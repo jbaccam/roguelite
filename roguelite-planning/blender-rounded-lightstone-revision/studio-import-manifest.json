@@ -1,0 +1,337 @@
+{
+  "studio": "Place1",
+  "placeId": 0,
+  "workspaceFolder": "Workspace.RogueliteCliffPack",
+  "method": "Roblox Studio File > Import;19 original FBX files with embedded baked atlas; creator Me",
+  "models": 19,
+  "meshParts": 19,
+  "anchored": 19,
+  "textured": 19,
+  "visualVerified": true,
+  "scaling": "Explicit Size restored from polygon-report.json (Blender XYZ -> Studio XZY); FBX default was100x; no unrelated size changes",
+  "assets": [
+    {
+      "sourceFBX": "01-short-squat-grass.fbx",
+      "name": "01_Short_Squat_Grass",
+      "position": {
+        "1": 160,
+        "2": 2.3932816982269287,
+        "3": 40
+      },
+      "textureId": "rbxassetid://134336625852850",
+      "meshId": "rbxassetid://109135907369122",
+      "anchored": true,
+      "size": {
+        "1": 8.021342277526855,
+        "2": 4.786563396453857,
+        "3": 7.280717849731445
+      }
+    },
+    {
+      "sourceFBX": "02-medium-grass.fbx",
+      "name": "02_Medium_Grass",
+      "position": {
+        "1": 188,
+        "2": 4.4001240730285645,
+        "3": 40
+      },
+      "textureId": "rbxassetid://84113540138583",
+      "meshId": "rbxassetid://72860900053929",
+      "anchored": true,
+      "size": {
+        "1": 8.57907485961914,
+        "2": 8.800248146057129,
+        "3": 7.616178512573242
+      }
+    },
+    {
+      "sourceFBX": "03-tall-narrow-grass.fbx",
+      "name": "03_Tall_Narrow_Grass",
+      "position": {
+        "1": 216,
+        "2": 7.198072910308838,
+        "3": 40
+      },
+      "textureId": "rbxassetid://125737173784246",
+      "meshId": "rbxassetid://129848391114751",
+      "anchored": true,
+      "size": {
+        "1": 7.973809242248535,
+        "2": 14.396145820617676,
+        "3": 6.735424518585205
+      }
+    },
+    {
+      "sourceFBX": "04-wide-low-plateau.fbx",
+      "name": "04_Wide_Low_Plateau",
+      "position": {
+        "1": 244,
+        "2": 1.9929932355880737,
+        "3": 40
+      },
+      "textureId": "rbxassetid://82058041715955",
+      "meshId": "rbxassetid://124227870967819",
+      "anchored": true,
+      "size": {
+        "1": 18.36430549621582,
+        "2": 3.9859864711761475,
+        "3": 13.479005813598633
+      }
+    },
+    {
+      "sourceFBX": "05-broad-medium-plateau.fbx",
+      "name": "05_Broad_Medium_Plateau",
+      "position": {
+        "1": 272,
+        "2": 3.848450183868408,
+        "3": 40
+      },
+      "textureId": "rbxassetid://82346261477326",
+      "meshId": "rbxassetid://123646951903351",
+      "anchored": true,
+      "size": {
+        "1": 15.908100128173828,
+        "2": 7.696900367736816,
+        "3": 13.100112915039062
+      }
+    },
+    {
+      "sourceFBX": "06-tall-wide-mass.fbx",
+      "name": "06_Tall_Wide_Mass",
+      "position": {
+        "1": 160,
+        "2": 6.688317775726318,
+        "3": 70
+      },
+      "textureId": "rbxassetid://109138828331147",
+      "meshId": "rbxassetid://78650895029280",
+      "anchored": true,
+      "size": {
+        "1": 16.320026397705078,
+        "2": 13.376635551452637,
+        "3": 13.01995849609375
+      }
+    },
+    {
+      "sourceFBX": "07-slightly-tapered-grass.fbx",
+      "name": "07_Slightly_Tapered_Grass",
+      "position": {
+        "1": 188,
+        "2": 4.599194049835205,
+        "3": 70
+      },
+      "textureId": "rbxassetid://100686702790351",
+      "meshId": "rbxassetid://127726570876087",
+      "anchored": true,
+      "size": {
+        "1": 10.356525421142578,
+        "2": 9.19838809967041,
+        "3": 9.061853408813477
+      }
+    },
+    {
+      "sourceFBX": "08-double-eroded-terrace.fbx",
+      "name": "08_Double_Eroded_Terrace",
+      "position": {
+        "1": 216,
+        "2": 5.802602767944336,
+        "3": 70
+      },
+      "textureId": "rbxassetid://130730851593457",
+      "meshId": "rbxassetid://121416913016110",
+      "anchored": true,
+      "size": {
+        "1": 20.71953582763672,
+        "2": 11.605205535888672,
+        "3": 14.858415603637695
+      }
+    },
+    {
+      "sourceFBX": "09-triple-eroded-terrace.fbx",
+      "name": "09_Triple_Eroded_Terrace",
+      "position": {
+        "1": 244,
+        "2": 7.135000228881836,
+        "3": 70
+      },
+      "textureId": "rbxassetid://75742185811910",
+      "meshId": "rbxassetid://107189280456855",
+      "anchored": true,
+      "size": {
+        "1": 21.921602249145508,
+        "2": 14.270000457763672,
+        "3": 14.825847625732422
+      }
+    },
+    {
+      "sourceFBX": "10-bare-low-filler.fbx",
+      "name": "10_Bare_Low_Filler",
+      "position": {
+        "1": 272,
+        "2": 1.4604299068450928,
+        "3": 70
+      },
+      "textureId": "rbxassetid://97032979873320",
+      "meshId": "rbxassetid://133984016921198",
+      "anchored": true,
+      "size": {
+        "1": 11.986343383789062,
+        "2": 2.9208598136901855,
+        "3": 8.370407104492188
+      }
+    },
+    {
+      "sourceFBX": "11-medium-boulder.fbx",
+      "name": "11_Medium_Boulder",
+      "position": {
+        "1": 160,
+        "2": 2.354090929031372,
+        "3": 100
+      },
+      "textureId": "rbxassetid://86658587479396",
+      "meshId": "rbxassetid://74146679043728",
+      "anchored": true,
+      "size": {
+        "1": 6.781913757324219,
+        "2": 4.708181858062744,
+        "3": 5.519160270690918
+      }
+    },
+    {
+      "sourceFBX": "12-large-boulder.fbx",
+      "name": "12_Large_Boulder",
+      "position": {
+        "1": 188,
+        "2": 3.322530508041382,
+        "3": 100
+      },
+      "textureId": "rbxassetid://132392013814446",
+      "meshId": "rbxassetid://137958346852191",
+      "anchored": true,
+      "size": {
+        "1": 10.628684997558594,
+        "2": 6.645061016082764,
+        "3": 8.646673202514648
+      }
+    },
+    {
+      "sourceFBX": "13-rock-cluster.fbx",
+      "name": "13_Rock_Cluster",
+      "position": {
+        "1": 216,
+        "2": 2.513815402984619,
+        "3": 100
+      },
+      "textureId": "rbxassetid://104196781820875",
+      "meshId": "rbxassetid://106093959973831",
+      "anchored": true,
+      "size": {
+        "1": 10.131604194641113,
+        "2": 5.027630805969238,
+        "3": 7.3177490234375
+      }
+    },
+    {
+      "sourceFBX": "14-standing-narrow-rock.fbx",
+      "name": "14_Standing_Narrow_Rock",
+      "position": {
+        "1": 244,
+        "2": 5.358634948730469,
+        "3": 100
+      },
+      "textureId": "rbxassetid://109170660861612",
+      "meshId": "rbxassetid://116477409438740",
+      "anchored": true,
+      "size": {
+        "1": 5.38887882232666,
+        "2": 10.717269897460938,
+        "3": 4.263914585113525
+      }
+    },
+    {
+      "sourceFBX": "15-short-moss-only.fbx",
+      "name": "15_Short_Moss_Only",
+      "position": {
+        "1": 272,
+        "2": 2.3932816982269287,
+        "3": 100
+      },
+      "textureId": "rbxassetid://126610518218065",
+      "meshId": "rbxassetid://127851177761586",
+      "anchored": true,
+      "size": {
+        "1": 8.021370887756348,
+        "2": 4.786563396453857,
+        "3": 7.280717849731445
+      }
+    },
+    {
+      "sourceFBX": "16-medium-moss-only.fbx",
+      "name": "16_Medium_Moss_Only",
+      "position": {
+        "1": 160,
+        "2": 4.4001240730285645,
+        "3": 130
+      },
+      "textureId": "rbxassetid://72749013676528",
+      "meshId": "rbxassetid://89432527834965",
+      "anchored": true,
+      "size": {
+        "1": 8.57907485961914,
+        "2": 8.800248146057129,
+        "3": 7.616178512573242
+      }
+    },
+    {
+      "sourceFBX": "17-tall-moss-only.fbx",
+      "name": "17_Tall_Moss_Only",
+      "position": {
+        "1": 188,
+        "2": 7.198072910308838,
+        "3": 130
+      },
+      "textureId": "rbxassetid://93714362397697",
+      "meshId": "rbxassetid://116669733084617",
+      "anchored": true,
+      "size": {
+        "1": 7.973809242248535,
+        "2": 14.396145820617676,
+        "3": 6.735424518585205
+      }
+    },
+    {
+      "sourceFBX": "18-wide-low-moss-only.fbx",
+      "name": "18_Wide_Low_Moss_Only",
+      "position": {
+        "1": 216,
+        "2": 1.9929932355880737,
+        "3": 130
+      },
+      "textureId": "rbxassetid://137110807367808",
+      "meshId": "rbxassetid://139837993466931",
+      "anchored": true,
+      "size": {
+        "1": 18.36431121826172,
+        "2": 3.9859864711761475,
+        "3": 13.479005813598633
+      }
+    },
+    {
+      "sourceFBX": "19-mossy-boulder-filler.fbx",
+      "name": "19_Mossy_Boulder_Filler",
+      "position": {
+        "1": 244,
+        "2": 2.8735604286193848,
+        "3": 130
+      },
+      "textureId": "rbxassetid://118064701771502",
+      "meshId": "rbxassetid://134964965937983",
+      "anchored": true,
+      "size": {
+        "1": 10.419829368591309,
+        "2": 5.7471208572387695,
+        "3": 8.795434951782227
+      }
+    }
+  ]
+}
