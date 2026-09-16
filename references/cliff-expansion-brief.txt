@@ -1,0 +1,130 @@
+Continue expanding the existing modular cliff kit.
+ Do NOT remake the current pieces, but create additional pieces that match the exact same art direction, textures, UV scale, low-poly style, and overall shape language.
+I am building a large stylized arena map like the reference image: a wide open grassy center surrounded by a continuous ring of cliffs, ledges, pine trees, rocks, dirt paths, and mountain walls. The current cliff set is a good start, but it is missing many functional pieces needed to build a convincing environment.
+The target map is not made only from isolated grassy cliff pillars. It is a broad natural arena with:
+-  a large open central field 
+-  continuous cliff walls around the perimeter 
+-  2–3 tiers of elevation 
+-  long wall sections 
+-  corners and curved wall segments 
+-  some flat grassy tops 
+-  some exposed rock with no grass on top 
+-  scattered boulders and rock clusters 
+-  lower rocks at the base of walls 
+-  occasional shelves and ledges for trees / props 
+-  dirt path openings and transitions between cliff sections 
+I need new modular pieces that let me assemble this type of environment.
+-  keep the exact same stylized low-poly look as the existing set 
+-  use the existing blue-gray rock texture on cliff/rock surfaces 
+-  use the existing grass texture on top-facing grassy surfaces 
+-  use the grass-to-rock transition texture only where grass meets cliff edges 
+-  keep texture scale and UV scale consistent with the current pieces 
+-  geometry should stay low poly, but not overly primitive 
+-  do not rely on giant faceted geometry to fake the texture 
+-  let the textures provide most of the visual surface detail 
+-  avoid making everything cylindrical or circular 
+-  use more rectangular, elongated, irregular, slightly curved, and asymmetrical silhouettes 
+-  subtle tapering is good on some pieces, but not extreme tapering 
+-  grass tops should have slight irregularity and edge variation 
+-  some pieces should have no grass at all 
+-  wide wall section 
+-  much wider than deep 
+-  mostly straight front face 
+-  irregular natural outline 
+-  grassy top 
+-  useful for building long perimeter walls 
+-  slightly concave 
+-  helps form the inside of the arena bowl 
+-  grassy top 
+-  slightly convex 
+-  grassy top 
+-  used for perimeter variation and exterior shaping 
+-  organic inward corner 
+-  not a perfect 90-degree angle 
+-  grassy top 
+-  outward-facing chunky corner 
+-  grassy top 
+-  one side higher than the other 
+-  natural elevation transition 
+-  grassy top 
+-  main cliff wall with a usable shelf or mid-level ledge 
+-  grassy top and a lower ledge 
+-  ledge large enough for props / small trees / rocks 
+-  one end lower, one end higher 
+-  helps transition between wall heights 
+-  grassy top 
+-  broad low-to-medium-height platform 
+-  large enough for multiple trees / props 
+-  irregular rectangular or asymmetrical footprint 
+-  subtle overhang 
+-  grassy top projects slightly beyond the rock face 
+-  moderate only, not extreme 
+-  same general scale as grassy wall pieces 
+-  no grass cap 
+-  exposed vertical rock only 
+-  useful for mixing into the perimeter so it does not all look identical 
+-  concave 
+-  no grass top 
+-  exposed rock face only 
+-  convex 
+-  no grass top 
+-  can be inward or outward shaped 
+-  no grass top 
+-  broad usable silhouette for connecting exposed rocky sections 
+-  taller, more vertical exposed rock formation 
+-  no grass top 
+-  looks like a rocky support built into the mountain wall 
+-  useful for breaking up smooth wall repetition 
+-  exposed rock face with a natural notch / indentation / broken section 
+-  no grass top 
+-  useful for making the perimeter wall feel eroded and natural 
+-  low and wide 
+-  no grass top 
+-  designed to sit at the base of larger cliffs or in front of walls 
+-  useful for layering and hiding seams 
+-  simple standalone rock 
+-  low-poly 
+-  no grass 
+-  should work as a field prop 
+-  larger standalone rock 
+-  slightly asymmetrical 
+-  no grass 
+-  useful inside the arena and around cliff bases 
+-  chunkier and broader 
+-  no grass 
+-  should feel like a significant environmental rock 
+-  3–5 grouped rocks in one modular piece 
+-  no grass 
+-  useful for fast dressing and seam hiding 
+-  grouped broken stones / rock debris 
+-  no grass 
+-  designed to sit where cliff walls meet the ground 
+-  upright exposed rock 
+-  no grass 
+-  useful for visual variety near walls / trees / path edges 
+-  cliff section with a natural opening or lower cut-through 
+-  allows dirt path connection between elevations 
+-  may have grass on top but should expose plenty of rock 
+-  medium-height cliff with a flat side shelf intended for placing a pine tree 
+-  should feel integrated into the wall 
+-  much larger and taller than gameplay cliff pieces 
+-  designed for distant perimeter / backdrop use 
+-  may have some grass on top or may be mostly rock 
+-  should still match the same texture style 
+I need a modular kit that can build a large stylized mountain-ring arena.
+ Not every piece should have a grassy top. The final environment needs a mix of:
+-  grassy playable ledges 
+-  exposed rock cliff faces 
+-  base rocks 
+-  scatter boulders 
+-  filler pieces 
+-  corners 
+-  long walls 
+-  height transitions 
+The new pieces should be designed to:
+-  overlap well 
+-  connect naturally 
+-  hide seams easily 
+-  avoid obvious repetition 
+-  support tree placement and environmental dressing 
+Keep the pieces in a clean preview lineup at the end so I can inspect the silhouettes and make sure the kit is usable.

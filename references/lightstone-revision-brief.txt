@@ -1,0 +1,115 @@
+Revise the current cliff kit again. Keep the overall modular rounded-cylinder cliff direction, but fix the materials, transitions, stack shapes, and edge treatment.
+The current modeling direction is much closer, but there are still several important problems:
+1. You are still not using the lighter stone texture I provided.
+Use the NEW lighter cool-gray / pale blue-gray stone texture as the base rock material for all cliffs and rocks. Do not use the darker blue/purple rock texture from the earlier iterations.
+This should be mostly a material/UV correction, not a geometry redesign.
+The rock should read as:
+-  light cool gray 
+-  subtle bluish-gray shadows 
+-  muted beige/taupe highlights 
+-  painterly faceted rock detail 
+-  subtle moss only where applicable 
+Keep texture scale consistent across every asset.
+2. The grass-to-rock transition is too short and abrupt.
+Right now the grass ends too suddenly and creates a blunt green-to-stone line.
+I want the transition to be much more apparent and gradual:
+-  use the provided grass-to-rock transition texture 
+-  create a wider transition band around the upper cliff rim 
+-  let the green fade down into the stone over a visibly larger vertical distance 
+-  make the transition irregular, not a straight band 
+-  allow small hanging grassy/mossy shapes to creep down the cliff face 
+-  keep the center/lower portion of the cliff mostly exposed stone 
+The transition should feel like vegetation naturally growing over the upper edge of the rock, not like a green cap pasted onto a stone cylinder.
+If needed, create a slightly wider beveled/rounded rim area to give the transition texture more space.
+3. The double-stack and triple-stack pieces still look too artificial.
+Do not make them like a tiered cake where each layer is just a smaller centered version of the one below.
+Redesign them as naturally formed rock masses:
+-  vary the height of each level 
+-  vary the width of each level 
+-  offset upper sections horizontally 
+-  do not center every layer 
+-  make some transitions partially blended into each other 
+-  let one side be taller and another side lower 
+-  use irregular footprints 
+-  allow some sections to feel like one continuous eroded cliff instead of separate cylinders stacked on top 
+The reference environment shows terrain that looks like natural stepped rock formations, not wedding-cake layers.
+For the double-stack:
+-  make the lower mass broad and irregular 
+-  place the upper mass off-center 
+-  make the upper rise noticeably different in height from the lower level 
+-  blend part of the upper section into the lower formation 
+For the triple-stack:
+-  use 3 uneven elevation zones, not 3 centered tiers 
+-  one level can be broad and low 
+-  another can be narrower and taller 
+-  the highest section should be offset 
+-  make the overall silhouette asymmetrical 
+-  it should look like a naturally eroded rocky outcrop with terraces 
+4. The cliff edges are still too sharp.
+Keep the low-poly style, but soften the silhouettes slightly:
+-  bevel/chamfer major outer edges 
+-  avoid knife-sharp 90-degree transitions 
+-  keep broad readable low-poly planes 
+-  do not smooth everything into blobs 
+The goal is worn, stylized rock, not perfectly machined polygons.
+5. Keep the rounded modular cliff family.
+Do not return to concave wall systems, corner walls, or engineered modular wall pieces.
+The kit should remain mostly:
+-  short rounded cliffs 
+-  medium rounded cliffs 
+-  tall rounded pillars 
+-  wide low plateaus 
+-  broad medium-height masses 
+-  tall wide masses 
+-  slightly tapered variants 
+-  natural double-stack and triple-stack formations 
+-  rocks/boulders/fillers 
+A few shapes can be slightly squarer or more irregular, but the main design language should still be rounded/cylindrical chunky cliffs.
+6. Add a few moss-only rock/cliff variants.
+Use the new subtle moss stone texture and the moss overlay textures I provided.
+Create a few variants that have:
+-  NO grass cap 
+-  exposed light stone tops 
+-  subtle moss in seams and cracks 
+-  occasional small moss overlays on edges or ledges 
+Do not overdo the moss. Keep it sparse and secondary.
+Good examples:
+-  short moss-only cliff 
+-  medium moss-only cliff 
+-  tall moss-only pillar 
+-  wide low moss-only plateau 
+-  mossy boulder/filler 
+7. Use the moss overlays selectively.
+Do not bake giant green patches into every rock.
+Use the overlay textures only on selected areas:
+-  cracks 
+-  ledges 
+-  top edges 
+-  occasional side patches 
+Most of each mossy cliff should still visibly be light stone.
+8. Grass tops still need some natural variation.
+The grassy top surfaces should not look like perfectly flat disks.
+Add:
+-  slight top-surface irregularity 
+-  subtle elevation variation 
+-  irregular rim shapes 
+-  a small amount of edge overhang 
+Keep it clean and low-poly, but avoid perfectly flat green plates.
+9. Keep everything game-ready and Roblox-friendly.
+-  separate modular assets 
+-  consistent world scale 
+-  clean pivots/origins 
+-  image-based materials 
+-  no Blender-only procedural effects unless baked 
+-  simple UVs 
+-  consistent texture scale 
+-  low-poly geometry 
+Final target:
+I want a polished modular cliff kit using the lighter stone texture, stronger grass-to-rock blending, softer cliff edges, natural uneven stacked formations, and a few subtle moss-only variants.
+The biggest issues to fix are:
+1.  lighter stone texture must actually be used 
+2.  grass-to-rock transition must be longer and more visible 
+3.  double/triple stacks must stop looking like cakes 
+4.  major cliff edges need to be slightly softer 
+5.  moss should be subtle and selective 
+Please revise the current models instead of starting over, and present the updated set in a clean lineup for review.
