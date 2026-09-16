@@ -1,0 +1,526 @@
+{
+  "texture_sha256": {
+    "rock": {
+      "original": "ecb5c2a7250f3ebb97f747ac0377ae34798be1b4cfc475bdbbe30d50692ba55c",
+      "copy": "ecb5c2a7250f3ebb97f747ac0377ae34798be1b4cfc475bdbbe30d50692ba55c",
+      "identical": true
+    },
+    "grass": {
+      "original": "91fed16cd66e4ec32c005c605aa0d426ce47c191adf90c38cda9d83b562ec1b3",
+      "copy": "91fed16cd66e4ec32c005c605aa0d426ce47c191adf90c38cda9d83b562ec1b3",
+      "identical": true
+    },
+    "transition": {
+      "original": "34271335e094f424ec9131796f342d2258f99aa486fd386fe542244a2858f037",
+      "copy": "34271335e094f424ec9131796f342d2258f99aa486fd386fe542244a2858f037",
+      "identical": true
+    }
+  },
+  "exports": [
+    {
+      "file": "exports\\glb\\01-short-squat-grass.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "01_Short_Squat_Grass",
+          "triangles": 574,
+          "uv_loops": 1722,
+          "material": "01_Short_Squat_Grass_Atlas",
+          "images": [
+            "01_short_squat_grass-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 574,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\02-medium-grass.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "02_Medium_Grass",
+          "triangles": 574,
+          "uv_loops": 1722,
+          "material": "02_Medium_Grass_Atlas",
+          "images": [
+            "02_medium_grass-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 574,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\03-tall-narrow-grass.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "03_Tall_Narrow_Grass",
+          "triangles": 702,
+          "uv_loops": 2106,
+          "material": "03_Tall_Narrow_Grass_Atlas",
+          "images": [
+            "03_tall_narrow_grass-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 702,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\04-wide-low-plateau.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "04_Wide_Low_Plateau",
+          "triangles": 718,
+          "uv_loops": 2154,
+          "material": "04_Wide_Low_Plateau_Atlas",
+          "images": [
+            "04_wide_low_plateau-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 718,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\05-broad-medium-plateau.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "05_Broad_Medium_Plateau",
+          "triangles": 718,
+          "uv_loops": 2154,
+          "material": "05_Broad_Medium_Plateau_Atlas",
+          "images": [
+            "05_broad_medium_plateau-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 718,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\06-tall-wide-mass.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "06_Tall_Wide_Mass",
+          "triangles": 878,
+          "uv_loops": 2634,
+          "material": "06_Tall_Wide_Mass_Atlas",
+          "images": [
+            "06_tall_wide_mass-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 878,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\07-slightly-tapered-grass.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "07_Slightly_Tapered_Grass",
+          "triangles": 574,
+          "uv_loops": 1722,
+          "material": "07_Slightly_Tapered_Grass_Atlas",
+          "images": [
+            "07_slightly_tapered_grass-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 574,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\08-double-stack.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "08_Double_Stack",
+          "triangles": 1292,
+          "uv_loops": 3876,
+          "material": "08_Double_Stack_Atlas",
+          "images": [
+            "08_double_stack-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 1292,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\09-triple-stack.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "09_Triple_Stack",
+          "triangles": 2010,
+          "uv_loops": 6030,
+          "material": "09_Triple_Stack_Atlas",
+          "images": [
+            "09_triple_stack-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 2010,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\10-bare-low-filler.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "10_Bare_Low_Filler",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "10_Bare_Low_Filler_Atlas",
+          "images": [
+            "10_bare_low_filler-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\11-medium-boulder.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "11_Medium_Boulder",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "11_Medium_Boulder_Atlas",
+          "images": [
+            "11_medium_boulder-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\12-large-boulder.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "12_Large_Boulder",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "12_Large_Boulder_Atlas",
+          "images": [
+            "12_large_boulder-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\13-rock-cluster.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "13_Rock_Cluster",
+          "triangles": 320,
+          "uv_loops": 960,
+          "material": "13_Rock_Cluster_Atlas",
+          "images": [
+            "13_rock_cluster-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 320,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\14-standing-narrow-rock.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "14_Standing_Narrow_Rock",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "14_Standing_Narrow_Rock_Atlas",
+          "images": [
+            "14_standing_narrow_rock-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\01-short-squat-grass.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "01_Short_Squat_Grass",
+          "triangles": 574,
+          "uv_loops": 1152,
+          "material": "01_Short_Squat_Grass_Atlas",
+          "images": [
+            "01_Short_Squat_Grass_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 574,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\02-medium-grass.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "02_Medium_Grass",
+          "triangles": 574,
+          "uv_loops": 1152,
+          "material": "02_Medium_Grass_Atlas",
+          "images": [
+            "02_Medium_Grass_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 574,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\03-tall-narrow-grass.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "03_Tall_Narrow_Grass",
+          "triangles": 702,
+          "uv_loops": 1408,
+          "material": "03_Tall_Narrow_Grass_Atlas",
+          "images": [
+            "03_Tall_Narrow_Grass_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 702,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\04-wide-low-plateau.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "04_Wide_Low_Plateau",
+          "triangles": 718,
+          "uv_loops": 1440,
+          "material": "04_Wide_Low_Plateau_Atlas",
+          "images": [
+            "04_Wide_Low_Plateau_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 718,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\05-broad-medium-plateau.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "05_Broad_Medium_Plateau",
+          "triangles": 718,
+          "uv_loops": 1440,
+          "material": "05_Broad_Medium_Plateau_Atlas",
+          "images": [
+            "05_Broad_Medium_Plateau_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 718,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\06-tall-wide-mass.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "06_Tall_Wide_Mass",
+          "triangles": 878,
+          "uv_loops": 1760,
+          "material": "06_Tall_Wide_Mass_Atlas",
+          "images": [
+            "06_Tall_Wide_Mass_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 878,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\07-slightly-tapered-grass.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "07_Slightly_Tapered_Grass",
+          "triangles": 574,
+          "uv_loops": 1152,
+          "material": "07_Slightly_Tapered_Grass_Atlas",
+          "images": [
+            "07_Slightly_Tapered_Grass_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 574,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\08-double-stack.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "08_Double_Stack",
+          "triangles": 1292,
+          "uv_loops": 2592,
+          "material": "08_Double_Stack_Atlas",
+          "images": [
+            "08_Double_Stack_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 1292,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\09-triple-stack.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "09_Triple_Stack",
+          "triangles": 2010,
+          "uv_loops": 4032,
+          "material": "09_Triple_Stack_Atlas",
+          "images": [
+            "09_Triple_Stack_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 2010,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\10-bare-low-filler.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "10_Bare_Low_Filler",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "10_Bare_Low_Filler_Atlas",
+          "images": [
+            "10_Bare_Low_Filler_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\11-medium-boulder.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "11_Medium_Boulder",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "11_Medium_Boulder_Atlas",
+          "images": [
+            "11_Medium_Boulder_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\12-large-boulder.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "12_Large_Boulder",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "12_Large_Boulder_Atlas",
+          "images": [
+            "12_Large_Boulder_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\13-rock-cluster.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "13_Rock_Cluster",
+          "triangles": 320,
+          "uv_loops": 960,
+          "material": "13_Rock_Cluster_Atlas",
+          "images": [
+            "13_Rock_Cluster_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 320,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\14-standing-narrow-rock.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "14_Standing_Narrow_Rock",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "14_Standing_Narrow_Rock_Atlas",
+          "images": [
+            "14_Standing_Narrow_Rock_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    }
+  ],
+  "all_passed": true
+}

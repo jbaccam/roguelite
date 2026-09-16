@@ -1,0 +1,187 @@
+{
+  "blender_version": "5.2.1 LTS",
+  "modules": {
+    "01_Short_Squat_Grass": {
+      "file_stem": "01-short-squat-grass",
+      "vertices": 289,
+      "triangles": 574,
+      "materials": 1,
+      "dimensions": [
+        8.05899715423584,
+        7.276044845581055,
+        4.789836406707764
+      ],
+      "pivot": "ground-level local origin",
+      "atlas_size": 2048
+    },
+    "02_Medium_Grass": {
+      "file_stem": "02-medium-grass",
+      "vertices": 289,
+      "triangles": 574,
+      "materials": 1,
+      "dimensions": [
+        8.612879753112793,
+        7.6139020919799805,
+        8.807541847229004
+      ],
+      "pivot": "ground-level local origin",
+      "atlas_size": 2048
+    },
+    "03_Tall_Narrow_Grass": {
+      "file_stem": "03-tall-narrow-grass",
+      "vertices": 353,
+      "triangles": 702,
+      "materials": 1,
+      "dimensions": [
+        7.973809242248535,
+        6.721341133117676,
+        14.400293350219727
+      ],
+      "pivot": "ground-level local origin",
+      "atlas_size": 2048
+    },
+    "04_Wide_Low_Plateau": {
+      "file_stem": "04-wide-low-plateau",
+      "vertices": 361,
+      "triangles": 718,
+      "materials": 1,
+      "dimensions": [
+        18.46631622314453,
+        13.501338958740234,
+        3.9896159172058105
+      ],
+      "pivot": "ground-level local origin",
+      "atlas_size": 2048
+    },
+    "05_Broad_Medium_Plateau": {
+      "file_stem": "05-broad-medium-plateau",
+      "vertices": 361,
+      "triangles": 718,
+      "materials": 1,
+      "dimensions": [
+        15.956589698791504,
+        13.114358901977539,
+        7.701766014099121
+      ],
+      "pivot": "ground-level local origin",
+      "atlas_size": 2048
+    },
+    "06_Tall_Wide_Mass": {
+      "file_stem": "06-tall-wide-mass",
+      "vertices": 441,
+      "triangles": 878,
+      "materials": 1,
+      "dimensions": [
+        16.362030029296875,
+        13.007698059082031,
+        13.382034301757812
+      ],
+      "pivot": "ground-level local origin",
+      "atlas_size": 2048
+    },
+    "07_Slightly_Tapered_Grass": {
+      "file_stem": "07-slightly-tapered-grass",
+      "vertices": 289,
+      "triangles": 574,
+      "materials": 1,
+      "dimensions": [
+        10.399971008300781,
+        9.064205169677734,
+        9.205804824829102
+      ],
+      "pivot": "ground-level local origin",
+      "atlas_size": 2048
+    },
+    "08_Double_Stack": {
+      "file_stem": "08-double-stack",
+      "vertices": 650,
+      "triangles": 1292,
+      "materials": 1,
+      "dimensions": [
+        18.080860137939453,
+        13.586124420166016,
+        10.80903434753418
+      ],
+      "pivot": "ground-level local origin",
+      "atlas_size": 2048
+    },
+    "09_Triple_Stack": {
+      "file_stem": "09-triple-stack",
+      "vertices": 1011,
+      "triangles": 2010,
+      "materials": 1,
+      "dimensions": [
+        20.326955795288086,
+        14.773330688476562,
+        14.070892333984375
+      ],
+      "pivot": "ground-level local origin",
+      "atlas_size": 2048
+    },
+    "10_Bare_Low_Filler": {
+      "file_stem": "10-bare-low-filler",
+      "vertices": 42,
+      "triangles": 80,
+      "materials": 1,
+      "dimensions": [
+        11.986343383789062,
+        8.370407104492188,
+        2.9208598136901855
+      ],
+      "pivot": "ground-level local origin",
+      "atlas_size": 2048
+    },
+    "11_Medium_Boulder": {
+      "file_stem": "11-medium-boulder",
+      "vertices": 42,
+      "triangles": 80,
+      "materials": 1,
+      "dimensions": [
+        6.781913757324219,
+        5.519160270690918,
+        4.708181858062744
+      ],
+      "pivot": "ground-level local origin",
+      "atlas_size": 2048
+    },
+    "12_Large_Boulder": {
+      "file_stem": "12-large-boulder",
+      "vertices": 42,
+      "triangles": 80,
+      "materials": 1,
+      "dimensions": [
+        10.628684997558594,
+        8.646673202514648,
+        6.645061016082764
+      ],
+      "pivot": "ground-level local origin",
+      "atlas_size": 2048
+    },
+    "13_Rock_Cluster": {
+      "file_stem": "13-rock-cluster",
+      "vertices": 168,
+      "triangles": 320,
+      "materials": 1,
+      "dimensions": [
+        10.131604194641113,
+        7.3177490234375,
+        5.027630805969238
+      ],
+      "pivot": "ground-level local origin",
+      "atlas_size": 2048
+    },
+    "14_Standing_Narrow_Rock": {
+      "file_stem": "14-standing-narrow-rock",
+      "vertices": 42,
+      "triangles": 80,
+      "materials": 1,
+      "dimensions": [
+        5.38887882232666,
+        4.263914585113525,
+        10.717269897460938
+      ],
+      "pivot": "ground-level local origin",
+      "atlas_size": 2048
+    }
+  }
+}
