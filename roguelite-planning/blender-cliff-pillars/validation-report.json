@@ -1,0 +1,78 @@
+{
+  "blender_version": "5.2.1 LTS",
+  "files": {
+    "exports\\fbx\\cliff-floating-tapered.fbx": {
+      "mesh_objects": 2,
+      "triangles": 108,
+      "bytes": 24316,
+      "ok": true
+    },
+    "exports\\fbx\\cliff-medium-mesa.fbx": {
+      "mesh_objects": 2,
+      "triangles": 90,
+      "bytes": 23804,
+      "ok": true
+    },
+    "exports\\fbx\\cliff-short-narrow.fbx": {
+      "mesh_objects": 2,
+      "triangles": 80,
+      "bytes": 23596,
+      "ok": true
+    },
+    "exports\\fbx\\cliff-squat-broad-plateau.fbx": {
+      "mesh_objects": 2,
+      "triangles": 110,
+      "bytes": 24252,
+      "ok": true
+    },
+    "exports\\fbx\\cliff-tall-narrow.fbx": {
+      "mesh_objects": 2,
+      "triangles": 96,
+      "bytes": 24028,
+      "ok": true
+    },
+    "exports\\fbx\\cliff-tall-wide-mesa.fbx": {
+      "mesh_objects": 2,
+      "triangles": 120,
+      "bytes": 24508,
+      "ok": true
+    },
+    "exports\\glb\\cliff-floating-tapered.glb": {
+      "mesh_objects": 2,
+      "triangles": 108,
+      "bytes": 11760,
+      "ok": true
+    },
+    "exports\\glb\\cliff-medium-mesa.glb": {
+      "mesh_objects": 2,
+      "triangles": 90,
+      "bytes": 10292,
+      "ok": true
+    },
+    "exports\\glb\\cliff-short-narrow.glb": {
+      "mesh_objects": 2,
+      "triangles": 80,
+      "bytes": 9752,
+      "ok": true
+    },
+    "exports\\glb\\cliff-squat-broad-plateau.glb": {
+      "mesh_objects": 2,
+      "triangles": 110,
+      "bytes": 11500,
+      "ok": true
+    },
+    "exports\\glb\\cliff-tall-narrow.glb": {
+      "mesh_objects": 2,
+      "triangles": 96,
+      "bytes": 10996,
+      "ok": true
+    },
+    "exports\\glb\\cliff-tall-wide-mesa.glb": {
+      "mesh_objects": 2,
+      "triangles": 120,
+      "bytes": 12492,
+      "ok": true
+    }
+  },
+  "passed": true
+}

@@ -1,0 +1,41 @@
+{
+  "blender_version": "5.2.1 LTS",
+  "modules": {
+    "ShortNarrow": {
+      "file_stem": "cliff-short-narrow",
+      "vertices": 44,
+      "triangles": 80,
+      "pivot": "bottom center z=0"
+    },
+    "MediumMesa": {
+      "file_stem": "cliff-medium-mesa",
+      "vertices": 49,
+      "triangles": 90,
+      "pivot": "bottom center z=0"
+    },
+    "TallNarrow": {
+      "file_stem": "cliff-tall-narrow",
+      "vertices": 52,
+      "triangles": 96,
+      "pivot": "bottom center z=0"
+    },
+    "TallWideMesa": {
+      "file_stem": "cliff-tall-wide-mesa",
+      "vertices": 64,
+      "triangles": 120,
+      "pivot": "bottom center z=0"
+    },
+    "SquatBroadPlateau": {
+      "file_stem": "cliff-squat-broad-plateau",
+      "vertices": 59,
+      "triangles": 110,
+      "pivot": "bottom center z=0"
+    },
+    "FloatingTapered": {
+      "file_stem": "cliff-floating-tapered",
+      "vertices": 58,
+      "triangles": 108,
+      "pivot": "center at z=0; floating piece has modeled extent z=-10 to +5.55"
+    }
+  }
+}

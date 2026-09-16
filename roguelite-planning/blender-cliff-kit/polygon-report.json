@@ -1,0 +1,47 @@
+{
+  "blender_version": "5.2.1 LTS",
+  "modules": {
+    "Cliff_Straight": {
+      "objects": 2,
+      "vertices": 40,
+      "triangles": 64
+    },
+    "Cliff_Curve45": {
+      "objects": 2,
+      "vertices": 40,
+      "triangles": 64
+    },
+    "Cliff_Curve22": {
+      "objects": 2,
+      "vertices": 40,
+      "triangles": 64
+    },
+    "Cliff_PillarMesa": {
+      "objects": 2,
+      "vertices": 44,
+      "triangles": 80
+    },
+    "Cliff_SteppedTerrace": {
+      "objects": 6,
+      "vertices": 48,
+      "triangles": 72
+    },
+    "Cliff_Arch": {
+      "objects": 4,
+      "vertices": 32,
+      "triangles": 48
+    }
+  },
+  "sample_assembly": {
+    "objects": 17,
+    "vertices": 448,
+    "triangles": 764
+  },
+  "dimensions_blender_units": {
+    "arena_clear_radius": 35.5,
+    "curve45_inner_radius": 36.0,
+    "curve45_outer_radius": 44.0,
+    "nominal_cliff_height": 10.0,
+    "top_cap_thickness": 0.65
+  }
+}

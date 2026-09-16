@@ -1,0 +1,105 @@
+{
+  "blender_version": "5.2.1 LTS",
+  "files": {
+    "exports\\fbx\\cliff-arch.fbx": {
+      "mesh_objects": 4,
+      "vertices": 96,
+      "triangles": 176,
+      "bytes": 28188,
+      "ok": true
+    },
+    "exports\\fbx\\cliff-curve22.fbx": {
+      "mesh_objects": 2,
+      "vertices": 40,
+      "triangles": 64,
+      "bytes": 23068,
+      "ok": true
+    },
+    "exports\\fbx\\cliff-curve45.fbx": {
+      "mesh_objects": 2,
+      "vertices": 40,
+      "triangles": 64,
+      "bytes": 23116,
+      "ok": true
+    },
+    "exports\\fbx\\cliff-pillarmesa.fbx": {
+      "mesh_objects": 2,
+      "vertices": 44,
+      "triangles": 80,
+      "bytes": 23532,
+      "ok": true
+    },
+    "exports\\fbx\\cliff-steppedterrace.fbx": {
+      "mesh_objects": 6,
+      "vertices": 144,
+      "triangles": 264,
+      "bytes": 34668,
+      "ok": true
+    },
+    "exports\\fbx\\cliff-straight.fbx": {
+      "mesh_objects": 2,
+      "vertices": 40,
+      "triangles": 64,
+      "bytes": 22636,
+      "ok": true
+    },
+    "exports\\fbx\\sample-circular-arena.fbx": {
+      "mesh_objects": 17,
+      "vertices": 448,
+      "triangles": 764,
+      "bytes": 68412,
+      "ok": true
+    },
+    "exports\\glb\\cliff-arch.glb": {
+      "mesh_objects": 4,
+      "vertices": 384,
+      "triangles": 176,
+      "bytes": 16280,
+      "ok": true
+    },
+    "exports\\glb\\cliff-curve22.glb": {
+      "mesh_objects": 2,
+      "vertices": 165,
+      "triangles": 64,
+      "bytes": 9288,
+      "ok": true
+    },
+    "exports\\glb\\cliff-curve45.glb": {
+      "mesh_objects": 2,
+      "vertices": 165,
+      "triangles": 64,
+      "bytes": 9320,
+      "ok": true
+    },
+    "exports\\glb\\cliff-pillarmesa.glb": {
+      "mesh_objects": 2,
+      "vertices": 226,
+      "triangles": 80,
+      "bytes": 10872,
+      "ok": true
+    },
+    "exports\\glb\\cliff-steppedterrace.glb": {
+      "mesh_objects": 6,
+      "vertices": 576,
+      "triangles": 264,
+      "bytes": 23900,
+      "ok": true
+    },
+    "exports\\glb\\cliff-straight.glb": {
+      "mesh_objects": 2,
+      "vertices": 163,
+      "triangles": 64,
+      "bytes": 8928,
+      "ok": true
+    },
+    "exports\\glb\\sample-circular-arena.glb": {
+      "mesh_objects": 17,
+      "vertices": 1704,
+      "triangles": 764,
+      "bytes": 72420,
+      "ok": true
+    }
+  },
+  "passed": true,
+  "missing": []
+}
