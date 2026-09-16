@@ -1,0 +1,75 @@
+{
+  "blender_version": "5.2.1 LTS",
+  "modules": {
+    "Short_Blocky": {
+      "vertices": 289,
+      "triangles": 574,
+      "materials": 1,
+      "texture": "2048px baked color atlas from three supplied sheets",
+      "base_width_ratio": 0.94,
+      "dimensions": [
+        10.469679832458496,
+        8.390914916992188,
+        5.6819586753845215
+      ],
+      "pivot": "bottom center",
+      "file_stem": "short-blocky"
+    },
+    "Medium_Subtle_Taper": {
+      "vertices": 289,
+      "triangles": 574,
+      "materials": 1,
+      "texture": "2048px baked color atlas from three supplied sheets",
+      "base_width_ratio": 0.84,
+      "dimensions": [
+        9.354595184326172,
+        8.626415252685547,
+        10.18265438079834
+      ],
+      "pivot": "bottom center",
+      "file_stem": "medium-subtle-taper"
+    },
+    "Tall_Curved": {
+      "vertices": 433,
+      "triangles": 862,
+      "materials": 1,
+      "texture": "2048px baked color atlas from three supplied sheets",
+      "base_width_ratio": 0.94,
+      "dimensions": [
+        9.242746353149414,
+        7.902398109436035,
+        17.170000076293945
+      ],
+      "pivot": "bottom center",
+      "file_stem": "tall-curved"
+    },
+    "Wide_Platform": {
+      "vertices": 361,
+      "triangles": 718,
+      "materials": 1,
+      "texture": "2048px baked color atlas from three supplied sheets",
+      "base_width_ratio": 0.94,
+      "dimensions": [
+        18.90659523010254,
+        11.486263275146484,
+        4.570000171661377
+      ],
+      "pivot": "bottom center",
+      "file_stem": "wide-platform"
+    },
+    "Shoulder_Cliff": {
+      "vertices": 361,
+      "triangles": 718,
+      "materials": 1,
+      "texture": "2048px baked color atlas from three supplied sheets",
+      "base_width_ratio": 0.89,
+      "dimensions": [
+        14.430373191833496,
+        9.111825942993164,
+        11.670000076293945
+      ],
+      "pivot": "bottom center",
+      "file_stem": "shoulder-cliff"
+    }
+  }
+}

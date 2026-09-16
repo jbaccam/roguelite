@@ -1,0 +1,202 @@
+{
+  "texture_sha256": {
+    "rock": {
+      "original": "ecb5c2a7250f3ebb97f747ac0377ae34798be1b4cfc475bdbbe30d50692ba55c",
+      "copy": "ecb5c2a7250f3ebb97f747ac0377ae34798be1b4cfc475bdbbe30d50692ba55c",
+      "identical": true
+    },
+    "grass": {
+      "original": "91fed16cd66e4ec32c005c605aa0d426ce47c191adf90c38cda9d83b562ec1b3",
+      "copy": "91fed16cd66e4ec32c005c605aa0d426ce47c191adf90c38cda9d83b562ec1b3",
+      "identical": true
+    },
+    "transition": {
+      "original": "cb390c610c6cb541133e5b02cdba68bbe2f9d46efc1d9b4033c795bc904b4997",
+      "copy": "cb390c610c6cb541133e5b02cdba68bbe2f9d46efc1d9b4033c795bc904b4997",
+      "identical": true
+    }
+  },
+  "exports": [
+    {
+      "file": "exports\\glb\\medium-subtle-taper.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Medium_Subtle_Taper",
+          "triangles": 574,
+          "uv_loops": 1722,
+          "material": "Medium_Subtle_Taper_Atlas",
+          "images": [
+            "medium_subtle_taper-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 574,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\short-blocky.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Short_Blocky",
+          "triangles": 574,
+          "uv_loops": 1722,
+          "material": "Short_Blocky_Atlas",
+          "images": [
+            "short_blocky-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 574,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\shoulder-cliff.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Shoulder_Cliff",
+          "triangles": 718,
+          "uv_loops": 2154,
+          "material": "Shoulder_Cliff_Atlas",
+          "images": [
+            "shoulder_cliff-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 718,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\tall-curved.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Tall_Curved",
+          "triangles": 862,
+          "uv_loops": 2586,
+          "material": "Tall_Curved_Atlas",
+          "images": [
+            "tall_curved-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 862,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\wide-platform.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Wide_Platform",
+          "triangles": 718,
+          "uv_loops": 2154,
+          "material": "Wide_Platform_Atlas",
+          "images": [
+            "wide_platform-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 718,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\medium-subtle-taper.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Medium_Subtle_Taper",
+          "triangles": 574,
+          "uv_loops": 1152,
+          "material": "Medium_Subtle_Taper_Atlas",
+          "images": [
+            "Medium_Subtle_Taper_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 574,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\short-blocky.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Short_Blocky",
+          "triangles": 574,
+          "uv_loops": 1152,
+          "material": "Short_Blocky_Atlas",
+          "images": [
+            "Short_Blocky_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 574,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\shoulder-cliff.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Shoulder_Cliff",
+          "triangles": 718,
+          "uv_loops": 1440,
+          "material": "Shoulder_Cliff_Atlas",
+          "images": [
+            "Shoulder_Cliff_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 718,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\tall-curved.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Tall_Curved",
+          "triangles": 862,
+          "uv_loops": 1728,
+          "material": "Tall_Curved_Atlas",
+          "images": [
+            "Tall_Curved_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 862,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\wide-platform.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Wide_Platform",
+          "triangles": 718,
+          "uv_loops": 1440,
+          "material": "Wide_Platform_Atlas",
+          "images": [
+            "Wide_Platform_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 718,
+      "passed": true
+    }
+  ],
+  "all_passed": true
+}
