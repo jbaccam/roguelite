@@ -1,0 +1,958 @@
+{
+  "texture_sha256": {
+    "rock": {
+      "original": "ecb5c2a7250f3ebb97f747ac0377ae34798be1b4cfc475bdbbe30d50692ba55c",
+      "copy": "ecb5c2a7250f3ebb97f747ac0377ae34798be1b4cfc475bdbbe30d50692ba55c",
+      "identical": true
+    },
+    "grass": {
+      "original": "91fed16cd66e4ec32c005c605aa0d426ce47c191adf90c38cda9d83b562ec1b3",
+      "copy": "91fed16cd66e4ec32c005c605aa0d426ce47c191adf90c38cda9d83b562ec1b3",
+      "identical": true
+    },
+    "transition": {
+      "original": "cb390c610c6cb541133e5b02cdba68bbe2f9d46efc1d9b4033c795bc904b4997",
+      "copy": "cb390c610c6cb541133e5b02cdba68bbe2f9d46efc1d9b4033c795bc904b4997",
+      "identical": true
+    }
+  },
+  "exports": [
+    {
+      "file": "exports\\glb\\broad-grass-platform.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Broad_Grass_Platform",
+          "triangles": 648,
+          "uv_loops": 1944,
+          "material": "Broad_Grass_Platform_Atlas",
+          "images": [
+            "broad_grass_platform-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 648,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\broken-rubble.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Broken_Rubble",
+          "triangles": 560,
+          "uv_loops": 1680,
+          "material": "Broken_Rubble_Atlas",
+          "images": [
+            "broken_rubble-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 560,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\concave-grass-wall.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Concave_Grass_Wall",
+          "triangles": 532,
+          "uv_loops": 1596,
+          "material": "Concave_Grass_Wall_Atlas",
+          "images": [
+            "concave_grass_wall-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 532,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\convex-grass-wall.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Convex_Grass_Wall",
+          "triangles": 532,
+          "uv_loops": 1596,
+          "material": "Convex_Grass_Wall_Atlas",
+          "images": [
+            "convex_grass_wall-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 532,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\distant-mountain-backdrop.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Distant_Mountain_Backdrop",
+          "triangles": 1192,
+          "uv_loops": 3576,
+          "material": "Distant_Mountain_Backdrop_Atlas",
+          "images": [
+            "distant_mountain_backdrop-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 1192,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\eroded-notch-wall.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Eroded_Notch_Wall",
+          "triangles": 510,
+          "uv_loops": 1530,
+          "material": "Eroded_Notch_Wall_Atlas",
+          "images": [
+            "eroded_notch_wall-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 510,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\exposed-concave-wall.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Exposed_Concave_Wall",
+          "triangles": 412,
+          "uv_loops": 1236,
+          "material": "Exposed_Concave_Wall_Atlas",
+          "images": [
+            "exposed_concave_wall-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 412,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\exposed-convex-wall.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Exposed_Convex_Wall",
+          "triangles": 412,
+          "uv_loops": 1236,
+          "material": "Exposed_Convex_Wall_Atlas",
+          "images": [
+            "exposed_convex_wall-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 412,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\exposed-long-wall.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Exposed_Long_Wall",
+          "triangles": 440,
+          "uv_loops": 1320,
+          "material": "Exposed_Long_Wall_Atlas",
+          "images": [
+            "exposed_long_wall-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 440,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\exposed-organic-corner.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Exposed_Organic_Corner",
+          "triangles": 454,
+          "uv_loops": 1362,
+          "material": "Exposed_Organic_Corner_Atlas",
+          "images": [
+            "exposed_organic_corner-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 454,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\four-rock-cluster.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Four_Rock_Cluster",
+          "triangles": 320,
+          "uv_loops": 960,
+          "material": "Four_Rock_Cluster_Atlas",
+          "images": [
+            "four_rock_cluster-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 320,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\inward-grass-corner.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Inward_Grass_Corner",
+          "triangles": 586,
+          "uv_loops": 1758,
+          "material": "Inward_Grass_Corner_Atlas",
+          "images": [
+            "inward_grass_corner-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 586,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\large-boulder.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Large_Boulder",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "Large_Boulder_Atlas",
+          "images": [
+            "large_boulder-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\long-grass-wall.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Long_Grass_Wall",
+          "triangles": 568,
+          "uv_loops": 1704,
+          "material": "Long_Grass_Wall_Atlas",
+          "images": [
+            "long_grass_wall-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 568,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\low-base-filler.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Low_Base_Filler",
+          "triangles": 292,
+          "uv_loops": 876,
+          "material": "Low_Base_Filler_Atlas",
+          "images": [
+            "low_base_filler-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 292,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\medium-boulder.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Medium_Boulder",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "Medium_Boulder_Atlas",
+          "images": [
+            "medium_boulder-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\moderate-overhang-wall.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Moderate_Overhang_Wall",
+          "triangles": 532,
+          "uv_loops": 1596,
+          "material": "Moderate_Overhang_Wall_Atlas",
+          "images": [
+            "moderate_overhang_wall-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 532,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\outward-grass-corner.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Outward_Grass_Corner",
+          "triangles": 652,
+          "uv_loops": 1956,
+          "material": "Outward_Grass_Corner_Atlas",
+          "images": [
+            "outward_grass_corner-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 652,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\path-cut-through.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Path_Cut_Through",
+          "triangles": 596,
+          "uv_loops": 1788,
+          "material": "Path_Cut_Through_Atlas",
+          "images": [
+            "path_cut_through-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 596,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\shelf-wall.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Shelf_Wall",
+          "triangles": 864,
+          "uv_loops": 2592,
+          "material": "Shelf_Wall_Atlas",
+          "images": [
+            "shelf_wall-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 864,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\sloped-height-wall.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Sloped_Height_Wall",
+          "triangles": 632,
+          "uv_loops": 1896,
+          "material": "Sloped_Height_Wall_Atlas",
+          "images": [
+            "sloped_height_wall-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 632,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\small-boulder.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Small_Boulder",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "Small_Boulder_Atlas",
+          "images": [
+            "small_boulder-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\standing-rock.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Standing_Rock",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "Standing_Rock_Atlas",
+          "images": [
+            "standing_rock-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\stepped-height-wall.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Stepped_Height_Wall",
+          "triangles": 704,
+          "uv_loops": 2112,
+          "material": "Stepped_Height_Wall_Atlas",
+          "images": [
+            "stepped_height_wall-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 704,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\tree-shelf-wall.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Tree_Shelf_Wall",
+          "triangles": 720,
+          "uv_loops": 2160,
+          "material": "Tree_Shelf_Wall_Atlas",
+          "images": [
+            "tree_shelf_wall-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 720,
+      "passed": true
+    },
+    {
+      "file": "exports\\glb\\vertical-buttress.glb",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Vertical_Buttress",
+          "triangles": 332,
+          "uv_loops": 996,
+          "material": "Vertical_Buttress_Atlas",
+          "images": [
+            "vertical_buttress-atlas"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 332,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\broad-grass-platform.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Broad_Grass_Platform",
+          "triangles": 648,
+          "uv_loops": 1452,
+          "material": "Broad_Grass_Platform_Atlas",
+          "images": [
+            "Broad_Grass_Platform_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 648,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\broken-rubble.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Broken_Rubble",
+          "triangles": 560,
+          "uv_loops": 1680,
+          "material": "Broken_Rubble_Atlas",
+          "images": [
+            "Broken_Rubble_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 560,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\concave-grass-wall.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Concave_Grass_Wall",
+          "triangles": 532,
+          "uv_loops": 1176,
+          "material": "Concave_Grass_Wall_Atlas",
+          "images": [
+            "Concave_Grass_Wall_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 532,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\convex-grass-wall.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Convex_Grass_Wall",
+          "triangles": 532,
+          "uv_loops": 1176,
+          "material": "Convex_Grass_Wall_Atlas",
+          "images": [
+            "Convex_Grass_Wall_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 532,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\distant-mountain-backdrop.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Distant_Mountain_Backdrop",
+          "triangles": 1192,
+          "uv_loops": 2536,
+          "material": "Distant_Mountain_Backdrop_Atlas",
+          "images": [
+            "Distant_Mountain_Backdrop_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 1192,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\eroded-notch-wall.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Eroded_Notch_Wall",
+          "triangles": 510,
+          "uv_loops": 1160,
+          "material": "Eroded_Notch_Wall_Atlas",
+          "images": [
+            "Eroded_Notch_Wall_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 510,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\exposed-concave-wall.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Exposed_Concave_Wall",
+          "triangles": 412,
+          "uv_loops": 936,
+          "material": "Exposed_Concave_Wall_Atlas",
+          "images": [
+            "Exposed_Concave_Wall_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 412,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\exposed-convex-wall.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Exposed_Convex_Wall",
+          "triangles": 412,
+          "uv_loops": 936,
+          "material": "Exposed_Convex_Wall_Atlas",
+          "images": [
+            "Exposed_Convex_Wall_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 412,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\exposed-long-wall.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Exposed_Long_Wall",
+          "triangles": 440,
+          "uv_loops": 1000,
+          "material": "Exposed_Long_Wall_Atlas",
+          "images": [
+            "Exposed_Long_Wall_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 440,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\exposed-organic-corner.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Exposed_Organic_Corner",
+          "triangles": 454,
+          "uv_loops": 1032,
+          "material": "Exposed_Organic_Corner_Atlas",
+          "images": [
+            "Exposed_Organic_Corner_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 454,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\four-rock-cluster.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Four_Rock_Cluster",
+          "triangles": 320,
+          "uv_loops": 960,
+          "material": "Four_Rock_Cluster_Atlas",
+          "images": [
+            "Four_Rock_Cluster_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 320,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\inward-grass-corner.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Inward_Grass_Corner",
+          "triangles": 586,
+          "uv_loops": 1296,
+          "material": "Inward_Grass_Corner_Atlas",
+          "images": [
+            "Inward_Grass_Corner_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 586,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\large-boulder.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Large_Boulder",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "Large_Boulder_Atlas",
+          "images": [
+            "Large_Boulder_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\long-grass-wall.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Long_Grass_Wall",
+          "triangles": 568,
+          "uv_loops": 1256,
+          "material": "Long_Grass_Wall_Atlas",
+          "images": [
+            "Long_Grass_Wall_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 568,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\low-base-filler.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Low_Base_Filler",
+          "triangles": 292,
+          "uv_loops": 696,
+          "material": "Low_Base_Filler_Atlas",
+          "images": [
+            "Low_Base_Filler_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 292,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\medium-boulder.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Medium_Boulder",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "Medium_Boulder_Atlas",
+          "images": [
+            "Medium_Boulder_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\moderate-overhang-wall.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Moderate_Overhang_Wall",
+          "triangles": 532,
+          "uv_loops": 1176,
+          "material": "Moderate_Overhang_Wall_Atlas",
+          "images": [
+            "Moderate_Overhang_Wall_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 532,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\outward-grass-corner.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Outward_Grass_Corner",
+          "triangles": 652,
+          "uv_loops": 1428,
+          "material": "Outward_Grass_Corner_Atlas",
+          "images": [
+            "Outward_Grass_Corner_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 652,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\path-cut-through.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Path_Cut_Through",
+          "triangles": 596,
+          "uv_loops": 1320,
+          "material": "Path_Cut_Through_Atlas",
+          "images": [
+            "Path_Cut_Through_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 596,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\shelf-wall.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Shelf_Wall",
+          "triangles": 864,
+          "uv_loops": 1904,
+          "material": "Shelf_Wall_Atlas",
+          "images": [
+            "Shelf_Wall_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 864,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\sloped-height-wall.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Sloped_Height_Wall",
+          "triangles": 632,
+          "uv_loops": 1384,
+          "material": "Sloped_Height_Wall_Atlas",
+          "images": [
+            "Sloped_Height_Wall_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 632,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\small-boulder.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Small_Boulder",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "Small_Boulder_Atlas",
+          "images": [
+            "Small_Boulder_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\standing-rock.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Standing_Rock",
+          "triangles": 80,
+          "uv_loops": 240,
+          "material": "Standing_Rock_Atlas",
+          "images": [
+            "Standing_Rock_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 80,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\stepped-height-wall.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Stepped_Height_Wall",
+          "triangles": 704,
+          "uv_loops": 1552,
+          "material": "Stepped_Height_Wall_Atlas",
+          "images": [
+            "Stepped_Height_Wall_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 704,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\tree-shelf-wall.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Tree_Shelf_Wall",
+          "triangles": 720,
+          "uv_loops": 1584,
+          "material": "Tree_Shelf_Wall_Atlas",
+          "images": [
+            "Tree_Shelf_Wall_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 720,
+      "passed": true
+    },
+    {
+      "file": "exports\\fbx\\vertical-buttress.fbx",
+      "mesh_objects": 1,
+      "parts": [
+        {
+          "name": "Vertical_Buttress",
+          "triangles": 332,
+          "uv_loops": 724,
+          "material": "Vertical_Buttress_Atlas",
+          "images": [
+            "Vertical_Buttress_Color"
+          ],
+          "base_color_image_link": true
+        }
+      ],
+      "total_triangles": 332,
+      "passed": true
+    }
+  ],
+  "all_passed": true
+}

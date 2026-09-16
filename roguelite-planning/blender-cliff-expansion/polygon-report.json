@@ -1,0 +1,369 @@
+{
+  "blender_version": "5.2.1 LTS",
+  "modules": {
+    "Long_Grass_Wall": {
+      "file_stem": "long-grass-wall",
+      "group": "Grassy_Walls",
+      "triangles": 568,
+      "vertices": 286,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        26.956209182739258,
+        7.460522651672363,
+        10.099374771118164
+      ],
+      "usage": "Straight front; overlap ends 1\u20132 units."
+    },
+    "Concave_Grass_Wall": {
+      "file_stem": "concave-grass-wall",
+      "group": "Grassy_Walls",
+      "triangles": 532,
+      "vertices": 268,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        24.887222290039062,
+        10.201225280761719,
+        10.12359619140625
+      ],
+      "usage": "Arena-facing negative-Y side curves inward."
+    },
+    "Convex_Grass_Wall": {
+      "file_stem": "convex-grass-wall",
+      "group": "Grassy_Walls",
+      "triangles": 532,
+      "vertices": 268,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        24.963607788085938,
+        10.262080192565918,
+        10.096349716186523
+      ],
+      "usage": "Arena-facing negative-Y side bulges outward."
+    },
+    "Inward_Grass_Corner": {
+      "file_stem": "inward-grass-corner",
+      "group": "Grassy_Walls",
+      "triangles": 586,
+      "vertices": 295,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        16.51569938659668,
+        16.647663116455078,
+        10.074898719787598
+      ],
+      "usage": "Organic L corner; rotate to fit perimeter."
+    },
+    "Outward_Grass_Corner": {
+      "file_stem": "outward-grass-corner",
+      "group": "Grassy_Walls",
+      "triangles": 652,
+      "vertices": 328,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        16.64476776123047,
+        16.59427833557129,
+        11.076812744140625
+      ],
+      "usage": "Mirrored outward corner with asymmetric arms."
+    },
+    "Sloped_Height_Wall": {
+      "file_stem": "sloped-height-wall",
+      "group": "Grassy_Walls",
+      "triangles": 632,
+      "vertices": 318,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        24.90334129333496,
+        8.498458862304688,
+        12.040705680847168
+      ],
+      "usage": "Smooth top grade from 5 to 12; preserve scale when connecting."
+    },
+    "Stepped_Height_Wall": {
+      "file_stem": "stepped-height-wall",
+      "group": "Grassy_Walls",
+      "triangles": 704,
+      "vertices": 356,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        23.480331420898438,
+        8.482855796813965,
+        11.075695037841797
+      ],
+      "usage": "Two levels with one-unit overlap; step is not a walking ramp."
+    },
+    "Broad_Grass_Platform": {
+      "file_stem": "broad-grass-platform",
+      "group": "Grassy_Walls",
+      "triangles": 648,
+      "vertices": 326,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        28.915746688842773,
+        17.568004608154297,
+        5.889601707458496
+      ],
+      "usage": "Broad irregular platform for several props."
+    },
+    "Moderate_Overhang_Wall": {
+      "file_stem": "moderate-overhang-wall",
+      "group": "Grassy_Walls",
+      "triangles": 532,
+      "vertices": 268,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        23.587154388427734,
+        8.76033878326416,
+        10.086174964904785
+      ],
+      "usage": "Grass lip expands moderately, around 0.6 unit per side."
+    },
+    "Exposed_Long_Wall": {
+      "file_stem": "exposed-long-wall",
+      "group": "Exposed_Rock",
+      "triangles": 440,
+      "vertices": 222,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        26.167095184326172,
+        7.238582611083984,
+        12.056480407714844
+      ],
+      "usage": "Exposed rock only; no grass cap."
+    },
+    "Exposed_Concave_Wall": {
+      "file_stem": "exposed-concave-wall",
+      "group": "Exposed_Rock",
+      "triangles": 412,
+      "vertices": 208,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        24.089866638183594,
+        9.785728454589844,
+        12.077740669250488
+      ],
+      "usage": "Exposed rock only; no grass cap."
+    },
+    "Exposed_Convex_Wall": {
+      "file_stem": "exposed-convex-wall",
+      "group": "Exposed_Rock",
+      "triangles": 412,
+      "vertices": 208,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        24.176559448242188,
+        9.941292762756348,
+        12.088360786437988
+      ],
+      "usage": "Exposed rock only; no grass cap."
+    },
+    "Exposed_Organic_Corner": {
+      "file_stem": "exposed-organic-corner",
+      "group": "Exposed_Rock",
+      "triangles": 454,
+      "vertices": 229,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        16.20656967163086,
+        16.051748275756836,
+        12.095331192016602
+      ],
+      "usage": "Exposed rock only; no grass cap."
+    },
+    "Vertical_Buttress": {
+      "file_stem": "vertical-buttress",
+      "group": "Exposed_Rock",
+      "triangles": 332,
+      "vertices": 168,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        9.979233741760254,
+        9.176576614379883,
+        18.65909767150879
+      ],
+      "usage": "Narrow wall support for breaking long wall repetition."
+    },
+    "Eroded_Notch_Wall": {
+      "file_stem": "eroded-notch-wall",
+      "group": "Exposed_Rock",
+      "triangles": 510,
+      "vertices": 257,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        26.1947021484375,
+        8.2366943359375,
+        11.089595794677734
+      ],
+      "usage": "Broad wall with broken inward notch."
+    },
+    "Low_Base_Filler": {
+      "file_stem": "low-base-filler",
+      "group": "Scatter_and_Fillers",
+      "triangles": 292,
+      "vertices": 148,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        24.001941680908203,
+        8.02353572845459,
+        3.3708090782165527
+      ],
+      "usage": "Low broad exposed rock to conceal seams and wall bases."
+    },
+    "Small_Boulder": {
+      "file_stem": "small-boulder",
+      "group": "Scatter_and_Fillers",
+      "triangles": 80,
+      "vertices": 42,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        3.814910888671875,
+        2.942476272583008,
+        2.388758420944214
+      ],
+      "usage": "Standalone exposed rock; base at Z=0."
+    },
+    "Medium_Boulder": {
+      "file_stem": "medium-boulder",
+      "group": "Scatter_and_Fillers",
+      "triangles": 80,
+      "vertices": 42,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        6.556055068969727,
+        4.421937942504883,
+        4.091007232666016
+      ],
+      "usage": "Standalone exposed rock; base at Z=0."
+    },
+    "Large_Boulder": {
+      "file_stem": "large-boulder",
+      "group": "Scatter_and_Fillers",
+      "triangles": 80,
+      "vertices": 42,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        9.641490936279297,
+        6.915484428405762,
+        5.8831329345703125
+      ],
+      "usage": "Standalone exposed rock; base at Z=0."
+    },
+    "Standing_Rock": {
+      "file_stem": "standing-rock",
+      "group": "Scatter_and_Fillers",
+      "triangles": 80,
+      "vertices": 42,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        4.606633186340332,
+        3.7480578422546387,
+        8.576244354248047
+      ],
+      "usage": "Standalone exposed rock; base at Z=0."
+    },
+    "Four_Rock_Cluster": {
+      "file_stem": "four-rock-cluster",
+      "group": "Scatter_and_Fillers",
+      "triangles": 320,
+      "vertices": 168,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        8.74930477142334,
+        5.806945323944092,
+        4.204211235046387
+      ],
+      "usage": "Four joined disconnected rock shells for quick dressing."
+    },
+    "Broken_Rubble": {
+      "file_stem": "broken-rubble",
+      "group": "Scatter_and_Fillers",
+      "triangles": 560,
+      "vertices": 294,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        12.918014526367188,
+        4.193970680236816,
+        1.8980447053909302
+      ],
+      "usage": "Seven broken stones in one mesh; for cliff/ground junctions."
+    },
+    "Shelf_Wall": {
+      "file_stem": "shelf-wall",
+      "group": "Special_Modules",
+      "triangles": 864,
+      "vertices": 436,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        22.782638549804688,
+        12.456014633178711,
+        13.036930084228516
+      ],
+      "usage": "Integrated 13\u00d78 lower grassy shelf; overlap into taller wall."
+    },
+    "Tree_Shelf_Wall": {
+      "file_stem": "tree-shelf-wall",
+      "group": "Special_Modules",
+      "triangles": 720,
+      "vertices": 364,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        17.703006744384766,
+        12.332113265991211,
+        11.027090072631836
+      ],
+      "usage": "Lower 8\u00d78 grassy shelf suitable for a pine tree prop."
+    },
+    "Path_Cut_Through": {
+      "file_stem": "path-cut-through",
+      "group": "Special_Modules",
+      "triangles": 596,
+      "vertices": 302,
+      "materials": 1,
+      "atlas_size": 2048,
+      "dimensions": [
+        25.476848602294922,
+        10.546560287475586,
+        10.09970760345459
+      ],
+      "usage": "Open central passage, approximately 6.5 units clear; add your own dirt path."
+    },
+    "Distant_Mountain_Backdrop": {
+      "file_stem": "distant-mountain-backdrop",
+      "group": "Special_Modules",
+      "triangles": 1192,
+      "vertices": 598,
+      "materials": 1,
+      "atlas_size": 4096,
+      "dimensions": [
+        46.97735595703125,
+        19.800745010375977,
+        31.468461990356445
+      ],
+      "usage": "Distant exposed mountain wall; same nominal source texture scale."
+    }
+  }
+}
