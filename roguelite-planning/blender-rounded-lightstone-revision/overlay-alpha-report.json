@@ -1,0 +1,30 @@
+{
+  "ChatGPT Image Sep 16, 2026, 04_33_16 PM (1).png": {
+    "channels": 4,
+    "alpha_min": 0.0,
+    "alpha_max": 1.0,
+    "transparent_fraction": 0.7409737007445393,
+    "sha256": "51247e83576805ca969788d3d37eec4caabe0edfd4f87418ca0192961b169e28"
+  },
+  "ChatGPT Image Sep 16, 2026, 04_33_16 PM (2).png": {
+    "channels": 4,
+    "alpha_min": 0.0,
+    "alpha_max": 1.0,
+    "transparent_fraction": 0.5684539934728804,
+    "sha256": "f3833ffefb5d82b0acd68de30d91ece10e80c90909e94f012ae758367401f6bf"
+  },
+  "ChatGPT Image Sep 16, 2026, 04_33_16 PM (3).png": {
+    "channels": 4,
+    "alpha_min": 0.0,
+    "alpha_max": 1.0,
+    "transparent_fraction": 0.7883427194937069,
+    "sha256": "6cb5a80affbb2e320e3a8d2b5c211d34b1dc18f806a138cb02388e929a8fa22b"
+  },
+  "ChatGPT Image Sep 16, 2026, 04_33_17 PM (4).png": {
+    "channels": 4,
+    "alpha_min": 0.0,
+    "alpha_max": 1.0,
+    "transparent_fraction": 0.6057284830540378,
+    "sha256": "345c8287b13054a0869b7ae08a104e180345cbce998db8c6017197ccf459ca12"
+  }
+}

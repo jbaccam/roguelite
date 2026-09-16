@@ -1,0 +1,233 @@
+{
+  "blender_version": "5.2.1 LTS",
+  "modules": {
+    "01_Short_Squat_Grass": {
+      "file_stem": "01-short-squat-grass",
+      "triangles": 804,
+      "vertices": 404,
+      "materials": 1,
+      "dimensions": [
+        8.021342277526855,
+        7.280717849731445,
+        4.786563396453857
+      ],
+      "atlas_size": 2048
+    },
+    "02_Medium_Grass": {
+      "file_stem": "02-medium-grass",
+      "triangles": 798,
+      "vertices": 401,
+      "materials": 1,
+      "dimensions": [
+        8.57907485961914,
+        7.616178512573242,
+        8.800248146057129
+      ],
+      "atlas_size": 2048
+    },
+    "03_Tall_Narrow_Grass": {
+      "file_stem": "03-tall-narrow-grass",
+      "triangles": 860,
+      "vertices": 432,
+      "materials": 1,
+      "dimensions": [
+        7.973809242248535,
+        6.735424518585205,
+        14.396145820617676
+      ],
+      "atlas_size": 2048
+    },
+    "04_Wide_Low_Plateau": {
+      "file_stem": "04-wide-low-plateau",
+      "triangles": 990,
+      "vertices": 497,
+      "materials": 1,
+      "dimensions": [
+        18.36430549621582,
+        13.479005813598633,
+        3.9859864711761475
+      ],
+      "atlas_size": 2048
+    },
+    "05_Broad_Medium_Plateau": {
+      "file_stem": "05-broad-medium-plateau",
+      "triangles": 998,
+      "vertices": 501,
+      "materials": 1,
+      "dimensions": [
+        15.908100128173828,
+        13.100112915039062,
+        7.696900367736816
+      ],
+      "atlas_size": 2048
+    },
+    "06_Tall_Wide_Mass": {
+      "file_stem": "06-tall-wide-mass",
+      "triangles": 1072,
+      "vertices": 538,
+      "materials": 1,
+      "dimensions": [
+        16.320026397705078,
+        13.01995849609375,
+        13.376635551452637
+      ],
+      "atlas_size": 2048
+    },
+    "07_Slightly_Tapered_Grass": {
+      "file_stem": "07-slightly-tapered-grass",
+      "triangles": 798,
+      "vertices": 401,
+      "materials": 1,
+      "dimensions": [
+        10.356525421142578,
+        9.061853408813477,
+        9.19838809967041
+      ],
+      "atlas_size": 2048
+    },
+    "08_Double_Eroded_Terrace": {
+      "file_stem": "08-double-eroded-terrace",
+      "triangles": 1774,
+      "vertices": 891,
+      "materials": 1,
+      "dimensions": [
+        20.71953582763672,
+        14.858415603637695,
+        11.605205535888672
+      ],
+      "atlas_size": 2048
+    },
+    "09_Triple_Eroded_Terrace": {
+      "file_stem": "09-triple-eroded-terrace",
+      "triangles": 2808,
+      "vertices": 1410,
+      "materials": 1,
+      "dimensions": [
+        21.921602249145508,
+        14.825847625732422,
+        14.270000457763672
+      ],
+      "atlas_size": 2048
+    },
+    "10_Bare_Low_Filler": {
+      "file_stem": "10-bare-low-filler",
+      "triangles": 80,
+      "vertices": 42,
+      "materials": 1,
+      "dimensions": [
+        11.986343383789062,
+        8.370407104492188,
+        2.9208598136901855
+      ],
+      "atlas_size": 2048
+    },
+    "11_Medium_Boulder": {
+      "file_stem": "11-medium-boulder",
+      "triangles": 80,
+      "vertices": 42,
+      "materials": 1,
+      "dimensions": [
+        6.781913757324219,
+        5.519160270690918,
+        4.708181858062744
+      ],
+      "atlas_size": 2048
+    },
+    "12_Large_Boulder": {
+      "file_stem": "12-large-boulder",
+      "triangles": 80,
+      "vertices": 42,
+      "materials": 1,
+      "dimensions": [
+        10.628684997558594,
+        8.646673202514648,
+        6.645061016082764
+      ],
+      "atlas_size": 2048
+    },
+    "13_Rock_Cluster": {
+      "file_stem": "13-rock-cluster",
+      "triangles": 320,
+      "vertices": 168,
+      "materials": 1,
+      "dimensions": [
+        10.131604194641113,
+        7.3177490234375,
+        5.027630805969238
+      ],
+      "atlas_size": 2048
+    },
+    "14_Standing_Narrow_Rock": {
+      "file_stem": "14-standing-narrow-rock",
+      "triangles": 80,
+      "vertices": 42,
+      "materials": 1,
+      "dimensions": [
+        5.38887882232666,
+        4.263914585113525,
+        10.717269897460938
+      ],
+      "atlas_size": 2048
+    },
+    "15_Short_Moss_Only": {
+      "file_stem": "15-short-moss-only",
+      "triangles": 804,
+      "vertices": 404,
+      "materials": 1,
+      "dimensions": [
+        8.021370887756348,
+        7.280717849731445,
+        4.786563396453857
+      ],
+      "atlas_size": 2048
+    },
+    "16_Medium_Moss_Only": {
+      "file_stem": "16-medium-moss-only",
+      "triangles": 798,
+      "vertices": 401,
+      "materials": 1,
+      "dimensions": [
+        8.57907485961914,
+        7.616178512573242,
+        8.800248146057129
+      ],
+      "atlas_size": 2048
+    },
+    "17_Tall_Moss_Only": {
+      "file_stem": "17-tall-moss-only",
+      "triangles": 860,
+      "vertices": 432,
+      "materials": 1,
+      "dimensions": [
+        7.973809242248535,
+        6.735424518585205,
+        14.396145820617676
+      ],
+      "atlas_size": 2048
+    },
+    "18_Wide_Low_Moss_Only": {
+      "file_stem": "18-wide-low-moss-only",
+      "triangles": 988,
+      "vertices": 496,
+      "materials": 1,
+      "dimensions": [
+        18.36431121826172,
+        13.479005813598633,
+        3.9859864711761475
+      ],
+      "atlas_size": 2048
+    },
+    "19_Mossy_Boulder_Filler": {
+      "file_stem": "19-mossy-boulder-filler",
+      "triangles": 80,
+      "vertices": 42,
+      "materials": 1,
+      "dimensions": [
+        10.419829368591309,
+        8.795434951782227,
+        5.7471208572387695
+      ],
+      "atlas_size": 2048
+    }
+  }
+}
