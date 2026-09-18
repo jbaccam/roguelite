@@ -1,0 +1,35 @@
+{
+  "name": "Glock (approved)",
+  "formats": {
+    "glb": {
+      "meshes": 1,
+      "triangles": 2344,
+      "finite_coordinates": true,
+      "bounds": [
+        6.820516347885132,
+        1.3650000095367432,
+        4.973444938659668
+      ],
+      "unwanted_cameras_or_lights": [],
+      "image_count": 1,
+      "unloaded_images": [],
+      "has_uvs": true,
+      "zero_area_faces": 0
+    },
+    "fbx": {
+      "meshes": 1,
+      "triangles": 2344,
+      "finite_coordinates": true,
+      "bounds": [
+        6.820516347885132,
+        1.3650000095367432,
+        4.973445024341345
+      ],
+      "unwanted_cameras_or_lights": [],
+      "image_count": 1,
+      "unloaded_images": [],
+      "has_uvs": true,
+      "zero_area_faces": 0
+    }
+  }
+}

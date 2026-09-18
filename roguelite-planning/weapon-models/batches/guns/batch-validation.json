@@ -1,0 +1,72 @@
+[
+  {
+    "index": 7,
+    "name": "Draco",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\07-draco",
+    "triangles": 2446,
+    "geometry_checks_pass": true,
+    "exports_pass": true,
+    "files_pass": true,
+    "reference_pass": true
+  },
+  {
+    "index": 8,
+    "name": "Fart Gun",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\08-fart-gun",
+    "triangles": 4068,
+    "geometry_checks_pass": true,
+    "exports_pass": true,
+    "files_pass": true,
+    "reference_pass": true
+  },
+  {
+    "index": 9,
+    "name": "Shotgun",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\09-shotgun",
+    "triangles": 1440,
+    "geometry_checks_pass": true,
+    "exports_pass": true,
+    "files_pass": true,
+    "reference_pass": true
+  },
+  {
+    "index": 10,
+    "name": "T-Shirt Cannon",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\10-t-shirt-cannon",
+    "triangles": 2276,
+    "geometry_checks_pass": true,
+    "exports_pass": true,
+    "files_pass": true,
+    "reference_pass": true
+  },
+  {
+    "index": 11,
+    "name": "Rocket Launcher",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\11-rocket-launcher",
+    "triangles": 2560,
+    "geometry_checks_pass": true,
+    "exports_pass": true,
+    "files_pass": true,
+    "reference_pass": true
+  },
+  {
+    "index": 24,
+    "name": "Nail Gun",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\24-nail-gun",
+    "triangles": 3488,
+    "geometry_checks_pass": true,
+    "exports_pass": true,
+    "files_pass": true,
+    "reference_pass": true
+  },
+  {
+    "index": 29,
+    "name": "Power Washer",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\29-power-washer",
+    "triangles": 2992,
+    "geometry_checks_pass": true,
+    "exports_pass": true,
+    "files_pass": true,
+    "reference_pass": true
+  }
+]

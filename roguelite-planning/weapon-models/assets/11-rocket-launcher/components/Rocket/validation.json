@@ -1,0 +1,79 @@
+{
+  "index": 11,
+  "name": "Rocket",
+  "vertices": 258,
+  "triangles": 484,
+  "mesh_objects": 1,
+  "materials": 1,
+  "UV": true,
+  "texture": "1024x1024 packed BaseColor.png",
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "bounds_dimensions": [
+    3.5199999809265137,
+    0.9168184995651245,
+    0.9639999866485596
+  ],
+  "limitations": [
+    "Single-view reconstruction: reverse details mirrored or inferred.",
+    "Assembly has intentional intersecting closed components.",
+    "No Studio import or gameplay integration performed."
+  ],
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "nonmesh_objects": 0,
+    "triangles": 484,
+    "matches_source": true,
+    "zero_area_triangles": 0,
+    "UV": true,
+    "texture_images": 1,
+    "textures_loaded": true,
+    "passed": true
+  },
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "nonmesh_objects": 0,
+    "triangles": 484,
+    "matches_source": true,
+    "zero_area_triangles": 0,
+    "UV": true,
+    "texture_images": 1,
+    "textures_loaded": true,
+    "passed": true
+  },
+  "geometry": {
+    "vertices": 258,
+    "triangles": 484,
+    "nonmanifold_edges": 0,
+    "loose_vertices": 0,
+    "zero_area_faces": 0,
+    "dimensions": [
+      3.5199999809265137,
+      0.9168184995651245,
+      0.9639999866485596
+    ]
+  },
+  "pivot": {
+    "type": "Warhead rear shoulder / insertion socket on centerline",
+    "local_forward": "+X",
+    "blend_world_location": [
+      0,
+      0,
+      0
+    ],
+    "export_root_translation": [
+      0,
+      0,
+      0
+    ]
+  },
+  "separate_component": true,
+  "contains_rocket": true,
+  "blend_asset_meshes": 1,
+  "blend_textures_packed": true,
+  "previews_visually_reviewed": true,
+  "blend_total_objects": 1,
+  "blend_total_meshes": 1,
+  "blend_stage_removed": true
+}

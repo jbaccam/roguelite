@@ -1,0 +1,66 @@
+{
+  "status": "Static separated assets; no animations",
+  "launcher": "Model.blend / Model.fbx / Model.glb",
+  "rocket_files": "components/Rocket/Model.blend / Model.fbx / Model.glb",
+  "launcher_contains_rocket": false,
+  "independent_exports": true,
+  "launcher_bore": {
+    "axis": "+X",
+    "nominal_inner_radius_at_tube_front": 0.5,
+    "inner_radius_at_backstop": 0.43,
+    "muzzle_rim_x_original": 2.04,
+    "backstop_x_original": -0.9,
+    "clear_centerline_depth": 2.94
+  },
+  "rocket": {
+    "forward_axis": "+X",
+    "tip_x_local": 1.08,
+    "rear_x_local": -2.44,
+    "maximum_radius": 0.482,
+    "tail_fin_radius_max": 0.401,
+    "full_length": 3.52,
+    "pivot": "Warhead rear shoulder, on centerline",
+    "blend_geometry_only": true
+  },
+  "alignment": {
+    "coordinate_system": "Blender right-handed Z-up, +X forward; units match primary model",
+    "launcher_socket_world": [
+      1.6400001049041748,
+      0.0,
+      1.6449998617172241
+    ],
+    "rocket_export_root": [
+      0,
+      0,
+      0
+    ],
+    "rocket_loaded_matrix_relative_to_launcher_object": "Identity: same rotation, position and scale as the launcher mesh object because both origins share the insertion shoulder.",
+    "rocket_blend_to_loaded_world_translation": [
+      1.6400001049041748,
+      0.0,
+      1.6449998617172241
+    ],
+    "fbx_axes": {
+      "forward": "-Z",
+      "up": "Y"
+    },
+    "glb_conversion": "Blender exporter converts Z-up to glTF Y-up for both assets consistently.",
+    "rocket_blend_root": [
+      0,
+      0,
+      0
+    ]
+  },
+  "checks": {
+    "empty_bore_ray_pass": true,
+    "launcher_round_trips": true,
+    "rocket_round_trips": true,
+    "launcher_triangles": 2588,
+    "rocket_triangles": 484
+  },
+  "limitations": [
+    "Hidden rocket rear is an inferred stylized cylinder with four low-profile tail fins.",
+    "No functional internal mechanism or engine details.",
+    "No animation, attachments in Studio, or gameplay scripts added."
+  ]
+}

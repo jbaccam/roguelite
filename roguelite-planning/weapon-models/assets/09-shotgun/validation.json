@@ -1,0 +1,40 @@
+{
+  "index": 9,
+  "name": "Shotgun",
+  "vertices": 744,
+  "triangles": 1440,
+  "mesh_objects": 1,
+  "materials": 1,
+  "UV": true,
+  "texture": "1024x1024 packed BaseColor.png",
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "bounds_dimensions": [
+    6.659999847412109,
+    0.8579999804496765,
+    2.3841631412506104
+  ],
+  "limitations": [
+    "Single-view reconstruction: reverse details mirrored or inferred.",
+    "Assembly has intentional intersecting closed components.",
+    "No Studio import or gameplay integration performed."
+  ],
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "triangles": 1440,
+    "matches_source": true,
+    "zero_area_triangles": 0,
+    "UV": true
+  },
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "triangles": 1440,
+    "matches_source": true,
+    "zero_area_triangles": 0,
+    "UV": true
+  },
+  "reference_sha256_matches": true,
+  "required_deliverables_present": true,
+  "preview_visually_reviewed": true
+}

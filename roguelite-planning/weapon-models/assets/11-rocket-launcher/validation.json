@@ -1,0 +1,88 @@
+{
+  "index": 11,
+  "name": "Rocket Launcher",
+  "vertices": 1338,
+  "triangles": 2588,
+  "mesh_objects": 1,
+  "materials": 1,
+  "UV": true,
+  "texture": "1024x1024 packed BaseColor.png",
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "bounds_dimensions": [
+    4.889999866485596,
+    1.6548383235931396,
+    2.764423370361328
+  ],
+  "limitations": [
+    "Single-view reconstruction: reverse details mirrored or inferred.",
+    "Assembly has intentional intersecting closed components.",
+    "No Studio import or gameplay integration performed."
+  ],
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "nonmesh_objects": 0,
+    "triangles": 2588,
+    "matches_source": true,
+    "zero_area_triangles": 0,
+    "UV": true,
+    "texture_images": 1,
+    "textures_loaded": true,
+    "passed": true
+  },
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "nonmesh_objects": 0,
+    "triangles": 2588,
+    "matches_source": true,
+    "zero_area_triangles": 0,
+    "UV": true,
+    "texture_images": 1,
+    "textures_loaded": true,
+    "passed": true
+  },
+  "geometry": {
+    "vertices": 1338,
+    "triangles": 2588,
+    "nonmanifold_edges": 0,
+    "loose_vertices": 0,
+    "zero_area_faces": 0,
+    "dimensions": [
+      4.8899993896484375,
+      1.6548383235931396,
+      2.764423370361328
+    ]
+  },
+  "pivot": {
+    "type": "Warhead rear shoulder / insertion socket on centerline",
+    "local_forward": "+X",
+    "blend_world_location": [
+      1.6400001049041748,
+      0.0,
+      1.6449998617172241
+    ],
+    "export_root_translation": [
+      1.6400001049041748,
+      0.0,
+      1.6449998617172241
+    ]
+  },
+  "separate_component": false,
+  "contains_rocket": false,
+  "empty_bore_ray_check": {
+    "hit": true,
+    "ray_from_original": [
+      2.2,
+      0,
+      2.1
+    ],
+    "first_axial_surface_original_x": -0.9000000953674316,
+    "expected_backstop_x": -0.9,
+    "open_depth_from_muzzle": 2.9400000953674317,
+    "pass": true
+  },
+  "blend_asset_meshes": 1,
+  "blend_textures_packed": true,
+  "previews_visually_reviewed": true
+}

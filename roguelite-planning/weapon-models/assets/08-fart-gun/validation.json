@@ -1,0 +1,40 @@
+{
+  "index": 8,
+  "name": "Fart Gun",
+  "vertices": 2110,
+  "triangles": 4068,
+  "mesh_objects": 1,
+  "materials": 1,
+  "UV": true,
+  "texture": "2048x2048 packed BaseColor.png",
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "bounds_dimensions": [
+    4.880000114440918,
+    1.921134114265442,
+    4.130000114440918
+  ],
+  "limitations": [
+    "Single-view reconstruction: reverse details mirrored or inferred.",
+    "Assembly has intentional intersecting closed components.",
+    "No Studio import or gameplay integration performed."
+  ],
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "triangles": 4068,
+    "matches_source": true,
+    "zero_area_triangles": 0,
+    "UV": true
+  },
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "triangles": 4068,
+    "matches_source": true,
+    "zero_area_triangles": 0,
+    "UV": true
+  },
+  "reference_sha256_matches": true,
+  "required_deliverables_present": true,
+  "preview_visually_reviewed": true
+}

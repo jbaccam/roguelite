@@ -1,0 +1,23 @@
+{
+  "vertices": 1268,
+  "triangles": 2344,
+  "mesh_objects": 1,
+  "materials": 1,
+  "texture": "1024 x 1024 base color",
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "dimensions": [
+    6.820516586303711,
+    1.3650000095367432,
+    4.973444938659668
+  ],
+  "status": "User visually approved. Delivery copy cleaned; Roblox import not performed.",
+  "faces": 1358,
+  "zero_area_faces": 0,
+  "cleanup": "Delivery copy only: welded coincident vertices and dissolved invisible zero-area bevel faces; original approved file untouched.",
+  "before_cleanup": {
+    "vertices": 1390,
+    "faces": 1479,
+    "zero_area_faces": 121
+  }
+}
