@@ -1,0 +1,83 @@
+{
+  "date": "2026-09-17",
+  "animation": {
+    "Zombie_01": {
+      "maxHandZ": -1.7637767791748047,
+      "maxSpeed": 15.20189094543457,
+      "maxHip": 0.5767983198165894,
+      "minHip": -0.5637567043304443,
+      "mesh": "rbxassetid://78893098815517"
+    },
+    "Zombie_02": {
+      "maxHandZ": -1.7638236284255981,
+      "maxSpeed": 15.20418930053711,
+      "maxHip": 0.5727236270904541,
+      "minHip": -0.5623177886009216,
+      "mesh": "rbxassetid://78893098815517"
+    },
+    "Zombie_04": {
+      "maxHandZ": -1.7631988525390625,
+      "maxSpeed": 15.204593658447266,
+      "maxHip": 0.5881847143173218,
+      "minHip": -0.5914232730865479,
+      "mesh": "rbxassetid://78893098815517"
+    },
+    "Zombie_05": {
+      "maxHandZ": -1.7632896900177002,
+      "maxSpeed": 15.20246410369873,
+      "maxHip": 0.5855303406715393,
+      "minHip": -0.5862364768981934,
+      "mesh": "rbxassetid://78893098815517"
+    },
+    "Zombie_03": {
+      "maxHandZ": -1.7634190320968628,
+      "maxSpeed": 15.202460289001465,
+      "maxHip": 0.5797561407089233,
+      "minHip": -0.5788470506668091,
+      "mesh": "rbxassetid://78893098815517"
+    }
+  },
+  "server": {
+    "count": 5,
+    "displayTagged": false,
+    "allDisplayAnchored": true,
+    "displayPosition": "70, 5, 410",
+    "enemies": [
+      {
+        "name": "Zombie_01",
+        "headMesh": "rbxassetid://78893098815517",
+        "speed": 15.199999809265137,
+        "owner": "nil",
+        "chasing": true
+      },
+      {
+        "name": "Zombie_02",
+        "headMesh": "rbxassetid://78893098815517",
+        "speed": 15.199999809265137,
+        "owner": "nil",
+        "chasing": true
+      },
+      {
+        "name": "Zombie_03",
+        "headMesh": "rbxassetid://78893098815517",
+        "speed": 15.199999809265137,
+        "owner": "nil",
+        "chasing": true
+      },
+      {
+        "name": "Zombie_04",
+        "headMesh": "rbxassetid://78893098815517",
+        "speed": 15.199999809265137,
+        "owner": "nil",
+        "chasing": true
+      },
+      {
+        "name": "Zombie_05",
+        "headMesh": "rbxassetid://78893098815517",
+        "speed": 15.199999809265137,
+        "owner": "nil",
+        "chasing": true
+      }
+    ]
+  }
+}
