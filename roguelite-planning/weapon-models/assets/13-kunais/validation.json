@@ -1,0 +1,43 @@
+{
+  "index": 13,
+  "name": "Kunais",
+  "vertices": 342,
+  "triangles": 664,
+  "mesh_objects": 1,
+  "materials": 1,
+  "uv_layers": 1,
+  "texture": "1024x1024 packed base color",
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "bounds": [
+    0.8399999737739563,
+    0.41999998688697815,
+    3.354119062423706
+  ],
+  "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "triangles": 664,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0,
+    "all_faces_triangular": true,
+    "texture_pixels_loaded": true,
+    "triangle_count_matches": true
+  },
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "triangles": 664,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0,
+    "all_faces_triangular": true,
+    "texture_pixels_loaded": true,
+    "triangle_count_matches": true
+  },
+  "blend_packed_texture": true,
+  "named_component_groups": 6,
+  "all_source_faces_triangular": true,
+  "reference_sha256_matches": true
+}

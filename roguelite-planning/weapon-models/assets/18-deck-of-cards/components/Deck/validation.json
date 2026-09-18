@@ -1,0 +1,27 @@
+{
+  "name": "Deck",
+  "mesh_objects": 1,
+  "vertices": 926,
+  "triangles": 1772,
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "pivot": "Geometry bounds center, located at world origin",
+  "parent": null,
+  "uv_layers": 1,
+  "packed_texture": true,
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "triangles": 1772,
+    "all_faces_triangular": true,
+    "texture_pixels_loaded": true,
+    "unexpected_stage_objects": 0
+  },
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "triangles": 1772,
+    "all_faces_triangular": true,
+    "texture_pixels_loaded": true,
+    "unexpected_stage_objects": 0
+  }
+}

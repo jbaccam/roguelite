@@ -1,0 +1,43 @@
+{
+  "index": 14,
+  "name": "Molotovs",
+  "vertices": 385,
+  "triangles": 734,
+  "mesh_objects": 1,
+  "materials": 1,
+  "uv_layers": 1,
+  "texture": "1024x1024 packed base color",
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "bounds": [
+    2.6899755001068115,
+    1.0271410942077637,
+    4.015407085418701
+  ],
+  "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "triangles": 734,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0,
+    "all_faces_triangular": true,
+    "texture_pixels_loaded": true,
+    "triangle_count_matches": true
+  },
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "triangles": 734,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0,
+    "all_faces_triangular": true,
+    "texture_pixels_loaded": true,
+    "triangle_count_matches": true
+  },
+  "blend_packed_texture": true,
+  "named_component_groups": 9,
+  "all_source_faces_triangular": true,
+  "reference_sha256_matches": true
+}

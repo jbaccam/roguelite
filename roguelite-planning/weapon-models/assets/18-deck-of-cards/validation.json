@@ -1,0 +1,72 @@
+{
+  "index": 18,
+  "name": "Deck of Cards",
+  "vertices": 1388,
+  "triangles": 2648,
+  "mesh_objects": 4,
+  "materials": 1,
+  "uv_layers": 1,
+  "texture": "1024x1024 packed base color",
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "bounds": [
+    4.162827491760254,
+    0.7870000600814819,
+    4.031281471252441
+  ],
+  "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+  "glb_reimport": {
+    "mesh_objects": 4,
+    "triangles": 2648,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0,
+    "all_faces_triangular": true,
+    "texture_pixels_loaded": true,
+    "triangle_count_matches": true
+  },
+  "fbx_reimport": {
+    "mesh_objects": 4,
+    "triangles": 2648,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0,
+    "all_faces_triangular": true,
+    "texture_pixels_loaded": true,
+    "triangle_count_matches": true
+  },
+  "component_objects": [
+    "Deck",
+    "HeartCard",
+    "SpadeCard",
+    "DiamondCard"
+  ],
+  "unparented_components": true,
+  "independent_components": [
+    {
+      "name": "Deck",
+      "directory": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\18-deck-of-cards\\components\\Deck",
+      "triangles": 1772
+    },
+    {
+      "name": "HeartCard",
+      "directory": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\18-deck-of-cards\\components\\HeartCard",
+      "triangles": 296
+    },
+    {
+      "name": "SpadeCard",
+      "directory": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\18-deck-of-cards\\components\\SpadeCard",
+      "triangles": 356
+    },
+    {
+      "name": "DiamondCard",
+      "directory": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\18-deck-of-cards\\components\\DiamondCard",
+      "triangles": 224
+    }
+  ],
+  "blend_packed_texture": true,
+  "named_component_groups": 160,
+  "all_source_faces_triangular": true,
+  "reference_sha256_matches": true
+}
