@@ -1,0 +1,41 @@
+{
+  "blend": {
+    "parts": 15,
+    "bones": 16,
+    "uv_and_weights": "pass",
+    "closed_shells": "pass",
+    "elbow_motion": 0.5354591711134464,
+    "unrelated_foot_motion": 0.0,
+    "vertical_bounds": [
+      -5.960464477539063e-08,
+      6.789999961853027
+    ],
+    "textures_loaded": true
+  },
+  "fbx": {
+    "parts": 15,
+    "bones": 16,
+    "uv_and_weights": "pass",
+    "closed_shells": "pass",
+    "elbow_motion": 0.5354592028556172,
+    "unrelated_foot_motion": 0.0,
+    "vertical_bounds": [
+      -7.580261041084668e-08,
+      6.789999961853027
+    ],
+    "textures_loaded": true
+  },
+  "glb": {
+    "parts": 15,
+    "bones": 16,
+    "uv_and_weights": "pass",
+    "closed_shells": "pass",
+    "elbow_motion": 0.5354594096145191,
+    "unrelated_foot_motion": 0.0,
+    "vertical_bounds": [
+      -7.450582728552035e-08,
+      6.789999961853027
+    ],
+    "textures_loaded": true
+  }
+}
