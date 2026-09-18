@@ -1,0 +1,51 @@
+{
+  "index": 2,
+  "name": "Nunchucks",
+  "vertices": 1376,
+  "triangles": 2720,
+  "mesh_objects": 1,
+  "materials": 1,
+  "uv_layers": 1,
+  "texture": "1024x1024 packed base color",
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "bounds": [
+    2.384425640106201,
+    0.5799999833106995,
+    3.288311004638672
+  ],
+  "notes": "Reference geometry unchanged. Intentional assembled intersections. Studio import pending. Rigged FBX/GLB contain one mesh and one armature.",
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "triangles": 2720,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0,
+    "armature_objects": 1,
+    "bones": 7,
+    "skeleton_and_skin_retained": true,
+    "pose_deformation_verified": true
+  },
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "triangles": 2720,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0,
+    "armature_objects": 1,
+    "bones": 7,
+    "skeleton_and_skin_retained": true,
+    "pose_deformation_verified": true
+  },
+  "pivot": [
+    0.708,
+    0,
+    1.19
+  ],
+  "pivot_description": "Handhold center in reference presentation coordinates",
+  "armature_objects": 1,
+  "bone_count": 7,
+  "rig": "Rigid FK chain and terminal payload; one deform bone per vertex; no Actions/keyframes",
+  "rig_validation": "rig_validation.json"
+}

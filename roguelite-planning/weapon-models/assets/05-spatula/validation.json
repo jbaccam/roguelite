@@ -1,0 +1,39 @@
+{
+  "index": 5,
+  "name": "Spatula",
+  "vertices": 366,
+  "triangles": 728,
+  "mesh_objects": 1,
+  "materials": 1,
+  "uv_layers": 1,
+  "texture": "1024x1024 packed base color",
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "bounds": [
+    1.8548212051391602,
+    0.3050000071525574,
+    3.742809295654297
+  ],
+  "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "triangles": 728,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0
+  },
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "triangles": 728,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0
+  },
+  "pivot": [
+    0.393,
+    0,
+    0.863
+  ],
+  "pivot_description": "Handhold center in reference presentation coordinates"
+}

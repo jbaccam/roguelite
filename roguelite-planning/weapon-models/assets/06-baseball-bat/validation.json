@@ -1,0 +1,39 @@
+{
+  "index": 6,
+  "name": "Baseball Bat",
+  "vertices": 500,
+  "triangles": 980,
+  "mesh_objects": 1,
+  "materials": 1,
+  "uv_layers": 1,
+  "texture": "1024x1024 packed base color",
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "bounds": [
+    2.548452377319336,
+    0.7599999904632568,
+    3.0697622299194336
+  ],
+  "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "triangles": 980,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0
+  },
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "triangles": 980,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0
+  },
+  "pivot": [
+    -0.601,
+    0,
+    0.623
+  ],
+  "pivot_description": "Handhold center in reference presentation coordinates"
+}

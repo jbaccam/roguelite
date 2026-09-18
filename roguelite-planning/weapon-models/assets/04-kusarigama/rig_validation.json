@@ -1,0 +1,340 @@
+{
+  "name": "Kusarigama",
+  "rig_type": "Rigid FK linked chain; no IK, physics, constraints or animations",
+  "rest_geometry_max_error": 3.3922649734712273e-07,
+  "bone_count": 13,
+  "handhold_world": [
+    -0.19300000369548798,
+    0.0,
+    2.1589999198913574
+  ],
+  "hierarchy": [
+    {
+      "bone": "Handle_ROOT",
+      "parent": null,
+      "head_world": [
+        -0.19300000369548798,
+        0.0,
+        2.1589999198913574
+      ],
+      "source_parts": [
+        "Wood sickle shaft",
+        "Sickle lower socket ferrule",
+        "Square blade mounting socket",
+        "Closed angled black hand wrap",
+        "Closed angled black hand wrap.001",
+        "Closed angled black hand wrap.002",
+        "Curved sickle blade with cutting bevel",
+        "Large octagonal blade rivet"
+      ],
+      "rigid_vertices": 298
+    },
+    {
+      "bone": "Chain_01",
+      "parent": "Handle_ROOT",
+      "head_world": [
+        -0.5049999952316284,
+        6.561591270326517e-10,
+        1.059999942779541
+      ],
+      "source_parts": [
+        "Sickle interlocked chain 0"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Chain_02",
+      "parent": "Chain_01",
+      "head_world": [
+        -0.4649999439716339,
+        6.984919864727601e-10,
+        0.8799999952316284
+      ],
+      "source_parts": [
+        "Sickle interlocked chain 1"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Chain_03",
+      "parent": "Chain_02",
+      "head_world": [
+        -0.3199998736381531,
+        6.984919864727601e-10,
+        0.6349999904632568
+      ],
+      "source_parts": [
+        "Sickle interlocked chain 2"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Chain_04",
+      "parent": "Chain_03",
+      "head_world": [
+        -0.07499990612268448,
+        9.948218915312168e-10,
+        0.44999992847442627
+      ],
+      "source_parts": [
+        "Sickle interlocked chain 3"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Chain_05",
+      "parent": "Chain_04",
+      "head_world": [
+        0.22500011324882507,
+        9.948218915312168e-10,
+        0.35999995470046997
+      ],
+      "source_parts": [
+        "Sickle interlocked chain 4"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Chain_06",
+      "parent": "Chain_05",
+      "head_world": [
+        0.5250002145767212,
+        8.678233687220427e-10,
+        0.3749999403953552
+      ],
+      "source_parts": [
+        "Sickle interlocked chain 5"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Chain_07",
+      "parent": "Chain_06",
+      "head_world": [
+        0.7950001955032349,
+        8.678233687220427e-10,
+        0.51500004529953
+      ],
+      "source_parts": [
+        "Sickle interlocked chain 6"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Chain_08",
+      "parent": "Chain_07",
+      "head_world": [
+        1.010000228881836,
+        4.868277447833691e-10,
+        0.7500002384185791
+      ],
+      "source_parts": [
+        "Sickle interlocked chain 7"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Chain_09",
+      "parent": "Chain_08",
+      "head_world": [
+        1.2150002717971802,
+        4.868277447833691e-10,
+        1.0050002336502075
+      ],
+      "source_parts": [
+        "Sickle interlocked chain 8"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Chain_10",
+      "parent": "Chain_09",
+      "head_world": [
+        1.455000400543213,
+        2.751635030939781e-10,
+        1.190000295639038
+      ],
+      "source_parts": [
+        "Sickle interlocked chain 9"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Chain_11",
+      "parent": "Chain_10",
+      "head_world": [
+        1.6900004148483276,
+        2.751635030939781e-10,
+        1.1650002002716064
+      ],
+      "source_parts": [
+        "Sickle interlocked chain 10"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Weight_END",
+      "parent": "Chain_11",
+      "head_world": [
+        1.8550001382827759,
+        6.561591270326517e-10,
+        0.9800000190734863
+      ],
+      "source_parts": [
+        "Weight attachment collar",
+        "Beveled twelve-facet iron chain weight"
+      ],
+      "rigid_vertices": 76
+    }
+  ],
+  "all_vertices_have_exactly_one_deform_bone": true,
+  "deform_weight": 1.0,
+  "vertex_count": 1342,
+  "triangles": 2656,
+  "pose_tests": [
+    {
+      "test": 0,
+      "maximum_rigid_distance_error": 4.5431177214672047e-07,
+      "fixed_handle_max_displacement": 0.0,
+      "terminal_max_displacement": 0.4901330157282968,
+      "joint_anchor_coincidence_error": 2.2379046050337606e-07,
+      "passed": true
+    },
+    {
+      "test": 1,
+      "maximum_rigid_distance_error": 2.3733962764560523e-07,
+      "fixed_handle_max_displacement": 0.0,
+      "terminal_max_displacement": 0.09650099621815172,
+      "joint_anchor_coincidence_error": 2.5211161845458495e-07,
+      "passed": true
+    },
+    {
+      "test": 2,
+      "maximum_rigid_distance_error": 3.7630967120172443e-07,
+      "fixed_handle_max_displacement": 0.0,
+      "terminal_max_displacement": 0.22696553435419445,
+      "joint_anchor_coincidence_error": 2.425733297482089e-07,
+      "passed": true
+    }
+  ],
+  "actions": 0,
+  "keyframes": 0,
+  "render": "Rig_Pose_Check.png is a temporary diagnostic pose, not a saved clip. Model.blend is saved in rest pose.",
+  "limitations": [
+    "No collision avoidance or chain physics solver; extreme rotations can interpenetrate.",
+    "Joint pivots maintain parent-child attachment; rigid interlocking meshes do not use stretchy blended weights.",
+    "Studio skeleton import and animation playback remain untested."
+  ],
+  "glb_roundtrip": {
+    "mesh_objects": 1,
+    "armature_objects": 1,
+    "bone_count": 13,
+    "bones": [
+      "Chain_01",
+      "Chain_02",
+      "Chain_03",
+      "Chain_04",
+      "Chain_05",
+      "Chain_06",
+      "Chain_07",
+      "Chain_08",
+      "Chain_09",
+      "Chain_10",
+      "Chain_11",
+      "Handle_ROOT",
+      "Weight_END"
+    ],
+    "invalid_deform_vertices": 0,
+    "triangles": 2656,
+    "expected_triangles": 2656,
+    "armature_modifier_present": true,
+    "texture_present": true,
+    "actions": 0,
+    "unexpected_camera_or_light": 0,
+    "pose_tests": [
+      {
+        "test": 0,
+        "maximum_rigid_distance_error": 4.797773736076039e-07,
+        "fixed_handle_max_displacement": 0.0,
+        "terminal_max_displacement": 0.49013287131760624,
+        "joint_anchor_coincidence_error": 3.096765368691792e-07,
+        "passed": true
+      },
+      {
+        "test": 1,
+        "maximum_rigid_distance_error": 4.7049242757335463e-07,
+        "fixed_handle_max_displacement": 0.0,
+        "terminal_max_displacement": 0.09650082250129376,
+        "joint_anchor_coincidence_error": 2.669762502188819e-07,
+        "passed": true
+      },
+      {
+        "test": 2,
+        "maximum_rigid_distance_error": 4.003726143952946e-07,
+        "fixed_handle_max_displacement": 0.0,
+        "terminal_max_displacement": 0.226964886021529,
+        "joint_anchor_coincidence_error": 3.0538293021796936e-07,
+        "passed": true
+      }
+    ],
+    "importer_only_bone_display_helpers": [
+      "Icosphere"
+    ],
+    "passed": true
+  },
+  "fbx_roundtrip": {
+    "mesh_objects": 1,
+    "armature_objects": 1,
+    "bone_count": 13,
+    "bones": [
+      "Chain_01",
+      "Chain_02",
+      "Chain_03",
+      "Chain_04",
+      "Chain_05",
+      "Chain_06",
+      "Chain_07",
+      "Chain_08",
+      "Chain_09",
+      "Chain_10",
+      "Chain_11",
+      "Handle_ROOT",
+      "Weight_END"
+    ],
+    "invalid_deform_vertices": 0,
+    "triangles": 2656,
+    "expected_triangles": 2656,
+    "armature_modifier_present": true,
+    "texture_present": true,
+    "actions": 0,
+    "unexpected_camera_or_light": 0,
+    "pose_tests": [
+      {
+        "test": 0,
+        "maximum_rigid_distance_error": 3.428094698110229e-07,
+        "fixed_handle_max_displacement": 0.0,
+        "terminal_max_displacement": 0.4901333311519036,
+        "joint_anchor_coincidence_error": 3.687556604373912e-07,
+        "passed": true
+      },
+      {
+        "test": 1,
+        "maximum_rigid_distance_error": 6.316631702141251e-07,
+        "fixed_handle_max_displacement": 0.0,
+        "terminal_max_displacement": 0.09650139341354448,
+        "joint_anchor_coincidence_error": 4.831724494939738e-07,
+        "passed": true
+      },
+      {
+        "test": 2,
+        "maximum_rigid_distance_error": 5.776031672954929e-07,
+        "fixed_handle_max_displacement": 0.0,
+        "terminal_max_displacement": 0.22696527646737163,
+        "joint_anchor_coincidence_error": 4.953375500021774e-07,
+        "passed": true
+      }
+    ],
+    "importer_only_bone_display_helpers": [],
+    "passed": true
+  }
+}

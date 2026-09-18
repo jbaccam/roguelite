@@ -1,0 +1,51 @@
+{
+  "index": 4,
+  "name": "Kusarigama",
+  "vertices": 1342,
+  "triangles": 2656,
+  "mesh_objects": 1,
+  "materials": 1,
+  "uv_layers": 1,
+  "texture": "1024x1024 packed base color",
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "bounds": [
+    4.33262825012207,
+    0.81446772813797,
+    3.54695200920105
+  ],
+  "notes": "Reference geometry unchanged. Intentional assembled intersections. Studio import pending. Rigged FBX/GLB contain one mesh and one armature.",
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "triangles": 2656,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0,
+    "armature_objects": 1,
+    "bones": 13,
+    "skeleton_and_skin_retained": true,
+    "pose_deformation_verified": true
+  },
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "triangles": 2656,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0,
+    "armature_objects": 1,
+    "bones": 13,
+    "skeleton_and_skin_retained": true,
+    "pose_deformation_verified": true
+  },
+  "pivot": [
+    -0.193,
+    0,
+    2.159
+  ],
+  "pivot_description": "Handhold center in reference presentation coordinates",
+  "armature_objects": 1,
+  "bone_count": 13,
+  "rig": "Rigid FK chain and terminal payload; one deform bone per vertex; no Actions/keyframes",
+  "rig_validation": "rig_validation.json"
+}

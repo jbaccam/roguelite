@@ -1,0 +1,250 @@
+{
+  "name": "Nunchucks",
+  "rig_type": "Rigid FK linked chain; no IK, physics, constraints or animations",
+  "rest_geometry_max_error": 3.4240261593687705e-07,
+  "bone_count": 7,
+  "handhold_world": [
+    0.7080000042915344,
+    0.0,
+    1.190000057220459
+  ],
+  "hierarchy": [
+    {
+      "bone": "Handle_ROOT",
+      "parent": null,
+      "head_world": [
+        0.7080000042915344,
+        0.0,
+        1.190000057220459
+      ],
+      "source_parts": [
+        "Wood baton 1",
+        "Dark grip metal band.002",
+        "Dark grip metal band.003",
+        "Beveled slotted chain ferrule.001",
+        "Terminal chain eye.001"
+      ],
+      "rigid_vertices": 468
+    },
+    {
+      "bone": "Chain_01",
+      "parent": "Handle_ROOT",
+      "head_world": [
+        0.4019368886947632,
+        6.561591270326517e-10,
+        2.733184814453125
+      ],
+      "source_parts": [
+        "Interlocked chain link 4"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Chain_02",
+      "parent": "Chain_01",
+      "head_world": [
+        0.3200000524520874,
+        2.751635030939781e-10,
+        2.9600000381469727
+      ],
+      "source_parts": [
+        "Interlocked chain link 3"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Chain_03",
+      "parent": "Chain_02",
+      "head_world": [
+        0.11500003933906555,
+        2.751635030939781e-10,
+        3.0900001525878906
+      ],
+      "source_parts": [
+        "Interlocked chain link 2"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Chain_04",
+      "parent": "Chain_03",
+      "head_world": [
+        -0.10500001907348633,
+        -2.3283064365386963e-10,
+        3.0950002670288086
+      ],
+      "source_parts": [
+        "Interlocked chain link 1"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Chain_05",
+      "parent": "Chain_04",
+      "head_world": [
+        -0.30500006675720215,
+        -2.3283064365386963e-10,
+        2.9700002670288086
+      ],
+      "source_parts": [
+        "Interlocked chain link 0"
+      ],
+      "rigid_vertices": 88
+    },
+    {
+      "bone": "Baton_END",
+      "parent": "Chain_05",
+      "head_world": [
+        -0.3969368636608124,
+        6.561591270326517e-10,
+        2.738184928894043
+      ],
+      "source_parts": [
+        "Wood baton 0",
+        "Dark grip metal band",
+        "Dark grip metal band.001",
+        "Beveled slotted chain ferrule",
+        "Terminal chain eye"
+      ],
+      "rigid_vertices": 468
+    }
+  ],
+  "all_vertices_have_exactly_one_deform_bone": true,
+  "deform_weight": 1.0,
+  "vertex_count": 1376,
+  "triangles": 2720,
+  "pose_tests": [
+    {
+      "test": 0,
+      "maximum_rigid_distance_error": 4.406642348797618e-07,
+      "fixed_handle_max_displacement": 0.0,
+      "terminal_max_displacement": 0.5814340298820164,
+      "joint_anchor_coincidence_error": 1.493246517675415e-07,
+      "passed": true
+    },
+    {
+      "test": 1,
+      "maximum_rigid_distance_error": 5.660874946578076e-07,
+      "fixed_handle_max_displacement": 0.0,
+      "terminal_max_displacement": 0.3257304970835472,
+      "joint_anchor_coincidence_error": 1.41805904438155e-07,
+      "passed": true
+    },
+    {
+      "test": 2,
+      "maximum_rigid_distance_error": 4.1229186509283977e-07,
+      "fixed_handle_max_displacement": 0.0,
+      "terminal_max_displacement": 0.17006072167381256,
+      "joint_anchor_coincidence_error": 1.5359765386647212e-07,
+      "passed": true
+    }
+  ],
+  "actions": 0,
+  "keyframes": 0,
+  "render": "Rig_Pose_Check.png is a temporary diagnostic pose, not a saved clip. Model.blend is saved in rest pose.",
+  "limitations": [
+    "No collision avoidance or chain physics solver; extreme rotations can interpenetrate.",
+    "Joint pivots maintain parent-child attachment; rigid interlocking meshes do not use stretchy blended weights.",
+    "Studio skeleton import and animation playback remain untested."
+  ],
+  "glb_roundtrip": {
+    "mesh_objects": 1,
+    "armature_objects": 1,
+    "bone_count": 7,
+    "bones": [
+      "Baton_END",
+      "Chain_01",
+      "Chain_02",
+      "Chain_03",
+      "Chain_04",
+      "Chain_05",
+      "Handle_ROOT"
+    ],
+    "invalid_deform_vertices": 0,
+    "triangles": 2720,
+    "expected_triangles": 2720,
+    "armature_modifier_present": true,
+    "texture_present": true,
+    "actions": 0,
+    "unexpected_camera_or_light": 0,
+    "pose_tests": [
+      {
+        "test": 0,
+        "maximum_rigid_distance_error": 4.0828791814107035e-07,
+        "fixed_handle_max_displacement": 0.0,
+        "terminal_max_displacement": 0.5814335781831639,
+        "joint_anchor_coincidence_error": 2.4607999824334344e-07,
+        "passed": true
+      },
+      {
+        "test": 1,
+        "maximum_rigid_distance_error": 3.439894966650314e-07,
+        "fixed_handle_max_displacement": 0.0,
+        "terminal_max_displacement": 0.3257306660430571,
+        "joint_anchor_coincidence_error": 2.686603327408849e-07,
+        "passed": true
+      },
+      {
+        "test": 2,
+        "maximum_rigid_distance_error": 3.4765744372222684e-07,
+        "fixed_handle_max_displacement": 0.0,
+        "terminal_max_displacement": 0.17006065567854795,
+        "joint_anchor_coincidence_error": 2.385349660155493e-07,
+        "passed": true
+      }
+    ],
+    "importer_only_bone_display_helpers": [
+      "Icosphere"
+    ],
+    "passed": true
+  },
+  "fbx_roundtrip": {
+    "mesh_objects": 1,
+    "armature_objects": 1,
+    "bone_count": 7,
+    "bones": [
+      "Baton_END",
+      "Chain_01",
+      "Chain_02",
+      "Chain_03",
+      "Chain_04",
+      "Chain_05",
+      "Handle_ROOT"
+    ],
+    "invalid_deform_vertices": 0,
+    "triangles": 2720,
+    "expected_triangles": 2720,
+    "armature_modifier_present": true,
+    "texture_present": true,
+    "actions": 0,
+    "unexpected_camera_or_light": 0,
+    "pose_tests": [
+      {
+        "test": 0,
+        "maximum_rigid_distance_error": 7.395157961553878e-07,
+        "fixed_handle_max_displacement": 0.0,
+        "terminal_max_displacement": 0.5814335269265323,
+        "joint_anchor_coincidence_error": 2.2834847942239656e-07,
+        "passed": true
+      },
+      {
+        "test": 1,
+        "maximum_rigid_distance_error": 2.981584792949299e-07,
+        "fixed_handle_max_displacement": 0.0,
+        "terminal_max_displacement": 0.32573064258884615,
+        "joint_anchor_coincidence_error": 1.6862854805225544e-07,
+        "passed": true
+      },
+      {
+        "test": 2,
+        "maximum_rigid_distance_error": 8.161115352400827e-07,
+        "fixed_handle_max_displacement": 0.0,
+        "terminal_max_displacement": 0.17006086664998885,
+        "joint_anchor_coincidence_error": 2.723541368012762e-07,
+        "passed": true
+      }
+    ],
+    "importer_only_bone_display_helpers": [],
+    "passed": true
+  }
+}
