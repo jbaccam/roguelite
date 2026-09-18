@@ -1,0 +1,13 @@
+{
+  "body_sections": 15,
+  "bones_including_root": 16,
+  "source_dimensions_preserved": true,
+  "original_images": {
+    "head": "C:/Users/Jeremiah/AppData/Local/Temp/codex-clipboard-38985ec3-bc0d-4fac-80bd-3bd94573dcc2.png",
+    "torso": "ChatGPT Image Sep 17, 2026, 12_31_38 PM (2).png",
+    "limb": "ChatGPT Image Sep 17, 2026, 12_31_38 PM (1).png"
+  },
+  "hair": false,
+  "source_images_repainted": false,
+  "note": "Texture panels aligned from supplied raster nets; separate UV template files were not attached. Studio animation compatibility still requires in-engine animation testing."
+}
