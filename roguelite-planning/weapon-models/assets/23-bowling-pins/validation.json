@@ -1,0 +1,72 @@
+{
+  "mesh_objects": 1,
+  "vertices": 120,
+  "triangles": 236,
+  "loose_vertices": 0,
+  "nonmanifold_edges": 0,
+  "zero_area_faces": 0,
+  "zero_area_triangles": 0,
+  "uv_layers": true,
+  "loaded_textures": true,
+  "index": 23,
+  "name": "Bowling Pins",
+  "bounds_min": [
+    -0.7197999954223633,
+    -0.6845704913139343,
+    0.03999999910593033
+  ],
+  "bounds_max": [
+    0.7197999954223633,
+    0.6845704913139343,
+    3.6599998474121094
+  ],
+  "notes": "Single reusable item; gloves are independent left/right components. Closed assembled components with intentional overlapping joints. Back surfaces inferred. Palette UV islands intentionally overlap by material. Static prop; no rig. No Studio validation.",
+  "multiplicity": "One reusable item",
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "vertices": 460,
+    "triangles": 236,
+    "loose_vertices": 0,
+    "nonmanifold_edges": 0,
+    "zero_area_faces": 0,
+    "zero_area_triangles": 0,
+    "uv_layers": true,
+    "loaded_textures": true,
+    "materials": 1,
+    "unexpected_nonmesh_objects": 0,
+    "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+  },
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "vertices": 120,
+    "triangles": 236,
+    "loose_vertices": 0,
+    "nonmanifold_edges": 0,
+    "zero_area_faces": 0,
+    "zero_area_triangles": 0,
+    "uv_layers": true,
+    "loaded_textures": true,
+    "materials": 1,
+    "unexpected_nonmesh_objects": 0,
+    "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+  },
+  "pivot": [
+    0,
+    0,
+    0
+  ],
+  "pivot_description": "Base center",
+  "source_copy_sha256_matches": true,
+  "review_renders_visually_inspected": true,
+  "materials": 1,
+  "packed_images": [
+    {
+      "name": "23-bowling-pins_BaseColor",
+      "size": [
+        320,
+        320
+      ],
+      "packed": true
+    }
+  ]
+}

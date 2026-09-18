@@ -1,0 +1,71 @@
+{
+  "blend": {
+    "mesh_objects": 1,
+    "vertices": 386,
+    "triangles": 752,
+    "loose_vertices": 0,
+    "nonmanifold_edges": 0,
+    "zero_area_faces": 0,
+    "zero_area_triangles": 0,
+    "uv_layers": true,
+    "loaded_textures": true,
+    "materials": 1,
+    "parents": [
+      null
+    ],
+    "origins": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "unexpected_objects": []
+  },
+  "fbx": {
+    "mesh_objects": 1,
+    "vertices": 386,
+    "triangles": 752,
+    "loose_vertices": 0,
+    "nonmanifold_edges": 0,
+    "zero_area_faces": 0,
+    "zero_area_triangles": 0,
+    "uv_layers": true,
+    "loaded_textures": true,
+    "materials": 1,
+    "parents": [
+      null
+    ],
+    "origins": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "unexpected_objects": []
+  },
+  "glb": {
+    "mesh_objects": 1,
+    "vertices": 1452,
+    "triangles": 752,
+    "loose_vertices": 0,
+    "nonmanifold_edges": 0,
+    "zero_area_faces": 0,
+    "zero_area_triangles": 0,
+    "uv_layers": true,
+    "loaded_textures": true,
+    "materials": 1,
+    "parents": [
+      null
+    ],
+    "origins": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "unexpected_objects": []
+  }
+}

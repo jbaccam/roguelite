@@ -1,0 +1,72 @@
+{
+  "mesh_objects": 11,
+  "vertices": 898,
+  "triangles": 1752,
+  "loose_vertices": 0,
+  "nonmanifold_edges": 0,
+  "zero_area_faces": 0,
+  "zero_area_triangles": 0,
+  "uv_layers": true,
+  "loaded_textures": true,
+  "index": 27,
+  "name": "Paint Roller",
+  "bounds_min": [
+    -1.3799999952316284,
+    -0.5399423241615295,
+    -0.008338004350662231
+  ],
+  "bounds_max": [
+    1.7249414920806885,
+    0.5356255173683167,
+    3.2127318382263184
+  ],
+  "notes": "Single reusable item; gloves are independent left/right components. Closed assembled components with intentional overlapping joints. Back surfaces inferred. Palette UV islands intentionally overlap by material. Static prop; no rig. No Studio validation.",
+  "multiplicity": "One reusable item",
+  "glb_reimport": {
+    "mesh_objects": 11,
+    "vertices": 3528,
+    "triangles": 1752,
+    "loose_vertices": 0,
+    "nonmanifold_edges": 0,
+    "zero_area_faces": 0,
+    "zero_area_triangles": 0,
+    "uv_layers": true,
+    "loaded_textures": true,
+    "materials": 1,
+    "unexpected_nonmesh_objects": 0,
+    "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+  },
+  "fbx_reimport": {
+    "mesh_objects": 11,
+    "vertices": 898,
+    "triangles": 1752,
+    "loose_vertices": 0,
+    "nonmanifold_edges": 0,
+    "zero_area_faces": 0,
+    "zero_area_triangles": 0,
+    "uv_layers": true,
+    "loaded_textures": true,
+    "materials": 1,
+    "unexpected_nonmesh_objects": 0,
+    "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+  },
+  "pivot": [
+    0.6,
+    0,
+    0.6
+  ],
+  "pivot_description": "Handhold center",
+  "source_copy_sha256_matches": true,
+  "review_renders_visually_inspected": true,
+  "materials": 1,
+  "packed_images": [
+    {
+      "name": "27-paint-roller_BaseColor",
+      "size": [
+        320,
+        320
+      ],
+      "packed": true
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "index": 26,
+  "name": "Shovel",
+  "vertices": 239,
+  "triangles": 454,
+  "mesh_objects": 1,
+  "materials": 1,
+  "uv_layers": 1,
+  "texture": "1024x1024 packed base color",
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "bounds": [
+    1.7320177555084229,
+    0.4050000011920929,
+    3.7866928577423096
+  ],
+  "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "triangles": 454,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0
+  },
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "triangles": 454,
+    "has_uv": true,
+    "has_image_texture": true,
+    "unexpected_stage_objects": 0
+  },
+  "pivot": [
+    0.164,
+    0,
+    2.468
+  ],
+  "pivot_description": "Handhold center in reference presentation coordinates"
+}

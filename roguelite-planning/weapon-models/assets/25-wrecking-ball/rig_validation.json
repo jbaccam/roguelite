@@ -1,0 +1,410 @@
+{
+  "weights": {
+    "fully_rigid_vertices": 1177,
+    "vertex_count": 1177,
+    "bad_weight_vertices": [],
+    "per_bone_vertices": {
+      "Chain_01": 88,
+      "Chain_07": 88,
+      "Weight_END": 116,
+      "Chain_02": 88,
+      "Handle_ROOT": 445,
+      "Chain_04": 88,
+      "Chain_06": 88,
+      "Chain_03": 88,
+      "Chain_05": 88
+    }
+  },
+  "max_per_bone_rigidity_error": {
+    "Chain_01": 3.013577256627542e-07,
+    "Chain_07": 2.809970454376032e-07,
+    "Weight_END": 4.716494483858469e-07,
+    "Chain_02": 2.2462551196519853e-07,
+    "Handle_ROOT": 0.0,
+    "Chain_04": 3.9371319213166167e-07,
+    "Chain_06": 3.468137022566431e-07,
+    "Chain_03": 4.0124289998888507e-07,
+    "Chain_05": 3.407172664837699e-07
+  },
+  "max_per_bone_vertex_displacement": {
+    "Chain_01": 0.10221884175523237,
+    "Chain_07": 0.8321519347765908,
+    "Weight_END": 1.5153360478502278,
+    "Chain_02": 0.16521450528039028,
+    "Handle_ROOT": 0.0,
+    "Chain_04": 0.39034918286203174,
+    "Chain_06": 0.6881971455085947,
+    "Chain_03": 0.2918556254453557,
+    "Chain_05": 0.5409624472969273
+  },
+  "fixed_handle_max_displacement": 0.0,
+  "payload_displacement": 1.5153360478502278,
+  "joint_anchor_gaps": {
+    "Chain_01": 0.0,
+    "Chain_02": 0.0,
+    "Chain_03": 0.0,
+    "Chain_04": 0.0,
+    "Chain_05": 0.0,
+    "Chain_06": 0.0,
+    "Chain_07": 0.0,
+    "Weight_END": 0.0
+  },
+  "test_pose_radians": {
+    "Chain_01_localZ": -0.26,
+    "Chain_03_localX": 0.18,
+    "Chain_05_localZ": 0.15
+  },
+  "rest_restore_max_vertex_error": 0.0,
+  "hierarchy": [
+    {
+      "bone": "Handle_ROOT",
+      "parent": null,
+      "head_armature_space": [
+        1.0700000524520874,
+        0.0,
+        2.0
+      ],
+      "tail_armature_space": [
+        0.6800000071525574,
+        0.0,
+        2.950000047683716
+      ],
+      "deform": true
+    },
+    {
+      "bone": "Chain_01",
+      "parent": "Handle_ROOT",
+      "head_armature_space": [
+        0.6800000071525574,
+        0.0,
+        2.950000047683716
+      ],
+      "tail_armature_space": [
+        0.5300000309944153,
+        0.0,
+        3.0999999046325684
+      ],
+      "deform": true
+    },
+    {
+      "bone": "Chain_02",
+      "parent": "Chain_01",
+      "head_armature_space": [
+        0.5300000309944153,
+        0.0,
+        3.0999999046325684
+      ],
+      "tail_armature_space": [
+        0.25,
+        0.0,
+        3.119999885559082
+      ],
+      "deform": true
+    },
+    {
+      "bone": "Chain_03",
+      "parent": "Chain_02",
+      "head_armature_space": [
+        0.25,
+        0.0,
+        3.119999885559082
+      ],
+      "tail_armature_space": [
+        -0.03500000014901161,
+        0.0,
+        2.9549999237060547
+      ],
+      "deform": true
+    },
+    {
+      "bone": "Chain_04",
+      "parent": "Chain_03",
+      "head_armature_space": [
+        -0.03500000014901161,
+        0.0,
+        2.9549999237060547
+      ],
+      "tail_armature_space": [
+        -0.29499998688697815,
+        0.0,
+        2.7049999237060547
+      ],
+      "deform": true
+    },
+    {
+      "bone": "Chain_05",
+      "parent": "Chain_04",
+      "head_armature_space": [
+        -0.29499998688697815,
+        0.0,
+        2.7049999237060547
+      ],
+      "tail_armature_space": [
+        -0.5349999666213989,
+        0.0,
+        2.440000057220459
+      ],
+      "deform": true
+    },
+    {
+      "bone": "Chain_06",
+      "parent": "Chain_05",
+      "head_armature_space": [
+        -0.5349999666213989,
+        0.0,
+        2.440000057220459
+      ],
+      "tail_armature_space": [
+        -0.7549999952316284,
+        0.0,
+        2.1599998474121094
+      ],
+      "deform": true
+    },
+    {
+      "bone": "Chain_07",
+      "parent": "Chain_06",
+      "head_armature_space": [
+        -0.7549999952316284,
+        0.0,
+        2.1599998474121094
+      ],
+      "tail_armature_space": [
+        -0.9599999785423279,
+        0.0,
+        1.9299999475479126
+      ],
+      "deform": true
+    },
+    {
+      "bone": "Weight_END",
+      "parent": "Chain_07",
+      "head_armature_space": [
+        -0.9599999785423279,
+        0.0,
+        1.9299999475479126
+      ],
+      "tail_armature_space": [
+        -0.9599999785423279,
+        0.0,
+        0.9300000071525574
+      ],
+      "deform": true
+    }
+  ],
+  "part_assignments": {
+    "Large faceted iron wrecking ball": "Weight_END",
+    "Ball top chain socket": "Weight_END",
+    "Heavy interlocked chain 0": "Chain_07",
+    "Heavy interlocked chain 1": "Chain_06",
+    "Heavy interlocked chain 2": "Chain_05",
+    "Heavy interlocked chain 3": "Chain_04",
+    "Heavy interlocked chain 4": "Chain_03",
+    "Heavy interlocked chain 5": "Chain_02",
+    "Heavy interlocked chain 6": "Chain_01",
+    "Brown wrapped wooden grip": "Handle_ROOT",
+    "Heavy steel grip cap": "Handle_ROOT",
+    "Heavy steel grip cap.001": "Handle_ROOT",
+    "Raised diagonal leather seam": "Handle_ROOT",
+    "Raised diagonal leather seam.001": "Handle_ROOT",
+    "Raised diagonal leather seam.002": "Handle_ROOT",
+    "Raised diagonal leather seam.003": "Handle_ROOT",
+    "Raised diagonal leather seam.004": "Handle_ROOT"
+  },
+  "animation_actions": 0,
+  "animation_data_present": false,
+  "constraints": 0,
+  "fbx_roundtrip": {
+    "weights": {
+      "fully_rigid_vertices": 1177,
+      "vertex_count": 1177,
+      "bad_weight_vertices": [],
+      "per_bone_vertices": {
+        "Chain_01": 88,
+        "Chain_07": 88,
+        "Weight_END": 116,
+        "Chain_02": 88,
+        "Handle_ROOT": 445,
+        "Chain_04": 88,
+        "Chain_06": 88,
+        "Chain_03": 88,
+        "Chain_05": 88
+      }
+    },
+    "max_per_bone_rigidity_error": {
+      "Chain_01": 3.937177118495949e-07,
+      "Chain_07": 4.545705272196443e-07,
+      "Weight_END": 4.850978718717869e-07,
+      "Chain_02": 2.3131644424564946e-07,
+      "Handle_ROOT": 0.0,
+      "Chain_04": 3.706512624740421e-07,
+      "Chain_06": 4.943024815018404e-07,
+      "Chain_03": 4.4069738941443504e-07,
+      "Chain_05": 4.2557351703775836e-07
+    },
+    "max_per_bone_vertex_displacement": {
+      "Chain_01": 0.10221896418510329,
+      "Chain_07": 0.8321517557087768,
+      "Weight_END": 1.5153354387834415,
+      "Chain_02": 0.16521416423845922,
+      "Handle_ROOT": 0.0,
+      "Chain_04": 0.3903486388831936,
+      "Chain_06": 0.6881967855363523,
+      "Chain_03": 0.2918553713587943,
+      "Chain_05": 0.5409627296397463
+    },
+    "fixed_handle_max_displacement": 0.0,
+    "payload_displacement": 1.5153354387834415,
+    "joint_anchor_gaps": {
+      "Chain_01": 2.0057690566291014e-08,
+      "Chain_02": 7.258964976323464e-07,
+      "Chain_03": 2.4131141216608354e-07,
+      "Chain_04": 2.511464624208685e-07,
+      "Chain_05": 2.682209014892578e-07,
+      "Chain_06": 4.3901562281418546e-07,
+      "Chain_07": 3.998401124775034e-07,
+      "Weight_END": 7.450580596923828e-08
+    },
+    "test_pose_radians": {
+      "Chain_01_localZ": -0.26,
+      "Chain_03_localX": 0.18,
+      "Chain_05_localZ": 0.15
+    },
+    "armature_count": 1,
+    "mesh_count": 1,
+    "bone_names": [
+      "Handle_ROOT",
+      "Chain_01",
+      "Chain_02",
+      "Chain_03",
+      "Chain_04",
+      "Chain_05",
+      "Chain_06",
+      "Chain_07",
+      "Weight_END"
+    ],
+    "armature_modifiers": [
+      "WreckingBall_Rig"
+    ],
+    "animation_actions": 0,
+    "importer_only_bone_display_helpers": [],
+    "unexpected_stage_objects": [],
+    "geometry": {
+      "mesh_objects": 1,
+      "vertices": 1177,
+      "triangles": 2314,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "materials": 1
+    }
+  },
+  "glb_roundtrip": {
+    "weights": {
+      "fully_rigid_vertices": 4762,
+      "vertex_count": 4762,
+      "bad_weight_vertices": [],
+      "per_bone_vertices": {
+        "Chain_01": 376,
+        "Chain_07": 376,
+        "Weight_END": 460,
+        "Chain_02": 376,
+        "Handle_ROOT": 1670,
+        "Chain_04": 376,
+        "Chain_06": 376,
+        "Chain_03": 376,
+        "Chain_05": 376
+      }
+    },
+    "max_per_bone_rigidity_error": {
+      "Chain_01": 3.435153551611947e-07,
+      "Chain_07": 4.318154996248158e-07,
+      "Weight_END": 3.6250519519498425e-07,
+      "Chain_02": 1.836981844242913e-07,
+      "Handle_ROOT": 0.0,
+      "Chain_04": 3.219499866147224e-07,
+      "Chain_06": 2.7335674086803596e-07,
+      "Chain_03": 4.076883719644764e-07,
+      "Chain_05": 2.5560801109048015e-07
+    },
+    "max_per_bone_vertex_displacement": {
+      "Chain_01": 0.10221884346355715,
+      "Chain_07": 0.8321523913993424,
+      "Weight_END": 1.5153359187846325,
+      "Chain_02": 0.16521464972975627,
+      "Handle_ROOT": 0.0,
+      "Chain_04": 0.39034853509767126,
+      "Chain_06": 0.6881974838281997,
+      "Chain_03": 0.2918558528067694,
+      "Chain_05": 0.5409629327887567
+    },
+    "fixed_handle_max_displacement": 0.0,
+    "payload_displacement": 1.5153359187846325,
+    "joint_anchor_gaps": {
+      "Chain_01": 2.988816351674741e-07,
+      "Chain_02": 1.0803341865539551e-07,
+      "Chain_03": 2.467706078541159e-07,
+      "Chain_04": 1.2209919554421592e-07,
+      "Chain_05": 1.6858739404357614e-07,
+      "Chain_06": 1.4901161193847656e-08,
+      "Chain_07": 4.349505758084781e-07,
+      "Weight_END": 1.3328003749250113e-07
+    },
+    "test_pose_radians": {
+      "Chain_01_localZ": -0.26,
+      "Chain_03_localX": 0.18,
+      "Chain_05_localZ": 0.15
+    },
+    "armature_count": 1,
+    "mesh_count": 1,
+    "bone_names": [
+      "Handle_ROOT",
+      "Chain_01",
+      "Chain_02",
+      "Chain_03",
+      "Chain_04",
+      "Chain_05",
+      "Chain_06",
+      "Chain_07",
+      "Weight_END"
+    ],
+    "armature_modifiers": [
+      "WreckingBall_Rig"
+    ],
+    "animation_actions": 0,
+    "importer_only_bone_display_helpers": [
+      "Icosphere"
+    ],
+    "unexpected_stage_objects": [],
+    "geometry": {
+      "mesh_objects": 1,
+      "vertices": 4762,
+      "triangles": 2314,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "materials": 1
+    }
+  },
+  "static_source_shape_max_deviation": 3.039252476355614e-07,
+  "static_source_armature_count": 0,
+  "glb_file_structure": {
+    "meshes": 1,
+    "skins": 1,
+    "joints": 9,
+    "animations": 0
+  },
+  "visual_pose_check_inspected": true,
+  "source_file_all_bones_rest_pose": true,
+  "source_scene_objects": {
+    "WreckingBall_Skinned": "MESH",
+    "WreckingBall_Rig": "ARMATURE"
+  },
+  "source_stage_objects": 0
+}

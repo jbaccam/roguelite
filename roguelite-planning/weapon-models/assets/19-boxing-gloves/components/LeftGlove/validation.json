@@ -1,0 +1,92 @@
+{
+  "mesh_objects": 1,
+  "vertices": 222,
+  "triangles": 416,
+  "loose_vertices": 0,
+  "nonmanifold_edges": 0,
+  "zero_area_faces": 0,
+  "zero_area_triangles": 0,
+  "uv_layers": true,
+  "loaded_textures": true,
+  "pivot": "Wrist center at origin",
+  "independent_file_checks": {
+    "blend": {
+      "mesh_objects": 1,
+      "vertices": 222,
+      "triangles": 416,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "materials": 1,
+      "object_names": [
+        "LeftGlove.001"
+      ],
+      "parents": [
+        null
+      ],
+      "origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "unexpected_objects": 0
+    },
+    "fbx": {
+      "mesh_objects": 1,
+      "vertices": 222,
+      "triangles": 416,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "materials": 1,
+      "object_names": [
+        "LeftGlove.001"
+      ],
+      "parents": [
+        null
+      ],
+      "origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "unexpected_objects": 0
+    },
+    "glb": {
+      "mesh_objects": 1,
+      "vertices": 1084,
+      "triangles": 416,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "materials": 1,
+      "object_names": [
+        "LeftGlove.001"
+      ],
+      "parents": [
+        null
+      ],
+      "origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "unexpected_objects": 0
+    }
+  }
+}

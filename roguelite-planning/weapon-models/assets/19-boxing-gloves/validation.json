@@ -1,0 +1,250 @@
+{
+  "mesh_objects": 2,
+  "vertices": 444,
+  "triangles": 832,
+  "loose_vertices": 0,
+  "nonmanifold_edges": 0,
+  "zero_area_faces": 0,
+  "zero_area_triangles": 0,
+  "uv_layers": true,
+  "loaded_textures": true,
+  "index": 19,
+  "name": "Boxing Gloves",
+  "bounds_min": [
+    -1.9260544776916504,
+    -0.5499999523162842,
+    0.02598509192466736
+  ],
+  "bounds_max": [
+    1.9452475309371948,
+    0.5499999523162842,
+    2.5153706073760986
+  ],
+  "notes": "Single reusable item; gloves are independent left/right components. Closed assembled components with intentional overlapping joints. Back surfaces inferred. Palette UV islands intentionally overlap by material. Static prop; no rig. No Studio validation.",
+  "multiplicity": "Independent left and right gloves, plus review assembly",
+  "components": {
+    "LeftGlove": {
+      "mesh_objects": 1,
+      "vertices": 222,
+      "triangles": 416,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "pivot": "Wrist center at origin",
+      "independent_file_checks": {
+        "blend": {
+          "mesh_objects": 1,
+          "vertices": 222,
+          "triangles": 416,
+          "loose_vertices": 0,
+          "nonmanifold_edges": 0,
+          "zero_area_faces": 0,
+          "zero_area_triangles": 0,
+          "uv_layers": true,
+          "loaded_textures": true,
+          "materials": 1,
+          "object_names": [
+            "LeftGlove.001"
+          ],
+          "parents": [
+            null
+          ],
+          "origins": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ]
+          ],
+          "unexpected_objects": 0
+        },
+        "fbx": {
+          "mesh_objects": 1,
+          "vertices": 222,
+          "triangles": 416,
+          "loose_vertices": 0,
+          "nonmanifold_edges": 0,
+          "zero_area_faces": 0,
+          "zero_area_triangles": 0,
+          "uv_layers": true,
+          "loaded_textures": true,
+          "materials": 1,
+          "object_names": [
+            "LeftGlove.001"
+          ],
+          "parents": [
+            null
+          ],
+          "origins": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ]
+          ],
+          "unexpected_objects": 0
+        },
+        "glb": {
+          "mesh_objects": 1,
+          "vertices": 1084,
+          "triangles": 416,
+          "loose_vertices": 0,
+          "nonmanifold_edges": 0,
+          "zero_area_faces": 0,
+          "zero_area_triangles": 0,
+          "uv_layers": true,
+          "loaded_textures": true,
+          "materials": 1,
+          "object_names": [
+            "LeftGlove.001"
+          ],
+          "parents": [
+            null
+          ],
+          "origins": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ]
+          ],
+          "unexpected_objects": 0
+        }
+      }
+    },
+    "RightGlove": {
+      "mesh_objects": 1,
+      "vertices": 222,
+      "triangles": 416,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "pivot": "Wrist center at origin",
+      "independent_file_checks": {
+        "blend": {
+          "mesh_objects": 1,
+          "vertices": 222,
+          "triangles": 416,
+          "loose_vertices": 0,
+          "nonmanifold_edges": 0,
+          "zero_area_faces": 0,
+          "zero_area_triangles": 0,
+          "uv_layers": true,
+          "loaded_textures": true,
+          "materials": 1,
+          "object_names": [
+            "RightGlove.001"
+          ],
+          "parents": [
+            null
+          ],
+          "origins": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ]
+          ],
+          "unexpected_objects": 0
+        },
+        "fbx": {
+          "mesh_objects": 1,
+          "vertices": 222,
+          "triangles": 416,
+          "loose_vertices": 0,
+          "nonmanifold_edges": 0,
+          "zero_area_faces": 0,
+          "zero_area_triangles": 0,
+          "uv_layers": true,
+          "loaded_textures": true,
+          "materials": 1,
+          "object_names": [
+            "RightGlove.001"
+          ],
+          "parents": [
+            null
+          ],
+          "origins": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ]
+          ],
+          "unexpected_objects": 0
+        },
+        "glb": {
+          "mesh_objects": 1,
+          "vertices": 1084,
+          "triangles": 416,
+          "loose_vertices": 0,
+          "nonmanifold_edges": 0,
+          "zero_area_faces": 0,
+          "zero_area_triangles": 0,
+          "uv_layers": true,
+          "loaded_textures": true,
+          "materials": 1,
+          "object_names": [
+            "RightGlove.001"
+          ],
+          "parents": [
+            null
+          ],
+          "origins": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ]
+          ],
+          "unexpected_objects": 0
+        }
+      }
+    }
+  },
+  "glb_reimport": {
+    "mesh_objects": 2,
+    "vertices": 2168,
+    "triangles": 832,
+    "loose_vertices": 0,
+    "nonmanifold_edges": 0,
+    "zero_area_faces": 0,
+    "zero_area_triangles": 0,
+    "uv_layers": true,
+    "loaded_textures": true,
+    "unexpected_nonmesh_objects": 0,
+    "topology_note": "Welded coordinate duplicates for topology analysis because exporters split UV/normal seams."
+  },
+  "fbx_reimport": {
+    "mesh_objects": 2,
+    "vertices": 444,
+    "triangles": 832,
+    "loose_vertices": 0,
+    "nonmanifold_edges": 0,
+    "zero_area_faces": 0,
+    "zero_area_triangles": 0,
+    "uv_layers": true,
+    "loaded_textures": true,
+    "unexpected_nonmesh_objects": 0,
+    "topology_note": "Welded coordinate duplicates for topology analysis because exporters split UV/normal seams."
+  },
+  "source_copy_sha256_matches": true,
+  "review_renders_visually_inspected": true,
+  "materials": 1,
+  "packed_images": [
+    {
+      "name": "19-boxing-gloves_BaseColor",
+      "size": [
+        320,
+        320
+      ],
+      "packed": true
+    }
+  ]
+}

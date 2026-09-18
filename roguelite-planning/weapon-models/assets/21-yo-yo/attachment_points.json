@@ -1,0 +1,62 @@
+{
+  "String_Axle": {
+    "parent_mesh": "YoYo",
+    "local_position_blender_xyz": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "local_rotation_quaternion_wxyz": [
+      -3.0908619663705394e-08,
+      3.0908619663705394e-08,
+      0.7071067690849304,
+      0.7071067690849304
+    ],
+    "local_rotation_degrees_xyz": [
+      -89.999995674289,
+      -179.999991348578,
+      -0.0
+    ],
+    "local_axis_Z": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "world_position_blender_xyz": [
+      -0.550000011920929,
+      0.0,
+      1.100000023841858
+    ]
+  },
+  "String_Hand": {
+    "parent_mesh": "FingerRing",
+    "local_position_blender_xyz": [
+      0.3700000047683716,
+      0.3499999940395355,
+      0.0
+    ],
+    "local_rotation_quaternion_wxyz": [
+      0.27059808373451233,
+      0.27059802412986755,
+      0.6532814502716064,
+      0.6532813906669617
+    ],
+    "local_rotation_degrees_xyz": [
+      90.00000250447816,
+      6.310271376898521e-06,
+      135.00000034162267
+    ],
+    "local_axis_Z": [
+      0.7071067690849304,
+      0.7071067690849304,
+      0.0
+    ],
+    "world_position_blender_xyz": [
+      1.7999999523162842,
+      -0.6100000143051147,
+      0.15000000596046448
+    ]
+  },
+  "coordinate_system": "Blender right-handed XYZ; Z up. Values are relative to each named mesh origin. Standalone components use the same local marker coordinates. Convert coordinates with the import basis before making Studio Attachments; do not copy Blender XYZ blindly.",
+  "string_strategy": "No baked cord. Later create a Beam between Attachments named String_Hand and String_Axle for a visual line; adjust Beam curves for slack and move attachments for extension. A separate optional RopeConstraint can later enforce physical maximum length. No gameplay, animation, Beam or constraint created in this asset task."
+}

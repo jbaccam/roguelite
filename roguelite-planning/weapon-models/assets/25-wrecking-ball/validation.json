@@ -1,0 +1,71 @@
+{
+  "mesh_objects": 1,
+  "vertices": 1177,
+  "triangles": 2314,
+  "loose_vertices": 0,
+  "nonmanifold_edges": 0,
+  "zero_area_faces": 0,
+  "zero_area_triangles": 0,
+  "uv_layers": true,
+  "loaded_textures": true,
+  "materials": 1,
+  "index": 25,
+  "name": "Wrecking Ball",
+  "armatures": 1,
+  "bones": 9,
+  "notes": "Rigid skinned assembly; each closed chain link has weight1 to one bone. Handle_ROOT is fixed when child links pose. No animation Actions or clips. No Studio import tested.",
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "vertices": 1177,
+    "triangles": 2314,
+    "loose_vertices": 0,
+    "nonmanifold_edges": 0,
+    "zero_area_faces": 0,
+    "zero_area_triangles": 0,
+    "uv_layers": true,
+    "loaded_textures": true,
+    "materials": 1
+  },
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "vertices": 4762,
+    "triangles": 2314,
+    "loose_vertices": 0,
+    "nonmanifold_edges": 0,
+    "zero_area_faces": 0,
+    "zero_area_triangles": 0,
+    "uv_layers": true,
+    "loaded_textures": true,
+    "materials": 1
+  },
+  "bounds_min": [
+    -1.8599997758865356,
+    -0.8999999761581421,
+    0.0
+  ],
+  "bounds_max": [
+    1.6834907531738281,
+    0.8999999761581421,
+    3.336493492126465
+  ],
+  "source_copy_sha256_matches": true,
+  "packed_images": [
+    {
+      "name": "25-wrecking-ball_BaseColor",
+      "size": [
+        320,
+        320
+      ],
+      "packed": true
+    }
+  ],
+  "mesh_origins": {
+    "WreckingBall_Skinned": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "animation_actions": 0,
+  "rig_pose_check_inspected": true
+}

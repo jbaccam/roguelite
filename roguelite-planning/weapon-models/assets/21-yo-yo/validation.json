@@ -1,0 +1,265 @@
+{
+  "mesh_objects": 2,
+  "vertices": 506,
+  "triangles": 988,
+  "loose_vertices": 0,
+  "nonmanifold_edges": 0,
+  "zero_area_faces": 0,
+  "zero_area_triangles": 0,
+  "uv_layers": true,
+  "loaded_textures": true,
+  "materials": 1,
+  "index": 21,
+  "name": "Yo-Yo",
+  "notes": "Two independent unparented meshes: YoYo and FingerRing. Static cord removed. Named attachment Empty guides are only in Blender, never exports. No rig, physics or animation.",
+  "removed_cord_objects": [
+    "Twisted ivory cord strand 0",
+    "Twisted ivory cord strand 1"
+  ],
+  "attachment_markers": [
+    "String_Axle",
+    "String_Hand"
+  ],
+  "components": {
+    "YoYo": {
+      "blend": {
+        "mesh_objects": 1,
+        "vertices": 386,
+        "triangles": 752,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "parents": [
+          null
+        ],
+        "origins": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "unexpected_objects": []
+      },
+      "fbx": {
+        "mesh_objects": 1,
+        "vertices": 386,
+        "triangles": 752,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "parents": [
+          null
+        ],
+        "origins": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "unexpected_objects": []
+      },
+      "glb": {
+        "mesh_objects": 1,
+        "vertices": 1452,
+        "triangles": 752,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "parents": [
+          null
+        ],
+        "origins": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "unexpected_objects": []
+      }
+    },
+    "FingerRing": {
+      "blend": {
+        "mesh_objects": 1,
+        "vertices": 120,
+        "triangles": 236,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "parents": [
+          null
+        ],
+        "origins": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "unexpected_objects": []
+      },
+      "fbx": {
+        "mesh_objects": 1,
+        "vertices": 120,
+        "triangles": 236,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "parents": [
+          null
+        ],
+        "origins": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "unexpected_objects": []
+      },
+      "glb": {
+        "mesh_objects": 1,
+        "vertices": 512,
+        "triangles": 236,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "parents": [
+          null
+        ],
+        "origins": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "unexpected_objects": []
+      }
+    }
+  },
+  "fbx_reimport": {
+    "mesh_objects": 2,
+    "vertices": 506,
+    "triangles": 988,
+    "loose_vertices": 0,
+    "nonmanifold_edges": 0,
+    "zero_area_faces": 0,
+    "zero_area_triangles": 0,
+    "uv_layers": true,
+    "loaded_textures": true,
+    "materials": 1,
+    "parents": [
+      null,
+      null
+    ],
+    "unexpected_objects": []
+  },
+  "glb_reimport": {
+    "mesh_objects": 2,
+    "vertices": 1964,
+    "triangles": 988,
+    "loose_vertices": 0,
+    "nonmanifold_edges": 0,
+    "zero_area_faces": 0,
+    "zero_area_triangles": 0,
+    "uv_layers": true,
+    "loaded_textures": true,
+    "materials": 1,
+    "parents": [
+      null,
+      null
+    ],
+    "unexpected_objects": []
+  },
+  "bounds_min": [
+    -1.5799999237060547,
+    -1.3299999237060547,
+    0.04999995231628418
+  ],
+  "bounds_max": [
+    1.820000171661377,
+    0.7599999904632568,
+    2.1041758060455322
+  ],
+  "source_copy_sha256_matches": true,
+  "packed_images": [
+    {
+      "name": "21-yo-yo_BaseColor",
+      "size": [
+        320,
+        320
+      ],
+      "packed": true
+    }
+  ],
+  "mesh_origins": {
+    "YoYo": [
+      -0.550000011920929,
+      0.0,
+      1.100000023841858
+    ],
+    "FingerRing": [
+      1.4300000667572021,
+      -0.9599999785423279,
+      0.1499999761581421
+    ]
+  },
+  "animation_actions": 0,
+  "glb_file_structure": {
+    "meshes": 2,
+    "skins": 0,
+    "animations": 0,
+    "nodes": [
+      "FingerRing",
+      "YoYo"
+    ]
+  },
+  "nonexported_marker_checks": {
+    "String_Axle": {
+      "parent": "YoYo",
+      "local_position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "hidden_from_render": true
+    },
+    "String_Hand": {
+      "parent": "FingerRing",
+      "local_position": [
+        0.3700000047683716,
+        0.3499999940395355,
+        0.0
+      ],
+      "hidden_from_render": true
+    }
+  },
+  "preview_and_alternate_inspected": true
+}
