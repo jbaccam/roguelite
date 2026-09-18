@@ -1,0 +1,365 @@
+{
+  "source": "Existing export_audit.json (historical export evidence, not a new GPU profile)",
+  "weapons": [
+    {
+      "id": "0",
+      "name": "Glock (approved)",
+      "triangles": 2344,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "1",
+      "name": "Frying Pan",
+      "triangles": 448,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "30",
+      "name": "Magic Staff",
+      "triangles": 644,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "31",
+      "name": "Mjolnir",
+      "triangles": 2554,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "32",
+      "name": "Excalibur",
+      "triangles": 1478,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "33",
+      "name": "Pandoras Box",
+      "triangles": 2438,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "34",
+      "name": "Medusas Head",
+      "triangles": 3872,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "2",
+      "name": "Nunchucks",
+      "triangles": 2720,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "3",
+      "name": "Katana",
+      "triangles": 1368,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "4",
+      "name": "Kusarigama",
+      "triangles": 2656,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "5",
+      "name": "Spatula",
+      "triangles": 728,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "6",
+      "name": "Baseball Bat",
+      "triangles": 980,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "26",
+      "name": "Shovel",
+      "triangles": 454,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "35",
+      "name": "Crystal Ball",
+      "triangles": 2188,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "7",
+      "name": "Draco",
+      "triangles": 2446,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "8",
+      "name": "Fart Gun",
+      "triangles": 4068,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "9",
+      "name": "Shotgun",
+      "triangles": 1440,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "10",
+      "name": "T-Shirt Cannon",
+      "triangles": 2276,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "11",
+      "name": "Rocket Launcher",
+      "triangles": 2588,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "24",
+      "name": "Nail Gun",
+      "triangles": 3488,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "29",
+      "name": "Power Washer",
+      "triangles": 2992,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "17",
+      "name": "Rubber Ducks",
+      "triangles": 792,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "19",
+      "name": "Boxing Gloves",
+      "triangles": 832,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "19:LeftGlove",
+      "name": "Boxing Gloves / LeftGlove",
+      "triangles": 416,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "19:RightGlove",
+      "name": "Boxing Gloves / RightGlove",
+      "triangles": 416,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "20",
+      "name": "Cinder Blocks",
+      "triangles": 132,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "23",
+      "name": "Bowling Pins",
+      "triangles": 236,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "12",
+      "name": "Boomerang",
+      "triangles": 588,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "13",
+      "name": "Kunais",
+      "triangles": 664,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "14",
+      "name": "Molotovs",
+      "triangles": 734,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "15",
+      "name": "Eggs",
+      "triangles": 96,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "16",
+      "name": "Steak",
+      "triangles": 560,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "18",
+      "name": "Deck of Cards",
+      "triangles": 2648,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "18:Deck",
+      "name": "Deck of Cards / Deck",
+      "triangles": 1772,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "18:HeartCard",
+      "name": "Deck of Cards / HeartCard",
+      "triangles": 296,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "18:SpadeCard",
+      "name": "Deck of Cards / SpadeCard",
+      "triangles": 356,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "18:DiamondCard",
+      "name": "Deck of Cards / DiamondCard",
+      "triangles": 224,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "21",
+      "name": "Yo-Yo",
+      "triangles": 988,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "22",
+      "name": "Bowling Ball",
+      "triangles": 686,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "25",
+      "name": "Wrecking Ball",
+      "triangles": 2314,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "27",
+      "name": "Paint Roller",
+      "triangles": 1752,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "28",
+      "name": "Vacuum Cleaner",
+      "triangles": 1198,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "11:Rocket",
+      "name": "Rocket Launcher / Rocket",
+      "triangles": 484,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "21:YoYo",
+      "name": "Yo-Yo / YoYo",
+      "triangles": 752,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    },
+    {
+      "id": "21:FingerRing",
+      "name": "Yo-Yo / FingerRing",
+      "triangles": 236,
+      "uvs": true,
+      "finite": true,
+      "zero_area": 0
+    }
+  ]
+}

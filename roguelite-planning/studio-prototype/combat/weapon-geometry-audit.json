@@ -1,0 +1,365 @@
+{
+  "method": "Fresh GLB accessor inspection. Exact coincident triangles checked within each mesh; arbitrary near-coplanar intersections and GPU performance are not covered.",
+  "files": [
+    {
+      "file": "roguelite-planning/weapon-models/assets/00-glock-approved/Model.glb",
+      "triangles": 2344,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/01-frying-pan/Model.glb",
+      "triangles": 448,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/02-nunchucks/Model.glb",
+      "triangles": 2720,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/03-katana/Model.glb",
+      "triangles": 1368,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/04-kusarigama/Model.glb",
+      "triangles": 2656,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/05-spatula/Model.glb",
+      "triangles": 728,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/06-baseball-bat/Model.glb",
+      "triangles": 980,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/07-draco/Model.glb",
+      "triangles": 2446,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/08-fart-gun/Model.glb",
+      "triangles": 4068,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/09-shotgun/Model.glb",
+      "triangles": 1440,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/10-t-shirt-cannon/Model.glb",
+      "triangles": 2276,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/11-rocket-launcher/components/Rocket/Model.glb",
+      "triangles": 484,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/11-rocket-launcher/Model.glb",
+      "triangles": 2588,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/12-boomerang/Model.glb",
+      "triangles": 588,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/13-kunais/Model.glb",
+      "triangles": 664,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/14-molotovs/Model.glb",
+      "triangles": 734,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/15-eggs/Model.glb",
+      "triangles": 96,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/16-steak/Model.glb",
+      "triangles": 560,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/17-rubber-ducks/Model.glb",
+      "triangles": 792,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/18-deck-of-cards/components/Deck/Model.glb",
+      "triangles": 1772,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/18-deck-of-cards/components/DiamondCard/Model.glb",
+      "triangles": 224,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/18-deck-of-cards/components/HeartCard/Model.glb",
+      "triangles": 296,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/18-deck-of-cards/components/SpadeCard/Model.glb",
+      "triangles": 356,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/18-deck-of-cards/Model.glb",
+      "triangles": 2648,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/19-boxing-gloves/components/LeftGlove/Model.glb",
+      "triangles": 416,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/19-boxing-gloves/components/RightGlove/Model.glb",
+      "triangles": 416,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/19-boxing-gloves/Model.glb",
+      "triangles": 832,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/20-cinder-blocks/Model.glb",
+      "triangles": 132,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/21-yo-yo/components/FingerRing/Model.glb",
+      "triangles": 236,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/21-yo-yo/components/YoYo/Model.glb",
+      "triangles": 752,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/21-yo-yo/Model.glb",
+      "triangles": 988,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/22-bowling-ball/Model.glb",
+      "triangles": 686,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/23-bowling-pins/Model.glb",
+      "triangles": 236,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/24-nail-gun/Model.glb",
+      "triangles": 3488,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/25-wrecking-ball/Model.glb",
+      "triangles": 2314,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/26-shovel/Model.glb",
+      "triangles": 454,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/27-paint-roller/Model.glb",
+      "triangles": 1752,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/28-vacuum-cleaner/Model.glb",
+      "triangles": 1198,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/29-power-washer/Model.glb",
+      "triangles": 2992,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/30-magic-staff/Model.glb",
+      "triangles": 644,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/31-mjolnir/Model.glb",
+      "triangles": 2554,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/32-excalibur/Model.glb",
+      "triangles": 1478,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/33-pandoras-box/Model.glb",
+      "triangles": 2438,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/34-medusas-head/Model.glb",
+      "triangles": 3872,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    },
+    {
+      "file": "roguelite-planning/weapon-models/assets/35-crystal-ball/Model.glb",
+      "triangles": 2188,
+      "exact_duplicate_triangles": 0,
+      "degenerate_triangles": 0,
+      "finite": true,
+      "uvs": true
+    }
+  ]
+}
