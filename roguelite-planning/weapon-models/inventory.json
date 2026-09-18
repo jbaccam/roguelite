@@ -1,0 +1,349 @@
+[
+  {
+    "index": 1,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_22 PM (1).png",
+    "name": "Frying Pan",
+    "slug": "01-frying-pan",
+    "batch": "melee_tools",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\01-frying-pan"
+  },
+  {
+    "index": 2,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_22 PM (2).png",
+    "name": "Nunchucks",
+    "slug": "02-nunchucks",
+    "batch": "melee_tools",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\02-nunchucks",
+    "rigged": true
+  },
+  {
+    "index": 3,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_22 PM (3).png",
+    "name": "Katana",
+    "slug": "03-katana",
+    "batch": "melee_tools",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\03-katana"
+  },
+  {
+    "index": 4,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_22 PM (4).png",
+    "name": "Kusarigama",
+    "slug": "04-kusarigama",
+    "batch": "melee_tools",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\04-kusarigama",
+    "rigged": true
+  },
+  {
+    "index": 5,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_23 PM (5).png",
+    "name": "Spatula",
+    "slug": "05-spatula",
+    "batch": "melee_tools",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\05-spatula"
+  },
+  {
+    "index": 6,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_24 PM (6).png",
+    "name": "Baseball Bat",
+    "slug": "06-baseball-bat",
+    "batch": "melee_tools",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\06-baseball-bat"
+  },
+  {
+    "index": 7,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_25 PM (8).png",
+    "name": "Draco",
+    "slug": "07-draco",
+    "batch": "guns",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\07-draco"
+  },
+  {
+    "index": 8,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_25 PM (9).png",
+    "name": "Fart Gun",
+    "slug": "08-fart-gun",
+    "batch": "guns",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\08-fart-gun"
+  },
+  {
+    "index": 9,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_26 PM (10).png",
+    "name": "Shotgun",
+    "slug": "09-shotgun",
+    "batch": "guns",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\09-shotgun"
+  },
+  {
+    "index": 10,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_28 PM (1).png",
+    "name": "T-Shirt Cannon",
+    "slug": "10-t-shirt-cannon",
+    "batch": "guns",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\10-t-shirt-cannon"
+  },
+  {
+    "index": 11,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_28 PM (2).png",
+    "name": "Rocket Launcher",
+    "slug": "11-rocket-launcher",
+    "batch": "guns",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\11-rocket-launcher",
+    "components": [
+      "Rocket"
+    ],
+    "component_mode": "additional",
+    "representation": "empty_launcher_with_separate_rocket"
+  },
+  {
+    "index": 12,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_28 PM (3).png",
+    "name": "Boomerang",
+    "slug": "12-boomerang",
+    "batch": "throwables",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\12-boomerang"
+  },
+  {
+    "index": 13,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_29 PM (4).png",
+    "name": "Kunais",
+    "slug": "13-kunais",
+    "batch": "throwables",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\13-kunais",
+    "representation": "single_reusable"
+  },
+  {
+    "index": 14,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_29 PM (5).png",
+    "name": "Molotovs",
+    "slug": "14-molotovs",
+    "batch": "throwables",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\14-molotovs"
+  },
+  {
+    "index": 15,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_30 PM (6).png",
+    "name": "Eggs",
+    "slug": "15-eggs",
+    "batch": "throwables",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\15-eggs",
+    "representation": "single_reusable"
+  },
+  {
+    "index": 16,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_30 PM (7).png",
+    "name": "Steak",
+    "slug": "16-steak",
+    "batch": "throwables",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\16-steak"
+  },
+  {
+    "index": 17,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_31 PM (10).png",
+    "name": "Rubber Ducks",
+    "slug": "17-rubber-ducks",
+    "batch": "juggler_utility",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\17-rubber-ducks",
+    "representation": "single_reusable"
+  },
+  {
+    "index": 18,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_31 PM (8).png",
+    "name": "Deck of Cards",
+    "slug": "18-deck-of-cards",
+    "batch": "throwables",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\18-deck-of-cards",
+    "representation": "independent_components",
+    "components": [
+      "Deck",
+      "HeartCard",
+      "SpadeCard",
+      "DiamondCard"
+    ]
+  },
+  {
+    "index": 19,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_31 PM (9).png",
+    "name": "Boxing Gloves",
+    "slug": "19-boxing-gloves",
+    "batch": "juggler_utility",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\19-boxing-gloves",
+    "representation": "independent_components",
+    "components": [
+      "LeftGlove",
+      "RightGlove"
+    ]
+  },
+  {
+    "index": 20,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_36 PM (1).png",
+    "name": "Cinder Blocks",
+    "slug": "20-cinder-blocks",
+    "batch": "juggler_utility",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\20-cinder-blocks",
+    "representation": "single_reusable"
+  },
+  {
+    "index": 21,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_36 PM (2).png",
+    "name": "Yo-Yo",
+    "slug": "21-yo-yo",
+    "batch": "juggler_utility",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\21-yo-yo",
+    "components": [
+      "YoYo",
+      "FingerRing"
+    ],
+    "representation": "independent_components",
+    "string_strategy": "Roblox Beam later; no static string mesh"
+  },
+  {
+    "index": 22,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_37 PM (3).png",
+    "name": "Bowling Ball",
+    "slug": "22-bowling-ball",
+    "batch": "juggler_utility",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\22-bowling-ball"
+  },
+  {
+    "index": 23,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_37 PM (4).png",
+    "name": "Bowling Pins",
+    "slug": "23-bowling-pins",
+    "batch": "juggler_utility",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\23-bowling-pins",
+    "representation": "single_reusable"
+  },
+  {
+    "index": 24,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_38 PM (5).png",
+    "name": "Nail Gun",
+    "slug": "24-nail-gun",
+    "batch": "guns",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\24-nail-gun"
+  },
+  {
+    "index": 25,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_38 PM (6).png",
+    "name": "Wrecking Ball",
+    "slug": "25-wrecking-ball",
+    "batch": "juggler_utility",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\25-wrecking-ball",
+    "rigged": true
+  },
+  {
+    "index": 26,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_38 PM (7).png",
+    "name": "Shovel",
+    "slug": "26-shovel",
+    "batch": "melee_tools",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\26-shovel"
+  },
+  {
+    "index": 27,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_39 PM (8).png",
+    "name": "Paint Roller",
+    "slug": "27-paint-roller",
+    "batch": "juggler_utility",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\27-paint-roller"
+  },
+  {
+    "index": 28,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_39 PM (9).png",
+    "name": "Vacuum Cleaner",
+    "slug": "28-vacuum-cleaner",
+    "batch": "juggler_utility",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\28-vacuum-cleaner"
+  },
+  {
+    "index": 29,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_13_40 PM (10).png",
+    "name": "Power Washer",
+    "slug": "29-power-washer",
+    "batch": "guns",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\29-power-washer"
+  },
+  {
+    "index": 30,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_24_51 PM (1).png",
+    "name": "Magic Staff",
+    "slug": "30-magic-staff",
+    "batch": "magic",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\30-magic-staff"
+  },
+  {
+    "index": 31,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_24_51 PM (2).png",
+    "name": "Mjolnir",
+    "slug": "31-mjolnir",
+    "batch": "magic",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\31-mjolnir"
+  },
+  {
+    "index": 32,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_24_52 PM (3).png",
+    "name": "Excalibur",
+    "slug": "32-excalibur",
+    "batch": "magic",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\32-excalibur"
+  },
+  {
+    "index": 33,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_24_52 PM (4).png",
+    "name": "Pandoras Box",
+    "slug": "33-pandoras-box",
+    "batch": "magic",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\33-pandoras-box",
+    "rigged": true
+  },
+  {
+    "index": 34,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_24_52 PM (5).png",
+    "name": "Medusas Head",
+    "slug": "34-medusas-head",
+    "batch": "magic",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\34-medusas-head"
+  },
+  {
+    "index": 35,
+    "source": "C:\\Users\\Jeremiah\\Downloads\\weapons\\ChatGPT Image Sep 17, 2026, 03_24_52 PM (6).png",
+    "name": "Crystal Ball",
+    "slug": "35-crystal-ball",
+    "batch": "magic",
+    "status": "complete_verified",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\35-crystal-ball"
+  }
+]

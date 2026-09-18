@@ -1,0 +1,332 @@
+[
+  {
+    "index": 0,
+    "name": "Glock (approved)",
+    "prefix": "W00_Glock_approved",
+    "meshes": [
+      "W00_Glock_approved"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 1,
+    "name": "Frying Pan",
+    "prefix": "W01_Frying_Pan",
+    "meshes": [
+      "W01_Frying_Pan"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 2,
+    "name": "Nunchucks",
+    "prefix": "W02_Nunchucks",
+    "meshes": [
+      "W02_Nunchucks"
+    ],
+    "bones": 7
+  },
+  {
+    "index": 3,
+    "name": "Katana",
+    "prefix": "W03_Katana",
+    "meshes": [
+      "W03_Katana"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 4,
+    "name": "Kusarigama",
+    "prefix": "W04_Kusarigama",
+    "meshes": [
+      "W04_Kusarigama"
+    ],
+    "bones": 13
+  },
+  {
+    "index": 5,
+    "name": "Spatula",
+    "prefix": "W05_Spatula",
+    "meshes": [
+      "W05_Spatula"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 6,
+    "name": "Baseball Bat",
+    "prefix": "W06_Baseball_Bat",
+    "meshes": [
+      "W06_Baseball_Bat"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 7,
+    "name": "Draco",
+    "prefix": "W07_Draco",
+    "meshes": [
+      "W07_Draco"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 8,
+    "name": "Fart Gun",
+    "prefix": "W08_Fart_Gun",
+    "meshes": [
+      "W08_Fart_Gun"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 9,
+    "name": "Shotgun",
+    "prefix": "W09_Shotgun",
+    "meshes": [
+      "W09_Shotgun"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 10,
+    "name": "T-Shirt Cannon",
+    "prefix": "W10_T_Shirt_Cannon",
+    "meshes": [
+      "W10_T_Shirt_Cannon"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 11,
+    "name": "Rocket Launcher",
+    "prefix": "W11_Rocket_Launcher",
+    "meshes": [
+      "W11_Rocket_Launcher"
+    ],
+    "bones": 0,
+    "rocket": "W11_Rocket_Component"
+  },
+  {
+    "index": 12,
+    "name": "Boomerang",
+    "prefix": "W12_Boomerang",
+    "meshes": [
+      "W12_Boomerang"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 13,
+    "name": "Kunais",
+    "prefix": "W13_Kunais",
+    "meshes": [
+      "W13_Kunais"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 14,
+    "name": "Molotovs",
+    "prefix": "W14_Molotovs",
+    "meshes": [
+      "W14_Molotovs"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 15,
+    "name": "Eggs",
+    "prefix": "W15_Eggs",
+    "meshes": [
+      "W15_Eggs"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 16,
+    "name": "Steak",
+    "prefix": "W16_Steak",
+    "meshes": [
+      "W16_Steak"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 17,
+    "name": "Rubber Ducks",
+    "prefix": "W17_Rubber_Ducks",
+    "meshes": [
+      "W17_Rubber_Ducks"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 18,
+    "name": "Deck of Cards",
+    "prefix": "W18_Deck_of_Cards",
+    "meshes": [
+      "W18_Deck_of_Cards__01",
+      "W18_Deck_of_Cards__02",
+      "W18_Deck_of_Cards__03",
+      "W18_Deck_of_Cards__04"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 19,
+    "name": "Boxing Gloves",
+    "prefix": "W19_Boxing_Gloves",
+    "meshes": [
+      "W19_Boxing_Gloves__01",
+      "W19_Boxing_Gloves__02"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 20,
+    "name": "Cinder Blocks",
+    "prefix": "W20_Cinder_Blocks",
+    "meshes": [
+      "W20_Cinder_Blocks"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 21,
+    "name": "Yo-Yo",
+    "prefix": "W21_Yo_Yo",
+    "meshes": [
+      "W21_Yo_Yo__01",
+      "W21_Yo_Yo__02"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 22,
+    "name": "Bowling Ball",
+    "prefix": "W22_Bowling_Ball",
+    "meshes": [
+      "W22_Bowling_Ball"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 23,
+    "name": "Bowling Pins",
+    "prefix": "W23_Bowling_Pins",
+    "meshes": [
+      "W23_Bowling_Pins"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 24,
+    "name": "Nail Gun",
+    "prefix": "W24_Nail_Gun",
+    "meshes": [
+      "W24_Nail_Gun"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 25,
+    "name": "Wrecking Ball",
+    "prefix": "W25_Wrecking_Ball",
+    "meshes": [
+      "W25_Wrecking_Ball"
+    ],
+    "bones": 9
+  },
+  {
+    "index": 26,
+    "name": "Shovel",
+    "prefix": "W26_Shovel",
+    "meshes": [
+      "W26_Shovel"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 27,
+    "name": "Paint Roller",
+    "prefix": "W27_Paint_Roller",
+    "meshes": [
+      "W27_Paint_Roller"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 28,
+    "name": "Vacuum Cleaner",
+    "prefix": "W28_Vacuum_Cleaner",
+    "meshes": [
+      "W28_Vacuum_Cleaner"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 29,
+    "name": "Power Washer",
+    "prefix": "W29_Power_Washer",
+    "meshes": [
+      "W29_Power_Washer"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 30,
+    "name": "Magic Staff",
+    "prefix": "W30_Magic_Staff",
+    "meshes": [
+      "W30_Magic_Staff"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 31,
+    "name": "Mjolnir",
+    "prefix": "W31_Mjolnir",
+    "meshes": [
+      "W31_Mjolnir"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 32,
+    "name": "Excalibur",
+    "prefix": "W32_Excalibur",
+    "meshes": [
+      "W32_Excalibur"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 33,
+    "name": "Pandoras Box",
+    "prefix": "W33_Pandoras_Box",
+    "meshes": [
+      "W33_Pandoras_Box"
+    ],
+    "bones": 2
+  },
+  {
+    "index": 34,
+    "name": "Medusas Head",
+    "prefix": "W34_Medusas_Head",
+    "meshes": [
+      "W34_Medusas_Head"
+    ],
+    "bones": 0
+  },
+  {
+    "index": 35,
+    "name": "Crystal Ball",
+    "prefix": "W35_Crystal_Ball",
+    "meshes": [
+      "W35_Crystal_Ball"
+    ],
+    "bones": 0
+  }
+]

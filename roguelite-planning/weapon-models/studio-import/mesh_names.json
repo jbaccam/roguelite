@@ -1,0 +1,212 @@
+[
+  {
+    "name": "W00_Glock_approved",
+    "data": "Cube.001",
+    "vertices": 5024
+  },
+  {
+    "name": "W01_Frying_Pan",
+    "data": "Cast iron pan with sloped interior and thick rim",
+    "vertices": 872
+  },
+  {
+    "name": "W02_Nunchucks",
+    "data": "Wood baton 0",
+    "vertices": 5128
+  },
+  {
+    "name": "W03_Katana",
+    "data": "Black wrapped katana handle",
+    "vertices": 2756
+  },
+  {
+    "name": "W04_Kusarigama",
+    "data": "Wood sickle shaft",
+    "vertices": 5188
+  },
+  {
+    "name": "W05_Spatula",
+    "data": "Wooden hanging grip",
+    "vertices": 1412
+  },
+  {
+    "name": "W06_Baseball_Bat",
+    "data": "Tapered faceted ash baseball bat",
+    "vertices": 1944
+  },
+  {
+    "name": "W07_Draco",
+    "data": "Cube.002",
+    "vertices": 5091
+  },
+  {
+    "name": "W08_Fart_Gun",
+    "data": "Ivory body",
+    "vertices": 8288
+  },
+  {
+    "name": "W09_Shotgun",
+    "data": "Cube.021",
+    "vertices": 2956
+  },
+  {
+    "name": "W10_T_Shirt_Cannon",
+    "data": "Blue faceted main receiver",
+    "vertices": 4522
+  },
+  {
+    "name": "W11_Rocket_Component",
+    "data": "Complete olive rocket exterior",
+    "vertices": 962
+  },
+  {
+    "name": "W11_Rocket_Launcher",
+    "data": "Rear flared shoulder opening",
+    "vertices": 5230
+  },
+  {
+    "name": "W12_Boomerang",
+    "data": "Solid curved wooden boomerang",
+    "vertices": 1544
+  },
+  {
+    "name": "W13_Kunais",
+    "data": "Kunai 0 diamond blade",
+    "vertices": 1412
+  },
+  {
+    "name": "W14_Molotovs",
+    "data": "Green faceted bottle",
+    "vertices": 1466
+  },
+  {
+    "name": "W15_Eggs",
+    "data": "Icosphere.002",
+    "vertices": 260
+  },
+  {
+    "name": "W16_Steak",
+    "data": "Thick steak with perimeter fat",
+    "vertices": 1197
+  },
+  {
+    "name": "W17_Rubber_Ducks",
+    "data": "Icosphere.003",
+    "vertices": 1988
+  },
+  {
+    "name": "W18_Deck_of_Cards__01",
+    "data": "Layered deck card 00.004",
+    "vertices": 496
+  },
+  {
+    "name": "W18_Deck_of_Cards__02",
+    "data": "Layered deck card 00.003",
+    "vertices": 770
+  },
+  {
+    "name": "W18_Deck_of_Cards__03",
+    "data": "Layered deck card 00.001",
+    "vertices": 3656
+  },
+  {
+    "name": "W18_Deck_of_Cards__04",
+    "data": "Layered deck card 00.002",
+    "vertices": 642
+  },
+  {
+    "name": "W19_Boxing_Gloves__01",
+    "data": "Icosphere.007",
+    "vertices": 1084
+  },
+  {
+    "name": "W19_Boxing_Gloves__02",
+    "data": "Icosphere.010",
+    "vertices": 1084
+  },
+  {
+    "name": "W20_Cinder_Blocks",
+    "data": "Cube.005",
+    "vertices": 224
+  },
+  {
+    "name": "W21_Yo_Yo__01",
+    "data": "Gold finger loop",
+    "vertices": 512
+  },
+  {
+    "name": "W21_Yo_Yo__02",
+    "data": "Red yo-yo half",
+    "vertices": 1452
+  },
+  {
+    "name": "W22_Bowling_Ball",
+    "data": "Sphere",
+    "vertices": 1396
+  },
+  {
+    "name": "W23_Bowling_Pins",
+    "data": "Pin 1 | continuous faceted body and twin red bands",
+    "vertices": 460
+  },
+  {
+    "name": "W24_Nail_Gun",
+    "data": "Yellow broad motor shell",
+    "vertices": 7695
+  },
+  {
+    "name": "W25_Wrecking_Ball",
+    "data": "Sphere.003",
+    "vertices": 4762
+  },
+  {
+    "name": "W26_Shovel",
+    "data": "Cupped pointed steel shovel blade",
+    "vertices": 910
+  },
+  {
+    "name": "W27_Paint_Roller",
+    "data": "Icosphere.020",
+    "vertices": 3528
+  },
+  {
+    "name": "W28_Vacuum_Cleaner",
+    "data": "Charcoal rear wheel",
+    "vertices": 2252
+  },
+  {
+    "name": "W29_Power_Washer",
+    "data": "Cube.008",
+    "vertices": 6740
+  },
+  {
+    "name": "W30_Magic_Staff",
+    "data": "Large cyan crown crystal",
+    "vertices": 1932
+  },
+  {
+    "name": "W31_Mjolnir",
+    "data": "Cube.014",
+    "vertices": 7662
+  },
+  {
+    "name": "W32_Excalibur",
+    "data": "Broad diamond-section steel blade",
+    "vertices": 4434
+  },
+  {
+    "name": "W33_Pandoras_Box",
+    "data": "Cube.041",
+    "vertices": 6672
+  },
+  {
+    "name": "W34_Medusas_Head",
+    "data": "Icosphere.009",
+    "vertices": 11616
+  },
+  {
+    "name": "W35_Crystal_Ball",
+    "data": "Cube.069",
+    "vertices": 6564
+  }
+]

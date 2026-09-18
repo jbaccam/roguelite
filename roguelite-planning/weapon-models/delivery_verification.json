@@ -1,0 +1,262 @@
+{
+  "expected_items": 36,
+  "reusable_model_count": 42,
+  "source_images": 35,
+  "passed_items": 36,
+  "inventory_issues": [],
+  "items": [
+    {
+      "index": 0,
+      "name": "Glock (approved)",
+      "batch": "approved",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 1,
+      "name": "Frying Pan",
+      "batch": "melee_tools",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 2,
+      "name": "Nunchucks",
+      "batch": "melee_tools",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 3,
+      "name": "Katana",
+      "batch": "melee_tools",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 4,
+      "name": "Kusarigama",
+      "batch": "melee_tools",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 5,
+      "name": "Spatula",
+      "batch": "melee_tools",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 6,
+      "name": "Baseball Bat",
+      "batch": "melee_tools",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 7,
+      "name": "Draco",
+      "batch": "guns",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 8,
+      "name": "Fart Gun",
+      "batch": "guns",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 9,
+      "name": "Shotgun",
+      "batch": "guns",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 10,
+      "name": "T-Shirt Cannon",
+      "batch": "guns",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 11,
+      "name": "Rocket Launcher",
+      "batch": "guns",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 12,
+      "name": "Boomerang",
+      "batch": "throwables",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 13,
+      "name": "Kunais",
+      "batch": "throwables",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 14,
+      "name": "Molotovs",
+      "batch": "throwables",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 15,
+      "name": "Eggs",
+      "batch": "throwables",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 16,
+      "name": "Steak",
+      "batch": "throwables",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 17,
+      "name": "Rubber Ducks",
+      "batch": "juggler_utility",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 18,
+      "name": "Deck of Cards",
+      "batch": "throwables",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 19,
+      "name": "Boxing Gloves",
+      "batch": "juggler_utility",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 20,
+      "name": "Cinder Blocks",
+      "batch": "juggler_utility",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 21,
+      "name": "Yo-Yo",
+      "batch": "juggler_utility",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 22,
+      "name": "Bowling Ball",
+      "batch": "juggler_utility",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 23,
+      "name": "Bowling Pins",
+      "batch": "juggler_utility",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 24,
+      "name": "Nail Gun",
+      "batch": "guns",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 25,
+      "name": "Wrecking Ball",
+      "batch": "juggler_utility",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 26,
+      "name": "Shovel",
+      "batch": "melee_tools",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 27,
+      "name": "Paint Roller",
+      "batch": "juggler_utility",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 28,
+      "name": "Vacuum Cleaner",
+      "batch": "juggler_utility",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 29,
+      "name": "Power Washer",
+      "batch": "guns",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 30,
+      "name": "Magic Staff",
+      "batch": "magic",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 31,
+      "name": "Mjolnir",
+      "batch": "magic",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 32,
+      "name": "Excalibur",
+      "batch": "magic",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 33,
+      "name": "Pandoras Box",
+      "batch": "magic",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 34,
+      "name": "Medusas Head",
+      "batch": "magic",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "index": 35,
+      "name": "Crystal Ball",
+      "batch": "magic",
+      "passed": true,
+      "issues": []
+    }
+  ],
+  "studio_import_tested": false
+}

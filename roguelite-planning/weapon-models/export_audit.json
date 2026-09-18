@@ -1,0 +1,2264 @@
+{
+  "0": {
+    "name": "Glock (approved)",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 2344,
+        "finite_coordinates": true,
+        "bounds": [
+          6.820516347885132,
+          1.3650000095367432,
+          4.973444938659668
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 2344,
+        "finite_coordinates": true,
+        "bounds": [
+          6.820516347885132,
+          1.3650000095367432,
+          4.973445024341345
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "1": {
+    "name": "Frying Pan",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 448,
+        "finite_coordinates": true,
+        "bounds": [
+          4.546422719955444,
+          2.859999895095825,
+          0.6949999928474426
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 448,
+        "finite_coordinates": true,
+        "bounds": [
+          4.546422719955444,
+          2.859999895095825,
+          0.6950002446984769
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "30": {
+    "name": "Magic Staff",
+    "formats": {
+      "glb": {
+        "meshes": 11,
+        "triangles": 644,
+        "finite_coordinates": true,
+        "bounds": [
+          4.2849526554346085,
+          0.796001672744751,
+          4.433173645287752
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 11,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 11,
+        "triangles": 644,
+        "finite_coordinates": true,
+        "bounds": [
+          4.284952625632286,
+          0.796001672744751,
+          4.433172710239887
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 11,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "31": {
+    "name": "Mjolnir",
+    "formats": {
+      "glb": {
+        "meshes": 45,
+        "triangles": 2554,
+        "finite_coordinates": true,
+        "bounds": [
+          3.1252259612083435,
+          1.1920000314712524,
+          5.081527212634683
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 45,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 45,
+        "triangles": 2554,
+        "finite_coordinates": true,
+        "bounds": [
+          3.1252258718013763,
+          1.1920002698898315,
+          5.081526674390666
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 45,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "32": {
+    "name": "Excalibur",
+    "formats": {
+      "glb": {
+        "meshes": 22,
+        "triangles": 1478,
+        "finite_coordinates": true,
+        "bounds": [
+          4.5622593611478806,
+          0.8199999928474426,
+          4.151479721069336
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 22,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 22,
+        "triangles": 1478,
+        "finite_coordinates": true,
+        "bounds": [
+          4.562259405851364,
+          0.8200000524520874,
+          4.151480168104172
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 22,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "33": {
+    "name": "Pandoras Box",
+    "formats": {
+      "glb": {
+        "meshes": 47,
+        "triangles": 2438,
+        "finite_coordinates": true,
+        "bounds": [
+          2.962831974029541,
+          2.5149999856948853,
+          2.7699999809265137
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 50,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1,
+          2
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": [
+          "Icosphere"
+        ],
+        "file_mesh_instances": 47
+      },
+      "fbx": {
+        "meshes": 47,
+        "triangles": 2438,
+        "finite_coordinates": true,
+        "bounds": [
+          2.962831735610962,
+          2.5150002241134644,
+          2.7700003410517127
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 50,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1,
+          2
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": []
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 47,
+      "parented_meshes": [
+        "Stone coffer body",
+        "Bottom bevel plinth",
+        "Corner gilded upright",
+        "Octagonal corner foot",
+        "Corner gilded upright.001",
+        "Octagonal corner foot.001",
+        "Corner gilded upright.002",
+        "Octagonal corner foot.002",
+        "Corner gilded upright.003",
+        "Octagonal corner foot.003",
+        "Horizontal lower trim",
+        "Horizontal upper trim",
+        "Raised angular spiral scrollwork",
+        "Raised angular spiral scrollwork.001",
+        "Horizontal lower trim.001",
+        "Horizontal upper trim.001",
+        "Raised angular spiral scrollwork.002",
+        "Raised angular spiral scrollwork.003",
+        "Side horizontal border",
+        "Side horizontal border.001",
+        "Side spiral relief",
+        "Side horizontal border.002",
+        "Side horizontal border.003",
+        "Side spiral relief.001",
+        "Dark slightly open lid seam",
+        "Purple magic within seam",
+        "Heavy chamfered stone lid",
+        "Raised inset lid panel",
+        "Lid hooked corner binding",
+        "Lid hooked corner binding.001",
+        "Lid hooked corner binding.002",
+        "Lid hooked corner binding.003",
+        "Top gem gold setting",
+        "Lid amethyst pyramid",
+        "Heavy central clasp",
+        "Clasp amethyst",
+        "Lid underside inset stone panel",
+        "Lid underside gold edge",
+        "Lid underside gold edge.001",
+        "Lid underside gold edge.002",
+        "Lid underside gold edge.003",
+        "Rear fixed hinge leaf",
+        "Rear hinge barrel",
+        "Lid hinge leaf",
+        "Rear fixed hinge leaf.001",
+        "Rear hinge barrel.001",
+        "Lid hinge leaf.001"
+      ],
+      "referenced_images": 2,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "34": {
+    "name": "Medusas Head",
+    "formats": {
+      "glb": {
+        "meshes": 76,
+        "triangles": 3872,
+        "finite_coordinates": true,
+        "bounds": [
+          3.4386179447174072,
+          1.2899999618530273,
+          4.100472468882799
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 76,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 76,
+        "triangles": 3872,
+        "finite_coordinates": true,
+        "bounds": [
+          3.4386173486709595,
+          1.2899999618530273,
+          4.100471990978608
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 76,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "2": {
+    "name": "Nunchucks",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 2720,
+        "finite_coordinates": true,
+        "bounds": [
+          2.384425640106201,
+          0.5800001621246338,
+          3.2883113622665405
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": [
+          "Icosphere"
+        ],
+        "file_mesh_instances": 1
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 2720,
+        "finite_coordinates": true,
+        "bounds": [
+          2.384425163269043,
+          0.5800000131130219,
+          3.2883111238479614
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": []
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 2,
+      "parented_meshes": [
+        "Nunchucks"
+      ],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "3": {
+    "name": "Katana",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 1368,
+        "finite_coordinates": true,
+        "bounds": [
+          3.2193946838378906,
+          0.6200000047683716,
+          3.2675132155418396
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 1368,
+        "finite_coordinates": true,
+        "bounds": [
+          3.2193946838378906,
+          0.6200000047683716,
+          3.2675132155418396
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "4": {
+    "name": "Kusarigama",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 2656,
+        "finite_coordinates": true,
+        "bounds": [
+          4.332634806632996,
+          0.8144682943820953,
+          3.546950578689575
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": [
+          "Icosphere"
+        ],
+        "file_mesh_instances": 1
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 2656,
+        "finite_coordinates": true,
+        "bounds": [
+          4.33262825012207,
+          0.81446772813797,
+          3.546952024102211
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": []
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 2,
+      "parented_meshes": [
+        "Kusarigama"
+      ],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "5": {
+    "name": "Spatula",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 728,
+        "finite_coordinates": true,
+        "bounds": [
+          1.8548211455345154,
+          0.3049999922513962,
+          3.7428093552589417
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 728,
+        "finite_coordinates": true,
+        "bounds": [
+          1.8548210859298706,
+          0.30500005185604095,
+          3.7428094260394573
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "6": {
+    "name": "Baseball Bat",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 980,
+        "finite_coordinates": true,
+        "bounds": [
+          2.548452377319336,
+          0.7599999904632568,
+          3.0697622895240784
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 980,
+        "finite_coordinates": true,
+        "bounds": [
+          2.548452377319336,
+          0.7600000202655792,
+          3.0697622895240784
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "26": {
+    "name": "Shovel",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 454,
+        "finite_coordinates": true,
+        "bounds": [
+          1.7320177555084229,
+          0.4050000011920929,
+          3.7866928577423096
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 454,
+        "finite_coordinates": true,
+        "bounds": [
+          1.7320177555084229,
+          0.40500016510486603,
+          3.7866928577423096
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "35": {
+    "name": "Crystal Ball",
+    "formats": {
+      "glb": {
+        "meshes": 21,
+        "triangles": 2188,
+        "finite_coordinates": true,
+        "bounds": [
+          2.1600000858306885,
+          2.190000057220459,
+          2.819999933242798
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 22,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 21,
+        "triangles": 2188,
+        "finite_coordinates": true,
+        "bounds": [
+          2.1600000858306885,
+          2.1899999380111694,
+          2.8200000929050617
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 22,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "7": {
+    "name": "Draco",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 2446,
+        "finite_coordinates": true,
+        "bounds": [
+          5.4587578773498535,
+          0.8907294869422913,
+          4.051025390625
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 2446,
+        "finite_coordinates": true,
+        "bounds": [
+          5.4587578773498535,
+          0.8907295167446136,
+          4.051025446018027
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "8": {
+    "name": "Fart Gun",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 4068,
+        "finite_coordinates": true,
+        "bounds": [
+          4.880000114440918,
+          1.921134114265442,
+          4.130000114440918
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 4068,
+        "finite_coordinates": true,
+        "bounds": [
+          4.880000114440918,
+          1.9211341738700867,
+          4.130000170648543
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "9": {
+    "name": "Shotgun",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 1440,
+        "finite_coordinates": true,
+        "bounds": [
+          6.659999847412109,
+          0.8579999804496765,
+          2.3841631412506104
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 1440,
+        "finite_coordinates": true,
+        "bounds": [
+          6.659999847412109,
+          0.8580000102519989,
+          2.384163177907759
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "10": {
+    "name": "T-Shirt Cannon",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 2276,
+        "finite_coordinates": true,
+        "bounds": [
+          5.704999923706055,
+          1.540711522102356,
+          3.0464377403259277
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 2276,
+        "finite_coordinates": true,
+        "bounds": [
+          5.704999923706055,
+          1.5407116413116455,
+          3.0464379043384042
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "11": {
+    "name": "Rocket Launcher",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 2588,
+        "finite_coordinates": true,
+        "bounds": [
+          4.889999628067017,
+          1.6548383235931396,
+          2.764423370361328
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": [],
+        "file_mesh_instances": 1
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 2588,
+        "finite_coordinates": true,
+        "bounds": [
+          4.889999628067017,
+          1.6548384428024292,
+          2.7644236468649126
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": []
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 2,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "24": {
+    "name": "Nail Gun",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 3488,
+        "finite_coordinates": true,
+        "bounds": [
+          4.256720662117004,
+          1.0509999990463257,
+          3.9196624755859375
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 3488,
+        "finite_coordinates": true,
+        "bounds": [
+          4.256720662117004,
+          1.0510000586509705,
+          3.9196624028090383
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "29": {
+    "name": "Power Washer",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 2992,
+        "finite_coordinates": true,
+        "bounds": [
+          6.209723472595215,
+          1.5689542293548584,
+          3.479891538619995
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 2992,
+        "finite_coordinates": true,
+        "bounds": [
+          6.209723472595215,
+          1.568954348564148,
+          3.4798914986192457
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "17": {
+    "name": "Rubber Ducks",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 792,
+        "finite_coordinates": true,
+        "bounds": [
+          1.8833580017089844,
+          2.4606791734695435,
+          2.2799999117851257
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 792,
+        "finite_coordinates": true,
+        "bounds": [
+          1.8833580017089844,
+          2.460679054260254,
+          2.2799999117851257
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 2,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "19": {
+    "name": "Boxing Gloves",
+    "formats": {
+      "glb": {
+        "meshes": 2,
+        "triangles": 832,
+        "finite_coordinates": true,
+        "bounds": [
+          3.871302008628845,
+          1.0999999046325684,
+          2.4893855154514313
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 2,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 2,
+        "triangles": 832,
+        "finite_coordinates": true,
+        "bounds": [
+          3.871302008628845,
+          1.0999999046325684,
+          2.4893855452537537
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 2,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 3,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "19:LeftGlove": {
+    "name": "Boxing Gloves / LeftGlove",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 416,
+        "finite_coordinates": true,
+        "bounds": [
+          1.6441285610198975,
+          1.0999999046325684,
+          2.489385485649109
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 416,
+        "finite_coordinates": true,
+        "bounds": [
+          1.6441285610198975,
+          1.0999999046325684,
+          2.489385485649109
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 1,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "19:RightGlove": {
+    "name": "Boxing Gloves / RightGlove",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 416,
+        "finite_coordinates": true,
+        "bounds": [
+          1.656141996383667,
+          1.0999999046325684,
+          2.489385485649109
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 416,
+        "finite_coordinates": true,
+        "bounds": [
+          1.656141996383667,
+          1.0999999046325684,
+          2.489385485649109
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 1,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "20": {
+    "name": "Cinder Blocks",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 132,
+        "finite_coordinates": true,
+        "bounds": [
+          2.299999952316284,
+          1.1399999856948853,
+          1.2000000476837158
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 132,
+        "finite_coordinates": true,
+        "bounds": [
+          2.299999952316284,
+          1.1400001645088196,
+          1.2000002404674888
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 2,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "23": {
+    "name": "Bowling Pins",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 236,
+        "finite_coordinates": true,
+        "bounds": [
+          1.4395999908447266,
+          1.3691409826278687,
+          3.619999848306179
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 236,
+        "finite_coordinates": true,
+        "bounds": [
+          1.4395999908447266,
+          1.3691409826278687,
+          3.619999896734953
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 2,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "12": {
+    "name": "Boomerang",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 588,
+        "finite_coordinates": true,
+        "bounds": [
+          4.161175727844238,
+          0.2980000078678131,
+          2.928813487291336
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 588,
+        "finite_coordinates": true,
+        "bounds": [
+          4.161175727844238,
+          0.29800020158290863,
+          2.928813487291336
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 2,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "13": {
+    "name": "Kunais",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 664,
+        "finite_coordinates": true,
+        "bounds": [
+          0.8399999737739563,
+          0.41999998688697815,
+          3.354119062423706
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 664,
+        "finite_coordinates": true,
+        "bounds": [
+          0.8399999737739563,
+          0.42000000178813934,
+          3.354119062423706
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 2,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "14": {
+    "name": "Molotovs",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 734,
+        "finite_coordinates": true,
+        "bounds": [
+          2.6899755001068115,
+          1.0271410942077637,
+          4.015407085418701
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 734,
+        "finite_coordinates": true,
+        "bounds": [
+          2.6899755001068115,
+          1.0271413326263428,
+          4.015407085418701
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 2,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "15": {
+    "name": "Eggs",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 96,
+        "finite_coordinates": true,
+        "bounds": [
+          1.306609332561493,
+          1.2399998903274536,
+          1.8100000619888306
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 96,
+        "finite_coordinates": true,
+        "bounds": [
+          1.306609332561493,
+          1.2399998903274536,
+          1.810000091791153
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 2,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "16": {
+    "name": "Steak",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 560,
+        "finite_coordinates": true,
+        "bounds": [
+          2.6200000047683716,
+          2.6299999952316284,
+          0.5000000149011612
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 560,
+        "finite_coordinates": true,
+        "bounds": [
+          2.6200000047683716,
+          2.6299999952316284,
+          0.5000002980232239
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 2,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "18": {
+    "name": "Deck of Cards",
+    "formats": {
+      "glb": {
+        "meshes": 4,
+        "triangles": 2648,
+        "finite_coordinates": true,
+        "bounds": [
+          4.162827730178833,
+          0.7870000451803207,
+          4.031281471252441
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 4,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 4,
+        "triangles": 2648,
+        "finite_coordinates": true,
+        "bounds": [
+          4.162827730178833,
+          0.7870001494884491,
+          4.031281523406506
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 4,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 5,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "18:Deck": {
+    "name": "Deck of Cards / Deck",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 1772,
+        "finite_coordinates": true,
+        "bounds": [
+          1.7200000286102295,
+          0.7870000600814819,
+          2.2800002098083496
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 1772,
+        "finite_coordinates": true,
+        "bounds": [
+          1.7200000286102295,
+          0.7870001196861267,
+          2.2800002098083496
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 1,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "18:HeartCard": {
+    "name": "Deck of Cards / HeartCard",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 296,
+        "finite_coordinates": true,
+        "bounds": [
+          1.1059727668762207,
+          0.07349999248981476,
+          1.4535346031188965
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 296,
+        "finite_coordinates": true,
+        "bounds": [
+          1.1059727668762207,
+          0.07350018620491028,
+          1.4535346031188965
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 1,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "18:SpadeCard": {
+    "name": "Deck of Cards / SpadeCard",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 356,
+        "finite_coordinates": true,
+        "bounds": [
+          1.0282032489776611,
+          0.07349999248981476,
+          1.4225623607635498
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 356,
+        "finite_coordinates": true,
+        "bounds": [
+          1.0282032489776611,
+          0.07350020483136177,
+          1.4225623607635498
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 1,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "18:DiamondCard": {
+    "name": "Deck of Cards / DiamondCard",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 224,
+        "finite_coordinates": true,
+        "bounds": [
+          1.1596828699111938,
+          0.07349999248981476,
+          1.4706707000732422
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 224,
+        "finite_coordinates": true,
+        "bounds": [
+          1.1596828699111938,
+          0.07350021228194237,
+          1.4706707000732422
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 1,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "21": {
+    "name": "Yo-Yo",
+    "formats": {
+      "glb": {
+        "meshes": 2,
+        "triangles": 988,
+        "finite_coordinates": true,
+        "bounds": [
+          3.4000000953674316,
+          2.0899999141693115,
+          2.054175853729248
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 2,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": [],
+        "file_mesh_instances": 2
+      },
+      "fbx": {
+        "meshes": 2,
+        "triangles": 988,
+        "finite_coordinates": true,
+        "bounds": [
+          3.399999976158142,
+          2.0899999141693115,
+          2.054175913333893
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 2,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": []
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 3,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "22": {
+    "name": "Bowling Ball",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 686,
+        "finite_coordinates": true,
+        "bounds": [
+          2.399999976158142,
+          2.378252148628235,
+          2.4000000953674316
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 686,
+        "finite_coordinates": true,
+        "bounds": [
+          2.399999976158142,
+          2.378252148628235,
+          2.4000000953674316
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 2,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "25": {
+    "name": "Wrecking Ball",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 2314,
+        "finite_coordinates": true,
+        "bounds": [
+          3.543490767478943,
+          1.8000004291534424,
+          3.3364935922622863
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": [
+          "Icosphere"
+        ],
+        "file_mesh_instances": 1
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 2314,
+        "finite_coordinates": true,
+        "bounds": [
+          3.5434905290603638,
+          1.8000001907348633,
+          3.3364938879012627
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": []
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 1,
+      "parented_meshes": [
+        "WreckingBall_Skinned"
+      ],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "27": {
+    "name": "Paint Roller",
+    "formats": {
+      "glb": {
+        "meshes": 11,
+        "triangles": 1752,
+        "finite_coordinates": true,
+        "bounds": [
+          3.104941487312317,
+          1.0755678415298462,
+          3.221069812774658
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 11,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 11,
+        "triangles": 1752,
+        "finite_coordinates": true,
+        "bounds": [
+          3.104941487312317,
+          1.0755678415298462,
+          3.2210700511932373
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 11,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 12,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "28": {
+    "name": "Vacuum Cleaner",
+    "formats": {
+      "glb": {
+        "meshes": 19,
+        "triangles": 1198,
+        "finite_coordinates": true,
+        "bounds": [
+          3.9499999284744263,
+          1.929900050163269,
+          2.1895999908447266
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 19,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      },
+      "fbx": {
+        "meshes": 19,
+        "triangles": 1198,
+        "finite_coordinates": true,
+        "bounds": [
+          3.950000047683716,
+          1.9299002289772034,
+          2.189600106328726
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 19,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 20,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "11:Rocket": {
+    "name": "Rocket Launcher / Rocket",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 484,
+        "finite_coordinates": true,
+        "bounds": [
+          3.5200001001358032,
+          0.9168184995651245,
+          0.9639999866485596
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": [],
+        "file_mesh_instances": 1
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 484,
+        "finite_coordinates": true,
+        "bounds": [
+          3.5200001001358032,
+          0.9168185591697693,
+          0.9639999866485596
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": []
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 1,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "21:YoYo": {
+    "name": "Yo-Yo / YoYo",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 752,
+        "finite_coordinates": true,
+        "bounds": [
+          2.059999942779541,
+          1.5199999809265137,
+          2.0083515644073486
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": [],
+        "file_mesh_instances": 1
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 752,
+        "finite_coordinates": true,
+        "bounds": [
+          2.059999942779541,
+          1.5199999809265137,
+          2.0083518028259277
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": []
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 1,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  },
+  "21:FingerRing": {
+    "name": "Yo-Yo / FingerRing",
+    "formats": {
+      "glb": {
+        "meshes": 1,
+        "triangles": 236,
+        "finite_coordinates": true,
+        "bounds": [
+          0.7050001621246338,
+          0.7599999308586121,
+          0.20000004768371582
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": [],
+        "file_mesh_instances": 1
+      },
+      "fbx": {
+        "meshes": 1,
+        "triangles": 236,
+        "finite_coordinates": true,
+        "bounds": [
+          0.7050001621246338,
+          0.7599999308586121,
+          0.2000000774860382
+        ],
+        "unwanted_cameras_or_lights": [],
+        "image_count": 1,
+        "unloaded_images": [],
+        "has_uvs": true,
+        "uv_layer_counts": [
+          1
+        ],
+        "zero_area_faces": 0,
+        "importer_bone_display_helpers": []
+      }
+    },
+    "blend": {
+      "opened": true,
+      "mesh_count_including_stage": 1,
+      "parented_meshes": [],
+      "referenced_images": 1,
+      "unpacked_images": [],
+      "unloaded_images": []
+    }
+  }
+}

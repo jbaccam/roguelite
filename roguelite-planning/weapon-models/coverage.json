@@ -1,0 +1,2422 @@
+[
+  {
+    "index": 0,
+    "name": "Glock (approved)",
+    "batch": "approved",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\00-glock-approved",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "vertices": 1268,
+      "triangles": 2344,
+      "mesh_objects": 1,
+      "materials": 1,
+      "texture": "1024 x 1024 base color",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "dimensions": [
+        6.820516586303711,
+        1.3650000095367432,
+        4.973444938659668
+      ],
+      "status": "User visually approved. Delivery copy cleaned; Roblox import not performed.",
+      "faces": 1358,
+      "zero_area_faces": 0,
+      "cleanup": "Delivery copy only: welded coincident vertices and dissolved invisible zero-area bevel faces; original approved file untouched.",
+      "before_cleanup": {
+        "vertices": 1390,
+        "faces": 1479,
+        "zero_area_faces": 121
+      }
+    }
+  },
+  {
+    "index": 1,
+    "name": "Frying Pan",
+    "batch": "melee_tools",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\01-frying-pan",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 1,
+      "name": "Frying Pan",
+      "vertices": 236,
+      "triangles": 448,
+      "mesh_objects": 1,
+      "materials": 1,
+      "uv_layers": 1,
+      "texture": "1024x1024 packed base color",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds": [
+        4.546422481536865,
+        2.859999895095825,
+        0.6949999928474426
+      ],
+      "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 448,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 448,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0
+      },
+      "pivot": [
+        2.3,
+        0,
+        0.47
+      ],
+      "pivot_description": "Handhold center in reference presentation coordinates"
+    }
+  },
+  {
+    "index": 2,
+    "name": "Nunchucks",
+    "batch": "melee_tools",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\02-nunchucks",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 2,
+      "name": "Nunchucks",
+      "vertices": 1376,
+      "triangles": 2720,
+      "mesh_objects": 1,
+      "materials": 1,
+      "uv_layers": 1,
+      "texture": "1024x1024 packed base color",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds": [
+        2.384425640106201,
+        0.5799999833106995,
+        3.288311004638672
+      ],
+      "notes": "Reference geometry unchanged. Intentional assembled intersections. Studio import pending. Rigged FBX/GLB contain one mesh and one armature.",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 2720,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "armature_objects": 1,
+        "bones": 7,
+        "skeleton_and_skin_retained": true,
+        "pose_deformation_verified": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 2720,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "armature_objects": 1,
+        "bones": 7,
+        "skeleton_and_skin_retained": true,
+        "pose_deformation_verified": true
+      },
+      "pivot": [
+        0.708,
+        0,
+        1.19
+      ],
+      "pivot_description": "Handhold center in reference presentation coordinates",
+      "armature_objects": 1,
+      "bone_count": 7,
+      "rig": "Rigid FK chain and terminal payload; one deform bone per vertex; no Actions/keyframes",
+      "rig_validation": "rig_validation.json"
+    }
+  },
+  {
+    "index": 3,
+    "name": "Katana",
+    "batch": "melee_tools",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\03-katana",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 3,
+      "name": "Katana",
+      "vertices": 720,
+      "triangles": 1368,
+      "mesh_objects": 1,
+      "materials": 1,
+      "uv_layers": 1,
+      "texture": "1024x1024 packed base color",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds": [
+        3.2193946838378906,
+        0.6200000047683716,
+        3.2675132751464844
+      ],
+      "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 1368,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 1368,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0
+      },
+      "pivot": [
+        0.864,
+        0,
+        0.567
+      ],
+      "pivot_description": "Handhold center in reference presentation coordinates"
+    }
+  },
+  {
+    "index": 4,
+    "name": "Kusarigama",
+    "batch": "melee_tools",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\04-kusarigama",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 4,
+      "name": "Kusarigama",
+      "vertices": 1342,
+      "triangles": 2656,
+      "mesh_objects": 1,
+      "materials": 1,
+      "uv_layers": 1,
+      "texture": "1024x1024 packed base color",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds": [
+        4.33262825012207,
+        0.81446772813797,
+        3.54695200920105
+      ],
+      "notes": "Reference geometry unchanged. Intentional assembled intersections. Studio import pending. Rigged FBX/GLB contain one mesh and one armature.",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 2656,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "armature_objects": 1,
+        "bones": 13,
+        "skeleton_and_skin_retained": true,
+        "pose_deformation_verified": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 2656,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "armature_objects": 1,
+        "bones": 13,
+        "skeleton_and_skin_retained": true,
+        "pose_deformation_verified": true
+      },
+      "pivot": [
+        -0.193,
+        0,
+        2.159
+      ],
+      "pivot_description": "Handhold center in reference presentation coordinates",
+      "armature_objects": 1,
+      "bone_count": 13,
+      "rig": "Rigid FK chain and terminal payload; one deform bone per vertex; no Actions/keyframes",
+      "rig_validation": "rig_validation.json"
+    }
+  },
+  {
+    "index": 5,
+    "name": "Spatula",
+    "batch": "melee_tools",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\05-spatula",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 5,
+      "name": "Spatula",
+      "vertices": 366,
+      "triangles": 728,
+      "mesh_objects": 1,
+      "materials": 1,
+      "uv_layers": 1,
+      "texture": "1024x1024 packed base color",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds": [
+        1.8548212051391602,
+        0.3050000071525574,
+        3.742809295654297
+      ],
+      "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 728,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 728,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0
+      },
+      "pivot": [
+        0.393,
+        0,
+        0.863
+      ],
+      "pivot_description": "Handhold center in reference presentation coordinates"
+    }
+  },
+  {
+    "index": 6,
+    "name": "Baseball Bat",
+    "batch": "melee_tools",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\06-baseball-bat",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 6,
+      "name": "Baseball Bat",
+      "vertices": 500,
+      "triangles": 980,
+      "mesh_objects": 1,
+      "materials": 1,
+      "uv_layers": 1,
+      "texture": "1024x1024 packed base color",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds": [
+        2.548452377319336,
+        0.7599999904632568,
+        3.0697622299194336
+      ],
+      "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 980,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 980,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0
+      },
+      "pivot": [
+        -0.601,
+        0,
+        0.623
+      ],
+      "pivot_description": "Handhold center in reference presentation coordinates"
+    }
+  },
+  {
+    "index": 7,
+    "name": "Draco",
+    "batch": "guns",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\07-draco",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 7,
+      "name": "Draco",
+      "vertices": 1279,
+      "triangles": 2446,
+      "mesh_objects": 1,
+      "materials": 1,
+      "UV": true,
+      "texture": "1024x1024 packed BaseColor.png",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds_dimensions": [
+        5.4587578773498535,
+        0.8907294869422913,
+        4.051025390625
+      ],
+      "limitations": [
+        "Single-view reconstruction: reverse details mirrored or inferred.",
+        "Assembly has intentional intersecting closed components.",
+        "No Studio import or gameplay integration performed."
+      ],
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 2446,
+        "matches_source": true,
+        "zero_area_triangles": 0,
+        "UV": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 2446,
+        "matches_source": true,
+        "zero_area_triangles": 0,
+        "UV": true
+      },
+      "reference_sha256_matches": true,
+      "required_deliverables_present": true,
+      "preview_visually_reviewed": true
+    }
+  },
+  {
+    "index": 8,
+    "name": "Fart Gun",
+    "batch": "guns",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\08-fart-gun",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 8,
+      "name": "Fart Gun",
+      "vertices": 2110,
+      "triangles": 4068,
+      "mesh_objects": 1,
+      "materials": 1,
+      "UV": true,
+      "texture": "2048x2048 packed BaseColor.png",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds_dimensions": [
+        4.880000114440918,
+        1.921134114265442,
+        4.130000114440918
+      ],
+      "limitations": [
+        "Single-view reconstruction: reverse details mirrored or inferred.",
+        "Assembly has intentional intersecting closed components.",
+        "No Studio import or gameplay integration performed."
+      ],
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 4068,
+        "matches_source": true,
+        "zero_area_triangles": 0,
+        "UV": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 4068,
+        "matches_source": true,
+        "zero_area_triangles": 0,
+        "UV": true
+      },
+      "reference_sha256_matches": true,
+      "required_deliverables_present": true,
+      "preview_visually_reviewed": true
+    }
+  },
+  {
+    "index": 9,
+    "name": "Shotgun",
+    "batch": "guns",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\09-shotgun",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 9,
+      "name": "Shotgun",
+      "vertices": 744,
+      "triangles": 1440,
+      "mesh_objects": 1,
+      "materials": 1,
+      "UV": true,
+      "texture": "1024x1024 packed BaseColor.png",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds_dimensions": [
+        6.659999847412109,
+        0.8579999804496765,
+        2.3841631412506104
+      ],
+      "limitations": [
+        "Single-view reconstruction: reverse details mirrored or inferred.",
+        "Assembly has intentional intersecting closed components.",
+        "No Studio import or gameplay integration performed."
+      ],
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 1440,
+        "matches_source": true,
+        "zero_area_triangles": 0,
+        "UV": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 1440,
+        "matches_source": true,
+        "zero_area_triangles": 0,
+        "UV": true
+      },
+      "reference_sha256_matches": true,
+      "required_deliverables_present": true,
+      "preview_visually_reviewed": true
+    }
+  },
+  {
+    "index": 10,
+    "name": "T-Shirt Cannon",
+    "batch": "guns",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\10-t-shirt-cannon",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 10,
+      "name": "T-Shirt Cannon",
+      "vertices": 1194,
+      "triangles": 2276,
+      "mesh_objects": 1,
+      "materials": 1,
+      "UV": true,
+      "texture": "1024x1024 packed BaseColor.png",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds_dimensions": [
+        5.704999923706055,
+        1.540711522102356,
+        3.0464377403259277
+      ],
+      "limitations": [
+        "Single-view reconstruction: reverse details mirrored or inferred.",
+        "Assembly has intentional intersecting closed components.",
+        "No Studio import or gameplay integration performed."
+      ],
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 2276,
+        "matches_source": true,
+        "zero_area_triangles": 0,
+        "UV": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 2276,
+        "matches_source": true,
+        "zero_area_triangles": 0,
+        "UV": true
+      },
+      "reference_sha256_matches": true,
+      "required_deliverables_present": true,
+      "preview_visually_reviewed": true
+    }
+  },
+  {
+    "index": 11,
+    "name": "Rocket Launcher",
+    "batch": "guns",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\11-rocket-launcher",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 11,
+      "name": "Rocket Launcher",
+      "vertices": 1338,
+      "triangles": 2588,
+      "mesh_objects": 1,
+      "materials": 1,
+      "UV": true,
+      "texture": "1024x1024 packed BaseColor.png",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds_dimensions": [
+        4.889999866485596,
+        1.6548383235931396,
+        2.764423370361328
+      ],
+      "limitations": [
+        "Single-view reconstruction: reverse details mirrored or inferred.",
+        "Assembly has intentional intersecting closed components.",
+        "No Studio import or gameplay integration performed."
+      ],
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "nonmesh_objects": 0,
+        "triangles": 2588,
+        "matches_source": true,
+        "zero_area_triangles": 0,
+        "UV": true,
+        "texture_images": 1,
+        "textures_loaded": true,
+        "passed": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "nonmesh_objects": 0,
+        "triangles": 2588,
+        "matches_source": true,
+        "zero_area_triangles": 0,
+        "UV": true,
+        "texture_images": 1,
+        "textures_loaded": true,
+        "passed": true
+      },
+      "geometry": {
+        "vertices": 1338,
+        "triangles": 2588,
+        "nonmanifold_edges": 0,
+        "loose_vertices": 0,
+        "zero_area_faces": 0,
+        "dimensions": [
+          4.8899993896484375,
+          1.6548383235931396,
+          2.764423370361328
+        ]
+      },
+      "pivot": {
+        "type": "Warhead rear shoulder / insertion socket on centerline",
+        "local_forward": "+X",
+        "blend_world_location": [
+          1.6400001049041748,
+          0.0,
+          1.6449998617172241
+        ],
+        "export_root_translation": [
+          1.6400001049041748,
+          0.0,
+          1.6449998617172241
+        ]
+      },
+      "separate_component": false,
+      "contains_rocket": false,
+      "empty_bore_ray_check": {
+        "hit": true,
+        "ray_from_original": [
+          2.2,
+          0,
+          2.1
+        ],
+        "first_axial_surface_original_x": -0.9000000953674316,
+        "expected_backstop_x": -0.9,
+        "open_depth_from_muzzle": 2.9400000953674317,
+        "pass": true
+      },
+      "blend_asset_meshes": 1,
+      "blend_textures_packed": true,
+      "previews_visually_reviewed": true
+    }
+  },
+  {
+    "index": 12,
+    "name": "Boomerang",
+    "batch": "throwables",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\12-boomerang",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 12,
+      "name": "Boomerang",
+      "vertices": 320,
+      "triangles": 588,
+      "mesh_objects": 1,
+      "materials": 1,
+      "uv_layers": 1,
+      "texture": "1024x1024 packed base color",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds": [
+        4.161175727844238,
+        0.2980000078678131,
+        2.9288134574890137
+      ],
+      "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 588,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "all_faces_triangular": true,
+        "texture_pixels_loaded": true,
+        "triangle_count_matches": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 588,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "all_faces_triangular": true,
+        "texture_pixels_loaded": true,
+        "triangle_count_matches": true
+      },
+      "blend_packed_texture": true,
+      "named_component_groups": 17,
+      "all_source_faces_triangular": true,
+      "reference_sha256_matches": true
+    }
+  },
+  {
+    "index": 13,
+    "name": "Kunais",
+    "batch": "throwables",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\13-kunais",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 13,
+      "name": "Kunais",
+      "vertices": 342,
+      "triangles": 664,
+      "mesh_objects": 1,
+      "materials": 1,
+      "uv_layers": 1,
+      "texture": "1024x1024 packed base color",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds": [
+        0.8399999737739563,
+        0.41999998688697815,
+        3.354119062423706
+      ],
+      "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 664,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "all_faces_triangular": true,
+        "texture_pixels_loaded": true,
+        "triangle_count_matches": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 664,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "all_faces_triangular": true,
+        "texture_pixels_loaded": true,
+        "triangle_count_matches": true
+      },
+      "blend_packed_texture": true,
+      "named_component_groups": 6,
+      "all_source_faces_triangular": true,
+      "reference_sha256_matches": true
+    }
+  },
+  {
+    "index": 14,
+    "name": "Molotovs",
+    "batch": "throwables",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\14-molotovs",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 14,
+      "name": "Molotovs",
+      "vertices": 385,
+      "triangles": 734,
+      "mesh_objects": 1,
+      "materials": 1,
+      "uv_layers": 1,
+      "texture": "1024x1024 packed base color",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds": [
+        2.6899755001068115,
+        1.0271410942077637,
+        4.015407085418701
+      ],
+      "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 734,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "all_faces_triangular": true,
+        "texture_pixels_loaded": true,
+        "triangle_count_matches": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 734,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "all_faces_triangular": true,
+        "texture_pixels_loaded": true,
+        "triangle_count_matches": true
+      },
+      "blend_packed_texture": true,
+      "named_component_groups": 9,
+      "all_source_faces_triangular": true,
+      "reference_sha256_matches": true
+    }
+  },
+  {
+    "index": 15,
+    "name": "Eggs",
+    "batch": "throwables",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\15-eggs",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 15,
+      "name": "Eggs",
+      "vertices": 50,
+      "triangles": 96,
+      "mesh_objects": 1,
+      "materials": 1,
+      "uv_layers": 1,
+      "texture": "1024x1024 packed base color",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds": [
+        1.3066093921661377,
+        1.2399998903274536,
+        1.809999942779541
+      ],
+      "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 96,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "all_faces_triangular": true,
+        "texture_pixels_loaded": true,
+        "triangle_count_matches": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 96,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "all_faces_triangular": true,
+        "texture_pixels_loaded": true,
+        "triangle_count_matches": true
+      },
+      "blend_packed_texture": true,
+      "named_component_groups": 1,
+      "all_source_faces_triangular": true,
+      "reference_sha256_matches": true
+    }
+  },
+  {
+    "index": 16,
+    "name": "Steak",
+    "batch": "throwables",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\16-steak",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 16,
+      "name": "Steak",
+      "vertices": 284,
+      "triangles": 560,
+      "mesh_objects": 1,
+      "materials": 1,
+      "uv_layers": 1,
+      "texture": "1024x1024 packed base color",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds": [
+        2.619999885559082,
+        2.630000114440918,
+        0.5
+      ],
+      "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 560,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "all_faces_triangular": true,
+        "texture_pixels_loaded": true,
+        "triangle_count_matches": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 560,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "all_faces_triangular": true,
+        "texture_pixels_loaded": true,
+        "triangle_count_matches": true
+      },
+      "blend_packed_texture": true,
+      "named_component_groups": 3,
+      "all_source_faces_triangular": true,
+      "reference_sha256_matches": true
+    }
+  },
+  {
+    "index": 17,
+    "name": "Rubber Ducks",
+    "batch": "juggler_utility",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\17-rubber-ducks",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "mesh_objects": 1,
+      "vertices": 420,
+      "triangles": 792,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "index": 17,
+      "name": "Rubber Ducks",
+      "bounds_min": [
+        -0.9368994235992432,
+        -1.296891212463379,
+        0.04000002145767212
+      ],
+      "bounds_max": [
+        0.9464585781097412,
+        1.1637879610061646,
+        2.319999933242798
+      ],
+      "notes": "Single reusable item; gloves are independent left/right components. Closed assembled components with intentional overlapping joints. Back surfaces inferred. Palette UV islands intentionally overlap by material. Static prop; no rig. No Studio validation.",
+      "multiplicity": "One reusable item",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "vertices": 1988,
+        "triangles": 792,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "unexpected_nonmesh_objects": 0,
+        "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "vertices": 420,
+        "triangles": 792,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "unexpected_nonmesh_objects": 0,
+        "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ],
+      "pivot_description": "Base center",
+      "source_copy_sha256_matches": true,
+      "review_renders_visually_inspected": true,
+      "materials": 1,
+      "packed_images": [
+        {
+          "name": "17-rubber-ducks_BaseColor",
+          "size": [
+            320,
+            320
+          ],
+          "packed": true
+        }
+      ]
+    }
+  },
+  {
+    "index": 18,
+    "name": "Deck of Cards",
+    "batch": "throwables",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\18-deck-of-cards",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 18,
+      "name": "Deck of Cards",
+      "vertices": 1388,
+      "triangles": 2648,
+      "mesh_objects": 4,
+      "materials": 1,
+      "uv_layers": 1,
+      "texture": "1024x1024 packed base color",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds": [
+        4.162827491760254,
+        0.7870000600814819,
+        4.031281471252441
+      ],
+      "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+      "glb_reimport": {
+        "mesh_objects": 4,
+        "triangles": 2648,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "all_faces_triangular": true,
+        "texture_pixels_loaded": true,
+        "triangle_count_matches": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 4,
+        "triangles": 2648,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0,
+        "all_faces_triangular": true,
+        "texture_pixels_loaded": true,
+        "triangle_count_matches": true
+      },
+      "component_objects": [
+        "Deck",
+        "HeartCard",
+        "SpadeCard",
+        "DiamondCard"
+      ],
+      "unparented_components": true,
+      "independent_components": [
+        {
+          "name": "Deck",
+          "directory": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\18-deck-of-cards\\components\\Deck",
+          "triangles": 1772
+        },
+        {
+          "name": "HeartCard",
+          "directory": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\18-deck-of-cards\\components\\HeartCard",
+          "triangles": 296
+        },
+        {
+          "name": "SpadeCard",
+          "directory": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\18-deck-of-cards\\components\\SpadeCard",
+          "triangles": 356
+        },
+        {
+          "name": "DiamondCard",
+          "directory": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\18-deck-of-cards\\components\\DiamondCard",
+          "triangles": 224
+        }
+      ],
+      "blend_packed_texture": true,
+      "named_component_groups": 160,
+      "all_source_faces_triangular": true,
+      "reference_sha256_matches": true
+    }
+  },
+  {
+    "index": 19,
+    "name": "Boxing Gloves",
+    "batch": "juggler_utility",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\19-boxing-gloves",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "mesh_objects": 2,
+      "vertices": 444,
+      "triangles": 832,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "index": 19,
+      "name": "Boxing Gloves",
+      "bounds_min": [
+        -1.9260544776916504,
+        -0.5499999523162842,
+        0.02598509192466736
+      ],
+      "bounds_max": [
+        1.9452475309371948,
+        0.5499999523162842,
+        2.5153706073760986
+      ],
+      "notes": "Single reusable item; gloves are independent left/right components. Closed assembled components with intentional overlapping joints. Back surfaces inferred. Palette UV islands intentionally overlap by material. Static prop; no rig. No Studio validation.",
+      "multiplicity": "Independent left and right gloves, plus review assembly",
+      "components": {
+        "LeftGlove": {
+          "mesh_objects": 1,
+          "vertices": 222,
+          "triangles": 416,
+          "loose_vertices": 0,
+          "nonmanifold_edges": 0,
+          "zero_area_faces": 0,
+          "zero_area_triangles": 0,
+          "uv_layers": true,
+          "loaded_textures": true,
+          "pivot": "Wrist center at origin",
+          "independent_file_checks": {
+            "blend": {
+              "mesh_objects": 1,
+              "vertices": 222,
+              "triangles": 416,
+              "loose_vertices": 0,
+              "nonmanifold_edges": 0,
+              "zero_area_faces": 0,
+              "zero_area_triangles": 0,
+              "uv_layers": true,
+              "loaded_textures": true,
+              "materials": 1,
+              "object_names": [
+                "LeftGlove.001"
+              ],
+              "parents": [
+                null
+              ],
+              "origins": [
+                [
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              ],
+              "unexpected_objects": 0
+            },
+            "fbx": {
+              "mesh_objects": 1,
+              "vertices": 222,
+              "triangles": 416,
+              "loose_vertices": 0,
+              "nonmanifold_edges": 0,
+              "zero_area_faces": 0,
+              "zero_area_triangles": 0,
+              "uv_layers": true,
+              "loaded_textures": true,
+              "materials": 1,
+              "object_names": [
+                "LeftGlove.001"
+              ],
+              "parents": [
+                null
+              ],
+              "origins": [
+                [
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              ],
+              "unexpected_objects": 0
+            },
+            "glb": {
+              "mesh_objects": 1,
+              "vertices": 1084,
+              "triangles": 416,
+              "loose_vertices": 0,
+              "nonmanifold_edges": 0,
+              "zero_area_faces": 0,
+              "zero_area_triangles": 0,
+              "uv_layers": true,
+              "loaded_textures": true,
+              "materials": 1,
+              "object_names": [
+                "LeftGlove.001"
+              ],
+              "parents": [
+                null
+              ],
+              "origins": [
+                [
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              ],
+              "unexpected_objects": 0
+            }
+          }
+        },
+        "RightGlove": {
+          "mesh_objects": 1,
+          "vertices": 222,
+          "triangles": 416,
+          "loose_vertices": 0,
+          "nonmanifold_edges": 0,
+          "zero_area_faces": 0,
+          "zero_area_triangles": 0,
+          "uv_layers": true,
+          "loaded_textures": true,
+          "pivot": "Wrist center at origin",
+          "independent_file_checks": {
+            "blend": {
+              "mesh_objects": 1,
+              "vertices": 222,
+              "triangles": 416,
+              "loose_vertices": 0,
+              "nonmanifold_edges": 0,
+              "zero_area_faces": 0,
+              "zero_area_triangles": 0,
+              "uv_layers": true,
+              "loaded_textures": true,
+              "materials": 1,
+              "object_names": [
+                "RightGlove.001"
+              ],
+              "parents": [
+                null
+              ],
+              "origins": [
+                [
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              ],
+              "unexpected_objects": 0
+            },
+            "fbx": {
+              "mesh_objects": 1,
+              "vertices": 222,
+              "triangles": 416,
+              "loose_vertices": 0,
+              "nonmanifold_edges": 0,
+              "zero_area_faces": 0,
+              "zero_area_triangles": 0,
+              "uv_layers": true,
+              "loaded_textures": true,
+              "materials": 1,
+              "object_names": [
+                "RightGlove.001"
+              ],
+              "parents": [
+                null
+              ],
+              "origins": [
+                [
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              ],
+              "unexpected_objects": 0
+            },
+            "glb": {
+              "mesh_objects": 1,
+              "vertices": 1084,
+              "triangles": 416,
+              "loose_vertices": 0,
+              "nonmanifold_edges": 0,
+              "zero_area_faces": 0,
+              "zero_area_triangles": 0,
+              "uv_layers": true,
+              "loaded_textures": true,
+              "materials": 1,
+              "object_names": [
+                "RightGlove.001"
+              ],
+              "parents": [
+                null
+              ],
+              "origins": [
+                [
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              ],
+              "unexpected_objects": 0
+            }
+          }
+        }
+      },
+      "glb_reimport": {
+        "mesh_objects": 2,
+        "vertices": 2168,
+        "triangles": 832,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "unexpected_nonmesh_objects": 0,
+        "topology_note": "Welded coordinate duplicates for topology analysis because exporters split UV/normal seams."
+      },
+      "fbx_reimport": {
+        "mesh_objects": 2,
+        "vertices": 444,
+        "triangles": 832,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "unexpected_nonmesh_objects": 0,
+        "topology_note": "Welded coordinate duplicates for topology analysis because exporters split UV/normal seams."
+      },
+      "source_copy_sha256_matches": true,
+      "review_renders_visually_inspected": true,
+      "materials": 1,
+      "packed_images": [
+        {
+          "name": "19-boxing-gloves_BaseColor",
+          "size": [
+            320,
+            320
+          ],
+          "packed": true
+        }
+      ]
+    }
+  },
+  {
+    "index": 20,
+    "name": "Cinder Blocks",
+    "batch": "juggler_utility",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\20-cinder-blocks",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "mesh_objects": 1,
+      "vertices": 64,
+      "triangles": 132,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "index": 20,
+      "name": "Cinder Blocks",
+      "bounds_min": [
+        -1.149999976158142,
+        -0.5699999928474426,
+        0.009999990463256836
+      ],
+      "bounds_max": [
+        1.149999976158142,
+        0.5699999928474426,
+        1.2100000381469727
+      ],
+      "notes": "Single reusable item; gloves are independent left/right components. Closed assembled components with intentional overlapping joints. Back surfaces inferred. Palette UV islands intentionally overlap by material. Static prop; no rig. No Studio validation.",
+      "multiplicity": "One reusable item",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "vertices": 224,
+        "triangles": 132,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "unexpected_nonmesh_objects": 0,
+        "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "vertices": 64,
+        "triangles": 132,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "unexpected_nonmesh_objects": 0,
+        "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ],
+      "pivot_description": "Base center",
+      "source_copy_sha256_matches": true,
+      "review_renders_visually_inspected": true,
+      "materials": 1,
+      "packed_images": [
+        {
+          "name": "20-cinder-blocks_BaseColor",
+          "size": [
+            320,
+            320
+          ],
+          "packed": true
+        }
+      ]
+    }
+  },
+  {
+    "index": 21,
+    "name": "Yo-Yo",
+    "batch": "juggler_utility",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\21-yo-yo",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "mesh_objects": 2,
+      "vertices": 506,
+      "triangles": 988,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "materials": 1,
+      "index": 21,
+      "name": "Yo-Yo",
+      "notes": "Two independent unparented meshes: YoYo and FingerRing. Static cord removed. Named attachment Empty guides are only in Blender, never exports. No rig, physics or animation.",
+      "removed_cord_objects": [
+        "Twisted ivory cord strand 0",
+        "Twisted ivory cord strand 1"
+      ],
+      "attachment_markers": [
+        "String_Axle",
+        "String_Hand"
+      ],
+      "components": {
+        "YoYo": {
+          "blend": {
+            "mesh_objects": 1,
+            "vertices": 386,
+            "triangles": 752,
+            "loose_vertices": 0,
+            "nonmanifold_edges": 0,
+            "zero_area_faces": 0,
+            "zero_area_triangles": 0,
+            "uv_layers": true,
+            "loaded_textures": true,
+            "materials": 1,
+            "parents": [
+              null
+            ],
+            "origins": [
+              [
+                0.0,
+                0.0,
+                0.0
+              ]
+            ],
+            "unexpected_objects": []
+          },
+          "fbx": {
+            "mesh_objects": 1,
+            "vertices": 386,
+            "triangles": 752,
+            "loose_vertices": 0,
+            "nonmanifold_edges": 0,
+            "zero_area_faces": 0,
+            "zero_area_triangles": 0,
+            "uv_layers": true,
+            "loaded_textures": true,
+            "materials": 1,
+            "parents": [
+              null
+            ],
+            "origins": [
+              [
+                0.0,
+                0.0,
+                0.0
+              ]
+            ],
+            "unexpected_objects": []
+          },
+          "glb": {
+            "mesh_objects": 1,
+            "vertices": 1452,
+            "triangles": 752,
+            "loose_vertices": 0,
+            "nonmanifold_edges": 0,
+            "zero_area_faces": 0,
+            "zero_area_triangles": 0,
+            "uv_layers": true,
+            "loaded_textures": true,
+            "materials": 1,
+            "parents": [
+              null
+            ],
+            "origins": [
+              [
+                0.0,
+                0.0,
+                0.0
+              ]
+            ],
+            "unexpected_objects": []
+          }
+        },
+        "FingerRing": {
+          "blend": {
+            "mesh_objects": 1,
+            "vertices": 120,
+            "triangles": 236,
+            "loose_vertices": 0,
+            "nonmanifold_edges": 0,
+            "zero_area_faces": 0,
+            "zero_area_triangles": 0,
+            "uv_layers": true,
+            "loaded_textures": true,
+            "materials": 1,
+            "parents": [
+              null
+            ],
+            "origins": [
+              [
+                0.0,
+                0.0,
+                0.0
+              ]
+            ],
+            "unexpected_objects": []
+          },
+          "fbx": {
+            "mesh_objects": 1,
+            "vertices": 120,
+            "triangles": 236,
+            "loose_vertices": 0,
+            "nonmanifold_edges": 0,
+            "zero_area_faces": 0,
+            "zero_area_triangles": 0,
+            "uv_layers": true,
+            "loaded_textures": true,
+            "materials": 1,
+            "parents": [
+              null
+            ],
+            "origins": [
+              [
+                0.0,
+                0.0,
+                0.0
+              ]
+            ],
+            "unexpected_objects": []
+          },
+          "glb": {
+            "mesh_objects": 1,
+            "vertices": 512,
+            "triangles": 236,
+            "loose_vertices": 0,
+            "nonmanifold_edges": 0,
+            "zero_area_faces": 0,
+            "zero_area_triangles": 0,
+            "uv_layers": true,
+            "loaded_textures": true,
+            "materials": 1,
+            "parents": [
+              null
+            ],
+            "origins": [
+              [
+                0.0,
+                0.0,
+                0.0
+              ]
+            ],
+            "unexpected_objects": []
+          }
+        }
+      },
+      "fbx_reimport": {
+        "mesh_objects": 2,
+        "vertices": 506,
+        "triangles": 988,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "parents": [
+          null,
+          null
+        ],
+        "unexpected_objects": []
+      },
+      "glb_reimport": {
+        "mesh_objects": 2,
+        "vertices": 1964,
+        "triangles": 988,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "parents": [
+          null,
+          null
+        ],
+        "unexpected_objects": []
+      },
+      "bounds_min": [
+        -1.5799999237060547,
+        -1.3299999237060547,
+        0.04999995231628418
+      ],
+      "bounds_max": [
+        1.820000171661377,
+        0.7599999904632568,
+        2.1041758060455322
+      ],
+      "source_copy_sha256_matches": true,
+      "packed_images": [
+        {
+          "name": "21-yo-yo_BaseColor",
+          "size": [
+            320,
+            320
+          ],
+          "packed": true
+        }
+      ],
+      "mesh_origins": {
+        "YoYo": [
+          -0.550000011920929,
+          0.0,
+          1.100000023841858
+        ],
+        "FingerRing": [
+          1.4300000667572021,
+          -0.9599999785423279,
+          0.1499999761581421
+        ]
+      },
+      "animation_actions": 0,
+      "glb_file_structure": {
+        "meshes": 2,
+        "skins": 0,
+        "animations": 0,
+        "nodes": [
+          "FingerRing",
+          "YoYo"
+        ]
+      },
+      "nonexported_marker_checks": {
+        "String_Axle": {
+          "parent": "YoYo",
+          "local_position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "hidden_from_render": true
+        },
+        "String_Hand": {
+          "parent": "FingerRing",
+          "local_position": [
+            0.3700000047683716,
+            0.3499999940395355,
+            0.0
+          ],
+          "hidden_from_render": true
+        }
+      },
+      "preview_and_alternate_inspected": true
+    }
+  },
+  {
+    "index": 22,
+    "name": "Bowling Ball",
+    "batch": "juggler_utility",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\22-bowling-ball",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "mesh_objects": 1,
+      "vertices": 345,
+      "triangles": 686,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "index": 22,
+      "name": "Bowling Ball",
+      "bounds_min": [
+        -1.1999999284744263,
+        -1.178252100944519,
+        0.0
+      ],
+      "bounds_max": [
+        1.2000000476837158,
+        1.2000000476837158,
+        2.4000000953674316
+      ],
+      "notes": "Single reusable item; gloves are independent left/right components. Closed assembled components with intentional overlapping joints. Back surfaces inferred. Palette UV islands intentionally overlap by material. Static prop; no rig. No Studio validation.",
+      "multiplicity": "One reusable item",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "vertices": 1396,
+        "triangles": 686,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "unexpected_nonmesh_objects": 0,
+        "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "vertices": 345,
+        "triangles": 686,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "unexpected_nonmesh_objects": 0,
+        "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+      },
+      "pivot": [
+        0,
+        0,
+        1.2
+      ],
+      "pivot_description": "Ball/spool center",
+      "source_copy_sha256_matches": true,
+      "review_renders_visually_inspected": true,
+      "materials": 1,
+      "packed_images": [
+        {
+          "name": "22-bowling-ball_BaseColor",
+          "size": [
+            320,
+            320
+          ],
+          "packed": true
+        }
+      ]
+    }
+  },
+  {
+    "index": 23,
+    "name": "Bowling Pins",
+    "batch": "juggler_utility",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\23-bowling-pins",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "mesh_objects": 1,
+      "vertices": 120,
+      "triangles": 236,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "index": 23,
+      "name": "Bowling Pins",
+      "bounds_min": [
+        -0.7197999954223633,
+        -0.6845704913139343,
+        0.03999999910593033
+      ],
+      "bounds_max": [
+        0.7197999954223633,
+        0.6845704913139343,
+        3.6599998474121094
+      ],
+      "notes": "Single reusable item; gloves are independent left/right components. Closed assembled components with intentional overlapping joints. Back surfaces inferred. Palette UV islands intentionally overlap by material. Static prop; no rig. No Studio validation.",
+      "multiplicity": "One reusable item",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "vertices": 460,
+        "triangles": 236,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "unexpected_nonmesh_objects": 0,
+        "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "vertices": 120,
+        "triangles": 236,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "unexpected_nonmesh_objects": 0,
+        "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ],
+      "pivot_description": "Base center",
+      "source_copy_sha256_matches": true,
+      "review_renders_visually_inspected": true,
+      "materials": 1,
+      "packed_images": [
+        {
+          "name": "23-bowling-pins_BaseColor",
+          "size": [
+            320,
+            320
+          ],
+          "packed": true
+        }
+      ]
+    }
+  },
+  {
+    "index": 24,
+    "name": "Nail Gun",
+    "batch": "guns",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\24-nail-gun",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 24,
+      "name": "Nail Gun",
+      "vertices": 1872,
+      "triangles": 3488,
+      "mesh_objects": 1,
+      "materials": 1,
+      "UV": true,
+      "texture": "1024x1024 packed BaseColor.png",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds_dimensions": [
+        4.256720542907715,
+        1.0509999990463257,
+        3.9196624755859375
+      ],
+      "limitations": [
+        "Single-view reconstruction: reverse details mirrored or inferred.",
+        "Assembly has intentional intersecting closed components.",
+        "No Studio import or gameplay integration performed."
+      ],
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 3488,
+        "matches_source": true,
+        "zero_area_triangles": 0,
+        "UV": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 3488,
+        "matches_source": true,
+        "zero_area_triangles": 0,
+        "UV": true
+      },
+      "reference_sha256_matches": true,
+      "required_deliverables_present": true,
+      "preview_visually_reviewed": true
+    }
+  },
+  {
+    "index": 25,
+    "name": "Wrecking Ball",
+    "batch": "juggler_utility",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\25-wrecking-ball",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "mesh_objects": 1,
+      "vertices": 1177,
+      "triangles": 2314,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "materials": 1,
+      "index": 25,
+      "name": "Wrecking Ball",
+      "armatures": 1,
+      "bones": 9,
+      "notes": "Rigid skinned assembly; each closed chain link has weight1 to one bone. Handle_ROOT is fixed when child links pose. No animation Actions or clips. No Studio import tested.",
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "vertices": 1177,
+        "triangles": 2314,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1
+      },
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "vertices": 4762,
+        "triangles": 2314,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1
+      },
+      "bounds_min": [
+        -1.8599997758865356,
+        -0.8999999761581421,
+        0.0
+      ],
+      "bounds_max": [
+        1.6834907531738281,
+        0.8999999761581421,
+        3.336493492126465
+      ],
+      "source_copy_sha256_matches": true,
+      "packed_images": [
+        {
+          "name": "25-wrecking-ball_BaseColor",
+          "size": [
+            320,
+            320
+          ],
+          "packed": true
+        }
+      ],
+      "mesh_origins": {
+        "WreckingBall_Skinned": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "animation_actions": 0,
+      "rig_pose_check_inspected": true
+    }
+  },
+  {
+    "index": 26,
+    "name": "Shovel",
+    "batch": "melee_tools",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\26-shovel",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 26,
+      "name": "Shovel",
+      "vertices": 239,
+      "triangles": 454,
+      "mesh_objects": 1,
+      "materials": 1,
+      "uv_layers": 1,
+      "texture": "1024x1024 packed base color",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds": [
+        1.7320177555084229,
+        0.4050000011920929,
+        3.7866928577423096
+      ],
+      "notes": "Intentional component intersections; mirrored/extrapolated unseen surfaces. Static prop; no rig or gameplay. Roblox import not tested.",
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 454,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 454,
+        "has_uv": true,
+        "has_image_texture": true,
+        "unexpected_stage_objects": 0
+      },
+      "pivot": [
+        0.164,
+        0,
+        2.468
+      ],
+      "pivot_description": "Handhold center in reference presentation coordinates"
+    }
+  },
+  {
+    "index": 27,
+    "name": "Paint Roller",
+    "batch": "juggler_utility",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\27-paint-roller",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "mesh_objects": 11,
+      "vertices": 898,
+      "triangles": 1752,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "index": 27,
+      "name": "Paint Roller",
+      "bounds_min": [
+        -1.3799999952316284,
+        -0.5399423241615295,
+        -0.008338004350662231
+      ],
+      "bounds_max": [
+        1.7249414920806885,
+        0.5356255173683167,
+        3.2127318382263184
+      ],
+      "notes": "Single reusable item; gloves are independent left/right components. Closed assembled components with intentional overlapping joints. Back surfaces inferred. Palette UV islands intentionally overlap by material. Static prop; no rig. No Studio validation.",
+      "multiplicity": "One reusable item",
+      "glb_reimport": {
+        "mesh_objects": 11,
+        "vertices": 3528,
+        "triangles": 1752,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "unexpected_nonmesh_objects": 0,
+        "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+      },
+      "fbx_reimport": {
+        "mesh_objects": 11,
+        "vertices": 898,
+        "triangles": 1752,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "unexpected_nonmesh_objects": 0,
+        "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+      },
+      "pivot": [
+        0.6,
+        0,
+        0.6
+      ],
+      "pivot_description": "Handhold center",
+      "source_copy_sha256_matches": true,
+      "review_renders_visually_inspected": true,
+      "materials": 1,
+      "packed_images": [
+        {
+          "name": "27-paint-roller_BaseColor",
+          "size": [
+            320,
+            320
+          ],
+          "packed": true
+        }
+      ]
+    }
+  },
+  {
+    "index": 28,
+    "name": "Vacuum Cleaner",
+    "batch": "juggler_utility",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\28-vacuum-cleaner",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "mesh_objects": 19,
+      "vertices": 633,
+      "triangles": 1198,
+      "loose_vertices": 0,
+      "nonmanifold_edges": 0,
+      "zero_area_faces": 0,
+      "zero_area_triangles": 0,
+      "uv_layers": true,
+      "loaded_textures": true,
+      "materials": 1,
+      "index": 28,
+      "name": "Vacuum Cleaner",
+      "bounds_min": [
+        -2.140000104904175,
+        -1.0095000267028809,
+        0.04039999842643738
+      ],
+      "bounds_max": [
+        1.8100000619888306,
+        0.9204000234603882,
+        2.2300000190734863
+      ],
+      "notes": "Single reusable item; gloves are independent left/right components. Closed assembled components with intentional overlapping joints. Back surfaces inferred. Palette UV islands intentionally overlap by material. Static prop; no rig. No Studio validation.",
+      "multiplicity": "One reusable item",
+      "glb_reimport": {
+        "mesh_objects": 19,
+        "vertices": 2252,
+        "triangles": 1198,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "unexpected_nonmesh_objects": 0,
+        "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+      },
+      "fbx_reimport": {
+        "mesh_objects": 19,
+        "vertices": 633,
+        "triangles": 1198,
+        "loose_vertices": 0,
+        "nonmanifold_edges": 0,
+        "zero_area_faces": 0,
+        "zero_area_triangles": 0,
+        "uv_layers": true,
+        "loaded_textures": true,
+        "materials": 1,
+        "unexpected_nonmesh_objects": 0,
+        "topology_note": "GLB split normal/UV coordinate duplicates welded for topology measurement."
+      },
+      "pivot": [
+        0.86,
+        0,
+        2.07
+      ],
+      "pivot_description": "Handhold center",
+      "source_copy_sha256_matches": true,
+      "review_renders_visually_inspected": true,
+      "packed_images": [
+        {
+          "name": "28-vacuum-cleaner_BaseColor",
+          "size": [
+            320,
+            320
+          ],
+          "packed": true
+        }
+      ]
+    }
+  },
+  {
+    "index": 29,
+    "name": "Power Washer",
+    "batch": "guns",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\29-power-washer",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "index": 29,
+      "name": "Power Washer",
+      "vertices": 1580,
+      "triangles": 2992,
+      "mesh_objects": 1,
+      "materials": 1,
+      "UV": true,
+      "texture": "1024x1024 packed BaseColor.png",
+      "nonmanifold_edges": 0,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "bounds_dimensions": [
+        6.209723472595215,
+        1.5689542293548584,
+        3.479891538619995
+      ],
+      "limitations": [
+        "Single-view reconstruction: reverse details mirrored or inferred.",
+        "Assembly has intentional intersecting closed components.",
+        "No Studio import or gameplay integration performed."
+      ],
+      "glb_reimport": {
+        "mesh_objects": 1,
+        "triangles": 2992,
+        "matches_source": true,
+        "zero_area_triangles": 0,
+        "UV": true
+      },
+      "fbx_reimport": {
+        "mesh_objects": 1,
+        "triangles": 2992,
+        "matches_source": true,
+        "zero_area_triangles": 0,
+        "UV": true
+      },
+      "reference_sha256_matches": true,
+      "required_deliverables_present": true,
+      "preview_visually_reviewed": true
+    }
+  },
+  {
+    "index": 30,
+    "name": "Magic Staff",
+    "batch": "magic",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\30-magic-staff",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "name": "Magic Staff",
+      "vertices": 344,
+      "triangles": 644,
+      "mesh_count": 11,
+      "material_count": 1,
+      "uv": "per-face atlas coordinates",
+      "packed_texture": true,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "non_manifold_edges": 0,
+      "bounds_min": [
+        -4.172266483306885,
+        -0.5009999871253967,
+        0.0
+      ],
+      "bounds_max": [
+        0.1126861572265625,
+        0.29500168561935425,
+        4.433173656463623
+      ],
+      "intentional_intersections": "Separate closed decorative components intersect support surfaces; no runtime rig or collision setup.",
+      "limitations": [
+        "Unseen rear surfaces inferred symmetrically.",
+        "Roblox Studio import not tested."
+      ],
+      "glb_reimport_meshes": 11,
+      "glb_reimport_triangles": 644,
+      "fbx_reimport_meshes": 11,
+      "fbx_reimport_triangles": 644
+    }
+  },
+  {
+    "index": 31,
+    "name": "Mjolnir",
+    "batch": "magic",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\31-mjolnir",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "name": "Mjolnir",
+      "vertices": 1367,
+      "triangles": 2554,
+      "mesh_count": 45,
+      "material_count": 1,
+      "uv": "per-face atlas coordinates",
+      "packed_texture": true,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "non_manifold_edges": 0,
+      "bounds_min": [
+        -2.6590068340301514,
+        -0.5960000157356262,
+        2.0489096641540527e-08
+      ],
+      "bounds_max": [
+        0.46621912717819214,
+        0.5960000157356262,
+        5.081527233123779
+      ],
+      "intentional_intersections": "Separate closed decorative components intersect support surfaces; no runtime rig or collision setup.",
+      "limitations": [
+        "Unseen rear surfaces inferred symmetrically.",
+        "Roblox Studio import not tested."
+      ],
+      "glb_reimport_meshes": 45,
+      "glb_reimport_triangles": 2554,
+      "fbx_reimport_meshes": 45,
+      "fbx_reimport_triangles": 2554
+    }
+  },
+  {
+    "index": 32,
+    "name": "Excalibur",
+    "batch": "magic",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\32-excalibur",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "name": "Excalibur",
+      "vertices": 783,
+      "triangles": 1478,
+      "mesh_count": 22,
+      "material_count": 1,
+      "uv": "per-face atlas coordinates",
+      "packed_texture": true,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "non_manifold_edges": 0,
+      "bounds_min": [
+        -4.4217119216918945,
+        -0.421999990940094,
+        0.0
+      ],
+      "bounds_max": [
+        0.14054743945598602,
+        0.39800000190734863,
+        4.151479721069336
+      ],
+      "intentional_intersections": "Separate closed decorative components intersect support surfaces; no runtime rig or collision setup.",
+      "limitations": [
+        "Unseen rear surfaces inferred symmetrically.",
+        "Roblox Studio import not tested."
+      ],
+      "glb_reimport_meshes": 22,
+      "glb_reimport_triangles": 1478,
+      "fbx_reimport_meshes": 22,
+      "fbx_reimport_triangles": 1478
+    }
+  },
+  {
+    "index": 33,
+    "name": "Pandoras Box",
+    "batch": "magic",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\33-pandoras-box",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "mesh_count": 47,
+      "vertices": 1309,
+      "triangles": 2438,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "non_manifold_edges": 0,
+      "name": "Pandoras Box",
+      "material_count": 2,
+      "packed_texture": true,
+      "uv": "Original exterior atlas preserved; separate packed stone interior atlas",
+      "armature_count": 1,
+      "animation_count": 0,
+      "limitations": [
+        "Unseen hollow interior and lid underside inferred.",
+        "Roblox Studio import and runtime hinge control not tested."
+      ],
+      "intentional_intersections": "Closed ornamental components overlap their support meshes; all lid ornaments rigidly follow the lid.",
+      "glb_reimport_triangles": 2438,
+      "glb_reimport_meshes": 47,
+      "fbx_reimport_triangles": 2438,
+      "fbx_reimport_meshes": 47
+    }
+  },
+  {
+    "index": 34,
+    "name": "Medusas Head",
+    "batch": "magic",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\34-medusas-head",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "name": "Medusas Head",
+      "vertices": 2088,
+      "triangles": 3872,
+      "mesh_count": 76,
+      "material_count": 1,
+      "uv": "per-face atlas coordinates",
+      "packed_texture": true,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "non_manifold_edges": 0,
+      "bounds_min": [
+        -2.3564181327819824,
+        -0.6700000166893005,
+        -7.450580596923828e-09
+      ],
+      "bounds_max": [
+        1.0821993350982666,
+        0.6199999451637268,
+        4.100472450256348
+      ],
+      "intentional_intersections": "Separate closed decorative components intersect support surfaces; no runtime rig or collision setup.",
+      "limitations": [
+        "Unseen rear surfaces inferred symmetrically.",
+        "Roblox Studio import not tested."
+      ],
+      "glb_reimport_meshes": 76,
+      "glb_reimport_triangles": 3872,
+      "fbx_reimport_meshes": 76,
+      "fbx_reimport_triangles": 3872
+    }
+  },
+  {
+    "index": 35,
+    "name": "Crystal Ball",
+    "batch": "magic",
+    "output": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\assets\\35-crystal-ball",
+    "complete_files": true,
+    "missing": [],
+    "validation": {
+      "name": "Crystal Ball",
+      "vertices": 1136,
+      "triangles": 2188,
+      "mesh_count": 21,
+      "material_count": 3,
+      "uv": "per-face atlas coordinates",
+      "packed_texture": true,
+      "loose_vertices": 0,
+      "zero_area_faces": 0,
+      "non_manifold_edges": 0,
+      "bounds_min": [
+        -1.0800000429153442,
+        -1.1100000143051147,
+        0.0
+      ],
+      "bounds_max": [
+        1.0800000429153442,
+        1.0800000429153442,
+        2.819999933242798
+      ],
+      "intentional_intersections": "Separate closed decorative components intersect support surfaces; no runtime rig or collision setup.",
+      "limitations": [
+        "Unseen rear surfaces inferred symmetrically.",
+        "Roblox Studio import not tested.",
+        "Crystal shell alpha and subtle interior emission may need Roblox material/lighting tuning; interior is modeled and surface-colored rather than volumetric."
+      ],
+      "glb_reimport_meshes": 21,
+      "glb_reimport_triangles": 2188,
+      "fbx_reimport_meshes": 21,
+      "fbx_reimport_triangles": 2188
+    }
+  }
+]
