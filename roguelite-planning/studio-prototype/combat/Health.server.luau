@@ -1,0 +1,1 @@
+-- Intentionally empty. Prevent Roblox default regeneration; CharacterService owns healing.
