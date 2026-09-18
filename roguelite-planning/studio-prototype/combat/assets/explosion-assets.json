@@ -1,0 +1,18 @@
+{
+  "small": {
+    "file": "rocket-explosion-small-atlas.png",
+    "assetId": "99550847281506"
+  },
+  "large": {
+    "file": "rocket-explosion-large-atlas.png",
+    "assetId": "120401440349556"
+  },
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "runtimeAtlasSize": [
+    1024,
+    1024
+  ]
+}
