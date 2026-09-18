@@ -1,0 +1,15 @@
+{
+  "vertices": 1390,
+  "triangles": 2588,
+  "mesh_objects": 1,
+  "materials": 1,
+  "texture": "1024 x 1024 base color",
+  "nonmanifold_edges": 0,
+  "loose_vertices": 0,
+  "dimensions": [
+    6.820516586303711,
+    1.3650000095367432,
+    4.973444938659668
+  ],
+  "status": "Awaiting user visual approval; Roblox import not performed."
+}

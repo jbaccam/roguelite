@@ -1,0 +1,28 @@
+{
+  "glb": {
+    "mesh_objects": 1,
+    "triangles": 2588,
+    "materials": 1,
+    "uv_layers": 1,
+    "base_color_image_loaded": true,
+    "bounds": [
+      6.820516347885132,
+      1.3650000095367432,
+      4.973444938659668
+    ],
+    "nonmanifold_edges_after_seam_weld": 0
+  },
+  "fbx": {
+    "mesh_objects": 1,
+    "triangles": 2588,
+    "materials": 1,
+    "uv_layers": 1,
+    "base_color_image_loaded": true,
+    "bounds": [
+      6.820516347885132,
+      1.3650000095367432,
+      4.973445024341345
+    ],
+    "nonmanifold_edges_after_seam_weld": 0
+  }
+}
