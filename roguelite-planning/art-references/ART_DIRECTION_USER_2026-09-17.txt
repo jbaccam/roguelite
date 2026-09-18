@@ -1,0 +1,622 @@
+The game uses a stylized low-poly 3D aesthetic with soft faceting, clean silhouettes, chunky proportions, painterly textures, and bright but controlled colors. The overall visual language should feel somewhere between a polished Roblox game, a mobile action game, and a hand-painted fantasy toy world.
+The style should be immediately readable from a distance, simple enough for Roblox performance, but still detailed enough to feel intentional and high quality.
+The world should never look realistic, gritty, hyper-detailed, or physically accurate. It should feel playful, slightly exaggerated, colorful, and cohesive.
+Everything in the game should follow these principles:
+- low-poly but polished 
+- chunky and readable silhouettes 
+- soft bevels instead of razor-sharp edges 
+- faceted geometry is visible 
+- textures provide visual richness 
+- geometry provides shape 
+- bright but not neon-everywhere 
+- stylized painterly materials 
+- simple color palettes 
+- slightly exaggerated proportions 
+- minimal realistic detail 
+- game-ready, Roblox-friendly assets 
+- clean presentation 
+- consistent world scale 
+- consistent texture scale 
+The style should not look like:
+-  realistic PBR 
+-  photorealism 
+-  Minecraft 
+-  voxel art 
+-  pure flat-shaded geometry 
+-  overly smooth Pixar-style models 
+-  highly detailed fantasy MMO assets 
+-  hyper-detailed sculpted meshes 
+-  plastic toy models with no texture variation 
+The ideal middle ground is:
+simple geometry + strong silhouette + subtle painterly texture + clean faceting
+Models should be visibly low-poly, but not primitive.
+Use:
+-  moderate polygon counts 
+-  broad planar surfaces 
+-  slightly irregular faceting 
+-  subtle bevels 
+-  rounded/chamfered corners 
+-  asymmetry where natural 
+-  simplified forms 
+Avoid:
+-  huge triangular facets dominating surfaces 
+-  perfectly smooth subdivision 
+-  razor-sharp 90° edges 
+-  excessive tiny geometry 
+-  random noisy topology 
+-  hyper-detailed sculpting 
+Edges should usually be slightly softened.
+For hard-surface objects:
+-  beveled edges 
+-  chunky simplified forms 
+-  major shapes clearly readable 
+-  limited small details 
+For natural objects:
+-  irregular silhouettes 
+-  slight tapering 
+-  asymmetrical mass 
+-  softened polygonal edges 
+Textures are one of the most important parts of the style.
+They should be:
+-  painterly 
+-  stylized 
+-  soft 
+-  low-noise 
+-  slightly hand-painted 
+-  broad color variation 
+-  subtle surface detail 
+Avoid:
+-  realistic photographic textures 
+-  extreme dirt 
+-  micro-scratches everywhere 
+-  high-frequency noise 
+-  sharp photoreal cracks 
+-  heavy PBR detail 
+Textures should contain:
+-  2–4 main value ranges 
+-  gentle color variation 
+-  broad patches 
+-  subtle grunge 
+-  occasional highlights 
+-  hand-painted-looking shading 
+For most assets:
+-  roughness: fairly high 
+-  metallic: only when appropriate 
+-  normal maps: optional, subtle 
+-  displacement: generally unnecessary 
+The base color texture should do most of the visual work.
+Cliffs are one of the defining assets in the game.
+They should be:
+-  rounded/cylindrical 
+-  chunky 
+-  modular 
+-  stackable 
+-  slightly irregular 
+-  low-poly 
+-  soft-edged 
+Common cliff forms:
+-  short squat cliff 
+-  medium-height cliff 
+-  tall narrow pillar 
+-  wide low plateau 
+-  broad medium plateau 
+-  tall wide cliff 
+-  subtly tapered cliff 
+-  natural stacked cliff formations 
+-  exposed rock variants 
+-  boulders and filler rocks 
+Avoid engineered wall systems unless specifically needed.
+Do not overuse:
+-  concave wall modules 
+-  convex wall modules 
+-  architectural corner systems 
+-  straight modular wall kits 
+The environment should feel like it is assembled from natural rock masses, not castle pieces.
+Most cliff pieces should have rounded or softly polygonal footprints.
+Use:
+-  circular-ish 
+-  oval 
+-  rounded square 
+-  irregular rounded shapes 
+Avoid:
+-  perfect cylinders 
+-  perfect rectangles 
+-  perfectly centered stacked tiers 
+Some cliffs may taper toward the base, but only slightly.
+Bad:
+floating-island cone
+Good:
+wide top, subtly narrower lower body
+Stacked cliffs must NOT look like layer cakes.
+Bad:
+-  centered circle 
+-  smaller centered circle 
+-  another smaller centered circle 
+Good:
+-  offset upper mass 
+-  unequal height zones 
+-  irregular widths 
+-  one side taller 
+-  asymmetrical footprint 
+-  overlapping rock masses 
+-  partially blended forms 
+A stacked cliff should look like natural erosion created multiple elevations.
+The main rock color palette is:
+-  light cool gray 
+-  soft blue-gray shadows 
+-  muted beige/taupe highlights 
+-  desaturated stone colors 
+The rock texture should feel:
+-  painterly 
+-  faceted 
+-  broad 
+-  low contrast 
+-  soft 
+Avoid dark navy/purple cliff textures unless specifically requested.
+The preferred rock look is lighter gray stone, similar to stylized fantasy mountain cliffs.
+Grass should be:
+-  bright spring green 
+-  soft painterly variation 
+-  subtle patches 
+-  no obvious repeating motifs 
+-  no realistic grass blades across the whole surface 
+For large ground planes:
+-  broad green variation 
+-  very subtle lighter/darker patches 
+-  sparse tiny grass clump shapes 
+-  low contrast 
+-  seamless tiling 
+The ground should look alive without looking busy.
+Large 500x500 Roblox surfaces should not reveal obvious texture repetition.
+This is important.
+Grass should not abruptly stop at the cliff edge.
+Use:
+-  gradual vegetation fade 
+-  irregular edge 
+-  small hanging grass 
+-  subtle moss 
+-  green coloration extending down rock 
+-  soft transition band 
+The transition should occupy a noticeable band, not a tiny line.
+Think:
+grass → overgrown rim → mossy transition → clean stone
+Avoid:
+grass | hard line | rock
+Moss should be subtle.
+Base stone may include:
+-  tiny moss in cracks 
+-  slight green discoloration 
+-  sparse crevice growth 
+Larger moss patches should be:
+-  selective 
+-  irregular 
+-  placed on ledges 
+-  placed in cracks 
+-  occasionally hanging 
+-  not covering entire rocks 
+Moss overlays should be used as optional accents.
+Do not make all stones heavily green.
+The map should feel like a stylized fantasy forest arena.
+Core structure:
+-  open central grassy arena 
+-  cliff ring around perimeter 
+-  multiple elevation levels 
+-  pine trees 
+-  rocks 
+-  logs 
+-  camp props 
+-  dirt paths 
+-  occasional tents/fences 
+-  distant mountains 
+The environment should feel natural, readable, and uncluttered.
+The center should stay relatively open for gameplay.
+The edges should carry most of the environmental detail.
+Use a clear gameplay hierarchy:
+-  mostly open grass 
+-  occasional rocks/logs 
+-  minimal clutter 
+-  readable combat space 
+-  trees 
+-  small rocks 
+-  logs 
+-  paths 
+-  props 
+-  cliffs 
+-  trees 
+-  boulder clusters 
+-  elevation 
+-  environment framing 
+-  larger mountains 
+-  distant trees 
+-  atmospheric depth 
+Trees are stylized evergreen pines.
+The master tree should be reusable by scaling.
+Structure:
+-  central trunk 
+-  around 4 foliage tiers 
+-  pointed top 
+-  largest foliage layer at bottom 
+-  progressively smaller upward 
+Foliage:
+-  chunky 
+-  layered 
+-  scalloped edges 
+-  slightly drooping 
+-  low-poly 
+-  soft silhouette 
+Avoid:
+-  realistic needles 
+-  individual leaf cards 
+-  super spiky geometry 
+-  very thin branches 
+Trunk:
+-  warm brown 
+-  lightly faceted 
+-  subtle taper 
+-  slightly widened base 
+Foliage textures should be mostly color variation.
+Use:
+-  medium green 
+-  dark green 
+-  yellow-green highlights 
+Avoid painting full miniature branches or tree shapes into the texture.
+The geometry defines the foliage silhouette.
+The texture should mainly provide:
+-  tonal breakup 
+-  broad leaf-like shapes 
+-  subtle painterly variation 
+Bark should be:
+-  warm medium brown 
+-  elongated vertical shapes 
+-  simplified low-poly patterns 
+-  broad shadow grooves 
+Avoid:
+-  realistic bark photography 
+-  tiny cracks 
+-  excessive noise 
+Props like:
+-  logs 
+-  crates 
+-  rocks 
+-  tents 
+-  tools 
+-  environmental objects 
+should use:
+-  chunky low-poly geometry 
+-  simplified construction 
+-  soft bevels 
+-  subtle texture wear 
+-  clear silhouettes 
+A prop should be instantly identifiable from a distance.
+Logs should be:
+-  thick 
+-  chunky 
+-  faceted 
+-  slightly irregular 
+-  simple 
+Include:
+-  cut circular ends 
+-  short broken branch stubs 
+-  visible bark variation 
+-  slightly uneven silhouette 
+Avoid smooth perfect cylinders.
+Weapons follow the same low-poly visual language.
+Every weapon should:
+-  look immediately recognizable 
+-  have a strong silhouette 
+-  have simplified details 
+-  use chunky geometry 
+-  use soft bevels 
+-  use simple materials 
+-  remain game-ready 
+Weapons can be exaggerated slightly for readability.
+Examples:
+-  frying pan: thick cast-iron silhouette 
+-  Glock-like pistol: simplified tactical handgun 
+-  shotgun: chunky barrel/stock 
+-  katana: clean long blade with simplified grip 
+-  rocket launcher: large readable tube 
+-  boxing gloves: oversized 
+-  cinder blocks: simplified gray concrete 
+-  magic staff: chunky wood + glowing crystal 
+Real-world-inspired weapons should not attempt perfect real-world replication.
+They should feel:
+-  stylized 
+-  simplified 
+-  recognizable 
+-  toy-like 
+-  low-poly 
+Avoid:
+-  serial numbers 
+-  extreme mechanical precision 
+-  unnecessary tiny gun components 
+-  overly realistic materials 
+Fantasy weapons may use:
+-  gems 
+-  glowing crystals 
+-  magical runes 
+-  gold accents 
+-  simple energy glow 
+But they should remain:
+-  chunky 
+-  readable 
+-  low-poly 
+-  not overly ornate 
+Magic effects should be used sparingly.
+The overall game palette should be bright and readable.
+Common colors:
+-  bright natural green 
+-  cool light gray stone 
+-  medium warm brown 
+-  sky blue 
+-  muted beige 
+-  charcoal / near-black 
+-  bright lime green accents 
+-  red health 
+-  gold currency 
+-  white text 
+-  occasional blue/purple class colors 
+Use clear color identities:
+-  metal: charcoal / gray 
+-  wood: warm brown 
+-  magic: saturated blue/purple/green 
+-  tools: yellow/red/blue accents 
+UI should match the low-poly asset style.
+The UI should look:
+-  chunky 
+-  beveled 
+-  slightly 3D 
+-  game-like 
+-  clean 
+-  readable 
+-  modern arcade 
+Panels:
+-  dark charcoal 
+-  thick borders 
+-  beveled edges 
+-  subtle highlights 
+-  occasional stone-like corner pieces 
+Accent:
+-  bright lime green 
+Use green for:
+-  positive stats 
+-  XP 
+-  active selection 
+-  buttons 
+-  highlights 
+Use:
+-  beveled rectangles 
+-  clipped corners 
+-  hexagonal accents 
+-  chunky frames 
+-  dark inner panels 
+-  bright accent strips 
+Avoid:
+-  plain flat rectangles everywhere 
+-  thin minimalist UI 
+-  glassmorphism 
+-  neon cyberpunk 
+-  ornate medieval frames 
+The UI should feel like the same world as the low-poly items.
+HUD backgrounds should generally be transparent.
+Use:
+-  individual framed HUD elements 
+-  no large opaque screen-covering box during gameplay 
+Menus may use:
+-  semi-transparent dark overlays 
+-  dimmed game world behind 
+Core HUD elements:
+-  health bar 
+-  XP/level bar 
+-  currency bag/count 
+-  wave timer 
+-  wave number 
+-  stats 
+-  buffs 
+-  player modifiers 
+HUD should remain compact.
+Health bar:
+-  dark beveled frame 
+-  red fill 
+-  heart icon 
+-  white numeric HP text 
+-  slightly chunky 3D border 
+Example:
+14 / 16
+Do not overcomplicate it.
+XP bar:
+-  bright green fill 
+-  dark frame 
+-  level text on right 
+Example:
+LV. 3
+It should visually pair with the health bar.
+Currency is represented using a stylized bag/coin icon.
+Use:
+-  brown bag 
+-  gold coin 
+-  chunky low-poly illustration 
+-  white number 
+Currency display should be readable at a glance.
+Wave timer should be centered at the top.
+Display:
+-  large countdown 
+-  small wave label 
+Example:
+01:28
+ Wave 2
+Frame:
+-  dark beveled panel 
+-  subtle lime accents 
+Level-up UI should show multiple upgrade cards.
+Each card:
+-  icon at top 
+-  upgrade name 
+-  effect/stat 
+-  large choose button 
+Use:
+-  dark card background 
+-  beveled border 
+-  bright green accents 
+-  large readable text 
+The menu should feel more polished than Brotato but remain simple.
+The shop screen should be original but inspired by roguelite readability.
+Layout:
+-  shop title 
+-  currency display 
+-  reroll button 
+-  3–4 item/weapon cards 
+-  player stats panel 
+-  inventory slots 
+-  weapon slots 
+-  next wave button 
+Cards should include:
+-  item image 
+-  item name 
+-  item category 
+-  stat modifiers 
+-  price 
+Use a clear visual hierarchy.
+Avoid directly copying Brotato’s flat black rectangles.
+Instead:
+-  stronger beveled card frames 
+-  low-poly stone/metal corners 
+-  thicker panel silhouettes 
+-  lime accent lines 
+-  slightly more dimensional buttons 
+-  larger item icons 
+-  clearer visual grouping 
+Keep it simple, not flashy.
+Icons should be:
+-  simplified 
+-  low-poly 
+-  bold 
+-  colorful 
+-  readable at small size 
+Do not use hyper-detailed art.
+Icons should match weapon assets visually.
+Typography should be:
+-  bold 
+-  simple 
+-  game-readable 
+-  slightly chunky 
+Use:
+-  white primary text 
+-  green positive stats 
+-  red negative stats 
+-  gold prices 
+-  gray secondary text 
+Avoid overly decorative fantasy fonts.
+Characters should remain recognizably Roblox.
+Use:
+-  R15 structure 
+-  chunky proportions 
+-  simple silhouettes 
+-  custom textures 
+-  softened block forms 
+Do not turn characters into realistic humanoids.
+Zombie NPC:
+-  R15 Roblox rig 
+-  bald 
+-  blocky 
+-  slightly rounded/softened head 
+-  green skin 
+-  ragged brown clothing 
+-  dirty/grimy 
+-  expressive cartoon zombie face 
+Base skin color:
+RGB 64, 131, 54
+Skin variation:
+-  darker green patches 
+-  subtle dirt 
+-  mottled texture 
+-  slight desaturation in spots 
+Face should:
+-  feel cartoon-undead 
+-  use deep dark eye sockets 
+-  pale glowing/dead eyes 
+-  crooked teeth 
+-  wrinkles 
+-  facial creases 
+-  grime 
+The face must fade smoothly into the head texture.
+Avoid:
+-  visible rectangle around face 
+-  abrupt texture seam 
+-  sticker appearance 
+The face should feel painted directly onto the same continuous skin.
+All UV textures should:
+-  bleed beyond seam boundaries 
+-  maintain same base colors across islands 
+-  fade detail near seams 
+-  avoid strong lines crossing UV edges 
+The head especially must wrap naturally.
+Lighting should generally be:
+-  soft 
+-  bright 
+-  slightly warm 
+-  clean 
+Use:
+-  broad soft shadows 
+-  ambient sky light 
+-  subtle directional sun 
+-  no harsh realism 
+Characters and props should remain readable.
+Sky:
+-  bright blue 
+-  soft clouds 
+-  cheerful 
+-  stylized 
+Distant mountains:
+-  pale blue-gray 
+-  low contrast 
+-  simplified 
+Use atmospheric perspective.
+Foreground:
+-  highest detail 
+Midground:
+-  moderate detail 
+Background:
+-  simplified 
+Do not make every surface equally busy.
+The player should always be visually prioritized.
+Everything should be optimized for Roblox.
+Use:
+-  reusable modular meshes 
+-  shared textures 
+-  scalable props 
+-  repeated assets with rotation/scale variation 
+-  moderate poly counts 
+-  simple material setups 
+Avoid unique meshes when scaling/rotation can create variation.
+Prefer master assets that can be reused.
+Examples:
+-  one pine tree scaled multiple ways 
+-  modular cliff family 
+-  reusable boulders 
+-  reusable moss overlays 
+-  reusable logs 
+-  weapon base materials 
+Variation should come from:
+-  scale 
+-  rotation 
+-  placement 
+-  overlap 
+-  color variation 
+-  texture variation 
+You can give future agents this shorter phrase:
+Create the asset in our established game art style: polished stylized low-poly 3D, chunky readable silhouette, softly beveled/faceted geometry, painterly low-noise textures, bright but controlled colors, simplified materials, subtle surface variation, Roblox-friendly proportions, no photorealism, no excessive detail, and a clean game-ready finish consistent with our cliffs, trees, weapons, zombie, and UI.
+Stylized low-poly fantasy forest arena with bright soft grass, light cool-gray painterly cliffs, subtle moss, layered evergreen trees, chunky boulders, logs, dirt paths, distant blue mountains, and clean gameplay-readable composition. Soft bevels, irregular natural silhouettes, low visual noise, bright daylight, Roblox-friendly geometry.
+Stylized low-poly Roblox-friendly weapon asset, strong readable silhouette, chunky proportions, clean faceted geometry, soft bevels, simple materials, subtle painterly surface variation, no excessive realism, isolated model reference.
+Stylized low-poly roguelite UI with dark charcoal beveled panels, chunky metal/stone framing, lime-green accents, white bold text, red health, green XP, gold currency, simple colorful icons, strong hierarchy, clean transparent HUD layout, polished but not flashy, distinct from Brotato while retaining immediate roguelite readability.
+When generating anything new, the agent should ask:
+“Would this asset look natural sitting next to the existing cliffs, pine trees, weapons, zombie, and UI?”
+If the answer is no, simplify it and bring it back toward:
+-  low-poly 
+-  chunky 
+-  softly beveled 
+-  painterly 
+-  readable 
+-  colorful 
+-  Roblox-friendly 
+That is the core visual identity.
