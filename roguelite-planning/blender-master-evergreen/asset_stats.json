@@ -1,0 +1,16 @@
+{
+  "vertices": 1260,
+  "polygons": 1452,
+  "triangles": 2496,
+  "material_count": 1,
+  "height": 18.0,
+  "width": 10.54626750946045,
+  "origin": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "objects_exported": 1,
+  "foliage_tiers": 4,
+  "pointed_crown": 1
+}

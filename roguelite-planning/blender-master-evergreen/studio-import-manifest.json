@@ -1,0 +1,23 @@
+{
+  "path": "Workspace.RogueliteEnvironmentAssets.Evergreen_Master",
+  "meshCount": 1,
+  "meshId": "rbxassetid://81417212359651",
+  "textureId": "rbxassetid://102292851859366",
+  "sourceFBX": "Evergreen_Master.fbx",
+  "placeId": 107877054949326,
+  "anchored": true,
+  "pivot": {
+    "1": 308,
+    "2": 0,
+    "3": 40
+  },
+  "size": {
+    "1": 10.546266555786133,
+    "2": 18,
+    "3": 10.546266555786133
+  },
+  "method": "Studio standard FBX importer; creator Me; embedded2048x1024 color atlas",
+  "visualVerified": true,
+  "scaleCorrection": "Uniform18/importedHeight;100x FBX units corrected",
+  "placeSaveOrPublishPerformed": false
+}

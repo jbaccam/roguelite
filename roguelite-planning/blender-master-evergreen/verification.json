@@ -1,0 +1,53 @@
+{
+  "blend": {
+    "mesh_objects": 1,
+    "vertices_in_file": 1260,
+    "triangles": 2496,
+    "materials": 1,
+    "UV_layers": 1,
+    "boundary_edges_after_weld": 0,
+    "nonmanifold_edges_after_weld": 0,
+    "minimum_z": 0.0,
+    "maximum_z": 18.0,
+    "origin_world": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "texture_nodes": 1
+  },
+  "fbx": {
+    "mesh_objects": 1,
+    "vertices_in_file": 1260,
+    "triangles": 2496,
+    "materials": 1,
+    "UV_layers": 1,
+    "boundary_edges_after_weld": 0,
+    "nonmanifold_edges_after_weld": 0,
+    "minimum_z": -2.6713263423516764e-07,
+    "maximum_z": 18.0,
+    "origin_world": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "texture_nodes": 2
+  },
+  "glb": {
+    "mesh_objects": 1,
+    "vertices_in_file": 1705,
+    "triangles": 2496,
+    "materials": 1,
+    "UV_layers": 1,
+    "boundary_edges_after_weld": 0,
+    "nonmanifold_edges_after_weld": 0,
+    "minimum_z": 0.0,
+    "maximum_z": 18.0,
+    "origin_world": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "texture_nodes": 1
+  }
+}
