@@ -5,3 +5,10 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+
+# Regenerable local output and redundant delivery archives
+*.log
+*.zip
+**/frames/
+**/labelled/
+build/
