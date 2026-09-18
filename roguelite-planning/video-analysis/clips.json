@@ -1,0 +1,56 @@
+[
+  {
+    "index": 1,
+    "file": "lighting knife.mp4",
+    "fps": 30.15580499246105,
+    "frames": 180,
+    "duration": 5.968999999999999,
+    "width": 1920.0,
+    "height": 1080.0
+  },
+  {
+    "index": 2,
+    "file": "multiple weapons - rocket launcher - club - axe - shotgun - pistol.mp4",
+    "fps": 30.057547587428065,
+    "frames": 679,
+    "duration": 22.59,
+    "width": 1920.0,
+    "height": 1080.0
+  },
+  {
+    "index": 3,
+    "file": "punching.mp4",
+    "fps": 30.284917314206016,
+    "frames": 152,
+    "duration": 5.019,
+    "width": 1920.0,
+    "height": 1080.0
+  },
+  {
+    "index": 4,
+    "file": "rocket launcher.mp4",
+    "fps": 30.114606193611316,
+    "frames": 247,
+    "duration": 8.202,
+    "width": 1920.0,
+    "height": 1080.0
+  },
+  {
+    "index": 5,
+    "file": "slash and thrust.mp4",
+    "fps": 30.075187969924812,
+    "frames": 264,
+    "duration": 8.778,
+    "width": 1920.0,
+    "height": 1080.0
+  },
+  {
+    "index": 6,
+    "file": "smg.mp4",
+    "fps": 30.165912518853695,
+    "frames": 160,
+    "duration": 5.304,
+    "width": 1920.0,
+    "height": 1080.0
+  }
+]

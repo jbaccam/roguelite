@@ -1,0 +1,11 @@
+{
+  "mesh_vertices": 2756,
+  "measured_mesh_scale": 1.3698537819407663,
+  "minimum_vertex_radius_near_avatar": 2.0396593212750833,
+  "avatar_footprint_radius": 1.8,
+  "windup_seconds": 0.09,
+  "slash_seconds": 0.11,
+  "recovery_seconds": 0.16,
+  "horizontal_arc_degrees": 115,
+  "note": "Independent Blender motion concept, not an exported Roblox animation."
+}

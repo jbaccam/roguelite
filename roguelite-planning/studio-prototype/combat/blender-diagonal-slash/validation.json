@@ -1,0 +1,26 @@
+{
+  "sampled_poses": 1351,
+  "mesh_vertices": 2756,
+  "avatar_conservative_aabb": [
+    [
+      -1.7300000190734863,
+      -0.5699999928474426,
+      0.0
+    ],
+    [
+      1.7300000190734863,
+      0.5699999928474426,
+      5.150000095367432
+    ]
+  ],
+  "minimum_separating_axis_clearance_studs": 0.5843796730041504,
+  "minimum_floor_clearance_studs": 1.1252851486206055,
+  "possible_avatar_intersection_times": [],
+  "start_end_position_error": 0.0,
+  "start_end_quaternion_angle_error_degrees": 0.0,
+  "cut_seconds": 0.17,
+  "cycle_seconds": 1.35,
+  "rotation_axis": "world Y only; no axial roll",
+  "forward_grip_reach_studs": 3.75,
+  "preview_only": "Blender animation; no Studio or gameplay changes."
+}
