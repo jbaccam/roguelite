@@ -1,0 +1,107 @@
+{
+  "name": "RogueliteKatanaCombat",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "RogueliteCombat": {
+        "$className": "Folder",
+        "$ignoreUnknownInstances": true,
+        "KatanaMotion": {
+          "$path": "KatanaMotion.luau"
+        },
+        "WeaponCatalog": {
+          "$path": "WeaponCatalog.luau"
+        },
+        "WeaponMotion": {
+          "$path": "WeaponMotion.luau"
+        },
+        "BulletImpactVisuals": {
+          "$path": "BulletImpactVisuals.luau"
+        },
+        "ZombieDeath": {
+          "$path": "ZombieDeath.luau"
+        },
+        "ZombiePopped": {
+          "$className": "RemoteEvent"
+        },
+        "RocketProjectile": {
+          "$path": "RocketProjectile.luau"
+        },
+        "RocketMotion": {
+          "$path": "RocketMotion.luau"
+        },
+        "RocketFX": {
+          "$className": "RemoteEvent"
+        },
+        "RocketVisuals": {
+          "$path": "RocketVisuals.luau"
+        },
+        "CharacterStats": {
+          "$path": "CharacterStats.luau"
+        },
+        "EditPractice": {
+          "$className": "RemoteEvent"
+        },
+        "RocketExplosionVisuals": {
+          "$path": "RocketExplosionVisuals.luau"
+        },
+        "EconomyConfig": {
+          "$path": "EconomyConfig.luau"
+        },
+        "ShopCatalog": {
+          "$path": "ShopCatalog.luau"
+        },
+        "ShopAction": {
+          "$className": "RemoteEvent"
+        }
+      },
+      "RogueliteUI": {
+        "$path": "../ui/RogueliteUI.luau"
+      },
+      "WeaponInventoryUI": {
+        "$path": "../ui/WeaponInventoryUI.luau"
+      },
+      "CharacterStatsUI": {
+        "$path": "../ui/CharacterStatsUI.luau"
+      },
+      "ShopUI": {
+        "$path": "../ui/ShopUI.luau"
+      }
+    },
+    "ServerScriptService": {
+      "RogueliteCombat": {
+        "$path": "RogueliteCombat.server.luau"
+      },
+      "RogueliteZombieChase": {
+        "$path": "../RogueliteZombieChase.server.luau"
+      },
+      "CharacterService": {
+        "$path": "CharacterService.luau"
+      },
+      "CombatEffectsService": {
+        "$path": "CombatEffectsService.luau"
+      },
+      "StatProjectiles": {
+        "$path": "StatProjectiles.luau"
+      },
+      "ShopService": {
+        "$path": "ShopService.luau"
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "RogueliteCombat": {
+          "$path": "RogueliteCombat.client.luau"
+        },
+        "RogueliteHUD": {
+          "$path": "../ui/RogueliteHUD.client.luau"
+        }
+      },
+      "StarterCharacterScripts": {
+        "Health": {
+          "$path": "Health.server.luau"
+        }
+      }
+    }
+  }
+}
