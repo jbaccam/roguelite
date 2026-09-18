@@ -1,6 +1,6 @@
 # Roblox Roguelite
 
-Pre-production game design and modular environment art developed through iterative planning. This repository is separate from the Copy The Scene / Partyati codebase; unrelated game source is not included.
+Game design, modular environment art, reviewed weapon assets, and a playable Studio combat/shop prototype developed through iterative planning. This repository is separate from the Copy The Scene / Partyati codebase; unrelated game source is not included.
 
 ## Start here
 
@@ -11,6 +11,16 @@ Pre-production game design and modular environment art developed through iterati
 - [Latest cliff pack: 19 light-stone assets](roguelite-planning/blender-rounded-lightstone-revision/README.md)
 
 The design documents distinguish confirmed decisions from proposals. Earlier art sets are retained to preserve iteration history, not as approved production directions. The light-stone rounded pack is the latest asset direction: rounded reusable masses, uneven terraces, longer vegetation rims, and sparse moss-only variants. The ring prototype and architectural wall expansion are superseded.
+
+## Studio prototype
+
+- [Combat, loadouts, rockets, and effect verification](roguelite-planning/studio-prototype/combat/LOADOUT.md)
+- [Character stats and classes](roguelite-planning/studio-prototype/combat/CHARACTER_STATS.md)
+- [Shop UI editing instructions](roguelite-planning/studio-prototype/ui/EDITING_SHOP_UI.md)
+- [Zombie setup and asset provenance](roguelite-planning/studio-prototype/README.md)
+- [Required future enemy architecture](roguelite-planning/ENEMY_SIMULATION_ARCHITECTURE.md)
+
+Build the roguelite scripts with `rojo build roguelite-planning/studio-prototype/combat/default.project.json -o build/RogueliteCombat.rbxlx` after creating `build/`. The project packages runtime scripts/UI, not a complete map, imported weapon templates, or zombie rig; follow the installation notes and preserve the existing Studio world. Do not sync a CopyTheScene project into the roguelite place. This is a Studio practice prototype, not a published persistent progression system. The future server-owned data-only mob architecture is documented, not yet implemented.
 
 ## Art iteration archive
 
