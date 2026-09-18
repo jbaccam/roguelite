@@ -1,0 +1,104 @@
+{
+  "blend": {
+    "mesh_objects": 1,
+    "vertices_in_file": 769,
+    "triangles": 1518,
+    "materials": 1,
+    "UV_layers": 1,
+    "boundary_edges_after_weld": 0,
+    "nonmanifold_edges_after_weld": 0,
+    "closed_shells": 5,
+    "bounds_world": [
+      [
+        -6.008160591125488,
+        6.008160591125488
+      ],
+      [
+        -1.8350822925567627,
+        1.8350822925567627
+      ],
+      [
+        0.0,
+        3.5960745811462402
+      ]
+    ],
+    "origin_world": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "loaded_texture_dimensions": [
+      2048,
+      2048
+    ],
+    "zero_area_triangles": 0
+  },
+  "fbx": {
+    "mesh_objects": 1,
+    "vertices_in_file": 769,
+    "triangles": 1518,
+    "materials": 1,
+    "UV_layers": 1,
+    "boundary_edges_after_weld": 0,
+    "nonmanifold_edges_after_weld": 0,
+    "closed_shells": 5,
+    "bounds_world": [
+      [
+        -6.008160591125488,
+        6.008160591125488
+      ],
+      [
+        -1.8350821733474731,
+        1.8350825309753418
+      ],
+      [
+        -4.869958303288513e-08,
+        3.5960745811462402
+      ]
+    ],
+    "origin_world": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "loaded_texture_dimensions": [
+      2048,
+      2048
+    ],
+    "zero_area_triangles": 0
+  },
+  "glb": {
+    "mesh_objects": 1,
+    "vertices_in_file": 3049,
+    "triangles": 1518,
+    "materials": 1,
+    "UV_layers": 1,
+    "boundary_edges_after_weld": 0,
+    "nonmanifold_edges_after_weld": 0,
+    "closed_shells": 5,
+    "bounds_world": [
+      [
+        -6.008160591125488,
+        6.008160591125488
+      ],
+      [
+        -1.8350822925567627,
+        1.8350822925567627
+      ],
+      [
+        0.0,
+        3.5960745811462402
+      ]
+    ],
+    "origin_world": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "loaded_texture_dimensions": [
+      2048,
+      2048
+    ],
+    "zero_area_triangles": 0
+  }
+}
