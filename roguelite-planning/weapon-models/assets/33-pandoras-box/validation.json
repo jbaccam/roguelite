@@ -1,0 +1,23 @@
+{
+  "mesh_count": 47,
+  "vertices": 1309,
+  "triangles": 2438,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "non_manifold_edges": 0,
+  "name": "Pandoras Box",
+  "material_count": 2,
+  "packed_texture": true,
+  "uv": "Original exterior atlas preserved; separate packed stone interior atlas",
+  "armature_count": 1,
+  "animation_count": 0,
+  "limitations": [
+    "Unseen hollow interior and lid underside inferred.",
+    "Roblox Studio import and runtime hinge control not tested."
+  ],
+  "intentional_intersections": "Closed ornamental components overlap their support meshes; all lid ornaments rigidly follow the lid.",
+  "glb_reimport_triangles": 2438,
+  "glb_reimport_meshes": 47,
+  "fbx_reimport_triangles": 2438,
+  "fbx_reimport_meshes": 47
+}

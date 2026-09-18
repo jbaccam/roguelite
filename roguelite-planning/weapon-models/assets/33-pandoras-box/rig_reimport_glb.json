@@ -1,0 +1,71 @@
+{
+  "bone_hierarchy": {
+    "Root": null,
+    "Lid_Hinge": "Root"
+  },
+  "hinge_world_anchor": [
+    0.0,
+    1.1050000190734863,
+    1.899999976158142
+  ],
+  "hinge_world_axis": [
+    1,
+    0,
+    0
+  ],
+  "rigid_weights": true,
+  "body_meshes": 30,
+  "lid_meshes": 17,
+  "pose_samples": [
+    {
+      "angle_degrees": 30,
+      "body_max_displacement": 0,
+      "lid_max_rigid_transform_error": 3.371747880871523e-07,
+      "lid_max_displacement": 1.2673391372555332
+    },
+    {
+      "angle_degrees": 60,
+      "body_max_displacement": 0,
+      "lid_max_rigid_transform_error": 5.092623081992585e-07,
+      "lid_max_displacement": 2.4483109758571135
+    },
+    {
+      "angle_degrees": 90,
+      "body_max_displacement": 0,
+      "lid_max_rigid_transform_error": 5.967910407334801e-07,
+      "lid_max_displacement": 3.4624348451839735
+    }
+  ],
+  "actions": 0,
+  "rest_pose_restored": true,
+  "mesh_count": 47,
+  "vertices": 6672,
+  "triangles": 2438,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "non_manifold_edges": 6672,
+  "excluded_actual_bone_custom_shapes": [
+    "Icosphere"
+  ],
+  "scene_cameras_lights": 0,
+  "images": [
+    {
+      "name": "BaseColor",
+      "loaded": true,
+      "size": [
+        172,
+        172
+      ]
+    },
+    {
+      "name": "InteriorBaseColor",
+      "loaded": true,
+      "size": [
+        8,
+        8
+      ]
+    }
+  ],
+  "non_manifold_edges_after_welding_uv_normal_seams": 0,
+  "topology_note": "GLB can split vertices at UV and flat-normal seams; coincident seam vertices are welded only in a temporary audit mesh."
+}

@@ -1,0 +1,208 @@
+{
+  "bone_hierarchy": {
+    "Root": null,
+    "Lid_Hinge": "Root"
+  },
+  "hinge_world_anchor": [
+    0.0,
+    1.1050000190734863,
+    1.899999976158142
+  ],
+  "hinge_world_axis": [
+    1,
+    0,
+    0
+  ],
+  "rigid_weights": true,
+  "body_meshes": 30,
+  "lid_meshes": 17,
+  "pose_samples": [
+    {
+      "angle_degrees": 30,
+      "body_max_displacement": 0,
+      "lid_max_rigid_transform_error": 5.331201499700045E-07,
+      "lid_max_displacement": 1.267339269531141
+    },
+    {
+      "angle_degrees": 60,
+      "body_max_displacement": 0,
+      "lid_max_rigid_transform_error": 5.623090941939713E-07,
+      "lid_max_displacement": 2.4483109758571135
+    },
+    {
+      "angle_degrees": 90,
+      "body_max_displacement": 0,
+      "lid_max_rigid_transform_error": 5.057621821307283E-07,
+      "lid_max_displacement": 3.4624348451839735
+    }
+  ],
+  "actions": 0,
+  "rest_pose_restored": true,
+  "cavity": {
+    "inner_x_width": 2.23,
+    "inner_y_depth": 1.54,
+    "floor_z": 0.38,
+    "rim_top_z": 1.91,
+    "lid_underside_finished": true,
+    "solid_caps_removed": [
+      "Stone coffer body",
+      "Dark slightly open lid seam",
+      "Purple magic within seam"
+    ]
+  },
+  "open_cavity_center_ray_hit": {
+    "object": "Stone coffer body",
+    "z": 0.3799999952316284,
+    "expected_floor_z": 0.38
+  },
+  "raw_glb": {
+    "skins": 1,
+    "animations": 0,
+    "mesh_payloads": 47,
+    "cameras": 0,
+    "joint_names": [
+      "Root",
+      "Lid_Hinge"
+    ]
+  },
+  "glb_fresh_reimport": {
+    "bone_hierarchy": {
+      "Root": null,
+      "Lid_Hinge": "Root"
+    },
+    "hinge_world_anchor": [
+      0.0,
+      1.1050000190734863,
+      1.899999976158142
+    ],
+    "hinge_world_axis": [
+      1,
+      0,
+      0
+    ],
+    "rigid_weights": true,
+    "body_meshes": 30,
+    "lid_meshes": 17,
+    "pose_samples": [
+      {
+        "angle_degrees": 30,
+        "body_max_displacement": 0,
+        "lid_max_rigid_transform_error": 3.371747880871523E-07,
+        "lid_max_displacement": 1.2673391372555332
+      },
+      {
+        "angle_degrees": 60,
+        "body_max_displacement": 0,
+        "lid_max_rigid_transform_error": 5.092623081992585E-07,
+        "lid_max_displacement": 2.4483109758571135
+      },
+      {
+        "angle_degrees": 90,
+        "body_max_displacement": 0,
+        "lid_max_rigid_transform_error": 5.967910407334801E-07,
+        "lid_max_displacement": 3.4624348451839735
+      }
+    ],
+    "actions": 0,
+    "rest_pose_restored": true,
+    "mesh_count": 47,
+    "vertices": 6672,
+    "triangles": 2438,
+    "loose_vertices": 0,
+    "zero_area_faces": 0,
+    "non_manifold_edges": 6672,
+    "excluded_actual_bone_custom_shapes": [
+      "Icosphere"
+    ],
+    "scene_cameras_lights": 0,
+    "images": [
+      {
+        "name": "BaseColor",
+        "loaded": true,
+        "size": [
+          172,
+          172
+        ]
+      },
+      {
+        "name": "InteriorBaseColor",
+        "loaded": true,
+        "size": [
+          8,
+          8
+        ]
+      }
+    ],
+    "non_manifold_edges_after_welding_uv_normal_seams": 0,
+    "topology_note": "GLB can split vertices at UV and flat-normal seams; coincident seam vertices are welded only in a temporary audit mesh."
+  },
+  "fbx_fresh_reimport": {
+    "bone_hierarchy": {
+      "Root": null,
+      "Lid_Hinge": "Root"
+    },
+    "hinge_world_anchor": [
+      0.0,
+      1.105000376701355,
+      1.899999737739563
+    ],
+    "hinge_world_axis": [
+      1,
+      0,
+      0
+    ],
+    "rigid_weights": true,
+    "body_meshes": 30,
+    "lid_meshes": 17,
+    "pose_samples": [
+      {
+        "angle_degrees": 30,
+        "body_max_displacement": 0,
+        "lid_max_rigid_transform_error": 9.830249847454215E-07,
+        "lid_max_displacement": 1.2673399478108462
+      },
+      {
+        "angle_degrees": 60,
+        "body_max_displacement": 0,
+        "lid_max_rigid_transform_error": 5.960464477539062E-07,
+        "lid_max_displacement": 2.4483115753578355
+      },
+      {
+        "angle_degrees": 90,
+        "body_max_displacement": 0,
+        "lid_max_rigid_transform_error": 1.338120956459263E-06,
+        "lid_max_displacement": 3.4624346041787
+      }
+    ],
+    "actions": 0,
+    "rest_pose_restored": true,
+    "mesh_count": 47,
+    "vertices": 1309,
+    "triangles": 2438,
+    "loose_vertices": 0,
+    "zero_area_faces": 0,
+    "non_manifold_edges": 0,
+    "excluded_actual_bone_custom_shapes": [],
+    "scene_cameras_lights": 0,
+    "images": [
+      {
+        "name": "Finished dark stone interior texture",
+        "loaded": true,
+        "size": [
+          8,
+          8
+        ]
+      },
+      {
+        "name": "Portable base-color atlas",
+        "loaded": true,
+        "size": [
+          172,
+          172
+        ]
+      }
+    ],
+    "non_manifold_edges_after_welding_uv_normal_seams": 0,
+    "topology_note": "GLB can split vertices at UV and flat-normal seams; coincident seam vertices are welded only in a temporary audit mesh."
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "Magic Staff",
+  "vertices": 344,
+  "triangles": 644,
+  "mesh_count": 11,
+  "material_count": 1,
+  "uv": "per-face atlas coordinates",
+  "packed_texture": true,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "non_manifold_edges": 0,
+  "bounds_min": [
+    -4.172266483306885,
+    -0.5009999871253967,
+    0.0
+  ],
+  "bounds_max": [
+    0.1126861572265625,
+    0.29500168561935425,
+    4.433173656463623
+  ],
+  "intentional_intersections": "Separate closed decorative components intersect support surfaces; no runtime rig or collision setup.",
+  "limitations": [
+    "Unseen rear surfaces inferred symmetrically.",
+    "Roblox Studio import not tested."
+  ],
+  "glb_reimport_meshes": 11,
+  "glb_reimport_triangles": 644,
+  "fbx_reimport_meshes": 11,
+  "fbx_reimport_triangles": 644
+}
