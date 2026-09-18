@@ -15,7 +15,7 @@ The first useful playable is:
 ## Prototype content target
 
 - One circular graybox arena that later becomes Pine Valley
-- Elevated third-person camera
+- Regular Roblox camera with player-controlled zoom and rotation
 - All six classes available for internal testing
 - One signature weapon per class: Frying Pan, Glock, Boomerang, Boxing Gloves, Nail Gun, Magic Staff
 - Four temporary combination tiers per prototype weapon
@@ -31,6 +31,8 @@ The first useful playable is:
 - Basic permanent save data only after the run loop works
 
 ## Phase 0 — Data and authority skeleton
+
+**Required architecture (2026-09-17):** Follow [Enemy simulation and combat architecture](ENEMY_SIMULATION_ARCHITECTURE.md). Enemies are authoritative server records with client-rendered models, batched snapshots, smooth visual reconciliation, spatial queries, and budgeted shared navigation. Migrate the five-chaser prototype before building combat against it; replicated Humanoid NPCs are not the horde foundation.
 
 Create server-owned definitions and services before content multiplication:
 
@@ -56,7 +58,7 @@ Definitions load without circular dependencies, invalid IDs are rejected, and th
 
 1. Create a flat circular arena with a visible boundary.
 2. Spawn the Roblox avatar near the center.
-3. Implement the elevated third-person camera.
+3. Keep the regular Roblox camera. Start base WalkSpeed testing at 18 studs/second; further speed modifiers come from classes and run builds.
 4. Support keyboard, controller, and touch movement.
 5. Prevent avatar scale/accessories from changing combat collision.
 6. Add a temporary debug HUD for health, run time, enemy count, and FPS.
@@ -68,6 +70,10 @@ Use primitives and default materials. Do not build Pine Valley art yet.
 Movement and camera feel comfortable on PC and touch across the entire arena, including near the perimeter.
 
 ## Phase 2 — Smallest combat toy
+
+**2026-09-17 implementation checkpoint:** Approved native R15 zombie now replaces the imported prototype. Studio Play spawns five server-owned chasers at 15.2 studs/second with forward-arm running animation; one static display remains. Single-client movement, animation, head replication/orientation, and spawn count verified. Health/damage and automatic Glock combat are next; Phase 2 is not yet complete. See `studio-prototype/README.md` for sources and test limits.
+
+Before step 1, complete the five-enemy simulation/presentation migration and validation in ENEMY_SIMULATION_ARCHITECTURE.md. The existing movement checkpoint does not satisfy this requirement.
 
 1. Add server-owned player health and damage handling.
 2. Add one block Zombie using the melee-chaser behavior.
@@ -84,6 +90,8 @@ Moving through a crowd while automatically firing is readable and satisfying for
 ## Phase 3 — Performance proof
 
 Test successively with 25, 50, 75, and approximately 100 active enemies, plus projectiles and drops.
+
+After those pass measured device and network budgets, attempt 250 and 500 as stress targets under ENEMY_SIMULATION_ARCHITECTURE.md. Do not claim those counts are supported until profiled with combat, multiple clients, and representative mobile hardware.
 
 Record:
 

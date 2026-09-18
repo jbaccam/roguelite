@@ -1,6 +1,6 @@
 # Brainstorm — Funny Weapons and Retired Armor Ideas
 
-> **Current decision:** The game has no separate armor equipment or armor-set system, and equipped weapons are not continuously visible on the avatar. Armor concepts below are retained only as an idea archive for possible passive-item names, lobby props, or non-core customization—not as the current equipment plan.
+> **Current decision:** The game has no separate armor equipment or armor-set system, and equipped weapons remain visible as floating models around the avatar. Armor concepts below are retained only as an idea archive for possible passive-item names, lobby props, or non-core customization—not as the current equipment plan.
 
 **Status:** Idea pool, not an approved catalog  
 **Direction:** Roblox avatars accumulate ridiculous but readable attack systems in the HUD and around them during attacks. The arsenal deliberately mixes real weapons and nonsense; the contrast is more important than making every object a joke.
@@ -9,7 +9,7 @@
 
 - Melee weapons auto-attack without requiring the avatar's limbs or weapon model to make physical contact.
 - Melee timing is communicated through slash arcs, thrust streaks, spin rings, shockwaves, and impact effects.
-- The avatar does not continuously hold equipped weapons. Only attack representations—slash effects, projectiles, lightning, impact zones, and orbitals—appear in the world.
+- The avatar holds no weapon. Equipped models remain visible in a floating formation, independently aim and perform their own attacks, then recover. Effects reinforce the model motion. See FLOATING_WEAPON_PRESENTATION.md; this supersedes the old effect-only direction.
 - Ranged weapons produce visible projectiles.
 - Projectile size, speed, color, and trail should make the weapon recognizable during a crowded run.
 

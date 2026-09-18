@@ -1,8 +1,8 @@
 # Roblox Roguelite — Master Game Design
 
 **Status:** Discovery / pre-production  
-**Version:** 0.30 — six weapons per class  
-**Updated:** 2026-09-15  
+**Version:** 0.34 — world art, beveled UI, fixed weapon slots and katana combat  
+**Updated:** 2026-09-17  
 **Project name:** TBD
 
 This is the living source of truth for the proposed Roblox roguelite inspired by the broad genre space occupied by *Survivor.io*, *Megabonk*, and *Brotato*. Inspiration describes useful patterns, not content to copy. Names, art, characters, maps, enemies, weapons, balance values, and progression will be original.
@@ -43,9 +43,9 @@ When new reference material arrives, record what it teaches us in the reference 
 
 ### Player embodiment
 
-**Confirmed:** Players use their Roblox avatars. Equipped weapons are represented in the HUD and by their attacks, not continuously held or displayed on the avatar.
+**Confirmed:** Players use their Roblox avatars. Equipped weapons remain visible as floating 3D models around the avatar, independently aiming and auto-attacking. The avatar holds no weapon and moves normally.
 
-**Confirmed:** There is no separate playable-character, hero, or armor-equipment roster. All players use the same baseline avatar rules; classes, weapons, passives, stats, and combinations create mechanical identity during a run. Armor may exist as a defensive stat, not equippable gear.
+**Confirmed:** There is no separate playable-character, hero, or armor-equipment roster. All players use the same baseline avatar rules; classes, weapons, passives, stats, and combinations create mechanical identity during a run. Armor remains a defensive stat. Selected temporary passives may appear as avatar accessories, without separate armor slots or armor sets.
 
 **Confirmed:** Selectable classes provide mechanical rules without replacing or visually changing the Roblox avatar. Classes are permanent unlocks selected in the lobby; the exact class roster, bonuses, tradeoffs, and unlock order remain to be designed.
 
@@ -146,15 +146,13 @@ This combines Brotato’s clear escalation and build decisions with the user's p
 | Character skill | Q/E | Shoulder button | Action button |
 | Choose upgrade | Click/number | D-pad/face button | Tap card |
 
-**Proposal:** Basic weapons auto-target or attack based on movement/facing. The player always owns movement. Manual aiming should be reserved for a small number of high-impact skills or weapon families.
+**Confirmed:** Basic weapons independently auto-target, regardless of avatar movement/facing. The player always owns movement. Manual aiming should be reserved for a small number of high-impact skills or weapon families.
 
 ### Weapon presentation
 
-- **Confirmed:** Melee damage does not depend on the avatar performing a full physical swing that connects with a target.
-- **Confirmed:** Melee auto-attacks may use slash arcs, thrust lines, spins, ground impacts, or other readable attack effects.
-- **Confirmed:** Ranged attacks show their projectiles.
-- **Proposal:** A melee weapon may remain visible in the avatar's hand, on the back, or floating beside the avatar, but the attack effect—not limb contact—is the authoritative visual cue.
-- **Proposal:** This presentation avoids avatar-animation and body-proportion inconsistencies while preserving readable timing and weapon identity.
+**Confirmed:** [FLOATING_WEAPON_PRESENTATION.md](FLOATING_WEAPON_PRESENTATION.md) defines the user-approved 3D adaptation of the six supplied Brotato clips. Up to five equipped weapons remain visible in a spaced floating formation around the avatar. The avatar holds no weapon. Each weapon independently aims and attacks on its own cooldown, using visible recoil, punch, thrust, sweep or other motion before recovering. Projectiles originate from the weapon and effects reinforce the action. Movement remains independent of aim. Weapons occupy specific assigned floating slots; they do not spin 360 degrees around the avatar. Earlier orbital concepts require review against this rule.
+
+Start with waist-to-chest-height placement and tune readability in Studio. Weapon geometry must stay outside the avatar during idle and every attack phase. Rear/side weapons must take a clear outward route or wait for a reachable target, never slash through the player to reach a front enemy. Confirmed hits show actual damage numbers above the enemy. Server-authoritative hit volumes and timings must align with visible attacks; avatar limb contact is not required. This replaces the earlier effect-only presentation. Exact targeting priority and formation dimensions remain to be tuned.
 
 ### Base moveset
 
@@ -277,6 +275,10 @@ The current preferred direction is an eight-wave shop hybrid:
 This is a proposal based on the user's preferred Brotato-style intermission flow, adapted to an approximately eight-minute chapter. Details are documented in `WEAPON_SYSTEM_OPTIONS.md` and `PROGRESSION_AND_SESSION_FLOW.md`.
 
 ### Item design rules
+
+**Current catalog (2026-09-17):** [PASSIVE_ITEM_MASTER_LIST.md](PASSIVE_ITEM_MASTER_LIST.md) is the authoritative working list of **38 temporary shop passives**, consolidating the revised brainstorm, six existing healing/status foundations, and five selected spooky/science additions. Tooth Fairy's Teeth Collection replaces Jar of Teeth. Unselected brainstorm candidates are not roster commitments. The catalog also records eight regular level-up upgrade types and proposed rarity values separately from items.
+
+**Confirmed direction:** Most items provide straightforward build benefits. A smaller set has modest tradeoffs or special attack modifiers. Some appear on the avatar as hats, glasses, backpacks or other accessories; this supersedes the earlier invisible-passive direction without creating an armor equipment system. Humor and spooky visuals do not require complicated random effects. Exact numbers, prices, rarity, stacking and compatible-weapon rules remain proposals to balance, not implemented mechanics. Previously unspecified healing/status values remain explicitly unresolved.
 
 Every modifier should fit at least one category:
 
@@ -437,7 +439,7 @@ All three families should target approximately eight minutes. Geometry cannot be
 
 ### Open-arena rule
 
-**Confirmed visual reference:** Maps resemble a broad outdoor basin or clearing viewed from an elevated third-person camera. The floor can roll gently and contain sparse natural dressing, but it remains one continuous combat space rather than an intricate explorable level.
+**Confirmed visual reference:** Maps resemble a broad outdoor basin or clearing. Use the regular Roblox camera with player-controlled zoom and rotation (user correction, 2026-09-16). Test a slightly faster base WalkSpeed of 18; further speed modifiers come from classes and run builds. The floor can roll gently and contain sparse natural dressing, but it remains one continuous combat space rather than an intricate explorable level.
 
 - Roughly 75–85% of the movement area stays open at a glance.
 - Gentle hills and shallow dips are acceptable; cliffs, ledges, and elevation that interrupt movement are not.
@@ -556,6 +558,22 @@ The proposed currency boundaries, earned crate types, direct cosmetic catalog, c
 
 ## 13. Interface and onboarding
 
+### Confirmed art direction — 2026-09-17
+
+The visual identity is **polished stylized low-poly 3D: chunky readable silhouettes, softly beveled/faceted geometry, subtle painterly low-noise textures, bright but controlled colors, and Roblox-friendly proportions**. Simple geometry provides the shape; broad painted value/color variation provides richness. Assets should look natural beside the existing cliffs, pine trees, weapons, zombie, and UI.
+
+The complete user-supplied art brief is preserved in [Art direction source](art-references/ART_DIRECTION_USER_2026-09-17.txt). Treat it as the approved art reference for future production. It does not independently authorize new gameplay, economy, or production actions. Gameplay values, sample card effects, currency counts, and item categories in mockups are illustrative, not balance decisions.
+
+- **Geometry/materials:** Moderate polygon counts, softened edges, broad planar surfaces, simplified details, gentle natural asymmetry, 2–4 main texture value ranges, shared textures and reusable master assets. Avoid photorealism, heavy PBR, voxel/Minecraft forms, primitive flat shading, overly smooth subdivision, noisy surfaces, and tiny mechanical details.
+- **Environment:** Open grass combat space with scenery concentrated at the perimeter. Light cool-gray painterly cliffs with blue-gray shadows and taupe highlights; irregular rounded footprints and offset stacked masses rather than centered layer cakes or engineered wall kits. Bright spring-green grass has subtle seamless variation, including across large surfaces. Blend grass through an overgrown rim and moss band into stone; keep moss selective. Layered evergreen pines have about four chunky scalloped foliage tiers, warm tapered trunks, and broad green tonal variation. Use chunky logs, boulders, camp props, paths, and pale distant mountains.
+- **Weapons/characters:** Strong recognizable silhouettes, simplified chunky proportions, subtle texture wear, and restrained fantasy glow. Real-world-inspired weapons are stylized rather than precision replicas. Preserve recognizably Roblox R15 characters. The approved zombie has green skin (base RGB 64, 131, 54), ragged brown clothing, a cartoon-undead face, and continuous head texture with seam bleed rather than a rectangular face sticker.
+- **Palette/lighting:** Natural greens, cool light-gray stone, warm browns, sky blue, beige, charcoal, white, and controlled accent colors. Bright soft daylight, broad shadows, atmospheric depth, and clear player/hazard priority. No equally busy detail across every surface.
+- **UI:** Dark charcoal panels with thick beveled/clipped borders, subtle highlights, occasional faceted stone/metal end caps, restrained lime accent strips, bold white outlined text, red health, green XP/positive stats, gold currency, and gray secondary text. Dimmed worlds are appropriate behind menus; gameplay uses compact independent frames on a transparent background. Avoid thin minimalist panels, glassmorphism, neon everywhere, ornate medieval framing, and large opaque HUD backgrounds.
+
+References: [Gameplay HUD](art-references/hud-reference.png), [Level-up cards](art-references/level-up-reference.png), [Shop](art-references/shop-reference.png). Recreate the visual language as responsive interactive UI rather than flattening the screenshots into a screen-sized image. The HUD pairs a heart/red numeric health bar at upper left with a top-center timer and wave label. Upgrade cards group icon, title, benefit, and choose button; the shop groups offers, live stats, inventory, weapons, and next-wave action. Keep the planned four-offer shop; the three-card reference is visual inspiration.
+
+**Current UI implementation scope:** Bind health to actual character Health/MaxHealth, including damage, healing, death, and respawn. XP and gold systems are deferred by the user. Unimplemented progression/shop states must not masquerade as active gameplay or change live stats locally. Follow [Enemy simulation architecture](ENEMY_SIMULATION_ARCHITECTURE.md) when future combat supplies those states.
+
 ### HUD priorities
 
 1. Health and immediate danger
@@ -665,7 +683,7 @@ Use simplified server hit tests and pooled presentation where appropriate. Never
 ### Phase 0 — Vision lock
 
 - Choose original theme, tone, title direction, and one-sentence pitch.
-- Decide solo/co-op launch intent and the exact attack-control model. The standard chapter duration and elevated third-person camera direction are selected.
+- Decide solo/co-op launch intent and the exact attack-control model. The standard chapter duration and regular Roblox camera direction are selected.
 - Approve the initial stat list and build grammar.
 - Incorporate Survivor.io and Megabonk reference intake.
 
@@ -708,7 +726,7 @@ These are ordered by how strongly they affect everything downstream:
 2. Which six weapons enter the prototype, and what are all four behavioral tiers for each?
 3. Is co-op required for initial launch, or should the first public version be solo?
 4. Does the player have only movement and automatic weapons, or also one universal dash/class active?
-5. What are the first passive-item catalog and exact shop/economy values?
+5. Which 12–15 of the 38 cataloged passives enter the vertical slice, and what are their final balance, shop prices and copy limits?
 6. What final price, timer, and co-op rules should the approved death-screen revive use, and should testing ever allow a second revive?
 7. Is the “impossible odd-jobs agency” a good wrapper, or should funny avatar gear use a different premise?
 
@@ -734,6 +752,8 @@ Everything not needed to answer that question—large catalogs, monetization, el
 Detailed source notes are kept in `REFERENCE_NOTES_BROTATO.md` so this master document stays focused on our game.
 
 ## 20. Change log
+
+- **0.33 (2026-09-17):** Preserved the complete supplied art brief and three UI references; confirmed the world/asset/UI style above and a functional health-first UI implementation with XP and gold deferred.
 
 - **0.1 (2026-09-14):** Created initial discovery document from the user’s goal and supplied Brotato references. Added proposals for loop, run structure, combat, builds, stats, weapons, enemies, map, multiplayer, progression, fair monetization, Roblox authority, balance, testing, and production phases. No theme or major format decision has been treated as confirmed.
 - **0.2 (2026-09-15):** Corrected the unsupported assumption that players would use Roblox avatars. Recorded avatar use as one open option. Confirmed the approximate eight-minute chapter target, no mid-level checkpoints, low-attention play, sequential chapters, and three Survivor.io-inspired geometry families. Removed the 12-minute run proposal.
@@ -765,3 +785,67 @@ Detailed source notes are kept in `REFERENCE_NOTES_BROTATO.md` so this master do
 - **0.28 (2026-09-15):** Replaced the tentative pre-equipped Continue Ticket with a confirmed direct death-screen paid revive. Proposed one revive per chapter, approximately 65 Robux, 50% restored health, three seconds of invulnerability, nearby-enemy pushback, receipt validation, and recorded revive counts. Removed Protein Shake's movement penalty and added life-steal, burn, ice, lightning, and poison passive concepts.
 - **0.29 (2026-09-15):** Confirmed that new accounts begin with Brawler, Gunner, and Mage while Thrower, Juggler, and Handyman are early earnable or purchasable unlocks. Defined the class value structure as an always-active specialization plus two- and four-home-weapon affinities, with no mandatory class drawbacks and one wildcard weapon slot preserved.
 - **0.30 (2026-09-15):** Added Bowling Pins as a Juggler orbital and Deck of Cards as a Thrower projectile. Expanded every class evenly from five to six launch weapons by adding Baseball Bat, Rocket Launcher, Power Washer, and Crystal Ball, raising the launch roster from 30 to 36.
+- **0.31 (2026-09-17):** Consolidated 38 passives in PASSIVE_ITEM_MASTER_LIST.md, including five selected spooky/science additions and Tooth Fairy's Teeth Collection. Preserved earlier healing/status foundations, merged alternate names, separated regular level-up upgrades, and allowed selected passive avatar accessories without adding armor slots. Values remain initial balance proposals.
+
+- **0.32 (2026-09-17):** Confirmed persistent floating 3D weapon models, independent automatic aim/cooldowns, weapon-model attack motions and empty avatar hands, based on six user-supplied video references. Added FLOATING_WEAPON_PRESENTATION.md; supersedes effect-only presentation.
+
+### Weapon display implementation — 2026-09-17
+
+Studio now contains 36 large weapon displays and a second complete showcase at one-third scale for play-size review. Material corrections, independent component/rig preservation, source files, and Play-mode verification are recorded in [Showcase corrections](weapon-models/studio-import/SHOWCASE_CORRECTIONS.md). Combat auto-aim and attacks remain the next implementation stage; display sizing is provisional.
+
+
+### Katana combat prototype — 2026-09-17
+
+The first combat weapon is the user-resized katana, in a fixed right-side slot. Automatic slashes damage zombies on the server and display floating damage numbers. Studio-only Zombies [Z] and Katana [K] toggles independently control the wave and weapon. Initial test values: 25 damage, 0.8-second cadence, 100-health zombies, three-second replacement after a kill. Details: [Combat prototype](studio-prototype/combat/README.md).
+
+Katana targeting clarification: the fixed slot is its resting position, not a targeting restriction. It rapidly turns and slashes directly toward the enemy from its assigned grip slot. It must not travel around the avatar or switch sides before attacking. Blade facing reversed 180 degrees per user feedback.
+
+Latest correction: a rear target is attacked directly from the right-side slot; no front-of-avatar detour and no move to the left side. This supersedes the earlier attack-repositioning arc.
+
+## SHOP / ECONOMY SYSTEM — implemented prototype, 2026-09-18
+
+**Latest layout proportions:** Items and Weapons now have independent fixed 112-pixel heights. They no longer stretch into remaining vertical space. Weapons retains six compact slots in two rows of three, with icons beside names; Items retains two compact rows. The 1320-pixel centered width cap is removed: the shop uses 2.5% horizontal margins, a heading at 16 pixels and content at 64 pixels from the viewport top. The right stats column and its Start Wave button remain separate. These dimensions supersede the earlier expanding-panel layout below. Editable values are grouped under `M.Layout` in ShopUI; see [Studio editing steps](studio-prototype/ui/EDITING_SHOP_UI.md).
+
+**Inventory correction:** Inventory remains the Studio creative-mode catalog, with all 36 weapons freely available in any of the six slots, including duplicates. Free equip/remove works during shopping and combat. The Shop tab separately handles purchases and selling. Creative replacement resets that slot's purchase metadata to a new free Common copy (zero refund), without charging or changing gold. This supersedes the earlier restriction below that blocked free equipping during the shop/combat loop. The creative catalog must not be replaced by an owned-only inventory view.
+
+This economy is heavily inspired by roguelite shops such as Brotato, with our own formulas, tuning, visual design, and game-specific balancing. The established charcoal, beveled panels and lime accents remain. This implementation supersedes the old nonfunctional shop preview; the separate Upgrades tab is still explicitly a preview, not a completed level-up system.
+
+The between-wave shop contains four offers: weapons, passive items, or utility items. All transactions use temporary **GOLD**, never Robux or saved account currency. Each player has a server-owned balance, four offer identities, purchased item stacks, and six individual weapon copies. Initial prototype gold is 60. Buying immediately equips a weapon in the first empty slot or applies/stores an item. A full weapon loadout rejects the purchase without charging or replacing anything. Sixteen distinct item slots are shown in two rows; per-item copy limits are enforced. Passive bonuses and penalties feed the same authoritative character and weapon calculations, including avatar health and movement. Debug stat overrides deliberately replace the final stat until reset.
+
+LOCK preserves that exact offer and its displayed price through rerolls and subsequent shops. Unlocking resumes current-wave pricing. Bought offers remain marked SOLD until the next reroll/shop. Reroll replaces unlocked/sold offers, deducts the displayed cost, and increments that player's visit count. An all-locked shop cannot charge for a no-op reroll. Unaffordable actions are visibly marked and rejected server-side. Offers use server tokens and revisions to reject stale or replayed actions.
+
+All balancing constants live in `studio-prototype/combat/EconomyConfig.luau`:
+
+```text
+BaseRerollCost = BASE_REROLL_COST + floor(Wave * REROLL_WAVE_SCALE)
+RerollCost = BaseRerollCost + RerollCount * REROLL_INCREASE
+Initial values: 2, 0.75, and 2 respectively.
+
+FinalPrice = max(1, floor((BasePrice + Wave * FLAT_WAVE_PRICE)
+             * (1 + Wave * INFLATION_RATE)
+             * ShopPriceModifier * GLOBAL_SHOP_PRICE_MODIFIER))
+Initial values: FLAT_WAVE_PRICE = 1, INFLATION_RATE = 0.06,
+GLOBAL_SHOP_PRICE_MODIFIER = 1.
+
+ShopPriceModifier = clamp(1 + ShopPricePercent / 100 - ShopDiscount / 100, 0.2, 3)
+SellValue = floor(FinalPurchasePrice * WEAPON_SELL_REFUND)
+WEAPON_SELL_REFUND = 0.50
+```
+
+Wave 1 rerolls cost 2, 4, 6, 8 gold; wave 8 costs 8, 10, 12, 14. RerollCount resets to zero upon entering the next wave's shop. A base-price-20 offer costs 22, 32, 48 and 88 at waves 1, 5, 10 and 20 with no modifier. Discounts apply immediately to unlocked offers; locked prices remain fixed. Shop price increases are red, discounts green, and unchanged values neutral. No harvesting or reroll-discount stat is fabricated.
+
+Each catalog entry has an individual BasePrice. Common items begin around 8–25; weapon price bands are 12–25, 30–55, 60–95, and 110–160 for Common/Uncommon/Rare/Legendary. Items have individually tuned prices and fixed tiers. Prototype weapon tiers multiply damage by 1, 1.20, 1.45, and 1.75, without scaling the imported model. These are temporary shop tiers, not persistent weapon levels; mechanical combination/evolution upgrades remain future work.
+
+Each purchased weapon copy records BasePrice, FinalPurchasePrice (also mirrored as PurchasePrice), Tier, WavePurchased, and CopyId. Clicking a loadout slot opens a compact detail panel with effective damage, cooldown, critical chance, range, class/type, special effect, and the exact SELL refund. A 47-gold copy returns 23 gold even if its current inflated offer price later rises to 100. Free starter/debug copies have a zero paid price and return zero gold, preventing inflation and free-equipment resale exploits. Free practice equipping is blocked during the shop/combat loop.
+
+START WAVE readies the player; combat starts when all living players are ready. The test loop runs 30-second survival waves, pauses zombie spawning during shopping, and opens the next shop automatically. Zombies currently respawn during the timed wave. The default population is `min(100, 5 + (Wave - 1) * 2)`. Studio's population override persists across waves until “Use wave count” is selected. Server-confirmed kills grant 2 gold; survivors receive `12 + completedWave * 3` at wave end. These timings/rewards are configurable and are prototype pacing, not the final chapter/boss implementation. Death/respawn currently preserves this session economy; no persistence or account rewards are awarded.
+
+The random offer mix currently uses 50% weapons, independent of purchases and Luck, with tier weights 55/30/12/3. From wave 6, one quarter of common tier rolls are promoted to uncommon. The initial shop guarantees a weapon and a nonweapon offer when a matching catalog pool is available. Class/blueprint weighting and tracked-weapon protection remain future systems; no paid action modifies odds.
+
+The stats/debug page has a current-gold input plus +100, +1000, -100 and SET. Both `RunService:IsStudio()` and `DEBUG_CURRENCY_ENABLED` must permit edits; production clients cannot grant currency. Set the config flag false to hide/disable the editor in Studio. All transactions validate phase, living player, bounds, balance, capacity and copy identity on the server. The shop has no DataStore access.
+
+Layout uses separate left/center and right regions with a gutter: four offer cards and two taller inventory panels stay entirely left of the anchored stats column. Weapons are six usable slots in **two rows of three**, not nine slots; items retain two rows of eight. These panels expand vertically into the available space below offers. **Start Wave sits on the right directly beneath stats.** Primary/Secondary buttons switch the sidebar title and list; all 46 stats are assigned exactly once. Both lists fit without scrolling at the standard desktop size. Very short windows use previous/next page buttons instead of a stat scrollbar. Narrow windows use a two-column offer grid with independent left-region scrolling; footer navigation stays outside both regions. Static ViewportFrame previews clone the actual textured weapon templates, retaining TextureID, SurfaceAppearance, colors and authored scale. Raw mesh asset thumbnails are not used because they render weapons gray. Item artwork currently reuses the existing approved UI icon set; individual passive illustrations can be swapped without changing economy behavior.
+
+Verification: `ShopTests.luau` passed 606 assertions in a normal Studio server Script, including catalog/tier calculations, item application, gold validation, locks, stale/replayed transactions, full-loadout rejection, original-price refunds, and wave resets. The existing character/combat regression suite passed 2,313 assertions with the expanded schema. Actual client clicks exercised developer gold, lock/reroll, buying, item application, selling and timed wave entry/return. `ShopLayoutTests.luau` checked actual rendered boundaries at 1920×1080, 1440×900, 1280×720, 1024×768, 800×600, 640×360 and 390×844: separate stats/main/footer/status regions, nonoverlapping cards/buttons/items/weapons and contained widths all passed. Both Rojo projects built successfully. Multiple real clients, published-game permissions and final device performance still require separate testing.
+
+Katana arrow-reference refinement: front/left attacks sweep right-to-left across the front; rear attacks mirror the sweep behind the avatar. Open the blade outward, perform a fast wide horizontal cut with outward reach, then lift clear before retracting. Keep the assigned right-side slot and avoid routing around the body. Prototype cadence is now 0.58 seconds (0.10 windup, 0.10 strike, 0.18 recovery); 25 damage is unchanged. See combat README for verified reach limitations.

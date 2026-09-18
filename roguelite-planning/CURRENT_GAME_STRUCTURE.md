@@ -6,6 +6,8 @@
 
 This is the fastest document to read for the complete current plan. The master design and specialist documents contain the reasoning and deeper notes. Items marked **Confirmed** came directly from the project direction. Items marked **Proposed** are the strongest current recommendation and can still change.
 
+**Confirmed architecture update, 2026-09-17:** Future mobs and combat must use server-owned enemy simulation with client-only enemy visuals, smooth snapshot reconciliation, spatial queries, and reused/budgeted navigation. See [Enemy simulation and combat architecture](ENEMY_SIMULATION_ARCHITECTURE.md). The five chasing zombies remain a movement prototype; combat and this scalable architecture are not yet implemented. Hundreds of enemies are a performance goal requiring measurement.
+
 ## 1. Game identity
 
 **Confirmed:** A funny, three-dimensional Roblox survivor roguelite played as the player's normal Roblox avatar. There is no roster of replacement heroes. A player chooses a mechanical class, enters a short chapter, automatically attacks crowds, creates a build through weapons and stats, defeats a boss, and returns to the lobby with permanent rewards.
@@ -119,6 +121,8 @@ The tutorial asks the player to try one, but all three remain unlocked afterward
 
 ### Proposed class benefits
 
+**Implementation update (2026-09-17):** The user requested explicit class buffs and debuffs. The live prototype now implements six class presets, home-weapon affinity bonuses, 45 visible stat attributes, and a Studio stat/zombie editor. [Character stat implementation](studio-prototype/combat/CHARACTER_STATS.md) is authoritative for current values; the table below remains the earlier design proposal.
+
 Exact percentages require playtesting, but each class has a defined mechanical lane:
 
 | Class | Always-active specialization | Two home weapons | Four home weapons |
@@ -140,14 +144,9 @@ Example: a Gunner using Glock, Draco, Shotgun, Fart Gun, and Kunais receives bot
 
 ### Presentation rule
 
-Equipped weapons are build icons, not objects the avatar continuously holds. The world shows only the attack representation:
+Equipped weapons remain visible as floating 3D models around the avatar. The avatar holds no weapon and keeps normal movement animations. Each weapon independently aims at eligible enemies and attacks on its own cooldown: guns recoil and fire from their muzzle, fists punch, blades thrust or sweep, and every weapon recovers to its floating position. Effects reinforce the visible weapon action.
 
-- Katana creates a clean slash effect near enemies.
-- Boomerang/Kunai/Egg-style attacks show their actual projectile.
-- Magic Staff calls lightning or another spell effect without placing a staff in the avatar's hand.
-- Glock creates visible bullets, muzzle-like feedback, and impact effects without requiring a held gun model.
-
-This matches the supplied reference screenshot and keeps the Roblox avatar readable. Because most weapon models are never visible, **weapon skins are removed from the core cosmetic and monetization plan**. A few future attack-effect variants could exist only if they preserve identical silhouettes, timing, color warnings, and readability, but they are not a launch priority.
+Up to five weapon slots form a spaced arrangement near the avatar, initially tested around waist-to-chest height. Each weapon occupies a specific floating slot; the formation does not rotate 360 degrees around the avatar. Attacks must preserve avatar clearance and show damage numbers for confirmed enemy hits. Movement and facing do not force weapon aim. See [FLOATING_WEAPON_PRESENTATION.md](FLOATING_WEAPON_PRESENTATION.md) for the confirmed video-based direction. This supersedes the earlier invisible/effect-only rule. Weapon skins remain outside current scope.
 
 ### Temporary run progression
 
@@ -199,30 +198,9 @@ This permits creative mixed builds without making focused builds depend entirely
 
 A **passive** is a temporary shop item that modifies the run without occupying one of the five weapon slots or performing its own repeating attack. It resets after the chapter. Passives are how the player specializes a build after choosing weapons.
 
-Examples:
+The authoritative working roster is [PASSIVE_ITEM_MASTER_LIST.md](PASSIVE_ITEM_MASTER_LIST.md): **38 passives**, including the revised straightforward items, six retained healing/status foundations, and five selected spooky/science additions. It supersedes the old example table and unselected brainstorm lists. Tooth Fairy's Teeth Collection replaces Jar of Teeth.
 
-| Passive | Simple effect |
-| --- | --- |
-| Energy Drink | More attack speed, slightly less max health |
-| Protein Shake | More damage |
-| Running Shoes | More movement speed |
-| Horseshoe | More luck |
-| Fridge Magnet | Larger pickup radius |
-| Bandage Roll | Health regeneration |
-| Safety Helmet | More armor, slightly less speed |
-| Hot Sauce | Larger explosions and status areas |
-| Broken Glasses | More critical chance but less range |
-| Coupon Book | Shop purchases cost less |
-| Vampire Fang | A small percentage of damage heals the player, with a healing-per-second cap |
-| Lighter | Hits can ignite enemies for short damage over time |
-| Ice Cube | Hits can briefly slow enemies |
-| Battery Pack | Every set number of hits releases a short lightning chain |
-| Toxic Barrel | Hits can apply stacking poison damage |
-| Charcoal | Increases burn damage and burn duration |
-| Snow Globe | Increases slow strength and duration |
-| Lightning Rod | Lightning chains can jump to one additional enemy |
-
-Passives should mostly be readable stat changes, tradeoffs, and one-sentence triggers—not additional complicated weapons.
+Most items have clear positive benefits; a smaller set has modest tradeoffs or special attack modifiers. The catalog gives proposed numerical effects, wearable appearances and the remaining balance questions. It separately lists eight regular XP-earned upgrade types with proposed rarity values. Numbers are not yet balanced or implemented; unresolved healing/status numbers remain marked TBD.
 
 **Confirmed direction:** Stat choices happen between waves, not while enemies are moving. Combat remains uninterrupted and the end of each wave becomes the short decision phase.
 
@@ -242,15 +220,15 @@ Candidate run stats include:
 - Knockback
 - Deployable/utility power
 
-**Armor decision:** There is no separate armor equipment, armor-set, or visible game-owned armor system. Players already bring their Roblox avatar appearance, and covering it with armor would fight that identity while duplicating Final Swarm. **Armor remains a numerical defensive stat** that classes, level-up cards, and passives such as Safety Helmet may increase.
+**Appearance decision (updated 2026-09-17):** Some temporary passives appear on the avatar as hats, glasses, backpacks, masks or other accessories. There is still no separate armor-equipment or armor-set system. Armor remains a numerical defensive stat. These accessories preserve the player's underlying avatar and reset with the run.
 
-The launch target is approximately 24–30 simple passives. The vertical slice needs about 12–15.
+The working launch roster has 38 passives. The vertical slice selects about 12–15 from that catalog.
 
 ## 8. Maps, primary mobs, and bosses
 
 Visual direction sheets for all six arenas are saved in [map-concepts/README.md](map-concepts/README.md).
 
-All maps are broad outdoor arenas viewed from an elevated third-person camera. Approximately 75–85% of the playable surface remains open. Gentle slopes, sparse low props, and a scenery-heavy perimeter provide identity without creating intricate interiors, mazes, parkour, or constant collision traps.
+All maps are broad outdoor arenas using the regular Roblox camera with player-controlled zoom and rotation. Base movement should be slightly faster; 18 studs/second is the initial test value, with further speed modifiers supplied by classes and run builds. Approximately 75–85% of the playable surface remains open. Gentle slopes, sparse low props, and a scenery-heavy perimeter provide identity without creating intricate interiors, mazes, parkour, or constant collision traps.
 
 The lists below are each map's **first-clear primary roster**, not a permanent lock. Later chapters and higher difficulties may remix mobs across maps. Strong enemies consume more of the spawn threat budget and therefore appear less often.
 
@@ -413,7 +391,7 @@ The **content launch target** is six maps, six classes, 36 weapons, 30–40 pass
 4. Pine Valley wave-by-wave spawn script and tutorial boss choice.
 5. Base stat formulas, damage calculation, attack targeting, and defensive rules.
 6. Shop prices, starting currency, reroll escalation, recycle value, and wave income.
-7. The first 10–15 passive items.
+7. Select and balance the first 12–15 passives from the 38-item master list.
 8. Exact keyboard, controller, and mobile controls, including whether there is a dash or class active.
 9. Final revive price, purchase timeout, co-op behavior, and whether a second revive is ever permitted.
 10. Performance budgets for enemies, projectiles, drops, VFX, and audio voices.
@@ -443,7 +421,7 @@ The **content launch target** is six maps, six classes, 36 weapons, 30–40 pass
 
 1. Lock class kits.
 2. Lock the six prototype weapons and design all 24 tier forms.
-3. Design the first 15 passive items.
+3. Select and balance the first 15 passive items from PASSIVE_ITEM_MASTER_LIST.md.
 4. Specify Pine Valley's six mobs, Ogre Warlord kit, and eight-wave script.
 5. Build the economy sheet and run simulator.
 6. Wireframe the run HUD, stat choice, shop, results, and lobby armory.

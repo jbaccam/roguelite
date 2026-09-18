@@ -146,7 +146,7 @@ This still allows fun earned loot without making paid power depend on gambling. 
 
 ## Direct customization
 
-Customization remains valuable because players retain their Roblox avatar and repeatedly see pickup streams, enemy defeats, the HUD, the lobby, and result celebrations. Weapon skins and game-owned armor sets are poor fits because equipped weapon models are not continuously visible and the avatar already carries the player's Roblox appearance.
+Customization remains valuable because players retain their Roblox avatar and repeatedly see pickup streams, enemy defeats, the HUD, the lobby, and result celebrations. The updated combat direction keeps equipped weapon models visible in a floating formation (see FLOATING_WEAPON_PRESENTATION.md), and some temporary passives appear as avatar accessories. Weapon skins remain outside the approved monetization scope; these presentation changes do not add paid skins or a separate armor-set system.
 
 Good products include:
 
