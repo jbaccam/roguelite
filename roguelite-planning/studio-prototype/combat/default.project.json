@@ -65,7 +65,24 @@
         "$path": "../ui/CharacterStatsUI.luau"
       },
       "ShopUI": {
-        "$path": "../ui/ShopUI.luau"
+        "$path": "../ui/ShopUI.luau",
+        "$attributes": {
+          "HorizontalMargin": 0.025,
+          "HeaderTop": 16,
+          "ContentTop": 64,
+          "WeaponsHeight": 152,
+          "WeaponsWidth": 320,
+          "ItemsHeight": 152,
+          "InventoryBottomPadding": 12,
+          "RerollWidth": 180,
+          "RerollHeight": 34,
+          "InventoryGap": 8,
+          "SlotGap": 4,
+          "InventoryTitleHeight": 26,
+          "ItemWidthShare": 0.55,
+          "CardHeight": 248,
+          "StatsWidth": 250
+        }
       }
     },
     "ServerScriptService": {

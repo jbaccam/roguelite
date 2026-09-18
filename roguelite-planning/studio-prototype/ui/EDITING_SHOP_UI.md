@@ -1,35 +1,37 @@
-# Editing the shop in Roblox Studio
+# Edit the shop without writing code
 
-The shop is built by scripts when the game runs. Its permanent layout controls are in **ReplicatedStorage → ShopUI**, near the top under `LAYOUT SETTINGS`. Dragging the generated panels under a player's PlayerGui only changes that running session.
+The shop is created by scripts, so its panels are not permanent draggable objects in StarterGui. Use the numeric **Attributes** on `ReplicatedStorage → ShopUI` instead. These are now wired to the layout. You do not need to double-click ShopUI or open its code.
 
-1. Click the **red square Stop button** near Studio's upper-left corner if the game is running.
-2. Click the **Home** tab at the top, then **Explorer** in its toolbar. Explorer is the tree of game objects, normally on the right.
-3. In Explorer, find **ReplicatedStorage**. Click the small arrow beside it to expand it.
-4. Find **ShopUI directly inside ReplicatedStorage** and double-click it. Do not open the separate RogueliteCombat folder for this edit.
-5. Press **Ctrl+F**, type `LAYOUT SETTINGS`, and press Enter. Press Escape to close Find.
-6. Change only the number beside the setting you want. Keep the comma at the end of the line. For example, change `WeaponsHeight=112,` to `WeaponsHeight=100,` to make only the shop's weapons panel shorter.
-7. Click the **blue triangle Play button** near the upper-left. The shop opens at the beginning of a test; **B** opens it again if closed.
-8. Inspect the result. Click **Stop** before adjusting the numbers again. Use **Ctrl+Z** in the script editor if you need to undo your edit.
-9. Save your place using Studio's **File** menu when satisfied. Saving and publishing a live update are separate actions; testing this layout does not require publishing.
+1. Click the **red square Stop button** near Studio's upper-left if the game is running. Changes made to the playtest copy disappear when you stop.
+2. Click **Home** at the top, then **Explorer** and **Properties** in that toolbar. These open two panels on the right.
+3. In **Explorer**, find **ReplicatedStorage**. Click its small arrow to expand it.
+4. **Single-click ShopUI**, directly inside ReplicatedStorage. Do not select RogueliteUI, and do not go into Players or PlayerGui.
+5. In the **Properties** panel, clear any text in its search/filter field. Scroll to the bottom and expand **Attributes** using the arrow beside it.
+6. Double-click the number beside the setting below, type a new number and press **Enter**.
+7. Click the **blue Play triangle** near Studio's upper-left. The shop opens automatically; press **B** to reopen it if closed.
+8. To make another permanent adjustment, click **Stop** first and repeat steps 4–7. Save your place through **File** when satisfied. No live publishing is needed to preview changes.
 
-| Setting | Current value | What it changes |
+| Attribute | Current value | What to change |
 | --- | --- | --- |
-| `WeaponsHeight` | `112` | Shop weapons panel height in pixels. Six slots remain two rows of three. |
-| `ItemsHeight` | `112` | Item panel height, independently of Weapons. |
-| `HorizontalMargin` | `0.025` | Margin on each side. `0.02` = 2%; `0.03` = 3%. |
-| `HeaderTop` | `16` | Distance between the top edge and the shop heading. |
-| `ContentTop` | `64` | Top position of the gold/reroll row and stats column. Keep it below the heading. |
-| `SlotGap` | `4` | Spacing between inventory slots, in pixels. |
-| `InventoryGap` | `8` | Gap between the Items and Weapons panels. |
-| `InventoryTitleHeight` | `26` | Space above the slots reserved for each panel title. |
-| `ItemWidthShare` | `0.55` | Fraction of the lower-left region used by Items. Weapons uses the remainder. |
-| `CardHeight` | `248` | Height of each of the four shop offer cards. |
-| `StatsWidth` | `250` | Maximum width of the right stats column. |
+| `WeaponsWidth` | `320` | Smaller = narrower Weapons panel. Try 280; desktop minimum is 240. |
+| `WeaponsHeight` | `152` | Larger = taller panel and weapon slots. Try 164. |
+| `ItemsHeight` | `152` | Larger = taller item panel and slots. |
+| `InventoryBottomPadding` | `12` | Smaller = move both bottom inventories down; larger = move them up. |
+| `ItemWidthShare` | `0.55` | Larger = wider Items panel. This is a fraction of the region left of stats. |
+| `RerollWidth` | `180` | Width of the Reroll button. Try 160 for smaller. |
+| `RerollHeight` | `34` | Height of Reroll (28–40 pixels). |
+| `HorizontalMargin` | `0.025` | `0.02` means 2% on each side; `0.03` means 3%. |
+| `ContentTop` | `64` | Larger = move the cards/top controls down. Keep below the heading. |
+| `HeaderTop` | `16` | Position of the shop title relative to the top edge. |
+| `SlotGap` | `4` | Spacing between inventory slots. |
+| `InventoryGap` | `8` | Minimum separation between inventory panels. |
+| `CardHeight` | `248` | Height of the four shop offers; minimum 230. |
+| `StatsWidth` | `250` | Maximum width of the stats column. |
 
-Panel heights have a 92-pixel minimum, and cards a 230-pixel minimum, to keep their controls usable. Use small changes, such as 8–16 pixels at a time. These settings affect the shop, not the separate creative weapon catalog.
+Weapons stays six slots in two rows of three. Both inventory heights have a 92-pixel minimum. Smaller screens rearrange the layout to avoid overlap, so the exact requested width is a desktop target rather than a forced overflow.
 
-Source of truth: `roguelite-planning/studio-prototype/ui/ShopUI.luau`. Studio-only script edits must be copied back to this repository file before a future Rojo sync, or the repository version will replace them. If working through Codex, ask it to read your edited Studio settings back into the source rather than resetting your values.
+You can experiment with these Attributes during Play and see the changes immediately, but **write down those values and apply them again after Stop** if you want them saved. Dragging PlayerGui panels also only affects that playtest and is replaced when the UI redraws.
 
-`RogueliteUI` owns the outer menu, header, status area and footer. `ShopUI` owns the offer cards, stat tabs, Items, Weapons and Start Wave, and exposes the shared layout settings used by both modules.
+Repository synchronization: Attribute values are saved in `studio-prototype/combat/default.project.json` under `ReplicatedStorage.ShopUI.$attributes`. Fallback defaults are at `M.Layout` near the top of `ui/ShopUI.luau`. Attributes take precedence over those defaults. Before a future Rojo sync, copy your changed Studio Attributes into that project JSON, or ask Codex to read them back into the repository. Do not replace your Studio values with the old defaults.
 
-Verification for this revision: the rendered layout passed boundary checks at 1920×1080, 1440×900, 1280×720, 1024×768, 800×600, 640×360 and 390×844. Both Rojo projects package successfully. The change does not alter purchases, the six-weapon limit, creative equipping, or weapon textures.
+Verification: seven rendered sizes passed boundary checks, from 1920×1080 through 390×844, including 640×360. A live `WeaponsWidth` Attribute change from 320 to 280 resized the panel and was restored to 320. Both Rojo builds passed. The existing session loadout, items, gold, offers and stat overrides were restored after the UI update.

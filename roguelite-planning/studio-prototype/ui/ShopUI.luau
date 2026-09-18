@@ -13,8 +13,12 @@ M.Layout={
  HorizontalMargin=0.025,
  HeaderTop=16,
  ContentTop=64,
- WeaponsHeight=112,
- ItemsHeight=112,
+ WeaponsHeight=152,
+ WeaponsWidth=320,
+ ItemsHeight=152,
+ InventoryBottomPadding=12,
+ RerollWidth=180,
+ RerollHeight=34,
  InventoryGap=8,
  SlotGap=4,
  InventoryTitleHeight=26,
@@ -22,6 +26,20 @@ M.Layout={
  CardHeight=248,
  StatsWidth=250,
 }
+-- ModuleScript Attributes expose these controls in Studio's Properties panel.
+function M.getLayout()
+ local result=table.clone(M.Layout)
+ for key in result do
+  local value=script:GetAttribute(key)
+  if type(value)=='number' and value==value and math.abs(value)<10000 then result[key]=value end
+ end
+ result.HorizontalMargin=math.clamp(result.HorizontalMargin,0,.1)
+ result.ItemWidthShare=math.clamp(result.ItemWidthShare,.2,.7)
+ result.WeaponsWidth=math.max(240,result.WeaponsWidth)
+ result.RerollWidth=math.max(130,result.RerollWidth)
+ result.RerollHeight=math.clamp(result.RerollHeight,28,40)
+ return result
+end
 local white=Color3.fromRGB(240,243,239)
 local green=Color3.fromRGB(145,239,20)
 local red=Color3.fromRGB(255,105,105)
@@ -47,6 +65,7 @@ function M.new(player,h,refresh)
   local data=self:snapshot();if data then combat.ShopAction:FireServer(action,data.revision,arg,extra) end
  end
  state:GetAttributeChangedSignal('ShopSnapshot'):Connect(function() task.defer(refresh) end)
+ script.AttributeChanged:Connect(function() task.defer(refresh) end)
  local function text(p,n,t,x,y,w,ht,size,color)
   local l=label(p,n,t,x,y,w,ht,size or 14,color);l.TextXAlignment=Enum.TextXAlignment.Left;return l
  end
@@ -90,7 +109,7 @@ function M.new(player,h,refresh)
  end
  function self:render(parent,width,height,inventoryOnly)
   local data=self:snapshot();if not data then text(parent,'Loading','Loading shop…',0,0,width,40,20);return end
-  local L=M.Layout
+  local L=M.getLayout()
   local scale=math.min(1,width/480);local w=width/scale;local ht=height/scale
   local root=Instance.new('Frame');root.Name='ShopLayout';root.BackgroundTransparency=1;root.Size=UDim2.fromOffset(w,ht);root.Parent=parent
   local scaling=Instance.new('UIScale');scaling.Scale=scale;scaling.Parent=root
@@ -128,7 +147,8 @@ function M.new(player,h,refresh)
    btn(stats,'NextStats','›',side-42,statsH-33,32,25,function() self.statPage=page<pages and page+1 or 1;refresh() end,true)
   end
   h.icon(left,'GoldBag',4,0,38,'bag');text(left,'Gold',tostring(data.gold)..' GOLD',46,0,leftW*.4-40,38,20)
-  local reroll=btn(left,'Reroll','REROLL · '..data.rerollPrice..' GOLD',leftW*.48,0,leftW*.52,38,function() self:send('Reroll') end)
+  local rerollW=math.min(L.RerollWidth,leftW*.55)
+  local reroll=btn(left,'Reroll','REROLL · '..data.rerollPrice..' GOLD',leftW-rerollW,0,rerollW,L.RerollHeight,function() self:send('Reroll') end)
   if data.gold<data.rerollPrice or data.phase~='Shop' then reroll.ImageColor3=Color3.fromRGB(105,105,105);reroll.Caption.TextColor3=red end
   local top=46;local cols=leftW>=660 and 4 or 2;local cardW=(leftW-(cols-1)*8)/cols;local cardH=math.max(230,L.CardHeight)
   if not inventoryOnly then
@@ -179,6 +199,7 @@ function M.new(player,h,refresh)
   end
   local split=leftW>=700;local itemW=split and math.floor(leftW*L.ItemWidthShare)-L.InventoryGap/2 or leftW
   local itemHeight=math.max(92,L.ItemsHeight);local weaponHeight=math.max(92,L.WeaponsHeight)
+  if split then top=math.max(top,ht-math.max(itemHeight,weaponHeight)-math.max(0,L.InventoryBottomPadding)) end
   local titleH=L.InventoryTitleHeight
   local items=panel(left,'Items',0,top,itemW,itemHeight);text(items,'Title','Items · '..#data.items..' / '..E.ITEM_CAPACITY,10,3,itemW-20,titleH-2,16)
   local cell=(itemW-22)/8
@@ -188,8 +209,8 @@ function M.new(player,h,refresh)
    if it then local entry=Catalog.ById[it.id];local size=math.min(cell-10,itemH-12);art(b,entry,3,(itemH-size)/2,cell-10,size);text(b,'Count','×'..it.count,cell-25,itemH-20,21,17,12,green) end
   end
   if not split then top+=itemHeight+L.InventoryGap end
-  local weaponW=split and leftW-itemW-L.InventoryGap or leftW
-  local owned=panel(left,'Weapons',split and itemW+L.InventoryGap or 0,top,weaponW,weaponHeight);local count=0;for _,copy in data.weapons do if copy.id~='' then count+=1 end end
+  local weaponW=split and math.min(L.WeaponsWidth,leftW-itemW-L.InventoryGap) or leftW
+  local owned=panel(left,'Weapons',split and leftW-weaponW or 0,top,weaponW,weaponHeight);local count=0;for _,copy in data.weapons do if copy.id~='' then count+=1 end end
   text(owned,'Title','Weapons ('..count..'/6)',10,3,weaponW-20,titleH-2,16)
   local slotW=(weaponW-22)/3;local slotH=(weaponHeight-titleH-8-L.SlotGap)/2
   for i=1,6 do

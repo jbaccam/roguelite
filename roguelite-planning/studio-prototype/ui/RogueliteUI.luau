@@ -161,7 +161,7 @@ function UI.mount(playerGui, studioPreview)
  end
  render=function()
   if not controller.Mode then return end
-  local settings=shopModule.Layout
+  local settings=shopModule.getLayout()
   local isShop=controller.Mode=='Shop'
   local inset=game:GetService('GuiService'):GetGuiInset().Y
   -- Extend the menu backdrop into the top inset, while keeping buttons below Roblox's bar.
