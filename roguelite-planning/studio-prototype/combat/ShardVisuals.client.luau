@@ -61,6 +61,6 @@ RunService.RenderStepped:Connect(function(dt)
   local p=id and Players:GetPlayerByUserId(id)
   local r=p and p.Character and p.Character:FindFirstChild('HumanoidRootPart')
   if r and start then pos=Motion.pull(m:GetAttribute('MagnetOrigin') or pos,r.Position,now-start) end
-  v:PivotTo(CFrame.new(pos)*CFrame.Angles(0,(now-born)*.5+born%6.28,0))
+  v:PivotTo(CFrame.new(pos)*Motion.rotation(born,now))
  end
 end)

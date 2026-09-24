@@ -20,6 +20,8 @@ M.MuzzleOffsets={
  ['00']=Vector3.new(0,.56,-1.195),
  ['07']=M.DracoMuzzle,
  ['09']=Vector3.new(0,.315,-1.67),
+ -- Reviewed cannon mouth: native front mapped into the normalized play model.
+ ['10']=Vector3.new(0,.302,-1.802),
 }
 function M.frame(cf)
  local forward=Vector3.new(cf.LookVector.X,0,cf.LookVector.Z)
@@ -104,12 +106,12 @@ function M.pose(root,radius,slot,aim,start,now,kind,id,attackDirection,attackRan
   -- Keep the physical weapon size. Move its center far enough that its
   -- striking end reaches the resolved range, including AttackRange bonuses.
   local peak=math.max(.5,reach-tip-.11)
-  -- The katana's longer reach must not leave a blind spot beside the player.
+  -- Long melee weapons must not leave a blind spot beside the player.
   -- Pull the cut inward for close targets; distant targets use the full reach.
-  if id=='03' and aim then
+  if aim then
    local offset=aim-center
    local distance=Vector3.new(offset.X,0,offset.Z).Magnitude
-   peak=math.min(peak,math.max(.5,distance-(boundsCenter or Vector3.zero).Y*sign))
+   peak=math.min(peak,math.max(.35,distance-tip*.65))
   end
   local pulse=math.min(.65*reach/8.5,peak*.25)
   local extension=peak-pulse*(1-math.sin(t*math.pi))
@@ -171,6 +173,7 @@ function M.attackRoot(root,aim)
  return CFrame.new(root.Position.X,aim.Y-.25,root.Position.Z)*M.frame(root).Rotation
 end
 function M.chooseStyle(id,count,serial,distance,baseRange)
+ if M.DownwardWeapons[id] and distance and distance<3 then return 'Horizontal' end
  -- At the outer edge, use the stroke that can actually reach. Keep the
  -- hammer's existing ranged/melee combo decision, since it can throw.
  if id~='31' and M.DownwardWeapons[id] and distance and baseRange and distance>baseRange then return 'Downward' end

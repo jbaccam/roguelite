@@ -6,6 +6,7 @@ local Targets=require(game.ReplicatedStorage.RogueliteCombat.ProjectileTarget)
 local P={}
 function P.new(combat,damage,rayParams)
  local active={}
+ local serial=0
  local function cast(r,delta)
   local params=rayParams(r.d.character,false);local filter=params.FilterDescendantsInstances
   for npc in r.hit do table.insert(filter,npc) end;params.FilterDescendantsInstances=filter
@@ -18,14 +19,16 @@ function P.new(combat,damage,rayParams)
    if r.target and not Targets.alive(r.target) then
     local replacement=Targets.replacement(r.position,d,r.hit,r.remaining,r.launchOrigin,rayParams)
     if not replacement then table.remove(active,i);continue end
-    r.target=replacement;r.direction=(replacement.Position-r.position).Unit
+    r.target=replacement
+    local point=Targets.predict(replacement,r.position,function(distance) return distance/d.projectileSpeed end,0,r.remaining,rayParams,d.character)
+    r.direction=(point-r.position).Magnitude>.01 and (point-r.position).Unit or r.direction
    end
    local distance=math.min(d.projectileSpeed*math.min(dt,.1),r.remaining)
    local delta=r.direction*distance;local result=cast(r,delta)
    local finish=result and result.Position or r.position+delta
    local hitModel=result and result.Instance:FindFirstAncestorOfClass('Model')
    local mobContact=hitModel~=nil and Tags:HasTag(hitModel,'RogueliteZombie')
-   combat.Shot:FireAllClients(r.position,finish,'Ranged',d.id,d.projectileRadius*2,nil,result~=nil and d.kind~='Blast',result and result.Normal,d.owner.UserId,d.slotIndex,r.first,mobContact,r.shotId)
+   combat.Shot:FireAllClients(r.position,finish,'Ranged',d.id,d.projectileRadius*2,nil,result~=nil and d.kind~='Blast',result and result.Normal,d.owner.UserId,d.slotIndex,r.first,mobContact,r.shotId,r.visualId,d.projectileSpeed,result~=nil and (not mobContact or (r.pierce<=0 and r.bounce<=0)) or r.remaining<=distance)
    r.first=false
    r.remaining-=(finish-r.position).Magnitude;r.position=finish
    if result then
@@ -53,7 +56,8 @@ function P.new(combat,damage,rayParams)
       end
      end
      if not best then table.remove(active,i);continue end
-     r.direction=(best.Position-finish).Unit;r.bounce-=1;r.factor*=.6
+     local point=Targets.predict(best,finish,function(distance) return distance/d.projectileSpeed end,0,r.remaining,rayParams,d.character)
+     r.direction=(point-finish).Magnitude>.01 and (point-finish).Unit or r.direction;r.bounce-=1;r.factor*=.6
      r.target=best
     else table.remove(active,i);continue end
     r.position+=r.direction*.05;r.remaining-=.05
@@ -76,7 +80,8 @@ function P.new(combat,damage,rayParams)
    end
   end
   if (aim-origin).Magnitude<.01 then return end
-  table.insert(active,{d=d,target=d.arcTarget,launchOrigin=origin,position=origin,direction=(aim-origin).Unit,remaining=d.range,hit={},pierce=math.min(4,d.stats.Pierce+(d.nativePierce or 0)),bounce=math.min(4,d.stats.Bounce+(d.nativeBounce or 0)),factor=1,first=first,shotId=d.muzzleShotId,expires=os.clock()+10})
+  serial+=1
+  table.insert(active,{visualId=serial,d=d,target=d.arcTarget,launchOrigin=origin,position=origin,direction=(aim-origin).Unit,remaining=d.range,hit={},pierce=math.min(4,d.stats.Pierce+(d.nativePierce or 0)),bounce=math.min(4,d.stats.Bounce+(d.nativeBounce or 0)),factor=1,first=first,shotId=d.muzzleShotId,expires=os.clock()+10})
  end
  return self
 end

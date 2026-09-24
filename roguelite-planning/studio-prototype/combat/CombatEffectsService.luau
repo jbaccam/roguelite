@@ -33,6 +33,9 @@ local function status(npc,d,name,duration,amount,spread)
 end
 function E.hit(npc,amount,d,secondary)
  local h,r=alive(npc);if not h or not d or not valid(d) then return 0 end
+ if not Tags:HasTag(npc,'RogueliteZombie') then return 0 end
+ -- Tag before damage: the Died handler can run immediately on a lethal shot.
+ if d.id=='10' and not secondary and amount>0 then npc:SetAttribute('DesignerShirt',true) end
  local s=d.stats;local position=r.Position
  if not secondary and math.random()<s.CritChance/100 then amount*=s.CritDamage/100 end
  if npc:GetAttribute('IsElite') or npc:GetAttribute('IsBoss') then amount*=Stats.mult(s.BossDamage) end
@@ -78,8 +81,9 @@ function E.hit(npc,amount,d,secondary)
  local state=Characters.states[d.owner]
  if state then
   state.hits+=1
-  local count=math.max(s.ChainCount,d.lightning and 1 or 0)
-  if count>0 and state.hits%s.ChainEvery==0 then
+  local sourceCount=math.max(s.ChainCount,d.lightning and 1 or 0)
+  local count=math.min(6,sourceCount+s.ChainBonus)
+  if sourceCount>0 and state.hits%s.ChainEvery==0 then
    for i,target in near(position,12*Stats.mult(s.AreaSize),{[npc]=true},d.character) do
     if i>count then break end
     combat.Shot:FireAllClients(position,target.HumanoidRootPart.Position,'Lightning',d.id)
@@ -102,7 +106,12 @@ RunService.Heartbeat:Connect(function(dt)
    elseif e.name=='Slow' then slow=math.max(slow,e.amount)
    elseif now>=e.nextTick then e.nextTick=now+1;E.hit(npc,e.amount*e.stacks,e.d,true) end
   end
-  if h.Parent and h.Health>0 then h.WalkSpeed=(npc:GetAttribute('BaseMoveSpeed') or 12)*(1-slow/100*(npc:GetAttribute('IsBoss') and .5 or 1)) end
+  if h.Parent and h.Health>0 then
+   slow*=npc:GetAttribute('IsBoss') and .5 or 1
+   npc:SetAttribute('StatusSlowStrength',slow)
+   local vacuumSlow=(npc:GetAttribute('VacuumSlowUntil') or 0)>workspace:GetServerTimeNow() and 35 or 0
+   h.WalkSpeed=(npc:GetAttribute('BaseMoveSpeed') or 12)*(1-math.max(slow,vacuumSlow)/100)
+  end
   if next(entries)==nil then E.statuses[npc]=nil end
  end
 end)
