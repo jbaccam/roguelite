@@ -1,0 +1,275 @@
+[
+  {
+    "itemId": "protein",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_02_36 AM-1.png",
+    "file": "protein.png",
+    "sha256": "061273a6232c3f277c0e66ff12a6b46785bfd8664ca3c227e69dea859d0f1323",
+    "assetId": "rbxassetid://83194367813542"
+  },
+  {
+    "itemId": "cheese",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_02_36 AM-2.png",
+    "file": "cheese.png",
+    "sha256": "99ee211e3a2c23eb358cef699676c29bbf1371363da502d95f70ad36b877b507",
+    "assetId": "rbxassetid://90250262957329"
+  },
+  {
+    "itemId": "potato",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_02_37 AM-3.png",
+    "file": "potato.png",
+    "sha256": "f7c55dca00d20eb70cc312cf10af6013728660e946e231538fc9832b20324488",
+    "assetId": "rbxassetid://83830925182356"
+  },
+  {
+    "itemId": "shoes",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_02_37 AM-4.png",
+    "file": "shoes.png",
+    "sha256": "29d7e6d865d51d8338a53727cb7da9b696d59811af07549166a387f57a922e00",
+    "assetId": "rbxassetid://107662510054482"
+  },
+  {
+    "itemId": "headband",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_02_38 AM-5.png",
+    "file": "headband.png",
+    "sha256": "7d49f74ac34eab1694d21bc2aae1c67dd1e45b9bcb58b12495cc0510ddc84019",
+    "assetId": "rbxassetid://135907983584957"
+  },
+  {
+    "itemId": "glasses",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_02_38 AM-6.png",
+    "file": "glasses.png",
+    "sha256": "eeb765d594db7853d94bf5ffbbf76c6697df6c31eceb6aed3c5b60a7563812fc",
+    "assetId": "rbxassetid://96052817991093"
+  },
+  {
+    "itemId": "potlid",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_02_38 AM-7.png",
+    "file": "potlid.png",
+    "sha256": "733346f2379a612ea6e562b679df08862f6add8f9e90b565528c2ff0766637ee",
+    "assetId": "rbxassetid://95875975195945"
+  },
+  {
+    "itemId": "sock",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_02_39 AM-8.png",
+    "file": "sock.png",
+    "sha256": "36fe5c481ae0229e8116b78af6e7508acc1e86ed9abab40557463e52b4475e13",
+    "assetId": "rbxassetid://107984529281974"
+  },
+  {
+    "itemId": "magnet",
+    "originalFile": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-83a84c57-4c91-46af-b9ab-70a33ebe308e.png",
+    "file": "magnet-fridge.png",
+    "sha256": "dc9bb78058600c4c194bf691131ca8c98b369b1e320b5ea9755875300aeae4aa",
+    "assetId": "rbxassetid://79860440384816"
+  },
+  {
+    "itemId": "coupons",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_03_01 AM.png",
+    "file": "coupons.png",
+    "sha256": "45fea1e4bd5d4eb38fdf5581367c0b9c9efa4c7ed1d9c2d59d9b8740cef48079",
+    "assetId": "rbxassetid://88520618235310"
+  },
+  {
+    "itemId": "ketchup",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_03_22 AM-1.png",
+    "file": "ketchup.png",
+    "sha256": "81ec3d12c0be56d0927e9edca39b38acf19e43f585ebd34a8fe92174b178f289",
+    "assetId": "rbxassetid://131244011688920"
+  },
+  {
+    "itemId": "hotsauce",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_03_23 AM-2.png",
+    "file": "hotsauce.png",
+    "sha256": "fcbc4915186ea972694d28f1624a5f83dbdeac62d9d1cab09705450977a510e7",
+    "assetId": "rbxassetid://119160485990749"
+  },
+  {
+    "itemId": "marshmallow",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_03_24 AM-3.png",
+    "file": "marshmallow.png",
+    "sha256": "bfa3748db281827461696db6581f01d73d72124d65273194e11e96b63605acf9",
+    "assetId": "rbxassetid://126733361101751"
+  },
+  {
+    "itemId": "peas",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_03_24 AM-4.png",
+    "file": "peas.png",
+    "sha256": "34007cd2d01791ad2cac1e640fbc7930009b7994a5dfd639cb7a92dd54937f6e",
+    "assetId": "rbxassetid://83565201991578"
+  },
+  {
+    "itemId": "stinkysock",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_03_25 AM-5.png",
+    "file": "stinkysock.png",
+    "sha256": "4872f9ae27b5cef286b76c06260f67f7892ccf46bb7746aa8bdfb97e462dfe7c",
+    "assetId": "rbxassetid://92934200477984"
+  },
+  {
+    "itemId": "energy",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_03_28 AM-6.png",
+    "file": "energy.png",
+    "sha256": "9f43e745834334f5ea4148f3f36b4ccae7ec369850d8f6ffc955ba958ec5d84c",
+    "assetId": "rbxassetid://136079535507930"
+  },
+  {
+    "itemId": "helmet",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_03_29 AM-7.png",
+    "file": "helmet.png",
+    "sha256": "7e01499db1d898757a1356a381224bab3c94e57981430a8b2c1aab6d729dee10",
+    "assetId": "rbxassetid://73191633018679"
+  },
+  {
+    "itemId": "broken",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_03_29 AM-8.png",
+    "file": "broken.png",
+    "sha256": "ad42e77cb259c3e248da8ff2e55f58b37cc18c6b8f6b33ffb4f616853900911a",
+    "assetId": "rbxassetid://118717032933610"
+  },
+  {
+    "itemId": "ballchain",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_03_34 AM-9.png",
+    "file": "ballchain.png",
+    "sha256": "0f298d36d611bc625ec9bc8e1c9084d44addcca6545a508ade7818d72984e995",
+    "assetId": "rbxassetid://116486378397548"
+  },
+  {
+    "itemId": "backpack",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_03_35 AM-10.png",
+    "file": "backpack.png",
+    "sha256": "b005963346a22294296dac22b39a9cbc5f4a110317ce20db6c96f5bad68a389a",
+    "assetId": "rbxassetid://72326129404039"
+  },
+  {
+    "itemId": "nightmare",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_04_03 AM-1.png",
+    "file": "nightmare.png",
+    "sha256": "9776fdb54086cecfc632039e43662e41e05671c803f1d0364dcb4d038034bdbf",
+    "assetId": "rbxassetid://131703819690946"
+  },
+  {
+    "itemId": "straws",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_04_04 AM-2.png",
+    "file": "straws.png",
+    "sha256": "00fdd8a5a98588daa594d250a9cc8376b24d380beb4a2bcf52f936727c66e012",
+    "assetId": "rbxassetid://103855013199609"
+  },
+  {
+    "itemId": "bouncy",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_04_05 AM-3.png",
+    "file": "bouncy.png",
+    "sha256": "fe8da6dcdd86e4478032c65722d3c4eb4bccac7ebac5ee9aaeed07682a81847c",
+    "assetId": "rbxassetid://72472678515992"
+  },
+  {
+    "itemId": "pencil",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_04_06 AM-4.png",
+    "file": "pencil.png",
+    "sha256": "424083b2f5d42348b0d75ad4e016955c0a036cd817feaf911ce37c551b8e2b93",
+    "assetId": "rbxassetid://108647088361466"
+  },
+  {
+    "itemId": "antlers",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_08_12 AM-1.png",
+    "file": "antlers.png",
+    "sha256": "b9d62e08a2ac86002b07d27079b4268dcb65729ded1fe428af4a0fce7f1c3baa",
+    "assetId": "rbxassetid://90516946916091"
+  },
+  {
+    "itemId": "mitt",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_08_13 AM-2.png",
+    "file": "mitt.png",
+    "sha256": "294b1f69e97481ce8d66d71f1fb11fea1d88e3492f6b42a2ea6ce138829c367a",
+    "assetId": "rbxassetid://140473103768001"
+  },
+  {
+    "itemId": "bubble",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_08_14 AM-3.png",
+    "file": "bubble.png",
+    "sha256": "18ced2614f44d81db31d897bc89d8e8210b0c0861453fc73d9134ce31d2b965a",
+    "assetId": "rbxassetid://136728170000690"
+  },
+  {
+    "itemId": "bandage",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_08_20 AM-4.png",
+    "file": "bandage.png",
+    "sha256": "820cf145e18979158d3ee1fc39af983d9d07128b94a44a48924dc88a776b5864",
+    "assetId": "rbxassetid://86023323568594"
+  },
+  {
+    "itemId": "fang",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_08_21 AM-5.png",
+    "file": "fang.png",
+    "sha256": "1522edfdbce5f30f408584e5aa36be7df0ba3776b8b77d7522f3c2dd24265662",
+    "assetId": "rbxassetid://93247265104136"
+  },
+  {
+    "itemId": "lighter",
+    "originalFile": "C:\\Users\\Jeremiah\\Downloads\\shop images\\ChatGPT Image Sep 24, 2026, 01_08_26 AM-6.png",
+    "file": "lighter.png",
+    "sha256": "9be8aff5a20c76d213eacead4b54c7c30b1076875895bbd7e02aa20a6d6174ea",
+    "assetId": "rbxassetid://131511231922178"
+  },
+  {
+    "itemId": "ice",
+    "originalFile": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-8c52cfc5-1040-46c6-b4c6-2d88750c0abb.png",
+    "file": "ice.png",
+    "sha256": "418705d10728d0eb595f157fc893f80bc3668c87857343c431aefad80e1d26ae",
+    "origin": "Built-in image generation; user references; see GENERATED_PROMPTS.md",
+    "downloadCopy": "C:\\Users\\Jeremiah\\Downloads\\shop images\\Ice Cube.png",
+    "assetId": "rbxassetid://107793797321617"
+  },
+  {
+    "itemId": "battery",
+    "originalFile": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-a4e1f1f6-35cf-4f71-8963-44a3d26755b4.png",
+    "file": "battery.png",
+    "sha256": "e6dede0c5a7141e6aa39dbee71415f5eaeaac69759f03991bde85526de79e596",
+    "origin": "Built-in image generation; user references; see GENERATED_PROMPTS.md",
+    "downloadCopy": "C:\\Users\\Jeremiah\\Downloads\\shop images\\Battery Pack.png",
+    "assetId": "rbxassetid://77920495517577"
+  },
+  {
+    "itemId": "toxic",
+    "originalFile": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-ceb2b8f2-d92e-4a30-90f6-33ad675bf953.png",
+    "file": "toxic.png",
+    "sha256": "cc1796945d964849facef14189afa230f1a5deb950a1ed8bd9cde89c30857955",
+    "origin": "Built-in image generation; user references; see GENERATED_PROMPTS.md",
+    "downloadCopy": "C:\\Users\\Jeremiah\\Downloads\\shop images\\Toxic Barrel.png",
+    "assetId": "rbxassetid://70439693967934"
+  },
+  {
+    "itemId": "teeth",
+    "originalFile": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-ce8862c5-ef2b-4339-8c27-f1d3bc4206d9.png",
+    "file": "teeth.png",
+    "sha256": "3904a67816082b0217e8736a9854aa3d86a07b0d792fd6f610caaa51e7dea58b",
+    "origin": "Built-in image generation; user references; see GENERATED_PROMPTS.md",
+    "downloadCopy": "C:\\Users\\Jeremiah\\Downloads\\shop images\\Tooth Fairys Collection.png",
+    "assetId": "rbxassetid://138418894713581"
+  },
+  {
+    "itemId": "mask",
+    "originalFile": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-a6087e99-04f6-4fcc-9e15-f1eb7bc30375.png",
+    "file": "mask.png",
+    "sha256": "bb82708143cb7b58c87042b81a1f76faa41ceb11af647b6c8a773ed00f894cb4",
+    "origin": "Built-in image generation; user references; see GENERATED_PROMPTS.md",
+    "downloadCopy": "C:\\Users\\Jeremiah\\Downloads\\shop images\\Cracked Burial Mask.png",
+    "assetId": "rbxassetid://79342628709582"
+  },
+  {
+    "itemId": "alien",
+    "originalFile": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-771369da-ec3d-4bce-aae9-7b12e0c0036e.png",
+    "file": "alien.png",
+    "sha256": "e3c29f220e3e10e8565c12fa704e4a600bc77e20b44baa184bef4e5718b448b5",
+    "origin": "Built-in image generation; user references; see GENERATED_PROMPTS.md",
+    "downloadCopy": "C:\\Users\\Jeremiah\\Downloads\\shop images\\Alien Battery.png",
+    "assetId": "rbxassetid://96598846243561"
+  },
+  {
+    "itemId": "crown",
+    "originalFile": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-666ebdf2-b980-43c0-bd1b-67c3c2493fb3.png",
+    "file": "crown.png",
+    "sha256": "8b9a299388bce5a4f9c861a696ab25a829ad9e04e03d23752b46f3c2349de2ee",
+    "origin": "Built-in image generation; user references; see GENERATED_PROMPTS.md",
+    "downloadCopy": "C:\\Users\\Jeremiah\\Downloads\\shop images\\Bone Crown.png",
+    "assetId": "rbxassetid://121286333601812"
+  }
+]

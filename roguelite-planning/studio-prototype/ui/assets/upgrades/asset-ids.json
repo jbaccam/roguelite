@@ -1,0 +1,18 @@
+{
+  "MaxHP": "rbxassetid://87748663271804",
+  "Damage": "rbxassetid://105663077535579",
+  "AttackSpeed": "rbxassetid://104227388119878",
+  "Armor": "rbxassetid://80556274645944",
+  "Dodge": "rbxassetid://99124374960499",
+  "Regeneration": "rbxassetid://86810106921196",
+  "LifeSteal": "rbxassetid://94341050485414",
+  "CritChance": "rbxassetid://129045264697854",
+  "MeleeDamage": "rbxassetid://95614914114816",
+  "RangedDamage": "rbxassetid://79016661829505",
+  "ElementalDamage": "rbxassetid://104925573900277",
+  "UtilityPower": "rbxassetid://133538769433103",
+  "MoveSpeed": "rbxassetid://117216104224040",
+  "PickupRadius": "rbxassetid://133081616364253",
+  "Luck": "rbxassetid://136231704380505",
+  "AttackRange": "rbxassetid://72729393219444"
+}

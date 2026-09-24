@@ -1,0 +1,37 @@
+[
+  {
+    "id": "ice",
+    "name": "Ice Cube",
+    "source": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-8c52cfc5-1040-46c6-b4c6-2d88750c0abb.png"
+  },
+  {
+    "id": "battery",
+    "name": "Battery Pack",
+    "source": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-a4e1f1f6-35cf-4f71-8963-44a3d26755b4.png"
+  },
+  {
+    "id": "toxic",
+    "name": "Toxic Barrel",
+    "source": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-ceb2b8f2-d92e-4a30-90f6-33ad675bf953.png"
+  },
+  {
+    "id": "teeth",
+    "name": "Tooth Fairy's Collection",
+    "source": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-ce8862c5-ef2b-4339-8c27-f1d3bc4206d9.png"
+  },
+  {
+    "id": "mask",
+    "name": "Cracked Burial Mask",
+    "source": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-a6087e99-04f6-4fcc-9e15-f1eb7bc30375.png"
+  },
+  {
+    "id": "alien",
+    "name": "Alien Battery",
+    "source": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-771369da-ec3d-4bce-aae9-7b12e0c0036e.png"
+  },
+  {
+    "id": "crown",
+    "name": "Bone Crown",
+    "source": "C:\\Users\\Jeremiah\\.codex\\generated_images\\01a0d075-12fc-7462-8186-0be04eb3ab30\\exec-666ebdf2-b980-43c0-bd1b-67c3c2493fb3.png"
+  }
+]
