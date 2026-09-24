@@ -1,0 +1,22 @@
+{
+  "name": "HammerBossArmFlexFix",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "$ignoreUnknownInstances": true,
+      "RogueliteCombat": {
+        "$className": "Folder",
+        "$ignoreUnknownInstances": true,
+        "BossData": {
+          "$path": "finished/BossDataMain.luau",
+          "$ignoreUnknownInstances": true,
+          "Slam": { "$path": "finished/clips/Slam.luau" },
+          "Swing": { "$path": "finished/clips/Swing.luau" },
+          "Spin": { "$path": "finished/clips/Spin.luau" }
+        },
+        "BossMotion": { "$path": "BossMotion.luau" }
+      }
+    }
+  }
+}
