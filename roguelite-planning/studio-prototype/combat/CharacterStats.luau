@@ -19,7 +19,7 @@ stat('LifeStealCap','Life steal cap',10,0,50,2,' HP/s','Recovery','Maximum life-
 stat('Recovery','Recovery',0,-80,200,10,'%','Recovery','Multiplies regeneration, life steal and health-pickup healing.')
 stat('MoveSpeed','Movement speed',24,6,40,2,' studs/s','Utility','Actual Humanoid WalkSpeed.')
 stat('PickupRadius','Pickup radius',8,1,50,2,' studs','Utility','Distance at which crystals start pulling toward you. Collect them for shards and run XP.')
-stat('Luck','Luck',0,0,100,10,'','Utility','Health-drop chance: 15% + Luck / 500, up to 35%. No weapon weighting.')
+stat('Luck','Luck',0,0,100,10,'','Utility','Improves higher-tier shop odds within rarity caps, and health-drop chance. Does not weight weapons.')
 stat('MeleeDamage','Melee damage',0,-80,300,10,'%','Offense','Bonus to close-range attacks.')
 stat('RangedDamage','Ranged damage',0,-80,300,10,'%','Offense','Bonus to projectile attacks, including thrown weapons.')
 stat('ElementalDamage','Elemental damage',0,-80,300,10,'%','Offense','Bonus to Elemental-tagged hits and status damage.')
@@ -46,6 +46,7 @@ stat('PoisonChance','Poison chance',0,0,100,10,'%','Status','Direct hits may poi
 stat('PoisonDamage','Poison damage',0,-80,300,10,'%','Status','Poison: 3 base damage/second per stack for 4 seconds.')
 stat('PoisonStacks','Poison stack cap',3,1,10,1,'','Status','Maximum poison stacks per attacker on a target.')
 stat('ChainCount','Lightning targets',0,0,6,1,'','Status','Targets after a trigger; lightning weapons have at least one.')
+stat('ChainBonus','Extra lightning targets',0,0,3,1,'','Status','Added to an existing lightning chain; does not create lightning on its own.')
 stat('ChainEvery','Lightning frequency',5,1,20,1,' hits','Status','One chain every N direct hits; secondary hits cannot trigger chains.')
 stat('ChainDamage','Lightning damage',0,-80,300,10,'%','Status','Chain hits deal 40% of base weapon damage, then this bonus.')
 stat('FirstHitBlock','First-hit blocks',0,0,1,1,'','Defense','One block per wave; practice reset restores it, stat edits do not.')
@@ -62,7 +63,7 @@ S.Classes={
 }
 function S.valid(id,value)
  local d=S.ById[id]
- local count=table.find({'ProjectileCount','Pierce','Bounce','PoisonStacks','ChainCount','ChainEvery','BurnSpread','FirstHitBlock'},id)
+ local count=table.find({'ProjectileCount','Pierce','Bounce','PoisonStacks','ChainCount','ChainBonus','ChainEvery','BurnSpread','FirstHitBlock'},id)
  return d~=nil and type(value)=='number' and value==value and value>=d.min and value<=d.max and (not count or value%1==0)
 end
 function S.resolve(class,count,overrides,bonuses,percent)
@@ -70,7 +71,7 @@ function S.resolve(class,count,overrides,bonuses,percent)
  for _,d in S.List do
   local value=d.base+(c.buffs[d.id] or 0)+(count>=2 and (c.two[d.id] or 0) or 0)+(count>=4 and (c.four[d.id] or 0) or 0)
   value=(value+((bonuses or {})[d.id] or 0))*(1+((percent or {})[d.id] or 0)/100)
-  if table.find({'ProjectileCount','Pierce','Bounce','PoisonStacks','ChainCount','ChainEvery','BurnSpread','FirstHitBlock'},d.id) then value=math.round(value) end
+  if table.find({'ProjectileCount','Pierce','Bounce','PoisonStacks','ChainCount','ChainBonus','ChainEvery','BurnSpread','FirstHitBlock'},d.id) then value=math.round(value) end
   if overrides and overrides[d.id]~=nil then value=overrides[d.id] end
   result[d.id]=math.clamp(value,d.min,d.max)
  end
@@ -93,12 +94,13 @@ function S.weapon(base,s,class,tier)
  d.cooldown=math.max(base.kind=='Melee' and .18 or .08,base.cooldown*(base.tierCooldown and base.tierCooldown[tier] or 1)/speed*(1-s.CooldownReduction/100))
  -- Animation speed is independent of damage cadence: heavy weapons strike
  -- crisply, then wait for their longer cooldown. Nunchucks use a slower cut.
- d.motionRate=base.kind=='Melee' and (base.id=='02' and 1.35 or base.id=='19' and 2.1 or 1.8)*speed/(1-s.CooldownReduction/100) or base.cooldown/d.cooldown
+ d.motionRate=base.kind=='Melee' and (base.id=='02' and 1.35 or base.id=='19' and 2.7 or 1.8)*speed/(1-s.CooldownReduction/100) or base.cooldown/d.cooldown
  d.range=base.range*S.mult(s.AttackRange)
  d.targetRange=(base.hybridRange or base.range)*S.mult(s.AttackRange)
  d.projectileSpeed=(base.projectileSpeed or 110)*S.mult(s.ProjectileSpeed)
  d.projectileCount=base.kind=='Spread' and (4+tier) or base.id=='18' and (tier>=3 and 4 or 3) or (base.trait=='shots' and tier>=2 and 2 or 1)
  d.nativePierce=base.trait=='pierce' and math.floor(tier/2) or 0
+ if base.id=='22' then d.nativePierce=math.min(4,3+math.floor(tier/3)) end
  d.nativeBounce=base.id=='12' and math.min(4,tier+1) or base.trait=='bounce' and (tier-1) or 0
  d.projectileRadius=.12*S.mult(s.ProjectileSize)
  d.blastRadius=(base.blastRadius or 7)*S.mult(s.AreaSize)

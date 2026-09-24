@@ -30,7 +30,7 @@ function A.new(combat,damage,rayParams)
    if r.target and not Targets.alive(r.target) then
     local replacement=Targets.replacement(r.position,d,r.hit,r.remaining,r.launchOrigin,rayParams)
     if not replacement or r.redirects>=8 then finish(r,nil,false);continue end
-    r.target=replacement;r.redirects+=1;r.origin=r.position;r.finish=replacement.Position
+    r.target=replacement;r.redirects+=1;r.origin=r.position;r.finish=Targets.predict(replacement,r.origin,function(distance) return Motion.duration(d.id,distance,d.projectileSpeed) end,math.max(0,r.started-now),r.remaining,rayParams,d.character,d.id=='33')
     if d.id=='33' then
      local ground=workspace:Raycast(r.finish+Vector3.yAxis*2,-Vector3.yAxis*30,rayParams(d.character,true))
      if ground then r.finish=ground.Position+Vector3.yAxis*.1 end
@@ -92,8 +92,9 @@ function A.new(combat,damage,rayParams)
    local delay=d.id=='18' and (i-1)*Motion.CARD_STAGGER or Motion.BOX_OPEN+(i-1)*.08
    local from=origin+Vector3.yAxis*(d.id=='33' and .65 or .35)
    local target=aim
+   if d.arcTarget then target=Targets.predict(d.arcTarget,from,function(distance) return Motion.duration(d.id,distance,d.projectileSpeed) end,delay,d.range,rayParams,d.character,d.id=='33') end
    if d.id=='33' then
-    local ground=workspace:Raycast(aim+Vector3.yAxis*2,-Vector3.yAxis*30,rayParams(d.character,true))
+    local ground=workspace:Raycast(target+Vector3.yAxis*2,-Vector3.yAxis*30,rayParams(d.character,true))
     if ground then target=ground.Position+Vector3.yAxis*.1 end
    end
    local distance=(target-from).Magnitude

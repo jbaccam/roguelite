@@ -7,7 +7,7 @@ function M.position(origin,finish,t,side,height,bend)
  return origin:Lerp(finish,t)+right*(math.sin(math.pi*t)*(side or 0)+math.sin(2*math.pi*t)*(bend or 0))+Vector3.yAxis*(4*t*(1-t)*(height or 0))
 end
 function M.duration(id,distance,speed)
- return math.clamp(distance/math.max(1,speed)*(id=='33' and 2.1 or 1.35),id=='33' and .85 or .48,id=='33' and 2.1 or 1.25)
+ return math.clamp(distance/math.max(1,speed)*(id=='33' and 2.1 or 1.5),id=='33' and .85 or .54,id=='33' and 2.1 or 1.4)
 end
 function M.shape(id,distance,index,random)
  if id=='33' then return 0,math.clamp(distance*.55,8,23) end

@@ -1,5 +1,8 @@
 # Six-slot weapon practice
 
+September 23 accuracy and utility update: [predictive throws, close melee, vacuum and water streams](TRAVEL_ACCURACY.md).
+
+
 September 22 zombie expansion: [baby and mutant integration status](ZOMBIE_VARIANTS.md). Movement, stats, hunched poses and server-timed slam code are synchronized; new mesh imports and actual Play validation remain pending.
 
 Current implementation: [LOADOUT.md](LOADOUT.md). Studio now has a live all-weapons inventory, six server-owned slots, and independent auto-targeting. The katana-only notes below record earlier prototype behavior and are not the current six-slot motion implementation.

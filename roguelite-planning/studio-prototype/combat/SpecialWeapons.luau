@@ -8,6 +8,7 @@ local Stats=require(RS.RogueliteCombat.CharacterStats)
 local Targets=require(RS.RogueliteCombat.ProjectileTarget)
 local S={}
 function S.new(combat,damage,rayParams)
+ local utility=require(script.Parent.UtilityWeapons).new(combat,damage,rayParams)
  local event=combat:WaitForChild('SpecialFX');local flights={};local zones={};local serial=0
  local function nextId() serial+=1;return serial end
  local function valid(d)
@@ -56,9 +57,14 @@ function S.new(combat,damage,rayParams)
   local npc=result and result.Instance:FindFirstAncestorOfClass('Model')
   if npc and Tags:HasTag(npc,'RogueliteZombie') and allowed(npc,d) and not r.hit[npc] then
    r.hit[npc]=true;damage(npc,d.damage*r.factor,d)
+   if d.id=='22' and r.pierces>0 then r.pierces-=1;r.factor*=.7;return end
    if not profile.zone and r.bounces>0 then
     local target=Targets.replacement(r.position,d,r.hit,r.remaining,r.launchOrigin,rayParams)
-    if target then r.bounces-=1;r.factor*=.65;segment(r,target.Position,false);return end
+    if target then
+     r.bounces-=1;r.factor*=.65
+     local point=Targets.predict(target,r.position,function(distance) return Motion.duration(Vector3.zero,Vector3.xAxis*distance,d.projectileSpeed) end,0,r.remaining,rayParams,d.character)
+     segment(r,point,false);return
+    end
    end
    if not profile.zone and r.pierces>0 then r.pierces-=1;r.factor*=.7;return end
   end
@@ -112,13 +118,14 @@ function S.new(combat,damage,rayParams)
   end
  end)
  local self={}
- function self:handles(id) return Motion.profiles[id]~=nil or id=='17' end
+ function self:handles(id) return Motion.profiles[id]~=nil or id=='17' or id=='28' or id=='29' end
  function self:busy(player,index)
   for _,r in flights do if r.d.owner==player and r.d.slotIndex==index and Motion.profiles[r.d.id].returns then return true end end
   return false
  end
  function self:launch(d,origin,aim)
   if not valid(d) then return end
+  if d.id=='28' or d.id=='29' then utility:launch(d,origin,aim);return end
   if d.id=='17' then
    local direction=(aim-origin).Magnitude>.01 and (aim-origin).Unit or -Vector3.zAxis
    local length=math.min(d.range,14*Stats.mult(d.stats.AttackRange))
@@ -142,9 +149,13 @@ function S.new(combat,damage,rayParams)
   if slot then slot:SetAttribute('ThrowIndex',reserve) end
   for i=1,count do
    local def=table.clone(d);local target=aim
+   local delay=(i-1)*.06
+   if d.arcTarget then target=Targets.predict(d.arcTarget,origin,function(distance) return Motion.duration(Vector3.zero,Vector3.xAxis*distance,d.projectileSpeed) end,delay,d.range,rayParams,d.character,d.id=='14') end
    if i>1 then target+=Vector3.new((i%2==0 and 1 or -1)*i*.65,0,0) end
+   -- A rolling ball continues through the first target down the entire lane.
+   if d.id=='22' and (target-origin).Magnitude>.01 then target=origin+(target-origin).Unit*d.range end
    local key=nextId();local height=math.min(profile.height,(target-origin).Magnitude*.2)
-   local r={key=key,d=def,origin=origin,finish=target,position=origin,launchOrigin=origin,started=workspace:GetServerTimeNow()+(i-1)*.06,height=height,duration=Motion.duration(origin,target,d.projectileSpeed),t=0,hit={},factor=1,bounces=math.min(4,d.nativeBounce+d.stats.Bounce),pierces=math.min(4,d.nativePierce+d.stats.Pierce),remaining=d.range*1.8,expires=workspace:GetServerTimeNow()+8,radius=math.clamp(d.id=='22' and .65 or d.id=='08' and .45 or d.projectileRadius,.12,1.2)}
+   local r={key=key,d=def,origin=origin,finish=target,position=origin,launchOrigin=origin,started=workspace:GetServerTimeNow()+delay,height=height,duration=Motion.duration(origin,target,d.projectileSpeed),t=0,hit={},factor=1,bounces=math.min(4,d.nativeBounce+d.stats.Bounce),pierces=math.min(4,d.nativePierce+d.stats.Pierce),remaining=d.range*1.8,expires=workspace:GetServerTimeNow()+8,radius=math.clamp(d.id=='22' and .65 or d.id=='08' and .45 or d.projectileRadius,.12,1.2)}
    flights[key]=r
    event:FireAllClients('Launch',key,d.id,d.owner.UserId,d.slotIndex,reserve,origin,target,r.started,r.duration,height)
   end

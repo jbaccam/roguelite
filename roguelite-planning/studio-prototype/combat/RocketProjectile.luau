@@ -34,7 +34,8 @@ function Rocket.new(combat,damage,rayParams)
     local replacement=Targets.replacement(r.position,r.definition,nil,remaining,r.launchOrigin,rayParams)
     if not replacement or r.redirects>=8 then finish(id,r,nil);continue end
     r.target=replacement;r.redirects+=1;r.range=remaining;r.traveled=0;r.origin=r.position
-    local delta=replacement.Position-r.position;r.direction=delta.Unit;r.targetDistance=delta.Magnitude;r.started=workspace:GetServerTimeNow()
+    local predicted=Targets.predict(replacement,r.position,function(distance) return distance/r.definition.projectileSpeed end,0,remaining,rayParams,r.character)
+    local delta=predicted-r.position;r.direction=delta.Magnitude>.01 and delta.Unit or r.direction;r.targetDistance=delta.Magnitude;r.started=workspace:GetServerTimeNow()
     event:FireAllClients('Redirect',id,r.origin,r.direction*r.definition.projectileSpeed,r.started,r.range,r.definition.projectileRadius/.12,r.targetDistance)
    end
    local distance=math.min(math.max(0,workspace:GetServerTimeNow()-r.started)*r.definition.projectileSpeed,r.range)

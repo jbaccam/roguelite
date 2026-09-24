@@ -4,7 +4,7 @@ M.profiles={
  ['13']={height=0,spin='point'},
  ['14']={height=5,spin='tumble',zone='Fire'},
  ['15']={height=3,spin='tumble',reserve=true},
- ['22']={height=2,spin='roll'},
+ ['22']={height=0,spin='roll'},
  ['23']={height=5,spin='tumble',reserve=true},
  ['31']={height=0,spin='rock',returns=true},
  ['08']={height=.4,spin='cloud',zone='Poison'},
