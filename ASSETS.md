@@ -62,3 +62,19 @@ Installed in roguelite place 107877054949326 as `ServerStorage.RogueliteNPCs.Ham
 
 - Bullet contact atlas: user-supplied ChatGPT Image Sep 18, 2026, 12_09_04 AM (2).png, preserved unchanged at roguelite-planning/studio-prototype/combat/assets/bullet-impact-atlas.png. Uploaded Roblox image rbxassetid://131707953627421. Runtime crops only rows 2 and 4, with coordinates scaled from 1254 to 1024 texture pixels.
 
+
+## Shop item icons supplied 2026-09-24
+
+30 transparent PNG icons supplied by the user in `C:/Users/Jeremiah/Downloads/shop images`. Copied unchanged into `roguelite-planning/studio-prototype/ui/assets/shop/` with readable item IDs. No Creator Store assets are involved. Original filenames, SHA-256 hashes, and uploaded Roblox image IDs are recorded in `manifest.json`; `asset-ids.json` contains the item-to-asset mapping. ShopCatalog references the uploaded IDs directly, shared by shop cards, owned items, and preloading.
+
+Verified all 30 images visually in the Studio client gallery; all reported IsLoaded. HUD preload reported 80/80 assets loaded. Rojo build passed. Studio Edit catalog synchronized; cloud save is not confirmed.
+
+Still using placeholders: Ice Cube, Battery Pack, Toxic Barrel, Tooth Fairy's Collection, Cracked Burial Mask, Alien Battery, Bone Crown.
+
+### Seven missing shop icons completed
+
+Ice Cube, Battery Pack, Toxic Barrel, Tooth Fairy's Collection, Cracked Burial Mask, Alien Battery, and Bone Crown were generated with the built-in image tool from the approved art brief, master design, passive-item descriptions, and user-supplied peas/helmet/nightmare style references. All seven are 1254x1254 RGBA PNGs with verified transparent alpha, saved in the project shop asset directory and copied to Downloads/shop images under item names. Prompts are preserved in GENERATED_PROMPTS.md; sources and uploaded IDs are in the adjacent manifests. All 37 passive-item icons are now linked in the source ShopCatalog. Rojo packaging passed. Studio sync for the new seven is pending because the shared boss test entered Play. New seven icons were visually reviewed as generated outputs; a fresh live-client loading check was not run.
+
+## Designer cannon cloth — 2026-09-24
+
+Original Blender-authored bundled cotton tee and fitted torso/sleeve panels: `roguelite-planning/rolled-shirt/`. Ivory faceted fabric and red supermeme text label requested by the user; no logo image imported. Blender/FBX/GLB sources and generated runtime geometry retained. Server-owned designer mark grants a fixed +2 shards per death. See `roguelite-planning/studio-prototype/combat/DESIGNER_CANNON.md` for actual Studio verification and renderer limits.

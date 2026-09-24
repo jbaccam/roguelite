@@ -1,5 +1,7 @@
 # Copy the Scene!
 
+This README and the root Rojo project cover Copy The Scene. The roguelite and other work in this workspace are mapped in [PROJECTS.md](PROJECTS.md).
+
 A Roblox memory party game for 4–8 players, aimed at ages 8–16 with a middle-school sensibility. Remember a recognizable setup, rebuild it, and survive the elimination rounds. The prototype includes 20 grouped scenes across camping, skating, gaming, pizza, treasure, and expedition themes. Thirty prop definitions are available, including two adapted Creator Store props.
 
 The stage is a coastal competition pavilion: warm wood, slate blue, soft white, and restrained amber accents. Textured cliff and tree assets surround the waterfront arena. The grid is **6×6 with four-stud cells**, reduced from 144 possible floor positions to 36. Read [ASSETS.md](ASSETS.md) for model provenance.
