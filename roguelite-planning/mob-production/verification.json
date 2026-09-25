@@ -1,0 +1,370 @@
+{
+  "revisions/fire-goblin": {
+    "blend": {
+      "triangles": 7078,
+      "bones": 16,
+      "meshes": 15,
+      "normalizedWeights": true,
+      "textureLoaded": true,
+      "closedComponents": true,
+      "rigPoseDisplacement": 0.4069158308520458,
+      "actions": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Move"
+      ]
+    },
+    "fbx": {
+      "triangles": 7078,
+      "bones": 16,
+      "meshes": 15,
+      "normalizedWeights": true,
+      "textureLoaded": true,
+      "closedComponents": true,
+      "rigPoseDisplacement": 0.40691570153848794,
+      "actions": []
+    },
+    "glb": {
+      "triangles": 7078,
+      "bones": 16,
+      "meshes": 15,
+      "normalizedWeights": true,
+      "textureLoaded": true,
+      "closedComponents": true,
+      "rigPoseDisplacement": 0.40691557394144146,
+      "actions": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Move"
+      ]
+    },
+    "clips": {
+      "Idle": {
+        "frames": [
+          2.0,
+          32.0
+        ],
+        "evaluatedMotion": 0.04918637365022249
+      },
+      "Move": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "evaluatedMotion": 0.8247770690909917
+      },
+      "Attack": {
+        "frames": [
+          2.0,
+          32.0
+        ],
+        "evaluatedMotion": 1.0655711668777315
+      },
+      "Hit": {
+        "frames": [
+          2.0,
+          11.0
+        ],
+        "evaluatedMotion": 0.12984455350368762
+      },
+      "Death": {
+        "frames": [
+          2.0,
+          20.0
+        ],
+        "evaluatedMotion": 3.8900922017958806
+      }
+    },
+    "fileHashes": {
+      "Model.blend": "f41c30cfedf54777e41546de05ee6f5b9e8f1563ec36396302146a8960d5e096",
+      "Model.fbx": "0449604ae80ac2e26ad81c809f0c0bade7757f69c61d2ab376ba41bfc597e66e",
+      "Model.glb": "bb5681c07dbafc21280cb7a3b3b853f0b69e3a2a1f7bf9a5abca632d8089a368",
+      "BaseColor.png": "874f64eabe93baba2b13a599290d7dfa348f0b83d8ed3ec1afa1371a97acbdb5",
+      "Idle.fbx": "c0b126135e612c2f9844a873e402b7a8c389f34ac43c5c018b1fe49c502bf296",
+      "Move.fbx": "bde45420736824acb0e8ac6505ddd7ce17ea7e247627b549ccdf4bc085ba8611",
+      "Attack.fbx": "e7996c832a092bd389ae6b28b964ca0fcdd8314df4b502410fc4c5ef7915e940",
+      "Hit.fbx": "1c63151ae351b6917bc5b34f6e9af864b739ec806c21c80eae2191a59a662e28",
+      "Death.fbx": "50a24acc85aadf25b68963a505b853d2b025e6c6dfaa8dff9c52ce2565541c3c"
+    }
+  },
+  "revisions/obsidian-ogre": {
+    "blend": {
+      "triangles": 4420,
+      "bones": 16,
+      "meshes": 15,
+      "normalizedWeights": true,
+      "textureLoaded": true,
+      "closedComponents": true,
+      "rigPoseDisplacement": 0.6156861853045826,
+      "actions": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Move"
+      ]
+    },
+    "fbx": {
+      "triangles": 4420,
+      "bones": 16,
+      "meshes": 15,
+      "normalizedWeights": true,
+      "textureLoaded": true,
+      "closedComponents": true,
+      "rigPoseDisplacement": 0.6156863146604552,
+      "actions": []
+    },
+    "glb": {
+      "triangles": 4420,
+      "bones": 16,
+      "meshes": 15,
+      "normalizedWeights": true,
+      "textureLoaded": true,
+      "closedComponents": true,
+      "rigPoseDisplacement": 0.615686055948683,
+      "actions": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Move"
+      ]
+    },
+    "clips": {
+      "Idle": {
+        "frames": [
+          2.0,
+          32.0
+        ],
+        "evaluatedMotion": 0.0767787023420965
+      },
+      "Move": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "evaluatedMotion": 1.287456728422228
+      },
+      "Attack": {
+        "frames": [
+          2.0,
+          32.0
+        ],
+        "evaluatedMotion": 2.955605983734131
+      },
+      "Hit": {
+        "frames": [
+          2.0,
+          11.0
+        ],
+        "evaluatedMotion": 0.2026841770809824
+      },
+      "Death": {
+        "frames": [
+          2.0,
+          20.0
+        ],
+        "evaluatedMotion": 6.072339953859455
+      }
+    },
+    "fileHashes": {
+      "Model.blend": "d89a489d6c042c73956942e5923f211a93bd99ce30794de7ac586c0707cd21f6",
+      "Model.fbx": "54b9906ed14576a78c513a2e55b120f324390640f118440a7df2942d59c7a5dc",
+      "Model.glb": "24c0450c9573afe4f4eb5470859ef2cc1c40cc38302c1010a67352dbd701f256",
+      "BaseColor.png": "874f64eabe93baba2b13a599290d7dfa348f0b83d8ed3ec1afa1371a97acbdb5",
+      "Idle.fbx": "690afaf0114d9a1547dd66735a9857349b499a0e56bf1d3e63b26df9d21fdae0",
+      "Move.fbx": "346a3863d9d9592744608c46c2258892b7adde1c887e1576b7af956a1e253d35",
+      "Attack.fbx": "617f593d5b7cb0e5bff8dfa7ac2d18a0d9b542d1df2264b8c35125bec8e3e467",
+      "Hit.fbx": "2b0930f9e3033ee42927f740443e4a50c39b2db27bac510a3c1ff512ca3ffaa9",
+      "Death.fbx": "58f945deb6c6c965103316157d827035a498e0af4ba15f428077e94ae2af80e5"
+    }
+  },
+  "revisions/ash-shaman": {
+    "blend": {
+      "triangles": 9848,
+      "bones": 16,
+      "meshes": 15,
+      "normalizedWeights": true,
+      "textureLoaded": true,
+      "closedComponents": true,
+      "rigPoseDisplacement": 1.1757108209434022,
+      "actions": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Move"
+      ]
+    },
+    "fbx": {
+      "triangles": 9848,
+      "bones": 16,
+      "meshes": 15,
+      "normalizedWeights": true,
+      "textureLoaded": true,
+      "closedComponents": true,
+      "rigPoseDisplacement": 1.175710927881724,
+      "actions": []
+    },
+    "glb": {
+      "triangles": 9848,
+      "bones": 16,
+      "meshes": 15,
+      "normalizedWeights": true,
+      "textureLoaded": true,
+      "closedComponents": true,
+      "rigPoseDisplacement": 1.1757106181566324,
+      "actions": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Move"
+      ]
+    },
+    "clips": {
+      "Idle": {
+        "frames": [
+          2.0,
+          32.0
+        ],
+        "evaluatedMotion": 0.059983366327053034
+      },
+      "Move": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "evaluatedMotion": 1.0058258335754928
+      },
+      "Attack": {
+        "frames": [
+          2.0,
+          32.0
+        ],
+        "evaluatedMotion": 1.7210751910091915
+      },
+      "Hit": {
+        "frames": [
+          2.0,
+          11.0
+        ],
+        "evaluatedMotion": 0.15834704081856898
+      },
+      "Death": {
+        "frames": [
+          2.0,
+          20.0
+        ],
+        "evaluatedMotion": 4.7440144266620905
+      }
+    },
+    "fileHashes": {
+      "Model.blend": "8d70327f689bd6d315908cee61a3372f9adcba95a8a1a2270fe63cf9cfa42f9f",
+      "Model.fbx": "ac9d10c221e4cd82651ec3393041947228f3eccaa7db9dbf47827ddfe3a3e7c2",
+      "Model.glb": "fdeb683e48f4edc89017d16c23dd1a3914bda11438b4e07669d19c33bbcdde35",
+      "BaseColor.png": "874f64eabe93baba2b13a599290d7dfa348f0b83d8ed3ec1afa1371a97acbdb5",
+      "Idle.fbx": "85000d4d4dd2b9fb31508878a65cbee9727647c2b248ae6cb2763c19d41ffd68",
+      "Move.fbx": "1694c4ff3d709c116df66ac4b5362891e7ffc8ea408b8ce2675b0112e4b9a7dc",
+      "Attack.fbx": "851a7cf590a05b73dc72fcc7447769c43a9f09c18ebedda1f6c164d9181eff6b",
+      "Hit.fbx": "9310c925e74fa480759f0a66f75a10f232b40b752418bdf77501373bc101b321",
+      "Death.fbx": "1ec3caa0d80c5c393eae5804d1027078bd7e6e0a7a887a01a266386b7c2aed57"
+    }
+  },
+  "revisions/spitter-zombie": {
+    "blend": {
+      "triangles": 5580,
+      "bones": 16,
+      "meshes": 15,
+      "normalizedWeights": true,
+      "textureLoaded": true,
+      "closedComponents": true,
+      "rigPoseDisplacement": 0.5050551255159257,
+      "actions": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Move"
+      ]
+    },
+    "fbx": {
+      "triangles": 5580,
+      "bones": 16,
+      "meshes": 15,
+      "normalizedWeights": true,
+      "textureLoaded": true,
+      "closedComponents": true,
+      "rigPoseDisplacement": 0.5050551255159257,
+      "actions": []
+    },
+    "glb": {
+      "triangles": 5580,
+      "bones": 16,
+      "meshes": 15,
+      "normalizedWeights": true,
+      "textureLoaded": true,
+      "closedComponents": true,
+      "rigPoseDisplacement": 0.5050551255159257,
+      "actions": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Move"
+      ]
+    },
+    "clips": {
+      "Idle": {
+        "frames": [
+          2.0,
+          32.0
+        ],
+        "evaluatedMotion": 0.06298251936973287
+      },
+      "Move": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "evaluatedMotion": 1.0561170179659243
+      },
+      "Attack": {
+        "frames": [
+          2.0,
+          32.0
+        ],
+        "evaluatedMotion": 1.8071286584971062
+      },
+      "Hit": {
+        "frames": [
+          2.0,
+          11.0
+        ],
+        "evaluatedMotion": 0.16626445469927376
+      },
+      "Death": {
+        "frames": [
+          2.0,
+          20.0
+        ],
+        "evaluatedMotion": 4.981215600990538
+      }
+    },
+    "fileHashes": {
+      "Model.blend": "273e533bcbb93c0e96fd28f9d155de2a0c8317814fb170e8c519ef0e19f8a1e6",
+      "Model.fbx": "726204d3e838beb2fc88ac41e7ba63ce130d427d1d15dff71d1a58d8b969b3a1",
+      "Model.glb": "2452bef3f68f55b20fb4763fe3cfb0a89ee39a6ce06f23087f0cf7a4f6808093",
+      "BaseColor.png": "874f64eabe93baba2b13a599290d7dfa348f0b83d8ed3ec1afa1371a97acbdb5",
+      "Idle.fbx": "ab932d3e117ff9d497fe1502c16b3d9d08a604ed8ca7824203a7a6ac7e1b00ca",
+      "Move.fbx": "1cddc835ac7613dd6fef7b2b0c290cbaa2d90a62499c4ec60f422a325d273fe9",
+      "Attack.fbx": "24f1bf98d25632e80db09574599c9eee09cbf25114cc04e74af205bb0823aaaa",
+      "Hit.fbx": "bdb6ff4e24eb142352f55f75147a31ec3ea4d3a8846947ee2b6e4602ed3b00bd",
+      "Death.fbx": "01f7ba30d66f108ac18aecda629db0133e7d9b4bdd8eaf26e525f01461fa9dcf"
+    }
+  }
+}
