@@ -1,5 +1,7 @@
 # Mob and Boss Roster
 
+**September 24 roster update:** [Map Mob Roster](MAP_MOB_ROSTER.md) supersedes the older mob assignments, boss selections, and roster scope below. Use it for the five current maps, ranged enemy roles, fast Snake lunge, and enormous Giant King Crab. Older roster entries below are historical planning.
+
 **Status:** Simplified planning roster  
 **Rule:** Keep behaviors basic and reusable. Purposeful variants are allowed for foundational families, but do not create five versions of every mob. Zombies may have regular/crawler/large forms, Skeletons may have melee/bow forms, and Slimes may have small/big splitter forms.
 
