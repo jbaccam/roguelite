@@ -1,0 +1,82 @@
+{
+  "id": "bow-skeleton",
+  "checks": {
+    "glbStructure": {
+      "animations": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Move"
+      ],
+      "meshes": 15,
+      "embeddedImages": 1
+    },
+    "fbxImport": {
+      "triangles": 22710,
+      "bones": 17,
+      "meshes": 15,
+      "maxInfluences": 1,
+      "weightsNormalized": true,
+      "textureLoaded": true
+    },
+    "glbImport": {
+      "triangles": 22710,
+      "bones": 17,
+      "meshes": 15,
+      "maxInfluences": 1,
+      "weightsNormalized": true,
+      "textureLoaded": true
+    },
+    "fbxAnimationImports": {
+      "Idle": {
+        "frames": [
+          2.0,
+          74.0
+        ],
+        "sampledMatrixDelta": 0.02837567776441574
+      },
+      "Move": {
+        "frames": [
+          2.0,
+          23.0
+        ],
+        "sampledMatrixDelta": 1.037225991487503
+      },
+      "Attack": {
+        "frames": [
+          2.0,
+          32.0
+        ],
+        "sampledMatrixDelta": 1.3413746356964111
+      },
+      "Hit": {
+        "frames": [
+          2.0,
+          12.0
+        ],
+        "sampledMatrixDelta": 0.08699739724397659
+      },
+      "Death": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "sampledMatrixDelta": 1.4563395529985428
+      }
+    }
+  },
+  "errors": [],
+  "sha256": {
+    "Model.blend": "7789163618fce6cf0c72fb0c7e3335594dd133c334dac5f993a94954e8355092",
+    "Model.fbx": "4e4280574f80980186ff7e488d4fc70b70dfb721c93c4d372859ff2aee1d5d33",
+    "Model.glb": "3648b02089ad6d33a0046acf43235bb9e2ce4d5cc9e13ab7044870229e4946ed",
+    "BaseColor.png": "14749fcaa5b21bb2c4e91c2a25d86ffd6fde4e77482a7dfc2f90010415e90fc8",
+    "animations\\Attack.fbx": "c64e6fca8623db8bdce96461af72c13ab7fefafc73319e80ac0f074f21ed0912",
+    "animations\\Death.fbx": "dd56d7362d02610bcba47379d16985d35d27001dcf22659e86d84b43ef0462b8",
+    "animations\\Hit.fbx": "11c6be18be2a106ffdc72aa2ccca07b4638b69fff53a48b439ddecfe5d82e710",
+    "animations\\Idle.fbx": "e63036534b19e8a6c3ccc0ff7f915968f5e0ffedaba831745d180eb2e11732d4",
+    "animations\\Move.fbx": "edff91e50a96db2509d1da4b5b32db9ce197dd54a0a0d1c709b8d9e334445c60"
+  },
+  "passed": true
+}

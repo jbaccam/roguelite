@@ -1,0 +1,41 @@
+{
+  "id": "snake",
+  "source": "reference-rebuilds\\snake",
+  "geometryUnchanged": true,
+  "clips": {
+    "Idle": {
+      "duration": 3.0,
+      "loop": true
+    },
+    "Move": {
+      "duration": 0.6666666666666666,
+      "loop": true
+    },
+    "Attack": {
+      "duration": 0.7916666666666666,
+      "loop": false
+    },
+    "Hit": {
+      "duration": 0.4166666666666667,
+      "loop": false
+    },
+    "Death": {
+      "duration": 1.0,
+      "loop": false
+    }
+  },
+  "motion": {
+    "strideLength": 1.5555555555555554,
+    "nominalSpeed": 2.333333333333333,
+    "attackImpact": 0.38791666666666663,
+    "attackRecovery": 0.4591666666666666,
+    "attackDuration": 0.7916666666666666
+  },
+  "studioVerified": false,
+  "assetPublication": "Not published by this export script",
+  "notes": [
+    "Accepted geometry, UVs and weights preserved.",
+    "Animations sampled at 24 fps with exact loop closure.",
+    "Humanoid ankles solve to ground targets; movement cycle is distance driven in Roblox."
+  ]
+}

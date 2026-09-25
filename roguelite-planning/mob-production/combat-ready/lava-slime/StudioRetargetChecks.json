@@ -1,0 +1,11 @@
+{
+  "id": "lava-slime",
+  "boneCount": 3,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 5.702223473957879e-08,
+  "maxNativeMotorPartError": 0.0,
+  "passed": true,
+  "sourceAnimationHash": "9f64a8596f6315b2976f82bae5921c247b8f16a90be342a193ceeef4bfc8a667",
+  "importReceiptHash": "2529f9053c198930b4a56a56d772693a307459ee58bda2089c315ee99a3f59e0",
+  "outputHash": "118c51d6d1bbce3da4e40a763838c044f64504ed3eed47c3527df0ae715a3a1a"
+}

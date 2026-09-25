@@ -1,0 +1,11 @@
+{
+  "id": "snake",
+  "boneCount": 18,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 3.1019732305015424e-07,
+  "maxNativeMotorPartError": 0.0,
+  "passed": true,
+  "sourceAnimationHash": "60776e994c6d16a6a1000e43d588be29543171780b90312f107f90981c8a7eda",
+  "importReceiptHash": "f7d66085b2d84a7b40b6419f7a3a5911188e415c4d0c43eb0b726be76454410c",
+  "outputHash": "51bf5b17a19bcd4467ff1d2791db0b9e98ed218419bcf82dc1c80447a62b0f07"
+}

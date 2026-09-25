@@ -1,0 +1,218 @@
+{
+  "status": "shape review before rigging",
+  "bones": {
+    "Pelvis": [
+      [
+        0,
+        0,
+        2.18
+      ],
+      [
+        0,
+        0,
+        2.9
+      ],
+      null
+    ],
+    "Chest": [
+      [
+        0,
+        0,
+        2.9
+      ],
+      [
+        0,
+        0,
+        3.86
+      ],
+      "Pelvis"
+    ],
+    "Head": [
+      [
+        0,
+        0,
+        3.86
+      ],
+      [
+        0,
+        0,
+        5.13
+      ],
+      "Chest"
+    ],
+    "LeftUpperArm": [
+      [
+        -0.96,
+        0,
+        3.73
+      ],
+      [
+        -1.28,
+        -0.05,
+        2.94
+      ],
+      "Chest"
+    ],
+    "LeftForearm": [
+      [
+        -1.28,
+        -0.05,
+        2.94
+      ],
+      [
+        -1.47,
+        -0.14,
+        2.31
+      ],
+      "LeftUpperArm"
+    ],
+    "LeftHand": [
+      [
+        -1.47,
+        -0.14,
+        2.31
+      ],
+      [
+        -1.49,
+        -0.24,
+        1.98
+      ],
+      "LeftForearm"
+    ],
+    "LeftThigh": [
+      [
+        -0.47,
+        0,
+        2.24
+      ],
+      [
+        -0.5,
+        0,
+        1.4
+      ],
+      "Pelvis"
+    ],
+    "LeftShin": [
+      [
+        -0.5,
+        0,
+        1.4
+      ],
+      [
+        -0.51,
+        0,
+        0.48
+      ],
+      "LeftThigh"
+    ],
+    "LeftFoot": [
+      [
+        -0.51,
+        0,
+        0.48
+      ],
+      [
+        -0.51,
+        -0.6,
+        0.22
+      ],
+      "LeftShin"
+    ],
+    "RightUpperArm": [
+      [
+        0.96,
+        0,
+        3.73
+      ],
+      [
+        1.28,
+        -0.05,
+        2.94
+      ],
+      "Chest"
+    ],
+    "RightForearm": [
+      [
+        1.28,
+        -0.05,
+        2.94
+      ],
+      [
+        1.47,
+        -0.14,
+        2.31
+      ],
+      "RightUpperArm"
+    ],
+    "RightHand": [
+      [
+        1.47,
+        -0.14,
+        2.31
+      ],
+      [
+        1.49,
+        -0.24,
+        1.98
+      ],
+      "RightForearm"
+    ],
+    "RightThigh": [
+      [
+        0.47,
+        0,
+        2.24
+      ],
+      [
+        0.5,
+        0,
+        1.4
+      ],
+      "Pelvis"
+    ],
+    "RightShin": [
+      [
+        0.5,
+        0,
+        1.4
+      ],
+      [
+        0.51,
+        0,
+        0.48
+      ],
+      "RightThigh"
+    ],
+    "RightFoot": [
+      [
+        0.51,
+        0,
+        0.48
+      ],
+      [
+        0.51,
+        -0.6,
+        0.22
+      ],
+      "RightShin"
+    ]
+  },
+  "grips": [
+    {
+      "bone": "RightHand",
+      "center": [
+        1.5,
+        -0.2199999988079071,
+        2.0399999618530273
+      ],
+      "axis": [
+        0.9017601609230042,
+        -0.3005867302417755,
+        -0.3106062710285187
+      ],
+      "handleRadius": 0.108,
+      "contactChannelRadius": 0.136
+    }
+  ],
+  "hands": "Continuous sculpted fists with transverse grasp, curled finger pads, integrated thumb web and wrist"
+}

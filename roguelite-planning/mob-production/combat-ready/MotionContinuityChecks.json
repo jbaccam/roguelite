@@ -1,0 +1,542 @@
+{
+  "ash-shaman": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.14781667357602715,
+      "rotationFrame": 72,
+      "rotationJoint": "LeftShin",
+      "maxJointTranslationPerFrame": 0.0017583921434082943,
+      "translationFrame": 36,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 20.794955547362886,
+      "rotationFrame": 20,
+      "rotationJoint": "LeftShin",
+      "maxJointTranslationPerFrame": 0.02247981520920489,
+      "translationFrame": 14,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 20.741408234592683,
+      "rotationFrame": 12,
+      "rotationJoint": "LeftForearm",
+      "maxJointTranslationPerFrame": 0.14810329995803606,
+      "translationFrame": 12,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "bow-skeleton": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.14468183608305504,
+      "rotationFrame": 34,
+      "rotationJoint": "LeftShin",
+      "maxJointTranslationPerFrame": 0.002084565302407197,
+      "translationFrame": 36,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 20.806600192914757,
+      "rotationFrame": 20,
+      "rotationJoint": "LeftShin",
+      "maxJointTranslationPerFrame": 0.026648898757734824,
+      "translationFrame": 14,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 40.10279670946961,
+      "rotationFrame": 4,
+      "rotationJoint": "LeftHand",
+      "maxJointTranslationPerFrame": 0.4449995191415267,
+      "translationFrame": 16,
+      "translationJoint": "BowDraw",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "crab": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.21667269770012187,
+      "rotationFrame": 72,
+      "rotationJoint": "LeftLeg3Upper",
+      "maxJointTranslationPerFrame": 0.0005229,
+      "translationFrame": 72,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 12.021024354071502,
+      "rotationFrame": 6,
+      "rotationJoint": "RightLeg0Lower",
+      "maxJointTranslationPerFrame": 0.00787324417251237,
+      "translationFrame": 19,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 26.66755488557012,
+      "rotationFrame": 12,
+      "rotationJoint": "RightClaw",
+      "maxJointTranslationPerFrame": 0.0014359,
+      "translationFrame": 26,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "ember-spider": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.13411792558713537,
+      "rotationFrame": 70,
+      "rotationJoint": "LeftLeg1Upper",
+      "maxJointTranslationPerFrame": 0.0005229,
+      "translationFrame": 72,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 12.4089473124297,
+      "rotationFrame": 14,
+      "rotationJoint": "LeftLeg0Lower",
+      "maxJointTranslationPerFrame": 0.009947096095343605,
+      "translationFrame": 15,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 22.559037252672393,
+      "rotationFrame": 9,
+      "rotationJoint": "RightFang",
+      "maxJointTranslationPerFrame": 0.0019752,
+      "translationFrame": 10,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "fire-goblin": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.13717804001695913,
+      "rotationFrame": 35,
+      "rotationJoint": "LeftShin",
+      "maxJointTranslationPerFrame": 0.0017892961884495365,
+      "translationFrame": 36,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 30.178328621481114,
+      "rotationFrame": 15,
+      "rotationJoint": "LeftShin",
+      "maxJointTranslationPerFrame": 0.028988762336636584,
+      "translationFrame": 14,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 32.58526552809246,
+      "rotationFrame": 9,
+      "rotationJoint": "RightForearm",
+      "maxJointTranslationPerFrame": 0.19123389228434376,
+      "translationFrame": 9,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "frost-ghost": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.17378677042572444,
+      "rotationFrame": 72,
+      "rotationJoint": "Head",
+      "maxJointTranslationPerFrame": 0.0056651,
+      "translationFrame": 72,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 1.1922905034296936,
+      "rotationFrame": 11,
+      "rotationJoint": "RightArm",
+      "maxJointTranslationPerFrame": 0.0193754,
+      "translationFrame": 11,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 12.346091198737865,
+      "rotationFrame": 12,
+      "rotationJoint": "RightArm",
+      "maxJointTranslationPerFrame": 0.0155555,
+      "translationFrame": 26,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "frozen-knight": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.13069803267652072,
+      "rotationFrame": 71,
+      "rotationJoint": "RightLowerLeg",
+      "maxJointTranslationPerFrame": 0.0024524126182190365,
+      "translationFrame": 72,
+      "translationJoint": "LowerTorso",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 11.21556143575666,
+      "rotationFrame": 28,
+      "rotationJoint": "LeftLowerLeg",
+      "maxJointTranslationPerFrame": 0.02183491521485713,
+      "translationFrame": 26,
+      "translationJoint": "LowerTorso",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 18.300430288703136,
+      "rotationFrame": 17,
+      "rotationJoint": "RightLowerArm",
+      "maxJointTranslationPerFrame": 0.14719796923398776,
+      "translationFrame": 17,
+      "translationJoint": "LowerTorso",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "hermit-crab": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.21666607198052312,
+      "rotationFrame": 72,
+      "rotationJoint": "LeftLeg0Upper",
+      "maxJointTranslationPerFrame": 0.0005229,
+      "translationFrame": 72,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 6.314821380218756,
+      "rotationFrame": 9,
+      "rotationJoint": "RightLeg0Lower",
+      "maxJointTranslationPerFrame": 0.0055502351968182385,
+      "translationFrame": 27,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 19.00431230819932,
+      "rotationFrame": 17,
+      "rotationJoint": "RightClaw",
+      "maxJointTranslationPerFrame": 0.0009876,
+      "translationFrame": 38,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "ice-elf": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.13979542133048925,
+      "rotationFrame": 35,
+      "rotationJoint": "LeftLowerLeg",
+      "maxJointTranslationPerFrame": 0.002389215390039188,
+      "translationFrame": 36,
+      "translationJoint": "LowerTorso",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 21.98319142355222,
+      "rotationFrame": 20,
+      "rotationJoint": "LeftLowerLeg",
+      "maxJointTranslationPerFrame": 0.030543597016887164,
+      "translationFrame": 14,
+      "translationJoint": "LowerTorso",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 24.198308966365307,
+      "rotationFrame": 12,
+      "rotationJoint": "RightUpperArm",
+      "maxJointTranslationPerFrame": 0.20123025464561736,
+      "translationFrame": 12,
+      "translationJoint": "LowerTorso",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "lava-slime": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.15795361363810265,
+      "rotationFrame": 72,
+      "rotationJoint": "Crown",
+      "maxJointTranslationPerFrame": 0.005665084615431618,
+      "translationFrame": 72,
+      "translationJoint": "Crown",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 0.5370184829255555,
+      "rotationFrame": 11,
+      "rotationJoint": "Crown",
+      "maxJointTranslationPerFrame": 0.04532937109204141,
+      "translationFrame": 11,
+      "translationJoint": "Crown",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 0.431054191262945,
+      "rotationFrame": 26,
+      "rotationJoint": "Crown",
+      "maxJointTranslationPerFrame": 0.2439405766211927,
+      "translationFrame": 12,
+      "translationJoint": "Crown",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "mummy": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.13069803267652072,
+      "rotationFrame": 71,
+      "rotationJoint": "RightLowerLeg",
+      "maxJointTranslationPerFrame": 0.0024524126182190365,
+      "translationFrame": 72,
+      "translationJoint": "LowerTorso",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 11.21556143575666,
+      "rotationFrame": 28,
+      "rotationJoint": "LeftLowerLeg",
+      "maxJointTranslationPerFrame": 0.02183491521485713,
+      "translationFrame": 26,
+      "translationJoint": "LowerTorso",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 18.300430288703136,
+      "rotationFrame": 17,
+      "rotationJoint": "RightLowerArm",
+      "maxJointTranslationPerFrame": 0.14719796923398776,
+      "translationFrame": 17,
+      "translationJoint": "LowerTorso",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "obsidian-ogre": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.13581257183431725,
+      "rotationFrame": 35,
+      "rotationJoint": "LeftShin",
+      "maxJointTranslationPerFrame": 0.002494258272513087,
+      "translationFrame": 36,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 11.246805048836862,
+      "rotationFrame": 28,
+      "rotationJoint": "LeftShin",
+      "maxJointTranslationPerFrame": 0.02220780159155789,
+      "translationFrame": 26,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 21.467850353930114,
+      "rotationFrame": 17,
+      "rotationJoint": "RightUpperArm",
+      "maxJointTranslationPerFrame": 0.14971134456135915,
+      "translationFrame": 17,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "rock-throwing-crab": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.20737601146636722,
+      "rotationFrame": 36,
+      "rotationJoint": "RightLeg0Upper",
+      "maxJointTranslationPerFrame": 0.0005229,
+      "translationFrame": 72,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 13.407664125163672,
+      "rotationFrame": 19,
+      "rotationJoint": "LeftLeg0Lower",
+      "maxJointTranslationPerFrame": 0.00787324417251237,
+      "translationFrame": 19,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 29.136754599405748,
+      "rotationFrame": 12,
+      "rotationJoint": "RightArm",
+      "maxJointTranslationPerFrame": 0.0014359,
+      "translationFrame": 26,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "scorpion": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.21667269770012187,
+      "rotationFrame": 72,
+      "rotationJoint": "LeftLeg3Upper",
+      "maxJointTranslationPerFrame": 0.0005229,
+      "translationFrame": 72,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 12.021024354071502,
+      "rotationFrame": 6,
+      "rotationJoint": "RightLeg0Lower",
+      "maxJointTranslationPerFrame": 0.00787324417251237,
+      "translationFrame": 19,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 7.407653894867292,
+      "rotationFrame": 12,
+      "rotationJoint": "Tail6",
+      "maxJointTranslationPerFrame": 0.0014359,
+      "translationFrame": 26,
+      "translationJoint": "Body",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "skeleton": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.14468183608305504,
+      "rotationFrame": 34,
+      "rotationJoint": "LeftShin",
+      "maxJointTranslationPerFrame": 0.002084565302407197,
+      "translationFrame": 36,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 20.806600192914757,
+      "rotationFrame": 20,
+      "rotationJoint": "LeftShin",
+      "maxJointTranslationPerFrame": 0.026648898757734824,
+      "translationFrame": 14,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 25.679843909536398,
+      "rotationFrame": 12,
+      "rotationJoint": "RightForearm",
+      "maxJointTranslationPerFrame": 0.175570306750088,
+      "translationFrame": 12,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "snake": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.05564386210381979,
+      "rotationFrame": 70,
+      "rotationJoint": "Head",
+      "maxJointTranslationPerFrame": 0.0,
+      "translationFrame": 72,
+      "translationJoint": "Spine9",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 1.0924782765659977,
+      "rotationFrame": 12,
+      "rotationJoint": "Spine9",
+      "maxJointTranslationPerFrame": 0.0,
+      "translationFrame": 16,
+      "translationJoint": "Spine9",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 19.739760212578975,
+      "rotationFrame": 9,
+      "rotationJoint": "Spine0",
+      "maxJointTranslationPerFrame": 0.2299007898102353,
+      "translationFrame": 9,
+      "translationJoint": "Root",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "spitter-zombie": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.1356898932087132,
+      "rotationFrame": 35,
+      "rotationJoint": "LeftShin",
+      "maxJointTranslationPerFrame": 0.002125519164815989,
+      "translationFrame": 72,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 11.468382826279571,
+      "rotationFrame": 28,
+      "rotationJoint": "LeftShin",
+      "maxJointTranslationPerFrame": 0.01892438898590921,
+      "translationFrame": 26,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 10.557956652471228,
+      "rotationFrame": 17,
+      "rotationJoint": "Head",
+      "maxJointTranslationPerFrame": 0.1275763073215399,
+      "translationFrame": 17,
+      "translationJoint": "Pelvis",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  },
+  "werewolf": {
+    "Idle": {
+      "maxJointRotationPerFrameDegrees": 0.13681962940678122,
+      "rotationFrame": 35,
+      "rotationJoint": "LeftLowerLeg",
+      "maxJointTranslationPerFrame": 0.0026485555497289433,
+      "translationFrame": 72,
+      "translationJoint": "LowerTorso",
+      "continuousAt24fps": true
+    },
+    "Move": {
+      "maxJointRotationPerFrameDegrees": 30.13869257906238,
+      "rotationFrame": 15,
+      "rotationJoint": "LeftLowerLeg",
+      "maxJointTranslationPerFrame": 0.04290911005427635,
+      "translationFrame": 14,
+      "translationJoint": "LowerTorso",
+      "continuousAt24fps": true
+    },
+    "Attack": {
+      "maxJointRotationPerFrameDegrees": 32.58526564318529,
+      "rotationFrame": 9,
+      "rotationJoint": "RightLowerArm",
+      "maxJointTranslationPerFrame": 0.28306438223946506,
+      "translationFrame": 9,
+      "translationJoint": "LowerTorso",
+      "continuousAt24fps": true
+    },
+    "passed": true
+  }
+}

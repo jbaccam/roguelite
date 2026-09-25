@@ -1,0 +1,68 @@
+{
+  "source": "reference-rebuilds\\bow-skeleton",
+  "geometryFingerprintBefore": "8ba6082679769a53712a8a4461ba71174acb84bdfebcafecb2ae268c7a188d04",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {
+    "leftLegRightArmCovariance": 0.0673166066873306,
+    "rightLegLeftArmCovariance": 0.0673189091104506,
+    "sameSideCovariance": -0.07775864371256322,
+    "strideLength": 3.111676706401182,
+    "nominalSpeed": 3.5562019501727797,
+    "opposingLimbs": true,
+    "maxPlantedAnkleHeightError": 2.384185791015625e-07
+  },
+  "bow": {
+    "7": {
+      "wristDegrees": 0.0
+    },
+    "8": {
+      "wristDegrees": 0.0
+    },
+    "9": {
+      "wristDegrees": 0.0
+    },
+    "10": {
+      "wristDegrees": 0.0
+    },
+    "11": {
+      "wristDegrees": 0.0
+    },
+    "12": {
+      "wristDegrees": 0.0
+    },
+    "13": {
+      "wristDegrees": 0.0
+    },
+    "14": {
+      "wristDegrees": 0.0
+    },
+    "15": {
+      "wristDegrees": 0.0
+    },
+    "16": {
+      "wristDegrees": 0.0
+    },
+    "17": {
+      "wristDegrees": 0.0
+    },
+    "18": {
+      "wristDegrees": 0.0
+    },
+    "19": {
+      "wristDegrees": 0.0
+    }
+  },
+  "geometryFingerprintAfter": "8ba6082679769a53712a8a4461ba71174acb84bdfebcafecb2ae268c7a188d04",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "7789163618fce6cf0c72fb0c7e3335594dd133c334dac5f993a94954e8355092",
+    "Model.fbx": "4e4280574f80980186ff7e488d4fc70b70dfb721c93c4d372859ff2aee1d5d33",
+    "Model.glb": "3648b02089ad6d33a0046acf43235bb9e2ce4d5cc9e13ab7044870229e4946ed",
+    "AnimationData.json": "910c03fc1ff402db064136036b42f1c66e0d9fe228ed7a0d15fbf87f4132411e",
+    "Geometry.json": "e2ac2d07ed8ff857bfc66b9195d06e72b2b422486b34332649a46e5d19c52ccb"
+  }
+}

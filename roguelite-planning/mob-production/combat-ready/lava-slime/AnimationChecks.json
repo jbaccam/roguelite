@@ -1,0 +1,20 @@
+{
+  "source": "reference-rebuilds\\lava-slime",
+  "geometryFingerprintBefore": "62232b51688c73c1c79170bee1e61f7055d8b65212f9afb7870657ef32df6dba",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {},
+  "bow": {},
+  "geometryFingerprintAfter": "62232b51688c73c1c79170bee1e61f7055d8b65212f9afb7870657ef32df6dba",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "d2b6c63cb7541ac3f0dbbc41197d02621c4f65396901e7963c7f9709ae0ae789",
+    "Model.fbx": "b7683ac5d5c3a6ff3eb4b20127926213d5ff671483ab5e3762243fcb193b96eb",
+    "Model.glb": "d64edd6996612820100e524f820163898626cc5d413b4958478baa3df1563d8f",
+    "AnimationData.json": "9f64a8596f6315b2976f82bae5921c247b8f16a90be342a193ceeef4bfc8a667",
+    "Geometry.json": "10f6db35d74b958731bef620276fffd10d0bc50669d1b6baf70cf333391a6f74"
+  }
+}

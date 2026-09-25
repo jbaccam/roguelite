@@ -1,0 +1,20 @@
+{
+  "source": "reference-rebuilds\\snake",
+  "geometryFingerprintBefore": "05217ed588c0949c6391161e8942649a9265b6cf619bd52bd557e8018333d068",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {},
+  "bow": {},
+  "geometryFingerprintAfter": "05217ed588c0949c6391161e8942649a9265b6cf619bd52bd557e8018333d068",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "b1bc6b61e39a7eaa381de0c86f226ab9698cbe5850f3c6afff2528bc5b20fa71",
+    "Model.fbx": "7a021ad733018dbe5efd3293a13c6ec3341e4a4bb2df19b1110dc02b8028b85a",
+    "Model.glb": "f0f5a53461d7ac362aac27a03d8918f67379604c8ddbe1548ff460e61da21620",
+    "AnimationData.json": "60776e994c6d16a6a1000e43d588be29543171780b90312f107f90981c8a7eda",
+    "Geometry.json": "edaba57c0a050df2193ef4fe95a0cf3ba51d9102527a80037fb2a18a7aca7413"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "source": "reference-rebuilds\\rock-throwing-crab",
+  "geometryFingerprintBefore": "e7bf2c8cecc588e4e7455fdc39c741bd50d900c797e0fb58e24ec2c5978bb1d3",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {},
+  "bow": {},
+  "geometryFingerprintAfter": "e7bf2c8cecc588e4e7455fdc39c741bd50d900c797e0fb58e24ec2c5978bb1d3",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "a3f56696fee86990c859794240f278e5c5e4fed21904ff5b46b7a222ff240b4a",
+    "Model.fbx": "4d1e8facf7a506688262d16949238e9af083d6a0ace1f03dbf9768bc9a4338b1",
+    "Model.glb": "0b50f1e821b6166a8fa8fb10651eba06b397ae2caff55c26c734c89e768fcbb1",
+    "AnimationData.json": "74aedf786dca51f6a6a110346223ff7a5ef8d6f551a1d9a2410d23a3c76a744f",
+    "Geometry.json": "f1cbb8bb7a27363d5755d3902ae53557a568f4f0b34ae5e9ce026e2fe7ca0261"
+  }
+}
