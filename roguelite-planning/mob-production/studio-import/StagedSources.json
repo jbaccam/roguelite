@@ -1,0 +1,110 @@
+[
+  {
+    "Id": "ash-shaman",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\reference-rebuilds\\ash-shaman\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\ash-shaman.fbx",
+    "Sha256": "E1069EE8CDA749A559C2015A653304079751FF23A0818C48FEC89678DC980E52"
+  },
+  {
+    "Id": "bow-skeleton",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\reference-rebuilds\\bow-skeleton\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\bow-skeleton.fbx",
+    "Sha256": "BFD59650884A0779F47F55F8980CAB2DA6492207D8A4583D717B0F3C52C67C85"
+  },
+  {
+    "Id": "crab",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\revisions\\crab\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\crab.fbx",
+    "Sha256": "6DA7704BCD7C6596782042D99E06B0A88A7F25EB5F342986A66D017F144CBF41"
+  },
+  {
+    "Id": "ember-spider",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\revisions\\ember-spider\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\ember-spider.fbx",
+    "Sha256": "0341828E99085D3CCC8C7387C5F930ADA58CCEC48BA36C3D46FC7CCA905CA8D9"
+  },
+  {
+    "Id": "fire-goblin",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\reference-rebuilds\\fire-goblin\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\fire-goblin.fbx",
+    "Sha256": "5D3AE079B27FA907A4FD750BAF0E9CA14B090FCB935571DA0854BC4DC9F31ED8"
+  },
+  {
+    "Id": "frost-ghost",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\revisions\\frost-ghost\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\frost-ghost.fbx",
+    "Sha256": "92BB06833035EF4A7CC1CC07DD2D7BBDFC123740F8CC8ADD5EBFE212ACFD654B"
+  },
+  {
+    "Id": "frozen-knight",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\revisions\\frozen-knight\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\frozen-knight.fbx",
+    "Sha256": "90BA32B7FD8E709E92E90260C14B1182E804A8D637555A87B4934ED798003F4B"
+  },
+  {
+    "Id": "hermit-crab",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\revisions\\hermit-crab\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\hermit-crab.fbx",
+    "Sha256": "574881A79DA4E38767A210587A8FCB996B758B9415AF43B9AF337904230FFD93"
+  },
+  {
+    "Id": "ice-elf",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\revisions\\ice-elf\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\ice-elf.fbx",
+    "Sha256": "728B76499C289D2E46B7011B3B5873280EFF9461EA6A46666059F43FB2BD225D"
+  },
+  {
+    "Id": "lava-slime",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\reference-rebuilds\\lava-slime\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\lava-slime.fbx",
+    "Sha256": "5D7C3191781B1E12544CD6F0C294630A26B2C4532A4618E1A88EE20AF28CF10D"
+  },
+  {
+    "Id": "mummy",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\revisions\\mummy\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\mummy.fbx",
+    "Sha256": "8993654F8FC62BD4935058AA269FE97969F32F1484420640911782A202D03F21"
+  },
+  {
+    "Id": "obsidian-ogre",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\reference-rebuilds\\obsidian-ogre\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\obsidian-ogre.fbx",
+    "Sha256": "380C4F6177B2C931DE1C5F576E9B4517288E89E0624894B32C41D4B3A08A5BB4"
+  },
+  {
+    "Id": "rock-throwing-crab",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\reference-rebuilds\\rock-throwing-crab\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\rock-throwing-crab.fbx",
+    "Sha256": "933B29855E1068E0A67A6A12DB91A5BA1562EE7F79A7B3488E5F6BE12FF22967"
+  },
+  {
+    "Id": "scorpion",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\revisions\\scorpion\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\scorpion.fbx",
+    "Sha256": "7F7A4987C9C3078EF6AE369CB6EC7CF7640D6FFAD5483A13563B0BA144BE5C2E"
+  },
+  {
+    "Id": "skeleton",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\reference-rebuilds\\skeleton\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\skeleton.fbx",
+    "Sha256": "7098FFD66C6F430ED7821DC611526A960AB883EA779062BEFA899AE8750F393A"
+  },
+  {
+    "Id": "snake",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\reference-rebuilds\\snake\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\snake.fbx",
+    "Sha256": "AB88C893AA6CCD96A537526BE40AA06972DCE507F41EBEFB5ED4A85B74880089"
+  },
+  {
+    "Id": "spitter-zombie",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\reference-rebuilds\\spitter-zombie\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\spitter-zombie.fbx",
+    "Sha256": "23CCA582DA9CC26996AAAE3156BE177B64DCE8469DF36EF28AF1F37F7A81261F"
+  },
+  {
+    "Id": "werewolf",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\revisions\\werewolf\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\werewolf.fbx",
+    "Sha256": "43F4C0BBC75F404F7305D693F334F284A55C02B157B5B0B528C7CBA78EB4BA0C"
+  }
+]

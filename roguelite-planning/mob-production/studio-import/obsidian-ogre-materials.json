@@ -1,0 +1,79 @@
+[
+  {
+    "colorMap": "rbxassetid://95023628709105",
+    "normalMap": "rbxassetid://109429297470239",
+    "roughnessMap": "",
+    "mesh": "Continuous muscular body",
+    "metalnessMap": ""
+  },
+  {
+    "colorMap": "rbxassetid://95023628709105",
+    "normalMap": "rbxassetid://109429297470239",
+    "roughnessMap": "",
+    "mesh": "Head_Geometry",
+    "metalnessMap": ""
+  },
+  {
+    "colorMap": "rbxassetid://95023628709105",
+    "normalMap": "rbxassetid://109429297470239",
+    "roughnessMap": "",
+    "mesh": "LeftHand_Geometry",
+    "metalnessMap": ""
+  },
+  {
+    "colorMap": "rbxassetid://95023628709105",
+    "normalMap": "rbxassetid://109429297470239",
+    "roughnessMap": "",
+    "mesh": "Pelvis_Geometry",
+    "metalnessMap": ""
+  },
+  {
+    "colorMap": "rbxassetid://95023628709105",
+    "normalMap": "rbxassetid://109429297470239",
+    "roughnessMap": "",
+    "mesh": "RightHand_Geometry",
+    "metalnessMap": ""
+  },
+  {
+    "colorMap": "rbxassetid://95023628709105",
+    "normalMap": "rbxassetid://109429297470239",
+    "roughnessMap": "",
+    "mesh": "Shoulder fissure",
+    "metalnessMap": ""
+  },
+  {
+    "colorMap": "rbxassetid://95023628709105",
+    "normalMap": "rbxassetid://109429297470239",
+    "roughnessMap": "",
+    "mesh": "Shoulder fissure.001",
+    "metalnessMap": ""
+  },
+  {
+    "colorMap": "rbxassetid://95023628709105",
+    "normalMap": "rbxassetid://109429297470239",
+    "roughnessMap": "",
+    "mesh": "Shoulder fissure.002",
+    "metalnessMap": ""
+  },
+  {
+    "colorMap": "rbxassetid://95023628709105",
+    "normalMap": "rbxassetid://109429297470239",
+    "roughnessMap": "",
+    "mesh": "Shoulder fissure.003",
+    "metalnessMap": ""
+  },
+  {
+    "colorMap": "rbxassetid://95023628709105",
+    "normalMap": "rbxassetid://109429297470239",
+    "roughnessMap": "",
+    "mesh": "Shoulder fissure.004",
+    "metalnessMap": ""
+  },
+  {
+    "colorMap": "rbxassetid://95023628709105",
+    "normalMap": "rbxassetid://109429297470239",
+    "roughnessMap": "",
+    "mesh": "Shoulder fissure.005",
+    "metalnessMap": ""
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "id": "lava-slime",
+  "surfaceAppearanceByMesh": {
+    "Glowing pupil": {
+      "colorMap": "rbxassetid://73217942093673",
+      "normalMap": "",
+      "roughnessMap": "",
+      "alphaMode": "Overlay",
+      "metalnessMap": ""
+    },
+    "Molten continuous surface": {
+      "colorMap": "rbxassetid://73217942093673",
+      "normalMap": "",
+      "roughnessMap": "",
+      "alphaMode": "Overlay",
+      "metalnessMap": ""
+    },
+    "Glowing pupil.001": {
+      "colorMap": "rbxassetid://73217942093673",
+      "normalMap": "",
+      "roughnessMap": "",
+      "alphaMode": "Overlay",
+      "metalnessMap": ""
+    }
+  }
+}
