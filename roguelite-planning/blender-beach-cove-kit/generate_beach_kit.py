@@ -33,6 +33,7 @@ other's source text, which breaks as soon as any of them is edited.
 """
 import json
 import math
+import time
 import sys
 from pathlib import Path
 
@@ -65,7 +66,7 @@ D_WATER = 12.0
 
 # Sized for a 125-stud arena, so roughly 2x the sibling kits; their 0.10-unit
 # worn chamfer scales to about 0.22 studs here.
-CHAMFER = 0.22
+CHAMFER = 0.07
 SHARP = math.radians(40)   # facets steeper than this stay as readable breaks
 
 ROCK, GRASS, TRANS, SAND, BARK, FROND, DRIFT, BOAT, WATER = range(9)
@@ -433,6 +434,7 @@ def palm(name, height, seed, lean=0.0, fronds=8, crown_r=1.0, coconuts=3):
         # Blunt tip cap so the blade closes instead of ending on an open edge.
         tip = base_i + fseg * 3
         add((tip, tip + 1, tip + 2), [(0.0, 0.0), (0.12, 0.0), (0.24, 0.0)], FROND)
+        add((tip + 2, tip + 1, tip), [(0.24, 0.0), (0.12, 0.0), (0.0, 0.0)], FROND)
         run = 0.0
         for k in range(fseg):
             a = base_i + k * 3
@@ -440,9 +442,14 @@ def palm(name, height, seed, lean=0.0, fronds=8, crown_r=1.0, coconuts=3):
             step = math.dist(spine[k], spine[k + 1])
             for off in (0, 1):
                 ids = (a + off, a + off + 1, b + off + 1, b + off)
-                u0, u1 = off * blade * 0.17 / D_FROND, (off + 1) * blade * 0.17 / D_FROND
-                add(ids, [(u0, run / D_FROND), (u1, run / D_FROND),
-                          (u1, (run + step) / D_FROND), (u0, (run + step) / D_FROND)], FROND)
+                u0, u1 = off * blade * 0.095 / D_FROND, (off + 1) * blade * 0.095 / D_FROND
+                co = [(u0, run / D_FROND), (u1, run / D_FROND),
+                      (u1, (run + step) / D_FROND), (u0, (run + step) / D_FROND)]
+                add(ids, co, FROND)
+                # A frond is a thin blade, so its back face is visible whenever you
+                # stand under the tree. Single-sided geometry gets backface-culled
+                # and the leaves vanish from below, so emit the mirror face too.
+                add(tuple(reversed(ids)), list(reversed(co)), FROND)
             run += step
 
     for c in range(coconuts):
@@ -738,6 +745,7 @@ else:
     objects.append(rowboat("21_Wrecked_Rowboat", length=10.5, beam=3.8, depth=1.8))
     objects.append(ground_disc("22_Tide_Pool_Small", 7, 5.5, 31, WATER, D_WATER, rim_role=SAND))
     objects.append(ground_disc("23_Tide_Pool_Large", 12, 9, 32, WATER, D_WATER, rim_role=SAND))
+    objects.append(ground_disc("26_Tide_Pool_Big", 21, 16, 35, WATER, D_WATER, rim_role=SAND))
     objects.append(grass_patch("24_Grass_Patch_Small", 6, 5, 33, clumps=4))
     objects.append(grass_patch("25_Grass_Patch_Large", 10, 8, 34, clumps=5))
 
@@ -759,7 +767,7 @@ for obj in objects:
     atlas_uv.active_render = True
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
-    bpy.ops.uv.smart_project(angle_limit=math.radians(66), island_margin=0.02)
+    bpy.ops.uv.smart_project(angle_limit=math.radians(85), island_margin=0.006)
     bpy.ops.object.mode_set(mode="OBJECT")
 
     atlas = bpy.data.images.new(obj.name + "_Color", width=ATLAS, height=ATLAS, alpha=False)
@@ -770,7 +778,17 @@ for obj in objects:
         node.image = atlas
         m.node_tree.nodes.active = node
     bpy.ops.object.bake(type="DIFFUSE", pass_filter={"COLOR"}, margin=16, use_clear=True)
-    atlas.save()
+    # Writing a freshly baked 2048px PNG intermittently fails on this machine
+    # (a different asset each run), which looks like a scanner holding the new
+    # file briefly. Retry rather than losing the whole build and the .blend save.
+    for attempt in range(6):
+        try:
+            atlas.save()
+            break
+        except RuntimeError:
+            if attempt == 5:
+                raise
+            time.sleep(1.0)
 
     baked = bpy.data.materials.new(obj.name + "_Atlas")
     baked.use_nodes = True

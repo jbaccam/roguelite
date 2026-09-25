@@ -17,9 +17,9 @@
       "vertices": 170,
       "materials": 1,
       "dimensions_studs": [
-        18.931,
-        14.713,
-        10.118
+        18.932,
+        14.714,
+        10.119
       ],
       "atlas_size": 2048,
       "pivot": "ground-level local origin"
@@ -30,7 +30,7 @@
       "vertices": 174,
       "materials": 1,
       "dimensions_studs": [
-        21.335,
+        21.338,
         15.246,
         17.196
       ],
@@ -43,9 +43,9 @@
       "vertices": 179,
       "materials": 1,
       "dimensions_studs": [
-        16.973,
-        14.13,
-        27.384
+        16.969,
+        14.137,
+        27.386
       ],
       "atlas_size": 2048,
       "pivot": "ground-level local origin"
@@ -69,9 +69,9 @@
       "vertices": 195,
       "materials": 1,
       "dimensions_studs": [
-        31.07,
-        27.238,
-        15.18
+        31.104,
+        27.188,
+        15.181
       ],
       "atlas_size": 2048,
       "pivot": "ground-level local origin"
@@ -82,9 +82,9 @@
       "vertices": 192,
       "materials": 1,
       "dimensions_studs": [
-        29.655,
-        24.701,
-        30.375
+        29.68,
+        24.715,
+        30.377
       ],
       "atlas_size": 2048,
       "pivot": "ground-level local origin"
@@ -108,8 +108,8 @@
       "vertices": 375,
       "materials": 1,
       "dimensions_studs": [
-        31.538,
-        20.444,
+        31.563,
+        20.453,
         21.242
       ],
       "atlas_size": 2048,
@@ -121,9 +121,9 @@
       "vertices": 548,
       "materials": 1,
       "dimensions_studs": [
-        34.077,
-        25.131,
-        28.386
+        34.123,
+        25.161,
+        28.387
       ],
       "atlas_size": 2048,
       "pivot": "ground-level local origin"
@@ -147,9 +147,9 @@
       "vertices": 108,
       "materials": 1,
       "dimensions_studs": [
-        5.201,
-        4.413,
-        3.646
+        5.273,
+        4.452,
+        3.692
       ],
       "atlas_size": 2048,
       "pivot": "ground-level local origin"
@@ -160,9 +160,9 @@
       "vertices": 105,
       "materials": 1,
       "dimensions_studs": [
-        10.894,
-        8.689,
-        6.472
+        11.073,
+        8.785,
+        6.509
       ],
       "atlas_size": 2048,
       "pivot": "ground-level local origin"
@@ -173,9 +173,9 @@
       "vertices": 434,
       "materials": 1,
       "dimensions_studs": [
-        10.246,
-        7.32,
-        4.866
+        10.281,
+        7.349,
+        4.981
       ],
       "atlas_size": 2048,
       "pivot": "ground-level local origin"
@@ -186,9 +186,9 @@
       "vertices": 103,
       "materials": 1,
       "dimensions_studs": [
-        4.946,
-        4.359,
-        9.91
+        4.996,
+        4.386,
+        10.175
       ],
       "atlas_size": 2048,
       "pivot": "ground-level local origin"
@@ -199,8 +199,8 @@
       "vertices": 80,
       "materials": 1,
       "dimensions_studs": [
-        12.582,
-        7.617,
+        12.629,
+        7.663,
         1.964
       ],
       "atlas_size": 2048,
@@ -208,39 +208,39 @@
     },
     "16_Palm_Tall": {
       "file_stem": "16-palm-tall",
-      "triangles": 807,
-      "vertices": 531,
+      "triangles": 955,
+      "vertices": 594,
       "materials": 1,
       "dimensions_studs": [
-        20.674,
-        20.693,
-        23.502
+        20.755,
+        20.774,
+        23.534
       ],
       "atlas_size": 2048,
       "pivot": "ground-level local origin"
     },
     "17_Palm_Leaning": {
       "file_stem": "17-palm-leaning",
-      "triangles": 739,
-      "vertices": 486,
+      "triangles": 868,
+      "vertices": 542,
       "materials": 1,
       "dimensions_studs": [
-        17.973,
-        17.975,
-        19.229
+        18.09,
+        18.024,
+        19.255
       ],
       "atlas_size": 2048,
       "pivot": "ground-level local origin"
     },
     "18_Palm_Short": {
       "file_stem": "18-palm-short",
-      "triangles": 559,
-      "vertices": 363,
+      "triangles": 665,
+      "vertices": 407,
       "materials": 1,
       "dimensions_studs": [
-        14.715,
-        15.029,
-        14.956
+        14.805,
+        15.12,
+        14.976
       ],
       "atlas_size": 2048,
       "pivot": "ground-level local origin"
@@ -305,6 +305,19 @@
       "dimensions_studs": [
         13.408,
         8.811,
+        0.38
+      ],
+      "atlas_size": 2048,
+      "pivot": "ground-level local origin"
+    },
+    "26_Tide_Pool_Big": {
+      "file_stem": "26-tide-pool-big",
+      "triangles": 42,
+      "vertices": 29,
+      "materials": 1,
+      "dimensions_studs": [
+        23.076,
+        16.36,
         0.38
       ],
       "atlas_size": 2048,

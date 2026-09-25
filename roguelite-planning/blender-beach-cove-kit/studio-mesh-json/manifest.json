@@ -1,0 +1,446 @@
+{
+  "assets": {
+    "01-headland-short": {
+      "name": "01_Headland_Short",
+      "vertices": 298,
+      "triangles": 336,
+      "size_studs": [
+        18.932,
+        10.1186,
+        14.7143
+      ],
+      "bbox_centre": [
+        1.1653,
+        5.0593,
+        0.3407
+      ],
+      "json": "01-headland-short.json",
+      "atlas": "01_headland_short-atlas.png"
+    },
+    "02-headland-medium": {
+      "name": "02_Headland_Medium",
+      "vertices": 304,
+      "triangles": 344,
+      "size_studs": [
+        21.3381,
+        17.1962,
+        15.2462
+      ],
+      "bbox_centre": [
+        1.0534,
+        8.5981,
+        -0.1786
+      ],
+      "json": "02-headland-medium.json",
+      "atlas": "02_headland_medium-atlas.png"
+    },
+    "03-headland-tall": {
+      "name": "03_Headland_Tall",
+      "vertices": 326,
+      "triangles": 354,
+      "size_studs": [
+        16.9693,
+        27.386,
+        14.1366
+      ],
+      "bbox_centre": [
+        0.5474,
+        13.693,
+        -0.1492
+      ],
+      "json": "03-headland-tall.json",
+      "atlas": "03_headland_tall-atlas.png"
+    },
+    "04-plateau-wide-low": {
+      "name": "04_Plateau_Wide_Low",
+      "vertices": 363,
+      "triangles": 430,
+      "size_studs": [
+        34.6114,
+        8.0926,
+        27.8999
+      ],
+      "bbox_centre": [
+        -0.7708,
+        4.0463,
+        0.4936
+      ],
+      "json": "04-plateau-wide-low.json",
+      "atlas": "04_plateau_wide_low-atlas.png"
+    },
+    "05-plateau-broad": {
+      "name": "05_Plateau_Broad",
+      "vertices": 333,
+      "triangles": 386,
+      "size_studs": [
+        31.1044,
+        15.1806,
+        27.188
+      ],
+      "bbox_centre": [
+        -0.7297,
+        7.5903,
+        1.2662
+      ],
+      "json": "05-plateau-broad.json",
+      "atlas": "05_plateau_broad-atlas.png"
+    },
+    "06-headland-tall-mass": {
+      "name": "06_Headland_Tall_Mass",
+      "vertices": 317,
+      "triangles": 380,
+      "size_studs": [
+        29.6797,
+        30.3766,
+        24.7147
+      ],
+      "bbox_centre": [
+        -0.3847,
+        15.1883,
+        0.7125
+      ],
+      "json": "06-headland-tall-mass.json",
+      "atlas": "06_headland_tall_mass-atlas.png"
+    },
+    "07-headland-tapered": {
+      "name": "07_Headland_Tapered",
+      "vertices": 313,
+      "triangles": 324,
+      "size_studs": [
+        20.606,
+        19.2192,
+        16.1363
+      ],
+      "bbox_centre": [
+        0.2356,
+        9.6096,
+        0.3459
+      ],
+      "json": "07-headland-tapered.json",
+      "atlas": "07_headland_tapered-atlas.png"
+    },
+    "08-stack-double": {
+      "name": "08_Stack_Double",
+      "vertices": 642,
+      "triangles": 742,
+      "size_studs": [
+        31.5626,
+        21.2423,
+        20.4532
+      ],
+      "bbox_centre": [
+        -0.1426,
+        10.6212,
+        -0.3794
+      ],
+      "json": "08-stack-double.json",
+      "atlas": "08_stack_double-atlas.png"
+    },
+    "09-stack-triple": {
+      "name": "09_Stack_Triple",
+      "vertices": 947,
+      "triangles": 1084,
+      "size_studs": [
+        34.1234,
+        28.3874,
+        25.1608
+      ],
+      "bbox_centre": [
+        0.5097,
+        14.1937,
+        -0.7152
+      ],
+      "json": "09-stack-triple.json",
+      "atlas": "09_stack_triple-atlas.png"
+    },
+    "10-rim-corner-wedge": {
+      "name": "10_Rim_Corner_Wedge",
+      "vertices": 311,
+      "triangles": 328,
+      "size_studs": [
+        25.2211,
+        17.1962,
+        14.099
+      ],
+      "bbox_centre": [
+        0.9451,
+        8.5981,
+        -0.06
+      ],
+      "json": "10-rim-corner-wedge.json",
+      "atlas": "10_rim_corner_wedge-atlas.png"
+    },
+    "11-boulder-medium": {
+      "name": "11_Boulder_Medium",
+      "vertices": 168,
+      "triangles": 212,
+      "size_studs": [
+        5.2731,
+        3.692,
+        4.4522
+      ],
+      "bbox_centre": [
+        0.1289,
+        1.846,
+        0.1514
+      ],
+      "json": "11-boulder-medium.json",
+      "atlas": "11_boulder_medium-atlas.png"
+    },
+    "12-boulder-large": {
+      "name": "12_Boulder_Large",
+      "vertices": 163,
+      "triangles": 206,
+      "size_studs": [
+        11.0725,
+        6.5086,
+        8.7846
+      ],
+      "bbox_centre": [
+        0.412,
+        3.2543,
+        0.0923
+      ],
+      "json": "12-boulder-large.json",
+      "atlas": "12_boulder_large-atlas.png"
+    },
+    "13-rock-cluster": {
+      "name": "13_Rock_Cluster",
+      "vertices": 675,
+      "triangles": 852,
+      "size_studs": [
+        10.2808,
+        4.9809,
+        7.3493
+      ],
+      "bbox_centre": [
+        -0.0361,
+        2.4905,
+        0.3978
+      ],
+      "json": "13-rock-cluster.json",
+      "atlas": "13_rock_cluster-atlas.png"
+    },
+    "14-standing-rock": {
+      "name": "14_Standing_Rock",
+      "vertices": 178,
+      "triangles": 202,
+      "size_studs": [
+        4.9956,
+        10.1753,
+        4.3861
+      ],
+      "bbox_centre": [
+        0.1906,
+        5.1595,
+        0.0937
+      ],
+      "json": "14-standing-rock.json",
+      "atlas": "14_standing_rock-atlas.png"
+    },
+    "15-shore-rock-low": {
+      "name": "15_Shore_Rock_Low",
+      "vertices": 133,
+      "triangles": 156,
+      "size_studs": [
+        12.6294,
+        1.9642,
+        7.6627
+      ],
+      "bbox_centre": [
+        -0.0367,
+        0.9821,
+        0.057
+      ],
+      "json": "15-shore-rock-low.json",
+      "atlas": "15_shore_rock_low-atlas.png"
+    },
+    "16-palm-tall": {
+      "name": "16_Palm_Tall",
+      "vertices": 972,
+      "triangles": 955,
+      "size_studs": [
+        20.7549,
+        23.5341,
+        20.7744
+      ],
+      "bbox_centre": [
+        1.176,
+        11.767,
+        0.0728
+      ],
+      "json": "16-palm-tall.json",
+      "atlas": "16_palm_tall-atlas.png"
+    },
+    "17-palm-leaning": {
+      "name": "17_Palm_Leaning",
+      "vertices": 943,
+      "triangles": 868,
+      "size_studs": [
+        18.0901,
+        19.2552,
+        18.0238
+      ],
+      "bbox_centre": [
+        3.0634,
+        9.6276,
+        0.0344
+      ],
+      "json": "17-palm-leaning.json",
+      "atlas": "17_palm_leaning-atlas.png"
+    },
+    "18-palm-short": {
+      "name": "18_Palm_Short",
+      "vertices": 641,
+      "triangles": 665,
+      "size_studs": [
+        14.8051,
+        14.9762,
+        15.1198
+      ],
+      "bbox_centre": [
+        0.7173,
+        7.4881,
+        0.0505
+      ],
+      "json": "18-palm-short.json",
+      "atlas": "18_palm_short-atlas.png"
+    },
+    "19-driftwood-log": {
+      "name": "19_Driftwood_Log",
+      "vertices": 299,
+      "triangles": 302,
+      "size_studs": [
+        11.2796,
+        4.1152,
+        3.5252
+      ],
+      "bbox_centre": [
+        0.0001,
+        1.9685,
+        -0.0536
+      ],
+      "json": "19-driftwood-log.json",
+      "atlas": "19_driftwood_log-atlas.png"
+    },
+    "20-driftwood-planks": {
+      "name": "20_Driftwood_Planks",
+      "vertices": 591,
+      "triangles": 612,
+      "size_studs": [
+        8.61,
+        1.5279,
+        2.5155
+      ],
+      "bbox_centre": [
+        0.0,
+        0.7892,
+        -0.7051
+      ],
+      "json": "20-driftwood-planks.json",
+      "atlas": "20_driftwood_planks-atlas.png"
+    },
+    "21-wrecked-rowboat": {
+      "name": "21_Wrecked_Rowboat",
+      "vertices": 571,
+      "triangles": 632,
+      "size_studs": [
+        10.6867,
+        3.0422,
+        3.7108
+      ],
+      "bbox_centre": [
+        -0.0808,
+        1.4991,
+        0.5665
+      ],
+      "json": "21-wrecked-rowboat.json",
+      "atlas": "21_wrecked_rowboat-atlas.png"
+    },
+    "22-tide-pool-small": {
+      "name": "22_Tide_Pool_Small",
+      "vertices": 45,
+      "triangles": 71,
+      "size_studs": [
+        7.6961,
+        0.38,
+        5.3851
+      ],
+      "bbox_centre": [
+        -0.0445,
+        0.19,
+        0.2194
+      ],
+      "json": "22-tide-pool-small.json",
+      "atlas": "22_tide_pool_small-atlas.png"
+    },
+    "23-tide-pool-large": {
+      "name": "23_Tide_Pool_Large",
+      "vertices": 29,
+      "triangles": 42,
+      "size_studs": [
+        13.4079,
+        0.38,
+        8.8107
+      ],
+      "bbox_centre": [
+        0.2193,
+        0.19,
+        0.3407
+      ],
+      "json": "23-tide-pool-large.json",
+      "atlas": "23_tide_pool_large-atlas.png"
+    },
+    "24-grass-patch-small": {
+      "name": "24_Grass_Patch_Small",
+      "vertices": 184,
+      "triangles": 229,
+      "size_studs": [
+        6.4461,
+        1.303,
+        5.1657
+      ],
+      "bbox_centre": [
+        0.4168,
+        0.6515,
+        0.0474
+      ],
+      "json": "24-grass-patch-small.json",
+      "atlas": "24_grass_patch_small-atlas.png"
+    },
+    "25-grass-patch-large": {
+      "name": "25_Grass_Patch_Large",
+      "vertices": 177,
+      "triangles": 269,
+      "size_studs": [
+        10.1824,
+        1.9611,
+        8.0
+      ],
+      "bbox_centre": [
+        0.1547,
+        0.9806,
+        -0.2231
+      ],
+      "json": "25-grass-patch-large.json",
+      "atlas": "25_grass_patch_large-atlas.png"
+    },
+    "26-tide-pool-big": {
+      "name": "26_Tide_Pool_Big",
+      "vertices": 29,
+      "triangles": 42,
+      "size_studs": [
+        23.0763,
+        0.38,
+        16.3602
+      ],
+      "bbox_centre": [
+        -0.5824,
+        0.19,
+        -0.8626
+      ],
+      "json": "26-tide-pool-big.json",
+      "atlas": "26_tide_pool_big-atlas.png"
+    }
+  }
+}

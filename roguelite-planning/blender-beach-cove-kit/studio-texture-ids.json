@@ -1,0 +1,30 @@
+{
+  "note": "Image assets uploaded to the user's Roblox account 2026-09-24 via the Studio MCP upload_image tool, from the localhost server. Geometry is NOT uploaded; it is rebuilt in-place from studio-mesh-json via AssetService:CreateEditableMesh.",
+  "textures": {
+    "01_Headland_Short": "rbxassetid://112802211281979",
+    "02_Headland_Medium": "rbxassetid://98776517645316",
+    "03_Headland_Tall": "rbxassetid://98675767101137",
+    "04_Plateau_Wide_Low": "rbxassetid://89178448939724",
+    "05_Plateau_Broad": "rbxassetid://79152209260038",
+    "06_Headland_Tall_Mass": "rbxassetid://84990010627643",
+    "07_Headland_Tapered": "rbxassetid://107489254993066",
+    "08_Stack_Double": "rbxassetid://137605137783838",
+    "09_Stack_Triple": "rbxassetid://118427343952216",
+    "10_Rim_Corner_Wedge": "rbxassetid://80238953558755",
+    "11_Boulder_Medium": "rbxassetid://84806884129358",
+    "12_Boulder_Large": "rbxassetid://128395387162116",
+    "13_Rock_Cluster": "rbxassetid://87215857075528",
+    "14_Standing_Rock": "rbxassetid://70787356625828",
+    "15_Shore_Rock_Low": "rbxassetid://117917951793785",
+    "16_Palm_Tall": "rbxassetid://135244266411801",
+    "17_Palm_Leaning": "rbxassetid://104104909917591",
+    "18_Palm_Short": "rbxassetid://125860938235374",
+    "19_Driftwood_Log": "rbxassetid://99934746092121",
+    "20_Driftwood_Planks": "rbxassetid://123786035758152",
+    "21_Wrecked_Rowboat": "rbxassetid://117422591484977",
+    "22_Tide_Pool_Small": "rbxassetid://105439527365350",
+    "23_Tide_Pool_Large": "rbxassetid://130322404581731",
+    "24_Grass_Patch_Small": "rbxassetid://126978465096503",
+    "25_Grass_Patch_Large": "rbxassetid://129257708372902"
+  }
+}
