@@ -1,0 +1,81 @@
+{
+  "blend": {
+    "triangles": 5590,
+    "bones": 16,
+    "meshes": 15,
+    "normalizedWeights": true,
+    "textureLoaded": true,
+    "closedComponents": true,
+    "rigPoseDisplacement": 0.46093626759023903,
+    "actions": [
+      "Attack",
+      "Death",
+      "Hit",
+      "Idle",
+      "Move"
+    ]
+  },
+  "fbx": {
+    "triangles": 5590,
+    "bones": 16,
+    "meshes": 15,
+    "normalizedWeights": true,
+    "textureLoaded": true,
+    "closedComponents": true,
+    "rigPoseDisplacement": 0.4609362154202473,
+    "actions": []
+  },
+  "glb": {
+    "triangles": 5590,
+    "bones": 16,
+    "meshes": 15,
+    "normalizedWeights": true,
+    "textureLoaded": true,
+    "closedComponents": true,
+    "rigPoseDisplacement": 0.4609361544421224,
+    "actions": [
+      "Attack",
+      "Death",
+      "Hit",
+      "Idle",
+      "Move"
+    ]
+  },
+  "clips": {
+    "Idle": {
+      "frames": [
+        2.0,
+        32.0
+      ],
+      "evaluatedMotion": 0.05170981769809657
+    },
+    "Move": {
+      "frames": [
+        2.0,
+        26.0
+      ],
+      "evaluatedMotion": 0.8670913036669248
+    },
+    "Attack": {
+      "frames": [
+        2.0,
+        32.0
+      ],
+      "evaluatedMotion": 1.713678080038875
+    },
+    "Hit": {
+      "frames": [
+        2.0,
+        11.0
+      ],
+      "evaluatedMotion": 0.15834703525490568
+    },
+    "Death": {
+      "frames": [
+        2.0,
+        20.0
+      ],
+      "evaluatedMotion": 4.352756252084305
+    }
+  }
+}
