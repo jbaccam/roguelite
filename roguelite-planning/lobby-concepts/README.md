@@ -1,0 +1,11 @@
+# Circular floating lobby concept
+
+2026-09-24. Generated with the built-in image generation tool.
+
+Image: [circular-floating-lobby-v1.png](circular-floating-lobby-v1.png)
+
+User direction: use the supplied grassy floating-island reference, but make circulation circular with no dead end. This is build inspiration, not an implemented map. The concept shows four islands and four bridges closing the loop. Station details and island count are proposed rather than approved.
+
+## Generation prompt
+
+Use case: stylized-concept. Create a polished 3D environment concept render for a Roblox roguelite lobby using the attached image as an environment reference, not an edit target. Preserve its floating grassy islands, layered warm gray rocky cliffs, round stylized trees, pale stepping-stone paths, wooden rope bridges, turquoise sky and soft clouds. Crucial redesign: arrange ONE larger main island and THREE smaller islands in a circular closed ring around a clearly visible open sky center. Exactly four broad wooden bridges connect adjacent islands, including the last island back to the main island, forming a visibly uninterrupted walkable circular circuit with no dead-end islands. Paths on every island must visibly connect its incoming and outgoing bridges. Main island has an open spawn plaza, restrained cyan circular portal for starting runs, and small warm-wood/slate-blue loadout and armory kiosks beside the through-path. Smaller islands have simple social seating and a practice dummy clearing beside the loop; keep landscaping sparse and movement space generous. Approachably detailed Roblox-compatible rounded low-poly geometry, chunky beveled rock strata, normal human-scale architecture, no voxel/Minecraft blocks. Elevated three-quarter aerial camera showing the entire ring, bridge connectivity, cliff depth and all traversable surfaces; landscape composition, full structure uncropped. Professional real-time 3D game environment render, soft daylight, ambient occlusion, natural grass green, warm wood, stone gray, restrained blue accents. Not a flat illustrated map, not photoreal, not an elaborate medieval castle. No UI, no labels, no watermarks, no promotional text. This is a practical build inspiration image, with clear spatial layout and recognizable props.
