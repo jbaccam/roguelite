@@ -1,0 +1,56 @@
+{
+  "id": "ember-spider",
+  "reference": "Reference.png",
+  "status": "Revision candidate; exchange checks passed; Studio validation pending",
+  "triangles": 5528,
+  "meshCount": 19,
+  "boneCount": 20,
+  "clips": {
+    "Idle": {
+      "seconds": 1.0,
+      "loop": true
+    },
+    "Move": {
+      "seconds": 0.8,
+      "loop": true
+    },
+    "Attack": {
+      "seconds": 1.0,
+      "loop": false
+    },
+    "Hit": {
+      "seconds": 0.3,
+      "loop": false
+    },
+    "Death": {
+      "seconds": 0.6,
+      "loop": false
+    }
+  },
+  "texture": "BaseColor.png",
+  "textureMethod": "Original AI-generated revisions/Materials.png atlas, packed and exported; no source-pixel edits.",
+  "limitations": [
+    "Layered clothing and fur use intentional intersecting closed pieces.",
+    "Rigid weights on articulated hard sections; snake main body uses blended weights.",
+    "No multiplayer or mobile performance claim.",
+    "Studio import and actual gameplay verification pending."
+  ],
+  "boundsAuthoring": {
+    "minimum": [
+      -1.8454346656799316,
+      -1.3341398239135742,
+      0.022116076201200485
+    ],
+    "maximum": [
+      1.8454346656799316,
+      1.6799999475479126,
+      2.1499998569488525
+    ],
+    "size": [
+      3.6908693313598633,
+      3.014139771461487,
+      2.127883780747652
+    ]
+  },
+  "optionalLaterMob": false
+}

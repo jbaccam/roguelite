@@ -1,0 +1,56 @@
+{
+  "id": "bow-skeleton",
+  "reference": "Reference.png",
+  "status": "Revision candidate; exchange checks passed; Studio validation pending",
+  "triangles": 10966,
+  "meshCount": 15,
+  "boneCount": 16,
+  "clips": {
+    "Idle": {
+      "seconds": 1.0,
+      "loop": true
+    },
+    "Move": {
+      "seconds": 0.8,
+      "loop": true
+    },
+    "Attack": {
+      "seconds": 1.0,
+      "loop": false
+    },
+    "Hit": {
+      "seconds": 0.3,
+      "loop": false
+    },
+    "Death": {
+      "seconds": 0.6,
+      "loop": false
+    }
+  },
+  "texture": "BaseColor.png",
+  "textureMethod": "Original AI-generated revisions/Materials.png atlas, packed and exported; no source-pixel edits.",
+  "limitations": [
+    "Layered clothing and fur use intentional intersecting closed pieces.",
+    "Rigid weights on articulated hard sections; snake main body uses blended weights.",
+    "No multiplayer or mobile performance claim.",
+    "Studio import and actual gameplay verification pending."
+  ],
+  "boundsAuthoring": {
+    "minimum": [
+      -1.5894999504089355,
+      -0.7000000476837158,
+      0.034800007939338684
+    ],
+    "maximum": [
+      1.5894999504089355,
+      0.9855953454971313,
+      5.969299793243408
+    ],
+    "size": [
+      3.178999900817871,
+      1.6855953931808472,
+      5.9344997853040695
+    ]
+  },
+  "optionalLaterMob": false
+}

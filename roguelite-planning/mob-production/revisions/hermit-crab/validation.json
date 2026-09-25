@@ -1,0 +1,92 @@
+{
+  "blend": {
+    "triangles": 8112,
+    "bones": 20,
+    "meshes": 19,
+    "normalizedWeights": true,
+    "textureLoaded": true,
+    "closedComponents": true,
+    "rigPoseDisplacement": 0.3202012249323851,
+    "actions": [
+      "Attack",
+      "Death",
+      "Hit",
+      "Idle",
+      "Move"
+    ]
+  },
+  "fbx": {
+    "triangles": 8112,
+    "bones": 20,
+    "meshes": 19,
+    "normalizedWeights": true,
+    "textureLoaded": true,
+    "closedComponents": true,
+    "rigPoseDisplacement": 0.32020122533998036,
+    "actions": []
+  },
+  "glb": {
+    "triangles": 8112,
+    "bones": 20,
+    "meshes": 19,
+    "normalizedWeights": true,
+    "textureLoaded": true,
+    "closedComponents": true,
+    "rigPoseDisplacement": 0.32020120198917584,
+    "actions": [
+      "Attack",
+      "Death",
+      "Hit",
+      "Idle",
+      "Move"
+    ]
+  },
+  "clips": {
+    "Idle": {
+      "frames": [
+        2.0,
+        32.0
+      ],
+      "evaluatedMotion": 0.02464105561375618
+    },
+    "Move": {
+      "frames": [
+        2.0,
+        26.0
+      ],
+      "evaluatedMotion": 0.4256739616394043
+    },
+    "Attack": {
+      "frames": [
+        2.0,
+        32.0
+      ],
+      "evaluatedMotion": 0.6748346527430726
+    },
+    "Hit": {
+      "frames": [
+        2.0,
+        11.0
+      ],
+      "evaluatedMotion": 0.19324827194213867
+    },
+    "Death": {
+      "frames": [
+        2.0,
+        20.0
+      ],
+      "evaluatedMotion": 2.623687744140625
+    }
+  },
+  "fileHashes": {
+    "Model.blend": "092b2b0e6df2b4c1a0252e2ce28f25e8f9b48037dcd305ac4d7af18ef445f88a",
+    "Model.fbx": "574881a79da4e38767a210587a8fcb996b758b9415af43b9af337904230ffd93",
+    "Model.glb": "78beab09a039afbd5b9f210c07f2b905a76506ae18be7a610768c9ab4a4568b1",
+    "BaseColor.png": "874f64eabe93baba2b13a599290d7dfa348f0b83d8ed3ec1afa1371a97acbdb5",
+    "Idle.fbx": "358e6374e69d09c86bd5f8cddcc27c8c15fea8391e2770f3a0b0242bf60a5717",
+    "Move.fbx": "82060226194c0bfdce89a832930b8befbe15bad8195c3341610825122974bd2e",
+    "Attack.fbx": "4bcd274dc940a9091bbd2bdc832d7da7db3c5ad367f0536b479f54b619bafba3",
+    "Hit.fbx": "76f08c43138233296cbf67b18d90c91c44491abc276d2de8ebe3286c3db5da33",
+    "Death.fbx": "5621e4fd68d9b9321b0c5cc9ee61c7f98dfa7ab803e3454314dbfd2f413734ab"
+  }
+}

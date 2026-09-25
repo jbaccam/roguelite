@@ -1,0 +1,264 @@
+{
+  "id": "lava-slime",
+  "status": "Blender candidate; visual review and Studio acceptance pending",
+  "totals": {
+    "vertices": 4438,
+    "triangles": 8784
+  },
+  "bones": [
+    "Body",
+    "Crown"
+  ],
+  "actions": {
+    "Idle": 33,
+    "Move": 25,
+    "Attack": 25,
+    "Hit": 13,
+    "Death": 25
+  },
+  "checks": [
+    {
+      "mesh": "Molten continuous surface",
+      "vertices": 3402,
+      "triangles": 6800,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 0",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 1",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 2",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 3",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 4",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 5",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 6",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 7",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 8",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 9",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 10",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 11",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 12",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 13",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 14",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 15",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Basalt chunk 16",
+      "vertices": 28,
+      "triangles": 52,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Charred eye socket",
+      "vertices": 114,
+      "triangles": 224,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Glowing pupil",
+      "vertices": 146,
+      "triangles": 288,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Charred eye socket.001",
+      "vertices": 114,
+      "triangles": 224,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Glowing pupil.001",
+      "vertices": 146,
+      "triangles": 288,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Frowning mouth",
+      "vertices": 40,
+      "triangles": 76,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    }
+  ],
+  "failures": [],
+  "grips": [],
+  "gameplayImplemented": false,
+  "studioImportVerified": false,
+  "attackEvents": {
+    "frame": 12,
+    "type": "contact"
+  },
+  "notes": [
+    "Baked UV atlas and reference-specific anatomy.",
+    "Attack timing metadata does not implement server damage or projectile release.",
+    "Bow animation is a basic aiming gesture, not a complete nocked draw."
+  ]
+}

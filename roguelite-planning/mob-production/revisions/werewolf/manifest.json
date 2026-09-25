@@ -1,0 +1,56 @@
+{
+  "id": "werewolf",
+  "reference": "Reference.png",
+  "status": "Revision candidate; exchange checks passed; Studio validation pending",
+  "triangles": 9176,
+  "meshCount": 16,
+  "boneCount": 17,
+  "clips": {
+    "Idle": {
+      "seconds": 1.0,
+      "loop": true
+    },
+    "Move": {
+      "seconds": 0.8,
+      "loop": true
+    },
+    "Attack": {
+      "seconds": 1.0,
+      "loop": false
+    },
+    "Hit": {
+      "seconds": 0.3,
+      "loop": false
+    },
+    "Death": {
+      "seconds": 0.6,
+      "loop": false
+    }
+  },
+  "texture": "BaseColor.png",
+  "textureMethod": "Original AI-generated revisions/Materials.png atlas, packed and exported; no source-pixel edits.",
+  "limitations": [
+    "Layered clothing and fur use intentional intersecting closed pieces.",
+    "Rigid weights on articulated hard sections; snake main body uses blended weights.",
+    "No multiplayer or mobile performance claim.",
+    "Studio import and actual gameplay verification pending."
+  ],
+  "boundsAuthoring": {
+    "minimum": [
+      -2.100353717803955,
+      -1.084313154220581,
+      0.01879199966788292
+    ],
+    "maximum": [
+      2.100353717803955,
+      1.2707773447036743,
+      6.940519332885742
+    ],
+    "size": [
+      4.20070743560791,
+      2.3550904989242554,
+      6.921727333217859
+    ]
+  },
+  "optionalLaterMob": false
+}

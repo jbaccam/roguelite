@@ -1,0 +1,56 @@
+{
+  "id": "snake",
+  "reference": "Reference.png",
+  "status": "Revision candidate; exchange checks passed; Studio validation pending",
+  "triangles": 4620,
+  "meshCount": 7,
+  "boneCount": 11,
+  "clips": {
+    "Idle": {
+      "seconds": 1.0,
+      "loop": true
+    },
+    "Move": {
+      "seconds": 0.8,
+      "loop": true
+    },
+    "Attack": {
+      "seconds": 1.0,
+      "loop": false
+    },
+    "Hit": {
+      "seconds": 0.3,
+      "loop": false
+    },
+    "Death": {
+      "seconds": 0.6,
+      "loop": false
+    }
+  },
+  "texture": "BaseColor.png",
+  "textureMethod": "Original AI-generated revisions/Materials.png atlas, packed and exported; no source-pixel edits.",
+  "limitations": [
+    "Layered clothing and fur use intentional intersecting closed pieces.",
+    "Rigid weights on articulated hard sections; snake main body uses blended weights.",
+    "No multiplayer or mobile performance claim.",
+    "Studio import and actual gameplay verification pending."
+  ],
+  "boundsAuthoring": {
+    "minimum": [
+      -1.0756864547729492,
+      -1.6399998664855957,
+      0.00011255964636802673
+    ],
+    "maximum": [
+      1.0353728532791138,
+      2.338798999786377,
+      2.3930001258850098
+    ],
+    "size": [
+      2.111059308052063,
+      3.9787988662719727,
+      2.3928875662386417
+    ]
+  },
+  "optionalLaterMob": false
+}

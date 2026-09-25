@@ -1,0 +1,109 @@
+{
+  "id": "snake",
+  "status": "Blender candidate; visual review and Studio acceptance pending",
+  "totals": {
+    "vertices": 24852,
+    "triangles": 43296
+  },
+  "bones": [
+    "Spine15",
+    "Spine14",
+    "Spine13",
+    "Spine12",
+    "Spine11",
+    "Spine10",
+    "Spine9",
+    "Spine8",
+    "Spine7",
+    "Spine6",
+    "Spine5",
+    "Spine4",
+    "Spine3",
+    "Spine2",
+    "Spine1",
+    "Spine0",
+    "Head"
+  ],
+  "actions": {
+    "Idle": 33,
+    "Move": 25,
+    "Attack": 25,
+    "Hit": 13,
+    "Death": 25
+  },
+  "checks": [
+    {
+      "mesh": "Continuous snake skin",
+      "vertices": 4640,
+      "triangles": 9276,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Ventral scutes",
+      "vertices": 2072,
+      "triangles": 3848,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Head_Geometry",
+      "vertices": 4487,
+      "triangles": 8934,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Overlapping dorsal scales_0",
+      "vertices": 5994,
+      "triangles": 9324,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Overlapping dorsal scales_1",
+      "vertices": 5994,
+      "triangles": 9324,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Overlapping dorsal scales_2",
+      "vertices": 1665,
+      "triangles": 2590,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    }
+  ],
+  "failures": [],
+  "grips": [],
+  "gameplayImplemented": false,
+  "studioImportVerified": false,
+  "attackEvents": {
+    "frame": 12,
+    "type": "contact"
+  },
+  "notes": [
+    "Baked UV atlas and reference-specific anatomy.",
+    "Attack timing metadata does not implement server damage or projectile release.",
+    "Bow animation is a basic aiming gesture, not a complete nocked draw."
+  ]
+}

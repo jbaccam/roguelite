@@ -1,0 +1,87 @@
+{
+  "id": "spitter-zombie",
+  "status": "Blender candidate; visual review and Studio acceptance pending",
+  "totals": {
+    "vertices": 18250,
+    "triangles": 36452
+  },
+  "bones": [
+    "Pelvis",
+    "Chest",
+    "Head",
+    "LeftUpperArm",
+    "LeftForearm",
+    "LeftHand",
+    "RightUpperArm",
+    "RightForearm",
+    "RightHand",
+    "LeftThigh",
+    "LeftShin",
+    "LeftFoot",
+    "RightThigh",
+    "RightShin",
+    "RightFoot"
+  ],
+  "actions": {
+    "Idle": 33,
+    "Move": 25,
+    "Attack": 25,
+    "Hit": 13,
+    "Death": 25
+  },
+  "checks": [
+    {
+      "mesh": "Continuous spitter anatomy",
+      "vertices": 7438,
+      "triangles": 14872,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Tattered shirt fitted to belly",
+      "vertices": 3510,
+      "triangles": 7032,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Ragged shorts",
+      "vertices": 2444,
+      "triangles": 4892,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Head_Geometry",
+      "vertices": 4858,
+      "triangles": 9656,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    }
+  ],
+  "failures": [],
+  "grips": [],
+  "gameplayImplemented": false,
+  "studioImportVerified": false,
+  "attackEvents": {
+    "frame": 12,
+    "type": "projectile"
+  },
+  "notes": [
+    "Baked UV atlas and reference-specific anatomy.",
+    "Attack timing metadata does not implement server damage or projectile release.",
+    "Bow animation is a basic aiming gesture, not a complete nocked draw."
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "id": "obsidian-ogre",
+  "reference": "Reference.png",
+  "status": "Revision candidate; exchange checks passed; Studio validation pending",
+  "triangles": 4420,
+  "meshCount": 15,
+  "boneCount": 16,
+  "clips": {
+    "Idle": {
+      "seconds": 1.0,
+      "loop": true
+    },
+    "Move": {
+      "seconds": 0.8,
+      "loop": true
+    },
+    "Attack": {
+      "seconds": 1.0,
+      "loop": false
+    },
+    "Hit": {
+      "seconds": 0.3,
+      "loop": false
+    },
+    "Death": {
+      "seconds": 0.6,
+      "loop": false
+    }
+  },
+  "texture": "BaseColor.png",
+  "textureMethod": "Original AI-generated revisions/Materials.png atlas, packed and exported; no source-pixel edits.",
+  "limitations": [
+    "Layered clothing and fur use intentional intersecting closed pieces.",
+    "Rigid weights on articulated hard sections; snake main body uses blended weights.",
+    "No multiplayer or mobile performance claim.",
+    "Studio import and actual gameplay verification pending."
+  ],
+  "boundsAuthoring": {
+    "minimum": [
+      -2.4370110034942627,
+      -1.0240000486373901,
+      0.022272000089287758
+    ],
+    "maximum": [
+      2.4370110034942627,
+      0.7616000175476074,
+      7.675648212432861
+    ],
+    "size": [
+      4.874022006988525,
+      1.7856000661849976,
+      7.653376212343574
+    ]
+  },
+  "optionalLaterMob": false
+}

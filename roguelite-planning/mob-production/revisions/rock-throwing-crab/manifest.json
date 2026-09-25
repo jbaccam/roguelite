@@ -1,0 +1,56 @@
+{
+  "id": "rock-throwing-crab",
+  "reference": "Reference.png",
+  "status": "Revision candidate; exchange checks passed; Studio validation pending",
+  "triangles": 7360,
+  "meshCount": 23,
+  "boneCount": 24,
+  "clips": {
+    "Idle": {
+      "seconds": 1.0,
+      "loop": true
+    },
+    "Move": {
+      "seconds": 0.8,
+      "loop": true
+    },
+    "Attack": {
+      "seconds": 1.0,
+      "loop": false
+    },
+    "Hit": {
+      "seconds": 0.3,
+      "loop": false
+    },
+    "Death": {
+      "seconds": 0.6,
+      "loop": false
+    }
+  },
+  "texture": "BaseColor.png",
+  "textureMethod": "Original AI-generated revisions/Materials.png atlas, packed and exported; no source-pixel edits.",
+  "limitations": [
+    "Layered clothing and fur use intentional intersecting closed pieces.",
+    "Rigid weights on articulated hard sections; snake main body uses blended weights.",
+    "No multiplayer or mobile performance claim.",
+    "Studio import and actual gameplay verification pending."
+  ],
+  "boundsAuthoring": {
+    "minimum": [
+      -2.069136619567871,
+      -2.9931349754333496,
+      0.0347287580370903
+    ],
+    "maximum": [
+      2.3238775730133057,
+      1.0800000429153442,
+      2.0584168434143066
+    ],
+    "size": [
+      4.393014192581177,
+      4.073135018348694,
+      2.0236880853772163
+    ]
+  },
+  "optionalLaterMob": false
+}

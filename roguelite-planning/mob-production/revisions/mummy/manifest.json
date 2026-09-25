@@ -1,0 +1,56 @@
+{
+  "id": "mummy",
+  "reference": "Reference.png",
+  "status": "Revision candidate; exchange checks passed; Studio validation pending",
+  "triangles": 4772,
+  "meshCount": 15,
+  "boneCount": 16,
+  "clips": {
+    "Idle": {
+      "seconds": 1.0,
+      "loop": true
+    },
+    "Move": {
+      "seconds": 0.8,
+      "loop": true
+    },
+    "Attack": {
+      "seconds": 1.0,
+      "loop": false
+    },
+    "Hit": {
+      "seconds": 0.3,
+      "loop": false
+    },
+    "Death": {
+      "seconds": 0.6,
+      "loop": false
+    }
+  },
+  "texture": "BaseColor.png",
+  "textureMethod": "Original AI-generated revisions/Materials.png atlas, packed and exported; no source-pixel edits.",
+  "limitations": [
+    "Layered clothing and fur use intentional intersecting closed pieces.",
+    "Rigid weights on articulated hard sections; snake main body uses blended weights.",
+    "No multiplayer or mobile performance claim.",
+    "Studio import and actual gameplay verification pending."
+  ],
+  "boundsAuthoring": {
+    "minimum": [
+      -1.6850000619888306,
+      -0.800000011920929,
+      0.017400000244379044
+    ],
+    "maximum": [
+      1.6850000619888306,
+      0.5950000286102295,
+      6.047244548797607
+    ],
+    "size": [
+      3.370000123977661,
+      1.3950000405311584,
+      6.029844548553228
+    ]
+  },
+  "optionalLaterMob": false
+}

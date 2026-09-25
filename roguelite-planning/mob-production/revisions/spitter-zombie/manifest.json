@@ -1,0 +1,56 @@
+{
+  "id": "spitter-zombie",
+  "reference": "Reference.png",
+  "status": "Revision candidate; exchange checks passed; Studio validation pending",
+  "triangles": 5580,
+  "meshCount": 15,
+  "boneCount": 16,
+  "clips": {
+    "Idle": {
+      "seconds": 1.0,
+      "loop": true
+    },
+    "Move": {
+      "seconds": 0.8,
+      "loop": true
+    },
+    "Attack": {
+      "seconds": 1.0,
+      "loop": false
+    },
+    "Hit": {
+      "seconds": 0.3,
+      "loop": false
+    },
+    "Death": {
+      "seconds": 0.6,
+      "loop": false
+    }
+  },
+  "texture": "BaseColor.png",
+  "textureMethod": "Original AI-generated revisions/Materials.png atlas, packed and exported; no source-pixel edits.",
+  "limitations": [
+    "Layered clothing and fur use intentional intersecting closed pieces.",
+    "Rigid weights on articulated hard sections; snake main body uses blended weights.",
+    "No multiplayer or mobile performance claim.",
+    "Studio import and actual gameplay verification pending."
+  ],
+  "boundsAuthoring": {
+    "minimum": [
+      -1.9792499542236328,
+      -1.1445001363754272,
+      0.01827000081539154
+    ],
+    "maximum": [
+      1.9792499542236328,
+      0.624750018119812,
+      6.2964301109313965
+    ],
+    "size": [
+      3.9584999084472656,
+      1.7692501544952393,
+      6.278160110116005
+    ]
+  },
+  "optionalLaterMob": true
+}

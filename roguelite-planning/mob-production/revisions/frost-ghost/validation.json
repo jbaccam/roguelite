@@ -1,0 +1,92 @@
+{
+  "blend": {
+    "triangles": 2624,
+    "bones": 5,
+    "meshes": 4,
+    "normalizedWeights": true,
+    "textureLoaded": true,
+    "closedComponents": true,
+    "rigPoseDisplacement": 0.41295486426850503,
+    "actions": [
+      "Attack",
+      "Death",
+      "Hit",
+      "Idle",
+      "Move"
+    ]
+  },
+  "fbx": {
+    "triangles": 2624,
+    "bones": 5,
+    "meshes": 4,
+    "normalizedWeights": true,
+    "textureLoaded": true,
+    "closedComponents": true,
+    "rigPoseDisplacement": 0.4129547469947181,
+    "actions": []
+  },
+  "glb": {
+    "triangles": 2624,
+    "bones": 5,
+    "meshes": 4,
+    "normalizedWeights": true,
+    "textureLoaded": true,
+    "closedComponents": true,
+    "rigPoseDisplacement": 0.4129549544790878,
+    "actions": [
+      "Attack",
+      "Death",
+      "Hit",
+      "Idle",
+      "Move"
+    ]
+  },
+  "clips": {
+    "Idle": {
+      "frames": [
+        2.0,
+        32.0
+      ],
+      "evaluatedMotion": 0.0895071029663086
+    },
+    "Move": {
+      "frames": [
+        2.0,
+        26.0
+      ],
+      "evaluatedMotion": 0.09000015258789062
+    },
+    "Attack": {
+      "frames": [
+        2.0,
+        32.0
+      ],
+      "evaluatedMotion": 0.4794256230208589
+    },
+    "Hit": {
+      "frames": [
+        2.0,
+        11.0
+      ],
+      "evaluatedMotion": 0.10920485754940046
+    },
+    "Death": {
+      "frames": [
+        2.0,
+        20.0
+      ],
+      "evaluatedMotion": 2.6899054338498445
+    }
+  },
+  "fileHashes": {
+    "Model.blend": "0f26bd2534f2b5267ac47c288070c6288c752d0c48d64c083ab34b65f4b0ede7",
+    "Model.fbx": "92bb06833035ef4a7cc1cc07dd2d7bbdfc123740f8cc8add5ebfe212acfd654b",
+    "Model.glb": "454af0eff473b5796b18617e7e750223f7e397b83a97e9521e2097dec5381435",
+    "BaseColor.png": "874f64eabe93baba2b13a599290d7dfa348f0b83d8ed3ec1afa1371a97acbdb5",
+    "Idle.fbx": "e6493e35a846b3ea30b11aea1f59741fb18fc8521487e181ea241b560e693bfa",
+    "Move.fbx": "d54e33ce8bd60e577ac2c82c57ae712078f03f520426b47fc73ad9859f7a2661",
+    "Attack.fbx": "207ef7f62ea61f06624828bc70e9ee46eeb0efc7163b05e88a91237d9a5a3232",
+    "Hit.fbx": "71d711662b1ddad56aac317a6f1086a684672a7e821d7ee0669c41afa288f6ef",
+    "Death.fbx": "1c77c74529700b536ce9c63574e6b3bc9c7c34fbc0c80634f46da74740e795a2"
+  }
+}
