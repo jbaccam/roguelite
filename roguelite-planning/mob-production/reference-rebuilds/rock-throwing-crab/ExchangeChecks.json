@@ -1,0 +1,82 @@
+{
+  "id": "rock-throwing-crab",
+  "checks": {
+    "glbStructure": {
+      "animations": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Move"
+      ],
+      "meshes": 25,
+      "embeddedImages": 1
+    },
+    "fbxImport": {
+      "triangles": 17828,
+      "bones": 25,
+      "meshes": 25,
+      "maxInfluences": 1,
+      "weightsNormalized": true,
+      "textureLoaded": true
+    },
+    "glbImport": {
+      "triangles": 17828,
+      "bones": 25,
+      "meshes": 25,
+      "maxInfluences": 1,
+      "weightsNormalized": true,
+      "textureLoaded": true
+    },
+    "fbxAnimationImports": {
+      "Idle": {
+        "frames": [
+          2.0,
+          34.0
+        ],
+        "sampledMatrixDelta": 0.03209125995635986
+      },
+      "Move": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "sampledMatrixDelta": 0.3084545452147722
+      },
+      "Attack": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "sampledMatrixDelta": 0.5975601077079773
+      },
+      "Hit": {
+        "frames": [
+          2.0,
+          14.0
+        ],
+        "sampledMatrixDelta": 0.21490317583084106
+      },
+      "Death": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "sampledMatrixDelta": 1.1201717257499695
+      }
+    }
+  },
+  "errors": [],
+  "sha256": {
+    "Model.blend": "3783b7bffa446da87981a1080cc420ac9d504651bc45c871b054eb4e6741dba0",
+    "Model.fbx": "933b29855e1068e0a67a6a12db91a5ba1562ee7f79a7b3488e5f6be12ff22967",
+    "Model.glb": "513add980817175dc0e908abc16138463dc27d8484b2cac8ff2d2430c9991a34",
+    "BaseColor.png": "8dd246afc2edbb8b1ed2f2e5a99b48d6272c1f37b225ecf0b2a70aa001250d23",
+    "animations\\Attack.fbx": "13d9afd54445b8d118d504c4acaa46acd960d55f385071f03334552b2beed220",
+    "animations\\Death.fbx": "5373ebd84b1a3cb597045fcddd9b2540e666d6c25822e40ccc126139697eb6cc",
+    "animations\\Hit.fbx": "0345f2a238c2fb96b9d16ece82cf0a209d0e1e42b8ce4071d3c4c7761f6d951b",
+    "animations\\Idle.fbx": "2c292c17f012d332160cc08f24281f12994a6b3d74fbfbc870890e1e2107fcd8",
+    "animations\\Move.fbx": "fb80988be68997bbdffa91c74af66d2daac9cc7182a5fa5bc745c857bb456af4"
+  },
+  "passed": true
+}

@@ -1,0 +1,112 @@
+{
+  "id": "fire-goblin",
+  "status": "Blender candidate; visual review and Studio acceptance pending",
+  "totals": {
+    "vertices": 17047,
+    "triangles": 33986
+  },
+  "bones": [
+    "Pelvis",
+    "Chest",
+    "Head",
+    "LeftUpperArm",
+    "LeftForearm",
+    "LeftHand",
+    "RightUpperArm",
+    "RightForearm",
+    "RightHand",
+    "LeftThigh",
+    "LeftShin",
+    "LeftFoot",
+    "RightThigh",
+    "RightShin",
+    "RightFoot"
+  ],
+  "actions": {
+    "Idle": 33,
+    "Move": 25,
+    "Attack": 25,
+    "Hit": 13,
+    "Death": 25
+  },
+  "checks": [
+    {
+      "mesh": "Stocky goblin anatomy",
+      "vertices": 9735,
+      "triangles": 19490,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Head_Geometry",
+      "vertices": 5227,
+      "triangles": 10390,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Chest_Geometry",
+      "vertices": 384,
+      "triangles": 768,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Pelvis_Geometry",
+      "vertices": 1074,
+      "triangles": 2120,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightHand_Geometry",
+      "vertices": 627,
+      "triangles": 1218,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    }
+  ],
+  "failures": [],
+  "grips": [
+    {
+      "bone": "RightHand",
+      "center": [
+        1.5,
+        -0.2199999988079071,
+        2.0399999618530273
+      ],
+      "axis": [
+        0.9017601609230042,
+        -0.3005867302417755,
+        -0.3106062710285187
+      ],
+      "handleRadius": 0.108,
+      "contactChannelRadius": 0.136
+    }
+  ],
+  "gameplayImplemented": false,
+  "studioImportVerified": false,
+  "attackEvents": {
+    "frame": 12,
+    "type": "contact"
+  },
+  "notes": [
+    "Baked UV atlas and reference-specific anatomy.",
+    "Attack timing metadata does not implement server damage or projectile release."
+  ]
+}

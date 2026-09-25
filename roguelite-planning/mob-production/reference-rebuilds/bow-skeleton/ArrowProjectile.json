@@ -1,0 +1,12 @@
+{
+  "origin": "nock",
+  "blenderForward": [
+    0,
+    -1,
+    0
+  ],
+  "length": 1.9,
+  "triangles": 294,
+  "texture": "ArrowBaseColor.png",
+  "separateFromCharacter": true
+}

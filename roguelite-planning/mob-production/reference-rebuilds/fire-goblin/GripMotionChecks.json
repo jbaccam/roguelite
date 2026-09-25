@@ -1,0 +1,46 @@
+{
+  "contactVertices": 375,
+  "clips": {
+    "Idle": {
+      "frames": [
+        1.0,
+        33.0
+      ],
+      "maxContactSkinDeviation": 7.289394622227555e-07
+    },
+    "Move": {
+      "frames": [
+        1.0,
+        25.0
+      ],
+      "maxContactSkinDeviation": 5.114919899205833e-07
+    },
+    "Attack": {
+      "frames": [
+        1.0,
+        25.0
+      ],
+      "maxContactSkinDeviation": 7.996802249550068e-07
+    },
+    "Hit": {
+      "frames": [
+        1.0,
+        13.0
+      ],
+      "maxContactSkinDeviation": 7.275674114068569e-07
+    },
+    "Death": {
+      "frames": [
+        1.0,
+        25.0
+      ],
+      "maxContactSkinDeviation": 5.462855929083633e-07
+    }
+  },
+  "passed": true,
+  "sha256": {
+    "Model.blend": "90d5e07e0b6d2dbdd12ec327fe6e2bc223a56fc33beb15f3d3a46f181b4288f3",
+    "Model.fbx": "5d3ae079b27fa907a4fd750baf0e9ca14b090fcb935571da0854bc4dc9f31ed8",
+    "Model.glb": "faa53485e0baea9229392ad3f68e3c05d427cddba371ba92ae1ff9b7f5bf6ff8"
+  }
+}

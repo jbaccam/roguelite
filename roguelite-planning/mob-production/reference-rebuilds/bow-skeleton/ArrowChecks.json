@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "imports": {
+    "fbx": {
+      "triangles": 294,
+      "textureLoaded": true,
+      "closedGeometry": true
+    },
+    "glb": {
+      "triangles": 294,
+      "textureLoaded": true,
+      "closedGeometry": true
+    }
+  },
+  "sha256": {
+    "ArrowProjectile.blend": "8cb28f40b74f912701e14e00eb9a40a8ce167f169c815dba8cc1c821e9837fcc",
+    "ArrowProjectile.fbx": "8e1ba1bb27bd20a91c1c237910b170197f247298d33bfcc46ace7d519390de6d",
+    "ArrowProjectile.glb": "26b14e961d5626c9ebb018b0ad9ec602ae9a95a513338d4675bcb3c4d5eb767d",
+    "ArrowBaseColor.png": "eebc067343c8714aec13a5db5705dd1ebbc8d06003a2d0cb7c2a6db31f616484"
+  }
+}

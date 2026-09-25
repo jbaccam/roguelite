@@ -1,0 +1,212 @@
+{
+  "id": "ash-shaman",
+  "status": "Blender candidate; visual review and Studio acceptance pending",
+  "totals": {
+    "vertices": 16326,
+    "triangles": 32464
+  },
+  "bones": [
+    "Pelvis",
+    "Chest",
+    "Head",
+    "LeftUpperArm",
+    "LeftForearm",
+    "LeftHand",
+    "RightUpperArm",
+    "RightForearm",
+    "RightHand",
+    "LeftThigh",
+    "LeftShin",
+    "LeftFoot",
+    "RightThigh",
+    "RightShin",
+    "RightFoot"
+  ],
+  "actions": {
+    "Idle": 33,
+    "Move": 25,
+    "Attack": 25,
+    "Hit": 13,
+    "Death": 25
+  },
+  "checks": [
+    {
+      "mesh": "Connected shaman body",
+      "vertices": 5002,
+      "triangles": 10000,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftThigh_Geometry",
+      "vertices": 362,
+      "triangles": 720,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftFoot_Geometry",
+      "vertices": 798,
+      "triangles": 1588,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftShin_Geometry",
+      "vertices": 524,
+      "triangles": 1048,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftUpperArm_Geometry",
+      "vertices": 80,
+      "triangles": 156,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftForearm_Geometry",
+      "vertices": 440,
+      "triangles": 868,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightHand_Geometry",
+      "vertices": 464,
+      "triangles": 880,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightThigh_Geometry",
+      "vertices": 362,
+      "triangles": 720,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightFoot_Geometry",
+      "vertices": 798,
+      "triangles": 1588,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightShin_Geometry",
+      "vertices": 524,
+      "triangles": 1048,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightUpperArm_Geometry",
+      "vertices": 80,
+      "triangles": 156,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightForearm_Geometry",
+      "vertices": 440,
+      "triangles": 868,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Chest_Geometry",
+      "vertices": 394,
+      "triangles": 784,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Pelvis_Geometry",
+      "vertices": 860,
+      "triangles": 1696,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "Head_Geometry",
+      "vertices": 5198,
+      "triangles": 10344,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    }
+  ],
+  "failures": [],
+  "grips": [
+    {
+      "bone": "RightHand",
+      "center": [
+        1.5299999713897705,
+        -0.4699999988079071,
+        2.7100000381469727
+      ],
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "handleRadius": 0.103,
+      "innerFingerRadius": 0.098
+    }
+  ],
+  "gameplayImplemented": false,
+  "studioImportVerified": false,
+  "attackEvents": {
+    "frame": 12,
+    "type": "projectile"
+  },
+  "notes": [
+    "Baked UV atlas and reference-specific anatomy.",
+    "Attack timing metadata does not implement server damage or projectile release."
+  ]
+}

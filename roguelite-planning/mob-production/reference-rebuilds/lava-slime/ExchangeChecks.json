@@ -1,0 +1,82 @@
+{
+  "id": "lava-slime",
+  "checks": {
+    "glbStructure": {
+      "animations": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Move"
+      ],
+      "meshes": 23,
+      "embeddedImages": 1
+    },
+    "fbxImport": {
+      "triangles": 8784,
+      "bones": 3,
+      "meshes": 23,
+      "maxInfluences": 2,
+      "weightsNormalized": true,
+      "textureLoaded": true
+    },
+    "glbImport": {
+      "triangles": 8784,
+      "bones": 3,
+      "meshes": 23,
+      "maxInfluences": 2,
+      "weightsNormalized": true,
+      "textureLoaded": true
+    },
+    "fbxAnimationImports": {
+      "Idle": {
+        "frames": [
+          2.0,
+          34.0
+        ],
+        "sampledMatrixDelta": 0.01741345226764679
+      },
+      "Move": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "sampledMatrixDelta": 0.11712992191314697
+      },
+      "Attack": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "sampledMatrixDelta": 0.2771281355617443
+      },
+      "Hit": {
+        "frames": [
+          2.0,
+          14.0
+        ],
+        "sampledMatrixDelta": 0.12062548200158574
+      },
+      "Death": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "sampledMatrixDelta": 0.48220804293804065
+      }
+    }
+  },
+  "errors": [],
+  "sha256": {
+    "Model.blend": "c83c31860f94557daa81136e4ef3aa7872da030113a71f6fb3a1612f46fe85ee",
+    "Model.fbx": "5d7c3191781b1e12544cd6f0c294630a26b2c4532a4618e1a88ee20af28cf10d",
+    "Model.glb": "f58fa580b7635ac2817adf3918c792a71287341857b9f6f1e16362fb4f4ede6d",
+    "BaseColor.png": "3373929f05076f38b626f0306e81575aac2e59047e319a22253ff84317ad45f9",
+    "animations\\Attack.fbx": "72709071845c1912d1eb3c4ab447ea0197cc036f3f376033ddfdd2e0ca4a0eca",
+    "animations\\Death.fbx": "ff35f65d63bad48f25d05f882a039e59f20c02cc7d78f362c1d1668982b9dd54",
+    "animations\\Hit.fbx": "598c0d1a8d50e99e0ead29a921388d6ca903d770ba71c8a51447e8a7a50912d6",
+    "animations\\Idle.fbx": "cbee0abbb46915f275fe0bcf05d51d1ef327c8bd036a5b7887c07652eedd4c99",
+    "animations\\Move.fbx": "9c67e7a0fe045d3e1dd1de19bce71a2577097b5a77d3abb8c5368b566df1298f"
+  },
+  "passed": true
+}

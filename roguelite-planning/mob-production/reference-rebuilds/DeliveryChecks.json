@@ -1,0 +1,96 @@
+{
+  "mobs": {
+    "obsidian-ogre": {
+      "triangles": 34492,
+      "bones": 16,
+      "clips": 5,
+      "meshChecksPassed": true,
+      "exchangeChecksPassed": true,
+      "hashesCurrent": true
+    },
+    "snake": {
+      "triangles": 43296,
+      "bones": 18,
+      "clips": 5,
+      "meshChecksPassed": true,
+      "exchangeChecksPassed": true,
+      "hashesCurrent": true
+    },
+    "rock-throwing-crab": {
+      "triangles": 17828,
+      "bones": 25,
+      "clips": 5,
+      "meshChecksPassed": true,
+      "exchangeChecksPassed": true,
+      "hashesCurrent": true
+    },
+    "skeleton": {
+      "triangles": 21030,
+      "bones": 16,
+      "clips": 5,
+      "meshChecksPassed": true,
+      "exchangeChecksPassed": true,
+      "hashesCurrent": true
+    },
+    "bow-skeleton": {
+      "triangles": 22710,
+      "bones": 17,
+      "clips": 5,
+      "meshChecksPassed": true,
+      "exchangeChecksPassed": true,
+      "hashesCurrent": true
+    },
+    "fire-goblin": {
+      "triangles": 33986,
+      "bones": 16,
+      "clips": 5,
+      "meshChecksPassed": true,
+      "exchangeChecksPassed": true,
+      "hashesCurrent": true
+    },
+    "lava-slime": {
+      "triangles": 8784,
+      "bones": 3,
+      "clips": 5,
+      "meshChecksPassed": true,
+      "exchangeChecksPassed": true,
+      "hashesCurrent": true
+    },
+    "ash-shaman": {
+      "triangles": 32464,
+      "bones": 16,
+      "clips": 5,
+      "meshChecksPassed": true,
+      "exchangeChecksPassed": true,
+      "hashesCurrent": true
+    },
+    "spitter-zombie": {
+      "triangles": 36452,
+      "bones": 16,
+      "clips": 5,
+      "meshChecksPassed": true,
+      "exchangeChecksPassed": true,
+      "hashesCurrent": true
+    }
+  },
+  "errors": [],
+  "studioVerified": false,
+  "visualApproval": false,
+  "HandAnatomyChecks.json": {
+    "passed": true,
+    "hashesCurrent": null
+  },
+  "GripMotionChecks.json": {
+    "passed": true,
+    "hashesCurrent": true
+  },
+  "ArrowChecks.json": {
+    "passed": true,
+    "hashesCurrent": true
+  },
+  "ShootingChecks.json": {
+    "passed": true,
+    "hashesCurrent": true
+  },
+  "reviewHttpStatus": 200
+}

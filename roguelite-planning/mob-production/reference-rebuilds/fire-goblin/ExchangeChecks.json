@@ -1,0 +1,82 @@
+{
+  "id": "fire-goblin",
+  "checks": {
+    "glbStructure": {
+      "animations": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Move"
+      ],
+      "meshes": 5,
+      "embeddedImages": 1
+    },
+    "fbxImport": {
+      "triangles": 33986,
+      "bones": 16,
+      "meshes": 5,
+      "maxInfluences": 4,
+      "weightsNormalized": true,
+      "textureLoaded": true
+    },
+    "glbImport": {
+      "triangles": 33986,
+      "bones": 16,
+      "meshes": 5,
+      "maxInfluences": 4,
+      "weightsNormalized": true,
+      "textureLoaded": true
+    },
+    "fbxAnimationImports": {
+      "Idle": {
+        "frames": [
+          2.0,
+          34.0
+        ],
+        "sampledMatrixDelta": 0.033370979130239675
+      },
+      "Move": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "sampledMatrixDelta": 0.599604857919239
+      },
+      "Attack": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "sampledMatrixDelta": 0.9800836443901062
+      },
+      "Hit": {
+        "frames": [
+          2.0,
+          14.0
+        ],
+        "sampledMatrixDelta": 0.2541365782406615
+      },
+      "Death": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "sampledMatrixDelta": 1.6921118169573788
+      }
+    }
+  },
+  "errors": [],
+  "sha256": {
+    "Model.blend": "90d5e07e0b6d2dbdd12ec327fe6e2bc223a56fc33beb15f3d3a46f181b4288f3",
+    "Model.fbx": "5d3ae079b27fa907a4fd750baf0e9ca14b090fcb935571da0854bc4dc9f31ed8",
+    "Model.glb": "faa53485e0baea9229392ad3f68e3c05d427cddba371ba92ae1ff9b7f5bf6ff8",
+    "BaseColor.png": "2e72ebd32f61b53214fd63203aec9968958296645727b7fdad0920ce42081f9a",
+    "animations\\Attack.fbx": "92d3992b667e1c0ce89eaa40283612e98a623cdd54448bf180f732e4c7607f5c",
+    "animations\\Death.fbx": "575c50fbe4492ad91d9724c6c1d0f085ac707fd2f44565b9e5720e4f56068562",
+    "animations\\Hit.fbx": "e96f550272b9b110790b224ff6c2d4e007f67f10b65d261c5a5db4ff993d8e6d",
+    "animations\\Idle.fbx": "2b1bed62f5c506ab980aa91ec19a5dbc100362ac12b9edd05c00c7f7e9eab700",
+    "animations\\Move.fbx": "fd24fb588a95e5513a2e355060961a419d0a749ece6d970cef4f276c8e88145c"
+  },
+  "passed": true
+}

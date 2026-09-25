@@ -1,0 +1,257 @@
+{
+  "connectedSkinComponents": 1,
+  "componentVertexCounts": [
+    9735
+  ],
+  "nonManifoldEdges": 0,
+  "gripChannelSamples": [
+    {
+      "along": -0.18,
+      "angle": 0.0,
+      "distance": 0.1357809156179428
+    },
+    {
+      "along": -0.18,
+      "angle": 22.5,
+      "distance": 0.1358749270439148
+    },
+    {
+      "along": -0.18,
+      "angle": 45.0,
+      "distance": 0.1359066218137741
+    },
+    {
+      "along": -0.18,
+      "angle": 67.5,
+      "distance": 0.13586701452732086
+    },
+    {
+      "along": -0.18,
+      "angle": 90.0,
+      "distance": 0.14969895780086517
+    },
+    {
+      "along": -0.18,
+      "angle": 112.5,
+      "distance": 0.1436791867017746
+    },
+    {
+      "along": -0.18,
+      "angle": 135.0,
+      "distance": 0.13982853293418884
+    },
+    {
+      "along": -0.18,
+      "angle": 157.5,
+      "distance": 0.13539807498455048
+    },
+    {
+      "along": -0.18,
+      "angle": 180.0,
+      "distance": 0.13712410628795624
+    },
+    {
+      "along": -0.18,
+      "angle": 202.5,
+      "distance": null
+    },
+    {
+      "along": -0.18,
+      "angle": 225.0,
+      "distance": 0.13590237498283386
+    },
+    {
+      "along": -0.18,
+      "angle": 247.5,
+      "distance": 0.13586942851543427
+    },
+    {
+      "along": -0.18,
+      "angle": 270.0,
+      "distance": 0.1358012706041336
+    },
+    {
+      "along": -0.18,
+      "angle": 292.5,
+      "distance": 0.1358676254749298
+    },
+    {
+      "along": -0.18,
+      "angle": 315.0,
+      "distance": 0.13594941794872284
+    },
+    {
+      "along": -0.18,
+      "angle": 337.5,
+      "distance": 0.13576337695121765
+    },
+    {
+      "along": 0,
+      "angle": 0.0,
+      "distance": 0.13588795065879822
+    },
+    {
+      "along": 0,
+      "angle": 22.5,
+      "distance": 0.13590267300605774
+    },
+    {
+      "along": 0,
+      "angle": 45.0,
+      "distance": 0.13596424460411072
+    },
+    {
+      "along": 0,
+      "angle": 67.5,
+      "distance": 0.13592128455638885
+    },
+    {
+      "along": 0,
+      "angle": 90.0,
+      "distance": 0.13682377338409424
+    },
+    {
+      "along": 0,
+      "angle": 112.5,
+      "distance": 0.16506019234657288
+    },
+    {
+      "along": 0,
+      "angle": 135.0,
+      "distance": 0.1607653647661209
+    },
+    {
+      "along": 0,
+      "angle": 157.5,
+      "distance": 0.14365904033184052
+    },
+    {
+      "along": 0,
+      "angle": 180.0,
+      "distance": null
+    },
+    {
+      "along": 0,
+      "angle": 202.5,
+      "distance": null
+    },
+    {
+      "along": 0,
+      "angle": 225.0,
+      "distance": null
+    },
+    {
+      "along": 0,
+      "angle": 247.5,
+      "distance": 0.1649642139673233
+    },
+    {
+      "along": 0,
+      "angle": 270.0,
+      "distance": 0.13660626113414764
+    },
+    {
+      "along": 0,
+      "angle": 292.5,
+      "distance": 0.13585035502910614
+    },
+    {
+      "along": 0,
+      "angle": 315.0,
+      "distance": 0.1359173059463501
+    },
+    {
+      "along": 0,
+      "angle": 337.5,
+      "distance": 0.1358417421579361
+    },
+    {
+      "along": 0.18,
+      "angle": 0.0,
+      "distance": 0.1359078735113144
+    },
+    {
+      "along": 0.18,
+      "angle": 22.5,
+      "distance": 0.13587774336338043
+    },
+    {
+      "along": 0.18,
+      "angle": 45.0,
+      "distance": 0.13588771224021912
+    },
+    {
+      "along": 0.18,
+      "angle": 67.5,
+      "distance": 0.13597556948661804
+    },
+    {
+      "along": 0.18,
+      "angle": 90.0,
+      "distance": 0.13580213487148285
+    },
+    {
+      "along": 0.18,
+      "angle": 112.5,
+      "distance": 0.13599994778633118
+    },
+    {
+      "along": 0.18,
+      "angle": 135.0,
+      "distance": 0.1358804702758789
+    },
+    {
+      "along": 0.18,
+      "angle": 157.5,
+      "distance": 0.13541090488433838
+    },
+    {
+      "along": 0.18,
+      "angle": 180.0,
+      "distance": 0.13597315549850464
+    },
+    {
+      "along": 0.18,
+      "angle": 202.5,
+      "distance": null
+    },
+    {
+      "along": 0.18,
+      "angle": 225.0,
+      "distance": null
+    },
+    {
+      "along": 0.18,
+      "angle": 247.5,
+      "distance": null
+    },
+    {
+      "along": 0.18,
+      "angle": 270.0,
+      "distance": null
+    },
+    {
+      "along": 0.18,
+      "angle": 292.5,
+      "distance": 0.13584516942501068
+    },
+    {
+      "along": 0.18,
+      "angle": 315.0,
+      "distance": 0.13588520884513855
+    },
+    {
+      "along": 0.18,
+      "angle": 337.5,
+      "distance": 0.13592013716697693
+    }
+  ],
+  "wrappedHandleRadius": 0.134,
+  "minimumChannelRadius": 0.13539807498455048,
+  "contactRaysPerSection": [
+    15,
+    13,
+    12
+  ],
+  "passed": true
+}

@@ -1,0 +1,83 @@
+{
+  "id": "obsidian-ogre",
+  "checks": {
+    "glbStructure": {
+      "animations": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Move"
+      ],
+      "meshes": 11,
+      "embeddedImages": 2
+    },
+    "fbxImport": {
+      "triangles": 34492,
+      "bones": 16,
+      "meshes": 11,
+      "maxInfluences": 4,
+      "weightsNormalized": true,
+      "textureLoaded": true
+    },
+    "glbImport": {
+      "triangles": 34492,
+      "bones": 16,
+      "meshes": 11,
+      "maxInfluences": 4,
+      "weightsNormalized": true,
+      "textureLoaded": true
+    },
+    "fbxAnimationImports": {
+      "Idle": {
+        "frames": [
+          2.0,
+          34.0
+        ],
+        "sampledMatrixDelta": 0.03452153400314728
+      },
+      "Move": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "sampledMatrixDelta": 0.8346778958500636
+      },
+      "Attack": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "sampledMatrixDelta": 1.5251461490988731
+      },
+      "Hit": {
+        "frames": [
+          2.0,
+          14.0
+        ],
+        "sampledMatrixDelta": 0.31483249842392524
+      },
+      "Death": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "sampledMatrixDelta": 2.432958890788427
+      }
+    }
+  },
+  "errors": [],
+  "sha256": {
+    "Model.blend": "6a427a4e96871e7d7f59bde829609983302e617aabffb54d5435971f07aaea0b",
+    "Model.fbx": "380c4f6177b2c931de1c5f576e9b4517288e89e0624894b32c41d4b3a08a5bb4",
+    "Model.glb": "f9df149a485053556e750029a60e18a67958f8710325c5adce75790363dd081d",
+    "BaseColor.png": "6d93cd120c52fa42c1a72a5f2b88886ce3890f218d1f4c4fc6f6d0df055588e9",
+    "animations\\Attack.fbx": "69a5f979f5c30aec732eb529bf315794f4b9dc1e589924b06e197358663b3194",
+    "animations\\Death.fbx": "6cf855655ca87a0f9cb4d16ad6a3e405f95ee1703d60ab3a9d7a168b1254835c",
+    "animations\\Hit.fbx": "079773d79854fc9b453485040f8d616863a512a6506e26da01ce62e41ea3eace",
+    "animations\\Idle.fbx": "b548e07402644a98288dfbf99c996bb0e064dad875f73fbd3af8045f23860d13",
+    "animations\\Move.fbx": "e7e330e8d335ffc0411ef7ab9da551f25f303e4407a94cee88181422ae7b6348",
+    "Normal.png": "2841558d32004ce969b5ebedd31d8cb509f5fb23f5f9f0a462cbaf772e7186e2"
+  },
+  "passed": true
+}

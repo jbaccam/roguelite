@@ -1,0 +1,305 @@
+{
+  "id": "rock-throwing-crab",
+  "status": "Blender candidate; visual review and Studio acceptance pending",
+  "totals": {
+    "vertices": 9062,
+    "triangles": 17828
+  },
+  "bones": [
+    "Body",
+    "RightLeg0Upper",
+    "RightLeg0Lower",
+    "RightLeg1Upper",
+    "RightLeg1Lower",
+    "RightLeg2Upper",
+    "RightLeg2Lower",
+    "RightLeg3Upper",
+    "RightLeg3Lower",
+    "LeftLeg0Upper",
+    "LeftLeg0Lower",
+    "LeftLeg1Upper",
+    "LeftLeg1Lower",
+    "LeftLeg2Upper",
+    "LeftLeg2Lower",
+    "LeftLeg3Upper",
+    "LeftLeg3Lower",
+    "RightArm",
+    "RightForearm",
+    "RightClaw",
+    "RightPincer",
+    "LeftArm",
+    "LeftClaw",
+    "LeftPincer"
+  ],
+  "actions": {
+    "Idle": 33,
+    "Move": 25,
+    "Attack": 25,
+    "Hit": 13,
+    "Death": 25
+  },
+  "checks": [
+    {
+      "mesh": "Body_Geometry",
+      "vertices": 1492,
+      "triangles": 2900,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightLeg0Upper_Geometry",
+      "vertices": 392,
+      "triangles": 776,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightLeg0Lower_Geometry",
+      "vertices": 408,
+      "triangles": 804,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightLeg1Upper_Geometry",
+      "vertices": 392,
+      "triangles": 776,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightLeg1Lower_Geometry",
+      "vertices": 408,
+      "triangles": 804,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightLeg2Upper_Geometry",
+      "vertices": 392,
+      "triangles": 776,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightLeg2Lower_Geometry",
+      "vertices": 408,
+      "triangles": 804,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightLeg3Upper_Geometry",
+      "vertices": 392,
+      "triangles": 776,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightLeg3Lower_Geometry",
+      "vertices": 408,
+      "triangles": 804,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftLeg0Upper_Geometry",
+      "vertices": 392,
+      "triangles": 776,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftLeg0Lower_Geometry",
+      "vertices": 408,
+      "triangles": 804,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftLeg1Upper_Geometry",
+      "vertices": 392,
+      "triangles": 776,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftLeg1Lower_Geometry",
+      "vertices": 408,
+      "triangles": 804,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftLeg2Upper_Geometry",
+      "vertices": 392,
+      "triangles": 776,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftLeg2Lower_Geometry",
+      "vertices": 408,
+      "triangles": 804,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftLeg3Upper_Geometry",
+      "vertices": 392,
+      "triangles": 776,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftLeg3Lower_Geometry",
+      "vertices": 408,
+      "triangles": 804,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightArm_Geometry",
+      "vertices": 36,
+      "triangles": 68,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightForearm_Geometry",
+      "vertices": 398,
+      "triangles": 788,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightClaw_Geometry",
+      "vertices": 302,
+      "triangles": 592,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "RightPincer_Geometry",
+      "vertices": 80,
+      "triangles": 152,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftArm_Geometry",
+      "vertices": 24,
+      "triangles": 44,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftClaw_Geometry",
+      "vertices": 204,
+      "triangles": 400,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "LeftPincer_Geometry",
+      "vertices": 40,
+      "triangles": 76,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    },
+    {
+      "mesh": "HeldRock",
+      "vertices": 86,
+      "triangles": 168,
+      "nonManifoldEdges": 0,
+      "unweighted": 0,
+      "badWeightSum": 0,
+      "overFourInfluences": 0,
+      "hasUV": true
+    }
+  ],
+  "failures": [],
+  "grips": [],
+  "gameplayImplemented": false,
+  "studioImportVerified": false,
+  "attackEvents": {
+    "frame": 12,
+    "type": "projectile"
+  },
+  "notes": [
+    "Baked UV atlas and reference-specific anatomy.",
+    "Attack timing metadata does not implement server damage or projectile release."
+  ]
+}
