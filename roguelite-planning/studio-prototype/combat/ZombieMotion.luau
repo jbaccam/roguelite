@@ -26,22 +26,33 @@ function M.slam(age)
     end
     return poses
 end
-function M.pose(kind,phase,stride,reach,clock,attackAge)
+function M.pose(kind,phase,stride,reach,clock,attackAge,attackImpact,attackRecovery)
     if kind=='Mutant' and attackAge and attackAge>=0 and attackAge<=1 then return M.slam(attackAge) end
     local step=math.sin(phase);local bounce=math.cos(phase*2);local idle=math.sin(clock*2.1)*.012
     local poses={};local mutant=kind=='Mutant';local baby=kind=='Baby'
     for _,side in {'Left','Right'} do
         local s=side=='Left' and 1 or -1;local wave=step*s
-        poses[side..'Shoulder']=cf(mutant and (25+wave*9*stride) or (83*reach+wave*5*stride),0,s*(mutant and -3 or 3)*reach,wave*(mutant and .07 or .035)*stride)
-        poses[side..'Elbow']=cf(mutant and 12 or 8*reach+math.sin(phase-.4)*s*2*stride)
-        poses[side..'Wrist']=cf(mutant and -8 or -5*reach)
-        poses[side..'Hip']=cf((mutant and 5 or 0)+wave*(mutant and 22 or 34)*stride)
-        poses[side..'Knee']=cf((mutant and -8 or 0)-math.max(0,-wave)*(mutant and 24 or 42)*stride)
-        poses[side..'Ankle']=cf((mutant and 3 or 0)-wave*8*stride)
+        poses[side..'Shoulder']=cf((mutant and 25 or baby and 16 or 12)-wave*(mutant and 15 or 24)*stride,0,s*-4,wave*.025*stride)
+        poses[side..'Elbow']=cf((mutant and 12 or 16)+math.max(0,wave)*8*stride)
+        poses[side..'Wrist']=cf(mutant and -8 or -5)
+        poses[side..'Hip']=cf((mutant and 5 or 6)+wave*(mutant and 22 or 31)*stride)
+        poses[side..'Knee']=cf((mutant and -8 or -12)-math.max(0,-wave)*(mutant and 24 or 34)*stride)
+        poses[side..'Ankle']=cf((mutant and 3 or 6)-wave*8*stride)
     end
-    poses.Root=cf(0,0,0,mutant and -.03 or 0)
-    poses.Waist=cf((mutant and -26 or -7*reach)+bounce*1.5*stride,math.cos(phase)*2*stride,step*(mutant and 4 or 3.5)*stride,idle+bounce*(mutant and .08 or baby and .045 or .055)*stride)
-    poses.Neck=cf((mutant and 16 or 5*reach)-math.cos(phase*2-.35)*1.5*stride,0,mutant and 0 or 3-math.sin(phase-.25)*2*stride)
+    poses.Root=cf(0,0,0,mutant and -.03 or -.045)
+    poses.Waist=cf((mutant and -26 or -9)+bounce*1.5*stride,math.cos(phase)*2*stride,step*(mutant and 4 or 3.5)*stride,idle+bounce*(mutant and .08 or baby and .045 or .055)*stride)
+    poses.Neck=cf((mutant and 16 or 6)-math.cos(phase*2-.35)*1.5*stride,0,mutant and 0 or 2-math.sin(phase-.25)*2*stride)
+    if not mutant and attackAge and attackAge>=0 and attackAge<=(attackRecovery or .58) then
+        local impact=attackImpact or .24;local recovery=attackRecovery or .58
+        local anticipation=math.clamp(attackAge/(impact*.7),0,1)
+        local strike=math.clamp((attackAge-impact*.7)/(impact*.3),0,1)
+        local relax=smooth(math.clamp((attackAge-impact)/(recovery-impact),0,1))
+        local arm=(12-38*smooth(anticipation)+110*strike)*(1-relax)+12*relax
+        poses.RightShoulder=cf(arm,-10*(1-relax),-7)
+        poses.RightElbow=cf(16+22*anticipation*(1-strike)*(1-relax))
+        poses.LeftShoulder=cf(20,0,6);poses.LeftElbow=cf(25)
+        poses.Waist=cf(-9-9*strike*(1-relax),-12*(anticipation-2*strike)*(1-relax))
+    end
     return poses
 end
 return M
