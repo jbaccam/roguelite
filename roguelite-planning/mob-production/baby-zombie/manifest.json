@@ -1,0 +1,39 @@
+{
+  "id": "baby-zombie",
+  "reference": "Reference.png",
+  "status": "Authored; independent validation and Studio import pending",
+  "triangles": 2704,
+  "meshCount": 15,
+  "boneCount": 16,
+  "clips": {
+    "Idle": {
+      "seconds": 1.0,
+      "loop": true
+    },
+    "Move": {
+      "seconds": 0.8,
+      "loop": true
+    },
+    "Attack": {
+      "seconds": 1.0,
+      "loop": false
+    },
+    "Hit": {
+      "seconds": 0.3,
+      "loop": false
+    },
+    "Death": {
+      "seconds": 0.6,
+      "loop": false
+    }
+  },
+  "texture": "Packed source textures",
+  "textureMethod": "Preserved source UV textures, no recoloring or remodeling",
+  "limitations": [
+    "Layered clothing and fur use intentional intersecting closed pieces.",
+    "Rigid weights on articulated hard sections; snake main body uses blended weights.",
+    "No multiplayer or mobile performance claim.",
+    "Studio import and actual gameplay verification pending."
+  ],
+  "preservedSource": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\baby-mutant-zombies\\Baby\\Model.blend"
+}
