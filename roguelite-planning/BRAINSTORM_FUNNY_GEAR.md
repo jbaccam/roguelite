@@ -1,6 +1,6 @@
 # Brainstorm — Funny Weapons and Retired Armor Ideas
 
-> **Current decision:** The game has no separate armor equipment or armor-set system, and equipped weapons remain visible as floating models around the avatar. Armor concepts below are retained only as an idea archive for possible passive-item names, lobby props, or non-core customization—not as the current equipment plan.
+> **Current decision (2026-09-26):** Armor is back. Players unlock armor sets and wear one into each run, upgrading it through duplicate chest copies (see [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md#armor)). The armor-set ideas below are the starting concept pool for those sets; each set's "full-set payoff" is a candidate signature perk. The "Armor philosophy" options are historical. Equipped weapons remain visible as floating models around the avatar.
 
 **Status:** Idea pool, not an approved catalog  
 **Direction:** Roblox avatars accumulate ridiculous but readable attack systems in the HUD and around them during attacks. The arsenal deliberately mixes real weapons and nonsense; the contrast is more important than making every object a joke.

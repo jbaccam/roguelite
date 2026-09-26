@@ -4,6 +4,8 @@
 
 ## Confirmed project direction from the user
 
+> **Update 2026-09-26:** The eight-minute chapter target below was replaced. Each map is now won at wave 20 (roughly 15–20 minutes), with optional Endless afterward. See [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md). The geometry-family and no-checkpoint lessons still apply.
+
 - Main progression should follow a chapter structure comparable in broad form to Survivor.io.
 - A chapter should take approximately eight minutes, not 15 minutes.
 - There are no mid-level checkpoints; failure means restarting the chapter.

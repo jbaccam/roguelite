@@ -73,7 +73,7 @@ The current Brotato Wiki shop page was checked separately from the older Steam f
 - free locks that preserve offers and prices;
 - identical same-tier weapon combination through Tier 4.
 
-These are reference mechanics, not requirements or formulas to copy. Our eight-wave structure needs stronger build protection than a 20-wave game and a clearer explanation of why an offer appeared.
+These are reference mechanics, not requirements or formulas to copy. Our runs now also use 20 waves (updated 2026-09-26), but we still want clearer explanations of why an offer appeared and protection for a tracked weapon.
 
 ### Complete supplied 2022 feedback thread
 

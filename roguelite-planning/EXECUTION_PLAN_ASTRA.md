@@ -1,7 +1,7 @@
 # Astra Execution Plan — Roblox Survivor Roguelite
 
 **Status:** Approved implementation order  
-**Updated:** 2026-09-15  
+**Updated:** 2026-09-26  
 **Purpose:** Build the smallest complete version of the game in the correct dependency order. Do not begin by producing the full 36-weapon catalog or finished environment art.
 
 ## Core rule
@@ -20,10 +20,10 @@ The first useful playable is:
 - One signature weapon per class: Frying Pan, Glock, Boomerang, Boxing Gloves, Nail Gun, Magic Staff
 - Four temporary combination tiers per prototype weapon
 - Twelve prototype passives
-- Eight combat waves
+- Twenty combat waves (wave 20 boss wins the map; Endless comes later)
 - Six basic enemy types using reusable behavior modules
-- One elite configuration
-- Ogre Warlord final boss
+- Elite waves 5 and 15, horde wave 10
+- Hammer Zombie Boss (see MAP_MOB_ROSTER.md)
 - Banked end-of-wave stat choices
 - Four-card shop, reroll, lock, recycle, tracking, and duplicate combining
 - Death, paid revive test, victory, defeat, and results
@@ -58,7 +58,7 @@ Definitions load without circular dependencies, invalid IDs are rejected, and th
 
 1. Create a flat circular arena with a visible boundary.
 2. Spawn the Roblox avatar near the center.
-3. Keep the regular Roblox camera. Start base WalkSpeed testing at 18 studs/second; further speed modifiers come from classes and run builds.
+3. Keep the regular Roblox camera. The prototype's base move speed is 24 studs/second (see studio-prototype/combat/LOADOUT.md); further speed modifiers come from classes and run builds.
 4. Support keyboard, controller, and touch movement.
 5. Prevent avatar scale/accessories from changing combat collision.
 6. Add a temporary debug HUD for health, run time, enemy count, and FPS.
@@ -141,7 +141,7 @@ Each weapon needs four temporary tiers. A tier must change coverage, cadence, pr
 
 Each signature weapon has a recognizable silhouette and produces a meaningfully different movement/build preference.
 
-## Phase 6 — Complete eight-wave run
+## Phase 6 — Complete 20-wave run
 
 Build the state sequence:
 
@@ -161,7 +161,7 @@ Implement:
 - Wave director and threat budget
 - Run XP and levels
 - Run materials
-- Five active weapon slots
+- Six active weapon slots (implemented)
 - Passive inventory
 - Four-card shop
 - Buy, reroll, lock, recycle, and Track
@@ -203,15 +203,15 @@ After movement speed, attack range, and camera height are stable:
 
 - Lock arena diameter
 - Lock spawn regions and minimum off-camera spawn distance
-- Author the eight-wave Pine Valley schedule
+- Author the 20-wave Pine Valley schedule
 - Add its first-clear roster
 - Add the elite encounter
-- Add Ogre Warlord with basic swing, red-line charge, telegraphed ground slam, and limited add summon
+- Add the Hammer Zombie Boss with telegraphed sweeps and slam (see hammer-boss/README.md)
 - Tune XP, materials, prices, and spawn budgets together
 
 ### Exit check
 
-The chapter lasts approximately 8–10 real minutes including intermissions and has a readable escalation curve.
+A full clear lasts roughly 15–20 real minutes including intermissions and has a readable escalation curve.
 
 ## Phase 9 — Functional UI
 
@@ -239,7 +239,7 @@ Replace placeholders only after gameplay dimensions are stable:
 
 1. Enemy models and basic animations
 2. Weapon attack representations and projectiles
-3. XP, Coin, and loot models
+3. XP crystal, key and chest models
 4. Death bursts and magnetic pickup effects
 5. Attack, hit, death, and pickup audio
 6. Red attack telegraphs
@@ -270,15 +270,13 @@ Icons need strong silhouettes at mobile size and should be derived from the actu
 
 Add:
 
-- Chapter/class/starter selection
+- Loadout: class, starting weapon (with saved tier) and armor selection
+- Map selection and the five-map unlock ladder
+- Keys from wave milestones, chests, copy counts and starting tiers
+- Armor sets
 - Armory
-- Blueprints
-- Universal Parts
-- Permanent Weapon Levels
-- Mastery
-- Earned cases
-- Quests
-- Account progression
+- Achievements and quests with deterministic unlocks
+- Endless mode after wave 20 and best-wave records
 - Tutorial
 - DataStore schema, versioning, retries, and failure handling
 
@@ -290,12 +288,11 @@ Implement only after run state, saving, and receipts are reliable:
 
 - Death-screen paid revive
 - Gem products
-- VIP
-- Starter Pack
-- Class and weapon early unlocks
-- Universal Parts and Coin packs
-- Class Arsenal bundles
-- Premium progression track when content exists
+- VIP (cosmetic and convenience only)
+- Starter Pack (early class unlock, Gems, cosmetics)
+- Early class unlocks
+- Cosmetics
+- Never keys, chests, copies or reward multipliers (see MONETIZATION_AND_REWARDS.md)
 
 For the revive, test with a Studio-only fake grant first. Production grant logic must use idempotent server-side `MarketplaceService.ProcessReceipt`. Never grant production rewards from a client claim.
 
@@ -307,12 +304,11 @@ Only after the Pine Valley vertical slice tests well:
 - Add remaining passives
 - Beach Cove
 - Desert Basin
-- Castle Fields
 - Frozen Pass
 - Volcanic Crater
 - Remaining mobs and bosses
 - Co-op, if approved
-- Endless mode, if approved
+- Endless leaderboards
 
 ## Do not front-load
 

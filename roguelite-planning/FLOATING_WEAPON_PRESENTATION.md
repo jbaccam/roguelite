@@ -10,7 +10,7 @@ Equipped weapons remain visible as floating 3D models arranged around the player
 
 
 
-- Up to five equipped weapon slots are visible in a spaced formation following the avatar. Each slot may contain the weapon's required pieces, such as paired gloves.
+- Up to six equipped weapon slots (as implemented in [LOADOUT.md](studio-prototype/combat/LOADOUT.md)) are visible in a spaced formation following the avatar. Each slot may contain the weapon's required pieces, such as paired gloves.
 
 - Aim is independent of avatar facing and movement. Weapons may target different directions and attack asynchronously. Exact target priority is weapon-specific and still needs tuning.
 

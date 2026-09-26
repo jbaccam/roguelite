@@ -1,7 +1,7 @@
 # Weapon Acquisition and Upgrade System
 
-**Status:** Reference comparison; continuous-draft recommendation superseded by the current eight-wave shop proposal  
-**Question:** How does a player enter a chapter, acquire weapons, improve them, and evolve a build during an eight-minute run?
+**Status:** Historical reference comparison. The current system is in [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md): 20-wave runs with a between-wave shop, six weapon slots, and saved starting tiers raised by duplicate chest copies. The continuous-draft and "eight-minute" material below is kept only to show the tradeoff.  
+**Original question:** How does a player enter a chapter, acquire weapons, improve them, and evolve a build during an eight-minute run?
 
 The current recommended direction is documented in `PROGRESSION_AND_SESSION_FLOW.md`: timed combat waves, end-of-wave level choices, a temporary-material shop, and same-tier weapon combining. The continuous system below is retained only so the tradeoff remains visible.
 
@@ -130,16 +130,16 @@ Pairwise combining works naturally in Brotato because the player visits a shop a
 
 Direct weapon leveling preserves the satisfying “I found my weapon again” moment while remaining faster on touch devices.
 
-We can still borrow the useful part of Brotato's system: once the player owns a blueprint, that weapon enters the normal shop pool, and weapons already used in the current build receive increased offer weight so duplicate combining remains practical.
+We can still borrow the useful part of Brotato's system: once the player owns a weapon, it enters the normal shop pool, and weapons already used in the current build receive increased offer weight so duplicate combining remains practical.
 
-## Persistent blueprint and Weapon Level layer
+## Persistent layer (updated 2026-09-26)
 
-- Cases, deterministic coin unlocks, mastery objectives, or direct purchases can permanently unlock a weapon blueprint.
-- An owned blueprint can be selected as the one guaranteed starter and can appear in normal run shops.
-- Weapon Parts plus persistent Coins raise that weapon through a capped Permanent Weapon Level 1–10 track.
-- Permanent Weapon Level adds only a modest effectiveness bonus, initially targeted around 10–12% total at the cap.
-- The run's Tier 1–4 combining system remains temporary and resets after the chapter.
-- The player never carries the previous run's five-weapon inventory into a new chapter.
+The earlier blueprint / Universal Parts / Permanent Weapon Level 1–10 layer is removed. Now:
+
+- Owning one copy of a weapon (from a chest, an achievement, or the starting set) lets it be the starter for its class and puts it in run shops.
+- Duplicate copies from key-opened chests raise the weapon's **starting tier**: 2 copies = Tier II, 4 = Tier III, 8 = Tier IV. This is the same "two of a tier make the next" rule as in-run combining.
+- Only the one starting weapon uses its saved tier. Everything bought during the run resets afterward.
+- The player never carries the previous run's weapon inventory into a new run.
 
 ## Avoiding a forced build
 
@@ -153,16 +153,16 @@ We can still borrow the useful part of Brotato's system: once the player owns a 
 
 ## Armor decision
 
-**Chosen:** There is no separate armor equipment, armor-set, or game-owned visible armor system. The player's Roblox avatar remains their appearance. Armor continues only as a defensive number modified by classes, level-up cards, and temporary passive items such as Safety Helmet.
+**Chosen (2026-09-26, reversing the earlier no-armor rule):** Players unlock armor sets and wear one into each run. Sets layer comedic gear onto the Roblox avatar and upgrade through duplicate copies like weapons. The Armor stat also remains, modified by classes, level-up cards, armor sets and passives such as Safety Helmet. See [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md#armor).
 
 ## Decisions to confirm
 
 1. **Chosen:** Discrete combat waves with banked end-of-wave stat choices and a shop.
 2. **Chosen:** Bring one owned starting weapon.
-3. **Chosen for prototype:** Five active weapon slots; passive copy limits still need testing.
-4. **Chosen:** Capped Permanent Weapon Level plus temporary same-tier duplicate combining during the run.
+3. **Chosen:** Six active weapon slots (implemented); passive copy limits still need testing.
+4. **Chosen:** Saved starting tier (I–IV) from duplicate copies, plus temporary same-tier combining during the run.
 5. Decide whether maximum-tier weapons require a paired passive for a final evolution.
-6. **Chosen:** No armor equipment system; Armor remains a stat.
+6. **Chosen:** Unlockable, upgradable armor sets worn into each run; Armor also remains a stat.
 
 ## Sources reviewed
 
