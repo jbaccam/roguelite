@@ -1,0 +1,56 @@
+{
+  "id": "ice-elf",
+  "reference": "Reference.png",
+  "status": "Revision candidate; exchange checks passed; Studio validation pending",
+  "triangles": 19768,
+  "meshCount": 15,
+  "boneCount": 16,
+  "clips": {
+    "Idle": {
+      "seconds": 1.0,
+      "loop": true
+    },
+    "Move": {
+      "seconds": 0.8,
+      "loop": true
+    },
+    "Attack": {
+      "seconds": 1.0,
+      "loop": false
+    },
+    "Hit": {
+      "seconds": 0.3,
+      "loop": false
+    },
+    "Death": {
+      "seconds": 0.6,
+      "loop": false
+    }
+  },
+  "texture": "BaseColor.png",
+  "textureMethod": "Original AI-generated revisions/Materials.png atlas, packed and exported; no source-pixel edits.",
+  "limitations": [
+    "Layered clothing and fur use intentional intersecting closed pieces.",
+    "Rigid weights on articulated hard sections; snake main body uses blended weights.",
+    "No multiplayer or mobile performance claim.",
+    "Studio import and actual gameplay verification pending."
+  ],
+  "boundsAuthoring": {
+    "minimum": [
+      -1.9043577909469604,
+      -0.8349999785423279,
+      0.07000000029802322
+    ],
+    "maximum": [
+      1.9043577909469604,
+      0.7248152494430542,
+      6.850124359130859
+    ],
+    "size": [
+      3.808715581893921,
+      1.559815227985382,
+      6.780124358832836
+    ]
+  },
+  "optionalLaterMob": false
+}
