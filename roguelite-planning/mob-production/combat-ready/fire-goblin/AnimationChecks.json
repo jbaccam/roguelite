@@ -1,0 +1,28 @@
+{
+  "source": "reference-rebuilds\\fire-goblin",
+  "geometryFingerprintBefore": "517f1b8b1471d1b34d873e1c5b5d959e49fcab6b66415f89c3360caea9847f84",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {
+    "leftLegRightArmCovariance": 0.0413762821368805,
+    "rightLegLeftArmCovariance": 0.1619345255544802,
+    "sameSideCovariance": -0.17821045614560554,
+    "strideLength": 2.999292820894347,
+    "nominalSpeed": 4.49893923134152,
+    "opposingLimbs": true,
+    "maxPlantedAnkleHeightError": 8.940696716308594e-08
+  },
+  "bow": {},
+  "geometryFingerprintAfter": "517f1b8b1471d1b34d873e1c5b5d959e49fcab6b66415f89c3360caea9847f84",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "5891abe488c5d2aa37fec50455d8e83f9df60491a5eb452be46fa8274296df04",
+    "Model.fbx": "270023e843650d26701d143399ff9b3673afc1c3bad4c66d6ce1e3c14b2f741f",
+    "Model.glb": "f849ec5e13640698ca5aa816b30dc1d7df7ecaf39fbf4e573dae493327d64b56",
+    "AnimationData.json": "867078dce531be216a4e0b9e33abed3e0779b7767efc1ac3121b4a1530b929f4",
+    "Geometry.json": "8d274de5104b592f04b8b2c64fd4a724ca9bf3028f1b891013d6181cad57b92c"
+  }
+}

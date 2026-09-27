@@ -1,0 +1,11 @@
+{
+  "id": "ember-spider",
+  "boneCount": 20,
+  "rigType": "Motor6D",
+  "maxWorldMatrixReconstructionError": 1.927986892358291e-07,
+  "maxNativeMotorPartError": 2.772058900202268e-07,
+  "passed": true,
+  "sourceAnimationHash": "a3a1afa89e90ea177b15e1ff81fe617fde72028e7466c45643685a8fa9798112",
+  "importReceiptHash": "5d553ffbb3b6243e5b27421ea8d7869a69c92d95f14a3c204a2b1d39a52cadc4",
+  "outputHash": "4c324beaf79bc5ca6b6e95060b35fd0854bd6e41a16e31e1a273f3c2aff0c8fc"
+}

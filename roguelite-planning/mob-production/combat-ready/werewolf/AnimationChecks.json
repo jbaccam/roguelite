@@ -1,0 +1,28 @@
+{
+  "source": "revisions\\werewolf",
+  "geometryFingerprintBefore": "1ed487ce8b8c08a6fca1fc796d27d842c315ab6a64de5c4b6690dd3c136b951f",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {
+    "leftLegRightArmCovariance": 0.3090492391086723,
+    "rightLegLeftArmCovariance": 0.3090492391086723,
+    "sameSideCovariance": -0.34117759209867565,
+    "strideLength": 4.439551924844562,
+    "nominalSpeed": 6.659327887266842,
+    "opposingLimbs": true,
+    "maxPlantedAnkleHeightError": 1.7881393432617188e-07
+  },
+  "bow": {},
+  "geometryFingerprintAfter": "1ed487ce8b8c08a6fca1fc796d27d842c315ab6a64de5c4b6690dd3c136b951f",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "0ef5b9d5a0515984905a3c9365dbe0085955516269fa1012d3d1b081af5b7624",
+    "Model.fbx": "bf2c26bcfa76d3b7c4fd61959386290065eafd30262b26028ad3267c01011240",
+    "Model.glb": "8e5bdbb389b25e8dd8040501a8e7ad5b726dcf4681ddca2acc4d0d551ed038b0",
+    "AnimationData.json": "4a9d7c62bf9ec6de0a5cad9072637b96e2088d62c4d86438c5275eaa730d7ca9",
+    "Geometry.json": "69c7dc455de9a82a04f4c56cda52ac337c4bc35a655f3143e6c6f843e7c12b7f"
+  }
+}

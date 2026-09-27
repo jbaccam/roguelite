@@ -1,0 +1,11 @@
+{
+  "id": "rock-throwing-crab",
+  "boneCount": 25,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 1.6410153569346164e-07,
+  "maxNativeMotorPartError": 0.0,
+  "passed": true,
+  "sourceAnimationHash": "74aedf786dca51f6a6a110346223ff7a5ef8d6f551a1d9a2410d23a3c76a744f",
+  "importReceiptHash": "10c3e0b63fa98276d790b54277514721545ee1fd26dfa52a39e7d23f2d86e39e",
+  "outputHash": "9d8ef25c8908a64971e779fde46d3bae45c8a7c4d14f109d245ec678b83b45b2"
+}

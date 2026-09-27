@@ -1,0 +1,8 @@
+{
+  "id": "scorpion",
+  "plantedSamples": 108,
+  "maxPlantedTipError": 3.6319192324895717e-07,
+  "minimumSwingClearance": 0.0014551468193531036,
+  "maximumSwingClearance": 0.11238452419638634,
+  "passed": true
+}

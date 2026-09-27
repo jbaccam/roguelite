@@ -1,0 +1,11 @@
+{
+  "id": "hermit-crab",
+  "boneCount": 20,
+  "rigType": "Motor6D",
+  "maxWorldMatrixReconstructionError": 2.0225778163407426e-07,
+  "maxNativeMotorPartError": 3.905662446790359e-07,
+  "passed": true,
+  "sourceAnimationHash": "c06d3c9f7f9cc27b9f0d77fcb381be018f20a5faea41042931c7c5298b596fb6",
+  "importReceiptHash": "ea16c6ba5df328d3a31a08b300fe52d9afae1f85daafe0feb4eb3ee5501d25fe",
+  "outputHash": "a1a745c6890e4953e74c6c28df8b0d13bbb037aa2a9146496b26702b9fc39283"
+}

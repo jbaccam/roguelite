@@ -1,0 +1,11 @@
+{
+  "id": "spitter-zombie",
+  "boneCount": 16,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 2.3595046355628924e-07,
+  "maxNativeMotorPartError": 0.0,
+  "passed": true,
+  "sourceAnimationHash": "5143c37398a7d8a4e5f07478c9db90b905770505adf079fc8a76cc55c0092d79",
+  "importReceiptHash": "8089deb2425a94ad74f16b929035cd5c449aee23e94b4b1fa56700a9031936fb",
+  "outputHash": "989871d9df7f9bc88736b7c54340081becbfa6bd3d43d680f160069a019290c9"
+}

@@ -1,0 +1,28 @@
+{
+  "source": "revisions\\mummy",
+  "geometryFingerprintBefore": "fd9074b061db831d6f1d34a71b8e0229244995bd2f8e1627beeaeaddad9ac4e3",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {
+    "leftLegRightArmCovariance": 0.15619193788619734,
+    "rightLegLeftArmCovariance": 0.15619193788619734,
+    "sameSideCovariance": -0.17961871657003084,
+    "strideLength": 3.4246194759796467,
+    "nominalSpeed": 2.7396955807837173,
+    "opposingLimbs": true,
+    "maxPlantedAnkleHeightError": 1.1920928955078125e-07
+  },
+  "bow": {},
+  "geometryFingerprintAfter": "fd9074b061db831d6f1d34a71b8e0229244995bd2f8e1627beeaeaddad9ac4e3",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "1327cb21dfdccbabdb290c5c8d950912e02dd1f8e8bd98224a986b7a4c89e63e",
+    "Model.fbx": "3ef3d94d4e483012e16caaa5eb08e925adbc477c5fb2c98a1fd861c494b449c4",
+    "Model.glb": "d1ac0b2ac0c70a358b92cb67dbc1dcc5fba2a777024c50151b560dbe5a8579aa",
+    "AnimationData.json": "31410c5905d7cd9073cffd46036a45dc31ee9dc69560d35bc6bfd4358cbe96a8",
+    "Geometry.json": "e22623c7b6f8716520047f3f72d9457e123a4854dbad035fc3ce0ed575537acf"
+  }
+}

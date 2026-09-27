@@ -1,0 +1,20 @@
+{
+  "source": "revisions\\frost-ghost",
+  "geometryFingerprintBefore": "05a6bfbf7b1efc336cd8783738ea04732555008adfe1d57327572ef346ab5426",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {},
+  "bow": {},
+  "geometryFingerprintAfter": "05a6bfbf7b1efc336cd8783738ea04732555008adfe1d57327572ef346ab5426",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "a317c04ca1e2713da47797ea2992381767386dfde39115515bde3fda96e211d4",
+    "Model.fbx": "d75732190034479eec0b6792020844ea857326c62db0d3508013b5f2add475f5",
+    "Model.glb": "bdac5bed592260971cf8e32bbe04db03ef5614ef833c877242c2072e3f16af91",
+    "AnimationData.json": "049686b1e8fe8ad0266013d4d772171afc9f09f0b8e1318c597bf0a76b8ae39c",
+    "Geometry.json": "7c6f04eb2a49bf7b352d95b6d2070ceddb015e29a07946d6d4111e7e00940653"
+  }
+}

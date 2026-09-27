@@ -1,0 +1,11 @@
+{
+  "id": "crab",
+  "boneCount": 24,
+  "rigType": "Motor6D",
+  "maxWorldMatrixReconstructionError": 2.0688393770340596e-07,
+  "maxNativeMotorPartError": 2.6318577561745826e-07,
+  "passed": true,
+  "sourceAnimationHash": "ba67cfb152a25277a909b10fd87d60f98871f3fba933c77a81841694a564782f",
+  "importReceiptHash": "b8f4307d708c8bb6f81d1f98476998d461b4cffa97510fcb4341b7a959516dfe",
+  "outputHash": "a521afa6aea5a3faa95d454540ecf723c07a0e10edbf3e0f0a2bf4cd85a39acb"
+}

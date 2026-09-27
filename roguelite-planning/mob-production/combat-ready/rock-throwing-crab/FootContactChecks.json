@@ -1,0 +1,8 @@
+{
+  "id": "rock-throwing-crab",
+  "plantedSamples": 108,
+  "maxPlantedTipError": 5.04567158398519e-07,
+  "minimumSwingClearance": 0.0014550834894180298,
+  "maximumSwingClearance": 0.1123843565583229,
+  "passed": true
+}

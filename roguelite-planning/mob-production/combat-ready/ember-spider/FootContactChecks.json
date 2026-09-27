@@ -1,0 +1,8 @@
+{
+  "id": "ember-spider",
+  "plantedSamples": 80,
+  "maxPlantedTipError": 5.02292924841737e-07,
+  "minimumSwingClearance": 0.003338294103741646,
+  "maximumSwingClearance": 0.13985811360180378,
+  "passed": true
+}

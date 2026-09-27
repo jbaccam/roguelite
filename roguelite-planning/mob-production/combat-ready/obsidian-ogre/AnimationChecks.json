@@ -1,0 +1,28 @@
+{
+  "source": "reference-rebuilds\\obsidian-ogre",
+  "geometryFingerprintBefore": "efd9881a86279cbb81d01747ac75c08e25fa631dfbab017bb466bd9850d79f37",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {
+    "leftLegRightArmCovariance": 0.22778983226016272,
+    "rightLegLeftArmCovariance": 0.22778983226016272,
+    "sameSideCovariance": -0.26110431293200764,
+    "strideLength": 3.483092162654462,
+    "nominalSpeed": 2.7864737301235696,
+    "opposingLimbs": true,
+    "maxPlantedAnkleHeightError": 2.384185791015625e-07
+  },
+  "bow": {},
+  "geometryFingerprintAfter": "efd9881a86279cbb81d01747ac75c08e25fa631dfbab017bb466bd9850d79f37",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "796f37284a7bb1614177f1e1bef021239609f9d0948a959c8ccd038e9e6553da",
+    "Model.fbx": "72a5aa0c61a01cf217d0e27063d5b8fd72e32e49df4c63991ad2dff9f9677441",
+    "Model.glb": "9a81b6f7a395fcf321577e4138c36bf9af9ee5ba20e7c6ab1f80c04152854ef7",
+    "AnimationData.json": "dea7f05f4a9ad0bd80b951d740293456ee7b7e89dd3d627253b5e9282781aa74",
+    "Geometry.json": "38ec972249dda68f9d2773558b699f30dfcf9014268a6cb6430512d5517ac425"
+  }
+}

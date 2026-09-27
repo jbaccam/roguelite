@@ -1,0 +1,83 @@
+{
+  "id": "obsidian-ogre",
+  "checks": {
+    "glbStructure": {
+      "animations": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Move"
+      ],
+      "meshes": 11,
+      "embeddedImages": 2
+    },
+    "fbxImport": {
+      "triangles": 34492,
+      "bones": 16,
+      "meshes": 11,
+      "maxInfluences": 4,
+      "weightsNormalized": true,
+      "textureLoaded": true
+    },
+    "glbImport": {
+      "triangles": 34492,
+      "bones": 16,
+      "meshes": 11,
+      "maxInfluences": 4,
+      "weightsNormalized": true,
+      "textureLoaded": true
+    },
+    "fbxAnimationImports": {
+      "Idle": {
+        "frames": [
+          2.0,
+          74.0
+        ],
+        "sampledMatrixDelta": 0.04170016944408417
+      },
+      "Move": {
+        "frames": [
+          2.0,
+          32.0
+        ],
+        "sampledMatrixDelta": 1.161030575633049
+      },
+      "Attack": {
+        "frames": [
+          2.0,
+          40.0
+        ],
+        "sampledMatrixDelta": 2.9245057106018066
+      },
+      "Hit": {
+        "frames": [
+          2.0,
+          12.0
+        ],
+        "sampledMatrixDelta": 0.12775660306215286
+      },
+      "Death": {
+        "frames": [
+          2.0,
+          26.0
+        ],
+        "sampledMatrixDelta": 1.8045603334903717
+      }
+    }
+  },
+  "errors": [],
+  "sha256": {
+    "Model.blend": "796f37284a7bb1614177f1e1bef021239609f9d0948a959c8ccd038e9e6553da",
+    "Model.fbx": "72a5aa0c61a01cf217d0e27063d5b8fd72e32e49df4c63991ad2dff9f9677441",
+    "Model.glb": "9a81b6f7a395fcf321577e4138c36bf9af9ee5ba20e7c6ab1f80c04152854ef7",
+    "BaseColor.png": "6d93cd120c52fa42c1a72a5f2b88886ce3890f218d1f4c4fc6f6d0df055588e9",
+    "animations\\Attack.fbx": "183fca26da4d2bce2e0d8d5fe61e5dabcd490aa5e095ce673b13bf5c4e4c1541",
+    "animations\\Death.fbx": "c22a2f344ab0037cbb500bf5d21518eef7160a1d1fb8ba1bed8f93b043d0aa46",
+    "animations\\Hit.fbx": "e276617d20385de02c07da1b3deeb16ab3ce9e1f1c9bef6478272829bd72cb5d",
+    "animations\\Idle.fbx": "18ba786d7e6f784e5af9523ff925173a01160b4e5b15b07203b2211d1239f334",
+    "animations\\Move.fbx": "04f3cac6217fdfffd86a95c0dec8e32bee2efa93cefee96b8bf06cf971e07ed4",
+    "Normal.png": "2841558d32004ce969b5ebedd31d8cb509f5fb23f5f9f0a462cbaf772e7186e2"
+  },
+  "passed": true
+}

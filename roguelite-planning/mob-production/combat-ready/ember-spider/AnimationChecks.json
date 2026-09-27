@@ -1,0 +1,20 @@
+{
+  "source": "revisions\\ember-spider",
+  "geometryFingerprintBefore": "928aa2ee29120ffd720280031aefabd720f3cf0b45f9ea40b644e6313a1ffeb7",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {},
+  "bow": {},
+  "geometryFingerprintAfter": "928aa2ee29120ffd720280031aefabd720f3cf0b45f9ea40b644e6313a1ffeb7",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "51b959715aafd3ee686bac53c5933cfa12de2ebe5f2aab9b5084dbbe70464efa",
+    "Model.fbx": "ab27fd3973e3071237526afba08f23d7f990a7adf615f30a660a990e7e7fdf46",
+    "Model.glb": "a6bd36009b1535cb99f264a85dd92d074b779a44340da41c2daa38e4befeef9c",
+    "AnimationData.json": "a3a1afa89e90ea177b15e1ff81fe617fde72028e7466c45643685a8fa9798112",
+    "Geometry.json": "efb899178025a7e7520795d5f00d9ccd955d3d49b954be966e7bc0bb8d86d810"
+  }
+}

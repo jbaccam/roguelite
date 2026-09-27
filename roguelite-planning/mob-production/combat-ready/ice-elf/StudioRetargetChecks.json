@@ -1,0 +1,11 @@
+{
+  "id": "ice-elf",
+  "boneCount": 16,
+  "rigType": "Motor6D",
+  "maxWorldMatrixReconstructionError": 2.472563171984632e-07,
+  "maxNativeMotorPartError": 3.429739754423622e-07,
+  "passed": true,
+  "sourceAnimationHash": "a97825a0d7c7e171d06a64f96218580222f1b986a521f1f1bd460d3cc8276fc9",
+  "importReceiptHash": "85f2b15fa0810e902279cd36803243b2e86417e143f016a9680b3679688b0923",
+  "outputHash": "7199912f0435ce5f6fbd4199f11bf233beb1a5b41b01b18409ddddd76db2f5a1"
+}

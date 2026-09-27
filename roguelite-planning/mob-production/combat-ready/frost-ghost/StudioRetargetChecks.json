@@ -1,0 +1,11 @@
+{
+  "id": "frost-ghost",
+  "boneCount": 5,
+  "rigType": "Motor6D",
+  "maxWorldMatrixReconstructionError": 1.1910214601368319e-07,
+  "maxNativeMotorPartError": 1.8193510431530058e-07,
+  "passed": true,
+  "sourceAnimationHash": "049686b1e8fe8ad0266013d4d772171afc9f09f0b8e1318c597bf0a76b8ae39c",
+  "importReceiptHash": "9f6cdb6d31ceedd88026e6bfbdfcdf1e45066aa05c7650e34562230c12e80464",
+  "outputHash": "2dacb6e904239a09aa6c0c94426d7c1c9e8a0e69e1da3a5789f586e07c459400"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "obsidian-ogre",
+  "boneCount": 16,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 4.308784693485279e-07,
+  "maxNativeMotorPartError": 0.0,
+  "passed": true,
+  "sourceAnimationHash": "dea7f05f4a9ad0bd80b951d740293456ee7b7e89dd3d627253b5e9282781aa74",
+  "importReceiptHash": "75afc010330d71929235603c876f7b4f3ce45f7ac30412e937baf95e8863588d",
+  "outputHash": "a4f691a6d8ce1c05c1be0bae1a9807f9c3fde83214d3dde62f04ea3d9b9b8581"
+}

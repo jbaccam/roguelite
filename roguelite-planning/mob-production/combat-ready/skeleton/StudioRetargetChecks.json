@@ -1,0 +1,11 @@
+{
+  "id": "skeleton",
+  "boneCount": 16,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 2.3451002006957822e-07,
+  "maxNativeMotorPartError": 0.0,
+  "passed": true,
+  "sourceAnimationHash": "59454ff3227fd1069188e5b0a7b3f484353d34c6457526eae9aa8d25b01da287",
+  "importReceiptHash": "9447bc90d8ff3066ab87c4abb49e89d7fff967052a8c91f52cc80ecb68d8c8cb",
+  "outputHash": "fa8c4fe6007ebc71e478ddec281a886a191106bbe1479112fb9de18816b8d2e5"
+}

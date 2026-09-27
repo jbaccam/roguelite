@@ -1,0 +1,11 @@
+{
+  "id": "frozen-knight",
+  "boneCount": 16,
+  "rigType": "Motor6D",
+  "maxWorldMatrixReconstructionError": 2.1603332878150638e-07,
+  "maxNativeMotorPartError": 5.065098047651873e-07,
+  "passed": true,
+  "sourceAnimationHash": "4b50d691a3870723634cea7a002067c65a40f9688679f6d252e2cbf6490a9d5f",
+  "importReceiptHash": "84707260ce865873c45fe5f6322111cf851decd9fca586ad353269c666f54bde",
+  "outputHash": "640067bc7a505963de193b7b86e5a5c75c9d83621100750dc7a8f73790476573"
+}

@@ -1,0 +1,20 @@
+{
+  "source": "revisions\\hermit-crab",
+  "geometryFingerprintBefore": "348b00f15d8634d7b79f9f72a93361e10df9d168cd1e7bed8b53f0dd49482a5d",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {},
+  "bow": {},
+  "geometryFingerprintAfter": "348b00f15d8634d7b79f9f72a93361e10df9d168cd1e7bed8b53f0dd49482a5d",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "b273b9e339afec111f544292a0fc4149432d04efb15b9edd740f7d7c6fe287d0",
+    "Model.fbx": "1f6665d275b601cbbbfbdab37c357bca7c082c99afa07134e407d4b10685534d",
+    "Model.glb": "41639ce53ccb6a57ac8e068a39fe748eb50de89b9d39433ed23fcac14ae2bf88",
+    "AnimationData.json": "c06d3c9f7f9cc27b9f0d77fcb381be018f20a5faea41042931c7c5298b596fb6",
+    "Geometry.json": "159e193f6efd32f17461c943665d187151c39004507d63dcbb7800cab6234d97"
+  }
+}

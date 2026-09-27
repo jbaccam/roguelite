@@ -1,0 +1,28 @@
+{
+  "source": "revisions\\ice-elf",
+  "geometryFingerprintBefore": "130b863a5b7639708386ed821d2609e8e2e0448f466501d3cf44e43bc937d614",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {
+    "leftLegRightArmCovariance": 0.22332141955419585,
+    "rightLegLeftArmCovariance": 0.2233372042337566,
+    "sameSideCovariance": -0.2571969483636585,
+    "strideLength": 3.5664534555048575,
+    "nominalSpeed": 4.075946806291266,
+    "opposingLimbs": true,
+    "maxPlantedAnkleHeightError": 2.384185791015625e-07
+  },
+  "bow": {},
+  "geometryFingerprintAfter": "130b863a5b7639708386ed821d2609e8e2e0448f466501d3cf44e43bc937d614",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "f666354aa11d39fea21067e465015446ddf9a4571ef736d0f40caa87ddd0c2b7",
+    "Model.fbx": "f5a9e44e7ca7240b018b908ed4086f6573e293fed8fb5d5dff48c3ef5a6eae7a",
+    "Model.glb": "2ae3c3d2677fcc12dbe7d89cb4b1ecdeff3306ab7d1d04f407e37c6a19c106be",
+    "AnimationData.json": "a97825a0d7c7e171d06a64f96218580222f1b986a521f1f1bd460d3cc8276fc9",
+    "Geometry.json": "a0bd7d10f70886e9ea311a73c9b91b436ef8d31c423fd9c34827a31656fe4ece"
+  }
+}

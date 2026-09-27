@@ -1,0 +1,11 @@
+{
+  "id": "fire-goblin",
+  "boneCount": 16,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 2.0501600550559829e-07,
+  "maxNativeMotorPartError": 0.0,
+  "passed": true,
+  "sourceAnimationHash": "867078dce531be216a4e0b9e33abed3e0779b7767efc1ac3121b4a1530b929f4",
+  "importReceiptHash": "0ab5133647f07675b9cf5b9c8893a79543f63f0a66902cca1cafed89003316e3",
+  "outputHash": "6ddbfebb00ed296fbe32cf8988218eef43c8d9cc8d6dfeee3dcef96d5d38f748"
+}

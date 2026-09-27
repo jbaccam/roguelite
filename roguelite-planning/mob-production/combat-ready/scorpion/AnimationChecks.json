@@ -1,0 +1,20 @@
+{
+  "source": "revisions\\scorpion",
+  "geometryFingerprintBefore": "e16906f30cbcc8297469d25405581404a145282e3c3126643cbf1f2b689e24eb",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {},
+  "bow": {},
+  "geometryFingerprintAfter": "e16906f30cbcc8297469d25405581404a145282e3c3126643cbf1f2b689e24eb",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "6500dc5b18513c8f1b1ce28c1ef5ffc491d9072487a439267d1eeb2188977e79",
+    "Model.fbx": "cf9a02ceeb9a7d0e3a03fb4e8669dde3e1cc388d2149a92368b91676002d04d4",
+    "Model.glb": "9d2e1e80c37432d464563cbec9dfe4793266f4367602107007e766fe40ee68fb",
+    "AnimationData.json": "21a9916d26a2583f5822d69d0e9df724cb122ec463fe855a329142405a708d5f",
+    "Geometry.json": "88a4326fcc093943381ae9fe98a312f1c9e097606f36dd17ce62f8062c2a3faa"
+  }
+}

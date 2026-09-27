@@ -1,0 +1,114 @@
+{
+  "scope": "18 custom regular enemies; native Pine Valley templates verified by runtime integration",
+  "passed": true,
+  "models": {
+    "ash-shaman": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "c30cdfc8e481ffe521143513fd25c3bd21faa0ca9171a538ddcce05fb41b441c"
+    },
+    "bow-skeleton": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "463b260951d8c937a6686be38bab78418af5cfee8972faf7cbca73d9882b3e43"
+    },
+    "crab": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "a521afa6aea5a3faa95d454540ecf723c07a0e10edbf3e0f0a2bf4cd85a39acb"
+    },
+    "ember-spider": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "4c324beaf79bc5ca6b6e95060b35fd0854bd6e41a16e31e1a273f3c2aff0c8fc"
+    },
+    "fire-goblin": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "6ddbfebb00ed296fbe32cf8988218eef43c8d9cc8d6dfeee3dcef96d5d38f748"
+    },
+    "frost-ghost": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "2dacb6e904239a09aa6c0c94426d7c1c9e8a0e69e1da3a5789f586e07c459400"
+    },
+    "frozen-knight": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "640067bc7a505963de193b7b86e5a5c75c9d83621100750dc7a8f73790476573"
+    },
+    "hermit-crab": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "a1a745c6890e4953e74c6c28df8b0d13bbb037aa2a9146496b26702b9fc39283"
+    },
+    "ice-elf": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "7199912f0435ce5f6fbd4199f11bf233beb1a5b41b01b18409ddddd76db2f5a1"
+    },
+    "lava-slime": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "118c51d6d1bbce3da4e40a763838c044f64504ed3eed47c3527df0ae715a3a1a"
+    },
+    "mummy": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "8a5174aa89df1470882a8bb5659e2147d0f27202df137e9d06b99af014562051"
+    },
+    "obsidian-ogre": {
+      "passed": true,
+      "checkedFiles": 18,
+      "failures": [],
+      "runtimePayloadHash": "a4f691a6d8ce1c05c1be0bae1a9807f9c3fde83214d3dde62f04ea3d9b9b8581"
+    },
+    "rock-throwing-crab": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "9d8ef25c8908a64971e779fde46d3bae45c8a7c4d14f109d245ec678b83b45b2"
+    },
+    "scorpion": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "a704dc4e2e8963247ec852d2210d471278da3a75e23ecd5b5628e3e2129d309e"
+    },
+    "skeleton": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "fa8c4fe6007ebc71e478ddec281a886a191106bbe1479112fb9de18816b8d2e5"
+    },
+    "snake": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "51bf5b17a19bcd4467ff1d2791db0b9e98ed218419bcf82dc1c80447a62b0f07"
+    },
+    "spitter-zombie": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "989871d9df7f9bc88736b7c54340081becbfa6bd3d43d680f160069a019290c9"
+    },
+    "werewolf": {
+      "passed": true,
+      "checkedFiles": 17,
+      "failures": [],
+      "runtimePayloadHash": "89d56211f15723ada5dbc8d569c129d0ffdfb1a3c1baf7f68dbc4bff39f8553e"
+    }
+  }
+}

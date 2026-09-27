@@ -1,0 +1,8 @@
+{
+  "id": "hermit-crab",
+  "plantedSamples": 120,
+  "maxPlantedTipError": 5.754940538645834e-07,
+  "minimumSwingClearance": 0.0009527988731861115,
+  "maximumSwingClearance": 0.07821305468678474,
+  "passed": true
+}

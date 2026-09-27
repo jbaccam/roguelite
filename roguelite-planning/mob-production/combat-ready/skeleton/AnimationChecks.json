@@ -1,0 +1,28 @@
+{
+  "source": "reference-rebuilds\\skeleton",
+  "geometryFingerprintBefore": "08b4ad3c871a205c54011b6552940c4454fad47da8f17e8df5530f7c535baa76",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {
+    "leftLegRightArmCovariance": 0.033668279929077005,
+    "rightLegLeftArmCovariance": 0.14351178532060724,
+    "sameSideCovariance": -0.16601237174988612,
+    "strideLength": 3.111676706401182,
+    "nominalSpeed": 3.5562019501727797,
+    "opposingLimbs": true,
+    "maxPlantedAnkleHeightError": 2.384185791015625e-07
+  },
+  "bow": {},
+  "geometryFingerprintAfter": "08b4ad3c871a205c54011b6552940c4454fad47da8f17e8df5530f7c535baa76",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "8c72c60b2a6155a5913ce9d217b8d7681a92957883809d3d72524daf01926c66",
+    "Model.fbx": "3d15dee238c48a5daabc62f21b3887602d9eedfb7a1688bf4088223ce9923fc9",
+    "Model.glb": "26e7b0f19e198816ce533f1890d2ac0de652e075edd6cc1f4e8daeaf35316387",
+    "AnimationData.json": "59454ff3227fd1069188e5b0a7b3f484353d34c6457526eae9aa8d25b01da287",
+    "Geometry.json": "edf39ca49d42c78071b1811788106df912debf2b23d93b379b7d6fd69730d7a5"
+  }
+}

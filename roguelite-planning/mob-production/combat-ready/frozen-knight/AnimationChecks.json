@@ -1,0 +1,28 @@
+{
+  "source": "revisions\\frozen-knight",
+  "geometryFingerprintBefore": "ecb26a724022176cd546115192773a1d67a67588e38fe708551e02a0a64a2d3a",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {
+    "leftLegRightArmCovariance": 0.058001256502519166,
+    "rightLegLeftArmCovariance": 0.15564405578055085,
+    "sameSideCovariance": -0.17895914790829684,
+    "strideLength": 3.4246194759796467,
+    "nominalSpeed": 2.7396955807837173,
+    "opposingLimbs": true,
+    "maxPlantedAnkleHeightError": 1.1920928955078125e-07
+  },
+  "bow": {},
+  "geometryFingerprintAfter": "ecb26a724022176cd546115192773a1d67a67588e38fe708551e02a0a64a2d3a",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "f6c73797aaa0d157b2d87c82d92deba030e6b42610a8bcbe2c233b46dd79bc5a",
+    "Model.fbx": "387d336b5dd8a438fd72bef1fef5a4ffa3b9b118bb2131b570b4c0fd85c8b2db",
+    "Model.glb": "09ed3e8bb4af50c8d4004166c3b428dca42eaeab5781661a606f12b91b07f491",
+    "AnimationData.json": "4b50d691a3870723634cea7a002067c65a40f9688679f6d252e2cbf6490a9d5f",
+    "Geometry.json": "9f0829f51896efca0116c5536b0efe437dadd93697fdca5f6c245bb33929c192"
+  }
+}

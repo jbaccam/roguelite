@@ -1,0 +1,11 @@
+{
+  "id": "ash-shaman",
+  "boneCount": 16,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 1.9905557967908605e-07,
+  "maxNativeMotorPartError": 0.0,
+  "passed": true,
+  "sourceAnimationHash": "4971cd0d47b1535eb74189a83b22d88ad645606eb453547cbf2cae1437342605",
+  "importReceiptHash": "e1195aede6a500fa324bde97401f906d69ceee8a589a4af96e757423f0689705",
+  "outputHash": "c30cdfc8e481ffe521143513fd25c3bd21faa0ca9171a538ddcce05fb41b441c"
+}

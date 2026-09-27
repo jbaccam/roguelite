@@ -1,0 +1,11 @@
+{
+  "id": "scorpion",
+  "boneCount": 31,
+  "rigType": "Motor6D",
+  "maxWorldMatrixReconstructionError": 2.2336988358961918e-07,
+  "maxNativeMotorPartError": 3.4109439761564886e-07,
+  "passed": true,
+  "sourceAnimationHash": "21a9916d26a2583f5822d69d0e9df724cb122ec463fe855a329142405a708d5f",
+  "importReceiptHash": "9263f01831bc9b3aebaf5c0f970e32ab03f32898e0083add9f7d5ac67b66553c",
+  "outputHash": "a704dc4e2e8963247ec852d2210d471278da3a75e23ecd5b5628e3e2129d309e"
+}

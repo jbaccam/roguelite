@@ -1,0 +1,41 @@
+{
+  "id": "skeleton",
+  "source": "reference-rebuilds\\skeleton",
+  "geometryUnchanged": true,
+  "clips": {
+    "Idle": {
+      "duration": 3.0,
+      "loop": true
+    },
+    "Move": {
+      "duration": 0.875,
+      "loop": true
+    },
+    "Attack": {
+      "duration": 1.0833333333333333,
+      "loop": false
+    },
+    "Hit": {
+      "duration": 0.4166666666666667,
+      "loop": false
+    },
+    "Death": {
+      "duration": 1.0,
+      "loop": false
+    }
+  },
+  "motion": {
+    "strideLength": 3.111676706401182,
+    "nominalSpeed": 3.5562019501727797,
+    "attackImpact": 0.5416666666666666,
+    "attackRecovery": 0.6283333333333333,
+    "attackDuration": 1.0833333333333333
+  },
+  "studioVerified": false,
+  "assetPublication": "Not published by this export script",
+  "notes": [
+    "Accepted geometry, UVs and weights preserved.",
+    "Animations sampled at 24 fps with exact loop closure.",
+    "Humanoid ankles solve to ground targets; movement cycle is distance driven in Roblox."
+  ]
+}

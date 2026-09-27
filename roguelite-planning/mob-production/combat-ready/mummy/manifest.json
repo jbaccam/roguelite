@@ -1,0 +1,41 @@
+{
+  "id": "mummy",
+  "source": "revisions\\mummy",
+  "geometryUnchanged": true,
+  "clips": {
+    "Idle": {
+      "duration": 3.0,
+      "loop": true
+    },
+    "Move": {
+      "duration": 1.25,
+      "loop": true
+    },
+    "Attack": {
+      "duration": 1.5833333333333333,
+      "loop": false
+    },
+    "Hit": {
+      "duration": 0.4166666666666667,
+      "loop": false
+    },
+    "Death": {
+      "duration": 1.0,
+      "loop": false
+    }
+  },
+  "motion": {
+    "strideLength": 3.4246194759796467,
+    "nominalSpeed": 2.7396955807837173,
+    "attackImpact": 0.855,
+    "attackRecovery": 0.9183333333333332,
+    "attackDuration": 1.5833333333333333
+  },
+  "studioVerified": false,
+  "assetPublication": "Not published by this export script",
+  "notes": [
+    "Accepted geometry, UVs and weights preserved.",
+    "Animations sampled at 24 fps with exact loop closure.",
+    "Humanoid ankles solve to ground targets; movement cycle is distance driven in Roblox."
+  ]
+}

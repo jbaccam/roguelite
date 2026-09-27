@@ -1,0 +1,11 @@
+{
+  "id": "mummy",
+  "boneCount": 16,
+  "rigType": "Motor6D",
+  "maxWorldMatrixReconstructionError": 2.406706518520707e-07,
+  "maxNativeMotorPartError": 4.1891554092288175e-07,
+  "passed": true,
+  "sourceAnimationHash": "31410c5905d7cd9073cffd46036a45dc31ee9dc69560d35bc6bfd4358cbe96a8",
+  "importReceiptHash": "9b4a2d64baa3bf7ea5a1b66ac257fcf6032138de4732bb40d18c68fd15d3b772",
+  "outputHash": "8a5174aa89df1470882a8bb5659e2147d0f27202df137e9d06b99af014562051"
+}

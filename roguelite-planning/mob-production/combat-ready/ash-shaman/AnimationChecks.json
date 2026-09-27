@@ -1,0 +1,28 @@
+{
+  "source": "reference-rebuilds\\ash-shaman",
+  "geometryFingerprintBefore": "3161e658709a552c5bdd78b4140de6d8d5ad700b07f4cfea2bfef56b1d1568f8",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {
+    "leftLegRightArmCovariance": 0.02210253357272424,
+    "rightLegLeftArmCovariance": 0.07485561544544676,
+    "sameSideCovariance": -0.08744117671160903,
+    "strideLength": 2.624871495304113,
+    "nominalSpeed": 2.999853137490415,
+    "opposingLimbs": true,
+    "maxPlantedAnkleHeightError": 1.4901161193847656e-07
+  },
+  "bow": {},
+  "geometryFingerprintAfter": "3161e658709a552c5bdd78b4140de6d8d5ad700b07f4cfea2bfef56b1d1568f8",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "9af5067f82f53a5c63cfa8287e60729376daf4297dc5d2b3c5750170a695b436",
+    "Model.fbx": "ec6e3a58414e7a70c0e438ea97bb574de2deaf7a3bbc5f29116b9140787c425f",
+    "Model.glb": "c8e89cf49486a79662b031db6a1c8d1f99fc046d2d6b0712c8326536a85e97b7",
+    "AnimationData.json": "4971cd0d47b1535eb74189a83b22d88ad645606eb453547cbf2cae1437342605",
+    "Geometry.json": "35e2867c987530622a9d767c83351101acde5d4d50cee1ce50cdec74a4b2cc1f"
+  }
+}

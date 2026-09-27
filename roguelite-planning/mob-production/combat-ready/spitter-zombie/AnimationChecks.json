@@ -1,0 +1,28 @@
+{
+  "source": "reference-rebuilds\\spitter-zombie",
+  "geometryFingerprintBefore": "3772ba25f1f166df99d3e3aa692e965d32217b04ea0d93d602e96c9c2326d264",
+  "loopErrors": {
+    "Idle": 0.0,
+    "Move": 0.0
+  },
+  "gait": {
+    "leftLegRightArmCovariance": 0.12662950168823986,
+    "rightLegLeftArmCovariance": 0.12662950168823986,
+    "sameSideCovariance": -0.14400286129197984,
+    "strideLength": 2.968114877890624,
+    "nominalSpeed": 2.3744919023124993,
+    "opposingLimbs": true,
+    "maxPlantedAnkleHeightError": 2.086162567138672e-07
+  },
+  "bow": {},
+  "geometryFingerprintAfter": "3772ba25f1f166df99d3e3aa692e965d32217b04ea0d93d602e96c9c2326d264",
+  "geometryUnchanged": true,
+  "passed": true,
+  "fileHashes": {
+    "Model.blend": "ef6248017b6e85d171c264ab951388b5d9756b945389d444e322d2831e311413",
+    "Model.fbx": "ba38220da739dfce8eb0485218b314c916bc5f61443a62eb166b3dfb2758139e",
+    "Model.glb": "6589bd2a56ecb27d104f14efdde2ffb6b0d87ceb9b96f2344139c34997ea9b4d",
+    "AnimationData.json": "5143c37398a7d8a4e5f07478c9db90b905770505adf079fc8a76cc55c0092d79",
+    "Geometry.json": "c48a0d354e7025440e5c34b0016bdc7e5af7cfca2c721b86611d530120f512e6"
+  }
+}

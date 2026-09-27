@@ -1,0 +1,11 @@
+{
+  "id": "bow-skeleton",
+  "boneCount": 17,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 2.237855180053927e-07,
+  "maxNativeMotorPartError": 0.0,
+  "passed": true,
+  "sourceAnimationHash": "910c03fc1ff402db064136036b42f1c66e0d9fe228ed7a0d15fbf87f4132411e",
+  "importReceiptHash": "f04d9bd0fcbc0425060fe05cb3aacf21c286450116c82c67c5bc6fd859998172",
+  "outputHash": "463b260951d8c937a6686be38bab78418af5cfee8972faf7cbca73d9882b3e43"
+}
