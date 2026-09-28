@@ -733,14 +733,15 @@ cd "C:/Users/Jeremiah/Documents/ChatGPT/Roblox" && git add roguelite-planning/st
 **Files:**
 - Modify: `studio-prototype/combat/RogueliteCombat.server.luau` (the `Shop` require line; `rayParams`)
 - Modify: `studio-prototype/lobby/RogueliteLobbyPreview.server.luau` (lines 11-12, 20-21, `areaSpawn`, `travelRemote`, the START branch, `attach`)
+- Modify: `studio-prototype/lobby/RunSetupRules.luau` (`ReplicatedStorage.RunSetupRules`: the requires, `validMap`)
 
 - [ ] **Step 1: Check that Studio matches the repo.** In Edit:
 
 ```lua
-return tostring(same(SSS.RogueliteCombat,'studio-prototype/combat/RogueliteCombat.server.luau'))..' '..tostring(same(SSS.RogueliteLobbyPreview,'studio-prototype/lobby/RogueliteLobbyPreview.server.luau'))
+return tostring(same(SSS.RogueliteCombat,'studio-prototype/combat/RogueliteCombat.server.luau'))..' '..tostring(same(SSS.RogueliteLobbyPreview,'studio-prototype/lobby/RogueliteLobbyPreview.server.luau'))..' '..tostring(same(RS.RunSetupRules,'studio-prototype/lobby/RunSetupRules.luau'))
 ```
 
-  Expected: `true true`.
+  Expected: `true true true`.
 
 - [ ] **Step 2: Edit `RogueliteCombat.server.luau`.**
 
@@ -845,26 +846,58 @@ cd "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/studio-prototy
 
   Expected: `0`.
 
+- [ ] **Step 3b: Refuse maps that aren't built** (review finding on Task 1). Maps unlock by winning the previous map on Hard. Once wins are recorded (plan B), a Beach Cove Hard win would unlock Desert Basin, which has no folders, markers or roster. RunSetupRules is unsandboxed, so it may require the sandboxed MapConfig. In `studio-prototype/lobby/RunSetupRules.luau`:
+
+  a) Replace:
+```lua
+local Stats=require(combat:WaitForChild('CharacterStats'))
+local R={}
+```
+  with:
+```lua
+local Stats=require(combat:WaitForChild('CharacterStats'))
+local Playable=require(combat:WaitForChild('MapConfig'))
+local R={}
+```
+
+  b) Replace:
+```lua
+ local index=type(mapId)=='string' and R.MapIndex[mapId]
+ if not index then return false,'Unknown map' end
+```
+  with:
+```lua
+ local index=type(mapId)=='string' and R.MapIndex[mapId]
+ if not index then return false,'Unknown map' end
+ -- Only maps with match folders can be played (MapConfig); the rest show as coming soon.
+ if not Playable.valid(mapId) then return false,'Coming soon' end
+```
+
 - [ ] **Step 4: Parse-check.**
 
 ```bash
-cd "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning" && for f in studio-prototype/combat/RogueliteCombat.server.luau studio-prototype/lobby/RogueliteLobbyPreview.server.luau; do ~/.rokit/bin/stylua --check "$f" 2>&1 | grep -i "error parsing" && echo "PARSE ERROR $f" || echo "ok $f"; done
+cd "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning" && for f in studio-prototype/combat/RogueliteCombat.server.luau studio-prototype/lobby/RogueliteLobbyPreview.server.luau studio-prototype/lobby/RunSetupRules.luau; do ~/.rokit/bin/stylua --check "$f" 2>&1 | grep -i "error parsing" && echo "PARSE ERROR $f" || echo "ok $f"; done
 ```
 
-  Expected: `ok` for both.
+  Expected: `ok` three times.
 
-- [ ] **Step 5: Sync both to Studio.** In Edit:
+- [ ] **Step 5: Sync all three to Studio and check `validMap`.** In Edit:
 
 ```lua
 sync(SSS.RogueliteCombat,'studio-prototype/combat/RogueliteCombat.server.luau')
 sync(SSS.RogueliteLobbyPreview,'studio-prototype/lobby/RogueliteLobbyPreview.server.luau')
-return 'synced'
+sync(RS.RunSetupRules,'studio-prototype/lobby/RunSetupRules.luau')
+local Rules=fresh(RS.RunSetupRules)
+local ok,why=Rules.validMap(nil,'DesertBasin')
+return 'desert='..tostring(ok)..' '..tostring(why)
 ```
+
+  Expected: `desert=false Coming soon`. The check runs before any player lookup, so `nil` is safe here.
 
 - [ ] **Step 6: Commit.**
 
 ```bash
-cd "C:/Users/Jeremiah/Documents/ChatGPT/Roblox" && git add roguelite-planning/studio-prototype/combat/RogueliteCombat.server.luau roguelite-planning/studio-prototype/lobby/RogueliteLobbyPreview.server.luau && git commit -q -m "$(printf 'Lobby server and combat rays follow the server role and active map\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>')"
+cd "C:/Users/Jeremiah/Documents/ChatGPT/Roblox" && git add roguelite-planning/studio-prototype/combat/RogueliteCombat.server.luau roguelite-planning/studio-prototype/lobby/RogueliteLobbyPreview.server.luau roguelite-planning/studio-prototype/lobby/RunSetupRules.luau && git commit -q -m "$(printf 'Lobby server and combat rays follow the server role and active map\n\nUnbuilt maps answer Coming soon instead of starting a run.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>')"
 ```
 
 ---
@@ -1058,7 +1091,17 @@ add(workspace.PineValleyArena.PlayerSpawn.Enabled and combat:GetAttribute('Enemy
 return table.concat(r,'\n')
 ```
 
-  Expected: every line `PASS`. Stop Play.
+  Expected: every line `PASS`. Then, in the same Play session, run in **Client** (unbuilt maps are refused):
+
+```lua
+local remote=workspace.RogueliteLobby:WaitForChild('RunSetup')
+local got;local c=remote.OnClientEvent:Connect(function(k,ok,m) if k=='Result' then got={ok,m} end end)
+task.wait(.4);remote:FireServer('Play','DesertBasin','Brawler','01',true,'Normal')
+local t0=os.clock();while not got and os.clock()-t0<3 do task.wait(.05) end;c:Disconnect()
+return 'desert='..(got and (tostring(got[1])..' '..got[2]) or 'no reply')
+```
+
+  Expected: `desert=false Coming soon`. Stop Play.
 
 - [ ] **Step 2: Lobby.** In Edit: `workspace:SetAttribute('StudioServerRole','Lobby')`. Start Play, then run in **Server**:
 
@@ -1170,6 +1213,12 @@ return 'slot1='..tostring(f and f.Slot1:GetAttribute('WeaponId'))
 
 **Files:**
 - Modify: `LOBBY_AND_MATCH_SERVERS.md` (§9 table, last row)
+
+- [ ] **Step 0: Fix the spec's §1 area list.** In `LOBBY_AND_MATCH_SERVERS.md` §1, the **Areas** bullet list names `RogueliteLobby`, `PineValleyArena` and `BeachCoveArena`. Add a fourth bullet under `BeachCoveArena`:
+
+```markdown
+- `BeachCoveExtras` (Beach Cove's PlayerSpawn, RogueliteZombieSpawn and hand-placed props; its kit rebuilds `BeachCoveArena` by deleting it)
+```
 
 - [ ] **Step 1: Update the spec's Workspace row.** Replace the last row of the §9 table, the one starting `| Workspace (Edit, one time) |`, with:
 
