@@ -378,6 +378,13 @@ return 'passed '..r.passed..' sandboxed='..tostring(SSS.ServerRole.Sandboxed)..'
 cd "C:/Users/Jeremiah/Documents/ChatGPT/Roblox" && git add roguelite-planning/studio-prototype/lobby/ServerRole.luau roguelite-planning/studio-prototype/lobby/ServerRoleBoot.server.luau roguelite-planning/studio-prototype/lobby/ServerRoleTests.luau && git commit -q -m "$(printf 'Add ServerRole: lobby/match/combined detection and area parking\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>')"
 ```
 
+> **Revised after code review** (the commit after dc455c9). `studio-prototype/lobby/ServerRole.luau` is the source of truth now; the Step 3 block above is the first draft. The changes:
+> - `setMap` applies the map before it returns (signals are deferred in this place), and returns false on lobbies.
+> - `LIVE_ROLES=false` keeps published servers Combined until plan C.
+> - Area folders are resolved once at boot, so a same-named character can't be picked up.
+> - A second copy of the module doesn't boot again.
+> - The module is listed in `combat/default.project.json`.
+
 > Don't Play-test yet. The Workspace folders `ServerRole` looks for are created in Task 3. Until then Combined mode behaves as before, because `setMap` finds no folders and changes nothing.
 
 ---
@@ -531,6 +538,18 @@ return ('loose=%d pineChildren=%d pineSpawn=%s pineMarker=%s beachProps=%d beach
 ```
 
   Expected: `loose=0 pineChildren=<≈190> pineSpawn=true pineMarker=true beachProps=<≈40> beachSpawnEnabled=false beachMarkerRadius=95`.
+
+  Then check two things the review flagged. **Scripts inside a map folder** stop while it's parked and restart when it comes back. **The display zombie** at the origin must stay at the top of Workspace, because `PracticeTarget` and the spawner look it up there. In Edit:
+
+```lua
+local scripts={}
+for _,f in {workspace.PineValleyArena,workspace.BeachCoveExtras} do
+ for _,d in f:GetDescendants() do if d:IsA('LuaSourceContainer') then table.insert(scripts,d:GetFullName()) end end
+end
+return 'scriptsInMapFolders='..#scripts..' '..table.concat(scripts,', ')..' displayZombieAtRoot='..tostring(workspace:FindFirstChild('Zombie_R15_ProvidedTextures_Studio')~=nil)
+```
+
+  Expected: `scriptsInMapFolders=0 displayZombieAtRoot=true`. If there are scripts, list them in the report; if they only do visuals, that's acceptable.
 
 - [ ] **Step 5: Look at it.** Take a plain `screen_capture` with **no camera position**. The maps must look exactly as before. Nothing moved; only the Explorer tree changed.
 
@@ -802,7 +821,9 @@ local lobbySpawn=root:WaitForChild('LobbySpawn');lobbySpawn.Enabled=Role.get()==
 ```
   with:
 ```lua
- local base=area=='Lobby' and lobbySpawn.Position or Role.playerSpawn().Position
+ -- The active map's spawn; the lobby's if RunMap is somehow invalid, rather than erroring.
+ local mapSpawn=Role.playerSpawn()
+ local base=(area=='Lobby' or not mapSpawn) and lobbySpawn.Position or mapSpawn.Position
 ```
 
   d) Replace:
@@ -1056,7 +1077,11 @@ cd "C:/Users/Jeremiah/Documents/ChatGPT/Roblox" && git add roguelite-planning/st
 
 ### Task 8: Verify every role in Play
 
-**Files:** none (verification). Before **each** Play: `list_sessions` + `get_studio_state`, as in Conventions. After each check: `get_console_output` must show no new errors, and **stop Play**.
+**Files:** none (verification). Before **each** Play: `list_sessions` + `get_studio_state`, as in Conventions. After each check, run `get_console_output`:
+- It must show no new errors.
+- It must show **no line mentioning `capability` or `Sandboxed`**. ServerRole is the first sandboxed code here to move Workspace folders into ServerStorage.
+
+Then **stop Play**.
 
 - [ ] **Step 1: Combined (default).** In Edit, confirm `workspace:GetAttribute('StudioServerRole')==nil`. Start Play, wait for the player, then run in **Server**:
 
@@ -1143,6 +1168,7 @@ local p=game.Players:GetPlayers()[1] or game.Players.PlayerAdded:Wait()
 local char=p.Character or p.CharacterAdded:Wait();task.wait(1)
 add(RS:GetAttribute('ServerRole')=='Match','role Match')
 for _,n in {'RogueliteLobby','PineValleyArena'} do add(SS.InactiveAreas:FindFirstChild(n)~=nil,n..' parked') end
+add(#SS.InactiveAreas:GetChildren()==2,'only the lobby and Pine Valley parked')
 for _,n in {'BeachCoveArena','BeachCoveExtras'} do add(workspace:FindFirstChild(n)~=nil,n..' in Workspace') end
 add(combat:GetAttribute('RunMap')=='BeachCove' and combat:GetAttribute('RunDifficulty')=='Normal','RunMap BeachCove, Normal')
 add(workspace.BeachCoveExtras.PlayerSpawn.Enabled,'Beach spawn enabled')
@@ -1218,6 +1244,17 @@ return 'slot1='..tostring(f and f.Slot1:GetAttribute('WeaponId'))
 
 ```markdown
 - `BeachCoveExtras` (Beach Cove's PlayerSpawn, RogueliteZombieSpawn and hand-placed props; its kit rebuilds `BeachCoveArena` by deleting it)
+```
+
+- [ ] **Step 0b: Two spec corrections from the Task 2 review.**
+  - **Where `ServerRole` lives.** In `LOBBY_AND_MATCH_SERVERS.md`, §1 and the §9 table say `ServerRole` is in ReplicatedStorage. Change both to "ServerScriptService (server only; clients read the `ReplicatedStorage.ServerRole` attribute)". A client that required the module would run the parking code.
+  - **Requirements for plan C.** At the end of §2, add:
+
+```markdown
+- **Plan C requirements** (from the plan A review):
+  - `AvatarNormalizer` spawns players on join. A match server must hold that spawn until `ServerRole.setMap(entry.map)` has returned; `setMap` applies the map before it returns.
+  - If `setMap` returns false (a missing or bad match entry), send the players back to a lobby.
+  - Flip `ServerRole`'s `LIVE_ROLES` to true in the same change that ships the teleports.
 ```
 
 - [ ] **Step 1: Update the spec's Workspace row.** Replace the last row of the §9 table, the one starting `| Workspace (Edit, one time) |`, with:
