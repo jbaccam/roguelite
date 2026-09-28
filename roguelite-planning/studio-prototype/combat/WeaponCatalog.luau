@@ -24,7 +24,7 @@ local profiles={
  {16,.85,6,{16,24,36,54}}, -- Steak
  {5,.32,12,{5,8,12,18},nil,'bounce'}, -- Duck
  {15,.95,42,{15,21,30,42},nil,'cards'}, -- Cards
- {8,.62,6.5,{8,16,32,64},{1,.94,.88,.76}}, -- Gloves: Fist inspiration
+ {8,.42,6.5,{8,16,32,64},{1,.94,.88,.76}}, -- Gloves: alternating quick jabs
  {30,1.35,7,{30,45,68,102}}, -- Block
  {8,.7,28,{8,12,18,27},nil,'bounce'}, -- Yo-yo
  {24,1.6,35,{24,36,54,81},nil,'pierce'}, -- Ball
@@ -35,12 +35,12 @@ local profiles={
  {10,.8,9,{10,15,23,35}}, -- Roller
  {4,.32,20,{4,6,9,14}}, -- Vacuum
  {3,.24,30,{3,4,6,9},nil,'pierce'}, -- Washer
- {9,1.15,45,{9,14,21,32}}, -- Staff (lightning)
+ {9,1.15,45,{9,14,21,32}}, -- Staff (arcane energy orb)
  {22,2.4,8,{22,33,50,75}}, -- Mjolnir
  {26,1.35,8.5,{26,39,59,89}}, -- Excalibur
  {25,2,50,{25,38,57,86}}, -- Pandora
  {5,1.2,38,{5,8,12,18},nil,'shots'}, -- Medusa (slow)
- {13,1.05,48,{13,20,30,45},nil,'bounce'}, -- Crystal
+ {13,1.05,48,{13,20,30,45},nil,'bounce'}, -- Crystal (lightning)
 }
 for i,name in names do
  local n=i-1
@@ -52,6 +52,7 @@ for i,name in names do
  d.damage=profile[1];d.cooldown=profile[2];d.range=profile[3]
  d.tierDamage=profile[4];d.tierCooldown=profile[5] or {1,.95,.9,.84}
  d.trait=profile[6] or ''
+ if n==10 then d.projectileSpeed=48 end
  if n==11 then d.projectileSpeed=80;d.blastRadius=9 end
  if n==18 then d.projectileSpeed=90 end
  if n==33 then d.projectileSpeed=45;d.blastRadius=7 end
@@ -60,11 +61,12 @@ for i,name in names do
  if n==17 or n==21 or n==23 then d.kind='Ranged' end
  d.nativeKnockback=(n==5 and 14 or n==26 and 20 or n==20 and 16 or 0)
  if n==31 then d.hybridRange=32;d.projectileSpeed=42 end
+ if n==8 then d.projectileSpeed=150 end
  local thrownSpeed={[12]=40,[13]=65,[14]=28,[15]=35,[22]=32,[23]=24}
  if thrownSpeed[n] then d.projectileSpeed=thrownSpeed[n] end
  d.elemental=d.home=='Mage' or n==8 or n==14 or n==17
  d.utility=d.home=='Handyman'
- d.burn=n==14 and 100 or 0;d.poison=n==8 and 100 or 0;d.slow=n==34 and 100 or 0;d.lightning=n==30 or n==31
+ d.burn=n==14 and 100 or 0;d.poison=n==8 and 100 or 0;d.slow=n==34 and 100 or 0;d.lightning=n==35 or n==31
  d.tags={d.kind=='Melee' and 'Melee' or 'Projectile',d.home}
  if d.elemental then table.insert(d.tags,'Elemental') end
  if d.utility then table.insert(d.tags,'Utility') end

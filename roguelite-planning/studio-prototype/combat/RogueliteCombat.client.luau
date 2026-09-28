@@ -16,7 +16,16 @@ require(combat:WaitForChild('RocketVisuals')).mount(combat,visuals)
 local bulletImpact=require(combat:WaitForChild('BulletImpactVisuals')).mount(visuals)
 local muzzleFlash=require(combat:WaitForChild('MuzzleFlashVisuals')).mount(visuals)
 local mobImpact=require(combat:WaitForChild('MobImpactVisuals')).mount(visuals)
+local shirtShot=require(combat:WaitForChild('ShirtVisuals')).mount(visuals)
+local Swing=require(combat:WaitForChild('SwingVisuals')).mount(visuals)
+local Spacing=require(combat:WaitForChild('WeaponSpacing'))
+local Pandora=require(combat:WaitForChild('PandoraVisuals'))
 local tracked={}
+local projectileStyles=require(combat:WaitForChild('ProjectileStyleVisuals')).mount(visuals,function(ownerId,index)
+ local state=states:FindFirstChild(tostring(ownerId))
+ local slot=state and state:FindFirstChild('Slot'..tostring(index))
+ return slot and tracked[slot]
+end)
 local ArcMotion=require(combat:WaitForChild('ArcMotion'))
 require(combat:WaitForChild('ArcVisuals')).mount(combat,visuals,function(ownerId,index)
  local state=states:FindFirstChild(tostring(ownerId))
@@ -38,6 +47,7 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
    if not float or float.root~=root then float=Motion.newFloat();float.root=root;floats[state]=float end
    Motion.stepFloat(float,root.CFrame,root.AssemblyLinearVelocity,dt)
   else floats[state]=nil;float=nil end
+  local frameList={}
   for _,slot in state:GetChildren() do
    local id=slot:GetAttribute('WeaponId');local d=Catalog.ById[id]
    local v=tracked[slot];seen[slot]=true
@@ -64,6 +74,13 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
      part.Anchored=true;part.CanCollide=false;part.CanTouch=false;part.CanQuery=false
      table.insert(v.parts,part)
     end end
+    -- Cosmetic extras: swing ribbons, Pandora glow and a contact capsule.
+    Swing.attach(v,id,template)
+    if id=='33' then v.pandora=Pandora.idle(model) end
+    local bounds=template:GetAttribute('BoundsSize')
+    if typeof(bounds)=='Vector3' then v.capsule=Spacing.capsule(bounds,template:GetAttribute('BoundsCenter')) end
+    -- Egg/pin reserves sit 1.5 studs to each side; widen the capsule to cover them.
+    if v.capsule and v.reserves then v.capsule={a=Vector3.new(-1.5,.2,.1),b=Vector3.new(1.5,.2,.1),r=v.capsule.r} end
    end
    if v then
     local visible=root and hum and hum.Health>0 and state:GetAttribute('WeaponEnabled')
@@ -139,13 +156,27 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
      Chains.apply(v.chain,age)
      Cards.step(v.cards,now)
      if v.lid then v.lid.Transform=CFrame.Angles(0,-math.pi/2*ArcMotion.lid(now-start),0) end
-    elseif float then
-     float.slots[slot:GetAttribute('Index')]=nil
+     if v.pandora then
+      local opening=now-start
+      if opening>=0 and opening<.3 and v.openedAt~=start then
+       v.openedAt=start;Pandora.open(visuals,pose,template:GetAttribute('BoundsSize'))
+      end
+      Pandora.stepIdle(v.pandora,pose,true,ArcMotion.lid(opening))
+     end
+     v.frame={visible=true,active=age>=0 and age<duration,age=age,start=start,kind=kind,style=style,side=side,
+      attackRoot=attackRoot,rate=rate,direction=slot:GetAttribute('AttackDirection'),range=slot:GetAttribute('SwingRange') or d.range,
+      hand=slot:GetAttribute('AttackHand'),secondAim=slot:GetAttribute('SecondAim')}
+     table.insert(frameList,v)
+    else
+     v.frame=nil;v.spacing=nil;Swing.hide(v)
+     if v.pandora then Pandora.stepIdle(v.pandora,v.model:GetPivot(),false,0) end
+     if float then float.slots[slot:GetAttribute('Index')]=nil end
     end
     for _,part in v.parts do
      local reserve=part:FindFirstAncestor('Reserve2') and 2 or part:FindFirstAncestor('Reserve3') and 3 or 1
      local flying=v.flying and v.flying[reserve] and v.flying[reserve]>0
-     part.LocalTransparencyModifier=visible and not flying and 0 or 1
+     local hidden=v.hide and (v.hide[part] or 0)>0
+     part.LocalTransparencyModifier=visible and not flying and not hidden and 0 or 1
     end
     if v.cards then
      for _,entry in v.cards.cards do
@@ -157,21 +188,41 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
     end
    end
   end
+  -- Weapons are solid to each other: push overlapping capsules apart after
+  -- posing. A swinging melee weapon is heavier, so idle neighbours make room.
+  local bodies,owners={},{}
+  for _,v in frameList do
+   local flying=v.flying and v.flying[1] and v.flying[1]>0
+   if v.capsule and not flying then
+    local pivot=v.model:GetPivot()
+    table.insert(bodies,{a=pivot:PointToWorldSpace(v.capsule.a),b=pivot:PointToWorldSpace(v.capsule.b),r=v.capsule.r,
+     mass=(v.frame.active and v.frame.kind=='Melee') and Spacing.AttackMass or 1})
+    table.insert(owners,v)
+   else v.spacing=nil end
+  end
+  local offsets=#bodies>1 and Spacing.solve(bodies) or {}
+  for i,v in owners do
+   v.spacing=Spacing.smooth(v.spacing,offsets[i] or Vector3.zero,dt)
+   if v.spacing.Magnitude>1e-3 then v.model:PivotTo(v.model:GetPivot()+v.spacing) end
+  end
+  for _,v in frameList do Swing.step(v,v.model:GetPivot(),v.frame) end
  end
  for slot,v in tracked do if not seen[slot] then v.model:Destroy();tracked[slot]=nil end end
  for state in floats do if state.Parent~=states then floats[state]=nil end end
 end)
-combat:WaitForChild('Shot').OnClientEvent:Connect(function(origin,finish,kind,id,thickness,blastRadius,contact,normal,ownerId,slotIndex,first,mobContact,shotId)
- if contact and kind=='Ranged' and not mobContact then bulletImpact(finish,normal) end
+combat:WaitForChild('Shot').OnClientEvent:Connect(function(origin,finish,kind,id,thickness,blastRadius,contact,normal,ownerId,slotIndex,first,mobContact,shotId,projectileId,projectileSpeed,terminal)
+ if id~='10' and contact and kind=='Ranged' and not mobContact then bulletImpact(finish,normal) end
  if first and Motion.MuzzleOffsets[id] and ownerId and slotIndex then
   local state=states:FindFirstChild(tostring(ownerId))
   local slot=state and state:FindFirstChild('Slot'..slotIndex)
   local v=slot and tracked[slot]
   if v and v.id==id then
    origin=v.model:GetPivot():PointToWorldSpace(Motion.MuzzleOffsets[id])
-   if shotId then muzzleFlash(v.model,id,Motion.MuzzleOffsets[id],shotId) end
+   if shotId and id~='10' then muzzleFlash(v.model,id,Motion.MuzzleOffsets[id],shotId) end
   end
  end
+ if projectileStyles.handle(origin,finish,kind,id,thickness,blastRadius,contact,normal,ownerId,slotIndex,first,mobContact,shotId,projectileId,projectileSpeed,terminal) then return end
+ if id=='10' then shirtShot(origin,finish,projectileId,projectileSpeed,terminal);return end
  local distance=(finish-origin).Magnitude;if distance<.01 then return end
  local p=Instance.new('Part');p.Name='WeaponShot';p.Anchored=true;p.CanCollide=false;p.CanTouch=false;p.CanQuery=false
  p.Material=Enum.Material.Neon;p.Color=kind=='Blast' and Color3.fromRGB(242,164,71) or Color3.fromRGB(255,231,179)
@@ -185,13 +236,17 @@ combat:WaitForChild('Shot').OnClientEvent:Connect(function(origin,finish,kind,id
  end
 end)
 local function damageNumber(position,damage,color,name)
+ -- Settings menu (UITheme) can hide hit numbers; your own damage taken always shows.
+ if name~='PlayerDamageNumber' and player:GetAttribute('Setting_DamageNumbers')==false then return end
  local anchor=Instance.new('Part');anchor.Name=name or 'DamageNumber';anchor.Size=Vector3.one*.1;anchor.Transparency=1;anchor.Anchored=true;anchor.CanCollide=false;anchor.CanTouch=false;anchor.CanQuery=false;anchor.Position=position+Vector3.new((math.random()-.5)*.8,0,0);anchor.Parent=visuals
- local gui=Instance.new('BillboardGui');gui.Size=UDim2.fromOffset(100,60);gui.AlwaysOnTop=true;gui.MaxDistance=100;gui.Parent=anchor
- local text=Instance.new('TextLabel');text.Size=UDim2.fromScale(1,1);text.BackgroundTransparency=1;text.Text=tostring(math.round(damage));text.Font=Enum.Font.GothamBold;text.TextSize=30;text.TextColor3=color;text.TextStrokeColor3=Color3.fromRGB(28,22,20);text.TextStrokeTransparency=.12;text.Parent=gui
+ local gui=Instance.new('BillboardGui');gui.Size=UDim2.fromOffset(name=='PlayerDamageNumber' and 160 or 100,name=='PlayerDamageNumber' and 90 or 60);gui.AlwaysOnTop=true;gui.MaxDistance=100;gui.Parent=anchor
+ local text=Instance.new('TextLabel');text.Size=UDim2.fromScale(1,1);text.BackgroundTransparency=1;text.Text=(name=='PlayerDamageNumber' and '-' or '')..tostring(math.round(damage));text.Font=name=='PlayerDamageNumber' and Enum.Font.GothamBlack or Enum.Font.GothamBold;text.TextSize=name=='PlayerDamageNumber' and 44 or 30;text.TextColor3=color;text.TextStrokeColor3=Color3.fromRGB(28,22,20);text.TextStrokeTransparency=.12;text.Parent=gui
+ local outline
+ if name=='PlayerDamageNumber' then outline=Instance.new('UIStroke');outline.Thickness=2;outline.Color=Color3.fromRGB(46,10,17);outline.Parent=text;text.TextStrokeTransparency=1 end
  local scale=Instance.new('UIScale');scale.Scale=.65;scale.Parent=text
  TweenService:Create(scale,TweenInfo.new(.13,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
  TweenService:Create(anchor,TweenInfo.new(.8,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=anchor.Position+Vector3.new(0,2,0)}):Play()
- task.delay(.42,function()if text.Parent then TweenService:Create(text,TweenInfo.new(.3),{TextTransparency=1,TextStrokeTransparency=1}):Play()end end)
+ task.delay(.42,function()if text.Parent then if outline then TweenService:Create(outline,TweenInfo.new(.3),{Transparency=1}):Play() end;TweenService:Create(text,TweenInfo.new(.3),{TextTransparency=1,TextStrokeTransparency=1}):Play()end end)
  Debris:AddItem(anchor,.85)
 end
 
@@ -209,12 +264,41 @@ combat:WaitForChild('Hit').OnClientEvent:Connect(function(position,damage,npc,im
  end
 end)
 
+-- Four full-resolution gradients stay transparent in the center; no image download.
+local damageGui=Instance.new('ScreenGui');damageGui.Name='DamageFeedback';damageGui.IgnoreGuiInset=true;damageGui.ResetOnSpawn=false;damageGui.DisplayOrder=45;damageGui.Parent=player:WaitForChild('PlayerGui')
+local edges={};local edgeTweens={}
+for i,d in {{UDim2.fromScale(0,0),UDim2.fromScale(1,.28),90},{UDim2.fromScale(0,.72),UDim2.fromScale(1,.28),270},{UDim2.fromScale(0,0),UDim2.fromScale(.22,1),0},{UDim2.fromScale(.78,0),UDim2.fromScale(.22,1),180}} do
+ local edge=Instance.new('Frame');edge.Name='Edge'..i;edge.BorderSizePixel=0;edge.Position=d[1];edge.Size=d[2];edge.BackgroundColor3=Color3.fromRGB(210,12,32);edge.BackgroundTransparency=1;edge.Parent=damageGui
+ local fade=Instance.new('UIGradient');fade.Rotation=d[3];fade.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(.35,.4),NumberSequenceKeypoint.new(1,1)});fade.Parent=edge;edges[i]=edge
+end
+local shakeUntil=0;local shakeStart=0;local lastOffset=CFrame.identity;local shakenCamera
+RunService:BindToRenderStep('DamageShakeRestore',Enum.RenderPriority.Camera.Value-1,function()
+ if shakenCamera and shakenCamera==workspace.CurrentCamera then shakenCamera.CFrame=shakenCamera.CFrame*lastOffset:Inverse() end
+ lastOffset=CFrame.identity;shakenCamera=nil
+end)
+RunService:BindToRenderStep('DamageShake',Enum.RenderPriority.Camera.Value+1,function()
+ local now=os.clock();local camera=workspace.CurrentCamera
+ if now>=shakeUntil or not camera or camera.CameraType==Enum.CameraType.Scriptable then return end
+ local age=now-shakeStart;local envelope=math.clamp((shakeUntil-now)/.28,0,1)^2
+ lastOffset=CFrame.new(math.sin(age*91)*.09*envelope,math.sin(age*117)*.055*envelope,0)*CFrame.Angles(0,0,math.rad(math.sin(age*83)*.45*envelope))
+ camera.CFrame*=lastOffset;shakenCamera=camera
+end)
+local function damageFeedback()
+ for i,edge in edges do
+  if edgeTweens[i] then edgeTweens[i]:Cancel() end
+  edge.BackgroundTransparency=.36
+  edgeTweens[i]=TweenService:Create(edge,TweenInfo.new(.95,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency=1});edgeTweens[i]:Play()
+ end
+ if player:GetAttribute('Setting_ScreenShake')~=false then shakeStart=os.clock();shakeUntil=shakeStart+.28 end
+end
+player.CharacterAdded:Connect(function() shakeUntil=0;for i,e in edges do if edgeTweens[i] then edgeTweens[i]:Cancel() end;e.BackgroundTransparency=1 end end)
 combat:WaitForChild('PlayerDamaged').OnClientEvent:Connect(function(damage)
  if type(damage)~='number' or damage~=damage or damage<=0 then return end
  local character=player.Character
  local root=character and character:FindFirstChild('HumanoidRootPart')
  local humanoid=character and character:FindFirstChildOfClass('Humanoid')
  if not root or not humanoid then return end
+ damageFeedback()
  damageNumber(root.Position+Vector3.new(0,2.5,0),damage,Color3.fromRGB(235,72,72),'PlayerDamageNumber')
 end)
 
@@ -224,9 +308,12 @@ combat:WaitForChild('ZombiePopped').OnClientEvent:Connect(function(position)
 end)
 
 if RunService:IsStudio()then
- local gui=Instance.new('ScreenGui');gui.Name='RogueliteCombatTestControls';gui.ResetOnSpawn=false;gui.Parent=player:WaitForChild('PlayerGui')
- local frame=Instance.new('Frame');frame.Position=UDim2.fromOffset(14,258);frame.Size=UDim2.fromOffset(210,152);frame.BackgroundColor3=Color3.fromRGB(29,34,43);frame.BackgroundTransparency=.08;frame.Parent=gui;Instance.new('UICorner',frame).CornerRadius=UDim.new(0,8)
- local heading=Instance.new('TextLabel');heading.Position=UDim2.fromOffset(10,5);heading.Size=UDim2.new(1,-20,0,23);heading.Text='COMBAT TEST';heading.TextSize=13;heading.Font=Enum.Font.GothamBold;heading.TextXAlignment=Enum.TextXAlignment.Left;heading.BackgroundTransparency=1;heading.TextColor3=Color3.fromRGB(210,215,225);heading.Parent=frame
+ -- Studio-only test panel, drawn with the shared green theme.
+ local T=require(game.ReplicatedStorage:WaitForChild('UITheme'))
+ local gui=Instance.new('ScreenGui');gui.Name='RogueliteCombatTestControls';gui.ResetOnSpawn=false;gui.ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets;gui.Parent=player:WaitForChild('PlayerGui')
+ local frame=T.panel(gui,'Panel',0,0,228,196,'panel');frame.AnchorPoint=Vector2.new(0,1);frame.Position=UDim2.new(0,14,1,-16)
+ local plate=T.panel(frame,'TitlePlate',26,-18,176,40,'panel');T.caps(plate,30)
+ local heading=T.label(plate,'Heading','COMBAT TEST',0,0,0,0,18);heading.Size=UDim2.fromScale(1,1)
  local own=states:WaitForChild(tostring(player.UserId))
  local function toggle(key)
   local value=key=='Zombies'and combat:GetAttribute('ZombiesEnabled')or own:GetAttribute('WeaponEnabled')
@@ -234,22 +321,20 @@ if RunService:IsStudio()then
   combat.SetTestOption:FireServer(key,not value)
  end
  local function button(key,y,hotkey)
-  local b=Instance.new('TextButton');b.Position=UDim2.fromOffset(8,y);b.Size=UDim2.new(1,-16,0,32);b.BackgroundColor3=Color3.fromRGB(51,62,76);b.TextColor3=Color3.new(1,1,1);b.Font=Enum.Font.GothamMedium;b.TextSize=15;b.Parent=frame;Instance.new('UICorner',b).CornerRadius=UDim.new(0,5)
-  b.Activated:Connect(function()toggle(key)end)
-  local function refresh()local enabled;if key=='Zombies'then enabled=combat:GetAttribute('ZombiesEnabled')else enabled=own:GetAttribute('WeaponEnabled')end;b.Text=key..': '..(enabled and 'ON' or 'OFF')..'  ['..hotkey..']';b.BackgroundColor3=enabled and Color3.fromRGB(51,75,83)or Color3.fromRGB(64,56,59)end
+  local b=T.button(frame,key..'Toggle','',14,y,200,42,function()toggle(key)end);b.Caption.TextSize=18
+  local function refresh()local enabled;if key=='Zombies'then enabled=combat:GetAttribute('ZombiesEnabled')else enabled=own:GetAttribute('WeaponEnabled')end;b.Caption.Text=key..': '..(enabled and 'ON' or 'OFF')..'  ['..hotkey..']';T.setPrimary(b,enabled==true)end
   if key=='Zombies'then combat:GetAttributeChangedSignal('ZombiesEnabled'):Connect(refresh)else own:GetAttributeChangedSignal('WeaponEnabled'):Connect(refresh)end;refresh()
  end
- button('Zombies',33,'Z');button('Weapons',72,'K')
+ button('Zombies',34,'Z');button('Weapons',84,'K')
  local run=game.ReplicatedStorage:WaitForChild('RogueliteRunState')
- local stop=Instance.new('TextButton');stop.Name='StopWave';stop.Position=UDim2.fromOffset(8,111);stop.Size=UDim2.new(1,-16,0,32);stop.TextColor3=Color3.new(1,1,1);stop.Font=Enum.Font.GothamMedium;stop.TextSize=15;stop.Parent=frame;Instance.new('UICorner',stop).CornerRadius=UDim.new(0,5)
  local function stopWave() if run:GetAttribute('Phase')=='Combat' then combat.SetTestOption:FireServer('StopWave',true) end end
+ local stop=T.button(frame,'StopWave','',14,134,200,42,stopWave,true);stop.Caption.TextSize=18
  local function refreshStop()
   local active=run:GetAttribute('Phase')=='Combat'
-  stop.Interactable=active;stop.AutoButtonColor=active
-  stop.Text=active and 'Stop wave  [X]' or 'No wave running'
-  stop.BackgroundColor3=active and Color3.fromRGB(99,57,59) or Color3.fromRGB(48,50,56)
-  stop.TextTransparency=active and 0 or .35
+  stop.Interactable=active
+  stop.Caption.Text=active and 'Stop wave  [X]' or 'No wave running'
+  stop.Caption.TextColor3=active and T.Color.negative or T.Color.white
  end
- stop.Activated:Connect(stopWave);run:GetAttributeChangedSignal('Phase'):Connect(refreshStop);refreshStop()
+ run:GetAttributeChangedSignal('Phase'):Connect(refreshStop);refreshStop()
  Input.InputBegan:Connect(function(input,processed)if processed or Input:GetFocusedTextBox()then return end;if input.KeyCode==Enum.KeyCode.Z then toggle('Zombies')elseif input.KeyCode==Enum.KeyCode.K then toggle('Weapons')elseif input.KeyCode==Enum.KeyCode.X then stopWave()end end)
 end

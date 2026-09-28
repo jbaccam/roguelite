@@ -3,8 +3,10 @@ local Players=game:GetService('Players')
 local Debris=game:GetService('Debris')
 local Motion=require(script.Parent.SpecialMotion)
 local WeaponMotion=require(script.Parent.WeaponMotion)
+local Thrown=require(script.Parent.ThrownVisuals)
 local V={}
 function V.mount(combat,folder,lookup)
+ require(script.Parent.UtilityVisuals).mount(combat,folder,lookup)
  local flights,zones,puffs={},{},{}
  local function part(name,position,size,color,alpha)
   local p=Instance.new('Part');p.Name=name;p.Shape=Enum.PartType.Ball;p.Size=Vector3.one*size;p.Position=position
@@ -23,7 +25,12 @@ function V.mount(combat,folder,lookup)
   if r.visual and r.visual.flying then r.visual.flying[r.reserve]=math.max(0,(r.visual.flying[r.reserve] or 1)-1) end
   if r.model then r.model:Destroy() end
  end
- local function endFlight(key) local r=flights[key];if r then release(r);flights[key]=nil end end
+ local function endFlight(key)
+  local r=flights[key];if not r then return end
+  -- Returning weapons land back in their slot; everything else gets a small impact.
+  if r.model and not r.returning then Thrown.impact(folder,r.id,r.model:GetPivot().Position) end
+  release(r);flights[key]=nil
+ end
  local function endZone(key) local z=zones[key];if z then z.model:Destroy();zones[key]=nil end end
  combat:WaitForChild('SpecialFX').OnClientEvent:Connect(function(action,key,...)
   local a={...}
@@ -76,7 +83,7 @@ function V.mount(combat,folder,lookup)
     local template=combat.WeaponTemplates:FindFirstChild(r.id);if not template then endFlight(key);continue end
     if r.id=='08' then
      r.model=Instance.new('Model');r.model.Name='FlyingPoison';local p=part('CloudCore',r.origin,.65,Color3.fromRGB(128,180,65),.6);p.Parent=r.model;r.model.PrimaryPart=p
-    else r.model=template:Clone();r.model.Name='FlyingWeapon_'..r.id end
+    else r.model=template:Clone();r.model.Name='FlyingWeapon_'..r.id;Thrown.decorate(r.model,r.id) end
     for _,p in r.model:GetDescendants() do if p:IsA('BasePart') then p.Anchored=true;p.CanCollide=false;p.CanTouch=false;p.CanQuery=false;p.LocalTransparencyModifier=0 end end
     r.model.Parent=folder
     local visual=lookup(r.owner,r.slot)
@@ -96,6 +103,7 @@ function V.mount(combat,folder,lookup)
    local tangent=r.finish-r.origin
    local rotation=Motion.rotation(r.id,now-r.created,r.id=='31' and r.launchDirection or tangent)
    r.model:PivotTo(CFrame.new(pos)*rotation)
+   Thrown.step(folder,r,pos)
    if r.id=='08' and (not r.lastPuff or (pos-r.lastPuff).Magnitude>.7) then puff(pos,true,.6,.4);r.lastPuff=pos end
   end
   for key,z in zones do

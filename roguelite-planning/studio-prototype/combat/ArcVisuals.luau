@@ -1,7 +1,7 @@
 local RunService=game:GetService('RunService')
-local TweenService=game:GetService('TweenService')
-local Debris=game:GetService('Debris')
 local Motion=require(script.Parent.ArcMotion)
+local Pandora=require(script.Parent.PandoraVisuals)
+local K=require(script.Parent.VfxKit)
 local A={}
 function A.mount(combat,folder,lookup)
  local active={}
@@ -11,13 +11,7 @@ function A.mount(combat,folder,lookup)
    if r.model then r.model:Destroy() end
    active[id]=nil
   end
-  if impact and weapon=='33' then
-   local burst=Instance.new('Part');burst.Name='PandoraImpact';burst.Shape=Enum.PartType.Ball
-   burst.Anchored=true;burst.CanCollide=false;burst.CanTouch=false;burst.CanQuery=false
-   burst.Material=Enum.Material.Neon;burst.Color=Color3.fromRGB(155,112,230);burst.Transparency=.55
-   burst.Size=Vector3.one;burst.Position=impact;burst.Parent=folder
-   TweenService:Create(burst,TweenInfo.new(.25),{Size=Vector3.one*math.min(5,(radius or 5)*.6),Transparency=1}):Play();Debris:AddItem(burst,.3)
-  end
+  if impact and weapon=='33' then Pandora.impact(folder,impact,radius) end
  end
  combat:WaitForChild('ArcShot').OnClientEvent:Connect(function(action,id,...)
   local a={...}
@@ -47,22 +41,20 @@ function A.mount(combat,folder,lookup)
      r.offset=entry.model:GetPivot().Position-r.origin
      entry.flyingUntil=math.max(entry.flyingUntil or 0,r.started+r.duration+.12)
      for _,part in r.model:GetDescendants() do if part:IsA('BasePart') then part.LocalTransparencyModifier=0 elseif part:IsA('SurfaceGui') then part.Enabled=true end end
+    elseif r.weapon=='33' then
+     r.model,r.skull=Pandora.skull(folder);r.offset=Vector3.zero
+     -- Rise out of the open lid, then settle onto the shared mortar path.
+     if v and v.id=='33' then r.offset=v.model:GetPivot():PointToWorldSpace(Vector3.new(0,1,0))-r.origin end
     else
-     local m=Instance.new('Model');m.Name=r.weapon=='33' and 'PandoraMortarBall' or 'FlyingCard'
+     local m=Instance.new('Model');m.Name='FlyingCard'
      local p=Instance.new('Part');p.Name='ReplaceableProjectile';p.Anchored=true;p.CanCollide=false;p.CanTouch=false;p.CanQuery=false
-     p.Shape=r.weapon=='33' and Enum.PartType.Ball or Enum.PartType.Block
-     p.Size=r.weapon=='33' and Vector3.one*.7 or Vector3.new(.5,.8,.04)
-     p.Material=r.weapon=='33' and Enum.Material.Neon or Enum.Material.SmoothPlastic
-     p.Color=r.weapon=='33' and Color3.fromRGB(167,132,232) or Color3.fromRGB(132,28,47)
+     p.Size=Vector3.new(.5,.8,.04);p.Material=Enum.Material.SmoothPlastic;p.Color=Color3.fromRGB(132,28,47)
      p.Parent=m;m.PrimaryPart=p;r.model=m;r.offset=Vector3.zero
-     if r.weapon=='33' then
-      local a0=Instance.new('Attachment');a0.Position=Vector3.new(-.18,0,0);a0.Parent=p
-      local a1=Instance.new('Attachment');a1.Position=Vector3.new(.18,0,0);a1.Parent=p
-      local trail=Instance.new('Trail');trail.Name='MortarTrail';trail.Attachment0=a0;trail.Attachment1=a1
-      trail.Lifetime=.32;trail.MinLength=.05;trail.FaceCamera=true;trail.LightEmission=.7
-      trail.Color=ColorSequence.new(Color3.fromRGB(202,174,255),Color3.fromRGB(104,74,181))
-      trail.Transparency=NumberSequence.new(.15,1);trail.Parent=p
-     end
+    end
+    if r.weapon=='18' then
+     -- Faint streak so the curving card route stays readable.
+     local card=r.model.PrimaryPart or r.model:FindFirstChildWhichIsA('BasePart',true)
+     if card then K.trail(card,.22,.14,K.White,K.White,.55) end
     end
     r.model.Parent=folder
    end
@@ -73,7 +65,7 @@ function A.mount(combat,folder,lookup)
    local tangent=nextPos-pos;if tangent.Magnitude<.001 then tangent=Vector3.new(0,-1,-.01) end
    local cf=CFrame.lookAt(pos,pos+tangent)
    if r.weapon=='18' then cf*=CFrame.Angles(math.pi/2+.2,0,(now-r.started)*math.pi*10+r.index) end
-   r.model:PivotTo(cf)
+   if r.skull then Pandora.stepSkull(r.skull,cf,now-r.started) else r.model:PivotTo(cf) end
   end
  end)
 end
