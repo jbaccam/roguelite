@@ -1,0 +1,96 @@
+{
+  "tier": "gold",
+  "name": "Gold",
+  "blender_version": "5.2.1 LTS",
+  "authoring": "final Roblox stud size; import at 1:1, do not scale",
+  "hinge_studs": [
+    0.0,
+    2.49,
+    3.24
+  ],
+  "open": {
+    "rotate_x_deg": 105.0,
+    "lift": 0.0
+  },
+  "moves_when_opening": [
+    "Chest_Lid"
+  ],
+  "glow_srgb": [
+    255,
+    196,
+    60
+  ],
+  "accent_srgb": [
+    255,
+    196,
+    60
+  ],
+  "texture": "textures/chest-gold-baked.png (2048x2048, baked lighting)",
+  "parts": {
+    "Chest_Base": {
+      "role": "MeshPart, TextureID = textures/chest-gold-baked.png",
+      "triangles": 5866,
+      "vertices": 3188,
+      "dimensions_studs": [
+        7.718,
+        6.234,
+        3.933
+      ],
+      "uv_range": [
+        0.0053,
+        0.9947,
+        0.0053,
+        0.9947
+      ]
+    },
+    "Chest_Lid": {
+      "role": "MeshPart, TextureID = textures/chest-gold-baked.png",
+      "triangles": 2592,
+      "vertices": 1450,
+      "dimensions_studs": [
+        7.0,
+        5.47,
+        2.934
+      ],
+      "uv_range": [
+        0.0053,
+        0.9946,
+        0.0053,
+        0.9946
+      ]
+    },
+    "Chest_Glow": {
+      "role": "Neon, GLOW colour; fade out as the chest opens",
+      "triangles": 66,
+      "vertices": 40,
+      "dimensions_studs": [
+        6.28,
+        5.305,
+        0.9
+      ],
+      "uv_range": [
+        0.8542,
+        0.8542,
+        0.1875,
+        0.1875
+      ]
+    },
+    "Chest_Inner": {
+      "role": "Neon, GLOW colour; seen when open",
+      "triangles": 92,
+      "vertices": 48,
+      "dimensions_studs": [
+        5.72,
+        4.02,
+        0.98
+      ],
+      "uv_range": [
+        0.8542,
+        0.8542,
+        0.1875,
+        0.1875
+      ]
+    }
+  },
+  "total_triangles": 8616
+}

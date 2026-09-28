@@ -1,0 +1,96 @@
+{
+  "tier": "silver",
+  "name": "Silver",
+  "blender_version": "5.2.1 LTS",
+  "authoring": "final Roblox stud size; import at 1:1, do not scale",
+  "hinge_studs": [
+    0.0,
+    2.44,
+    3.09
+  ],
+  "open": {
+    "rotate_x_deg": 105.0,
+    "lift": 0.0
+  },
+  "moves_when_opening": [
+    "Chest_Lid"
+  ],
+  "glow_srgb": [
+    80,
+    175,
+    255
+  ],
+  "accent_srgb": [
+    80,
+    175,
+    255
+  ],
+  "texture": "textures/chest-silver-baked.png (2048x2048, baked lighting)",
+  "parts": {
+    "Chest_Base": {
+      "role": "MeshPart, TextureID = textures/chest-silver-baked.png",
+      "triangles": 4296,
+      "vertices": 2504,
+      "dimensions_studs": [
+        7.3,
+        6.01,
+        4.02
+      ],
+      "uv_range": [
+        0.0051,
+        0.9946,
+        0.0051,
+        0.9833
+      ]
+    },
+    "Chest_Lid": {
+      "role": "MeshPart, TextureID = textures/chest-silver-baked.png",
+      "triangles": 2232,
+      "vertices": 1238,
+      "dimensions_studs": [
+        6.9,
+        5.32,
+        2.649
+      ],
+      "uv_range": [
+        0.0051,
+        0.9949,
+        0.0051,
+        0.9833
+      ]
+    },
+    "Chest_Glow": {
+      "role": "Neon, GLOW colour; fade out as the chest opens",
+      "triangles": 66,
+      "vertices": 40,
+      "dimensions_studs": [
+        6.12,
+        5.185,
+        0.77
+      ],
+      "uv_range": [
+        0.8542,
+        0.8542,
+        0.1875,
+        0.1875
+      ]
+    },
+    "Chest_Inner": {
+      "role": "Neon, GLOW colour; seen when open",
+      "triangles": 12,
+      "vertices": 8,
+      "dimensions_studs": [
+        5.62,
+        3.96,
+        0.04
+      ],
+      "uv_range": [
+        0.8542,
+        0.8542,
+        0.1875,
+        0.1875
+      ]
+    }
+  },
+  "total_triangles": 6606
+}

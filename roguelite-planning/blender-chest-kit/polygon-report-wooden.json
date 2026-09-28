@@ -1,0 +1,96 @@
+{
+  "tier": "wooden",
+  "name": "Wooden",
+  "blender_version": "5.2.1 LTS",
+  "authoring": "final Roblox stud size; import at 1:1, do not scale",
+  "hinge_studs": [
+    0.0,
+    2.33,
+    2.95
+  ],
+  "open": {
+    "rotate_x_deg": 105.0,
+    "lift": 0.0
+  },
+  "moves_when_opening": [
+    "Chest_Lid"
+  ],
+  "glow_srgb": [
+    255,
+    184,
+    64
+  ],
+  "accent_srgb": [
+    255,
+    184,
+    64
+  ],
+  "texture": "textures/chest-wooden-baked.png (2048x2048, baked lighting)",
+  "parts": {
+    "Chest_Base": {
+      "role": "MeshPart, TextureID = textures/chest-wooden-baked.png",
+      "triangles": 2946,
+      "vertices": 1716,
+      "dimensions_studs": [
+        6.5,
+        5.23,
+        3.72
+      ],
+      "uv_range": [
+        0.005,
+        0.995,
+        0.005,
+        0.9855
+      ]
+    },
+    "Chest_Lid": {
+      "role": "MeshPart, TextureID = textures/chest-wooden-baked.png",
+      "triangles": 932,
+      "vertices": 540,
+      "dimensions_studs": [
+        6.26,
+        4.94,
+        2.431
+      ],
+      "uv_range": [
+        0.0052,
+        0.9945,
+        0.0056,
+        0.9838
+      ]
+    },
+    "Chest_Glow": {
+      "role": "Neon, GLOW colour; fade out as the chest opens",
+      "triangles": 66,
+      "vertices": 40,
+      "dimensions_studs": [
+        5.88,
+        4.94,
+        0.49
+      ],
+      "uv_range": [
+        0.8542,
+        0.8542,
+        0.1875,
+        0.1875
+      ]
+    },
+    "Chest_Inner": {
+      "role": "Neon, GLOW colour; seen when open",
+      "triangles": 12,
+      "vertices": 8,
+      "dimensions_studs": [
+        5.38,
+        3.78,
+        0.04
+      ],
+      "uv_range": [
+        0.8542,
+        0.8542,
+        0.1875,
+        0.1875
+      ]
+    }
+  },
+  "total_triangles": 3956
+}
