@@ -6,6 +6,9 @@ local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 local PhysicsService = game:GetService("PhysicsService")
 local combat = game:GetService('ReplicatedStorage'):WaitForChild('RogueliteCombat')
+local Role = require(game:GetService('ServerScriptService'):WaitForChild('ServerRole'))
+-- Lobby servers run no waves; their maps are parked (ServerRole).
+if Role.get() == 'Lobby' then return end
 local Death = require(combat:WaitForChild('ZombieDeath'))
 local Types = require(combat:WaitForChild('ZombieTypes'))
 local EnemyCatalog = require(combat:WaitForChild('EnemyCatalog'))
@@ -29,7 +32,10 @@ local folder = Instance.new("Folder")
 folder.Name = "RogueliteEnemies"
 folder.Parent = workspace
 
-local marker = workspace:WaitForChild("RogueliteZombieSpawn")
+-- The active map's marker, looked up on each use: Studio's combined mode can switch maps between runs.
+local function marker()
+    return Role.marker() or error('No RogueliteZombieSpawn in the active map ' .. tostring(Role.activeMap()))
+end
 local spawnZombie
 
 -- Spawn director: Brotato-style telegraphed groups spread around the players.
@@ -52,9 +58,10 @@ warnings.Parent = workspace
 local queued, queuedSet, flushScheduled = {}, {}, false
 
 local function arena()
-    local center = marker:GetAttribute('SpawnAreaCenter')
-    if typeof(center) ~= 'Vector3' then center = marker.Position end
-    return center, marker:GetAttribute('SpawnAreaRadius') or 60
+    local m = marker()
+    local center = m:GetAttribute('SpawnAreaCenter')
+    if typeof(center) ~= 'Vector3' then center = m.Position end
+    return center, m:GetAttribute('SpawnAreaRadius') or 60
 end
 local function livingRoots()
     local roots = {}
@@ -75,7 +82,7 @@ local function clearOfPlayers(point, minimum, roots)
 end
 -- Rock/tree climb blockers have CanQuery off, so test their footprints directly.
 local function insideBlocker(point)
-    local blockers = workspace:FindFirstChild(marker:GetAttribute('SpawnBlockerFolder') or 'MapOneNoClimb')
+    local blockers = Role.find(marker():GetAttribute('SpawnBlockerFolder') or 'MapOneNoClimb')
     if not blockers then return false end
     for _, part in blockers:GetDescendants() do
         if part:IsA("BasePart") then
@@ -87,11 +94,11 @@ local function insideBlocker(point)
 end
 local function groundAt(point)
     local center = arena()
-    local exclude = {folder, warnings, marker, workspace:FindFirstChild("Zombie_R15_ProvidedTextures_Studio")}
+    local exclude = {folder, warnings, marker(), workspace:FindFirstChild("Zombie_R15_ProvidedTextures_Studio")}
     for _, root in livingRoots() do table.insert(exclude, root.Parent) end
     -- The arena's invisible walls and lid sit above the floor; the ground ray ignores them.
     local rayExclude = table.clone(exclude)
-    table.insert(rayExclude, workspace:FindFirstChild(marker:GetAttribute('SpawnBoundaryModel') or 'MapOneBoundary'))
+    table.insert(rayExclude, Role.find(marker():GetAttribute('SpawnBoundaryModel') or 'MapOneBoundary'))
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = rayExclude
@@ -255,10 +262,10 @@ npc.Destroying:Connect(function()
     end)
 end)
 local angle = (index - 1) * math.pi * 2 / math.max(1,spawnCount())
-local position = spawnPosition or marker.Position + Vector3.new(math.cos(angle) * 10, 0, math.sin(angle) * 10)
+local position = spawnPosition or marker().Position + Vector3.new(math.cos(angle) * 10, 0, math.sin(angle) * 10)
 local groundParams = RaycastParams.new()
 groundParams.FilterType = Enum.RaycastFilterType.Exclude
-groundParams.FilterDescendantsInstances = {folder, marker, workspace:FindFirstChild("Zombie_R15_ProvidedTextures_Studio")}
+groundParams.FilterDescendantsInstances = {folder, marker(), workspace:FindFirstChild("Zombie_R15_ProvidedTextures_Studio")}
 local ground = workspace:Raycast(position + Vector3.new(0, 30, 0), Vector3.new(0, -100, 0), groundParams)
 if ground then position = Vector3.new(position.X, ground.Position.Y + humanoid.HipHeight + root.Size.Y / 2 + 0.1, position.Z) end
 local facing = nil
@@ -268,7 +275,7 @@ end
 if facing and flatDistance(position, facing) > 0.1 then
     npc:PivotTo(CFrame.lookAt(position, Vector3.new(facing.X, position.Y, facing.Z)))
 else
-    npc:PivotTo(CFrame.new(position) * marker.CFrame.Rotation)
+    npc:PivotTo(CFrame.new(position) * marker().CFrame.Rotation)
 end
 for _, part in npc:GetDescendants() do
     if part:IsA("BasePart") then
@@ -352,7 +359,7 @@ connection = RunService.Heartbeat:Connect(function(dt)
     end
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
-    params.FilterDescendantsInstances = {folder, target.Parent, marker}
+    params.FilterDescendantsInstances = {folder, target.Parent, marker()}
     local obstruction = workspace:Raycast(root.Position, target.Position - root.Position, params)
     if not obstruction then
         waypoints = nil
