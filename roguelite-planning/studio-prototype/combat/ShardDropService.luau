@@ -60,6 +60,20 @@ function D.step(now)
   end
  end
 end
+-- A defeated wave boss showers public crystals (anyone may collect) over a wide disc.
+D.BOSS_DROPS=50;D.BOSS_DROP_VALUE=4
+local function dropAt(at,owner,value,bonus)
+ local model=Instance.new('Model');model.Name='CrystalShard'
+ local root=Instance.new('Part');root.Name='ShardMarker';root.Size=Vector3.one*.1;root.Transparency=1
+ root.Anchored=true;root.CanCollide=false;root.CanTouch=false;root.CanQuery=false;root.CastShadow=false
+ root.CFrame=CFrame.new(at);root.Parent=model;model.PrimaryPart=root
+ local born=workspace:GetServerTimeNow()
+ model:SetAttribute('DesignerBonus',bonus)
+ model:SetAttribute('Origin',at);model:SetAttribute('BornAt',born)
+ model:SetAttribute('OwnerUserId',owner and owner.UserId or 0);model:SetAttribute('ShardValue',value);model.Parent=folder
+ local d={model=model,position=at,origin=at,born=born,owner=owner,value=value,collected=false}
+ table.insert(D.drops,d);return d
+end
 function D.spawn(npc,position)
  if npc:GetAttribute('PracticeTarget') then return end
  if not isCombat or not isCombat() or not Tags:HasTag(npc,'RogueliteZombie') or npc:GetAttribute('ShardDropped') then return end
@@ -70,22 +84,36 @@ function D.spawn(npc,position)
  local mobs=workspace:FindFirstChild('RogueliteEnemies');if mobs then table.insert(exclude,mobs) end
  for _,p in Players:GetPlayers() do if p.Character then table.insert(exclude,p.Character) end end
  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances=exclude
+ if npc:GetAttribute('IsHammerBoss') then
+  local first
+  for n=1,D.BOSS_DROPS do
+   -- Golden-angle spiral: evenly filled disc, 3 to 14 studs from the body.
+   local angle=n*2.39996;local radius=3+math.sqrt(n/D.BOSS_DROPS)*11
+   local spot=position+Vector3.new(math.cos(angle)*radius,0,math.sin(angle)*radius)
+   local ground=workspace:Raycast(spot+Vector3.new(0,6,0),Vector3.new(0,-100,0),params)
+   local d=dropAt(ground and ground.Position+Vector3.new(0,1.15,0) or spot,nil,D.BOSS_DROP_VALUE,0)
+   first=first or d
+  end
+  return first
+ end
  local ground=workspace:Raycast(position+Vector3.new(0,2,0),Vector3.new(0,-100,0),params)
  local at=ground and ground.Position+Vector3.new(0,1.15,0) or position
- local model=Instance.new('Model');model.Name='CrystalShard'
- local root=Instance.new('Part');root.Name='ShardMarker';root.Size=Vector3.one*.1;root.Transparency=1
- root.Anchored=true;root.CanCollide=false;root.CanTouch=false;root.CanQuery=false;root.CastShadow=false
- root.CFrame=CFrame.new(at);root.Parent=model;model.PrimaryPart=root
- local born=workspace:GetServerTimeNow()
- model:SetAttribute('Origin',at);model:SetAttribute('BornAt',born)
- model:SetAttribute('OwnerUserId',owner and owner.UserId or 0);model:SetAttribute('ShardValue',E.KILL_SHARDS);model.Parent=folder
- local d={model=model,position=at,origin=at,born=born,owner=owner,value=E.KILL_SHARDS,collected=false}
- table.insert(D.drops,d);return d
+ local value=E.KILL_SHARDS+(npc:GetAttribute('DesignerShirt')==true and E.DESIGNER_BONUS_SHARDS or 0)
+ return dropAt(at,owner,value,value-E.KILL_SHARDS)
 end
 function D.clear(bank)
  for i=#D.drops,1,-1 do
   local d=D.drops[i]
-  if bank and not d.collected and d.owner and living(d.owner) then d.collected=true;award(d.owner,d.value) end
+  if bank and not d.collected then
+   local owner=d.owner
+   if not owner then
+    local nearest=math.huge
+    for _,p in Players:GetPlayers() do local root=living(p)
+     if root and characters.states[p] then local distance=(root.Position-d.origin).Magnitude;if distance<nearest then nearest=distance;owner=p end end
+    end
+   end
+   if owner then d.collected=true;award(owner,d.value,false) end
+  end
   remove(i)
  end
 end

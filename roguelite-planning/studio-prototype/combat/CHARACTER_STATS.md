@@ -20,7 +20,13 @@ All 36 weapons consume general damage, compatible melee/ranged/elemental/utility
 
 Attack range moves melee reach without rescaling the equipped mesh. Authored model sizes, including the katana scale 0.013698526658117772, are preserved. Projectile Size changes projectile collision/visuals, not the equipped weapon model.
 
-Pickup Radius and Luck apply to temporary owner-only health drops. Drop chance is 15% plus Luck/500, capped at 35%; drops heal 8 HP before Recovery. XP, currency, shop odds and purchases remain deferred. Utility Power applies to existing Handyman weapons; there is no new summon system in this change.
+Pickup Radius and Luck apply to rare heart drops (2026-09-28, `HeartDropService`): 2.5% per real kill plus Luck × 0.05%, capped at 8%; a heart heals 15 HP before Recovery and is pulled only by a hurt player within max(4, Pickup Radius). (The original 15%/8 HP green orb was removed on 2026-09-22.) XP, currency, shop odds and purchases remain deferred. Utility Power applies to existing Handyman weapons; there is no new summon system in this change.
+
+## Normalized avatars
+
+`AvatarNormalizer.server.luau` (September 27, 2026) turns off `CharacterAutoLoads` and spawns every character from a sanitized copy of the player's HumanoidDescription. Height, width, depth and head scale are set to 1, and body type and proportion to 0. Body-part meshes are set to 0, so the rig uses classic R15 limbs, with no Rthro, dynamic-head or custom body shapes. Animation-pack IDs are also set to 0, so the default R15 animations play. Layered clothing is removed. Up to four rigid hat, hair or face accessories are kept, along with body colours, classic shirt/pants/T-shirt and face. This keeps armor, shirts, floating weapons and animations on the body proportions they were authored for.
+
+The script also handles respawns after death, using `Players.RespawnTime`. Any character loaded another way (for example a plain `LoadCharacter` in a test) is replaced with a normalized one. Game Settings > Avatar should stay on R15; the script warns if a spawn comes out R6. Studio Play check: no reload loop, H=1, BodyType=0, height 5.5 studs, stats still applied, and correct on first spawn, after a foreign reload and after death. Several different real avatars in a live server have not been tested.
 
 ## Classes
 

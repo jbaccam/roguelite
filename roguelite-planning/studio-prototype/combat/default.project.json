@@ -42,13 +42,27 @@
         },
         "BossData": {
           "$path": "../../hammer-boss/finished/BossDataMain.luau",
-          "Idle": { "$path": "../../hammer-boss/finished/clips/Idle.luau" },
-          "Walk": { "$path": "../../hammer-boss/finished/clips/Walk.luau" },
-          "Slam": { "$path": "../../hammer-boss/finished/clips/Slam.luau" },
-          "Swing": { "$path": "../../hammer-boss/finished/clips/Swing.luau" },
-          "Spin": { "$path": "../../hammer-boss/finished/clips/Spin.luau" },
-          "Hit": { "$path": "../../hammer-boss/finished/clips/Hit.luau" },
-          "Death": { "$path": "../../hammer-boss/finished/clips/Death.luau" }
+          "Idle": {
+            "$path": "../../hammer-boss/finished/clips/Idle.luau"
+          },
+          "Walk": {
+            "$path": "../../hammer-boss/finished/clips/Walk.luau"
+          },
+          "Slam": {
+            "$path": "../../hammer-boss/finished/clips/Slam.luau"
+          },
+          "Swing": {
+            "$path": "../../hammer-boss/finished/clips/Swing.luau"
+          },
+          "Spin": {
+            "$path": "../../hammer-boss/finished/clips/Spin.luau"
+          },
+          "Hit": {
+            "$path": "../../hammer-boss/finished/clips/Hit.luau"
+          },
+          "Death": {
+            "$path": "../../hammer-boss/finished/clips/Death.luau"
+          }
         },
         "BossMotion": {
           "$path": "../../hammer-boss/BossMotion.luau"
@@ -86,6 +100,9 @@
         "EconomyConfig": {
           "$path": "EconomyConfig.luau"
         },
+        "LevelUpCatalog": {
+          "$path": "LevelUpCatalog.luau"
+        },
         "RunXP": {
           "$path": "RunXP.luau"
         },
@@ -94,6 +111,9 @@
         },
         "CrystalShardVisual": {
           "$path": "../../crystal-shard/CrystalShardVisual.lua"
+        },
+        "HeartPickupVisual": {
+          "$path": "HeartPickupVisual.luau"
         },
         "ShopCatalog": {
           "$path": "ShopCatalog.luau"
@@ -113,11 +133,50 @@
         "ArcVisuals": {
           "$path": "ArcVisuals.luau"
         },
+        "VfxKit": {
+          "$path": "VfxKit.luau"
+        },
+        "WeaponSpacing": {
+          "$path": "WeaponSpacing.luau"
+        },
+        "SwingVisuals": {
+          "$path": "SwingVisuals.luau"
+        },
+        "ProjectileStyleVisuals": {
+          "$path": "ProjectileStyleVisuals.luau"
+        },
+        "PandoraVisuals": {
+          "$path": "PandoraVisuals.luau"
+        },
+        "ThrownVisuals": {
+          "$path": "ThrownVisuals.luau"
+        },
         "ArcShot": {
           "$className": "RemoteEvent"
         },
         "ZombieTypes": {
           "$path": "ZombieTypes.luau"
+        },
+        "EnemyCatalog": {
+          "$path": "EnemyCatalog.luau"
+        },
+        "EnemyMotion": {
+          "$path": "EnemyMotion.luau"
+        },
+        "EnemyProjectileVisuals": {
+          "$path": "EnemyProjectileVisuals.luau"
+        },
+        "EnemyHeldProjectiles": {
+          "$path": "EnemyHeldProjectiles.luau"
+        },
+        "NativeEnemyFeet": {
+          "$path": "NativeEnemyFeet.luau"
+        },
+        "EnemyMotionTuning": {
+          "$path": "EnemyMotionTuning.luau"
+        },
+        "EnemyAnimations": {
+          "$path": "EnemyAnimations"
         },
         "ZombieMotion": {
           "$path": "ZombieMotion.luau"
@@ -139,7 +198,76 @@
           "$properties": {
             "Sandboxed": true
           }
+        },
+        "UtilityMotion": {
+          "$path": "UtilityMotion.luau"
+        },
+        "UtilityVisuals": {
+          "$path": "UtilityVisuals.luau"
+        },
+        "RolledShirtVisual": {
+          "$path": "RolledShirtVisual.luau"
+        },
+        "DesignerShirtVisual": {
+          "$path": "DesignerShirtVisual.luau"
+        },
+        "ShirtVisuals": {
+          "$path": "ShirtVisuals.luau"
+        },
+        "RolledShirtData": {
+          "$path": "../../rolled-shirt/RolledShirtData.luau"
+        },
+        "TeeTorsoData": {
+          "$path": "../../rolled-shirt/TeeTorsoData.luau"
+        },
+        "TeeSleeveData": {
+          "$path": "../../rolled-shirt/TeeSleeveData.luau"
+        },
+        "MonetizationConfig": {
+          "$path": "MonetizationConfig.luau"
+        },
+        "ChestConfig": {
+          "$path": "ChestConfig.luau"
+        },
+        "SkillTreeConfig": {
+          "$path": "SkillTreeConfig.luau"
+        },
+        "PurchaseRequest": {
+          "$className": "RemoteEvent",
+          "$properties": {
+            "Sandboxed": true
+          }
+        },
+        "PurchaseResult": {
+          "$className": "RemoteEvent",
+          "$properties": {
+            "Sandboxed": true
+          }
+        },
+        "RunAction": {
+          "$className": "RemoteEvent",
+          "$properties": {
+            "Sandboxed": true
+          }
+        },
+        "ProfileAction": {
+          "$className": "RemoteFunction"
         }
+      },
+      "UITheme": {
+        "$path": "../ui/UITheme.luau"
+      },
+      "LobbyUI": {
+        "$path": "../ui/LobbyUI.luau"
+      },
+      "RunSetupUI": {
+        "$path": "../ui/RunSetupUI.luau"
+      },
+      "RunSetupRules": {
+        "$path": "../lobby/RunSetupRules.luau"
+      },
+      "LevelUpUI": {
+        "$path": "../ui/LevelUpUI.luau"
       },
       "RogueliteUI": {
         "$path": "../ui/RogueliteUI.luau"
@@ -169,9 +297,31 @@
           "CardHeight": 390,
           "StatsWidth": 310
         }
+      },
+      "UILayoutAudit": {
+        "$path": "../ui/UILayoutAudit.luau"
+      },
+      "DeathScreenUI": {
+        "$path": "../ui/DeathScreenUI.luau"
+      },
+      "StoreFX": {
+        "$path": "../ui/StoreFX.luau"
+      },
+      "SkillTreeUI": {
+        "$path": "../ui/SkillTreeUI.luau"
+      },
+      "ChestFX": {
+        "$path": "../ui/ChestFX.luau"
+      },
+      "ChestStage": {
+        "$path": "../ui/ChestStage.luau"
+      },
+      "ChestScreenUI": {
+        "$path": "../ui/ChestScreenUI.luau"
       }
     },
     "ServerStorage": {
+      "$ignoreUnknownInstances": true,
       "RogueliteNPCs": {
         "$className": "Folder",
         "$ignoreUnknownInstances": true,
@@ -190,6 +340,9 @@
       }
     },
     "ServerScriptService": {
+      "AvatarNormalizer": {
+        "$path": "AvatarNormalizer.server.luau"
+      },
       "RogueliteCombat": {
         "$path": "RogueliteCombat.server.luau"
       },
@@ -208,8 +361,14 @@
       "ShardDropService": {
         "$path": "ShardDropService.luau"
       },
+      "HeartDropService": {
+        "$path": "HeartDropService.luau"
+      },
       "ShopService": {
         "$path": "ShopService.luau"
+      },
+      "LeaderboardService": {
+        "$path": "LeaderboardService.server.luau"
       },
       "ArcProjectiles": {
         "$path": "ArcProjectiles.luau"
@@ -220,6 +379,9 @@
       "ZombieAttacks": {
         "$path": "ZombieAttacks.luau"
       },
+      "EnemyAttacks": {
+        "$path": "EnemyAttacks.luau"
+      },
       "BossService": {
         "$path": "../../hammer-boss/BossService.luau"
       },
@@ -228,6 +390,24 @@
       },
       "SpecialWeapons": {
         "$path": "SpecialWeapons.luau"
+      },
+      "UtilityWeapons": {
+        "$path": "UtilityWeapons.luau"
+      },
+      "MobCollision": {
+        "$path": "MobCollision.server.luau"
+      },
+      "RogueliteLobbyPreview": {
+        "$path": "../lobby/RogueliteLobbyPreview.server.luau",
+        "QueueState": {
+          "$path": "../lobby/QueueState.luau"
+        }
+      },
+      "ProfileService": {
+        "$path": "ProfileService.luau"
+      },
+      "RogueliteMeta": {
+        "$path": "RogueliteMeta.server.luau"
       }
     },
     "StarterPlayer": {
@@ -242,6 +422,9 @@
         "ShardVisuals": {
           "$path": "ShardVisuals.client.luau"
         },
+        "HeartVisuals": {
+          "$path": "HeartVisuals.client.luau"
+        },
         "RogueliteZombieAnimation": {
           "$path": "../RogueliteZombieAnimation.client.luau"
         },
@@ -253,6 +436,12 @@
         },
         "CardShowcase": {
           "$path": "CardShowcase.client.luau"
+        },
+        "RogueliteLobbyPreview": {
+          "$path": "../lobby/RogueliteLobbyPreview.client.luau"
+        },
+        "RogueliteLobbyHUD": {
+          "$path": "../ui/RogueliteLobbyHUD.client.luau"
         }
       },
       "StarterCharacterScripts": {
