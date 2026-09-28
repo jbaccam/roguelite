@@ -411,6 +411,12 @@
       },
       "RogueliteMeta": {
         "$path": "RogueliteMeta.server.luau"
+      },
+      "ServerRole": {
+        "$path": "../lobby/ServerRole.luau"
+      },
+      "ServerRoleBoot": {
+        "$path": "../lobby/ServerRoleBoot.server.luau"
       }
     },
     "StarterPlayer": {
