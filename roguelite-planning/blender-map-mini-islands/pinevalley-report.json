@@ -1,0 +1,23 @@
+{
+  "map": "PineValley",
+  "island_mesh": {
+    "name": "PineValley_Island",
+    "triangles": 8220,
+    "vertices": 4574,
+    "extent_studs": [
+      62.02,
+      61.67,
+      47.55
+    ],
+    "atlas": "textures/pinevalley-island-atlas.png"
+  },
+  "instances": {
+    "Evergreen_Master": 15,
+    "Log_Master": 3
+  },
+  "instance_triangles": {
+    "Evergreen_Master": 2496,
+    "Log_Master": 1518
+  },
+  "total_triangles": 50214
+}

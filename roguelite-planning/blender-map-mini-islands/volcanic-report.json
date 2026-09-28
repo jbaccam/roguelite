@@ -1,0 +1,23 @@
+{
+  "map": "Volcanic",
+  "island_mesh": {
+    "name": "Volcanic_Island",
+    "triangles": 12114,
+    "vertices": 6949,
+    "extent_studs": [
+      62.02,
+      63.96,
+      60.79
+    ],
+    "atlas": "textures/volcanic-island-atlas.png"
+  },
+  "lava_mesh": {
+    "name": "Volcanic_Lava",
+    "triangles": 1596,
+    "vertices": 1603,
+    "atlas": "textures/volcanic-lava-atlas.png",
+    "note": "emissive; set MeshPart Material to Neon (orange) in Roblox"
+  },
+  "instances": {},
+  "total_triangles": 13710
+}

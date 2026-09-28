@@ -1,0 +1,80 @@
+{
+ "note": "Roblox/glTF axes (Y up). center/size = bounds of the main island mesh relative to the island origin (top of the island at y=0). Used by studio-install-islands.luau.",
+ "islands": {
+  "PineValley": {
+   "fbx": "exports/fbx/pinevalley-mini-island.fbx",
+   "islandMesh": "PineValley_Island",
+   "center": [
+    0.0413,
+    -12.7246,
+    -0.3092
+   ],
+   "size": [
+    62.022,
+    47.5508,
+    61.6743
+   ],
+   "meshCount": 19
+  },
+  "BeachCove": {
+   "fbx": "exports/fbx/beachcove-mini-island.fbx",
+   "islandMesh": "BeachCove_Island",
+   "center": [
+    0.656,
+    -11.009,
+    0.0983
+   ],
+   "size": [
+    62.0999,
+    50.982,
+    64.5127
+   ],
+   "meshCount": 21
+  },
+  "DesertBasin": {
+   "fbx": "exports/fbx/desert-mini-island.fbx",
+   "islandMesh": "Desert_Island",
+   "center": [
+    0.6071,
+    -10.0746,
+    0.0479
+   ],
+   "size": [
+    62.0201,
+    52.8508,
+    63.963
+   ],
+   "meshCount": 1
+  },
+  "FrozenPass": {
+   "fbx": "exports/fbx/frozen-mini-island.fbx",
+   "islandMesh": "FrozenPass_Island",
+   "center": [
+    0.6101,
+    -10.7058,
+    0.218
+   ],
+   "size": [
+    62.0181,
+    51.5884,
+    64.6141
+   ],
+   "meshCount": 16
+  },
+  "VolcanicCrater": {
+   "fbx": "exports/fbx/volcanic-mini-island.fbx",
+   "islandMesh": "Volcanic_Island",
+   "center": [
+    0.6071,
+    -6.1048,
+    0.0479
+   ],
+   "size": [
+    62.0201,
+    60.7904,
+    63.963
+   ],
+   "meshCount": 2
+  }
+ }
+}

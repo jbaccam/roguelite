@@ -1,0 +1,27 @@
+{
+  "map": "Desert",
+  "island_mesh": {
+    "name": "Desert_Island",
+    "triangles": 16070,
+    "vertices": 8673,
+    "extent_studs": [
+      62.02,
+      63.96,
+      52.85
+    ],
+    "atlas": "textures/desert-island-atlas.png"
+  },
+  "instances": {},
+  "procedural_props": {
+    "sandstone_mesa": 18,
+    "sandstone_boulder": 20,
+    "obelisk": 1,
+    "cactus": 12,
+    "ribcage": 4,
+    "dead_tree": 2,
+    "floor_rock": 9,
+    "flower": 5,
+    "dry_grass_tufts": 26
+  },
+  "total_triangles": 16070
+}

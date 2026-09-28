@@ -1,0 +1,25 @@
+{
+  "map": "FrozenPass",
+  "island_mesh": {
+    "name": "FrozenPass_Island",
+    "triangles": 16134,
+    "vertices": 9109,
+    "extent_studs": [
+      62.02,
+      64.61,
+      51.59
+    ],
+    "atlas": "textures/frozen-island-atlas.png"
+  },
+  "instances": {
+    "SnowPine_Master": 15
+  },
+  "instance_triangles": {
+    "SnowPine_Master": 3126
+  },
+  "instance_atlas": {
+    "SnowPine_Master": "textures/frozen-snowpine-atlas.png"
+  },
+  "snowpine_source": "blender-master-evergreen/Evergreen_Master.glb + procedural snow caps (baked)",
+  "total_triangles": 63024
+}

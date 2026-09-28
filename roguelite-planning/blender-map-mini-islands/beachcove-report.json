@@ -1,0 +1,82 @@
+{
+  "map": "BeachCove",
+  "island_mesh": {
+    "name": "BeachCove_Island",
+    "triangles": 7920,
+    "vertices": 4712,
+    "extent_studs": [
+      62.1,
+      64.51,
+      50.98
+    ],
+    "atlas": "textures/beachcove-island-atlas.png"
+  },
+  "instances": {
+    "PalmTall": 4,
+    "PalmShort": 5,
+    "PalmLean": 3,
+    "Log": 2,
+    "Planks": 2,
+    "Boat": 1,
+    "PoolLarge": 1,
+    "PoolSmall": 2
+  },
+  "instance_triangles": {
+    "PalmTall": 955,
+    "PalmLean": 868,
+    "PalmShort": 665,
+    "Log": 302,
+    "Planks": 612,
+    "Boat": 632,
+    "PoolSmall": 71,
+    "PoolLarge": 42
+  },
+  "instance_scales": {
+    "PalmTall": [
+      0.5,
+      0.52,
+      0.56,
+      0.58
+    ],
+    "PalmShort": [
+      0.55,
+      0.58,
+      0.6,
+      0.62
+    ],
+    "PalmLean": [
+      0.62,
+      0.64
+    ],
+    "Log": [
+      0.4,
+      0.45
+    ],
+    "Planks": [
+      0.42,
+      0.5
+    ],
+    "Boat": [
+      0.58
+    ],
+    "PoolLarge": [
+      0.68
+    ],
+    "PoolSmall": [
+      0.7,
+      0.8
+    ]
+  },
+  "source_glbs": {
+    "PalmTall": "blender-beach-cove-kit/exports/glb/16-palm-tall.glb",
+    "PalmLean": "blender-beach-cove-kit/exports/glb/17-palm-leaning.glb",
+    "PalmShort": "blender-beach-cove-kit/exports/glb/18-palm-short.glb",
+    "Log": "blender-beach-cove-kit/exports/glb/19-driftwood-log.glb",
+    "Planks": "blender-beach-cove-kit/exports/glb/20-driftwood-planks.glb",
+    "Boat": "blender-beach-cove-kit/exports/glb/21-wrecked-rowboat.glb",
+    "PoolSmall": "blender-beach-cove-kit/exports/glb/22-tide-pool-small.glb",
+    "PoolLarge": "blender-beach-cove-kit/exports/glb/23-tide-pool-large.glb"
+  },
+  "instances_triangles_total": 12393,
+  "total_triangles": 20313
+}
