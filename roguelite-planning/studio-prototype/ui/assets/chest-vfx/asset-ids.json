@@ -1,0 +1,20 @@
+{
+  "note": "Uploaded 2026-09-28 through the Studio MCP upload_image. VFX from make_chest_vfx.py; chest icons from blender-chest-kit/package_studio.py (previews/icon-<tier>.png).",
+  "vfx": {
+    "glow": "rbxassetid://82171749127523",
+    "star": "rbxassetid://119142062258395",
+    "streak": "rbxassetid://95826913551457",
+    "wisp": "rbxassetid://98763107983691",
+    "ring": "rbxassetid://112313196019616",
+    "rays": "rbxassetid://95423827430619",
+    "shaft": "rbxassetid://81309750877710",
+    "mote": "rbxassetid://88119068890270"
+  },
+  "icons": {
+    "Wooden": "rbxassetid://107136053285951",
+    "Silver": "rbxassetid://103320236733137",
+    "Gold": "rbxassetid://88627612681717",
+    "Magical": "rbxassetid://92681366357642",
+    "Legendary": "rbxassetid://81753880209961"
+  }
+}
