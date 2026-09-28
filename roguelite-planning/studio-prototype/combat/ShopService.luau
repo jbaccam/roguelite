@@ -1,4 +1,5 @@
--- In-memory run economy. No DataStores, Robux, client prices or client-owned inventory.
+-- In-memory run economy. No DataStores, client prices or client-owned inventory.
+-- Robux rerolls arrive only through RogueliteMeta's validated receipts (S.paidReroll).
 local RS=game:GetService('ReplicatedStorage')
 local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')
@@ -6,9 +7,13 @@ local Http=game:GetService('HttpService')
 local combat=RS:WaitForChild('RogueliteCombat')
 local E=require(combat.EconomyConfig)
 local Catalog=require(combat.ShopCatalog)
+local Weapons=require(combat.WeaponCatalog)
 local Characters=require(script.Parent.CharacterService)
 local Shards=require(script.Parent.ShardDropService)
+local Hearts=require(script.Parent.HeartDropService)
 local XP=require(combat.RunXP)
+local Upgrades=require(combat.LevelUpCatalog)
+local StatSchema=require(combat.CharacterStats)
 local S={states={},wave=1,phase='Shop'}
 local rng=Random.new()
 local serial=0
@@ -18,7 +23,8 @@ run.Name='RogueliteRunState';run.Parent=RS
 run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',1)
 combat:SetAttribute('ZombiesEnabled',false)
 local remote=combat:WaitForChild('ShopAction')
-local function living(p) local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid');return h and h.Health>0 end
+-- Players standing in the Studio lobby preview are not part of the arena run.
+local function living(p) local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid');return h and h.Health>0 and not p:GetAttribute('LobbyPreviewActive') end
 local function slots(p) return Characters.states[p].folder end
 local function owned(p)
  local result={}
@@ -42,10 +48,17 @@ local function upgradeWeapon(f,paid)
  f:SetAttribute('BasePrice',Catalog.ById['weapon_'..f:GetAttribute('WeaponId')..'_'..tier].basePrice)
  f:SetAttribute('CopyId',token());f:SetAttribute('Tier',tier)
 end
+function S.prepareUpgrades(p)
+ local s=S.states[p];local cs=Characters.states[p]
+ if not s or not cs or S.phase~='Shop' or s.pendingLevels<=0 or #s.upgradeOffers>0 then return end
+ s.upgradeOffers=Upgrades.roll(cs.stats,s.banished,s.level-s.pendingLevels+1,rng)
+ for _,offer in s.upgradeOffers do offer.token=token();offer.new=(s.upgradeBonuses[offer.id] or 0)==0 end
+ s.upgradeToken=token();s.upgradeRerolls=0
+end
 function S.publish(p,message)
  local s=S.states[p];if not s or not Characters.states[p] then return end
- local data={shards=s.shards,wave=S.wave,phase=S.phase,rerolls=s.rerolls,rerollPrice=E.reroll(S.wave,s.rerolls),offers=s.offers,items=s.items,weapons=owned(p),ready=s.ready,revision=s.revision,message=message or s.message or '',modifier=E.modifier(Characters.states[p].stats),debug=RunService:IsStudio() and E.DEBUG_CURRENCY_ENABLED}
- s.message=data.message;slots(p):SetAttribute('Shards',s.shards)
+ local data={pendingLevels=s.pendingLevels,upgradeOffers=s.upgradeOffers,upgradeToken=s.upgradeToken,upgradeRerolls=s.upgradeRerolls,upgradeRerollPrice=E.reroll(S.wave,s.upgradeRerolls),freeRerolls=s.freeRerolls,freeUpgradeRerolls=s.freeUpgradeRerolls,baggedShards=s.baggedShards,level=s.level,shards=s.shards,wave=S.wave,phase=S.phase,rerolls=s.rerolls,rerollPrice=E.reroll(S.wave,s.rerolls),offers=s.offers,items=s.items,weapons=owned(p),ready=s.ready,revision=s.revision,message=message or s.message or '',modifier=E.modifier(Characters.states[p].stats),debug=RunService:IsStudio() and E.DEBUG_CURRENCY_ENABLED}
+ s.message=data.message;slots(p):SetAttribute('Shards',s.shards);slots(p):SetAttribute('BaggedShards',s.baggedShards)
  slots(p):SetAttribute('RunLevel',s.level);slots(p):SetAttribute('RunXP',s.xp)
  slots(p):SetAttribute('RunXPRequired',XP.required(s.level))
  slots(p):SetAttribute('PendingLevelUps',s.pendingLevels)
@@ -55,42 +68,167 @@ local function reprice(p)
  local s=S.states[p];local modifier=E.modifier(Characters.states[p].stats)
  for _,o in s.offers do if not o.locked and not o.sold then o.price=E.price(Catalog.ById[o.id].basePrice,S.wave,modifier) end end
 end
-local function roll(p,previous,kind)
- local s=S.states[p];local pool={};local wantWeapon=kind=='Weapon' or (not kind and rng:NextNumber()<.5)
- -- Wave-dependent rarity mix is disclosed, independent of Luck and purchases.
- local n=rng:NextNumber();local tier=n<.55 and 1 or n<.85 and 2 or n<.97 and 3 or 4
- if S.wave>=6 and tier==1 and rng:NextNumber()<.25 then tier=2 end
- for _,entry in Catalog.List do
-  if (entry.kind=='Weapon')==wantWeapon and entry.tier==tier and entry.id~=previous then
-   local count=0;for _,it in s.items do if it.id==entry.id then count=it.count end end
-   if entry.kind=='Weapon' or count<entry.cap then table.insert(pool,entry) end
+local wanted={
+ Brawler={Health=true,Armor=true,Melee=true},Gunner={Projectile=true,Pierce=true,Crit=true,AttackSpeed=true},
+ Thrower={Projectile=true,Bounce=true,Pierce=true},Juggler={Mobility=true,Bounce=true,Crit=true},
+ Handyman={Explosion=true,Economy=true,Armor=true},Mage={Burn=true,Slow=true,Poison=true,Lightning=true},
+}
+local function choose(pool,p,wantWeapon)
+ local cs=Characters.states[p]
+ if wantWeapon then
+  local ownedIds,ownedHomes={},{}
+  for i=1,6 do
+   local id=slots(p)['Slot'..i]:GetAttribute('WeaponId')
+   local weapon=Weapons.ById[id]
+   if weapon then ownedIds[id]=true;ownedHomes[weapon.home]=true end
   end
+  local n=rng:NextNumber()
+  local same,sameClass={},{}
+  for _,entry in pool do
+   if ownedIds[entry.weaponId] then table.insert(same,entry) end
+   if ownedHomes[Weapons.ById[entry.weaponId].home] then table.insert(sameClass,entry) end
+  end
+  if n<.20 and #same>0 then pool=same
+  elseif n<.35+E.classBonus(S.wave) and #sameClass>0 then pool=sameClass end
+ elseif rng:NextNumber()<.05 then
+  local tags=wanted[cs.class] or {}
+  local matched={}
+  for _,entry in pool do
+   for _,tag in entry.tags or {} do if tags[tag] then table.insert(matched,entry);break end end
+  end
+  if #matched>0 then pool=matched end
  end
- if #pool==0 then for _,entry in Catalog.List do if entry.kind=='Weapon' and entry.id~=previous then table.insert(pool,entry) end end end
- local entry=pool[rng:NextInteger(1,#pool)]
- return {id=entry.id,token=token(),price=E.price(entry.basePrice,S.wave,E.modifier(Characters.states[p].stats)),locked=false,sold=false}
+ return pool[rng:NextInteger(1,#pool)]
+end
+local function roll(p,slot,excluded)
+ local s=S.states[p];local cs=Characters.states[p]
+ local wantWeapon=E.weaponSlot(S.wave,slot,rng)
+ local tier=E.rollTier(S.wave,cs.stats.Luck,rng)
+ local pool={}
+ for try=tier,1,-1 do
+  for _,entry in Catalog.List do
+   if (entry.kind=='Weapon')==wantWeapon and entry.tier==try and not excluded[entry.id] then
+    local count=0
+    for _,it in s.items do if it.id==entry.id then count=it.count;break end end
+    if entry.kind=='Weapon' or count<entry.cap then table.insert(pool,entry) end
+   end
+  end
+  if #pool>0 then break end
+ end
+ -- Exhausted item pools can still produce a usable weapon rather than a dead offer.
+ if #pool==0 then
+  for _,entry in Catalog.List do if entry.kind=='Weapon' and not excluded[entry.id] then table.insert(pool,entry) end end
+ end
+ local entry=choose(pool,p,wantWeapon and #pool>0 and pool[1].kind=='Weapon')
+ excluded[entry.id]=true
+ return {id=entry.id,token=token(),price=E.price(entry.basePrice,S.wave,E.modifier(cs.stats)),locked=false,sold=false}
 end
 function S.bonuses(p)
  local s=S.states[p];local cs=Characters.states[p];if not s or not cs then return end
- cs.itemBonuses={};cs.itemPercent={}
+ cs.itemBonuses=table.clone(s.upgradeBonuses);cs.itemPercent={}
  for _,item in s.items do local entry=Catalog.ById[item.id]
   for id,value in entry.modifiers do cs.itemBonuses[id]=(cs.itemBonuses[id] or 0)+value*item.count end
   for id,value in entry.percent do cs.itemPercent[id]=(cs.itemPercent[id] or 0)+value*item.count end
  end
  Characters.refresh(p)
 end
-function S.attach(p)
- local s={shards=E.STARTING_SHARDS,level=1,xp=0,pendingLevels=0,rerolls=0,offers={},items={},ready=false,revision=1,lastRequest=-1e6}
+S.startingWeapons={}
+local function newState(p)
+ local s={shards=E.STARTING_SHARDS,level=1,xp=0,pendingLevels=0,upgradeOffers={},upgradeBonuses={},banished={},baggedShards=0,upgradeRerolls=0,upgradeToken=token(),rerolls=0,offers={},items={},ready=false,revision=1,lastRequest=-1e6,freeRerolls=0,freeUpgradeRerolls=0}
  S.states[p]=s
  for i=1,6 do local f=slots(p)['Slot'..i];f:SetAttribute('Tier',1);f:SetAttribute('FinalPurchasePrice',0);f:SetAttribute('BasePrice',0);f:SetAttribute('WavePurchased',0);f:SetAttribute('CopyId',token()) end
- for i=1,E.OFFER_COUNT do s.offers[i]=roll(p,nil,i==1 and 'Weapon' or i==2 and 'Item' or nil) end
- S.publish(p)
- p.CharacterAdded:Connect(function() task.defer(function() if S.states[p] then s.ready=false;S.publish(p) end end) end)
+ local excluded={}
+ for i=1,E.OFFER_COUNT do s.offers[i]=roll(p,i,excluded) end
+ return s
+end
+function S.attach(p)
+ -- Remember the run's starting weapons so a give-up can restore them.
+ local start={};for i=1,6 do start[i]=slots(p)['Slot'..i]:GetAttribute('WeaponId') or '' end
+ S.startingWeapons[p]=start
+ newState(p);S.publish(p)
+ p.CharacterAdded:Connect(function() task.defer(function() local s=S.states[p];if s then s.ready=false;S.publish(p) end end) end)
+end
+-- Fresh run state for one player: starting weapons, shards, level and shop.
+function S.resetPlayer(p)
+ if not S.states[p] or not Characters.states[p] then return end
+ local start=S.startingWeapons[p] or {}
+ for i=1,6 do local f=slots(p)['Slot'..i];clearWeapon(f);f:SetAttribute('WeaponId',start[i] or '') end
+ newState(p);S.bonuses(p);S.publish(p,'New run')
+end
+-- Whole run back to wave 1 (nobody left alive after a give-up).
+-- A new loadout starter: every later run begins with it. A player standing in the lobby sees it
+-- on their ring right away; run weapons are never swapped mid-run.
+function S.setStarter(p,id)
+ if not S.states[p] or not Characters.states[p] then return end
+ S.startingWeapons[p]={id,'','','','',''}
+ if not p:GetAttribute('LobbyPreviewActive') then return end
+ for i=1,6 do local f=slots(p)['Slot'..i];clearWeapon(f);f:SetAttribute('WeaponId',S.startingWeapons[p][i]) end
+ slots(p):SetAttribute('EquippedCount',1)
+end
+function S.resetRun()
+ S.wave=1;S.phase='Shop';S.paused=nil
+ run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',1);run:SetAttribute('WaveEndsAt',nil);run:SetAttribute('Paused',nil)
+ combat:SetAttribute('ZombiesEnabled',false);Shards.clear(false)
+ for p in S.states do S.resetPlayer(p) end
+end
+-- Solo death pauses the wave clock; revive resumes it with the same time left.
+function S.pause()
+ if S.phase~='Combat' or S.paused then return end
+ local ends=run:GetAttribute('WaveEndsAt')
+ S.paused=ends and math.max(0,ends-workspace:GetServerTimeNow()) or 0
+ run:SetAttribute('WaveEndsAt',nil);run:SetAttribute('Paused',true)
+end
+function S.resume()
+ if not S.paused then return end
+ if S.phase=='Combat' then run:SetAttribute('WaveEndsAt',workspace:GetServerTimeNow()+S.paused) end
+ S.paused=nil;run:SetAttribute('Paused',nil)
+end
+-- Banish (stored or bought): remove one offered stat for the rest of the run and replace
+-- only that card. Validated here: shop phase, pending level-up, valid card index.
+function S.canBanish(p,index)
+ local s=S.states[p]
+ return s~=nil and S.phase=='Shop' and s.pendingLevels>0 and type(index)=='number' and s.upgradeOffers[index]~=nil
+end
+function S.banish(p,index)
+ if not S.canBanish(p,index) then return false end
+ local s=S.states[p];local cs=Characters.states[p]
+ local offer=s.upgradeOffers[index]
+ s.banished[offer.id]=true
+ local skip=table.clone(s.banished)
+ for _,o in s.upgradeOffers do skip[o.id]=true end
+ local replacement=Upgrades.roll(cs.stats,skip,s.level-s.pendingLevels+1,rng)[1]
+ if replacement then replacement.token=token();replacement.new=(s.upgradeBonuses[replacement.id] or 0)==0;s.upgradeOffers[index]=replacement
+ else table.remove(s.upgradeOffers,index) end
+ s.upgradeToken=token();s.revision+=1
+ S.publish(p,'Banished '..Upgrades.ById[offer.id].name..' for this run')
+ return true
+end
+local function rerollOffers(p)
+ local s=S.states[p];local excluded={}
+ for _,o in s.offers do excluded[o.id]=true end
+ for i,o in s.offers do if not o.locked or o.sold then s.offers[i]=roll(p,i,excluded) end end
+end
+local function rerollUpgrades(p)
+ local s=S.states[p];local cs=Characters.states[p]
+ s.upgradeOffers=Upgrades.roll(cs.stats,s.banished,s.level-s.pendingLevels+1,rng)
+ s.upgradeToken=token()
+ for _,o in s.upgradeOffers do o.token=token();o.new=(s.upgradeBonuses[o.id] or 0)==0 end
+end
+-- Robux reroll (validated receipt). Applies now during the shop; otherwise banks a free
+-- reroll that the next Reroll uses before shards.
+function S.paidReroll(p,kind)
+ local s=S.states[p];if not s then return false end
+ local now=S.phase=='Shop' and (kind=='Shop' or s.pendingLevels>0)
+ if now and kind=='Shop' then rerollOffers(p);s.ready=false
+ elseif now then rerollUpgrades(p)
+ elseif kind=='Shop' then s.freeRerolls+=1 else s.freeUpgradeRerolls+=1 end
+ s.revision+=1;reprice(p);S.publish(p,now and 'Rerolled' or 'Free reroll saved for the next shop')
+ return true
 end
 local function beginWave()
  if S.phase~='Shop' then return end
  local count=0
- for p,s in S.states do if living(p) then count+=1;if not s.ready then return end end end
+ for p,s in S.states do if living(p) then count+=1;if not s.ready or s.pendingLevels>0 then return end end end
  if count==0 then return end
  S.phase='Combat';run:SetAttribute('Phase','Combat');run:SetAttribute('WaveEndsAt',workspace:GetServerTimeNow()+E.WAVE_SECONDS)
  combat:SetAttribute('ZombieCount',combat:GetAttribute('TestZombieCountOverride') or math.min(100,5+(S.wave-1)*2));combat:SetAttribute('ZombiesEnabled',true)
@@ -104,6 +242,7 @@ function S.stopWave()
  Shards.clear(false)
  for p,s in S.states do
   s.ready=false;s.revision+=1
+  S.prepareUpgrades(p)
   S.publish(p,'Wave stopped · restart this wave when ready')
  end
  return true
@@ -116,7 +255,10 @@ function S.finishWave()
  for p,s in S.states do
   if living(p) then s.shards=math.min(E.MAX_SHARDS,s.shards+E.WAVE_REWARD_BASE+(S.wave-1)*E.WAVE_REWARD_SCALE) end
   s.rerolls=0;s.ready=false;s.revision+=1
-  for i,o in s.offers do if not o.locked or o.sold then s.offers[i]=roll(p,o.id) end end
+  local excluded={}
+  for _,o in s.offers do excluded[o.id]=true end
+  for i,o in s.offers do if not o.locked or o.sold then s.offers[i]=roll(p,i,excluded) end end
+  S.prepareUpgrades(p)
   S.publish(p,'Next shop · reroll cost reset')
  end
  return true
@@ -134,6 +276,28 @@ function S.request(p,action,revision,arg,extra)
   if not E.integer(value,0,E.MAX_SHARDS) then return fail('Shards must be between 0 and '..E.MAX_SHARDS) end
   s.shards=value
  elseif S.phase~='Shop' then return fail('Shop actions are available between waves')
+ elseif action=='Upgrade' or action=='UpgradeReroll'  or action=='UpgradeSkip' then
+  if s.pendingLevels<=0 then return fail('No earned upgrades available') end
+  if extra~=s.upgradeToken then return fail('Upgrade offers changed') end
+  if action=='UpgradeSkip' then
+   if #Upgrades.pool(cs.stats,s.banished)>0 then return fail('Choose an available upgrade') end
+   s.pendingLevels-=1;s.upgradeOffers={};S.prepareUpgrades(p)
+  elseif action=='UpgradeReroll' then
+   -- Level-up rerolls are Robux (or saved) only; shards cannot buy them.
+   if s.freeUpgradeRerolls<=0 then return fail('Level-up rerolls use REROLL') end
+   s.freeUpgradeRerolls-=1
+   rerollUpgrades(p)
+  else
+   if not E.integer(arg,1,Upgrades.OFFER_COUNT) then return fail('Invalid upgrade') end
+   local offer=s.upgradeOffers[arg];if not offer then return fail('Upgrade unavailable') end
+    local definition=Upgrades.ById[offer.id]
+    if not definition then return fail('Invalid stat upgrade') end
+    local amount=math.min(offer.amount,StatSchema.ById[offer.id].max-cs.stats[offer.id])
+    if amount<=0 then return fail('This stat is already capped; choose another offer or reroll') end
+    s.upgradeBonuses[offer.id]=(s.upgradeBonuses[offer.id] or 0)+amount
+    s.pendingLevels-=1;s.upgradeOffers={}
+    S.bonuses(p);S.prepareUpgrades(p)
+  end
  elseif action=='Buy' or action=='Lock' then
   if not E.integer(arg,1,E.OFFER_COUNT) then return fail('Invalid offer') end
   local o=s.offers[arg];if not o or o.token~=extra or o.sold then return fail('Offer is no longer available') end
@@ -165,13 +329,23 @@ function S.request(p,action,revision,arg,extra)
    end
    s.shards-=o.price;o.sold=true;o.locked=false
    S.bonuses(p)
+   local soldOut=true
+   for _,offerNow in s.offers do if not offerNow.sold then soldOut=false;break end end
+   if soldOut then
+    local excluded={}
+    for _,offerNow in s.offers do excluded[offerNow.id]=true end
+    for i=1,E.OFFER_COUNT do s.offers[i]=roll(p,i,excluded) end
+   end
   end
  elseif action=='Reroll' then
   local available=false;for _,o in s.offers do if not o.locked or o.sold then available=true end end
   if not available then return fail('Unlock an offer before rerolling') end
-  local price=E.reroll(S.wave,s.rerolls);if s.shards<price then return fail('Not enough shards to reroll') end
-  s.shards-=price;s.rerolls+=1
-  for i,o in s.offers do if not o.locked or o.sold then s.offers[i]=roll(p,o.id) end end
+  if s.freeRerolls>0 then s.freeRerolls-=1
+  else
+   local price=E.reroll(S.wave,s.rerolls);if s.shards<price then return fail('Not enough shards to reroll') end
+   s.shards-=price;s.rerolls+=1
+  end
+  rerollOffers(p)
  elseif action=='Combine' then
   if not E.integer(arg,1,6) then return fail('Invalid weapon slot') end
   local f=slots(p)['Slot'..arg];local id=f:GetAttribute('WeaponId');local tier=f:GetAttribute('Tier') or 1
@@ -190,7 +364,9 @@ function S.request(p,action,revision,arg,extra)
   if f:GetAttribute('WeaponId')=='' or f:GetAttribute('CopyId')~=extra then return fail('Weapon changed; select it again') end
   s.shards=math.min(E.MAX_SHARDS,s.shards+E.refund(f:GetAttribute('FinalPurchasePrice') or 0))
   clearWeapon(f)
- elseif action=='Start' then s.ready=true
+ elseif action=='Start' then
+  if s.pendingLevels>0 then return fail('Choose your earned level-up upgrades first') end
+  s.ready=true
  else return fail('Unknown shop action') end
  if action~='Start' then s.ready=false end
  local count=0;for i=1,6 do if slots(p)['Slot'..i]:GetAttribute('WeaponId')~='' then count+=1 end end;slots(p):SetAttribute('EquippedCount',count)
@@ -200,24 +376,46 @@ function S.request(p,action,revision,arg,extra)
 end
 remote.OnServerEvent:Connect(S.request)
 Characters.onStatsChanged=function(p) if S.states[p] then reprice(p);S.states[p].revision+=1;S.publish(p) end end
-Shards.configure(Characters,function() return S.phase=='Combat' end,function(p,amount,pickedUp)
+-- Collected units consume stored units one-for-one. Leftovers grant nothing until picked up.
+function S.creditShards(p,amount,pickedUp)
  local s=S.states[p]
- if not s or not living(p) or not E.integer(amount,1,E.MAX_SHARDS) then return false end
- s.shards=math.min(E.MAX_SHARDS,s.shards+amount)
- if pickedUp then
-  local level,xp,gained=XP.add(s.level,s.xp,amount*XP.XP_PER_SHARD)
+ if not s or not E.integer(amount,1,E.MAX_SHARDS) or (pickedUp and not living(p)) then return false end
+ if not pickedUp then
+  s.baggedShards=math.min(E.MAX_SHARDS,s.baggedShards+amount)
+ else
+  if S.phase~='Combat' then return false end
+  local bonus=math.min(s.baggedShards,amount)
+  s.baggedShards-=bonus
+  local total=amount+bonus
+  s.shards=math.min(E.MAX_SHARDS,s.shards+total)
+  local level,xp,gained=XP.add(s.level,s.xp,math.min(1000000,total*XP.XP_PER_SHARD))
   s.level=level;s.xp=xp;s.pendingLevels+=gained
  end
  S.publish(p);return true
-end)
+end
+Shards.configure(Characters,function() return S.phase=='Combat' end,S.creditShards)
+Hearts.configure(Characters)
 require(combat.ZombieDeath).onDeath=function(npc,position)
  Shards.spawn(npc,position)
+ Hearts.roll(npc,position)
 end
-Players.PlayerRemoving:Connect(function(p) S.states[p]=nil;task.defer(beginWave) end)
+Players.PlayerRemoving:Connect(function(p) S.states[p]=nil;S.startingWeapons[p]=nil;task.defer(beginWave) end)
+-- Any hammer boss (scheduled or spawned) holds the wave open until it is gone,
+-- then a short grace lets players sweep up its crystal shower.
+local BOSS_LOOT_GRACE=5
+local bossSeenAt=-math.huge
+local function bossHolding(now)
+ local mobs=workspace:FindFirstChild('RogueliteEnemies')
+ if mobs then for _,npc in mobs:GetChildren() do if npc:GetAttribute('IsHammerBoss') then bossSeenAt=now;return true end end end
+ return run:GetAttribute('BossAlive')==true or now-bossSeenAt<BOSS_LOOT_GRACE
+end
 local elapsed=0
 RunService.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<.2 then return end;elapsed=0
+ local now=workspace:GetServerTimeNow()
  if S.phase=='Shop' then beginWave() end
- if S.phase=='Combat' and not run:GetAttribute('BossAlive') and workspace:GetServerTimeNow()>=(run:GetAttribute('WaveEndsAt') or math.huge) then S.finishWave() end
+ local holding=S.phase=='Combat' and bossHolding(now)
+ if run:GetAttribute('BossHolding')~=holding then run:SetAttribute('BossHolding',holding) end
+ if S.phase=='Combat' and not holding and now>=(run:GetAttribute('WaveEndsAt') or math.huge) then S.finishWave() end
 end)
 return S

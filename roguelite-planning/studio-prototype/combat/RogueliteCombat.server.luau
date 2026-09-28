@@ -10,10 +10,17 @@ local chainRigs={}
 for _,id in {'02','04','25'} do chainRigs[id]=Chains.bind(templates:WaitForChild(id),id) end
 local Death=require(combat:WaitForChild('ZombieDeath'))
 local Stats=require(combat:WaitForChild('CharacterStats'))
+local Targets=require(combat:WaitForChild('ProjectileTarget'))
 local Characters=require(script.Parent:WaitForChild('CharacterService'))
 local Effects=require(script.Parent:WaitForChild('CombatEffectsService'))
 local states={}
 local Shop=require(script.Parent:WaitForChild('ShopService'))
+-- Slot 1 holds the loadout starter the lobby validated (RunWeapon); Brawler's signature until one is picked.
+-- Each class build opens with its signature weapon. RunSetupRules isn't sandboxed, so this script can't require it.
+local function starter(player)
+ local id=player:GetAttribute('RunWeapon')
+ return type(id)=='string' and Catalog.ById[id] and templates:FindFirstChild(id) and id or Stats.Classes.Brawler.build[1]
+end
 local function reset(slot,now)
  slot.start=-1e6;slot.ready=now;slot.previous=0;slot.hit={};slot.definition=nil
  slot.lastTarget=nil
@@ -25,12 +32,15 @@ local function add(player)
  local s={folder=f,slots={},lastOption=-1e6,lastEquip=-1e6};states[player]=s
  for i=1,Catalog.Slots do
   local child=Instance.new('Folder');child.Name='Slot'..i
-  child:SetAttribute('WeaponId',i==1 and '03' or '');child:SetAttribute('Index',i);child.Parent=f
+  child:SetAttribute('WeaponId',i==1 and starter(player) or '');child:SetAttribute('Index',i);child.Parent=f
   local slot={folder=child,random=Random.new()};s.slots[i]=slot;reset(slot,0)
  end
  f:SetAttribute('EquippedCount',1);f.Parent=combat.PlayerStates
  Characters.attach(player,f)
  Shop.attach(player)
+ -- The lobby server sets these only after validating a pick (class unlocked, weapon owned).
+ player:GetAttributeChangedSignal('RunClass'):Connect(function() Characters.setClass(player,player:GetAttribute('RunClass')) end)
+ player:GetAttributeChangedSignal('RunWeapon'):Connect(function() Shop.setStarter(player,starter(player)) end)
  for _,slot in s.slots do slot.folder:GetAttributeChangedSignal('WeaponId'):Connect(function() reset(slot,workspace:GetServerTimeNow()+.25) end) end
 end
 Players.PlayerAdded:Connect(add)
@@ -88,6 +98,7 @@ local function shoot(d,origin,aim,p,wallParams,enemies,character)
  d.muzzleShotId=workspace:GetServerTimeNow() -- One visual flash per trigger, not per pellet.
  if d.id=='18' or d.id=='33' then arcs:launch(d,origin,aim);return end
  local count=(d.projectileCount or (d.kind=='Spread' and 5 or 1))+d.stats.ProjectileCount
+ if d.arcTarget then aim=Targets.predict(d.arcTarget,origin,function(distance) return distance/d.projectileSpeed end,0,d.range,rayParams,character) end
  local direction=(aim-origin).Unit
  d.muzzleDirection=direction -- All spread pellets leave the same barrel mouth.
  d.rocketTargetDistance=(aim-origin).Magnitude
@@ -159,7 +170,8 @@ RunService.Heartbeat:Connect(function(dt)
     slot.serial=(slot.serial or 0)+1
     local nearby,second=0,nil
     for _,npc in enemies do local h,r=alive(npc);if h and (r.Position-origin).Magnitude<=d.range and clear(origin,r.Position,wallParams) then nearby+=1;if r~=target and (r.Position-target.Position).Magnitude<8 then second=r end end end
-    slot.style=Motion.chooseStyle(id,nearby,slot.serial,(target.Position-origin).Magnitude,d.range)
+    local targetOffset=target.Position-origin
+    slot.style=Motion.chooseStyle(id,nearby,slot.serial,Vector3.new(targetOffset.X,0,targetOffset.Z).Magnitude,d.range)
     slot.side=Motion.chooseSide(slot.serial)
     d.range=Motion.attackReach(id,slot.style,d.range)
     -- Resolve the hammer's melee/throw choice after selecting its stroke:

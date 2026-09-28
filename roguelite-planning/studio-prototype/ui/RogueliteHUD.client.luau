@@ -4,10 +4,41 @@ local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local StarterGui=game:GetService("StarterGui")
 local RunService=game:GetService("RunService")
 local UserInputService=game:GetService("UserInputService")
+local ContentProvider=game:GetService("ContentProvider")
 local player=Players.LocalPlayer
 local UI=require(ReplicatedStorage:WaitForChild("RogueliteUI"))
 local playerGui=player:WaitForChild("PlayerGui")
 if playerGui:FindFirstChild("RogueliteHUD") then return end
+-- Request every image the shop and weapon inventory may show before the first reroll.
+-- Keep this off the main thread so the HUD and character controls appear immediately.
+task.spawn(function()
+ local seen,images={},{}
+ local function add(asset)
+  if type(asset)~='string' or asset=='' or seen[asset] then return end
+  seen[asset]=true
+  local image=Instance.new('ImageLabel')
+  image.Image=asset
+  table.insert(images,image)
+ end
+ for _,asset in UI.Assets do add(asset) end
+ local catalog=require(ReplicatedStorage:WaitForChild('RogueliteCombat'):WaitForChild('ShopCatalog'))
+ for _,entry in catalog.List do
+  if not entry.weaponId then add(UI.Assets[entry.icon] or entry.icon) end
+ end
+ local statIcons=require(ReplicatedStorage.RogueliteCombat.LevelUpCatalog)
+ local schema=require(ReplicatedStorage.RogueliteCombat.CharacterStats)
+ for _,d in schema.List do add(statIcons.icon(d.id)) end
+ add(statIcons.icon('ShardBag'))
+ local inventory=require(ReplicatedStorage:WaitForChild('WeaponInventoryUI'))
+ for _,asset in inventory.Icons do add(asset) end
+ playerGui:SetAttribute('ShopArtTotal',#images)
+ local loaded=0
+ ContentProvider:PreloadAsync(images,function(_,status)
+  if status==Enum.AssetFetchStatus.Success then loaded+=1 end
+ end)
+ playerGui:SetAttribute('ShopArtLoaded',loaded)
+ for _,image in images do image:Destroy() end
+end)
 local view=UI.mount(playerGui,RunService:IsStudio())
 task.spawn(function()
  for _=1,10 do
@@ -59,12 +90,15 @@ RunService.Heartbeat:Connect(function(dt)
  if type(phase)~="string" then phase="Practice" end
  local validTime=type(endsAt)=="number" and endsAt==endsAt and math.abs(endsAt)<1e12
  local validWave=type(wave)=="number" and wave==wave and wave>=1 and wave<1e6
- view:SetTimer(validTime and math.max(0,endsAt-workspace:GetServerTimeNow()) or nil,validWave and math.floor(wave) or nil,phase)
+ local remaining=validTime and math.max(0,endsAt-workspace:GetServerTimeNow()) or nil
+ -- Time is up but a boss is holding the wave open: the round ends when it falls.
+ local bossLabel=remaining==0 and state:GetAttribute("BossHolding")==true and "BOSS" or nil
+ view:SetTimer(remaining,validWave and math.floor(wave) or nil,phase,bossLabel)
  if activeHumanoid then view:SetStats(activeHumanoid.MaxHealth,activeHumanoid.WalkSpeed) end
  local combat=ReplicatedStorage:FindFirstChild('RogueliteCombat')
  local states=combat and combat:FindFirstChild('PlayerStates')
  local own=states and states:FindFirstChild(tostring(player.UserId))
- view:SetShards(own and own:GetAttribute('Shards') or 0)
+ view:SetShards(own and own:GetAttribute('Shards') or 0,own and own:GetAttribute('BaggedShards') or 0)
  view:SetXP(own and own:GetAttribute('RunXP'),own and own:GetAttribute('RunXPRequired'),own and own:GetAttribute('RunLevel'))
  local root=player.Character and player.Character:FindFirstChild('HumanoidRootPart')
  local selected,health;local nearest=200

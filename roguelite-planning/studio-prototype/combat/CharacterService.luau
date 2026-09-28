@@ -4,6 +4,8 @@ local RunService=game:GetService('RunService')
 local Tags=game:GetService('CollectionService')
 local combat=game.ReplicatedStorage:WaitForChild('RogueliteCombat')
 local Stats=require(combat:WaitForChild('CharacterStats'))
+local EnemyCatalog=require(combat:WaitForChild('EnemyCatalog'))
+local Skills=require(combat:WaitForChild('SkillTreeConfig'))
 local playerDamaged=combat:FindFirstChild('PlayerDamaged')
 if not playerDamaged then
  playerDamaged=Instance.new('RemoteEvent');playerDamaged.Name='PlayerDamaged'
@@ -26,7 +28,15 @@ function Service.refresh(player)
  local s=Service.states[player];if not s then return end
  local count=0
  for _,slot in s.folder:GetChildren() do local d=Catalog.ById[slot:GetAttribute('WeaponId')];if d and d.home==s.class then count+=1 end end
- s.stats=Stats.resolve(s.class,count,s.overrides,s.itemBonuses,s.itemPercent)
+ -- Permanent skill-tree bonuses join the run's item bonuses as flat terms. ProfileSkills is
+ -- written only by ProfileService on the server, so clients cannot change it.
+ local flat=s.itemBonuses
+ local skills=Skills.bonuses(Skills.parse(player:GetAttribute('ProfileSkills')))
+ if next(skills) then
+  flat=table.clone(s.itemBonuses or {})
+  for id,v in skills do flat[id]=(flat[id] or 0)+v end
+ end
+ s.stats=Stats.resolve(s.class,count,s.overrides,flat,s.itemPercent)
  s.folder:SetAttribute('Class',s.class);s.folder:SetAttribute('AffinityCount',count)
  for _,d in Stats.List do
   local value=s.stats[d.id];s.folder:SetAttribute('Stat_'..d.id,value)
@@ -44,7 +54,8 @@ function Service.refresh(player)
  if Service.onStatsChanged then Service.onStatsChanged(player) end
 end
 function Service.attach(player,folder)
- local s={folder=folder,class='Brawler',overrides={},lastRequest=-1e6,lastContact=0,blocks=1,leech=0,hits=0}
+ local picked=player:GetAttribute('RunClass')
+ local s={folder=folder,class=Stats.Classes[picked] and picked or 'Brawler',overrides={},lastRequest=-1e6,lastContact=0,blocks=1,leech=0,hits=0}
  Service.states[player]=s
  local function spawned(character)
   local h=character:WaitForChild('Humanoid',10);if not h or player.Character~=character then return end
@@ -60,7 +71,14 @@ function Service.attach(player,folder)
  player.CharacterAdded:Connect(spawned)
  if player.Character then task.spawn(spawned,player.Character) end
  for _,slot in folder:GetChildren() do slot:GetAttributeChangedSignal('WeaponId'):Connect(function() Service.refresh(player) end) end
+ player:GetAttributeChangedSignal('ProfileSkills'):Connect(function() Service.refresh(player) end)
  Service.refresh(player)
+end
+-- The class from the player's validated loadout (RunClass). Studio stat overrides stay.
+function Service.setClass(player,class)
+ local s=Service.states[player]
+ if not s or type(class)~='string' or not Stats.Classes[class] or s.class==class then return end
+ s.class=class;Service.refresh(player)
 end
 function Service.heal(player,amount)
  local s=Service.states[player];local h=humanoid(player)
@@ -112,9 +130,23 @@ function Service.request(player,action,key,value)
   combat:SetAttribute('ZombieCount',value)
   combat:SetAttribute('TestZombieCountOverride',value)
  elseif action=='AutoZombies' then combat:SetAttribute('TestZombieCountOverride',nil)
+ elseif action=='Roster' then
+  -- Studio-only mob picker: known catalog IDs only; empty restores the normal wave mix.
+  if key~=nil or type(value)~='string' or #value>600 then return false end
+  local ids,seen={},{}
+  for id in value:gmatch('[^,%s]+') do
+   if not EnemyCatalog.ById[id] then return false end
+   if not seen[id] then seen[id]=true;table.insert(ids,id) end
+  end
+  combat:SetAttribute('EnemyRoster',#ids>0 and table.concat(ids,',') or nil)
  elseif action=='SpawnBoss' or action=='RemoveBoss' then
   if key~=nil or value~=nil then return false end
   if not Service.onPracticeBoss or not Service.onPracticeBoss(player,action) then return false end
+ elseif action=='Emeralds' then
+  -- Studio-only admin grant (saved profile currency, in-memory in Studio). key: 'Add' | 'Set'.
+  if (key~='Add' and key~='Set') or type(value)~='number' or value~=value or value%1~=0 then return false end
+  if (key=='Add' and math.abs(value)>1e6) or (key=='Set' and (value<0 or value>1e7)) then return false end
+  if not Service.onPracticeEmeralds or not Service.onPracticeEmeralds(player,key,value) then return false end
  else return false end
  s.lastRequest=os.clock();s.folder:SetAttribute('PracticeRevision',(s.folder:GetAttribute('PracticeRevision') or 0)+1)
  return true
