@@ -3,6 +3,10 @@
 local Players=game:GetService('Players')
 local ReplicatedStorage=game:GetService('ReplicatedStorage')
 local player=Players.LocalPlayer
+-- Match servers have no lobby (ServerRole sets this attribute before players join).
+local role=ReplicatedStorage:GetAttribute('ServerRole')
+while role==nil do ReplicatedStorage:GetAttributeChangedSignal('ServerRole'):Wait();role=ReplicatedStorage:GetAttribute('ServerRole') end
+if role=='Match' then return end
 if player:WaitForChild('PlayerGui'):FindFirstChild('RogueliteLobbyHUD') then return end
 local Lobby=require(ReplicatedStorage:WaitForChild('LobbyUI'))
 Lobby.mount(player)

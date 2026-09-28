@@ -36,6 +36,11 @@ update()
 
 -- Travel switch, top-right (free in the lobby HUD, the arena HUD and the shop); the current
 -- area is lit. The server moves only the caller.
+-- The switch only exists where the lobby and the maps share one server (ServerRole).
+local RS=game:GetService('ReplicatedStorage')
+local role=RS:GetAttribute('ServerRole')
+while role==nil do RS:GetAttributeChangedSignal('ServerRole'):Wait();role=RS:GetAttribute('ServerRole') end
+if role~='Combined' then return end
 local travel=workspace:WaitForChild('RogueliteLobby'):WaitForChild('StudioTravel')
 local screen=T.make('ScreenGui',gui,{Name='StudioTravel',ResetOnSpawn=false,DisplayOrder=40,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets})
 local frame=T.panel(screen,'Panel',0,0,200,46,'inset');frame.AnchorPoint=Vector2.new(1,0);frame.Position=UDim2.new(1,-12,0,6)
