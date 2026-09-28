@@ -3,6 +3,7 @@ local Run=game:GetService('RunService')
 local Debris=game:GetService('Debris')
 local Motion=require(game.ReplicatedStorage:WaitForChild('RogueliteCombat'):WaitForChild('BossMotion'))
 local tracked={}
+local BOSS_MAX_GAIT_RATE=1.8 -- Walk clip seconds per real second
 local red=Color3.fromRGB(224,45,49)
 local function part(parent,name,size,cf,transparency)
  local p=Instance.new('Part');p.Name=name;p.Size=size;p.CFrame=cf;p.Anchored=true;p.CanCollide=false;p.CanQuery=false;p.CanTouch=false;p.CastShadow=false
@@ -75,7 +76,8 @@ Run.PreSimulation:Connect(function(dt)
    local v=root.AssemblyLinearVelocity;local moving=Vector2.new(v.X,v.Z).Magnitude>.4
    clip=moving and 'Walk' or 'Idle'
    -- Ground distance, not elapsed time, advances the planted-foot gait.
-   state.phase+=moving and math.min(distance,dt*20)/(Motion.Data.walkSpeed or 4.5) or dt
+   -- Chase speed outpaces the authored stride; cap cadence so the heavy gait stays weighty.
+   state.phase+=moving and math.min(distance/(Motion.Data.walkSpeed or 4.5),dt*BOSS_MAX_GAIT_RATE) or dt
    time=state.phase%Motion.duration(clip)
   end
   local poses=Motion.sample(clip,time)

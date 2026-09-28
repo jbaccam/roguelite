@@ -7,6 +7,8 @@ local Motion=require(combat:WaitForChild('BossMotion'))
 local Characters=require(script.Parent.CharacterService)
 local Death=require(combat.ZombieDeath)
 local B={states={}}
+-- Wave chase speed: well under the 24 studs/s player base, fast enough to close gaps.
+local CHASE_SPEED=15
 local lastPracticeRequest=-math.huge
 function B.practice(player,action)
  if not Run:IsStudio() or (action~='SpawnBoss' and action~='RemoveBoss') then return false end
@@ -82,7 +84,7 @@ function B.spawn(cf,practice)
  local template=game.ServerStorage.RogueliteNPCs:FindFirstChild('HammerBoss_NPC');if not template then return nil end
  local folder=workspace:FindFirstChild('RogueliteEnemies');if not folder then return nil end
  local npc=template:Clone();npc.Name='HammerBoss';Motion.prepare(npc);npc:PivotTo(cf);npc:SetAttribute('BossPractice',practice==true)
- local root=npc.PrimaryPart;local h=npc.Humanoid;h.WalkSpeed=Motion.Data.walkSpeed/Motion.Scale
+ local root=npc.PrimaryPart;local h=npc.Humanoid;h.WalkSpeed=CHASE_SPEED
  npc:SetAttribute('IsBoss',true);npc:SetAttribute('IsHammerBoss',true);npc:SetAttribute('ZombieType','HammerBoss')
  npc:SetAttribute('ContactDamage',0);npc:SetAttribute('ContactRange',0);npc:SetAttribute('BaseMoveSpeed',h.WalkSpeed)
  for name in Motion.Data.parts do
