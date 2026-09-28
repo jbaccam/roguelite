@@ -124,3 +124,69 @@ a.poly([(166,29),(206,24),(224,66),(196,100),(164,80),(156,46)],'#0db6de')
 a.poly([(166,29),(206,24),(186,59),(156,46)],'#9aefff')
 a.poly([(186,59),(206,24),(224,66),(196,100)],'#008bbc');a.save()
 print(f'Wrote {len(list(OUT.glob("*.png")))} vector assets')
+
+# Rarity (2026-09-27, revised): keep the exact `panel` look and recolour only its corner
+# accents. `panelplain` is `panel` without accents; `corners` is only the accents in white,
+# layered on top and tinted with ImageColor3 (II blue, III purple, IV red).
+a=Art('panelplain')
+for inset,cut,col in [(1,31,'#060809'),(5,29,'#15191c'),(9,27,'#555b5d'),(13,25,'#292e31'),(18,22,'#080b0d'),(21,21,'#222629')]: a.oct(inset,cut,col)
+a.poly([(43,24),(213,24),(230,41),(230,95),(24,95),(24,43)],'#292d30')
+a.rect(45,23,166,2,'#414649')
+a.save()
+a=Art('corners')
+for pts in [[(14,38),(38,14),(47,14),(14,47)],[(209,14),(218,14),(242,38),(242,47)],[(14,209),(14,218),(38,242),(47,242)],[(209,242),(218,242),(242,218),(242,209)]]: a.poly(pts,'#ffffff')
+a.save()
+
+# Store effects (2026-09-27): white sunburst rays and a soft glow, tinted in-game with
+# ImageColor3 and rotated behind featured icons. Pure effects, no icon content.
+import math as _m
+def _fx():
+    N=512;c=N/2
+    rays=Image.new('RGBA',(N,N),(0,0,0,0));px=rays.load()
+    for y in range(N):
+        for x in range(N):
+            dx,dy=x-c,y-c;r=(dx*dx+dy*dy)**.5/c
+            if r>1: continue
+            a=(_m.atan2(dy,dx)/(2*_m.pi))*16%1  # 16 rays
+            ray=1 if a<.5 else 0
+            soft=max(0,1-r)**1.3
+            px[x,y]=(255,255,255,int(255*ray*soft*.85))
+    rays.save(OUT/'sunburst.png')
+    glow=Image.new('RGBA',(256,256),(0,0,0,0));gp=glow.load()
+    for y in range(256):
+        for x in range(256):
+            r=((x-128)**2+(y-128)**2)**.5/128
+            gp[x,y]=(255,255,255,int(255*max(0,1-r)**2.2)) if r<=1 else (0,0,0,0)
+    glow.save(OUT/'glow.png')
+_fx()
+
+# Lock (2026-09-27): replaces the frame-drawn padlock. Steel shackle over a brass body, same
+# faceted, black-outlined style as the stone and gem icons.
+def _arc(cx,cy,r,a0,a1,n=24):
+    return [(cx+r*_m.cos(_m.radians(a0+(a1-a0)*i/n)),cy-r*_m.sin(_m.radians(a0+(a1-a0)*i/n))) for i in range(n+1)]
+def _band(cx,cy,ro,ri,a0,a1,bottom=None):
+    # Arc band from a0 to a1 degrees (counter-clockwise, 0 = right); legs run down to `bottom`.
+    outer=_arc(cx,cy,ro,a0,a1);inner=_arc(cx,cy,ri,a1,a0)
+    if bottom is not None:
+        outer=[(cx+ro,bottom)]+outer+[(cx-ro,bottom)];inner=[(cx-ri,bottom)]+inner+[(cx+ri,bottom)]
+    return outer+inner
+def _chamfer(x0,y0,x1,y1,c):
+    return [(x0+c,y0),(x1-c,y0),(x1,y0+c),(x1,y1-c),(x1-c,y1),(x0+c,y1),(x0,y1-c),(x0,y0+c)]
+a=Art('lock')
+a.poly(_band(128,96,78,32,0,180,150),'#07090b')                  # shackle outline
+a.poly(_band(128,96,66,44,0,180,146),'#7d878e')                  # steel
+a.poly(_arc(128,96,66,90,180)+[(62,146),(73,146)]+_arc(128,96,55,180,90),'#c9d1d6')  # lit outer edge, left leg
+a.poly([(181,146),(172,146)]+_arc(128,96,44,0,70)+_arc(128,96,53,70,0),'#566067')    # shaded inner edge, right leg
+a.poly(_chamfer(22,112,234,248,26),'#07090b')                    # body outline
+a.poly(_chamfer(34,124,222,236,18),'#b87a14')                    # brass
+a.poly([(52,124),(204,124),(222,142),(222,158),(34,158),(34,142)],'#f2c243')   # top face
+a.poly([(34,158),(222,158),(222,168),(34,168)],'#d99a1c')
+a.poly([(34,168),(62,168),(62,226),(52,236),(34,218)],'#e0a42a')               # left bevel
+a.poly([(194,168),(222,168),(222,218),(204,236),(194,236)],'#8f5a0c')          # right shadow
+a.poly([(62,214),(194,214),(194,236),(52,236)],'#9c650e')                      # bottom shadow
+a.poly([(56,130),(96,130),(90,140),(50,140)],'#fff0b0')                        # glint
+a.ellipse((104,154,152,202),'#07090b')                           # keyhole
+a.poly([(116,186),(140,186),(148,222),(108,222)],'#07090b')
+a.ellipse((111,161,145,195),'#2a1a06')
+a.poly([(121,186),(135,186),(140,214),(116,214)],'#2a1a06')
+a.save()

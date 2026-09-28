@@ -26,7 +26,9 @@ local ok,err=xpcall(function()
    if card then
     assert(card.AbsolutePosition.X-2>=left.AbsolutePosition.X,'left border clipped')
     assert(right(card)+2<=right(left),'right border clipped')
-    assert(card.UIStroke.Thickness>=3,'card border too thin')
+    -- Green theme: tier II+ cards use the tinted rarity frame; common keeps the lime panel.
+    local tier=card:GetAttribute('Tier') or 1
+    assert(card.Image~='' and ((tier>1)==(card.ImageColor3~=Color3.new(1,1,1))),'rarity frame mismatch')
     assert(disjoint(card,left.Items) and disjoint(card,left.Weapons),'offer/inventory overlap')
     assert(bottom(card.Buy)<=bottom(card)-8,'price overlaps card border')
     assert(disjoint(card,left['Lock'..i]),'lock overlaps card border')

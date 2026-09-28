@@ -3,6 +3,7 @@ local RS=game:GetService('ReplicatedStorage')
 local combat=RS:WaitForChild('RogueliteCombat')
 local Catalog=require(combat:WaitForChild('WeaponCatalog'))
 local templates=combat:WaitForChild('WeaponTemplates')
+local T=require(RS:WaitForChild('UITheme'))
 local I={}
 local Icons={
  ["00"]="rbxassetid://71681559132362",
@@ -42,6 +43,7 @@ local Icons={
  ["34"]="rbxassetid://137554573636900",
  ["35"]="rbxassetid://115596756605971",
 }
+I.Icons=Icons
 
 function I.preview(parent,template,x,y,w,h)
  if not template then return end
@@ -80,7 +82,7 @@ function I.new(player,helpers,refresh)
   for i=1,6 do
    local id=state['Slot'..i]:GetAttribute('WeaponId');local d=Catalog.ById[id]
    local slot=button(box,'Slot'..i,'',8+((i-1)%3)*(cell+gap),52+math.floor((i-1)/3)*(height+gap),cell,height,function() self.selected=i;refresh() end,true)
-   slot.ImageColor3=i==self.selected and Color3.fromRGB(154,202,222) or Color3.new(1,1,1)
+   T.setPrimary(slot,i==self.selected) -- Selected slot takes the lime face.
    label(slot,'Number',tostring(i),3,2,20,20,14)
    if d then
     I.preview(slot,templates:FindFirstChild(id),9,9,cell-18,height-33)

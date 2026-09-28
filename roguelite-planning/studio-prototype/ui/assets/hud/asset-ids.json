@@ -1,0 +1,17 @@
+{
+  "source": "C:/Users/Jeremiah/.codex/generated_images/01a0d65c-b68c-7d70-b869-e5efdcdbf661 (user-generated icons, trimmed to alpha bounds, 4% pad, 256x256)",
+  "uploaded": "2026-09-27",
+  "icons": {
+    "play-portal":  {"source": "exec-f86fea26-698f-4f28-ac03-c55faaebed00.png", "asset": "rbxassetid://119231770241307"},
+    "chest":        {"source": "exec-b5e2f18c-4b7f-4123-88d6-5453346b3bd7.png", "asset": "rbxassetid://128369126123154"},
+    "armory-anvil": {"source": "exec-535d51a8-6e00-47ad-9cef-3184f9bb34dd.png", "asset": "rbxassetid://128990045041232"},
+    "loadout-case": {"source": "exec-673f2b59-b6ad-4d05-884f-2fa9e882e93a.png", "asset": "rbxassetid://73755136987218"},
+    "store-bag":    {"source": "exec-5fdcfa5c-e080-4c63-a404-2c1b9c923db0.png", "asset": "rbxassetid://113789432822588"},
+    "quest-scroll": {"source": "exec-15f6b24a-cc4e-4cb7-8a58-448cb5d7bc56.png", "asset": "rbxassetid://85014504299735"},
+    "achievements": {"source": "exec-2923e73d-03f0-4dd0-a11c-630e614ecbb5.png", "asset": "rbxassetid://79366861483753"},
+    "profile":      {"source": "exec-8e06b83b-b5f9-4b5e-9498-f966ab3c214c.png", "asset": "rbxassetid://138623258102251"},
+    "party":        {"source": "exec-c6e49033-70ba-4d20-9fcc-7ab744dab8fc.png", "asset": "rbxassetid://83985140371877"},
+    "settings":     {"source": "exec-93800d32-8569-4265-8341-ed1693b75167.png", "asset": "rbxassetid://127804812980101"},
+    "skill-tree":   {"source": "Downloads/ChatGPT Image Sep 27, 2026, 09_20_46 PM.png (user-supplied 2026-09-27, trimmed, no pad)", "asset": "rbxassetid://70956867630986"}
+  }
+}
