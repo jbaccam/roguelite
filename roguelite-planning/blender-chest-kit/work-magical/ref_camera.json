@@ -1,0 +1,1 @@
+{"yaw": 38.2, "elev": 22.2, "dist": 25.0, "focal_px": 1994.0, "cx": 1013.0, "cy": 586.0, "note": "fit_camera.py with the distance fixed at 25 (rms 14.5 px on 7 chest landmarks); used by ref_render.py and skull_lab.py"}

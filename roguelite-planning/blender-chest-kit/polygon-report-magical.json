@@ -1,0 +1,200 @@
+{
+  "tier": "magical",
+  "name": "Magical",
+  "blender_version": "5.2.1 LTS",
+  "authoring": "final Roblox stud size; import at 1:1, do not scale",
+  "hinge_studs": [
+    0.0,
+    2.23,
+    4.13
+  ],
+  "open": {
+    "rotate_x_deg": 102.0,
+    "lift": 0.0
+  },
+  "moves_when_opening": [
+    "Chest_Lid",
+    "Chest_LidSkull",
+    "Chest_LidMagic"
+  ],
+  "glow_srgb": [
+    80,
+    176,
+    255
+  ],
+  "accent_srgb": [
+    150,
+    224,
+    255
+  ],
+  "texture": "textures/chest-magical-baked.png (2048x2048, baked lighting)",
+  "preview_lights": [
+    {
+      "pos": [
+        0.0,
+        -3.5,
+        4.13
+      ],
+      "srgb": [
+        80,
+        176,
+        255
+      ],
+      "watts": 240.0
+    },
+    {
+      "pos": [
+        -4.38,
+        0.0,
+        3.46
+      ],
+      "srgb": [
+        80,
+        176,
+        255
+      ],
+      "watts": 110.0
+    },
+    {
+      "pos": [
+        4.38,
+        0.0,
+        3.46
+      ],
+      "srgb": [
+        80,
+        176,
+        255
+      ],
+      "watts": 110.0
+    },
+    {
+      "pos": [
+        0.0,
+        0.0,
+        4.68
+      ],
+      "srgb": [
+        80,
+        176,
+        255
+      ],
+      "watts": 120.0
+    }
+  ],
+  "parts": {
+    "Chest_Base": {
+      "role": "MeshPart, TextureID = textures/chest-magical-baked.png",
+      "triangles": 5614,
+      "vertices": 2901,
+      "dimensions_studs": [
+        7.636,
+        5.81,
+        4.957
+      ],
+      "uv_range": [
+        0.0056,
+        0.9823,
+        0.0056,
+        0.9943
+      ]
+    },
+    "Chest_Lid": {
+      "role": "MeshPart, TextureID = textures/chest-magical-baked.png",
+      "triangles": 6048,
+      "vertices": 3074,
+      "dimensions_studs": [
+        11.352,
+        5.604,
+        4.531
+      ],
+      "uv_range": [
+        0.0056,
+        0.9823,
+        0.0056,
+        0.9943
+      ]
+    },
+    "Chest_LidSkull": {
+      "role": "MeshPart, TextureID = textures/chest-magical-baked.png",
+      "triangles": 6573,
+      "vertices": 3316,
+      "dimensions_studs": [
+        2.745,
+        2.975,
+        2.997
+      ],
+      "uv_range": [
+        0.0056,
+        0.9824,
+        0.0056,
+        0.9944
+      ]
+    },
+    "Chest_Glow": {
+      "role": "Neon, GLOW colour; fade out as the chest opens",
+      "triangles": 32,
+      "vertices": 16,
+      "dimensions_studs": [
+        6.44,
+        4.28,
+        0.16
+      ],
+      "uv_range": [
+        0.8542,
+        0.8542,
+        0.1875,
+        0.1875
+      ]
+    },
+    "Chest_Inner": {
+      "role": "Neon, GLOW colour; seen when open",
+      "triangles": 156,
+      "vertices": 80,
+      "dimensions_studs": [
+        4.8,
+        3.8,
+        0.58
+      ],
+      "uv_range": [
+        0.8542,
+        0.8542,
+        0.1875,
+        0.1875
+      ]
+    },
+    "Chest_Magic": {
+      "role": "Neon, ACCENT colour; always on",
+      "triangles": 704,
+      "vertices": 382,
+      "dimensions_studs": [
+        7.48,
+        5.016,
+        2.727
+      ],
+      "uv_range": [
+        0.8542,
+        0.8542,
+        0.1875,
+        0.1875
+      ]
+    },
+    "Chest_LidMagic": {
+      "role": "Neon, ACCENT colour; always on",
+      "triangles": 132,
+      "vertices": 88,
+      "dimensions_studs": [
+        6.4,
+        4.008,
+        1.679
+      ],
+      "uv_range": [
+        0.8542,
+        0.8542,
+        0.1875,
+        0.1875
+      ]
+    }
+  },
+  "total_triangles": 19259
+}

@@ -1,0 +1,503 @@
+{
+  "axis": "studio = (-x, z, y) of blender; front = -Z",
+  "tiers": {
+    "Wooden": {
+      "hinge": [
+        -0.0,
+        2.95,
+        2.33
+      ],
+      "rotate_x_deg": 105.0,
+      "lift": 0.0,
+      "moves": [
+        "Chest_Lid"
+      ],
+      "glow": [
+        255,
+        184,
+        64
+      ],
+      "accent": [
+        255,
+        184,
+        64
+      ],
+      "parts": {
+        "Chest_Lid": {
+          "kind": "textured",
+          "center": [
+            -0.0,
+            4.1656,
+            -0.02
+          ],
+          "size": [
+            6.26,
+            2.4311,
+            4.94
+          ]
+        },
+        "Chest_Inner": {
+          "kind": "floor",
+          "center": [
+            -0.0,
+            1.95,
+            0.0
+          ],
+          "size": [
+            5.38,
+            0.04,
+            3.78
+          ]
+        },
+        "Chest_Glow": {
+          "kind": "glow",
+          "center": [
+            -0.0,
+            2.795,
+            -0.33
+          ],
+          "size": [
+            5.88,
+            0.49,
+            4.94
+          ]
+        },
+        "Chest_Base": {
+          "kind": "textured",
+          "center": [
+            -0.0,
+            1.86,
+            -0.165
+          ],
+          "size": [
+            6.5,
+            3.72,
+            5.23
+          ]
+        }
+      },
+      "bounds_size": [
+        6.5,
+        5.381,
+        5.25
+      ],
+      "bounds_center": [
+        -0.0,
+        2.6906,
+        -0.175
+      ]
+    },
+    "Silver": {
+      "hinge": [
+        -0.0,
+        3.09,
+        2.44
+      ],
+      "rotate_x_deg": 105.0,
+      "lift": 0.0,
+      "moves": [
+        "Chest_Lid"
+      ],
+      "glow": [
+        80,
+        175,
+        255
+      ],
+      "accent": [
+        80,
+        175,
+        255
+      ],
+      "parts": {
+        "Chest_Lid": {
+          "kind": "textured",
+          "center": [
+            -0.0,
+            4.4147,
+            -0.0
+          ],
+          "size": [
+            6.9,
+            2.6494,
+            5.32
+          ]
+        },
+        "Chest_Inner": {
+          "kind": "floor",
+          "center": [
+            -0.0,
+            2.07,
+            0.0
+          ],
+          "size": [
+            5.62,
+            0.04,
+            3.96
+          ]
+        },
+        "Chest_Glow": {
+          "kind": "glow",
+          "center": [
+            -0.0,
+            2.735,
+            -0.3625
+          ],
+          "size": [
+            6.12,
+            0.77,
+            5.185
+          ]
+        },
+        "Chest_Base": {
+          "kind": "textured",
+          "center": [
+            -0.0,
+            2.01,
+            -0.185
+          ],
+          "size": [
+            7.3,
+            4.02,
+            6.01
+          ]
+        }
+      },
+      "bounds_size": [
+        7.3,
+        5.739,
+        6.01
+      ],
+      "bounds_center": [
+        -0.0,
+        2.8697,
+        -0.185
+      ]
+    },
+    "Gold": {
+      "hinge": [
+        -0.0,
+        3.24,
+        2.49
+      ],
+      "rotate_x_deg": 105.0,
+      "lift": 0.0,
+      "moves": [
+        "Chest_Lid"
+      ],
+      "glow": [
+        255,
+        196,
+        60
+      ],
+      "accent": [
+        255,
+        196,
+        60
+      ],
+      "parts": {
+        "Chest_Lid": {
+          "kind": "textured",
+          "center": [
+            -0.0,
+            4.6871,
+            -0.0
+          ],
+          "size": [
+            7.0,
+            2.9343,
+            5.47
+          ]
+        },
+        "Chest_Inner": {
+          "kind": "floor",
+          "center": [
+            -0.0,
+            2.66,
+            0.0
+          ],
+          "size": [
+            5.72,
+            0.98,
+            4.02
+          ]
+        },
+        "Chest_Glow": {
+          "kind": "glow",
+          "center": [
+            -0.0,
+            2.82,
+            -0.3625
+          ],
+          "size": [
+            6.28,
+            0.9,
+            5.305
+          ]
+        },
+        "Chest_Base": {
+          "kind": "textured",
+          "center": [
+            -0.0,
+            1.9664,
+            -0.1329
+          ],
+          "size": [
+            7.718,
+            3.9329,
+            6.2343
+          ]
+        }
+      },
+      "bounds_size": [
+        7.718,
+        6.154,
+        6.234
+      ],
+      "bounds_center": [
+        -0.0,
+        3.0771,
+        -0.1329
+      ]
+    },
+    "Magical": {
+      "hinge": [
+        -0.0,
+        4.13,
+        2.23
+      ],
+      "rotate_x_deg": 102.0,
+      "lift": 0.0,
+      "moves": [
+        "Chest_Lid",
+        "Chest_LidSkull",
+        "Chest_LidMagic"
+      ],
+      "glow": [
+        80,
+        176,
+        255
+      ],
+      "accent": [
+        150,
+        224,
+        255
+      ],
+      "parts": {
+        "Chest_Magic": {
+          "kind": "accent",
+          "center": [
+            -0.0,
+            3.1474,
+            -0.3482
+          ],
+          "size": [
+            7.48,
+            2.7268,
+            5.0164
+          ]
+        },
+        "Chest_LidSkull": {
+          "kind": "textured",
+          "center": [
+            -0.0235,
+            6.7069,
+            -1.4852
+          ],
+          "size": [
+            2.7446,
+            2.9972,
+            2.9751
+          ]
+        },
+        "Chest_LidMagic": {
+          "kind": "accent",
+          "center": [
+            -0.0,
+            5.6903,
+            0.0
+          ],
+          "size": [
+            6.4,
+            1.6793,
+            4.0079
+          ]
+        },
+        "Chest_Lid": {
+          "kind": "textured",
+          "center": [
+            0.0169,
+            6.4445,
+            -0.0204
+          ],
+          "size": [
+            11.3523,
+            4.531,
+            5.6041
+          ]
+        },
+        "Chest_Inner": {
+          "kind": "floor",
+          "center": [
+            -0.0,
+            3.39,
+            0.0
+          ],
+          "size": [
+            4.8,
+            0.58,
+            3.8
+          ]
+        },
+        "Chest_Glow": {
+          "kind": "glow",
+          "center": [
+            -0.0,
+            4.13,
+            0.0
+          ],
+          "size": [
+            6.44,
+            0.16,
+            4.28
+          ]
+        },
+        "Chest_Base": {
+          "kind": "textured",
+          "center": [
+            0.0127,
+            2.4783,
+            -0.0045
+          ],
+          "size": [
+            7.6358,
+            4.9567,
+            5.81
+          ]
+        }
+      },
+      "bounds_size": [
+        11.352,
+        8.71,
+        5.873
+      ],
+      "bounds_center": [
+        0.0169,
+        4.355,
+        -0.0361
+      ]
+    },
+    "Legendary": {
+      "hinge": [
+        -0.0,
+        3.9,
+        2.86
+      ],
+      "rotate_x_deg": 105.0,
+      "lift": 0.0,
+      "moves": [
+        "Chest_Lid",
+        "Chest_Lid_Jewel"
+      ],
+      "glow": [
+        255,
+        170,
+        40
+      ],
+      "accent": [
+        120,
+        255,
+        232
+      ],
+      "parts": {
+        "Chest_Lid_Jewel": {
+          "kind": "accent",
+          "center": [
+            -0.0,
+            6.3024,
+            -2.508
+          ],
+          "size": [
+            0.3903,
+            0.3174,
+            0.2671
+          ]
+        },
+        "Chest_Lid": {
+          "kind": "textured",
+          "center": [
+            -0.0,
+            5.6781,
+            0.0
+          ],
+          "size": [
+            7.88,
+            3.5561,
+            6.24
+          ]
+        },
+        "Chest_Jewel": {
+          "kind": "accent",
+          "center": [
+            -0.0,
+            3.87,
+            -3.7925
+          ],
+          "size": [
+            0.4582,
+            0.4582,
+            0.025
+          ]
+        },
+        "Chest_Inner": {
+          "kind": "floor",
+          "center": [
+            -0.0,
+            3.605,
+            0.0
+          ],
+          "size": [
+            6.64,
+            2.07,
+            4.64
+          ]
+        },
+        "Chest_Glow": {
+          "kind": "glow",
+          "center": [
+            -0.0,
+            3.42,
+            -0.2775
+          ],
+          "size": [
+            7.72,
+            0.98,
+            6.275
+          ]
+        },
+        "Chest_Base": {
+          "kind": "textured",
+          "center": [
+            -0.0,
+            2.877,
+            -0.0499
+          ],
+          "size": [
+            9.793,
+            5.7516,
+            7.8928
+          ]
+        }
+      },
+      "bounds_size": [
+        9.793,
+        7.455,
+        7.893
+      ],
+      "bounds_center": [
+        -0.0,
+        3.7287,
+        -0.0499
+      ]
+    }
+  }
+}

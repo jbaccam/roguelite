@@ -1,0 +1,129 @@
+{
+  "tier": "legendary",
+  "name": "Legendary",
+  "blender_version": "5.2.1 LTS",
+  "authoring": "final Roblox stud size; import at 1:1, do not scale",
+  "hinge_studs": [
+    0.0,
+    2.86,
+    3.9
+  ],
+  "open": {
+    "rotate_x_deg": 105.0,
+    "lift": 0.0
+  },
+  "moves_when_opening": [
+    "Chest_Lid",
+    "Chest_Lid_Jewel"
+  ],
+  "glow_srgb": [
+    255,
+    170,
+    40
+  ],
+  "accent_srgb": [
+    120,
+    255,
+    232
+  ],
+  "texture": "textures/chest-legendary-baked.png (2048x2048, baked lighting)",
+  "parts": {
+    "Chest_Base": {
+      "role": "MeshPart, TextureID = textures/chest-legendary-baked.png",
+      "triangles": 11218,
+      "vertices": 6072,
+      "dimensions_studs": [
+        9.793,
+        7.893,
+        5.752
+      ],
+      "uv_range": [
+        0.0053,
+        0.9947,
+        0.0053,
+        0.9947
+      ]
+    },
+    "Chest_Lid": {
+      "role": "MeshPart, TextureID = textures/chest-legendary-baked.png",
+      "triangles": 2132,
+      "vertices": 1208,
+      "dimensions_studs": [
+        7.88,
+        6.24,
+        3.556
+      ],
+      "uv_range": [
+        0.0053,
+        0.9947,
+        0.0053,
+        0.9945
+      ]
+    },
+    "Chest_Glow": {
+      "role": "Neon, GLOW colour; fade out as the chest opens",
+      "triangles": 66,
+      "vertices": 40,
+      "dimensions_studs": [
+        7.72,
+        6.275,
+        0.98
+      ],
+      "uv_range": [
+        0.8542,
+        0.8542,
+        0.1875,
+        0.1875
+      ]
+    },
+    "Chest_Inner": {
+      "role": "Neon, GLOW colour; seen when open",
+      "triangles": 124,
+      "vertices": 64,
+      "dimensions_studs": [
+        6.64,
+        4.64,
+        2.07
+      ],
+      "uv_range": [
+        0.8542,
+        0.8542,
+        0.1875,
+        0.1875
+      ]
+    },
+    "Chest_Jewel": {
+      "role": "Neon, ACCENT colour; always on",
+      "triangles": 28,
+      "vertices": 16,
+      "dimensions_studs": [
+        0.458,
+        0.025,
+        0.458
+      ],
+      "uv_range": [
+        0.8542,
+        0.8542,
+        0.1875,
+        0.1875
+      ]
+    },
+    "Chest_Lid_Jewel": {
+      "role": "Neon, ACCENT colour; always on",
+      "triangles": 28,
+      "vertices": 16,
+      "dimensions_studs": [
+        0.39,
+        0.267,
+        0.317
+      ],
+      "uv_range": [
+        0.8542,
+        0.8542,
+        0.1875,
+        0.1875
+      ]
+    }
+  },
+  "total_triangles": 13596
+}
