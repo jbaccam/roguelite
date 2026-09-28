@@ -104,8 +104,9 @@ local function footprintBox(folder,prop,bottomY)
 end
 local function clearAdded(folder) if folder then for _,c in folder:GetChildren() do if c:GetAttribute('AddedBy')==TAG then c:Destroy() end end end end
 
--- First arena (Pine Valley): loose top-level props on the grass, x < 400, above y = -60.
-local mapOne=workspace:FindFirstChild('MapOneNoClimb')
+-- First arena (Pine Valley): props in Workspace.PineValleyArena on the grass, x < 400, above y = -60.
+local pineArea=workspace:FindFirstChild('PineValleyArena') or workspace
+local mapOne=pineArea:FindFirstChild('MapOneNoClimb')
 clearAdded(mapOne)
 if mapOne then
  -- Only MapOneNoClimb's own (cliff and tree) blocks count here; the added boxes were just cleared.
@@ -116,7 +117,7 @@ if mapOne then
   return false
  end
  local added,solid=0,0
- for _,c in workspace:GetChildren() do
+ for _,c in pineArea:GetChildren() do
   if (c:IsA('Model') or c:IsA('MeshPart')) and matches(c.Name,ARENA_BOXED) then
    local p=c:GetPivot().Position
    if revert then for _,part in visibleParts(c) do restore(part) end
@@ -143,7 +144,9 @@ if beach then
  local boxes,palms,solid=0,0,0
  local candidates={}
  for _,d in beach.Scenery:GetDescendants() do if d:IsA('BasePart') then table.insert(candidates,d) end end
- for _,c in workspace:GetChildren() do if c:IsA('MeshPart') then table.insert(candidates,c) end end
+ -- Hand-placed props sit in BeachCoveExtras.Props (GroupMapAreas), outside the rebuilt arena folder.
+ local extras=workspace:FindFirstChild('BeachCoveExtras');local looseProps=extras and extras:FindFirstChild('Props')
+ for _,c in (looseProps or workspace):GetChildren() do if c:IsA('MeshPart') then table.insert(candidates,c) end end
  for _,p in candidates do
   if p.Transparency<1 and inside(p) then
    if p.Name=='FixedPalm' or string.find(p.Name,'Palm') then if revert then restore(p) else makeSolid(p,true);palms+=1 end
