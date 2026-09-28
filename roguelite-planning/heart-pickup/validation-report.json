@@ -1,0 +1,16 @@
+{
+  "vertices": 90,
+  "triangles": 176,
+  "fallback_triangles": 56,
+  "dimensions_blender_units": [
+    1.9932,
+    0.867,
+    1.8008
+  ],
+  "non_manifold_edges": 0,
+  "degenerate_faces": 0,
+  "materials": 1,
+  "uv_maps": 1,
+  "svg_sha256": "ce42a2621cb9e0df6de3550eacaa739467ecbb22a115619dc3669c6b5e885036",
+  "passed": true
+}
