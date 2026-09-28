@@ -1,182 +1,141 @@
-# Monetization, Crates, and Reward Economy
+# Monetization, Chests, and Reward Economy
 
 **Status:** Planning proposal  
-**Confirmed direction:** Purchases may grant bounded gameplay advantages through faster persistent progression or early access to earnable sidegrades. They must not sell overwhelming, exclusive, or uncapped combat power.
+**Updated:** 2026-09-26  
+**Confirmed direction:** Purchases may provide bounded, transparent convenience, early access to earnable sidegrades, expression, and the approved limited death-screen revive. They must not sell exclusive or uncapped combat power, and must not sell random gameplay rewards.
+
+Progression itself is defined in [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md): keys from waves survived, chests with weapon and armor copies, copies raising starting tiers, and achievement unlocks.
+
+## Direction change — 2026-09-27 (user decision, implemented in Studio)
+
+The user wants chests to be the main spend: **emeralds** (premium currency, sold for Robux) open chests, and in-run **shop and upgrade rerolls** are sold for Robux. This supersedes the "never sell keys/chests/rerolls" defaults below; keys themselves are still earned only.
+
+Implemented (`studio-prototype/combat/MonetizationConfig.luau`, `ChestConfig.luau`, `ProfileService.luau`, `RogueliteMeta.server.luau`):
+
+- Developer products: Revive 65, Shop Reroll 15, Upgrade Reroll 15, emerald packs 100/550/1200/2600 for 99/449/899/1799, Starter Pack 199 (300 emeralds + Royal Chest, once), early classes 149 each (or 400 emeralds). VIP game pass 399. Robux values are placeholders; Roblox charges the dashboard price.
+- Chests: class chests (3 keys or 60 emeralds, 3 weapons) and a Royal Chest (250 emeralds, 8 weapons from all 36). Exact per-weapon odds are shown before opening. Pick-your-weapon every 10th chest per type.
+- **Policy:** rerolls and emerald-opened chests are paid random items. `PolicyService.ArePaidRandomItemsRestricted` players never see or can use them (server-enforced); odds are always displayed.
+- Receipts are idempotent (processed PurchaseIds stored in the profile). Grants happen only in `ProcessReceipt`; a revive bought after it is no longer usable is refunded as 50 emeralds.
+- **Setup still required:** create each developer product/pass in the Creator Dashboard and paste its ID into `MonetizationConfig.luau` (ID 0 = not for sale in live servers; Studio simulates the grant in memory only). Enable Studio API access to DataStores only if you intend to test saving (`workspace:SetAttribute('EnableStudioDataStores',true)`).
+
+## Store expansion — 2026-09-27 (inspired by the user's reference shop)
+
+Store is now four tabs (DAILY, BUNDLES, CHESTS, EMERALDS) with key/emerald counters and **+** buttons. New in `MonetizationConfig.luau` (all prices placeholders):
+
+| Tab | What | Price |
+| --- | --- | --- |
+| Daily | 5 deals per UTC day: 1 free (10 keys) + 4 weapon-upgrade deals for keys or emeralds; VIP daily free Royal Chest | keys / emeralds |
+| Bundles | Starter Pack (150 emeralds, Royal Chest, 5 rerolls; once) | R$ 49 |
+| Bundles | Arsenal Bundle (+3 upgrades to all 6 class starters, 500 emeralds) | R$ 499 |
+| Bundles | VIP pass (+25% run keys, daily Royal Chest, open ×10) | R$ 499 |
+| Bundles | Quick Open pass (open 10 chests at once) | R$ 149 |
+| Bundles | Reroll packs 5 / 15, Banish packs 5 / 15 (saved, used in runs) | R$ 59 / 149, 79 / 199 |
+| Chests | Royal Chest ×1 / ×5 / ×12; Mega Chest Bundle (15 Royal, 3000 emeralds, 25 rerolls, 10 banishes) | R$ 149 / 599 / 1299; 2999 |
+| Emeralds | 100 / 550 / 1200 / 2600 (labelled +21% / +32% / +43% more) and a codes box | R$ 99–1799 |
+
+In-run: level-up cards have **BANISH** (removes that stat for the run, replaces the card) and the reroll buttons use stored rerolls/banishes before prompting Robux. Single Banish R$ 19, single reroll R$ 15. Codes live server-side in `ProfileService.luau` (RELEASE, CHESTS, REROLL). Chest packs, rerolls and banishes are hidden where paid random items are restricted.
 
 ## Product philosophy
 
-The paid offer should feel helpful without making ordinary play feel pointless. A paying player may unlock build options sooner or progress an account somewhat faster, but a skilled free player must be able to access the same gameplay content, complete every chapter, and build equally powerful runs.
+The paid offer should feel helpful without making ordinary play feel pointless. A paying player may unlock a class sooner or look different, but a free player must be able to reach the same weapons, armor, tiers and maps, win every map, and build equally powerful runs.
 
 The dividing line is:
 
-- **Acceptable:** “I reached this class or weapon sooner.”
-- **Not acceptable:** “My paid version has higher damage,” “I bought better luck during the run,” or “this chapter effectively requires payment.”
+- **Acceptable:** "I reached this class sooner," or "my pickup effect looks cooler."
+- **Not acceptable:** "I bought keys and got Tier IV first," "I bought better luck during the run," or "this map effectively requires payment."
+
+## Why keys and chests aren't sold
+
+Chests give **random** weapon and armor copies, and those copies raise starting power. Roblox's paid-random-item rules also cover Robux that indirectly buys the random outcome: keys, gems, rerolls or boosters used to open it. Selling keys (or a key multiplier) would mean:
+
+- showing every outcome with its actual numerical odds before purchase;
+- checking `PolicyService:GetPolicyInfoForPlayerAsync()` per player and hiding the product where `ArePaidRandomItemsRestricted` is true;
+- selling random power, which conflicts with the project's fairness rules.
+
+**Launch default:** Keys, chests, chest pity and key multipliers are earned only. Keeping all random rewards free keeps chests clear of those rules.
 
 ## Hard boundaries
 
-- All combat classes, weapons, and gameplay options are earnable through normal play. There is no armor-equipment system.
-- Paid class and weapon unlocks grant the normal item early, never a stronger premium version.
-- Paid Coins or universal Weapon Parts may shorten Permanent Weapon Level progression, but the same level cap and stats apply to everyone.
-- Account boosts are modest, clearly disclosed, nonstacking, and capped.
-- The one explicit active-chapter purchase is a death-screen revive. No other combat purchase is offered during a run.
-- No paid run XP, run materials, shop rerolls, shop discounts, extra weapon slots, temporary stats, altered drops, or altered shop odds.
-- No paid-exclusive combat content or uncapped permanent stat growth.
-- No purchase is required to clear a chapter or participate meaningfully in co-op.
+- All classes, weapons, armor sets and passives are earnable through normal play.
+- Paid class unlocks grant the normal class early, never a stronger version.
+- No paid keys, chests, chest pity progress, or key/reward multipliers.
+- No paid weapon or armor copies or starting tiers (**open question**; see below).
+- The one active-run purchase is the death-screen revive.
+- No paid run XP, shards, rerolls, shop discounts, extra weapon slots, temporary stats, altered drops or altered shop odds.
+- No purchase is required to win a map or take part meaningfully in co-op.
 - Difficulty and grind cannot be deliberately worsened to pressure a purchase.
 
 ## Currency separation
 
-| Currency/resource | Saved? | Purpose | Purchasable or boostable? |
+| Currency/resource | Saved? | Purpose | Purchasable? |
 | --- | --- | --- | --- |
-| Run XP | No | End-of-wave stat choices | Never |
-| Run materials | No | Intermission weapons and items | Never |
-| Account XP | Yes | Account levels and unlock milestones | May receive a modest, nonstacking paid boost |
-| Gameplay coins | Yes | Deterministic class, weapon, and feature unlocks | Fixed starter bundles or a modest earnings boost may be sold |
-| Universal Parts | Yes | Upgrade any owned weapon's capped Permanent Weapon Level | Guaranteed Parts packs may be sold |
-| Unlock token | Yes | Directly unlocks one eligible class or starter weapon | May be sold only for earnable sidegrades; player chooses the reward |
-| Gems | Yes | Premium currency for guaranteed catalog offers and bundles | Sold directly; not used for undisclosed random rewards |
-| Progression-track XP | Track record | Advances a visible free/premium reward track | May be boosted if the complete track is shown |
+| Run XP | No | Level-up stat choices between waves | Never |
+| Crystal shards | No | Run shop weapons, items and rerolls | Never |
+| Keys | Yes | Open chests | Never (random outcome) |
+| Gems | Yes | Premium currency for the guaranteed catalog | Sold directly; never spent on keys, chests or anything random |
 
-Persistent currency never converts into active-run materials. This keeps paid acceleration outside the eight-minute build and prevents someone from buying a winning shop sequence.
+## Recommended launch catalog
 
-## Recommended paid advantages
+### Gem packs
 
-### Supporter/VIP pass
+Premium currency for the guaranteed catalog below. Contents and prices are always shown up front.
 
-A permanent, nonstacking pass could provide:
+### VIP pass
 
-- **+20% account XP** from completed chapters;
-- **+20% persistent Coin earnings**, calculated only after the run;
-- one additional daily quest and a small daily Gem grant;
-- two extra saved build/loadout presets;
-- a supporter nameplate, lobby pose, and cosmetic set.
+- two extra saved loadout presets;
+- a VIP nameplate, lobby pose and cosmetic set;
+- a small daily Gem grant.
 
-These percentages are initial balance targets, not confirmed values. The pass never changes run XP, enemy drops, shop inventory, damage, health, or luck.
-
-### One-time starter pack
-
-A fixed, guaranteed pack could contain:
-
-- a disclosed amount of persistent Coins and Gems;
-- one player-chosen class token;
-- one player-chosen weapon blueprint token;
-- a disclosed amount of Universal Parts;
-- one exclusive nameplate or lobby pose.
-
-The pack is a head start, not exclusive power. It cannot contain upgraded weapon tiers or random gameplay rewards.
+The pass never changes keys, chest odds, run XP, drops, shop inventory, damage, health or luck.
 
 ### Direct early class unlock
 
-- A player may buy immediate access to a specific class.
-- The class remains unlockable through a clearly stated gameplay objective or coin price.
-- Paid classes obey the same balance budget as free starting classes.
-- Avoid advertising a class as the “best” or designing it to outperform the roster.
+- Immediate access to Thrower, Juggler or Handyman.
+- The same class stays unlockable through its achievement.
+- Paid classes obey the same balance budget as free starting classes. Don't advertise one as "the best".
 
-### Direct early starter-weapon unlock
+### One-time starter pack
 
-- A player may unlock a specific weapon for the pre-run starting pool.
-- The weapon is also earnable normally.
-- The purchase grants its base version, not a permanent tier increase.
-- The weapon must be a sidegrade that supports a build style, not a strict damage upgrade.
-
-### Guaranteed Weapon Parts
-
-- Sell a disclosed number of **Universal Parts** that the player assigns to an owned weapon.
-- Parts accelerate the same capped Permanent Weapon Level 1–10 progression earned through play.
-- A purchase never exceeds the ordinary rank cap or creates a paid version of the weapon.
-- Show the exact resulting rank and stat change before confirmation.
-- Offer small and medium packs rather than an unlimited ladder of escalating purchases.
-
-### Persistent coin packs
-
-- Coins may pay deterministic blueprint, class, and Permanent Weapon Level costs in the lobby.
-- Coins cannot become run materials and cannot buy anything in an active chapter.
-- The free earning rate must remain reasonable; paid Coins are a time skip, not access to a separate power system.
-
-### Optional timed account booster
-
-If repeatable boosters are used, one product may give roughly **+25% account XP and persistent coins** for a clearly stated duration. It must not stack with itself; use the larger of the timed boost or VIP boost rather than multiplying both.
-
-This is more aggressive than the permanent VIP pass and should be tested carefully. It is not essential for launch.
+A fixed, guaranteed pack: one early class unlock of the player's choice, a disclosed amount of Gems, and an exclusive nameplate or lobby pose. No keys, chests or copies.
 
 ### Buyable death-screen revive
 
 - When the player dies, show **REVIVE** and **GIVE UP**.
-- REVIVE opens a repeatable Developer Product purchase prompt; recommended initial price test is approximately **65 Robux**.
-- Limit the launch version to one paid revive per player per chapter.
-- A revive restores 50% health, grants three seconds of invulnerability, pushes nearby enemies away, and resumes the same wave and boss state.
+- REVIVE opens a repeatable Developer Product prompt. The recommended first price test is about **65 Robux**.
+- Limited to one paid revive per player per run.
+- Restores 50% health, grants three seconds of invulnerability, pushes nearby enemies away, and resumes the same wave and boss state.
 - The server grants it only through validated `MarketplaceService.ProcessReceipt` handling.
-- A revived victory counts, awards normal rewards, and records its revive count for challenge/leaderboard filtering.
-- Do not sell damage, temporary stats, or another rescue offer alongside the revive.
+- A revived win counts, pays normal keys, and records its revive count for leaderboard filtering.
+- Don't sell damage, temporary stats or another rescue offer alongside the revive.
+- Never shown during the tutorial.
 
-## Gameplay crates
+### Customization
 
-Gameplay cases may be earned from chapters, bosses, quests, or a visible repeat-clear meter. They can contain weapon blueprints, Weapon Parts, persistent Coins, unlock progress, or cosmetics.
+Players keep their Roblox avatar and repeatedly see pickup streams, enemy defeats, the HUD, the lobby and result celebrations. Good products:
 
-Rules:
+- defeat effects, pickup trails, magnetic stream styles and short sound packs;
+- emotes, lobby poses, spawn animations, nameplates, titles, banners, profile frames, UI themes and victory celebrations;
+- cosmetic armor *looks* that change appearance only, if they don't hide the armor set's identity or hitbox.
 
-- Do not sell randomized gameplay crates for Robux at launch.
-- Do not sell Robux keys for earned gameplay crates.
-- Important classes and weapons must also have deterministic unlock paths.
-- Show the reward pool, duplicate behavior, and progress meter.
-- Duplicates convert into a useful deterministic currency.
-- First-clear and major mastery rewards should usually be guaranteed rather than random.
+Cosmetics cannot disguise weapon behavior, enlarge projectiles, obscure danger cues, or make paid sound effects louder than gameplay information.
 
-This still allows fun earned loot without making paid power depend on gambling. If paid randomized cases are ever considered later, Roblox requires every final outcome and its actual numerical probability to be shown before purchase. The game must also check `PolicyService:GetPolicyInfoForPlayerAsync()` and block, hide, or replace paid random products when `ArePaidRandomItemsRestricted` is true. These rules also apply when Robux purchases keys, gems, rerolls, or another currency used for the random outcome. Guaranteed blueprint and Parts sales are therefore the preferred launch design.
+### Later: cosmetic progression track
 
-## Earned crate ideas
+A free-and-paid track with cosmetics only. The complete track is visible before purchase, and permanent or returning tracks are preferred over harsh fear-of-missing-out pressure.
 
-### Chapter crate
+## Open decision: selling copies or starting tiers
 
-- Earned for a first clear or by filling a repeat-clear meter.
-- Contains persistent coins, cosmetic tickets, unlock fragments, or chapter-themed cosmetics.
-- First-clear reward is shown before the chapter begins.
-
-### Boss trophy crate
-
-- Earned from boss or difficulty milestones.
-- Contains boss cosmetics and a guaranteed amount of account progression.
-- Major trophies are deterministic: Cyclops eye aura, Giant Crab shell shoulders, Pharaoh wrap trail, or Headless Knight title.
-
-### Weapon or class mastery crate
-
-- Earned through using that class or weapon.
-- Mainly contains its skins, badges, banners, and mastery currency.
-- If mastery unlocks gameplay, the required number of milestones is visible and does not rely solely on random drops.
-
-## Direct customization
-
-Customization remains valuable because players retain their Roblox avatar and repeatedly see pickup streams, enemy defeats, the HUD, the lobby, and result celebrations. The updated combat direction keeps equipped weapon models visible in a floating formation (see FLOATING_WEAPON_PRESENTATION.md), and some temporary passives appear as avatar accessories. Weapon skins remain outside the approved monetization scope; these presentation changes do not add paid skins or a separate armor-set system.
-
-Good products include:
-
-- defeat effects, pickup trails, magnetic stream styles, and short sound packs;
-- emotes, lobby poses, spawn animations, nameplates, titles, banners, profile frames, UI themes, and victory celebrations;
-- cosmetic class presentation bundles that do not change class stats.
-
-Cosmetics cannot disguise weapon behavior, enlarge effective projectiles, obscure danger cues, or make paid sound effects louder than gameplay information.
-
-## Cosmetic or progression track
-
-A free-and-paid track may contain cosmetics, persistent coins, and deterministic unlock tokens. If gameplay progression appears on the paid lane:
-
-- the same class or weapon must remain earnable outside the track;
-- the paid lane accelerates access but does not grant stronger variants;
-- the complete reward track is visible before purchase;
-- ordinary play progresses at a reasonable rate;
-- prefer permanent or returning tracks over harsh fear-of-missing-out pressure.
+A direct, **non-random** purchase of a chosen weapon or armor copy is technically allowed by the project's "bounded acceleration" rule: the tier is capped at IV and everything stays earnable. It still sells the exact power the map ladder is balanced around, which would read as pay-to-win to players. **Default: don't sell at launch.** Revisit only after free pacing is measured.
 
 ## Products not to sell
 
-- Direct damage, health, armor, attack speed, movement speed, luck, or pickup-range upgrades
-- Uncapped Permanent Weapon Levels or paid-only weapon-level bonuses
-- Run XP, starting levels, or run materials
-- Shop rerolls, locks, discounts, or improved rarity odds
-- Extra active weapon or passive slots
-- Unlimited/repeated revive chains, boss skips, or any emergency mid-run offer besides the approved revive
-- Paid-only classes, weapons, evolutions, or maps
-- Random paid gameplay crates at launch
-- Boosts that stack without limit
+- Keys, chests, pity progress, or key/reward multipliers
+- Direct damage, health, armor, attack speed, movement speed, luck or pickup-range upgrades
+- Run XP, starting levels or shards
+- Shop rerolls, locks, discounts or improved rarity odds
+- Extra weapon or passive slots
+- Unlimited or repeated revive chains, boss skips, or any other mid-run offer
+- Paid-only classes, weapons, armor sets or maps
 - Any product framed or balanced as necessary for progression
 
 ## Technical and policy requirements
@@ -184,36 +143,18 @@ A free-and-paid track may contain cosmetics, persistent coins, and deterministic
 - Grant repeatable purchases only through validated `MarketplaceService.ProcessReceipt` handling.
 - Store entitlements and receipt results idempotently.
 - Never trust client claims that a purchase completed.
-- Maintain a server-side product catalog with stable IDs and explicit grant behavior.
-- Show the exact guaranteed reward and boost percentage before purchase.
-- Paid randomized items, if ever introduced, require actual numerical outcome odds and per-player `PolicyService` eligibility handling.
-- Studio purchase tests must never grant production entitlements or persistent rewards accidentally.
-
-## Recommended launch catalog
-
-Start small enough that we can evaluate whether the game is fun and the free progression rate is healthy:
-
-1. Gem packs
-2. VIP pass/subscription with account progression boosts, an extra daily quest, and daily Gems
-3. One fixed starter pack with class and weapon choice tokens
-4. Direct early unlocks for selected classes and weapons
-5. Class Arsenal bundles containing one class and its six earnable blueprints
-6. Small, medium, and large guaranteed Universal Parts and Coin packs
-7. Rotating guaranteed daily deals
-8. Defeat-effect, pickup-style, UI-theme, emote, and lobby-identity bundles
-9. Premium progression track once enough finished content exists
-10. One death-screen Revive Developer Product, initially limited to one per chapter
-
-Do not launch with paid random gameplay crates or other mid-run purchases beyond the approved revive.
+- Keep a server-side product catalog with stable IDs and explicit grant behavior.
+- Show exact guaranteed contents before purchase.
+- If any paid random item is ever introduced, show actual numerical odds and handle `PolicyService` eligibility per player.
+- Studio purchase tests must never grant production entitlements or persistent rewards.
 
 ## Balance questions to test
 
-- How many completed chapters does a free class or weapon unlock require?
-- Does VIP save time without becoming the assumed baseline?
-- Can a free player reach the full build pool in a satisfying timeframe?
-- Are paid early-unlock weapons genuine sidegrades across multiple builds?
-- Does co-op remain comfortable when paid and free accounts play together?
-- Do players still value a purchase after all gameplay options are unlocked?
+- How many runs does each achievement-gated class take a free player?
+- Does the chest pity interval stop bad luck from blocking a wanted starter?
+- Are paid early classes genuine sidegrades?
+- Does co-op stay comfortable when players with different starting tiers play together?
+- Is the catalog valuable enough without selling progression? If not, prefer more cosmetics over selling power.
 
 ## Sources
 

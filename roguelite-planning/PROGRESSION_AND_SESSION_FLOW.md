@@ -1,433 +1,247 @@
-# Lobby, Run, and Progression Structure
+# Progression and Session Flow
 
-**Status:** Recommended structure; classes confirmed, exact roster and wave timings require approval  
-**Goal:** Give every run a fresh build while preserving meaningful reasons to clear chapters, master weapons, unlock options, and return to the lobby.
+**Status:** Authoritative progression design  
+**Updated:** 2026-09-26  
+**Goal:** Every run pays out something, harder maps pay more, and players always have a next thing to chase: a stronger starting weapon, a new armor set, the next map, a longer Endless record, or a specific achievement unlock.
 
-## The three progression layers
+Labels follow the master design: **Confirmed** is the user's direction; **Proposal** is the current recommendation and can change after playtesting.
 
-### 1. Account and arsenal progression — permanent
+## Summary
 
-This represents the player's overall game progress:
-
-- account level and XP;
-- unlocked chapters and map themes;
-- unlocked difficulty levels;
-- owned weapon blueprints and their capped Permanent Weapon Levels;
-- weapons and items added to the possible run pool;
-- unlocked classes/loadout perks, if approved;
-- weapon and class mastery records;
-- challenges, achievements, best clears, and collection completion;
-- persistent earned currency;
-- titles, pickup effects, defeat effects, UI themes, lobby poses, and emotes.
-
-Account progression expands options and provides a modest head start. It should not become an uncapped damage tree that makes early chapters play themselves.
-
-### Persistent weapon collection
-
-Weapons are earnable, but they are not all granted automatically. Every weapon has three permanent records:
-
-1. **Blueprint ownership:** allows the weapon to be selected as the guaranteed starting weapon and adds it to the normal run-shop pool.
-2. **Permanent Weapon Level:** a capped Level 1–10 improvement purchased with Universal Parts plus persistent Coins.
-3. **Mastery:** experience earned by actually using the weapon; unlocks Coins, Universal Parts, challenges, titles, badges, and profile records rather than another stacking damage track.
-
-Permanent Weapon Level provides a real but bounded advantage. Initial target: approximately 1–1.5% base effectiveness per level, capped around 10–12% at maximum. The bonus applies whenever that weapon is used, including copies bought in the run shop. It does not grant permanent Run Tiers, additional projectiles, or extra weapon slots.
-
-Cases earned after play can award a new blueprint or Universal Parts. A duplicate blueprint converts into Universal Parts. Players can also target a weapon through a deterministic Coin shop or mastery objective, so bad case luck never becomes the only route.
-
-The player still brings only one guaranteed starting weapon into a chapter. Every additional weapon, duplicate, tier combination, passive item, and temporary stat must be rebuilt during that run.
-
-### 2. Run progression — temporary
-
-This exists only inside the current chapter:
-
-- current run level and XP;
-- weapons purchased during the run;
-- weapon tiers and combinations;
-- passive items, including items that modify the Armor stat;
-- stat upgrades;
-- run materials used in the shop;
-- reroll prices and locked shop offers;
-- temporary buffs, consumables, and evolution eligibility;
-- current health and revive state.
-
-These reset after victory, defeat, leaving the run, or starting another chapter.
-
-### 3. Mastery progression — permanent record and sidegrades
-
-Mastery rewards using different parts of the game without carrying the completed run build forward:
-
-- Weapon mastery increases when that weapon is used, evolved, or clears a chapter.
-- Class mastery increases when clearing chapters with that class/loadout perk.
-- Mastery unlocks Coins, Universal Parts, titles, profile badges, challenges, and collection records.
-- Raw permanent effectiveness comes from the separate capped Permanent Weapon Level; Mastery does not stack damage endlessly.
+- **Confirmed:** Five maps, each harder than the last and paying better rewards.
+- **Confirmed:** Every map is won by surviving to **wave 20**. After the win, the player can keep going in **Endless**.
+- **Confirmed:** Rewards are **keys**. Harder maps and more waves survived give more keys.
+- **Confirmed:** Keys open **chests**. Chests give copies of weapons (and armor).
+- **Confirmed:** Duplicate copies of a weapon raise the tier it **starts** at. A player can enter a run with a Tier II, III, or IV starting weapon instead of Tier I.
+- **Confirmed:** Players unlock **armor** as four pieces (helmet, chestplate, leggings, boots) and wear them into each run. Set bonuses at 2 and 4 pieces of one set (decided 2026-09-27).
+- **Confirmed:** Achievements and quests give deterministic unlocks, e.g. "Win with 4 Thrower weapons → unlock Molotovs." Some passives are gated this way too.
+- **Removed:** Blueprints, Permanent Weapon Levels 1–10, Universal Parts, Weapon Parts, and cases. See [What changed](#what-changed-from-earlier-docs).
 
 ## What saves and what resets
 
-| Data | Saved permanently? | Notes |
-| --- | --- | --- |
-| Account level | Yes | Main broad progression track |
-| Chapter completion | Yes | Unlocks later chapters and difficulty |
-| Earned persistent currency | Yes | Separate from run shop materials |
-| Weapon blueprints | Yes | Determines starter availability and normal run-shop pool |
-| Permanent Weapon Level and Universal Parts | Yes | Capped modest bonus; Run Tiers remain temporary |
-| Weapon mastery | Yes | Milestone resources, challenges, titles, badges, and records |
-| Classes/loadout perks | Yes | Same Roblox avatar; no authored character model required |
-| Customization | Yes | Pickup/defeat effects, UI themes, emotes, titles, nameplates, and lobby poses |
-| Run weapons | No | Reset after the chapter |
-| Weapon tiers | No | Reset after the chapter |
-| Run items/passives | No | Reset after the chapter |
-| Run level and XP | No | Reset after the chapter |
-| Run shop materials | No | Spent during the run and discarded afterward |
-| Temporary stats | No | Reset after the chapter |
-| Best score/time/stats | Yes | Historical record only |
+| Saved permanently | Resets after every run |
+| --- | --- |
+| Owned weapons and their copy counts / starting tier | Run level and XP |
+| Owned armor and its copy counts / tier | Level-up stat choices |
+| Unlocked classes | Weapons bought during the run |
+| Map wins and best wave reached on each map | In-run weapon tiers from combining |
+| Keys and unopened chests | Passive items |
+| Achievement and quest progress | Crystal shards and shard bags |
+| Unlocked passives (added to the run shop pool) | Rerolls, locked offers, current health |
+| Cosmetics, settings, last-used loadout | |
 
-## Recommended complete player flow
+## The five maps
+
+Each map is its own difficulty step, and each map has three difficulties (below). **Default, 2026-09-27:** winning a map on **Hard** unlocks the next map. This slows the map rush so players stay on a map longer while chest upgrades catch up. It is a one-line rule in `RunSetupRules.mapUnlocked` if Normal should unlock the next map instead.
+
+| # | Map | Boss (wave 20) | Unlocked by | Keys per 5 waves reached — proposal |
+| ---: | --- | --- | --- | ---: |
+| 1 | Pine Valley | Hammer Zombie Boss | Available after the tutorial | 1 |
+| 2 | Beach Cove | Giant King Crab | Win Pine Valley on Hard | 2 |
+| 3 | Desert Basin | Pharaoh | Win Beach Cove on Hard | 3 |
+| 4 | Frozen Pass | Frost Cyclops | Win Desert Basin on Hard | 4 |
+| 5 | Volcanic Crater | Dragon | Win Frozen Pass on Hard | 5 |
+
+### Difficulty tiers
+
+**Confirmed 2026-09-27:** every map has Normal, Hard and Nightmare tabs on the map-select screen. Harder tiers only buff enemies (no new rules) and pay more keys. Starting values:
+
+| Tier | Enemy health | Enemy damage | Keys | Unlocked by |
+| --- | ---: | ---: | ---: | --- |
+| Normal | ×1 | ×1 | ×1 | The map itself |
+| Hard | ×1.6 | ×1.3 | ×1.5 | Winning Normal on that map |
+| Nightmare | ×2.5 | ×1.6 | ×2 | Winning Hard on that map |
+
+Example: Pine Valley pays 1 key per 5 waves, so a Normal win pays 4 keys, Hard pays 6 and Nightmare pays 8. The first-win bonus (5 × map number) is paid once per map *and* difficulty and uses the same multiplier (rounded). Wins and best waves are saved per map and difficulty; Normal keeps the plain map id (`PineValley`), harder tiers use `PineValley/Hard`. At 15–20 minutes a run, reaching Volcanic Crater takes at least 8 wins (about 2–2.5 hours) instead of 4.
+
+Mob rosters per map live in [Map Mob Roster](MAP_MOB_ROSTER.md). Castle Fields remains a later-content idea outside these five.
+
+**Proposal: how each map gets harder.** Enemy health, damage and spawn budget rise with the map number; later maps add more ranged and lunging enemies earlier in the run. Difficulty comes from role mix and timing first, raw stat inflation second.
+
+**Proposal: intended power per map.** Map 1 is winnable with a Tier I starter. Map 3 is comfortable around a Tier II starter with armor. Map 5 expects roughly a Tier III starter plus upgraded armor. Skilled players can win below those targets. This is what makes chest upgrades matter: they're the key to pushing into the next map.
+
+## The 20-wave run
+
+**Confirmed:** Wave 20 is the win condition on every map. This replaces the older eight-wave, eight-minute chapter.
+
+| Waves | Proposed length | Role |
+| --- | ---: | --- |
+| 1–4 | 25–35 s | Learn the starter, pick a direction |
+| 5 | 40 s | **Elite wave** |
+| 6–9 | 40 s | Second pressure type, build specializes |
+| 10 | 45 s | **Horde wave** |
+| 11–14 | 50 s | Mixed roles, denser crowds |
+| 15 | 55 s | **Stronger elite wave** |
+| 16–19 | 55–60 s | Final build checks |
+| 20 | Up to 90 s | **Map boss**; the wave ends when the boss dies |
+
+Nineteen intermissions of about 10–15 seconds put a full clear around **15–20 minutes**. Combat stays low-attention enough to play with music or an audiobook. There are still no mid-run checkpoints.
+
+After every wave, as already built in the prototype:
+
+1. Remaining crystals pull in; uncollected value goes into the shard bag.
+2. Banked level-ups resolve one at a time: **four** stat cards, reroll costs shards. See [level-up readiness](studio-prototype/combat/LEVEL_UP_READINESS.md).
+3. The four-offer shop opens. See [shop readiness](studio-prototype/combat/SHOP_GAMEPLAY_READINESS.md) for the current offer rules.
+4. The next wave starts when everyone is ready or the timer ends.
+
+Leveling never pauses combat. Crossing an XP threshold during a wave plays a short sound and adds a pending-choice count to the HUD.
+
+### Endless — wave 21 and beyond
+
+**Confirmed:** After the wave 20 boss dies, the player can keep going for fun and bigger rewards.
+
+- The win screen offers **Cash Out** or **Keep Going**. The map win and wave 20 rewards are saved immediately either way.
+- **Proposal:** Enemies keep scaling. An elite or boss returns every five waves.
+- Keys keep coming at the same per-five-waves rate for that map.
+- Dying in Endless keeps everything earned. The run already counts as a win.
+- The game records each player's **best wave per map**. A leaderboard can use it later.
+- **Open:** If players find an idle farming trick, add a per-run or daily key cap for Endless only.
+
+## Keys
+
+- **Earning (proposal):** Reaching wave 5, 10, 15, 20, 25, … on a map gives that map's key value. The first win on each map adds a one-time bonus of **5 × map number** keys.
+- **A loss still pays.** Dying on wave 12 in Desert Basin passed waves 5 and 10, so it earns 6 keys.
+- **Examples:** A Pine Valley win gives 4 keys (+5 the first time). A Volcanic Crater win gives 20 keys (+25 the first time). Pushing Volcanic Crater Endless to wave 30 adds 10 more.
+- Quests and some achievements also give keys.
+- **Keys are earned only by playing.** They are not sold for Robux. Chests are random, and Roblox's paid-random-item rules also apply to anything Robux can buy that opens a random reward. See [Monetization](MONETIZATION_AND_REWARDS.md).
+
+## Chests
+
+- **Proposal:** A chest costs 3 keys and gives one copy.
+- **Proposal: chest types.** A **Class Chest** for each class drops a copy of one of that class's chest-eligible weapons. An **Armor Chest** drops an armor copy. The player picks which chest to open, which lets them aim for the weapon they care about.
+- Every chest shows its full contents and odds before opening.
+- **Bad-luck protection (proposal):** Every 10th chest of the same type lets the player **pick** the copy.
+- **Proposal:** Copies beyond Tier IV convert back into keys at 1 key per 2 extra copies, so late duplicates are never worthless.
+
+## Duplicates → upgrade → starting tier
+
+**Confirmed direction, 2026-09-27 (replaces the automatic copy-count rule):** The first chest drop of a weapon unlocks it at Tier I. Every later drop adds +1 to that weapon's upgrade bar. When the bar is full the player presses **Upgrade**, which spends those duplicates and raises the starting tier. The UI shows only numbers, never the word "copies": e.g. `5 / 2` → Upgrade → `3 / 4`.
+
+| Upgrade | Duplicates spent — proposal |
+| --- | ---: |
+| Tier I → II | 2 |
+| Tier II → III | 4 |
+| Tier III → IV | 8 |
+
+- Leftover duplicates carry over after an upgrade (5 held, spend 2 → 3 toward the next).
+- **Pacing check needed:** these proposal costs total 14 duplicates to Tier IV, versus 7 under the old "8 total copies" rule. Re-check against the pacing target below before locking values (`L.UpgradeCost` in `studio-prototype/ui/LobbyUI.luau`).
+- The saved tier applies to the **one starting weapon** the player brings in. Copies bought from the run shop still start at the shop's tier.
+- Tier forms are the same four behavior tiers used in runs. For example, the Glock goes Glock → Extended Clip → Switch → Akimbo Switches.
+- A starter already at Tier IV can't combine further, so the run shop stops offering its exact duplicate. This uses the existing "remove capped choices" rule.
+- **Balance note:** A Tier IV starter is a big early power jump (prototype damage multipliers are 1, 1.20, 1.45, 1.75, plus the behavior upgrade). The map ladder is tuned around this. Later maps expect upgraded starters.
+
+**Proposal pacing target:** A focused player reaches their first Tier II starter within about an hour, their first Tier IV after roughly 10–15 hours, and a full collection after 100+ hours.
+
+## Weapon ownership
+
+"Blueprint" was the old word for *you own this weapon*. It's gone. Ownership is now just "you have at least one copy".
+
+- An owned weapon can be picked as the starting weapon if it belongs to the selected class.
+- Only owned weapons appear in the run shop. Unlocking weapons makes new runs play differently.
+- **Proposal:** New accounts own the three starter-class signatures plus about half the roster, so shops feel varied from the first run. Most of the rest drops from Class Chests. A smaller set gets its first copy only from an achievement (see below). After that, their duplicates can drop from chests too.
+
+## Armor
+
+**Confirmed:** Players unlock armor and wear it into each run. This reverses the earlier "no armor equipment system" decision.
+
+- **Confirmed (2026-09-27):** Four armor slots (helmet, chestplate, leggings, boots), shown on the avatar and picked in the Armory. This replaces the earlier one-outfit proposal; the player preferred pieces because collecting a full set keeps players playing longer.
+- **Proposal:** Each piece gives part of its set's defensive stat package; 2 pieces of one set give the set bonus and 4 give the set's **signature perk**. Each armor set gives a defensive stat package (Armor, Max HP, contact resistance, dodge, etc.) plus one **signature perk**. Tiers I–IV use the same copy rule as weapons. Higher tiers raise the numbers and strengthen the perk.
+- Armor stays comedic everyday gear, not medieval plate. Starting concepts come from the archived sets in [BRAINSTORM_FUNNY_GEAR.md](BRAINSTORM_FUNNY_GEAR.md#armor-set-ideas--stranger-pass) (Wrong Sport, Fridge Raider, Grandma's House, Tiny Car, and others). Pieces layer onto the Roblox avatar (helmet, shoulders, backpack, waist) rather than replacing it.
+- **Proposal scope:** 1 free starter set, 2–3 sets in the vertical slice, 6–8 at launch.
+- The Armor **stat** still exists. Armor sets, level-up cards and passives can all raise it.
+- **Open:** Passive items that appear as hats or glasses (Pot Lid, Safety Helmet, Comically Large Glasses) may overlap armor pieces. They need a rule for which one renders.
+
+## Classes
+
+- New accounts own **Brawler, Gunner, and Mage**. **Thrower, Juggler, and Handyman** unlock through achievements (early purchase is optional; see Monetization).
+- A class sets which owned weapons can be the starter, plus its always-active bonuses and home-weapon affinity bonuses. Current values: [Character stats](studio-prototype/combat/CHARACTER_STATS.md).
+- Every weapon has **one home class**. There are **6 classes × 6 home weapons = 36 weapons**. Any class can still buy any owned weapon mid-run.
+- The prototype has **six weapon slots**. Two equipped home-class weapons activate the class's first affinity bonus, and four activate the stronger one. That leaves two flexible slots for off-class weapons.
+
+## Achievements and quests
+
+**Confirmed:** Deterministic unlocks tied to achievements, e.g. "Win with 4 Thrower weapons → unlock Molotovs." Some passives are gated this way so new runs feel different.
+
+- **Achievements** are permanent, one-time goals with visible requirements. Their rewards are a *specific* named unlock (class, weapon, passive, armor set) or keys. They're never random.
+- **Quests** are rotating daily and weekly goals that pay keys. Missing a day loses nothing permanent.
+- The old weapon and class "mastery" tracks are folded into achievements (e.g. "Win 3 maps with the Glock").
+
+**Proposal: example achievements.** Final list and targets to be tuned.
+
+| Achievement | Unlocks |
+| --- | --- |
+| Reach wave 10 on Pine Valley | Thrower class |
+| Win Pine Valley | Juggler class |
+| Defeat 1,000 enemies with Construction/Utility weapons | Handyman class |
+| Win any map holding 4 Thrower weapons | Molotovs (weapon) |
+| Win a map using only Gun-tagged weapons | Rocket Launcher (weapon) |
+| Chain lightning 1,000 times | Tinfoil Antlers (passive) |
+| Kill 500 burning enemies | Grandma's Oven Mitt (passive) |
+| Win with 3 or more projectile weapons | Two Straws, One Juice Box (passive) |
+| Defeat 3 different map bosses | Bone Crown (passive) |
+| Win Frozen Pass | Mjolnir (weapon) |
+| Reach wave 30 in any Endless run | An armor set |
+
+**Proposal:** About 20 of the 37 passives are available from the start. The rest unlock through achievements.
+
+## First-time player flow
+
+Matches [Lobby and first-run flow](LOBBY_AND_FIRST_RUN.md):
+
+1. The first join goes straight into a short guided tutorial as the base avatar with one fixed weapon: three short waves and an easy boss.
+2. The result screen explains that the run build resets, then grants enough keys for **one chest**.
+3. The first lobby visit introduces Loadout (class → starting weapon → armor) and Play, then guides the first chest opening.
+4. Pine Valley is the first real map.
+
+Tutorial replays never farm keys. Studio practice never grants persistent rewards, and DataStores stay disabled in Studio by default.
+
+## Lobby loadout
 
 ```text
-Lobby
-  → form party or play solo
-  → select unlocked chapter
-  → select difficulty
-  → select class
-  → select starting weapon
-  → enter reserved run
-  → combat wave
-  → automatic pickup + level choices + shop
-  → repeat through elite/horde waves
-  → final boss
-  → victory or defeat results
-  → grant permanent rewards once
-  → return to lobby
+Loadout: Class → Starting weapon (owned, that class; shows its tier) → Armor
+Play:    Map (unlocked only) → solo or party → queue at a portal
 ```
 
-## First-time player journey
-
-### First join and tutorial
-
-1. Load the player's normal Roblox avatar into a compact lobby.
-2. Give three starter classes representing distinct styles: **Brawler**, **Gunner**, and **Mage**. Their included signature blueprints are **Frying Pan**, **Glock**, and **Magic Staff**.
-3. Let the player choose a tutorial class; its signature weapon is automatically equipped. All three starter classes and blueprints remain owned.
-4. Launch a short three-wave tutorial in Pine Valley rather than explaining every lobby station first.
-5. Wave 1 teaches movement, automatic attacks, XP drops, and magnetic pickup.
-6. The first banked level guarantees a simple choice between Power, attack speed, and movement speed.
-7. Wave 2 ends with a scripted shop containing a second weapon, one passive item, and a duplicate of the starter so combining is demonstrated.
-8. Wave 3 introduces one telegraphed stronger mob and a small tutorial boss.
-9. Return to a result screen that grants Coins, account XP, a guaranteed starter case, and enough Parts to perform the first Permanent Weapon Level upgrade.
-
-The shop is not shown until the player has experienced one wave. Monetization prompts do not appear during the tutorial.
-
-### First lobby return
-
-The result screen leads the player through only four actions:
-
-1. Open the earned starter case.
-2. Convert its result into a new blueprint or weapon Parts.
-3. Upgrade one owned weapon from Permanent Weapon Level 1 to Level 2.
-4. Select Chapter 1, a class, and the starting weapon, then launch the first full run.
-
-After this guided sequence, the wider lobby exposes chapter selection, Arsenal/Weapon Upgrades, Classes, Cases, Quests, Cosmetics, and the Robux Shop. The player may ignore every station and use a quick-play panel.
-
-### First full chapter
-
-- Select a class, then choose one owned starting weapon assigned to that class. A newly unlocked class defaults to its signature weapon.
-- Enter with that starting weapon at its saved Permanent Weapon Level.
-- Fight eight waves. XP banks free end-of-wave stat choices; temporary materials fund the four-card shop.
-- Hold up to five active weapons. Same-weapon, same-tier copies combine through four temporary tiers.
-- Passive shop items do not use active-weapon slots; individual passives can have sensible copy caps.
-- An elite can drop one free in-run item crate that resolves during intermission.
-- Defeat the final boss or fail the chapter, then return to results.
-
-### Results and the second run
-
-The complete run build disappears: temporary weapon tiers, extra weapons, passives, chosen stats, XP, and run materials reset.
-
-The account keeps:
-
-- blueprint ownership and Permanent Weapon Levels;
-- Weapon Parts and persistent Coins;
-- account, weapon, and class XP;
-- chapter/difficulty clears;
-- case progress and unopened earned cases;
-- quest, achievement, and challenge progress;
-- cosmetics and settings.
-
-A victory unlocks the next chapter and gives the full reward package. A defeat gives reduced account XP, Coins, mastery, and case-meter progress so the session is not wasted. The player can upgrade the starter, change class or weapon, open an earned case, and immediately retry or choose another chapter.
-
-## Lobby functions
-
-The lobby should let players:
-
-- see chapter progress and rewards;
-- select an available chapter and difficulty;
-- select a starting weapon;
-- select a class;
-- inspect weapon and item unlocks;
-- see mastery challenges and recent progress;
-- equip pickup/defeat effects, UI themes, emotes, titles, nameplates, and lobby poses;
-- form a party, ready up, or launch solo;
-- revisit completed chapters for farming or challenges.
-
-Do not force players to walk between many separate upgrade stations for basic actions. The lobby can be visually explorable while keeping chapter selection and ready-up quick.
-
-## Recommended eight-wave chapter
-
-The supplied Brotato structure is useful, but copying 20 waves would conflict with the preferred eight-minute chapter. A compact eight-wave structure can preserve the combat/shop rhythm:
-
-| Wave | Combat target | Role |
-| ---: | ---: | --- |
-| 1 | 35 seconds | Establish basic mob and earn first shop budget |
-| 2 | 40 seconds | Introduce second pressure type |
-| 3 | 45 seconds | Build begins to specialize |
-| 4 | 45 seconds | Elite wave |
-| 5 | 50 seconds | Denser mixed wave |
-| 6 | 50 seconds | Horde wave |
-| 7 | 55 seconds | Final build check |
-| 8 | Up to 70 seconds | Boss wave; ends immediately on boss defeat |
-
-Seven intermissions at roughly 10–12 seconds place the normal wall-clock target near eight minutes. Pending level-up choices can extend that time, so multiplayer intermissions need a maximum timer and ready button.
-
-These timings are a starting hypothesis. The target is a satisfying eight-minute experience, not loyalty to the table.
-
-## End-of-wave intermission
-
-**Design decision:** Leveling does not stop combat. XP earned during a wave fills the meter and queues level-up rewards, but stat cards appear only after that wave ends. This matches the selected wave/shop structure and avoids repeated menus while the player is dodging a dense swarm.
-
-When a wave ends:
-
-1. Remaining XP, run materials, consumables, and eligible loot pull magnetically into the player.
-2. Every queued level-up resolves first, one concise stat choice at a time.
-3. The shop opens with four weapons/items after all stat choices are complete.
-4. Players may buy, sell/recycle, reroll, or lock an offer.
-5. The next wave begins when everyone is ready or the timer expires.
-
-### During-combat level feedback
-
-- Crossing an XP threshold plays a short level-up sound and a compact `LEVEL UP — CHOICE BANKED` notification.
-- The HUD shows the number of pending stat choices, such as `2 UPGRADES`.
-- No selection window, slow motion, or full-screen overlay appears during combat.
-- XP continues filling toward later levels normally.
-- XP collected by the end-of-wave magnet can create additional queued choices before the intermission screen opens.
-
-### Stat-choice step
-
-- Each earned level grants one free stat increase; it does not spend shop materials.
-- Show three large stat cards and choose one. Resolve multiple earned levels sequentially.
-- Cards display the exact before-and-after value, rarity, and any cap.
-- A limited stat refresh can replace all three cards. Its availability is separate from the shop reroll price.
-- Offers include core stats such as Power, attack speed, critical chance, armor, dodge, speed, regeneration, pickup range, and luck.
-- Weapon-specific behaviors such as extra bounce, piercing, or projectile count normally come from weapons and passive items in the shop rather than generic level-up cards.
-
-### Shop screen structure
-
-Use the supplied Brotato screenshot as information-architecture inspiration, not a screen to copy exactly:
-
-- four large offer cards across the main area;
-- item name, tags, important numerical changes, price, and lock control on each card;
-- run-material total and reroll price kept visually prominent;
-- current weapons and passive inventory visible along the bottom;
-- a collapsible live-stat summary on the side;
-- a large ready/next-wave control after the player finishes shopping.
-
-The stat-choice step and shop are visually distinct. This prevents the player from mistaking a free level reward for a purchase.
-
-### Multiplayer handling
-
-- Each player receives a personal shop and build choices.
-- Combat resumes only when all active players are ready or the timer ends.
-- A player who times out keeps unspent materials and receives no automatic purchase.
-- Any unresolved stat choices use the player's currently highlighted card or a safe valid default so the team cannot be held indefinitely.
-- Other players can see ready status, not private shop details unless sharing is intentionally supported.
-
-## Run currencies
-
-Use different names and icons so players never confuse temporary and permanent money:
-
-| Resource | Lifetime | Purpose |
-| --- | --- | --- |
-| XP | Current run | Produces stat/upgrade choices at intermission |
-| Scrap, Materials, or another run currency | Current run | Purchases weapons and items in the intermission shop |
-| Coins or another account currency | Permanent | Unlocks content or cosmetics in the lobby |
-| Rare chapter reward | Permanent | Specific unlock recipes, cosmetics, or achievement progress |
-
-Persistent coins should be granted at the result screen from server-calculated performance, not copied one-for-one from every temporary run material.
-
-## Shop proposal
-
-- Four offers per intermission.
-- Mix of weapons and passive items.
-- Early shops guarantee enough weapon offers to establish a build.
-- Rerolls cost increasing amounts during that intermission and reset next wave.
-- One offer may be locked for the next intermission.
-- Every unlocked weapon remains eligible regardless of selected class unless an explicitly labeled challenge rule says otherwise.
-- Equipped weapon types, shared combat tags, and selected class influence weapon weights without hard-locking the pool.
-- Capped or unusable choices are removed from the pool.
-- Run currency cannot be purchased with Robux.
-
-### Weapon-slot selection pools
-
-First decide whether an offer slot contains a weapon or passive item. The first two shops contain exactly two weapons and two passive items. Shops after Waves 3 and 4 guarantee at least one weapon. Later slots use the ordinary weapon/item rate.
-
-Whenever a slot is designated as a weapon, choose its source pool first:
-
-| Source pool | Initial weight | Purpose |
-| --- | ---: | --- |
-| Exact equipped weapon | 30% | Makes duplicate combining achievable in an eight-wave run |
-| Shared combat tag | 25% | Supports related weapons, including cross-class combinations |
-| Selected class | 20% | Reinforces class identity without enforcing it |
-| All unlocked weapons | 25% | Preserves experimentation and unexpected hybrid builds |
-
-These are starting test values, not copied Brotato numbers. Pool selection occurs before choosing an individual weapon, so unlocking additional blueprints does not reduce the 30% exact-weapon share; it only expands the relevant pool.
-
-Examples for a Gunner holding a Glock:
-
-- Another Glock can roll from the exact-weapon pool.
-- Draco or Fart Gun can roll from Gunner or shared `Gun` tags.
-- Nail Gun can roll through shared `Gun`, `Rapid`, or `Projectile` tags even though its home class is Handyman.
-- Kunais can roll through their projectile/critical tags or from the global pool.
-- Any other unlocked weapon can roll from the global pool.
-
-### Build protection and transparency
-
-- The player may mark one equipped weapon as **Tracked** in the shop.
-- If the tracked weapon fails to appear across two completed intermissions, the next intermission's guaranteed weapon slot offers a legal copy unless that weapon is already max Run Tier.
-- Rerolls do not advance this protection counter.
-- Each weapon card displays why it was eligible: `DUPLICATE`, `CLASS`, `TAG MATCH`, or `WILDCARD`.
-- An `Odds & Pools` panel shows the current source weights and every eligible unlocked weapon.
-- Luck affects offer rarity and disclosed reward-drop chances; it does **not** affect weapon identity, class matching, tag matching, or tracked-weapon protection.
-- Newly unlocked weapons never silently make exact duplicates less likely.
-
-### Class affinity without restrictions
-
-Every weapon has one **home class** plus multiple **combat tags**. Home class determines starting-weapon eligibility and class-affinity count. Combat tags determine which weapon and item bonuses can affect it.
-
-- Two equipped home-class weapons activate the class's first affinity bonus.
-- Four activate its stronger affinity bonus.
-- Five is not required, deliberately leaving one flex slot for an off-class weapon.
-- An off-class weapon works at full base strength and receives all applicable ordinary stats and tag bonuses.
-- It simply does not add a point toward the selected class's 2-piece/4-piece affinity milestones.
-- A cross-class weapon can still benefit from the class's tag-specific passive. For example, Gunner bonuses affecting `Gun` weapons also affect the Handyman Nail Gun.
-
-Affinity bonuses should strengthen a style rather than be generic damage taxes. Candidate directions include magazine/reload behavior for Gunner, orbit rhythm for Juggler, deployable uptime for Handyman, returning/splash behavior for Thrower, close-range cadence for Brawler, and status/echo behavior for Mage.
-
-### Launch pool size
-
-A reroll shop needs variety, but too many unweighted weapons make duplicate combining frustrating. Equal class pools and class weighting let the total roster grow without ruining merges. Target:
-
-- **36 launch weapons: six classes with six weapons each**;
-- **30–40 passive items** so shop decisions are not mostly weapon cards;
-- five active weapon slots and four temporary tiers;
-- at least one weapon offer in ordinary early shops and two in the first shop;
-- explicit source-pool weights that prioritize exact equipped copies, then shared tags, class affinity, and finally the full unlocked pool.
-
-Keep development even: six signature weapons in the prototype, 12 weapons in the vertical slice, and 30 at launch. Later updates add the same number of weapons to every class before changing the advertised class counts.
-
-### Weapon combining
-
-If the Brotato-style system is approved:
-
-- Two identical weapons of the same tier automatically combine into the next tier.
-- Combining is free.
-- A duplicate purchased while slots are full may auto-combine if a legal pair exists.
-- Four tiers are enough for an eight-wave run.
-- Every higher tier changes at least one visible behavior, not only damage.
-- Example: two Glocks become **Glock + Extended Clip**; two Extended Clip Glocks become **Glock with Switch**; two Switch Glocks become **Akimbo Switches**.
-- All tiers reset after the chapter.
-
-This replaces the earlier direct Level 1–5 weapon proposal. Do not run both systems simultaneously.
-
-## Confirmed class direction
-
-Different authored characters are unnecessary. A compact class system provides long-term unlocks while everyone keeps their Roblox avatar.
-
-Classes are data rules, not new models, dialogue, or animation sets.
-
-| Class | Direction | Signature weapon |
-| --- | --- | --- |
-| Brawler | Close-range, rapid melee, and critical attacks | Frying Pan |
-| Gunner | Fire rate, magazines, piercing, and ranged attacks | Glock |
-| Thrower | Returning projectiles, splash, and status effects | Boomerang |
-| Juggler | Orbiting objects, movement, and collision effects | Boxing Gloves |
-| Handyman | Construction tools, deployables, and control | Nail Gun |
-| Mage | Magic, elemental effects, and rare mythological weapons | Magic Staff |
-
-Each class receives exactly five launch weapons. The detailed proposed allocation lives in `BRAINSTORM_FUNNY_GEAR.md`. Exact class bonuses and tradeoffs remain to be balanced.
-
-### Unlocking classes
-
-Do not require every player to grind a class they dislike just to reach another one. Prefer multiple transparent unlock paths:
-
-- account-level milestone;
-- complete a chapter or difficulty;
-- evolve a related weapon;
-- achieve a build milestone;
-- reach modest mastery with a neighboring class.
-
-Start with Brawler, Gunner, and Mage. Thrower, Juggler, and Handyman unlock through play or direct early purchase without forming one mandatory linear ladder.
-
-### Class mastery
-
-Mastery can unlock:
-
-- class badge/title;
-- lobby pose or aura;
-- class-themed title, profile badge, lobby pose, or UI theme;
-- alternate starting-weapon choices;
-- new related item added to the global run pool;
-- a challenge variant.
-
-Avoid permanent percentage bonuses at every mastery level. Otherwise longtime players and new friends cannot meaningfully play the same chapter together.
-
-## Chapter progression
-
-- Clearing a chapter unlocks the next chapter.
-- Higher chapters provide more account XP and persistent reward progress.
-- Previously cleared chapters remain replayable.
-- Open, corridor, and enclosed maps rotate independently from mob rosters.
-- Difficulty levels unlock after milestone clears.
-- Optional completion goals can reward mastery or cosmetics without blocking the next normal chapter.
-- Failure still grants reduced account XP and valid mastery progress, but not a victory reward.
-
-## Returning to the lobby
-
-At the result screen, the server commits one idempotent reward receipt containing:
-
-- victory/defeat;
-- chapter and difficulty;
-- account XP earned;
-- persistent currency earned;
-- weapon/class mastery earned;
-- challenge and unlock progress;
-- newly unlocked content;
-- run summary statistics.
-
-The player can replay, choose another chapter, or return to the lobby. Starting a new chapter creates a completely fresh run build.
-
-## Endless mode
-
-Endless mode should be deferred until the standard eight-wave chapter works. When added:
-
-- it branches after the normal boss victory so the chapter clear is already secured;
-- run build and shop economy continue;
-- bosses return at authored intervals;
-- leaderboard eligibility uses a fixed difficulty/ruleset;
-- permanent reward farming receives diminishing or capped returns;
-- leaving endless preserves the already-earned normal clear and valid rewards.
-
-## Recommended decision package
-
-1. Keep Roblox avatars; do not add authored character models.
-2. Use a small class/loadout-perk system for replayability and unlock progression.
-3. Use eight combat waves with short intermission shops.
-4. Use XP for end-of-wave stat choices and temporary materials for shop purchases.
-5. Choose a class, then one owned starting weapon belonging to that class.
-6. Use Brotato-style automatic same-tier weapon combining, capped at four tiers.
-7. Reset the complete combat build after every chapter.
-8. Save chapters, unlocks, mastery, currency, achievements, and cosmetics.
-9. Keep permanent progression mostly horizontal so old and new players can still play together.
+The last valid loadout is remembered. After a run, the player should be able to open a chest, see what upgraded, and queue again within 30–60 seconds.
+
+## Multiplayer handling
+
+- Each player has a personal level-up and shop screen. Combat resumes when everyone is ready or the timer ends.
+- A player who times out keeps unspent shards and gets no automatic purchase. Unresolved stat choices use a safe default so nobody holds the team up.
+- Each player earns their own keys from the waves the team reaches.
+- **Open:** Party size, and whether a party can enter a map that only the leader has unlocked.
+
+## Result screen
+
+The server writes one idempotent reward receipt per run:
+
+- map, win/loss, best wave reached;
+- keys earned (wave milestones, first-win bonus, Endless);
+- achievement and quest progress, plus anything newly unlocked;
+- run summary stats.
+
+Then: Open Chests, Play Again, or Lobby.
+
+## What changed from earlier docs
+
+| Old system | Now |
+| --- | --- |
+| Blueprints | Just "you own at least one copy" |
+| Permanent Weapon Level 1–10, Universal Parts, Weapon Parts, Coins for upgrades | Copies raise the starting tier (I–IV) |
+| Cases and case meter | Chests opened with keys; pick-a-copy every 10th chest |
+| Eight waves, ~8 minutes, boss at wave 8 | Twenty waves, ~15–20 minutes, boss at wave 20, then Endless |
+| Chapters unlocked by account progress | The next map unlocks by winning the previous map |
+| No armor equipment | Four upgradable armor pieces per run, with 2- and 4-piece set bonuses |
+| Weapon and class mastery tracks | Folded into achievements |
+| Account level and account XP | **Proposal:** Removed. Map wins, achievements and collection are the progress bars. |
+| Five weapon slots | Six, matching the working prototype |
+| Three level-up cards | Four, matching the working prototype |
 
 ## Open decisions
 
-- Does armor provide temporary run power, permanent power, or persistent appearance only?
-- Does XP produce stat upgrades only, or can level-ups also grant passive items?
-- Is the eight-minute target measured including intermissions or only combat time?
-- How many players can join one run?
+1. Final key values, chest price and pity interval (the numbers above are starting proposals).
+2. Which weapons are owned at the start, which drop from chests, and which are achievement-first.
+3. The first armor sets (four pieces each), their bonuses and perks, and the passive-accessory overlap rule.
+4. Whether Endless needs a key cap.
+5. Party size and map access for mixed-progress parties.
+6. Whether any Robux product may touch starting tiers (see Monetization). The current default is no.

@@ -1,12 +1,16 @@
 # Roblox Roguelite — Master Game Design
 
+**September 26 progression update:** [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md) is authoritative for progression. Five maps form a difficulty ladder. Every map is won at **wave 20**, with optional **Endless** afterward. Waves survived earn **keys** (more on harder maps). Keys open **chests** of weapon and armor copies. Duplicate copies raise a weapon's or armor set's **starting tier** (2 copies = Tier II, 4 = III, 8 = IV). Players wear one unlockable **armor set** per run. Achievements and quests unlock specific classes, weapons, passives and armor. Blueprints, Permanent Weapon Levels, Universal/Weapon Parts, cases, account level and the eight-wave/eight-minute chapter are removed. The prototype's six weapon slots and four level-up cards are the current standard.
+
+**September 24 roster update:** [Map Mob Roster](MAP_MOB_ROSTER.md) supersedes the older mob assignments, boss selections, and roster scope below. Use it for the five current maps, ranged enemy roles, fast Snake lunge, and enormous Giant King Crab. Older roster entries below are historical planning.
+
 **September 22 currency update:** Blue crystal shards replace gold coins in the run shop. Every combat mob death drops a collectible shard; balances, purchases, rerolls and refunds use shards. The shard model has no aura or VFX. See [Crystal shard currency](SHARD_CURRENCY.md) for pickup rules and prototype values. This supersedes earlier gold references and UI mockups.
 
 **Pickup refinement:** Crystals gently bob and turn, then accelerate magnetically into the player before granting currency. Every death retains its own pickup. Random glowing health-orb drops are removed; Luck does not affect guaranteed crystal drops. The user's subsequent visual refinement adds restrained cyan facet glow and a soft light-blue aura to in-game crystals, superseding the original no-VFX requirement for pickups.
 
 **Status:** Discovery / pre-production  
-**Version:** 0.34 — world art, beveled UI, fixed weapon slots and katana combat  
-**Updated:** 2026-09-17  
+**Version:** 0.35 — map ladder, keys and chests, starting tiers, armor, achievements  
+**Updated:** 2026-09-26  
 **Project name:** TBD
 
 This is the living source of truth for the proposed Roblox roguelite inspired by the broad genre space occupied by *Survivor.io*, *Megabonk*, and *Brotato*. Inspiration describes useful patterns, not content to copy. Names, art, characters, maps, enemies, weapons, balance values, and progression will be original.
@@ -32,15 +36,15 @@ When new reference material arrives, record what it teaches us in the reference 
 
 ### Working experience
 
-**Proposal:** A highly replayable Roblox action roguelite where players move freely through compact arenas, survive escalating enemy pressure, assemble a distinct build from weapons and modifiers, defeat a run-ending boss, and unlock more ways to play without purchasing power.
+**Proposal:** A highly replayable Roblox action roguelite where players move freely through open arenas, survive 20 escalating waves, assemble a distinct build from weapons and modifiers, defeat the map boss, and earn keys that upgrade their starting weapon and armor so they can push the next, harder map, without purchasing power.
 
 ### Target experience
 
 - **Confirmed:** Roblox; roguelite/roguelike survivor-style combat.
 - **Proposal:** Ages 9+, readable on phone, controller, and keyboard/mouse.
 - **Proposal:** Solo-first combat rules with co-op designed early enough that it is not bolted on later.
-- **Confirmed:** Standard chapters target approximately eight minutes, not 15-minute sessions.
-- **Confirmed:** Chapters have no mid-level checkpoints; an unsuccessful run restarts the chapter.
+- **Confirmed (2026-09-26):** Every map is won by surviving to wave 20, roughly 15–20 minutes including intermissions. Players may continue into Endless afterward. This replaces the earlier eight-minute chapter target.
+- **Confirmed:** Runs have no mid-run checkpoints. A loss restarts the map, but keys earned for waves already passed are kept.
 - **Confirmed:** The desired attention level supports listening to music or an audiobook. Movement and choices matter, but ordinary play should not demand constant laser focus.
 - **Proposal:** Easy controls, meaningful build decisions, high spectacle, and strong replayability.
 - **Confirmed:** Purchases may provide bounded progression acceleration, early access to earnable sidegrades, and a limited death-screen revive. They cannot provide paid-exclusive combat content, uncapped power, mid-run stat purchases, altered run RNG, or power required to clear content.
@@ -49,9 +53,11 @@ When new reference material arrives, record what it teaches us in the reference 
 
 **Confirmed:** Players use their Roblox avatars. Equipped weapons remain visible as floating 3D models around the avatar, independently aiming and auto-attacking. The avatar holds no weapon and moves normally.
 
-**Confirmed:** There is no separate playable-character, hero, or armor-equipment roster. All players use the same baseline avatar rules; classes, weapons, passives, stats, and combinations create mechanical identity during a run. Armor remains a defensive stat. Selected temporary passives may appear as avatar accessories, without separate armor slots or armor sets.
+**Confirmed:** There is no separate playable-character or hero roster. All players use the same baseline avatar rules; classes, weapons, armor, passives, stats, and combinations create mechanical identity.
 
-**Confirmed:** Selectable classes provide mechanical rules without replacing or visually changing the Roblox avatar. Classes are permanent unlocks selected in the lobby; the exact class roster, bonuses, tradeoffs, and unlock order remain to be designed.
+**Confirmed (2026-09-26):** Players unlock armor sets and wear one into each run. This reverses the earlier no-armor-equipment decision. Armor layers comedic gear pieces onto the avatar rather than replacing it, and upgrades through duplicate copies like weapons. The Armor stat still exists. Selected temporary passives may also appear as avatar accessories. See [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md#armor).
+
+**Confirmed:** Selectable classes provide mechanical rules without replacing or visually changing the Roblox avatar. The six classes are Brawler, Gunner, Thrower, Juggler, Handyman and Mage. New accounts own Brawler, Gunner and Mage; the other three unlock through achievements. Current values: [CHARACTER_STATS.md](studio-prototype/combat/CHARACTER_STATS.md).
 
 ### Tone and content wrapper
 
@@ -61,7 +67,7 @@ When new reference material arrives, record what it teaches us in the reference 
 
 **Confirmed:** Construction equipment, restrained mythology, and magic may contribute weapon families. Mythological weapons should feel like notable later unlocks rather than making the base arsenal predominantly fantasy-themed.
 
-**Candidate wrapper — not confirmed:** An impossible odd-jobs agency sends Roblox avatars into eight-minute assignments that have gone catastrophically wrong. This supplies a consistent reason to visit unrelated chapters and face changing creature rosters. The recurring visual identity comes from ridiculous attack effects, strange assignments, and the agency presentation rather than one universal enemy faction.
+**Candidate wrapper — not confirmed:** An impossible odd-jobs agency sends Roblox avatars into short assignments that have gone catastrophically wrong. This supplies a consistent reason to visit unrelated chapters and face changing creature rosters. The recurring visual identity comes from ridiculous attack effects, strange assignments, and the agency presentation rather than one universal enemy faction.
 
 ### Design pillars
 
@@ -69,7 +75,7 @@ When new reference material arrives, record what it teaches us in the reference 
 2. **Every run becomes a build.** A player should be able to describe what their build does and why its pieces work together.
 3. **Readable pressure.** Enemy silhouettes and telegraphs remain understandable even when the screen is busy.
 4. **Short decisions, long consequences.** Level-up choices are fast, but synergies and tradeoffs alter the rest of the run.
-5. **Fair replayability.** Knowledge and execution drive success; persistent progression expands variety more than raw strength.
+5. **Fair replayability.** Knowledge and execution drive success. Persistent progression adds capped starting power (Tier I–IV starters and armor) that unlocks harder maps, plus new options through achievements. It never makes a run play itself.
 
 ### Anti-pillars
 
@@ -84,9 +90,10 @@ When new reference material arrives, record what it teaches us in the reference 
 ### Session loop
 
 ```text
-Lobby → choose class/starter weapon → enter run → fight and collect XP
-      → level-up choice → build grows → elite/boss test
-      → victory or defeat → rewards/unlocks → inspect results → play again
+Lobby → choose class, starting weapon (saved tier) and armor → choose map
+      → 20 waves: fight, collect crystals, level-up choices, shop, combine
+      → wave 20 boss → Cash Out or Keep Going (Endless)
+      → keys for waves survived → open chests → starting tiers rise → play again
 ```
 
 ### Moment-to-moment loop
@@ -100,43 +107,32 @@ Lobby → choose class/starter weapon → enter run → fight and collect XP
 
 ### Between-run loop
 
-1. Receive account XP and a non-premium earnable currency.
-2. Make progress on transparent challenges, classes/loadout perks if approved, and weapon unlocks.
-3. Unlock new sidegrades, difficulty modifiers, cosmetics, and collection entries.
-4. Select a different class/loadout perk if approved, starting weapon, map, or challenge.
-5. Re-enter with more knowledge and more options—not an overwhelming permanent stat advantage.
+1. Receive keys for every five waves reached, scaled by map difficulty.
+2. Open chests for weapon and armor copies; duplicates raise starting tiers.
+3. Complete achievements and quests that unlock specific classes, weapons, passives and armor.
+4. Win a map to unlock the next, harder one; chase a best Endless wave.
+5. Re-enter with a stronger start, more options and more knowledge.
 
 ## 3. Run structure
 
-### Recommended first prototype
+The wave table, key rewards and Endless rules live in [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md#the-20-wave-run).
 
-| Element | Proposal |
+| Element | Current direction |
 | --- | --- |
-| Format | One enclosed arena with eight combat waves and short shop intermissions |
-| Duration | Approximately 8 minutes including the final boss window |
+| Format | One open arena per map, 20 combat waves with short level-up/shop intermissions |
+| Duration | Roughly 15–20 minutes including intermissions |
 | Players | Solo initially; architecture supports 1–4 |
 | Upgrade cadence | Level-up and shop decisions at the end of each wave |
-| Elite cadence | Proposed wave 4; final schedule requires playtesting |
-| Boss | Wave 8; ends immediately when the boss is defeated |
-| Loss condition | All participating players down with no valid recovery |
-| Win condition | Defeat the final boss |
-
-This combines Brotato’s clear escalation and build decisions with the user's preferred Survivor.io-style chapter and map model. Exact encounter timing remains open.
-
-### Proposed run phases
-
-| Waves | Purpose | Pressure change |
-| --- | --- | --- |
-| 1–2 | Learn the starting weapon and establish direction | Swarm plus one standard behavior |
-| 3–4 | Specialize the build and face an elite | First build check |
-| 5–6 | Combine known enemy roles, including a horde wave | Positioning and crowd-clear check |
-| 7–8 | Final shop payoff and boss | Survival and damage check |
+| Special waves (proposal) | Elite on waves 5 and 15, horde on wave 10 |
+| Boss | Wave 20; the wave ends when the boss dies |
+| Win condition | Defeat the wave 20 boss; Endless is optional afterward |
+| Loss condition | All participating players down with no valid recovery; earned keys are kept |
 
 ### Difficulty
 
-**Proposal:** Unlock named difficulty tiers after a win. Higher tiers add authored modifiers and new enemy combinations, not just inflated health. Examples: earlier ranged enemies, an extra elite, faster hazard cycles, or a boss phase. Rewards should emphasize unlock progress and cosmetics rather than permanent combat dominance.
+**Confirmed:** The five maps are the difficulty ladder. Each map is harder than the last and pays more keys. **Confirmed 2026-09-27:** each map also has Normal, Hard and Nightmare tiers that buff enemy health/damage and pay more keys; winning Hard unlocks the next map (default, see PROGRESSION_AND_SESSION_FLOW.md). Map-to-map difficulty comes from role composition and timing first, raw stat inflation second.
 
-**Later:** Endless mode, daily seeded challenge, mutators, and leaderboards after the standard run is fun and stable.
+**Later:** Endless leaderboards, a daily seeded challenge and mutators, after the standard run is fun and stable.
 
 ## 4. Player controls and moveset
 
@@ -154,7 +150,7 @@ This combines Brotato’s clear escalation and build decisions with the user's p
 
 ### Weapon presentation
 
-**Confirmed:** [FLOATING_WEAPON_PRESENTATION.md](FLOATING_WEAPON_PRESENTATION.md) defines the user-approved 3D adaptation of the six supplied Brotato clips. Up to five equipped weapons remain visible in a spaced floating formation around the avatar. The avatar holds no weapon. Each weapon independently aims and attacks on its own cooldown, using visible recoil, punch, thrust, sweep or other motion before recovering. Projectiles originate from the weapon and effects reinforce the action. Movement remains independent of aim. Weapons occupy specific assigned floating slots; they do not spin 360 degrees around the avatar. Earlier orbital concepts require review against this rule.
+**Confirmed:** [FLOATING_WEAPON_PRESENTATION.md](FLOATING_WEAPON_PRESENTATION.md) defines the user-approved 3D adaptation of the six supplied Brotato clips. Up to six equipped weapons remain visible in a spaced floating formation around the avatar (six slots, as implemented in [LOADOUT.md](studio-prototype/combat/LOADOUT.md)). The avatar holds no weapon. Each weapon independently aims and attacks on its own cooldown, using visible recoil, punch, thrust, sweep or other motion before recovering. Projectiles originate from the weapon and effects reinforce the action. Movement remains independent of aim. Weapons occupy specific assigned floating slots; they do not spin 360 degrees around the avatar. Earlier orbital concepts require review against this rule.
 
 Start with waist-to-chest-height placement and tune readability in Studio. Weapon geometry must stay outside the avatar during idle and every attack phase. Rear/side weapons must take a clear outward route or wait for a reachable target, never slash through the player to reach a front enemy. Confirmed hits show actual damage numbers above the enemy. Server-authoritative hit volumes and timings must align with visible attacks; avatar limb contact is not required. This replaces the earlier effect-only presentation. Exact targeting priority and formation dimensions remain to be tuned.
 
@@ -182,7 +178,7 @@ Start with waist-to-chest-height placement and tune readability in Studio. Weapo
 - Defeats use a clear burst/pop response with controlled fragments, squash, dissolve, or other readable animation rather than disappearing silently.
 - Every defeated enemy produces its own short death-feedback event, so farming a large crowd creates a rapid satisfying sequence rather than one aggregated multikill sound.
 - XP, crystal shards, and ordinary drops accelerate toward the player along clean magnetic arcs.
-- September 22 HUD implementation: collected blue crystals grant both shop currency and run XP (initially 2 shards + 2 XP per pickup). The supplied shard icon and green potion XP bar now show live balance, XP fill and level. Initial thresholds are 20 XP then +10 per level, with overflow carried forward; upgrade-choice resolution remains planned. See [SHARD_CURRENCY.md](SHARD_CURRENCY.md).
+- September 22 HUD implementation: collected blue crystals grant both shop currency and run XP (initially 2 shards + 2 XP per pickup). The supplied shard icon and green potion XP bar now show live balance, XP fill and level. Initial thresholds are 20 XP then +10 per level, with overflow carried forward. Upgrade-choice resolution is now implemented; see [LEVEL_UP_READINESS.md](studio-prototype/combat/LEVEL_UP_READINESS.md) and [SHARD_CURRENCY.md](SHARD_CURRENCY.md).
 - Pickup chains use a rising or rhythmically building sound sequence, with special accents for a completed level, rare drop, or large collection burst.
 - Important rewards look and sound different from ordinary XP before collection.
 - Attack animations and effects clearly communicate direction, range, cadence, and active hit area.
@@ -253,7 +249,7 @@ Projectile speed, size, piercing, bounce, knockback, area size, duration, cooldo
 
 ### Upgrade offer rules
 
-**Chosen direction:** Crossing an XP threshold during combat banks a level-up rather than opening a menu. At wave end, resolve each banked level through three stat choices before opening the weapon/item shop. The combat HUD provides a brief sound, notification, and pending-choice count without pausing or slowing the wave.
+**Chosen direction:** Crossing an XP threshold during combat banks a level-up rather than opening a menu. At wave end, resolve each banked level through four stat choices before opening the weapon/item shop. Rerolling the four cards costs shards (implemented; see [LEVEL_UP_READINESS.md](studio-prototype/combat/LEVEL_UP_READINESS.md)). The combat HUD provides a brief sound, notification, and pending-choice count without pausing or slowing the wave.
 
 - Every offer has a rarity and tags.
 - Class affinity modestly increases relevant tag weight; it never removes off-build possibilities.
@@ -265,27 +261,26 @@ Projectile speed, size, piercing, bounce, knockback, area size, duration, cooldo
 
 ### Weapon acquisition proposal
 
-The current preferred direction is an eight-wave shop hybrid:
+The current direction is a 20-wave shop run:
 
-- Choose a class, then one owned starting weapon assigned to that class.
-- Fight a short timed wave and collect XP plus temporary shop materials.
-- At wave end, magnetically collect remaining drops, resolve level-up stat choices, and open a personal four-offer shop.
+- Choose a class, then one owned starting weapon from that class. It enters at its saved starting tier (I–IV, raised by duplicate chest copies).
+- Fight a timed wave and collect crystals (shards + run XP).
+- At wave end, collect remaining drops, resolve level-up stat choices, and open a personal four-offer shop.
 - Buy new weapons and passive items, reroll, recycle, or lock an offer.
-- Every unlocked weapon can appear for every class. The selected class, equipped copies, and shared combat tags change probability rather than imposing restrictions.
-- Weapon slots initially draw from explicit pools: 30% exact equipped weapon, 25% shared tag, 20% selected class, and 25% all unlocked weapons.
-- A tracked-weapon protection system prevents more than two completed intermissions of duplicate starvation.
+- Every owned weapon can appear for every class. Owned identities and home classes get a modest weighting preference; the general pool stays available. Current implemented weights: [SHOP_GAMEPLAY_READINESS.md](studio-prototype/combat/SHOP_GAMEPLAY_READINESS.md).
+- **Planned:** Tracked-weapon protection against duplicate starvation, and offer-source labels.
 - Luck improves rarity, not weapon identity or class matching; the shop explains this directly.
-- Two identical same-tier weapons automatically combine, up to Tier 4.
-- Elite, horde, and boss waves break up the ordinary sequence.
-- The entire combat build and run currency reset when the chapter ends.
+- Two identical same-tier weapons automatically combine, up to Tier IV.
+- Elite, horde and boss waves break up the ordinary sequence.
+- The entire combat build and shards reset when the run ends.
 
-This is a proposal based on the user's preferred Brotato-style intermission flow, adapted to an approximately eight-minute chapter. Details are documented in `WEAPON_SYSTEM_OPTIONS.md` and `PROGRESSION_AND_SESSION_FLOW.md`.
+Details: [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md). `WEAPON_SYSTEM_OPTIONS.md` keeps the historical comparison.
 
 ### Item design rules
 
-**Current catalog (2026-09-17):** [PASSIVE_ITEM_MASTER_LIST.md](PASSIVE_ITEM_MASTER_LIST.md) is the authoritative working list of **38 temporary shop passives**, consolidating the revised brainstorm, six existing healing/status foundations, and five selected spooky/science additions. Tooth Fairy's Teeth Collection replaces Jar of Teeth. Unselected brainstorm candidates are not roster commitments. The catalog also records eight regular level-up upgrade types and proposed rarity values separately from items.
+**Current catalog (2026-09-23):** [PASSIVE_ITEM_MASTER_LIST.md](PASSIVE_ITEM_MASTER_LIST.md) is the authoritative working list of **37 temporary shop passives** (Manager Badge was removed). About 20 are proposed as available from the start; the rest unlock through achievements. The catalog consolidates the revised brainstorm, six existing healing/status foundations, and five selected spooky/science additions. Tooth Fairy's Teeth Collection replaces Jar of Teeth. Unselected brainstorm candidates are not roster commitments. The catalog also records eight regular level-up upgrade types and proposed rarity values separately from items.
 
-**Confirmed direction:** Most items provide straightforward build benefits. A smaller set has modest tradeoffs or special attack modifiers. Some appear on the avatar as hats, glasses, backpacks or other accessories; this supersedes the earlier invisible-passive direction without creating an armor equipment system. Humor and spooky visuals do not require complicated random effects. Exact numbers, prices, rarity, stacking and compatible-weapon rules remain proposals to balance, not implemented mechanics. Previously unspecified healing/status values remain explicitly unresolved.
+**Confirmed direction:** Most items provide straightforward build benefits. A smaller set has modest tradeoffs or special attack modifiers. Some appear on the avatar as hats, glasses, backpacks or other accessories; this supersedes the earlier invisible-passive direction. How passive accessories coexist with worn armor sets is still open. Humor and spooky visuals do not require complicated random effects. Exact numbers, prices, rarity, stacking and compatible-weapon rules remain proposals to balance, not implemented mechanics. Previously unspecified healing/status values remain explicitly unresolved.
 
 Every modifier should fit at least one category:
 
@@ -341,7 +336,7 @@ The current plan contains six weapons for each of six classes, totaling 36. The 
 
 ### Class-guided build archetypes
 
-Each class begins with one of its owned weapons and biases relevant shop offers, but it does not hard-lock the run. Off-class weapons can appear at a lower rate after their blueprints are owned, allowing hybrid builds. The production plan stays even: six signature weapons for the prototype, two weapons per class for the vertical slice, and six per class for a 36-weapon launch roster.
+Each class begins with one of its owned weapons and biases relevant shop offers, but it does not hard-lock the run. Any owned off-class weapon can appear at a lower rate, allowing hybrid builds. The production plan stays even: six signature weapons for the prototype, two weapons per class for the vertical slice, and six per class for a 36-weapon launch roster.
 
 ## 8. Enemies, elites, and bosses
 
@@ -369,6 +364,8 @@ Each class begins with one of its owned weapons and biases relevant shop offers,
 - Elite and boss attacks must remain readable in four-player effect density.
 
 ### Confirmed initial enemy roster
+
+> **Superseded:** [MAP_MOB_ROSTER.md](MAP_MOB_ROSTER.md) holds the current five-map roster (21 regular mobs, five bosses: Hammer Zombie Boss, Giant King Crab, Pharaoh, Frost Cyclops, Dragon). The list below is the older mixed creature pool, kept as historical planning.
 
 - Zombies: common slow chasers
 - Slimes: common enemies that split once
@@ -425,7 +422,7 @@ Mob comedy should come from living or undead creatures, their proportions, equip
 
 ### Chapter and map model
 
-**Confirmed direction:** Main progression follows a long sequence of authored chapters. Chapters reuse three readable geometry families inspired by Survivor.io's level-design structure while using original environments, encounters, and layouts:
+**Confirmed (2026-09-26):** Main progression is a ladder of five maps: Pine Valley, Beach Cove, Desert Basin, Frozen Pass, Volcanic Crater. Each is harder and pays more keys than the one before, and winning one unlocks the next. Maps may use three readable geometry families inspired by Survivor.io's level-design structure while using original environments, encounters, and layouts:
 
 | Family | Geometry | Gameplay effect |
 | --- | --- | --- |
@@ -433,7 +430,7 @@ Mob comedy should come from living or undead creatures, their proportions, equip
 | Corridor | Long route constrained on two opposing sides | Funnels enemies, emphasizes forward/backward movement, and changes projectile value |
 | Enclosed | Compact arena bounded on all sides | Higher encounter density and quick completion/farming potential |
 
-All three families should target approximately eight minutes. Geometry cannot be purely cosmetic: it should change which weapons, movement patterns, enemy roles, and objectives are useful. Chapters do not contain mid-level checkpoints.
+Every map uses the same 20-wave structure. Geometry cannot be purely cosmetic: it should change which weapons, movement patterns, enemy roles, and objectives are useful. Runs do not contain mid-run checkpoints.
 
 ### Map goals
 
@@ -446,7 +443,7 @@ All three families should target approximately eight minutes. Geometry cannot be
 
 ### Open-arena rule
 
-**Confirmed visual reference:** Maps resemble a broad outdoor basin or clearing. Use the regular Roblox camera with player-controlled zoom and rotation (user correction, 2026-09-16). Test a slightly faster base WalkSpeed of 18; further speed modifiers come from classes and run builds. The floor can roll gently and contain sparse natural dressing, but it remains one continuous combat space rather than an intricate explorable level.
+**Confirmed visual reference:** Maps resemble a broad outdoor basin or clearing. Use the regular Roblox camera with player-controlled zoom and rotation (user correction, 2026-09-16). The prototype's base move speed is 24 studs/second (the default Brawler moves at 22 after class modifiers; see [LOADOUT.md](studio-prototype/combat/LOADOUT.md)); further speed modifiers come from classes and run builds. The floor can roll gently and contain sparse natural dressing, but it remains one continuous combat space rather than an intricate explorable level.
 
 - Roughly 75–85% of the movement area stays open at a glance.
 - Gentle hills and shallow dips are acceptable; cliffs, ledges, and elevation that interrupt movement are not.
@@ -463,6 +460,8 @@ The three geometry families still work, but they describe only the arena's outer
 - **Enclosed:** one open square or circle with four visible outer boundaries.
 
 ### Proposed map themes
+
+> **Current scope:** Five maps in ladder order: Pine Valley → Beach Cove → Desert Basin → Frozen Pass → Volcanic Crater. Castle Fields remains a later-content idea. Current bosses are listed in [MAP_MOB_ROSTER.md](MAP_MOB_ROSTER.md); the boss column below is the older pairing.
 
 Every theme uses the same sparse, wide-arena philosophy shown in the supplied reference.
 
@@ -493,7 +492,7 @@ Different chapters primarily change arena dimensions, broad outer shape, mob com
 - XP can be shared within a generous radius or across the team; avoid last-hit competition.
 - Level-up choices must not repeatedly freeze all players. Candidate: individual safe/slow choice with an auto-pick timeout.
 - Enemy health and spawn pressure scale by active player count with diminishing per-player increases.
-- Downed players may be revived through play where co-op rules allow it. A direct death-screen paid revive is approved, initially capped at one per player per chapter.
+- Downed players may be revived through play where co-op rules allow it. A direct death-screen paid revive is approved, initially capped at one per player per run.
 - Disconnect/rejoin policy must prevent reward duplication.
 - Personal effects need visibility controls while enemy hazards remain visible.
 
@@ -501,23 +500,23 @@ Different chapters primarily change arena dimensions, broad outer shape, mob com
 
 ## 11. Progression and retention
 
-### Account progression
+### Persistent progression
 
-**Chosen direction:** Persistent progression unlocks breadth plus a small, capped amount of weapon power:
+**Confirmed (2026-09-26):** Full rules are in [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md).
 
-- Starting weapon options
-- Weapon blueprints, shared Universal Parts, and capped Permanent Weapon Levels 1–10
-- Optional classes/loadout perks applied to the Roblox avatar
-- New modifier pools and challenge modes
-- Map/difficulty access
-- Cosmetics, titles, banners, emotes, and collection entries
-- Weapon and class mastery cosmetics, challenges, and selectable sidegrades
+- **Map ladder:** Five maps of rising difficulty, each with Normal/Hard/Nightmare; winning one on Hard at wave 20 unlocks the next. Best wave per map and difficulty, including Endless, is recorded.
+- **Keys:** Earned for every five waves reached, scaled by map. Also from quests and some achievements. Never sold.
+- **Chests:** Opened with keys. They drop weapon and armor copies, with a pick-your-copy reward every 10th chest of a type (proposal).
+- **Starting tiers:** Duplicate copies raise the starting tier of that weapon or armor set: 2 copies = Tier II, 4 = III, 8 = IV. This is the saved power track. It is capped at Tier IV and applies only to the one starting weapon and the worn armor.
+- **Armor:** One unlockable, upgradable armor set worn into each run.
+- **Achievements and quests:** Deterministic unlocks of specific classes, weapons, passives and armor sets. Quests pay keys.
+- **Cosmetics:** Titles, banners, emotes, effects and collection entries.
 
-Permanent Weapon Level is the saved power track: approximately 10–12% maximum effectiveness per weapon as an initial target. It applies whenever that weapon is used, while all temporary Run Tiers, extra weapons, passive items, and level-up stats reset after every chapter. The player's first weapon must belong to the selected class; they do not carry a completed multi-weapon kit forward.
+Everything else (extra weapons, in-run tiers, passive items, level-up stats, shards) resets after every run. The starting weapon must belong to the selected class; players never carry a completed multi-weapon kit forward.
 
 ### Unlock philosophy
 
-- Challenges teach playstyles: survive with a class, defeat an elite with a condition, reach a stat threshold, or win a difficulty.
+- Achievements teach playstyles: win with a class, hold four weapons of one class, reach a wave, or beat a boss.
 - Requirements are visible before completion.
 - A failed run still advances at least one understandable goal.
 - New players start with enough variety to form several builds.
@@ -527,41 +526,34 @@ Permanent Weapon Level is the saved power track: approximately 10–12% maximum 
 
 ### Earned currencies
 
-**Proposal:** Start with one earnable currency for unlocks and one account XP track. Add currencies only when each has a distinct, explainable job.
-
-Run XP and run-only resources reset at the end of each run. Persistent rewards are granted once through an idempotent server receipt.
+**Confirmed (2026-09-26):** One earned persistent currency: **keys**, which open chests. Run XP and crystal shards reset at the end of each run. **Gems** are the only premium currency. Persistent rewards are granted once through an idempotent server receipt.
 
 ### Bounded monetization boundaries
 
-Allowed candidates:
+Allowed candidates (detail in [MONETIZATION_AND_REWARDS.md](MONETIZATION_AND_REWARDS.md)):
 
-- Character skins with identical gameplay and hitboxes
-- Weapon effect skins with equal or stricter readability budgets
-- Emotes, lobby animations, titles, banners, and profile frames
-- Cosmetic-only seasonal track with a permanent or returning acquisition path
-- Private-server presentation/customization perks that do not affect public progression
-- Earned gameplay crates containing cosmetics, with duplicate protection
-- Modest account XP or persistent coin acceleration with a disclosed cap
-- Direct early unlocks for classes or weapons that are also earnable through normal play and are designed as sidegrades
-- Guaranteed persistent Coin and Universal Weapon Part packs that accelerate the ordinary capped Permanent Weapon Level progression
-- One-time starter progression packs with fixed guaranteed contents
-- Cosmetic-track XP boosts
+- Gem packs for a guaranteed catalog
+- VIP pass with loadout presets and cosmetics, and no reward multipliers
+- Direct early class unlocks for classes that are also earnable and designed as sidegrades
+- One-time starter pack with fixed guaranteed contents (no keys, chests or copies)
+- The limited death-screen revive
+- Cosmetics: effects, emotes, lobby animations, titles, banners, profile frames, cosmetic armor looks, and a cosmetic-only track
 
 Disallowed:
 
-- Mid-run paid damage, health, speed, luck, rerolls, materials, weapon slots, or starting levels; the limited revive is the sole exception
-- Paid-only combat characters or weapons
-- Paid random gameplay cases at launch; use earned cases and guaranteed paid unlocks/Parts instead
+- Keys, chests, chest pity, or key/reward multipliers. Chests are random, and Roblox's paid-random-item rules cover Robux that indirectly opens them.
+- Weapon or armor copies / starting tiers (open question; default no)
+- Mid-run paid damage, health, speed, luck, rerolls, shards, weapon slots, or starting levels; the limited revive is the sole exception
+- Paid-only classes, weapons, armor or maps
 - Energy systems that sell the right to keep playing
-- Purchases that influence competitive leaderboards or challenge validity
-- Uncapped stacking XP/currency multipliers or uncapped Permanent Weapon Level power
-- Paid changes to shop offers, weapon evolution odds, boss drops, or crate rarity
+- Purchases that influence leaderboards or achievement validity
+- Paid changes to shop offers, boss drops or chest odds
 
 ### Monetization decision gate
 
 Do not finalize products until the core loop retains players without rewards. Before adding a product, document its player value, price range, age-appropriateness, effect on clarity/performance, maximum gameplay advantage, free acquisition time, and why the advantage remains bounded.
 
-The proposed currency boundaries, earned crate types, direct cosmetic catalog, capped progression boosts, prohibited power products, and Roblox policy requirements are detailed in `MONETIZATION_AND_REWARDS.md`.
+Currency boundaries, the launch catalog, prohibited products and Roblox policy requirements are detailed in `MONETIZATION_AND_REWARDS.md`.
 
 ## 13. Interface and onboarding
 
@@ -579,7 +571,7 @@ The complete user-supplied art brief is preserved in [Art direction source](art-
 
 References: [Gameplay HUD](art-references/hud-reference.png), [Level-up cards](art-references/level-up-reference.png), [Shop](art-references/shop-reference.png). Recreate the visual language as responsive interactive UI rather than flattening the screenshots into a screen-sized image. The HUD pairs a heart/red numeric health bar at upper left with a top-center timer and wave label. Upgrade cards group icon, title, benefit, and choose button; the shop groups offers, live stats, inventory, weapons, and next-wave action. Keep the planned four-offer shop; the three-card reference is visual inspiration.
 
-**Current UI implementation scope:** Health binds to actual character Health/MaxHealth, including damage, healing, death, and respawn. Run shop currency is implemented as server-owned crystal shards with physical mob drops; XP remains deferred. Unimplemented progression states must not masquerade as active gameplay or change live stats locally. See [Crystal shard currency](SHARD_CURRENCY.md) and [verification](studio-prototype/combat/SHARD_TEST_RESULTS.md).
+**Current UI implementation scope:** Health binds to actual character Health/MaxHealth, including damage, healing, death, and respawn. Run shop currency is implemented as server-owned crystal shards with physical mob drops. Run XP, the XP bar and level-up choices are implemented ([RUN_XP.md](studio-prototype/combat/RUN_XP.md), [LEVEL_UP_READINESS.md](studio-prototype/combat/LEVEL_UP_READINESS.md)). Unimplemented progression states must not masquerade as active gameplay or change live stats locally. See [Crystal shard currency](SHARD_CURRENCY.md) and [verification](studio-prototype/combat/SHARD_TEST_RESULTS.md).
 
 ### HUD priorities
 
@@ -596,9 +588,10 @@ Cards show the icon, short name, rarity, relevant tags, one-sentence behavior, a
 
 ### Onboarding
 
+- **Confirmed update, 2026-09-24:** First-time players automatically enter a guided game as a base character before seeing the lobby or selecting a class. Introduce features step by step, let them defeat mobs over a few waves, then defeat an easy boss and return to the lobby to select their setup and queue. See [Lobby and first-run flow](LOBBY_AND_FIRST_RUN.md); detailed lobby UX remains proposed.
 - First run teaches movement, XP pickup, level choice, damage tells, and boss objective through play.
 - Use a shortened forgiving run rather than a long text tutorial.
-- Preserve normal rewards but exclude the tutorial from competitive records.
+- The first tutorial completion grants enough keys for one chest. Replays grant nothing, and the tutorial is excluded from competitive records.
 - Test touch targets, text scale, color contrast, and controller focus from the beginning.
 
 ## 14. Roblox technical architecture
@@ -683,7 +676,7 @@ Use simplified server hit tests and pooled presentation where appropriate. Never
 - Removing/merging an upgrade recalculates from definitions, avoiding drift.
 - Damage cannot be negative, NaN, infinite, or client-authored.
 - A reward receipt can be retried without duplicating rewards.
-- No purchase creates a paid-only combat formula, bypasses the shared Permanent Weapon Level cap, or changes run reward probability. Paid acceleration reaches only the same bounded progression available through play.
+- No purchase creates a paid-only combat formula, grants keys or copies, exceeds the Tier IV starting cap, or changes run or chest reward probability.
 
 ## 16. Production roadmap
 
@@ -729,13 +722,16 @@ Use simplified server hit tests and pooled presentation where appropriate. Never
 
 These are ordered by how strongly they affect everything downstream:
 
-1. What are the exact passive, drawback, 2-piece affinity, and 4-piece affinity for all six classes?
-2. Which six weapons enter the prototype, and what are all four behavioral tiers for each?
-3. Is co-op required for initial launch, or should the first public version be solo?
-4. Does the player have only movement and automatic weapons, or also one universal dash/class active?
-5. Which 12–15 of the 38 cataloged passives enter the vertical slice, and what are their final balance, shop prices and copy limits?
-6. What final price, timer, and co-op rules should the approved death-screen revive use, and should testing ever allow a second revive?
-7. Is the “impossible odd-jobs agency” a good wrapper, or should funny avatar gear use a different premise?
+1. What are all four behavioral tiers for the six prototype weapons? These are now also the saved starting tiers.
+2. What does Pine Valley's 20-wave script look like, and how much harder is each later map?
+3. What are the key values, chest price and pity interval? Check them against the pacing targets in PROGRESSION_AND_SESSION_FLOW.md.
+4. What are the first armor sets and their perks, and how do armor pieces coexist with passive accessories?
+5. Which weapons and passives are owned at the start, which come from chests, and which are achievement-first?
+6. Is co-op required for initial launch? How do mixed-progress parties choose a map?
+7. Does the player have only movement and automatic weapons, or also one universal dash/class active?
+8. Which 12–15 of the 37 cataloged passives enter the vertical slice, and what are their final balance, shop prices and copy limits?
+9. What final price, timer, and co-op rules should the approved death-screen revive use?
+10. Is the “impossible odd-jobs agency” a good wrapper, or should funny avatar gear use a different premise?
 
 ## 18. Current hypothesis to test
 
@@ -753,7 +749,7 @@ Everything not needed to answer that question—large catalogs, monetization, el
 | Brotato characters page | Rule-changing passives, constraints, affinities, and playstyle unlocks | Source snapshot; do not copy character packages |
 | Brotato build summary | Strength/weakness/signature-build framing for 17 characters | Partial reference; file explicitly says more entries remain |
 | “Best Brotato Items (2026 Meta)” screenshot | Four useful evaluation lenses: peak rarity, scaling, defense, and economy | Unverified editorial summary, not balance evidence |
-| Survivor.io chapter/map notes and supplied Reddit snapshot | Eight-minute chapter target; open, corridor, and enclosed geometry families; sequential chapter progression; no mid-level checkpoint | Direction confirmed; exact cadence and rewards still open |
+| Survivor.io chapter/map notes and supplied Reddit snapshot | Open, corridor, and enclosed geometry families; sequential map progression; no mid-run checkpoint. Its eight-minute target was replaced by 20-wave runs on 2026-09-26 | Geometry and sequencing confirmed |
 | Megabonk | Awaiting intake | Open |
 
 Detailed source notes are kept in `REFERENCE_NOTES_BROTATO.md` so this master document stays focused on our game.
@@ -795,6 +791,8 @@ Detailed source notes are kept in `REFERENCE_NOTES_BROTATO.md` so this master do
 - **0.31 (2026-09-17):** Consolidated 38 passives in PASSIVE_ITEM_MASTER_LIST.md, including five selected spooky/science additions and Tooth Fairy's Teeth Collection. Preserved earlier healing/status foundations, merged alternate names, separated regular level-up upgrades, and allowed selected passive avatar accessories without adding armor slots. Values remain initial balance proposals.
 
 - **0.32 (2026-09-17):** Confirmed persistent floating 3D weapon models, independent automatic aim/cooldowns, weapon-model attack motions and empty avatar hands, based on six user-supplied video references. Added FLOATING_WEAPON_PRESENTATION.md; supersedes effect-only presentation.
+
+- **0.35 (2026-09-26):** Rebuilt progression at the user's direction. Five maps form a difficulty ladder; wave 20 wins each map, with optional Endless afterward. Waves survived earn keys, scaled by map; keys open chests of weapon and armor copies; duplicates raise starting tiers (2/4/8 copies = Tier II/III/IV). Added unlockable, upgradable armor sets worn into each run, reversing the no-armor-equipment rule. Achievements and quests give deterministic unlocks of classes, weapons, passives and armor. Removed blueprints, Permanent Weapon Levels, Universal/Weapon Parts, cases, account level and mastery tracks. Monetization no longer sells keys, chests, Parts, Coins or copies. Fixed contradictions: six weapon slots, four level-up cards, 24 base move speed, 37 passives, Hammer Zombie Boss, five maps, implemented XP/level-ups.
 
 ### Weapon display implementation — 2026-09-17
 
@@ -849,7 +847,7 @@ Each purchased weapon copy records BasePrice, FinalPurchasePrice (also mirrored 
 
 START WAVE readies the player; combat starts when all living players are ready. The test loop runs 30-second survival waves, pauses zombie spawning during shopping, and opens the next shop automatically. Zombies currently respawn during the timed wave. The default population is `min(100, 5 + (Wave - 1) * 2)`. Studio's population override persists across waves until “Use wave count” is selected. Server-confirmed mob deaths drop one collectible crystal worth 2 shards; survivors receive `12 + completedWave * 3` at wave end. These timings/rewards are configurable and are prototype pacing, not the final chapter/boss implementation. Death/respawn currently preserves this session economy; no persistence or account rewards are awarded.
 
-The random offer mix currently uses 50% weapons, independent of purchases and Luck, with tier weights 55/30/12/3. From wave 6, one quarter of common tier rolls are promoted to uncommon. The initial shop guarantees a weapon and a nonweapon offer when a matching catalog pool is available. Class/blueprint weighting and tracked-weapon protection remain future systems; no paid action modifies odds.
+*(Superseded 2026-09-23 by [SHOP_GAMEPLAY_READINESS.md](studio-prototype/combat/SHOP_GAMEPLAY_READINESS.md): 35% weapon / 65% item in later shops, per-wave tier unlocks, and owned-weapon/class preferences.)* The original random offer mix used 50% weapons, independent of purchases and Luck, with tier weights 55/30/12/3. From wave 6, one quarter of common tier rolls are promoted to uncommon. The initial shop guarantees a weapon and a nonweapon offer when a matching catalog pool is available. Class/ownership weighting and tracked-weapon protection remained future systems at that time; no paid action modifies odds.
 
 The stats/debug page has a current-shards input plus +100, +1000, -100 and SET. Both `RunService:IsStudio()` and `DEBUG_CURRENCY_ENABLED` must permit edits; production clients cannot grant currency. Set the config flag false to hide/disable the editor in Studio. All transactions validate phase, living player, bounds, balance, capacity and copy identity on the server. The shop has no DataStore access.
 

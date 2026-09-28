@@ -1,46 +1,36 @@
 # Current Game Structure
 
-**Status:** Consolidated pre-production blueprint  
-**Updated:** 2026-09-15  
+**Status:** Consolidated pre-production plan  
+**Updated:** 2026-09-26  
 **Scope:** What the game currently is, what content belongs to it, and what still needs design work.
 
-This is the fastest document to read for the complete current plan. The master design and specialist documents contain the reasoning and deeper notes. Items marked **Confirmed** came directly from the project direction. Items marked **Proposed** are the strongest current recommendation and can still change.
+This is the fastest document to read for the complete current plan. [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md) is authoritative for progression, maps, keys, chests, armor and achievements. The master design and specialist documents contain the deeper reasoning. **Confirmed** items came directly from project direction. **Proposed** items are the strongest current recommendation and can still change.
 
-**Confirmed architecture update, 2026-09-17:** Future mobs and combat must use server-owned enemy simulation with client-only enemy visuals, smooth snapshot reconciliation, spatial queries, and reused/budgeted navigation. See [Enemy simulation and combat architecture](ENEMY_SIMULATION_ARCHITECTURE.md). The five chasing zombies remain a movement prototype; combat and this scalable architecture are not yet implemented. Hundreds of enemies are a performance goal requiring measurement.
+**Architecture:** Future mobs and combat use server-owned enemy simulation with client-only enemy visuals. See [Enemy simulation and combat architecture](ENEMY_SIMULATION_ARCHITECTURE.md). The Studio prototype already has automatic weapon combat, six weapon slots, crystal shards, run XP, level-up choices and the between-wave shop. Hundreds of enemies remains a performance goal that still needs measurement.
 
 ## 1. Game identity
 
-**Confirmed:** A funny, three-dimensional Roblox survivor roguelite played as the player's normal Roblox avatar. There is no roster of replacement heroes. A player chooses a mechanical class, enters a short chapter, automatically attacks crowds, creates a build through weapons and stats, defeats a boss, and returns to the lobby with permanent rewards.
+**Confirmed:** A funny, three-dimensional Roblox survivor roguelite played as the player's normal Roblox avatar. There is no roster of replacement heroes. A player picks a class, a starting weapon, armor pieces and a pet, enters one of five maps, automatically attacks crowds, builds up weapons and stats between waves, and tries to survive to wave 20. The player can then keep going in Endless or cash out, and returns to the lobby with keys to open chests.
 
-The comedy comes from using serious and ridiculous equipment together: a Katana beside a Frying Pan, a Glock beside a Fart Gun, or Mjolnir beside a Spatula. Maps can have separate themes and enemy rosters; the whole game does not need one creature or museum gimmick.
+The comedy comes from using serious and ridiculous equipment together: a Katana beside a Frying Pan, a Glock beside a Fart Gun, or Mjolnir beside a Spatula.
 
-**Session target:** Eight waves, approximately 6.5–7 minutes of combat and 8–10 minutes including choices and shops. It should be comfortable to play while listening to music or an audiobook. Ordinary enemies should not require constant precision aiming.
+**Session target:** Twenty waves, roughly 15–20 minutes including level-ups and shops. It should be comfortable to play while listening to music or an audiobook. Ordinary enemies should not require precise aiming.
 
 ## 2. Complete player journey
 
 ```text
-Join as Roblox avatar
-  -> short guided lobby introduction
-  -> choose a starter class and its signature weapon
-  -> play a three-wave tutorial
-  -> collect XP and drops through satisfying magnetic pickups
-  -> choose banked stat upgrades between waves
-  -> buy and combine weapons in the between-wave shop
-  -> defeat the tutorial boss
-  -> receive Coins, account XP, a starter case, and Weapon Parts
-  -> return to lobby, open rewards, and upgrade a weapon
-  -> select a chapter, class, and owned class starter weapon
-  -> play an eight-wave chapter and defeat its boss
-  -> return with persistent progression; the temporary run build resets
+First join as Roblox avatar
+  -> short guided tutorial with one fixed weapon (three waves + easy boss)
+  -> result screen grants keys for one chest
+  -> lobby: open first chest, choose class, starting weapon and armor
+  -> Pine Valley: survive to wave 20 and beat the Hammer Zombie Boss
+  -> Cash Out, or Keep Going into Endless for more keys
+  -> keys open chests; duplicate copies raise starting tiers
+  -> winning a map on Hard unlocks the next, harder map (Normal / Hard / Nightmare per map)
+  -> achievements and quests unlock specific classes, weapons, passives and armor
 ```
 
-### First session
-
-- The player initially owns **Brawler, Gunner, and Mage**.
-- Their initial weapon blueprints are **Frying Pan, Glock, and Magic Staff**.
-- The tutorial takes place in **Pine Valley** and teaches movement, automatic attacks, XP pickup, one stat choice, a scripted shop purchase, and combining two matching weapons.
-- The first results screen grants enough Parts to demonstrate one Permanent Weapon Level.
-- The remaining classes and weapons are earnable through account progression, chapter clears, quests, mastery, cases, or direct early-unlock purchases.
+See [Lobby and first-run flow](LOBBY_AND_FIRST_RUN.md) for the tutorial and lobby detail.
 
 ## 3. Run structure
 
@@ -48,56 +38,38 @@ Join as Roblox avatar
 
 The player selects:
 
-1. A chapter.
-2. A class.
-3. One owned starter weapon from that class. A newly unlocked class includes its signature weapon.
+1. A class.
+2. One owned starting weapon from that class, entering at its saved tier (I–IV).
+3. Owned armor pieces: helmet, chestplate, leggings and boots (**confirmed 2026-09-27:** individual pieces, not one outfit).
+4. An unlocked map.
 
-### During a chapter
+### During a run
 
-- The avatar moves freely in an open arena while weapons attack automatically.
-- Enemies drop XP, run currency, and occasional temporary loot.
-- Level-ups are recorded during combat but do not interrupt the action.
-- At the end of each wave, all remaining drops vacuum to the player.
-- Banked level-ups are resolved as quick stat-card choices.
-- A four-card shop then offers weapons and passive items; the player may buy, reroll, lock, recycle, and combine.
-- Horde and elite waves create variation. Wave 8 ends with the chapter boss.
-- Death ends the chapter with partial persistent rewards. Victory awards full rewards and unlocks the next chapter where applicable.
+- The avatar moves freely in an open arena while up to six equipped weapons attack automatically.
+- Every mob death drops a blue crystal worth shards and run XP. See [Crystal shard currency](SHARD_CURRENCY.md).
+- Level-ups are banked during combat and never interrupt it.
+- At the end of each wave, drops pull in. Leftover value goes into the shard bag.
+- Banked level-ups resolve as four stat cards (reroll costs shards).
+- A four-offer shop sells weapons and passive items. The player can buy, reroll, lock, recycle and combine.
+- Elites on waves 5 and 15, a horde on wave 10, and the map boss on wave 20.
+- **Win:** The wave 20 boss dies. Then the player can Keep Going into Endless.
+- **Loss:** The player keeps the keys earned for waves already passed.
 
 ### What resets after a run
 
-- Run level and XP
-- Temporary stat choices
-- Extra weapons acquired in the run
-- Weapon run tiers
-- Passive items
-- Run shop currency
-- Temporary drops and boosts
+Run level and XP, stat choices, extra weapons, in-run weapon tiers, passive items, shards and shard bags, rerolls and locks.
 
 ### What saves permanently
 
-- Classes and class mastery
-- Weapon blueprints
-- Permanent Weapon Levels
-- Weapon Parts and persistent Coins
-- Account level and XP
-- Weapon mastery
-- Chapter clears and difficulty progress
-- Cases and case progress
-- Quests, achievements, cosmetics, and settings
+Owned weapons and armor with their copy counts / starting tiers, unlocked classes, map wins and best wave per map, keys and unopened chests, achievement and quest progress, unlocked passives, cosmetics and settings.
 
 ## 4. Classes and complete weapon roster
 
-There are **six classes with six home weapons each**, for **36 launch weapons**. A class determines the first-weapon pool and affinity bonuses, but it does not lock the player out of other weapons.
+There are **six classes with six home weapons each**, for **36 weapons**. Every weapon belongs to exactly one "home" class. A class decides which owned weapons can be the starting weapon and which weapons count toward its affinity bonuses. It does **not** stop the player from buying other classes' weapons during a run.
 
 ### Starting access
 
-Every new player immediately owns **three classes**:
-
-- **Brawler** with Frying Pan
-- **Gunner** with Glock
-- **Mage** with Magic Staff
-
-The tutorial asks the player to try one, but all three remain unlocked afterward. **Thrower, Juggler, and Handyman** begin locked and are earned through early account/chapter goals or purchased for immediate access. The intended free unlock pace is one new class within the first few successful runs, not a long grind.
+New accounts own **Brawler, Gunner, and Mage**. **Thrower, Juggler, and Handyman** unlock through early achievements, or through an optional early purchase. The intended pace is one new class within the first few runs.
 
 | Class | Play style | Signature starter | Other home weapons |
 | --- | --- | --- | --- |
@@ -112,49 +84,24 @@ The tutorial asks the player to try one, but all three remain unlocked afterward
 
 - A class supplies one always-active specialization, even when using off-class weapons.
 - Every weapon has one **home class** and two or more **combat tags**.
-- Any class may buy any unlocked weapon unless a future balance exception explicitly says otherwise.
-- Off-class weapons retain their full base behavior and can receive bonuses through shared tags.
-- Equipping **two** home-class weapons activates the class's first affinity bonus.
-- Equipping **four** activates its stronger affinity bonus.
-- The fifth slot remains flexible for a wildcard weapon.
-- Example: Nail Gun belongs to Handyman but also has Gun, Rapid, and Projectile tags, so a Gunner can roll it and benefit from applicable Gunner/tag effects.
+- Any class may buy any owned weapon during a run.
+- Off-class weapons keep their full base behavior and can receive bonuses through shared tags.
+- **Two** equipped home-class weapons activate the class's first affinity bonus. **Four** activate its stronger bonus. With six slots, two stay flexible for off-class weapons.
+- Example: Nail Gun belongs to Handyman but also has Gun, Rapid and Projectile tags, so a Gunner can roll it and benefit from Gun-tag effects.
 
-### Proposed class benefits
+**Current class values:** [Character stat implementation](studio-prototype/combat/CHARACTER_STATS.md) is authoritative. It implements six class presets with explicit buffs and debuffs, home-weapon affinity bonuses, and 46 visible stats.
 
-**Implementation update (2026-09-17):** The user requested explicit class buffs and debuffs. The live prototype now implements six class presets, home-weapon affinity bonuses, 45 visible stat attributes, and a Studio stat/zombie editor. [Character stat implementation](studio-prototype/combat/CHARACTER_STATS.md) is authoritative for current values; the table below remains the earlier design proposal.
-
-Exact percentages require playtesting, but each class has a defined mechanical lane:
-
-| Class | Always-active specialization | Two home weapons | Four home weapons |
-| --- | --- | --- | --- |
-| **Brawler** | Better close-range knockback and reduced contact damage | More close-range damage and Armor | Close-range hits occasionally echo with a second smaller impact |
-| **Gunner** | Faster projectiles and slightly faster ranged attacks | Gun/Rapid attacks gain improved piercing or magazine uptime | Every set number of projectiles produces a free bonus shot |
-| **Thrower** | Returning and thrown projectiles travel farther and return faster | More thrown-projectile damage and bounce strength | Every few volleys throws one additional projectile at reduced damage |
-| **Juggler** | Orbiting attacks rotate faster | Orbitals gain radius and knockback | Adds one reduced-damage copy to applicable orbital attacks |
-| **Handyman** | Construction/Utility attacks gain area and knockback | Reduced cooldown for Construction/Utility weapons | Every set number of attacks repeats the attack at reduced power |
-| **Mage** | Longer burn, poison, slow, and lightning-related effects | More Elemental damage | Enemies defeated while affected can spread that effect to one nearby enemy |
-
-Classes do not need mandatory drawbacks. Their opportunity cost is that off-class-heavy builds do not activate the two- and four-weapon affinity bonuses.
-
-Example: a Gunner using Glock, Draco, Shotgun, Fart Gun, and Kunais receives both Gunner affinities while keeping Kunais as a wildcard. A Gunner using five Thrower weapons can still use all of them normally, but receives only the Gunner's always-active specialization and would have been better served choosing Thrower for that run.
-
-**Still to design:** Exact percentages, proc intervals, class unlock objectives/prices, and whether there is a universal dash or class active.
-
-## 5. Weapon presentation, acquisition, and upgrades
+## 5. Weapons, armor and upgrades
 
 ### Presentation rule
 
-Equipped weapons remain visible as floating 3D models around the avatar. The avatar holds no weapon and keeps normal movement animations. Each weapon independently aims at eligible enemies and attacks on its own cooldown: guns recoil and fire from their muzzle, fists punch, blades thrust or sweep, and every weapon recovers to its floating position. Effects reinforce the visible weapon action.
+Equipped weapons stay visible as floating 3D models around the avatar. The avatar holds no weapon and keeps its normal movement animations. Each weapon aims at eligible enemies on its own and attacks on its own cooldown, then recovers to its slot. **Six** slots sit in a fixed arrangement around the avatar and do not orbit. See [FLOATING_WEAPON_PRESENTATION.md](FLOATING_WEAPON_PRESENTATION.md) and [LOADOUT.md](studio-prototype/combat/LOADOUT.md).
 
-Up to five weapon slots form a spaced arrangement near the avatar, initially tested around waist-to-chest height. Each weapon occupies a specific floating slot; the formation does not rotate 360 degrees around the avatar. Attacks must preserve avatar clearance and show damage numbers for confirmed enemy hits. Movement and facing do not force weapon aim. See [FLOATING_WEAPON_PRESENTATION.md](FLOATING_WEAPON_PRESENTATION.md) for the confirmed video-based direction. This supersedes the earlier invisible/effect-only rule. Weapon skins remain outside current scope.
+### In-run tiers (temporary)
 
-### Temporary run progression
-
-- Maximum **five active weapons**.
-- Weapons have **four temporary run tiers**.
-- Two copies of the same weapon and tier combine into the next tier.
-- Combining improves numbers and visibly changes behavior, silhouette, projectile pattern, or utility.
-- Run tiers disappear when the chapter ends.
+- Up to **six** equipped weapons.
+- Two copies of the same weapon and tier combine into the next tier, up to **Tier IV**.
+- Every tier changes behavior, silhouette, projectile pattern or utility, not only damage.
 
 The Glock is the approved model for upgrade quality:
 
@@ -165,264 +112,159 @@ The Glock is the approved model for upgrade quality:
 | III | Glock with Switch | Automatic bursts and a denser firing stream |
 | IV | Akimbo Switches | Two firing streams with improved crowd coverage |
 
-All other weapons need similarly recognizable Tier I–IV chains. A tier cannot be only “+20% damage.”
+### Permanent progression (saved)
 
-### Permanent weapon progression
+- **Ownership:** Having one copy of a weapon means you own it. Owned weapons can be the starter (for their class) and appear in run shops.
+- **Starting tier:** Copies from chests stack on the same rule as in-run combining: 2 copies = Tier II start, 4 = Tier III, 8 = Tier IV.
+- **Armor (confirmed 2026-09-27):** Four piece slots: helmet, chestplate, leggings and boots. Pieces drop from armor chests. Each piece gives defensive stats. Wearing 2 pieces of one set gives its set bonus, and all 4 give its signature perk, so completing a set is a longer grind. Tiers I–IV use the same copy rule per piece.
+- **Pets (planned):** One pet slot. Pets hatch from pet eggs (pets only) and follow the player into runs. Copies level them up.
 
-Permanent weapon progression is intentionally reduced to three understandable records:
-
-- **Blueprint:** a one-time unlock. Owning it adds the weapon to shops and allows it to be selected as a starter for its home class. A blueprint does not increase damage.
-- **Permanent Weapon Level:** approximately levels 1–10, upgraded with **Universal Parts plus persistent Coins**. It supplies a small shared cap, initially about 10–12% total effectiveness. It never carries temporary tiers between runs.
-- **Mastery:** a use record earned by playing with the weapon. Milestones grant Coins, Universal Parts, profile badges, titles, and challenges. Mastery is not another endlessly stacking damage track.
-
-Weapon-specific Parts are removed to avoid filling the inventory with 36 materials. All duplicates convert to Universal Parts. Players must also have deterministic unlock paths so bad case luck cannot permanently block a desired weapon.
+Full rules, chest types, key values and pacing targets: [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md).
 
 ## 6. Between-wave shop
 
-The shop shows four cards and supports buy, reroll, lock, recycle, and automatic legal combinations.
+Four offers each intermission. Buy, reroll, lock, recycle, and automatic legal combining. All prices use crystal shards, which are temporary run money and never Robux or saved currency.
 
-- Shops 1 and 2 show exactly **two weapons and two passive items**.
-- Shops after waves 3 and 4 guarantee at least one weapon.
-- When a slot is a weapon, the current test weighting is:
-  - 30% exact copy of an equipped weapon
-  - 25% weapon sharing a combat tag
-  - 20% selected class weapon
-  - 25% any unlocked weapon
-- A player can **Track** one equipped weapon. If it has not appeared for two completed intermissions, the next guaranteed weapon slot offers a legal copy. Rerolls do not advance this protection.
-- Cards identify why they appeared: **DUPLICATE, CLASS, TAG MATCH,** or **WILDCARD**.
-- Luck affects rarity and drop quality, not weapon identity weighting or tracking.
+The **current implemented rules** are in [Shop gameplay readiness](studio-prototype/combat/SHOP_GAMEPLAY_READINESS.md):
 
-This permits creative mixed builds without making focused builds depend entirely on luck.
+- Shops 1–2 have two weapons and two items. Shops 3–5 guarantee one weapon. Later slots roll 35% weapon / 65% item.
+- Owned weapon identities and home classes get a modest pool preference. The general pool always stays available.
+- Luck raises tier chances within caps. No paid purchase changes shop odds.
+
+**Still planned:** A player can **Track** one equipped weapon to protect against duplicate starvation. Offer cards will show why they appeared (**DUPLICATE, CLASS, TAG MATCH, WILDCARD**). Tier unlock waves (currently Tier IV from wave 8) need retuning for 20-wave runs.
 
 ## 7. Stats and passive items
 
-A **passive** is a temporary shop item that modifies the run without occupying one of the five weapon slots or performing its own repeating attack. It resets after the chapter. Passives are how the player specializes a build after choosing weapons.
+A **passive** is a temporary shop item that modifies the run without using a weapon slot or attacking on its own. It resets after the run.
 
-The authoritative working roster is [PASSIVE_ITEM_MASTER_LIST.md](PASSIVE_ITEM_MASTER_LIST.md): **38 passives**, including the revised straightforward items, six retained healing/status foundations, and five selected spooky/science additions. It supersedes the old example table and unselected brainstorm lists. Tooth Fairy's Teeth Collection replaces Jar of Teeth.
+The working roster is [PASSIVE_ITEM_MASTER_LIST.md](PASSIVE_ITEM_MASTER_LIST.md): **37 passives**. About 20 are proposed as available from the start. The rest unlock through achievements. Some passives appear on the avatar as hats, glasses or backpacks.
 
-Most items have clear positive benefits; a smaller set has modest tradeoffs or special attack modifiers. The catalog gives proposed numerical effects, wearable appearances and the remaining balance questions. It separately lists eight regular XP-earned upgrade types with proposed rarity values. Numbers are not yet balanced or implemented; unresolved healing/status numbers remain marked TBD.
+Level-up stat choices are free and happen between waves as four cards. They are separate from shop items.
 
-**Confirmed direction:** Stat choices happen between waves, not while enemies are moving. Combat remains uninterrupted and the end of each wave becomes the short decision phase.
+## 8. Maps, mobs and bosses
 
-Candidate run stats include:
+The five maps form the difficulty ladder. Each map is harder and pays more keys than the one before. The current roster is maintained in [Map Mob Roster](MAP_MOB_ROSTER.md):
 
-- Damage
-- Attack speed
-- Critical chance and critical damage
-- Projectile count, piercing, bounce, and area size
-- Melee/close-range damage
-- Ranged/projectile damage
-- Elemental/status damage
-- Max health, armor, dodge, regeneration, and life steal
-- Movement speed
-- Pickup radius
-- Luck
-- Knockback
-- Deployable/utility power
+| # | Map | Regular mobs | Dedicated ranged mob | Boss |
+| ---: | --- | --- | --- | --- |
+| 1 | Pine Valley | Regular Zombie, Baby Zombie, Tank Zombie | Spitter Zombie (later addition) | Hammer Zombie Boss |
+| 2 | Beach Cove | Crab, Snake, Hermit Crab, Rock-Throwing Crab | Rock-Throwing Crab | Giant King Crab |
+| 3 | Desert Basin | Skeleton, Bow Skeleton, Mummy, Scorpion | Bow Skeleton | Pharaoh |
+| 4 | Frozen Pass | Frost Ghost, Werewolf, Frozen Knight, Ice Elf | Ice Elf | Frost Cyclops |
+| 5 | Volcanic Crater | Fire Goblin, Ember Spider, Lava Slime, Obsidian Ogre, Ash Shaman | Ash Shaman | Dragon |
 
-**Appearance decision (updated 2026-09-17):** Some temporary passives appear on the avatar as hats, glasses, backpacks, masks or other accessories. There is still no separate armor-equipment or armor-set system. Armor remains a numerical defensive stat. These accessories preserve the player's underlying avatar and reset with the run.
+All maps are broad outdoor arenas using the regular Roblox camera. About 75–85% of the playable surface stays open, with scenery concentrated on the rim. The prototype's base move speed is 24 studs/second (class modifiers apply; the default Brawler moves at 22). See [LOADOUT.md](studio-prototype/combat/LOADOUT.md). Visual direction sheets are in [map-concepts/README.md](map-concepts/README.md). Castle Fields is a later-content idea outside these five.
 
-The working launch roster has 38 passives. The vertical slice selects about 12–15 from that catalog.
+## 9. Combat feel, drops and readability
 
-## 8. Maps, primary mobs, and bosses
+- Target approximately 100 active enemies in stress tests, adjusted for Roblox device performance.
+- Every defeated enemy produces its own short impact/death sound. No multikill-announcer aggregation.
+- Enemies burst, pop, crumble or dissolve clearly according to creature type.
+- Crystals bob, then pull magnetically into the player with a rising pickup sound.
+- Attacks need crisp anticipation, hit confirmation and distinct silhouettes.
+- Enemy hazards always win the readability hierarchy over friendly effects.
 
-Visual direction sheets for all six arenas are saved in [map-concepts/README.md](map-concepts/README.md).
-
-All maps are broad outdoor arenas using the regular Roblox camera with player-controlled zoom and rotation. Base movement should be slightly faster; 18 studs/second is the initial test value, with further speed modifiers supplied by classes and run builds. Approximately 75–85% of the playable surface remains open. Gentle slopes, sparse low props, and a scenery-heavy perimeter provide identity without creating intricate interiors, mazes, parkour, or constant collision traps.
-
-The lists below are each map's **first-clear primary roster**, not a permanent lock. Later chapters and higher difficulties may remix mobs across maps. Strong enemies consume more of the spawn threat budget and therefore appear less often.
-
-| Map | Shape and visual identity | Frequent mobs | Less-frequent threats | Boss |
-| --- | --- | --- | --- | --- |
-| **Pine Valley** | Open grassy basin, pine rim, scattered rocks and logs | Zombies, Slimes, Goblins | Garden Gnomes, Ogres | **Ogre Warlord** |
-| **Beach Cove** | Open sand-and-grass coast with rock rim, tide pools and driftwood | Crabs, Slimes, Snakes | Ghosts, Trolls | **Giant Crab** |
-| **Desert Basin** | Enclosed sand bowl, giant perimeter rocks, sparse cacti, bones and dead trees | Skeletons, Snakes, Mummies | Assassins, Witches | **Pharaoh** |
-| **Castle Fields** | Open lawn outside distant walls and towers; broken carts and banners stay near the edges | Goblins, Skeletons, Knights | Vampires, Assassins | **Headless Knight** |
-| **Frozen Pass** | Wide vertical corridor between snowy cliffs; sparse ice and ruined camp props | Werewolves, Ghosts, Knights | Trolls, Witches | **Cyclops** |
-| **Volcanic Crater** | Enclosed dark-stone basin with lava scenery beyond safe edges and sparse vents | Spiders, Goblins, Slimes | Ogres, Vampires | **Dragon or Hydra** |
-
-### Complete regular-mob pool
-
-Zombie, Slime, Goblin, Crab, Skeleton, Snake, Spider, Ghost, Mummy, Witch, Knight, Vampire, Werewolf, Garden Gnome, Assassin, Ogre, and Troll.
-
-Small purposeful variants are allowed when they reuse one of the basic behaviors below. Foundational families such as Zombies, Skeletons, and Slimes may have two or three recognizable forms; every creature does not need a full family.
-
-### Basic enemy behavior kit
-
-| Behavior | Rule | Telegraph |
-| --- | --- | --- |
-| **Melee chaser** | Walk toward the nearest player and perform a basic swing/contact hit | Short windup and small ground flash at close range |
-| **Ranged shooter** | Stop briefly and fire one visible projectile | Thin red aim line appears before firing |
-| **Dasher** | Pause, lock a direction, then dash through the lane | Wide red line/rectangle marks the entire dash path |
-| **Heavy chaser** | Slower, larger, more health and damage; still uses a basic swing | Large silhouette and slower windup |
-| **Splitter** | On death, produces a small fixed number of weaker enemies | Body swells/wobbles immediately before splitting |
-
-Approved early variants:
-
-- **Zombie:** regular chaser, fast low-health crawler, and large slow Zombie.
-- **Skeleton:** melee Skeleton and Bow Skeleton with a red aim line.
-- **Slime:** Small Slime and Big Slime; a Big Slime splits into two or three Small Slimes.
-- Other mobs should initially use one behavior each. For example, Assassin can dash, Witch can shoot, Ogre can be a heavy chaser, and Spider can be a faster melee chaser.
-
-The full initial assignment is intentionally plain: Goblin, Crab, Spider, Ghost, Mummy, Vampire, and Werewolf use melee-chaser variations; Witch, Garden Gnome, Bow Skeleton, and Troll use the red-line ranged shot; Snake and Assassin use the red-lane dash; Knight and Ogre are heavy melee enemies. Detailed values, not extra moves, distinguish most of them.
-
-Their combat weight differs:
-
-- **Weak swarmers:** threat cost 1; appear in large numbers.
-- **Standard enemies:** threat cost 2; form the normal crowd.
-- **Specialists:** threat cost 3–4; ranged attacks, ambushes, buffs, or area denial; appear less often.
-- **Heavy enemies:** threat cost 7–9; large silhouettes and dangerous attacks; appear rarely.
-- **Elites:** empowered encounters with unique telegraphs, not routine recolors of every mob.
-
-### Complete boss pool
-
-- Ogre Warlord
-- Giant Crab
-- Pharaoh
-- Headless Knight
-- Cyclops
-- Dragon or Hydra — final selection still open
-
-Each boss still needs a complete kit, telegraphs, phase rules, audio identity, and mobile-safe tuning.
-
-## 9. Combat feel, drops, and readability
-
-- Target approximately 100 active enemies during stress tests, adjusted for Roblox device performance.
-- Each defeated enemy produces an immediate individual impact/death sound; there is no multikill-announcer aggregation.
-- Enemies should burst, pop, crumble, or dissolve clearly according to creature type.
-- Run shop currency is now blue crystal shards, replacing gold coins. Each mob death drops a crystal; the server validates collection and shop spending. The shard asset has no aura or VFX. See [Crystal shard currency](SHARD_CURRENCY.md). XP and other loot feedback remain separate future presentation work.
-- Pickup audio rises or varies subtly during a stream without becoming a spoken combo system.
-- Attacks must have crisp anticipation, hit confirmation, and distinct silhouettes.
-- Effects should remain close to the ground or weapon path and must not cover large portions of the screen.
-- Enemy hazards always win the readability hierarchy over friendly spectacle.
+Details: [COMBAT_FEEL_AUDIO_VFX.md](COMBAT_FEEL_AUDIO_VFX.md).
 
 ## 10. Lobby structure
 
-The lobby is a compact, readable home base rather than a giant social maze. Core stations can also be opened from a single menu on mobile.
+A floating-island lobby with a circular connected route and four independent queue portals. See [Lobby and first-run flow](LOBBY_AND_FIRST_RUN.md).
 
-### Required spaces
+- **Loadout:** class, owned starting weapon (with its tier) and armor. The same interface opens from a button or a world station.
+- **Play / portals:** unlocked map, solo or party, queue.
+- **Chests:** open chests with keys. Shows contents, odds, pity progress, and which weapon or armor tiered up.
+- **Armory:** full-screen room with the avatar on a dais: weapons, armor pieces and pets, copy progress toward the next tier, and how to unlock the missing ones. Slots: helmet, chest, legs, boots, weapon, pet, class.
+- **Achievements and quests:** what each goal unlocks and current progress.
+- **Customization:** pickup effects, defeat effects, emotes, titles, nameplates, lobby poses and UI themes.
+- **Shop:** clearly separated Robux purchases.
+- **Practice area:** damage dummies with no persistent rewards.
 
-- **Play / chapter portal:** map, chapter, difficulty, class, and starter-weapon selection.
-- **Class station:** view unlocked classes, bonuses, mastery, and unlock requirements.
-- **Armory:** weapon blueprints, Permanent Weapon Levels, Universal Parts, mastery, and tier/attack previews.
-- **Case station:** earned cases, transparent contents, duplicate conversion, and case progress.
-- **Quest board:** daily, weekly, achievement, and progression objectives.
-- **Customization:** pickup effects, enemy defeat effects, emotes, titles, nameplates, lobby poses, and UI themes. No weapon-skin or armor-set dependency.
-- **Shop:** clearly separated Robux purchases and persistent-Coin purchases.
-- **Practice area:** damage dummies and weapon previews with no persistent rewards.
-- **Party area:** invite friends and queue together if co-op is included.
-- **Results board:** last run, personal bests, mastery progress, and next unlock.
-
-The player should be able to return from a run, understand every reward, make one meaningful upgrade, and launch the next chapter in roughly 30–60 seconds.
+A returning player should be able to understand their rewards, open a chest and queue again in roughly 30–60 seconds.
 
 ## 11. Progression outside runs
 
-- **Account level:** unlocks systems, classes, chapters, and broader reward tracks.
-- **Chapter progress:** first clears open later stages and difficulties.
-- **Class mastery:** rewards using a class without changing the avatar.
-- **Weapon ownership and levels:** expands possible starts and provides bounded permanent growth.
-- **Weapon mastery:** rewards actual play with each weapon.
-- **Cases and case meter:** provide earnable blueprints, Universal Parts, Coins, and customization rewards.
-- **Quests and achievements:** give deterministic progress and reasons to try varied builds.
-- **Customization collection:** emotes, titles, nameplates, lobby poses, pickup effects, defeat effects, and UI themes.
+- **Map ladder:** Each map has Normal, Hard and Nightmare (enemy buffs, more keys). Winning a map on Hard unlocks the next. Best wave per map and difficulty is recorded, including Endless.
+- **Keys and chests:** Keys come from waves survived, scaled by map. Chests give weapon and armor copies, with a pick-your-copy reward every 10th chest of a type.
+- **Starting tiers:** Duplicates raise a weapon's or armor set's starting tier up to IV.
+- **Achievements:** Deterministic unlocks of specific classes, weapons, passives and armor sets.
+- **Quests:** Rotating daily and weekly goals that pay keys. Missing a day loses nothing permanent.
+- **Customization collection:** Cosmetics only.
 
-A defeat still grants reduced account XP, Coins, mastery, and case-meter progress, preventing an unsuccessful eight-minute session from feeling wasted.
+A loss still pays keys for every five-wave milestone reached, so a failed run is never wasted.
 
 ## 12. Monetization and purchases
 
-The commercial rule is **pay for meaningful acceleration, convenience, early access to earnable options, and expression—not exclusive or uncapped combat dominance**. Add one premium currency, **Gems**, so purchases lead into a clear rotating catalog rather than dozens of separate developer products.
-
-### Recommended launch products
+The commercial rule is **pay for convenience, early access to earnable options, a limited revive, and expression. Never pay for random rewards or uncapped power.** Full detail: [MONETIZATION_AND_REWARDS.md](MONETIZATION_AND_REWARDS.md).
 
 | Product | What it provides | Guardrail |
 | --- | --- | --- |
-| **Gem packs** | Premium currency for guaranteed catalog purchases | Never used for undisclosed random rolls |
-| **VIP game pass/subscription** | Proposed +20% account XP, +20% persistent Coins, one extra daily quest, daily Gems, VIP nameplate | Multipliers do not stack with separate economy passes |
-| **Starter Pack** | Class-choice token, blueprint-choice token, fixed Universal Parts, fixed Coins, Gems, exclusive nameplate | One-time, contents stated exactly, no random paid outcome |
-| **Early Class Unlock** | Immediate access to an otherwise earnable class | Class remains a sidegrade and is earnable normally |
-| **Early Weapon Blueprint** | Immediate access to a selected otherwise earnable weapon | Weapon is not paid-exclusive and still follows normal balance |
-| **Class Arsenal Bundle** | One class plus its six weapon blueprints and upgrade materials | Everything remains separately earnable; bundle saves time rather than raising the cap |
-| **Universal Weapon Parts** | Speeds Permanent Weapon Levels | Same low level cap and stats as earned Parts |
-| **Persistent Coin Packs** | Speeds account/weapon progression | Cannot purchase run shop currency |
-| **Premium Progression Track** | Extra Gems, Coins, Universal Parts, choice tokens, effects, emotes and titles | Gameplay resources accelerate the same capped systems |
-| **Daily Deals** | Rotating guaranteed blueprints, class tokens, Parts and bundles | Exact contents shown; no paid rerolling for better odds |
-| **Buyable Revive** | Direct death-screen Developer Product that immediately continues the current chapter | One paid revive per player per chapter at launch; recommended first price test around 65 Robux |
-| **Customization** | Defeat effects, magnet/pickup styles, emotes, titles, nameplates, lobby poses and UI themes | No weapon skins or armor sets required |
+| **Gem packs** | Premium currency for the guaranteed catalog | Never spent on keys, chests or anything random |
+| **VIP pass** | Extra loadout presets, VIP nameplate, cosmetic set | No key or reward multiplier while chests are random |
+| **Early Class Unlock** | Immediate access to an otherwise earnable class | The class stays a sidegrade and earnable through achievements |
+| **Starter Pack** | Early class unlock + cosmetics + Gems | One-time, contents stated exactly |
+| **Buyable Revive** | Death-screen continue for the current run | One per player per run; first price test around 65 Robux |
+| **Customization** | Defeat effects, pickup styles, emotes, titles, nameplates, lobby poses, UI themes | No gameplay effect |
 
 ### Never sell
 
-- Mid-run purchases other than the explicitly approved revive
-- Run XP, run shop currency, rerolls, weapon slots, or stronger shop odds
-- Unlimited or repeatedly escalating revive chains
-- Raw permanent damage/health entitlements beyond the normal earnable capped systems
-- Paid-exclusive classes or combat weapons
-- Loot boxes with hidden odds
-
-If paid random items are ever added, Roblox requires disclosure of actual numerical odds and policy checks for each player. The launch recommendation remains guaranteed paid contents and earnable random cases.
+- Keys, chests, chest pity, or anything else that opens a random reward
+- Weapon or armor copies / starting tiers (**open question**; default is no)
+- Mid-run purchases other than the one revive
+- Run XP, shards, rerolls, weapon slots or stronger shop odds
+- Paid-exclusive classes, weapons or armor
 
 ### Buyable revive flow
 
-When a solo player dies, the run pauses and the death screen shows **REVIVE** and **GIVE UP**. Selecting REVIVE opens the Roblox purchase prompt. The server grants the revive only after a validated developer-product receipt.
+When a solo player dies, the run pauses and the death screen shows **REVIVE** and **GIVE UP**. REVIVE opens the Roblox purchase prompt. The server grants the revive only after a validated developer-product receipt.
 
-- One paid revive per player per chapter at launch.
-- Restore 50% max health.
-- Grant three seconds of invulnerability.
-- Push nearby enemies outward so the player does not instantly die again.
-- Resume the same wave, timer, boss health, build, currency, and drops.
+- One paid revive per player per run.
+- Restore 50% max health, grant three seconds of invulnerability, and push nearby enemies outward.
+- Resume the same wave, timer, boss health, build, shards and drops.
 - A cancelled or failed purchase returns to the death choice without granting anything.
-- Revived victories still clear the chapter and earn normal rewards, but the result records the revive count for challenge and leaderboard filtering.
-- Co-op behavior remains to be decided; the clean proposal is to show the purchase only when that player cannot be rescued normally or the entire team is down.
+- Revived wins still count and pay normal keys. The result records the revive count for leaderboard filtering.
+- Co-op behavior is still to be decided.
 
 ## 13. Launch-scope recommendation
 
-The **prototype** should contain one map, three classes, six signature/demo weapons, six regular mobs, one boss, the eight-wave loop, banked level-ups, and the shop/combine flow.
+**Prototype:** Pine Valley, three classes, six signature weapons, its three zombie types, the Hammer Zombie Boss, the 20-wave loop, banked level-ups and the shop/combine flow.
 
-The **vertical slice** should contain two maps, all six classes, 12 weapons (two per class), approximately 15 passive items, 8–10 mobs, two bosses, the complete lobby loop, saving, one earned case, and bounded weapon leveling.
+**Vertical slice:** Two maps, all six classes, 12 weapons (two per class), about 15 passives, 2–3 armor sets, keys and chests, starting tiers, a first batch of achievements, saving, and the lobby loop.
 
-The **content launch target** is six maps, six classes, 36 weapons, 30–40 passives, all 17 core mobs, six bosses, chapter progression, quests, cases, mastery, cosmetics, and the approved monetization catalog. This is a target to produce toward, not a promise that everything must ship before the first public test.
+**Content launch target:** Five maps, six classes, 36 weapons, 37 passives, 6–8 armor sets, 21 regular mobs, five bosses, Endless, achievements and quests, cosmetics and the approved monetization catalog. This is a target to work toward, not a requirement for the first public test.
 
 ## 14. What is still missing
 
 ### Must be decided before the prototype
 
-1. Exact Brawler, Gunner, and Mage class rules.
-2. The six prototype weapons and their complete four-tier chains.
-3. Assign the basic behavior kit, threat costs, health, speed, damage, and drop values to the six prototype mobs.
-4. Pine Valley wave-by-wave spawn script and tutorial boss choice.
-5. Base stat formulas, damage calculation, attack targeting, and defensive rules.
-6. Shop prices, starting currency, reroll escalation, recycle value, and wave income.
-7. Select and balance the first 12–15 passives from the 38-item master list.
-8. Exact keyboard, controller, and mobile controls, including whether there is a dash or class active.
-9. Final revive price, purchase timeout, co-op behavior, and whether a second revive is ever permitted.
-10. Performance budgets for enemies, projectiles, drops, VFX, and audio voices.
+1. Tier I–IV chains for the six prototype weapons.
+2. Pine Valley's 20-wave spawn script, elite waves 5/15, horde wave 10, and Hammer Zombie Boss kit.
+3. Shop tier-unlock waves and prices retuned for 20 waves.
+4. Tutorial weapon and base-class behavior.
+5. Final revive price, timeout and co-op behavior.
+6. Performance budgets for enemies, projectiles, drops, VFX and audio voices.
 
 ### Must be decided before the vertical slice
 
-1. Exact rules for all six classes and their 2-/4-weapon affinities.
-2. Tier chains for all 12 slice weapons.
-3. Permanent Weapon Level cost curve and reward pacing.
-4. Account, class, and weapon mastery unlock pacing.
-5. Enemy behaviors, elites, boss kits, and difficulty scaling.
-6. Solo-only launch versus 1–4 player co-op, plus scaling, revives, loot ownership, and drop-in rules.
-7. Case tables, duplicate conversion, pity/deterministic unlock paths, and quest rewards.
-8. Lobby layout and full UI wireframes.
-9. Product prices, Gem pricing, regional/platform policy handling, analytics, and purchase receipt validation.
+1. Key values, chest price and pity interval, checked against the pacing targets.
+2. Which weapons are owned at the start, which come from chests, and which are achievement-first.
+3. The first armor sets, their perks, and the armor/passive-accessory overlap rule.
+4. The first achievement and quest list.
+5. How much harder each map is, and the intended starting-tier power per map.
+6. Solo-only launch versus co-op, party size, and map access for mixed-progress parties.
+7. Lobby layout and full UI wireframes.
 
 ### Important but not blocking the first build
 
 - Final game title
 - Optional odd-jobs-agency story wrapper
-- Dragon versus Hydra selection
-- Endless mode
-- Seasonal events and progression track cadence
-- Advanced difficulty modifiers and later cross-map enemy remixes
+- Endless leaderboards and any Endless key cap
+- Seasonal events
+- Later cross-map enemy remixes and Castle Fields
 
 ## 15. Immediate next design order
 
-1. Lock class kits.
-2. Lock the six prototype weapons and design all 24 tier forms.
-3. Select and balance the first 15 passive items from PASSIVE_ITEM_MASTER_LIST.md.
-4. Specify Pine Valley's six mobs, Ogre Warlord kit, and eight-wave script.
-5. Build the economy sheet and run simulator.
-6. Wireframe the run HUD, stat choice, shop, results, and lobby armory.
-7. Create the Roblox technical architecture and prototype milestone plan.
+1. Lock the Tier I–IV chains for the six prototype weapons.
+2. Write Pine Valley's 20-wave script and retune the shop for 20 waves.
+3. Draft the key/chest economy sheet and check it against the pacing targets.
+4. Pick the first armor sets and first achievements.
+5. Wireframe the chest screen, Armory and result screen.
