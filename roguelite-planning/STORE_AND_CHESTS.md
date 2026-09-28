@@ -1,0 +1,224 @@
+# Store and chests rework (design, 2026-09-27)
+
+Status: proposed, waiting for user review. Replaces the chest and currency parts of
+MONETIZATION_AND_REWARDS.md and PROGRESSION_AND_SESSION_FLOW.md where they disagree.
+
+> **Decision 2026-09-27 (user): keys are dropped. Emeralds are the only currency** for chests,
+> skills, classes, deals and bundles, earned in runs and bought with Robux (like Final Swarm /
+> Survive the Swarm). Any key amount further down converts at 1 key = 20 emeralds (for example,
+> a 15-key Gold Chest = 300 emeralds). Old saves convert the same way. Where paid random items
+> are restricted, only emeralds earned in play can open chests (ProfileService tracks Robux
+> emeralds as `bought`).
+
+## Goals
+
+- One rule a kid can guess: **emeralds buy everything.**
+- Chests work like Clash Royale: every weapon has a fixed rarity, a chest gives many copies of
+  commons and a few of the rarer weapons, and copies upgrade a weapon's starting tier.
+- Rarity only means *how often it drops*, never *how strong it is*. A Common can be the best
+  weapon in someone's build.
+- A few **Godly** weapons are the long-term chase: very rare, flashy, clearly good, never "game over".
+- The store stops looking bland: colour backdrops per category, 3D weapon models, a real
+  chest-opening reveal.
+
+## Build order
+
+Each part is built, verified in Studio Play, and shown to the user before the next.
+
+| Part | What | Why first |
+|---|---|---|
+| 0 | Runs start with the saved loadout weapon at its upgraded tier | Today upgrades never reach a run, so chests have no payoff |
+| 1 | Store look and compliance fixes (the emeralds-only switch is already done) | Makes the store clear and appealing |
+| 2 | Weapon rarities, chest tiers, chest-opening reveal | The Clash Royale loop |
+| 3 | Godly weapons (brainstorm, models, VFX, stats) | New content; needs its own design pass |
+| 4 | Armor chests and pet eggs | When those systems exist; same template |
+| 5 | Polish: featured item of the day, lobby chest room | Nice to have |
+
+## Part 0: upgrades count in runs
+
+- The lobby already stores the chosen class and weapon (`LoadoutClass`/`LoadoutWeapon`, and
+  `RunClass`/`RunWeapon` on the queue). At run start the server puts that weapon in slot 1
+  at the tier saved in the profile (`ProfileService` weapons `tier`).
+- Server checks: the player owns the weapon and the class; otherwise fall back to the class
+  signature weapon at Tier I.
+- Example: Frying Pan saved at Tier III → the run starts with a Tier III Frying Pan.
+
+## Part 1: currency and store
+
+### The rule
+
+| Currency | Earned from | Spent on |
+|---|---|---|
+| Emeralds | Runs, daily free emeralds, codes, spare copies, quests, and Robux | Everything: chests, skills, daily deals, classes |
+
+- Every item shows exactly one price.
+- Chests are priced in emeralds. Where `ArePaidRandomItemsRestricted` is true, only emeralds
+  earned in play can open chests: the server spends earned emeralds only, and the client shows
+  `ProfileGemsEarned`. This is already built in ProfileService.
+- Robux chest packs remain (flagged `random`, hidden where restricted).
+- Daily deals: weapon copies cost 15 emeralds each. Slot 1 is 200 free emeralds.
+
+### Compliance fixes
+
+- Starter Pack contains a chest → mark it `random` (hidden/replaced where restricted).
+- VIP daily chest: check `restricted[p]` before granting; restricted VIPs get emeralds instead.
+
+### Look
+
+- Keep the charcoal window, lime corners and stone title plate.
+- Offer cards get saturated colour backdrops per category (new tintable nine-slice card art made
+  by `ui/build_assets.py`, white base so one image tints to every colour):
+  - Chests: amber
+  - Emeralds: teal
+  - Bundles / Starter Pack: purple
+  - VIP / passes: royal blue
+  - Godly: crimson
+- Chest cards show a "What's inside" list with one bar per rarity (e.g. Common 89% ███▉),
+  and "220 more emeralds needed" under the price when short.
+
+## Part 2: rarities, chests and upgrades
+
+### Rarity (fixed per weapon)
+
+Colours belong to rarity. Tier badges become plain numerals (I–IV) with no rarity colour, and the
+in-run shop stops calling tiers Common/Uncommon/Rare/Legendary (`EconomyConfig.TIER_NAMES`
+becomes `Tier I`–`Tier IV`), so each colour has one meaning.
+
+| Rarity | Colour | Per class | Weapons |
+|---|---|---|---|
+| Common | light grey | 2 | Frying Pan, Spatula, Glock, Fart Gun, Boomerang, Egg, Boxing Gloves, Rubber Duck, Nail Gun, Shovel, Magic Staff, Crystal Ball |
+| Rare | blue | 2 | Nunchucks, Baseball Bat, Shotgun, Draco, Kunai, Steak, Bowling Pin, Yo-Yo, Paint Roller, Power Washer, Medusa's Head, Pandora's Box |
+| Epic | purple | 1 | Kusarigama, T-Shirt Cannon, Molotov, Cinder Block, Vacuum Cleaner, Mjolnir |
+| Legendary | gold | 1 | Katana, Rocket Launcher, Deck of Cards, Bowling Ball, Wrecking Ball, Excalibur |
+| Godly | crimson | — | New weapons from Part 3 |
+
+Every class signature weapon is Common, so starting weapons are easy to upgrade.
+The assignment is a first pass; the user can move any weapon.
+
+### Upgrading (copies raise the starting tier)
+
+A weapon's first copy unlocks it at Tier I. Copies are spent to raise its starting tier.
+Rarer weapons need fewer copies because they drop less.
+
+| Rarity | I → II | II → III | III → IV | Total |
+|---|---:|---:|---:|---:|
+| Common | 4 | 10 | 20 | 34 |
+| Rare | 2 | 5 | 10 | 17 |
+| Epic | 1 | 2 | 4 | 7 |
+| Legendary | 1 | 1 | 2 | 4 |
+| Godly | 1 | 1 | 1 | 3 |
+
+Copies past Tier IV turn into emeralds.
+- Today the code pays a flat 10 per copy (`ChestConfig.OverflowEmeralds`).
+- The plan is per rarity: Common 2, Rare 5, Epic 20, Legendary 60, Godly 200.
+
+### Chest tiers (emeralds)
+
+Better chests roll better items (user direction, 2026-09-27: "a legendary in a wooden might be
+1%, in magical like 50%, in legendary guaranteed"). Each chest has a fixed number of copies,
+a guaranteed number of Rare and Epic copies, and a per-chest chance of a Legendary or Godly
+copy. Everything else is Common. Copies of the same rarity are grouped into 1–3 weapons
+(Clash Royale style stacks, e.g. ×12 Frying Pan, ×6 Glock). The pool is all 36 weapons (plus
+Godly); locked-class weapons still drop and show a "Class locked" note.
+
+| Chest | Emeralds | Copies | Rare copies | Epic copies | Legendary | Godly |
+|---|---:|---:|---:|---|---:|---:|
+| Wooden | 60 | 7 | 1 | 10% chance of 1 | 1% | — |
+| Silver | 160 | 16 | 2 | 35% chance of 1 | 4% | 0.1% |
+| Gold | 300 | 30 | 5 | 1 | 15% | 0.25% |
+| Magical | 700 | 40 | 10 | 3 | 50% | 1% |
+| Legendary | Robux / rewards | 14 | 4 | 2 | 100% | 3% |
+
+Godly also has a visible pity bar (guaranteed after 150 Silver-or-better chests; config value).
+
+Example: a Gold Chest for 300 emeralds gives 30 copies: 24 Common split over three weapons, 5 Rare
+split over two, 1 Epic, and a 15% (about 1 in 7) chance that one copy is a Legendary.
+
+Like the reference game, the chest's **[i]** button opens a grid of every weapon it can drop,
+tinted by rarity, with that weapon's exact chance per chest (e.g. Frying Pan 9.6%).
+
+The old "every 10th chest lets you pick" is replaced by the Legendary and Godly pity bars.
+
+### Chest looks
+
+Five completely different chests that get grander as they go (user direction 2026-09-27: not
+recolours). They share only the finish: chunky, bevelled, baked icon lighting. Built in
+`blender-chest-kit/`.
+
+| Chest | Design | Glow |
+|---|---|---|
+| Wooden | Plank chest, barrel lid, iron straps | Lantern gold |
+| Silver | Knight's Vault: octagonal armoured steel strongbox, blue enamel, pyramid lid, shield lock | Rare blue |
+| Gold | Royal Treasury: fat bulging walnut chest, tall ribbed dome, lion-paw feet, coins spilling out | Gold |
+| Magical | Arcane Reliquary: floating tapered hexagonal reliquary, crystal-spike lid, orbiting shards, runes | Epic purple |
+| Legendary | Dragon's Hoard: black lacquer and gold, spined lid, wings, horns, claw feet, sun-gem | Gold-orange |
+
+Each chest glows in the colour of the rarity it's known for, so the chest itself teaches the
+colour code. There is no Godly chest: Godly is a rare drop inside other chests, and its
+cracked-obsidian, crimson-ember look is saved for the Godly reveal effect.
+
+### Chest screen
+
+Full-screen (reference: user screenshots, 2026-09-27):
+
+- Right: **Your chests** list, one row per tier with owned count; the selected row expands to
+  price, ×1/×10 toggle and "What's inside" rarity bars.
+- Centre: the chest's 3D model, "10 chests · Ready to open", big **OPEN** and **×10** buttons.
+
+### Opening reveal
+
+1. The chest shakes; its glow colour hints at the best rarity inside.
+2. One page per rarity, Common first: heading in the rarity colour ("COMMON"), each weapon as
+   a spinning 3D model (existing reviewed models in a ViewportFrame) with a ×N badge, name,
+   "WEAPON · COMMON", spare copies, and a NEW! or UPGRADE READY! tag. Page counter "1/3",
+   "Tap to continue".
+3. Epic and above get a page per weapon, centred and larger, with a sound sting.
+4. Godly: screen flash, crimson rays, and a server-wide announcement
+   ("EggaRowls found a Godly weapon!").
+5. Last page: DONE.
+
+### Built 2026-09-28: chest screen, island and opening
+
+- `ChestConfig` now holds the five tiers, fixed weapon rarities, per-rarity upgrade costs and
+  overflow, and the Legendary pity (guaranteed within 50 Silver-or-better chests). Old class chests
+  convert to Wooden, the Royal Chest to Legendary (the Robux packs now give Legendary Chests).
+- Server actions: `BuyChest(kind, amount)` (emeralds; earned-only where restricted) and
+  `OpenChest(kind, amount)` (owned chests only). Amount is 1, 10 or 100; the reply groups every
+  copy by weapon.
+- **Chest island** (`lobby/InstallChestIsland.luau`): a floating island next to the lobby's east
+  island with the five chests on stepped pedestals; each chest has a coloured aura (wisps, seam
+  light, sparkles, back glow, ground glow, inner light) and a name / "×3 READY" label.
+- **Chest screen** (`ui/ChestScreenUI.luau` + `ChestStage.luau` + `ChestFX.luau`): the camera flies
+  from the player to the island and pans between chests. List on the left with owned count,
+  price, what's inside by rarity and an [i] odds grid; over the chest: BUY ×n, OPEN ×n and the
+  ×1 / ×10 / ×100 amount.
+- **Opening:** the camera pushes in; tap 1 and 2 shake the chest and charge the aura (the second
+  shake tints it towards the best rarity inside when it is Epic or better); tap 3 bursts the lid
+  open with light shafts, sparkles, rings and a flash. Cards fly out of the chest, commons first,
+  Epic and Legendary last with their own flash and sting. ×10 and ×100 are one animation with a
+  2× / 5× burst and more item icons spraying out. CLAIM or OPEN AGAIN.
+
+## Part 3: Godly weapons (outline only)
+
+- Separate brainstorm and spec. Target: about 25–35% stronger than a regular weapon at the same
+  tier, with oversized VFX and sound so they *feel* broken, but a run with them is still a real
+  run.
+- Chest-only drop; never sold directly for Robux.
+
+## Server rules (all parts)
+
+- Rolls, prices, pity, grants and upgrades happen on the server (`ProfileService`,
+  `RogueliteMeta`). The client only requests and draws.
+- Odds shown before opening are generated from the same `ChestConfig` table the server rolls.
+- Studio keeps in-memory profiles; nothing persists.
+
+## Verification
+
+- Unit tests (Studio command bar): odds tables sum to 100%; grouping never loses copies;
+  upgrade costs per rarity; overflow → emeralds; restricted players can open chests only with
+  earned emeralds, and cannot buy chest packs or claim paid chest rewards.
+- Studio Play: open each chest tier with emeralds, the ×10 flow, the "more emeralds needed" state, the reveal pages,
+  an upgrade in the Armory, then start a run and confirm the upgraded tier in slot 1.
+- `UILayoutAudit`: 0 problems on the chest screen, reveal and every store tab.
+- Not testable in Studio: real Robux receipts, PolicyService-restricted accounts, DataStore
+  saving, multiple clients.

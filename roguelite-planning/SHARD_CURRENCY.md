@@ -18,6 +18,8 @@ Pickup appeal: pale cyan facets use Neon while deep-blue facets retain their rea
 
 The random glowing green health-orb drop has been removed completely, including its producer, pickup loop and combat hook. Mobs drop crystals reliably, independent of Luck. PickupRadius and Fridge Magnet now describe crystal attraction; Lucky Sock explicitly describes Luck as reserved for future loot instead of promising removed health drops.
 
+**2026-09-28:** a new, rarer heart pickup replaces that idea (see `heart-pickup/README.md`): 2.5% per real kill plus 0.05% per killer Luck point (capped at 8%), at most 6 on the field, heals 15 HP before Recovery, pulled only by hurt living players inside their PickupRadius (minimum 4 studs), cleared when the wave ends. Bosses, practice targets and slime split children never roll. A defeated hammer boss now showers 50 public crystals worth 4 shards each (200 total) in a 3–14 stud disc; practice bosses still drop nothing.
+
 Shards are temporary session/run money, never persistent account currency or Robux. Studio tests never award persistent currency or wins, and DataStores remain disabled. Older references to persistent account Coins in progression proposals describe a separate lobby economy; they do not authorize coin drops or gold purchases in the run shop.
 
 The mesh exports and Roblox geometry builder share the same shard silhouette and blue/cyan palette. The builder enables immediate runtime use without requiring a new uploaded mesh ID. See the asset README for the distinction between the textured mesh and native runtime geometry.
