@@ -9,6 +9,9 @@ local Players=game:GetService('Players')
 local TweenService=game:GetService('TweenService')
 local SSS=game:GetService('ServerScriptService')
 local RS=game:GetService('ReplicatedStorage')
+-- Match servers have no lobby: ServerRole parks it.
+local Role=require(SSS:WaitForChild('ServerRole'))
+if Role.get()=='Match' then return end
 local root=workspace:WaitForChild('RogueliteLobby')
 local State=require(script:WaitForChild('QueueState'))
 local Rules=require(RS:WaitForChild('RunSetupRules'))
@@ -17,8 +20,8 @@ local Shop=require(SSS:WaitForChild('ShopService'))
 local CAPACITY=4
 local state=State.new(4,CAPACITY)
 local last,stepOff={},{}
-local lobbySpawn=root:WaitForChild('LobbySpawn');lobbySpawn.Enabled=false -- placed by script, never picked by Roblox
-local arenaSpawn=workspace:WaitForChild('SpawnLocation')
+-- Lobby servers spawn players here; the combined Studio preview places them by script instead.
+local lobbySpawn=root:WaitForChild('LobbySpawn');lobbySpawn.Enabled=Role.get()=='Lobby'
 local origin=root:GetAttribute('Origin')
 local now=function() return workspace:GetServerTimeNow() end
 local function remote(name)
@@ -145,7 +148,9 @@ local function leave(player) if state:leave(player.UserId,now()) then setQueue(p
 
 -- Areas -----------------------------------------------------------------------------
 local function areaSpawn(area,spread)
- local base=area=='Lobby' and lobbySpawn.Position or arenaSpawn.Position
+ -- The active map's spawn; the lobby's if RunMap is somehow invalid, rather than erroring.
+ local mapSpawn=Role.playerSpawn()
+ local base=(area=='Lobby' or not mapSpawn) and lobbySpawn.Position or mapSpawn.Position
  local a=math.random()*math.pi*2
  return CFrame.new(base+Vector3.new(math.cos(a)*spread,4,math.sin(a)*spread))
 end
@@ -164,7 +169,7 @@ local function moveTo(player,area,spread)
  return true
 end
 travelRemote.OnServerEvent:Connect(function(player,area)
- if area~='Lobby' and area~='Arena' then return end
+ if Role.get()~='Combined' or (area~='Lobby' and area~='Arena') then return end
  if os.clock()-(last[player] or -math.huge)<.5 or player:GetAttribute('RunDown') then return end
  local index=state.membership[player.UserId]
  if index and state.queues[index].locked then return end -- already departing
@@ -187,6 +192,8 @@ setupRemote.OnServerEvent:Connect(function(player,action,a,b,c,d,e)
  local index=state.membership[player.UserId]
  local function reply(ok,message) setupRemote:FireClient(player,'Result',ok,message) end
  if action=='Start' or action=='Play' then
+  -- Lobby servers send parties to match servers (plan C); Studio can't teleport.
+  if Role.get()=='Lobby' then return reply(false,'Runs start in the published game. Use the combined Studio mode to play here') end
   local mapOk,mapWhy=Rules.validMap(player,a,e);if not mapOk then return reply(false,mapWhy) end
   local okL,why=Rules.validLoadout(player,b,c);if not okL then return reply(false,why) end
   -- PLAY away from the pads: take the first empty pad and stand the player on it as host.
@@ -242,7 +249,7 @@ local function launch(index)
 end
 
 local function attach(player)
- player:SetAttribute('StudioArea',root:GetAttribute('StudioStartArea')=='Lobby' and 'Lobby' or 'Arena')
+ player:SetAttribute('StudioArea',(Role.get()=='Lobby' or root:GetAttribute('StudioStartArea')=='Lobby') and 'Lobby' or 'Arena')
  local function spawned(char)
   leave(player);stepOff[player]=nil
   local hrp=char:WaitForChild('HumanoidRootPart',10)

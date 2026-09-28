@@ -5,6 +5,7 @@ local RS=game:GetService('ReplicatedStorage')
 local combat=RS:WaitForChild('RogueliteCombat')
 local Weapons=require(combat:WaitForChild('WeaponCatalog'))
 local Stats=require(combat:WaitForChild('CharacterStats'))
+local Playable=require(combat:WaitForChild('MapConfig'))
 local R={}
 
 -- PROGRESSION_AND_SESSION_FLOW.md: five maps, each won at wave 20, and three difficulties per map.
@@ -74,6 +75,8 @@ function R.homeWeapons(class) local out={};for _,w in Weapons.List do if w.home=
 function R.validMap(player,mapId,diff)
  local index=type(mapId)=='string' and R.MapIndex[mapId]
  if not index then return false,'Unknown map' end
+ -- Only maps with match folders can be played (MapConfig); the rest show as coming soon.
+ if not Playable.valid(mapId) then return false,'Coming soon' end
  diff=diff or 'Normal'
  if type(diff)~='string' or not R.DifficultyIndex[diff] then return false,'Unknown difficulty' end
  if not R.difficultyUnlocked(R.progress(player).wins,index,diff) then

@@ -15,6 +15,7 @@ local Characters=require(script.Parent:WaitForChild('CharacterService'))
 local Effects=require(script.Parent:WaitForChild('CombatEffectsService'))
 local states={}
 local Shop=require(script.Parent:WaitForChild('ShopService'))
+local Role=require(script.Parent:WaitForChild('ServerRole'))
 -- Slot 1 holds the loadout starter the lobby validated (RunWeapon); Brawler's signature until one is picked.
 -- Each class build opens with its signature weapon. RunSetupRules isn't sandboxed, so this script can't require it.
 local function starter(player)
@@ -81,9 +82,10 @@ end
 local function rayParams(character,ignoreEnemies)
  local filter={character}
  for _,p in Players:GetPlayers() do if p.Character then table.insert(filter,p.Character) end end
- for _,name in {'RogueliteWeaponShowcase','RogueliteWeaponShowcase_PlaySize','RogueliteZombieSpawn'} do
+ for _,name in {'RogueliteWeaponShowcase','RogueliteWeaponShowcase_PlaySize'} do
   local f=workspace:FindFirstChild(name);if f then table.insert(filter,f) end
  end
+ local marker=Role.marker();if marker then table.insert(filter,marker) end
  if ignoreEnemies then for _,npc in Tags:GetTagged('RogueliteZombie') do table.insert(filter,npc) end end
  local p=RaycastParams.new();p.FilterType=Enum.RaycastFilterType.Exclude;p.FilterDescendantsInstances=filter;return p
 end
