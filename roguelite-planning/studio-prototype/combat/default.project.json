@@ -232,6 +232,9 @@
         "SkillTreeConfig": {
           "$path": "SkillTreeConfig.luau"
         },
+        "MapConfig": {
+          "$path": "MapConfig.luau"
+        },
         "PurchaseRequest": {
           "$className": "RemoteEvent",
           "$properties": {

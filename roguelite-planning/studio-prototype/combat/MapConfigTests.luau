@@ -8,6 +8,7 @@ return function(Maps, EnemyCatalog, Rules)
 	check(Maps.valid(Maps.Default), "Default map must exist")
 	check(not Maps.valid("Nope") and not Maps.valid(nil) and not Maps.valid(5), "Unknown ids are invalid")
 	check(Maps.get("Nope") == nil, "get() returns nil for unknown ids")
+	check(Maps.get(Maps.Default) == Maps.Maps[Maps.Default], "get() returns the map entry")
 	local seenFolders = {}
 	for _, name in Maps.LobbyFolders do
 		seenFolders[name] = "lobby"
@@ -30,6 +31,15 @@ return function(Maps, EnemyCatalog, Rules)
 				count += 1
 			end
 			check(count > 0, id .. " roster must not be empty")
+			local listed = {}
+			for enemyId in map.roster:gmatch("[^,%s]+") do
+				listed[enemyId] = true
+			end
+			for _, enemy in EnemyCatalog.List do
+				if enemy.map == Rules.Maps[index].name then
+					check(listed[enemy.id], id .. " roster is missing " .. tostring(enemy.id))
+				end
+			end
 		end
 	end
 	check(Maps.Maps.PineValley.boss == "Hammer" and Maps.Maps.PineValley.roster == nil, "Pine Valley keeps its zombies and Hammer boss")
