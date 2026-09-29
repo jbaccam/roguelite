@@ -4,6 +4,10 @@
 -- Positions never change. Every move and every new instance is recorded in
 -- ServerStorage.MapGrouping_20260928; set UNDO=true and run again to reverse it. Running it
 -- twice is safe: it only picks up what is still loose.
+-- UNDO is safe to re-run. It skips anything moved or deleted since the migration and keeps
+-- folders that still hold other content. Before undoing, revert and sync the code that expects
+-- the folders (RogueliteZombieChase, BossEncounter, RogueliteCombat, RogueliteLobbyPreview and
+-- ApplyPropCollision); otherwise the spawner finds no marker.
 local UNDO=false
 local PINE_CENTER=Vector3.new(56,5,450) -- Pine Valley's zombie spawn marker
 local PINE_RADIUS=250
@@ -16,16 +20,29 @@ log.Name='MapGrouping_20260928';log.Parent=SS
 local function record(kind,inst) local v=Instance.new('ObjectValue');v.Name=kind;v.Value=inst;v.Parent=log end
 
 if UNDO then
- local restored,removed=0,0
- for _,v in log:GetChildren() do if v.Name=='moved' and v.Value then v.Value.Parent=workspace;restored+=1 end end
- for _,v in log:GetChildren() do if v.Name=='created' and v.Value then v.Value:Destroy();removed+=1 end end
- for _,inst in workspace:GetChildren() do
-  local original=inst:GetAttribute('OriginalName')
-  if original then inst.Name=original;inst:SetAttribute('OriginalName',nil) end
-  if inst:GetAttribute('AddedSpawnBoundaryModel') then inst:SetAttribute('SpawnBoundaryModel',nil);inst:SetAttribute('AddedSpawnBoundaryModel',nil) end
+ -- Undo only what is still where this migration put it; leave anything moved or deleted since.
+ local pine=workspace:FindFirstChild('PineValleyArena');local ex=workspace:FindFirstChild('BeachCoveExtras')
+ local props=ex and ex:FindFirstChild('Props')
+ local restored,removed,skipped,kept=0,0,{},{}
+ local function unmark(inst)
+  local o=inst:GetAttribute('OriginalName');if o then inst.Name=o;inst:SetAttribute('OriginalName',nil) end
+  if inst:GetAttribute('AddedSpawnBoundaryModel') and inst:GetAttribute('SpawnBoundaryModel')=='MapOneBoundary' then
+   inst:SetAttribute('SpawnBoundaryModel',nil);inst:SetAttribute('AddedSpawnBoundaryModel',nil) end
  end
- log:Destroy()
- return ('Undone: %d moved back, %d created removed'):format(restored,removed)
+ for _,v in log:GetChildren() do local inst=v.Value
+  if v.Name=='moved' and inst and inst.Parent then
+   if (inst.Parent==pine or inst.Parent==props) and pcall(function() inst.Parent=workspace end) then unmark(inst);restored+=1;v:Destroy()
+   else table.insert(skipped,inst:GetFullName()) end
+  elseif v.Name=='moved' then v:Destroy() end -- deleted since: leave it deleted
+ end
+ local created={};for _,v in log:GetChildren() do if v.Name=='created' then table.insert(created,v) end end
+ for i=#created,1,-1 do local v=created[i];local inst=v.Value -- children before parents
+  if inst and inst.Parent and inst:IsA('Folder') and #inst:GetChildren()>0 then table.insert(kept,inst:GetFullName())
+  else if inst and inst.Parent then inst:Destroy();removed+=1 end;v:Destroy() end
+ end
+ if #log:GetChildren()==0 then log:Destroy() end
+ return ('Undone: %d moved back, %d removed. Skipped (moved/deleted since): %s. Kept non-empty: %s'):format(
+  restored,removed,table.concat(skipped,', '),table.concat(kept,', '))
 end
 
 local function flat(p) return Vector3.new(p.X,0,p.Z) end
@@ -72,6 +89,7 @@ local ring=0
 for _,w in arena.BoundaryWall:GetDescendants() do
  if w:IsA('BasePart') and w.Name:match('^Wall') then ring=math.max(ring,(flat(w.Position)-flat(center)).Magnitude) end
 end
+assert(ring>20,'BeachCoveArena.BoundaryWall has no Wall parts; cannot size the spawn area')
 local function clearSpot()
  local params=OverlapParams.new();params.FilterType=Enum.RaycastFilterType.Exclude
  params.FilterDescendantsInstances={sand,arena.BoundaryWall,workspace.Baseplate}
@@ -96,6 +114,7 @@ end
 if not extras:FindFirstChild('RogueliteZombieSpawn') then
  local m=Instance.new('Part');m.Name='RogueliteZombieSpawn'
  m.Anchored=true;m.Size=Vector3.new(1,1,1);m.Transparency=1;m.CanCollide=false;m.CanTouch=false
+ m.CanQuery=false -- invisible to raycasts, so ray filters needn't exclude it
  m.Position=center+Vector3.new(0,.5,0)
  m:SetAttribute('SpawnAreaCenter',center);m:SetAttribute('SpawnAreaRadius',math.floor(ring-11))
  m:SetAttribute('SpawnBlockerFolder','NoClimb');m:SetAttribute('SpawnBoundaryModel','BoundaryWall')
