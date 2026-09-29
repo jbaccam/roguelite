@@ -3,6 +3,12 @@
 Status: proposed, waiting for user review. Replaces the chest and currency parts of
 MONETIZATION_AND_REWARDS.md and PROGRESSION_AND_SESSION_FLOW.md where they disagree.
 
+> **Partly replaced 2026-09-28 by [RARITY_GODLY_ARMOR.md](RARITY_GODLY_ARMOR.md) (user-approved).**
+> Rarity now also means a little more power. Chests hold a handful of items (Gold: 30 → 10).
+> Upgrade costs, daily-deal prices, the Godly odds and pity, the six Godly weapons, the seven armor
+> sets and the twelve pets are all defined there. Pets come from a **Pet Chest**, not eggs. Where
+> this file disagrees, that one wins.
+
 > **Decision 2026-09-27 (user): keys are dropped. Emeralds are the only currency** for chests,
 > skills, classes, deals and bundles, earned in runs and bought with Robux (like Final Swarm /
 > Survive the Swarm). Any key amount further down converts at 1 key = 20 emeralds (for example,
@@ -15,8 +21,9 @@ MONETIZATION_AND_REWARDS.md and PROGRESSION_AND_SESSION_FLOW.md where they disag
 - One rule a kid can guess: **emeralds buy everything.**
 - Chests work like Clash Royale: every weapon has a fixed rarity, a chest gives many copies of
   commons and a few of the rarer weapons, and copies upgrade a weapon's starting tier.
-- Rarity only means *how often it drops*, never *how strong it is*. A Common can be the best
-  weapon in someone's build.
+- ~~Rarity only means *how often it drops*, never *how strong it is*.~~ Replaced 2026-09-28:
+  rarer weapons are also a little stronger (Common 100 → Legendary 120 → Godly 135), see
+  RARITY_GODLY_ARMOR.md. Pets are the exception: rarer pets are only flashier.
 - A few **Godly** weapons are the long-term chase: very rare, flashy, clearly good, never "game over".
 - The store stops looking bland: colour backdrops per category, 3D weapon models, a real
   chest-opening reveal.
@@ -31,7 +38,7 @@ Each part is built, verified in Studio Play, and shown to the user before the ne
 | 1 | Store look and compliance fixes (the emeralds-only switch is already done) | Makes the store clear and appealing |
 | 2 | Weapon rarities, chest tiers, chest-opening reveal | The Clash Royale loop |
 | 3 | Godly weapons (brainstorm, models, VFX, stats) | New content; needs its own design pass |
-| 4 | Armor chests and pet eggs | When those systems exist; same template |
+| 4 | Armor chests and a Pet Chest (pets only; no eggs, user 2026-09-28) | When those systems exist; same template |
 | 5 | Polish: featured item of the day, lobby chest room | Nice to have |
 
 ## Part 0: upgrades count in runs
