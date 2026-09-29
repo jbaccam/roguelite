@@ -23,7 +23,7 @@ To reconstruct the character in Edit mode:
 1. If missing, run `../zombie-stock-r15-preview/supplied-textures/studio-native/CreateNativeZombie.luau` to create the approved display rig and supplied textures.
 2. Run `InstallPreferredZombie.luau` to replace the gameplay template and make the display static.
 3. Run `InstallPersistentHead.luau` to replace temporary editable head geometry with persistent asset 78893098815517 and correct its neck attachment orientation. This also disables automatic NPC scaling so Roblox cannot reset the fixed rig at spawn.
-4. Install the two runtime scripts at the paths above. Retain the existing map, SpawnLocation, and RogueliteZombieSpawn marker.
+4. Install the two runtime scripts at the paths above. Retain the existing map, `Workspace.PineValleyArena.PlayerSpawn` (Beach Cove: `Workspace.BeachCoveExtras.PlayerSpawn`), and RogueliteZombieSpawn marker.
 
 `export_head.py` and `ZombieHead_NativeUV.obj` preserve the unchanged Roblox built-in head geometry with the approved full-head UV projection. The OBJ importer reverses its facing relative to the rig; the install script compensates in both NeckRigAttachment and Neck.C1.
 

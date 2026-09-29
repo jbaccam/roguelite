@@ -1,6 +1,6 @@
 # Lobby and Match Servers (MVP)
 
-Status: design approved by the user on 2026-09-28. Next step: implementation plan.
+Status: design approved by the user on 2026-09-28. Plan A done (see the second status line); next are plans B and C.
 Plan A (server roles and map folders) is implemented and verified in Studio Play on 2026-09-28. Plans B (run lifecycle) and C (teleports, save lock) are next.
 
 ## In one paragraph
@@ -190,6 +190,7 @@ VIP bonus applies as it does today.
 | `ServerRole` (new, ServerScriptService; server only, clients read the `ReplicatedStorage.ServerRole` attribute) | Role detection, area parking, the `ServerRole` attribute |
 | `MatchService` (new, ServerScriptService) | Reserve, write the match entry, save, teleport, retry/fail (lobby); read the entry, check members, wait for the party, return teleport (match) |
 | `RogueliteLobbyPreview.server` | Runs live in the Lobby role (drop the Studio-only exit); `launch()` teleports via MatchService when not Combined; the travel remote stays Studio-only |
+| `RogueliteLobbyPreview.client` | Plan C: drop its Studio-only exit for the half that hides the run HUD, level-up and damage overlays in the lobby (live lobbies need it); keep the travel switch Combined-only |
 | `ProfileService` | Session lock, save-and-release, run-ID-deduped `recordRun` with win and first-win emeralds |
 | `RogueliteMeta.server` | Map from `RunMap`; spectate/respawn-at-wave-end; 10 s everyone-down countdown; unlimited doubling revives; Leave Run; run end → results |
 | `ShopService` | Win at the end of wave 20; respawn downed players at the shop phase; `setStarter` applies in a match until wave 1; Leave Run action |
