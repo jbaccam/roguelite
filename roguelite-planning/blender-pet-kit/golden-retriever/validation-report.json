@@ -1,0 +1,571 @@
+{
+  "fbx": {
+    "file": "exports/fbx/golden-retriever.fbx",
+    "ok": true,
+    "objects": 10,
+    "total_triangles": 11781,
+    "head_top_studs": 2.2205,
+    "length_studs": 2.6761,
+    "problems": [],
+    "parts": {
+      "Retriever_Body": {
+        "triangles": 4534,
+        "pivot": [
+          0.0,
+          0.0,
+          0.96
+        ],
+        "bbox_min": [
+          -0.5986,
+          -0.9127,
+          0.5166
+        ],
+        "bbox_max": [
+          0.4861,
+          0.7008,
+          1.6532
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_CrystalTag": {
+        "triangles": 210,
+        "pivot": [
+          0.0,
+          -0.9168,
+          1.1294
+        ],
+        "bbox_min": [
+          -0.0724,
+          -1.0052,
+          0.7765
+        ],
+        "bbox_max": [
+          0.0724,
+          -0.8523,
+          1.1408
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_EarL": {
+        "triangles": 412,
+        "pivot": [
+          0.36,
+          -0.74,
+          2.05
+        ],
+        "bbox_min": [
+          0.27,
+          -0.9664,
+          1.4372
+        ],
+        "bbox_max": [
+          0.6488,
+          -0.5569,
+          2.1679
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_EarR": {
+        "triangles": 412,
+        "pivot": [
+          -0.36,
+          -0.74,
+          2.05
+        ],
+        "bbox_min": [
+          -0.6488,
+          -0.9664,
+          1.4372
+        ],
+        "bbox_max": [
+          -0.27,
+          -0.5569,
+          2.1679
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_Head": {
+        "triangles": 1967,
+        "pivot": [
+          0.0,
+          -0.54,
+          1.36
+        ],
+        "bbox_min": [
+          -0.5358,
+          -1.48,
+          1.2434
+        ],
+        "bbox_max": [
+          0.5358,
+          -0.2843,
+          2.2205
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_LegBL": {
+        "triangles": 818,
+        "pivot": [
+          0.26,
+          0.36,
+          0.96
+        ],
+        "bbox_min": [
+          0.0676,
+          0.1296,
+          -0.0003
+        ],
+        "bbox_max": [
+          0.5343,
+          0.7372,
+          1.1174
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_LegBR": {
+        "triangles": 818,
+        "pivot": [
+          -0.26,
+          0.36,
+          0.96
+        ],
+        "bbox_min": [
+          -0.5343,
+          0.1296,
+          -0.0003
+        ],
+        "bbox_max": [
+          -0.0676,
+          0.7372,
+          1.1174
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_LegFL": {
+        "triangles": 730,
+        "pivot": [
+          0.25,
+          -0.32,
+          0.92
+        ],
+        "bbox_min": [
+          0.0653,
+          -0.6202,
+          -0.0027
+        ],
+        "bbox_max": [
+          0.4426,
+          -0.1092,
+          1.1215
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_LegFR": {
+        "triangles": 730,
+        "pivot": [
+          -0.25,
+          -0.32,
+          0.92
+        ],
+        "bbox_min": [
+          -0.4426,
+          -0.6202,
+          -0.0027
+        ],
+        "bbox_max": [
+          -0.0653,
+          -0.1092,
+          1.1215
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_Tail": {
+        "triangles": 1150,
+        "pivot": [
+          0.0,
+          0.62,
+          1.16
+        ],
+        "bbox_min": [
+          -0.1297,
+          0.4465,
+          1.0205
+        ],
+        "bbox_max": [
+          0.13,
+          1.1961,
+          2.0054
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "glb": {
+    "file": "exports/glb/golden-retriever.glb",
+    "ok": true,
+    "objects": 10,
+    "total_triangles": 11781,
+    "head_top_studs": 2.2205,
+    "length_studs": 2.6761,
+    "problems": [],
+    "parts": {
+      "Retriever_Body": {
+        "triangles": 4534,
+        "pivot": [
+          0.0,
+          0.0,
+          0.96
+        ],
+        "bbox_min": [
+          -0.5986,
+          -0.9127,
+          0.5166
+        ],
+        "bbox_max": [
+          0.4861,
+          0.7008,
+          1.6532
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_CrystalTag": {
+        "triangles": 210,
+        "pivot": [
+          0.0,
+          -0.9168,
+          1.1294
+        ],
+        "bbox_min": [
+          -0.0724,
+          -1.0052,
+          0.7765
+        ],
+        "bbox_max": [
+          0.0724,
+          -0.8523,
+          1.1408
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_EarL": {
+        "triangles": 412,
+        "pivot": [
+          0.36,
+          -0.74,
+          2.05
+        ],
+        "bbox_min": [
+          0.27,
+          -0.9664,
+          1.4372
+        ],
+        "bbox_max": [
+          0.6488,
+          -0.5569,
+          2.1679
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_EarR": {
+        "triangles": 412,
+        "pivot": [
+          -0.36,
+          -0.74,
+          2.05
+        ],
+        "bbox_min": [
+          -0.6488,
+          -0.9664,
+          1.4372
+        ],
+        "bbox_max": [
+          -0.27,
+          -0.5569,
+          2.1679
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_Head": {
+        "triangles": 1967,
+        "pivot": [
+          0.0,
+          -0.54,
+          1.36
+        ],
+        "bbox_min": [
+          -0.5358,
+          -1.48,
+          1.2434
+        ],
+        "bbox_max": [
+          0.5358,
+          -0.2843,
+          2.2205
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_LegBL": {
+        "triangles": 818,
+        "pivot": [
+          0.26,
+          0.36,
+          0.96
+        ],
+        "bbox_min": [
+          0.0676,
+          0.1296,
+          -0.0003
+        ],
+        "bbox_max": [
+          0.5343,
+          0.7372,
+          1.1174
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_LegBR": {
+        "triangles": 818,
+        "pivot": [
+          -0.26,
+          0.36,
+          0.96
+        ],
+        "bbox_min": [
+          -0.5343,
+          0.1296,
+          -0.0003
+        ],
+        "bbox_max": [
+          -0.0676,
+          0.7372,
+          1.1174
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_LegFL": {
+        "triangles": 730,
+        "pivot": [
+          0.25,
+          -0.32,
+          0.92
+        ],
+        "bbox_min": [
+          0.0653,
+          -0.6202,
+          -0.0027
+        ],
+        "bbox_max": [
+          0.4426,
+          -0.1092,
+          1.1215
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_LegFR": {
+        "triangles": 730,
+        "pivot": [
+          -0.25,
+          -0.32,
+          0.92
+        ],
+        "bbox_min": [
+          -0.4426,
+          -0.6202,
+          -0.0027
+        ],
+        "bbox_max": [
+          -0.0653,
+          -0.1092,
+          1.1215
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Retriever_Tail": {
+        "triangles": 1150,
+        "pivot": [
+          0.0,
+          0.62,
+          1.16
+        ],
+        "bbox_min": [
+          -0.1297,
+          0.4465,
+          1.0205
+        ],
+        "bbox_max": [
+          0.13,
+          1.1961,
+          2.0054
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "golden-retriever",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "texture": {
+    "file": "textures/golden-retriever.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "ok": true
+  },
+  "install_data": {
+    "file": "studio-install-data.json",
+    "ok": true,
+    "problems": []
+  },
+  "all_ok": true,
+  "expected_parts": [
+    "Retriever_Body",
+    "Retriever_CrystalTag",
+    "Retriever_EarL",
+    "Retriever_EarR",
+    "Retriever_Head",
+    "Retriever_LegBL",
+    "Retriever_LegBR",
+    "Retriever_LegFL",
+    "Retriever_LegFR",
+    "Retriever_Tail"
+  ],
+  "scope": "Blender re-import only (Blender 5.2.1 LTS); Studio untested"
+}

@@ -1,0 +1,278 @@
+{
+  "asset": "golden-retriever",
+  "axis": "studio = (-x, z, y) of blender; Blender front -Y = Studio front -Z",
+  "units": "studs; the model is at final size, import 1:1 and do not scale",
+  "sides": "L/R are the dog's own left/right; its left is Blender +X = Studio -X",
+  "origin": "all positions are relative to the model origin = the ground point under the body pivot (Blender world origin)",
+  "ground_point": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "overall_size": [
+    1.2975,
+    2.2232,
+    2.6761
+  ],
+  "overall_center": [
+    0.0,
+    1.1089,
+    -0.1419
+  ],
+  "texture": "textures/golden-retriever.png",
+  "texture_note": "one shared atlas; every MeshPart uses the same TextureID (Common rarity: no Neon, no glow)",
+  "rest_rotation": "every part has identity rotation relative to the model at rest",
+  "rig": "one Motor6D per part: Part0 = joint_parent, Part1 = the part, C0/C1 placed at the part's pivot",
+  "parts": {
+    "Retriever_Body": {
+      "center": [
+        0.0563,
+        1.0849,
+        -0.106
+      ],
+      "size": [
+        1.0847,
+        1.1366,
+        1.6134
+      ],
+      "pivot": [
+        0.0,
+        0.96,
+        0.0
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pivot_is": "body centre (root part; bob/roll pivot)",
+      "joint_parent": null,
+      "suggested_motion": "root part: bob up/down in Studio Y and a small roll about Studio Z while running"
+    },
+    "Retriever_Head": {
+      "center": [
+        0.0,
+        1.732,
+        -0.8821
+      ],
+      "size": [
+        1.0717,
+        0.9771,
+        1.1957
+      ],
+      "pivot": [
+        0.0,
+        1.36,
+        -0.54
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.4,
+        -0.54
+      ],
+      "pivot_is": "neck joint (nod / tilt / turn pivot)",
+      "joint_parent": "Retriever_Body",
+      "suggested_motion": "nod = pitch about Studio X, tilt = roll about Studio Z, look = yaw about Studio Y, all through the neck joint"
+    },
+    "Retriever_EarL": {
+      "center": [
+        -0.4594,
+        1.8026,
+        -0.7616
+      ],
+      "size": [
+        0.3788,
+        0.7307,
+        0.4095
+      ],
+      "pivot": [
+        -0.36,
+        2.05,
+        -0.74
+      ],
+      "pivot_from_body_pivot": [
+        -0.36,
+        1.09,
+        -0.74
+      ],
+      "pivot_is": "ear root on the skull (flop pivot)",
+      "joint_parent": "Retriever_Head",
+      "suggested_motion": "flop = rotate about Studio Z (front-back axis) through the ear root; child of the head"
+    },
+    "Retriever_EarR": {
+      "center": [
+        0.4594,
+        1.8026,
+        -0.7616
+      ],
+      "size": [
+        0.3788,
+        0.7307,
+        0.4095
+      ],
+      "pivot": [
+        0.36,
+        2.05,
+        -0.74
+      ],
+      "pivot_from_body_pivot": [
+        0.36,
+        1.09,
+        -0.74
+      ],
+      "pivot_is": "ear root on the skull (flop pivot)",
+      "joint_parent": "Retriever_Head",
+      "suggested_motion": "flop = rotate about Studio Z (front-back axis) through the ear root; child of the head"
+    },
+    "Retriever_LegFL": {
+      "center": [
+        -0.2539,
+        0.5594,
+        -0.3647
+      ],
+      "size": [
+        0.3773,
+        1.1242,
+        0.511
+      ],
+      "pivot": [
+        -0.25,
+        0.92,
+        -0.32
+      ],
+      "pivot_from_body_pivot": [
+        -0.25,
+        -0.04,
+        -0.32
+      ],
+      "pivot_is": "shoulder (swing about the side-to-side axis)",
+      "joint_parent": "Retriever_Body",
+      "suggested_motion": "trot = swing about Studio X (side-to-side axis) through the shoulder"
+    },
+    "Retriever_LegFR": {
+      "center": [
+        0.2539,
+        0.5594,
+        -0.3647
+      ],
+      "size": [
+        0.3773,
+        1.1242,
+        0.511
+      ],
+      "pivot": [
+        0.25,
+        0.92,
+        -0.32
+      ],
+      "pivot_from_body_pivot": [
+        0.25,
+        -0.04,
+        -0.32
+      ],
+      "pivot_is": "shoulder (swing about the side-to-side axis)",
+      "joint_parent": "Retriever_Body",
+      "suggested_motion": "trot = swing about Studio X (side-to-side axis) through the shoulder"
+    },
+    "Retriever_LegBL": {
+      "center": [
+        -0.301,
+        0.5586,
+        0.4334
+      ],
+      "size": [
+        0.4666,
+        1.1176,
+        0.6076
+      ],
+      "pivot": [
+        -0.26,
+        0.96,
+        0.36
+      ],
+      "pivot_from_body_pivot": [
+        -0.26,
+        0.0,
+        0.36
+      ],
+      "pivot_is": "hip (swing about the side-to-side axis)",
+      "joint_parent": "Retriever_Body",
+      "suggested_motion": "trot = swing about Studio X (side-to-side axis) through the hip"
+    },
+    "Retriever_LegBR": {
+      "center": [
+        0.301,
+        0.5586,
+        0.4334
+      ],
+      "size": [
+        0.4666,
+        1.1176,
+        0.6076
+      ],
+      "pivot": [
+        0.26,
+        0.96,
+        0.36
+      ],
+      "pivot_from_body_pivot": [
+        0.26,
+        0.0,
+        0.36
+      ],
+      "pivot_is": "hip (swing about the side-to-side axis)",
+      "joint_parent": "Retriever_Body",
+      "suggested_motion": "trot = swing about Studio X (side-to-side axis) through the hip"
+    },
+    "Retriever_Tail": {
+      "center": [
+        -0.0002,
+        1.5129,
+        0.8213
+      ],
+      "size": [
+        0.2597,
+        0.985,
+        0.7496
+      ],
+      "pivot": [
+        0.0,
+        1.16,
+        0.62
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.2,
+        0.62
+      ],
+      "pivot_is": "tail root (wag = turn about the vertical axis)",
+      "joint_parent": "Retriever_Body",
+      "suggested_motion": "wag = yaw about Studio Y through the tail root (lift = pitch about Studio X)"
+    },
+    "Retriever_CrystalTag": {
+      "center": [
+        0.0,
+        0.9586,
+        -0.9288
+      ],
+      "size": [
+        0.1448,
+        0.3643,
+        0.1529
+      ],
+      "pivot": [
+        0.0,
+        1.1294,
+        -0.9168
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.1694,
+        -0.9168
+      ],
+      "pivot_is": "tag ring on the collar (swing pivot)",
+      "joint_parent": "Retriever_Body",
+      "suggested_motion": "dangle = swing about Studio X through the ring on the collar (lags the body)"
+    }
+  }
+}
