@@ -6,6 +6,7 @@
 -- Until plan C's solo test matches, a live server is Combined: one run shared by everyone. So on
 -- a live server the panel only works while no other player (non-developer) is in the server,
 -- and a developer leaving hands the shared run back (unpaused, unfrozen, normal waves).
+-- A non-developer joining a live server mid-test ends the developer's test with a new, rewarding run.
 -- Unsandboxed Script: it uses sandboxed modules (AdminConfig, MapConfig, ServerRole, ShopService)
 -- and the spawner's ServerStorage.AdminSpawn bindable (RogueliteZombieChase, unsandboxed).
 local Players=game:GetService('Players')
@@ -168,22 +169,37 @@ remote.OnServerInvoke=function(p,action,a,b)
  if not ran then warn('AdminService:',action,ok);return {ok=false,message='Server error'} end
  return {ok=ok==true,message=message or ''}
 end
--- A developer leaving while others stay hands the shared run back: no admin Pause, Freeze,
--- Keep N alive or Sandbox. It stays a test run (AdminTestRun is untouched). When nobody stays,
--- ShopService resets the run anyway.
-local function handBack()
- Shop.adminPause(false) -- false when it wasn't paused; nothing to do then
- local sp=spawner()
- if sp then sp:Invoke('Freeze',false);keepAlive(0,'') end -- no spawner: neither can be on
- if Shop.phase=='Practice' then Shop.setWaves() end
+-- Hand the shared run back: no admin Pause, Freeze or Keep N alive; after() finishes the job
+-- (normal waves, or a new run). Errors only warn.
+local function handBack(why,after)
+ local ok,err=pcall(function()
+  Shop.adminPause(false) -- false when it wasn't paused; nothing to do then
+  local sp=spawner()
+  if sp then sp:Invoke('Freeze',false);keepAlive(0,'') end -- no spawner: neither can be on
+  after()
+ end)
+ if not ok then warn('AdminService: hand back ('..why..') failed:',err) end
 end
+-- A developer leaving while others stay: the run goes back to normal waves (Sandbox ends). It
+-- stays a test run (AdminTestRun is untouched). When nobody stays, ShopService resets the run anyway.
 Players.PlayerRemoving:Connect(function(p)
  last[p]=nil
  if not Admin.isAdmin(p) then return end
  for _,q in Players:GetPlayers() do
   if q~=p then
-   local ok,err=pcall(handBack);if not ok then warn('AdminService: hand back failed:',err) end
+   handBack('developer left',function() if Shop.phase=='Practice' then Shop.setWaves() end end)
    return
   end
  end
 end)
+-- A non-developer joining a live server where a developer has been testing gets a real,
+-- rewarding run: the gate kept everyone else out, so this only ends the developer's own test.
+local run=RS:WaitForChild('RogueliteRunState')
+local function joined(p)
+ if RunService:IsStudio() or Admin.isAdmin(p) then return end
+ if Admin.isTestRun(run) or run:GetAttribute('AdminPaused') or combat:GetAttribute('AdminFreeze') or Shop.phase=='Practice' then
+  handBack('player joined',Shop.resetRun)
+ end
+end
+Players.PlayerAdded:Connect(joined)
+for _,p in Players:GetPlayers() do task.spawn(joined,p) end
