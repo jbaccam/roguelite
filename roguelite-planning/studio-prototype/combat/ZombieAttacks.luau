@@ -67,4 +67,13 @@ function A.update(npc,target)
     h.AutoRotate=false;h:Move(Vector3.zero);h:MoveTo(root.Position)
     return true
 end
+-- Drop a slam in progress without its hit (admin Freeze), so it can't land the moment the
+-- Mutant updates again. The cooldown stays; the next slam starts a fresh wind-up.
+function A.cancel(npc)
+    local s=states[npc];if not s or not s.start then return end
+    s.start=nil
+    local h=npc:FindFirstChildOfClass('Humanoid');if h then h.AutoRotate=true end
+    npc:SetAttribute('Attacking',false)
+    npc:SetAttribute('SlamStart',nil) -- the client drops the slam pose and ground warning too
+end
 return A

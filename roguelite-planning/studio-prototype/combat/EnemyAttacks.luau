@@ -275,4 +275,19 @@ function A.update(npc, target, dt)
 	h.AutoRotate = false
 	return true
 end
+-- Drop an attack in progress without its hit (admin Freeze), so it can't land the moment the
+-- enemy updates again. The cooldown stays; the next attack starts a fresh wind-up.
+function A.cancel(npc)
+	local s = states[npc]
+	if not s or not s.start then
+		return
+	end
+	s.start = nil
+	local h = npc:FindFirstChildOfClass("Humanoid")
+	if h then
+		h.AutoRotate = true
+	end
+	npc:SetAttribute("Attacking", false)
+	npc:SetAttribute("EnemyAttackStart", nil) -- the client stops the swing pose too
+end
 return A

@@ -184,8 +184,10 @@ function S.pause()
  S.paused=ends and math.max(0,ends-workspace:GetServerTimeNow()) or 0
  run:SetAttribute('WaveEndsAt',nil);run:SetAttribute('Paused',true)
 end
+-- An admin Pause holds the clock until adminPause(false), which clears AdminPaused first: a revive
+-- during it must not restart the clock while the spawner stays paused.
 function S.resume()
- if not S.paused then return end
+ if not S.paused or run:GetAttribute('AdminPaused') then return end
  if S.phase=='Combat' then run:SetAttribute('WaveEndsAt',workspace:GetServerTimeNow()+S.paused) end
  S.paused=nil;run:SetAttribute('Paused',nil)
 end
@@ -250,6 +252,8 @@ function S.stopWave()
  if not RunService:IsStudio() or S.phase~='Combat' then return false end
  S.phase='Shop';run:SetAttribute('Phase','Shop');run:SetAttribute('WaveEndsAt',nil)
  combat:SetAttribute('ZombiesEnabled',false)
+ -- A stopped wave can't stay paused (solo death or admin Pause), like endWave.
+ S.paused=nil;run:SetAttribute('Paused',nil);run:SetAttribute('AdminPaused',nil)
  Shards.clear(false)
  for p,s in S.states do
   s.ready=false;s.revision+=1

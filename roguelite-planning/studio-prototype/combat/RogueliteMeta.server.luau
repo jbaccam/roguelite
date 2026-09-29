@@ -20,7 +20,9 @@ local studio=RunService:IsStudio()
 -- to the developer's own account. Grants count as earned; Robux emeralds are clamped to the balance.
 Characters.onPracticeEmeralds=function(p,mode,amount)
  local d=Admin.isAdmin(p) and Profiles.get(p);if not d then return false end
- d.emeralds=math.clamp(mode=='Set' and amount or d.emeralds+amount,0,1e7)
+ -- Add never cuts a balance already above 1e7 (from Robux) down to the cap; Set stays 0..1e7.
+ if mode=='Set' then d.emeralds=math.clamp(amount,0,1e7)
+ else d.emeralds=math.clamp(d.emeralds+amount,0,math.max(1e7,d.emeralds)) end
  d.bought=math.min(d.bought or 0,d.emeralds)
  Profiles.publish(p);return true
 end

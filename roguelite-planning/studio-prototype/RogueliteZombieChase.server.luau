@@ -177,7 +177,7 @@ local function releaseQueued(members, generation)
         if queuedSet[index] == generation then queuedSet[index] = nil end
     end
 end
-local function telegraphGroup(members, point, generation)
+local function telegraphBody(members, point, generation)
     if generation ~= waveGeneration then releaseQueued(members, generation) return end
     local spots = point and memberSpots(point, #members) or {}
     local marks = {}
@@ -197,6 +197,14 @@ local function telegraphGroup(members, point, generation)
     end
     for n, index in members do spawnZombie(index, nil, spots[n]) end
 end
+-- The group's queue slots are always released, even if the body errors part-way (a missing
+-- marker, say); otherwise those slots never refill until the next resetWave. After a normal
+-- run the body has already released them and this release does nothing.
+local function telegraphGroup(members, point, generation)
+    local ok, err = pcall(telegraphBody, members, point, generation)
+    releaseQueued(members, generation)
+    if not ok then warn('Spawn telegraph failed: ' .. tostring(err)) end
+end
 local function flushQueue()
     flushScheduled = false
     local generation, batch, chosen, delay = waveGeneration, queued, {}, 0
@@ -206,7 +214,10 @@ local function flushQueue()
         local size = math.min(#batch - i + 1, math.random(2, 4))
         local members = table.move(batch, i, i + size - 1, 1, {})
         i += size
-        local point = pickSpawnPoint(chosen, nil, SPAWN_BAND, MIN_PLAYER_DISTANCE)
+        -- An error here would strand the rest of the batch in queuedSet; with no point the group
+        -- still goes to telegraphGroup, which releases it.
+        local picked, point = pcall(pickSpawnPoint, chosen, nil, SPAWN_BAND, MIN_PLAYER_DISTANCE)
+        if not picked then warn('Spawn point failed: ' .. tostring(point)); point = nil end
         if point then table.insert(chosen, point) end
         task.delay(delay, telegraphGroup, members, point, generation)
         delay += GROUP_STAGGER
@@ -262,7 +273,8 @@ humanoid.MaxHealth = config.health
 humanoid.Health = humanoid.MaxHealth
 humanoid.BreakJointsOnDeath = false
 humanoid.Died:Connect(function()
-    if config.behavior=='Splitter' and not splitChild and thisWave==waveGeneration and combat:GetAttribute('ZombiesEnabled') then
+    -- Admin extras outlive a population change (resetWave keeps them), so they split in any wave.
+    if config.behavior=='Splitter' and not splitChild and (admin or thisWave==waveGeneration) and combat:GetAttribute('ZombiesEnabled') then
         local position=root.Position
         for child=1,config.splitCount do spawnZombie(index,id,position+Vector3.new(child==1 and -1.5 or 1.5,0,0),child,admin) end
     end
@@ -332,10 +344,13 @@ connection = RunService.Heartbeat:Connect(function(dt)
         connection:Disconnect()
         return
     end
-    -- Admin Freeze: no moving and no new attacks; animations, hits and damage still work.
+    -- Admin Freeze: no moving and no attacks; players' hits and damage still work. The first
+    -- frozen frame cancels an attack in progress, so its hit can't land the moment Freeze ends.
     if combat:GetAttribute('AdminFreeze') == true then
         if not frozen then
             frozen = true
+            EnemyAttacks.cancel(npc)
+            Attacks.cancel(npc)
             npc:SetAttribute("Chasing", false)
             humanoid:Move(Vector3.zero)
             humanoid:MoveTo(root.Position)
@@ -479,7 +494,8 @@ adminSpawn.OnInvoke = function(action, id, count, position)
     end
     if combat:GetAttribute('ZombiesEnabled') ~= true or not Role.marker() then return 0 end
     local made = 0
-    for _ = 1, math.clamp(math.floor(count), 0, 50) do
+    -- AdminConfig caps the Hammer boss at 5; checked here again.
+    for _ = 1, math.clamp(math.floor(count), 0, id == 'Hammer' and 5 or 50) do
         local point = pickSpawnPoint({}, position, {20, 40}, 20)
         if point then
             if id == 'Hammer' then

@@ -81,13 +81,15 @@ function Service.setClass(player,class)
  if not s or type(class)~='string' or not Stats.Classes[class] or s.class==class then return end
  s.class=class;Service.refresh(player)
 end
--- A new run starts clean (ShopService.resetRun): admin stat edits, class picks and god mode
--- never carry into a run that pays rewards. Normal play has nothing to clear. The caller refreshes.
+-- A new run starts clean (ShopService.resetRun): admin stat edits, class picks, god mode and the
+-- Weapons off toggle never carry into a run that pays rewards. Normal play has nothing to clear.
+-- The caller refreshes.
 function Service.clearAdmin(player)
  local s=Service.states[player];if not s then return end
  s.overrides={}
  local picked=player:GetAttribute('RunClass');s.class=Stats.Classes[picked] and picked or 'Brawler'
  player:SetAttribute('AdminGod',nil)
+ s.folder:SetAttribute('WeaponEnabled',true)
 end
 function Service.heal(player,amount)
  local s=Service.states[player];local h=humanoid(player)
