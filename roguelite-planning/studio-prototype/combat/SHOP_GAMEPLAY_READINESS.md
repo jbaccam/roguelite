@@ -11,6 +11,18 @@ Updated 2026-09-23. The [Brotato shop reference](https://brotato.wiki.spellsandg
 - Shop inflation follows base price plus wave and 10% of base price per wave. Recycled weapons still return 50% of their actual purchase cost. This is intentionally more forgiving than the reference because this game has no crate item economy.
 - Purchases, copy caps, weapons, combining, locks, prices, and the phase are validated on the server. No paid purchase changes shop odds. Studio practice does not write persistent rewards.
 - Common shop cards have no rarity outline. Higher tiers use dark colored fills with an outline. The overall shop background and gray panels are darker.
+- A run launched from a lobby pad opens on wave 1; the first shop comes after it (`ShopService.startFirstWave`, 2026-09-28).
+- **Out of play between waves (2026-09-28).** While the run phase is Shop, a player in the arena can't be hurt, walk or jump, so nobody can die or wander around mid-shop. `CharacterService.inShop` drives both rules:
+  - `contact` returns 0. Every player damage path goes through it: enemy melee and projectiles, contact damage, Tank slams and the boss.
+  - The Humanoid gets WalkSpeed 0 and JumpHeight 0 on the server.
+  - The server puts back anyone who drifts more than 3 studs. A jump over 25 studs is a server move (travel, respawn), so the hold restarts from there.
+  - Players standing in the Studio lobby aren't in the run and move freely.
+  - Verified in single-client Studio Play:
+    - During the shop, 1.5 s of held forward and jump input moved 0.00 studs and rose 0.00.
+    - A 6–7 stud client teleport snapped back within 0.3 s.
+    - The admin 20-damage test hit dealt 0.
+    - After Start, WalkSpeed went back to 22 and JumpHeight to 9.5, and the same hit dealt 13.4.
+  - The very first teleport attempt, right after spawning, wasn't pulled back. Every later one was.
 
 ## Build paths supported by the catalog
 

@@ -19,7 +19,17 @@ workspace.Gravity=Stats.Movement.Gravity
 local Catalog=require(combat:WaitForChild('WeaponCatalog'))
 local Service={states={}}
 local function humanoid(player) return player.Character and player.Character:FindFirstChildOfClass('Humanoid') end
+-- Between waves (run phase Shop) a player in the arena is out of play: nothing can damage them and
+-- they can't walk or jump until the next wave starts. Players in the Studio lobby aren't in the run.
+-- The run state is looked up, never waited on: ShopService creates it after requiring this module.
+function Service.inShop(player)
+ local run=game.ReplicatedStorage:FindFirstChild('RogueliteRunState')
+ return run~=nil and run:GetAttribute('Phase')=='Shop' and player:GetAttribute('LobbyPreviewActive')~=true
+end
 local function applyMoveSpeed(h,s)
+ h.UseJumpPower=false
+ if s.held then h.WalkSpeed=0;h.JumpHeight=0;return end
+ h.JumpHeight=Stats.Movement.JumpHeight
  local state=h:GetState()
  local airborne=h.Health>0 and (state==Enum.HumanoidStateType.Jumping or state==Enum.HumanoidStateType.Freefall)
  -- Always derive from the resolved ground stat; repeated jumps never stack.
@@ -49,7 +59,6 @@ function Service.refresh(player)
   local missing=h.MaxHealth-h.Health;local alive=h.Health>0
   h.MaxHealth=s.stats.MaxHP;if alive then h.Health=math.clamp(h.MaxHealth-missing,1,h.MaxHealth) end
   applyMoveSpeed(h,s)
-  h.UseJumpPower=false;h.JumpHeight=Stats.Movement.JumpHeight
   player.Character:SetAttribute('CombatClass',s.class)
  end
  if Service.onStatsChanged then Service.onStatsChanged(player) end
@@ -61,6 +70,7 @@ function Service.attach(player,folder)
  local function spawned(character)
   local h=character:WaitForChild('Humanoid',10);if not h or player.Character~=character then return end
   s.leech=0;s.blocks=1;s.hits=0;s.lastContact=os.clock()
+  s.held=nil;s.holdAt=nil -- the next tick re-checks the shop hold for the new body
   Service.refresh(player);h.Health=h.MaxHealth
   if s.moveStateConnection then s.moveStateConnection:Disconnect() end
   s.moveStateConnection=h.StateChanged:Connect(function()
@@ -103,9 +113,10 @@ function Service.leech(player,damage)
 end
 function Service.contact(player,amount,roll)
  local s=Service.states[player];local h=humanoid(player)
- -- Admin god mode (AdminGod, set only by AdminService): no damage from any source. Every player
- -- damage path (contact, enemy melee and projectiles, zombie slams, the boss) comes through here.
- if not s or not h or h.Health<=0 or player.Character:FindFirstChildOfClass('ForceField') or player:GetAttribute('AdminGod')==true then return 0 end
+ -- Admin god mode (AdminGod, set only by AdminService) and the between-wave shop: no damage from
+ -- any source. Every player damage path (contact, enemy melee and projectiles, zombie slams, the
+ -- boss) comes through here.
+ if not s or not h or h.Health<=0 or player.Character:FindFirstChildOfClass('ForceField') or player:GetAttribute('AdminGod')==true or Service.inShop(player) then return 0 end
  if s.stats.FirstHitBlock>0 and s.blocks>0 then s.blocks-=1;s.folder:SetAttribute('BlocksRemaining',s.blocks);return 0 end
  if (roll or math.random())<s.stats.Dodge/100 then return 0 end
  local before=h.Health;h:TakeDamage(Stats.incoming(amount,s.stats));local actual=before-h.Health
@@ -178,6 +189,16 @@ RunService.Heartbeat:Connect(function(dt)
  for player,s in Service.states do
   local h=humanoid(player);local root=player.Character and player.Character:FindFirstChild('HumanoidRootPart')
   if h and root and h.Health>0 then
+   -- Shop hold: stand still from the moment the shop opens until the next wave starts. Anyone who
+   -- still drifts a few studs is put back. A long jump is a server move (travel, respawn), so the
+   -- hold starts again from there.
+   local held=Service.inShop(player)
+   if held~=(s.held==true) then s.held=held;s.holdAt=held and root.Position or nil;applyMoveSpeed(h,s) end
+   if held and s.holdAt then
+    local drift=root.Position-s.holdAt;local flat=Vector2.new(drift.X,drift.Z).Magnitude
+    if flat>25 then s.holdAt=root.Position
+    elseif flat>3 then player.Character:PivotTo(CFrame.new(s.holdAt)*root.CFrame.Rotation) end
+   end
    Service.heal(player,s.stats.Regeneration*step)
    local second=math.floor(now);if s.leechSecond~=second then s.leechSecond=second;s.leech=0 end
    if now-s.lastContact>=.8 and combat:GetAttribute('ZombiesEnabled') then
