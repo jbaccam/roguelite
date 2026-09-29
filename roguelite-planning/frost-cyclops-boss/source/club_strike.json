@@ -1,0 +1,8 @@
+{
+ "normal_ref_world": [
+  -0.473807,
+  0.122082,
+  -0.872125
+ ],
+ "note": "Striking-face normal in the REFERENCE pose; points straight down at the GroundSlam impact frame. Written by fc_motion.write_strike()."
+}

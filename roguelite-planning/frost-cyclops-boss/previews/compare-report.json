@@ -1,0 +1,952 @@
+{
+ "render": "previews\\Reference_Match.png",
+ "silhouette_iou": 0.9156,
+ "reference_px": 783189,
+ "render_px": 778975,
+ "probes": {
+  "skin_belly": {
+   "reference": {
+    "pixels": 31115,
+    "shadow_srgb": [
+     98,
+     122,
+     157
+    ],
+    "mid_srgb": [
+     130,
+     153,
+     184
+    ],
+    "lit_srgb": [
+     162,
+     180,
+     204
+    ],
+    "mean_linear": [
+     0.23102,
+     0.32116,
+     0.47576
+    ]
+   },
+   "render": {
+    "pixels": 30879,
+    "shadow_srgb": [
+     133,
+     150,
+     183
+    ],
+    "mid_srgb": [
+     143,
+     160,
+     191
+    ],
+    "lit_srgb": [
+     154,
+     170,
+     200
+    ],
+    "mean_linear": [
+     0.27609,
+     0.35237,
+     0.52319
+    ]
+   },
+   "ratio_ref_over_render": [
+    0.837,
+    0.911,
+    0.909
+   ],
+   "worst_channel_pct": 16.3
+  },
+  "skin_arm_L": {
+   "reference": {
+    "pixels": 29670,
+    "shadow_srgb": [
+     111,
+     137,
+     172
+    ],
+    "mid_srgb": [
+     152,
+     170,
+     199
+    ],
+    "lit_srgb": [
+     187,
+     199,
+     224
+    ],
+    "mean_linear": [
+     0.31866,
+     0.40653,
+     0.5781
+    ]
+   },
+   "render": {
+    "pixels": 29738,
+    "shadow_srgb": [
+     107,
+     123,
+     154
+    ],
+    "mid_srgb": [
+     123,
+     139,
+     171
+    ],
+    "lit_srgb": [
+     150,
+     190,
+     238
+    ],
+    "mean_linear": [
+     0.21672,
+     0.30691,
+     0.49025
+    ]
+   },
+   "ratio_ref_over_render": [
+    1.47,
+    1.325,
+    1.179
+   ],
+   "worst_channel_pct": 47.0
+  },
+  "skin_arm_R": {
+   "reference": {
+    "pixels": 15576,
+    "shadow_srgb": [
+     69,
+     98,
+     142
+    ],
+    "mid_srgb": [
+     139,
+     157,
+     203
+    ],
+    "lit_srgb": [
+     180,
+     198,
+     237
+    ],
+    "mean_linear": [
+     0.24814,
+     0.32945,
+     0.55672
+    ]
+   },
+   "render": {
+    "pixels": 14746,
+    "shadow_srgb": [
+     111,
+     127,
+     158
+    ],
+    "mid_srgb": [
+     145,
+     161,
+     191
+    ],
+    "lit_srgb": [
+     150,
+     190,
+     238
+    ],
+    "mean_linear": [
+     0.25567,
+     0.38091,
+     0.60905
+    ]
+   },
+   "ratio_ref_over_render": [
+    0.971,
+    0.865,
+    0.914
+   ],
+   "worst_channel_pct": 13.5
+  },
+  "skin_leg_L": {
+   "reference": {
+    "pixels": 22560,
+    "shadow_srgb": [
+     72,
+     98,
+     135
+    ],
+    "mid_srgb": [
+     96,
+     121,
+     157
+    ],
+    "lit_srgb": [
+     123,
+     145,
+     177
+    ],
+    "mean_linear": [
+     0.13192,
+     0.20221,
+     0.3462
+    ]
+   },
+   "render": {
+    "pixels": 22800,
+    "shadow_srgb": [
+     101,
+     116,
+     147
+    ],
+    "mid_srgb": [
+     119,
+     136,
+     168
+    ],
+    "lit_srgb": [
+     150,
+     167,
+     196
+    ],
+    "mean_linear": [
+     0.20128,
+     0.26221,
+     0.40901
+    ]
+   },
+   "ratio_ref_over_render": [
+    0.655,
+    0.771,
+    0.846
+   ],
+   "worst_channel_pct": 34.5
+  },
+  "skin_head": {
+   "reference": {
+    "pixels": 5966,
+    "shadow_srgb": [
+     93,
+     121,
+     164
+    ],
+    "mid_srgb": [
+     165,
+     181,
+     209
+    ],
+    "lit_srgb": [
+     180,
+     196,
+     219
+    ],
+    "mean_linear": [
+     0.33137,
+     0.42723,
+     0.60382
+    ]
+   },
+   "render": {
+    "pixels": 5820,
+    "shadow_srgb": [
+     110,
+     125,
+     157
+    ],
+    "mid_srgb": [
+     132,
+     149,
+     181
+    ],
+    "lit_srgb": [
+     144,
+     161,
+     191
+    ],
+    "mean_linear": [
+     0.22277,
+     0.29363,
+     0.45334
+    ]
+   },
+   "ratio_ref_over_render": [
+    1.487,
+    1.455,
+    1.332
+   ],
+   "worst_channel_pct": 48.7
+  },
+  "fur_mantle": {
+   "reference": {
+    "pixels": 59300,
+    "shadow_srgb": [
+     176,
+     162,
+     148
+    ],
+    "mid_srgb": [
+     221,
+     208,
+     195
+    ],
+    "lit_srgb": [
+     244,
+     234,
+     224
+    ],
+    "mean_linear": [
+     0.69275,
+     0.60864,
+     0.52744
+    ]
+   },
+   "render": {
+    "pixels": 59375,
+    "shadow_srgb": [
+     173,
+     165,
+     159
+    ],
+    "mid_srgb": [
+     218,
+     206,
+     193
+    ],
+    "lit_srgb": [
+     235,
+     222,
+     206
+    ],
+    "mean_linear": [
+     0.66743,
+     0.58666,
+     0.50996
+    ]
+   },
+   "ratio_ref_over_render": [
+    1.038,
+    1.037,
+    1.034
+   ],
+   "worst_channel_pct": 3.8
+  },
+  "leather_wrap": {
+   "reference": {
+    "pixels": 14039,
+    "shadow_srgb": [
+     67,
+     53,
+     54
+    ],
+    "mid_srgb": [
+     93,
+     74,
+     73
+    ],
+    "lit_srgb": [
+     120,
+     97,
+     92
+    ],
+    "mean_linear": [
+     0.11628,
+     0.07352,
+     0.07059
+    ]
+   },
+   "render": {
+    "pixels": 19076,
+    "shadow_srgb": [
+     69,
+     56,
+     58
+    ],
+    "mid_srgb": [
+     100,
+     82,
+     82
+    ],
+    "lit_srgb": [
+     117,
+     95,
+     92
+    ],
+    "mean_linear": [
+     0.12188,
+     0.07946,
+     0.07744
+    ]
+   },
+   "ratio_ref_over_render": [
+    0.954,
+    0.925,
+    0.912
+   ],
+   "worst_channel_pct": 8.8
+  },
+  "leather_belt": {
+   "reference": {
+    "pixels": 2196,
+    "shadow_srgb": [
+     59,
+     47,
+     50
+    ],
+    "mid_srgb": [
+     74,
+     61,
+     63
+    ],
+    "lit_srgb": [
+     114,
+     99,
+     95
+    ],
+    "mean_linear": [
+     0.08813,
+     0.06177,
+     0.06214
+    ]
+   },
+   "render": {
+    "pixels": 2432,
+    "shadow_srgb": [
+     62,
+     51,
+     53
+    ],
+    "mid_srgb": [
+     70,
+     57,
+     58
+    ],
+    "lit_srgb": [
+     102,
+     83,
+     79
+    ],
+    "mean_linear": [
+     0.07204,
+     0.04842,
+     0.04856
+    ]
+   },
+   "ratio_ref_over_render": [
+    1.223,
+    1.276,
+    1.28
+   ],
+   "worst_channel_pct": 28.0
+  },
+  "loincloth": {
+   "reference": {
+    "pixels": 17725,
+    "shadow_srgb": [
+     40,
+     40,
+     52
+    ],
+    "mid_srgb": [
+     59,
+     58,
+     72
+    ],
+    "lit_srgb": [
+     67,
+     68,
+     85
+    ],
+    "mean_linear": [
+     0.04143,
+     0.04122,
+     0.0643
+    ]
+   },
+   "render": {
+    "pixels": 17404,
+    "shadow_srgb": [
+     46,
+     45,
+     58
+    ],
+    "mid_srgb": [
+     52,
+     51,
+     64
+    ],
+    "lit_srgb": [
+     67,
+     65,
+     80
+    ],
+    "mean_linear": [
+     0.04006,
+     0.03825,
+     0.0586
+    ]
+   },
+   "ratio_ref_over_render": [
+    1.034,
+    1.078,
+    1.097
+   ],
+   "worst_channel_pct": 9.7
+  },
+  "buckle_stone": {
+   "reference": {
+    "pixels": 3880,
+    "shadow_srgb": [
+     92,
+     90,
+     97
+    ],
+    "mid_srgb": [
+     102,
+     98,
+     104
+    ],
+    "lit_srgb": [
+     175,
+     167,
+     169
+    ],
+    "mean_linear": [
+     0.19874,
+     0.18241,
+     0.19819
+    ]
+   },
+   "render": {
+    "pixels": 6633,
+    "shadow_srgb": [
+     112,
+     109,
+     115
+    ],
+    "mid_srgb": [
+     121,
+     117,
+     123
+    ],
+    "lit_srgb": [
+     136,
+     130,
+     133
+    ],
+    "mean_linear": [
+     0.19576,
+     0.18092,
+     0.19915
+    ]
+   },
+   "ratio_ref_over_render": [
+    1.015,
+    1.008,
+    0.995
+   ],
+   "worst_channel_pct": 1.5
+  },
+  "club_stone": {
+   "reference": {
+    "pixels": 31295,
+    "shadow_srgb": [
+     105,
+     102,
+     110
+    ],
+    "mid_srgb": [
+     145,
+     137,
+     139
+    ],
+    "lit_srgb": [
+     202,
+     192,
+     189
+    ],
+    "mean_linear": [
+     0.31968,
+     0.28709,
+     0.2945
+    ]
+   },
+   "render": {
+    "pixels": 38610,
+    "shadow_srgb": [
+     119,
+     115,
+     121
+    ],
+    "mid_srgb": [
+     152,
+     145,
+     146
+    ],
+    "lit_srgb": [
+     175,
+     165,
+     163
+    ],
+    "mean_linear": [
+     0.31215,
+     0.2821,
+     0.2919
+    ]
+   },
+   "ratio_ref_over_render": [
+    1.024,
+    1.018,
+    1.009
+   ],
+   "worst_channel_pct": 2.4
+  },
+  "club_haft": {
+   "reference": {
+    "pixels": 6984,
+    "shadow_srgb": [
+     70,
+     54,
+     51
+    ],
+    "mid_srgb": [
+     98,
+     77,
+     72
+    ],
+    "lit_srgb": [
+     123,
+     97,
+     87
+    ],
+    "mean_linear": [
+     0.12759,
+     0.07874,
+     0.0675
+    ]
+   },
+   "render": {
+    "pixels": 5815,
+    "shadow_srgb": [
+     79,
+     63,
+     60
+    ],
+    "mid_srgb": [
+     104,
+     82,
+     75
+    ],
+    "lit_srgb": [
+     115,
+     91,
+     82
+    ],
+    "mean_linear": [
+     0.12662,
+     0.07761,
+     0.06552
+    ]
+   },
+   "ratio_ref_over_render": [
+    1.008,
+    1.015,
+    1.03
+   ],
+   "worst_channel_pct": 3.0
+  },
+  "club_strap": {
+   "reference": {
+    "pixels": 9610,
+    "shadow_srgb": [
+     67,
+     53,
+     53
+    ],
+    "mid_srgb": [
+     77,
+     62,
+     62
+    ],
+    "lit_srgb": [
+     109,
+     91,
+     89
+    ],
+    "mean_linear": [
+     0.0914,
+     0.06142,
+     0.06029
+    ]
+   },
+   "render": {
+    "pixels": 12758,
+    "shadow_srgb": [
+     75,
+     62,
+     63
+    ],
+    "mid_srgb": [
+     81,
+     66,
+     66
+    ],
+    "lit_srgb": [
+     92,
+     75,
+     73
+    ],
+    "mean_linear": [
+     0.08736,
+     0.05816,
+     0.05745
+    ]
+   },
+   "ratio_ref_over_render": [
+    1.046,
+    1.056,
+    1.049
+   ],
+   "worst_channel_pct": 5.6
+  },
+  "eye_sclera": {
+   "reference": {
+    "pixels": 448,
+    "shadow_srgb": [
+     213,
+     228,
+     243
+    ],
+    "mid_srgb": [
+     234,
+     248,
+     254
+    ],
+    "lit_srgb": [
+     248,
+     254,
+     255
+    ],
+    "mean_linear": [
+     0.81531,
+     0.91086,
+     0.96902
+    ]
+   },
+   "render": null
+  },
+  "eye_iris": {
+   "reference": {
+    "pixels": 187,
+    "shadow_srgb": [
+     21,
+     93,
+     121
+    ],
+    "mid_srgb": [
+     70,
+     192,
+     219
+    ],
+    "lit_srgb": [
+     117,
+     229,
+     244
+    ],
+    "mean_linear": [
+     0.08381,
+     0.48977,
+     0.64706
+    ]
+   },
+   "render": {
+    "pixels": 155,
+    "shadow_srgb": [
+     67,
+     124,
+     150
+    ],
+    "mid_srgb": [
+     77,
+     187,
+     204
+    ],
+    "lit_srgb": [
+     105,
+     198,
+     213
+    ],
+    "mean_linear": [
+     0.08661,
+     0.4361,
+     0.53797
+    ]
+   },
+   "ratio_ref_over_render": [
+    0.968,
+    1.123,
+    1.203
+   ],
+   "worst_channel_pct": 20.3
+  },
+  "tusk": {
+   "reference": {
+    "pixels": 247,
+    "shadow_srgb": [
+     185,
+     173,
+     166
+    ],
+    "mid_srgb": [
+     234,
+     221,
+     206
+    ],
+    "lit_srgb": [
+     248,
+     237,
+     224
+    ],
+    "mean_linear": [
+     0.75475,
+     0.66989,
+     0.58005
+    ]
+   },
+   "render": {
+    "pixels": 337,
+    "shadow_srgb": [
+     191,
+     183,
+     177
+    ],
+    "mid_srgb": [
+     214,
+     205,
+     196
+    ],
+    "lit_srgb": [
+     228,
+     218,
+     205
+    ],
+    "mean_linear": [
+     0.66318,
+     0.60242,
+     0.53992
+    ]
+   },
+   "ratio_ref_over_render": [
+    1.138,
+    1.112,
+    1.074
+   ],
+   "worst_channel_pct": 13.8
+  },
+  "toenails_skin_L": {
+   "reference": {
+    "pixels": 17022,
+    "shadow_srgb": [
+     76,
+     101,
+     139
+    ],
+    "mid_srgb": [
+     140,
+     160,
+     189
+    ],
+    "lit_srgb": [
+     172,
+     186,
+     209
+    ],
+    "mean_linear": [
+     0.24452,
+     0.32165,
+     0.46978
+    ]
+   },
+   "render": {
+    "pixels": 17493,
+    "shadow_srgb": [
+     114,
+     130,
+     160
+    ],
+    "mid_srgb": [
+     133,
+     150,
+     182
+    ],
+    "lit_srgb": [
+     162,
+     180,
+     204
+    ],
+    "mean_linear": [
+     0.24874,
+     0.32026,
+     0.47151
+    ]
+   },
+   "ratio_ref_over_render": [
+    0.983,
+    1.004,
+    0.996
+   ],
+   "worst_channel_pct": 1.7
+  },
+  "snow_ground": {
+   "reference": {
+    "pixels": 52800,
+    "shadow_srgb": [
+     215,
+     224,
+     247
+    ],
+    "mid_srgb": [
+     231,
+     235,
+     249
+    ],
+    "lit_srgb": [
+     238,
+     241,
+     252
+    ],
+    "mean_linear": [
+     0.78501,
+     0.82268,
+     0.95162
+    ]
+   },
+   "render": {
+    "pixels": 52800,
+    "shadow_srgb": [
+     235,
+     240,
+     255
+    ],
+    "mid_srgb": [
+     237,
+     241,
+     255
+    ],
+    "lit_srgb": [
+     238,
+     243,
+     255
+    ],
+    "mean_linear": [
+     0.84325,
+     0.88111,
+     0.99992
+    ]
+   },
+   "ratio_ref_over_render": [
+    0.931,
+    0.934,
+    0.952
+   ],
+   "worst_channel_pct": 6.9
+  }
+ }
+}

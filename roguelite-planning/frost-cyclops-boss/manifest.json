@@ -1,0 +1,1146 @@
+{
+ "asset": "FrostCyclops",
+ "reference": {
+  "file": "source/FrostCyclops_reference.webp",
+  "sha256": "DAAFFA2AE07CF831D8F83242B9A5B72126C30F1AEFA1D2395112BC2B3F6F63A5",
+  "size": [
+   1086,
+   1448
+  ]
+ },
+ "units": "1 Blender unit = 1 Roblox stud; Z up, the character faces -Y, +X is the character's left",
+ "dimensions_studs": {
+  "height_reference_pose": 13.09,
+  "width_reference_pose_incl_club": 12.382,
+  "depth_reference_pose_incl_club": 7.862,
+  "height_rest_pose": 13.09,
+  "eye_centre_z": 11.85,
+  "shoulder_joint_span": 6.04,
+  "haft_radius_grip_stone": [
+   0.32,
+   0.48
+  ],
+  "stone_half_extents": [
+   1.62,
+   1.36,
+   1.86
+  ]
+ },
+ "bones": [
+  {
+   "name": "Root",
+   "parent": null,
+   "length": 1.2,
+   "head_rest": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "name": "HumanoidRootPart",
+   "parent": "Root",
+   "length": 0.9,
+   "head_rest": [
+    0.0,
+    0.05,
+    4.55
+   ]
+  },
+  {
+   "name": "LowerTorso",
+   "parent": "HumanoidRootPart",
+   "length": 2.2175,
+   "head_rest": [
+    0.0,
+    0.05,
+    4.55
+   ]
+  },
+  {
+   "name": "UpperTorso",
+   "parent": "LowerTorso",
+   "length": 3.3004,
+   "head_rest": [
+    -0.2741,
+    0.0966,
+    6.75
+   ]
+  },
+  {
+   "name": "Head",
+   "parent": "UpperTorso",
+   "length": 2.2589,
+   "head_rest": [
+    -0.4044,
+    -0.47,
+    10.81
+   ]
+  },
+  {
+   "name": "Jaw",
+   "parent": "Head",
+   "length": 1.2298,
+   "head_rest": [
+    -0.4009,
+    -0.67,
+    11.41
+   ]
+  },
+  {
+   "name": "Eye",
+   "parent": "Head",
+   "length": 0.7,
+   "head_rest": [
+    -0.3885,
+    -1.3799,
+    11.85
+   ]
+  },
+  {
+   "name": "EyelidUpper",
+   "parent": "Head",
+   "length": 0.4943,
+   "head_rest": [
+    -0.3885,
+    -1.3799,
+    11.851
+   ]
+  },
+  {
+   "name": "Brow",
+   "parent": "Head",
+   "length": 0.45,
+   "head_rest": [
+    -0.386,
+    -1.5199,
+    12.16
+   ]
+  },
+  {
+   "name": "RightUpperArm",
+   "parent": "UpperTorso",
+   "length": 2.1617,
+   "head_rest": [
+    -3.1653,
+    0.9748,
+    9.55
+   ]
+  },
+  {
+   "name": "RightLowerArm",
+   "parent": "RightUpperArm",
+   "length": 2.2833,
+   "head_rest": [
+    -4.7827,
+    1.3612,
+    8.1687
+   ]
+  },
+  {
+   "name": "RightHand",
+   "parent": "RightLowerArm",
+   "length": 1.1448,
+   "head_rest": [
+    -5.6812,
+    1.1484,
+    6.0804
+   ]
+  },
+  {
+   "name": "RightIndex1",
+   "parent": "RightHand",
+   "length": 0.6914,
+   "head_rest": [
+    -6.0234,
+    0.6153,
+    4.765
+   ]
+  },
+  {
+   "name": "RightIndex2",
+   "parent": "RightIndex1",
+   "length": 0.5448,
+   "head_rest": [
+    -6.2799,
+    0.8097,
+    4.153
+   ]
+  },
+  {
+   "name": "RightIndex3",
+   "parent": "RightIndex2",
+   "length": 0.4609,
+   "head_rest": [
+    -6.3021,
+    1.0161,
+    3.6494
+   ]
+  },
+  {
+   "name": "RightMiddle1",
+   "parent": "RightHand",
+   "length": 0.7128,
+   "head_rest": [
+    -6.153,
+    1.1223,
+    4.9369
+   ]
+  },
+  {
+   "name": "RightMiddle2",
+   "parent": "RightMiddle1",
+   "length": 0.5616,
+   "head_rest": [
+    -6.4092,
+    1.2887,
+    4.2929
+   ]
+  },
+  {
+   "name": "RightMiddle3",
+   "parent": "RightMiddle2",
+   "length": 0.4752,
+   "head_rest": [
+    -6.4253,
+    1.4749,
+    3.7633
+   ]
+  },
+  {
+   "name": "RightRing1",
+   "parent": "RightHand",
+   "length": 0.6843,
+   "head_rest": [
+    -6.28,
+    1.6193,
+    5.1055
+   ]
+  },
+  {
+   "name": "RightRing2",
+   "parent": "RightRing1",
+   "length": 0.5391,
+   "head_rest": [
+    -6.5174,
+    1.746,
+    4.4763
+   ]
+  },
+  {
+   "name": "RightRing3",
+   "parent": "RightRing2",
+   "length": 0.4562,
+   "head_rest": [
+    -6.5262,
+    1.8987,
+    3.9593
+   ]
+  },
+  {
+   "name": "RightPinky1",
+   "parent": "RightHand",
+   "length": 0.5988,
+   "head_rest": [
+    -6.402,
+    2.0964,
+    5.2673
+   ]
+  },
+  {
+   "name": "RightPinky2",
+   "parent": "RightPinky1",
+   "length": 0.4717,
+   "head_rest": [
+    -6.5989,
+    2.1684,
+    4.7064
+   ]
+  },
+  {
+   "name": "RightPinky3",
+   "parent": "RightPinky2",
+   "length": 0.3992,
+   "head_rest": [
+    -6.5988,
+    2.271,
+    4.246
+   ]
+  },
+  {
+   "name": "RightThumb1",
+   "parent": "RightHand",
+   "length": 0.594,
+   "head_rest": [
+    -5.045,
+    0.6736,
+    5.538
+   ]
+  },
+  {
+   "name": "RightThumb2",
+   "parent": "RightThumb1",
+   "length": 0.4752,
+   "head_rest": [
+    -5.0869,
+    0.6499,
+    4.946
+   ]
+  },
+  {
+   "name": "RightThumb3",
+   "parent": "RightThumb2",
+   "length": 0.3888,
+   "head_rest": [
+    -5.1229,
+    0.7085,
+    4.4758
+   ]
+  },
+  {
+   "name": "Club",
+   "parent": "RightHand",
+   "length": 1.2,
+   "head_rest": [
+    -5.4653,
+    1.4491,
+    5.3564
+   ]
+  },
+  {
+   "name": "Mantle_R",
+   "parent": "UpperTorso",
+   "length": 1.8788,
+   "head_rest": [
+    -1.6807,
+    0.8358,
+    11.05
+   ]
+  },
+  {
+   "name": "LeftUpperArm",
+   "parent": "UpperTorso",
+   "length": 3.8932,
+   "head_rest": [
+    2.6689,
+    -0.5884,
+    9.55
+   ]
+  },
+  {
+   "name": "LeftLowerArm",
+   "parent": "LeftUpperArm",
+   "length": 2.3151,
+   "head_rest": [
+    5.2805,
+    -0.1734,
+    6.6926
+   ]
+  },
+  {
+   "name": "LeftHand",
+   "parent": "LeftLowerArm",
+   "length": 1.1448,
+   "head_rest": [
+    5.2502,
+    -0.7644,
+    4.4544
+   ]
+  },
+  {
+   "name": "LeftIndex1",
+   "parent": "LeftHand",
+   "length": 0.6914,
+   "head_rest": [
+    4.9638,
+    -1.7083,
+    3.378
+   ]
+  },
+  {
+   "name": "LeftIndex2",
+   "parent": "LeftIndex1",
+   "length": 0.5448,
+   "head_rest": [
+    5.2206,
+    -1.9391,
+    2.779
+   ]
+  },
+  {
+   "name": "LeftIndex3",
+   "parent": "LeftIndex2",
+   "length": 0.4609,
+   "head_rest": [
+    5.339,
+    -1.9626,
+    2.2478
+   ]
+  },
+  {
+   "name": "LeftMiddle1",
+   "parent": "LeftHand",
+   "length": 0.7128,
+   "head_rest": [
+    5.4394,
+    -1.4359,
+    3.4326
+   ]
+  },
+  {
+   "name": "LeftMiddle2",
+   "parent": "LeftMiddle1",
+   "length": 0.5616,
+   "head_rest": [
+    5.6724,
+    -1.6929,
+    2.8099
+   ]
+  },
+  {
+   "name": "LeftMiddle3",
+   "parent": "LeftMiddle2",
+   "length": 0.4752,
+   "head_rest": [
+    5.7694,
+    -1.7317,
+    2.2581
+   ]
+  },
+  {
+   "name": "LeftRing1",
+   "parent": "LeftHand",
+   "length": 0.6843,
+   "head_rest": [
+    5.9056,
+    -1.1688,
+    3.4861
+   ]
+  },
+  {
+   "name": "LeftRing2",
+   "parent": "LeftRing1",
+   "length": 0.5391,
+   "head_rest": [
+    6.0984,
+    -1.4331,
+    2.885
+   ]
+  },
+  {
+   "name": "LeftRing3",
+   "parent": "LeftRing2",
+   "length": 0.4562,
+   "head_rest": [
+    6.167,
+    -1.4844,
+    2.3527
+   ]
+  },
+  {
+   "name": "LeftPinky1",
+   "parent": "LeftHand",
+   "length": 0.5988,
+   "head_rest": [
+    6.3532,
+    -0.9124,
+    3.5374
+   ]
+  },
+  {
+   "name": "LeftPinky2",
+   "parent": "LeftPinky1",
+   "length": 0.4717,
+   "head_rest": [
+    6.485,
+    -1.1632,
+    3.0099
+   ]
+  },
+  {
+   "name": "LeftPinky3",
+   "parent": "LeftPinky2",
+   "length": 0.3992,
+   "head_rest": [
+    6.5163,
+    -1.2241,
+    2.5432
+   ]
+  },
+  {
+   "name": "LeftThumb1",
+   "parent": "LeftHand",
+   "length": 0.594,
+   "head_rest": [
+    4.4221,
+    -0.7495,
+    3.966
+   ]
+  },
+  {
+   "name": "LeftThumb2",
+   "parent": "LeftThumb1",
+   "length": 0.4752,
+   "head_rest": [
+    4.3765,
+    -0.9566,
+    3.4112
+   ]
+  },
+  {
+   "name": "LeftThumb3",
+   "parent": "LeftThumb2",
+   "length": 0.3888,
+   "head_rest": [
+    4.3989,
+    -1.0741,
+    2.9513
+   ]
+  },
+  {
+   "name": "Mantle_L",
+   "parent": "UpperTorso",
+   "length": 1.8788,
+   "head_rest": [
+    1.3137,
+    0.0335,
+    11.05
+   ]
+  },
+  {
+   "name": "Belly",
+   "parent": "LowerTorso",
+   "length": 1.6125,
+   "head_rest": [
+    -0.5071,
+    -0.7727,
+    7.3
+   ]
+  },
+  {
+   "name": "RightUpperLeg",
+   "parent": "LowerTorso",
+   "length": 1.8609,
+   "head_rest": [
+    -1.4141,
+    0.5032,
+    4.45
+   ]
+  },
+  {
+   "name": "RightLowerLeg",
+   "parent": "RightUpperLeg",
+   "length": 1.8673,
+   "head_rest": [
+    -2.33,
+    0.25,
+    2.85
+   ]
+  },
+  {
+   "name": "RightFoot",
+   "parent": "RightLowerLeg",
+   "length": 1.6155,
+   "head_rest": [
+    -2.3,
+    0.62,
+    1.02
+   ]
+  },
+  {
+   "name": "RightToes",
+   "parent": "RightFoot",
+   "length": 0.7816,
+   "head_rest": [
+    -3.4584,
+    -0.285,
+    0.35
+   ]
+  },
+  {
+   "name": "LeftUpperLeg",
+   "parent": "LowerTorso",
+   "length": 2.0723,
+   "head_rest": [
+    1.4662,
+    -0.2078,
+    4.45
+   ]
+  },
+  {
+   "name": "LeftLowerLeg",
+   "parent": "LeftUpperLeg",
+   "length": 1.6973,
+   "head_rest": [
+    2.04,
+    -1.12,
+    2.68
+   ]
+  },
+  {
+   "name": "LeftFoot",
+   "parent": "LeftLowerLeg",
+   "length": 1.6073,
+   "head_rest": [
+    2.26,
+    -1.02,
+    1.0
+   ]
+  },
+  {
+   "name": "LeftToes",
+   "parent": "LeftFoot",
+   "length": 0.7816,
+   "head_rest": [
+    2.4646,
+    -2.4757,
+    0.35
+   ]
+  },
+  {
+   "name": "Loincloth_Front_1",
+   "parent": "LowerTorso",
+   "length": 1.303,
+   "head_rest": [
+    -1.0738,
+    -2.9822,
+    5.4025
+   ]
+  },
+  {
+   "name": "Loincloth_Front_2",
+   "parent": "Loincloth_Front_1",
+   "length": 1.3332,
+   "head_rest": [
+    -1.1026,
+    -3.092,
+    4.1044
+   ]
+  },
+  {
+   "name": "Loincloth_Back_1",
+   "parent": "LowerTorso",
+   "length": 1.0066,
+   "head_rest": [
+    0.8059,
+    2.3481,
+    7.4333
+   ]
+  },
+  {
+   "name": "Loincloth_Back_2",
+   "parent": "Loincloth_Back_1",
+   "length": 0.9022,
+   "head_rest": [
+    0.8407,
+    2.4419,
+    6.4317
+   ]
+  }
+ ],
+ "bone_count_deform": 61,
+ "non_deform_helpers_not_exported": [
+  "EyeTarget",
+  "ClubImpact",
+  "IK_Hand_R",
+  "Pole_Elbow_R",
+  "IK_Foot_R",
+  "Pole_Knee_R",
+  "IK_Hand_L",
+  "Pole_Elbow_L",
+  "IK_Foot_L",
+  "Pole_Knee_L"
+ ],
+ "sections": {
+  "FrostCyclops_Body": {
+   "triangles": 9110,
+   "vertices": 4430,
+   "faces": 9110,
+   "texture_master": "FrostCyclops_Body_BaseColor_2048.png",
+   "texture_delivery": "FrostCyclops_Body_BaseColor.png"
+  },
+  "FrostCyclops_Head": {
+   "triangles": 3889,
+   "vertices": 1911,
+   "faces": 3889,
+   "texture_master": "FrostCyclops_Head_BaseColor_2048.png",
+   "texture_delivery": "FrostCyclops_Head_BaseColor.png"
+  },
+  "FrostCyclops_Eye": {
+   "triangles": 520,
+   "vertices": 262,
+   "faces": 520,
+   "texture_master": "FrostCyclops_Eye_BaseColor_1024.png",
+   "texture_delivery": "FrostCyclops_Eye_BaseColor.png"
+  },
+  "FrostCyclops_Fur": {
+   "triangles": 11768,
+   "vertices": 6096,
+   "faces": 7736,
+   "texture_master": "FrostCyclops_Fur_BaseColor_2048.png",
+   "texture_delivery": "FrostCyclops_Fur_BaseColor.png"
+  },
+  "FrostCyclops_Gear": {
+   "triangles": 5840,
+   "vertices": 2930,
+   "faces": 3140,
+   "texture_master": "FrostCyclops_Gear_BaseColor_2048.png",
+   "texture_delivery": "FrostCyclops_Gear_BaseColor.png"
+  },
+  "FrostCyclops_Club": {
+   "triangles": 2464,
+   "vertices": 1236,
+   "faces": 1678,
+   "texture_master": "FrostCyclops_Club_BaseColor_2048.png",
+   "texture_delivery": "FrostCyclops_Club_BaseColor.png"
+  }
+ },
+ "triangles_total": 33591,
+ "club": {
+  "grip_point": "Club bone head = centre of the finger tunnel (haft axis inside the right fist)",
+  "club_bone_in_RightHand_space_4x4": [
+   [
+    0.46947,
+    -0.88295,
+    -0.0,
+    -0.0
+   ],
+   [
+    0.88295,
+    0.46947,
+    0.0,
+    0.486
+   ],
+   [
+    -0.0,
+    -0.0,
+    1.0,
+    -0.652
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "grip_centre_hand_local_studs": [
+   0.0,
+   0.486,
+   -0.652
+  ],
+  "haft_direction_hand_local": [
+   -0.8829,
+   0.4695,
+   0.0
+  ],
+  "club_impact_in_Club_bone_space_blender": [
+   0.9333,
+   5.938,
+   -0.2698
+  ],
+  "club_impact_normal_in_Club_bone_space_blender": [
+   0.9008,
+   0.4342,
+   -0.0
+  ],
+  "note": "Blender bone space: +Y along the bone (head->tail), X/Z per roll. ClubImpact = centre of the flat striking face; its normal is the second vector. The ClubImpact helper bone in FrostCyclops.blend sits there (non-deform, not exported).",
+  "grip_report": {
+   "haft_radius": 0.32,
+   "centre_local": [
+    0.0,
+    0.486,
+    -0.652
+   ],
+   "direction_local": [
+    -0.883,
+    0.469,
+    0.0
+   ],
+   "contact_target": 0.015,
+   "Index": {
+    "curls_deg": [
+     21,
+     100,
+     24
+    ],
+    "clearance_min": -0.031,
+    "clearance_max": 0.3
+   },
+   "Middle": {
+    "curls_deg": [
+     78,
+     64,
+     42
+    ],
+    "clearance_min": -0.006,
+    "clearance_max": 0.102
+   },
+   "Ring": {
+    "curls_deg": [
+     99,
+     40,
+     42
+    ],
+    "clearance_min": 0.001,
+    "clearance_max": 0.162
+   },
+   "Pinky": {
+    "curls_deg": [
+     108,
+     124,
+     24
+    ],
+    "clearance_min": -0.005,
+    "clearance_max": 0.406
+   },
+   "Thumb": {
+    "clearance_min": -0.007,
+    "clearance_max": 0.045,
+    "tip_to_target": 0.834
+   }
+  }
+ },
+ "attacks": {
+  "GroundSlam": {
+   "frames": [
+    1,
+    60
+   ],
+   "impact_frame": 29,
+   "labels": {
+    "carry": 1,
+    "windup": 21,
+    "mid-swing": 27,
+    "impact": 29,
+    "recovery": 54
+   },
+   "strike_window": [
+    21,
+    29
+   ],
+   "swing_plane_normal": [
+    -0.9842,
+    0.1772,
+    0.0
+   ],
+   "club_impact_point_root": [
+    -3.4506,
+    -8.1636,
+    0.0008
+   ],
+   "strike_face_normal_at_impact": [
+    0.0001,
+    0.0007,
+    -1.0
+   ],
+   "ClubImpact_root_at_impact_blender": [
+    -3.4506,
+    -8.1636,
+    0.0008
+   ],
+   "ClubImpact_root_at_impact_roblox_xyz": [
+    3.4506,
+    0.0008,
+    -8.1636
+   ]
+  },
+  "Stomp": {
+   "frames": [
+    1,
+    80
+   ],
+   "impact_frame": 50,
+   "labels": {
+    "weight shift": 10,
+    "top of raise": 44,
+    "mid-slam": 48,
+    "impact": 50,
+    "recovery": 68
+   },
+   "StompImpact_root": [
+    2.3167,
+    -2.9409,
+    0.0
+   ],
+   "StompSpikeDirection_root": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "StompImpact_root_roblox_xyz": [
+    -2.3167,
+    0.0,
+    -2.9409
+   ],
+   "StompSpikeDirection_roblox_xyz": [
+    -0.0,
+    0.0,
+    -1.0
+   ]
+  }
+ },
+ "actions": {
+  "GroundSlam": {
+   "frame_range": [
+    1,
+    60
+   ],
+   "fps": 30,
+   "markers": {
+    "Impact": 29
+   }
+  },
+  "ReferencePose": {
+   "frame_range": [
+    1,
+    2
+   ],
+   "fps": 30,
+   "markers": {}
+  },
+  "RigTest_ROM": {
+   "frame_range": [
+    1,
+    129
+   ],
+   "fps": 30,
+   "markers": {}
+  },
+  "Stomp": {
+   "frame_range": [
+    1,
+    80
+   ],
+   "fps": 30,
+   "markers": {
+    "Impact": 50
+   }
+  }
+ },
+ "motion_checks_summary": {
+  "GroundSlam": {
+   "strike_max_wrist_bend": 18.0,
+   "strike_max_elbow_out_of_plane": 0.0,
+   "mid_to_impact_max_elbow_flex": 6.0,
+   "mid_to_impact_min_reach_pct": 99.86000061035156,
+   "min_club_body_clearance": 0.128,
+   "min_club_lowest_z": -0.0,
+   "club_lowest_z_at_impact": -0.0,
+   "max_grip_digit_drift": 3e-06
+  },
+  "Stomp": {
+   "max_knee_flex_Left": 99.02,
+   "knee_flex_Left_at_top": 99.02,
+   "knee_flex_Left_at_impact": 44.66,
+   "max_knee_twist_Left": 0.07,
+   "max_standing_foot_drift": 1e-06,
+   "min_thigh_gut_clearance": 0.208,
+   "min_loincloth_thigh_clearance": -0.584,
+   "min_club_lowest_z": 0.089
+  }
+ },
+ "motion_checks_passed": true,
+ "textures": {
+  "FrostCyclops_Body_BaseColor.png": {
+   "sha256": "886577AC640630C1E82C43AC745DC29EEF8D002611DDD389DCCC37F8655490B9",
+   "bytes": 733450
+  },
+  "FrostCyclops_Body_BaseColor_2048.png": {
+   "sha256": "CAA8B14D57657889ACB3DE1D49A3B3F1D01A39B99188BD0596D2650D4EED739C",
+   "bytes": 1832511
+  },
+  "FrostCyclops_Club_BaseColor.png": {
+   "sha256": "C3E3921DC665B1D9CF0B832B8380FA2DB6D8A11251D90E67CFB9FC501C9080C7",
+   "bytes": 523752
+  },
+  "FrostCyclops_Club_BaseColor_2048.png": {
+   "sha256": "48FBC815E3D5595B864E803E76ECC90ACAE0DEB08C44DC48EE236084DD64C95F",
+   "bytes": 1318250
+  },
+  "FrostCyclops_Eye_BaseColor.png": {
+   "sha256": "83AACEE2C6C8C169C50D392BF24F88537903E6D27035426A08F018BCE4689D88",
+   "bytes": 148674
+  },
+  "FrostCyclops_Eye_BaseColor_1024.png": {
+   "sha256": "83AACEE2C6C8C169C50D392BF24F88537903E6D27035426A08F018BCE4689D88",
+   "bytes": 148674
+  },
+  "FrostCyclops_Fur_BaseColor.png": {
+   "sha256": "D8680C7A5F80001947C2E503707CFE449B494C5DBA807A7AF174028F5C37FA9E",
+   "bytes": 709737
+  },
+  "FrostCyclops_Fur_BaseColor_2048.png": {
+   "sha256": "B892693A258138994F67E75AE89D9B20A6281918567800C74F0D16A8B9934DB7",
+   "bytes": 1839520
+  },
+  "FrostCyclops_Gear_BaseColor.png": {
+   "sha256": "7B5252E61881EF22A0597239CF9BFDE50DC4D77881889EF38DDA8C5899344A39",
+   "bytes": 584958
+  },
+  "FrostCyclops_Gear_BaseColor_2048.png": {
+   "sha256": "F44B2E75B8F73873EDAB8DDFC73F4B05E3543A7223105C5587201AA34056A670",
+   "bytes": 1457034
+  },
+  "FrostCyclops_Head_BaseColor.png": {
+   "sha256": "D054E4908D222DD376BED6B4FB58307A037119BEC38000F255151230FA268164",
+   "bytes": 614300
+  },
+  "FrostCyclops_Head_BaseColor_2048.png": {
+   "sha256": "DB34DC85D7387B9F1F9AAA481979B8434CBB884FF70ED9AA71EEC46A8B7B142A",
+   "bytes": 1491866
+  }
+ },
+ "exports": {
+  "exports/fbx/FrostCyclops.fbx": {
+   "sha256": "0F0C00466B2E792374B4A08C1C152F1EE09D3CB3781C2D26D871FA18A268E996",
+   "bytes": 5158076
+  },
+  "exports/fbx/FrostCyclops_GroundSlam.fbx": {
+   "sha256": "6AFA3FFE213631D84ECD13115B95E7E1E97E0F0A7BADBD68A06BB05998B4E74B",
+   "bytes": 616780
+  },
+  "exports/fbx/FrostCyclops_ReferencePose.fbx": {
+   "sha256": "3136D8EBBB05928609EC8F00E66294F704BFBAC065DAB1B3ACE5B830C01FD355",
+   "bytes": 368204
+  },
+  "exports/fbx/FrostCyclops_RigTest_ROM.fbx": {
+   "sha256": "B9810D485CCD58D9A8EBBDCB2F23567262EBE380EB6760EBF3623CD410B67829",
+   "bytes": 830076
+  },
+  "exports/fbx/FrostCyclops_Stomp.fbx": {
+   "sha256": "42128E9E9E6B03343B5610D59F678A129C7A675EFB285F7651F89B40CAAF0E94",
+   "bytes": 693500
+  },
+  "exports/glb/FrostCyclops.glb": {
+   "sha256": "F06D1935A053E4D539A3CAA96E50B2666ADC26C0033578CF6A36244C559BCC5E",
+   "bytes": 8194056
+  }
+ },
+ "camera_solution": {
+  "image": [
+   1086,
+   1448
+  ],
+  "principal_point_px": [
+   543.0,
+   724.0
+  ],
+  "focal_px": 2076.67,
+  "blender_lens_mm_sensor36_fit_vertical": 51.63,
+  "camera_location": [
+   -0.4515,
+   -26.263,
+   6.3642
+  ],
+  "pitch_deg": -0.0004,
+  "yaw_deg": 1.1528,
+  "vertical_fov_deg": 38.441,
+  "rms_reprojection_px": 1.043,
+  "anchors": [
+   {
+    "name": "head_top",
+    "pixel": [
+     541,
+     185
+    ],
+    "world": [
+     0.0382,
+     -0.7,
+     13.0
+    ],
+    "reprojected": [
+     541.0,
+     185.01
+    ],
+    "depth": 25.568
+   },
+   {
+    "name": "foot_L_toe_bottom",
+    "pixel": [
+     760,
+     1290
+    ],
+    "world": [
+     2.4536,
+     -3.0,
+     0.0
+    ],
+    "reprojected": [
+     760.0,
+     1290.8
+    ],
+    "depth": 23.317
+   },
+   {
+    "name": "foot_R_toe_bottom",
+    "pixel": [
+     395,
+     1248
+    ],
+    "world": [
+     -1.7418,
+     -1.0,
+     0.0
+    ],
+    "reprojected": [
+     395.0,
+     1247.78
+    ],
+    "depth": 25.232
+   },
+   {
+    "name": "club_head_bottom",
+    "pixel": [
+     215,
+     1300
+    ],
+    "world": [
+     -3.641,
+     -3.05,
+     0.0
+    ],
+    "reprojected": [
+     214.97,
+     1295.03
+    ],
+    "depth": 23.144
+   },
+   {
+    "name": "foot_L_little_toe",
+    "pixel": [
+     905,
+     1283
+    ],
+    "world": [
+     4.1423,
+     -2.72,
+     0.0
+    ],
+    "reprojected": [
+     905.0,
+     1283.27
+    ],
+    "depth": 23.631
+   },
+   {
+    "name": "foot_L_big_toe_in",
+    "pixel": [
+     668,
+     1287
+    ],
+    "world": [
+     1.4233,
+     -2.95,
+     0.0
+    ],
+    "reprojected": [
+     668.02,
+     1290.09
+    ],
+    "depth": 23.346
+   }
+  ],
+  "depth_priors_note": "Y of each anchor is a stance prior: left toes 1.6 studs ahead of the right toes, crown 2.3 studs behind the left toes. Everything else solved."
+ }
+}

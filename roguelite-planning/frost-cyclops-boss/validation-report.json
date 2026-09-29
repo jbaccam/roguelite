@@ -1,0 +1,447 @@
+{
+ "tool": "validate_exports.py",
+ "blender": "5.2.1 LTS",
+ "fbx_main": {
+  "armatures": 1,
+  "meshes": 6,
+  "mesh_names": [
+   "FrostCyclops_Body",
+   "FrostCyclops_Club",
+   "FrostCyclops_Eye",
+   "FrostCyclops_Fur",
+   "FrostCyclops_Gear",
+   "FrostCyclops_Head"
+  ],
+  "armature": {
+   "bone_count": 61,
+   "missing": [],
+   "extra": [],
+   "wrong_parent": []
+  },
+  "per_mesh": {
+   "FrostCyclops_Body": {
+    "triangles": 9110,
+    "vertices": 4430,
+    "under_20k": true,
+    "unweighted_vertices": 0,
+    "max_influences": 4,
+    "max_weight_sum_error": 0.0001000426709651947,
+    "uv": true,
+    "uv_range": [
+     0.00850024912506342,
+     0.991499662399292
+    ],
+    "flat_loop_fraction": 1.0,
+    "textures": [
+     {
+      "image": "FrostCyclops_Body_BaseColor",
+      "size": [
+       1024,
+       1024
+      ],
+      "mean": 0.6277773380279541
+     }
+    ]
+   },
+   "FrostCyclops_Club": {
+    "triangles": 2464,
+    "vertices": 1236,
+    "under_20k": true,
+    "unweighted_vertices": 0,
+    "max_influences": 1,
+    "max_weight_sum_error": 0.0,
+    "uv": true,
+    "uv_range": [
+     0.007745952811092138,
+     0.9922541379928589
+    ],
+    "flat_loop_fraction": 1.0,
+    "textures": [
+     {
+      "image": "FrostCyclops_Club_BaseColor",
+      "size": [
+       1024,
+       1024
+      ],
+      "mean": 0.3806779086589813
+     }
+    ]
+   },
+   "FrostCyclops_Eye": {
+    "triangles": 520,
+    "vertices": 262,
+    "under_20k": true,
+    "unweighted_vertices": 0,
+    "max_influences": 1,
+    "max_weight_sum_error": 0.0,
+    "uv": true,
+    "uv_range": [
+     0.002449366031214595,
+     0.9975506067276001
+    ],
+    "flat_loop_fraction": 1.0,
+    "textures": [
+     {
+      "image": "FrostCyclops_Eye_BaseColor",
+      "size": [
+       1024,
+       1024
+      ],
+      "mean": 0.8624393343925476
+     }
+    ]
+   },
+   "FrostCyclops_Fur": {
+    "triangles": 11768,
+    "vertices": 6096,
+    "under_20k": true,
+    "unweighted_vertices": 0,
+    "max_influences": 4,
+    "max_weight_sum_error": 0.00010003149509429932,
+    "uv": true,
+    "uv_range": [
+     0.01012754999101162,
+     0.989872395992279
+    ],
+    "flat_loop_fraction": 1.0,
+    "textures": [
+     {
+      "image": "FrostCyclops_Fur_BaseColor",
+      "size": [
+       1024,
+       1024
+      ],
+      "mean": 0.7769642472267151
+     }
+    ]
+   },
+   "FrostCyclops_Gear": {
+    "triangles": 5840,
+    "vertices": 2930,
+    "under_20k": true,
+    "unweighted_vertices": 0,
+    "max_influences": 4,
+    "max_weight_sum_error": 0.00010003149509429932,
+    "uv": true,
+    "uv_range": [
+     0.009376201778650284,
+     0.9906378984451294
+    ],
+    "flat_loop_fraction": 1.0,
+    "textures": [
+     {
+      "image": "FrostCyclops_Gear_BaseColor",
+      "size": [
+       1024,
+       1024
+      ],
+      "mean": 0.33815598487854004
+     }
+    ]
+   },
+   "FrostCyclops_Head": {
+    "triangles": 3889,
+    "vertices": 1911,
+    "under_20k": true,
+    "unweighted_vertices": 0,
+    "max_influences": 3,
+    "max_weight_sum_error": 0.00010002963244915009,
+    "uv": true,
+    "uv_range": [
+     0.008122307248413563,
+     0.9918777346611023
+    ],
+    "flat_loop_fraction": 1.0,
+    "textures": [
+     {
+      "image": "FrostCyclops_Head_BaseColor",
+      "size": [
+       1024,
+       1024
+      ],
+      "mean": 0.6017678380012512
+     }
+    ]
+   }
+  },
+  "eye_y": -1.38,
+  "body_y": -0.352,
+  "bounds_min": [
+   -7.196000099182129,
+   -4.468999862670898,
+   -0.10300000011920929
+  ],
+  "bounds_max": [
+   6.729000091552734,
+   3.069999933242798,
+   13.09000015258789
+  ],
+  "height": 13.09
+ },
+ "fbx_clips": {
+  "ReferencePose": {
+   "armatures": 1,
+   "meshes": 0,
+   "actions": [
+    "FrostCyclops_Rig|Scene"
+   ],
+   "frame_range": [
+    2,
+    3
+   ],
+   "bones_moving_samples": 0,
+   "armature": {
+    "bone_count": 61,
+    "missing": [],
+    "extra": [],
+    "wrong_parent": []
+   }
+  },
+  "RigTest_ROM": {
+   "armatures": 1,
+   "meshes": 0,
+   "actions": [
+    "FrostCyclops_Rig|Scene"
+   ],
+   "frame_range": [
+    2,
+    130
+   ],
+   "bones_moving_samples": 414,
+   "armature": {
+    "bone_count": 61,
+    "missing": [],
+    "extra": [],
+    "wrong_parent": []
+   }
+  },
+  "GroundSlam": {
+   "armatures": 1,
+   "meshes": 0,
+   "actions": [
+    "FrostCyclops_Rig|Scene"
+   ],
+   "frame_range": [
+    2,
+    61
+   ],
+   "bones_moving_samples": 790,
+   "armature": {
+    "bone_count": 61,
+    "missing": [],
+    "extra": [],
+    "wrong_parent": []
+   }
+  },
+  "Stomp": {
+   "armatures": 1,
+   "meshes": 0,
+   "actions": [
+    "FrostCyclops_Rig|Scene"
+   ],
+   "frame_range": [
+    2,
+    81
+   ],
+   "bones_moving_samples": 752,
+   "armature": {
+    "bone_count": 61,
+    "missing": [],
+    "extra": [],
+    "wrong_parent": []
+   }
+  }
+ },
+ "glb": {
+  "armatures": 1,
+  "meshes": 6,
+  "mesh_names": [
+   "FrostCyclops_Body",
+   "FrostCyclops_Club",
+   "FrostCyclops_Eye",
+   "FrostCyclops_Fur",
+   "FrostCyclops_Gear",
+   "FrostCyclops_Head"
+  ],
+  "actions": [
+   "GroundSlam",
+   "ReferencePose",
+   "RigTest_ROM",
+   "Stomp"
+  ],
+  "ignored_importer_helpers": [
+   "Icosphere"
+  ],
+  "armature": {
+   "bone_count": 61,
+   "missing": [],
+   "extra": [],
+   "wrong_parent": []
+  },
+  "per_mesh": {
+   "FrostCyclops_Body": {
+    "triangles": 9110,
+    "vertices": 27330,
+    "under_20k": true,
+    "unweighted_vertices": 0,
+    "max_influences": 4,
+    "max_weight_sum_error": 1.2665987014770508e-07,
+    "uv": true,
+    "uv_range": [
+     0.008500277996063232,
+     0.991499662399292
+    ],
+    "flat_loop_fraction": 1.0,
+    "textures": [
+     {
+      "image": "FrostCyclops_Body_BaseColor",
+      "size": [
+       1024,
+       1024
+      ],
+      "mean": 0.6277773380279541
+     }
+    ]
+   },
+   "FrostCyclops_Club": {
+    "triangles": 2464,
+    "vertices": 5442,
+    "under_20k": true,
+    "unweighted_vertices": 0,
+    "max_influences": 1,
+    "max_weight_sum_error": 0.0,
+    "uv": true,
+    "uv_range": [
+     0.007745975162833929,
+     0.9922541379928589
+    ],
+    "flat_loop_fraction": 0.9943,
+    "textures": [
+     {
+      "image": "FrostCyclops_Club_BaseColor",
+      "size": [
+       1024,
+       1024
+      ],
+      "mean": 0.3806779086589813
+     }
+    ]
+   },
+   "FrostCyclops_Eye": {
+    "triangles": 520,
+    "vertices": 1560,
+    "under_20k": true,
+    "unweighted_vertices": 0,
+    "max_influences": 1,
+    "max_weight_sum_error": 0.0,
+    "uv": true,
+    "uv_range": [
+     0.0024493669625371695,
+     0.9975506067276001
+    ],
+    "flat_loop_fraction": 1.0,
+    "textures": [
+     {
+      "image": "FrostCyclops_Eye_BaseColor",
+      "size": [
+       1024,
+       1024
+      ],
+      "mean": 0.8624393343925476
+     }
+    ]
+   },
+   "FrostCyclops_Fur": {
+    "triangles": 11768,
+    "vertices": 27236,
+    "under_20k": true,
+    "unweighted_vertices": 0,
+    "max_influences": 4,
+    "max_weight_sum_error": 6.51925802230835e-08,
+    "uv": true,
+    "uv_range": [
+     0.010127544403076172,
+     0.989872395992279
+    ],
+    "flat_loop_fraction": 1.0,
+    "textures": [
+     {
+      "image": "FrostCyclops_Fur_BaseColor",
+      "size": [
+       1024,
+       1024
+      ],
+      "mean": 0.7769642472267151
+     }
+    ]
+   },
+   "FrostCyclops_Gear": {
+    "triangles": 5840,
+    "vertices": 10890,
+    "under_20k": true,
+    "unweighted_vertices": 0,
+    "max_influences": 4,
+    "max_weight_sum_error": 1.2386590242385864e-07,
+    "uv": true,
+    "uv_range": [
+     0.009376201778650284,
+     0.9906378984451294
+    ],
+    "flat_loop_fraction": 1.0,
+    "textures": [
+     {
+      "image": "FrostCyclops_Gear_BaseColor",
+      "size": [
+       1024,
+       1024
+      ],
+      "mean": 0.33815598487854004
+     }
+    ]
+   },
+   "FrostCyclops_Head": {
+    "triangles": 3889,
+    "vertices": 11580,
+    "under_20k": true,
+    "unweighted_vertices": 0,
+    "max_influences": 3,
+    "max_weight_sum_error": 7.82310962677002e-08,
+    "uv": true,
+    "uv_range": [
+     0.008122307248413563,
+     0.9918777346611023
+    ],
+    "flat_loop_fraction": 1.0,
+    "textures": [
+     {
+      "image": "FrostCyclops_Head_BaseColor",
+      "size": [
+       1024,
+       1024
+      ],
+      "mean": 0.6017678380012512
+     }
+    ]
+   }
+  },
+  "bones_moving_samples": {
+   "GroundSlam": 622,
+   "ReferencePose": 0,
+   "RigTest_ROM": 373,
+   "Stomp": 578
+  },
+  "height": 13.09,
+  "bounds_min": [
+   -7.196000099182129,
+   -4.468999862670898,
+   -0.10300000011920929
+  ],
+  "bounds_max": [
+   6.729000091552734,
+   3.069999933242798,
+   13.09000015258789
+  ]
+ },
+ "fails": [],
+ "passed": true
+}

@@ -1,0 +1,126 @@
+{
+ "image": [
+  1086,
+  1448
+ ],
+ "principal_point_px": [
+  543.0,
+  724.0
+ ],
+ "focal_px": 2076.67,
+ "blender_lens_mm_sensor36_fit_vertical": 51.63,
+ "camera_location": [
+  -0.4515,
+  -26.263,
+  6.3642
+ ],
+ "pitch_deg": -0.0004,
+ "yaw_deg": 1.1528,
+ "vertical_fov_deg": 38.441,
+ "rms_reprojection_px": 1.043,
+ "anchors": [
+  {
+   "name": "head_top",
+   "pixel": [
+    541,
+    185
+   ],
+   "world": [
+    0.0382,
+    -0.7,
+    13.0
+   ],
+   "reprojected": [
+    541.0,
+    185.01
+   ],
+   "depth": 25.568
+  },
+  {
+   "name": "foot_L_toe_bottom",
+   "pixel": [
+    760,
+    1290
+   ],
+   "world": [
+    2.4536,
+    -3.0,
+    0.0
+   ],
+   "reprojected": [
+    760.0,
+    1290.8
+   ],
+   "depth": 23.317
+  },
+  {
+   "name": "foot_R_toe_bottom",
+   "pixel": [
+    395,
+    1248
+   ],
+   "world": [
+    -1.7418,
+    -1.0,
+    0.0
+   ],
+   "reprojected": [
+    395.0,
+    1247.78
+   ],
+   "depth": 25.232
+  },
+  {
+   "name": "club_head_bottom",
+   "pixel": [
+    215,
+    1300
+   ],
+   "world": [
+    -3.641,
+    -3.05,
+    0.0
+   ],
+   "reprojected": [
+    214.97,
+    1295.03
+   ],
+   "depth": 23.144
+  },
+  {
+   "name": "foot_L_little_toe",
+   "pixel": [
+    905,
+    1283
+   ],
+   "world": [
+    4.1423,
+    -2.72,
+    0.0
+   ],
+   "reprojected": [
+    905.0,
+    1283.27
+   ],
+   "depth": 23.631
+  },
+  {
+   "name": "foot_L_big_toe_in",
+   "pixel": [
+    668,
+    1287
+   ],
+   "world": [
+    1.4233,
+    -2.95,
+    0.0
+   ],
+   "reprojected": [
+    668.02,
+    1290.09
+   ],
+   "depth": 23.346
+  }
+ ],
+ "depth_priors_note": "Y of each anchor is a stance prior: left toes 1.6 studs ahead of the right toes, crown 2.3 studs behind the left toes. Everything else solved."
+}

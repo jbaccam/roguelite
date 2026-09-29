@@ -1,0 +1,183 @@
+{
+ "sections": {
+  "FrostCyclops_Body": {
+   "triangles": 9110,
+   "vertices": 4430,
+   "faces": 9110,
+   "texture_master": "FrostCyclops_Body_BaseColor_2048.png",
+   "texture_delivery": "FrostCyclops_Body_BaseColor.png"
+  },
+  "FrostCyclops_Head": {
+   "triangles": 3889,
+   "vertices": 1911,
+   "faces": 3889,
+   "texture_master": "FrostCyclops_Head_BaseColor_2048.png",
+   "texture_delivery": "FrostCyclops_Head_BaseColor.png"
+  },
+  "FrostCyclops_Eye": {
+   "triangles": 520,
+   "vertices": 262,
+   "faces": 520,
+   "texture_master": "FrostCyclops_Eye_BaseColor_1024.png",
+   "texture_delivery": "FrostCyclops_Eye_BaseColor.png"
+  },
+  "FrostCyclops_Fur": {
+   "triangles": 11768,
+   "vertices": 6096,
+   "faces": 7736,
+   "texture_master": "FrostCyclops_Fur_BaseColor_2048.png",
+   "texture_delivery": "FrostCyclops_Fur_BaseColor.png"
+  },
+  "FrostCyclops_Gear": {
+   "triangles": 5840,
+   "vertices": 2930,
+   "faces": 3140,
+   "texture_master": "FrostCyclops_Gear_BaseColor_2048.png",
+   "texture_delivery": "FrostCyclops_Gear_BaseColor.png"
+  },
+  "FrostCyclops_Club": {
+   "triangles": 2464,
+   "vertices": 1236,
+   "faces": 1678,
+   "texture_master": "FrostCyclops_Club_BaseColor_2048.png",
+   "texture_delivery": "FrostCyclops_Club_BaseColor.png"
+  }
+ },
+ "total_triangles": 33591,
+ "limit_per_mesh": 20000,
+ "all_under_limit": true,
+ "weights": {
+  "BodySkin": {
+   "verts": 2850,
+   "bones": 18
+  },
+  "HandRight": {
+   "verts": 789,
+   "bones": 17
+  },
+  "HandLeft": {
+   "verts": 791,
+   "bones": 17
+  },
+  "HeadSkin": {
+   "verts": 1259,
+   "bones": 18
+  },
+  "EyelidUpper": {
+   "verts": 146,
+   "bones": 1
+  },
+  "TuskR": {
+   "verts": 82,
+   "bones": 1
+  },
+  "TuskL": {
+   "verts": 82,
+   "bones": 1
+  },
+  "TeethUpper": {
+   "verts": 186,
+   "bones": 1
+  },
+  "TeethLower": {
+   "verts": 156,
+   "bones": 1
+  },
+  "Eyeball": {
+   "verts": 262,
+   "bones": 1
+  },
+  "MantlePelt": {
+   "verts": 1560,
+   "bones": 16
+  },
+  "MantleTufts": {
+   "verts": 4248,
+   "bones": 16
+  },
+  "HipFur": {
+   "verts": 288,
+   "bones": 18
+  },
+  "WrapRight0": {
+   "verts": 208,
+   "bones": 1
+  },
+  "WrapRight1": {
+   "verts": 208,
+   "bones": 1
+  },
+  "WrapRight2": {
+   "verts": 208,
+   "bones": 1
+  },
+  "WrapLeft0": {
+   "verts": 208,
+   "bones": 1
+  },
+  "WrapLeft1": {
+   "verts": 208,
+   "bones": 1
+  },
+  "WrapLeft2": {
+   "verts": 208,
+   "bones": 1
+  },
+  "Belt": {
+   "verts": 256,
+   "bones": 1
+  },
+  "Buckle": {
+   "verts": 182,
+   "bones": 1
+  },
+  "Rivet-9": {
+   "verts": 22,
+   "bones": 1
+  },
+  "Rivet+9": {
+   "verts": 22,
+   "bones": 1
+  },
+  "Loincloth": {
+   "verts": 1152,
+   "bones": 7
+  },
+  "BeltTail0": {
+   "verts": 24,
+   "bones": 7
+  },
+  "BeltTail1": {
+   "verts": 24,
+   "bones": 7
+  },
+  "ClubStone": {
+   "verts": 452,
+   "bones": 1
+  },
+  "ClubHaft": {
+   "verts": 112,
+   "bones": 1
+  },
+  "ClubStrap+34": {
+   "verts": 192,
+   "bones": 1
+  },
+  "ClubStrap-34": {
+   "verts": 192,
+   "bones": 1
+  },
+  "ClubStrapTop": {
+   "verts": 160,
+   "bones": 1
+  },
+  "ClubLash0": {
+   "verts": 64,
+   "bones": 1
+  },
+  "ClubLash1": {
+   "verts": 64,
+   "bones": 1
+  }
+ }
+}
