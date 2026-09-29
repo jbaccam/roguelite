@@ -1,5 +1,5 @@
--- Studio lobby preview client: keeps combat overlays out of the lobby, and draws the
--- Studio-only LOBBY / ARENA travel switch (hotkey F8) shown in both areas.
+-- Studio lobby preview client: keeps combat overlays out of the lobby, holds a queued player on
+-- their pad, and draws the Studio-only LOBBY / ARENA travel switch (hotkey F8) shown in both areas.
 if not game:GetService('RunService'):IsStudio() then return end
 local Input=game:GetService('UserInputService')
 local player=game:GetService('Players').LocalPlayer
@@ -33,6 +33,27 @@ gui.ChildRemoved:Connect(function(screen)
 end)
 player:GetAttributeChangedSignal('LobbyPreviewActive'):Connect(update)
 update()
+
+-- Queued on a pad (LobbyQueue = portal id): walk and jump freely inside the ring, but its edge
+-- holds like a wall until LEAVE. Runs after physics so the corrected spot is what renders.
+local portals=workspace:WaitForChild('RogueliteLobby'):WaitForChild('Portals')
+local function padOf(id)
+ for _,portal in portals:GetChildren() do
+  if portal:GetAttribute('PortalId')==id then return portal:GetAttribute('PadCenter'),portal:GetAttribute('PadRadius') end
+ end
+end
+game:GetService('RunService').PostSimulation:Connect(function()
+ local id=player:GetAttribute('LobbyQueue');if id==nil then return end
+ local hrp=player.Character and player.Character:FindFirstChild('HumanoidRootPart');if not hrp then return end
+ local center,radius=padOf(id)
+ if typeof(center)~='Vector3' or type(radius)~='number' then return end
+ local offset=hrp.Position-center;local flat=Vector3.new(offset.X,0,offset.Z)
+ if flat.Magnitude<=radius then return end
+ local out=flat.Unit
+ hrp.CFrame+=out*(radius-flat.Magnitude)
+ local v=hrp.AssemblyLinearVelocity;local away=v:Dot(out)
+ if away>0 then hrp.AssemblyLinearVelocity=v-out*away end
+end)
 
 -- Travel switch, top-right (free in the lobby HUD, the arena HUD and the shop); the current
 -- area is lit. The server moves only the caller.

@@ -1,6 +1,6 @@
 -- Studio-only lobby / arena preview: step-on queue pads where the first player (host) picks
--- the map and presses START, a countdown that launches the group into the arena, and a
--- travel remote for testing either area directly.
+-- the map and presses START, a countdown that launches the group straight into wave 1, and a
+-- travel remote for testing either area directly. A queued player stays on the pad until LEAVE.
 -- Production first-join routing and reserved-match launch are separate integrations.
 -- workspace.RogueliteLobby.StudioStartArea ('Arena' or 'Lobby') picks where Play starts.
 local RunService=game:GetService('RunService')
@@ -102,6 +102,8 @@ local function buildPad(portal)
  Instance.new('UIAspectRatioConstraint',notch)
  local status=label('Status',.75,.22,'')
  table.insert(tinted,line);table.insert(tinted,notch)
+ -- The client keeps a queued player inside this circle (RogueliteLobbyPreview.client).
+ portal:SetAttribute('PadCenter',center);portal:SetAttribute('PadRadius',RING_RADIUS-1)
  pads[portal:GetAttribute('PortalId')]={portal=portal,center=center,strokes=strokes,tinted=tinted,beams=beams,map=map,count=count,status=status,shown=nil}
 end
 local function paint(pad,color)
@@ -142,6 +144,11 @@ local function padUnder(hrp)
   local o=hrp.Position-pad.center
   if Vector2.new(o.X,o.Z).Magnitude<=PAD_RADIUS and o.Y>-1.5 and o.Y<10 then return index end
  end
+end
+-- Loose server check for a queued player: the client already holds them inside the ring.
+local function nearPad(hrp,pad)
+ local o=hrp.Position-pad.center
+ return Vector2.new(o.X,o.Z).Magnitude<=PAD_RADIUS+2 and math.abs(o.Y)<20
 end
 local function setQueue(player) player:SetAttribute('LobbyQueue',state.membership[player.UserId]) end
 local function leave(player) if state:leave(player.UserId,now()) then setQueue(player);publish() end end
@@ -239,12 +246,16 @@ local function launch(index)
   elseif p and not ok then setupRemote:FireClient(p,'Result',false,why) end
  end
  -- Nobody already fighting: this group starts a fresh run at wave 1 on the chosen difficulty.
- if next(going) and not arenaHasPlayers(going) then
+ local fresh=next(going)~=nil and not arenaHasPlayers(going)
+ if fresh then
   Role.setMap(q.map);combat:SetAttribute('RunDifficulty',q.difficulty or 'Normal')
   Shop.resetRun()
  end
  state:finish(index)
  for p in going do setQueue(p);moveTo(p,'Arena',4) end
+ -- Wave 1 starts as they land; the first shop follows it. A group joining a run already under
+ -- way keeps that run's phase.
+ if fresh and arenaHasPlayers({}) then Shop.startFirstWave() end
  publish()
 end
 
@@ -279,7 +290,10 @@ RunService.Heartbeat:Connect(function(dt)
   if index and state.queues[index].locked then continue end
   local under=lobby and padUnder(hrp) or nil
   if stepOff[p] and under~=stepOff[p] then stepOff[p]=nil end
-  if index and under~=index then leave(p);index=nil end
+  -- Queued players are locked to their pad until they press LEAVE. Dying or being moved out of
+  -- the lobby (travel) still ends the queue; anyone who got off the pad is put back on it.
+  if index and not lobby then leave(p);index=nil
+  elseif index and pads[index] and not nearPad(hrp,pads[index]) then char:PivotTo(CFrame.new(pads[index].center+Vector3.new(0,3.5,0))*(hrp.CFrame-hrp.Position)) end
   if under and not index and stepOff[p]~=under and state:join(p.UserId,under,now()) then setQueue(p) end
  end
  -- A host who never presses START frees the pad for someone else.

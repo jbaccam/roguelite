@@ -247,6 +247,12 @@ local function beginWave()
  if count==0 then return end
  startWave()
 end
+-- A group launched from a lobby pad goes straight into wave 1; the first shop comes after it.
+-- Only from a fresh run (resetRun), so it can never skip a later shop.
+function S.startFirstWave()
+ if S.phase~='Shop' or S.wave~=1 then return false end
+ startWave();return true
+end
 function S.stopWave()
  -- Abort a Studio test, not a wave clear: no reward, advancement or reroll.
  if not RunService:IsStudio() or S.phase~='Combat' then return false end

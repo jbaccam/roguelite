@@ -73,7 +73,7 @@ At start, the role parents the areas it doesn't use into `ServerStorage.Inactive
 - The match server reads its entry using `game.PrivateServerId`.
 - It kicks back to the lobby any player who isn't a listed member. This can't normally happen.
 - After loading each member's profile, it re-checks the loadout against *that player's own save*. If the check fails, the player gets their class signature weapon.
-- It waits for all listed members, up to 30 s, before the first shop can start wave 1. A member who arrives after wave 1 has begun waits like a downed player and spawns at the next wave end.
+- It waits for all listed members, up to 30 s, before wave 1 starts. Runs open on wave 1; the first shop comes after it (user direction, 2026-09-28). A member who arrives after wave 1 has begun waits like a downed player and spawns at the next wave end.
 - If a player disconnects mid-run and rejoins the game, they land in a lobby server. There's no rejoining a match.
 - **Plan C requirements** (from the plan A review):
   - `AvatarNormalizer` spawns players on join. A match server must hold that spawn until `ServerRole.setMap(entry.map)` has returned; `setMap` applies the map before it returns.
