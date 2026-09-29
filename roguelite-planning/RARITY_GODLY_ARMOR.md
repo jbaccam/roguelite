@@ -484,6 +484,24 @@ Steps 4–6 use the approved models.
 - **Armory cleanup** (section 12): the pet-egg wording goes, and the cleanup gets shown to the
   user.
 
+**Built 2026-09-28** ([plan E](plans/2026-09-28-E-economy-numbers.md)); waiting for the user's
+look before step 2. Results in Studio:
+- `ChestConfigTests` (Edit): **PASS, 93 checks, 4.2 s**, including `odds()` against a
+  100,000-chest simulation per chest kind, both pity counters (with a temporary Godly pool), and
+  20,000 rolled deals.
+- Server (Play): 10 Gold Chests gave exactly 100 items. `pity.Godly` exists at 0 and stays 0 while
+  Godly is off. Every daily deal is priced `amount × DealPrice[rarity]`, above the spare-copy value.
+- Client (Play), through the real chest screen: every chest kind opened ×1 and ×10 gives exactly its
+  item count (3/6/10/18/8, ×10 = 30/60/100/180/80). The Wooden and Magical odds grids match
+  `ChestConfig.odds` (36 cells each, 0 mismatches).
+- `UILayoutAudit`, 0 problems each: chest browse, odds overlay, results, Store → Daily, and the
+  Armory's Weapons, Armor and Pets tabs.
+- **Found, not caused by this step:** upgraded tiers still never reach a run. A Tier II Frying Pan
+  starts the run in slot 1 at Tier 1. `STORE_AND_CHESTS.md` Part 0 was never built; nothing reads
+  the profile tier at run start.
+- Not testable in Studio: DataStore migration of real saves, Robux Legendary Chests,
+  PolicyService-restricted accounts.
+
 ### Step 2: Rarity power, run-shop rarity, Brotato tiers, Tier IV bumps
 - Add `rarity` to each weapon in `WeaponCatalog`, and make `ChestConfig` read its pools from it
   (sandboxing note in section 4).
