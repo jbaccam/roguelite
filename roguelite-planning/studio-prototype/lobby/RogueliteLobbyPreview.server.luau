@@ -240,7 +240,7 @@ local function launch(index)
  end
  -- Nobody already fighting: this group starts a fresh run at wave 1 on the chosen difficulty.
  if next(going) and not arenaHasPlayers(going) then
-  combat:SetAttribute('RunMap',q.map);combat:SetAttribute('RunDifficulty',q.difficulty or 'Normal')
+  Role.setMap(q.map);combat:SetAttribute('RunDifficulty',q.difficulty or 'Normal')
   Shop.resetRun()
  end
  state:finish(index)

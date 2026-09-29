@@ -228,6 +228,8 @@ config.health=math.max(1,math.ceil(config.health*difficulty.hp));config.damage*=
 local kind=config.legacy or id
 local selected=templates:FindFirstChild(config.template)
 if not selected then warn('Missing regular enemy template: '..config.template);return end
+-- No marker in the active map: build nothing (resetWave warns once).
+local m = Role.marker(); if not m then return end
 local npc = selected:Clone()
 npc.Name = instanceName
 if splitChild then npc:ScaleTo(npc:GetScale()*config.childScale);config.health=math.max(1,math.ceil(config.health*.45));config.damage*=.6 end
@@ -262,10 +264,10 @@ npc.Destroying:Connect(function()
     end)
 end)
 local angle = (index - 1) * math.pi * 2 / math.max(1,spawnCount())
-local position = spawnPosition or marker().Position + Vector3.new(math.cos(angle) * 10, 0, math.sin(angle) * 10)
+local position = spawnPosition or m.Position + Vector3.new(math.cos(angle) * 10, 0, math.sin(angle) * 10)
 local groundParams = RaycastParams.new()
 groundParams.FilterType = Enum.RaycastFilterType.Exclude
-groundParams.FilterDescendantsInstances = {folder, marker(), workspace:FindFirstChild("Zombie_R15_ProvidedTextures_Studio")}
+groundParams.FilterDescendantsInstances = {folder, m, workspace:FindFirstChild("Zombie_R15_ProvidedTextures_Studio")}
 local ground = workspace:Raycast(position + Vector3.new(0, 30, 0), Vector3.new(0, -100, 0), groundParams)
 if ground then position = Vector3.new(position.X, ground.Position.Y + humanoid.HipHeight + root.Size.Y / 2 + 0.1, position.Z) end
 local facing = nil
@@ -275,7 +277,7 @@ end
 if facing and flatDistance(position, facing) > 0.1 then
     npc:PivotTo(CFrame.lookAt(position, Vector3.new(facing.X, position.Y, facing.Z)))
 else
-    npc:PivotTo(CFrame.new(position) * marker().CFrame.Rotation)
+    npc:PivotTo(CFrame.new(position) * m.CFrame.Rotation)
 end
 for _, part in npc:GetDescendants() do
     if part:IsA("BasePart") then
@@ -359,7 +361,8 @@ connection = RunService.Heartbeat:Connect(function(dt)
     end
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
-    params.FilterDescendantsInstances = {folder, target.Parent, marker()}
+    -- Markers are CanQuery=false now; the marker entry (last, so nil is safe) is only for older places.
+    params.FilterDescendantsInstances = {folder, target.Parent, Role.marker()}
     local obstruction = workspace:Raycast(root.Position, target.Position - root.Position, params)
     if not obstruction then
         waypoints = nil
@@ -416,6 +419,10 @@ local function resetWave()
         if not npc:GetAttribute('IsHammerBoss') or not combat:GetAttribute('ZombiesEnabled') then npc:Destroy() end
     end
     if combat:GetAttribute('ZombiesEnabled') then
+        if not Role.marker() then
+            warn('No RogueliteZombieSpawn in the active map ' .. tostring(Role.activeMap()) .. '; no enemies this wave')
+            return
+        end
         for index = 1, spawnCount() do queueSpawn(index) end
     end
 end
