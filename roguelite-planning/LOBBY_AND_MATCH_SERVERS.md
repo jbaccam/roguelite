@@ -205,3 +205,10 @@ VIP bonus applies as it does today.
 - Endless / Keep Going, Play Again with the same party, rejoining a match after disconnecting.
 - The King Crab boss, the tutorial / first-join flow, cross-server party invites or friends-follow into matches.
 - Monetization IDs themselves: the user creates the 5 revive products in the Creator Dashboard.
+
+## Early plan B pieces (2026-09-29)
+
+- `RogueliteMeta` reads the map from `RunMap` (the hard-coded `MAP='PineValley'` bug is fixed; Beach Cove runs now record and pay as Beach Cove).
+- Best wave saves as each wave clears (`ShopService.onWaveCleared` → `ProfileService.recordProgress`), not only on Give Up. Clearing wave 20 records the win and pays the first-win bonus once. Wave emeralds still pay on Give Up until plan B's Leave Run / results screen.
+- Every wave starts at full health (`ShopService.refillHealth`, also run when a wave ends).
+- Still not built: plans B (Leave Run, victory/defeat results, spectate) and C (lobby → match teleports, session lock). Until C ships, Studio and live servers stay Combined, so lobby and arenas share one server.

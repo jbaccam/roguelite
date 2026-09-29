@@ -25,3 +25,8 @@ Shards are temporary session/run money, never persistent account currency or Rob
 The mesh exports and Roblox geometry builder share the same shard silhouette and blue/cyan palette. The builder enables immediate runtime use without requiring a new uploaded mesh ID. See the asset README for the distinction between the textured mesh and native runtime geometry.
 
 Verification results are recorded in `studio-prototype/combat/SHARD_TEST_RESULTS.md`. Multiplayer contention with multiple real clients and published-server performance require separate testing.
+
+**2026-09-29 (user playtest: crystals and hearts too easy):**
+- A kill crystal is now worth **1 shard and 1 XP** (`EconomyConfig.KILL_SHARDS`). The designer-shirt bonus (+2) and the boss shower (50 × 4) are unchanged.
+- Hearts: **1% per kill** plus Luck × 0.02% (cap 3%), at most **3** on the field. **Any** living player in range pulls one, even at full health (it's wasted), and an unclaimed heart **expires after 10 s**, blinking for its last 3 s. Heal stays 15.
+- Wave population is now `min(100, 8 + (wave - 1) * 3)`: 8 at wave 1, 35 at wave 10, 65 at wave 20 (was 5 / 23 / 43).

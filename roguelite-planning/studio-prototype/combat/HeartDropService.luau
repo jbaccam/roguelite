@@ -1,17 +1,19 @@
--- Server-owned rare heart pickups. A real combat kill may drop one; a hurt living
--- player inside their PickupRadius pulls it in and heals on arrival. No remote,
--- no client-supplied amounts. Hearts clear whenever the run leaves Combat.
+-- Server-owned rare heart pickups. A real combat kill may drop one; any living player
+-- inside their PickupRadius pulls it in and heals on arrival (a full-health player just
+-- uses it up). Unclaimed hearts expire after LIFETIME. No remote, no client-supplied
+-- amounts. Hearts clear whenever the run leaves Combat.
 local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')
 local Tags=game:GetService('CollectionService')
 local RS=game:GetService('ReplicatedStorage')
 local Motion=require(RS:WaitForChild('RogueliteCombat'):WaitForChild('ShardMotion'))
 local H={drops={},
- BASE_CHANCE=.025, -- per eligible kill
- LUCK_CHANCE=.0005, -- per Luck point of the killer (Luck 100 -> +5%)
- MAX_CHANCE=.08,
+ BASE_CHANCE=.01, -- per eligible kill
+ LUCK_CHANCE=.0002, -- per Luck point of the killer (Luck 100 -> +2%)
+ MAX_CHANCE=.03,
  HEAL=15, -- before Recovery; base max health is 100
- MAX_ACTIVE=6,
+ MAX_ACTIVE=3,
+ LIFETIME=10, -- seconds on the ground before it vanishes (HeartVisuals blinks the last 3)
  MIN_PICKUP_RADIUS=4,
 }
 local characters
@@ -47,6 +49,7 @@ function H.spawnAt(position)
  root.CFrame=CFrame.new(at);root.Parent=model;model.PrimaryPart=root
  local born=workspace:GetServerTimeNow()
  model:SetAttribute('Origin',at);model:SetAttribute('BornAt',born);model:SetAttribute('HealAmount',H.HEAL)
+ model:SetAttribute('ExpiresAt',born+H.LIFETIME)
  model.Parent=folder
  local d={model=model,origin=at,position=at,born=born}
  table.insert(H.drops,d);return d
@@ -67,8 +70,8 @@ function H.collect(p,d)
  local now=workspace:GetServerTimeNow()
  if now-d.born<Motion.REST_SECONDS then return false end
  local r,h=living(p);local s=characters and characters.states[p]
- -- Only hurt players pull hearts, so a full-health teammate never wastes one.
- if not r or not s or h.Health>=h.MaxHealth then return false end
+ -- Full-health players still grab it (it's wasted), so hearts can't be banked for later.
+ if not r or not s then return false end
  local radius=math.max(H.MIN_PICKUP_RADIUS,math.clamp(s.stats.PickupRadius or 0,0,100))
  if (r.Position-d.origin).Magnitude>radius then return false end
  d.target=p;d.started=now;d.startPosition=Motion.idle(d.origin,d.born,now)
@@ -80,6 +83,7 @@ function H.step(now)
  for i=#H.drops,1,-1 do
   local d=H.drops[i]
   if not d.model.Parent then remove(i)
+  elseif not d.target and now>=d.born+H.LIFETIME then remove(i)
   elseif d.target then
    local r=living(d.target)
    if not r or (r.Position-d.origin).Magnitude>100 then cancel(d)

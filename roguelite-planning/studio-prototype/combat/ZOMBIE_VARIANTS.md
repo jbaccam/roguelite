@@ -54,3 +54,7 @@ The warning is a 5.2-stud radius circle centered 3.5 studs ahead. Characters abo
 2. Verify faces, axes, dimensions, texture permission, root collision, feet, and all 15 Motor6Ds in Studio.
 3. In actual Play, verify the baby speed/bob and mutant hunched walk/raise/slam. Check stationary in-circle damage, leaving the circle, jumping, a wall, death during windup, stopping the wave, cooldown, one-hit-per-slam, normal weapon kills, and respawning the correct type.
 4. Confirm no errors and restore Edit mode/test state. Multiple real clients, device profiling, published asset access and DataStores remain untested. This feature adds no DataStore/persistent reward code.
+
+## Body bumps (2026-09-29)
+
+Wave mobs still set `ContactDamage` 0 (their timed swings own damage), but running into one now hurts too. Each spawn sets `BumpDamage` = half its hit (rounded, at least 1) and `BumpRange` = min(stopRange, radius + 1.5) − 0.3 (2.8 studs for a normal zombie). `CharacterService` deals it when a player's body overlaps a mob with clear line of sight, at most once per 0.6 s per player across all mobs (its own timer, separate from the old 0.8 s contact timer). The range sits inside the mob's stop distance, so fighting at normal reach never bumps. Example: a wave-10 zombie that hits for 12 bumps for 6; dashing through a pack for 1.5 s costs about 2–3 bumps.

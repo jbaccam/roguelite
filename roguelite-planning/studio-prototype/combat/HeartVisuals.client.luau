@@ -52,5 +52,16 @@ RunService.RenderStepped:Connect(function()
   if r and start then pos=Motion.pull(m:GetAttribute('MagnetOrigin') or pos,r.Position,now-start) end
   -- Upright, turning slowly about its vertical axis so both faces read.
   v:PivotTo(CFrame.new(pos)*CFrame.Angles(0,(now-born)*1.6+born%6.28,0))
+  -- Blink through its last 3 seconds before it expires (not while flying to a player).
+  local left=(m:GetAttribute('ExpiresAt') or math.huge)-now
+  local hidden=not start and left<3 and (now*(left<1.2 and 8 or 4))%1<.35
+  if v:GetAttribute('Hidden')~=hidden then
+   v:SetAttribute('Hidden',hidden)
+   for _,d in v:GetDescendants() do
+    if d:IsA('BasePart') then d.LocalTransparencyModifier=hidden and 1 or 0
+    elseif d:IsA('Highlight') then d.Enabled=not hidden
+    elseif d:IsA('Light') then d.Enabled=not hidden end
+   end
+  end
  end
 end)

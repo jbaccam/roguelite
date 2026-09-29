@@ -3,7 +3,7 @@ local E={
  FLAT_WAVE_PRICE=1, INFLATION_RATE=.10, GLOBAL_SHOP_PRICE_MODIFIER=1,
  STARTING_SHARDS=60, MAX_SHARDS=1000000, DEBUG_CURRENCY_ENABLED=true,
  OFFER_COUNT=4, ITEM_CAPACITY=16, MAX_ITEM_COPIES=5,
- WAVE_SECONDS=30, WAVE_REWARD_BASE=12, WAVE_REWARD_SCALE=3, KILL_SHARDS=2, DESIGNER_BONUS_SHARDS=2,
+ WAVE_SECONDS=30, WAVE_REWARD_BASE=12, WAVE_REWARD_SCALE=3, KILL_SHARDS=1, DESIGNER_BONUS_SHARDS=2,
  TIER_PRICE_BANDS={{12,25},{30,55},{60,95},{110,160}}, TIER_DAMAGE_MULTIPLIERS={1,1.2,1.45,1.75},
  TIER_NAMES={'Common','Uncommon','Rare','Legendary'},
 }
@@ -20,8 +20,8 @@ function E.modifier(stats) return math.clamp(1+(stats.ShopPricePercent or 0)/100
 -- Ordered rarity thresholds. Luck is earned within the run and never changed by Robux.
 local rarity={
  [2]={minWave=2,perWave=.06,cap=.60},
- [3]={minWave=4,perWave=.02,cap=.25},
- [4]={minWave=8,perWave=.0023,cap=.08},
+ [3]={minWave=6,perWave=.015,cap=.20},
+ [4]={minWave=12,perWave=.0015,cap=.05},
 }
 function E.rarityChance(tier,wave,luck)
  local rule=rarity[tier]

@@ -206,7 +206,14 @@ function UI.mount(playerGui)
  local shopTab=button(footer,"ShopTab","Shop",0,8,120,48,function() controller:ShowPreview("Shop") end,true)
  local upgradesTab=button(footer,"UpgradesTab","Upgrades",130,8,140,48,function() controller:ShowPreview("Upgrades") end,true)
  local closeButton=button(footer,"Close","Back to game",280,8,210,48,close,true)
- closeButton.Modal=true -- Only while its menu is visible; releases first-person cursor.
+ -- The Shop / Upgrades / Back to game row is hidden (user, 2026-09-29): the shop opens and
+ -- closes with the phase, and during a wave SHOP and B toggle the view.
+ footer.Visible=false
+ -- A modal button frees the first-person cursor only while it is visible, so the overlay
+ -- carries its own empty one now that closeButton is hidden.
+ local cursorFree=Instance.new('TextButton');cursorFree.Name='CursorFree';cursorFree.Text=''
+ cursorFree.BackgroundTransparency=1;cursorFree.Size=UDim2.new();cursorFree.Selectable=false
+ cursorFree.Modal=true;cursorFree.Parent=overlay
  local tabModes={Shop=shopTab,Upgrades=upgradesTab}
  local helpers={panel=panel,label=label,button=button,icon=icon}
  local shopModule=require(RS:WaitForChild('ShopUI'))
@@ -220,7 +227,13 @@ function UI.mount(playerGui)
  local function launcher(name,asset,caption,order,fn)
   local b=T.iconButton(menu,name,asset,caption,58,fn);b.LayoutOrder=order;return b
  end
- launcher('OpenShop','store','SHOP',1,function() controller:ShowPreview('Shop') end)
+ -- Toggle: with the footer gone, the same button (and B) closes a mid-wave shop view.
+ -- Between waves the shop stays open; START WAVE closes it.
+ local function toggleShop()
+  local phase=(shopView:snapshot() or {}).phase
+  if overlay.Visible and controller.Mode=='Shop' and phase~='Shop' then close() else controller:ShowPreview('Shop') end
+ end
+ launcher('OpenShop','store','SHOP',1,toggleShop)
  launcher('SettingsButton','settings','SETTINGS',4,function()
   if settingsWindow then settingsWindow.Close() return end
   settingsWindow=T.settingsWindow(gui)
@@ -228,7 +241,7 @@ function UI.mount(playerGui)
  end)
  Input.InputBegan:Connect(function(input,processed)
   if processed or Input:GetFocusedTextBox() then return end
-  if input.KeyCode==Enum.KeyCode.B then controller:ShowPreview('Shop') end
+  if input.KeyCode==Enum.KeyCode.B then toggleShop() end
  end)
  -- Build strip: live server slots plus snapshot items.
  local Catalog=require(RS.RogueliteCombat.ShopCatalog)
@@ -302,7 +315,7 @@ function UI.mount(playerGui)
   gui:SetAttribute("PreviewScreen",mode)
   scroller.CanvasPosition=Vector2.zero;render()
   if Input:GetLastInputType()==Enum.UserInputType.Gamepad1 then
-   game:GetService("GuiService").SelectedObject=closeButton
+   game:GetService("GuiService").SelectedObject=nil
   end
  end
  local function layout()

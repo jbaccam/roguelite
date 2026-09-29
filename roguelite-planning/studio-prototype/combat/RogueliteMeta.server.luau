@@ -50,14 +50,26 @@ local function checkPolicy(p)
 end
 
 -- Death flow ----------------------------------------------------------------------
-local MAP='PineValley'
+-- The run's map is the combat attribute RunMap (Pine Valley when unset or unknown).
+local function runMap() local id=combat:GetAttribute('RunMap');return RunSetupRules.MapIndex[id] and id or 'PineValley' end
 local RunSetupRules=require(game.ReplicatedStorage:WaitForChild('RunSetupRules'))
 local down,revivesUsed={},{}
 -- ShopService (required above) creates this folder, so looking it up here cannot deadlock.
 local runState=game.ReplicatedStorage:WaitForChild('RogueliteRunState')
 -- Harder difficulties pay more emeralds; wins and best waves are saved per map and difficulty.
 local function difficulty() return combat:GetAttribute('RunDifficulty') or 'Normal' end
-local function emeraldsFor(wave) return RunSetupRules.runEmeralds(RunSetupRules.MapIndex[MAP],difficulty(),wave) end
+local function emeraldsFor(wave,map) return RunSetupRules.runEmeralds(RunSetupRules.MapIndex[map or runMap()],difficulty(),wave) end
+-- Each cleared wave saves the best wave (and the win at wave 20, with its first-win bonus)
+-- right away, so a run counts even if it ends without the death screen's Give Up.
+Shop.onWaveCleared=function(wavesPassed)
+ local map=runMap();local index=RunSetupRules.MapIndex[map]
+ local key=RunSetupRules.runKey(map,difficulty())
+ for p in Shop.states do
+  if not p:GetAttribute('LobbyPreviewActive') then
+   Profiles.recordProgress(p,key,wavesPassed,RunSetupRules.firstWinEmeralds(index,difficulty()))
+  end
+ end
+end
 local function livingInRun()
  local n=0
  for p in Shop.states do local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid');if h and h.Health>0 and not down[p] then n+=1 end end
@@ -72,10 +84,10 @@ local function onDied(p,character)
  local s=Shop.states[p]
  -- test: this player went down during a test run. It stays true even if resetRun clears the run flag
  -- before they give up, so a later give-up still pays nothing.
- down[p]={position=root and root.Position or Vector3.zero,wave=Shop.wave,test=Admin.isTestRun()}
+ down[p]={position=root and root.Position or Vector3.zero,wave=Shop.wave,map=runMap(),test=Admin.isTestRun()}
  p:SetAttribute('HoldRespawn',true)
  -- A test run (the admin panel was used) pays nothing, so the death screen shows 0 emeralds.
- p:SetAttribute('DeathInfo',Http:JSONEncode({wave=Shop.wave,level=s.level,emeralds=Admin.isTestRun() and 0 or emeraldsFor(Shop.wave),map='Pine Valley',
+ p:SetAttribute('DeathInfo',Http:JSONEncode({wave=Shop.wave,level=s.level,emeralds=Admin.isTestRun() and 0 or emeraldsFor(Shop.wave),map=RunSetupRules.Maps[RunSetupRules.MapIndex[runMap()]].name,
   revivesLeft=math.max(0,Config.ReviveLimitPerRun-(revivesUsed[p] or 0))}))
  p:SetAttribute('RunDown',true)
  if livingInRun()==0 then Shop.pause() end
@@ -134,7 +146,7 @@ local function revive(p)
 end
 local function giveUp(p)
  local d=down[p];if not d then return false end
- if not d.test then Profiles.recordRun(p,RunSetupRules.runKey(MAP,difficulty()),math.max(0,d.wave-1),emeraldsFor(d.wave)) end
+ if not d.test then Profiles.recordRun(p,RunSetupRules.runKey(d.map,difficulty()),math.max(0,d.wave-1),emeraldsFor(d.wave,d.map)) end
  clearDown(p);revivesUsed[p]=0
  if livingInRun()==0 then Shop.resetRun();for q in revivesUsed do revivesUsed[q]=0 end else Shop.resetPlayer(p) end
  p:SetAttribute('HoldRespawn',false) -- AvatarNormalizer respawns normally

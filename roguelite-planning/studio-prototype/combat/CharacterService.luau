@@ -18,6 +18,7 @@ assert(playerDamaged:IsA('RemoteEvent'),'RogueliteCombat.PlayerDamaged must be a
 workspace.Gravity=Stats.Movement.Gravity
 local Catalog=require(combat:WaitForChild('WeaponCatalog'))
 local Service={states={}}
+local BUMP_GRACE=.6 -- seconds between body-bump hits on one player
 local function humanoid(player) return player.Character and player.Character:FindFirstChildOfClass('Humanoid') end
 -- Between waves (run phase Shop) a player in the arena is out of play: nothing can damage them and
 -- they can't walk or jump until the next wave starts. Players in the Studio lobby aren't in the run.
@@ -65,11 +66,11 @@ function Service.refresh(player)
 end
 function Service.attach(player,folder)
  local picked=player:GetAttribute('RunClass')
- local s={folder=folder,class=Stats.Classes[picked] and picked or 'Brawler',overrides={},lastRequest=-1e6,lastContact=0,blocks=1,leech=0,hits=0}
+ local s={folder=folder,class=Stats.Classes[picked] and picked or 'Brawler',overrides={},lastRequest=-1e6,lastContact=0,lastBump=0,blocks=1,leech=0,hits=0}
  Service.states[player]=s
  local function spawned(character)
   local h=character:WaitForChild('Humanoid',10);if not h or player.Character~=character then return end
-  s.leech=0;s.blocks=1;s.hits=0;s.lastContact=os.clock()
+  s.leech=0;s.blocks=1;s.hits=0;s.lastContact=os.clock();s.lastBump=os.clock()
   s.held=nil;s.holdAt=nil -- the next tick re-checks the shop hold for the new body
   Service.refresh(player);h.Health=h.MaxHealth
   if s.moveStateConnection then s.moveStateConnection:Disconnect() end
@@ -201,15 +202,24 @@ RunService.Heartbeat:Connect(function(dt)
    end
    Service.heal(player,s.stats.Regeneration*step)
    local second=math.floor(now);if s.leechSecond~=second then s.leechSecond=second;s.leech=0 end
-   if now-s.lastContact>=.8 and combat:GetAttribute('ZombiesEnabled') then
+   -- Old proximity mobs (ContactDamage > 0) keep their 0.8 s contact timer. Wave mobs set
+   -- ContactDamage 0 (their swings own damage) and hurt through BumpDamage/BumpRange instead:
+   -- body overlap only, at most once per BUMP_GRACE across all mobs.
+   if combat:GetAttribute('ZombiesEnabled') then
     for _,npc in Tags:GetTagged('RogueliteZombie') do
      local nr=npc:FindFirstChild('HumanoidRootPart');local nh=npc:FindFirstChildOfClass('Humanoid')
      local contactDamage=npc:GetAttribute('ContactDamage') or 10
      local contactRange=npc:GetAttribute('ContactRange') or 4.5
+     local bump=contactDamage<=0
+     if bump then contactDamage=npc:GetAttribute('BumpDamage') or 0;contactRange=npc:GetAttribute('BumpRange') or 0 end
+     local ready=if bump then now-s.lastBump>=BUMP_GRACE else now-s.lastContact>=.8
      local delta=nr and root.Position-nr.Position
-     if contactDamage>0 and not npc:GetAttribute('PracticeTarget') and nr and nh and nh.Health>0 and math.abs(delta.Y)<4.5 and Vector2.new(delta.X,delta.Z).Magnitude<contactRange then
+     if ready and contactDamage>0 and not npc:GetAttribute('PracticeTarget') and nr and nh and nh.Health>0 and math.abs(delta.Y)<4.5 and Vector2.new(delta.X,delta.Z).Magnitude<contactRange then
       local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances={npc,player.Character,workspace:FindFirstChild('RogueliteEnemies')}
-      if not workspace:Raycast(nr.Position,root.Position-nr.Position,params) then s.lastContact=now;Service.contact(player,contactDamage);break end
+      if not workspace:Raycast(nr.Position,root.Position-nr.Position,params) then
+       if bump then s.lastBump=now else s.lastContact=now end
+       Service.contact(player,contactDamage);break
+      end
      end
     end
    end

@@ -234,8 +234,16 @@ function S.paidReroll(p,kind)
  return true
 end
 -- The wave's normal enemy count (Keep N alive overrides it through TestZombieCountOverride).
-function S.waveEnemyCount() return math.min(100,5+(S.wave-1)*2) end
+function S.waveEnemyCount() return math.min(100,8+(S.wave-1)*3) end
+-- Every wave starts at full health (Brotato rule): damage never carries between waves.
+local function refillHealth()
+ for p in S.states do
+  local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid')
+  if h and h.Health>0 then h.Health=h.MaxHealth end
+ end
+end
 local function startWave()
+ refillHealth()
  S.phase='Combat';run:SetAttribute('Phase','Combat');run:SetAttribute('WaveEndsAt',workspace:GetServerTimeNow()+E.WAVE_SECONDS)
  combat:SetAttribute('ZombieCount',combat:GetAttribute('TestZombieCountOverride') or S.waveEnemyCount());combat:SetAttribute('ZombiesEnabled',true)
  for p in S.states do local cs=Characters.states[p];cs.blocks=1;cs.folder:SetAttribute('BlocksRemaining',cs.stats.FirstHitBlock);S.publish(p,'Wave started') end
@@ -282,6 +290,8 @@ function S.finishWave()
   S.prepareUpgrades(p)
   S.publish(p,'Next shop · reroll cost reset')
  end
+ refillHealth()
+ if S.onWaveCleared then S.onWaveCleared(S.wave-1) end
  return true
 end
 -- Admin panel run modes (ADMIN_PANEL.md "Waves"). AdminService checks the developer first.

@@ -39,6 +39,8 @@ Example at tier 1: the egg hits for 10, so a peck does 4. A chicken that pecks f
 
 ## Status (2026-09-29)
 
+- 2026-09-29 user report "the chicken isn't spawning": confirmed the cause below. The Play console showed the missing-template warning; `ServerStorage.RogueliteAllies` doesn't exist.
+
 - Scripts are synced into Studio Edit. `EggChickens` loads and the client script compiles.
 - The FBX is **not imported yet**, so the template is missing. Until it's installed, eggs hatch nothing and the server warns once: `EggChickens: ServerStorage.RogueliteAllies.EggChicken is missing`.
 - Not play-tested. The user is testing it.

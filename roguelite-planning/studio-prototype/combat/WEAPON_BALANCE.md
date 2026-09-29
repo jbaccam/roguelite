@@ -23,3 +23,15 @@ Reference data: user-supplied `Pasted text.txt` (Brotato Weapons, patch 1.1.6.3)
 Validation: `WeaponBalanceTests.luau` checks all 36 weapons at all four tiers, monotonic damage/cadence, native projectile traits and wave formulas. `ShopTests.luau` covers full-inventory automatic merging, manual merging, paid-price conservation, stale copy tokens, malformed slots, mismatched tiers, legendary cap and combat-phase rejection alongside existing economy checks. Both are temporary Studio server test scripts, not shipped gameplay. Studio execution and actual play-loop results must be recorded by the integrating agent; tests requiring real multiple clients or published services are not claimed here.
 
 Integrated Studio results: WeaponBalanceTests 571 assertions, ShopTests 630 assertions, CharacterStatsTests 2,314 assertions, and StatProjectileTests eight collision groups passed. Actual client combine, buy, lock, reroll and wave flow were exercised. See ../ui/SHOP_UI_VALIDATION.md for scope and limits.
+
+## Shop rarity retune (2026-09-29)
+
+User playtest: Legendary (tier 4) weapons came too easily. `EconomyConfig` rarity now:
+
+| Tier | Opens | Per wave | Cap |
+|---|---|---|---|
+| 2 Uncommon | wave 2 | 6% | 60% (unchanged) |
+| 3 Rare | wave 6 (was 4) | 1.5% (was 2%) | 20% (was 25%) |
+| 4 Legendary | wave 12 (was 8) | 0.15% (was 0.23%) | 5% (was 8%) |
+
+Luck still multiplies these by up to ×2. Example, no Luck, wave 20: a shop card is Rare 18.6%, Legendary 1.35% (was 3%). Kill crystals also dropped from 2 to 1 shard, which slows buying duplicates to combine.

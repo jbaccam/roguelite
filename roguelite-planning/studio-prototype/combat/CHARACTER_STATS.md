@@ -20,7 +20,7 @@ All 36 weapons consume general damage, compatible melee/ranged/elemental/utility
 
 Attack range moves melee reach without rescaling the equipped mesh. Authored model sizes, including the katana scale 0.013698526658117772, are preserved. Projectile Size changes projectile collision/visuals, not the equipped weapon model.
 
-Pickup Radius and Luck apply to rare heart drops (2026-09-28, `HeartDropService`): 2.5% per real kill plus Luck × 0.05%, capped at 8%; a heart heals 15 HP before Recovery and is pulled only by a hurt player within max(4, Pickup Radius). (The original 15%/8 HP green orb was removed on 2026-09-22.) XP, currency, shop odds and purchases remain deferred. Utility Power applies to existing Handyman weapons; there is no new summon system in this change.
+Pickup Radius and Luck apply to rare heart drops (`HeartDropService`, retuned 2026-09-29): 1% per real kill plus Luck × 0.02%, capped at 3%; a heart heals 15 HP before Recovery, is pulled by any living player within max(4, Pickup Radius) (wasted at full health), and expires after 10 s. (The original 15%/8 HP green orb was removed on 2026-09-22.) XP, currency, shop odds and purchases remain deferred. Utility Power applies to existing Handyman weapons; there is no new summon system in this change.
 
 ## Normalized avatars
 

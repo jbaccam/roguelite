@@ -262,6 +262,19 @@ function P.recordRun(player,map,wavesPassed,emeralds)
  P.publish(player)
 end
 
+-- Live progress as each wave clears (RogueliteMeta): best wave, and the win at wave 20 with its
+-- one-time first-win bonus. Wave emeralds still pay at the run's end (recordRun). A test run
+-- (the admin panel was used) saves nothing.
+function P.recordProgress(player,map,wavesPassed,firstWinBonus)
+ local d=P.profiles[player];if not d or Admin.isTestRun() then return end
+ local changed=false
+ if wavesPassed>(d.bestWaves[map] or 0) then d.bestWaves[map]=wavesPassed;changed=true end
+ if wavesPassed>=20 and not d.mapWins[map] then
+  d.mapWins[map]=true;d.emeralds+=math.max(0,math.floor(firstWinBonus or 0));changed=true
+ end
+ if changed then P.publish(player) end
+end
+
 -- Stored rerolls/banishes spent during a run.
 function P.spend(player,field)
  local d=P.profiles[player]
