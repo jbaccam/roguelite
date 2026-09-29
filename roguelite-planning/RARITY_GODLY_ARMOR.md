@@ -319,6 +319,112 @@ Chest** that holds pets only (weapon, armor and pet chests never mix).
   Obvious candidates are the long "coming" panels. Run `UILayoutAudit`, then **show the user**
   before calling it done.
 
+### 13. Art: Blender models, R15 fit and rarity looks (user, 2026-09-28)
+
+**What the user asked for:**
+- Model the armor, Godly weapons and pets in Blender.
+- Armor must **fit the R15 rig players are locked to**, and be "very well designed": good fit,
+  curvature, edges, colouring and textures.
+- **The rarer it is, the sicker it looks:** more design, VFX and intricacy, and more texture
+  (e.g. real scales), "not just Minecraft armor".
+- Iron (Common) can be fairly flat, like the ice plate reference. Legendary and Godly should reach
+  the level of the lava reference.
+- **"Don't copy it directly. Make it look better than this."**
+
+**References** are the user's screenshots of another Roblox game. Use them for style only and
+never copy them. They're saved in `art-references/armor-2026-09-28/`:
+
+| File | SHA256 | What it shows |
+|---|---|---|
+| `ice-plate-armor-reference.png` | `53c85a8b0f3e41d221c5fdc75367e9765c4370c35b369d8765687d51bc569df9` | Low-rarity level: smooth pale-blue chest plates, soft bevelled edges, a raised centre ridge, one diamond gem, and an open face-plate helmet that leaves the hair showing |
+| `lava-armor-chest-reference.webp` | `4d0c47f9b67854878e5183aba030c62f19d5925555f21ecd9d7883f8ee952637` | High-rarity level: dark rock plates split by glowing orange crack lines. The same motif runs across helmet, chest, legs, boots, sword and a themed event chest |
+| `lava-armor-full-reference.png` | `6cbc08bfac4556956c6dff723a1e4acd9fb31293e57d26995766a30b07952f3c` | The same lava set worn on a blocky R15 avatar: a full crested helmet with a visor slit, diamond gem accents, and pauldrons and bracers following the arm segments |
+
+**The look climbs with rarity** (armor first; weapons and pet flair follow the same idea):
+
+| Rarity | Shape | Surface | Glow / VFX |
+|---|---|---|---|
+| Common (Iron) | Clean plates, soft bevels, a trim line or rivets | Painterly brushed metal, 2–3 values | None |
+| Rare (Ninja, Viking) | Layered plate edges, a second material (leather straps, cloth wraps, fur) | More colour breakup | None |
+| Epic (Samurai, Spartan) | Distinctive silhouette pieces (big pauldrons, crest, lamellar rows), engraved trim | Patterned texture (engravings, lacquer) | A subtle glowing accent (a gem) |
+| Legendary (Dragon Scale) | **Overlapping scale plates as real geometry** on the chest, shoulders and shins; horns and spines | Painted scales between the modelled ones | Glowing seams and gems, light ember particles |
+| Godly (Phoenix) | The most complex silhouette (feather and flame shapes) | The richest pattern | Animated glow plus particles |
+
+All of it stays inside `art-references/ART_DIRECTION_USER_2026-09-17.txt`: stylized low-poly and
+painterly, soft bevels, textures give richness while geometry gives shape. Never realistic, never
+voxel/Minecraft, never a hyper-detailed sculpt.
+
+**How armor has to fit the R15 body:**
+
+- **The body is fixed.** `AvatarNormalizer.server.luau` gives every player the standard-proportion
+  R15 body: default blocky parts, every scale 1, `BodyTypeScale` and `ProportionScale` 0, no layered
+  clothing. Classic Shirt/Pants and up to 4 hat, hair or face accessories stay. Armor is authored
+  once, for that exact body.
+- **Measure the real body; don't guess.** In Studio, read a normalized character's part sizes and
+  joint positions. Rebuild that body in Blender as the fitting proxy, at 1:1 studs, and model at
+  final size (no upscaling in Studio).
+- **Split each piece into rigid meshes, one per R15 part it covers, welded to that part:**
+
+  | Piece | R15 parts |
+  |---|---|
+  | Helmet | Head |
+  | Chest | UpperTorso, LowerTorso, both UpperArms (pauldrons), both LowerArms (bracers) |
+  | Legs | Both UpperLegs and LowerLegs (knee guards) |
+  | Boots | Both Feet, plus a cuff on the LowerLegs |
+
+- **Joints:** overlap and flare the plates at the shoulders, elbows, hips and knees. There must be
+  no gaps and no clipping in idle, walk, run and jump. Check in **Play**, not Edit.
+- **Close fit:** chunky enough to read from the game camera, but hugging the body, not a bulky
+  shell.
+- **Helmet vs hair:** each helmet is either open-face (hair shows, like the ice reference) or full,
+  hiding hat and hair accessories while it's worn (like the lava reference). Propose one for the
+  sample and let the user decide.
+
+**Roblox technical rules:**
+- Colour goes through `MeshPart.TextureID`. SurfaceAppearance with newly uploaded images renders
+  blank white in Play.
+- Glow comes from separate inset meshes with the Neon material (crack lines, seams, gems), plus an
+  optional ParticleEmitter or PointLight. Never from a lighting trick that hides missing geometry.
+- **Budgets:**
+  - A whole armor set: about 6k triangles for Common, up to about 12k for Legendary or Godly.
+  - A weapon: under 8k (as in the weapon brief).
+  - A pet: about 5k.
+  - Document the reason if you go over.
+- **Blender kit convention** (like the other `blender-*` folders):
+  - A self-contained generator run in background Blender 5.2.
+  - `exports/fbx` + `exports/glb`, `textures/`, real `previews/` renders, a polygon report,
+    `validate_exports.py` and a README with provenance.
+  - Don't change the user's open Blender scene through MCP.
+- **Godly weapon:** follow the deliverables in `weapon-models/MODELING_BRIEF.md`. The approved Glock
+  (`item-model-test-glock/`) is the quality bar. There's no reference image, so design from section
+  9 with the Godly accent (crimson and obsidian).
+- **Pet:** a stylized low-poly animal, cute but cool for ages 8–16.
+  - Paint the face into the texture over shallow relief; modelled sockets read as sunglasses.
+  - Give it a simple armature (body, head, legs, tail) so step 6 can animate it. No animations yet.
+
+**Style-sample gate. This comes first, and before any other art:**
+
+1. Model **only one of each**:
+   - 1 armor set: **Dragon Scale** (Legendary, which shows scales and the top-end detail).
+   - 1 weapon: **Reaper's Scythe** (Godly).
+   - 1 pet: **Golden Retriever**.
+
+   Swap any of these if the user picks different ones.
+2. Show the user:
+   - **Blender renders:** front, back and side of each.
+   - **An in-Studio Play check:**
+     - The Dragon Scale set worn by a normalized R15 display dummy that plays the default walk.
+     - The scythe floating next to it.
+     - The dog standing beside it.
+
+     Put these only in a `Workspace.StyleSamples` folder near the lobby spawn. No gameplay code, and
+     remove the folder after approval. Capture from the Play client.
+3. **Stop and wait for the user's approval of the style.** Only then model the other 6 armor sets,
+   5 Godly weapons and 11 pets, reusing the approved look.
+
+This art work doesn't depend on the gameplay code, so it can run alongside step 1. The gameplay
+for armor, Godly weapons and pets still waits for steps 4–6.
+
 ## Pace check
 
 `economy-sims/chest_pace_sim.py` simulates a player who spends every emerald on one chest type.
@@ -346,6 +452,10 @@ maps (including 200 daily emeralds). Median hours played:
 
 Each step gets built, synced to Studio, tested in Studio Play and **shown to the user before the
 next one starts**. Every step must leave Studio fully working (see "Rules for implementers").
+
+**Art track (runs alongside step 1):** the style-sample gate in section 13. Model one armor set, one
+Godly weapon and one pet in Blender, show them, and wait for approval before modeling anything else.
+Steps 4–6 use the approved models.
 
 ### Step 1: Economy numbers (small; fixes "too easy" right away)
 - **`ChestConfig.luau`:**
