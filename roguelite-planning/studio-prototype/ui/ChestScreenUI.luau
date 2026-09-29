@@ -28,7 +28,7 @@ local DW,DH=1920,1080
 local LIST_X,LIST_Y,LIST_W=40,150,610
 local ROW_H,RAR_H=104,36
 local WHITE=Color3.new(1,1,1)
-local RANK={Common=1,Rare=2,Epic=3,Legendary=4}
+local RANK={Common=1,Rare=2,Epic=3,Legendary=4,Godly=5}
 
 local function tween(obj,time,props,style,dir,delay)
  local tw=TweenService:Create(obj,TweenInfo.new(time,style or Enum.EasingStyle.Quad,dir or Enum.EasingDirection.Out,0,false,delay or 0),props)
@@ -110,7 +110,8 @@ function U.new(player,opts)
 
  -- Browse ----------------------------------------------------------------------------------------
  local function rarityBars(parent,id,y)
-  for i,row in Chests.summary(id) do
+  local rows=Chests.summary(id)
+  for i,row in rows do
    local color=Chests.RarityColor[row.rarity]
    local bar=T.make('Frame',parent,{Name='Rarity_'..row.rarity,Position=UDim2.fromOffset(14,y+(i-1)*(RAR_H+6)),Size=UDim2.fromOffset(LIST_W-28,RAR_H),BackgroundColor3=color,BackgroundTransparency=.45,BorderSizePixel=0})
    T.make('UICorner',bar,{CornerRadius=UDim.new(0,6)})
@@ -119,7 +120,20 @@ function U.new(player,opts)
    left(T.label(bar,'Name',row.rarity,16,0,300,RAR_H,24,WHITE))
    right(T.label(bar,'Amount',row.text,LIST_W-28-316,0,300,RAR_H,24,WHITE))
   end
-  return y+4*(RAR_H+6)
+  return y+#rows*(RAR_H+6)
+ end
+
+ -- Pity reminders under the selected chest (the Godly line only once Godly weapons exist).
+ local function pityLines(def)
+  local out={}
+  if not def.pity then return out end
+  local function line(rarity,limit)
+   local n=math.max(1,limit-(profile.pity[rarity] or 0))
+   table.insert(out,rarity..' guaranteed within <b>'..n..'</b> chest'..(n>1 and 's' or ''))
+  end
+  line('Legendary',Chests.LegendaryPity)
+  if Chests.godlyEnabled() and (def.godly or 0)>0 then line('Godly',Chests.GodlyPity) end
+  return out
  end
 
  local function openOdds(id)
@@ -128,17 +142,19 @@ function U.new(player,opts)
   local back=T.make('TextButton',canvas,{Name='Odds',Text='',AutoButtonColor=false,BackgroundColor3=C.shade,BackgroundTransparency=.4,Position=UDim2.fromOffset(-1000,-200),Size=UDim2.fromOffset(DW+2000,DH+400),ZIndex=40})
   oddsOverlay=back
   back.Activated:Connect(function() back:Destroy();oddsOverlay=nil end)
-  local W,H=1340,740
+  -- One row per rarity that has weapons (Godly appears once Godly weapons exist).
+  local odds=Chests.odds(id)
+  local byR={};for _,o in odds do byR[o.rarity]=byR[o.rarity] or {};table.insert(byR[o.rarity],o) end
+  local shown={};for _,r in Chests.Rarities do if byR[r] then table.insert(shown,r) end end
+  local W,H=1340,math.max(740,130+#shown*144)
   local p=T.panel(back,'Panel',1000+(DW-W)/2,200+(DH-H)/2+20,W,H,'panel');p.ZIndex=41;p.Active=true;corners(p,def.aura)
   local pl=plate(p,def.name..'  ·  Odds',28,-34,34);pl.ZIndex=42;for _,d in pl:GetDescendants() do if d:IsA('GuiObject') then d.ZIndex=43 end end
   local x0,y=36,54
   local help=left(T.text(p,'Help','Chance that one '..def.name..' includes each weapon. '..def.copies..' weapons per chest.',x0,y,W-72,26,20,C.muted));help.ZIndex=42
   y+=40
-  local odds=Chests.odds(id)
-  local byR={};for _,o in odds do byR[o.rarity]=byR[o.rarity] or {};table.insert(byR[o.rarity],o) end
   local cell,gap=96,8
-  for _,r in Chests.Rarities do
-   local list=byR[r] or {}
+  for _,r in shown do
+   local list=byR[r]
    local col=Chests.RarityColor[r]
    left(T.label(p,'H_'..r,string.upper(r),x0,y,300,30,26,col)).ZIndex=42
    y+=34
@@ -162,7 +178,7 @@ function U.new(player,opts)
   local y=0
   for _,id in Chests.Order do
    local def=Chests.ById[id];local sel=id==selected
-   local rowH=ROW_H+(sel and (4*(RAR_H+6)+(def.pity and 44 or 10)) or 0)
+   local rowH=ROW_H+(sel and (#Chests.summary(id)*(RAR_H+6)+10+#pityLines(def)*34) or 0)
    local row=T.button(listFrame,'Row_'..id,'',0,y,LIST_W,rowH,function()
     if selected~=id then selected=id;if opts.selection then opts.selection.chest=id end;Stage.Select(id);FX.play(FX.Sounds.Chime,.18,1.4);drawBrowse() end
    end,true)
@@ -171,7 +187,7 @@ function U.new(player,opts)
    local icon=T.icon(row,'Icon',-6,-12,124,def.icon);icon.ZIndex=row.ZIndex+2
    local n=owned(id)
    local name=left(T.label(row,'Name',def.name..(n>0 and '  <font color="#91EF14">('..n..')</font>' or ''),128,10,LIST_W-300,48,36));name.RichText=true;name.TextWrapped=false;name.ZIndex=row.ZIndex+2
-   local sub=left(T.text(row,'Sub',def.copies..' weapons  ·  '..(def.legendary>=1 and 'Legendary guaranteed' or ('Legendary '..(math.floor(def.legendary*1000+.5)/10)..'%')),130,56,LIST_W-230,26,20,C.cream));sub.ZIndex=row.ZIndex+2
+   local sub=left(T.text(row,'Sub',def.copies..' weapons  ·  '..(def.legendary>=1 and 'Legendary guaranteed' or ('Legendary '..Chests.percent(def.legendary))),130,56,LIST_W-230,26,20,C.cream));sub.ZIndex=row.ZIndex+2
    -- Price chip (top right).
    local chip=T.panel(row,'Price',LIST_W-172,14,154,48,'inset');chip.ZIndex=row.ZIndex+2
    if def.emeralds then costRow(chip,short(def.emeralds),'emerald',24,C.emerald)
@@ -181,9 +197,8 @@ function U.new(player,opts)
    if sel then
     local yy=rarityBars(row,id,ROW_H)
     for _,d in row:GetChildren() do if d.Name:find('^Rarity_') then d.ZIndex=row.ZIndex+2;for _,e in d:GetDescendants() do if e:IsA('GuiObject') then e.ZIndex=row.ZIndex+3 end end end end
-    if def.pity then
-     local left_=math.max(1,Chests.LegendaryPity-(profile.pity.Legendary or 0))
-     local p=left(T.text(row,'Pity','Legendary guaranteed within <b>'..left_..'</b> chest'..(left_>1 and 's' or ''),18,yy+2,LIST_W-36,30,20,C.limeSoft));p.ZIndex=row.ZIndex+2
+    for i,text in pityLines(def) do
+     local p=left(T.text(row,i==1 and 'Pity' or 'Pity'..i,text,18,yy+2+(i-1)*34,LIST_W-36,30,20,C.limeSoft));p.ZIndex=row.ZIndex+2
     end
    end
    y+=rowH+10
@@ -353,7 +368,7 @@ function U.new(player,opts)
   local col=Chests.RarityColor[r.rarity] or WHITE
   local c=T.panel(parent,'Card_'..r.id,x,y,w,h,'panel');corners(c,col)
   wash(c,col,RANK[r.rarity]>=3 and .7 or .5,c.ZIndex)
-  if RANK[r.rarity]>=3 then local b=StoreFX.burst(c,w/2,78,w*1.25,col,RANK[r.rarity]==4 and 40 or 22);b.ZIndex=c.ZIndex+1;for _,d in b:GetChildren() do d.ZIndex=c.ZIndex+1 end end
+  if RANK[r.rarity]>=3 then local b=StoreFX.burst(c,w/2,78,w*1.25,col,RANK[r.rarity]>=4 and 40 or 22);b.ZIndex=c.ZIndex+1;for _,d in b:GetChildren() do d.ZIndex=c.ZIndex+1 end end
   local ic=T.icon(c,'Icon',(w-120)/2,18,120,WeaponIcons[r.id]);ic.ZIndex=c.ZIndex+2
   local cnt=right(T.label(c,'Count','×'..(r.count or 1),w-110,6,98,40,36,RANK[r.rarity]>=3 and C.gold or WHITE));cnt.ZIndex=c.ZIndex+3
   local w_=Weapons.ById[r.id]
@@ -435,10 +450,10 @@ function U.new(player,opts)
     if not resultLayer or not resultLayer.Parent then return end
     local rank=RANK[r.rarity] or 1
     if not skipReveal and rank>=3 then
-     task.wait(rank==4 and .5 or .25)
-     flash(Chests.RarityColor[r.rarity],rank==4 and .55 or .3)
-     FX.play(rank==4 and FX.Sounds.Legendary or FX.Sounds.Chime,rank==4 and .6 or .5,rank==4 and 1 or .9)
-     Stage.Shake(rank==4 and .3 or .15)
+     task.wait(rank>=4 and .5 or .25)
+     flash(Chests.RarityColor[r.rarity],rank>=4 and .55 or .3)
+     FX.play(rank>=4 and FX.Sounds.Legendary or FX.Sounds.Chime,rank>=4 and .6 or .5,rank>=4 and 1 or .9)
+     Stage.Shake(rank>=4 and .3 or .15)
     end
     local slot=slots[r]
     local c=card(grid,r,slot.X,slot.Y,cw,ch)
