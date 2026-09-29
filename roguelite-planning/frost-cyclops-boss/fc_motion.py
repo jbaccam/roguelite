@@ -339,7 +339,7 @@ def lever_frames(sk, spec):
 
 
 def ground_slam_spec(sk):
-    """Overhead Ground Slam: the arm rises through the front to a high windup with
+    """Overhead Ground Slam: the arm rises FORWARD through the front (never back) to a high windup with
     the club cocked behind the head (head of the club pointing back and down),
     holds, then the shoulder drives a near-vertical arc; the elbow straightens
     by mid-swing and the wrist stays within +-20 deg while the club accelerates
@@ -358,33 +358,39 @@ def ground_slam_spec(sk):
     bounce = dict(impact, drop=1.16, lean=28, belly=-5, mantle=6, jaw=20)
     settle = dict(impact, drop=1.24, lean=30, belly=2, mantle=-3, jaw=18)
     lift = dict(carry, shift=(0, -0.1, 0), drop=0.45, lean=10, twist=-2, larm=(-12, 0, 12), jaw=6, mantle=2)
-    # Unwrapped arm angles along the motion (theta only ever moves one way per phase):
-    # carry (-114, carry plane) -> lateral raise out and up (-185, -262) -> the plane
-    # turns to the swing plane while the arm points straight up -> cocked back
-    # (-248 = 112 deg, -242 = 118 deg) -> strike over the top and down (-> -360+th_imp).
+    # Unwrapped arm angles (theta only moves one way per phase). The arm rises
+    # FORWARD like an overhead axe chop: carry (-114, carry plane) -> forward
+    # (-15) -> straight up beside the head (95) while the elbow bends so the club
+    # drops behind the head -> cocked (112, 118) -> strike back over the top and
+    # down to th_imp -> recovery to the carry.
     nref = tuple(nref)
     sm = {'body': 'smooth', 'theta': 'smooth', 'flex': 'smooth', 'psi': 'smooth'}
     strike = {'body': 'in', 'theta': 'in', 'flex': 'fast', 'psi': 'smooth'}
     A_carry = (th0, fl0, ps0, ro0, nref)
-    A_side = (-185.0, 32.0, 6.0, 24.0, nref)
-    A_up = (-262.0, 48.0, 0.0, 6.0, tuple(n_out))
-    A_wind = (-248.0, 82.0, -4.0, 0.0, tuple(n_out))
-    A_cock = (-242.0, 88.0, -10.0, 0.0, tuple(n_out))
+    # early raise: the arm swings forward in a plane leaning 30 deg outward so the
+    # club's pommel clears the thigh and belly, hand rolling to neutral
+    f_ax = D._unit(np.cross(UP, n_out))
+    A_early = (-70.0, 33.0, 10.0, 0.0, tuple(axis_angle(f_ax, -30.0) @ n_out))
+    A_fwd = (-15.0, 38.0, 4.0, 10.0, tuple(n_out))
+    A_up = (95.0, 70.0, -2.0, 0.0, tuple(n_out))
+    A_wind = (112.0, 82.0, -4.0, 0.0, tuple(n_out))
+    A_cock = (118.0, 88.0, -10.0, 0.0, tuple(n_out))
     fl_imp, ps_imp = 6.0, 18.0
-    th_imp = solve_theta_for_ground(sk, impact, n_out, fl_imp, ps_imp, lo=-100.0, hi=-20.0) - 360.0
+    th_imp = solve_theta_for_ground(sk, impact, n_out, fl_imp, ps_imp, lo=-100.0, hi=-20.0)
     A_imp = (th_imp, fl_imp, ps_imp, 0.0, tuple(n_out))
     A_bounce = (th_imp + 5.0, 9.0, 16.0, 0.0, tuple(n_out))
     A_settle = (th_imp + 1.5, 8.0, 17.0, 0.0, tuple(n_out))
     A_lift = (th_imp + 18.0, 30.0, 10.0, -8.0, tuple(D._unit(np.asarray(n_out) * 0.7 + np.asarray(nref) * 0.3)))
-    A_lower = (th0 - 360.0 - 12.0, fl0 + 12.0, ps0 - 6.0, ro0 * 0.8, nref)
+    A_lower = (th0 - 12.0, fl0 + 12.0, ps0 - 6.0, ro0 * 0.8, nref)
     side = dict(rise, larm=(-20, -10, 20))
     lift = dict(carry, shift=(0, -0.05, 0), drop=0.40, lean=10, twist=-4, larm=(-8, 0, 8), jaw=6, mantle=2)
     lower = dict(carry, drop=0.10, lean=3, larm=(-3, 0, 3))
-    A_carry2 = (th0 - 360.0, fl0, ps0, ro0, nref)
+    A_carry2 = A_carry
     keys = [(1, carry, None, sm),
             (2, carry, A_carry, sm),
-            (7, side, A_side, sm),
-            (12, rise, A_up, sm),
+            (5, side, A_early, sm),
+            (8, side, A_fwd, sm),
+            (13, rise, A_up, sm),
             (17, wind, A_wind, sm),
             (21, cock, A_cock, sm),
             (29, impact, A_imp, strike),
@@ -433,29 +439,29 @@ def leg_hinge(P, sk, side, ankle, pole, foot_R=None):
 
 
 def stomp_frames(sk):
-    """Stomp: weight shifts over the right (club-side) foot, the left thigh rises
-    slowly sumo-style (out to the side and forward, clearing the gut) to about
-    horizontal with the knee hinged ~90 deg and the foot flat, a short hold with a
-    slight extra rise, then the foot drives straight down, the knee extending,
-    landing sole-flat a little forward with the toes along the facing (-Y). The
-    standing foot is pinned; the knee is a one-way hinge (shared thigh/shin axis)."""
+    """Stomp: weight shifts over the right (club-side) foot, the left knee comes
+    UP high sumo-style (thigh at or a little above horizontal, out to the side)
+    with the shin hanging vertical and the foot directly under the knee, a hold
+    with a slight extra rise, then the foot slams straight DOWN and lands sole-flat
+    where it lifted from (under the hip, out to the side), toes along the facing.
+    The standing foot is pinned; the knee is a one-way hinge (shared thigh/shin
+    axis); the loincloth front bones swing up and out with the thigh."""
     A0 = {s_: sk.ref[s_ + 'Foot'][:3, 3].copy() for s_ in ('Right', 'Left')}
     l1, l2 = sk.length['LeftUpperLeg'], sk.length['LeftLowerLeg']
     base = {'shift': (0, 0, 0), 'drop': 0.0, 'lean': 0.0, 'side': 0.0, 'lift': 0.0, 'elev': 0.0,
             'land': (0, 0, 0), 'fyaw': 0.0, 'larm': (0, 0, 0), 'rarm': (0, 0), 'head': 0.0, 'jaw': 0.0,
-            'belly': 0.0, 'mantle': 0.0, 'loin': 0.0}
+            'belly': 0.0, 'mantle': 0.0, 'loin': 0.0, 'loin_side': 0.0}
     shift = dict(base, shift=(-0.85, 0.15, 0), drop=0.30, lean=-4, side=-6, larm=(-10, -30, 20), rarm=(-5, 16))
-    top = dict(shift, shift=(-1.25, 0.25, 0), drop=0.05, lean=-8, side=-9, lift=1.0, elev=0.0, fyaw=8.0,
-               larm=(-35, -70, 30), rarm=(-12, 26), head=4, jaw=10, loin=-35)
-    top2 = dict(top, elev=8.0, drop=-0.05, lean=-10, head=6, jaw=16, loin=-40)
-    mid = dict(top, lift=0.45, elev=-10.0, drop=0.45, lean=10, larm=(-25, -55, 30), jaw=20, loin=-20,
-               land=(-0.15, -1.20, 0.0))
-    impact = dict(shift, shift=(-0.85, 0.05, 0), lift=0.0, land=(-0.15, -1.20, 0.0), fyaw=8.0, drop=0.95,
+    top = dict(shift, shift=(-1.25, 0.25, 0), drop=0.05, lean=-8, side=-9, lift=1.0, elev=6.0, fyaw=8.0,
+               larm=(-35, -70, 30), rarm=(-12, 26), head=4, jaw=10, loin=-35, loin_side=-22)
+    top2 = dict(top, elev=12.0, drop=-0.05, lean=-10, head=6, jaw=16, loin=-40, loin_side=-24)
+    mid = dict(top, lift=0.45, elev=0.0, drop=0.45, lean=10, larm=(-25, -55, 30), jaw=20, loin=-20, loin_side=-10)
+    impact = dict(shift, shift=(-0.85, 0.05, 0), lift=0.0, land=(0.0, 0.0, 0.0), fyaw=8.0, drop=0.95,
                   lean=22, side=-4, larm=(-20, -45, 30), rarm=(-14, 30), head=-14, jaw=22, belly=6, mantle=-8,
-                  loin=-5)
+                  loin=-16, loin_side=-8)
     bounce = dict(impact, drop=0.85, lean=19, belly=-5, mantle=5, head=-10)
     settle = dict(impact, drop=0.9, lean=20, belly=2, mantle=-2, head=-11)
-    step = dict(base, shift=(-0.6, 0.05, 0), drop=0.35, lean=6, lift=0.25, land=(-0.05, -0.6, 0.0), fyaw=4.0,
+    step = dict(base, shift=(-0.6, 0.05, 0), drop=0.35, lean=6, lift=0.0, land=(0.0, 0.0, 0.0), fyaw=4.0,
                 larm=(-10, -20, 15), rarm=(-5, 12), jaw=6)
     keys = [(1, base, 'smooth'), (10, shift, 'smooth'), (38, top, 'smooth'), (44, top2, 'smooth'),
             (47, mid, 'in'), (50, impact, 'in'), (53, bounce, 'smooth'), (57, settle, 'smooth'),
@@ -464,7 +470,7 @@ def stomp_frames(sk):
     X = np.array([1.0, 0, 0])
     Y = np.array([0, 1.0, 0])
     fwd = np.array([0, -1.0, 0])
-    thigh_dir0 = D._unit(np.array([0.65, -0.76, 0.0]))       # sumo: out and forward, clears the belly
+    thigh_dir0 = D._unit(np.array([0.80, -0.60, 0.0]))       # sumo: knee up and OUT to the side, clears the belly
     for f in range(1, keys[-1][0] + 1):
         for (fa, pa, _), (fb, pb, ease) in zip(keys[:-1], keys[1:]):
             if fa <= f <= fb:
@@ -503,6 +509,7 @@ def stomp_frames(sk):
                 P.rot('Mantle_R', Y, float(prm['mantle']))
                 P.rot('Mantle_L', Y, -float(prm['mantle']))
                 P.rot('Loincloth_Front_1', X, float(prm['loin']))
+                P.rot('Loincloth_Front_1', Y, float(prm['loin_side']))
                 P.rot('Loincloth_Front_2', X, float(prm['loin']) * 0.4)
                 frames.append((f, P, {'right': r, 'left': l}))
                 break
@@ -529,6 +536,15 @@ def arm_metrics(P, sk, n_out):
     lateral = float(off @ n)             # + = elbow pointing outward (lateral)
     return {'reach_pct': round(100 * reach, 2), 'elbow_flex': round(flex, 2), 'wrist_bend': round(bend, 2),
             'elbow_out_of_plane': round(out_of_plane, 3), 'elbow_lateral_offset': round(lateral, 3)}
+
+
+def arm_behind_coronal(P):
+    """(degrees the right upper arm points BEHIND the torso's coronal plane,
+    hand below shoulder?). Positive = behind (shoulder extension)."""
+    S, E, W = P.head('RightUpperArm'), P.head('RightLowerArm'), P.head('RightHand')
+    ua = D._unit(E - S)
+    fwd = D._unit(P.m['UpperTorso'][:3, 2])
+    return math.degrees(math.asin(np.clip(-(ua @ fwd), -1, 1))), bool(W[2] < S[2])
 
 
 def club_clearance(P, prims):

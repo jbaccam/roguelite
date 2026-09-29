@@ -744,7 +744,7 @@
    0.4342,
    -0.0
   ],
-  "note": "Blender bone space: +Y along the bone (head->tail), X/Z per roll. ClubImpact = centre of the flat striking face; its normal is the second vector. The ClubImpact helper bone in FrostCyclops.blend sits there (non-deform, not exported).",
+  "note": "Blender bone space: +Y along the bone (head->tail), X/Z per roll. The ClubImpact helper bone in FrostCyclops.blend sits at this point (not exported; deform-only exports).",
   "grip_report": {
    "haft_radius": 0.32,
    "centre_local": [
@@ -859,8 +859,8 @@
     "recovery": 68
    },
    "StompImpact_root": [
-    2.3167,
-    -2.9409,
+    2.4667,
+    -1.7409,
     0.0
    ],
    "StompSpikeDirection_root": [
@@ -869,9 +869,9 @@
     0.0
    ],
    "StompImpact_root_roblox_xyz": [
-    -2.3167,
+    -2.4667,
     0.0,
-    -2.9409
+    -1.7409
    ],
    "StompSpikeDirection_roblox_xyz": [
     -0.0,
@@ -920,6 +920,7 @@
  },
  "motion_checks_summary": {
   "GroundSlam": {
+   "max_upper_arm_behind_coronal_deg_hand_below_shoulder": 3.16,
    "strike_max_wrist_bend": 18.0,
    "strike_max_elbow_out_of_plane": 0.0,
    "mid_to_impact_max_elbow_flex": 6.0,
@@ -930,13 +931,16 @@
    "max_grip_digit_drift": 3e-06
   },
   "Stomp": {
-   "max_knee_flex_Left": 99.02,
-   "knee_flex_Left_at_top": 99.02,
-   "knee_flex_Left_at_impact": 44.66,
+   "max_thigh_elevation_deg": 12.36,
+   "max_foot_ahead_of_knee": 0.107,
+   "foot_from_lift_spot_at_impact": 0.0,
+   "max_knee_flex_Left": 102.95,
+   "knee_flex_Left_at_top": 102.95,
+   "knee_flex_Left_at_impact": 74.07,
    "max_knee_twist_Left": 0.07,
    "max_standing_foot_drift": 1e-06,
-   "min_thigh_gut_clearance": 0.208,
-   "min_loincloth_thigh_clearance": -0.584,
+   "min_thigh_gut_clearance": 0.209,
+   "min_loincloth_thigh_clearance": 0.05,
    "min_club_lowest_z": 0.089
   }
  },
@@ -971,16 +975,16 @@
    "bytes": 709737
   },
   "FrostCyclops_Fur_BaseColor_2048.png": {
-   "sha256": "B892693A258138994F67E75AE89D9B20A6281918567800C74F0D16A8B9934DB7",
-   "bytes": 1839520
+   "sha256": "E3A48E8B33BD0F7F22AC17199DC96D4FB624AFA5E148910BEC02D7594AFFC990",
+   "bytes": 1839544
   },
   "FrostCyclops_Gear_BaseColor.png": {
-   "sha256": "7B5252E61881EF22A0597239CF9BFDE50DC4D77881889EF38DDA8C5899344A39",
-   "bytes": 584958
+   "sha256": "2C5B06421B8C1D69907694C797CA19C18A23010DE0C3A8A730C15F408F2BD500",
+   "bytes": 584962
   },
   "FrostCyclops_Gear_BaseColor_2048.png": {
-   "sha256": "F44B2E75B8F73873EDAB8DDFC73F4B05E3543A7223105C5587201AA34056A670",
-   "bytes": 1457034
+   "sha256": "F8DF363387058FA3ED523F8971A4CB80B11F349651E3B430C094CD61DAEAB792",
+   "bytes": 1457048
   },
   "FrostCyclops_Head_BaseColor.png": {
    "sha256": "D054E4908D222DD376BED6B4FB58307A037119BEC38000F255151230FA268164",
@@ -993,28 +997,28 @@
  },
  "exports": {
   "exports/fbx/FrostCyclops.fbx": {
-   "sha256": "0F0C00466B2E792374B4A08C1C152F1EE09D3CB3781C2D26D871FA18A268E996",
-   "bytes": 5158076
+   "sha256": "1BA092E85385F715060C473F38BA6623C3EE595BF94BE3D741DA27AA00AD0955",
+   "bytes": 5157804
   },
   "exports/fbx/FrostCyclops_GroundSlam.fbx": {
-   "sha256": "6AFA3FFE213631D84ECD13115B95E7E1E97E0F0A7BADBD68A06BB05998B4E74B",
-   "bytes": 616780
+   "sha256": "232195E25E4060D0369F373CEEEEE02E570C5D7498DF232ABEDB2420D3BA11BE",
+   "bytes": 615420
   },
   "exports/fbx/FrostCyclops_ReferencePose.fbx": {
-   "sha256": "3136D8EBBB05928609EC8F00E66294F704BFBAC065DAB1B3ACE5B830C01FD355",
+   "sha256": "F240129B4B3CAFCDEACE0C245223831D2830B503F8571302B86585ABB74B9560",
    "bytes": 368204
   },
   "exports/fbx/FrostCyclops_RigTest_ROM.fbx": {
-   "sha256": "B9810D485CCD58D9A8EBBDCB2F23567262EBE380EB6760EBF3623CD410B67829",
+   "sha256": "2D47E6D566D49E337363DE3D3B36AC1686AA0CC76461855A1FF64809B5561B82",
    "bytes": 830076
   },
   "exports/fbx/FrostCyclops_Stomp.fbx": {
-   "sha256": "42128E9E9E6B03343B5610D59F678A129C7A675EFB285F7651F89B40CAAF0E94",
-   "bytes": 693500
+   "sha256": "DBE9D48CBB285332773E37E4DF0C4E350A594AD454C22DD59148DBC2571A74E6",
+   "bytes": 693516
   },
   "exports/glb/FrostCyclops.glb": {
-   "sha256": "F06D1935A053E4D539A3CAA96E50B2666ADC26C0033578CF6A36244C559BCC5E",
-   "bytes": 8194056
+   "sha256": "350C04B47A0225782CEA5B576EBF82172FE2B23D3888EB5C9E9E72E18014E3C6",
+   "bytes": 8194060
   }
  },
  "camera_solution": {

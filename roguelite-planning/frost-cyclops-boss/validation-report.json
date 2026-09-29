@@ -381,7 +381,7 @@
     "under_20k": true,
     "unweighted_vertices": 0,
     "max_influences": 4,
-    "max_weight_sum_error": 1.2386590242385864e-07,
+    "max_weight_sum_error": 8.009374141693115e-08,
     "uv": true,
     "uv_range": [
      0.009376201778650284,
@@ -425,7 +425,7 @@
    }
   },
   "bones_moving_samples": {
-   "GroundSlam": 622,
+   "GroundSlam": 620,
    "ReferencePose": 0,
    "RigTest_ROM": 373,
    "Stomp": 578

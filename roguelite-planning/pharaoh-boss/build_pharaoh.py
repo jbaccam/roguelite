@@ -34,6 +34,8 @@ HERE = Path(__file__).resolve().parent
 STAGE = os.environ.get('STAGE', 'full')
 PROBE_ONLY = os.environ.get('PROBE_ONLY') == '1'
 SAMPLES = int(os.environ.get('SAMPLES', '48'))
+# PREVIEWS=subset re-renders only Reference_Match, Turnaround and Face_CloseUp
+PREVIEW_SUBSET = os.environ.get('PREVIEWS') == 'subset'
 WORK = HERE / '_work'
 for d in ('textures', 'previews', 'exports/fbx', 'exports/glb', '_work'):
     (HERE / d).mkdir(parents=True, exist_ok=True)
@@ -529,10 +531,10 @@ def build_materials():
               cal('skin', 168, 168, 134), patch_scale=0.85, speck=9.0,
               speck_col=cal('skin', 70, 70, 52), edge_col=cal('skin', 190, 188, 156),
               edge_amt=0.45, cav_col=cal('skin', 60, 62, 48), cav_amt=0.55, facet_amt=0.10)
-    painterly('bone', cal('bone', 156, 151, 125), cal('bone', 124, 120, 98),
-              cal('bone', 194, 187, 158), patch_scale=1.6, speck=11.0,
-              speck_col=cal('bone', 96, 86, 62), edge_col=cal('bone', 226, 214, 178),
-              edge_amt=0.55, cav_col=cal('bone', 70, 62, 42), cav_amt=0.65, facet_amt=0.08)
+    painterly('bone', cal('bone', 156, 151, 125), cal('bone', 118, 114, 92),
+              cal('bone', 196, 189, 160), patch_scale=2.2, speck=15.0,
+              speck_col=cal('bone', 84, 76, 56), edge_col=cal('bone', 232, 222, 190),
+              edge_amt=0.80, cav_col=cal('bone', 52, 48, 34), cav_amt=0.85, facet_amt=0.10)
     painterly('teeth', cal('bone', 226, 206, 166), cal('bone', 196, 176, 138),
               cal('bone', 240, 226, 190), patch_scale=3.0, edge_col=cal('bone', 246, 236, 206),
               edge_amt=0.5, cav_col=cal('bone', 110, 90, 60), cav_amt=0.5, facet_amt=0.05)
@@ -863,12 +865,23 @@ def build_body():
 
 # ================================================================= traced slabs
 def slab(name, pts_uv, y_front, thick, mat, bevel_w=0.02, segments=1, normal=None,
-         angle=40.0, rev=False):
+         angle=40.0, rev=False, back=None):
     """A piece whose front outline is traced in reference pixels. The outline is
     unprojected onto a plane through Y=y_front (optionally tilted by `normal`,
-    which points toward the viewer) and extruded `thick` away from the viewer."""
+    which points toward the viewer) and extruded `thick` away from the viewer,
+    or along `back` when given (e.g. back-and-up for an overhanging brow whose
+    underside must slope up into the socket instead of hiding the eye)."""
     pts = uv_outline(pts_uv, y_front, normal)
     nd = Vector(normal).normalized() if normal is not None else Vector((0, -1, 0))
+    if isinstance(back, str) and back == 'ray':
+        # extrude along the camera ray through the outline's centre: the sides
+        # are then edge-on from the reference camera, so the piece images
+        # exactly as traced, and depth still reads from every other angle
+        cu = sum(u for u, _ in pts_uv) / len(pts_uv)
+        cv = sum(v for _, v in pts_uv) / len(pts_uv)
+        nd = -WR(cu, cv)
+    elif back is not None:
+        nd = -Vector(back).normalized()
     if rev:
         pts = list(reversed(pts))
     return extrude_poly(name, pts, nd, thick, mat, bevel_w, segments, angle)
@@ -903,14 +916,25 @@ def boolean_cut(target, cutters, delete=True):
 
 
 def build_head():
+    """Chiselled skull, built from carved blocks like the reference.
+
+    Every outline below is traced from a 6x zoom of the reference face (pixels)
+    and unprojected through the solved camera. Depths (FACE_Y offsets) stack
+    the blocks: heavy V brows proud of the skull, a glabella ridge, angular
+    cheekbone blocks and lower orbital ridges, a maxilla block, a stepped
+    squared jaw. The sockets, the inverted-heart nasal cavity and the mouth are
+    boolean pits whose walls take the dark material. The teeth are an uneven
+    clenched grimace: four big upper teeth with a wide gap, seven lower teeth,
+    a dark line between the rows, the mouth dropping toward his left.
+    """
     bone, dark, teeth = MATS['bone'], MATS['dark'], MATS['teeth']
-    # --- skull base: lofted chamfered sections, wide at the cheekbones and
-    # narrowing to the maxilla; the brow band and dome cover everything above
-    # (image row, half width, face set-back, cheek plane depth, ridge)
+    rnd = random.Random(20260929)
+    # --- skull mass: wide at the cheekbones, hollowing under them ----------
+    # (image row, half width, face set-back, cheek plane depth, centre ridge)
     secs = [(246, 0.76, 0.00, 0.20, 0.05), (262, 0.80, 0.00, 0.22, 0.06),
-            (286, 0.84, 0.02, 0.30, 0.08), (302, 0.80, 0.03, 0.34, 0.08),
-            (316, 0.66, 0.06, 0.26, 0.06), (330, 0.60, 0.07, 0.22, 0.05),
-            (342, 0.55, 0.08, 0.20, 0.04)]
+            (286, 0.84, 0.02, 0.30, 0.08), (302, 0.78, 0.04, 0.40, 0.08),
+            (316, 0.60, 0.08, 0.50, 0.06), (330, 0.56, 0.09, 0.48, 0.05),
+            (342, 0.53, 0.10, 0.40, 0.04)]
     rings = []
     for v, hx, back, ck, rg in secs:
         z = face_z(v, FACE_Y)
@@ -921,63 +945,94 @@ def build_head():
             (-hx + 0.06, y1 - 0.2, z), (-hx, y0 + ck, z), (-hx * 0.86, y0 + ck * 0.45, z),
             (-hx * 0.46, y0, z))])
     base = loft('Skull', rings, bone)
-    bevel(base, 0.05, 1, 25)
-    cut = []
-    def ell(cx, cy, rx, ry, tilt, n=16):
-        t = math.radians(tilt)
-        return [(cx + math.cos(2 * math.pi * i / n) * rx * math.cos(t)
-                 - math.sin(2 * math.pi * i / n) * ry * math.sin(t),
-                 cy + math.cos(2 * math.pi * i / n) * rx * math.sin(t)
-                 + math.sin(2 * math.pi * i / n) * ry * math.cos(t)) for i in range(n)]
-    for nm, pts, dep in (
-            ('SocketL', ell(515.5, 277.5, 26.0, 15.5, 8), 0.42),
-            ('SocketR', ell(583.0, 275.0, 26.0, 15.5, -8), 0.42),
-            ('Nose', [(550, 281), (557, 288), (561, 303), (553, 301), (550, 297),
-                      (547, 301), (539, 303), (543, 288)], 0.26),
-            ('Mouth', [(519, 315), (534, 313), (550, 314), (566, 313), (581, 315),
-                       (586, 328), (584, 341), (552, 342), (521, 341), (518, 328)], 0.30)):
-        c = slab(nm + 'Cut', pts, FACE_Y - 0.4, 0.4 + dep, dark, 0.0)
-        cut.append(c)
+    bevel(base, 0.04, 1, 25)
+    # --- pits: angular sockets, inverted-heart nose, grimacing mouth --------
+    PITS = (
+        ('SocketL', [(491, 277), (496, 267), (508, 263), (528, 264), (540, 268), (544, 277),
+                     (539, 289), (522, 294), (503, 293), (494, 287)], 0.50),
+        ('SocketR', [(559, 276), (563, 267), (576, 263), (597, 262), (606, 266), (610, 276),
+                     (605, 287), (588, 290), (569, 290), (562, 285)], 0.50),
+        ('Nose', [(549, 283), (554, 283), (563, 297), (561, 303.5), (553, 298), (550, 298),
+                  (542, 303.5), (539, 297)], 0.40),
+        ('Mouth', [(516, 319), (522, 313), (536, 312), (552, 313.5), (576, 312.5), (583, 316),
+                   (589, 326), (590, 341.5), (552, 343), (519, 343.5), (515, 333)], 0.40))
+    cut = [slab(nm + 'Cut', pts, FACE_Y - 0.6, 0.6 + dep, dark, 0.0, back='ray')
+           for nm, pts, dep in PITS]
     boolean_cut(base, cut)
     part(base, 'Head', ('rigid', 'Head'), 'bone')
-    # --- proud bone around the pits ---------------------------------------
-    # brow slabs: heavy, sloping down to the centre (the angry V); they
-    # overhang the sockets
-    for nm, pts in (('BrowL', [(480, 239), (505, 241), (532, 249), (547, 258), (548, 270),
-                               (534, 272), (514, 267), (496, 266), (481, 269), (475, 254)]),
-                    ('BrowR', [(609, 233), (619, 242), (624, 256), (616, 266), (590, 267),
-                               (570, 270), (551, 271), (550, 258), (566, 247), (588, 237)])):
-        b = slab(nm, pts, FACE_Y - 0.24, 0.62, bone, 0.13, 2, angle=25.0)
-        part(b, 'Head', ('rigid', 'Head'), 'bone')
-    # nose bridge between the brows
-    fh = slab('NoseBridge', [(540, 252), (550, 255), (560, 252), (557, 262), (553, 280),
-                             (547, 280), (543, 262)], FACE_Y - 0.05, 0.3, bone, 0.02, 1)
-    part(fh, 'Head', ('rigid', 'Head'), 'bone')
-    # cheekbone plates: angled planes flush with the skull's sides
-    for nm, pts, nx in (('CheekL', [(476, 283), (492, 287), (501, 298), (500, 310), (488, 313),
-                                    (478, 305)], -0.55),
-                        ('CheekR', [(626, 282), (611, 286), (602, 297), (603, 309), (615, 312),
-                                    (625, 304)], 0.55)):
-        c = slab(nm, pts, FACE_Y + 0.07, 0.40, bone, 0.05, 1, angle=25.0, normal=(nx, -1, 0.1))
-        part(c, 'Head', ('rigid', 'Head'), 'bone')
-    # --- teeth set into the mouth pit ---------------------------------------
-    upper = [(523, 537), (538, 551.5), (552.3, 566), (567, 578.3), (578.8, 582.5)]
-    lower = [(522.3, 528.4), (528.9, 537.2), (538, 552), (553, 566.4), (567, 575.6),
-             (576, 583)]
-    for i, (a, b_) in enumerate(upper):
-        pts = [(a + 0.35, 316.4), (b_ - 0.35, 316.4), (b_ - 0.35, 328.8), (a + 0.35, 328.8)]
-        t = slab(f'ToothU{i}', pts, FACE_Y - 0.08, 0.38, teeth, 0.013, 1)
-        part(t, 'Head', ('rigid', 'Head'), 'teeth')
-    for i, (a, b_) in enumerate(lower):
-        pts = [(a + 0.35, 329.3), (b_ - 0.35, 329.3), (b_ - 0.35, 339.4), (a + 0.35, 339.4)]
-        t = slab(f'ToothL{i}', pts, FACE_Y - 0.06, 0.38, teeth, 0.012, 1)
-        part(t, 'Head', ('rigid', 'Jaw'), 'teeth')
-    # --- mandible: a chunky block with a squared chin ------------------------
-    jw = slab('Jaw', [(498, 340), (517, 344), (552, 346), (588, 344), (598, 340), (597, 351),
-                      (590, 361), (575, 366), (550, 367), (522, 366), (510, 362), (501, 351)],
-              FACE_Y - 0.06, 1.05, bone, 0.07, 2)
-    part(jw, 'Head', ('rigid', 'Jaw'), 'bone')
-    # --- eye glows (own section, EyeGlow) at the bottom of the socket pits --
+
+    def block(name, pts, front, thick, bw=0.06, seg=1, normal=None, host='Head', mat=None,
+              back='ray'):
+        o = slab(name, pts, front, thick, mat or bone, bw, seg, angle=25.0, normal=normal,
+                 back=back)
+        part(o, 'Head', ('rigid', host), 'teeth' if mat is teeth else 'bone')
+        return o
+    # --- heavy V brows: proud and overhanging; the big single chamfer gives
+    # the lit top plane the reference shows. Shallow depth so their underside
+    # frames (not hides) the glow set deep in the socket.
+    block('BrowL', [(476, 256), (483, 246), (500, 248), (522, 251), (545, 256), (548, 267),
+                    (541, 272), (522, 268), (504, 266), (490, 265), (479, 263)],
+          FACE_Y - 0.34, 0.46, 0.08)
+    block('BrowR', [(552, 267), (554, 256), (576, 252), (598, 247), (604, 244), (614, 250),
+                    (616, 260), (606, 265), (590, 265), (572, 267), (560, 272)],
+          FACE_Y - 0.34, 0.46, 0.08)
+    # glabella ridge between the brows, running down to the nose
+    block('Glabella', [(545, 256), (555, 256), (555, 268), (552, 282), (548, 282), (545, 268)],
+          FACE_Y - 0.16, 0.30, 0.03)
+    # --- cheekbones: angular blocks jutting out at the socket corners --------
+    block('CheekL', [(473, 288), (490, 292), (498, 299), (496, 309), (484, 312), (474, 303)],
+          FACE_Y + 0.02, 0.45, 0.05, normal=(-0.55, -1, 0.15))
+    block('CheekR', [(609, 280), (628, 289), (627, 301), (614, 308), (603, 300)],
+          FACE_Y + 0.02, 0.45, 0.05, normal=(0.55, -1, 0.15))
+    # lower orbital ridges: the lit ledge under each socket
+    block('OrbitL', [(491, 293), (503, 294.5), (522, 295.5), (539, 292), (542, 300),
+                     (521, 303), (497, 301)], FACE_Y - 0.10, 0.35, 0.04)
+    block('OrbitR', [(560, 290), (588, 291.5), (606, 288), (609, 296), (591, 301), (564, 299)],
+          FACE_Y - 0.10, 0.35, 0.04)
+    # maxilla: the block between the nose and the upper lip
+    block('Maxilla', [(517, 304), (538, 305.5), (552, 301.5), (564, 305.5), (587, 303),
+                      (585, 314), (552, 312.5), (520, 314.5)], FACE_Y - 0.10, 0.40, 0.04)
+    block('MaxillaL', [(496, 301), (518, 304), (520, 314.5), (501, 311)], FACE_Y - 0.02, 0.40,
+          0.03, normal=(-0.75, -1, 0.0))
+    block('MaxillaR', [(586, 303), (606, 299), (604, 309), (585, 314)], FACE_Y - 0.02, 0.40,
+          0.03, normal=(0.75, -1, 0.0))
+    # --- teeth: an uneven clenched grimace ----------------------------------
+    # (left, right, top, bottom) in reference px; the upper row has a wide gap
+    # between the 3rd and 4th tooth, the lower row sits lower on his left
+    UPPER = [(517.8, 522.8, 319.5, 328.0), (524.0, 537.2, 316.4, 329.6),
+             (538.4, 551.6, 315.4, 328.4), (552.8, 565.6, 316.0, 329.8),
+             (568.8, 581.4, 316.6, 328.2), (582.8, 587.6, 320.0, 327.6)]
+    LOWER = [(518.2, 522.2, 331.0, 337.0), (523.2, 531.6, 331.0, 338.4),
+             (532.6, 543.6, 330.6, 340.6), (544.8, 552.4, 331.4, 339.0),
+             (553.4, 563.0, 330.8, 341.4), (564.0, 572.8, 331.6, 340.0),
+             (573.8, 582.0, 330.8, 340.8), (583.0, 588.6, 331.8, 339.4)]
+
+    def tooth(name, l, r, t, bot, front, host, lower):
+        j = lambda: rnd.uniform(-0.55, 0.55)
+        # bevelled corners on the free edge (bottom for upper teeth, top for
+        # lower ones) and a slightly skewed, uneven shape
+        c = 1.6
+        if lower:
+            pts = [(l + c + j(), t + j() * 0.5), (r - c + j(), t + j() * 0.5), (r + j() * 0.4, t + c),
+                   (r + j() * 0.4, bot), (l + j() * 0.4, bot), (l + j() * 0.4, t + c)]
+        else:
+            pts = [(l + j() * 0.4, t), (r + j() * 0.4, t), (r + j() * 0.4, bot - c),
+                   (r - c + j(), bot + j() * 0.5), (l + c + j(), bot + j() * 0.5),
+                   (l + j() * 0.4, bot - c)]
+        o = slab(name, pts, front + rnd.uniform(-0.02, 0.02), 0.34, teeth, 0.018, 1, angle=25.0,
+                 back='ray')
+        part(o, 'Head', ('rigid', host), 'teeth')
+    for i, (l, r, t, bot) in enumerate(UPPER):
+        tooth(f'ToothU{i}', l, r, t, bot, FACE_Y - 0.05, 'Head', False)
+    for i, (l, r, t, bot) in enumerate(LOWER):
+        tooth(f'ToothL{i}', l, r, t, bot, FACE_Y - 0.03, 'Jaw', True)
+    # --- mandible: heavy and squared, stepped like the reference ------------
+    block('JawShelf', [(509, 342), (519, 344), (552, 344.5), (589, 343), (604, 346), (602, 356),
+                       (590, 358), (552, 359), (520, 358), (511, 355)],
+          FACE_Y - 0.17, 1.00, 0.08, host='Jaw')
+    block('JawChin', [(518, 356), (552, 357), (594, 355), (592, 364), (582, 369), (552, 371),
+                      (527, 369), (519, 364)], FACE_Y - 0.10, 0.95, 0.07, host='Jaw')
+    # --- eye glows (own section, EyeGlow), set deep inside the sockets ------
     def almond(cx, cy, rx, ry, tilt_deg, n=14):
         t = math.radians(tilt_deg)
         pts = []
@@ -986,11 +1041,12 @@ def build_head():
             x, y = math.cos(a_) * rx, math.sin(a_) * ry * (1.0 if math.sin(a_) > 0 else 0.85)
             pts.append((cx + x * math.cos(t) - y * math.sin(t), cy + x * math.sin(t) + y * math.cos(t)))
         return pts
-    for nm, (cx, cy, tilt) in (('EyeL', (519.8, 280.6, 12)), ('EyeR', (580.4, 276.8, -12))):
-        h = slab(nm + 'Halo', almond(cx, cy, 13.5, 9.5, tilt), FACE_Y + 0.05, 0.04,
-                 MATS['eye_halo'], 0.0)
+    for nm, (cx, cy, tilt) in (('EyeL', (520.0, 280.5, 12)), ('EyeR', (580.8, 276.8, -12))):
+        h = slab(nm + 'Halo', almond(cx, cy, 13.0, 9.0, tilt), FACE_Y + 0.20, 0.04,
+                 MATS['eye_halo'], 0.0, back='ray')
         part(h, 'EyeGlow', ('rigid', 'Head'), 'eye_halo')
-        e = slab(nm, almond(cx, cy, 9.0, 6.4, tilt), FACE_Y - 0.01, 0.05, MATS['eye'], 0.012, 1)
+        e = slab(nm, almond(cx, cy, 9.0, 6.4, tilt), FACE_Y + 0.14, 0.05, MATS['eye'], 0.012, 1,
+                 back='ray')
         part(e, 'EyeGlow', ('rigid', 'Head'), 'eye')
 
 
@@ -3888,6 +3944,12 @@ def render_reviews(arm):
     scene.render.resolution_x, scene.render.resolution_y = 1000, 1000
     cam_look(cam, (0.9, -9.5, 11.2), (0, -0.9, 10.75), lens=85)
     render_to(P / 'Face_CloseUp.png', 64)
+    if PREVIEW_SUBSET:
+        # partial refresh (e.g. a skull-only pass): Turnaround and Face_CloseUp
+        # only; Rig_Bones, RigTest_ROM and AttackCheck keep their last renders
+        cam.matrix_world, cam.data.lens, cam.data.type = keep
+        scene.render.resolution_x, scene.render.resolution_y = IMG_W, IMG_H
+        return
     # rig bones overlay (front + side), reference pose
     viz = bone_sticks(arm)
     ghost_sections(True)
@@ -4418,7 +4480,8 @@ def main():
         log('PROBE_DONE')
         return
     render_reviews(arm)
-    attack_check(arm)
+    if not PREVIEW_SUBSET:
+        attack_check(arm)
     export_all(arm)
     write_reports(arm)
     bpy.ops.file.pack_all()

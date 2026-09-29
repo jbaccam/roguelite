@@ -476,7 +476,8 @@ def motion_checks(info):
             rel = np.linalg.inv(mats['Club']) @ mats[b]
             rel0 = np.linalg.inv(sk.ref['Club']) @ sk.ref[b]
             drift = max(drift, float(np.linalg.norm(rel[:3, 3] - rel0[:3, 3])))
-        row = {'frame': f}
+        behind, below = MO.arm_behind_coronal(P)
+        row = {'frame': f, 'upper_arm_behind_coronal_deg': round(behind, 2), 'hand_below_shoulder': below}
         row.update({k: float(v) for k, v in m.items()})
         row.update({'club_body_clearance': round(c, 3), 'club_lowest_z': round(z, 3),
                     'grip_digit_drift': round(drift, 6)})
@@ -491,6 +492,8 @@ def motion_checks(info):
                 fails.append('GroundSlam f%d: elbow flex %.1f' % (f, row['elbow_flex']))
             if row['reach_pct'] < 95.0:
                 fails.append('GroundSlam f%d: reach %.1f' % (f, row['reach_pct']))
+        if below and behind > 20.0:
+            fails.append('GroundSlam f%d: upper arm %.1f deg behind the coronal plane with the hand low' % (f, behind))
         if c < -0.02:
             fails.append('GroundSlam f%d: club-body clearance %.3f' % (f, c))
         if z < -0.03:
@@ -503,8 +506,11 @@ def motion_checks(info):
         'limits': {'strike_window_frames': [s0, s1], 'mid_swing_frame': mid,
                    'wrist_bend_max_deg_in_strike': 20, 'elbow_out_of_plane_max_in_strike': 0.05,
                    'elbow_flex_max_deg_mid_to_impact': 15, 'reach_min_pct_mid_to_impact': 95,
-                   'club_body_clearance_min': -0.02, 'club_lowest_z_min': -0.03},
+                   'club_body_clearance_min': -0.02, 'club_lowest_z_min': -0.03,
+                   'upper_arm_behind_coronal_max_deg_while_hand_below_shoulder': 20},
         'summary': {
+            'max_upper_arm_behind_coronal_deg_hand_below_shoulder':
+                max([r['upper_arm_behind_coronal_deg'] for r in rows if r['hand_below_shoulder']] or [0.0]),
             'strike_max_wrist_bend': max(r['wrist_bend'] for r in win),
             'strike_max_elbow_out_of_plane': max(r['elbow_out_of_plane'] for r in win),
             'mid_to_impact_max_elbow_flex': max(r['elbow_flex'] for r in mwin),
@@ -531,6 +537,11 @@ def motion_checks(info):
             row['knee_twist_' + side] = round(math.degrees(math.acos(np.clip(
                 mats[side + 'UpperLeg'][:3, 0] @ mats[side + 'LowerLeg'][:3, 0], -1, 1))), 2)
         row['standing_foot_drift'] = round(float(np.linalg.norm(P.head('RightFoot') - RF0)), 6)
+        Kl, Al = P.head('LeftLowerLeg'), P.head('LeftFoot')
+        row['foot_ahead_of_knee'] = round(float((Al - Kl) @ np.array([0, -1.0, 0])), 3)
+        row['thigh_elevation_deg'] = round(math.degrees(math.asin(np.clip(
+            D._unit(Kl - P.head('LeftUpperLeg'))[2], -1, 1))), 2)
+        row['stomp_foot_from_lift_spot'] = round(float(np.linalg.norm((Al - sk.ref['LeftFoot'][:3, 3])[:2])), 3)
         row['thigh_gut_clearance'] = round(MO.thigh_clearance(P, prims), 3)
         c, z = MO.club_clearance(P, prims)
         row['club_lowest_z'] = round(z, 3)
@@ -557,11 +568,20 @@ def motion_checks(info):
             fails.append('Stomp f%d: thigh into gut %.3f' % (f, row['thigh_gut_clearance']))
         if row['club_lowest_z'] < -0.03:
             fails.append('Stomp f%d: club below ground %.3f' % (f, row['club_lowest_z']))
+        if row['foot_ahead_of_knee'] > 0.15:
+            fails.append('Stomp f%d: foot swings ahead of the knee %.3f' % (f, row['foot_ahead_of_knee']))
+        if row.get('loincloth_thigh_clearance', 9.0) < 0.0:
+            fails.append('Stomp f%d: thigh passes through the loincloth %.3f' % (f, row['loincloth_thigh_clearance']))
     top = st['labels']['top of raise']
     res['Stomp'] = {
         'limits': {'standing_foot_drift_max': 0.001, 'knee_twist_max_deg': 1.0, 'thigh_gut_clearance_min': -0.05,
-                   'club_lowest_z_min': -0.03},
+                   'club_lowest_z_min': -0.03, 'foot_ahead_of_knee_max': 0.15,
+                   'loincloth_thigh_clearance_min': 0.0},
         'summary': {
+            'max_thigh_elevation_deg': max(r['thigh_elevation_deg'] for r in rows),
+            'max_foot_ahead_of_knee': max(r['foot_ahead_of_knee'] for r in rows),
+            'foot_from_lift_spot_at_impact': [r['stomp_foot_from_lift_spot'] for r in rows
+                                              if r['frame'] == st['impact_frame']][0],
             'max_knee_flex_Left': max(r['knee_flex_Left'] for r in rows),
             'knee_flex_Left_at_top': [r['knee_flex_Left'] for r in rows if r['frame'] == top][0],
             'knee_flex_Left_at_impact': [r['knee_flex_Left'] for r in rows if r['frame'] == st['impact_frame']][0],

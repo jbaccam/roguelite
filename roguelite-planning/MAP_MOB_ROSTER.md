@@ -47,7 +47,11 @@ The user approved the themed rosters, requested ranged enemies for Frozen Pass a
   - **Ground Slam (club):** the club comes down overhead and strikes the ground. A 360° frost shockwave rings out around the Cyclops and knocks players off their feet: a short knockdown/stagger that interrupts them. A ring warning shows on the ground during the windup. Start the radius near 10 studs (the Hammer boss's slam is 7) and tune in playtesting.
   - **Stomp → Ice Spikes (leg):** he shifts his weight onto one leg, then slowly raises the other, bending at the knee, sumo-style; the slow raise is the warning. He slams the foot flat into the floor. A line of ice spikes erupts from the foot and travels forward, one after another, reaching well past slam range. Start near 20–25 studs long and a few studs wide. A frost line on the ground marks the path during the raise, and the direction locks before the spikes start. This replaces the earlier club-strike version of Ice Spikes.
   - Effects spawn from the club head's or the stomping foot's ground-contact point. Damage, knockdown and timing stay server-owned.
-- **Dragon:** Volcanic Crater boss; replaces the earlier undecided Dragon/Hydra slot. Full attack kit remains to be designed.
+- **Dragon:** Volcanic Crater boss; replaces the earlier undecided Dragon/Hydra slot. User direction, 2026-09-29: three attacks.
+  - **Fire Breath:** he rears his head back, then extends his neck forward and breathes fire from the open jaw.
+  - **Tail Whip:** a wide, fast horizontal sweep of the tail, with the spade leading.
+  - **Front Stomp:** he rears up on his hind legs, lifting both front legs almost like a hop, then slams both front feet down together.
+  - Hit shapes, ranges and timing are to be set in playtesting and stay server-owned. Effects spawn from the recorded mouth, tail-tip and front-foot points.
 
 ## Scope and implementation
 

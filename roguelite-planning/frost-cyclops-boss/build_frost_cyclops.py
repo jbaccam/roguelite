@@ -455,14 +455,18 @@ def accessory_weights(ob, V, F, rest_body, RJ):
         front = 1 - WT._smoothstep(50, 80, np.abs(th))
         back = WT._smoothstep(105, 135, np.abs(th))
         side = 1 - front - back
-        W = {'LowerTorso': up + side * (mid + low) * 0.5}
+        # The side panels below the belt band ride fully on the thighs and the
+        # front flap's lower half 60 % on them, so a raised knee lifts the skirt
+        # instead of passing through it (checked in AttackMotionChecks: Stomp).
+        side_leg, front_leg = 1.0, 0.6
+        W = {'LowerTorso': up + side * (mid + low) * (1 - side_leg)}
         W['Loincloth_Front_1'] = front * mid
-        W['Loincloth_Front_2'] = front * low
+        W['Loincloth_Front_2'] = front * low * (1 - front_leg)
         W['Loincloth_Back_1'] = back * mid
         W['Loincloth_Back_2'] = back * low
         legL = WT._smoothstep(-0.3, 0.6, rel[:, 0])
-        W['LeftUpperLeg'] = side * (mid + low) * 0.5 * legL + front * low * 0.25 * legL
-        W['RightUpperLeg'] = side * (mid + low) * 0.5 * (1 - legL) + front * low * 0.25 * (1 - legL)
+        W['LeftUpperLeg'] = side * (mid + low) * side_leg * legL + front * low * front_leg * legL
+        W['RightUpperLeg'] = side * (mid + low) * side_leg * (1 - legL) + front * low * front_leg * (1 - legL)
         return W
     return {'LowerTorso': np.ones(n)}
 
@@ -925,17 +929,20 @@ def full_stage(rig, sk, objs, tex_info, actions, weight_stats):
     # 1. the reference match, from the posed rig, plus its silhouette mask
     rig.animation_data.action = bpy.data.actions['ReferencePose']
     scene.frame_set(1)
-    render(PREVIEWS / 'Reference_Match.png', samples=int(os.environ.get('FC_SAMPLES', '96')),
-           mask_path=WORK / 'render_mask.png')
-    render_closeups(PREVIEWS / 'Detail', which=None, samples=48)
+    motion_only = STAGE == 'motion'          # FC_STAGE=motion: attacks, checks, exports, reports only
+    if not motion_only:
+        render(PREVIEWS / 'Reference_Match.png', samples=int(os.environ.get('FC_SAMPLES', '96')),
+               mask_path=WORK / 'render_mask.png')
+        render_closeups(PREVIEWS / 'Detail', which=None, samples=48)
     # 2. review renders (a free camera; the reference camera is restored after)
     free = bpy.data.objects.new('ReviewCamera', bpy.data.cameras.new('ReviewCamera'))
     bpy.data.collections['REVIEW_ONLY'].objects.link(free)
     scene.camera = free
-    FD.turnaround(free)
-    FD.face_closeup(free)
-    FD.bone_overlay(free)
-    FD.rom_sheet(actions, free)
+    if not motion_only:
+        FD.turnaround(free)
+        FD.face_closeup(free)
+        FD.bone_overlay(free)
+        FD.rom_sheet(actions, free)
     atk = FD.attack_sheet(actions, free)
     FD.swing_arcs(actions, free)
     vids = FD.attack_videos(actions, free)

@@ -139,7 +139,7 @@ The reference mask was made with OpenCV GrabCut, seeded by a rectangle, with the
 These are the user's kit: the club never swings at players. Every frame of both attacks is keyed at 30 fps, and each action has an `Impact` marker. Checks run on the Blender-evaluated rig (`AttackMotionChecks.json`) and all asserted limits passed.
 
 **GroundSlam** (60 frames, impact at frame 29, strike window 21–29):
-- **Windup.** The arm rises out to the side, then overhead, and cocks the club behind the head at frame 21, with the stone back and down behind him. The torso leans back, twists toward the club side and shifts its weight back.
+- **Windup.** The arm rises FORWARD through the front, like an overhead axe chop, to vertical beside the head. As it rises the elbow bends, so the club drops behind the head into the cocked pose at frame 21 (stone back and down behind him). While the hand is below the shoulder, the upper arm is at most 3.2° behind the torso's coronal plane (limit 20°). The torso leans back, twists toward the club side and shifts its weight back.
 - **Strike.** The shoulder drives a near-vertical arc in a fixed swing plane. The elbow straightens by mid-swing, the club accelerates (ease-in), and the torso crunches and the knees drop into the hit. The flat face lands on the ground in front of him and to his right.
 - **Follow-through.** A bounce, a settle and a recovery back to the carry.
 - **Checks:**
@@ -154,14 +154,14 @@ These are the user's kit: the club never swings at players. Every frame of both 
 
 **Stomp** (80 frames, impact at frame 50):
 - **Weight shift.** The pelvis moves toward the right (standing) foot.
-- **Slow raise (frames 10–44).** The left thigh rises sumo-style, out and forward, to horizontal with the knee at 99°. A slight extra rise gives anticipation.
-- **Slam (frames 44–50).** The foot drives straight down and lands sole-flat a little forward, toes along the facing direction. The body drops, and the Belly and Mantle bounce. Then it recovers.
+- **Slow raise (frames 10–44).** The left knee comes up high, sumo-style out to the side, to 12° above horizontal with the knee at 103°. The shin hangs vertical with the foot under the knee (never more than 0.11 stud ahead of it, the same as in the planted stance). A slight extra rise gives anticipation.
+- **Slam (frames 44–50).** The foot drives straight down and lands sole-flat exactly where it lifted from (under the hip, out to the side), toes along the facing direction. The body drops, and the Belly and Mantle bounce. The loincloth's front bones and thigh-weighted side panels lift and swing out with the knee, clearing the thigh by at least 0.05 stud. Then it recovers.
 - **Checks:**
   - standing-foot drift 1e-6;
   - knee twist ≤ 0.07° (one hinge axis);
   - thigh-to-gut clearance ≥ 0.208;
   - the club never touches the ground (min z 0.089).
-- **Impact:** `StompImpact_root` = Blender `(2.317, −2.941, 0)` = Roblox `(−2.317, 0, −2.941)`. `StompSpikeDirection` = Blender `(0, −1, 0)` = Roblox `(0, 0, −1)`.
+- **Impact:** `StompImpact_root` = Blender `(2.467, −1.741, 0)` = Roblox `(−2.467, 0, −1.741)`. `StompSpikeDirection` = Blender `(0, −1, 0)` = Roblox `(0, 0, −1)`.
 
 The Roblox vectors use the axis mapping observed in `../mob-production` imports, `(−X, Z, Y)`, and are not verified for this asset.
 
@@ -207,7 +207,7 @@ The following were checked in Blender 5.2.1, headless:
 
 - **Roblox.** Studio import, in-game look and scale, the axis mapping of the Roblox vectors above, and texture upload.
 - **Animation.** The attacks' look at game speed with VFX, and blending into idle or walk clips (none are authored). Animations beyond the ROM and the two attacks.
-- **Loincloth.** During the Stomp raise the loincloth passes into the raised thigh: the minimum loincloth-to-thigh clearance is −0.58 stud, and cloth collision is not simulated.
+- **Loincloth.** In the Stomp the loincloth clears the raised thigh (≥ 0.05 stud, capsule check). It is not simulated cloth, and other extreme poses (for example the ROM high knee) were not checked.
 - **ROM extremes.** The extreme ROM poses show some fur-to-head intersection on the head turn and club-to-head proximity at 130° elbow flex. These are ROM probes, not authored motion.
 
 ## Known differences from the reference
@@ -223,3 +223,21 @@ The following were checked in Blender 5.2.1, headless:
 - **Club.** The haft is thinner than the reference's (0.32 radius at the grip, chosen so the fingers can close round it). The straps are a plain X plus two bands; the reference's lashing is more layered and worn.
 - **Belt.** A thin belt tail hangs at his right hip and reads as a stick in the front view.
 - **Back and underside.** These are authored, not recovered: back fur rows, the loincloth back flap and the soles.
+
+## Motion revision (2026-09-29)
+
+This pass changed only the two attacks and the loincloth weights.
+
+- **GroundSlam arm raise.** The arm used to go up behind the body. It now rises forward and overhead, and the elbow bends to drop the club behind the head. The strike, impact and recovery are unchanged, so every strike check still holds. The new coronal-plane check is in `AttackMotionChecks.json`.
+- **Stomp.** It no longer reads as a forward step or kick:
+  - the knee comes up high and out to the side;
+  - the shin stays vertical with the foot under the knee;
+  - the foot slams straight down onto the spot it lifted from;
+  - `StompImpact` has moved (see Attacks above).
+- **Loincloth.** The side panels now follow the thighs fully and the front flap's lower half 60 %. The front bones are driven with the knee, so the thigh no longer passes through the cloth.
+
+After this pass:
+- the actions, the armature-only clips, the GLB, the rest FBX (loincloth weights changed), the two AttackCheck sheets, both SwingArc strips and both videos were regenerated;
+- `validate_exports.py` passed again.
+
+The build used `FC_STAGE=motion`: attacks, checks, exports and reports only. The reference-match and turnaround renders were not redone, and the geometry is unchanged.

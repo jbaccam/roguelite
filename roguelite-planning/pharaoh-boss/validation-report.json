@@ -2,19 +2,19 @@
   "files": {
     "fbx": {
       "path": "exports\\fbx\\Pharaoh.fbx",
-      "sha256": "A92183C4D2F6FE12FB9DA4B2408125AC53CEAE585F39028FDA128F02AFB1863C"
+      "sha256": "B736C69AE351A29289614D62BA2EEDD75CB11D8932A3CF24F1EC0B115B62D5CB"
     },
     "fbx_ReferencePose": {
       "path": "exports\\fbx\\Pharaoh_ReferencePose.fbx",
-      "sha256": "36ECE9F506F77FA448DF4779A1EAA0E1E316FC8CF098AC16EBCB9F31C533C175"
+      "sha256": "84A0C3433EE7C4CBC4A22835F3BE867CCABA83786108AA63BB6CA0E47EF5547D"
     },
     "fbx_RigTest_ROM": {
       "path": "exports\\fbx\\Pharaoh_RigTest_ROM.fbx",
-      "sha256": "CD350EE1B76E7C8189BEAE673AA78E76605C294B9860C6D1E9CFF164F55E493E"
+      "sha256": "382D6DB36225E57DE51C24FC4787163B34ED6860E219F3BCAD1B4F62CC909DCE"
     },
     "glb": {
       "path": "exports\\glb\\Pharaoh.glb",
-      "sha256": "D4936A1E27B555775258B375547B07F9341F6FCCD688216DE8366D59D7D86640"
+      "sha256": "B8A86B27CA4E9A389BD376095CD830D42215A674F1E8ABF071A272CE03C4230A"
     }
   },
   "checks": [
@@ -35,13 +35,13 @@
       "ok": true,
       "triangles": {
         "Pharaoh_Body": 14573,
-        "Pharaoh_Head": 13524,
-        "Pharaoh_Bandages": 16424,
+        "Pharaoh_Head": 14088,
         "Pharaoh_EyeGlow": 320,
+        "Pharaoh_Bandages": 16424,
         "Pharaoh_Staff": 1984,
         "Pharaoh_Waist": 11158
       },
-      "total": 57983
+      "total": 58547
     },
     {
       "name": "fbx: armature present",
@@ -76,14 +76,7 @@
           "worst_sum_error": 0.0
         },
         "Pharaoh_Head": {
-          "vertices": 7036,
-          "unweighted": 0,
-          "over4": 0,
-          "not_normalised": 0,
-          "worst_sum_error": 0.0
-        },
-        "Pharaoh_Bandages": {
-          "vertices": 8264,
+          "vertices": 7336,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
@@ -91,6 +84,13 @@
         },
         "Pharaoh_EyeGlow": {
           "vertices": 168,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Pharaoh_Bandages": {
+          "vertices": 8264,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
@@ -118,8 +118,8 @@
       "uv_layers": {
         "Pharaoh_Body": 1,
         "Pharaoh_Head": 1,
-        "Pharaoh_Bandages": 1,
         "Pharaoh_EyeGlow": 1,
+        "Pharaoh_Bandages": 1,
         "Pharaoh_Staff": 1,
         "Pharaoh_Waist": 1
       }
@@ -128,6 +128,54 @@
       "name": "fbx: embedded textures load",
       "ok": true,
       "textures": [
+        {
+          "name": "Pharaoh_Head_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_EyeGlow_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Bandages_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Bandages_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Staff_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Staff_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
         {
           "name": "Pharaoh_Body_Color",
           "size": [
@@ -175,54 +223,6 @@
             2048
           ],
           "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_Bandages_Color",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_Head_Rough",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_Bandages_Rough",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_EyeGlow_Rough",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_Staff_Color",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_Staff_Rough",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
         }
       ]
     },
@@ -232,8 +232,8 @@
       "split_vertex_fraction": {
         "Pharaoh_Body": 0.9434,
         "Pharaoh_Head": 0.999,
-        "Pharaoh_Bandages": 0.9486,
         "Pharaoh_EyeGlow": 1.0,
+        "Pharaoh_Bandages": 0.9486,
         "Pharaoh_Staff": 1.0,
         "Pharaoh_Waist": 0.9114
       }
@@ -249,9 +249,9 @@
       "name": "fbx: character faces -Y",
       "ok": true,
       "eye_centre": [
-        0.001,
-        -1.267,
-        10.775
+        0.005,
+        -1.118,
+        10.833
       ]
     },
     {
@@ -357,14 +357,14 @@
           "worst_sum_error": 0.0
         },
         "Pharaoh_EyeGlow": {
-          "vertices": 583,
+          "vertices": 585,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
           "worst_sum_error": 0.0
         },
         "Pharaoh_Head": {
-          "vertices": 27122,
+          "vertices": 28398,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
@@ -391,15 +391,7 @@
       "ok": true,
       "textures": [
         {
-          "name": "Pharaoh_Bandages_Rough",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_Body_Color",
+          "name": "Pharaoh_Bandages_Color",
           "size": [
             2048,
             2048
@@ -415,7 +407,31 @@
           "has_pixels": true
         },
         {
+          "name": "Pharaoh_Body_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
           "name": "Pharaoh_Head_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Staff_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Staff_Rough",
           "size": [
             2048,
             2048
@@ -439,7 +455,7 @@
           "has_pixels": true
         },
         {
-          "name": "Pharaoh_Bandages_Color",
+          "name": "Pharaoh_Body_Rough",
           "size": [
             2048,
             2048
@@ -447,7 +463,7 @@
           "has_pixels": true
         },
         {
-          "name": "Pharaoh_Body_Rough",
+          "name": "Pharaoh_Bandages_Rough",
           "size": [
             2048,
             2048
@@ -464,22 +480,6 @@
         },
         {
           "name": "Pharaoh_Head_Color",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_Staff_Color",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_Staff_Rough",
           "size": [
             2048,
             2048

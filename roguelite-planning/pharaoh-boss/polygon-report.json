@@ -11,9 +11,9 @@
       "faces": 8212
     },
     "Pharaoh_Head": {
-      "triangles": 13524,
-      "vertices": 7036,
-      "faces": 7184
+      "triangles": 14088,
+      "vertices": 7336,
+      "faces": 7612
     },
     "Pharaoh_Waist": {
       "triangles": 11158,
@@ -31,7 +31,7 @@
       "faces": 208
     }
   },
-  "total_triangles": 57983,
+  "total_triangles": 58547,
   "per_mesh_limit": 20000,
   "all_under_limit": true
 }

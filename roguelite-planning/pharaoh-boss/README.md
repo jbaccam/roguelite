@@ -265,13 +265,13 @@ and right mirror each other.
 
 | Section | Triangles |
 | --- | --- |
-| Body (skin, palms, fingers, feet) | 14,576 |
+| Body (skin, palms, fingers, feet) | 14,573 |
 | Bandages | 16,424 |
-| Head (skull, nemes, uraeus, collar) | 13,524 |
+| Head (skull, nemes, uraeus, collar) | 14,088 |
 | Waist (belt, gem, kilt, bands) | 11,158 |
 | Staff | 1,984 |
 | EyeGlow | 320 |
-| **Total** | **57,986** |
+| **Total** | **58,547** |
 
 Every section is under Roblox's 20,000-triangle per-mesh limit.
 
@@ -312,6 +312,29 @@ from the probe table.
 | 5 | Silhouette | Staff axis refit, crook retraced, visible back tail, world-placed deltoids, asymmetric lats, left arm and hand refit. Clip export rest-frame fix. Validation 26/26. | 0.921 / 7.8 % |
 | 6 | Detail | Taut-across bandages with painted edge lines, deltoid sleeves, round U collar, faceted skull with chunkier V brows and cheek plates. Deterministic jitter. ROM elbow range limited to 130°. | **0.921 / 7.8 %** |
 
+## Skull pass (2026-09-29, user review: "not as chiselled and detailed")
+
+This was one focused pass. Only the skull changed; the rest of the model is unchanged.
+
+`build_head()` was rebuilt from carved blocks traced off a 6× zoom of the reference face:
+
+- **Brows:** heavy angular V brows proud of the skull, with a glabella ridge down to the nose.
+- **Sockets:** deep, angular boolean pits. The cyan EyeGlow (core plus halo) now sits inside them, 0.14–0.20 studs behind the face.
+- **Cheeks:** angular cheekbone blocks, lower orbital ledges, and a maxilla with two side planes angled back, so the cheek hollows fall into shadow.
+- **Nose:** an inverted-heart nasal cavity.
+- **Teeth:** a clenched, uneven grimace: 6 upper teeth with a wide gap, 8 lower teeth, and a dark mouth line between the rows.
+- **Jaw:** a heavier, squarer stepped jaw (shelf plus chin) on the `Jaw` bone.
+- **Construction:** face blocks and pits are extruded along the reference camera's rays, so they image exactly as traced while keeping real depth from other angles.
+- **Paint:** the bone paint now has stronger cavity darkening, lighter worn ridges and more chips.
+
+Results:
+
+- **Jaw:** jaw-open was checked in the ROM head-turn and nod frames. The lower teeth and chin drop cleanly and the mouth interior reads dark.
+- **Head texture:** re-baked.
+- **Exports:** FBX and GLB re-exported. `validate_exports.py` passes 26/26.
+- **Fit:** silhouette IoU 0.921, unchanged. The bone colour probe is 4.9 %, and all probes stay within 8 %.
+- **Previews:** only `Reference_Match`, `Comparison_SideBySide`, `Face_CloseUp` and `Turnaround` were refreshed, using `PREVIEWS=subset`. `Rig_Bones`, `RigTest_ROM`, `AttackCheck_Staff` and the `Crop_*`/overlay sheets still show the previous skull.
+
 ## Verified in Blender (Blender 5.2.1 LTS, headless)
 
 - The generator runs clean end to end (`build.log`).
@@ -338,7 +361,7 @@ from the probe table.
 ## Known differences from the reference
 
 - **Chest.** The chest X straps are broader and softer than the reference's crisp straps. Less bare pec and six-pack shows between them, and the strips have some soft crumples where the reference's are perfectly flat.
-- **Skull.** The brow V is less deep. The teeth are a straight row, not the reference's grimace, and the jaw is less squared. The face reads calmer than the reference.
+- **Skull (after the skull pass).** The brows are still a little slimmer than the reference's, and the eye glow is partly shaded by the brow from above-eye-level views. The cheekbone blocks read slightly separate from the skull.
 - **Uraeus.** Flatter, with less crisp hood and scute detail.
 - **Right hand.** Deliberately changed. The reference shows three stacked finger bars with the thumb on top and a large foreshortened cuff; this uses a natural wrapped grip with a fitted cuff, at the user's request.
 - **Left hand.** Slightly more closed and a little smaller than the reference's claw. The wrist wrap is thinner.
