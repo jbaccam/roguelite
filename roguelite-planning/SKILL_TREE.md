@@ -105,7 +105,7 @@ Studio only: the `DevEmeralds` (+200 emeralds) and `DevResetSkills` (refund ever
 ## Presentation
 
 - **Growing tree:** the whole tree is never shown. A new player sees 9 tiles: the star, the 4 skills they can buy, and one "?" past each. Buying a skill grows the tree outward, and the view eases out to fit it, so the tree gets bigger as you unlock more.
-- **Opening:** the screen blurs and darkens. Two lime rings roll out from the star, and the visible nodes spring out from the centre in waves ordered by distance. Each link draws outward from its parent once its child lands, and there's a soft airy whoosh.
+- **Opening:** the screen blurs and darkens, and the visible nodes spring out from the centre in waves ordered by distance. There are no ripple rings (the user had them removed on 2026-09-28). Each link draws outward from its parent once its child lands, and there's a soft airy whoosh.
 - **No spinning rays.** Those are kept for the store.
 - **Node states:**
   - owned: lime tile
@@ -113,7 +113,7 @@ Studio only: the `DevEmeralds` (+200 emeralds) and `DevResetSkills` (refund ever
   - next up: dark "?" tile, with its name hidden
   - further out: not drawn
   - Capstones and the star also get gold corners.
-- **Buying:** a soft chime (pitched up slightly for deeper nodes). The node squashes and springs back with a white flash, a ripple ring and a few spark flecks. The links to its children charge with light. Then the "?" tiles flip into real skills, new "?" tiles grow in along new links, and the view zooms out if needed. The emerald counter ticks down with a "-300" drifting off it, and the changed rows in YOUR BONUSES flash lime.
+- **Buying:** a soft chime (pitched up slightly for deeper nodes). The node squashes and springs back with a white flash and a few spark flecks. The links to its children charge with light. Then the "?" tiles flip into real skills, new "?" tiles grow in along new links, and the view zooms out if needed. The emerald counter ticks down with a "-300" drifting off it, and the changed rows in YOUR BONUSES flash lime.
 - **Navigation:** drag to pan, scroll or pinch to zoom.
 - **HUD badge:** the SKILLS button shows a red count of skills you can afford right now.
 

@@ -1,6 +1,6 @@
 -- Full-screen Skill Tree (lobby), green theme (UITheme).
--- Opening: a ring ripples out from the centre star and the nodes spring outward in waves.
--- Buying: the node squashes and pops lime with a flash, a ring and a few sparks, the links to its
+-- Opening: the nodes spring outward from the centre star in waves. No ripple circles.
+-- Buying: the node squashes and pops lime with a flash and a few sparks, the links to its
 -- children charge up, newly reachable skills flip over and the key counter ticks down.
 -- Presentation and requests only: purchases go through ProfileAction('BuySkill', id) and are
 -- validated by ProfileService with SkillTreeConfig. Owned skills come from the ProfileSkills attribute.
@@ -231,19 +231,6 @@ function U.new(player,opts)
    task.delay(.6,function() f:Destroy() end)
   end
  end
- -- Expanding outline ring (open ripple and purchase ripple).
- local function ring(at,from,to,time,thickness,color,delay)
-  local r=T.make('Frame',fxLayer,{Name='Ripple',BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(at.X,at.Y),Size=UDim2.fromOffset(from,from),ZIndex=3})
-  T.make('UICorner',r,{CornerRadius=UDim.new(1,0)})
-  local stroke=T.make('UIStroke',r,{Color=color or C.lime,Thickness=thickness or 4,Transparency=delay and 1 or .1})
-  task.delay(delay or 0,function()
-   if not r.Parent then return end
-   stroke.Transparency=.1
-   tween(r,time,{Size=UDim2.fromOffset(to,to)},Enum.EasingStyle.Sine)
-   tween(stroke,time,{Transparency=1,Thickness=1},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
-  end)
-  task.delay((delay or 0)+time+.05,function() r:Destroy() end)
- end
  -- A newly reachable skill flips into view; a brand-new '?' also grows its link from the parent.
  local function reveal(id,delay,grow)
   local n=nodes[id];if not n then return end
@@ -296,7 +283,6 @@ function U.new(player,opts)
   local flash=T.make('ImageLabel',n.holder,{Name='Flash',BackgroundTransparency=1,Image=FX.Asset.glow,ImageColor3=WHITE,ImageTransparency=0,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromScale(1.1,1.1),ZIndex=10})
   tween(flash,.5,{Size=UDim2.fromScale(2.8,2.8),ImageTransparency=1})
   task.delay(.55,function() flash:Destroy() end)
-  ring(at,size,size*3.2,.55,5,d.kind=='capstone' and C.gold or C.lime)
   sparks(at,d.kind=='capstone' and 16 or 10,size*.95)
   -- Charge the links out to the children, then flip them into view.
   for _,child in d.children do
@@ -534,16 +520,12 @@ function U.new(player,opts)
   end))
  end
 
- -- Opening ripple ---------------------------------------------------------------------
+ -- Opening -----------------------------------------------------------------------------
  local function playOpen()
   play(Skills.Sounds.Open,.3,1.05)
   tween(shade,.3,{BackgroundTransparency=.28})
   tween(blur,.3,{Size=16})
-  local maxDepth=1
-  for _,d in Skills.List do if Skills.state(owned,d.id)~='hidden' then maxDepth=math.max(maxDepth,d.depth) end end
-  -- Two rings roll out from the star; nodes spring out on the wavefront.
-  ring(Vector2.zero,60,(maxDepth+1.2)*UNIT*2,1.05,6,C.lime,.02)
-  ring(Vector2.zero,60,(maxDepth+1.2)*UNIT*2,1.2,3,C.limeSoft,.16)
+  -- Nodes spring out from the star, one depth at a time.
   for _,d in Skills.List do
    local n=nodes[d.id]
    local delay=d.kind=='root' and 0 or .1+d.depth*.075
