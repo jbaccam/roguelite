@@ -475,20 +475,23 @@ function L.mount(player)
    tick()
    task.spawn(function() while timer.Parent do task.wait(1);if timer.Parent then tick() end end end)
    local deals=profile.daily.deals or {}
-   local n=math.max(1,#deals);local cw=(SW-(n-1)*12)/n;local ch=270
+   local n=math.max(1,#deals);local cw=(SW-(n-1)*12)/n;local ch=292
    for i,deal in deals do
     local x=(i-1)*(cw+12)
     local free=deal.kind=='Emeralds'
-    local tier=free and 4 or math.clamp(deal.amount-1,1,4)
-    local card=T.panel(list,'Deal'..i,x,y,cw,ch,'panel');T.setTier(card,tier)
-    local color=free and C.emerald or T.Tier[tier]
+    local rarity=deal.rarity or 'Common'
+    local card=T.panel(list,'Deal'..i,x,y,cw,ch,'panel');T.setTier(card,free and 4 or 2)
+    -- Weapon deals wear their rarity's colour (ChestConfig.RarityColor), like chest reveal cards.
+    local color=free and C.emerald or Chests.RarityColor[rarity]
+    if not free and card:FindFirstChild('RarityCorners') then card.RarityCorners.ImageColor3=color end
     art(card,free and 'emerald' or WeaponIcons[deal.id],cw/2,104,92,color,150)
     local amt=T.label(card,'Amount',(free and '+' or '×')..deal.amount,0,22,cw,34,32,free and C.emerald or C.gold);amt.TextXAlignment=Enum.TextXAlignment.Center;amt.ZIndex=3
     local name=free and 'Emeralds' or Weapons.ById[deal.id].name
-    local nm=T.text(card,'Name',name,10,158,cw-20,22,18);nm.TextXAlignment=Enum.TextXAlignment.Center
+    local nm=T.text(card,'Name',name,10,156,cw-20,22,18);nm.TextXAlignment=Enum.TextXAlignment.Center
     if deal.kind=='Weapon' then
+     local rl=T.text(card,'Rarity',string.upper(rarity)..'  ·  '..(deal.each or deal.price)..' each',10,180,cw-20,20,15,color);rl.TextXAlignment=Enum.TextXAlignment.Center
      local rec=profile.weapons[deal.id]
-     if rec then T.upgradeBar(card,'Bar',14,184,cw-28,18,rec.have,L.need(rec)) else local l=T.text(card,'New','NEW WEAPON',14,182,cw-28,20,15,C.gold);l.TextXAlignment=Enum.TextXAlignment.Center end
+     if rec then T.upgradeBar(card,'Bar',14,204,cw-28,18,rec.have,L.need(rec)) else local l=T.text(card,'New','NEW WEAPON',14,202,cw-28,20,15,C.gold);l.TextXAlignment=Enum.TextXAlignment.Center end
     end
     local label=deal.bought and 'CLAIMED' or deal.currency=='Free' and 'FREE' or ''
     local pb=T.button(card,'Buy',label,12,ch-64,cw-24,52,function() act('BuyDeal',i) end,deal.bought)
