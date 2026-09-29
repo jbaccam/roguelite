@@ -1,0 +1,401 @@
+{
+  "fbx": {
+    "file": "exports/fbx/derp-chicken.fbx",
+    "ok": true,
+    "objects": 7,
+    "problems": [],
+    "parts": {
+      "Chicken_Body": {
+        "triangles": 324,
+        "pivot": [
+          0.0,
+          0.0,
+          0.55
+        ],
+        "bbox_min": [
+          -0.6473,
+          -0.6198,
+          0.5238
+        ],
+        "bbox_max": [
+          0.6473,
+          1.3162,
+          1.9562
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "derp-chicken-atlas",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Chicken_Feather": {
+        "triangles": 106,
+        "pivot": [
+          1.4618,
+          0.3,
+          0.0527
+        ],
+        "bbox_min": [
+          1.354,
+          0.025,
+          0.0225
+        ],
+        "bbox_max": [
+          1.5695,
+          0.575,
+          0.083
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "derp-chicken-atlas",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Chicken_Head": {
+        "triangles": 1396,
+        "pivot": [
+          0.0,
+          -0.55,
+          1.38
+        ],
+        "bbox_min": [
+          -0.4486,
+          -1.46,
+          1.18
+        ],
+        "bbox_max": [
+          0.4616,
+          -0.342,
+          2.6197
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "derp-chicken-atlas",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Chicken_LegL": {
+        "triangles": 220,
+        "pivot": [
+          0.3,
+          0.0,
+          0.55
+        ],
+        "bbox_min": [
+          0.1221,
+          -0.32,
+          -0.0
+        ],
+        "bbox_max": [
+          0.4779,
+          0.11,
+          0.62
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "derp-chicken-atlas",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Chicken_LegR": {
+        "triangles": 220,
+        "pivot": [
+          -0.3,
+          0.0,
+          0.55
+        ],
+        "bbox_min": [
+          -0.4779,
+          -0.32,
+          -0.0
+        ],
+        "bbox_max": [
+          -0.1221,
+          0.11,
+          0.62
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "derp-chicken-atlas",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Chicken_WingL": {
+        "triangles": 276,
+        "pivot": [
+          0.61,
+          -0.36,
+          1.44
+        ],
+        "bbox_min": [
+          0.5525,
+          -0.4557,
+          0.8557
+        ],
+        "bbox_max": [
+          0.7183,
+          0.6442,
+          1.4577
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "derp-chicken-atlas",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Chicken_WingR": {
+        "triangles": 276,
+        "pivot": [
+          -0.61,
+          -0.36,
+          1.44
+        ],
+        "bbox_min": [
+          -0.7183,
+          -0.4557,
+          0.8557
+        ],
+        "bbox_max": [
+          -0.5525,
+          0.6442,
+          1.4577
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "derp-chicken-atlas",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "glb": {
+    "file": "exports/glb/derp-chicken.glb",
+    "ok": true,
+    "objects": 7,
+    "problems": [],
+    "parts": {
+      "Chicken_Body": {
+        "triangles": 324,
+        "pivot": [
+          0.0,
+          0.0,
+          0.55
+        ],
+        "bbox_min": [
+          -0.6473,
+          -0.6198,
+          0.5238
+        ],
+        "bbox_max": [
+          0.6473,
+          1.3162,
+          1.9562
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "derp-chicken-atlas",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Chicken_Feather": {
+        "triangles": 106,
+        "pivot": [
+          1.4618,
+          0.3,
+          0.0527
+        ],
+        "bbox_min": [
+          1.354,
+          0.025,
+          0.0225
+        ],
+        "bbox_max": [
+          1.5695,
+          0.575,
+          0.083
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "derp-chicken-atlas",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Chicken_Head": {
+        "triangles": 1396,
+        "pivot": [
+          0.0,
+          -0.55,
+          1.38
+        ],
+        "bbox_min": [
+          -0.4486,
+          -1.46,
+          1.18
+        ],
+        "bbox_max": [
+          0.4616,
+          -0.342,
+          2.6197
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "derp-chicken-atlas",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Chicken_LegL": {
+        "triangles": 220,
+        "pivot": [
+          0.3,
+          0.0,
+          0.55
+        ],
+        "bbox_min": [
+          0.1221,
+          -0.32,
+          0.0
+        ],
+        "bbox_max": [
+          0.4779,
+          0.11,
+          0.62
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "derp-chicken-atlas",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Chicken_LegR": {
+        "triangles": 220,
+        "pivot": [
+          -0.3,
+          0.0,
+          0.55
+        ],
+        "bbox_min": [
+          -0.4779,
+          -0.32,
+          0.0
+        ],
+        "bbox_max": [
+          -0.1221,
+          0.11,
+          0.62
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "derp-chicken-atlas",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Chicken_WingL": {
+        "triangles": 276,
+        "pivot": [
+          0.61,
+          -0.36,
+          1.44
+        ],
+        "bbox_min": [
+          0.5525,
+          -0.4557,
+          0.8557
+        ],
+        "bbox_max": [
+          0.7183,
+          0.6442,
+          1.4577
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "derp-chicken-atlas",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Chicken_WingR": {
+        "triangles": 276,
+        "pivot": [
+          -0.61,
+          -0.36,
+          1.44
+        ],
+        "bbox_min": [
+          -0.7183,
+          -0.4557,
+          0.8557
+        ],
+        "bbox_max": [
+          -0.5525,
+          0.6442,
+          1.4577
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "derp-chicken-atlas",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "atlas": {
+    "file": "textures/derp-chicken-atlas.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "ok": true
+  },
+  "all_ok": true,
+  "expected_parts": [
+    "Chicken_Body",
+    "Chicken_Feather",
+    "Chicken_Head",
+    "Chicken_LegL",
+    "Chicken_LegR",
+    "Chicken_WingL",
+    "Chicken_WingR"
+  ],
+  "scope": "Blender re-import only (Blender 5.2.1 LTS); Studio untested"
+}

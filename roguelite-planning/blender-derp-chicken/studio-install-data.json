@@ -1,0 +1,200 @@
+{
+  "asset": "derp-chicken",
+  "axis": "studio = (-x, z, y) of blender; Blender front -Y = Studio front -Z",
+  "units": "studs; the model is at final size, import 1:1 and do not scale",
+  "sides": "L/R are the chicken's own left/right; its left is Blender +X = Studio -X",
+  "origin": "all positions are relative to the model origin = ground point (Blender world origin): the hip-line centre dropped to the feet bottom",
+  "ground_point": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "overall_size": [
+    1.4365,
+    2.6197,
+    2.7762
+  ],
+  "overall_center": [
+    0.0,
+    1.3099,
+    -0.0719
+  ],
+  "texture": "textures/derp-chicken-atlas.png",
+  "texture_note": "one shared atlas; every MeshPart uses the same TextureID",
+  "body_pivot_convention": "Chicken_Body pivot = centre of the hip line (not the body bbox centre)",
+  "rest_rotation": "every part has identity rotation relative to the model at rest",
+  "overall_scope": "overall_size / overall_center / ground_point cover the six rig parts only",
+  "feather_note": "Chicken_Feather (kind 'feather') is a standalone burst piece exported beside the chicken; do not weld or Motor6D it to the rig. Origin = its bbox centre; length along Studio Z (quill end toward -Z, tip toward +Z), width along X, thickness along Y (lies flat at rest)",
+  "parts": {
+    "Chicken_Body": {
+      "kind": "rig",
+      "center": [
+        0.0,
+        1.24,
+        0.3482
+      ],
+      "size": [
+        1.2945,
+        1.4324,
+        1.936
+      ],
+      "pivot": [
+        0.0,
+        0.55,
+        0.0
+      ],
+      "pivot_is": "hip-line centre (the root part; waddle/bob pivot)",
+      "suggested_motion": "root part; waddle = small roll about Studio Z (front-back) and bob in Studio Y",
+      "pivot_from_body_pivot": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "Chicken_Head": {
+      "kind": "rig",
+      "center": [
+        -0.0065,
+        1.8999,
+        -0.901
+      ],
+      "size": [
+        0.9102,
+        1.4397,
+        1.118
+      ],
+      "pivot": [
+        0.0,
+        1.38,
+        -0.55
+      ],
+      "pivot_is": "neck point (peck/bob pivot)",
+      "suggested_motion": "peck = pitch about Studio X (side-to-side axis) through the neck point",
+      "pivot_from_body_pivot": [
+        0.0,
+        0.83,
+        -0.55
+      ]
+    },
+    "Chicken_WingL": {
+      "kind": "rig",
+      "center": [
+        -0.6354,
+        1.1567,
+        0.0943
+      ],
+      "size": [
+        0.1657,
+        0.6021,
+        1.0998
+      ],
+      "pivot": [
+        -0.61,
+        1.44,
+        -0.36
+      ],
+      "pivot_is": "top-front shoulder hinge (flap about the front-back axis)",
+      "suggested_motion": "flap = rotate about Studio Z (front-back axis) through the shoulder hinge, tip swinging out/up",
+      "pivot_from_body_pivot": [
+        -0.61,
+        0.89,
+        -0.36
+      ]
+    },
+    "Chicken_WingR": {
+      "kind": "rig",
+      "center": [
+        0.6354,
+        1.1567,
+        0.0943
+      ],
+      "size": [
+        0.1657,
+        0.6021,
+        1.0998
+      ],
+      "pivot": [
+        0.61,
+        1.44,
+        -0.36
+      ],
+      "pivot_is": "top-front shoulder hinge (flap about the front-back axis)",
+      "suggested_motion": "flap = rotate about Studio Z (front-back axis) through the shoulder hinge, tip swinging out/up",
+      "pivot_from_body_pivot": [
+        0.61,
+        0.89,
+        -0.36
+      ]
+    },
+    "Chicken_LegL": {
+      "kind": "rig",
+      "center": [
+        -0.3,
+        0.31,
+        -0.105
+      ],
+      "size": [
+        0.3559,
+        0.62,
+        0.43
+      ],
+      "pivot": [
+        -0.3,
+        0.55,
+        0.0
+      ],
+      "pivot_is": "hip point at the body underside (swing about the side axis)",
+      "suggested_motion": "walk = swing about Studio X (side-to-side axis) through the hip point",
+      "pivot_from_body_pivot": [
+        -0.3,
+        0.0,
+        0.0
+      ]
+    },
+    "Chicken_LegR": {
+      "kind": "rig",
+      "center": [
+        0.3,
+        0.31,
+        -0.105
+      ],
+      "size": [
+        0.3559,
+        0.62,
+        0.43
+      ],
+      "pivot": [
+        0.3,
+        0.55,
+        0.0
+      ],
+      "pivot_is": "hip point at the body underside (swing about the side axis)",
+      "suggested_motion": "walk = swing about Studio X (side-to-side axis) through the hip point",
+      "pivot_from_body_pivot": [
+        0.3,
+        0.0,
+        0.0
+      ]
+    },
+    "Chicken_Feather": {
+      "kind": "feather",
+      "center": [
+        -1.4618,
+        0.0527,
+        0.3
+      ],
+      "size": [
+        0.2154,
+        0.0605,
+        0.55
+      ],
+      "pivot": [
+        -1.4618,
+        0.0527,
+        0.3
+      ],
+      "pivot_is": "bbox centre (standalone burst piece, not part of the rig)",
+      "suggested_motion": "not part of the rig: clone it many times for the death 'pop' feather burst"
+    }
+  }
+}

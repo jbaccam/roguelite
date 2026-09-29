@@ -406,6 +406,9 @@
       "UtilityWeapons": {
         "$path": "UtilityWeapons.luau"
       },
+      "EggChickens": {
+        "$path": "EggChickens.luau"
+      },
       "MobCollision": {
         "$path": "MobCollision.server.luau"
       },
@@ -448,6 +451,9 @@
         },
         "RogueliteZombieAnimation": {
           "$path": "../RogueliteZombieAnimation.client.luau"
+        },
+        "RogueliteChickens": {
+          "$path": "RogueliteChickens.client.luau"
         },
         "RogueliteCombat": {
           "$path": "RogueliteCombat.client.luau"

@@ -1,0 +1,260 @@
+{
+  "asset": "derp-chicken",
+  "blender_version": "5.2.1 LTS",
+  "authoring": "final Roblox stud size (1 Blender unit = 1 stud); import at 1:1, do not scale",
+  "axes": "Blender Z-up, front -Y, chicken's left +X; feet bottom z = 0",
+  "texture": "textures/derp-chicken-atlas.png (1024x1024, shared by every part)",
+  "parts": {
+    "Chicken_Body": {
+      "kind": "rig",
+      "triangles": 324,
+      "vertices": 168,
+      "dimensions_studs": [
+        1.2945,
+        1.936,
+        1.4324
+      ],
+      "bbox_min": [
+        -0.6473,
+        -0.6198,
+        0.5238
+      ],
+      "bbox_max": [
+        0.6473,
+        1.3162,
+        1.9562
+      ],
+      "pivot": [
+        0.0,
+        0.0,
+        0.55
+      ],
+      "pivot_is": "hip-line centre (the root part; waddle/bob pivot)",
+      "uv_range": [
+        0.0062,
+        0.8564,
+        0.0062,
+        0.9869
+      ],
+      "min_face_area": 0.00081967
+    },
+    "Chicken_Head": {
+      "kind": "rig",
+      "triangles": 1396,
+      "vertices": 722,
+      "dimensions_studs": [
+        0.9102,
+        1.118,
+        1.4397
+      ],
+      "bbox_min": [
+        -0.4486,
+        -1.46,
+        1.18
+      ],
+      "bbox_max": [
+        0.4616,
+        -0.342,
+        2.6197
+      ],
+      "pivot": [
+        0.0,
+        -0.55,
+        1.38
+      ],
+      "pivot_is": "neck point (peck/bob pivot)",
+      "uv_range": [
+        0.0062,
+        0.9893,
+        0.0064,
+        0.994
+      ],
+      "min_face_area": 1.313e-05
+    },
+    "Chicken_WingL": {
+      "kind": "rig",
+      "triangles": 276,
+      "vertices": 140,
+      "dimensions_studs": [
+        0.1657,
+        1.0998,
+        0.6021
+      ],
+      "bbox_min": [
+        0.5525,
+        -0.4557,
+        0.8557
+      ],
+      "bbox_max": [
+        0.7183,
+        0.6442,
+        1.4577
+      ],
+      "pivot": [
+        0.61,
+        -0.36,
+        1.44
+      ],
+      "pivot_is": "top-front shoulder hinge (flap about the front-back axis)",
+      "uv_range": [
+        0.0062,
+        0.9632,
+        0.0916,
+        0.956
+      ],
+      "min_face_area": 5.856e-05
+    },
+    "Chicken_WingR": {
+      "kind": "rig",
+      "triangles": 276,
+      "vertices": 140,
+      "dimensions_studs": [
+        0.1657,
+        1.0998,
+        0.6021
+      ],
+      "bbox_min": [
+        -0.7183,
+        -0.4557,
+        0.8557
+      ],
+      "bbox_max": [
+        -0.5525,
+        0.6442,
+        1.4577
+      ],
+      "pivot": [
+        -0.61,
+        -0.36,
+        1.44
+      ],
+      "pivot_is": "top-front shoulder hinge (flap about the front-back axis)",
+      "uv_range": [
+        0.0061,
+        0.9655,
+        0.018,
+        0.9584
+      ],
+      "min_face_area": 5.856e-05
+    },
+    "Chicken_LegL": {
+      "kind": "rig",
+      "triangles": 220,
+      "vertices": 120,
+      "dimensions_studs": [
+        0.3559,
+        0.43,
+        0.62
+      ],
+      "bbox_min": [
+        0.1221,
+        -0.32,
+        0.0
+      ],
+      "bbox_max": [
+        0.4779,
+        0.11,
+        0.62
+      ],
+      "pivot": [
+        0.3,
+        0.0,
+        0.55
+      ],
+      "pivot_is": "hip point at the body underside (swing about the side axis)",
+      "uv_range": [
+        0.013,
+        0.9893,
+        0.0062,
+        0.994
+      ],
+      "min_face_area": 0.000104
+    },
+    "Chicken_LegR": {
+      "kind": "rig",
+      "triangles": 220,
+      "vertices": 120,
+      "dimensions_studs": [
+        0.3559,
+        0.43,
+        0.62
+      ],
+      "bbox_min": [
+        -0.4779,
+        -0.32,
+        0.0
+      ],
+      "bbox_max": [
+        -0.1221,
+        0.11,
+        0.62
+      ],
+      "pivot": [
+        -0.3,
+        0.0,
+        0.55
+      ],
+      "pivot_is": "hip point at the body underside (swing about the side axis)",
+      "uv_range": [
+        0.0064,
+        0.9916,
+        0.0063,
+        0.994
+      ],
+      "min_face_area": 0.000104
+    },
+    "Chicken_Feather": {
+      "kind": "feather",
+      "triangles": 106,
+      "vertices": 57,
+      "dimensions_studs": [
+        0.2154,
+        0.55,
+        0.0605
+      ],
+      "bbox_min": [
+        1.354,
+        0.025,
+        0.0225
+      ],
+      "bbox_max": [
+        1.5695,
+        0.575,
+        0.083
+      ],
+      "pivot": [
+        1.4618,
+        0.3,
+        0.0527
+      ],
+      "pivot_is": "bbox centre (standalone burst piece, not part of the rig)",
+      "uv_range": [
+        0.007,
+        0.9798,
+        0.0065,
+        0.9489
+      ],
+      "min_face_area": 0.00017026
+    }
+  },
+  "total_triangles": 2818,
+  "rig_triangles": 2712,
+  "feather_triangles": 106,
+  "overall": {
+    "scope": "chicken rig only (the loose feather is excluded)",
+    "bbox_min": [
+      -0.7183,
+      -1.46,
+      0.0
+    ],
+    "bbox_max": [
+      0.7183,
+      1.3162,
+      2.6197
+    ],
+    "height_studs": 2.6197,
+    "length_studs": 2.7762,
+    "width_studs": 1.4365,
+    "body_length_studs": 1.936
+  }
+}

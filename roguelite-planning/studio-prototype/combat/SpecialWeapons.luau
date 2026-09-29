@@ -9,6 +9,7 @@ local Targets=require(RS.RogueliteCombat.ProjectileTarget)
 local S={}
 function S.new(combat,damage,rayParams)
  local utility=require(script.Parent.UtilityWeapons).new(combat,damage,rayParams)
+ local chickens=require(script.Parent.EggChickens).new(combat,damage,rayParams)
  local event=combat:WaitForChild('SpecialFX');local flights={};local zones={};local serial=0
  local function nextId() serial+=1;return serial end
  local function valid(d)
@@ -50,6 +51,7 @@ function S.new(combat,damage,rayParams)
     segment(r,WeaponMotion.origin(root.CFrame,state and state:GetAttribute('RingRadius') or WeaponMotion.BaseRadius,r.d.slotIndex),true);return
    end
   end
+  chickens:landed(r.d,r.position) -- a landing egg may hatch a chicken
   endFlight(r)
  end
  local function impact(r,result)
