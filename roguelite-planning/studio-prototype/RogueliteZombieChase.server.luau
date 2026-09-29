@@ -60,6 +60,7 @@ local SPAWN_BAND = {28, 70}
 local STAND_RADIUS = 5
 local RELOCATE_BAND = {14, 30}
 local RESPAWN_DELAY = 2
+local MIN_MASS = 4 -- enemy bodies below this get a denser root (see spawnZombie)
 local WARNING_COLOR = Color3.fromRGB(214, 58, 52)
 local warnings = Instance.new("Folder")
 warnings.Name = "RogueliteSpawnWarnings"
@@ -309,6 +310,14 @@ for _, part in npc:GetDescendants() do
         part.CollisionGroup = COLLISION_GROUP
     end
 end
+-- The Humanoid can't steer a very light body. The baby zombie (0.33 mass, every limb Massless)
+-- slid ~38 degrees off its facing on average at ~60% of its WalkSpeed; from 2 mass up it runs
+-- like the regular zombie. Lava slime split children are lighter still.
+if root.AssemblyMass < MIN_MASS then
+    local physical = root.CurrentPhysicalProperties
+    local density = (root:GetMass() + MIN_MASS - root.AssemblyMass) / (root.Size.X * root.Size.Y * root.Size.Z)
+    root.CustomPhysicalProperties = PhysicalProperties.new(math.min(density, 100), physical.Friction, physical.Elasticity, physical.FrictionWeight, physical.ElasticityWeight)
+end
 root:SetNetworkOwner(nil)
 humanoid.WalkSpeed = config.speed
 npc:SetAttribute('BaseMoveSpeed',config.speed)
@@ -320,6 +329,7 @@ local waypoints, waypointIndex = nil, 1
 local computing, lastPath, generation = false, -math.huge, 0
 local previousTarget = nil
 local elapsed = 0
+local stall = nil
 local function nearestTarget()
     local best, distance = nil, math.huge
     for _, player in Players:GetPlayers() do
@@ -355,12 +365,14 @@ connection = RunService.Heartbeat:Connect(function(dt)
             humanoid:Move(Vector3.zero)
             humanoid:MoveTo(root.Position)
         end
+        stall = nil
         return
     end
     frozen = false
+    -- Standing still to attack isn't a stall (see the hop below).
     if kind=='Mutant' then
-        if Attacks.update(npc,previousTarget) then return end
-    elseif EnemyAttacks.update(npc,previousTarget,dt) then return end
+        if Attacks.update(npc,previousTarget) then stall = nil return end
+    elseif EnemyAttacks.update(npc,previousTarget,dt) then stall = nil return end
     elapsed += dt
     if elapsed < 0.1 then return end
     elapsed = 0
@@ -414,8 +426,24 @@ connection = RunService.Heartbeat:Connect(function(dt)
         else
             humanoid:MoveTo(root.Position)
         end
+        -- A step taller than the hips stops a walker dead (babies at the 1-stud spawn pad).
+        -- The line of sight is clear, so no path gives a jump waypoint: hop when 0.3 s of
+        -- chasing covered under 15% of the walk. Close in, arriving at the MoveTo point isn't a stall,
+        -- and neither is being held back by the crowd's separation push.
+        local chasing = direction.Magnitude > 0.05 and flat.Magnitude > 0.01 and direction.Unit:Dot(flat.Unit) > 0.8
+        if chasing and distance >= config.stopRange + 1 and humanoid.WalkSpeed > 4 and config.behavior ~= 'Heavy' then
+            if not stall then
+                stall = {at = root.Position, since = os.clock()}
+            elseif os.clock() - stall.since >= 0.3 then
+                if flatDistance(root.Position, stall.at) < humanoid.WalkSpeed * 0.3 * 0.15 then humanoid.Jump = true end
+                stall = nil
+            end
+        else
+            stall = nil
+        end
         return
     end
+    stall = nil
     if not computing and os.clock() - lastPath > 1 then
         computing = true
         lastPath = os.clock()

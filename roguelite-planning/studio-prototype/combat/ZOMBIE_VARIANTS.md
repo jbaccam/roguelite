@@ -8,6 +8,12 @@ The user explicitly approved limited Studio import-dialog UI control with “ye�
 
 The single-client Play smoke test confirmed live baby/mutant spawns, correct MaxHealth and WalkSpeed, client joint motion, mutant hunched waist, and at least two mutant slam starts. Weapon damage reduced the mutant from 240 to 30 HP and it subsequently disappeared. Exact slam damage, dodge/wall/death cancellation cases, respawn, and multiple clients remain unverified. Console output showed Roblox CorePackages social/chat errors and an existing CardPresentation missing-showcase-child wait; no zombie error was observed. The test wave was Play-only and Studio was returned to Edit mode.
 
+## Baby sliding and the spawn-pad step — September 28, 2026
+
+- Babies slid like they were on ice. Cause: the whole template weighs 0.33 (only its small root part has mass; every limb is `Massless`), and the Humanoid can't steer a body that light. It accelerated at about 25 studs/s² (the regular zombie manages ~700), averaged 12 studs/s against its 20 WalkSpeed, and moved about 38° off the way it faced. Test weights of 1/2/4/8: from 2 up it runs like the regular zombie. `RogueliteZombieChase` now raises any enemy under 4 mass to 4 at spawn by making its root denser. Knockback impulses already scale by `AssemblyMass`. Most custom mobs weigh 1.3–2.2, and lava slime split children about 0.3, so they get the same floor.
+- Babies also stood still at the edge of the 1-stud `PlayerSpawn` pad. Their hips are 0.84 studs up, and with a clear line of sight the chase never gets a path jump waypoint. A chasing walker (not Heavy) now hops when 0.3 s covers under 15% of its walk. That only counts when it is over 1 stud outside its stop range, steering at the target, and not attacking or frozen.
+- Verified in single-client Play with weapons off. Open ground, player circling: babies averaged 19.1 studs/s, an 11° facing error and 3.7% sideways frames (regular zombies: 10°, 4%), and never hopped. Six babies against a player on the pad: one hop each at the edge, all six on the pad, no other hops in 20 s. Console clean. Multiple clients untested.
+
 ## Starting balance
 
 | Type | HP | Speed | Damage | Behavior |
