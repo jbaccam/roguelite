@@ -14,6 +14,7 @@ local Hearts=require(script.Parent.HeartDropService)
 local XP=require(combat.RunXP)
 local Upgrades=require(combat.LevelUpCatalog)
 local StatSchema=require(combat.CharacterStats)
+local Maps=require(combat.MapConfig) -- sandboxed, like this module
 local S={states={},wave=1,phase='Shop'}
 local rng=Random.new()
 local serial=0
@@ -168,8 +169,11 @@ end
 function S.resetRun()
  S.wave=1;S.phase='Shop';S.paused=nil
  run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',1);run:SetAttribute('WaveEndsAt',nil);run:SetAttribute('Paused',nil)
- -- A new run starts clean: not a test run (ADMIN_PANEL.md).
- run:SetAttribute('AdminTestRun',nil)
+ -- A new run starts clean: not a test run, no admin pause, freeze or Keep N alive, and the map's
+ -- own enemy mix (ADMIN_PANEL.md). Normal play already has these, so nothing fires.
+ run:SetAttribute('AdminTestRun',nil);run:SetAttribute('AdminPaused',nil)
+ local map=Maps.get(combat:GetAttribute('RunMap'))
+ combat:SetAttribute('AdminFreeze',nil);combat:SetAttribute('TestZombieCountOverride',nil);combat:SetAttribute('EnemyRoster',map and map.roster)
  combat:SetAttribute('ZombiesEnabled',false);Shards.clear(false)
  for p in S.states do Characters.clearAdmin(p);S.resetPlayer(p) end
 end
@@ -227,14 +231,19 @@ function S.paidReroll(p,kind)
  s.revision+=1;reprice(p);S.publish(p,now and 'Rerolled' or 'Free reroll saved for the next shop')
  return true
 end
+-- The wave's normal enemy count (Keep N alive overrides it through TestZombieCountOverride).
+function S.waveEnemyCount() return math.min(100,5+(S.wave-1)*2) end
+local function startWave()
+ S.phase='Combat';run:SetAttribute('Phase','Combat');run:SetAttribute('WaveEndsAt',workspace:GetServerTimeNow()+E.WAVE_SECONDS)
+ combat:SetAttribute('ZombieCount',combat:GetAttribute('TestZombieCountOverride') or S.waveEnemyCount());combat:SetAttribute('ZombiesEnabled',true)
+ for p in S.states do local cs=Characters.states[p];cs.blocks=1;cs.folder:SetAttribute('BlocksRemaining',cs.stats.FirstHitBlock);S.publish(p,'Wave started') end
+end
 local function beginWave()
  if S.phase~='Shop' then return end
  local count=0
  for p,s in S.states do if living(p) then count+=1;if not s.ready or s.pendingLevels>0 then return end end end
  if count==0 then return end
- S.phase='Combat';run:SetAttribute('Phase','Combat');run:SetAttribute('WaveEndsAt',workspace:GetServerTimeNow()+E.WAVE_SECONDS)
- combat:SetAttribute('ZombieCount',combat:GetAttribute('TestZombieCountOverride') or math.min(100,5+(S.wave-1)*2));combat:SetAttribute('ZombiesEnabled',true)
- for p in S.states do local cs=Characters.states[p];cs.blocks=1;cs.folder:SetAttribute('BlocksRemaining',cs.stats.FirstHitBlock);S.publish(p,'Wave started') end
+ startWave()
 end
 function S.stopWave()
  -- Abort a Studio test, not a wave clear: no reward, advancement or reroll.
@@ -264,6 +273,84 @@ function S.finishWave()
   S.publish(p,'Next shop · reroll cost reset')
  end
  return true
+end
+-- Admin panel run modes (ADMIN_PANEL.md "Waves"). AdminService checks the developer first.
+-- Enemies turn off for one frame so the spawner and BossEncounter see the old wave end
+-- (signals are deferred in this place).
+local function endEnemies()
+ combat:SetAttribute('ZombiesEnabled',false);Shards.clear(false)
+ S.paused=nil;run:SetAttribute('Paused',nil);run:SetAttribute('AdminPaused',nil);run:SetAttribute('WaveEndsAt',nil)
+ for _,s in S.states do s.ready=false;s.revision+=1 end
+ task.wait()
+end
+-- Sandbox: phase Practice at wave 1, no clock and no shop. Enemies stay on (weapons need them),
+-- but only Keep N alive (TestZombieCountOverride) and Mobs spawns fill the arena.
+function S.setPractice()
+ endEnemies()
+ S.phase='Practice';S.wave=1;run:SetAttribute('Phase','Practice');run:SetAttribute('Wave',1)
+ combat:SetAttribute('ZombieCount',combat:GetAttribute('TestZombieCountOverride') or 0);combat:SetAttribute('ZombiesEnabled',true)
+ for p in S.states do S.publish(p,'Sandbox · no waves') end
+ return true
+end
+-- Waves from the sandbox: the normal wave-1 shop, then the normal beginWave/finishWave loop.
+-- The build stays: it's the same test run.
+function S.setWaves()
+ if S.phase~='Practice' then return false end
+ endEnemies()
+ S.phase='Shop';S.wave=1;run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',1)
+ for p in S.states do S.prepareUpgrades(p);S.publish(p,'Waves · press Start when ready') end
+ return true
+end
+-- Start wave n (1-20) now from any phase, skipping the shop's ready check.
+function S.jumpToWave(n)
+ if type(n)~='number' or n~=n or n%1~=0 or n<1 or n>20 then return false end
+ endEnemies()
+ S.wave=n;run:SetAttribute('Wave',n)
+ startWave();return true
+end
+-- End this wave as if the timer ran out (wave reward, next shop). A boss can't hold it open.
+function S.endWave()
+ if S.phase~='Combat' then return false end
+ S.paused=nil;run:SetAttribute('Paused',nil);run:SetAttribute('AdminPaused',nil)
+ return S.finishWave()
+end
+-- Pause/Resume: the wave clock (pause/resume above) and, through AdminPaused, the spawner.
+-- S.pause alone (a solo death) keeps spawning as before.
+function S.adminPause(on)
+ if on then
+  if S.phase~='Combat' or S.paused then return false end
+  S.pause();run:SetAttribute('AdminPaused',true)
+ else
+  if not run:GetAttribute('AdminPaused') then return false end
+  run:SetAttribute('AdminPaused',nil);S.resume()
+ end
+ return true
+end
+-- Admin grants (Player tab). AdminConfig.check already validated mode and number.
+function S.adminShards(p,mode,value)
+ local s=S.states[p];if not s then return false,'No run state' end
+ local total=mode=='Set' and value or s.shards+value
+ if not E.integer(total,0,E.MAX_SHARDS) then return false,'Shards must be between 0 and '..E.MAX_SHARDS end
+ s.shards=total;s.revision+=1;S.publish(p,'Shards: '..total)
+ return true,'Shards: '..total
+end
+-- New levels arrive as earned level-ups (chosen in the shop); lowering the level drops unspent ones.
+function S.adminLevel(p,mode,value)
+ local s=S.states[p];if not s then return false,'No run state' end
+ local level=math.clamp(mode=='Set' and value or s.level+value,1,XP.MAX_LEVEL)
+ s.pendingLevels=math.max(0,s.pendingLevels+level-s.level);s.level=level;s.xp=0
+ s.upgradeOffers={};s.revision+=1;S.prepareUpgrades(p);S.publish(p,'Level '..level)
+ return true,'Level '..level
+end
+function S.adminItem(p,id)
+ local s=S.states[p];local entry=Catalog.ById[id]
+ if not s or not entry or entry.kind=='Weapon' then return false,'Unknown item' end
+ local existing;for _,it in s.items do if it.id==id then existing=it end end
+ if existing and existing.count>=entry.cap then return false,'Item copy limit reached' end
+ if not existing and #s.items>=E.ITEM_CAPACITY then return false,'Item inventory full' end
+ if existing then existing.count+=1 else table.insert(s.items,{id=id,count=1}) end
+ s.revision+=1;S.bonuses(p);S.publish(p,entry.name..' added')
+ return true,entry.name..' added'
 end
 function S.request(p,action,revision,arg,extra)
  local s=S.states[p];local cs=Characters.states[p]
