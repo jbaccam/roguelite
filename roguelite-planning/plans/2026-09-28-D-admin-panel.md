@@ -466,7 +466,9 @@ local r=fresh(SS.RogueliteTests.AdminConfigTests)(fresh(RS.RogueliteCombat.Admin
 return 'passed '..r.passed..' sandboxed='..tostring(RS.RogueliteCombat.AdminConfig.Sandboxed)
 ```
 
-  Expected: `passed 69 sandboxed=true`. That count is:
+  > **Revised after review** (the commit after 9a84c55): `markTestRun` returns true/false and warns when `RogueliteRunState` is missing; the Hammer boss spawn is capped at 1–5; the user id list is frozen; the tests add hostile-input and guard cases, so the pass count is higher than 69.
+
+  Expected (first version): `passed 69 sandboxed=true`. That count is:
   - 4 who-is-a-developer checks;
   - 3 test-run checks;
   - 1 action count;
@@ -1769,9 +1771,10 @@ remote.OnServerInvoke=function(p,action,a,b)
  if os.clock()-(last[p] or -math.huge)<.15 then return {ok=false,message='Slow down'} end
  last[p]=os.clock()
  if not Admin.check(action,a,b) then return {ok=false,message='Invalid request'} end
+ -- Mark first: an action that does part of its work and then errors must still void rewards.
+ Admin.markTestRun()
  local ran,ok,message=pcall(actions[action],p,a,b)
  if not ran then warn('AdminService:',action,ok);return {ok=false,message='Server error'} end
- if ok then Admin.markTestRun() end
  return {ok=ok==true,message=message or ''}
 end
 Players.PlayerRemoving:Connect(function(p) last[p]=nil end)
@@ -2235,6 +2238,8 @@ local Admin=require(combat:WaitForChild('AdminConfig'))
 local Maps=require(combat:WaitForChild('MapConfig'))
 local Enemies=require(combat:WaitForChild('EnemyCatalog'))
 local Items=require(combat:WaitForChild('ShopCatalog'))
+local Economy=require(combat:WaitForChild('EconomyConfig')) -- Set-box limits, same as AdminConfig
+local XP=require(combat:WaitForChild('RunXP'))
 local Rules=require(RS:WaitForChild('RunSetupRules')) -- map display names
 local C=T.Color
 local M={}
@@ -2362,11 +2367,11 @@ function M.new(player)
   live(shards,own,'Shards',function(v) return 'Shards · '..tostring(v or 0) end)
   button(c,'Shards100','+100',230,90,110,function() send('Shards','Add',100) end)
   button(c,'Shards1000','+1000',350,90,120,function() send('Shards','Add',1000) end)
-  numberBox(c,'ShardsSet',own:GetAttribute('Shards') or 0,480,90,140,function(v) send('Shards','Set',math.floor(v)) end)
+  numberBox(c,'ShardsSet',own:GetAttribute('Shards') or 0,480,90,140,function(v) send('Shards','Set',math.clamp(math.floor(v),0,Economy.MAX_SHARDS)) end)
   local level=left(T.label(c,'LevelLabel','',0,140,220,40,20))
   live(level,own,'RunLevel',function(v) return 'Level · '..tostring(v or 1) end)
   button(c,'LevelUp','+1',230,140,110,function() send('Level','Add',1) end)
-  numberBox(c,'LevelSet',own:GetAttribute('RunLevel') or 1,350,140,120,function(v) send('Level','Set',math.floor(v)) end)
+  numberBox(c,'LevelSet',own:GetAttribute('RunLevel') or 1,350,140,120,function(v) send('Level','Set',math.clamp(math.floor(v),1,XP.MAX_LEVEL)) end)
   note(c,'SetHint','Type a number and press Enter to set it.',188)
   heading(c,'ItemsTitle','Give item',220)
   local items={};for _,e in Items.List do if e.kind~='Weapon' then table.insert(items,e) end end

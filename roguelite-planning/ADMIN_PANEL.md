@@ -46,7 +46,7 @@ It works in Studio and in the published game, but only for listed developer acco
 - **The old travel switch:** the Studio LOBBY/ARENA switch stays for non-developer Studio testers. For developers it's hidden, because Travel replaces it.
 
 ### Mobs
-- **Spawn:** pick any regular enemy or boss (`EnemyCatalog` plus the Hammer boss), a count (1–50) and **Spawn**. They appear on the walkable floor of the current map around the developer, at 20–40 studs, and fight normally. These are **extra** enemies: they don't take wave slots and don't respawn.
+- **Spawn:** pick any regular enemy or boss (`EnemyCatalog` plus the Hammer boss), a count (1–50; bosses 1–5, so a mistyped number can't stall the server) and **Spawn**. They appear on the walkable floor of the current map around the developer, at 20–40 studs, and fight normally. These are **extra** enemies: they don't take wave slots and don't respawn.
 - **Keep N alive:** pick enemy types and a number; the spawner keeps that many alive, respawning as they die. This is today's Z-mode plus mob picker.
 - **Clear all:** removes every enemy, including bosses, and turns off Keep N alive.
 - **Freeze:** enemies stop moving and attacking, while animations and damage still work, so you can inspect models and hitboxes. Press it again to unfreeze.
