@@ -1,7 +1,11 @@
 -- ADMIN panel server (ADMIN_PANEL.md). Owns the RemoteFunction RogueliteCombat.AdminAction.
 -- Each request: developer check by UserId (AdminConfig; everyone else gets no reply), a rate
--- limit, then AdminConfig.check on every argument. The owning service does the work, and a
--- successful action marks the run as a test run (no rewards).
+-- limit, AdminConfig.check on every argument, then the shared-run gate (blocked below). Every
+-- valid, unblocked request marks the run as a test run (no rewards), even one the owning
+-- service then refuses; the owning service does the work.
+-- Until plan C's solo test matches, a live server is Combined: one run shared by everyone. So on
+-- a live server the panel only works while no other player (non-developer) is in the server,
+-- and a developer leaving hands the shared run back (unpaused, unfrozen, normal waves).
 -- Unsandboxed Script: it uses sandboxed modules (AdminConfig, MapConfig, ServerRole, ShopService)
 -- and the spawner's ServerStorage.AdminSpawn bindable (RogueliteZombieChase, unsandboxed).
 local Players=game:GetService('Players')
@@ -24,10 +28,22 @@ local function alive(p)
 end
 -- The spawner exists wherever enemies can: not on lobby servers (RogueliteZombieChase).
 local function spawner() return SS:FindFirstChild('AdminSpawn') end
+-- Other players in the arena, downed teammates (death screen) included.
 local function arenaHasOthers(p)
- for _,q in Players:GetPlayers() do if q~=p and q:GetAttribute('StudioArea')=='Arena' and alive(q) then return true end end
+ for _,q in Players:GetPlayers() do if q~=p and q:GetAttribute('StudioArea')=='Arena' and (alive(q) or q:GetAttribute('RunDown')) then return true end end
  return false
 end
+-- A direct child PlayerSpawn in one of the map's Workspace folders (MapConfig), checked before
+-- Role.setMap so a failed Travel leaves the active map alone.
+local function hasPlayerSpawn(id)
+ local map=Maps.get(id);if not map then return false end
+ for _,name in map.folders do
+  local folder=workspace:FindFirstChild(name)
+  if folder and folder:FindFirstChild('PlayerSpawn') then return true end
+ end
+ return false
+end
+local MAX_EXTRAS,MAX_BOSSES=100,5
 -- Keep N alive (the old Z-mode plus mob picker): n enemies of the picked EnemyCatalog ids
 -- ('' = the map's own mix), respawning as they die. 0 turns it off and brings back the map's
 -- mix and the phase's normal count.
@@ -57,6 +73,9 @@ function actions.Travel(p,where)
   if not arenaHasOthers(p) then if Shop.phase=='Practice' then Shop.resetRun() else Shop.stopWave() end end
   return true,'Lobby'
  end
+ -- The arena is shared: never pull other players' map out from under them.
+ if arenaHasOthers(p) and where~=Role.activeMap() then return false,'Other players are on '..tostring(Role.activeMap()) end
+ if not hasPlayerSpawn(where) then return false,'No PlayerSpawn on '..where end
  if not Role.setMap(where) then return false,'That map is not available here' end
  local spawn=Role.playerSpawn();if not spawn then return false,'No PlayerSpawn on '..where end
  p:SetAttribute('StudioArea','Arena');char:PivotTo(CFrame.new(spawn.Position+Vector3.new(0,4,0)))
@@ -68,13 +87,26 @@ function actions.Spawn(p,id,count)
  local sp=spawner();if not sp then return false,NO_ARENA end
  if combat:GetAttribute('ZombiesEnabled')~=true then return false,'Enemies spawn in Sandbox or during a wave' end
  local _,root=alive(p);if not root then return false,'Respawn first' end
+ -- Caps on what's alive: extras are named Admin_nn (split children too); admin bosses are
+ -- HammerBoss models the spawner tags AdminSpawn.
+ local extras,bosses=0,0
+ local folder=workspace:FindFirstChild('RogueliteEnemies')
+ for _,npc in folder and folder:GetChildren() or {} do
+  if npc.Name:sub(1,6)=='Admin_' then extras+=1 end
+  local h=npc:FindFirstChildOfClass('Humanoid')
+  if npc:GetAttribute('IsHammerBoss') and npc:GetAttribute('AdminSpawn') and h and h.Health>0 then bosses+=1 end
+ end
+ if id==Admin.BossId then
+  if bosses+count>MAX_BOSSES then return false,'Too many bosses ('..MAX_BOSSES..'). Clear first' end
+ elseif extras+count>MAX_EXTRAS then return false,'Too many spawned enemies ('..MAX_EXTRAS..'). Clear first' end
  local made=sp:Invoke('Spawn',id,count,root.Position)
  if made==0 then return false,'No open floor 20-40 studs from you (or no model for that enemy)' end
  return true,'Spawned '..made
 end
 function actions.KeepAlive(p,n,ids) if not spawner() then return false,NO_ARENA end;return keepAlive(n,ids) end
--- Clear all: every enemy goes now. During a wave, turning Keep N alive off brings the wave's
--- normal count back.
+-- Clear all: every enemy goes now, and Keep N alive turns off. During a wave with Keep N alive
+-- on, turning it off brings the wave's normal count back. During a wave without it, the wave
+-- stays empty until the next wave (cleared enemies don't respawn).
 function actions.ClearMobs(p)
  local sp=spawner();if not sp then return false,NO_ARENA end
  sp:Invoke('Clear');keepAlive(0,'')
@@ -110,16 +142,48 @@ function actions.Shards(p,mode,n) return Shop.adminShards(p,mode,n) end
 function actions.Level(p,mode,n) return Shop.adminLevel(p,mode,n) end
 for _,name in Admin.Actions do assert(actions[name],'AdminService has no handler for '..name) end
 
+-- The shared-run gate, checked before anything is marked. A reason string blocks the request.
+local function blocked(p,action)
+ -- A live server's run is shared (Combined until plan C): never test on other players' run.
+ if not RunService:IsStudio() then
+  for _,q in Players:GetPlayers() do
+   if q~=p and not Admin.isAdmin(q) then return "Other players are in this server. Use the panel when you're alone (solo test matches come with plan C)." end
+  end
+ end
+ -- Travel can't do anything outside Studio's combined server, so it must not mark the run either.
+ if action=='Travel' and not (RunService:IsStudio() and Role.get()=='Combined') then return 'Needs lobby/match teleports (plan C)' end
+ return nil
+end
+
 local last={}
 remote.OnServerInvoke=function(p,action,a,b)
  if not Admin.isAdmin(p) then return nil end -- non-developers get no reply
  if os.clock()-(last[p] or -math.huge)<.15 then return {ok=false,message='Slow down'} end
  last[p]=os.clock()
  if not Admin.check(action,a,b) then return {ok=false,message='Invalid request'} end
+ local why=blocked(p,action);if why then return {ok=false,message=why} end
  -- Mark first: an action that does part of its work and then errors must still void rewards.
  Admin.markTestRun()
  local ran,ok,message=pcall(actions[action],p,a,b)
  if not ran then warn('AdminService:',action,ok);return {ok=false,message='Server error'} end
  return {ok=ok==true,message=message or ''}
 end
-Players.PlayerRemoving:Connect(function(p) last[p]=nil end)
+-- A developer leaving while others stay hands the shared run back: no admin Pause, Freeze,
+-- Keep N alive or Sandbox. It stays a test run (AdminTestRun is untouched). When nobody stays,
+-- ShopService resets the run anyway.
+local function handBack()
+ Shop.adminPause(false) -- false when it wasn't paused; nothing to do then
+ local sp=spawner()
+ if sp then sp:Invoke('Freeze',false);keepAlive(0,'') end -- no spawner: neither can be on
+ if Shop.phase=='Practice' then Shop.setWaves() end
+end
+Players.PlayerRemoving:Connect(function(p)
+ last[p]=nil
+ if not Admin.isAdmin(p) then return end
+ for _,q in Players:GetPlayers() do
+  if q~=p then
+   local ok,err=pcall(handBack);if not ok then warn('AdminService: hand back failed:',err) end
+   return
+  end
+ end
+end)
