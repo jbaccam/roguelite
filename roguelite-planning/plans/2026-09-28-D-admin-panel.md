@@ -466,7 +466,7 @@ local r=fresh(SS.RogueliteTests.AdminConfigTests)(fresh(RS.RogueliteCombat.Admin
 return 'passed '..r.passed..' sandboxed='..tostring(RS.RogueliteCombat.AdminConfig.Sandboxed)
 ```
 
-  > **Revised after review** (the commit after 9a84c55): `markTestRun` returns true/false and warns when `RogueliteRunState` is missing; the Hammer boss spawn is capped at 1–5; the user id list is frozen; the tests add hostile-input and guard cases, so the pass count is higher than 69.
+  > **Revised after review** (the commit after 9a84c55): `markTestRun` returns true/false and warns when `RogueliteRunState` is missing; the Hammer boss spawn is capped at 1–5; the user id list is frozen; the tests add hostile-input and guard cases. Expected now: `passed 115 sandboxed=true`.
 
   Expected (first version): `passed 69 sandboxed=true`. That count is:
   - 4 who-is-a-developer checks;
@@ -2326,7 +2326,7 @@ function M.new(player)
   button(c,'Spawn','Spawn',190,y,200,function()
    local ids=picked(false)
    if #ids==0 then T.toast(screen,'Pick an enemy first',C.negative);return end
-   for i,id in ids do if i>1 then task.wait(.2) end;send('Spawn',id,self.spawnCount) end
+   for i,id in ids do if i>1 then task.wait(.2) end;send('Spawn',id,id==Admin.BossId and math.min(self.spawnCount,5) or self.spawnCount) end -- bosses cap at 5 (AdminConfig)
   end,true)
   y+=60
   heading(c,'KeepTitle','Keep N alive',y);y+=32
