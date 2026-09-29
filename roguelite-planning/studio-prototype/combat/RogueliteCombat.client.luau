@@ -113,12 +113,12 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
         if v.gloves then for _,g in v.gloves do v.attackReturn.gloves[g.part]=g.part.CFrame end end
        end
        if v.chain then
-        local cut=Chains.pose(v.chain,attackRoot,slot:GetAttribute('AttackDirection'),aim,math.min(age,activeEnd),slot:GetAttribute('SwingRange') or d.range,style,side)
+        local cut=Chains.pose(v.chain,attackRoot,slot:GetAttribute('AttackDirection'),aim,math.min(age,activeEnd),slot:GetAttribute('SwingRange') or d.range,style,side,true)
         pose=age<=activeEnd and cut or Chains.swingReturn(v.chain,cut,idle,age,v.attackReturn)
        else
         local cut=Motion.pose(attackRoot,radius,index,aim,start,start+math.min(age,activeEnd),kind,id,
          slot:GetAttribute('AttackDirection'),slot:GetAttribute('SwingRange') or d.range,
-         template:GetAttribute('BoundsSize'),template:GetAttribute('BoundsCenter'),style,side)
+         template:GetAttribute('BoundsSize'),template:GetAttribute('BoundsCenter'),style,side,true)
         pose=age<=activeEnd and cut or Motion.swingReturn(cut,idle,age,v.attackReturn,id,style)
        end
        if age<Motion.SwingHitStart then pose=v.attackReturn.entry:Lerp(pose,Motion.entryAlpha(age)) end

@@ -211,7 +211,8 @@ function S.Charge(id,stage,hint)
  a:Pulse(stage==1 and .8 or 1.3)
  if stage==2 and hint then a:SetColor(a.Color:Lerp(hint,.45)) end
  S.Shake(.12*stage)
- FX.play(stage==1 and FX.Sounds.Shake1 or FX.Sounds.Shake2,.7,stage==1 and 1 or 1.08)
+ local taps=id=='Gold' and {FX.Sounds.GoldShake1,FX.Sounds.GoldShake2} or {FX.Sounds.Shake1,FX.Sounds.Shake2}
+ FX.play(stage==1 and taps[1] or taps[2],.7,stage==1 and 1 or 1.08)
  if stage==2 then FX.play(FX.Sounds.Charge,.35,1.1) end
 end
 function S.Burst(id,scale,hint)

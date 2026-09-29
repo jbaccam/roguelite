@@ -74,3 +74,15 @@ After each frame's poses, the client builds one capsule per visible weapon from 
 - Both Rojo packages build.
 
 Not tested: multiple real clients, latency, mobile performance with four players' effects, and every stat-scaled size.
+
+## Wider rendered horizontal swings — September 28, 2026
+
+User request: make horizontal strikes on all melee weapons wider for looks, even if they hit no more zombies. Re-checked against `example swinging.mp4` (17.9–18.35 s greatsword sweep): about a 200° arc, but a much bigger radius than ours. Ours already swept 210°, but close zombies pulled the blade in to 0.35–3 studs.
+
+- `WeaponMotion.pose` / `ChainWeaponMotion.pose` take a trailing `visual` flag. Only `RogueliteCombat.client.luau` passes it. With it, horizontal cuts sweep ±120° (`WeaponMotion.VisualSweepHalfAngle`) instead of ±105°. Against close targets the blade sits farther out, with its inner quarter still on the target, and the reach pulse is softened to 40%. Both paths stay centred on the target, so the visible blade crosses the target when the hit lands.
+- The server hit sampling omits the flag, so hit coverage, range and timing are unchanged. Diagonal, thrust, overhead and slap strokes are untouched.
+- `SwingVisuals`: blade/blob trails last 0.22 s (heavy 0.25, katana 0.19) so most of the arc shows at once. Heavy-weapon ground crescents span ±115° to match. Crescents are still heavy-only, per the earlier decision.
+- Verification (Studio Edit, fresh clones): MeleeMotionTests 20,064 (adds rendered-width, crossing and overlap checks); rendered-path checks 128,378 (every horizontal-capable weapon at 1.2–6 studs, both sides: identical damage window, no jumps over 0.6 studs, smooth recovery; chains start at 120°); unchanged SpringComboTests 15,069, TravelAccuracyTests 169, WeaponBehaviorTests 19,905. Single-client Play with a tier-1 Frying Pan against 8 regular zombies: live sweeps spanned 232–242° with the pan 4.0 studs out, against 1.9–3.1 studs on the hit path. A screenshot showed the wide white arc through the pack. The console was clean.
+
+Not tested: multiple real clients, other weapons live in Play (covered by the module checks above), mobile.
+

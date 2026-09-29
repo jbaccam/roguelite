@@ -13,7 +13,7 @@ local V={}
 local Profiles={
  ['01']={mode='blade',inner=.05},
  ['02']={mode='chain',entry='payload',width=.55},
- ['03']={mode='blade',inner=.5,lifetime=.15},
+ ['03']={mode='blade',inner=.5,lifetime=.19},
  ['04']={mode='chain',entry='root',width=.7},
  ['05']={mode='blade',inner=.15},
  ['06']={mode='blade',inner=.2,heavy=true},
@@ -34,7 +34,8 @@ local function newRibbon(parent,profile,faceCamera,width)
  local a0=Instance.new('Attachment');a0.Name='SwingA';a0.Parent=carrier
  local a1=Instance.new('Attachment');a1.Name='SwingB';a1.Parent=carrier
  local trail=Instance.new('Trail');trail.Name='SwingTrail';trail.Attachment0=a0;trail.Attachment1=a1
- trail.FaceCamera=faceCamera;trail.Lifetime=profile.lifetime or (profile.heavy and .2 or .17)
+ -- Long enough that most of the wide rendered arc shows at once.
+ trail.FaceCamera=faceCamera;trail.Lifetime=profile.lifetime or (profile.heavy and .25 or .22)
  trail.MinLength=.04;trail.LightEmission=.35;trail.LightInfluence=.15;trail.Enabled=false
  local tint=profile.color or K.White
  trail.Color=ColorSequence.new(tint,tint:Lerp(Color3.fromRGB(232,240,255),.5))
@@ -90,8 +91,10 @@ function V.mount(folder)
   local frame=CFrame.lookAt(base,base+direction.Unit)
   local side=info.side or 1
   local diagonal=info.style=='Diagonal'
-  local from=math.rad((diagonal and -60 or -100)*side)
-  local to=math.rad((diagonal and 40 or 100)*side)
+  -- Horizontal crescents follow the wider rendered sweep (WeaponMotion.VisualSweepHalfAngle).
+  local half=Motion.VisualSweepHalfAngle-5
+  local from=math.rad((diagonal and -60 or -half)*side)
+  local to=math.rad((diagonal and 40 or half)*side)
   local radius=math.clamp(reach*.82,3,11)
   K.ring(folder,frame,{segments=12,from=from,to=to,radius0=radius*.9,radius1=radius*1.06,
    width=math.clamp(reach*.24,1,2.1),rim=HEAVY_RIM,reveal=math.max(.06,(Motion.SwingHitEnd-Motion.SwingHitStart)/(info.rate or 1)),

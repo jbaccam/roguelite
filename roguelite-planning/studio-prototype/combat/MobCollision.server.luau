@@ -20,5 +20,7 @@ local function player(p)
  if p.Character then bind(p.Character,'RoguelitePlayers') end
 end
 Players.PlayerAdded:Connect(player);for _,p in Players:GetPlayers() do player(p) end
-Tags:GetInstanceAddedSignal('RogueliteZombie'):Connect(function(m) bind(m,'RogueliteZombies') end)
-for _,m in Tags:GetTagged('RogueliteZombie') do bind(m,'RogueliteZombies') end
+-- Lobby practice dummies are solid scenery; players must not walk through them.
+local function mob(m) if not m:GetAttribute('LobbyDummy') then bind(m,'RogueliteZombies') end end
+Tags:GetInstanceAddedSignal('RogueliteZombie'):Connect(mob)
+for _,m in Tags:GetTagged('RogueliteZombie') do mob(m) end

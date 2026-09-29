@@ -26,14 +26,23 @@ function M.slam(age)
     end
     return poses
 end
+-- Regular and baby zombies hold both arms straight out while chasing. `reach`
+-- (0..1) fades between hanging arms and that reach; the mutant keeps its hunch.
+-- 92 deg offsets the 9 deg forward torso lean so the arms read level in world.
+local REACH_SHOULDER,REACH_ELBOW=92,8
+local function mix(a,b,t) return a+(b-a)*t end
 function M.pose(kind,phase,stride,reach,clock,attackAge,attackImpact,attackRecovery)
     if kind=='Mutant' and attackAge and attackAge>=0 and attackAge<=1 then return M.slam(attackAge) end
     local step=math.sin(phase);local bounce=math.cos(phase*2);local idle=math.sin(clock*2.1)*.012
     local poses={};local mutant=kind=='Mutant';local baby=kind=='Baby'
+    reach=mutant and 0 or math.clamp(reach or 0,0,1)
     for _,side in {'Left','Right'} do
         local s=side=='Left' and 1 or -1;local wave=step*s
-        poses[side..'Shoulder']=cf((mutant and 25 or baby and 16 or 12)-wave*(mutant and 15 or 24)*stride,0,s*-4,wave*.025*stride)
-        poses[side..'Elbow']=cf((mutant and 12 or 16)+math.max(0,wave)*8*stride)
+        -- Reaching arms keep a small bob that still opposes the same-side leg.
+        local hang=(mutant and 25 or baby and 16 or 12)-wave*(mutant and 15 or 24)*stride
+        local out=REACH_SHOULDER-wave*6*stride
+        poses[side..'Shoulder']=cf(mix(hang,out,reach),0,s*mix(-4,3,reach),wave*.025*stride)
+        poses[side..'Elbow']=cf(mix((mutant and 12 or 16)+math.max(0,wave)*8*stride,REACH_ELBOW+math.sin(phase-.4)*s*2*stride,reach))
         poses[side..'Wrist']=cf(mutant and -8 or -5)
         poses[side..'Hip']=cf((mutant and 5 or 6)+wave*(mutant and 22 or 31)*stride)
         poses[side..'Knee']=cf((mutant and -8 or -12)-math.max(0,-wave)*(mutant and 24 or 34)*stride)
@@ -47,10 +56,13 @@ function M.pose(kind,phase,stride,reach,clock,attackAge,attackImpact,attackRecov
         local anticipation=math.clamp(attackAge/(impact*.7),0,1)
         local strike=math.clamp((attackAge-impact*.7)/(impact*.3),0,1)
         local relax=smooth(math.clamp((attackAge-impact)/(recovery-impact),0,1))
-        local arm=(12-38*smooth(anticipation)+110*strike)*(1-relax)+12*relax
+        -- Pull back from the rest arm, swipe forward, settle back to rest.
+        local rest=mix(12,REACH_SHOULDER,reach);local pulled=smooth(anticipation)
+        local arm=(rest*(1-pulled)-26*pulled+110*strike)*(1-relax)+rest*relax
+        local elbow=mix(16,REACH_ELBOW,reach)
         poses.RightShoulder=cf(arm,-10*(1-relax),-7)
-        poses.RightElbow=cf(16+22*anticipation*(1-strike)*(1-relax))
-        poses.LeftShoulder=cf(20,0,6);poses.LeftElbow=cf(25)
+        poses.RightElbow=cf(elbow+22*anticipation*(1-strike)*(1-relax))
+        poses.LeftShoulder=cf(mix(20,REACH_SHOULDER,reach),0,mix(6,3,reach));poses.LeftElbow=cf(mix(25,REACH_ELBOW,reach))
         poses.Waist=cf(-9-9*strike*(1-relax),-12*(anticipation-2*strike)*(1-relax))
     end
     return poses

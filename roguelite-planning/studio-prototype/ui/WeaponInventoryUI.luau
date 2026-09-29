@@ -116,7 +116,7 @@ function I.new(player,helpers,refresh)
    I.preview(card,templates:FindFirstChild(d.id),12,6,cardW-24,104)
    label(card,'Name',d.name,8,110,cardW-16,36,20)
    label(card,'Stats',d.kind..'  ·  '..d.damage..' damage\n'..d.cooldown..'s cooldown',8,148,cardW-16,38,14)
-   button(card,'Equip','Equip '..T.Roman[self.tier]..' → '..self.selected,10,188,cardW-20,34,function() combat.EquipWeapon:FireServer(self.selected,d.id,self.tier) end,true).Caption.TextSize=17
+   button(card,'Equip','Equip '..T.Roman[self.tier]..' → '..self.selected,10,188,cardW-20,34,function() T.sound('ui_equip');combat.EquipWeapon:FireServer(self.selected,d.id,self.tier) end,true).Caption.TextSize=17
   end
   return math.max(slotsHeight,top+92+math.ceil(#Catalog.List/columns)*(cardH+gap))
  end

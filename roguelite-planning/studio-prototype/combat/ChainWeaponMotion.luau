@@ -120,14 +120,16 @@ function C.hitBoxes(rig,pose,age)
  local _,boxes=C.sample(rig,age,pose)
  return boxes
 end
-function C.pose(rig,root,direction,aim,age,reach,style,side)
+-- `visual` (client renderer only) widens the sweep like WeaponMotion.pose.
+function C.pose(rig,root,direction,aim,age,reach,style,side,visual)
  local center=root.Position+Vector3.yAxis*.25
  local delta=direction or (aim and aim-center) or root.LookVector
  delta=Vector3.new(delta.X,0,delta.Z)
  if delta.Magnitude<.01 then delta=Motion.frame(root).LookVector end
  local t=math.clamp((age-Motion.SwingHitStart)/(Motion.SwingHitEnd-Motion.SwingHitStart),0,1)
  side=side or 1
- local heading=CFrame.lookAt(center,center+delta.Unit)*CFrame.Angles(0,math.rad((-105+210*smooth(t))*side),0)
+ local half=visual and Motion.VisualSweepHalfAngle or 105
+ local heading=CFrame.lookAt(center,center+delta.Unit)*CFrame.Angles(0,math.rad((-half+2*half*smooth(t))*side),0)
  local frames=C.sample(rig,age)
  local held=frames[rig.heldIndex]:PointToWorldSpace(rig.heldOffset)
  local distance=math.max(.85,reach-rig.fullReach-.12)

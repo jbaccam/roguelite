@@ -3,6 +3,9 @@ M.SwingReferenceCooldown=.65
 M.SwingHitStart=.12
 M.SwingHitEnd=.46
 M.SwingDuration=.9
+-- Rendered horizontal cuts sweep wider than the hit path (+/-105 deg). Both stay
+-- centred on the target, so the visible blade crosses it when the hit lands.
+M.VisualSweepHalfAngle=120
 -- Shared by rendered motion and authoritative hit sampling. Unlisted weapons
 -- retain their horizontal cut. Thrust also works with normalized +Y sword tips.
 M.MeleeStyles={['03']='Diagonal',['19']='Thrust',['16']='Slap',['20']='Downward',['26']='Downward'}
@@ -78,7 +81,8 @@ function M.swingReturn(cut,idle,age,state,id,style)
  end
  return CFrame.new(M.returnPosition(cut.Position,idle.Position,age))*rotation
 end
-function M.pose(root,radius,slot,aim,start,now,kind,id,attackDirection,attackRange,boundsSize,boundsCenter,attackStyle,attackSide)
+-- `visual` is set only by the client renderer; server hit sampling omits it.
+function M.pose(root,radius,slot,aim,start,now,kind,id,attackDirection,attackRange,boundsSize,boundsCenter,attackStyle,attackSide,visual)
  local origin=M.origin(root,radius,slot)
  -- Every idle weapon faces the character's twelve o'clock, regardless of slot.
  local forward=M.frame(root).LookVector
@@ -99,7 +103,10 @@ function M.pose(root,radius,slot,aim,start,now,kind,id,attackDirection,attackRan
   local t=math.clamp((age-M.SwingHitStart)/(M.SwingHitEnd-M.SwingHitStart),0,1)
   local side=attackSide or 1
   local sweep=t*t*(3-2*t)
-  local heading=CFrame.lookAt(center,center+cutDirection.Unit)*CFrame.Angles(0,math.rad((-105+210*sweep)*side),0)
+  local style=attackStyle or M.meleeStyle(id)
+  local wide=visual and style=='Horizontal'
+  local half=wide and M.VisualSweepHalfAngle or 105
+  local heading=CFrame.lookAt(center,center+cutDirection.Unit)*CFrame.Angles(0,math.rad((-half+2*half*sweep)*side),0)
   local sign=headSign(id)
   local reach=attackRange or (id=='32' and 8.5 or 6)
   local tip=boundsSize and boundsSize.Y*.5+(boundsCenter or Vector3.zero).Y*sign or 2.69
@@ -111,12 +118,14 @@ function M.pose(root,radius,slot,aim,start,now,kind,id,attackDirection,attackRan
   if aim then
    local offset=aim-center
    local distance=Vector3.new(offset.X,0,offset.Z).Magnitude
-   peak=math.min(peak,math.max(.35,distance-tip*.65))
+   -- Rendered: sit farther out, keeping the inner quarter of the blade on the target.
+   local length=boundsSize and boundsSize.Y or tip*2
+   peak=math.min(peak,math.max(.35,wide and distance+(length-tip)-length*.25 or distance-tip*.65))
   end
-  local pulse=math.min(.65*reach/8.5,peak*.25)
+  -- A softer rendered pulse keeps the wide arc round instead of pinched at the ends.
+  local pulse=math.min(.65*reach/8.5,peak*.25)*(wide and .4 or 1)
   local extension=peak-pulse*(1-math.sin(t*math.pi))
   local cut=heading*CFrame.new(0,.12,-extension)*CFrame.Angles(-math.pi/2*sign,0,0)*CFrame.Angles(0,bladeTwist(id)*side,0)
-  local style=attackStyle or M.meleeStyle(id)
   local targetFrame=CFrame.lookAt(center,center+cutDirection.Unit)
   if style=='Diagonal' then
    -- Descend from target-relative upper right to lower left. Limit vertical

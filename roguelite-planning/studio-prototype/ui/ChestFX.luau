@@ -29,6 +29,9 @@ FX.Sounds={
  Chime=9116394545,  -- Magic Glows Soft Clusters Of Chiming Hits 1
  Burst=119620526223720, -- "Explosion Prize" (Creator Store)
  Legendary=128460880879263, -- "Rare Achievement" (Creator Store)
+ -- Wood-crack taps for the two shakes, trialled on the Gold (VIP free daily) chest only.
+ -- User-supplied Pixabay file split and made cartoony by audio/process_audio.py.
+ GoldShake1=135215998961802,GoldShake2=117464991289206,
 }
 
 local WHITE=Color3.new(1,1,1)
@@ -41,6 +44,7 @@ end
 function FX.play(id,volume,pitch)
  if not id then return end
  local s=Instance.new('Sound');s.SoundId='rbxassetid://'..id;s.Volume=volume or .5;s.PlaybackSpeed=pitch or 1
+ s.SoundGroup=game:GetService('SoundService'):FindFirstChild('RogueliteSFX') -- Settings SFX slider
  s.Parent=game:GetService('SoundService');game:GetService('SoundService'):PlayLocalSound(s)
  task.delay(6,function() s:Destroy() end)
 end
