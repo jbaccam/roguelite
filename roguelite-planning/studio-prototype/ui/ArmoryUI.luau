@@ -36,8 +36,8 @@ local TRAITS = {
 	shots = "Fires a burst of shots.",
 }
 
--- Armor is worn as four pieces; 2 and 4 pieces of one set give set bonuses. Pets hatch from pet
--- eggs. Neither exists yet, so their slots and tabs explain what is coming.
+-- Armor is worn as four pieces; 2 and 4 pieces of one set give set bonuses. Pets come from the Pet
+-- Chest (pets only). Neither exists yet, so their slots and tabs say what is coming.
 local ARMOR_PIECES = {
 	{ id = "Helmet", label = "HELMET", plural = "HELMETS" },
 	{ id = "Chest", label = "CHEST", plural = "CHESTPLATES" },
@@ -72,6 +72,12 @@ local function describe(w)
 		table.insert(out, "Explodes on impact.")
 	end
 	return table.concat(out, " ")
+end
+
+-- "RARE" in its rarity colour (ChestConfig.RarityColor), for RichText labels.
+local function rarityTag(id)
+	local rarity = Chests.RarityOf[id] or "Common"
+	return '<font color="' .. T.hex(Chests.RarityColor[rarity]) .. '">' .. string.upper(rarity) .. "</font>"
 end
 
 -- What each tier adds over the one before, from the catalogue's per-tier tables.
@@ -316,21 +322,27 @@ function A.new(player, opts)
 			end
 		else
 			RunSetup.lock(card, CARD - 40, 12, 26)
-			centred(T.text(card, "Locked", "NOT OWNED", 12, CARD_H - 38, CARD - 24, 20, 15, C.dim))
+			local locked = centred(T.text(card, "Locked", "NOT OWNED", 12, CARD_H - 38, CARD - 24, 20, 15, C.dim))
+			if chosen then
+				-- Dark text on the lime "selected" fill; grey would disappear into it.
+				n.TextColor3, locked.TextColor3 = C.ink, C.ink
+				n.TextStrokeTransparency, locked.TextStrokeTransparency = 1, 1
+				art.ImageTransparency = 0.3
+			end
 		end
 		return card
 	end
 
-	-- "Coming" panel for tabs whose items are not in the game yet.
+	-- "Coming" panel for tabs whose items are not in the game yet: a title, one line, a few facts.
 	local function comingPanel(parent, title, body, lines)
-		local h = 150 + #lines * 44
+		local h = 118 + #lines * 44
 		local box = T.panel(parent, "Coming", 0, 0, LEFT_W - 60, h, "inset")
 		local t = T.label(box, "Title", title, 20, 18, LEFT_W - 100, 40, 30)
 		t.TextXAlignment = Enum.TextXAlignment.Left
-		local b = T.text(box, "Body", body, 20, 62, LEFT_W - 100, 70, 18, C.muted)
+		local b = T.text(box, "Body", body, 20, 62, LEFT_W - 100, 30, 18, C.muted)
 		b.TextYAlignment = Enum.TextYAlignment.Top
 		for i, line in lines do
-			local row = T.panel(box, "Row" .. i, 20, 138 + (i - 1) * 44, LEFT_W - 100, 38, "panel")
+			local row = T.panel(box, "Row" .. i, 20, 104 + (i - 1) * 44, LEFT_W - 100, 38, "panel")
 			local l = T.label(row, "Text", line, 16, 2, LEFT_W - 132, 34, 20, C.cream)
 			l.TextXAlignment = Enum.TextXAlignment.Left
 		end
@@ -457,30 +469,20 @@ function A.new(player, opts)
 				state.kind, state.item = "weapon", weapon
 			end
 		elseif state.tab == "Pets" then
-			y = comingPanel(
-				grid,
-				"Pets are coming",
-				"Pets hatch from pet eggs and follow you into runs. Your pet slot stays empty until the first eggs arrive.",
-				{
-					"Hatch from pet eggs (pets only)",
-					"One pet follows you into each run",
-					"Copies level it up, like weapons",
-				}
-			) + 10
+			y = comingPanel(grid, "Pets are coming", "Pets come from the Pet Chest and follow you into runs.", {
+				"Each pet has its own strong suit",
+				"One pet follows you at a time",
+				"Copies level it up, like weapons",
+			}) + 10
 			if not state.item then
 				state.kind, state.item = "pet", "Pet"
 			end
 		else
-			local lines = {}
-			for _, piece in ARMOR_PIECES do
-				table.insert(lines, piece.plural .. "  ·  none yet")
-			end
-			y = comingPanel(
-				grid,
-				"Armor is coming",
-				"Wear a helmet, chestplate, leggings and boots. 2 pieces of one set give a set bonus, and all 4 give its signature perk.",
-				lines
-			) + 10
+			y = comingPanel(grid, "Armor is coming", "Armor pieces come from armor chests.", {
+				"Helmet, chestplate, leggings and boots",
+				"2 pieces of one set: a set bonus",
+				"All 4 pieces: the set's special perk",
+			}) + 10
 			if not state.item then
 				state.kind, state.item = "armor", "Helmet"
 			end
@@ -503,9 +505,13 @@ function A.new(player, opts)
 		return b
 	end
 	local function emptySlot(b, chosen)
-		centred(T.label(b, "Plus", "+", 0, 14, SLOT, 70, 64, C.dim)).Size = UDim2.new(1, 0, 0, 80)
-		centred(T.text(b, "Soon", "SOON", 10, SLOT - 34, SLOT - 20, 22, 15, C.dim))
+		-- Dark text on the lime "selected" fill; grey on the charcoal one.
+		local ink = chosen and C.ink or C.dim
+		local plus = centred(T.label(b, "Plus", "+", 0, 14, SLOT, 70, 64, ink))
+		plus.Size = UDim2.new(1, 0, 0, 80)
+		local soon = centred(T.text(b, "Soon", "SOON", 10, SLOT - 34, SLOT - 20, 22, 15, ink))
 		if chosen then
+			plus.TextStrokeTransparency, soon.TextStrokeTransparency = 1, 1
 			T.setPrimary(b, true)
 		end
 	end
@@ -643,7 +649,7 @@ function A.new(player, opts)
 			WeaponIcons[w.id],
 			rec and tier,
 			w.name,
-			"WEAPON  ·  " .. string.upper(w.home) .. "  ·  " .. string.upper(w.kind),
+			rarityTag(w.id) .. "  ·  " .. string.upper(w.home) .. "  ·  " .. string.upper(w.kind),
 			rec and T.Tier[tier] or C.white
 		)
 		local desc = T.text(panel, "Description", describe(w), 24, 168, RIGHT_W - 48, 66, 19, C.muted)
@@ -741,16 +747,19 @@ function A.new(player, opts)
 		else
 			local lk = T.label(panel, "NotOwned", "NOT OWNED", 24, 410, 300, 34, 28, C.dim)
 			lk.TextXAlignment = Enum.TextXAlignment.Left
+			local rarity = Chests.RarityOf[w.id] or "Common"
 			T.text(
 				panel,
 				"How",
-				"A "
-					.. (Chests.RarityOf[w.id] or "Common")
-					.. " weapon. It drops from every chest; better chests drop rarer weapons more often. One copy unlocks it; more copies raise its starting tier.",
+				"One copy from a chest unlocks it. "
+					.. (
+						rarity == "Common" and "Every chest has Common weapons."
+						or ("Better chests find " .. rarity .. " weapons more often.")
+					),
 				24,
 				448,
 				RIGHT_W - 48,
-				60,
+				50,
 				18,
 				C.muted
 			)
@@ -761,11 +770,11 @@ function A.new(player, opts)
 		end
 	end
 
-	local function drawComingDetail(panel, title, sub, body)
-		header(panel, "shoulders", nil, title, sub, C.white)
-		local b = T.text(panel, "Body", body, 24, 168, RIGHT_W - 48, 120, 19, C.muted)
+	-- Empty armor/pet slot: what fills it and one thing the left panel doesn't already say.
+	local function drawComingDetail(panel, icon, title, sub, body)
+		header(panel, icon, nil, title, sub, C.white)
+		local b = T.text(panel, "Body", body, 24, 168, RIGHT_W - 48, 90, 19, C.muted)
 		b.TextYAlignment = Enum.TextYAlignment.Top
-		T.label(panel, "Empty", "EMPTY", 24, 300, RIGHT_W - 48, 40, 30, C.dim).TextXAlignment = Enum.TextXAlignment.Left
 	end
 
 	local function drawClassDetail(panel, class)
@@ -832,9 +841,10 @@ function A.new(player, opts)
 		elseif state.kind == "pet" then
 			drawComingDetail(
 				panel,
+				"chest",
 				"PET",
-				"PET SLOT  ·  COMING WITH PET EGGS",
-				"Pets are not in the game yet. When they arrive, one pet follows you into each run, and extra copies level it up."
+				"EMPTY SLOT  ·  FROM THE PET CHEST",
+				"Every pet helps in its own way: one fetches crystals, one heals you and your team, others knock enemies back or slow them down."
 			)
 		else
 			local piece = ARMOR_PIECES[1]
@@ -845,9 +855,10 @@ function A.new(player, opts)
 			end
 			drawComingDetail(
 				panel,
+				"shoulders",
 				piece.label,
-				"ARMOR PIECE  ·  COMING WITH ARMOR CHESTS",
-				"Armor pieces drop from armor chests. Wear 2 pieces of one set for its set bonus and all 4 for its signature perk. Copies upgrade a piece, like weapons."
+				"EMPTY SLOT  ·  FROM ARMOR CHESTS",
+				"Copies upgrade a piece from Tier I to Tier IV, like weapons. The rarer the set, the cooler it looks."
 			)
 		end
 		slideIn(right, UDim2.new(1, 16, 0.5, 30), UDim2.new(1, -24, 0.5, 30))
@@ -940,7 +951,7 @@ function A.new(player, opts)
 			WeaponIcons[w.id],
 			rec and tier,
 			w.name,
-			"WEAPON  ·  TIER " .. (rec and (tier .. " / 4") or "NOT OWNED"),
+			rarityTag(w.id) .. "  ·  TIER " .. (rec and (tier .. " / 4") or "NOT OWNED"),
 			rec and T.Tier[tier] or C.white
 		)
 		local st = weaponAt(w, math.max(tier, 1))
