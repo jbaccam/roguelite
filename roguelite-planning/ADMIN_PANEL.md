@@ -17,7 +17,7 @@ It works in Studio and in the published game, but only for listed developer acco
 | Question | Decision |
 |---|---|
 | Where it works | Studio **and** the published game, only for developer accounts. |
-| Rewards | A run where the panel was used is a **test run**: no emeralds, wins, best waves or leaderboard entries, for anyone in that run. |
+| Rewards | A run where the panel was used is a **test run**: no emeralds or wins for the whole run, and no leaderboard kills or best waves from the first admin action on, for anyone in that run. |
 | Default when entering an arena from the panel | **Sandbox (no waves).** |
 
 ## Who is a developer
@@ -71,7 +71,7 @@ It works in Studio and in the published game, but only for listed developer acco
 ## Test runs (no rewards)
 
 - **What gets marked:** the first admin action of a run, outside Studio, sets `RogueliteRunState.AdminTestRun = true`. In Studio, profiles are in-memory anyway, but the flag is set there too, so the code path gets tested.
-- **What a test run does:** while it's set, reward code grants nothing. That covers emeralds, wins, first-win, best waves and leaderboard submissions. It's cleared when a new run starts (`Shop.resetRun`).
+- **What a test run does:** rewards are blocked for the whole run: no emeralds, wins or first-win, including for a player who was already down when the flag was set (their record keeps its own test status, so a give-up after a reset still pays nothing). Leaderboard kills and best waves are blocked "from the first admin action on", because stats earned earlier in that run are already recorded live. The flag is cleared when a new run starts (`Shop.resetRun`), including when the last player leaves the server.
 - **Where it's enforced:** today's reward entry point is `ProfileService.recordRun` (called from `RogueliteMeta`), plus `LeaderboardService`'s run submissions. Plan B's run-end rewards must check the same flag.
 - **What players see:** the HUD shows a small "TEST RUN" tag while the flag is set, so nobody confuses it with a real run.
 

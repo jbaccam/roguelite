@@ -50,6 +50,8 @@ end
 local MAP='PineValley'
 local RunSetupRules=require(game.ReplicatedStorage:WaitForChild('RunSetupRules'))
 local down,revivesUsed={},{}
+-- ShopService (required above) creates this folder, so looking it up here cannot deadlock.
+local runState=game.ReplicatedStorage:WaitForChild('RogueliteRunState')
 -- Harder difficulties pay more emeralds; wins and best waves are saved per map and difficulty.
 local function difficulty() return combat:GetAttribute('RunDifficulty') or 'Normal' end
 local function emeraldsFor(wave) return RunSetupRules.runEmeralds(RunSetupRules.MapIndex[MAP],difficulty(),wave) end
@@ -65,7 +67,9 @@ local function onDied(p,character)
  if not Shop.states[p] or down[p] then return end
  local root=character:FindFirstChild('HumanoidRootPart')
  local s=Shop.states[p]
- down[p]={position=root and root.Position or Vector3.zero,wave=Shop.wave}
+ -- test: this player went down during a test run. It stays true even if resetRun clears the run flag
+ -- before they give up, so a later give-up still pays nothing.
+ down[p]={position=root and root.Position or Vector3.zero,wave=Shop.wave,test=Admin.isTestRun()}
  p:SetAttribute('HoldRespawn',true)
  -- A test run (the admin panel was used) pays nothing, so the death screen shows 0 emeralds.
  p:SetAttribute('DeathInfo',Http:JSONEncode({wave=Shop.wave,level=s.level,emeralds=Admin.isTestRun() and 0 or emeraldsFor(Shop.wave),map='Pine Valley',
@@ -73,6 +77,15 @@ local function onDied(p,character)
  p:SetAttribute('RunDown',true)
  if livingInRun()==0 then Shop.pause() end
 end
+-- The flag can be set after a player went down: their death screen shows 0 and their give-up pays nothing.
+runState:GetAttributeChangedSignal('AdminTestRun'):Connect(function()
+ if runState:GetAttribute('AdminTestRun')~=true then return end
+ for p,d in down do
+  d.test=true
+  local ok,info=pcall(function() return Http:JSONDecode(p:GetAttribute('DeathInfo')) end)
+  if ok and type(info)=='table' then info.emeralds=0;p:SetAttribute('DeathInfo',Http:JSONEncode(info)) end
+ end
+end)
 local function watch(p)
  p.CharacterAdded:Connect(function(character)
   local h=character:WaitForChild('Humanoid',10)
@@ -118,7 +131,7 @@ local function revive(p)
 end
 local function giveUp(p)
  local d=down[p];if not d then return false end
- Profiles.recordRun(p,RunSetupRules.runKey(MAP,difficulty()),math.max(0,d.wave-1),emeraldsFor(d.wave))
+ if not d.test then Profiles.recordRun(p,RunSetupRules.runKey(MAP,difficulty()),math.max(0,d.wave-1),emeraldsFor(d.wave)) end
  clearDown(p);revivesUsed[p]=0
  if livingInRun()==0 then Shop.resetRun();for q in revivesUsed do revivesUsed[q]=0 end else Shop.resetPlayer(p) end
  p:SetAttribute('HoldRespawn',false) -- AvatarNormalizer respawns normally

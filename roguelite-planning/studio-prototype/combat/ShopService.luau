@@ -401,7 +401,8 @@ require(combat.ZombieDeath).onDeath=function(npc,position)
  Shards.spawn(npc,position)
  Hearts.roll(npc,position)
 end
-Players.PlayerRemoving:Connect(function(p) S.states[p]=nil;S.startingWeapons[p]=nil;task.defer(beginWave) end)
+-- The last player leaving resets the run, so no wave, phase or test-run flag outlives an empty server.
+Players.PlayerRemoving:Connect(function(p) S.states[p]=nil;S.startingWeapons[p]=nil;if next(S.states)==nil then S.resetRun() end;task.defer(beginWave) end)
 -- Any hammer boss (scheduled or spawned) holds the wave open until it is gone,
 -- then a short grace lets players sweep up its crystal shower.
 local BOSS_LOOT_GRACE=5
