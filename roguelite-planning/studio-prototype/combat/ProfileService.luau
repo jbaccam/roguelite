@@ -74,6 +74,7 @@ function P.load(player)
  for kind,n in data.chests do local k=Chests.Legacy[kind] or kind;if Chests.ById[k] then chests[k]=(chests[k] or 0)+n end end
  data.chests=chests
  if data.pity.Legendary==nil then data.pity={Legendary=0} end
+ if data.pity.Godly==nil then data.pity.Godly=0 end -- Godly pity (2026-09-28); old saves start at 0
  data.picks={}
  -- Keys were dropped: old saves convert them to earned emeralds once.
  if type(data.keys)=='number' then data.emeralds+=math.max(0,data.keys)*Money.EmeraldsPerOldKey;data.keys=nil end
@@ -137,7 +138,7 @@ end
 function P.addDrop(d,id) return P.addCopies(d,id,1) end
 
 local rng=Random.new()
-local RANK={Common=1,Rare=2,Epic=3,Legendary=4}
+local RANK={Common=1,Rare=2,Epic=3,Legendary=4,Godly=5}
 -- Buy chests into the inventory. Where paid random items are restricted, only emeralds earned
 -- in play can pay for chests.
 function P.buyChest(player,kind,count,restricted)
@@ -166,9 +167,7 @@ function P.openChest(player,kind,count)
  d.chests[kind]-=n;if d.chests[kind]<=0 then d.chests[kind]=nil end
  local tally={}
  for _=1,n do
-  local forced=chest.pity and (d.pity.Legendary or 0)>=Chests.LegendaryPity-1
-  local counts=Chests.rollCounts(kind,rng,forced)
-  if chest.pity then d.pity.Legendary=counts.Legendary>0 and 0 or (d.pity.Legendary or 0)+1 end
+  local counts=Chests.open(kind,rng,d.pity) -- rolls with both pity counters and updates them
   for _,r in Chests.Rarities do Chests.group(r,counts[r],rng,tally) end
  end
  local results={}
@@ -238,15 +237,12 @@ function P.spend(player,field)
  d[field]-=1;P.publish(player);return true
 end
 
--- Daily deals: same 5 deals for a player all day, new ones at UTC midnight.
+-- Daily deals: same 5 deals for a player all day, new ones at UTC midnight. Never Godly.
 local function dealList(userId)
  local day=Money.day();local r=Random.new(day*100003+userId%100003)
  local list={{kind='Emeralds',amount=Money.DailyFreeEmeralds,currency='Free',price=0}}
- for _=2,Money.DailyDealSlots do
-  local w=Weapons.List[r:NextInteger(1,#Weapons.List)]
-  local amount=r:NextInteger(2,5)
-  table.insert(list,{kind='Weapon',id=w.id,amount=amount,currency='Emeralds',price=amount*15})
- end
+ -- Each paid slot: a rarity, then a weapon of it, priced per copy by rarity (ChestConfig.rollDeal).
+ for _=2,Money.DailyDealSlots do table.insert(list,Chests.rollDeal(r)) end
  return list,day
 end
 local function dailyState(d)
