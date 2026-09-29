@@ -40,6 +40,8 @@ task.spawn(function()
  for _,image in images do image:Destroy() end
 end)
 local view=UI.mount(playerGui,RunService:IsStudio())
+-- Match servers never run the lobby HUD; warm the shop, inventory and chest icons here too.
+require(ReplicatedStorage:WaitForChild("AssetPreloader")).start(player)
 task.spawn(function()
  for _=1,10 do
   if pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health,false) end) then break end

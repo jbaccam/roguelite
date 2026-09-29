@@ -1,5 +1,6 @@
--- Background asset loading for the lobby, so windows, scroll lists and the run-setup backdrop
--- never pop in. Started once from the lobby HUD entry script; never blocks the HUD.
+-- Background asset loading, so windows, scroll lists and the run-setup backdrop never pop in.
+-- Started once from the lobby HUD entry script, and from the arena HUD on match servers (which
+-- never run the lobby HUD); never blocks either HUD.
 --   1. Every UI image named in the shared UI/catalog modules is requested and then kept
 --      resident by a tiny, nearly transparent label. Destroying preload labels lets the engine
 --      drop the texture again, which is what made icons appear late while scrolling.
@@ -15,6 +16,7 @@ local SOURCES = {
 	{ "RogueliteUI" },
 	{ "WeaponInventoryUI" },
 	{ "StoreFX" },
+	{ "ChestFX" },
 	{ "RogueliteCombat", "ShopCatalog" },
 	{ "RogueliteCombat", "LevelUpCatalog" },
 	{ "RogueliteCombat", "ChestConfig" },
@@ -110,8 +112,11 @@ function P.start(player)
 	end
 	started = true
 	task.spawn(warmImages, player)
-	task.spawn(warmIslands)
-	task.spawn(warmArmory)
+	-- The map-select islands and the Armory hall only exist behind lobby screens.
+	if RS:GetAttribute("ServerRole") ~= "Match" then
+		task.spawn(warmIslands)
+		task.spawn(warmArmory)
+	end
 end
 
 return P
