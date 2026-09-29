@@ -1,0 +1,33 @@
+{
+  "Body": {
+    "triangles": 6460,
+    "vertices": 3316,
+    "faces": 3309,
+    "under_roblox_20k": true
+  },
+  "Eyes": {
+    "triangles": 1248,
+    "vertices": 628,
+    "faces": 672,
+    "under_roblox_20k": true
+  },
+  "ClawR": {
+    "triangles": 2316,
+    "vertices": 1176,
+    "faces": 1213,
+    "under_roblox_20k": true
+  },
+  "ClawL": {
+    "triangles": 2428,
+    "vertices": 1256,
+    "faces": 1317,
+    "under_roblox_20k": true
+  },
+  "Legs": {
+    "triangles": 7216,
+    "vertices": 3688,
+    "faces": 3797,
+    "under_roblox_20k": true
+  },
+  "total_triangles": 19668
+}

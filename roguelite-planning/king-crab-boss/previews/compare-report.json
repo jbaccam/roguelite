@@ -1,0 +1,251 @@
+{
+  "silhouette_iou": 0.7967,
+  "silhouette_iou_excluding_crusher": 0.8272,
+  "silhouette_iou_excluding_both_claws": 0.9131,
+  "ref_pixels": 556172,
+  "render_pixels": 496425,
+  "missing_px": 89418,
+  "extra_px": 29671,
+  "colour_probes": {
+    "red_Body": {
+      "reference": {
+        "pixels": 20125,
+        "srgb_of_linear_mean": [
+          229,
+          95,
+          71
+        ]
+      },
+      "render": {
+        "pixels": 24310,
+        "srgb_of_linear_mean": [
+          228,
+          95,
+          71
+        ]
+      },
+      "ratio_ref_over_render": [
+        1.017,
+        1.001,
+        1.001
+      ],
+      "worst_channel_pct": 1.7
+    },
+    "red_ClawR": {
+      "reference": {
+        "pixels": 108998,
+        "srgb_of_linear_mean": [
+          181,
+          71,
+          58
+        ]
+      },
+      "render": {
+        "pixels": 90903,
+        "srgb_of_linear_mean": [
+          181,
+          71,
+          58
+        ]
+      },
+      "ratio_ref_over_render": [
+        1.002,
+        1.002,
+        1.003
+      ],
+      "worst_channel_pct": 0.3
+    },
+    "red_ClawL": {
+      "reference": {
+        "pixels": 37442,
+        "srgb_of_linear_mean": [
+          200,
+          81,
+          64
+        ]
+      },
+      "render": {
+        "pixels": 24510,
+        "srgb_of_linear_mean": [
+          200,
+          81,
+          64
+        ]
+      },
+      "ratio_ref_over_render": [
+        1.003,
+        1.001,
+        1.003
+      ],
+      "worst_channel_pct": 0.3
+    },
+    "red_Legs": {
+      "reference": {
+        "pixels": 29115,
+        "srgb_of_linear_mean": [
+          169,
+          69,
+          52
+        ]
+      },
+      "render": {
+        "pixels": 17591,
+        "srgb_of_linear_mean": [
+          171,
+          71,
+          53
+        ]
+      },
+      "ratio_ref_over_render": [
+        0.976,
+        0.959,
+        0.956
+      ],
+      "worst_channel_pct": 4.4
+    },
+    "beige_Body": {
+      "reference": {
+        "pixels": 13705,
+        "srgb_of_linear_mean": [
+          211,
+          164,
+          119
+        ]
+      },
+      "render": {
+        "pixels": 19874,
+        "srgb_of_linear_mean": [
+          211,
+          164,
+          119
+        ]
+      },
+      "ratio_ref_over_render": [
+        1.0,
+        1.001,
+        1.002
+      ],
+      "worst_channel_pct": 0.2
+    },
+    "beige_Belly": {
+      "reference": {
+        "pixels": 18641,
+        "srgb_of_linear_mean": [
+          152,
+          112,
+          76
+        ]
+      },
+      "render": {
+        "pixels": 17702,
+        "srgb_of_linear_mean": [
+          151,
+          112,
+          76
+        ]
+      },
+      "ratio_ref_over_render": [
+        1.002,
+        1.001,
+        1.001
+      ],
+      "worst_channel_pct": 0.2
+    },
+    "beige_ClawR": {
+      "reference": {
+        "pixels": 20404,
+        "srgb_of_linear_mean": [
+          218,
+          180,
+          142
+        ]
+      },
+      "render": {
+        "pixels": 21258,
+        "srgb_of_linear_mean": [
+          218,
+          180,
+          142
+        ]
+      },
+      "ratio_ref_over_render": [
+        1.001,
+        0.998,
+        0.998
+      ],
+      "worst_channel_pct": 0.2
+    },
+    "beige_ClawL": {
+      "reference": {
+        "pixels": 7828,
+        "srgb_of_linear_mean": [
+          200,
+          159,
+          124
+        ]
+      },
+      "render": {
+        "pixels": 1104,
+        "srgb_of_linear_mean": [
+          201,
+          159,
+          124
+        ]
+      },
+      "ratio_ref_over_render": [
+        0.995,
+        0.996,
+        0.995
+      ],
+      "worst_channel_pct": 0.5
+    },
+    "beige_Legs": {
+      "reference": {
+        "pixels": 6546,
+        "srgb_of_linear_mean": [
+          194,
+          153,
+          115
+        ]
+      },
+      "render": {
+        "pixels": 5151,
+        "srgb_of_linear_mean": [
+          194,
+          153,
+          115
+        ]
+      },
+      "ratio_ref_over_render": [
+        1.001,
+        1.004,
+        1.002
+      ],
+      "worst_channel_pct": 0.4
+    },
+    "eye": {
+      "reference": {
+        "pixels": 647,
+        "srgb_of_linear_mean": [
+          245,
+          218,
+          186
+        ]
+      },
+      "render": {
+        "pixels": 418,
+        "srgb_of_linear_mean": [
+          245,
+          218,
+          186
+        ]
+      },
+      "ratio_ref_over_render": [
+        1.007,
+        1.004,
+        1.004
+      ],
+      "worst_channel_pct": 0.7
+    }
+  }
+}

@@ -43,7 +43,10 @@ The user approved the themed rosters, requested ranged enemies for Frozen Pass a
 - **Hammer Zombie Boss:** Pine Valley's existing user-created boss direction replaces Ogre Warlord.
 - **Giant King Crab:** an enormous king crab, dramatically larger than players and regular crabs, with a broad body, long legs, and massive claws. It should dominate the arena visually while leaving navigable dodge space and readable attacks. Exact scale and attack kit still need testing.
 - **Pharaoh:** Desert boss; full attack kit remains to be designed.
-- **Frost Cyclops:** Frozen Pass boss; full attack kit remains to be designed.
+- **Frost Cyclops:** Frozen Pass boss. It never swings its club at players. Every attack drives the club (or a fist) into the ground, and the visual effects carry the attack. This keeps the animation count low. User direction, 2026-09-29:
+  - **Ground Slam:** the club comes down overhead and strikes the ground. A 360° frost shockwave rings out around the Cyclops and knocks players off their feet: a short knockdown/stagger that interrupts them. A ring warning shows on the ground during the windup. Start the radius near 10 studs (the Hammer boss's slam is 7) and tune in playtesting.
+  - **Ice Spikes:** the club is driven down in front of the Cyclops. A line of ice spikes erupts from the impact point and travels forward, one after another, reaching well past slam range. Start near 20–25 studs long and a few studs wide. A frost line on the ground warns of the path first, and the spikes lock their direction before they start.
+  - Both attacks spawn their effects from the club head's ground-contact point. Damage, knockdown and timing stay server-owned.
 - **Dragon:** Volcanic Crater boss; replaces the earlier undecided Dragon/Hydra slot. Full attack kit remains to be designed.
 
 ## Scope and implementation

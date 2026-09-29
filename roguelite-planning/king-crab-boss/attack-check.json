@@ -1,0 +1,119 @@
+{
+  "shut_angle_deg": {
+    "R": 0.89,
+    "L": 6.15
+  },
+  "windup_candidate": {
+    "R": 0,
+    "L": 2
+  },
+  "windup_pose": {
+    "R": {
+      "Coxa": [
+        16,
+        0,
+        -20
+      ],
+      "Merus": [
+        20,
+        0,
+        0
+      ],
+      "Carpus": [
+        -6,
+        0,
+        0
+      ],
+      "Propodus": [
+        22,
+        0,
+        0
+      ],
+      "Dactyl": [
+        30,
+        0,
+        0
+      ]
+    },
+    "L": {
+      "Coxa": [
+        20,
+        0,
+        0
+      ],
+      "Merus": [
+        12,
+        0,
+        0
+      ],
+      "Carpus": [
+        -14,
+        0,
+        0
+      ],
+      "Propodus": [
+        18,
+        0,
+        0
+      ],
+      "Dactyl": [
+        30,
+        0,
+        0
+      ]
+    }
+  },
+  "poses": {
+    "guard": {
+      "ClawR_vs_Body": 0,
+      "ClawR_vs_Eyes": 0,
+      "ClawR_vs_Legs": 0,
+      "ClawR_finger_vs_hand": 0,
+      "ClawL_vs_Body": 0,
+      "ClawL_vs_Eyes": 0,
+      "ClawL_vs_Legs": 0,
+      "ClawL_finger_vs_hand": 0
+    },
+    "windup": {
+      "ClawR_vs_Body": 0,
+      "ClawR_vs_Eyes": 0,
+      "ClawR_vs_Legs": 0,
+      "ClawR_finger_vs_hand": 0,
+      "ClawL_vs_Body": 0,
+      "ClawL_vs_Eyes": 0,
+      "ClawL_vs_Legs": 0,
+      "ClawL_finger_vs_hand": 0
+    },
+    "impact": {
+      "ClawR_vs_Body": 0,
+      "ClawR_vs_Eyes": 0,
+      "ClawR_vs_Legs": 0,
+      "ClawR_finger_vs_hand": 0,
+      "ClawL_vs_Body": 0,
+      "ClawL_vs_Eyes": 0,
+      "ClawL_vs_Legs": 0,
+      "ClawL_finger_vs_hand": 0
+    },
+    "open": {
+      "ClawR_vs_Body": 0,
+      "ClawR_vs_Eyes": 0,
+      "ClawR_vs_Legs": 0,
+      "ClawR_finger_vs_hand": 0,
+      "ClawL_vs_Body": 0,
+      "ClawL_vs_Eyes": 0,
+      "ClawL_vs_Legs": 0,
+      "ClawL_finger_vs_hand": 0
+    },
+    "shut": {
+      "ClawR_vs_Body": 0,
+      "ClawR_vs_Eyes": 0,
+      "ClawR_vs_Legs": 0,
+      "ClawR_finger_vs_hand": 0,
+      "ClawL_vs_Body": 0,
+      "ClawL_vs_Eyes": 0,
+      "ClawL_vs_Legs": 0,
+      "ClawL_finger_vs_hand": 0
+    }
+  },
+  "rom_claw_clearance": "no overlaps at any sampled frame"
+}

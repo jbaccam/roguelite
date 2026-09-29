@@ -1,0 +1,236 @@
+{
+  "files": {
+    "KingCrab.fbx": {
+      "meshes": {
+        "KingCrab_Body": {
+          "triangles": 6460,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "weights": {
+            "vertices": 3316,
+            "unweighted": 0,
+            "over_4_influences": 0,
+            "not_normalized": 0,
+            "weights_to_non_bones": 0
+          },
+          "flat_corner_fraction": 0.9988,
+          "texture": [
+            1024,
+            1024
+          ],
+          "armature_modifier": true,
+          "expected_shading": "flat"
+        },
+        "KingCrab_ClawL": {
+          "triangles": 2428,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "weights": {
+            "vertices": 1256,
+            "unweighted": 0,
+            "over_4_influences": 0,
+            "not_normalized": 0,
+            "weights_to_non_bones": 0
+          },
+          "flat_corner_fraction": 1.0,
+          "texture": [
+            1024,
+            1024
+          ],
+          "armature_modifier": true,
+          "expected_shading": "flat"
+        },
+        "KingCrab_ClawR": {
+          "triangles": 2316,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "weights": {
+            "vertices": 1176,
+            "unweighted": 0,
+            "over_4_influences": 0,
+            "not_normalized": 0,
+            "weights_to_non_bones": 0
+          },
+          "flat_corner_fraction": 1.0,
+          "texture": [
+            1024,
+            1024
+          ],
+          "armature_modifier": true,
+          "expected_shading": "flat"
+        },
+        "KingCrab_Eyes": {
+          "triangles": 1248,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "weights": {
+            "vertices": 628,
+            "unweighted": 0,
+            "over_4_influences": 0,
+            "not_normalized": 0,
+            "weights_to_non_bones": 0
+          },
+          "flat_corner_fraction": 0.0,
+          "texture": [
+            1024,
+            1024
+          ],
+          "armature_modifier": true,
+          "expected_shading": "smooth"
+        },
+        "KingCrab_Legs": {
+          "triangles": 7216,
+          "uv_layers": [
+            "UVMap"
+          ],
+          "weights": {
+            "vertices": 3688,
+            "unweighted": 0,
+            "over_4_influences": 0,
+            "not_normalized": 0,
+            "weights_to_non_bones": 0
+          },
+          "flat_corner_fraction": 1.0,
+          "texture": [
+            1024,
+            1024
+          ],
+          "armature_modifier": true,
+          "expected_shading": "flat"
+        }
+      },
+      "armature": {
+        "bones": 52,
+        "hierarchy_matches_manifest": true,
+        "leaf_bones": []
+      },
+      "total_triangles": 19668,
+      "dimensions_rest": {
+        "height": 10.031,
+        "top_z": 10.085,
+        "x": [
+          -9.582,
+          8.354
+        ],
+        "y": [
+          -10.036,
+          4.818
+        ]
+      }
+    },
+    "KingCrab_ReferencePose.fbx": {
+      "meshes": 0,
+      "bones": 52,
+      "only_deform_bones": true,
+      "action": "KingCrab_Rig|Scene",
+      "frame_range": [
+        2.0,
+        3.0
+      ],
+      "max_joint_error_vs_ReferencePose@1_studs": 0.0001,
+      "ReferencePose@1_max_joint_offset_from_rest_studs": 4.628
+    },
+    "KingCrab_RigTest_ROM.fbx": {
+      "meshes": 0,
+      "bones": 52,
+      "only_deform_bones": true,
+      "action": "KingCrab_Rig|Scene",
+      "frame_range": [
+        2.0,
+        145.0
+      ],
+      "max_joint_error_vs_RigTest_ROM@37_studs": 0.0001,
+      "RigTest_ROM@37_max_joint_offset_from_rest_studs": 2.896,
+      "max_motion_by_chain_deg": {
+        "Body": 15.1,
+        "Brow": 12.1,
+        "Claw_L": 24.9,
+        "Claw_R": 24.9,
+        "Eye": 49.8,
+        "EyeStalk": 24.3,
+        "Leg_L1": 27.9,
+        "Leg_L2": 27.9,
+        "Leg_L3": 27.9,
+        "Leg_L4": 27.9,
+        "Leg_R1": 27.9,
+        "Leg_R2": 27.9,
+        "Leg_R3": 27.9,
+        "Leg_R4": 27.9,
+        "Maxilliped": 15.8,
+        "Root": 0.0
+      },
+      "bones_without_motion": []
+    },
+    "KingCrab.glb": {
+      "meshes": 5,
+      "importer_helper_objects": [
+        "Icosphere"
+      ],
+      "actions": [
+        "ClawAttack_Check",
+        "ReferencePose",
+        "RigTest_ROM"
+      ],
+      "bones": 52,
+      "skinned_meshes": 5,
+      "textures": 5,
+      "reference_pose_bones_posed": 39,
+      "rom_bones_with_motion": 51,
+      "dimensions_rest": {
+        "height": 10.031,
+        "top_z": 10.085,
+        "x": [
+          -9.582,
+          8.354
+        ],
+        "y": [
+          -10.036,
+          4.818
+        ]
+      },
+      "weights": {
+        "KingCrab_Body": {
+          "vertices": 13078,
+          "unweighted": 0,
+          "over_4_influences": 0,
+          "not_normalized": 0,
+          "weights_to_non_bones": 0
+        },
+        "KingCrab_ClawL": {
+          "vertices": 5062,
+          "unweighted": 0,
+          "over_4_influences": 0,
+          "not_normalized": 0,
+          "weights_to_non_bones": 0
+        },
+        "KingCrab_ClawR": {
+          "vertices": 4742,
+          "unweighted": 0,
+          "over_4_influences": 0,
+          "not_normalized": 0,
+          "weights_to_non_bones": 0
+        },
+        "KingCrab_Eyes": {
+          "vertices": 958,
+          "unweighted": 0,
+          "over_4_influences": 0,
+          "not_normalized": 0,
+          "weights_to_non_bones": 0
+        },
+        "KingCrab_Legs": {
+          "vertices": 14810,
+          "unweighted": 0,
+          "over_4_influences": 0,
+          "not_normalized": 0,
+          "weights_to_non_bones": 0
+        }
+      }
+    }
+  },
+  "failures": [],
+  "passed": true
+}
