@@ -17,6 +17,7 @@ local combat = RS:WaitForChild("RogueliteCombat")
 local Weapons = require(combat:WaitForChild("WeaponCatalog"))
 local Stats = require(combat:WaitForChild("CharacterStats"))
 local Chests = require(combat:WaitForChild("ChestConfig"))
+local Armor = require(combat:WaitForChild("ArmorCatalog"))
 local WeaponIcons = require(RS:WaitForChild("WeaponInventoryUI")).Icons
 local C = T.Color
 local A = {}
@@ -36,14 +37,59 @@ local TRAITS = {
 	shots = "Fires a burst of shots.",
 }
 
--- Armor is worn as four pieces; 2 and 4 pieces of one set give set bonuses. Pets come from the Pet
--- Chest (pets only). Neither exists yet, so their slots and tabs say what is coming.
+-- Armor is worn as four pieces (ArmorCatalog; cosmetic until armor chests and set bonuses exist).
+-- Pets come from the Pet Chest (pets only) and don't exist yet, so their slot and tab say so.
 local ARMOR_PIECES = {
 	{ id = "Helmet", label = "HELMET", plural = "HELMETS" },
 	{ id = "Chest", label = "CHEST", plural = "CHESTPLATES" },
 	{ id = "Legs", label = "LEGS", plural = "LEGGINGS" },
 	{ id = "Boots", label = "BOOTS", plural = "BOOTS" },
 }
+
+-- A 3D view of one armor piece: its meshes from ReplicatedStorage.ArmorSets at their rest
+-- positions around the body (the installer's `Rest` attribute), framed from the front-left.
+local function armorModel(setId)
+	local sets = RS:FindFirstChild("ArmorSets")
+	return sets and Armor.ById[setId] and sets:FindFirstChild(Armor.ById[setId].model)
+end
+
+local function armorView(parent, setId, slot, x, y, size)
+	local vp = T.make("ViewportFrame", parent, {
+		Name = "ArmorView",
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(x, y),
+		Size = UDim2.fromOffset(size, size),
+		Ambient = Color3.fromRGB(200, 200, 200),
+		LightColor = Color3.fromRGB(255, 250, 240),
+		LightDirection = Vector3.new(-0.3, -1, 0.5),
+	})
+	local template = armorModel(setId)
+	if not template then
+		return vp
+	end
+	local lo, hi = Vector3.one * math.huge, -Vector3.one * math.huge
+	for _, src in template:GetChildren() do
+		if src:IsA("BasePart") and src:GetAttribute("Piece") == slot then
+			local rest = src:GetAttribute("Rest") or CFrame.new()
+			local p = src:Clone()
+			p.Anchored = true
+			p.CFrame = rest
+			p.Parent = vp
+			lo, hi = lo:Min(rest.Position - p.Size / 2), hi:Max(rest.Position + p.Size / 2)
+		end
+	end
+	if lo.X == math.huge then
+		return vp
+	end
+	local cam = Instance.new("Camera")
+	cam.FieldOfView = 30
+	local centre, radius = (lo + hi) / 2, (hi - lo).Magnitude / 2
+	-- The body faces -Z: look from in front, a little left and above.
+	cam.CFrame = CFrame.lookAt(centre + Vector3.new(-0.5, 0.3, -1).Unit * radius / math.sin(math.rad(15)), centre)
+	cam.Parent = vp
+	vp.CurrentCamera = cam
+	return vp
+end
 
 local function weaponAt(w, tier)
 	tier = math.clamp(tier or 1, 1, 4)
@@ -195,7 +241,8 @@ function A.new(player, opts)
 	self.Screen = screen
 	local fallback -- blur + shade when the hall is not installed
 	local root, profile, draw
-	local state = { tab = "Weapons", mine = true, item = nil, kind = "weapon", mode = "main" }
+	-- armorSlot: the Armor tab's slot filter (nil = every slot).
+	local state = { tab = "Weapons", mine = true, item = nil, kind = "weapon", mode = "main", armorSlot = nil }
 	-- Panels slide in only when the screen opens or switches between main and upgrade views;
 	-- a plain redraw (selecting an item, a profile update) must not move anything.
 	local animate = false
@@ -333,6 +380,60 @@ function A.new(player, opts)
 		return card
 	end
 
+	-- An armor piece card: 3D view, set name, slot in the rarity colour, tick when worn.
+	local function armorCard(parent, setId, slot, x, y)
+		local id = Armor.pieceId(setId, slot)
+		local set = Armor.ById[setId]
+		local rec = profile.armor[id]
+		local chosen = state.kind == "armor" and state.item == id
+		local card = T.button(parent, "A_" .. id, "", x, y, CARD, CARD_H, function()
+			select("armor", id)
+		end, not chosen)
+		card.Caption.Visible = false
+		local view = armorView(card, setId, slot, (CARD - 124) / 2, 6, 124)
+		view.ImageTransparency = rec and 0 or 0.62
+		local n = centred(T.label(card, "Name", set.name, 6, 132, CARD - 12, 30, 20, rec and C.white or C.dim))
+		n.TextWrapped = false
+		n.TextScaled = true
+		T.make("UITextSizeConstraint", n, { MaxTextSize = 20, MinTextSize = 12 })
+		local k = centred(T.text(card, "Slot", string.upper(slot), 6, 164, CARD - 12, 22, 16, Chests.RarityColor[set.rarity]))
+		if profile.wearing[slot] == setId then
+			tick(card, CARD - 38, 10, 28)
+		end
+		if not rec then
+			RunSetup.lock(card, CARD - 40, 12, 26)
+		end
+		if chosen then
+			n.TextColor3, k.TextColor3 = C.ink, C.ink
+			n.TextStrokeTransparency, k.TextStrokeTransparency = 1, 1
+		end
+		return card
+	end
+
+	-- Wear or take off armor (slot or 'All'). The server re-dresses the character; the dais copy
+	-- is rebuilt once the character carries the new ProfileWearing.
+	local function wear(slot, setId)
+		local before = player:GetAttribute("ProfileWearing")
+		local r = combat.ProfileAction:InvokeServer("WearArmor", slot, setId)
+		T.toast(screen, r.message or "", r.ok and C.lime or C.negative)
+		if not r.ok then
+			return
+		end
+		T.sound("ui_equip")
+		task.spawn(function()
+			local t0 = os.clock()
+			while os.clock() - t0 < 3 do
+				local now = player:GetAttribute("ProfileWearing")
+				local ch = player.Character
+				if now ~= before and ch and ch:GetAttribute("ArmorWorn") == now then
+					break
+				end
+				task.wait(0.05)
+			end
+			Stage.RefreshAvatar()
+		end)
+	end
+
 	-- "Coming" panel for tabs whose items are not in the game yet: a title, one line, a few facts.
 	local function comingPanel(parent, title, body, lines)
 		local h = 118 + #lines * 44
@@ -383,6 +484,7 @@ function A.new(player, opts)
 			end
 			state.tab = id
 			state.kind, state.item = nil, nil
+			state.armorSlot = nil
 			draw()
 		end)
 		for id, b in tabs do
@@ -413,6 +515,29 @@ function A.new(player, opts)
 				T.label(panel, "Owned", owned .. " / " .. total .. " OWNED", 330, y0, LEFT_W - 352, 50, 18, C.muted)
 			count.TextXAlignment = Enum.TextXAlignment.Right
 			y0 += 64
+		end
+		-- Armor sets whose meshes are installed and that own at least one piece.
+		local armorSets = {}
+		for _, set in Armor.Sets do
+			local owns = false
+			for _, sl in Armor.Slots do
+				owns = owns or profile.armor[Armor.pieceId(set.id, sl)] ~= nil
+			end
+			if owns and armorModel(set.id) then
+				table.insert(armorSets, set)
+			end
+		end
+		if state.tab == "Armor" and #armorSets > 0 then
+			local filters = { "All" }
+			for _, sl in Armor.Slots do
+				table.insert(filters, sl)
+			end
+			T.tabs(panel, 22, y0, LEFT_W - 44, 44, filters, state.armorSlot or "All", function(id)
+				state.armorSlot = id ~= "All" and id or nil
+				state.kind, state.item = nil, nil
+				draw()
+			end)
+			y0 += 58
 		end
 		local grid = T.scroll(panel, "Grid", 22, y0, LEFT_W - 36, LEFT_H - y0 - 22)
 		local tab = state.tab
@@ -477,6 +602,40 @@ function A.new(player, opts)
 			if not state.item then
 				state.kind, state.item = "pet", "Pet"
 			end
+		elseif #armorSets > 0 then
+			-- Each set with an owned piece: its pieces in the filtered slot(s), unowned ones locked.
+			local slots = state.armorSlot and { state.armorSlot } or Armor.Slots
+			local first
+			for _, set in armorSets do
+				do
+					local h = T.label(
+						grid,
+						"Header_" .. set.id,
+						string.upper(set.name) .. "  ·  " .. string.upper(set.rarity),
+						4,
+						y,
+						LEFT_W - 60,
+						32,
+						22,
+						Chests.RarityColor[set.rarity]
+					)
+					h.TextXAlignment = Enum.TextXAlignment.Left
+					y += 38
+					for i, sl in slots do
+						local x, dy = cell(i)
+						armorCard(grid, set.id, sl, x, y + dy)
+						local id = Armor.pieceId(set.id, sl)
+						if profile.wearing[sl] == set.id and profile.armor[id] then
+							first = first or id
+						end
+					end
+					y += math.ceil(#slots / cols) * (CARD_H + GAP) + 8
+					first = first or Armor.pieceId(set.id, slots[1])
+				end
+			end
+			if not state.item then
+				state.kind, state.item = "armor", first
+			end
 		else
 			y = comingPanel(grid, "Armor is coming", "Armor pieces come from armor chests.", {
 				"Helmet, chestplate, leggings and boots",
@@ -504,12 +663,12 @@ function A.new(player, opts)
 		fill(b)
 		return b
 	end
-	local function emptySlot(b, chosen)
+	local function emptySlot(b, chosen, text)
 		-- Dark text on the lime "selected" fill; grey on the charcoal one.
 		local ink = chosen and C.ink or C.dim
 		local plus = centred(T.label(b, "Plus", "+", 0, 14, SLOT, 70, 64, ink))
 		plus.Size = UDim2.new(1, 0, 0, 80)
-		local soon = centred(T.text(b, "Soon", "SOON", 10, SLOT - 34, SLOT - 20, 22, 15, ink))
+		local soon = centred(T.text(b, "Soon", text or "SOON", 10, SLOT - 34, SLOT - 20, 22, 15, ink))
 		if chosen then
 			plus.TextStrokeTransparency, soon.TextStrokeTransparency = 1, 1
 			T.setPrimary(b, true)
@@ -524,11 +683,23 @@ function A.new(player, opts)
 		end
 		-- Left column: the four armor pieces.
 		for i, piece in ARMOR_PIECES do
+			local setId = profile.wearing[piece.id]
+			setId = setId and armorModel(setId) and setId or nil
+			local id = setId and Armor.pieceId(setId, piece.id) or piece.id
 			slot(mid, piece.id .. "Slot", piece.label, 60, rowY(i), function()
 				state.tab = "Armor"
-				select("armor", piece.id)
+				state.armorSlot = piece.id
+				state.kind, state.item = "armor", id
+				draw()
 			end, function(b)
-				emptySlot(b, state.kind == "armor" and state.item == piece.id)
+				if setId then
+					armorView(b, setId, piece.id, 4, 4, SLOT - 8)
+					if state.kind == "armor" and state.item == id then
+						T.setPrimary(b, true)
+					end
+				else
+					emptySlot(b, state.kind == "armor" and state.item == id, next(profile.armor) and "EMPTY" or nil)
+				end
 			end)
 		end
 		-- Right column: starting weapon, pet, class, ready upgrades.
@@ -777,6 +948,79 @@ function A.new(player, opts)
 		b.TextYAlignment = Enum.TextYAlignment.Top
 	end
 
+	-- A worn or owned armor piece: EQUIP / TAKE OFF this piece, or the whole set.
+	local function drawArmorDetail(panel, id)
+		local setId, slot = Armor.split(id)
+		local set = Armor.ById[setId]
+		local rec = profile.armor[id]
+		local worn = profile.wearing[slot] == setId
+		header(
+			panel,
+			nil,
+			nil,
+			string.upper(set.name),
+			'<font color="'
+				.. T.hex(Chests.RarityColor[set.rarity])
+				.. '">'
+				.. string.upper(set.rarity)
+				.. "</font>  ·  ARMOR  ·  "
+				.. string.upper(slot),
+			C.white
+		)
+		armorView(panel.IconWell, setId, slot, 6, 6, 120)
+		local d = T.text(
+			panel,
+			"Description",
+			"Wear all four " .. set.name .. " pieces for the full look. Set bonuses come with armor chests.",
+			24,
+			168,
+			RIGHT_W - 48,
+			60,
+			19,
+			C.muted
+		)
+		d.TextYAlignment = Enum.TextYAlignment.Top
+		T.label(panel, "PiecesTitle", "SET PIECES", 24, 240, 300, 34, 26).TextXAlignment = Enum.TextXAlignment.Left
+		local owned, wornAll = 0, true
+		for i, sl in Armor.Slots do
+			local have = profile.armor[Armor.pieceId(setId, sl)] ~= nil
+			local on = profile.wearing[sl] == setId
+			owned += have and 1 or 0
+			wornAll = wornAll and (on or not have)
+			statRow(panel, 278 + (i - 1) * 40, sl, on and "WORN" or (have and "OWNED" or "NOT OWNED"))
+		end
+		local eq = T.button(
+			panel,
+			"Equip",
+			worn and "TAKE OFF" or (rec and "EQUIP" or "NOT OWNED"),
+			24,
+			500,
+			RIGHT_W - 48,
+			70,
+			function()
+				wear(slot, (not worn) and setId or nil)
+			end,
+			true
+		)
+		eq.Caption.TextSize = 28
+		eq.Interactable = rec ~= nil
+		local all = T.button(
+			panel,
+			"EquipSet",
+			wornAll and "TAKE OFF SET" or "EQUIP FULL SET",
+			24,
+			584,
+			RIGHT_W - 48,
+			70,
+			function()
+				wear("All", (not wornAll) and setId or nil)
+			end,
+			wornAll
+		)
+		all.Caption.TextSize = 28
+		all.Interactable = owned > 0
+	end
+
 	local function drawClassDetail(panel, class)
 		local c = Stats.Classes[class]
 		header(
@@ -846,6 +1090,8 @@ function A.new(player, opts)
 				"EMPTY SLOT  ·  FROM THE PET CHEST",
 				"Every pet helps in its own way: one fetches crystals, one heals you and your team, others knock enemies back or slow them down."
 			)
+		elseif Armor.valid(state.item) then
+			drawArmorDetail(panel, state.item)
 		else
 			local piece = ARMOR_PIECES[1]
 			for _, p in ARMOR_PIECES do
@@ -857,8 +1103,9 @@ function A.new(player, opts)
 				panel,
 				"shoulders",
 				piece.label,
-				"EMPTY SLOT  ·  FROM ARMOR CHESTS",
-				"Copies upgrade a piece from Tier I to Tier IV, like weapons. The rarer the set, the cooler it looks."
+				next(profile.armor) and "EMPTY SLOT" or "EMPTY SLOT  ·  FROM ARMOR CHESTS",
+				next(profile.armor) and "Pick an armor piece on the left to wear it here."
+					or "Copies upgrade a piece from Tier I to Tier IV, like weapons. The rarer the set, the cooler it looks."
 			)
 		end
 		slideIn(right, UDim2.new(1, 16, 0.5, 30), UDim2.new(1, -24, 0.5, 30))

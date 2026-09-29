@@ -65,6 +65,10 @@ function L.profile(player)
  if connected then
   for id,tier,have in string.gmatch(player:GetAttribute('ProfileWeapons') or '','([^,:]+):(%d+):(%d+)') do p.weapons[id]={id=id,tier=math.clamp(tonumber(tier),1,4),have=tonumber(have)} end
  else for class in p.classes do p.weapons[L.Signature[class]]={id=L.Signature[class],tier=1,have=0} end end
+ -- Armor: ProfileArmor ('DragonScale.Helmet:1:0' = piece:tier:copies), ProfileWearing ('Helmet:DragonScale').
+ p.armor={};p.wearing={}
+ for id,tier,have in string.gmatch(player:GetAttribute('ProfileArmor') or '','([^,:]+):(%d+):(%d+)') do p.armor[id]={id=id,tier=math.clamp(tonumber(tier),1,4),have=tonumber(have)} end
+ for slot,set in string.gmatch(player:GetAttribute('ProfileWearing') or '','([^,:]+):([^,:]+)') do p.wearing[slot]=set end
  p.best=csvMap(player:GetAttribute('ProfileBestWaves'))
  p.wins=csvSet(player:GetAttribute('ProfileMapWins'))
  p.pity=csvMap(player:GetAttribute('ProfilePity'));p.picks=csvMap(player:GetAttribute('ProfilePicks'))

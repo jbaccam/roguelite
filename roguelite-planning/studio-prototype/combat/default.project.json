@@ -229,6 +229,9 @@
         "ChestConfig": {
           "$path": "ChestConfig.luau"
         },
+        "ArmorCatalog": {
+          "$path": "ArmorCatalog.luau"
+        },
         "SkillTreeConfig": {
           "$path": "SkillTreeConfig.luau"
         },
@@ -423,6 +426,9 @@
       },
       "RogueliteMeta": {
         "$path": "RogueliteMeta.server.luau"
+      },
+      "ArmorService": {
+        "$path": "ArmorService.server.luau"
       },
       "ServerRole": {
         "$path": "../lobby/ServerRole.luau"

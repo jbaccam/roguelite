@@ -525,6 +525,13 @@ look before step 2. Results in Studio:
 - Models follow the roguelite art direction (stylized low-poly, painterly, never realistic) and
   the Blender kit convention.
 - Loadout rule change for Godly starters.
+- **Godly weapons only appear for players who own them** (user, 2026-09-29). They are never shown
+  or offered unless unlocked:
+  - not in the run shop, level-up offers or drops;
+  - not in the Armory weapon grid or class lists.
+
+  The server filters every offer by the player's profile, and the client never lists them. Only
+  the chest odds panel shows the Godly *chance*, and it doesn't name any weapon.
 - Godly reveal and server announcement in the chest opening.
 - Turn Godly chest rolls and pity on.
 

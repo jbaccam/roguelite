@@ -14,6 +14,7 @@ local Chests=require(combat:WaitForChild('ChestConfig'))
 local Weapons=require(combat:WaitForChild('WeaponCatalog'))
 local Money=require(combat:WaitForChild('MonetizationConfig'))
 local Skills=require(combat:WaitForChild('SkillTreeConfig'))
+local Armor=require(combat:WaitForChild('ArmorCatalog'))
 local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed; this module is unsandboxed
 -- Redeemable codes (server-only so they cannot be read from the client). One use per account.
 local CODES={
@@ -31,7 +32,8 @@ local MAX_RECEIPTS=200
 local function fresh()
  local d={version=1,emeralds=0,bought=0,classes={Brawler=true,Gunner=true,Mage=true},weapons={},pity={},picks={},chests={},
   receipts={},receiptOrder={},bestWaves={},mapWins={},starterPack=false,vip=false,
-  rerolls=0,banishes=0,quickOpen=false,codes={},daily={day=0,bought={}},vipClaimDay=0,skills={}}
+  rerolls=0,banishes=0,quickOpen=false,codes={},daily={day=0,bought={}},vipClaimDay=0,skills={},
+  armor={},wearing={}} -- armor: 'DragonScale.Helmet' -> {tier,have}; wearing: slot -> set id
  for class in d.classes do d.weapons[SIGNATURE[class]]={tier=1,have=0} end
  return d
 end
@@ -43,6 +45,9 @@ function P.publish(player)
  player:SetAttribute('ProfileGemsEarned',d.emeralds-d.bought) -- what restricted regions may spend on chests
  player:SetAttribute('ProfileClasses',csv(d.classes,function(k) return k end))
  player:SetAttribute('ProfileWeapons',csv(d.weapons,function(k,v) return k..':'..v.tier..':'..v.have end))
+ player:SetAttribute('ProfileArmor',csv(d.armor,function(k,v) return k..':'..v.tier..':'..v.have end))
+ -- ArmorService puts the worn pieces on the character from this attribute.
+ player:SetAttribute('ProfileWearing',csv(d.wearing,function(k,v) return k..':'..v end))
  player:SetAttribute('ProfilePity',csv(d.pity,function(k,v) return k..':'..v end))
  player:SetAttribute('ProfilePicks',csv(d.picks,function(k,v) return k..':'..v end))
  player:SetAttribute('ProfileChests',csv(d.chests,function(k,v) return k..':'..v end))
@@ -76,6 +81,12 @@ function P.load(player)
  if data.pity.Legendary==nil then data.pity={Legendary=0} end
  if data.pity.Godly==nil then data.pity.Godly=0 end -- Godly pity (2026-09-28); old saves start at 0
  data.picks={}
+ -- Armor has no chests yet: Studio test profiles (in memory, never saved) own the sample sets.
+ if not store then
+  for _,setId in Armor.StudioGrant do
+   for _,slot in Armor.Slots do local id=Armor.pieceId(setId,slot);data.armor[id]=data.armor[id] or {tier=1,have=0} end
+  end
+ end
  -- Keys were dropped: old saves convert them to earned emeralds once.
  if type(data.keys)=='number' then data.emeralds+=math.max(0,data.keys)*Money.EmeraldsPerOldKey;data.keys=nil end
  P.profiles[player]=data;P.loaded[player]=true
@@ -136,6 +147,27 @@ function P.addCopies(d,id,count)
  return {id=id,new=new,tier=rec.tier,have=rec.have,emeralds=emeralds,overflow=emeralds>0}
 end
 function P.addDrop(d,id) return P.addCopies(d,id,1) end
+
+-- Wear the owned piece of `setId` in `slot`, or take it off (setId nil). slot 'All' does every
+-- slot: all owned pieces of the set, or takes everything off.
+function P.wear(player,slot,setId)
+ local d=P.profiles[player];if not d then return false,'Profile still loading' end
+ local set=setId~=nil and Armor.ById[setId]
+ if setId~=nil and not set then return false,'Unknown armor' end
+ local slots=slot=='All' and Armor.Slots or {slot}
+ if not Armor.isSlot(slots[1]) then return false,'Unknown slot' end
+ local changed=0
+ for _,s in slots do
+  if not set then
+   if d.wearing[s] then d.wearing[s]=nil;changed+=1 end
+  elseif d.armor[Armor.pieceId(setId,s)] then d.wearing[s]=setId;changed+=1
+  elseif slot~='All' then return false,"You don't own that piece yet" end
+ end
+ if changed==0 then return false,set and "You don't own any of that set" or 'Nothing to take off' end
+ P.publish(player)
+ if not set then return true,slot=='All' and 'Armor off' or 'Took off the '..string.lower(slot) end
+ return true,slot=='All' and (set.name..' set equipped') or (set.name..' '..string.lower(slot)..' equipped')
+end
 
 local rng=Random.new()
 local RANK={Common=1,Rare=2,Epic=3,Legendary=4,Godly=5}

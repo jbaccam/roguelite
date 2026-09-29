@@ -389,6 +389,14 @@ function S.Show(weaponId)
 	return true
 end
 
+-- Re-copy the player's look while the stage is shown (after armor goes on or comes off).
+function S.RefreshAvatar()
+	if conn then
+		buildAvatar()
+		render()
+	end
+end
+
 function S.SetStarter(weaponId)
 	if floater and floater:GetAttribute("WeaponId") == weaponId then
 		return
