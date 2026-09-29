@@ -252,6 +252,11 @@ and Pillow. Add `-- --preview` to the generator for a three-piece style study on
 Unlike the sibling generators, this script is self-contained — it does not `exec()`
 slices of its neighbours' source text, which breaks as soon as any of them is edited.
 
+## Notes
+
+- Rebuilding `BeachCoveArena` deletes `NoClimb`. Re-run `studio-prototype/ApplyPropCollision.luau` afterwards.
+- The spawn markers and hand-placed props live in `Workspace.BeachCoveExtras` and survive a rebuild.
+
 ## Validation
 
 `validation-report.json` records every FBX and GLB reimported into an empty scene:

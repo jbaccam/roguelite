@@ -1,6 +1,7 @@
 # Lobby and Match Servers (MVP)
 
 Status: design approved by the user on 2026-09-28. Next step: implementation plan.
+Plan A (server roles and map folders) is implemented and verified in Studio Play on 2026-09-28. Plans B (run lifecycle) and C (teleports, save lock) are next.
 
 ## In one paragraph
 
@@ -25,7 +26,7 @@ server, so the Tab player list shows just them.
 
 ## 1. Server roles
 
-A new shared module, `ServerRole` (in ReplicatedStorage), decides the role once, at server start:
+A new server-only module, `ServerRole` (in **ServerScriptService**), decides the role once, at server start:
 
 - **Match** when this is a reserved server: `game.PrivateServerId ~= ""` and `game.PrivateServerOwnerId == 0`.
 - **Lobby** in every other live server, including player-bought VIP servers.
@@ -33,12 +34,13 @@ A new shared module, `ServerRole` (in ReplicatedStorage), decides the role once,
   - `Combined` is the default and keeps today's one-server setup: lobby and arenas together, and START walks you over.
   - `Lobby` and `Match` force one role. A forced Match reads Workspace attributes `StudioMatchMap` (default `PineValley`) and `StudioMatchDifficulty` (default `Normal`).
 
-The role is published as the ReplicatedStorage attribute `ServerRole` so client scripts can read it.
+The role is published as the ReplicatedStorage attribute `ServerRole`. Client scripts read that attribute; they never require the module, because a client that required it would run the parking code.
 
 **Areas.** Each area is one Workspace folder:
 - `RogueliteLobby`
 - `PineValleyArena` (new: the loose Pine Valley parts are gathered into it once, see §9)
 - `BeachCoveArena`
+- `BeachCoveExtras` (Beach Cove's PlayerSpawn, RogueliteZombieSpawn and hand-placed props; its kit rebuilds `BeachCoveArena` by deleting it)
 
 At start, the role parents the areas it doesn't use into `ServerStorage.InactiveAreas`, so clients never download them:
 - Lobby: keeps only the lobby.
@@ -73,6 +75,10 @@ At start, the role parents the areas it doesn't use into `ServerStorage.Inactive
 - After loading each member's profile, it re-checks the loadout against *that player's own save*. If the check fails, the player gets their class signature weapon.
 - It waits for all listed members, up to 30 s, before the first shop can start wave 1. A member who arrives after wave 1 has begun waits like a downed player and spawns at the next wave end.
 - If a player disconnects mid-run and rejoins the game, they land in a lobby server. There's no rejoining a match.
+- **Plan C requirements** (from the plan A review):
+  - `AvatarNormalizer` spawns players on join. A match server must hold that spawn until `ServerRole.setMap(entry.map)` has returned; `setMap` applies the map before it returns.
+  - If `setMap` returns false (a missing or bad match entry), send the players back to a lobby.
+  - Flip `ServerRole`'s `LIVE_ROLES` to true in the same change that ships the teleports.
 
 ## 3. In the match: map, enemies, starting weapon
 
@@ -181,7 +187,7 @@ VIP bonus applies as it does today.
 
 | Piece | Change |
 |---|---|
-| `ServerRole` (new, ReplicatedStorage) | Role detection, area parking, the `ServerRole` attribute |
+| `ServerRole` (new, ServerScriptService; server only, clients read the `ReplicatedStorage.ServerRole` attribute) | Role detection, area parking, the `ServerRole` attribute |
 | `MatchService` (new, ServerScriptService) | Reserve, write the match entry, save, teleport, retry/fail (lobby); read the entry, check members, wait for the party, return teleport (match) |
 | `RogueliteLobbyPreview.server` | Runs live in the Lobby role (drop the Studio-only exit); `launch()` teleports via MatchService when not Combined; the travel remote stays Studio-only |
 | `ProfileService` | Session lock, save-and-release, run-ID-deduped `recordRun` with win and first-win emeralds |
@@ -191,7 +197,7 @@ VIP bonus applies as it does today.
 | `DeathScreenUI` | Spectate camera and ‹ › switching, next revive price, Leave Run, the countdown |
 | `RunResultsUI` (new) | The results screen and Back to Lobby |
 | `ShopUI` | Leave Run button |
-| Workspace (Edit, one time) | Gather Pine Valley's loose parts into `PineValleyArena` (record the moved names so it can be undone); give each map `PlayerSpawn` and `RogueliteZombieSpawn`; update scripts that look up `workspace.SpawnLocation`, `workspace.RogueliteZombieSpawn`, `MapOneNoClimb` or `MapOneBoundary` by path |
+| Workspace (done 2026-09-28, `lobby/GroupMapAreas.luau`) | Pine Valley lives in `Workspace.PineValleyArena`. Beach Cove is `BeachCoveArena` (rebuilt by its kit) plus `BeachCoveExtras` (PlayerSpawn, RogueliteZombieSpawn, hand-placed `Props`). **New map props go inside their map folder**; anything left loose in Workspace shows up on every server. Only the active map's `PlayerSpawn` is enabled (ServerRole). Studio: `Workspace.StudioServerRole` = `Lobby` / `Match` (with `StudioMatchMap`, `StudioMatchDifficulty`), unset = Combined. |
 
 ## Out of scope for this version
 
