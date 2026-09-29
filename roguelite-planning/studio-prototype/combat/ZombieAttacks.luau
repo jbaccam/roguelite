@@ -15,6 +15,46 @@ local function available(npc)
     local h=npc:FindFirstChildOfClass('Humanoid');local root=npc:FindFirstChild('HumanoidRootPart')
     return npc:IsDescendantOf(workspace) and not npc:GetAttribute('PracticeTarget') and h and h.Health>0 and root and combat:GetAttribute('ZombiesEnabled')==true,h,root
 end
+-- The Mutant slams on the move, like the other enemies (EnemyAttacks): until the hammer lands it
+-- keeps walking (the chase loop steers) and turning toward its target, and the warning circle
+-- travels in front of it. The circle stops where the slam lands.
+local TURN_RATE=math.rad(360)
+-- Turned by an AlignOrientation, never CFrame writes, which stop a walking Humanoid dead
+-- (see EnemyAttacks). release() hands facing back to the Humanoid.
+local function face(root,direction)
+    local align=root:FindFirstChild('AttackFacing')
+    if not align then
+        local attachment=Instance.new('Attachment');attachment.Name='AttackFacingAttachment';attachment.Parent=root
+        align=Instance.new('AlignOrientation');align.Name='AttackFacing';align.Mode=Enum.OrientationAlignmentMode.OneAttachment
+        align.Attachment0=attachment;align.MaxTorque=math.huge;align.Responsiveness=60;align.Parent=root
+    end
+    align.CFrame=CFrame.lookAt(Vector3.zero,direction);align.Enabled=true
+end
+local function release(npc,h)
+    local root=npc:FindFirstChild('HumanoidRootPart');local align=root and root:FindFirstChild('AttackFacing')
+    if align then align.Enabled=false end
+    if h then h.AutoRotate=true end
+end
+local function follow(npc,root,target,s,now,circle)
+    local dt=math.min(now-(s.last or now),.1);s.last=now
+    if target and target.Parent then
+        local delta=target.Position-root.Position;local flat=Vector3.new(delta.X,0,delta.Z)
+        if flat.Magnitude>.05 then
+            local want=flat.Unit;local angle=math.acos(math.clamp(s.direction:Dot(want),-1,1));local step=TURN_RATE*dt
+            s.direction=angle<=step and want or CFrame.Angles(0,s.direction:Cross(want).Y>=0 and step or -step,0):VectorToWorldSpace(s.direction)
+        end
+    end
+    face(root,s.direction)
+    if not circle then return end
+    local center=root.Position+s.direction*Types.Slam.offset
+    local ground=workspace:Raycast(center+Vector3.yAxis*8,-Vector3.yAxis*30,s.params)
+    if ground then
+        s.center=ground.Position
+        -- Only replicate real moves; a standing Mutant sends nothing.
+        local shown=npc:GetAttribute('SlamPosition')
+        if not shown or (shown-s.center).Magnitude>.15 then npc:SetAttribute('SlamPosition',s.center) end
+    end
+end
 function A.update(npc,target)
     if npc:GetAttribute('ZombieType')~='Mutant' then return false end
     local ok,h,root=available(npc);local s=states[npc]
@@ -22,9 +62,9 @@ function A.update(npc,target)
     local now=workspace:GetServerTimeNow()
     if not s then s={nextAttack=0};states[npc]=s end
     if s.start then
-        h:Move(Vector3.zero);h:MoveTo(root.Position);h.AutoRotate=false
-        root.AssemblyLinearVelocity=Vector3.new(0,root.AssemblyLinearVelocity.Y,0)
+        h.AutoRotate=false
         local age=now-s.start
+        follow(npc,root,target,s,now,age<Types.Slam.impact)
         if age>=Types.Slam.impact and not s.hit then
             s.hit=true -- consume once even when nobody is in range or damage is blocked
             local p=params(npc)
@@ -44,10 +84,10 @@ function A.update(npc,target)
             npc:SetAttribute('LastSlamImpact',now)
         end
         if age>=Types.Slam.recovery then
-            s.start=nil;h.AutoRotate=true;npc:SetAttribute('Attacking',false)
+            s.start=nil;release(npc,h);npc:SetAttribute('Attacking',false)
             return false
         end
-        return true
+        return false -- the chase keeps steering through the slam
     end
     if now<s.nextAttack or not target or not target.Parent then return false end
     local th=target.Parent:FindFirstChildOfClass('Humanoid')
@@ -56,23 +96,26 @@ function A.update(npc,target)
     if flat.Magnitude>Types.Slam.trigger or math.abs(delta.Y)>Types.Slam.maxHeight then return false end
     local p=params(npc)
     if workspace:Raycast(root.Position,target.Position-root.Position,p) then return false end
-    if flat.Magnitude>.05 then root.CFrame=CFrame.lookAt(root.Position,root.Position+flat) end
-    local center=root.Position+root.CFrame.LookVector*Types.Slam.offset
+    local look=root.CFrame.LookVector
+    local direction=flat.Magnitude>.05 and flat.Unit or Vector3.new(look.X,0,look.Z).Unit
+    local center=root.Position+direction*Types.Slam.offset
     local ground=workspace:Raycast(center+Vector3.yAxis*8,-Vector3.yAxis*30,p)
     if not ground then return false end
     s.center=ground.Position;s.start=now;s.hit=false;s.nextAttack=now+Types.Slam.cooldown
+    s.params=p;s.last=now;s.direction=direction
     npc:SetAttribute('SlamPosition',s.center)
     npc:SetAttribute('SlamSerial',(npc:GetAttribute('SlamSerial') or 0)+1)
     npc:SetAttribute('SlamStart',now);npc:SetAttribute('Attacking',true)
-    h.AutoRotate=false;h:Move(Vector3.zero);h:MoveTo(root.Position)
-    return true
+    -- No stop: it slams on the move.
+    h.AutoRotate=false;face(root,direction)
+    return false
 end
 -- Drop a slam in progress without its hit (admin Freeze), so it can't land the moment the
 -- Mutant updates again. The cooldown stays; the next slam starts a fresh wind-up.
 function A.cancel(npc)
     local s=states[npc];if not s or not s.start then return end
     s.start=nil
-    local h=npc:FindFirstChildOfClass('Humanoid');if h then h.AutoRotate=true end
+    release(npc,npc:FindFirstChildOfClass('Humanoid'))
     npc:SetAttribute('Attacking',false)
     npc:SetAttribute('SlamStart',nil) -- the client drops the slam pose and ground warning too
 end

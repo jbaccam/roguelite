@@ -52,6 +52,23 @@ The eighteen imported models use retargeted `StudioAnimationData.json`, generate
 
 `EnemyAttacks` owns melee, visible projectiles and locked-direction lunges on the server. Damage checks current life/phase, range, elevation and wall occlusion; projectiles use swept travel against players and world geometry. Native Tank retains `ZombieAttacks`. Arrow, rock, icicle, fireball and spit release from sampled hand/claw/casting/mouth anchors. The bow's aim offset comes from its actual arrow release direction. The cosmetic nocked arrow hides at release; HeldRock hides until recovery. Children of Lava Slime carry `SplitChild` and cannot split again.
 
+### Attacks on the move (2026-09-28)
+
+User feedback: mobs froze in place for every swing, so weaving past them made them halt and whiff, which looked stiff and made it nearly impossible to get hit. Now:
+- **Server.** An attack no longer roots the mob. The chase loop keeps steering it through the wind-up and recovery. It keeps turning toward its target at up to 540°/s, and the melee hit checks where the mob is at impact.
+  - Ranged shots release at the target's position at release time, and they still travel, so they can be dodged.
+  - Lunge mobs (Snake, Scorpion) chase through the wind-up. The dash itself still owns movement, locked to its direction at the strike.
+  - The Tank Zombie slams on the move. Its red warning circle travels in front of it until the slam lands, then stays put.
+- **Turning.** Mobs turn with an `AttackFacing` AlignOrientation on the root, never CFrame writes. Measured on a Regular Zombie: re-aiming a walking Humanoid's root by CFrame every frame drops it from 16.4 to 0.0 studs/s. With the constraint it walks at 16.3 studs/s while turning, and stays upright.
+- **Client.** The attack clip plays above the hips, and the legs keep the walk cycle while the mob moves. Leg bones are any bone with Leg, Thigh, Shin or Foot in its name, which covers all 18 imported rigs. Standing still, the legs settle into the authored attack stance. Snake, slime and ghost have no legs and play the whole clip. Native zombie feet keep stepping through a swing.
+
+Verified in single-client Studio Play, with the player kiting away at about 12 studs/s and flipping direction every 0.35 s (god mode, weapons off):
+- **Regular Zombie.** It kept moving in 82% of its attack frames at 10 studs/s, and landed 4 of 6 swings in 5 s. Before the change it averaged about 2 studs/s during a swing.
+- **Skeleton.** 15.2 studs/s through its attack frames. Mid-attack while moving, its swing arm matched the attack clip within 1.7°, and its thigh was 19° off the clip because the walk cycle drives it.
+- **Tank Zombie.** It moved in 63% of its slam frames at 7.2 studs/s, and landed 2 of 2 slams.
+
+Not tested: every other imported mob in Play (they share the code path), multiple clients, and a full crowded wave.
+
 ## Source and packaging
 
 - `InstallRegularEnemyTemplates.luau` clones reviewed imports into `ServerStorage.RogueliteNPCs`; raw imports remain untouched. Native template changes are limited to intended tuning/metadata.

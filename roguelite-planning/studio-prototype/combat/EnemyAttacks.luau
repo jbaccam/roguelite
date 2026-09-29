@@ -50,6 +50,58 @@ local function validPlayer(player)
 	local h = char and char:FindFirstChildOfClass("Humanoid")
 	return Characters.states[player] and root and h and h.Health > 0, root
 end
+-- Attacks don't root an enemy: it keeps walking (the chase loop steers) and keeps turning toward
+-- its target at this rate, so a swing lands where the enemy is at impact instead of where the
+-- player was when it started.
+local TURN_RATE = math.rad(540)
+local function turnToward(from, to, maxAngle)
+	local angle = math.acos(math.clamp(from:Dot(to), -1, 1))
+	if angle <= maxAngle then
+		return to
+	end
+	return CFrame.Angles(0, from:Cross(to).Y >= 0 and maxAngle or -maxAngle, 0):VectorToWorldSpace(from)
+end
+-- The body turns through an AlignOrientation, never CFrame writes: re-aiming a walking Humanoid's
+-- root by CFrame every frame stops its walk dead (measured 16 -> 0 studs/s), while the constraint
+-- turns it and it keeps walking (16.3 studs/s).
+local function face(root, s)
+	local align = root:FindFirstChild("AttackFacing")
+	if not align then
+		local attachment = Instance.new("Attachment")
+		attachment.Name = "AttackFacingAttachment"
+		attachment.Parent = root
+		align = Instance.new("AlignOrientation")
+		align.Name = "AttackFacing"
+		align.Mode = Enum.OrientationAlignmentMode.OneAttachment
+		align.Attachment0 = attachment
+		align.MaxTorque = math.huge
+		align.Responsiveness = 60
+		align.Parent = root
+	end
+	align.CFrame = CFrame.lookAt(Vector3.zero, s.direction) * CFrame.Angles(0, s.yaw or 0, 0)
+	align.Enabled = true
+end
+-- Attack over: the Humanoid steers its own facing again.
+local function release(npc, h)
+	local root = npc:FindFirstChild("HumanoidRootPart")
+	local align = root and root:FindFirstChild("AttackFacing")
+	if align then
+		align.Enabled = false
+	end
+	if h then
+		h.AutoRotate = true
+	end
+end
+local function track(root, target, s, dt)
+	if target and target.Parent then
+		local delta = target.Position - root.Position
+		local flat = Vector3.new(delta.X, 0, delta.Z)
+		if flat.Magnitude > 0.05 then
+			s.direction = turnToward(s.direction, flat.Unit, TURN_RATE * math.min(dt or 1 / 60, 0.1))
+		end
+	end
+	face(root, s)
+end
 function A.segmentDistance(a, b, p)
 	local delta = b - a
 	local t = delta:Dot(delta) > 1e-8 and math.clamp((p - a):Dot(delta) / delta:Dot(delta), 0, 1) or 0
@@ -202,24 +254,32 @@ function A.update(npc, target, dt)
 	local now = workspace:GetServerTimeNow()
 	if s.start then
 		local age = now - s.start
-		h:Move(Vector3.zero)
-		h:MoveTo(root.Position)
 		h.AutoRotate = false
-		root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
+		local lunging = config.behavior == "Lunge"
+			and age >= config.attackImpact
+			and age <= config.attackImpact + config.lungeDuration
+		if lunging then
+			-- The dash owns movement, in the direction it had at the strike.
+			h:Move(Vector3.zero)
+			h:MoveTo(root.Position)
+			root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
+		else
+			track(root, target, s, dt)
+		end
 		if age >= config.attackImpact and not s.hit then
 			s.hit = true
 			if config.behavior == "Ranged" then
+				-- Released at where the target is now; the shot still travels, so it can be dodged.
+				if target and target.Parent then
+					s.aim = target.Position
+				end
 				projectile(npc, root, config, s)
 			elseif config.behavior ~= "Lunge" then
 				melee(npc, root, config, s)
 			end
 			npc:SetAttribute("LastEnemyImpact", now)
 		end
-		if
-			config.behavior == "Lunge"
-			and age >= config.attackImpact
-			and age <= config.attackImpact + config.lungeDuration
-		then
+		if lunging then
 			local move = s.direction * config.lungeSpeed * math.min(dt or 1 / 60, 0.05)
 			local wall = workspace:Raycast(root.Position, move + s.direction * config.radius, s.params)
 			if not wall then
@@ -229,11 +289,12 @@ function A.update(npc, target, dt)
 		end
 		if age >= config.attackRecovery then
 			s.start = nil
-			h.AutoRotate = true
+			release(npc, h)
 			npc:SetAttribute("Attacking", false)
 			return false
 		end
-		return true
+		-- true only while a lunge dash moves the body; otherwise the chase keeps steering.
+		return lunging
 	end
 	if now < s.nextAttack or not target or not target.Parent then
 		return false
@@ -258,22 +319,21 @@ function A.update(npc, target, dt)
 	s.hit = false
 	s.hitPlayers = {}
 	s.nextAttack = now + config.attackCooldown
-	local yaw = config.attackFacingYaw or 0
+	s.yaw = config.attackFacingYaw or 0
 	if config.projectile == "Arrow" then
 		local data = Motion.load(config.id)
 		if data and data.projectile then
-			yaw = data.projectile.attackFacingYaw or yaw
+			s.yaw = data.projectile.attackFacingYaw or s.yaw
 		end
 	end
-	root.CFrame = CFrame.lookAt(root.Position, root.Position + s.direction) * CFrame.Angles(0, yaw, 0)
+	h.AutoRotate = false
+	face(root, s)
 	npc:SetAttribute("EnemyAttackStart", now)
 	npc:SetAttribute("EnemyAttackSerial", (npc:GetAttribute("EnemyAttackSerial") or 0) + 1)
 	npc:SetAttribute("EnemyAttackDirection", s.direction)
 	npc:SetAttribute("Attacking", true)
-	h:Move(Vector3.zero)
-	h:MoveTo(root.Position)
-	h.AutoRotate = false
-	return true
+	-- No stop: the enemy swings on the move and the chase keeps steering it.
+	return false
 end
 -- Drop an attack in progress without its hit (admin Freeze), so it can't land the moment the
 -- enemy updates again. The cooldown stays; the next attack starts a fresh wind-up.
@@ -283,10 +343,7 @@ function A.cancel(npc)
 		return
 	end
 	s.start = nil
-	local h = npc:FindFirstChildOfClass("Humanoid")
-	if h then
-		h.AutoRotate = true
-	end
+	release(npc, npc:FindFirstChildOfClass("Humanoid"))
 	npc:SetAttribute("Attacking", false)
 	npc:SetAttribute("EnemyAttackStart", nil) -- the client stops the swing pose too
 end

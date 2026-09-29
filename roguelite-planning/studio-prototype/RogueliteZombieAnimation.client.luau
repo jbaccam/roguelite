@@ -42,7 +42,8 @@ RunService.PreSimulation:Connect(function(dt)
   local age=attackStart and now-attackStart
   local attacking=age~=nil and age>=0 and age<=config.attackRecovery
   local grounded=h.FloorMaterial~=Enum.Material.Air
-  local walking=grounded and speed>.2 and not attacking
+  -- Enemies attack on the move (EnemyAttacks), so the legs keep walking through a swing.
+  local walking=grounded and speed>.2
   state.stride+=((walking and 1 or 0)-state.stride)*blend
   state.refresh+=dt
   if state.refresh>=1 then state.refresh=0;state.joints=Motion.bind(npc) end
@@ -54,7 +55,14 @@ RunService.PreSimulation:Connect(function(dt)
   else
    if not state.data then
     state.data=Motion.load(config.id)
-    if state.data then state.moveClock=state.idleOffset/(2*math.pi)*state.data.clips.Move.duration end
+    if state.data then
+     state.moveClock=state.idleOffset/(2*math.pi)*state.data.clips.Move.duration
+     -- Leg bones on every rig: Thigh/Shin/Foot, Upper/LowerLeg, crab and spider LegNUpper/Lower.
+     state.legBones={}
+     for bone in state.data.bones do
+      if bone:find('Leg') or bone:find('Thigh') or bone:find('Shin') or bone:find('Foot') then table.insert(state.legBones,bone) end
+     end
+    end
    end
    if not state.data then
     if not state.warned then warn('Missing enemy clips: '..config.id);state.warned=true end
@@ -71,7 +79,15 @@ RunService.PreSimulation:Connect(function(dt)
    local idle=Motion.sample(data,'Idle',now+state.idleOffset)
    local move=Motion.sample(data,'Move',state.moveClock)
    target=Motion.blend(idle,move,state.stride)
-   if attacking then target=Motion.sample(data,'Attack',attackTime(data,config,age)) end
+   if attacking then
+    -- The attack plays above the hips; the legs keep the walk cycle while the enemy moves and
+    -- settle into the authored attack stance when it stands still. Legless rigs use the whole clip.
+    local attack=Motion.sample(data,'Attack',attackTime(data,config,age))
+    for _,bone in state.legBones do
+     if attack[bone] and target[bone] then attack[bone]=attack[bone]:Lerp(target[bone],state.stride) end
+    end
+    target=attack
+   end
    target=Motion.scalePose(target,relativeScale)
   end
   local mode=attacking and 'Attack' or walking and 'Move' or 'Idle'
@@ -80,7 +96,8 @@ RunService.PreSimulation:Connect(function(dt)
   -- Blend only on state changes; continuous smoothing would drag planted feet.
   state.poses=Motion.blend(state.transitionPose or {},target,math.min(1,state.transition/.12))
   local displayPoses=state.poses
-  if config.legacy then displayPoses=NativeFeet.apply(state.feet,table.clone(state.poses),state.phase,state.stride,attacking) end
+  -- Zombie feet stay planted only for a standing attack; on the move they keep stepping.
+  if config.legacy then displayPoses=NativeFeet.apply(state.feet,table.clone(state.poses),state.phase,state.stride,attacking and not walking) end
   Motion.apply(state.joints,displayPoses)
   if state.data then HeldProjectiles.update(npc,config,state.data,state.poses,attacking and age or nil,attacking and attackTime(state.data,config,age) or 0) end
   npc:SetAttribute('ClientMotionState',mode)
