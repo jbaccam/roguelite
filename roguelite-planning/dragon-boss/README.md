@@ -34,6 +34,8 @@ The full build takes about 4 minutes on an RTX 2070 (Cycles OPTIX). Other entry 
 - `DRAGON_STAGE=probe` gives a flat-colour silhouette probe.
 - `DRAGON_LOOP=1` stops after `Reference_Match`.
 - `DRAGON_STAGE=previews` re-renders the review sheets from the saved `Dragon.blend`.
+- `DRAGON_STAGE=attack DRAGON_ATTACK=TailWhip` rebuilds one attack in the saved `Dragon.blend`. It re-delivers only
+  that clip FBX, the GLB, `manifest.attacks.<name>`, that attack's AttackCheck row and its mp4.
 - `DRAGON_TEX` / `DRAGON_SAMPLES` / `DRAGON_FINAL_SAMPLES` set the texture size and the preview and final sample
   counts.
 
@@ -148,7 +150,7 @@ anatomy: it gives a front-to-hind stance of 10.7 studs, which fits the brief's 3
 | `ReferencePose` | 1–2 | Held reference pose. |
 | `RigTest_ROM` | 1–369 | Each leg lifted, neck sweep L/R/up/down, fire-breath jaw, wings fold → spread → flap ×3, tail sweep L/R/up, toes curl/spread, 2 blinks. |
 | `FireBreath` | 1–60, **Impact 25** | Head rears back and inhales (f1–16, jaw cracks, wings lift a little). The neck then strikes forward and low with the jaw wide open (f16–24). The breath is held f25–48 with a small left/right sweep, then he recovers. |
-| `TailWhip` | 1–52, **Impact 23** | The body coils and twists, with the tail to his right (f1–14). A fast, wide horizontal sweep follows with the spade leading (f15–24), then he recovers. |
+| `TailWhip` | 1–72, **Impact 27** | v2, "more butt into it". Wind-up f1–20: the hindquarters coil 32° to his right, the tail curls the same way and the wings lift clear. The fast swing, f20–31, pivots on the planted front legs: the hips yaw round to −46° while the hind feet hop round with the body. The tail straightens to full reach with the base leading and the spade trailing, then snaps through. Follow-through f31–38 reaches −48°, and the recovery f38–72 steps the hind feet back to the rest stance. |
 | `FrontStomp` | 1–48, **Impact 27** | He rears on his hind legs (hips pitched 26°, root up 0.3), with the front legs up and folded and the wings flared. At f22–26 he slams both front feet down together, sole-flat; the body drops 0.4 and he recovers. |
 
 Each attack has an `Impact` pose marker in the .blend. FBX and GLB do not carry markers, so the gameplay data sits
@@ -159,17 +161,24 @@ in `manifest.json` → `attacks`. It is given in Blender world studs (Z up, drag
   - `breath` lists the world origin and direction for every second frame of the hold (f25–48).
   - The direction is the bisector of the open jaws, e.g. (0, −0.746, −0.666) at f25. The flame comes down and
     forward and reaches the ground ~8 studs ahead.
-- **TailWhip:** `spade_arc` is pivoted at the tail base (0, 6.7, 6.1). It runs from −45.6° to +62.0°, measured
-  about +Z from straight back, positive toward the dragon's left, over f15–24. Radius 15.5–16.5 (mean 16.2),
-  height 3.3–3.7, with tip samples.
+- **TailWhip:** the spade sweeps **205°**, from −93.5° (f21, wind-up side) to +111.5° (f37, follow-through).
+  - Angles are measured about the fitted pivot (1.86, 5.89) of the spade's path, about +Z from straight back,
+    positive toward the dragon's left. About the rest tail base (0, 6.7, 6.1) the sweep is −97.0° to +111.8°
+    (208.7°).
+  - Radius: 16.6 fitted, 15.7–17.8 through the fast swing, 19.1 at most.
+  - The spade point stays at 2.0–3.3 studs high; peak speed is 33°/frame at the impact frame.
+  - The manifest also lists `hind_steps` (lift and land frames), `planted_intervals` and tip samples.
 - **FrontStomp:** the impact points at f27 are the front toe centres (±5.29, −4.30) on the ground, with palms at
   (±5.20, −4.05, 0.70).
 
-**Planted feet** are re-planted by IK at every key (keys every 2 frames). They were measured on the evaluated rig at
-every frame:
+**Planted feet** are re-planted by IK at every key: every 2 frames, and every frame for TailWhip. They were measured on
+the evaluated rig at every frame of each planted interval:
 
-- **Drift:** 0.000 studs for FireBreath and 0.005 for TailWhip and FrontStomp. The FrontStomp front feet count from
+- **Drift:** 0.000 studs for FireBreath and TailWhip, and 0.005 for FrontStomp. The FrontStomp front feet count from
   impact on.
+- **TailWhip steps:** the hind feet lift and re-plant between intervals, so they step instead of sliding.
+- **TailWhip clearance:** a capsule check keeps the tail and spade at least 1.8 studs from the legs and 5 studs from
+  the wings on every frame.
 - **Joints:** all joint motion is bone rotation (plus the stomp's root lift and drop).
 
 ## Colour and silhouette (final Reference_Match, 128 spp)
@@ -215,6 +224,7 @@ warmer and greyer), and the horns are too dark.
 | P10–P12 | Toes and claws, front-foot IK plant, far-clavicle pose, crystal spade, horns, wing bones, two calibration passes, mottled red. | 0.852 |
 | Final | Coordinator wrap-up. | 0.852 |
 | User polish | Bigger teeth; attack kit replaced with FireBreath, TailWhip and FrontStomp. | 0.852 |
+| TailWhip v2 | Hip swing, hind-foot stepping, 205° spade arc. Updated with `DRAGON_STAGE=attack DRAGON_ATTACK=TailWhip`, which re-delivers only the clip, the GLB, `manifest.attacks.TailWhip`, the AttackCheck row and the mp4. | 0.852 |
 
 ## Deliberate deviations (animation-friendly construction)
 

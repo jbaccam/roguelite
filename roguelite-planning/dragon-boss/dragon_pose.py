@@ -538,25 +538,248 @@ def fire_pose(sk, t):
     return pose
 
 
-# ---- TailWhip: coil and twist (tail to the right), fast wide sweep to the left, recover
-WHIP = {'frames': 52, 'coil': (0.0, 0.27), 'whip': (0.27, 0.46), 'impact_frame': 23}
+# ---- TailWhip v2 (user: "more butt into it, a wider AoE"). The hindquarters
+# swing hard around the planted front legs (hips yaw +30 wind-up -> -48 follow
+# through, the spine bending between a fixed chest and the hips); the hind feet
+# step around with the body (automatic step planner: a foot lifts when the body
+# is about to rotate > STEP_THRESH away from where it is planted, lands where
+# the body will be, never both at once except the hop during the fast swing);
+# the tail coils to the right, straightens through the fast part with the base
+# leading and the spade trailing (per-bone lag), snaps through and recovers.
+WHIP = {'frames': 72, 'impact_frame': 27}
+WHIP_PHI = [(1, 0.0), (16, 30.0), (20, 32.0), (31, -46.0), (38, -48.0), (66, 0.0), (72, 0.0)]   # hips yaw, + = rear to the dragon's right
+WHIP_TAU = [(1, 0.0), (16, 116.0), (20, 124.0), (31, -100.0), (35, -126.0), (40, -112.0), (66, 0.0), (72, 0.0)]  # total tail curl
+WHIP_WING = [(1, 0.0), (6, 0.0), (16, 1.0), (42, 1.0), (62, 0.0), (72, 0.0)]      # wings raised clear of the tail
+WHIP_LIFT = [(1, 0.0), (14, 8.0), (38, 8.0), (62, 0.0), (72, 0.0)]                # tail pitch (deg, total)
+WHIP_NECK = [(1, 0.0), (16, -14.0), (20, -16.0), (31, 12.0), (38, 14.0), (66, 0.0), (72, 0.0)]
+WHIP_FAST = (20, 31)
+WHIP_HOP = (21, 31)       # both hind feet in the air while the rear whips round
+WHIP_LAG = 3.5            # frames the spade trails the tail base
+STEP_FRAMES = 6
+STEP_THRESH = 8.0
+STEP_LIFT = 1.1
+HOP_LIFT = 1.5
+
+
+def curve(keys, f, fast=None):
+    """Piecewise eased curve through (frame, value) keys; the `fast` segment uses
+    smootherstep (slow in, very fast middle, slow out)."""
+    for (f0, v0), (f1, v1) in zip(keys[:-1], keys[1:]):
+        if f <= f1:
+            u = min(max((f - f0) / (f1 - f0), 0.0), 1.0) if f1 > f0 else 1.0
+            if fast is not None and (f0, f1) == tuple(fast):
+                e = u * u * u * (u * (u * 6 - 15) + 10)
+            else:
+                e = u * u * (3 - 2 * u)
+            return v0 + (v1 - v0) * e
+    return keys[-1][1]
+
+
+def whip_phi(f):
+    return curve(WHIP_PHI, f, WHIP_FAST)
+
+
+def whip_body_at(sk, phi):
+    pose = {'Hips': wx(sk, 'Hips', (0, 0, 1), phi)}
+    for b in ('Spine_1', 'Spine_2', 'Spine_3'):
+        pose[b] = wx(sk, b, (0, 0, 1), -phi / 3.0)
+    keep_bone_fixed(sk, pose, 'Chest')
+    return pose
+
+
+_HIND_TGT = {}
+
+
+def hind_target(sk, s, psi):
+    """Ground claw-row centre for hind foot s when the body is at hips yaw psi:
+    the rest target carried rigidly by the pelvis."""
+    key = (s, round(float(psi), 3))
+    if key not in _HIND_TGT:
+        W = sk.fk(whip_body_at(sk, psi))
+        M = W['Hips'] @ np.linalg.inv(sk.rest['Hips'])
+        r = np.array(RG.TOE_ROWS['hind'][0], float)
+        if s == 'R':
+            r = RG.mirror(r)
+        p = M @ np.array([r[0], r[1], r[2], 1.0])
+        _HIND_TGT[key] = (float(p[0]), float(p[1]))
+    return _HIND_TGT[key]
+
+
+def place_hind(sk, pose, s, target_xy, lift, splay):
+    """plant_hind with the claw row raised by `lift` (swing phase)."""
+    rest_row = np.array(RG.TOE_ROWS['hind'][0], float)
+    if s == 'R':
+        rest_row = RG.mirror(rest_row)
+    ball = sk.head[f'Foot_{s}']
+    hock = sk.head[f'Ankle_{s}']
+    Ry = rot_axis((0, 0, 1), splay)
+    tgt = np.array([target_xy[0], target_xy[1], rest_row[2] + lift])
+    ball_t = tgt + Ry @ (ball - rest_row)
+    hock_t = tgt + Ry @ (hock - rest_row)
+    knee_rest = sk.head[f'Shin_{s}']
+    pole = knee_rest - 0.5 * (sk.head[f'Thigh_{s}'] + hock)
+    two_bone_ik(sk, pose, f'Thigh_{s}', f'Shin_{s}', hock_t, Ry @ pole)
+    aim(sk, pose, f'Ankle_{s}', ball_t)
+    set_world_rot(sk, pose, f'Foot_{s}', Ry @ sk.rest[f'Foot_{s}'][:3, :3])
+    return pose
+
+
+_WHIP_SCHED = None
+
+
+def whip_schedule():
+    """Per hind foot: list of swings (f_start, f_end, psi_from, psi_to); planted otherwise.
+    A foot lifts when the body is about to turn more than STEP_THRESH away from
+    where it is planted and lands where the body will be (plus a small lead in
+    the direction of motion). The feet alternate (a foot may lift once the other
+    is past half its swing); both leave together only for the hop."""
+    global _WHIP_SCHED
+    if _WHIP_SCHED is not None:
+        return _WHIP_SCHED
+    n = WHIP['frames']
+    sched = {'HL': [], 'HR': []}
+    st = {k: {'psi': 0.0, 'swing': None} for k in sched}
+    for f in range(1, n + 1):
+        for k in sched:
+            sw = st[k]['swing']
+            if sw and f >= sw[1]:
+                st[k]['psi'] = sw[3]
+                st[k]['swing'] = None
+        if f == WHIP_HOP[0]:
+            for k in sched:
+                sw = (f, WHIP_HOP[1], st[k]['psi'], whip_phi(WHIP_HOP[1]))
+                st[k]['swing'] = sw
+                sched[k].append(sw)
+            continue
+        if WHIP_HOP[0] <= f < WHIP_HOP[1]:
+            continue
+        moving_right = whip_phi(min(f + 1, n)) > whip_phi(f)
+        order = ('HR', 'HL') if moving_right else ('HL', 'HR')
+        for k in order:
+            other = 'HL' if k == 'HR' else 'HR'
+            if st[k]['swing']:
+                continue
+            osw = st[other]['swing']
+            if osw and (f - osw[0]) < 0.5 * (osw[1] - osw[0]):
+                continue
+            land = min(f + STEP_FRAMES, n)
+            if f < WHIP_HOP[0] < land + 1:
+                continue                                  # the hop is about to take this foot
+            fut = whip_phi(min(f + STEP_FRAMES // 2, n))
+            settle = f >= n - STEP_FRAMES and abs(st[k]['psi'] - whip_phi(n)) > 0.3 and abs(whip_phi(f) - whip_phi(n)) < 0.5
+            if abs(fut - st[k]['psi']) > STEP_THRESH or settle:
+                lead = float(np.clip(whip_phi(min(land + 3, n)) - whip_phi(land), -6, 6))
+                to = whip_phi(n) if settle else whip_phi(land) + lead
+                if abs(whip_phi(n) - to) < 1.5 and land >= n - 8:
+                    to = whip_phi(n)
+                sw = (f, land, st[k]['psi'], to)
+                st[k]['swing'] = sw
+                sched[k].append(sw)
+    _WHIP_SCHED = sched
+    return sched
+
+
+def hind_state(k, f):
+    """('planted', psi) or ('swing', psi_from, psi_to, u, hop)."""
+    psi = 0.0
+    for (fs, fe, pa, pb) in whip_schedule()[k]:
+        if f < fs:
+            return ('planted', psi)
+        if fs <= f < fe:
+            return ('swing', pa, pb, (f - fs) / (fe - fs), fs == WHIP_HOP[0])
+        psi = pb
+    return ('planted', psi)
+
+
+def whip_tail(sk, f):
+    n = RG.TAIL_N
+    w = np.array([0.6 + 0.8 * (i + 1) / n for i in range(n)])
+    w /= w.sum()
+    lift = curve(WHIP_LIFT, f) / n
+    q = {}
+    for i in range(n):
+        fi = f - WHIP_LAG * i / (n - 1)
+        tau = curve(WHIP_TAU, fi, WHIP_FAST)
+        b = f'Tail_{i + 1}'
+        q[b] = compose(wx(sk, b, (0, 0, 1), tau * w[i]), local_axis_rot((1, 0, 0), lift))
+    return q
 
 
 def whip_pose(sk, t):
-    c = seg(t, *WHIP['coil'])
-    w = seg(t, *WHIP['whip'])
-    r = seg(t, 0.52, 1.0)
-    tail_yaw = (56 * c - 140 * w) * (1 - r) if t < 0.52 else (56 - 140) * (1 - r)
-    hips_yaw = (12 * c - 26 * w) * (1 - r) if t < 0.52 else (12 - 26) * (1 - r)
-    lift = 10 * min(c + w, 1.0) * (1 - r)
-    pose = {'Hips': wx(sk, 'Hips', (0, 0, 1), hips_yaw)}
-    for b in ('Spine_1', 'Spine_2', 'Spine_3'):
-        pose[b] = wx(sk, b, (0, 0, 1), -hips_yaw / 3.0)
-    keep_bone_fixed(sk, pose, 'Chest')
-    pose = merge(pose, tail_pose(sk, yaw_deg=tail_yaw, pitch_deg=lift),
-                 neck_pose(sk, yaw_deg=-18 * c * (1 - r) + 14 * w * (1 - r), head_yaw=-8 * c * (1 - r)))
-    plant_all(sk, pose)
+    n = WHIP['frames']
+    f = 1 + t * (n - 1)
+    phi = whip_phi(f)
+    pose = whip_body_at(sk, phi)
+    pose = merge(pose, whip_tail(sk, f), neck_pose(sk, yaw_deg=curve(WHIP_NECK, f), head_yaw=0.5 * curve(WHIP_NECK, f)))
+    pose.update(wing_blend(sk, curve(WHIP_WING, f)))
+    plant_all(sk, pose, ('FL', 'FR'))
+    for k in ('HL', 'HR'):
+        s = k[1]
+        stt = hind_state(k, f)
+        if stt[0] == 'planted':
+            place_hind(sk, pose, s, hind_target(sk, s, stt[1]), 0.0, stt[1])
+        else:
+            _, pa, pb, u, hop = stt
+            e = u * u * (3 - 2 * u)
+            a = np.array(hind_target(sk, s, pa))
+            b = np.array(hind_target(sk, s, pb))
+            xy = a + (b - a) * e
+            place_hind(sk, pose, s, xy, (HOP_LIFT if hop else STEP_LIFT) * math.sin(math.pi * u), pa + (pb - pa) * e)
     return pose
+
+
+def whip_planted_intervals():
+    """Frames during which each foot is planted: {'FL': [(1, n)], 'HL': [(f0, f1), ...], ...}."""
+    n = WHIP['frames']
+    out = {'FL': [(1, n)], 'FR': [(1, n)]}
+    for k in ('HL', 'HR'):
+        iv = []
+        start = 1
+        for (fs, fe, pa, pb) in whip_schedule()[k]:
+            if fs > start:
+                iv.append((start, fs))
+            start = fe
+        if start <= n:
+            iv.append((start, n))
+        out[k] = iv
+    return out
+
+
+def spade_tip(sk, pose):
+    W = sk.fk(pose)
+    return (W['TailTip'] @ np.array([0, 2.6, 0, 1]))[:3]      # spade point (dragon_design.spade)
+
+
+def fit_circle(P):
+    """Least-squares circle through 2D points -> (centre, radius)."""
+    A = np.c_[2 * P[:, 0], 2 * P[:, 1], np.ones(len(P))]
+    b = (P ** 2).sum(1)
+    cx, cy, c = np.linalg.lstsq(A, b, rcond=None)[0]
+    return np.array([cx, cy]), float(np.sqrt(c + cx * cx + cy * cy))
+
+
+def whip_arc(sk):
+    """Spade path over the whole action; arc angles about the fitted pivot of the
+    fast swing, plus about the rest tail base."""
+    n = WHIP['frames']
+    pts = []
+    for f in range(1, n + 1):
+        pts.append((f, spade_tip(sk, whip_pose(sk, (f - 1) / (n - 1)))))
+    fast = np.array([p[:2] for f, p in pts if WHIP_FAST[0] <= f <= WHIP_FAST[1] + 4])
+    c, r = fit_circle(fast)
+
+    def ang(p, o):
+        return math.degrees(math.atan2(p[0] - o[0], p[1] - o[1]))
+    a = np.unwrap(np.radians([ang(p, c) for _, p in pts]))
+    a = np.degrees(a)
+    base = sk.rest['Tail_1'][:3, 3]
+    ab = np.degrees(np.unwrap(np.radians([ang(p, base) for _, p in pts])))
+    rad = np.array([np.hypot(p[0] - c[0], p[1] - c[1]) for _, p in pts])
+    spd = np.abs(np.diff(a))
+    fast_idx = [i for i, (f, _) in enumerate(pts[:-1]) if WHIP_FAST[0] <= f <= WHIP_FAST[1]]
+    imp = max(fast_idx, key=lambda i: spd[i])
+    return {'pts': pts, 'centre': c, 'radius_fit': r, 'angles': a, 'angles_base': ab, 'radii': rad,
+            'impact_frame': pts[imp + 1][0], 'speed_deg_per_frame': spd}
 
 
 # ---- FrontStomp: rear up on the hind legs (front feet leave the ground, wings
@@ -623,19 +846,19 @@ ATTACKS = {
 def attack_keys(sk, name):
     spec, fn = ATTACKS[name]
     n = spec['frames']
-    frames = list(range(1, n + 1, KEY_STEP))
-    if frames[-1] != n:
-        frames.append(n)
-    if spec['impact_frame'] not in frames:
-        frames = sorted(frames + [spec['impact_frame']])
+    frames = set(range(1, n + 1, KEY_STEP)) | {n, spec['impact_frame']}
+    if name == 'TailWhip':      # fast swing and stepping feet: key every frame so planted feet hold exactly
+        frames = set(range(1, n + 1))
+    frames = sorted(frames)
     return [(f, fn(sk, (f - 1) / (n - 1))) for f in frames]
 
 
 def attack_phase_frames(name):
     spec, _ = ATTACKS[name]
     n = spec['frames']
-    windup = {'FireBreath': 16, 'TailWhip': 14, 'FrontStomp': 20}[name]
-    return {'windup': windup, 'impact': spec['impact_frame'], 'recovery': int(n * 0.85)}
+    windup = {'FireBreath': 16, 'TailWhip': 20, 'FrontStomp': 20}[name]
+    recovery = {'FireBreath': 51, 'TailWhip': 54, 'FrontStomp': 40}[name]
+    return {'windup': windup, 'impact': spec['impact_frame'], 'recovery': recovery}
 
 
 def fire_origin_design():
@@ -674,26 +897,39 @@ def attack_data(sk, name):
         out['hold_frames'] = [f0, f1]
         out['breath'] = hold
     elif name == 'TailWhip':
-        pivot = sk.rest['Tail_1'][:3, 3]
-        tip_local = np.array([0, 2.6, 0, 1])      # spade point, 2.6 studs along the TailTip bone (dragon_design.spade)
-        f0 = int(round(1 + WHIP['whip'][0] * (n - 1)))
-        f1 = int(round(1 + WHIP['whip'][1] * (n - 1)))
-        pts = []
-        for f in range(f0, f1 + 1):
-            W = sk.fk(fn(sk, (f - 1) / (n - 1)))
-            pts.append((f, (W['TailTip'] @ tip_local)[:3]))
-        ang = [math.degrees(math.atan2(p[0] - pivot[0], p[1] - pivot[1])) for _, p in pts]
-        rad = [float(np.hypot(p[0] - pivot[0], p[1] - pivot[1])) for _, p in pts]
+        arc = whip_arc(sk)
+        a = arc['angles']
+        ab = arc['angles_base']
+        fr = [f for f, _ in arc['pts']]
+        i0 = int(np.argmin(a[:WHIP_FAST[1]]))            # wind-up extreme
+        i1 = int(np.argmax(a))                            # follow-through extreme
+        fast = [i for i, f in enumerate(fr) if WHIP_FAST[0] <= f <= WHIP_FAST[1]]
+        c = arc['centre']
         out['spade_arc'] = {
-            'pivot': [round(float(v), 3) for v in pivot],
+            'pivot': [round(float(c[0]), 3), round(float(c[1]), 3), 0.0],
+            'pivot_note': 'least-squares circle centre of the spade path through the fast swing (vertical axis)',
             'angle_convention': 'degrees about +Z from +Y (straight back), positive toward +X (dragon left)',
-            'start_angle_deg': round(ang[0], 1), 'end_angle_deg': round(ang[-1], 1),
-            'radius_mean': round(float(np.mean(rad)), 3), 'radius_min': round(float(min(rad)), 3),
-            'radius_max': round(float(max(rad)), 3),
-            'height_range': [round(float(min(p[2] for _, p in pts)), 3), round(float(max(p[2] for _, p in pts)), 3)],
-            'whip_frames': [f0, f1],
-            'samples': [{'frame': f, 'tip': [round(float(v), 3) for v in p]} for f, p in pts[::2]],
+            'start_angle_deg': round(float(a[i0]), 1), 'start_frame': fr[i0],
+            'end_angle_deg': round(float(a[i1]), 1), 'end_frame': fr[i1],
+            'sweep_deg': round(float(a[i1] - a[i0]), 1),
+            'radius_fit': round(arc['radius_fit'], 3),
+            'radius_fast_swing': [round(float(min(arc['radii'][fast])), 3), round(float(max(arc['radii'][fast])), 3)],
+            'radius_max': round(float(max(arc['radii'])), 3),
+            'about_rest_tail_base': {'pivot': [round(float(v), 3) for v in sk.rest['Tail_1'][:3, 3]],
+                                     'start_angle_deg': round(float(ab[i0]), 1), 'end_angle_deg': round(float(ab[i1]), 1),
+                                     'sweep_deg': round(float(ab[i1] - ab[i0]), 1)},
+            'height_range': [round(float(min(p[2] for _, p in arc['pts'])), 3),
+                             round(float(max(p[2] for _, p in arc['pts'])), 3)],
+            'fast_swing_frames': list(WHIP_FAST),
+            'peak_speed_deg_per_frame': round(float(max(arc['speed_deg_per_frame'])), 1),
+            'samples': [{'frame': f, 'tip': [round(float(v), 3) for v in p]} for f, p in arc['pts'][::2]],
         }
+        sched = whip_schedule()
+        out['hind_steps'] = {k: [{'lift_frame': fs, 'land_frame': fe, 'from_hips_yaw': round(pa, 1),
+                                  'to_hips_yaw': round(pb, 1)} for (fs, fe, pa, pb) in v] for k, v in sched.items()}
+        out['planted_intervals'] = {k: [list(iv) for iv in v] for k, v in whip_planted_intervals().items()}
+        out['hips_yaw_deg'] = {'windup': max(v for _, v in WHIP_PHI), 'follow_through': min(v for _, v in WHIP_PHI),
+                               'note': '+ swings the rear to the dragon right; the chest stays fixed over the planted front feet'}
     elif name == 'FrontStomp':
         W = sk.fk(fn(sk, (spec['impact_frame'] - 1) / (n - 1)))
         pts = {}

@@ -1775,98 +1775,491 @@
     "TailWhip": {
       "frames": [
         1,
-        52
+        72
       ],
       "fps": 24,
-      "impact_frame": 23,
-      "impact_time_s": 0.9167,
+      "impact_frame": 27,
+      "impact_time_s": 1.0833,
       "spade_arc": {
         "pivot": [
-          0.0,
-          6.7,
-          6.1
+          1.864,
+          5.889,
+          0.0
         ],
+        "pivot_note": "least-squares circle centre of the spade path through the fast swing (vertical axis)",
         "angle_convention": "degrees about +Z from +Y (straight back), positive toward +X (dragon left)",
-        "start_angle_deg": -45.6,
-        "end_angle_deg": 62.0,
-        "radius_mean": 16.213,
-        "radius_min": 15.523,
-        "radius_max": 16.545,
+        "start_angle_deg": -93.5,
+        "start_frame": 21,
+        "end_angle_deg": 111.5,
+        "end_frame": 37,
+        "sweep_deg": 205.1,
+        "radius_fit": 16.591,
+        "radius_fast_swing": [
+          15.726,
+          17.831
+        ],
+        "radius_max": 19.116,
+        "about_rest_tail_base": {
+          "pivot": [
+            0.0,
+            6.7,
+            6.1
+          ],
+          "start_angle_deg": -97.0,
+          "end_angle_deg": 111.8,
+          "sweep_deg": 208.7
+        },
         "height_range": [
-          3.299,
-          3.653
+          1.974,
+          3.305
         ],
-        "whip_frames": [
-          15,
-          24
+        "fast_swing_frames": [
+          20,
+          31
         ],
+        "peak_speed_deg_per_frame": 33.3,
         "samples": [
+          {
+            "frame": 1,
+            "tip": [
+              0.0,
+              23.073,
+              1.974
+            ]
+          },
+          {
+            "frame": 3,
+            "tip": [
+              -0.792,
+              23.072,
+              2.059
+            ]
+          },
+          {
+            "frame": 5,
+            "tip": [
+              -3.459,
+              22.821,
+              2.276
+            ]
+          },
+          {
+            "frame": 7,
+            "tip": [
+              -7.681,
+              21.543,
+              2.561
+            ]
+          },
+          {
+            "frame": 9,
+            "tip": [
+              -12.107,
+              18.605,
+              2.833
+            ]
+          },
+          {
+            "frame": 11,
+            "tip": [
+              -15.269,
+              14.368,
+              3.008
+            ]
+          },
+          {
+            "frame": 13,
+            "tip": [
+              -16.515,
+              10.123,
+              3.036
+            ]
+          },
           {
             "frame": 15,
             "tip": [
-              -11.649,
-              18.094,
-              3.485
+              -16.341,
+              7.19,
+              2.942
             ]
           },
           {
             "frame": 17,
             "tip": [
-              -8.582,
-              20.758,
-              3.577
+              -15.812,
+              6.014,
+              2.866
             ]
           },
           {
             "frame": 19,
             "tip": [
-              -0.442,
-              23.235,
-              3.653
+              -15.636,
+              5.153,
+              2.836
             ]
           },
           {
             "frame": 21,
             "tip": [
-              8.611,
-              20.483,
-              3.551
+              -15.324,
+              4.828,
+              2.806
             ]
           },
           {
             "frame": 23,
             "tip": [
-              13.091,
-              15.382,
-              3.357
+              -14.466,
+              8.205,
+              2.809
+            ]
+          },
+          {
+            "frame": 25,
+            "tip": [
+              -8.836,
+              17.413,
+              2.961
+            ]
+          },
+          {
+            "frame": 27,
+            "tip": [
+              7.79,
+              21.33,
+              3.241
+            ]
+          },
+          {
+            "frame": 29,
+            "tip": [
+              18.981,
+              10.884,
+              3.268
+            ]
+          },
+          {
+            "frame": 31,
+            "tip": [
+              18.567,
+              4.383,
+              3.058
+            ]
+          },
+          {
+            "frame": 33,
+            "tip": [
+              17.545,
+              2.733,
+              2.95
+            ]
+          },
+          {
+            "frame": 35,
+            "tip": [
+              16.562,
+              1.072,
+              2.88
+            ]
+          },
+          {
+            "frame": 37,
+            "tip": [
+              15.607,
+              0.471,
+              2.793
+            ]
+          },
+          {
+            "frame": 39,
+            "tip": [
+              15.915,
+              0.966,
+              2.8
+            ]
+          },
+          {
+            "frame": 41,
+            "tip": [
+              16.485,
+              1.786,
+              2.814
+            ]
+          },
+          {
+            "frame": 43,
+            "tip": [
+              16.696,
+              2.756,
+              2.773
+            ]
+          },
+          {
+            "frame": 45,
+            "tip": [
+              16.811,
+              4.222,
+              2.706
+            ]
+          },
+          {
+            "frame": 47,
+            "tip": [
+              16.88,
+              6.28,
+              2.631
+            ]
+          },
+          {
+            "frame": 49,
+            "tip": [
+              16.653,
+              8.855,
+              2.546
+            ]
+          },
+          {
+            "frame": 51,
+            "tip": [
+              15.897,
+              11.779,
+              2.447
+            ]
+          },
+          {
+            "frame": 53,
+            "tip": [
+              14.461,
+              14.794,
+              2.336
+            ]
+          },
+          {
+            "frame": 55,
+            "tip": [
+              12.342,
+              17.588,
+              2.222
+            ]
+          },
+          {
+            "frame": 57,
+            "tip": [
+              9.707,
+              19.883,
+              2.115
+            ]
+          },
+          {
+            "frame": 59,
+            "tip": [
+              6.862,
+              21.515,
+              2.03
+            ]
+          },
+          {
+            "frame": 61,
+            "tip": [
+              4.173,
+              22.481,
+              1.981
+            ]
+          },
+          {
+            "frame": 63,
+            "tip": [
+              1.986,
+              22.925,
+              1.974
+            ]
+          },
+          {
+            "frame": 65,
+            "tip": [
+              0.581,
+              23.055,
+              1.974
+            ]
+          },
+          {
+            "frame": 67,
+            "tip": [
+              0.087,
+              23.072,
+              1.974
+            ]
+          },
+          {
+            "frame": 69,
+            "tip": [
+              0.001,
+              23.073,
+              1.974
+            ]
+          },
+          {
+            "frame": 71,
+            "tip": [
+              0.0,
+              23.073,
+              1.974
             ]
           }
         ]
       },
+      "hind_steps": {
+        "HL": [
+          {
+            "lift_frame": 7,
+            "land_frame": 13,
+            "from_hips_yaw": 0.0,
+            "to_hips_yaw": 30.0
+          },
+          {
+            "lift_frame": 21,
+            "land_frame": 31,
+            "from_hips_yaw": 30.0,
+            "to_hips_yaw": -46.0
+          },
+          {
+            "lift_frame": 47,
+            "land_frame": 53,
+            "from_hips_yaw": -46.0,
+            "to_hips_yaw": -15.4
+          },
+          {
+            "lift_frame": 57,
+            "land_frame": 63,
+            "from_hips_yaw": -15.4,
+            "to_hips_yaw": 0.0
+          }
+        ],
+        "HR": [
+          {
+            "lift_frame": 4,
+            "land_frame": 10,
+            "from_hips_yaw": 0.0,
+            "to_hips_yaw": 25.4
+          },
+          {
+            "lift_frame": 21,
+            "land_frame": 31,
+            "from_hips_yaw": 25.4,
+            "to_hips_yaw": -46.0
+          },
+          {
+            "lift_frame": 44,
+            "land_frame": 50,
+            "from_hips_yaw": -46.0,
+            "to_hips_yaw": -23.1
+          },
+          {
+            "lift_frame": 53,
+            "land_frame": 59,
+            "from_hips_yaw": -23.1,
+            "to_hips_yaw": -2.7
+          },
+          {
+            "lift_frame": 66,
+            "land_frame": 72,
+            "from_hips_yaw": -2.7,
+            "to_hips_yaw": 0.0
+          }
+        ]
+      },
+      "planted_intervals": {
+        "FL": [
+          [
+            1,
+            72
+          ]
+        ],
+        "FR": [
+          [
+            1,
+            72
+          ]
+        ],
+        "HL": [
+          [
+            1,
+            7
+          ],
+          [
+            13,
+            21
+          ],
+          [
+            31,
+            47
+          ],
+          [
+            53,
+            57
+          ],
+          [
+            63,
+            72
+          ]
+        ],
+        "HR": [
+          [
+            1,
+            4
+          ],
+          [
+            10,
+            21
+          ],
+          [
+            31,
+            44
+          ],
+          [
+            50,
+            53
+          ],
+          [
+            59,
+            66
+          ],
+          [
+            72,
+            72
+          ]
+        ]
+      },
+      "hips_yaw_deg": {
+        "windup": 32.0,
+        "follow_through": -48.0,
+        "note": "+ swings the rear to the dragon right; the chest stays fixed over the planted front feet"
+      },
       "phase_frames": {
-        "windup": 14,
-        "impact": 23,
-        "recovery": 44
+        "windup": 20,
+        "impact": 27,
+        "recovery": 54
       },
       "planted_feet_drift": {
         "FL": {
-          "max_horizontal": 0.0019,
+          "max_horizontal": 0.0,
           "max_vertical": 0.0
         },
         "FR": {
-          "max_horizontal": 0.0019,
+          "max_horizontal": 0.0,
           "max_vertical": 0.0
         },
         "HL": {
-          "max_horizontal": 0.0053,
-          "max_vertical": 0.0034
+          "max_horizontal": 0.0,
+          "max_vertical": 0.0
         },
         "HR": {
-          "max_horizontal": 0.0029,
-          "max_vertical": 0.0021
+          "max_horizontal": 0.0,
+          "max_vertical": 0.0
         }
       },
-      "planted_feet": "all four"
+      "planted_feet": "front feet throughout; hind feet between their steps (see hind_steps / planted_intervals)"
     },
     "FrontStomp": {
       "frames": [

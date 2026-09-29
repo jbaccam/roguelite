@@ -249,8 +249,9 @@ check('manifest: three attacks with impact frames', all(n in atk and atk[n].get(
 check('manifest: FireBreath origin + per-frame breath direction', bool(atk.get('FireBreath', {}).get('FireOrigin'))
       and len(atk.get('FireBreath', {}).get('breath', [])) > 5, frames=len(atk.get('FireBreath', {}).get('breath', [])))
 arc = atk.get('TailWhip', {}).get('spade_arc', {})
-check('manifest: TailWhip spade arc', 'start_angle_deg' in arc and 'radius_mean' in arc,
-      start=arc.get('start_angle_deg'), end=arc.get('end_angle_deg'), radius=arc.get('radius_mean'))
+check('manifest: TailWhip spade arc (sweep >= 200 deg)', 'start_angle_deg' in arc and 'radius_fit' in arc
+      and arc.get('sweep_deg', 0) >= 200, start=arc.get('start_angle_deg'), end=arc.get('end_angle_deg'),
+      sweep=arc.get('sweep_deg'), radius=arc.get('radius_fit'), pivot=arc.get('pivot'))
 ip = atk.get('FrontStomp', {}).get('impact_points', {})
 check('manifest: FrontStomp impact points for both front feet', 'Front_L' in ip and 'Front_R' in ip, points=ip)
 drift = {n: max(max(d.values()) for d in atk[n]['planted_feet_drift'].values()) for n in ATTACKS if n in atk}

@@ -1096,37 +1096,83 @@ def rom_sheet(rig, cam, act, sections, keys):
     rig.animation_data.action = None
 
 
-def attack_sheet(rig, sk, cam, sections):
-    """AttackCheck: FireBreath / TailWhip / FrontStomp at windup, impact and
-    recovery, front and 3/4 (one row per attack)."""
+def planted_intervals(name, f0, f1):
+    """Frames during which each foot is planted, per attack."""
+    if name == 'TailWhip':
+        return PZ.whip_planted_intervals()
+    if name == 'FrontStomp':
+        imp = PZ.ATTACKS[name][0]['impact_frame']
+        return {'FL': [(imp, f1)], 'FR': [(imp, f1)], 'HL': [(f0, f1)], 'HR': [(f0, f1)]}
+    return {k: [(f0, f1)] for k in ('FL', 'FR', 'HL', 'HR')}
+
+
+def planted_slide(rig, act, name):
+    """Max horizontal/vertical drift (studs) of each foot while planted, over every
+    frame of an attack, measured on the evaluated rig (after Blender's
+    interpolation), relative to where the foot was when it was planted."""
+    sc = bpy.context.scene
+    set_action(rig, act)
+    probes = {'FL': 'Hand_L_Toe2_2', 'FR': 'Hand_R_Toe2_2', 'HL': 'Foot_L_Toe2_2', 'HR': 'Foot_R_Toe2_2'}
+    f0, f1 = int(act.frame_range[0]), int(act.frame_range[1])
+    pos = {}
+    for f in range(f0, f1 + 1):
+        sc.frame_set(f)
+        pos[f] = {k: (rig.matrix_world @ rig.pose.bones[b].head).copy() for k, b in probes.items()}
+    worst = {k: [0.0, 0.0] for k in probes}
+    for k, ivs in planted_intervals(name, f0, f1).items():
+        for (a, b) in ivs:
+            ref = pos[a][k]
+            for f in range(a, b + 1):
+                p = pos[f][k]
+                worst[k][0] = max(worst[k][0], ((p.x - ref.x) ** 2 + (p.y - ref.y) ** 2) ** 0.5)
+                worst[k][1] = max(worst[k][1], abs(p.z - ref.z))
+    rig.animation_data.action = None
+    return {k: {'max_horizontal': round(v[0], 4), 'max_vertical': round(v[1], 4)} for k, v in worst.items()}
+
+
+ATTACK_VIEWS = {
+    'default': (('front', (0.0, -1.0, 0.22), 44.0), ('3/4', (0.85, -0.8, 0.34), 48.0)),
+    'TailWhip': (('front, high', (0.0, -1.0, 0.85), 52.0), ('3/4, high', (0.85, -0.8, 0.95), 56.0)),
+}
+
+
+def attack_tiles(rig, cam, sections, name):
+    """Render windup / impact / recovery x (front, 3/4) for one attack; returns paths, labels."""
     sc = bpy.context.scene
     apply_pose(rig, {})
     P = measure(sections)
     c = Vector(0.5 * (P.min(0) + P.max(0))) + Vector((0, 0, 0.5))
+    act = bpy.data.actions[name]
+    set_action(rig, act)
+    ph = PZ.attack_phase_frames(name)
     paths, labels = [], []
-    for name in PZ.ATTACKS:
-        act = bpy.data.actions[name]
-        set_action(rig, act)
-        ph = PZ.attack_phase_frames(name)
-        views = (('front', (0.0, -1.0, 0.22), 44.0), ('3/4', (0.85, -0.8, 0.34), 48.0))
-        if name == 'TailWhip':      # high views so the sweep over the back reads
-            views = (('front, high', (0.0, -1.0, 0.85), 48.0), ('3/4, high', (0.85, -0.8, 0.95), 52.0))
-        for view, dvec, dist in views:
-            for phase in ('windup', 'impact', 'recovery'):
-                sc.frame_set(ph[phase])
-                dv = Vector(dvec).normalized()
-                aim_cam(cam, c + dv * dist, c, lens=35)
-                p = WORK / f'atk_{name}_{phase}_{view.replace("/", "").replace(", ", "_")}.png'
-                render_to(p, 480, 360, samples=16)
-                paths.append(p)
-                labels.append(f'{name} {phase} f{ph[phase]} ({view})')
-    tile(paths, 6, HERE / 'previews' / 'AttackCheck.png')
-    SHEETS['AttackCheck.png'] = {'cols': 6, 'tile': [480, 360], 'labels': labels}
+    for view, dvec, dist in ATTACK_VIEWS.get(name, ATTACK_VIEWS['default']):
+        for phase in ('windup', 'impact', 'recovery'):
+            sc.frame_set(ph[phase])
+            dv = Vector(dvec).normalized()
+            aim_cam(cam, c + dv * dist, c, lens=35)
+            p = WORK / f'atk_{name}_{phase}_{view.replace("/", "").replace(", ", "_")}.png'
+            render_to(p, 480, 360, samples=16)
+            paths.append(p)
+            labels.append(f'{name} {phase} f{ph[phase]} ({view})')
     rig.animation_data.action = None
     apply_pose(rig, {})
+    return paths, labels
 
 
-def attack_videos(rig, cam, sections):
+def attack_sheet(rig, sk, cam, sections):
+    """AttackCheck: FireBreath / TailWhip / FrontStomp at windup, impact and
+    recovery, front and 3/4 (one row per attack)."""
+    paths, labels = [], []
+    for name in PZ.ATTACKS:
+        p, l = attack_tiles(rig, cam, sections, name)
+        paths += p
+        labels += l
+    tile(paths, 6, HERE / 'previews' / 'AttackCheck.png')
+    SHEETS['AttackCheck.png'] = {'cols': 6, 'tile': [480, 360], 'labels': labels}
+
+
+def attack_videos(rig, cam, sections, only=None):
     """Short low-res Workbench mp4 per attack (3/4 view, textured, 24 fps)."""
     sc = bpy.context.scene
     apply_pose(rig, {})
@@ -1134,10 +1180,12 @@ def attack_videos(rig, cam, sections):
     c = Vector(0.5 * (P.min(0) + P.max(0))) + Vector((0, 0, 0.5))
     made = []
     for name in PZ.ATTACKS:
+        if only and name not in only:
+            continue
         act = bpy.data.actions[name]
         set_action(rig, act)
         dv = Vector((0.8, -0.85, 0.34 if name != 'TailWhip' else 0.9)).normalized()
-        aim_cam(cam, c + dv * 50, c, lens=35)
+        aim_cam(cam, c + dv * (50 if name != 'TailWhip' else 58), c, lens=35)
         sc.render.engine = 'BLENDER_WORKBENCH'
         sh = sc.display.shading
         sh.light = 'STUDIO'
@@ -1176,29 +1224,6 @@ def attack_videos(rig, cam, sections):
     return made
 
 
-def planted_slide(rig, act, name):
-    """Max horizontal/vertical drift (studs) of each planted foot over every frame
-    of an attack, measured on the evaluated rig (after Blender's interpolation)."""
-    sc = bpy.context.scene
-    set_action(rig, act)
-    probes = {'FL': 'Hand_L_Toe2_2', 'FR': 'Hand_R_Toe2_2', 'HL': 'Foot_L_Toe2_2', 'HR': 'Foot_R_Toe2_2'}
-    rest = {k: rig.matrix_world @ rig.data.bones[b].head_local for k, b in probes.items()}
-    impact = PZ.ATTACKS[name][0]['impact_frame']
-    worst = {k: [0.0, 0.0] for k in probes}
-    f0, f1 = int(act.frame_range[0]), int(act.frame_range[1])
-    for f in range(f0, f1 + 1):
-        sc.frame_set(f)
-        for k, b in probes.items():
-            if name == 'FrontStomp' and k in ('FL', 'FR') and f < impact:
-                continue
-            p = rig.matrix_world @ rig.pose.bones[b].head
-            dxy = ((p.x - rest[k].x) ** 2 + (p.y - rest[k].y) ** 2) ** 0.5
-            worst[k][0] = max(worst[k][0], dxy)
-            worst[k][1] = max(worst[k][1], abs(p.z - rest[k].z))
-    rig.animation_data.action = None
-    return {k: {'max_horizontal': round(v[0], 4), 'max_vertical': round(v[1], 4)} for k, v in worst.items()}
-
-
 def make_attack_actions(rig, sk):
     acts = []
     info = {}
@@ -1211,7 +1236,8 @@ def make_attack_actions(rig, sk):
         data = PZ.attack_data(sk, name)
         data['phase_frames'] = PZ.attack_phase_frames(name)
         data['planted_feet_drift'] = planted_slide(rig, act, name)
-        data['planted_feet'] = 'all four' if name != 'FrontStomp' else 'hind feet throughout; front feet from the impact frame on'
+        data['planted_feet'] = {'FireBreath': 'all four', 'FrontStomp': 'hind feet throughout; front feet from the impact frame on',
+                                'TailWhip': 'front feet throughout; hind feet between their steps (see hind_steps / planted_intervals)'}[name]
         info[name] = data
         log('attack', name, 'impact', data['impact_frame'], 'drift', data['planted_feet_drift'])
     return acts, info
@@ -1362,6 +1388,106 @@ def main():
     log('done')
 
 
+def attack_update_main(names):
+    """DRAGON_STAGE=attack DRAGON_ATTACK=TailWhip: rebuild one (or more) attack
+    actions in the saved Dragon.blend and re-deliver only what depends on them:
+    the clip FBX, the GLB (all actions), manifest attacks.<name>, that attack's
+    row of AttackCheck.png and its mp4. The model, rig, other actions and the
+    rest-mesh FBX are untouched."""
+    global REVIEW
+    bpy.ops.wm.open_mainfile(filepath=str(HERE / f'{NAME}.blend'))
+    REVIEW = bpy.data.collections.get('REVIEW_ONLY')
+    rig = bpy.data.objects[f'{NAME}_Rig']
+    sections = {s: bpy.data.objects[f'{NAME}_{s}'] for s in SECTIONS if f'{NAME}_{s}' in bpy.data.objects}
+    cam = bpy.data.objects['RefCam']
+    sk = RG.Skeleton()
+    rig.animation_data_create()
+    rig.animation_data.action = None
+    man = json.loads((HERE / 'manifest.json').read_text())
+    for name in names:
+        old = bpy.data.actions.get(name)
+        if old:
+            bpy.data.actions.remove(old)
+        act = make_action(rig, name, PZ.attack_keys(sk, name))
+        mk = act.pose_markers.new('Impact')
+        mk.frame = PZ.ATTACKS[name][0]['impact_frame']
+        rig.animation_data.action = None
+        data = PZ.attack_data(sk, name)
+        data['phase_frames'] = PZ.attack_phase_frames(name)
+        data['planted_feet_drift'] = planted_slide(rig, act, name)
+        data['planted_feet'] = {'FireBreath': 'all four', 'FrontStomp': 'hind feet throughout; front feet from the impact frame on',
+                                'TailWhip': 'front feet throughout; hind feet between their steps (see hind_steps / planted_intervals)'}[name]
+        man.setdefault('attacks', {})[name] = data
+        log('attack', name, 'impact', data['impact_frame'], 'drift', data['planted_feet_drift'])
+    man['actions'] = [a.name for a in bpy.data.actions if a.use_fake_user]
+    (HERE / 'manifest.json').write_text(json.dumps(man, indent=2))
+    # exports: the changed clips + the GLB with every action
+    fbxdir = HERE / 'exports' / 'fbx'
+    common = dict(use_selection=True, apply_unit_scale=True, apply_scale_options='FBX_SCALE_NONE',
+                  axis_forward='-Z', axis_up='Y', add_leaf_bones=False, use_armature_deform_only=True,
+                  primary_bone_axis='Y', secondary_bone_axis='X', mesh_smooth_type='OFF', use_mesh_modifiers=False)
+
+    def select(obs):
+        for o in bpy.context.view_layer.objects:
+            o.select_set(False)
+        for o in obs:
+            o.select_set(True)
+        bpy.context.view_layer.objects.active = rig
+    for name in names:
+        act = bpy.data.actions[name]
+        set_action(rig, act)
+        select([rig])
+        bpy.ops.export_scene.fbx(filepath=str(fbxdir / f'{NAME}_{name}.fbx'), object_types={'ARMATURE'},
+                                 bake_anim=True, bake_anim_use_all_actions=False, bake_anim_use_nla_strips=False,
+                                 bake_anim_force_startend_keying=True, bake_anim_simplify_factor=0.0, **common)
+    order = ['ReferencePose', 'RigTest_ROM'] + list(PZ.ATTACKS)
+    acts = [bpy.data.actions[n] for n in order if n in bpy.data.actions]
+    rig.animation_data.action = None
+    for tr in list(rig.animation_data.nla_tracks):
+        rig.animation_data.nla_tracks.remove(tr)
+    for act in acts:
+        tr = rig.animation_data.nla_tracks.new()
+        tr.name = act.name
+        st = tr.strips.new(act.name, int(act.frame_range[0]), act)
+        st.name = act.name
+    for pb in rig.pose.bones:
+        pb.rotation_quaternion = (1, 0, 0, 0)
+        pb.location = (0, 0, 0)
+    select(list(sections.values()) + [rig])
+    bpy.ops.export_scene.gltf(filepath=str(HERE / 'exports' / 'glb' / f'{NAME}.glb'), export_format='GLB',
+                              use_selection=True, export_animations=True, export_animation_mode='NLA_TRACKS',
+                              export_skins=True, export_def_bones=True, export_normals=True, export_apply=False,
+                              export_yup=True)
+    for tr in list(rig.animation_data.nla_tracks):
+        rig.animation_data.nla_tracks.remove(tr)
+    # previews: that attack's AttackCheck row (pasted into the existing sheet) + its mp4
+    sheet = HERE / 'previews' / 'AttackCheck.png'
+    img = load_px(sheet)
+    labels = []
+    gap, tw, th = 6, 480, 360
+    for r, name in enumerate(PZ.ATTACKS):
+        if name in names:
+            paths, labs = attack_tiles(rig, cam, sections, name)
+            for c, p in enumerate(paths):
+                y = gap + r * (th + gap)
+                x = gap + c * (tw + gap)
+                img[y:y + th, x:x + tw] = load_px(p)
+        else:
+            ph = PZ.attack_phase_frames(name)
+            labs = [f'{name} {phase} f{ph[phase]} ({view})' for view, _, _ in ATTACK_VIEWS.get(name, ATTACK_VIEWS['default'])
+                    for phase in ('windup', 'impact', 'recovery')]
+        labels += labs
+    save_px(img, sheet)
+    SHEETS['AttackCheck.png'] = {'cols': 6, 'tile': [tw, th], 'labels': labels}
+    write_sheet_labels()
+    attack_videos(rig, cam, sections, only=names)
+    set_action(rig, bpy.data.actions['ReferencePose'])
+    bpy.context.scene.frame_set(1)
+    restore_ref_cam(cam)
+    bpy.ops.wm.save_as_mainfile(filepath=str(HERE / f'{NAME}.blend'), compress=True)
+    log('attack update done', names)
+
+
 def previews_main():
     """DRAGON_STAGE=previews: reopen Dragon.blend and re-render the review sheets
     only (head close-up, turnaround, ROM sheet, AttackCheck). The model, rig,
@@ -1390,6 +1516,8 @@ if __name__ == '__main__':
         main()
     elif STAGE == 'previews':
         previews_main()
+    elif STAGE == 'attack':
+        attack_update_main([a for a in os.environ.get('DRAGON_ATTACK', 'TailWhip').split(',') if a])
     else:
         full_main()
 

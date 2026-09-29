@@ -49,7 +49,7 @@ The user approved the themed rosters, requested ranged enemies for Frozen Pass a
   - Effects spawn from the club head's or the stomping foot's ground-contact point. Damage, knockdown and timing stay server-owned.
 - **Dragon:** Volcanic Crater boss; replaces the earlier undecided Dragon/Hydra slot. User direction, 2026-09-29: three attacks.
   - **Fire Breath:** he rears his head back, then extends his neck forward and breathes fire from the open jaw.
-  - **Tail Whip:** a wide, fast horizontal sweep of the tail, with the spade leading.
+  - **Tail Whip:** the hindquarters swing around hard, pivoting on the front legs, and the fully extended tail sweeps a wide arc of at least ~200° with the spade snapping through. This is a wide-area attack around his rear and sides.
   - **Front Stomp:** he rears up on his hind legs, lifting both front legs almost like a hop, then slams both front feet down together.
   - Hit shapes, ranges and timing are to be set in playtesting and stay server-owned. Effects spawn from the recorded mouth, tail-tip and front-foot points.
 

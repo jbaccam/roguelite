@@ -22,8 +22,8 @@
     },
     "fbx_TailWhip": {
       "path": "exports/fbx/Dragon_TailWhip.fbx",
-      "bytes": 866076,
-      "sha256": "9ABEDFE93D3D6C5F17B661AD1F8593DD470A71DFDCE1768974FC926B5623A3F4"
+      "bytes": 981596,
+      "sha256": "0F9B5C4D4BC1C25BE7416D8C97A9E29B3B75FAE4C86E58FDA0C987B36CA992DF"
     },
     "fbx_FrontStomp": {
       "path": "exports/fbx/Dragon_FrontStomp.fbx",
@@ -32,8 +32,8 @@
     },
     "glb": {
       "path": "exports/glb/Dragon.glb",
-      "bytes": 20148320,
-      "sha256": "742321D8558AE9CE7E2376F0195109B8E86FB2CF82B48D69F841CDE4AFF5E391"
+      "bytes": 20172700,
+      "sha256": "52B46EB761F265E31077E915F9DE0BB9E6F5BD1CB73C033A0A07108F93DBACF5"
     }
   },
   "checks": [
@@ -266,10 +266,10 @@
     {
       "name": "fbx clip TailWhip: attack motion present, frame count matches manifest",
       "ok": true,
-      "max_rotation_deg": 101.8,
-      "bones_moving": 45,
-      "frames": 52,
-      "manifest_frames": 52
+      "max_rotation_deg": 171.5,
+      "bones_moving": 63,
+      "frames": 72,
+      "manifest_frames": 72
     },
     {
       "name": "fbx clip FrontStomp: armature-only, action present",
@@ -423,7 +423,7 @@
       "ok": true,
       "impact_frames": {
         "FireBreath": 25,
-        "TailWhip": 23,
+        "TailWhip": 27,
         "FrontStomp": 27
       }
     },
@@ -433,11 +433,17 @@
       "frames": 12
     },
     {
-      "name": "manifest: TailWhip spade arc",
+      "name": "manifest: TailWhip spade arc (sweep >= 200 deg)",
       "ok": true,
-      "start": -45.6,
-      "end": 62.0,
-      "radius": 16.213
+      "start": -93.5,
+      "end": 111.5,
+      "sweep": 205.1,
+      "radius": 16.591,
+      "pivot": [
+        1.864,
+        5.889,
+        0.0
+      ]
     },
     {
       "name": "manifest: FrontStomp impact points for both front feet",
@@ -484,7 +490,7 @@
       "ok": true,
       "max_drift": {
         "FireBreath": 0.0,
-        "TailWhip": 0.0053,
+        "TailWhip": 0.0,
         "FrontStomp": 0.0053
       }
     }
