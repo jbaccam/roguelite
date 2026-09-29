@@ -112,7 +112,8 @@ RunService.Heartbeat:Connect(function(dt)
  view:SetShards(own and own:GetAttribute('Shards') or 0,own and own:GetAttribute('BaggedShards') or 0)
  view:SetXP(own and own:GetAttribute('RunXP'),own and own:GetAttribute('RunXPRequired'),own and own:GetAttribute('RunLevel'))
  local root=player.Character and player.Character:FindFirstChild('HumanoidRootPart')
- local selected,health;local nearest=200
+ -- The nearest living boss in this arena; kiting it across the map keeps the bar up.
+ local selected,health;local nearest=600
  if root and activeHumanoid and activeHumanoid.Health>0 then
   for _,npc in game:GetService('CollectionService'):GetTagged('HammerBoss') do
    local h=npc:FindFirstChildOfClass('Humanoid');local part=npc.PrimaryPart

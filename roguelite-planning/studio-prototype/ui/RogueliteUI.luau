@@ -3,6 +3,7 @@ local TweenService=game:GetService("TweenService")
 local Players=game:GetService("Players")
 local RS=game:GetService("ReplicatedStorage")
 local Input=game:GetService("UserInputService")
+local TextService=game:GetService("TextService")
 local T=require(RS:WaitForChild("UITheme"))
 local UI={}
 local C=T.Color
@@ -18,11 +19,16 @@ function UI.mount(playerGui)
  local health=frame(hud,"Health",20,16,382,234)
  local healthScale=make("UIScale",health,{Scale=1})
  panel(health,"HealthFrame",25,8,355,56,"inset")
- local track=make("Frame",health,{Name="Track",Position=UDim2.fromOffset(54,20),Size=UDim2.fromOffset(307,30),BackgroundColor3=Color3.fromRGB(34,39,43),BorderSizePixel=0,ClipsDescendants=true})
- local trail=make("Frame",track,{Name="DamageTrail",Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.fromRGB(248,172,104),BorderSizePixel=0})
- local fill=make("Frame",track,{Name="Fill",Size=UDim2.fromScale(1,1),BackgroundColor3=C.red,BorderSizePixel=0})
- make("UIGradient",fill,{Rotation=90,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,109,103)),ColorSequenceKeypoint.new(0.18,Color3.fromRGB(255,45,54)),ColorSequenceKeypoint.new(0.52,Color3.fromRGB(227,22,35)),ColorSequenceKeypoint.new(1,Color3.fromRGB(165,16,27))})})
- make("Frame",fill,{Name="Shine",Position=UDim2.fromOffset(0,2),Size=UDim2.new(1,0,0,2),BackgroundColor3=Color3.fromRGB(255,152,144),BackgroundTransparency=0.4,BorderSizePixel=0})
+ -- Red health fill over an orange damage trail in a dark track. The boss bar uses the same one.
+ local function healthTrack(parent,position,size)
+  local t=make("Frame",parent,{Name="Track",Position=position,Size=size,BackgroundColor3=Color3.fromRGB(34,39,43),BorderSizePixel=0,ClipsDescendants=true})
+  local damage=make("Frame",t,{Name="DamageTrail",Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.fromRGB(248,172,104),BorderSizePixel=0})
+  local f=make("Frame",t,{Name="Fill",Size=UDim2.fromScale(1,1),BackgroundColor3=C.red,BorderSizePixel=0})
+  make("UIGradient",f,{Rotation=90,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,109,103)),ColorSequenceKeypoint.new(0.18,Color3.fromRGB(255,45,54)),ColorSequenceKeypoint.new(0.52,Color3.fromRGB(227,22,35)),ColorSequenceKeypoint.new(1,Color3.fromRGB(165,16,27))})})
+  make("Frame",f,{Name="Shine",Position=UDim2.fromOffset(0,2),Size=UDim2.new(1,0,0,2),BackgroundColor3=Color3.fromRGB(255,152,144),BackgroundTransparency=0.4,BorderSizePixel=0})
+  return t,f,damage
+ end
+ local _,fill,trail=healthTrack(health,UDim2.fromOffset(54,20),UDim2.fromOffset(307,30))
  icon(health,"Heart",0,0,75,"heart")
  local hp=label(health,"HealthText","— / —",75,10,265,48,29)
  local low=label(health,"Warning","LOW HEALTH",92,63,250,22,16,C.red);low.Visible=false
@@ -72,15 +78,18 @@ function UI.mount(playerGui)
  end
  local itemStrip=frame(build,'Items',0,88,330,62)
  make('UIListLayout',itemStrip,{FillDirection=Enum.FillDirection.Horizontal,HorizontalAlignment=Enum.HorizontalAlignment.Right,Wraps=true,Padding=UDim.new(0,4),SortOrder=Enum.SortOrder.LayoutOrder})
- -- Boss health, bottom centre.
- local bossBar=panel(hud,'BossHealth',0,0,460,68,'inset')
- bossBar.AnchorPoint=Vector2.new(.5,1);bossBar.Position=UDim2.new(.5,0,1,-88);bossBar.Visible=false
- local bossName=label(bossBar,'BossName','HAMMER BRUTE',14,5,432,24,20)
- bossName.Size=UDim2.new(1,-28,0,24)
- local bossTrack=make('Frame',bossBar,{Name='Track',Position=UDim2.fromOffset(18,34),Size=UDim2.new(1,-36,0,20),BackgroundColor3=Color3.fromRGB(40,28,32),BorderSizePixel=0,ClipsDescendants=true})
- local bossFill=make('Frame',bossTrack,{Name='Fill',Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.fromRGB(205,38,44),BorderSizePixel=0})
- make('UIGradient',bossFill,{Rotation=90,Color=ColorSequence.new(Color3.fromRGB(246,77,66),Color3.fromRGB(141,20,31))})
- local bossHP=label(bossTrack,'HealthText','',0,0,100,20,15);bossHP.Size=UDim2.fromScale(1,1);bossHP.ZIndex=2
+ -- Boss health, bottom centre, while a boss fight is on: the health bar's red fill and damage
+ -- trail in a wide inset frame with the timer's stone caps, and the boss's name on a pill over
+ -- its top edge (like the timer's wave pill, flipped).
+ local BOSS_W,BOSS_H=700,96
+ local bossBar=frame(hud,'BossHealth',0,0,BOSS_W,BOSS_H);bossBar.AnchorPoint=Vector2.new(.5,1);bossBar.Visible=false
+ local bossScale=make('UIScale',bossBar,{Scale=1})
+ local bossFrame=panel(bossBar,'BarFrame',0,30,BOSS_W,62,'inset');bossFrame.Size=UDim2.new(1,0,0,62)
+ T.caps(bossFrame,50)
+ local _,bossFill,bossTrail=healthTrack(bossFrame,UDim2.fromOffset(32,16),UDim2.new(1,-64,0,30))
+ local bossHP=label(bossFill.Parent,'HealthText','',0,0,0,0,24);bossHP.Size=UDim2.fromScale(1,1);bossHP.ZIndex=2
+ local bossPlate=panel(bossBar,'NamePlate',0,0,260,40,'panel');bossPlate.AnchorPoint=Vector2.new(.5,0);bossPlate.Position=UDim2.fromScale(.5,0);bossPlate.ZIndex=2
+ local bossName=label(bossPlate,'BossName','',0,0,0,0,22);bossName.Size=UDim2.fromScale(1,1);bossName.ZIndex=3;bossName.TextWrapped=false
  -- Full-screen menus (shop, upgrades).
  local overlay=make("Frame",root,{Name="Menus",Active=true,Visible=false,Size=UDim2.fromScale(1,1),BackgroundColor3=C.shade,BackgroundTransparency=0.1,BorderSizePixel=0})
  local header=panel(overlay,"Header",0,12,500,68)
@@ -104,18 +113,33 @@ function UI.mount(playerGui)
   pendingText.Text=count==1 and 'LEVEL UP READY' or ('LEVEL UP  ×'..count)
   gui:SetAttribute('DisplayedPendingLevels',count)
  end
- local bossTween;local lastBossHealth,lastBossMax,lastBossId
+ local bossTween,bossTrailTween;local lastBossHealth,lastBossMax,lastBossId
+ local bossY=-24 -- bottom offset; layout() raises it on phones, clear of the touch controls
  function controller:SetBossHealth(npc,value,maximum)
   local visible=npc~=nil and type(value)=='number' and type(maximum)=='number' and maximum>0 and value>0
-  bossBar.Visible=visible
-  if not visible then lastBossId=nil;gui:SetAttribute('BossHealthRatio',nil);gui:SetAttribute('DisplayedBossHealth',nil);return end
+  if not visible then bossBar.Visible=false;lastBossId=nil;gui:SetAttribute('BossHealthRatio',nil);gui:SetAttribute('DisplayedBossHealth',nil);return end
   value=math.clamp(value,0,maximum)
   if npc==lastBossId and value==lastBossHealth and maximum==lastBossMax then return end
-  local fresh=npc~=lastBossId;lastBossId,lastBossHealth,lastBossMax=npc,value,maximum
+  local fresh=npc~=lastBossId
+  local decreasing=not fresh and value<lastBossHealth
+  lastBossId,lastBossHealth,lastBossMax=npc,value,maximum
   local ratio=value/maximum;gui:SetAttribute('BossHealthRatio',ratio);gui:SetAttribute('DisplayedBossHealth',value)
   bossHP.Text=string.format('%d / %d',math.ceil(value),math.ceil(maximum))
   if bossTween then bossTween:Cancel() end
-  if fresh then bossFill.Size=UDim2.fromScale(ratio,1) else bossTween=TweenService:Create(bossFill,TweenInfo.new(.16),{Size=UDim2.fromScale(ratio,1)});bossTween:Play() end
+  if bossTrailTween then bossTrailTween:Cancel() end
+  if fresh then
+   -- A new fight: name the boss (BossName attribute, if the model has one) and rise into place.
+   local name=string.upper(tostring(npc:GetAttribute('BossName') or 'Hammer Brute'))
+   bossName.Text=name
+   bossPlate.Size=UDim2.fromOffset(TextService:GetTextSize(name,22,T.Font,Vector2.new(1000,100)).X+64,40)
+   bossFill.Size=UDim2.fromScale(ratio,1);bossTrail.Size=bossFill.Size
+   bossBar.Position=UDim2.new(.5,0,1,bossY+140);bossBar.Visible=true
+   TweenService:Create(bossBar,TweenInfo.new(.4,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Position=UDim2.new(.5,0,1,bossY)}):Play()
+  else
+   -- Same feel as the player's bar: the fill snaps down, the orange trail drains after it.
+   bossTween=TweenService:Create(bossFill,TweenInfo.new(.16,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.fromScale(ratio,1)});bossTween:Play()
+   bossTrailTween=TweenService:Create(bossTrail,TweenInfo.new(decreasing and .55 or .16,Enum.EasingStyle.Quad,Enum.EasingDirection.Out,0,false,decreasing and .12 or 0),{Size=UDim2.fromScale(ratio,1)});bossTrailTween:Play()
+  end
  end
  local xpTween;local lastXP,lastLevel,lastRequired
  function controller:SetXP(value,required,level)
@@ -286,8 +310,12 @@ function UI.mount(playerGui)
   local compact=w<720
   local scale=math.clamp(w/1100,0.62,1)*T.setting('HudScale')
   healthScale.Scale=scale;timerScale.Scale=scale;buildScale.Scale=scale*.9;menuScale.Scale=math.clamp(scale,.7,1.1)
-  bossBar.Size=UDim2.fromOffset(math.min(460,w-32),68)
-  bossBar.Position=UDim2.new(.5,0,1,compact and -142 or -88)
+  -- Boss bar: HUD scale like the health block, never wider than the screen, and above the
+  -- thumbstick and jump button on touch screens.
+  bossScale.Scale=scale
+  bossBar.Size=UDim2.fromOffset(math.min(BOSS_W,(w-32)/scale),BOSS_H)
+  bossY=(compact or (Input.TouchEnabled and not Input.KeyboardEnabled)) and -130 or -24
+  bossBar.Position=UDim2.new(.5,0,1,bossY)
   health.Position=UDim2.fromOffset(12,12)
   timer.Position=UDim2.new(0.5,0,0,14)
   -- Narrow screens: the build strip moves under the health block so nothing overlaps the timer.
