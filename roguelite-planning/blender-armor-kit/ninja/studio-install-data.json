@@ -1,0 +1,251 @@
+{
+ "set": "ninja",
+ "rarity": "Rare",
+ "helmet": "hood",
+ "glow_color_srgb": null,
+ "textured_material": "SmoothPlastic (colour comes from TextureID)",
+ "axes": "offset/size in Studio part-local axes (x = Blender -x, y = Blender z, z = Blender y)",
+ "parts": {
+  "Ninja_Helmet_Head": {
+   "piece": "Helmet",
+   "body_part": "Head",
+   "kind": "textured",
+   "atlas": "textures/ninja-helmet.png",
+   "offset": [
+    0.0064,
+    0.0871,
+    0.0829
+   ],
+   "size": [
+    1.5235,
+    1.4357,
+    1.8181
+   ]
+  },
+  "Ninja_Chest_UpperTorso": {
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "kind": "textured",
+   "atlas": "textures/ninja-torso.png",
+   "offset": [
+    -0.0,
+    0.0659,
+    0.0038
+   ],
+   "size": [
+    2.012,
+    1.7638,
+    1.4263
+   ]
+  },
+  "Ninja_Chest_LowerTorso": {
+   "piece": "Chest",
+   "body_part": "LowerTorso",
+   "kind": "textured",
+   "atlas": "textures/ninja-torso.png",
+   "offset": [
+    -0.0,
+    -0.1446,
+    -0.1178
+   ],
+   "size": [
+    1.9934,
+    0.7126,
+    1.5539
+   ]
+  },
+  "Ninja_Chest_LeftUpperArm": {
+   "piece": "Chest",
+   "body_part": "LeftUpperArm",
+   "kind": "textured",
+   "atlas": "textures/ninja-torso.png",
+   "offset": [
+    -0.1661,
+    0.1502,
+    0.0054
+   ],
+   "size": [
+    1.3242,
+    1.3716,
+    1.4139
+   ]
+  },
+  "Ninja_Chest_RightUpperArm": {
+   "piece": "Chest",
+   "body_part": "RightUpperArm",
+   "kind": "textured",
+   "atlas": "textures/ninja-torso.png",
+   "offset": [
+    0.1661,
+    0.1502,
+    -0.0054
+   ],
+   "size": [
+    1.3242,
+    1.3716,
+    1.4139
+   ]
+  },
+  "Ninja_Chest_LeftLowerArm": {
+   "piece": "Chest",
+   "body_part": "LeftLowerArm",
+   "kind": "textured",
+   "atlas": "textures/ninja-torso.png",
+   "offset": [
+    -0.068,
+    -0.0945,
+    -0.008
+   ],
+   "size": [
+    1.1221,
+    0.7764,
+    1.2421
+   ]
+  },
+  "Ninja_Chest_RightLowerArm": {
+   "piece": "Chest",
+   "body_part": "RightLowerArm",
+   "kind": "textured",
+   "atlas": "textures/ninja-torso.png",
+   "offset": [
+    0.068,
+    -0.0952,
+    -0.008
+   ],
+   "size": [
+    1.1221,
+    0.7746,
+    1.2421
+   ]
+  },
+  "Ninja_Legs_LeftUpperLeg": {
+   "piece": "Legs",
+   "body_part": "LeftUpperLeg",
+   "kind": "textured",
+   "atlas": "textures/ninja-legs.png",
+   "offset": [
+    -0.0852,
+    -0.0148,
+    -0.0075
+   ],
+   "size": [
+    1.1423,
+    0.8602,
+    1.331
+   ]
+  },
+  "Ninja_Legs_RightUpperLeg": {
+   "piece": "Legs",
+   "body_part": "RightUpperLeg",
+   "kind": "textured",
+   "atlas": "textures/ninja-legs.png",
+   "offset": [
+    0.0852,
+    -0.0146,
+    0.0076
+   ],
+   "size": [
+    1.1423,
+    0.8593,
+    1.331
+   ]
+  },
+  "Ninja_Legs_LeftLowerLeg": {
+   "piece": "Legs",
+   "body_part": "LeftLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/ninja-legs.png",
+   "offset": [
+    -0.0846,
+    0.1419,
+    -0.0315
+   ],
+   "size": [
+    1.1412,
+    0.9075,
+    1.3709
+   ]
+  },
+  "Ninja_Legs_RightLowerLeg": {
+   "piece": "Legs",
+   "body_part": "RightLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/ninja-legs.png",
+   "offset": [
+    0.0775,
+    0.1426,
+    -0.0348
+   ],
+   "size": [
+    1.127,
+    0.908,
+    1.3644
+   ]
+  },
+  "Ninja_Boots_LeftLowerLeg": {
+   "piece": "Boots",
+   "body_part": "LeftLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/ninja-legs.png",
+   "offset": [
+    -0.0685,
+    -0.4209,
+    -0.007
+   ],
+   "size": [
+    1.103,
+    0.2671,
+    1.254
+   ]
+  },
+  "Ninja_Boots_RightLowerLeg": {
+   "piece": "Boots",
+   "body_part": "RightLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/ninja-legs.png",
+   "offset": [
+    0.0685,
+    -0.4207,
+    0.007
+   ],
+   "size": [
+    1.103,
+    0.2665,
+    1.254
+   ]
+  },
+  "Ninja_Boots_LeftFoot": {
+   "piece": "Boots",
+   "body_part": "LeftFoot",
+   "kind": "textured",
+   "atlas": "textures/ninja-legs.png",
+   "offset": [
+    -0.054,
+    0.0275,
+    -0.04
+   ],
+   "size": [
+    1.048,
+    0.355,
+    1.25
+   ]
+  },
+  "Ninja_Boots_RightFoot": {
+   "piece": "Boots",
+   "body_part": "RightFoot",
+   "kind": "textured",
+   "atlas": "textures/ninja-legs.png",
+   "offset": [
+    0.054,
+    0.0275,
+    -0.04
+   ],
+   "size": [
+    1.048,
+    0.355,
+    1.25
+   ]
+  }
+ },
+ "embers": []
+}

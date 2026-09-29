@@ -1,0 +1,50 @@
+{
+  "fbx": {
+    "ok": true,
+    "meshes_checked": 15,
+    "meshes_expected": 15,
+    "images": {
+      "spartan-arms.png": [
+        1024,
+        1024
+      ],
+      "spartan-helmet.png": [
+        1024,
+        1024
+      ],
+      "spartan-legs.png": [
+        1024,
+        1024
+      ],
+      "spartan-torso.png": [
+        1024,
+        1024
+      ]
+    },
+    "problems": []
+  },
+  "glb": {
+    "ok": true,
+    "meshes_checked": 15,
+    "meshes_expected": 15,
+    "images": {
+      "spartan-arms": [
+        1024,
+        1024
+      ],
+      "spartan-helmet": [
+        1024,
+        1024
+      ],
+      "spartan-legs": [
+        1024,
+        1024
+      ],
+      "spartan-torso": [
+        1024,
+        1024
+      ]
+    },
+    "problems": []
+  }
+}

@@ -1,0 +1,537 @@
+{
+ "set": "phoenix",
+ "helmet": "full",
+ "glow_color_srgb": [
+  255,
+  150,
+  40
+ ],
+ "glow_material": "Neon",
+ "textured_material": "SmoothPlastic (colour comes from TextureID)",
+ "axes": "offset/size in Studio part-local axes (x = Blender -x, y = Blender z, z = Blender y)",
+ "parts": {
+  "Phoenix_Helmet_Head": {
+   "piece": "Helmet",
+   "body_part": "Head",
+   "kind": "textured",
+   "atlas": "textures/phoenix-helmet.png",
+   "offset": [
+    -0.0,
+    0.3822,
+    0.1014
+   ],
+   "size": [
+    1.5759,
+    2.0025,
+    2.2727
+   ]
+  },
+  "Phoenix_Chest_UpperTorso": {
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "kind": "textured",
+   "atlas": "textures/phoenix-torso.png",
+   "offset": [
+    -0.0,
+    0.61,
+    0.2338
+   ],
+   "size": [
+    2.0675,
+    2.826,
+    2.059
+   ]
+  },
+  "Phoenix_Chest_LowerTorso": {
+   "piece": "Chest",
+   "body_part": "LowerTorso",
+   "kind": "textured",
+   "atlas": "textures/phoenix-torso.png",
+   "offset": [
+    -0.0,
+    -0.2686,
+    0.0
+   ],
+   "size": [
+    1.988,
+    1.0554,
+    1.5649
+   ]
+  },
+  "Phoenix_Chest_LeftUpperArm": {
+   "piece": "Chest",
+   "body_part": "LeftUpperArm",
+   "kind": "textured",
+   "atlas": "textures/phoenix-arms.png",
+   "offset": [
+    -0.2528,
+    0.3714,
+    0.2871
+   ],
+   "size": [
+    1.5296,
+    1.9028,
+    2.1272
+   ]
+  },
+  "Phoenix_Chest_RightUpperArm": {
+   "piece": "Chest",
+   "body_part": "RightUpperArm",
+   "kind": "textured",
+   "atlas": "textures/phoenix-arms.png",
+   "offset": [
+    0.2528,
+    0.3714,
+    0.2863
+   ],
+   "size": [
+    1.5296,
+    1.9028,
+    2.1287
+   ]
+  },
+  "Phoenix_Chest_LeftLowerArm": {
+   "piece": "Chest",
+   "body_part": "LeftLowerArm",
+   "kind": "textured",
+   "atlas": "textures/phoenix-arms.png",
+   "offset": [
+    -0.1169,
+    -0.01,
+    -0.0008
+   ],
+   "size": [
+    1.2599,
+    1.02,
+    1.4334
+   ]
+  },
+  "Phoenix_Chest_RightLowerArm": {
+   "piece": "Chest",
+   "body_part": "RightLowerArm",
+   "kind": "textured",
+   "atlas": "textures/phoenix-arms.png",
+   "offset": [
+    0.12,
+    -0.01,
+    0.0
+   ],
+   "size": [
+    1.2661,
+    1.02,
+    1.446
+   ]
+  },
+  "Phoenix_Legs_LeftUpperLeg": {
+   "piece": "Legs",
+   "body_part": "LeftUpperLeg",
+   "kind": "textured",
+   "atlas": "textures/phoenix-legs.png",
+   "offset": [
+    -0.0763,
+    0.0,
+    -0.0386
+   ],
+   "size": [
+    1.1286,
+    1.2,
+    1.2572
+   ]
+  },
+  "Phoenix_Legs_RightUpperLeg": {
+   "piece": "Legs",
+   "body_part": "RightUpperLeg",
+   "kind": "textured",
+   "atlas": "textures/phoenix-legs.png",
+   "offset": [
+    0.0825,
+    0.0,
+    -0.0449
+   ],
+   "size": [
+    1.141,
+    1.2,
+    1.2698
+   ]
+  },
+  "Phoenix_Legs_LeftLowerLeg": {
+   "piece": "Legs",
+   "body_part": "LeftLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/phoenix-legs.png",
+   "offset": [
+    -0.1603,
+    0.1989,
+    -0.1183
+   ],
+   "size": [
+    1.2967,
+    1.1037,
+    1.4167
+   ]
+  },
+  "Phoenix_Legs_RightLowerLeg": {
+   "piece": "Legs",
+   "body_part": "RightLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/phoenix-legs.png",
+   "offset": [
+    0.1603,
+    0.1988,
+    -0.1231
+   ],
+   "size": [
+    1.2967,
+    1.1035,
+    1.4262
+   ]
+  },
+  "Phoenix_Boots_LeftLowerLeg": {
+   "piece": "Boots",
+   "body_part": "LeftLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/phoenix-boots.png",
+   "offset": [
+    -0.1585,
+    -0.2996,
+    0.0
+   ],
+   "size": [
+    1.287,
+    0.3739,
+    1.4862
+   ]
+  },
+  "Phoenix_Boots_RightLowerLeg": {
+   "piece": "Boots",
+   "body_part": "RightLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/phoenix-boots.png",
+   "offset": [
+    0.1585,
+    -0.2996,
+    0.0
+   ],
+   "size": [
+    1.287,
+    0.3739,
+    1.4721
+   ]
+  },
+  "Phoenix_Boots_LeftFoot": {
+   "piece": "Boots",
+   "body_part": "LeftFoot",
+   "kind": "textured",
+   "atlas": "textures/phoenix-boots.png",
+   "offset": [
+    -0.1163,
+    0.1026,
+    -0.04
+   ],
+   "size": [
+    1.1966,
+    0.5092,
+    1.716
+   ]
+  },
+  "Phoenix_Boots_RightFoot": {
+   "piece": "Boots",
+   "body_part": "RightFoot",
+   "kind": "textured",
+   "atlas": "textures/phoenix-boots.png",
+   "offset": [
+    0.1137,
+    0.108,
+    -0.04
+   ],
+   "size": [
+    1.1913,
+    0.52,
+    1.716
+   ]
+  },
+  "Phoenix_Helmet_Head_Glow": {
+   "piece": "Helmet",
+   "body_part": "Head",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.0,
+    0.7563,
+    0.3811
+   ],
+   "size": [
+    1.2009,
+    1.3309,
+    2.0346
+   ]
+  },
+  "Phoenix_Chest_UpperTorso_Glow": {
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.0,
+    0.839,
+    0.1863
+   ],
+   "size": [
+    2.0852,
+    2.5659,
+    1.9887
+   ]
+  },
+  "Phoenix_Chest_LeftUpperArm_Glow": {
+   "piece": "Chest",
+   "body_part": "LeftUpperArm",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.411,
+    1.0004,
+    1.1463
+   ],
+   "size": [
+    0.1922,
+    0.5327,
+    0.6832
+   ]
+  },
+  "Phoenix_Chest_RightUpperArm_Glow": {
+   "piece": "Chest",
+   "body_part": "RightUpperArm",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    0.411,
+    1.0004,
+    1.1463
+   ],
+   "size": [
+    0.1922,
+    0.5327,
+    0.6832
+   ]
+  },
+  "Phoenix_Chest_LeftLowerArm_Glow": {
+   "piece": "Chest",
+   "body_part": "LeftLowerArm",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.6438,
+    -0.1102,
+    -0.0002
+   ],
+   "size": [
+    0.0581,
+    0.4608,
+    0.0218
+   ]
+  },
+  "Phoenix_Chest_RightLowerArm_Glow": {
+   "piece": "Chest",
+   "body_part": "RightLowerArm",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    0.6438,
+    -0.1102,
+    -0.0002
+   ],
+   "size": [
+    0.0581,
+    0.4608,
+    0.0218
+   ]
+  }
+ },
+ "vfx": [
+  {
+   "kind": "flame",
+   "body_part": "Head",
+   "piece": "Helmet",
+   "position": [
+    -0.0,
+    1.224,
+    0.664
+   ],
+   "direction": [
+    -0.0,
+    0.876,
+    0.482
+   ],
+   "color": [
+    255,
+    150,
+    40
+   ],
+   "size": 1.0,
+   "rate": 16,
+   "note": "helm crest"
+  },
+  {
+   "kind": "embers",
+   "body_part": "UpperTorso",
+   "piece": "Chest",
+   "position": [
+    -0.0,
+    0.3,
+    -0.818
+   ],
+   "direction": [
+    -0.0,
+    0.97,
+    -0.243
+   ],
+   "color": [
+    255,
+    176,
+    70
+   ],
+   "size": 0.1,
+   "rate": 3,
+   "note": "core: a few slow sparks"
+  },
+  {
+   "kind": "light",
+   "body_part": "UpperTorso",
+   "piece": "Chest",
+   "position": [
+    -0.0,
+    0.3,
+    -0.878
+   ],
+   "direction": [
+    -0.0,
+    0.0,
+    -1.0
+   ],
+   "color": [
+    255,
+    150,
+    40
+   ],
+   "range": 9,
+   "brightness": 1.4,
+   "note": "the only light on the set: PointLight at the sun core"
+  },
+  {
+   "kind": "flame",
+   "body_part": "UpperTorso",
+   "piece": "Chest",
+   "position": [
+    -0.934,
+    2.045,
+    0.978
+   ],
+   "direction": [
+    -0.264,
+    0.88,
+    0.396
+   ],
+   "color": [
+    255,
+    150,
+    40
+   ],
+   "size": 0.6,
+   "rate": 10,
+   "note": "wing tip"
+  },
+  {
+   "kind": "flame",
+   "body_part": "UpperTorso",
+   "piece": "Chest",
+   "position": [
+    0.934,
+    2.045,
+    0.978
+   ],
+   "direction": [
+    0.264,
+    0.88,
+    0.396
+   ],
+   "color": [
+    255,
+    150,
+    40
+   ],
+   "size": 0.6,
+   "rate": 10,
+   "note": "wing tip"
+  },
+  {
+   "kind": "embers",
+   "body_part": "UpperTorso",
+   "piece": "Chest",
+   "position": [
+    -0.0,
+    0.45,
+    0.85
+   ],
+   "direction": [
+    -0.0,
+    0.944,
+    0.33
+   ],
+   "color": [
+    255,
+    170,
+    60
+   ],
+   "size": 0.12,
+   "rate": 6,
+   "note": "gentle rising embers between the wings"
+  },
+  {
+   "kind": "flame",
+   "body_part": "LeftUpperArm",
+   "piece": "Chest",
+   "position": [
+    -0.471,
+    0.891,
+    1.104
+   ],
+   "direction": [
+    -0.13,
+    0.869,
+    0.478
+   ],
+   "color": [
+    255,
+    150,
+    40
+   ],
+   "size": 0.8,
+   "rate": 12,
+   "note": "pauldron flame crest"
+  },
+  {
+   "kind": "flame",
+   "body_part": "RightUpperArm",
+   "piece": "Chest",
+   "position": [
+    0.471,
+    0.891,
+    1.104
+   ],
+   "direction": [
+    0.13,
+    0.869,
+    0.478
+   ],
+   "color": [
+    255,
+    150,
+    40
+   ],
+   "size": 0.8,
+   "rate": 12,
+   "note": "pauldron flame crest"
+  }
+ ],
+ "vfx_notes": "Phoenix only. position/direction are part-local Studio axes: put an Attachment at position on the body part and point the emitter along direction. flame = ParticleEmitter (LightEmission 1, Lifetime 0.4-0.7, Size shrinking from size to 0, Speed ~2, SpreadAngle ~15); embers = small ParticleEmitter (Lifetime 1.5-2.5, Speed 0.8-1.5, slight Acceleration up); light = one PointLight (Shadows off)."
+}

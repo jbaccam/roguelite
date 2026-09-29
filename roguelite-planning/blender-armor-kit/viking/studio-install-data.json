@@ -1,0 +1,250 @@
+{
+ "set": "viking",
+ "helmet": "open",
+ "glow_color_srgb": null,
+ "glow_material": null,
+ "textured_material": "SmoothPlastic (colour comes from TextureID)",
+ "axes": "offset/size in Studio part-local axes (x = Blender -x, y = Blender z, z = Blender y)",
+ "parts": {
+  "Viking_Helmet_Head": {
+   "piece": "Helmet",
+   "body_part": "Head",
+   "kind": "textured",
+   "atlas": "textures/viking-helmet.png",
+   "offset": [
+    -0.0,
+    0.4543,
+    0.0002
+   ],
+   "size": [
+    2.7093,
+    1.4514,
+    1.6665
+   ]
+  },
+  "Viking_Chest_UpperTorso": {
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "kind": "textured",
+   "atlas": "textures/viking-body.png",
+   "offset": [
+    -0.0,
+    0.1,
+    -0.0219
+   ],
+   "size": [
+    2.0041,
+    1.7999,
+    1.5798
+   ]
+  },
+  "Viking_Chest_LowerTorso": {
+   "piece": "Chest",
+   "body_part": "LowerTorso",
+   "kind": "textured",
+   "atlas": "textures/viking-body.png",
+   "offset": [
+    -0.0,
+    0.0,
+    -0.0305
+   ],
+   "size": [
+    1.9915,
+    0.4652,
+    1.327
+   ]
+  },
+  "Viking_Chest_LeftUpperArm": {
+   "piece": "Chest",
+   "body_part": "LeftUpperArm",
+   "kind": "textured",
+   "atlas": "textures/viking-body.png",
+   "offset": [
+    -0.2176,
+    0.1772,
+    0.0
+   ],
+   "size": [
+    1.4553,
+    1.5144,
+    1.5408
+   ]
+  },
+  "Viking_Chest_RightUpperArm": {
+   "piece": "Chest",
+   "body_part": "RightUpperArm",
+   "kind": "textured",
+   "atlas": "textures/viking-body.png",
+   "offset": [
+    0.2176,
+    0.1772,
+    0.0
+   ],
+   "size": [
+    1.4553,
+    1.5144,
+    1.5408
+   ]
+  },
+  "Viking_Chest_LeftLowerArm": {
+   "piece": "Chest",
+   "body_part": "LeftLowerArm",
+   "kind": "textured",
+   "atlas": "textures/viking-body.png",
+   "offset": [
+    -0.0655,
+    -0.01,
+    -0.006
+   ],
+   "size": [
+    1.153,
+    1.02,
+    1.272
+   ]
+  },
+  "Viking_Chest_RightLowerArm": {
+   "piece": "Chest",
+   "body_part": "RightLowerArm",
+   "kind": "textured",
+   "atlas": "textures/viking-body.png",
+   "offset": [
+    0.0655,
+    -0.01,
+    -0.006
+   ],
+   "size": [
+    1.153,
+    1.02,
+    1.272
+   ]
+  },
+  "Viking_Legs_LeftUpperLeg": {
+   "piece": "Legs",
+   "body_part": "LeftUpperLeg",
+   "kind": "textured",
+   "atlas": "textures/viking-legs.png",
+   "offset": [
+    -0.06,
+    -0.01,
+    0.0
+   ],
+   "size": [
+    1.08,
+    1.18,
+    1.2001
+   ]
+  },
+  "Viking_Legs_RightUpperLeg": {
+   "piece": "Legs",
+   "body_part": "RightUpperLeg",
+   "kind": "textured",
+   "atlas": "textures/viking-legs.png",
+   "offset": [
+    0.06,
+    -0.01,
+    0.0
+   ],
+   "size": [
+    1.08,
+    1.18,
+    1.2001
+   ]
+  },
+  "Viking_Legs_LeftLowerLeg": {
+   "piece": "Legs",
+   "body_part": "LeftLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/viking-legs.png",
+   "offset": [
+    -0.0695,
+    0.01,
+    -0.0596
+   ],
+   "size": [
+    1.099,
+    1.14,
+    1.2552
+   ]
+  },
+  "Viking_Legs_RightLowerLeg": {
+   "piece": "Legs",
+   "body_part": "RightLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/viking-legs.png",
+   "offset": [
+    0.0695,
+    0.01,
+    -0.0596
+   ],
+   "size": [
+    1.099,
+    1.14,
+    1.2552
+   ]
+  },
+  "Viking_Boots_LeftLowerLeg": {
+   "piece": "Boots",
+   "body_part": "LeftLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/viking-legs.png",
+   "offset": [
+    -0.0962,
+    -0.375,
+    0.0
+   ],
+   "size": [
+    1.1725,
+    0.41,
+    1.3664
+   ]
+  },
+  "Viking_Boots_RightLowerLeg": {
+   "piece": "Boots",
+   "body_part": "RightLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/viking-legs.png",
+   "offset": [
+    0.0962,
+    -0.375,
+    0.0
+   ],
+   "size": [
+    1.1725,
+    0.41,
+    1.3664
+   ]
+  },
+  "Viking_Boots_LeftFoot": {
+   "piece": "Boots",
+   "body_part": "LeftFoot",
+   "kind": "textured",
+   "atlas": "textures/viking-legs.png",
+   "offset": [
+    -0.0766,
+    0.0715,
+    -0.099
+   ],
+   "size": [
+    1.1171,
+    0.447,
+    1.1419
+   ]
+  },
+  "Viking_Boots_RightFoot": {
+   "piece": "Boots",
+   "body_part": "RightFoot",
+   "kind": "textured",
+   "atlas": "textures/viking-legs.png",
+   "offset": [
+    0.0766,
+    0.0715,
+    -0.0989
+   ],
+   "size": [
+    1.1171,
+    0.447,
+    1.1421
+   ]
+  }
+ }
+}

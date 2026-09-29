@@ -1,0 +1,108 @@
+{
+ "set": "spartan",
+ "rarity": "Epic",
+ "blender_version": "5.2.1 LTS",
+ "authoring": "final Roblox stud size; import at 1:1, do not scale",
+ "pieces": {
+  "Helmet": {
+   "Spartan_Helmet_Head": {
+    "body_part": "Head",
+    "triangles": 4136,
+    "vertices": 2191
+   }
+  },
+  "Chest": {
+   "Spartan_Chest_UpperTorso": {
+    "body_part": "UpperTorso",
+    "triangles": 5516,
+    "vertices": 2904
+   },
+   "Spartan_Chest_LowerTorso": {
+    "body_part": "LowerTorso",
+    "triangles": 2408,
+    "vertices": 1476
+   },
+   "Spartan_Chest_LeftUpperArm": {
+    "body_part": "LeftUpperArm",
+    "triangles": 1818,
+    "vertices": 1060
+   },
+   "Spartan_Chest_RightUpperArm": {
+    "body_part": "RightUpperArm",
+    "triangles": 1818,
+    "vertices": 1060
+   },
+   "Spartan_Chest_LeftLowerArm": {
+    "body_part": "LeftLowerArm",
+    "triangles": 652,
+    "vertices": 350
+   },
+   "Spartan_Chest_RightLowerArm": {
+    "body_part": "RightLowerArm",
+    "triangles": 652,
+    "vertices": 350
+   }
+  },
+  "Legs": {
+   "Spartan_Legs_LeftUpperLeg": {
+    "body_part": "LeftUpperLeg",
+    "triangles": 724,
+    "vertices": 425
+   },
+   "Spartan_Legs_RightUpperLeg": {
+    "body_part": "RightUpperLeg",
+    "triangles": 724,
+    "vertices": 425
+   },
+   "Spartan_Legs_LeftLowerLeg": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 1074,
+    "vertices": 566
+   },
+   "Spartan_Legs_RightLowerLeg": {
+    "body_part": "RightLowerLeg",
+    "triangles": 1074,
+    "vertices": 566
+   }
+  },
+  "Boots": {
+   "Spartan_Boots_LeftLowerLeg": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 908,
+    "vertices": 562
+   },
+   "Spartan_Boots_RightLowerLeg": {
+    "body_part": "RightLowerLeg",
+    "triangles": 908,
+    "vertices": 562
+   },
+   "Spartan_Boots_LeftFoot": {
+    "body_part": "LeftFoot",
+    "triangles": 844,
+    "vertices": 486
+   },
+   "Spartan_Boots_RightFoot": {
+    "body_part": "RightFoot",
+    "triangles": 844,
+    "vertices": 486
+   }
+  }
+ },
+ "triangles_total": 24100,
+ "triangles_by_piece": {
+  "Helmet": 4136,
+  "Chest": 12864,
+  "Legs": 3596,
+  "Boots": 3504
+ },
+ "largest_mesh": [
+  "Spartan_Chest_UpperTorso",
+  5516
+ ],
+ "textures": {
+  "arms": "textures/spartan-arms.png (1024x1024)",
+  "helmet": "textures/spartan-helmet.png (1024x1024)",
+  "legs": "textures/spartan-legs.png (1024x1024)",
+  "torso": "textures/spartan-torso.png (1024x1024)"
+ }
+}

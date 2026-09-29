@@ -1,0 +1,50 @@
+{
+  "fbx": {
+    "ok": true,
+    "meshes_checked": 15,
+    "meshes_expected": 15,
+    "images": {
+      "samurai-arms.png": [
+        1024,
+        1024
+      ],
+      "samurai-helmet.png": [
+        1024,
+        1024
+      ],
+      "samurai-legs.png": [
+        1024,
+        1024
+      ],
+      "samurai-torso.png": [
+        1024,
+        1024
+      ]
+    },
+    "problems": []
+  },
+  "glb": {
+    "ok": true,
+    "meshes_checked": 15,
+    "meshes_expected": 15,
+    "images": {
+      "samurai-arms": [
+        1024,
+        1024
+      ],
+      "samurai-helmet": [
+        1024,
+        1024
+      ],
+      "samurai-legs": [
+        1024,
+        1024
+      ],
+      "samurai-torso": [
+        1024,
+        1024
+      ]
+    },
+    "problems": []
+  }
+}

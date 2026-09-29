@@ -1,0 +1,34 @@
+{
+  "fbx": {
+    "ok": true,
+    "meshes_checked": 15,
+    "meshes_expected": 15,
+    "images": {
+      "iron-body.png": [
+        1024,
+        1024
+      ],
+      "iron-gear.png": [
+        1024,
+        1024
+      ]
+    },
+    "problems": []
+  },
+  "glb": {
+    "ok": true,
+    "meshes_checked": 15,
+    "meshes_expected": 15,
+    "images": {
+      "iron-body": [
+        1024,
+        1024
+      ],
+      "iron-gear": [
+        1024,
+        1024
+      ]
+    },
+    "problems": []
+  }
+}

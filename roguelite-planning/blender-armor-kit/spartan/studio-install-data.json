@@ -1,0 +1,250 @@
+{
+ "set": "spartan",
+ "glow_color_srgb": null,
+ "glow_material": null,
+ "helmet": "full",
+ "textured_material": "SmoothPlastic (colour comes from TextureID)",
+ "axes": "offset/size in Studio part-local axes (x = Blender -x, y = Blender z, z = Blender y)",
+ "parts": {
+  "Spartan_Helmet_Head": {
+   "piece": "Helmet",
+   "body_part": "Head",
+   "kind": "textured",
+   "atlas": "textures/spartan-helmet.png",
+   "offset": [
+    -0.0,
+    0.2853,
+    0.0778
+   ],
+   "size": [
+    1.4383,
+    1.7268,
+    1.9558
+   ]
+  },
+  "Spartan_Chest_UpperTorso": {
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "kind": "textured",
+   "atlas": "textures/spartan-torso.png",
+   "offset": [
+    -0.0,
+    0.1267,
+    0.0803
+   ],
+   "size": [
+    1.98,
+    1.8694,
+    1.5135
+   ]
+  },
+  "Spartan_Chest_LowerTorso": {
+   "piece": "Chest",
+   "body_part": "LowerTorso",
+   "kind": "textured",
+   "atlas": "textures/spartan-torso.png",
+   "offset": [
+    -0.0,
+    -0.1846,
+    0.0036
+   ],
+   "size": [
+    1.99,
+    0.7691,
+    1.4149
+   ]
+  },
+  "Spartan_Chest_LeftUpperArm": {
+   "piece": "Chest",
+   "body_part": "LeftUpperArm",
+   "kind": "textured",
+   "atlas": "textures/spartan-arms.png",
+   "offset": [
+    -0.2032,
+    0.1202,
+    0.0043
+   ],
+   "size": [
+    1.3825,
+    1.4004,
+    1.4318
+   ]
+  },
+  "Spartan_Chest_RightUpperArm": {
+   "piece": "Chest",
+   "body_part": "RightUpperArm",
+   "kind": "textured",
+   "atlas": "textures/spartan-arms.png",
+   "offset": [
+    0.2032,
+    0.1202,
+    -0.0043
+   ],
+   "size": [
+    1.3825,
+    1.4004,
+    1.4318
+   ]
+  },
+  "Spartan_Chest_LeftLowerArm": {
+   "piece": "Chest",
+   "body_part": "LeftLowerArm",
+   "kind": "textured",
+   "atlas": "textures/spartan-arms.png",
+   "offset": [
+    -0.0987,
+    -0.1176,
+    -0.0005
+   ],
+   "size": [
+    1.1834,
+    0.7115,
+    1.3207
+   ]
+  },
+  "Spartan_Chest_RightLowerArm": {
+   "piece": "Chest",
+   "body_part": "RightLowerArm",
+   "kind": "textured",
+   "atlas": "textures/spartan-arms.png",
+   "offset": [
+    0.1025,
+    -0.1104,
+    0.0
+   ],
+   "size": [
+    1.1911,
+    0.7233,
+    1.336
+   ]
+  },
+  "Spartan_Legs_LeftUpperLeg": {
+   "piece": "Legs",
+   "body_part": "LeftUpperLeg",
+   "kind": "textured",
+   "atlas": "textures/spartan-legs.png",
+   "offset": [
+    -0.0524,
+    -0.1,
+    0.0
+   ],
+   "size": [
+    1.0988,
+    1.0,
+    1.184
+   ]
+  },
+  "Spartan_Legs_RightUpperLeg": {
+   "piece": "Legs",
+   "body_part": "RightUpperLeg",
+   "kind": "textured",
+   "atlas": "textures/spartan-legs.png",
+   "offset": [
+    0.0524,
+    -0.1,
+    0.0
+   ],
+   "size": [
+    1.0988,
+    1.0,
+    1.184
+   ]
+  },
+  "Spartan_Legs_LeftLowerLeg": {
+   "piece": "Legs",
+   "body_part": "LeftLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/spartan-legs.png",
+   "offset": [
+    -0.0688,
+    0.0956,
+    -0.004
+   ],
+   "size": [
+    1.1027,
+    0.7266,
+    1.3104
+   ]
+  },
+  "Spartan_Legs_RightLowerLeg": {
+   "piece": "Legs",
+   "body_part": "RightLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/spartan-legs.png",
+   "offset": [
+    0.0703,
+    0.099,
+    -0.0049
+   ],
+   "size": [
+    1.1056,
+    0.733,
+    1.3086
+   ]
+  },
+  "Spartan_Boots_LeftLowerLeg": {
+   "piece": "Boots",
+   "body_part": "LeftLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/spartan-legs.png",
+   "offset": [
+    -0.049,
+    -0.3909,
+    0.0
+   ],
+   "size": [
+    1.09,
+    0.2959,
+    1.188
+   ]
+  },
+  "Spartan_Boots_RightLowerLeg": {
+   "piece": "Boots",
+   "body_part": "RightLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/spartan-legs.png",
+   "offset": [
+    0.049,
+    -0.3909,
+    0.0
+   ],
+   "size": [
+    1.09,
+    0.2959,
+    1.188
+   ]
+  },
+  "Spartan_Boots_LeftFoot": {
+   "piece": "Boots",
+   "body_part": "LeftFoot",
+   "kind": "textured",
+   "atlas": "textures/spartan-legs.png",
+   "offset": [
+    -0.0422,
+    -0.0235,
+    -0.0276
+   ],
+   "size": [
+    1.0804,
+    0.2698,
+    1.2152
+   ]
+  },
+  "Spartan_Boots_RightFoot": {
+   "piece": "Boots",
+   "body_part": "RightFoot",
+   "kind": "textured",
+   "atlas": "textures/spartan-legs.png",
+   "offset": [
+    0.0422,
+    -0.0235,
+    -0.0197
+   ],
+   "size": [
+    1.0804,
+    0.2697,
+    1.2194
+   ]
+  }
+ }
+}

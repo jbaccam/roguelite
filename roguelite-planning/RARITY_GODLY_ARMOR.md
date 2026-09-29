@@ -264,7 +264,7 @@ Armor rules (already decided in `CURRENT_GAME_STRUCTURE.md` / `PROGRESSION_AND_S
 | Viking | Rare | +15% melee damage | Under half HP: +30% attack speed |
 | Samurai | Epic | +10% crit chance | Crits hit 50% harder (`CritDamage` +50) |
 | Spartan | Epic | +6 armor | A shield blocks the first hit every wave (`FirstHitBlock` = 1) |
-| Dragon Scale | Legendary | +25 max HP | Hits can set enemies on fire, and fire spreads when they die (`BurnChance`, `BurnSpread`) |
+| Dragon Scale | Legendary | +25 max HP | A % chance for your hits to set enemies on fire, and a % chance to burn enemies that hit you (fire thorns). Not every time; numbers in the step 5 spec (`BurnChance`, `FireThornsChance`). Changed 2026-09-29; fire no longer spreads on death |
 | Phoenix | Godly | Heal 2 HP per second | Once per run, when you die you rise in flames with half HP and blast everything near you |
 
 - The 2- and 4-piece bonuses can use the same shape as the class `two`/`four` tables in
@@ -383,8 +383,11 @@ voxel/Minecraft, never a hyper-detailed sculpt.
 **Roblox technical rules:**
 - Colour goes through `MeshPart.TextureID`. SurfaceAppearance with newly uploaded images renders
   blank white in Play.
-- Glow comes from separate inset meshes with the Neon material (crack lines, seams, gems), plus an
-  optional ParticleEmitter or PointLight. Never from a lighting trick that hides missing geometry.
+- Glow comes from separate inset meshes with the Neon material (crack lines, seams, gems). Never
+  from a lighting trick that hides missing geometry.
+- **Only Phoenix (Godly) gets VFX and lighting on the set itself** (user, 2026-09-29): flame and
+  ember ParticleEmitters and PointLights. Every other set has no particles and no lights. Dragon
+  Scale keeps its Neon inlays (eyes, gems, seams); its ember points are unused.
 - **Budgets:**
   - A whole armor set: about 6k triangles for Common, up to about 12k for Legendary or Godly.
   - A weapon: under 8k (as in the weapon brief).

@@ -1,0 +1,42 @@
+{
+  "fbx": {
+    "ok": true,
+    "meshes_checked": 15,
+    "meshes_expected": 15,
+    "images": {
+      "ninja-helmet.png": [
+        1024,
+        1024
+      ],
+      "ninja-legs.png": [
+        1024,
+        1024
+      ],
+      "ninja-torso.png": [
+        1024,
+        1024
+      ]
+    },
+    "problems": []
+  },
+  "glb": {
+    "ok": true,
+    "meshes_checked": 15,
+    "meshes_expected": 15,
+    "images": {
+      "ninja-helmet": [
+        1024,
+        1024
+      ],
+      "ninja-legs": [
+        1024,
+        1024
+      ],
+      "ninja-torso": [
+        1024,
+        1024
+      ]
+    },
+    "problems": []
+  }
+}

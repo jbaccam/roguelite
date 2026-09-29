@@ -1,0 +1,251 @@
+{
+ "set": "iron",
+ "rarity": "Common",
+ "helmet": "open",
+ "glow_color_srgb": null,
+ "glow_material": null,
+ "textured_material": "SmoothPlastic (colour comes from TextureID)",
+ "axes": "offset/size in Studio part-local axes (x = Blender -x, y = Blender z, z = Blender y)",
+ "parts": {
+  "Iron_Helmet_Head": {
+   "piece": "Helmet",
+   "body_part": "Head",
+   "kind": "textured",
+   "atlas": "textures/iron-gear.png",
+   "offset": [
+    -0.0,
+    0.293,
+    0.0
+   ],
+   "size": [
+    1.4807,
+    0.95,
+    1.5359
+   ]
+  },
+  "Iron_Chest_UpperTorso": {
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "kind": "textured",
+   "atlas": "textures/iron-body.png",
+   "offset": [
+    -0.0,
+    0.0587,
+    -0.034
+   ],
+   "size": [
+    1.98,
+    1.7175,
+    1.3789
+   ]
+  },
+  "Iron_Chest_LowerTorso": {
+   "piece": "Chest",
+   "body_part": "LowerTorso",
+   "kind": "textured",
+   "atlas": "textures/iron-body.png",
+   "offset": [
+    -0.0,
+    -0.0215,
+    0.0023
+   ],
+   "size": [
+    1.98,
+    0.443,
+    1.3455
+   ]
+  },
+  "Iron_Chest_LeftUpperArm": {
+   "piece": "Chest",
+   "body_part": "LeftUpperArm",
+   "kind": "textured",
+   "atlas": "textures/iron-body.png",
+   "offset": [
+    -0.1655,
+    0.1994,
+    0.005
+   ],
+   "size": [
+    1.329,
+    1.3401,
+    1.4286
+   ]
+  },
+  "Iron_Chest_RightUpperArm": {
+   "piece": "Chest",
+   "body_part": "RightUpperArm",
+   "kind": "textured",
+   "atlas": "textures/iron-body.png",
+   "offset": [
+    0.1655,
+    0.1993,
+    -0.0047
+   ],
+   "size": [
+    1.329,
+    1.3402,
+    1.4293
+   ]
+  },
+  "Iron_Chest_LeftLowerArm": {
+   "piece": "Chest",
+   "body_part": "LeftLowerArm",
+   "kind": "textured",
+   "atlas": "textures/iron-body.png",
+   "offset": [
+    -0.0672,
+    -0.09,
+    -0.0005
+   ],
+   "size": [
+    1.1325,
+    0.86,
+    1.2658
+   ]
+  },
+  "Iron_Chest_RightLowerArm": {
+   "piece": "Chest",
+   "body_part": "RightLowerArm",
+   "kind": "textured",
+   "atlas": "textures/iron-body.png",
+   "offset": [
+    0.0705,
+    -0.0845,
+    0.0
+   ],
+   "size": [
+    1.139,
+    0.8709,
+    1.28
+   ]
+  },
+  "Iron_Legs_LeftUpperLeg": {
+   "piece": "Legs",
+   "body_part": "LeftUpperLeg",
+   "kind": "textured",
+   "atlas": "textures/iron-gear.png",
+   "offset": [
+    -0.0721,
+    0.01,
+    -0.0354
+   ],
+   "size": [
+    1.1202,
+    0.822,
+    1.2505
+   ]
+  },
+  "Iron_Legs_RightUpperLeg": {
+   "piece": "Legs",
+   "body_part": "RightUpperLeg",
+   "kind": "textured",
+   "atlas": "textures/iron-gear.png",
+   "offset": [
+    0.076,
+    0.01,
+    -0.0393
+   ],
+   "size": [
+    1.128,
+    0.822,
+    1.2583
+   ]
+  },
+  "Iron_Legs_LeftLowerLeg": {
+   "piece": "Legs",
+   "body_part": "LeftLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/iron-gear.png",
+   "offset": [
+    -0.063,
+    0.1962,
+    -0.1165
+   ],
+   "size": [
+    1.118,
+    1.0724,
+    1.4708
+   ]
+  },
+  "Iron_Legs_RightLowerLeg": {
+   "piece": "Legs",
+   "body_part": "RightLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/iron-gear.png",
+   "offset": [
+    0.063,
+    0.1969,
+    -0.1165
+   ],
+   "size": [
+    1.118,
+    1.0738,
+    1.4708
+   ]
+  },
+  "Iron_Boots_LeftLowerLeg": {
+   "piece": "Boots",
+   "body_part": "LeftLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/iron-gear.png",
+   "offset": [
+    -0.081,
+    -0.379,
+    0.0
+   ],
+   "size": [
+    1.158,
+    0.202,
+    1.32
+   ]
+  },
+  "Iron_Boots_RightLowerLeg": {
+   "piece": "Boots",
+   "body_part": "RightLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/iron-gear.png",
+   "offset": [
+    0.0779,
+    -0.379,
+    -0.0
+   ],
+   "size": [
+    1.1517,
+    0.202,
+    1.3075
+   ]
+  },
+  "Iron_Boots_LeftFoot": {
+   "piece": "Boots",
+   "body_part": "LeftFoot",
+   "kind": "textured",
+   "atlas": "textures/iron-gear.png",
+   "offset": [
+    -0.054,
+    0.0695,
+    -0.037
+   ],
+   "size": [
+    1.07,
+    0.421,
+    1.096
+   ]
+  },
+  "Iron_Boots_RightFoot": {
+   "piece": "Boots",
+   "body_part": "RightFoot",
+   "kind": "textured",
+   "atlas": "textures/iron-gear.png",
+   "offset": [
+    0.0538,
+    0.0695,
+    -0.037
+   ],
+   "size": [
+    1.0697,
+    0.421,
+    1.096
+   ]
+  }
+ }
+}

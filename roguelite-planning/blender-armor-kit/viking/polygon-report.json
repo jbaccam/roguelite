@@ -1,0 +1,107 @@
+{
+ "set": "viking",
+ "rarity": "Rare",
+ "blender_version": "5.2.1 LTS",
+ "authoring": "final Roblox stud size; import at 1:1, do not scale",
+ "pieces": {
+  "Helmet": {
+   "Viking_Helmet_Head": {
+    "body_part": "Head",
+    "triangles": 3142,
+    "vertices": 1679
+   }
+  },
+  "Chest": {
+   "Viking_Chest_UpperTorso": {
+    "body_part": "UpperTorso",
+    "triangles": 3306,
+    "vertices": 1951
+   },
+   "Viking_Chest_LowerTorso": {
+    "body_part": "LowerTorso",
+    "triangles": 1362,
+    "vertices": 785
+   },
+   "Viking_Chest_LeftUpperArm": {
+    "body_part": "LeftUpperArm",
+    "triangles": 1028,
+    "vertices": 596
+   },
+   "Viking_Chest_RightUpperArm": {
+    "body_part": "RightUpperArm",
+    "triangles": 1028,
+    "vertices": 596
+   },
+   "Viking_Chest_LeftLowerArm": {
+    "body_part": "LeftLowerArm",
+    "triangles": 796,
+    "vertices": 487
+   },
+   "Viking_Chest_RightLowerArm": {
+    "body_part": "RightLowerArm",
+    "triangles": 796,
+    "vertices": 487
+   }
+  },
+  "Legs": {
+   "Viking_Legs_LeftUpperLeg": {
+    "body_part": "LeftUpperLeg",
+    "triangles": 244,
+    "vertices": 144
+   },
+   "Viking_Legs_RightUpperLeg": {
+    "body_part": "RightUpperLeg",
+    "triangles": 244,
+    "vertices": 144
+   },
+   "Viking_Legs_LeftLowerLeg": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 838,
+    "vertices": 535
+   },
+   "Viking_Legs_RightLowerLeg": {
+    "body_part": "RightLowerLeg",
+    "triangles": 838,
+    "vertices": 535
+   }
+  },
+  "Boots": {
+   "Viking_Boots_LeftLowerLeg": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 604,
+    "vertices": 353
+   },
+   "Viking_Boots_RightLowerLeg": {
+    "body_part": "RightLowerLeg",
+    "triangles": 604,
+    "vertices": 353
+   },
+   "Viking_Boots_LeftFoot": {
+    "body_part": "LeftFoot",
+    "triangles": 630,
+    "vertices": 346
+   },
+   "Viking_Boots_RightFoot": {
+    "body_part": "RightFoot",
+    "triangles": 630,
+    "vertices": 346
+   }
+  }
+ },
+ "triangles_total": 16090,
+ "triangles_by_piece": {
+  "Helmet": 3142,
+  "Chest": 8316,
+  "Legs": 2164,
+  "Boots": 2468
+ },
+ "largest_mesh": [
+  "Viking_Chest_UpperTorso",
+  3306
+ ],
+ "textures": {
+  "body": "textures/viking-body.png (1024x1024)",
+  "helmet": "textures/viking-helmet.png (1024x1024)",
+  "legs": "textures/viking-legs.png (1024x1024)"
+ }
+}

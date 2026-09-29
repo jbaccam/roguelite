@@ -1,0 +1,107 @@
+{
+ "set": "ninja",
+ "rarity": "Rare",
+ "blender_version": "5.2.1 LTS",
+ "authoring": "final Roblox stud size; import at 1:1, do not scale",
+ "pieces": {
+  "Helmet": {
+   "Ninja_Helmet_Head": {
+    "body_part": "Head",
+    "triangles": 2274,
+    "vertices": 1264
+   }
+  },
+  "Chest": {
+   "Ninja_Chest_UpperTorso": {
+    "body_part": "UpperTorso",
+    "triangles": 2094,
+    "vertices": 1216
+   },
+   "Ninja_Chest_LowerTorso": {
+    "body_part": "LowerTorso",
+    "triangles": 904,
+    "vertices": 506
+   },
+   "Ninja_Chest_LeftUpperArm": {
+    "body_part": "LeftUpperArm",
+    "triangles": 1134,
+    "vertices": 648
+   },
+   "Ninja_Chest_RightUpperArm": {
+    "body_part": "RightUpperArm",
+    "triangles": 1134,
+    "vertices": 648
+   },
+   "Ninja_Chest_LeftLowerArm": {
+    "body_part": "LeftLowerArm",
+    "triangles": 844,
+    "vertices": 493
+   },
+   "Ninja_Chest_RightLowerArm": {
+    "body_part": "RightLowerArm",
+    "triangles": 844,
+    "vertices": 493
+   }
+  },
+  "Legs": {
+   "Ninja_Legs_LeftUpperLeg": {
+    "body_part": "LeftUpperLeg",
+    "triangles": 328,
+    "vertices": 185
+   },
+   "Ninja_Legs_RightUpperLeg": {
+    "body_part": "RightUpperLeg",
+    "triangles": 328,
+    "vertices": 185
+   },
+   "Ninja_Legs_LeftLowerLeg": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 1294,
+    "vertices": 753
+   },
+   "Ninja_Legs_RightLowerLeg": {
+    "body_part": "RightLowerLeg",
+    "triangles": 1294,
+    "vertices": 753
+   }
+  },
+  "Boots": {
+   "Ninja_Boots_LeftLowerLeg": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 292,
+    "vertices": 166
+   },
+   "Ninja_Boots_RightLowerLeg": {
+    "body_part": "RightLowerLeg",
+    "triangles": 292,
+    "vertices": 166
+   },
+   "Ninja_Boots_LeftFoot": {
+    "body_part": "LeftFoot",
+    "triangles": 470,
+    "vertices": 241
+   },
+   "Ninja_Boots_RightFoot": {
+    "body_part": "RightFoot",
+    "triangles": 470,
+    "vertices": 241
+   }
+  }
+ },
+ "triangles_total": 13996,
+ "triangles_by_piece": {
+  "Helmet": 2274,
+  "Chest": 6954,
+  "Legs": 3244,
+  "Boots": 1524
+ },
+ "largest_mesh": [
+  "Ninja_Helmet_Head",
+  2274
+ ],
+ "textures": {
+  "helmet": "textures/ninja-helmet.png (1024x1024)",
+  "legs": "textures/ninja-legs.png (1024x1024)",
+  "torso": "textures/ninja-torso.png (1024x1024)"
+ }
+}

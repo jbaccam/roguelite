@@ -1,0 +1,139 @@
+{
+ "set": "phoenix",
+ "rarity": "Godly",
+ "blender_version": "5.2.1 LTS",
+ "authoring": "final Roblox stud size; import at 1:1, do not scale",
+ "pieces": {
+  "Helmet": {
+   "Phoenix_Helmet_Head": {
+    "body_part": "Head",
+    "triangles": 4136,
+    "vertices": 2144
+   },
+   "Phoenix_Helmet_Head_Glow": {
+    "body_part": "Head",
+    "triangles": 424,
+    "vertices": 244
+   }
+  },
+  "Chest": {
+   "Phoenix_Chest_UpperTorso": {
+    "body_part": "UpperTorso",
+    "triangles": 11484,
+    "vertices": 6294
+   },
+   "Phoenix_Chest_LowerTorso": {
+    "body_part": "LowerTorso",
+    "triangles": 4360,
+    "vertices": 2448
+   },
+   "Phoenix_Chest_LeftUpperArm": {
+    "body_part": "LeftUpperArm",
+    "triangles": 4344,
+    "vertices": 2330
+   },
+   "Phoenix_Chest_RightUpperArm": {
+    "body_part": "RightUpperArm",
+    "triangles": 4344,
+    "vertices": 2330
+   },
+   "Phoenix_Chest_LeftLowerArm": {
+    "body_part": "LeftLowerArm",
+    "triangles": 928,
+    "vertices": 514
+   },
+   "Phoenix_Chest_RightLowerArm": {
+    "body_part": "RightLowerArm",
+    "triangles": 928,
+    "vertices": 514
+   },
+   "Phoenix_Chest_UpperTorso_Glow": {
+    "body_part": "UpperTorso",
+    "triangles": 318,
+    "vertices": 189
+   },
+   "Phoenix_Chest_LeftUpperArm_Glow": {
+    "body_part": "LeftUpperArm",
+    "triangles": 52,
+    "vertices": 30
+   },
+   "Phoenix_Chest_RightUpperArm_Glow": {
+    "body_part": "RightUpperArm",
+    "triangles": 52,
+    "vertices": 30
+   },
+   "Phoenix_Chest_LeftLowerArm_Glow": {
+    "body_part": "LeftLowerArm",
+    "triangles": 16,
+    "vertices": 15
+   },
+   "Phoenix_Chest_RightLowerArm_Glow": {
+    "body_part": "RightLowerArm",
+    "triangles": 16,
+    "vertices": 15
+   }
+  },
+  "Legs": {
+   "Phoenix_Legs_LeftUpperLeg": {
+    "body_part": "LeftUpperLeg",
+    "triangles": 708,
+    "vertices": 408
+   },
+   "Phoenix_Legs_RightUpperLeg": {
+    "body_part": "RightUpperLeg",
+    "triangles": 708,
+    "vertices": 408
+   },
+   "Phoenix_Legs_LeftLowerLeg": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 1188,
+    "vertices": 672
+   },
+   "Phoenix_Legs_RightLowerLeg": {
+    "body_part": "RightLowerLeg",
+    "triangles": 1188,
+    "vertices": 672
+   }
+  },
+  "Boots": {
+   "Phoenix_Boots_LeftLowerLeg": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 682,
+    "vertices": 367
+   },
+   "Phoenix_Boots_RightLowerLeg": {
+    "body_part": "RightLowerLeg",
+    "triangles": 680,
+    "vertices": 366
+   },
+   "Phoenix_Boots_LeftFoot": {
+    "body_part": "LeftFoot",
+    "triangles": 924,
+    "vertices": 508
+   },
+   "Phoenix_Boots_RightFoot": {
+    "body_part": "RightFoot",
+    "triangles": 924,
+    "vertices": 508
+   }
+  }
+ },
+ "triangles_total": 38404,
+ "triangles_by_piece": {
+  "Helmet": 4560,
+  "Chest": 26842,
+  "Legs": 3792,
+  "Boots": 3210
+ },
+ "largest_mesh": [
+  "Phoenix_Chest_UpperTorso",
+  11484
+ ],
+ "textures": {
+  "arms": "textures/phoenix-arms.png (1024x1024)",
+  "boots": "textures/phoenix-boots.png (1024x1024)",
+  "helmet": "textures/phoenix-helmet.png (1024x1024)",
+  "legs": "textures/phoenix-legs.png (1024x1024)",
+  "torso": "textures/phoenix-torso.png (1024x1024)"
+ }
+}

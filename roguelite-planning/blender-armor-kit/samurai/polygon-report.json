@@ -1,0 +1,108 @@
+{
+ "set": "samurai",
+ "rarity": "Epic",
+ "blender_version": "5.2.1 LTS",
+ "authoring": "final Roblox stud size; import at 1:1, do not scale",
+ "pieces": {
+  "Helmet": {
+   "Samurai_Helmet_Head": {
+    "body_part": "Head",
+    "triangles": 5690,
+    "vertices": 3058
+   }
+  },
+  "Chest": {
+   "Samurai_Chest_UpperTorso": {
+    "body_part": "UpperTorso",
+    "triangles": 3996,
+    "vertices": 2354
+   },
+   "Samurai_Chest_LowerTorso": {
+    "body_part": "LowerTorso",
+    "triangles": 3086,
+    "vertices": 1715
+   },
+   "Samurai_Chest_LeftUpperArm": {
+    "body_part": "LeftUpperArm",
+    "triangles": 1816,
+    "vertices": 1036
+   },
+   "Samurai_Chest_RightUpperArm": {
+    "body_part": "RightUpperArm",
+    "triangles": 1816,
+    "vertices": 1036
+   },
+   "Samurai_Chest_LeftLowerArm": {
+    "body_part": "LeftLowerArm",
+    "triangles": 1152,
+    "vertices": 669
+   },
+   "Samurai_Chest_RightLowerArm": {
+    "body_part": "RightLowerArm",
+    "triangles": 1152,
+    "vertices": 669
+   }
+  },
+  "Legs": {
+   "Samurai_Legs_LeftUpperLeg": {
+    "body_part": "LeftUpperLeg",
+    "triangles": 1226,
+    "vertices": 769
+   },
+   "Samurai_Legs_RightUpperLeg": {
+    "body_part": "RightUpperLeg",
+    "triangles": 1226,
+    "vertices": 769
+   },
+   "Samurai_Legs_LeftLowerLeg": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 848,
+    "vertices": 499
+   },
+   "Samurai_Legs_RightLowerLeg": {
+    "body_part": "RightLowerLeg",
+    "triangles": 848,
+    "vertices": 499
+   }
+  },
+  "Boots": {
+   "Samurai_Boots_LeftLowerLeg": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 886,
+    "vertices": 484
+   },
+   "Samurai_Boots_RightLowerLeg": {
+    "body_part": "RightLowerLeg",
+    "triangles": 886,
+    "vertices": 484
+   },
+   "Samurai_Boots_LeftFoot": {
+    "body_part": "LeftFoot",
+    "triangles": 692,
+    "vertices": 375
+   },
+   "Samurai_Boots_RightFoot": {
+    "body_part": "RightFoot",
+    "triangles": 692,
+    "vertices": 375
+   }
+  }
+ },
+ "triangles_total": 26012,
+ "triangles_by_piece": {
+  "Helmet": 5690,
+  "Chest": 13018,
+  "Legs": 4148,
+  "Boots": 3156
+ },
+ "largest_mesh": [
+  "Samurai_Helmet_Head",
+  5690
+ ],
+ "textures": {
+  "arms": "textures/samurai-arms.png (1024x1024)",
+  "helmet": "textures/samurai-helmet.png (1024x1024)",
+  "legs": "textures/samurai-legs.png (1024x1024)",
+  "torso": "textures/samurai-torso.png (1024x1024)"
+ }
+}

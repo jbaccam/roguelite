@@ -1,0 +1,249 @@
+{
+ "set": "samurai",
+ "glow_color_srgb": null,
+ "helmet": "full",
+ "textured_material": "SmoothPlastic (colour comes from TextureID)",
+ "axes": "offset/size in Studio part-local axes (x = Blender -x, y = Blender z, z = Blender y)",
+ "parts": {
+  "Samurai_Helmet_Head": {
+   "piece": "Helmet",
+   "body_part": "Head",
+   "kind": "textured",
+   "atlas": "textures/samurai-helmet.png",
+   "offset": [
+    -0.0,
+    0.1567,
+    0.0379
+   ],
+   "size": [
+    2.1685,
+    1.6957,
+    2.1048
+   ]
+  },
+  "Samurai_Chest_UpperTorso": {
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "kind": "textured",
+   "atlas": "textures/samurai-torso.png",
+   "offset": [
+    -0.0,
+    0.044,
+    0.0667
+   ],
+   "size": [
+    1.9947,
+    1.692,
+    1.5649
+   ]
+  },
+  "Samurai_Chest_LowerTorso": {
+   "piece": "Chest",
+   "body_part": "LowerTorso",
+   "kind": "textured",
+   "atlas": "textures/samurai-torso.png",
+   "offset": [
+    -0.0,
+    -0.2248,
+    0.0
+   ],
+   "size": [
+    2.4419,
+    0.8496,
+    1.4409
+   ]
+  },
+  "Samurai_Chest_LeftUpperArm": {
+   "piece": "Chest",
+   "body_part": "LeftUpperArm",
+   "kind": "textured",
+   "atlas": "textures/samurai-arms.png",
+   "offset": [
+    -0.176,
+    0.0722,
+    0.0
+   ],
+   "size": [
+    1.332,
+    1.3045,
+    1.5061
+   ]
+  },
+  "Samurai_Chest_RightUpperArm": {
+   "piece": "Chest",
+   "body_part": "RightUpperArm",
+   "kind": "textured",
+   "atlas": "textures/samurai-arms.png",
+   "offset": [
+    0.176,
+    0.0722,
+    0.0
+   ],
+   "size": [
+    1.332,
+    1.3045,
+    1.5061
+   ]
+  },
+  "Samurai_Chest_LeftLowerArm": {
+   "piece": "Chest",
+   "body_part": "LeftLowerArm",
+   "kind": "textured",
+   "atlas": "textures/samurai-arms.png",
+   "offset": [
+    -0.0725,
+    -0.01,
+    0.0
+   ],
+   "size": [
+    1.1211,
+    1.02,
+    1.2851
+   ]
+  },
+  "Samurai_Chest_RightLowerArm": {
+   "piece": "Chest",
+   "body_part": "RightLowerArm",
+   "kind": "textured",
+   "atlas": "textures/samurai-arms.png",
+   "offset": [
+    0.0775,
+    -0.01,
+    0.0
+   ],
+   "size": [
+    1.131,
+    1.02,
+    1.286
+   ]
+  },
+  "Samurai_Legs_LeftUpperLeg": {
+   "piece": "Legs",
+   "body_part": "LeftUpperLeg",
+   "kind": "textured",
+   "atlas": "textures/samurai-legs.png",
+   "offset": [
+    -0.0977,
+    0.0,
+    -0.0363
+   ],
+   "size": [
+    1.1713,
+    1.2,
+    1.2948
+   ]
+  },
+  "Samurai_Legs_RightUpperLeg": {
+   "piece": "Legs",
+   "body_part": "RightUpperLeg",
+   "kind": "textured",
+   "atlas": "textures/samurai-legs.png",
+   "offset": [
+    0.1,
+    0.0,
+    -0.0385
+   ],
+   "size": [
+    1.176,
+    1.2,
+    1.2991
+   ]
+  },
+  "Samurai_Legs_LeftLowerLeg": {
+   "piece": "Legs",
+   "body_part": "LeftLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/samurai-legs.png",
+   "offset": [
+    -0.0638,
+    0.075,
+    -0.0949
+   ],
+   "size": [
+    1.1036,
+    0.95,
+    1.2338
+   ]
+  },
+  "Samurai_Legs_RightLowerLeg": {
+   "piece": "Legs",
+   "body_part": "RightLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/samurai-legs.png",
+   "offset": [
+    0.0683,
+    0.075,
+    -0.0982
+   ],
+   "size": [
+    1.1126,
+    0.95,
+    1.2405
+   ]
+  },
+  "Samurai_Boots_LeftLowerLeg": {
+   "piece": "Boots",
+   "body_part": "LeftLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/samurai-legs.png",
+   "offset": [
+    -0.0859,
+    -0.5379,
+    0.0
+   ],
+   "size": [
+    1.1457,
+    0.2799,
+    1.218
+   ]
+  },
+  "Samurai_Boots_RightLowerLeg": {
+   "piece": "Boots",
+   "body_part": "RightLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/samurai-legs.png",
+   "offset": [
+    0.0859,
+    -0.5379,
+    0.0
+   ],
+   "size": [
+    1.1457,
+    0.2799,
+    1.218
+   ]
+  },
+  "Samurai_Boots_LeftFoot": {
+   "piece": "Boots",
+   "body_part": "LeftFoot",
+   "kind": "textured",
+   "atlas": "textures/samurai-legs.png",
+   "offset": [
+    -0.058,
+    -0.0525,
+    -0.0171
+   ],
+   "size": [
+    1.09,
+    0.219,
+    1.2537
+   ]
+  },
+  "Samurai_Boots_RightFoot": {
+   "piece": "Boots",
+   "body_part": "RightFoot",
+   "kind": "textured",
+   "atlas": "textures/samurai-legs.png",
+   "offset": [
+    0.064,
+    -0.0525,
+    -0.0145
+   ],
+   "size": [
+    1.102,
+    0.219,
+    1.259
+   ]
+  }
+ }
+}

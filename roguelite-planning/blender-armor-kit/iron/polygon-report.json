@@ -1,0 +1,106 @@
+{
+ "set": "iron",
+ "rarity": "Common",
+ "blender_version": "5.2.1 LTS",
+ "authoring": "final Roblox stud size; import at 1:1, do not scale",
+ "pieces": {
+  "Helmet": {
+   "Iron_Helmet_Head": {
+    "body_part": "Head",
+    "triangles": 776,
+    "vertices": 416
+   }
+  },
+  "Chest": {
+   "Iron_Chest_UpperTorso": {
+    "body_part": "UpperTorso",
+    "triangles": 898,
+    "vertices": 546
+   },
+   "Iron_Chest_LowerTorso": {
+    "body_part": "LowerTorso",
+    "triangles": 750,
+    "vertices": 476
+   },
+   "Iron_Chest_LeftUpperArm": {
+    "body_part": "LeftUpperArm",
+    "triangles": 511,
+    "vertices": 314
+   },
+   "Iron_Chest_RightUpperArm": {
+    "body_part": "RightUpperArm",
+    "triangles": 511,
+    "vertices": 314
+   },
+   "Iron_Chest_LeftLowerArm": {
+    "body_part": "LeftLowerArm",
+    "triangles": 429,
+    "vertices": 267
+   },
+   "Iron_Chest_RightLowerArm": {
+    "body_part": "RightLowerArm",
+    "triangles": 429,
+    "vertices": 267
+   }
+  },
+  "Legs": {
+   "Iron_Legs_LeftUpperLeg": {
+    "body_part": "LeftUpperLeg",
+    "triangles": 265,
+    "vertices": 169
+   },
+   "Iron_Legs_RightUpperLeg": {
+    "body_part": "RightUpperLeg",
+    "triangles": 265,
+    "vertices": 169
+   },
+   "Iron_Legs_LeftLowerLeg": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 598,
+    "vertices": 371
+   },
+   "Iron_Legs_RightLowerLeg": {
+    "body_part": "RightLowerLeg",
+    "triangles": 598,
+    "vertices": 371
+   }
+  },
+  "Boots": {
+   "Iron_Boots_LeftLowerLeg": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 394,
+    "vertices": 228
+   },
+   "Iron_Boots_RightLowerLeg": {
+    "body_part": "RightLowerLeg",
+    "triangles": 394,
+    "vertices": 228
+   },
+   "Iron_Boots_LeftFoot": {
+    "body_part": "LeftFoot",
+    "triangles": 297,
+    "vertices": 173
+   },
+   "Iron_Boots_RightFoot": {
+    "body_part": "RightFoot",
+    "triangles": 297,
+    "vertices": 173
+   }
+  }
+ },
+ "triangles_total": 7412,
+ "triangles_by_piece": {
+  "Helmet": 776,
+  "Chest": 3528,
+  "Legs": 1726,
+  "Boots": 1382
+ },
+ "largest_mesh": [
+  "Iron_Chest_UpperTorso",
+  898
+ ],
+ "textures": {
+  "body": "textures/iron-body.png (1024x1024)",
+  "gear": "textures/iron-gear.png (1024x1024)"
+ }
+}
