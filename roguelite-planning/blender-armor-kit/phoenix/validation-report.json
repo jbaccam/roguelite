@@ -1,8 +1,8 @@
 {
   "fbx": {
     "ok": true,
-    "meshes_checked": 21,
-    "meshes_expected": 21,
+    "meshes_checked": 30,
+    "meshes_expected": 30,
     "images": {
       "phoenix-arms.png": [
         1024,
@@ -23,14 +23,18 @@
       "phoenix-torso.png": [
         1024,
         1024
+      ],
+      "phoenix-wings.png": [
+        1024,
+        1024
       ]
     },
     "problems": []
   },
   "glb": {
     "ok": true,
-    "meshes_checked": 21,
-    "meshes_expected": 21,
+    "meshes_checked": 30,
+    "meshes_expected": 30,
     "images": {
       "phoenix-arms": [
         1024,
@@ -51,16 +55,26 @@
       "phoenix-torso": [
         1024,
         1024
+      ],
+      "phoenix-wings": [
+        1024,
+        1024
       ]
     },
     "problems": []
   },
   "install_data": {
     "ok": true,
-    "vfx_counts": {
-      "light": 1,
-      "flame": 5,
-      "embers": 2
+    "triangles_total": 47886,
+    "vfx_count": 30,
+    "vfx_kinds": {
+      "ember_swirl": 1,
+      "embers_rise": 3,
+      "flame_lick": 3,
+      "flame_plume": 11,
+      "flame_sheet": 8,
+      "heat_glow": 2,
+      "light": 2
     },
     "problems": []
   }

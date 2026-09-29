@@ -1,4 +1,4 @@
-"""Re-import the exported Phoenix set and check it against polygon-report.json and studio-install-data.json.
+"""Re-import the exported Phoenix v2 set and check it against polygon-report.json and studio-install-data.json.
 
     blender -b --factory-startup --python validate_exports.py
 
@@ -9,6 +9,7 @@ Checks, for the FBX and the GLB separately:
     glow meshes carry the glow material (Neon in Studio)
   * no vertex-colour layers (Roblox would read them as vertex colour)
   * the embedded/linked texture images exist and are 1024x1024 (Roblox's cap)
+  * install data: helmet 'full', the wings mesh on UpperTorso, glow colours, and a complete vfx list
 Writes validation-report.json. Blender-verified only; says nothing about Studio.
 """
 import json
@@ -81,22 +82,47 @@ for path in (ROOT / "exports" / "fbx" / f"{SET}.fbx", ROOT / "exports" / "glb" /
     print("VALIDATION", path.name, "ok" if not problems else problems[:8], flush=True)
 (ROOT / "validation-report.json").write_text(json.dumps(results, indent=2))
 
-# Phoenix extras: the install data carries the full-helm mode, glow meshes and the vfx list.
+# Phoenix extras: the install data carries the full-helm mode, both Neon colours, the wings mesh and the vfx list.
 inst = json.loads((ROOT / "studio-install-data.json").read_text())
 extra = []
 if inst.get("helmet") != "full":
     extra.append("helmet mode is not 'full'")
-kinds = [v["kind"] for v in inst.get("vfx", [])]
-if kinds.count("light") != 1:
-    extra.append(f"expected exactly one light, found {kinds.count('light')}")
-for k in ("flame", "embers"):
+vfx = inst.get("vfx", [])
+kinds = [v["kind"] for v in vfx]
+if kinds.count("light") < 2:
+    extra.append(f"expected a core light and a wing light, found {kinds.count('light')} lights")
+for k in ("flame_plume", "flame_sheet", "embers_rise", "ember_swirl", "heat_glow"):
     if k not in kinds:
         extra.append(f"no {k} vfx")
-if not any(p["kind"] == "glow" for p in inst["parts"].values()):
+need = {"ParticleEmitter": ("Texture", "Rate", "Lifetime", "Speed", "SpreadAngle", "Size", "Transparency", "Color",
+                            "LightEmission", "LightInfluence", "Drag", "Acceleration", "Rotation", "RotSpeed",
+                            "EmissionDirection"),
+        "PointLight": ("Brightness", "Range", "Color")}
+for v in vfx:
+    missing = [k for k in need[v["class"]] if k not in v["properties"]]
+    if missing:
+        extra.append(f"vfx {v['name']} missing {missing}")
+    if v.get("parent") == "attachment" and "position" not in v.get("attachment", {}):
+        extra.append(f"vfx {v['name']} has no attachment position")
+    for k in ("body_part", "piece"):
+        if not v.get(k):
+            extra.append(f"vfx {v['name']} has no {k}")
+for tex in inst.get("particle_textures", {}).values():
+    if not (ROOT / tex).exists():
+        extra.append(f"particle texture missing: {tex}")
+glows = {n: p for n, p in inst["parts"].items() if p["kind"] == "glow"}
+if not glows:
     extra.append("no glow meshes")
+if any("color_srgb" not in p for p in glows.values()):
+    extra.append("glow part without color_srgb")
+wings = inst["parts"].get("Phoenix_Chest_Wings")
+if not wings or wings["body_part"] != "UpperTorso":
+    extra.append("Phoenix_Chest_Wings missing or not on UpperTorso")
 big = [n for n, v in want.items() if v["triangles"] >= 20000]
 if big:
     extra.append(f"meshes over 20k triangles: {big}")
-results["install_data"] = {"ok": not extra, "vfx_counts": {k: kinds.count(k) for k in set(kinds)}, "problems": extra}
-print("VALIDATION install data", "ok" if not extra else extra, flush=True)
+total = sum(v["triangles"] for v in want.values())
+results["install_data"] = {"ok": not extra, "triangles_total": total, "vfx_count": len(vfx),
+                           "vfx_kinds": {k: kinds.count(k) for k in sorted(set(kinds))}, "problems": extra}
+print("VALIDATION install data", "ok" if not extra else extra, total, "tris", flush=True)
 (ROOT / "validation-report.json").write_text(json.dumps(results, indent=2))

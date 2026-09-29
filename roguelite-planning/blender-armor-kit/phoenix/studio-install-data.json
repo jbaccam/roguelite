@@ -1,14 +1,24 @@
 {
  "set": "phoenix",
+ "version": 2,
  "helmet": "full",
  "glow_color_srgb": [
   255,
   150,
   40
  ],
+ "glow_hot_color_srgb": [
+  255,
+  214,
+  96
+ ],
  "glow_material": "Neon",
  "textured_material": "SmoothPlastic (colour comes from TextureID)",
- "axes": "offset/size in Studio part-local axes (x = Blender -x, y = Blender z, z = Blender y)",
+ "axes": "offset/size/position in Studio part-local axes (x = Blender -x, y = Blender z, z = Blender y)",
+ "particle_textures": {
+  "flame": "textures/vfx/flame.png",
+  "ember": "textures/vfx/ember.png"
+ },
  "parts": {
   "Phoenix_Helmet_Head": {
    "piece": "Helmet",
@@ -16,14 +26,14 @@
    "kind": "textured",
    "atlas": "textures/phoenix-helmet.png",
    "offset": [
-    -0.0,
-    0.3822,
-    0.1014
+    0.0059,
+    0.6121,
+    0.0214
    ],
    "size": [
-    1.5759,
-    2.0025,
-    2.2727
+    2.0843,
+    2.4522,
+    2.5035
    ]
   },
   "Phoenix_Chest_UpperTorso": {
@@ -33,13 +43,29 @@
    "atlas": "textures/phoenix-torso.png",
    "offset": [
     -0.0,
-    0.61,
-    0.2338
+    0.0564,
+    -0.0277
    ],
    "size": [
-    2.0675,
-    2.826,
-    2.059
+    1.98,
+    1.7189,
+    1.6315
+   ]
+  },
+  "Phoenix_Chest_Wings": {
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "kind": "textured",
+   "atlas": "textures/phoenix-wings.png",
+   "offset": [
+    -0.0,
+    1.3871,
+    1.1545
+   ],
+   "size": [
+    4.9387,
+    3.6155,
+    1.2717
    ]
   },
   "Phoenix_Chest_LowerTorso": {
@@ -48,14 +74,14 @@
    "kind": "textured",
    "atlas": "textures/phoenix-torso.png",
    "offset": [
-    -0.0,
-    -0.2686,
-    0.0
+    -0.0211,
+    -0.2097,
+    0.0339
    ],
    "size": [
-    1.988,
-    1.0554,
-    1.5649
+    2.0303,
+    0.9387,
+    1.6678
    ]
   },
   "Phoenix_Chest_LeftUpperArm": {
@@ -64,14 +90,14 @@
    "kind": "textured",
    "atlas": "textures/phoenix-arms.png",
    "offset": [
-    -0.2528,
-    0.3714,
-    0.2871
+    -0.3272,
+    0.3915,
+    0.0
    ],
    "size": [
-    1.5296,
-    1.9028,
-    2.1272
+    1.6784,
+    1.943,
+    1.7035
    ]
   },
   "Phoenix_Chest_RightUpperArm": {
@@ -80,14 +106,14 @@
    "kind": "textured",
    "atlas": "textures/phoenix-arms.png",
    "offset": [
-    0.2528,
-    0.3714,
-    0.2863
+    0.3272,
+    0.3915,
+    0.0
    ],
    "size": [
-    1.5296,
-    1.9028,
-    2.1287
+    1.6784,
+    1.943,
+    1.7035
    ]
   },
   "Phoenix_Chest_LeftLowerArm": {
@@ -96,12 +122,12 @@
    "kind": "textured",
    "atlas": "textures/phoenix-arms.png",
    "offset": [
-    -0.1169,
+    -0.1493,
     -0.01,
     -0.0008
    ],
    "size": [
-    1.2599,
+    1.3246,
     1.02,
     1.4334
    ]
@@ -112,12 +138,12 @@
    "kind": "textured",
    "atlas": "textures/phoenix-arms.png",
    "offset": [
-    0.12,
+    0.1493,
     -0.01,
     0.0
    ],
    "size": [
-    1.2661,
+    1.3246,
     1.02,
     1.446
    ]
@@ -128,14 +154,14 @@
    "kind": "textured",
    "atlas": "textures/phoenix-legs.png",
    "offset": [
-    -0.0763,
+    -0.099,
     0.0,
-    -0.0386
+    -0.036
    ],
    "size": [
-    1.1286,
+    1.174,
     1.2,
-    1.2572
+    1.3001
    ]
   },
   "Phoenix_Legs_RightUpperLeg": {
@@ -144,14 +170,14 @@
    "kind": "textured",
    "atlas": "textures/phoenix-legs.png",
    "offset": [
-    0.0825,
+    0.1032,
     0.0,
-    -0.0449
+    -0.041
    ],
    "size": [
-    1.141,
+    1.1824,
     1.2,
-    1.2698
+    1.3069
    ]
   },
   "Phoenix_Legs_LeftLowerLeg": {
@@ -160,13 +186,13 @@
    "kind": "textured",
    "atlas": "textures/phoenix-legs.png",
    "offset": [
-    -0.1603,
-    0.1989,
+    -0.1851,
+    0.199,
     -0.1183
    ],
    "size": [
-    1.2967,
-    1.1037,
+    1.3462,
+    1.1034,
     1.4167
    ]
   },
@@ -176,13 +202,13 @@
    "kind": "textured",
    "atlas": "textures/phoenix-legs.png",
    "offset": [
-    0.1603,
-    0.1988,
+    0.1851,
+    0.1989,
     -0.1231
    ],
    "size": [
-    1.2967,
-    1.1035,
+    1.3462,
+    1.1032,
     1.4262
    ]
   },
@@ -192,14 +218,14 @@
    "kind": "textured",
    "atlas": "textures/phoenix-boots.png",
    "offset": [
-    -0.1585,
-    -0.2996,
-    0.0
+    -0.16,
+    -0.2907,
+    -0.0074
    ],
    "size": [
-    1.287,
-    0.3739,
-    1.4862
+    1.2901,
+    0.4531,
+    1.5011
    ]
   },
   "Phoenix_Boots_RightLowerLeg": {
@@ -208,14 +234,14 @@
    "kind": "textured",
    "atlas": "textures/phoenix-boots.png",
    "offset": [
-    0.1585,
-    -0.2996,
-    0.0
+    0.16,
+    -0.2907,
+    -0.011
    ],
    "size": [
-    1.287,
-    0.3739,
-    1.4721
+    1.2901,
+    0.4531,
+    1.4941
    ]
   },
   "Phoenix_Boots_LeftFoot": {
@@ -224,14 +250,14 @@
    "kind": "textured",
    "atlas": "textures/phoenix-boots.png",
    "offset": [
-    -0.1163,
+    -0.153,
     0.1026,
-    -0.04
+    -0.0855
    ],
    "size": [
-    1.1966,
+    1.27,
     0.5092,
-    1.716
+    1.807
    ]
   },
   "Phoenix_Boots_RightFoot": {
@@ -240,14 +266,14 @@
    "kind": "textured",
    "atlas": "textures/phoenix-boots.png",
    "offset": [
-    0.1137,
+    0.153,
     0.108,
-    -0.04
+    -0.0855
    ],
    "size": [
-    1.1913,
+    1.27,
     0.52,
-    1.716
+    1.807
    ]
   },
   "Phoenix_Helmet_Head_Glow": {
@@ -257,13 +283,39 @@
    "atlas": null,
    "offset": [
     -0.0,
-    0.7563,
-    0.3811
+    1.5674,
+    0.6014
    ],
    "size": [
-    1.2009,
-    1.3309,
-    2.0346
+    1.5519,
+    0.9689,
+    2.0738
+   ],
+   "color_srgb": [
+    255,
+    150,
+    40
+   ]
+  },
+  "Phoenix_Helmet_Head_Hot_Glow": {
+   "piece": "Helmet",
+   "body_part": "Head",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    0.0,
+    1.1953,
+    0.422
+   ],
+   "size": [
+    0.8986,
+    2.3663,
+    2.1602
+   ],
+   "color_srgb": [
+    255,
+    214,
+    96
    ]
   },
   "Phoenix_Chest_UpperTorso_Glow": {
@@ -272,14 +324,124 @@
    "kind": "glow",
    "atlas": null,
    "offset": [
-    -0.0,
-    0.839,
-    0.1863
+    0.0362,
+    -0.0371,
+    -0.7466
    ],
    "size": [
-    2.0852,
-    2.5659,
-    1.9887
+    1.0077,
+    0.8141,
+    0.1093
+   ],
+   "color_srgb": [
+    255,
+    150,
+    40
+   ]
+  },
+  "Phoenix_Chest_UpperTorso_Hot_Glow": {
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.0,
+    0.1596,
+    -0.0082
+   ],
+   "size": [
+    0.38,
+    0.4807,
+    1.7595
+   ],
+   "color_srgb": [
+    255,
+    214,
+    96
+   ]
+  },
+  "Phoenix_Chest_Wings_Glow": {
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.0,
+    1.9311,
+    1.3044
+   ],
+   "size": [
+    5.1589,
+    3.0721,
+    1.17
+   ],
+   "color_srgb": [
+    255,
+    150,
+    40
+   ]
+  },
+  "Phoenix_Chest_Wings_Hot_Glow": {
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    0.1005,
+    3.2481,
+    1.8648
+   ],
+   "size": [
+    5.0798,
+    0.9667,
+    0.4629
+   ],
+   "color_srgb": [
+    255,
+    214,
+    96
+   ]
+  },
+  "Phoenix_Chest_LowerTorso_Glow": {
+   "piece": "Chest",
+   "body_part": "LowerTorso",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.0748,
+    -0.6937,
+    0.0656
+   ],
+   "size": [
+    1.8963,
+    0.3119,
+    1.6897
+   ],
+   "color_srgb": [
+    255,
+    150,
+    40
+   ]
+  },
+  "Phoenix_Chest_LowerTorso_Hot_Glow": {
+   "piece": "Chest",
+   "body_part": "LowerTorso",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.0212,
+    -0.4474,
+    0.1373
+   ],
+   "size": [
+    0.4806,
+    1.0449,
+    1.7959
+   ],
+   "color_srgb": [
+    255,
+    214,
+    96
    ]
   },
   "Phoenix_Chest_LeftUpperArm_Glow": {
@@ -288,14 +450,40 @@
    "kind": "glow",
    "atlas": null,
    "offset": [
-    -0.411,
-    1.0004,
-    1.1463
+    -0.4225,
+    1.2123,
+    0.2593
    ],
    "size": [
-    0.1922,
-    0.5327,
-    0.6832
+    0.5205,
+    0.443,
+    1.2422
+   ],
+   "color_srgb": [
+    255,
+    150,
+    40
+   ]
+  },
+  "Phoenix_Chest_LeftUpperArm_Hot_Glow": {
+   "piece": "Chest",
+   "body_part": "LeftUpperArm",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.5784,
+    1.4061,
+    0.6097
+   ],
+   "size": [
+    0.6494,
+    0.3326,
+    0.5694
+   ],
+   "color_srgb": [
+    255,
+    214,
+    96
    ]
   },
   "Phoenix_Chest_RightUpperArm_Glow": {
@@ -304,14 +492,40 @@
    "kind": "glow",
    "atlas": null,
    "offset": [
-    0.411,
-    1.0004,
-    1.1463
+    0.4225,
+    1.2123,
+    0.2593
    ],
    "size": [
-    0.1922,
-    0.5327,
-    0.6832
+    0.5205,
+    0.443,
+    1.2422
+   ],
+   "color_srgb": [
+    255,
+    150,
+    40
+   ]
+  },
+  "Phoenix_Chest_RightUpperArm_Hot_Glow": {
+   "piece": "Chest",
+   "body_part": "RightUpperArm",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    0.5784,
+    1.4061,
+    0.6097
+   ],
+   "size": [
+    0.6494,
+    0.3326,
+    0.5694
+   ],
+   "color_srgb": [
+    255,
+    214,
+    96
    ]
   },
   "Phoenix_Chest_LeftLowerArm_Glow": {
@@ -320,14 +534,19 @@
    "kind": "glow",
    "atlas": null,
    "offset": [
-    -0.6438,
-    -0.1102,
+    -0.6322,
+    -0.0903,
     -0.0002
    ],
    "size": [
-    0.0581,
-    0.4608,
-    0.0218
+    0.035,
+    0.421,
+    0.0238
+   ],
+   "color_srgb": [
+    255,
+    150,
+    40
    ]
   },
   "Phoenix_Chest_RightLowerArm_Glow": {
@@ -336,202 +555,3934 @@
    "kind": "glow",
    "atlas": null,
    "offset": [
-    0.6438,
-    -0.1102,
+    0.6322,
+    -0.0903,
     -0.0002
    ],
    "size": [
-    0.0581,
-    0.4608,
-    0.0218
+    0.035,
+    0.421,
+    0.0238
+   ],
+   "color_srgb": [
+    255,
+    150,
+    40
    ]
   }
  },
  "vfx": [
   {
-   "kind": "flame",
-   "body_part": "Head",
+   "name": "crest_plume_1",
+   "kind": "flame_plume",
    "piece": "Helmet",
-   "position": [
-    -0.0,
-    1.224,
-    0.664
-   ],
-   "direction": [
-    -0.0,
-    0.876,
-    0.482
-   ],
-   "color": [
-    255,
-    150,
-    40
-   ],
-   "size": 1.0,
-   "rate": 16,
-   "note": "helm crest"
+   "body_part": "Head",
+   "note": "flame plume on the crest",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -0.0,
+     1.765,
+     0.346
+    ],
+    "secondary_axis": [
+     -0.0,
+     0.974,
+     0.228
+    ],
+    "axis": [
+     0.0,
+     -0.228,
+     0.974
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.25,
+      0
+     ],
+     [
+      1,
+      0.45,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 24,
+    "Lifetime": [
+     0.35,
+     0.65
+    ],
+    "Speed": [
+     1.92,
+     3.04
+    ],
+    "SpreadAngle": [
+     14,
+     14
+    ],
+    "Size": [
+     [
+      0,
+      0.48,
+      0.08
+     ],
+     [
+      0.25,
+      0.92,
+      0.12
+     ],
+     [
+      0.7,
+      0.64,
+      0.08
+     ],
+     [
+      1,
+      0.12,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.05,
+      0
+     ],
+     [
+      0.55,
+      0.25,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       255,
+       255
+      ]
+     ],
+     [
+      0.45,
+      [
+       255,
+       224,
+       180
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       120,
+       70
+      ]
+     ]
+    ],
+    "Drag": 1.6,
+    "Acceleration": [
+     0,
+     4.8,
+     0
+    ],
+    "Rotation": [
+     -18,
+     18
+    ],
+    "RotSpeed": [
+     -45,
+     45
+    ]
+   }
   },
   {
-   "kind": "embers",
-   "body_part": "UpperTorso",
+   "name": "crest_plume_2",
+   "kind": "flame_plume",
+   "piece": "Helmet",
+   "body_part": "Head",
+   "note": "flame plume on the crest",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -0.0,
+     1.963,
+     0.776
+    ],
+    "secondary_axis": [
+     -0.0,
+     0.972,
+     0.235
+    ],
+    "axis": [
+     0.0,
+     -0.235,
+     0.972
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.25,
+      0
+     ],
+     [
+      1,
+      0.45,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 24,
+    "Lifetime": [
+     0.35,
+     0.65
+    ],
+    "Speed": [
+     2.4,
+     3.8
+    ],
+    "SpreadAngle": [
+     14,
+     14
+    ],
+    "Size": [
+     [
+      0,
+      0.6,
+      0.1
+     ],
+     [
+      0.25,
+      1.15,
+      0.15
+     ],
+     [
+      0.7,
+      0.8,
+      0.1
+     ],
+     [
+      1,
+      0.15,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.05,
+      0
+     ],
+     [
+      0.55,
+      0.25,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       255,
+       255
+      ]
+     ],
+     [
+      0.45,
+      [
+       255,
+       224,
+       180
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       120,
+       70
+      ]
+     ]
+    ],
+    "Drag": 1.6,
+    "Acceleration": [
+     0,
+     6.0,
+     0
+    ],
+    "Rotation": [
+     -18,
+     18
+    ],
+    "RotSpeed": [
+     -45,
+     45
+    ]
+   }
+  },
+  {
+   "name": "crest_plume_3",
+   "kind": "flame_plume",
+   "piece": "Helmet",
+   "body_part": "Head",
+   "note": "flame plume on the crest",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -0.0,
+     1.979,
+     1.232
+    ],
+    "secondary_axis": [
+     -0.0,
+     0.967,
+     0.256
+    ],
+    "axis": [
+     0.0,
+     -0.256,
+     0.967
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.25,
+      0
+     ],
+     [
+      1,
+      0.45,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 24,
+    "Lifetime": [
+     0.35,
+     0.65
+    ],
+    "Speed": [
+     2.4,
+     3.8
+    ],
+    "SpreadAngle": [
+     14,
+     14
+    ],
+    "Size": [
+     [
+      0,
+      0.6,
+      0.1
+     ],
+     [
+      0.25,
+      1.15,
+      0.15
+     ],
+     [
+      0.7,
+      0.8,
+      0.1
+     ],
+     [
+      1,
+      0.15,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.05,
+      0
+     ],
+     [
+      0.55,
+      0.25,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       255,
+       255
+      ]
+     ],
+     [
+      0.45,
+      [
+       255,
+       224,
+       180
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       120,
+       70
+      ]
+     ]
+    ],
+    "Drag": 1.6,
+    "Acceleration": [
+     0,
+     6.0,
+     0
+    ],
+    "Rotation": [
+     -18,
+     18
+    ],
+    "RotSpeed": [
+     -45,
+     45
+    ]
+   }
+  },
+  {
+   "name": "core_ember_swirl",
+   "kind": "ember_swirl",
    "piece": "Chest",
-   "position": [
-    -0.0,
-    0.3,
-    -0.818
-   ],
-   "direction": [
-    -0.0,
-    0.97,
-    -0.243
-   ],
-   "color": [
-    255,
-    176,
-    70
-   ],
-   "size": 0.1,
-   "rate": 3,
-   "note": "core: a few slow sparks"
+   "body_part": "UpperTorso",
+   "note": "embers bursting out and drifting up around the sun core",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -0.0,
+     0.1,
+     -0.868
+    ],
+    "secondary_axis": [
+     -0.0,
+     0.287,
+     -0.958
+    ],
+    "axis": [
+     -1.0,
+     0.0,
+     0.0
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 3,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Front",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/ember.png",
+    "Rate": 16,
+    "Lifetime": [
+     0.9,
+     1.5
+    ],
+    "Speed": [
+     1.4,
+     2.2
+    ],
+    "SpreadAngle": [
+     180,
+     180
+    ],
+    "Size": [
+     [
+      0,
+      0.13,
+      0.03
+     ],
+     [
+      0.5,
+      0.1,
+      0.02
+     ],
+     [
+      1,
+      0,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      0.7,
+      0.2,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       250,
+       210
+      ]
+     ],
+     [
+      0.4,
+      [
+       255,
+       200,
+       90
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       100,
+       40
+      ]
+     ]
+    ],
+    "Drag": 3.2,
+    "Acceleration": [
+     0,
+     1.6,
+     0
+    ],
+    "Rotation": [
+     0,
+     360
+    ],
+    "RotSpeed": [
+     -360,
+     360
+    ]
+   }
   },
   {
+   "name": "core_light",
    "kind": "light",
-   "body_part": "UpperTorso",
    "piece": "Chest",
-   "position": [
-    -0.0,
-    0.3,
-    -0.878
-   ],
-   "direction": [
-    -0.0,
-    0.0,
-    -1.0
-   ],
-   "color": [
-    255,
-    150,
-    40
-   ],
-   "range": 9,
-   "brightness": 1.4,
-   "note": "the only light on the set: PointLight at the sun core"
+   "body_part": "UpperTorso",
+   "note": "bright PointLight at the sun core",
+   "class": "PointLight",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -0.0,
+     0.1,
+     -0.928
+    ]
+   },
+   "properties": {
+    "Brightness": 2.4,
+    "Range": 12,
+    "Color": [
+     255,
+     150,
+     50
+    ],
+    "Shadows": false
+   }
   },
   {
-   "kind": "flame",
-   "body_part": "UpperTorso",
+   "name": "chest_heat_glow",
+   "kind": "heat_glow",
    "piece": "Chest",
-   "position": [
-    -0.934,
-    2.045,
-    0.978
-   ],
-   "direction": [
-    -0.264,
-    0.88,
-    0.396
-   ],
-   "color": [
-    255,
-    150,
-    40
-   ],
-   "size": 0.6,
-   "rate": 10,
-   "note": "wing tip"
+   "body_part": "UpperTorso",
+   "note": "soft heat shimmer/glow around the upper body",
+   "class": "ParticleEmitter",
+   "parent": "part",
+   "parent_part": "Phoenix_Chest_UpperTorso",
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 0.8,
+    "LightInfluence": 0,
+    "Brightness": 1,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": -0.6,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/ember.png",
+    "Rate": 5,
+    "Lifetime": [
+     1.2,
+     1.8
+    ],
+    "Speed": [
+     0.2,
+     0.5
+    ],
+    "SpreadAngle": [
+     20,
+     20
+    ],
+    "Shape": "Box",
+    "ShapeStyle": "Volume",
+    "ShapeInOut": "Outward",
+    "Size": [
+     [
+      0,
+      1.6,
+      0.3
+     ],
+     [
+      0.5,
+      2.4,
+      0.4
+     ],
+     [
+      1,
+      2.8,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      1,
+      0
+     ],
+     [
+      0.3,
+      0.86,
+      0
+     ],
+     [
+      0.7,
+      0.9,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       170,
+       70
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       110,
+       40
+      ]
+     ]
+    ],
+    "Drag": 0.5,
+    "Acceleration": [
+     0,
+     0.8,
+     0
+    ],
+    "Rotation": [
+     0,
+     360
+    ],
+    "RotSpeed": [
+     -10,
+     10
+    ]
+   }
   },
   {
-   "kind": "flame",
-   "body_part": "UpperTorso",
+   "name": "wing_l_tip_plume_1",
+   "kind": "flame_plume",
    "piece": "Chest",
-   "position": [
-    0.934,
-    2.045,
-    0.978
-   ],
-   "direction": [
-    0.264,
-    0.88,
-    0.396
-   ],
-   "color": [
-    255,
-    150,
-    40
-   ],
-   "size": 0.6,
-   "rate": 10,
-   "note": "wing tip"
+   "body_part": "UpperTorso",
+   "note": "flame plume on a wing tip",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -1.738,
+     3.378,
+     1.7
+    ],
+    "secondary_axis": [
+     -0.014,
+     0.995,
+     0.096
+    ],
+    "axis": [
+     0.0,
+     -0.096,
+     0.995
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.25,
+      0
+     ],
+     [
+      1,
+      0.45,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 22,
+    "Lifetime": [
+     0.35,
+     0.65
+    ],
+    "Speed": [
+     2.04,
+     3.23
+    ],
+    "SpreadAngle": [
+     14,
+     14
+    ],
+    "Size": [
+     [
+      0,
+      0.51,
+      0.085
+     ],
+     [
+      0.25,
+      0.977,
+      0.128
+     ],
+     [
+      0.7,
+      0.68,
+      0.085
+     ],
+     [
+      1,
+      0.128,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.05,
+      0
+     ],
+     [
+      0.55,
+      0.25,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       255,
+       255
+      ]
+     ],
+     [
+      0.45,
+      [
+       255,
+       224,
+       180
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       120,
+       70
+      ]
+     ]
+    ],
+    "Drag": 1.6,
+    "Acceleration": [
+     0,
+     5.1,
+     0
+    ],
+    "Rotation": [
+     -18,
+     18
+    ],
+    "RotSpeed": [
+     -45,
+     45
+    ]
+   }
   },
   {
-   "kind": "embers",
-   "body_part": "UpperTorso",
+   "name": "wing_l_tip_plume_2",
+   "kind": "flame_plume",
    "piece": "Chest",
-   "position": [
-    -0.0,
-    0.45,
-    0.85
-   ],
-   "direction": [
-    -0.0,
-    0.944,
-    0.33
-   ],
-   "color": [
-    255,
-    170,
-    60
-   ],
-   "size": 0.12,
-   "rate": 6,
-   "note": "gentle rising embers between the wings"
+   "body_part": "UpperTorso",
+   "note": "flame plume on a wing tip",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -2.077,
+     3.373,
+     1.795
+    ],
+    "secondary_axis": [
+     -0.092,
+     0.99,
+     0.111
+    ],
+    "axis": [
+     0.0,
+     -0.112,
+     0.994
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.25,
+      0
+     ],
+     [
+      1,
+      0.45,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 22,
+    "Lifetime": [
+     0.35,
+     0.65
+    ],
+    "Speed": [
+     1.8,
+     2.85
+    ],
+    "SpreadAngle": [
+     14,
+     14
+    ],
+    "Size": [
+     [
+      0,
+      0.45,
+      0.075
+     ],
+     [
+      0.25,
+      0.862,
+      0.112
+     ],
+     [
+      0.7,
+      0.6,
+      0.075
+     ],
+     [
+      1,
+      0.112,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.05,
+      0
+     ],
+     [
+      0.55,
+      0.25,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       255,
+       255
+      ]
+     ],
+     [
+      0.45,
+      [
+       255,
+       224,
+       180
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       120,
+       70
+      ]
+     ]
+    ],
+    "Drag": 1.6,
+    "Acceleration": [
+     0,
+     4.5,
+     0
+    ],
+    "Rotation": [
+     -18,
+     18
+    ],
+    "RotSpeed": [
+     -45,
+     45
+    ]
+   }
   },
   {
-   "kind": "flame",
+   "name": "wing_l_tip_plume_3",
+   "kind": "flame_plume",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "flame plume on a wing tip",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -2.356,
+     3.148,
+     1.834
+    ],
+    "secondary_axis": [
+     -0.163,
+     0.979,
+     0.125
+    ],
+    "axis": [
+     0.0,
+     -0.127,
+     0.992
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.25,
+      0
+     ],
+     [
+      1,
+      0.45,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 22,
+    "Lifetime": [
+     0.35,
+     0.65
+    ],
+    "Speed": [
+     1.56,
+     2.47
+    ],
+    "SpreadAngle": [
+     14,
+     14
+    ],
+    "Size": [
+     [
+      0,
+      0.39,
+      0.065
+     ],
+     [
+      0.25,
+      0.747,
+      0.097
+     ],
+     [
+      0.7,
+      0.52,
+      0.065
+     ],
+     [
+      1,
+      0.097,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.05,
+      0
+     ],
+     [
+      0.55,
+      0.25,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       255,
+       255
+      ]
+     ],
+     [
+      0.45,
+      [
+       255,
+       224,
+       180
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       120,
+       70
+      ]
+     ]
+    ],
+    "Drag": 1.6,
+    "Acceleration": [
+     0,
+     3.9,
+     0
+    ],
+    "Rotation": [
+     -18,
+     18
+    ],
+    "RotSpeed": [
+     -45,
+     45
+    ]
+   }
+  },
+  {
+   "name": "wing_l_edge_1",
+   "kind": "flame_sheet",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "trailing flame sheet along the wing's leading edge",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -0.629,
+     0.949,
+     1.145
+    ],
+    "secondary_axis": [
+     0.172,
+     0.598,
+     0.783
+    ],
+    "axis": [
+     0.977,
+     0.0,
+     -0.215
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "VelocityParallel",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.6,
+      0
+     ],
+     [
+      1,
+      0.9,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 16,
+    "Lifetime": [
+     0.3,
+     0.5
+    ],
+    "Speed": [
+     0.84,
+     1.54
+    ],
+    "SpreadAngle": [
+     18,
+     6
+    ],
+    "Size": [
+     [
+      0,
+      0.315,
+      0.056
+     ],
+     [
+      0.3,
+      0.56,
+      0.07
+     ],
+     [
+      1,
+      0.07,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.1,
+      0
+     ],
+     [
+      0.6,
+      0.3,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       250,
+       230
+      ]
+     ],
+     [
+      0.5,
+      [
+       255,
+       200,
+       150
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       110,
+       70
+      ]
+     ]
+    ],
+    "Drag": 2.4,
+    "Acceleration": [
+     0,
+     2.8,
+     0
+    ],
+    "Rotation": [
+     -10,
+     10
+    ],
+    "RotSpeed": [
+     -20,
+     20
+    ]
+   }
+  },
+  {
+   "name": "wing_l_edge_2",
+   "kind": "flame_sheet",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "trailing flame sheet along the wing's leading edge",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -0.992,
+     1.392,
+     1.306
+    ],
+    "secondary_axis": [
+     0.172,
+     0.598,
+     0.783
+    ],
+    "axis": [
+     0.977,
+     0.0,
+     -0.215
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "VelocityParallel",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.6,
+      0
+     ],
+     [
+      1,
+      0.9,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 16,
+    "Lifetime": [
+     0.3,
+     0.5
+    ],
+    "Speed": [
+     0.84,
+     1.54
+    ],
+    "SpreadAngle": [
+     18,
+     6
+    ],
+    "Size": [
+     [
+      0,
+      0.315,
+      0.056
+     ],
+     [
+      0.3,
+      0.56,
+      0.07
+     ],
+     [
+      1,
+      0.07,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.1,
+      0
+     ],
+     [
+      0.6,
+      0.3,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       250,
+       230
+      ]
+     ],
+     [
+      0.5,
+      [
+       255,
+       200,
+       150
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       110,
+       70
+      ]
+     ]
+    ],
+    "Drag": 2.4,
+    "Acceleration": [
+     0,
+     2.8,
+     0
+    ],
+    "Rotation": [
+     -10,
+     10
+    ],
+    "RotSpeed": [
+     -20,
+     20
+    ]
+   }
+  },
+  {
+   "name": "wing_l_edge_3",
+   "kind": "flame_sheet",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "trailing flame sheet along the wing's leading edge",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -1.282,
+     1.814,
+     1.4
+    ],
+    "secondary_axis": [
+     0.172,
+     0.598,
+     0.783
+    ],
+    "axis": [
+     0.977,
+     0.0,
+     -0.215
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "VelocityParallel",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.6,
+      0
+     ],
+     [
+      1,
+      0.9,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 16,
+    "Lifetime": [
+     0.3,
+     0.5
+    ],
+    "Speed": [
+     0.84,
+     1.54
+    ],
+    "SpreadAngle": [
+     18,
+     6
+    ],
+    "Size": [
+     [
+      0,
+      0.315,
+      0.056
+     ],
+     [
+      0.3,
+      0.56,
+      0.07
+     ],
+     [
+      1,
+      0.07,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.1,
+      0
+     ],
+     [
+      0.6,
+      0.3,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       250,
+       230
+      ]
+     ],
+     [
+      0.5,
+      [
+       255,
+       200,
+       150
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       110,
+       70
+      ]
+     ]
+    ],
+    "Drag": 2.4,
+    "Acceleration": [
+     0,
+     2.8,
+     0
+    ],
+    "Rotation": [
+     -10,
+     10
+    ],
+    "RotSpeed": [
+     -20,
+     20
+    ]
+   }
+  },
+  {
+   "name": "wing_l_edge_4",
+   "kind": "flame_sheet",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "trailing flame sheet along the wing's leading edge",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -1.468,
+     2.144,
+     1.44
+    ],
+    "secondary_axis": [
+     0.172,
+     0.598,
+     0.783
+    ],
+    "axis": [
+     0.977,
+     0.0,
+     -0.215
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "VelocityParallel",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.6,
+      0
+     ],
+     [
+      1,
+      0.9,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 16,
+    "Lifetime": [
+     0.3,
+     0.5
+    ],
+    "Speed": [
+     0.84,
+     1.54
+    ],
+    "SpreadAngle": [
+     18,
+     6
+    ],
+    "Size": [
+     [
+      0,
+      0.315,
+      0.056
+     ],
+     [
+      0.3,
+      0.56,
+      0.07
+     ],
+     [
+      1,
+      0.07,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.1,
+      0
+     ],
+     [
+      0.6,
+      0.3,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       250,
+       230
+      ]
+     ],
+     [
+      0.5,
+      [
+       255,
+       200,
+       150
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       110,
+       70
+      ]
+     ]
+    ],
+    "Drag": 2.4,
+    "Acceleration": [
+     0,
+     2.8,
+     0
+    ],
+    "Rotation": [
+     -10,
+     10
+    ],
+    "RotSpeed": [
+     -20,
+     20
+    ]
+   }
+  },
+  {
+   "name": "wing_l_embers",
+   "kind": "embers_rise",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "embers rising off the wing",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -1.749,
+     1.536,
+     1.553
+    ],
+    "secondary_axis": [
+     -0.0,
+     1.0,
+     0.0
+    ],
+    "axis": [
+     0.0,
+     -0.0,
+     1.0
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 3,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/ember.png",
+    "Rate": 14,
+    "Lifetime": [
+     1.4,
+     2.6
+    ],
+    "Speed": [
+     1.2,
+     2.4
+    ],
+    "SpreadAngle": [
+     35,
+     35
+    ],
+    "Size": [
+     [
+      0,
+      0.16,
+      0.04
+     ],
+     [
+      0.6,
+      0.12,
+      0.03
+     ],
+     [
+      1,
+      0,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      0.75,
+      0.15,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       246,
+       200
+      ]
+     ],
+     [
+      0.35,
+      [
+       255,
+       190,
+       80
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       90,
+       40
+      ]
+     ]
+    ],
+    "Drag": 0.7,
+    "Acceleration": [
+     0,
+     3,
+     0
+    ],
+    "Rotation": [
+     0,
+     360
+    ],
+    "RotSpeed": [
+     -120,
+     120
+    ]
+   }
+  },
+  {
+   "name": "wing_r_tip_plume_1",
+   "kind": "flame_plume",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "flame plume on a wing tip",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     1.738,
+     3.378,
+     1.7
+    ],
+    "secondary_axis": [
+     0.014,
+     0.995,
+     0.096
+    ],
+    "axis": [
+     0.0,
+     -0.096,
+     0.995
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.25,
+      0
+     ],
+     [
+      1,
+      0.45,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 22,
+    "Lifetime": [
+     0.35,
+     0.65
+    ],
+    "Speed": [
+     2.04,
+     3.23
+    ],
+    "SpreadAngle": [
+     14,
+     14
+    ],
+    "Size": [
+     [
+      0,
+      0.51,
+      0.085
+     ],
+     [
+      0.25,
+      0.977,
+      0.128
+     ],
+     [
+      0.7,
+      0.68,
+      0.085
+     ],
+     [
+      1,
+      0.128,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.05,
+      0
+     ],
+     [
+      0.55,
+      0.25,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       255,
+       255
+      ]
+     ],
+     [
+      0.45,
+      [
+       255,
+       224,
+       180
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       120,
+       70
+      ]
+     ]
+    ],
+    "Drag": 1.6,
+    "Acceleration": [
+     0,
+     5.1,
+     0
+    ],
+    "Rotation": [
+     -18,
+     18
+    ],
+    "RotSpeed": [
+     -45,
+     45
+    ]
+   }
+  },
+  {
+   "name": "wing_r_tip_plume_2",
+   "kind": "flame_plume",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "flame plume on a wing tip",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     2.077,
+     3.373,
+     1.795
+    ],
+    "secondary_axis": [
+     0.092,
+     0.99,
+     0.111
+    ],
+    "axis": [
+     0.0,
+     -0.112,
+     0.994
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.25,
+      0
+     ],
+     [
+      1,
+      0.45,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 22,
+    "Lifetime": [
+     0.35,
+     0.65
+    ],
+    "Speed": [
+     1.8,
+     2.85
+    ],
+    "SpreadAngle": [
+     14,
+     14
+    ],
+    "Size": [
+     [
+      0,
+      0.45,
+      0.075
+     ],
+     [
+      0.25,
+      0.862,
+      0.112
+     ],
+     [
+      0.7,
+      0.6,
+      0.075
+     ],
+     [
+      1,
+      0.112,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.05,
+      0
+     ],
+     [
+      0.55,
+      0.25,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       255,
+       255
+      ]
+     ],
+     [
+      0.45,
+      [
+       255,
+       224,
+       180
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       120,
+       70
+      ]
+     ]
+    ],
+    "Drag": 1.6,
+    "Acceleration": [
+     0,
+     4.5,
+     0
+    ],
+    "Rotation": [
+     -18,
+     18
+    ],
+    "RotSpeed": [
+     -45,
+     45
+    ]
+   }
+  },
+  {
+   "name": "wing_r_tip_plume_3",
+   "kind": "flame_plume",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "flame plume on a wing tip",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     2.356,
+     3.148,
+     1.834
+    ],
+    "secondary_axis": [
+     0.163,
+     0.979,
+     0.125
+    ],
+    "axis": [
+     0.0,
+     -0.127,
+     0.992
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.25,
+      0
+     ],
+     [
+      1,
+      0.45,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 22,
+    "Lifetime": [
+     0.35,
+     0.65
+    ],
+    "Speed": [
+     1.56,
+     2.47
+    ],
+    "SpreadAngle": [
+     14,
+     14
+    ],
+    "Size": [
+     [
+      0,
+      0.39,
+      0.065
+     ],
+     [
+      0.25,
+      0.747,
+      0.097
+     ],
+     [
+      0.7,
+      0.52,
+      0.065
+     ],
+     [
+      1,
+      0.097,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.05,
+      0
+     ],
+     [
+      0.55,
+      0.25,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       255,
+       255
+      ]
+     ],
+     [
+      0.45,
+      [
+       255,
+       224,
+       180
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       120,
+       70
+      ]
+     ]
+    ],
+    "Drag": 1.6,
+    "Acceleration": [
+     0,
+     3.9,
+     0
+    ],
+    "Rotation": [
+     -18,
+     18
+    ],
+    "RotSpeed": [
+     -45,
+     45
+    ]
+   }
+  },
+  {
+   "name": "wing_r_edge_1",
+   "kind": "flame_sheet",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "trailing flame sheet along the wing's leading edge",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     0.629,
+     0.949,
+     1.145
+    ],
+    "secondary_axis": [
+     -0.172,
+     0.598,
+     0.783
+    ],
+    "axis": [
+     0.977,
+     -0.0,
+     0.215
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "VelocityParallel",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.6,
+      0
+     ],
+     [
+      1,
+      0.9,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 16,
+    "Lifetime": [
+     0.3,
+     0.5
+    ],
+    "Speed": [
+     0.84,
+     1.54
+    ],
+    "SpreadAngle": [
+     18,
+     6
+    ],
+    "Size": [
+     [
+      0,
+      0.315,
+      0.056
+     ],
+     [
+      0.3,
+      0.56,
+      0.07
+     ],
+     [
+      1,
+      0.07,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.1,
+      0
+     ],
+     [
+      0.6,
+      0.3,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       250,
+       230
+      ]
+     ],
+     [
+      0.5,
+      [
+       255,
+       200,
+       150
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       110,
+       70
+      ]
+     ]
+    ],
+    "Drag": 2.4,
+    "Acceleration": [
+     0,
+     2.8,
+     0
+    ],
+    "Rotation": [
+     -10,
+     10
+    ],
+    "RotSpeed": [
+     -20,
+     20
+    ]
+   }
+  },
+  {
+   "name": "wing_r_edge_2",
+   "kind": "flame_sheet",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "trailing flame sheet along the wing's leading edge",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     0.992,
+     1.392,
+     1.306
+    ],
+    "secondary_axis": [
+     -0.172,
+     0.598,
+     0.783
+    ],
+    "axis": [
+     0.977,
+     -0.0,
+     0.215
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "VelocityParallel",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.6,
+      0
+     ],
+     [
+      1,
+      0.9,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 16,
+    "Lifetime": [
+     0.3,
+     0.5
+    ],
+    "Speed": [
+     0.84,
+     1.54
+    ],
+    "SpreadAngle": [
+     18,
+     6
+    ],
+    "Size": [
+     [
+      0,
+      0.315,
+      0.056
+     ],
+     [
+      0.3,
+      0.56,
+      0.07
+     ],
+     [
+      1,
+      0.07,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.1,
+      0
+     ],
+     [
+      0.6,
+      0.3,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       250,
+       230
+      ]
+     ],
+     [
+      0.5,
+      [
+       255,
+       200,
+       150
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       110,
+       70
+      ]
+     ]
+    ],
+    "Drag": 2.4,
+    "Acceleration": [
+     0,
+     2.8,
+     0
+    ],
+    "Rotation": [
+     -10,
+     10
+    ],
+    "RotSpeed": [
+     -20,
+     20
+    ]
+   }
+  },
+  {
+   "name": "wing_r_edge_3",
+   "kind": "flame_sheet",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "trailing flame sheet along the wing's leading edge",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     1.282,
+     1.814,
+     1.4
+    ],
+    "secondary_axis": [
+     -0.172,
+     0.598,
+     0.783
+    ],
+    "axis": [
+     0.977,
+     -0.0,
+     0.215
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "VelocityParallel",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.6,
+      0
+     ],
+     [
+      1,
+      0.9,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 16,
+    "Lifetime": [
+     0.3,
+     0.5
+    ],
+    "Speed": [
+     0.84,
+     1.54
+    ],
+    "SpreadAngle": [
+     18,
+     6
+    ],
+    "Size": [
+     [
+      0,
+      0.315,
+      0.056
+     ],
+     [
+      0.3,
+      0.56,
+      0.07
+     ],
+     [
+      1,
+      0.07,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.1,
+      0
+     ],
+     [
+      0.6,
+      0.3,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       250,
+       230
+      ]
+     ],
+     [
+      0.5,
+      [
+       255,
+       200,
+       150
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       110,
+       70
+      ]
+     ]
+    ],
+    "Drag": 2.4,
+    "Acceleration": [
+     0,
+     2.8,
+     0
+    ],
+    "Rotation": [
+     -10,
+     10
+    ],
+    "RotSpeed": [
+     -20,
+     20
+    ]
+   }
+  },
+  {
+   "name": "wing_r_edge_4",
+   "kind": "flame_sheet",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "trailing flame sheet along the wing's leading edge",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     1.468,
+     2.144,
+     1.44
+    ],
+    "secondary_axis": [
+     -0.172,
+     0.598,
+     0.783
+    ],
+    "axis": [
+     0.977,
+     -0.0,
+     0.215
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "VelocityParallel",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.6,
+      0
+     ],
+     [
+      1,
+      0.9,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 16,
+    "Lifetime": [
+     0.3,
+     0.5
+    ],
+    "Speed": [
+     0.84,
+     1.54
+    ],
+    "SpreadAngle": [
+     18,
+     6
+    ],
+    "Size": [
+     [
+      0,
+      0.315,
+      0.056
+     ],
+     [
+      0.3,
+      0.56,
+      0.07
+     ],
+     [
+      1,
+      0.07,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.1,
+      0
+     ],
+     [
+      0.6,
+      0.3,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       250,
+       230
+      ]
+     ],
+     [
+      0.5,
+      [
+       255,
+       200,
+       150
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       110,
+       70
+      ]
+     ]
+    ],
+    "Drag": 2.4,
+    "Acceleration": [
+     0,
+     2.8,
+     0
+    ],
+    "Rotation": [
+     -10,
+     10
+    ],
+    "RotSpeed": [
+     -20,
+     20
+    ]
+   }
+  },
+  {
+   "name": "wing_r_embers",
+   "kind": "embers_rise",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "embers rising off the wing",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     1.749,
+     1.536,
+     1.553
+    ],
+    "secondary_axis": [
+     -0.0,
+     1.0,
+     0.0
+    ],
+    "axis": [
+     0.0,
+     -0.0,
+     1.0
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 3,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/ember.png",
+    "Rate": 14,
+    "Lifetime": [
+     1.4,
+     2.6
+    ],
+    "Speed": [
+     1.2,
+     2.4
+    ],
+    "SpreadAngle": [
+     35,
+     35
+    ],
+    "Size": [
+     [
+      0,
+      0.16,
+      0.04
+     ],
+     [
+      0.6,
+      0.12,
+      0.03
+     ],
+     [
+      1,
+      0,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      0.75,
+      0.15,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       246,
+       200
+      ]
+     ],
+     [
+      0.35,
+      [
+       255,
+       190,
+       80
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       90,
+       40
+      ]
+     ]
+    ],
+    "Drag": 0.7,
+    "Acceleration": [
+     0,
+     3,
+     0
+    ],
+    "Rotation": [
+     0,
+     360
+    ],
+    "RotSpeed": [
+     -120,
+     120
+    ]
+   }
+  },
+  {
+   "name": "back_embers",
+   "kind": "embers_rise",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "embers rising from the back medallion",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -0.0,
+     0.2,
+     0.9
+    ],
+    "secondary_axis": [
+     -0.0,
+     1.0,
+     0.0
+    ],
+    "axis": [
+     0.0,
+     -0.0,
+     1.0
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 3,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/ember.png",
+    "Rate": 10,
+    "Lifetime": [
+     1.4,
+     2.6
+    ],
+    "Speed": [
+     1.2,
+     2.4
+    ],
+    "SpreadAngle": [
+     35,
+     35
+    ],
+    "Size": [
+     [
+      0,
+      0.16,
+      0.04
+     ],
+     [
+      0.6,
+      0.12,
+      0.03
+     ],
+     [
+      1,
+      0,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      0.75,
+      0.15,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       246,
+       200
+      ]
+     ],
+     [
+      0.35,
+      [
+       255,
+       190,
+       80
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       90,
+       40
+      ]
+     ]
+    ],
+    "Drag": 0.7,
+    "Acceleration": [
+     0,
+     3,
+     0
+    ],
+    "Rotation": [
+     0,
+     360
+    ],
+    "RotSpeed": [
+     -120,
+     120
+    ]
+   }
+  },
+  {
+   "name": "wing_light",
+   "kind": "light",
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "note": "soft second light between the wings",
+   "class": "PointLight",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -0.0,
+     1.7,
+     1.5
+    ]
+   },
+   "properties": {
+    "Brightness": 1.2,
+    "Range": 10,
+    "Color": [
+     255,
+     170,
+     70
+    ],
+    "Shadows": false
+   }
+  },
+  {
+   "name": "tasset_l_lick",
+   "kind": "flame_lick",
+   "piece": "Chest",
+   "body_part": "LowerTorso",
+   "note": "small flame at the tasset tips",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -0.505,
+     -0.775,
+     -0.768
+    ],
+    "secondary_axis": [
+     -0.0,
+     0.997,
+     0.083
+    ],
+    "axis": [
+     0.0,
+     -0.083,
+     0.997
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.3,
+      0
+     ],
+     [
+      1,
+      0.5,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 10,
+    "Lifetime": [
+     0.3,
+     0.5
+    ],
+    "Speed": [
+     0.7,
+     1.1
+    ],
+    "SpreadAngle": [
+     12,
+     12
+    ],
+    "Size": [
+     [
+      0,
+      0.175,
+      0.025
+     ],
+     [
+      0.3,
+      0.3,
+      0.04
+     ],
+     [
+      1,
+      0.04,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.1,
+      0
+     ],
+     [
+      0.6,
+      0.3,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       255,
+       255
+      ]
+     ],
+     [
+      0.5,
+      [
+       255,
+       214,
+       170
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       120,
+       70
+      ]
+     ]
+    ],
+    "Drag": 1.8,
+    "Acceleration": [
+     0,
+     4,
+     0
+    ],
+    "Rotation": [
+     -15,
+     15
+    ],
+    "RotSpeed": [
+     -30,
+     30
+    ]
+   }
+  },
+  {
+   "name": "tasset_r_lick",
+   "kind": "flame_lick",
+   "piece": "Chest",
+   "body_part": "LowerTorso",
+   "note": "small flame at the tasset tips",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     0.505,
+     -0.775,
+     -0.768
+    ],
+    "secondary_axis": [
+     -0.0,
+     0.997,
+     0.083
+    ],
+    "axis": [
+     0.0,
+     -0.083,
+     0.997
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.3,
+      0
+     ],
+     [
+      1,
+      0.5,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 10,
+    "Lifetime": [
+     0.3,
+     0.5
+    ],
+    "Speed": [
+     0.7,
+     1.1
+    ],
+    "SpreadAngle": [
+     12,
+     12
+    ],
+    "Size": [
+     [
+      0,
+      0.175,
+      0.025
+     ],
+     [
+      0.3,
+      0.3,
+      0.04
+     ],
+     [
+      1,
+      0.04,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.1,
+      0
+     ],
+     [
+      0.6,
+      0.3,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       255,
+       255
+      ]
+     ],
+     [
+      0.5,
+      [
+       255,
+       214,
+       170
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       120,
+       70
+      ]
+     ]
+    ],
+    "Drag": 1.8,
+    "Acceleration": [
+     0,
+     4,
+     0
+    ],
+    "Rotation": [
+     -15,
+     15
+    ],
+    "RotSpeed": [
+     -30,
+     30
+    ]
+   }
+  },
+  {
+   "name": "tail_lick",
+   "kind": "flame_lick",
+   "piece": "Chest",
+   "body_part": "LowerTorso",
+   "note": "flames licking off the phoenix tail",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -0.0,
+     -0.856,
+     0.899
+    ],
+    "secondary_axis": [
+     -0.014,
+     0.993,
+     -0.116
+    ],
+    "axis": [
+     -0.0,
+     0.116,
+     0.993
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.3,
+      0
+     ],
+     [
+      1,
+      0.5,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 12,
+    "Lifetime": [
+     0.3,
+     0.5
+    ],
+    "Speed": [
+     0.84,
+     1.32
+    ],
+    "SpreadAngle": [
+     12,
+     12
+    ],
+    "Size": [
+     [
+      0,
+      0.21,
+      0.03
+     ],
+     [
+      0.3,
+      0.36,
+      0.048
+     ],
+     [
+      1,
+      0.048,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.1,
+      0
+     ],
+     [
+      0.6,
+      0.3,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       255,
+       255
+      ]
+     ],
+     [
+      0.5,
+      [
+       255,
+       214,
+       170
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       120,
+       70
+      ]
+     ]
+    ],
+    "Drag": 1.8,
+    "Acceleration": [
+     0,
+     4,
+     0
+    ],
+    "Rotation": [
+     -15,
+     15
+    ],
+    "RotSpeed": [
+     -30,
+     30
+    ]
+   }
+  },
+  {
+   "name": "waist_heat_glow",
+   "kind": "heat_glow",
+   "piece": "Chest",
+   "body_part": "LowerTorso",
+   "note": "soft heat glow around the waist and tassets",
+   "class": "ParticleEmitter",
+   "parent": "part",
+   "parent_part": "Phoenix_Chest_LowerTorso",
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 0.8,
+    "LightInfluence": 0,
+    "Brightness": 1,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": -0.6,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/ember.png",
+    "Rate": 5,
+    "Lifetime": [
+     1.2,
+     1.8
+    ],
+    "Speed": [
+     0.2,
+     0.5
+    ],
+    "SpreadAngle": [
+     20,
+     20
+    ],
+    "Shape": "Box",
+    "ShapeStyle": "Volume",
+    "ShapeInOut": "Outward",
+    "Size": [
+     [
+      0,
+      1.12,
+      0.21
+     ],
+     [
+      0.5,
+      1.68,
+      0.28
+     ],
+     [
+      1,
+      1.96,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      1,
+      0
+     ],
+     [
+      0.3,
+      0.86,
+      0
+     ],
+     [
+      0.7,
+      0.9,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       170,
+       70
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       110,
+       40
+      ]
+     ]
+    ],
+    "Drag": 0.5,
+    "Acceleration": [
+     0,
+     0.8,
+     0
+    ],
+    "Rotation": [
+     0,
+     360
+    ],
+    "RotSpeed": [
+     -10,
+     10
+    ]
+   }
+  },
+  {
+   "name": "left_pauldron_plume",
+   "kind": "flame_plume",
+   "piece": "Chest",
    "body_part": "LeftUpperArm",
-   "piece": "Chest",
-   "position": [
-    -0.471,
-    0.891,
-    1.104
-   ],
-   "direction": [
-    -0.13,
-    0.869,
-    0.478
-   ],
-   "color": [
-    255,
-    150,
-    40
-   ],
-   "size": 0.8,
-   "rate": 12,
-   "note": "pauldron flame crest"
+   "note": "flame plume on the pauldron crest",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     -0.578,
+     1.352,
+     0.694
+    ],
+    "secondary_axis": [
+     -0.243,
+     0.953,
+     0.181
+    ],
+    "axis": [
+     0.0,
+     -0.186,
+     0.982
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.25,
+      0
+     ],
+     [
+      1,
+      0.45,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 22,
+    "Lifetime": [
+     0.35,
+     0.65
+    ],
+    "Speed": [
+     2.04,
+     3.23
+    ],
+    "SpreadAngle": [
+     14,
+     14
+    ],
+    "Size": [
+     [
+      0,
+      0.51,
+      0.085
+     ],
+     [
+      0.25,
+      0.977,
+      0.128
+     ],
+     [
+      0.7,
+      0.68,
+      0.085
+     ],
+     [
+      1,
+      0.128,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.05,
+      0
+     ],
+     [
+      0.55,
+      0.25,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       255,
+       255
+      ]
+     ],
+     [
+      0.45,
+      [
+       255,
+       224,
+       180
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       120,
+       70
+      ]
+     ]
+    ],
+    "Drag": 1.6,
+    "Acceleration": [
+     0,
+     5.1,
+     0
+    ],
+    "Rotation": [
+     -18,
+     18
+    ],
+    "RotSpeed": [
+     -45,
+     45
+    ]
+   }
   },
   {
-   "kind": "flame",
-   "body_part": "RightUpperArm",
+   "name": "right_pauldron_plume",
+   "kind": "flame_plume",
    "piece": "Chest",
-   "position": [
-    0.471,
-    0.891,
-    1.104
-   ],
-   "direction": [
-    0.13,
-    0.869,
-    0.478
-   ],
-   "color": [
-    255,
-    150,
-    40
-   ],
-   "size": 0.8,
-   "rate": 12,
-   "note": "pauldron flame crest"
+   "body_part": "RightUpperArm",
+   "note": "flame plume on the pauldron crest",
+   "class": "ParticleEmitter",
+   "parent": "attachment",
+   "attachment": {
+    "position": [
+     0.578,
+     1.352,
+     0.694
+    ],
+    "secondary_axis": [
+     0.243,
+     0.953,
+     0.181
+    ],
+    "axis": [
+     0.0,
+     -0.186,
+     0.982
+    ]
+   },
+   "properties": {
+    "Enabled": true,
+    "LightEmission": 1,
+    "LightInfluence": 0,
+    "Brightness": 2,
+    "Orientation": "FacingCamera",
+    "EmissionDirection": "Top",
+    "LockedToPart": false,
+    "ZOffset": 0.3,
+    "VelocityInheritance": 0,
+    "Squash": [
+     [
+      0,
+      0.25,
+      0
+     ],
+     [
+      1,
+      0.45,
+      0
+     ]
+    ],
+    "Texture": "textures/vfx/flame.png",
+    "Rate": 22,
+    "Lifetime": [
+     0.35,
+     0.65
+    ],
+    "Speed": [
+     2.04,
+     3.23
+    ],
+    "SpreadAngle": [
+     14,
+     14
+    ],
+    "Size": [
+     [
+      0,
+      0.51,
+      0.085
+     ],
+     [
+      0.25,
+      0.977,
+      0.128
+     ],
+     [
+      0.7,
+      0.68,
+      0.085
+     ],
+     [
+      1,
+      0.128,
+      0
+     ]
+    ],
+    "Transparency": [
+     [
+      0,
+      0.05,
+      0
+     ],
+     [
+      0.55,
+      0.25,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "Color": [
+     [
+      0,
+      [
+       255,
+       255,
+       255
+      ]
+     ],
+     [
+      0.45,
+      [
+       255,
+       224,
+       180
+      ]
+     ],
+     [
+      1,
+      [
+       255,
+       120,
+       70
+      ]
+     ]
+    ],
+    "Drag": 1.6,
+    "Acceleration": [
+     0,
+     5.1,
+     0
+    ],
+    "Rotation": [
+     -18,
+     18
+    ],
+    "RotSpeed": [
+     -45,
+     45
+    ]
+   }
   }
  ],
- "vfx_notes": "Phoenix only. position/direction are part-local Studio axes: put an Attachment at position on the body part and point the emitter along direction. flame = ParticleEmitter (LightEmission 1, Lifetime 0.4-0.7, Size shrinking from size to 0, Speed ~2, SpreadAngle ~15); embers = small ParticleEmitter (Lifetime 1.5-2.5, Speed 0.8-1.5, slight Acceleration up); light = one PointLight (Shadows off)."
+ "vfx_notes": "Phoenix only. For parent 'attachment': add an Attachment to the character's body_part at attachment.position (part-local), set Attachment.Axis = axis and SecondaryAxis = secondary_axis, and parent the ParticleEmitter/PointLight to it (EmissionDirection 'Top' emits along the attachment's +Y = secondary_axis; 'Front' = all around for the swirl). For parent 'part': parent the emitter to that armour MeshPart (Shape Box fills it). NumberSequence keypoints are [time, value, envelope]; ColorSequence keypoints are [time, [r, g, b]] sRGB 0-255; ranges are [min, max]; Acceleration is world space. Upload textures/vfx/*.png and use their asset ids as Texture. At these rates about 300 particles are alive per player; halve Rate on low graphics quality. Glow parts: Neon, Color = color_srgb."
 }
