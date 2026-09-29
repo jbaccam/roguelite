@@ -15,10 +15,11 @@ local Shop=require(SSS:WaitForChild('ShopService'))
 local Characters=require(SSS:WaitForChild('CharacterService'))
 local Admin=require(combat:WaitForChild('AdminConfig'))
 local studio=RunService:IsStudio()
--- Stats admin panel (Studio only): add or set emeralds. CharacterService validates the numbers;
--- grants count as earned, and Robux emeralds are clamped so they never exceed the balance.
+-- Admin panel emeralds (developers only): add or set. CharacterService checks the developer and
+-- the numbers. In Studio the profile is in memory; on a live server this is a real, saved change
+-- to the developer's own account. Grants count as earned; Robux emeralds are clamped to the balance.
 Characters.onPracticeEmeralds=function(p,mode,amount)
- local d=studio and Profiles.get(p);if not d then return false end
+ local d=Admin.isAdmin(p) and Profiles.get(p);if not d then return false end
  d.emeralds=math.max(0,mode=='Set' and amount or d.emeralds+amount)
  d.bought=math.min(d.bought or 0,d.emeralds)
  Profiles.publish(p);return true

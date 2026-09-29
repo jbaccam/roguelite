@@ -171,7 +171,7 @@ function S.resetRun()
  -- A new run starts clean: not a test run (ADMIN_PANEL.md).
  run:SetAttribute('AdminTestRun',nil)
  combat:SetAttribute('ZombiesEnabled',false);Shards.clear(false)
- for p in S.states do S.resetPlayer(p) end
+ for p in S.states do Characters.clearAdmin(p);S.resetPlayer(p) end
 end
 -- Solo death pauses the wave clock; revive resumes it with the same time left.
 function S.pause()

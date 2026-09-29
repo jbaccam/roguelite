@@ -6,12 +6,14 @@ local combat=game.ReplicatedStorage:WaitForChild('RogueliteCombat')
 local Motion=require(combat:WaitForChild('BossMotion'))
 local Characters=require(script.Parent.CharacterService)
 local Death=require(combat.ZombieDeath)
+local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed; this module is unsandboxed
 local B={states={}}
 -- Wave chase speed: well under the 24 studs/s player base, fast enough to close gaps.
 local CHASE_SPEED=15
 local lastPracticeRequest=-math.huge
 function B.practice(player,action)
- if not Run:IsStudio() or (action~='SpawnBoss' and action~='RemoveBoss') then return false end
+ -- Developers only (the admin panel), in Studio and on live servers; CharacterService checks too.
+ if not Admin.isAdmin(player) or (action~='SpawnBoss' and action~='RemoveBoss') then return false end
  local ch=player.Character;local h=ch and ch:FindFirstChildOfClass('Humanoid');local root=ch and ch:FindFirstChild('HumanoidRootPart')
  local folder=workspace:FindFirstChild('RogueliteEnemies')
  if not Characters.states[player] or not h or h.Health<=0 or not root or not folder or os.clock()-lastPracticeRequest<.5 then return false end
@@ -80,7 +82,7 @@ function B.start(npc,kind,target)
 end
 function B.spawn(cf,practice)
  assert(typeof(cf)=='CFrame','Server spawn requires CFrame')
- assert(not practice or Run:IsStudio(),'Practice is Studio only')
+ -- practice: an admin-panel boss (BossPractice: no loot). Callers check the developer first.
  local template=game.ServerStorage.RogueliteNPCs:FindFirstChild('HammerBoss_NPC');if not template then return nil end
  local folder=workspace:FindFirstChild('RogueliteEnemies');if not folder then return nil end
  local npc=template:Clone();npc.Name='HammerBoss';Motion.prepare(npc);npc:PivotTo(cf);npc:SetAttribute('BossPractice',practice==true)

@@ -6,6 +6,7 @@ local combat=game.ReplicatedStorage:WaitForChild('RogueliteCombat')
 local Stats=require(combat:WaitForChild('CharacterStats'))
 local EnemyCatalog=require(combat:WaitForChild('EnemyCatalog'))
 local Skills=require(combat:WaitForChild('SkillTreeConfig'))
+local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed, like this module
 local playerDamaged=combat:FindFirstChild('PlayerDamaged')
 if not playerDamaged then
  playerDamaged=Instance.new('RemoteEvent');playerDamaged.Name='PlayerDamaged'
@@ -80,6 +81,14 @@ function Service.setClass(player,class)
  if not s or type(class)~='string' or not Stats.Classes[class] or s.class==class then return end
  s.class=class;Service.refresh(player)
 end
+-- A new run starts clean (ShopService.resetRun): admin stat edits, class picks and god mode
+-- never carry into a run that pays rewards. Normal play has nothing to clear. The caller refreshes.
+function Service.clearAdmin(player)
+ local s=Service.states[player];if not s then return end
+ s.overrides={}
+ local picked=player:GetAttribute('RunClass');if Stats.Classes[picked] then s.class=picked end
+ player:SetAttribute('AdminGod',nil)
+end
 function Service.heal(player,amount)
  local s=Service.states[player];local h=humanoid(player)
  if s and h and h.Health>0 then h.Health=math.min(h.MaxHealth,h.Health+math.max(0,amount)*Stats.mult(s.stats.Recovery)) end
@@ -92,7 +101,9 @@ function Service.leech(player,damage)
 end
 function Service.contact(player,amount,roll)
  local s=Service.states[player];local h=humanoid(player)
- if not s or not h or h.Health<=0 or player.Character:FindFirstChildOfClass('ForceField') then return 0 end
+ -- Admin god mode (AdminGod, set only by AdminService): no damage from any source. Every player
+ -- damage path (contact, enemy melee and projectiles, zombie slams, the boss) comes through here.
+ if not s or not h or h.Health<=0 or player.Character:FindFirstChildOfClass('ForceField') or player:GetAttribute('AdminGod')==true then return 0 end
  if s.stats.FirstHitBlock>0 and s.blocks>0 then s.blocks-=1;s.folder:SetAttribute('BlocksRemaining',s.blocks);return 0 end
  if (roll or math.random())<s.stats.Dodge/100 then return 0 end
  local before=h.Health;h:TakeDamage(Stats.incoming(amount,s.stats));local actual=before-h.Health
@@ -105,8 +116,9 @@ local remote=combat:FindFirstChild('EditPractice') or Instance.new('RemoteEvent'
 remote.Name='EditPractice';remote.Parent=combat
 function Service.request(player,action,key,value)
  local s=Service.states[player];local h=humanoid(player);local run=game.ReplicatedStorage:FindFirstChild('RogueliteRunState')
- -- Studio stat/health/population controls remain usable during combat.
- if not RunService:IsStudio() or not s or not h or h.Health<=0 then return false end
+ -- Developer controls (the ADMIN panel's Player tab), usable during combat. Checked by UserId on
+ -- every request (AdminConfig), in Studio and on live servers; everyone else gets nothing.
+ if not Admin.isAdmin(player) or not s or not h or h.Health<=0 then return false end
  if type(action)~='string' or type(key)=='table' or os.clock()-s.lastRequest<.08 then return false end
  if action=='Stat' then
   if type(key)~='string' or not Stats.valid(key,value) then return false end
@@ -149,6 +161,7 @@ function Service.request(player,action,key,value)
   if not Service.onPracticeEmeralds or not Service.onPracticeEmeralds(player,key,value) then return false end
  else return false end
  s.lastRequest=os.clock();s.folder:SetAttribute('PracticeRevision',(s.folder:GetAttribute('PracticeRevision') or 0)+1)
+ Admin.markTestRun()
  return true
 end
 remote.OnServerEvent:Connect(function(...) Service.request(...) end)

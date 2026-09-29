@@ -16,6 +16,7 @@ local Effects=require(script.Parent:WaitForChild('CombatEffectsService'))
 local states={}
 local Shop=require(script.Parent:WaitForChild('ShopService'))
 local Role=require(script.Parent:WaitForChild('ServerRole'))
+local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed, like this script
 -- Slot 1 holds the loadout starter the lobby validated (RunWeapon); Brawler's signature until one is picked.
 -- Each class build opens with its signature weapon. RunSetupRules isn't sandboxed, so this script can't require it.
 local function starter(player)
@@ -47,23 +48,27 @@ end
 Players.PlayerAdded:Connect(add)
 for _,p in Players:GetPlayers() do add(p) end
 Players.PlayerRemoving:Connect(function(p) local s=states[p];if s then s.folder:Destroy();states[p]=nil end end)
-combat.EquipWeapon.OnServerEvent:Connect(function(player,index,id)
+-- Give weapon (ADMIN panel Player tab): developers only, checked by UserId. tier 1-4 (default 1).
+combat.EquipWeapon.OnServerEvent:Connect(function(player,index,id,tier)
  local s=states[player]
- if not RunService:IsStudio() or not s or not Catalog.validate(index,id) then return end
+ if tier==nil then tier=1 end
+ if not Admin.isAdmin(player) or not s or not Catalog.validate(index,id) then return end
+ if type(tier)~='number' or tier%1~=0 or tier<1 or tier>4 then return end
  local hum=player.Character and player.Character:FindFirstChildOfClass('Humanoid')
  if not hum or hum.Health<=0 then return end
  if id~='' and not templates:FindFirstChild(id) then return end
  if os.clock()-s.lastEquip<.12 then return end;s.lastEquip=os.clock()
  local slot=s.slots[index]
- if slot.folder:GetAttribute('WeaponId')==id then return end
+ if slot.folder:GetAttribute('WeaponId')==id and (slot.folder:GetAttribute('Tier') or 1)==tier then return end
  -- Creative copies are free, and never inherit the replaced copy's paid refund.
  slot.folder:SetAttribute('CopyId',game:GetService('HttpService'):GenerateGUID(false))
  slot.folder:SetAttribute('BasePrice',0);slot.folder:SetAttribute('FinalPurchasePrice',0);slot.folder:SetAttribute('PurchasePrice',0)
- slot.folder:SetAttribute('Tier',1);slot.folder:SetAttribute('WavePurchased',0)
+ slot.folder:SetAttribute('Tier',tier);slot.folder:SetAttribute('WavePurchased',0)
  slot.folder:SetAttribute('WeaponId',id);reset(slot,workspace:GetServerTimeNow()+.25)
  local count=0;for _,v in s.slots do if v.folder:GetAttribute('WeaponId')~='' then count+=1 end end
  s.folder:SetAttribute('EquippedCount',count)
  local shopState=Shop.states[player];if shopState then shopState.ready=false;shopState.revision+=1;Shop.publish(player) end
+ Admin.markTestRun()
 end)
 combat.SetTestOption.OnServerEvent:Connect(function(player,key,value)
  local s=states[player]
