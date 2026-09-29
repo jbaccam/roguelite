@@ -423,6 +423,9 @@
       },
       "ServerRoleBoot": {
         "$path": "../lobby/ServerRoleBoot.server.luau"
+      },
+      "AdminService": {
+        "$path": "AdminService.server.luau"
       }
     },
     "StarterPlayer": {
