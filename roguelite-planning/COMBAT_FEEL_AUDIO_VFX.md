@@ -33,7 +33,9 @@ Rapid hits and deaths should create a satisfying cascade. The client should:
 - preserve special sounds for critical hits, armor breaks, elites, and bosses;
 - prevent rapid weapons from restarting the same sample every frame.
 
-Every defeated enemy still emits an individual short death-feedback event. Voice limits may steal the quietest or oldest sound if many occur on the exact same audio frame, but the system must not synthesize or substitute one generic “multikill” sound for the individual cascade.
+Every hit, including the killing hit, plays its own weapon sound and mob impact. Voice limits may steal the quietest or oldest sound if many occur on the exact same audio frame, but the system must not synthesize or substitute one generic “multikill” sound for the individual cascade.
+
+**User decision (2026-09-28):** there is no separate death sound. A mob hit is the weapon's sound plus a short splat-type impact that matches the creature (squish, shell crack, bone clack, ice crack). Pop sounds read as bubbles, not mobs dying, so they are not used for kills.
 
 ## Enemy defeat bursts
 
@@ -41,7 +43,7 @@ Enemies should not silently disappear. A normal defeat sequence should complete 
 
 1. Very short squash, recoil, or freeze at the killing impact.
 2. Clear burst, collapse, dissolve, or fragment animation matching the creature.
-3. Distinct defeat sound layered with the killing weapon's impact.
+3. The killing hit's weapon sound and mob impact (no separate defeat sound).
 4. XP/coin/loot pieces eject in a controlled readable pattern.
 5. Corpse visuals clear quickly enough to preserve performance and visibility.
 
@@ -60,7 +62,7 @@ These differences need only one or two cheap signature elements. Do not build lo
 When many enemies die together:
 
 - individual bursts may be visually simplified;
-- every enemy triggers its own short death sound, producing a fast layered pop/crunch sequence;
+- every enemy's killing hit plays its own short impact, producing a fast layered splat/crunch sequence;
 - samples and pitch vary slightly so the sequence does not sound like one file restarting;
 - reward pieces remain visibly numerous enough to produce the desired magnetic stream;
 - visual tokens may consolidate only at extreme density or in reduced-effects mode, while preserving the apparent volume and collection cadence;
@@ -213,7 +215,7 @@ Provide settings for:
 
 Before expanding the weapon and mob catalog, one five-minute graybox should prove:
 
-- a ten-plus-enemy simultaneous defeat produces a crisp sequence of individual death sounds without clipping or being replaced by a generic multikill sound;
+- a ten-plus-enemy simultaneous defeat produces a crisp sequence of individual impact sounds without clipping or being replaced by a generic multikill sound;
 - slime, skeleton, and ogre defeats feel different with inexpensive effects;
 - a large XP pile streams magnetically into the player without stuttering;
 - the pickup sequence clearly ends in a level-up payoff;

@@ -1,0 +1,81 @@
+{
+  "uploaded": "2026-09-28 via Creator Hub to EggaRowls; loudness -16 LUFS (process_music.py)",
+  "tracks": {
+    "regular_01": {
+      "id": "85713999753984",
+      "source": "alex-morgan-video-game-pixel-chiptune-music-583271.mp3"
+    },
+    "regular_02": {
+      "id": "136587884649675",
+      "source": "alexgrohl-retro-electronic-535019.mp3",
+      "moderated": "rejected by Roblox moderation 2026-09-28 (likely copyright match); not in the playlist"
+    },
+    "regular_03": {
+      "id": "110092951263724",
+      "source": "arpmedia-synthwave-retro-80s-569468.mp3"
+    },
+    "regular_04": {
+      "id": "114896912451477",
+      "source": "grand_project-flying-in-a-dream_53sec-202374.mp3"
+    },
+    "regular_05": {
+      "id": "82696866610833",
+      "source": "grand_project-neon-odyssey-399913.mp3"
+    },
+    "regular_06": {
+      "id": "116618272311962",
+      "source": "jonasblakewood-retro-lightning-350632.mp3",
+      "moderated": "rejected by Roblox moderation 2026-09-28 (likely copyright match); not in the playlist"
+    },
+    "regular_07": {
+      "id": "82173399238973",
+      "source": "joyinsound-valley-of-silicon-403396.mp3",
+      "moderated": "rejected by Roblox moderation 2026-09-28 (likely copyright match); not in the playlist"
+    },
+    "regular_08": {
+      "id": "87872254035105",
+      "source": "pixelmaniaxx-faded-hours-502889.mp3"
+    },
+    "regular_09": {
+      "id": "77058244722116",
+      "source": "pixelmaniaxx-still-you-528524.mp3"
+    },
+    "regular_10": {
+      "id": "109700680105754",
+      "source": "pixelmaniaxx-synchronized-ruin-492857.mp3"
+    },
+    "regular_11": {
+      "id": "71742442864373",
+      "source": "zephiramusic-lofi-synth-588187.mp3"
+    },
+    "boss_01": {
+      "id": "115913771603981",
+      "source": "alex-morgan-gaming-stream-arcade-session-578484.mp3"
+    },
+    "boss_02": {
+      "id": "129688736633367",
+      "source": "jorisvermeer-electronic-trailer-pulse-425978.mp3"
+    },
+    "boss_03": {
+      "id": "115583045438655",
+      "source": "lunarboommusic-synthed-halloween-569669.mp3"
+    },
+    "boss_04": {
+      "id": "99558552359046",
+      "source": "the_mountain-electronic-electronic-music-490598.mp3"
+    },
+    "boss_05": {
+      "id": "93251025835717",
+      "source": "tunetank-intense-cyberpunk-techno-music-348920.mp3",
+      "moderated": "rejected by Roblox moderation 2026-09-28 (likely copyright match); not in the playlist"
+    },
+    "regular_12": {
+      "id": "131272353616369",
+      "source": "echoes_of_lumen-techno-music-energetic-electro-583432.mp3"
+    },
+    "boss_06": {
+      "id": "89877873691224",
+      "source": "alex-morgan-phonk-brazilian-phonk-phonk-music-545509.mp3"
+    }
+  }
+}
