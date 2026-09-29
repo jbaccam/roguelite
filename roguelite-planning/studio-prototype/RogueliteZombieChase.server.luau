@@ -15,7 +15,16 @@ local EnemyCatalog = require(combat:WaitForChild('EnemyCatalog'))
 local RunSetupRules = require(game:GetService('ReplicatedStorage'):WaitForChild('RunSetupRules'))
 local EnemyAttacks = require(script.Parent:WaitForChild('EnemyAttacks'))
 local Attacks = require(script.Parent:WaitForChild('ZombieAttacks'))
+-- The admin panel's Hammer boss spawns (AdminSpawn below). This script and BossService are unsandboxed.
+local Bosses = require(script.Parent:WaitForChild('BossService'))
+local BossMotion = require(combat:WaitForChild('BossMotion'))
 local waveGeneration = 0
+-- Admin Pause (ShopService.adminPause): no new spawns until Resume. Looked up lazily, because
+-- ShopService creates RogueliteRunState.
+local function adminPaused()
+    local run = game:GetService('ReplicatedStorage'):FindFirstChild('RogueliteRunState')
+    return run ~= nil and run:GetAttribute('AdminPaused') == true
+end
 
 combat:SetAttribute('ZombieCount',combat:GetAttribute('ZombieCount') or 5)
 local function spawnCount() return math.clamp(combat:GetAttribute('ZombieCount') or 5,0,100) end
@@ -176,7 +185,7 @@ local function telegraphGroup(members, point, generation)
     task.wait(TELEGRAPH_TIME)
     for _, mark in marks do mark:Destroy() end
     releaseQueued(members, generation)
-    if generation ~= waveGeneration or combat:GetAttribute('ZombiesEnabled') ~= true then return end
+    if generation ~= waveGeneration or combat:GetAttribute('ZombiesEnabled') ~= true or adminPaused() then return end
     local roots = livingRoots()
     local blocked = false
     for _, spot in spots do
@@ -204,7 +213,7 @@ local function flushQueue()
     end
 end
 local function queueSpawn(index)
-    if queuedSet[index] or folder:FindFirstChild(string.format('Zombie_%02d', index)) then return end
+    if adminPaused() or queuedSet[index] or folder:FindFirstChild(string.format('Zombie_%02d', index)) then return end
     queuedSet[index] = waveGeneration
     table.insert(queued, index)
     if not flushScheduled then
@@ -213,9 +222,11 @@ local function queueSpawn(index)
     end
 end
 
-spawnZombie = function(index,overrideId,spawnPosition,splitChild)
-if combat:GetAttribute('ZombiesEnabled') ~= true or index>spawnCount() then return end
-local instanceName=string.format('Zombie_%02d',index)..(splitChild and '_Split'..splitChild or '')
+-- admin: an extra enemy from the admin panel (AdminSpawn): named Admin_nn, outside the wave's
+-- slots, never respawned. index is then its serial number.
+spawnZombie = function(index,overrideId,spawnPosition,splitChild,admin)
+if combat:GetAttribute('ZombiesEnabled') ~= true or (not admin and index>spawnCount()) then return end
+local instanceName=string.format(admin and 'Admin_%02d' or 'Zombie_%02d',index)..(splitChild and '_Split'..splitChild or '')
 if folder:FindFirstChild(instanceName) then return end
 local thisWave = waveGeneration
 local run=game:GetService('ReplicatedStorage'):FindFirstChild('RogueliteRunState')
@@ -238,6 +249,7 @@ npc:SetAttribute('ZombieType',kind)
 npc:SetAttribute('EnemyId',id)
 npc:SetAttribute('EnemyBalanceStatus',config.balanceStatus)
 npc:SetAttribute('SplitChild',splitChild~=nil)
+if admin then npc:SetAttribute('AdminSpawn',true) end
 npc:SetAttribute('ContactDamage',0) -- Timestamped attacks own damage; never double-hit through proximity.
 npc:SetAttribute('AttackDamage',config.damage)
 npc:SetAttribute('SlamDamage',config.damage)
@@ -252,13 +264,13 @@ humanoid.BreakJointsOnDeath = false
 humanoid.Died:Connect(function()
     if config.behavior=='Splitter' and not splitChild and thisWave==waveGeneration and combat:GetAttribute('ZombiesEnabled') then
         local position=root.Position
-        for child=1,config.splitCount do spawnZombie(index,id,position+Vector3.new(child==1 and -1.5 or 1.5,0,0),child) end
+        for child=1,config.splitCount do spawnZombie(index,id,position+Vector3.new(child==1 and -1.5 or 1.5,0,0),child,admin) end
     end
     Death.finish(npc)
 end)
 -- Schedule replacements in this script's lifecycle, independently of the damage caller.
 npc.Destroying:Connect(function()
-    if splitChild or not npc:GetAttribute('DeathPopped') then return end
+    if splitChild or admin or not npc:GetAttribute('DeathPopped') then return end
     task.delay(RESPAWN_DELAY, function()
         if thisWave == waveGeneration and combat:GetAttribute('ZombiesEnabled') then queueSpawn(index) end
     end)
@@ -311,6 +323,7 @@ local function nearestTarget()
     return best, distance
 end
 
+local frozen = false
 local connection
 connection = RunService.Heartbeat:Connect(function(dt)
     if not npc.Parent or humanoid.Health <= 0 then
@@ -319,6 +332,17 @@ connection = RunService.Heartbeat:Connect(function(dt)
         connection:Disconnect()
         return
     end
+    -- Admin Freeze: no moving and no new attacks; animations, hits and damage still work.
+    if combat:GetAttribute('AdminFreeze') == true then
+        if not frozen then
+            frozen = true
+            npc:SetAttribute("Chasing", false)
+            humanoid:Move(Vector3.zero)
+            humanoid:MoveTo(root.Position)
+        end
+        return
+    end
+    frozen = false
     if kind=='Mutant' then
         if Attacks.update(npc,previousTarget) then return end
     elseif EnemyAttacks.update(npc,previousTarget,dt) then return end
@@ -416,7 +440,9 @@ local function resetWave()
     queued, queuedSet = {}, {}
     warnings:ClearAllChildren()
     for _,npc in folder:GetChildren() do
-        if not npc:GetAttribute('IsHammerBoss') or not combat:GetAttribute('ZombiesEnabled') then npc:Destroy() end
+        -- Bosses and admin-panel extras outlive a population change; everything goes when enemies turn off.
+        local keep = npc:GetAttribute('IsHammerBoss') or npc:GetAttribute('AdminSpawn')
+        if not keep or not combat:GetAttribute('ZombiesEnabled') then npc:Destroy() end
     end
     if combat:GetAttribute('ZombiesEnabled') then
         if not Role.marker() then
@@ -430,3 +456,52 @@ combat:GetAttributeChangedSignal('ZombiesEnabled'):Connect(resetWave)
 combat:GetAttributeChangedSignal('ZombieCount'):Connect(resetWave)
 combat:GetAttributeChangedSignal('EnemyRoster'):Connect(resetWave)
 resetWave()
+
+-- Admin panel spawner (ADMIN_PANEL.md). Only AdminService calls it, after checking the developer.
+-- ('Spawn', id, count, position): extra enemies (or 'Hammer' bosses) on open floor 20-40 studs
+-- around position. They fight normally, take no wave slot and never respawn. Returns how many
+-- appeared. ('Clear'): removes every enemy, bosses included. ('Freeze', on): sets AdminFreeze.
+local adminSerial = 0
+local adminSpawn = ServerStorage:FindFirstChild('AdminSpawn') or Instance.new('BindableFunction')
+adminSpawn.Name = 'AdminSpawn'
+adminSpawn.OnInvoke = function(action, id, count, position)
+    if action == 'Clear' then
+        waveGeneration += 1
+        queued, queuedSet = {}, {}
+        warnings:ClearAllChildren()
+        folder:ClearAllChildren()
+        return true
+    elseif action == 'Freeze' then
+        combat:SetAttribute('AdminFreeze', id == true or nil)
+        return true
+    elseif action ~= 'Spawn' or typeof(position) ~= 'Vector3' or type(count) ~= 'number' then
+        return 0
+    end
+    if combat:GetAttribute('ZombiesEnabled') ~= true or not Role.marker() then return 0 end
+    local made = 0
+    for _ = 1, math.clamp(math.floor(count), 0, 50) do
+        local point = pickSpawnPoint({}, position, {20, 40}, 20)
+        if point then
+            if id == 'Hammer' then
+                local at = point + Vector3.yAxis * (BossMotion.RootHeight + 0.1)
+                local boss = Bosses.spawn(CFrame.lookAt(at, Vector3.new(position.X, at.Y, position.Z)), true)
+                if boss then boss:SetAttribute('AdminSpawn', true); made += 1 end
+            else
+                adminSerial += 1
+                spawnZombie(adminSerial, id, point, nil, true)
+                if folder:FindFirstChild(string.format('Admin_%02d', adminSerial)) then made += 1 end
+            end
+        end
+    end
+    return made
+end
+adminSpawn.Parent = ServerStorage
+
+-- Resume after an admin Pause: refill the wave's empty slots.
+task.spawn(function()
+    local run = game:GetService('ReplicatedStorage'):WaitForChild('RogueliteRunState')
+    run:GetAttributeChangedSignal('AdminPaused'):Connect(function()
+        if adminPaused() or combat:GetAttribute('ZombiesEnabled') ~= true or not Role.marker() then return end
+        for index = 1, spawnCount() do queueSpawn(index) end
+    end)
+end)

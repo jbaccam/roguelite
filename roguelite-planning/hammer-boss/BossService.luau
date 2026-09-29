@@ -144,6 +144,8 @@ function B.step(npc,s,now)
   return
  end
  if npc:GetAttribute('BossManual') and Run:IsStudio() then h:Move(Vector3.zero);return end
+ -- Admin Freeze: no moving and no new attacks; an attack already under way finishes above.
+ if combat:GetAttribute('AdminFreeze')==true then h:Move(Vector3.zero);h:MoveTo(root.Position);return end
  local target,dist=nil,math.huge
  for _,p in Players:GetPlayers() do
   local ch=p.Character;local ph=ch and ch:FindFirstChildOfClass('Humanoid');local pr=ch and ch:FindFirstChild('HumanoidRootPart')
