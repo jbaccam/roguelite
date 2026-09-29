@@ -20,7 +20,7 @@ local studio=RunService:IsStudio()
 -- to the developer's own account. Grants count as earned; Robux emeralds are clamped to the balance.
 Characters.onPracticeEmeralds=function(p,mode,amount)
  local d=Admin.isAdmin(p) and Profiles.get(p);if not d then return false end
- d.emeralds=math.max(0,mode=='Set' and amount or d.emeralds+amount)
+ d.emeralds=math.clamp(mode=='Set' and amount or d.emeralds+amount,0,1e7)
  d.bought=math.min(d.bought or 0,d.emeralds)
  Profiles.publish(p);return true
 end

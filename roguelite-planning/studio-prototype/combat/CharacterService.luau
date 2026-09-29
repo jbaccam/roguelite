@@ -75,7 +75,7 @@ function Service.attach(player,folder)
  player:GetAttributeChangedSignal('ProfileSkills'):Connect(function() Service.refresh(player) end)
  Service.refresh(player)
 end
--- The class from the player's validated loadout (RunClass). Studio stat overrides stay.
+-- The class from the player's validated loadout (RunClass). Developer stat overrides stay until clearAdmin.
 function Service.setClass(player,class)
  local s=Service.states[player]
  if not s or type(class)~='string' or not Stats.Classes[class] or s.class==class then return end
@@ -86,7 +86,7 @@ end
 function Service.clearAdmin(player)
  local s=Service.states[player];if not s then return end
  s.overrides={}
- local picked=player:GetAttribute('RunClass');if Stats.Classes[picked] then s.class=picked end
+ local picked=player:GetAttribute('RunClass');s.class=Stats.Classes[picked] and picked or 'Brawler'
  player:SetAttribute('AdminGod',nil)
 end
 function Service.heal(player,amount)
@@ -143,7 +143,7 @@ function Service.request(player,action,key,value)
   combat:SetAttribute('TestZombieCountOverride',value)
  elseif action=='AutoZombies' then combat:SetAttribute('TestZombieCountOverride',nil)
  elseif action=='Roster' then
-  -- Studio-only mob picker: known catalog IDs only; empty restores the normal wave mix.
+  -- Developer mob picker (the remote checks Admin.isAdmin): known catalog IDs only; empty restores the normal wave mix.
   if key~=nil or type(value)~='string' or #value>600 then return false end
   local ids,seen={},{}
   for id in value:gmatch('[^,%s]+') do
@@ -155,7 +155,7 @@ function Service.request(player,action,key,value)
   if key~=nil or value~=nil then return false end
   if not Service.onPracticeBoss or not Service.onPracticeBoss(player,action) then return false end
  elseif action=='Emeralds' then
-  -- Studio-only admin grant (saved profile currency, in-memory in Studio). key: 'Add' | 'Set'.
+  -- Developer admin grant (saved profile currency on a live server, in-memory in Studio). key: 'Add' | 'Set'.
   if (key~='Add' and key~='Set') or type(value)~='number' or value~=value or value%1~=0 then return false end
   if (key=='Add' and math.abs(value)>1e6) or (key=='Set' and (value<0 or value>1e7)) then return false end
   if not Service.onPracticeEmeralds or not Service.onPracticeEmeralds(player,key,value) then return false end

@@ -47,9 +47,14 @@ function B.practice(player,action)
  end
  if not cf then combat:SetAttribute('PracticeBossStatus','Move to open ground to spawn the boss');return false end
  -- Enabling first lets the normal population reset finish before adding the boss.
+ local wasEnabled=combat:GetAttribute('ZombiesEnabled')
  combat:SetAttribute('ZombiesEnabled',true)
  local npc=B.spawn(cf,true)
- if not npc then combat:SetAttribute('PracticeBossStatus','Boss template unavailable');return false end
+ if not npc then
+  -- Put zombies back as they were: on with no boss and no test-run mark would be a stray wave.
+  combat:SetAttribute('ZombiesEnabled',wasEnabled)
+  combat:SetAttribute('PracticeBossStatus','Boss template unavailable');return false
+ end
  combat:SetAttribute('PracticeBossStatus','Practice boss active · no rewards')
  npc.Destroying:Connect(function() combat:SetAttribute('PracticeBossStatus','Practice boss gone · spawn another') end)
  return true

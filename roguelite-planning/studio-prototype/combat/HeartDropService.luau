@@ -28,7 +28,7 @@ function H.configure(c) characters=c end
 local function remove(i) local d=table.remove(H.drops,i);if d then d.model:Destroy() end end
 function H.clear() for i=#H.drops,1,-1 do remove(i) end end
 function H.chance(luck)
- -- Studio-only test hook, like TestZombieCountOverride; ignored in live servers.
+ -- Studio-only test hook, ignored in live servers. (TestZombieCountOverride is different: the admin panel's Keep N alive sets it, so developers can use it live.)
  local test=RunService:IsStudio() and RS.RogueliteCombat:GetAttribute('TestHeartChance')
  if type(test)=='number' then return math.clamp(test,0,1) end
  return math.clamp(H.BASE_CHANCE+math.max(0,tonumber(luck) or 0)*H.LUCK_CHANCE,0,H.MAX_CHANCE)
