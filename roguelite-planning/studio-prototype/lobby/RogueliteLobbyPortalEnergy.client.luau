@@ -1,4 +1,4 @@
--- Animates the lobby portals' energy (installed by InstallLobbyV9.luau): plays the 4 x 4 flipbook slowly
+-- Animates the lobby portals' energy (exported from Studio 2026-09-28; the installer isn't in the repo): plays the 4 x 4 flipbook slowly
 -- (4 frames per second, one 16-frame loop every 4 s), cross-fading each frame into the next so the slow speed
 -- stays smooth, and spins it very slowly so it drifts rather than churns. Purely cosmetic and client-side;
 -- reads no gameplay state.

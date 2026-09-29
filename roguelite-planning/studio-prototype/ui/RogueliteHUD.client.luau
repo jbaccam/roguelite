@@ -40,8 +40,13 @@ task.spawn(function()
  for _,image in images do image:Destroy() end
 end)
 local view=UI.mount(playerGui,RunService:IsStudio())
--- Match servers never run the lobby HUD; warm the shop, inventory and chest icons here too.
-require(ReplicatedStorage:WaitForChild("AssetPreloader")).start(player)
+-- Match servers never run the lobby HUD, which starts the preloader everywhere else; warm the
+-- shop, inventory and chest icons here. Spawned so a missing module can never stall this HUD.
+task.spawn(function()
+ local role=ReplicatedStorage:GetAttribute("ServerRole")
+ while role==nil do ReplicatedStorage:GetAttributeChangedSignal("ServerRole"):Wait();role=ReplicatedStorage:GetAttribute("ServerRole") end
+ if role=="Match" then require(ReplicatedStorage:WaitForChild("AssetPreloader")).start(player) end
+end)
 task.spawn(function()
  for _=1,10 do
   if pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health,false) end) then break end

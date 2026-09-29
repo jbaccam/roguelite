@@ -321,6 +321,9 @@
       },
       "ChestScreenUI": {
         "$path": "../ui/ChestScreenUI.luau"
+      },
+      "AssetPreloader": {
+        "$path": "../ui/AssetPreloader.luau"
       }
     },
     "ServerStorage": {
@@ -448,6 +451,9 @@
         },
         "RogueliteLobbyPreview": {
           "$path": "../lobby/RogueliteLobbyPreview.client.luau"
+        },
+        "RogueliteLobbyPortalEnergy": {
+          "$path": "../lobby/RogueliteLobbyPortalEnergy.client.luau"
         },
         "RogueliteLobbyHUD": {
           "$path": "../ui/RogueliteLobbyHUD.client.luau"
