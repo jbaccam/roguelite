@@ -1,0 +1,14 @@
+{
+  "sections_triangles": {
+    "Body": 18370,
+    "Head": 8012,
+    "Wings": 7636,
+    "Belly": 6988,
+    "Obsidian": 5272,
+    "LavaGlow": 936,
+    "EyeGlow": 40
+  },
+  "total_triangles": 47254,
+  "limit_per_mesh": 20000,
+  "all_under_limit": true
+}

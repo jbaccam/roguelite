@@ -1,0 +1,452 @@
+{
+  "image": [
+    1536,
+    1024
+  ],
+  "f_px": 1150.0,
+  "sensor_width_mm": 36.0,
+  "lens_mm": 26.9531,
+  "camera_location": [
+    10.917,
+    -19.6205,
+    1.5624
+  ],
+  "yaw_deg": -24.7273,
+  "pitch_deg": 0.0,
+  "roll_deg": 0.0,
+  "principal_v": 817.558,
+  "blender_shift_y": 0.19893,
+  "params": {
+    "cx": 10.917,
+    "cy": -19.6205,
+    "cz": 1.5624,
+    "alpha": -0.4316,
+    "v0": 817.5584,
+    "a_f": 5.6671,
+    "y_f": 5.2556,
+    "a_h": 6.2968,
+    "y_h": 5.4149,
+    "s_FR": -0.0241,
+    "s_FL": 0.5862,
+    "s_HR": 0.0243,
+    "s_HL": 0.2434,
+    "sp": 1.0052,
+    "dm": 0.5596,
+    "hsc": 0.95,
+    "sk_x": -0.2278,
+    "sk_y": -5.4688
+  },
+  "feet_claw_rows_world": {
+    "FR": [
+      [
+        -6.183,
+        -5.803,
+        0.08
+      ],
+      [
+        -5.178,
+        -5.827,
+        0.08
+      ],
+      [
+        -4.16,
+        -5.292,
+        0.08
+      ]
+    ],
+    "FL": [
+      [
+        4.411,
+        -6.09,
+        0.08
+      ],
+      [
+        5.558,
+        -6.0,
+        0.08
+      ],
+      [
+        6.395,
+        -5.444,
+        0.08
+      ],
+      [
+        6.923,
+        -4.422,
+        0.08
+      ]
+    ],
+    "HR": [
+      [
+        -6.761,
+        4.872,
+        0.08
+      ],
+      [
+        -5.807,
+        4.895,
+        0.08
+      ],
+      [
+        -4.865,
+        5.45,
+        0.08
+      ]
+    ],
+    "HL": [
+      [
+        4.907,
+        5.07,
+        0.08
+      ],
+      [
+        5.962,
+        4.784,
+        0.08
+      ],
+      [
+        6.888,
+        5.014,
+        0.08
+      ],
+      [
+        7.687,
+        5.76,
+        0.08
+      ]
+    ]
+  },
+  "summary": {
+    "f_px": 1150.0,
+    "lens_mm": 26.95,
+    "cost": 12.96,
+    "claw_rms_px": 2.77,
+    "claw_max_px": 5.22,
+    "cam": [
+      10.92,
+      -19.62,
+      1.56
+    ],
+    "dist_xy": 22.45,
+    "yaw_deg": -24.73,
+    "horizon_v": 817.6,
+    "stance_halfwidth_front_hind": [
+      5.67,
+      6.3
+    ],
+    "front_to_hind_sep": 10.67,
+    "claw_spacing": 1.005,
+    "hind_scale": 0.95,
+    "splay_deg": {
+      "FR": -1.4,
+      "FL": 33.6,
+      "HR": 1.4,
+      "HL": 13.9
+    },
+    "skull_top": [
+      -0.23,
+      -5.47,
+      11.0
+    ]
+  },
+  "focal_profile": [
+    {
+      "f_px": 800,
+      "lens_mm": 18.75,
+      "cost": 24.18,
+      "claw_rms_px": 3.63,
+      "claw_max_px": 8.8,
+      "cam": [
+        8.57,
+        -17.07,
+        1.11
+      ],
+      "dist_xy": 19.1,
+      "yaw_deg": -24.43,
+      "horizon_v": 842.1,
+      "stance_halfwidth_front_hind": [
+        5.64,
+        7.07
+      ],
+      "front_to_hind_sep": 10.53,
+      "claw_spacing": 0.903,
+      "hind_scale": 1.082,
+      "splay_deg": {
+        "FR": 5.8,
+        "FL": 30.8,
+        "HR": 15.6,
+        "HL": 8.1
+      },
+      "skull_top": [
+        -0.36,
+        -7.65,
+        11.0
+      ]
+    },
+    {
+      "f_px": 950,
+      "lens_mm": 22.27,
+      "cost": 16.15,
+      "claw_rms_px": 3.04,
+      "claw_max_px": 7.03,
+      "cam": [
+        9.59,
+        -19.14,
+        1.31
+      ],
+      "dist_xy": 21.41,
+      "yaw_deg": -24.58,
+      "horizon_v": 831.6,
+      "stance_halfwidth_front_hind": [
+        5.67,
+        6.7
+      ],
+      "front_to_hind_sep": 10.65,
+      "claw_spacing": 0.958,
+      "hind_scale": 1.015,
+      "splay_deg": {
+        "FR": 2.6,
+        "FL": 32.3,
+        "HR": 8.9,
+        "HL": 11.1
+      },
+      "skull_top": [
+        -0.29,
+        -7.69,
+        11.0
+      ]
+    },
+    {
+      "f_px": 1050,
+      "lens_mm": 24.61,
+      "cost": 13.9,
+      "claw_rms_px": 2.86,
+      "claw_max_px": 6.05,
+      "cam": [
+        10.26,
+        -18.88,
+        1.44
+      ],
+      "dist_xy": 21.49,
+      "yaw_deg": -24.66,
+      "horizon_v": 824.6,
+      "stance_halfwidth_front_hind": [
+        5.67,
+        6.48
+      ],
+      "front_to_hind_sep": 10.68,
+      "claw_spacing": 0.985,
+      "hind_scale": 0.98,
+      "splay_deg": {
+        "FR": 0.5,
+        "FL": 33.0,
+        "HR": 4.9,
+        "HL": 12.6
+      },
+      "skull_top": [
+        -0.25,
+        -6.08,
+        11.0
+      ]
+    },
+    {
+      "f_px": 1150,
+      "lens_mm": 26.95,
+      "cost": 12.96,
+      "claw_rms_px": 2.77,
+      "claw_max_px": 5.22,
+      "cam": [
+        10.92,
+        -19.62,
+        1.56
+      ],
+      "dist_xy": 22.45,
+      "yaw_deg": -24.73,
+      "horizon_v": 817.6,
+      "stance_halfwidth_front_hind": [
+        5.67,
+        6.3
+      ],
+      "front_to_hind_sep": 10.67,
+      "claw_spacing": 1.005,
+      "hind_scale": 0.95,
+      "splay_deg": {
+        "FR": -1.4,
+        "FL": 33.6,
+        "HR": 1.4,
+        "HL": 13.9
+      },
+      "skull_top": [
+        -0.23,
+        -5.47,
+        11.0
+      ]
+    },
+    {
+      "f_px": 1250,
+      "lens_mm": 29.3,
+      "cost": 12.82,
+      "claw_rms_px": 2.74,
+      "claw_max_px": 5.44,
+      "cam": [
+        11.58,
+        -20.37,
+        1.68
+      ],
+      "dist_xy": 23.43,
+      "yaw_deg": -24.8,
+      "horizon_v": 810.5,
+      "stance_halfwidth_front_hind": [
+        5.66,
+        6.13
+      ],
+      "front_to_hind_sep": 10.64,
+      "claw_spacing": 1.022,
+      "hind_scale": 0.925,
+      "splay_deg": {
+        "FR": -3.1,
+        "FL": 34.1,
+        "HR": -1.5,
+        "HL": 15.1
+      },
+      "skull_top": [
+        -0.21,
+        -4.87,
+        11.0
+      ]
+    },
+    {
+      "f_px": 1400,
+      "lens_mm": 32.81,
+      "cost": 13.46,
+      "claw_rms_px": 2.76,
+      "claw_max_px": 5.77,
+      "cam": [
+        12.57,
+        -21.5,
+        1.86
+      ],
+      "dist_xy": 24.9,
+      "yaw_deg": -24.9,
+      "horizon_v": 799.7,
+      "stance_halfwidth_front_hind": [
+        5.64,
+        5.92
+      ],
+      "front_to_hind_sep": 10.58,
+      "claw_spacing": 1.04,
+      "hind_scale": 0.893,
+      "splay_deg": {
+        "FR": -5.4,
+        "FL": 34.6,
+        "HR": -4.8,
+        "HL": 16.5
+      },
+      "skull_top": [
+        -0.19,
+        -3.98,
+        11.0
+      ]
+    },
+    {
+      "f_px": 1600,
+      "lens_mm": 37.5,
+      "cost": 15.06,
+      "claw_rms_px": 2.83,
+      "claw_max_px": 6.06,
+      "cam": [
+        13.89,
+        -23.0,
+        2.1
+      ],
+      "dist_xy": 26.87,
+      "yaw_deg": -25.04,
+      "horizon_v": 785.2,
+      "stance_halfwidth_front_hind": [
+        5.61,
+        5.7
+      ],
+      "front_to_hind_sep": 10.47,
+      "claw_spacing": 1.058,
+      "hind_scale": 0.86,
+      "splay_deg": {
+        "FR": -7.9,
+        "FL": 35.3,
+        "HR": -8.0,
+        "HL": 18.0
+      },
+      "skull_top": [
+        -0.16,
+        -2.8,
+        11.0
+      ]
+    },
+    {
+      "f_px": 1900,
+      "lens_mm": 44.53,
+      "cost": 17.92,
+      "claw_rms_px": 2.95,
+      "claw_max_px": 6.3,
+      "cam": [
+        15.89,
+        -25.22,
+        2.45
+      ],
+      "dist_xy": 29.81,
+      "yaw_deg": -25.23,
+      "horizon_v": 763.2,
+      "stance_halfwidth_front_hind": [
+        5.57,
+        5.44
+      ],
+      "front_to_hind_sep": 10.31,
+      "claw_spacing": 1.076,
+      "hind_scale": 0.822,
+      "splay_deg": {
+        "FR": -11.0,
+        "FL": 36.0,
+        "HR": -11.3,
+        "HL": 19.7
+      },
+      "skull_top": [
+        -0.14,
+        -1.0,
+        11.0
+      ]
+    },
+    {
+      "f_px": 2300,
+      "lens_mm": 53.91,
+      "cost": 21.57,
+      "claw_rms_px": 3.1,
+      "claw_max_px": 6.43,
+      "cam": [
+        18.58,
+        -28.08,
+        2.91
+      ],
+      "dist_xy": 33.67,
+      "yaw_deg": -25.45,
+      "horizon_v": 733.4,
+      "stance_halfwidth_front_hind": [
+        5.52,
+        5.2
+      ],
+      "front_to_hind_sep": 10.11,
+      "claw_spacing": 1.091,
+      "hind_scale": 0.788,
+      "splay_deg": {
+        "FR": -14.0,
+        "FL": 36.7,
+        "HR": -14.1,
+        "HL": 21.4
+      },
+      "skull_top": [
+        -0.11,
+        1.49,
+        11.0
+      ]
+    }
+  ],
+  "conventions": "Blender world, Z up, dragon faces -Y, +X = dragon left. Level camera: view dir (sin a, cos a, 0), right (cos a, -sin a, 0); u = cx + f*xc/zc, v = principal_v - f*yc/zc."
+}

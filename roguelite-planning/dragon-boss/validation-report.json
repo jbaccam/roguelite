@@ -1,0 +1,496 @@
+{
+  "files": {
+    "fbx": {
+      "path": "exports/fbx/Dragon.fbx",
+      "bytes": 16315724,
+      "sha256": "3790FB55CC4A12484B24F4EABDEDBAC4739797BB8AF924A1024517859687A848"
+    },
+    "fbx_ReferencePose": {
+      "path": "exports/fbx/Dragon_ReferencePose.fbx",
+      "bytes": 535020,
+      "sha256": "EEFE651E0337D6D0B051AA95A80CE7650B9DC19AC54ABB1F8739D907721C71D3"
+    },
+    "fbx_RigTest_ROM": {
+      "path": "exports/fbx/Dragon_RigTest_ROM.fbx",
+      "bytes": 2251420,
+      "sha256": "D77FFF4B8BBF0322579EAF07FE757894A357BC666BDD7F7124BA46C7C449D09B"
+    },
+    "fbx_FireBreath": {
+      "path": "exports/fbx/Dragon_FireBreath.fbx",
+      "bytes": 843692,
+      "sha256": "A3E79C98C2143B944F64A2272209B140B09AC5BB4F287A34BDDB8AEB63968B87"
+    },
+    "fbx_TailWhip": {
+      "path": "exports/fbx/Dragon_TailWhip.fbx",
+      "bytes": 866076,
+      "sha256": "9ABEDFE93D3D6C5F17B661AD1F8593DD470A71DFDCE1768974FC926B5623A3F4"
+    },
+    "fbx_FrontStomp": {
+      "path": "exports/fbx/Dragon_FrontStomp.fbx",
+      "bytes": 840780,
+      "sha256": "B8F74156A0E47D746157B1135C8900A794EBACFF0FE5322E9BDA56529DC298A0"
+    },
+    "glb": {
+      "path": "exports/glb/Dragon.glb",
+      "bytes": 20148320,
+      "sha256": "742321D8558AE9CE7E2376F0195109B8E86FB2CF82B48D69F841CDE4AFF5E391"
+    }
+  },
+  "checks": [
+    {
+      "name": "fbx: seven skinned section meshes",
+      "ok": true,
+      "found": [
+        "Dragon_Belly",
+        "Dragon_Body",
+        "Dragon_EyeGlow",
+        "Dragon_Head",
+        "Dragon_LavaGlow",
+        "Dragon_Obsidian",
+        "Dragon_Wings"
+      ],
+      "expected": [
+        "Dragon_Belly",
+        "Dragon_Body",
+        "Dragon_EyeGlow",
+        "Dragon_Head",
+        "Dragon_LavaGlow",
+        "Dragon_Obsidian",
+        "Dragon_Wings"
+      ]
+    },
+    {
+      "name": "fbx: every mesh < 20k triangles",
+      "ok": true,
+      "triangles": {
+        "Dragon_EyeGlow": 40,
+        "Dragon_Body": 18370,
+        "Dragon_Belly": 6988,
+        "Dragon_Head": 8012,
+        "Dragon_LavaGlow": 936,
+        "Dragon_Obsidian": 5272,
+        "Dragon_Wings": 7636
+      },
+      "total": 47254
+    },
+    {
+      "name": "fbx: deform bone set matches manifest",
+      "ok": true,
+      "count": 90,
+      "expected": 90,
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "fbx: hierarchy matches manifest",
+      "ok": true,
+      "mismatched": []
+    },
+    {
+      "name": "fbx: no leaf / control bones exported",
+      "ok": true
+    },
+    {
+      "name": "fbx: every vertex weighted, <=4 influences, normalised",
+      "ok": true,
+      "stats": {
+        "Dragon_EyeGlow": {
+          "vertices": 24,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Dragon_Body": {
+          "vertices": 9235,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Dragon_Belly": {
+          "vertices": 3548,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Dragon_Head": {
+          "vertices": 4094,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Dragon_LavaGlow": {
+          "vertices": 624,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Dragon_Obsidian": {
+          "vertices": 2720,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Dragon_Wings": {
+          "vertices": 3858,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        }
+      }
+    },
+    {
+      "name": "fbx: UVs present",
+      "ok": true,
+      "uv_layers": {
+        "Dragon_EyeGlow": 1,
+        "Dragon_Body": 1,
+        "Dragon_Belly": 1,
+        "Dragon_Head": 1,
+        "Dragon_LavaGlow": 1,
+        "Dragon_Obsidian": 1,
+        "Dragon_Wings": 1
+      }
+    },
+    {
+      "name": "fbx: embedded textures load with pixel data",
+      "ok": true,
+      "textures": {
+        "Dragon_EyeGlow": 2048,
+        "Dragon_Body": 2048,
+        "Dragon_Belly": 2048,
+        "Dragon_Head": 2048,
+        "Dragon_LavaGlow": 2048,
+        "Dragon_Obsidian": 2048,
+        "Dragon_Wings": 2048
+      }
+    },
+    {
+      "name": "fbx: faceted normals preserved (split corner normals)",
+      "ok": true,
+      "split_vertex_fraction": {
+        "Dragon_EyeGlow": 1.0,
+        "Dragon_Body": 0.992,
+        "Dragon_Belly": 0.998,
+        "Dragon_Head": 1.0,
+        "Dragon_LavaGlow": 1.0,
+        "Dragon_Obsidian": 1.0,
+        "Dragon_Wings": 0.911
+      }
+    },
+    {
+      "name": "fbx: dimensions in studs match manifest (1 unit = 1 stud, Z up after import)",
+      "ok": true,
+      "imported": [
+        21.958,
+        31.962,
+        16.37
+      ],
+      "manifest": [
+        21.958,
+        31.962,
+        16.37
+      ]
+    },
+    {
+      "name": "fbx: axes preserved (head toward -Y, tail toward +Y, up = +Z)",
+      "ok": true,
+      "head": [
+        -0.0,
+        -6.55,
+        9.45
+      ],
+      "tail_tip": [
+        -0.0,
+        20.47,
+        2.05
+      ]
+    },
+    {
+      "name": "fbx clip ReferencePose: armature-only, action present",
+      "ok": true,
+      "bones": 90,
+      "actions": [
+        "Dragon_Rig|Scene"
+      ]
+    },
+    {
+      "name": "fbx clip ReferencePose: holds a pose that differs from rest",
+      "ok": true,
+      "max_deviation_from_rest_deg": 112.6
+    },
+    {
+      "name": "fbx clip RigTest_ROM: armature-only, action present",
+      "ok": true,
+      "bones": 90,
+      "actions": [
+        "Dragon_Rig|Scene"
+      ]
+    },
+    {
+      "name": "fbx clip RigTest_ROM: real bone motion across the range",
+      "ok": true,
+      "max_rotation_deg": 167.2,
+      "bones_moving": 82
+    },
+    {
+      "name": "fbx clip FireBreath: armature-only, action present",
+      "ok": true,
+      "bones": 90,
+      "actions": [
+        "Dragon_Rig|Scene"
+      ]
+    },
+    {
+      "name": "fbx clip FireBreath: attack motion present, frame count matches manifest",
+      "ok": true,
+      "max_rotation_deg": 51.6,
+      "bones_moving": 25,
+      "frames": 60,
+      "manifest_frames": 60
+    },
+    {
+      "name": "fbx clip TailWhip: armature-only, action present",
+      "ok": true,
+      "bones": 90,
+      "actions": [
+        "Dragon_Rig|Scene"
+      ]
+    },
+    {
+      "name": "fbx clip TailWhip: attack motion present, frame count matches manifest",
+      "ok": true,
+      "max_rotation_deg": 101.8,
+      "bones_moving": 45,
+      "frames": 52,
+      "manifest_frames": 52
+    },
+    {
+      "name": "fbx clip FrontStomp: armature-only, action present",
+      "ok": true,
+      "bones": 90,
+      "actions": [
+        "Dragon_Rig|Scene"
+      ]
+    },
+    {
+      "name": "fbx clip FrontStomp: attack motion present, frame count matches manifest",
+      "ok": true,
+      "max_rotation_deg": 64.0,
+      "bones_moving": 71,
+      "frames": 48,
+      "manifest_frames": 48
+    },
+    {
+      "name": "glb: section meshes present",
+      "ok": true,
+      "found": [
+        "Dragon_Belly",
+        "Dragon_Body",
+        "Dragon_EyeGlow",
+        "Dragon_Head",
+        "Dragon_LavaGlow",
+        "Dragon_Obsidian",
+        "Dragon_Wings"
+      ]
+    },
+    {
+      "name": "glb: every mesh < 20k triangles",
+      "ok": true,
+      "triangles": {
+        "Dragon_Belly": 6988,
+        "Dragon_Body": 18370,
+        "Dragon_EyeGlow": 40,
+        "Dragon_Head": 8012,
+        "Dragon_LavaGlow": 936,
+        "Dragon_Obsidian": 5272,
+        "Dragon_Wings": 7636
+      }
+    },
+    {
+      "name": "glb: deform bones present",
+      "ok": true,
+      "count": 90,
+      "missing": []
+    },
+    {
+      "name": "glb: every vertex weighted, <=4 influences, normalised",
+      "ok": true,
+      "stats": {
+        "Dragon_Belly": {
+          "vertices": 14146,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Dragon_Body": {
+          "vertices": 48863,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Dragon_EyeGlow": {
+          "vertices": 120,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Dragon_Head": {
+          "vertices": 17400,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Dragon_LavaGlow": {
+          "vertices": 1872,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Dragon_Obsidian": {
+          "vertices": 10926,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Dragon_Wings": {
+          "vertices": 15508,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        }
+      }
+    },
+    {
+      "name": "glb: textures load",
+      "ok": true,
+      "textures": {
+        "Dragon_Belly": 2048,
+        "Dragon_Body": 2048,
+        "Dragon_EyeGlow": 2048,
+        "Dragon_Head": 2048,
+        "Dragon_LavaGlow": 2048,
+        "Dragon_Obsidian": 2048,
+        "Dragon_Wings": 2048
+      }
+    },
+    {
+      "name": "glb: all five actions present",
+      "ok": true,
+      "actions": [
+        "FireBreath",
+        "FrontStomp",
+        "ReferencePose",
+        "RigTest_ROM",
+        "TailWhip"
+      ]
+    },
+    {
+      "name": "glb: ROM action moves the bones",
+      "ok": true,
+      "max_rotation_deg": 167.2,
+      "bones_moving": 82
+    },
+    {
+      "name": "glb: dimensions in studs match manifest",
+      "ok": true,
+      "imported": [
+        21.958,
+        31.962,
+        16.37
+      ],
+      "manifest": [
+        21.958,
+        31.962,
+        16.37
+      ]
+    },
+    {
+      "name": "manifest: three attacks with impact frames",
+      "ok": true,
+      "impact_frames": {
+        "FireBreath": 25,
+        "TailWhip": 23,
+        "FrontStomp": 27
+      }
+    },
+    {
+      "name": "manifest: FireBreath origin + per-frame breath direction",
+      "ok": true,
+      "frames": 12
+    },
+    {
+      "name": "manifest: TailWhip spade arc",
+      "ok": true,
+      "start": -45.6,
+      "end": 62.0,
+      "radius": 16.213
+    },
+    {
+      "name": "manifest: FrontStomp impact points for both front feet",
+      "ok": true,
+      "points": {
+        "Front_L": {
+          "palm": [
+            5.2,
+            -4.05,
+            0.7
+          ],
+          "toe_centre": [
+            5.287,
+            -4.298,
+            0.976
+          ],
+          "ground_point": [
+            5.287,
+            -4.298,
+            0.0
+          ]
+        },
+        "Front_R": {
+          "palm": [
+            -5.2,
+            -4.05,
+            0.7
+          ],
+          "toe_centre": [
+            -5.287,
+            -4.298,
+            0.976
+          ],
+          "ground_point": [
+            -5.287,
+            -4.298,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "name": "attacks: planted feet do not slide (evaluated rig, every frame, < 0.05 studs)",
+      "ok": true,
+      "max_drift": {
+        "FireBreath": 0.0,
+        "TailWhip": 0.0053,
+        "FrontStomp": 0.0053
+      }
+    }
+  ],
+  "summary": {
+    "passed": 34,
+    "total": 34
+  }
+}
