@@ -1,0 +1,503 @@
+{
+  "files": {
+    "fbx": {
+      "path": "exports\\fbx\\Pharaoh.fbx",
+      "sha256": "A92183C4D2F6FE12FB9DA4B2408125AC53CEAE585F39028FDA128F02AFB1863C"
+    },
+    "fbx_ReferencePose": {
+      "path": "exports\\fbx\\Pharaoh_ReferencePose.fbx",
+      "sha256": "36ECE9F506F77FA448DF4779A1EAA0E1E316FC8CF098AC16EBCB9F31C533C175"
+    },
+    "fbx_RigTest_ROM": {
+      "path": "exports\\fbx\\Pharaoh_RigTest_ROM.fbx",
+      "sha256": "CD350EE1B76E7C8189BEAE673AA78E76605C294B9860C6D1E9CFF164F55E493E"
+    },
+    "glb": {
+      "path": "exports\\glb\\Pharaoh.glb",
+      "sha256": "D4936A1E27B555775258B375547B07F9341F6FCCD688216DE8366D59D7D86640"
+    }
+  },
+  "checks": [
+    {
+      "name": "fbx: six mesh sections",
+      "ok": true,
+      "found": [
+        "Pharaoh_Bandages",
+        "Pharaoh_Body",
+        "Pharaoh_EyeGlow",
+        "Pharaoh_Head",
+        "Pharaoh_Staff",
+        "Pharaoh_Waist"
+      ]
+    },
+    {
+      "name": "fbx: every mesh < 20,000 triangles",
+      "ok": true,
+      "triangles": {
+        "Pharaoh_Body": 14573,
+        "Pharaoh_Head": 13524,
+        "Pharaoh_Bandages": 16424,
+        "Pharaoh_EyeGlow": 320,
+        "Pharaoh_Staff": 1984,
+        "Pharaoh_Waist": 11158
+      },
+      "total": 57983
+    },
+    {
+      "name": "fbx: armature present",
+      "ok": true
+    },
+    {
+      "name": "fbx: bone count/names = deform bones in manifest",
+      "ok": true,
+      "count": 62,
+      "expected": 62,
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "fbx: hierarchy matches",
+      "ok": true,
+      "mismatches": []
+    },
+    {
+      "name": "fbx: no leaf/end bones",
+      "ok": true
+    },
+    {
+      "name": "fbx: every vertex weighted, <=4 influences, normalised",
+      "ok": true,
+      "stats": {
+        "Pharaoh_Body": {
+          "vertices": 7346,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Pharaoh_Head": {
+          "vertices": 7036,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Pharaoh_Bandages": {
+          "vertices": 8264,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Pharaoh_EyeGlow": {
+          "vertices": 168,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Pharaoh_Staff": {
+          "vertices": 1028,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Pharaoh_Waist": {
+          "vertices": 5643,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        }
+      }
+    },
+    {
+      "name": "fbx: UVs present on every mesh",
+      "ok": true,
+      "uv_layers": {
+        "Pharaoh_Body": 1,
+        "Pharaoh_Head": 1,
+        "Pharaoh_Bandages": 1,
+        "Pharaoh_EyeGlow": 1,
+        "Pharaoh_Staff": 1,
+        "Pharaoh_Waist": 1
+      }
+    },
+    {
+      "name": "fbx: embedded textures load",
+      "ok": true,
+      "textures": [
+        {
+          "name": "Pharaoh_Body_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Head_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Body_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_EyeGlow_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Waist_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Waist_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Bandages_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Head_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Bandages_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_EyeGlow_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Staff_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Staff_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        }
+      ]
+    },
+    {
+      "name": "fbx: faceted split normals preserved",
+      "ok": true,
+      "split_vertex_fraction": {
+        "Pharaoh_Body": 0.9434,
+        "Pharaoh_Head": 0.999,
+        "Pharaoh_Bandages": 0.9486,
+        "Pharaoh_EyeGlow": 1.0,
+        "Pharaoh_Staff": 1.0,
+        "Pharaoh_Waist": 0.9114
+      }
+    },
+    {
+      "name": "fbx: scale/axes (rest top height in studs, feet on Z=0)",
+      "ok": true,
+      "top": 12.721,
+      "bottom": -0.01,
+      "expected_top": 12.721
+    },
+    {
+      "name": "fbx: character faces -Y",
+      "ok": true,
+      "eye_centre": [
+        0.001,
+        -1.267,
+        10.775
+      ]
+    },
+    {
+      "name": "clip ReferencePose: armature only",
+      "ok": true,
+      "meshes": 0
+    },
+    {
+      "name": "clip ReferencePose: bones match",
+      "ok": true
+    },
+    {
+      "name": "clip ReferencePose: action present, pose differs from rest (arms)",
+      "ok": true,
+      "actions": [
+        "Pharaoh_Rig|Scene"
+      ],
+      "frame_range": [
+        [
+          2.0,
+          3.0
+        ]
+      ],
+      "rotated_bones_deg": {
+        "LeftUpperArm": 9.0,
+        "RightUpperArm": 9.0
+      }
+    },
+    {
+      "name": "clip RigTest_ROM: armature only",
+      "ok": true,
+      "meshes": 0
+    },
+    {
+      "name": "clip RigTest_ROM: bones match",
+      "ok": true
+    },
+    {
+      "name": "clip RigTest_ROM: action present with bone motion",
+      "ok": true,
+      "actions": [
+        "Pharaoh_Rig|Scene"
+      ],
+      "frame_range": [
+        [
+          2.0,
+          254.0
+        ]
+      ],
+      "moving_bones": 60
+    },
+    {
+      "name": "glb: mesh sections",
+      "ok": true,
+      "found": [
+        "Pharaoh_Bandages",
+        "Pharaoh_Body",
+        "Pharaoh_EyeGlow",
+        "Pharaoh_Head",
+        "Pharaoh_Staff",
+        "Pharaoh_Waist"
+      ]
+    },
+    {
+      "name": "glb: skinned to one armature",
+      "ok": true
+    },
+    {
+      "name": "glb: deform bones present",
+      "ok": true,
+      "count": 62,
+      "missing": []
+    },
+    {
+      "name": "glb: both actions present",
+      "ok": true,
+      "actions": [
+        "ReferencePose",
+        "RigTest_ROM"
+      ]
+    },
+    {
+      "name": "glb: ROM action moves bones",
+      "ok": true,
+      "moving_bones": 60
+    },
+    {
+      "name": "glb: weights valid",
+      "ok": true,
+      "stats": {
+        "Pharaoh_Bandages": {
+          "vertices": 32824,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Pharaoh_Body": {
+          "vertices": 35335,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Pharaoh_EyeGlow": {
+          "vertices": 583,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Pharaoh_Head": {
+          "vertices": 27122,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Pharaoh_Staff": {
+          "vertices": 4116,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Pharaoh_Waist": {
+          "vertices": 25853,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        }
+      }
+    },
+    {
+      "name": "glb: textures load",
+      "ok": true,
+      "textures": [
+        {
+          "name": "Pharaoh_Bandages_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Body_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_EyeGlow_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Head_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Waist_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Waist_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Bandages_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Body_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_EyeGlow_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Head_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Staff_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Staff_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        }
+      ]
+    },
+    {
+      "name": "glb: scale (rest top height in studs)",
+      "ok": true,
+      "top": 12.721,
+      "expected_top": 12.721
+    }
+  ],
+  "summary": {
+    "passed": 26,
+    "failed": 0,
+    "blender": "5.2.1 LTS"
+  }
+}

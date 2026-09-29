@@ -1,0 +1,129 @@
+{
+  "poses": [
+    {
+      "pose": "Rest (reference pose)",
+      "grip": {
+        "Index": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "Middle": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "Ring": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "Pinky": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "max_finger_drift_in_staff_frame": 0.0
+      },
+      "staff": {
+        "min_distance_to_body": 0.7827,
+        "nearest_section": "Body",
+        "staff_verts_inside_body": 0
+      }
+    },
+    {
+      "pose": "Staff raised overhead",
+      "grip": {
+        "Index": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "Middle": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "Ring": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "Pinky": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "max_finger_drift_in_staff_frame": 3e-06
+      },
+      "staff": {
+        "min_distance_to_body": 2.6311,
+        "nearest_section": "Head",
+        "staff_verts_inside_body": 0
+      }
+    },
+    {
+      "pose": "Staff slammed down",
+      "grip": {
+        "Index": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "Middle": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "Ring": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "Pinky": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "max_finger_drift_in_staff_frame": 2e-06
+      },
+      "staff": {
+        "min_distance_to_body": 0.951,
+        "nearest_section": "Head",
+        "staff_verts_inside_body": 0
+      }
+    },
+    {
+      "pose": "Forward thrust, crook first",
+      "grip": {
+        "Index": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "Middle": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "Ring": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "Pinky": {
+          "min_surface_clearance": 0.022,
+          "inner_radius": 0.2741,
+          "n": 72
+        },
+        "max_finger_drift_in_staff_frame": 2e-06
+      },
+      "staff": {
+        "min_distance_to_body": 1.2762,
+        "nearest_section": "Bandages",
+        "staff_verts_inside_body": 0
+      }
+    }
+  ],
+  "note": "Staff bone is never rotated relative to RightHand; finger drift is measured in the Staff bone frame. Negative surface clearance means the finger surface dips into the chamfered corner of the square shaft."
+}

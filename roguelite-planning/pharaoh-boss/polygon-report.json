@@ -1,0 +1,37 @@
+{
+  "sections": {
+    "Pharaoh_Body": {
+      "triangles": 14573,
+      "vertices": 7346,
+      "faces": 13134
+    },
+    "Pharaoh_Bandages": {
+      "triangles": 16424,
+      "vertices": 8264,
+      "faces": 8212
+    },
+    "Pharaoh_Head": {
+      "triangles": 13524,
+      "vertices": 7036,
+      "faces": 7184
+    },
+    "Pharaoh_Waist": {
+      "triangles": 11158,
+      "vertices": 5643,
+      "faces": 7909
+    },
+    "Pharaoh_Staff": {
+      "triangles": 1984,
+      "vertices": 1028,
+      "faces": 1066
+    },
+    "Pharaoh_EyeGlow": {
+      "triangles": 320,
+      "vertices": 168,
+      "faces": 208
+    }
+  },
+  "total_triangles": 57983,
+  "per_mesh_limit": 20000,
+  "all_under_limit": true
+}
