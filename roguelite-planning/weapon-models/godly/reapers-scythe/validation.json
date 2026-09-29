@@ -1,0 +1,148 @@
+{
+ "name": "ReapersScythe",
+ "blender_version": "5.2.1 LTS",
+ "authored_scale_factor": 0.95274,
+ "meshes": {
+  "ReapersScythe": {
+   "triangles": 14507,
+   "vertices": 7536,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 128,
+   "bounds_min": [
+    -2.8485,
+    -0.4099,
+    0.1327
+   ],
+   "bounds_max": [
+    0.9356,
+    0.5058,
+    5.0495
+   ]
+  },
+  "ReapersScythe_Glow": {
+   "triangles": 1900,
+   "vertices": 1036,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    -2.8167,
+    -0.2438,
+    0.0
+   ],
+   "bounds_max": [
+    0.9323,
+    0.494,
+    4.4495
+   ]
+  },
+  "ReapersScythe_GlowCore": {
+   "triangles": 496,
+   "vertices": 262,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    -2.816,
+    -0.2549,
+    2.048
+   ],
+   "bounds_max": [
+    0.9321,
+    0.1357,
+    4.3064
+   ]
+  }
+ },
+ "total_triangles": 16903,
+ "total_vertices": 8834,
+ "mesh_count": 3,
+ "materials": {
+  "ReapersScythe": "ReapersScythe_Baked",
+  "ReapersScythe_Glow": "ReapersScythe_Glow",
+  "ReapersScythe_GlowCore": "ReapersScythe_GlowCore"
+ },
+ "texture": {
+  "file": "BaseColor.png",
+  "size": [
+   1024,
+   1024
+  ],
+  "packed_in_blend": true,
+  "uv_layers": [
+   "UVMap"
+  ],
+  "uv_range": [
+   0.0047,
+   0.9953
+  ]
+ },
+ "height_studs": 5.0495,
+ "bounds_blender_min": [
+  -2.8485,
+  -0.4099,
+  0.0
+ ],
+ "bounds_blender_max": [
+  0.9356,
+  0.5058,
+  5.0495
+ ],
+ "bounds_studio_size": [
+  3.7841,
+  5.0495,
+  0.9157
+ ],
+ "glb_reimport": {
+  "meshes": 3,
+  "triangles": 16903,
+  "names": [
+   "ReapersScythe",
+   "ReapersScythe_Glow",
+   "ReapersScythe_GlowCore"
+  ],
+  "images": [
+   "BaseColor 1024x1024"
+  ]
+ },
+ "fbx_reimport": {
+  "meshes": 3,
+  "triangles": 16903,
+  "names": [
+   "ReapersScythe",
+   "ReapersScythe_Glow",
+   "ReapersScythe_GlowCore"
+  ],
+  "embedded_images": [
+   "ReapersScythe_BaseColor 1024x1024"
+  ],
+  "dimensions_after_axis_conversion": {
+   "ReapersScythe": [
+    3.784,
+    0.916,
+    4.917
+   ],
+   "ReapersScythe_Glow": [
+    3.749,
+    0.738,
+    4.449
+   ],
+   "ReapersScythe_GlowCore": [
+    3.748,
+    0.391,
+    2.258
+   ]
+  }
+ },
+ "checks": {
+  "loose_vertices_total": 0,
+  "zero_area_faces_total": 0,
+  "glb_triangles_match": true,
+  "fbx_triangles_match": true
+ },
+ "notes": [
+  "Non-manifold edge counts are expected: the textured mesh is many closed parts that overlap by design (wraps on the shaft, bones on the blade spine, trim on the hood), and booleaned runes/sockets meet the bevels.",
+  "Studio import, Neon look and in-game scale are untested (no Studio access in this task)."
+ ]
+}

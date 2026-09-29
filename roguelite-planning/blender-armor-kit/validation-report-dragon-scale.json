@@ -1,0 +1,58 @@
+{
+  "fbx": {
+    "ok": true,
+    "meshes_checked": 26,
+    "meshes_expected": 26,
+    "images": {
+      "dragon-scale-arms.png": [
+        1024,
+        1024
+      ],
+      "dragon-scale-boots.png": [
+        1024,
+        1024
+      ],
+      "dragon-scale-helmet.png": [
+        1024,
+        1024
+      ],
+      "dragon-scale-legs.png": [
+        1024,
+        1024
+      ],
+      "dragon-scale-torso.png": [
+        1024,
+        1024
+      ]
+    },
+    "problems": []
+  },
+  "glb": {
+    "ok": true,
+    "meshes_checked": 26,
+    "meshes_expected": 26,
+    "images": {
+      "dragon-scale-arms": [
+        1024,
+        1024
+      ],
+      "dragon-scale-boots": [
+        1024,
+        1024
+      ],
+      "dragon-scale-helmet": [
+        1024,
+        1024
+      ],
+      "dragon-scale-legs": [
+        1024,
+        1024
+      ],
+      "dragon-scale-torso": [
+        1024,
+        1024
+      ]
+    },
+    "problems": []
+  }
+}

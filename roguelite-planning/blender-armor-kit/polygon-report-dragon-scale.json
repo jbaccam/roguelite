@@ -1,0 +1,164 @@
+{
+ "set": "dragon-scale",
+ "rarity": "Legendary",
+ "blender_version": "5.2.1 LTS",
+ "authoring": "final Roblox stud size; import at 1:1, do not scale",
+ "pieces": {
+  "Helmet": {
+   "DragonScale_Helmet_Head": {
+    "body_part": "Head",
+    "triangles": 6434,
+    "vertices": 4035
+   },
+   "DragonScale_Helmet_Head_Glow": {
+    "body_part": "Head",
+    "triangles": 92,
+    "vertices": 60
+   }
+  },
+  "Chest": {
+   "DragonScale_Chest_UpperTorso": {
+    "body_part": "UpperTorso",
+    "triangles": 10548,
+    "vertices": 6174
+   },
+   "DragonScale_Chest_LowerTorso": {
+    "body_part": "LowerTorso",
+    "triangles": 4606,
+    "vertices": 2579
+   },
+   "DragonScale_Chest_LeftUpperArm": {
+    "body_part": "LeftUpperArm",
+    "triangles": 4912,
+    "vertices": 2798
+   },
+   "DragonScale_Chest_RightUpperArm": {
+    "body_part": "RightUpperArm",
+    "triangles": 4912,
+    "vertices": 2798
+   },
+   "DragonScale_Chest_LeftLowerArm": {
+    "body_part": "LeftLowerArm",
+    "triangles": 1561,
+    "vertices": 923
+   },
+   "DragonScale_Chest_RightLowerArm": {
+    "body_part": "RightLowerArm",
+    "triangles": 1561,
+    "vertices": 923
+   },
+   "DragonScale_Chest_UpperTorso_Glow": {
+    "body_part": "UpperTorso",
+    "triangles": 50,
+    "vertices": 35
+   },
+   "DragonScale_Chest_LowerTorso_Glow": {
+    "body_part": "LowerTorso",
+    "triangles": 56,
+    "vertices": 38
+   },
+   "DragonScale_Chest_LeftUpperArm_Glow": {
+    "body_part": "LeftUpperArm",
+    "triangles": 92,
+    "vertices": 60
+   },
+   "DragonScale_Chest_RightUpperArm_Glow": {
+    "body_part": "RightUpperArm",
+    "triangles": 92,
+    "vertices": 60
+   },
+   "DragonScale_Chest_LeftLowerArm_Glow": {
+    "body_part": "LeftLowerArm",
+    "triangles": 16,
+    "vertices": 15
+   },
+   "DragonScale_Chest_RightLowerArm_Glow": {
+    "body_part": "RightLowerArm",
+    "triangles": 16,
+    "vertices": 15
+   }
+  },
+  "Legs": {
+   "DragonScale_Legs_LeftUpperLeg": {
+    "body_part": "LeftUpperLeg",
+    "triangles": 708,
+    "vertices": 408
+   },
+   "DragonScale_Legs_RightUpperLeg": {
+    "body_part": "RightUpperLeg",
+    "triangles": 708,
+    "vertices": 408
+   },
+   "DragonScale_Legs_LeftLowerLeg": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 1438,
+    "vertices": 860
+   },
+   "DragonScale_Legs_RightLowerLeg": {
+    "body_part": "RightLowerLeg",
+    "triangles": 1438,
+    "vertices": 860
+   },
+   "DragonScale_Legs_LeftUpperLeg_Glow": {
+    "body_part": "LeftUpperLeg",
+    "triangles": 48,
+    "vertices": 42
+   },
+   "DragonScale_Legs_RightUpperLeg_Glow": {
+    "body_part": "RightUpperLeg",
+    "triangles": 48,
+    "vertices": 42
+   },
+   "DragonScale_Legs_LeftLowerLeg_Glow": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 16,
+    "vertices": 15
+   },
+   "DragonScale_Legs_RightLowerLeg_Glow": {
+    "body_part": "RightLowerLeg",
+    "triangles": 16,
+    "vertices": 15
+   }
+  },
+  "Boots": {
+   "DragonScale_Boots_LeftLowerLeg": {
+    "body_part": "LeftLowerLeg",
+    "triangles": 622,
+    "vertices": 337
+   },
+   "DragonScale_Boots_RightLowerLeg": {
+    "body_part": "RightLowerLeg",
+    "triangles": 620,
+    "vertices": 336
+   },
+   "DragonScale_Boots_LeftFoot": {
+    "body_part": "LeftFoot",
+    "triangles": 924,
+    "vertices": 508
+   },
+   "DragonScale_Boots_RightFoot": {
+    "body_part": "RightFoot",
+    "triangles": 924,
+    "vertices": 508
+   }
+  }
+ },
+ "triangles_total": 42458,
+ "triangles_by_piece": {
+  "Helmet": 6526,
+  "Chest": 28422,
+  "Legs": 4420,
+  "Boots": 3090
+ },
+ "largest_mesh": [
+  "DragonScale_Chest_UpperTorso",
+  10548
+ ],
+ "textures": {
+  "arms": "textures/dragon-scale-arms.png (1024x1024)",
+  "boots": "textures/dragon-scale-boots.png (1024x1024)",
+  "helmet": "textures/dragon-scale-helmet.png (1024x1024)",
+  "legs": "textures/dragon-scale-legs.png (1024x1024)",
+  "torso": "textures/dragon-scale-torso.png (1024x1024)"
+ }
+}

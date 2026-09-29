@@ -1,0 +1,93 @@
+{
+ "name": "ReapersScythe",
+ "blender_version": "5.2.1 LTS",
+ "status": "Blender-verified, Studio untested",
+ "units": "1 Blender unit = 1 stud, authored at hero size; set the play size in Studio by uniform scale",
+ "axes": "Studio = (-x, z, y) of Blender; FBX exported with axis_forward=-Z, axis_up=Y",
+ "texture": "BaseColor.png 1024x1024, baked painted lighting; use MeshPart.TextureID (not SurfaceAppearance)",
+ "parts": {
+  "ReapersScythe": {
+   "kind": "textured",
+   "center_studio": [
+    0.9565,
+    2.5911,
+    0.048
+   ],
+   "size_studio": [
+    3.7841,
+    4.9168,
+    0.9157
+   ],
+   "triangles": 14507,
+   "material": "SmoothPlastic (or Plastic), Color white",
+   "texture_id": "BaseColor.png"
+  },
+  "ReapersScythe_Glow": {
+   "kind": "glow",
+   "center_studio": [
+    0.9422,
+    2.2247,
+    0.1251
+   ],
+   "size_studio": [
+    3.749,
+    4.4495,
+    0.7378
+   ],
+   "triangles": 1900,
+   "material": "Neon",
+   "color_rgb": [
+    255,
+    22,
+    52
+   ],
+   "note": "crimson glow: blade/hook edges, runes, eyes, flames, pommel gem"
+  },
+  "ReapersScythe_GlowCore": {
+   "kind": "glow",
+   "center_studio": [
+    0.9419,
+    3.1772,
+    -0.0596
+   ],
+   "size_studio": [
+    3.7481,
+    2.2584,
+    0.3906
+   ],
+   "triangles": 496,
+   "material": "Neon",
+   "color_rgb": [
+    255,
+    150,
+    128
+   ],
+   "note": "white-hot cores: edge rims, eye pupils, flame hearts"
+  }
+ },
+ "grip_point_studio": [
+  -0.0,
+  1.8769,
+  0.0
+ ],
+ "grip_point_relative_to_textured_center": [
+  -0.9565,
+  -0.7142,
+  -0.048
+ ],
+ "float_pivot_studio": [
+  -0.0,
+  2.5247,
+  0.0
+ ],
+ "float_pivot_relative_to_textured_center": [
+  -0.9565,
+  -0.0664,
+  -0.048
+ ],
+ "notes": [
+  "Every MeshPart imports centred on its own bounding box: place each at its center_studio, relative to a shared model origin (Blender origin = pommel tip on the shaft axis).",
+  "grip_point = middle of the crimson leather grip on the shaft axis (hand / spin pivot).",
+  "float_pivot = mid-height point on the shaft axis (pivot for the floating idle bob and spin)."
+ ]
+}

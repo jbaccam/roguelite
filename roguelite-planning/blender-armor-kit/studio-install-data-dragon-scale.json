@@ -1,0 +1,481 @@
+{
+ "set": "dragon-scale",
+ "glow_color_srgb": [
+  255,
+  132,
+  30
+ ],
+ "glow_material": "Neon",
+ "textured_material": "SmoothPlastic (colour comes from TextureID)",
+ "axes": "offset/size in Studio part-local axes (x = Blender -x, y = Blender z, z = Blender y)",
+ "parts": {
+  "DragonScale_Helmet_Head": {
+   "piece": "Helmet",
+   "body_part": "Head",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-helmet.png",
+   "offset": [
+    -0.0,
+    0.3505,
+    -0.1299
+   ],
+   "size": [
+    2.0934,
+    1.9391,
+    2.1801
+   ]
+  },
+  "DragonScale_Chest_UpperTorso": {
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-torso.png",
+   "offset": [
+    -0.0,
+    0.2879,
+    0.1062
+   ],
+   "size": [
+    1.98,
+    2.1819,
+    1.8457
+   ]
+  },
+  "DragonScale_Chest_LowerTorso": {
+   "piece": "Chest",
+   "body_part": "LowerTorso",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-torso.png",
+   "offset": [
+    -0.0,
+    -0.173,
+    -0.0444
+   ],
+   "size": [
+    1.988,
+    0.847,
+    1.6151
+   ]
+  },
+  "DragonScale_Chest_LeftUpperArm": {
+   "piece": "Chest",
+   "body_part": "LeftUpperArm",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-arms.png",
+   "offset": [
+    -0.2098,
+    0.4457,
+    -0.0293
+   ],
+   "size": [
+    1.4437,
+    2.1145,
+    2.1
+   ]
+  },
+  "DragonScale_Chest_RightUpperArm": {
+   "piece": "Chest",
+   "body_part": "RightUpperArm",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-arms.png",
+   "offset": [
+    0.2098,
+    0.4515,
+    -0.0293
+   ],
+   "size": [
+    1.4437,
+    2.103,
+    2.1
+   ]
+  },
+  "DragonScale_Chest_LeftLowerArm": {
+   "piece": "Chest",
+   "body_part": "LeftLowerArm",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-arms.png",
+   "offset": [
+    -0.1169,
+    -0.12,
+    0.1053
+   ],
+   "size": [
+    1.2599,
+    1.24,
+    1.6455
+   ]
+  },
+  "DragonScale_Chest_RightLowerArm": {
+   "piece": "Chest",
+   "body_part": "RightLowerArm",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-arms.png",
+   "offset": [
+    0.12,
+    -0.12,
+    0.1025
+   ],
+   "size": [
+    1.2661,
+    1.24,
+    1.651
+   ]
+  },
+  "DragonScale_Legs_LeftUpperLeg": {
+   "piece": "Legs",
+   "body_part": "LeftUpperLeg",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-legs.png",
+   "offset": [
+    -0.0763,
+    0.0,
+    -0.0386
+   ],
+   "size": [
+    1.1286,
+    1.2,
+    1.2572
+   ]
+  },
+  "DragonScale_Legs_RightUpperLeg": {
+   "piece": "Legs",
+   "body_part": "RightUpperLeg",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-legs.png",
+   "offset": [
+    0.0825,
+    0.0,
+    -0.0449
+   ],
+   "size": [
+    1.141,
+    1.2,
+    1.2698
+   ]
+  },
+  "DragonScale_Legs_LeftLowerLeg": {
+   "piece": "Legs",
+   "body_part": "LeftLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-legs.png",
+   "offset": [
+    -0.1057,
+    0.1989,
+    -0.194
+   ],
+   "size": [
+    1.1875,
+    1.1037,
+    1.568
+   ]
+  },
+  "DragonScale_Legs_RightLowerLeg": {
+   "piece": "Legs",
+   "body_part": "RightLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-legs.png",
+   "offset": [
+    0.1057,
+    0.1988,
+    -0.194
+   ],
+   "size": [
+    1.1875,
+    1.1035,
+    1.568
+   ]
+  },
+  "DragonScale_Boots_LeftLowerLeg": {
+   "piece": "Boots",
+   "body_part": "LeftLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-boots.png",
+   "offset": [
+    -0.1316,
+    -0.3427,
+    0.0
+   ],
+   "size": [
+    1.2333,
+    0.4201,
+    1.4862
+   ]
+  },
+  "DragonScale_Boots_RightLowerLeg": {
+   "piece": "Boots",
+   "body_part": "RightLowerLeg",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-boots.png",
+   "offset": [
+    0.1316,
+    -0.3422,
+    0.0
+   ],
+   "size": [
+    1.2333,
+    0.421,
+    1.4721
+   ]
+  },
+  "DragonScale_Boots_LeftFoot": {
+   "piece": "Boots",
+   "body_part": "LeftFoot",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-boots.png",
+   "offset": [
+    -0.1163,
+    0.1026,
+    -0.025
+   ],
+   "size": [
+    1.1966,
+    0.5092,
+    1.646
+   ]
+  },
+  "DragonScale_Boots_RightFoot": {
+   "piece": "Boots",
+   "body_part": "RightFoot",
+   "kind": "textured",
+   "atlas": "textures/dragon-scale-boots.png",
+   "offset": [
+    0.1137,
+    0.108,
+    -0.025
+   ],
+   "size": [
+    1.1913,
+    0.52,
+    1.646
+   ]
+  },
+  "DragonScale_Helmet_Head_Glow": {
+   "piece": "Helmet",
+   "body_part": "Head",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.0,
+    0.0457,
+    -0.9622
+   ],
+   "size": [
+    0.8204,
+    0.5857,
+    0.5448
+   ]
+  },
+  "DragonScale_Chest_UpperTorso_Glow": {
+   "piece": "Chest",
+   "body_part": "UpperTorso",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.0,
+    0.023,
+    -0.7698
+   ],
+   "size": [
+    0.19,
+    0.8539,
+    0.0864
+   ]
+  },
+  "DragonScale_Chest_LowerTorso_Glow": {
+   "piece": "Chest",
+   "body_part": "LowerTorso",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.0,
+    0.026,
+    -0.6655
+   ],
+   "size": [
+    0.3282,
+    0.2348,
+    0.0559
+   ]
+  },
+  "DragonScale_Chest_LeftUpperArm_Glow": {
+   "piece": "Chest",
+   "body_part": "LeftUpperArm",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.3742,
+    0.4952,
+    -0.8695
+   ],
+   "size": [
+    0.5911,
+    0.4555,
+    0.4525
+   ]
+  },
+  "DragonScale_Chest_RightUpperArm_Glow": {
+   "piece": "Chest",
+   "body_part": "RightUpperArm",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    0.3742,
+    0.4952,
+    -0.8695
+   ],
+   "size": [
+    0.5911,
+    0.4555,
+    0.4525
+   ]
+  },
+  "DragonScale_Chest_LeftLowerArm_Glow": {
+   "piece": "Chest",
+   "body_part": "LeftLowerArm",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.6447,
+    -0.1003,
+    -0.0002
+   ],
+   "size": [
+    0.0601,
+    0.4809,
+    0.0219
+   ]
+  },
+  "DragonScale_Chest_RightLowerArm_Glow": {
+   "piece": "Chest",
+   "body_part": "RightLowerArm",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    0.6447,
+    -0.1003,
+    -0.0002
+   ],
+   "size": [
+    0.0601,
+    0.4809,
+    0.0219
+   ]
+  },
+  "DragonScale_Legs_LeftUpperLeg_Glow": {
+   "piece": "Legs",
+   "body_part": "LeftUpperLeg",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.1941,
+    0.0015,
+    -0.2903
+   ],
+   "size": [
+    0.8532,
+    0.6076,
+    0.6879
+   ]
+  },
+  "DragonScale_Legs_RightUpperLeg_Glow": {
+   "piece": "Legs",
+   "body_part": "RightUpperLeg",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    0.1941,
+    0.0015,
+    -0.2903
+   ],
+   "size": [
+    0.8532,
+    0.6076,
+    0.6879
+   ]
+  },
+  "DragonScale_Legs_LeftLowerLeg_Glow": {
+   "piece": "Legs",
+   "body_part": "LeftLowerLeg",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    -0.5935,
+    -0.0092,
+    0.0121
+   ],
+   "size": [
+    0.015,
+    0.5038,
+    0.0918
+   ]
+  },
+  "DragonScale_Legs_RightLowerLeg_Glow": {
+   "piece": "Legs",
+   "body_part": "RightLowerLeg",
+   "kind": "glow",
+   "atlas": null,
+   "offset": [
+    0.5935,
+    -0.0092,
+    0.0121
+   ],
+   "size": [
+    0.015,
+    0.5038,
+    0.0918
+   ]
+  }
+ },
+ "embers": [
+  {
+   "part": "Head",
+   "piece": "Helmet",
+   "what": "dragon breath",
+   "attachment_position": [
+    -0.0,
+    -0.22,
+    -0.98
+   ]
+  },
+  {
+   "part": "UpperTorso",
+   "piece": "Chest",
+   "what": "dragon heart",
+   "attachment_position": [
+    -0.0,
+    0.3,
+    -0.808
+   ]
+  },
+  {
+   "part": "LowerTorso",
+   "piece": "Chest",
+   "what": "buckle dragon breath",
+   "attachment_position": [
+    -0.0,
+    -0.08,
+    -0.756
+   ]
+  },
+  {
+   "part": "LeftUpperArm",
+   "piece": "Chest",
+   "what": "pauldron dragon breath",
+   "attachment_position": [
+    -0.3781,
+    0.2803,
+    -0.8914
+   ]
+  },
+  {
+   "part": "RightUpperArm",
+   "piece": "Chest",
+   "what": "pauldron dragon breath",
+   "attachment_position": [
+    0.3781,
+    0.2803,
+    -0.8914
+   ]
+  }
+ ]
+}
