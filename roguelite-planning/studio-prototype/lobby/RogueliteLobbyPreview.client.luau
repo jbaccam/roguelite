@@ -41,6 +41,8 @@ local RS=game:GetService('ReplicatedStorage')
 local role=RS:GetAttribute('ServerRole')
 while role==nil do RS:GetAttributeChangedSignal('ServerRole'):Wait();role=RS:GetAttribute('ServerRole') end
 if role~='Combined' then return end
+-- Developers travel from the ADMIN panel's Travel tab instead (ADMIN_PANEL.md).
+if require(RS:WaitForChild('RogueliteCombat'):WaitForChild('AdminConfig')).isAdmin(player) then return end
 local travel=workspace:WaitForChild('RogueliteLobby'):WaitForChild('StudioTravel')
 local screen=T.make('ScreenGui',gui,{Name='StudioTravel',ResetOnSpawn=false,DisplayOrder=40,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets})
 local frame=T.panel(screen,'Panel',0,0,200,46,'inset');frame.AnchorPoint=Vector2.new(1,0);frame.Position=UDim2.new(1,-12,0,6)

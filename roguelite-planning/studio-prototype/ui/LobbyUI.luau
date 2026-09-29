@@ -155,12 +155,13 @@ function L.mount(player)
  local goalsButton=T.make('TextButton',goals,{Name='Open',Text='',BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=3})
  goalsButton.Activated:Connect(function() open('Quests','Achievements') end)
  -- Right edge: store, rewards, settings.
- local right,rightScale=scaled('Right',Vector2.new(1,.5),UDim2.new(1,-12,.45,0),Vector2.new(96,450))
+ local right,rightScale=scaled('Right',Vector2.new(1,.5),UDim2.new(1,-12,.45,0),Vector2.new(96,592))
  T.make('UIListLayout',right,{Padding=UDim.new(0,10),HorizontalAlignment=Enum.HorizontalAlignment.Center,SortOrder=Enum.SortOrder.LayoutOrder})
  local store=T.iconButton(right,'Store','store','STORE',78,function() open('Store') end);store.LayoutOrder=1
  local skills=T.iconButton(right,'Skills',SkillTree.Icons.Hud,'SKILLS',78,function() open('Skills') end);skills.LayoutOrder=2
  local awards=T.iconButton(right,'Awards','achievements','REWARDS',78,function() open('Quests','Achievements') end);awards.LayoutOrder=3
  local settings=T.iconButton(right,'Settings','settings','SETTINGS',64,function() open('Settings') end);settings.LayoutOrder=4
+ -- LayoutOrder 6 (after ATTACKS) is the developers' ADMIN button, added by AdminPanel.client (ADMIN_PANEL.md).
  -- Bottom centre: main actions with PLAY in the middle.
  local bottom,bottomScale=scaled('Bottom',Vector2.new(.5,1),UDim2.new(.5,0,1,-8),Vector2.new(640,150))
  local order={{'Chests','chest','CHESTS',86},{'Armory','armory','ARMORY',86},{'Play','play','PLAY',122},{'Loadout','loadout','LOADOUT',86},{'Quests','quests','QUESTS',86}}

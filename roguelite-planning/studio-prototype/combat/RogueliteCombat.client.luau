@@ -307,7 +307,9 @@ combat:WaitForChild('ZombiePopped').OnClientEvent:Connect(function(position)
  mobImpact.death(position)
 end)
 
-if RunService:IsStudio()then
+-- Developers use the ADMIN panel instead (Keep N alive, Weapons, End this wave); other Studio
+-- testers keep this panel and its Z/K/X keys (ADMIN_PANEL.md).
+if RunService:IsStudio() and not require(combat:WaitForChild('AdminConfig')).isAdmin(player) then
  -- Studio-only test panel, drawn with the shared green theme.
  local T=require(game.ReplicatedStorage:WaitForChild('UITheme'))
  local gui=Instance.new('ScreenGui');gui.Name='RogueliteCombatTestControls';gui.ResetOnSpawn=false;gui.ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets;gui.Parent=player:WaitForChild('PlayerGui')

@@ -9,7 +9,7 @@ local C=T.Color
 local A=T.Asset
 UI.Assets=A
 local make,frame,panel,icon,label,button=T.make,T.frame,T.panel,T.icon,T.label,T.button
-function UI.mount(playerGui, studioPreview)
+function UI.mount(playerGui)
  local player=Players.LocalPlayer
  local gui=make("ScreenGui",playerGui,{Name="RogueliteHUD",ResetOnSpawn=false,DisplayOrder=20,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,ClipToDeviceSafeArea=true})
  local root=frame(gui,"SafeArea",0,0,0,0);root.Size=UDim2.fromScale(1,1)
@@ -81,7 +81,7 @@ function UI.mount(playerGui, studioPreview)
  local bossFill=make('Frame',bossTrack,{Name='Fill',Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.fromRGB(205,38,44),BorderSizePixel=0})
  make('UIGradient',bossFill,{Rotation=90,Color=ColorSequence.new(Color3.fromRGB(246,77,66),Color3.fromRGB(141,20,31))})
  local bossHP=label(bossTrack,'HealthText','',0,0,100,20,15);bossHP.Size=UDim2.fromScale(1,1);bossHP.ZIndex=2
- -- Full-screen menus (shop, inventory, stats, upgrades).
+ -- Full-screen menus (shop, upgrades).
  local overlay=make("Frame",root,{Name="Menus",Active=true,Visible=false,Size=UDim2.fromScale(1,1),BackgroundColor3=C.shade,BackgroundTransparency=0.1,BorderSizePixel=0})
  local header=panel(overlay,"Header",0,12,500,68)
  header.AnchorPoint=Vector2.new(0.5,0);header.Position=UDim2.new(0.5,0,0,12)
@@ -159,7 +159,6 @@ function UI.mount(playerGui, studioPreview)
  end
  local render
  local shopView
- local creativeInventory
  local levelUpView
  local settingsWindow
  local function close()
@@ -182,18 +181,15 @@ function UI.mount(playerGui, studioPreview)
  function controller:Close() close();if settingsWindow then settingsWindow.Close() end end
  local shopTab=button(footer,"ShopTab","Shop",0,8,120,48,function() controller:ShowPreview("Shop") end,true)
  local upgradesTab=button(footer,"UpgradesTab","Upgrades",130,8,140,48,function() controller:ShowPreview("Upgrades") end,true)
- local inventoryTab=button(footer,"InventoryTab","Inventory",0,8,140,48,function() controller:ShowPreview("Inventory") end,true)
- local statsTab=button(footer,'StatsTab','Stats',0,8,100,48,function() controller:ShowPreview('Stats') end,true)
  local closeButton=button(footer,"Close","Back to game",280,8,210,48,close,true)
  closeButton.Modal=true -- Only while its menu is visible; releases first-person cursor.
- local tabModes={Shop=shopTab,Upgrades=upgradesTab,Inventory=inventoryTab,Stats=statsTab}
+ local tabModes={Shop=shopTab,Upgrades=upgradesTab}
  local helpers={panel=panel,label=label,button=button,icon=icon}
- local statsView=require(RS:WaitForChild('CharacterStatsUI')).new(player,helpers)
  local shopModule=require(RS:WaitForChild('ShopUI'))
- shopView=shopModule.new(player,helpers,function() if render and (controller.Mode=='Shop' or controller.Mode=='Inventory') then render() elseif controller.Mode=='Stats' then local data=shopView:snapshot();if data then status.Text=data.message end end end)
- creativeInventory=require(RS:WaitForChild('WeaponInventoryUI')).new(player,helpers,function() if render and controller.Mode=='Inventory' then task.defer(render) end end)
- function controller:SetStats() end -- Stats render from live server attributes inside the Stats view.
- -- Right edge: menu launchers. Inventory and Stats are Studio test tools.
+ shopView=shopModule.new(player,helpers,function() if render and controller.Mode=='Shop' then render() end end)
+ function controller:SetStats() end -- RogueliteHUD still calls this; stat edits live in the ADMIN panel.
+ -- Right edge: menu launchers. The ADMIN button (developers only) is AdminPanel.client's, at
+ -- LayoutOrder 5 after SETTINGS; the old GEAR and STATS test tools moved into that panel.
  local menu=frame(hud,'Menu',0,0,76,300);menu.AnchorPoint=Vector2.new(1,.5)
  local menuScale=make('UIScale',menu,{Scale=1})
  make('UIListLayout',menu,{Padding=UDim.new(0,6),HorizontalAlignment=Enum.HorizontalAlignment.Center,SortOrder=Enum.SortOrder.LayoutOrder})
@@ -201,10 +197,6 @@ function UI.mount(playerGui, studioPreview)
   local b=T.iconButton(menu,name,asset,caption,58,fn);b.LayoutOrder=order;return b
  end
  launcher('OpenShop','store','SHOP',1,function() controller:ShowPreview('Shop') end)
- if studioPreview then
-  launcher('InventoryButton','loadout','GEAR',2,function() controller:ShowPreview('Inventory') end)
-  launcher('StatsButton','profile','STATS',3,function() controller:ShowPreview('Stats') end)
- end
  launcher('SettingsButton','settings','SETTINGS',4,function()
   if settingsWindow then settingsWindow.Close() return end
   settingsWindow=T.settingsWindow(gui)
@@ -212,9 +204,7 @@ function UI.mount(playerGui, studioPreview)
  end)
  Input.InputBegan:Connect(function(input,processed)
   if processed or Input:GetFocusedTextBox() then return end
-  if input.KeyCode==Enum.KeyCode.B then controller:ShowPreview('Shop')
-  elseif studioPreview and input.KeyCode==Enum.KeyCode.I then if controller.Mode=='Inventory' then close() else controller:ShowPreview('Inventory') end
-  elseif studioPreview and input.KeyCode==Enum.KeyCode.P then if controller.Mode=='Stats' then close() else controller:ShowPreview('Stats') end end
+  if input.KeyCode==Enum.KeyCode.B then controller:ShowPreview('Shop') end
  end)
  -- Build strip: live server slots plus snapshot items.
  local Catalog=require(RS.RogueliteCombat.ShopCatalog)
@@ -268,23 +258,11 @@ function UI.mount(playerGui, studioPreview)
   content:ClearAllChildren()
   local width=math.max(260,scroller.AbsoluteSize.X-(isShop and 0 or 10))
   scroller.ScrollingEnabled=controller.Mode~='Shop'
-  if controller.Mode=='Inventory' then
-   local height=creativeInventory:render(content,width)
-   if width>=850 then content.EquippedWeapons.Position=UDim2.fromOffset(content.EquippedWeapons.Position.X.Offset,scroller.CanvasPosition.Y) end
-   content.Size=UDim2.fromOffset(width,height);scroller.CanvasSize=UDim2.fromOffset(0,height)
-   title.Text='CREATIVE INVENTORY';note.Text='Studio test tool  ·  Choose a slot  ·  Equip any weapon for free  ·  Duplicates allowed'
-   return
-  end
   if isShop then
    content.Size=UDim2.fromOffset(width,scroller.AbsoluteSize.Y);scroller.CanvasSize=UDim2.new()
    local data=shopView:render(content,width,scroller.AbsoluteSize.Y,false)
    if data then status.Text=data.message end
    return
-  end
-  if controller.Mode=='Stats' then
-   local offset=shopView:debug(content,width)
-   local inner=frame(content,'StatEditor',0,offset,width,1)
-   local height=statsView:render(inner,width)+offset;inner.Size=UDim2.fromOffset(width,height-offset);content.Size=UDim2.fromOffset(width,height);scroller.CanvasSize=UDim2.fromOffset(0,height);return
   end
   local pendingCount=(shopView:snapshot() or {}).pendingLevels or 0
   local box=panel(content,'NoUpgrades',math.max(0,(width-560)/2),30,math.min(560,width),150)
@@ -294,8 +272,8 @@ function UI.mount(playerGui, studioPreview)
  function controller:ShowPreview(mode)
   if levelUpView and levelUpView:Show() then return end
   if settingsWindow then settingsWindow.Close() end
-  controller.Mode=mode;title.Text=mode=='Stats' and 'CHARACTER STATS' or mode=='Inventory' and 'WEAPON INVENTORY' or (mode=='Shop' and 'SHOP' or 'LEVEL UP!')
-  note.Text=mode=='Stats' and 'STUDIO PRACTICE  ·  Server-applied edits  ·  No saved rewards' or mode=='Inventory' and 'Owned weapons and items' or mode=='Shop' and '' or 'Upgrade offers appear here between waves'
+  controller.Mode=mode;title.Text=mode=='Shop' and 'SHOP' or 'LEVEL UP!'
+  note.Text=mode=='Shop' and '' or 'Upgrade offers appear here between waves'
   overlay.Visible=true;hud.Visible=false;status.Text=""
   gui:SetAttribute("PreviewScreen",mode)
   scroller.CanvasPosition=Vector2.zero;render()
@@ -303,10 +281,6 @@ function UI.mount(playerGui, studioPreview)
    game:GetService("GuiService").SelectedObject=closeButton
   end
  end
- scroller:GetPropertyChangedSignal('CanvasPosition'):Connect(function()
-  local slots=content:FindFirstChild('EquippedWeapons')
-  if controller.Mode=='Inventory' and slots and scroller.AbsoluteSize.X-10>=850 then slots.Position=UDim2.fromOffset(slots.Position.X.Offset,scroller.CanvasPosition.Y) end
- end)
  local function layout()
   local w=root.AbsoluteSize.X
   local compact=w<720
@@ -325,8 +299,8 @@ function UI.mount(playerGui, studioPreview)
   title.TextSize=26
   local footerWidth=math.min(660,w-24)
   footer.Size=UDim2.fromOffset(footerWidth,64)
-  local bw=(footerWidth-32)/5
-  for i,b in {shopTab,upgradesTab,inventoryTab,statsTab,closeButton} do
+  local bw=(footerWidth-16)/3
+  for i,b in {shopTab,upgradesTab,closeButton} do
    b.Position=UDim2.fromOffset((i-1)*(bw+8),8);b.Size=UDim2.fromOffset(bw,48);b.Caption.TextSize=w<600 and 12 or 18
   end
   render()

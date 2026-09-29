@@ -1,4 +1,4 @@
--- UI sends only slot + catalogue ID. The server owns the equipped state.
+-- UI sends only slot, catalogue ID and tier. The server owns the equipped state.
 local RS=game:GetService('ReplicatedStorage')
 local combat=RS:WaitForChild('RogueliteCombat')
 local Catalog=require(combat:WaitForChild('WeaponCatalog'))
@@ -71,8 +71,13 @@ end
 function I.new(player,helpers,refresh)
  local panel,label,button=helpers.panel,helpers.label,helpers.button
  local state=combat.PlayerStates:WaitForChild(tostring(player.UserId))
- local self={selected=1,filter='',state=state}
- local function updated() refresh() end
+ -- Give weapon (ADMIN panel): the selected slot starts at, and moves on to, the next free slot.
+ local function nextFree() for i=1,6 do if state['Slot'..i]:GetAttribute('WeaponId')=='' then return i end end end
+ local self={selected=nextFree() or 1,filter='',state=state,tier=1}
+ local function updated()
+  if state['Slot'..self.selected]:GetAttribute('WeaponId')~='' then self.selected=nextFree() or self.selected end
+  refresh()
+ end
  for _,slot in state:GetChildren() do slot:GetAttributeChangedSignal('WeaponId'):Connect(updated) end
  function self:drawSlots(parent,x,y,width,compact)
   local box=panel(parent,'EquippedWeapons',x,y,width,compact and 256 or 316)
@@ -99,7 +104,11 @@ function I.new(player,helpers,refresh)
   local slotsHeight=self:drawSlots(content,wide and x+area+18 or x,0,side,not wide)
   local top=wide and 0 or slotsHeight+14
   label(content,'AllWeapons','All weapons  ·  36',x,top,area,35,26)
-  label(content,'Instructions','Choose a slot, then equip any weapon. Duplicates allowed.',x,top+38,area,42,16)
+  label(content,'Instructions','Choose a slot and a tier, then equip any weapon. Duplicates allowed.',x,top+38,area-236,42,16)
+  for tier=1,4 do
+   local b=button(content,'Tier'..tier,T.Roman[tier],x+area-232+(tier-1)*58,top+42,52,34,function() self.tier=tier;refresh() end,tier~=self.tier)
+   b.Caption.TextSize=16
+  end
   local columns=math.max(1,math.floor(area/205));local gap=12
   local cardW=math.floor((area-gap*(columns-1))/columns);local cardH=230
   for i,d in Catalog.List do
@@ -107,7 +116,7 @@ function I.new(player,helpers,refresh)
    I.preview(card,templates:FindFirstChild(d.id),12,6,cardW-24,104)
    label(card,'Name',d.name,8,110,cardW-16,36,20)
    label(card,'Stats',d.kind..'  ·  '..d.damage..' damage\n'..d.cooldown..'s cooldown',8,148,cardW-16,38,14)
-   button(card,'Equip','Equip → '..self.selected,10,188,cardW-20,34,function() combat.EquipWeapon:FireServer(self.selected,d.id) end,true).Caption.TextSize=17
+   button(card,'Equip','Equip '..T.Roman[self.tier]..' → '..self.selected,10,188,cardW-20,34,function() combat.EquipWeapon:FireServer(self.selected,d.id,self.tier) end,true).Caption.TextSize=17
   end
   return math.max(slotsHeight,top+92+math.ceil(#Catalog.List/columns)*(cardH+gap))
  end

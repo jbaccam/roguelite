@@ -325,6 +325,9 @@
       "ChestScreenUI": {
         "$path": "../ui/ChestScreenUI.luau"
       },
+      "AdminPanelUI": {
+        "$path": "../ui/AdminPanelUI.luau"
+      },
       "AssetPreloader": {
         "$path": "../ui/AssetPreloader.luau"
       }
@@ -463,6 +466,9 @@
         },
         "RogueliteLobbyHUD": {
           "$path": "../ui/RogueliteLobbyHUD.client.luau"
+        },
+        "AdminPanel": {
+          "$path": "../ui/AdminPanel.client.luau"
         }
       },
       "StarterCharacterScripts": {

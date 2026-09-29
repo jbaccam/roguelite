@@ -39,7 +39,7 @@ task.spawn(function()
  playerGui:SetAttribute('ShopArtLoaded',loaded)
  for _,image in images do image:Destroy() end
 end)
-local view=UI.mount(playerGui,RunService:IsStudio())
+local view=UI.mount(playerGui)
 -- Match servers never run the lobby HUD, which starts the preloader everywhere else; warm the
 -- shop, inventory and chest icons here. Spawned so a missing module can never stall this HUD.
 task.spawn(function()

@@ -3,6 +3,7 @@ local combat=RS:WaitForChild('RogueliteCombat')
 local Stats=require(combat:WaitForChild('CharacterStats'))
 local Catalog=require(combat.WeaponCatalog)
 local EnemyCatalog=require(combat:WaitForChild('EnemyCatalog'))
+local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed; UI modules are unsandboxed
 local T=require(RS:WaitForChild('UITheme'))
 local M={}
 function M.new(player,helpers)
@@ -16,7 +17,9 @@ function M.new(player,helpers)
  local function small(parent,name,text,x,y,w,callback)
   local b=button(parent,name,text,x,y,w,34,callback,true);b.Caption.TextSize=15;return b
  end
- function self:render(content,width)
+ -- opts.skipMobs (the ADMIN panel's Player tab): leave out the population controls, which live
+ -- in the panel's Mobs tab.
+ function self:render(content,width,opts)
   self.refreshers={}
   local usable=math.min(width,1200);local x=(width-usable)/2
   local extra=usable<600 and 70 or 0
@@ -40,6 +43,8 @@ function M.new(player,helpers)
    local values={};for _,d in Stats.List do local v=Stats.Classes[class].buffs[d.id];if v then table.insert(values,'<font color="'..(v>0 and '#91ef14' or '#ff6969')..'">'..d.label..' '..(v>0 and '+' or '')..v..d.unit..'</font>') end end;buffs.Text=table.concat(values,'  |  ')
    affinity.Text=string.format('%d home weapons · Bonuses at 2 and 4 · Changing class clears stat edits',state:GetAttribute('AffinityCount') or 0)
   end)
+  -- Without the population panel, the controls below move up into its 250 px slot (238 + gap).
+  if opts and opts.skipMobs then extra-=250 else
   local mobCols=usable<600 and 3 or 6;local mobRows=math.ceil(#EnemyCatalog.List/mobCols)
   local zombieH=282+mobRows*38;local zextra=zombieH-238
   local zombies=panel(content,'ZombieControls',x,280+extra,usable,zombieH)
@@ -87,9 +92,11 @@ function M.new(player,helpers)
   local bossStatus=label(zombies,'BossStatus','',12,183,usable-24,48,13);bossStatus.TextWrapped=true
   table.insert(self.refreshers,function() bossStatus.Text=combat:GetAttribute('PracticeBossStatus') or 'Spawn one practice boss nearby · Enables zombies · No boss rewards' end)
   extra+=zextra
+  end
   small(content,'Heal','Heal to full',x,530+extra,(usable-12)/2,function() send('Heal') end)
   small(content,'TestDamage','Test 20 contact damage',x+(usable+12)/2,530+extra,(usable-12)/2,function() send('Damage') end)
-  -- Emeralds (saved currency): quick grants plus an exact value. Studio only, never saved.
+  -- Emeralds (saved currency): quick grants plus an exact value. In memory in Studio; a real,
+  -- saved change to the developer's own account on a live server.
   local gems=panel(content,'Emeralds',x,574+extra,usable,52,'inset')
   local Theme=require(RS:WaitForChild('UITheme'))
   local gemIcon=Instance.new('ImageLabel');gemIcon.Name='Icon';gemIcon.BackgroundTransparency=1;gemIcon.Image=Theme.Asset.emerald;gemIcon.Position=UDim2.fromOffset(10,6);gemIcon.Size=UDim2.fromOffset(40,40);gemIcon.ScaleType=Enum.ScaleType.Fit;gemIcon.Parent=gems
@@ -140,7 +147,7 @@ function M.new(player,helpers)
     if base then local d=Stats.weapon(base,Stats.read(state),state:GetAttribute('Class'),slot:GetAttribute('Tier'));text.Text=string.format('%d · %s · %.1f damage · %.2fs · %.1f range',i,d.name,d.damage,d.cooldown,d.range) else text.Text=i..' · Empty' end
    end)
   end
-  if not game:GetService('RunService'):IsStudio() then
+  if not Admin.isAdmin(player) then
    for _,o in content:GetDescendants() do if o:IsA('GuiButton') then o.Interactable=false elseif o:IsA('TextBox') then o.TextEditable=false end end
   end
   update();return bottom+274
