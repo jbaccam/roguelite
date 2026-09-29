@@ -14,6 +14,9 @@ local combat=RS:WaitForChild('RogueliteCombat')
 local Shop=require(SSS:WaitForChild('ShopService')) -- sets ZombieDeath.onDeath, which is wrapped below
 local Death=require(combat:WaitForChild('ZombieDeath'))
 local runState=RS:WaitForChild('RogueliteRunState')
+-- Test runs (the admin panel was used) record no kills or best waves. Time played still counts:
+-- it measures time on the server, not a run result.
+local Admin=require(combat:WaitForChild('AdminConfig'))
 
 local STATS={
  {id='Kills',field='kills'},
@@ -66,7 +69,7 @@ end
 
 -- Kills --------------------------------------------------------------------------------
 local function credit(npc)
- if Shop.phase~='Combat' or npc:GetAttribute('PracticeTarget') or npc:GetAttribute('KillCredited') then return end
+ if Shop.phase~='Combat' or Admin.isTestRun(runState) or npc:GetAttribute('PracticeTarget') or npc:GetAttribute('KillCredited') then return end
  if not Tags:HasTag(npc,'RogueliteZombie') then return end
  local id=npc:GetAttribute('LastDamageUserId')
  local p=type(id)=='number' and Players:GetPlayerByUserId(id) or nil
@@ -93,7 +96,7 @@ task.spawn(function()
   local wave=runState:GetAttribute('Phase')=='Combat' and (runState:GetAttribute('Wave') or 0) or 0
   for p,d in data do
    d.seconds+=dt
-   if wave>d.bestWave and inRun(p) then d.bestWave=wave end
+   if wave>d.bestWave and inRun(p) and not Admin.isTestRun(runState) then d.bestWave=wave end
   end
  end
 end)

@@ -13,6 +13,7 @@ local Chests=require(combat:WaitForChild('ChestConfig'))
 local Profiles=require(SSS:WaitForChild('ProfileService'))
 local Shop=require(SSS:WaitForChild('ShopService'))
 local Characters=require(SSS:WaitForChild('CharacterService'))
+local Admin=require(combat:WaitForChild('AdminConfig'))
 local studio=RunService:IsStudio()
 -- Stats admin panel (Studio only): add or set emeralds. CharacterService validates the numbers;
 -- grants count as earned, and Robux emeralds are clamped so they never exceed the balance.
@@ -66,7 +67,8 @@ local function onDied(p,character)
  local s=Shop.states[p]
  down[p]={position=root and root.Position or Vector3.zero,wave=Shop.wave}
  p:SetAttribute('HoldRespawn',true)
- p:SetAttribute('DeathInfo',Http:JSONEncode({wave=Shop.wave,level=s.level,emeralds=emeraldsFor(Shop.wave),map='Pine Valley',
+ -- A test run (the admin panel was used) pays nothing, so the death screen shows 0 emeralds.
+ p:SetAttribute('DeathInfo',Http:JSONEncode({wave=Shop.wave,level=s.level,emeralds=Admin.isTestRun() and 0 or emeraldsFor(Shop.wave),map='Pine Valley',
   revivesLeft=math.max(0,Config.ReviveLimitPerRun-(revivesUsed[p] or 0))}))
  p:SetAttribute('RunDown',true)
  if livingInRun()==0 then Shop.pause() end

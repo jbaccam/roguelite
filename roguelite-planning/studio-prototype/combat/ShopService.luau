@@ -20,7 +20,7 @@ local serial=0
 local function token() serial+=1;return tostring(serial) end
 local run=RS:FindFirstChild('RogueliteRunState') or Instance.new('Folder')
 run.Name='RogueliteRunState';run.Parent=RS
-run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',1)
+run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',1);run:SetAttribute('AdminTestRun',nil)
 combat:SetAttribute('ZombiesEnabled',false)
 local remote=combat:WaitForChild('ShopAction')
 -- Players standing in the Studio lobby preview are not part of the arena run.
@@ -168,6 +168,8 @@ end
 function S.resetRun()
  S.wave=1;S.phase='Shop';S.paused=nil
  run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',1);run:SetAttribute('WaveEndsAt',nil);run:SetAttribute('Paused',nil)
+ -- A new run starts clean: not a test run (ADMIN_PANEL.md).
+ run:SetAttribute('AdminTestRun',nil)
  combat:SetAttribute('ZombiesEnabled',false);Shards.clear(false)
  for p in S.states do S.resetPlayer(p) end
 end

@@ -56,6 +56,9 @@ function UI.mount(playerGui, studioPreview)
  local timeText=label(timer,"Time","--:--",25,3,175,42,35)
  local phase=panel(timer,"Phase",43,51,139,31)
  local phaseText=label(phase,"Label","PRACTICE",8,2,123,26,17)
+ -- TEST RUN tag under the phase pill: the admin panel was used, so this run pays no rewards.
+ local testTag=panel(timer,"TestRun",57,86,111,26,"inset");testTag.Visible=false
+ label(testTag,"Label","TEST RUN",0,0,111,26,15,C.gold)
  -- Upper right: equipped weapons and collected items.
  local build=frame(hud,'Build',0,0,330,150);build.AnchorPoint=Vector2.new(1,0)
  local buildScale=make('UIScale',build,{Scale=1})
@@ -150,6 +153,9 @@ function UI.mount(playerGui, studioPreview)
   if label then timeText.Text=label
   elseif seconds then local s=math.max(0,math.ceil(seconds));timeText.Text=string.format("%02d:%02d",math.floor(s/60),s%60) else timeText.Text="--:--" end
   phaseText.Text=wave and ("WAVE "..tostring(wave)) or string.upper(phaseName or "PRACTICE")
+ end
+ function controller:SetTestRun(on)
+  testTag.Visible=on==true;gui:SetAttribute("TestRunShown",on==true)
  end
  local render
  local shopView
@@ -341,7 +347,8 @@ function UI.mount(playerGui, studioPreview)
   local data=shopView:snapshot();if not data then return end
   if data.phase~=lastPhase then
    lastPhase=data.phase
-   if data.phase=='Shop' then controller:ShowPreview('Shop') elseif data.phase=='Combat' then close() end
+   -- Sandbox (phase Practice) has no shop: close any open menu, as a wave start does.
+   if data.phase=='Shop' then controller:ShowPreview('Shop') elseif data.phase=='Combat' or data.phase=='Practice' then close() end
   end
  end
  shopView.state:GetAttributeChangedSignal('ShopSnapshot'):Connect(phaseChanged)

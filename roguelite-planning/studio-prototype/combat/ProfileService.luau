@@ -14,6 +14,7 @@ local Chests=require(combat:WaitForChild('ChestConfig'))
 local Weapons=require(combat:WaitForChild('WeaponCatalog'))
 local Money=require(combat:WaitForChild('MonetizationConfig'))
 local Skills=require(combat:WaitForChild('SkillTreeConfig'))
+local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed; this module is unsandboxed
 -- Redeemable codes (server-only so they cannot be read from the client). One use per account.
 local CODES={
  RELEASE={emeralds=300},
@@ -220,8 +221,9 @@ function P.resetSkills(player)
 end
 
 -- Run result: emeralds for the waves passed, best wave per map.
+-- A test run (the admin panel was used) grants nothing: no emeralds, wins or best waves.
 function P.recordRun(player,map,wavesPassed,emeralds)
- local d=P.profiles[player];if not d then return end
+ local d=P.profiles[player];if not d or Admin.isTestRun() then return end
  if d.vip then emeralds=math.floor(emeralds*(1+Money.VIPRunBonus)+.5) end
  d.emeralds+=emeralds
  if wavesPassed>(d.bestWaves[map] or 0) then d.bestWaves[map]=wavesPassed end

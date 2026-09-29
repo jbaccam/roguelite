@@ -100,7 +100,11 @@ RunService.Heartbeat:Connect(function(dt)
  local remaining=validTime and math.max(0,endsAt-workspace:GetServerTimeNow()) or nil
  -- Time is up but a boss is holding the wave open: the round ends when it falls.
  local bossLabel=remaining==0 and state:GetAttribute("BossHolding")==true and "BOSS" or nil
- view:SetTimer(remaining,validWave and math.floor(wave) or nil,phase,bossLabel)
+ -- Sandbox (phase Practice, from the admin panel): no countdown and no wave number.
+ local practice=state~=nil and state:GetAttribute("Phase")=="Practice"
+ view:SetTimer(not practice and remaining or nil,not practice and validWave and math.floor(wave) or nil,phase,practice and "SANDBOX" or bossLabel)
+ -- A run where the admin panel was used pays no rewards (ADMIN_PANEL.md).
+ view:SetTestRun(state~=nil and state:GetAttribute("AdminTestRun")==true)
  if activeHumanoid then view:SetStats(activeHumanoid.MaxHealth,activeHumanoid.WalkSpeed) end
  local combat=ReplicatedStorage:FindFirstChild('RogueliteCombat')
  local states=combat and combat:FindFirstChild('PlayerStates')
