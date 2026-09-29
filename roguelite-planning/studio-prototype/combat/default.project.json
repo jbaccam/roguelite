@@ -235,6 +235,9 @@
         "MapConfig": {
           "$path": "MapConfig.luau"
         },
+        "AdminConfig": {
+          "$path": "AdminConfig.luau"
+        },
         "PurchaseRequest": {
           "$className": "RemoteEvent",
           "$properties": {
