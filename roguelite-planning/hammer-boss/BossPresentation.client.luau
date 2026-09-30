@@ -85,9 +85,11 @@ Run.PreSimulation:Connect(function(dt)
   local chargeSpeed=npc:GetAttribute('BossChargeSpeed') or Motion.Charge.speed
   local run=charging and Motion.duration('ChargeStart');local runEnd=charging and run+(npc:GetAttribute('BossChargeLength') or 0)/chargeSpeed
   if death then clip,time='Death',now-death
-  elseif charging and age<=runEnd+.3 then
+  elseif charging and age<=runEnd+Motion.Charge.brake+.3 then
    if age<run then clip,time='ChargeStart',age
-   else clip,time='ChargeRun',Motion.chargeRunTime((math.min(age,runEnd)-run)*chargeSpeed)%Motion.duration('ChargeRun') end
+   elseif age<runEnd then clip,time='ChargeRun',Motion.chargeRunTime((age-run)*chargeSpeed)%Motion.duration('ChargeRun')
+   -- Brake: ChargeStart backwards, ending on the carry pose the Slam starts from.
+   else clip,time='ChargeBrake',run*(1-math.clamp((age-runEnd)/Motion.Charge.brake,0,1)) end
   elseif a and age and age>=0 and age<=a.duration and npc:GetAttribute('Attacking') then clip,time=kind,age
   elseif hit and now-hit<Motion.duration('Hit') then clip,time='Hit',now-hit
   else
@@ -98,7 +100,7 @@ Run.PreSimulation:Connect(function(dt)
    state.phase+=moving and math.min(distance/(Motion.Data.walkSpeed or 4.5),dt*BOSS_MAX_GAIT_RATE) or dt
    time=state.phase%Motion.duration(clip)
   end
-  local poses=Motion.sample(clip,time)
+  local poses=Motion.sample(clip=='ChargeBrake' and 'ChargeStart' or clip,time)
   if state.lastClip~=clip and state.lastPose and clip~='Death' then state.blendFrom=state.lastPose;state.blendStart=now end
   -- Ease out of the heavy walk during the attack's initial windup only.
   -- All contact frames still use the exact authoritative pose.

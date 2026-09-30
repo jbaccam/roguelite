@@ -1,0 +1,742 @@
+{
+ "carryPoseForearmHeadDepth_baseline": 0.07889600753784176,
+ "ChargeStart_hammerContactsByFrame": {},
+ "ChargeStart_forearmHeadDepthPerFrame": [
+  0.079,
+  0.034,
+  0.041,
+  0.032,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0
+ ],
+ "ChargeStart": {
+  "frames": 19,
+  "fps": 30,
+  "lastFrame": 18,
+  "checks": {
+   "contact": {
+    "worst": 5e-06,
+    "at": 12
+   },
+   "axial": {
+    "worst": 5e-06,
+    "at": 7
+   },
+   "bend": {
+    "worst": 29.495919,
+    "at": 3
+   },
+   "flexMin": {
+    "worst": 12.057226,
+    "at": 0
+   },
+   "flexMax": {
+    "worst": 129.515295,
+    "at": 8
+   },
+   "swivel": {
+    "worst": 74.999881,
+    "at": 0
+   },
+   "hingeAxis": {
+    "worst": 1e-06,
+    "at": 14
+   },
+   "armGap": {
+    "worst": 6e-06,
+    "at": 5
+   },
+   "forearmCore": {
+    "worst": 1.384289,
+    "at": 8
+   },
+   "shaftCore": {
+    "worst": 3.178728,
+    "at": 18
+   },
+   "headGround": {
+    "worst": 0.202784,
+    "at": 2
+   },
+   "kneeMin": {
+    "worst": 4.203503,
+    "at": 0
+   },
+   "kneeMax": {
+    "worst": 113.165063,
+    "at": 13
+   },
+   "kneeForwardDot": {
+    "worst": 0.585054,
+    "at": 14
+   },
+   "legGap": {
+    "worst": 5e-06,
+    "at": 4
+   },
+   "legLeg": {
+    "worst": 0.863174,
+    "at": 14
+   },
+   "hammerBodyInside": {
+    "worst": 0,
+    "at": 0
+   },
+   "hammerBodyMin": {
+    "worst": 0.531059,
+    "at": 3
+   },
+   "forearmHeadDepth": {
+    "worst": 0.078896,
+    "at": 0
+   },
+   "armLegMin": {
+    "worst": 0.657217,
+    "at": 3
+   }
+  },
+  "maxJointStepDegPerFrame": {
+   "value": 35.823,
+   "at": [
+    1,
+    "LeftLowerLeg"
+   ]
+  },
+  "maxWorldPartStepDegPerFrame": {
+   "value": 32.777,
+   "at": [
+    3,
+    "RightUpperArm"
+   ]
+  },
+  "jointStepPerFrame": [
+   23.06,
+   35.82,
+   29.44,
+   30.08,
+   29.33,
+   26.0,
+   16.44,
+   15.18,
+   21.2,
+   18.58,
+   21.24,
+   30.45,
+   30.83,
+   16.15,
+   24.67,
+   18.6,
+   18.09,
+   13.38
+  ]
+ },
+ "ChargeRun_hammerContactsByFrame": {},
+ "ChargeRun_forearmHeadDepthPerFrame": [
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0
+ ],
+ "ChargeRun": {
+  "frames": 17,
+  "fps": 30,
+  "lastFrame": 16,
+  "checks": {
+   "contact": {
+    "worst": 4e-06,
+    "at": 4
+   },
+   "axial": {
+    "worst": 4e-06,
+    "at": 1
+   },
+   "bend": {
+    "worst": 5.16839,
+    "at": 5
+   },
+   "flexMin": {
+    "worst": 15.761594,
+    "at": 7
+   },
+   "flexMax": {
+    "worst": 129.515371,
+    "at": 1
+   },
+   "swivel": {
+    "worst": 69.182176,
+    "at": 9
+   },
+   "hingeAxis": {
+    "worst": 1e-06,
+    "at": 12
+   },
+   "armGap": {
+    "worst": 6e-06,
+    "at": 9
+   },
+   "forearmCore": {
+    "worst": 1.380563,
+    "at": 5
+   },
+   "shaftCore": {
+    "worst": 2.893543,
+    "at": 9
+   },
+   "headGround": {
+    "worst": 1.141616,
+    "at": 12
+   },
+   "kneeMin": {
+    "worst": 40.604446,
+    "at": 8
+   },
+   "kneeMax": {
+    "worst": 128.990252,
+    "at": 2
+   },
+   "kneeForwardDot": {
+    "worst": 0.745342,
+    "at": 5
+   },
+   "legGap": {
+    "worst": 5e-06,
+    "at": 11
+   },
+   "legLeg": {
+    "worst": 0.916027,
+    "at": 4
+   },
+   "hammerBodyInside": {
+    "worst": 0,
+    "at": 0
+   },
+   "hammerBodyMin": {
+    "worst": 0.455129,
+    "at": 9
+   },
+   "forearmHeadDepth": {
+    "worst": 0,
+    "at": 0
+   },
+   "armLegMin": {
+    "worst": 1.059012,
+    "at": 4
+   }
+  },
+  "maxJointStepDegPerFrame": {
+   "value": 22.932,
+   "at": [
+    0,
+    "RightLowerLeg"
+   ]
+  },
+  "maxWorldPartStepDegPerFrame": {
+   "value": 22.924,
+   "at": [
+    2,
+    "LeftLowerLeg"
+   ]
+  },
+  "jointStepPerFrame": [
+   22.93,
+   18.73,
+   15.71,
+   17.92,
+   20.17,
+   20.54,
+   20.43,
+   12.07,
+   21.89,
+   18.22,
+   13.93,
+   17.68,
+   19.86,
+   19.74,
+   18.82,
+   13.38
+  ]
+ },
+ "ChargeStart_runtime120Hz": {
+  "samples": 73,
+  "checks": {
+   "contact": {
+    "worst": 0.028542,
+    "at": 38
+   },
+   "axial": {
+    "worst": 3e-06,
+    "at": 44
+   },
+   "bend": {
+    "worst": 29.743613,
+    "at": 13
+   },
+   "flexMin": {
+    "worst": 12.057262,
+    "at": 0
+   },
+   "flexMax": {
+    "worst": 129.993861,
+    "at": 30
+   },
+   "swivel": {
+    "worst": 75.000005,
+    "at": 1
+   },
+   "hingeAxis": {
+    "worst": 0.0,
+    "at": 23
+   },
+   "armGap": {
+    "worst": 3e-06,
+    "at": 44
+   },
+   "forearmCore": {
+    "worst": 1.384292,
+    "at": 32
+   },
+   "shaftCore": {
+    "worst": 3.178727,
+    "at": 72
+   },
+   "headGround": {
+    "worst": 0.202782,
+    "at": 8
+   },
+   "kneeMin": {
+    "worst": 4.203499,
+    "at": 0
+   },
+   "kneeMax": {
+    "worst": 113.16501,
+    "at": 52
+   },
+   "kneeForwardDot": {
+    "worst": 0.585053,
+    "at": 56
+   },
+   "legGap": {
+    "worst": 0.075159,
+    "at": 50
+   },
+   "legLeg": {
+    "worst": 0.863174,
+    "at": 56
+   },
+   "hammerBodyInside": {
+    "worst": 0,
+    "at": 0
+   },
+   "hammerBodyMin": {
+    "worst": 0.5179,
+    "at": 14
+   },
+   "forearmHeadDepth": {
+    "worst": 0.121868,
+    "at": 2
+   },
+   "armLegMin": {
+    "worst": 0.653412,
+    "at": 13
+   }
+  }
+ },
+ "ChargeRun_runtime120Hz": {
+  "samples": 65,
+  "checks": {
+   "contact": {
+    "worst": 0.000294,
+    "at": 10
+   },
+   "axial": {
+    "worst": 3e-06,
+    "at": 33
+   },
+   "bend": {
+    "worst": 5.168352,
+    "at": 20
+   },
+   "flexMin": {
+    "worst": 15.761319,
+    "at": 0
+   },
+   "flexMax": {
+    "worst": 129.520827,
+    "at": 34
+   },
+   "swivel": {
+    "worst": 69.182386,
+    "at": 36
+   },
+   "hingeAxis": {
+    "worst": 0.0,
+    "at": 53
+   },
+   "armGap": {
+    "worst": 4e-06,
+    "at": 62
+   },
+   "forearmCore": {
+    "worst": 1.380565,
+    "at": 20
+   },
+   "shaftCore": {
+    "worst": 2.893543,
+    "at": 36
+   },
+   "headGround": {
+    "worst": 1.141616,
+    "at": 48
+   },
+   "kneeMin": {
+    "worst": 40.604476,
+    "at": 32
+   },
+   "kneeMax": {
+    "worst": 128.990342,
+    "at": 8
+   },
+   "kneeForwardDot": {
+    "worst": 0.745341,
+    "at": 20
+   },
+   "legGap": {
+    "worst": 0.065523,
+    "at": 26
+   },
+   "legLeg": {
+    "worst": 0.915466,
+    "at": 50
+   },
+   "hammerBodyInside": {
+    "worst": 0,
+    "at": 0
+   },
+   "hammerBodyMin": {
+    "worst": 0.455128,
+    "at": 36
+   },
+   "forearmHeadDepth": {
+    "worst": 0,
+    "at": 0
+   },
+   "armLegMin": {
+    "worst": 1.059011,
+    "at": 16
+   }
+  }
+ },
+ "runtimeReproductionMaxError": 4.5623374621405064e-05,
+ "ChargeRunToSlam_blend": {
+  "phases": 16,
+  "samplesPerPhase": 8,
+  "checks": {
+   "contact": {
+    "worst": 0.102603,
+    "at": 78
+   },
+   "axial": {
+    "worst": 3e-06,
+    "at": 9
+   },
+   "bend": {
+    "worst": 38.815166,
+    "at": 42
+   },
+   "flexMin": {
+    "worst": 30.582292,
+    "at": 7
+   },
+   "flexMax": {
+    "worst": 127.894692,
+    "at": 8
+   },
+   "swivel": {
+    "worst": 75.000035,
+    "at": 126
+   },
+   "hingeAxis": {
+    "worst": 0.0,
+    "at": 17
+   },
+   "armGap": {
+    "worst": 2e-06,
+    "at": 2
+   },
+   "forearmCore": {
+    "worst": 2.565744,
+    "at": 74
+   },
+   "shaftCore": {
+    "worst": 2.695711,
+    "at": 73
+   },
+   "headGround": {
+    "worst": 0.945198,
+    "at": 98
+   },
+   "kneeMin": {
+    "worst": 4.154923,
+    "at": 62
+   },
+   "kneeMax": {
+    "worst": 102.719393,
+    "at": 16
+   },
+   "kneeForwardDot": {
+    "worst": 0.807468,
+    "at": 40
+   },
+   "legGap": {
+    "worst": 0.736684,
+    "at": 51
+   },
+   "legLeg": {
+    "worst": 0.916078,
+    "at": 72
+   },
+   "hammerBodyInside": {
+    "worst": 0,
+    "at": 0
+   },
+   "hammerBodyMin": {
+    "worst": 0.236019,
+    "at": 73
+   },
+   "forearmHeadDepth": {
+    "worst": 0.276133,
+    "at": 12
+   },
+   "armLegMin": {
+    "worst": 0.811045,
+    "at": 97
+   }
+  },
+  "maxJointStepDegPer30HzFrame": 201.151
+ },
+ "informational_RunToSlam_pivotAwareBlend": {
+  "note": "NOT the shipped runtime; simulation of a joint-pivot lerp (recommended BossMotion.blend change)",
+  "checks": {
+   "contact": {
+    "worst": 0.076636,
+    "at": 94
+   },
+   "axial": {
+    "worst": 3e-06,
+    "at": 9
+   },
+   "bend": {
+    "worst": 36.428196,
+    "at": 107
+   },
+   "flexMin": {
+    "worst": 30.582267,
+    "at": 7
+   },
+   "flexMax": {
+    "worst": 127.875818,
+    "at": 8
+   },
+   "swivel": {
+    "worst": 75.000011,
+    "at": 13
+   },
+   "hingeAxis": {
+    "worst": 0.0,
+    "at": 73
+   },
+   "armGap": {
+    "worst": 2e-06,
+    "at": 83
+   },
+   "forearmCore": {
+    "worst": 1.321999,
+    "at": 40
+   },
+   "shaftCore": {
+    "worst": 2.69571,
+    "at": 73
+   },
+   "headGround": {
+    "worst": 0.921687,
+    "at": 98
+   },
+   "kneeMin": {
+    "worst": 4.2035,
+    "at": 7
+   },
+   "kneeMax": {
+    "worst": 113.341565,
+    "at": 16
+   },
+   "kneeForwardDot": {
+    "worst": 0.807143,
+    "at": 40
+   },
+   "legGap": {
+    "worst": 0.415715,
+    "at": 11
+   },
+   "legLeg": {
+    "worst": 0.910502,
+    "at": 11
+   },
+   "hammerBodyInside": {
+    "worst": 0,
+    "at": 0
+   },
+   "hammerBodyMin": {
+    "worst": 0.236019,
+    "at": 73
+   },
+   "forearmHeadDepth": {
+    "worst": 0.338749,
+    "at": 3
+   },
+   "armLegMin": {
+    "worst": 0.700558,
+    "at": 98
+   }
+  },
+  "wouldFail": [
+   "RunToSlamPivotBlend:bend=36.4282@107",
+   "RunToSlamPivotBlend:forearmHeadDepth=0.3387@3"
+  ],
+  "maxJointStepDegPer30HzFrame": 90.653
+ },
+ "referenceMaxJointStepDegPerFrame_existingClips": {
+  "Walk": 16.658,
+  "Slam": 66.828,
+  "Swing": 60.485
+ },
+ "referenceWalkToSlamBlend": {
+  "contact": 0.08324,
+  "bend": 20.03725,
+  "legGap": 0.87361,
+  "swivel": 74.99998
+ },
+ "referenceRuntime120Hz_existingClips": {
+  "Walk": {
+   "contact": 0.01773,
+   "bend": 18.14853,
+   "legGap": 0.02107
+  },
+  "Slam": {
+   "contact": 0.07882,
+   "bend": 33.32839,
+   "legGap": 0.00458
+  },
+  "Swing": {
+   "contact": 0.3999,
+   "bend": 35.47702,
+   "legGap": 0.29495
+  },
+  "Spin": {
+   "contact": 0.30563,
+   "bend": 37.54063,
+   "legGap": 0.03859
+  }
+ },
+ "plantedFeet": {
+  "run": 5.3e-06,
+  "runToeHeight": 1.9e-06,
+  "start": 5.4e-06,
+  "startToeHeight": 1.9e-06,
+  "toeTravelPerContact": 3.4133333,
+  "note": "ChargeRun: planted toe (and heel while flat) moves backward exactly chargeSpeed/30 per frame relative to the root; ChargeStart plays in place, so planted toes must not move at all."
+ },
+ "joins": {
+  "startLast_vs_runFirst_maxComponentDiff": 0.0,
+  "runLast_vs_runFirst_maxComponentDiff": 0.0,
+  "startFirst_vs_idleFirst_maxComponentDiff": 0.0,
+  "runSeamJointStep": {
+   "intoSeam(15->16)": 13.377,
+   "outOfSeam(0->1)": 22.932,
+   "runMedian": 18.821,
+   "runMax": 22.932
+  },
+  "startToRunJointStep": {
+   "start(17->18)": 13.377,
+   "run(0->1)": 22.932
+  },
+  "angularAccelDegPerFrame2": {
+   "runSeam": 21.405,
+   "runInteriorMax": 23.005,
+   "startToRunJoin": 31.576,
+   "startInteriorMax": 32.255
+  }
+ },
+ "existingUnchanged": {
+  "clipData": {
+   "Idle": true,
+   "Walk": true,
+   "Slam": true,
+   "Swing": true,
+   "Spin": true,
+   "Hit": true,
+   "Death": true
+  },
+  "clipLuauBytes": {
+   "Death.luau": true,
+   "Hit.luau": true,
+   "Idle.luau": true,
+   "Slam.luau": true,
+   "Spin.luau": true,
+   "Swing.luau": true,
+   "Walk.luau": true
+  },
+  "blendActions": {
+   "Idle": true,
+   "Walk": true,
+   "Slam": true,
+   "Swing": true,
+   "Spin": true,
+   "Hit": true,
+   "Death": true
+  },
+  "metadataOtherThanChargeSpeed": true,
+  "actionsInBlend": [
+   "Boss_ChargeRun",
+   "Boss_ChargeStart",
+   "Boss_Death",
+   "Boss_Hit",
+   "Boss_Idle",
+   "Boss_Slam",
+   "Boss_Spin",
+   "Boss_Swing",
+   "Boss_Walk"
+  ]
+ },
+ "chargeSpeed": 16.0,
+ "failures": [
+  "RunToSlamBlend:contact=0.1026@78",
+  "RunToSlamBlend:bend=38.8152@42",
+  "RunToSlamBlend:forearmHeadDepth=0.2761@12"
+ ]
+}

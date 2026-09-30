@@ -61,5 +61,23 @@
     "minimumBendSideDot": 0.2588209956884384,
     "maxElbowStep": 1.6907043322073276,
     "maxSwivelStepDegrees": 74.99990143449567
+  },
+  "ChargeStart": {
+    "minSignedFlexion": 12.057226220728245,
+    "maxSignedFlexion": 129.51529461986715,
+    "maxHingeAxisMismatch": 1.2828852683324149e-06,
+    "maxJointGap": 5.662127536314925e-06,
+    "minimumBendSideDot": 0.2588209956884384,
+    "maxElbowStep": 1.0928220490934828,
+    "maxSwivelStepDegrees": 20.000073258020592
+  },
+  "ChargeRun": {
+    "minSignedFlexion": 15.761593741096094,
+    "maxSignedFlexion": 129.51537056621459,
+    "maxHingeAxisMismatch": 1.0532496599598105e-06,
+    "maxJointGap": 6.441991033994742e-06,
+    "minimumBendSideDot": 0.3553977310657501,
+    "maxElbowStep": 0.239711486408487,
+    "maxSwivelStepDegrees": 13.429910974218167
   }
 }

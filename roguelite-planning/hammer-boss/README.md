@@ -2,6 +2,49 @@
 
 The current deliverable is **`finished/HammerBoss.blend`**. Earlier files in this folder and `reference-rebuild/` are authoring drafts, not the installed boss.
 
+## Charge clips — 2026-09-30
+
+Two new clips for a charge move. They are authored in Blender and not yet installed or tested in Studio.
+- **ChargeStart**: 30 FPS, lastFrame 18 (0.6 s), plays once in place. It starts on Idle frame 0, the shared carry pose. He drops about 1 stud with a forward lean of about 30° and tucks his head. The left foot steps back into a loaded stance. The hammer swings down and back into a low two-handed carry on his right side, with the head behind and outside the right hip. It overshoots slightly behind, then settles. The right heel rolls up and the drive step lands on ChargeRun's first contact. The last frame is identical to ChargeRun frame 0.
+- **ChargeRun**: 30 FPS, 16-frame loop (0.533 s, two steps). The last frame equals the first. The body leans 25°, the hips and shoulders counter-rotate (±7° and ±12°), and the pelvis bobs 0.5 studs. Feet land flat, roll the heel up about the toe, and push off; each foot is down 40% of the cycle. The hammer head bounces a little after the body.
+- **`chargeSpeed` = 16.0** studs/s in unscaled BossData units, the same convention as `walkSpeed`. A planted toe travels 3.41 studs per contact. BossMotion scales `walkSpeed` by 1.15, and `chargeSpeed` needs the same scaling (18.4 studs/s in game). ChargeRun cadence should follow ground distance, as Walk does.
+- Hands stay on the carry grips (2.72 / 8.05). During the run each hand stays within 24° of its carry roll on the shaft, so the runtime blend into Slam keeps the grip as close as it can.
+- Built by `charge_motion.py` (`CHARGE_STAGE=design|build`), which reuses `elbow_hinge`/`hinge_frames` from `wrist_motion.py`. Checked by `validate_charge.py` → `finished/charge-checks.json`. `charge_runtime.py` re-implements `BossMotion.sample/blend/constrainArms` for those checks and for the review video. Review: `finished/attack-videos/Charge_Review.mp4` (side + 3/4 front, normal then half speed) and `Charge_Strip.png`. The previous data is backed up in `before-charge/`.
+
+**Checks passed:** every authored frame, plus 120 Hz runtime-interpolated samples.
+
+| Check | ChargeStart | ChargeRun |
+| --- | --- | --- |
+| Hand-on-shaft drift (authored / 120 Hz) | 0.000005 / 0.029 | 0.000006 / 0.0003 |
+| Elbow flexion (limit 12–130°) | 12.06–129.5° | 15.8–129.5° |
+| Max wrist bend (limit 35°) | 29.5° | 5.2° |
+| Max shoulder swivel (limit 75°) | 75.0° (frame 0 = Idle) | 69.2° |
+| Shaft torso-core clearance, squared (min 1) | 3.18 | 2.89 |
+| Hammer head above ground | 0.20 studs | 1.14 studs |
+| Knee angle, forward only | 4.2–113° | 40.6–129° |
+| Hammer/body penetration | 0 vertices | 0 vertices |
+
+- Planted-foot drift: under 0.00001 studs per frame in both clips. In ChargeRun the planted foot moves back at exactly chargeSpeed; in ChargeStart the planted feet do not move.
+- Max joint rotation per frame: 35.8° in ChargeStart (left knee as the back-step lifts) and 22.9° in ChargeRun. For comparison: Walk 16.7°, Slam 66.8°, Swing 60.5°. The loop seam and the ChargeStart→ChargeRun join show no spike.
+- Runtime reproduces the authored frames within 0.00005.
+- `validate_elbows.py` passes on both clips, with swivel steps ≤ 20°/frame.
+- The existing seven clips are unchanged: clip data, `clips/*.luau` bytes, FBXs and the Blender action keys all match the backup.
+
+**Failed: runtime ChargeRun→Slam blend.** This is BossMotion's 0.12 s blend, simulated from every run phase at 60 Hz:
+- Grip drift reaches 0.10 studs (limit 0.08).
+- Wrist bend reaches 38.8°.
+- The forearm grazes the hammer head by up to 0.28 studs.
+- A 60 Hz sample can jump by up to 100°.
+
+Cause: `M.blend` lerps each part's delta CFrame about the root origin, so `constrainArms` re-derives an elbow swivel that snaps to its ±75° clamp. The carry pose has both elbows forward at −67°/+75°; the trailing carry has them back. The same simulation for the existing Walk→Slam blend also clamps (grip drift 0.083 studs, leg joint gaps 0.87 studs). Changing only the clip data did not fix it. Keeping the elbows on the carry side made the run's wrists worse and did not fix the blend. A simulated joint-pivot lerp reduced the jump to 45° per sample, but elbows still clamp. It needs a runtime fix: a longer or pivot-aware arm blend, or a dedicated transition. Leg joints also separate briefly (up to 0.74 studs) during that blend, as they do for Walk.
+
+Accepted trade-offs:
+- The carry grip sits 2.72 studs from the head, so the head can only trail just behind and well outside the right hip (6.2 studs out). It reads as a low carry at his right side rather than a ground drag.
+- ChargeStart frames 2–3 reach a 29.5° right-wrist bend while the elbow turns from the carry's forward pole to the rear pole.
+- The server's instant start to chargeSpeed puts a velocity step on the first contact. The foot is world-continuous; ChargeStart lands it pulling back at half speed to soften this.
+
+Not tested: Studio import of the FBXs, runtime playback, server motion, multiplayer.
+
 The rebuilt model is 11.92 studs tall, with a 9.05-stud handle. Carry grips are 5.33 studs apart; attack grips slide to 6.55 and 8.05 along the shaft, 1.50 studs apart near its end. It has a projecting belly, torn cream shirt, suspenders, charcoal trousers, rounded hips and seat, closed grips, and a beveled iron hammer. Enlarged traps/back blend into the unchanged shoulders. Green skin retains the Tank family palette; the boss now has its own modeled scarred brow, narrowed eye, and broken-tooth snarl. It is a reconstructed 3D interpretation of the supplied single view; hidden surfaces are authored rather than recovered from that image.
 
 ## Extended attack paths — September 24, 2026

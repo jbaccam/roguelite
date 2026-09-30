@@ -72,9 +72,11 @@ end
 function M.duration(name) return clips[name].duration end
 -- Charge (2026-09-30): runs down a player who kites from range. ChargeStart plays in place, then
 -- the server drives the body in a straight line at `speed` while ChargeRun loops (its cadence from
--- ground covered: D.chargeSpeed studs per clip second), and the run ends in the normal Slam.
+-- ground covered: D.chargeSpeed studs per clip second). He then brakes for `brake` seconds by
+-- playing ChargeStart backwards (run pose -> carry pose, every frame validated) and slams. A direct
+-- ChargeRun->Slam blend flips the elbows (forward in the carry, back in the run) and snaps.
 -- Anyone the body passes within `halfWidth` takes `damage` and is knocked down.
-M.Charge={minRange=24,maxRange=70,speed=34,maxLength=55,stopShort=6,halfWidth=4.5,damage=24,knockdown=.6,cooldown=6}
+M.Charge={minRange=24,maxRange=70,speed=30,maxLength=55,stopShort=6,halfWidth=4.5,damage=24,knockdown=.6,cooldown=6,brake=.3}
 M.hasCharge=clips.ChargeStart~=nil and clips.ChargeRun~=nil
 function M.chargeRunTime(travelled) return travelled/(D.chargeSpeed or M.Charge.speed) end
 -- Interpolate the held end of the tool, then the hands in tool space.

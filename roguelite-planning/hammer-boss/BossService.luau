@@ -110,7 +110,7 @@ function B.charge(npc,s,target,now)
  local ground=workspace:Raycast(root.Position+Vector3.yAxis*8,-Vector3.yAxis*30,params);if not ground then return false end
  local cf=CFrame.lookAt(root.Position,root.Position+dir);root.CFrame=cf
  local run=Motion.duration('ChargeStart')
- s.attack={kind='Charge',start=now,cf=cf,dir=dir,length=length,run=run,finish=run+length/C.speed,travelled=0,hits={}}
+ s.attack={kind='Charge',start=now,cf=cf,dir=dir,length=length,run=run,finish=run+length/C.speed+C.brake,travelled=0,hits={}}
  s.nextCharge=now+C.cooldown
  npc:SetAttribute('BossAttack','Charge');npc:SetAttribute('BossStart',now);npc:SetAttribute('BossFrame',cf);npc:SetAttribute('BossGroundY',ground.Position.Y)
  npc:SetAttribute('BossChargeLength',length);npc:SetAttribute('BossChargeSpeed',C.speed)
@@ -144,7 +144,7 @@ local function stepCharge(npc,s,now,root)
   A.travelled=travelled
  end
  if age>=A.finish then
-  -- The run ends in a slam at the stopping point, facing whoever is nearest if in reach.
+  -- After the brake, a slam at the stopping point, facing whoever is nearest if in reach.
   s.attack=nil;npc:SetAttribute('Attacking',false)
   local target,dist=nil,Motion.reach('Slam')+3
   for _,p in Players:GetPlayers() do
