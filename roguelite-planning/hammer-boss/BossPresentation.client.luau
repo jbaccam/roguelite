@@ -3,7 +3,7 @@ local Run=game:GetService('RunService')
 local Debris=game:GetService('Debris')
 local Motion=require(game.ReplicatedStorage:WaitForChild('RogueliteCombat'):WaitForChild('BossMotion'))
 local tracked={}
-local BOSS_MAX_GAIT_RATE=1.8 -- Walk clip seconds per real second
+local BOSS_MAX_GAIT_RATE=2.4 -- Walk clip seconds per real second (chase outpaces the authored stride)
 local red=Color3.fromRGB(224,45,49)
 local function part(parent,name,size,cf,transparency)
  local p=Instance.new('Part');p.Name=name;p.Size=size;p.CFrame=cf;p.Anchored=true;p.CanCollide=false;p.CanQuery=false;p.CanTouch=false;p.CastShadow=false
@@ -51,7 +51,8 @@ local function impact(npc,kind)
  local e=Instance.new('ParticleEmitter');e.Texture='rbxasset://textures/particles/smoke_main.dds';e.Color=ColorSequence.new(Color3.fromRGB(152,134,107));e.Rate=0
  e.Lifetime=NumberRange.new(.35,.75);e.Speed=NumberRange.new(8,14);e.SpreadAngle=Vector2.new(85,85);e.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,.5),NumberSequenceKeypoint.new(1,2.2)})
  e.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.30),NumberSequenceKeypoint.new(1,1)});e.Parent=host;e:Emit(22)
- local s=Instance.new('Sound');s.SoundId='rbxasset://sounds/impact_explosion_03.mp3';s.Volume=.55;s.PlaybackSpeed=.7;s.RollOffMaxDistance=75;s.Parent=host;s:Play()
+ local s=Instance.new('Sound');s.SoundId='rbxasset://sounds/impact_explosion_03.mp3';s.Volume=.55;s.PlaybackSpeed=.7;s.RollOffMaxDistance=75
+ s.SoundGroup=game:GetService('SoundService'):FindFirstChild('RogueliteSFX');s.Parent=host;s:Play() -- Settings SFX slider
  local radius=Motion.Attacks.Slam.radius*.85
  for i=1,12 do local angle=i*math.pi/6;local p=part(host,'ImpactChip',Vector3.new(.25,.14,.45),CFrame.new(pos+Vector3.new(math.sin(angle)*radius,.03,math.cos(angle)*radius))*CFrame.Angles(0,angle,0),.12);p.Material=Enum.Material.Slate;p.Color=Color3.fromRGB(137,125,100) end
  Debris:AddItem(host,1.0)

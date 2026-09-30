@@ -214,13 +214,44 @@ function D.aftershock(m)
  end
 end
 
+-- Fireball ------------------------------------------------------------------------------------
+-- The same inhale and throat glow as the breath, then a mouth flash as the volley leaves. Each ball
+-- is a white-hot core in a pulsing flame shell with a fire-and-smoke wake; where it stops it bursts
+-- into a flame jet and embers.
+local function spit(ctx)
+ local m=ctx.points(ctx.def.point,math.max(C.age(ctx),ctx.attack.impact));if not C.near(m) then return end
+ local s=ctx.scale
+ C.star(m,WHITE_HOT,5*s,.18);C.light(m,FLAME,16*s,3,.3)
+ C.emit(m,up,'Flame',{emit=14,Speed={10,18},SpreadAngle=60,Lifetime={.25,.4},Size=ns({0,1.5*s},{1,3.5*s}),Color=cs({0,WHITE_HOT},{.4,FLAME},{1,DEEP}),Transparency=ns({0,.2},{1,1}),LightEmission=.9})
+ C.cue('fire_breath',m,.6,1.25)
+end
+function D.projectile(ctx,i)
+ local r=ctx.def.radius or 2
+ local core=K.ball(C.folder(),'BossVfxFireball',r*1.4,HOT,0,Enum.Material.Neon)
+ local shell=K.ball(core,'BossVfxFireballShell',r*2.1,FLAME,.45,Enum.Material.Neon) -- a child, so it goes with the core
+ local tail=C.tail(core,(ctx.def.life or 2)+1.5,.8)
+ K.trail(tail,r*1.4,.3,FLAME,DEEP,.2)
+ C.fx(tail,'Flame',{Rate=60,Speed={1,3},SpreadAngle=180,Lifetime={.3,.45},Size=ns({0,r*1.3},{1,r*.3}),Color=cs({0,HOT},{.5,FLAME},{1,DEEP}),Transparency=ns({0,.15},{1,1}),LightEmission=.9,Rotation={0,360},RotSpeed={-90,90}})
+ C.fx(tail,'SmokePuff',{Rate=8,Speed={.5,1.5},SpreadAngle=180,Lifetime={.8,1.1},Size=ns({0,r*.8},{1,r*2}),Color=SMOKE,Transparency=ns({0,.5},{1,1}),LightInfluence=.6,Rotation={0,360}})
+ local light=Instance.new('PointLight');light.Color=FLAME;light.Range=12;light.Brightness=2;light.Shadows=false;light.Parent=tail
+ local t=math.random()+i
+ return core,function(dt)
+  t+=dt;shell.CFrame=core.CFrame;shell.Size=Vector3.one*r*2.1*(1+math.sin(t*25)*.08)
+ end,function(pos)
+  if not C.near(pos) then return end
+  C.star(pos,HOT,r*3,.18);C.light(pos,FLAME,r*6,3,.35)
+  jet(pos,6,r*1.2);embers(pos,14,{10,20},60,.45)
+  local now=os.clock();if now-(ctx.fireballPop or 0)>.12 then ctx.fireballPop=now;C.cue('lava_hiss',pos,.35,1.3) end
+ end
+end
+
 function D.windup(ctx)
  local k=ctx.kind
- if k=='FireBreath' then inhale(ctx);throat(ctx) elseif k=='TailWhip' then coil(ctx);tail(ctx) elseif k=='FrontStomp' then rear(ctx) end
+ if k=='FireBreath' or k=='Fireball' then inhale(ctx);throat(ctx) elseif k=='TailWhip' then coil(ctx);tail(ctx) elseif k=='FrontStomp' then rear(ctx) end
 end
 function D.impact(ctx)
  local k=ctx.kind
- if k=='FireBreath' then throat(ctx);breath(ctx) elseif k=='TailWhip' then tail(ctx);whip(ctx) elseif k=='FrontStomp' then stomp(ctx) end
+ if k=='FireBreath' then throat(ctx);breath(ctx) elseif k=='Fireball' then throat(ctx);spit(ctx) elseif k=='TailWhip' then tail(ctx);whip(ctx) elseif k=='FrontStomp' then stomp(ctx) end
 end
 -- The breath and the tail run on their own controllers; active only starts them if impact was missed.
 function D.active(ctx,age)

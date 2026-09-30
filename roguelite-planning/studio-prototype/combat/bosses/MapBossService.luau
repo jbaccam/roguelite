@@ -8,6 +8,7 @@ local Tags=game:GetService('CollectionService')
 local Http=game:GetService('HttpService')
 local combat=game.ReplicatedStorage:WaitForChild('RogueliteCombat')
 local Shapes=require(combat:WaitForChild('MapBossShapes'))
+local Rules=require(game.ReplicatedStorage:WaitForChild('RunSetupRules'))
 local flat=Shapes.flat
 local M={states={}}
 
@@ -136,7 +137,7 @@ end
 -- One hit: line of sight from `from`, then CharacterService applies armor, dodge and blocks.
 local function hit(npc,def,e,from,params,source)
  if workspace:Raycast(from,e.root.Position-from,params) then return false end
- local actual=Characters.contact(e.player,def.damage)
+ local actual=Characters.contact(e.player,def.damage*(npc:GetAttribute('BossDamageScale') or 1))
  npc:SetAttribute('BossHits',(npc:GetAttribute('BossHits') or 0)+1);npc:SetAttribute('LastBossDamage',actual)
  if def.knockdown and actual>0 then knock:FireClient(e.player,source,def.knockdown) end
  return true
@@ -207,7 +208,10 @@ function M.spawn(id,cf,practice)
  local root=npc.PrimaryPart;local h=npc:FindFirstChildOfClass('Humanoid')
  if not root or not h then npc:Destroy();return nil end
  h.HipHeight=math.max(0,T.rootHeight-root.Size.Y*.5)
- h.MaxHealth=def.health;h.Health=def.health;h.WalkSpeed=def.chaseSpeed
+ -- Difficulty and player count scale health; difficulty scales every hit (see hit).
+ local hpScale,damageScale=Rules.bossScale(combat:GetAttribute('RunDifficulty'),#Players:GetPlayers())
+ h.MaxHealth=math.ceil(def.health*hpScale);h.Health=h.MaxHealth;h.WalkSpeed=def.chaseSpeed
+ npc:SetAttribute('BossDamageScale',damageScale)
  npc:SetAttribute('BossSpawnedAt',workspace:GetServerTimeNow())
  npc:SetAttribute('IsBoss',true);npc:SetAttribute('IsMapBoss',true);npc:SetAttribute('MapBossId',id);npc:SetAttribute('BossName',def.name);npc:SetAttribute('ZombieType',id)
  npc:SetAttribute('ContactDamage',0);npc:SetAttribute('ContactRange',0);npc:SetAttribute('BaseMoveSpeed',h.WalkSpeed)

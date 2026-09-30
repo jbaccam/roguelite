@@ -25,6 +25,13 @@ R.Difficulties={
 }
 R.DifficultyIndex={};for i,d in R.Difficulties do R.DifficultyIndex[d.id]=d end
 function R.difficulty(id) return R.DifficultyIndex[id] or R.Difficulties[1] end
+-- Bosses: health x the difficulty's hp x (1 + BossPlayerHp per extra player); damage x its damage.
+-- Normal solo is the authored number (a 2-player Normal Hammer: 24,000 x 1.75 = 42,000).
+R.BossPlayerHp=.75
+function R.bossScale(id,players)
+ local d=R.difficulty(id)
+ return d.hp*(1+R.BossPlayerHp*math.max(0,(players or 1)-1)),d.damage
+end
 -- Saved win / best-wave key: Normal keeps the plain map id (older saves stay valid).
 function R.runKey(mapId,diff) return (diff==nil or diff=='Normal') and mapId or mapId..'/'..diff end
 R.MapIndex={};for i,m in R.Maps do R.MapIndex[m.id]=i end

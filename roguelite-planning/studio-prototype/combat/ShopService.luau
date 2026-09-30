@@ -56,13 +56,20 @@ function S.prepareUpgrades(p)
  for _,offer in s.upgradeOffers do offer.token=token();offer.new=(s.upgradeBonuses[offer.id] or 0)==0 end
  s.upgradeToken=token();s.upgradeRerolls=0
 end
+-- The combat HUD reads these attributes directly. Pickups do not change shop
+-- offers, passives or equipped weapons, so they must not rebuild the full snapshot.
+function S.publishProgress(p)
+ local s=S.states[p];if not s or not Characters.states[p] then return end
+ local state=slots(p)
+ state:SetAttribute('Shards',s.shards);state:SetAttribute('BaggedShards',s.baggedShards)
+ state:SetAttribute('RunLevel',s.level);state:SetAttribute('RunXP',s.xp)
+ state:SetAttribute('RunXPRequired',XP.required(s.level))
+ state:SetAttribute('PendingLevelUps',s.pendingLevels)
+end
 function S.publish(p,message)
  local s=S.states[p];if not s or not Characters.states[p] then return end
  local data={pendingLevels=s.pendingLevels,upgradeOffers=s.upgradeOffers,upgradeToken=s.upgradeToken,upgradeRerolls=s.upgradeRerolls,upgradeRerollPrice=E.reroll(S.wave,s.upgradeRerolls),freeRerolls=s.freeRerolls,freeUpgradeRerolls=s.freeUpgradeRerolls,baggedShards=s.baggedShards,level=s.level,shards=s.shards,wave=S.wave,phase=S.phase,rerolls=s.rerolls,rerollPrice=E.reroll(S.wave,s.rerolls),offers=s.offers,items=s.items,weapons=owned(p),ready=s.ready,revision=s.revision,message=message or s.message or '',modifier=E.modifier(Characters.states[p].stats),debug=RunService:IsStudio() and E.DEBUG_CURRENCY_ENABLED}
- s.message=data.message;slots(p):SetAttribute('Shards',s.shards);slots(p):SetAttribute('BaggedShards',s.baggedShards)
- slots(p):SetAttribute('RunLevel',s.level);slots(p):SetAttribute('RunXP',s.xp)
- slots(p):SetAttribute('RunXPRequired',XP.required(s.level))
- slots(p):SetAttribute('PendingLevelUps',s.pendingLevels)
+ s.message=data.message;S.publishProgress(p)
  slots(p):SetAttribute('ShopSnapshot',Http:JSONEncode(data))
 end
 local function reprice(p)
@@ -89,8 +96,9 @@ local function choose(pool,p,wantWeapon)
    if ownedIds[entry.weaponId] then table.insert(same,entry) end
    if ownedHomes[Weapons.ById[entry.weaponId].home] then table.insert(sameClass,entry) end
   end
-  if n<.20 and #same>0 then pool=same
-  elseif n<.35+E.classBonus(S.wave) and #sameClass>0 then pool=sameClass end
+  -- 10% an owned weapon (duplicates merge up a tier), 15% one from an owned weapon's class.
+  if n<.10 and #same>0 then pool=same
+  elseif n<.25+E.classBonus(S.wave) and #sameClass>0 then pool=sameClass end
  elseif rng:NextNumber()<.05 then
   local tags=wanted[cs.class] or {}
   local matched={}
@@ -500,7 +508,7 @@ function S.creditShards(p,amount,pickedUp)
   local level,xp,gained=XP.add(s.level,s.xp,math.min(1000000,total*XP.XP_PER_SHARD))
   s.level=level;s.xp=xp;s.pendingLevels+=gained
  end
- S.publish(p);return true
+ S.publishProgress(p);return true
 end
 Shards.configure(Characters,function() return S.phase=='Combat' end,S.creditShards)
 Hearts.configure(Characters)

@@ -7,9 +7,12 @@ local Motion=require(combat:WaitForChild('BossMotion'))
 local Characters=require(script.Parent.CharacterService)
 local Death=require(combat.ZombieDeath)
 local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed; this module is unsandboxed
+local Rules=require(game.ReplicatedStorage:WaitForChild('RunSetupRules'))
 local B={states={}}
--- Wave chase speed: well under the 24 studs/s player base, fast enough to close gaps.
-local CHASE_SPEED=15
+-- Wave chase speed: under the 24 studs/s player base but closing; the charge catches kiters.
+local CHASE_SPEED=18
+-- Normal, one player; RunSetupRules.bossScale adds difficulty and player count.
+local HEALTH=24000
 local lastPracticeRequest=-math.huge
 function B.practice(player,action)
  -- Developers only (the admin panel), in Studio and on live servers; CharacterService checks too.
@@ -92,6 +95,8 @@ function B.spawn(cf,practice)
  local folder=workspace:FindFirstChild('RogueliteEnemies');if not folder then return nil end
  local npc=template:Clone();npc.Name='HammerBoss';Motion.prepare(npc);npc:PivotTo(cf);npc:SetAttribute('BossPractice',practice==true)
  local root=npc.PrimaryPart;local h=npc.Humanoid;h.WalkSpeed=CHASE_SPEED
+ local hpScale,damageScale=Rules.bossScale(combat:GetAttribute('RunDifficulty'),#Players:GetPlayers())
+ h.MaxHealth=math.ceil(HEALTH*hpScale);h.Health=h.MaxHealth;npc:SetAttribute('BossDamageScale',damageScale)
  npc:SetAttribute('IsBoss',true);npc:SetAttribute('IsHammerBoss',true);npc:SetAttribute('ZombieType','HammerBoss')
  npc:SetAttribute('ContactDamage',0);npc:SetAttribute('ContactRange',0);npc:SetAttribute('BaseMoveSpeed',h.WalkSpeed)
  for name in Motion.Data.parts do
@@ -120,7 +125,7 @@ local function damage(npc,s,time)
    if kind=='Slam' then local delta=pr.Position-center;hit=Vector2.new(delta.X,delta.Z).Magnitude<=a.radius and math.abs(delta.Y)<=6 end
    if hit and not workspace:Raycast(attack.cf.Position,pr.Position-attack.cf.Position,exclusions(npc)) then
     attack.hits[p]=true -- consume even when armor/dodge/first-hit block prevents damage
-    local actual=Characters.contact(p,a.damage)
+    local actual=Characters.contact(p,a.damage*(npc:GetAttribute('BossDamageScale') or 1))
     npc:SetAttribute('BossHits',(npc:GetAttribute('BossHits') or 0)+1);npc:SetAttribute('LastBossDamage',actual)
    end
   end

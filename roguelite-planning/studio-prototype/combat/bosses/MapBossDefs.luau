@@ -6,6 +6,8 @@
 --   generated timing already scaled (root height, footprint, stride, sampled points), so the server
 --   hit tests, the client warnings and the effects all read the scaled boss. Distances written
 --   below (radius, length, range...) are final studs for the scaled boss.
+-- health: Normal, one player. MapBossService multiplies it by the run difficulty and the player
+--   count (RunSetupRules.bossScale), and boss damage by the difficulty's damage.
 -- stop: optional chase hold-off (flat studs, centre to player); default min(8 x scale, footprint) + 3.
 -- rate: attack clip playback speed. D.timing(id) divides that attack's times by it, and the client
 --   plays the clip at age * rate. Every warning starts the moment the boss commits (warnStart 0).
@@ -18,38 +20,40 @@ local D={}
 D.Order={'KingCrab','Pharaoh','FrostCyclops','Dragon'}
 D.ENRAGE_AT=.5
 D.FIRST_ATTACK=1.2 -- seconds after spawn before the first attack
-D.KingCrab={anim='king-crab',name='Giant King Crab',health=2400,scale=1.4,chaseSpeed=17,glowColor=nil,deathSeconds=nil,
+D.KingCrab={anim='king-crab',name='Giant King Crab',health=28000,scale=1.4,chaseSpeed=22,glowColor=nil,deathSeconds=nil,
  enrage={cooldown=.6,chase=3,extra=4,follow=2},
  attacks={
   ClawCrush={clip='ClawCrush',rate=1.3,range={0,20},cooldown=1,damage=28,shape='circle',point='ClawImpact',radius=9,
    follow={radius=5.5,delay=.8,maxTargets=4,range=48,damage=18}},
-  SidewaysRush={clips={'RushStart','RushLoop','RushEnd'},rate=1.25,range={8,52},cooldown=1.4,damage=24,shape='lane',length=50,width=12,speed=42},
-  BubbleBarrage={clip='BubbleBarrage',rate=1.2,range={10,46},cooldown=1.1,damage=10,shape='projectiles',point='BubbleOrigin',count=13,spread=math.rad(52),speed=26,radius=2,life=2.6,perPlayer=2},
+  SidewaysRush={clips={'RushStart','RushLoop','RushEnd'},rate=1.25,range={8,70},cooldown=1.4,damage=24,shape='lane',length=70,width=12,speed=42},
+  BubbleBarrage={clip='BubbleBarrage',rate=1.2,range={10,72},cooldown=1.1,damage=10,shape='projectiles',point='BubbleOrigin',count=13,spread=math.rad(52),speed=30,radius=2,life=2.6,perPlayer=2},
  },order={'ClawCrush','BubbleBarrage','SidewaysRush','ClawCrush','SidewaysRush','BubbleBarrage'}}
-D.Pharaoh={anim='pharaoh',name='The Pharaoh',health=3000,scale=1.4,chaseSpeed=15,glowColor=Color3.fromRGB(120,235,255),
+D.Pharaoh={anim='pharaoh',name='The Pharaoh',health=32000,scale=1.4,chaseSpeed=20,glowColor=Color3.fromRGB(120,235,255),
  enrage={cooldown=.6,chase=3,extra=2,follow=2},
  attacks={
-  CursedBolts={clip='CursedBolts',rate=1.25,range={8,56},cooldown=.9,damage=22,shape='projectiles',point='BoltOrigin',count=5,spread=math.rad(34),speed=40,radius=1.6,life=2.2,perPlayer=1},
-  TombEruption={clip='TombEruption',rate=1.2,range={0,70},cooldown=1.4,damage=30,shape='targets',radius=5.5,maxTargets=5,lead=.25,eruptDelay=.7,extra=1},
+  CursedBolts={clip='CursedBolts',rate=1.25,range={8,75},cooldown=.9,damage=22,shape='projectiles',point='BoltOrigin',count=5,spread=math.rad(34),speed=40,radius=1.6,life=2.2,perPlayer=1},
+  TombEruption={clip='TombEruption',rate=1.2,range={0,80},cooldown=1.4,damage=30,shape='targets',radius=5.5,maxTargets=5,lead=.25,eruptDelay=.7,extra=1},
  },order={'CursedBolts','TombEruption','CursedBolts','CursedBolts','TombEruption'}}
 -- The cyclops holds off at 18 studs (stop) and uses Stomp's wave from range. Ground Slam's club
 -- lands ~11.6 studs ahead, so radius 15 reaches ~27 studs; rate 1 keeps its warning at
 -- radius/22 + .25 s (0.93 s of the 0.96 s wind-up).
-D.FrostCyclops={anim='frost-cyclops',name='Frost Cyclops',health=3600,scale=1.4,chaseSpeed=16,glowColor=nil,stop=18,
+D.FrostCyclops={anim='frost-cyclops',name='Frost Cyclops',health=36000,scale=1.4,chaseSpeed=21,glowColor=nil,stop=18,
  enrage={cooldown=.6,chase=3,follow=2,fan={-28,0,28}},
  attacks={
   GroundSlam={clip='GroundSlam',rate=1,range={0,22},cooldown=1,damage=32,shape='circle',point='ClubImpact',radius=15,knockdown=.7,
    follow={radius=6,delay=.85,maxTargets=4,range=48,damage=22}},
-  Stomp={clip='Stomp',rate=1.3,range={10,58},cooldown=1.3,damage=30,shape='wave',point='StompImpact',length=60,width=7,travel=70},
+  Stomp={clip='Stomp',rate=1.3,range={10,75},cooldown=1.3,damage=30,shape='wave',point='StompImpact',length=78,width=7,travel=80},
  },order={'GroundSlam','Stomp','GroundSlam','Stomp','Stomp'}}
-D.Dragon={anim='dragon',name='Inferno Dragon',health=4500,scale=1.25,chaseSpeed=18,glowColor=Color3.fromRGB(255,150,40),
+D.Dragon={anim='dragon',name='Inferno Dragon',health=42000,scale=1.25,chaseSpeed=22,glowColor=Color3.fromRGB(255,150,40),
  enrage={cooldown=.6,chase=3,follow=2,track=1.6},
  attacks={
   FireBreath={clip='FireBreath',rate=1.2,range={4,32},cooldown=1.3,damage=12,shape='breath',point='FireOrigin',halfAngle=math.rad(24),length=30,tick=.35,track=math.rad(70)},
+  -- Fireball: the long-range answer to kiting, spat on the FireBreath clip (rate must match it).
+  Fireball={clip='FireBreath',rate=1.2,range={24,80},cooldown=1.4,damage=20,shape='projectiles',point='FireOrigin',count=3,spread=math.rad(16),speed=45,radius=2,life=2,perPlayer=1},
   TailWhip={clip='TailWhip',rate=1.25,range={0,26},cooldown=1,damage=34,shape='sweep',point='SpadeTip',mid='TailMid',radius=4},
   FrontStomp={clip='FrontStomp',rate=1.2,range={0,16},cooldown=1.1,damage=38,shape='circle',point='StompCenter',radius=12,knockdown=.8,
    follow={radius=6.5,delay=.85,maxTargets=4,range=56,damage=26}},
- },order={'FireBreath','FrontStomp','TailWhip','FireBreath','TailWhip','FrontStomp'}}
+ },order={'FireBreath','Fireball','FrontStomp','TailWhip','Fireball','FireBreath','TailWhip','FrontStomp'}}
 D.ATTACK_CLIPS={['king-crab']={'ClawCrush','RushStart','RushLoop','RushEnd','BubbleBarrage'},['frost-cyclops']={'GroundSlam','Stomp'},['pharaoh']={'CursedBolts','TombEruption'},['dragon']={'FireBreath','TailWhip','FrontStomp'}}
 function D.get(id) return D[id] and type(D[id])=='table' and D[id].anim and D[id] or nil end
 function D.isBoss(id) return D.get(id)~=nil end

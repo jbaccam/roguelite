@@ -14,7 +14,7 @@ local animations=combat:WaitForChild('BossAnimations')
 local vfxFolder=combat:WaitForChild('BossVfx')
 local Common=require(vfxFolder:WaitForChild('Common'))
 local player=Players.LocalPlayer
-local MAX_GAIT_RATE=1.8 -- Walk clip seconds per real second
+local MAX_GAIT_RATE=2.6 -- Walk clip seconds per real second (chase speeds outrun the authored walk)
 local FILL,EDGE=.78,.2
 local TINT={KingCrab=Color3.fromRGB(255,120,90),Pharaoh=Color3.fromRGB(255,200,80),FrostCyclops=Color3.fromRGB(140,220,255),Dragon=Color3.fromRGB(255,110,40)}
 local tracked,compiled,modules={},{},{}

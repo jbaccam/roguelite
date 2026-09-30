@@ -24,7 +24,7 @@ local profiles={
  {16,.85,6,{16,24,36,54}}, -- Steak
  {5,.32,12,{5,8,12,18},nil,'bounce'}, -- Duck
  {15,.95,42,{15,21,30,42},nil,'cards'}, -- Cards
- {8,.42,6.5,{8,16,32,64},{1,.94,.88,.76}}, -- Gloves: alternating quick jabs
+ {8,.42,6.5,{8,15,28,48},{1,.94,.88,.76}}, -- Gloves: alternating quick jabs (T4 ~150 DPS: the close-range trade)
  {30,1.35,7,{30,45,68,102}}, -- Block
  {8,.7,28,{8,12,18,27},nil,'bounce'}, -- Yo-yo
  {24,1.6,35,{24,36,54,81},nil,'pierce'}, -- Ball
