@@ -136,18 +136,19 @@ local function ensureGui(display)
  gui.SizingMode=Enum.SurfaceGuiSizingMode.PixelsPerStud;gui.PixelsPerStud=100;gui.LightInfluence=0;gui.Brightness=1.1
  gui.MaxDistance=140;gui.ResetOnSpawn=false
  local list=Instance.new('Frame');list.Name='Rows';list.BackgroundTransparency=1
- list.Size=UDim2.new(1,-36,1,-30);list.Position=UDim2.fromOffset(18,15);list.Parent=gui
+ list.Size=UDim2.new(1,-24,1,-16);list.Position=UDim2.fromOffset(12,8);list.Parent=gui
  local layout=Instance.new('UIListLayout');layout.SortOrder=Enum.SortOrder.LayoutOrder;layout.Parent=list
  for i=1,TOP do
   local row=Instance.new('Frame');row.Name='Row'..i;row.LayoutOrder=i;row.Size=UDim2.new(1,0,1/TOP,0)
   row.BackgroundColor3=Color3.fromRGB(12,34,47);row.BackgroundTransparency=i%2==0 and .55 or 1;row.BorderSizePixel=0;row.Parent=list
   Instance.new('UICorner',row).CornerRadius=UDim.new(0,8)
-  label(row,'Rank',{Text=tostring(i),Size=UDim2.new(0,62,.62,0),Position=UDim2.new(0,4,.19,0),TextXAlignment=Enum.TextXAlignment.Center,TextColor3=i<=3 and AMBER or DIM})
+  -- Text fills ~80% of each 0.53-stud row so names read from the spawn path.
+  label(row,'Rank',{Text=tostring(i),Size=UDim2.new(0,58,.84,0),Position=UDim2.new(0,2,.08,0),TextXAlignment=Enum.TextXAlignment.Center,TextColor3=i<=3 and AMBER or DIM})
   local head=Instance.new('ImageLabel');head.Name='Headshot';head.BackgroundColor3=Color3.fromRGB(29,64,83);head.BorderSizePixel=0
-  head.Size=UDim2.new(0,40,0,40);head.Position=UDim2.new(0,72,.5,-20);head.Parent=row
+  head.Size=UDim2.new(0,46,0,46);head.Position=UDim2.new(0,66,.5,-23);head.Parent=row
   Instance.new('UICorner',head).CornerRadius=UDim.new(1,0)
-  label(row,'PlayerName',{Size=UDim2.new(1,-330,.56,0),Position=UDim2.new(0,124,.22,0)})
-  label(row,'Value',{Size=UDim2.new(0,190,.56,0),Position=UDim2.new(1,-196,.22,0),TextXAlignment=Enum.TextXAlignment.Right,TextColor3=i<=3 and AMBER or CREAM})
+  label(row,'PlayerName',{Size=UDim2.new(1,-318,.8,0),Position=UDim2.new(0,120,.1,0)})
+  label(row,'Value',{Size=UDim2.new(0,196,.8,0),Position=UDim2.new(1,-200,.1,0),TextXAlignment=Enum.TextXAlignment.Right,TextColor3=i<=3 and AMBER or CREAM})
  end
  gui.Parent=display;return gui
 end
