@@ -33,7 +33,8 @@ local function fresh()
  local d={version=1,emeralds=0,bought=0,classes={Brawler=true,Gunner=true,Mage=true},weapons={},pity={},picks={},chests={},
   receipts={},receiptOrder={},bestWaves={},mapWins={},starterPack=false,vip=false,
   rerolls=0,banishes=0,quickOpen=false,codes={},daily={day=0,bought={}},vipClaimDay=0,skills={},
-  armor={},wearing={}} -- armor: 'DragonScale.Helmet' -> {tier,have}; wearing: slot -> set id
+  armor={},wearing={}, -- armor: 'DragonScale.Helmet' -> {tier,have}; wearing: slot -> set id
+  freeChestDay=0} -- Money.day() of the last free daily chest (the Wooden Chest)
  for class in d.classes do d.weapons[SIGNATURE[class]]={tier=1,have=0} end
  return d
 end
@@ -48,6 +49,7 @@ function P.publish(player)
  player:SetAttribute('ProfileArmor',csv(d.armor,function(k,v) return k..':'..v.tier..':'..v.have end))
  -- ArmorService puts the worn pieces on the character from this attribute.
  player:SetAttribute('ProfileWearing',csv(d.wearing,function(k,v) return k..':'..v end))
+ player:SetAttribute('ProfileFreeChestDay',d.freeChestDay) -- = Money.day(): today's free chest is claimed
  player:SetAttribute('ProfilePity',csv(d.pity,function(k,v) return k..':'..v end))
  player:SetAttribute('ProfilePicks',csv(d.picks,function(k,v) return k..':'..v end))
  player:SetAttribute('ProfileChests',csv(d.chests,function(k,v) return k..':'..v end))
@@ -136,11 +138,13 @@ function P.grant(player,g)
  P.publish(player);return true
 end
 
--- Copies of one weapon: the first copy of a new weapon unlocks it at Tier I; the rest fill the
--- upgrade bar; past Tier IV each copy turns into (earned) emeralds by rarity.
+-- Copies of one item (a weapon, or an armor piece like 'Iron.Helmet'): the first copy unlocks it
+-- at Tier I; the rest fill the upgrade bar; past Tier IV each copy turns into (earned) emeralds
+-- by rarity.
 function P.addCopies(d,id,count)
- local rec=d.weapons[id];local new=false
- if not rec then rec={tier=1,have=0};d.weapons[id]=rec;new=true;count-=1 end
+ local book=Chests.isArmor(id) and d.armor or d.weapons
+ local rec=book[id];local new=false
+ if not rec then rec={tier=1,have=0};book[id]=rec;new=true;count-=1 end
  local emeralds=0
  if rec.tier>=4 then emeralds=count*Chests.overflow(id);d.emeralds+=emeralds
  else rec.have+=count end
@@ -176,6 +180,16 @@ local RANK={Common=1,Rare=2,Epic=3,Legendary=4,Godly=5}
 function P.buyChest(player,kind,count,restricted)
  local d=P.profiles[player];local chest=Chests.ById[kind]
  if not d or not chest then return false,'Unknown chest' end
+ -- The free daily chest: one per day, never sold (count is ignored).
+ if chest.daily then
+  if d.freeChestDay==Money.day() then
+   local s=Money.secondsToReset()
+   return false,string.format('Next free %s in %dh %dm',chest.name,s//3600,(s%3600)//60)
+  end
+  d.freeChestDay=Money.day();d.chests[kind]=(d.chests[kind] or 0)+1
+  P.publish(player)
+  return true,'Free '..chest.name..' claimed'
+ end
  if not Chests.validAmount(count) then return false,'Invalid amount' end
  if not chest.emeralds then return false,chest.name..'s come from Robux packs and rewards' end
  local price=chest.emeralds*count
@@ -189,7 +203,7 @@ function P.buyChest(player,kind,count,restricted)
  return true,count>1 and ('Bought '..count..'× '..chest.name) or ('Bought '..chest.name)
 end
 -- Open owned chests (up to count). Every chest rolls on the server; the reply groups all copies
--- by weapon: {id, count, rarity, new, tier, have, emeralds}, rarest first.
+-- by item (weapon or armor piece): {id, count, rarity, new, tier, have, emeralds}, rarest first.
 function P.openChest(player,kind,count)
  local d=P.profiles[player];local chest=Chests.ById[kind]
  if not d or not chest then return false,'Unknown chest' end

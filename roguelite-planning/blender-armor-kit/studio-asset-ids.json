@@ -1,0 +1,82 @@
+{
+ "icons": {
+  "DragonScale.Boots": "rbxassetid://122619097931139",
+  "DragonScale.Chest": "rbxassetid://99087648687237",
+  "DragonScale.Helmet": "rbxassetid://107313624596017",
+  "DragonScale.Legs": "rbxassetid://99675553277531",
+  "Iron.Boots": "rbxassetid://85626163763678",
+  "Iron.Chest": "rbxassetid://125004347306285",
+  "Iron.Helmet": "rbxassetid://108620771694726",
+  "Iron.Legs": "rbxassetid://106319354254330",
+  "Ninja.Boots": "rbxassetid://84851293687606",
+  "Ninja.Chest": "rbxassetid://84533859284815",
+  "Ninja.Helmet": "rbxassetid://123952778159697",
+  "Ninja.Legs": "rbxassetid://97067760550019",
+  "Phoenix.Boots": "rbxassetid://119867479721375",
+  "Phoenix.Chest": "rbxassetid://99037831238990",
+  "Phoenix.Helmet": "rbxassetid://83919301031061",
+  "Phoenix.Legs": "rbxassetid://136423621963228",
+  "Samurai.Boots": "rbxassetid://110749138580619",
+  "Samurai.Chest": "rbxassetid://76632440125129",
+  "Samurai.Helmet": "rbxassetid://93114126403391",
+  "Samurai.Legs": "rbxassetid://128518737623168",
+  "Spartan.Boots": "rbxassetid://131876371544570",
+  "Spartan.Chest": "rbxassetid://109195399406235",
+  "Spartan.Helmet": "rbxassetid://92189851172805",
+  "Spartan.Legs": "rbxassetid://81528249409821",
+  "Viking.Boots": "rbxassetid://135434557996276",
+  "Viking.Chest": "rbxassetid://76607499373698",
+  "Viking.Helmet": "rbxassetid://135240295104077",
+  "Viking.Legs": "rbxassetid://89528919327823"
+ },
+ "note": "Roblox image asset ids uploaded 2026-09-30 via Studio MCP upload_image. textures: per set, keyed by the install data's atlas path. icons: piece id -> image.",
+ "textures": {
+  "dragon-scale": {
+   "textures/dragon-scale-arms.png": "rbxassetid://115141085987683",
+   "textures/dragon-scale-boots.png": "rbxassetid://111073067516615",
+   "textures/dragon-scale-helmet.png": "rbxassetid://84842539507005",
+   "textures/dragon-scale-legs.png": "rbxassetid://130164121208142",
+   "textures/dragon-scale-torso.png": "rbxassetid://135900482412527"
+  },
+  "iron": {
+   "textures/iron-body.png": "rbxassetid://118031019522752",
+   "textures/iron-gear.png": "rbxassetid://138040841103582"
+  },
+  "ninja": {
+   "textures/ninja-helmet.png": "rbxassetid://93019062859451",
+   "textures/ninja-legs.png": "rbxassetid://113826950493125",
+   "textures/ninja-torso.png": "rbxassetid://121779276184252"
+  },
+  "phoenix": {
+   "textures/phoenix-arms.png": "rbxassetid://112171248151475",
+   "textures/phoenix-boots.png": "rbxassetid://77816524810899",
+   "textures/phoenix-helmet.png": "rbxassetid://128677909269302",
+   "textures/phoenix-legs.png": "rbxassetid://112548082928957",
+   "textures/phoenix-torso.png": "rbxassetid://91700595770696",
+   "textures/phoenix-wings.png": "rbxassetid://82227889426898"
+  },
+  "samurai": {
+   "textures/samurai-arms.png": "rbxassetid://82708703871899",
+   "textures/samurai-helmet.png": "rbxassetid://134560000466123",
+   "textures/samurai-legs.png": "rbxassetid://114578454433517",
+   "textures/samurai-torso.png": "rbxassetid://136293605868470"
+  },
+  "spartan": {
+   "textures/spartan-arms.png": "rbxassetid://91592921847794",
+   "textures/spartan-helmet.png": "rbxassetid://124775572562508",
+   "textures/spartan-legs.png": "rbxassetid://112662167574884",
+   "textures/spartan-torso.png": "rbxassetid://130605734634743"
+  },
+  "viking": {
+   "textures/viking-body.png": "rbxassetid://79379678362606",
+   "textures/viking-helmet.png": "rbxassetid://106721071823787",
+   "textures/viking-legs.png": "rbxassetid://138449318183187"
+  }
+ },
+ "vfx_textures": {
+  "phoenix": {
+   "textures/vfx/ember.png": "rbxassetid://129722729343719",
+   "textures/vfx/flame.png": "rbxassetid://107400215045522"
+  }
+ }
+}

@@ -14,8 +14,8 @@
   "Chest": {
    "Iron_Chest_UpperTorso": {
     "body_part": "UpperTorso",
-    "triangles": 898,
-    "vertices": 546
+    "triangles": 904,
+    "vertices": 550
    },
    "Iron_Chest_LowerTorso": {
     "body_part": "LowerTorso",
@@ -24,45 +24,45 @@
    },
    "Iron_Chest_LeftUpperArm": {
     "body_part": "LeftUpperArm",
-    "triangles": 511,
-    "vertices": 314
+    "triangles": 891,
+    "vertices": 548
    },
    "Iron_Chest_RightUpperArm": {
     "body_part": "RightUpperArm",
-    "triangles": 511,
-    "vertices": 314
+    "triangles": 891,
+    "vertices": 548
    },
    "Iron_Chest_LeftLowerArm": {
     "body_part": "LeftLowerArm",
-    "triangles": 429,
-    "vertices": 267
+    "triangles": 453,
+    "vertices": 280
    },
    "Iron_Chest_RightLowerArm": {
     "body_part": "RightLowerArm",
-    "triangles": 429,
-    "vertices": 267
+    "triangles": 453,
+    "vertices": 280
    }
   },
   "Legs": {
    "Iron_Legs_LeftUpperLeg": {
     "body_part": "LeftUpperLeg",
-    "triangles": 265,
-    "vertices": 169
+    "triangles": 401,
+    "vertices": 255
    },
    "Iron_Legs_RightUpperLeg": {
     "body_part": "RightUpperLeg",
-    "triangles": 265,
-    "vertices": 169
+    "triangles": 401,
+    "vertices": 255
    },
    "Iron_Legs_LeftLowerLeg": {
     "body_part": "LeftLowerLeg",
-    "triangles": 598,
-    "vertices": 371
+    "triangles": 722,
+    "vertices": 445
    },
    "Iron_Legs_RightLowerLeg": {
     "body_part": "RightLowerLeg",
-    "triangles": 598,
-    "vertices": 371
+    "triangles": 722,
+    "vertices": 445
    }
   },
   "Boots": {
@@ -88,16 +88,16 @@
    }
   }
  },
- "triangles_total": 7412,
+ "triangles_total": 8746,
  "triangles_by_piece": {
   "Helmet": 776,
-  "Chest": 3528,
-  "Legs": 1726,
+  "Chest": 4342,
+  "Legs": 2246,
   "Boots": 1382
  },
  "largest_mesh": [
   "Iron_Chest_UpperTorso",
-  898
+  904
  ],
  "textures": {
   "body": "textures/iron-body.png (1024x1024)",

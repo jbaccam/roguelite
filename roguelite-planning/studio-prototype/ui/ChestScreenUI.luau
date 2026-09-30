@@ -20,7 +20,12 @@ local combat=RS:WaitForChild('RogueliteCombat')
 local Chests=require(combat:WaitForChild('ChestConfig'))
 local Weapons=require(combat:WaitForChild('WeaponCatalog'))
 local WeaponIcons=require(RS:WaitForChild('WeaponInventoryUI')).Icons
+local Armor=require(combat:WaitForChild('ArmorCatalog'))
+local Money=require(combat:WaitForChild('MonetizationConfig'))
 local C=T.Color
+-- Chests drop weapons and armor pieces ('Iron.Helmet'); both get an icon and a name here.
+local function itemIcon(id) return WeaponIcons[id] or Armor.Icons[id] end
+local function itemName(id) local w=Weapons.ById[id];return w and w.name or Armor.pieceName(id) end
 local U={}
 
 -- Authored at 1920x1080 and scaled to the viewport (like the Armory and Skill Tree).
@@ -150,7 +155,7 @@ function U.new(player,opts)
   local p=T.panel(back,'Panel',1000+(DW-W)/2,200+(DH-H)/2+20,W,H,'panel');p.ZIndex=41;p.Active=true;corners(p,def.aura)
   local pl=plate(p,def.name..'  ·  Odds',28,-34,34);pl.ZIndex=42;for _,d in pl:GetDescendants() do if d:IsA('GuiObject') then d.ZIndex=43 end end
   local x0,y=36,54
-  local help=left(T.text(p,'Help','Chance that one '..def.name..' includes each weapon. '..def.copies..' weapons per chest.',x0,y,W-72,26,20,C.muted));help.ZIndex=42
+  local help=left(T.text(p,'Help','Chance that one '..def.name..' includes each item. '..def.copies..' items per chest (weapons and armor).',x0,y,W-72,26,20,C.muted));help.ZIndex=42
   y+=40
   local cell,gap=96,8
   for _,r in shown do
@@ -162,7 +167,7 @@ function U.new(player,opts)
     local x=x0+(i-1)*(cell+gap)
     local c=T.make('Frame',p,{Name='W_'..o.id,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(cell,cell),BackgroundColor3=col,BackgroundTransparency=.55,BorderSizePixel=0,ZIndex=42})
     T.make('UICorner',c,{CornerRadius=UDim.new(0,8)});T.make('UIStroke',c,{Color=col,Thickness=2})
-    local ic=T.icon(c,'Icon',8,4,cell-16,WeaponIcons[o.id]);ic.ZIndex=43
+    local ic=T.icon(c,'Icon',8,4,cell-16,itemIcon(o.id));ic.ZIndex=43
     local pct=o.chance>=10 and string.format('%.0f%%',o.chance) or o.chance>=1 and string.format('%.1f%%',o.chance) or string.format('%.2f%%',o.chance)
     local l=centred(T.label(c,'Chance',pct,0,cell-30,cell,28,22,WHITE));l.ZIndex=44
    end
@@ -187,10 +192,13 @@ function U.new(player,opts)
    local icon=T.icon(row,'Icon',-6,-12,124,def.icon);icon.ZIndex=row.ZIndex+2
    local n=owned(id)
    local name=left(T.label(row,'Name',def.name..(n>0 and '  <font color="#91EF14">('..n..')</font>' or ''),128,10,LIST_W-300,48,36));name.RichText=true;name.TextWrapped=false;name.ZIndex=row.ZIndex+2
-   local sub=left(T.text(row,'Sub',def.copies..' weapons  ·  '..(def.legendary>=1 and 'Legendary guaranteed' or ('Legendary '..Chests.percent(def.legendary))),130,56,LIST_W-230,26,20,C.cream));sub.ZIndex=row.ZIndex+2
+   local sub=left(T.text(row,'Sub',def.copies..' items  ·  '..(def.legendary>=1 and 'Legendary guaranteed' or ('Legendary '..Chests.percent(def.legendary))),130,56,LIST_W-230,26,20,C.cream));sub.ZIndex=row.ZIndex+2
    -- Price chip (top right).
    local chip=T.panel(row,'Price',LIST_W-172,14,154,48,'inset');chip.ZIndex=row.ZIndex+2
-   if def.emeralds then costRow(chip,short(def.emeralds),'emerald',24,C.emerald)
+   if def.daily then
+    local ready=profile.freeChestDay~=Money.day()
+    local l=centred(T.label(chip,'Free',ready and 'FREE' or 'CLAIMED',0,0,154,48,ready and 26 or 20,ready and C.lime or C.muted));l.ZIndex=chip.ZIndex+1
+   elseif def.emeralds then costRow(chip,short(def.emeralds),'emerald',24,C.emerald)
    else local l=centred(T.label(chip,'Robux','ROBUX',0,0,154,48,22,C.gold));l.ZIndex=chip.ZIndex+1 end
    for _,d in chip:GetDescendants() do if d:IsA('GuiObject') then d.ZIndex=chip.ZIndex+1 end end
    local info=T.button(row,'Info','i',LIST_W-66,ROW_H-52,48,42,function() openOdds(id) end,true);info.Caption.TextSize=26;info.ZIndex=row.ZIndex+3;info.Caption.ZIndex=row.ZIndex+4
@@ -213,23 +221,33 @@ function U.new(player,opts)
   T.make('UIGradient',title,{Color=ColorSequence.new(WHITE,def.aura:Lerp(WHITE,.35)),Rotation=90})
   local line=T.make('Frame',header,{Name='Underline',BackgroundColor3=WHITE,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,0),Position=UDim2.fromOffset(430,90),Size=UDim2.fromOffset(640,4)})
   T.make('UIGradient',line,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(1,1)})})
-  centred(T.text(header,'Owned',n>0 and ('You have <b>'..n..'</b>  ·  '..def.copies..' weapons each') or ('None yet  ·  '..def.copies..' weapons each'),0,100,860,32,26,n>0 and C.limeSoft or C.cream))
+  centred(T.text(header,'Owned',n>0 and ('You have <b>'..n..'</b>  ·  '..def.copies..' items each') or ('None yet  ·  '..def.copies..' items each'),0,100,860,32,26,n>0 and C.limeSoft or C.cream))
   -- Actions: BUY (price × amount) · OPEN (owned, up to amount) · amount.
   local bw,bh,gap=300,92,16
   local x0=(860-(bw*2+170+gap*2))/2
   local price=def.emeralds and def.emeralds*amount
+  local freeReady=def.daily and profile.freeChestDay~=Money.day()
   local buy=T.button(header,'Buy','',x0,150,bw,bh,function()
    if busy then return end
-   if not def.emeralds then self.Close();opts.openWindow('Store','Chests');return end
+   if def.daily and not freeReady then return end
+   if not def.emeralds and not def.daily then self.Close();opts.openWindow('Store','Chests');return end
    busy=true
-   local r=request('BuyChest',selected,amount)
+   local r=request('BuyChest',selected,def.daily and 1 or amount)
    busy=false
    if r.ok then FX.play(FX.Sounds.Chime,.4,1.2);local a=Stage.Aura(selected);if a then a:Pulse(.8) end end
    toast(r.message or '',r.ok)
    readProfile();drawBrowse()
   end)
   buy.Caption.Visible=false
-  if def.emeralds then
+  if def.daily then
+   -- Free once a day (resets at 00:00 UTC, Money.day()).
+   local s=Money.secondsToReset()
+   local l=centred(T.label(buy,'Label',freeReady and 'CLAIM FREE' or 'NEXT FREE',0,freeReady and 0 or 8,bw,freeReady and bh or 34,freeReady and 34 or 28,C.ink));l.TextStrokeTransparency=1
+   if not freeReady then
+    local t=centred(T.label(buy,'Timer',string.format('in %dh %dm',s//3600,(s%3600)//60),0,48,bw,34,26,C.ink));t.TextStrokeTransparency=1
+    buy.Interactable=false
+   end
+  elseif def.emeralds then
    local l=centred(T.label(buy,'Label','BUY ×'..amount,0,8,bw,34,28,C.ink));l.TextStrokeTransparency=1
    local c=costRow(buy,fmt(price),'emerald',30,WHITE);c.Position=UDim2.new(.5,0,0,64)
   else
@@ -369,10 +387,9 @@ function U.new(player,opts)
   local c=T.panel(parent,'Card_'..r.id,x,y,w,h,'panel');corners(c,col)
   wash(c,col,RANK[r.rarity]>=3 and .7 or .5,c.ZIndex)
   if RANK[r.rarity]>=3 then local b=StoreFX.burst(c,w/2,78,w*1.25,col,RANK[r.rarity]>=4 and 40 or 22);b.ZIndex=c.ZIndex+1;for _,d in b:GetChildren() do d.ZIndex=c.ZIndex+1 end end
-  local ic=T.icon(c,'Icon',(w-120)/2,18,120,WeaponIcons[r.id]);ic.ZIndex=c.ZIndex+2
+  local ic=T.icon(c,'Icon',(w-120)/2,18,120,itemIcon(r.id));ic.ZIndex=c.ZIndex+2
   local cnt=right(T.label(c,'Count','×'..(r.count or 1),w-110,6,98,40,36,RANK[r.rarity]>=3 and C.gold or WHITE));cnt.ZIndex=c.ZIndex+3
-  local w_=Weapons.ById[r.id]
-  local nm=centred(T.label(c,'Name',w_ and w_.name or r.id,6,140,w-12,30,24,WHITE));nm.ZIndex=c.ZIndex+3;nm.TextWrapped=false;nm.TextScaled=true
+  local nm=centred(T.label(c,'Name',itemName(r.id),6,140,w-12,30,24,WHITE));nm.ZIndex=c.ZIndex+3;nm.TextWrapped=false;nm.TextScaled=true
   T.make('UITextSizeConstraint',nm,{MaxTextSize=24,MinTextSize=12})
   local rl=centred(T.label(c,'Rarity',string.upper(r.rarity),6,170,w-12,24,19,col:Lerp(WHITE,.25)));rl.ZIndex=c.ZIndex+3
   if r.new then
@@ -400,7 +417,7 @@ function U.new(player,opts)
   local def=Chests.ById[o.id]
   local head=centred(T.label(resultLayer,'Title','YOU GOT!',0,40,DW,90,84,WHITE));head.ZIndex=31
   T.make('UIGradient',head,{Color=ColorSequence.new(WHITE,(o.best or def.aura):Lerp(WHITE,.3)),Rotation=90})
-  local sub=centred(T.text(resultLayer,'Sub',o.total..' weapons from '..(o.n>1 and (o.n..' '..def.name..'s') or ('a '..def.name)),0,128,DW,34,28,C.cream));sub.ZIndex=31
+  local sub=centred(T.text(resultLayer,'Sub',o.total..' items from '..(o.n>1 and (o.n..' '..def.name..'s') or ('a '..def.name)),0,128,DW,34,28,C.cream));sub.ZIndex=31
   -- Grid: up to 7 per row; scrolls past three rows (×100 can give 30+ weapons).
   local list=o.results
   local cols=math.min(7,math.max(1,#list));local cw,ch,gap=186,244,16
@@ -438,7 +455,7 @@ function U.new(player,opts)
    local ghosts=math.min(o.total,o.n>=100 and 60 or o.n>=10 and 26 or 8)
    for g=1,ghosts do
     local r=list[((g-1)%#list)+1]
-    local ic=T.icon(canvas,'Ghost',start.X-28,start.Y-28,56,WeaponIcons[r.id]);ic.ZIndex=33
+    local ic=T.icon(canvas,'Ghost',start.X-28,start.Y-28,56,itemIcon(r.id));ic.ZIndex=33
     local a=math.rad(-90+(math.random()-.5)*150);local d=260+math.random()*420
     local to=start+Vector2.new(math.cos(a)*d,math.sin(a)*d*.8)
     ic.Rotation=math.random(-40,40)
@@ -460,7 +477,7 @@ function U.new(player,opts)
     if not skipReveal then
      -- Fly from the chest mouth to the slot (in canvas space), then pop.
      local target=grid.AbsolutePosition/canvasScale.Scale-canvas.AbsolutePosition/canvasScale.Scale+slot-Vector2.new(0,grid.CanvasPosition.Y)
-     local fly=T.icon(canvas,'Fly',start.X-50,start.Y-50,100,WeaponIcons[r.id]);fly.ZIndex=34;fly.Rotation=math.random(-30,30)
+     local fly=T.icon(canvas,'Fly',start.X-50,start.Y-50,100,itemIcon(r.id));fly.ZIndex=34;fly.Rotation=math.random(-30,30)
      c.Visible=false
      tween(fly,.38,{Position=UDim2.fromOffset(target.X+(cw-100)/2,target.Y+30),Rotation=0},Enum.EasingStyle.Quad,Enum.EasingDirection.Out)
      task.delay(.36,function()

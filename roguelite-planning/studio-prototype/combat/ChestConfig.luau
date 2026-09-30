@@ -1,10 +1,13 @@
--- Chest tiers, weapon rarities and odds, shared by the server (rolls) and the UI (odds shown
+-- Chest tiers, item rarities and odds, shared by the server (rolls) and the UI (odds shown
 -- before opening). Numbers: roguelite-planning/RARITY_GODLY_ARMOR.md sections 1-3.
--- A chest holds a handful of weapon copies. Rare and Epic amounts are whole copies plus a chance
+-- Chests hold weapons AND armor pieces (user, 2026-09-30): every armor piece (ArmorCatalog,
+-- e.g. 'Iron.Helmet') is its own item with its set's rarity, pooled with that rarity's weapons.
+-- A chest holds a handful of item copies. Rare and Epic amounts are whole copies plus a chance
 -- of one more (.25 = a 25% chance of one, 1 = exactly one); Legendary and Godly are a chance of
 -- one copy (1 = always). Commons fill the rest. Copies of one rarity are grouped into 1-3 weapons
 -- (e.g. ×5 Frying Pan, ×2 Egg).
 local C={Order={},ById={}}
+local Armor=require(script.Parent:WaitForChild('ArmorCatalog'))
 
 C.Rarities={'Common','Rare','Epic','Legendary','Godly'}
 C.RarityColor={
@@ -21,12 +24,20 @@ local RARITY={
  Legendary={'03','11','18','22','25','32','31'},
  Godly={},
 }
-C.Pool={};C.RarityOf={}
+-- Pool: everything a chest can drop per rarity. WeaponPool: weapons only (daily deals).
+C.Pool={};C.WeaponPool={};C.RarityOf={}
 for _,r in C.Rarities do
- C.Pool[r]=table.clone(RARITY[r])
+ C.Pool[r]=table.clone(RARITY[r]);C.WeaponPool[r]=table.clone(RARITY[r])
  for _,id in RARITY[r] do C.RarityOf[id]=r end
 end
--- A Godly roll with no Godly weapon would turn into a missing item, so Godly waits for its pool.
+for _,set in Armor.Sets do
+ for _,slot in Armor.Slots do
+  local id=Armor.pieceId(set.id,slot)
+  table.insert(C.Pool[set.rarity],id);C.RarityOf[id]=set.rarity
+ end
+end
+function C.isArmor(id) return Armor.valid(id) end
+-- Godly rolls only while the Godly pool has items (today: the Phoenix armor pieces).
 function C.godlyEnabled() return #C.Pool.Godly>0 end
 
 -- Copies spent to raise a weapon's starting tier (I->II, II->III, III->IV).
@@ -48,9 +59,10 @@ C.Amounts={1,10,100}
 function C.validAmount(n) return table.find(C.Amounts,n)~=nil end
 
 -- aura: the chest's glow and opening colour. emeralds=nil: not sold for emeralds (the Legendary
--- Chest comes from Robux packs and rewards).
+-- Chest comes from Robux packs and rewards). daily=true: free, one per day (the Wooden Chest,
+-- 2026-09-30), claimed through BuyChest.
 local function add(d) C.ById[d.id]=d;table.insert(C.Order,d.id) end
-add({id='Wooden',icon='rbxassetid://107136053285951',name='Wooden Chest',emeralds=60,copies=3,rare=.25,epic=.02,legendary=.002,godly=0,pity=false,
+add({id='Wooden',icon='rbxassetid://107136053285951',name='Wooden Chest',emeralds=nil,daily=true,copies=3,rare=.25,epic=.02,legendary=.002,godly=0,pity=false,
  aura=Color3.fromRGB(120,235,70),glow=Color3.fromRGB(255,190,80)})
 add({id='Silver',icon='rbxassetid://103320236733137',name='Silver Chest',emeralds=160,copies=6,rare=1,epic=.08,legendary=.008,godly=.0005,pity=true,
  aura=Color3.fromRGB(70,170,255),glow=Color3.fromRGB(110,195,255)})
@@ -91,7 +103,7 @@ function C.open(kind,rng,pity)
  return counts
 end
 
--- Split `copies` of one rarity over 1-3 different weapons. Returns {id=count}.
+-- Split `copies` of one rarity over 1-3 different items. Returns {id=count}.
 function C.group(rarity,copies,rng,into)
  into=into or {}
  local pool=table.clone(C.Pool[rarity]);local n=math.min(stacks(copies),#pool)
@@ -124,8 +136,7 @@ local function amountText(x)
  return nil
 end
 
--- Rarity summary for the chest screen. Rarities this chest can't drop are left out (Godly until
--- Godly weapons exist).
+-- Rarity summary for the chest screen. Rarities this chest can't drop are left out.
 function C.summary(kind)
  local d=C.ById[kind];local out={}
  local godly=C.godlyEnabled() and d.godly or 0
@@ -139,8 +150,8 @@ function C.summary(kind)
  return out
 end
 
--- Chance (percent) that one chest includes at least one copy of each weapon, grouped by
--- rarity. Exact for the rules above (stacks are distinct weapons picked uniformly).
+-- Chance (percent) that one chest includes at least one copy of each item, grouped by
+-- rarity. Exact for the rules above (stacks are distinct items picked uniformly).
 function C.odds(kind)
  local d=C.ById[kind];if not d then return {} end
  local godly=C.godlyEnabled() and d.godly or 0
@@ -164,8 +175,8 @@ function C.odds(kind)
  return out
 end
 
--- Daily deals (the "item shop sale"): each paid slot picks a rarity, then a weapon of it. Never
--- Godly. Every price per copy is well above that rarity's spare-copy value, so buying a deal to
+-- Daily deals (the "item shop sale"): each paid slot picks a rarity, then a weapon of it
+-- (weapons only). Never Godly. Every price per copy is well above that rarity's spare-copy value, so buying a deal to
 -- cash the copies in never pays.
 C.DealOdds={{'Common',55},{'Rare',35},{'Epic',8},{'Legendary',2}}
 C.DealPrice={Common=15,Rare=40,Epic=150,Legendary=500} -- emeralds per copy
@@ -173,7 +184,7 @@ C.DealAmount={Common={2,5},Rare={1,3},Epic={1,1},Legendary={1,1}}
 function C.rollDeal(rng)
  local roll=rng:NextNumber()*100;local rarity=C.DealOdds[#C.DealOdds][1]
  for _,o in C.DealOdds do if roll<o[2] then rarity=o[1];break end;roll-=o[2] end
- local pool=C.Pool[rarity];local id=pool[rng:NextInteger(1,#pool)]
+ local pool=C.WeaponPool[rarity];local id=pool[rng:NextInteger(1,#pool)]
  local a=C.DealAmount[rarity];local n=rng:NextInteger(a[1],a[2])
  return {kind='Weapon',id=id,rarity=rarity,amount=n,each=C.DealPrice[rarity],currency='Emeralds',price=n*C.DealPrice[rarity]}
 end

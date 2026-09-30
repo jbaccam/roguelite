@@ -2,8 +2,9 @@
 -- server-set ProfileWearing attribute ('Chest:DragonScale,Helmet:DragonScale'); every spawn and
 -- every change re-dresses the character. Each piece is one MeshPart per R15 part, cloned from
 -- ReplicatedStorage.ArmorSets.<model> and welded to its body part at the part's `Mount` attribute
--- (the CFrame from body part to mesh, set by the kit's Studio installer). A worn helmet
--- is a full helm: it hides hat and hair accessories and the face until it comes off.
+-- (the CFrame from body part to mesh, set by the kit's Studio installer). A worn helmet hides
+-- what its set's `helmet` mode says (ArmorCatalog): hood = hats and hair, full = those and the
+-- face. Phoenix's flames and lights ride along as Attachments inside its meshes.
 -- Cosmetic only. Unsandboxed (reads the unsandboxed ArmorCatalog).
 local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
@@ -21,27 +22,29 @@ local function worn(player)
 	return out
 end
 
--- What the helmet covers: hat/hair accessory handles and the face decal.
-local function covered(character)
+-- What a helmet covers: {object, hide?} for hat/hair accessory handles and the face decal.
+local function covered(character, mode)
 	local out = {}
 	for _, d in character:GetChildren() do
 		if d:IsA("Accessory") and HIDE[d.AccessoryType] then
 			local h = d:FindFirstChild("Handle")
 			if h then
-				table.insert(out, h)
+				table.insert(out, { h, mode == "hood" or mode == "full" })
 			end
 		end
 	end
 	local head = character:FindFirstChild("Head")
 	local face = head and head:FindFirstChild("face")
 	if face and face:IsA("Decal") then
-		table.insert(out, face)
+		table.insert(out, { face, mode == "full" })
 	end
 	return out
 end
 
-local function setHidden(character, hidden)
-	for _, x in covered(character) do
+-- mode: the worn helmet's ArmorCatalog `helmet` ('open' | 'hood' | 'full'), or nil for none.
+local function setHidden(character, mode)
+	for _, pair in covered(character, mode) do
+		local x, hidden = pair[1], pair[2]
 		local base = x:GetAttribute("ArmorBaseTransparency")
 		if hidden then
 			if base == nil then
@@ -94,7 +97,7 @@ local function dress(player, character)
 		end
 	end
 	folder.Parent = character
-	setHidden(character, w.Helmet ~= nil)
+	setHidden(character, w.Helmet and Catalog.ById[w.Helmet].helmet or nil)
 	-- The Armory copies the character once this matches ProfileWearing.
 	character:SetAttribute("ArmorWorn", player:GetAttribute("ProfileWearing") or "")
 end
@@ -109,8 +112,9 @@ local function added(player)
 		dress(player, character)
 		-- Accessories can finish loading after the dress: keep them under the helmet.
 		character.ChildAdded:Connect(function(c)
-			if c:IsA("Accessory") and worn(player).Helmet then
-				task.defer(setHidden, character, true)
+			local helmet = worn(player).Helmet
+			if c:IsA("Accessory") and helmet then
+				task.defer(setHidden, character, Catalog.ById[helmet].helmet)
 			end
 		end)
 	end)

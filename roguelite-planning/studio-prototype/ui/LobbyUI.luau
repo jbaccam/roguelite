@@ -69,6 +69,7 @@ function L.profile(player)
  p.armor={};p.wearing={}
  for id,tier,have in string.gmatch(player:GetAttribute('ProfileArmor') or '','([^,:]+):(%d+):(%d+)') do p.armor[id]={id=id,tier=math.clamp(tonumber(tier),1,4),have=tonumber(have)} end
  for slot,set in string.gmatch(player:GetAttribute('ProfileWearing') or '','([^,:]+):([^,:]+)') do p.wearing[slot]=set end
+ p.freeChestDay=player:GetAttribute('ProfileFreeChestDay') or 0 -- = MonetizationConfig.day(): today's free Wooden Chest is claimed
  p.best=csvMap(player:GetAttribute('ProfileBestWaves'))
  p.wins=csvSet(player:GetAttribute('ProfileMapWins'))
  p.pity=csvMap(player:GetAttribute('ProfilePity'));p.picks=csvMap(player:GetAttribute('ProfilePicks'))

@@ -103,9 +103,9 @@ def joint_world(child):
 # ---------------------------------------------------------------------------
 # Materials (bake inputs). Index order is shared by every component.
 # ---------------------------------------------------------------------------
-MAT_NAMES = ["Steel", "Leather", "Gambeson", "Dark"]
-STL, LTH, GAM, DRK = range(4)
-PREVIEW_RGB = {STL: (156, 166, 182), LTH: (86, 54, 32), GAM: (178, 150, 108), DRK: (34, 30, 30)}
+MAT_NAMES = ["Steel", "Leather", "Gambeson", "Dark", "Under"]
+STL, LTH, GAM, DRK, UND = range(5)      # Under = dark brown leather undersuit; Gambeson = thin quilted trim only
+PREVIEW_RGB = {STL: (156, 166, 182), LTH: (86, 54, 32), GAM: (178, 150, 108), DRK: (34, 30, 30), UND: (58, 38, 26)}
 
 def lin(c):
     c = c / 255
@@ -418,10 +418,11 @@ def limb_cols(ch):
     return [0.012, st["front_mid"] * 0.5, st["front_mid"]] + arc0 + [st["outer_mid"]] + arc1 +         [st["back_mid"], (st["back_mid"] + st["back_in"]) / 2, st["back_in"] - 0.012]
 
 
-def undersuit_box(comps, chart, us, vs, rnd=0.5):
-    """Dark scale-mail undersuit layer (flush, single surface) that shows in every gap."""
+def undersuit_box(comps, chart, us, vs, rnd=0.5, trim=()):
+    """Dark brown leather undersuit layer (flush, single surface) that shows in every gap. Rows listed in
+    `trim` are the thin quilted gambeson trim (cuffs)."""
     c = Comp(bevel=0.0, shade="smooth")
-    shell(c, chart, grid(us, vs), 0.004, mat=GAM, rnd=rnd)
+    shell(c, chart, grid(us, vs), 0.004, mat=UND, mat_fn=lambda j, i: GAM if j in trim else UND, rnd=rnd)
     comps.append(c)
 
 def lt_chart(side, clear=CL):
@@ -669,8 +670,8 @@ def build_head():
 # ---------------------------------------------------------------------------
 def ut_vtop(ch, u, front=True):
     """Top edge of the body plate: a scooped neckline in the middle, rising onto the shoulder top."""
-    k = smooth((abs(u) - 0.30) / 0.42)
-    return lerp(0.615 if front else 0.66, ch.top + 0.05, k)
+    k = smooth((abs(u) - 0.30) / 0.42) if front else smooth((abs(u) - 0.50) / 0.30)
+    return lerp(0.615 if front else 0.74, ch.top + 0.05, k)
 
 
 def ut_vbot(u):
@@ -688,12 +689,13 @@ def build_upper_torso():
         def sv(u, t):
             return lerp(-0.8, lerp(0.75, 0.85, smooth((abs(u) - 0.35) / 0.3)), t)
         gc = Comp(bevel=0.0, shade="smooth")
-        shell(gc, sch, [[(u, sv(u, t)) for u in sus] for t in (0.0, 0.35, 0.8, 0.92, 1.0)], 0.004, mat=GAM, flush=True)
+        shell(gc, sch, [[(u, sv(u, t)) for u in sus] for t in (0.0, 0.35, 0.8, 0.92, 1.0)], 0.004, mat=UND,
+              mat_fn=lambda j, i: GAM if (j == 3 and abs(sus[i] + sus[i + 1]) < 1.0) else UND, flush=True)
         comps.append(gc)
         ch = torso_chart(side, rc=0.05)
-        us = [-0.86, -0.62, -0.4, -0.2, 0.0, 0.2, 0.4, 0.62, 0.86]
+        us = [-0.96, -0.78, -0.56, -0.28, 0.0, 0.28, 0.56, 0.78, 0.96]      # out to the shoulder line
         ts = [0.0, 0.07, 0.32, 0.6, 0.86, 1.0]
-        amp, ridge_a = (0.105, 0.05) if front else (0.055, 0.03)
+        amp, ridge_a = (0.105, 0.05) if front else (0.07, 0.035)
 
         def height(t, u, roll=False):
             edge = math.sin(math.pi * clamp(t)) ** 0.6
@@ -723,7 +725,7 @@ def build_upper_torso():
             return lerp(ut_vbot(u), ut_vtop(ch, u, front), t)
         spots = [(u, tv(u, 0.09)) for u in ((-0.56, -0.28, 0.0, 0.28, 0.56) if front else (-0.5, 0.0, 0.5))]
         if front:
-            spots += [(sg * 0.74, tv(sg * 0.74, t)) for sg in (-1, 1) for t in (0.55,)]
+            spots += [(sg * 0.87, tv(sg * 0.87, t)) for sg in (-1, 1) for t in (0.55,)]
         rivets_on(rv, ch, spots, lambda u, v: height(clamp((v - ut_vbot(u)) / (ut_vtop(ch, u, front) - ut_vbot(u))), u))
         comps.append(rv)
     return comps
@@ -774,10 +776,10 @@ def build_lower_torso():
 def build_upper_arm():
     comps = []
     su = limb_chart(r=0.05, clear=SUIT_CL)
-    undersuit_box(comps, su, lite_cols(su), [-0.334, 0.55])
+    undersuit_box(comps, su, lite_cols(su), [-0.334, 0.58])
     top = Comp(shade="smooth")
     tc_ = [Vector((x, y, 0.584 + SUIT_CL)) for x, y in ((-0.49, -0.49), (0.49, -0.49), (0.49, 0.49), (-0.49, 0.49))]
-    top.f([top.v(p, (0, 0, 0.5, 0)) for p in tc_], GAM)
+    top.f([top.v(p, (0, 0, 0.5, 0)) for p in tc_], UND)
     comps.append(top)
     lc = limb_chart(r=0.05)
     L = lc.stations
@@ -789,6 +791,22 @@ def build_upper_arm():
     shell(c, lc, [[(u, lerp(zt, zb, t)) for u in us] for t in tvs], lambda j, i, u, v: 0.045 + (0.016 if j >= 1 else 0.0),
           lift=lambda j, i, u, v: fl * (0.35 + 0.65 * tvs[j] ** 1.3), mat=STL, rim_mat=STL, flush=True)
     comps.append(c)
+    # rerebrace: steel plate round the front, outer and back of the arm from under the shoulder plate down
+    # to the lame (stops well above the elbow); the chart is open at the inner face, which stays clear
+    zr = [-0.12, -0.05, 0.52, 0.585]
+    rr = Comp(bevel=0.011, segs=1, angle=32)
+    shell(rr, lc, [[(u, z) for u in us] for z in zr], lambda j, i, u, v: (0.040, 0.050, 0.050, 0.046)[j],
+          mat=STL, rim_mat=STL, flush=True)
+    comps.append(rr)
+    rs = Comp(bevel=0.008, segs=1, angle=40)
+    shell(rs, lc, [[(u, z) for u in us] for z in (0.14, 0.23)], 0.03, lift=lambda j, i, u, v: 0.046,
+          mat=LTH, rim_mat=LTH, flush=True)
+    comps.append(rs)
+    rrv = Comp(shade="smooth")
+    s4a = L["total"] - 0.95
+    rivets_on(rrv, lc, [(L["front_mid"] + dx, 0.42) for dx in (-0.2, 0.2)] +
+              [(s4a + 0.45 + dx, 0.42) for dx in (-0.2, 0.2)], lambda u, v: 0.05)
+    comps.append(rrv)
     # the rounded shoulder plate
     ss = [0.0, 0.16, 0.36, 0.58, 0.78, 0.92, 1.0]
     NT = 8
@@ -812,7 +830,7 @@ def build_upper_arm():
 def build_lower_arm():
     comps = []
     su = limb_chart(r=0.05, clear=SUIT_CL)
-    undersuit_box(comps, su, lite_cols(su), [-0.52, 0.259])
+    undersuit_box(comps, su, lite_cols(su), [-0.52, -0.45, 0.259], trim=(0,))
     lc = limb_chart(r=0.05)
     L = lc.stations
     us = lite_cols(lc)
@@ -871,6 +889,20 @@ def build_upper_leg():
     fm = L["front_mid"]
     rivets_on(rv, lc, [(fm + dx, z_hi(fm + dx) - 0.05) for dx in (-0.2, 0.0, 0.2)], lambda u, v: 0.066)
     comps.append(rv)
+    # separate back lame: wraps the outer-back corner and the back face, inner face clear; it stops 0.1 above
+    # the knee plane so the knee can bend
+    s4 = L["total"] - 0.95
+    ub = [L["corner_ob"] + 0.03, s4 + 0.02, s4 + 0.22, s4 + 0.475, s4 + 0.73, s4 + 0.925]
+    tb = [0.0, 0.1, 0.9, 1.0]
+    bl = Comp(bevel=0.011, segs=1, angle=32)
+    shell(bl, lc, [[(u, lerp(-0.30, 0.30, t)) for u in ub] for t in tb],
+          lambda j, i, u, v: 0.052 + (0.014 if j in (0, 3) else 0.0), lift=lambda j, i, u, v: 0.03 * (1 - tb[j]),
+          mat=STL, rim_mat=STL, flush=True)
+    comps.append(bl)
+    rb = Comp(shade="smooth")
+    rivets_on(rb, lc, [(s4 + 0.22, lerp(-0.30, 0.30, 0.1)), (s4 + 0.73, lerp(-0.30, 0.30, 0.1))],
+              lambda u, v: 0.027 + 0.052)
+    comps.append(rb)
     return comps
 
 
@@ -892,13 +924,27 @@ def build_lower_leg_legs():
     shell(c, lc, [[(u, lerp(-0.24, 0.30, t)) for u in us] for t in tvs],
           lambda j, i, u, v: 0.06 + ridge(u) + (0.018 if j == 0 else 0.0), mat=STL, rim_mat=STL, flush=True)
     comps.append(c)
-    # one leather strap all the way round, resting on the greave in front and on the padding behind
+    # calf guard: a separate plate round the back of the shin (inner face clear) with a soft calf bulge; it
+    # stops 0.1 below the knee plane so the knee can bend
+    s4 = L["total"] - 0.95
+    ug = [L["corner_ob"] + 0.03, s4 + 0.02, s4 + 0.22, s4 + 0.475, s4 + 0.73, s4 + 0.925]
+    tg = [0.0, 0.12, 0.5, 0.88, 1.0]
+
+    def calf(u, t):
+        p, _ = lc(u, 0)
+        return 0.045 * max(0.0, 1 - (p.x / 0.5) ** 2) * math.sin(math.pi * clamp(t))
+    cg = Comp(bevel=0.011, segs=1, angle=32)
+    shell(cg, lc, [[(u, lerp(-0.22, 0.28, t)) for u in ug] for t in tg],
+          lambda j, i, u, v: 0.05 + calf(u, tg[j]) + (0.016 if j in (0, 4) else 0.0),
+          lift=lambda j, i, u, v: 0.02 * (1 - tg[j]) ** 2, mat=STL, rim_mat=STL, flush=True)
+    comps.append(cg)
+    # one leather strap all the way round, resting on the greave in front and on the calf guard behind
     cols = lite_cols(lc)
 
     def slift(j, i, u, v):
         if u <= L["corner_ob"]:
             return 0.06 + ridge(u) - 0.004
-        return lerp(0.06, 0.012, smooth((u - L["corner_ob"]) / 0.25))
+        return 0.048 + calf(u, 0.45)
     st = Comp(bevel=0.008, segs=1, angle=40)
     shell(st, lc, [[(u, z) for u in cols] for z in (-0.05, 0.05)], 0.03, lift=slift, mat=LTH, rim_mat=LTH, flush=True)
     comps.append(st)
@@ -1340,6 +1386,18 @@ def build_bake_material(m, idx):
         base = b.mix(1.0, base, jit, "MULTIPLY")
         col = tint_shade(base, (56, 50, 70), (152, 142, 144), (255, 246, 236))
         col = b.mix(b.math("MULTIPLY", edge_up, 0.25), col, (232, 208, 164))
+    elif idx == UND:
+        sp = b.nt.nodes.new("ShaderNodeSeparateXYZ")
+        b.nt.links.new(b.geo.outputs["Position"], sp.inputs["Vector"])
+        grain = b.math("MULTIPLY_ADD", b.noise(18.0, 2.0, 0.6, 0.3), 0.10, -0.05)
+        col = b.ramp(b.math("ADD", S, b.math("ADD", b.math("MULTIPLY", paint, 0.9), grain)),
+                     [(0.0, (8, 5, 4)), (0.3, (24, 15, 10)), (0.55, (46, 30, 20)), (0.78, (70, 47, 31)),
+                      (1.0, (98, 68, 46))])
+        col = b.mix(1.0, col, jit, "MULTIPLY")
+        seam = b.math("SUBTRACT", 1.0, b.smoothstep(b.math("ABSOLUTE", b.math("SINE", b.math("MULTIPLY", sp.outputs["X"], 6.0))), 0.0, 0.10))
+        col = b.mix(b.math("MULTIPLY", seam, 0.30), col, (10, 6, 4))
+        col = b.mix(b.math("MULTIPLY", rim, 0.20), col, (10, 16, 36), "ADD")
+        col = b.mix(b.math("MULTIPLY", edge_up, 0.22), col, (128, 92, 62))
     else:
         col = b.ramp(S, [(0.0, (10, 8, 8)), (1.0, (52, 40, 34))])
     target = b.nt.nodes.new("ShaderNodeTexImage")
@@ -1359,6 +1417,34 @@ def unwrap(objs):
     bpy.ops.uv.smart_project(angle_limit=math.radians(55), island_margin=0.003, correct_aspect=True)
     bpy.ops.uv.pack_islands(rotate=True, margin=0.0025)
     bpy.ops.object.mode_set(mode="OBJECT")
+
+
+def fill_holes(img, iters=20):
+    """Texels the bake never wrote are pure black and show as dark slits along UV seams. Flood them with
+    the average of their painted neighbours (a plain dilation; painted texels are never touched)."""
+    import numpy as np
+    n = BAKE_SIZE
+    a = np.empty(n * n * 4, np.float32)
+    img.pixels.foreach_get(a)
+    a = a.reshape(n, n, 4)
+    empty = a[:, :, :3].sum(axis=2) <= 1e-7
+    log("unbaked texels before fill:", int(empty.sum()))
+    for _ in range(iters):
+        if not empty.any():
+            break
+        acc = np.zeros((n, n, 3), np.float32)
+        cnt = np.zeros((n, n), np.float32)
+        ok = ~empty
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                if dy == 0 and dx == 0:
+                    continue
+                acc += np.roll(a[:, :, :3] * ok[:, :, None], (dy, dx), (0, 1))
+                cnt += np.roll(ok.astype(np.float32), (dy, dx), (0, 1))
+        fill = empty & (cnt > 0)
+        a[fill, :3] = acc[fill] / cnt[fill][:, None]
+        empty = empty & ~fill
+    img.pixels.foreach_set(a.ravel())
 
 
 def bake_all(objs):
@@ -1382,6 +1468,7 @@ def bake_all(objs):
         select_only(members)
         t0 = time.time()
         bpy.ops.object.bake(type="EMIT")
+        fill_holes(img)
         path = ROOT / "textures" / f"{SET}-{group}.png"
         img.filepath_raw = str(path)
         img.file_format = "PNG"
@@ -1408,8 +1495,6 @@ def bake_all(objs):
     return groups
 
 
-if not QUICK:
-    bake_all(armor_objs)
 
 # ===========================================================================
 # EXPORTS, POLYGON REPORT, STUDIO INSTALL DATA
@@ -1432,8 +1517,6 @@ def clean_mesh(o):
 
 def export():
     objs = armor_objs
-    for o in objs:
-        clean_mesh(o)
     select_only(objs)
     bpy.ops.export_scene.gltf(filepath=str(ROOT / "exports" / "glb" / f"{SET}.glb"), export_format="GLB",
                               use_selection=True, export_apply=True)
@@ -1474,6 +1557,9 @@ def export():
 
 
 if not QUICK:
+    for _o in armor_objs:
+        clean_mesh(_o)            # clean BEFORE unwrapping, so no UV corner is merged or smeared afterwards
+    bake_all(armor_objs)
     export()
 
 
