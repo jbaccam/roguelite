@@ -510,13 +510,14 @@ require(combat.ZombieDeath).onDeath=function(npc,position)
 end
 -- The last player leaving resets the run, so no wave, phase or test-run flag outlives an empty server.
 Players.PlayerRemoving:Connect(function(p) S.states[p]=nil;S.startingWeapons[p]=nil;if next(S.states)==nil then S.resetRun() end;task.defer(beginWave) end)
--- Any hammer boss (scheduled or spawned) holds the wave open until it is gone,
--- then a short grace lets players sweep up its crystal shower.
+-- Any boss (IsBoss: the Hammer boss today, later map bosses; scheduled or admin-spawned) holds
+-- the wave open until it is gone, then a short grace lets players sweep up its crystal shower.
+-- Only the admin panel's End wave / Jump to wave skip this.
 local BOSS_LOOT_GRACE=5
 local bossSeenAt=-math.huge
 local function bossHolding(now)
  local mobs=workspace:FindFirstChild('RogueliteEnemies')
- if mobs then for _,npc in mobs:GetChildren() do if npc:GetAttribute('IsHammerBoss') then bossSeenAt=now;return true end end end
+ if mobs then for _,npc in mobs:GetChildren() do if npc:GetAttribute('IsBoss') or npc:GetAttribute('IsHammerBoss') then bossSeenAt=now;return true end end end
  return run:GetAttribute('BossAlive')==true or now-bossSeenAt<BOSS_LOOT_GRACE
 end
 local elapsed=0

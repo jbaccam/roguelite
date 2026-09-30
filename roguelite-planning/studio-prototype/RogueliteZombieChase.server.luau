@@ -422,7 +422,13 @@ connection = RunService.Heartbeat:Connect(function(dt)
     local obstruction = workspace:Raycast(root.Position, target.Position - root.Position, params)
     if not obstruction then
         waypoints = nil
-        local delta = target.Position - root.Position
+        -- leadTime (crabs): aim where the player is heading, fading out up close so it never overshoots.
+        local aim = target.Position
+        if config.leadTime then
+            local v = target.AssemblyLinearVelocity
+            aim += Vector3.new(v.X, 0, v.Z) * config.leadTime * math.clamp((distance - config.stopRange) / 8, 0, 1)
+        end
+        local delta = aim - root.Position
         local flat = Vector3.new(delta.X, 0, delta.Z)
         local direction = (distance >= config.stopRange and flat.Magnitude > 0.01) and flat.Unit or Vector3.zero
         direction += separation * 1.8

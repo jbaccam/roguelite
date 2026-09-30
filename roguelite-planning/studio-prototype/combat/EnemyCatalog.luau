@@ -94,7 +94,19 @@ add("spitter-zombie", "Spitter Zombie", "Pine Valley", "Ranged", 5, 10, 1.5, {
 	attackRecovery = 1.15,
 	attackCooldown = 2.5,
 })
-add("crab", "Crab", "Beach Cove", "Melee", 4, 11, 1, { height = 3, radius = 1.8, strideLength = 3.5 })
+-- maxMoveCycles: short-legged scuttlers need more Move loops per second than the default 4,
+-- or their feet glide (crab: 1.7-stud stride at 16 studs/s wants ~9). leadTime: seconds of the
+-- target's velocity to aim ahead, so a side-step doesn't leave the crab trailing behind.
+add(
+	"crab",
+	"Crab",
+	"Beach Cove",
+	"Melee",
+	4,
+	11,
+	1,
+	{ height = 3, radius = 1.8, strideLength = 3.5, maxMoveCycles = 10, leadTime = 0.35 }
+)
 add("snake", "Snake", "Beach Cove", "Lunge", 3, 12, 1.5, {
 	height = 3,
 	radius = 1.2,
@@ -116,6 +128,7 @@ add("hermit-crab", "Hermit Crab", "Beach Cove", "Heavy", 12, 7, 2, {
 	attackRecovery = 1.25,
 	attackCooldown = 1.8,
 	strideLength = 3.2,
+	maxMoveCycles = 10,
 })
 add("rock-throwing-crab", "Rock-Throwing Crab", "Beach Cove", "Ranged", 6, 8, 2, {
 	height = 3,
@@ -127,6 +140,7 @@ add("rock-throwing-crab", "Rock-Throwing Crab", "Beach Cove", "Ranged", 6, 8, 2,
 	attackRecovery = 1.25,
 	attackCooldown = 2.5,
 	strideLength = 3.5,
+	maxMoveCycles = 10,
 })
 add("skeleton", "Skeleton", "Desert Badlands", "Melee", 4, 12, 1.2)
 add("bow-skeleton", "Bow Skeleton", "Desert Badlands", "Ranged", 4, 10, 1.5, {

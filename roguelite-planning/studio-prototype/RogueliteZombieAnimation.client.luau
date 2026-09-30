@@ -73,7 +73,7 @@ RunService.PreSimulation:Connect(function(dt)
    local strideLength=(data.motion.strideLength or config.strideLength)*relativeScale
    if walking then
     -- Short authored strides would blur at wave speeds; cap cadence and let feet glide.
-    local advance=config.timeBasedMovement and dt*math.clamp(speed/config.speed,0,2) or math.min(distance/math.max(.1,strideLength),dt*MAX_MOVE_CYCLES)*clip.duration
+    local advance=config.timeBasedMovement and dt*math.clamp(speed/config.speed,0,2) or math.min(distance/math.max(.1,strideLength),dt*(config.maxMoveCycles or MAX_MOVE_CYCLES))*clip.duration
     state.moveClock=(state.moveClock+advance)%clip.duration
    end
    local idle=Motion.sample(data,'Idle',now+state.idleOffset)
