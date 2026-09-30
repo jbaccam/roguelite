@@ -1,8 +1,13 @@
 -- Server-only, idempotent death lifecycle. Effects never keep a corpse alive.
 local combat=script.Parent
 local Death={}
+-- Practice targets soak hits: no death, rewards, lifesteal or status. Studio test
+-- targets, plus the server-built lobby dummies (LobbyPracticeDummies) everywhere.
+function Death.isPractice(npc)
+ return npc:GetAttribute('PracticeTarget')==true and (game:GetService('RunService'):IsStudio() or npc:GetAttribute('LobbyDummy')==true)
+end
 function Death.finish(npc)
- if game:GetService('RunService'):IsStudio() and npc:GetAttribute('PracticeTarget') then return end
+ if Death.isPractice(npc) then return end
  if not npc.Parent or npc:GetAttribute('DeathPopped') then return end
  local humanoid=npc:FindFirstChildOfClass('Humanoid')
  if not humanoid or humanoid.Health>0 then return end

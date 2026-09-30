@@ -53,9 +53,36 @@ At start, the role parents the areas it doesn't use into `ServerStorage.Inactive
 |---|---|---|---|
 | Queue pads, run setup, chests, armory, store, skills | yes | no | yes |
 | Weapon ring beside the player (RogueliteCombat) | yes | yes | yes |
+| Attackable practice dummies + ATTACKS switch | yes | no (lobby only) | yes |
 | Waves, enemies, boss, shop, level-ups, death screen | no | yes | yes |
 | Profile loading and saving, Robux receipts | yes | yes | yes |
 | Studio travel switch | no | no | yes |
+
+### Lobby practice dummies (2026-09-28)
+
+User request: make the lobby dummies attackable, with a clear way to turn attacks off so a ranged weapon doesn't fire nonstop.
+
+- `lobby/LobbyPracticeDummies.server.luau` (ServerScriptService) wraps each `Asset=Practice_Dummy` mesh (3, one per side island) at runtime. Each gets a Model with an invisible HumanoidRootPart and a Humanoid, the `PracticeTarget` and `LobbyDummy` attributes, and the `RogueliteZombie` and `LobbyPracticeDummy` tags. Edit-mode geometry is unchanged, and the mesh keeps its collision (`MobCollision` skips dummies).
+- `ZombieDeath.isPractice` extends the old Studio-only practice path to lobby dummies in any server: hits show numbers, but there is no death, kill credit, drops, lifesteal, statuses or rewards.
+- `PlayerStates.<id>.LobbyAttacks` (server-owned, default ON) gates only LobbyDummy targets. `SetLobbyAttacks` accepts booleans only, one every 0.25 s. Arena targeting ignores it.
+- The player-facing controls in `LobbyUI` are:
+  - an ATTACKS ON/OFF button under SETTINGS (lime when on, charcoal when off, with a T or Y key tag);
+  - T on keyboard, Y on gamepad;
+  - a Dummy attacks row in Settings;
+  - a toast on each change;
+  - a PRACTICE DUMMY sign over each dummy that says what's happening and how to switch it, with wording for keyboard, gamepad or touch.
+  - The signs follow the dummy's root as it streams in and out (StreamingEnabled).
+- The setting lasts for the session, like the other settings.
+- Verified in single-client Studio Play:
+  - Attacks ON: a tier-1 Frying Pan at 4.5 studs landed 4 hits in 4 s. A tier-1 Glock at 20 studs (about the Rewards station's distance) fired 5 shots and landed 5 hits.
+  - Attacks OFF, via the real T key and the Settings row: 0 shots and 0 hits. The button, the sign text and the toast all updated.
+  - With dummy attacks OFF, arena zombies still took hits.
+  - After 58 hits the dummy was alive, with no kill credit, shard, heart or death pop. Emeralds stayed at 0.
+  - The console was clean.
+- Not tested:
+  - Multiple real clients (what other players see and their independent switches).
+  - The live lobby role (`LIVE_ROLES=false`; the lobby HUD is still Studio-preview gated).
+  - Mobile touch layout.
 
 ## 2. The trip: lobby → match
 
