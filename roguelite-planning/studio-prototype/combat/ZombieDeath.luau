@@ -12,13 +12,13 @@ function Death.finish(npc)
  combat.ZombiePopped:FireAllClients(position)
  if Death.onDeath and not npc:GetAttribute('BossPractice') then Death.onDeath(npc,position) end
  game:GetService('CollectionService'):RemoveTag(npc,'RogueliteZombie')
- if npc:GetAttribute('IsHammerBoss') then
+ if npc:GetAttribute('IsHammerBoss') or npc:GetAttribute('IsMapBoss') then
   npc:SetAttribute('Attacking',false)
   npc:SetAttribute('BossDeathStart',workspace:GetServerTimeNow())
   if root then root.Anchored=true end
   humanoid.AutoRotate=false
   for _,p in npc:GetDescendants() do if p:IsA('BasePart') then p.CanCollide=false;p.CanTouch=false;p.CanQuery=false end end
-  task.delay(2.9,function() if npc.Parent then npc:Destroy() end end)
+  task.delay(npc:GetAttribute('BossDeathSeconds') or 2.9,function() if npc.Parent then npc:Destroy() end end)
   return
  end
  npc:Destroy()

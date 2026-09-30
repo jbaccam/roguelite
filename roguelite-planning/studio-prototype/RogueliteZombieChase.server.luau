@@ -18,6 +18,8 @@ local Attacks = require(script.Parent:WaitForChild('ZombieAttacks'))
 -- The admin panel's Hammer boss spawns (AdminSpawn below). This script and BossService are unsandboxed.
 local Bosses = require(script.Parent:WaitForChild('BossService'))
 local BossMotion = require(combat:WaitForChild('BossMotion'))
+-- Hammer plus the MapBossDefs ids; MapBossService is required on first use (it needs the generated timing).
+local BossIds = require(combat:WaitForChild('AdminConfig')).BossIds
 local waveGeneration = 0
 -- Admin Pause (ShopService.adminPause): no new spawns until Resume. Looked up lazily, because
 -- ShopService creates RogueliteRunState.
@@ -495,7 +497,7 @@ local function resetWave()
     warnings:ClearAllChildren()
     for _,npc in folder:GetChildren() do
         -- Bosses and admin-panel extras outlive a population change; everything goes when enemies turn off.
-        local keep = npc:GetAttribute('IsHammerBoss') or npc:GetAttribute('AdminSpawn')
+        local keep = npc:GetAttribute('IsBoss') or npc:GetAttribute('AdminSpawn')
         if not keep or not combat:GetAttribute('ZombiesEnabled') then npc:Destroy() end
     end
     if combat:GetAttribute('ZombiesEnabled') then
@@ -512,7 +514,7 @@ combat:GetAttributeChangedSignal('EnemyRoster'):Connect(resetWave)
 resetWave()
 
 -- Admin panel spawner (ADMIN_PANEL.md). Only AdminService calls it, after checking the developer.
--- ('Spawn', id, count, position): extra enemies (or 'Hammer' bosses) on open floor 20-40 studs
+-- ('Spawn', id, count, position): extra enemies (or bosses: AdminConfig.BossIds) on open floor 20-40 studs
 -- around position. They fight normally, take no wave slot and never respawn. Returns how many
 -- appeared. ('Clear'): removes every enemy, bosses included. ('Freeze', on): sets AdminFreeze.
 local adminSerial = 0
@@ -533,13 +535,18 @@ adminSpawn.OnInvoke = function(action, id, count, position)
     end
     if combat:GetAttribute('ZombiesEnabled') ~= true or not Role.marker() then return 0 end
     local made = 0
-    -- AdminConfig caps the Hammer boss at 5; checked here again.
-    for _ = 1, math.clamp(math.floor(count), 0, id == 'Hammer' and 5 or 50) do
+    -- AdminConfig caps bosses at 5; checked here again.
+    for _ = 1, math.clamp(math.floor(count), 0, table.find(BossIds, id) and 5 or 50) do
         local point = pickSpawnPoint({}, position, {20, 40}, 20)
         if point then
             if id == 'Hammer' then
                 local at = point + Vector3.yAxis * (BossMotion.RootHeight + 0.1)
                 local boss = Bosses.spawn(CFrame.lookAt(at, Vector3.new(position.X, at.Y, position.Z)), true)
+                if boss then boss:SetAttribute('AdminSpawn', true); made += 1 end
+            elseif table.find(BossIds, id) then
+                local timing = require(combat:WaitForChild('MapBossDefs')).timing(id)
+                local at = timing and point + Vector3.yAxis * (timing.rootHeight + 0.1)
+                local boss = at and require(script.Parent:WaitForChild('MapBossService')).spawn(id, CFrame.lookAt(at, Vector3.new(position.X, at.Y, position.Z)), true)
                 if boss then boss:SetAttribute('AdminSpawn', true); made += 1 end
             else
                 adminSerial += 1

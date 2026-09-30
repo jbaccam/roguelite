@@ -115,13 +115,13 @@ RunService.Heartbeat:Connect(function(dt)
  -- The nearest living boss in this arena; kiting it across the map keeps the bar up.
  local selected,health;local nearest=600
  if root and activeHumanoid and activeHumanoid.Health>0 then
-  for _,npc in game:GetService('CollectionService'):GetTagged('HammerBoss') do
+  for _,tag in {'HammerBoss','MapBoss'} do for _,npc in game:GetService('CollectionService'):GetTagged(tag) do
    local h=npc:FindFirstChildOfClass('Humanoid');local part=npc.PrimaryPart
    if npc:IsDescendantOf(workspace) and h and h.Health>0 and part then
     local distance=(part.Position-root.Position).Magnitude
     if distance<nearest then selected,health,nearest=npc,h,distance end
    end
-  end
+  end end
  end
  view:SetBossHealth(selected,health and health.Health,health and health.MaxHealth)
 end)

@@ -11,7 +11,7 @@ local Items=require(combat:WaitForChild('ShopCatalog'))
 local Maps=require(combat:WaitForChild('MapConfig'))
 local E=require(combat:WaitForChild('EconomyConfig'))
 local XP=require(combat:WaitForChild('RunXP'))
-local A={UserIds=table.freeze({341854066}),BossId='Hammer'} -- 341854066: EggaRowls; frozen so nothing can add a developer at runtime
+local A={UserIds=table.freeze({341854066}),BossId='Hammer',BossIds=table.freeze({'Hammer','KingCrab','Pharaoh','FrostCyclops','Dragon'})} -- 341854066: EggaRowls; frozen so nothing can add a developer at runtime
 local admins={};for _,id in A.UserIds do admins[id]=true end
 function A.isAdminId(id) return type(id)=='number' and admins[id]==true end
 function A.isAdmin(player) return typeof(player)=='Instance' and player:IsA('Player') and A.isAdminId(player.UserId) end
@@ -49,9 +49,9 @@ local function enemyList(v)
 end
 local rules={
  Travel=function(a,b) return b==nil and (a=='Lobby' or Maps.valid(a)) end,
- -- The boss is capped at 5: one mistyped count could otherwise stall the server with 50 bosses.
+ -- Bosses are capped at 5: one mistyped count could otherwise stall the server with 50 bosses.
  Spawn=function(a,b)
-  if a==A.BossId then return int(b,1,5) end
+  if table.find(A.BossIds,a) then return int(b,1,5) end
   return type(a)=='string' and Enemies.ById[a]~=nil and int(b,1,50)
  end,
  KeepAlive=function(a,b) return int(a,0,100) and enemyList(b) end,

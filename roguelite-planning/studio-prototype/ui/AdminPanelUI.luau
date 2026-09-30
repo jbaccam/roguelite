@@ -72,14 +72,15 @@ function M.new(player)
   end
   return 120
  end
- -- Mobs: pick types (any EnemyCatalog enemy or the Hammer boss). Spawn adds that many of each
+ -- Mobs: pick types (any EnemyCatalog enemy or a boss). Spawn adds that many of each
  -- picked type; Keep N alive uses the picked regular types.
  local options={}
  for _,d in Enemies.List do table.insert(options,{id=d.id,name=d.name}) end
  table.insert(options,{id=Admin.BossId,name='Hammer boss'})
+ for _,o in {{id='KingCrab',name='King Crab boss'},{id='Pharaoh',name='Pharaoh boss'},{id='FrostCyclops',name='Frost Cyclops boss'},{id='Dragon',name='Dragon boss'}} do table.insert(options,o) end
  local function picked(regularOnly)
   local out={}
-  for _,o in options do if self.mobs[o.id] and not (regularOnly and o.id==Admin.BossId) then table.insert(out,o.id) end end
+  for _,o in options do if self.mobs[o.id] and not (regularOnly and table.find(Admin.BossIds,o.id)) then table.insert(out,o.id) end end
   return out
  end
  function tabs.Mobs(c)
@@ -97,7 +98,7 @@ function M.new(player)
   button(c,'Spawn','Spawn',190,y,200,function()
    local ids=picked(false)
    if #ids==0 then T.toast(screen,'Pick an enemy first',C.negative);return end
-   for i,id in ids do if i>1 then task.wait(.2) end;send('Spawn',id,id==Admin.BossId and math.min(self.spawnCount,5) or self.spawnCount) end -- bosses cap at 5 (AdminConfig)
+   for i,id in ids do if i>1 then task.wait(.2) end;send('Spawn',id,table.find(Admin.BossIds,id) and math.min(self.spawnCount,5) or self.spawnCount) end -- bosses cap at 5 (AdminConfig)
   end,true)
   y+=60
   heading(c,'KeepTitle','Keep N alive',y);y+=32

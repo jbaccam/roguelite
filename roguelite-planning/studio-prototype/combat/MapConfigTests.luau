@@ -21,7 +21,8 @@ return function(Maps, EnemyCatalog, Rules)
 			check(type(name) == "string" and seenFolders[name] == nil, id .. " folder " .. tostring(name) .. " is shared")
 			seenFolders[name] = id
 		end
-		check(map.boss == nil or map.boss == "Hammer", id .. " boss must be Hammer or nil")
+		local mapBosses = { "KingCrab", "Pharaoh", "FrostCyclops", "Dragon" } -- MapBossDefs ids
+		check(map.boss == nil or map.boss == "Hammer" or table.find(mapBosses, map.boss) ~= nil, id .. " boss must be Hammer, a map boss or nil")
 		if map.roster ~= nil then
 			local count = 0
 			for enemyId in map.roster:gmatch("[^,%s]+") do
@@ -43,6 +44,6 @@ return function(Maps, EnemyCatalog, Rules)
 		end
 	end
 	check(Maps.Maps.PineValley.boss == "Hammer" and Maps.Maps.PineValley.roster == nil, "Pine Valley keeps its zombies and Hammer boss")
-	check(Maps.Maps.BeachCove.boss == nil, "Beach Cove is won by clearing wave 20")
+	check(Maps.Maps.BeachCove.boss == "KingCrab", "Beach Cove ends with the King Crab boss")
 	return { passed = checks }
 end

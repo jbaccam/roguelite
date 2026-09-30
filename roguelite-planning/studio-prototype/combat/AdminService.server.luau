@@ -89,15 +89,15 @@ function actions.Spawn(p,id,count)
  if combat:GetAttribute('ZombiesEnabled')~=true then return false,'Enemies spawn in Sandbox or during a wave' end
  local _,root=alive(p);if not root then return false,'Respawn first' end
  -- Caps on what's alive: extras are named Admin_nn (split children too); admin bosses are
- -- HammerBoss models the spawner tags AdminSpawn.
+ -- boss models (IsBoss) the spawner tags AdminSpawn.
  local extras,bosses=0,0
  local folder=workspace:FindFirstChild('RogueliteEnemies')
  for _,npc in folder and folder:GetChildren() or {} do
   if npc.Name:sub(1,6)=='Admin_' then extras+=1 end
   local h=npc:FindFirstChildOfClass('Humanoid')
-  if npc:GetAttribute('IsHammerBoss') and npc:GetAttribute('AdminSpawn') and h and h.Health>0 then bosses+=1 end
+  if npc:GetAttribute('IsBoss') and npc:GetAttribute('AdminSpawn') and h and h.Health>0 then bosses+=1 end
  end
- if id==Admin.BossId then
+ if table.find(Admin.BossIds,id) then
   if bosses+count>MAX_BOSSES then return false,'Too many bosses ('..MAX_BOSSES..'). Clear first' end
  elseif extras+count>MAX_EXTRAS then return false,'Too many spawned enemies ('..MAX_EXTRAS..'). Clear first' end
  local made=sp:Invoke('Spawn',id,count,root.Position)

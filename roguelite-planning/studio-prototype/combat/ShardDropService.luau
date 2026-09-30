@@ -84,7 +84,7 @@ function D.spawn(npc,position)
  local mobs=workspace:FindFirstChild('RogueliteEnemies');if mobs then table.insert(exclude,mobs) end
  for _,p in Players:GetPlayers() do if p.Character then table.insert(exclude,p.Character) end end
  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances=exclude
- if npc:GetAttribute('IsHammerBoss') then
+ if npc:GetAttribute('IsHammerBoss') or npc:GetAttribute('IsMapBoss') then
   local first
   for n=1,D.BOSS_DROPS do
    -- Golden-angle spiral: evenly filled disc, 3 to 14 studs from the body.

@@ -1,0 +1,980 @@
+{
+  "kit": "boss-vfx-kit",
+  "status": "Blender-verified, Studio untested",
+  "generated": "2026-09-29",
+  "generator": "build_vfx_kit.py + paint_textures.py (Blender 5.2 --factory-startup, numpy only)",
+  "conventions": {
+    "units": "1 Blender unit = 1 stud; author-final size, import at scale 1.0",
+    "axes": "Z up, model front faces -Y; FBX written with axis_forward=-Z, axis_up=Y",
+    "origin": "base centre; z = 0 is the ground line. Glaciers and obelisks extend slightly below z = 0 so they can rise out of the floor with no gap.",
+    "fbx": "one FBX per mesh, textures embedded (path_mode=COPY, embed_textures=True); a <name>.fbm folder beside each holds a plain copy of the same PNG",
+    "flipbooks": "4x4 grid in one 1024x1024 PNG, 256px frames, read left-to-right then top-to-bottom (Roblox Grid4x4)"
+  },
+  "families": {
+    "Ice": {
+      "atlas": "textures/IceSpikes_BaseColor.png",
+      "pixels": 1024,
+      "texel_coverage": 0.505
+    },
+    "Molten": {
+      "atlas": "textures/MoltenRock_BaseColor.png",
+      "pixels": 512,
+      "texel_coverage": 0.579
+    },
+    "Sandstone": {
+      "atlas": "textures/Obelisk_BaseColor.png",
+      "pixels": 1024,
+      "texel_coverage": 0.567
+    },
+    "Shell": {
+      "atlas": "textures/ShellChip_BaseColor.png",
+      "pixels": 512,
+      "texel_coverage": 0.488
+    }
+  },
+  "all_meshes_fbx": {
+    "file": "exports/fbx/AllMeshes.fbx",
+    "check": {
+      "reimport_triangles": 7272,
+      "reimport_size": [
+        63.307,
+        76.749,
+        15.42
+      ],
+      "embedded_png_count": 4,
+      "bytes": 1225484
+    }
+  },
+  "assets": [
+    {
+      "name": "IceSpike_A",
+      "type": "mesh",
+      "file": "exports/fbx/IceSpike_A.fbx",
+      "texture": "textures/IceSpikes_BaseColor.png",
+      "size_studs": [
+        2.705,
+        2.075,
+        3.574
+      ],
+      "height_above_ground_studs": 3.0,
+      "below_ground_studs": 0.574,
+      "triangles": 448,
+      "vertices": 232,
+      "boss": "Frost Cyclops",
+      "attack": "Stomp",
+      "use": "First (smallest) glacier of the travelling ice wall; tween up out of the ground from the base origin.",
+      "fbx_check": {
+        "reimport_triangles": 448,
+        "reimport_size": [
+          2.705,
+          2.075,
+          3.574
+        ],
+        "embedded_png_count": 1,
+        "bytes": 379116,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "IceSpike_B",
+      "type": "mesh",
+      "file": "exports/fbx/IceSpike_B.fbx",
+      "texture": "textures/IceSpikes_BaseColor.png",
+      "size_studs": [
+        4.075,
+        3.765,
+        5.952
+      ],
+      "height_above_ground_studs": 5.0,
+      "below_ground_studs": 0.952,
+      "triangles": 541,
+      "vertices": 281,
+      "boss": "Frost Cyclops",
+      "attack": "Stomp",
+      "use": "Ice wall step 2.",
+      "fbx_check": {
+        "reimport_triangles": 541,
+        "reimport_size": [
+          4.075,
+          3.765,
+          5.952
+        ],
+        "embedded_png_count": 1,
+        "bytes": 383244,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "IceSpike_C",
+      "type": "mesh",
+      "file": "exports/fbx/IceSpike_C.fbx",
+      "texture": "textures/IceSpikes_BaseColor.png",
+      "size_studs": [
+        6.228,
+        4.791,
+        8.359
+      ],
+      "height_above_ground_studs": 7.0,
+      "below_ground_studs": 1.359,
+      "triangles": 589,
+      "vertices": 307,
+      "boss": "Frost Cyclops",
+      "attack": "Stomp",
+      "use": "Ice wall step 3.",
+      "fbx_check": {
+        "reimport_triangles": 589,
+        "reimport_size": [
+          6.228,
+          4.791,
+          8.359
+        ],
+        "embedded_png_count": 1,
+        "bytes": 385772,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "IceSpike_D",
+      "type": "mesh",
+      "file": "exports/fbx/IceSpike_D.fbx",
+      "texture": "textures/IceSpikes_BaseColor.png",
+      "size_studs": [
+        9.031,
+        7.941,
+        11.931
+      ],
+      "height_above_ground_studs": 10.0,
+      "below_ground_studs": 1.931,
+      "triangles": 735,
+      "vertices": 382,
+      "boss": "Frost Cyclops",
+      "attack": "Stomp",
+      "use": "Ice wall step 4.",
+      "fbx_check": {
+        "reimport_triangles": 735,
+        "reimport_size": [
+          9.031,
+          7.941,
+          11.931
+        ],
+        "embedded_png_count": 1,
+        "bytes": 391996,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "IceSpike_E",
+      "type": "mesh",
+      "file": "exports/fbx/IceSpike_E.fbx",
+      "texture": "textures/IceSpikes_BaseColor.png",
+      "size_studs": [
+        11.883,
+        9.053,
+        15.42
+      ],
+      "height_above_ground_studs": 13.0,
+      "below_ground_studs": 2.42,
+      "triangles": 825,
+      "vertices": 429,
+      "boss": "Frost Cyclops",
+      "attack": "Stomp",
+      "use": "Last and largest glacier; shards lean forward (-Y) along the wall's travel direction.",
+      "fbx_check": {
+        "reimport_triangles": 825,
+        "reimport_size": [
+          11.883,
+          9.053,
+          15.42
+        ],
+        "embedded_png_count": 1,
+        "bytes": 396028,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "IceShard_A",
+      "type": "mesh",
+      "file": "exports/fbx/IceShard_A.fbx",
+      "texture": "textures/IceSpikes_BaseColor.png",
+      "size_studs": [
+        0.156,
+        0.183,
+        0.498
+      ],
+      "height_above_ground_studs": 0.498,
+      "below_ground_studs": 0.0,
+      "triangles": 74,
+      "vertices": 39,
+      "boss": "Frost Cyclops",
+      "attack": "Stomp / Ground Slam",
+      "use": "Small flung debris when glaciers erupt or shatter.",
+      "fbx_check": {
+        "reimport_triangles": 74,
+        "reimport_size": [
+          0.156,
+          0.183,
+          0.498
+        ],
+        "embedded_png_count": 1,
+        "bytes": 363196,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "IceShard_B",
+      "type": "mesh",
+      "file": "exports/fbx/IceShard_B.fbx",
+      "texture": "textures/IceSpikes_BaseColor.png",
+      "size_studs": [
+        0.278,
+        0.341,
+        0.817
+      ],
+      "height_above_ground_studs": 0.817,
+      "below_ground_studs": 0.0,
+      "triangles": 96,
+      "vertices": 50,
+      "boss": "Frost Cyclops",
+      "attack": "Stomp / Ground Slam",
+      "use": "Flung ice debris.",
+      "fbx_check": {
+        "reimport_triangles": 96,
+        "reimport_size": [
+          0.278,
+          0.341,
+          0.817
+        ],
+        "embedded_png_count": 1,
+        "bytes": 364044,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "IceShard_C",
+      "type": "mesh",
+      "file": "exports/fbx/IceShard_C.fbx",
+      "texture": "textures/IceSpikes_BaseColor.png",
+      "size_studs": [
+        0.767,
+        0.47,
+        1.219
+      ],
+      "height_above_ground_studs": 1.219,
+      "below_ground_studs": 0.0,
+      "triangles": 174,
+      "vertices": 91,
+      "boss": "Frost Cyclops",
+      "attack": "Stomp / Ground Slam",
+      "use": "Twin-crystal debris chunk.",
+      "fbx_check": {
+        "reimport_triangles": 174,
+        "reimport_size": [
+          0.767,
+          0.47,
+          1.219
+        ],
+        "embedded_png_count": 1,
+        "bytes": 367404,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "MoltenRock_A",
+      "type": "mesh",
+      "file": "exports/fbx/MoltenRock_A.fbx",
+      "texture": "textures/MoltenRock_BaseColor.png",
+      "size_studs": [
+        0.799,
+        0.712,
+        0.535
+      ],
+      "height_above_ground_studs": 0.535,
+      "below_ground_studs": 0.0,
+      "triangles": 192,
+      "vertices": 98,
+      "boss": "Dragon",
+      "attack": "Front Stomp / Tail Whip",
+      "use": "Obsidian ejecta with glowing seams; optional EmissiveMask for a SurfaceAppearance emissive setup.",
+      "fbx_check": {
+        "reimport_triangles": 192,
+        "reimport_size": [
+          0.799,
+          0.712,
+          0.535
+        ],
+        "embedded_png_count": 1,
+        "bytes": 202156,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "MoltenRock_B",
+      "type": "mesh",
+      "file": "exports/fbx/MoltenRock_B.fbx",
+      "texture": "textures/MoltenRock_BaseColor.png",
+      "size_studs": [
+        1.423,
+        1.162,
+        0.946
+      ],
+      "height_above_ground_studs": 0.946,
+      "below_ground_studs": 0.0,
+      "triangles": 200,
+      "vertices": 102,
+      "boss": "Dragon",
+      "attack": "Front Stomp / Tail Whip",
+      "use": "Obsidian ejecta.",
+      "fbx_check": {
+        "reimport_triangles": 200,
+        "reimport_size": [
+          1.423,
+          1.162,
+          0.946
+        ],
+        "embedded_png_count": 1,
+        "bytes": 202460,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "MoltenRock_C",
+      "type": "mesh",
+      "file": "exports/fbx/MoltenRock_C.fbx",
+      "texture": "textures/MoltenRock_BaseColor.png",
+      "size_studs": [
+        2.087,
+        1.776,
+        1.333
+      ],
+      "height_above_ground_studs": 1.333,
+      "below_ground_studs": 0.0,
+      "triangles": 176,
+      "vertices": 90,
+      "boss": "Dragon",
+      "attack": "Front Stomp / Tail Whip",
+      "use": "Largest ejecta chunk.",
+      "fbx_check": {
+        "reimport_triangles": 176,
+        "reimport_size": [
+          2.087,
+          1.776,
+          1.333
+        ],
+        "embedded_png_count": 1,
+        "bytes": 201548,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "Obelisk_A",
+      "type": "mesh",
+      "file": "exports/fbx/Obelisk_A.fbx",
+      "texture": "textures/Obelisk_BaseColor.png",
+      "size_studs": [
+        2.539,
+        2.478,
+        4.665
+      ],
+      "height_above_ground_studs": 4.325,
+      "below_ground_studs": 0.34,
+      "triangles": 818,
+      "vertices": 426,
+      "boss": "Pharaoh",
+      "attack": "Tomb Eruption",
+      "use": "Stone spike bursting up through a hieroglyph circle; leans slightly, broken rubble at the foot.",
+      "fbx_check": {
+        "reimport_triangles": 818,
+        "reimport_size": [
+          2.539,
+          2.478,
+          4.665
+        ],
+        "embedded_png_count": 1,
+        "bytes": 330092,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "Obelisk_B",
+      "type": "mesh",
+      "file": "exports/fbx/Obelisk_B.fbx",
+      "texture": "textures/Obelisk_BaseColor.png",
+      "size_studs": [
+        3.477,
+        3.659,
+        6.224
+      ],
+      "height_above_ground_studs": 5.777,
+      "below_ground_studs": 0.447,
+      "triangles": 836,
+      "vertices": 437,
+      "boss": "Pharaoh",
+      "attack": "Tomb Eruption",
+      "use": "Medium obelisk spike.",
+      "fbx_check": {
+        "reimport_triangles": 836,
+        "reimport_size": [
+          3.477,
+          3.659,
+          6.224
+        ],
+        "embedded_png_count": 1,
+        "bytes": 330668,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "Obelisk_C",
+      "type": "mesh",
+      "file": "exports/fbx/Obelisk_C.fbx",
+      "texture": "textures/Obelisk_BaseColor.png",
+      "size_studs": [
+        4.303,
+        4.669,
+        8.334
+      ],
+      "height_above_ground_studs": 7.717,
+      "below_ground_studs": 0.617,
+      "triangles": 856,
+      "vertices": 444,
+      "boss": "Pharaoh",
+      "attack": "Tomb Eruption",
+      "use": "Tallest obelisk spike with the gold pyramidion cap.",
+      "fbx_check": {
+        "reimport_triangles": 856,
+        "reimport_size": [
+          4.303,
+          4.669,
+          8.334
+        ],
+        "embedded_png_count": 1,
+        "bytes": 331980,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "SandstoneRubble_A",
+      "type": "mesh",
+      "file": "exports/fbx/SandstoneRubble_A.fbx",
+      "texture": "textures/Obelisk_BaseColor.png",
+      "size_studs": [
+        1.391,
+        1.316,
+        0.819
+      ],
+      "height_above_ground_studs": 0.819,
+      "below_ground_studs": 0.0,
+      "triangles": 164,
+      "vertices": 84,
+      "boss": "Pharaoh",
+      "attack": "Tomb Eruption",
+      "use": "Flung sandstone chunk.",
+      "fbx_check": {
+        "reimport_triangles": 164,
+        "reimport_size": [
+          1.391,
+          1.316,
+          0.819
+        ],
+        "embedded_png_count": 1,
+        "bytes": 301292,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "SandstoneRubble_B",
+      "type": "mesh",
+      "file": "exports/fbx/SandstoneRubble_B.fbx",
+      "texture": "textures/Obelisk_BaseColor.png",
+      "size_studs": [
+        1.899,
+        2.164,
+        1.391
+      ],
+      "height_above_ground_studs": 1.391,
+      "below_ground_studs": 0.0,
+      "triangles": 156,
+      "vertices": 80,
+      "boss": "Pharaoh",
+      "attack": "Tomb Eruption",
+      "use": "Larger flung sandstone chunk.",
+      "fbx_check": {
+        "reimport_triangles": 156,
+        "reimport_size": [
+          1.899,
+          2.164,
+          1.391
+        ],
+        "embedded_png_count": 1,
+        "bytes": 300796,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "ShellChip_A",
+      "type": "mesh",
+      "file": "exports/fbx/ShellChip_A.fbx",
+      "texture": "textures/ShellChip_BaseColor.png",
+      "size_studs": [
+        0.522,
+        0.384,
+        0.147
+      ],
+      "height_above_ground_studs": 0.147,
+      "below_ground_studs": 0.0,
+      "triangles": 128,
+      "vertices": 66,
+      "boss": "King Crab",
+      "attack": "Claw Crush / Sideways Rush",
+      "use": "Small shell fragment knocked off on impact.",
+      "fbx_check": {
+        "reimport_triangles": 128,
+        "reimport_size": [
+          0.522,
+          0.384,
+          0.147
+        ],
+        "embedded_png_count": 1,
+        "bytes": 71548,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "ShellChip_B",
+      "type": "mesh",
+      "file": "exports/fbx/ShellChip_B.fbx",
+      "texture": "textures/ShellChip_BaseColor.png",
+      "size_studs": [
+        0.779,
+        0.668,
+        0.238
+      ],
+      "height_above_ground_studs": 0.238,
+      "below_ground_studs": 0.0,
+      "triangles": 132,
+      "vertices": 68,
+      "boss": "King Crab",
+      "attack": "Claw Crush / Sideways Rush",
+      "use": "Shell fragment.",
+      "fbx_check": {
+        "reimport_triangles": 132,
+        "reimport_size": [
+          0.779,
+          0.668,
+          0.238
+        ],
+        "embedded_png_count": 1,
+        "bytes": 71836,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "ShellChip_C",
+      "type": "mesh",
+      "file": "exports/fbx/ShellChip_C.fbx",
+      "texture": "textures/ShellChip_BaseColor.png",
+      "size_studs": [
+        1.06,
+        0.931,
+        0.352
+      ],
+      "height_above_ground_studs": 0.352,
+      "below_ground_studs": 0.0,
+      "triangles": 132,
+      "vertices": 68,
+      "boss": "King Crab",
+      "attack": "Claw Crush / Sideways Rush",
+      "use": "Largest shell fragment.",
+      "fbx_check": {
+        "reimport_triangles": 132,
+        "reimport_size": [
+          1.06,
+          0.931,
+          0.352
+        ],
+        "embedded_png_count": 1,
+        "bytes": 71756,
+        "triangles_match": true
+      }
+    },
+    {
+      "name": "FrostFloor",
+      "type": "decal",
+      "file": "textures/FrostFloor.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "boss": "Frost Cyclops",
+      "attack": "Ground Slam / Stomp",
+      "use": "Top-down frosted ground patch under impacts; Decal on a flat part or a SurfaceGui-free Texture."
+    },
+    {
+      "name": "FrostRing",
+      "type": "decal",
+      "file": "textures/FrostRing.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "boss": "Frost Cyclops",
+      "attack": "Ground Slam",
+      "use": "360-degree frost shockwave ring; scale a flat part outward, bright leading edge on the outside."
+    },
+    {
+      "name": "FrostMist_Flipbook4x4",
+      "type": "flipbook",
+      "file": "textures/FrostMist_Flipbook4x4.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "boss": "Frost Cyclops",
+      "attack": "Ground Slam / Stomp",
+      "use": "Cold mist puff that dissipates over 16 frames.",
+      "flipbook_layout": "4x4",
+      "frames": 16,
+      "frame_pixels": 256,
+      "frame_order": "left-to-right, top-to-bottom",
+      "roblox": {
+        "FlipbookLayout": "Grid4x4",
+        "FlipbookMode": "OneShot"
+      }
+    },
+    {
+      "name": "SnowSparkle",
+      "type": "sprite",
+      "file": "textures/SnowSparkle.png",
+      "pixels": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "boss": "Frost Cyclops",
+      "attack": "Ground Slam / Stomp",
+      "use": "Small star/snow sparkle particle."
+    },
+    {
+      "name": "LavaCracks",
+      "type": "decal",
+      "file": "textures/LavaCracks.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "boss": "Dragon",
+      "attack": "Front Stomp",
+      "use": "Top-down glowing lava cracks radiating from the stomp point."
+    },
+    {
+      "name": "ScorchMark",
+      "type": "decal",
+      "file": "textures/ScorchMark.png",
+      "pixels": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "boss": "Dragon",
+      "attack": "Fire Breath",
+      "use": "Soft scorched ground patch with ember specks left by the breath cone."
+    },
+    {
+      "name": "Flame_Flipbook4x4",
+      "type": "flipbook",
+      "file": "textures/Flame_Flipbook4x4.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "boss": "Dragon",
+      "attack": "Fire Breath",
+      "use": "Stylized flame tongue: grows, sways, curls and lifts off over 16 frames.",
+      "flipbook_layout": "4x4",
+      "frames": 16,
+      "frame_pixels": 256,
+      "frame_order": "left-to-right, top-to-bottom",
+      "roblox": {
+        "FlipbookLayout": "Grid4x4",
+        "FlipbookMode": "OneShot"
+      }
+    },
+    {
+      "name": "Ember",
+      "type": "sprite",
+      "file": "textures/Ember.png",
+      "pixels": [
+        128,
+        128
+      ],
+      "alpha": true,
+      "boss": "Dragon",
+      "attack": "Fire Breath / Front Stomp",
+      "use": "Small ember spark particle."
+    },
+    {
+      "name": "SmokePuff_Flipbook4x4",
+      "type": "flipbook",
+      "file": "textures/SmokePuff_Flipbook4x4.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "boss": "Dragon",
+      "attack": "Fire Breath / Front Stomp",
+      "use": "Dark-grey smoke puff, rising and dissipating.",
+      "flipbook_layout": "4x4",
+      "frames": 16,
+      "frame_pixels": 256,
+      "frame_order": "left-to-right, top-to-bottom",
+      "roblox": {
+        "FlipbookLayout": "Grid4x4",
+        "FlipbookMode": "OneShot"
+      }
+    },
+    {
+      "name": "HieroglyphCircle",
+      "type": "decal",
+      "file": "textures/HieroglyphCircle.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "boss": "Pharaoh",
+      "attack": "Tomb Eruption",
+      "use": "Telegraph circle under targeted players: gold rings, 16 glyphs, lapis wash."
+    },
+    {
+      "name": "Hieroglyphs_Flipbook4x4",
+      "type": "flipbook",
+      "file": "textures/Hieroglyphs_Flipbook4x4.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "boss": "Pharaoh",
+      "attack": "Cursed Bolts / Tomb Eruption",
+      "use": "16 single glowing glyphs; one glyph per particle.",
+      "flipbook_layout": "4x4",
+      "frames": 16,
+      "frame_pixels": 256,
+      "frame_order": "left-to-right, top-to-bottom",
+      "roblox": {
+        "FlipbookLayout": "Grid4x4",
+        "FlipbookMode": "Random"
+      }
+    },
+    {
+      "name": "SandBurst_Flipbook4x4",
+      "type": "flipbook",
+      "file": "textures/SandBurst_Flipbook4x4.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "boss": "Pharaoh",
+      "attack": "Tomb Eruption",
+      "use": "Sand geyser plume: column rises, spreads and falls apart. Bottom-anchored in each frame.",
+      "flipbook_layout": "4x4",
+      "frames": 16,
+      "frame_pixels": 256,
+      "frame_order": "left-to-right, top-to-bottom",
+      "roblox": {
+        "FlipbookLayout": "Grid4x4",
+        "FlipbookMode": "OneShot"
+      }
+    },
+    {
+      "name": "CurseOrb",
+      "type": "sprite",
+      "file": "textures/CurseOrb.png",
+      "pixels": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "boss": "Pharaoh",
+      "attack": "Cursed Bolts",
+      "use": "Projectile orb: cyan core, gold rim, soft glow."
+    },
+    {
+      "name": "WaterSplash_Flipbook4x4",
+      "type": "flipbook",
+      "file": "textures/WaterSplash_Flipbook4x4.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "boss": "King Crab",
+      "attack": "Claw Crush",
+      "use": "Cartoon crown splash: bursts up, throws droplets, collapses. Bottom-anchored.",
+      "flipbook_layout": "4x4",
+      "frames": 16,
+      "frame_pixels": 256,
+      "frame_order": "left-to-right, top-to-bottom",
+      "roblox": {
+        "FlipbookLayout": "Grid4x4",
+        "FlipbookMode": "OneShot"
+      }
+    },
+    {
+      "name": "Bubble",
+      "type": "sprite",
+      "file": "textures/Bubble.png",
+      "pixels": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "boss": "King Crab",
+      "attack": "Bubble Barrage",
+      "use": "Bubble: clear centre, bright rim, curved shine and a dot highlight."
+    },
+    {
+      "name": "SandSpray_Flipbook4x4",
+      "type": "flipbook",
+      "file": "textures/SandSpray_Flipbook4x4.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "boss": "King Crab",
+      "attack": "Sideways Rush / Claw Crush",
+      "use": "Beige sand kick sweeping up and to the right; flip with particle rotation or a mirrored emitter.",
+      "flipbook_layout": "4x4",
+      "frames": 16,
+      "frame_pixels": 256,
+      "frame_order": "left-to-right, top-to-bottom",
+      "roblox": {
+        "FlipbookLayout": "Grid4x4",
+        "FlipbookMode": "OneShot"
+      }
+    },
+    {
+      "name": "ShockwaveRing",
+      "type": "decal",
+      "file": "textures/ShockwaveRing.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "boss": "Shared",
+      "attack": "Any slam",
+      "use": "White tintable ring band, sharp outer edge, soft inner falloff.",
+      "tintable": true
+    },
+    {
+      "name": "ImpactStar",
+      "type": "sprite",
+      "file": "textures/ImpactStar.png",
+      "pixels": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "boss": "Shared",
+      "attack": "Any hit",
+      "use": "Chunky 8-point white impact flash, tintable.",
+      "tintable": true
+    },
+    {
+      "name": "DustPuff_Flipbook4x4",
+      "type": "flipbook",
+      "file": "textures/DustPuff_Flipbook4x4.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "boss": "Shared",
+      "attack": "Any landing / stomp",
+      "use": "Light-grey tintable dust puff over 16 frames.",
+      "flipbook_layout": "4x4",
+      "frames": 16,
+      "frame_pixels": 256,
+      "frame_order": "left-to-right, top-to-bottom",
+      "roblox": {
+        "FlipbookLayout": "Grid4x4",
+        "FlipbookMode": "OneShot"
+      },
+      "tintable": true
+    },
+    {
+      "name": "IceSpikes_BaseColor",
+      "type": "atlas",
+      "file": "textures/IceSpikes_BaseColor.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": false,
+      "boss": "Frost Cyclops",
+      "attack": "Stomp",
+      "use": "Shared atlas for IceSpike_A-E and IceShard_A-C (embedded in their FBX)."
+    },
+    {
+      "name": "MoltenRock_BaseColor",
+      "type": "atlas",
+      "file": "textures/MoltenRock_BaseColor.png",
+      "pixels": [
+        512,
+        512
+      ],
+      "alpha": false,
+      "boss": "Dragon",
+      "attack": "Front Stomp / Tail Whip",
+      "use": "Atlas for MoltenRock_A-C."
+    },
+    {
+      "name": "Obelisk_BaseColor",
+      "type": "atlas",
+      "file": "textures/Obelisk_BaseColor.png",
+      "pixels": [
+        1024,
+        1024
+      ],
+      "alpha": false,
+      "boss": "Pharaoh",
+      "attack": "Tomb Eruption",
+      "use": "Shared atlas for Obelisk_A-C and SandstoneRubble_A-B."
+    },
+    {
+      "name": "ShellChip_BaseColor",
+      "type": "atlas",
+      "file": "textures/ShellChip_BaseColor.png",
+      "pixels": [
+        512,
+        512
+      ],
+      "alpha": false,
+      "boss": "King Crab",
+      "attack": "Claw Crush / Sideways Rush",
+      "use": "Atlas for ShellChip_A-C."
+    },
+    {
+      "name": "MoltenRock_EmissiveMask",
+      "type": "atlas",
+      "file": "textures/MoltenRock_EmissiveMask.png",
+      "pixels": [
+        512,
+        512
+      ],
+      "alpha": false,
+      "boss": "Dragon",
+      "attack": "Front Stomp / Tail Whip",
+      "use": "Optional seam glow mask (white = glowing). Not embedded in the FBX."
+    }
+  ]
+}
