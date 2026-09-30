@@ -15,22 +15,22 @@
             0.0
           ],
           "rootAtImpact": [
-            -3.2,
+            -3.1994,
             -10.0,
-            1.8723
+            1.8742
           ],
           "rootAtImpactStudio": [
-            3.2,
-            1.8723,
+            3.1994,
+            1.8742,
             -10.0
           ],
           "groundPointAtImpact": [
-            -3.2,
+            -3.1994,
             -10.0,
             0.0
           ],
           "groundPointAtImpactStudio": [
-            3.2,
+            3.1994,
             0.0,
             -10.0
           ]

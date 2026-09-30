@@ -494,8 +494,28 @@ def clip_bubbles():
 
 CRUSH = {'impact_f': 29, 'Pi': Vector((-3.2, -10.0, 1.9)), 'Pw': Vector((-8.6, 0.6, 10.8)),
          'Pc': Vector((-9.0, -7.6, 9.4)), 'R1_back': Vector((-1.2, 1.5, 0.0))}
-RW = orient((-1.0, 0.15, 0.0), (-0.25, 0.45, 1.0))          # windup: fingers up and back
 RI = orient((0.0, 0.0, -1.0), (0.3, -1.0, 0.0))             # impact: outer face down, fingers forward
+# The strike is a hammer chop: the hand is carried rigidly by the arm's swing about the shoulder.
+# The windup hand is the impact hand swung back up to the windup palm (fingers up and back), and
+# during the strike the hand only follows the swing from there (swing_rot). An independently
+# authored windup orientation made the IK corkscrew the upper arm ~180 degrees in the last frames
+# before impact to reach the impact orientation (the user: "his arm would rip out of his shell").
+SHOULDER_R = REST_P['Claw_R_Coxa'].translation.copy()
+
+
+def swing_rot(a, b):
+    """Rotation carrying the shoulder->a direction onto shoulder->b (shortest arc, no twist)."""
+    return (Vector(a) - SHOULDER_R).normalized().rotation_difference((Vector(b) - SHOULDER_R).normalized()).to_matrix()
+
+
+# The windup (Pw) and the arc's control point (Pc) lie in the vertical plane through the shoulder
+# and the impact point: the claw is raised overhead, cocked slightly back, and chopped straight
+# down, so the shoulder only pitches. (The earlier Pw out to the side made the arm circle round
+# the shoulder on the way down.)
+_FWD = Vector((CRUSH['Pi'].x - SHOULDER_R.x, CRUSH['Pi'].y - SHOULDER_R.y, 0.0)).normalized()
+CRUSH['Pw'] = SHOULDER_R + _FWD * -1.5 + Vector((0, 0, 9.0))
+CRUSH['Pc'] = SHOULDER_R + _FWD * 6.0 + Vector((0, 0, 8.0))
+RW = swing_rot(CRUSH['Pi'], CRUSH['Pw']) @ RI              # windup: the impact hand, swung up and back
 
 
 def crush_pose(f, Pi):
@@ -522,7 +542,10 @@ def crush_pose(f, Pi):
     elif t < ti:
         a, b, cc = CRUSH['Pw'], CRUSH['Pc'], Pi
         pos = a * (1 - u) ** 2 + b * 2 * u * (1 - u) + cc * u * u
-        rot = RW.to_quaternion().slerp(RI.to_quaternion(), min(1.0, u * 1.15)).to_matrix()
+        # carried by the swing (lands on RI up to the landing correction of Pi's height), with a
+        # slerp to RI over the last 15% so the palm still lands exactly flat
+        carried = swing_rot(a, pos) @ RW
+        rot = carried.to_quaternion().slerp(RI.to_quaternion(), smooth(u, 0.85, 1.0)).to_matrix()
     else:
         pos = Pi.lerp(REST_PALM['R'], r)
         rot = RI.to_quaternion().slerp(REST_HAND_ROT['R'].to_quaternion(), r).to_matrix()
