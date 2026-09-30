@@ -33,9 +33,9 @@ function X.flatDir(f,d)
  d=flat(f.ground:VectorToWorldSpace(d));return d.Magnitude>.05 and d.Unit or look
 end
 function X.window(def,T,length)
- if def.clips then -- the crab's rush: RushStart, travel at `speed`, RushEnd
-  local c=T.clips or {};local rs,re=c[def.clips[1]],c[def.clips[3]];if not rs or not re then return nil end
-  local move=(length or def.length)/def.speed
+ if def.clips then -- the crab's rush: RushStart, travel at `speed`, RushEnd (clips played at def.rate)
+  local c=T.clips or {};local rate=def.rate or 1;local rs,re=c[def.clips[1]],c[def.clips[3]];if not rs or not re then return nil end
+  rs,re=rs/rate,re/rate;local move=(length or def.length)/def.speed
   return {warnStart=0,impact=rs,activeEnd=rs+move,recoveryEnd=rs+move+re,duration=rs+move+re}
  end
  return T.attacks and T.attacks[def.clip]
@@ -48,9 +48,28 @@ function X.duration(def,at)
  return d
 end
 function X.circle(def,at,f) return {kind='circle',center=X.onGround(f,X.point(f,at,def.point,at.impact)),radius=def.radius} end
-function X.wave(def,at,f)
- local d=at.directionAtImpactStudio and v3(at.directionAtImpactStudio)
- return {kind='line',origin=X.onGround(f,X.point(f,at,def.point,at.impact)),direction=X.flatDir(f,d),length=def.length,width=def.width}
+function X.wave(def,at,f,yaw)
+ local d=at.directionAtImpactStudio and v3(at.directionAtImpactStudio);local dir=X.flatDir(f,d)
+ if yaw and yaw~=0 then dir=CFrame.Angles(0,yaw,0):VectorToWorldSpace(dir) end
+ return {kind='line',origin=X.onGround(f,X.point(f,at,def.point,at.impact)),direction=dir,length=def.length,width=def.width}
+end
+-- Turns cf's facing toward goal by at most maxTurn radians about +Y (the breath's tracking).
+function X.turnToward(cf,goal,maxTurn)
+ local d=flat(goal-cf.Position);if d.Magnitude<.1 then return cf end
+ local a=math.clamp(Shapes.yaw(cf.LookVector,d),-maxTurn,maxTurn)
+ return CFrame.new(cf.Position)*CFrame.Angles(0,a,0)*cf.Rotation
+end
+-- Follow-up circle spots: one under each target, plus `extra` more 7-11 studs round each (seeded).
+function X.followSpots(targets,extra,cap,rng)
+ local list={}
+ for _,p in targets do if #list<cap then table.insert(list,p) end end
+ for _,p in targets do
+  for _=1,extra do
+   if #list>=cap then break end
+   local a=rng:NextNumber()*math.pi*2;table.insert(list,p+Vector3.new(math.cos(a),0,math.sin(a))*rng:NextNumber(7,11))
+  end
+ end
+ return list
 end
 -- The wave front reaches along-distance d at impact + d/travel; true when that time is in (t0, t1].
 function X.waveHit(def,at,line,pos,t0,t1)
@@ -148,15 +167,24 @@ function M.start(npc,kind,target,force)
   A.data={dir={A.dir.X,A.dir.Z},length=A.length,shape=Shapes.encode(X.laneShape(f,A.dir,A.length,def.width))}
  end
  A.at=X.window(def,s.T,A.length);local at=A.at;A.duration=X.duration(def,at)
+ local rage=s.enraged and s.def.enrage or {}
  if def.shape=='circle' then A.data.shape=Shapes.encode(X.circle(def,at,f))
- elseif def.shape=='wave' then A.line=X.wave(def,at,f);A.data.shape=Shapes.encode(A.line)
+ elseif def.shape=='wave' then
+  -- Enraged, the wave splits into a fan (rage.fan, degrees). Hits test every line; data.shape
+  -- (the middle line) is kept for older readers, and the client warns and draws data.lines.
+  A.lines={};A.data.lines={}
+  for _,deg in rage.fan or {0} do local line=X.wave(def,at,f,math.rad(deg));table.insert(A.lines,line);table.insert(A.data.lines,Shapes.encode(line)) end
+  A.line=A.lines[math.ceil(#A.lines/2)];A.data.shape=Shapes.encode(A.line)
  elseif def.shape=='breath' then A.data.shape=Shapes.encode(X.cone(def,at,f,at.impact))
  elseif def.shape=='sweep' then A.data.shape=Shapes.encode(X.sweepArc(def,at,f))
  elseif def.shape=='projectiles' then
   local origin=X.point(f,at,def.point,at.impact);local aim=flat(goal-origin)
   local dir=MOUTH_AIMED[kind] and X.flatDir(f,X.localDir(at,def.point,at.impact)) or (aim.Magnitude>.1 and aim.Unit or flat(cf.LookVector).Unit)
-  A.data={origin={origin.X,origin.Y,origin.Z},yaws=X.yaws(def,dir),height=f.groundY+math.clamp(origin.Y-f.groundY,1.5,3.5),speed=def.speed,life=def.life}
+  -- Enraged: rage.extra more shots, the fan widened to keep the same gap between them.
+  local count=def.count+(rage.extra or 0);local fan={count=count,spread=def.count>1 and def.spread*(count-1)/(def.count-1) or def.spread}
+  A.data={origin={origin.X,origin.Y,origin.Z},yaws=X.yaws(fan,dir),height=f.groundY+math.clamp(origin.Y-f.groundY,1.5,3.5),speed=def.speed,life=def.life,radius=def.radius}
  end
+ A.data.rate=def.rate or 1
  s.attack=A
  npc:SetAttribute('BossAttack',kind);npc:SetAttribute('BossStart',now);npc:SetAttribute('BossFrame',cf);npc:SetAttribute('BossGroundY',f.groundY);npc:SetAttribute('BossDuration',A.duration)
  publish(npc,A);npc:SetAttribute('BossSerial',(npc:GetAttribute('BossSerial') or 0)+1);npc:SetAttribute('Attacking',true)
@@ -169,16 +197,24 @@ function M.spawn(id,cf,practice)
  local def,T=Defs.get(id),Defs.timing(id);if not def or not T then return nil end
  local template=game.ServerStorage.RogueliteNPCs:FindFirstChild(id..'_NPC');if not template then return nil end
  local folder=workspace:FindFirstChild('RogueliteEnemies');if not folder then return nil end
- local npc=template:Clone();npc.Name=id;npc:PivotTo(cf);npc:SetAttribute('BossPractice',practice==true)
+ local npc=template:Clone();npc.Name=id
+ -- The template is at authored size; def.scale grows it about its pivot (the HumanoidRootPart),
+ -- which is then placed at cf. EnemyBaselineModelScale stays the template's, so the client scales
+ -- the clips' translations by the same factor.
+ local scale=def.scale or 1
+ if scale~=1 then npc:ScaleTo(npc:GetScale()*scale) end
+ npc:PivotTo(cf);npc:SetAttribute('BossPractice',practice==true)
  local root=npc.PrimaryPart;local h=npc:FindFirstChildOfClass('Humanoid')
  if not root or not h then npc:Destroy();return nil end
+ h.HipHeight=math.max(0,T.rootHeight-root.Size.Y*.5)
  h.MaxHealth=def.health;h.Health=def.health;h.WalkSpeed=def.chaseSpeed
+ npc:SetAttribute('BossSpawnedAt',workspace:GetServerTimeNow())
  npc:SetAttribute('IsBoss',true);npc:SetAttribute('IsMapBoss',true);npc:SetAttribute('MapBossId',id);npc:SetAttribute('BossName',def.name);npc:SetAttribute('ZombieType',id)
  npc:SetAttribute('ContactDamage',0);npc:SetAttribute('ContactRange',0);npc:SetAttribute('BaseMoveSpeed',h.WalkSpeed)
  if not npc:GetAttribute('BossDeathSeconds') and T.clips and T.clips.Death then npc:SetAttribute('BossDeathSeconds',T.clips.Death+.6) end
  for _,p in npc:GetDescendants() do if p:IsA('BasePart') then p.Anchored=false end end
  npc.Parent=folder;root:SetNetworkOwner(nil);h.AutoRotate=true
- local s={id=id,def=def,T=T,next=workspace:GetServerTimeNow()+2,index=0,lastHealth=h.Health,stop=math.min(8,T.footprintRadius or 4)+3};M.states[npc]=s
+ local s={id=id,def=def,T=T,next=workspace:GetServerTimeNow()+Defs.FIRST_ATTACK,index=0,lastHealth=h.Health,stop=math.min(8*scale,T.footprintRadius or 4)+3,follows={},followSerial=0};M.states[npc]=s
  h.HealthChanged:Connect(function(health)
   if health<s.lastHealth and health>0 and not s.attack then npc:SetAttribute('BossHitStart',workspace:GetServerTimeNow()) end;s.lastHealth=health
  end)
@@ -252,8 +288,59 @@ local function stepShots(npc,s,now,params,people)
  if changed then npc:SetAttribute('MapBossShotEnds',Http:JSONEncode(B.ends)) end
  if not alive then s.shots=nil end
 end
+local rng=Random.new()
+local function groundAt(pos,params,fallbackY)
+ local g=workspace:Raycast(Vector3.new(pos.X,pos.Y+6,pos.Z),-Vector3.yAxis*30,params)
+ return g and g.Position or Vector3.new(pos.X,fallbackY,pos.Z)
+end
+-- Ground spots under up to maxTargets living players within range of the boss, nearest first,
+-- skipping anyone in `skip`, plus `extra` spots round each (X.followSpots), capped at 10.
+local function spotsNear(root,people,maxTargets,range,extra,skip,params,groundY)
+ table.sort(people,function(a,b) return (a.root.Position-root.Position).Magnitude<(b.root.Position-root.Position).Magnitude end)
+ local targets={}
+ for _,e in people do
+  if #targets>=maxTargets then break end
+  if not (skip and skip[e.player]) and flat(e.root.Position-root.Position).Magnitude<=range then table.insert(targets,groundAt(e.root.Position,params,groundY)) end
+ end
+ local list=X.followSpots(targets,extra,10,rng)
+ for i,p in list do list[i]=groundAt(p,params,p.Y) end
+ return list
+end
+local function encodePoints(points) local list={};for i,v in points do list[i]={v.X,v.Y,v.Z} end;return list end
+-- A circle attack's follow-up (def.follow): circles open under the players the main hit missed and
+-- erupt def.follow.delay later. It runs on its own clock, so the boss is free to move meanwhile.
+local function queueFollow(npc,s,A,now,root,params,people)
+ local F=A.def.follow;local rage=s.enraged and s.def.enrage or {}
+ local points=spotsNear(root,people,F.maxTargets,F.range,rage.follow or 0,A.hits,params,A.ground)
+ if #points==0 then return end
+ s.followSerial+=1
+ table.insert(s.follows,{def=F,points=points,at=now+F.delay,hits={}})
+ npc:SetAttribute('MapBossFollow',Http:JSONEncode({serial=s.followSerial,kind=A.kind,at=now+F.delay,radius=F.radius,points=encodePoints(points)}))
+end
+local function stepFollows(npc,s,now,params,people)
+ for i=#s.follows,1,-1 do
+  local Q=s.follows[i]
+  if now>=Q.at then
+   for _,e in people do for _,c in Q.points do
+    if not Q.hits[e.player] and Shapes.contains({kind='circle',center=c,radius=Q.def.radius},e.root.Position) and hit(npc,Q.def,e,c+Vector3.yAxis*2,params,c) then Q.hits[e.player]=true end
+   end end
+   table.remove(s.follows,i)
+  end
+ end
+end
 local function stepAttack(npc,s,now,h,root,params,people)
  local A=s.attack;local def,at,f=A.def,A.at,A.frame;local age=now-A.start;local t0=A.sampled
+ local rage=s.enraged and s.def.enrage or {}
+ if def.track and age>=at.impact-.1 and age<at.activeEnd then
+  -- The breath turns toward the nearest player at up to def.track rad/s (x rage.track): side-steps
+  -- still escape it, standing still does not. The client follows the replicated BossFrame.
+  local target,dist=nil,math.huge
+  for _,e in people do local d=(e.root.Position-A.cf.Position).Magnitude;if d<dist then target,dist=e.root,d end end
+  if target then
+   A.cf=X.turnToward(A.cf,target.Position,def.track*(rage.track or 1)*math.max(0,age-t0))
+   A.frame=X.frame(A.cf,s.T,A.ground);f=A.frame;npc:SetAttribute('BossFrame',A.cf)
+  end
+ end
  if def.shape=='lane' then
   local travel=math.clamp((age-at.impact)*def.speed,0,A.length);local base=Vector3.new(A.cf.X,f.groundY,A.cf.Z)
   root.CFrame=A.cf+A.dir*travel
@@ -267,10 +354,13 @@ local function stepAttack(npc,s,now,h,root,params,people)
  else root.CFrame=A.cf end
  if def.shape=='circle' and age>=at.impact and not A.fired then
   A.fired=true;local c=X.circle(def,at,f)
-  for _,e in people do if Shapes.contains(c,e.root.Position) then hit(npc,def,e,c.center+Vector3.yAxis*2,params,c.center) end end
+  for _,e in people do if Shapes.contains(c,e.root.Position) and hit(npc,def,e,c.center+Vector3.yAxis*2,params,c.center) then A.hits[e.player]=true end end
+  if def.follow then queueFollow(npc,s,A,now,root,params,people) end
  elseif def.shape=='wave' and age>=at.impact then
   for _,e in people do
-   if not A.hits[e.player] and X.waveHit(def,at,A.line,e.root.Position,t0,age) and hit(npc,def,e,A.line.origin+Vector3.yAxis*2,params,A.line.origin) then A.hits[e.player]=true end
+   for _,line in A.lines or {A.line} do
+    if not A.hits[e.player] and X.waveHit(def,at,line,e.root.Position,t0,age) and hit(npc,def,e,line.origin+Vector3.yAxis*2,params,line.origin) then A.hits[e.player]=true end
+   end
   end
  elseif (def.shape=='breath' or def.shape=='sweep') and age>=at.impact then
   -- Bound catch-up to this attack's active window, never a stale whole turn.
@@ -285,17 +375,11 @@ local function stepAttack(npc,s,now,h,root,params,people)
   end
   if begin<=finish then for time=begin,finish,breath and 1/30 or 1/60 do test(time) end;test(finish) end
  elseif def.shape=='targets' then
-  if age>=at.warnStart and not A.points then
-   -- Snapshot the nearest players in range as ground spots; they erupt after eruptDelay.
-   A.points={};table.sort(people,function(a,b) return (a.root.Position-root.Position).Magnitude<(b.root.Position-root.Position).Magnitude end)
-   for _,e in people do
-    if #A.points>=def.maxTargets then break end
-    local pos=e.root.Position
-    if flat(pos-root.Position).Magnitude<=def.range[2] then
-     local g=workspace:Raycast(pos,-Vector3.yAxis*20,params);table.insert(A.points,g and g.Position or Vector3.new(pos.X,f.groundY,pos.Z))
-    end
-   end
-   local list={};for i,v in A.points do list[i]={v.X,v.Y,v.Z} end;A.data.points=list;publish(npc,A)
+  if age>=math.max(at.warnStart,at.impact-(def.lead or 0)) and not A.points then
+   -- Snapshot the nearest players in range as ground spots (plus def.extra round each, more when
+   -- enraged); they erupt after eruptDelay.
+   A.points=spotsNear(root,people,def.maxTargets,def.range[2],(def.extra or 0)+(rage.follow or 0),nil,params,f.groundY)
+   A.data.points=encodePoints(A.points);publish(npc,A)
   end
   if A.points and age>=at.impact+def.eruptDelay and not A.fired then
    A.fired=true
@@ -312,18 +396,26 @@ local function stepAttack(npc,s,now,h,root,params,people)
  if age>=at.impact and not A.impacted then A.impacted=true;npc:SetAttribute('BossImpactStart',now) end
  A.sampled=age
  if age>=A.duration then
-  s.attack=nil;s.next=now+def.cooldown;npc:SetAttribute('Attacking',false);root.Anchored=false;root:SetNetworkOwner(nil);h.AutoRotate=true
+  s.attack=nil;s.next=now+def.cooldown*(rage.cooldown or 1);npc:SetAttribute('Attacking',false);root.Anchored=false;root:SetNetworkOwner(nil);h.AutoRotate=true
  end
+end
+-- Below ENRAGE_AT health: faster chase, shorter cooldowns and the def.enrage extras (see MapBossDefs).
+local function checkEnrage(npc,s,h)
+ if s.enraged or h.Health>h.MaxHealth*Defs.ENRAGE_AT then return end
+ s.enraged=true;local speed=s.def.chaseSpeed+(s.def.enrage and s.def.enrage.chase or 0)
+ h.WalkSpeed=speed;npc:SetAttribute('BaseMoveSpeed',speed);npc:SetAttribute('BossEnraged',workspace:GetServerTimeNow())
 end
 function M.step(npc,s,now)
  if not npc.Parent then M.states[npc]=nil;return end
  local h=npc:FindFirstChildOfClass('Humanoid');local root=npc.PrimaryPart
- if not h or not root or h.Health<=0 then s.attack=nil;s.shots=nil;return end
+ if not h or not root or h.Health<=0 then s.attack=nil;s.shots=nil;table.clear(s.follows);return end
  if combat:GetAttribute('ZombiesEnabled')~=true then
-  s.attack=nil;s.shots=nil;npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil);root.Anchored=false;h.AutoRotate=true;h:Move(Vector3.zero);return
+  s.attack=nil;s.shots=nil;table.clear(s.follows);npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil);root.Anchored=false;h.AutoRotate=true;h:Move(Vector3.zero);return
  end
+ checkEnrage(npc,s,h)
  local params,people=exclusions(npc),living()
  stepShots(npc,s,now,params,people)
+ stepFollows(npc,s,now,params,people)
  if s.attack then stepAttack(npc,s,now,h,root,params,people);return end
  if npc:GetAttribute('BossManual') and Run:IsStudio() then h:Move(Vector3.zero);return end
  -- Admin Freeze: no moving and no new attacks; an attack already under way finishes above.

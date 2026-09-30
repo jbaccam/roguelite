@@ -198,7 +198,43 @@ local function stepShots(npc,state,now,dt)
 end
 local function clear(state)
  if state.warning then state.warning.folder:Destroy();state.warning=nil end
+ if state.follow then state.follow.w.folder:Destroy() end;state.follow=nil
  for _,B in state.shots or {} do for _,s in B.list do if s.part then s.part:Destroy() end end end;state.shots=nil
+end
+
+-- Follow-up circles (MapBossService queueFollow): a warning from when the server publishes them to
+-- their eruption time, then the boss module's aftershock hook. Only the latest set is shown.
+local function stepFollow(npc,state,now,death)
+ local raw=npc:GetAttribute('MapBossFollow')
+ if raw and raw~=state.followRaw then
+  state.followRaw=raw;local d=decode(raw)
+  if state.follow then state.follow.w.folder:Destroy();state.follow=nil end
+  if type(d.points)=='table' and #d.points>0 and type(d.at)=='number' and d.at>now then
+   local F={kind=d.kind,at=d.at,born=now,radius=d.radius or 5,points={},w=newWarning(d.serial,raw)}
+   for i,p in d.points do F.points[i]=Vector3.new(p[1],p[2],p[3]) end
+   for _,p in F.points do drawShape(F.w,{kind='circle',center=p,radius=F.radius},p.Y+.07,state.tint or Color3.fromRGB(224,45,49)) end
+   state.follow=F
+  end
+ end
+ local F=state.follow;if not F then return end
+ if death then F.w.folder:Destroy();state.follow=nil;return end
+ if now>=F.at then
+  F.w.folder:Destroy();state.follow=nil
+  call(state,'aftershock',{npc=npc,id=state.id,kind=F.kind,points=F.points,radius=F.radius,tint=state.tint,scale=state.T.scale or 1})
+  return
+ end
+ paintWarning(F.w,(now-F.born)/math.max(.05,F.at-F.born),F.at-now,now)
+end
+-- Once per boss: the spawn intro (only if it spawned in the last 3 s) and the enrage burst.
+local function stepMoments(npc,state,now,death)
+ if death then return end
+ if not state.introDone then
+  state.introDone=true;local born=npc:GetAttribute('BossSpawnedAt')
+  if type(born)=='number' and now-born<3 then call(state,'intro',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1}) end
+ end
+ if not state.enraged and npc:GetAttribute('BossEnraged') then
+  state.enraged=true;call(state,'enrage',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1})
+ end
 end
 
 local function track(npc)
@@ -228,7 +264,11 @@ local function frame(npc,state,now,dt)
  local serial=npc:GetAttribute('BossSerial') or 0
  if a and start and serial~=(state.ctx and state.ctx.serial) then state.ctx=context(npc,state,kind,a,start,serial) end
  local ctx=state.ctx
- if ctx then local raw=npc:GetAttribute('MapBossAttackData');if raw~=ctx.raw then ctx.raw=raw;ctx.data=decode(raw) end end
+ if ctx then
+  local raw=npc:GetAttribute('MapBossAttackData');if raw~=ctx.raw then ctx.raw=raw;ctx.data=decode(raw) end
+  -- The breath turns during its active window (MapBossService tracking); follow the new frame.
+  local cf=npc:GetAttribute('BossFrame');if typeof(cf)=='CFrame' and cf~=ctx.cf then ctx.cf=cf;ctx.ground=cf*CFrame.new(0,-T.rootHeight,0) end
+ end
  local death=npc:GetAttribute('BossDeathStart');local hit=npc:GetAttribute('BossHitStart')
  local attacking=ctx and ctx.serial==serial and npc:GetAttribute('Attacking') and age and age>=0 and age<=(npc:GetAttribute('BossDuration') or ctx.attack.duration)
  local clip,time
@@ -252,15 +292,17 @@ local function frame(npc,state,now,dt)
  state.lastPose=poses;state.lastClip=clip
  local baseline=npc:GetAttribute('EnemyBaselineModelScale')
  EnemyMotion.apply(state.joints,baseline and EnemyMotion.scalePose(poses,npc:GetScale()/baseline) or poses)
- -- Warnings: warnStart to impact (tombs: to their eruption), brightening over the last 0.25 s.
+ -- Warnings: from the moment the boss commits to impact (tombs: to their eruption); the grow
+ -- layer reaches the edge at impact.
  local at=ctx and ctx.attack
  local warnEnd=at and (ctx.def.shape=='targets' and at.impact+ctx.def.eruptDelay or at.impact)
  if not death and attacking and age>=at.warnStart and age<warnEnd then
   local w=state.warning
   if not w or w.serial~=ctx.serial or w.raw~=ctx.raw then if w then w.folder:Destroy() end;w=buildWarning(ctx);state.warning=w end
-  local fill=.55+(FILL-.55)*math.clamp((warnEnd-age)/.25,0,1)
-  for _,p in w.fills do p.Transparency=fill end
+  paintWarning(w,(age-at.warnStart)/math.max(.05,warnEnd-at.warnStart),warnEnd-age,now)
  elseif state.warning then state.warning.folder:Destroy();state.warning=nil end
+ stepFollow(npc,state,now,death)
+ stepMoments(npc,state,now,death)
  -- Effects: windup once at warnStart, impact once at impact, active every frame in the active window.
  if attacking and not death then
   if not ctx.woundUp and age>=at.warnStart then ctx.woundUp=true;if age<at.impact then call(state,'windup',ctx) end end
