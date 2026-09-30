@@ -1557,11 +1557,15 @@
     }
   ],
   "actions": [
+    "Death",
     "FireBreath",
     "FrontStomp",
+    "Hit",
+    "Idle",
     "ReferencePose",
     "RigTest_ROM",
-    "TailWhip"
+    "TailWhip",
+    "Walk"
   ],
   "attacks": {
     "FireBreath": {
@@ -2312,11 +2316,11 @@
       },
       "planted_feet_drift": {
         "FL": {
-          "max_horizontal": 0.0,
+          "max_horizontal": 0.0005,
           "max_vertical": 0.0004
         },
         "FR": {
-          "max_horizontal": 0.0,
+          "max_horizontal": 0.0005,
           "max_vertical": 0.0004
         },
         "HL": {
@@ -2331,5 +2335,73 @@
       "planted_feet": "hind feet throughout; front feet from the impact frame on"
     }
   },
-  "animation_notes": "Actions at 24 fps. Each attack action carries an Impact pose marker in the .blend; FBX/GLB do not carry markers, so the impact frame/time and gameplay points are listed here (Blender world studs: Z up, dragon faces -Y, +X = dragon left)."
+  "animation_notes": "Actions at 24 fps. Each attack action carries an Impact pose marker in the .blend; FBX/GLB do not carry markers, so the impact frame/time and gameplay points are listed here (Blender world studs: Z up, dragon faces -Y, +X = dragon left).",
+  "game_package": {
+    "animation_data": "exports/game/AnimationData.json",
+    "boss_game_data": "exports/game/BossGameData.json",
+    "studio_fbx": "exports/game/Dragon_Studio.fbx",
+    "checks": {
+      "deathGround": {
+        "min_vertex_z": -0.05,
+        "root_lifts": {
+          "20": 0.002,
+          "21": 0.0101,
+          "22": 0.0211,
+          "23": 0.0331,
+          "24": 0.0593,
+          "25": 0.0978,
+          "26": 0.1089,
+          "27": 0.1523,
+          "28": 0.4919,
+          "29": 0.7796,
+          "30": 0.9941,
+          "31": 1.1421,
+          "32": 1.2195,
+          "33": 1.2247,
+          "34": 1.1855,
+          "35": 1.1033,
+          "36": 0.9819,
+          "37": 0.8286,
+          "38": 0.6536,
+          "39": 0.4692,
+          "40": 0.2892,
+          "41": 0.1271,
+          "42": 0.0547,
+          "43": 0.0856,
+          "44": 0.0989,
+          "45": 0.0897,
+          "46": 0.0558,
+          "47": 0.012,
+          "50": 0.0204,
+          "51": 0.064,
+          "52": 0.0938,
+          "53": 0.0993,
+          "54": 0.0993,
+          "55": 0.0993,
+          "56": 0.0993,
+          "57": 0.0993,
+          "58": 0.0993,
+          "59": 0.0993,
+          "60": 0.0993,
+          "61": 0.0993
+        }
+      },
+      "walkPlantedDrift": {
+        "FL": 0.0,
+        "FR": 0.0,
+        "HL": 0.0,
+        "HR": 0.0
+      },
+      "clipMinVertexZ": {
+        "Idle": -0.0511,
+        "Walk": -0.0503,
+        "Hit": -0.0504,
+        "Death": -0.05
+      }
+    },
+    "motion": {
+      "strideLength": 4.2667,
+      "nominalSpeed": 2.56
+    }
+  }
 }

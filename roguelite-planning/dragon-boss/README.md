@@ -181,6 +181,65 @@ the evaluated rig at every frame of each planted interval:
   the wings on every frame.
 - **Joints:** all joint motion is bone rotation (plus the stomp's root lift and drop).
 
+## Game package
+
+The package follows `../plans/BOSS_GAME_PACKAGE_SPEC.md`. Build it with `DRAGON_STAGE=game` (about 40 s). That stage
+reopens `Dragon.blend`, keys the clips and writes everything below. The model, textures and rig are unchanged.
+
+**Files**
+- `exports/game/Dragon_Studio.fbx`: for Studio's 3D Importer. It holds the rest mesh and the 90 deform bones, with no
+  animation and no control bones.
+  - There is one mesh per section, named `Body`, `Head`, `Wings`, `Belly`, `Obsidian`, `LavaGlow` and `EyeGlow`.
+    LavaGlow and EyeGlow are separate, so they can be set to Neon.
+  - Materials are `Dragon_<Section>`, on the 1024² delivery maps. The maps are embedded and also copied into
+    `Dragon_Studio.fbm/`.
+  - Axes are `-Z` forward and `Y` up.
+- `exports/game/AnimationData.json`: id `dragon`, 24 fps, 90 bones, in the `animate_mobs.py` schema (`cf = S@m@S`,
+  12 numbers).
+- `exports/game/BossGameData.json`: attack timings (seconds from clip start), points in root space in Blender axes
+  and in Studio axes (−X, Z, Y), and body metrics.
+  - `rootHeight` is 0: the Root bone sits on the ground. The hips are at 6.4.
+  - `height` 16.3, `footprintRadius` 9.3 (body and legs, without wings and tail).
+- `previews/GameClips.png` (Workbench, 5 frames per clip) and `previews/Clip_{Idle,Walk,Hit,Death}.mp4`.
+
+**Clips**
+
+| Clip | Frames (24 fps) | Loop | Content |
+| --- | --- | --- | --- |
+| `Idle` | 0–72 (3.0 s) | yes | Breathing (the body settles and the chest lifts), a small side-to-side weight shift, and neck, head, jaw, wings and tail drifting later than the body, plus one blink. Frame 0 is the rest pose. |
+| `Walk` | 0–40 (1.67 s) | yes | In place, 4-beat lateral-sequence walk (LH → LF → RH → RF, duty 0.75), body lowered 0.5, wings half-folded, tail counter-sway. |
+| `Hit` | 0–11 (0.46 s) | no | Head and neck snap back, jaw opens, wings twitch; returns exactly to rest. |
+| `Death` | 0–60 (2.5 s) | no | Rears and roars with the wings flared, then collapses onto the belly and rolls about 22° onto his right side. The right wing folds under and the left droops; head, tail and spade go down. |
+| `FireBreath` / `TailWhip` / `FrontStomp` | 0–59 / 0–71 / 0–47 | no | The attacks (above), re-keyed at 24 fps. |
+
+- **Walk speed:** `strideLength` 4.267 studs per cycle, `nominalSpeed` 2.56 studs/s. The game moves the root.
+- **Attacks start and end on the Idle start pose (rest).** To make this exact, the front-foot IK now keeps the rest
+  bend plane (`pole_bias` 0). `ReferencePose` keeps its original pole (0.4), so `Reference_Match` is unchanged.
+- **Attack timings** (warnStart / impact / activeEnd / recoveryEnd / duration, in seconds):
+
+  | Attack | warnStart | impact | activeEnd | recoveryEnd | duration |
+  | --- | --- | --- | --- | --- | --- |
+  | FireBreath | 0.25 | 1.0 | 1.958 | 2.458 | 2.458 |
+  | TailWhip | 0.292 | 1.083 | 1.5 | 2.708 | 2.958 |
+  | FrontStomp | 0.292 | 1.083 | 1.083 | 1.625 | 1.958 |
+
+- **Attack points:**
+  - `FireOrigin` is on `Head`, with breath samples every 2 frames over the hold.
+  - `SpadeTip` is on `TailTip`, with its arc: pivot (1.86, 5.89), −93.5° → +111.5°, radius 16.6.
+  - `LeftFrontImpact` and `RightFrontImpact` are on `Hand_L/R`, at (±5.29, −4.30, 0).
+
+**Checks** (in `BossGameData.json` → `checks` and `validate_exports.py`)
+- **Walk:** planted feet track the ground-locked path with 0.000 error.
+- **Death:** the Root is raised per frame wherever a vertex would go below −0.05, so the minimum vertex z is −0.05.
+  - The largest lift is 1.2 studs, mid-collapse (frames 30–35), where the front legs catch the body.
+  - The final pose rests with a 0.1 lift.
+- **Minimum vertex z:** Idle −0.051, Walk −0.050, Hit −0.050. The rest pose is −0.049, at the claw tips.
+- **Validation:** 46 / 46 checks pass, including a fresh re-import of the Studio FBX (sections, triangle counts, bone
+  names against AnimationData, `Dragon_<Section>` materials with 1024 textures, the `.fbm` PNGs) and every clip's
+  frame count, NaNs and loop closure.
+
+**Not verified:** the Studio import itself, the receipt and retarget, and in-game playback.
+
 ## Colour and silhouette (final Reference_Match, 128 spp)
 
 `previews/Reference_Match.png` is rendered from the posed, skinned rig (`ReferencePose` action) at 1536 × 1024 in
@@ -259,7 +318,7 @@ warmer and greyer), and the horns are too dark.
 ## Verified in Blender
 
 - The generator runs clean headless (Blender 5.2.1 LTS).
-- `validate_exports.py`: **34 / 34 checks pass** (`validation-report.json`). It re-imports the FBX, all five clip
+- `validate_exports.py`: **46 / 46 checks pass** (`validation-report.json`, including the game package). It re-imports the FBX, the clip
   FBXs and the GLB fresh, and checks:
   - 7 sections, each < 20k tris;
   - 90 deform bones with names and hierarchy matching the manifest, and no leaf/control bones;
@@ -297,7 +356,8 @@ warmer and greyer), and the horns are too dark.
 | Kind | Files |
 | --- | --- |
 | Blend | `Dragon.blend` (packed textures, `REVIEW_ONLY` collection with the camera, lights and ground) |
-| FBX | `exports/fbx/Dragon.fbx`, plus `Dragon_ReferencePose.fbx`, `Dragon_RigTest_ROM.fbx`, `Dragon_FireBreath.fbx`, `Dragon_TailWhip.fbx`, `Dragon_FrontStomp.fbx` |
+| FBX | `exports/fbx/Dragon.fbx`, plus armature-only clips `Dragon_ReferencePose.fbx`, `Dragon_RigTest_ROM.fbx`, `Dragon_Idle.fbx`, `Dragon_Walk.fbx`, `Dragon_Hit.fbx`, `Dragon_Death.fbx`, `Dragon_FireBreath.fbx`, `Dragon_TailWhip.fbx`, `Dragon_FrontStomp.fbx` |
+| Game package | `exports/game/Dragon_Studio.fbx` (+ `.fbm/`), `exports/game/AnimationData.json`, `exports/game/BossGameData.json` |
 | GLB | `exports/glb/Dragon.glb` |
 | Textures | `textures/` |
 | Previews | `previews/` |

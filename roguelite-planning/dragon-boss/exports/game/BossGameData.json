@@ -1,0 +1,533 @@
+{
+  "attacks": {
+    "FireBreath": {
+      "duration": 2.4583,
+      "warnStart": 0.25,
+      "impact": 1.0,
+      "activeEnd": 1.9583,
+      "recoveryEnd": 2.4583,
+      "points": {
+        "FireOrigin": {
+          "bone": "Head",
+          "offset": [
+            0.0,
+            1.9517,
+            -0.4109
+          ],
+          "rootAtImpact": [
+            -0.0,
+            -8.3213,
+            7.3439
+          ],
+          "rootAtImpactStudio": [
+            0.0,
+            7.3439,
+            -8.3213
+          ],
+          "samples": [
+            {
+              "time": 1.0,
+              "root": [
+                0.0,
+                -8.321,
+                7.344
+              ],
+              "dir": [
+                0.0,
+                -0.7463,
+                -0.6656
+              ],
+              "rootStudio": [
+                -0.0,
+                7.344,
+                -8.321
+              ],
+              "dirStudio": [
+                -0.0,
+                -0.6656,
+                -0.7463
+              ]
+            },
+            {
+              "time": 1.0833,
+              "root": [
+                0.193,
+                -8.316,
+                7.345
+              ],
+              "dir": [
+                0.0689,
+                -0.7438,
+                -0.6649
+              ],
+              "rootStudio": [
+                -0.193,
+                7.345,
+                -8.316
+              ],
+              "dirStudio": [
+                -0.0689,
+                -0.6649,
+                -0.7438
+              ]
+            },
+            {
+              "time": 1.1667,
+              "root": [
+                0.451,
+                -8.29,
+                7.352
+              ],
+              "dir": [
+                0.1606,
+                -0.7324,
+                -0.6617
+              ],
+              "rootStudio": [
+                -0.451,
+                7.352,
+                -8.29
+              ],
+              "dirStudio": [
+                -0.1606,
+                -0.6617,
+                -0.7324
+              ]
+            },
+            {
+              "time": 1.25,
+              "root": [
+                0.57,
+                -8.271,
+                7.357
+              ],
+              "dir": [
+                0.2028,
+                -0.7239,
+                -0.6594
+              ],
+              "rootStudio": [
+                -0.57,
+                7.357,
+                -8.271
+              ],
+              "dirStudio": [
+                -0.2028,
+                -0.6594,
+                -0.7239
+              ]
+            },
+            {
+              "time": 1.3333,
+              "root": [
+                0.517,
+                -8.28,
+                7.355
+              ],
+              "dir": [
+                0.1837,
+                -0.728,
+                -0.6605
+              ],
+              "rootStudio": [
+                -0.517,
+                7.355,
+                -8.28
+              ],
+              "dirStudio": [
+                -0.1837,
+                -0.6605,
+                -0.728
+              ]
+            },
+            {
+              "time": 1.4167,
+              "root": [
+                0.305,
+                -8.307,
+                7.348
+              ],
+              "dir": [
+                0.1086,
+                -0.74,
+                -0.6638
+              ],
+              "rootStudio": [
+                -0.305,
+                7.348,
+                -8.307
+              ],
+              "dirStudio": [
+                -0.1086,
+                -0.6638,
+                -0.74
+              ]
+            },
+            {
+              "time": 1.5,
+              "root": [
+                -0.002,
+                -8.321,
+                7.344
+              ],
+              "dir": [
+                -0.0006,
+                -0.7463,
+                -0.6656
+              ],
+              "rootStudio": [
+                0.002,
+                7.344,
+                -8.321
+              ],
+              "dirStudio": [
+                0.0006,
+                -0.6656,
+                -0.7463
+              ]
+            },
+            {
+              "time": 1.5833,
+              "root": [
+                -0.308,
+                -8.307,
+                7.348
+              ],
+              "dir": [
+                -0.1096,
+                -0.7399,
+                -0.6638
+              ],
+              "rootStudio": [
+                0.308,
+                7.348,
+                -8.307
+              ],
+              "dirStudio": [
+                0.1096,
+                -0.6638,
+                -0.7399
+              ]
+            },
+            {
+              "time": 1.6667,
+              "root": [
+                -0.518,
+                -8.28,
+                7.355
+              ],
+              "dir": [
+                -0.1842,
+                -0.7279,
+                -0.6605
+              ],
+              "rootStudio": [
+                0.518,
+                7.355,
+                -8.28
+              ],
+              "dirStudio": [
+                0.1842,
+                -0.6605,
+                -0.7279
+              ]
+            },
+            {
+              "time": 1.75,
+              "root": [
+                -0.57,
+                -8.271,
+                7.357
+              ],
+              "dir": [
+                -0.2027,
+                -0.724,
+                -0.6594
+              ],
+              "rootStudio": [
+                0.57,
+                7.357,
+                -8.271
+              ],
+              "dirStudio": [
+                0.2027,
+                -0.6594,
+                -0.724
+              ]
+            },
+            {
+              "time": 1.8333,
+              "root": [
+                -0.449,
+                -8.29,
+                7.352
+              ],
+              "dir": [
+                -0.1599,
+                -0.7325,
+                -0.6617
+              ],
+              "rootStudio": [
+                0.449,
+                7.352,
+                -8.29
+              ],
+              "dirStudio": [
+                0.1599,
+                -0.6617,
+                -0.7325
+              ]
+            },
+            {
+              "time": 1.9167,
+              "root": [
+                -0.19,
+                -8.316,
+                7.345
+              ],
+              "dir": [
+                -0.0678,
+                -0.7439,
+                -0.6649
+              ],
+              "rootStudio": [
+                0.19,
+                7.345,
+                -8.316
+              ],
+              "dirStudio": [
+                0.0678,
+                -0.6649,
+                -0.7439
+              ]
+            }
+          ]
+        }
+      },
+      "directionAtImpact": [
+        0.0,
+        -0.7463,
+        -0.6656
+      ],
+      "directionAtImpactStudio": [
+        -0.0,
+        -0.6656,
+        -0.7463
+      ]
+    },
+    "TailWhip": {
+      "duration": 2.9583,
+      "warnStart": 0.2917,
+      "impact": 1.0833,
+      "activeEnd": 1.5,
+      "recoveryEnd": 2.7083,
+      "points": {
+        "SpadeTip": {
+          "bone": "TailTip",
+          "offset": [
+            0.0,
+            2.6,
+            0.0
+          ],
+          "rootAtImpact": [
+            7.7898,
+            21.3297,
+            3.2409
+          ],
+          "rootAtImpactStudio": [
+            -7.7898,
+            3.2409,
+            21.3297
+          ],
+          "arc": {
+            "pivot": [
+              1.864,
+              5.889,
+              0.0
+            ],
+            "pivotStudio": [
+              -1.864,
+              0.0,
+              5.889
+            ],
+            "startAngleDeg": -93.5,
+            "endAngleDeg": 111.5,
+            "sweepDeg": 205.1,
+            "radius": 16.591,
+            "radiusMax": 19.116,
+            "heightRange": [
+              1.974,
+              3.305
+            ],
+            "startTime": 0.8333,
+            "endTime": 1.5,
+            "angleConvention": "Blender axes: degrees about +Z from +Y (straight back), positive toward +X (dragon left). In Studio axes (-X, Z, Y): about +Y from +Z, positive toward -X."
+          }
+        }
+      },
+      "directionAtImpact": [
+        0.8632,
+        -0.5049,
+        0.0072
+      ],
+      "directionAtImpactStudio": [
+        -0.8632,
+        0.0072,
+        -0.5049
+      ]
+    },
+    "FrontStomp": {
+      "duration": 1.9583,
+      "warnStart": 0.2917,
+      "impact": 1.0833,
+      "activeEnd": 1.0833,
+      "recoveryEnd": 1.625,
+      "points": {
+        "LeftFrontImpact": {
+          "bone": "Hand_L",
+          "offset": [
+            0.0792,
+            1.7231,
+            0.0642
+          ],
+          "rootAtImpact": [
+            5.287,
+            -4.298,
+            0.0
+          ],
+          "rootAtImpactStudio": [
+            -5.287,
+            0.0,
+            -4.298
+          ]
+        },
+        "RightFrontImpact": {
+          "bone": "Hand_R",
+          "offset": [
+            -0.0792,
+            1.7231,
+            0.0642
+          ],
+          "rootAtImpact": [
+            -5.287,
+            -4.298,
+            0.0
+          ],
+          "rootAtImpactStudio": [
+            5.287,
+            0.0,
+            -4.298
+          ]
+        }
+      }
+    }
+  },
+  "rootHeight": 0.0,
+  "rootNote": "The Root bone sits on the ground under the body centre (z = 0); the Hips joint is at 6.4 studs.",
+  "hipsHeight": 6.4,
+  "height": 16.321,
+  "footprintRadius": 9.291,
+  "footprintNote": "max horizontal distance from the origin of body/leg/head vertices (wings and tail excluded)",
+  "wingspanRest": 21.958,
+  "lengthRest": 31.962,
+  "motion": {
+    "strideLength": 4.2667,
+    "nominalSpeed": 2.56
+  },
+  "clips": {
+    "Idle": {
+      "duration": 3.0,
+      "loop": true,
+      "frames": 73
+    },
+    "Walk": {
+      "duration": 1.6666667,
+      "loop": true,
+      "frames": 41
+    },
+    "Hit": {
+      "duration": 0.4583333,
+      "loop": false,
+      "frames": 12
+    },
+    "Death": {
+      "duration": 2.5,
+      "loop": false,
+      "frames": 61
+    },
+    "FireBreath": {
+      "duration": 2.4583333,
+      "loop": false,
+      "frames": 60
+    },
+    "TailWhip": {
+      "duration": 2.9583333,
+      "loop": false,
+      "frames": 72
+    },
+    "FrontStomp": {
+      "duration": 1.9583333,
+      "loop": false,
+      "frames": 48
+    }
+  },
+  "checks": {
+    "deathGround": {
+      "min_vertex_z": -0.05,
+      "root_lifts": {
+        "20": 0.002,
+        "21": 0.0101,
+        "22": 0.0211,
+        "23": 0.0331,
+        "24": 0.0593,
+        "25": 0.0978,
+        "26": 0.1089,
+        "27": 0.1523,
+        "28": 0.4919,
+        "29": 0.7796,
+        "30": 0.9941,
+        "31": 1.1421,
+        "32": 1.2195,
+        "33": 1.2247,
+        "34": 1.1855,
+        "35": 1.1033,
+        "36": 0.9819,
+        "37": 0.8286,
+        "38": 0.6536,
+        "39": 0.4692,
+        "40": 0.2892,
+        "41": 0.1271,
+        "42": 0.0547,
+        "43": 0.0856,
+        "44": 0.0989,
+        "45": 0.0897,
+        "46": 0.0558,
+        "47": 0.012,
+        "50": 0.0204,
+        "51": 0.064,
+        "52": 0.0938,
+        "53": 0.0993,
+        "54": 0.0993,
+        "55": 0.0993,
+        "56": 0.0993,
+        "57": 0.0993,
+        "58": 0.0993,
+        "59": 0.0993,
+        "60": 0.0993,
+        "61": 0.0993
+      }
+    },
+    "walkPlantedDrift": {
+      "FL": 0.0,
+      "FR": 0.0,
+      "HL": 0.0,
+      "HR": 0.0
+    },
+    "clipMinVertexZ": {
+      "Idle": -0.0511,
+      "Walk": -0.0503,
+      "Hit": -0.0504,
+      "Death": -0.05
+    }
+  }
+}

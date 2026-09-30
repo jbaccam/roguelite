@@ -258,6 +258,67 @@ drift = {n: max(max(d.values()) for d in atk[n]['planted_feet_drift'].values()) 
 check('attacks: planted feet do not slide (evaluated rig, every frame, < 0.05 studs)',
       all(v < 0.05 for v in drift.values()), max_drift=drift)
 
+# ------------------------------------------------------------------ game package (plans/BOSS_GAME_PACKAGE_SPEC.md)
+import math as _m
+GAME = HERE / 'exports' / 'game'
+anim = json.loads((GAME / 'AnimationData.json').read_text(encoding='utf-8'))
+bgd = json.loads((GAME / 'BossGameData.json').read_text(encoding='utf-8'))
+studio = GAME / 'Dragon_Studio.fbx'
+reset()
+bpy.ops.import_scene.fbx(filepath=str(studio), use_custom_normals=True, automatic_bone_orientation=False)
+report['files']['studio_fbx'] = {'path': 'exports/game/Dragon_Studio.fbx', 'bytes': studio.stat().st_size, 'sha256': sha(studio)}
+meshes = mesh_objs()
+arm = arm_obj()
+secs = sorted(o.name for o in meshes)
+check('studio fbx: one mesh per section, named after the section', secs == sorted(MAN['sections']), found=secs)
+check('studio fbx: every mesh < 20k triangles', all(tris(o) < 20000 for o in meshes), triangles={o.name: tris(o) for o in meshes})
+names = {b.name for b in arm.data.bones} if arm else set()
+check('studio fbx: bone names match AnimationData.json', names == set(anim['bones']), count=len(names),
+      missing=sorted(set(anim['bones']) - names)[:8], extra=sorted(names - set(anim['bones']))[:8])
+mats = {}
+for o in meshes:
+    m = o.material_slots[0].material if o.material_slots else None
+    img = None
+    if m and m.use_nodes:
+        img = next((n.image for n in m.node_tree.nodes if n.type == 'TEX_IMAGE' and n.image), None)
+    mats[o.name] = (m.name if m else None, img.size[0] if img else 0, bool(img and img.has_data))
+check('studio fbx: materials Dragon_<Section> with 1024 delivery textures loading',
+      all(v[0] == f'Dragon_{k}' and v[1] == 1024 and v[2] for k, v in mats.items()), materials=mats)
+check('studio fbx: no animation, no control bones', not bpy.data.actions and not any(n.startswith(('IK_', 'Pole_')) for n in names),
+      actions=[a.name for a in bpy.data.actions])
+fbm = sorted(p.name for p in (GAME / 'Dragon_Studio.fbm').glob('*.png'))
+check('studio fbx: delivery PNGs copied into Dragon_Studio.fbm', len(fbm) == len(MAN['sections']), files=fbm)
+need = ['Idle', 'Walk', 'Hit', 'Death', 'FireBreath', 'TailWhip', 'FrontStomp']
+check('AnimationData: id, fps and every required clip', anim['id'] == 'dragon' and anim['fps'] == 24 and all(c in anim['clips'] for c in need),
+      clips=list(anim['clips']))
+bad = {}
+for cname, c in anim['clips'].items():
+    n = round(c['duration'] * 24) + 1
+    nan = any(not _m.isfinite(x) for fr in c['frames'] for tr in fr['transforms'].values() for x in tr)
+    closes = True
+    if c['loop']:
+        a, z = c['frames'][0]['transforms'], c['frames'][-1]['transforms']
+        closes = max(abs(p - q) for bn in a for p, q in zip(a[bn], z[bn])) < 1e-4
+    bones_ok = all(set(fr['transforms']) == set(anim['bones']) for fr in c['frames'])
+    if len(c['frames']) != n or nan or not closes or not bones_ok:
+        bad[cname] = {'frames': len(c['frames']), 'expected': n, 'nan': nan, 'loop_closes': closes, 'bones_ok': bones_ok}
+check('AnimationData: frame counts, no NaNs, loops close, every bone in every frame', not bad, problems=bad)
+idle0 = anim['clips']['Idle']['frames'][0]['transforms']
+dev = {}
+for a in ('FireBreath', 'TailWhip', 'FrontStomp'):
+    fr = anim['clips'][a]['frames']
+    dev[a] = round(max(max(abs(p - q) for p, q in zip(idle0[bn], fr[i]['transforms'][bn])) for i in (0, -1) for bn in idle0), 6)
+check('attacks start and end on the Idle start pose (< 1e-3)', all(v < 1e-3 for v in dev.values()), max_difference=dev)
+dz = bgd['checks']['deathGround']['min_vertex_z']
+check('Death: no vertex below z = -0.05', dz >= -0.05, min_vertex_z=dz)
+wd = bgd['checks']['walkPlantedDrift']
+check('Walk: planted feet follow the ground-locked path (< 0.05 studs)', max(wd.values()) < 0.05, drift=wd,
+      stride=anim['motion'])
+atk = bgd['attacks']
+ok = all(k in atk for k in ('FireBreath', 'TailWhip', 'FrontStomp')) and 'FireOrigin' in atk['FireBreath']['points']     and 'SpadeTip' in atk['TailWhip']['points'] and 'arc' in atk['TailWhip']['points']['SpadeTip']     and {'LeftFrontImpact', 'RightFrontImpact'} <= set(atk['FrontStomp']['points'])     and all(atk[k]['warnStart'] <= atk[k]['impact'] <= atk[k]['activeEnd'] <= atk[k]['recoveryEnd'] <= atk[k]['duration'] + 1e-6 for k in atk)
+check('BossGameData: required points and ordered timings', ok,
+      timings={k: [v['warnStart'], v['impact'], v['activeEnd'], v['recoveryEnd'], v['duration']] for k, v in atk.items()})
+
 report['summary'] = {'passed': sum(c['ok'] for c in report['checks']), 'total': len(report['checks'])}
 (HERE / 'validation-report.json').write_text(json.dumps(report, indent=2))
 print('SUMMARY', report['summary'])

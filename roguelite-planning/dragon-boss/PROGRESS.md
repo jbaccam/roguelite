@@ -1,6 +1,23 @@
 # Dragon boss — progress log
 
-## State: DELIVERED (TailWhip v2 done)
+## State: DELIVERED (game package done)
+
+The game package follows `plans/BOSS_GAME_PACKAGE_SPEC.md`. Build it with `DRAGON_STAGE=game`. It produces:
+
+- `exports/game/Dragon_Studio.fbx`, plus the `.fbm` folder of 1024 maps;
+- `AnimationData.json`: 7 clips (Idle, Walk, Hit, Death, FireBreath, TailWhip, FrontStomp) at 24 fps over 90 bones;
+- `BossGameData.json`;
+- `previews/GameClips.png` and `previews/Clip_*.mp4`.
+
+Results:
+
+- **Walk:** stride 4.267 studs per cycle, speed 2.56 studs/s, planted drift 0.
+- **Death:** minimum vertex z −0.05.
+- **Attacks:** they start and end exactly on the Idle start pose. To get this, the front-foot IK pole was changed, and
+  ReferencePose keeps its old pole.
+- **Validation:** 46 / 46 checks pass.
+
+## Earlier state (TailWhip v2)
 
 - `validate_exports.py` passes 34 / 34 checks.
 - Silhouette IoU is 0.852, accepted under the coordinator's wrap-up order (the target was 0.92).
@@ -57,3 +74,4 @@ To update one attack in the saved blend, set `DRAGON_STAGE=attack DRAGON_ATTACK=
 | Final | Full build, validation and previews. | — |
 | Polish | Teeth; attack kit replaced (FireBreath, TailWhip, FrontStomp) with videos. | 0.852 |
 | TailWhip v2 | Hip swing, hind-foot stepping, 205° arc, impact f27, drift 0, validation 34 / 34. | 0.852 |
+| Game package | Studio FBX, AnimationData (7 clips), BossGameData, GameClips sheet and mp4s; validation 46 / 46. | 0.852 |

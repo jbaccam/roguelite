@@ -183,9 +183,11 @@ def plant_hind(sk, pose, s, target_xy, splay):
     return pose
 
 
-def plant_front(sk, pose, s, target_xy, splay):
+def plant_front(sk, pose, s, target_xy, splay, pole_bias=0.0):
     """Plant the front foot: claw-row centre at target_xy, the hand level and
-    yawed by `splay` (deg about Z), elbow bending backward."""
+    yawed by `splay` (deg about Z), elbow bending backward. With pole_bias 0 the
+    bend plane is the rest one, so planting at the rest spot returns the exact
+    rest pose (the pose every clip starts from); ReferencePose keeps its 0.4."""
     rest_row = np.array(RG.TOE_ROWS['front'][0], float)
     if s == 'R':
         rest_row = RG.mirror(rest_row)
@@ -194,7 +196,7 @@ def plant_front(sk, pose, s, target_xy, splay):
     tgt = np.array([target_xy[0], target_xy[1], rest_row[2]])
     wrist_t = tgt + Ry @ (wrist - rest_row)
     elbow_rest = sk.head[f'Forearm_{s}']
-    pole = elbow_rest - 0.5 * (sk.head[f'UpperArm_{s}'] + wrist) + np.array([0, 0.4, 0])
+    pole = elbow_rest - 0.5 * (sk.head[f'UpperArm_{s}'] + wrist) + np.array([0, pole_bias, 0])
     two_bone_ik(sk, pose, f'UpperArm_{s}', f'Forearm_{s}', wrist_t, pole)
     set_world_rot(sk, pose, f'Hand_{s}', Ry @ sk.rest[f'Hand_{s}'][:3, :3])
     return pose
@@ -253,7 +255,7 @@ def reference_pose(sk, P=None):
         sgn = 1 if s == 'L' else -1
         ry, rz = P['shoulder_rot'][s]
         pose[f'Shoulder_{s}'] = compose(wx(sk, f'Shoulder_{s}', (0, 1, 0), ry), wx(sk, f'Shoulder_{s}', (0, 0, 1), rz))
-        plant_front(sk, pose, s, P['front_target'][s], sgn * P['front_splay'][s])
+        plant_front(sk, pose, s, P['front_target'][s], sgn * P['front_splay'][s], pole_bias=0.4)
         plant_hind(sk, pose, s, P['hind_target'][s], P['hind_splay'][s])
     # wings: every bone aims at its measured joint pixel. Each pixel ray meets
     # the bone's reach sphere twice; all 2^7 near/far combinations are tried and
@@ -942,3 +944,223 @@ def attack_data(sk, name):
                                  'ground_point': [round(float(c[0]), 3), round(float(c[1]), 3), 0.0]}
         out['impact_points'] = pts
     return out
+
+
+# =============================================================== game clips
+# Idle / Walk / Hit / Death for the game package (24 fps). Idle starts on the
+# rest pose (the pose every attack starts and ends on); every clip re-plants
+# the feet that are on the ground with IK every frame.
+GAME_CLIPS = {'Idle': (72, True), 'Walk': (40, True), 'Hit': (11, False), 'Death': (60, False)}
+
+
+def b1(t):
+    """Periodic bump 0 -> 1 -> 0 over one cycle (zero value and slope at the ends)."""
+    return 0.5 * (1 - math.cos(2 * math.pi * t))
+
+
+def lagged(fn, t, lag):
+    """fn(t - lag), corrected so it is exactly 0 at t = 0 and t = 1 (idle loops start on rest)."""
+    return fn(t - lag) - fn(-lag) * (1 - b1(t))
+
+
+def sn(t):
+    return math.sin(2 * math.pi * t)
+
+
+def root_tr(x=0.0, y=0.0, z=0.0, q=None):
+    return {'q': np.array([1.0, 0, 0, 0]) if q is None else np.asarray(q, float), 't': np.array([x, y, z])}
+
+
+def root_rot_about(axis, deg, pivot, extra=(0.0, 0.0, 0.0), sk=None):
+    """Root basis rotating the whole rig by `deg` about world `axis` through world
+    `pivot`, plus a world translation `extra` (Root rest: local Y = -world Y, Z = world Z)."""
+    R = rot_axis(axis, deg)
+    piv = np.asarray(pivot, float)
+    t_world = piv - R @ piv + np.asarray(extra, float)
+    Rr = sk.rest['Root'][:3, :3]
+    return {'q': mat_to_quat(Rr.T @ R @ Rr), 't': Rr.T @ t_world}
+
+
+def idle_pose(sk, t):
+    br = b1(t)
+    pose = {'Root': root_tr(0.12 * sn(t), 0.0, -0.1 * br - 0.08 * sn(t) ** 2)}
+    pose['Hips'] = wx(sk, 'Hips', (0, 0, 1), 1.2 * sn(t))
+    pose['Spine_2'] = wx(sk, 'Spine_2', (1, 0, 0), -0.9 * br)
+    pose['Spine_3'] = wx(sk, 'Spine_3', (1, 0, 0), -0.7 * lagged(b1, t, 0.04))
+    pose = merge(pose, neck_pose(sk, pitch_deg=-2.5 * lagged(b1, t, 0.1), head_pitch=1.5 * lagged(b1, t, 0.14),
+                                 yaw_deg=2.0 * lagged(sn, t, 0.1), head_yaw=3.0 * lagged(sn, t, 0.14)))
+    pose['Jaw'] = local_axis_rot((1, 0, 0), -2.5 * lagged(b1, t, 0.06))
+    for s in ('L', 'R'):
+        sg = 1 if s == 'L' else -1
+        pose[f'Wing_{s}_1'] = wx(sk, f'Wing_{s}_1', (0, 1, 0), -sg * 3.0 * lagged(b1, t, 0.2))
+        pose[f'Wing_{s}_2'] = wx(sk, f'Wing_{s}_2', (0, 1, 0), -sg * 2.0 * lagged(b1, t, 0.26))
+    n = RG.TAIL_N
+    for i in range(n):
+        b = f'Tail_{i + 1}'
+        lag = 0.12 + 0.18 * i / (n - 1)
+        pose[b] = compose(wx(sk, b, (0, 0, 1), 1.1 * lagged(sn, t, lag)), local_axis_rot((1, 0, 0), 0.5 * lagged(b1, t, lag)))
+    blink = seg(t, 0.62, 0.66) * (1 - seg(t, 0.68, 0.72))
+    pose = merge(pose, PZ_blink(sk, blink))
+    plant_all(sk, pose)
+    return pose
+
+
+def PZ_blink(sk, amount):
+    return blink(sk, amount) if amount > 1e-6 else {}
+
+
+# ---- Walk: 4-beat lateral-sequence walk, in place (the game moves the root).
+WALK = {'frames': 40, 'duty': 0.75, 'excursion': 3.2, 'lift': 0.9, 'crouch': 0.5,
+        'offsets': {'HL': 0.0, 'FL': 0.25, 'HR': 0.5, 'FR': 0.75}}
+
+
+def walk_stride():
+    """Studs travelled per cycle: stance excursion / duty."""
+    return WALK['excursion'] / WALK['duty']
+
+
+def walk_foot(key, t):
+    """Target (dx, dy, lift) of a foot relative to its rest ground spot, and planted flag.
+    Stance: the foot moves backward (+Y) at body speed; swing: forward with lift."""
+    p = (t - WALK['offsets'][key]) % 1.0
+    d = WALK['duty']
+    E = WALK['excursion']
+    if p < d:
+        return 0.0, -E / 2 + E * (p / d), 0.0, True
+    u = (p - d) / (1 - d)
+    e = u * u * (3 - 2 * u)
+    return 0.0, E / 2 - E * e, WALK['lift'] * math.sin(math.pi * u), False
+
+
+def walk_pose(sk, t):
+    c = WALK['crouch']
+    pose = {'Root': root_tr(0.14 * sn(t), 0.0, -c + 0.07 * math.cos(4 * math.pi * t))}
+    pose['Hips'] = compose(wx(sk, 'Hips', (0, 1, 0), 2.5 * sn(t)), wx(sk, 'Hips', (0, 0, 1), 2.0 * sn(t + 0.12)))
+    pose['Spine_3'] = wx(sk, 'Spine_3', (0, 0, 1), -2.0 * sn(t + 0.12))
+    pose['Chest'] = wx(sk, 'Chest', (0, 1, 0), -1.5 * sn(t + 0.25))
+    pose = merge(pose, neck_pose(sk, pitch_deg=2.0 * math.cos(4 * math.pi * (t - 0.06)), yaw_deg=2.5 * sn(t - 0.1),
+                                 head_yaw=-1.5 * sn(t - 0.1)))
+    # wings half folded (rest -> folded, 50 %), a small lagged bob
+    fold = fold_wings(sk)
+    for b, q in fold.items():
+        pose[b] = slerp(np.array([1.0, 0, 0, 0]), q, 0.5)
+    for s in ('L', 'R'):
+        sg = 1 if s == 'L' else -1
+        pose[f'Wing_{s}_1'] = compose(wx(sk, f'Wing_{s}_1', (0, 1, 0), -sg * 2.0 * math.cos(4 * math.pi * (t - 0.1))),
+                                      pose[f'Wing_{s}_1'])
+    # tail counter-sway (opposite the hips), trailing along its length
+    n = RG.TAIL_N
+    for i in range(n):
+        b = f'Tail_{i + 1}'
+        pose[b] = compose(wx(sk, b, (0, 0, 1), -1.4 * sn(t - 0.05 - 0.2 * i / (n - 1))), local_axis_rot((1, 0, 0), 1.0))
+    rf = RG.TOE_ROWS['front'][0]
+    rh = RG.TOE_ROWS['hind'][0]
+    for key in ('FL', 'FR', 'HL', 'HR'):
+        s = key[1]
+        sg = 1 if s == 'L' else -1
+        dx, dy, lift, planted = walk_foot(key, t)
+        if key[0] == 'F':
+            _place_front(sk, pose, s, (sg * rf[0] + dx, rf[1] + dy), lift, 0.0)
+        else:
+            place_hind(sk, pose, s, (sg * rh[0] + dx, rh[1] + dy), lift, 0.0)
+    return pose
+
+
+def _place_front(sk, pose, s, target_xy, lift, splay):
+    """plant_front with the claw row raised by `lift`."""
+    rest_row = np.array(RG.TOE_ROWS['front'][0], float)
+    if s == 'R':
+        rest_row = RG.mirror(rest_row)
+    wrist = sk.head[f'Hand_{s}']
+    Ry = rot_axis((0, 0, 1), splay)
+    tgt = np.array([target_xy[0], target_xy[1], rest_row[2] + lift])
+    wrist_t = tgt + Ry @ (wrist - rest_row)
+    elbow_rest = sk.head[f'Forearm_{s}']
+    pole = elbow_rest - 0.5 * (sk.head[f'UpperArm_{s}'] + wrist)
+    two_bone_ik(sk, pose, f'UpperArm_{s}', f'Forearm_{s}', wrist_t, pole)
+    set_world_rot(sk, pose, f'Hand_{s}', Ry @ sk.rest[f'Hand_{s}'][:3, :3])
+    return pose
+
+
+# ---- Hit: 0.46 s flinch, back exactly to rest
+def hit_pose(sk, t):
+    k = math.sin(math.pi * min(max(t, 0.0), 1.0) ** 0.6) ** 2      # fast in, eased out, 0 at both ends
+    pose = {'Root': root_tr(0.0, 0.2 * k, -0.34 * k)}
+    pose['Spine_3'] = wx(sk, 'Spine_3', (1, 0, 0), -4.0 * k)
+    pose = merge(pose, neck_pose(sk, pitch_deg=-9.0 * k, head_pitch=-6.0 * k, yaw_deg=5.0 * k, head_yaw=6.0 * k))
+    pose['Jaw'] = local_axis_rot((1, 0, 0), -14.0 * k)
+    for s in ('L', 'R'):
+        sg = 1 if s == 'L' else -1
+        pose[f'Wing_{s}_1'] = wx(sk, f'Wing_{s}_1', (0, 1, 0), -sg * 7.0 * k)
+    n = RG.TAIL_N
+    for i in range(n):
+        b = f'Tail_{i + 1}'
+        pose[b] = local_axis_rot((1, 0, 0), 1.5 * k)
+    pose = merge(pose, blink(sk, 0.8 * k))
+    plant_all(sk, pose)
+    return pose
+
+
+# ---- Death: rear and roar, collapse onto the belly and roll onto the right side,
+# wings limp, head and tail down; ground clearance enforced per frame in Blender.
+def death_pose(sk, t):
+    r = seg(t, 0.0, 0.26) * (1 - seg(t, 0.3, 0.52))
+    c = seg(t, 0.3, 0.72)
+    bounce = math.sin(math.pi * seg(t, 0.72, 0.86)) * (1 - seg(t, 0.86, 1.0))
+    roll = -22.0 * c
+    pose = {'Root': root_rot_about((0, 1, 0), roll, (0.0, 0.0, 0.0), extra=(0.0, 0.0, -1.0 * c + 0.12 * bounce), sk=sk)}
+    pose['Hips'] = wx(sk, 'Hips', (1, 0, 0), -14.0 * r + 3.0 * c)
+    pose['Tail_1'] = wx(sk, 'Tail_1', (1, 0, 0), 16.0 * r + 5.0 * c)
+    pose = merge(pose, neck_pose(sk, pitch_deg=10 * r + 26 * c, head_pitch=-12 * r + 10 * c, yaw_deg=24 * c,
+                                 head_yaw=10 * c),
+                 {'Jaw': local_axis_rot((1, 0, 0), -(30 * r + 10 * c))}, blink(sk, seg(t, 0.62, 0.8)))
+    n = RG.TAIL_N
+    for i in range(1, n):
+        b = f'Tail_{i + 1}'
+        pose[b] = wx(sk, b, (0, 0, 1), 3.0 * c)
+    # the spade must not plough into the ground: tip it up while rearing, lay it flat as he falls
+    pose['TailTip'] = compose(local_axis_rot((1, 0, 0), 30.0 * r + 40.0 * c), local_axis_rot((0, 1, 0), -60.0 * c))
+    # wings: flare while rearing, then fall limp (right one folds under, left one droops)
+    sp = flap_wings(sk, 20.0)
+    fold = fold_wings(sk)
+    droop = flap_wings(sk, -20.0)
+    for s in ('L', 'R'):
+        for bt, _ in WING_BONES:
+            b = bt.format(s=s)
+            q_rear = slerp(np.array([1.0, 0, 0, 0]), sp[b], r)
+            q_end = fold[b] if s == 'R' else slerp(np.array([1.0, 0, 0, 0]), droop[b], 0.6)
+            pose[b] = slerp(q_rear, q_end, c)
+    # legs: hind feet planted while rearing; front paws lift; then every foot is
+    # IK-placed onto splayed ground spots as the body goes down
+    plant_all(sk, pose, ('HL', 'HR'))
+    air = front_air(sk, dict(pose), 0.6 * r)
+    rf = RG.TOE_ROWS['front'][0]
+    rh = RG.TOE_ROWS['hind'][0]
+    spl = dict(pose)
+    for key, (x, y) in {'FL': (rf[0] + 1.2, rf[1] - 0.4), 'FR': (-rf[0] - 1.2, rf[1] - 0.6),
+                        'HL': (rh[0] + 1.4, rh[1] + 0.6), 'HR': (-rh[0] - 1.4, rh[1] + 0.8)}.items():
+        if key[0] == 'F':
+            _place_front(sk, spl, key[1], (x, y), 0.0, 0.0)
+        else:
+            place_hind(sk, spl, key[1], (x, y), 0.0, 0.0)
+    for s in ('L', 'R'):
+        for b in (f'UpperArm_{s}', f'Forearm_{s}', f'Hand_{s}'):
+            pose[b] = slerp(air[b], spl[b], c)
+        for b in (f'Thigh_{s}', f'Shin_{s}', f'Ankle_{s}', f'Foot_{s}'):
+            pose[b] = slerp(pose[b], spl[b], c)
+    # toes go slack at the end
+    for hand in ('Hand', 'Foot'):
+        for s in ('L', 'R'):
+            for k in range(1, 5):
+                pose[f'{hand}_{s}_Toe{k}_1'] = local_axis_rot((1, 0, 0), 12 * seg(t, 0.7, 0.9))
+    return pose
+
+
+GAME_POSES = {'Idle': idle_pose, 'Walk': walk_pose, 'Hit': hit_pose, 'Death': death_pose}
+
+
+def game_clip_keys(sk, name):
+    """[(frame, pose)] for frames 1..N+1 (N intervals at 24 fps; a loop's last frame equals its first)."""
+    n, loop = GAME_CLIPS[name]
+    fn = GAME_POSES[name]
+    return [(f + 1, fn(sk, f / n)) for f in range(n + 1)]

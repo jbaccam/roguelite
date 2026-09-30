@@ -15,6 +15,7 @@ Self-contained: imports only the dragon_* modules in this folder. Blender world,
 Z up, the dragon faces -Y, +X is the dragon's left; 1 unit = 1 Roblox stud.
 """
 import json
+import shutil
 import math
 import os
 import sys
@@ -1488,6 +1489,446 @@ def attack_update_main(names):
     log('attack update done', names)
 
 
+GAME_DIR = HERE / 'exports' / 'game'
+S_SWAP = Matrix(((1, 0, 0, 0), (0, 0, 1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))
+
+
+def cf12(m):
+    """AnimationData 12-number transform: S@m@S (Y/Z swap), [x,y,z,R00..R22], 7 places."""
+    m = S_SWAP @ m @ S_SWAP
+    return [round(x, 7) for x in [m[0][3], m[1][3], m[2][3], m[0][0], m[0][1], m[0][2], m[1][0], m[1][1], m[1][2],
+                                  m[2][0], m[2][1], m[2][2]]]
+
+
+def to_studio(v):
+    return [round(-float(v[0]), 4), round(float(v[2]), 4), round(float(v[1]), 4)]
+
+
+def evaluated_min_z(sections):
+    deps = bpy.context.evaluated_depsgraph_get()
+    mz = 1e9
+    for ob in sections.values():
+        e = ob.evaluated_get(deps)
+        me = e.to_mesh()
+        co = np.zeros(len(me.vertices) * 3)
+        me.vertices.foreach_get('co', co)
+        co = co.reshape(-1, 3)
+        M = np.array(ob.matrix_world)
+        z = co @ M[2, :3] + M[2, 3]
+        mz = min(mz, float(z.min()))
+        e.to_mesh_clear()
+    return mz
+
+
+def ground_clearance_pass(rig, act, sections, floor=-0.05):
+    """Raise the Root per frame so no vertex goes below `floor` (keys every frame)."""
+    sc = bpy.context.scene
+    set_action(rig, act)
+    f0, f1 = int(act.frame_range[0]), int(act.frame_range[1])
+    worst = 0.0
+    lifts = {}
+    for f in range(f0, f1 + 1):
+        sc.frame_set(f)
+        mz = evaluated_min_z(sections)
+        if mz < floor:
+            pb = rig.pose.bones['Root']
+            lift = floor - mz
+            pb.location = pb.location + Vector((0, 0, lift))
+            pb.keyframe_insert('location', frame=f, group='Root')
+            lifts[f] = round(lift, 4)
+            bpy.context.view_layer.update()
+            sc.frame_set(f)
+            mz = evaluated_min_z(sections)
+        worst = min(worst, mz)
+    rig.animation_data.action = None
+    return {'min_vertex_z': round(worst, 4), 'root_lifts': lifts}
+
+
+def clip_min_z(rig, act, sections, step=2):
+    sc = bpy.context.scene
+    set_action(rig, act)
+    f0, f1 = int(act.frame_range[0]), int(act.frame_range[1])
+    worst = 1e9
+    for f in list(range(f0, f1 + 1, step)) + [f1]:
+        sc.frame_set(f)
+        worst = min(worst, evaluated_min_z(sections))
+    rig.animation_data.action = None
+    return round(worst, 4)
+
+
+def walk_drift(rig, act):
+    """Planted-foot error vs the ideal ground-locked path (in-place walk: planted
+    feet move backward at exactly the walk speed)."""
+    sc = bpy.context.scene
+    set_action(rig, act)
+    n = PZ.GAME_CLIPS['Walk'][0]
+    probes = {'FL': 'Hand_L_Toe2_2', 'FR': 'Hand_R_Toe2_2', 'HL': 'Foot_L_Toe2_2', 'HR': 'Foot_R_Toe2_2'}
+    rest = {k: rig.data.bones[b].head_local.copy() for k, b in probes.items()}
+    worst = {k: 0.0 for k in probes}
+    for f in range(n + 1):
+        sc.frame_set(f + 1)
+        t = f / n
+        for k, b in probes.items():
+            dx, dy, lift, planted = PZ.walk_foot(k, t)
+            if not planted:
+                continue
+            exp = rest[k] + Vector((dx, dy, 0.0))
+            worst[k] = max(worst[k], (rig.pose.bones[b].head - exp).length)
+    rig.animation_data.action = None
+    return {k: round(v, 4) for k, v in worst.items()}
+
+
+def sample_clip(rig, act, n_intervals, loop):
+    sc = bpy.context.scene
+    set_action(rig, act)
+    deform = [pb for pb in rig.pose.bones if rig.data.bones[pb.name].use_deform]
+    frames = []
+    for f in range(n_intervals + 1):
+        sc.frame_set(f + 1)
+        frames.append({'time': round(f / 24, 7), 'transforms': {pb.name: cf12(pb.matrix_basis) for pb in deform}})
+    rig.animation_data.action = None
+    return {'duration': round(n_intervals / 24, 7), 'loop': loop, 'frames': frames}
+
+
+def workbench_setup(w, h):
+    sc = bpy.context.scene
+    sc.render.engine = 'BLENDER_WORKBENCH'
+    sh = sc.display.shading
+    sh.light = 'STUDIO'
+    sh.color_type = 'TEXTURE'
+    sh.show_shadows = True
+    sc.render.resolution_x, sc.render.resolution_y = w, h
+    sc.render.resolution_percentage = 100
+
+
+def game_clips_sheet(rig, cam, sections, names):
+    sc = bpy.context.scene
+    apply_pose(rig, {})
+    P = measure(sections)
+    c = Vector(0.5 * (P.min(0) + P.max(0))) + Vector((0, 0, 0.5))
+    dv = Vector((0.8, -0.85, 0.34)).normalized()
+    paths, labels = [], []
+    for name in names:
+        act = bpy.data.actions[name]
+        set_action(rig, act)
+        n = int(act.frame_range[1] - act.frame_range[0])
+        picks = sorted({1 + round(n * u) for u in (0.0, 0.25, 0.5, 0.75, 1.0)})
+        if name == 'Hit':
+            picks = [1, 3, 5, 8, n + 1]
+        for f in picks[:5]:
+            sc.frame_set(f)
+            aim_cam(cam, c + dv * (50 if name != 'Death' else 54), c, lens=35)
+            workbench_setup(400, 300)
+            sc.render.image_settings.file_format = 'PNG'
+            p = WORK / f'game_{name}_{f:03d}.png'
+            sc.render.filepath = str(p)
+            bpy.ops.render.render(write_still=True)
+            paths.append(p)
+            labels.append(f'{name} f{f - 1} ({(f - 1) / 24:.2f}s)')
+        rig.animation_data.action = None
+    tile(paths, 5, HERE / 'previews' / 'GameClips.png')
+    SHEETS['GameClips.png'] = {'cols': 5, 'tile': [400, 300], 'labels': labels}
+    sc.render.resolution_x, sc.render.resolution_y = CAM.W, CAM.H
+
+
+def clip_video(rig, cam, sections, name):
+    sc = bpy.context.scene
+    apply_pose(rig, {})
+    P = measure(sections)
+    c = Vector(0.5 * (P.min(0) + P.max(0))) + Vector((0, 0, 0.5))
+    act = bpy.data.actions[name]
+    set_action(rig, act)
+    dv = Vector((0.8, -0.85, 0.34)).normalized()
+    aim_cam(cam, c + dv * 52, c, lens=35)
+    workbench_setup(640, 360)
+    sc.render.fps = 24
+    try:
+        sc.render.image_settings.media_type = 'VIDEO'
+    except Exception:  # noqa: BLE001
+        pass
+    sc.render.image_settings.file_format = 'FFMPEG'
+    sc.render.ffmpeg.format = 'MPEG4'
+    sc.render.ffmpeg.codec = 'H264'
+    out = HERE / 'previews' / f'Clip_{name}.mp4'
+    for old in (HERE / 'previews').glob(f'Clip_{name}*.mp4'):
+        old.unlink()
+    sc.render.filepath = str(HERE / 'previews' / f'Clip_{name}_')
+    bpy.ops.render.render(animation=True)
+    got = sorted((HERE / 'previews').glob(f'Clip_{name}_*.mp4'))
+    if got:
+        got[-1].replace(out)
+    try:
+        sc.render.image_settings.media_type = 'IMAGE'
+    except Exception:  # noqa: BLE001
+        pass
+    sc.render.image_settings.file_format = 'PNG'
+    sc.render.resolution_x, sc.render.resolution_y = CAM.W, CAM.H
+    rig.animation_data.action = None
+    return out.exists()
+
+
+def point_entry(rig, bone, offset_local, frame):
+    """Point on `bone` (local offset, Blender axes) in root/armature space at `frame`."""
+    bpy.context.scene.frame_set(frame)
+    M = rig.pose.bones[bone].matrix
+    p = M @ Vector(offset_local)
+    return {'bone': bone, 'offset': [round(float(v), 4) for v in offset_local],
+            'rootAtImpact': [round(float(v), 4) for v in p], 'rootAtImpactStudio': to_studio(p)}
+
+
+def boss_game_data(rig, sk, man, sections):
+    sc = bpy.context.scene
+    A = man['attacks']
+    out = {'attacks': {}}
+    tsec = lambda f: round((f - 1) / 24, 4)      # action frame -> seconds from clip start
+    # FireBreath
+    fb = A['FireBreath']
+    act = bpy.data.actions['FireBreath']
+    set_action(rig, act)
+    imp = fb['impact_frame']
+    off = fb['FireOrigin']['local']
+    e = {'duration': tsec(fb['frames'][1]), 'warnStart': tsec(7), 'impact': tsec(imp),
+         'activeEnd': tsec(fb['hold_frames'][1]), 'recoveryEnd': tsec(fb['frames'][1]),
+         'points': {'FireOrigin': point_entry(rig, 'Head', off, imp)}}
+    samples = []
+    for s in fb['breath']:
+        samples.append({'time': tsec(s['frame']), 'root': s['origin'], 'dir': s['direction'],
+                         'rootStudio': to_studio(s['origin']), 'dirStudio': to_studio(s['direction'])})
+    e['points']['FireOrigin']['samples'] = samples
+    d0 = fb['breath'][0]['direction']
+    e['directionAtImpact'] = d0
+    e['directionAtImpactStudio'] = to_studio(d0)
+    out['attacks']['FireBreath'] = e
+    # TailWhip
+    tw = A['TailWhip']
+    act = bpy.data.actions['TailWhip']
+    set_action(rig, act)
+    imp = tw['impact_frame']
+    arc = tw['spade_arc']
+    e = {'duration': tsec(tw['frames'][1]), 'warnStart': tsec(8), 'impact': tsec(imp),
+         'activeEnd': tsec(arc['end_frame']), 'recoveryEnd': tsec(66),
+         'points': {'SpadeTip': point_entry(rig, 'TailTip', (0.0, 2.6, 0.0), imp)}}
+    e['points']['SpadeTip']['arc'] = {
+        'pivot': arc['pivot'], 'pivotStudio': to_studio(arc['pivot']),
+        'startAngleDeg': arc['start_angle_deg'], 'endAngleDeg': arc['end_angle_deg'], 'sweepDeg': arc['sweep_deg'],
+        'radius': arc['radius_fit'], 'radiusMax': arc['radius_max'], 'heightRange': arc['height_range'],
+        'startTime': tsec(arc['start_frame']), 'endTime': tsec(arc['end_frame']),
+        'angleConvention': 'Blender axes: degrees about +Z from +Y (straight back), positive toward +X (dragon left). '
+                           'In Studio axes (-X, Z, Y): about +Y from +Z, positive toward -X.'}
+    bpy.context.scene.frame_set(imp)
+    W = rig.pose.bones['TailTip'].matrix
+    tip = W @ Vector((0, 2.6, 0))
+    bpy.context.scene.frame_set(imp + 1)
+    tip2 = rig.pose.bones['TailTip'].matrix @ Vector((0, 2.6, 0))
+    dv = (tip2 - tip).normalized()
+    e['directionAtImpact'] = [round(float(v), 4) for v in dv]
+    e['directionAtImpactStudio'] = to_studio(dv)
+    out['attacks']['TailWhip'] = e
+    # FrontStomp
+    fs = A['FrontStomp']
+    act = bpy.data.actions['FrontStomp']
+    set_action(rig, act)
+    imp = fs['impact_frame']
+    pts = {}
+    for s, key in (('L', 'LeftFrontImpact'), ('R', 'RightFrontImpact')):
+        g = fs['impact_points'][f'Front_{s}']['ground_point']
+        bpy.context.scene.frame_set(imp)
+        Mh = rig.pose.bones[f'Hand_{s}'].matrix
+        local = Mh.inverted() @ Vector(g)
+        pts[key] = point_entry(rig, f'Hand_{s}', tuple(local), imp)
+    e = {'duration': tsec(fs['frames'][1]), 'warnStart': tsec(8), 'impact': tsec(imp), 'activeEnd': tsec(imp),
+         'recoveryEnd': tsec(40), 'points': pts}
+    out['attacks']['FrontStomp'] = e
+    rig.animation_data.action = None
+    # body metrics (rest pose)
+    apply_pose(rig, {})
+    Pw = measure(sections)
+    out['rootHeight'] = 0.0
+    out['rootNote'] = ('The Root bone sits on the ground under the body centre (z = 0); the Hips joint is at '
+                       f"{round(float(sk.head['Hips'][2]), 3)} studs.")
+    out['hipsHeight'] = round(float(sk.head['Hips'][2]), 3)
+    out['height'] = round(float(Pw[:, 2].max()), 3)
+    # footprint: body, legs and head only (vertices mostly weighted to wing / tail bones excluded)
+    rad = 0.0
+    for ob in sections.values():
+        names = {g.index: g.name for g in ob.vertex_groups}
+        M = ob.matrix_world
+        for v in ob.data.vertices:
+            if not v.groups:
+                continue
+            gmax = max(v.groups, key=lambda g: g.weight)
+            nm = names[gmax.group]
+            if nm.startswith(('Wing_', 'Tail')):
+                continue
+            w = M @ v.co
+            rad = max(rad, (w.x ** 2 + w.y ** 2) ** 0.5)
+    out['footprintRadius'] = round(rad, 3)
+    out['footprintNote'] = 'max horizontal distance from the origin of body/leg/head vertices (wings and tail excluded)'
+    out['wingspanRest'] = round(float(Pw[:, 0].max() - Pw[:, 0].min()), 3)
+    out['lengthRest'] = round(float(Pw[:, 1].max() - Pw[:, 1].min()), 3)
+    return out
+
+
+def studio_fbx(rig, sections):
+    """exports/game/Dragon_Studio.fbx: rest mesh + deform armature, one mesh per section
+    named after the section, materials Dragon_<Section> on the 1024 delivery maps."""
+    GAME_DIR.mkdir(parents=True, exist_ok=True)
+    fbm = GAME_DIR / f'{NAME}_Studio.fbm'
+    fbm.mkdir(exist_ok=True)
+    rig.animation_data.action = None
+    for tr in list(rig.animation_data.nla_tracks):
+        rig.animation_data.nla_tracks.remove(tr)
+    apply_pose(rig, {})
+    swapped = []
+    for sec, ob in sections.items():
+        src = TEXDIR / f'{NAME}_{sec}_BaseColor.png'
+        img = bpy.data.images.load(str(src))
+        img.name = f'{NAME}_{sec}_BaseColor'
+        m = ob.data.materials[0]
+        m.name = f'{NAME}_{sec}'
+        tex = [n for n in m.node_tree.nodes if n.type == 'TEX_IMAGE'][0]
+        swapped.append((ob, ob.name, tex, tex.image))
+        tex.image = img
+        ob.name = sec
+        shutil.copy2(src, fbm / src.name)
+    for o in bpy.context.view_layer.objects:
+        o.select_set(False)
+    for o in list(sections.values()) + [rig]:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = rig
+    path = GAME_DIR / f'{NAME}_Studio.fbx'
+    bpy.ops.export_scene.fbx(filepath=str(path), use_selection=True, object_types={'ARMATURE', 'MESH'},
+                             apply_unit_scale=True, apply_scale_options='FBX_SCALE_NONE', axis_forward='-Z',
+                             axis_up='Y', add_leaf_bones=False, use_armature_deform_only=True, bake_anim=False,
+                             primary_bone_axis='Y', secondary_bone_axis='X', mesh_smooth_type='OFF',
+                             use_mesh_modifiers=False, path_mode='COPY', embed_textures=True)
+    for ob, name, tex, old in swapped:
+        ob.name = name
+        tex.image = old
+    return path
+
+
+def game_main():
+    """DRAGON_STAGE=game: the Studio game package (see plans/BOSS_GAME_PACKAGE_SPEC.md)."""
+    global REVIEW
+    bpy.ops.wm.open_mainfile(filepath=str(HERE / f'{NAME}.blend'))
+    REVIEW = bpy.data.collections.get('REVIEW_ONLY')
+    rig = bpy.data.objects[f'{NAME}_Rig']
+    sections = {s: bpy.data.objects[f'{NAME}_{s}'] for s in SECTIONS if f'{NAME}_{s}' in bpy.data.objects}
+    cam = bpy.data.objects['RefCam']
+    sk = RG.Skeleton()
+    rig.animation_data_create()
+    rig.animation_data.action = None
+    for tr in list(rig.animation_data.nla_tracks):
+        rig.animation_data.nla_tracks.remove(tr)
+    man = json.loads((HERE / 'manifest.json').read_text(encoding='utf-8'))
+    checks = {}
+    # attacks re-keyed at 24 fps so their first/last frames are exactly the rest (= Idle start) pose
+    for name in PZ.ATTACKS:
+        old = bpy.data.actions.get(name)
+        if old:
+            bpy.data.actions.remove(old)
+        act = make_action(rig, name, PZ.attack_keys(sk, name))
+        act.pose_markers.new('Impact').frame = PZ.ATTACKS[name][0]['impact_frame']
+        rig.animation_data.action = None
+        data = PZ.attack_data(sk, name)
+        data['phase_frames'] = PZ.attack_phase_frames(name)
+        data['planted_feet_drift'] = planted_slide(rig, act, name)
+        data['planted_feet'] = {'FireBreath': 'all four', 'FrontStomp': 'hind feet throughout; front feet from the impact frame on',
+                                'TailWhip': 'front feet throughout; hind feet between their steps (see hind_steps / planted_intervals)'}[name]
+        man['attacks'][name] = data
+        log('attack', name, 'drift', data['planted_feet_drift'])
+    # new game clips
+    for name, (n, loop) in PZ.GAME_CLIPS.items():
+        old = bpy.data.actions.get(name)
+        if old:
+            bpy.data.actions.remove(old)
+        act = make_action(rig, name, PZ.game_clip_keys(sk, name))
+        rig.animation_data.action = None
+        log('clip', name, n, 'frames')
+    checks['deathGround'] = ground_clearance_pass(rig, bpy.data.actions['Death'], sections)
+    checks['walkPlantedDrift'] = walk_drift(rig, bpy.data.actions['Walk'])
+    checks['clipMinVertexZ'] = {n: clip_min_z(rig, bpy.data.actions[n], sections) for n in ('Idle', 'Walk', 'Hit', 'Death')}
+    log('checks', checks)
+    # AnimationData.json
+    GAME_DIR.mkdir(parents=True, exist_ok=True)
+    bones = {}
+    for b in rig.data.bones:
+        if not b.use_deform:
+            continue
+        bones[b.name] = {'parent': b.parent.name if b.parent else None,
+                         'rest': cf12(b.parent.matrix_local.inverted() @ b.matrix_local if b.parent else b.matrix_local)}
+    clips = {}
+    for name, (n, loop) in PZ.GAME_CLIPS.items():
+        clips[name] = sample_clip(rig, bpy.data.actions[name], n, loop)
+    for name in PZ.ATTACKS:
+        n = PZ.ATTACKS[name][0]['frames'] - 1
+        clips[name] = sample_clip(rig, bpy.data.actions[name], n, False)
+    stride = PZ.walk_stride()
+    walk_dur = PZ.GAME_CLIPS['Walk'][0] / 24
+    anim = {'id': 'dragon', 'fps': 24, 'bones': bones, 'clips': clips,
+            'motion': {'strideLength': round(stride, 4), 'nominalSpeed': round(stride / walk_dur, 4)}}
+    (GAME_DIR / 'AnimationData.json').write_text(json.dumps(anim, separators=(',', ':')), encoding='utf-8')
+    # BossGameData.json
+    bgd = boss_game_data(rig, sk, man, sections)
+    bgd['motion'] = anim['motion']
+    bgd['clips'] = {n: {'duration': c['duration'], 'loop': c['loop'], 'frames': len(c['frames'])} for n, c in clips.items()}
+    bgd['checks'] = checks
+    (GAME_DIR / 'BossGameData.json').write_text(json.dumps(bgd, indent=2), encoding='utf-8')
+    man['actions'] = [a.name for a in bpy.data.actions if a.use_fake_user]
+    man['game_package'] = {'animation_data': 'exports/game/AnimationData.json', 'boss_game_data': 'exports/game/BossGameData.json',
+                           'studio_fbx': f'exports/game/{NAME}_Studio.fbx', 'checks': checks, 'motion': anim['motion']}
+    (HERE / 'manifest.json').write_text(json.dumps(man, indent=2), encoding='utf-8')
+    # clip FBXs (armature only) for the attacks and the new clips, GLB with every action
+    fbxdir = HERE / 'exports' / 'fbx'
+    common = dict(use_selection=True, apply_unit_scale=True, apply_scale_options='FBX_SCALE_NONE',
+                  axis_forward='-Z', axis_up='Y', add_leaf_bones=False, use_armature_deform_only=True,
+                  primary_bone_axis='Y', secondary_bone_axis='X', mesh_smooth_type='OFF', use_mesh_modifiers=False)
+
+    def select(obs):
+        for o in bpy.context.view_layer.objects:
+            o.select_set(False)
+        for o in obs:
+            o.select_set(True)
+        bpy.context.view_layer.objects.active = rig
+    for name in list(PZ.ATTACKS) + list(PZ.GAME_CLIPS):
+        set_action(rig, bpy.data.actions[name])
+        select([rig])
+        bpy.ops.export_scene.fbx(filepath=str(fbxdir / f'{NAME}_{name}.fbx'), object_types={'ARMATURE'},
+                                 bake_anim=True, bake_anim_use_all_actions=False, bake_anim_use_nla_strips=False,
+                                 bake_anim_force_startend_keying=True, bake_anim_simplify_factor=0.0, **common)
+    order = ['ReferencePose', 'RigTest_ROM'] + list(PZ.GAME_CLIPS) + list(PZ.ATTACKS)
+    rig.animation_data.action = None
+    for nme in order:
+        act = bpy.data.actions[nme]
+        tr = rig.animation_data.nla_tracks.new()
+        tr.name = nme
+        st = tr.strips.new(nme, int(act.frame_range[0]), act)
+        st.name = nme
+    apply_pose(rig, {})
+    select(list(sections.values()) + [rig])
+    bpy.ops.export_scene.gltf(filepath=str(HERE / 'exports' / 'glb' / f'{NAME}.glb'), export_format='GLB',
+                              use_selection=True, export_animations=True, export_animation_mode='NLA_TRACKS',
+                              export_skins=True, export_def_bones=True, export_normals=True, export_apply=False,
+                              export_yup=True)
+    for tr in list(rig.animation_data.nla_tracks):
+        rig.animation_data.nla_tracks.remove(tr)
+    # previews: GameClips.png + one mp4 per new clip
+    game_clips_sheet(rig, cam, sections, list(PZ.GAME_CLIPS))
+    write_sheet_labels()
+    for name in PZ.GAME_CLIPS:
+        log('video', name, clip_video(rig, cam, sections, name))
+    # save the blend (new actions), then write the Studio FBX from the saved state
+    set_action(rig, bpy.data.actions['ReferencePose'])
+    bpy.context.scene.frame_set(1)
+    restore_ref_cam(cam)
+    bpy.context.scene.render.engine = 'CYCLES'
+    bpy.ops.wm.save_as_mainfile(filepath=str(HERE / f'{NAME}.blend'), compress=True)
+    rig.animation_data.action = None
+    log('studio fbx', studio_fbx(rig, sections))
+    log('game package done')
+
+
 def previews_main():
     """DRAGON_STAGE=previews: reopen Dragon.blend and re-render the review sheets
     only (head close-up, turnaround, ROM sheet, AttackCheck). The model, rig,
@@ -1516,6 +1957,8 @@ if __name__ == '__main__':
         main()
     elif STAGE == 'previews':
         previews_main()
+    elif STAGE == 'game':
+        game_main()
     elif STAGE == 'attack':
         attack_update_main([a for a in os.environ.get('DRAGON_ATTACK', 'TailWhip').split(',') if a])
     else:
