@@ -241,3 +241,59 @@ After this pass:
 - `validate_exports.py` passed again.
 
 The build used `FC_STAGE=motion`: attacks, checks, exports and reports only. The reference-match and turnaround renders were not redone, and the geometry is unchanged.
+
+## Game package (2026-09-29)
+
+Built to `../plans/BOSS_GAME_PACKAGE_SPEC.md` by `build_game_package.py` (Blender). It opens `FrostCyclops.blend` and leaves the model, textures and rig unchanged.
+
+| File | What |
+| --- | --- |
+| `exports/game/AnimationData.json` | Id `frost-cyclops`, 24 fps, 61 deform bones (parent-relative rest), six clips, `motion` (`strideLength` 4.5 studs per cycle, `nominalSpeed` 3.0 studs/s). Matrices go through `cf(S@m@S)` exactly as in `animate_mobs.py`. |
+| `exports/game/BossGameData.json` | Attack timings, points and directions; `rootHeight` 4.55, `height` 13.09, `footprintRadius` 6.54, `groundOffset` 0.103. |
+| `exports/game/FrostCyclops_Studio.fbx` + `.fbm/` | Rest mesh and deform-only armature, no animation. The six section meshes use materials `FrostCyclops_<Section>` with the 1024² delivery maps, embedded and copied. |
+| `exports/game/GameClipChecks.json` | Loop closure, start/end poses, walk foot drift, death ground contact. |
+| `previews/GameClips.png`, `previews/Game_{Idle,Walk,Hit,Death}.mp4` | Workbench, ¾ view, low resolution. |
+
+**Clips.** All are 24 fps.
+
+| Clip | Duration | Loop | Notes |
+| --- | --- | --- | --- |
+| Idle | 3.0 s | yes | Two heavy breaths, a slow side-to-side weight shift, one blink. Belly, mantle and loincloth lag the body. Frame 0 is exactly the reference pose, which is also the first and last frame of both attacks. |
+| Walk | 1.5 s cycle | yes | Heavy gait: stride 4.5 studs, 62 % stance, pelvis bob and sway, counter-rotating chest. The club is carried out beside the right leg (lowest point 0.72 above the snow) with the fist closed. The left fist swings. Belly, mantle and loincloth follow through. Planted-foot drift is 1e-6. |
+| Hit | 0.46 s | no | Rocks back with the jaw open, then returns exactly to the idle start. |
+| Death | 2.5 s | no | See below. |
+| GroundSlam | 2.0 s | no | Resampled from the 30 fps clip with timing kept: impact at 0.933 s (between frames 22 and 23). |
+| Stomp | 2.667 s | no | Resampled the same way: impact at 1.633 s. |
+
+**Death:**
+- He recoils and the club slips from the opening hand, tipping over onto the snow.
+- He drops to his knees with the toes tucked.
+- He topples forward 61° about the knees onto his belly, arms reaching ahead, head turned.
+- A small settle follows.
+
+The topple angle, knee height and club rest were solved against the evaluated mesh. From frame 17 on nothing goes below the ground; the minimum across the clip is exactly the standing-pose sole depth.
+
+**Attack timings** (seconds). All hits are instant (`activeEnd` = `impact`).
+
+| Attack | warnStart | impact | recoveryEnd | Points |
+| --- | --- | --- | --- | --- |
+| GroundSlam | 0.233 | 0.933 | 1.933 | `ClubImpact` on the `Club` bone at (0.933, 5.938, −0.270). Root at impact (−3.451, −8.164, 0.001); Studio (3.451, 0.001, −8.164). |
+| Stomp | 0.300 | 1.633 | 2.633 | `StompImpact` on the `LeftFoot` bone at (0, 1.090, −0.611). Root at impact (2.467, −1.741, 0); Studio (−2.467, 0, −1.741). Spike direction (0, −1, 0); Studio (0, 0, −1). |
+
+**Changes made in this pass:**
+- **Leg IK.** `fc_motion.leg_hinge` now keeps the reference pose's own knee plane and each leg bone's roll about the hinge. The previous version rolled the thighs about 50° in the Stomp, and the Stomp's first and last frames were not the idle start pose; now they are.
+- **Stomp check.** The Stomp knee-twist check now measures twist relative to the reference: 0.0°.
+- **Re-exported files.** The attack actions, clip FBXs, rest FBX and GLB were rebuilt and re-exported, and the GLB now also carries Idle, Walk, Hit and Death. `AttackMotionChecks.json` was re-run and all checks pass.
+- **Old previews.** `AttackCheck_Stomp.png`, `SwingArc_Stomp.png` and `Stomp.mp4` were not re-rendered. They show the same joint positions, but the thigh mesh has the old roll.
+
+**Ground offset.** The approved model's soles sit 0.103 stud below z = 0 in the standing pose. `BossGameData.groundOffset` records this so the game can raise the model; the Death ground check is made relative to it.
+
+**Verified:**
+- `validate_exports.py` re-imports `FrostCyclops_Studio.fbx`:
+  - 6 meshes, all under 20k triangles;
+  - 61 bones, matching `AnimationData.json`;
+  - 1024 textures loading;
+  - no animation in the file.
+- Every clip has the right frame count, no NaNs, and loops that close (error 0).
+
+**Not verified:** Studio import, the retarget, the in-game look, and blends between clips at runtime.

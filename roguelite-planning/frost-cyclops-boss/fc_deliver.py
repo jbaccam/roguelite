@@ -534,8 +534,7 @@ def motion_checks(info):
             H, K, A = P.head(side + 'UpperLeg'), P.head(side + 'LowerLeg'), P.head(side + 'Foot')
             t, sh = D._unit(K - H), D._unit(A - K)
             row['knee_flex_' + side] = round(math.degrees(math.acos(np.clip(t @ sh, -1, 1))), 2)
-            row['knee_twist_' + side] = round(math.degrees(math.acos(np.clip(
-                mats[side + 'UpperLeg'][:3, 0] @ mats[side + 'LowerLeg'][:3, 0], -1, 1))), 2)
+            row['knee_twist_' + side] = round(MO.knee_twist(P, sk, side), 2)
         row['standing_foot_drift'] = round(float(np.linalg.norm(P.head('RightFoot') - RF0)), 6)
         Kl, Al = P.head('LeftLowerLeg'), P.head('LeftFoot')
         row['foot_ahead_of_knee'] = round(float((Al - Kl) @ np.array([0, -1.0, 0])), 3)

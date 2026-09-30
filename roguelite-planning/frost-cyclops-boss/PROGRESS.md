@@ -1,9 +1,7 @@
 # Frost Cyclops: progress log
 
-**Status: DELIVERED (final pass, 2026-09-29).** See README.md for everything.
+**Status: game package DELIVERED 2026-09-29.** See README.md, "Game package".
 
-- Final silhouette IoU is 0.9156. This was accepted per the coordinator's wrap-up order.
-- `validate_exports.py` PASSED.
-- `AttackMotionChecks.json` passed all its asserted limits.
-- The kit is GroundSlam plus Stomp; the club IceSpikes clip was dropped.
-- `_work/` was deleted. To rebuild, see README "Rebuilding".
+- `build_game_package.py` has been run and `validate_exports.py` PASSED, including the Studio FBX and AnimationData checks.
+- `GameClipChecks.json` and `AttackMotionChecks.json` both passed.
+- `_work/` was deleted.

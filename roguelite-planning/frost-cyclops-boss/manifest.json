@@ -916,6 +916,38 @@
    "markers": {
     "Impact": 50
    }
+  },
+  "Idle": {
+   "frame_range": [
+    1,
+    73
+   ],
+   "fps": 24,
+   "markers": {}
+  },
+  "Walk": {
+   "frame_range": [
+    1,
+    37
+   ],
+   "fps": 24,
+   "markers": {}
+  },
+  "Hit": {
+   "frame_range": [
+    1,
+    12
+   ],
+   "fps": 24,
+   "markers": {}
+  },
+  "Death": {
+   "frame_range": [
+    1,
+    61
+   ],
+   "fps": 24,
+   "markers": {}
   }
  },
  "motion_checks_summary": {
@@ -997,28 +1029,44 @@
  },
  "exports": {
   "exports/fbx/FrostCyclops.fbx": {
-   "sha256": "1BA092E85385F715060C473F38BA6623C3EE595BF94BE3D741DA27AA00AD0955",
-   "bytes": 5157804
+   "sha256": "4DB6C998B1C1038C08B066FCF4E619D47A36BCA75E4D4DC2BCA72D2782E92874",
+   "bytes": 5157948
   },
   "exports/fbx/FrostCyclops_GroundSlam.fbx": {
-   "sha256": "232195E25E4060D0369F373CEEEEE02E570C5D7498DF232ABEDB2420D3BA11BE",
-   "bytes": 615420
+   "sha256": "23E83639F4D41C52E946F5F4F7334AA1D777EFE58FC202361A2E614EC814266A",
+   "bytes": 615516
   },
   "exports/fbx/FrostCyclops_ReferencePose.fbx": {
-   "sha256": "F240129B4B3CAFCDEACE0C245223831D2830B503F8571302B86585ABB74B9560",
-   "bytes": 368204
+   "sha256": "DF67657CE0CCBCCC111934DA10795706389D95AAEC2048791A7D5E537B019C94",
+   "bytes": 368316
   },
   "exports/fbx/FrostCyclops_RigTest_ROM.fbx": {
-   "sha256": "2D47E6D566D49E337363DE3D3B36AC1686AA0CC76461855A1FF64809B5561B82",
-   "bytes": 830076
+   "sha256": "A2B8B40859B6ADB700A63242BB7D35DACB6C991E4852918AA64635129F424D22",
+   "bytes": 830172
   },
   "exports/fbx/FrostCyclops_Stomp.fbx": {
-   "sha256": "DBE9D48CBB285332773E37E4DF0C4E350A594AD454C22DD59148DBC2571A74E6",
-   "bytes": 693516
+   "sha256": "33E62DCB02CF2CC3688F3CD389FF4E3DC809C9D895B51D258154EE402C05747D",
+   "bytes": 693724
+  },
+  "exports/game/AnimationData.json": {
+   "sha256": "2C6036BCF72B5EB68DDAB7BAE7F8D5FD3D3D70A81A36E11A9C934FC6B6782100",
+   "bytes": 1908706
+  },
+  "exports/game/BossGameData.json": {
+   "sha256": "4BC4B19E397B69BB7DE058D61195DEAAF082E127012F09AE28AB886B4F685CE8",
+   "bytes": 1765
+  },
+  "exports/game/FrostCyclops_Studio.fbx": {
+   "sha256": "235046D4FE488FF892B1E9599BC115108B2E7F14BBEBD11BF6ADB3A8FBC17CD4",
+   "bytes": 5158188
+  },
+  "exports/game/GameClipChecks.json": {
+   "sha256": "FBE6BF4E04C7C10E08935C74DBE3F222E625331D6252F2D5432ADF96364107DA",
+   "bytes": 1665
   },
   "exports/glb/FrostCyclops.glb": {
-   "sha256": "350C04B47A0225782CEA5B576EBF82172FE2B23D3888EB5C9E9E72E18014E3C6",
-   "bytes": 8194060
+   "sha256": "E838D3C35166CC57503BA5C31DD1E4E224EF2DE96F476FE81924463DDB0F48FB",
+   "bytes": 8392964
   }
  },
  "camera_solution": {
@@ -1146,5 +1194,23 @@
    }
   ],
   "depth_priors_note": "Y of each anchor is a stance prior: left toes 1.6 studs ahead of the right toes, crown 2.3 studs behind the left toes. Everything else solved."
+ },
+ "game_package": {
+  "animation_data": "exports/game/AnimationData.json",
+  "boss_game_data": "exports/game/BossGameData.json",
+  "studio_fbx": "exports/game/FrostCyclops_Studio.fbx",
+  "checks": "exports/game/GameClipChecks.json",
+  "fps": 24,
+  "clips": [
+   "Idle",
+   "Walk",
+   "Hit",
+   "Death",
+   "GroundSlam",
+   "Stomp"
+  ],
+  "groundOffset": 0.1027,
+  "strideLength": 4.5,
+  "nominalSpeed": 3.0
  }
 }

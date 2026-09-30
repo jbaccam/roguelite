@@ -405,28 +405,51 @@ def ground_slam_spec(sk):
 
 
 # ------------------------------------------------------------------ stomp
-def leg_hinge(P, sk, side, ankle, pole, foot_R=None):
-    """Two-bone leg IK with ONE knee axis shared by thigh and shin (no twist)."""
+def _ref_leg(sk, side):
+    """REF knee plane and each leg bone's roll offset from the knee hinge."""
     ub, lb, fb = side + 'UpperLeg', side + 'LowerLeg', side + 'Foot'
+    H, K, A = sk.ref[ub][:3, 3], sk.ref[lb][:3, 3], sk.ref[fb][:3, 3]
+    t, s_ = D._unit(K - H), D._unit(A - K)
+    hinge = D._unit(np.cross(t, s_))
+    u = D._unit(A - H)
+    pole = D._unit((K - H) - u * ((K - H) @ u))
+
+    def roll(X, axis):
+        return math.atan2(np.cross(hinge, X) @ axis, hinge @ X)
+    return {'pole': pole, 'phi_t': roll(sk.ref[ub][:3, 0], t), 'phi_s': roll(sk.ref[lb][:3, 0], s_)}
+
+
+def leg_hinge(P, sk, side, ankle, pole=None, foot_R=None, pole_weight=None):
+    """Two-bone leg IK with ONE knee axis shared by thigh and shin (no twist).
+
+    The knee plane defaults to the reference pose's own knee plane (carried by
+    the pelvis), and each bone keeps its reference roll relative to the hinge,
+    so with the reference pelvis and ankle it returns the reference pose
+    exactly. `pole` (optional) blends the knee direction toward another
+    direction by `pole_weight` (default 1)."""
+    ub, lb, fb = side + 'UpperLeg', side + 'LowerLeg', side + 'Foot'
+    ref = _ref_leg(sk, side)
+    Rd = P.m['LowerTorso'][:3, :3] @ sk.ref['LowerTorso'][:3, :3].T
+    pole0 = Rd @ ref['pole']
+    if pole is not None:
+        w = 1.0 if pole_weight is None else float(pole_weight)
+        pole0 = pole0 * (1 - w) + D._unit(np.asarray(pole, float)) * w
     H = P.head(ub)
     l1, l2 = sk.length[ub], sk.length[lb]
     v = np.asarray(ankle) - H
     d = min(np.linalg.norm(v), l1 + l2 - 1e-4)
     uu = D._unit(v)
-    pole = np.asarray(pole, float)
-    pole = D._unit(pole - uu * (pole @ uu))
+    pl = D._unit(pole0 - uu * (pole0 @ uu))
     a = (l1 * l1 - l2 * l2 + d * d) / (2 * d)
     hgt = math.sqrt(max(0.0, l1 * l1 - a * a))
-    K = H + uu * a + pole * hgt
+    K = H + uu * a + pl * hgt
     A = H + uu * d
     th_dir = D._unit(K - H)
     sh_dir = D._unit(A - K)
-    hinge = np.cross(pole, uu)                   # perpendicular to the leg plane
-    if hinge @ sk.rest[ub][:3, 0] < 0:           # keep the rest X convention
-        hinge = -hinge
-    set_bone_frame(P, ub, H, th_dir, hinge)
-    set_bone_frame(P, lb, K, sh_dir, hinge)
-    # foot: world orientation given (flat), placed at the ankle
+    c = np.cross(th_dir, sh_dir)
+    hinge = D._unit(c) if np.linalg.norm(c) > 1e-4 else D._unit(np.cross(pl, uu))
+    set_bone_frame(P, ub, H, th_dir, axis_angle(th_dir, math.degrees(ref['phi_t'])) @ hinge)
+    set_bone_frame(P, lb, K, sh_dir, axis_angle(sh_dir, math.degrees(ref['phi_s'])) @ hinge)
     Rf = sk.ref[fb][:3, :3] if foot_R is None else foot_R
     M = np.eye(4)
     M[:3, :3] = Rf
@@ -436,6 +459,22 @@ def leg_hinge(P, sk, side, ankle, pole, foot_R=None):
         P.m[dd] = G @ P.m[dd]
     flexk = math.degrees(math.acos(np.clip(th_dir @ sh_dir, -1, 1)))
     return {'knee': K, 'ankle': A, 'knee_flex': flexk, 'hinge': hinge}
+
+
+def knee_twist(P, sk, side):
+    """Twist between thigh and shin about the knee, relative to the reference
+    pose (deg). 0 = the two bones share the hinge exactly as in the reference."""
+    ub, lb = side + 'UpperLeg', side + 'LowerLeg'
+    ref = _ref_leg(sk, side)
+    t, s_ = P.m[ub][:3, 1], P.m[lb][:3, 1]
+    c = np.cross(t, s_)
+    if np.linalg.norm(c) < 1e-4:
+        return 0.0
+    h = D._unit(c)
+    pt = math.atan2(np.cross(h, P.m[ub][:3, 0]) @ t, h @ P.m[ub][:3, 0])
+    ps = math.atan2(np.cross(h, P.m[lb][:3, 0]) @ s_, h @ P.m[lb][:3, 0])
+    d = (pt - ps) - (ref['phi_t'] - ref['phi_s'])
+    return abs(math.degrees((d + math.pi) % (2 * math.pi) - math.pi))
 
 
 def stomp_frames(sk):
@@ -483,7 +522,7 @@ def stomp_frames(sk):
                 P.rot('UpperTorso', np.array([-1.0, 0, 0]), -float(prm['lean']) * 0.65)
                 P.rot('LowerTorso', fwd, float(prm['side']))
                 P.rot('UpperTorso', fwd, -float(prm['side']) * 0.5)
-                r = leg_hinge(P, sk, 'Right', A0['Right'], pole=D.FOOT_DIR['Right'])
+                r = leg_hinge(P, sk, 'Right', A0['Right'])
                 # stomping leg: blend a ground target with the raised 90/90 target
                 H = P.head('LeftUpperLeg')
                 el = math.radians(float(prm['elev']))
@@ -495,7 +534,7 @@ def stomp_frames(sk):
                 pole = D._unit(thigh_dir0 + np.array([0, 0, 0.25]))
                 yaw = float(prm['fyaw'])
                 Rfl = axis_angle(UP, yaw) @ sk.ref['LeftFoot'][:3, :3]
-                l = leg_hinge(P, sk, 'Left', tgt, pole=pole, foot_R=Rfl)
+                l = leg_hinge(P, sk, 'Left', tgt, pole=pole, foot_R=Rfl, pole_weight=min(1.0, w * 3.0))
                 la = prm['larm']
                 P.rot('LeftUpperArm', X, float(la[0]))
                 P.rot('LeftUpperArm', Y, float(la[1]))

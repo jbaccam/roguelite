@@ -1,0 +1,92 @@
+{
+ "attacks": {
+  "GroundSlam": {
+   "duration": 2.0,
+   "warnStart": 0.2333,
+   "impact": 0.9333,
+   "activeEnd": 0.9333,
+   "recoveryEnd": 1.9333,
+   "points": {
+    "ClubImpact": {
+     "bone": "Club",
+     "offset": [
+      0.9333,
+      5.938,
+      -0.2698
+     ],
+     "rootAtImpact": [
+      -3.4506,
+      -8.1636,
+      0.0008
+     ],
+     "rootAtImpactStudio": [
+      3.4506,
+      0.0008,
+      -8.1636
+     ]
+    }
+   },
+   "strikeFaceNormalAtImpact": [
+    0.0001,
+    0.0007,
+    -1.0
+   ],
+   "strikeFaceNormalAtImpactStudio": [
+    -0.0001,
+    -1.0,
+    0.0007
+   ]
+  },
+  "Stomp": {
+   "duration": 2.6666667,
+   "warnStart": 0.3,
+   "impact": 1.6333,
+   "activeEnd": 1.6333,
+   "recoveryEnd": 2.6333,
+   "points": {
+    "StompImpact": {
+     "bone": "LeftFoot",
+     "offset": [
+      -0.0,
+      1.0903,
+      -0.6113
+     ],
+     "rootAtImpact": [
+      2.4667,
+      -1.7409,
+      -0.0
+     ],
+     "rootAtImpactStudio": [
+      -2.4667,
+      -0.0,
+      -1.7409
+     ]
+    }
+   },
+   "directionAtImpact": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "directionAtImpactStudio": [
+    -0.0,
+    0.0,
+    -1.0
+   ],
+   "spikeLineLength": [
+    20,
+    25
+   ]
+  }
+ },
+ "rootHeight": 4.55,
+ "groundOffset": 0.1027,
+ "height": 13.09,
+ "footprintRadius": 6.5398,
+ "walk": {
+  "strideLength": 4.5,
+  "nominalSpeed": 3.0,
+  "cycle": 1.5
+ },
+ "notes": "Times in seconds from clip start. Offsets are in the named bone's local space (Blender axes, studs); root positions are Blender root space; *Studio vectors use the (-X, Z, Y) mapping. groundOffset: the soles sit this far below z = 0 in the standing pose; raise the model by it so the feet rest on the ground."
+}

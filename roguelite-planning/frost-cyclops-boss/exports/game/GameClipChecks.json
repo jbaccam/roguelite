@@ -1,0 +1,123 @@
+{
+ "loopErrors": {
+  "Idle": 0.0,
+  "Walk": 0.0
+ },
+ "startsOnIdleStart": {
+  "Hit": {
+   "start": 0.0,
+   "end": 0.0
+  },
+  "Death": {
+   "start": 0.0,
+   "end": null
+  },
+  "GroundSlam": {
+   "start": 0.0,
+   "end": 0.0
+  },
+  "Stomp": {
+   "start": 0.0,
+   "end": 0.0
+  }
+ },
+ "walk": {
+  "plantedFootDrift_Right": 1e-06,
+  "plantedFootDrift_Left": 1e-06,
+  "clubLowestZ": 0.7194
+ },
+ "death": {
+  "minZPerFrame": [
+   -0.1027,
+   -0.1027,
+   -0.1027,
+   -0.1027,
+   -0.1027,
+   -0.1027,
+   -0.1027,
+   -0.0796,
+   -0.0283,
+   0.0144,
+   0.0961,
+   0.0993,
+   0.0665,
+   0.0249,
+   -0.019,
+   0.0009,
+   0.002,
+   -0.0,
+   0.0,
+   -0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   0.0,
+   -0.0,
+   -0.0,
+   0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.0
+  ],
+  "minZ": -0.1027,
+  "minZFrame": 0,
+  "groundOffset": 0.1027,
+  "minZRelativeToGround": 0.0,
+  "finalBodyMinZ": -0.1027,
+  "params": {
+   "topple_deg": 61.254,
+   "kneel_lift": 0.303,
+   "club_tip_deg": 46.0,
+   "club_lift": 0.1392
+  }
+ },
+ "nan": {
+  "Idle": false,
+  "Walk": false,
+  "Hit": false,
+  "Death": false,
+  "GroundSlam": false,
+  "Stomp": false
+ },
+ "death_lowest_section": {
+  "Body": -0.1027,
+  "Club": 0.0716,
+  "Eye": 11.5397,
+  "Fur": 5.8712,
+  "Gear": 2.0661,
+  "Head": 10.4188
+ },
+ "passed": true,
+ "failures": []
+}

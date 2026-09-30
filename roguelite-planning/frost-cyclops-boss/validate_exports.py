@@ -211,6 +211,35 @@ def check_glb(rep):
     rep['glb'] = r
 
 
+def check_game_package(rep):
+    """exports/game: the Studio import FBX and AnimationData.json (BOSS_GAME_PACKAGE_SPEC section 5)."""
+    game = HERE / 'exports' / 'game'
+    r = {}
+    anim = json.loads((game / 'AnimationData.json').read_text())
+    reset()
+    bpy.ops.import_scene.fbx(filepath=str(game / f'{NAME}_Studio.fbx'))
+    arms = [o for o in bpy.data.objects if o.type == 'ARMATURE']
+    mesh_obs = skinned_meshes()
+    r['meshes'] = {o.name: mesh_checks(o) for o in mesh_obs}
+    bones = sorted(b.name for b in arms[0].data.bones) if arms else []
+    r['bones_match_animation_data'] = bones == sorted(anim['bones'].keys())
+    r['bone_count'] = len(bones)
+    r['actions_in_studio_fbx'] = len(bpy.data.actions)
+    r['fbm_textures'] = sorted(p.name for p in (game / f'{NAME}_Studio.fbm').glob('*.png'))
+    clips = {}
+    for name, c in anim['clips'].items():
+        n_exp = int(round(c['duration'] * anim['fps'])) + 1
+        vals = [x for f in c['frames'] for v in f['transforms'].values() for x in v]
+        e = {'frames': len(c['frames']), 'expected': n_exp, 'nan': bool(not np.all(np.isfinite(np.array(vals, float)))),
+             'bones_ok': all(set(f['transforms']) == set(anim['bones']) for f in c['frames'])}
+        if c['loop']:
+            a, b = c['frames'][0]['transforms'], c['frames'][-1]['transforms']
+            e['loop_error'] = max(abs(x - y) for k in a for x, y in zip(a[k], b[k]))
+        clips[name] = e
+    r['clips'] = clips
+    rep['game_package'] = r
+
+
 def verdict(rep):
     fails = []
     exp_h = MAN['dimensions_studs']['height_rest_pose']       # top of the head, ground at z = 0
@@ -247,6 +276,18 @@ def verdict(rep):
             fails.append(f'clip {act}: {e}')
         elif act != 'ReferencePose' and not e.get('bones_moving_samples'):
             fails.append(f'clip {act}: no bone motion')
+    gp = rep.get('game_package')
+    if gp:
+        for n, m in gp['meshes'].items():
+            if not m['under_20k'] or not m['textures'] or not all(t['size'][0] > 0 for t in m['textures']):
+                fails.append(f'studio fbx/{n}: tris or texture problem')
+        if not gp['bones_match_animation_data']:
+            fails.append('studio fbx bones differ from AnimationData.json')
+        if gp['actions_in_studio_fbx']:
+            fails.append('studio fbx carries animation')
+        for n, e in gp['clips'].items():
+            if e['frames'] != e['expected'] or e['nan'] or not e['bones_ok'] or e.get('loop_error', 0) > 1e-4:
+                fails.append(f'AnimationData clip {n}: {e}')
     g = rep['glb']
     names = ' '.join(g['actions'])
     for act in ACTIONS:
@@ -262,6 +303,8 @@ def main():
     check_fbx_main(rep)
     check_fbx_clips(rep)
     check_glb(rep)
+    if (HERE / 'exports' / 'game' / 'AnimationData.json').exists():
+        check_game_package(rep)
     fails = verdict(rep)
     (HERE / 'validation-report.json').write_text(json.dumps(rep, indent=1))
     print('VALIDATION', 'PASSED' if not fails else 'FAILED', json.dumps(fails, indent=1))
