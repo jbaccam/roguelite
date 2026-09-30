@@ -3,8 +3,7 @@
 -- then paste this file into execute_luau (Edit). Only scripts whose code differs are written.
 -- New modules are created unsandboxed, like the rest of the map-boss chain (see the
 -- roguelite-new-modules note: MapBossPresentation, MapBossService and BossVfx are all unsandboxed).
--- It also restores the dragon template's import shrink (see InstallMapBossTemplates) if the
--- template in ServerStorage predates that fix.
+-- It warns if the dragon template is still the old shrunk import (see InstallMapBossTemplates).
 assert(not game:GetService("RunService"):IsRunning(), "Run the sync in Edit mode")
 local Http = game:GetService("HttpService")
 local RS, SSS, SS = game.ReplicatedStorage, game.ServerScriptService, game.ServerStorage
@@ -74,38 +73,17 @@ for _, rel in ANIMATIONS or {} do
 	end
 end
 
--- Dragon template: restore the importer's 2048-unit mesh shrink about Dragon_Belly.
-local FACTOR = 3004.590 / 2048
+-- Dragon template: the Studio FBX is split under the 2048-unit mesh cap, so there is no import
+-- shrink to restore any more (the old x1.467 restore here would stretch a correct template).
+-- A template still carrying a capped section is the old shrunk import: rerun InstallMapBossTemplates.
 local dragon = SS.RogueliteNPCs:FindFirstChild("Dragon_NPC")
-if dragon and not dragon:GetAttribute("ImportShrinkRestored") then
-	local rig = assert(dragon:FindFirstChild("RootPart"), "Dragon_NPC has no importer RootPart")
-	local anchor = assert(dragon:FindFirstChild("Dragon_Belly", true), "Dragon_NPC has no Dragon_Belly")
-	local centre = rig.CFrame:PointToObjectSpace(anchor.Position)
-	-- Welds off while the sections move, so no section drags the assembly; re-enabling rebuilds
-	-- each weld's offset from the new placement.
-	local welds = {}
-	for _, w in dragon:GetDescendants() do
-		if w:IsA("WeldConstraint") and w.Enabled and ((w.Part0 and w.Part0:IsA("MeshPart")) or (w.Part1 and w.Part1:IsA("MeshPart"))) then
-			w.Enabled = false
-			table.insert(welds, w)
-		end
-	end
-	local rigBefore = rig.CFrame
-	local n = 0
+if dragon then
 	for _, p in dragon:GetDescendants() do
-		if p:IsA("MeshPart") then
-			local rel = rig.CFrame:ToObjectSpace(p.CFrame)
-			p.Size *= FACTOR
-			p.CFrame = rig.CFrame * (CFrame.new(centre + (rel.Position - centre) * FACTOR) * rel.Rotation)
-			n += 1
+		if p:IsA("MeshPart") and math.max(p.Size.X, p.Size.Y, p.Size.Z) >= 20.47 then
+			table.insert(report, "WARNING Dragon_NPC has a capped section (" .. p.Name .. "): rerun InstallMapBossTemplates")
+			break
 		end
 	end
-	for _, w in welds do
-		w.Enabled = true
-	end
-	assert(rig.CFrame == rigBefore, "the importer RootPart moved")
-	dragon:SetAttribute("ImportShrinkRestored", FACTOR)
-	table.insert(report, string.format("DRAGON restored %d sections x%.6f, %d welds rebuilt", n, FACTOR, #welds))
 end
 table.insert(report, "scripts written: " .. written)
 return table.concat(report, "\n")

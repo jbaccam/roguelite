@@ -31,7 +31,9 @@ end
 local function add(player)
  local f=Instance.new('Folder');f.Name=tostring(player.UserId)
  f:SetAttribute('WeaponEnabled',true);f:SetAttribute('RingRadius',Motion.BaseRadius)
- local s={folder=f,slots={},lastOption=-1e6,lastEquip=-1e6};states[player]=s
+ -- Lobby practice dummies are attacked until the player switches it off (T / ATTACKS).
+ f:SetAttribute('LobbyAttacks',true)
+ local s={folder=f,slots={},lastOption=-1e6,lastEquip=-1e6,lastLobbyAttacks=-1e6};states[player]=s
  for i=1,Catalog.Slots do
   local child=Instance.new('Folder');child.Name='Slot'..i
   child:SetAttribute('WeaponId',i==1 and starter(player) or '');child:SetAttribute('Index',i);child.Parent=f
@@ -79,6 +81,20 @@ combat.SetTestOption.OnServerEvent:Connect(function(player,key,value)
  if key=='Zombies' then combat:SetAttribute('ZombiesEnabled',value)
  else s.folder:SetAttribute('WeaponEnabled',value);for _,slot in s.slots do reset(slot,workspace:GetServerTimeNow()+.25) end end
 end)
+-- Any player may switch their own lobby-dummy attacks. Booleans only, rate limited.
+-- It only gates LobbyDummy targets, so arena fights are never affected.
+combat.SetLobbyAttacks.OnServerEvent:Connect(function(player,value)
+ local s=states[player]
+ if not s or type(value)~='boolean' then return end
+ if os.clock()-s.lastLobbyAttacks<.25 then return end;s.lastLobbyAttacks=os.clock()
+ s.folder:SetAttribute('LobbyAttacks',value)
+end)
+-- Lobby dummies follow the player's switch; everything else needs a live wave or
+-- is a Studio practice target.
+local function targetable(npc,s)
+ if npc:GetAttribute('LobbyDummy') then return Death.isPractice(npc) and s.folder:GetAttribute('LobbyAttacks')~=false end
+ return combat:GetAttribute('ZombiesEnabled') or Death.isPractice(npc)
+end
 local function alive(npc)
  if not npc:IsDescendantOf(workspace) then return end
  local hum=npc:FindFirstChildOfClass('Humanoid');local root=npc:FindFirstChild('HumanoidRootPart')
@@ -95,12 +111,30 @@ local function rayParams(character,ignoreEnemies)
  local p=RaycastParams.new();p.FilterType=Enum.RaycastFilterType.Exclude;p.FilterDescendantsInstances=filter;return p
 end
 local function clear(origin,finish,p) return workspace:Raycast(origin,finish-origin,p)==nil end
+-- Where reach is measured to. A map boss is far wider than its root box (the dragon's side is
+-- ~9 studs from its centre), so it is measured to the nearest point of any body section's box:
+-- a pan touching its flank is in range. Every other enemy is measured to its root, as before.
+local function reachPoint(npc,root,from)
+ if not npc:GetAttribute('IsMapBoss') then return root.Position end
+ local best,bestDistance=root.Position,(root.Position-from).Magnitude
+ for _,p in npc:GetChildren() do
+  if p:IsA('MeshPart') or p==root then
+   local l=p.CFrame:PointToObjectSpace(from);local h=p.Size*.5
+   local q=p.CFrame:PointToWorldSpace(Vector3.new(math.clamp(l.X,-h.X,h.X),math.clamp(l.Y,-h.Y,h.Y),math.clamp(l.Z,-h.Z,h.Z)))
+   local distance=(q-from).Magnitude
+   if distance<bestDistance then best,bestDistance=q,distance end
+  end
+ end
+ -- Standing inside a section's box: a point just short of the player, so it still counts as a target.
+ if bestDistance<.05 then return from+(root.Position-from).Unit*.05 end
+ return best
+end
 local function damage(npc,amount,d,secondary) return Effects.hit(npc,amount,d,secondary) end
 local rockets=require(combat:WaitForChild('RocketProjectile')).new(combat,damage,rayParams)
 local projectiles=require(script.Parent:WaitForChild('StatProjectiles')).new(combat,damage,rayParams)
 local arcs=require(script.Parent:WaitForChild('ArcProjectiles')).new(combat,damage,rayParams)
 local specials=require(script.Parent:WaitForChild('SpecialWeapons')).new(combat,damage,rayParams)
-local function shoot(d,origin,aim,p,wallParams,enemies,character)
+local function shoot(d,origin,aim,character)
  if specials:handles(d.id) then specials:launch(d,origin,aim);return end
  d.muzzleShotId=workspace:GetServerTimeNow() -- One visual flash per trigger, not per pellet.
  if d.id=='18' or d.id=='33' then arcs:launch(d,origin,aim);return end
@@ -131,7 +165,19 @@ RunService.Heartbeat:Connect(function(dt)
   local radius=Motion.radius(root.Size,equippedCount)
   if math.abs((s.folder:GetAttribute('RingRadius') or 0)-radius)>.04 then s.folder:SetAttribute('RingRadius',radius) end
   radius=s.folder:GetAttribute('RingRadius')
-  local wallParams=rayParams(character,true);local params=rayParams(character,false)
+  local wallParams=rayParams(character,true)
+  -- Reuse eligibility only within this player's non-yielding preparation pass.
+  -- Rebuild for the next player: earlier attacks may have killed an enemy.
+  local targetParts,targetPositions,targetBosses
+  if equippedCount>1 and Characters.states[player] and s.folder:GetAttribute('WeaponEnabled') then
+   targetParts,targetPositions,targetBosses={},{},{}
+   for _,npc in enemies do local health,part=alive(npc)
+    if health and targetable(npc,s) then
+     targetParts[#targetParts+1]=part;targetPositions[#targetPositions+1]=part.Position
+     targetBosses[#targetBosses+1]=npc:GetAttribute('IsMapBoss')==true
+    end
+   end
+  end
   local prepared={};local targetCount=0
   for index,slot in s.slots do
    local id=slot.folder:GetAttribute('WeaponId');local base=Catalog.ById[id];if not base then continue end
@@ -142,16 +188,20 @@ RunService.Heartbeat:Connect(function(dt)
    if d.kind=='Melee' and Motion.DownwardWeapons[id] then
     searchRange=math.max(searchRange,Motion.attackReach(id,'Downward',d.range))
    end
-   local target,best=nil,searchRange
-   if s.folder:GetAttribute('WeaponEnabled') then
+   local target,best,point=nil,searchRange,nil
+   if targetParts then
+    for i,part in targetParts do local position=targetBosses[i] and reachPoint(part.Parent,part,origin) or targetPositions[i];local distance=(position-origin).Magnitude
+     if distance<best and distance>.01 and clear(origin,position,wallParams) then target=part;best=distance;point=position end
+    end
+   elseif s.folder:GetAttribute('WeaponEnabled') then
     for _,npc in enemies do local health,part=alive(npc)
-     if health and (combat:GetAttribute('ZombiesEnabled') or (RunService:IsStudio() and npc:GetAttribute('PracticeTarget'))) then local distance=(part.Position-origin).Magnitude
-      if distance<best and distance>.01 and clear(origin,part.Position,wallParams) then target=part;best=distance end
+     if health and targetable(npc,s) then local position=reachPoint(npc,part,origin);local distance=(position-origin).Magnitude
+      if distance<best and distance>.01 and clear(origin,position,wallParams) then target=part;best=distance;point=position end
      end
     end
    end
    if target then targetCount+=1 end
-   table.insert(prepared,{index=index,slot=slot,id=id,definition=d,origin=origin,target=target})
+   table.insert(prepared,{index=index,slot=slot,id=id,definition=d,origin=origin,target=target,point=point})
   end
   for _,entry in prepared do
    local index,slot,id=entry.index,entry.slot,entry.id
@@ -177,13 +227,15 @@ RunService.Heartbeat:Connect(function(dt)
     slot.serial=(slot.serial or 0)+1
     local nearby,second=0,nil
     for _,npc in enemies do local h,r=alive(npc);if h and (r.Position-origin).Magnitude<=d.range and clear(origin,r.Position,wallParams) then nearby+=1;if r~=target and (r.Position-target.Position).Magnitude<8 then second=r end end end
-    local targetOffset=target.Position-origin
+    -- Distances use the reach point (a map boss's nearest side); the swing still faces the root.
+    local reach=entry.point or target.Position
+    local targetOffset=reach-origin
     slot.style=Motion.chooseStyle(id,nearby,slot.serial,Vector3.new(targetOffset.X,0,targetOffset.Z).Magnitude,d.range)
     slot.side=Motion.chooseSide(slot.serial)
     d.range=Motion.attackReach(id,slot.style,d.range)
     -- Resolve the hammer's melee/throw choice after selecting its stroke:
     -- overheads can advance farther, while other cuts retain normal reach.
-    if id=='31' and (target.Position-origin).Magnitude>d.range then
+    if id=='31' and (reach-origin).Magnitude>d.range then
      d.kind='Ranged';d.damage=d.damage/Stats.mult(d.stats.MeleeDamage)*Stats.mult(d.stats.RangedDamage)
      d.range=d.targetRange
     end
@@ -201,9 +253,9 @@ RunService.Heartbeat:Connect(function(dt)
     slot.folder:SetAttribute('MotionRate',d.motionRate);slot.folder:SetAttribute('ReachScale',Stats.mult(d.stats.AttackRange))
     slot.folder:SetAttribute('SwingRange',d.range)
     slot.folder:SetAttribute('AttackAim',slot.aim);slot.folder:SetAttribute('AttackDirection',slot.direction);slot.folder:SetAttribute('StartTime',now)
-    d.practiceTarget=RunService:IsStudio() and target.Parent:GetAttribute('PracticeTarget')==true
+    d.practiceTarget=Death.isPractice(target.Parent)
     d.arcTarget=target
-    if d.kind~='Melee' then shoot(d,origin,target.Position,params,wallParams,enemies,character) end
+    if d.kind~='Melee' then shoot(d,origin,target.Position,character) end
    end
    d=slot.definition or d
    local age=(now-slot.start)*d.motionRate
@@ -234,10 +286,11 @@ RunService.Heartbeat:Connect(function(dt)
       for _,box in boxes do
        for _,part in workspace:GetPartBoundsInBox(box.cf,box.size+Vector3.one*.4,overlap) do
        local npc=part:FindFirstAncestorOfClass('Model')
-       if npc and not slot.hit[npc] and Tags:HasTag(npc,'RogueliteZombie') then
+       if npc and not slot.hit[npc] and Tags:HasTag(npc,'RogueliteZombie') and (not npc:GetAttribute('LobbyDummy') or targetable(npc,s)) then
         local health,npcRoot=alive(npc)
         local attackOrigin=slot.attackOrigin or origin
-        if health and (npcRoot.Position-attackOrigin).Magnitude<=d.range and clear(attackOrigin,npcRoot.Position,wallParams) then slot.hit[npc]=true;damage(npc,d.damage,d);slot.folder:SetAttribute('LastContact',now) end
+        local point=health and reachPoint(npc,npcRoot,attackOrigin)
+        if health and (point-attackOrigin).Magnitude<=d.range and clear(attackOrigin,point,wallParams) then slot.hit[npc]=true;damage(npc,d.damage,d);slot.folder:SetAttribute('LastContact',now) end
        end
        end
       end
