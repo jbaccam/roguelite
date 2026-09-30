@@ -348,6 +348,8 @@ game = {
 }
 (GAME / 'BossGameData.json').write_text(json.dumps(game, indent=1))
 log('BossGameData.json written')
+import snap_game_timings                                   # noqa: E402  (same folder)
+snap_game_timings.snap(log=log)                            # 30 fps times -> whole 24 fps frames
 
 # ---------------------------------------------------------- 6. attack checks + existing exports refreshed
 free = bpy.data.objects.get('ReviewCamera') or bpy.data.objects.new('ReviewCamera',

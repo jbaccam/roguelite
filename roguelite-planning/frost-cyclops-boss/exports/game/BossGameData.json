@@ -2,10 +2,10 @@
  "attacks": {
   "GroundSlam": {
    "duration": 2.0,
-   "warnStart": 0.2333,
-   "impact": 0.9333,
-   "activeEnd": 0.9333,
-   "recoveryEnd": 1.9333,
+   "warnStart": 0.25,
+   "impact": 0.9583,
+   "activeEnd": 0.9583,
+   "recoveryEnd": 1.9167,
    "points": {
     "ClubImpact": {
      "bone": "Club",
@@ -15,34 +15,34 @@
       -0.2698
      ],
      "rootAtImpact": [
-      -3.4506,
-      -8.1636,
-      0.0008
+      -3.484,
+      -8.2611,
+      0.1602
      ],
      "rootAtImpactStudio": [
-      3.4506,
-      0.0008,
-      -8.1636
+      3.484,
+      0.1602,
+      -8.2611
      ]
     }
    },
    "strikeFaceNormalAtImpact": [
-    0.0001,
-    0.0007,
-    -1.0
+    -0.0044,
+    -0.0211,
+    -0.9998
    ],
    "strikeFaceNormalAtImpactStudio": [
-    -0.0001,
-    -1.0,
-    0.0007
+    0.0044,
+    -0.9998,
+    -0.0211
    ]
   },
   "Stomp": {
    "duration": 2.6666667,
-   "warnStart": 0.3,
-   "impact": 1.6333,
-   "activeEnd": 1.6333,
-   "recoveryEnd": 2.6333,
+   "warnStart": 0.2917,
+   "impact": 1.6667,
+   "activeEnd": 1.6667,
+   "recoveryEnd": 2.625,
    "points": {
     "StompImpact": {
      "bone": "LeftFoot",
@@ -54,7 +54,7 @@
      "rootAtImpact": [
       2.4667,
       -1.7409,
-      -0.0
+      0.0
      ],
      "rootAtImpactStudio": [
       -2.4667,
@@ -88,5 +88,5 @@
   "nominalSpeed": 3.0,
   "cycle": 1.5
  },
- "notes": "Times in seconds from clip start. Offsets are in the named bone's local space (Blender axes, studs); root positions are Blender root space; *Studio vectors use the (-X, Z, Y) mapping. groundOffset: the soles sit this far below z = 0 in the standing pose; raise the model by it so the feet rest on the ground."
+ "notes": "Times in seconds from clip start. Offsets are in the named bone's local space (Blender axes, studs); root positions are Blender root space; *Studio vectors use the (-X, Z, Y) mapping. groundOffset: the soles sit this far below z = 0 in the standing pose; raise the model by it so the feet rest on the ground. All times are whole 24 fps frames of AnimationData.json; impact is the frame the hit point actually touches down."
 }

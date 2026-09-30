@@ -237,6 +237,10 @@ def check_game_package(rep):
             e['loop_error'] = max(abs(x - y) for k in a for x, y in zip(a[k], b[k]))
         clips[name] = e
     r['clips'] = clips
+    gd = json.loads((game / 'BossGameData.json').read_text())
+    r['attack_times_on_frames'] = {
+        a: {k: round(v[k] * anim['fps'], 3) for k in ('warnStart', 'impact', 'activeEnd', 'recoveryEnd')}
+        for a, v in gd['attacks'].items()}
     rep['game_package'] = r
 
 
@@ -285,6 +289,9 @@ def verdict(rep):
             fails.append('studio fbx bones differ from AnimationData.json')
         if gp['actions_in_studio_fbx']:
             fails.append('studio fbx carries animation')
+        for a, fr in gp.get('attack_times_on_frames', {}).items():
+            if any(abs(f - round(f)) > 0.01 for f in fr.values()):
+                fails.append(f'BossGameData {a}: times not on 24 fps frames {fr}')
         for n, e in gp['clips'].items():
             if e['frames'] != e['expected'] or e['nan'] or not e['bones_ok'] or e.get('loop_error', 0) > 1e-4:
                 fails.append(f'AnimationData clip {n}: {e}')

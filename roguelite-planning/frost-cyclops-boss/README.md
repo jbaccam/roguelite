@@ -262,8 +262,8 @@ Built to `../plans/BOSS_GAME_PACKAGE_SPEC.md` by `build_game_package.py` (Blende
 | Walk | 1.5 s cycle | yes | Heavy gait: stride 4.5 studs, 62 % stance, pelvis bob and sway, counter-rotating chest. The club is carried out beside the right leg (lowest point 0.72 above the snow) with the fist closed. The left fist swings. Belly, mantle and loincloth follow through. Planted-foot drift is 1e-6. |
 | Hit | 0.46 s | no | Rocks back with the jaw open, then returns exactly to the idle start. |
 | Death | 2.5 s | no | See below. |
-| GroundSlam | 2.0 s | no | Resampled from the 30 fps clip with timing kept: impact at 0.933 s (between frames 22 and 23). |
-| Stomp | 2.667 s | no | Resampled the same way: impact at 1.633 s. |
+| GroundSlam | 2.0 s | no | Resampled from the 30 fps clip with timing kept. The club touches down on frame 23 (0.958 s). |
+| Stomp | 2.667 s | no | Resampled the same way. The sole lands on frame 40 (1.667 s). |
 
 **Death:**
 - He recoils and the club slips from the opening hand, tipping over onto the snow.
@@ -273,12 +273,12 @@ Built to `../plans/BOSS_GAME_PACKAGE_SPEC.md` by `build_game_package.py` (Blende
 
 The topple angle, knee height and club rest were solved against the evaluated mesh. From frame 17 on nothing goes below the ground; the minimum across the clip is exactly the standing-pose sole depth.
 
-**Attack timings** (seconds). All hits are instant (`activeEnd` = `impact`).
+**Attack timings** (seconds). Every time is a whole 24 fps frame, and `impact` is the frame where the hit point actually touches down. `snap_game_timings.py` sets them from `AnimationData.json`, and `build_game_package.py` runs it. All hits are instant (`activeEnd` = `impact`).
 
 | Attack | warnStart | impact | recoveryEnd | Points |
 | --- | --- | --- | --- | --- |
-| GroundSlam | 0.233 | 0.933 | 1.933 | `ClubImpact` on the `Club` bone at (0.933, 5.938, −0.270). Root at impact (−3.451, −8.164, 0.001); Studio (3.451, 0.001, −8.164). |
-| Stomp | 0.300 | 1.633 | 2.633 | `StompImpact` on the `LeftFoot` bone at (0, 1.090, −0.611). Root at impact (2.467, −1.741, 0); Studio (−2.467, 0, −1.741). Spike direction (0, −1, 0); Studio (0, 0, −1). |
+| GroundSlam | 0.250 | 0.958 | 1.917 | `ClubImpact` on the `Club` bone at (0.933, 5.938, −0.270). Root at impact (−3.484, −8.261, 0.160); Studio (3.484, 0.160, −8.261). |
+| Stomp | 0.292 | 1.667 | 2.625 | `StompImpact` on the `LeftFoot` bone at (0, 1.090, −0.611). Root at impact (2.467, −1.741, 0); Studio (−2.467, 0, −1.741). Spike direction (0, −1, 0); Studio (0, 0, −1). |
 
 **Changes made in this pass:**
 - **Leg IK.** `fc_motion.leg_hinge` now keeps the reference pose's own knee plane and each leg bone's roll about the hinge. The previous version rolled the thighs about 50° in the Stomp, and the Stomp's first and last frames were not the idle start pose; now they are.

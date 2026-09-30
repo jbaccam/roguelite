@@ -647,6 +647,20 @@
     "nan": false,
     "bones_ok": true
    }
+  },
+  "attack_times_on_frames": {
+   "GroundSlam": {
+    "warnStart": 6.0,
+    "impact": 22.999,
+    "activeEnd": 22.999,
+    "recoveryEnd": 46.001
+   },
+   "Stomp": {
+    "warnStart": 7.001,
+    "impact": 40.001,
+    "activeEnd": 40.001,
+    "recoveryEnd": 63.0
+   }
   }
  },
  "fails": [],
