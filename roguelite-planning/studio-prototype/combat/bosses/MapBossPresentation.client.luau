@@ -48,17 +48,18 @@ local function call(state,name,...)
  if not r[1] then warn('BossVfx.'..state.id..'.'..name..': '..tostring(r[2]));return end
  return table.unpack(r,2,r.n)
 end
--- Same windows as MapBossService: the rush is RushStart, travel at speed, then RushEnd.
+-- Same windows as MapBossService: the rush is RushStart, travel at speed, then RushEnd. The timing
+-- from MapBossDefs.timing is already scaled and rate-adjusted (real seconds, final studs).
 local function window(a,T,length)
  if not a.clips then return T.attacks and T.attacks[a.clip] end
- local rs,re=T.clips[a.clips[1]] or 0,T.clips[a.clips[3]] or 0;local move=(length or a.length)/a.speed
+ local rate=a.rate or 1;local rs,re=(T.clips[a.clips[1]] or 0)/rate,(T.clips[a.clips[3]] or 0)/rate;local move=(length or a.length)/a.speed
  return {warnStart=0,impact=rs,activeEnd=rs+move,recoveryEnd=rs+move+re,duration=rs+move+re}
 end
 local function context(npc,state,kind,a,start,serial)
  local cf=npc:GetAttribute('BossFrame');if typeof(cf)~='CFrame' then return nil end
  local T=state.T;local raw=npc:GetAttribute('MapBossAttackData');local data=decode(raw)
  local ctx={npc=npc,id=state.id,kind=kind,def=a,serial=serial,start=start,cf=cf,groundY=npc:GetAttribute('BossGroundY') or cf.Y-T.rootHeight,
-  timing=T,tint=state.tint,raw=raw,data=data,ground=cf*CFrame.new(0,-T.rootHeight,0)}
+  timing=T,tint=state.tint,raw=raw,data=data,ground=cf*CFrame.new(0,-T.rootHeight,0),scale=T.scale or 1,enraged=npc:GetAttribute('BossEnraged')~=nil}
  local at=window(a,T,data.length);if not at then return nil end
  ctx.attack=at
  function ctx.points(name,t)
@@ -68,62 +69,105 @@ local function context(npc,state,kind,a,start,serial)
  end
  function ctx.dirAt(name,t)
   local d=Shapes.sample(at.dirs and at.dirs[name],t) or (at.directionAtImpactStudio and Vector3.new(table.unpack(at.directionAtImpactStudio)))
-  return d and d.Magnitude>1e-3 and ctx.ground:VectorToWorldSpace(d).Unit or cf.LookVector
+  return d and d.Magnitude>1e-3 and ctx.ground:VectorToWorldSpace(d).Unit or ctx.cf.LookVector
  end
  return ctx
 end
+-- Clip time for an attack at `age` real seconds: the clip plays at the attack's rate.
 local function attackClip(ctx,age,motion)
- local a,at=ctx.def,ctx.attack
- if a.shape~='lane' then return a.clip,age end
- if age<at.impact then return a.clips[1],age end
+ local a,at=ctx.def,ctx.attack;local rate=a.rate or 1
+ if a.shape~='lane' then return a.clip,age*rate end
+ if age<at.impact then return a.clips[1],age*rate end
  if age<at.activeEnd then
   -- Loop phase follows the ground covered: one rushStrideLength per RushLoop cycle.
   local travelled=(age-at.impact)*a.speed
   return a.clips[2],travelled/(ctx.timing.rushStrideLength or 2.2)*clipDuration(motion,a.clips[2])
  end
- return a.clips[3],age-at.activeEnd
+ return a.clips[3],(age-at.activeEnd)*rate
 end
 
--- Ground warnings: a translucent tinted fill and bright edge segments (the Hammer's parts).
-local function slab(w,name,size,cf,tint,transparency,fill)
+-- Ground warnings, three layers per shape: a faint zone fill, a bright edge, and a hotter inner
+-- fill that grows out to the edge exactly at impact (circles and cones from their centre, lines
+-- from their origin), so the timing reads at a glance. The edge flickers in the last 0.3 s.
+local GROW_FILL,EDGE_WIDTH=.42,.24
+local function slab(w,name,size,cf,tint,transparency,list)
  local p=Instance.new('Part');p.Name=name;p.Size=size;p.CFrame=cf;p.Anchored=true;p.CanCollide=false;p.CanQuery=false;p.CanTouch=false;p.CastShadow=false
  p.Material=Enum.Material.Neon;p.Color=tint;p.Transparency=transparency;p.Parent=w.folder
- if fill then table.insert(w.fills,p) end
+ if list then table.insert(list,p) end
  return p
 end
-local function drawShape(w,shape,y,tint)
+-- Fill geometry for one shape into `list`; `grow` also records how each part scales.
+local function fillShape(w,shape,y,tint,transparency,list,grow)
  local function flat(v) return Vector3.new(v.X,y,v.Z) end
  if shape.kind=='circle' then
-  local p=slab(w,'WarningFill',Vector3.new(.045,shape.radius*2,shape.radius*2),CFrame.new(flat(shape.center))*CFrame.Angles(0,0,math.pi/2),tint,FILL,true);p.Shape=Enum.PartType.Cylinder
+  local c=flat(shape.center);local p=slab(w,'WarningFill',Vector3.new(.045,shape.radius*2,shape.radius*2),CFrame.new(c)*CFrame.Angles(0,0,math.pi/2),tint,transparency,list);p.Shape=Enum.PartType.Cylinder
+  if grow then table.insert(grow,{part=p,mode='disc',cf=p.CFrame,size=p.Size}) end
  elseif shape.kind=='line' then
-  local mid=flat(shape.origin+shape.direction*shape.length/2)
-  slab(w,'WarningFill',Vector3.new(shape.width,.045,shape.length),CFrame.lookAt(mid,mid+shape.direction),tint,FILL,true)
+  local o=flat(shape.origin);local mid=o+shape.direction*shape.length/2
+  local p=slab(w,'WarningFill',Vector3.new(shape.width,.045,shape.length),CFrame.lookAt(mid,mid+shape.direction),tint,transparency,list)
+  if grow then table.insert(grow,{part=p,mode='along',origin=o,dir=shape.direction,size=p.Size}) end
  elseif shape.kind=='cone' or shape.kind=='arc' then
   -- Polar ribbon: angular sectors split into radial bands, each strip as wide as its outer edge.
   local pivot=flat(shape.origin or shape.pivot);local forward=shape.direction or shape.forward
   local from,to=shape.from or -shape.halfAngle,shape.to or shape.halfAngle;local inner,outer=shape.inner or 0,shape.outer or shape.length
-  local n=math.max(4,math.ceil((to-from)/math.rad(6)));local bands=math.clamp(math.ceil((outer-inner)/7),1,3);local step=(to-from)/n
+  local n=math.max(4,math.ceil((to-from)/math.rad(6)));local bands=math.clamp(math.ceil((outer-inner)/7),1,4);local step=(to-from)/n
   for i=0,n-1 do
    local d=CFrame.Angles(0,from+step*(i+.5),0):VectorToWorldSpace(forward)
    for b=0,bands-1 do
     local r0,r1=inner+(outer-inner)*b/bands,inner+(outer-inner)*(b+1)/bands;local p=pivot+d*(r0+r1)/2
-    slab(w,'WarningFill',Vector3.new(math.max(.05,r1*math.abs(step)*1.02),.045,r1-r0),CFrame.lookAt(p,p+d),tint,FILL,true)
+    local part=slab(w,'WarningFill',Vector3.new(math.max(.05,r1*math.abs(step)*1.02),.045,r1-r0),CFrame.lookAt(p,p+d),tint,transparency,list)
+    if grow then table.insert(grow,{part=part,mode='radial',pivot=pivot,cf=part.CFrame,size=part.Size}) end
    end
   end
  end
+end
+local function edgeShape(w,shape,y,tint)
+ local function flat(v) return Vector3.new(v.X,y,v.Z) end
  local pts=Shapes.outline(shape,48)
  for i=1,#pts do
   local a,b=flat(pts[i]),flat(pts[i%#pts+1]);local len=(b-a).Magnitude
-  if len>.01 then local m=(a+b)/2+Vector3.yAxis*.025;slab(w,'WarningEdge',Vector3.new(.14,.05,len+.06),CFrame.lookAt(m,b+Vector3.yAxis*.025),tint,EDGE,false) end
+  if len>.01 then local m=(a+b)/2+Vector3.yAxis*.03;slab(w,'WarningEdge',Vector3.new(EDGE_WIDTH,.06,len+.1),CFrame.lookAt(m,b+Vector3.yAxis*.03),tint,EDGE,w.edges) end
  end
 end
-local function buildWarning(ctx)
- local w={folder=Instance.new('Folder'),fills={},raw=ctx.raw,serial=ctx.serial};w.folder.Name='BossWarning';w.folder.Parent=workspace
- local tint=ctx.tint or Color3.fromRGB(224,45,49)
- if ctx.def.shape=='targets' then
-  for _,p in ctx.data.points or {} do drawShape(w,{kind='circle',center=Vector3.new(p[1],p[2],p[3]),radius=ctx.def.radius},p[2]+.07,tint) end
- elseif ctx.data.shape then drawShape(w,Shapes.decode(ctx.data.shape),ctx.groundY+.07,tint) end
+local function drawShape(w,shape,y,tint,noGrow)
+ fillShape(w,shape,y,tint,FILL,w.fills)
+ if not noGrow then fillShape(w,shape,y+.02,tint,1,w.growParts,w.grow) end
+ edgeShape(w,shape,y,tint)
+end
+local function newWarning(serial,raw)
+ local w={folder=Instance.new('Folder'),fills={},edges={},grow={},growParts={},raw=raw,serial=serial};w.folder.Name='BossWarning';w.folder.Parent=workspace
  return w
+end
+local function buildWarning(ctx)
+ local w=newWarning(ctx.serial,ctx.raw)
+ local tint=ctx.tint or Color3.fromRGB(224,45,49);local d=ctx.data
+ if ctx.def.shape=='targets' then
+  for _,p in d.points or {} do drawShape(w,{kind='circle',center=Vector3.new(p[1],p[2],p[3]),radius=ctx.def.radius},p[2]+.07,tint) end
+ elseif ctx.def.shape=='projectiles' then
+  -- One narrow lane per shot along its level flight, no grow layer: where the volley will go.
+  if d.origin and d.yaws then
+   local o=Vector3.new(d.origin[1],ctx.groundY,d.origin[3]);local len=math.min((d.speed or 20)*(d.life or 2),38);local width=(d.radius or 1)*2
+   for _,yaw in d.yaws do fillShape(w,{kind='line',origin=o,direction=CFrame.Angles(0,yaw,0).LookVector,length=len,width=width},ctx.groundY+.07,tint,.8,w.fills) end
+  end
+ elseif d.lines then
+  for _,line in d.lines do drawShape(w,Shapes.decode(line),ctx.groundY+.07,tint) end
+ elseif d.shape then drawShape(w,Shapes.decode(d.shape),ctx.groundY+.07,tint) end
+ return w
+end
+-- k: 0 when the warning appears, 1 at impact. left: seconds to impact.
+local function paintWarning(w,k,left,now)
+ k=math.clamp(k,0,1)
+ local e=1-(1-k)^1.6 -- fast start, easing into the edge
+ for _,g in w.grow do
+  local p=g.part
+  if g.mode=='disc' then p.Size=Vector3.new(g.size.X,g.size.Y*e,g.size.Z*e)
+  elseif g.mode=='along' then local len=g.size.Z*e;local mid=g.origin+g.dir*len/2+Vector3.yAxis*.02;p.Size=Vector3.new(g.size.X,g.size.Y,math.max(.05,len));p.CFrame=CFrame.lookAt(mid,mid+g.dir)
+  else p.Size=Vector3.new(g.size.X*e,g.size.Y,g.size.Z*e);p.CFrame=CFrame.new(g.pivot+(g.cf.Position-g.pivot)*e)*g.cf.Rotation end
+  p.Transparency=e<.02 and 1 or GROW_FILL-.12*k
+ end
+ local flicker=left<.3 and (.5+.5*math.sin(now*48)) or 0
+ for _,p in w.fills do p.Transparency=FILL-.1*k end
+ for _,p in w.edges do p.Transparency=EDGE*(1-flicker) end
 end
 
 -- Projectiles: the server's shots replayed from origin, yaws, speed and life (MapBossShapes.shot),
@@ -240,7 +284,9 @@ end)
 
 -- Knockdown (GroundSlam, FrontStomp): a short fall, thrown away from the impact.
 task.spawn(function()
- local knock=combat:WaitForChild('MapBossKnockdown') -- MapBossService creates it on the server
+ -- MapBossService creates it on the server when it first loads (the first map boss), so this can
+ -- wait the whole session; the explicit timeout keeps the infinite-yield warning out of Output.
+ local knock=combat:WaitForChild('MapBossKnockdown',math.huge)
  local token
  knock.OnClientEvent:Connect(function(source,seconds)
   if typeof(source)~='Vector3' or type(seconds)~='number' or seconds~=seconds then return end
