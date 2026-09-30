@@ -1,0 +1,112 @@
+{
+  "attacks": {
+    "CursedBolts": {
+      "duration": 2.125,
+      "warnStart": 0.3,
+      "chargeStart": 0.45,
+      "impact": 1.0417,
+      "activeEnd": 1.0417,
+      "recoveryEnd": 2.125,
+      "boltCount": 3,
+      "fanSpreadDegrees": 15.0,
+      "points": {
+        "BoltOrigin": {
+          "bone": "Staff",
+          "offset": [
+            0.3235,
+            4.5247,
+            0.0002
+          ],
+          "rootAtImpact": [
+            -2.1708,
+            -7.3962,
+            10.1944
+          ],
+          "rootAtImpactStudio": [
+            2.1708,
+            10.1944,
+            -7.3962
+          ]
+        }
+      },
+      "directionAtImpact": [
+        0.1381,
+        -0.7817,
+        -0.6082
+      ],
+      "directionAtImpactStudio": [
+        -0.1381,
+        -0.6082,
+        -0.7817
+      ],
+      "fanDirectionsAtImpact": [
+        [
+          -0.069,
+          -0.7908,
+          -0.6082
+        ],
+        [
+          0.1381,
+          -0.7817,
+          -0.6082
+        ],
+        [
+          0.3357,
+          -0.7193,
+          -0.6082
+        ]
+      ],
+      "fanDirectionsAtImpactStudio": [
+        [
+          0.069,
+          -0.6082,
+          -0.7908
+        ],
+        [
+          -0.1381,
+          -0.6082,
+          -0.7817
+        ],
+        [
+          -0.3357,
+          -0.6082,
+          -0.7193
+        ]
+      ],
+      "note": "Aim: the direction points from BoltOrigin toward a target 16 studs ahead at chest height; the game re-aims at the real target at release."
+    },
+    "TombEruption": {
+      "duration": 2.5,
+      "warnStart": 0.35,
+      "impact": 0.7917,
+      "activeEnd": 1.6,
+      "channelStart": 0.7917,
+      "channelEnd": 1.6,
+      "recoveryEnd": 2.3,
+      "points": {
+        "StaffImpact": {
+          "bone": "Staff",
+          "offset": [
+            -0.0,
+            -7.0604,
+            0.0
+          ],
+          "rootAtImpact": [
+            -1.5326,
+            -3.9948,
+            0.0205
+          ],
+          "rootAtImpactStudio": [
+            1.5326,
+            0.0205,
+            -3.9948
+          ]
+        }
+      },
+      "note": "Hieroglyph circles open under players during impact..activeEnd (channel)."
+    }
+  },
+  "rootHeight": 5.2,
+  "height": 12.7211,
+  "footprintRadius": 5.899
+}

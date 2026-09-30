@@ -247,6 +247,68 @@ for o in ms:
 check('glb: scale (rest top height in studs)', abs(max(zs) - REST_TOP) < 0.05,
       top=round(max(zs), 3), expected_top=REST_TOP)
 
+# ------------------------------------------------------------------ GAME PACKAGE
+GAME = HERE / 'exports' / 'game'
+studio_fbx = GAME / 'Pharaoh_Studio.fbx'
+anim = json.loads((GAME / 'AnimationData.json').read_text())
+gdata = json.loads((GAME / 'BossGameData.json').read_text())
+reset()
+bpy.ops.import_scene.fbx(filepath=str(studio_fbx))
+report['files']['studio_fbx'] = dict(path=str(studio_fbx.relative_to(HERE)), sha256=sha(studio_fbx))
+ms = mesh_objs()
+arm = arm_obj()
+secs = sorted(o.name for o in ms)
+check('studio fbx: one mesh per section, named after it',
+      secs == sorted(['Bandages', 'Body', 'EyeGlow', 'Head', 'Staff', 'Waist']), found=secs)
+check('studio fbx: every mesh < 20,000 triangles', all(tris(o) < 20000 for o in ms),
+      triangles={o.name: tris(o) for o in ms})
+check('studio fbx: materials Pharaoh_<Section>', all(
+    [s.material.name.split('.')[0] for s in o.material_slots] == [f'Pharaoh_{o.name}'] for o in ms),
+      materials={o.name: [s.material.name for s in o.material_slots] for o in ms})
+tx = texture_status(ms)
+check('studio fbx: 1024 base-colour maps load', len(tx) >= 6 and all(
+    t['has_pixels'] and t['size'] == [1024, 1024] for t in tx), textures=tx)
+fbm = sorted(p.name for p in (GAME / 'Pharaoh_Studio.fbm').glob('*.png'))
+check('studio fbx: textures copied to Pharaoh_Studio.fbm', len(fbm) == 6, files=fbm)
+sb = {bb.name: (bb.parent.name if bb.parent else None) for bb in arm.data.bones} if arm else {}
+check('studio fbx: bones match AnimationData (names + parents)',
+      sb == {n: v['parent'] for n, v in anim['bones'].items()}, count=len(sb),
+      missing=sorted(set(anim['bones']) - set(sb)), extra=sorted(set(sb) - set(anim['bones'])))
+check('studio fbx: no animation', len(bpy.data.actions) == 0, actions=[a.name for a in bpy.data.actions])
+ws = {o.name: weight_stats(o, arm) for o in ms}
+check('studio fbx: weights valid', all(v['unweighted'] == 0 and v['over4'] == 0 and
+                                       v['not_normalised'] == 0 for v in ws.values()), stats=ws)
+need = ['Idle', 'Walk', 'Hit', 'Death', 'CursedBolts', 'TombEruption']
+check('AnimationData: id/fps/clips', anim['id'] == 'pharaoh' and anim['fps'] == 24 and
+      all(c in anim['clips'] for c in need), clips=sorted(anim['clips']))
+clipres = {}
+for name, c in anim['clips'].items():
+    n = len(c['frames'])
+    exp = round(c['duration'] * 24) + 1
+    nan = any(math.isnan(x) or math.isinf(x) for fr in c['frames'] for v in fr['transforms'].values()
+              for x in v)
+    bones_ok = all(set(fr['transforms']) == set(anim['bones']) for fr in c['frames'])
+    loop_err = None
+    if c['loop']:
+        a, z = c['frames'][0]['transforms'], c['frames'][-1]['transforms']
+        loop_err = max(abs(x - y) for k in a for x, y in zip(a[k], z[k]))
+    clipres[name] = dict(frames=n, expected=exp, nan=nan, bonesComplete=bones_ok, loop=c['loop'],
+                         loopError=loop_err)
+check('AnimationData: frame counts = duration*24+1, no NaN, all bones, loops close',
+      all(r['frames'] == r['expected'] and not r['nan'] and r['bonesComplete'] and
+          (not r['loop'] or r['loopError'] < 1e-6) for r in clipres.values()), clips=clipres)
+check('AnimationData: motion has strideLength and nominalSpeed',
+      anim['motion'].get('strideLength', 0) > 0 and anim['motion'].get('nominalSpeed', 0) > 0,
+      motion=anim['motion'])
+att = gdata['attacks']
+check('BossGameData: CursedBolts BoltOrigin + release direction, TombEruption StaffImpact',
+      'BoltOrigin' in att['CursedBolts']['points'] and 'directionAtImpact' in att['CursedBolts']
+      and 'StaffImpact' in att['TombEruption']['points'] and
+      all(0 <= a['warnStart'] <= a['impact'] <= a['activeEnd'] <= a['recoveryEnd'] <= a['duration']
+          + 1e-6 for a in att.values()),
+      timings={k: [v['warnStart'], v['impact'], v['activeEnd'], v['recoveryEnd'], v['duration']]
+               for k, v in att.items()})
+
 report['summary'] = dict(passed=sum(c['ok'] for c in report['checks']),
                          failed=sum(not c['ok'] for c in report['checks']),
                          blender=bpy.app.version_string)

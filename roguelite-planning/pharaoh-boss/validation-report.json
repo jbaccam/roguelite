@@ -15,6 +15,10 @@
     "glb": {
       "path": "exports\\glb\\Pharaoh.glb",
       "sha256": "B8A86B27CA4E9A389BD376095CD830D42215A674F1E8ABF071A272CE03C4230A"
+    },
+    "studio_fbx": {
+      "path": "exports\\game\\Pharaoh_Studio.fbx",
+      "sha256": "4EBC70E4FD384F70A8429AEFD836A5D823DAEB7B059C340145C67B80A334B24B"
     }
   },
   "checks": [
@@ -35,8 +39,8 @@
       "ok": true,
       "triangles": {
         "Pharaoh_Body": 14573,
-        "Pharaoh_Head": 14088,
         "Pharaoh_EyeGlow": 320,
+        "Pharaoh_Head": 14088,
         "Pharaoh_Bandages": 16424,
         "Pharaoh_Staff": 1984,
         "Pharaoh_Waist": 11158
@@ -75,15 +79,15 @@
           "not_normalised": 0,
           "worst_sum_error": 0.0
         },
-        "Pharaoh_Head": {
-          "vertices": 7336,
+        "Pharaoh_EyeGlow": {
+          "vertices": 168,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
           "worst_sum_error": 0.0
         },
-        "Pharaoh_EyeGlow": {
-          "vertices": 168,
+        "Pharaoh_Head": {
+          "vertices": 7336,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
@@ -117,8 +121,8 @@
       "ok": true,
       "uv_layers": {
         "Pharaoh_Body": 1,
-        "Pharaoh_Head": 1,
         "Pharaoh_EyeGlow": 1,
+        "Pharaoh_Head": 1,
         "Pharaoh_Bandages": 1,
         "Pharaoh_Staff": 1,
         "Pharaoh_Waist": 1
@@ -129,7 +133,7 @@
       "ok": true,
       "textures": [
         {
-          "name": "Pharaoh_Head_Rough",
+          "name": "Pharaoh_EyeGlow_Rough",
           "size": [
             2048,
             2048
@@ -137,7 +141,7 @@
           "has_pixels": true
         },
         {
-          "name": "Pharaoh_EyeGlow_Rough",
+          "name": "Pharaoh_Head_Rough",
           "size": [
             2048,
             2048
@@ -231,8 +235,8 @@
       "ok": true,
       "split_vertex_fraction": {
         "Pharaoh_Body": 0.9434,
-        "Pharaoh_Head": 0.999,
         "Pharaoh_EyeGlow": 1.0,
+        "Pharaoh_Head": 0.999,
         "Pharaoh_Bandages": 0.9486,
         "Pharaoh_Staff": 1.0,
         "Pharaoh_Waist": 0.9114
@@ -391,22 +395,6 @@
       "ok": true,
       "textures": [
         {
-          "name": "Pharaoh_Bandages_Color",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_EyeGlow_Color",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
-        },
-        {
           "name": "Pharaoh_Body_Color",
           "size": [
             2048,
@@ -415,23 +403,31 @@
           "has_pixels": true
         },
         {
+          "name": "Pharaoh_Body_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_EyeGlow_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Head_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
           "name": "Pharaoh_Head_Rough",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_Staff_Color",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_Staff_Rough",
           "size": [
             2048,
             2048
@@ -455,7 +451,7 @@
           "has_pixels": true
         },
         {
-          "name": "Pharaoh_Body_Rough",
+          "name": "Pharaoh_Bandages_Color",
           "size": [
             2048,
             2048
@@ -471,7 +467,7 @@
           "has_pixels": true
         },
         {
-          "name": "Pharaoh_EyeGlow_Rough",
+          "name": "Pharaoh_EyeGlow_Color",
           "size": [
             2048,
             2048
@@ -479,7 +475,15 @@
           "has_pixels": true
         },
         {
-          "name": "Pharaoh_Head_Color",
+          "name": "Pharaoh_Staff_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Staff_Rough",
           "size": [
             2048,
             2048
@@ -493,10 +497,278 @@
       "ok": true,
       "top": 12.721,
       "expected_top": 12.721
+    },
+    {
+      "name": "studio fbx: one mesh per section, named after it",
+      "ok": true,
+      "found": [
+        "Bandages",
+        "Body",
+        "EyeGlow",
+        "Head",
+        "Staff",
+        "Waist"
+      ]
+    },
+    {
+      "name": "studio fbx: every mesh < 20,000 triangles",
+      "ok": true,
+      "triangles": {
+        "EyeGlow": 320,
+        "Body": 14573,
+        "Head": 14088,
+        "Bandages": 16424,
+        "Staff": 1984,
+        "Waist": 11158
+      }
+    },
+    {
+      "name": "studio fbx: materials Pharaoh_<Section>",
+      "ok": true,
+      "materials": {
+        "EyeGlow": [
+          "Pharaoh_EyeGlow"
+        ],
+        "Body": [
+          "Pharaoh_Body"
+        ],
+        "Head": [
+          "Pharaoh_Head"
+        ],
+        "Bandages": [
+          "Pharaoh_Bandages"
+        ],
+        "Staff": [
+          "Pharaoh_Staff"
+        ],
+        "Waist": [
+          "Pharaoh_Waist"
+        ]
+      }
+    },
+    {
+      "name": "studio fbx: 1024 base-colour maps load",
+      "ok": true,
+      "textures": [
+        {
+          "name": "Pharaoh_Bandages_Color_1024.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Waist_Color_1024.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_EyeGlow_Color_1024.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Head_Color_1024.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Staff_Color_1024.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Body_Color_1024.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "has_pixels": true
+        }
+      ]
+    },
+    {
+      "name": "studio fbx: textures copied to Pharaoh_Studio.fbm",
+      "ok": true,
+      "files": [
+        "Pharaoh_Bandages_Color_1024.png",
+        "Pharaoh_Body_Color_1024.png",
+        "Pharaoh_EyeGlow_Color_1024.png",
+        "Pharaoh_Head_Color_1024.png",
+        "Pharaoh_Staff_Color_1024.png",
+        "Pharaoh_Waist_Color_1024.png"
+      ]
+    },
+    {
+      "name": "studio fbx: bones match AnimationData (names + parents)",
+      "ok": true,
+      "count": 62,
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "studio fbx: no animation",
+      "ok": true,
+      "actions": []
+    },
+    {
+      "name": "studio fbx: weights valid",
+      "ok": true,
+      "stats": {
+        "EyeGlow": {
+          "vertices": 168,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Body": {
+          "vertices": 7346,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Head": {
+          "vertices": 7336,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Bandages": {
+          "vertices": 8264,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Staff": {
+          "vertices": 1028,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Waist": {
+          "vertices": 5643,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        }
+      }
+    },
+    {
+      "name": "AnimationData: id/fps/clips",
+      "ok": true,
+      "clips": [
+        "CursedBolts",
+        "Death",
+        "Hit",
+        "Idle",
+        "TombEruption",
+        "Walk"
+      ]
+    },
+    {
+      "name": "AnimationData: frame counts = duration*24+1, no NaN, all bones, loops close",
+      "ok": true,
+      "clips": {
+        "Idle": {
+          "frames": 73,
+          "expected": 73,
+          "nan": false,
+          "bonesComplete": true,
+          "loop": true,
+          "loopError": 0.0
+        },
+        "Walk": {
+          "frames": 37,
+          "expected": 37,
+          "nan": false,
+          "bonesComplete": true,
+          "loop": true,
+          "loopError": 0.0
+        },
+        "Hit": {
+          "frames": 12,
+          "expected": 12,
+          "nan": false,
+          "bonesComplete": true,
+          "loop": false,
+          "loopError": null
+        },
+        "CursedBolts": {
+          "frames": 52,
+          "expected": 52,
+          "nan": false,
+          "bonesComplete": true,
+          "loop": false,
+          "loopError": null
+        },
+        "TombEruption": {
+          "frames": 61,
+          "expected": 61,
+          "nan": false,
+          "bonesComplete": true,
+          "loop": false,
+          "loopError": null
+        },
+        "Death": {
+          "frames": 55,
+          "expected": 55,
+          "nan": false,
+          "bonesComplete": true,
+          "loop": false,
+          "loopError": null
+        }
+      }
+    },
+    {
+      "name": "AnimationData: motion has strideLength and nominalSpeed",
+      "ok": true,
+      "motion": {
+        "strideLength": 4.2,
+        "nominalSpeed": 2.8
+      }
+    },
+    {
+      "name": "BossGameData: CursedBolts BoltOrigin + release direction, TombEruption StaffImpact",
+      "ok": true,
+      "timings": {
+        "CursedBolts": [
+          0.3,
+          1.0417,
+          1.0417,
+          2.125,
+          2.125
+        ],
+        "TombEruption": [
+          0.35,
+          0.7917,
+          1.6,
+          2.3,
+          2.5
+        ]
+      }
     }
   ],
   "summary": {
-    "passed": 26,
+    "passed": 38,
     "failed": 0,
     "blender": "5.2.1 LTS"
   }

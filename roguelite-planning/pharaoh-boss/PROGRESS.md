@@ -171,3 +171,22 @@ The generator itself is always left runnable.
 - **Checks:** exports validate 26/26; IoU 0.921; bone probe 4.9 %.
 - **Jaw:** open checked.
 - **README:** note added.
+
+## Game package pass (2026-09-29): DONE
+
+- **Spec:** `plans/BOSS_GAME_PACKAGE_SPEC.md`.
+- **Clips:** Idle, Walk, Hit, Death, CursedBolts, TombEruption.
+- **Script:** `build_game_package.py` (Blender) opens `Pharaoh.blend`, authors the clips and writes:
+  - `exports/game/AnimationData.json`
+  - `exports/game/BossGameData.json`
+  - `exports/game/Pharaoh_Studio.fbx`, plus the `.fbm` texture folder
+  - `previews/GameClips.png`, `CursedBolts.mp4` and `TombEruption.mp4`
+- **Validation:** `validate_exports.py` is extended to check the Studio FBX and the clips.
+- 19:46 GPU/CPU job: first run of build_game_package.py
+- **Result.**
+  - All six clips are authored.
+  - AnimationData, BossGameData and the Studio FBX (plus `.fbm`) are written.
+  - `GameClips.png` and both mp4s are rendered.
+  - `validate_exports.py` passes 38/38.
+  - The motion checks are in `exports/game/GameMotionChecks.json`.
+  - The README section is added and `_work/` is cleaned.

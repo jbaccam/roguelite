@@ -335,6 +335,83 @@ Results:
 - **Fit:** silhouette IoU 0.921, unchanged. The bone colour probe is 4.9 %, and all probes stay within 8 %.
 - **Previews:** only `Reference_Match`, `Comparison_SideBySide`, `Face_CloseUp` and `Turnaround` were refreshed, using `PREVIEWS=subset`. `Rig_Bones`, `RigTest_ROM`, `AttackCheck_Staff` and the `Crop_*`/overlay sheets still show the previous skull.
 
+## Game package (2026-09-29)
+
+This follows `plans/BOSS_GAME_PACKAGE_SPEC.md`. The model, textures and rig are unchanged; only the clips were added to `Pharaoh.blend`.
+
+**Rebuild:** `blender -b --factory-startup --python build_game_package.py` (about 15 s), then `validate_exports.py`.
+
+### Outputs
+
+**`exports/game/AnimationData.json`**
+
+- Schema: `animate_mobs.py`, id `pharaoh`, 24 fps, all 62 deform bones.
+- Transforms: `matrix_basis` through the Y/Z swap.
+- Motion: `strideLength` 4.2 studs per cycle, `nominalSpeed` 2.8 studs/s.
+
+| Clip | Length | Loop | Content |
+| --- | --- | --- | --- |
+| Idle | 3.0 s | yes | Breathing and weight shift. Cloth, lappets and bandage ends drift later. |
+| Walk | 1.5 s | yes | Heavy stomp with a 62 % stance and a body drop at each foot strike. The staff is carried off the ground and swings with the right arm. |
+| Hit | 0.458 s | no | Flinch back, then back to the Idle start pose. |
+| Death | 2.25 s | no | Staggers, buckles to a crouch and falls face down. The staff is released and topples flat beside him. |
+| CursedBolts | 2.125 s | no | Staff lifts clear, then the crook is raised and aimed. Gathers from 0.45 s, releases at 1.042 s (frame 25), small recoil, back to idle. |
+| TombEruption | 2.5 s | no | Staff lifted in both hands, then its foot driven into the ground in front at 0.792 s (frame 19). Channels while planted until 1.6 s, then recovers. |
+
+**`exports/game/BossGameData.json`**
+
+| Attack | warnStart | impact | activeEnd | recoveryEnd |
+| --- | --- | --- | --- | --- |
+| CursedBolts | 0.30 | 1.042 | 1.042 | 2.125 |
+| TombEruption | 0.35 | 0.792 | 1.60 | 2.30 |
+
+- **`BoltOrigin`:** on the `Staff` bone at offset (0.32, 4.52, 0.00), the centre of the crook's curl.
+  - At release it is at root (-2.17, -7.40, 10.19), Studio (2.17, 10.19, -7.40).
+  - Release direction is (0.14, -0.78, -0.61), Studio (-0.14, -0.61, -0.78). This aims at a point 16 studs ahead at chest height; the game re-aims at the real target.
+  - Three fan directions at ±15° are listed as well.
+- **`StaffImpact`:** on the `Staff` bone at offset (0, -7.06, 0), the bottom of the staff foot.
+  - At impact it is at root (-1.53, -3.99, 0.02), Studio (1.53, 0.02, -3.99).
+- **Body:** `rootHeight` 5.2, `height` 12.72, `footprintRadius` 5.90. The footprint is the widest horizontal extent of the body in the rest pose, without the staff.
+
+**`exports/game/Pharaoh_Studio.fbx`**
+
+- Rest mesh and armature: deform bones only, no leaf bones, no animation.
+- Six meshes, each named after its section (Body, Bandages, Head, Waist, Staff, EyeGlow).
+  - The materials are `Pharaoh_<Section>` on the 1024² base-colour maps.
+  - The textures are embedded and also copied to `Pharaoh_Studio.fbm/`.
+  - EyeGlow stays a separate mesh so Studio can set it to Neon.
+- Export settings: `axis_forward='-Z', axis_up='Y'`.
+
+**Previews:** `previews/GameClips.png` (Workbench, ¾ view; 4–6 frames per clip) and low-res Workbench `previews/CursedBolts.mp4` and `previews/TombEruption.mp4`.
+
+### Motion discipline
+
+These results are recorded in `exports/game/GameMotionChecks.json`.
+
+- **Grip:** the right fist never opens, and the `Staff` bone never moves relative to the hand in any clip except Death, where it is released. The measured offset is 0 and finger rotation is 0.
+- **Aiming:** attack poses are solved against the rig with capped joints. Only the shoulder (flexion, abduction, cross-body swing, humeral twist), elbow, wrist (capped at ≤ 18°) and torso move.
+  - CursedBolts: the elbow flexes 32° at release, which is close to straight, and the wrist is 0°.
+  - TombEruption: the wrist peaks at 17.9°. The left hand reaches across and closes on the shaft 0.95 studs above the right hand; the chest turns 30° to make that reach possible.
+- **Feet:** planted feet are pinned by analytic two-bone leg IK. Drift is 0 in Idle, Hit and both attacks. In Walk, the planted feet move back at exactly `nominalSpeed`, so the world-space slip is ≤ 1e-6 studs per frame.
+- **Loops and blending:** Idle and Walk close exactly. Hit and both attacks start and end exactly on the Idle start pose.
+- **Ground:**
+  - The planted staff foot rests on the sand; a 2° elbow lift seats it at z ≥ 0.006.
+  - During TombEruption the foot is driven 0.03–0.07 studs into the ground while planted.
+  - Walk carries the staff ≥ 0.84 studs clear of the ground.
+  - Death stays within the ground rule: its lowest point over the whole clip is z = -0.01, and the final pose rests at z = 0.01.
+
+### Validation
+
+`validate_exports.py` passes 38/38. It re-imports the Studio FBX and checks the section meshes, triangle counts, materials, 1024 maps, the `.fbm` copy, bones against `AnimationData.json`, the absence of animation, and the weights. It then checks every clip's frame count, NaNs, bone coverage and loop closure, plus the attack timings and points in `BossGameData.json`.
+
+### Not verified
+
+- Studio import.
+- The retarget receipt.
+- In-game playback of the clips.
+- VFX: the bolt gather and fan, and the hieroglyph circles.
+
+
 ## Verified in Blender (Blender 5.2.1 LTS, headless)
 
 - The generator runs clean end to end (`build.log`).

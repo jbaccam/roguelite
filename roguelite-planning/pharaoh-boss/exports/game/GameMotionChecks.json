@@ -1,0 +1,214 @@
+{
+  "clips": {
+    "Idle": {
+      "frames": 73,
+      "maxRightWristDeg": 0.0,
+      "rightElbowFlexRange": [
+        98.2,
+        98.2
+      ],
+      "staffLowestZ": 0.006,
+      "staffBoneMaxOffsetFromHand": 0.0,
+      "rightFingerMaxRotationDeg": 0.0,
+      "plantedFootDriftMax": 0.0,
+      "loopError": 0.0
+    },
+    "Hit": {
+      "frames": 12,
+      "maxRightWristDeg": 0.0,
+      "rightElbowFlexRange": [
+        98.2,
+        98.2
+      ],
+      "staffLowestZ": 0.015,
+      "staffBoneMaxOffsetFromHand": 0.0,
+      "rightFingerMaxRotationDeg": 0.0,
+      "plantedFootDriftMax": 0.0,
+      "startError": 0.0,
+      "endError": 0.0
+    },
+    "CursedBolts": {
+      "frames": 52,
+      "maxRightWristDeg": 0.0,
+      "rightElbowFlexRange": [
+        32.2,
+        121.9
+      ],
+      "staffLowestZ": 0.015,
+      "staffBoneMaxOffsetFromHand": 0.0,
+      "rightFingerMaxRotationDeg": 0.0,
+      "plantedFootDriftMax": 0.0,
+      "startError": 0.0,
+      "endError": 0.0
+    },
+    "TombEruption": {
+      "frames": 61,
+      "maxRightWristDeg": 17.91,
+      "rightElbowFlexRange": [
+        59.5,
+        122.2
+      ],
+      "staffLowestZ": -0.066,
+      "staffBoneMaxOffsetFromHand": 0.0,
+      "rightFingerMaxRotationDeg": 0.0,
+      "plantedFootDriftMax": 0.0,
+      "staffMinZPerFrame": [
+        0.015,
+        0.194,
+        0.656,
+        1.352,
+        2.022,
+        2.244,
+        2.204,
+        2.14,
+        2.093,
+        2.084,
+        2.11,
+        2.157,
+        2.218,
+        2.28,
+        2.32,
+        2.284,
+        2.038,
+        1.568,
+        0.868,
+        -0.03,
+        -0.053,
+        -0.051,
+        -0.062,
+        -0.014,
+        -0.03,
+        -0.051,
+        0.003,
+        -0.055,
+        -0.03,
+        -0.004,
+        -0.066,
+        -0.006,
+        -0.03,
+        -0.05,
+        -0.006,
+        -0.044,
+        -0.03,
+        -0.024,
+        -0.032,
+        0.011,
+        0.25,
+        0.639,
+        1.176,
+        1.78,
+        2.331,
+        2.689,
+        2.741,
+        2.583,
+        2.297,
+        1.944,
+        1.582,
+        1.259,
+        1.007,
+        0.837,
+        0.747,
+        0.721,
+        0.607,
+        0.42,
+        0.229,
+        0.074,
+        0.015
+      ],
+      "startError": 0.0,
+      "endError": 0.0
+    },
+    "Walk": {
+      "frames": 37,
+      "maxRightWristDeg": 0.0,
+      "rightElbowFlexRange": [
+        119.2,
+        125.2
+      ],
+      "staffLowestZ": 0.844,
+      "staffBoneMaxOffsetFromHand": 0.0,
+      "rightFingerMaxRotationDeg": 0.0,
+      "plantedFootWorldSlipPerFrameMax": 1e-06,
+      "strideLength": 4.2,
+      "nominalSpeed": 2.8,
+      "cycle": 1.5,
+      "duty": 0.62,
+      "loopError": 0.0
+    },
+    "Death": {
+      "frames": 55,
+      "maxRightWristDeg": 0.0,
+      "rightElbowFlexRange": [
+        98.2,
+        104.2
+      ],
+      "staffLowestZ": 0.01,
+      "staffBoneMaxOffsetFromHand": 111.252198,
+      "rightFingerMaxRotationDeg": 34.0,
+      "lowestZOverClip": -0.01,
+      "finalLowestZ": 0.01,
+      "startError": 0.0
+    }
+  },
+  "boltOriginStaffLocal": [
+    0.3235,
+    4.5247,
+    0.0002
+  ],
+  "staffImpactStaffLocal": [
+    -0.0,
+    -7.0604,
+    0.0
+  ],
+  "solver": {
+    "CursedBolts": {
+      "flex": -54.0,
+      "abd": 1.0,
+      "horiz": 16.5,
+      "hum": -12.0,
+      "elbow": -66.0,
+      "wrist": 0
+    },
+    "TombLift": {
+      "right": {
+        "flex": -69.75,
+        "abd": 4.5,
+        "horiz": 45,
+        "hum": -35.25,
+        "elbow": -38.0,
+        "wrist": -18
+      },
+      "left": {
+        "flex": -83.5,
+        "abd": -17.5,
+        "horiz": -40,
+        "hum": -7.5,
+        "elbow": 33.0,
+        "wrist": -9.0
+      },
+      "score": 1.02,
+      "left_score": 0.28
+    },
+    "TombHit": {
+      "right": {
+        "flex": -54.75,
+        "abd": -0.75,
+        "horiz": 35.5,
+        "hum": -25.5,
+        "elbow": -38.75,
+        "wrist": 10.5
+      },
+      "left": {
+        "flex": -82.0,
+        "abd": -19.75,
+        "horiz": -46.0,
+        "hum": 2.25,
+        "elbow": 16.5,
+        "wrist": -6.0
+      },
+      "score": 0.85,
+      "left_score": 0.32
+    }
+  },
+  "tombImpactFootZ": 0.0205
+}
