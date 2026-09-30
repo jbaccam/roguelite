@@ -54,6 +54,16 @@ end
 -- its target at this rate, so a swing lands where the enemy is at impact instead of where the
 -- player was when it started.
 local TURN_RATE = math.rad(540)
+-- Melee forgiveness (user, 2026-09-30: dodging by changing direction was too easy). A swing starts
+-- TRIGGER_BONUS studs before attackRange, then hits anyone within its reach + REACH_BONUS whose
+-- direction is within ~95 degrees of the facing (ARC_DOT), checked every frame for HIT_WINDOW
+-- seconds from impact instead of one frame. Example, a normal zombie (4.6 reach, 0.35 s impact):
+-- it swings at 5.6 studs and connects out to 6.1 studs for 0.15 s.
+local TRIGGER_BONUS = 1
+local REACH_BONUS = 1.5
+local LUNGE_REACH_BONUS = 0.6
+local ARC_DOT = -0.1
+local HIT_WINDOW = 0.15
 local function turnToward(from, to, maxAngle)
 	local angle = math.acos(math.clamp(from:Dot(to), -1, 1))
 	if angle <= maxAngle then
@@ -130,8 +140,10 @@ local function melee(npc, root, config, s)
 			local flat = Vector3.new(delta.X, 0, delta.Z)
 			if
 				math.abs(delta.Y) <= config.maxHeight
-				and flat.Magnitude <= (config.hitRange or config.attackRange)
-				and (flat.Magnitude < 0.1 or flat.Unit:Dot(s.direction) > 0.15)
+				and flat.Magnitude
+					<= (config.hitRange or config.attackRange)
+						+ (config.behavior == "Lunge" and LUNGE_REACH_BONUS or REACH_BONUS)
+				and (flat.Magnitude < 0.1 or flat.Unit:Dot(s.direction) > ARC_DOT)
 				and not workspace:Raycast(root.Position, delta, s.params)
 			then
 				s.hitPlayers[player] = true
@@ -278,6 +290,13 @@ function A.update(npc, target, dt)
 				melee(npc, root, config, s)
 			end
 			npc:SetAttribute("LastEnemyImpact", now)
+		elseif
+			s.hit
+			and config.behavior ~= "Ranged"
+			and config.behavior ~= "Lunge"
+			and age <= config.attackImpact + HIT_WINDOW
+		then
+			melee(npc, root, config, s) -- still swinging through: catch a player who steps into it
 		end
 		if lunging then
 			local move = s.direction * config.lungeSpeed * math.min(dt or 1 / 60, 0.05)
@@ -306,7 +325,9 @@ function A.update(npc, target, dt)
 	end
 	local delta = target.Position - root.Position
 	local flat = Vector3.new(delta.X, 0, delta.Z)
-	if flat.Magnitude > config.attackRange or math.abs(delta.Y) > config.maxHeight or flat.Magnitude < 0.01 then
+	local trigger = config.attackRange
+		+ ((config.behavior == "Ranged" or config.behavior == "Lunge") and 0 or TRIGGER_BONUS)
+	if flat.Magnitude > trigger or math.abs(delta.Y) > config.maxHeight or flat.Magnitude < 0.01 then
 		return false
 	end
 	s.params = params(npc)

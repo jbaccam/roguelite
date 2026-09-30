@@ -172,3 +172,9 @@ Runtime size is 1.15 times the authored size. BossMotion scales a private pose-d
 All authored checks passed. Recovery wrist height stays below 5.97 authored studs, and maximum left-grip rotation per frame is 12.68 degrees. Studio passed 2,307 interpolated joint samples (maximum gap 0.00000377 studs), plus 87 actual client poses (maximum position error 0.005043 studs). Both packages built. Updated normal/half-speed videos show the authored motion; the 15% enlargement is applied in-game. Multi-client behavior was not tested.
 
 Final single-client gameplay checks passed: one hit per attack, zero early hits, a miss at 7.5 studs outside the slam radius, and 18.015 studs of walking over four seconds at the unchanged speed of 4.5. Reapplying model preparation did not change its size. See `finished/recovery-scale-studio-checks.json`.
+
+## Hit areas (2026-09-30)
+
+User playtest: hits that looked certain missed. Before, Swing/Spin only hit within 0.85 studs of the hammer head, while the red warning showed a wider band (Spin: a full disc).
+- **Swing/Spin** now hit anyone within `BossMotion.SweepRadius` (2.8 × scale = 3.2 studs) of the line from the boss to the hammer head as it sweeps, including between the boss and the hammer. The Swing warning ribbon is filled in to the boss to match; Spin's disc already was.
+- **Slam** radius 9.5 (was 7); it also hits players up to 6 studs above the impact (was 4), so a plain jump no longer clears it. The warning disc and impact chips read the same radius.

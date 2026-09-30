@@ -25,7 +25,8 @@ local function warning(npc,kind)
   local reach=0;for _,p in points do local d=p-cf.Position;reach=math.max(reach,Vector2.new(d.X,d.Z).Magnitude+radius) end
   disc(folder,Vector3.new(cf.X,y,cf.Z),reach)
  else
-  -- Polar ribbon of the true projected hammer path: an open frontal sweep.
+  -- Polar ribbon of the true projected hammer path, filled in to the boss: the server hits
+  -- anyone between the boss and the hammer (BossMotion.sweeps), so the warning shows that too.
   for i=0,95 do
    local angle=i*math.pi/48;local direction=Vector3.new(math.sin(angle),0,math.cos(angle));local near,far=math.huge,0
    for _,point in points do
@@ -33,6 +34,7 @@ local function warning(npc,kind)
     if along>0 and cross2<=radius*radius then local half=math.sqrt(radius*radius-cross2);near=math.min(near,math.max(0,along-half));far=math.max(far,along+half) end
    end
    if far>near then
+    near=0
     local mid=(near+far)/2;local p=Vector3.new(cf.X,y,cf.Z)+direction*mid
     part(folder,'FrontalArc',Vector3.new(math.max(.05,mid*math.pi/48),.045,far-near),CFrame.lookAt(p,p+direction),.64)
    end

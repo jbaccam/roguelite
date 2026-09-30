@@ -115,8 +115,9 @@ local function damage(npc,s,time)
  for _,p in Players:GetPlayers() do
   local char=p.Character;local pr=char and char:FindFirstChild('HumanoidRootPart');local ph=char and char:FindFirstChildOfClass('Humanoid')
   if pr and ph and ph.Health>0 and Characters.states[p] and not attack.hits[p] then
-   local hit=Motion.touches(head,pr.Position)
-   if kind=='Slam' then local delta=pr.Position-center;hit=Vector2.new(delta.X,delta.Z).Magnitude<=a.radius and math.abs(delta.Y)<=4 end
+   local hit=Motion.touches(head,pr.Position) or Motion.sweeps(attack.cf.Position,head.Position,pr.Position)
+   -- Slam: a ground shock disc; a normal jump (about 5 studs up) doesn't clear it.
+   if kind=='Slam' then local delta=pr.Position-center;hit=Vector2.new(delta.X,delta.Z).Magnitude<=a.radius and math.abs(delta.Y)<=6 end
    if hit and not workspace:Raycast(attack.cf.Position,pr.Position-attack.cf.Position,exclusions(npc)) then
     attack.hits[p]=true -- consume even when armor/dodge/first-hit block prevents damage
     local actual=Characters.contact(p,a.damage)

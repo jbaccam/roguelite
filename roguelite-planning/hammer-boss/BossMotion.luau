@@ -59,7 +59,7 @@ function M.constrainArms(poses)
  return poses
 end
 M.Attacks={
- Slam={anticipation=5/30,active=23/30,finish=24/30,duration=50/30,cooldown=2.65,damage=24,radius=7},
+ Slam={anticipation=5/30,active=23/30,finish=24/30,duration=50/30,cooldown=2.65,damage=24,radius=9.5},
  Swing={anticipation=6/30,active=19/30,finish=25/30,duration=54/30,cooldown=2.95,damage=18},
  Spin={anticipation=6/36,active=21/36,finish=37/36,duration=66/36,cooldown=4.15,damage=22},
 }
@@ -150,7 +150,17 @@ function M.touches(head,playerRoot)
  end
  return false
 end
--- The warning follows the actual projected sweep, including its inner gap.
+-- Swing/Spin hit band (user, 2026-09-30: sweeps felt like they missed). A player is hit when
+-- within SweepRadius of the line from the boss to the hammer head as it sweeps, so standing
+-- inside the swing (between boss and hammer) counts too. The warning draws this same area.
+M.SweepRadius=2.8*SCALE
+function M.sweeps(root,head,playerRoot)
+ if math.abs(playerRoot.Y-root.Y)>6 then return false end
+ local a=Vector2.new(root.X,root.Z);local b=Vector2.new(head.X,head.Z);local p=Vector2.new(playerRoot.X,playerRoot.Z)
+ local ab=b-a;local t=ab:Dot(ab)>1e-6 and math.clamp((p-a):Dot(ab)/ab:Dot(ab),0,1) or 0
+ return (p-(a+ab*t)).Magnitude<=M.SweepRadius
+end
+-- The warning follows the actual projected sweep.
 function M.warning(root,clip)
  local a=M.Attacks[clip];local points={}
  if clip=='Slam' then return {M.head(root,clip,a.active).Position},a.radius end
@@ -158,6 +168,6 @@ function M.warning(root,clip)
   local head=M.head(root,clip,math.min(a.finish,a.active+i/120))
   table.insert(points,head.Position)
  end
- return points,1.9*SCALE
+ return points,M.SweepRadius
 end
 return M

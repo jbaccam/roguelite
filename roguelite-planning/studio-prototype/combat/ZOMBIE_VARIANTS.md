@@ -58,3 +58,10 @@ The warning is a 5.2-stud radius circle centered 3.5 studs ahead. Characters abo
 ## Body bumps (2026-09-29)
 
 Wave mobs still set `ContactDamage` 0 (their timed swings own damage), but running into one now hurts too. Each spawn sets `BumpDamage` = half its hit (rounded, at least 1) and `BumpRange` = min(stopRange, radius + 1.5) − 0.3 (2.8 studs for a normal zombie). `CharacterService` deals it when a player's body overlaps a mob with clear line of sight, at most once per 0.6 s per player across all mobs (its own timer, separate from the old 0.8 s contact timer). The range sits inside the mob's stop distance, so fighting at normal reach never bumps. Example: a wave-10 zombie that hits for 12 bumps for 6; dashing through a pack for 1.5 s costs about 2–3 bumps.
+
+## Harder to dodge, no gliding (2026-09-30)
+
+User playtest: changing direction dodged almost every swing, and many mobs slid.
+- **Swings** (`EnemyAttacks`): a melee swing starts 1 stud before `attackRange`, reaches `attackRange` (or `hitRange`) + 1.5 studs (+0.6 for Lunge dashes), hits within ~95 degrees of the facing (was ~81), and checks every frame for 0.15 s from impact (was one frame). Ranged shots are unchanged. Example: a normal zombie swings at 5.6 studs and connects out to 6.1.
+- **Gait** (`RogueliteZombieAnimation`): the Move loop may run as fast as each mob's own stride needs at full speed, 4–12 loops/s (was a flat 4), so feet keep up with the body. Before: crab and snake legs covered ~40% of the ground, spider 52%, goblin 67%, skeleton 73%. Frost ghost, lava slime and snake keep their time-based motion.
+- **Mutant zombie slam** radius 6.5 (was 5.2); its warning disc reads the same value.

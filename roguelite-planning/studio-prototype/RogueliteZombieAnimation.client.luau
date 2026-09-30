@@ -72,8 +72,11 @@ RunService.PreSimulation:Connect(function(dt)
    local relativeScale=npc:GetScale()/(npc:GetAttribute('EnemyBaselineModelScale') or 1)
    local strideLength=(data.motion.strideLength or config.strideLength)*relativeScale
    if walking then
-    -- Short authored strides would blur at wave speeds; cap cadence and let feet glide.
-    local advance=config.timeBasedMovement and dt*math.clamp(speed/config.speed,0,2) or math.min(distance/math.max(.1,strideLength),dt*(config.maxMoveCycles or MAX_MOVE_CYCLES))*clip.duration
+    -- Cadence follows distance, capped per mob at the loops its own stride needs at full speed
+    -- (4-12/s), so short-legged mobs no longer glide. Example: a spider (2.6-stud stride, 20
+    -- studs/s) may loop 7.7/s; the old flat cap of 4 left its feet covering half the ground.
+    local cap=config.maxMoveCycles or math.clamp(config.speed/math.max(.1,strideLength)*1.05,MAX_MOVE_CYCLES,12)
+    local advance=config.timeBasedMovement and dt*math.clamp(speed/config.speed,0,2) or math.min(distance/math.max(.1,strideLength),dt*cap)*clip.duration
     state.moveClock=(state.moveClock+advance)%clip.duration
    end
    local idle=Motion.sample(data,'Idle',now+state.idleOffset)
