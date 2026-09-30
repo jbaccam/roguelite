@@ -19,6 +19,14 @@ end
 local function warning(npc,kind)
  local folder=Instance.new('Folder');folder.Name='BossWarning';folder.Parent=workspace
  local cf=npc:GetAttribute('BossFrame');local y=(npc:GetAttribute('BossGroundY') or cf.Y-Motion.RootHeight)+.065
+ if kind=='Charge' then
+  -- The lane the body will run down: as wide as the body hit, from the boss to where he stops.
+  local length=npc:GetAttribute('BossChargeLength') or 0;local width=Motion.Charge.halfWidth*2
+  local look=Vector3.new(cf.LookVector.X,0,cf.LookVector.Z).Unit;local mid=Vector3.new(cf.X,y,cf.Z)+look*length/2
+  part(folder,'ChargeLane',Vector3.new(width,.045,length),CFrame.lookAt(mid,mid+look),.72)
+  for _,side in {-1,1} do local p=mid+look:Cross(Vector3.yAxis)*side*width/2;part(folder,'WarningEdge',Vector3.new(.09,.04,length),CFrame.lookAt(p,p+look),.2) end
+  return folder
+ end
  local points,radius=Motion.warning(cf,kind)
  if kind=='Slam' then disc(folder,Vector3.new(points[1].X,y,points[1].Z),radius)
  elseif kind=='Spin' then
@@ -72,7 +80,14 @@ Run.PreSimulation:Connect(function(dt)
   local distance=Vector2.new(displacement.X,displacement.Z).Magnitude
   local start=npc:GetAttribute('BossStart');local kind=npc:GetAttribute('BossAttack');local a=kind and Motion.Attacks[kind];local age=start and now-start
   local death=npc:GetAttribute('BossDeathStart');local hit=npc:GetAttribute('BossHitStart');local clip,time
+  -- Charge: ChargeStart in place, then ChargeRun paced by the ground the server has covered.
+  local charging=kind=='Charge' and Motion.hasCharge and age and age>=0 and npc:GetAttribute('Attacking') and not death
+  local chargeSpeed=npc:GetAttribute('BossChargeSpeed') or Motion.Charge.speed
+  local run=charging and Motion.duration('ChargeStart');local runEnd=charging and run+(npc:GetAttribute('BossChargeLength') or 0)/chargeSpeed
   if death then clip,time='Death',now-death
+  elseif charging and age<=runEnd+.3 then
+   if age<run then clip,time='ChargeStart',age
+   else clip,time='ChargeRun',Motion.chargeRunTime((math.min(age,runEnd)-run)*chargeSpeed)%Motion.duration('ChargeRun') end
   elseif a and age and age>=0 and age<=a.duration and npc:GetAttribute('Attacking') then clip,time=kind,age
   elseif hit and now-hit<Motion.duration('Hit') then clip,time='Hit',now-hit
   else
@@ -94,10 +109,10 @@ Run.PreSimulation:Connect(function(dt)
    if weight==1 then state.blendFrom=nil end
   end
   Motion.apply(npc,poses);state.lastPose=poses;state.lastClip=clip
-  local warn=not death and npc:GetAttribute('Attacking') and a and age and age>=a.anticipation and age<a.active
-  if warn and not state.warning then state.warning=warning(npc,kind) end
-  if not warn and state.warning then state.warning:Destroy();state.warning=nil end
+  local warn=not death and npc:GetAttribute('Attacking') and (a and age and age>=a.anticipation and age<a.active or charging and age<runEnd)
   local serial=npc:GetAttribute('BossSerial') or 0
+  if state.warning and (not warn or state.warningSerial~=serial) then state.warning:Destroy();state.warning=nil end
+  if warn and not state.warning then state.warning=warning(npc,kind);state.warningSerial=serial end
   if not death and age and a and age>=a.active and age<a.duration and serial~=state.lastSerial then state.lastSerial=serial;impact(npc,kind) end
  end
 end)

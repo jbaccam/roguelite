@@ -9,6 +9,9 @@ local Death=require(combat.ZombieDeath)
 local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed; this module is unsandboxed
 local Rules=require(game.ReplicatedStorage:WaitForChild('RunSetupRules'))
 local B={states={}}
+-- Shared with MapBossService (find-or-create); MapBossPresentation throws the player on the client.
+local knock=combat:FindFirstChild('MapBossKnockdown') or Instance.new('RemoteEvent')
+knock.Name='MapBossKnockdown';knock.Parent=combat
 -- Wave chase speed: under the 24 studs/s player base but closing; the charge catches kiters.
 local CHASE_SPEED=18
 -- Normal, one player; RunSetupRules.bossScale adds difficulty and player count.
@@ -68,12 +71,17 @@ local function exclusions(npc)
  for _,p in Players:GetPlayers() do if p.Character then table.insert(list,p.Character) end end
  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances=list;return params
 end
-function B.start(npc,kind,target)
+-- force: no range or sight checks (the slam that ends a charge); it faces the target if one is
+-- given, else straight ahead.
+function B.start(npc,kind,target,force)
  local s=B.states[npc];local a=Motion.Attacks[kind];local h=npc:FindFirstChildOfClass('Humanoid');local root=npc.PrimaryPart
- if not s or not a or s.attack or h.Health<=0 or not target or not target.Parent then return false end
- local delta=target.Position-root.Position;local flat=Vector3.new(delta.X,0,delta.Z)
- if flat.Magnitude>Motion.reach(kind)+3 or math.abs(delta.Y)>7 then return false end
- if workspace:Raycast(root.Position,target.Position-root.Position,exclusions(npc)) then return false end
+ if not s or not a or s.attack or h.Health<=0 then return false end
+ if not force and (not target or not target.Parent) then return false end
+ local delta=target and target.Parent and target.Position-root.Position or root.CFrame.LookVector;local flat=Vector3.new(delta.X,0,delta.Z)
+ if not force then
+  if flat.Magnitude>Motion.reach(kind)+3 or math.abs(delta.Y)>7 then return false end
+  if workspace:Raycast(root.Position,target.Position-root.Position,exclusions(npc)) then return false end
+ end
  if flat.Magnitude>.1 then root.CFrame=CFrame.lookAt(root.Position,root.Position+flat) end
  if kind=='Slam' then
   local localHit=Motion.head(CFrame.identity,'Slam',a.active).Position
@@ -87,6 +95,64 @@ function B.start(npc,kind,target)
  npc:SetAttribute('BossSerial',(npc:GetAttribute('BossSerial') or 0)+1);npc:SetAttribute('Attacking',true)
  h:Move(Vector3.zero);h:MoveTo(root.Position);h.AutoRotate=false;root.Anchored=true
  return true
+end
+-- Charge (Motion.Charge): a player kiting beyond minRange is run down in a straight line that
+-- stops `stopShort` of where they stood (or short of a wall), then the boss slams.
+function B.charge(npc,s,target,now)
+ local C=Motion.Charge;local h=npc.Humanoid;local root=npc.PrimaryPart
+ local delta=target.Position-root.Position;local flat=Vector3.new(delta.X,0,delta.Z)
+ if flat.Magnitude<C.minRange or flat.Magnitude>C.maxRange or math.abs(delta.Y)>10 then return false end
+ local params=exclusions(npc)
+ if workspace:Raycast(root.Position,delta,params) then return false end
+ local dir=flat.Unit;local length=math.min(C.maxLength,flat.Magnitude-C.stopShort)
+ local wall=workspace:Raycast(root.Position,dir*length,params);if wall then length=wall.Distance-3 end
+ if length<8 then return false end
+ local ground=workspace:Raycast(root.Position+Vector3.yAxis*8,-Vector3.yAxis*30,params);if not ground then return false end
+ local cf=CFrame.lookAt(root.Position,root.Position+dir);root.CFrame=cf
+ local run=Motion.duration('ChargeStart')
+ s.attack={kind='Charge',start=now,cf=cf,dir=dir,length=length,run=run,finish=run+length/C.speed,travelled=0,hits={}}
+ s.nextCharge=now+C.cooldown
+ npc:SetAttribute('BossAttack','Charge');npc:SetAttribute('BossStart',now);npc:SetAttribute('BossFrame',cf);npc:SetAttribute('BossGroundY',ground.Position.Y)
+ npc:SetAttribute('BossChargeLength',length);npc:SetAttribute('BossChargeSpeed',C.speed)
+ npc:SetAttribute('BossSerial',(npc:GetAttribute('BossSerial') or 0)+1);npc:SetAttribute('Attacking',true)
+ h:Move(Vector3.zero);h:MoveTo(root.Position);h.AutoRotate=false;root.Anchored=true
+ return true
+end
+local function stepCharge(npc,s,now,root)
+ local A,C=s.attack,Motion.Charge;local age=now-A.start
+ local travelled=math.clamp((age-A.run)*C.speed,0,A.length)
+ if travelled>A.travelled then
+  local from=A.cf.Position+A.dir*A.travelled;local to=A.cf.Position+A.dir*travelled
+  local params=exclusions(npc)
+  -- Follow the floor so a slope doesn't leave him floating or buried.
+  local floor=workspace:Raycast(to+Vector3.yAxis*6,-Vector3.yAxis*(Motion.RootHeight+14),params)
+  if floor then to=Vector3.new(to.X,floor.Position.Y+Motion.RootHeight+.1,to.Z) end
+  root.CFrame=CFrame.lookAt(to,to+A.dir)
+  local a2,b2=Vector2.new(from.X,from.Z),Vector2.new(to.X,to.Z);local ab=b2-a2
+  for _,p in Players:GetPlayers() do
+   local char=p.Character;local pr=char and char:FindFirstChild('HumanoidRootPart');local ph=char and char:FindFirstChildOfClass('Humanoid')
+   if pr and ph and ph.Health>0 and Characters.states[p] and not A.hits[p] and math.abs(pr.Position.Y-to.Y)<=7 then
+    local q=Vector2.new(pr.Position.X,pr.Position.Z);local t=math.clamp((q-a2):Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1)
+    if (q-(a2+ab*t)).Magnitude<=C.halfWidth then
+     A.hits[p]=true
+     local actual=Characters.contact(p,C.damage*(npc:GetAttribute('BossDamageScale') or 1))
+     npc:SetAttribute('BossHits',(npc:GetAttribute('BossHits') or 0)+1);npc:SetAttribute('LastBossDamage',actual)
+     if actual>0 then knock:FireClient(p,to-A.dir*2,C.knockdown) end
+    end
+   end
+  end
+  A.travelled=travelled
+ end
+ if age>=A.finish then
+  -- The run ends in a slam at the stopping point, facing whoever is nearest if in reach.
+  s.attack=nil;npc:SetAttribute('Attacking',false)
+  local target,dist=nil,Motion.reach('Slam')+3
+  for _,p in Players:GetPlayers() do
+   local pr=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
+   if pr then local d=(pr.Position-root.Position).Magnitude;if d<dist then target,dist=pr,d end end
+  end
+  if not B.start(npc,'Slam',target,true) then root.Anchored=false;npc.Humanoid.AutoRotate=true end
+ end
 end
 function B.spawn(cf,practice)
  assert(typeof(cf)=='CFrame','Server spawn requires CFrame')
@@ -138,6 +204,7 @@ function B.step(npc,s,now)
  if combat:GetAttribute('ZombiesEnabled')~=true then
   s.attack=nil;npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil);root.Anchored=false;h.AutoRotate=true;h:Move(Vector3.zero);return
  end
+ if s.attack and s.attack.kind=='Charge' then stepCharge(npc,s,now,root);return end
  if s.attack then
   local attack=s.attack;local age=now-attack.start;local a=Motion.Attacks[attack.kind]
   root.CFrame=attack.cf
@@ -163,6 +230,8 @@ function B.step(npc,s,now)
   if ph and ph.Health>0 and pr then local d=(pr.Position-root.Position).Magnitude;if d<dist then target,dist=pr,d end end
  end
  if target then
+  -- Out of reach and kiting: run them down (Motion.Charge), on its own cooldown.
+  if Motion.hasCharge and now>=s.next and now>=(s.nextCharge or 0) and B.charge(npc,s,target,now) then return end
   local order={'Slam','Swing','Slam','Spin'};local nextIndex=s.index%#order+1
   local preferred=Motion.reach(order[nextIndex])
   if dist<preferred-1.8 then

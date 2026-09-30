@@ -7,7 +7,7 @@ end
 -- Scale a private copy so geometry, joint pivots, poses and collision agree.
 local D=copy(require(script.Parent.BossData))
 local function scale3(values) for i=1,3 do values[i]*=SCALE end end
-D.rootHeight*=SCALE;D.walkSpeed*=SCALE
+D.rootHeight*=SCALE;D.walkSpeed*=SCALE;if D.chargeSpeed then D.chargeSpeed*=SCALE end
 scale3(D.hammerHeadRest);scale3(D.hammerHeadSize)
 for _,joint in D.joints do scale3(joint.head) end
 for _,part in D.parts do scale3(part.center);scale3(part.size) end
@@ -70,6 +70,13 @@ for name,clip in D.clips do
  clips[name]={frames=frames,duration=clip.lastFrame/clip.fps,last=clip.lastFrame,fps=clip.fps}
 end
 function M.duration(name) return clips[name].duration end
+-- Charge (2026-09-30): runs down a player who kites from range. ChargeStart plays in place, then
+-- the server drives the body in a straight line at `speed` while ChargeRun loops (its cadence from
+-- ground covered: D.chargeSpeed studs per clip second), and the run ends in the normal Slam.
+-- Anyone the body passes within `halfWidth` takes `damage` and is knocked down.
+M.Charge={minRange=24,maxRange=70,speed=34,maxLength=55,stopShort=6,halfWidth=4.5,damage=24,knockdown=.6,cooldown=6}
+M.hasCharge=clips.ChargeStart~=nil and clips.ChargeRun~=nil
+function M.chargeRunTime(travelled) return travelled/(D.chargeSpeed or M.Charge.speed) end
 -- Interpolate the held end of the tool, then the hands in tool space.
 -- Independently interpolating world-space hand matrices cuts across the
 -- swing arc and pulls the cuffs inward between otherwise extended frames.
