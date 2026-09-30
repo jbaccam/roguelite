@@ -3,6 +3,8 @@
 -- sand spray and flung shell chips. SidewaysRush: dust as it braces, sand kicked from both leg
 -- groups while it scuttles, a furrow along the lane and a skid burst at the stop.
 -- BubbleBarrage: mouth foam that pumps with the clip; wobbling bubbles that pop into splashes.
+-- Aftershock (ClawCrush's follow-up): water geysers. Sizes follow the scaled boss (ctx.scale and
+-- the server's final def.radius / width).
 local C=require(script.Parent:WaitForChild('Common'))
 local K=C.K
 local ns=C.ns
@@ -36,16 +38,18 @@ local function crushWindup(ctx)
  end,function() C.retire({host},.8) end)
 end
 local function crushImpact(ctx)
- local at,def=ctx.attack,ctx.def;local g=C.ground(ctx,ctx.points(def.point,at.impact))
- C.shake(g,.8,.35);if not C.near(g) then return end
+ local at,def=ctx.attack,ctx.def;local g=C.ground(ctx,ctx.points(def.point,at.impact));local r,s=def.radius or 6.5,ctx.scale
+ C.shake(g,1.2,.45);if not C.near(g,r) then return end
  C.cue('crab_slam',g,.9)
- C.star(g+up*2.2,Color3.fromRGB(255,226,206),9,.2);C.light(g+up*3,Color3.fromRGB(255,214,190),18,2.2,.3)
- C.ring(g+up*.06,'ShockwaveRing',1,14,.45,CORAL,0,true);C.ring(g+up*.08,'ShockwaveRing',1,8,.22,Color3.fromRGB(255,244,236),.1,true)
- C.emit(g+up*.3,up,'WaterSplash',{emit=22,Speed={18,28},SpreadAngle=35,Lifetime={.55,.75},Size=ns({0,1.4},{1,2.8}),Color=WATER,Transparency=ns({0,0},{.75,.2},{1,1}),Acceleration=Vector3.new(0,-70,0),Drag=.6,Rotation={-25,25},LightEmission=.25,LightInfluence=.6})
+ C.star(g+up*2.5,Color3.fromRGB(255,226,206),r*1.3,.22);C.light(g+up*3,Color3.fromRGB(255,214,190),r*3,2.6,.35)
+ K.pop(C.folder(),g+up*1,WATER,r*.3,r*1.3,.25,.5)
+ C.ring(g+up*.06,'ShockwaveRing',1,r*2,.4,CORAL,0,true);C.ring(g+up*.08,'ShockwaveRing',1,r*1.2,.2,Color3.fromRGB(255,244,236),.1,true)
+ C.ring(g+up*.1,'ShockwaveRing',r,r*3,.8,WATER,.4,true)
+ C.emit(g+up*.3,up,'WaterSplash',{emit=30,Speed={20,32},SpreadAngle=35,Lifetime={.55,.75},Size=ns({0,1.6*s},{1,3.2*s}),Color=WATER,Transparency=ns({0,0},{.75,.2},{1,1}),Acceleration=Vector3.new(0,-70,0),Drag=.6,Rotation={-25,25},LightEmission=.25,LightInfluence=.6})
  -- Two crown splashes standing on the sand (the sheet is bottom-anchored, so centre them half up).
- C.emit(g+up*4,up,'WaterSplash',{emit=2,Speed=0,Lifetime={.55,.65},Size=ns({0,7},{1,9}),Color=WATER,Transparency=ns({0,0},{.8,.1},{1,1}),LightEmission=.2,LightInfluence=.6})
- sandSpray(g+up*.3,up,30,{12,20},65);dust(g+up*.4,up,8,{10,14},4)
- C.chunks(g+up*1.5,ctx.groundY,CHIPS,{count=3,speed={10,16},up={14,22},scale={2.4,3.2},life=1.4,fallback=SHELL})
+ C.emit(g+up*4*s,up,'WaterSplash',{emit=2,Speed=0,Lifetime={.55,.65},Size=ns({0,7*s},{1,9.5*s}),Color=WATER,Transparency=ns({0,0},{.8,.1},{1,1}),LightEmission=.2,LightInfluence=.6})
+ sandSpray(g+up*.3,up,40,{12,22},65);dust(g+up*.4,up,10,{10,14},4*s);C.dustRing(g,r*.9,12,SAND,{14,20},3.5*s)
+ C.chunks(g+up*1.5,ctx.groundY,CHIPS,{count=5,speed={10,16},up={14,22},scale={2.4*s,3.2*s},life=1.4,fallback=SHELL})
 end
 
 -- SidewaysRush ----------------------------------------------------------------------------
@@ -63,9 +67,9 @@ local function rush(ctx)
  local length=data.length or def.length;local start=C.ground(ctx,ctx.cf.Position)
  if not C.near(start+dir*length/2,length/2) then return end
  sandSpray(start-dir*4+up*.4,-dir+up*.7,20,{12,18},30);dust(start-dir*3+up*.4,-dir+up*.3,6,{8,12},4);C.shake(start,.35,.2) -- launch kick
- local back=-dir+up*.9;local feet={}
- for i,off in {4.5,-4.5} do
-  local h=C.part('Host',Vector3.new(3,.3,1.5),C.aim(start+dir*off+up*.3,back),K.White,1)
+ local back=-dir+up*.9;local feet={};local s=ctx.scale
+ for i,off in {4.5*s,-4.5*s} do
+  local h=C.part('Host',Vector3.new(3*s,.3,1.5*s),C.aim(start+dir*off+up*.3,back),K.White,1)
   feet[i]={host=h,off=off,
    spray=C.fx(h,'SandSpray',{Rate=0,Enabled=true,Speed={9,15},SpreadAngle=30,Lifetime={.45,.65},Size=ns({0,1.1},{1,2.6}),Color=SAND,Transparency=ns({0,0},{.7,.25},{1,1}),Acceleration=Vector3.new(0,-40,0),Drag=.8,Rotation={-40,40},LightInfluence=.8}),
    dust=C.fx(h,'DustPuff',{Rate=0,Enabled=true,Speed={2,4},SpreadAngle=60,Lifetime={.6,.9},Size=ns({0,1.5},{1,3.2}),Color=SAND,Transparency=ns({0,.4},{1,1}),Drag=2,LightInfluence=.8,Rotation={0,360}})}
@@ -83,7 +87,7 @@ local function rush(ctx)
   -- A furrow plate every 2.6 studs, laid just behind the body.
   local along=(pos-start):Dot(dir)
   while laid+2.6<=along-1 do
-   laid+=2.6;local p,set=C.plate(start+dir*laid+up*.03,'ScorchMark',6.5,FURROW,nil,false)
+   laid+=2.6;local p,set=C.plate(start+dir*laid+up*.03,'ScorchMark',(def.width or 9)*.72,FURROW,nil,false)
    if p then set(.45);table.insert(furrow,{p=p,set=set}) end
   end
  end,function(stopped)
@@ -145,6 +149,21 @@ function Crab.projectile(ctx,i)
   splash(pos,up,10,{6,12},180,1.6)
   C.emit(pos,up,'Bubble',{emit=6,Speed={3,6},SpreadAngle=180,Lifetime={.3,.5},Size=ns({0,.35},{1,.1}),Color=FOAM,Drag=2,LightInfluence=.6})
   local now=os.clock();if now-(ctx.crabPop or 0)>.09 then ctx.crabPop=now;C.cue('bubbles',pos,.45,1.2+math.random()*.3) end -- a volley popping at once gets one pop per 0.09 s
+ end
+end
+
+-- Aftershock (ClawCrush's follow-up): a water geyser out of each circle, with a sand ring and spray.
+function Crab.aftershock(m)
+ local s,r=m.scale or 1,m.radius or 5
+ for i,p in m.points do
+  if C.near(p,r) then
+   C.emit(p+up*.3,up,'WaterSplash',{emit=36,Speed={34,48},SpreadAngle=10,Lifetime={.8,1.1},Size=ns({0,r*.45},{.5,r*.8},{1,r}),Color=WATER,Transparency=ns({0,0},{.7,.2},{1,1}),Acceleration=Vector3.new(0,-60,0),Drag=.5,Rotation={-15,15},LightEmission=.25,LightInfluence=.6})
+   C.emit(p+up*r*.9,up,'WaterSplash',{emit=1,Speed=0,Lifetime=.8,Size=ns({0,r*1.8},{1,r*2.3}),Color=WATER,Transparency=ns({0,0},{.8,.1},{1,1}),LightEmission=.2,LightInfluence=.6}) -- the bottom-anchored column
+   C.emit(p+up*.5,up,'Bubble',{emit=16,Speed={10,18},SpreadAngle=35,Lifetime={.6,.9},Size=ns({0,.5*s},{1,.2}),Color=FOAM,Drag=2,Acceleration=Vector3.new(0,4,0),LightInfluence=.6})
+   C.ring(p+up*.07,'ShockwaveRing',1,r*2.3,.35,WATER,0,true);C.star(p+up*2,Color3.fromRGB(236,250,255),r*1.3,.18)
+   sandSpray(p+up*.3,up,20,{10,18},60);C.dustRing(p,r*.8,8,SAND,{10,16},2.5*s)
+   if i<=2 then C.cue('bubbles',p,.6,.9);C.cue('crab_slam',p,.4,1.3) end;C.shake(p,.6,.25)
+  end
  end
 end
 

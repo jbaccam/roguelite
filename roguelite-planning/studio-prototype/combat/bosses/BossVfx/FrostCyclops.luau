@@ -5,6 +5,10 @@
 -- stomp, glacier clusters erupt one after another along the server's wave line, each at
 -- impact + d / travel (the instant the server hit-tests that distance), growing from IceSpike_A
 -- at the foot to IceSpike_E at the far end. The wall holds, then shatters into shards and mist.
+-- Enraged, the server fans the wave into several lines (MapBossAttackData.lines); each line gets
+-- its own wall.
+-- Aftershock (GroundSlam's follow-up): a glacier bursts out of each circle and shatters.
+-- Sizes follow the scaled boss: def.radius / width / length are the server's final hit sizes.
 local C=require(script.Parent:WaitForChild('Common'))
 local K=C.K
 local ns=C.ns
@@ -51,9 +55,9 @@ local function shatter(c,groundY,scale,loud)
 end
 -- Full size for a cluster, slimmed across the lane so the wall stays close to the 5-stud hit width
 -- without losing height.
-local function sized(name,s)
- local t=C.template(name);local b=(t and t.Size or SIZE[name])*s
- return Vector3.new(b.X*math.min(1,7.5/b.X),b.Y,b.Z*.9)
+local function sized(name,s,width)
+ local t=C.template(name);local b=(t and t.Size or SIZE[name])*s;local cap=(width or 5)*1.5
+ return Vector3.new(b.X*math.min(1,cap/b.X),b.Y,b.Z*.9)
 end
 
 -- GroundSlam ------------------------------------------------------------------------------
@@ -70,11 +74,11 @@ local function slamWindup(ctx)
  end,function() C.retire({host},1) end)
 end
 -- A crown of small glaciers bursting out of the slam point, leaning outward, then shattering.
-local function crown(g,groundY)
- local list={};local seed=math.random()*6.28
- for i=1,5 do
-  local a=seed+i/5*math.pi*2;local out=Vector3.new(math.cos(a),0,math.sin(a))
-  list[i]=glacier('IceSpike_A',g+out*2.2,CFrame.lookAt(Vector3.zero,out).Rotation*CFrame.Angles(-math.rad(28+math.random()*14),0,0),sized('IceSpike_A',.8+math.random()*.35))
+local function crown(g,groundY,s)
+ local list={};local seed=math.random()*6.28;s=s or 1
+ for i=1,6 do
+  local a=seed+i/6*math.pi*2;local out=Vector3.new(math.cos(a),0,math.sin(a))
+  list[i]=glacier('IceSpike_B',g+out*2.6*s,CFrame.lookAt(Vector3.zero,out).Rotation*CFrame.Angles(-math.rad(28+math.random()*14),0,0),sized('IceSpike_B',(.8+math.random()*.35)*s,99))
   stand(list[i],0,10)
  end
  local life=.7
@@ -83,26 +87,27 @@ local function crown(g,groundY)
  end,function() for _,c in list do if c.part then c.part:Destroy() end end end,'bossWave',8)
 end
 local function slamImpact(ctx)
- local at,def=ctx.attack,ctx.def;local g=C.ground(ctx,ctx.points(def.point,at.impact))
- C.shake(g,1.3,.5);if not C.near(g) then return end
+ local at,def=ctx.attack,ctx.def;local g=C.ground(ctx,ctx.points(def.point,at.impact));local r,s=def.radius or 11,ctx.scale
+ C.shake(g,1.6,.55);if not C.near(g,r) then return end
  C.cue('ice_slam',g,.95)
- C.star(g+up*2,PALE,12,.22);C.light(g+up*3,PALE,26,3.2,.4)
- C.ring(g+up*.06,'ShockwaveRing',2,15,.24,PALE,0,true) -- crisp white snap
- C.ring(g+up*.08,'FrostRing',1,22,.5,WHITE,0,true) -- the frost shockwave, out to the hit radius
- C.ring(g+up*.1,'FrostRing',2,27,.95,ICE,.45,true) -- a slower, fainter second ring
- C.stain(g+up*.03,'FrostFloor',16,WHITE,.08,1.5,1.42,.05,.6) -- frozen floor, ~3 s
- crown(g,ctx.groundY)
- C.chunks(g+up*1.2,ctx.groundY,SHARDS,{count=8,speed={14,22},up={12,20},scale={2.4,3.6},life=1.3,fallback=ICE_BLOCK})
- snow(g+up*.5,24,{14,26},80);mist(g+up*.6,16,{10,16},5,88)
+ C.star(g+up*2.5,PALE,r*1.2,.24);C.light(g+up*3,PALE,r*2.6,3.4,.45);K.pop(C.folder(),g+up*1.2,PALE,r*.35,r*1.4,.26,.5)
+ C.ring(g+up*.06,'ShockwaveRing',2,r*1.4,.24,PALE,0,true) -- crisp white snap
+ C.ring(g+up*.08,'FrostRing',1,r*2,.5,WHITE,0,true) -- the frost shockwave, out to the hit radius
+ C.ring(g+up*.1,'FrostRing',2,r*2.6,.95,ICE,.45,true) -- a slower, fainter second ring
+ C.stain(g+up*.03,'FrostFloor',r*1.5,WHITE,.08,1.5,1.42,.05,.6) -- frozen floor, ~3 s
+ crown(g,ctx.groundY,s)
+ C.dustRing(g,r*.85,14,MIST,{16,24},4*s)
+ C.chunks(g+up*1.2,ctx.groundY,SHARDS,{count=10,speed={14,22},up={14,22},scale={2.4*s,3.6*s},life=1.4,fallback=ICE_BLOCK})
+ snow(g+up*.5,34,{16,28},80);mist(g+up*.6,18,{10,16},5*s,88)
 end
 
 -- Stomp: the ice wave ---------------------------------------------------------------------
 -- One controller per attack, started from windup (or impact if the windup was missed). It owns the
 -- creeping frost strip, the foot mist, the path glints and every glacier, all timed on the server
 -- clock so each cluster rises exactly when the server's wave front reaches it.
-local function wave(ctx)
- if ctx.frostWave then return end;ctx.frostWave=true
- local at,def=ctx.attack,ctx.def;local travel=def.travel or 40;local line=C.shape(ctx);local origin,dir,length
+local function wave(ctx,line,key)
+ ctx.frostWave=ctx.frostWave or {};if ctx.frostWave[key] then return end;ctx.frostWave[key]=true
+ local at,def=ctx.attack,ctx.def;local travel=def.travel or 40;local origin,dir,length
  if line and line.kind=='line' then origin,dir,length=line.origin,line.direction,line.length
  else
   origin=ctx.points(def.point,at.impact);dir=C.flat(ctx.dirAt(def.point,at.impact))
@@ -126,10 +131,11 @@ local function wave(ctx)
  -- One cluster every 2.2 studs: A near the foot up to E at the far end, zig-zagging a little either
  -- side of the line and leaning outward and forward.
  local clusters={}
- for d=1.1,math.max(length,1.2),2.2 do
+ local spacing=#(ctx.data.lines or {})>1 and 2.8 or 2.2
+ for d=1.1,math.max(length,1.2),spacing do
   local n=#clusters+1;local f=math.min(d/length,.999);local band=math.clamp(math.floor(f*5)+1,1,5);local sgn=n%2==0 and 1 or -1
   local rot=look*CFrame.Angles(0,math.rad(math.random(-25,25)),0)*CFrame.Angles(-math.rad(3+math.random()*5),0,-sgn*math.rad(6+math.random()*7))
-  clusters[n]={at=at.impact+d/travel,band=band,name=SPIKES[band],pos=origin+dir*d+side*sgn*(.3+math.random()*.5),rot=rot,size=sized(SPIKES[band],(.9+.2*((f*5)%1))*(.94+math.random()*.12)),loud=n%3==1}
+  clusters[n]={at=at.impact+d/travel,band=band,name=SPIKES[band],pos=origin+dir*d+side*sgn*(.3+math.random()*.5),rot=rot,size=sized(SPIKES[band],(.9+.2*((f*5)%1))*(.94+math.random()*.12),def.width),loud=n%3==1 and key==1}
  end
  local function erupt(c)
   c.g=glacier(c.name,c.pos,c.rot,c.size);stand(c.g,0,10)
@@ -147,7 +153,7 @@ local function wave(ctx)
   if age<at.impact and not deadAt then
    foot.CFrame=CFrame.new(ctx.points(def.point,age));if glints then glints.Rate=age>at.impact-.55 and 45 or 0 end
   elseif not retired then retired=true;C.retire({foot,lane},1) end
-  if not rolling and not deadAt and age>=at.impact then rolling=true;C.cue('ice_wave',mid,.9) end
+  if not rolling and not deadAt and age>=at.impact then rolling=true;if key==1 then C.cue('ice_wave',mid,.9) end end
   local busy=false
   for _,c in clusters do
    if not c.g and not c.done then if deadAt then c.done=true elseif age>=c.at then erupt(c) end end
@@ -175,22 +181,44 @@ local function wave(ctx)
   if not retired then foot:Destroy();lane:Destroy() end
  end,'bossWave',8)
 end
+-- Every wave line the server sent (one, or the enraged fan), else one from the sampled stomp.
+local function waves(ctx)
+ local lines=ctx.data.lines
+ if type(lines)=='table' and #lines>0 then for i,l in lines do wave(ctx,C.Shapes.decode(l),i) end
+ else wave(ctx,C.shape(ctx),1) end
+end
 local function stompImpact(ctx)
  local at,def=ctx.attack,ctx.def;local g=C.ground(ctx,ctx.points(def.point,at.impact))
  C.shake(g,1,.4);if not C.near(g) then return end
  C.cue('ice_slam',g,.55,1.15)
- C.ring(g+up*.06,'FrostRing',1,7,.4,WHITE,0,true);C.ring(g+up*.08,'ShockwaveRing',1,5,.2,PALE,.15,true)
- C.star(g+up*1.5,PALE,6,.16)
- snow(g+up*.5,18,{10,20},75);mist(g+up*.4,5,{6,10},4,88)
+ local s=ctx.scale
+ C.ring(g+up*.06,'FrostRing',1,10*s,.4,WHITE,0,true);C.ring(g+up*.08,'ShockwaveRing',1,7*s,.2,PALE,.15,true)
+ C.star(g+up*1.5,PALE,7*s,.16)
+ snow(g+up*.5,24,{10,20},75);mist(g+up*.4,6,{6,10},4*s,88)
 end
 
 function F.windup(ctx)
  if ctx.kind=='GroundSlam' then slamWindup(ctx)
- elseif ctx.kind=='Stomp' then C.cue('ice_windup',ctx.points(ctx.def.point,C.age(ctx)),.75);wave(ctx) end
+ elseif ctx.kind=='Stomp' then C.cue('ice_windup',ctx.points(ctx.def.point,C.age(ctx)),.75);waves(ctx) end
 end
 function F.impact(ctx)
  if ctx.kind=='GroundSlam' then slamImpact(ctx)
- elseif ctx.kind=='Stomp' then stompImpact(ctx);wave(ctx) end
+ elseif ctx.kind=='Stomp' then stompImpact(ctx);waves(ctx) end
+end
+-- Aftershock: a big glacier bursts out of each circle, leaning out, and shatters 0.85 s later.
+function F.aftershock(m)
+ local s,r=m.scale or 1,m.radius or 6
+ for i,p in m.points do
+  if C.near(p,r) then
+   local g=glacier('IceSpike_D',p,CFrame.Angles(0,math.random()*6.28,0)*CFrame.Angles(math.rad(math.random(-8,8)),0,math.rad(math.random(-8,8))),sized('IceSpike_D',r/5.5,r*1.4))
+   stand(g,0,10)
+   K.animate(1,function(_,age) if g.part then if age>=.85 then shatter(g,p.Y,2.4*s,i==1) else stand(g,age,.85) end end end,function() if g.part then g.part:Destroy() end end,'bossWave',8)
+   C.ring(p+up*.06,'FrostRing',1,r*2.2,.4,WHITE,0,true);C.stain(p+up*.03,'FrostFloor',r*1.8,WHITE,.05,1,1.2,.05,.6)
+   C.star(p+up*2,PALE,r*1.3,.2);snow(p+up*.5,18,{12,22},70);mist(p+up*.5,6,{6,10},r*.7,80)
+   C.chunks(p+up*1,p.Y,SHARDS,{count=4,speed={8,14},up={14,22},scale={1.8*s,2.6*s},life=1.2,fallback=ICE_BLOCK})
+   if i<=2 then C.cue('ice_slam',p,.5,1.2) end;C.shake(p,.7,.3)
+  end
+ end
 end
 -- Both attacks are instant at impact (activeEnd == impact); the wave runs on its own controller.
 function F.active(ctx,age) end

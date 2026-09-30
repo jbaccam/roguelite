@@ -54,16 +54,17 @@ end
 -- A bolt: neon cyan core in a pulsing gold halo under the CurseOrb sprite. Its trail, glyph wake and
 -- light ride a tail host that lingers so they fade out rather than vanish.
 function P.projectile(ctx,i)
- local core=K.ball(C.folder(),'BossVfxBolt',1,CYAN,0,Enum.Material.Neon)
- local rim=K.ball(core,'BossVfxBoltRim',1.7,GOLD,.6,Enum.Material.Neon) -- a child, so it goes with the core
- local _,_,img=C.sprite(core,'CurseOrb',3.2,WHITE,0)
+ local k=(ctx.def.radius or 1.2)/1.2 -- sized for the authored 1.2-stud bolt
+ local core=K.ball(C.folder(),'BossVfxBolt',1*k,CYAN,0,Enum.Material.Neon)
+ local rim=K.ball(core,'BossVfxBoltRim',1.7*k,GOLD,.6,Enum.Material.Neon) -- a child, so it goes with the core
+ local _,_,img=C.sprite(core,'CurseOrb',3.2*k,WHITE,0)
  local tail=C.tail(core,(ctx.def.life or 2.2)+2,.9)
  K.trail(tail,1.1,.35,CYAN,GOLD,.15)
  C.fx(tail,'Hieroglyphs',{Rate=18,Speed={.3,.8},SpreadAngle=180,Lifetime=.8,Size=ns({0,.75},{1,0}),Color=GOLD,Acceleration=Vector3.new(0,3,0),Drag=1,LightEmission=.6,RotSpeed={-45,45}})
  local light=Instance.new('PointLight');light.Color=CYAN;light.Range=10;light.Brightness=1.8;light.Shadows=false;light.Parent=tail
  local t=math.random()+i
  return core,function(dt)
-  t+=dt;rim.CFrame=core.CFrame;rim.Size=Vector3.one*1.7*(1+math.sin(t*22)*.08)
+  t+=dt;rim.CFrame=core.CFrame;rim.Size=Vector3.one*1.7*k*(1+math.sin(t*22)*.08)
   if img then img.Rotation=(t*240)%360 end
  end,function(pos)
   if not C.near(pos) then return end
@@ -91,12 +92,13 @@ local function staffImpact(ctx)
  local at=ctx.attack;local g=C.ground(ctx,ctx.points('StaffImpact',at.impact))
  C.shake(g,.45,.3);if not C.near(g) then return end
  C.cue('stone_rumble',g,.85)
- C.ring(g+up*.06,'ShockwaveRing',1,8,.4,GOLD,0,true);C.star(g+up*1.2,BRIGHT,5,.18);dust(g+up*.3,8)
+ local s=ctx.scale
+ C.ring(g+up*.06,'ShockwaveRing',1,9*s,.4,GOLD,0,true);C.ring(g+up*.09,'HieroglyphCircle',2,7*s,.6,GOLD,.2,1.6);C.star(g+up*1.2,BRIGHT,6*s,.18);dust(g+up*.3,10)
 end
 -- An obelisk rising out of the sand at full size: up in 0.18 s overshooting 10%, settle, hold
 -- 0.9 s, sink in 0.4 s. Its authored buried foot keeps the base hidden in the floor.
-local function obelisk(p)
- local name=OBELISKS[math.random(#OBELISKS)];local o=C.mesh(name,CFrame.new(p),.9+math.random()*.2)
+local function obelisk(p,k)
+ local name=OBELISKS[math.random(#OBELISKS)];local o=C.mesh(name,CFrame.new(p),(.9+math.random()*.2)*(k or 1))
  if not o then o=C.part('Obelisk',Vector3.new(2.2,6,2.2),CFrame.new(p),SAND,0);o.Material=Enum.Material.Sandstone end
  local size,below=o.Size,BURIED[name] or .07
  local frame=CFrame.new(p)*CFrame.Angles(0,math.random()*6.28,0)*CFrame.Angles(math.rad(math.random(-6,6)),0,math.rad(math.random(-6,6)))
@@ -106,9 +108,11 @@ local function obelisk(p)
   rise(age<.18 and 1.1*(1-(1-age/.18)^3) or age<.3 and 1.1-.1*K.smooth((age-.18)/.12) or age<1.08 and 1 or 1-K.smooth((age-1.08)/.4))
  end,function() o:Destroy() end,'bossObelisk',16)
 end
-local function eruptAt(p,i)
+-- k: the circle's radius over the authored 4.5 (the kit's obelisks and bursts were sized for it).
+local function eruptAt(p,i,k)
  if not C.near(p) then return end
- obelisk(p)
+ obelisk(p,k)
+ C.ring(p+up*.1,'ShockwaveRing',2,9*k,.5,BRIGHT,.3,true)
  C.emit(p+up*.3,up,'SandBurst',{emit=40,Speed={30,45},SpreadAngle=12,Lifetime={.9,1.2},Size=ns({0,2.2},{.5,4},{1,5.5}),Color=SAND,Transparency=ns({0,0},{.7,.2},{1,1}),Acceleration=Vector3.new(0,-55,0),Drag=.6,Rotation={-15,15},RotSpeed={-40,40},LightInfluence=.8})
  C.emit(p+up*5.5,up,'SandBurst',{emit=1,Speed=0,Lifetime=.9,Size=ns({0,10},{1,12}),Color=SAND,Transparency=ns({0,0},{.8,.1},{1,1}),LightInfluence=.8}) -- the bottom-anchored geyser plume
  dust(p+up*.4,10)
@@ -140,7 +144,7 @@ local function tomb(ctx)
   local age=C.age(ctx)
   if not deadAt and not fired and not C.live(ctx) then deadAt=age end
   if not built and not deadAt and type(ctx.data.points)=='table' then built=true;build(ctx.data.points) end
-  if not fired and not deadAt and age>=erupt then fired=true;for i,c in circles do eruptAt(c.p,i) end end
+  if not fired and not deadAt and age>=erupt then fired=true;for i,c in circles do eruptAt(c.p,i,(def.radius or 4.5)/4.5) end end
   local ending=(fired and age-erupt) or (deadAt and age-deadAt) or nil;local left=erupt-age
   for _,c in circles do
    if c.set then

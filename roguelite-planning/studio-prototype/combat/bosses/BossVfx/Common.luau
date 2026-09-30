@@ -302,10 +302,66 @@ function C.stopSound(s,host,seconds)
  local v=s.Volume;K.animate(seconds or .2,function(t) s.Volume=v*(1-t) end,function() host:Destroy() end,'bossSound',32)
 end
 function C.light(pos,color,range,brightness,seconds) K.flash(C.folder(),pos,color,range,brightness,seconds) end
--- Fallback hooks (MapBossPresentation calls these when a boss has no effects module).
+-- A dust ring thrown outward along the ground at radius r (landings, stomps, the spawn intro).
+function C.dustRing(pos,r,count,color,speed,size)
+ for i=1,count do
+  local a=i/count*math.pi*2+math.random()*.3;local out=Vector3.new(math.cos(a),0,math.sin(a))
+  C.emit(pos+out*r+up*.5,out+up*.25,'DustPuff',{emit=2,Speed=speed or {14,20},SpreadAngle=25,Drag=3.5,Lifetime={.7,1.1},Size=C.ns({0,(size or 3)*.5},{1,size or 3}),Color=color or K.Dust,Transparency=C.ns({0,.2},{.6,.4},{1,1}),LightInfluence=.8,Rotation={0,360},RotSpeed={-40,40}})
+ end
+end
+-- Ground height under the boss (the root centre sits Size.Y/2 + HipHeight above it).
+function C.feet(npc)
+ local root=npc.PrimaryPart;if not root then return nil end
+ local h=npc:FindFirstChildOfClass('Humanoid');local drop=root.Size.Y*.5+(h and h.HipHeight or 0)
+ return K.groundBelow(root.Position-up*(drop-1),{npc,C.folder()},root.Position.Y-drop)
+end
+-- Per-boss aura while enraged: {texture, colour, emission}.
+local AURA={
+ Dragon={'Flame',Color3.fromRGB(255,120,40),.9},FrostCyclops={'FrostMist',Color3.fromRGB(170,225,255),.3},
+ Pharaoh={'Hieroglyphs',Color3.fromRGB(255,206,96),.8},KingCrab={'Bubble',Color3.fromRGB(236,250,255),.3},
+}
+-- Fallback hooks (MapBossPresentation calls these when a boss module does not define them).
 function C.windup(ctx) end
 function C.impact(ctx) end
 function C.active(ctx,age) end
+-- Spawn intro: the boss lands with a double shockwave, a dust wall and a heavy shake.
+function C.intro(m)
+ local root=m.npc.PrimaryPart;if not root then return end
+ local y=C.feet(m.npc);local g=Vector3.new(root.Position.X,y or root.Position.Y,root.Position.Z)
+ C.shake(g,1.6,.7);if not C.near(g,40) then return end
+ local tint=m.tint or K.Amber;local r=8*(m.scale or 1)
+ C.cue('ground_quake',g,.8,.85)
+ C.ring(g+up*.06,'ShockwaveRing',r*.5,r*4.5,.6,K.White,0,true);C.ring(g+up*.09,'ShockwaveRing',r*.3,r*3,.9,tint,.25,true)
+ C.dustRing(g,r*.8,14,nil,{20,28},r*.55);C.light(g+up*4,tint,40,3,.7)
+ C.emit(g+up*.5,up,'DustPuff',{emit=18,Speed={10,18},SpreadAngle=80,Drag=3,Lifetime={1,1.5},Size=C.ns({0,r*.4},{1,r*.9}),Color=K.Dust,Transparency=C.ns({0,.3},{.6,.45},{1,1}),LightInfluence=.8,Rotation={0,360},RotSpeed={-30,30}})
+end
+-- Enrage (below half health): a flash and shockwave, the glows ramp to the tint, and an aura keeps
+-- rising off the body for the rest of the fight so the danger stays readable.
+function C.enrage(m)
+ local npc=m.npc;local root=npc.PrimaryPart;if not root then return end
+ local tint=m.tint or Color3.fromRGB(255,90,60);local p=root.Position;local r=6*(m.scale or 1)
+ C.shake(p,1.2,.6)
+ if C.near(p,40) then
+  K.pop(C.folder(),p,tint,r,r*5,.5,.35);C.star(p+up*2,tint,r*2.2,.28);C.light(p,tint,50,4,.8)
+  local y=C.feet(npc);if y then C.ring(Vector3.new(p.X,y+.08,p.Z),'ShockwaveRing',r,r*6,.7,tint,0,true) end
+  C.cue('dragon_windup',p,.7,.8)
+ end
+ C.setGlow(C.glow(npc,'EyeGlow'),Color3.fromRGB(255,70,50),.8)
+ local a=AURA[m.id] or {'Ember',tint,.8}
+ C.fx(root,a[1],{Rate=14,EmissionDirection=Enum.NormalId.Top,Speed={2,5},SpreadAngle=40,Lifetime={.8,1.3},Size=C.ns({0,r*.2},{.4,r*.45},{1,0}),Color=a[2],Transparency=C.ns({0,1},{.2,.35},{1,1}),LightEmission=a[3],LightInfluence=.4,Acceleration=Vector3.new(0,4,0),Rotation={0,360},RotSpeed={-40,40}})
+end
+-- Follow-up eruption at each circle: a column burst, shockwave and debris in the boss tint.
+function C.aftershock(m)
+ local tint=m.tint or K.Amber
+ for i,p in m.points do
+  if C.near(p) then
+   local r=m.radius or 5
+   C.ring(p+up*.07,'ShockwaveRing',1,r*2.4,.35,tint,0,true);C.star(p+up*2,tint,r*1.6,.2);C.light(p+up*3,tint,r*3,2.5,.35)
+   C.emit(p+up*.4,up,'DustPuff',{emit=10,Speed={16,26},SpreadAngle=18,Drag=2,Lifetime={.6,.9},Size=C.ns({0,r*.4},{1,r*.8}),Color=K.Dust,Transparency=C.ns({0,.2},{.6,.4},{1,1}),LightInfluence=.8,Rotation={0,360}})
+   if i==1 then C.cue('sand_burst',p,.6) end;C.shake(p,.6,.25)
+  end
+ end
+end
 -- A plain glowing ball; returns the part, a per-frame update and a finish(pos) for the pop.
 function C.projectile(ctx,i)
  local color=ctx.tint or K.Amber;local radius=ctx.def.radius or 1
