@@ -56,13 +56,14 @@ end
 local TURN_RATE = math.rad(540)
 -- Melee forgiveness (user, 2026-09-30: dodging by changing direction was too easy). A swing starts
 -- TRIGGER_BONUS studs before attackRange, then hits anyone within its reach + REACH_BONUS whose
--- direction is within ~95 degrees of the facing (ARC_DOT), checked every frame for HIT_WINDOW
--- seconds from impact instead of one frame. Example, a normal zombie (4.6 reach, 0.35 s impact):
--- it swings at 5.6 studs and connects out to 6.1 studs for 0.15 s.
-local TRIGGER_BONUS = 1
-local REACH_BONUS = 1.5
-local LUNGE_REACH_BONUS = 0.6
-local ARC_DOT = -0.1
+-- direction is within ~84 degrees of the facing (ARC_DOT), checked every frame for HIT_WINDOW
+-- seconds from impact instead of one frame. The window is what catches a dodging player; the
+-- reach stays near arm's length (a +1.5 bonus hit players who were visibly out of reach).
+-- Example, a normal zombie (4.6 reach, 0.35 s impact): swings at 5.1 studs, connects out to 5.1.
+local TRIGGER_BONUS = 0.5
+local REACH_BONUS = 0.5
+local LUNGE_REACH_BONUS = 0.3
+local ARC_DOT = 0.1
 local HIT_WINDOW = 0.15
 local function turnToward(from, to, maxAngle)
 	local angle = math.acos(math.clamp(from:Dot(to), -1, 1))

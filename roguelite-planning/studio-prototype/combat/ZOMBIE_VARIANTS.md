@@ -62,6 +62,6 @@ Wave mobs still set `ContactDamage` 0 (their timed swings own damage), but runni
 ## Harder to dodge, no gliding (2026-09-30)
 
 User playtest: changing direction dodged almost every swing, and many mobs slid.
-- **Swings** (`EnemyAttacks`): a melee swing starts 1 stud before `attackRange`, reaches `attackRange` (or `hitRange`) + 1.5 studs (+0.6 for Lunge dashes), hits within ~95 degrees of the facing (was ~81), and checks every frame for 0.15 s from impact (was one frame). Ranged shots are unchanged. Example: a normal zombie swings at 5.6 studs and connects out to 6.1.
+- **Swings** (`EnemyAttacks`): a melee swing starts 0.5 studs before `attackRange`, reaches `attackRange` (or `hitRange`) + 0.5 studs (+0.3 for Lunge dashes), hits within ~84 degrees of the facing (was ~81), and checks every frame for 0.15 s from impact (was one frame). Ranged shots are unchanged. Example: a normal zombie swings at 5.1 studs and connects out to 5.1. (First pass used +1 trigger, +1.5 reach and ~95 degrees; the user was hit by zombies that weren't touching them, so it was pulled back the same day.)
 - **Gait** (`RogueliteZombieAnimation`): the Move loop may run as fast as each mob's own stride needs at full speed, 4–12 loops/s (was a flat 4), so feet keep up with the body. Before: crab and snake legs covered ~40% of the ground, spider 52%, goblin 67%, skeleton 73%. Frost ghost, lava slime and snake keep their time-based motion.
 - **Mutant zombie slam** radius 6.5 (was 5.2); its warning disc reads the same value.
