@@ -232,7 +232,7 @@
     },
     "KingCrab_Studio.fbx": {
       "meshes": {
-        "Body": {
+        "KingCrab_Body": {
           "triangles": 6460,
           "materials": [
             "KingCrab_Body"
@@ -249,7 +249,7 @@
             "weights_to_non_bones": 0
           }
         },
-        "ClawL": {
+        "KingCrab_ClawL": {
           "triangles": 2428,
           "materials": [
             "KingCrab_ClawL"
@@ -266,7 +266,7 @@
             "weights_to_non_bones": 0
           }
         },
-        "ClawR": {
+        "KingCrab_ClawR": {
           "triangles": 2316,
           "materials": [
             "KingCrab_ClawR"
@@ -283,7 +283,7 @@
             "weights_to_non_bones": 0
           }
         },
-        "Eyes": {
+        "KingCrab_Eyes": {
           "triangles": 1248,
           "materials": [
             "KingCrab_Eyes"
@@ -300,7 +300,7 @@
             "weights_to_non_bones": 0
           }
         },
-        "Legs": {
+        "KingCrab_Legs": {
           "triangles": 7216,
           "materials": [
             "KingCrab_Legs"
@@ -321,6 +321,7 @@
       "actions_in_file": [],
       "bones": 52,
       "bones_match_animation_data": true,
+      "mesh_bone_name_clashes": [],
       "fbm_pngs": [
         "KingCrab_Body_BaseColor_1024.png",
         "KingCrab_ClawL_BaseColor_1024.png",

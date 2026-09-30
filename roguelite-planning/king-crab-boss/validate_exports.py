@@ -18,7 +18,8 @@ Checks
                 RigTest_ROM: rotation range per bone chain).
   KingCrab.glb  meshes and skin, textures, both named actions present, bone
                 motion in RigTest_ROM, dimensions.
-  game package  KingCrab_Studio.fbx: section meshes under 20k triangles,
+  game package  KingCrab_Studio.fbx: KingCrab_<Section> meshes under 20k
+                triangles, no mesh object named like a bone,
                 KingCrab_<Section> materials with 1024 maps, bones and parents
                 equal AnimationData.json, no animation, .fbm PNGs present.
                 AnimationData.json: every clip present, frame count
@@ -324,9 +325,9 @@ if (GAMED / 'AnimationData.json').exists():
     rig = arm()
     obs = meshes()
     st = {'meshes': {}, 'actions_in_file': [a.name for a in bpy.data.actions]}
-    want = set(SECTIONS)
+    want = {f'KingCrab_{sec}' for sec in SECTIONS}
     if {o.name for o in obs} != want:
-        fail(f'KingCrab_Studio.fbx: mesh names {sorted(o.name for o in obs)} != sections {sorted(want)}')
+        fail(f'KingCrab_Studio.fbx: mesh names {sorted(o.name for o in obs)} != {sorted(want)}')
     for o in obs:
         mats = [m.name for m in o.data.materials if m]
         st['meshes'][o.name] = {'triangles': tris(o.data), 'materials': mats, 'texture': image_ok(o),
@@ -336,7 +337,7 @@ if (GAMED / 'AnimationData.json').exists():
             fail(f'KingCrab_Studio.fbx: {o.name} weights {w}')
         if tris(o.data) >= 20000:
             fail(f'KingCrab_Studio.fbx: {o.name} {tris(o.data)} triangles')
-        if mats != [f'KingCrab_{o.name}']:
+        if mats != [o.name]:
             fail(f'KingCrab_Studio.fbx: {o.name} materials {mats}')
         if st['meshes'][o.name]['texture'] != [1024, 1024]:
             fail(f'KingCrab_Studio.fbx: {o.name} texture {st["meshes"][o.name]["texture"]}')
@@ -351,6 +352,11 @@ if (GAMED / 'AnimationData.json').exists():
         st['bones_match_animation_data'] = not bad and set(names) == set(anim['bones'])
         if not st['bones_match_animation_data']:
             fail(f'KingCrab_Studio.fbx: bones/parents differ from AnimationData.json {bad[:5]}')
+        # Roblox's importer merges a mesh object and a bone that share a name
+        clash = sorted({o.name for o in obs} & set(names))
+        st['mesh_bone_name_clashes'] = clash
+        if clash:
+            fail(f'KingCrab_Studio.fbx: mesh object names equal bone names: {clash}')
     fbm = sorted(p.name for p in (GAMED / 'KingCrab_Studio.fbm').glob('*.png'))
     st['fbm_pngs'] = fbm
     if len(fbm) != len(SECTIONS):

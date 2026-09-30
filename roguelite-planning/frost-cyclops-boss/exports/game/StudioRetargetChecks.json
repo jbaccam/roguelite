@@ -1,0 +1,10 @@
+{
+  "id": "frost-cyclops",
+  "boneCount": 61,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 1.1780654114446065e-06,
+  "passed": true,
+  "sourceAnimationHash": "2c6036bcf72b5eb68ddab7bae7f8d5fd3d3d70a81a36e11a9c934fc6b6782100",
+  "importReceiptHash": "4bf136545066d3bff901f78911736358573867e7eee84d8fd28475c26110e695",
+  "outputHash": "b7bd9fd43d80a6cb4e28e19bfbd91b5dc96ce80efa7078bcdad0142527d2aa07"
+}

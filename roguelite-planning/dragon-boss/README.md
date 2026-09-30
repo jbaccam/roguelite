@@ -189,7 +189,8 @@ reopens `Dragon.blend`, keys the clips and writes everything below. The model, t
 **Files**
 - `exports/game/Dragon_Studio.fbx`: for Studio's 3D Importer. It holds the rest mesh and the 90 deform bones, with no
   animation and no control bones.
-  - There is one mesh per section, named `Body`, `Head`, `Wings`, `Belly`, `Obsidian`, `LavaGlow` and `EyeGlow`.
+  - There is one mesh object per section, named `Dragon_<Section>` (`Dragon_Body`, `Dragon_Head`, …). A mesh must never
+    share a bone's name: Roblox's importer merges them, and `validate_exports.py` asserts there is no clash.
     LavaGlow and EyeGlow are separate, so they can be set to Neon.
   - Materials are `Dragon_<Section>`, on the 1024² delivery maps. The maps are embedded and also copied into
     `Dragon_Studio.fbm/`.

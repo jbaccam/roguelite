@@ -67,3 +67,4 @@ Plan: new self-contained `animate_game.py` (Blender -b) opens KingCrab.blend (mo
 - game pass: IK fixes (per-leg joint floor, rush turn steps, death floor/drop); all clips clean except Death ground check (iterating)
 - GAME PACKAGE DONE: animate_game.py writes exports/game/{AnimationData.json, BossGameData.json, GameChecks.json, KingCrab_Studio.fbx, KingCrab_Studio.fbm/}; clips saved as actions in KingCrab.blend; previews/GameClips.png + ClawCrush.mp4, Rush.mp4, BubbleBarrage.mp4. validate_exports.py extended and PASSED. README "Game package" section added. _work/ deleted.
 - Final: README restored after an encoding mishap (rewritten in full with the Game package section); KingCrab.blend verified: 12 actions (9 game clips + ReferencePose, RigTest_ROM, ClawAttack_Check), 5 packed textures. Report sent.
+- Studio FBX re-exported with mesh objects named KingCrab_<Section> (Body mesh collided with Body bone in Roblox); validator asserts no mesh/bone name clash; PASSED.

@@ -270,7 +270,9 @@ report['files']['studio_fbx'] = {'path': 'exports/game/Dragon_Studio.fbx', 'byte
 meshes = mesh_objs()
 arm = arm_obj()
 secs = sorted(o.name for o in meshes)
-check('studio fbx: one mesh per section, named after the section', secs == sorted(MAN['sections']), found=secs)
+check('studio fbx: one mesh per section, named Dragon_<Section>', secs == sorted(f'Dragon_{s}' for s in MAN['sections']), found=secs)
+_bn = {b.name for b in arm.data.bones} if arm else set()
+check('studio fbx: no mesh object name equals a bone name (Roblox merges them)', not (set(secs) & _bn), clashes=sorted(set(secs) & _bn))
 check('studio fbx: every mesh < 20k triangles', all(tris(o) < 20000 for o in meshes), triangles={o.name: tris(o) for o in meshes})
 names = {b.name for b in arm.data.bones} if arm else set()
 check('studio fbx: bone names match AnimationData.json', names == set(anim['bones']), count=len(names),
@@ -283,7 +285,7 @@ for o in meshes:
         img = next((n.image for n in m.node_tree.nodes if n.type == 'TEX_IMAGE' and n.image), None)
     mats[o.name] = (m.name if m else None, img.size[0] if img else 0, bool(img and img.has_data))
 check('studio fbx: materials Dragon_<Section> with 1024 delivery textures loading',
-      all(v[0] == f'Dragon_{k}' and v[1] == 1024 and v[2] for k, v in mats.items()), materials=mats)
+      all(v[0] == k and v[1] == 1024 and v[2] for k, v in mats.items()), materials=mats)
 check('studio fbx: no animation, no control bones', not bpy.data.actions and not any(n.startswith(('IK_', 'Pole_')) for n in names),
       actions=[a.name for a in bpy.data.actions])
 fbm = sorted(p.name for p in (GAME / 'Dragon_Studio.fbm').glob('*.png'))

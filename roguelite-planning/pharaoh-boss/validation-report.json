@@ -18,7 +18,7 @@
     },
     "studio_fbx": {
       "path": "exports\\game\\Pharaoh_Studio.fbx",
-      "sha256": "4EBC70E4FD384F70A8429AEFD836A5D823DAEB7B059C340145C67B80A334B24B"
+      "sha256": "AABE06EC1316D8EF351E8B0E7E460581AFFC36FEF13325FE687330199BF5EBC9"
     }
   },
   "checks": [
@@ -38,9 +38,9 @@
       "name": "fbx: every mesh < 20,000 triangles",
       "ok": true,
       "triangles": {
+        "Pharaoh_Head": 14088,
         "Pharaoh_Body": 14573,
         "Pharaoh_EyeGlow": 320,
-        "Pharaoh_Head": 14088,
         "Pharaoh_Bandages": 16424,
         "Pharaoh_Staff": 1984,
         "Pharaoh_Waist": 11158
@@ -72,6 +72,13 @@
       "name": "fbx: every vertex weighted, <=4 influences, normalised",
       "ok": true,
       "stats": {
+        "Pharaoh_Head": {
+          "vertices": 7336,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
         "Pharaoh_Body": {
           "vertices": 7346,
           "unweighted": 0,
@@ -81,13 +88,6 @@
         },
         "Pharaoh_EyeGlow": {
           "vertices": 168,
-          "unweighted": 0,
-          "over4": 0,
-          "not_normalised": 0,
-          "worst_sum_error": 0.0
-        },
-        "Pharaoh_Head": {
-          "vertices": 7336,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
@@ -120,9 +120,9 @@
       "name": "fbx: UVs present on every mesh",
       "ok": true,
       "uv_layers": {
+        "Pharaoh_Head": 1,
         "Pharaoh_Body": 1,
         "Pharaoh_EyeGlow": 1,
-        "Pharaoh_Head": 1,
         "Pharaoh_Bandages": 1,
         "Pharaoh_Staff": 1,
         "Pharaoh_Waist": 1
@@ -133,7 +133,7 @@
       "ok": true,
       "textures": [
         {
-          "name": "Pharaoh_EyeGlow_Rough",
+          "name": "Pharaoh_Head_Rough",
           "size": [
             2048,
             2048
@@ -141,7 +141,7 @@
           "has_pixels": true
         },
         {
-          "name": "Pharaoh_Head_Rough",
+          "name": "Pharaoh_EyeGlow_Rough",
           "size": [
             2048,
             2048
@@ -181,7 +181,7 @@
           "has_pixels": true
         },
         {
-          "name": "Pharaoh_Body_Color",
+          "name": "Pharaoh_Head_Color",
           "size": [
             2048,
             2048
@@ -189,7 +189,7 @@
           "has_pixels": true
         },
         {
-          "name": "Pharaoh_Head_Color",
+          "name": "Pharaoh_Body_Color",
           "size": [
             2048,
             2048
@@ -234,9 +234,9 @@
       "name": "fbx: faceted split normals preserved",
       "ok": true,
       "split_vertex_fraction": {
+        "Pharaoh_Head": 0.999,
         "Pharaoh_Body": 0.9434,
         "Pharaoh_EyeGlow": 1.0,
-        "Pharaoh_Head": 0.999,
         "Pharaoh_Bandages": 0.9486,
         "Pharaoh_Staff": 1.0,
         "Pharaoh_Waist": 0.9114
@@ -411,22 +411,6 @@
           "has_pixels": true
         },
         {
-          "name": "Pharaoh_EyeGlow_Rough",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_Head_Color",
-          "size": [
-            2048,
-            2048
-          ],
-          "has_pixels": true
-        },
-        {
           "name": "Pharaoh_Head_Rough",
           "size": [
             2048,
@@ -475,6 +459,22 @@
           "has_pixels": true
         },
         {
+          "name": "Pharaoh_EyeGlow_Rough",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Head_Color",
+          "size": [
+            2048,
+            2048
+          ],
+          "has_pixels": true
+        },
+        {
           "name": "Pharaoh_Staff_Color",
           "size": [
             2048,
@@ -499,49 +499,54 @@
       "expected_top": 12.721
     },
     {
-      "name": "studio fbx: one mesh per section, named after it",
+      "name": "studio fbx: one mesh per section, named Pharaoh_<Section>",
       "ok": true,
       "found": [
-        "Bandages",
-        "Body",
-        "EyeGlow",
-        "Head",
-        "Staff",
-        "Waist"
+        "Pharaoh_Bandages",
+        "Pharaoh_Body",
+        "Pharaoh_EyeGlow",
+        "Pharaoh_Head",
+        "Pharaoh_Staff",
+        "Pharaoh_Waist"
       ]
+    },
+    {
+      "name": "studio fbx: no mesh object name equals a bone name (Roblox merges them)",
+      "ok": true,
+      "collisions": []
     },
     {
       "name": "studio fbx: every mesh < 20,000 triangles",
       "ok": true,
       "triangles": {
-        "EyeGlow": 320,
-        "Body": 14573,
-        "Head": 14088,
-        "Bandages": 16424,
-        "Staff": 1984,
-        "Waist": 11158
+        "Pharaoh_Body": 14573,
+        "Pharaoh_Bandages": 16424,
+        "Pharaoh_EyeGlow": 320,
+        "Pharaoh_Head": 14088,
+        "Pharaoh_Staff": 1984,
+        "Pharaoh_Waist": 11158
       }
     },
     {
       "name": "studio fbx: materials Pharaoh_<Section>",
       "ok": true,
       "materials": {
-        "EyeGlow": [
-          "Pharaoh_EyeGlow"
-        ],
-        "Body": [
+        "Pharaoh_Body": [
           "Pharaoh_Body"
         ],
-        "Head": [
-          "Pharaoh_Head"
-        ],
-        "Bandages": [
+        "Pharaoh_Bandages": [
           "Pharaoh_Bandages"
         ],
-        "Staff": [
+        "Pharaoh_EyeGlow": [
+          "Pharaoh_EyeGlow"
+        ],
+        "Pharaoh_Head": [
+          "Pharaoh_Head"
+        ],
+        "Pharaoh_Staff": [
           "Pharaoh_Staff"
         ],
-        "Waist": [
+        "Pharaoh_Waist": [
           "Pharaoh_Waist"
         ]
       }
@@ -559,23 +564,7 @@
           "has_pixels": true
         },
         {
-          "name": "Pharaoh_Waist_Color_1024.png",
-          "size": [
-            1024,
-            1024
-          ],
-          "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_EyeGlow_Color_1024.png",
-          "size": [
-            1024,
-            1024
-          ],
-          "has_pixels": true
-        },
-        {
-          "name": "Pharaoh_Head_Color_1024.png",
+          "name": "Pharaoh_Body_Color_1024.png",
           "size": [
             1024,
             1024
@@ -591,7 +580,23 @@
           "has_pixels": true
         },
         {
-          "name": "Pharaoh_Body_Color_1024.png",
+          "name": "Pharaoh_Head_Color_1024.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_EyeGlow_Color_1024.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "has_pixels": true
+        },
+        {
+          "name": "Pharaoh_Waist_Color_1024.png",
           "size": [
             1024,
             1024
@@ -628,42 +633,42 @@
       "name": "studio fbx: weights valid",
       "ok": true,
       "stats": {
-        "EyeGlow": {
-          "vertices": 168,
-          "unweighted": 0,
-          "over4": 0,
-          "not_normalised": 0,
-          "worst_sum_error": 0.0
-        },
-        "Body": {
+        "Pharaoh_Body": {
           "vertices": 7346,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
           "worst_sum_error": 0.0
         },
-        "Head": {
-          "vertices": 7336,
-          "unweighted": 0,
-          "over4": 0,
-          "not_normalised": 0,
-          "worst_sum_error": 0.0
-        },
-        "Bandages": {
+        "Pharaoh_Bandages": {
           "vertices": 8264,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
           "worst_sum_error": 0.0
         },
-        "Staff": {
+        "Pharaoh_EyeGlow": {
+          "vertices": 168,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Pharaoh_Head": {
+          "vertices": 7336,
+          "unweighted": 0,
+          "over4": 0,
+          "not_normalised": 0,
+          "worst_sum_error": 0.0
+        },
+        "Pharaoh_Staff": {
           "vertices": 1028,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
           "worst_sum_error": 0.0
         },
-        "Waist": {
+        "Pharaoh_Waist": {
           "vertices": 5643,
           "unweighted": 0,
           "over4": 0,
@@ -768,7 +773,7 @@
     }
   ],
   "summary": {
-    "passed": 38,
+    "passed": 39,
     "failed": 0,
     "blender": "5.2.1 LTS"
   }

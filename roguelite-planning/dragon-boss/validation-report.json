@@ -37,8 +37,8 @@
     },
     "studio_fbx": {
       "path": "exports/game/Dragon_Studio.fbx",
-      "bytes": 7701932,
-      "sha256": "FEC854FA342778CB41578E7E4864712A36C563E355CAFD2C906E92AE27C94BD3"
+      "bytes": 7701980,
+      "sha256": "5FF7234683163DA48B3EFDCEB822D2A0A998AAAB78F356F510083B09A075D5EA"
     }
   },
   "checks": [
@@ -70,8 +70,8 @@
       "triangles": {
         "Dragon_Head": 8012,
         "Dragon_Belly": 6988,
-        "Dragon_Body": 18370,
         "Dragon_EyeGlow": 40,
+        "Dragon_Body": 18370,
         "Dragon_LavaGlow": 936,
         "Dragon_Obsidian": 5272,
         "Dragon_Wings": 7636
@@ -113,15 +113,15 @@
           "not_normalised": 0,
           "worst_sum_error": 0.0
         },
-        "Dragon_Body": {
-          "vertices": 9235,
+        "Dragon_EyeGlow": {
+          "vertices": 24,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
           "worst_sum_error": 0.0
         },
-        "Dragon_EyeGlow": {
-          "vertices": 24,
+        "Dragon_Body": {
+          "vertices": 9235,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
@@ -156,8 +156,8 @@
       "uv_layers": {
         "Dragon_Head": 1,
         "Dragon_Belly": 1,
-        "Dragon_Body": 1,
         "Dragon_EyeGlow": 1,
+        "Dragon_Body": 1,
         "Dragon_LavaGlow": 1,
         "Dragon_Obsidian": 1,
         "Dragon_Wings": 1
@@ -169,8 +169,8 @@
       "textures": {
         "Dragon_Head": 2048,
         "Dragon_Belly": 2048,
-        "Dragon_Body": 2048,
         "Dragon_EyeGlow": 2048,
+        "Dragon_Body": 2048,
         "Dragon_LavaGlow": 2048,
         "Dragon_Obsidian": 2048,
         "Dragon_Wings": 2048
@@ -182,8 +182,8 @@
       "split_vertex_fraction": {
         "Dragon_Head": 1.0,
         "Dragon_Belly": 0.998,
-        "Dragon_Body": 0.992,
         "Dragon_EyeGlow": 1.0,
+        "Dragon_Body": 0.992,
         "Dragon_LavaGlow": 1.0,
         "Dragon_Obsidian": 1.0,
         "Dragon_Wings": 0.911
@@ -504,29 +504,34 @@
       }
     },
     {
-      "name": "studio fbx: one mesh per section, named after the section",
+      "name": "studio fbx: one mesh per section, named Dragon_<Section>",
       "ok": true,
       "found": [
-        "Belly",
-        "Body",
-        "EyeGlow",
-        "Head",
-        "LavaGlow",
-        "Obsidian",
-        "Wings"
+        "Dragon_Belly",
+        "Dragon_Body",
+        "Dragon_EyeGlow",
+        "Dragon_Head",
+        "Dragon_LavaGlow",
+        "Dragon_Obsidian",
+        "Dragon_Wings"
       ]
+    },
+    {
+      "name": "studio fbx: no mesh object name equals a bone name (Roblox merges them)",
+      "ok": true,
+      "clashes": []
     },
     {
       "name": "studio fbx: every mesh < 20k triangles",
       "ok": true,
       "triangles": {
-        "Body": 18370,
-        "Head": 8012,
-        "Belly": 6988,
-        "EyeGlow": 40,
-        "LavaGlow": 936,
-        "Obsidian": 5272,
-        "Wings": 7636
+        "Dragon_Body": 18370,
+        "Dragon_Belly": 6988,
+        "Dragon_Head": 8012,
+        "Dragon_EyeGlow": 40,
+        "Dragon_LavaGlow": 936,
+        "Dragon_Obsidian": 5272,
+        "Dragon_Wings": 7636
       }
     },
     {
@@ -540,37 +545,37 @@
       "name": "studio fbx: materials Dragon_<Section> with 1024 delivery textures loading",
       "ok": true,
       "materials": {
-        "Body": [
+        "Dragon_Body": [
           "Dragon_Body",
           1024,
           true
         ],
-        "Head": [
-          "Dragon_Head",
-          1024,
-          true
-        ],
-        "Belly": [
+        "Dragon_Belly": [
           "Dragon_Belly",
           1024,
           true
         ],
-        "EyeGlow": [
+        "Dragon_Head": [
+          "Dragon_Head",
+          1024,
+          true
+        ],
+        "Dragon_EyeGlow": [
           "Dragon_EyeGlow",
           1024,
           true
         ],
-        "LavaGlow": [
+        "Dragon_LavaGlow": [
           "Dragon_LavaGlow",
           1024,
           true
         ],
-        "Obsidian": [
+        "Dragon_Obsidian": [
           "Dragon_Obsidian",
           1024,
           true
         ],
-        "Wings": [
+        "Dragon_Wings": [
           "Dragon_Wings",
           1024,
           true
@@ -670,7 +675,7 @@
     }
   ],
   "summary": {
-    "passed": 46,
-    "total": 46
+    "passed": 47,
+    "total": 47
   }
 }

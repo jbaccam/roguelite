@@ -258,9 +258,10 @@ and writes these files to `exports/game/`:
 - `BossGameData.json` holds attack timings, hit points and strides.
 - `GameChecks.json` holds foot drift, IK error and ground clearance.
 - `KingCrab_Studio.fbx` is the rest mesh plus the deform armature, with no
-  animation. It has 5 meshes named `Body`, `Eyes`, `ClawR`, `ClawL` and
-  `Legs`, and materials `KingCrab_<Section>` on the 1024² maps (embedded and
-  copied to `KingCrab_Studio.fbm/`).
+  animation. It has 5 mesh objects named `KingCrab_<Section>` (never a bone
+  name: Roblox's importer merges a mesh and a bone that share a name), and
+  materials with the same names on the 1024² maps (embedded and copied to
+  `KingCrab_Studio.fbm/`).
 
 | Clip | Length | Loop | What it does |
 | --- | --- | --- | --- |

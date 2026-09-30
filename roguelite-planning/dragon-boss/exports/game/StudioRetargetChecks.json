@@ -1,0 +1,10 @@
+{
+  "id": "dragon",
+  "boneCount": 90,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 3.311098018876635e-06,
+  "passed": true,
+  "sourceAnimationHash": "e353bd44e118b68123b1fe01f275d35e9d2a38479d69b7ce74b8f61ed2dad88a",
+  "importReceiptHash": "08373e1cb00ead45ee09d66b07fb75a8ed3ed46ef3ad19c8fb7b115c166957d8",
+  "outputHash": "500d01b230793cbecbe66eb325c4258390ba2dd9b88fef7c21170efae10dd67b"
+}

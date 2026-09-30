@@ -258,12 +258,16 @@ report['files']['studio_fbx'] = dict(path=str(studio_fbx.relative_to(HERE)), sha
 ms = mesh_objs()
 arm = arm_obj()
 secs = sorted(o.name for o in ms)
-check('studio fbx: one mesh per section, named after it',
-      secs == sorted(['Bandages', 'Body', 'EyeGlow', 'Head', 'Staff', 'Waist']), found=secs)
+check('studio fbx: one mesh per section, named Pharaoh_<Section>',
+      secs == sorted('Pharaoh_' + s for s in ['Bandages', 'Body', 'EyeGlow', 'Head', 'Staff', 'Waist']),
+      found=secs)
+bone_names = set(bb.name for bb in arm.data.bones) if arm else set()
+check('studio fbx: no mesh object name equals a bone name (Roblox merges them)',
+      not (set(secs) & bone_names), collisions=sorted(set(secs) & bone_names))
 check('studio fbx: every mesh < 20,000 triangles', all(tris(o) < 20000 for o in ms),
       triangles={o.name: tris(o) for o in ms})
 check('studio fbx: materials Pharaoh_<Section>', all(
-    [s.material.name.split('.')[0] for s in o.material_slots] == [f'Pharaoh_{o.name}'] for o in ms),
+    [s.material.name.split('.')[0] for s in o.material_slots] == [o.name.split('.')[0]] for o in ms),
       materials={o.name: [s.material.name for s in o.material_slots] for o in ms})
 tx = texture_status(ms)
 check('studio fbx: 1024 base-colour maps load', len(tx) >= 6 and all(

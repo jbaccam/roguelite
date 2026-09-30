@@ -1,0 +1,10 @@
+{
+  "id": "king-crab",
+  "boneCount": 52,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 1.1711799583480342e-06,
+  "passed": true,
+  "sourceAnimationHash": "79fc5876c9c9b5fbfcafc661b592535c9e9bbd8215641ba753620a6b3bc93309",
+  "importReceiptHash": "5dccfada0f13ae42b3f6c66973447a7a9fb8ba363ca2cbe8e301cd4b38f4b9d3",
+  "outputHash": "88d312cf2e38f8e30a9d944feeef08472b3051a2df4250416c17ed73ca4cd676"
+}

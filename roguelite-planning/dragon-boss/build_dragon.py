@@ -1770,8 +1770,9 @@ def boss_game_data(rig, sk, man, sections):
 
 
 def studio_fbx(rig, sections):
-    """exports/game/Dragon_Studio.fbx: rest mesh + deform armature, one mesh per section
-    named after the section, materials Dragon_<Section> on the 1024 delivery maps."""
+    """exports/game/Dragon_Studio.fbx: rest mesh + deform armature, one mesh object per
+    section named Dragon_<Section> (never a bare section name: Roblox's importer merges a
+    mesh with a same-named bone, e.g. Head), materials Dragon_<Section> on the 1024 maps."""
     GAME_DIR.mkdir(parents=True, exist_ok=True)
     fbm = GAME_DIR / f'{NAME}_Studio.fbm'
     fbm.mkdir(exist_ok=True)
@@ -1789,7 +1790,7 @@ def studio_fbx(rig, sections):
         tex = [n for n in m.node_tree.nodes if n.type == 'TEX_IMAGE'][0]
         swapped.append((ob, ob.name, tex, tex.image))
         tex.image = img
-        ob.name = sec
+        ob.name = f'{NAME}_{sec}'
         shutil.copy2(src, fbm / src.name)
     for o in bpy.context.view_layer.objects:
         o.select_set(False)
@@ -1959,6 +1960,12 @@ if __name__ == '__main__':
         previews_main()
     elif STAGE == 'game':
         game_main()
+    elif STAGE == 'studio':
+        bpy.ops.wm.open_mainfile(filepath=str(HERE / f'{NAME}.blend'))
+        _rig = bpy.data.objects[f'{NAME}_Rig']
+        _rig.animation_data_create()
+        log('studio fbx', studio_fbx(_rig, {s: bpy.data.objects[f'{NAME}_{s}'] for s in SECTIONS
+                                            if f'{NAME}_{s}' in bpy.data.objects}))
     elif STAGE == 'attack':
         attack_update_main([a for a in os.environ.get('DRAGON_ATTACK', 'TailWhip').split(',') if a])
     else:

@@ -376,7 +376,7 @@ This follows `plans/BOSS_GAME_PACKAGE_SPEC.md`. The model, textures and rig are 
 **`exports/game/Pharaoh_Studio.fbx`**
 
 - Rest mesh and armature: deform bones only, no leaf bones, no animation.
-- Six meshes, each named after its section (Body, Bandages, Head, Waist, Staff, EyeGlow).
+- Six meshes, each named `Pharaoh_<Section>` so no mesh shares a name with a bone (Roblox merges a same-named mesh and bone).
   - The materials are `Pharaoh_<Section>` on the 1024² base-colour maps.
   - The textures are embedded and also copied to `Pharaoh_Studio.fbm/`.
   - EyeGlow stays a separate mesh so Studio can set it to Neon.
@@ -402,7 +402,7 @@ These results are recorded in `exports/game/GameMotionChecks.json`.
 
 ### Validation
 
-`validate_exports.py` passes 38/38. It re-imports the Studio FBX and checks the section meshes, triangle counts, materials, 1024 maps, the `.fbm` copy, bones against `AnimationData.json`, the absence of animation, and the weights. It then checks every clip's frame count, NaNs, bone coverage and loop closure, plus the attack timings and points in `BossGameData.json`.
+`validate_exports.py` passes 39/39. It re-imports the Studio FBX and checks the section meshes, triangle counts, materials, 1024 maps, the `.fbm` copy, bones against `AnimationData.json`, the absence of animation, and the weights. It then checks every clip's frame count, NaNs, bone coverage and loop closure, plus the attack timings and points in `BossGameData.json`.
 
 ### Not verified
 

@@ -190,3 +190,4 @@ The generator itself is always left runnable.
   - `validate_exports.py` passes 38/38.
   - The motion checks are in `exports/game/GameMotionChecks.json`.
   - The README section is added and `_work/` is cleaned.
+- 11:44 Studio FBX re-exported with mesh objects named Pharaoh_<Section> (bone-name collision fix); validator asserts no mesh/bone name clash; 39/39.

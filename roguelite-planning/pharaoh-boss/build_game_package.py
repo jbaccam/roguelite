@@ -41,6 +41,55 @@ def log(*a):
     print(f'[{time.time() - T0:7.1f}s]', *a, flush=True)
 
 
+def export_studio_fbx():
+    """Studio import FBX. Mesh OBJECTS keep the name Pharaoh_<Section>: Roblox's
+    importer merges a mesh and a bone that share a name (mesh 'Head' vs bone
+    'Head' broke the skinning)."""
+    global scene, arm
+    bpy.ops.wm.open_mainfile(filepath=str(HERE / 'Pharaoh.blend'))
+    scene = bpy.context.scene
+    arm = bpy.data.objects[NAME + '_Rig']
+    arm.animation_data.action = None
+    for pb in arm.pose.bones:
+        pb.rotation_quaternion = Quaternion()
+        pb.location = (0, 0, 0)
+    fbm = GAME / f'{NAME}_Studio.fbm'
+    fbm.mkdir(exist_ok=True)
+    meshes = []
+    for o in [o for o in bpy.data.objects if o.type == 'MESH' and o.name.startswith(NAME + '_')]:
+        sec = o.name.replace(NAME + '_', '')
+        png = HERE / 'textures' / f'{NAME}_{sec}_Color_1024.png'
+        shutil.copy2(png, fbm / png.name)
+        im = bpy.data.images.load(str(fbm / png.name))
+        m = bpy.data.materials.new(f'{NAME}_{sec}')
+        m.use_nodes = True
+        bs = m.node_tree.nodes.get('Principled BSDF')
+        tx = m.node_tree.nodes.new('ShaderNodeTexImage')
+        tx.image = im
+        m.node_tree.links.new(tx.outputs['Color'], bs.inputs['Base Color'])
+        bs.inputs['Roughness'].default_value = 0.85
+        if sec == 'EyeGlow':
+            m.node_tree.links.new(tx.outputs['Color'], bs.inputs['Emission Color'])
+            bs.inputs['Emission Strength'].default_value = 5.0
+        o.data.materials.clear()
+        o.data.materials.append(m)
+        meshes.append(o)
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in [arm] + meshes:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.export_scene.fbx(filepath=str(GAME / f'{NAME}_Studio.fbx'), use_selection=True,
+                             object_types={'ARMATURE', 'MESH'}, axis_forward='-Z', axis_up='Y',
+                             add_leaf_bones=False, use_armature_deform_only=True, bake_anim=False,
+                             path_mode='COPY', embed_textures=True, mesh_smooth_type='OFF',
+                             use_mesh_modifiers=False)
+    log('Studio FBX exported (Pharaoh.blend left unchanged on disk)')
+
+
+if os.environ.get('STUDIO_ONLY') == '1':          # re-export the Studio FBX only
+    export_studio_fbx()
+    raise SystemExit(0)
+
 bpy.ops.wm.open_mainfile(filepath=str(HERE / 'Pharaoh.blend'))
 scene = bpy.context.scene
 scene.render.fps = FPS
@@ -1115,45 +1164,5 @@ for clip in ('CursedBolts', 'TombEruption'):
     bpy.ops.render.render(animation=True)
     log('video', clip)
 
-# =================================================================== STUDIO FBX
-bpy.ops.wm.open_mainfile(filepath=str(HERE / 'Pharaoh.blend'))
-scene = bpy.context.scene
-arm = bpy.data.objects[NAME + '_Rig']
-arm.animation_data.action = None
-for pb in arm.pose.bones:
-    pb.rotation_quaternion = Quaternion()
-    pb.location = (0, 0, 0)
-fbm = GAME / f'{NAME}_Studio.fbm'
-fbm.mkdir(exist_ok=True)
-meshes = []
-for o in [o for o in bpy.data.objects if o.type == 'MESH' and o.name.startswith(NAME + '_')]:
-    sec = o.name.replace(NAME + '_', '')
-    png = HERE / 'textures' / f'{NAME}_{sec}_Color_1024.png'
-    shutil.copy2(png, fbm / png.name)
-    im = bpy.data.images.load(str(fbm / png.name))
-    m = bpy.data.materials.new(f'{NAME}_{sec}')
-    m.use_nodes = True
-    bs = m.node_tree.nodes.get('Principled BSDF')
-    tx = m.node_tree.nodes.new('ShaderNodeTexImage')
-    tx.image = im
-    m.node_tree.links.new(tx.outputs['Color'], bs.inputs['Base Color'])
-    bs.inputs['Roughness'].default_value = 0.85
-    if sec == 'EyeGlow':
-        m.node_tree.links.new(tx.outputs['Color'], bs.inputs['Emission Color'])
-        bs.inputs['Emission Strength'].default_value = 5.0
-    o.data.materials.clear()
-    o.data.materials.append(m)
-    o.name = sec
-    o.data.name = sec
-    meshes.append(o)
-bpy.ops.object.select_all(action='DESELECT')
-for o in [arm] + meshes:
-    o.select_set(True)
-bpy.context.view_layer.objects.active = arm
-bpy.ops.export_scene.fbx(filepath=str(GAME / f'{NAME}_Studio.fbx'), use_selection=True,
-                         object_types={'ARMATURE', 'MESH'}, axis_forward='-Z', axis_up='Y',
-                         add_leaf_bones=False, use_armature_deform_only=True, bake_anim=False,
-                         path_mode='COPY', embed_textures=True, mesh_smooth_type='OFF',
-                         use_mesh_modifiers=False)
-log('Studio FBX exported (Pharaoh.blend left unchanged on disk)')
+export_studio_fbx()
 log('GAME_PACKAGE_DONE')

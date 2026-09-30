@@ -1017,8 +1017,9 @@ rig.animation_data.action = None
 rig.data.pose_position = 'REST'
 names = {}
 for sec, ob in SECS.items():
+    # Objects keep their KingCrab_<Section> names: Roblox's importer merges a
+    # mesh and a bone that share a name, and a section is called Body.
     names[sec] = ob.name
-    ob.name = sec                     # Studio MeshParts are named after the section
 for ob in bpy.context.view_layer.objects:
     ob.select_set(False)
 rig.select_set(True)

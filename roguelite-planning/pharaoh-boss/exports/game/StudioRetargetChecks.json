@@ -1,0 +1,10 @@
+{
+  "id": "pharaoh",
+  "boneCount": 62,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 8.688876462770168e-07,
+  "passed": true,
+  "sourceAnimationHash": "2f3cd0797fc1d9f62a140205fc4ce6206a8b1566238c354808e519a178557bab",
+  "importReceiptHash": "d828ffcbeb9213c2fd6217858fbff293c21cdfc878a99a3cd52b5bce49558871",
+  "outputHash": "c8e077157262ab07457eedf6700f9c5ef7a57f7858ca8543cbbe37902932b920"
+}

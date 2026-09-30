@@ -169,9 +169,12 @@ def write_animations(id, studio):
             clip_folder = target / clip; clip_folder.mkdir(exist_ok=True)
             clip_meta = {k: v for k, v in clip_data.items() if k != 'frames'}
             pieces = ['local clip=game:GetService("HttpService"):JSONDecode([=[' + json.dumps(clip_meta, separators=(',', ':')) + ']=])', 'clip.frames={}']
-            for chunk_index, begin in enumerate(range(0, len(clip_data['frames']), 20), 1):
-                chunk = 'return game:GetService("HttpService"):JSONDecode([=[' + json.dumps(clip_data['frames'][begin:begin + 20], separators=(',', ':'), allow_nan=False) + ']=])\n'
-                assert len(chunk) < LIMIT, f'{id}/{clip}: a 20-frame chunk is {len(chunk)} characters'
+            # Frames per chunk scale with the bone count (the 90-bone Dragon needs smaller chunks).
+            frame_chars = max(len(json.dumps(f, separators=(',', ':'))) for f in clip_data['frames']) + 1
+            per = max(1, min(20, (LIMIT - 200) // frame_chars))
+            for chunk_index, begin in enumerate(range(0, len(clip_data['frames']), per), 1):
+                chunk = 'return game:GetService("HttpService"):JSONDecode([=[' + json.dumps(clip_data['frames'][begin:begin + per], separators=(',', ':'), allow_nan=False) + ']=])\n'
+                assert len(chunk) < LIMIT, f'{id}/{clip}: a {per}-frame chunk is {len(chunk)} characters'
                 chunk_name = 'Frames' + str(chunk_index).zfill(2)
                 (clip_folder / (chunk_name + '.luau')).write_text(chunk, encoding='utf-8'); largest = max(largest, len(chunk))
                 pieces.append('for _,frame in require(script:WaitForChild("' + chunk_name + '")) do table.insert(clip.frames,frame) end')
