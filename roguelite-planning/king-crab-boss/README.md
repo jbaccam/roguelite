@@ -2,8 +2,9 @@
 
 A Blender rebuild of the supplied king-crab reference: textured, skinned to a
 52-bone animation-ready skeleton, and exported as FBX and GLB. Everything is
-authored at final size (1 Blender unit = 1 Roblox stud). It is a model, rig
-and test clips only. Nothing is installed in Studio and no gameplay is wired.
+authored at final size (1 Blender unit = 1 Roblox stud). The game clips,
+timing data and the Studio import FBX are described under
+[Game package](#game-package). Nothing is installed in Studio.
 
 The claws deliberately differ from the reference. On the user's instruction,
 both claws were re-oriented from the reference's upright, shield-like carry
@@ -15,16 +16,18 @@ about 45° off vertical. The rest of the crab follows the reference.
 | Path | What |
 | --- | --- |
 | `build_king_crab.py` | The whole generator (Blender 5.2, headless). Self-contained; reads only `source/camera.json` and the reference. |
+| `animate_game.py` | Authors the game clips and writes the game package (`exports/game/`); see **Game package**. |
 | `solve_camera.py` | Solves the reference camera from landmark pixels and writes `source/camera.json` (system python + numpy). |
 | `make_reference_mask.py` | Builds `source/reference_mask.png` (system python + OpenCV). |
 | `compare_reference.py` | Side-by-side, overlay, silhouette IoU, region IoUs, colour probes and crops (system python). |
 | `calibrate.py` | Folds the colour-probe ratios into the generator's `CALIBRATION` table. |
 | `label_sheets.py` | Adds labels to the contact sheets. |
-| `validate_exports.py` | Re-imports the FBX and GLB exports fresh and checks them; writes `validation-report.json`. |
-| `KingCrab.blend` | Rig, 5 skinned sections, 3 actions, packed textures, and a `REVIEW_ONLY` collection (camera, lights, ground) that is excluded from export. |
+| `validate_exports.py` | Re-imports the FBX and GLB exports and the game package fresh and checks them; writes `validation-report.json`. |
+| `KingCrab.blend` | Rig, 5 skinned sections, packed textures, the actions below, and a `REVIEW_ONLY` collection (camera, lights, ground) that is excluded from export. |
 | `exports/fbx/KingCrab.fbx` | Rest mesh, armature and embedded 1024 textures. |
 | `exports/fbx/KingCrab_ReferencePose.fbx`, `KingCrab_RigTest_ROM.fbx` | Armature-only clips. |
 | `exports/glb/KingCrab.glb` | Meshes, skin, textures, plus the actions `ReferencePose`, `RigTest_ROM` and `ClawAttack_Check`. |
+| `exports/game/` | The game package: `AnimationData.json`, `BossGameData.json`, `GameChecks.json`, `KingCrab_Studio.fbx` and `KingCrab_Studio.fbm/`. |
 | `textures/KingCrab_<Section>_BaseColor_2048.png` | Master base-colour maps, one per section. |
 | `textures/KingCrab_<Section>_BaseColor_1024.png` | Roblox delivery maps (Roblox caps uploads at 1024). |
 | `source/` | The unchanged reference, `REFERENCE_NOTES.md` (inventory, colours, landmarks), `camera.json`, the mask and its review image. |
@@ -38,6 +41,7 @@ Previews:
 - `Turnaround.png`: front, three-quarter, side, back and top, rest pose.
 - `Face_Closeup.png`, `Rig_Bones.png`, `RigTest_ROM.png`, `RigTest_Joints.png`.
 - `AttackCheck_Claws.png`: rest guard, windup, impact, pincer open and snapped shut, from the front, three-quarter and a crusher close-up.
+- `GameClips.png`, `ClawCrush.mp4`, `Rush.mp4`, `BubbleBarrage.mp4`: game clips (see below).
 
 ## Rebuilding
 
@@ -45,6 +49,7 @@ Previews:
 python solve_camera.py                 # only if landmarks change -> source/camera.json
 python make_reference_mask.py          # only if the mask changes
 blender -b --factory-startup --python build_king_crab.py        # ~2.5 min on the RTX 2070
+blender -b --factory-startup --python animate_game.py           # game clips + package, ~30 s
 python label_sheets.py
 python compare_reference.py previews/Reference_Match.png _work/final_mask.png
 blender -b --factory-startup --python validate_exports.py
@@ -54,6 +59,9 @@ The build has three modes:
 - `KC_MODE=probe`: renders the unbaked posed rig, its mask, an ID pass and a clay pass in about 10 s.
 - `KC_STOP_AFTER_MATCH=1`: bakes and stops after `Reference_Match`.
 - `KC_ATTACK_ONLY=1`: bakes and renders the attack check.
+
+`build_king_crab.py` rewrites `KingCrab.blend` without the game clips, so
+re-run `animate_game.py` after it.
 
 Colour loop: `python calibrate.py <compare-report.json>`, then rebuild.
 `_work/` holds intermediates and is deleted after delivery. Re-running
@@ -218,8 +226,10 @@ Actions:
   all 8 legs, both claws swinging with their hands pitching and opening, eye
   stalks and eyes looking around, brows, and the mouth plates chewing.
 - `ClawAttack_Check`: guard, windup, impact, open and shut.
+- The nine game clips (see **Game package**).
 
-There are no IK or control bones; the rig is FK only.
+There are no IK or control bones; the rig is FK only. The game clips were
+solved with scripted IK and baked to the deform bones.
 
 | Section | Triangles | Vertices | Material / map |
 | --- | --- | --- | --- |
@@ -232,6 +242,96 @@ There are no IK or control bones; the rig is FK only.
 
 The total is below the 25k–60k the brief suggested. That is deliberate: the
 look is broad low-poly facets, and more triangles would only soften them.
+
+## Game package
+
+Built by `animate_game.py`, per `../plans/BOSS_GAME_PACKAGE_SPEC.md`, after
+the build:
+`blender -b --factory-startup --python animate_game.py`, then
+`python label_sheets.py` and `validate_exports.py`. It opens `KingCrab.blend`
+and leaves the model, textures and rig unchanged. It adds the clips as actions
+and writes these files to `exports/game/`:
+
+- `AnimationData.json` uses the regular-mob schema, id `king-crab`, 24 fps,
+  52 bones: parent-relative rest, and `matrix_basis` per frame through the
+  Y/Z-swap `cf()`.
+- `BossGameData.json` holds attack timings, hit points and strides.
+- `GameChecks.json` holds foot drift, IK error and ground clearance.
+- `KingCrab_Studio.fbx` is the rest mesh plus the deform armature, with no
+  animation. It has 5 meshes named `Body`, `Eyes`, `ClawR`, `ClawL` and
+  `Legs`, and materials `KingCrab_<Section>` on the 1024² maps (embedded and
+  copied to `KingCrab_Studio.fbm/`).
+
+| Clip | Length | Loop | What it does |
+| --- | --- | --- | --- |
+| Idle | 3.0 s | yes | Two slow breaths and a weight shift; claws, mouth plates and eyes drift a beat behind the body |
+| Walk | 1.5 s | yes | Heavy forward scuttle; two alternating leg groups (L1 R2 L3 R4 / R1 L2 R3 L4), duty 0.55; body dips each step. Stride 2.73 studs per cycle, speed 1.82 studs/s |
+| Hit | 0.46 s | no | Shoved back and up, claws flinch, brows drop; returns exactly to the Idle start |
+| Death | 2.25 s | no | Staggers, legs splay, the body collapses onto the sand, claws lie flat, eye stalks droop, small settle |
+| ClawCrush | 2.25 s | no | Crusher rises high and back (body leans back), then drives down a wide arc and lands flat in front; the body lunges forward and drops at impact; the front-right leg steps back out of the way |
+| RushStart | 0.875 s | no | Braces low, claws up, turns 90° with four quick steps so his right side leads; ends on RushLoop's first frame |
+| RushLoop | 0.5 s | yes | Fast low sideways scuttle along his local −X (his right); alternating groups. Stride 2.2 studs per cycle, speed 4.4 studs/s |
+| RushEnd | 0.875 s | no | Skids, then turns back with four steps and returns to the Idle start; starts on RushLoop's first frame |
+| BubbleBarrage | 2.5 s | no | Mouth plates swing wide open, the body pumps three times while spraying, then the plates close |
+
+Timings (seconds from clip start):
+
+| Attack | warnStart | impact | activeEnd | recoveryEnd |
+| --- | --- | --- | --- | --- |
+| ClawCrush | 0.25 | 1.208 (frame 29) | 1.25 | 1.95 |
+| BubbleBarrage | 0.20 | 0.60 (spray starts) | 2.00 | 2.35 |
+
+Points and directions:
+
+- **ClawCrush `ClawImpact`**: the palm centre on `Claw_R_Propodus` at offset
+  (0, 2.6, 0). At impact it is at (−3.2, −10.0, 1.87) in root space, Studio
+  (3.2, 1.87, −10.0). The ground point directly below it is also given.
+- **BubbleBarrage `BubbleOrigin`**: on `Body`, at the mouth, root (0, −4.94,
+  5.45). Direction at impact (0, −0.98, 0.20), Studio (0, 0.20, −0.98), 10° up
+  from the body's forward. The pump times are included.
+- **Rush**: `rushStrideLength` 2.2 and `rushSpeed` 4.4. After RushStart the
+  travel direction is the model's forward (Blender −Y, Studio −Z), with the
+  crab turned sideways.
+- **Whole boss**: `rootHeight` 0 (the Root bone is on the ground under the
+  body centre), height 10.08, footprint radius 11.5.
+
+How the motion is made:
+- Every leg is solved every frame by damped least squares on an analytic FK
+  of its 4-bone chain, warm-started from the previous frame.
+- The IK keeps each leg's knee and ankle above a per-leg floor so the shells
+  stay out of the sand.
+- Locomotion is in place: planted feet move backward at the travel speed, so
+  with the model moving at `nominalSpeed` or `rushSpeed` they stay put.
+- The crusher's arc is IK on the hand's position and orientation, so the palm
+  lands flat. Its height was measured and corrected so the lowest point
+  touches at z ≈ 0.
+- Looping clips are solved over primed cycles, so they close; the last frame
+  equals the first.
+
+Checks (`GameChecks.json`, `validate_exports.py` passes):
+- Planted-foot drift: 0.0000 studs on Idle, Walk and Hit; 0.0001 on RushLoop;
+  0.017 on BubbleBarrage; 0.022 on RushEnd; 0.051 on ClawCrush (the pinned
+  legs are at full stretch in the lunge).
+- Ground: Death's lowest point is −0.044 at frame 36 (limit −0.05), and
+  ClawCrush's is +0.006.
+- In ClawCrush, the crusher's forearm, hand and finger never overlap the
+  body, eyes or legs at any frame (BVH).
+- `KingCrab_Studio.fbx` reimports with 5 meshes under 20k triangles, the
+  right materials with 1024 maps, 52 bones whose names and parents equal
+  `AnimationData.json`, and no animation.
+- Every clip has duration×24+1 frames and no NaNs. Loops close exactly;
+  attacks, Hit and Death start on the Idle start pose, and the attacks and Hit
+  also end on it; the rush chain joins RushLoop exactly.
+
+Previews:
+- `previews/GameClips.png`: 6 frames of each clip, Workbench, front ¾.
+- `previews/ClawCrush.mp4`, `Rush.mp4` (RushStart, four RushLoop cycles with
+  the model travelling at rush speed, then RushEnd), `BubbleBarrage.mp4`:
+  480×320 Workbench.
+
+Not verified: Studio import and retargeting, the look in game, attack timing
+feel, and hit shapes. No bubble or impact VFX are authored; the timings and
+points are for Studio to spawn them.
 
 ## Roblox import notes (not tested in Studio)
 
@@ -287,13 +387,14 @@ look is broad low-poly facets, and more triangles would only soften them.
     Every bone moves in the ROM.
   - GLB: 5 skinned, textured meshes; ReferencePose poses 39 bones; ROM moves
     51 bones.
+  - The game package; see **Game package**.
 - Attack check (`attack-check.json`), sampled BVH overlaps: in all five
   poses, zero overlapping triangles between the swinging claw parts (carpus,
   hand, finger) and the body, eyes or legs. The movable fingers never
   intersect their hands.
 - ROM clearance: no claw overlaps at any 4th frame of RigTest_ROM.
 - All renders listed above were produced and inspected, including every
-  crop, the ROM and joint sheets, and the atlases.
+  crop, the ROM and joint sheets, the atlases and the game-clip sheet.
 
 These are sampled geometric checks, not an exhaustive intersection proof.
 The claw coxa and merus sit inside the shoulder socket by design and are
@@ -303,9 +404,7 @@ excluded from the overlap test.
 
 - Roblox Studio import: scale, bone axes, skinning, SurfaceAppearance or
   TextureID display, and the in-game look.
-- Gameplay readability at arena distance, attack timing, and hitboxes.
-- Animations beyond the ROM and attack check. No idle, walk or attack clips
-  were authored.
+- Gameplay readability at arena distance, attack timing feel, and hitboxes.
 - Multi-client and published asset access.
 
 ## Known differences from the reference

@@ -229,6 +229,229 @@
           "weights_to_non_bones": 0
         }
       }
+    },
+    "KingCrab_Studio.fbx": {
+      "meshes": {
+        "Body": {
+          "triangles": 6460,
+          "materials": [
+            "KingCrab_Body"
+          ],
+          "texture": [
+            1024,
+            1024
+          ],
+          "weights": {
+            "vertices": 3316,
+            "unweighted": 0,
+            "over_4_influences": 0,
+            "not_normalized": 0,
+            "weights_to_non_bones": 0
+          }
+        },
+        "ClawL": {
+          "triangles": 2428,
+          "materials": [
+            "KingCrab_ClawL"
+          ],
+          "texture": [
+            1024,
+            1024
+          ],
+          "weights": {
+            "vertices": 1256,
+            "unweighted": 0,
+            "over_4_influences": 0,
+            "not_normalized": 0,
+            "weights_to_non_bones": 0
+          }
+        },
+        "ClawR": {
+          "triangles": 2316,
+          "materials": [
+            "KingCrab_ClawR"
+          ],
+          "texture": [
+            1024,
+            1024
+          ],
+          "weights": {
+            "vertices": 1176,
+            "unweighted": 0,
+            "over_4_influences": 0,
+            "not_normalized": 0,
+            "weights_to_non_bones": 0
+          }
+        },
+        "Eyes": {
+          "triangles": 1248,
+          "materials": [
+            "KingCrab_Eyes"
+          ],
+          "texture": [
+            1024,
+            1024
+          ],
+          "weights": {
+            "vertices": 628,
+            "unweighted": 0,
+            "over_4_influences": 0,
+            "not_normalized": 0,
+            "weights_to_non_bones": 0
+          }
+        },
+        "Legs": {
+          "triangles": 7216,
+          "materials": [
+            "KingCrab_Legs"
+          ],
+          "texture": [
+            1024,
+            1024
+          ],
+          "weights": {
+            "vertices": 3688,
+            "unweighted": 0,
+            "over_4_influences": 0,
+            "not_normalized": 0,
+            "weights_to_non_bones": 0
+          }
+        }
+      },
+      "actions_in_file": [],
+      "bones": 52,
+      "bones_match_animation_data": true,
+      "fbm_pngs": [
+        "KingCrab_Body_BaseColor_1024.png",
+        "KingCrab_ClawL_BaseColor_1024.png",
+        "KingCrab_ClawR_BaseColor_1024.png",
+        "KingCrab_Eyes_BaseColor_1024.png",
+        "KingCrab_Legs_BaseColor_1024.png"
+      ]
+    },
+    "AnimationData.json": {
+      "id": "king-crab",
+      "fps": 24,
+      "motion": {
+        "strideLength": 2.7273,
+        "nominalSpeed": 1.8182,
+        "rushStrideLength": 2.2,
+        "rushSpeed": 4.4
+      },
+      "clips": {
+        "Idle": {
+          "frames": 73,
+          "expected": 73,
+          "loop": true,
+          "nan": false,
+          "bones_ok": true,
+          "times_ok": true,
+          "loop_close_error": 0.0
+        },
+        "Walk": {
+          "frames": 37,
+          "expected": 37,
+          "loop": true,
+          "nan": false,
+          "bones_ok": true,
+          "times_ok": true,
+          "loop_close_error": 0.0
+        },
+        "Hit": {
+          "frames": 12,
+          "expected": 12,
+          "loop": false,
+          "nan": false,
+          "bones_ok": true,
+          "times_ok": true,
+          "starts_on_idle_start": true,
+          "ends_on_idle_start": true
+        },
+        "Death": {
+          "frames": 55,
+          "expected": 55,
+          "loop": false,
+          "nan": false,
+          "bones_ok": true,
+          "times_ok": true,
+          "starts_on_idle_start": true
+        },
+        "ClawCrush": {
+          "frames": 55,
+          "expected": 55,
+          "loop": false,
+          "nan": false,
+          "bones_ok": true,
+          "times_ok": true,
+          "starts_on_idle_start": true,
+          "ends_on_idle_start": true
+        },
+        "RushLoop": {
+          "frames": 13,
+          "expected": 13,
+          "loop": true,
+          "nan": false,
+          "bones_ok": true,
+          "times_ok": true,
+          "loop_close_error": 0.0
+        },
+        "RushStart": {
+          "frames": 22,
+          "expected": 22,
+          "loop": false,
+          "nan": false,
+          "bones_ok": true,
+          "times_ok": true,
+          "starts_on_idle_start": true,
+          "ends_on_RushLoop": true
+        },
+        "RushEnd": {
+          "frames": 22,
+          "expected": 22,
+          "loop": false,
+          "nan": false,
+          "bones_ok": true,
+          "times_ok": true,
+          "starts_on_RushLoop": true,
+          "ends_on_idle_start": true
+        },
+        "BubbleBarrage": {
+          "frames": 61,
+          "expected": 61,
+          "loop": false,
+          "nan": false,
+          "bones_ok": true,
+          "times_ok": true,
+          "starts_on_idle_start": true,
+          "ends_on_idle_start": true
+        }
+      }
+    },
+    "BossGameData.json": {
+      "ClawCrush": {
+        "timings_ordered": true,
+        "points": [
+          "ClawImpact"
+        ]
+      },
+      "BubbleBarrage": {
+        "timings_ordered": true,
+        "points": [
+          "BubbleOrigin"
+        ]
+      },
+      "RushStart": {
+        "timings_ordered": true,
+        "points": []
+      },
+      "RushLoop": {
+        "timings_ordered": true,
+        "points": []
+      },
+      "RushEnd": {
+        "timings_ordered": true,
+        "points": []
+      }
     }
   },
   "failures": [],

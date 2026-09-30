@@ -43,6 +43,16 @@ SHEETS = {
     },
 }
 
+GAME_ROWS = ['Idle', 'Walk', 'Hit', 'Death', 'ClawCrush', 'RushStart', 'RushLoop', 'RushEnd', 'BubbleBarrage']
+_gf = HERE / '_work' / 'gameclips_frames.json'
+GAME_FRAMES = __import__('json').loads(_gf.read_text()) if _gf.exists() else {}
+SHEETS['GameClips'] = {
+    'cols': 6, 'rows': len(GAME_ROWS),
+    'title': 'Game clips (24 fps, Workbench): 6 frames per clip from exports/game/AnimationData.json',
+    'cell': lambda r, c: (f'{GAME_ROWS[r]}  f{GAME_FRAMES[GAME_ROWS[r]][c]}' if GAME_ROWS[r] in GAME_FRAMES
+                          and c < len(GAME_FRAMES[GAME_ROWS[r]]) else ''),
+}
+
 for name, spec in SHEETS.items():
     src = HERE / '_work' / f'raw_{name}.png'
     if not src.exists():

@@ -1,0 +1,136 @@
+{
+  "attacks": {
+    "ClawCrush": {
+      "duration": 2.25,
+      "warnStart": 0.25,
+      "impact": 1.2083,
+      "activeEnd": 1.25,
+      "recoveryEnd": 1.95,
+      "points": {
+        "ClawImpact": {
+          "bone": "Claw_R_Propodus",
+          "offset": [
+            0.0,
+            2.6,
+            0.0
+          ],
+          "rootAtImpact": [
+            -3.2,
+            -10.0,
+            1.8723
+          ],
+          "rootAtImpactStudio": [
+            3.2,
+            1.8723,
+            -10.0
+          ],
+          "groundPointAtImpact": [
+            -3.2,
+            -10.0,
+            0.0
+          ],
+          "groundPointAtImpactStudio": [
+            3.2,
+            0.0,
+            -10.0
+          ]
+        }
+      },
+      "note": "crusher palm lands flat; ClawImpact is the palm centre (about 1.8 studs up, the palm half-thickness); groundPointAtImpact is directly below it"
+    },
+    "BubbleBarrage": {
+      "duration": 2.5,
+      "warnStart": 0.2,
+      "impact": 0.6,
+      "activeEnd": 2.0,
+      "recoveryEnd": 2.35,
+      "points": {
+        "BubbleOrigin": {
+          "bone": "Body",
+          "offset": [
+            0.0,
+            0.15,
+            4.95
+          ],
+          "rootAtImpact": [
+            0.0,
+            -4.9433,
+            5.4484
+          ],
+          "rootAtImpactStudio": [
+            -0.0,
+            5.4484,
+            -4.9433
+          ]
+        }
+      },
+      "directionAtImpact": [
+        0.0,
+        -0.9792,
+        0.2031
+      ],
+      "directionAtImpactStudio": [
+        -0.0,
+        0.2031,
+        -0.9792
+      ],
+      "pumps": [
+        0.8333,
+        1.3,
+        1.7667
+      ]
+    },
+    "RushStart": {
+      "duration": 0.875,
+      "warnStart": 0.0,
+      "impact": 0.875,
+      "activeEnd": 0.875,
+      "recoveryEnd": 0.875,
+      "note": "braces low, claws up, turns 90 deg so his right side leads; chains into RushLoop at its end",
+      "directionAtImpact": [
+        0.0,
+        -1.0,
+        0.0
+      ],
+      "directionAtImpactStudio": [
+        -0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "RushLoop": {
+      "duration": 0.5,
+      "loop": true,
+      "rushStrideLength": 2.2,
+      "rushSpeed": 4.4,
+      "note": "in place; move the model along directionAtImpact at rushSpeed (the crab travels along his local -X, his right side, which the RushStart turn points along the model forward)",
+      "directionAtImpact": [
+        0.0,
+        -1.0,
+        0.0
+      ],
+      "directionAtImpactStudio": [
+        -0.0,
+        0.0,
+        -1.0
+      ]
+    },
+    "RushEnd": {
+      "duration": 0.875,
+      "warnStart": 0.0,
+      "impact": 0.0,
+      "activeEnd": 0.3,
+      "recoveryEnd": 0.875,
+      "note": "skid stop (0-0.3 s) then turns back to face forward and returns to Idle"
+    }
+  },
+  "rootHeight": 0.0,
+  "height": 10.0846,
+  "footprintRadius": 11.475,
+  "bodyCentreHeight": 5.0,
+  "walk": {
+    "strideLength": 2.7273,
+    "nominalSpeed": 1.8182
+  },
+  "notes": "Times in seconds from clip start at 24 fps. Root bone sits on the ground under the body centre (rootHeight 0). Blender axes: +X crab left, -Y forward, +Z up; Studio = (-X, Z, Y)."
+}

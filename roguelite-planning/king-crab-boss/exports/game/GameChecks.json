@@ -1,0 +1,124 @@
+{
+  "clips": {
+    "Idle": {
+      "frames": 73,
+      "duration": 3.0,
+      "max_ik_error_at": [
+        45,
+        "L2"
+      ],
+      "max_ik_tip_error_studs": 0.0,
+      "max_planted_foot_drift_studs": 0.0,
+      "loop_error_before_snap": 1e-05
+    },
+    "Walk": {
+      "frames": 37,
+      "duration": 1.5,
+      "max_ik_error_at": [
+        2,
+        "R3"
+      ],
+      "max_ik_tip_error_studs": 0.0,
+      "max_planted_foot_drift_studs": 0.0,
+      "loop_error_before_snap": 0.00092
+    },
+    "Hit": {
+      "frames": 12,
+      "duration": 0.4583,
+      "max_ik_error_at": [
+        4,
+        "R1"
+      ],
+      "max_ik_tip_error_studs": 0.0,
+      "max_planted_foot_drift_studs": 0.0,
+      "start_error_before_snap": 0.0,
+      "end_error_before_snap": 1e-05
+    },
+    "Death": {
+      "frames": 55,
+      "duration": 2.25,
+      "max_ik_tip_error_studs": 0.0,
+      "max_planted_foot_drift_studs": 0.0,
+      "lowest_point_studs": -0.0445,
+      "lowest_point_frame": 36,
+      "lowest_point_section": "Legs",
+      "ground_ok": true
+    },
+    "ClawCrush": {
+      "frames": 55,
+      "duration": 2.25,
+      "max_ik_error_at": [
+        24,
+        "R2"
+      ],
+      "max_ik_tip_error_studs": 0.0511,
+      "max_planted_foot_drift_studs": 0.0511,
+      "start_error_before_snap": 0.0,
+      "end_error_before_snap": 0.0004,
+      "lowest_point_studs": 0.0059,
+      "lowest_point_frame": 30,
+      "lowest_point_section": "Legs",
+      "ground_ok": true,
+      "crusher_overlaps": "none"
+    },
+    "RushLoop": {
+      "frames": 13,
+      "duration": 0.5,
+      "max_ik_error_at": [
+        0,
+        "R2"
+      ],
+      "max_ik_tip_error_studs": 0.0001,
+      "max_planted_foot_drift_studs": 0.0001,
+      "loop_error_before_snap": 0.00143
+    },
+    "RushStart": {
+      "frames": 22,
+      "duration": 0.875,
+      "max_ik_error_at": [
+        15,
+        "L2"
+      ],
+      "max_ik_tip_error_studs": 0.097,
+      "max_planted_foot_drift_studs": 0.0001,
+      "start_error_before_snap": 0.0,
+      "end_error_before_snap": 0.00132
+    },
+    "RushEnd": {
+      "frames": 22,
+      "duration": 0.875,
+      "max_ik_error_at": [
+        14,
+        "L3"
+      ],
+      "max_ik_tip_error_studs": 0.0218,
+      "max_planted_foot_drift_studs": 0.0218,
+      "start_error_before_snap": 0.00228,
+      "end_error_before_snap": 0.00011
+    },
+    "BubbleBarrage": {
+      "frames": 61,
+      "duration": 2.5,
+      "max_ik_error_at": [
+        20,
+        "L2"
+      ],
+      "max_ik_tip_error_studs": 0.0167,
+      "max_planted_foot_drift_studs": 0.0167,
+      "start_error_before_snap": 0.0,
+      "end_error_before_snap": 0.00011
+    }
+  },
+  "motion": {
+    "strideLength": 2.7273,
+    "nominalSpeed": 1.8182,
+    "rushStrideLength": 2.2,
+    "rushSpeed": 4.4
+  },
+  "crusher_impact_target": [
+    -3.2,
+    -10.0,
+    1.8723
+  ],
+  "death_final_drop": 2.5898
+}

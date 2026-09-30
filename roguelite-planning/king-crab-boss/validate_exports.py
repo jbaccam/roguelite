@@ -18,6 +18,13 @@ Checks
                 RigTest_ROM: rotation range per bone chain).
   KingCrab.glb  meshes and skin, textures, both named actions present, bone
                 motion in RigTest_ROM, dimensions.
+  game package  KingCrab_Studio.fbx: section meshes under 20k triangles,
+                KingCrab_<Section> materials with 1024 maps, bones and parents
+                equal AnimationData.json, no animation, .fbm PNGs present.
+                AnimationData.json: every clip present, frame count
+                duration*24+1, times, no NaNs, loops close, attacks start/end on
+                the Idle start pose, the rush chain joins RushLoop.
+                BossGameData.json: required points, ordered timings.
 """
 import bpy, json, math, sys
 from pathlib import Path
@@ -299,6 +306,110 @@ else:
     g['dimensions_rest'] = dims_check('KingCrab.glb', obs, rig)
     g['weights'] = {o.name: weight_check(o, {b.name for b in rig.data.bones}) for o in obs}
 report['files']['KingCrab.glb'] = g
+
+# ------------------------------------------------------------- game package
+GAMED = OUT / 'exports' / 'game'
+REQUIRED_CLIPS = ['Idle', 'Walk', 'Hit', 'Death', 'ClawCrush', 'RushStart', 'RushLoop', 'RushEnd', 'BubbleBarrage']
+REST12 = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]
+
+
+def is_rest(transforms):
+    return all(max(abs(a - b) for a, b in zip(t, REST12)) < 1e-6 for t in transforms.values())
+
+
+if (GAMED / 'AnimationData.json').exists():
+    anim = json.loads((GAMED / 'AnimationData.json').read_text())
+    fresh()
+    bpy.ops.import_scene.fbx(filepath=str(GAMED / 'KingCrab_Studio.fbx'))
+    rig = arm()
+    obs = meshes()
+    st = {'meshes': {}, 'actions_in_file': [a.name for a in bpy.data.actions]}
+    want = set(SECTIONS)
+    if {o.name for o in obs} != want:
+        fail(f'KingCrab_Studio.fbx: mesh names {sorted(o.name for o in obs)} != sections {sorted(want)}')
+    for o in obs:
+        mats = [m.name for m in o.data.materials if m]
+        st['meshes'][o.name] = {'triangles': tris(o.data), 'materials': mats, 'texture': image_ok(o),
+                                'weights': weight_check(o, set(anim['bones']))}
+        w = st['meshes'][o.name]['weights']
+        if w['unweighted'] or w['over_4_influences'] or w['not_normalized']:
+            fail(f'KingCrab_Studio.fbx: {o.name} weights {w}')
+        if tris(o.data) >= 20000:
+            fail(f'KingCrab_Studio.fbx: {o.name} {tris(o.data)} triangles')
+        if mats != [f'KingCrab_{o.name}']:
+            fail(f'KingCrab_Studio.fbx: {o.name} materials {mats}')
+        if st['meshes'][o.name]['texture'] != [1024, 1024]:
+            fail(f'KingCrab_Studio.fbx: {o.name} texture {st["meshes"][o.name]["texture"]}')
+    if st['actions_in_file']:
+        fail('KingCrab_Studio.fbx: contains animation')
+    if rig is None:
+        fail('KingCrab_Studio.fbx: no armature')
+    else:
+        names = {b.name: (b.parent.name if b.parent else None) for b in rig.data.bones}
+        st['bones'] = len(names)
+        bad = [n for n in names if n in anim['bones'] and anim['bones'][n]['parent'] != names[n]]
+        st['bones_match_animation_data'] = not bad and set(names) == set(anim['bones'])
+        if not st['bones_match_animation_data']:
+            fail(f'KingCrab_Studio.fbx: bones/parents differ from AnimationData.json {bad[:5]}')
+    fbm = sorted(p.name for p in (GAMED / 'KingCrab_Studio.fbm').glob('*.png'))
+    st['fbm_pngs'] = fbm
+    if len(fbm) != len(SECTIONS):
+        fail(f'KingCrab_Studio.fbm: {len(fbm)} PNGs')
+    report['files']['KingCrab_Studio.fbx'] = st
+
+    ad = {'id': anim.get('id'), 'fps': anim.get('fps'), 'motion': anim.get('motion'), 'clips': {}}
+    if anim.get('fps') != 24 or anim.get('id') != 'king-crab':
+        fail('AnimationData.json: id/fps')
+    for c in REQUIRED_CLIPS:
+        if c not in anim['clips']:
+            fail(f'AnimationData.json: clip {c} missing')
+    loop0 = anim['clips']['RushLoop']['frames'][0]['transforms']
+    for name, clip in anim['clips'].items():
+        n = int(round(clip['duration'] * 24)) + 1
+        fr = clip['frames']
+        nan = any(not math.isfinite(v) for f in fr for t in f['transforms'].values() for v in t)
+        bones_ok = all(set(f['transforms']) == set(anim['bones']) for f in fr)
+        times_ok = all(abs(f['time'] - i / 24) < 1e-6 for i, f in enumerate(fr))
+        e = {'frames': len(fr), 'expected': n, 'loop': clip['loop'], 'nan': nan, 'bones_ok': bones_ok,
+             'times_ok': times_ok}
+        if clip['loop']:
+            e['loop_close_error'] = max(abs(a - b) for k in fr[0]['transforms']
+                                        for a, b in zip(fr[0]['transforms'][k], fr[-1]['transforms'][k]))
+            if e['loop_close_error'] > 1e-6:
+                fail(f'AnimationData.json: {name} loop does not close ({e["loop_close_error"]})')
+        else:
+            if name != 'RushEnd':
+                e['starts_on_idle_start'] = is_rest(fr[0]['transforms'])
+            else:
+                e['starts_on_RushLoop'] = fr[0]['transforms'] == loop0
+            if name == 'RushStart':
+                e['ends_on_RushLoop'] = fr[-1]['transforms'] == loop0
+            elif name != 'Death':
+                e['ends_on_idle_start'] = is_rest(fr[-1]['transforms'])
+            for k in ('starts_on_idle_start', 'ends_on_idle_start', 'starts_on_RushLoop', 'ends_on_RushLoop'):
+                if e.get(k) is False:
+                    fail(f'AnimationData.json: {name} {k} is false')
+        if len(fr) != n or nan or not bones_ok or not times_ok:
+            fail(f'AnimationData.json: {name} {e}')
+        ad['clips'][name] = e
+    report['files']['AnimationData.json'] = ad
+
+    gd = json.loads((GAMED / 'BossGameData.json').read_text())
+    g = {}
+    for name, a in gd['attacks'].items():
+        ts = [a.get(k) for k in ('warnStart', 'impact', 'activeEnd', 'recoveryEnd') if a.get(k) is not None]
+        ordered = all(x <= y + 1e-6 for x, y in zip(ts, ts[1:])) and (not ts or ts[-1] <= a['duration'] + 1e-6)
+        g[name] = {'timings_ordered': ordered, 'points': sorted(a.get('points', {}))}
+        if not ordered:
+            fail(f'BossGameData.json: {name} timings out of order')
+    for name, pts in (('ClawCrush', ['ClawImpact']), ('BubbleBarrage', ['BubbleOrigin'])):
+        if name not in gd['attacks'] or any(q not in gd['attacks'][name].get('points', {}) for q in pts):
+            fail(f'BossGameData.json: {name} missing {pts}')
+    if 'directionAtImpact' not in gd['attacks'].get('BubbleBarrage', {}):
+        fail('BossGameData.json: BubbleBarrage direction missing')
+    if 'rushStrideLength' not in gd['attacks'].get('RushLoop', {}):
+        fail('BossGameData.json: RushLoop rushStrideLength missing')
+    report['files']['BossGameData.json'] = g
 
 report['passed'] = not report['failures']
 (OUT / 'validation-report.json').write_text(json.dumps(report, indent=2))
