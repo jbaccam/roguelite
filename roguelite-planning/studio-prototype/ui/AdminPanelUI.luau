@@ -14,15 +14,16 @@ local XP=require(combat:WaitForChild('RunXP'))
 local Rules=require(RS:WaitForChild('RunSetupRules')) -- map display names
 local C=T.Color
 local M={}
-local W,H=900,600 -- window content size; the Body inside is (W-36) x (H-58)
-local CW=W-60 -- canvas width inside the scroll frame
+local W,H=920,600 -- window content size; the Body inside is (W-36) x (H-58)
+local CW=W-60 -- canvas width inside the scroll frame; 850+ puts the stat cards in two columns
 local TABS={'Travel','Mobs','Waves','Player'}
 local function left(l) l.TextXAlignment=Enum.TextXAlignment.Left;return l end
 function M.new(player)
  local remote=combat:WaitForChild('AdminAction')
  local run=RS:WaitForChild('RogueliteRunState')
  local own=combat:WaitForChild('PlayerStates'):WaitForChild(tostring(player.UserId))
- local screen=T.make('ScreenGui',player:WaitForChild('PlayerGui'),{Name='AdminPanel',ResetOnSpawn=false,DisplayOrder=60,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets})
+ -- DisplayOrder 65: above LevelUpOffers and RunSetup (60), below DeathScreen (80).
+ local screen=T.make('ScreenGui',player:WaitForChild('PlayerGui'),{Name='AdminPanel',ResetOnSpawn=false,DisplayOrder=65,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets})
  local helpers={panel=T.panel,label=T.label,button=T.button,icon=T.icon}
  local self={Screen=screen,tab='Travel',mobs={},spawnCount=5,keepCount=10,jump=1}
  local win,list,draw
@@ -42,10 +43,22 @@ function M.new(player)
  end
  local function heading(parent,name,text,y) return left(T.label(parent,name,text,0,y,CW,30,22)) end
  local function note(parent,name,text,y,color) return T.text(parent,name,text,0,y,CW,22,15,color or C.muted) end
- -- Number field: Enter or clicking away calls onSet(number); anything else puts the value back.
- local function numberBox(parent,name,value,x,y,w,onSet)
-  local box=T.make('TextBox',parent,{Name=name,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(w,40),BackgroundColor3=C.well,BorderSizePixel=0,TextColor3=C.white,Font=T.Font,TextSize=18,Text=tostring(value),ClearTextOnFocus=false})
-  box.FocusLost:Connect(function() local v=tonumber(box.Text);if v and v==v then onSet(v) else box.Text=tostring(value) end end)
+ -- Number field: a rounded box a shade lighter than the panel, in an inset well (<name>Well, behind
+ -- it), with a lime wash while typing. It shows get(); Enter or clicking away calls onSet(number),
+ -- anything else puts get() back. With inst/attr it follows that attribute's live value whenever
+ -- it isn't being typed in.
+ local INPUT=C.well:Lerp(C.white,.1)
+ local function numberBox(parent,name,get,x,y,w,onSet,hint,inst,attr)
+  T.panel(parent,name..'Well',x,y,w,40,'inset')
+  local box=T.make('TextBox',parent,{Name=name,Position=UDim2.fromOffset(x+5,y+5),Size=UDim2.fromOffset(w-10,30),ZIndex=2,BackgroundColor3=INPUT,BorderSizePixel=0,TextColor3=C.white,Font=T.Font,TextSize=18,Text=tostring(get()),PlaceholderText=hint,PlaceholderColor3=C.dim,ClearTextOnFocus=false})
+  T.make('UICorner',box,{CornerRadius=UDim.new(0,6)})
+  local function show() if not box:IsFocused() then box.Text=tostring(get()) end end
+  box.Focused:Connect(function() box.BackgroundColor3=INPUT:Lerp(C.lime,.18) end)
+  box.FocusLost:Connect(function()
+   box.BackgroundColor3=INPUT
+   local v=tonumber(box.Text);if v and v==v then onSet(v) else show() end
+  end)
+  if inst then local conn=inst:GetAttributeChangedSignal(attr):Connect(show);box.Destroying:Connect(function() conn:Disconnect() end) end
   return box
  end
  -- A label that follows one attribute while it is on screen.
@@ -94,16 +107,23 @@ function M.new(player)
   end
   local y=64+math.ceil(#options/cols)*48+8
   left(T.label(c,'CountLabel','Count',0,y,80,40,20))
-  numberBox(c,'SpawnCount',self.spawnCount,90,y,90,function(v) self.spawnCount=math.clamp(math.floor(v),1,50);draw() end)
+  numberBox(c,'SpawnCount',function() return self.spawnCount end,90,y,90,function(v) self.spawnCount=math.clamp(math.floor(v),1,50);draw() end,'1-50')
   button(c,'Spawn','Spawn',190,y,200,function()
+   if self.spawning then return end -- one Spawn at a time
    local ids=picked(false)
    if #ids==0 then T.toast(screen,'Pick an enemy first',C.negative);return end
-   for i,id in ids do if i>1 then task.wait(.2) end;send('Spawn',id,table.find(Admin.BossIds,id) and math.min(self.spawnCount,5) or self.spawnCount) end -- bosses cap at 5 (AdminConfig)
+   self.spawning=true
+   -- Stop at the first refusal: the other types would be refused the same way (one toast, not three).
+   for i,id in ids do
+    if i>1 then task.wait(.2) end
+    if not send('Spawn',id,table.find(Admin.BossIds,id) and math.min(self.spawnCount,5) or self.spawnCount) then break end -- bosses cap at 5 (AdminConfig)
+   end
+   self.spawning=false
   end,true)
   y+=60
   heading(c,'KeepTitle','Keep N alive',y);y+=32
   note(c,'KeepNote','Keeps this many of the picked types alive, respawning as they die. Nothing picked: the map mix.',y);y+=30
-  numberBox(c,'KeepCount',self.keepCount,0,y,90,function(v) self.keepCount=math.clamp(math.floor(v),1,100);draw() end)
+  numberBox(c,'KeepCount',function() return self.keepCount end,0,y,90,function(v) self.keepCount=math.clamp(math.floor(v),1,100);draw() end,'1-100')
   button(c,'KeepOn','Keep alive',100,y,200,function() send('KeepAlive',self.keepCount,table.concat(picked(true),',')) end,true)
   button(c,'KeepOff','Stop',310,y,120,function() send('KeepAlive',0,'') end)
   local keeping=combat:GetAttribute('TestZombieCountOverride')
@@ -122,7 +142,7 @@ function M.new(player)
   button(c,'Waves','Waves',290,36,200,function() send('Waves') end,not sandbox)
   note(c,'ModeNote',sandbox and 'Sandbox: no wave timer and no shop. Enemies only come from Mobs.' or ('Wave '..tostring(run:GetAttribute('Wave'))..' · '..(fighting and 'fighting' or 'shop')),84)
   heading(c,'JumpTitle','Jump to wave (1-20)',120)
-  numberBox(c,'JumpWave',self.jump,0,156,90,function(v) self.jump=math.clamp(math.floor(v),1,20) end)
+  numberBox(c,'JumpWave',function() return self.jump end,0,156,90,function(v) self.jump=math.clamp(math.floor(v),1,20) end,'1-20')
   button(c,'Jump','Start this wave now',100,156,260,function() send('JumpWave',self.jump) end,true)
   local paused=run:GetAttribute('AdminPaused')==true
   local e=button(c,'EndWave','End this wave',0,216,220,function() send('EndWave') end);e.Interactable=fighting
@@ -130,20 +150,26 @@ function M.new(player)
   return 272
  end
  function tabs.Player(c)
-  local god=player:GetAttribute('AdminGod')==true
-  local armed=own:GetAttribute('WeaponEnabled')~=false
   heading(c,'PlayerTitle','Player',0)
-  button(c,'God',god and 'God mode: ON' or 'God mode: OFF',0,36,260,function() send('God',not god) end,god)
-  button(c,'WeaponsToggle',armed and 'Weapons: ON' or 'Weapons: OFF',270,36,260,function() send('Weapons',not armed) end,armed)
+  -- A click sends the opposite of the attribute as it is now, and the button repaints from that
+  -- attribute: a new run clears God and restores weapons without redrawing this tab.
+  local function toggle(name,action,x,text,inst,attr,isOn)
+   local b=button(c,name,'',x,36,260,function() send(action,not isOn()) end)
+   local function paint() local on=isOn();T.setPrimary(b,on);b.Caption.Text=text..(on and 'ON' or 'OFF') end
+   paint();local conn=inst:GetAttributeChangedSignal(attr):Connect(paint)
+   b.Destroying:Connect(function() conn:Disconnect() end)
+  end
+  toggle('God','God',0,'God mode: ',player,'AdminGod',function() return player:GetAttribute('AdminGod')==true end)
+  toggle('WeaponsToggle','Weapons',270,'Weapons: ',own,'WeaponEnabled',function() return own:GetAttribute('WeaponEnabled')~=false end)
   local shards=left(T.label(c,'ShardsLabel','',0,90,220,40,20))
   live(shards,own,'Shards',function(v) return 'Shards · '..tostring(v or 0) end)
   button(c,'Shards100','+100',230,90,110,function() send('Shards','Add',100) end)
   button(c,'Shards1000','+1000',350,90,120,function() send('Shards','Add',1000) end)
-  numberBox(c,'ShardsSet',own:GetAttribute('Shards') or 0,480,90,140,function(v) send('Shards','Set',math.clamp(math.floor(v),0,Economy.MAX_SHARDS)) end)
+  numberBox(c,'ShardsSet',function() return own:GetAttribute('Shards') or 0 end,480,90,140,function(v) send('Shards','Set',math.clamp(math.floor(v),0,Economy.MAX_SHARDS)) end,'Set shards',own,'Shards')
   local level=left(T.label(c,'LevelLabel','',0,140,220,40,20))
   live(level,own,'RunLevel',function(v) return 'Level · '..tostring(v or 1) end)
   button(c,'LevelUp','+1',230,140,110,function() send('Level','Add',1) end)
-  numberBox(c,'LevelSet',own:GetAttribute('RunLevel') or 1,350,140,120,function(v) send('Level','Set',math.clamp(math.floor(v),1,XP.MAX_LEVEL)) end)
+  numberBox(c,'LevelSet',function() return own:GetAttribute('RunLevel') or 1 end,350,140,120,function(v) send('Level','Set',math.clamp(math.floor(v),1,XP.MAX_LEVEL)) end,'Set level',own,'RunLevel')
   note(c,'SetHint','Type a number and press Enter to set it.',188)
   heading(c,'ItemsTitle','Give item',220)
   local items={};for _,e in Items.List do if e.kind~='Weapon' then table.insert(items,e) end end
@@ -164,6 +190,7 @@ function M.new(player)
  draw=function()
   if not win then return end
   local keep=list and list.Parent and list.CanvasPosition
+  statsView.refreshers={} -- the old stat widgets stop updating; the Player tab adds its own again
   for _,child in win.Body:GetChildren() do child:Destroy() end
   T.tabs(win.Body,0,0,W-36,46,TABS,self.tab,function(id) self.tab=id;list=nil;draw() end)
   list=T.scroll(win.Body,'Content',0,56,W-36,H-58-56)
@@ -175,7 +202,7 @@ function M.new(player)
  end
  function self.Open()
   if win then return end
-  win=T.window(screen,'AdminWindow','Admin',W,H,function() win=nil;list=nil;screen:SetAttribute('Open',false) end)
+  win=T.window(screen,'AdminWindow','Admin',W,H,function() win=nil;list=nil;statsView.refreshers={};screen:SetAttribute('Open',false) end)
   screen:SetAttribute('Open',true);draw()
  end
  function self.Close() if win then win.Close() end end

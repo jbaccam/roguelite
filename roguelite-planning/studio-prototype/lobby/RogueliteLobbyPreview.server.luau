@@ -20,6 +20,7 @@ local Shop=require(SSS:WaitForChild('ShopService'))
 local CAPACITY=4
 local state=State.new(4,CAPACITY)
 local last,stepOff={},{}
+local travelling={}
 -- Lobby servers spawn players here; the combined Studio preview places them by script instead.
 local lobbySpawn=root:WaitForChild('LobbySpawn');lobbySpawn.Enabled=Role.get()=='Lobby'
 local origin=root:GetAttribute('Origin')
@@ -169,8 +170,17 @@ local function arenaHasPlayers(except)
 end
 local function moveTo(player,area,spread)
  local char=alive(player);if not char then return false end
+ travelling[player]=true
+ local destination=areaSpawn(area,spread or 0)
+ -- Preload the destination before moving across the large gaps between arena vistas.
+ if workspace.StreamingEnabled then
+  local ok,err=pcall(player.RequestStreamAroundAsync,player,destination.Position,5)
+  if not ok then travelling[player]=nil;warn('Arena stream request failed:',err);return false end
+ end
+ if not char.Parent or player.Character~=char then travelling[player]=nil;return false end
  player:SetAttribute('StudioArea',area)
- char:PivotTo(areaSpawn(area,spread or 0))
+ char:PivotTo(destination)
+ travelling[player]=nil
  -- Leaving the arena empty mid-wave: stop the wave so nothing keeps chasing an empty map.
  if area=='Lobby' and not arenaHasPlayers({}) then Shop.stopWave() end
  return true
@@ -281,6 +291,8 @@ local elapsed=0
 RunService.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<.1 then return end;elapsed=0
  for _,p in Players:GetPlayers() do
+  -- A departing player must not rejoin the pad while destination streaming yields.
+  if travelling[p] or p:GetAttribute('MapTravelPending') then continue end
   local char,hrp=alive(p)
   local lobby=hrp~=nil and inLobby(hrp)
   p:SetAttribute('LobbyPreviewActive',lobby)

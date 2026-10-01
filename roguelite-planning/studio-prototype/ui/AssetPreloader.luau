@@ -24,10 +24,20 @@ local SOURCES = {
 	{ "RogueliteCombat", "SkillTreeConfig" },
 }
 
+-- Match servers do not display these lobby-only screens. Keep combat/shop and
+-- monetization images (revive/reroll UI) in both roles.
+local LOBBY_ONLY = {
+ StoreFX = true,
+ ChestFX = true,
+ ChestConfig = true,
+ SkillTreeConfig = true,
+}
+
 local started = false
 
 -- Every rbxassetid string reachable from the modules' exported tables, in source order.
-function P.collect()
+function P.collect(role)
+	role = role or RS:GetAttribute("ServerRole")
 	local seen, list = {}, {}
 	local function walk(t, depth, visited)
 		if depth > 4 or visited[t] then
@@ -46,6 +56,7 @@ function P.collect()
 		end
 	end
 	for _, path in SOURCES do
+		if role == "Match" and LOBBY_ONLY[path[#path]] then continue end
 		local node = RS
 		for _, name in path do
 			node = node and node:FindFirstChild(name)

@@ -329,8 +329,11 @@ Players.PlayerAdded:Connect(watchPlayer)
 -- (can't afford, not available) plays the error. NoClickSound buttons (the chest's tap layer)
 -- stay silent, and one press never clicks twice when buttons overlap.
 local lastPress=0
+-- Menus can reparent the same button. Bind once without retaining destroyed UI.
+local hookedButtons=setmetatable({}, {__mode='k'})
 local function hookButton(b)
- if not b:IsA('GuiButton') then return end
+ if not b:IsA('GuiButton') or hookedButtons[b] then return end
+ hookedButtons[b]=true
  b.InputBegan:Connect(function(input)
   local t=input.UserInputType
   if t~=Enum.UserInputType.MouseButton1 and t~=Enum.UserInputType.Touch then return end

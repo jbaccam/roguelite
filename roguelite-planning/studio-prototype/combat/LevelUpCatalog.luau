@@ -43,7 +43,7 @@ end
 -- Distinct level-up art; the same stat image is used at every rarity.
 C.IconIds={
  MaxHP='rbxassetid://87748663271804', Damage='rbxassetid://105663077535579',
- AttackSpeed='rbxassetid://104227388119878', Armor='rbxassetid://80556274645944',
+ AttackSpeed='rbxassetid://118215254503921', Armor='rbxassetid://80556274645944',
  Dodge='rbxassetid://99124374960499', Regeneration='rbxassetid://86810106921196',
  LifeSteal='rbxassetid://94341050485414', CritChance='rbxassetid://129045264697854',
  MeleeDamage='rbxassetid://95614914114816', RangedDamage='rbxassetid://79016661829505',

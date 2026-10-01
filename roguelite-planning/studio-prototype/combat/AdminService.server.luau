@@ -39,7 +39,8 @@ end
 local function hasPlayerSpawn(id)
  local map=Maps.get(id);if not map then return false end
  for _,name in map.folders do
-  local folder=workspace:FindFirstChild(name)
+  local parked=SS:FindFirstChild('InactiveAreas')
+  local folder=workspace:FindFirstChild(name) or (parked and parked:FindFirstChild(name))
   if folder and folder:FindFirstChild('PlayerSpawn') then return true end
  end
  return false
@@ -66,6 +67,7 @@ local actions={}
 function actions.Travel(p,where)
  if not (RunService:IsStudio() and Role.get()=='Combined') then return false,'Needs lobby/match teleports (plan C)' end
  local char=alive(p);if not char then return false,'Respawn first' end
+ if p:GetAttribute('LobbyQueue')~=nil then return false,'Leave the queue before travelling' end
  if where=='Lobby' then
   local lobby=workspace:FindFirstChild('RogueliteLobby');local spawn=lobby and lobby:FindFirstChild('LobbySpawn')
   if not spawn then return false,'No lobby on this server' end
@@ -79,7 +81,14 @@ function actions.Travel(p,where)
  if not hasPlayerSpawn(where) then return false,'No PlayerSpawn on '..where end
  if not Role.setMap(where) then return false,'That map is not available here' end
  local spawn=Role.playerSpawn();if not spawn then return false,'No PlayerSpawn on '..where end
+ p:SetAttribute('MapTravelPending',true)
+ if workspace.StreamingEnabled then
+  local ok=pcall(p.RequestStreamAroundAsync,p,spawn.Position,5)
+  if not ok then p:SetAttribute('MapTravelPending',nil);return false,'Arena loading failed; retry Travel' end
+ end
+ if p.Character~=char or not char.Parent then p:SetAttribute('MapTravelPending',nil);return false,'Respawn first' end
  p:SetAttribute('StudioArea','Arena');char:PivotTo(CFrame.new(spawn.Position+Vector3.new(0,4,0)))
+ p:SetAttribute('MapTravelPending',nil)
  Shop.setPractice()
  return true,'Sandbox on '..where
 end

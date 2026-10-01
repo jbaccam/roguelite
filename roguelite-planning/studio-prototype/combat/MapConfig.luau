@@ -11,6 +11,9 @@ M.Maps={
  -- hand-placed props live beside it in BeachCoveExtras.
  BeachCove={folders={'BeachCoveArena','BeachCoveExtras'},roster='crab,snake,crab,hermit-crab,crab,rock-throwing-crab',boss='KingCrab'},
 }
+M.Maps.DesertBasin={folders={'DesertBasinArena'},roster='skeleton,bow-skeleton,mummy,scorpion',boss='Pharaoh',managed=true}
+M.Maps.FrozenPass={folders={'FrozenPassArena'},roster='frost-ghost,werewolf,frozen-knight,ice-elf',boss='FrostCyclops',managed=true}
+M.Maps.VolcanicCrater={folders={'VolcanicCraterArena'},roster='fire-goblin,ember-spider,lava-slime,obsidian-ogre,ash-shaman',boss='Dragon',managed=true}
 function M.valid(id) return type(id)=='string' and M.Maps[id]~=nil end
 function M.get(id) return M.valid(id) and M.Maps[id] or nil end
 return M

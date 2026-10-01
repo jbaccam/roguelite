@@ -1,6 +1,6 @@
 -- ADMIN panel launcher (ADMIN_PANEL.md). Developers only: adds the ADMIN button to the arena HUD's
--- launcher column and the lobby HUD's right-side buttons, and binds P. Showing it is cosmetic:
--- AdminService checks the developer on every request.
+-- launcher column and the lobby HUD's right-side buttons, binds P, and closes on Escape / gamepad B.
+-- Showing it is cosmetic: AdminService checks the developer on every request.
 local Players=game:GetService('Players')
 local RS=game:GetService('ReplicatedStorage')
 local RunService=game:GetService('RunService')
@@ -23,7 +23,15 @@ local function mount(screen)
 end
 for _,screen in gui:GetChildren() do task.spawn(mount,screen) end
 gui.ChildAdded:Connect(mount)
+-- Escape in a number box ends the typing; that same press must not also close the panel.
+local released=-1
+Input.TextBoxFocusReleased:Connect(function() released=os.clock() end)
 Input.InputBegan:Connect(function(input,processed)
+ -- Escape and gamepad B close the panel, like the lobby windows (even when the game saw the key).
+ if input.KeyCode==Enum.KeyCode.Escape or input.KeyCode==Enum.KeyCode.ButtonB then
+  if not Input:GetFocusedTextBox() and os.clock()-released>.1 then panel.Close() end
+  return
+ end
  if processed or Input:GetFocusedTextBox() or input.KeyCode~=Enum.KeyCode.P then return end
  panel.Toggle()
 end)

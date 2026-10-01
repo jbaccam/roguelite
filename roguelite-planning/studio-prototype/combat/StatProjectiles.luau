@@ -3,16 +3,23 @@ local RunService=game:GetService('RunService')
 local Tags=game:GetService('CollectionService')
 local Motion=require(game.ReplicatedStorage.RogueliteCombat.WeaponMotion)
 local Targets=require(game.ReplicatedStorage.RogueliteCombat.ProjectileTarget)
+local ShotBatch=require(game.ReplicatedStorage.RogueliteCombat.ShotBatch)
 local P={}
 function P.new(combat,damage,rayParams)
  local active={}
  local serial=0
+ local shots=ShotBatch.writer(combat.Shot)
+ local batching=false
+ local function emitShot(...)
+  if batching then shots:push(...) else combat.Shot:FireAllClients(...) end
+ end
  local function cast(r,delta)
   local params=rayParams(r.d.character,false);local filter=params.FilterDescendantsInstances
   for npc in r.hit do table.insert(filter,npc) end;params.FilterDescendantsInstances=filter
   return workspace:Spherecast(r.position,r.d.projectileRadius,delta,params)
  end
  RunService.Heartbeat:Connect(function(dt)
+  batching=#active>1
   for i=#active,1,-1 do
    local r=active[i];local d=r.d;local h=d.character:FindFirstChildOfClass('Humanoid')
    if (not combat:GetAttribute('ZombiesEnabled') and not d.practiceTarget) or d.owner.Character~=d.character or not h or h.Health<=0 or os.clock()>r.expires then table.remove(active,i);continue end
@@ -28,7 +35,9 @@ function P.new(combat,damage,rayParams)
    local finish=result and result.Position or r.position+delta
    local hitModel=result and result.Instance:FindFirstAncestorOfClass('Model')
    local mobContact=hitModel~=nil and Tags:HasTag(hitModel,'RogueliteZombie')
-   combat.Shot:FireAllClients(r.position,finish,'Ranged',d.id,d.projectileRadius*2,nil,result~=nil and d.kind~='Blast',result and result.Normal,d.owner.UserId,d.slotIndex,r.first,mobContact,r.shotId,r.visualId,d.projectileSpeed,result~=nil and (not mobContact or (r.pierce<=0 and r.bounce<=0)) or r.remaining<=distance)
+   emitShot(r.position,finish,'Ranged',d.id,d.projectileRadius*2,nil,result~=nil and d.kind~='Blast',result and result.Normal,d.owner.UserId,d.slotIndex,r.first,mobContact,r.shotId,r.visualId,d.projectileSpeed,result~=nil and (not mobContact or (r.pierce<=0 and r.bounce<=0)) or r.remaining<=distance)
+   -- Preserve Shot-before-damage ordering on contact; never wait another frame.
+   if result then shots:flush() end
    r.first=false
    r.remaining-=(finish-r.position).Magnitude;r.position=finish
    if result then
@@ -39,7 +48,7 @@ function P.new(combat,damage,rayParams)
       local root=candidate:FindFirstChild('HumanoidRootPart');local hum=candidate:FindFirstChildOfClass('Humanoid')
       if root and hum and hum.Health>0 and (root.Position-finish).Magnitude<=d.blastRadius and not workspace:Raycast(blastOrigin,root.Position-blastOrigin,wall) then damage(candidate,d.damage,d) end
      end
-     combat.Shot:FireAllClients(finish-r.direction*.15,finish,'Blast',d.id,d.projectileRadius*2,d.blastRadius)
+     emitShot(finish-r.direction*.15,finish,'Blast',d.id,d.projectileRadius*2,d.blastRadius)
      table.remove(active,i);continue
     end
     local npc=result.Instance:FindFirstAncestorOfClass('Model')
@@ -64,6 +73,7 @@ function P.new(combat,damage,rayParams)
    end
    if r.remaining<=.01 then table.remove(active,i) end
   end
+  shots:flush()
  end)
  local self={}
  function self:launch(d,origin,aim)

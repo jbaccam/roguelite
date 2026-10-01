@@ -43,11 +43,14 @@ local function padOf(id)
  end
 end
 game:GetService('RunService').PostSimulation:Connect(function()
- local id=player:GetAttribute('LobbyQueue');if id==nil then return end
+ local id=player:GetAttribute('LobbyQueue');if id==nil or player:GetAttribute('StudioArea')=='Arena' then return end
  local hrp=player.Character and player.Character:FindFirstChild('HumanoidRootPart');if not hrp then return end
  local center,radius=padOf(id)
  if typeof(center)~='Vector3' or type(radius)~='number' then return end
- local offset=hrp.Position-center;local flat=Vector3.new(offset.X,0,offset.Z)
+ local offset=hrp.Position-center
+ -- Ignore a just-replicated teleport while the queue-clear attribute catches up.
+ if offset.Magnitude>300 then return end
+ local flat=Vector3.new(offset.X,0,offset.Z)
  if flat.Magnitude<=radius then return end
  local out=flat.Unit
  hrp.CFrame+=out*(radius-flat.Magnitude)

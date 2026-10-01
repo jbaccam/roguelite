@@ -54,7 +54,7 @@ local function applyMap()
  local id=R.activeMap();if role=='Lobby' or not id then return end
  for mapId,map in Maps.Maps do
   for _,name in map.folders do
-   if role=='Match' then place(name,mapId==id) end
+   if role=='Match' or map.managed then place(name,mapId==id) end
    local spawn=areas[name] and areas[name]:FindFirstChild('PlayerSpawn')
    if spawn and spawn:IsA('SpawnLocation') then spawn.Enabled=mapId==id end
   end
