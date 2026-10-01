@@ -1,0 +1,571 @@
+{
+  "fbx": {
+    "file": "exports/fbx/fox.fbx",
+    "ok": true,
+    "objects": 10,
+    "total_triangles": 5557,
+    "head_top_studs": 2.5783,
+    "length_studs": 3.4113,
+    "problems": [],
+    "parts": {
+      "Fox_Body": {
+        "triangles": 1118,
+        "pivot": [
+          0.0,
+          0.0,
+          0.86
+        ],
+        "bbox_min": [
+          -0.412,
+          -0.8101,
+          0.4197
+        ],
+        "bbox_max": [
+          0.4107,
+          0.5446,
+          1.4537
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_EarL": {
+        "triangles": 240,
+        "pivot": [
+          0.36,
+          -0.66,
+          1.97
+        ],
+        "bbox_min": [
+          0.1709,
+          -0.7706,
+          1.8912
+        ],
+        "bbox_max": [
+          0.6011,
+          -0.5309,
+          2.5783
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_EarR": {
+        "triangles": 240,
+        "pivot": [
+          -0.36,
+          -0.66,
+          1.97
+        ],
+        "bbox_min": [
+          -0.6011,
+          -0.7706,
+          1.8912
+        ],
+        "bbox_max": [
+          -0.1709,
+          -0.5309,
+          2.5783
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_Head": {
+        "triangles": 1273,
+        "pivot": [
+          0.0,
+          -0.52,
+          1.18
+        ],
+        "bbox_min": [
+          -0.7056,
+          -1.7164,
+          1.0602
+        ],
+        "bbox_max": [
+          0.7048,
+          -0.2987,
+          2.1446
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_LegBL": {
+        "triangles": 380,
+        "pivot": [
+          0.26,
+          0.28,
+          0.66
+        ],
+        "bbox_min": [
+          0.0689,
+          0.0289,
+          -0.002
+        ],
+        "bbox_max": [
+          0.4986,
+          0.5608,
+          0.7641
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_LegBR": {
+        "triangles": 380,
+        "pivot": [
+          -0.26,
+          0.28,
+          0.66
+        ],
+        "bbox_min": [
+          -0.4986,
+          0.0289,
+          -0.002
+        ],
+        "bbox_max": [
+          -0.0689,
+          0.5608,
+          0.7641
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_LegFL": {
+        "triangles": 330,
+        "pivot": [
+          0.23,
+          -0.25,
+          0.64
+        ],
+        "bbox_min": [
+          0.053,
+          -0.5461,
+          0.0006
+        ],
+        "bbox_max": [
+          0.4276,
+          -0.0609,
+          0.6998
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_LegFR": {
+        "triangles": 330,
+        "pivot": [
+          -0.23,
+          -0.25,
+          0.64
+        ],
+        "bbox_min": [
+          -0.4276,
+          -0.5461,
+          0.0006
+        ],
+        "bbox_max": [
+          -0.053,
+          -0.0609,
+          0.6998
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_Scarf": {
+        "triangles": 366,
+        "pivot": [
+          0.294,
+          -0.6281,
+          0.9396
+        ],
+        "bbox_min": [
+          0.195,
+          -0.7352,
+          0.1524
+        ],
+        "bbox_max": [
+          0.6748,
+          -0.1745,
+          1.0325
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_Tail": {
+        "triangles": 900,
+        "pivot": [
+          0.0,
+          0.4,
+          0.8
+        ],
+        "bbox_min": [
+          -0.4277,
+          0.2528,
+          0.551
+        ],
+        "bbox_max": [
+          0.4254,
+          1.6949,
+          1.6458
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "glb": {
+    "file": "exports/glb/fox.glb",
+    "ok": true,
+    "objects": 10,
+    "total_triangles": 5557,
+    "head_top_studs": 2.5783,
+    "length_studs": 3.4113,
+    "problems": [],
+    "parts": {
+      "Fox_Body": {
+        "triangles": 1118,
+        "pivot": [
+          0.0,
+          0.0,
+          0.86
+        ],
+        "bbox_min": [
+          -0.412,
+          -0.8101,
+          0.4197
+        ],
+        "bbox_max": [
+          0.4107,
+          0.5446,
+          1.4537
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_EarL": {
+        "triangles": 240,
+        "pivot": [
+          0.36,
+          -0.66,
+          1.97
+        ],
+        "bbox_min": [
+          0.1709,
+          -0.7706,
+          1.8912
+        ],
+        "bbox_max": [
+          0.6011,
+          -0.5309,
+          2.5783
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_EarR": {
+        "triangles": 240,
+        "pivot": [
+          -0.36,
+          -0.66,
+          1.97
+        ],
+        "bbox_min": [
+          -0.6011,
+          -0.7706,
+          1.8912
+        ],
+        "bbox_max": [
+          -0.1709,
+          -0.5309,
+          2.5783
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_Head": {
+        "triangles": 1273,
+        "pivot": [
+          0.0,
+          -0.52,
+          1.18
+        ],
+        "bbox_min": [
+          -0.7056,
+          -1.7164,
+          1.0602
+        ],
+        "bbox_max": [
+          0.7048,
+          -0.2987,
+          2.1446
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_LegBL": {
+        "triangles": 380,
+        "pivot": [
+          0.26,
+          0.28,
+          0.66
+        ],
+        "bbox_min": [
+          0.0689,
+          0.0289,
+          -0.002
+        ],
+        "bbox_max": [
+          0.4986,
+          0.5608,
+          0.7641
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_LegBR": {
+        "triangles": 380,
+        "pivot": [
+          -0.26,
+          0.28,
+          0.66
+        ],
+        "bbox_min": [
+          -0.4986,
+          0.0289,
+          -0.002
+        ],
+        "bbox_max": [
+          -0.0689,
+          0.5608,
+          0.7641
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_LegFL": {
+        "triangles": 330,
+        "pivot": [
+          0.23,
+          -0.25,
+          0.64
+        ],
+        "bbox_min": [
+          0.053,
+          -0.5461,
+          0.0006
+        ],
+        "bbox_max": [
+          0.4276,
+          -0.0609,
+          0.6998
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_LegFR": {
+        "triangles": 330,
+        "pivot": [
+          -0.23,
+          -0.25,
+          0.64
+        ],
+        "bbox_min": [
+          -0.4276,
+          -0.5461,
+          0.0006
+        ],
+        "bbox_max": [
+          -0.053,
+          -0.0609,
+          0.6998
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_Scarf": {
+        "triangles": 366,
+        "pivot": [
+          0.294,
+          -0.6281,
+          0.9396
+        ],
+        "bbox_min": [
+          0.195,
+          -0.7352,
+          0.1524
+        ],
+        "bbox_max": [
+          0.6748,
+          -0.1745,
+          1.0325
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Fox_Tail": {
+        "triangles": 900,
+        "pivot": [
+          0.0,
+          0.4,
+          0.8
+        ],
+        "bbox_min": [
+          -0.4277,
+          0.2528,
+          0.551
+        ],
+        "bbox_max": [
+          0.4254,
+          1.6949,
+          1.6458
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "fox",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "texture": {
+    "file": "textures/fox.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "ok": true
+  },
+  "install_data": {
+    "file": "studio-install-data.json",
+    "ok": true,
+    "problems": []
+  },
+  "all_ok": true,
+  "expected_parts": [
+    "Fox_Body",
+    "Fox_EarL",
+    "Fox_EarR",
+    "Fox_Head",
+    "Fox_LegBL",
+    "Fox_LegBR",
+    "Fox_LegFL",
+    "Fox_LegFR",
+    "Fox_Scarf",
+    "Fox_Tail"
+  ],
+  "scope": "Blender re-import only (Blender 5.2.1 LTS); Studio untested"
+}

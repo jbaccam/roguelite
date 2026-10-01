@@ -1,0 +1,280 @@
+{
+  "asset": "fox",
+  "rarity": "Rare",
+  "strong_suit": "damage (pounces on nearby enemies)",
+  "axis": "studio = (-x, z, y) of blender; Blender front -Y = Studio front -Z",
+  "units": "studs; the model is at final size, import 1:1 and do not scale",
+  "sides": "L/R are the fox's own left/right; its left is Blender +X = Studio -X",
+  "origin": "all positions are relative to the model origin = the ground point under the body pivot (Blender world origin)",
+  "ground_point": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "overall_size": [
+    1.4104,
+    2.5804,
+    3.4113
+  ],
+  "overall_center": [
+    0.0004,
+    1.2881,
+    -0.0107
+  ],
+  "texture": "textures/fox.png",
+  "texture_note": "one shared atlas; every MeshPart uses the same TextureID (Rare: one painted charm, no Neon, no glow)",
+  "rest_rotation": "every part has identity rotation relative to the model at rest",
+  "rig": "one Motor6D per part: Part0 = joint_parent, Part1 = the part, C0/C1 placed at the part's pivot",
+  "parts": {
+    "Fox_Body": {
+      "center": [
+        0.0007,
+        0.9367,
+        -0.1327
+      ],
+      "size": [
+        0.8227,
+        1.034,
+        1.3547
+      ],
+      "pivot": [
+        0.0,
+        0.86,
+        0.0
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pivot_is": "body centre (root part; bob/roll pivot)",
+      "joint_parent": null,
+      "suggested_motion": "root part: bob up/down in Studio Y and a small roll about Studio Z while running; crouch before a pounce"
+    },
+    "Fox_Head": {
+      "center": [
+        0.0004,
+        1.6024,
+        -1.0076
+      ],
+      "size": [
+        1.4104,
+        1.0844,
+        1.4177
+      ],
+      "pivot": [
+        0.0,
+        1.18,
+        -0.52
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.32,
+        -0.52
+      ],
+      "pivot_is": "neck joint (nod / tilt / turn pivot)",
+      "joint_parent": "Fox_Body",
+      "suggested_motion": "nod = pitch about Studio X, tilt = roll about Studio Z, look = yaw about Studio Y, all through the neck joint"
+    },
+    "Fox_EarL": {
+      "center": [
+        -0.386,
+        2.2347,
+        -0.6507
+      ],
+      "size": [
+        0.4301,
+        0.6871,
+        0.2397
+      ],
+      "pivot": [
+        -0.36,
+        1.97,
+        -0.66
+      ],
+      "pivot_from_body_pivot": [
+        -0.36,
+        1.11,
+        -0.66
+      ],
+      "pivot_is": "ear root on the skull (flop pivot)",
+      "joint_parent": "Fox_Head",
+      "suggested_motion": "flick / flop = rotate about Studio Z (front-back axis) through the ear root; child of the head"
+    },
+    "Fox_EarR": {
+      "center": [
+        0.386,
+        2.2347,
+        -0.6507
+      ],
+      "size": [
+        0.4301,
+        0.6871,
+        0.2397
+      ],
+      "pivot": [
+        0.36,
+        1.97,
+        -0.66
+      ],
+      "pivot_from_body_pivot": [
+        0.36,
+        1.11,
+        -0.66
+      ],
+      "pivot_is": "ear root on the skull (flop pivot)",
+      "joint_parent": "Fox_Head",
+      "suggested_motion": "flick / flop = rotate about Studio Z (front-back axis) through the ear root; child of the head"
+    },
+    "Fox_LegFL": {
+      "center": [
+        -0.2403,
+        0.3502,
+        -0.3035
+      ],
+      "size": [
+        0.3746,
+        0.6992,
+        0.4851
+      ],
+      "pivot": [
+        -0.23,
+        0.64,
+        -0.25
+      ],
+      "pivot_from_body_pivot": [
+        -0.23,
+        -0.22,
+        -0.25
+      ],
+      "pivot_is": "shoulder (swing about the side-to-side axis)",
+      "joint_parent": "Fox_Body",
+      "suggested_motion": "trot / pounce reach = swing about Studio X (side-to-side axis) through the shoulder"
+    },
+    "Fox_LegFR": {
+      "center": [
+        0.2403,
+        0.3502,
+        -0.3035
+      ],
+      "size": [
+        0.3746,
+        0.6992,
+        0.4851
+      ],
+      "pivot": [
+        0.23,
+        0.64,
+        -0.25
+      ],
+      "pivot_from_body_pivot": [
+        0.23,
+        -0.22,
+        -0.25
+      ],
+      "pivot_is": "shoulder (swing about the side-to-side axis)",
+      "joint_parent": "Fox_Body",
+      "suggested_motion": "trot / pounce reach = swing about Studio X (side-to-side axis) through the shoulder"
+    },
+    "Fox_LegBL": {
+      "center": [
+        -0.2838,
+        0.381,
+        0.2949
+      ],
+      "size": [
+        0.4298,
+        0.7662,
+        0.5319
+      ],
+      "pivot": [
+        -0.26,
+        0.66,
+        0.28
+      ],
+      "pivot_from_body_pivot": [
+        -0.26,
+        -0.2,
+        0.28
+      ],
+      "pivot_is": "hip (swing about the side-to-side axis)",
+      "joint_parent": "Fox_Body",
+      "suggested_motion": "trot / pounce push = swing about Studio X (side-to-side axis) through the hip"
+    },
+    "Fox_LegBR": {
+      "center": [
+        0.2838,
+        0.381,
+        0.2949
+      ],
+      "size": [
+        0.4298,
+        0.7662,
+        0.5319
+      ],
+      "pivot": [
+        0.26,
+        0.66,
+        0.28
+      ],
+      "pivot_from_body_pivot": [
+        0.26,
+        -0.2,
+        0.28
+      ],
+      "pivot_is": "hip (swing about the side-to-side axis)",
+      "joint_parent": "Fox_Body",
+      "suggested_motion": "trot / pounce push = swing about Studio X (side-to-side axis) through the hip"
+    },
+    "Fox_Tail": {
+      "center": [
+        0.0011,
+        1.0984,
+        0.9739
+      ],
+      "size": [
+        0.8532,
+        1.0948,
+        1.4421
+      ],
+      "pivot": [
+        0.0,
+        0.8,
+        0.4
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        -0.06,
+        0.4
+      ],
+      "pivot_is": "tail root (wag = turn about the vertical axis)",
+      "joint_parent": "Fox_Body",
+      "suggested_motion": "wag / sweep = yaw about Studio Y through the tail root (lift = pitch about Studio X)"
+    },
+    "Fox_Scarf": {
+      "center": [
+        -0.4349,
+        0.5924,
+        -0.4549
+      ],
+      "size": [
+        0.4798,
+        0.8802,
+        0.5607
+      ],
+      "pivot": [
+        -0.294,
+        0.9396,
+        -0.6281
+      ],
+      "pivot_from_body_pivot": [
+        -0.294,
+        0.0796,
+        -0.6281
+      ],
+      "pivot_is": "scarf knot (flutter / sway pivot)",
+      "joint_parent": "Fox_Body",
+      "suggested_motion": "flutter = swing about Studio X (and a little about Studio Z) through the knot; lags the body"
+    }
+  }
+}

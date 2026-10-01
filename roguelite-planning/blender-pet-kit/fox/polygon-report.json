@@ -1,0 +1,359 @@
+{
+  "asset": "fox",
+  "pet": "Fox",
+  "rarity": "Rare",
+  "strong_suit": "damage (pounces on nearby enemies)",
+  "blender_version": "5.2.1 LTS",
+  "authoring": "final Roblox stud size (1 Blender unit = 1 stud); import at 1:1, do not scale",
+  "axes": "Blender Z-up, front -Y, the fox's left +X; paws on z = 0",
+  "texture": "textures/fox.png (1024x1024, shared by every part)",
+  "parts": {
+    "Fox_Body": {
+      "triangles": 1118,
+      "vertices": 606,
+      "dimensions_studs": [
+        0.8227,
+        1.3547,
+        1.034
+      ],
+      "bbox_min": [
+        -0.412,
+        -0.8101,
+        0.4197
+      ],
+      "bbox_max": [
+        0.4107,
+        0.5446,
+        1.4537
+      ],
+      "pivot": [
+        0.0,
+        0.0,
+        0.86
+      ],
+      "pivot_is": "body centre (root part; bob/roll pivot)",
+      "joint_parent": null,
+      "uv_range": [
+        0.0072,
+        0.9823,
+        0.0073,
+        0.9823
+      ],
+      "min_face_area": 0.00103653
+    },
+    "Fox_Head": {
+      "triangles": 1273,
+      "vertices": 650,
+      "dimensions_studs": [
+        1.4104,
+        1.4177,
+        1.0844
+      ],
+      "bbox_min": [
+        -0.7056,
+        -1.7164,
+        1.0602
+      ],
+      "bbox_max": [
+        0.7048,
+        -0.2987,
+        2.1446
+      ],
+      "pivot": [
+        0.0,
+        -0.52,
+        1.18
+      ],
+      "pivot_is": "neck joint (nod / tilt / turn pivot)",
+      "joint_parent": "Fox_Body",
+      "uv_range": [
+        0.0063,
+        0.9672,
+        0.0072,
+        0.9937
+      ],
+      "min_face_area": 0.00068013
+    },
+    "Fox_EarL": {
+      "triangles": 240,
+      "vertices": 122,
+      "dimensions_studs": [
+        0.4301,
+        0.2397,
+        0.6871
+      ],
+      "bbox_min": [
+        0.1709,
+        -0.7706,
+        1.8912
+      ],
+      "bbox_max": [
+        0.6011,
+        -0.5309,
+        2.5783
+      ],
+      "pivot": [
+        0.36,
+        -0.66,
+        1.97
+      ],
+      "pivot_is": "ear root on the skull (flop pivot)",
+      "joint_parent": "Fox_Head",
+      "uv_range": [
+        0.0067,
+        0.9181,
+        0.0069,
+        0.9219
+      ],
+      "min_face_area": 0.00044268
+    },
+    "Fox_EarR": {
+      "triangles": 240,
+      "vertices": 122,
+      "dimensions_studs": [
+        0.4301,
+        0.2397,
+        0.6871
+      ],
+      "bbox_min": [
+        -0.6011,
+        -0.7706,
+        1.8912
+      ],
+      "bbox_max": [
+        -0.1709,
+        -0.5309,
+        2.5783
+      ],
+      "pivot": [
+        -0.36,
+        -0.66,
+        1.97
+      ],
+      "pivot_is": "ear root on the skull (flop pivot)",
+      "joint_parent": "Fox_Head",
+      "uv_range": [
+        0.132,
+        0.9257,
+        0.0385,
+        0.9143
+      ],
+      "min_face_area": 0.00044268
+    },
+    "Fox_LegFL": {
+      "triangles": 330,
+      "vertices": 167,
+      "dimensions_studs": [
+        0.3746,
+        0.4851,
+        0.6992
+      ],
+      "bbox_min": [
+        0.053,
+        -0.5461,
+        0.0006
+      ],
+      "bbox_max": [
+        0.4276,
+        -0.0609,
+        0.6998
+      ],
+      "pivot": [
+        0.23,
+        -0.25,
+        0.64
+      ],
+      "pivot_is": "shoulder (swing about the side-to-side axis)",
+      "joint_parent": "Fox_Body",
+      "uv_range": [
+        0.159,
+        0.9313,
+        0.0072,
+        0.9861
+      ],
+      "min_face_area": 0.00041217
+    },
+    "Fox_LegFR": {
+      "triangles": 330,
+      "vertices": 167,
+      "dimensions_studs": [
+        0.3746,
+        0.4851,
+        0.6992
+      ],
+      "bbox_min": [
+        -0.4276,
+        -0.5461,
+        0.0006
+      ],
+      "bbox_max": [
+        -0.053,
+        -0.0609,
+        0.6998
+      ],
+      "pivot": [
+        -0.23,
+        -0.25,
+        0.64
+      ],
+      "pivot_is": "shoulder (swing about the side-to-side axis)",
+      "joint_parent": "Fox_Body",
+      "uv_range": [
+        0.0079,
+        0.9861,
+        0.0105,
+        0.9861
+      ],
+      "min_face_area": 0.00041217
+    },
+    "Fox_LegBL": {
+      "triangles": 380,
+      "vertices": 192,
+      "dimensions_studs": [
+        0.4298,
+        0.5319,
+        0.7662
+      ],
+      "bbox_min": [
+        0.0689,
+        0.0289,
+        -0.002
+      ],
+      "bbox_max": [
+        0.4986,
+        0.5608,
+        0.7641
+      ],
+      "pivot": [
+        0.26,
+        0.28,
+        0.66
+      ],
+      "pivot_is": "hip (swing about the side-to-side axis)",
+      "joint_parent": "Fox_Body",
+      "uv_range": [
+        0.0067,
+        0.9899,
+        0.0071,
+        0.9899
+      ],
+      "min_face_area": 0.00028571
+    },
+    "Fox_LegBR": {
+      "triangles": 380,
+      "vertices": 192,
+      "dimensions_studs": [
+        0.4298,
+        0.5319,
+        0.7662
+      ],
+      "bbox_min": [
+        -0.4986,
+        0.0289,
+        -0.002
+      ],
+      "bbox_max": [
+        -0.0689,
+        0.5608,
+        0.7641
+      ],
+      "pivot": [
+        -0.26,
+        0.28,
+        0.66
+      ],
+      "pivot_is": "hip (swing about the side-to-side axis)",
+      "joint_parent": "Fox_Body",
+      "uv_range": [
+        0.1576,
+        0.9937,
+        0.0063,
+        0.9899
+      ],
+      "min_face_area": 0.00028571
+    },
+    "Fox_Tail": {
+      "triangles": 900,
+      "vertices": 452,
+      "dimensions_studs": [
+        0.8532,
+        1.4421,
+        1.0948
+      ],
+      "bbox_min": [
+        -0.4277,
+        0.2528,
+        0.551
+      ],
+      "bbox_max": [
+        0.4254,
+        1.6949,
+        1.6458
+      ],
+      "pivot": [
+        0.0,
+        0.4,
+        0.8
+      ],
+      "pivot_is": "tail root (wag = turn about the vertical axis)",
+      "joint_parent": "Fox_Body",
+      "uv_range": [
+        0.0769,
+        0.9861,
+        0.0063,
+        0.7443
+      ],
+      "min_face_area": 0.00126442
+    },
+    "Fox_Scarf": {
+      "triangles": 366,
+      "vertices": 200,
+      "dimensions_studs": [
+        0.4798,
+        0.5607,
+        0.8802
+      ],
+      "bbox_min": [
+        0.195,
+        -0.7352,
+        0.1524
+      ],
+      "bbox_max": [
+        0.6748,
+        -0.1745,
+        1.0325
+      ],
+      "pivot": [
+        0.294,
+        -0.6281,
+        0.9396
+      ],
+      "pivot_is": "scarf knot (flutter / sway pivot)",
+      "joint_parent": "Fox_Body",
+      "uv_range": [
+        0.0064,
+        0.971,
+        0.0063,
+        0.9502
+      ],
+      "min_face_area": 0.00017563
+    }
+  },
+  "total_triangles": 5557,
+  "overall": {
+    "bbox_min": [
+      -0.7056,
+      -1.7164,
+      -0.002
+    ],
+    "bbox_max": [
+      0.7048,
+      1.6949,
+      2.5783
+    ],
+    "height_studs": 2.5804,
+    "length_studs": 3.4113,
+    "width_studs": 1.4104,
+    "head_top_studs": 2.1446
+  }
+}
