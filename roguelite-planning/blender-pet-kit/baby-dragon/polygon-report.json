@@ -1,0 +1,345 @@
+{
+  "asset": "baby-dragon",
+  "blender_version": "5.2.1 LTS",
+  "authoring": "final Roblox stud size (1 Blender unit = 1 stud); import at 1:1, do not scale",
+  "axes": "Blender Z-up, front -Y, the dragon's left +X; feet on z = 0",
+  "texture": "textures/baby-dragon.png (1024x1024, shared by every part)",
+  "parts": {
+    "BabyDragon_Body": {
+      "triangles": 1868,
+      "vertices": 936,
+      "dimensions_studs": [
+        1.0092,
+        1.1432,
+        1.2514
+      ],
+      "bbox_min": [
+        -0.5046,
+        -0.5698,
+        0.1427
+      ],
+      "bbox_max": [
+        0.5046,
+        0.5735,
+        1.3941
+      ],
+      "pivot": [
+        0.0,
+        0.06,
+        0.7
+      ],
+      "pivot_is": "root (belly centre)",
+      "joint_parent": null,
+      "uv_range": [
+        0.007,
+        0.9767,
+        0.0062,
+        0.9881
+      ]
+    },
+    "BabyDragon_Head": {
+      "triangles": 2760,
+      "vertices": 1382,
+      "dimensions_studs": [
+        1.5105,
+        1.2552,
+        1.3527
+      ],
+      "bbox_min": [
+        -0.7552,
+        -0.8525,
+        1.0055
+      ],
+      "bbox_max": [
+        0.7553,
+        0.4027,
+        2.3582
+      ],
+      "pivot": [
+        0.0,
+        -0.1,
+        1.22
+      ],
+      "pivot_is": "neck, hidden inside the head and chest",
+      "joint_parent": "BabyDragon_Body",
+      "uv_range": [
+        0.0062,
+        0.99,
+        0.0062,
+        0.9938
+      ]
+    },
+    "BabyDragon_WingL": {
+      "triangles": 560,
+      "vertices": 282,
+      "dimensions_studs": [
+        0.7535,
+        0.7726,
+        0.7567
+      ],
+      "bbox_min": [
+        0.1331,
+        0.1333,
+        0.7998
+      ],
+      "bbox_max": [
+        0.8866,
+        0.9059,
+        1.5565
+      ],
+      "pivot": [
+        0.26,
+        0.26,
+        1.08
+      ],
+      "pivot_is": "shoulder (round wing root sunk into the upper back)",
+      "joint_parent": "BabyDragon_Body",
+      "uv_range": [
+        0.0069,
+        0.9881,
+        0.1657,
+        0.9881
+      ]
+    },
+    "BabyDragon_WingR": {
+      "triangles": 560,
+      "vertices": 282,
+      "dimensions_studs": [
+        0.7535,
+        0.7726,
+        0.7567
+      ],
+      "bbox_min": [
+        -0.8866,
+        0.1333,
+        0.7998
+      ],
+      "bbox_max": [
+        -0.1331,
+        0.9059,
+        1.5565
+      ],
+      "pivot": [
+        -0.26,
+        0.26,
+        1.08
+      ],
+      "pivot_is": "shoulder (round wing root sunk into the upper back)",
+      "joint_parent": "BabyDragon_Body",
+      "uv_range": [
+        0.0069,
+        0.9862,
+        0.0065,
+        0.9843
+      ]
+    },
+    "BabyDragon_LegL": {
+      "triangles": 636,
+      "vertices": 320,
+      "dimensions_studs": [
+        0.3935,
+        0.7146,
+        0.5996
+      ],
+      "bbox_min": [
+        0.1319,
+        -0.3981,
+        0.0006
+      ],
+      "bbox_max": [
+        0.5254,
+        0.3165,
+        0.6001
+      ],
+      "pivot": [
+        0.3,
+        0.08,
+        0.42
+      ],
+      "pivot_is": "hip, inside the round thigh",
+      "joint_parent": "BabyDragon_Body",
+      "uv_range": [
+        0.0068,
+        0.9843,
+        0.007,
+        0.9919
+      ]
+    },
+    "BabyDragon_LegR": {
+      "triangles": 636,
+      "vertices": 320,
+      "dimensions_studs": [
+        0.3935,
+        0.7146,
+        0.5996
+      ],
+      "bbox_min": [
+        -0.5254,
+        -0.3981,
+        0.0006
+      ],
+      "bbox_max": [
+        -0.1319,
+        0.3165,
+        0.6001
+      ],
+      "pivot": [
+        -0.3,
+        0.08,
+        0.42
+      ],
+      "pivot_is": "hip, inside the round thigh",
+      "joint_parent": "BabyDragon_Body",
+      "uv_range": [
+        0.2921,
+        0.99,
+        0.0068,
+        0.9919
+      ]
+    },
+    "BabyDragon_Tail": {
+      "triangles": 904,
+      "vertices": 454,
+      "dimensions_studs": [
+        0.4038,
+        1.0392,
+        0.7008
+      ],
+      "bbox_min": [
+        -0.2019,
+        0.2132,
+        0.1203
+      ],
+      "bbox_max": [
+        0.2019,
+        1.2523,
+        0.8211
+      ],
+      "pivot": [
+        0.0,
+        0.38,
+        0.4
+      ],
+      "pivot_is": "tail root, inside the lower back",
+      "joint_parent": "BabyDragon_Body",
+      "uv_range": [
+        0.0073,
+        0.9862,
+        0.0065,
+        0.9919
+      ]
+    },
+    "BabyDragon_Cheeks_Glow": {
+      "triangles": 240,
+      "vertices": 128,
+      "dimensions_studs": [
+        1.281,
+        0.249,
+        0.2122
+      ],
+      "bbox_min": [
+        -0.6405,
+        -0.4764,
+        1.399
+      ],
+      "bbox_max": [
+        0.6405,
+        -0.2274,
+        1.6112
+      ],
+      "pivot": [
+        0.0,
+        -0.3519,
+        1.5051
+      ],
+      "pivot_is": "centre of the cheek ember marks (welded to the head, Neon)",
+      "joint_parent": "BabyDragon_Head",
+      "uv_range": [
+        0.1452,
+        0.9596,
+        0.0062,
+        0.9539
+      ]
+    },
+    "BabyDragon_Embers_Glow": {
+      "triangles": 300,
+      "vertices": 160,
+      "dimensions_studs": [
+        1.0254,
+        0.6955,
+        0.402
+      ],
+      "bbox_min": [
+        -0.5128,
+        -0.4368,
+        0.6148
+      ],
+      "bbox_max": [
+        0.5125,
+        0.2587,
+        1.0168
+      ],
+      "pivot": [
+        -0.0001,
+        -0.0891,
+        0.8158
+      ],
+      "pivot_is": "centre of the flank and chest ember marks (welded to the body, Neon)",
+      "joint_parent": "BabyDragon_Body",
+      "uv_range": [
+        0.0068,
+        0.9881,
+        0.0546,
+        0.971
+      ]
+    },
+    "BabyDragon_TailFlame_Glow": {
+      "triangles": 320,
+      "vertices": 166,
+      "dimensions_studs": [
+        0.2608,
+        0.6215,
+        0.6198
+      ],
+      "bbox_min": [
+        -0.1306,
+        0.6547,
+        0.4744
+      ],
+      "bbox_max": [
+        0.1302,
+        1.2762,
+        1.0943
+      ],
+      "pivot": [
+        -0.0002,
+        0.9654,
+        0.7844
+      ],
+      "pivot_is": "centre of the tail-tip flame and tail ember dots (welded to the tail, Neon)",
+      "joint_parent": "BabyDragon_Tail",
+      "uv_range": [
+        0.0346,
+        0.9919,
+        0.0066,
+        0.9919
+      ]
+    }
+  },
+  "total_triangles": 8784,
+  "overall": {
+    "bbox_min": [
+      -0.8866,
+      -0.8525,
+      0.0006
+    ],
+    "bbox_max": [
+      0.8866,
+      1.2762,
+      2.3582
+    ],
+    "height_studs": 2.3576,
+    "length_studs": 2.1287,
+    "width_studs": 1.7733
+  }
+}

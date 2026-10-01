@@ -1,0 +1,571 @@
+{
+  "fbx": {
+    "file": "exports/fbx/baby-dragon.fbx",
+    "ok": true,
+    "objects": 10,
+    "total_triangles": 8784,
+    "height_studs": 2.3576,
+    "lowest_z": 0.0006,
+    "problems": [],
+    "parts": {
+      "BabyDragon_Body": {
+        "triangles": 1868,
+        "pivot": [
+          0.0,
+          0.06,
+          0.7
+        ],
+        "bbox_min": [
+          -0.5046,
+          -0.5698,
+          0.1427
+        ],
+        "bbox_max": [
+          0.5046,
+          0.5735,
+          1.3941
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_Cheeks_Glow": {
+        "triangles": 240,
+        "pivot": [
+          0.0,
+          -0.3519,
+          1.5051
+        ],
+        "bbox_min": [
+          -0.6405,
+          -0.4764,
+          1.399
+        ],
+        "bbox_max": [
+          0.6405,
+          -0.2274,
+          1.6112
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_Embers_Glow": {
+        "triangles": 300,
+        "pivot": [
+          -0.0001,
+          -0.0891,
+          0.8158
+        ],
+        "bbox_min": [
+          -0.5128,
+          -0.4368,
+          0.6148
+        ],
+        "bbox_max": [
+          0.5125,
+          0.2587,
+          1.0168
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_Head": {
+        "triangles": 2760,
+        "pivot": [
+          0.0,
+          -0.1,
+          1.22
+        ],
+        "bbox_min": [
+          -0.7552,
+          -0.8525,
+          1.0055
+        ],
+        "bbox_max": [
+          0.7553,
+          0.4027,
+          2.3582
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_LegL": {
+        "triangles": 636,
+        "pivot": [
+          0.3,
+          0.08,
+          0.42
+        ],
+        "bbox_min": [
+          0.1319,
+          -0.3981,
+          0.0006
+        ],
+        "bbox_max": [
+          0.5254,
+          0.3165,
+          0.6001
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_LegR": {
+        "triangles": 636,
+        "pivot": [
+          -0.3,
+          0.08,
+          0.42
+        ],
+        "bbox_min": [
+          -0.5254,
+          -0.3981,
+          0.0006
+        ],
+        "bbox_max": [
+          -0.1319,
+          0.3165,
+          0.6001
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_Tail": {
+        "triangles": 904,
+        "pivot": [
+          0.0,
+          0.38,
+          0.4
+        ],
+        "bbox_min": [
+          -0.2019,
+          0.2132,
+          0.1203
+        ],
+        "bbox_max": [
+          0.2019,
+          1.2523,
+          0.8211
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_TailFlame_Glow": {
+        "triangles": 320,
+        "pivot": [
+          -0.0002,
+          0.9654,
+          0.7844
+        ],
+        "bbox_min": [
+          -0.1306,
+          0.6547,
+          0.4744
+        ],
+        "bbox_max": [
+          0.1302,
+          1.2762,
+          1.0943
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_WingL": {
+        "triangles": 560,
+        "pivot": [
+          0.26,
+          0.26,
+          1.08
+        ],
+        "bbox_min": [
+          0.1331,
+          0.1333,
+          0.7998
+        ],
+        "bbox_max": [
+          0.8866,
+          0.9059,
+          1.5565
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_WingR": {
+        "triangles": 560,
+        "pivot": [
+          -0.26,
+          0.26,
+          1.08
+        ],
+        "bbox_min": [
+          -0.8866,
+          0.1333,
+          0.7998
+        ],
+        "bbox_max": [
+          -0.1331,
+          0.9059,
+          1.5565
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "glb": {
+    "file": "exports/glb/baby-dragon.glb",
+    "ok": true,
+    "objects": 10,
+    "total_triangles": 8784,
+    "height_studs": 2.3576,
+    "lowest_z": 0.0006,
+    "problems": [],
+    "parts": {
+      "BabyDragon_Body": {
+        "triangles": 1868,
+        "pivot": [
+          0.0,
+          0.06,
+          0.7
+        ],
+        "bbox_min": [
+          -0.5046,
+          -0.5698,
+          0.1427
+        ],
+        "bbox_max": [
+          0.5046,
+          0.5735,
+          1.3941
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_Cheeks_Glow": {
+        "triangles": 240,
+        "pivot": [
+          0.0,
+          -0.3519,
+          1.5051
+        ],
+        "bbox_min": [
+          -0.6405,
+          -0.4764,
+          1.399
+        ],
+        "bbox_max": [
+          0.6405,
+          -0.2274,
+          1.6112
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_Embers_Glow": {
+        "triangles": 300,
+        "pivot": [
+          -0.0001,
+          -0.0891,
+          0.8158
+        ],
+        "bbox_min": [
+          -0.5128,
+          -0.4368,
+          0.6148
+        ],
+        "bbox_max": [
+          0.5125,
+          0.2587,
+          1.0168
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_Head": {
+        "triangles": 2760,
+        "pivot": [
+          0.0,
+          -0.1,
+          1.22
+        ],
+        "bbox_min": [
+          -0.7552,
+          -0.8525,
+          1.0055
+        ],
+        "bbox_max": [
+          0.7553,
+          0.4027,
+          2.3582
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_LegL": {
+        "triangles": 636,
+        "pivot": [
+          0.3,
+          0.08,
+          0.42
+        ],
+        "bbox_min": [
+          0.1319,
+          -0.3981,
+          0.0006
+        ],
+        "bbox_max": [
+          0.5254,
+          0.3165,
+          0.6001
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_LegR": {
+        "triangles": 636,
+        "pivot": [
+          -0.3,
+          0.08,
+          0.42
+        ],
+        "bbox_min": [
+          -0.5254,
+          -0.3981,
+          0.0006
+        ],
+        "bbox_max": [
+          -0.1319,
+          0.3165,
+          0.6001
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_Tail": {
+        "triangles": 904,
+        "pivot": [
+          0.0,
+          0.38,
+          0.4
+        ],
+        "bbox_min": [
+          -0.2019,
+          0.2132,
+          0.1203
+        ],
+        "bbox_max": [
+          0.2019,
+          1.2523,
+          0.8211
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_TailFlame_Glow": {
+        "triangles": 320,
+        "pivot": [
+          -0.0002,
+          0.9654,
+          0.7844
+        ],
+        "bbox_min": [
+          -0.1306,
+          0.6547,
+          0.4744
+        ],
+        "bbox_max": [
+          0.1302,
+          1.2762,
+          1.0943
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_WingL": {
+        "triangles": 560,
+        "pivot": [
+          0.26,
+          0.26,
+          1.08
+        ],
+        "bbox_min": [
+          0.1331,
+          0.1333,
+          0.7998
+        ],
+        "bbox_max": [
+          0.8866,
+          0.9059,
+          1.5565
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_WingR": {
+        "triangles": 560,
+        "pivot": [
+          -0.26,
+          0.26,
+          1.08
+        ],
+        "bbox_min": [
+          -0.8866,
+          0.1333,
+          0.7998
+        ],
+        "bbox_max": [
+          -0.1331,
+          0.9059,
+          1.5565
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "texture": {
+    "file": "textures/baby-dragon.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "ok": true
+  },
+  "install_data": {
+    "file": "studio-install-data.json",
+    "ok": true,
+    "problems": []
+  },
+  "all_ok": true,
+  "expected_parts": [
+    "BabyDragon_Body",
+    "BabyDragon_Cheeks_Glow",
+    "BabyDragon_Embers_Glow",
+    "BabyDragon_Head",
+    "BabyDragon_LegL",
+    "BabyDragon_LegR",
+    "BabyDragon_Tail",
+    "BabyDragon_TailFlame_Glow",
+    "BabyDragon_WingL",
+    "BabyDragon_WingR"
+  ],
+  "scope": "Blender re-import only (Blender 5.2.1 LTS); Studio untested"
+}
