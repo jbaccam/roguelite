@@ -1,0 +1,1020 @@
+{
+  "asset": "cheetah-cub",
+  "rarity": "Epic",
+  "strong_suit": "Speed: +move speed, and a short speed burst after you get hit (numbers live in the pet balance table, not in the model)",
+  "axis": "studio = (-x, z, y) of blender; Blender front -Y = Studio front -Z",
+  "units": "studs; the model is at final size, import 1:1 and do not scale",
+  "sides": "L/R are the cub's own left/right; its left is Blender +X = Studio -X",
+  "origin": "all positions are relative to the model origin = the ground point under the body (Blender world origin)",
+  "ground_point": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "overall_size": [
+    1.5124,
+    2.3539,
+    2.9499
+  ],
+  "overall_center": [
+    0.0473,
+    1.1804,
+    0.2555
+  ],
+  "texture": "textures/cheetah-cub.png",
+  "texture_note": "one shared atlas on every MeshPart via MeshPart.TextureID, except CheetahCub_Scarf_Glow",
+  "glow_parts": {
+    "CheetahCub_Scarf_Glow": {
+      "Material": "Neon",
+      "Color": [
+        255,
+        226,
+        92
+      ],
+      "Transparency": 0,
+      "TextureID": "none",
+      "weld": "WeldConstraint to CheetahCub_Scarf (same pivot)",
+      "note": "a small lightning bolt, a thin shell 0.016 stud proud of the scarf's outer face near its end. Subtle on purpose: only the bolt glows"
+    }
+  },
+  "role_prop": "electric-blue speed scarf: a collar band fused into the body, plus the knot, one long streaming tail and one short hanging tail as their own part (CheetahCub_Scarf) pivoting at the knot",
+  "rest_pose": "mobile, ready-to-run standing stance on all four paws (head up, tail up, scarf streaming); the model is never authored sitting. Any idle is an extra pose layered on top (see locomotion_data)",
+  "rest_rotation": "every part has identity rotation relative to the model at rest",
+  "rig": "one Motor6D per part (except the _Glow weld): Part0 = joint_parent, Part1 = the part, C0/C1 at the part's pivot",
+  "angle_convention": "studio_deg = CFrame.Angles(math.rad(x), math.rad(y), math.rad(z)) about the part's own pivot, applied as Motor6D.Transform; blender_bone_deg are the preview-rig values (Studio = (-x, y, -z) of them); body_drop_studs lowers the root in Studio Y",
+  "parts": {
+    "CheetahCub_Body": {
+      "center": [
+        0.0,
+        0.8572,
+        0.0901
+      ],
+      "size": [
+        1.1239,
+        1.072,
+        1.6717
+      ],
+      "pivot": [
+        0.0,
+        0.8,
+        0.1
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pivot_is": "root (belly centre)",
+      "joint_parent": null,
+      "suggested_motion": "root part: bob in Studio Y and pitch about Studio X for the gallop's spine stretch and curl"
+    },
+    "CheetahCub_Head": {
+      "center": [
+        0.0,
+        1.6197,
+        -0.5863
+      ],
+      "size": [
+        1.4177,
+        1.1525,
+        1.2664
+      ],
+      "pivot": [
+        0.0,
+        1.14,
+        -0.4
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.34,
+        -0.5
+      ],
+      "pivot_is": "neck, hidden under the big head",
+      "joint_parent": "CheetahCub_Body",
+      "suggested_motion": "nod = pitch about Studio X, tilt = roll about Studio Z, look = yaw about Studio Y, through the neck"
+    },
+    "CheetahCub_EarL": {
+      "center": [
+        -0.476,
+        2.1644,
+        -0.4633
+      ],
+      "size": [
+        0.3702,
+        0.3858,
+        0.1777
+      ],
+      "pivot": [
+        -0.4,
+        2.02,
+        -0.47
+      ],
+      "pivot_from_body_pivot": [
+        -0.4,
+        1.22,
+        -0.57
+      ],
+      "pivot_is": "ear base, sunk into the head",
+      "joint_parent": "CheetahCub_Head",
+      "suggested_motion": "flick / fold back = pitch about Studio X through the ear base (back = negative Studio X angle)"
+    },
+    "CheetahCub_EarR": {
+      "center": [
+        0.476,
+        2.1644,
+        -0.4633
+      ],
+      "size": [
+        0.3702,
+        0.3858,
+        0.1777
+      ],
+      "pivot": [
+        0.4,
+        2.02,
+        -0.47
+      ],
+      "pivot_from_body_pivot": [
+        0.4,
+        1.22,
+        -0.57
+      ],
+      "pivot_is": "ear base, sunk into the head",
+      "joint_parent": "CheetahCub_Head",
+      "suggested_motion": "flick / fold back = pitch about Studio X through the ear base (back = negative Studio X angle)"
+    },
+    "CheetahCub_FrontLegL": {
+      "center": [
+        -0.3022,
+        0.3896,
+        -0.3673
+      ],
+      "size": [
+        0.3962,
+        0.7723,
+        0.558
+      ],
+      "pivot": [
+        -0.3,
+        0.64,
+        -0.3
+      ],
+      "pivot_from_body_pivot": [
+        -0.3,
+        -0.16,
+        -0.4
+      ],
+      "pivot_is": "shoulder",
+      "joint_parent": "CheetahCub_Body",
+      "suggested_motion": "swing about Studio X through the shoulder; reach forward = positive Studio X angle"
+    },
+    "CheetahCub_FrontLegR": {
+      "center": [
+        0.3022,
+        0.3896,
+        -0.3673
+      ],
+      "size": [
+        0.3962,
+        0.7723,
+        0.558
+      ],
+      "pivot": [
+        0.3,
+        0.64,
+        -0.3
+      ],
+      "pivot_from_body_pivot": [
+        0.3,
+        -0.16,
+        -0.4
+      ],
+      "pivot_is": "shoulder",
+      "joint_parent": "CheetahCub_Body",
+      "suggested_motion": "swing about Studio X through the shoulder; reach forward = positive Studio X angle"
+    },
+    "CheetahCub_RearLegL": {
+      "center": [
+        -0.3302,
+        0.4311,
+        0.4691
+      ],
+      "size": [
+        0.4689,
+        0.8542,
+        0.6366
+      ],
+      "pivot": [
+        -0.32,
+        0.64,
+        0.5
+      ],
+      "pivot_from_body_pivot": [
+        -0.32,
+        -0.16,
+        0.4
+      ],
+      "pivot_is": "hip",
+      "joint_parent": "CheetahCub_Body",
+      "suggested_motion": "swing about Studio X through the hip; push back = negative Studio X angle"
+    },
+    "CheetahCub_RearLegR": {
+      "center": [
+        0.3302,
+        0.4311,
+        0.4691
+      ],
+      "size": [
+        0.4689,
+        0.8542,
+        0.6366
+      ],
+      "pivot": [
+        0.32,
+        0.64,
+        0.5
+      ],
+      "pivot_from_body_pivot": [
+        0.32,
+        -0.16,
+        0.4
+      ],
+      "pivot_is": "hip",
+      "joint_parent": "CheetahCub_Body",
+      "suggested_motion": "swing about Studio X through the hip; push back = negative Studio X angle"
+    },
+    "CheetahCub_Tail": {
+      "center": [
+        -0.0002,
+        1.3478,
+        1.1971
+      ],
+      "size": [
+        0.2985,
+        1.2584,
+        1.0666
+      ],
+      "pivot": [
+        0.0,
+        0.86,
+        0.86
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.06,
+        0.76
+      ],
+      "pivot_is": "tail base, inside the rump",
+      "joint_parent": "CheetahCub_Body",
+      "suggested_motion": "lift / lower = pitch about Studio X through the base, flick = yaw about Studio Y"
+    },
+    "CheetahCub_Scarf": {
+      "center": [
+        0.5754,
+        1.1637,
+        0.3509
+      ],
+      "size": [
+        0.4564,
+        0.7966,
+        1.5607
+      ],
+      "pivot": [
+        0.47,
+        1.09,
+        -0.3
+      ],
+      "pivot_from_body_pivot": [
+        0.47,
+        0.29,
+        -0.4
+      ],
+      "pivot_is": "the scarf knot on the collar (cub's right side of the neck)",
+      "joint_parent": "CheetahCub_Body",
+      "suggested_motion": "stream up = pitch about Studio X through the knot, flutter = small yaw / roll noise"
+    },
+    "CheetahCub_Scarf_Glow": {
+      "center": [
+        0.6826,
+        1.4496,
+        0.692
+      ],
+      "size": [
+        0.1093,
+        0.1204,
+        0.2098
+      ],
+      "pivot": [
+        0.47,
+        1.09,
+        -0.3
+      ],
+      "pivot_from_body_pivot": [
+        0.47,
+        0.29,
+        -0.4
+      ],
+      "pivot_is": "same as the scarf pivot (rigid weld to the scarf)",
+      "joint_parent": "CheetahCub_Scarf",
+      "suggested_motion": "none: WeldConstraint to CheetahCub_Scarf"
+    }
+  },
+  "locomotion": "gallop",
+  "locomotion_data": {
+    "gait": "eager bounding gallop: the FRONT pair reaches together, then the BACK pair pushes together (the pairs move as pairs, left slightly ahead of right). The spine stretches and curls through the body pitch, the head counter-pitches to stay level, the tail and scarf trail the body by a quarter cycle",
+    "period_s": 0.42,
+    "body_bob_studs": 0.1,
+    "frames": [
+      {
+        "t": 0.0,
+        "name": "gather: all four paws collected under the body, spine curled",
+        "blender_bone_deg": {
+          "Body": [
+            6,
+            0,
+            0
+          ],
+          "Head": [
+            -8,
+            0,
+            0
+          ],
+          "FrontLegL": [
+            30,
+            0,
+            0
+          ],
+          "FrontLegR": [
+            24,
+            0,
+            0
+          ],
+          "RearLegL": [
+            -34,
+            0,
+            0
+          ],
+          "RearLegR": [
+            -28,
+            0,
+            0
+          ],
+          "Tail": [
+            -12,
+            0,
+            0
+          ],
+          "Scarf": [
+            -8,
+            0,
+            0
+          ]
+        },
+        "studio_deg": {
+          "CheetahCub_Body": [
+            -6.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_Head": [
+            8.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_FrontLegL": [
+            -30.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_FrontLegR": [
+            -24.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_RearLegL": [
+            34.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_RearLegR": [
+            28.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_Tail": [
+            12.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_Scarf": [
+            8.0,
+            0.0,
+            0.0
+          ]
+        },
+        "body_drop_studs": 0.0
+      },
+      {
+        "t": 0.28,
+        "name": "front reach: front pair swings forward together, back pair still under",
+        "blender_bone_deg": {
+          "Body": [
+            -3,
+            0,
+            0
+          ],
+          "Head": [
+            2,
+            0,
+            0
+          ],
+          "FrontLegL": [
+            -44,
+            0,
+            0
+          ],
+          "FrontLegR": [
+            -38,
+            0,
+            0
+          ],
+          "RearLegL": [
+            -20,
+            0,
+            0
+          ],
+          "RearLegR": [
+            -14,
+            0,
+            0
+          ],
+          "Tail": [
+            2,
+            0,
+            0
+          ],
+          "Scarf": [
+            4,
+            0,
+            0
+          ]
+        },
+        "studio_deg": {
+          "CheetahCub_Body": [
+            3.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_Head": [
+            -2.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_FrontLegL": [
+            44.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_FrontLegR": [
+            38.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_RearLegL": [
+            20.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_RearLegR": [
+            14.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_Tail": [
+            -2.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_Scarf": [
+            -4.0,
+            0.0,
+            0.0
+          ]
+        },
+        "body_drop_studs": 0.0
+      },
+      {
+        "t": 0.55,
+        "name": "stretch: back pair pushes back together, full spine stretch, highest point",
+        "blender_bone_deg": {
+          "Body": [
+            -8,
+            0,
+            0
+          ],
+          "Head": [
+            8,
+            0,
+            0
+          ],
+          "FrontLegL": [
+            -42,
+            0,
+            0
+          ],
+          "FrontLegR": [
+            -36,
+            0,
+            0
+          ],
+          "RearLegL": [
+            42,
+            0,
+            0
+          ],
+          "RearLegR": [
+            36,
+            0,
+            0
+          ],
+          "Tail": [
+            14,
+            0,
+            0
+          ],
+          "Scarf": [
+            10,
+            0,
+            0
+          ],
+          "EarL": [
+            -14,
+            0,
+            0
+          ],
+          "EarR": [
+            -14,
+            0,
+            0
+          ]
+        },
+        "studio_deg": {
+          "CheetahCub_Body": [
+            8.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_Head": [
+            -8.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_FrontLegL": [
+            42.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_FrontLegR": [
+            36.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_RearLegL": [
+            -42.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_RearLegR": [
+            -36.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_Tail": [
+            -14.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_Scarf": [
+            -10.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_EarL": [
+            14.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_EarR": [
+            14.0,
+            0.0,
+            0.0
+          ]
+        },
+        "body_drop_studs": 0.0
+      },
+      {
+        "t": 0.8,
+        "name": "land: front pair plants and sweeps back, back pair swings forward",
+        "blender_bone_deg": {
+          "Body": [
+            3,
+            0,
+            0
+          ],
+          "Head": [
+            -4,
+            0,
+            0
+          ],
+          "FrontLegL": [
+            14,
+            0,
+            0
+          ],
+          "FrontLegR": [
+            20,
+            0,
+            0
+          ],
+          "RearLegL": [
+            26,
+            0,
+            0
+          ],
+          "RearLegR": [
+            20,
+            0,
+            0
+          ],
+          "Tail": [
+            6,
+            0,
+            0
+          ],
+          "Scarf": [
+            2,
+            0,
+            0
+          ]
+        },
+        "studio_deg": {
+          "CheetahCub_Body": [
+            -3.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_Head": [
+            4.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_FrontLegL": [
+            -14.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_FrontLegR": [
+            -20.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_RearLegL": [
+            -26.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_RearLegR": [
+            -20.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_Tail": [
+            -6.0,
+            0.0,
+            0.0
+          ],
+          "CheetahCub_Scarf": [
+            -2.0,
+            0.0,
+            0.0
+          ]
+        },
+        "body_drop_studs": 0.0
+      }
+    ],
+    "interpolation": "cubic ease between frames, loop to gather; add +body_bob_studs Studio-Y at the stretch frame and 0 at gather. Walk speed below ~60% of max: scale every angle by 0.6 and the period by 1.2",
+    "zoom_sprint": {
+      "note": "speed-burst pose (after-hit burst or catching up): low and stretched, ears folded back, scarf streaming up; hold this and oscillate the legs +/-12 deg at 0.25 s",
+      "t": 0.0,
+      "name": "zoom",
+      "blender_bone_deg": {
+        "Body": [
+          -5,
+          0,
+          0
+        ],
+        "Head": [
+          10,
+          0,
+          0
+        ],
+        "EarL": [
+          -55,
+          0,
+          0
+        ],
+        "EarR": [
+          -55,
+          0,
+          0
+        ],
+        "FrontLegL": [
+          -62,
+          0,
+          0
+        ],
+        "FrontLegR": [
+          -56,
+          0,
+          0
+        ],
+        "RearLegL": [
+          58,
+          0,
+          0
+        ],
+        "RearLegR": [
+          52,
+          0,
+          0
+        ],
+        "Tail": [
+          -24,
+          0,
+          0
+        ],
+        "Scarf": [
+          16,
+          0,
+          0
+        ]
+      },
+      "studio_deg": {
+        "CheetahCub_Body": [
+          5.0,
+          0.0,
+          0.0
+        ],
+        "CheetahCub_Head": [
+          -10.0,
+          0.0,
+          0.0
+        ],
+        "CheetahCub_EarL": [
+          55.0,
+          0.0,
+          0.0
+        ],
+        "CheetahCub_EarR": [
+          55.0,
+          0.0,
+          0.0
+        ],
+        "CheetahCub_FrontLegL": [
+          62.0,
+          0.0,
+          0.0
+        ],
+        "CheetahCub_FrontLegR": [
+          56.0,
+          0.0,
+          0.0
+        ],
+        "CheetahCub_RearLegL": [
+          -58.0,
+          0.0,
+          0.0
+        ],
+        "CheetahCub_RearLegR": [
+          -52.0,
+          0.0,
+          0.0
+        ],
+        "CheetahCub_Tail": [
+          24.0,
+          0.0,
+          0.0
+        ],
+        "CheetahCub_Scarf": [
+          -16.0,
+          0.0,
+          0.0
+        ]
+      },
+      "body_drop_studs": 0.12
+    },
+    "head_turn": {
+      "note": "idle look-around: yaw 32 and roll 12 through the neck",
+      "t": 0.0,
+      "name": "head turn",
+      "blender_bone_deg": {
+        "Head": [
+          4,
+          32,
+          12
+        ]
+      },
+      "studio_deg": {
+        "CheetahCub_Head": [
+          -4.0,
+          32.0,
+          -12.0
+        ]
+      },
+      "body_drop_studs": 0.0
+    },
+    "tail_flick": {
+      "note": "idle tail flick: lift 12 and yaw 30 through the tail base, 0.5 s out and back",
+      "t": 0.0,
+      "name": "tail flick",
+      "blender_bone_deg": {
+        "Tail": [
+          12,
+          30,
+          0
+        ]
+      },
+      "studio_deg": {
+        "CheetahCub_Tail": [
+          -12.0,
+          30.0,
+          0.0
+        ]
+      },
+      "body_drop_studs": 0.0
+    }
+  },
+  "vfx": [
+    {
+      "name": "ScarfSpeedTrail",
+      "kind": "Trail between two attachments across the scarf tip; Enabled while running",
+      "part": "CheetahCub_Scarf",
+      "attachment0_from_part_pivot": [
+        0.0413,
+        0.3715,
+        1.2773
+      ],
+      "attachment1_from_part_pivot": [
+        0.1287,
+        0.2623,
+        1.2846
+      ],
+      "position_model": [
+        0.54,
+        1.4,
+        1.04
+      ],
+      "color": [
+        120,
+        220,
+        255
+      ],
+      "suggested": {
+        "Lifetime": 0.22,
+        "MinLength": 0.05,
+        "FaceCamera": true,
+        "LightEmission": 0.7,
+        "LightInfluence": 0,
+        "Transparency": "NumberSequence 0:0.55, 1:1",
+        "WidthScale": "NumberSequence 0:1, 1:0.2",
+        "Color": "ColorSequence 0:(150,230,255), 1:(70,170,240)",
+        "note": "faint; Enabled only above ~70% of the cub's run speed"
+      }
+    },
+    {
+      "name": "PawSparks",
+      "kind": "ParticleEmitter on an attachment at each paw (four copies), faint speed sparks kicked back while running",
+      "parts": {
+        "CheetahCub_FrontLegL": {
+          "attachment_from_part_pivot": [
+            -0.01,
+            -0.54,
+            -0.13
+          ],
+          "position_model": [
+            -0.31,
+            0.1,
+            -0.43
+          ]
+        },
+        "CheetahCub_FrontLegR": {
+          "attachment_from_part_pivot": [
+            0.01,
+            -0.54,
+            -0.13
+          ],
+          "position_model": [
+            0.31,
+            0.1,
+            -0.43
+          ]
+        },
+        "CheetahCub_RearLegL": {
+          "attachment_from_part_pivot": [
+            -0.02,
+            -0.54,
+            -0.13
+          ],
+          "position_model": [
+            -0.34,
+            0.1,
+            0.37
+          ]
+        },
+        "CheetahCub_RearLegR": {
+          "attachment_from_part_pivot": [
+            0.02,
+            -0.54,
+            -0.13
+          ],
+          "position_model": [
+            0.34,
+            0.1,
+            0.37
+          ]
+        }
+      },
+      "color": [
+        255,
+        230,
+        120
+      ],
+      "suggested": {
+        "Texture": "a small soft streak / spark (e.g. rbxasset://textures/particles/sparkles_main.dds)",
+        "Rate": 6,
+        "Lifetime": [
+          0.15,
+          0.3
+        ],
+        "Size": "NumberSequence 0:0.08, 1:0",
+        "Speed": [
+          1.5,
+          3
+        ],
+        "SpreadAngle": [
+          25,
+          25
+        ],
+        "EmissionDirection": "Back",
+        "Drag": 4,
+        "LightEmission": 0.8,
+        "LightInfluence": 0,
+        "Transparency": "NumberSequence 0:0.35, 1:1",
+        "LockedToPart": false,
+        "note": "Rate 0 when idle or walking slowly"
+      }
+    },
+    {
+      "name": "SpeedBurst",
+      "kind": "one-shot ParticleEmitter:Emit(18) + 1.5 s boost when the after-hit speed burst triggers",
+      "part": "CheetahCub_Body",
+      "attachment_from_part_pivot": [
+        0.0,
+        0.05,
+        0.05
+      ],
+      "position_model": [
+        0.0,
+        0.85,
+        0.15
+      ],
+      "color": [
+        255,
+        236,
+        130
+      ],
+      "suggested": {
+        "Texture": "the same spark streak",
+        "Emit": 18,
+        "Lifetime": [
+          0.25,
+          0.45
+        ],
+        "Size": "NumberSequence 0:0.18, 1:0",
+        "Speed": [
+          6,
+          10
+        ],
+        "SpreadAngle": [
+          180,
+          180
+        ],
+        "Drag": 6,
+        "LightEmission": 1,
+        "LightInfluence": 0,
+        "Transparency": "NumberSequence 0:0.1, 1:1",
+        "during_burst": "ScarfSpeedTrail Transparency 0:0.25 and LightEmission 1, PawSparks Rate 20, Scarf_Glow Color brightened ~20%, pose blends to zoom_sprint; all revert after 1.5 s"
+      }
+    }
+  ]
+}

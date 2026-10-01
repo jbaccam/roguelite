@@ -1,0 +1,612 @@
+{
+  "fbx": {
+    "file": "exports/fbx/cheetah-cub.fbx",
+    "ok": true,
+    "objects": 11,
+    "total_triangles": 7364,
+    "height_studs": 2.3539,
+    "lowest_z": 0.0034,
+    "problems": [],
+    "parts": {
+      "CheetahCub_Body": {
+        "triangles": 1164,
+        "pivot": [
+          0.0,
+          0.1,
+          0.8
+        ],
+        "bbox_min": [
+          -0.5619,
+          -0.7458,
+          0.3212
+        ],
+        "bbox_max": [
+          0.5619,
+          0.926,
+          1.3932
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_EarL": {
+        "triangles": 312,
+        "pivot": [
+          0.4,
+          -0.47,
+          2.02
+        ],
+        "bbox_min": [
+          0.2909,
+          -0.5521,
+          1.9715
+        ],
+        "bbox_max": [
+          0.6611,
+          -0.3744,
+          2.3573
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_EarR": {
+        "triangles": 312,
+        "pivot": [
+          -0.4,
+          -0.47,
+          2.02
+        ],
+        "bbox_min": [
+          -0.6611,
+          -0.5521,
+          1.9715
+        ],
+        "bbox_max": [
+          -0.2909,
+          -0.3744,
+          2.3573
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_FrontLegL": {
+        "triangles": 436,
+        "pivot": [
+          0.3,
+          -0.3,
+          0.64
+        ],
+        "bbox_min": [
+          0.1041,
+          -0.6463,
+          0.0034
+        ],
+        "bbox_max": [
+          0.5002,
+          -0.0883,
+          0.7757
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_FrontLegR": {
+        "triangles": 436,
+        "pivot": [
+          -0.3,
+          -0.3,
+          0.64
+        ],
+        "bbox_min": [
+          -0.5002,
+          -0.6463,
+          0.0034
+        ],
+        "bbox_max": [
+          -0.1041,
+          -0.0883,
+          0.7757
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_Head": {
+        "triangles": 1552,
+        "pivot": [
+          0.0,
+          -0.4,
+          1.14
+        ],
+        "bbox_min": [
+          -0.7089,
+          -1.2195,
+          1.0435
+        ],
+        "bbox_max": [
+          0.7089,
+          0.0469,
+          2.196
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_RearLegL": {
+        "triangles": 588,
+        "pivot": [
+          0.32,
+          0.5,
+          0.64
+        ],
+        "bbox_min": [
+          0.0958,
+          0.1508,
+          0.004
+        ],
+        "bbox_max": [
+          0.5646,
+          0.7874,
+          0.8582
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_RearLegR": {
+        "triangles": 588,
+        "pivot": [
+          -0.32,
+          0.5,
+          0.64
+        ],
+        "bbox_min": [
+          -0.5646,
+          0.1508,
+          0.004
+        ],
+        "bbox_max": [
+          -0.0958,
+          0.7874,
+          0.8582
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_Scarf": {
+        "triangles": 1252,
+        "pivot": [
+          -0.47,
+          -0.3,
+          1.09
+        ],
+        "bbox_min": [
+          -0.8036,
+          -0.4294,
+          0.7654
+        ],
+        "bbox_max": [
+          -0.3471,
+          1.1313,
+          1.562
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_Scarf_Glow": {
+        "triangles": 20,
+        "pivot": [
+          -0.47,
+          -0.3,
+          1.09
+        ],
+        "bbox_min": [
+          -0.7372,
+          0.5871,
+          1.3894
+        ],
+        "bbox_max": [
+          -0.6279,
+          0.797,
+          1.5098
+        ],
+        "zero_area_triangles": 0,
+        "glow": true
+      },
+      "CheetahCub_Tail": {
+        "triangles": 704,
+        "pivot": [
+          0.0,
+          0.86,
+          0.86
+        ],
+        "bbox_min": [
+          -0.149,
+          0.6638,
+          0.7186
+        ],
+        "bbox_max": [
+          0.1494,
+          1.7304,
+          1.9771
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "glb": {
+    "file": "exports/glb/cheetah-cub.glb",
+    "ok": true,
+    "objects": 11,
+    "total_triangles": 7364,
+    "height_studs": 2.3539,
+    "lowest_z": 0.0034,
+    "problems": [],
+    "parts": {
+      "CheetahCub_Body": {
+        "triangles": 1164,
+        "pivot": [
+          0.0,
+          0.1,
+          0.8
+        ],
+        "bbox_min": [
+          -0.5619,
+          -0.7458,
+          0.3212
+        ],
+        "bbox_max": [
+          0.5619,
+          0.926,
+          1.3932
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_EarL": {
+        "triangles": 312,
+        "pivot": [
+          0.4,
+          -0.47,
+          2.02
+        ],
+        "bbox_min": [
+          0.2909,
+          -0.5521,
+          1.9715
+        ],
+        "bbox_max": [
+          0.6611,
+          -0.3744,
+          2.3573
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_EarR": {
+        "triangles": 312,
+        "pivot": [
+          -0.4,
+          -0.47,
+          2.02
+        ],
+        "bbox_min": [
+          -0.6611,
+          -0.5521,
+          1.9715
+        ],
+        "bbox_max": [
+          -0.2909,
+          -0.3744,
+          2.3573
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_FrontLegL": {
+        "triangles": 436,
+        "pivot": [
+          0.3,
+          -0.3,
+          0.64
+        ],
+        "bbox_min": [
+          0.1041,
+          -0.6463,
+          0.0034
+        ],
+        "bbox_max": [
+          0.5002,
+          -0.0883,
+          0.7757
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_FrontLegR": {
+        "triangles": 436,
+        "pivot": [
+          -0.3,
+          -0.3,
+          0.64
+        ],
+        "bbox_min": [
+          -0.5002,
+          -0.6463,
+          0.0034
+        ],
+        "bbox_max": [
+          -0.1041,
+          -0.0883,
+          0.7757
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_Head": {
+        "triangles": 1552,
+        "pivot": [
+          0.0,
+          -0.4,
+          1.14
+        ],
+        "bbox_min": [
+          -0.7089,
+          -1.2195,
+          1.0435
+        ],
+        "bbox_max": [
+          0.7089,
+          0.0469,
+          2.196
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_RearLegL": {
+        "triangles": 588,
+        "pivot": [
+          0.32,
+          0.5,
+          0.64
+        ],
+        "bbox_min": [
+          0.0958,
+          0.1508,
+          0.004
+        ],
+        "bbox_max": [
+          0.5646,
+          0.7874,
+          0.8582
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_RearLegR": {
+        "triangles": 588,
+        "pivot": [
+          -0.32,
+          0.5,
+          0.64
+        ],
+        "bbox_min": [
+          -0.5646,
+          0.1508,
+          0.004
+        ],
+        "bbox_max": [
+          -0.0958,
+          0.7874,
+          0.8582
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_Scarf": {
+        "triangles": 1252,
+        "pivot": [
+          -0.47,
+          -0.3,
+          1.09
+        ],
+        "bbox_min": [
+          -0.8036,
+          -0.4294,
+          0.7654
+        ],
+        "bbox_max": [
+          -0.3471,
+          1.1313,
+          1.562
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "CheetahCub_Scarf_Glow": {
+        "triangles": 20,
+        "pivot": [
+          -0.47,
+          -0.3,
+          1.09
+        ],
+        "bbox_min": [
+          -0.7372,
+          0.5871,
+          1.3894
+        ],
+        "bbox_max": [
+          -0.6279,
+          0.797,
+          1.5098
+        ],
+        "zero_area_triangles": 0,
+        "glow": true
+      },
+      "CheetahCub_Tail": {
+        "triangles": 704,
+        "pivot": [
+          0.0,
+          0.86,
+          0.86
+        ],
+        "bbox_min": [
+          -0.149,
+          0.6638,
+          0.7186
+        ],
+        "bbox_max": [
+          0.1494,
+          1.7304,
+          1.9771
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "cheetah-cub",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "texture": {
+    "file": "textures/cheetah-cub.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "ok": true
+  },
+  "install_data": {
+    "file": "studio-install-data.json",
+    "ok": true,
+    "problems": []
+  },
+  "all_ok": true,
+  "expected_parts": [
+    "CheetahCub_Body",
+    "CheetahCub_EarL",
+    "CheetahCub_EarR",
+    "CheetahCub_FrontLegL",
+    "CheetahCub_FrontLegR",
+    "CheetahCub_Head",
+    "CheetahCub_RearLegL",
+    "CheetahCub_RearLegR",
+    "CheetahCub_Scarf",
+    "CheetahCub_Scarf_Glow",
+    "CheetahCub_Tail"
+  ],
+  "scope": "Blender re-import only (Blender 5.2.1 LTS); Studio untested"
+}
