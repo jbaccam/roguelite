@@ -1,0 +1,491 @@
+{
+  "asset": "monkey",
+  "rarity": "Rare",
+  "strong_suit": "Attack speed (a plain +attack speed stat)",
+  "axis": "studio = (-x, z, y) of blender; Blender front -Y = Studio front -Z",
+  "units": "studs; the model is at final size, import 1:1 and do not scale",
+  "sides": "L/R are the monkey's own left/right; its left is Blender +X = Studio -X",
+  "origin": "all positions are relative to the model origin = the ground point under the body pivot (Blender world origin)",
+  "ground_point": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "overall_size": [
+    2.1602,
+    2.3325,
+    2.4252
+  ],
+  "overall_center": [
+    0.0,
+    1.1701,
+    0.2275
+  ],
+  "texture": "textures/monkey.png",
+  "texture_note": "one shared atlas; every MeshPart uses the same TextureID via MeshPart.TextureID (Rare: one small painted accent, no Neon, no glow)",
+  "rare_accent": "painted amber lightning bolt on the teal sweatband (texture only, no glow)",
+  "role_props": "teal sweatband with white edge lines and a short tied knot (fused into the head part); teal wrist wraps with a white stripe on both wrists (fused into the arm parts)",
+  "natural_stance": "the rest pose in the mesh IS the natural stance: a knuckle-walking crouch on all fours, fists on the ground",
+  "rest_rotation": "every part has identity rotation relative to the model at rest",
+  "rig": "one Motor6D per part: Part0 = joint_parent, Part1 = the part, C0/C1 placed at the part's pivot",
+  "parts": {
+    "Monkey_Body": {
+      "center": [
+        -0.0003,
+        0.9395,
+        0.0823
+      ],
+      "size": [
+        1.2297,
+        1.3443,
+        1.3754
+      ],
+      "pivot": [
+        0.0,
+        0.9,
+        0.05
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pivot_is": "root (belly centre)",
+      "joint_parent": null,
+      "suggested_motion": "root part: bob in Studio Y, lean (pitch about Studio X) and a little roll about Studio Z for the scamper; tips back for the hype pose"
+    },
+    "Monkey_Head": {
+      "center": [
+        0.0,
+        1.7189,
+        -0.1107
+      ],
+      "size": [
+        2.1602,
+        1.235,
+        1.7487
+      ],
+      "pivot": [
+        0.0,
+        1.36,
+        -0.2
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.46,
+        -0.25
+      ],
+      "pivot_is": "neck, hidden under the chin and chest",
+      "joint_parent": "Monkey_Body",
+      "suggested_motion": "nod = pitch about Studio X, tilt = roll about Studio Z, look = yaw about Studio Y, through the neck joint"
+    },
+    "Monkey_ArmL": {
+      "center": [
+        -0.6539,
+        0.7431,
+        -0.2533
+      ],
+      "size": [
+        0.7351,
+        1.4282,
+        0.9583
+      ],
+      "pivot": [
+        -0.56,
+        1.18,
+        -0.05
+      ],
+      "pivot_from_body_pivot": [
+        -0.56,
+        0.28,
+        -0.1
+      ],
+      "pivot_is": "shoulder",
+      "joint_parent": "Monkey_Body",
+      "suggested_motion": "swing about Studio X (side-to-side axis) through the shoulder; reach forward = positive Studio X angle; raise out = Studio Z"
+    },
+    "Monkey_ArmR": {
+      "center": [
+        0.6539,
+        0.7431,
+        -0.2533
+      ],
+      "size": [
+        0.7351,
+        1.4282,
+        0.9583
+      ],
+      "pivot": [
+        0.56,
+        1.18,
+        -0.05
+      ],
+      "pivot_from_body_pivot": [
+        0.56,
+        0.28,
+        -0.1
+      ],
+      "pivot_is": "shoulder",
+      "joint_parent": "Monkey_Body",
+      "suggested_motion": "swing about Studio X through the shoulder; reach forward = positive Studio X angle; raise out = Studio Z (mirrored sign)"
+    },
+    "Monkey_LegL": {
+      "center": [
+        -0.4188,
+        0.4069,
+        0.0184
+      ],
+      "size": [
+        0.5228,
+        0.8061,
+        1.0275
+      ],
+      "pivot": [
+        -0.4,
+        0.7,
+        0.26
+      ],
+      "pivot_from_body_pivot": [
+        -0.4,
+        -0.2,
+        0.21
+      ],
+      "pivot_is": "hip",
+      "joint_parent": "Monkey_Body",
+      "suggested_motion": "swing about Studio X through the hip; foot forward = positive Studio X angle"
+    },
+    "Monkey_LegR": {
+      "center": [
+        0.4188,
+        0.4069,
+        0.0184
+      ],
+      "size": [
+        0.5228,
+        0.8061,
+        1.0275
+      ],
+      "pivot": [
+        0.4,
+        0.7,
+        0.26
+      ],
+      "pivot_from_body_pivot": [
+        0.4,
+        -0.2,
+        0.21
+      ],
+      "pivot_is": "hip",
+      "joint_parent": "Monkey_Body",
+      "suggested_motion": "swing about Studio X through the hip; foot forward = positive Studio X angle"
+    },
+    "Monkey_Tail": {
+      "center": [
+        -0.001,
+        1.1589,
+        0.958
+      ],
+      "size": [
+        0.3266,
+        1.2234,
+        0.9642
+      ],
+      "pivot": [
+        0.0,
+        0.72,
+        0.62
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        -0.18,
+        0.57
+      ],
+      "pivot_is": "tail base, inside the rump",
+      "joint_parent": "Monkey_Body",
+      "suggested_motion": "curl / bounce = pitch about Studio X through the base, wave = yaw about Studio Y"
+    }
+  },
+  "locomotion": "scamper",
+  "locomotion_data": {
+    "gait": "scamper: a bouncy knuckle-walk on all fours in a diagonal gait (left arm with right leg), body bobbing up at mid-step, tail counter-swinging; a hop-bounce when it speeds up",
+    "angle_convention": "degrees, rotation of the part about its own pivot in Studio axes (right-hand rule, Roblox CFrame.Angles); 'blender_bone_deg' are the values used in the Blender preview armature (X pitch, Y yaw about world Z, Z roll about world -Y). Studio = (-x, y, -z) of the bone angles.",
+    "scamper": {
+      "step_period_s": 0.36,
+      "body_bob_studs": 0.07,
+      "frame_A": {
+        "blender_bone_deg": {
+          "Body": [
+            7,
+            0,
+            5
+          ],
+          "Head": [
+            -7,
+            0,
+            -5
+          ],
+          "ArmL": [
+            -40,
+            0,
+            0
+          ],
+          "ArmR": [
+            26,
+            0,
+            0
+          ],
+          "LegL": [
+            30,
+            0,
+            0
+          ],
+          "LegR": [
+            -28,
+            0,
+            0
+          ],
+          "Tail": [
+            -14,
+            0,
+            8
+          ]
+        },
+        "studio_deg": {
+          "Monkey_Body": [
+            -7.0,
+            0.0,
+            -5.0
+          ],
+          "Monkey_Head": [
+            7.0,
+            0.0,
+            5.0
+          ],
+          "Monkey_ArmL": [
+            40.0,
+            0.0,
+            0.0
+          ],
+          "Monkey_ArmR": [
+            -26.0,
+            0.0,
+            0.0
+          ],
+          "Monkey_LegL": [
+            -30.0,
+            0.0,
+            0.0
+          ],
+          "Monkey_LegR": [
+            28.0,
+            0.0,
+            0.0
+          ],
+          "Monkey_Tail": [
+            14.0,
+            0.0,
+            -8.0
+          ]
+        }
+      },
+      "frame_B": {
+        "blender_bone_deg": {
+          "Body": [
+            -3,
+            0,
+            -5
+          ],
+          "Head": [
+            3,
+            0,
+            5
+          ],
+          "ArmL": [
+            26,
+            0,
+            0
+          ],
+          "ArmR": [
+            -40,
+            0,
+            0
+          ],
+          "LegL": [
+            -28,
+            0,
+            0
+          ],
+          "LegR": [
+            30,
+            0,
+            0
+          ],
+          "Tail": [
+            12,
+            0,
+            -8
+          ]
+        },
+        "studio_deg": {
+          "Monkey_Body": [
+            3.0,
+            0.0,
+            5.0
+          ],
+          "Monkey_Head": [
+            -3.0,
+            0.0,
+            -5.0
+          ],
+          "Monkey_ArmL": [
+            -26.0,
+            0.0,
+            0.0
+          ],
+          "Monkey_ArmR": [
+            40.0,
+            0.0,
+            0.0
+          ],
+          "Monkey_LegL": [
+            28.0,
+            0.0,
+            0.0
+          ],
+          "Monkey_LegR": [
+            -30.0,
+            0.0,
+            0.0
+          ],
+          "Monkey_Tail": [
+            -12.0,
+            0.0,
+            8.0
+          ]
+        }
+      },
+      "note": "alternate A and B (ease in/out); arms reach forward = negative Blender X / positive Studio X, legs swing the opposite way to the arm on their diagonal; add +0.07 stud Studio Y bob at mid-step"
+    },
+    "hype_pose": {
+      "note": "celebrate / buff-ready: stands up on its hind legs, chest out, both fists pumped up beside the head",
+      "blender_bone_deg": {
+        "Body": [
+          -20,
+          0,
+          0
+        ],
+        "Head": [
+          14,
+          0,
+          0
+        ],
+        "ArmL": [
+          -122,
+          0,
+          -26
+        ],
+        "ArmR": [
+          -122,
+          0,
+          26
+        ],
+        "LegL": [
+          18,
+          0,
+          0
+        ],
+        "LegR": [
+          18,
+          0,
+          0
+        ],
+        "Tail": [
+          -10,
+          0,
+          0
+        ]
+      },
+      "studio_deg": {
+        "Monkey_Body": [
+          20.0,
+          0.0,
+          0.0
+        ],
+        "Monkey_Head": [
+          -14.0,
+          0.0,
+          0.0
+        ],
+        "Monkey_ArmL": [
+          122.0,
+          0.0,
+          26.0
+        ],
+        "Monkey_ArmR": [
+          122.0,
+          0.0,
+          -26.0
+        ],
+        "Monkey_LegL": [
+          -18.0,
+          0.0,
+          0.0
+        ],
+        "Monkey_LegR": [
+          -18.0,
+          0.0,
+          0.0
+        ],
+        "Monkey_Tail": [
+          10.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "head_turn": {
+      "blender_bone_deg": {
+        "Head": [
+          6,
+          30,
+          18
+        ]
+      },
+      "studio_deg": {
+        "Monkey_Head": [
+          -6.0,
+          30.0,
+          -18.0
+        ]
+      },
+      "note": "look around / tilt: yaw 30 and roll 18 through the neck joint"
+    },
+    "tail_curl": {
+      "blender_bone_deg": {
+        "Tail": [
+          30,
+          24,
+          0
+        ],
+        "Body": [
+          2,
+          0,
+          0
+        ]
+      },
+      "studio_deg": {
+        "Monkey_Tail": [
+          -30.0,
+          24.0,
+          0.0
+        ],
+        "Monkey_Body": [
+          -2.0,
+          0.0,
+          0.0
+        ]
+      },
+      "note": "tail pitched forward over the back with a sideways wave; use as the idle tail wag amplitude"
+    }
+  }
+}

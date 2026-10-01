@@ -1,0 +1,249 @@
+{
+  "asset": "monkey",
+  "blender_version": "5.2.1 LTS",
+  "authoring": "final Roblox stud size (1 Blender unit = 1 stud); import at 1:1, do not scale",
+  "axes": "Blender Z-up, front -Y, the monkey's left +X; feet on z = 0",
+  "texture": "textures/monkey.png (1024x1024, shared by every part)",
+  "parts": {
+    "Monkey_Body": {
+      "triangles": 912,
+      "vertices": 458,
+      "dimensions_studs": [
+        1.2297,
+        1.3754,
+        1.3443
+      ],
+      "bbox_min": [
+        -0.6146,
+        -0.6055,
+        0.2673
+      ],
+      "bbox_max": [
+        0.6151,
+        0.77,
+        1.6116
+      ],
+      "pivot": [
+        0.0,
+        0.05,
+        0.9
+      ],
+      "pivot_is": "root (belly centre)",
+      "joint_parent": null,
+      "uv_range": [
+        0.1735,
+        0.8678,
+        0.0125,
+        0.9643
+      ]
+    },
+    "Monkey_Head": {
+      "triangles": 2200,
+      "vertices": 1102,
+      "dimensions_studs": [
+        2.1602,
+        1.7487,
+        1.235
+      ],
+      "bbox_min": [
+        -1.0801,
+        -0.9851,
+        1.1013
+      ],
+      "bbox_max": [
+        1.0801,
+        0.7636,
+        2.3364
+      ],
+      "pivot": [
+        0.0,
+        -0.2,
+        1.36
+      ],
+      "pivot_is": "neck, hidden under the chin and chest",
+      "joint_parent": "Monkey_Body",
+      "uv_range": [
+        0.0062,
+        0.9828,
+        0.0061,
+        0.9717
+      ]
+    },
+    "Monkey_ArmL": {
+      "triangles": 812,
+      "vertices": 408,
+      "dimensions_studs": [
+        0.7351,
+        0.9583,
+        1.4282
+      ],
+      "bbox_min": [
+        0.2863,
+        -0.7325,
+        0.029
+      ],
+      "bbox_max": [
+        1.0214,
+        0.2258,
+        1.4571
+      ],
+      "pivot": [
+        0.56,
+        -0.05,
+        1.18
+      ],
+      "pivot_is": "shoulder",
+      "joint_parent": "Monkey_Body",
+      "uv_range": [
+        0.0062,
+        0.9791,
+        0.0361,
+        0.9939
+      ]
+    },
+    "Monkey_ArmR": {
+      "triangles": 812,
+      "vertices": 408,
+      "dimensions_studs": [
+        0.7351,
+        0.9583,
+        1.4282
+      ],
+      "bbox_min": [
+        -1.0214,
+        -0.7325,
+        0.029
+      ],
+      "bbox_max": [
+        -0.2863,
+        0.2258,
+        1.4571
+      ],
+      "pivot": [
+        -0.56,
+        -0.05,
+        1.18
+      ],
+      "pivot_is": "shoulder",
+      "joint_parent": "Monkey_Body",
+      "uv_range": [
+        0.0068,
+        0.9754,
+        0.0067,
+        0.9939
+      ]
+    },
+    "Monkey_LegL": {
+      "triangles": 668,
+      "vertices": 336,
+      "dimensions_studs": [
+        0.5228,
+        1.0275,
+        0.8061
+      ],
+      "bbox_min": [
+        0.1574,
+        -0.4953,
+        0.0039
+      ],
+      "bbox_max": [
+        0.6802,
+        0.5322,
+        0.81
+      ],
+      "pivot": [
+        0.4,
+        0.26,
+        0.7
+      ],
+      "pivot_is": "hip",
+      "joint_parent": "Monkey_Body",
+      "uv_range": [
+        0.0076,
+        0.9735,
+        0.1101,
+        0.9902
+      ]
+    },
+    "Monkey_LegR": {
+      "triangles": 668,
+      "vertices": 336,
+      "dimensions_studs": [
+        0.5228,
+        1.0275,
+        0.8061
+      ],
+      "bbox_min": [
+        -0.6802,
+        -0.4953,
+        0.0039
+      ],
+      "bbox_max": [
+        -0.1574,
+        0.5322,
+        0.81
+      ],
+      "pivot": [
+        -0.4,
+        0.26,
+        0.7
+      ],
+      "pivot_is": "hip",
+      "joint_parent": "Monkey_Body",
+      "uv_range": [
+        0.0207,
+        0.9902,
+        0.0066,
+        0.9902
+      ]
+    },
+    "Monkey_Tail": {
+      "triangles": 648,
+      "vertices": 326,
+      "dimensions_studs": [
+        0.3266,
+        0.9642,
+        1.2234
+      ],
+      "bbox_min": [
+        -0.1623,
+        0.4759,
+        0.5472
+      ],
+      "bbox_max": [
+        0.1643,
+        1.4401,
+        1.7706
+      ],
+      "pivot": [
+        0.0,
+        0.62,
+        0.72
+      ],
+      "pivot_is": "tail base, inside the rump",
+      "joint_parent": "Monkey_Body",
+      "uv_range": [
+        0.0062,
+        0.9661,
+        0.0062,
+        0.9828
+      ]
+    }
+  },
+  "total_triangles": 6720,
+  "overall": {
+    "bbox_min": [
+      -1.0801,
+      -0.9851,
+      0.0039
+    ],
+    "bbox_max": [
+      1.0801,
+      1.4401,
+      2.3364
+    ],
+    "height_studs": 2.3325,
+    "length_studs": 2.4252,
+    "width_studs": 2.1602
+  }
+}

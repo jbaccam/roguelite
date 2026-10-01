@@ -1,0 +1,412 @@
+{
+  "fbx": {
+    "file": "exports/fbx/monkey.fbx",
+    "ok": true,
+    "objects": 7,
+    "total_triangles": 6720,
+    "height_studs": 2.3325,
+    "lowest_z": 0.0039,
+    "problems": [],
+    "parts": {
+      "Monkey_ArmL": {
+        "triangles": 812,
+        "pivot": [
+          0.56,
+          -0.05,
+          1.18
+        ],
+        "bbox_min": [
+          0.2863,
+          -0.7325,
+          0.029
+        ],
+        "bbox_max": [
+          1.0214,
+          0.2258,
+          1.4571
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "monkey",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Monkey_ArmR": {
+        "triangles": 812,
+        "pivot": [
+          -0.56,
+          -0.05,
+          1.18
+        ],
+        "bbox_min": [
+          -1.0214,
+          -0.7325,
+          0.029
+        ],
+        "bbox_max": [
+          -0.2863,
+          0.2258,
+          1.4571
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "monkey",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Monkey_Body": {
+        "triangles": 912,
+        "pivot": [
+          0.0,
+          0.05,
+          0.9
+        ],
+        "bbox_min": [
+          -0.6146,
+          -0.6055,
+          0.2673
+        ],
+        "bbox_max": [
+          0.6151,
+          0.77,
+          1.6116
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "monkey",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Monkey_Head": {
+        "triangles": 2200,
+        "pivot": [
+          0.0,
+          -0.2,
+          1.36
+        ],
+        "bbox_min": [
+          -1.0801,
+          -0.9851,
+          1.1013
+        ],
+        "bbox_max": [
+          1.0801,
+          0.7636,
+          2.3364
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "monkey",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Monkey_LegL": {
+        "triangles": 668,
+        "pivot": [
+          0.4,
+          0.26,
+          0.7
+        ],
+        "bbox_min": [
+          0.1574,
+          -0.4953,
+          0.0039
+        ],
+        "bbox_max": [
+          0.6802,
+          0.5322,
+          0.81
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "monkey",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Monkey_LegR": {
+        "triangles": 668,
+        "pivot": [
+          -0.4,
+          0.26,
+          0.7
+        ],
+        "bbox_min": [
+          -0.6802,
+          -0.4953,
+          0.0039
+        ],
+        "bbox_max": [
+          -0.1574,
+          0.5322,
+          0.81
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "monkey",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Monkey_Tail": {
+        "triangles": 648,
+        "pivot": [
+          0.0,
+          0.62,
+          0.72
+        ],
+        "bbox_min": [
+          -0.1623,
+          0.4759,
+          0.5472
+        ],
+        "bbox_max": [
+          0.1643,
+          1.4401,
+          1.7706
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "monkey",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "glb": {
+    "file": "exports/glb/monkey.glb",
+    "ok": true,
+    "objects": 7,
+    "total_triangles": 6720,
+    "height_studs": 2.3325,
+    "lowest_z": 0.0039,
+    "problems": [],
+    "parts": {
+      "Monkey_ArmL": {
+        "triangles": 812,
+        "pivot": [
+          0.56,
+          -0.05,
+          1.18
+        ],
+        "bbox_min": [
+          0.2863,
+          -0.7325,
+          0.029
+        ],
+        "bbox_max": [
+          1.0214,
+          0.2258,
+          1.4571
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "monkey",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Monkey_ArmR": {
+        "triangles": 812,
+        "pivot": [
+          -0.56,
+          -0.05,
+          1.18
+        ],
+        "bbox_min": [
+          -1.0214,
+          -0.7325,
+          0.029
+        ],
+        "bbox_max": [
+          -0.2863,
+          0.2258,
+          1.4571
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "monkey",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Monkey_Body": {
+        "triangles": 912,
+        "pivot": [
+          0.0,
+          0.05,
+          0.9
+        ],
+        "bbox_min": [
+          -0.6146,
+          -0.6055,
+          0.2673
+        ],
+        "bbox_max": [
+          0.6151,
+          0.77,
+          1.6116
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "monkey",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Monkey_Head": {
+        "triangles": 2200,
+        "pivot": [
+          0.0,
+          -0.2,
+          1.36
+        ],
+        "bbox_min": [
+          -1.0801,
+          -0.9851,
+          1.1013
+        ],
+        "bbox_max": [
+          1.0801,
+          0.7636,
+          2.3364
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "monkey",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Monkey_LegL": {
+        "triangles": 668,
+        "pivot": [
+          0.4,
+          0.26,
+          0.7
+        ],
+        "bbox_min": [
+          0.1574,
+          -0.4953,
+          0.0039
+        ],
+        "bbox_max": [
+          0.6802,
+          0.5322,
+          0.81
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "monkey",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Monkey_LegR": {
+        "triangles": 668,
+        "pivot": [
+          -0.4,
+          0.26,
+          0.7
+        ],
+        "bbox_min": [
+          -0.6802,
+          -0.4953,
+          0.0039
+        ],
+        "bbox_max": [
+          -0.1574,
+          0.5322,
+          0.81
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "monkey",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Monkey_Tail": {
+        "triangles": 648,
+        "pivot": [
+          0.0,
+          0.62,
+          0.72
+        ],
+        "bbox_min": [
+          -0.1623,
+          0.4759,
+          0.5472
+        ],
+        "bbox_max": [
+          0.1643,
+          1.4401,
+          1.7706
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "monkey",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "texture": {
+    "file": "textures/monkey.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "ok": true
+  },
+  "install_data": {
+    "file": "studio-install-data.json",
+    "ok": true,
+    "problems": []
+  },
+  "all_ok": true,
+  "expected_parts": [
+    "Monkey_ArmL",
+    "Monkey_ArmR",
+    "Monkey_Body",
+    "Monkey_Head",
+    "Monkey_LegL",
+    "Monkey_LegR",
+    "Monkey_Tail"
+  ],
+  "scope": "Blender re-import only (Blender 5.2.1 LTS); Studio untested"
+}
