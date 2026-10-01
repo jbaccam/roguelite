@@ -1,0 +1,518 @@
+{
+  "fbx": {
+    "file": "exports/fbx/bunny.fbx",
+    "ok": true,
+    "objects": 9,
+    "total_triangles": 5762,
+    "head_top_studs": 2.1886,
+    "length_studs": 2.0029,
+    "problems": [],
+    "parts": {
+      "Bunny_Body": {
+        "triangles": 2400,
+        "pivot": [
+          0.0,
+          0.1,
+          0.75
+        ],
+        "bbox_min": [
+          -0.5217,
+          -0.5566,
+          0.145
+        ],
+        "bbox_max": [
+          0.5134,
+          0.6931,
+          1.4268
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_EarL": {
+        "triangles": 280,
+        "pivot": [
+          0.42,
+          -0.06,
+          2.0
+        ],
+        "bbox_min": [
+          0.2866,
+          -0.1915,
+          1.0943
+        ],
+        "bbox_max": [
+          0.978,
+          0.1059,
+          2.187
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_EarR": {
+        "triangles": 280,
+        "pivot": [
+          -0.42,
+          -0.06,
+          2.0
+        ],
+        "bbox_min": [
+          -0.9783,
+          -0.1926,
+          1.0939
+        ],
+        "bbox_max": [
+          -0.288,
+          0.1071,
+          2.1886
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_Head": {
+        "triangles": 1496,
+        "pivot": [
+          0.0,
+          -0.05,
+          1.25
+        ],
+        "bbox_min": [
+          -0.7378,
+          -0.8931,
+          1.0377
+        ],
+        "bbox_max": [
+          0.7378,
+          0.4791,
+          2.1589
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_LegBL": {
+        "triangles": 300,
+        "pivot": [
+          0.4,
+          0.22,
+          0.42
+        ],
+        "bbox_min": [
+          0.1754,
+          -0.7368,
+          0.0083
+        ],
+        "bbox_max": [
+          0.6675,
+          0.5791,
+          0.6929
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_LegBR": {
+        "triangles": 300,
+        "pivot": [
+          -0.4,
+          0.22,
+          0.42
+        ],
+        "bbox_min": [
+          -0.6684,
+          -0.7405,
+          0.0009
+        ],
+        "bbox_max": [
+          -0.1703,
+          0.5795,
+          0.699
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_LegFL": {
+        "triangles": 260,
+        "pivot": [
+          0.5,
+          -0.04,
+          1.02
+        ],
+        "bbox_min": [
+          0.3152,
+          -0.4657,
+          0.4303
+        ],
+        "bbox_max": [
+          0.7849,
+          0.1406,
+          1.2088
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_LegFR": {
+        "triangles": 260,
+        "pivot": [
+          -0.5,
+          -0.04,
+          1.02
+        ],
+        "bbox_min": [
+          -0.7803,
+          -0.4686,
+          0.4353
+        ],
+        "bbox_max": [
+          -0.3122,
+          0.1468,
+          1.2016
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_Tail": {
+        "triangles": 186,
+        "pivot": [
+          0.0,
+          0.6,
+          0.52
+        ],
+        "bbox_min": [
+          -0.3119,
+          0.5103,
+          0.2071
+        ],
+        "bbox_max": [
+          0.3117,
+          1.1098,
+          0.8585
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "glb": {
+    "file": "exports/glb/bunny.glb",
+    "ok": true,
+    "objects": 9,
+    "total_triangles": 5762,
+    "head_top_studs": 2.1886,
+    "length_studs": 2.0029,
+    "problems": [],
+    "parts": {
+      "Bunny_Body": {
+        "triangles": 2400,
+        "pivot": [
+          0.0,
+          0.1,
+          0.75
+        ],
+        "bbox_min": [
+          -0.5217,
+          -0.5566,
+          0.145
+        ],
+        "bbox_max": [
+          0.5134,
+          0.6931,
+          1.4268
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_EarL": {
+        "triangles": 280,
+        "pivot": [
+          0.42,
+          -0.06,
+          2.0
+        ],
+        "bbox_min": [
+          0.2866,
+          -0.1915,
+          1.0943
+        ],
+        "bbox_max": [
+          0.978,
+          0.1059,
+          2.187
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_EarR": {
+        "triangles": 280,
+        "pivot": [
+          -0.42,
+          -0.06,
+          2.0
+        ],
+        "bbox_min": [
+          -0.9783,
+          -0.1926,
+          1.0939
+        ],
+        "bbox_max": [
+          -0.288,
+          0.1071,
+          2.1886
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_Head": {
+        "triangles": 1496,
+        "pivot": [
+          0.0,
+          -0.05,
+          1.25
+        ],
+        "bbox_min": [
+          -0.7378,
+          -0.8931,
+          1.0377
+        ],
+        "bbox_max": [
+          0.7378,
+          0.4791,
+          2.1589
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_LegBL": {
+        "triangles": 300,
+        "pivot": [
+          0.4,
+          0.22,
+          0.42
+        ],
+        "bbox_min": [
+          0.1754,
+          -0.7368,
+          0.0083
+        ],
+        "bbox_max": [
+          0.6675,
+          0.5791,
+          0.6929
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_LegBR": {
+        "triangles": 300,
+        "pivot": [
+          -0.4,
+          0.22,
+          0.42
+        ],
+        "bbox_min": [
+          -0.6684,
+          -0.7405,
+          0.0009
+        ],
+        "bbox_max": [
+          -0.1703,
+          0.5795,
+          0.699
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_LegFL": {
+        "triangles": 260,
+        "pivot": [
+          0.5,
+          -0.04,
+          1.02
+        ],
+        "bbox_min": [
+          0.3152,
+          -0.4657,
+          0.4303
+        ],
+        "bbox_max": [
+          0.7849,
+          0.1406,
+          1.2088
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_LegFR": {
+        "triangles": 260,
+        "pivot": [
+          -0.5,
+          -0.04,
+          1.02
+        ],
+        "bbox_min": [
+          -0.7803,
+          -0.4686,
+          0.4353
+        ],
+        "bbox_max": [
+          -0.3122,
+          0.1468,
+          1.2016
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bunny_Tail": {
+        "triangles": 186,
+        "pivot": [
+          0.0,
+          0.6,
+          0.52
+        ],
+        "bbox_min": [
+          -0.3119,
+          0.5103,
+          0.2071
+        ],
+        "bbox_max": [
+          0.3117,
+          1.1098,
+          0.8585
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bunny",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "texture": {
+    "file": "textures/bunny.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "ok": true
+  },
+  "install_data": {
+    "file": "studio-install-data.json",
+    "ok": true,
+    "problems": []
+  },
+  "all_ok": true,
+  "expected_parts": [
+    "Bunny_Body",
+    "Bunny_EarL",
+    "Bunny_EarR",
+    "Bunny_Head",
+    "Bunny_LegBL",
+    "Bunny_LegBR",
+    "Bunny_LegFL",
+    "Bunny_LegFR",
+    "Bunny_Tail"
+  ],
+  "scope": "Blender re-import only (Blender 5.2.1 LTS); Studio untested"
+}

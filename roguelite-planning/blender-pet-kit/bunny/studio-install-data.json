@@ -1,0 +1,436 @@
+{
+  "asset": "bunny",
+  "rarity": "Common",
+  "strong_suit": "team healing (carrot drop every 10 s heals you or the closest hurt teammate)",
+  "axis": "studio = (-x, z, y) of blender; Blender front -Y = Studio front -Z",
+  "units": "studs; the model is at final size, import 1:1 and do not scale",
+  "sides": "L/R are the bunny's own left/right; its left is Blender +X = Studio -X",
+  "origin": "all positions are relative to the model origin = the ground point under the body pivot (Blender world origin)",
+  "ground_point": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "overall_size": [
+    1.9564,
+    2.1876,
+    2.0029
+  ],
+  "overall_center": [
+    0.0002,
+    1.0948,
+    0.1084
+  ],
+  "texture": "textures/bunny.png",
+  "texture_note": "one shared atlas; every MeshPart uses the same TextureID (Common rarity: no Neon, no glow)",
+  "rest_rotation": "every part has identity rotation relative to the model at rest",
+  "rig": "one Motor6D per part: Part0 = joint_parent, Part1 = the part, C0/C1 placed at the part's pivot",
+  "role_prop": "carrot bandolier (strap, four carrots with leafy tops, buckle) is part of Bunny_Body; the carrot drop itself is game code",
+  "parts": {
+    "Bunny_Body": {
+      "center": [
+        0.0042,
+        0.7859,
+        0.0682
+      ],
+      "size": [
+        1.0351,
+        1.2819,
+        1.2497
+      ],
+      "pivot": [
+        0.0,
+        0.75,
+        0.1
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": null,
+      "suggested_motion": "root part: a small bob up/down in Studio Y while following"
+    },
+    "Bunny_Head": {
+      "center": [
+        0.0,
+        1.5983,
+        -0.207
+      ],
+      "size": [
+        1.4757,
+        1.1212,
+        1.3721
+      ],
+      "pivot": [
+        0.0,
+        1.25,
+        -0.05
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.5,
+        -0.15
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bunny_Body",
+      "suggested_motion": "nod = pitch about Studio X, tilt = roll about Studio Z, look = yaw about Studio Y, through the neck joint"
+    },
+    "Bunny_EarL": {
+      "center": [
+        -0.6323,
+        1.6406,
+        -0.0428
+      ],
+      "size": [
+        0.6914,
+        1.0927,
+        0.2974
+      ],
+      "pivot": [
+        -0.42,
+        2.0,
+        -0.06
+      ],
+      "pivot_from_body_pivot": [
+        -0.42,
+        1.25,
+        -0.16
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bunny_Head",
+      "suggested_motion": "flop = rotate about Studio Z (front-back axis) through the ear base; child of the head"
+    },
+    "Bunny_EarR": {
+      "center": [
+        0.6332,
+        1.6413,
+        -0.0427
+      ],
+      "size": [
+        0.6903,
+        1.0946,
+        0.2997
+      ],
+      "pivot": [
+        0.42,
+        2.0,
+        -0.06
+      ],
+      "pivot_from_body_pivot": [
+        0.42,
+        1.25,
+        -0.16
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bunny_Head",
+      "suggested_motion": "flop = rotate about Studio Z (front-back axis) through the ear base; child of the head"
+    },
+    "Bunny_LegFL": {
+      "center": [
+        -0.5501,
+        0.8196,
+        -0.1626
+      ],
+      "size": [
+        0.4697,
+        0.7785,
+        0.6063
+      ],
+      "pivot": [
+        -0.5,
+        1.02,
+        -0.04
+      ],
+      "pivot_from_body_pivot": [
+        -0.5,
+        0.27,
+        -0.14
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bunny_Body",
+      "suggested_motion": "arm swing about Studio X through the shoulder"
+    },
+    "Bunny_LegFR": {
+      "center": [
+        0.5463,
+        0.8185,
+        -0.1609
+      ],
+      "size": [
+        0.4681,
+        0.7663,
+        0.6154
+      ],
+      "pivot": [
+        0.5,
+        1.02,
+        -0.04
+      ],
+      "pivot_from_body_pivot": [
+        0.5,
+        0.27,
+        -0.14
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bunny_Body",
+      "suggested_motion": "arm swing about Studio X through the shoulder"
+    },
+    "Bunny_LegBL": {
+      "center": [
+        -0.4215,
+        0.3506,
+        -0.0789
+      ],
+      "size": [
+        0.4921,
+        0.6847,
+        1.3159
+      ],
+      "pivot": [
+        -0.4,
+        0.42,
+        0.22
+      ],
+      "pivot_from_body_pivot": [
+        -0.4,
+        -0.33,
+        0.12
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bunny_Body",
+      "suggested_motion": "hind leg swing about Studio X through the hip (thigh and big foot move together)"
+    },
+    "Bunny_LegBR": {
+      "center": [
+        0.4193,
+        0.35,
+        -0.0805
+      ],
+      "size": [
+        0.4981,
+        0.6981,
+        1.32
+      ],
+      "pivot": [
+        0.4,
+        0.42,
+        0.22
+      ],
+      "pivot_from_body_pivot": [
+        0.4,
+        -0.33,
+        0.12
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bunny_Body",
+      "suggested_motion": "hind leg swing about Studio X through the hip (thigh and big foot move together)"
+    },
+    "Bunny_Tail": {
+      "center": [
+        0.0001,
+        0.5328,
+        0.8101
+      ],
+      "size": [
+        0.6236,
+        0.6514,
+        0.5995
+      ],
+      "pivot": [
+        0.0,
+        0.52,
+        0.6
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        -0.23,
+        0.5
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bunny_Body",
+      "suggested_motion": "wag = yaw about Studio Y through the tail root (lift = pitch about Studio X)"
+    }
+  },
+  "locomotion": "hop",
+  "hop": {
+    "suggested_hop_height_studs": 0.9,
+    "suggested_hop_length_studs": 3.0,
+    "note": "Rest pose = the crouch. Angles are about each bone's pivot (Blender X axis = pitch). A rotation of +a about Blender +X is -a about Studio +X (Studio = (-x, z, y)), given as studio_rx_deg. Positive Blender X swings a forward-pointing part down and then back; negative lifts the front. body_up_studs lifts the whole body root (Studio Y). Tween between frames.",
+    "frames": {
+      "crouch": {
+        "duration_s": 0.15,
+        "body_up_studs": 0,
+        "joints": {
+          "Bunny_Body": {
+            "blender_rx_deg": 8,
+            "studio_rx_deg": -8
+          },
+          "Bunny_Head": {
+            "blender_rx_deg": -6,
+            "studio_rx_deg": 6
+          },
+          "Bunny_LegFL": {
+            "blender_rx_deg": -20,
+            "studio_rx_deg": 20
+          },
+          "Bunny_LegFR": {
+            "blender_rx_deg": -20,
+            "studio_rx_deg": 20
+          },
+          "Bunny_LegBL": {
+            "blender_rx_deg": 0,
+            "studio_rx_deg": 0
+          },
+          "Bunny_LegBR": {
+            "blender_rx_deg": 0,
+            "studio_rx_deg": 0
+          },
+          "Bunny_EarL": {
+            "blender_rx_deg": 10,
+            "studio_rx_deg": -10
+          },
+          "Bunny_EarR": {
+            "blender_rx_deg": 10,
+            "studio_rx_deg": -10
+          },
+          "Bunny_Tail": {
+            "blender_rx_deg": 0,
+            "studio_rx_deg": 0
+          }
+        }
+      },
+      "launch": {
+        "duration_s": 0.1,
+        "body_up_studs": 0.25,
+        "joints": {
+          "Bunny_Body": {
+            "blender_rx_deg": -30,
+            "studio_rx_deg": 30
+          },
+          "Bunny_Head": {
+            "blender_rx_deg": 10,
+            "studio_rx_deg": -10
+          },
+          "Bunny_LegFL": {
+            "blender_rx_deg": 35,
+            "studio_rx_deg": -35
+          },
+          "Bunny_LegFR": {
+            "blender_rx_deg": 35,
+            "studio_rx_deg": -35
+          },
+          "Bunny_LegBL": {
+            "blender_rx_deg": 185,
+            "studio_rx_deg": -185
+          },
+          "Bunny_LegBR": {
+            "blender_rx_deg": 185,
+            "studio_rx_deg": -185
+          },
+          "Bunny_EarL": {
+            "blender_rx_deg": 40,
+            "studio_rx_deg": -40
+          },
+          "Bunny_EarR": {
+            "blender_rx_deg": 40,
+            "studio_rx_deg": -40
+          },
+          "Bunny_Tail": {
+            "blender_rx_deg": -15,
+            "studio_rx_deg": 15
+          }
+        }
+      },
+      "airborne": {
+        "duration_s": 0.4,
+        "body_up_studs": 0.85,
+        "joints": {
+          "Bunny_Body": {
+            "blender_rx_deg": -12,
+            "studio_rx_deg": 12
+          },
+          "Bunny_Head": {
+            "blender_rx_deg": 0,
+            "studio_rx_deg": 0
+          },
+          "Bunny_LegFL": {
+            "blender_rx_deg": -75,
+            "studio_rx_deg": 75
+          },
+          "Bunny_LegFR": {
+            "blender_rx_deg": -75,
+            "studio_rx_deg": 75
+          },
+          "Bunny_LegBL": {
+            "blender_rx_deg": 175,
+            "studio_rx_deg": -175
+          },
+          "Bunny_LegBR": {
+            "blender_rx_deg": 175,
+            "studio_rx_deg": -175
+          },
+          "Bunny_EarL": {
+            "blender_rx_deg": 62,
+            "studio_rx_deg": -62
+          },
+          "Bunny_EarR": {
+            "blender_rx_deg": 62,
+            "studio_rx_deg": -62
+          },
+          "Bunny_Tail": {
+            "blender_rx_deg": 20,
+            "studio_rx_deg": -20
+          }
+        }
+      },
+      "land": {
+        "duration_s": 0.15,
+        "body_up_studs": 0.12,
+        "joints": {
+          "Bunny_Body": {
+            "blender_rx_deg": 10,
+            "studio_rx_deg": -10
+          },
+          "Bunny_Head": {
+            "blender_rx_deg": -10,
+            "studio_rx_deg": 10
+          },
+          "Bunny_LegFL": {
+            "blender_rx_deg": -55,
+            "studio_rx_deg": 55
+          },
+          "Bunny_LegFR": {
+            "blender_rx_deg": -55,
+            "studio_rx_deg": 55
+          },
+          "Bunny_LegBL": {
+            "blender_rx_deg": 40,
+            "studio_rx_deg": -40
+          },
+          "Bunny_LegBR": {
+            "blender_rx_deg": 40,
+            "studio_rx_deg": -40
+          },
+          "Bunny_EarL": {
+            "blender_rx_deg": 30,
+            "studio_rx_deg": -30
+          },
+          "Bunny_EarR": {
+            "blender_rx_deg": 30,
+            "studio_rx_deg": -30
+          },
+          "Bunny_Tail": {
+            "blender_rx_deg": 10,
+            "studio_rx_deg": -10
+          }
+        }
+      }
+    },
+    "hind_legs": "pivot at the hip (inside the thigh); +175..185 deg (with the body pitched up 12..30) extends thigh and foot straight back on launch and in flight, +40 lands toes-first",
+    "front_legs": "pivot at the shoulder; -55..-75 reaches forward and down for the landing, +35 sweeps back on launch",
+    "ears": "rotate about X at the ear base; +40..62 trails them back while airborne",
+    "total_cycle_s": 0.8
+  }
+}

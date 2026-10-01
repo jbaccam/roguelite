@@ -1,0 +1,314 @@
+{
+  "asset": "bunny",
+  "blender_version": "5.2.1 LTS",
+  "authoring": "final Roblox stud size (1 Blender unit = 1 stud); import at 1:1, do not scale",
+  "axes": "Blender Z-up, front -Y, the bunny's left +X; sits on z = 0",
+  "texture": "textures/bunny.png (1024x1024, shared by every part)",
+  "parts": {
+    "Bunny_Body": {
+      "triangles": 2400,
+      "vertices": 1202,
+      "dimensions_studs": [
+        1.0351,
+        1.2497,
+        1.2819
+      ],
+      "bbox_min": [
+        -0.5217,
+        -0.5566,
+        0.145
+      ],
+      "bbox_max": [
+        0.5134,
+        0.6931,
+        1.4268
+      ],
+      "pivot": [
+        0.0,
+        0.1,
+        0.75
+      ],
+      "joint_parent": null,
+      "uv_range": [
+        0.0055,
+        0.9792,
+        0.0052,
+        0.9812
+      ],
+      "min_face_area": 0.00020638
+    },
+    "Bunny_Head": {
+      "triangles": 1496,
+      "vertices": 751,
+      "dimensions_studs": [
+        1.4757,
+        1.3721,
+        1.1212
+      ],
+      "bbox_min": [
+        -0.7378,
+        -0.8931,
+        1.0377
+      ],
+      "bbox_max": [
+        0.7378,
+        0.4791,
+        2.1589
+      ],
+      "pivot": [
+        0.0,
+        -0.05,
+        1.25
+      ],
+      "joint_parent": "Bunny_Body",
+      "uv_range": [
+        0.0056,
+        0.9558,
+        0.0053,
+        0.9792
+      ],
+      "min_face_area": 4.854e-05
+    },
+    "Bunny_EarL": {
+      "triangles": 280,
+      "vertices": 142,
+      "dimensions_studs": [
+        0.6914,
+        0.2974,
+        1.0927
+      ],
+      "bbox_min": [
+        0.2866,
+        -0.1915,
+        1.0943
+      ],
+      "bbox_max": [
+        0.978,
+        0.1059,
+        2.187
+      ],
+      "pivot": [
+        0.42,
+        -0.06,
+        2.0
+      ],
+      "joint_parent": "Bunny_Head",
+      "uv_range": [
+        0.0069,
+        0.8427,
+        0.0054,
+        0.9792
+      ],
+      "min_face_area": 0.00129725
+    },
+    "Bunny_EarR": {
+      "triangles": 280,
+      "vertices": 142,
+      "dimensions_studs": [
+        0.6903,
+        0.2997,
+        1.0946
+      ],
+      "bbox_min": [
+        -0.9783,
+        -0.1926,
+        1.0939
+      ],
+      "bbox_max": [
+        -0.288,
+        0.1071,
+        2.1886
+      ],
+      "pivot": [
+        -0.42,
+        -0.06,
+        2.0
+      ],
+      "joint_parent": "Bunny_Head",
+      "uv_range": [
+        0.0067,
+        0.9753,
+        0.1264,
+        0.948
+      ],
+      "min_face_area": 0.00125235
+    },
+    "Bunny_LegFL": {
+      "triangles": 260,
+      "vertices": 132,
+      "dimensions_studs": [
+        0.4697,
+        0.6063,
+        0.7785
+      ],
+      "bbox_min": [
+        0.3152,
+        -0.4657,
+        0.4303
+      ],
+      "bbox_max": [
+        0.7849,
+        0.1406,
+        1.2088
+      ],
+      "pivot": [
+        0.5,
+        -0.04,
+        1.02
+      ],
+      "joint_parent": "Bunny_Body",
+      "uv_range": [
+        0.0067,
+        0.9695,
+        0.006,
+        0.987
+      ],
+      "min_face_area": 0.0009625
+    },
+    "Bunny_LegFR": {
+      "triangles": 260,
+      "vertices": 132,
+      "dimensions_studs": [
+        0.4681,
+        0.6154,
+        0.7663
+      ],
+      "bbox_min": [
+        -0.7803,
+        -0.4686,
+        0.4353
+      ],
+      "bbox_max": [
+        -0.3122,
+        0.1468,
+        1.2016
+      ],
+      "pivot": [
+        -0.5,
+        -0.04,
+        1.02
+      ],
+      "joint_parent": "Bunny_Body",
+      "uv_range": [
+        0.0067,
+        0.9753,
+        0.075,
+        0.8778
+      ],
+      "min_face_area": 0.00107665
+    },
+    "Bunny_LegBL": {
+      "triangles": 300,
+      "vertices": 152,
+      "dimensions_studs": [
+        0.4921,
+        1.3159,
+        0.6847
+      ],
+      "bbox_min": [
+        0.1754,
+        -0.7368,
+        0.0083
+      ],
+      "bbox_max": [
+        0.6675,
+        0.5791,
+        0.6929
+      ],
+      "pivot": [
+        0.4,
+        0.22,
+        0.42
+      ],
+      "joint_parent": "Bunny_Body",
+      "uv_range": [
+        0.0182,
+        0.9909,
+        0.0053,
+        0.987
+      ],
+      "min_face_area": 0.00177161
+    },
+    "Bunny_LegBR": {
+      "triangles": 300,
+      "vertices": 152,
+      "dimensions_studs": [
+        0.4981,
+        1.32,
+        0.6981
+      ],
+      "bbox_min": [
+        -0.6684,
+        -0.7405,
+        0.0009
+      ],
+      "bbox_max": [
+        -0.1703,
+        0.5795,
+        0.699
+      ],
+      "pivot": [
+        -0.4,
+        0.22,
+        0.42
+      ],
+      "joint_parent": "Bunny_Body",
+      "uv_range": [
+        0.0059,
+        0.9773,
+        0.1099,
+        0.9948
+      ],
+      "min_face_area": 0.00157075
+    },
+    "Bunny_Tail": {
+      "triangles": 186,
+      "vertices": 95,
+      "dimensions_studs": [
+        0.6236,
+        0.5995,
+        0.6514
+      ],
+      "bbox_min": [
+        -0.3119,
+        0.5103,
+        0.2071
+      ],
+      "bbox_max": [
+        0.3117,
+        1.1098,
+        0.8585
+      ],
+      "pivot": [
+        0.0,
+        0.6,
+        0.52
+      ],
+      "joint_parent": "Bunny_Body",
+      "uv_range": [
+        0.1467,
+        0.9948,
+        0.0056,
+        0.9831
+      ],
+      "min_face_area": 1.95e-05
+    }
+  },
+  "total_triangles": 5762,
+  "overall": {
+    "bbox_min": [
+      -0.9783,
+      -0.8931,
+      0.0009
+    ],
+    "bbox_max": [
+      0.978,
+      1.1098,
+      2.1886
+    ],
+    "height_studs": 2.1876,
+    "length_studs": 2.0029,
+    "width_studs": 1.9564,
+    "head_top_studs": 2.1589
+  }
+}
