@@ -34,6 +34,7 @@ local function fresh()
   receipts={},receiptOrder={},bestWaves={},mapWins={},starterPack=false,vip=false,
   rerolls=0,banishes=0,quickOpen=false,codes={},daily={day=0,bought={}},vipClaimDay=0,skills={},
   armor={},wearing={}, -- armor: 'DragonScale.Helmet' -> {tier,have}; wearing: slot -> set id
+  bundles={}, -- one-time Godly bundles bought: product key -> true
   freeChestDay=0} -- Money.day() of the last free daily chest (the Wooden Chest)
  for class in d.classes do d.weapons[SIGNATURE[class]]={tier=1,have=0} end
  return d
@@ -56,6 +57,7 @@ function P.publish(player)
  player:SetAttribute('ProfileBestWaves',csv(d.bestWaves,function(k,v) return k..':'..v end))
  player:SetAttribute('ProfileMapWins',csv(d.mapWins,function(k) return k end))
  player:SetAttribute('ProfileStarterPack',d.starterPack);player:SetAttribute('ProfileVIP',d.vip)
+ player:SetAttribute('ProfileBundles',csv(d.bundles,function(k) return k end))
  player:SetAttribute('ProfileRerolls',d.rerolls);player:SetAttribute('ProfileBanishes',d.banishes)
  player:SetAttribute('ProfileQuickOpen',d.quickOpen)
  -- CharacterService reads this server-set attribute to apply the permanent skill bonuses.
@@ -100,6 +102,10 @@ function P.save(player)
  if not ok then warn('ProfileService: save failed',player.UserId,err) end
 end
 function P.get(player) return P.profiles[player] end
+-- WeaponCatalog id for a weapon name ('Vampire Blade' -> its id), nil while it isn't in the game.
+function P.weaponIdByName(name)
+ for id,w in Weapons.ById do if w.name==name then return id end end
+end
 
 -- Receipts: remember processed PurchaseIds so a retried receipt never grants twice.
 function P.hasReceipt(player,id) local d=P.profiles[player];return d and d.receipts[id]==true end
@@ -129,6 +135,10 @@ function P.grant(player,g)
  if g.vip then d.vip=true end
  if g.quickOpen then d.quickOpen=true end
  d.rerolls+=g.rerolls or 0;d.banishes+=g.banishes or 0
+ -- Godly bundles: one copy of the weapon and of every piece of the armor set.
+ if g.weapon then P.addCopies(d,g.weapon,1) end
+ if g.armorSet then for _,slot in Armor.Slots do P.addCopies(d,Armor.pieceId(g.armorSet,slot),1) end end
+ if g.bundle then d.bundles[g.bundle]=true end
  -- Arsenal bundle: +N toward the upgrade bar of every class's signature weapon.
  if g.signatureUpgrades then
   for _,id in SIGNATURE do

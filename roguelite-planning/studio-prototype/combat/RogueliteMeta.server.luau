@@ -207,6 +207,10 @@ local function eligible(p,key,arg)
  if key=='ShopReroll' or key=='UpgradeReroll' then return Shop.states[p]~=nil,'Only during a run' end
  if product.oneTime and d[product.oneTime] then return false,'Already purchased' end
  if product.class and d.classes[product.class] then return false,'Already unlocked' end
+ if product.godly then
+  if d.bundles[key] then return false,'Already purchased' end
+  if not Profiles.weaponIdByName(product.godly) then return false,'Coming soon' end
+ end
  return true
 end
 -- Grants run inside ProcessReceipt (or a Studio simulation). Return true only when delivered.
@@ -223,9 +227,13 @@ function grants.Banish(p) return Profiles.grant(p,{banishes=1}) end
 local function grantProduct(p,key)
  local product=Config.Products[key]
  if grants[key] then return grants[key](p) end
+ -- Godly bundle: never deliver without its weapon (the receipt stays unprocessed and retries).
+ local weapon=product.godly and Profiles.weaponIdByName(product.godly)
+ if product.godly and not weapon then return false end
  -- paid: Robux emeralds, which regions that restrict paid random items cannot spend on chests.
  return Profiles.grant(p,{emeralds=product.emeralds,paid=true,chests=product.chests,class=product.class,rerolls=product.rerolls,banishes=product.banishes,
-  signatureUpgrades=product.signatureUpgrades,starterPack=product.oneTime=='starterPack'})
+  signatureUpgrades=product.signatureUpgrades,starterPack=product.oneTime=='starterPack',
+  weapon=weapon,armorSet=product.armorSet,bundle=product.godly and key})
 end
 Market.ProcessReceipt=function(info)
  local p=Players:GetPlayerByUserId(info.PlayerId)

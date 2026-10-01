@@ -30,6 +30,12 @@ M.Products={
  StarterPack={productId=0,robux=49,emeralds=150,chests={Legendary=1},rerolls=5,name='Starter Pack',oneTime='starterPack'},
  ArsenalBundle={productId=0,robux=499,emeralds=500,signatureUpgrades=3,name='Arsenal Bundle'},
  MegaBundle={productId=0,robux=2999,emeralds=3000,chests={Legendary=15},rerolls=25,banishes=10,name='Mega Chest Bundle',random=true},
+ -- Godly bundles (2026-10-01): one Godly weapon + a full armor set + emeralds, one time each.
+ -- godly = the weapon's WeaponCatalog name. Until that weapon exists the store shows COMING SOON
+ -- and the server refuses the purchase. Phoenix (Godly armor) is the premium line, Dragon Scale
+ -- (Legendary armor) the cheaper one.
+ BloodPhoenixBundle={productId=0,robux=2499,emeralds=1000,godly='Vampire Blade',armorSet='Phoenix',name='Blood Phoenix Bundle'},
+ ShadowDragonBundle={productId=0,robux=1499,emeralds=500,godly='Shadow Daggers',armorSet='DragonScale',name='Shadow Dragon Bundle'},
  -- Class unlocks
  ClassThrower={productId=0,robux=149,class='Thrower',name='Thrower'},
  ClassJuggler={productId=0,robux=149,class='Juggler',name='Juggler'},
@@ -39,6 +45,7 @@ M.EmeraldPacks={'Emeralds1','Emeralds2','Emeralds3','Emeralds4'}
 M.ChestPacks={'Royal1','Royal5','Royal12'}
 M.RerollPacks={'Rerolls5','Rerolls15'}
 M.BanishPacks={'Banishes5','Banishes15'}
+M.GodlyBundles={'BloodPhoenixBundle','ShadowDragonBundle'}
 M.Passes={
  VIP={gamePassId=0,robux=499,name='VIP Pass'},
  QuickOpen={gamePassId=0,robux=149,name='Quick Open'},

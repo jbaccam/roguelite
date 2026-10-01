@@ -223,9 +223,15 @@ Rules:
 - **No class.** Any class can start a run with one. The loadout rule becomes: the weapon is an
   owned weapon of the chosen class, **or** any owned Godly. That affects `RunSetupRules`,
   `ArmoryUI`, `RunSetupUI` and `RogueliteCombat.server` (`starter`).
-- **Chest only.** Never in the run shop or daily deals, and never sold directly for Robux.
-  The **only** way to use one in a match is to have pulled it from a chest and bring it in as
-  your starting weapon (user, 2026-10-01).
+- **Chests and Godly bundles only.** Never in the run shop or daily deals. The only way to use
+  one in a match is to own it (from a chest or a bundle) and bring it in as your starting weapon
+  (user, 2026-10-01).
+- **Godly bundles** (user, 2026-10-01): one-time Robux bundles of one Godly weapon + a full
+  armor set + emeralds, in the store's Bundles tab (`MonetizationConfig.GodlyBundles`).
+  - Blood Phoenix: Vampire Blade + Phoenix (Godly armor) + 1,000 emeralds, 2,499 R$.
+  - Shadow Dragon: Shadow Daggers + Dragon Scale (Legendary armor) + 500 emeralds, 1,499 R$.
+  - Each shows COMING SOON, and the server refuses it, until its weapon is in `WeaponCatalog`
+    (step 4). Icons are placeholders; the owner is making new ones.
 - **One Godly per player per run** (user, 2026-10-01). The loadout takes at most one Godly, and
   the server rejects any run setup, shop buy, drop or reward that would give a second one. This is
   a hard server check, not just a UI rule.

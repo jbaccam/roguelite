@@ -13,6 +13,7 @@ local Stats=require(combat:WaitForChild('CharacterStats'))
 local ShopCatalog=require(combat:WaitForChild('ShopCatalog'))
 local Chests=require(combat:WaitForChild('ChestConfig'))
 local Money=require(combat:WaitForChild('MonetizationConfig'))
+local Armor=require(combat:WaitForChild('ArmorCatalog'))
 local RunService=game:GetService('RunService')
 local Http=game:GetService('HttpService')
 local WeaponIcons=require(RS:WaitForChild('WeaponInventoryUI')).Icons
@@ -75,6 +76,7 @@ function L.profile(player)
  p.pity=csvMap(player:GetAttribute('ProfilePity'));p.picks=csvMap(player:GetAttribute('ProfilePicks'))
  p.chests=csvMap(player:GetAttribute('ProfileChests'))
  p.starter=player:GetAttribute('ProfileStarterPack')==true;p.vip=player:GetAttribute('ProfileVIP')==true
+ p.bundles=csvSet(player:GetAttribute('ProfileBundles')) -- one-time Godly bundles already bought
  p.restricted=player:GetAttribute('PaidRandomRestricted')==true
  p.quickOpen=player:GetAttribute('ProfileQuickOpen')==true or p.vip
  p.rerolls=player:GetAttribute('ProfileRerolls') or 0;p.banishes=player:GetAttribute('ProfileBanishes') or 0
@@ -425,7 +427,8 @@ function L.mount(player)
   -- Robux price button (pulses when `pulse`), or OWNED.
   local function priceButton(parent,name,x,yy,bw,bh,key,owned,pulse)
    local item=Money.Products[key] or Money.Passes[key]
-   local pb=T.button(parent,name,owned and 'OWNED' or ('R$ '..item.robux),x,yy,bw,bh,function() buy(key) end,owned)
+   -- owned: true = OWNED; a string = that label instead (e.g. COMING SOON), also not buyable.
+   local pb=T.button(parent,name,owned==true and 'OWNED' or owned or ('R$ '..item.robux),x,yy,bw,bh,function() buy(key) end,owned)
    pb.Caption.TextSize=math.min(32,bh-16)
    if owned then pb.Interactable=false elseif pulse then FX.pulse(pb,.05) end
    return pb
@@ -606,6 +609,24 @@ function L.mount(player)
     if L.Store.chestRibbons[i] then FX.ribbon(card,L.Store.chestRibbons[i],180,i==3 and gold or nil) end
     if i==3 then FX.shine(card) end
     FX.lift(card)
+   -- Godly bundles: a Godly weapon + a full armor set + emeralds, one time each. COMING SOON until
+   -- the weapon is in WeaponCatalog (the server refuses it too). Icons are placeholders: the
+   -- weapon's catalogue icon once it exists, else the armory icon.
+   local godly=Chests.RarityColor.Godly
+   section('Godly Bundles','The strongest weapons in the game, with a full armor set.',y);y+=48
+   for _,key in Money.GodlyBundles do
+    local b=Money.Products[key];local set=Armor.ById[b.armorSet]
+    local wid;for id,w in Weapons.ById do if w.name==b.godly then wid=id end end
+    local tiles={{wid and WeaponIcons[wid] or 'armory',b.godly,godly}}
+    for _,slot in Armor.Slots do table.insert(tiles,{Armor.Icons[Armor.pieceId(b.armorSet,slot)],slot}) end
+    table.insert(tiles,{'emerald',b.emeralds..'',C.emerald})
+    local state=profile.bundles[key] and true or not wid and 'COMING SOON' or false
+    local premium=set.rarity=='Godly'
+    hero(key,y,270,4,godly,string.upper(b.name),b.godly..' + the full '..set.name..' armor set. One time only.',tiles,
+     Armor.Icons[Armor.pieceId(b.armorSet,'Chest')],key,state,
+     {cornerColor=godly,titleColor=godly,pulse=state==false,shine=true,ribbon=premium and 'GODLY ARMOR' or 'BEST GODLY DEAL',ribbonColor=godly,ribbonWidth=premium and 190 or 220,artSize=170})
+    y+=292
+   end
    end
    y+=388
    local mb=Money.Products.MegaBundle
@@ -729,7 +750,7 @@ function L.mount(player)
   if pendingRedraw then return end;pendingRedraw=true
   task.defer(function() pendingRedraw=false;if win and self.redraw then self.redraw() end end)
  end
- for _,attr in {'ProfileLoaded','ProfileGems','ProfileGemsEarned','ProfileClasses','ProfileWeapons','ProfilePity','ProfilePicks','ProfileChests','ProfileStarterPack','ProfileVIP','PaidRandomRestricted','ProfileSkills'} do player:GetAttributeChangedSignal(attr):Connect(profileChanged) end
+ for _,attr in {'ProfileLoaded','ProfileGems','ProfileGemsEarned','ProfileClasses','ProfileWeapons','ProfilePity','ProfilePicks','ProfileChests','ProfileStarterPack','ProfileVIP','ProfileBundles','PaidRandomRestricted','ProfileSkills'} do player:GetAttributeChangedSignal(attr):Connect(profileChanged) end
  combat:WaitForChild('PurchaseResult').OnClientEvent:Connect(function(_,ok,message)
   if screen.Enabled and type(message)=='string' then T.toast(screen,message,ok and C.lime or C.negative) end
  end)
