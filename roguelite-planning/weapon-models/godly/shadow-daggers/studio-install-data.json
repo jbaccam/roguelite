@@ -4,123 +4,123 @@
  "status": "Blender-verified, Studio untested",
  "units": "1 Blender unit = 1 stud, authored at hero size; set the play size in Studio by uniform scale",
  "axes": "Studio = (-x, z, y) of Blender; FBX exported with axis_forward=-Z, axis_up=Y",
- "texture": "BaseColor.png 1024x1024, baked painted lighting, shared by both daggers (the right dagger is an exact mirror with the same UVs); use MeshPart.TextureID (not SurfaceAppearance)",
+ "texture": "BaseColor.png 1024x1024, baked painted lighting, one atlas shared by both daggers (each dagger has its own UV islands); use MeshPart.TextureID (not SurfaceAppearance)",
  "parts": {
   "ShadowDaggers_L": {
    "kind": "textured",
    "center_studio": [
-    -0.8,
-    1.7586,
+    -0.9139,
+    2.3232,
     0.0
    ],
    "size_studio": [
-    1.5076,
-    3.1764,
-    0.384
+    1.2657,
+    4.2673,
+    0.344
    ],
-   "triangles": 7546,
+   "triangles": 7406,
    "material": "SmoothPlastic (or Plastic), Color white",
    "texture_id": "BaseColor.png"
   },
   "ShadowDaggers_L_Glow": {
    "kind": "glow",
    "center_studio": [
-    -0.8458,
-    1.6997,
+    -1.0864,
+    2.2683,
     0.0
    ],
    "size_studio": [
-    1.1189,
-    3.3993,
-    0.406
+    1.0293,
+    4.5367,
+    0.316
    ],
-   "triangles": 706,
+   "triangles": 1680,
    "material": "Neon",
    "color_rgb": [
-    170,
-    64,
-    255
+    255,
+    14,
+    30
    ],
-   "note": "violet glow: cutting edge, spine false edge, blade runes, skull eyes, wing eye-spots, pommel gem"
+   "note": "crimson Neon: serrated cutting edge, crack veins on both faces, spine false edge, demon eye, pommel spike"
   },
   "ShadowDaggers_L_GlowCore": {
    "kind": "glow",
    "center_studio": [
-    -0.8707,
-    2.4302,
+    -1.0863,
+    2.898,
     0.0
    ],
    "size_studio": [
-    1.0995,
-    1.9644,
-    0.198
+    1.053,
+    3.3099,
+    0.328
    ],
-   "triangles": 220,
+   "triangles": 456,
    "material": "Neon",
    "color_rgb": [
-    232,
-    206,
-    255
+    255,
+    64,
+    48
    ],
-   "note": "pale lavender cores: cutting-edge rim line, wing eye-spot pupils"
+   "note": "hot core: cutting-edge rim line, eye iris"
   },
   "ShadowDaggers_R": {
    "kind": "textured",
    "center_studio": [
-    0.8,
-    1.7586,
+    0.953,
+    2.1859,
     0.0
    ],
    "size_studio": [
-    1.5076,
-    3.1764,
-    0.384
+    1.344,
+    3.9928,
+    0.344
    ],
-   "triangles": 7546,
+   "triangles": 8386,
    "material": "SmoothPlastic (or Plastic), Color white",
    "texture_id": "BaseColor.png"
   },
   "ShadowDaggers_R_Glow": {
    "kind": "glow",
    "center_studio": [
-    0.8458,
-    1.6997,
+    1.1484,
+    2.1235,
     0.0
    ],
    "size_studio": [
-    1.1189,
-    3.3993,
-    0.406
+    1.0869,
+    4.247,
+    0.316
    ],
-   "triangles": 706,
+   "triangles": 698,
    "material": "Neon",
    "color_rgb": [
-    170,
-    64,
-    255
+    255,
+    14,
+    30
    ],
-   "note": "violet glow: cutting edge, spine false edge, blade runes, skull eyes, wing eye-spots, pommel gem"
+   "note": "crimson Neon: cutting edge, ridge line on both faces, demon eye, pommel spike"
   },
   "ShadowDaggers_R_GlowCore": {
    "kind": "glow",
    "center_studio": [
-    0.8707,
-    2.4302,
+    1.15,
+    2.7517,
     0.0
    ],
    "size_studio": [
-    1.0995,
-    1.9644,
-    0.198
+    1.1135,
+    3.0174,
+    0.328
    ],
-   "triangles": 220,
+   "triangles": 426,
    "material": "Neon",
    "color_rgb": [
-    232,
-    206,
-    255
+    255,
+    64,
+    48
    ],
-   "note": "pale lavender cores: cutting-edge rim line, wing eye-spot pupils"
+   "note": "hot core: cutting-edge rim line, eye iris"
   }
  },
  "daggers": {
@@ -131,13 +131,13 @@
     "ShadowDaggers_L_GlowCore"
    ],
    "grip_point_studio": [
-    -0.8,
-    0.805,
+    -0.9,
+    0.81,
     0.0
    ],
    "grip_point_relative_to_textured_center": [
-    -0.0,
-    -0.9536,
+    0.0139,
+    -1.5131,
     0.0
    ],
    "blade_axis_studio": [
@@ -155,7 +155,7 @@
     0.0,
     0.0
    ],
-   "triangles": 8472
+   "triangles": 9542
   },
   "right_hand": {
    "parts": [
@@ -164,13 +164,13 @@
     "ShadowDaggers_R_GlowCore"
    ],
    "grip_point_studio": [
-    0.8,
-    0.805,
+    0.9,
+    0.81,
     0.0
    ],
    "grip_point_relative_to_textured_center": [
-    0.0,
-    -0.9536,
+    -0.053,
+    -1.3759,
     0.0
    ],
    "blade_axis_studio": [
@@ -188,20 +188,21 @@
     0.0,
     0.0
    ],
-   "triangles": 8472
+   "triangles": 9510
   }
  },
  "notes": [
-  "Two independent daggers, one per hand. Each has its own textured MeshPart plus a Neon glow and a Neon core MeshPart; weld the three parts of a dagger together and to that hand.",
+  "Two different daggers, one per hand: left = 'Rend' (near-black serrated blade, crimson veins), right = 'Fang' (crimson blade, bone plates, hooked tip). Each has its own textured MeshPart plus a Neon glow and a Neon core MeshPart; weld the three parts of a dagger together and to that hand.",
   "Every MeshPart imports centred on its own bounding box: place each at its center_studio relative to the shared model origin (Blender origin, on the floor midway between the two daggers).",
-  "grip_point = middle of the wrapped grip on that dagger's axis (hand attachment / spin pivot). blade_axis = the grip-to-blade direction in the delivered pose. The cutting edge (long glowing curve) faces the other dagger (inward); the tip curves outward.",
+  "grip_point = middle of the scale grip on that dagger's axis (hand attachment / spin pivot). blade_axis = the grip-to-blade direction in the delivered pose. The cutting edges face each other (inward); the tips curve outward.",
   "The left-hand dagger sits at Studio -X (character's left when facing -Z), the right-hand dagger at Studio +X."
  ],
  "vfx_notes": [
-  "Chain dash (ability): for each hop, spawn an afterimage Beam between the dagger's current Attachment and the next enemy's Attachment: Color ColorSequence (232,206,255) -> (170,64,255) -> (60,20,110), LightEmission 1, LightInfluence 0, Width0 1.2 / Width1 0.3 studs, Transparency 0 -> 1 over 0.25 s (tween), FaceCamera true, Segments 1.",
-  "Afterimage ghosts: at every chain hit clone the dagger's three MeshParts (or the Neon glow part only) as a non-colliding copy, Material Neon, Color (170,64,255), Transparency tween 0.35 -> 1 over 0.3 s; up to 5 hits = up to 5 ghosts, one per hop, leaving a violet zig-zag between enemies.",
-  "Blade Trail per dagger: Attachment0 at the guard collar, Attachment1 at the blade tip; Color (170,64,255) -> (60,20,110), Lifetime 0.18, MinLength 0.05, WidthScale 1 -> 0, Transparency 0.2 -> 1, LightEmission 1, FaceCamera true.",
-  "Hit burst on each chained enemy: ParticleEmitter Burst 12, Color (170,64,255) -> (232,206,255), Size 0.8 -> 0, Lifetime 0.25-0.4, Speed 8-14, SpreadAngle 180, LightEmission 1, Drag 6; plus 4 dark smoke puffs Color (40,30,62), Size 1.2 -> 2.2, Transparency 0.4 -> 1, Lifetime 0.5, Speed 2.",
-  "Idle (optional): PointLight on the pommel gem, Color (170,64,255), Brightness 1.2, Range 6; a slow smoke ParticleEmitter at the pommel wisps, Rate 3, Color (74,56,112), Size 0.4 -> 0.9, Transparency 0.5 -> 1, Lifetime 0.8, Speed 0.6, Acceleration (0,1.5,0)."
+  "Aura haze (idle, always on while equipped): one ParticleEmitter per dagger on an Attachment at mid-blade, Shape Box sized to the blade (about 0.5 x 2 x 0.2 studs), Texture a soft round glow, Color (255,26,38) -> (120,8,20), LightEmission 1, LightInfluence 0, Size 0.9 -> 1.6, Transparency 0.75 -> 1, Lifetime 0.6-0.9, Rate 14, Speed 0.2-0.5, Acceleration (0,0.8,0), RotSpeed -30..30. Plus a PointLight on the guard eye: Color (255,40,40), Brightness 1.5, Range 7.",
+  "Ember motes (idle, optional): ParticleEmitter at the blade, Color (255,112,78) -> (255,26,38), Size 0.12 -> 0, LightEmission 1, Lifetime 0.5-0.8, Rate 6, Speed 0.6, SpreadAngle 30.",
+  "Chain dash (ability, up to 5 hits): the twin daggers zip from enemy to enemy. For each hop spawn a crimson afterimage chain: a Beam between the dagger's current Attachment and the next enemy's Attachment, Color (255,112,78) -> (255,26,38) -> (70,4,12), LightEmission 1, LightInfluence 0, Width0 1.4 / Width1 0.3 studs, Transparency 0 -> 1 over 0.3 s (tween), FaceCamera true, Segments 1.",
+  "Afterimages: at every hop leave 3 ghost copies of the dagger's Neon glow MeshPart (or all three parts) along the beam, Material Neon, Color (255,26,38), Transparency tween 0.3 -> 1 over 0.25 s, staggered 0.03 s apart; up to 5 hops leaves a crimson zig-zag of afterimages between the enemies.",
+  "Blade Trail per dagger: Attachment0 at the guard collar, Attachment1 at the blade tip; Color (255,26,38) -> (70,4,12), Lifetime 0.2, MinLength 0.05, WidthScale 1 -> 0, Transparency 0.15 -> 1, LightEmission 1, FaceCamera true.",
+  "Hit burst on each chained enemy: ParticleEmitter Burst 14, Color (255,112,78) -> (255,26,38), Size 0.9 -> 0, Lifetime 0.25-0.4, Speed 9-15, SpreadAngle 180, LightEmission 1, Drag 6; plus a crimson slash decal/Beam X across the enemy for 0.15 s and 4 dark smoke puffs Color (40,8,14), Size 1.2 -> 2.2, Transparency 0.4 -> 1, Lifetime 0.5, Speed 2."
  ]
 }

@@ -1,4 +1,4 @@
-"""Shadow Daggers: Godly melee weapon (RARITY_GODLY_ARMOR.md section 9:
+"""Shadow Daggers (round 2): Godly melee weapon (RARITY_GODLY_ARMOR.md section 9:
 "Twin daggers zip from enemy to enemy, hitting up to 5 in a chain").
 
 Run in background Blender 5.2 only (never the user's open scene):
@@ -7,22 +7,27 @@ Run in background Blender 5.2 only (never the user's open scene):
 Environment switches (all optional):
   MODE=quick     build and render flat-colour review shots to OUT only (no bake, no exports)
   MODE=full      (default) build, bake, export, validate, render the brief's set
-  OUT=<dir>      where quick renders go (default: this folder)
+  OUT=<dir>      where quick renders go (default: ./wip)
 
-Pipeline copied (not imported) from ../reapers-scythe/build_reapers_scythe.py: bmesh helpers, bevel
-+ weighted normals, painterly bake to one 1024 BaseColor.png, Neon glow meshes, catalogue stage,
-compose(), export + re-import validation.
+Pipeline copied (not imported) from ../reapers-scythe/build_reapers_scythe.py via the v1 generator:
+bmesh helpers, bevel + weighted normals, painterly bake to one 1024 BaseColor.png, Neon glow
+meshes, catalogue stage, compose(), export + re-import validation.
 
-Design: a mirrored pair of oversized curved obsidian daggers. Each blade sweeps outward with a
-violet Neon cutting edge on the long convex side, a gold spine with two back-hooks on the concave
-side, and gold-framed Neon moth-eye runes on both faces. The crossguard is a death's-head moth:
-bone skull on the thorax (both faces), violet enamel forewings with gold piping and Neon eye-spot
-gems, and smoky hindwings that curl into wisp tails. Dark wrapped grip with gold bands; gold claw
-pommel holding a violet Neon gem, with two curling smoke wisps.
+Design (owner references: Kamish's-Wrath-style demon dagger pair, ref1..ref4):
+  Dagger A (left hand)  "Rend": a near-black jagged blade, serrated cutting edge with a crimson Neon
+      edge, glowing crimson crack veins on both faces, three hooked back-spikes on the spine and a
+      Neon false edge near the needle tip.
+  Dagger B (right hand) "Fang": a blood-crimson broad blade with four layered bone chevron plates
+      climbing from the guard (claw tips past both edges), a hooked tip with a spine barb, a hot
+      crimson Neon edge and a Neon line on the ridge.
+  Shared hilt: a demon eye guard (bone lids, crimson Neon eyeball, slit pupil, both faces) held by
+      hooked gold claws and bone claw plates; dragon-scale grip (overlapping scale rows) between
+      gold collars; a gold claw pommel gripping a crimson Neon spike.
+  Blades are diamond in section (centre ridge + steeper edge bevel) with crisp 1-segment bevels.
 
 Axes: Blender +z up (blade up), blade flats look along +/-y. 1 Blender unit = 1 stud.
-Studio axes are (-x, z, y) of Blender. The authored dagger curves toward +x; it is the LEFT-hand
-dagger (character's left = Studio -X = Blender +x). The right-hand dagger is its exact x-mirror.
+Studio axes are (-x, z, y) of Blender. Dagger A sits at Blender +x (character's left = Studio -X),
+dagger B at Blender -x; each blade's tip curves outward, cutting edges face each other.
 """
 import bpy, bmesh, math, json, os, sys, time
 import numpy as np
@@ -33,11 +38,10 @@ T0 = time.time()
 ROOT = Path(__file__).resolve().parent
 NAME = "ShadowDaggers"
 MODE = os.environ.get("MODE", "full")
-OUT = Path(os.environ.get("OUT", str(ROOT)))
-OUT.mkdir(parents=True, exist_ok=True)
+OUT = Path(os.environ.get("OUT", str(ROOT / "wip")))
 BAKE_SIZE = 1024
-DX = 0.80                    # each dagger's axis sits at x = +/-DX in the delivered pair layout
-BLEED_K, BLEED_STRENGTH = 0.18, 0.85
+DX = 0.90                    # each dagger's axis sits at x = +/-DX in the delivered pair layout
+BLEED_K, BLEED_STRENGTH, BLEED_FALL = 0.12, 0.42, 0.06
 
 
 def log(*a):
@@ -48,22 +52,24 @@ def V(*a):
     return Vector(a)
 
 
+Y = V(0, 1, 0)
+
 # ---------------------------------------------------------------------------
 # Palette (slot index = material index). flat, painterly ramp (sRGB), bevel-edge tint
 # ---------------------------------------------------------------------------
 PAL = [
-    ("Obsidian", (40, 30, 62), [(0.28, (22, 16, 36)), (0.5, (40, 30, 62)), (0.78, (70, 54, 104))], (176, 150, 236)),
-    ("Steel", (104, 80, 156), [(0.28, (66, 48, 108)), (0.52, (102, 78, 154)), (0.8, (150, 126, 206))], (226, 210, 255)),
-    ("Gold", (238, 172, 34), [(0.3, (176, 100, 14)), (0.52, (238, 170, 30)), (0.78, (255, 226, 92))], (255, 240, 160)),
-    ("Bone", (238, 224, 190), [(0.3, (200, 174, 128)), (0.54, (238, 220, 184)), (0.8, (255, 248, 228))], (255, 255, 244)),
-    ("Socket", (22, 10, 26), [(0.4, (12, 5, 16)), (0.75, (34, 16, 40))], (80, 50, 110)),
-    ("Enamel", (96, 44, 156), [(0.28, (60, 24, 104)), (0.52, (94, 44, 152)), (0.8, (136, 80, 200))], (210, 170, 255)),
-    ("Smoke", (74, 56, 112), [(0.28, (44, 32, 72)), (0.52, (74, 56, 112)), (0.8, (120, 100, 170))], (200, 186, 240)),
-    ("Leather", (46, 34, 60), [(0.28, (26, 19, 36)), (0.52, (46, 34, 60)), (0.8, (74, 58, 96))], (150, 130, 190)),
+    ("Obsidian", (26, 9, 14), [(0.28, (9, 3, 6)), (0.5, (24, 8, 13)), (0.78, (50, 15, 22))], (170, 48, 56)),
+    ("Crimson", (112, 8, 20), [(0.28, (46, 2, 9)), (0.52, (108, 8, 20)), (0.8, (158, 18, 28))], (240, 90, 80)),
+    ("Hot", (140, 10, 22), [(0.3, (84, 4, 12)), (0.55, (138, 10, 22)), (0.82, (188, 28, 32))], (250, 120, 104)),
+    ("Gold", (206, 138, 28), [(0.3, (110, 54, 10)), (0.52, (204, 134, 26)), (0.8, (250, 198, 74))], (255, 228, 140)),
+    ("Bone", (214, 190, 146), [(0.3, (128, 92, 60)), (0.54, (206, 180, 136)), (0.8, (242, 226, 192))], (255, 248, 226)),
+    ("Scale", (36, 26, 42), [(0.28, (14, 9, 20)), (0.52, (36, 26, 42)), (0.8, (72, 50, 78))], (176, 96, 112)),
+    ("Socket", (14, 4, 8), [(0.4, (7, 2, 4)), (0.75, (26, 8, 12))], (90, 30, 36)),
+    ("Shard", (190, 160, 116), [(0.3, (100, 68, 40)), (0.55, (188, 158, 114)), (0.82, (228, 206, 164))], (248, 234, 204)),
 ]
-M_OBS, M_STEEL, M_GOLD, M_BONE, M_SOCK, M_ENAMEL, M_SMOKE, M_LEATHER = range(len(PAL))
-GLOW = (170, 64, 255)       # Roblox Neon, shadow violet (Godly accent)
-CORE = (232, 206, 255)      # Roblox Neon, pale lavender core of edges / eyes
+M_OBS, M_CRIM, M_HOT, M_GOLD, M_BONE, M_SCALE, M_SOCK, M_SHARD = range(len(PAL))
+GLOW = (255, 14, 30)        # Roblox Neon, blood crimson (long lines: edges, veins, ridge, eye, pommel)
+CORE = (255, 64, 48)       # Roblox Neon, hot core (edge rim lines, iris)
 
 
 def lin(c):
@@ -120,7 +126,7 @@ def loft(bm, rings, closed=True, caps=True, mat=0, recalc=True, mats=None):
     return faces
 
 
-def frames(pts, up=V(0, 1, 0)):
+def frames(pts, up=Y):
     n = len(pts)
     T = []
     for k in range(n):
@@ -141,10 +147,14 @@ def frames(pts, up=V(0, 1, 0)):
     return T, N, B
 
 
-def tube(bm, pts, radii, sides=8, mat=0, flat=1.0, phase=0.0, up=V(0, 1, 0), caps=True):
+DIAMOND = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+HEX = [(1, 0), (0.55, 1), (-0.55, 1), (-1, 0), (-0.55, -1), (0.55, -1)]
+
+
+def tube(bm, pts, radii, sides=8, mat=0, flat=1.0, phase=0.0, up=Y, caps=True, shape=None):
     """Tube along a centreline. radii entries: r, or (r_normal, r_binormal); 0 = pointed end."""
     T, N, B = frames(pts, up)
-    sec = [(math.cos(phase + 2 * math.pi * s / sides), math.sin(phase + 2 * math.pi * s / sides)) for s in range(sides)]
+    sec = shape or [(math.cos(phase + 2 * math.pi * s / sides), math.sin(phase + 2 * math.pi * s / sides)) for s in range(sides)]
     rings = []
     for k, p in enumerate(pts):
         r = radii[k]
@@ -187,6 +197,32 @@ def basis(x, y, z):
     return Matrix((x, y, z)).transposed().to_4x4()
 
 
+def catmull(ctrl, n=4):
+    P = [ctrl[0] + (ctrl[0] - ctrl[1])] + list(ctrl) + [ctrl[-1] + (ctrl[-1] - ctrl[-2])]
+    out = []
+    for i in range(1, len(P) - 2):
+        p0, p1, p2, p3 = P[i - 1], P[i], P[i + 1], P[i + 2]
+        for k in range(n):
+            t = k / n
+            out.append(0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t ** 3))
+    out.append(ctrl[-1].copy())
+    return out
+
+
+def claw(bm, ctrl, r0, mat, n=4, up=Y, belly=0.8, shape=DIAMOND, rmid=None):
+    """Tapered claw/hook along a Catmull-Rom path: diamond (or hex) section, needle point."""
+    pts = catmull([Vector(c) for c in ctrl], n)
+    m = len(pts)
+    radii = []
+    for k in range(m):
+        t = k / (m - 1)
+        f = 0.0 if k == m - 1 else (1 - t) ** belly
+        if rmid is not None:
+            f *= 1 + rmid * math.sin(math.pi * t)
+        radii.append((r0[0] * f, r0[1] * f))
+    return tube(bm, pts, radii, mat=mat, up=up, shape=shape)
+
+
 # ---------------------------------------------------------------------------
 # Scene, materials, modifiers
 # ---------------------------------------------------------------------------
@@ -205,7 +241,7 @@ for name, flat_c, ramp, edge in PAL:
     m.use_nodes = True
     bs = m.node_tree.nodes["Principled BSDF"]
     bs.inputs["Base Color"].default_value = rgba(flat_c)
-    bs.inputs["Roughness"].default_value = 0.55 if name != "Gold" else 0.35
+    bs.inputs["Roughness"].default_value = 0.5 if name != "Gold" else 0.35
     if name == "Gold":
         bs.inputs["Metallic"].default_value = 0.6
     MATS.append(m)
@@ -221,9 +257,11 @@ def emit_mat(name, col, strength):
     return m
 
 
-GLOW_MAT = emit_mat(f"{NAME}_Glow", GLOW, 1.5)
-CORE_MAT = emit_mat(f"{NAME}_GlowCore", CORE, 1.6)
+GLOW_STRENGTH = float(os.environ.get("GLOW_STRENGTH", "0.85"))
+GLOW_MAT = emit_mat(f"{NAME}_Glow", GLOW, GLOW_STRENGTH)
+CORE_MAT = emit_mat(f"{NAME}_GlowCore", CORE, GLOW_STRENGTH * 0.9)
 PARTS = []
+CUR = {"d": "A"}
 
 
 def new_bm():
@@ -232,6 +270,7 @@ def new_bm():
 
 def make_obj(name, bm, kind="tex", smooth=False, coll=None):
     bm.normal_update()
+    name = f"{CUR['d']}_{name}" if kind != "fig" else name
     me = bpy.data.meshes.new(name)
     bm.to_mesh(me)
     bm.free()
@@ -247,6 +286,7 @@ def make_obj(name, bm, kind="tex", smooth=False, coll=None):
     ob = bpy.data.objects.new(name, me)
     (coll or (WORK if kind == "cut" else ASSET)).objects.link(ob)
     ob["kind"] = kind
+    ob["dagger"] = CUR["d"]
     if kind == "cut":
         ob.display_type = "WIRE"
         ob.hide_render = True
@@ -276,16 +316,11 @@ def add_wn(ob):
     return m
 
 
-def hard(ob, width=0.012, segs=2, angle=30.0):
+def hard(ob, width=0.008, segs=1, angle=30.0):
     for p in ob.data.polygons:
         p.use_smooth = True
     add_bevel(ob, width, segs=segs, angle=angle)
     add_wn(ob)
-    return ob
-
-
-def soft(ob, width=0.01, angle=32.0):
-    add_bevel(ob, width, segs=1, angle=angle, harden=False)
     return ob
 
 
@@ -309,15 +344,11 @@ def apply_mods(ob):
 
 
 # ---------------------------------------------------------------------------
-# Layout (studs), authored dagger on the axis x = y = 0, pommel tip near z = 0
+# Layout (studs). Each dagger is authored on the axis x = y = 0 with its tip curving to +x
+# (dagger B is x-mirrored when the pair is placed). Pommel spike tip near z = 0.
 # ---------------------------------------------------------------------------
-ZB = 1.46                                   # blade root (inside the gold socket collar)
-BL = [V(0, 0, ZB - 0.08), V(0, 0, ZB + 0.72), V(0.03, 0, ZB + 1.40), V(0.56, 0, ZB + 1.86)]
-WE = [(0.0, 0.205), (0.18, 0.27), (0.40, 0.29), (0.64, 0.245), (0.84, 0.15), (1.0, 0.0)]   # edge-side half width
-WS = [(0.0, 0.185), (0.2, 0.19), (0.45, 0.17), (0.7, 0.125), (0.88, 0.07), (1.0, 0.0)]     # spine-side half width
-TH = [(0.0, 0.078), (0.4, 0.068), (0.75, 0.048), (1.0, 0.012)]                            # half thickness
-GRIP_Z = (0.47, 1.06)
-Y = V(0, 1, 0)
+ZB = 1.42                                   # blade root (inside the gold blade collar)
+GRIP_Z = (0.50, 1.00)
 
 
 def bez(P, t):
@@ -330,263 +361,393 @@ def bez_d(P, t):
     return ((P[1] - P[0]) * 3 * a * a + (P[2] - P[1]) * 6 * a * t + (P[3] - P[2]) * 3 * t * t).normalized()
 
 
-def station(u):
-    C, T = bez(BL, u), bez_d(BL, u)
-    NE = V(-T.z, 0, T.x)                   # toward the cutting (convex) edge, -x at the root
-    return C, T, NE, interp(WE, u), interp(WS, u), interp(TH, u)
+class Blade:
+    """Diamond-section blade on a Bezier centreline. NE = toward the cutting (convex) edge (-x at the root).
+    Ring per station: [E, Eb+, R+, Sb+, S, Sb-, R-, Eb-]  (E edge, Eb edge-bevel line, R ridge, S spine)."""
 
+    def __init__(self, P, WE, WS, TH, teeth=None, mats=(M_OBS, M_CRIM, M_OBS), NS=40):
+        self.P, self.WE, self.WS, self.TH, self.teeth, self.mats, self.NS = P, WE, WS, TH, teeth, mats, NS
+        self.edge_pts = []
 
-# blade cross-section (v across: +1 cutting edge, -1 spine; y in units of half thickness)
-SEC = [(1.0, 0.0), (0.42, 1.0), (-0.5, 1.0), (-1.0, 0.55), (-1.0, -0.55), (-0.5, -1.0), (0.42, -1.0)]
-SEC_M = [M_STEEL, M_OBS, M_OBS, M_GOLD, M_OBS, M_OBS, M_STEEL]
-EDGE_PTS = []
+    def frame(self, u):
+        C, T = bez(self.P, u), bez_d(self.P, u)
+        return C, T, V(-T.z, 0, T.x)
 
+    def dims(self, u):
+        we, ws, th = interp(self.WE, u), interp(self.WS, u), interp(self.TH, u)
+        return we, ws, th, (we - ws) * 0.5
 
-def sec_y(v):
-    """Half thickness factor of the section at v (upper surface)."""
-    if v >= 0.42:
-        return (1 - v) / 0.58
-    if v >= -0.5:
-        return 1.0
-    return 1.0 - 0.45 * (-0.5 - v) / 0.5
+    def tooth(self, u):
+        if not self.teeth:
+            return 0.0, 0.0
+        ua, ub, n, depth, hook = self.teeth
+        if u < ua or u > ub:
+            return 0.0, 0.0
+        t = (u - ua) / (ub - ua) * n
+        k = min(int(t), n - 1)
+        f = t - k
+        sh = f / 0.3 if f < 0.3 else 1 - (f - 0.3) / 0.7
+        fade = 0.65 + 0.35 * (1 - k / max(1, n - 1))
+        return depth * sh * fade, hook * sh * fade
 
+    def stations(self):
+        us = [k / self.NS for k in range(self.NS + 1)]
+        if self.teeth:
+            ua, ub, n, _, _ = self.teeth
+            keys = [ua + (ub - ua) * k / n for k in range(n + 1)] + [ua + (ub - ua) * (k + 0.3) / n for k in range(n)]
+            us = [u for u in us if min(abs(u - q) for q in keys) > 0.006] + keys
+        return sorted(set(round(u, 6) for u in us))
 
-def build_blade():
-    bm = new_bm()
-    rings = []
-    NS = 30
-    for k in range(NS + 1):
-        u = k / NS
-        C, T, NE, we, ws, th = station(u)
-        if k == NS:
-            rings.append(C)
-            continue
-        rings.append([C + NE * (v * (we if v > 0 else ws)) + Y * (yy * th) for v, yy in SEC])
-        EDGE_PTS.append(tuple(C + NE * we))
-    loft(bm, rings, mats=SEC_M)
-    ob = make_obj("Blade", bm, smooth=True)
-    add_bevel(ob, 0.008, segs=2, angle=24)
-    add_wn(ob)
-    # back-hooks on the spine (concave side): chunky, swept toward the grip
-    bm = new_bm()
-    for u, sc in ((0.28, 1.4), (0.49, 1.15)):
-        C, T, NE, we, ws, th = station(u)
-        S = C - NE * (ws - 0.02)
-        poly = [(0.075 * sc, -0.05), (0.0, 0.035 * sc), (-0.13 * sc, 0.15 * sc), (-0.07 * sc, -0.05)]
-        prism(bm, poly, S, T, -NE, Y, -0.62 * th, 0.62 * th, mat=M_OBS)
-    hk = make_obj("SpineHooks", bm)
-    hard(hk, 0.012, segs=1, angle=28)
+    def ring(self, u):
+        C, T, NE = self.frame(u)
+        we, ws, th, ro = self.dims(u)
+        dw, dt = self.tooth(u)
+        R = C + NE * ro
+        E = C + NE * (we + dw) + T * dt
+        Eb = R + NE * ((we - ro) * 0.75)
+        S = C - NE * ws
+        Sb = R - NE * ((ws + ro) * 0.70)
+        ye, yr, ys = th * 0.5, th, th * 0.42
+        return [E, Eb + Y * ye, R + Y * yr, Sb + Y * ys, S, Sb - Y * ys, R - Y * yr, Eb - Y * ye]
 
+    def surf(self, u, v, sg, lift=0.0):
+        """Point on the blade face (sg=+1 front/+y, -1 back) at u along, v across (+1 edge .. -1 spine)."""
+        C, T, NE = self.frame(u)
+        we, ws, th, ro = self.dims(u)
+        if v >= 0:
+            x = ro + v * (we - ro)
+            y = th * (1 - v / 0.75 * 0.5) if v <= 0.75 else th * 0.5 * (1 - v) / 0.25
+        else:
+            a = -v
+            x = ro - a * (ws + ro)
+            y = th * (1 - a / 0.7 * 0.58) if a <= 0.7 else th * 0.42 * (1 - a) / 0.3
+        return C + NE * x + Y * sg * (y + lift)
 
-def build_blade_glow():
-    # main cutting edge: violet Neon cap wrapping the steel edge, pale core line on the very rim
-    for kind, out, base, lift, tip_ext in (("glow", 0.045, 0.72, 0.012, 0.06), ("core", 0.068, 0.93, 0.006, 0.08)):
+    def build(self, name):
         bm = new_bm()
         rings = []
-        NS = 30
-        for k in range(1, NS + 1):
-            u = k / NS
-            C, T, NE, we, ws, th = station(u)
-            if k == NS:
-                rings.append(C + T * tip_ext)
+        main, edge, spine = self.mats[:3]
+        face2 = self.mats[3] if len(self.mats) > 3 else main
+        for u in self.stations():
+            if u >= 1.0:
+                rings.append(bez(self.P, 1.0))
                 continue
-            taper = 1.0 - 0.55 * smoothstep(0.75, 1.0, u)
-            yb = th * sec_y(base) + lift
-            rings.append([C + NE * (we + out * taper), C + NE * (we * base) + Y * yb, C + NE * (we * base) - Y * yb])
+            r = self.ring(u)
+            rings.append(r)
+            self.edge_pts.append(tuple(r[0]))
+        loft(bm, rings, mats=[edge, main, face2, spine, spine, face2, main, edge])
+        ob = make_obj(name, bm, smooth=True)
+        add_bevel(ob, 0.005, segs=1, angle=20)
+        add_wn(ob)
+        return ob
+
+    def edge_glow(self, u0, out=0.032, cover=0.5):
+        for kind, o, f, lift, ext in (("glow", out, cover, 0.006, 0.07), ("core", out + 0.012, 0.1, 0.004, 0.09)):
+            bm = new_bm()
+            rings = []
+            us = [u for u in self.stations() if u >= u0]
+            for u in us:
+                C, T, NE = self.frame(u)
+                if u >= 1.0:
+                    rings.append(C + T * ext)
+                    continue
+                r = self.ring(u)
+                we, ws, th, ro = self.dims(u)
+                taper = 1.0 - 0.5 * smoothstep(0.8, 1.0, u)
+                E, Eb = r[0], (r[1] + r[7]) * 0.5
+                G = E.lerp(Eb, f)
+                yb = th * 0.5 * f + lift
+                if kind == "core":
+                    G = E.lerp(Eb, 0.12)
+                    yb = th * 0.5 * 0.12 + lift
+                rings.append([E + NE * (o * taper), G + Y * yb, G - Y * yb])
+            loft(bm, rings)
+            make_obj(f"EdgeGlow_{kind}", bm, kind=kind)
+
+    def spine_glow(self, u0, out=0.026, cover=0.4):
+        bm = new_bm()
+        rings = []
+        us = [u for u in self.stations() if u >= u0]
+        for i, u in enumerate(us):
+            C, T, NE = self.frame(u)
+            if u >= 1.0:
+                rings.append(C + T * 0.07)
+                continue
+            r = self.ring(u)
+            we, ws, th, ro = self.dims(u)
+            g = smoothstep(u0, u0 + 0.12, u)
+            S, Sb = r[4], (r[3] + r[5]) * 0.5
+            G = S.lerp(Sb, cover * max(g, 0.15))
+            yb = th * 0.42 * cover * max(g, 0.15) + 0.006
+            rings.append([S - NE * (out * g), G + Y * yb, G - Y * yb])
         loft(bm, rings)
-        make_obj(f"EdgeGlow_{kind}", bm, kind=kind)
-    # false edge on the spine near the tip
+        make_obj("SpineGlow", bm, kind="glow")
+
+    def ribbon(self, bm, poly, hw0, hw1, sg, lift=0.008, sink=0.02, sub=3):
+        uv = []
+        for (a, b) in zip(poly, poly[1:]):
+            for k in range(sub):
+                t = k / sub
+                uv.append((a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t))
+        uv.append(poly[-1])
+        P = [self.surf(u, v, sg, lift) for u, v in uv]
+        m = len(P)
+        rings = []
+        for k, p in enumerate(P):
+            t_ = P[min(k + 1, m - 1)] - P[max(k - 1, 0)]
+            t_.y = 0
+            t_.normalize()
+            side = t_.cross(Y).normalized()
+            hw = hw0 + (hw1 - hw0) * k / (m - 1)
+            if k == 0:
+                hw *= 0.5
+            down = Y * (-sg * sink)
+            rings.append([p + side * hw, p - side * hw, p - side * hw + down, p + side * hw + down])
+        loft(bm, rings)
+
+    def local(self, u, a, b):
+        """Point at u along the centreline, a across (+ edge side), b along the tangent; in the blade plane."""
+        C, T, NE = self.frame(u)
+        return C + NE * a + T * b
+
+
+# ---------------------------------------------------------------------------
+# Dagger A "Rend": near-black jagged blade, serrated, crimson veins, hooked spine spikes
+# ---------------------------------------------------------------------------
+BLADE_A = Blade(
+    P=[V(0, 0, ZB - 0.12), V(0, 0, ZB + 1.15), V(0.08, 0, ZB + 2.2), V(0.66, 0, ZB + 3.0)],
+    WE=[(0.0, 0.205), (0.12, 0.24), (0.32, 0.245), (0.55, 0.195), (0.78, 0.11), (1.0, 0.0)],
+    WS=[(0.0, 0.185), (0.2, 0.175), (0.45, 0.15), (0.7, 0.10), (0.88, 0.05), (1.0, 0.0)],
+    TH=[(0.0, 0.088), (0.4, 0.07), (0.75, 0.046), (1.0, 0.012)],
+    teeth=(0.14, 0.50, 8, 0.07, -0.024),
+    mats=(M_OBS, M_CRIM, M_OBS), NS=46)
+
+BLADE_B = Blade(
+    P=[V(0, 0, ZB - 0.12), V(0, 0, ZB + 1.05), V(0.0, 0, ZB + 2.05), V(0.74, 0, ZB + 2.72)],
+    WE=[(0.0, 0.215), (0.25, 0.28), (0.5, 0.29), (0.7, 0.235), (0.87, 0.12), (1.0, 0.0)],
+    WS=[(0.0, 0.195), (0.3, 0.17), (0.6, 0.14), (0.8, 0.09), (0.92, 0.045), (1.0, 0.0)],
+    TH=[(0.0, 0.09), (0.4, 0.074), (0.75, 0.05), (1.0, 0.012)],
+    teeth=(0.48, 0.76, 3, 0.08, -0.03), mats=(M_CRIM, M_HOT, M_OBS, M_OBS), NS=46)
+
+
+def build_blade_A():
+    bl = BLADE_A
+    bl.build("Blade")
+    bl.edge_glow(0.04, out=0.024, cover=0.3)
+    bl.spine_glow(0.66)
+    # hooked back-spikes on the spine (concave side), swept toward the grip
     bm = new_bm()
-    rings = []
-    NS = 16
-    for k in range(NS + 1):
-        u = 0.58 + 0.42 * k / NS
-        C, T, NE, we, ws, th = station(u)
-        if k == 0:
-            rings.append(C - NE * (ws * 0.95))
-            continue
-        if k == NS:
-            rings.append(C + T * 0.06)
-            continue
-        g = smoothstep(0.58, 0.70, u)
-        yb = th * sec_y(-0.78) + 0.01
-        rings.append([C - NE * (ws + 0.035 * g), C - NE * (ws * (1 - 0.25 * g)) + Y * yb, C - NE * (ws * (1 - 0.25 * g)) - Y * yb])
-    loft(bm, rings)
-    make_obj("SpineGlow", bm, kind="glow")
-
-
-def build_runes():
-    """Gold-framed Neon moth-eye diamonds down both blade faces."""
-    gb, nb = new_bm(), new_bm()
-    for u, s in ((0.13, 0.095), (0.30, 0.083), (0.46, 0.07), (0.61, 0.056), (0.74, 0.042)):
-        C, T, NE, we, ws, th = station(u)
-        O = C + NE * 0.015
-        dia = [(s, 0), (0, 0.62 * s), (-s, 0), (0, -0.62 * s)]
-        fr = [(a * 1.5 + (0.012 if a > 0 else -0.012 if a < 0 else 0), b * 1.5) for a, b in dia]
-        for sg in (1, -1):
-            prism(gb, fr, O, T, NE, Y * sg, th - 0.006, th + 0.011, mat=M_GOLD)
-            prism(nb, dia, O, T, NE, Y * sg, th - 0.004, th + 0.019)
-        # small chevron ticks between runes
-    g = make_obj("RuneFrames", gb, smooth=True)
-    hard(g, 0.004, segs=1, angle=30)
-    make_obj("Runes", nb, kind="glow")
-
-
-def build_collar():
-    bm = new_bm()
-    prof = [(0.185, ZB - 0.14), (0.25, ZB - 0.11), (0.285, ZB - 0.05), (0.275, ZB + 0.02), (0.24, ZB + 0.07), (0.205, ZB + 0.085)]
-    lathe(bm, prof, sides=10, sy=0.48, mat=M_GOLD, M=Matrix.Translation(V(-0.01, 0, 0)))
-    # crown points on the collar rim, front and back faces
+    for u, sc in ((0.20, 1.0), (0.34, 0.9), (0.48, 0.78), (0.62, 0.62)):
+        we, ws, th, ro = bl.dims(u)
+        ctrl = [bl.local(u, -ws * 0.35, 0.06 * sc), bl.local(u, -(ws + 0.09 * sc), 0.05 * sc),
+                bl.local(u, -(ws + 0.19 * sc), -0.03 * sc), bl.local(u, -(ws + 0.22 * sc), -0.19 * sc)]
+        claw(bm, ctrl, (0.085 * sc, th * 0.95), M_OBS, n=4, belly=0.9)
+    hk = make_obj("SpineHooks", bm, smooth=True)
+    hard(hk, 0.005, segs=1, angle=25)
+    # crimson crack veins on both faces: two jagged lightning cracks with short spurs (not a leaf)
+    cracks = [[(0.02, 0.06), (0.10, 0.27), (0.16, 0.10), (0.25, 0.36), (0.31, 0.17), (0.42, 0.42), (0.50, 0.20),
+               (0.60, 0.33), (0.69, 0.13), (0.78, 0.2)],
+              [(0.03, -0.12), (0.12, -0.36), (0.19, -0.14), (0.29, -0.42), (0.36, -0.19), (0.47, -0.36), (0.55, -0.1),
+               (0.63, -0.24)]]
+    spurs = [[(0.16, 0.10), (0.21, 0.52), (0.24, 0.66)], [(0.31, 0.17), (0.35, -0.02), (0.36, -0.19)],
+             [(0.42, 0.42), (0.47, 0.64)], [(0.19, -0.14), (0.23, -0.5), (0.26, -0.62)], [(0.50, 0.20), (0.53, 0.02), (0.55, -0.1)]]
+    vb = new_bm()
     for sg in (1, -1):
-        for x in (-0.14, 0.0, 0.14):
-            b = V(x - 0.01, sg * 0.105, ZB + 0.04)
-            tube(bm, [b, b + V(0, sg * 0.005, 0.07), b + V(0, sg * 0.0, 0.12)], [0.034, 0.026, 0.0], sides=5, mat=M_GOLD)
-    ob = make_obj("Collar", bm, smooth=True)
-    hard(ob, 0.008, segs=1, angle=30)
+        for c in cracks:
+            bl.ribbon(vb, c, 0.015, 0.004, sg, sub=3)
+        for c in spurs:
+            bl.ribbon(vb, c, 0.011, 0.003, sg, sub=2)
+    make_obj("Veins", vb, kind="glow")
 
 
-def build_thorax():
+def build_blade_B():
+    bl = BLADE_B
+    bl.build("Blade")
+    bl.edge_glow(0.04, out=0.026, cover=0.35)
+    # ridge line glow above the plates, both faces
+    rb = new_bm()
+    for sg in (1, -1):
+        bl.ribbon(rb, [(0.44, 0.0), (0.6, 0.0), (0.8, 0.0), (0.92, 0.0)], 0.016, 0.003, sg, sub=5)
+    make_obj("RidgeGlow", rb, kind="glow")
+    # bone armour shards: asymmetric, crooked, broken-edged, climbing mostly along the SPINE side in varied sizes,
+    # two small ones on the edge side by the guard. f < 0: fraction of the spine half-width, f > 0: of the edge side.
+    SH = [(((0.00, 0.35), (0.05, -0.2), (0.10, -0.75), (0.15, -1.4)), 0.17, 0.05, 0.0),
+          (((0.08, 0.3), (0.13, -0.3), (0.17, -0.85), (0.225, -1.35)), 0.14, 0.042, 0.3),
+          (((0.16, 0.2), (0.205, -0.4), (0.235, -0.8), (0.28, -1.0), (0.315, -1.4)), 0.115, 0.035, 0.6),
+          (((0.25, 0.05), (0.29, -0.55), (0.34, -1.2)), 0.09, 0.028, 0.15),
+          (((0.32, -0.2), (0.355, -0.75), (0.40, -1.15)), 0.06, 0.022, 0.45),
+          (((0.0, 0.3), (0.035, 0.85), (0.075, 1.3)), 0.09, 0.036, 0.7),
+          (((0.065, 0.4), (0.10, 1.0), (0.13, 1.22)), 0.055, 0.024, 0.2)]
+    SHARD = [(1.0, 0.0), (0.35, 1.0), (-0.55, 0.85), (-1.0, 0.05), (-0.45, -0.92), (0.4, -1.0)]
+    JAG = [1.0, 0.82, 1.0, 0.66, 0.8, 0.48, 0.56, 0.3, 0.34, 0.15]
     bm = new_bm()
-    prof = [(0.0, 1.02), (0.10, 1.035), (0.165, 1.10), (0.195, 1.20), (0.19, 1.29), (0.16, 1.36), (0.0, 1.40)]
-    lathe(bm, prof, sides=12, sy=0.74, mat=M_OBS)
-    ob = make_obj("Thorax", bm, smooth=True)
-    hard(ob, 0.01, segs=2, angle=28)
-    # death's-head skull relief on both faces
-    bb, eb, cb = new_bm(), new_bm(), new_bm()
-    for sg in (-1, 1):
-        Mf = Matrix.Translation(V(0, sg * 0.10, 1.215)) @ basis(V(1, 0, 0), V(0, 0, 1), V(0, sg, 0))
-        lathe(bb, [(0.0, -0.01), (0.09, -0.01), (0.10, 0.03), (0.085, 0.065), (0.05, 0.085), (0.0, 0.092)], sides=8, M=Mf,
-              mat=M_BONE, sy=1.12)
-        box(bb, V(0, sg * 0.15, 1.115), (0.11, 0.06, 0.06), mat=M_BONE)
-        for x in (-0.037, 0.037):
-            Me = Matrix.Translation(V(x, sg * 0.165, 1.228)) @ basis(V(1, 0, 0), V(0, 0, 1), V(0, sg, 0))
-            lathe(bb, [(0.0, 0.0), (0.034, 0.0), (0.032, 0.022), (0.0, 0.026)], sides=6, M=Me, mat=M_SOCK)
-            lathe(eb, [(0.0, 0.015), (0.02, 0.016), (0.018, 0.034), (0.0, 0.038)], sides=6, M=Me)
-        # teeth notches
-        box(bb, V(0, sg * 0.181, 1.112), (0.075, 0.01, 0.012), mat=M_SOCK)
-        # nose
-        prism(bb, [(-0.014, 0.0), (0.014, 0.0), (0.0, 0.024)], V(0, sg * 0.168, 1.17), V(1, 0, 0), V(0, 0, 1), V(0, sg, 0),
-              0.0, 0.022, mat=M_SOCK)
-    sk = make_obj("Skulls", bb, smooth=True)
-    hard(sk, 0.006, segs=1, angle=30)
-    make_obj("SkullEyes", eb, kind="glow")
+    for ctrl_uv, ra, extra, ph in SH:
+        ctrl = []
+        for u, f in ctrl_uv:
+            we, ws, th, ro = bl.dims(u)
+            ctrl.append(bl.local(u, (we if f > 0 else ws) * f, 0.0))
+        pts = catmull(ctrl, 3)
+        m = len(pts)
+        th0 = bl.dims(ctrl_uv[0][0])[2]
+        radii = []
+        for k in range(m):
+            t = k / (m - 1)
+            if k == m - 1:
+                radii.append(0.0)
+                continue
+            jt = min(len(JAG) - 1.001, (t + ph * 0.1) * (len(JAG) - 1))
+            j0 = int(jt)
+            jag = JAG[j0] + (JAG[j0 + 1] - JAG[j0]) * (jt - j0)
+            radii.append((ra * jag * (1 - 0.35 * t), (th0 + extra) * (1 - 0.55 * t) * (0.85 + 0.15 * jag)))
+        tube(bm, pts, radii, mat=M_SHARD, shape=SHARD)
+    pl = make_obj("BoneShards", bm, smooth=True)
+    hard(pl, 0.005, segs=1, angle=25)
+    # hooked tip: a barb on the spine behind the tip, plus a smaller one lower down
+    bm = new_bm()
+    for u, sc in ((0.78, 1.15), (0.58, 0.75)):
+        we, ws, th, ro = bl.dims(u)
+        ctrl = [bl.local(u, -ws * 0.3, 0.07 * sc), bl.local(u, -(ws + 0.10 * sc), 0.05 * sc),
+                bl.local(u, -(ws + 0.20 * sc), -0.04 * sc), bl.local(u, -(ws + 0.20 * sc), -0.22 * sc)]
+        claw(bm, ctrl, (0.09 * sc, th * 0.95), M_CRIM, n=4, belly=0.9)
+    bb = make_obj("SpineBarbs", bm, smooth=True)
+    hard(bb, 0.005, segs=1, angle=25)
 
 
-def spiral(c, s, r0, r1, a0, turns, n, ccw=False):
-    """Points on a shrinking spiral in the xz plane around c (wisp curls). a0 in turns, measured from +x (mirrored by s)."""
+# ---------------------------------------------------------------------------
+# Shared hilt: demon-eye guard with gold + bone claws, scale grip, claw pommel
+# ---------------------------------------------------------------------------
+def almond(rx, rz, n=14, pinch=0.35):
     out = []
-    d = 1 if ccw else -1
-    for k in range(n + 1):
-        t = k / n
-        a = 2 * math.pi * (a0 + d * turns * t)
-        r = r0 + (r1 - r0) * t
-        out.append(c + V(s * r * math.cos(a), 0, r * math.sin(a)))
-    out.append(out[-1] + (out[-1] - out[-2]).normalized() * 0.03)
+    for k in range(n):
+        t = 2 * math.pi * k / n
+        c, s = math.cos(t), math.sin(t)
+        out.append((rx * c, rz * s * (1 - pinch * c * c)))
     return out
 
 
-def up_normal(T):
-    n = V(-T.z, 0, T.x)
-    return n if n.z >= 0 else -n
+def dome(bm, M, outline, h, mat=0, rings=(1.0, 0.82, 0.5), heights=(0.0, 0.55, 0.88)):
+    rs = [[M @ V(x * s, y * s, h * hh) for x, y in outline] for s, hh in zip(rings, heights)]
+    rs.append(M @ V(0, 0, h))
+    loft(bm, rs, mat=mat)
 
 
-def build_wings():
-    wb, gb, eb, cb, sb = new_bm(), new_bm(), new_bm(), new_bm(), new_bm()
+def build_guard():
+    body = new_bm()
+    prof = [(0.0, 0.99), (0.10, 1.0), (0.17, 1.06), (0.225, 1.15), (0.24, 1.25), (0.215, 1.34), (0.17, 1.41), (0.0, 1.43)]
+    lathe(body, prof, sides=10, sy=0.56, mat=M_OBS)
+    ob = make_obj("GuardBody", body, smooth=True)
+    hard(ob, 0.008, segs=1, angle=28)
+
+    gold = new_bm()
+    # blade collar (blade enters here) and grip collar
+    lathe(gold, [(0.15, 1.37), (0.205, 1.385), (0.222, 1.42), (0.205, 1.465), (0.165, 1.49), (0.12, 1.495)], sides=10, sy=0.55,
+          mat=M_GOLD)
+    lathe(gold, [(0.085, 0.965), (0.122, 0.975), (0.132, 1.01), (0.122, 1.045), (0.09, 1.06)], sides=10, mat=M_GOLD)
     for s in (1, -1):
-        # forewing: broad, swept up and out like a crossguard
-        fw = [V(s * 0.10, 0, 1.26), V(s * 0.28, 0, 1.32), V(s * 0.46, 0, 1.43), V(s * 0.60, 0, 1.57), V(s * 0.68, 0, 1.72),
-              V(s * 0.70, 0, 1.79)]
-        fr = [(0.11, 0.07), (0.15, 0.064), (0.175, 0.056), (0.16, 0.046), (0.09, 0.034), (0.0, 0.0)]
-        tube(wb, fw, fr, sides=8, mat=M_ENAMEL)
-        T, N, B = frames(fw)
-        trim = [fw[k] + up_normal(T[k]) * fr[k][0] * 0.93 for k in range(5)] + [fw[5] + V(0, 0, 0.0)]
-        tube(gb, trim, [0.032, 0.034, 0.034, 0.03, 0.024, 0.0], sides=5, mat=M_GOLD)
-        # Neon eye-spot gem in a gold ring, both faces
-        c = fw[2] + up_normal(T[2]) * 0.0 + V(s * 0.0, 0, 0)
-        for sg in (1, -1):
-            Mf = Matrix.Translation(c) @ basis(V(1, 0, 0), V(0, 0, 1), V(0, sg, 0))
-            lathe(gb, [(0.0, 0.03), (0.088, 0.03), (0.092, 0.058), (0.07, 0.07), (0.0, 0.066)], sides=8, M=Mf, mat=M_GOLD)
-            lathe(eb, [(0.0, 0.05), (0.058, 0.05), (0.052, 0.078), (0.025, 0.09), (0.0, 0.092)], sides=8, M=Mf)
-            lathe(cb, [(0.0, 0.07), (0.022, 0.07), (0.0, 0.099)], sides=6, M=Mf)
-        # hindwing: smoky, swept down and out, curling into a wisp tail
-        hw = [V(s * 0.09, 0, 1.17), V(s * 0.25, 0, 1.12), V(s * 0.38, 0, 1.03), V(s * 0.45, 0, 0.92)] +              spiral(V(s * 0.375, 0, 0.885), s, 0.08, 0.055, -0.15, 1.05, 6)
-        hr = [(0.09, 0.06), (0.115, 0.055), (0.105, 0.05), (0.085, 0.046), (0.075, 0.043), (0.066, 0.04), (0.058, 0.036),
-              (0.05, 0.033), (0.046, 0.031), (0.043, 0.029), (0.04, 0.027), (0.0, 0.0)]
-        tube(sb, hw, hr, sides=8, mat=M_SMOKE)
-    w = make_obj("Forewings", wb, smooth=True)
-    hard(w, 0.01, segs=1, angle=30)
-    g = make_obj("WingTrim", gb, smooth=True)
-    add_wn(g)
-    h = make_obj("Hindwings", sb, smooth=True)
-    hard(h, 0.01, segs=1, angle=30)
-    make_obj("WingEyes", eb, kind="glow")
-    make_obj("WingEyeCores", cb, kind="core")
+        # short claws that grip the blade base, hooking in over the edges
+        claw(gold, [V(s * 0.15, 0, 1.42), V(s * 0.25, 0, 1.50), V(s * 0.245, 0, 1.60), V(s * 0.185, 0, 1.68)], (0.05, 0.056),
+             M_GOLD, n=3, belly=0.7)
+        # big crossguard talons: swept out and down, needle tips pointing down-out
+        claw(gold, [V(s * 0.17, 0, 1.25), V(s * 0.39, 0, 1.23), V(s * 0.55, 0, 1.12), V(s * 0.63, 0, 0.93)],
+             (0.08, 0.064), M_GOLD, belly=0.8)
+    g = make_obj("GuardGold", gold, smooth=True)
+    hard(g, 0.006, segs=1, angle=25)
+
+    bone = new_bm()
+    for s in (1, -1):
+        # bone claw plates above the crossguard, swept out and up beside the blade base
+        claw(bone, [V(s * 0.17, 0, 1.31), V(s * 0.36, 0, 1.39), V(s * 0.48, 0, 1.54), V(s * 0.50, 0, 1.70)], (0.07, 0.054),
+             M_BONE, n=3, belly=0.75)
+        # small bone spur under the guard
+        claw(bone, [V(s * 0.12, 0, 1.07), V(s * 0.21, 0, 1.01), V(s * 0.24, 0, 0.92)], (0.04, 0.036), M_BONE, n=3, belly=0.75)
+    # the demon eye, both faces: bone lids with flicked corners, socket, glowing eyeball, iris, slit pupil
+    eb, cb = new_bm(), new_bm()
+    for sg in (1, -1):
+        O = V(0, sg * 0.118, 1.235)
+        Mf = Matrix.Translation(O) @ basis(V(1, 0, 0), V(0, 0, 1), V(0, sg, 0))
+        F = V(0, sg, 0)
+        lid_u = [O + V(-0.19, 0, 0.0), O + V(-0.10, 0, 0.068), O + V(0.0, 0, 0.088), O + V(0.10, 0, 0.068),
+                 O + V(0.19, 0, 0.0)]
+        lid_l = [O + V(-0.15, 0, -0.005), O + V(-0.07, 0, -0.06), O + V(0.07, 0, -0.06), O + V(0.15, 0, -0.005)]
+        for pts, r in ((lid_u, (0.03, 0.034)), (lid_l, (0.022, 0.028))):
+            pp = catmull(pts, 2)
+            m = len(pp)
+            rad = [0.0 if k in (0, m - 1) else (r[0] * (0.35 + 0.65 * math.sin(math.pi * k / (m - 1))),
+                                               r[1] * (0.4 + 0.6 * math.sin(math.pi * k / (m - 1)))) for k in range(m)]
+            tube(bone, [p + F * 0.012 for p in pp], rad, mat=M_BONE, up=F, shape=DIAMOND)
+        # angry brow plates sweeping up and out
+        for s in (1, -1):
+            claw(bone, [O + V(s * 0.015, 0, 0.096) + F * 0.018, O + V(s * 0.12, 0, 0.104) + F * 0.016,
+                        O + V(s * 0.215, 0, 0.122) + F * 0.004], (0.015, 0.024), M_BONE, n=3, up=F, belly=0.6)
+        prism(bone, almond(0.165, 0.085, 12), O, V(1, 0, 0), V(0, 0, 1), F, -0.03, 0.006, mat=M_SOCK)
+        dome(eb, Mf, almond(0.14, 0.066, 12), 0.04, mat=0)
+        dome(cb, Matrix.Translation(F * 0.012) @ Mf, almond(0.058, 0.052, 12, pinch=0.1), 0.034, mat=0)
+        prism(bone, [(0.0, 0.062), (0.017, 0.0), (0.0, -0.062), (-0.017, 0.0)], O, V(1, 0, 0), V(0, 0, 1), F, 0.02, 0.054,
+              mat=M_SOCK)
+    b = make_obj("GuardBone", bone, smooth=True)
+    hard(b, 0.005, segs=1, angle=25)
+    make_obj("Eye", eb, kind="glow")
+    make_obj("Iris", cb, kind="core")
 
 
 def build_grip():
     bm = new_bm()
-    lathe(bm, [(0.0, GRIP_Z[0] - 0.02), (0.10, GRIP_Z[0] - 0.02), (0.10, GRIP_Z[1] + 0.02), (0.0, GRIP_Z[1] + 0.02)], sides=10,
-          mat=M_LEATHER)
-    for z0, z1 in ((GRIP_Z[0] + 0.03, 0.73), (0.79, GRIP_Z[1] - 0.03)):
-        pitch = 0.072
-        turns = (z1 - z0) / pitch
-        steps = int(turns * 8)
-        rings = []
-        wdt, th = pitch * 1.02, 0.034
-        for k in range(steps + 1):
-            a = 2 * math.pi * turns * k / steps
-            z = z0 + (z1 - z0) * k / steps
-            rad = V(math.cos(a), math.sin(a), 0)
-            c = V(0, 0, z) + rad * 0.106
-            sec = [(-th * 0.5, -wdt * 0.5), (th * 0.2, -wdt * 0.46), (th * 0.6, 0.0), (th * 0.2, wdt * 0.46), (-th * 0.5, wdt * 0.5)]
-            rings.append([c + rad * p + V(0, 0, q) for p, q in sec])
-        loft(bm, rings, mat=M_LEATHER)
-    ob = make_obj("GripWrap", bm, smooth=False)
-    b2 = new_bm()
-    for z, h, ro in ((GRIP_Z[0], 0.075, 0.15), (0.76, 0.065, 0.145), (GRIP_Z[1], 0.08, 0.15)):
-        prof = [(0.09, z - h / 2), (ro, z - h / 2 + 0.012), (ro + 0.012, z), (ro, z + h / 2 - 0.012), (0.09, z + h / 2)]
-        lathe(b2, prof, sides=8, mat=M_GOLD)
-    ob2 = make_obj("GripBands", b2, smooth=True)
-    hard(ob2, 0.008, segs=1, angle=30)
+    lathe(bm, [(0.0, GRIP_Z[0] - 0.04), (0.08, GRIP_Z[0] - 0.04), (0.088, 0.75), (0.08, GRIP_Z[1] + 0.02), (0.0, GRIP_Z[1] + 0.02)],
+          sides=10, mat=M_SOCK)
+    # dragon scales: overlapping rows, tips pointing down toward the pommel, alternate rows offset half a scale
+    n = 9
+    rows = 7
+    for r in range(rows):
+        zt = 0.995 - r * 0.068
+        h = 0.092
+        ph = (r % 2) * math.pi / n
+        top, mid, zo, zi = [], [], [], []
+        for k in range(2 * n):
+            a = ph + math.pi * k / n
+            d = V(math.cos(a), math.sin(a), 0)
+            tip = k % 2 == 0
+            top.append(d * 0.078 + V(0, 0, zt))
+            mid.append(d * (0.104 if tip else 0.1) + V(0, 0, zt - 0.35 * h))
+            z = zt - h if tip else zt - 0.5 * h
+            zo.append(d * (0.112 if tip else 0.102) + V(0, 0, z))
+            zi.append(d * 0.082 + V(0, 0, z + 0.012))
+        loft(bm, [top, mid, zo, zi], mat=M_SCALE, caps=False)
+    ob = make_obj("GripScales", bm, smooth=False)
+    gb = new_bm()
+    lathe(gb, [(0.09, 0.42), (0.128, 0.435), (0.136, 0.47), (0.126, 0.505), (0.088, 0.52)], sides=10, mat=M_GOLD)
+    g = make_obj("GripCollar", gb, smooth=True)
+    hard(g, 0.006, segs=1, angle=30)
 
 
 def build_pommel():
     bm = new_bm()
-    prof = [(0.0, 0.215), (0.11, 0.215), (0.165, 0.26), (0.15, 0.32), (0.105, 0.37), (0.10, 0.44)]
-    lathe(bm, prof, sides=10, mat=M_GOLD)
+    lathe(bm, [(0.0, 0.445), (0.10, 0.445), (0.135, 0.41), (0.13, 0.37), (0.09, 0.33), (0.0, 0.32)], sides=10, mat=M_GOLD)
     for k in range(4):
         a = math.pi / 4 + k * math.pi / 2
-        d = V(math.cos(a), math.sin(a) * 0.9, 0)
-        tube(bm, [d * 0.15 + V(0, 0, 0.25), d * 0.142 + V(0, 0, 0.17), d * 0.118 + V(0, 0, 0.09)], [0.036, 0.03, 0.0], sides=6,
-             mat=M_GOLD)
+        d = V(math.cos(a), math.sin(a), 0)
+        tn = V(-math.sin(a), math.cos(a), 0)
+        claw(bm, [d * 0.10 + V(0, 0, 0.40), d * 0.175 + V(0, 0, 0.33), d * 0.17 + V(0, 0, 0.21), d * 0.085 + V(0, 0, 0.10)],
+             (0.048, 0.04), M_GOLD, n=3, up=tn, belly=0.7)
     ob = make_obj("PommelClaw", bm, smooth=True)
-    hard(ob, 0.008, segs=1, angle=30)
-    gb, cb = new_bm(), new_bm()
-    lathe(gb, [(0.0, -0.04), (0.118, 0.10), (0.122, 0.16), (0.075, 0.25), (0.0, 0.26)], sides=6, mat=0)
-    make_obj("PommelGem", gb, kind="glow")
-    # wisps curling off the pommel cup
-    sb = new_bm()
-    for s in (1, -1):
-        pts = [V(s * 0.12, 0, 0.33), V(s * 0.23, 0, 0.29)] + spiral(V(s * 0.30, 0, 0.405), s, 0.115, 0.05, -0.25, 1.2, 7, ccw=True)
-        rad = [(0.06, 0.042), (0.072, 0.045), (0.068, 0.042), (0.062, 0.039), (0.056, 0.036), (0.05, 0.033), (0.045, 0.03),
-               (0.04, 0.028), (0.037, 0.026), (0.034, 0.025), (0.0, 0.0)]
-        tube(sb, pts, rad, sides=6, mat=M_SMOKE)
-    w = make_obj("PommelWisps", sb, smooth=True)
-    hard(w, 0.008, segs=1, angle=30)
+    hard(ob, 0.006, segs=1, angle=28)
+    gb = new_bm()
+    lathe(gb, [(0.0, 0.36), (0.08, 0.32), (0.085, 0.22), (0.0, -0.06)], sides=6, mat=0)
+    make_obj("PommelSpike", gb, kind="glow")
 
 
-def build_all():
-    build_blade()
-    build_blade_glow()
-    build_runes()
-    build_collar()
-    build_thorax()
-    build_wings()
+def build_dagger(tag):
+    CUR["d"] = tag
+    if tag == "A":
+        build_blade_A()
+    else:
+        build_blade_B()
+    build_guard()
     build_grip()
     build_pommel()
 
 
-build_all()
+build_dagger("A")
+build_dagger("B")
 log("built", len(PARTS), "parts")
 
 
@@ -622,6 +783,36 @@ def apply_all():
 apply_all()
 
 
+def outward_check(ob):
+    me = ob.data
+    co = np.array([tuple(v.co) for v in me.vertices])
+    cen = co.mean(axis=0)
+    s = sum((Vector(p.center) - Vector(cen)).dot(p.normal) * p.area for p in me.polygons)
+    return s
+
+
+def place_pair():
+    """A at +DX as authored; B x-mirrored (tip curves to -x) at -DX."""
+    for o in PARTS:
+        if o["dagger"] == "B":
+            before = outward_check(o)
+            o.scale = (-1, 1, 1)
+            select_only([o])
+            bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+            if outward_check(o) * before < 0:
+                o.data.flip_normals()
+                log("flipped normals on", o.name)
+            o.data.transform(Matrix.Translation(V(-DX, 0, 0)))
+        else:
+            o.data.transform(Matrix.Translation(V(DX, 0, 0)))
+        o.data.update()
+    BLADE_A.edge_pts = [(p[0] + DX, p[1], p[2]) for p in BLADE_A.edge_pts]
+    BLADE_B.edge_pts = [(-p[0] - DX, p[1], p[2]) for p in BLADE_B.edge_pts]
+
+
+place_pair()
+
+
 def tri_count(objs):
     dg = bpy.context.evaluated_depsgraph_get()
     tot = {}
@@ -634,7 +825,7 @@ def tri_count(objs):
 
 
 TRIS = tri_count(PARTS)
-log("TRIS per dagger", sum(TRIS.values()), sorted(TRIS.items(), key=lambda kv: -kv[1]))
+log("TRIS pair", sum(TRIS.values()), sorted(TRIS.items(), key=lambda kv: -kv[1]))
 
 
 # ---------------------------------------------------------------------------
@@ -652,24 +843,48 @@ def world_bounds(objs):
     return pts
 
 
-def setup_comp(bloom=0.45):
+def setup_comp(bloom=1.35, size=0.8, fog=0.75, fog_size=0.9):
+    """Compositor Glare on every render (Roblox Neon blooms in game). The glare is driven by the Emission pass only, so
+    only the Neon radiates a crimson haze (a tight Bloom plus a wide Fog Glow) and the light backdrop never blooms."""
+    bpy.context.view_layer.use_pass_emit = True
     tree = bpy.data.node_groups.get("ReviewComp") or bpy.data.node_groups.new("ReviewComp", "CompositorNodeTree")
     tree.nodes.clear()
     if not tree.interface.items_tree:
         tree.interface.new_socket("Image", in_out="OUTPUT", socket_type="NodeSocketColor")
     rl = tree.nodes.new("CompositorNodeRLayers")
     out = tree.nodes.new("NodeGroupOutput")
-    if bloom > 0:
+    src = rl.outputs["Image"]
+
+    def add(a, b):
+        try:
+            m = tree.nodes.new("CompositorNodeMixRGB")
+            m.blend_type = "ADD"
+            m.inputs[0].default_value = 1.0
+            tree.links.new(a, m.inputs[1])
+            tree.links.new(b, m.inputs[2])
+            return m.outputs[0]
+        except Exception:
+            tree.nodes.remove(tree.nodes[-1]) if False else None
+            m = tree.nodes.new("ShaderNodeMix")
+            m.data_type = "RGBA"
+            m.blend_type = "ADD"
+            m.inputs["Factor"].default_value = 1.0
+            tree.links.new(a, m.inputs[6])
+            tree.links.new(b, m.inputs[7])
+            return m.outputs[2]
+
+    for typ, strength, sz in (("Bloom", bloom, size), ("Fog Glow", fog, fog_size)):
+        if strength <= 0:
+            continue
         g = tree.nodes.new("CompositorNodeGlare")
-        g.inputs["Type"].default_value = "Bloom"
+        g.inputs["Type"].default_value = typ
         g.inputs["Quality"].default_value = "High"
-        g.inputs["Threshold"].default_value = 0.55
-        g.inputs["Strength"].default_value = bloom
-        g.inputs["Size"].default_value = 0.55
-        tree.links.new(rl.outputs["Image"], g.inputs["Image"])
-        tree.links.new(g.outputs["Image"], out.inputs[0])
-    else:
-        tree.links.new(rl.outputs["Image"], out.inputs[0])
+        g.inputs["Threshold"].default_value = 0.0
+        g.inputs["Strength"].default_value = strength
+        g.inputs["Size"].default_value = sz
+        tree.links.new(rl.outputs["Emission"], g.inputs["Image"])
+        src = add(src, g.outputs["Glare"])
+    tree.links.new(src, out.inputs[0])
     scene.compositing_node_group = tree
 
 
@@ -744,7 +959,7 @@ def catalog_stage(objs, angle, camvec, res=1000, samples=24, ortho_pad=1.18, wor
     scene.render.resolution_x = scene.render.resolution_y = res
     scene.render.resolution_percentage = 100
     scene.view_settings.view_transform = "AgX"
-    scene.view_settings.look = "None"
+    scene.view_settings.look = "AgX - Punchy"          # keeps the Neon a deep red and the darks rich
     scene.render.image_settings.file_format = "PNG"
     STAGE.update(center=center, extent=extent, cam=cam)
 
@@ -772,51 +987,29 @@ def join(objs, name):
     return ob
 
 
-def mirror_copy(ob, name):
-    """Exact x-mirror (scale -1 applied, winding and custom normals fixed by Blender)."""
-    me = ob.data.copy()
-    me.name = name
-    o2 = bpy.data.objects.new(name, me)
-    ASSET.objects.link(o2)
-    o2["kind"] = ob["kind"]
-    o2.scale = (-1, 1, 1)
-    select_only([o2])
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    # outward-normal check: flip if the apply did not
-    co = np.array([tuple(v.co) for v in me.vertices])
-    cen = co.mean(axis=0)
-    s = sum((Vector(p.center) - Vector(cen)).dot(p.normal) * p.area for p in me.polygons)
-    if s < 0:
-        me.flip_normals()
-        log("flipped normals on", name)
-    return o2
-
-
-def shift(ob, d):
-    ob.data.transform(Matrix.Translation(d))
-    ob.data.update()
+def closeup(path, target, size, camdir=(0.25, -1, 0.15), res=800, samples=16):
+    cam = STAGE["cam"]
+    cam.data.ortho_scale = size
+    cam.location = Vector(target) + Vector(camdir).normalized() * 12
+    cam.rotation_euler = (Vector(target) - cam.location).to_track_quat("-Z", "Y").to_euler()
+    scene.render.resolution_x = scene.render.resolution_y = res
+    scene.cycles.samples = samples
+    render(path)
 
 
 if MODE == "quick":
-    setup_comp(0.4)
-    pair = []
-    for o in list(PARTS):
-        m = mirror_copy(o, o.name + "_R")
-        shift(o, V(DX, 0, 0))
-        shift(m, V(-DX, 0, 0))
-        pair += [o, m]
+    OUT.mkdir(parents=True, exist_ok=True)
+    setup_comp()
+    pair = list(PARTS)
     for nm, ang, vec in (("q_catalog", -12, (1.6, -15, 6.2)), ("q_front", 0, (0, -15, 1.2)), ("q_side", 0, (15, 0, 1.2))):
-        r = catalog_stage(pair, ang, vec, res=700, samples=12)
+        r = catalog_stage(pair, ang, vec, res=800, samples=16)
         render(OUT / f"{nm}.png")
         r()
-    r = catalog_stage(pair, 0, (1.2, -15, 3.0), res=700, samples=12)
-    cam = STAGE["cam"]
-    cam.data.ortho_scale = 1.5
-    tgt = V(DX, 0, 1.25 + STAGE["center"].z - 1.6)
-    tgt = V(DX, 0, 1.3)
-    cam.location = tgt + V(1.5, -9, 1.5)
-    cam.rotation_euler = (tgt - cam.location).to_track_quat("-Z", "Y").to_euler()
-    render(OUT / "q_guard.png")
+    r = catalog_stage(pair, 0, (0, -15, 1.2), res=800, samples=16)
+    zoff = -min(p.z for p in world_bounds(pair))
+    closeup(OUT / "q_hiltA.png", (DX, 0, 1.0 + zoff), 1.6)
+    closeup(OUT / "q_bladeA.png", (DX + 0.25, 0, 3.0 + zoff), 2.6)
+    closeup(OUT / "q_bladeB.png", (-DX - 0.2, 0, 2.4 + zoff), 2.2)
     r()
     log("QUICK DONE")
     sys.exit(0)
@@ -829,38 +1022,46 @@ Z0 = min(p.z for p in pts0)
 for o in PARTS:
     o.data.transform(Matrix.Translation(V(0, 0, -Z0)))
     o.data.update()
-EDGE_PTS = [tuple(Vector(p) - V(0, 0, Z0)) for p in EDGE_PTS]
-_by_kind = {k: [o for o in PARTS if o["kind"] == k] for k in ("tex", "glow", "core")}
-body = join(_by_kind["tex"], f"{NAME}_L")
-glow_ob = join(_by_kind["glow"], f"{NAME}_L_Glow")
-core_ob = join(_by_kind["core"], f"{NAME}_L_GlowCore")
-PARTS = [body, glow_ob, core_ob]
+for bl in (BLADE_A, BLADE_B):
+    bl.edge_pts = [(p[0], p[1], p[2] - Z0) for p in bl.edge_pts]
+SIDES = {"A": "L", "B": "R"}
+BODY, GLOWS, CORES = {}, {}, {}
+GROUPS = {(d, k): [o for o in PARTS if o["dagger"] == d and o["kind"] == k] for d in SIDES for k in ("tex", "glow", "core")}
+for d, h in SIDES.items():
+    BODY[d] = join(GROUPS[(d, "tex")], f"{NAME}_{h}")
+    GLOWS[d] = join(GROUPS[(d, "glow")], f"{NAME}_{h}_Glow")
+    CORES[d] = join(GROUPS[(d, "core")], f"{NAME}_{h}_GlowCore")
+PARTS = [BODY["A"], GLOWS["A"], CORES["A"], BODY["B"], GLOWS["B"], CORES["B"]]
 for o in PARTS:
     while o.data.uv_layers:
         o.data.uv_layers.remove(o.data.uv_layers[0])
     for a in [a.name for a in o.data.color_attributes]:
         o.data.color_attributes.remove(o.data.color_attributes[a])
-for o, m in ((glow_ob, GLOW_MAT), (core_ob, CORE_MAT)):
-    o.data.materials.clear()
-    o.data.materials.append(m)
-    for p in o.data.polygons:
-        p.material_index = 0
+for d in SIDES:
+    for o, m in ((GLOWS[d], GLOW_MAT), (CORES[d], CORE_MAT)):
+        o.data.materials.clear()
+        o.data.materials.append(m)
+        for p in o.data.polygons:
+            p.material_index = 0
 
-body.data.uv_layers.new(name="UVMap")
-select_only([body])
+bodies = [BODY["A"], BODY["B"]]
+for b in bodies:
+    b.data.uv_layers.new(name="UVMap")
+select_only(bodies, bodies[0])
 bpy.ops.object.mode_set(mode="EDIT")
 bpy.ops.mesh.select_all(action="SELECT")
 bpy.ops.uv.smart_project(angle_limit=math.radians(52), island_margin=0.003, area_weight=0.0, correct_aspect=True,
                          scale_to_bounds=False)
 bpy.ops.uv.pack_islands(rotate=True, margin=0.003)
 bpy.ops.object.mode_set(mode="OBJECT")
-for o in (glow_ob, core_ob):
-    o.data.uv_layers.new(name="UVMap")
-    select_only([o])
-    bpy.ops.object.mode_set(mode="EDIT")
-    bpy.ops.mesh.select_all(action="SELECT")
-    bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=0.01)
-    bpy.ops.object.mode_set(mode="OBJECT")
+for d in SIDES:
+    for o in (GLOWS[d], CORES[d]):
+        o.data.uv_layers.new(name="UVMap")
+        select_only([o])
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_all(action="SELECT")
+        bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=0.01)
+        bpy.ops.object.mode_set(mode="OBJECT")
 log("uv done")
 
 
@@ -886,28 +1087,10 @@ def np_smooth(a, b, x):
     return t * t * (3 - 2 * t)
 
 
-P, NRM, MI = corner_arrays(body.data)
-NL = len(P)
-paint = np.ones((NL, 3), np.float32)
-edge = np.array(EDGE_PTS, np.float32)
-R_AX = np.abs(P[:, 0])
-sel = MI == M_STEEL
-if sel.any():
-    d = np.min(np.linalg.norm(P[sel][:, None, :] - edge[None, :, :], axis=2), axis=1)
-    k = 1 - np_smooth(0.02, 0.22, d)
-    paint[sel] *= (0.78 + 0.45 * k)[:, None]
-sel = MI == M_OBS
-paint[sel] *= (0.86 + 0.2 * np.clip((P[sel][:, 2] - 1.4) / 1.9, 0, 1))[:, None]
-sel = MI == M_ENAMEL
-paint[sel] *= (0.72 + 0.5 * np_smooth(0.12, 0.66, R_AX[sel]))[:, None]
-sel = MI == M_SMOKE
-paint[sel] *= (0.72 + 0.75 * np_smooth(0.12, 0.42, R_AX[sel]))[:, None]
-sel = MI == M_BONE
-paint[sel] *= np.array([1.0, 0.985, 0.95], np.float32)
-
 gP, gA, gC = [], [], []
-for ob, col in ((glow_ob, GLOW), (core_ob, CORE)):
-    me = ob.data
+for o in list(GLOWS.values()) + list(CORES.values()):
+    me = o.data
+    col = CORE if "_GlowCore" in o.name else GLOW
     c = np.empty(len(me.polygons) * 3, np.float32)
     me.polygons.foreach_get("center", c)
     a = np.empty(len(me.polygons), np.float32)
@@ -916,23 +1099,65 @@ for ob, col in ((glow_ob, GLOW), (core_ob, CORE)):
     gA.append(a)
     gC.append(np.tile(np.array(rgba(col)[:3], np.float32), (len(a), 1)))
 gP, gA, gC = np.concatenate(gP), np.concatenate(gA), np.concatenate(gC)
-bleed = np.zeros((NL, 3), np.float32)
-for i0 in range(0, NL, 1500):
-    i1 = min(NL, i0 + 1500)
-    Ld = gP[None, :, :] - P[i0:i1, None, :]
-    d = np.linalg.norm(Ld, axis=2) + 1e-6
-    wrap = np.clip(np.einsum("cgk,ck->cg", Ld, NRM[i0:i1]) / d * 0.75 + 0.25, 0, 1)
-    w = gA[None, :] * wrap * np.exp(-d / 0.12) / (d * d + 0.03 ** 2)
-    bleed[i0:i1] = w @ gC
-bleed = (1 - np.exp(-BLEED_K * bleed)) * BLEED_STRENGTH
-for nm, arr in (("Paint", paint), ("Bleed", bleed)):
-    at = body.data.color_attributes.new(nm, "FLOAT_COLOR", "CORNER")
-    at.data.foreach_set("color", np.concatenate([arr, np.ones((NL, 1), np.float32)], axis=1).ravel())
+ZTOP = max(p.z for p in world_bounds(bodies))
+
+for d, bl in (("A", BLADE_A), ("B", BLADE_B)):
+    body = BODY[d]
+    ax = DX if d == "A" else -DX
+    P, NRM, MI = corner_arrays(body.data)
+    NL = len(P)
+    paint = np.ones((NL, 3), np.float32)
+    edge = np.array(bl.edge_pts, np.float32)
+    R_AX = np.sqrt((P[:, 0] - ax) ** 2 + P[:, 1] ** 2)
+    zb = ZB - Z0
+    hf = np.clip((P[:, 2] - zb) / (ZTOP - zb), 0, 1)
+    dE = np.full(NL, 9.0, np.float32)
+    blade_sel = np.isin(MI, [M_OBS, M_CRIM, M_HOT]) & (P[:, 2] > zb - 0.05)
+    if blade_sel.any():
+        idx = np.where(blade_sel)[0]
+        for i0 in range(0, len(idx), 4000):
+            ii = idx[i0:i0 + 4000]
+            dE[ii] = np.min(np.linalg.norm(P[ii][:, None, :] - edge[None, :, :], axis=2), axis=1)
+    kE = 1 - np_smooth(0.01, 0.06, dE)
+    sel = MI == M_OBS
+    if d == "A":
+        # near-black body, crimson cast rising toward the edges and the tip
+        s = sel & blade_sel
+        paint[s] *= (0.8 + 0.25 * hf[s])[:, None]
+        paint[s] *= np.stack([1 + 0.7 * kE[s] + 0.3 * hf[s], 1 + 0.05 * kE[s], 1 + 0.1 * kE[s]], axis=1)
+        s2 = (MI == M_CRIM) & blade_sel
+        paint[s2] *= 0.45
+    sel = MI == M_CRIM
+    s = sel & blade_sel
+    paint[s] *= (0.66 + 0.3 * hf[s] + 0.15 * kE[s])[:, None]
+    sel = MI == M_HOT
+    paint[sel] *= (0.85 + 0.3 * kE[sel])[:, None]
+    sel = MI == M_SHARD
+    paint[sel] *= (0.5 + 0.55 * np_smooth(0.06, 0.12, np.abs(P[sel][:, 1])))[:, None]
+    sel = MI == M_SCALE
+    paint[sel] *= (0.6 + 0.75 * np_smooth(0.086, 0.114, R_AX[sel]))[:, None]
+    sel = (MI == M_OBS) & ~blade_sel
+    paint[sel] *= (0.85 + 0.5 * np_smooth(0.1, 0.24, np.abs(P[sel][:, 0] - ax)))[:, None]
+
+    bleed = np.zeros((NL, 3), np.float32)
+    for i0 in range(0, NL, 1500):
+        i1 = min(NL, i0 + 1500)
+        Ld = gP[None, :, :] - P[i0:i1, None, :]
+        dd = np.linalg.norm(Ld, axis=2) + 1e-6
+        wrap = np.clip(np.einsum("cgk,ck->cg", Ld, NRM[i0:i1]) / dd * 0.75 + 0.25, 0, 1)
+        w = gA[None, :] * wrap * np.exp(-dd / BLEED_FALL) / (dd * dd + 0.03 ** 2)
+        bleed[i0:i1] = w @ gC
+    bleed = (1 - np.exp(-BLEED_K * bleed)) * BLEED_STRENGTH
+    bleed[blade_sel & (MI == M_OBS)] *= 0.15         # black blade faces stay black; glow sits in lines
+    bleed[blade_sel & (MI == M_CRIM)] *= 0.35
+    bleed[MI == M_SHARD] *= 0.5
+    for nm, arr in (("Paint", paint), ("Bleed", bleed)):
+        at = body.data.color_attributes.new(nm, "FLOAT_COLOR", "CORNER")
+        at.data.foreach_set("color", np.concatenate([arr, np.ones((NL, 1), np.float32)], axis=1).ravel())
 log("masks done")
 
 KEY_DIR = V(-0.45, -0.6, 0.75).normalized()
 RIM_DIR = V(0.7, 0.6, 0.25).normalized()
-ZTOP = max(p.z for p in world_bounds([body]))
 
 
 def build_bake_shader(idx, mat, img):
@@ -1017,45 +1242,36 @@ def build_bake_shader(idx, mat, img):
     pa = N("ShaderNodeAttribute")
     pa.attribute_name = "Paint"
     albedo = mix(rp.outputs["Color"], pa.outputs["Color"], 1.0, "MULTIPLY")
-    if idx in (M_SMOKE, M_LEATHER):      # soft streaks along the form
-        vm = N("ShaderNodeVectorMath")
-        vm.operation = "MULTIPLY"
-        L(pos, vm.inputs[0])
-        vm.inputs[1].default_value = (9.0, 9.0, 2.0)
-        nf = N("ShaderNodeTexNoise")
-        nf.inputs["Scale"].default_value = 1.0
-        L(vm.outputs[0], nf.inputs["Vector"])
-        albedo = mix(albedo, grey(remap(nf.outputs["Fac"], 0.3, 0.7, 0.82, 1.15)), 1.0, "MULTIPLY")
     k = dot_light(KEY_DIR)
     light = remap(k, 0.0, 1.0, 0.56, 1.2)
-    tint = mix((0.86, 0.90, 1.07, 1), (1.08, 1.0, 0.9, 1), k)
+    tint = mix((0.9, 0.9, 1.04, 1), (1.08, 1.0, 0.9, 1), k)
     ao = N("ShaderNodeAmbientOcclusion")
     ao.samples = 16
     ao.inputs["Distance"].default_value = 0.16
-    aof = remap(ao.outputs["AO"], 0.2, 1.0, 0.5, 1.0)
+    aof = remap(ao.outputs["AO"], 0.2, 1.0, 0.45, 1.0)
     cav = N("ShaderNodeAmbientOcclusion")
     cav.samples = 16
     cav.inputs["Distance"].default_value = 0.03
-    cavf = remap(cav.outputs["AO"], 0.35, 1.0, 0.6, 1.0)
+    cavf = remap(cav.outputs["AO"], 0.35, 1.0, 0.55, 1.0)
     sep = N("ShaderNodeSeparateXYZ")
     L(pos, sep.inputs["Vector"])
     height = remap(sep.outputs["Z"], 0.0, ZTOP, 0.9, 1.05)
     shade = math_("MULTIPLY", math_("MULTIPLY", light, aof), math_("MULTIPLY", cavf, height))
     lit = mix(mix(albedo, tint, 1.0, "MULTIPLY"), grey(shade), 1.0, "MULTIPLY")
-    rim = remap(dot_light(RIM_DIR), 0.25, 1.0, 0.0, 0.14)
-    lit = mix(lit, (0.62, 0.34, 1.0, 1), rim, "ADD")
+    rim = remap(dot_light(RIM_DIR), 0.25, 1.0, 0.0, 0.12)
+    lit = mix(lit, (1.0, 0.22, 0.2, 1), rim, "ADD")
     bev = N("ShaderNodeBevel")
     bev.samples = 8
-    bev.inputs["Radius"].default_value = 0.012
+    bev.inputs["Radius"].default_value = 0.01
     ed = N("ShaderNodeVectorMath")
     ed.operation = "DOT_PRODUCT"
     L(bev.outputs["Normal"], ed.inputs[0])
     L(tn, ed.inputs[1])
     e = remap(ed.outputs["Value"], 0.99, 0.84, 0.0, 1.0)
     convex = remap(cav.outputs["AO"], 0.86, 0.97, 0.0, 1.0)
-    efac = math_("MULTIPLY", math_("MULTIPLY", e, convex), remap(k, 0.0, 1.0, 0.45, 0.85))
-    ecol = mix(albedo, rgba(edge_c), 0.6)
-    lit = mix(lit, mix(ecol, grey(val(1.2)), 1.0, "MULTIPLY"), efac)
+    efac = math_("MULTIPLY", math_("MULTIPLY", e, convex), remap(k, 0.0, 1.0, 0.5, 0.9))
+    ecol = mix(albedo, rgba(edge_c), 0.65)
+    lit = mix(lit, mix(ecol, grey(val(1.25)), 1.0, "MULTIPLY"), efac)
     ba = N("ShaderNodeAttribute")
     ba.attribute_name = "Bleed"
     lit = mix(lit, ba.outputs["Color"], 1.0, "ADD")
@@ -1076,7 +1292,7 @@ scene.render.engine = "CYCLES"
 scene.cycles.device = "CPU"
 scene.cycles.samples = 40
 scene.render.bake.margin = 16
-select_only([body])
+select_only(bodies, bodies[0])
 t_b = time.time()
 bpy.ops.object.bake(type="EMIT")
 log(f"bake {time.time() - t_b:.0f}s")
@@ -1099,33 +1315,27 @@ tex_img.pack()
 final_mat = bpy.data.materials.new(f"{NAME}_Baked")
 final_mat.use_nodes = True
 bs = final_mat.node_tree.nodes["Principled BSDF"]
-bs.inputs["Roughness"].default_value = 0.62
-bs.inputs["Specular IOR Level"].default_value = 0.25
+bs.inputs["Roughness"].default_value = 0.6
+bs.inputs["Specular IOR Level"].default_value = 0.3
 tx = final_mat.node_tree.nodes.new("ShaderNodeTexImage")
 tx.image = tex_img
 final_mat.node_tree.links.new(tx.outputs["Color"], bs.inputs["Base Color"])
-body.data.materials.clear()
-body.data.materials.append(final_mat)
-for p in body.data.polygons:
-    p.material_index = 0
-for nm in ("Paint", "Bleed"):
-    body.data.color_attributes.remove(body.data.color_attributes[nm])
+for body in bodies:
+    body.data.materials.clear()
+    body.data.materials.append(final_mat)
+    for p in body.data.polygons:
+        p.material_index = 0
+    for nm in ("Paint", "Bleed"):
+        body.data.color_attributes.remove(body.data.color_attributes[nm])
 for m in MATS:
     bpy.data.materials.remove(m)
 log("texture done")
 
-# ---- the pair: authored dagger = left hand at +DX; right hand = exact x-mirror at -DX (shares UVs + texture)
-GRIP_LOCAL = V(0, 0, (GRIP_Z[0] + GRIP_Z[1]) / 2 - Z0)
-R_objs = [mirror_copy(o, o.name.replace("_L", "_R", 1)) for o in (body, glow_ob, core_ob)]
-L_objs = [body, glow_ob, core_ob]
-for o in L_objs:
-    shift(o, V(DX, 0, 0))
-for o in R_objs:
-    shift(o, V(-DX, 0, 0))
+L_objs = [BODY["A"], GLOWS["A"], CORES["A"]]
+R_objs = [BODY["B"], GLOWS["B"], CORES["B"]]
 FINAL = L_objs + R_objs
-body_R = R_objs[0]
 
-select_only(FINAL, body)
+select_only(FINAL, BODY["A"])
 bpy.ops.export_scene.gltf(filepath=str(ROOT / "Model.glb"), export_format="GLB", use_selection=True, export_apply=True)
 bpy.ops.export_scene.fbx(filepath=str(ROOT / "Model.fbx"), use_selection=True, object_types={"MESH"}, axis_forward="-Z",
                          axis_up="Y", path_mode="COPY", embed_textures=True, add_leaf_bones=False, mesh_smooth_type="OFF")
@@ -1159,26 +1369,26 @@ def studio_size(v):
 STATS = {o.name: mesh_stats(o) for o in FINAL}
 allmn = np.min([s["bounds_min"] for s in STATS.values()], axis=0)
 allmx = np.max([s["bounds_max"] for s in STATS.values()], axis=0)
-per_dagger = sum(STATS[o.name]["triangles"] for o in L_objs)
+GRIP_LOCAL_Z = (GRIP_Z[0] + GRIP_Z[1]) / 2 - Z0
 install = {
     "name": NAME, "blender_version": bpy.app.version_string, "status": "Blender-verified, Studio untested",
     "units": "1 Blender unit = 1 stud, authored at hero size; set the play size in Studio by uniform scale",
     "axes": "Studio = (-x, z, y) of Blender; FBX exported with axis_forward=-Z, axis_up=Y",
-    "texture": f"BaseColor.png {BAKE_SIZE}x{BAKE_SIZE}, baked painted lighting, shared by both daggers (the right dagger is an "
-               "exact mirror with the same UVs); use MeshPart.TextureID (not SurfaceAppearance)",
+    "texture": f"BaseColor.png {BAKE_SIZE}x{BAKE_SIZE}, baked painted lighting, one atlas shared by both daggers (each dagger "
+               "has its own UV islands); use MeshPart.TextureID (not SurfaceAppearance)",
     "parts": {},
     "daggers": {},
-    "notes": ["Two independent daggers, one per hand. Each has its own textured MeshPart plus a Neon glow and a Neon core "
+    "notes": ["Two different daggers, one per hand: left = 'Rend' (near-black serrated blade, crimson veins), right = 'Fang' "
+              "(crimson blade, bone plates, hooked tip). Each has its own textured MeshPart plus a Neon glow and a Neon core "
               "MeshPart; weld the three parts of a dagger together and to that hand.",
               "Every MeshPart imports centred on its own bounding box: place each at its center_studio relative to the shared "
               "model origin (Blender origin, on the floor midway between the two daggers).",
-              "grip_point = middle of the wrapped grip on that dagger's axis (hand attachment / spin pivot). blade_axis = the "
-              "grip-to-blade direction in the delivered pose. The cutting edge (long glowing curve) faces the other dagger "
-              "(inward); the tip curves outward.",
+              "grip_point = middle of the scale grip on that dagger's axis (hand attachment / spin pivot). blade_axis = the "
+              "grip-to-blade direction in the delivered pose. The cutting edges face each other (inward); the tips curve outward.",
               "The left-hand dagger sits at Studio -X (character's left when facing -Z), the right-hand dagger at Studio +X."],
 }
 for side, objs, sx in (("left_hand", L_objs, DX), ("right_hand", R_objs, -DX)):
-    grip = GRIP_LOCAL + V(sx, 0, 0)
+    grip = V(sx, 0, GRIP_LOCAL_Z)
     st = STATS[objs[0].name]
     tc = (np.array(st["bounds_min"]) + np.array(st["bounds_max"])) / 2
     install["daggers"][side] = {
@@ -1190,34 +1400,44 @@ for side, objs, sx in (("left_hand", L_objs, DX), ("right_hand", R_objs, -DX)):
         "tip_curves_toward_studio": [round(-math.copysign(1, sx), 1), 0.0, 0.0],
         "triangles": sum(STATS[o.name]["triangles"] for o in objs),
     }
+NOTES = {
+    "L_Glow": "crimson Neon: serrated cutting edge, crack veins on both faces, spine false edge, demon eye, pommel spike",
+    "R_Glow": "crimson Neon: cutting edge, ridge line on both faces, demon eye, pommel spike",
+    "L_GlowCore": "hot core: cutting-edge rim line, eye iris",
+    "R_GlowCore": "hot core: cutting-edge rim line, eye iris",
+}
 for o in FINAL:
     st = STATS[o.name]
     mn, mx = np.array(st["bounds_min"]), np.array(st["bounds_max"])
-    part = {"kind": "textured" if o in (body, body_R) else "glow", "center_studio": studio((mn + mx) / 2),
+    part = {"kind": "textured" if o in bodies else "glow", "center_studio": studio((mn + mx) / 2),
             "size_studio": studio_size(mx - mn), "triangles": st["triangles"]}
+    key = o.name.replace(f"{NAME}_", "")
     if "_GlowCore" in o.name:
-        part.update(material="Neon", color_rgb=list(CORE), note="pale lavender cores: cutting-edge rim line, wing eye-spot pupils")
+        part.update(material="Neon", color_rgb=list(CORE), note=NOTES[key])
     elif "_Glow" in o.name:
-        part.update(material="Neon", color_rgb=list(GLOW),
-                    note="violet glow: cutting edge, spine false edge, blade runes, skull eyes, wing eye-spots, pommel gem")
+        part.update(material="Neon", color_rgb=list(GLOW), note=NOTES[key])
     else:
         part.update(material="SmoothPlastic (or Plastic), Color white", texture_id="BaseColor.png")
     install["parts"][o.name] = part
 install["vfx_notes"] = [
-    "Chain dash (ability): for each hop, spawn an afterimage Beam between the dagger's current Attachment and the next enemy's "
-    "Attachment: Color ColorSequence (232,206,255) -> (170,64,255) -> (60,20,110), LightEmission 1, LightInfluence 0, "
-    "Width0 1.2 / Width1 0.3 studs, Transparency 0 -> 1 over 0.25 s (tween), FaceCamera true, Segments 1.",
-    "Afterimage ghosts: at every chain hit clone the dagger's three MeshParts (or the Neon glow part only) as a non-colliding "
-    "copy, Material Neon, Color (170,64,255), Transparency tween 0.35 -> 1 over 0.3 s; up to 5 hits = up to 5 ghosts, one per "
-    "hop, leaving a violet zig-zag between enemies.",
-    "Blade Trail per dagger: Attachment0 at the guard collar, Attachment1 at the blade tip; Color (170,64,255) -> (60,20,110), "
-    "Lifetime 0.18, MinLength 0.05, WidthScale 1 -> 0, Transparency 0.2 -> 1, LightEmission 1, FaceCamera true.",
-    "Hit burst on each chained enemy: ParticleEmitter Burst 12, Color (170,64,255) -> (232,206,255), Size 0.8 -> 0, "
-    "Lifetime 0.25-0.4, Speed 8-14, SpreadAngle 180, LightEmission 1, Drag 6; plus 4 dark smoke puffs Color (40,30,62), "
-    "Size 1.2 -> 2.2, Transparency 0.4 -> 1, Lifetime 0.5, Speed 2.",
-    "Idle (optional): PointLight on the pommel gem, Color (170,64,255), Brightness 1.2, Range 6; a slow smoke ParticleEmitter "
-    "at the pommel wisps, Rate 3, Color (74,56,112), Size 0.4 -> 0.9, Transparency 0.5 -> 1, Lifetime 0.8, Speed 0.6, "
-    "Acceleration (0,1.5,0).",
+    "Aura haze (idle, always on while equipped): one ParticleEmitter per dagger on an Attachment at mid-blade, Shape Box sized "
+    "to the blade (about 0.5 x 2 x 0.2 studs), Texture a soft round glow, Color (255,26,38) -> (120,8,20), LightEmission 1, "
+    "LightInfluence 0, Size 0.9 -> 1.6, Transparency 0.75 -> 1, Lifetime 0.6-0.9, Rate 14, Speed 0.2-0.5, "
+    "Acceleration (0,0.8,0), RotSpeed -30..30. Plus a PointLight on the guard eye: Color (255,40,40), Brightness 1.5, Range 7.",
+    "Ember motes (idle, optional): ParticleEmitter at the blade, Color (255,112,78) -> (255,26,38), Size 0.12 -> 0, "
+    "LightEmission 1, Lifetime 0.5-0.8, Rate 6, Speed 0.6, SpreadAngle 30.",
+    "Chain dash (ability, up to 5 hits): the twin daggers zip from enemy to enemy. For each hop spawn a crimson afterimage "
+    "chain: a Beam between the dagger's current Attachment and the next enemy's Attachment, Color (255,112,78) -> "
+    "(255,26,38) -> (70,4,12), LightEmission 1, LightInfluence 0, Width0 1.4 / Width1 0.3 studs, Transparency 0 -> 1 over "
+    "0.3 s (tween), FaceCamera true, Segments 1.",
+    "Afterimages: at every hop leave 3 ghost copies of the dagger's Neon glow MeshPart (or all three parts) along the beam, "
+    "Material Neon, Color (255,26,38), Transparency tween 0.3 -> 1 over 0.25 s, staggered 0.03 s apart; up to 5 hops leaves a "
+    "crimson zig-zag of afterimages between the enemies.",
+    "Blade Trail per dagger: Attachment0 at the guard collar, Attachment1 at the blade tip; Color (255,26,38) -> (70,4,12), "
+    "Lifetime 0.2, MinLength 0.05, WidthScale 1 -> 0, Transparency 0.15 -> 1, LightEmission 1, FaceCamera true.",
+    "Hit burst on each chained enemy: ParticleEmitter Burst 14, Color (255,112,78) -> (255,26,38), Size 0.9 -> 0, "
+    "Lifetime 0.25-0.4, Speed 9-15, SpreadAngle 180, LightEmission 1, Drag 6; plus a crimson slash decal/Beam X across the "
+    "enemy for 0.15 s and 4 dark smoke puffs Color (40,8,14), Size 1.2 -> 2.2, Transparency 0.4 -> 1, Lifetime 0.5, Speed 2.",
 ]
 (ROOT / "studio-install-data.json").write_text(json.dumps(install, indent=1))
 log("stats", {k: v["triangles"] for k, v in STATS.items()}, "total", sum(v["triangles"] for v in STATS.values()))
@@ -1225,7 +1445,7 @@ log("stats", {k: v["triangles"] for k, v in STATS.items()}, "total", sum(v["tria
 # ---------------------------------------------------------------------------
 # Renders: Preview, Front, Back, Side, Scale, Hero (brief's set only)
 # ---------------------------------------------------------------------------
-setup_comp(0.45)
+setup_comp()
 
 
 def shoot_catalog(name, angle, camvec, samples=32, res=1000):
@@ -1239,8 +1459,16 @@ shoot_catalog("Front.png", 0, (0, -15, 1.2))
 shoot_catalog("Back.png", 0, (0, 15, 1.2))
 shoot_catalog("Side.png", 0, (15, 0, 1.2))
 
+if os.environ.get("WIP_CLOSEUPS", "1") == "1":
+    (ROOT / "wip").mkdir(exist_ok=True)
+    r = catalog_stage(FINAL, 0, (0, -15, 1.2), res=900, samples=32)
+    closeup(ROOT / "wip" / "f_hiltA.png", (DX, 0, 1.05), 1.6, samples=32)
+    closeup(ROOT / "wip" / "f_bladeA.png", (DX + 0.25, 0, 3.0), 2.6, samples=32)
+    closeup(ROOT / "wip" / "f_bladeB.png", (-DX - 0.2, 0, 2.4), 2.2, samples=32)
+    r()
+
 fig_bm = new_bm()
-FX = 2.6
+FX = 3.7
 for c, sz in (((FX - 0.5, 0, 1.0), (1.0, 1.0, 2.0)), ((FX + 0.5, 0, 1.0), (1.0, 1.0, 2.0)),
               ((FX, 0, 3.0), (2.0, 1.0, 2.0)), ((FX - 1.5, 0, 3.0), (1.0, 1.0, 2.0)),
               ((FX + 1.5, 0, 3.0), (1.0, 1.0, 2.0)), ((FX, 0, 4.5), (1.15, 1.15, 1.0))):
@@ -1262,7 +1490,7 @@ bpy.data.objects.remove(fig, do_unlink=True)
 def hero(name, cam_loc, target, lens=58, res=(1200, 1400), samples=96):
     clear_stage()
     w = scene.world
-    w.node_tree.nodes["Background"].inputs["Color"].default_value = (0.016, 0.017, 0.032, 1)
+    w.node_tree.nodes["Background"].inputs["Color"].default_value = (0.02, 0.011, 0.014, 1)
     cd = bpy.data.cameras.new("Hero camera")
     cam = bpy.data.objects.new("Hero camera", cd)
     REVIEW.objects.link(cam)
@@ -1270,10 +1498,10 @@ def hero(name, cam_loc, target, lens=58, res=(1200, 1400), samples=96):
     cam.location = cam_loc
     cam.rotation_euler = (target - cam_loc).to_track_quat("-Z", "Y").to_euler()
     scene.camera = cam
-    for nm, loc, col, en, sz in (("Hero key", V(-3, -5, 6), (0.78, 0.84, 1.0), 700, 3),
-                                  ("Hero rim violet", V(3, 5, 4), (0.62, 0.22, 1.0), 1300, 3),
-                                  ("Hero rim steel", V(-4, 4, 4), (0.6, 0.7, 1.0), 650, 3),
-                                  ("Hero fill violet", V(2, -4, 0.5), (0.55, 0.4, 1.0), 140, 3)):
+    for nm, loc, col, en, sz in (("Hero key", V(-3, -5, 6), (1.0, 0.92, 0.86), 750, 3),
+                                  ("Hero rim crimson", V(3, 5, 4), (1.0, 0.16, 0.14), 1500, 3),
+                                  ("Hero rim warm", V(-4, 4, 4), (1.0, 0.72, 0.6), 600, 3),
+                                  ("Hero fill crimson", V(2, -4, 0.5), (1.0, 0.25, 0.2), 160, 3)):
         ld = bpy.data.lights.new(nm, "AREA")
         ld.color = col
         ld.energy = en
@@ -1281,7 +1509,7 @@ def hero(name, cam_loc, target, lens=58, res=(1200, 1400), samples=96):
         lo = bpy.data.objects.new(nm, ld)
         REVIEW.objects.link(lo)
         lo.location = loc
-        lo.rotation_euler = (V(0, 0, 1.6) - loc).to_track_quat("-Z", "Y").to_euler()
+        lo.rotation_euler = (V(0, 0, 2.2) - loc).to_track_quat("-Z", "Y").to_euler()
     scene.render.engine = "CYCLES"
     scene.cycles.samples = samples
     scene.cycles.use_denoising = True
@@ -1291,13 +1519,13 @@ def hero(name, cam_loc, target, lens=58, res=(1200, 1400), samples=96):
         scene.view_settings.look = "AgX - Punchy"
     except TypeError:
         pass
-    setup_comp(0.9)
+    setup_comp(1.5, 0.85, fog=0.8)
     render(ROOT / name)
     scene.view_settings.look = "None"
-    setup_comp(0.45)
+    setup_comp()
 
 
-hero("Hero.png", V(1.5, -5.6, 2.5), V(0.0, 0, 1.65), lens=50)
+hero("Hero.png", V(1.5, -7.6, 3.0), V(0.0, 0, 2.2), lens=50)
 
 catalog_stage(FINAL, 0, (0, -15, 1.2))
 for o in FINAL:
@@ -1390,13 +1618,13 @@ def compose(tiles, cols, cell, out_path, label_px=46, title=None, bg=(238, 237, 
 
 
 ASSETS = ROOT.parents[1] / "assets"
-compose([(ROOT / "Preview.png", "Shadow Daggers (Godly, new)"), (ASSETS / "32-excalibur" / "Preview.png", "Excalibur"),
+compose([(ROOT / "Preview.png", "Shadow Daggers (Godly, round 2)"), (ASSETS / "32-excalibur" / "Preview.png", "Excalibur"),
          (ASSETS / "31-mjolnir" / "Preview.png", "Mjolnir"), (ASSETS / "34-medusas-head" / "Preview.png", "Medusa's Head")],
         4, 700, ROOT / "Compare_Catalog.png", title="Catalogue framing: Godly Shadow Daggers beside the current top-tier weapons")
 compose([(ROOT / "Preview.png", "Preview (catalogue 3/4)"), (ROOT / "Front.png", "Front"), (ROOT / "Back.png", "Back"),
          (ROOT / "Side.png", "Side"), (ROOT / "Hero.png", "Hero (dramatic lighting)"),
          (ROOT / "Scale.png", "Scale: 5-stud R15 block figure"), (ROOT / "BaseColor.png", "BaseColor.png (1024, baked)")],
-        4, 560, ROOT / "Sheet.png", title="Shadow Daggers - Godly (Blender renders, Studio untested)")
+        4, 560, ROOT / "Sheet.png", title="Shadow Daggers - Godly, round 2 (Blender renders, Studio untested)")
 
 # ---------------------------------------------------------------------------
 # Validation (re-import both exports into a fresh file)
@@ -1405,27 +1633,23 @@ report = {
     "name": NAME, "blender_version": bpy.app.version_string,
     "meshes": {k: v for k, v in STATS.items()},
     "total_triangles": sum(v["triangles"] for v in STATS.values()),
-    "triangles_per_dagger": per_dagger,
+    "triangles_per_dagger": {"left_hand": install["daggers"]["left_hand"]["triangles"],
+                             "right_hand": install["daggers"]["right_hand"]["triangles"]},
     "total_vertices": sum(v["vertices"] for v in STATS.values()),
     "mesh_count": len(FINAL),
     "materials": {o.name: o.data.materials[0].name for o in FINAL},
     "texture": {"file": "BaseColor.png", "size": list(tex_img.size), "packed_in_blend": bool(tex_img.packed_file),
-                "uv_layers": [l.name for l in body.data.uv_layers]},
-    "dagger_length_studs": round(float(allmx[2] - allmn[2]), 4),
+                "uv_layers": {b.name: [l.name for l in b.data.uv_layers] for b in bodies}},
+    "pair_length_studs": round(float(allmx[2] - allmn[2]), 4),
     "bounds_blender_min": [round(float(x), 4) for x in allmn], "bounds_blender_max": [round(float(x), 4) for x in allmx],
     "bounds_studio_size": studio_size(allmx - allmn),
 }
-uvd = np.empty(len(body.data.loops) * 2, np.float32)
-body.data.uv_layers["UVMap"].data.foreach_get("uv", uvd)
-report["texture"]["uv_range"] = [round(float(uvd.min()), 4), round(float(uvd.max()), 4)]
-# mirror exactness: every vertex of R mirrored in x must land on a vertex of L (same mesh order)
-mir = {}
-for a, b in zip(L_objs, R_objs):
-    ca = np.array([tuple(v.co) for v in a.data.vertices])
-    cb = np.array([tuple(v.co) for v in b.data.vertices])
-    cb[:, 0] *= -1
-    mir[a.name] = round(float(np.abs(ca - cb).max()), 6) if ca.shape == cb.shape else "vertex count differs"
-report["mirror_max_vertex_error"] = mir
+uv_rng = []
+for b in bodies:
+    uvd = np.empty(len(b.data.loops) * 2, np.float32)
+    b.data.uv_layers["UVMap"].data.foreach_get("uv", uvd)
+    uv_rng += [float(uvd.min()), float(uvd.max())]
+report["texture"]["uv_range"] = [round(min(uv_rng), 4), round(max(uv_rng), 4)]
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=str(ROOT / "Model.glb"))
 g = [o for o in bpy.data.objects if o.type == "MESH"]
@@ -1447,13 +1671,15 @@ report["fbx_reimport"] = {"meshes": len(g), "triangles": sum(len(o.data.loop_tri
 report["checks"] = {
     "loose_vertices_total": sum(v["loose_vertices"] for v in STATS.values()),
     "zero_area_faces_total": sum(v["zero_area_faces"] for v in STATS.values()),
+    "max_mesh_triangles": max(v["triangles"] for v in STATS.values()),
+    "every_mesh_under_20k": all(v["triangles"] < 20000 for v in STATS.values()),
     "glb_triangles_match": report["glb_reimport"]["triangles"] == report["total_triangles"],
     "fbx_triangles_match": report["fbx_reimport"]["triangles"] == report["total_triangles"],
-    "pair_is_exact_mirror": all(isinstance(v, float) and v < 1e-4 for v in mir.values()),
 }
 report["notes"] = [
     "Non-manifold edge counts are expected: each textured mesh is many closed parts that overlap by design "
-    "(wraps on the grip, skull on the thorax, trim on the wings, runes on the blade).",
+    "(claws rooted in the guard, plates on the blade, scale rows on the grip, eye lids on the guard).",
+    "The two daggers are different meshes (not mirrors); both use the same 1024 atlas with separate UV islands.",
     "Studio import, Neon look and in-game scale are untested (no Studio access in this task).",
 ]
 (ROOT / "validation.json").write_text(json.dumps(report, indent=1))
