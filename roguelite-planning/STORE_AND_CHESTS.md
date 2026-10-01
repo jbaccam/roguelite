@@ -205,12 +205,34 @@ Full-screen (reference: user screenshots, 2026-09-27):
   Epic and Legendary last with their own flash and sting. ×10 and ×100 are one animation with a
   2× / 5× burst and more item icons spraying out. CLAIM or OPEN AGAIN.
 
-## Part 3: Godly weapons (outline only)
+## Part 3: Godly weapons
 
-- Separate brainstorm and spec. Target: about 25–35% stronger than a regular weapon at the same
-  tier, with oversized VFX and sound so they *feel* broken, but a run with them is still a real
-  run.
-- Chest-only drop; never sold directly for Robux.
+Replaced by RARITY_GODLY_ARMOR.md section 9 (2026-10-01): power 160, one per run, from chests or
+the Godly bundles (Blood Phoenix, Shadow Dragon, Godly Starter). The models are in
+`weapon-models/godly/`; game code is step 4 and not built yet.
+
+## Part 4: Shop ideas for later (2026-10-01)
+
+The owner compared our store with another Roblox game's shop. Our prices run higher; he's fine
+with that ("if it scales it scales"). Current extras: Ultimate Chest Bundle (100 Legendary, 7,999
+R$) and the Hoard and Treasury emerald packs.
+
+**VIP: improve soon, not now (owner).** Today: 499 R$ for +25% emeralds, a daily Gold Chest, open
+×10 and a VIP tag. The other game's 799 R$ VIP also gives cosmetics people show off. Candidates:
+- a VIP weapon aura;
+- a VIP crown or helmet cosmetic;
+- a better daily chest (Magical instead of Gold).
+
+**Ideas from the other game's shop, not decided:**
+- **Limited-time event chest.**
+  - A themed chest (theirs: "Inferno") with a countdown, its own 3 / 10 / 25 packs and a big
+    bundle with exclusive items.
+  - It fits our chest tiers and a Godly-themed season.
+- **Faster daily deals.** Their offers refresh hourly with a timer; ours refresh daily.
+- **Bonus chests on the biggest currency packs.** Their 30k and 75k key packs add 1–3 Legendary
+  Chests and an Epic Chest. We could add chests to Hoard and Treasury the same way.
+- **Weapon bundle.** Copies of several weapons at once (theirs: 4 weapons for 599 R$). For us: a
+  class's weapons, to raise their tiers.
 
 ## Server rules (all parts)
 
