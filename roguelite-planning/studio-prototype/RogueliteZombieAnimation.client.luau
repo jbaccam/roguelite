@@ -14,7 +14,7 @@ local function track(npc)
  if tracked[npc] or npc:GetAttribute('IsBoss') or npc:GetAttribute('IsHammerBoss') then return end
  local config=Catalog.fromModel(npc);if not config then return end
  local seed=((npc:GetAttribute('SpawnIndex') or 1)*2.3999632297)%(2*math.pi)
- tracked[npc]={joints=Motion.bind(npc),phase=seed,idleOffset=seed,stride=0,moveClock=0,poses={},config=config,refresh=0,feet=config.legacy and NativeFeet.bind(npc,config.legacy)}
+ tracked[npc]={joints=Motion.bind(npc),phase=seed,idleOffset=seed,stride=0,reach=0,moveClock=0,poses={},config=config,refresh=0,feet=config.legacy and NativeFeet.bind(npc,config.legacy)}
 end
 Tags:GetInstanceAddedSignal('RogueliteZombie'):Connect(track)
 Tags:GetInstanceRemovedSignal('RogueliteZombie'):Connect(function(npc) tracked[npc]=nil;SlamVisuals.remove(npc);HeldProjectiles.remove(npc) end)
@@ -51,7 +51,9 @@ RunService.PreSimulation:Connect(function(dt)
   if config.legacy then
    if config.legacy=='Mutant' then SlamVisuals.update(npc,now) end
    if walking then state.phase=(state.phase+distance*(state.feet and 2*math.pi/state.feet.strideLength or config.cadence))%(2*math.pi) end
-   target=NativeMotion.pose(config.legacy,state.phase,state.stride,npc:GetAttribute('Chasing') and 1 or 0,now+state.idleOffset,attacking and age or nil,config.attackImpact,config.attackRecovery)
+   -- Arms rise to the zombie reach over ~0.25 s when a chase starts.
+   state.reach+=((npc:GetAttribute('Chasing') and 1 or 0)-state.reach)*(1-math.exp(-math.min(dt,.1)*8))
+   target=NativeMotion.pose(config.legacy,state.phase,state.stride,state.reach,now+state.idleOffset,attacking and age or nil,config.attackImpact,config.attackRecovery)
   else
    if not state.data then
     state.data=Motion.load(config.id)

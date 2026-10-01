@@ -8,6 +8,12 @@ The user explicitly approved limited Studio import-dialog UI control with “ye�
 
 The single-client Play smoke test confirmed live baby/mutant spawns, correct MaxHealth and WalkSpeed, client joint motion, mutant hunched waist, and at least two mutant slam starts. Weapon damage reduced the mutant from 240 to 30 HP and it subsequently disappeared. Exact slam damage, dodge/wall/death cancellation cases, respawn, and multiple clients remain unverified. Console output showed Roblox CorePackages social/chat errors and an existing CardPresentation missing-showcase-child wait; no zombie error was observed. The test wave was Play-only and Studio was returned to Edit mode.
 
+## Arms out while chasing and tank HP floor — September 28, 2026
+
+- Regular and baby zombies hold both arms straight out while `Chasing` (a small alternating bob still opposes the legs). Commit 63b1901 had replaced the originally approved forward reach with hanging swinging arms. `ZombieMotion.pose` fades between the two by `reach`, and `RogueliteZombieAnimation` eases `reach` toward the chase flag over about 0.25 s. The shoulder is 92° to offset the 9° torso lean. Measured on the real rigs: upper arm 83°, forearm 91°, wrist level with the shoulder. The swipe attack now pulls back from, and settles to, the reaching arm, while the other hand keeps reaching. With `reach = 0` the pose is unchanged. The mutant is unchanged.
+- Tanks have an 80 HP floor (see `WEAPON_BALANCE.md`).
+- Verification: EnemyTests 252,990, ZombieTests 65,718, and native-feet hand/foot opposition checks on all three rigs, with and without reach. Single-client Play: wave-1 tanks spawned at 80 HP, regular 3, baby 1. Client upper-arm pitch while moving averaged 85° (baby) and 73° (regular, including the rise right after spawn). Screenshots show the babies reaching. The console was clean.
+
 ## Baby sliding and the spawn-pad step — September 28, 2026
 
 - Babies slid like they were on ice. Cause: the whole template weighs 0.33 (only its small root part has mass; every limb is `Massless`), and the Humanoid can't steer a body that light. It accelerated at about 25 studs/s² (the regular zombie manages ~700), averaged 12 studs/s against its 20 WalkSpeed, and moved about 38° off the way it faced. Test weights of 1/2/4/8: from 2 up it runs like the regular zombie. `RogueliteZombieChase` now raises any enemy under 4 mass to 4 at spawn by making its root denser. Knockback impulses already scale by `AssemblyMass`. Most custom mobs weigh 1.3–2.2, and lava slime split children about 0.3, so they get the same floor.
