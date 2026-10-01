@@ -5,7 +5,18 @@ local V={}
 local Motion=require(script.Parent.RocketMotion)
 function V.mount(combat,visuals)
  local template=combat:WaitForChild('RocketTemplate')
- local explode=require(combat:WaitForChild('RocketExplosionVisuals')).mount(visuals)
+ local Explosion=require(combat:WaitForChild('RocketExplosionVisuals'))
+ local explode=Explosion.mount(visuals)
+ -- Build the 3D explosion once any player holds a Rocket Launcher (WeaponCatalog id '11', the
+ -- only weapon RogueliteCombat launches as a rocket), well before its first impact.
+ local states=combat:WaitForChild('PlayerStates')
+ local function watch(slot)
+  if slot:GetAttribute('WeaponId')==nil then return end
+  local function check() if slot:GetAttribute('WeaponId')=='11' then Explosion.warm() end end
+  slot:GetAttributeChangedSignal('WeaponId'):Connect(check);check()
+ end
+ states.DescendantAdded:Connect(watch)
+ for _,slot in states:GetDescendants() do watch(slot) end
  local active={}
  local smokeFolder=Instance.new('Folder');smokeFolder.Name='RPGCloudTrail';smokeFolder.Parent=visuals
  local puffs={}
@@ -49,6 +60,7 @@ function V.mount(combat,visuals)
    local r=active[id];if not r then return end
    r.origin=position;r.velocity=velocity;r.started=started;r.range=range;r.targetDistance=targetDistance or range;r.nextSmoke=r.length
   elseif action=='Launch' then
+   Explosion.warm()
    local model=template:Clone();model.Name='FlyingRPG_'..id;model:ScaleTo(template:GetScale()*(projectileScale or 1));model.Parent=visuals
    local speed=velocity.Magnitude
    local age=math.max(0,workspace:GetServerTimeNow()-started)

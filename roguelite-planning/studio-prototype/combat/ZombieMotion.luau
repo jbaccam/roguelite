@@ -4,6 +4,11 @@ local function cf(x,y,z,lift,forward)
     return CFrame.new(0,lift or 0,-(forward or 0))*CFrame.Angles(math.rad(x or 0),math.rad(y or 0),math.rad(z or 0))
 end
 local function smooth(t) return t*t*(3-2*t) end
+-- Shared constants and scratch: pose() runs per zombie per frame. `out` (optional) is the
+-- caller's buffer, cleared and refilled so it equals a fresh table.
+local SIDES={'Left','Right'}
+local SLAM_KEYS={'waist','neck','shoulder','elbow','wrist','root','lift'}
+local slamValues={}
 local slamKeys={
     {t=0,waist=-26,neck=16,shoulder=25,elbow=12,wrist=-8,root=-.03,lift=0},
     {t=.32,waist=-16,neck=12,shoulder=154,elbow=18,wrist=-12,root=-.08,lift=.08},
@@ -11,14 +16,15 @@ local slamKeys={
     {t=.58,waist=-46,neck=22,shoulder=58,elbow=7,wrist=4,root=-.05,lift=-.73},
     {t=1,waist=-26,neck=16,shoulder=25,elbow=12,wrist=-8,root=-.03,lift=0},
 }
-function M.slam(age)
+function M.slam(age,out)
     local a,b=slamKeys[1],slamKeys[2]
     for i=2,#slamKeys do a,b=slamKeys[i-1],slamKeys[i];if age<=b.t then break end end
     local alpha=math.clamp((age-a.t)/(b.t-a.t),0,1)
     alpha=(b.t==.46) and alpha*alpha or smooth(alpha)
-    local v={};for _,key in {'waist','neck','shoulder','elbow','wrist','root','lift'} do v[key]=a[key]+(b[key]-a[key])*alpha end
-    local poses={Root=cf(0,0,0,v.root),Waist=cf(v.waist,0,0,v.lift),Neck=cf(v.neck)}
-    for _,side in {'Left','Right'} do
+    local v=slamValues;for _,key in SLAM_KEYS do v[key]=a[key]+(b[key]-a[key])*alpha end
+    local poses=out or {};table.clear(poses)
+    poses.Root=cf(0,0,0,v.root);poses.Waist=cf(v.waist,0,0,v.lift);poses.Neck=cf(v.neck)
+    for _,side in SIDES do
         local sign=side=='Left' and 1 or -1
         poses[side..'Shoulder']=cf(v.shoulder,0,sign*-4)
         poses[side..'Elbow']=cf(v.elbow);poses[side..'Wrist']=cf(v.wrist)
@@ -31,12 +37,12 @@ end
 -- 92 deg offsets the 9 deg forward torso lean so the arms read level in world.
 local REACH_SHOULDER,REACH_ELBOW=92,8
 local function mix(a,b,t) return a+(b-a)*t end
-function M.pose(kind,phase,stride,reach,clock,attackAge,attackImpact,attackRecovery)
-    if kind=='Mutant' and attackAge and attackAge>=0 and attackAge<=1 then return M.slam(attackAge) end
+function M.pose(kind,phase,stride,reach,clock,attackAge,attackImpact,attackRecovery,out)
+    if kind=='Mutant' and attackAge and attackAge>=0 and attackAge<=1 then return M.slam(attackAge,out) end
     local step=math.sin(phase);local bounce=math.cos(phase*2);local idle=math.sin(clock*2.1)*.012
-    local poses={};local mutant=kind=='Mutant';local baby=kind=='Baby'
+    local poses=out or {};table.clear(poses);local mutant=kind=='Mutant';local baby=kind=='Baby'
     reach=mutant and 0 or math.clamp(reach or 0,0,1)
-    for _,side in {'Left','Right'} do
+    for _,side in SIDES do
         local s=side=='Left' and 1 or -1;local wave=step*s
         -- Reaching arms keep a small bob that still opposes the same-side leg.
         local hang=(mutant and 25 or baby and 16 or 12)-wave*(mutant and 15 or 24)*stride

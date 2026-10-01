@@ -21,6 +21,7 @@ local tracked,compiled,modules={},{},{}
 local function decode(raw) local ok,t=pcall(Http.JSONDecode,Http,raw or '');return ok and type(t)=='table' and t or {} end
 local function clipDuration(motion,name) local c=motion.clips[name];return c and c.duration or 1 end
 -- EnemyMotion.compile asserts Idle, Move and Attack: alias Walk -> Move and the first attack -> Attack.
+-- compile builds a clip listed under two names once and shares the result.
 local function load(anim)
  if compiled[anim]~=nil then return compiled[anim] or nil end
  local source=animations:FindFirstChild(anim);if not source then return nil end
@@ -41,10 +42,21 @@ local function vfxFor(id)
  end
  return modules[id]
 end
+-- MicroProfiler labels (DEVICE_PROFILING.md): a throwing body still closes its label.
+local function profiled(label,f,...)
+ debug.profilebegin(label)
+ local r=table.pack(pcall(f,...))
+ debug.profileend()
+ if not r[1] then error(r[2],0) end
+ return table.unpack(r,2,r.n)
+end
+local vfxLabels=setmetatable({},{__index=function(t,name) local label='Boss:Vfx:'..name;t[name]=label;return label end})
 -- Effects never break the boss: every hook runs protected.
 local function call(state,name,...)
  local f=state.vfx[name] or Common[name];if not f then return end
+ debug.profilebegin(vfxLabels[name])
  local r=table.pack(pcall(f,...))
+ debug.profileend()
  if not r[1] then warn('BossVfx.'..state.id..'.'..name..': '..tostring(r[2]));return end
  return table.unpack(r,2,r.n)
 end
@@ -90,11 +102,24 @@ end
 -- fill that grows out to the edge exactly at impact (circles and cones from their centre, lines
 -- from their origin), so the timing reads at a glance. The edge flickers in the last 0.3 s.
 local GROW_FILL,EDGE_WIDTH=.42,.24
+-- Released warning parts wait unparented for the next cast instead of being rebuilt: a
+-- FireBreath warning is ~115 parts. slab resets every property a warning changes.
+local pool,POOL_MAX={},256
 local function slab(w,name,size,cf,tint,transparency,list)
- local p=Instance.new('Part');p.Name=name;p.Size=size;p.CFrame=cf;p.Anchored=true;p.CanCollide=false;p.CanQuery=false;p.CanTouch=false;p.CastShadow=false
- p.Material=Enum.Material.Neon;p.Color=tint;p.Transparency=transparency;p.Parent=w.folder
+ local p=table.remove(pool)
+ if not p then p=Instance.new('Part');p.Anchored=true;p.CanCollide=false;p.CanQuery=false;p.CanTouch=false;p.CastShadow=false;p.Material=Enum.Material.Neon end
+ p.Name=name;p.Shape=Enum.PartType.Block;p.Size=size;p.CFrame=cf
+ p.Color=tint;p.Transparency=transparency;p.Parent=w.folder
+ table.insert(w.parts,p)
  if list then table.insert(list,p) end
  return p
+end
+local function release(w)
+ for _,p in w.parts do
+  -- Only parts still in the folder: one destroyed elsewhere can't be parented again.
+  if p.Parent==w.folder and #pool<POOL_MAX then p.Parent=nil;table.insert(pool,p) else p:Destroy() end
+ end
+ table.clear(w.parts);w.folder:Destroy()
 end
 -- Fill geometry for one shape into `list`; `grow` also records how each part scales.
 local function fillShape(w,shape,y,tint,transparency,list,grow)
@@ -135,7 +160,7 @@ local function drawShape(w,shape,y,tint,noGrow)
  edgeShape(w,shape,y,tint)
 end
 local function newWarning(serial,raw)
- local w={folder=Instance.new('Folder'),fills={},edges={},grow={},growParts={},raw=raw,serial=serial};w.folder.Name='BossWarning';w.folder.Parent=workspace
+ local w={folder=Instance.new('Folder'),parts={},fills={},edges={},grow={},growParts={},raw=raw,serial=serial};w.folder.Name='BossWarning';w.folder.Parent=workspace
  return w
 end
 local function buildWarning(ctx)
@@ -155,19 +180,27 @@ local function buildWarning(ctx)
  return w
 end
 -- k: 0 when the warning appears, 1 at impact. left: seconds to impact.
+-- Each layer is only rewritten when its value moved (the edge holds still until the flicker).
 local function paintWarning(w,k,left,now)
+ debug.profilebegin('Boss:PaintWarning')
  k=math.clamp(k,0,1)
  local e=1-(1-k)^1.6 -- fast start, easing into the edge
- for _,g in w.grow do
-  local p=g.part
-  if g.mode=='disc' then p.Size=Vector3.new(g.size.X,g.size.Y*e,g.size.Z*e)
-  elseif g.mode=='along' then local len=g.size.Z*e;local mid=g.origin+g.dir*len/2+Vector3.yAxis*.02;p.Size=Vector3.new(g.size.X,g.size.Y,math.max(.05,len));p.CFrame=CFrame.lookAt(mid,mid+g.dir)
-  else p.Size=Vector3.new(g.size.X*e,g.size.Y,g.size.Z*e);p.CFrame=CFrame.new(g.pivot+(g.cf.Position-g.pivot)*e)*g.cf.Rotation end
-  p.Transparency=e<.02 and 1 or GROW_FILL-.12*k
+ if e~=w.e then
+  w.e=e
+  for _,g in w.grow do
+   local p=g.part
+   if g.mode=='disc' then p.Size=Vector3.new(g.size.X,g.size.Y*e,g.size.Z*e)
+   elseif g.mode=='along' then local len=g.size.Z*e;local mid=g.origin+g.dir*len/2+Vector3.yAxis*.02;p.Size=Vector3.new(g.size.X,g.size.Y,math.max(.05,len));p.CFrame=CFrame.lookAt(mid,mid+g.dir)
+   else p.Size=Vector3.new(g.size.X*e,g.size.Y,g.size.Z*e);p.CFrame=CFrame.new(g.pivot+(g.cf.Position-g.pivot)*e)*g.cf.Rotation end
+  end
  end
+ local grow=e<.02 and 1 or GROW_FILL-.12*k
+ if grow~=w.growT then w.growT=grow;for _,g in w.grow do g.part.Transparency=grow end end
  local flicker=left<.3 and (.5+.5*math.sin(now*48)) or 0
- for _,p in w.fills do p.Transparency=FILL-.1*k end
- for _,p in w.edges do p.Transparency=EDGE*(1-flicker) end
+ local fill,edge=FILL-.1*k,EDGE*(1-flicker)
+ if fill~=w.fillT then w.fillT=fill;for _,p in w.fills do p.Transparency=fill end end
+ if edge~=w.edgeT then w.edgeT=edge;for _,p in w.edges do p.Transparency=edge end end
+ debug.profileend()
 end
 
 -- Projectiles: the server's shots replayed from origin, yaws, speed and life (MapBossShapes.shot),
@@ -198,9 +231,10 @@ local function stepShots(npc,state,now,dt)
  end
 end
 local function clear(state)
- if state.warning then state.warning.folder:Destroy();state.warning=nil end
- if state.follow then state.follow.w.folder:Destroy() end;state.follow=nil
+ if state.warning then release(state.warning);state.warning=nil end
+ if state.follow then release(state.follow.w) end;state.follow=nil
  for _,B in state.shots or {} do for _,s in B.list do if s.part then s.part:Destroy() end end end;state.shots=nil
+ for _,c in state.connections or {} do c:Disconnect() end;state.connections=nil
 end
 
 -- Follow-up circles (MapBossService queueFollow): a warning from when the server publishes them to
@@ -209,18 +243,20 @@ local function stepFollow(npc,state,now,death)
  local raw=npc:GetAttribute('MapBossFollow')
  if raw and raw~=state.followRaw then
   state.followRaw=raw;local d=decode(raw)
-  if state.follow then state.follow.w.folder:Destroy();state.follow=nil end
+  if state.follow then release(state.follow.w);state.follow=nil end
   if type(d.points)=='table' and #d.points>0 and type(d.at)=='number' and d.at>now then
    local F={kind=d.kind,at=d.at,born=now,radius=d.radius or 5,points={},w=newWarning(d.serial,raw)}
    for i,p in d.points do F.points[i]=Vector3.new(p[1],p[2],p[3]) end
-   for _,p in F.points do drawShape(F.w,{kind='circle',center=p,radius=F.radius},p.Y+.07,state.tint or Color3.fromRGB(224,45,49)) end
+   profiled('Boss:BuildWarning',function()
+    for _,p in F.points do drawShape(F.w,{kind='circle',center=p,radius=F.radius},p.Y+.07,state.tint or Color3.fromRGB(224,45,49)) end
+   end)
    state.follow=F
   end
  end
  local F=state.follow;if not F then return end
- if death then F.w.folder:Destroy();state.follow=nil;return end
+ if death then release(F.w);state.follow=nil;return end
  if now>=F.at then
-  F.w.folder:Destroy();state.follow=nil
+  release(F.w);state.follow=nil
   call(state,'aftershock',{npc=npc,id=state.id,kind=F.kind,points=F.points,radius=F.radius,tint=state.tint,scale=state.T.scale or 1})
   return
  end
@@ -248,6 +284,13 @@ local function track(npc)
   local motion;for _=1,40 do motion=load(def.anim);if motion or compiled[def.anim]==false or tracked[npc]~=state then break end;task.wait(.5) end
   if not motion or tracked[npc]~=state then return end
   state.id,state.def,state.T,state.tint,state.vfx,state.joints=id,def,T,TINT[id],vfxFor(id),EnemyMotion.bind(npc)
+  -- Rebind after the rig changes (a streamed-out boss comes back with new Bone/Motor6D
+  -- instances), as RogueliteZombieAnimation does; clear() disconnects these.
+  local function changed(v)
+   if v:IsA('Bone') or v:IsA('Motor6D') or v:IsA('BasePart') or v:IsA('Humanoid') then state.bindingsDirty=true end
+  end
+  if tracked[npc]~=state then return end -- dropped while the effects module loaded
+  state.connections={npc.DescendantAdded:Connect(changed),npc.DescendantRemoving:Connect(changed)}
   state.motion=motion
  end)
 end
@@ -256,7 +299,7 @@ for _,npc in Tags:GetTagged('MapBoss') do track(npc) end
 
 local function frame(npc,state,now,dt)
  local h=npc:FindFirstChildOfClass('Humanoid');local root=npc.PrimaryPart;if not h or not root then return end
- if not next(state.joints) then state.joints=EnemyMotion.bind(npc) end
+ if state.bindingsDirty or not next(state.joints) then state.bindingsDirty=false;state.joints=EnemyMotion.bind(npc) end
  local motion,T=state.motion,state.T
  local displacement=state.previousPosition and root.Position-state.previousPosition or Vector3.zero
  state.previousPosition=root.Position
@@ -299,9 +342,9 @@ local function frame(npc,state,now,dt)
  local warnEnd=at and (ctx.def.shape=='targets' and at.impact+ctx.def.eruptDelay or at.impact)
  if not death and attacking and age>=at.warnStart and age<warnEnd then
   local w=state.warning
-  if not w or w.serial~=ctx.serial or w.raw~=ctx.raw then if w then w.folder:Destroy() end;w=buildWarning(ctx);state.warning=w end
+  if not w or w.serial~=ctx.serial or w.raw~=ctx.raw then if w then release(w) end;w=profiled('Boss:BuildWarning',buildWarning,ctx);state.warning=w end
   paintWarning(w,(age-at.warnStart)/math.max(.05,warnEnd-at.warnStart),warnEnd-age,now)
- elseif state.warning then state.warning.folder:Destroy();state.warning=nil end
+ elseif state.warning then release(state.warning);state.warning=nil end
  stepFollow(npc,state,now,death)
  stepMoments(npc,state,now,death)
  -- Effects: windup once at warnStart, impact once at impact, active every frame in the active window.
@@ -320,7 +363,9 @@ Run.PreSimulation:Connect(function(dt)
  for npc,state in tracked do
   if not npc.Parent or not Tags:HasTag(npc,'MapBoss') then clear(state);tracked[npc]=nil;continue end
   if not state.motion then continue end
+  debug.profilebegin('Boss:Frame')
   local ok,err=pcall(frame,npc,state,now,dt)
+  debug.profileend()
   if not ok and not state.warned then state.warned=true;warn('MapBossPresentation: '..tostring(err)) end
  end
 end)

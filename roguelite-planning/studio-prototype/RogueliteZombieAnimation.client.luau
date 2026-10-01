@@ -10,15 +10,50 @@ local SlamVisuals=require(combat:WaitForChild('ZombieSlamVisuals'))
 local HeldProjectiles=require(combat:WaitForChild('EnemyHeldProjectiles'))
 local tracked={}
 local MAX_MOVE_CYCLES=4 -- imported Move clip loops per second
+local EMPTY=table.freeze({})
+local function untrack(npc)
+ local state=tracked[npc]
+ if state then
+  for _,connection in state.connections do connection:Disconnect() end
+  tracked[npc]=nil
+ end
+ SlamVisuals.remove(npc);HeldProjectiles.remove(npc)
+end
 local function track(npc)
  if tracked[npc] or npc:GetAttribute('IsBoss') or npc:GetAttribute('IsHammerBoss') then return end
  local config=Catalog.fromModel(npc);if not config then return end
  local seed=((npc:GetAttribute('SpawnIndex') or 1)*2.3999632297)%(2*math.pi)
- tracked[npc]={joints=Motion.bind(npc),phase=seed,idleOffset=seed,stride=0,reach=0,moveClock=0,poses={},config=config,refresh=0,feet=config.legacy and NativeFeet.bind(npc,config.legacy)}
+ tracked[npc]={joints=Motion.bind(npc),phase=seed,idleOffset=seed,stride=0,reach=0,moveClock=0,poses={},spare={},config=config,bindingsDirty=false,feetRetry=0,connections={},feet=config.legacy and NativeFeet.bind(npc,config.legacy)}
+ -- Per-enemy pose buffers, refilled every frame instead of allocating new tables (see the frame).
+ tracked[npc].buffers={idle={},move={},mix={},attack={},scaled={},display={}}
+ local state=tracked[npc]
+ local function changed(descendant)
+  if descendant:IsA('Bone') or descendant:IsA('Motor6D') or descendant:IsA('BasePart') or descendant:IsA('Humanoid') then
+   state.bindingsDirty=true
+  end
+ end
+ table.insert(state.connections,npc.DescendantAdded:Connect(changed))
+ table.insert(state.connections,npc.DescendantRemoving:Connect(changed))
 end
 Tags:GetInstanceAddedSignal('RogueliteZombie'):Connect(track)
-Tags:GetInstanceRemovedSignal('RogueliteZombie'):Connect(function(npc) tracked[npc]=nil;SlamVisuals.remove(npc);HeldProjectiles.remove(npc) end)
+Tags:GetInstanceRemovedSignal('RogueliteZombie'):Connect(untrack)
 for _,npc in Tags:GetTagged('RogueliteZombie') do track(npc) end
+-- A beat after join and on each roster change, build the map's enemy clips one type at a time
+-- across frames, so the first wave doesn't stall a frame per new type.
+local warmSerial=0
+local function warmRoster()
+ warmSerial+=1;local mine=warmSerial
+ task.delay(2,function()
+  local roster=combat:GetAttribute('EnemyRoster')
+  if type(roster)~='string' then return end
+  for id in roster:gmatch('[^,%s]+') do
+   if mine~=warmSerial then return end
+   Motion.warm(id)
+  end
+ end)
+end
+combat:GetAttributeChangedSignal('EnemyRoster'):Connect(warmRoster)
+warmRoster()
 local function attackTime(data,config,age)
  local clip=data.clips.Attack;local authoredImpact=data.motion.attackImpact or clip.duration*.45
  if age<=config.attackImpact then return math.clamp(age/config.attackImpact,0,1)*authoredImpact end
@@ -26,12 +61,20 @@ local function attackTime(data,config,age)
 end
 RunService.PreSimulation:Connect(function(dt)
  local now=workspace:GetServerTimeNow()
+ debug.profilebegin('EnemyAnim:Update') -- MicroProfiler label (bosses/DEVICE_PROFILING.md)
  for npc,state in tracked do
-  if not npc.Parent then tracked[npc]=nil;SlamVisuals.remove(npc);HeldProjectiles.remove(npc);continue end
+  if not npc.Parent then untrack(npc);continue end
   local root=npc:FindFirstChild('HumanoidRootPart');local h=npc:FindFirstChildOfClass('Humanoid')
   if not root or not h or h.Health<=0 or npc:GetAttribute('PracticeTarget') then SlamVisuals.remove(npc);HeldProjectiles.remove(npc);continue end
   local config=state.config
-  if config.legacy and not state.feet then state.feet=NativeFeet.bind(npc,config.legacy) end
+  if state.bindingsDirty then
+   state.joints=Motion.bind(npc)
+   state.feet=config.legacy and NativeFeet.bind(npc,config.legacy)
+   state.bindingsDirty=false;state.feetRetry=now+1
+  elseif config.legacy and not state.feet and now>=state.feetRetry then
+   -- A rig that can't bind yet retries on its next structural change, else once a second.
+   state.feet=NativeFeet.bind(npc,config.legacy);state.feetRetry=now+1
+  end
   local displacement=state.lastPosition and root.Position-state.lastPosition or Vector3.zero;state.lastPosition=root.Position
   local distance=Vector2.new(displacement.X,displacement.Z).Magnitude
   -- Teleports and long hitches reset the estimator instead of spinning a gait.
@@ -45,18 +88,20 @@ RunService.PreSimulation:Connect(function(dt)
   -- Enemies attack on the move (EnemyAttacks), so the legs keep walking through a swing.
   local walking=grounded and speed>.2
   state.stride+=((walking and 1 or 0)-state.stride)*blend
-  state.refresh+=dt
-  if state.refresh>=1 then state.refresh=0;state.joints=Motion.bind(npc) end
-  local target
+  local target;local buffers=state.buffers
   if config.legacy then
    if config.legacy=='Mutant' then SlamVisuals.update(npc,now) end
    if walking then state.phase=(state.phase+distance*(state.feet and 2*math.pi/state.feet.strideLength or config.cadence))%(2*math.pi) end
    -- Arms rise to the zombie reach over ~0.25 s when a chase starts.
    state.reach+=((npc:GetAttribute('Chasing') and 1 or 0)-state.reach)*(1-math.exp(-math.min(dt,.1)*8))
-   target=NativeMotion.pose(config.legacy,state.phase,state.stride,state.reach,now+state.idleOffset,attacking and age or nil,config.attackImpact,config.attackRecovery)
+   target=NativeMotion.pose(config.legacy,state.phase,state.stride,state.reach,now+state.idleOffset,attacking and age or nil,config.attackImpact,config.attackRecovery,buffers.mix)
   else
    if not state.data then
-    state.data=Motion.load(config.id)
+    -- A type's first sighting builds its clips over the next few frames (bind pose meanwhile),
+    -- not inside this frame; warmRoster usually has the map's types ready before the wave.
+    local data,pending=Motion.loadAsync(config.id)
+    state.data=data
+    if not data and not pending and not state.warned then warn('Missing enemy clips: '..config.id);state.warned=true end
     if state.data then
      state.moveClock=state.idleOffset/(2*math.pi)*state.data.clips.Move.duration
      -- Leg bones on every rig: Thigh/Shin/Foot, Upper/LowerLeg, crab and spider LegNUpper/Lower.
@@ -66,10 +111,7 @@ RunService.PreSimulation:Connect(function(dt)
      end
     end
    end
-   if not state.data then
-    if not state.warned then warn('Missing enemy clips: '..config.id);state.warned=true end
-    continue
-   end
+   if not state.data then continue end
    local data=state.data;local clip=data.clips.Move
    local relativeScale=npc:GetScale()/(npc:GetAttribute('EnemyBaselineModelScale') or 1)
    local strideLength=(data.motion.strideLength or config.strideLength)*relativeScale
@@ -81,31 +123,40 @@ RunService.PreSimulation:Connect(function(dt)
     local advance=config.timeBasedMovement and dt*math.clamp(speed/config.speed,0,2) or math.min(distance/math.max(.1,strideLength),dt*cap)*clip.duration
     state.moveClock=(state.moveClock+advance)%clip.duration
    end
-   local idle=Motion.sample(data,'Idle',now+state.idleOffset)
-   local move=Motion.sample(data,'Move',state.moveClock)
-   target=Motion.blend(idle,move,state.stride)
+   -- Each buffer is written once and only read after that, within this frame.
+   local idle=Motion.sample(data,'Idle',now+state.idleOffset,buffers.idle)
+   local move=Motion.sample(data,'Move',state.moveClock,buffers.move)
+   target=Motion.blend(idle,move,state.stride,buffers.mix)
    if attacking then
     -- The attack plays above the hips; the legs keep the walk cycle while the enemy moves and
     -- settle into the authored attack stance when it stands still. Legless rigs use the whole clip.
-    local attack=Motion.sample(data,'Attack',attackTime(data,config,age))
+    local attack=Motion.sample(data,'Attack',attackTime(data,config,age),buffers.attack)
     for _,bone in state.legBones do
      if attack[bone] and target[bone] then attack[bone]=attack[bone]:Lerp(target[bone],state.stride) end
     end
     target=attack
    end
-   target=Motion.scalePose(target,relativeScale)
+   target=Motion.scalePose(target,relativeScale,buffers.scaled)
   end
   local mode=attacking and 'Attack' or walking and 'Move' or 'Idle'
-  if mode~=state.mode then state.mode=mode;state.transition=0;state.transitionPose=state.poses end
+  -- The outgoing pose freezes as the transition source; output swaps to the other buffer so
+  -- the frozen one is never overwritten while it is blended from.
+  if mode~=state.mode then state.mode=mode;state.transition=0;state.transitionPose=state.poses;state.poses,state.spare=state.spare,state.poses end
   state.transition=(state.transition or 0)+dt
   -- Blend only on state changes; continuous smoothing would drag planted feet.
-  state.poses=Motion.blend(state.transitionPose or {},target,math.min(1,state.transition/.12))
+  state.poses=Motion.blend(state.transitionPose or EMPTY,target,math.min(1,state.transition/.12),state.poses)
   local displayPoses=state.poses
   -- Zombie feet stay planted only for a standing attack; on the move they keep stepping.
-  if config.legacy then displayPoses=NativeFeet.apply(state.feet,table.clone(state.poses),state.phase,state.stride,attacking and not walking) end
+  -- The feet write into their copy, never into state.poses (next frame's transition source).
+  if config.legacy then
+   local copy=buffers.display;table.clear(copy)
+   for name,pose in state.poses do copy[name]=pose end
+   displayPoses=NativeFeet.apply(state.feet,copy,state.phase,state.stride,attacking and not walking)
+  end
   Motion.apply(state.joints,displayPoses)
   if state.data then HeldProjectiles.update(npc,config,state.data,state.poses,attacking and age or nil,attacking and attackTime(state.data,config,age) or 0) end
   npc:SetAttribute('ClientMotionState',mode)
   npc:SetAttribute('ClientMeasuredSpeed',speed)
  end
+ debug.profileend()
 end)
