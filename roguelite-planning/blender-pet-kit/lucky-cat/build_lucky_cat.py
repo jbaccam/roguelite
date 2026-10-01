@@ -324,6 +324,11 @@ def body_field(h):
     neck = ell(P, (0, NECK_Y, 0.80), (0.28, 0.26, 0.24))
     chest = ell(P, (0, -0.32, 0.58), (0.30, 0.24, 0.24))
     base = smin(smin(trunk, neck, 0.20), chest, 0.14)
+    # shoulder and haunch masses are part of the BODY: soft bulges, filleted into the torso, that swallow the
+    # leg roots (each leg root is a ball centred on its pivot, so it stays hidden through every rotation)
+    for sx in (1, -1):
+        base = smin(base, ell(P, (sx * 0.23, -0.22, 0.50), (0.20, 0.23, 0.23)), 0.12)
+        base = smin(base, ell(P, (sx * 0.26, 0.40, 0.51), (0.21, 0.26, 0.25)), 0.12)
     f = np.clip(-(Y - NECK_Y) / NECK_RY, 0, 1)
     zc = ZC_COLLAR - 0.04 * f                                          # collar droops a little at the front
     rho = np.sqrt((X / NECK_RX) ** 2 + ((Y - NECK_Y) / NECK_RY) ** 2)
@@ -392,8 +397,8 @@ def build_front_leg(h):
     """Left front leg (+X): short chunky column from the shoulder to a round paw (the right one is its mirror)."""
     G = Grid((-0.05, -0.62, -0.10), (0.50, 0.05, 0.78), h)
     P = G.P
-    root = ell(P, SHOULDER_L, (0.17, 0.17, 0.17))
-    seg = capsule(P, SHOULDER_L, ANKLE_F, 0.172, 0.152)
+    root = ell(P, SHOULDER_L, (0.19, 0.19, 0.19))                  # wide top, hidden in the shoulder mass
+    seg = capsule(P, SHOULDER_L, ANKLE_F, 0.186, 0.140)            # tapers from shoulder to wrist
     paw = ell(P, FPAW_C, (0.168, 0.200, 0.105))
     F = smin(smin(root, seg, 0.06), paw, 0.08)
     F = smax(F, -P[..., 2], 0.02)
@@ -404,10 +409,10 @@ def build_hind(h):
     """Left hind leg (+X): rounded haunch on the side of the rump, short leg, round paw."""
     G = Grid((-0.02, 0.02, -0.10), (0.58, 0.82, 0.82), h)
     P = G.P
-    thigh = ell(P, (0.27, 0.44, 0.47), (0.17, 0.23, 0.23))
-    seg = capsule(P, (0.27, 0.44, 0.40), ANKLE_H, 0.168, 0.150)
+    thigh = ell(P, HIP_L, (0.20, 0.20, 0.20))                       # wide top, hidden in the haunch mass
+    seg = capsule(P, HIP_L, ANKLE_H, 0.195, 0.142)                  # tapers from thigh to ankle
     paw = ell(P, HFOOT_C, (0.165, 0.200, 0.105))
-    F = smin(smin(thigh, seg, 0.08), paw, 0.08)
+    F = smin(smin(thigh, seg, 0.06), paw, 0.08)
     F = smax(F, -P[..., 2], 0.02)
     return extract(G, F, "hindL")
 
@@ -684,7 +689,7 @@ def paint_head(p, n, eyes_out):
 
 
 def paint_limb(p, n, pid):
-    c = fur(p, n, 60 + pid, 0.0, 1.2)
+    c = fur(p, n, 11, 0.0, 1.0)                 # same fur field as the body: no colour step at the leg tops
     c = calico(c, p, n, BODY_PATCHES)
     if pid in (P_FRONTL, P_FRONTR, P_HINDL, P_HINDR):
         s = 1 if pid in (P_FRONTL, P_HINDL) else -1

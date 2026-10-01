@@ -3,9 +3,9 @@
     "file": "exports/fbx/lucky-cat.fbx",
     "ok": true,
     "objects": 10,
-    "total_triangles": 5836,
+    "total_triangles": 6172,
     "height_studs": 2.062,
-    "lowest_z": 0.0,
+    "lowest_z": 0.0001,
     "problems": [],
     "parts": {
       "LuckyCat_Bell": {
@@ -35,20 +35,20 @@
         ]
       },
       "LuckyCat_Body": {
-        "triangles": 752,
+        "triangles": 872,
         "pivot": [
           0.0,
           0.1,
           0.62
         ],
         "bbox_min": [
-          -0.3929,
+          -0.4594,
           -0.6091,
-          0.2656
+          0.267
         ],
         "bbox_max": [
-          0.3929,
-          0.6529,
+          0.4594,
+          0.6586,
           1.0295
         ],
         "zero_area_triangles": 0,
@@ -107,21 +107,21 @@
         "texture": null
       },
       "LuckyCat_FrontL": {
-        "triangles": 524,
+        "triangles": 588,
         "pivot": [
           0.22,
           -0.22,
           0.5
         ],
         "bbox_min": [
-          0.0423,
-          -0.5042,
-          0.0
+          0.0248,
+          -0.504,
+          0.0001
         ],
         "bbox_max": [
-          0.3961,
-          -0.0441,
-          0.6741
+          0.4189,
+          -0.018,
+          0.7018
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -133,21 +133,21 @@
         ]
       },
       "LuckyCat_FrontR": {
-        "triangles": 524,
+        "triangles": 588,
         "pivot": [
           -0.22,
           -0.22,
           0.5
         ],
         "bbox_min": [
-          -0.3961,
-          -0.5042,
-          0.0
+          -0.4189,
+          -0.504,
+          0.0001
         ],
         "bbox_max": [
-          -0.0423,
-          -0.0441,
-          0.6741
+          -0.0248,
+          -0.018,
+          0.7018
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -185,21 +185,21 @@
         ]
       },
       "LuckyCat_HindL": {
-        "triangles": 560,
+        "triangles": 604,
         "pivot": [
           0.25,
           0.4,
           0.52
         ],
         "bbox_min": [
-          0.0909,
-          0.1971,
-          0.0
+          0.0399,
+          0.1956,
+          0.0001
         ],
         "bbox_max": [
-          0.4512,
-          0.6613,
-          0.6885
+          0.4587,
+          0.6029,
+          0.727
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -211,21 +211,21 @@
         ]
       },
       "LuckyCat_HindR": {
-        "triangles": 560,
+        "triangles": 604,
         "pivot": [
           -0.25,
           0.4,
           0.52
         ],
         "bbox_min": [
-          -0.4512,
-          0.1971,
-          0.0
+          -0.4587,
+          0.1956,
+          0.0001
         ],
         "bbox_max": [
-          -0.0909,
-          0.6613,
-          0.6885
+          -0.0399,
+          0.6029,
+          0.727
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -268,9 +268,9 @@
     "file": "exports/glb/lucky-cat.glb",
     "ok": true,
     "objects": 10,
-    "total_triangles": 5836,
+    "total_triangles": 6172,
     "height_studs": 2.062,
-    "lowest_z": 0.0,
+    "lowest_z": 0.0001,
     "problems": [],
     "parts": {
       "LuckyCat_Bell": {
@@ -300,20 +300,20 @@
         ]
       },
       "LuckyCat_Body": {
-        "triangles": 752,
+        "triangles": 872,
         "pivot": [
           0.0,
           0.1,
           0.62
         ],
         "bbox_min": [
-          -0.3929,
+          -0.4594,
           -0.6091,
-          0.2656
+          0.267
         ],
         "bbox_max": [
-          0.3929,
-          0.6529,
+          0.4594,
+          0.6586,
           1.0295
         ],
         "zero_area_triangles": 0,
@@ -372,21 +372,21 @@
         "texture": null
       },
       "LuckyCat_FrontL": {
-        "triangles": 524,
+        "triangles": 588,
         "pivot": [
           0.22,
           -0.22,
           0.5
         ],
         "bbox_min": [
-          0.0423,
-          -0.5042,
-          0.0
+          0.0248,
+          -0.504,
+          0.0001
         ],
         "bbox_max": [
-          0.3961,
-          -0.0441,
-          0.6741
+          0.4189,
+          -0.018,
+          0.7018
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -398,21 +398,21 @@
         ]
       },
       "LuckyCat_FrontR": {
-        "triangles": 524,
+        "triangles": 588,
         "pivot": [
           -0.22,
           -0.22,
           0.5
         ],
         "bbox_min": [
-          -0.3961,
-          -0.5042,
-          0.0
+          -0.4189,
+          -0.504,
+          0.0001
         ],
         "bbox_max": [
-          -0.0423,
-          -0.0441,
-          0.6741
+          -0.0248,
+          -0.018,
+          0.7018
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -450,21 +450,21 @@
         ]
       },
       "LuckyCat_HindL": {
-        "triangles": 560,
+        "triangles": 604,
         "pivot": [
           0.25,
           0.4,
           0.52
         ],
         "bbox_min": [
-          0.0909,
-          0.1971,
-          0.0
+          0.0399,
+          0.1956,
+          0.0001
         ],
         "bbox_max": [
-          0.4512,
-          0.6613,
-          0.6885
+          0.4587,
+          0.6029,
+          0.727
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -476,21 +476,21 @@
         ]
       },
       "LuckyCat_HindR": {
-        "triangles": 560,
+        "triangles": 604,
         "pivot": [
           -0.25,
           0.4,
           0.52
         ],
         "bbox_min": [
-          -0.4512,
-          0.1971,
-          0.0
+          -0.4587,
+          0.1956,
+          0.0001
         ],
         "bbox_max": [
-          -0.0909,
-          0.6613,
-          0.6885
+          -0.0399,
+          0.6029,
+          0.727
         ],
         "zero_area_triangles": 0,
         "texture": [
