@@ -1,0 +1,896 @@
+{
+  "asset": "owl",
+  "rarity": "Epic",
+  "strong_suit": "bosses: marks the toughest nearby enemy; the player's hits on the marked enemy do +20% (game code)",
+  "axis": "studio = (-x, z, y) of blender; Blender front -Y = Studio front -Z",
+  "units": "studs; the model is at final size, import 1:1 and do not scale",
+  "sides": "L/R are the owl's own left/right; its left is Blender +X = Studio -X. The scope sits over its RIGHT eye",
+  "origin": "all positions are relative to the model origin = the ground point under the body (Blender world origin); modelled perched, feet on Studio Y = 0",
+  "ground_point": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "overall_size": [
+    1.6482,
+    2.0439,
+    1.4826
+  ],
+  "overall_center": [
+    0.0,
+    1.0261,
+    0.0674
+  ],
+  "texture": "textures/owl.png",
+  "texture_note": "one shared atlas on every MeshPart via MeshPart.TextureID. Owl_Reticle_Glow: set Material = Neon and Color = [255, 116, 70] (its atlas texels are that colour too)",
+  "rest_rotation": "every part has identity rotation relative to the model at rest (wings folded down the body sides)",
+  "rig": "one Motor6D per animated part: Part0 = joint_parent, Part1 = the part, C0/C1 at the part's pivot; Owl_Scope and Owl_Reticle_Glow are WeldConstraints",
+  "role_prop": "Owl_Scope: chunky brass monocle-scope with a leather strap over the right eye; Owl_Reticle_Glow: the Neon target reticle in its lens (the painted eye shows through)",
+  "parts": {
+    "Owl_Body": {
+      "center": [
+        0.0,
+        0.6814,
+        0.1194
+      ],
+      "size": [
+        1.2246,
+        1.1972,
+        1.3787
+      ],
+      "pivot": [
+        0.0,
+        0.62,
+        0.03
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pivot_is": "root (belly centre)",
+      "joint_parent": null,
+      "suggested_motion": "root part: lifted HOVER_H studs while flying, sine bob in Studio Y; pitch about Studio X (nose down to glide); yaw about Studio Y for the perched hop-turn"
+    },
+    "Owl_Head": {
+      "center": [
+        0.0,
+        1.4856,
+        -0.0591
+      ],
+      "size": [
+        1.3771,
+        1.1247,
+        1.2296
+      ],
+      "pivot": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.38,
+        -0.03
+      ],
+      "pivot_is": "neck, hidden inside the head",
+      "joint_parent": "Owl_Body",
+      "suggested_motion": "nod = pitch about Studio X, tilt = roll about Studio Z, look = yaw about Studio Y, through the neck joint (owls turn their heads a lot: up to +-60 deg yaw is fine)"
+    },
+    "Owl_WingL": {
+      "center": [
+        -0.5999,
+        0.5754,
+        0.2305
+      ],
+      "size": [
+        0.4484,
+        0.9755,
+        0.8902
+      ],
+      "pivot": [
+        -0.52,
+        0.92,
+        0.1
+      ],
+      "pivot_from_body_pivot": [
+        -0.52,
+        0.3,
+        0.07
+      ],
+      "pivot_is": "shoulder (round wing root sunk into the body side)",
+      "joint_parent": "Owl_Body",
+      "suggested_motion": "flap = rotate about Studio Z (front-back axis) through the shoulder; NEGATIVE Blender-Y = POSITIVE Studio Z raises the left wing (see locomotion_data.angle_convention)"
+    },
+    "Owl_WingR": {
+      "center": [
+        0.5999,
+        0.5754,
+        0.2305
+      ],
+      "size": [
+        0.4484,
+        0.9755,
+        0.8902
+      ],
+      "pivot": [
+        0.52,
+        0.92,
+        0.1
+      ],
+      "pivot_from_body_pivot": [
+        0.52,
+        0.3,
+        0.07
+      ],
+      "pivot_is": "shoulder",
+      "joint_parent": "Owl_Body",
+      "suggested_motion": "flap = rotate about Studio Z through the shoulder; mirror of WingL (opposite sign)"
+    },
+    "Owl_FootL": {
+      "center": [
+        -0.2189,
+        0.1838,
+        -0.1758
+      ],
+      "size": [
+        0.2701,
+        0.3594,
+        0.4061
+      ],
+      "pivot": [
+        -0.22,
+        0.24,
+        -0.1
+      ],
+      "pivot_from_body_pivot": [
+        -0.22,
+        -0.38,
+        -0.13
+      ],
+      "pivot_is": "hip, inside the belly",
+      "joint_parent": "Owl_Body",
+      "suggested_motion": "pitch about Studio X through the hip: tuck the toes down/back while flying, small dangle on the hop"
+    },
+    "Owl_FootR": {
+      "center": [
+        0.2189,
+        0.1838,
+        -0.1758
+      ],
+      "size": [
+        0.2701,
+        0.3594,
+        0.4061
+      ],
+      "pivot": [
+        0.22,
+        0.24,
+        -0.1
+      ],
+      "pivot_from_body_pivot": [
+        0.22,
+        -0.38,
+        -0.13
+      ],
+      "pivot_is": "hip, inside the belly",
+      "joint_parent": "Owl_Body",
+      "suggested_motion": "pitch about Studio X through the hip: tuck the toes down/back while flying, small dangle on the hop"
+    },
+    "Owl_Scope": {
+      "center": [
+        0.32,
+        1.4407,
+        0.0192
+      ],
+      "size": [
+        0.8798,
+        0.5189,
+        1.2072
+      ],
+      "pivot": [
+        0.2747,
+        1.44,
+        -0.5202
+      ],
+      "pivot_from_body_pivot": [
+        0.2747,
+        0.82,
+        -0.5502
+      ],
+      "pivot_is": "centre of the monocle rim (rigid, never animated)",
+      "joint_parent": "Owl_Head",
+      "suggested_motion": "none (welded to the head)"
+    },
+    "Owl_Reticle_Glow": {
+      "center": [
+        0.2752,
+        1.44,
+        -0.5251
+      ],
+      "size": [
+        0.3535,
+        0.354,
+        0.0571
+      ],
+      "pivot": [
+        0.2752,
+        1.44,
+        -0.5251
+      ],
+      "pivot_from_body_pivot": [
+        0.2752,
+        0.82,
+        -0.5551
+      ],
+      "pivot_is": "centre of the reticle (rigid, never animated; Neon)",
+      "joint_parent": "Owl_Scope",
+      "suggested_motion": "none (welded to the scope); Material = Neon, pulse its Transparency (see vfx)"
+    }
+  },
+  "locomotion": "fly",
+  "locomotion_data": {
+    "summary": "flies: hovers about 1.5 studs up with slow, broad wingbeats and a gentle bob, glides on held wings when the player runs, and when idle near the player for a while it lands and perches (little hop-turns on its stubby feet)",
+    "hover_height_studs": 1.5,
+    "overall_height_at_hover_studs": 3.544,
+    "how": "the model stands on the ground (feet on Studio Y = 0); lift the Body root by hover_height_studs (plus the bob) and keep every other part joined to it",
+    "bob": {
+      "amplitude_studs": 0.12,
+      "period_s": 1.6,
+      "formula": "body_up = hover_height_studs + amplitude_studs * sin(2*pi*t/period_s)",
+      "extra": "pitch the Body +-3 deg about Studio X in time with the bob"
+    },
+    "wingbeat": {
+      "period_s": 0.6,
+      "note": "slow, broad owl beats: ease between wings_up and wings_down (sine), 0.3 s each way. Angles are DELTAS from the folded rest pose (wing hanging about 68 deg below horizontal): up = about 44 deg above horizontal, down = about 32 deg below it. Body rises 0.07 on the down stroke. Every 3-4 beats hold the glide frame for 0.4 s for a flap-flap-glide rhythm.",
+      "WingL_studio_rz_deg": {
+        "up": -112,
+        "down": -36,
+        "mid": -105
+      },
+      "WingR_studio_rz_deg": {
+        "up": 112,
+        "down": 36,
+        "mid": 105
+      },
+      "mid_cup_studio_ry_deg": {
+        "WingL": -24,
+        "WingR": 24
+      }
+    },
+    "glide": "wings held level (WingL/R -90/+90, swept back 10 deg), body nose-down 12 deg, head counter-pitched to stay level, feet tucked",
+    "mark_target": "on mark: face the target, head tilted 14 deg and yawed 20 deg so the scoped RIGHT eye leads, body leans in 6 deg, wings half-spread; hold 0.25 s while the reticle pulse fires (see vfx), then return to hover",
+    "perched_idle": "lands on its feet (Body_loc 0); every 2-4 s a little hop-turn: up 0.18 studs and yaw 24 deg over 0.3 s, wings flick out 22 deg, head lags -12 deg; between hops a slow head turn up to 50 deg (head_turn)",
+    "frames": {
+      "hover_mid": {
+        "duration_s": 0.0,
+        "body_up_studs": 1.5,
+        "joints": {
+          "Owl_WingL": {
+            "blender_rot_deg": [
+              0,
+              -105,
+              -24
+            ],
+            "studio_rot_deg": [
+              0,
+              -24,
+              -105
+            ]
+          },
+          "Owl_WingR": {
+            "blender_rot_deg": [
+              0,
+              105,
+              24
+            ],
+            "studio_rot_deg": [
+              0,
+              24,
+              105
+            ]
+          },
+          "Owl_FootL": {
+            "blender_rot_deg": [
+              48,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -48,
+              0,
+              0
+            ]
+          },
+          "Owl_FootR": {
+            "blender_rot_deg": [
+              48,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -48,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "wings_up": {
+        "duration_s": 0.3,
+        "body_up_studs": 1.43,
+        "joints": {
+          "Owl_WingL": {
+            "blender_rot_deg": [
+              0,
+              -112,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              -112
+            ]
+          },
+          "Owl_WingR": {
+            "blender_rot_deg": [
+              0,
+              112,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              112
+            ]
+          },
+          "Owl_FootL": {
+            "blender_rot_deg": [
+              48,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -48,
+              0,
+              0
+            ]
+          },
+          "Owl_FootR": {
+            "blender_rot_deg": [
+              48,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -48,
+              0,
+              0
+            ]
+          },
+          "Owl_Head": {
+            "blender_rot_deg": [
+              4,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -4,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "wings_down": {
+        "duration_s": 0.3,
+        "body_up_studs": 1.57,
+        "joints": {
+          "Owl_WingL": {
+            "blender_rot_deg": [
+              0,
+              -36,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              -36
+            ]
+          },
+          "Owl_WingR": {
+            "blender_rot_deg": [
+              0,
+              36,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              36
+            ]
+          },
+          "Owl_FootL": {
+            "blender_rot_deg": [
+              40,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -40,
+              0,
+              0
+            ]
+          },
+          "Owl_FootR": {
+            "blender_rot_deg": [
+              40,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -40,
+              0,
+              0
+            ]
+          },
+          "Owl_Head": {
+            "blender_rot_deg": [
+              -3,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              3,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "glide": {
+        "duration_s": 0.0,
+        "body_up_studs": 1.5,
+        "joints": {
+          "Owl_Body": {
+            "blender_rot_deg": [
+              12,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -12,
+              0,
+              0
+            ]
+          },
+          "Owl_Head": {
+            "blender_rot_deg": [
+              -12,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              12,
+              0,
+              0
+            ]
+          },
+          "Owl_WingL": {
+            "blender_rot_deg": [
+              0,
+              -90,
+              10
+            ],
+            "studio_rot_deg": [
+              0,
+              10,
+              -90
+            ]
+          },
+          "Owl_WingR": {
+            "blender_rot_deg": [
+              0,
+              90,
+              -10
+            ],
+            "studio_rot_deg": [
+              0,
+              -10,
+              90
+            ]
+          },
+          "Owl_FootL": {
+            "blender_rot_deg": [
+              60,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -60,
+              0,
+              0
+            ]
+          },
+          "Owl_FootR": {
+            "blender_rot_deg": [
+              60,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -60,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "mark_target": {
+        "duration_s": 0.25,
+        "body_up_studs": 1.5,
+        "joints": {
+          "Owl_Body": {
+            "blender_rot_deg": [
+              6,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -6,
+              0,
+              0
+            ]
+          },
+          "Owl_Head": {
+            "blender_rot_deg": [
+              6,
+              -14,
+              20
+            ],
+            "studio_rot_deg": [
+              -6,
+              20,
+              -14
+            ]
+          },
+          "Owl_WingL": {
+            "blender_rot_deg": [
+              0,
+              -50,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              -50
+            ]
+          },
+          "Owl_WingR": {
+            "blender_rot_deg": [
+              0,
+              50,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              50
+            ]
+          },
+          "Owl_FootL": {
+            "blender_rot_deg": [
+              48,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -48,
+              0,
+              0
+            ]
+          },
+          "Owl_FootR": {
+            "blender_rot_deg": [
+              48,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -48,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "head_turn": {
+        "duration_s": 0.35,
+        "body_up_studs": 0,
+        "joints": {
+          "Owl_Head": {
+            "blender_rot_deg": [
+              0,
+              8,
+              50
+            ],
+            "studio_rot_deg": [
+              0,
+              50,
+              8
+            ]
+          }
+        }
+      },
+      "perch_hop_turn": {
+        "duration_s": 0.3,
+        "body_up_studs": 0.18,
+        "joints": {
+          "Owl_Body": {
+            "blender_rot_deg": [
+              0,
+              0,
+              24
+            ],
+            "studio_rot_deg": [
+              0,
+              24,
+              0
+            ]
+          },
+          "Owl_Head": {
+            "blender_rot_deg": [
+              0,
+              0,
+              -12
+            ],
+            "studio_rot_deg": [
+              0,
+              -12,
+              0
+            ]
+          },
+          "Owl_WingL": {
+            "blender_rot_deg": [
+              0,
+              -22,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              -22
+            ]
+          },
+          "Owl_WingR": {
+            "blender_rot_deg": [
+              0,
+              22,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              22
+            ]
+          },
+          "Owl_FootL": {
+            "blender_rot_deg": [
+              14,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -14,
+              0,
+              0
+            ]
+          },
+          "Owl_FootR": {
+            "blender_rot_deg": [
+              14,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -14,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "angle_convention": "blender_rot_deg = about world X, Y, Z; studio_rot_deg = [about Studio X, about Studio Y, about Studio Z] = [-bx, bz, by]. Apply as CFrame.Angles(rad(sx), rad(sy), rad(sz)) in the joint's pivot frame, relative to the rest pose."
+  },
+  "vfx": [
+    {
+      "kind": "neon_pulse",
+      "part": "Owl_Reticle_Glow",
+      "position": [
+        0.2752,
+        1.44,
+        -0.5251
+      ],
+      "colour_rgb": [
+        255,
+        116,
+        70
+      ],
+      "material": "Neon",
+      "suggested": {
+        "Transparency_idle": [
+          0.35,
+          0.55
+        ],
+        "idle_pulse_period_s": 1.4,
+        "Transparency_marking": [
+          0.05,
+          0.35
+        ],
+        "marking_pulse_period_s": 0.45,
+        "PointLight": {
+          "Color": [
+            255,
+            140,
+            90
+          ],
+          "Brightness": 0.6,
+          "Range": 3,
+          "Shadows": false
+        },
+        "note": "subtle: tween Transparency with a sine, never fully opaque at idle; the PointLight only while marking"
+      }
+    },
+    {
+      "kind": "particle_trail",
+      "part": "Owl_Body",
+      "attachment_position": [
+        0.0,
+        0.7,
+        0.55
+      ],
+      "attachment_from_body_pivot": [
+        0.0,
+        0.08,
+        0.52
+      ],
+      "colour_rgb": [
+        [
+          255,
+          236,
+          200
+        ],
+        [
+          255,
+          176,
+          96
+        ]
+      ],
+      "enabled": "only while flying (Body_loc > 0.5)",
+      "suggested": {
+        "Texture": "soft feather sprite or soft round sparkle",
+        "Rate": 6,
+        "Lifetime": [
+          0.6,
+          1.0
+        ],
+        "Speed": [
+          0.3,
+          0.8
+        ],
+        "SpreadAngle": [
+          25,
+          25
+        ],
+        "EmissionDirection": "Back",
+        "Size": "0 -> 0.22 (t 0.15) -> 0",
+        "Transparency": "0.45 -> 1",
+        "LightEmission": 0.5,
+        "Drag": 2,
+        "Acceleration": [
+          0,
+          -1.2,
+          0
+        ],
+        "Rotation": [
+          0,
+          360
+        ],
+        "RotSpeed": [
+          -60,
+          60
+        ],
+        "LockedToPart": false,
+        "note": "faint: a few drifting feathers/sparkles, not a stream"
+      }
+    },
+    {
+      "kind": "wingtip_trail_optional",
+      "parts": [
+        "Owl_WingL",
+        "Owl_WingR"
+      ],
+      "attachments_from_wing_pivot": {
+        "Owl_WingL": [
+          [
+            -0.1346,
+            -0.4217,
+            0.0808
+          ],
+          [
+            -0.1974,
+            -0.6185,
+            0.1184
+          ]
+        ],
+        "Owl_WingR": [
+          [
+            0.1346,
+            -0.4217,
+            0.0808
+          ],
+          [
+            0.1974,
+            -0.6185,
+            0.1184
+          ]
+        ]
+      },
+      "colour_rgb": [
+        255,
+        236,
+        200
+      ],
+      "suggested": {
+        "Trail.Lifetime": 0.25,
+        "Transparency": "0.75 -> 1",
+        "WidthScale": "1 -> 0",
+        "LightEmission": 0.3,
+        "enabled": "glide frames only"
+      }
+    },
+    {
+      "kind": "mark_on_target",
+      "part": "the marked enemy (game code)",
+      "colour_rgb": [
+        255,
+        116,
+        70
+      ],
+      "suggested": {
+        "Highlight": {
+          "FillColor": [
+            255,
+            116,
+            70
+          ],
+          "FillTransparency": 0.85,
+          "OutlineColor": [
+            255,
+            170,
+            100
+          ],
+          "OutlineTransparency": 0.2,
+          "DepthMode": "Occluded"
+        },
+        "BillboardGui_reticle": "a small amber reticle ring above the enemy's head (Size 2x2 studs), slow 1.4 s spin",
+        "Beam_on_mark_optional": {
+          "from": "Owl_Reticle_Glow attachment",
+          "to": "enemy",
+          "Color": [
+            255,
+            140,
+            90
+          ],
+          "Transparency": "0.6 -> 0.95",
+          "Width0": 0.06,
+          "Width1": 0.14,
+          "LightEmission": 1,
+          "FaceCamera": true,
+          "duration_s": 0.35
+        }
+      }
+    }
+  ]
+}
