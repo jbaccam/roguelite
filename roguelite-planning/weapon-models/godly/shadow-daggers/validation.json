@@ -1,0 +1,229 @@
+{
+ "name": "ShadowDaggers",
+ "blender_version": "5.2.1 LTS",
+ "meshes": {
+  "ShadowDaggers_L": {
+   "triangles": 7546,
+   "vertices": 3885,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    0.0462,
+    -0.192,
+    0.1704
+   ],
+   "bounds_max": [
+    1.5538,
+    0.192,
+    3.3468
+   ]
+  },
+  "ShadowDaggers_L_Glow": {
+   "triangles": 706,
+   "vertices": 395,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    0.2864,
+    -0.203,
+    0.0
+   ],
+   "bounds_max": [
+    1.4053,
+    0.203,
+    3.3993
+   ]
+  },
+  "ShadowDaggers_L_GlowCore": {
+   "triangles": 220,
+   "vertices": 120,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    0.3209,
+    -0.099,
+    1.448
+   ],
+   "bounds_max": [
+    1.4204,
+    0.099,
+    3.4124
+   ]
+  },
+  "ShadowDaggers_R": {
+   "triangles": 7546,
+   "vertices": 3885,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    -1.5538,
+    -0.192,
+    0.1704
+   ],
+   "bounds_max": [
+    -0.0462,
+    0.192,
+    3.3468
+   ]
+  },
+  "ShadowDaggers_R_Glow": {
+   "triangles": 706,
+   "vertices": 395,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    -1.4053,
+    -0.203,
+    0.0
+   ],
+   "bounds_max": [
+    -0.2864,
+    0.203,
+    3.3993
+   ]
+  },
+  "ShadowDaggers_R_GlowCore": {
+   "triangles": 220,
+   "vertices": 120,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    -1.4204,
+    -0.099,
+    1.448
+   ],
+   "bounds_max": [
+    -0.3209,
+    0.099,
+    3.4124
+   ]
+  }
+ },
+ "total_triangles": 16944,
+ "triangles_per_dagger": 8472,
+ "total_vertices": 8800,
+ "mesh_count": 6,
+ "materials": {
+  "ShadowDaggers_L": "ShadowDaggers_Baked",
+  "ShadowDaggers_L_Glow": "ShadowDaggers_Glow",
+  "ShadowDaggers_L_GlowCore": "ShadowDaggers_GlowCore",
+  "ShadowDaggers_R": "ShadowDaggers_Baked",
+  "ShadowDaggers_R_Glow": "ShadowDaggers_Glow",
+  "ShadowDaggers_R_GlowCore": "ShadowDaggers_GlowCore"
+ },
+ "texture": {
+  "file": "BaseColor.png",
+  "size": [
+   1024,
+   1024
+  ],
+  "packed_in_blend": true,
+  "uv_layers": [
+   "UVMap"
+  ],
+  "uv_range": [
+   0.0043,
+   0.9957
+  ]
+ },
+ "dagger_length_studs": 3.4124,
+ "bounds_blender_min": [
+  -1.5538,
+  -0.203,
+  0.0
+ ],
+ "bounds_blender_max": [
+  1.5538,
+  0.203,
+  3.4124
+ ],
+ "bounds_studio_size": [
+  3.1076,
+  3.4124,
+  0.406
+ ],
+ "mirror_max_vertex_error": {
+  "ShadowDaggers_L": 0.0,
+  "ShadowDaggers_L_Glow": 0.0,
+  "ShadowDaggers_L_GlowCore": 0.0
+ },
+ "glb_reimport": {
+  "meshes": 6,
+  "triangles": 16944,
+  "names": [
+   "ShadowDaggers_L",
+   "ShadowDaggers_L_Glow",
+   "ShadowDaggers_L_GlowCore",
+   "ShadowDaggers_R",
+   "ShadowDaggers_R_Glow",
+   "ShadowDaggers_R_GlowCore"
+  ],
+  "images": [
+   "BaseColor 1024x1024"
+  ]
+ },
+ "fbx_reimport": {
+  "meshes": 6,
+  "triangles": 16944,
+  "names": [
+   "ShadowDaggers_L",
+   "ShadowDaggers_L_Glow",
+   "ShadowDaggers_L_GlowCore",
+   "ShadowDaggers_R",
+   "ShadowDaggers_R_Glow",
+   "ShadowDaggers_R_GlowCore"
+  ],
+  "embedded_images": [
+   "ShadowDaggers_BaseColor 1024x1024"
+  ],
+  "dimensions_after_axis_conversion": {
+   "ShadowDaggers_L": [
+    1.508,
+    0.384,
+    3.176
+   ],
+   "ShadowDaggers_L_Glow": [
+    1.119,
+    0.406,
+    3.399
+   ],
+   "ShadowDaggers_L_GlowCore": [
+    1.099,
+    0.198,
+    1.964
+   ],
+   "ShadowDaggers_R": [
+    1.508,
+    0.384,
+    3.176
+   ],
+   "ShadowDaggers_R_Glow": [
+    1.119,
+    0.406,
+    3.399
+   ],
+   "ShadowDaggers_R_GlowCore": [
+    1.099,
+    0.198,
+    1.964
+   ]
+  }
+ },
+ "checks": {
+  "loose_vertices_total": 0,
+  "zero_area_faces_total": 0,
+  "glb_triangles_match": true,
+  "fbx_triangles_match": true,
+  "pair_is_exact_mirror": true
+ },
+ "notes": [
+  "Non-manifold edge counts are expected: each textured mesh is many closed parts that overlap by design (wraps on the grip, skull on the thorax, trim on the wings, runes on the blade).",
+  "Studio import, Neon look and in-game scale are untested (no Studio access in this task)."
+ ]
+}
