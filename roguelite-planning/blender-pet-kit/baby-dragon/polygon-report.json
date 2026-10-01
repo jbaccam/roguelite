@@ -6,22 +6,22 @@
   "texture": "textures/baby-dragon.png (1024x1024, shared by every part)",
   "parts": {
     "BabyDragon_Body": {
-      "triangles": 2500,
-      "vertices": 1252,
+      "triangles": 2880,
+      "vertices": 1552,
       "dimensions_studs": [
-        1.0575,
-        1.1563,
-        1.3611
+        1.0586,
+        1.1626,
+        1.3677
       ],
       "bbox_min": [
-        -0.5288,
-        -0.5372,
-        0.1618
+        -0.5295,
+        -0.5433,
+        0.1615
       ],
       "bbox_max": [
-        0.5286,
-        0.6191,
-        1.5228
+        0.5291,
+        0.6193,
+        1.5292
       ],
       "pivot": [
         0.0,
@@ -31,29 +31,29 @@
       "pivot_is": "root (centre of the pot belly)",
       "joint_parent": null,
       "uv_range": [
-        0.007,
-        0.9891,
-        0.0069,
-        0.9933
+        0.0075,
+        0.9906,
+        0.0078,
+        0.9906
       ]
     },
     "BabyDragon_Head": {
-      "triangles": 2900,
-      "vertices": 1452,
+      "triangles": 2450,
+      "vertices": 1227,
       "dimensions_studs": [
-        1.388,
-        1.526,
-        1.3246
+        1.3862,
+        1.5252,
+        1.3272
       ],
       "bbox_min": [
-        -0.694,
+        -0.6931,
         -0.9924,
-        1.1185
+        1.118
       ],
       "bbox_max": [
-        0.694,
-        0.5336,
-        2.443
+        0.6931,
+        0.5328,
+        2.4452
       ],
       "pivot": [
         0.0,
@@ -64,28 +64,28 @@
       "joint_parent": "BabyDragon_Body",
       "uv_range": [
         0.0073,
-        0.9912,
-        0.0074,
-        0.9933
+        0.9862,
+        0.0076,
+        0.9884
       ]
     },
     "BabyDragon_WingL": {
-      "triangles": 950,
-      "vertices": 477,
+      "triangles": 1336,
+      "vertices": 672,
       "dimensions_studs": [
-        1.145,
-        0.8555,
-        1.1532
+        1.1665,
+        0.8794,
+        1.1871
       ],
       "bbox_min": [
-        0.0975,
-        0.0372,
-        0.7498
+        0.0949,
+        0.034,
+        0.7375
       ],
       "bbox_max": [
-        1.2425,
-        0.8927,
-        1.9031
+        1.2614,
+        0.9134,
+        1.9246
       ],
       "pivot": [
         0.22,
@@ -95,29 +95,29 @@
       "pivot_is": "shoulder (round wing root sunk into the upper back)",
       "joint_parent": "BabyDragon_Body",
       "uv_range": [
-        0.1202,
-        0.9828,
-        0.0069,
-        0.9933
+        0.0076,
+        0.984,
+        0.0073,
+        0.9818
       ]
     },
     "BabyDragon_WingR": {
-      "triangles": 950,
-      "vertices": 477,
+      "triangles": 1336,
+      "vertices": 672,
       "dimensions_studs": [
-        1.145,
-        0.8555,
-        1.1532
+        1.1665,
+        0.8794,
+        1.1871
       ],
       "bbox_min": [
-        -1.2425,
-        0.0372,
-        0.7498
+        -1.2614,
+        0.034,
+        0.7375
       ],
       "bbox_max": [
-        -0.0975,
-        0.8927,
-        1.9031
+        -0.0949,
+        0.9134,
+        1.9246
       ],
       "pivot": [
         -0.22,
@@ -127,10 +127,10 @@
       "pivot_is": "shoulder (round wing root sunk into the upper back)",
       "joint_parent": "BabyDragon_Body",
       "uv_range": [
-        0.0722,
-        0.987,
-        0.0076,
-        0.9912
+        0.0491,
+        0.9818,
+        0.0077,
+        0.9796
       ]
     },
     "BabyDragon_LegL": {
@@ -159,10 +159,10 @@
       "pivot_is": "knee, hidden inside the thigh fused to the hip",
       "joint_parent": "BabyDragon_Body",
       "uv_range": [
-        0.0468,
-        0.9682,
-        0.2862,
-        0.9745
+        0.008,
+        0.9289,
+        0.2248,
+        0.984
       ]
     },
     "BabyDragon_LegR": {
@@ -191,10 +191,10 @@
       "pivot_is": "knee, hidden inside the thigh fused to the hip",
       "joint_parent": "BabyDragon_Body",
       "uv_range": [
-        0.0188,
-        0.9724,
-        0.0086,
-        0.9766
+        0.0897,
+        0.9289,
+        0.0206,
+        0.9377
       ]
     },
     "BabyDragon_Tail": {
@@ -223,138 +223,202 @@
       "pivot_is": "tail root, inside the tail stub of the body",
       "joint_parent": "BabyDragon_Body",
       "uv_range": [
-        0.1871,
-        0.9682,
-        0.0971,
-        0.9745
+        0.0074,
+        0.9818,
+        0.0083,
+        0.9884
+      ]
+    },
+    "BabyDragon_ArmL": {
+      "triangles": 380,
+      "vertices": 192,
+      "dimensions_studs": [
+        0.3201,
+        0.7579,
+        0.4479
+      ],
+      "bbox_min": [
+        0.1736,
+        -0.7402,
+        0.6732
+      ],
+      "bbox_max": [
+        0.4937,
+        0.0177,
+        1.1211
+      ],
+      "pivot": [
+        0.3,
+        -0.1,
+        1.0
+      ],
+      "pivot_is": "shoulder: the arm-top ball is centred on the pivot and buried in the body's shoulder bulge",
+      "joint_parent": "BabyDragon_Body",
+      "uv_range": [
+        0.0073,
+        0.9884,
+        0.0076,
+        0.9884
+      ]
+    },
+    "BabyDragon_ArmR": {
+      "triangles": 380,
+      "vertices": 192,
+      "dimensions_studs": [
+        0.3201,
+        0.7579,
+        0.4479
+      ],
+      "bbox_min": [
+        -0.4937,
+        -0.7402,
+        0.6732
+      ],
+      "bbox_max": [
+        -0.1736,
+        0.0177,
+        1.1211
+      ],
+      "pivot": [
+        -0.3,
+        -0.1,
+        1.0
+      ],
+      "pivot_is": "shoulder: the arm-top ball is centred on the pivot and buried in the body's shoulder bulge",
+      "joint_parent": "BabyDragon_Body",
+      "uv_range": [
+        0.0287,
+        0.984,
+        0.0082,
+        0.9906
       ]
     },
     "BabyDragon_Cheeks_Glow": {
       "triangles": 240,
       "vertices": 128,
       "dimensions_studs": [
-        1.1753,
-        0.2886,
+        1.1716,
+        0.2872,
         0.2061
       ],
       "bbox_min": [
-        -0.5877,
-        -0.5383,
-        1.5349
+        -0.5858,
+        -0.5403,
+        1.5341
       ],
       "bbox_max": [
-        0.5877,
-        -0.2496,
-        1.741
+        0.5858,
+        -0.2531,
+        1.7402
       ],
       "pivot": [
         0.0,
-        -0.394,
-        1.6379
+        -0.3967,
+        1.6372
       ],
       "pivot_is": "centre of the cheek ember streaks (welded to the head, Neon)",
       "joint_parent": "BabyDragon_Head",
       "uv_range": [
-        0.1249,
-        0.9912,
-        0.0078,
-        0.9808
+        0.0985,
+        0.9642,
+        0.1155,
+        0.9664
       ]
     },
     "BabyDragon_Back_Glow": {
       "triangles": 180,
       "vertices": 96,
       "dimensions_studs": [
-        0.1115,
-        0.2396,
-        0.5084
+        0.113,
+        0.2408,
+        0.5083
       ],
       "bbox_min": [
-        -0.0553,
-        0.3972,
+        -0.0561,
+        0.3971,
         0.6294
       ],
       "bbox_max": [
-        0.0562,
-        0.6368,
-        1.1378
+        0.0569,
+        0.6379,
+        1.1377
       ],
       "pivot": [
         0.0004,
-        0.517,
-        0.8836
+        0.5175,
+        0.8835
       ],
       "pivot_is": "centre of the ember tops of the spine bumps (welded to the body, Neon)",
       "joint_parent": "BabyDragon_Body",
       "uv_range": [
-        0.0461,
-        0.9599,
-        0.0075,
-        0.9599
+        0.141,
+        0.9686,
+        0.0442,
+        0.9752
       ]
     },
     "BabyDragon_WingL_Glow": {
       "triangles": 120,
       "vertices": 64,
       "dimensions_studs": [
-        0.2365,
-        0.1377,
-        0.2587
+        0.2364,
+        0.1314,
+        0.2599
       ],
       "bbox_min": [
-        0.2647,
-        0.1371,
-        1.2613
+        0.2583,
+        0.1369,
+        1.2666
       ],
       "bbox_max": [
-        0.5012,
-        0.2748,
-        1.52
+        0.4947,
+        0.2683,
+        1.5265
       ],
       "pivot": [
-        0.383,
-        0.206,
-        1.3906
+        0.3765,
+        0.2026,
+        1.3966
       ],
       "pivot_is": "centre of the ember streaks on the left wing arm (welded to WingL, Neon)",
       "joint_parent": "BabyDragon_WingL",
       "uv_range": [
-        0.0068,
-        0.9703,
-        0.168,
-        0.9536
+        0.5109,
+        0.9598,
+        0.307,
+        0.9201
       ]
     },
     "BabyDragon_WingR_Glow": {
       "triangles": 120,
       "vertices": 64,
       "dimensions_studs": [
-        0.2365,
-        0.1377,
-        0.2587
+        0.2364,
+        0.1314,
+        0.2599
       ],
       "bbox_min": [
-        -0.5012,
-        0.1371,
-        1.2613
+        -0.4947,
+        0.1369,
+        1.2666
       ],
       "bbox_max": [
-        -0.2647,
-        0.2748,
-        1.52
+        -0.2583,
+        0.2683,
+        1.5265
       ],
       "pivot": [
-        -0.383,
-        0.206,
-        1.3906
+        -0.3765,
+        0.2026,
+        1.3966
       ],
       "pivot_is": "centre of the ember streaks on the right wing arm (welded to WingR, Neon)",
       "joint_parent": "BabyDragon_WingR",
       "uv_range": [
-        0.0313,
-        0.9724,
-        0.0595,
-        0.5592
+        0.2157,
+        0.9554,
+        0.0078,
+        0.9752
       ]
     },
     "BabyDragon_TailFlame_Glow": {
@@ -383,27 +447,27 @@
       "pivot_is": "centre of the tail flame and tail ember dots (welded to the tail, Neon)",
       "joint_parent": "BabyDragon_Tail",
       "uv_range": [
-        0.0266,
-        0.9912,
-        0.0674,
-        0.9912
+        0.0578,
+        0.9928,
+        0.0078,
+        0.9928
       ]
     }
   },
-  "total_triangles": 9500,
+  "total_triangles": 10962,
   "overall": {
     "bbox_min": [
-      -1.2425,
+      -1.2614,
       -0.9924,
       0.0002
     ],
     "bbox_max": [
-      1.2425,
+      1.2614,
       1.4932,
-      2.443
+      2.4452
     ],
-    "height_studs": 2.4429,
+    "height_studs": 2.445,
     "length_studs": 2.4856,
-    "width_studs": 2.485
+    "width_studs": 2.5228
   }
 }

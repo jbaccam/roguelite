@@ -14,13 +14,13 @@
     0.0
   ],
   "overall_size": [
-    2.485,
-    2.4429,
+    2.5228,
+    2.445,
     2.4856
   ],
   "overall_center": [
     0.0,
-    1.2216,
+    1.2227,
     0.2504
   ],
   "texture": "textures/baby-dragon.png",
@@ -30,14 +30,14 @@
   "parts": {
     "BabyDragon_Body": {
       "center": [
-        0.0001,
-        0.8423,
-        0.0409
+        0.0002,
+        0.8453,
+        0.038
       ],
       "size": [
-        1.0575,
-        1.3611,
-        1.1563
+        1.0586,
+        1.3677,
+        1.1626
       ],
       "pivot": [
         0.0,
@@ -56,13 +56,13 @@
     "BabyDragon_Head": {
       "center": [
         0.0,
-        1.7807,
-        -0.2294
+        1.7816,
+        -0.2298
       ],
       "size": [
-        1.388,
-        1.3246,
-        1.526
+        1.3862,
+        1.3272,
+        1.5252
       ],
       "pivot": [
         0.0,
@@ -80,14 +80,14 @@
     },
     "BabyDragon_WingL": {
       "center": [
-        -0.67,
-        1.3264,
-        0.465
+        -0.6781,
+        1.331,
+        0.4737
       ],
       "size": [
-        1.145,
-        1.1532,
-        0.8555
+        1.1665,
+        1.1871,
+        0.8794
       ],
       "pivot": [
         -0.22,
@@ -105,14 +105,14 @@
     },
     "BabyDragon_WingR": {
       "center": [
-        0.67,
-        1.3264,
-        0.465
+        0.6781,
+        1.331,
+        0.4737
       ],
       "size": [
-        1.145,
-        1.1532,
-        0.8555
+        1.1665,
+        1.1871,
+        0.8794
       ],
       "pivot": [
         0.22,
@@ -203,26 +203,76 @@
       "joint_parent": "BabyDragon_Body",
       "suggested_motion": "hangs 12 deg down in flight; swish = yaw about Studio Y (+/-30 deg)"
     },
+    "BabyDragon_ArmL": {
+      "center": [
+        -0.3337,
+        0.8972,
+        -0.3613
+      ],
+      "size": [
+        0.3201,
+        0.4479,
+        0.7579
+      ],
+      "pivot": [
+        -0.3,
+        1.0,
+        -0.1
+      ],
+      "pivot_from_body_pivot": [
+        -0.3,
+        0.28,
+        -0.14
+      ],
+      "pivot_is": "shoulder: the arm-top ball is centred on the pivot and buried in the body's shoulder bulge",
+      "joint_parent": "BabyDragon_Body",
+      "suggested_motion": "shoulder joint: rest = elbows bent, forearms held forward in front of the belly; flight = small tuck (Studio X -6..-12) with the beat; fire breath = braced forward and up; glide = tucked back along the sides"
+    },
+    "BabyDragon_ArmR": {
+      "center": [
+        0.3337,
+        0.8972,
+        -0.3613
+      ],
+      "size": [
+        0.3201,
+        0.4479,
+        0.7579
+      ],
+      "pivot": [
+        0.3,
+        1.0,
+        -0.1
+      ],
+      "pivot_from_body_pivot": [
+        0.3,
+        0.28,
+        -0.14
+      ],
+      "pivot_is": "shoulder: the arm-top ball is centred on the pivot and buried in the body's shoulder bulge",
+      "joint_parent": "BabyDragon_Body",
+      "suggested_motion": "mirror of ArmL"
+    },
     "BabyDragon_Cheeks_Glow": {
       "center": [
         0.0,
-        1.6379,
-        -0.394
+        1.6372,
+        -0.3967
       ],
       "size": [
-        1.1753,
+        1.1716,
         0.2061,
-        0.2886
+        0.2872
       ],
       "pivot": [
         0.0,
-        1.6379,
-        -0.394
+        1.6372,
+        -0.3967
       ],
       "pivot_from_body_pivot": [
         0.0,
-        0.9179,
-        -0.434
+        0.9172,
+        -0.4367
       ],
       "pivot_is": "centre of the cheek ember streaks (welded to the head, Neon)",
       "joint_parent": "BabyDragon_Head",
@@ -231,23 +281,23 @@
     "BabyDragon_Back_Glow": {
       "center": [
         -0.0004,
-        0.8836,
-        0.517
+        0.8835,
+        0.5175
       ],
       "size": [
-        0.1115,
-        0.5084,
-        0.2396
+        0.113,
+        0.5083,
+        0.2408
       ],
       "pivot": [
         -0.0004,
-        0.8836,
-        0.517
+        0.8835,
+        0.5175
       ],
       "pivot_from_body_pivot": [
         -0.0004,
-        0.1636,
-        0.477
+        0.1635,
+        0.4775
       ],
       "pivot_is": "centre of the ember tops of the spine bumps (welded to the body, Neon)",
       "joint_parent": "BabyDragon_Body",
@@ -255,24 +305,24 @@
     },
     "BabyDragon_WingL_Glow": {
       "center": [
-        -0.383,
-        1.3906,
-        0.206
+        -0.3765,
+        1.3966,
+        0.2026
       ],
       "size": [
-        0.2365,
-        0.2587,
-        0.1377
+        0.2364,
+        0.2599,
+        0.1314
       ],
       "pivot": [
-        -0.383,
-        1.3906,
-        0.206
+        -0.3765,
+        1.3966,
+        0.2026
       ],
       "pivot_from_body_pivot": [
-        -0.383,
-        0.6706,
-        0.166
+        -0.3765,
+        0.6766,
+        0.1626
       ],
       "pivot_is": "centre of the ember streaks on the left wing arm (welded to WingL, Neon)",
       "joint_parent": "BabyDragon_WingL",
@@ -280,24 +330,24 @@
     },
     "BabyDragon_WingR_Glow": {
       "center": [
-        0.383,
-        1.3906,
-        0.206
+        0.3765,
+        1.3966,
+        0.2026
       ],
       "size": [
-        0.2365,
-        0.2587,
-        0.1377
+        0.2364,
+        0.2599,
+        0.1314
       ],
       "pivot": [
-        0.383,
-        1.3906,
-        0.206
+        0.3765,
+        1.3966,
+        0.2026
       ],
       "pivot_from_body_pivot": [
-        0.383,
-        0.6706,
-        0.166
+        0.3765,
+        0.6766,
+        0.1626
       ],
       "pivot_is": "centre of the ember streaks on the right wing arm (welded to WingR, Neon)",
       "joint_parent": "BabyDragon_WingR",
@@ -392,6 +442,30 @@
         "BabyDragon_Tail": {
           "rot_deg_studio_xyz": [
             12.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_ArmL": {
+          "rot_deg_studio_xyz": [
+            -6.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_ArmR": {
+          "rot_deg_studio_xyz": [
+            -6.0,
             0.0,
             0.0
           ],
@@ -560,6 +634,30 @@
             0.0,
             0.0
           ]
+        },
+        "BabyDragon_ArmL": {
+          "rot_deg_studio_xyz": [
+            -12.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_ArmR": {
+          "rot_deg_studio_xyz": [
+            -12.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
         }
       },
       "glide": {
@@ -640,6 +738,30 @@
             6.0,
             0.0,
             0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_ArmL": {
+          "rot_deg_studio_xyz": [
+            -35.0,
+            0.0,
+            -20.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_ArmR": {
+          "rot_deg_studio_xyz": [
+            -35.0,
+            0.0,
+            20.0
           ],
           "offset_studs_studio_xyz": [
             0.0,
@@ -732,6 +854,30 @@
             0.0,
             0.0
           ]
+        },
+        "BabyDragon_ArmL": {
+          "rot_deg_studio_xyz": [
+            28.0,
+            0.0,
+            -8.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_ArmR": {
+          "rot_deg_studio_xyz": [
+            28.0,
+            0.0,
+            8.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
         }
       },
       "tail_swish": {
@@ -782,6 +928,30 @@
             0.0,
             0.0
           ]
+        },
+        "BabyDragon_ArmL": {
+          "rot_deg_studio_xyz": [
+            -6.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_ArmR": {
+          "rot_deg_studio_xyz": [
+            -6.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
         }
       },
       "head_turn": {
@@ -825,6 +995,30 @@
           "rot_deg_studio_xyz": [
             12.0,
             -15.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_ArmL": {
+          "rot_deg_studio_xyz": [
+            -6.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_ArmR": {
+          "rot_deg_studio_xyz": [
+            -6.0,
+            0.0,
             0.0
           ],
           "offset_studs_studio_xyz": [
@@ -925,6 +1119,30 @@
             "rot_deg_studio_xyz": [
               0.0,
               -16.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "BabyDragon_ArmL": {
+            "rot_deg_studio_xyz": [
+              -10.0,
+              0.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "BabyDragon_ArmR": {
+            "rot_deg_studio_xyz": [
+              10.0,
+              0.0,
               0.0
             ],
             "offset_studs_studio_xyz": [
@@ -1037,6 +1255,30 @@
             "rot_deg_studio_xyz": [
               0.0,
               16.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "BabyDragon_ArmL": {
+            "rot_deg_studio_xyz": [
+              10.0,
+              0.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "BabyDragon_ArmR": {
+            "rot_deg_studio_xyz": [
+              -10.0,
+              0.0,
               0.0
             ],
             "offset_studs_studio_xyz": [

@@ -71,6 +71,7 @@ def log(*a):
 (P_BODY, P_HEAD, P_WINGL, P_WINGR, P_LEGL, P_LEGR, P_TAIL,
  P_GCHEEK, P_GBACK, P_GWINGL, P_GWINGR, P_GTAIL) = range(1, 13)
 GLOW_PIDS = (P_GCHEEK, P_GBACK, P_GWINGL, P_GWINGR, P_GTAIL)
+P_ARML, P_ARMR = 13, 14
 
 
 def V(*a):
@@ -294,6 +295,8 @@ PIVOT = {
     PFX + "LegL": V(0.34, -0.08, 0.36),
     PFX + "LegR": V(-0.34, -0.08, 0.36),
     PFX + "Tail": V(0.0, 0.30, 0.52),
+    PFX + "ArmL": V(0.30, -0.10, 1.00),
+    PFX + "ArmR": V(-0.30, -0.10, 1.00),
 }
 H_FINE = 0.02
 BELLY_C, BELLY_R = (0.0, -0.10, 0.60), (0.40, 0.40, 0.44)
@@ -339,6 +342,8 @@ def body_field(h):
     thigh = np.minimum(ell(P, (0.32, 0.02, 0.44), (0.21, 0.28, 0.25)), ell(P, (-0.32, 0.02, 0.44), (0.21, 0.28, 0.25)))
     F = smin(F, thigh, 0.10)                                                   # haunches with fillets
     F = smin(F, ell(P, (0.0, 0.34, 0.52), (0.23, 0.28, 0.23)), 0.15)          # tail root continues the body line
+    shoulder = np.minimum(ell(P, (0.31, -0.11, 1.00), (0.15, 0.15, 0.16)), ell(P, (-0.31, -0.11, 1.00), (0.15, 0.15, 0.16)))
+    F = smin(F, shoulder, 0.08)                                                # soft shoulder bulges hide the arm-top balls
     # soft bumps down the spine, sitting on the surface
     bumps = None
     for z, sc in ((1.26, 0.85), (1.06, 1.0), (0.86, 1.0), (0.66, 0.85)):
@@ -346,18 +351,64 @@ def body_field(h):
         b = ell(P, (0.0, bp[1] - 0.035, z), (0.085 * sc, 0.11 * sc, 0.12 * sc))
         bumps = b if bumps is None else np.minimum(bumps, b)
     F = smin(F, bumps, 0.05)
-    # modelled belly plates: bands of a 0.04-stud-proud shell over the belly and chest, with grooves between
-    shell = smin(ell(P, BELLY_C, np.array(BELLY_R) + 0.04), ell(P, CHEST_C, np.array(CHEST_R) + 0.04), 0.20)
+    plates, shell = plates_sdf(P)                                              # painter masks; plates are meshed separately
+    return G, F, dict(bumps=bumps, plates=plates, shell=shell, thigh=thigh, shoulder=shoulder)
+
+
+def plates_sdf(P):
+    """Five clean belly bands: a 0.045-stud-proud shell sliced into bands with rounded rims, hollowed inside the body."""
+    X, Y, Z = P[..., 0], P[..., 1], P[..., 2]
+    shell = smin(ell(P, BELLY_C, np.array(BELLY_R) + 0.045), ell(P, CHEST_C, np.array(CHEST_R) + 0.045), 0.20)
+    inner = smin(ell(P, BELLY_C, np.array(BELLY_R) - 0.05), ell(P, CHEST_C, np.array(CHEST_R) - 0.05), 0.20)
     zz = Z + 0.30 * X ** 2
-    plates = None
+    pl = None
+    for k in range(PL_N):
+        band = smax(shell, np.abs(zz - (PL_Z0 + (k + 0.5) * PL_SP)) - (PL_SP / 2 - 0.026), 0.03)
+        pl = band if pl is None else np.minimum(pl, band)
+    pl = smax(pl, np.abs(X) - 0.29, 0.045)
+    pl = smax(pl, Y + 0.05, 0.03)
+    pl = smax(pl, -inner, 0.01)
+    return pl, shell
+
+
+PLATE_NF = 0
+PLATE_FULL = None
+
+
+def build_plates():
+    """Each plate is a lofted band laid on the body surface: flat top 0.045 proud, quarter-circle rounded rims that dive
+    0.02 under the skin, rounded lateral ends that sink into the body. All boundaries are hidden inside the body."""
+    G, fl = FUSED["body"]
+    F = fl["F"]
+    xs = np.linspace(-0.31, 0.31, 13)
+    ts = [-1.0, -0.93, -0.82, -0.66, -0.3, 0.3, 0.66, 0.82, 0.93, 1.0]
+    hb = PL_SP / 2 - 0.012
+    vs, fs = [], []
+    nt = len(ts)
     for k in range(PL_N):
         zc = PL_Z0 + (k + 0.5) * PL_SP
-        band = smax(shell, np.abs(zz - zc) - (PL_SP / 2 - 0.022), 0.02)
-        plates = band if plates is None else np.minimum(plates, band)
-    plates = smax(plates, np.abs(X) - 0.29, 0.04)
-    plates = smax(plates, Y + 0.05, 0.04)
-    F = smin(F, plates, 0.012)
-    return G, F, dict(bumps=bumps, plates=plates, shell=shell, thigh=thigh)
+        base = len(vs)
+        for x in xs:
+            ex = float(sstep(0.0, 1.0, np.array([(0.31 - abs(x)) / 0.07]))[0])
+            for t in ts:
+                z = zc + t * hb - 0.30 * x * x
+                p_, n_ = surf_point(G, F, x, z, -1.0, 0.3)
+                at = abs(t)
+                prof = 0.045 if at <= 0.62 else -0.02 + 0.065 * math.sqrt(max(0.0, 1 - ((at - 0.62) / 0.38) ** 2))
+                vs.append(p_ + n_ * (-0.02 + (prof + 0.02) * ex))
+        for i in range(len(xs) - 1):
+            for j in range(nt - 1):
+                a = base + i * nt + j
+                b = a + nt
+                fs.append((a, b, b + 1, a + 1))
+    vs = np.array(vs)
+    f0 = fs[len(fs) // 2]
+    if np.cross(vs[f0[1]] - vs[f0[0]], vs[f0[2]] - vs[f0[0]])[1] > 0:
+        fs = [tuple(reversed(f)) for f in fs]
+    global PLATE_NF
+    PLATE_NF = len(fs)
+    log("plates", len(fs), "quads (lofted, no decimation)")
+    return vs, fs
 
 
 def horn_sdf(P, s):
@@ -452,29 +503,81 @@ def wing_struts(P):
     """Arm, thumb and three finger struts of the LEFT wing (P in left-wing world space)."""
     d, e, n = wing_frame()
     W = {k: W0 + d * p[0] + e * p[1] for k, p in WING_PTS.items()}
-    arm = smin(rcone(P, W0, W["wrist"], 0.10, 0.075), ell(P, W["wrist"], (0.085, 0.085, 0.085)), 0.03)
-    thumb = rcone(P, W["wrist"], W["wrist"] - e * 0.13 + d * 0.05, 0.055, 0.035)
+    arm = smin(rcone(P, W0, W["wrist"], 0.11, 0.085), ell(P, W["wrist"], (0.095, 0.095, 0.095)), 0.03)
+    thumb = rcone(P, W["wrist"], W["wrist"] - e * 0.13 + d * 0.05, 0.065, 0.042)
     fing = None
     for k in ("tip1", "tip2", "tip3"):
-        f = rcone(P, W["wrist"], W[k], 0.06, 0.036)
+        f = rcone(P, W["wrist"], W[k], 0.072, 0.056)
         fing = f if fing is None else np.minimum(fing, f)
     return smin(smin(arm, thumb, 0.03), fing, 0.04)
 
 
-def wing_field(h):
-    """Left wing (+X); the right one is its mirror."""
+def wing_outline(k_arc=(12, 12, 10)):
+    """Clean 2D membrane outline (u, v): leading edge under the arm and finger, smooth scallop arcs between the tips."""
+    W = {k: np.array(v, float) for k, v in WING_PTS.items()}
+    cen = np.mean(np.array(list(W.values())), axis=0)
+    tip = {k: W[k] + (cen - W[k]) / np.linalg.norm(cen - W[k]) * 0.035 for k in ("tip1", "tip2", "tip3")}
+    pts = []
+
+    def line(a, b, k):
+        for i in range(k):
+            pts.append(a + (b - a) * i / k)
+
+    def arc(a, b, sag, k):
+        L = np.linalg.norm(b - a)
+        mid = (a + b) / 2
+        nn = np.array(((b - a)[1], -(b - a)[0])) / L
+        if nn @ (mid - cen) < 0:
+            nn = -nn
+        s_ = sag * L
+        R = (L / 2) ** 2 / (2 * s_) + s_ / 2
+        cc = mid + nn * (R - s_)
+        ta, tb = math.atan2((a - cc)[1], (a - cc)[0]), math.atan2((b - cc)[1], (b - cc)[0])
+        dt = (tb - ta + math.pi) % (2 * math.pi) - math.pi
+        for i in range(k):
+            t = ta + dt * i / k
+            pts.append(cc + R * np.array((math.cos(t), math.sin(t))))
+
+    line(W["root"], W["wrist"], 3)
+    line(W["wrist"], tip["tip1"], 5)
+    arc(tip["tip1"], tip["tip2"], 0.16, k_arc[0])
+    arc(tip["tip2"], tip["tip3"], 0.16, k_arc[1])
+    arc(tip["tip3"], W["back"], 0.12, k_arc[2])
+    line(W["back"], W["root"], 3)
+    return np.array(pts)
+
+
+def wing_membrane():
     d, e, n = wing_frame()
-    corners = np.array([W0 + d * a + e * b + n * c for a in (-0.25, 1.45) for b in (-0.30, 1.0) for c in (-0.2, 0.2)])
+    uv = wing_outline()
+    vs = [tuple(W0 + d * u + e * v) for u, v in uv]
+    me = bpy.data.meshes.new("memb")
+    me.from_pydata(vs, [], [tuple(range(len(vs)))])
+    ob = bpy.data.objects.new("memb", me)
+    bpy.context.scene.collection.objects.link(ob)
+    so = ob.modifiers.new("Solid", "SOLIDIFY")
+    so.thickness, so.offset, so.use_even_offset = 0.05, 0.0, True
+    bv = ob.modifiers.new("Bevel", "BEVEL")
+    bv.width, bv.segments, bv.limit_method, bv.angle_limit = 0.016, 2, "ANGLE", math.radians(30)
+    tr = ob.modifiers.new("Tri", "TRIANGULATE")
+    tr.quad_method, tr.ngon_method = "BEAUTY", "BEAUTY"
+    ev = ob.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    m2 = ev.to_mesh()
+    vo = np.array([v.co[:] for v in m2.vertices], float)
+    fo = [tuple(p.vertices) for p in m2.polygons]
+    ev.to_mesh_clear()
+    bpy.data.objects.remove(ob)
+    bpy.data.meshes.remove(me)
+    log("membrane", len(uv), "outline points ->", len(fo), "tris")
+    return vo, fo
+
+
+def struts_field(h):
+    d, e, n = wing_frame()
+    corners = np.array([W0 + d * a + e * b + n * c for a in (-0.25, 1.45) for b in (-0.35, 0.95) for c in (-0.2, 0.2)])
     G = Grid(corners.min(0) - 0.05, corners.max(0) + 0.05, h)
     P = G.P
-    q = P - W0
-    u, v, w = q @ d, q @ e, q @ n
-    th, r = 0.045, 0.03
-    a, b = wing_2d(u, v) + r, np.abs(w) - th + r
-    slab = np.sqrt(np.maximum(a, 0) ** 2 + np.maximum(b, 0) ** 2) + np.minimum(np.maximum(a, b), 0) - r
-    F = smin(slab, wing_struts(P), 0.04)
-    F = smin(F, ell(P, W0, (0.12, 0.12, 0.12)), 0.05)                         # root ball sunk in the shoulder
-    return G, F
+    return G, smin(wing_struts(P), ell(P, W0, (0.12, 0.12, 0.12)), 0.05)
 
 
 def leg_field(h):
@@ -488,6 +591,28 @@ def leg_field(h):
         F = smin(F, ell(P, (LEG_X + dx, dy, dz), (0.055, 0.065, 0.055)), 0.03)
     F = smax(F, -Z, 0.012)
     return G, F
+
+
+ARM_S, ARM_E = np.array((0.30, -0.10, 1.00)), np.array((0.39, -0.20, 0.78))
+ARM_W, ARM_H = np.array((0.28, -0.53, 0.80)), np.array((0.26, -0.60, 0.785))
+
+
+def arm_parts(P):
+    """Left arm (+X): top ball on the shoulder pivot, thick upper arm, elbow bend, forearm held forward, 3-claw hand."""
+    F = smin(ell(P, ARM_S, (0.115, 0.115, 0.115)), rcone(P, ARM_S, ARM_E, 0.115, 0.095), 0.03)
+    F = smin(F, ell(P, ARM_E, (0.10, 0.10, 0.10)), 0.03)
+    F = smin(F, rcone(P, ARM_E, ARM_W, 0.09, 0.078), 0.04)
+    F = smin(F, ell(P, ARM_H, (0.088, 0.09, 0.075)), 0.04)
+    claws = None
+    for dx in (-0.045, 0.0, 0.045):
+        c_ = rcone(P, ARM_H + np.array((dx, -0.05, -0.015)), ARM_H + np.array((dx * 1.25, -0.125, -0.065)), 0.034, 0.024)
+        claws = c_ if claws is None else np.minimum(claws, c_)
+    return smin(F, claws, 0.02), claws
+
+
+def arm_field(h):
+    G = Grid((0.08, -0.80, 0.56), (0.58, 0.08, 1.18), h)
+    return G, arm_parts(G.P)[0]
 
 
 TAIL_CHAIN = [((0, 0.34, 0.52), 0.23), ((0, 0.62, 0.42), 0.17), ((0, 0.90, 0.37), 0.125),
@@ -683,20 +808,22 @@ def paint_body(p, n):
     sh = sstep(0.03, -0.01, sample("body", "shell", p)) * sstep(0.32, 0.27, np.abs(X)) * sstep(-0.02, -0.10, Y) \
         * sstep(0.10, -0.25, n[:, 1]) * sstep(PL_Z0 - 0.02, PL_Z0 + 0.03, Z + 0.3 * X ** 2) \
         * sstep(PL_Z0 + PL_N * PL_SP + 0.03, PL_Z0 + PL_N * PL_SP - 0.02, Z + 0.3 * X ** 2)
-    pm = sstep(0.012, -0.004, sample("body", "plates", p))
     ph = (Z + 0.3 * X ** 2 - PL_Z0) / PL_SP
     fr = ph - np.floor(ph)
+    pm = sstep(0.074, 0.064, np.abs(fr - 0.5) * PL_SP) * sstep(0.315, 0.27, np.abs(X))
     pc = mix(BELLY_SH, BELLY, sstep(0.0, 0.40, fr))
     pc = mix(pc, BELLY_LT, 0.50 * sstep(0.35, 0.65, fr) * sstep(0.95, 0.70, fr))
     bd2, _ = bands(p, 4.0, 2.0, 17, 0.0)
     pc = mix(pc, BELLY_SH, 0.16 * bd2)
     pc = mix(BELLY_LINE, pc, pm)
-    c = mix(c, pc, sh)
+    c = mix(c, pc, sh * sstep(-0.02, 0.03, sample("body", "shoulder", p)))
     # spine bumps: a deeper warm red under their ember tops
     bm = sstep(0.02, -0.01, sample("body", "bumps", p)) * (Y > 0.1)
     c = mix(c, mix(RED_DK, RED, sstep(-0.3, 0.6, n[:, 2] + 0.4 * n[:, 1])), 0.7 * bm)
     c = halos(c, p, n, P_BODY)
-    return c, (bm > 0.5) | (pm * sh > 0.5)
+    global _PLATE_LOCAL
+    _PLATE_LOCAL = pm * sh > 0.5
+    return c, bm > 0.5
 
 
 def paint_head(p, n, eyes_out):
@@ -791,6 +918,16 @@ def paint_leg(p, n, s):
     return c, hard
 
 
+def paint_arm(p, n, s):
+    q = p * np.array((s, 1.0, 1.0))
+    c = red_skin(q - np.array((0.0, 0.0, 0.0)), n, 41 + s, 0.62, 1.05)
+    under = sstep(-0.15, -0.55, n[:, 2]) * sstep(-0.30, -0.45, q[:, 1])
+    c = mix(c, mix(BELLY_SH, BELLY, 0.6), 0.85 * under)                        # cream palm / forearm underside
+    cm = sstep(0.012, -0.004, arm_parts(q)[1])
+    c = mix(c, mix(IVORY_SH, IVORY, sstep(-0.3, 0.5, n[:, 2] - n[:, 1])), cm)
+    return c, cm > 0.5
+
+
 def paint_tail(p, n):
     X, Y, Z = p[:, 0], p[:, 1], p[:, 2]
     c = red_skin(p * np.array((1, 0.5, 1)), n, 31, -0.2, 0.6, 0.5)
@@ -820,7 +957,7 @@ def paint_all(P, Ns, part):
     col = np.zeros((len(P), 3))
     hard = np.zeros(len(P), bool)
     eyes = []
-    for pid in range(1, 13):
+    for pid in range(1, 15):
         m = part == pid
         if not m.any():
             continue
@@ -829,6 +966,9 @@ def paint_all(P, Ns, part):
         h = np.zeros(len(p), bool)
         if pid == P_BODY:
             c, h = paint_body(p, n)
+            global PLATE_FULL
+            PLATE_FULL = np.zeros(len(P), bool)
+            PLATE_FULL[m] = _PLATE_LOCAL
         elif pid == P_HEAD:
             c, h = paint_head(p, n, ex)
         elif pid in (P_WINGL, P_WINGR):
@@ -837,6 +977,8 @@ def paint_all(P, Ns, part):
             c, h = paint_leg(p, n, 1 if pid == P_LEGL else -1)
         elif pid == P_TAIL:
             c, h = paint_tail(p, n)
+        elif pid in (P_ARML, P_ARMR):
+            c, h = paint_arm(p, n, 1 if pid == P_ARML else -1)
         else:
             c = paint_glow(p, n, pid)
         col[m], hard[m] = c, h
@@ -857,8 +999,9 @@ def light(col, P, Ns, Nf, hard, ao_s, ao_l, edge, part_ids):
     sky = 0.5 + 0.5 * Ns[:, 2]
     lightv = 0.62 + 0.40 * k + 0.12 * sky
     head = part_ids == P_HEAD
-    ao_w = np.where(head, 0.22, 0.30)
-    aol_w = np.where(head, 0.08, 0.16)
+    plate = PLATE_FULL if PLATE_FULL is not None else np.zeros(len(P), bool)
+    ao_w = np.where(head, 0.22, np.where(plate, 0.22, 0.30))
+    aol_w = np.where(head | plate, np.where(plate, 0.0, 0.08), 0.16)
     aof = (1.0 - ao_w + ao_w * sstep(0.12, 1.0, ao_s)) * (1.0 - aol_w * (1.0 - sstep(0.2, 1.0, ao_l)))
     shade = lightv * aof * (0.92 + 0.10 * sstep(0.0, 2.2, P[:, 2]))
     lit = col * shade[:, None]
@@ -929,10 +1072,12 @@ def make_object(name, pid, vf, material):
     return ob
 
 
-TARGET = dict(body=2500, head=2900, wing=950, leg=300, tail=620, flame=200)
+TARGET = dict(body=1800, head=2450, struts=720, leg=300, tail=620, flame=200, arm=380)
 G_, F_, fl_ = body_field(H_FINE)
+fl_["F"] = F_
 FUSED["body"] = (G_, fl_)
 body_vf = extract(G_, F_, TARGET["body"], "body")
+body_vf = merge([body_vf, build_plates()])
 G_, F_, fl_ = head_field(H_FINE, True)
 FUSED["head"] = (G_, fl_)
 head_vf = extract(G_, F_, TARGET["head"], "head")
@@ -941,8 +1086,10 @@ FUSED["tail"] = (G_, fl_)
 tail_vf = extract(G_, F_, TARGET["tail"], "tail")
 G_, F_ = leg_field(0.015)
 leg_l = extract(G_, F_, TARGET["leg"], "leg")
-G_, F_ = wing_field(0.02)
-wing_l = extract(G_, F_, TARGET["wing"], "wing")
+G_, F_ = arm_field(0.014)
+arm_l = extract(G_, F_, TARGET["arm"], "arm")
+G_, F_ = struts_field(0.014)
+wing_l = merge([extract(G_, F_, TARGET["struts"], "struts"), wing_membrane()])
 G_, F_ = flame_field(0.012)
 flame_vf = extract(G_, F_, TARGET["flame"], "flame")
 del G_, F_
@@ -966,7 +1113,7 @@ for gpid, (vs_, _) in glow_vf.items():
 specs = [(PFX + "Body", P_BODY, body_vf), (PFX + "Head", P_HEAD, head_vf),
          (PFX + "WingL", P_WINGL, wing_l), (PFX + "WingR", P_WINGR, mirror(wing_l)),
          (PFX + "LegL", P_LEGL, leg_l), (PFX + "LegR", P_LEGR, mirror(leg_l)),
-         (PFX + "Tail", P_TAIL, tail_vf)] + [(GLOW_NAME[g], g, glow_vf[g]) for g in GLOW_PIDS]
+         (PFX + "Tail", P_TAIL, tail_vf), (PFX + "ArmL", P_ARML, arm_l), (PFX + "ArmR", P_ARMR, mirror(arm_l))] + [(GLOW_NAME[g], g, glow_vf[g]) for g in GLOW_PIDS]
 objs = [make_object(n, pid, vf, mat) for n, pid, vf in specs]
 parts = {o.name: o for o in objs}
 GLOWS = [parts[GLOW_NAME[g]] for g in GLOW_PIDS]
@@ -987,6 +1134,32 @@ def tri_count(o):
 
 select_only(objs)
 bpy.ops.object.shade_flat()     # faceted: broad planes like cut gemstone facets
+SMOOTH_DEG = 24.0               # ... but rims, tubes and bevels (sharper folds) shade smooth so edges read soft
+
+
+def smooth_rims(o):
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    flags = []
+    for f in bm.faces:
+        mx = 0.0
+        for e in f.edges:
+            if len(e.link_faces) == 2:
+                mx = max(mx, math.degrees(e.calc_face_angle(0.0)))
+        flags.append(mx > SMOOTH_DEG)
+    bm.free()
+    o.data.polygons.foreach_set("use_smooth", flags)
+    return int(sum(flags))
+
+
+log("smooth-shaded rim faces", {o.name.replace(PFX, ""): smooth_rims(o) for o in objs if o.pass_index not in GLOW_PIDS})
+_bp = parts[PFX + "Body"].data.polygons
+_fl = [False] * len(_bp)
+_bp.foreach_get("use_smooth", _fl)
+for _i in range(len(_bp) - PLATE_NF, len(_bp)):
+    _fl[_i] = True
+_bp.foreach_set("use_smooth", _fl)
+log("belly plates fully smooth:", PLATE_NF, "faces")
 
 if SHAPE:
     for o in objs:
@@ -1015,7 +1188,8 @@ if SHAPE:
 else:
     for o in objs:
         fa = o.data.attributes.new("fnrm", "FLOAT_VECTOR", "FACE")
-        fa.data.foreach_set("vector", np.array([pl.normal for pl in o.data.polygons], np.float32).ravel())
+        fa.data.foreach_set("vector", np.array([(0.0, 0.0, 0.0) if pl.use_smooth else pl.normal[:] for pl in o.data.polygons],
+                                               np.float32).ravel())
 
     # ---- UVs: smart project, then a denser cylindrical island for the visible face -------------
     select_only(objs)
@@ -1161,7 +1335,9 @@ else:
         return a / np.maximum(np.linalg.norm(a, axis=1), 1e-6)[:, None]
 
     P = dec(maps["pos"], 0.04)
-    Ns, Nf, Nb = unit(dec(maps["nrm"], 0.5)), unit(dec(maps["fnrm"], 0.5)), unit(dec(maps["bev"], 0.5))
+    Ns, Nb = unit(dec(maps["nrm"], 0.5)), unit(dec(maps["bev"], 0.5))
+    Nf_raw = dec(maps["fnrm"], 0.5)
+    Nf = np.where((np.linalg.norm(Nf_raw, axis=1) < 0.5)[:, None], Ns, unit(Nf_raw))   # smooth faces: no facet key
     pf = maps["attr"][idx, 0].astype(np.float64) * 16.0
     part = np.rint(pf).astype(np.int64)
     bbs, trees = {}, {}
@@ -1246,6 +1422,8 @@ JOINT_NAME = {PFX + "Body": "root (centre of the pot belly)", PFX + "Head": "nec
               PFX + "WingR": "shoulder (round wing root sunk into the upper back)",
               PFX + "LegL": "knee, hidden inside the thigh fused to the hip", PFX + "LegR": "knee, hidden inside the thigh fused to the hip",
               PFX + "Tail": "tail root, inside the tail stub of the body",
+              PFX + "ArmL": "shoulder: the arm-top ball is centred on the pivot and buried in the body's shoulder bulge",
+              PFX + "ArmR": "shoulder: the arm-top ball is centred on the pivot and buried in the body's shoulder bulge",
               GLOW_NAME[P_GCHEEK]: "centre of the cheek ember streaks (welded to the head, Neon)",
               GLOW_NAME[P_GBACK]: "centre of the ember tops of the spine bumps (welded to the body, Neon)",
               GLOW_NAME[P_GWINGL]: "centre of the ember streaks on the left wing arm (welded to WingL, Neon)",
@@ -1259,6 +1437,8 @@ MOTION = {
     PFX + "LegL": "knee joint: tucked 20 deg forward while flying, swing +/-22 deg in the landing waddle",
     PFX + "LegR": "mirror of LegL",
     PFX + "Tail": "hangs 12 deg down in flight; swish = yaw about Studio Y (+/-30 deg)",
+    PFX + "ArmL": "shoulder joint: rest = elbows bent, forearms held forward in front of the belly; flight = small tuck (Studio X -6..-12) with the beat; fire breath = braced forward and up; glide = tucked back along the sides",
+    PFX + "ArmR": "mirror of ArmL",
 }
 for g in GLOW_PIDS:
     MOTION[GLOW_NAME[g]] = f"none (WeldConstraint to {CARRIER[GLOW_NAME[g]]}); Material Neon"
@@ -1279,7 +1459,7 @@ def world_bounds(o):
 
 # ---- poses (Blender bone angles: X = pitch about world X, Y = yaw about world Z, Z = roll about world -Y).
 # Flight frames are relative to the hover root (the game lifts the rig HOVER_H); the previews add the lift.
-TUCK = {"LegL": (-20, 0, 0), "LegR": (-20, 0, 0), "Tail": (-12, 0, 0)}
+TUCK = {"LegL": (-20, 0, 0), "LegR": (-20, 0, 0), "Tail": (-12, 0, 0), "ArmL": (6, 0, 0), "ArmR": (6, 0, 0)}
 
 
 def fly(rots, locs=None):
@@ -1289,24 +1469,25 @@ def fly(rots, locs=None):
 
 
 HOVER_MID = fly({"Head": (-4, 0, 0)})
-WINGS_UP = fly({"WingL": (0, 0, 30), "WingR": (0, 0, -30), "Head": (-6, 0, 0)}, {"Body": (0, 0, 0.10)})
-WINGS_DOWN = fly({"WingL": (0, 0, -55), "WingR": (0, 0, 55), "Body": (4, 0, 0), "Tail": (-6, 0, 0)}, {"Body": (0, 0, -0.08)})
+WINGS_UP = fly({"WingL": (0, 0, 30), "WingR": (0, 0, -30), "Head": (-6, 0, 0), "ArmL": (0, 0, 0), "ArmR": (0, 0, 0)}, {"Body": (0, 0, 0.10)})
+WINGS_DOWN = fly({"WingL": (0, 0, -55), "WingR": (0, 0, 55), "Body": (4, 0, 0), "Tail": (-6, 0, 0), "ArmL": (12, 0, 0), "ArmR": (12, 0, 0)}, {"Body": (0, 0, -0.08)})
 GLIDE = fly({"Body": (12, 0, 0), "Head": (-12, 0, 0), "WingL": (50, 0, -40), "WingR": (50, 0, 40),
-             "LegL": (25, 0, 0), "LegR": (25, 0, 0), "Tail": (-6, 0, 0)})
+             "LegL": (25, 0, 0), "LegR": (25, 0, 0), "Tail": (-6, 0, 0), "ArmL": (35, 0, 20), "ArmR": (35, 0, -20)})
 FIRE = fly({"Body": (-10, 0, 0), "Head": (-20, 0, 0), "WingL": (0, 25, 10), "WingR": (0, -25, -10),
-            "LegL": (-30, 0, 0), "LegR": (-30, 0, 0), "Tail": (-18, 0, 0)}, {"Head": (0, -0.05, 0.02)})
+            "LegL": (-30, 0, 0), "LegR": (-30, 0, 0), "Tail": (-18, 0, 0), "ArmL": (-28, 0, 8), "ArmR": (-28, 0, -8)}, {"Head": (0, -0.05, 0.02)})
 SWISH = fly({"Tail": (-12, 30, 0), "Head": (0, -8, 0)})
 HEADTURN = fly({"Head": (8, 30, 12), "Tail": (-12, -15, 0)})
 
 
 def waddle(s):
     rots = {"Body": (0, 0, 7 * s), "LegL": (-22 * s, 0, 0), "LegR": (22 * s, 0, 0), "Head": (-3, 4 * s, -5 * s),
-            "Tail": (0, -16 * s, 0), "WingL": (0, 20, -20 + 10 * (s > 0)), "WingR": (0, -20, 20 - 10 * (s < 0))}
+            "Tail": (0, -16 * s, 0), "WingL": (0, 20, -20 + 10 * (s > 0)), "WingR": (0, -20, 20 - 10 * (s < 0)),
+            "ArmL": (10 * s, 0, 0), "ArmR": (-10 * s, 0, 0)}
     return rots, {"Body": (0, 0, 0.03), ("LegL" if s > 0 else "LegR"): (0, 0, 0.07)}
 
 
 WADDLE_PASS = ({"WingL": (0, 20, -15), "WingR": (0, -20, 15)}, {})
-BONES = ["Body", "Head", "WingL", "WingR", "LegL", "LegR", "Tail"]
+BONES = ["Body", "Head", "WingL", "WingR", "LegL", "LegR", "Tail", "ArmL", "ArmR"]
 
 
 def lifted(rl, h=HOVER_H):
@@ -1460,7 +1641,7 @@ if not QUICK:
     bpy.ops.export_scene.gltf(filepath=str(GLB_PATH), export_format="GLB", use_selection=True, export_apply=True)
     select_only(objs, parts[PFX + "Body"])
     bpy.ops.export_scene.fbx(filepath=str(FBX_PATH), use_selection=True, object_types={"MESH"},
-                             axis_forward="-Z", axis_up="Y", path_mode="COPY", embed_textures=True,
+                             axis_forward="-Z", axis_up="Y", path_mode="COPY", embed_textures=True, mesh_smooth_type="FACE",
                              add_leaf_bones=False)
     log("exported", FBX_PATH.name, GLB_PATH.name)
 
@@ -1524,6 +1705,8 @@ go = gnt.nodes.new("ShaderNodeOutputMaterial")
 gnt.links.new(ge.outputs[0], go.inputs[0])
 for g in GLOWS:
     g.data.materials[0] = gm
+for _n in ("ArmL", "ArmR", "WingL", "WingR"):
+    parts[PFX + _n].visible_shadow = False
 
 scene.render.engine = "BLENDER_EEVEE"
 scene.view_settings.view_transform = "Standard"
@@ -1692,8 +1875,8 @@ D = 10.6
 POSES = [
     ("Wings up (beat top), hovering", WINGS_UP, around(tgt, (-0.7, -0.8, 0.25), D), tgt, False),
     ("Wings down (beat bottom)", WINGS_DOWN, around(tgt, (-0.7, -0.8, 0.25), D), tgt, False),
-    ("Glide: wings flat and spread, nose down", GLIDE, around(tgt, (-0.55, -0.7, 0.75), D), tgt, False),
-    ("Fire breath: nose up, wings back, braced", FIRE, around(tgt + V(0, -0.6, 0.1), (-1, -0.25, 0.12), D + 1.0), tgt + V(0, -0.6, 0.1), True),
+    ("Glide: wings flat, arms tucked back", GLIDE, around(tgt, (-0.55, -0.7, 0.75), D), tgt, False),
+    ("Fire breath: arms braced forward, wings back", FIRE, around(tgt + V(0, -0.6, 0.1), (-1, -0.25, 0.12), D + 1.0), tgt + V(0, -0.6, 0.1), True),
     ("Tail swish 30 (from behind)", SWISH, around(tgt, (0.45, 1, 0.35), D), tgt, False),
     ("Head turn 30 + nod 8 + tilt 12", HEADTURN, around(tgt, (0.35, -1, 0.2), D - 1.0), tgt, False),
 ]
@@ -1702,13 +1885,21 @@ VIEWS = [("threeq", "Three-quarter (hovering)", (-0.75, -0.9, 0.30), D, tgt),
          ("side", "Side (dragon's right)", (-1, 0, 0.06), D, tgt),
          ("back", "Back (follow view)", (0, 1, 0.30), D - 0.5, tgt)]
 
+WING_CU = V(*wing_world(0.86, 0.72)) + H
+BELLY_CU = V(0.0, -0.40, 0.66) + H
+CLOSEUPS = [("closeup-wing-edge", "Close-up: wing edge", around(WING_CU, (0.35, -1, 0.25), 2.4), WING_CU),
+            ("closeup-belly", "Close-up: belly plates + arm", around(BELLY_CU, (-0.55, -1, 0.15), 2.8), BELLY_CU)]
+
 if not NO_PREVIEWS and QUICK:
     pose(lifted(HOVER_MID))
     items = [(shoot(OUT / f"_{k}.png", around(t, dv, dd), t, res=(700, 700)), lab) for k, lab, dv, dd, t in VIEWS]
     items.append((shoot(OUT / "_face.png", around(ft, (-0.35, -1, 0.10), 4.6), ft, res=(700, 700)), "Face"))
     pose(({}, {}))
     items.append((shoot(OUT / "_rest_side.png", around(tgt - H, (-1, 0, 0.06), D), tgt - H, res=(700, 700)), "Rest side (standing)"))
-    for i in (2, 3, 1):
+    pose(lifted(HOVER_MID))
+    for k, lab, loc, t in CLOSEUPS:
+        items.append((shoot(OUT / f"_{k}.png", loc, t, res=(700, 700)), lab))
+    for i in (3,):
         pose(lifted(POSES[i][1]))
         place_cone(POSES[i][4])
         items.append((shoot(OUT / f"_pose{i}.png", POSES[i][2], POSES[i][3], res=(700, 700)), POSES[i][0]))
@@ -1721,6 +1912,8 @@ elif not NO_PREVIEWS:
     pose(lifted(HOVER_MID))
     shots = [(shoot(OUT / f"{k}.png", around(t, dv, dd), t), lab) for k, lab, dv, dd, t in VIEWS]
     face = shoot(OUT / "face-closeup.png", around(ft, (-0.35, -1, 0.10), 4.6), ft, res=(1400, 1400))
+    for k, lab, loc, t in CLOSEUPS:
+        shoot(OUT / f"{k}.png", loc, t, res=(1000, 1000))
     pose_items = []
     for i, (lab, rl, loc, t, fire) in enumerate(POSES):
         pose(lifted(rl))

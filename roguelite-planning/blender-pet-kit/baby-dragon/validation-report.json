@@ -2,28 +2,80 @@
   "fbx": {
     "file": "exports/fbx/baby-dragon.fbx",
     "ok": true,
-    "objects": 12,
-    "total_triangles": 9500,
-    "height_studs": 2.4429,
+    "objects": 14,
+    "total_triangles": 10962,
+    "height_studs": 2.445,
     "lowest_z": 0.0002,
     "problems": [],
     "parts": {
+      "BabyDragon_ArmL": {
+        "triangles": 380,
+        "pivot": [
+          0.3,
+          -0.1,
+          1.0
+        ],
+        "bbox_min": [
+          0.1736,
+          -0.7402,
+          0.6732
+        ],
+        "bbox_max": [
+          0.4937,
+          0.0177,
+          1.1211
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_ArmR": {
+        "triangles": 380,
+        "pivot": [
+          -0.3,
+          -0.1,
+          1.0
+        ],
+        "bbox_min": [
+          -0.4937,
+          -0.7402,
+          0.6732
+        ],
+        "bbox_max": [
+          -0.1736,
+          0.0177,
+          1.1211
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
       "BabyDragon_Back_Glow": {
         "triangles": 180,
         "pivot": [
           0.0004,
-          0.517,
-          0.8836
+          0.5175,
+          0.8835
         ],
         "bbox_min": [
-          -0.0553,
-          0.3972,
+          -0.0561,
+          0.3971,
           0.6294
         ],
         "bbox_max": [
-          0.0562,
-          0.6368,
-          1.1378
+          0.0569,
+          0.6379,
+          1.1377
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -35,21 +87,21 @@
         ]
       },
       "BabyDragon_Body": {
-        "triangles": 2500,
+        "triangles": 2880,
         "pivot": [
           0.0,
           0.04,
           0.72
         ],
         "bbox_min": [
-          -0.5288,
-          -0.5372,
-          0.1618
+          -0.5295,
+          -0.5433,
+          0.1615
         ],
         "bbox_max": [
-          0.5286,
-          0.6191,
-          1.5228
+          0.5291,
+          0.6193,
+          1.5292
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -64,18 +116,18 @@
         "triangles": 240,
         "pivot": [
           0.0,
-          -0.394,
-          1.6379
+          -0.3967,
+          1.6372
         ],
         "bbox_min": [
-          -0.5877,
-          -0.5383,
-          1.5349
+          -0.5858,
+          -0.5403,
+          1.5341
         ],
         "bbox_max": [
-          0.5877,
-          -0.2496,
-          1.741
+          0.5858,
+          -0.2531,
+          1.7402
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -87,21 +139,21 @@
         ]
       },
       "BabyDragon_Head": {
-        "triangles": 2900,
+        "triangles": 2450,
         "pivot": [
           0.0,
           -0.13,
           1.34
         ],
         "bbox_min": [
-          -0.694,
+          -0.6931,
           -0.9924,
-          1.1185
+          1.118
         ],
         "bbox_max": [
-          0.694,
-          0.5336,
-          2.443
+          0.6931,
+          0.5328,
+          2.4452
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -217,21 +269,21 @@
         ]
       },
       "BabyDragon_WingL": {
-        "triangles": 950,
+        "triangles": 1336,
         "pivot": [
           0.22,
           0.16,
           1.08
         ],
         "bbox_min": [
-          0.0975,
-          0.0372,
-          0.7498
+          0.0949,
+          0.034,
+          0.7375
         ],
         "bbox_max": [
-          1.2425,
-          0.8927,
-          1.9031
+          1.2614,
+          0.9134,
+          1.9246
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -245,19 +297,19 @@
       "BabyDragon_WingL_Glow": {
         "triangles": 120,
         "pivot": [
-          0.383,
-          0.206,
-          1.3906
+          0.3765,
+          0.2026,
+          1.3966
         ],
         "bbox_min": [
-          0.2647,
-          0.1371,
-          1.2613
+          0.2583,
+          0.1369,
+          1.2666
         ],
         "bbox_max": [
-          0.5012,
-          0.2748,
-          1.52
+          0.4947,
+          0.2683,
+          1.5265
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -269,21 +321,21 @@
         ]
       },
       "BabyDragon_WingR": {
-        "triangles": 950,
+        "triangles": 1336,
         "pivot": [
           -0.22,
           0.16,
           1.08
         ],
         "bbox_min": [
-          -1.2425,
-          0.0372,
-          0.7498
+          -1.2614,
+          0.034,
+          0.7375
         ],
         "bbox_max": [
-          -0.0975,
-          0.8927,
-          1.9031
+          -0.0949,
+          0.9134,
+          1.9246
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -297,19 +349,19 @@
       "BabyDragon_WingR_Glow": {
         "triangles": 120,
         "pivot": [
-          -0.383,
-          0.206,
-          1.3906
+          -0.3765,
+          0.2026,
+          1.3966
         ],
         "bbox_min": [
-          -0.5012,
-          0.1371,
-          1.2613
+          -0.4947,
+          0.1369,
+          1.2666
         ],
         "bbox_max": [
-          -0.2647,
-          0.2748,
-          1.52
+          -0.2583,
+          0.2683,
+          1.5265
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -325,28 +377,80 @@
   "glb": {
     "file": "exports/glb/baby-dragon.glb",
     "ok": true,
-    "objects": 12,
-    "total_triangles": 9500,
-    "height_studs": 2.4429,
+    "objects": 14,
+    "total_triangles": 10962,
+    "height_studs": 2.445,
     "lowest_z": 0.0002,
     "problems": [],
     "parts": {
+      "BabyDragon_ArmL": {
+        "triangles": 380,
+        "pivot": [
+          0.3,
+          -0.1,
+          1.0
+        ],
+        "bbox_min": [
+          0.1736,
+          -0.7402,
+          0.6732
+        ],
+        "bbox_max": [
+          0.4937,
+          0.0177,
+          1.1211
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "BabyDragon_ArmR": {
+        "triangles": 380,
+        "pivot": [
+          -0.3,
+          -0.1,
+          1.0
+        ],
+        "bbox_min": [
+          -0.4937,
+          -0.7402,
+          0.6732
+        ],
+        "bbox_max": [
+          -0.1736,
+          0.0177,
+          1.1211
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "baby-dragon",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
       "BabyDragon_Back_Glow": {
         "triangles": 180,
         "pivot": [
           0.0004,
-          0.517,
-          0.8836
+          0.5175,
+          0.8835
         ],
         "bbox_min": [
-          -0.0553,
-          0.3972,
+          -0.0561,
+          0.3971,
           0.6294
         ],
         "bbox_max": [
-          0.0562,
-          0.6368,
-          1.1378
+          0.0569,
+          0.6379,
+          1.1377
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -358,21 +462,21 @@
         ]
       },
       "BabyDragon_Body": {
-        "triangles": 2500,
+        "triangles": 2880,
         "pivot": [
           0.0,
           0.04,
           0.72
         ],
         "bbox_min": [
-          -0.5288,
-          -0.5372,
-          0.1618
+          -0.5295,
+          -0.5433,
+          0.1615
         ],
         "bbox_max": [
-          0.5286,
-          0.6191,
-          1.5228
+          0.5291,
+          0.6193,
+          1.5292
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -387,18 +491,18 @@
         "triangles": 240,
         "pivot": [
           0.0,
-          -0.394,
-          1.6379
+          -0.3967,
+          1.6372
         ],
         "bbox_min": [
-          -0.5877,
-          -0.5383,
-          1.5349
+          -0.5858,
+          -0.5403,
+          1.5341
         ],
         "bbox_max": [
-          0.5877,
-          -0.2496,
-          1.741
+          0.5858,
+          -0.2531,
+          1.7402
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -410,21 +514,21 @@
         ]
       },
       "BabyDragon_Head": {
-        "triangles": 2900,
+        "triangles": 2450,
         "pivot": [
           0.0,
           -0.13,
           1.34
         ],
         "bbox_min": [
-          -0.694,
+          -0.6931,
           -0.9924,
-          1.1185
+          1.118
         ],
         "bbox_max": [
-          0.694,
-          0.5336,
-          2.443
+          0.6931,
+          0.5328,
+          2.4452
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -540,21 +644,21 @@
         ]
       },
       "BabyDragon_WingL": {
-        "triangles": 950,
+        "triangles": 1336,
         "pivot": [
           0.22,
           0.16,
           1.08
         ],
         "bbox_min": [
-          0.0975,
-          0.0372,
-          0.7498
+          0.0949,
+          0.034,
+          0.7375
         ],
         "bbox_max": [
-          1.2425,
-          0.8927,
-          1.9031
+          1.2614,
+          0.9134,
+          1.9246
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -568,19 +672,19 @@
       "BabyDragon_WingL_Glow": {
         "triangles": 120,
         "pivot": [
-          0.383,
-          0.206,
-          1.3906
+          0.3765,
+          0.2026,
+          1.3966
         ],
         "bbox_min": [
-          0.2647,
-          0.1371,
-          1.2613
+          0.2583,
+          0.1369,
+          1.2666
         ],
         "bbox_max": [
-          0.5012,
-          0.2748,
-          1.52
+          0.4947,
+          0.2683,
+          1.5265
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -592,21 +696,21 @@
         ]
       },
       "BabyDragon_WingR": {
-        "triangles": 950,
+        "triangles": 1336,
         "pivot": [
           -0.22,
           0.16,
           1.08
         ],
         "bbox_min": [
-          -1.2425,
-          0.0372,
-          0.7498
+          -1.2614,
+          0.034,
+          0.7375
         ],
         "bbox_max": [
-          -0.0975,
-          0.8927,
-          1.9031
+          -0.0949,
+          0.9134,
+          1.9246
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -620,19 +724,19 @@
       "BabyDragon_WingR_Glow": {
         "triangles": 120,
         "pivot": [
-          -0.383,
-          0.206,
-          1.3906
+          -0.3765,
+          0.2026,
+          1.3966
         ],
         "bbox_min": [
-          -0.5012,
-          0.1371,
-          1.2613
+          -0.4947,
+          0.1369,
+          1.2666
         ],
         "bbox_max": [
-          -0.2647,
-          0.2748,
-          1.52
+          -0.2583,
+          0.2683,
+          1.5265
         ],
         "zero_area_triangles": 0,
         "texture": [
@@ -660,6 +764,8 @@
   },
   "all_ok": true,
   "expected_parts": [
+    "BabyDragon_ArmL",
+    "BabyDragon_ArmR",
     "BabyDragon_Back_Glow",
     "BabyDragon_Body",
     "BabyDragon_Cheeks_Glow",
