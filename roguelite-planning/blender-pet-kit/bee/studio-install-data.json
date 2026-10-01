@@ -1,0 +1,605 @@
+{
+  "asset": "bee",
+  "rarity": "Rare",
+  "strong_suit": "poison (the stinger poisons enemies; the honey jar with green honey is the Rare charm)",
+  "axis": "studio = (-x, z, y) of blender; Blender front -Y = Studio front -Z",
+  "units": "studs; the model is at final size, import 1:1 and do not scale",
+  "sides": "L/R are the bee's own left/right; its left is Blender +X = Studio -X",
+  "origin": "all positions are relative to the model origin = the ground point under the world origin; the bee is modelled AT REST, lowest point (the jar) at Studio Y of about 0.02",
+  "ground_point": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "overall_size": [
+    1.0808,
+    1.1763,
+    1.6348
+  ],
+  "overall_center": [
+    0.0007,
+    0.5984,
+    0.1189
+  ],
+  "texture": "textures/bee.png",
+  "texture_note": "one shared atlas; every MeshPart uses the same TextureID (Rare: no Neon, no glow; the green honey is painted)",
+  "rest_rotation": "every part has identity rotation relative to the model at rest (wings rest 38 deg above horizontal and swept back 22 deg)",
+  "rig": "one Motor6D per part: Part0 = joint_parent, Part1 = the part, C0/C1 placed at the part's pivot",
+  "role_prop": "Bee_Jar: honey jar hung from a leather cord with a painted green (poison) honey drip; the sting/poison itself is game code",
+  "parts": {
+    "Bee_Body": {
+      "center": [
+        0.0,
+        0.5549,
+        0.2876
+      ],
+      "size": [
+        0.7792,
+        0.7289,
+        1.0323
+      ],
+      "pivot": [
+        0.0,
+        0.52,
+        0.2
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": null,
+      "suggested_motion": "root part: lifted HOVER_H studs above the ground while hovering, with a sine bob in Studio Y; pitch about Studio X for the sting dive"
+    },
+    "Bee_Head": {
+      "center": [
+        0.0,
+        0.7636,
+        -0.3295
+      ],
+      "size": [
+        0.7994,
+        0.8459,
+        0.7381
+      ],
+      "pivot": [
+        0.0,
+        0.55,
+        -0.1
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.03,
+        -0.3
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bee_Body",
+      "suggested_motion": "nod = pitch about Studio X, tilt = roll about Studio Z, look = yaw about Studio Y, through the neck joint"
+    },
+    "Bee_WingL": {
+      "center": [
+        -0.2947,
+        0.964,
+        0.2766
+      ],
+      "size": [
+        0.49,
+        0.4342,
+        0.4271
+      ],
+      "pivot": [
+        -0.1,
+        0.8,
+        0.12
+      ],
+      "pivot_from_body_pivot": [
+        -0.1,
+        0.28,
+        -0.08
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bee_Body",
+      "suggested_motion": "flap = rotate about Studio Z (the front-back axis) through the wing root; positive Z = down for the bee's left wing"
+    },
+    "Bee_WingR": {
+      "center": [
+        0.2976,
+        0.9635,
+        0.2767
+      ],
+      "size": [
+        0.487,
+        0.4323,
+        0.4281
+      ],
+      "pivot": [
+        0.1,
+        0.8,
+        0.12
+      ],
+      "pivot_from_body_pivot": [
+        0.1,
+        0.28,
+        -0.08
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bee_Body",
+      "suggested_motion": "flap = rotate about Studio Z through the wing root; positive Z = UP for the bee's right wing (mirror of WingL)"
+    },
+    "Bee_Stinger": {
+      "center": [
+        0.0034,
+        0.4404,
+        0.7853
+      ],
+      "size": [
+        0.2174,
+        0.2214,
+        0.3021
+      ],
+      "pivot": [
+        0.0,
+        0.44,
+        0.74
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        -0.08,
+        0.54
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bee_Body",
+      "suggested_motion": "pitch about Studio X through the abdomen tip: rest points back and slightly down, -135 deg aims it down and a little forward for the sting"
+    },
+    "Bee_LegL": {
+      "center": [
+        -0.1831,
+        0.2511,
+        0.2015
+      ],
+      "size": [
+        0.1226,
+        0.2117,
+        0.5265
+      ],
+      "pivot": [
+        -0.2,
+        0.3,
+        0.1
+      ],
+      "pivot_from_body_pivot": [
+        -0.2,
+        -0.22,
+        -0.1
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bee_Body",
+      "suggested_motion": "dangle: small pitch about Studio X through the hip (three stubby legs move together); tuck back in the dive"
+    },
+    "Bee_LegR": {
+      "center": [
+        0.1864,
+        0.2511,
+        0.2031
+      ],
+      "size": [
+        0.1243,
+        0.2113,
+        0.5259
+      ],
+      "pivot": [
+        0.2,
+        0.3,
+        0.1
+      ],
+      "pivot_from_body_pivot": [
+        0.2,
+        -0.22,
+        -0.1
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bee_Body",
+      "suggested_motion": "dangle: small pitch about Studio X through the hip (three stubby legs move together); tuck back in the dive"
+    },
+    "Bee_Jar": {
+      "center": [
+        -0.0005,
+        0.2207,
+        -0.2881
+      ],
+      "size": [
+        0.3181,
+        0.4208,
+        0.3774
+      ],
+      "pivot": [
+        0.0,
+        0.4,
+        -0.12
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        -0.12,
+        -0.32
+      ],
+      "pivot_is": "joint pivot",
+      "joint_parent": "Bee_Body",
+      "suggested_motion": "pendulum swing about Studio X (and a little Z) through the cord's top point inside the chest"
+    }
+  },
+  "locomotion": "hover",
+  "hover": {
+    "hover_height_studs": 1.2,
+    "overall_height_at_hover_studs": 2.376,
+    "how": "the model stands on the ground (lowest point (the jar) at Studio Y of about 0.02); lift the Body root by hover_height_studs (plus the bob) and keep every other part joined to it. The tiny leg nubs are tucked under the belly; nothing touches the ground while hovering.",
+    "bob": {
+      "amplitude_studs": 0.1,
+      "period_s": 1.4,
+      "formula": "body_up = hover_height_studs + amplitude_studs * sin(2*pi*t/period_s)",
+      "extra": "pitch the Body +-4 deg about Studio X in time with the bob; nose-down when moving forward fast"
+    },
+    "wing_flap": {
+      "frequency_hz": 12,
+      "note": "alternate wings_up and wings_down every ~0.04 s (about 12 Hz, 2-3 frames at 60 fps; on the server just replicate the speed). Both wings mirror each other. Angles are DELTAS from the rest pose (wings 38 deg above horizontal, swept back 22 deg): up = 68 deg above horizontal, down = 24 deg below it.",
+      "WingL_studio_rz_deg": {
+        "up": -30,
+        "down": 62
+      },
+      "WingR_studio_rz_deg": {
+        "up": 30,
+        "down": -62
+      },
+      "body_lift_with_stroke": "the body rises 0.07 studs on the down stroke and sinks 0.07 on the up stroke"
+    },
+    "sting_dive": {
+      "note": "windup (body nose-up, stinger tipped up), then dive: body pitched 38 deg nose-down, head -18 so it still looks at the target, stinger rotated -135 deg to aim down and slightly forward at the enemy, wings swept back and up, legs tucked a little, jar swung forward. Net result: the stinger points about 17 deg forward of straight down. Dive down to body_up 0.85 studs, hit, then recover to hover_mid.",
+      "dive_distance_studs": 3.0,
+      "recover_time_s": 0.35
+    },
+    "frames": {
+      "hover_mid": {
+        "duration_s": 0.0,
+        "body_up_studs": 1.2,
+        "joints": {}
+      },
+      "wings_up": {
+        "duration_s": 0.04,
+        "body_up_studs": 1.13,
+        "joints": {
+          "Bee_WingL": {
+            "blender_rot_deg": [
+              0,
+              -30,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              -30
+            ]
+          },
+          "Bee_WingR": {
+            "blender_rot_deg": [
+              0,
+              30,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              30
+            ]
+          },
+          "Bee_LegL": {
+            "blender_rot_deg": [
+              4,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -4,
+              0,
+              0
+            ]
+          },
+          "Bee_LegR": {
+            "blender_rot_deg": [
+              4,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -4,
+              0,
+              0
+            ]
+          },
+          "Bee_Jar": {
+            "blender_rot_deg": [
+              -4,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              4,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "wings_down": {
+        "duration_s": 0.04,
+        "body_up_studs": 1.27,
+        "joints": {
+          "Bee_WingL": {
+            "blender_rot_deg": [
+              0,
+              62,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              62
+            ]
+          },
+          "Bee_WingR": {
+            "blender_rot_deg": [
+              0,
+              -62,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              -62
+            ]
+          },
+          "Bee_LegL": {
+            "blender_rot_deg": [
+              -3,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              3,
+              0,
+              0
+            ]
+          },
+          "Bee_LegR": {
+            "blender_rot_deg": [
+              -3,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              3,
+              0,
+              0
+            ]
+          },
+          "Bee_Jar": {
+            "blender_rot_deg": [
+              4,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -4,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "sting_windup": {
+        "duration_s": 0.22,
+        "body_up_studs": 1.38,
+        "joints": {
+          "Bee_Body": {
+            "blender_rot_deg": [
+              -16,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              16,
+              0,
+              0
+            ]
+          },
+          "Bee_Head": {
+            "blender_rot_deg": [
+              6,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -6,
+              0,
+              0
+            ]
+          },
+          "Bee_Stinger": {
+            "blender_rot_deg": [
+              10,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -10,
+              0,
+              0
+            ]
+          },
+          "Bee_WingL": {
+            "blender_rot_deg": [
+              0,
+              -34,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              -34
+            ]
+          },
+          "Bee_WingR": {
+            "blender_rot_deg": [
+              0,
+              34,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              34
+            ]
+          },
+          "Bee_LegL": {
+            "blender_rot_deg": [
+              0,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              0
+            ]
+          },
+          "Bee_LegR": {
+            "blender_rot_deg": [
+              0,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              0,
+              0,
+              0
+            ]
+          },
+          "Bee_Jar": {
+            "blender_rot_deg": [
+              8,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -8,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "sting_dive": {
+        "duration_s": 0.18,
+        "body_up_studs": 0.85,
+        "joints": {
+          "Bee_Body": {
+            "blender_rot_deg": [
+              38,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -38,
+              0,
+              0
+            ]
+          },
+          "Bee_Head": {
+            "blender_rot_deg": [
+              -18,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              18,
+              0,
+              0
+            ]
+          },
+          "Bee_Stinger": {
+            "blender_rot_deg": [
+              -135,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              135,
+              0,
+              0
+            ]
+          },
+          "Bee_WingL": {
+            "blender_rot_deg": [
+              0,
+              -30,
+              20
+            ],
+            "studio_rot_deg": [
+              0,
+              20,
+              -30
+            ]
+          },
+          "Bee_WingR": {
+            "blender_rot_deg": [
+              0,
+              30,
+              -20
+            ],
+            "studio_rot_deg": [
+              0,
+              -20,
+              30
+            ]
+          },
+          "Bee_LegL": {
+            "blender_rot_deg": [
+              6,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -6,
+              0,
+              0
+            ]
+          },
+          "Bee_LegR": {
+            "blender_rot_deg": [
+              6,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              -6,
+              0,
+              0
+            ]
+          },
+          "Bee_Jar": {
+            "blender_rot_deg": [
+              -14,
+              0,
+              0
+            ],
+            "studio_rot_deg": [
+              14,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "angle_convention": "blender_rot_deg = about world X, Y, Z; studio_rot_deg = [about Studio X, about Studio Y, about Studio Z] = [-bx, bz, by]. Apply as CFrame.Angles(rad(sx), rad(sy), rad(sz)) in the joint's pivot frame, relative to the rest pose."
+  }
+}

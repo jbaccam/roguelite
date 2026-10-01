@@ -1,0 +1,465 @@
+{
+  "fbx": {
+    "file": "exports/fbx/bee.fbx",
+    "ok": true,
+    "objects": 8,
+    "total_triangles": 4794,
+    "head_top_studs": 1.1866,
+    "length_studs": 1.6348,
+    "problems": [],
+    "parts": {
+      "Bee_Body": {
+        "triangles": 1498,
+        "pivot": [
+          0.0,
+          0.2,
+          0.52
+        ],
+        "bbox_min": [
+          -0.3896,
+          -0.2286,
+          0.1905
+        ],
+        "bbox_max": [
+          0.3896,
+          0.8037,
+          0.9194
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bee_Head": {
+        "triangles": 1500,
+        "pivot": [
+          0.0,
+          -0.1,
+          0.55
+        ],
+        "bbox_min": [
+          -0.3997,
+          -0.6985,
+          0.3406
+        ],
+        "bbox_max": [
+          0.3997,
+          0.0396,
+          1.1866
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bee_Jar": {
+        "triangles": 700,
+        "pivot": [
+          0.0,
+          -0.12,
+          0.4
+        ],
+        "bbox_min": [
+          -0.1585,
+          -0.4769,
+          0.0102
+        ],
+        "bbox_max": [
+          0.1595,
+          -0.0994,
+          0.4311
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bee_LegL": {
+        "triangles": 164,
+        "pivot": [
+          0.2,
+          0.1,
+          0.3
+        ],
+        "bbox_min": [
+          0.1218,
+          -0.0617,
+          0.1452
+        ],
+        "bbox_max": [
+          0.2444,
+          0.4647,
+          0.357
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bee_LegR": {
+        "triangles": 164,
+        "pivot": [
+          -0.2,
+          0.1,
+          0.3
+        ],
+        "bbox_min": [
+          -0.2485,
+          -0.0599,
+          0.1454
+        ],
+        "bbox_max": [
+          -0.1243,
+          0.4661,
+          0.3568
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bee_Stinger": {
+        "triangles": 88,
+        "pivot": [
+          0.0,
+          0.74,
+          0.44
+        ],
+        "bbox_min": [
+          -0.1121,
+          0.6342,
+          0.3298
+        ],
+        "bbox_max": [
+          0.1053,
+          0.9363,
+          0.5511
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bee_WingL": {
+        "triangles": 340,
+        "pivot": [
+          0.1,
+          0.12,
+          0.8
+        ],
+        "bbox_min": [
+          0.0497,
+          0.0631,
+          0.7469
+        ],
+        "bbox_max": [
+          0.5397,
+          0.4902,
+          1.1811
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bee_WingR": {
+        "triangles": 340,
+        "pivot": [
+          -0.1,
+          0.12,
+          0.8
+        ],
+        "bbox_min": [
+          -0.5411,
+          0.0627,
+          0.7474
+        ],
+        "bbox_max": [
+          -0.0541,
+          0.4908,
+          1.1797
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "glb": {
+    "file": "exports/glb/bee.glb",
+    "ok": true,
+    "objects": 8,
+    "total_triangles": 4794,
+    "head_top_studs": 1.1866,
+    "length_studs": 1.6348,
+    "problems": [],
+    "parts": {
+      "Bee_Body": {
+        "triangles": 1498,
+        "pivot": [
+          0.0,
+          0.2,
+          0.52
+        ],
+        "bbox_min": [
+          -0.3896,
+          -0.2286,
+          0.1905
+        ],
+        "bbox_max": [
+          0.3896,
+          0.8037,
+          0.9194
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bee_Head": {
+        "triangles": 1500,
+        "pivot": [
+          0.0,
+          -0.1,
+          0.55
+        ],
+        "bbox_min": [
+          -0.3997,
+          -0.6985,
+          0.3406
+        ],
+        "bbox_max": [
+          0.3997,
+          0.0396,
+          1.1866
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bee_Jar": {
+        "triangles": 700,
+        "pivot": [
+          0.0,
+          -0.12,
+          0.4
+        ],
+        "bbox_min": [
+          -0.1585,
+          -0.4769,
+          0.0102
+        ],
+        "bbox_max": [
+          0.1595,
+          -0.0994,
+          0.4311
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bee_LegL": {
+        "triangles": 164,
+        "pivot": [
+          0.2,
+          0.1,
+          0.3
+        ],
+        "bbox_min": [
+          0.1218,
+          -0.0617,
+          0.1452
+        ],
+        "bbox_max": [
+          0.2444,
+          0.4647,
+          0.357
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bee_LegR": {
+        "triangles": 164,
+        "pivot": [
+          -0.2,
+          0.1,
+          0.3
+        ],
+        "bbox_min": [
+          -0.2485,
+          -0.0599,
+          0.1454
+        ],
+        "bbox_max": [
+          -0.1243,
+          0.4661,
+          0.3568
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bee_Stinger": {
+        "triangles": 88,
+        "pivot": [
+          0.0,
+          0.74,
+          0.44
+        ],
+        "bbox_min": [
+          -0.1121,
+          0.6342,
+          0.3298
+        ],
+        "bbox_max": [
+          0.1053,
+          0.9363,
+          0.5511
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bee_WingL": {
+        "triangles": 340,
+        "pivot": [
+          0.1,
+          0.12,
+          0.8
+        ],
+        "bbox_min": [
+          0.0497,
+          0.0631,
+          0.7469
+        ],
+        "bbox_max": [
+          0.5397,
+          0.4902,
+          1.1811
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Bee_WingR": {
+        "triangles": 340,
+        "pivot": [
+          -0.1,
+          0.12,
+          0.8
+        ],
+        "bbox_min": [
+          -0.5411,
+          0.0627,
+          0.7474
+        ],
+        "bbox_max": [
+          -0.0541,
+          0.4908,
+          1.1797
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "bee",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "texture": {
+    "file": "textures/bee.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "ok": true
+  },
+  "install_data": {
+    "file": "studio-install-data.json",
+    "ok": true,
+    "problems": []
+  },
+  "all_ok": true,
+  "expected_parts": [
+    "Bee_Body",
+    "Bee_Head",
+    "Bee_Jar",
+    "Bee_LegL",
+    "Bee_LegR",
+    "Bee_Stinger",
+    "Bee_WingL",
+    "Bee_WingR"
+  ],
+  "scope": "Blender re-import only (Blender 5.2.1 LTS); Studio untested"
+}

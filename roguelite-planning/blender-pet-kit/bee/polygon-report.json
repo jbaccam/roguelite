@@ -1,0 +1,283 @@
+{
+  "asset": "bee",
+  "blender_version": "5.2.1 LTS",
+  "authoring": "final Roblox stud size (1 Blender unit = 1 stud); import at 1:1, do not scale",
+  "axes": "Blender Z-up, front -Y, the bee's left +X; modelled at rest, lowest point (the jar) at z of about 0.02 (hover offset is in studio-install-data.json)",
+  "texture": "textures/bee.png (1024x1024, shared by every part)",
+  "parts": {
+    "Bee_Body": {
+      "triangles": 1498,
+      "vertices": 751,
+      "dimensions_studs": [
+        0.7792,
+        1.0323,
+        0.7289
+      ],
+      "bbox_min": [
+        -0.3896,
+        -0.2286,
+        0.1905
+      ],
+      "bbox_max": [
+        0.3896,
+        0.8037,
+        0.9194
+      ],
+      "pivot": [
+        0.0,
+        0.2,
+        0.52
+      ],
+      "joint_parent": null,
+      "uv_range": [
+        0.005,
+        0.7545,
+        0.0048,
+        0.9574
+      ],
+      "min_face_area": 0.00039394
+    },
+    "Bee_Head": {
+      "triangles": 1500,
+      "vertices": 752,
+      "dimensions_studs": [
+        0.7994,
+        0.7381,
+        0.8459
+      ],
+      "bbox_min": [
+        -0.3997,
+        -0.6985,
+        0.3406
+      ],
+      "bbox_max": [
+        0.3997,
+        0.0396,
+        1.1866
+      ],
+      "pivot": [
+        0.0,
+        -0.1,
+        0.55
+      ],
+      "joint_parent": "Bee_Body",
+      "uv_range": [
+        0.0052,
+        0.9332,
+        0.0045,
+        0.9956
+      ],
+      "min_face_area": 0.00027925
+    },
+    "Bee_WingL": {
+      "triangles": 340,
+      "vertices": 172,
+      "dimensions_studs": [
+        0.49,
+        0.4271,
+        0.4342
+      ],
+      "bbox_min": [
+        0.0497,
+        0.0631,
+        0.7469
+      ],
+      "bbox_max": [
+        0.5397,
+        0.4902,
+        1.1811
+      ],
+      "pivot": [
+        0.1,
+        0.12,
+        0.8
+      ],
+      "joint_parent": "Bee_Body",
+      "uv_range": [
+        0.0106,
+        0.8985,
+        0.0054,
+        0.7736
+      ],
+      "min_face_area": 0.00029745
+    },
+    "Bee_WingR": {
+      "triangles": 340,
+      "vertices": 172,
+      "dimensions_studs": [
+        0.487,
+        0.4281,
+        0.4323
+      ],
+      "bbox_min": [
+        -0.5411,
+        0.0627,
+        0.7474
+      ],
+      "bbox_max": [
+        -0.0541,
+        0.4908,
+        1.1797
+      ],
+      "pivot": [
+        -0.1,
+        0.12,
+        0.8
+      ],
+      "joint_parent": "Bee_Body",
+      "uv_range": [
+        0.006,
+        0.7701,
+        0.0055,
+        0.8985
+      ],
+      "min_face_area": 0.00032999
+    },
+    "Bee_Stinger": {
+      "triangles": 88,
+      "vertices": 46,
+      "dimensions_studs": [
+        0.2174,
+        0.3021,
+        0.2214
+      ],
+      "bbox_min": [
+        -0.1121,
+        0.6342,
+        0.3298
+      ],
+      "bbox_max": [
+        0.1053,
+        0.9363,
+        0.5511
+      ],
+      "pivot": [
+        0.0,
+        0.74,
+        0.44
+      ],
+      "joint_parent": "Bee_Body",
+      "uv_range": [
+        0.0054,
+        0.9748,
+        0.0045,
+        0.9505
+      ],
+      "min_face_area": 9.63e-05
+    },
+    "Bee_LegL": {
+      "triangles": 164,
+      "vertices": 88,
+      "dimensions_studs": [
+        0.1226,
+        0.5265,
+        0.2117
+      ],
+      "bbox_min": [
+        0.1218,
+        -0.0617,
+        0.1452
+      ],
+      "bbox_max": [
+        0.2444,
+        0.4647,
+        0.357
+      ],
+      "pivot": [
+        0.2,
+        0.1,
+        0.3
+      ],
+      "joint_parent": "Bee_Body",
+      "uv_range": [
+        0.005,
+        0.9887,
+        0.1359,
+        0.9921
+      ],
+      "min_face_area": 0.0002387
+    },
+    "Bee_LegR": {
+      "triangles": 164,
+      "vertices": 88,
+      "dimensions_studs": [
+        0.1243,
+        0.5259,
+        0.2113
+      ],
+      "bbox_min": [
+        -0.2485,
+        -0.0599,
+        0.1454
+      ],
+      "bbox_max": [
+        -0.1243,
+        0.4661,
+        0.3568
+      ],
+      "pivot": [
+        -0.2,
+        0.1,
+        0.3
+      ],
+      "joint_parent": "Bee_Body",
+      "uv_range": [
+        0.1734,
+        0.9679,
+        0.0049,
+        0.9748
+      ],
+      "min_face_area": 0.0003617
+    },
+    "Bee_Jar": {
+      "triangles": 700,
+      "vertices": 350,
+      "dimensions_studs": [
+        0.3181,
+        0.3774,
+        0.4208
+      ],
+      "bbox_min": [
+        -0.1585,
+        -0.4769,
+        0.0102
+      ],
+      "bbox_max": [
+        0.1595,
+        -0.0994,
+        0.4311
+      ],
+      "pivot": [
+        0.0,
+        -0.12,
+        0.4
+      ],
+      "joint_parent": "Bee_Body",
+      "uv_range": [
+        0.0045,
+        0.9679,
+        0.0044,
+        0.9887
+      ],
+      "min_face_area": 9.457e-05
+    }
+  },
+  "total_triangles": 4794,
+  "overall": {
+    "bbox_min": [
+      -0.5411,
+      -0.6985,
+      0.0102
+    ],
+    "bbox_max": [
+      0.5397,
+      0.9363,
+      1.1866
+    ],
+    "height_studs": 1.1763,
+    "length_studs": 1.6348,
+    "width_studs": 1.0808,
+    "height_with_hover_studs": 2.3763,
+    "head_top_studs": 1.1866
+  }
+}
