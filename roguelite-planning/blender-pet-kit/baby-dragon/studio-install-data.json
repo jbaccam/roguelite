@@ -2,127 +2,127 @@
   "asset": "baby-dragon",
   "rarity": "Legendary",
   "strong_suit": "Fire: small fire breaths that burn groups (BurnChance on every enemy in the breath cone)",
-  "accent": "Neon ember markings (cheeks, flanks, chest, tail dots) and a Neon tail-tip flame, plus the particle specs below",
+  "accent": "Neon ember streaks on the cheeks and wing arms, ember tops on the spine bumps, ember dots on the tail, a Neon tail-tip flame, plus the particle specs below",
   "role_prop": "the fire itself (breath + tail flame); no extra prop",
   "axis": "studio = (-x, z, y) of blender; Blender front -Y = Studio front -Z",
   "units": "studs; the model is at final size, import 1:1 and do not scale",
   "sides": "L/R are the dragon's own left/right; its left is Blender +X = Studio -X",
-  "origin": "all positions are relative to the model origin = the ground point under the model centre (Blender world origin)",
+  "origin": "all positions are relative to the model origin = the ground point under the model centre (Blender world origin); the feet stand on it at rest",
   "ground_point": [
     0.0,
     0.0,
     0.0
   ],
   "overall_size": [
-    1.7733,
-    2.3576,
-    2.1287
+    2.485,
+    2.4429,
+    2.4856
   ],
   "overall_center": [
     0.0,
-    1.1794,
-    0.2118
+    1.2216,
+    0.2504
   ],
   "texture": "textures/baby-dragon.png",
-  "texture_note": "one shared atlas on every MeshPart via MeshPart.TextureID. The three *_Glow parts: Material = Neon, Color = [255, 150, 46] (their atlas texels are that colour too)",
+  "texture_note": "one shared atlas on every MeshPart via MeshPart.TextureID. The five *_Glow parts: Material = Neon, Color = [255, 150, 46] (their atlas texels are that colour too)",
   "rest_rotation": "every part has identity rotation relative to the model at rest",
   "rig": "one Motor6D per animated part: Part0 = joint_parent, Part1 = the part, C0/C1 at the part's pivot; the *_Glow parts are WeldConstraints to their carrier",
   "parts": {
     "BabyDragon_Body": {
       "center": [
-        0.0,
-        0.7684,
-        0.0019
+        0.0001,
+        0.8423,
+        0.0409
       ],
       "size": [
-        1.0092,
-        1.2514,
-        1.1432
+        1.0575,
+        1.3611,
+        1.1563
       ],
       "pivot": [
         0.0,
-        0.7,
-        0.06
+        0.72,
+        0.04
       ],
       "pivot_from_body_pivot": [
         0.0,
         0.0,
         0.0
       ],
-      "pivot_is": "root (belly centre)",
+      "pivot_is": "root (centre of the pot belly)",
       "joint_parent": null,
-      "suggested_motion": "root: waddle roll about Studio Z (+/-7 deg) with a small bob; hop-glide lifts it 0.6 studs and pitches 14 deg nose-down; fire breath leans back 8 deg"
+      "suggested_motion": "root: hovers 1.5 studs up, bobs with the wingbeat (+0.10 on the up-beat, -0.08 on the down-beat); glide pitches 12 deg nose-down; fire breath leans back 10 deg"
     },
     "BabyDragon_Head": {
       "center": [
         0.0,
-        1.6818,
-        -0.2249
+        1.7807,
+        -0.2294
       ],
       "size": [
-        1.5105,
-        1.3527,
-        1.2552
+        1.388,
+        1.3246,
+        1.526
       ],
       "pivot": [
         0.0,
-        1.22,
-        -0.1
+        1.34,
+        -0.13
       ],
       "pivot_from_body_pivot": [
         0.0,
-        0.52,
-        -0.16
+        0.62,
+        -0.17
       ],
-      "pivot_is": "neck, hidden inside the head and chest",
+      "pivot_is": "neck, hidden inside the head and the neck",
       "joint_parent": "BabyDragon_Body",
-      "suggested_motion": "nod = pitch about Studio X, look = yaw about Studio Y, tilt = roll about Studio Z; fire breath: nose up 22 deg and 0.06 studs forward"
+      "suggested_motion": "nod = pitch about Studio X, look = yaw about Studio Y, tilt = roll about Studio Z; fire breath: nose up 20 deg, 0.05 studs forward"
     },
     "BabyDragon_WingL": {
       "center": [
-        -0.5099,
-        1.1781,
-        0.5196
+        -0.67,
+        1.3264,
+        0.465
       ],
       "size": [
-        0.7535,
-        0.7567,
-        0.7726
+        1.145,
+        1.1532,
+        0.8555
       ],
       "pivot": [
-        -0.26,
+        -0.22,
         1.08,
-        0.26
+        0.16
       ],
       "pivot_from_body_pivot": [
-        -0.26,
-        0.38,
-        0.2
+        -0.22,
+        0.36,
+        0.12
       ],
       "pivot_is": "shoulder (round wing root sunk into the upper back)",
       "joint_parent": "BabyDragon_Body",
-      "suggested_motion": "flap = rotate about Studio Z through the shoulder (+ raises the left wing in Blender-bone terms; see locomotion_data); glide = spread forward and down"
+      "suggested_motion": "wingbeat = rotate about Studio Z through the shoulder: wings_up / wings_down frames (big, slow: 0.8 s per beat); glide flattens and spreads"
     },
     "BabyDragon_WingR": {
       "center": [
-        0.5099,
-        1.1781,
-        0.5196
+        0.67,
+        1.3264,
+        0.465
       ],
       "size": [
-        0.7535,
-        0.7567,
-        0.7726
+        1.145,
+        1.1532,
+        0.8555
       ],
       "pivot": [
-        0.26,
+        0.22,
         1.08,
-        0.26
+        0.16
       ],
       "pivot_from_body_pivot": [
-        0.26,
-        0.38,
-        0.2
+        0.22,
+        0.36,
+        0.12
       ],
       "pivot_is": "shoulder (round wing root sunk into the upper back)",
       "joint_parent": "BabyDragon_Body",
@@ -130,160 +130,716 @@
     },
     "BabyDragon_LegL": {
       "center": [
-        -0.3287,
-        0.3003,
-        -0.0408
+        -0.3515,
+        0.2422,
+        -0.1932
       ],
       "size": [
-        0.3935,
-        0.5996,
-        0.7146
+        0.2964,
+        0.4841,
+        0.4783
       ],
       "pivot": [
-        -0.3,
-        0.42,
-        0.08
+        -0.34,
+        0.36,
+        -0.08
       ],
       "pivot_from_body_pivot": [
-        -0.3,
-        -0.28,
-        0.02
+        -0.34,
+        -0.36,
+        -0.12
       ],
-      "pivot_is": "hip, inside the round thigh",
+      "pivot_is": "knee, hidden inside the thigh fused to the hip",
       "joint_parent": "BabyDragon_Body",
-      "suggested_motion": "waddle swing about Studio X through the hip (+/-22 deg) with a 0.07 stud lift; tucked back 30 deg in a glide"
+      "suggested_motion": "knee joint: tucked 20 deg forward while flying, swing +/-22 deg in the landing waddle"
     },
     "BabyDragon_LegR": {
       "center": [
-        0.3287,
-        0.3003,
-        -0.0408
+        0.3515,
+        0.2422,
+        -0.1932
       ],
       "size": [
-        0.3935,
-        0.5996,
-        0.7146
+        0.2964,
+        0.4841,
+        0.4783
       ],
       "pivot": [
-        0.3,
-        0.42,
-        0.08
+        0.34,
+        0.36,
+        -0.08
       ],
       "pivot_from_body_pivot": [
-        0.3,
-        -0.28,
-        0.02
+        0.34,
+        -0.36,
+        -0.12
       ],
-      "pivot_is": "hip, inside the round thigh",
+      "pivot_is": "knee, hidden inside the thigh fused to the hip",
       "joint_parent": "BabyDragon_Body",
-      "suggested_motion": "mirror of LegL, opposite phase"
+      "suggested_motion": "mirror of LegL"
     },
     "BabyDragon_Tail": {
       "center": [
         0.0,
-        0.4707,
-        0.7327
+        0.4897,
+        0.7838
       ],
       "size": [
-        0.4038,
-        0.7008,
-        1.0392
+        0.4583,
+        0.5183,
+        1.3434
       ],
       "pivot": [
         0.0,
-        0.4,
-        0.38
+        0.52,
+        0.3
       ],
       "pivot_from_body_pivot": [
         0.0,
-        -0.3,
-        0.32
+        -0.2,
+        0.26
       ],
-      "pivot_is": "tail root, inside the lower back",
+      "pivot_is": "tail root, inside the tail stub of the body",
       "joint_parent": "BabyDragon_Body",
-      "suggested_motion": "swish = yaw about Studio Y (+/-28 deg), counter-swings the waddle"
+      "suggested_motion": "hangs 12 deg down in flight; swish = yaw about Studio Y (+/-30 deg)"
     },
     "BabyDragon_Cheeks_Glow": {
       "center": [
         0.0,
-        1.5051,
-        -0.3519
+        1.6379,
+        -0.394
       ],
       "size": [
-        1.281,
-        0.2122,
-        0.249
+        1.1753,
+        0.2061,
+        0.2886
       ],
       "pivot": [
         0.0,
-        1.5051,
-        -0.3519
+        1.6379,
+        -0.394
       ],
       "pivot_from_body_pivot": [
         0.0,
-        0.8051,
-        -0.4119
+        0.9179,
+        -0.434
       ],
-      "pivot_is": "centre of the cheek ember marks (welded to the head, Neon)",
+      "pivot_is": "centre of the cheek ember streaks (welded to the head, Neon)",
       "joint_parent": "BabyDragon_Head",
-      "suggested_motion": "none (WeldConstraint to the head); Material Neon, gentle Transparency pulse"
+      "suggested_motion": "none (WeldConstraint to BabyDragon_Head); Material Neon"
     },
-    "BabyDragon_Embers_Glow": {
+    "BabyDragon_Back_Glow": {
       "center": [
-        0.0001,
-        0.8158,
-        -0.0891
+        -0.0004,
+        0.8836,
+        0.517
       ],
       "size": [
-        1.0254,
-        0.402,
-        0.6955
+        0.1115,
+        0.5084,
+        0.2396
       ],
       "pivot": [
-        0.0001,
-        0.8158,
-        -0.0891
+        -0.0004,
+        0.8836,
+        0.517
       ],
       "pivot_from_body_pivot": [
-        0.0001,
-        0.1158,
-        -0.1491
+        -0.0004,
+        0.1636,
+        0.477
       ],
-      "pivot_is": "centre of the flank and chest ember marks (welded to the body, Neon)",
+      "pivot_is": "centre of the ember tops of the spine bumps (welded to the body, Neon)",
       "joint_parent": "BabyDragon_Body",
-      "suggested_motion": "none (WeldConstraint to the body); Material Neon"
+      "suggested_motion": "none (WeldConstraint to BabyDragon_Body); Material Neon"
+    },
+    "BabyDragon_WingL_Glow": {
+      "center": [
+        -0.383,
+        1.3906,
+        0.206
+      ],
+      "size": [
+        0.2365,
+        0.2587,
+        0.1377
+      ],
+      "pivot": [
+        -0.383,
+        1.3906,
+        0.206
+      ],
+      "pivot_from_body_pivot": [
+        -0.383,
+        0.6706,
+        0.166
+      ],
+      "pivot_is": "centre of the ember streaks on the left wing arm (welded to WingL, Neon)",
+      "joint_parent": "BabyDragon_WingL",
+      "suggested_motion": "none (WeldConstraint to BabyDragon_WingL); Material Neon"
+    },
+    "BabyDragon_WingR_Glow": {
+      "center": [
+        0.383,
+        1.3906,
+        0.206
+      ],
+      "size": [
+        0.2365,
+        0.2587,
+        0.1377
+      ],
+      "pivot": [
+        0.383,
+        1.3906,
+        0.206
+      ],
+      "pivot_from_body_pivot": [
+        0.383,
+        0.6706,
+        0.166
+      ],
+      "pivot_is": "centre of the ember streaks on the right wing arm (welded to WingR, Neon)",
+      "joint_parent": "BabyDragon_WingR",
+      "suggested_motion": "none (WeldConstraint to BabyDragon_WingR); Material Neon"
     },
     "BabyDragon_TailFlame_Glow": {
       "center": [
         0.0002,
-        0.7844,
-        0.9654
+        0.7506,
+        1.036
       ],
       "size": [
-        0.2608,
-        0.6198,
-        0.6215
+        0.2511,
+        0.4749,
+        0.9143
       ],
       "pivot": [
         0.0002,
-        0.7844,
-        0.9654
+        0.7506,
+        1.036
       ],
       "pivot_from_body_pivot": [
         0.0002,
-        0.0844,
-        0.9054
+        0.0306,
+        0.996
       ],
-      "pivot_is": "centre of the tail-tip flame and tail ember dots (welded to the tail, Neon)",
+      "pivot_is": "centre of the tail flame and tail ember dots (welded to the tail, Neon)",
       "joint_parent": "BabyDragon_Tail",
-      "suggested_motion": "none (WeldConstraint to the tail); Material Neon, flicker the flame's Transparency"
+      "suggested_motion": "none (WeldConstraint to BabyDragon_Tail); Material Neon"
     }
   },
-  "locomotion": "waddle_glide",
+  "locomotion": "fly",
   "locomotion_data": {
-    "gait": "waddle: quick side-to-side waddle on the stubby hind legs, body rolls over the planted foot, the wings give little balance flaps and the tail counter-swings; every few seconds (or to cross gaps) a short hop-glide with the wings spread",
-    "angle_convention": "per part, rotation about the part's own pivot in Studio axes (Roblox CFrame.Angles, degrees) plus a translation offset in studs applied in the parent's frame (Motor6D C0). Only parts that move are listed; others stay at rest. Blender bone angles in the previews map as Studio X = -bone X, Studio Y = bone Y, Studio Z = -bone Z.",
-    "waddle": {
+    "gait": "fly: hovers about 1.5 studs up with big, slow wingbeats, legs tucked a little forward and the tail hanging; flies to targets in short glides; lands and waddles only as an extra (e.g. idle on the ground)",
+    "hover_height_studs": 1.5,
+    "angle_convention": "per part, rotation about the part's own pivot in Studio axes (Roblox CFrame.Angles, degrees) plus a translation offset in studs applied in the parent's frame (Motor6D C0). Only parts that move are listed; others stay at rest. Flight frames are relative to the hovering root (add hover_height_studs to the root). Blender bone angles in the previews map as Studio X = -bone X, Studio Y = bone Y, Studio Z = -bone Z.",
+    "wingbeat": {
+      "period_s": 0.8,
+      "loop": [
+        "wings_up",
+        "hover_mid",
+        "wings_down",
+        "hover_mid"
+      ],
+      "bob_studs": [
+        0.1,
+        -0.08
+      ],
+      "note": "big and slow; ease in/out at wings_up and wings_down"
+    },
+    "glide": {
+      "note": "used while travelling to a target: hold 0.4-0.8 s between beats, wings flattened and spread, body 12 deg nose-down"
+    },
+    "frames": {
+      "hover_mid": {
+        "BabyDragon_Head": {
+          "rot_deg_studio_xyz": [
+            4.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_LegL": {
+          "rot_deg_studio_xyz": [
+            20.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_LegR": {
+          "rot_deg_studio_xyz": [
+            20.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_Tail": {
+          "rot_deg_studio_xyz": [
+            12.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "wings_up": {
+        "BabyDragon_Body": {
+          "rot_deg_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.1,
+            0.0
+          ]
+        },
+        "BabyDragon_Head": {
+          "rot_deg_studio_xyz": [
+            6.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_WingL": {
+          "rot_deg_studio_xyz": [
+            0.0,
+            0.0,
+            -30.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_WingR": {
+          "rot_deg_studio_xyz": [
+            0.0,
+            0.0,
+            30.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_LegL": {
+          "rot_deg_studio_xyz": [
+            20.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_LegR": {
+          "rot_deg_studio_xyz": [
+            20.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_Tail": {
+          "rot_deg_studio_xyz": [
+            12.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "wings_down": {
+        "BabyDragon_Body": {
+          "rot_deg_studio_xyz": [
+            -4.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            -0.08,
+            0.0
+          ]
+        },
+        "BabyDragon_WingL": {
+          "rot_deg_studio_xyz": [
+            0.0,
+            0.0,
+            55.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_WingR": {
+          "rot_deg_studio_xyz": [
+            0.0,
+            0.0,
+            -55.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_LegL": {
+          "rot_deg_studio_xyz": [
+            20.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_LegR": {
+          "rot_deg_studio_xyz": [
+            20.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_Tail": {
+          "rot_deg_studio_xyz": [
+            6.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "glide": {
+        "BabyDragon_Body": {
+          "rot_deg_studio_xyz": [
+            -12.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_Head": {
+          "rot_deg_studio_xyz": [
+            12.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_WingL": {
+          "rot_deg_studio_xyz": [
+            -50.0,
+            0.0,
+            40.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_WingR": {
+          "rot_deg_studio_xyz": [
+            -50.0,
+            0.0,
+            -40.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_LegL": {
+          "rot_deg_studio_xyz": [
+            -25.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_LegR": {
+          "rot_deg_studio_xyz": [
+            -25.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_Tail": {
+          "rot_deg_studio_xyz": [
+            6.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "fire_breath": {
+        "BabyDragon_Body": {
+          "rot_deg_studio_xyz": [
+            10.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_Head": {
+          "rot_deg_studio_xyz": [
+            20.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.02,
+            -0.05
+          ]
+        },
+        "BabyDragon_WingL": {
+          "rot_deg_studio_xyz": [
+            0.0,
+            25.0,
+            -10.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_WingR": {
+          "rot_deg_studio_xyz": [
+            0.0,
+            -25.0,
+            10.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_LegL": {
+          "rot_deg_studio_xyz": [
+            30.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_LegR": {
+          "rot_deg_studio_xyz": [
+            30.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_Tail": {
+          "rot_deg_studio_xyz": [
+            18.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "tail_swish": {
+        "BabyDragon_Head": {
+          "rot_deg_studio_xyz": [
+            0.0,
+            -8.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_LegL": {
+          "rot_deg_studio_xyz": [
+            20.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_LegR": {
+          "rot_deg_studio_xyz": [
+            20.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_Tail": {
+          "rot_deg_studio_xyz": [
+            12.0,
+            30.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "head_turn": {
+        "BabyDragon_Head": {
+          "rot_deg_studio_xyz": [
+            -8.0,
+            30.0,
+            -12.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_LegL": {
+          "rot_deg_studio_xyz": [
+            20.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_LegR": {
+          "rot_deg_studio_xyz": [
+            20.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "BabyDragon_Tail": {
+          "rot_deg_studio_xyz": [
+            12.0,
+            -15.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "fire_breath": {
+      "note": "hovering: head forward and up, wings swept back, legs braced forward, body leaning back; ease in 0.12 s, hold 0.6 s while the fire_breath emitter runs, ease out 0.2 s"
+    },
+    "landing_waddle_extra": {
+      "note": "only when grounded (root at 0): short waddle with the wings half folded",
       "step_period_s": 0.55,
       "loop": [
         "waddle_A",
@@ -291,10 +847,6 @@
         "waddle_B",
         "waddle_pass"
       ],
-      "body_roll_deg": 7,
-      "leg_swing_deg": 22,
-      "foot_lift_studs": 0.07,
-      "wing_balance_flap_deg": 16,
       "frames": {
         "waddle_A": {
           "BabyDragon_Body": {
@@ -324,8 +876,8 @@
           "BabyDragon_WingL": {
             "rot_deg_studio_xyz": [
               0.0,
-              0.0,
-              -16.0
+              20.0,
+              10.0
             ],
             "offset_studs_studio_xyz": [
               0.0,
@@ -336,8 +888,8 @@
           "BabyDragon_WingR": {
             "rot_deg_studio_xyz": [
               0.0,
-              0.0,
-              4.0
+              -20.0,
+              -20.0
             ],
             "offset_studs_studio_xyz": [
               0.0,
@@ -383,23 +935,11 @@
           }
         },
         "waddle_pass": {
-          "BabyDragon_Head": {
-            "rot_deg_studio_xyz": [
-              -2.0,
-              0.0,
-              0.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
           "BabyDragon_WingL": {
             "rot_deg_studio_xyz": [
               0.0,
-              0.0,
-              -8.0
+              20.0,
+              15.0
             ],
             "offset_studs_studio_xyz": [
               0.0,
@@ -410,8 +950,8 @@
           "BabyDragon_WingR": {
             "rot_deg_studio_xyz": [
               0.0,
-              0.0,
-              8.0
+              -20.0,
+              -15.0
             ],
             "offset_studs_studio_xyz": [
               0.0,
@@ -448,8 +988,8 @@
           "BabyDragon_WingL": {
             "rot_deg_studio_xyz": [
               0.0,
-              0.0,
-              -4.0
+              20.0,
+              20.0
             ],
             "offset_studs_studio_xyz": [
               0.0,
@@ -460,8 +1000,8 @@
           "BabyDragon_WingR": {
             "rot_deg_studio_xyz": [
               0.0,
-              0.0,
-              16.0
+              -20.0,
+              -10.0
             ],
             "offset_studs_studio_xyz": [
               0.0,
@@ -507,373 +1047,6 @@
           }
         }
       }
-    },
-    "hop_glide": {
-      "sequence": [
-        [
-          "wings_up",
-          0.12
-        ],
-        [
-          "wings_down",
-          0.1
-        ],
-        [
-          "glide",
-          0.55
-        ],
-        [
-          "wings_up",
-          0.1
-        ],
-        [
-          "land = waddle_pass",
-          0.15
-        ]
-      ],
-      "note": "seconds per key; glide holds the wings spread while the root travels ~3 studs forward at 0.6 studs up; ease the land",
-      "frames": {
-        "wings_up": {
-          "BabyDragon_Body": {
-            "rot_deg_studio_xyz": [
-              4.0,
-              0.0,
-              0.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.3,
-              0.0
-            ]
-          },
-          "BabyDragon_Head": {
-            "rot_deg_studio_xyz": [
-              6.0,
-              0.0,
-              0.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "BabyDragon_WingL": {
-            "rot_deg_studio_xyz": [
-              0.0,
-              0.0,
-              -38.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "BabyDragon_WingR": {
-            "rot_deg_studio_xyz": [
-              0.0,
-              0.0,
-              38.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "BabyDragon_Tail": {
-            "rot_deg_studio_xyz": [
-              -6.0,
-              0.0,
-              0.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          }
-        },
-        "wings_down": {
-          "BabyDragon_Body": {
-            "rot_deg_studio_xyz": [
-              -4.0,
-              0.0,
-              0.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.45,
-              0.0
-            ]
-          },
-          "BabyDragon_WingL": {
-            "rot_deg_studio_xyz": [
-              0.0,
-              -10.0,
-              34.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "BabyDragon_WingR": {
-            "rot_deg_studio_xyz": [
-              0.0,
-              10.0,
-              -34.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "BabyDragon_LegL": {
-            "rot_deg_studio_xyz": [
-              -14.0,
-              0.0,
-              0.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "BabyDragon_LegR": {
-            "rot_deg_studio_xyz": [
-              -14.0,
-              0.0,
-              0.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          }
-        },
-        "glide": {
-          "BabyDragon_Body": {
-            "rot_deg_studio_xyz": [
-              -14.0,
-              0.0,
-              0.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.6,
-              0.0
-            ]
-          },
-          "BabyDragon_Head": {
-            "rot_deg_studio_xyz": [
-              12.0,
-              0.0,
-              0.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "BabyDragon_WingL": {
-            "rot_deg_studio_xyz": [
-              -40.0,
-              0.0,
-              36.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "BabyDragon_WingR": {
-            "rot_deg_studio_xyz": [
-              -40.0,
-              0.0,
-              -36.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "BabyDragon_LegL": {
-            "rot_deg_studio_xyz": [
-              -30.0,
-              0.0,
-              0.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "BabyDragon_LegR": {
-            "rot_deg_studio_xyz": [
-              -30.0,
-              0.0,
-              0.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "BabyDragon_Tail": {
-            "rot_deg_studio_xyz": [
-              14.0,
-              0.0,
-              0.0
-            ],
-            "offset_studs_studio_xyz": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          }
-        }
-      }
-    },
-    "fire_breath": {
-      "note": "head forward and up, mouth (painted open) toward the target, wings swept back, legs braced; ease in 0.12 s, hold 0.6 s while the fire_breath emitter runs, ease out 0.2 s",
-      "pose": {
-        "BabyDragon_Body": {
-          "rot_deg_studio_xyz": [
-            8.0,
-            0.0,
-            0.0
-          ],
-          "offset_studs_studio_xyz": [
-            0.0,
-            0.0,
-            0.0
-          ]
-        },
-        "BabyDragon_Head": {
-          "rot_deg_studio_xyz": [
-            22.0,
-            0.0,
-            0.0
-          ],
-          "offset_studs_studio_xyz": [
-            0.0,
-            0.02,
-            -0.06
-          ]
-        },
-        "BabyDragon_WingL": {
-          "rot_deg_studio_xyz": [
-            0.0,
-            30.0,
-            -16.0
-          ],
-          "offset_studs_studio_xyz": [
-            0.0,
-            0.0,
-            0.0
-          ]
-        },
-        "BabyDragon_WingR": {
-          "rot_deg_studio_xyz": [
-            0.0,
-            -30.0,
-            16.0
-          ],
-          "offset_studs_studio_xyz": [
-            0.0,
-            0.0,
-            0.0
-          ]
-        },
-        "BabyDragon_LegL": {
-          "rot_deg_studio_xyz": [
-            12.0,
-            0.0,
-            -6.0
-          ],
-          "offset_studs_studio_xyz": [
-            0.0,
-            0.0,
-            0.0
-          ]
-        },
-        "BabyDragon_LegR": {
-          "rot_deg_studio_xyz": [
-            -12.0,
-            0.0,
-            6.0
-          ],
-          "offset_studs_studio_xyz": [
-            0.0,
-            0.0,
-            0.0
-          ]
-        },
-        "BabyDragon_Tail": {
-          "rot_deg_studio_xyz": [
-            6.0,
-            0.0,
-            0.0
-          ],
-          "offset_studs_studio_xyz": [
-            0.0,
-            0.0,
-            0.0
-          ]
-        }
-      }
-    },
-    "tail_swish": {
-      "note": "idle accent, +/-28 deg yaw, 0.8 s period",
-      "pose": {
-        "BabyDragon_Body": {
-          "rot_deg_studio_xyz": [
-            0.0,
-            0.0,
-            3.0
-          ],
-          "offset_studs_studio_xyz": [
-            0.0,
-            0.0,
-            0.0
-          ]
-        },
-        "BabyDragon_Head": {
-          "rot_deg_studio_xyz": [
-            0.0,
-            -10.0,
-            -4.0
-          ],
-          "offset_studs_studio_xyz": [
-            0.0,
-            0.0,
-            0.0
-          ]
-        },
-        "BabyDragon_Tail": {
-          "rot_deg_studio_xyz": [
-            0.0,
-            28.0,
-            0.0
-          ],
-          "offset_studs_studio_xyz": [
-            0.0,
-            0.0,
-            0.0
-          ]
-        }
-      }
     }
   },
   "vfx": [
@@ -882,15 +1055,15 @@
       "part": "BabyDragon_Head",
       "attachment_position": [
         0.0,
-        1.3743,
-        -0.8438
+        1.5067,
+        -1.0362
       ],
       "attachment_from_part_pivot": [
         0.0,
-        0.1543,
-        -0.7438
+        0.1667,
+        -0.9062
       ],
-      "attachment_axis": "emit along the head's forward (Studio -Z of the head) so the cone follows the 22 deg nose-up breath pose",
+      "attachment_axis": "emit along the head's forward (Studio -Z of the head) so the cone follows the 20 deg nose-up breath pose",
       "trigger": "burst-driven while breathing: Enabled = true for the 0.6 s hold (or :Emit(6) every 0.05 s), off otherwise",
       "cone_length_studs": 5.0,
       "cone_half_angle_deg": 18,
@@ -997,25 +1170,25 @@
         "BabyDragon_Body": {
           "position": [
             0.0,
-            1.2,
-            0.4
+            1.12,
+            0.42
           ],
           "from_part_pivot": [
             0.0,
-            0.5,
-            0.34
+            0.4,
+            0.38
           ]
         },
         "BabyDragon_Tail": {
           "position": [
             0.0,
-            1.1,
-            1.26
+            0.99,
+            1.48
           ],
           "from_part_pivot": [
             0.0,
-            0.7,
-            0.88
+            0.47,
+            1.18
           ]
         }
       },
@@ -1081,40 +1254,68 @@
         ],
         "LockedToPart": false,
         "Texture": "small soft spark dot",
-        "note": "a few slow sparks drifting up; never a stream"
+        "note": "a few slow sparks drifting up from the spine embers and the tail flame; never a stream"
       }
     },
     {
-      "kind": "glide_trail",
+      "kind": "flight_trail",
       "parts": [
         "BabyDragon_WingL",
         "BabyDragon_WingR"
       ],
       "attachments_from_wing_pivot": {
         "BabyDragon_WingL": [
-          -0.5987,
-          0.4424,
-          0.4855
+          [
+            -0.9051,
+            0.7912,
+            0.4985
+          ],
+          [
+            -0.9884,
+            0.2496,
+            0.698
+          ]
         ],
         "BabyDragon_WingR": [
-          0.5987,
-          0.4424,
-          0.4855
+          [
+            0.9051,
+            0.7912,
+            0.4985
+          ],
+          [
+            0.9884,
+            0.2496,
+            0.698
+          ]
         ]
       },
       "attachment_positions": {
         "BabyDragon_WingL": [
-          -0.8587,
-          1.5224,
-          0.7455
+          [
+            -1.1251,
+            1.8712,
+            0.6585
+          ],
+          [
+            -1.2084,
+            1.3296,
+            0.858
+          ]
         ],
         "BabyDragon_WingR": [
-          0.8587,
-          1.5224,
-          0.7455
+          [
+            1.1251,
+            1.8712,
+            0.6585
+          ],
+          [
+            1.2084,
+            1.3296,
+            0.858
+          ]
         ]
       },
-      "enabled": "glide frames only (hop_glide glide key)",
+      "enabled": "always while flying (wingtips: the leading finger tip and the middle finger tip); Rate x1.5 in glides",
       "colour_sequence": [
         [
           0.0,
@@ -1142,7 +1343,7 @@
         ]
       ],
       "suggested": {
-        "Rate": 16,
+        "Rate": 10,
         "Lifetime": [
           0.3,
           0.45
@@ -1167,14 +1368,16 @@
         "Drag": 1,
         "LockedToPart": false,
         "Texture": "small soft spark dot",
-        "note": "faint ember trail off each wingtip; a Trail between two wingtip attachments (Lifetime 0.25, WidthScale 1 -> 0) also works"
+        "note": "faint ember trail off each wingtip; a Trail between the two tip attachments of each wing (Lifetime 0.25, WidthScale 1 -> 0, Transparency 0.6 -> 1) also works"
       }
     },
     {
       "kind": "neon_glow",
       "parts": [
         "BabyDragon_Cheeks_Glow",
-        "BabyDragon_Embers_Glow",
+        "BabyDragon_Back_Glow",
+        "BabyDragon_WingL_Glow",
+        "BabyDragon_WingR_Glow",
         "BabyDragon_TailFlame_Glow"
       ],
       "colour_rgb": [

@@ -1,50 +1,66 @@
-# Baby Dragon (Legendary, fire)
+# Baby Dragon (Legendary, fire, flyer)
 
-Chibi low-poly baby dragon for the roguelite. Strong suit: small fire breaths that burn groups (`BurnChance`).
-Blender-verified, Studio untested.
+Chibi low-poly baby dragon for the roguelite, inspired by the Clash Royale baby dragon's design language (own model).
+Strong suit: small fire breaths that burn groups (`BurnChance`). Blender-verified, Studio untested.
 
-## Design
-- Crimson / red-orange body, big round head (about as wide as the body), short rounded snout flowing out of the face.
-- Big glossy amber eyes with two catchlights, a small open toothy smile with two tiny rounded fangs, painted nostrils, soft blush.
-- Two short thick curved ivory horns and soft ear fins, fused into the head. A few soft gold bumps fused along the back (no spikes).
-- Round cream belly with broad painted scale bands, stubby arms fused to the chest, stubby hind legs, chunky feet with rounded ivory claws.
-- Stubby thick bat wings (rounded arm ridge + thick scalloped membrane, peach with painted veins), their own parts pivoting at the shoulders.
-- Short thick curled tail with a rounded gold spade, and a Neon flame on the tip.
-- Legendary accent: three separate thin-shell Neon `_Glow` parts: cheek ember streaks, flank and chest embers, tail dots plus the tail flame.
-  Colour [255, 150, 46]. No extra role prop: the fire is the prop.
-- Meshing: coarse signed-distance lattice, flat shading, so the facets are broad and even. Painterly texture baked from position-driven
-  paint, AO, soft key, warm shadows and a cool rim, one 1024 atlas (`textures/baby-dragon.png`, use `MeshPart.TextureID`).
-- Rest pose: standing upright on both feet, ready to waddle (no sit pose).
+## Design (rework after the owner's notes: designed masses, judged by the side silhouette)
+- **Head:** big, a rounded wedge / bean from the side (scaled 1.12 about the neck for chibi proportions).
+  - A wide, boxy, rounded muzzle pushes clearly forward, with two nostril bumps on top.
+  - A toothy overbite with two modelled ivory fangs over a cream lower jaw.
+  - Big round amber eyes with two catchlights, set high and wide under soft brow ridges.
+  - Thick ivory horns sweep back; small ear fins.
+- **Body:** a pear that tapers into a short thick neck.
+  - A low pot belly with five MODELLED cream belly plates (raised bands with grooves).
+  - Haunches: the thighs are fused into the hips with fillets.
+  - Soft bumps run down the spine. No arms.
+- **Wings:** big bat wings (about 2x the first pass).
+  - A thick arm, a wrist thumb and 3 finger struts.
+  - A thick, scalloped peach membrane.
+  - Spread and raised, so they read from the front, side and back.
+- **Tail:** a thick root that continues the body line, tapering to a rounded gold spade with a Neon flame.
+- **Legs:** short, chunky shins and feet with 3 rounded ivory claws. They pivot at the knee, which is hidden inside the fused thigh.
+- **Neon embers:** five separate thin-shell `_Glow` parts, colour [255, 150, 46]:
+  - cheek streaks;
+  - ember tops on the spine bumps;
+  - streaks on each wing arm;
+  - tail dots plus the tail flame.
+
+  There are no chest or belly embers.
+- **Meshing:** a fine signed-distance grid, decimated and relaxed (edge flips plus smoothing projected back onto the surface), flat shaded.
+- **Texture:** painterly, baked to one 1024 atlas (`textures/baby-dragon.png`, use `MeshPart.TextureID`).
+- **Rest pose:** stands on z = 0 with the wings spread. The game hovers it 1.5 studs up. The presentation renders show it hovering mid-beat.
 
 ## Parts, pivots (Studio axes), triangles
 | Part | Parent | Pivot (Studio) | Tris |
 |---|---|---|---|
-| BabyDragon_Body (root) | none | 0, 0.70, 0.06 | 1868 |
-| BabyDragon_Head (neck) | Body | 0, 1.22, -0.10 | 2760 |
-| BabyDragon_WingL / WingR (shoulder) | Body | -/+0.26, 1.08, 0.26 | 560 each |
-| BabyDragon_LegL / LegR (hip) | Body | -/+0.30, 0.42, 0.08 | 636 each |
-| BabyDragon_Tail (tail root) | Body | 0, 0.40, 0.38 | 904 |
-| BabyDragon_Cheeks_Glow (weld) | Head | 0, 1.51, -0.35 | 240 |
-| BabyDragon_Embers_Glow (weld) | Body | 0, 0.82, -0.09 | 300 |
-| BabyDragon_TailFlame_Glow (weld) | Tail | 0, 0.78, 0.97 | 320 |
-| Total | | | 8784 |
+| BabyDragon_Body (root) | none | 0, 0.72, 0.04 | 2500 |
+| BabyDragon_Head (neck) | Body | 0, 1.34, -0.13 | 2900 |
+| BabyDragon_WingL / WingR (shoulder) | Body | -/+0.22, 1.08, 0.16 | 950 each |
+| BabyDragon_LegL / LegR (knee) | Body | -/+0.34, 0.36, -0.08 | 300 each |
+| BabyDragon_Tail (tail root) | Body | 0, 0.52, 0.30 | 620 |
+| BabyDragon_Cheeks_Glow (weld) | Head | 0, 1.64, -0.39 | 240 |
+| BabyDragon_Back_Glow (weld) | Body | 0, 0.88, 0.52 | 180 |
+| BabyDragon_WingL_Glow / WingR_Glow (weld) | WingL / WingR | -/+0.38, 1.39, 0.21 | 120 each |
+| BabyDragon_TailFlame_Glow (weld) | Tail | 0, 0.75, 1.04 | 320 |
+| Total | | | 9500 |
 
-Size 1.77 wide, 2.13 long, 2.36 tall studs. Import 1:1. The front is Blender -Y (Studio -Z), and its left is Studio -X.
-Exact values are in `polygon-report.json` and `studio-install-data.json`.
+Size 2.49 wide (wings), 2.49 long, 2.44 tall studs. Import 1:1. The front is Blender -Y (Studio -Z), and its left is Studio -X.
 
-## Locomotion (`"locomotion": "waddle_glide"`)
-`studio-install-data.json > locomotion_data` holds the Studio-axis angles and offsets for each frame:
-- `waddle`: 0.55 s step, legs swing +/-22 deg with a 0.07 stud lift, body rolls +/-7 deg, little balance wing flaps and a tail counter-swing.
-- `hop_glide`: wings_up -> wings_down -> glide (root up 0.6, pitched 14 deg, wings spread flat, legs tucked) -> land.
-- `fire_breath`: nose up 22 deg, head 0.06 studs forward, wings swept back, legs braced, body leaning back 8 deg.
-- `tail_swish`: +/-28 deg yaw.
+## Locomotion (`"locomotion": "fly"`)
+`studio-install-data.json > locomotion_data` holds Studio-axis angles and offsets per frame. Flight frames are relative to the hovering root.
+- `wingbeat`: 0.8 s, big and slow: wings_up (+30) -> hover_mid -> wings_down (-55) -> hover_mid, with a body bob of +0.10 / -0.08.
+- `glide`: the wings flatten and spread, the body pitches 12 deg nose-down and the legs tuck.
+- `fire_breath`: nose up 20 deg, wings swept back, legs braced forward, body leaning back 10 deg.
+- `tail_swish` and `head_turn`.
+- `landing_waddle_extra`: a short grounded waddle with the wings half folded.
 
 ## VFX (`studio-install-data.json > vfx`)
-- `fire_breath`: a cone emitter at the mouth (on the head). It runs in bursts while breathing. Colour goes yellow -> orange -> red -> smoke.
-  The cone is 5 studs long with an 18 deg half-angle, to match the burn hitbox.
-- `ambient_embers`: a few slow sparks drifting up from the upper back and the tail flame. Always on.
-- `glide_trail`: a faint ember trail from each wingtip, during glides only.
-- `neon_glow`: Neon settings for the three `_Glow` parts, with a gentle pulse and a tail-flame flicker.
+- `fire_breath`: a cone emitter at the mouth (on the head). It runs in bursts while breathing.
+  - Colour goes yellow -> orange -> red -> smoke.
+  - The cone is 5 studs long with an 18 deg half-angle, to match the burn hitbox.
+- `ambient_embers`: slow sparks drifting up from the spine embers and the tail flame. Always on.
+- `flight_trail`: a faint ember trail from two tip attachments per wing, always on while flying and stronger in glides.
+- `neon_glow`: Neon settings for the five `_Glow` parts.
 
 ## Files
 - `build_baby_dragon.py`: the generator.

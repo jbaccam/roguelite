@@ -3,7 +3,7 @@
     "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b --factory-startup --threads 2 --python validate_exports.py
 
 Checks, for each file:
-  - exactly the expected mesh objects, named as in the report (seven rigid parts + three Neon `_Glow` parts)
+  - exactly the expected mesh objects, named as in the report (seven rigid parts + five Neon `_Glow` parts)
   - triangle count per part equals the report
   - world-space bounding box per part matches the report within 0.005 studs, and the sorted dimensions within 1%
   - each object's origin sits on its reported joint pivot within 0.005 studs
@@ -13,8 +13,8 @@ Checks, for each file:
   - no mesh over 20k triangles, total inside the Legendary budget (at most 15k; the owner asked for about 8-11k)
   - the model stands on z = 0 and is 2.0-2.6 studs tall
 Also checks the texture file is 1024x1024 and that studio-install-data.json covers every part with a pivot, a joint
-parent, the waddle_glide locomotion data (waddle frames, hop-glide frames, fire breath, tail swish) and the Legendary
-vfx entries (fire_breath, ambient_embers, glide_trail). Writes validation-report.json. Blender-verified only; says
+parent, the fly locomotion data (hover height, wingbeat, wings up/down, glide, fire breath, tail swish, head turn, landing
+waddle extra) and the Legendary vfx entries (fire_breath, ambient_embers, flight_trail). Writes validation-report.json. Blender-verified only; says
 nothing about Studio.
 """
 import json
@@ -124,8 +124,8 @@ for path in FILES:
     total = sum(v["triangles"] for v in found.values())
     if total > 15000:
         problems.append(f"total {total} tris is over the Legendary budget")
-    if sum(1 for n in found if n.endswith("_Glow")) != 3:
-        problems.append("expected three _Glow parts")
+    if sum(1 for n in found if n.endswith("_Glow")) != 5:
+        problems.append("expected five _Glow parts")
     results[path.suffix[1:]] = {"file": str(path.relative_to(ROOT)).replace("\\", "/"), "ok": not problems,
                                 "objects": len(objs), "total_triangles": total,
                                 "height_studs": round(height, 4), "lowest_z": round(lo_all[2], 4),
@@ -146,21 +146,18 @@ for name in REPORT["parts"]:
     rp = REPORT["parts"][name]["pivot"]
     if not close(part.get("pivot", [9, 9, 9]), [-rp[0], rp[2], rp[1]], 1e-3):
         inst_problems.append(f"{name}: Studio pivot {part.get('pivot')} is not (-x, z, y) of {rp}")
-if INSTALL.get("locomotion") != "waddle_glide":
-    inst_problems.append("locomotion is not 'waddle_glide'")
+if INSTALL.get("locomotion") != "fly":
+    inst_problems.append("locomotion is not 'fly'")
 ld = INSTALL.get("locomotion_data", {})
-for key in ("waddle", "hop_glide", "fire_breath", "tail_swish"):
+for key in ("hover_height_studs", "wingbeat", "glide", "frames", "fire_breath", "landing_waddle_extra"):
     if key not in ld:
         inst_problems.append(f"locomotion_data has no {key}")
-for fr in ("waddle_A", "waddle_B", "waddle_pass"):
-    if fr not in ld.get("waddle", {}).get("frames", {}):
-        inst_problems.append(f"no waddle frame {fr}")
-for fr in ("wings_up", "wings_down", "glide"):
-    if fr not in ld.get("hop_glide", {}).get("frames", {}):
-        inst_problems.append(f"no hop_glide frame {fr}")
+for fr in ("hover_mid", "wings_up", "wings_down", "glide", "fire_breath", "tail_swish", "head_turn"):
+    if fr not in ld.get("frames", {}):
+        inst_problems.append(f"no {fr} frame")
 vfx = INSTALL.get("vfx", [])
 kinds = {v.get("kind") for v in vfx}
-for k in ("fire_breath", "ambient_embers", "glide_trail"):
+for k in ("fire_breath", "ambient_embers", "flight_trail"):
     if k not in kinds:
         inst_problems.append(f"no vfx entry {k}")
 for v in vfx:
