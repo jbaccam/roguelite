@@ -1,0 +1,540 @@
+{
+  "asset": "turtle",
+  "rarity": "Rare",
+  "strong_suit": "Team defense (every 15 s a shell shield blocks one hit to you or a hurt teammate)",
+  "accent": "small painted shield-crest emblem on the front of the helm (no glow, no Neon)",
+  "role_prop": "knight kettle helm with plume, fused into Turtle_Head; brass shield-crest rim fused into the shell",
+  "axis": "studio = (-x, z, y) of blender; Blender front -Y = Studio front -Z",
+  "units": "studs; the model is at final size, import 1:1 and do not scale",
+  "sides": "L/R are the turtle's own left/right; its left is Blender +X = Studio -X",
+  "origin": "all positions are relative to the model origin = the ground point under the model centre (Blender world origin)",
+  "ground_point": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "overall_size": [
+    2.4438,
+    2.2877,
+    3.7719
+  ],
+  "overall_center": [
+    0.0,
+    1.1439,
+    -0.46
+  ],
+  "texture": "textures/turtle.png",
+  "texture_note": "one shared atlas; every MeshPart uses the same TextureID via MeshPart.TextureID (Rare: no Neon, no glow)",
+  "rest_rotation": "every part has identity rotation relative to the model at rest",
+  "rig": "one Motor6D per part: Part0 = joint_parent, Part1 = the part, C0/C1 placed at the part's pivot",
+  "parts": {
+    "Turtle_Body": {
+      "center": [
+        0.0,
+        1.2326,
+        0.1203
+      ],
+      "size": [
+        2.4438,
+        1.6607,
+        2.0034
+      ],
+      "pivot": [
+        0.0,
+        0.8,
+        0.12
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pivot_is": "root (centre of the shell, under the dome)",
+      "joint_parent": null,
+      "suggested_motion": "root part: sway roll about Studio Z (+/-4 deg), small bob in Studio Y; shield-up pitch about Studio X (-12 deg = top leans forward)"
+    },
+    "Turtle_Head": {
+      "center": [
+        0.0,
+        1.3109,
+        -1.3273
+      ],
+      "size": [
+        1.9375,
+        1.9538,
+        2.0373
+      ],
+      "pivot": [
+        0.0,
+        0.95,
+        -0.8
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.15,
+        -0.92
+      ],
+      "pivot_is": "neck, hidden inside the shell front",
+      "joint_parent": "Turtle_Body",
+      "suggested_motion": "plod: bob forward (Studio -Z up to 0.12) with a +/-4 deg nod about Studio X; look = yaw about Studio Y; shield-up: pull back 0.45 studs (Studio +Z) and pitch down 20 deg"
+    },
+    "Turtle_LegFL": {
+      "center": [
+        -0.7177,
+        0.4582,
+        -0.4373
+      ],
+      "size": [
+        0.7119,
+        0.9164,
+        0.864
+      ],
+      "pivot": [
+        -0.72,
+        0.8,
+        -0.36
+      ],
+      "pivot_from_body_pivot": [
+        -0.72,
+        0.0,
+        -0.48
+      ],
+      "pivot_is": "hip, tucked under the rim",
+      "joint_parent": "Turtle_Body",
+      "suggested_motion": "plod = swing about Studio X through the hip (+/-16 deg, diagonal pair with LegBR); lift 0.10 studs in Studio Y on the forward swing"
+    },
+    "Turtle_LegFR": {
+      "center": [
+        0.7177,
+        0.4582,
+        -0.4373
+      ],
+      "size": [
+        0.7119,
+        0.9164,
+        0.864
+      ],
+      "pivot": [
+        0.72,
+        0.8,
+        -0.36
+      ],
+      "pivot_from_body_pivot": [
+        0.72,
+        0.0,
+        -0.48
+      ],
+      "pivot_is": "hip, tucked under the rim",
+      "joint_parent": "Turtle_Body",
+      "suggested_motion": "plod = swing about Studio X through the hip (+/-16 deg, diagonal pair with LegBL); lift 0.10 studs in Studio Y on the forward swing"
+    },
+    "Turtle_LegBL": {
+      "center": [
+        -0.7177,
+        0.4582,
+        0.5827
+      ],
+      "size": [
+        0.7119,
+        0.9164,
+        0.864
+      ],
+      "pivot": [
+        -0.72,
+        0.8,
+        0.66
+      ],
+      "pivot_from_body_pivot": [
+        -0.72,
+        0.0,
+        0.54
+      ],
+      "pivot_is": "hip, tucked under the rim",
+      "joint_parent": "Turtle_Body",
+      "suggested_motion": "plod = swing about Studio X through the hip (+/-16 deg, diagonal pair with LegFR); lift 0.10 studs on the forward swing"
+    },
+    "Turtle_LegBR": {
+      "center": [
+        0.7177,
+        0.4582,
+        0.5827
+      ],
+      "size": [
+        0.7119,
+        0.9164,
+        0.864
+      ],
+      "pivot": [
+        0.72,
+        0.8,
+        0.66
+      ],
+      "pivot_from_body_pivot": [
+        0.72,
+        0.0,
+        0.54
+      ],
+      "pivot_is": "hip, tucked under the rim",
+      "joint_parent": "Turtle_Body",
+      "suggested_motion": "plod = swing about Studio X through the hip (+/-16 deg, diagonal pair with LegFL); lift 0.10 studs on the forward swing"
+    },
+    "Turtle_Tail": {
+      "center": [
+        0.0001,
+        0.5689,
+        1.1253
+      ],
+      "size": [
+        0.4211,
+        0.4566,
+        0.6013
+      ],
+      "pivot": [
+        0.0,
+        0.62,
+        0.96
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        -0.18,
+        0.84
+      ],
+      "pivot_is": "tail root, inside the rear of the shell",
+      "joint_parent": "Turtle_Body",
+      "suggested_motion": "idle wag about Studio Y (+/-12 deg); shield-up: tuck 0.12 studs forward"
+    }
+  },
+  "locomotion": "plod",
+  "locomotion_data": {
+    "gait": "plod: slow, sturdy diagonal-pair steps (FL+BR then FR+BL), the shell sways side to side and the head bobs forward with each push",
+    "angle_convention": "per part, rotation about the part's own pivot in Studio axes (Roblox CFrame.Angles, degrees) plus a translation offset in studs applied in the parent's frame (Motor6D C0). Only parts that move are listed; others stay at rest. Blender bone angles in the previews map as Studio X = -bone X, Studio Y = bone Y, Studio Z = -bone Z.",
+    "plod": {
+      "step_period_s": 1.4,
+      "loop": [
+        "plod_A",
+        "plod_pass_1",
+        "plod_B",
+        "plod_pass_2"
+      ],
+      "body_sway_deg": 4,
+      "leg_swing_deg": 16,
+      "head_bob_studs": 0.12,
+      "frames": {
+        "plod_A": {
+          "Turtle_Body": {
+            "rot_deg_studio_xyz": [
+              0.0,
+              0.0,
+              -4.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "Turtle_Head": {
+            "rot_deg_studio_xyz": [
+              4.0,
+              0.0,
+              4.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              -0.12
+            ]
+          },
+          "Turtle_LegFL": {
+            "rot_deg_studio_xyz": [
+              -16.0,
+              0.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "Turtle_LegFR": {
+            "rot_deg_studio_xyz": [
+              16.0,
+              0.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.1,
+              0.0
+            ]
+          },
+          "Turtle_LegBL": {
+            "rot_deg_studio_xyz": [
+              16.0,
+              0.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.1,
+              0.0
+            ]
+          },
+          "Turtle_LegBR": {
+            "rot_deg_studio_xyz": [
+              -16.0,
+              0.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "Turtle_Tail": {
+            "rot_deg_studio_xyz": [
+              0.0,
+              12.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "plod_pass_1": {
+          "Turtle_Body": {
+            "rot_deg_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.04,
+              0.0
+            ]
+          },
+          "Turtle_Head": {
+            "rot_deg_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              -0.06
+            ]
+          }
+        },
+        "plod_B": {
+          "Turtle_Body": {
+            "rot_deg_studio_xyz": [
+              0.0,
+              0.0,
+              4.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "Turtle_Head": {
+            "rot_deg_studio_xyz": [
+              -4.0,
+              0.0,
+              -4.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "Turtle_LegFL": {
+            "rot_deg_studio_xyz": [
+              16.0,
+              0.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.1,
+              0.0
+            ]
+          },
+          "Turtle_LegFR": {
+            "rot_deg_studio_xyz": [
+              -16.0,
+              0.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "Turtle_LegBL": {
+            "rot_deg_studio_xyz": [
+              -16.0,
+              0.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "Turtle_LegBR": {
+            "rot_deg_studio_xyz": [
+              16.0,
+              0.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.1,
+              0.0
+            ]
+          },
+          "Turtle_Tail": {
+            "rot_deg_studio_xyz": [
+              0.0,
+              -12.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "plod_pass_2": {
+          "Turtle_Body": {
+            "rot_deg_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.04,
+              0.0
+            ]
+          },
+          "Turtle_Head": {
+            "rot_deg_studio_xyz": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "offset_studs_studio_xyz": [
+              0.0,
+              0.0,
+              -0.06
+            ]
+          }
+        }
+      }
+    },
+    "shield_up": {
+      "note": "guard pose while the team shield is up or on a blocked hit: head and legs half tucked, the shell leans forward like a held shield; hold 0.4 s then ease back to plod",
+      "pose": {
+        "Turtle_Body": {
+          "rot_deg_studio_xyz": [
+            -12.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "Turtle_Head": {
+          "rot_deg_studio_xyz": [
+            -20.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            -0.06,
+            0.45
+          ]
+        },
+        "Turtle_LegFL": {
+          "rot_deg_studio_xyz": [
+            12.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.14,
+            0.3,
+            0.0
+          ]
+        },
+        "Turtle_LegFR": {
+          "rot_deg_studio_xyz": [
+            12.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            -0.14,
+            0.3,
+            0.0
+          ]
+        },
+        "Turtle_LegBL": {
+          "rot_deg_studio_xyz": [
+            -8.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.14,
+            0.16,
+            0.0
+          ]
+        },
+        "Turtle_LegBR": {
+          "rot_deg_studio_xyz": [
+            -8.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            -0.14,
+            0.16,
+            0.0
+          ]
+        },
+        "Turtle_Tail": {
+          "rot_deg_studio_xyz": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "offset_studs_studio_xyz": [
+            0.0,
+            0.05,
+            -0.12
+          ]
+        }
+      },
+      "ground_note": "front legs are lifted 0.30 studs and back legs 0.16 so the feet stay on the ground after the shell pitches; re-check against the live ground in Studio"
+    }
+  }
+}

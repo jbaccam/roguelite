@@ -1,0 +1,412 @@
+{
+  "fbx": {
+    "file": "exports/fbx/turtle.fbx",
+    "ok": true,
+    "objects": 7,
+    "total_triangles": 6468,
+    "height_studs": 2.2877,
+    "lowest_z": 0.0,
+    "problems": [],
+    "parts": {
+      "Turtle_Body": {
+        "triangles": 1664,
+        "pivot": [
+          0.0,
+          0.12,
+          0.8
+        ],
+        "bbox_min": [
+          -1.2219,
+          -0.8814,
+          0.4022
+        ],
+        "bbox_max": [
+          1.2219,
+          1.122,
+          2.063
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "turtle",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Turtle_Head": {
+        "triangles": 2664,
+        "pivot": [
+          0.0,
+          -0.8,
+          0.95
+        ],
+        "bbox_min": [
+          -0.9687,
+          -2.3459,
+          0.334
+        ],
+        "bbox_max": [
+          0.9687,
+          -0.3086,
+          2.2878
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "turtle",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Turtle_LegBL": {
+        "triangles": 476,
+        "pivot": [
+          0.72,
+          0.66,
+          0.8
+        ],
+        "bbox_min": [
+          0.3618,
+          0.1507,
+          0.0
+        ],
+        "bbox_max": [
+          1.0737,
+          1.0146,
+          0.9165
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "turtle",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Turtle_LegBR": {
+        "triangles": 476,
+        "pivot": [
+          -0.72,
+          0.66,
+          0.8
+        ],
+        "bbox_min": [
+          -1.0737,
+          0.1507,
+          0.0
+        ],
+        "bbox_max": [
+          -0.3618,
+          1.0146,
+          0.9165
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "turtle",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Turtle_LegFL": {
+        "triangles": 476,
+        "pivot": [
+          0.72,
+          -0.36,
+          0.8
+        ],
+        "bbox_min": [
+          0.3618,
+          -0.8693,
+          0.0
+        ],
+        "bbox_max": [
+          1.0737,
+          -0.0054,
+          0.9165
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "turtle",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Turtle_LegFR": {
+        "triangles": 476,
+        "pivot": [
+          -0.72,
+          -0.36,
+          0.8
+        ],
+        "bbox_min": [
+          -1.0737,
+          -0.8693,
+          0.0
+        ],
+        "bbox_max": [
+          -0.3618,
+          -0.0054,
+          0.9165
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "turtle",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Turtle_Tail": {
+        "triangles": 236,
+        "pivot": [
+          0.0,
+          0.96,
+          0.62
+        ],
+        "bbox_min": [
+          -0.2106,
+          0.8246,
+          0.3406
+        ],
+        "bbox_max": [
+          0.2104,
+          1.426,
+          0.7972
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "turtle",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "glb": {
+    "file": "exports/glb/turtle.glb",
+    "ok": true,
+    "objects": 7,
+    "total_triangles": 6468,
+    "height_studs": 2.2877,
+    "lowest_z": 0.0,
+    "problems": [],
+    "parts": {
+      "Turtle_Body": {
+        "triangles": 1664,
+        "pivot": [
+          0.0,
+          0.12,
+          0.8
+        ],
+        "bbox_min": [
+          -1.2219,
+          -0.8814,
+          0.4022
+        ],
+        "bbox_max": [
+          1.2219,
+          1.122,
+          2.063
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "turtle",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Turtle_Head": {
+        "triangles": 2664,
+        "pivot": [
+          0.0,
+          -0.8,
+          0.95
+        ],
+        "bbox_min": [
+          -0.9687,
+          -2.3459,
+          0.334
+        ],
+        "bbox_max": [
+          0.9687,
+          -0.3086,
+          2.2878
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "turtle",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Turtle_LegBL": {
+        "triangles": 476,
+        "pivot": [
+          0.72,
+          0.66,
+          0.8
+        ],
+        "bbox_min": [
+          0.3618,
+          0.1507,
+          0.0
+        ],
+        "bbox_max": [
+          1.0737,
+          1.0146,
+          0.9165
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "turtle",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Turtle_LegBR": {
+        "triangles": 476,
+        "pivot": [
+          -0.72,
+          0.66,
+          0.8
+        ],
+        "bbox_min": [
+          -1.0737,
+          0.1507,
+          0.0
+        ],
+        "bbox_max": [
+          -0.3618,
+          1.0146,
+          0.9165
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "turtle",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Turtle_LegFL": {
+        "triangles": 476,
+        "pivot": [
+          0.72,
+          -0.36,
+          0.8
+        ],
+        "bbox_min": [
+          0.3618,
+          -0.8693,
+          0.0
+        ],
+        "bbox_max": [
+          1.0737,
+          -0.0054,
+          0.9165
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "turtle",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Turtle_LegFR": {
+        "triangles": 476,
+        "pivot": [
+          -0.72,
+          -0.36,
+          0.8
+        ],
+        "bbox_min": [
+          -1.0737,
+          -0.8693,
+          0.0
+        ],
+        "bbox_max": [
+          -0.3618,
+          -0.0054,
+          0.9165
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "turtle",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Turtle_Tail": {
+        "triangles": 236,
+        "pivot": [
+          0.0,
+          0.96,
+          0.62
+        ],
+        "bbox_min": [
+          -0.2106,
+          0.8246,
+          0.3406
+        ],
+        "bbox_max": [
+          0.2104,
+          1.426,
+          0.7972
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "turtle",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "texture": {
+    "file": "textures/turtle.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "ok": true
+  },
+  "install_data": {
+    "file": "studio-install-data.json",
+    "ok": true,
+    "problems": []
+  },
+  "all_ok": true,
+  "expected_parts": [
+    "Turtle_Body",
+    "Turtle_Head",
+    "Turtle_LegBL",
+    "Turtle_LegBR",
+    "Turtle_LegFL",
+    "Turtle_LegFR",
+    "Turtle_Tail"
+  ],
+  "scope": "Blender re-import only (Blender 5.2.1 LTS); Studio untested"
+}
