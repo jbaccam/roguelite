@@ -6,17 +6,18 @@ Strong suit: small fire breaths that burn groups (`BurnChance`). Blender-verifie
 ## Design (designed masses, judged by the side silhouette)
 - **Head:** big, a rounded wedge / bean from the side (scaled 1.12 about the neck).
   - A wide, boxy, rounded muzzle pushes forward, with two nostril bumps on top.
-  - A toothy overbite with two modelled ivory fangs over a cream lower jaw.
+  - A BIG rounded cream lower jaw and chunky chin that reach as far forward as the snout.
+  - A happy open grin: a wide mouth curving up at the corners, a dark interior, 6 rounded ivory teeth and a pink tongue.
   - Big round amber eyes with two catchlights, set high and wide under soft brows.
   - Thick ivory horns sweep back; small ear fins.
-- **Body:** a pear that tapers into a short thick neck.
+- **Body:** a chubby pear (belly 0.96 wide). A thick neck and throat run chin -> chest -> pot belly in one curve, with a cream throat.
   - A low pot belly with five clean modelled cream belly plates.
   - Haunches: the thighs are fused into the hips.
-  - Soft shoulder bulges and soft spine bumps.
-- **Arms** (`ArmL` / `ArmR`): short and chunky, with a thick upper arm, a visible elbow bend, a forearm held forward in
-  front of the belly, a cream underside / palm and a hand with 3 rounded ivory claws.
-  - The arm-top ball is centred on the shoulder pivot and buried in the shoulder bulge, so there is no seam when it rotates.
-  - From the side there is a clear gap between the forearm and the belly.
+  - Big round shoulder + upper-arm masses belong to the body, fused with wide fillets. Soft spine bumps.
+- **Arms** (`ArmL` / `ArmR`): only the forearm + hand, pivoting at the elbow.
+  - The elbow ball is centred on the pivot and buried in the body's upper-arm mass, so no joint shows.
+  - Short, thick forearms taper to stubby round hands with 3 rounded ivory toes, held forward and down in front of the belly.
+  - A cream underside. From the side there is a clear gap to the belly.
 - **Wings:** big bat wings.
   - A thick arm, a wrist thumb and 3 finger struts as smooth rounded tubes.
   - The membrane is a clean procedural outline with smooth scallop arcs, given thickness (solidify 0.05) with a 2-segment bevelled rim.
@@ -40,7 +41,7 @@ Strong suit: small fire breaths that burn groups (`BurnChance`). Blender-verifie
 | BabyDragon_Body (root, incl. 1080-tri belly plates) | none | 0, 0.72, 0.04 | 2880 |
 | BabyDragon_Head (neck) | Body | 0, 1.34, -0.13 | 2450 |
 | BabyDragon_WingL / WingR (shoulder; 720 struts + 616 membrane) | Body | -/+0.22, 1.08, 0.16 | 1336 each |
-| BabyDragon_ArmL / ArmR (shoulder) | Body | -/+0.30, 1.00, -0.10 | 380 each |
+| BabyDragon_ArmL / ArmR (elbow; forearm + hand) | Body | -/+0.45, 0.78, -0.30 | 380 each |
 | BabyDragon_LegL / LegR (knee) | Body | -/+0.34, 0.36, -0.08 | 300 each |
 | BabyDragon_Tail (tail root) | Body | 0, 0.52, 0.30 | 620 |
 | BabyDragon_Cheeks_Glow (weld) | Head | | 240 |
@@ -49,7 +50,7 @@ Strong suit: small fire breaths that burn groups (`BurnChance`). Blender-verifie
 | BabyDragon_TailFlame_Glow (weld) | Tail | | 320 |
 | Total | | | 10962 |
 
-Size 2.52 wide (wings), 2.49 long, 2.45 tall studs. Import 1:1. The front is Blender -Y (Studio -Z), and its left is Studio -X.
+Size 2.52 wide (wings), 2.58 long, 2.45 tall studs. Import 1:1. The front is Blender -Y (Studio -Z), and its left is Studio -X.
 Exact glow pivots are in `studio-install-data.json`.
 
 ## Locomotion (`"locomotion": "fly"`)
@@ -74,4 +75,4 @@ Exact glow pivots are in `studio-install-data.json`.
   - `-- --no-hero`: skips the Cycles hero render.
 - `baby-dragon.blend`, `exports/fbx/baby-dragon.fbx` (smoothing exported per face), `exports/glb/baby-dragon.glb`.
 - `validate_exports.py` -> `validation-report.json`: PASS for FBX, GLB, texture and install data.
-- `previews/`: front, side, threeq, back, face-closeup, closeup-wing-edge, closeup-belly, pose-check, hero, sheet.
+- `previews/`: front, side, threeq, back, face-closeup, closeup-wing-edge, closeup-belly, closeup-shoulder, pose-check, hero, sheet.

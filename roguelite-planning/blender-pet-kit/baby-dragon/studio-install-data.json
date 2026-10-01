@@ -15,13 +15,13 @@
   ],
   "overall_size": [
     2.5228,
-    2.445,
-    2.4856
+    2.4437,
+    2.5752
   ],
   "overall_center": [
     0.0,
-    1.2227,
-    0.2504
+    1.222,
+    0.2056
   ],
   "texture": "textures/baby-dragon.png",
   "texture_note": "one shared atlas on every MeshPart via MeshPart.TextureID. The five *_Glow parts: Material = Neon, Color = [255, 150, 46] (their atlas texels are that colour too)",
@@ -30,14 +30,14 @@
   "parts": {
     "BabyDragon_Body": {
       "center": [
-        0.0002,
-        0.8453,
-        0.038
+        -0.0005,
+        0.8364,
+        0.0075
       ],
       "size": [
-        1.0586,
-        1.3677,
-        1.1626
+        1.2946,
+        1.4284,
+        1.2215
       ],
       "pivot": [
         0.0,
@@ -56,13 +56,13 @@
     "BabyDragon_Head": {
       "center": [
         0.0,
-        1.7816,
-        -0.2298
+        1.7671,
+        -0.2741
       ],
       "size": [
-        1.3862,
-        1.3272,
-        1.5252
+        1.3814,
+        1.3536,
+        1.6157
       ],
       "pivot": [
         0.0,
@@ -205,74 +205,74 @@
     },
     "BabyDragon_ArmL": {
       "center": [
-        -0.3337,
-        0.8972,
-        -0.3613
+        -0.4251,
+        0.7803,
+        -0.4747
       ],
       "size": [
-        0.3201,
-        0.4479,
-        0.7579
+        0.4075,
+        0.3568,
+        0.7071
       ],
       "pivot": [
-        -0.3,
-        1.0,
-        -0.1
+        -0.45,
+        0.78,
+        -0.3
       ],
       "pivot_from_body_pivot": [
-        -0.3,
-        0.28,
-        -0.14
+        -0.45,
+        0.06,
+        -0.34
       ],
-      "pivot_is": "shoulder: the arm-top ball is centred on the pivot and buried in the body's shoulder bulge",
+      "pivot_is": "elbow: the forearm's elbow ball is centred on the pivot and buried in the body's upper-arm mass",
       "joint_parent": "BabyDragon_Body",
-      "suggested_motion": "shoulder joint: rest = elbows bent, forearms held forward in front of the belly; flight = small tuck (Studio X -6..-12) with the beat; fire breath = braced forward and up; glide = tucked back along the sides"
+      "suggested_motion": "forearm + hand at the elbow (shoulders and upper arms are part of the body): rest = elbows bent, forearms held forward in front of the belly; flight = small tuck (Studio X -6..-12) with the beat; fire breath = braced forward and up; glide = tucked back along the sides"
     },
     "BabyDragon_ArmR": {
       "center": [
-        0.3337,
-        0.8972,
-        -0.3613
+        0.4251,
+        0.7803,
+        -0.4747
       ],
       "size": [
-        0.3201,
-        0.4479,
-        0.7579
+        0.4075,
+        0.3568,
+        0.7071
       ],
       "pivot": [
-        0.3,
-        1.0,
-        -0.1
+        0.45,
+        0.78,
+        -0.3
       ],
       "pivot_from_body_pivot": [
-        0.3,
-        0.28,
-        -0.14
+        0.45,
+        0.06,
+        -0.34
       ],
-      "pivot_is": "shoulder: the arm-top ball is centred on the pivot and buried in the body's shoulder bulge",
+      "pivot_is": "elbow: the forearm's elbow ball is centred on the pivot and buried in the body's upper-arm mass",
       "joint_parent": "BabyDragon_Body",
       "suggested_motion": "mirror of ArmL"
     },
     "BabyDragon_Cheeks_Glow": {
       "center": [
         0.0,
-        1.6372,
-        -0.3967
+        1.6371,
+        -0.3973
       ],
       "size": [
-        1.1716,
-        0.2061,
-        0.2872
+        1.1745,
+        0.2054,
+        0.2895
       ],
       "pivot": [
         0.0,
-        1.6372,
-        -0.3967
+        1.6371,
+        -0.3973
       ],
       "pivot_from_body_pivot": [
         0.0,
-        0.9172,
-        -0.4367
+        0.9171,
+        -0.4373
       ],
       "pivot_is": "centre of the cheek ember streaks (welded to the head, Neon)",
       "joint_parent": "BabyDragon_Head",
@@ -280,24 +280,24 @@
     },
     "BabyDragon_Back_Glow": {
       "center": [
-        -0.0004,
-        0.8835,
-        0.5175
+        -0.0038,
+        0.8836,
+        0.5207
       ],
       "size": [
-        0.113,
-        0.5083,
-        0.2408
+        0.1171,
+        0.5102,
+        0.2316
       ],
       "pivot": [
-        -0.0004,
-        0.8835,
-        0.5175
+        -0.0038,
+        0.8836,
+        0.5207
       ],
       "pivot_from_body_pivot": [
-        -0.0004,
-        0.1635,
-        0.4775
+        -0.0038,
+        0.1636,
+        0.4807
       ],
       "pivot_is": "centre of the ember tops of the spine bumps (welded to the body, Neon)",
       "joint_parent": "BabyDragon_Body",
@@ -747,9 +747,9 @@
         },
         "BabyDragon_ArmL": {
           "rot_deg_studio_xyz": [
-            -35.0,
+            -45.0,
             0.0,
-            -20.0
+            -25.0
           ],
           "offset_studs_studio_xyz": [
             0.0,
@@ -759,9 +759,9 @@
         },
         "BabyDragon_ArmR": {
           "rot_deg_studio_xyz": [
-            -35.0,
+            -45.0,
             0.0,
-            20.0
+            25.0
           ],
           "offset_studs_studio_xyz": [
             0.0,
@@ -1297,13 +1297,13 @@
       "part": "BabyDragon_Head",
       "attachment_position": [
         0.0,
-        1.5067,
-        -1.0362
+        1.5383,
+        -0.9094
       ],
       "attachment_from_part_pivot": [
         0.0,
-        0.1667,
-        -0.9062
+        0.1983,
+        -0.7794
       ],
       "attachment_axis": "emit along the head's forward (Studio -Z of the head) so the cone follows the 20 deg nose-up breath pose",
       "trigger": "burst-driven while breathing: Enabled = true for the 0.6 s hold (or :Emit(6) every 0.05 s), off otherwise",

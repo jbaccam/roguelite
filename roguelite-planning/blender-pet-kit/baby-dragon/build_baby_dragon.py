@@ -209,7 +209,7 @@ def tidy(grid, F, vs, fs, passes=6):
     return vo, fo
 
 
-def extract(grid, F, target=None, name="fused"):
+def extract(grid, F, target=None, name="fused", passes=6):
     g = vdb.FloatGrid(1.0e4)
     g.copyFromArray((F / grid.h).astype(np.float32))
     pts, tris, quads = g.convertToPolygons(0.0, 0.0)
@@ -234,7 +234,7 @@ def extract(grid, F, target=None, name="fused"):
     ev.to_mesh_clear()
     bpy.data.objects.remove(ob)
     bpy.data.meshes.remove(me)
-    vo, fo = tidy(grid, F, vo, fo)
+    vo, fo = tidy(grid, F, vo, fo, passes)
     log(name, "isosurface", n_tri, "tris ->", len(fo))
     return vo, fo
 
@@ -295,12 +295,12 @@ PIVOT = {
     PFX + "LegL": V(0.34, -0.08, 0.36),
     PFX + "LegR": V(-0.34, -0.08, 0.36),
     PFX + "Tail": V(0.0, 0.30, 0.52),
-    PFX + "ArmL": V(0.30, -0.10, 1.00),
-    PFX + "ArmR": V(-0.30, -0.10, 1.00),
+    PFX + "ArmL": V(0.45, -0.30, 0.78),
+    PFX + "ArmR": V(-0.45, -0.30, 0.78),
 }
 H_FINE = 0.02
-BELLY_C, BELLY_R = (0.0, -0.10, 0.60), (0.40, 0.40, 0.44)
-CHEST_C, CHEST_R = (0.0, -0.04, 1.00), (0.34, 0.32, 0.34)
+BELLY_C, BELLY_R = (0.0, -0.10, 0.60), (0.48, 0.46, 0.48)
+CHEST_C, CHEST_R = (0.0, -0.06, 1.00), (0.42, 0.36, 0.38)
 PL_Z0, PL_SP, PL_N = 0.27, 0.166, 5
 HEAD_C, HEAD_R = (0.0, -0.20, 1.80), (0.52, 0.48, 0.44)
 HEAD_S = 1.12                              # whole head scaled about the neck pivot (chibi)
@@ -325,25 +325,37 @@ def rbox(P, c, b, r):
     return np.linalg.norm(np.maximum(q, 0.0), axis=-1) + np.minimum(np.max(q, axis=-1), 0.0) - r
 
 
+ARM_SH = np.array((0.38, -0.12, 0.98))
+ARM_E = np.array((0.45, -0.30, 0.78))
+
+
+def upper_arm(P, s):
+    """Body-owned chubby shoulder + upper arm ending in a round elbow mass that hides the forearm's elbow ball."""
+    m = np.array((s, 1.0, 1.0))
+    a = smin(ell(P, ARM_SH * m, (0.19, 0.19, 0.20)), rcone(P, ARM_SH * m, ARM_E * m, 0.18, 0.17), 0.05)
+    return smin(a, ell(P, ARM_E * m, (0.195, 0.195, 0.195)), 0.05)
+
+
 def back_point(G, F, x, z, y0=0.95, y1=-0.3):
     p, _ = surf_point(G, F, x, z, y0, y1)
     return p
 
 
 def body_field(h):
-    G = Grid((-0.80, -0.75, 0.05), (0.80, 0.85, 1.50), h, sym_x=True)
+    G = Grid((-0.85, -0.80, 0.05), (0.85, 0.85, 1.50), h, sym_x=True)
     P = G.P
     X, Y, Z = P[..., 0], P[..., 1], P[..., 2]
     belly = ell(P, BELLY_C, BELLY_R)
     chest = ell(P, CHEST_C, CHEST_R)
     F = smin(belly, chest, 0.20)                                               # pear: pot belly low, narrower chest
     F = smin(F, ell(P, (0.0, 0.08, 0.74), (0.38, 0.36, 0.42)), 0.15)           # rounded back
-    F = smin(F, rcone(P, (0.0, -0.05, 1.02), (0.0, -0.13, 1.32), 0.26, 0.21), 0.15)   # short thick neck
-    thigh = np.minimum(ell(P, (0.32, 0.02, 0.44), (0.21, 0.28, 0.25)), ell(P, (-0.32, 0.02, 0.44), (0.21, 0.28, 0.25)))
-    F = smin(F, thigh, 0.10)                                                   # haunches with fillets
+    F = smin(F, rcone(P, (0.0, -0.07, 1.02), (0.0, -0.18, 1.34), 0.30, 0.27), 0.15)   # thick chubby neck, no pinch
+    F = smin(F, ell(P, (0.0, -0.28, 1.16), (0.28, 0.24, 0.24)), 0.15)          # throat: chin -> chest -> belly in one curve
+    thigh = np.minimum(ell(P, (0.33, 0.0, 0.42), (0.25, 0.31, 0.28)), ell(P, (-0.33, 0.0, 0.42), (0.25, 0.31, 0.28)))
+    F = smin(F, thigh, 0.14)                                                   # thick thighs tucked under, wide fillets
     F = smin(F, ell(P, (0.0, 0.34, 0.52), (0.23, 0.28, 0.23)), 0.15)          # tail root continues the body line
-    shoulder = np.minimum(ell(P, (0.31, -0.11, 1.00), (0.15, 0.15, 0.16)), ell(P, (-0.31, -0.11, 1.00), (0.15, 0.15, 0.16)))
-    F = smin(F, shoulder, 0.08)                                                # soft shoulder bulges hide the arm-top balls
+    shoulder = np.minimum(upper_arm(P, 1), upper_arm(P, -1))
+    F = smin(F, shoulder, 0.12)                                                # round shoulders + upper arms melt into the torso
     # soft bumps down the spine, sitting on the surface
     bumps = None
     for z, sc in ((1.26, 0.85), (1.06, 1.0), (0.86, 1.0), (0.66, 0.85)):
@@ -365,7 +377,7 @@ def plates_sdf(P):
     for k in range(PL_N):
         band = smax(shell, np.abs(zz - (PL_Z0 + (k + 0.5) * PL_SP)) - (PL_SP / 2 - 0.026), 0.03)
         pl = band if pl is None else np.minimum(pl, band)
-    pl = smax(pl, np.abs(X) - 0.29, 0.045)
+    pl = smax(pl, np.abs(X) - 0.32, 0.045)
     pl = smax(pl, Y + 0.05, 0.03)
     pl = smax(pl, -inner, 0.01)
     return pl, shell
@@ -380,7 +392,7 @@ def build_plates():
     0.02 under the skin, rounded lateral ends that sink into the body. All boundaries are hidden inside the body."""
     G, fl = FUSED["body"]
     F = fl["F"]
-    xs = np.linspace(-0.31, 0.31, 13)
+    xs = np.linspace(-0.34, 0.34, 13)
     ts = [-1.0, -0.93, -0.82, -0.66, -0.3, 0.3, 0.66, 0.82, 0.93, 1.0]
     hb = PL_SP / 2 - 0.012
     vs, fs = [], []
@@ -389,7 +401,7 @@ def build_plates():
         zc = PL_Z0 + (k + 0.5) * PL_SP
         base = len(vs)
         for x in xs:
-            ex = float(sstep(0.0, 1.0, np.array([(0.31 - abs(x)) / 0.07]))[0])
+            ex = float(sstep(0.0, 1.0, np.array([(0.34 - abs(x)) / 0.07]))[0])
             for t in ts:
                 z = zc + t * hb - 0.30 * x * x
                 p_, n_ = surf_point(G, F, x, z, -1.0, 0.3)
@@ -425,23 +437,34 @@ def head_field(h, store):
     base = smin(base, ell(P, (0.0, -0.12, 1.36), (0.24, 0.24, 0.22)), 0.10)    # neck plug (hidden joint)
     for s in (1, -1):
         base = smin(base, ell(P, (s * 0.33, -0.46, 1.62), (0.18, 0.17, 0.15)), 0.10)   # cheeks
-    muzzle = rbox(P, (0.0, -0.68, 1.58), (0.30, 0.22, 0.17), 0.12)             # wide boxy rounded muzzle
-    jaw = rbox(P, (0.0, -0.64, 1.40), (0.25, 0.19, 0.08), 0.07)                # lower jaw, set back (overbite)
-    nost = np.minimum(ell(P, (0.11, -0.80, 1.745), (0.07, 0.065, 0.05)), ell(P, (-0.11, -0.80, 1.745), (0.07, 0.065, 0.05)))
+    base = smin(base, ell(P, (0.0, -0.18, 1.38), (0.30, 0.30, 0.24)), 0.10)    # thick neck plug under the jaw
+    muzzle = rbox(P, (0.0, -0.72, 1.62), (0.32, 0.26, 0.15), 0.12)             # long wide rounded upper snout
+    jaw = smin(rbox(P, (0.0, -0.66, 1.385), (0.30, 0.25, 0.115), 0.11),        # BIG rounded lower jaw, as far forward
+               ell(P, (0.0, -0.70, 1.31), (0.25, 0.22, 0.12)), 0.06)             # chunky round chin
+    nost = np.minimum(ell(P, (0.11, -0.86, 1.765), (0.07, 0.065, 0.05)), ell(P, (-0.11, -0.86, 1.765), (0.07, 0.065, 0.05)))
+    Pb = P.copy()
+    Pb[..., 2] = Pb[..., 2] - 0.5 * Pb[..., 0] ** 2                             # grin curves up at the corners
+    cav = ell(Pb, (0.0, -0.95, 1.495), (0.31, 0.17, 0.05))                     # open mouth
+    tongue = ell(P, (0.0, -0.84, 1.455), (0.13, 0.12, 0.035))
+    teeth = None
+    for x, z0, z1 in ((0.09, 1.55, 1.505), (0.20, 1.55, 1.51), (-0.09, 1.55, 1.505), (-0.20, 1.55, 1.51),
+                      (0.14, 1.44, 1.49), (-0.14, 1.44, 1.49)):
+        t_ = rcone(P, (x, -0.925, z0 + 0.5 * x * x), (x, -0.935, z1 + 0.5 * x * x), 0.032, 0.02)
+        teeth = t_ if teeth is None else np.minimum(teeth, t_)
     brow = np.minimum(ell(P, (0.25, -0.50, 2.05), (0.16, 0.085, 0.06), axis=(0.9, 0.0, 0.3)),
                       ell(P, (-0.25, -0.50, 2.05), (0.16, 0.085, 0.06), axis=(-0.9, 0.0, 0.3)))
-    fang = np.minimum(rcone(P, (0.12, -0.86, 1.47), (0.12, -0.88, 1.37), 0.038, 0.016),
-                      rcone(P, (-0.12, -0.86, 1.47), (-0.12, -0.88, 1.37), 0.038, 0.016))
     F = smin(base, muzzle, 0.14)
-    F = smin(F, jaw, 0.06)
+    F = smin(F, jaw, 0.10)
     F = smin(F, nost, 0.04)
     F = smin(F, brow, 0.07)
-    F = smin(F, fang, 0.012)
+    F = smax(F, -cav, 0.025)
+    F = smin(F, tongue, 0.02)
+    F = smin(F, teeth, 0.012)
     if store:
         for name, s in (("eyeL", 1), ("eyeR", -1)):
             ew = head_world((s * 0.27, 0.0, 1.86))
             frames[name] = frame_at(G, smin(base, muzzle, 0.14), ew[0], ew[2], -1.4, -0.1, (0.165 * HEAD_S, 0.18 * HEAD_S))
-        frames["mouth"] = frame_at(G, F, 0.0, head_world((0, 0, 1.50))[2], -1.4, -0.3)
+        frames["mouth"] = frame_at(G, F, 0.0, head_world((0, 0, 1.495))[2], -1.4, -0.3)
     horn = np.minimum(horn_sdf(P, 1), horn_sdf(P, -1))
     fin = np.minimum(ell(P, (0.50, 0.04, 1.86), (0.05, 0.10, 0.15), axis=(1.0, 0.8, 0.2)),
                      ell(P, (-0.50, 0.04, 1.86), (0.05, 0.10, 0.15), axis=(-1.0, 0.8, 0.2)))
@@ -450,7 +473,8 @@ def head_field(h, store):
     if store:
         FACE.update(frames)
     S = HEAD_S
-    return G, F * S, dict(horn=horn * S, fin=fin * S, muzzle=muzzle * S, jaw=jaw * S, fang=fang * S, brow=brow * S, nost=nost * S)
+    return G, F * S, dict(horn=horn * S, fin=fin * S, muzzle=muzzle * S, jaw=jaw * S, teeth=teeth * S, brow=brow * S, nost=nost * S,
+                          cav=cav * S, tongue=tongue * S)
 
 
 def wing_frame():
@@ -593,25 +617,23 @@ def leg_field(h):
     return G, F
 
 
-ARM_S, ARM_E = np.array((0.30, -0.10, 1.00)), np.array((0.39, -0.20, 0.78))
-ARM_W, ARM_H = np.array((0.28, -0.53, 0.80)), np.array((0.26, -0.60, 0.785))
+ARM_W, ARM_H = np.array((0.40, -0.58, 0.76)), np.array((0.37, -0.675, 0.735))
 
 
 def arm_parts(P):
-    """Left arm (+X): top ball on the shoulder pivot, thick upper arm, elbow bend, forearm held forward, 3-claw hand."""
-    F = smin(ell(P, ARM_S, (0.115, 0.115, 0.115)), rcone(P, ARM_S, ARM_E, 0.115, 0.095), 0.03)
-    F = smin(F, ell(P, ARM_E, (0.10, 0.10, 0.10)), 0.03)
-    F = smin(F, rcone(P, ARM_E, ARM_W, 0.09, 0.078), 0.04)
-    F = smin(F, ell(P, ARM_H, (0.088, 0.09, 0.075)), 0.04)
-    claws = None
-    for dx in (-0.045, 0.0, 0.045):
-        c_ = rcone(P, ARM_H + np.array((dx, -0.05, -0.015)), ARM_H + np.array((dx * 1.25, -0.125, -0.065)), 0.034, 0.024)
-        claws = c_ if claws is None else np.minimum(claws, c_)
-    return smin(F, claws, 0.02), claws
+    """Left forearm (+X): elbow ball on the pivot (buried in the body's elbow mass), short thick forearm held forward,
+    stubby round hand with 3 rounded ivory toes pointing forward and down."""
+    F = smin(ell(P, ARM_E, (0.165, 0.165, 0.165)), rcone(P, ARM_E, ARM_W, 0.17, 0.145), 0.05)
+    F = smin(F, ell(P, ARM_H, (0.15, 0.135, 0.12)), 0.07)                     # fat rounded mitten hand
+    toes = None
+    for dx in (-0.06, 0.0, 0.06):
+        t_ = ell(P, ARM_H + np.array((dx * 1.5, -0.105, -0.045)), (0.058, 0.05, 0.05))
+        toes = t_ if toes is None else np.minimum(toes, t_)
+    return smin(F, toes, 0.04), toes
 
 
 def arm_field(h):
-    G = Grid((0.08, -0.80, 0.56), (0.58, 0.08, 1.18), h)
+    G = Grid((0.14, -0.92, 0.45), (0.72, -0.08, 1.02), h)
     return G, arm_parts(G.P)[0]
 
 
@@ -805,18 +827,20 @@ def paint_body(p, n):
     X, Y, Z = p[:, 0], p[:, 1], p[:, 2]
     c = red_skin(p, n, 11, 0.15, 1.0, 0.04)
     # modelled cream plates (each lighter in its middle), warm orange grooves between them
-    sh = sstep(0.03, -0.01, sample("body", "shell", p)) * sstep(0.32, 0.27, np.abs(X)) * sstep(-0.02, -0.10, Y) \
+    sh = sstep(0.14, 0.10, sample("body", "shell", p)) * sstep(0.35, 0.30, np.abs(X)) * sstep(-0.02, -0.10, Y) \
         * sstep(0.10, -0.25, n[:, 1]) * sstep(PL_Z0 - 0.02, PL_Z0 + 0.03, Z + 0.3 * X ** 2) \
-        * sstep(PL_Z0 + PL_N * PL_SP + 0.03, PL_Z0 + PL_N * PL_SP - 0.02, Z + 0.3 * X ** 2)
+        * sstep(PL_Z0 + PL_N * PL_SP + 0.09, PL_Z0 + PL_N * PL_SP + 0.04, Z + 0.3 * X ** 2)
     ph = (Z + 0.3 * X ** 2 - PL_Z0) / PL_SP
     fr = ph - np.floor(ph)
-    pm = sstep(0.074, 0.064, np.abs(fr - 0.5) * PL_SP) * sstep(0.315, 0.27, np.abs(X))
+    pm = sstep(0.074, 0.064, np.abs(fr - 0.5) * PL_SP) * sstep(0.345, 0.30, np.abs(X))
     pc = mix(BELLY_SH, BELLY, sstep(0.0, 0.40, fr))
     pc = mix(pc, BELLY_LT, 0.50 * sstep(0.35, 0.65, fr) * sstep(0.95, 0.70, fr))
     bd2, _ = bands(p, 4.0, 2.0, 17, 0.0)
     pc = mix(pc, BELLY_SH, 0.16 * bd2)
     pc = mix(BELLY_LINE, pc, pm)
-    c = mix(c, pc, sh * sstep(-0.02, 0.03, sample("body", "shoulder", p)))
+    c = mix(c, pc, sh * (1 - (1 - sstep(-0.02, 0.03, sample("body", "shoulder", p))) * sstep(0.29, 0.34, np.abs(X))))
+    th = sstep(0.98, 1.08, Z) * sstep(0.27, 0.20, np.abs(X)) * sstep(-0.12, -0.30, Y) * sstep(0.0, -0.35, n[:, 1])
+    c = mix(c, mix(BELLY_SH, BELLY, sstep(-0.6, 0.3, n[:, 2] + 0.3)), th)
     # spine bumps: a deeper warm red under their ember tops
     bm = sstep(0.02, -0.01, sample("body", "bumps", p)) * (Y > 0.1)
     c = mix(c, mix(RED_DK, RED, sstep(-0.3, 0.6, n[:, 2] + 0.4 * n[:, 1])), 0.7 * bm)
@@ -835,17 +859,16 @@ def paint_head(p, n, eyes_out):
     c = mix(c, RED_LT, 0.20 * mz * sstep(0.2, 0.8, n[:, 2]))                   # muzzle top catches light
     br = sstep(0.02, -0.01, sample("head", "brow", pw))
     c = mix(c, RED_LT, 0.25 * br * sstep(0.1, 0.7, n[:, 2]))
-    # cream lower jaw / chin, warm dark mouth line under the overbite
-    jw = sstep(0.02, -0.01, sample("head", "jaw", pw)) * sstep(1.47, 1.43, Z)
+    # cream lower jaw / chin, dark open grin, pink tongue, rounded ivory teeth
+    jw = sstep(0.02, -0.01, sample("head", "jaw", pw)) * sstep(1.47, 1.43, Z - 0.5 * X ** 2)
     jc = mix(BELLY_SH, BELLY, sstep(-0.6, 0.2, n[:, 2] - n[:, 1] * 0.5))
     c = mix(c, jc, jw)
-    lipz = 1.425 + 0.45 * X ** 2
-    lip = sstep(0.022, 0.010, np.abs(Z - lipz)) * sstep(0.30, 0.26, np.abs(X)) * (Y < -0.70) * (n[:, 1] < 0.1)
-    c = mix(c, MOUTH_C, 0.9 * lip)
-    for s in (1, -1):                                                          # little upturned mouth corners
-        cd = np.hypot(X - s * 0.285, Z - 1.47)
-        c = mix(c, MOUTH_C, 0.8 * sstep(0.020, 0.010, np.abs(cd - 0.045)) * (Z < 1.49) * (Y < -0.6) * (s * X > 0.25))
-    fg = sstep(0.012, -0.004, sample("head", "fang", pw))
+    cv = sample("head", "cav", pw)
+    mo = sstep(0.022, 0.004, cv) * (Y > -1.02)
+    c = mix(c, mix(MOUTH_C * 0.7, MOUTH_C * 1.25, sstep(-0.80, -0.95, Y)), mo)
+    tg = sstep(0.012, -0.004, sample("head", "tongue", pw)) * mo
+    c = mix(c, mix(rgb(214, 84, 98), rgb(250, 136, 140), sstep(-0.2, 0.8, n[:, 2])), tg)
+    fg = sstep(0.012, -0.004, sample("head", "teeth", pw))
     c = mix(c, mix(IVORY_SH, IVORY, sstep(-0.5, 0.3, -n[:, 1])), fg)
     # nostrils on the front of the nostril bumps
     for s in (1, -1):
@@ -920,8 +943,8 @@ def paint_leg(p, n, s):
 
 def paint_arm(p, n, s):
     q = p * np.array((s, 1.0, 1.0))
-    c = red_skin(q - np.array((0.0, 0.0, 0.0)), n, 41 + s, 0.62, 1.05)
-    under = sstep(-0.15, -0.55, n[:, 2]) * sstep(-0.30, -0.45, q[:, 1])
+    c = red_skin(p, n, 11, 0.15, 1.0, 0.04)                                    # same coat as the body across the elbow
+    under = sstep(-0.15, -0.55, n[:, 2]) * sstep(-0.50, -0.60, q[:, 1])
     c = mix(c, mix(BELLY_SH, BELLY, 0.6), 0.85 * under)                        # cream palm / forearm underside
     cm = sstep(0.012, -0.004, arm_parts(q)[1])
     c = mix(c, mix(IVORY_SH, IVORY, sstep(-0.3, 0.5, n[:, 2] - n[:, 1])), cm)
@@ -1003,6 +1026,8 @@ def light(col, P, Ns, Nf, hard, ao_s, ao_l, edge, part_ids):
     ao_w = np.where(head, 0.22, np.where(plate, 0.22, 0.30))
     aol_w = np.where(head | plate, np.where(plate, 0.0, 0.08), 0.16)
     aof = (1.0 - ao_w + ao_w * sstep(0.12, 1.0, ao_s)) * (1.0 - aol_w * (1.0 - sstep(0.2, 1.0, ao_l)))
+    eld = np.minimum(np.linalg.norm(P - ARM_E, axis=1), np.linalg.norm(P - ARM_E * np.array((-1, 1, 1)), axis=1))
+    aof = mix(aof[:, None], np.ones((len(P), 1)), sstep(0.30, 0.20, eld))[:, 0]   # elbow joint: no crease
     shade = lightv * aof * (0.92 + 0.10 * sstep(0.0, 2.2, P[:, 2]))
     lit = col * shade[:, None]
     lit = mix(lit, np.clip(lit * np.array((1.06, 0.97, 0.88)), 0, 1), 0.5 * sstep(1.0, 0.8, shade) * sstep(0.55, 0.75, shade))
@@ -1072,7 +1097,7 @@ def make_object(name, pid, vf, material):
     return ob
 
 
-TARGET = dict(body=1800, head=2450, struts=720, leg=300, tail=620, flame=200, arm=380)
+TARGET = dict(body=1800, head=3200, struts=720, leg=300, tail=620, flame=200, arm=440)
 G_, F_, fl_ = body_field(H_FINE)
 fl_["F"] = F_
 FUSED["body"] = (G_, fl_)
@@ -1080,7 +1105,7 @@ body_vf = extract(G_, F_, TARGET["body"], "body")
 body_vf = merge([body_vf, build_plates()])
 G_, F_, fl_ = head_field(H_FINE, True)
 FUSED["head"] = (G_, fl_)
-head_vf = extract(G_, F_, TARGET["head"], "head")
+head_vf = extract(G_, F_, TARGET["head"], "head", passes=12)
 G_, F_, fl_ = tail_field(H_FINE)
 FUSED["tail"] = (G_, fl_)
 tail_vf = extract(G_, F_, TARGET["tail"], "tail")
@@ -1422,8 +1447,8 @@ JOINT_NAME = {PFX + "Body": "root (centre of the pot belly)", PFX + "Head": "nec
               PFX + "WingR": "shoulder (round wing root sunk into the upper back)",
               PFX + "LegL": "knee, hidden inside the thigh fused to the hip", PFX + "LegR": "knee, hidden inside the thigh fused to the hip",
               PFX + "Tail": "tail root, inside the tail stub of the body",
-              PFX + "ArmL": "shoulder: the arm-top ball is centred on the pivot and buried in the body's shoulder bulge",
-              PFX + "ArmR": "shoulder: the arm-top ball is centred on the pivot and buried in the body's shoulder bulge",
+              PFX + "ArmL": "elbow: the forearm's elbow ball is centred on the pivot and buried in the body's upper-arm mass",
+              PFX + "ArmR": "elbow: the forearm's elbow ball is centred on the pivot and buried in the body's upper-arm mass",
               GLOW_NAME[P_GCHEEK]: "centre of the cheek ember streaks (welded to the head, Neon)",
               GLOW_NAME[P_GBACK]: "centre of the ember tops of the spine bumps (welded to the body, Neon)",
               GLOW_NAME[P_GWINGL]: "centre of the ember streaks on the left wing arm (welded to WingL, Neon)",
@@ -1437,7 +1462,7 @@ MOTION = {
     PFX + "LegL": "knee joint: tucked 20 deg forward while flying, swing +/-22 deg in the landing waddle",
     PFX + "LegR": "mirror of LegL",
     PFX + "Tail": "hangs 12 deg down in flight; swish = yaw about Studio Y (+/-30 deg)",
-    PFX + "ArmL": "shoulder joint: rest = elbows bent, forearms held forward in front of the belly; flight = small tuck (Studio X -6..-12) with the beat; fire breath = braced forward and up; glide = tucked back along the sides",
+    PFX + "ArmL": "forearm + hand at the elbow (shoulders and upper arms are part of the body): rest = elbows bent, forearms held forward in front of the belly; flight = small tuck (Studio X -6..-12) with the beat; fire breath = braced forward and up; glide = tucked back along the sides",
     PFX + "ArmR": "mirror of ArmL",
 }
 for g in GLOW_PIDS:
@@ -1472,7 +1497,7 @@ HOVER_MID = fly({"Head": (-4, 0, 0)})
 WINGS_UP = fly({"WingL": (0, 0, 30), "WingR": (0, 0, -30), "Head": (-6, 0, 0), "ArmL": (0, 0, 0), "ArmR": (0, 0, 0)}, {"Body": (0, 0, 0.10)})
 WINGS_DOWN = fly({"WingL": (0, 0, -55), "WingR": (0, 0, 55), "Body": (4, 0, 0), "Tail": (-6, 0, 0), "ArmL": (12, 0, 0), "ArmR": (12, 0, 0)}, {"Body": (0, 0, -0.08)})
 GLIDE = fly({"Body": (12, 0, 0), "Head": (-12, 0, 0), "WingL": (50, 0, -40), "WingR": (50, 0, 40),
-             "LegL": (25, 0, 0), "LegR": (25, 0, 0), "Tail": (-6, 0, 0), "ArmL": (35, 0, 20), "ArmR": (35, 0, -20)})
+             "LegL": (25, 0, 0), "LegR": (25, 0, 0), "Tail": (-6, 0, 0), "ArmL": (45, 0, 25), "ArmR": (45, 0, -25)})
 FIRE = fly({"Body": (-10, 0, 0), "Head": (-20, 0, 0), "WingL": (0, 25, 10), "WingR": (0, -25, -10),
             "LegL": (-30, 0, 0), "LegR": (-30, 0, 0), "Tail": (-18, 0, 0), "ArmL": (-28, 0, 8), "ArmR": (-28, 0, -8)}, {"Head": (0, -0.05, 0.02)})
 SWISH = fly({"Tail": (-12, 30, 0), "Head": (0, -8, 0)})
@@ -1888,7 +1913,9 @@ VIEWS = [("threeq", "Three-quarter (hovering)", (-0.75, -0.9, 0.30), D, tgt),
 WING_CU = V(*wing_world(0.86, 0.72)) + H
 BELLY_CU = V(0.0, -0.40, 0.66) + H
 CLOSEUPS = [("closeup-wing-edge", "Close-up: wing edge", around(WING_CU, (0.35, -1, 0.25), 2.4), WING_CU),
-            ("closeup-belly", "Close-up: belly plates + arm", around(BELLY_CU, (-0.55, -1, 0.15), 2.8), BELLY_CU)]
+            ("closeup-belly", "Close-up: belly plates + arm", around(BELLY_CU, (-0.55, -1, 0.15), 2.8), BELLY_CU),
+            ("closeup-shoulder", "Close-up: shoulder + arm (3/4)", around(V(-0.36, -0.32, 0.88) + H, (-0.8, -1, 0.25), 3.0),
+             V(-0.36, -0.32, 0.88) + H)]
 
 if not NO_PREVIEWS and QUICK:
     pose(lifted(HOVER_MID))
@@ -1897,7 +1924,7 @@ if not NO_PREVIEWS and QUICK:
     pose(({}, {}))
     items.append((shoot(OUT / "_rest_side.png", around(tgt - H, (-1, 0, 0.06), D), tgt - H, res=(700, 700)), "Rest side (standing)"))
     pose(lifted(HOVER_MID))
-    for k, lab, loc, t in CLOSEUPS:
+    for k, lab, loc, t in CLOSEUPS[1:]:
         items.append((shoot(OUT / f"_{k}.png", loc, t, res=(700, 700)), lab))
     for i in (3,):
         pose(lifted(POSES[i][1]))
