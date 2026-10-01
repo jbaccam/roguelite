@@ -1,0 +1,154 @@
+{
+ "name": "VampireBlade",
+ "blender_version": "5.2.1 LTS",
+ "authored_scale_factor": 1.0,
+ "meshes": {
+  "VampireBlade": {
+   "triangles": 14804,
+   "vertices": 7536,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 72,
+   "bounds_min": [
+    -1.34,
+    -0.498,
+    0.2483
+   ],
+   "bounds_max": [
+    1.34,
+    0.2737,
+    5.0578
+   ]
+  },
+  "VampireBlade_Glow": {
+   "triangles": 2252,
+   "vertices": 1380,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    -1.1012,
+    -0.418,
+    0.0
+   ],
+   "bounds_max": [
+    1.1012,
+    0.314,
+    5.06
+   ]
+  },
+  "VampireBlade_GlowCore": {
+   "triangles": 220,
+   "vertices": 122,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    -0.14,
+    -0.428,
+    1.7984
+   ],
+   "bounds_max": [
+    0.14,
+    0.326,
+    4.64
+   ]
+  }
+ },
+ "total_triangles": 17276,
+ "total_vertices": 9038,
+ "mesh_count": 3,
+ "materials": {
+  "VampireBlade": "VampireBlade_Baked",
+  "VampireBlade_Glow": "VampireBlade_Glow",
+  "VampireBlade_GlowCore": "VampireBlade_GlowCore"
+ },
+ "texture": {
+  "file": "BaseColor.png",
+  "size": [
+   1024,
+   1024
+  ],
+  "packed_in_blend": true,
+  "uv_layers": [
+   "UVMap"
+  ],
+  "uv_range": [
+   0.0046,
+   0.9954
+  ]
+ },
+ "height_studs": 5.06,
+ "bounds_blender_min": [
+  -1.34,
+  -0.498,
+  0.0
+ ],
+ "bounds_blender_max": [
+  1.34,
+  0.326,
+  5.06
+ ],
+ "bounds_studio_size": [
+  2.68,
+  5.06,
+  0.824
+ ],
+ "x_mirror_symmetry_max_error_studs_guard_and_blade": {
+  "VampireBlade": 0.024753,
+  "VampireBlade_Glow": 0.0,
+  "VampireBlade_GlowCore": 0.0
+ },
+ "glb_reimport": {
+  "meshes": 3,
+  "triangles": 17276,
+  "names": [
+   "VampireBlade",
+   "VampireBlade_Glow",
+   "VampireBlade_GlowCore"
+  ],
+  "images": [
+   "BaseColor 1024x1024"
+  ]
+ },
+ "fbx_reimport": {
+  "meshes": 3,
+  "triangles": 17276,
+  "names": [
+   "VampireBlade",
+   "VampireBlade_Glow",
+   "VampireBlade_GlowCore"
+  ],
+  "embedded_images": [
+   "VampireBlade_BaseColor 1024x1024"
+  ],
+  "dimensions_after_axis_conversion": {
+   "VampireBlade": [
+    2.68,
+    0.772,
+    4.809
+   ],
+   "VampireBlade_Glow": [
+    2.202,
+    0.732,
+    5.06
+   ],
+   "VampireBlade_GlowCore": [
+    0.28,
+    0.754,
+    2.842
+   ]
+  }
+ },
+ "checks": {
+  "loose_vertices_total": 0,
+  "zero_area_faces_total": 0,
+  "glb_triangles_match": true,
+  "fbx_triangles_match": true,
+  "every_mesh_under_20k": true
+ },
+ "notes": [
+  "Non-manifold edge counts are expected: the textured mesh is many closed parts that overlap by design (wraps on the grip, wings in the boss, langets on the blade), and booleaned rune grooves meet the bevels.",
+  "Studio import, Neon look and in-game scale are untested (no Studio access in this task)."
+ ]
+}
