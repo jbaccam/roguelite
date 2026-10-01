@@ -81,9 +81,12 @@ player.CharacterRemoving:Connect(function()
  generation+=1;disconnect();view:SetHealth(0,0,true);view:Close()
 end)
 if player.Character then task.spawn(bindCharacter,player.Character) end
+-- ButtonB closes even when processed: with a menu button selected, the gamepad's GUI navigation
+-- marks B as handled, which would otherwise make it never close the menu.
 UserInputService.InputBegan:Connect(function(input,processed)
+ if input.KeyCode==Enum.KeyCode.ButtonB and not UserInputService:GetFocusedTextBox() then view:Close() return end
  if processed then return end
- if input.KeyCode==Enum.KeyCode.Escape or input.KeyCode==Enum.KeyCode.ButtonB then view:Close() end
+ if input.KeyCode==Enum.KeyCode.Escape then view:Close() end
 end)
 -- Future run service may publish these attributes on ReplicatedStorage.RogueliteRunState.
 -- No fabricated wave countdown or progression in the five-chaser practice scene.

@@ -59,9 +59,20 @@ function T.icon(parent,name,x,y,size,asset)
  if asset=='shard' then i.ImageRectOffset=T.ShardRect.offset;i.ImageRectSize=T.ShardRect.size end
  return i
 end
--- Chunky outlined headline text. Fixed TextSize; wraps inside its box.
+-- Chunky outlined headline text at TextSize; wraps inside its box. Text that would not fit (a long
+-- name, a big number, a narrow screen layout) shrinks to fit instead of spilling out, down to 60%
+-- of its size. Setting TextSize later moves the cap with it. A caller that adds its own
+-- UITextSizeConstraint replaces this one.
 function T.label(parent,name,text,x,y,w,h,size,color)
- return make('TextLabel',parent,{Name=name,BackgroundTransparency=1,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(w,h),Text=text,TextColor3=color or T.Color.white,Font=T.Font,TextSize=size or 24,TextWrapped=true,TextStrokeColor3=Color3.new(0,0,0),TextStrokeTransparency=.12})
+ size=size or 24
+ local l=make('TextLabel',parent,{Name=name,BackgroundTransparency=1,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(w,h),Text=text,TextColor3=color or T.Color.white,Font=T.Font,TextSize=size,TextScaled=true,TextWrapped=true,TextStrokeColor3=Color3.new(0,0,0),TextStrokeTransparency=.12})
+ -- Named FitText so callers' own `.UITextSizeConstraint` lookups always find theirs.
+ local fit=make('UITextSizeConstraint',l,{Name='FitText',MaxTextSize=size,MinTextSize=math.min(size,math.max(9,math.floor(size*.6)))})
+ l:GetPropertyChangedSignal('TextSize'):Connect(function()
+  if fit.Parent then fit.MaxTextSize=l.TextSize;fit.MinTextSize=math.min(l.TextSize,math.max(9,math.floor(l.TextSize*.6))) end
+ end)
+ l.ChildAdded:Connect(function(c) if c~=fit and c:IsA('UITextSizeConstraint') then fit:Destroy() end end)
+ return l
 end
 -- Body copy: left aligned, shrinks to fit between 9px and `size`.
 function T.text(parent,name,text,x,y,w,h,size,color)
@@ -215,6 +226,85 @@ end
 function T.headshotId(userId) return 'rbxthumb://type=AvatarHeadShot&id='..userId..'&w=150&h=150' end
 function T.headshot(image,userId) image.Image=T.headshotId(userId) end
 
+-- Full-screen screens (Armory, Skill Tree, Chests, Run Setup) lay out on a canvas in design pixels:
+-- the screen size divided by one scale, so panels, slots and text keep their proportions on every
+-- screen. The scale fits DESIGN (1920x1080). On small screens (phones) it is raised to
+-- READABLE_SCALE while the canvas stays at least MIN_CANVAS, so text stays readable and the screen
+-- lays itself out on the smaller canvas (lists and details scroll) instead of shrinking further.
+-- Example: a 1366x768 laptop gets scale .71 on a 1920x1080 canvas; an 844x390 phone gets .5 on a
+-- 1688x780 canvas; a 2560x1080 ultrawide gets 1 on a 2560x1080 canvas.
+T.DESIGN=Vector2.new(1920,1080);T.MIN_CANVAS=Vector2.new(1280,640);T.READABLE_SCALE=.5;T.MAX_SCALE=2
+function T.canvasScale(size,design,min)
+ design=design or T.DESIGN;min=min or T.MIN_CANVAS
+ local s=math.min(size.X/design.X,size.Y/design.Y)
+ if s<T.READABLE_SCALE then s=math.max(s,math.min(T.READABLE_SCALE,size.X/min.X,size.Y/min.Y)) end
+ return math.clamp(s,.05,T.MAX_SCALE)
+end
+-- A canvas filling `root` (a frame the size of the screen; tests resize it to preview other
+-- screens). onLayout(L,canvas) runs now and whenever the size changes: L.s scale, L.w/L.h canvas size and
+-- L.top the band at the top covered by Roblox's menu buttons, all in canvas pixels.
+-- Returns the canvas frame and an update() to call when the layout should be recomputed.
+function T.canvas(root,onLayout,opts)
+ local canvas=T.frame(root,'Canvas',0,0,0,0)
+ local scale=make('UIScale',canvas,{Scale=1})
+ local last
+ local function update()
+  if not canvas.Parent then return end
+  local size=root.AbsoluteSize
+  if size.X<2 or size.Y<2 then pcall(function() size=workspace.CurrentCamera.ViewportSize end) end
+  if size.X<2 or size.Y<2 then return end
+  local s=T.canvasScale(size,opts and opts.design,opts and opts.min)
+  local inset=0
+  pcall(function() inset=game:GetService('GuiService'):GetGuiInset().Y end)
+  local L={s=s,w=size.X/s,h=size.Y/s,top=math.max(inset,36)/s}
+  local key=string.format('%.2f %.2f %.3f',L.w,L.h,L.top)
+  if key==last then return end
+  last=key
+  canvas.Size=UDim2.fromOffset(L.w,L.h);scale.Scale=s
+  onLayout(L,canvas)
+ end
+ root:GetPropertyChangedSignal('AbsoluteSize'):Connect(update)
+ update()
+ return canvas,function() last=nil;update() end
+end
+
+-- Gamepad: when a menu opens, put the selection on its first button so a controller can drive it
+-- (mouse and touch players see no change). Deferred so the caller can finish building it first.
+-- All selection calls are protected: a sandboxed caller without the capability just skips them.
+function T.gamepadSelect(parent)
+ task.defer(function()
+  if not parent.Parent then return end
+  pcall(function()
+   if not game:GetService('UserInputService'):GetLastInputType().Name:find('^Gamepad') then return end
+   game:GetService('GuiService'):Select(parent)
+  end)
+ end)
+end
+-- Screens that rebuild themselves (Armory, Skill Tree) keep the controller's selection across a
+-- redraw: remember the selected button's path under `root` before, reselect it after.
+function T.selectionPath(root)
+ local ok,sel=pcall(function() return game:GetService('GuiService').SelectedObject end)
+ if not (ok and sel and sel:IsDescendantOf(root)) then return nil end
+ local path={};local o=sel
+ while o and o~=root do table.insert(path,1,o.Name);o=o.Parent end
+ return path
+end
+function T.restoreSelection(root,path)
+ if not path then return end
+ local o=root
+ for _,name in path do o=o and o:FindFirstChild(name) end
+ if o and o:IsA('GuiObject') and o.Selectable then pcall(function() game:GetService('GuiService').SelectedObject=o end)
+ else T.gamepadSelect(root) end
+end
+
+-- Full-screen screens hide the touch thumbstick and jump button while open, so neither can cover
+-- a button (the jump button sits bottom-right, over the details panels). Keyed per screen.
+local touchHiders={}
+function T.hideTouchControls(key,hide)
+ touchHiders[key]=hide or nil
+ pcall(function() game:GetService('GuiService').TouchControlsEnabled=next(touchHiders)==nil end)
+end
+
 -- Modal window: dimmed backdrop, lime-cornered frame, title with stone caps, close button.
 -- `w`/`h` is the content layout size; the frame adds WINDOW_MARGIN of breathing room on every
 -- side. Scales to fit the viewport, up to WINDOW_MAX_SCALE on large screens.
@@ -242,11 +332,32 @@ function T.window(screen,name,title,w,h,onClose,opts)
  local self={Root=backdrop,Holder=holder,Body=body,Title=titleLabel,Scale=scale}
  -- Red-cornered close button with a red X so it reads as 'close' at a glance.
  local close=T.button(holder,'Close','X',w-62,-22,58,58,nil,true);T.setTier(close,4);close.Caption.TextColor3=T.Color.negative;close.Caption.TextSize=34
+ -- A window that would have to shrink below READABLE_SCALE+.05 to fit (phones) stays at that scale
+ -- instead: it gets as tall as the screen allows and its body scrolls. Example: Settings on an
+ -- 844x390 phone was scale .22 (22 px titles drawn 5 px tall); now .55 with a scrolling body.
+ local scroller
  local function fit()
   local v=screen.AbsoluteSize
   if v.X<=0 then return end
-  if large then scale.Scale=math.min(T.LARGE_WINDOW_MAX_SCALE,(v.X-32)/w,(v.Y-40)/(h+34))
-  else scale.Scale=math.min(T.WINDOW_MAX_SCALE,(v.X-24)/w,(v.Y-184)/(h+34)) end
+  -- Big screens leave room around the window for the lobby HUD; short screens don't need to.
+  local reserve=large and 40 or math.clamp(v.Y*.17,24,184)
+  local s=math.min(large and T.LARGE_WINDOW_MAX_SCALE or T.WINDOW_MAX_SCALE,(v.X-(large and 32 or 24))/w,(v.Y-reserve)/(h+34))
+  local readable=math.min(T.READABLE_SCALE+.05,(v.X-24)/w)
+  local vh=h
+  if s<readable then s=readable;vh=math.clamp(math.floor((v.Y-16)/s-34),math.min(h,240),h) end
+  scale.Scale=s
+  holder.Size=UDim2.fromOffset(w,vh)
+  if vh<h then
+   -- Centred exactly (the backdrop starts 120 px above the screen; the title plate pokes 30 up).
+   holder.Position=UDim2.new(.5,0,0,120+v.Y/2+15*s)
+   scroller=scroller or T.scroll(holder,'BodyScroll',0,0,0,0)
+   scroller.Position=UDim2.fromOffset(18+m,40+m);scroller.Size=UDim2.fromOffset(w-36-m*2+12,vh-58-m*2)
+   scroller.CanvasSize=UDim2.fromOffset(0,h-58-m*2)
+   body.Position=UDim2.new();body.Parent=scroller
+  else
+   holder.Position=large and UDim2.new(.5,0,.5,76) or UDim2.new(.5,0,.53,60)
+   if scroller then body.Parent=holder;body.Position=UDim2.fromOffset(18+m,40+m);scroller:Destroy();scroller=nil end
+  end
  end
  local conn=screen:GetPropertyChangedSignal('AbsoluteSize'):Connect(fit);fit()
  function self.Close()
@@ -256,16 +367,31 @@ function T.window(screen,name,title,w,h,onClose,opts)
  end
  close.Activated:Connect(self.Close)
  backdrop.Activated:Connect(self.Close)
+ T.gamepadSelect(body)
  scale.Scale*=.92;TweenService:Create(scale,TweenInfo.new(.14,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=scale.Scale/.92}):Play()
  return self
 end
 
+-- Named sound cue (ui_equip, ui_purchase, ui_upgrade, ui_error). Sandboxed modules can't play
+-- audio, so StarterPlayerScripts.RogueliteSounds plays it. The cue is a sandboxed BindableEvent
+-- saved in ReplicatedStorage (audio/InstallSoundCue.luau). Protected: a sound problem must never
+-- stop the purchase, equip or message that follows the call.
+function T.sound(name)
+ pcall(function()
+  local cue=game:GetService('ReplicatedStorage'):FindFirstChild('RogueliteSoundCue');if cue then cue:Fire(name) end
+ end)
+end
+
 -- Short message near the top of a screen (purchase results, errors). Replaces any previous one.
+-- A red (negative) message is a failure and plays the error sound.
 function T.toast(screen,text,color)
+ if color==T.Color.negative then T.sound('ui_error') end
  local old=screen:FindFirstChild('Toast');if old then old:Destroy() end
  local size=game:GetService('TextService'):GetTextSize(text,20,T.Font,Vector2.new(900,100))
- local t=T.panel(screen,'Toast',0,0,size.X+60,52,'panel');t.AnchorPoint=Vector2.new(.5,0);t.Position=UDim2.new(.5,0,0,96);t.ZIndex=50
- local l=T.label(t,'Text',text,0,0,0,0,20,color or T.Color.white);l.Size=UDim2.fromScale(1,1);l.ZIndex=51
+ -- Never wider than the screen (phones): the text wraps or shrinks inside instead.
+ local maxW=screen.AbsoluteSize.X>0 and screen.AbsoluteSize.X-24 or 900
+ local t=T.panel(screen,'Toast',0,0,math.min(size.X+60,maxW),52,'panel');t.AnchorPoint=Vector2.new(.5,0);t.Position=UDim2.new(.5,0,0,96);t.ZIndex=50
+ local l=T.label(t,'Text',text,12,4,0,0,20,color or T.Color.white);l.Size=UDim2.new(1,-24,1,-8);l.ZIndex=51
  task.delay(2.6,function()
   if not t.Parent then return end
   TweenService:Create(t,TweenInfo.new(.3),{ImageTransparency=1}):Play()
@@ -276,20 +402,53 @@ function T.toast(screen,text,color)
 end
 
 -- Local presentation settings, stored as LocalPlayer attributes for this session.
--- Combat presentation reads Setting_ScreenShake and Setting_DamageNumbers.
-T.SettingDefaults={HudScale=1,ScreenShake=true,DamageNumbers=true}
+-- Combat presentation reads Setting_ScreenShake and Setting_DamageNumbers; RogueliteSounds and
+-- RogueliteMusic apply Setting_SfxVolume and Setting_MusicVolume (0-1) to their SoundGroups.
+T.SettingDefaults={HudScale=1,ScreenShake=true,DamageNumbers=true,MusicVolume=1,SfxVolume=1}
 function T.setting(key)
  local v=Players.LocalPlayer:GetAttribute('Setting_'..key)
  if v==nil then return T.SettingDefaults[key] end
  return v
 end
 function T.setSetting(key,value) Players.LocalPlayer:SetAttribute('Setting_'..key,value) end
-function T.settingsWindow(screen)
- local win=T.window(screen,'SettingsWindow','Settings',520,330)
+-- Drag bar for a 0-1 value in 5% steps with a live percent label; onChange(value) while dragging.
+function T.slider(parent,name,x,y,w,value,onChange)
+ local UIS=game:GetService('UserInputService')
+ local track=T.make('Frame',parent,{Name=name,Position=UDim2.fromOffset(x,y+16),Size=UDim2.fromOffset(w-72,12),BackgroundColor3=T.Color.track,BorderSizePixel=0})
+ T.make('UICorner',track,{CornerRadius=UDim.new(1,0)})
+ local fill=T.make('Frame',track,{Name='Fill',Size=UDim2.fromScale(value,1),BackgroundColor3=T.Color.lime,BorderSizePixel=0})
+ T.make('UICorner',fill,{CornerRadius=UDim.new(1,0)})
+ local knob=T.make('Frame',track,{Name='Knob',AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(value,.5),Size=UDim2.fromOffset(26,26),BackgroundColor3=T.Color.white,BorderSizePixel=0,ZIndex=3})
+ T.make('UICorner',knob,{CornerRadius=UDim.new(1,0)})
+ local label=T.label(parent,name..'Value',math.round(value*100)..'%',x+w-64,y+4,64,36,20)
+ local hit=T.make('TextButton',track,{Name='Hit',Text='',AutoButtonColor=false,BackgroundTransparency=1,Position=UDim2.fromOffset(-14,-16),Size=UDim2.new(1,28,0,44),ZIndex=4})
+ hit:SetAttribute('NoClickSound',true)
+ local dragging=false
+ local function set(px)
+  local v=math.round(math.clamp((px-track.AbsolutePosition.X)/track.AbsoluteSize.X,0,1)*20)/20
+  fill.Size=UDim2.fromScale(v,1);knob.Position=UDim2.fromScale(v,.5);label.Text=math.round(v*100)..'%'
+  onChange(v)
+ end
+ local function pointer(input) return input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch end
+ hit.InputBegan:Connect(function(input) if pointer(input) then dragging=true;set(input.Position.X) end end)
+ local moved=UIS.InputChanged:Connect(function(input)
+  if dragging and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then set(input.Position.X) end
+ end)
+ local ended=UIS.InputEnded:Connect(function(input) if pointer(input) then dragging=false end end)
+ track.Destroying:Connect(function() moved:Disconnect();ended:Disconnect() end)
+ return track
+end
+-- `extras`: optional ON/OFF rows owned by the caller, {key,title,help,get(),toggle()}.
+-- The caller calls win.Redraw() when its value changes (e.g. after a server reply).
+function T.settingsWindow(screen,extras)
+ extras=extras or {}
+ local win=T.window(screen,'SettingsWindow','Settings',520,498+#extras*84)
  local body=win.Body;local w=520-36
  local function row(y,title,help)
   T.label(body,title..'Title',title,14,y,w*.5,30,22).TextXAlignment=Enum.TextXAlignment.Left
-  T.text(body,title..'Help',help,14,y+30,w*.5,20,14,T.Color.muted)
+  -- Two lines of room so longer help wraps instead of shrinking to an unreadable size.
+  local l=T.text(body,title..'Help',help,14,y+30,w*.5,40,15,T.Color.muted);l.TextYAlignment=Enum.TextYAlignment.Top
+  l.UITextSizeConstraint.MinTextSize=12
  end
  local function draw()
   for _,c in body:GetChildren() do c:Destroy() end
@@ -303,9 +462,19 @@ function T.settingsWindow(screen)
    local on=T.setting(opt[1])
    T.button(body,opt[1],on and 'ON' or 'OFF',w*.5+w*.25,y+2,w*.25-6,44,function() T.setSetting(opt[1],not T.setting(opt[1]));draw() end,not on).Caption.TextSize=20
   end
-  T.text(body,'Note','Settings last for this session.',14,254,w-28,20,14,T.Color.dim)
+  for i,opt in {{'MusicVolume','Music','Background music in runs.'},{'SfxVolume','Sound effects','Weapons, hits, pickups and menus.'}} do
+   local y=16+(2+i)*84;row(y,opt[2],opt[3])
+   T.slider(body,opt[1],w*.5,y,w*.5-6,T.setting(opt[1]),function(v) T.setSetting(opt[1],v) end)
+  end
+  for i,extra in extras do
+   local y=16+(4+i)*84;row(y,extra.title,extra.help)
+   local on=extra.get()
+   T.button(body,extra.key,on and 'ON' or 'OFF',w*.5+w*.25,y+2,w*.25-6,44,extra.toggle,not on).Caption.TextSize=20
+  end
+  T.text(body,'Note','Settings last for this session.',14,422+#extras*84,w-28,20,14,T.Color.dim)
  end
  draw()
+ win.Redraw=function() if win.Root.Parent then draw() end end
  return win
 end
 

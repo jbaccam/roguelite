@@ -287,6 +287,17 @@ local function ease(t)
 	return 1 - (1 - t) ^ 3
 end
 
+-- The presets are framed for 16:9. On narrower screens (16:10, 4:3 tablets) keep the same
+-- horizontal view instead of the same vertical one, so the avatar shrinks with the screen width
+-- like the Armory panels do and still fits between them.
+function S.FieldOfView(fov, viewport)
+	local aspect = viewport.Y > 0 and viewport.X / viewport.Y or 16 / 9
+	if aspect >= 16 / 9 then
+		return fov
+	end
+	return 2 * math.deg(math.atan(math.tan(math.rad(fov / 2)) * (16 / 9) / aspect))
+end
+
 local function camCFrame(name)
 	local v = S.Views[name]
 	local base = stageCFrame()
@@ -305,7 +316,7 @@ local function render()
 	local centre = stageCFrame().Position
 	eye = centre + CFrame.Angles(0, sway, 0):VectorToWorldSpace(eye - centre)
 	camera.CameraType = Enum.CameraType.Scriptable
-	camera.FieldOfView = f0 + (f1 - f0) * t
+	camera.FieldOfView = S.FieldOfView(f0 + (f1 - f0) * t, camera.ViewportSize)
 	camera.CFrame = CFrame.lookAt(eye, look)
 
 	local base = stageCFrame()

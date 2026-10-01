@@ -1,6 +1,6 @@
 # Shop presentation controls
 
-The shop follows the supplied reference: four tall offers on desktop, two columns on medium screens and one on narrow phones. Price buttons sit inside the cards; locks sit below. Sold offers disappear. Owned item and weapon icons pack into the lower inventory without empty placeholder boxes. Weapon selection dims the shop and anchors a tier-colored detail panel above its icon. Short screens scroll detail contents.
+The shop follows the supplied reference: four tall offers on desktop and two columns (2×2) on medium screens and phones. On short screens (view under 450 px tall) the shop scales down so one whole card plus its lock fits, and every button stays at least 40 px on screen. Price buttons sit inside the cards; locks sit below. Sold offers disappear. Owned item and weapon icons pack into the lower inventory without empty placeholder boxes. Weapon selection dims the shop and anchors a tier-colored detail panel above its icon. Short screens scroll detail contents.
 
 The source of truth is `ShopUI.luau`; `WeaponInventoryUI.luau` contains the shared uploaded artwork mapping, used by both shop and creative inventory. `assets/weapons/provenance.json` records original filenames and Roblox IDs. The supplied set now has all 36 weapon images, including Glock.
 

@@ -37,6 +37,7 @@ local order = {} -- map ids in ladder order, set on first Show
 local shadows = {} -- ladder index -> that island's silhouette Highlight
 local stage, blur, grade, conn
 local saved -- camera state before the backdrop took over
+local shownMaps, shownLocked -- what Show was last given, to rebuild a lost stage
 local slot, fromSlot, toSlot, slideStart = 1, 1, 1, 0
 
 local function source()
@@ -85,15 +86,48 @@ local function ease(t)
 	return 1 - (1 - t) ^ 3
 end
 
+-- The hero framing is for 16:9. On narrower screens (16:10, 4:3 tablets) keep the same horizontal
+-- view so the island's sides aren't cropped: 32 degrees vertical at 4:3 becomes about 42.
+-- Same formula as ArmoryStage.FieldOfView.
+local function fieldOfView(fov, viewport)
+	local aspect = viewport.Y > 0 and viewport.X / viewport.Y or 16 / 9
+	if aspect >= 16 / 9 then
+		return fov
+	end
+	return 2 * math.deg(math.atan(math.tan(math.rad(fov / 2)) * (16 / 9) / aspect))
+end
+
+-- The islands live in the current camera. When the camera is replaced they move to the new one;
+-- if they were destroyed with the old camera they are cloned again.
+local function keepStage(camera)
+	if stage and stage.Parent == camera then
+		return
+	end
+	if stage and pcall(function()
+		stage.Parent = camera
+	end) then
+		return
+	end
+	stage = nil
+	table.clear(shadows)
+	if build(shownMaps) then
+		stage.Parent = camera
+		if shadows[toSlot] then
+			shadows[toSlot].FillTransparency = shownLocked and 0 or 1
+		end
+	end
+end
+
 local function render()
 	local camera = workspace.CurrentCamera
+	keepStage(camera)
 	local t = math.clamp((os.clock() - slideStart) / SLIDE, 0, 1)
 	slot = fromSlot + (toSlot - fromSlot) * ease(t)
 	local center = ORIGIN + STEP * (slot - 1)
 	local yaw = math.sin(os.clock() * 2 * math.pi / SWAY_PERIOD) * SWAY
 	local eye = center + CFrame.Angles(0, yaw, 0):VectorToWorldSpace(HERO)
 	camera.CameraType = Enum.CameraType.Scriptable
-	camera.FieldOfView = FOV
+	camera.FieldOfView = fieldOfView(FOV, camera.ViewportSize)
 	camera.CFrame = CFrame.lookAt(eye, center + LOOK)
 end
 
@@ -104,9 +138,10 @@ function B.Show(maps, index, locked)
 		return false
 	end
 	local camera = workspace.CurrentCamera
+	shownMaps, shownLocked = maps, locked
 	if not conn then
 		saved = { type = camera.CameraType, subject = camera.CameraSubject, fov = camera.FieldOfView }
-		stage.Parent = camera
+		keepStage(camera)
 		blur = Instance.new("BlurEffect")
 		blur.Name = "MapSelectBlur"
 		blur.Size = BLUR
@@ -139,7 +174,9 @@ function B.Hide()
 	blur:Destroy()
 	grade:Destroy()
 	blur, grade = nil, nil
-	stage.Parent = nil
+	if stage and stage.Parent then -- (a stage destroyed with its camera is rebuilt on the next Show)
+		stage.Parent = nil
+	end
 	local camera = workspace.CurrentCamera
 	local humanoid = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 	camera.CameraSubject = humanoid or saved.subject
