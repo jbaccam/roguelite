@@ -22,6 +22,8 @@ if old then
 end
 local island = Instance.new("Model")
 island.Name = "ChestIsland"
+-- Parented up front: seating the chests raycasts the pads, which must already be in Workspace.
+island.Parent = lobby
 local function folder(name)
 	local f = Instance.new("Folder")
 	f.Name = name
@@ -101,6 +103,28 @@ for i, tier in ORDER do
 		local chest = template:Clone()
 		chest:PivotTo(face * CFrame.new(0, topY, 0.3))
 		chest.Parent = chests
+		-- The pad mesh's stone surface sits ~0.4 below its bounding-box top, so seat the chest on
+		-- the real surface: raycast its footprint onto the pad (CanQuery is off, so allow it briefly).
+		upper.CanQuery = true
+		local params = RaycastParams.new()
+		params.FilterType = Enum.RaycastFilterType.Include
+		params.FilterDescendantsInstances = { upper }
+		local cf, size = chest:GetBoundingBox()
+		local surface = -math.huge
+		for _, o in { { 0, 0 }, { -0.35, -0.35 }, { 0.35, -0.35 }, { -0.35, 0.35 }, { 0.35, 0.35 } } do
+			local p = cf * Vector3.new(size.X * o[1], 0, size.Z * o[2])
+			local hit = workspace:Raycast(Vector3.new(p.X, cf.Position.Y + size.Y, p.Z), Vector3.new(0, -size.Y - 6, 0), params)
+			if hit then
+				surface = math.max(surface, hit.Position.Y)
+			end
+		end
+		upper.CanQuery = false
+		if surface > -math.huge then
+			-- Sink 0.02 so no sliver of light shows under the feet.
+			local drop = (cf.Position.Y - size.Y / 2) - (surface - 0.02)
+			chest:PivotTo(chest:GetPivot() - Vector3.new(0, drop, 0))
+			topY -= drop
+		end
 		table.insert(report, tier .. " placed")
 	else
 		table.insert(report, tier .. ": no template (run studio-install-chests.luau first)")
@@ -156,5 +180,4 @@ island.WorldPivot = CFrame.new(CENTER)
 -- A showpiece seen from the whole lobby and flown to by the chest screen: always streamed in.
 island.ModelStreamingMode = Enum.ModelStreamingMode.Persistent
 island:SetAttribute("Facing", FACING)
-island.Parent = lobby
 return table.concat(report, "\n")
