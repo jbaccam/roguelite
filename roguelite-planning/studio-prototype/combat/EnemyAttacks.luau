@@ -129,7 +129,7 @@ local function damage(npc, player, amount)
 		end
 		state.lastContact = now
 	end
-	local actual = Characters.contact(player, amount)
+	local actual = Characters.contact(player, amount, nil, npc)
 	npc:SetAttribute("EnemyHits", (npc:GetAttribute("EnemyHits") or 0) + 1)
 	npc:SetAttribute("LastEnemyDamage", actual)
 end

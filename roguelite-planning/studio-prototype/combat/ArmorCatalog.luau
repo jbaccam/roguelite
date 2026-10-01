@@ -1,7 +1,7 @@
 -- Armor sets: four pieces each (helmet, chest, legs, boots), worn over the normalized R15 body
 -- (AvatarNormalizer). Every piece is its own chest item with its set's rarity (ChestConfig pools).
--- Cosmetic for now: set stats and tier bonuses come with the armor spec (RARITY_GODLY_ARMOR.md
--- step 5). Meshes live in ReplicatedStorage.ArmorSets.<model>, one MeshPart per R15 part (plus
+-- Set bonuses and tier scaling (RARITY_GODLY_ARMOR.md step 5) live in CharacterStats.ArmorSets and
+-- CharacterStats.armorBonus, because sandboxed CharacterService can't require this module. Meshes live in ReplicatedStorage.ArmorSets.<model>, one MeshPart per R15 part (plus
 -- extras like Phoenix's wings), installed by blender-armor-kit/studio-install-armor.luau.
 -- Unsandboxed (ProfileService, ArmorService and ArmoryUI read it).
 local A = {}

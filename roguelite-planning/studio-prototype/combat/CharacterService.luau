@@ -44,9 +44,19 @@ function Service.refresh(player)
  -- written only by ProfileService on the server, so clients cannot change it.
  local flat=s.itemBonuses
  local skills=Skills.bonuses(Skills.parse(player:GetAttribute('ProfileSkills')))
- if next(skills) then
+ -- Armor set bonuses (lobby and runs) from the server-set ProfileWearing/ProfileArmor, the same
+ -- way. Perks are kept on the state: DodgeCrit, RageAttackSpeed, FireThorns, PhoenixBlast.
+ local armor,perks=Stats.armorBonus(player:GetAttribute('ProfileWearing'),player:GetAttribute('ProfileArmor') or '')
+ s.perks=perks
+ -- Viking 4-piece: extra attack speed only while below half health (the HealthChanged hook in
+ -- spawned refreshes when health crosses the line).
+ local h0=humanoid(player)
+ s.raging=perks.RageAttackSpeed~=nil and h0~=nil and h0.Health>0 and h0.Health<h0.MaxHealth*Stats.ArmorPerks.RageBelow
+ if s.raging then armor.AttackSpeed=(armor.AttackSpeed or 0)+perks.RageAttackSpeed end
+ if next(skills) or next(armor) then
   flat=table.clone(s.itemBonuses or {})
   for id,v in skills do flat[id]=(flat[id] or 0)+v end
+  for id,v in armor do flat[id]=(flat[id] or 0)+v end
  end
  s.stats=Stats.resolve(s.class,count,s.overrides,flat,s.itemPercent)
  s.folder:SetAttribute('Class',s.class);s.folder:SetAttribute('AffinityCount',count)
@@ -70,12 +80,17 @@ function Service.attach(player,folder)
  Service.states[player]=s
  local function spawned(character)
   local h=character:WaitForChild('Humanoid',10);if not h or player.Character~=character then return end
-  s.leech=0;s.blocks=1;s.hits=0;s.lastContact=os.clock();s.lastBump=os.clock()
+  s.leech=0;s.blocks=1;s.hits=0;s.lastContact=os.clock();s.lastBump=os.clock();s.dodgeCrit=nil
   s.held=nil;s.holdAt=nil -- the next tick re-checks the shop hold for the new body
   Service.refresh(player);h.Health=h.MaxHealth
   if s.moveStateConnection then s.moveStateConnection:Disconnect() end
   s.moveStateConnection=h.StateChanged:Connect(function()
    if player.Character==character and Service.states[player]==s then applyMoveSpeed(h,s) end
+  end)
+  if s.rageConnection then s.rageConnection:Disconnect() end
+  s.rageConnection=h.HealthChanged:Connect(function(health)
+   if player.Character~=character or Service.states[player]~=s or not (s.perks and s.perks.RageAttackSpeed) then return end
+   if (health>0 and health<h.MaxHealth*Stats.ArmorPerks.RageBelow)~=(s.raging==true) then Service.refresh(player) end
   end)
   -- Disable Roblox's implicit regeneration: this game's Recovery/Regeneration own healing.
   local health=character:FindFirstChild('Health');if health and health:IsA('Script') then health.Disabled=true end
@@ -84,6 +99,8 @@ function Service.attach(player,folder)
  if player.Character then task.spawn(spawned,player.Character) end
  for _,slot in folder:GetChildren() do slot:GetAttributeChangedSignal('WeaponId'):Connect(function() Service.refresh(player) end) end
  player:GetAttributeChangedSignal('ProfileSkills'):Connect(function() Service.refresh(player) end)
+ player:GetAttributeChangedSignal('ProfileWearing'):Connect(function() Service.refresh(player) end)
+ player:GetAttributeChangedSignal('ProfileArmor'):Connect(function() Service.refresh(player) end)
  Service.refresh(player)
 end
 -- The class from the player's validated loadout (RunClass). Developer stat overrides stay until clearAdmin.
@@ -112,18 +129,28 @@ function Service.leech(player,damage)
  local heal=math.min(damage*s.stats.LifeSteal/100*Stats.mult(s.stats.Recovery),math.max(0,s.stats.LifeStealCap-s.leech))
  s.leech+=heal;h.Health=math.min(h.MaxHealth,h.Health+heal)
 end
-function Service.contact(player,amount,roll)
+-- attacker: the zombie whose melee hit this is (body contact, swing, slam); nil for projectiles
+-- and other sources. It is only used for the Dragon Scale fire thorns.
+function Service.contact(player,amount,roll,attacker)
  local s=Service.states[player];local h=humanoid(player)
  -- Admin god mode (AdminGod, set only by AdminService) and the between-wave shop: no damage from
  -- any source. Every player damage path (contact, enemy melee and projectiles, zombie slams, the
  -- boss) comes through here.
  if not s or not h or h.Health<=0 or player.Character:FindFirstChildOfClass('ForceField') or player:GetAttribute('AdminGod')==true or Service.inShop(player) then return 0 end
  if s.stats.FirstHitBlock>0 and s.blocks>0 then s.blocks-=1;s.folder:SetAttribute('BlocksRemaining',s.blocks);return 0 end
- if (roll or math.random())<s.stats.Dodge/100 then return 0 end
+ if (roll or math.random())<s.stats.Dodge/100 then
+  -- Ninja 4-piece: the next direct hit is a guaranteed crit (CombatEffectsService.hit uses it up).
+  if s.perks and s.perks.DodgeCrit then s.dodgeCrit=true end
+  return 0
+ end
  local before=h.Health;h:TakeDamage(Stats.incoming(amount,s.stats));local actual=before-h.Health
  -- Only the damaged player needs this feedback. The server supplies actual health
  -- lost after armor and health clamping; clients never submit damage values.
  if actual>0 then playerDamaged:FireClient(player,actual) end
+ -- Dragon Scale 4-piece fire thorns: a chance to set the attacking zombie on fire (normal burn,
+ -- applied by CombatEffectsService through onThorns).
+ local thorns=s.perks and s.perks.FireThorns
+ if actual>0 and thorns and typeof(attacker)=='Instance' and Service.onThorns and math.random()<thorns/100 then Service.onThorns(player,attacker) end
  return actual
 end
 local remote=combat:FindFirstChild('EditPractice') or Instance.new('RemoteEvent')
@@ -181,6 +208,7 @@ end
 remote.OnServerEvent:Connect(function(...) Service.request(...) end)
 Players.PlayerRemoving:Connect(function(p)
  local s=Service.states[p];if s and s.moveStateConnection then s.moveStateConnection:Disconnect() end
+ if s and s.rageConnection then s.rageConnection:Disconnect() end
  Service.states[p]=nil
 end)
 local elapsed=0
@@ -218,7 +246,7 @@ RunService.Heartbeat:Connect(function(dt)
       local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances={npc,player.Character,workspace:FindFirstChild('RogueliteEnemies')}
       if not workspace:Raycast(nr.Position,root.Position-nr.Position,params) then
        if bump then s.lastBump=now else s.lastContact=now end
-       Service.contact(player,contactDamage);break
+       Service.contact(player,contactDamage,nil,npc);break
       end
      end
     end

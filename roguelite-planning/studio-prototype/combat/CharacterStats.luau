@@ -107,4 +107,69 @@ function S.weapon(base,s,class,tier)
  return d
 end
 function S.format(d,value) return string.format(value%1==0 and '%d' or '%.1f',value)..d.unit end
+-- Armor set bonuses (RARITY_GODLY_ARMOR.md step 5, approved 2026-09-30). Only worn pieces of the
+-- SAME set count: 2+ pieces give `two`, all 4 give `two` and `four`. A key that is a stat adds to
+-- that stat; any other key is a perk (a number scales with tier, true is a flag). `text` is the
+-- short line the Armory shows. Pure data: the server (CharacterService) and the UI both read it.
+S.ArmorSlots={'Helmet','Chest','Legs','Boots'}
+S.ArmorSets={
+ Iron={two={Armor=2},four={ContactReduction=10},text={two='+2 Armor',four='+10% Contact resistance'}},
+ Ninja={two={Dodge=8},four={DodgeCrit=true},text={two='+8% Dodge',four='After you dodge, your next hit is a critical hit'}},
+ Viking={two={MeleeDamage=12},four={RageAttackSpeed=25},text={two='+12% Melee damage',four='+25% Attack speed below half health'}},
+ Samurai={two={CritChance=8},four={CritDamage=40},text={two='+8% Critical chance',four='+40% Critical damage'}},
+ Spartan={two={Armor=3},four={FirstHitBlock=1},text={two='+3 Armor',four='Blocks the first hit every wave'}},
+ DragonScale={two={MaxHP=25},four={BurnChance=20,FireThorns=25},text={two='+25 Max health',four='+20% Burn chance; zombies that hit you may catch fire (25%)'}},
+ Phoenix={two={Regeneration=2},four={PhoenixBlast=100},text={two='+2 HP/s Regeneration',four='Once per run, rise at half health and blast nearby zombies'}},
+}
+-- Perk constants. RageAttackSpeed: while health < RageBelow of max. FireThorns: % chance per zombie
+-- hit taken. PhoenixBlast: damage to every zombie within PhoenixRadius, rising at PhoenixHealth.
+S.ArmorPerks={RageBelow=.5,PhoenixRadius=12,PhoenixHealth=.5}
+S.ArmorFixed={FirstHitBlock=true} -- never scaled by tier
+-- 'Chest:DragonScale,Helmet:DragonScale' -> {Chest='DragonScale',Helmet='DragonScale'} (ProfileWearing)
+function S.parseWearing(text)
+ local t={};for slot,set in string.gmatch(type(text)=='string' and text or '','([^,:]+):([^,:]+)') do t[slot]=set end;return t
+end
+-- 'DragonScale.Helmet:2:0' (piece:tier:copies) -> {['DragonScale.Helmet']=2} (ProfileArmor)
+function S.parseArmorTiers(text)
+ local t={};for id,tier in string.gmatch(type(text)=='string' and text or '','([^,:]+):(%d+):%d+') do t[id]=math.clamp(tonumber(tier) or 1,1,4) end;return t
+end
+-- wearing: {slot=setId} or the ProfileWearing string. tiers: {pieceId=tier} or the ProfileArmor
+-- string; when given, a worn piece must be in it (owned) to count; nil means every piece is tier I.
+-- Tier scaling: x(1 + 0.1 x (tier - 1)) from the lowest tier among the pieces that count: the best
+-- two for `two`, all four for `four`. Stats round to whole numbers (or a finer stat step); perk
+-- numbers round to whole numbers. Returns stat deltas, perks, and per-set {count,tierTwo,tierFour}.
+function S.armorBonus(wearing,tiers)
+ if type(wearing)~='table' then wearing=S.parseWearing(wearing) end
+ if tiers~=nil and type(tiers)~='table' then tiers=S.parseArmorTiers(tiers) end
+ local bySet={}
+ for _,slot in S.ArmorSlots do
+  local setId=wearing[slot];local tier=S.ArmorSets[setId] and (tiers==nil and 1 or tiers[setId..'.'..slot])
+  if tier then
+   local list=bySet[setId] or {};bySet[setId]=list
+   table.insert(list,math.clamp(math.floor(tonumber(tier) or 1),1,4))
+  end
+ end
+ local stats,perks,sets={},{},{}
+ local function add(bonus,tier)
+  for id,v in bonus do
+   local d=S.ById[id]
+   if type(v)~='number' then perks[id]=v
+   else
+    local scaled=S.ArmorFixed[id] and v or v*(9+tier)/10
+    if d then local step=math.min(d.step,1);stats[id]=(stats[id] or 0)+math.round(scaled/step)*step
+    else perks[id]=(perks[id] or 0)+math.round(scaled) end
+   end
+  end
+ end
+ for setId,list in bySet do
+  if #list>=2 then
+   table.sort(list,function(a,b) return a>b end)
+   local set=S.ArmorSets[setId]
+   sets[setId]={count=#list,tierTwo=list[2],tierFour=#list>=4 and list[4] or nil}
+   add(set.two,list[2])
+   if #list>=4 then add(set.four,list[4]) end
+  end
+ end
+ return stats,perks,sets
+end
 return S

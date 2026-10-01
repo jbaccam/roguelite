@@ -37,7 +37,12 @@ function E.hit(npc,amount,d,secondary)
  -- Tag before damage: the Died handler can run immediately on a lethal shot.
  if d.id=='10' and not secondary and amount>0 then npc:SetAttribute('DesignerShirt',true) end
  local s=d.stats;local position=r.Position
- if not secondary and math.random()<s.CritChance/100 then amount*=s.CritDamage/100 end
+ if not secondary then
+  -- Ninja 4-piece: after a dodge (CharacterService.contact) the next direct hit always crits.
+  local owner=Characters.states[d.owner];local sure=owner and owner.dodgeCrit
+  if sure then owner.dodgeCrit=nil end
+  if sure or math.random()<s.CritChance/100 then amount*=s.CritDamage/100 end
+ end
  if npc:GetAttribute('IsElite') or npc:GetAttribute('IsBoss') then amount*=Stats.mult(s.BossDamage) end
  if RunService:IsStudio() and npc:GetAttribute('PracticeTarget') then
   local actual=math.min(h.Health,math.max(0,amount))
@@ -92,6 +97,33 @@ function E.hit(npc,amount,d,secondary)
   end
  end
  return actual
+end
+-- Armor perks hit through the same path as weapons, with a weapon-like source whose id is 'Armor'
+-- (no weapon sound or style on clients). It is only valid while the wearer's body is alive.
+local function armorSource(player)
+ local state=Characters.states[player];local character=player and player.Character
+ if not state or not state.stats or not character then return end
+ local d={id='Armor',owner=player,character=character,stats=state.stats,damage=0}
+ if valid(d) then return d end
+end
+-- Dragon Scale 4-piece fire thorns (CharacterService.contact rolls the chance): the zombie that
+-- hit the wearer gets a normal burn, 6/s for 3 s scaled by the wearer's burn stats like a weapon burn.
+Characters.onThorns=function(player,npc)
+ local d=armorSource(player);if not d or not alive(npc) or not Tags:HasTag(npc,'RogueliteZombie') then return end
+ local s=d.stats
+ status(npc,d,'Burn',3*Stats.mult(s.Duration),6*Stats.mult(s.Damage)*Stats.mult(s.ElementalDamage)*Stats.mult(s.BurnDamage),true)
+end
+-- Phoenix 4-piece rise (RogueliteMeta): `damage` to every living zombie within `radius` of
+-- `position`, with the Blast burst on clients. Returns how many zombies were hit.
+function E.armorBlast(player,position,radius,damage)
+ local d=armorSource(player);if not d then return 0 end
+ combat.Shot:FireAllClients(position+Vector3.yAxis*.5,position,'Blast','Armor',.07,radius)
+ local count=0
+ for _,npc in Tags:GetTagged('RogueliteZombie') do
+  local h,r=alive(npc)
+  if h and not npc:GetAttribute('LobbyDummy') and (r.Position-position).Magnitude<=radius then E.hit(npc,damage,d,true);count+=1 end
+ end
+ return count
 end
 local elapsed=0
 RunService.Heartbeat:Connect(function(dt)

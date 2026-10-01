@@ -13,6 +13,8 @@ local Chests=require(combat:WaitForChild('ChestConfig'))
 local Profiles=require(SSS:WaitForChild('ProfileService'))
 local Shop=require(SSS:WaitForChild('ShopService'))
 local Characters=require(SSS:WaitForChild('CharacterService'))
+local Effects=require(SSS:WaitForChild('CombatEffectsService'))
+local Stats=require(combat:WaitForChild('CharacterStats'))
 local Admin=require(combat:WaitForChild('AdminConfig'))
 local studio=RunService:IsStudio()
 -- Admin panel emeralds (developers only): add or set. CharacterService checks the developer and
@@ -78,9 +80,28 @@ end
 local function clearDown(p)
  down[p]=nil;p:SetAttribute('RunDown',nil);p:SetAttribute('DeathInfo',nil)
 end
+local rise -- defined with revive below
+-- Phoenix 4-piece (armor set perk, CharacterStats.ArmorSets): once per run the first death rises
+-- right away at the death spot with half health and a fire blast; no death screen, and the paid
+-- revive stays unused for a later death. phoenixUsed resets with the run (giveUp, wave 1).
+local phoenixUsed={}
+local function phoenix(p,at)
+ local cs=Characters.states[p];local blast=cs and cs.perks and cs.perks.PhoenixBlast
+ if not blast or phoenixUsed[p] or p:GetAttribute('LobbyPreviewActive') then return false end
+ phoenixUsed[p]=true;p:SetAttribute('PhoenixUsed',true)
+ p:SetAttribute('HoldRespawn',true) -- keep AvatarNormalizer's normal respawn away
+ task.delay(.6,function()
+  if p.Parent~=Players or not Shop.states[p] or down[p] then return end
+  rise(p,at,Stats.ArmorPerks.PhoenixHealth,function(root)
+   Effects.armorBlast(p,root.Position,Stats.ArmorPerks.PhoenixRadius,blast)
+  end)
+ end)
+ return true
+end
 local function onDied(p,character)
  if not Shop.states[p] or down[p] then return end
  local root=character:FindFirstChild('HumanoidRootPart')
+ if phoenix(p,root and root.Position or Vector3.zero) then return end
  local s=Shop.states[p]
  -- test: this player went down during a test run. It stays true even if resetRun clears the run flag
  -- before they give up, so a later give-up still pays nothing.
@@ -101,6 +122,11 @@ runState:GetAttributeChangedSignal('AdminTestRun'):Connect(function()
   if ok and type(info)=='table' then info.emeralds=0;p:SetAttribute('DeathInfo',Http:JSONEncode(info)) end
  end
 end)
+-- A new run (the wave counter goes back to 1) gets its Phoenix rise back.
+runState:GetAttributeChangedSignal('Wave'):Connect(function()
+ if runState:GetAttribute('Wave')~=1 then return end
+ for q in phoenixUsed do if not down[q] then phoenixUsed[q]=nil;q:SetAttribute('PhoenixUsed',nil) end end
+end)
 local function watch(p)
  p.CharacterAdded:Connect(function(character)
   local h=character:WaitForChild('Humanoid',10)
@@ -109,9 +135,9 @@ local function watch(p)
 end
 local respawn=SSS:WaitForChild('AvatarNormalizer'):WaitForChild('RespawnPlayer')
 local function canRevive(p) return down[p]~=nil and (revivesUsed[p] or 0)<Config.ReviveLimitPerRun end
-local function revive(p)
- if not canRevive(p) then return false end
- local at=down[p].position;revivesUsed[p]=(revivesUsed[p] or 0)+1
+-- Respawn at `at` with `health` (fraction of max), a short shield and nearby zombies pushed back.
+-- beforePush(root) runs once the body is placed (the Phoenix blast), before the push.
+rise=function(p,at,health,beforePush)
  local character=respawn:Invoke(p)
  clearDown(p);p:SetAttribute('HoldRespawn',false)
  task.spawn(function()
@@ -125,11 +151,12 @@ local function revive(p)
   task.wait(.15)
   if not character.Parent or h.Health<=0 then return end
   character:PivotTo(CFrame.new(at+Vector3.new(0,3,0)))
-  h.Health=math.max(1,h.MaxHealth*Config.ReviveHealth)
+  h.Health=math.max(1,h.MaxHealth*health)
   -- Named, so the SpawnLocation's own spawn shield timer cannot remove it early.
   for _,f in character:GetChildren() do if f:IsA('ForceField') then f:Destroy() end end
   local shield=Instance.new('ForceField');shield.Name='ReviveShield';shield.Parent=character
   task.delay(Config.ReviveInvulnerableSeconds,function() if shield.Parent then shield:Destroy() end end)
+  if beforePush then beforePush(root) end
   for _,npc in Tags:GetTagged('RogueliteZombie') do
    local part=npc:IsA('Model') and npc.PrimaryPart
    if part and npc:IsDescendantOf(workspace) then
@@ -141,14 +168,22 @@ local function revive(p)
    end
   end
  end)
+end
+local function revive(p)
+ if not canRevive(p) then return false end
+ local at=down[p].position;revivesUsed[p]=(revivesUsed[p] or 0)+1
+ rise(p,at,Config.ReviveHealth)
  Shop.resume()
  return true
 end
 local function giveUp(p)
  local d=down[p];if not d then return false end
  if not d.test then Profiles.recordRun(p,RunSetupRules.runKey(d.map,difficulty()),math.max(0,d.wave-1),emeraldsFor(d.wave,d.map)) end
- clearDown(p);revivesUsed[p]=0
- if livingInRun()==0 then Shop.resetRun();for q in revivesUsed do revivesUsed[q]=0 end else Shop.resetPlayer(p) end
+ clearDown(p);revivesUsed[p]=0;phoenixUsed[p]=nil;p:SetAttribute('PhoenixUsed',nil)
+ if livingInRun()==0 then
+  Shop.resetRun();for q in revivesUsed do revivesUsed[q]=0 end
+  for q in phoenixUsed do phoenixUsed[q]=nil;q:SetAttribute('PhoenixUsed',nil) end
+ else Shop.resetPlayer(p) end
  p:SetAttribute('HoldRespawn',false) -- AvatarNormalizer respawns normally
  return true
 end
@@ -284,6 +319,6 @@ end
 Players.PlayerAdded:Connect(added)
 for _,p in Players:GetPlayers() do added(p);if p.Character then local h=p.Character:FindFirstChildOfClass('Humanoid');if h then h.Died:Connect(function() onDied(p,p.Character) end) end end end
 Players.PlayerRemoving:Connect(function(p)
- down[p]=nil;revivesUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil
+ down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil
  if livingInRun()==0 then Shop.resume() end
 end)

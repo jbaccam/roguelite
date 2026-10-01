@@ -75,7 +75,7 @@ function A.update(npc,target)
                     -- A low eye-to-body ray prevents damage through arena walls.
                     local origin=root.Position+Vector3.yAxis
                     if not workspace:Raycast(origin,pr.Position-origin,p) then
-                        local amount=Characters.contact(player,npc:GetAttribute('SlamDamage') or Types.Slam.damage)
+                        local amount=Characters.contact(player,npc:GetAttribute('SlamDamage') or Types.Slam.damage,nil,npc)
                         npc:SetAttribute('SlamHits',(npc:GetAttribute('SlamHits') or 0)+1)
                         npc:SetAttribute('LastSlamDamage',amount)
                     end
