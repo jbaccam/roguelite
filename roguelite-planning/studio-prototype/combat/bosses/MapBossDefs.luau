@@ -28,11 +28,14 @@ D.KingCrab={anim='king-crab',name='Giant King Crab',health=28000,scale=1.4,chase
   SidewaysRush={clips={'RushStart','RushLoop','RushEnd'},rate=1.25,range={8,70},cooldown=1.4,damage=24,shape='lane',length=70,width=12,speed=42},
   BubbleBarrage={clip='BubbleBarrage',rate=1.2,range={10,72},cooldown=1.1,damage=10,shape='projectiles',point='BubbleOrigin',count=13,spread=math.rad(52),speed=30,radius=2,life=2.6,perPlayer=2},
  },order={'ClawCrush','BubbleBarrage','SidewaysRush','ClawCrush','SidewaysRush','BubbleBarrage'}}
-D.Pharaoh={anim='pharaoh',name='The Pharaoh',health=32000,scale=1.4,chaseSpeed=20,glowColor=Color3.fromRGB(120,235,255),
+-- The Pharaoh's staff crook releases the bolts ~10 studs ahead and 14 up, so they pass over anyone
+-- within ~13 studs (MapBossServiceTests 4). He holds off at 20 (stop), bolts start at 15, and a
+-- player who closes in gets the tombs instead. The bolts fly 48 x 2.5 = 120 studs.
+D.Pharaoh={anim='pharaoh',name='The Pharaoh',health=32000,scale=1.4,chaseSpeed=20,glowColor=Color3.fromRGB(120,235,255),stop=20,
  enrage={cooldown=.6,chase=3,extra=2,follow=2},
  attacks={
-  CursedBolts={clip='CursedBolts',rate=1.25,range={8,75},cooldown=.9,damage=22,shape='projectiles',point='BoltOrigin',count=5,spread=math.rad(34),speed=40,radius=1.6,life=2.2,perPlayer=1},
-  TombEruption={clip='TombEruption',rate=1.2,range={0,80},cooldown=1.4,damage=30,shape='targets',radius=5.5,maxTargets=5,lead=.25,eruptDelay=.7,extra=1},
+  CursedBolts={clip='CursedBolts',rate=1.25,range={15,100},cooldown=.9,damage=22,shape='projectiles',point='BoltOrigin',count=5,spread=math.rad(34),speed=48,radius=1.6,life=2.5,perPlayer=1},
+  TombEruption={clip='TombEruption',rate=1.2,range={0,100},cooldown=1.4,damage=30,shape='targets',radius=5.5,maxTargets=5,lead=.25,eruptDelay=.7,extra=1},
  },order={'CursedBolts','TombEruption','CursedBolts','CursedBolts','TombEruption'}}
 -- The cyclops holds off at 18 studs (stop) and uses Stomp's wave from range. Ground Slam's club
 -- lands ~11.6 studs ahead, so radius 15 reaches ~27 studs; rate 1 keeps its warning at

@@ -1,7 +1,8 @@
 -- The Pharaoh's effects (plan F Task 12). Client-only; nothing here changes hits.
 -- CursedBolts: a cyan-gold CurseOrb charges in the crook with orbiting glyphs, inward sparkles, a
--- light ramp and flaring eyes; a gold muzzle flash; then cyan cores in gold halos trailing glyphs,
--- bursting into sand where they stop.
+-- light ramp and flaring eyes; a gold muzzle flash, a ring snapping open round the crook and sparks
+-- down the volley's path; then cyan cores in gold halos, two gold motes spiralling round each on
+-- thin trails, bursting into sand and a flash of hieroglyphs on the ground where they stop.
 -- TombEruption: gold dust spirals up the raised staff; rotating hieroglyph circles open under each
 -- target; the staff strike sends a gold ring; at impact + eruptDelay an obelisk bursts up through
 -- every circle on a sand geyser, holds, then sinks back.
@@ -48,24 +49,38 @@ end
 local function boltImpact(ctx)
  local at,def=ctx.attack,ctx.def;local o=ctx.points(def.point,at.impact);if not C.near(o) then return end
  C.cue('pharaoh_bolt',o,.8)
- C.star(o,GOLD,6.5,.2);K.pop(C.folder(),o,CYAN,1,5,.3,.35);C.light(o,CYAN,18,3,.3)
- C.emit(o,up,'Hieroglyphs',{emit=10,Speed={6,10},SpreadAngle=180,Drag=4,Lifetime={.5,.8},Size=ns({0,.9},{1,0}),Color=GOLD,LightEmission=.7,RotSpeed={-90,90}})
+ C.star(o,GOLD,8,.22);K.pop(C.folder(),o,CYAN,1,6,.3,.35);C.light(o,CYAN,24,3.5,.35)
+ C.emit(o,up,'Hieroglyphs',{emit=14,Speed={6,11},SpreadAngle=180,Drag=4,Lifetime={.5,.8},Size=ns({0,1},{1,0}),Color=GOLD,LightEmission=.7,RotSpeed={-90,90}})
+ -- A camera-facing ring snaps open round the crook, and cyan sparks spray down the volley's path
+ -- (level along the middle shot's yaw, tipped down the way the bolts drop to hit height).
+ local host,g,img=C.sprite(o,'ShockwaveRing',2,CYAN,0)
+ if host then K.animate(.32,function(t) local s=2+10*(1-(1-t)^3);g.Size=UDim2.fromScale(s,s);img.ImageTransparency=K.smooth((t-.25)/.75) end,function() host:Destroy() end,'bossStar',24) end
+ local yaws=ctx.data.yaws
+ if type(yaws)=='table' and #yaws>0 then
+  C.emit(o,CFrame.Angles(0,yaws[math.ceil(#yaws/2)],0).LookVector-up*.8,'SnowSparkle',{emit=26,Speed={22,36},SpreadAngle=24,Drag=5,Lifetime={.25,.4},Size=ns({0,.7},{1,0}),Color=CYAN,LightEmission=1})
+ end
 end
--- A bolt: neon cyan core in a pulsing gold halo under the CurseOrb sprite. Its trail, glyph wake and
--- light ride a tail host that lingers so they fade out rather than vanish.
+-- A bolt: neon cyan core in a pulsing gold halo under the CurseOrb sprite, two gold motes spiralling
+-- round it on thin trails. Its trail, glyph wake and light ride a tail host, and the motes stop
+-- where the core goes, so all of it fades out rather than vanishes.
 function P.projectile(ctx,i)
  local k=(ctx.def.radius or 1.2)/1.2 -- sized for the authored 1.2-stud bolt
  local core=K.ball(C.folder(),'BossVfxBolt',1*k,CYAN,0,Enum.Material.Neon)
  local rim=K.ball(core,'BossVfxBoltRim',1.7*k,GOLD,.6,Enum.Material.Neon) -- a child, so it goes with the core
- local _,_,img=C.sprite(core,'CurseOrb',3.2*k,WHITE,0)
- local tail=C.tail(core,(ctx.def.life or 2.2)+2,.9)
- K.trail(tail,1.1,.35,CYAN,GOLD,.15)
+ local _,_,img=C.sprite(core,'CurseOrb',3.6*k,WHITE,0)
+ local life=(ctx.def.life or 2.5)+2
+ local tail=C.tail(core,life,.9)
+ K.trail(tail,1.5*k,.45,CYAN,GOLD,.1)
  C.fx(tail,'Hieroglyphs',{Rate=18,Speed={.3,.8},SpreadAngle=180,Lifetime=.8,Size=ns({0,.75},{1,0}),Color=GOLD,Acceleration=Vector3.new(0,3,0),Drag=1,LightEmission=.6,RotSpeed={-45,45}})
  local light=Instance.new('PointLight');light.Color=CYAN;light.Range=10;light.Brightness=1.8;light.Shadows=false;light.Parent=tail
+ local motes={}
+ for j=1,2 do local m=C.part('Mote',Vector3.one*.4*k,core.CFrame,GOLD,0);m.Shape=Enum.PartType.Ball;m.Material=Enum.Material.Neon;K.trail(m,.4*k,.3,BRIGHT,GOLD,0);motes[j]=m end
+ K.animate(life,function() if not core.Parent then return true end end,function() for _,m in motes do m.Transparency=1 end;C.retire(motes,.4) end,'bossHelix',96)
  local t=math.random()+i
  return core,function(dt)
   t+=dt;rim.CFrame=core.CFrame;rim.Size=Vector3.one*1.7*k*(1+math.sin(t*22)*.08)
   if img then img.Rotation=(t*240)%360 end
+  for j,m in motes do local a=t*13+j*math.pi;m.CFrame=core.CFrame*CFrame.new(math.cos(a)*1.15*k,math.sin(a)*1.15*k,0) end
  end,function(pos)
   if not C.near(pos) then return end
   K.pop(C.folder(),pos,CYAN,1,4.5,.28,.3);C.star(pos,CYAN,4.5,.16)
@@ -73,6 +88,7 @@ function P.projectile(ctx,i)
   local gy=groundUnder(pos,ctx)
   if gy and pos.Y-gy<6 then
    C.emit(Vector3.new(pos.X,gy+.3,pos.Z),up,'SandBurst',{emit=16,Speed={6,12},SpreadAngle=40,Lifetime={.55,.8},Size=ns({0,1.2},{1,3}),Color=SAND,Transparency=ns({0,0},{.7,.2},{1,1}),Acceleration=Vector3.new(0,-30,0),Rotation={-20,20},LightInfluence=.8})
+   C.stain(Vector3.new(pos.X,gy+.05,pos.Z),'HieroglyphCircle',4*k,CYAN,.05,.2,.45,.1,.5,1.8) -- the curse mark
   end
   local now=os.clock();if now-(ctx.boltPop or 0)>.12 then ctx.boltPop=now;C.cue('sand_burst',pos,.3,1.3) end
  end

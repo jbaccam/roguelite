@@ -110,6 +110,15 @@ function X.yaws(def,dir)
  for i=1,def.count do list[i]=base+(def.count>1 and def.spread*((i-1)/(def.count-1)-.5) or 0) end
  return list
 end
+-- A volley's MapBossAttackData: released from def.point at impact and fanned about the aim from
+-- there to `goal`, or about the point's own direction when mouthAimed (the crab's bubbles).
+function X.volley(def,at,f,goal,mouthAimed,rage)
+ local origin=X.point(f,at,def.point,at.impact);local aim=flat(goal-origin)
+ local dir=mouthAimed and X.flatDir(f,X.localDir(at,def.point,at.impact)) or (aim.Magnitude>.1 and aim.Unit or flat(f.cf.LookVector).Unit)
+ -- Enraged: rage.extra more shots, the fan widened to keep the same gap between them.
+ local count=def.count+(rage and rage.extra or 0);local fan={count=count,spread=def.count>1 and def.spread*(count-1)/(def.count-1) or def.spread}
+ return {origin={origin.X,origin.Y,origin.Z},yaws=X.yaws(fan,dir),height=f.groundY+math.clamp(origin.Y-f.groundY,1.5,3.5),speed=def.speed,life=def.life,radius=def.radius}
+end
 
 -- Edit-mode test requires stop here: the services and the Heartbeat load on a running server only.
 if not (Run:IsServer() and Run:IsRunning()) then return M end
@@ -178,17 +187,12 @@ function M.start(npc,kind,target,force)
   A.line=A.lines[math.ceil(#A.lines/2)];A.data.shape=Shapes.encode(A.line)
  elseif def.shape=='breath' then A.data.shape=Shapes.encode(X.cone(def,at,f,at.impact))
  elseif def.shape=='sweep' then A.data.shape=Shapes.encode(X.sweepArc(def,at,f))
- elseif def.shape=='projectiles' then
-  local origin=X.point(f,at,def.point,at.impact);local aim=flat(goal-origin)
-  local dir=MOUTH_AIMED[kind] and X.flatDir(f,X.localDir(at,def.point,at.impact)) or (aim.Magnitude>.1 and aim.Unit or flat(cf.LookVector).Unit)
-  -- Enraged: rage.extra more shots, the fan widened to keep the same gap between them.
-  local count=def.count+(rage.extra or 0);local fan={count=count,spread=def.count>1 and def.spread*(count-1)/(def.count-1) or def.spread}
-  A.data={origin={origin.X,origin.Y,origin.Z},yaws=X.yaws(fan,dir),height=f.groundY+math.clamp(origin.Y-f.groundY,1.5,3.5),speed=def.speed,life=def.life,radius=def.radius}
- end
+ elseif def.shape=='projectiles' then A.data=X.volley(def,at,f,goal,MOUTH_AIMED[kind],rage) end
  A.data.rate=def.rate or 1
  s.attack=A
  npc:SetAttribute('BossAttack',kind);npc:SetAttribute('BossStart',now);npc:SetAttribute('BossFrame',cf);npc:SetAttribute('BossGroundY',f.groundY);npc:SetAttribute('BossDuration',A.duration)
- publish(npc,A);npc:SetAttribute('BossSerial',(npc:GetAttribute('BossSerial') or 0)+1);npc:SetAttribute('Attacking',true)
+ A.serial=(npc:GetAttribute('BossSerial') or 0)+1
+ publish(npc,A);npc:SetAttribute('BossSerial',A.serial);npc:SetAttribute('Attacking',true)
  h:Move(Vector3.zero);h:MoveTo(root.Position);h.AutoRotate=false;root.Anchored=true
  return true
 end
@@ -289,7 +293,7 @@ local function stepShots(npc,s,now,params,people)
   if wall or t>=def.life then shot.done=true end
   if shot.done then B.ends[tostring(i)]=now;changed=true else alive=true end
  end
- if changed then npc:SetAttribute('MapBossShotEnds',Http:JSONEncode(B.ends)) end
+ if changed then npc:SetAttribute('MapBossShotEnds',Http:JSONEncode({serial=B.serial,ends=B.ends})) end
  if not alive then s.shots=nil end
 end
 local rng=Random.new()
@@ -393,9 +397,9 @@ local function stepAttack(npc,s,now,h,root,params,people)
   end
  elseif def.shape=='projectiles' and age>=at.impact and not A.fired then
   A.fired=true;local d=A.data;local origin=v3(d.origin)
-  s.shots={def=def,born=A.start+at.impact,origin=origin,height=d.height,list={},hits={},ends={}}
+  s.shots={def=def,serial=A.serial,born=A.start+at.impact,origin=origin,height=d.height,list={},hits={},ends={}}
   for i,yaw in d.yaws do s.shots.list[i]={yaw=yaw,pos=origin} end
-  npc:SetAttribute('MapBossShotEnds','{}')
+  npc:SetAttribute('MapBossShotEnds',Http:JSONEncode({serial=A.serial,ends={}}))
  end
  if age>=at.impact and not A.impacted then A.impacted=true;npc:SetAttribute('BossImpactStart',now) end
  A.sampled=age

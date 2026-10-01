@@ -41,4 +41,32 @@ add(S.contains(arc,tip) and S.contains(arc,f.ground*S.sample(wat.samples.SpadeTi
 local ys=X.yaws({count=3,spread=math.rad(18)},Vector3.new(-1,0,0))
 add(#ys==3 and math.abs(ys[2]-math.pi/2)<1e-6 and math.abs(ys[3]-ys[1]-math.rad(18))<1e-6,'projectiles: yaws spread evenly about the aim')
 add(X.localPoint({points={P={rootAtImpactStudio={1,2,3}}}},'P',0)==Vector3.new(1,2,3),'point falls back to rootAtImpactStudio')
+-- 4. Real defs: every projectile attack reaches a still player straight ahead (root 3 up) anywhere
+-- in its range and at the boss's hold-off distance, replaying the server's shot test.
+local defsModule=game.ReplicatedStorage.RogueliteCombat:FindFirstChild('MapBossDefs')
+if defsModule then
+ local c=defsModule:Clone();c.Parent=defsModule.Parent;local ok,Defs=pcall(require,c);c:Destroy();assert(ok,Defs)
+ local function segd(a,b,p) local ab=b-a;local t=math.clamp((p-a):Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1);return (a+ab*t-p).Magnitude end
+ for _,id in Defs.Order do
+  local def,RT=Defs.get(id),Defs.timing(id);local rf=X.frame(CFrame.lookAt(Vector3.new(0,RT.rootHeight,0),Vector3.new(0,RT.rootHeight,-1)),RT,0)
+  local stop=def.stop or math.min(8*def.scale,RT.footprintRadius or 4)+3
+  for kind,a in def.attacks do
+   if a.shape=='projectiles' then
+    local list={a.range[1],a.range[2]};for d=a.range[1],a.range[2],5 do table.insert(list,d) end
+    if stop>=a.range[1] and stop<=a.range[2] then table.insert(list,stop) end
+    local miss={}
+    for _,d in list do
+     local goal=Vector3.new(0,3,-d);local v=X.volley(a,X.window(a,RT),rf,goal,kind=='BubbleBarrage');local o=Vector3.new(table.unpack(v.origin));local any=false
+     for _,yaw in v.yaws do
+      local pos=o
+      for i=1,math.ceil(v.life*60) do local p=S.shot(o,yaw,v.speed,v.height,i/60);if segd(pos,p,goal)<=v.radius+1.2 then any=true;break end;pos=p end
+      if any then break end
+     end
+     if not any then table.insert(miss,math.floor(d*10+.5)/10) end
+    end
+    add(#miss==0,('%s %s reaches a still player across its range (misses at %s)'):format(id,kind,#miss>0 and table.concat(miss,', ') or 'none'))
+   end
+  end
+ end
+end
 return table.concat(r,'\n')

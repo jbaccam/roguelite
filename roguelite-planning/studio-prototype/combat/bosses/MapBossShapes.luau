@@ -68,6 +68,10 @@ function S.shot(origin,yaw,speed,height,t)
  local d=CFrame.Angles(0,yaw,0).LookVector;local p=origin+d*speed*t;local k=1-math.clamp(t/.25,0,1)
  return Vector3.new(p.X,height+(origin.Y-height)*k*k,p.Z),d
 end
+-- MapBossShotEnds is {serial,ends}: when the server stopped each shot of one attack's volley, keyed
+-- by shot index. The client launches on its own clock and can read the attribute before the new
+-- volley's reset arrives, so ends carrying another attack's serial are stale and stop nothing.
+function S.shotEnds(t,serial) return type(t)=='table' and t.serial==serial and type(t.ends)=='table' and t.ends or nil end
 -- JSON-safe copies for the MapBossAttackData attribute (Vector3 <-> {x,y,z}).
 local VEC={center=true,origin=true,pivot=true,direction=true,forward=true,a=true,b=true}
 function S.encode(shape) local t={};for k,v in shape do t[k]=typeof(v)=='Vector3' and {v.X,v.Y,v.Z} or v end;return t end

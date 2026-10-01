@@ -171,7 +171,8 @@ local function paintWarning(w,k,left,now)
 end
 
 -- Projectiles: the server's shots replayed from origin, yaws, speed and life (MapBossShapes.shot),
--- stopping where MapBossShotEnds says the server stopped them.
+-- stopping where MapBossShotEnds says the server stopped them. Only a volley's own ends count
+-- (Shapes.shotEnds): the last volley's list can still be here when this one launches.
 local function launch(state,ctx)
  local d=ctx.data;if not d.yaws or not d.origin then return end
  local B={ctx=ctx,born=ctx.start+ctx.attack.impact,origin=Vector3.new(d.origin[1],d.origin[2],d.origin[3]),list={}}
@@ -182,10 +183,10 @@ local function stepShots(npc,state,now,dt)
  if not state.shots then return end
  local raw=npc:GetAttribute('MapBossShotEnds');if raw~=state.endsRaw then state.endsRaw=raw;state.ends=decode(raw) end
  for bi=#state.shots,1,-1 do
-  local B=state.shots[bi];local d=B.ctx.data;local latest=bi==#state.shots;local alive=false
+  local B=state.shots[bi];local d=B.ctx.data;local ends=Shapes.shotEnds(state.ends,B.ctx.serial);local alive=false
   for _,s in B.list do
    if s.done then continue end
-   local stop=math.min(B.born+d.life,latest and state.ends and state.ends[tostring(s.i)] or math.huge)
+   local stop=math.min(B.born+d.life,ends and ends[tostring(s.i)] or math.huge)
    local pos,dir=Shapes.shot(B.origin,s.yaw,d.speed,d.height,math.max(0,math.min(now,stop)-B.born))
    if s.part then s.part.CFrame=CFrame.lookAt(pos,pos+dir) end
    if s.update then pcall(s.update,dt) end
