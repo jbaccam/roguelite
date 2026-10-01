@@ -1,0 +1,355 @@
+{
+  "asset": "lucky-cat",
+  "blender_version": "5.2.1 LTS",
+  "authoring": "final Roblox stud size (1 Blender unit = 1 stud); import at 1:1, do not scale",
+  "axes": "Blender Z-up, front -Y, the cat's left +X; standing on z = 0 (rest pose = standing, walk-ready)",
+  "texture": "textures/lucky-cat.png (1024x1024, shared by every part except the _Glow part)",
+  "parts": {
+    "LuckyCat_Body": {
+      "triangles": 752,
+      "vertices": 378,
+      "dimensions_studs": [
+        0.7858,
+        1.262,
+        0.7639
+      ],
+      "bbox_min": [
+        -0.3929,
+        -0.6091,
+        0.2656
+      ],
+      "bbox_max": [
+        0.3929,
+        0.6529,
+        1.0295
+      ],
+      "pivot": [
+        0.0,
+        0.1,
+        0.62
+      ],
+      "pivot_is": "root (body centre)",
+      "joint_parent": null,
+      "uv_range": [
+        0.0059,
+        0.7145,
+        0.0053,
+        0.9949
+      ],
+      "glow": false
+    },
+    "LuckyCat_Head": {
+      "triangles": 1700,
+      "vertices": 852,
+      "dimensions_studs": [
+        1.3901,
+        1.0864,
+        1.1492
+      ],
+      "bbox_min": [
+        -0.695,
+        -0.9497,
+        0.9129
+      ],
+      "bbox_max": [
+        0.695,
+        0.1366,
+        2.062
+      ],
+      "pivot": [
+        0.0,
+        -0.36,
+        0.93
+      ],
+      "pivot_is": "neck, hidden inside the head and collar",
+      "joint_parent": "LuckyCat_Body",
+      "uv_range": [
+        0.0057,
+        0.8349,
+        0.0051,
+        0.7969
+      ],
+      "glow": false
+    },
+    "LuckyCat_FrontL": {
+      "triangles": 524,
+      "vertices": 264,
+      "dimensions_studs": [
+        0.3538,
+        0.4601,
+        0.6741
+      ],
+      "bbox_min": [
+        0.0423,
+        -0.5042,
+        0.0
+      ],
+      "bbox_max": [
+        0.3961,
+        -0.0441,
+        0.6741
+      ],
+      "pivot": [
+        0.22,
+        -0.22,
+        0.5
+      ],
+      "pivot_is": "left shoulder",
+      "joint_parent": "LuckyCat_Body",
+      "uv_range": [
+        0.0065,
+        0.8777,
+        0.0053,
+        0.9791
+      ],
+      "glow": false
+    },
+    "LuckyCat_FrontR": {
+      "triangles": 524,
+      "vertices": 264,
+      "dimensions_studs": [
+        0.3538,
+        0.4601,
+        0.6741
+      ],
+      "bbox_min": [
+        -0.3961,
+        -0.5042,
+        0.0
+      ],
+      "bbox_max": [
+        -0.0423,
+        -0.0441,
+        0.6741
+      ],
+      "pivot": [
+        -0.22,
+        -0.22,
+        0.5
+      ],
+      "pivot_is": "right shoulder (also the beckon emote paw)",
+      "joint_parent": "LuckyCat_Body",
+      "uv_range": [
+        0.293,
+        0.9553,
+        0.0428,
+        0.9823
+      ],
+      "glow": false
+    },
+    "LuckyCat_HindL": {
+      "triangles": 560,
+      "vertices": 282,
+      "dimensions_studs": [
+        0.3603,
+        0.4642,
+        0.6885
+      ],
+      "bbox_min": [
+        0.0909,
+        0.1971,
+        0.0
+      ],
+      "bbox_max": [
+        0.4512,
+        0.6613,
+        0.6885
+      ],
+      "pivot": [
+        0.25,
+        0.4,
+        0.52
+      ],
+      "pivot_is": "left hip",
+      "joint_parent": "LuckyCat_Body",
+      "uv_range": [
+        0.1099,
+        0.9347,
+        0.0053,
+        0.9379
+      ],
+      "glow": false
+    },
+    "LuckyCat_HindR": {
+      "triangles": 560,
+      "vertices": 282,
+      "dimensions_studs": [
+        0.3603,
+        0.4642,
+        0.6885
+      ],
+      "bbox_min": [
+        -0.4512,
+        0.1971,
+        0.0
+      ],
+      "bbox_max": [
+        -0.0909,
+        0.6613,
+        0.6885
+      ],
+      "pivot": [
+        -0.25,
+        0.4,
+        0.52
+      ],
+      "pivot_is": "right hip",
+      "joint_parent": "LuckyCat_Body",
+      "uv_range": [
+        0.0702,
+        0.9569,
+        0.0051,
+        0.9125
+      ],
+      "glow": false
+    },
+    "LuckyCat_Tail": {
+      "triangles": 352,
+      "vertices": 178,
+      "dimensions_studs": [
+        0.2731,
+        0.3576,
+        0.6122
+      ],
+      "bbox_min": [
+        -0.1364,
+        0.5029,
+        0.6309
+      ],
+      "bbox_max": [
+        0.1367,
+        0.8605,
+        1.2431
+      ],
+      "pivot": [
+        0.0,
+        0.6,
+        0.74
+      ],
+      "pivot_is": "tail root",
+      "joint_parent": "LuckyCat_Body",
+      "uv_range": [
+        0.0058,
+        0.9379,
+        0.336,
+        0.9284
+      ],
+      "glow": false
+    },
+    "LuckyCat_Bell": {
+      "triangles": 312,
+      "vertices": 158,
+      "dimensions_studs": [
+        0.2014,
+        0.1902,
+        0.2096
+      ],
+      "bbox_min": [
+        -0.1607,
+        -0.7251,
+        0.4905
+      ],
+      "bbox_max": [
+        0.0407,
+        -0.5348,
+        0.7001
+      ],
+      "pivot": [
+        -0.06,
+        -0.55,
+        0.71
+      ],
+      "pivot_is": "bell loop on the collar",
+      "joint_parent": "LuckyCat_Body",
+      "uv_range": [
+        0.0056,
+        0.9506,
+        0.0051,
+        0.9506
+      ],
+      "glow": false
+    },
+    "LuckyCat_Coin": {
+      "triangles": 264,
+      "vertices": 134,
+      "dimensions_studs": [
+        0.2581,
+        0.0955,
+        0.409
+      ],
+      "bbox_min": [
+        0.0709,
+        -0.6678,
+        0.3459
+      ],
+      "bbox_max": [
+        0.3291,
+        -0.5722,
+        0.7548
+      ],
+      "pivot": [
+        0.1974,
+        -0.5979,
+        0.7439
+      ],
+      "pivot_is": "coin eyelet on the collar",
+      "joint_parent": "LuckyCat_Body",
+      "uv_range": [
+        0.0053,
+        0.9791,
+        0.0056,
+        0.9696
+      ],
+      "glow": false
+    },
+    "LuckyCat_CoinRim_Glow": {
+      "triangles": 288,
+      "vertices": 144,
+      "dimensions_studs": [
+        0.3157,
+        0.1003,
+        0.406
+      ],
+      "bbox_min": [
+        0.0421,
+        -0.6701,
+        0.317
+      ],
+      "bbox_max": [
+        0.3579,
+        -0.5699,
+        0.723
+      ],
+      "pivot": [
+        0.1974,
+        -0.5979,
+        0.7439
+      ],
+      "pivot_is": "same as the coin pivot (rigid weld to the coin)",
+      "joint_parent": "LuckyCat_Coin",
+      "uv_range": [
+        0.02,
+        0.98,
+        0.02,
+        0.98
+      ],
+      "glow": true
+    }
+  },
+  "total_triangles": 5836,
+  "overall": {
+    "bbox_min": [
+      -0.695,
+      -0.9497,
+      0.0
+    ],
+    "bbox_max": [
+      0.695,
+      0.8605,
+      2.062
+    ],
+    "height_studs": 2.062,
+    "length_studs": 1.8102,
+    "width_studs": 1.3901
+  }
+}

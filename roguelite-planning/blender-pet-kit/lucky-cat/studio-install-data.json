@@ -1,0 +1,755 @@
+{
+  "asset": "lucky-cat",
+  "rarity": "Epic",
+  "strong_suit": "Luck (+Luck: the run shop rolls better tiers more often)",
+  "axis": "studio = (-x, z, y) of blender; Blender front -Y = Studio front -Z",
+  "units": "studs; the model is at final size, import 1:1 and do not scale",
+  "sides": "L/R are the cat's own left/right; its left is Blender +X = Studio -X. The beckon emote uses the RIGHT front paw",
+  "origin": "all positions are relative to the model origin = the ground point under the body (Blender world origin)",
+  "rest_pose": "standing on all four legs (walk-ready chibi stance), tail up; pets are always moving, so this is the rest pose",
+  "ground_point": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "overall_size": [
+    1.3901,
+    2.062,
+    1.8102
+  ],
+  "overall_center": [
+    0.0,
+    1.031,
+    -0.0446
+  ],
+  "texture": "textures/lucky-cat.png",
+  "texture_note": "one shared atlas on every MeshPart via MeshPart.TextureID, except LuckyCat_CoinRim_Glow",
+  "glow_parts": {
+    "LuckyCat_CoinRim_Glow": {
+      "Material": "Neon",
+      "Color": [
+        255,
+        196,
+        92
+      ],
+      "Transparency": 0,
+      "TextureID": "none",
+      "weld": "WeldConstraint to LuckyCat_Coin (same pivot)",
+      "note": "thin rim wrapping the koban edge; the coin itself is painted gold in the atlas (not Neon). Subtle on purpose: only the rim glows"
+    }
+  },
+  "rest_rotation": "every part has identity rotation relative to the model at rest",
+  "rig": "one Motor6D per part (except the _Glow weld): Part0 = joint_parent, Part1 = the part, C0/C1 at the part's pivot",
+  "angle_convention": "studio_angles_deg = CFrame.Angles(math.rad(x), math.rad(y), math.rad(z)) about the part's own pivot, applied as Motor6D.Transform; blender_bone_angles_deg are the preview-rig values (X then Y then Z); body_offset_studs is the root bob (Studio Y) that keeps the lowest paw on the ground",
+  "parts": {
+    "LuckyCat_Body": {
+      "center": [
+        0.0,
+        0.6475,
+        0.0219
+      ],
+      "size": [
+        0.7858,
+        0.7639,
+        1.262
+      ],
+      "pivot": [
+        0.0,
+        0.62,
+        0.1
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pivot_is": "root (body centre)",
+      "joint_parent": null,
+      "suggested_motion": "root part: walk bob in Studio Y and a small roll about Studio Z"
+    },
+    "LuckyCat_Head": {
+      "center": [
+        0.0,
+        1.4875,
+        -0.4065
+      ],
+      "size": [
+        1.3901,
+        1.1492,
+        1.0864
+      ],
+      "pivot": [
+        0.0,
+        0.93,
+        -0.36
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.31,
+        -0.46
+      ],
+      "pivot_is": "neck, hidden inside the head and collar",
+      "joint_parent": "LuckyCat_Body",
+      "suggested_motion": "nod = pitch about Studio X, tilt = roll about Studio Z, look = yaw about Studio Y, through the neck"
+    },
+    "LuckyCat_FrontL": {
+      "center": [
+        -0.2192,
+        0.3371,
+        -0.2741
+      ],
+      "size": [
+        0.3538,
+        0.6741,
+        0.4601
+      ],
+      "pivot": [
+        -0.22,
+        0.5,
+        -0.22
+      ],
+      "pivot_from_body_pivot": [
+        -0.22,
+        -0.12,
+        -0.32
+      ],
+      "pivot_is": "left shoulder",
+      "joint_parent": "LuckyCat_Body",
+      "suggested_motion": "step = swing about Studio X through the shoulder (positive Studio X = paw reaches forward)"
+    },
+    "LuckyCat_FrontR": {
+      "center": [
+        0.2192,
+        0.3371,
+        -0.2741
+      ],
+      "size": [
+        0.3538,
+        0.6741,
+        0.4601
+      ],
+      "pivot": [
+        0.22,
+        0.5,
+        -0.22
+      ],
+      "pivot_from_body_pivot": [
+        0.22,
+        -0.12,
+        -0.32
+      ],
+      "pivot_is": "right shoulder (also the beckon emote paw)",
+      "joint_parent": "LuckyCat_Body",
+      "suggested_motion": "step = swing about Studio X through the shoulder; beckon emote = lift to Studio X +145 with a Studio Z -38 outward roll, wave between +115 and +145"
+    },
+    "LuckyCat_HindL": {
+      "center": [
+        -0.271,
+        0.3443,
+        0.4292
+      ],
+      "size": [
+        0.3603,
+        0.6885,
+        0.4642
+      ],
+      "pivot": [
+        -0.25,
+        0.52,
+        0.4
+      ],
+      "pivot_from_body_pivot": [
+        -0.25,
+        -0.1,
+        0.3
+      ],
+      "pivot_is": "left hip",
+      "joint_parent": "LuckyCat_Body",
+      "suggested_motion": "step = swing about Studio X through the hip"
+    },
+    "LuckyCat_HindR": {
+      "center": [
+        0.271,
+        0.3443,
+        0.4292
+      ],
+      "size": [
+        0.3603,
+        0.6885,
+        0.4642
+      ],
+      "pivot": [
+        0.25,
+        0.52,
+        0.4
+      ],
+      "pivot_from_body_pivot": [
+        0.25,
+        -0.1,
+        0.3
+      ],
+      "pivot_is": "right hip",
+      "joint_parent": "LuckyCat_Body",
+      "suggested_motion": "step = swing about Studio X through the hip"
+    },
+    "LuckyCat_Tail": {
+      "center": [
+        -0.0001,
+        0.937,
+        0.6817
+      ],
+      "size": [
+        0.2731,
+        0.6122,
+        0.3576
+      ],
+      "pivot": [
+        0.0,
+        0.74,
+        0.6
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.12,
+        0.5
+      ],
+      "pivot_is": "tail root",
+      "joint_parent": "LuckyCat_Body",
+      "suggested_motion": "swish = yaw about Studio Y through the tail root; perk = pitch about Studio X"
+    },
+    "LuckyCat_Bell": {
+      "center": [
+        0.06,
+        0.5953,
+        -0.63
+      ],
+      "size": [
+        0.2014,
+        0.2096,
+        0.1902
+      ],
+      "pivot": [
+        0.06,
+        0.71,
+        -0.55
+      ],
+      "pivot_from_body_pivot": [
+        0.06,
+        0.09,
+        -0.65
+      ],
+      "pivot_is": "bell loop on the collar",
+      "joint_parent": "LuckyCat_Body",
+      "suggested_motion": "dangle: small lagging swing about Studio X"
+    },
+    "LuckyCat_Coin": {
+      "center": [
+        -0.2,
+        0.5504,
+        -0.62
+      ],
+      "size": [
+        0.2581,
+        0.409,
+        0.0955
+      ],
+      "pivot": [
+        -0.1974,
+        0.7439,
+        -0.5979
+      ],
+      "pivot_from_body_pivot": [
+        -0.1974,
+        0.1239,
+        -0.6979
+      ],
+      "pivot_is": "coin eyelet on the collar",
+      "joint_parent": "LuckyCat_Body",
+      "suggested_motion": "dangle like the bell, slightly out of phase"
+    },
+    "LuckyCat_CoinRim_Glow": {
+      "center": [
+        -0.2,
+        0.52,
+        -0.62
+      ],
+      "size": [
+        0.3157,
+        0.406,
+        0.1003
+      ],
+      "pivot": [
+        -0.1974,
+        0.7439,
+        -0.5979
+      ],
+      "pivot_from_body_pivot": [
+        -0.1974,
+        0.1239,
+        -0.6979
+      ],
+      "pivot_is": "same as the coin pivot (rigid weld to the coin)",
+      "joint_parent": "LuckyCat_Coin",
+      "suggested_motion": "none: WeldConstraint to LuckyCat_Coin"
+    }
+  },
+  "locomotion": "cat_walk",
+  "locomotion_data": {
+    "gait": "four-legged chibi cat walk in diagonal pairs (left front + right hind reach while right front + left hind push back, then swap), gentle body bob and roll, head steady, tail up with a small swish",
+    "period_s": 0.5,
+    "frames": [
+      {
+        "t": 0.0,
+        "name": "step A (left front + right hind reach)",
+        "body_offset_studs": [
+          0.0,
+          0.0429,
+          0.0
+        ],
+        "studio_angles_deg": {
+          "LuckyCat_Body": [
+            0.0,
+            0.0,
+            -3.0
+          ],
+          "LuckyCat_Head": [
+            3.0,
+            0.0,
+            3.0
+          ],
+          "LuckyCat_FrontL": [
+            22.0,
+            0.0,
+            0.0
+          ],
+          "LuckyCat_HindR": [
+            20.0,
+            0.0,
+            0.0
+          ],
+          "LuckyCat_FrontR": [
+            -18.0,
+            0.0,
+            0.0
+          ],
+          "LuckyCat_HindL": [
+            -16.0,
+            0.0,
+            0.0
+          ],
+          "LuckyCat_Tail": [
+            6.0,
+            12.0,
+            0.0
+          ],
+          "LuckyCat_Bell": [
+            -6.0,
+            0.0,
+            0.0
+          ],
+          "LuckyCat_Coin": [
+            -4.0,
+            0.0,
+            0.0
+          ]
+        },
+        "blender_bone_angles_deg": {
+          "LuckyCat_Body": [
+            0,
+            0,
+            3
+          ],
+          "LuckyCat_Head": [
+            -3,
+            0,
+            -3
+          ],
+          "LuckyCat_FrontL": [
+            -22,
+            0,
+            0
+          ],
+          "LuckyCat_HindR": [
+            -20,
+            0,
+            0
+          ],
+          "LuckyCat_FrontR": [
+            18,
+            0,
+            0
+          ],
+          "LuckyCat_HindL": [
+            16,
+            0,
+            0
+          ],
+          "LuckyCat_Tail": [
+            -6,
+            12,
+            0
+          ],
+          "LuckyCat_Bell": [
+            6,
+            0,
+            0
+          ],
+          "LuckyCat_Coin": [
+            4,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "t": 0.5,
+        "name": "step B (right front + left hind reach)",
+        "body_offset_studs": [
+          0.0,
+          0.0429,
+          0.0
+        ],
+        "studio_angles_deg": {
+          "LuckyCat_Body": [
+            0.0,
+            0.0,
+            3.0
+          ],
+          "LuckyCat_Head": [
+            3.0,
+            0.0,
+            -3.0
+          ],
+          "LuckyCat_FrontR": [
+            22.0,
+            0.0,
+            0.0
+          ],
+          "LuckyCat_HindL": [
+            20.0,
+            0.0,
+            0.0
+          ],
+          "LuckyCat_FrontL": [
+            -18.0,
+            0.0,
+            0.0
+          ],
+          "LuckyCat_HindR": [
+            -16.0,
+            0.0,
+            0.0
+          ],
+          "LuckyCat_Tail": [
+            6.0,
+            -12.0,
+            0.0
+          ],
+          "LuckyCat_Bell": [
+            6.0,
+            0.0,
+            0.0
+          ],
+          "LuckyCat_Coin": [
+            4.0,
+            0.0,
+            0.0
+          ]
+        },
+        "blender_bone_angles_deg": {
+          "LuckyCat_Body": [
+            0,
+            0,
+            -3
+          ],
+          "LuckyCat_Head": [
+            -3,
+            0,
+            3
+          ],
+          "LuckyCat_FrontR": [
+            -22,
+            0,
+            0
+          ],
+          "LuckyCat_HindL": [
+            -20,
+            0,
+            0
+          ],
+          "LuckyCat_FrontL": [
+            18,
+            0,
+            0
+          ],
+          "LuckyCat_HindR": [
+            16,
+            0,
+            0
+          ],
+          "LuckyCat_Tail": [
+            -6,
+            -12,
+            0
+          ],
+          "LuckyCat_Bell": [
+            -6,
+            0,
+            0
+          ],
+          "LuckyCat_Coin": [
+            -4,
+            0,
+            0
+          ]
+        }
+      }
+    ],
+    "interpolation": "sine ease A -> B -> A; pass through the rest pose (body offset 0) at t = 0.25 and 0.75, which gives the bob"
+  },
+  "beckon_emote": {
+    "note": "short emote (about 1.5 s, two or three waves), the cat stays standing: the right front paw lifts beside the cheek, palm (pink beans) forward, and waves at the shoulder; the head tilts slightly",
+    "blend_in_s": 0.15,
+    "wave_period_s": 0.5,
+    "duration_s": 1.5,
+    "frames": [
+      {
+        "t": 0.0,
+        "name": "paw up",
+        "body_offset_studs": [
+          0.0,
+          -0.0,
+          0.0
+        ],
+        "studio_angles_deg": {
+          "LuckyCat_FrontR": [
+            145.0,
+            0.0,
+            -38.0
+          ],
+          "LuckyCat_Head": [
+            6.0,
+            0.0,
+            8.0
+          ],
+          "LuckyCat_Tail": [
+            8.0,
+            10.0,
+            0.0
+          ]
+        },
+        "blender_bone_angles_deg": {
+          "LuckyCat_FrontR": [
+            -145,
+            0,
+            38
+          ],
+          "LuckyCat_Head": [
+            -6,
+            0,
+            -8
+          ],
+          "LuckyCat_Tail": [
+            -8,
+            10,
+            0
+          ]
+        }
+      },
+      {
+        "t": 0.5,
+        "name": "paw down (wave)",
+        "body_offset_studs": [
+          0.0,
+          -0.0,
+          0.0
+        ],
+        "studio_angles_deg": {
+          "LuckyCat_FrontR": [
+            115.0,
+            0.0,
+            -38.0
+          ],
+          "LuckyCat_Head": [
+            4.0,
+            0.0,
+            6.0
+          ],
+          "LuckyCat_Tail": [
+            8.0,
+            -6.0,
+            0.0
+          ]
+        },
+        "blender_bone_angles_deg": {
+          "LuckyCat_FrontR": [
+            -115,
+            0,
+            38
+          ],
+          "LuckyCat_Head": [
+            -4,
+            0,
+            -6
+          ],
+          "LuckyCat_Tail": [
+            -8,
+            -6,
+            0
+          ]
+        }
+      }
+    ]
+  },
+  "extras": {
+    "head_tilt": {
+      "body_offset_studs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "studio_angles_deg": {
+        "LuckyCat_Head": [
+          0.0,
+          25.0,
+          -20.0
+        ]
+      },
+      "blender_bone_angles_deg": {
+        "LuckyCat_Head": [
+          0,
+          25,
+          20
+        ]
+      }
+    },
+    "tail_swish": {
+      "body_offset_studs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "studio_angles_deg": {
+        "LuckyCat_Tail": [
+          0.0,
+          28.0,
+          0.0
+        ]
+      },
+      "blender_bone_angles_deg": {
+        "LuckyCat_Tail": [
+          0,
+          28,
+          0
+        ]
+      }
+    },
+    "timing": "while following: head tilt every 3-4 s, tail swish +/-28 deg on a slow 1.6 s sine"
+  },
+  "vfx": [
+    {
+      "name": "CoinSparkle",
+      "kind": "ParticleEmitter (always on), soft gold sparkle around the coin",
+      "part": "LuckyCat_Coin",
+      "attachment_position_from_part_pivot": [
+        -0.0026,
+        -0.2239,
+        -0.0221
+      ],
+      "position_model": [
+        -0.2,
+        0.52,
+        -0.62
+      ],
+      "color": [
+        255,
+        214,
+        120
+      ],
+      "suggested": {
+        "Texture": "a soft 4-point star sparkle (e.g. rbxasset://textures/particles/sparkles_main.dds)",
+        "Rate": 3,
+        "Lifetime": [
+          0.5,
+          0.9
+        ],
+        "Size": "NumberSequence 0:0.10, 0.4:0.14, 1:0",
+        "Speed": [
+          0.2,
+          0.5
+        ],
+        "SpreadAngle": [
+          180,
+          180
+        ],
+        "Acceleration": [
+          0,
+          0.4,
+          0
+        ],
+        "Drag": 2,
+        "Rotation": [
+          0,
+          360
+        ],
+        "RotSpeed": [
+          -90,
+          90
+        ],
+        "LightEmission": 0.8,
+        "LightInfluence": 0,
+        "Transparency": "NumberSequence 0:0.3, 0.7:0.5, 1:1",
+        "ZOffset": 0.2,
+        "LockedToPart": false
+      }
+    },
+    {
+      "name": "WalkSparkleTrail",
+      "kind": "ParticleEmitter, faint gold sparkle trail; Enabled only while the pet moves",
+      "part": "LuckyCat_Body",
+      "attachment_position_from_part_pivot": [
+        0.0,
+        -0.57,
+        0.3
+      ],
+      "position_model": [
+        0.0,
+        0.05,
+        0.4
+      ],
+      "color": [
+        255,
+        226,
+        150
+      ],
+      "suggested": {
+        "Texture": "same sparkle as CoinSparkle",
+        "Rate": 8,
+        "Lifetime": [
+          0.6,
+          1.0
+        ],
+        "Size": "NumberSequence 0:0.08, 1:0",
+        "Speed": [
+          0.05,
+          0.2
+        ],
+        "SpreadAngle": [
+          40,
+          40
+        ],
+        "EmissionDirection": "Top",
+        "Acceleration": [
+          0,
+          0.5,
+          0
+        ],
+        "LightEmission": 0.6,
+        "LightInfluence": 0,
+        "Transparency": "NumberSequence 0:0.45, 1:1",
+        "LockedToPart": false,
+        "note": "LockedToPart false so the sparks stay behind as a trail; set Rate 0 when idle"
+      }
+    }
+  ]
+}

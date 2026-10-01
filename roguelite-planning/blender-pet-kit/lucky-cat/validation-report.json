@@ -1,0 +1,559 @@
+{
+  "fbx": {
+    "file": "exports/fbx/lucky-cat.fbx",
+    "ok": true,
+    "objects": 10,
+    "total_triangles": 5836,
+    "height_studs": 2.062,
+    "lowest_z": 0.0,
+    "problems": [],
+    "parts": {
+      "LuckyCat_Bell": {
+        "triangles": 312,
+        "pivot": [
+          -0.06,
+          -0.55,
+          0.71
+        ],
+        "bbox_min": [
+          -0.1607,
+          -0.7251,
+          0.4905
+        ],
+        "bbox_max": [
+          0.0407,
+          -0.5348,
+          0.7001
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_Body": {
+        "triangles": 752,
+        "pivot": [
+          0.0,
+          0.1,
+          0.62
+        ],
+        "bbox_min": [
+          -0.3929,
+          -0.6091,
+          0.2656
+        ],
+        "bbox_max": [
+          0.3929,
+          0.6529,
+          1.0295
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_Coin": {
+        "triangles": 264,
+        "pivot": [
+          0.1974,
+          -0.5979,
+          0.7439
+        ],
+        "bbox_min": [
+          0.0709,
+          -0.6678,
+          0.3459
+        ],
+        "bbox_max": [
+          0.3291,
+          -0.5722,
+          0.7548
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_CoinRim_Glow": {
+        "triangles": 288,
+        "pivot": [
+          0.1974,
+          -0.5979,
+          0.7439
+        ],
+        "bbox_min": [
+          0.0421,
+          -0.6701,
+          0.317
+        ],
+        "bbox_max": [
+          0.3579,
+          -0.5699,
+          0.723
+        ],
+        "zero_area_triangles": 0,
+        "texture": null
+      },
+      "LuckyCat_FrontL": {
+        "triangles": 524,
+        "pivot": [
+          0.22,
+          -0.22,
+          0.5
+        ],
+        "bbox_min": [
+          0.0423,
+          -0.5042,
+          0.0
+        ],
+        "bbox_max": [
+          0.3961,
+          -0.0441,
+          0.6741
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_FrontR": {
+        "triangles": 524,
+        "pivot": [
+          -0.22,
+          -0.22,
+          0.5
+        ],
+        "bbox_min": [
+          -0.3961,
+          -0.5042,
+          0.0
+        ],
+        "bbox_max": [
+          -0.0423,
+          -0.0441,
+          0.6741
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_Head": {
+        "triangles": 1700,
+        "pivot": [
+          0.0,
+          -0.36,
+          0.93
+        ],
+        "bbox_min": [
+          -0.695,
+          -0.9497,
+          0.9129
+        ],
+        "bbox_max": [
+          0.695,
+          0.1366,
+          2.062
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_HindL": {
+        "triangles": 560,
+        "pivot": [
+          0.25,
+          0.4,
+          0.52
+        ],
+        "bbox_min": [
+          0.0909,
+          0.1971,
+          0.0
+        ],
+        "bbox_max": [
+          0.4512,
+          0.6613,
+          0.6885
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_HindR": {
+        "triangles": 560,
+        "pivot": [
+          -0.25,
+          0.4,
+          0.52
+        ],
+        "bbox_min": [
+          -0.4512,
+          0.1971,
+          0.0
+        ],
+        "bbox_max": [
+          -0.0909,
+          0.6613,
+          0.6885
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_Tail": {
+        "triangles": 352,
+        "pivot": [
+          0.0,
+          0.6,
+          0.74
+        ],
+        "bbox_min": [
+          -0.1364,
+          0.5029,
+          0.6309
+        ],
+        "bbox_max": [
+          0.1367,
+          0.8605,
+          1.2431
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "glb": {
+    "file": "exports/glb/lucky-cat.glb",
+    "ok": true,
+    "objects": 10,
+    "total_triangles": 5836,
+    "height_studs": 2.062,
+    "lowest_z": 0.0,
+    "problems": [],
+    "parts": {
+      "LuckyCat_Bell": {
+        "triangles": 312,
+        "pivot": [
+          -0.06,
+          -0.55,
+          0.71
+        ],
+        "bbox_min": [
+          -0.1607,
+          -0.7251,
+          0.4905
+        ],
+        "bbox_max": [
+          0.0407,
+          -0.5348,
+          0.7001
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_Body": {
+        "triangles": 752,
+        "pivot": [
+          0.0,
+          0.1,
+          0.62
+        ],
+        "bbox_min": [
+          -0.3929,
+          -0.6091,
+          0.2656
+        ],
+        "bbox_max": [
+          0.3929,
+          0.6529,
+          1.0295
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_Coin": {
+        "triangles": 264,
+        "pivot": [
+          0.1974,
+          -0.5979,
+          0.7439
+        ],
+        "bbox_min": [
+          0.0709,
+          -0.6678,
+          0.3459
+        ],
+        "bbox_max": [
+          0.3291,
+          -0.5722,
+          0.7548
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_CoinRim_Glow": {
+        "triangles": 288,
+        "pivot": [
+          0.1974,
+          -0.5979,
+          0.7439
+        ],
+        "bbox_min": [
+          0.0421,
+          -0.6701,
+          0.317
+        ],
+        "bbox_max": [
+          0.3579,
+          -0.5699,
+          0.723
+        ],
+        "zero_area_triangles": 0,
+        "texture": null
+      },
+      "LuckyCat_FrontL": {
+        "triangles": 524,
+        "pivot": [
+          0.22,
+          -0.22,
+          0.5
+        ],
+        "bbox_min": [
+          0.0423,
+          -0.5042,
+          0.0
+        ],
+        "bbox_max": [
+          0.3961,
+          -0.0441,
+          0.6741
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_FrontR": {
+        "triangles": 524,
+        "pivot": [
+          -0.22,
+          -0.22,
+          0.5
+        ],
+        "bbox_min": [
+          -0.3961,
+          -0.5042,
+          0.0
+        ],
+        "bbox_max": [
+          -0.0423,
+          -0.0441,
+          0.6741
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_Head": {
+        "triangles": 1700,
+        "pivot": [
+          0.0,
+          -0.36,
+          0.93
+        ],
+        "bbox_min": [
+          -0.695,
+          -0.9497,
+          0.9129
+        ],
+        "bbox_max": [
+          0.695,
+          0.1366,
+          2.062
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_HindL": {
+        "triangles": 560,
+        "pivot": [
+          0.25,
+          0.4,
+          0.52
+        ],
+        "bbox_min": [
+          0.0909,
+          0.1971,
+          0.0
+        ],
+        "bbox_max": [
+          0.4512,
+          0.6613,
+          0.6885
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_HindR": {
+        "triangles": 560,
+        "pivot": [
+          -0.25,
+          0.4,
+          0.52
+        ],
+        "bbox_min": [
+          -0.4512,
+          0.1971,
+          0.0
+        ],
+        "bbox_max": [
+          -0.0909,
+          0.6613,
+          0.6885
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "LuckyCat_Tail": {
+        "triangles": 352,
+        "pivot": [
+          0.0,
+          0.6,
+          0.74
+        ],
+        "bbox_min": [
+          -0.1364,
+          0.5029,
+          0.6309
+        ],
+        "bbox_max": [
+          0.1367,
+          0.8605,
+          1.2431
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "lucky-cat",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "texture": {
+    "file": "textures/lucky-cat.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "ok": true
+  },
+  "install_data": {
+    "file": "studio-install-data.json",
+    "ok": true,
+    "problems": []
+  },
+  "all_ok": true,
+  "expected_parts": [
+    "LuckyCat_Bell",
+    "LuckyCat_Body",
+    "LuckyCat_Coin",
+    "LuckyCat_CoinRim_Glow",
+    "LuckyCat_FrontL",
+    "LuckyCat_FrontR",
+    "LuckyCat_Head",
+    "LuckyCat_HindL",
+    "LuckyCat_HindR",
+    "LuckyCat_Tail"
+  ],
+  "scope": "Blender re-import only (Blender 5.2.1 LTS); Studio untested"
+}
