@@ -10,6 +10,7 @@ local combat=game.ReplicatedStorage:WaitForChild('RogueliteCombat')
 local EnemyMotion=require(combat:WaitForChild('EnemyMotion'))
 local Shapes=require(combat:WaitForChild('MapBossShapes'))
 local Defs=require(combat:WaitForChild('MapBossDefs'))
+local Maps=require(combat:WaitForChild('MapConfig'))
 local animations=combat:WaitForChild('BossAnimations')
 local vfxFolder=combat:WaitForChild('BossVfx')
 local Common=require(vfxFolder:WaitForChild('Common'))
@@ -22,14 +23,15 @@ local function decode(raw) local ok,t=pcall(Http.JSONDecode,Http,raw or '');retu
 local function clipDuration(motion,name) local c=motion.clips[name];return c and c.duration or 1 end
 -- EnemyMotion.compile asserts Idle, Move and Attack: alias Walk -> Move and the first attack -> Attack.
 -- compile builds a clip listed under two names once and shares the result.
+local function aliased(anim,source)
+ local raw=require(source);local data=table.clone(raw);data.clips=table.clone(raw.clips)
+ data.clips.Move=data.clips.Move or data.clips.Walk;data.clips.Attack=data.clips.Attack or data.clips[Defs.ATTACK_CLIPS[anim][1]]
+ return data
+end
 local function load(anim)
  if compiled[anim]~=nil then return compiled[anim] or nil end
  local source=animations:FindFirstChild(anim);if not source then return nil end
- local ok,result=pcall(function()
-  local raw=require(source);local data=table.clone(raw);data.clips=table.clone(raw.clips)
-  data.clips.Move=data.clips.Move or data.clips.Walk;data.clips.Attack=data.clips.Attack or data.clips[Defs.ATTACK_CLIPS[anim][1]]
-  return EnemyMotion.compile(data)
- end)
+ local ok,result=pcall(function() return EnemyMotion.compile(aliased(anim,source)) end)
  if not ok then warn('MapBossPresentation: '..anim..' animations failed: '..tostring(result)) end
  compiled[anim]=ok and result or false;return compiled[anim] or nil
 end
@@ -296,6 +298,47 @@ local function track(npc)
 end
 Tags:GetInstanceAddedSignal('MapBoss'):Connect(track)
 for _,npc in Tags:GetTagged('MapBoss') do track(npc) end
+
+-- Ahead of the fight: from two waves before BossEncounter spawns the run map's boss (wave
+-- HammerBossWave, default 20) its clips decode and compile one module or clip per frame, instead
+-- of all in the spawn frame (King Crab ~120 ms on desktop). Same data as load(); a boss that
+-- arrives first (or an admin spawn) still loads synchronously in track, and this stops.
+local warming={}
+local function warm(anim)
+ if warming[anim] or compiled[anim]~=nil then return end
+ local source=animations:FindFirstChild(anim);if not source then return end
+ warming[anim]=true
+ task.spawn(function()
+  -- A failure here is reported once, by the synchronous load() at spawn.
+  pcall(function()
+   local list=source:GetDescendants()
+   for i=#list,1,-1 do -- leaves before the clips that join them; require caches each for load()
+    if compiled[anim]~=nil then return end
+    if list[i]:IsA('ModuleScript') then task.wait();profiled('Boss:Warm',require,list[i]) end
+   end
+   task.wait();if compiled[anim]~=nil then return end
+   local data=profiled('Boss:Warm',aliased,anim,source)
+   local motion=EnemyMotion.compile(data,{})
+   for name in data.clips do
+    task.wait();if compiled[anim]~=nil then return end
+    profiled('Boss:Warm',function() return motion.clips[name] end)
+   end
+   if compiled[anim]==nil then compiled[anim]=motion end
+  end)
+ end)
+end
+task.spawn(function()
+ -- ShopService creates the run state on match servers only; lobby clients just wait here.
+ local run=game.ReplicatedStorage:WaitForChild('RogueliteRunState',math.huge)
+ local function check()
+  local map=Maps.get(combat:GetAttribute('RunMap'));local def=map and map.boss and Defs.get(map.boss)
+  local wave=run:GetAttribute('Wave')
+  if def and type(wave)=='number' and wave>=(combat:GetAttribute('HammerBossWave') or 20)-2 then warm(def.anim) end
+ end
+ run:GetAttributeChangedSignal('Wave'):Connect(check)
+ combat:GetAttributeChangedSignal('RunMap'):Connect(check)
+ check()
+end)
 
 local function frame(npc,state,now,dt)
  local h=npc:FindFirstChildOfClass('Humanoid');local root=npc.PrimaryPart;if not h or not root then return end

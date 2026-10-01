@@ -12,7 +12,7 @@ MicroProfiler labels so a spike can be pinned on one system.
 | `Boss:PaintWarning` | MapBossPresentation | the per-frame warning repaint |
 | `Boss:Vfx:<hook>` | MapBossPresentation `call` | a BossVfx/Common hook: windup, impact, active, projectile, intro, enrage, aftershock |
 | `EnemyAnim:Update` | RogueliteZombieAnimation | every ordinary enemy's animation for the frame |
-| `EnemyMotion:Decode` / `:Compile` | EnemyMotion.warm | one slice of a new enemy type's clip build (should be short) |
+| `EnemyMotion:Decode` / `:Compile`, `Boss:Warm` | EnemyMotion.warm, MapBossPresentation | one slice of a clip build ahead of use: a new enemy type, or the map boss from two waves out (should be short) |
 
 ## Capturing
 - PC: Ctrl+Alt+F6 opens the MicroProfiler (Ctrl+F6 in Studio). Ctrl+P pauses at a spike;
