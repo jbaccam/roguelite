@@ -214,7 +214,7 @@ function P.openChest(player,kind,count)
  local tally={}
  for _=1,n do
   local counts=Chests.open(kind,rng,d.pity) -- rolls with both pity counters and updates them
-  for _,r in Chests.Rarities do Chests.group(r,counts[r],rng,tally) end
+  for _,r in Chests.Rarities do Chests.group(r,counts[r],rng,tally,kind) end
  end
  local results={}
  for id,c in tally do
@@ -229,14 +229,19 @@ function P.openChest(player,kind,count)
  P.publish(player)
  return true,n>1 and ('Opened '..n..'× '..chest.name) or ('Opened '..chest.name),results
 end
+-- One tier up for a weapon or an armor piece: spends its copies AND emeralds (both tables in
+-- ChestConfig; the emerald cost triples each tier).
 function P.upgrade(player,id)
- local d=P.profiles[player];local rec=d and d.weapons[id]
- if not rec then return false,'You do not own that weapon' end
+ local d=P.profiles[player];local armor=Chests.isArmor(id)
+ local rec=d and (armor and d.armor or d.weapons)[id]
+ if not rec then return false,armor and 'You do not own that piece' or 'You do not own that weapon' end
  if rec.tier>=4 then return false,'Already Tier IV' end
- local cost=Chests.upgradeCost(id,rec.tier)
- if rec.have<cost then return false,'Need '..cost..' to upgrade' end
+ local cost,gems=Chests.upgradeCost(id,rec.tier),Chests.upgradeEmeralds(id,rec.tier)
+ if rec.have<cost then return false,'Need '..cost..' copies to upgrade' end
+ if not spend(d,gems) then return false,'Need '..(gems-d.emeralds)..' more emeralds' end
  rec.have-=cost;rec.tier+=1;P.publish(player)
- return true,Weapons.ById[id].name..' is now Tier '..({'I','II','III','IV'})[rec.tier]
+ local name=armor and Armor.pieceName(id) or Weapons.ById[id].name
+ return true,name..' is now Tier '..({'I','II','III','IV'})[rec.tier]
 end
 function P.buyClass(player,class,price)
  local d=P.profiles[player]

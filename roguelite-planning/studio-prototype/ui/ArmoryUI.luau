@@ -270,10 +270,11 @@ function A.new(player, opts)
 		end
 		return class, weapon
 	end
+	-- Ready to upgrade: enough copies AND emeralds (ChestConfig.upgradeEmeralds, tripling per tier).
 	local function ready(id)
 		local rec = profile.weapons[id]
 		local need = rec and opts.need(rec)
-		return need ~= nil and rec.have >= need
+		return need ~= nil and rec.have >= need and profile.gems >= (Chests.upgradeEmeralds(id, rec.tier) or 0)
 	end
 
 	-- Scaled groups ------------------------------------------------------------
@@ -803,7 +804,7 @@ function A.new(player, opts)
 	end
 
 	local function upgrade(id)
-		local before = profile.weapons[id]
+		local before = profile.weapons[id] or profile.armor[id]
 		local r = combat.ProfileAction:InvokeServer("Upgrade", id)
 		T.toast(screen, r.message or "", r.ok and C.lime or C.negative)
 		if r.ok then
@@ -949,6 +950,25 @@ function A.new(player, opts)
 	end
 
 	-- A worn or owned armor piece: EQUIP / TAKE OFF this piece, or the whole set.
+	-- Set bonus lines (the approved step 5 table). CharacterStats.ArmorSets carries the same text
+	-- once the combat side lands; this is the fallback.
+	local ARMOR_TEXT = {
+		Iron = { "+2 Armor", "10% less damage from zombie hits" },
+		Ninja = { "+8% Dodge", "After a dodge, your next hit crits" },
+		Viking = { "+12% Melee damage", "Below half HP: +25% Attack speed" },
+		Samurai = { "+8% Crit chance", "+40% Crit damage" },
+		Spartan = { "+3 Armor", "Blocks the first hit every wave" },
+		DragonScale = { "+25 Max health", "20% burn chance, and 25% to burn zombies that hit you" },
+		Phoenix = { "+2 HP/s Regeneration", "Once per run: rise at 50% HP in a fire blast" },
+	}
+	local function setText(setId)
+		local t = Stats.ArmorSets and Stats.ArmorSets[setId] and Stats.ArmorSets[setId].text
+		local f = ARMOR_TEXT[setId] or { "", "" }
+		return t and t.two or f[1], t and t.four or f[2]
+	end
+
+	-- An armor piece: tier, set bonuses, the set's pieces, UPGRADE (copies + emeralds), EQUIP /
+	-- TAKE OFF this piece or the whole set.
 	local function drawArmorDetail(panel, id)
 		local setId, slot = Armor.split(id)
 		local set = Armor.ById[setId]
@@ -957,7 +977,7 @@ function A.new(player, opts)
 		header(
 			panel,
 			nil,
-			nil,
+			rec and rec.tier,
 			string.upper(set.name),
 			'<font color="'
 				.. T.hex(Chests.RarityColor[set.rarity])
@@ -965,59 +985,93 @@ function A.new(player, opts)
 				.. string.upper(set.rarity)
 				.. "</font>  ·  ARMOR  ·  "
 				.. string.upper(slot),
-			C.white
+			rec and T.Tier[rec.tier] or C.white
 		)
 		armorView(panel.IconWell, setId, slot, 6, 6, 120)
+		local two, four = setText(setId)
 		local d = T.text(
 			panel,
-			"Description",
-			"Wear all four " .. set.name .. " pieces for the full look. Set bonuses come with armor chests.",
+			"Bonuses",
+			'<font color="#91EF14">2 PIECES</font>  ' .. two .. '\n<font color="#91EF14">4 PIECES</font>  ' .. four,
 			24,
-			168,
+			166,
 			RIGHT_W - 48,
-			60,
+			56,
 			19,
-			C.muted
+			C.cream
 		)
+		d.RichText = true
 		d.TextYAlignment = Enum.TextYAlignment.Top
-		T.label(panel, "PiecesTitle", "SET PIECES", 24, 240, 300, 34, 26).TextXAlignment = Enum.TextXAlignment.Left
+		T.label(panel, "PiecesTitle", "SET PIECES", 24, 228, 300, 32, 24).TextXAlignment = Enum.TextXAlignment.Left
 		local owned, wornAll = 0, true
 		for i, sl in Armor.Slots do
-			local have = profile.armor[Armor.pieceId(setId, sl)] ~= nil
+			local r = profile.armor[Armor.pieceId(setId, sl)]
 			local on = profile.wearing[sl] == setId
-			owned += have and 1 or 0
-			wornAll = wornAll and (on or not have)
-			statRow(panel, 278 + (i - 1) * 40, sl, on and "WORN" or (have and "OWNED" or "NOT OWNED"))
+			owned += r and 1 or 0
+			wornAll = wornAll and (on or not r)
+			statRow(
+				panel,
+				262 + (i - 1) * 34,
+				sl,
+				r and ((on and "WORN" or "OWNED") .. "  " .. T.Roman[r.tier]) or "NOT OWNED"
+			)
+		end
+		-- Upgrade: copies of this piece + emeralds (ChestConfig, tripling each tier).
+		if rec then
+			local need = rec.tier < 4 and Chests.upgradeCost(id, rec.tier) or nil
+			local gems = need and Chests.upgradeEmeralds(id, rec.tier)
+			T.upgradeBar(panel, "Copies", 24, 408, RIGHT_W - 48, 26, rec.have, need)
+			local ok = need ~= nil and rec.have >= need and profile.gems >= gems
+			local up = T.button(
+				panel,
+				"Upgrade",
+				need and ("UPGRADE  ·  " .. gems .. " EMERALDS") or "MAX TIER",
+				24,
+				444,
+				RIGHT_W - 48,
+				62,
+				function()
+					upgrade(id)
+				end,
+				not ok
+			)
+			up.Caption.TextSize = 24
+			up.Interactable = ok
+			if need and rec.have < need then
+				centred(T.text(panel, "Need", "Need " .. (need - rec.have) .. " more copies", 24, 506, RIGHT_W - 48, 20, 16, C.muted))
+			elseif need and profile.gems < gems then
+				centred(T.text(panel, "Need", "Need " .. (gems - profile.gems) .. " more emeralds", 24, 506, RIGHT_W - 48, 20, 16, C.negative))
+			end
 		end
 		local eq = T.button(
 			panel,
 			"Equip",
 			worn and "TAKE OFF" or (rec and "EQUIP" or "NOT OWNED"),
 			24,
-			500,
+			530,
 			RIGHT_W - 48,
-			70,
+			62,
 			function()
 				wear(slot, (not worn) and setId or nil)
 			end,
 			true
 		)
-		eq.Caption.TextSize = 28
+		eq.Caption.TextSize = 26
 		eq.Interactable = rec ~= nil
 		local all = T.button(
 			panel,
 			"EquipSet",
 			wornAll and "TAKE OFF SET" or "EQUIP FULL SET",
 			24,
-			584,
+			604,
 			RIGHT_W - 48,
-			70,
+			62,
 			function()
 				wear("All", (not wornAll) and setId or nil)
 			end,
 			wornAll
 		)
-		all.Caption.TextSize = 28
+		all.Caption.TextSize = 26
 		all.Interactable = owned > 0
 	end
 
@@ -1167,7 +1221,12 @@ function A.new(player, opts)
 				local cost = T.text(
 					card,
 					"Cost",
-					"Uses " .. Chests.upgradeCost(w.id, t - 1) .. " copies  ·  starts runs at Tier " .. T.Roman[t],
+					"Uses "
+						.. Chests.upgradeCost(w.id, t - 1)
+						.. " copies + "
+						.. Chests.upgradeEmeralds(w.id, t - 1)
+						.. " emeralds  ·  starts runs at Tier "
+						.. T.Roman[t],
 					26,
 					120,
 					LEFT_W - 100,
@@ -1223,7 +1282,10 @@ function A.new(player, opts)
 			local ct = T.label(rp, "CopiesTitle", "COPIES", 24, 320, 200, 30, 22, C.muted)
 			ct.TextXAlignment = Enum.TextXAlignment.Left
 			T.upgradeBar(rp, "Copies", 24, 356, RIGHT_W - 48, 30, rec.have, need)
-			if need and rec.have < need then
+			local gems = need and Chests.upgradeEmeralds(w.id, rec.tier)
+			if need and rec.have >= need and profile.gems < gems then
+				centred(T.label(rp, "Need", "NEED " .. (gems - profile.gems) .. " MORE EMERALDS", 24, 398, RIGHT_W - 48, 34, 22, C.negative))
+			elseif need and rec.have < need then
 				centred(
 					T.label(
 						rp,
@@ -1240,10 +1302,10 @@ function A.new(player, opts)
 			elseif not need then
 				centred(T.label(rp, "Max", "FULLY UPGRADED", 24, 398, RIGHT_W - 48, 34, 24, C.gold))
 			end
-			local b = T.button(rp, "UpgradeBig", need and "UPGRADE" or "MAX TIER", 24, 452, RIGHT_W - 48, 92, function()
+			local b = T.button(rp, "UpgradeBig", need and ("UPGRADE  ·  " .. gems .. " EMERALDS") or "MAX TIER", 24, 452, RIGHT_W - 48, 92, function()
 				upgrade(w.id)
 			end, not ready(w.id))
-			b.Caption.TextSize = 40
+			b.Caption.TextSize = need and 30 or 40
 			b.Interactable = ready(w.id)
 			if ready(w.id) then
 				b.Caption.TextColor3 = C.ink

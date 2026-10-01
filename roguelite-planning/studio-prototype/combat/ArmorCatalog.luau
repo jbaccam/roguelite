@@ -17,7 +17,8 @@ A.Sets = {
 	{ id = "Samurai", name = "Samurai", rarity = "Epic", model = "Samurai", helmet = "full" },
 	{ id = "Spartan", name = "Spartan", rarity = "Epic", model = "Spartan", helmet = "full" },
 	{ id = "DragonScale", name = "Dragon Scale", rarity = "Legendary", model = "DragonScale", helmet = "full" },
-	{ id = "Phoenix", name = "Phoenix", rarity = "Godly", model = "Phoenix", helmet = "full" },
+	-- chests: only these chest kinds drop the set (Phoenix: the Robux Legendary Chest only).
+	{ id = "Phoenix", name = "Phoenix", rarity = "Godly", model = "Phoenix", helmet = "full", chests = { "Legendary" } },
 }
 
 -- Piece icons for chest reveals and odds ('Iron.Helmet' -> image), rendered from each kit's

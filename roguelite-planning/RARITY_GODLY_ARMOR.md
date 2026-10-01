@@ -539,13 +539,52 @@ look before step 2. Results in Studio:
 - Turn Godly chest rolls and pity on.
 
 ### Step 5: Armor system and the 7 sets (section 10)
-- Its own design pass first:
-  - Piece stats per tier.
-  - Armor chest tiers and odds.
-  - The Armory armor tab (it's a "coming" panel today).
-  - Low-poly pieces that fit many Roblox avatars.
-  - Whether Phoenix's revive stacks with the Robux Revive (`MonetizationConfig.ReviveLimitPerRun = 1`).
-  - A second Common set (Iron is the only Common, so early armor chests would drop almost only Iron).
+
+**Approved by the user 2026-09-30.** This replaces the section 10 bonus numbers, which balance
+checks showed were too strong. For example, +4 armor cuts damage by 21% (damage ÷ (1 + armor/15)),
+which equals the whole Brawler class buff.
+
+- **Where armor comes from:**
+  - All 28 pieces drop from the normal chests, each as its own item with its set's rarity
+    (`ChestConfig` pools).
+  - Phoenix drops only from the Legendary Chest (the Robux one).
+  - The Wooden Chest is free once a day.
+- **Set bonuses:**
+  - They count pieces of the SAME set that you are wearing. Mixing sets gives nothing.
+  - The 2-piece bonus is about a class's 2-weapon affinity bonus. The 4-piece bonus is about a
+    class's 4-weapon perk.
+
+| Set | Rarity | 2 pieces | 4 pieces |
+|---|---|---|---|
+| Iron | Common | `Armor` +2 (12% less damage) | `ContactReduction` +10 (10% less zombie-hit damage) |
+| Ninja | Rare | `Dodge` +8 | After you dodge, your next hit is a guaranteed crit (new) |
+| Viking | Rare | `MeleeDamage` +12 | Below half HP: `AttackSpeed` +25 (new, live) |
+| Samurai | Epic | `CritChance` +8 | `CritDamage` +40 (1.5× → 1.9×) |
+| Spartan | Epic | `Armor` +3 (17% less damage) | `FirstHitBlock` 1 (blocks the first hit every wave) |
+| Dragon Scale | Legendary | `MaxHP` +25 | `BurnChance` +20; fire thorns: a zombie that hits you has a 25% chance to catch fire (normal burn, 6/s for 3 s) (new) |
+| Phoenix | Godly | `Regeneration` +2 HP/s | Once per run, when you die you rise at 50% HP and blast every enemy within 12 studs for 100 damage (new) |
+
+- **Piece tiers (I–IV, upgraded with copies and emeralds):**
+  - A set's bonuses scale by +10% per tier above I, counted from the lowest-tier piece that counts
+    toward the bonus. Tier IV = ×1.3.
+  - Numbers round to the stat's step. Chances and blast damage scale too. `FirstHitBlock` stays 1.
+- **Phoenix vs the Robux revive:** the Phoenix rise triggers first, with no death screen. After a
+  second death, the normal death screen offers the paid revive (still `ReviveLimitPerRun = 1`).
+- **Upgrade costs (weapons and armor, same table):**
+  - Copies as before (`ChestConfig.UpgradeByRarity`), PLUS emeralds that triple each tier
+    (`ChestConfig.UpgradeEmeralds`).
+
+  | Rarity | I→II | II→III | III→IV |
+  |---|---|---|---|
+  | Common | 60 | 180 | 540 |
+  | Rare | 120 | 360 | 1,080 |
+  | Epic | 250 | 750 | 2,250 |
+  | Legendary | 500 | 1,500 | 4,500 |
+  | Godly | 1,000 | 3,000 | 9,000 |
+
+  An early full run pays about 140 emeralds and a late Nightmare win about 1,400, so maxing a
+  Common costs about 5 early runs of emeralds plus its copies.
+- **Still open:** a second Common set (Iron is the only Common).
 
 ### Step 6: Pets and the Pet Chest (section 11)
 - Its own design pass first:

@@ -58,7 +58,12 @@ return function(Chests, rolls)
 	end
 	check(Chests.LegendaryPity == 50 and Chests.GodlyPity == 150, "Pity is 50 Legendary / 150 Godly")
 
-	-- Section 2: upgrade costs and spare-copy emeralds
+	-- Section 2: upgrade costs (copies + emeralds tripling each tier) and spare-copy emeralds
+	for r, e in { Common = 60, Rare = 120, Epic = 250, Legendary = 500, Godly = 1000 } do
+		local t = Chests.UpgradeEmeralds[r]
+		check(t[1] == e and t[2] == e * 3 and t[3] == e * 9, r .. " upgrades cost " .. e .. "/" .. e * 3 .. "/" .. e * 9 .. " emeralds")
+	end
+	check(Chests.upgradeEmeralds("31", 1) == 500 and Chests.upgradeEmeralds("Iron.Chest", 3) == 540, "upgradeEmeralds reads the item's rarity")
 	local upgrades = {
 		Common = { 2, 6, 15 },
 		Rare = { 2, 4, 8 },
@@ -224,6 +229,32 @@ return function(Chests, rolls)
 	compare("Legendary", rolls)
 	Chests.Pool.Godly = godlyPool
 	check(Chests.godlyEnabled(), "Godly is on again with the Phoenix pool")
+	-- Phoenix drops only from the Legendary Chest.
+	for _, kind in Chests.Order do
+		local legendary = kind == "Legendary"
+		check(Chests.godlyEnabled(kind) == legendary, kind .. (legendary and " has" or " has no") .. " Godly (Phoenix)")
+		check((rows(kind):find("Godly") ~= nil) == legendary, kind .. " summary shows Godly only for the Legendary Chest")
+		local phoenix = 0
+		for _, o in Chests.odds(kind) do
+			if o.id:find("^Phoenix%.") then
+				phoenix += 1
+			end
+		end
+		check(phoenix == (legendary and 4 or 0), kind .. " odds list " .. phoenix .. " Phoenix pieces")
+	end
+	local prng, seen = Random.new(7), {}
+	for _ = 1, 3000 do
+		local counts = Chests.open("Magical", prng, { Legendary = 0, Godly = Chests.GodlyPity - 1 })
+		for r, n in counts do
+			for id in Chests.group(r, n, prng, nil, "Magical") do
+				seen[id] = true
+			end
+		end
+	end
+	for id in seen do
+		assert(not id:find("^Phoenix%."), "a Magical Chest dropped " .. id)
+	end
+	checks += 1
 
 	-- Section 3: daily deals
 	for _, o in Chests.DealOdds do
