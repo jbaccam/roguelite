@@ -29,6 +29,23 @@ aura.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequ
 aura.LockedToPart=true;aura.Parent=attachment
 local visuals={}
 local refresh=0
+-- Drops being pulled first, then nearest. Only the best 128 are drawn and only the first 32 need
+-- their rank (glow and aura), so the rest are never sorted.
+local entries,list,pass={},{},0 -- entries: drop model -> {model,origin,distance,active,seen}
+local function before(a,b) if a.active~=b.active then return a.active end;return a.distance<b.distance end
+-- Moves the k best of list[1..n] into list[1..k], unordered (Wirth's FIND, average O(n)).
+local function select(n,k)
+ local lo,hi=1,n
+ while lo<hi do
+  local pivot=list[(lo+hi)//2];local i,j=lo,hi
+  repeat
+   while before(list[i],pivot) do i+=1 end
+   while before(pivot,list[j]) do j-=1 end
+   if i<=j then list[i],list[j]=list[j],list[i];i+=1;j-=1 end
+  until i>j
+  if k<=j then hi=j elseif k>=i then lo=i else return end
+ end
+end
 RunService.RenderStepped:Connect(function(dt)
  local now=workspace:GetServerTimeNow();refresh-=dt
  if refresh<=0 then
@@ -36,14 +53,32 @@ RunService.RenderStepped:Connect(function(dt)
   local position=workspace.CurrentCamera.CFrame.Position
   local root=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild('HumanoidRootPart')
   if root then position=root.Position end
-  local list={}
+  pass+=1
+  local n=0
   for _,m in drops:GetChildren() do
-   local origin=m:GetAttribute('Origin')
-   if typeof(origin)=='Vector3' then table.insert(list,{model=m,distance=(origin-position).Magnitude,active=m:GetAttribute('MagnetUserId')~=nil}) end
+   -- A drop's Origin never changes once it exists, so it is read once.
+   local e=entries[m]
+   if not e then
+    local origin=m:GetAttribute('Origin')
+    if typeof(origin)=='Vector3' then e={model=m,origin=origin};entries[m]=e end
+   end
+   if e then
+    e.seen=pass;e.distance=(e.origin-position).Magnitude;e.active=m:GetAttribute('MagnetUserId')~=nil
+    n+=1;list[n]=e
+   end
   end
-  table.sort(list,function(a,b) if a.active~=b.active then return a.active end;return a.distance<b.distance end)
+  for i=n+1,#list do list[i]=nil end
+  for m,e in entries do if e.seen~=pass then entries[m]=nil end end
+  local count=math.min(128,n);local ranked=math.min(32,count)
+  if n>count then select(n,count) end
+  if count>ranked then select(count,ranked) end
+  for i=2,ranked do -- insertion sort of the ranked few
+   local e=list[i];local j=i-1
+   while j>=1 and before(e,list[j]) do list[j+1]=list[j];j-=1 end
+   list[j+1]=e
+  end
   local wanted={}
-  for i=1,math.min(128,#list) do
+  for i=1,count do
    local m=list[i].model;wanted[m]=true
    if not visuals[m] then local v=template:Clone();v.Parent=folder;visuals[m]=v end
    -- Bound translucent overdraw and dynamic lights in dense drop piles.

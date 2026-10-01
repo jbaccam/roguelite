@@ -3,6 +3,7 @@ local RunService=game:GetService('RunService')
 local Tags=game:GetService('CollectionService')
 local Motion=require(game.ReplicatedStorage.RogueliteCombat.WeaponMotion)
 local U=require(game.ReplicatedStorage.RogueliteCombat.UtilityMotion)
+local Batch=require(game.ReplicatedStorage.RogueliteCombat.ShotBatch)
 local W={}
 function W.new(combat,damage,rayParams)
  local streams={};local budget=0
@@ -24,15 +25,17 @@ function W.new(combat,damage,rayParams)
    local delta=d.id=='28' and Vector3.new(aim.X-slotOrigin.X,0,aim.Z-slotOrigin.Z) or aim-slotOrigin
    local direction=delta.Magnitude>.01 and delta.Unit or Motion.frame(pr.CFrame).LookVector
    local origin=slotOrigin+direction*1.1
-   local nearWall=workspace:Raycast(slotOrigin,origin-slotOrigin,rayParams(d.character,true))
+   local wallParams=rayParams(d.character,true) -- one filter for this stream's walls and every enemy below
+   local nearWall=workspace:Raycast(slotOrigin,origin-slotOrigin,wallParams)
    if nearWall then origin=slotOrigin end
    local length=d.range
-   local wall=workspace:Raycast(origin,direction*length,rayParams(d.character,true))
+   local wall=workspace:Raycast(origin,direction*length,wallParams)
    if wall then length=math.max(.1,(wall.Position-origin).Magnitude) end
    local vacuum=d.id=='28';local width=vacuum and length*.48 or .6
    if now>=r.nextVisual then
     r.nextVisual=now+.1
-    combat.SpecialFX:FireAllClients('Stream',key,d.id,d.owner.UserId,d.slotIndex,origin,origin+direction*length,width,now+.3,U.SafeDistance)
+    -- Nearby players and the owner only (10 Hz); StreamEnd still goes to everyone.
+    Batch.fire(combat.SpecialFX,origin,d.owner,'Stream',key,d.id,d.owner.UserId,d.slotIndex,origin,origin+direction*length,width,now+.3,U.SafeDistance)
    end
    local tickDamage=now>=r.nextDamage
    if tickDamage then r.nextDamage=now+.12 end
@@ -40,7 +43,7 @@ function W.new(combat,damage,rayParams)
     local root=npc:FindFirstChild('HumanoidRootPart');local h=npc:FindFirstChildOfClass('Humanoid')
     if not root or not h or h.Health<=0 or (d.practiceTarget and not npc:GetAttribute('PracticeTarget')) then continue end
     if not U.inCone(origin,direction,root.Position,length,width,vacuum and 4 or 2) then continue end
-    if workspace:Raycast(origin,root.Position-origin,rayParams(d.character,true)) then continue end
+    if workspace:Raycast(origin,root.Position-origin,wallParams) then continue end
     if tickDamage then damage(npc,d.damage*.12/d.cooldown,d,true) end
     if not vacuum or h.Health<=0 or not root.Parent then continue end
     -- Shared per enemy: overlapping vacuums cannot refresh a hold forever.

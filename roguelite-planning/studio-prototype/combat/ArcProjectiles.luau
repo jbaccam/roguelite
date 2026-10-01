@@ -48,9 +48,7 @@ function A.new(combat,damage,rayParams)
     local pos=Motion.position(r.origin,r.finish,t,r.side,r.height,r.bend)
     local delta=pos-r.position
     if delta.Magnitude>r.remaining then finish(r,nil,false);break end
-    local params=rayParams(d.character,false);local filter=params.FilterDescendantsInstances
-    for npc in r.hit do table.insert(filter,npc) end;params.FilterDescendantsInstances=filter
-    local hit=delta.Magnitude>.0001 and workspace:Spherecast(r.position,math.max(d.projectileRadius,d.id=='18' and .28 or .4),delta,params)
+    local hit=delta.Magnitude>.0001 and workspace:Spherecast(r.position,math.max(d.projectileRadius,d.id=='18' and .28 or .4),delta,Targets.sweepParams(r,rayParams(d.character,false)))
     r.t=t;r.position=pos
     r.remaining-=delta.Magnitude
     if hit then
@@ -59,12 +57,12 @@ function A.new(combat,damage,rayParams)
       r.hit[npc]=true;damage(npc,d.damage*r.factor,d)
       if r.pierce>0 then r.pierce-=1;r.factor*=.7
       elseif r.bounce>0 then
-       local closest,range=nil,math.min(18,r.remaining)
+       local closest,range=nil,math.min(18,r.remaining);local wall=rayParams(d.character,true)
        for _,candidate in Tags:GetTagged('RogueliteZombie') do
         local root=candidate:FindFirstChild('HumanoidRootPart');local hum=candidate:FindFirstChildOfClass('Humanoid')
         if root and hum and hum.Health>0 and not r.hit[candidate] then
          local distance=(root.Position-hit.Position).Magnitude
-         if distance<range and distance>.1 and not workspace:Raycast(hit.Position,root.Position-hit.Position,rayParams(d.character,true)) then closest=root;range=distance end
+         if distance<range and distance>.1 and not workspace:Raycast(hit.Position,root.Position-hit.Position,wall) then closest=root;range=distance end
         end
        end
        if closest then

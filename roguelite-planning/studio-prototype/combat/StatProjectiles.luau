@@ -10,13 +10,13 @@ function P.new(combat,damage,rayParams)
  local serial=0
  local shots=ShotBatch.writer(combat.Shot)
  local batching=false
- local function emitShot(...)
-  if batching then shots:push(...) else combat.Shot:FireAllClients(...) end
+ -- Shots reach players near their origin plus the shooter (ShotBatch.fire).
+ local function emitShot(owner,...)
+  if batching then shots:push(owner,...) else ShotBatch.fire(combat.Shot,(...),owner,...) end
  end
  local function cast(r,delta)
-  local params=rayParams(r.d.character,false);local filter=params.FilterDescendantsInstances
-  for npc in r.hit do table.insert(filter,npc) end;params.FilterDescendantsInstances=filter
-  return workspace:Spherecast(r.position,r.d.projectileRadius,delta,params)
+  -- The projectile's own params (its hit enemies excluded), rebuilt only when it hits another.
+  return workspace:Spherecast(r.position,r.d.projectileRadius,delta,Targets.sweepParams(r,rayParams(r.d.character,false)))
  end
  RunService.Heartbeat:Connect(function(dt)
   batching=#active>1
@@ -35,7 +35,7 @@ function P.new(combat,damage,rayParams)
    local finish=result and result.Position or r.position+delta
    local hitModel=result and result.Instance:FindFirstAncestorOfClass('Model')
    local mobContact=hitModel~=nil and Tags:HasTag(hitModel,'RogueliteZombie')
-   emitShot(r.position,finish,'Ranged',d.id,d.projectileRadius*2,nil,result~=nil and d.kind~='Blast',result and result.Normal,d.owner.UserId,d.slotIndex,r.first,mobContact,r.shotId,r.visualId,d.projectileSpeed,result~=nil and (not mobContact or (r.pierce<=0 and r.bounce<=0)) or r.remaining<=distance)
+   emitShot(d.owner,r.position,finish,'Ranged',d.id,d.projectileRadius*2,nil,result~=nil and d.kind~='Blast',result and result.Normal,d.owner.UserId,d.slotIndex,r.first,mobContact,r.shotId,r.visualId,d.projectileSpeed,result~=nil and (not mobContact or (r.pierce<=0 and r.bounce<=0)) or r.remaining<=distance)
    -- Preserve Shot-before-damage ordering on contact; never wait another frame.
    if result then shots:flush() end
    r.first=false
@@ -48,7 +48,7 @@ function P.new(combat,damage,rayParams)
       local root=candidate:FindFirstChild('HumanoidRootPart');local hum=candidate:FindFirstChildOfClass('Humanoid')
       if root and hum and hum.Health>0 and (root.Position-finish).Magnitude<=d.blastRadius and not workspace:Raycast(blastOrigin,root.Position-blastOrigin,wall) then damage(candidate,d.damage,d) end
      end
-     emitShot(finish-r.direction*.15,finish,'Blast',d.id,d.projectileRadius*2,d.blastRadius)
+     emitShot(d.owner,finish-r.direction*.15,finish,'Blast',d.id,d.projectileRadius*2,d.blastRadius)
      table.remove(active,i);continue
     end
     local npc=result.Instance:FindFirstAncestorOfClass('Model')

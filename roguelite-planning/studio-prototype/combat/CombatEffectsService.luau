@@ -4,6 +4,8 @@ local combat=game.ReplicatedStorage:WaitForChild('RogueliteCombat')
 local Stats=require(combat.CharacterStats)
 local Characters=require(script.Parent.CharacterService)
 local Death=require(combat.ZombieDeath)
+-- Hits and chain/armor shots go to players near them plus the attacker (ShotBatch.fire), not the lobby.
+local Batch=require(combat.ShotBatch)
 local E={statuses={}}
 local function alive(npc)
  local h=npc and npc:FindFirstChildOfClass('Humanoid');local r=npc and npc:FindFirstChild('HumanoidRootPart')
@@ -54,7 +56,7 @@ function E.hit(npc,amount,d,secondary)
   npc:SetAttribute('PracticeHits',(npc:GetAttribute('PracticeHits') or 0)+1)
   npc:SetAttribute('PracticeDamage',(npc:GetAttribute('PracticeDamage') or 0)+actual)
   npc:SetAttribute('LastWeaponId',d.id)
-  combat.Hit:FireAllClients(position+Vector3.yAxis*2,actual,npc,position,false,secondary==true,d.id)
+  Batch.fire(combat.Hit,position,d.owner,position+Vector3.yAxis*2,actual,npc,position,false,secondary==true,d.id)
   return actual -- no death, rewards, lifesteal farming or damage to the tester
  end
  npc:SetAttribute('LastDamageUserId',d.owner.UserId)
@@ -64,7 +66,7 @@ function E.hit(npc,amount,d,secondary)
  combat:SetAttribute('ConfirmedHits',(combat:GetAttribute('ConfirmedHits') or 0)+1)
  -- A lethal hit is represented by the death burst, not a second hit burst.
  -- The weapon id lets clients add that weapon's impact sound (RogueliteSounds).
- combat.Hit:FireAllClients(position+Vector3.new(0,2,0),actual,npc,position,h.Health<=0,secondary==true,d.id)
+ Batch.fire(combat.Hit,position,d.owner,position+Vector3.new(0,2,0),actual,npc,position,h.Health<=0,secondary==true,d.id)
  if h.Health<=0 then
   local entries=E.statuses[npc]
   if entries then
@@ -95,7 +97,7 @@ function E.hit(npc,amount,d,secondary)
   if sourceCount>0 and state.hits%s.ChainEvery==0 then
    for i,target in near(position,12*Stats.mult(s.AreaSize),{[npc]=true},d.character) do
     if i>count then break end
-    combat.Shot:FireAllClients(position,target.HumanoidRootPart.Position,'Lightning',d.id)
+    Batch.fire(combat.Shot,position,d.owner,position,target.HumanoidRootPart.Position,'Lightning',d.id)
     E.hit(target,d.damage*.4*Stats.mult(s.ChainDamage),d,true)
    end
   end
@@ -121,7 +123,7 @@ end
 -- `position`, with the Blast burst on clients. Returns how many zombies were hit.
 function E.armorBlast(player,position,radius,damage)
  local d=armorSource(player);if not d then return 0 end
- combat.Shot:FireAllClients(position+Vector3.yAxis*.5,position,'Blast','Armor',.07,radius)
+ Batch.fire(combat.Shot,position,player,position+Vector3.yAxis*.5,position,'Blast','Armor',.07,radius)
  local count=0
  for _,npc in Tags:GetTagged('RogueliteZombie') do
   local h,r=alive(npc)

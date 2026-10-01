@@ -54,6 +54,21 @@ function T.predict(root,origin,duration,delay,range,rayParams,character,grounded
  if range and delta.Magnitude>range then predicted=origin+delta.Unit*range end
  return predicted
 end
+-- A flight's sweep filter: base (rayParams' shared, read-only params) plus the enemies the flight
+-- already hit (r.hit), as params of its own kept on r. Rebuilt only when base is a different object
+-- or another enemy was hit, not every frame.
+function T.sweepParams(r,base)
+ if next(r.hit)==nil then return base end
+ local count=0;for _ in r.hit do count+=1 end
+ local own=r.sweep
+ if not own or own.base~=base or own.count~=count then
+  local filter=base.FilterDescendantsInstances;for npc in r.hit do filter[#filter+1]=npc end
+  local p=RaycastParams.new();p.FilterType=base.FilterType;p.IgnoreWater=base.IgnoreWater
+  p.CollisionGroup=base.CollisionGroup;p.RespectCanCollide=base.RespectCanCollide;p.FilterDescendantsInstances=filter
+  own={base=base,count=count,params=p};r.sweep=own
+ end
+ return own.params
+end
 function T.alive(root)
  local npc=root and root.Parent
  local h=npc and npc:FindFirstChildOfClass('Humanoid')
@@ -61,12 +76,15 @@ function T.alive(root)
 end
 function T.replacement(position,d,hit,remaining,launchOrigin,rayParams)
  local best,range=nil,math.min(d.range,remaining)
+ local params -- one shared wall filter for the whole search, fetched on first use
  for _,npc in Tags:GetTagged('RogueliteZombie') do
   local root=npc:FindFirstChild('HumanoidRootPart')
   if T.alive(root) and not (hit and hit[npc]) and (not d.practiceTarget or npc:GetAttribute('PracticeTarget')) then
    local distance=(root.Position-position).Magnitude
-   if distance>.05 and distance<range and (root.Position-launchOrigin).Magnitude<=d.range
-    and not workspace:Raycast(position,root.Position-position,rayParams(d.character,true)) then best=root;range=distance end
+   if distance>.05 and distance<range and (root.Position-launchOrigin).Magnitude<=d.range then
+    params=params or rayParams(d.character,true)
+    if not workspace:Raycast(position,root.Position-position,params) then best=root;range=distance end
+   end
   end
  end
  return best

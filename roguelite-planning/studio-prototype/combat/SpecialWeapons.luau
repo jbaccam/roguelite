@@ -9,7 +9,13 @@ local Targets=require(RS.RogueliteCombat.ProjectileTarget)
 local S={}
 function S.new(combat,damage,rayParams)
  local utility=require(script.Parent.UtilityWeapons).new(combat,damage,rayParams)
- local chickens=require(script.Parent.EggChickens).new(combat,damage,rayParams)
+ -- rayParams hands out shared, read-only params; EggChickens adds its folder to the filter, so it
+ -- gets a private copy (hatching is rare).
+ local function ownParams(character,ignoreEnemies)
+  local p=RaycastParams.new();p.FilterType=Enum.RaycastFilterType.Exclude
+  p.FilterDescendantsInstances=rayParams(character,ignoreEnemies).FilterDescendantsInstances;return p
+ end
+ local chickens=require(script.Parent.EggChickens).new(combat,damage,ownParams)
  local event=combat:WaitForChild('SpecialFX');local flights={};local zones={};local serial=0
  local function nextId() serial+=1;return serial end
  local function valid(d)
@@ -92,9 +98,7 @@ function S.new(combat,damage,rayParams)
     local delta=pos-r.position
     local hit
     if not r.returning and delta.Magnitude>.001 then
-     local params=rayParams(r.d.character,false);local filter=params.FilterDescendantsInstances
-     for npc in r.hit do table.insert(filter,npc) end;params.FilterDescendantsInstances=filter
-     hit=workspace:Spherecast(r.position,r.radius,delta,params)
+     hit=workspace:Spherecast(r.position,r.radius,delta,Targets.sweepParams(r,rayParams(r.d.character,false)))
     end
     r.position=hit and hit.Position or pos;r.t=t;r.remaining-=delta.Magnitude
     if hit then impact(r,hit);if r.started~=oldStart then break end end
@@ -109,9 +113,10 @@ function S.new(combat,damage,rayParams)
    if now>=z.ends or not valid(z.d) then zones[key]=nil;event:FireAllClients('ZoneEnd',key)
    elseif now>=z.nextTick then
     z.nextTick=now+.4
+    local wall=rayParams(z.d.character,true)
     for _,npc in Tags:GetTagged('RogueliteZombie') do
      local root=npc:FindFirstChild('HumanoidRootPart');local h=npc:FindFirstChildOfClass('Humanoid')
-     if h and h.Health>0 and root and allowed(npc,z.d) and (root.Position-z.position).Magnitude<=z.radius and not workspace:Raycast(z.position+Vector3.yAxis*.3,root.Position-z.position-Vector3.yAxis*.3,rayParams(z.d.character,true)) then
+     if h and h.Health>0 and root and allowed(npc,z.d) and (root.Position-z.position).Magnitude<=z.radius and not workspace:Raycast(z.position+Vector3.yAxis*.3,root.Position-z.position-Vector3.yAxis*.3,wall) then
       -- Secondary ticks cannot proc crit, chains, knockback or status stacks.
       damage(npc,z.d.damage*.4,z.d,true)
      end
@@ -132,11 +137,12 @@ function S.new(combat,damage,rayParams)
    local direction=(aim-origin).Magnitude>.01 and (aim-origin).Unit or -Vector3.zAxis
    local length=math.min(d.range,14*Stats.mult(d.stats.AttackRange))
    event:FireAllClients('Spray',nextId(),origin,direction,length,d.owner.UserId,d.slotIndex)
+   local wall=rayParams(d.character,true)
    for _,npc in Tags:GetTagged('RogueliteZombie') do
     local h=npc:FindFirstChildOfClass('Humanoid');local root=npc:FindFirstChild('HumanoidRootPart')
     if h and h.Health>0 and root and allowed(npc,d) then
      local delta=root.Position-origin
-     if delta.Magnitude<=length and delta.Magnitude>.01 and delta.Unit:Dot(direction)>.84 and not workspace:Raycast(origin,delta,rayParams(d.character,true)) then damage(npc,d.damage,d) end
+     if delta.Magnitude<=length and delta.Magnitude>.01 and delta.Unit:Dot(direction)>.84 and not workspace:Raycast(origin,delta,wall) then damage(npc,d.damage,d) end
     end
    end
    return

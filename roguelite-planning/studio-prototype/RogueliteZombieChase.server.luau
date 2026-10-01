@@ -43,6 +43,39 @@ local folder = Instance.new("Folder")
 folder.Name = "RogueliteEnemies"
 folder.Parent = workspace
 
+local SpatialGrid = require(script.Parent:WaitForChild("EnemySpatialGrid"))
+local neighborGrid = SpatialGrid.new(folder, 4.5)
+-- Registered before enemy callbacks: one lazy snapshot per Heartbeat, never across frames.
+RunService.Heartbeat:Connect(function() neighborGrid:invalidate() end)
+folder.ChildAdded:Connect(function() neighborGrid:invalidate() end)
+folder.ChildRemoved:Connect(function() neighborGrid:invalidate() end)
+
+-- Pathfinding budget: ComputeAsync is the costliest call here and every blocked zombie asked once
+-- a second, so the server shares PATH_RATE computes per second (bursts up to PATH_BURST), oldest
+-- request first. A zombie waiting its turn keeps its last path, or holds as it did mid-compute.
+-- Each zombie has at most one request queued; one no longer wanted (zombie gone, or back in
+-- sight) is dropped without spending the budget.
+local PATH_RATE, PATH_BURST = 10, 10
+local pathQueue, pathHead, pathTail, pathTokens = {}, 1, 0, PATH_BURST
+local function queuePath(job)
+    pathTail += 1
+    pathQueue[pathTail] = job
+end
+RunService.Heartbeat:Connect(function(dt)
+    pathTokens = math.min(PATH_BURST, pathTokens + dt * PATH_RATE)
+    while pathHead <= pathTail do
+        local job = pathQueue[pathHead]
+        if job.wanted() then
+            if pathTokens < 1 then break end
+            pathTokens -= 1
+            task.spawn(job.run)
+        end
+        pathQueue[pathHead] = nil
+        pathHead += 1
+    end
+    if pathHead > pathTail then pathHead, pathTail = 1, 0 end
+end)
+
 -- The active map's marker, looked up on each use: Studio's combined mode can switch maps between runs.
 local function marker()
     return Role.marker() or error('No RogueliteZombieSpawn in the active map ' .. tostring(Role.activeMap()))
@@ -92,42 +125,68 @@ local function clearOfPlayers(point, minimum, roots)
     end
     return true
 end
--- Rock/tree climb blockers have CanQuery off, so test their footprints directly.
-local function insideBlocker(point)
+-- Rock/tree climb blockers have CanQuery off, so test their footprints directly. Their parts are
+-- listed once per map and kept until the folder's contents or the active map (RunMap) change.
+local blockerCache = {}
+local function forgetBlockers() blockerCache.parts = nil end
+combat:GetAttributeChangedSignal('RunMap'):Connect(forgetBlockers)
+local function blockerParts()
     local blockers = Role.find(marker():GetAttribute('SpawnBlockerFolder') or 'MapOneNoClimb')
-    if not blockers then return false end
-    for _, part in blockers:GetDescendants() do
-        if part:IsA("BasePart") then
-            local localPoint = part.CFrame:PointToObjectSpace(point)
-            if math.abs(localPoint.X) < part.Size.X / 2 + 1.5 and math.abs(localPoint.Z) < part.Size.Z / 2 + 1.5 then return true end
+    if blockers ~= blockerCache.folder then
+        for _, link in blockerCache.links or {} do link:Disconnect() end
+        blockerCache.folder, blockerCache.parts, blockerCache.links = blockers, nil, nil
+        if blockers then
+            blockerCache.links = {blockers.DescendantAdded:Connect(forgetBlockers), blockers.DescendantRemoving:Connect(forgetBlockers)}
         end
+    end
+    if blockers and not blockerCache.parts then
+        local parts = {}
+        for _, part in blockers:GetDescendants() do
+            if part:IsA("BasePart") then table.insert(parts, part) end
+        end
+        blockerCache.parts = parts
+    end
+    return blockerCache.parts
+end
+local function insideBlocker(point, parts)
+    for _, part in parts or {} do
+        local localPoint = part.CFrame:PointToObjectSpace(point)
+        if math.abs(localPoint.X) < part.Size.X / 2 + 1.5 and math.abs(localPoint.Z) < part.Size.Z / 2 + 1.5 then return true end
     end
     return false
 end
-local function groundAt(point)
-    local center = arena()
-    local exclude = {folder, warnings, marker(), workspace:FindFirstChild("Zombie_R15_ProvidedTextures_Studio")}
-    for _, root in livingRoots() do table.insert(exclude, root.Parent) end
+-- Everything a spawn check needs that can't change while one pick runs (it never yields):
+-- gathered once per pick instead of once per attempt.
+local function spawnContext()
+    local m = marker()
+    local center, radius = arena()
+    local roots = livingRoots()
+    local exclude = {folder, warnings, m, workspace:FindFirstChild("Zombie_R15_ProvidedTextures_Studio")}
+    for _, root in roots do table.insert(exclude, root.Parent) end
     -- The arena's invisible walls and lid sit above the floor; the ground ray ignores them.
     local rayExclude = table.clone(exclude)
-    table.insert(rayExclude, Role.find(marker():GetAttribute('SpawnBoundaryModel') or 'MapOneBoundary'))
+    table.insert(rayExclude, Role.find(m:GetAttribute('SpawnBoundaryModel') or 'MapOneBoundary'))
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = rayExclude
-    local hit = workspace:Raycast(Vector3.new(point.X, center.Y + 200, point.Z), Vector3.new(0, -260, 0), params)
-    -- Floor level only: never on cliffs, terraces, canopies or boulder tops.
-    if not hit or hit.Normal.Y < 0.75 or math.abs(hit.Position.Y - center.Y) > 5 or insideBlocker(hit.Position) then return nil end
     local overlap = OverlapParams.new()
     overlap.FilterType = Enum.RaycastFilterType.Exclude
     overlap.FilterDescendantsInstances = exclude
     overlap.RespectCanCollide = true
-    if #workspace:GetPartBoundsInBox(CFrame.new(hit.Position + Vector3.new(0, 3.5, 0)), Vector3.new(3, 5, 3), overlap) > 0 then return nil end
+    return {center = center, radius = radius, roots = roots, params = params, overlap = overlap, blockers = blockerParts()}
+end
+local function groundAt(point, context)
+    local center = context.center
+    local hit = workspace:Raycast(Vector3.new(point.X, center.Y + 200, point.Z), Vector3.new(0, -260, 0), context.params)
+    -- Floor level only: never on cliffs, terraces, canopies or boulder tops.
+    if not hit or hit.Normal.Y < 0.75 or math.abs(hit.Position.Y - center.Y) > 5 or insideBlocker(hit.Position, context.blockers) then return nil end
+    if #workspace:GetPartBoundsInBox(CFrame.new(hit.Position + Vector3.new(0, 3.5, 0)), Vector3.new(3, 5, 3), context.overlap) > 0 then return nil end
     return hit.Position
 end
 -- Prefer a ring around a random living player so pressure comes from every side.
 local function pickSpawnPoint(avoid, anchor, band, minimum)
-    local center, radius = arena()
-    local roots = livingRoots()
+    local context = spawnContext()
+    local center, radius, roots = context.center, context.radius, context.roots
     for attempt = 1, 32 do
         local origin = anchor or (#roots > 0 and attempt <= 24 and roots[math.random(#roots)].Position)
         local candidate
@@ -144,17 +203,18 @@ local function pickSpawnPoint(avoid, anchor, band, minimum)
         for _, other in avoid do
             if spaced and flatDistance(candidate, other) < GROUP_SPACING then spaced = false end
         end
-        local ground = spaced and groundAt(candidate)
+        local ground = spaced and groundAt(candidate, context)
         if ground then return ground end
     end
     return nil
 end
 local function memberSpots(point, count)
     local spots = {}
+    local context = spawnContext()
     for n = 1, count do
         local angle = (n / count + math.random() * 0.15) * math.pi * 2
         local offset = count > 1 and GROUP_RADIUS * (0.55 + math.random() * 0.45) or 0
-        spots[n] = groundAt(point + Vector3.new(math.cos(angle) * offset, 0, math.sin(angle) * offset)) or point
+        spots[n] = groundAt(point + Vector3.new(math.cos(angle) * offset, 0, math.sin(angle) * offset), context) or point
     end
     return spots
 end
@@ -208,21 +268,31 @@ local function telegraphGroup(members, point, generation)
     releaseQueued(members, generation)
     if not ok then warn('Spawn telegraph failed: ' .. tostring(err)) end
 end
+-- A big refill picks PICKS_PER_FRAME groups a frame instead of all at once; each group's
+-- telegraph still starts GROUP_STAGGER after the previous one, timed from the flush.
+local PICKS_PER_FRAME = 4
 local function flushQueue()
     flushScheduled = false
     local generation, batch, chosen, delay = waveGeneration, queued, {}, 0
     queued = {}
+    local started, picks = os.clock(), 0
     local i = 1
     while i <= #batch do
         local size = math.min(#batch - i + 1, math.random(2, 4))
         local members = table.move(batch, i, i + size - 1, 1, {})
         i += size
+        if picks >= PICKS_PER_FRAME then picks = 0; task.wait() end
         -- An error here would strand the rest of the batch in queuedSet; with no point the group
-        -- still goes to telegraphGroup, which releases it.
-        local picked, point = pcall(pickSpawnPoint, chosen, nil, SPAWN_BAND, MIN_PLAYER_DISTANCE)
-        if not picked then warn('Spawn point failed: ' .. tostring(point)); point = nil end
-        if point then table.insert(chosen, point) end
-        task.delay(delay, telegraphGroup, members, point, generation)
+        -- still goes to telegraphGroup, which releases it (and so does a wave reset mid-flush).
+        local point
+        if generation == waveGeneration then
+            picks += 1
+            local picked
+            picked, point = pcall(pickSpawnPoint, chosen, nil, SPAWN_BAND, MIN_PLAYER_DISTANCE)
+            if not picked then warn('Spawn point failed: ' .. tostring(point)); point = nil end
+            if point then table.insert(chosen, point) end
+        end
+        task.delay(math.max(0, started + delay - os.clock()), telegraphGroup, members, point, generation)
         delay += GROUP_STAGGER
     end
 end
@@ -334,6 +404,10 @@ CollectionService:AddTag(npc, "RogueliteZombie")
 
 local waypoints, waypointIndex = nil, 1
 local computing, lastPath, generation = false, -math.huge, 0
+local path, blockedAt = nil, -math.huge -- one reused Path; when sight was last blocked
+-- Line-of-sight filter, reused: rebuilt only when the target body or the map marker changes.
+local sight, sightTarget, sightMarker = RaycastParams.new(), nil, nil
+sight.FilterType = Enum.RaycastFilterType.Exclude
 local previousTarget = nil
 local elapsed = 0
 local stall = nil
@@ -400,28 +474,19 @@ connection = RunService.Heartbeat:Connect(function(dt)
         return
     end
     -- Gentle separation keeps the five bodies readable without pushing physics piles.
-    local separation = Vector3.zero
-    for _, other in folder:GetChildren() do
-        local otherRoot = other ~= npc and other:FindFirstChild("HumanoidRootPart")
-        if otherRoot then
-            local delta = root.Position - otherRoot.Position
-            delta = Vector3.new(delta.X, 0, delta.Z)
-            local spacing = delta.Magnitude
-            if spacing > 0.01 and spacing < 4.5 then
-                separation += delta.Unit * (1 - spacing / 4.5)
-            end
-        end
-    end
+    local separation = neighborGrid:separation(npc, root.Position)
     if distance < config.stopRange and separation.Magnitude < 0.15 then
         humanoid:Move(Vector3.zero)
         humanoid:MoveTo(root.Position)
         return
     end
-    local params = RaycastParams.new()
-    params.FilterType = Enum.RaycastFilterType.Exclude
     -- Markers are CanQuery=false now; the marker entry (last, so nil is safe) is only for older places.
-    params.FilterDescendantsInstances = {folder, target.Parent, Role.marker()}
-    local obstruction = workspace:Raycast(root.Position, target.Position - root.Position, params)
+    local m = Role.marker()
+    if target.Parent ~= sightTarget or m ~= sightMarker then
+        sightTarget, sightMarker = target.Parent, m
+        sight.FilterDescendantsInstances = {folder, sightTarget, m}
+    end
+    local obstruction = workspace:Raycast(root.Position, target.Position - root.Position, sight)
     if not obstruction then
         waypoints = nil
         -- leadTime (crabs): aim where the player is heading, fading out up close so it never overshoots.
@@ -457,13 +522,24 @@ connection = RunService.Heartbeat:Connect(function(dt)
         return
     end
     stall = nil
+    blockedAt = os.clock()
     if not computing and os.clock() - lastPath > 1 then
         computing = true
-        lastPath = os.clock()
-        local requestGeneration = generation
-        local start, finish = root.Position, target.Position
-        task.spawn(function()
-            local path = PathfindingService:CreatePath({AgentRadius = config.radius, AgentHeight = config.height, AgentCanJump = config.behavior~='Heavy', WaypointSpacing = 4})
+        local job = {}
+        -- Checked when its turn comes: still alive and still out of sight (checked every 0.1 s).
+        job.wanted = function()
+            if npc.Parent and humanoid.Health > 0 and os.clock() - blockedAt <= 0.3 then return true end
+            computing = false
+            return false
+        end
+        -- From where the zombie and its current target are now, not where they were when it asked.
+        job.run = function()
+            local goal = previousTarget
+            if not goal or not goal.Parent then computing = false return end
+            lastPath = os.clock()
+            local requestGeneration = generation
+            local start, finish = root.Position, goal.Position
+            path = path or PathfindingService:CreatePath({AgentRadius = config.radius, AgentHeight = config.height, AgentCanJump = config.behavior~='Heavy', WaypointSpacing = 4})
             local ok = pcall(function() path:ComputeAsync(start, finish) end)
             if requestGeneration == generation and npc.Parent and humanoid.Health > 0 then
                 if ok and path.Status == Enum.PathStatus.Success then
@@ -473,7 +549,8 @@ connection = RunService.Heartbeat:Connect(function(dt)
                 end
             end
             computing = false
-        end)
+        end
+        queuePath(job)
     end
     local point = waypoints and waypoints[waypointIndex]
     if point then

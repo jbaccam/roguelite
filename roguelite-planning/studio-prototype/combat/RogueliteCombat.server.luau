@@ -100,15 +100,39 @@ local function alive(npc)
  local hum=npc:FindFirstChildOfClass('Humanoid');local root=npc:FindFirstChild('HumanoidRootPart')
  if hum and root and hum.Health>0 then return hum,root end
 end
+-- Raycast filters are cached and shared: building one (and copying every enemy into it) per call
+-- ran per projectile per frame and inside enemy loops. The returned params are read-only; a caller
+-- that excludes more copies them (ProjectileTarget.sweepParams, SpecialWeapons' egg chickens).
+local SHOWCASES={'RogueliteWeaponShowcase','RogueliteWeaponShowcase_PlaySize'}
+local frame,checkedFrame=0,-1
+RunService.PreSimulation:Connect(function() frame+=1 end)
+local enemyVersion=0
+Tags:GetInstanceAddedSignal('RogueliteZombie'):Connect(function() enemyVersion+=1 end)
+Tags:GetInstanceRemovedSignal('RogueliteZombie'):Connect(function() enemyVersion+=1 end)
+local baseFilter,filters={},{}
+-- Characters, showcases and the map marker are compared once a frame; any change drops the cache.
+local function refreshBase()
+ if checkedFrame==frame then return end;checkedFrame=frame
+ local list={}
+ for _,p in Players:GetPlayers() do if p.Character then list[#list+1]=p.Character end end
+ for _,name in SHOWCASES do local f=workspace:FindFirstChild(name);if f then list[#list+1]=f end end
+ local marker=Role.marker();if marker then list[#list+1]=marker end
+ local same=#list==#baseFilter
+ if same then for i,v in list do if baseFilter[i]~=v then same=false;break end end end
+ if not same then baseFilter=list;filters={} end
+end
 local function rayParams(character,ignoreEnemies)
- local filter={character}
- for _,p in Players:GetPlayers() do if p.Character then table.insert(filter,p.Character) end end
- for _,name in {'RogueliteWeaponShowcase','RogueliteWeaponShowcase_PlaySize'} do
-  local f=workspace:FindFirstChild(name);if f then table.insert(filter,f) end
+ refreshBase()
+ local entry=filters[character or false];if not entry then entry={};filters[character or false]=entry end
+ local slot=ignoreEnemies and 2 or 1
+ local p=entry[slot]
+ -- A new object on every rebuild, so copies made from the old one can tell it changed.
+ if not p or (ignoreEnemies and entry.enemies~=enemyVersion) then
+  local filter={character};table.move(baseFilter,1,#baseFilter,#filter+1,filter)
+  if ignoreEnemies then for _,npc in Tags:GetTagged('RogueliteZombie') do filter[#filter+1]=npc end;entry.enemies=enemyVersion end
+  p=RaycastParams.new();p.FilterType=Enum.RaycastFilterType.Exclude;p.FilterDescendantsInstances=filter;entry[slot]=p
  end
- local marker=Role.marker();if marker then table.insert(filter,marker) end
- if ignoreEnemies then for _,npc in Tags:GetTagged('RogueliteZombie') do table.insert(filter,npc) end end
- local p=RaycastParams.new();p.FilterType=Enum.RaycastFilterType.Exclude;p.FilterDescendantsInstances=filter;return p
+ return p
 end
 local function clear(origin,finish,p) return workspace:Raycast(origin,finish-origin,p)==nil end
 -- Where reach is measured to. A boss is far wider than its root box (the dragon's side is ~9
@@ -118,12 +142,27 @@ local function clear(origin,finish,p) return workspace:Raycast(origin,finish-ori
 -- enemy is measured to its root, as before.
 local HELD={Hammer=true,LeftHand=true,RightHand=true}
 local function shelled(npc) return npc:GetAttribute('IsMapBoss')==true or npc:GetAttribute('IsHammerBoss')==true end
+-- A boss's body sections in child order, kept until a child is added or removed (or it is
+-- destroyed): walking every child per slot per tick and per melee hit was the cost.
+local sections={}
+local function bodySections(npc,root)
+ local c=sections[npc]
+ if c and c.root==root then return c.list end
+ if c then for _,link in c.links do link:Disconnect() end end
+ local list={}
+ for _,p in npc:GetChildren() do if p:IsA('MeshPart') or p==root then list[#list+1]=p end end
+ c={root=root,list=list,links={}};sections[npc]=c
+ local function drop() if sections[npc]==c then sections[npc]=nil end;for _,link in c.links do link:Disconnect() end end
+ c.links={npc.ChildAdded:Connect(drop),npc.ChildRemoved:Connect(drop),npc.Destroying:Connect(drop)}
+ return list
+end
 local function reachPoint(npc,root,from)
  if not shelled(npc) then return root.Position end
  local hammer=npc:GetAttribute('IsHammerBoss')==true
  local best,bestDistance=root.Position,(root.Position-from).Magnitude
- for _,p in npc:GetChildren() do
-  if (p:IsA('MeshPart') or p==root) and not (hammer and HELD[p.Name]) then
+ for _,p in bodySections(npc,root) do
+  -- Parent check: the removal signal is deferred, so a section can leave before the cache drops.
+  if p.Parent==npc and not (hammer and HELD[p.Name]) then
    local l=p.CFrame:PointToObjectSpace(from);local h=p.Size*.5
    local q=p.CFrame:PointToWorldSpace(Vector3.new(math.clamp(l.X,-h.X,h.X),math.clamp(l.Y,-h.Y,h.Y),math.clamp(l.Z,-h.Z,h.Z)))
    local distance=(q-from).Magnitude
@@ -155,6 +194,29 @@ local function shoot(d,origin,aim,character)
   else projectiles:launch(d,origin,target) end
  end
 end
+-- A slot's definition is rebuilt only when its weapon, tier, stats table, class or body changes
+-- (CharacterService replaces the stats table on every change). Never changed in place: an attack
+-- works on a clone, which its swing and projectiles keep.
+local function definition(slot,base,cs,player,character,index)
+ local tier=slot.folder:GetAttribute('Tier');local c=slot.cached
+ if not c or c.base~=base or c.tier~=tier or c.stats~=cs.stats or c.class~=cs.class or c.character~=character then
+  local d=Stats.weapon(base,cs.stats,cs.class,tier);d.stats=cs.stats;d.owner=player;d.character=character;d.slotIndex=index
+  c={base=base,tier=tier,stats=cs.stats,class=cs.class,character=character,d=d};slot.cached=c
+ end
+ return c.d
+end
+-- One reused melee overlap query; its enemy list is reassigned only when the tagged set differs.
+local overlap=OverlapParams.new();overlap.FilterType=Enum.RaycastFilterType.Include
+local overlapList={}
+local function meleeOverlap(enemies)
+ if overlapList~=enemies then
+  local same=#enemies==#overlapList
+  if same then for i,v in enemies do if overlapList[i]~=v then same=false;break end end end
+  if not same then overlap.FilterDescendantsInstances=enemies end
+  overlapList=enemies
+ end
+ return overlap
+end
 local elapsed=0
 RunService.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<1/30 then return end;elapsed=0
@@ -171,15 +233,19 @@ RunService.Heartbeat:Connect(function(dt)
   if math.abs((s.folder:GetAttribute('RingRadius') or 0)-radius)>.04 then s.folder:SetAttribute('RingRadius',radius) end
   radius=s.folder:GetAttribute('RingRadius')
   local wallParams=rayParams(character,true)
-  -- Reuse eligibility only within this player's non-yielding preparation pass.
-  -- Rebuild for the next player: earlier attacks may have killed an enemy.
-  local targetParts,targetPositions,targetBosses
-  if equippedCount>1 and Characters.states[player] and s.folder:GetAttribute('WeaponEnabled') then
-   targetParts,targetPositions,targetBosses={},{},{}
+  -- One pass over the enemies per player per tick, shared by every slot and by the attack that
+  -- fires (nothing can revive an enemy mid-tick). Each slot still takes the nearest clear target,
+  -- ties to the earlier enemy. Rebuilt for the next player: earlier attacks may have killed one.
+  local targetParts,targetPositions,targetBosses,living
+  if equippedCount>0 and Characters.states[player] and s.folder:GetAttribute('WeaponEnabled') then
+   targetParts,targetPositions,targetBosses,living={},{},{},{}
    for _,npc in enemies do local health,part=alive(npc)
-    if health and targetable(npc,s) then
-     targetParts[#targetParts+1]=part;targetPositions[#targetPositions+1]=part.Position
-     targetBosses[#targetBosses+1]=shelled(npc)
+    if health then
+     living[#living+1]=npc
+     if targetable(npc,s) then
+      targetParts[#targetParts+1]=part;targetPositions[#targetPositions+1]=part.Position
+      targetBosses[#targetBosses+1]=shelled(npc)
+     end
     end
    end
   end
@@ -187,7 +253,7 @@ RunService.Heartbeat:Connect(function(dt)
   for index,slot in s.slots do
    local id=slot.folder:GetAttribute('WeaponId');local base=Catalog.ById[id];if not base then continue end
    local cs=Characters.states[player];if not cs then continue end
-   local d=Stats.weapon(base,cs.stats,cs.class,slot.folder:GetAttribute('Tier'));d.stats=cs.stats;d.owner=player;d.character=character;d.slotIndex=index
+   local d=definition(slot,base,cs,player,character,index)
    local origin=Motion.combatOrigin(root.CFrame,radius,index,id,d.kind)
    local searchRange=d.targetRange or d.range
    if d.kind=='Melee' and Motion.DownwardWeapons[id] then
@@ -197,12 +263,6 @@ RunService.Heartbeat:Connect(function(dt)
    if targetParts then
     for i,part in targetParts do local position=targetBosses[i] and reachPoint(part.Parent,part,origin) or targetPositions[i];local distance=(position-origin).Magnitude
      if distance<best and distance>.01 and clear(origin,position,wallParams) then target=part;best=distance;point=position end
-    end
-   elseif s.folder:GetAttribute('WeaponEnabled') then
-    for _,npc in enemies do local health,part=alive(npc)
-     if health and targetable(npc,s) then local position=reachPoint(npc,part,origin);local distance=(position-origin).Magnitude
-      if distance<best and distance>.01 and clear(origin,position,wallParams) then target=part;best=distance;point=position end
-     end
     end
    end
    if target then targetCount+=1 end
@@ -228,10 +288,11 @@ RunService.Heartbeat:Connect(function(dt)
    if target and now>=slot.ready and not specials:busy(player,index) then
     -- Small symmetric variation changes the relative timing every cycle while
     -- keeping the nominal average cadence. Never interrupt this weapon's cut.
+    d=table.clone(d) -- this attack's own copy; the slot's cached definition stays unchanged
     local interval=d.cooldown*(equippedCount>1 and slot.random:NextNumber(.9,1.1) or 1)
     slot.serial=(slot.serial or 0)+1
     local nearby,second=0,nil
-    for _,npc in enemies do local h,r=alive(npc);if h and (r.Position-origin).Magnitude<=d.range and clear(origin,r.Position,wallParams) then nearby+=1;if r~=target and (r.Position-target.Position).Magnitude<8 then second=r end end end
+    for _,npc in living do local h,r=alive(npc);if h and (r.Position-origin).Magnitude<=d.range and clear(origin,r.Position,wallParams) then nearby+=1;if r~=target and (r.Position-target.Position).Magnitude<8 then second=r end end end
     -- Distances use the reach point (a boss's nearest side); a map boss's swing still faces the root.
     local reach=entry.point or target.Position
     local targetOffset=reach-origin
@@ -272,7 +333,7 @@ RunService.Heartbeat:Connect(function(dt)
     local first,last=math.max(slot.previous,activeFrom),math.min(age,activeTo)
     if first<=last then
      local template=templates[id];local size=template:GetAttribute('BoundsSize');local center=template:GetAttribute('BoundsCenter')
-     local overlap=OverlapParams.new();overlap.FilterType=Enum.RaycastFilterType.Include;overlap.FilterDescendantsInstances=enemies
+     local overlap=meleeOverlap(enemies)
      local steps=math.max(1,math.ceil((last-first)*120))
      for i=0,steps do
       local sampleAge=first+(last-first)*i/steps

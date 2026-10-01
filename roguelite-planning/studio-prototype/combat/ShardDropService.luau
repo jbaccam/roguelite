@@ -13,13 +13,40 @@ local function living(p)
  return h and h.Health>0 and r
 end
 function D.configure(c,phase,credit) characters=c;isCombat=phase;award=credit end
-local function remove(i) local d=table.remove(D.drops,i);if d then d.model:Destroy() end end
+-- Lookup only: drops are bucketed by their fixed origin on a CELL-stud X/Z grid, so the pickup pass
+-- and the Golden Retriever look at drops near a player instead of every drop. Nothing here merges,
+-- caps or deletes uncollected drops; each keeps its value and identity (ShardTests).
+-- A drop put straight into D.drops (tests) has no cell and is always checked, as before.
+local CELL=16
+local buckets,serial={},0
+local function cellKey(x,z) return x*65536+z end
+local function cells(position,range)
+ return math.floor((position.X-range)/CELL),math.floor((position.X+range)/CELL),math.floor((position.Z-range)/CELL),math.floor((position.Z+range)/CELL)
+end
+local function index(d)
+ serial+=1;d.serial=serial
+ d.cell=cellKey(math.floor(d.origin.X/CELL),math.floor(d.origin.Z/CELL))
+ local b=buckets[d.cell];if not b then b={};buckets[d.cell]=b end
+ b[d]=true
+end
+local function unindex(d)
+ local b=d.cell and buckets[d.cell]
+ if b then b[d]=nil;if next(b)==nil then buckets[d.cell]=nil end end
+end
+local function remove(i) local d=table.remove(D.drops,i);if d then unindex(d);d.model:Destroy() end end
+-- One reused line-of-sight filter per player, rebuilt when their body or the enemy folder changes.
+local sight={}
 local function visible(p,from,to)
- local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude
- local exclude={p.Character,folder}
- local mobs=workspace:FindFirstChild('RogueliteEnemies');if mobs then table.insert(exclude,mobs) end
- params.FilterDescendantsInstances=exclude
- return not workspace:Raycast(from,to-from,params)
+ local mobs=workspace:FindFirstChild('RogueliteEnemies')
+ local c=sight[p]
+ if not c or c.character~=p.Character or c.mobs~=mobs then
+  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude
+  local exclude={p.Character,folder}
+  if mobs then table.insert(exclude,mobs) end
+  params.FilterDescendantsInstances=exclude
+  c={character=p.Character,mobs=mobs,params=params};sight[p]=c
+ end
+ return not workspace:Raycast(from,to-from,c.params)
 end
 function D.collect(p,d)
  if not isCombat or not isCombat() or not d or d.collected or d.target or not d.model.Parent then return false end
@@ -54,7 +81,25 @@ local function cancel(d)
  d.target=nil;d.started=nil;d.position=d.origin;d.fetched=nil
  d.model:SetAttribute('MagnetUserId',nil);d.model:SetAttribute('MagnetStart',nil)
 end
+-- Idle drops within pickup radius of a living player in the run: the only idle drops D.collect
+-- can accept this step. Distances are exact; the buckets only skip the far ones.
+local function nearPlayers()
+ local near={}
+ for _,p in Players:GetPlayers() do
+  local r=living(p);local s=characters.states[p]
+  if r and s then
+   local at=r.Position;local radius=math.clamp(s.stats.PickupRadius or 0,0,100)
+   local x0,x1,z0,z1=cells(at,radius)
+   for x=x0,x1 do for z=z0,z1 do
+    local b=buckets[cellKey(x,z)]
+    if b then for d in b do if not near[d] and (at-d.origin).Magnitude<=radius then near[d]=true end end end
+   end end
+  end
+ end
+ return near
+end
 function D.step(now)
+ local near=isCombat and isCombat() and nearPlayers() or nil
  for i=#D.drops,1,-1 do
   local d=D.drops[i]
   if not d.model.Parent then remove(i)
@@ -70,6 +115,7 @@ function D.step(now)
       if award(d.target,d.value,true) then remove(i) else d.collected=false;cancel(d) end
      end
     end
+   elseif near and d.cell and not near[d] then continue -- out of every pickup radius
    elseif d.owner then D.collect(d.owner,d)
    else for _,p in Players:GetPlayers() do if D.collect(p,d) then break end end end
   end
@@ -87,7 +133,24 @@ local function dropAt(at,owner,value,bonus)
  model:SetAttribute('Origin',at);model:SetAttribute('BornAt',born)
  model:SetAttribute('OwnerUserId',owner and owner.UserId or 0);model:SetAttribute('ShardValue',value);model.Parent=folder
  local d={model=model,position=at,origin=at,born=born,owner=owner,value=value,collected=false}
- table.insert(D.drops,d);return d
+ table.insert(D.drops,d);index(d);return d
+end
+-- The nearest drop p may take within range of position (the Golden Retriever), ties to the older
+-- drop, like a scan of D.drops in order.
+function D.nearest(p,position,range)
+ local best,bestDistance
+ local function consider(d)
+  if not d.collected and not d.target and d.model.Parent and (d.owner==nil or d.owner==p) then
+   local distance=(d.origin-position).Magnitude
+   if distance<=range and (not best or distance<bestDistance or distance==bestDistance and d.serial<best.serial) then best,bestDistance=d,distance end
+  end
+ end
+ local x0,x1,z0,z1=cells(position,range)
+ for x=x0,x1 do for z=z0,z1 do
+  local b=buckets[cellKey(x,z)]
+  if b then for d in b do consider(d) end end
+ end end
+ return best
 end
 function D.spawn(npc,position)
  if npc:GetAttribute('PracticeTarget') then return end
@@ -133,6 +196,7 @@ function D.clear(bank)
  end
 end
 Players.PlayerRemoving:Connect(function(p)
+ sight[p]=nil
  for i=#D.drops,1,-1 do if D.drops[i].owner==p then remove(i) elseif D.drops[i].target==p then cancel(D.drops[i]) end end
 end)
 local elapsed=0

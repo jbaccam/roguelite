@@ -12,7 +12,7 @@
 --
 -- workspace.RoguelitePets holds one Folder per player with an equipped pet (named by UserId,
 -- attributes PetId, Tier, OwnerUserId); PetVisuals draws a follower for each, in every phase.
--- RS.RogueliteCombat.PetFX fires (ownerUserId, kind, data) to all clients for the visuals.
+-- RS.RogueliteCombat.PetFX fires (ownerUserId, kind, data) to clients near the owner for the visuals.
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Tags = game:GetService("CollectionService")
@@ -26,6 +26,7 @@ local Characters = require(SSS:WaitForChild("CharacterService"))
 local Effects = require(SSS:WaitForChild("CombatEffectsService"))
 local Shards = require(SSS:WaitForChild("ShardDropService"))
 local Shop = require(SSS:WaitForChild("ShopService"))
+local Batch = require(combat:WaitForChild("ShotBatch"))
 
 local fx = combat:FindFirstChild("PetFX")
 if not fx then
@@ -45,8 +46,11 @@ if not folder then
 end
 
 local state = {} -- player -> {id, tier, nextAt, burstReady, burstToken}
+-- To players near the pet's owner, and the owner (ShotBatch.fire): lobby players don't get arena pets.
 local function send(player, kind, data)
-	fx:FireAllClients(player.UserId, kind, data)
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	Batch.fire(fx, root and root.Position, player, player.UserId, kind, data)
 end
 
 -- The follower folder ---------------------------------------------------------------------------
@@ -222,17 +226,9 @@ end
 local ABILITY = {}
 
 ABILITY.GoldenRetriever = function(p, root, tier)
-	local range = Pets.get("GoldenRetriever", "range", tier)
-	local best, bestDistance
-	for _, d in Shards.drops do
-		if not d.collected and not d.target and d.model.Parent and (d.owner == nil or d.owner == p) then
-			local distance = (d.origin - root.Position).Magnitude
-			if distance <= range and (not best or distance < bestDistance) then
-				-- D.fetch re-checks phase, rest time and ownership; nearest first, first one that takes.
-				best, bestDistance = d, distance
-			end
-		end
-	end
+	-- The nearest crystal it may take (ShardDropService buckets, ties to the older one).
+	-- D.fetch re-checks phase, rest time and ownership.
+	local best = Shards.nearest(p, root.Position, Pets.get("GoldenRetriever", "range", tier))
 	if best and Shards.fetch(p, best) then
 		send(p, "Fetch", { position = best.origin })
 		return true
@@ -445,7 +441,7 @@ end
 -- Turtle shell popped by a hit.
 Characters.onPetShieldPop = function(player)
 	local r = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-	fx:FireAllClients(0, "ShieldPop", { target = player.UserId, position = r and r.Position })
+	Batch.fire(fx, r and r.Position, player, 0, "ShieldPop", { target = player.UserId, position = r and r.Position })
 end
 
 -- The loop ---------------------------------------------------------------------------------------
