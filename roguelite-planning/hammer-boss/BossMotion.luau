@@ -76,7 +76,10 @@ function M.duration(name) return clips[name].duration end
 -- playing ChargeStart backwards (run pose -> carry pose, every frame validated) and slams. A direct
 -- ChargeRun->Slam blend flips the elbows (forward in the carry, back in the run) and snaps.
 -- Anyone the body passes within `halfWidth` takes `damage` and is knocked down.
-M.Charge={minRange=24,maxRange=70,speed=30,maxLength=55,stopShort=6,halfWidth=4.5,damage=24,knockdown=.6,cooldown=6,brake=.3}
+-- The run ends where his front meets the target (user, 2026-10-01: he stopped short): his root
+-- `contact` studs from them, inside `halfWidth` so that hit lands. The lane is fixed at wind-up;
+-- he follows a target backing away down it, up to `maxLength` (enough from maxRange), but never turns.
+M.Charge={minRange=24,maxRange=70,speed=30,maxLength=75,contact=4,halfWidth=4.5,damage=24,knockdown=.6,cooldown=6,brake=.3}
 M.hasCharge=clips.ChargeStart~=nil and clips.ChargeRun~=nil
 function M.chargeRunTime(travelled) return travelled/(D.chargeSpeed or M.Charge.speed) end
 -- Interpolate the held end of the tool, then the hands in tool space.

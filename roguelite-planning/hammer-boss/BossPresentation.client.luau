@@ -113,8 +113,10 @@ Run.PreSimulation:Connect(function(dt)
   Motion.apply(npc,poses);state.lastPose=poses;state.lastClip=clip
   local warn=not death and npc:GetAttribute('Attacking') and (a and age and age>=a.anticipation and age<a.active or charging and age<runEnd)
   local serial=npc:GetAttribute('BossSerial') or 0
-  if state.warning and (not warn or state.warningSerial~=serial) then state.warning:Destroy();state.warning=nil end
-  if warn and not state.warning then state.warning=warning(npc,kind);state.warningSerial=serial end
+  -- The charge lane is redrawn as its end moves (he follows a target down it).
+  local lane=charging and npc:GetAttribute('BossChargeLength') or 0
+  if state.warning and (not warn or state.warningSerial~=serial or math.abs(lane-state.warningLane)>.25) then state.warning:Destroy();state.warning=nil end
+  if warn and not state.warning then state.warning=warning(npc,kind);state.warningSerial=serial;state.warningLane=lane end
   if not death and age and a and age>=a.active and age<a.duration and serial~=state.lastSerial then state.lastSerial=serial;impact(npc,kind) end
  end
 end)

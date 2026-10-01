@@ -96,21 +96,22 @@ function B.start(npc,kind,target,force)
  h:Move(Vector3.zero);h:MoveTo(root.Position);h.AutoRotate=false;root.Anchored=true
  return true
 end
--- Charge (Motion.Charge): a player kiting beyond minRange is run down in a straight line that
--- stops `stopShort` of where they stood (or short of a wall), then the boss slams.
+-- Charge (Motion.Charge): a player kiting beyond minRange is run down in a straight line, fixed at
+-- wind-up, that ends where his front meets them (stepCharge) or short of a wall, then the boss slams.
 function B.charge(npc,s,target,now)
  local C=Motion.Charge;local h=npc.Humanoid;local root=npc.PrimaryPart
  local delta=target.Position-root.Position;local flat=Vector3.new(delta.X,0,delta.Z)
  if flat.Magnitude<C.minRange or flat.Magnitude>C.maxRange or math.abs(delta.Y)>10 then return false end
  local params=exclusions(npc)
  if workspace:Raycast(root.Position,delta,params) then return false end
- local dir=flat.Unit;local length=math.min(C.maxLength,flat.Magnitude-C.stopShort)
- local wall=workspace:Raycast(root.Position,dir*length,params);if wall then length=wall.Distance-3 end
+ local dir=flat.Unit;local limit=C.maxLength
+ local wall=workspace:Raycast(root.Position,dir*limit,params);if wall then limit=wall.Distance-3 end
+ local length=math.min(limit,flat.Magnitude-C.contact)
  if length<8 then return false end
  local ground=workspace:Raycast(root.Position+Vector3.yAxis*8,-Vector3.yAxis*30,params);if not ground then return false end
  local cf=CFrame.lookAt(root.Position,root.Position+dir);root.CFrame=cf
  local run=Motion.duration('ChargeStart')
- s.attack={kind='Charge',start=now,cf=cf,dir=dir,length=length,run=run,finish=run+length/C.speed+C.brake,travelled=0,hits={}}
+ s.attack={kind='Charge',start=now,cf=cf,dir=dir,length=length,limit=limit,target=target,run=run,finish=run+length/C.speed+C.brake,travelled=0,hits={}}
  s.nextCharge=now+C.cooldown
  npc:SetAttribute('BossAttack','Charge');npc:SetAttribute('BossStart',now);npc:SetAttribute('BossFrame',cf);npc:SetAttribute('BossGroundY',ground.Position.Y)
  npc:SetAttribute('BossChargeLength',length);npc:SetAttribute('BossChargeSpeed',C.speed)
@@ -120,7 +121,19 @@ function B.charge(npc,s,target,now)
 end
 local function stepCharge(npc,s,now,root)
  local A,C=s.attack,Motion.Charge;local age=now-A.start
+ -- Until he stops, the run ends where his front meets the target, wherever they now are along the
+ -- lane: backing away down it doesn't outrun him, stepping out of it dodges (he never turns).
+ local pr=A.target
+ if not A.stopped and pr.Parent then
+  local d=pr.Position-A.cf.Position;local along=d:Dot(A.dir);local side=(Vector3.new(d.X,0,d.Z)-A.dir*along).Magnitude
+  if side<=C.halfWidth and math.abs(pr.Position.Y-root.Position.Y)<=7 then
+   -- Stop with them inside the body hit, so contact always lands.
+   local length=math.clamp(along-math.sqrt(math.max(0,C.contact^2-side^2)),A.travelled,A.limit)
+   if math.abs(length-A.length)>.05 then A.length=length;A.finish=A.run+length/C.speed+C.brake;npc:SetAttribute('BossChargeLength',length) end
+  end
+ end
  local travelled=math.clamp((age-A.run)*C.speed,0,A.length)
+ if travelled>=A.length then A.stopped=true end
  if travelled>A.travelled then
   local from=A.cf.Position+A.dir*A.travelled;local to=A.cf.Position+A.dir*travelled
   local params=exclusions(npc)

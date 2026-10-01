@@ -2,6 +2,12 @@
 
 The current deliverable is **`finished/HammerBoss.blend`**. Earlier files in this folder and `reference-rebuild/` are authoring drafts, not the installed boss.
 
+## Hitbox and charge reach — 2026-10-01
+
+Play-test: melee weapons had to get extra close, and the charge stopped short.
+- **Hitbox.** Player weapons measured him to his root, which sits about 3 studs behind his chest and 5 inside his arms (server rest pose, scale 1.15). A pan (range 6) only hit within 5.7 studs of his root. `RogueliteCombat.server` now measures him like the map bosses: to the nearest point of any body section's box, leaving out the hammer and the hands that hold it. A melee swing also aims at that point, so it lands on his shell. The pan now hits from 8.8 studs root to root in front, 10.9 at the side and 8.15 behind. A point just past the hammer head is still 2.96 studs from his body.
+- **Charge.** The run ended 6 studs short of where the player stood at wind-up, measured root to root. The body hit only reaches 4.5, so it never touched a player standing still. A player backing off also gained 14 studs during the 0.6 s wind-up alone. The lane is still fixed at wind-up, so side-stepping dodges it. Now he keeps running while the target stays in the lane, until his root is 4 studs from them (`Charge.contact`, inside the 4.5 hit), up to `maxLength` 75 (was 55) or a wall. `BossChargeLength` follows the run, and the client redraws the lane and times the brake from it. A player running straight away at full speed (24 vs his 30 studs/s) still gets away.
+
 ## Charge clips — 2026-09-30
 
 Two new clips for a charge move. They are authored in Blender and not yet installed or tested in Studio.

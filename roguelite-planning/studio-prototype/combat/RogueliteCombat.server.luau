@@ -111,14 +111,19 @@ local function rayParams(character,ignoreEnemies)
  local p=RaycastParams.new();p.FilterType=Enum.RaycastFilterType.Exclude;p.FilterDescendantsInstances=filter;return p
 end
 local function clear(origin,finish,p) return workspace:Raycast(origin,finish-origin,p)==nil end
--- Where reach is measured to. A map boss is far wider than its root box (the dragon's side is
--- ~9 studs from its centre), so it is measured to the nearest point of any body section's box:
--- a pan touching its flank is in range. Every other enemy is measured to its root, as before.
+-- Where reach is measured to. A boss is far wider than its root box (the dragon's side is ~9
+-- studs from its centre, the Hammer Brute's chest and arms 3-5), so it is measured to the nearest
+-- point of any body section's box: a pan touching its flank is in range. The Hammer Brute's hammer
+-- and the hands holding it are not his body, or reaching the hammer would hit him. Every other
+-- enemy is measured to its root, as before.
+local HELD={Hammer=true,LeftHand=true,RightHand=true}
+local function shelled(npc) return npc:GetAttribute('IsMapBoss')==true or npc:GetAttribute('IsHammerBoss')==true end
 local function reachPoint(npc,root,from)
- if not npc:GetAttribute('IsMapBoss') then return root.Position end
+ if not shelled(npc) then return root.Position end
+ local hammer=npc:GetAttribute('IsHammerBoss')==true
  local best,bestDistance=root.Position,(root.Position-from).Magnitude
  for _,p in npc:GetChildren() do
-  if p:IsA('MeshPart') or p==root then
+  if (p:IsA('MeshPart') or p==root) and not (hammer and HELD[p.Name]) then
    local l=p.CFrame:PointToObjectSpace(from);local h=p.Size*.5
    local q=p.CFrame:PointToWorldSpace(Vector3.new(math.clamp(l.X,-h.X,h.X),math.clamp(l.Y,-h.Y,h.Y),math.clamp(l.Z,-h.Z,h.Z)))
    local distance=(q-from).Magnitude
@@ -174,7 +179,7 @@ RunService.Heartbeat:Connect(function(dt)
    for _,npc in enemies do local health,part=alive(npc)
     if health and targetable(npc,s) then
      targetParts[#targetParts+1]=part;targetPositions[#targetPositions+1]=part.Position
-     targetBosses[#targetBosses+1]=npc:GetAttribute('IsMapBoss')==true
+     targetBosses[#targetBosses+1]=shelled(npc)
     end
    end
   end
@@ -227,7 +232,7 @@ RunService.Heartbeat:Connect(function(dt)
     slot.serial=(slot.serial or 0)+1
     local nearby,second=0,nil
     for _,npc in enemies do local h,r=alive(npc);if h and (r.Position-origin).Magnitude<=d.range and clear(origin,r.Position,wallParams) then nearby+=1;if r~=target and (r.Position-target.Position).Magnitude<8 then second=r end end end
-    -- Distances use the reach point (a map boss's nearest side); the swing still faces the root.
+    -- Distances use the reach point (a boss's nearest side); a map boss's swing still faces the root.
     local reach=entry.point or target.Position
     local targetOffset=reach-origin
     slot.style=Motion.chooseStyle(id,nearby,slot.serial,Vector3.new(targetOffset.X,0,targetOffset.Z).Magnitude,d.range)
@@ -239,16 +244,19 @@ RunService.Heartbeat:Connect(function(dt)
      d.kind='Ranged';d.damage=d.damage/Stats.mult(d.stats.MeleeDamage)*Stats.mult(d.stats.RangedDamage)
      d.range=d.targetRange
     end
+    -- A melee swing at the Hammer Brute lands on his shell (that point), not inside him at his root;
+    -- standing inside a body section, it still swings at his root.
+    local aim=d.kind=='Melee' and target.Parent:GetAttribute('IsHammerBoss') and (reach-origin).Magnitude>.1 and reach or target.Position
     _,_,duration=Motion.attackTiming(id,d.kind,slot.style)
     interval=math.max(interval,duration/d.motionRate)
     slot.folder:SetAttribute('AttackSide',slot.side)
     slot.hand=slot.serial%2==1 and -1 or 1;slot.secondAim=second and second.Position or nil
-    slot.attackRoot=Motion.attackRoot(root.CFrame,target.Position)
+    slot.attackRoot=Motion.attackRoot(root.CFrame,aim)
     slot.attackOrigin=Motion.combatOrigin(slot.attackRoot,radius,index,id,d.kind)
     slot.folder:SetAttribute('AttackRoot',slot.attackRoot);slot.folder:SetAttribute('AttackStyle',slot.style)
     slot.folder:SetAttribute('AttackKind',d.kind);slot.folder:SetAttribute('AttackHand',slot.hand);slot.folder:SetAttribute('SecondAim',slot.secondAim)
-    slot.start=now;slot.ready=now+interval;slot.previous=0;slot.hit={};slot.aim=target.Position;slot.definition=d
-    local delta=Vector3.new(target.Position.X-origin.X,0,target.Position.Z-origin.Z)
+    slot.start=now;slot.ready=now+interval;slot.previous=0;slot.hit={};slot.aim=aim;slot.definition=d
+    local delta=Vector3.new(aim.X-origin.X,0,aim.Z-origin.Z)
     slot.direction=delta.Magnitude>.01 and delta.Unit or Motion.frame(root.CFrame).LookVector
     slot.folder:SetAttribute('MotionRate',d.motionRate);slot.folder:SetAttribute('ReachScale',Stats.mult(d.stats.AttackRange))
     slot.folder:SetAttribute('SwingRange',d.range)
