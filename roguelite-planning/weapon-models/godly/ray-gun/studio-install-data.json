@@ -1,0 +1,115 @@
+{
+ "name": "RayGun",
+ "blender_version": "5.2.1 LTS",
+ "status": "Blender-verified, Studio untested",
+ "units": "1 Blender unit = 1 stud, authored at hero size (about 3.2 studs long); suggested play scale 0.65-0.7 (about 2.1-2.3 studs long in a 5-stud R15 hand)",
+ "axes": "Studio = (-x, z, y) of Blender; FBX exported with axis_forward=-Z, axis_up=Y. The barrel points along Blender -x = Studio +X in the exported frame.",
+ "texture": "BaseColor.png 1024x1024, baked painted lighting; use MeshPart.TextureID (not SurfaceAppearance)",
+ "parts": {
+  "RayGun": {
+   "kind": "textured",
+   "center_studio": [
+    -0.081,
+    0.9454,
+    0.0
+   ],
+   "size_studio": [
+    3.3271,
+    1.8908,
+    0.5774
+   ],
+   "triangles": 15004,
+   "material": "SmoothPlastic (or Plastic), Color white",
+   "texture_id": "BaseColor.png"
+  },
+  "RayGun_Glow": {
+   "kind": "glow",
+   "center_studio": [
+    0.0453,
+    1.2121,
+    0.0
+   ],
+   "size_studio": [
+    2.7369,
+    0.4904,
+    0.522
+   ],
+   "triangles": 352,
+   "material": "Neon",
+   "color_rgb": [
+    16,
+    255,
+    40
+   ],
+   "note": "hot green: glass energy chamber, muzzle mouth, dial charge arc, side vent lines"
+  },
+  "RayGun_GlowCore": {
+   "kind": "glow",
+   "center_studio": [
+    0.6292,
+    1.1775,
+    0.0832
+   ],
+   "size_studio": [
+    2.0867,
+    0.4262,
+    0.2864
+   ],
+   "triangles": 356,
+   "material": "Neon",
+   "color_rgb": [
+    140,
+    255,
+    110
+   ],
+   "note": "pale-hot plasma: crackles on the glass, emitter bead"
+  }
+ },
+ "grip_point_studio": [
+  -0.9435,
+  0.4598,
+  0.0
+ ],
+ "grip_point_relative_to_textured_center": [
+  -0.8625,
+  -0.4856,
+  0.0
+ ],
+ "grip_axis_studio_down": [
+  -0.139,
+  -0.9903,
+  0.0
+ ],
+ "muzzle_attachment_studio": [
+  1.6725,
+  1.1775,
+  0.0
+ ],
+ "muzzle_attachment_relative_to_textured_center": [
+  1.7536,
+  0.2321,
+  0.0
+ ],
+ "muzzle_direction_studio": [
+  1.0,
+  0.0,
+  0.0
+ ],
+ "chamber_light_point_relative_to_textured_center": [
+  0.0135,
+  0.2321,
+  0.0
+ ],
+ "notes": [
+  "Every MeshPart imports centred on its own bounding box: place each at its center_studio relative to a shared model origin (Blender origin = grip-bottom level, on the gun's mirror plane).",
+  "grip_point = middle of the ribbed black grip on its axis (hand attachment). The grip is raked back about 8 degrees; grip_axis_studio_down points from the top of the grip to the pommel.",
+  "muzzle_attachment = tip of the emitter bead in front of the flared muzzle: put an Attachment named Muzzle here, facing muzzle_direction_studio; projectiles and the muzzle flash spawn from it."
+ ],
+ "vfx_notes": [
+  "Blast projectile (spawn at the Muzzle attachment, travel along muzzle_direction): a Neon ball 0.7 studs, Color (16,255,40), with an inner Neon ball 0.35 studs Color (140,255,110); a Trail (Color (16,255,40) -> (10,120,40), Lifetime 0.12, WidthScale 1 -> 0, LightEmission 1, Transparency 0.1 -> 1) and a PointLight Color (16,255,40), Brightness 2, Range 8. Suggested speed 120-150 studs/s; on impact a small burst: ParticleEmitter Burst 8, Color (140,255,110) -> (16,255,40), Size 0.5 -> 0, Lifetime 0.15-0.25, Speed 6-10, SpreadAngle 180, LightEmission 1.",
+  "Muzzle flash per shot: at the Muzzle attachment, ParticleEmitter Burst 6, Color (140,255,110) -> (16,255,40), Size 0.9 -> 0, Lifetime 0.08-0.12, Speed 3-6, SpreadAngle 25, LightEmission 1, LockedToPart true; plus a flat Neon ring (the dish's emitter ring echo) scaling 0.6 -> 1.6 studs while Transparency 0.2 -> 1 over 0.12 s.",
+  "Disintegrate burst on kill (the ability): at the dead enemy's HumanoidRootPart. Tween every enemy part to Material Neon, Color (16,255,40), Transparency 0 -> 1 over 0.3 s while it shrinks to 60%. At the same moment spawn a Neon sphere shell Color (16,255,40), Transparency 0.35 -> 1, growing from 1 stud to the burst's hit diameter (2 x the splash radius set in the Godly spec, about 8-10 studs across) over 0.25 s, so players see exactly what the burst hits. Particles: ParticleEmitter Burst 30 square 'pixel' bits (a small square texture), Color (140,255,110) -> (16,255,40) -> (10,90,30), Size 0.45 -> 0, Lifetime 0.5-0.9, Speed 10-18, SpreadAngle 180, Drag 4, Acceleration (0,4,0), RotSpeed -180..180, LightEmission 1; plus a PointLight Color (16,255,40), Brightness 3 -> 0 over 0.3 s, Range 12.",
+  "Chained enemies hit by the burst: a short zap Beam from the burst centre to each one (Color (16,255,40), Width 0.4, LightEmission 1, CurveSize0/1 random +-2, visible 0.1 s) and a Burst 6 of the same pixel bits on them.",
+  "Idle: PointLight at chamber_light_point, Color (16,255,40), Brightness 1.5, Range 6; a slow ParticleEmitter on the glass chamber, Rate 6, Color (16,255,40), Size 0.15 -> 0, Lifetime 0.3, Speed 0.5, LightEmission 1 (sparks crawling the coil)."
+ ]
+}

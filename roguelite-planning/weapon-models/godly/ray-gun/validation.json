@@ -1,0 +1,179 @@
+{
+ "name": "RayGun",
+ "blender_version": "5.2.1 LTS",
+ "authored_scale_factor": 0.75,
+ "meshes": {
+  "RayGun": {
+   "triangles": 15004,
+   "vertices": 7798,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 64,
+   "bounds_min": [
+    -1.5825,
+    -0.2887,
+    0.0
+   ],
+   "bounds_max": [
+    1.7446,
+    0.2887,
+    1.8908
+   ]
+  },
+  "RayGun_Glow": {
+   "triangles": 352,
+   "vertices": 192,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    -1.4137,
+    -0.261,
+    0.9669
+   ],
+   "bounds_max": [
+    1.3232,
+    0.261,
+    1.4573
+   ]
+  },
+  "RayGun_GlowCore": {
+   "triangles": 356,
+   "vertices": 186,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    -1.6725,
+    -0.06,
+    0.9644
+   ],
+   "bounds_max": [
+    0.4142,
+    0.2264,
+    1.3906
+   ]
+  }
+ },
+ "part_triangles_before_join": {
+  "MuzzleCone": 608,
+  "MuzzleGold": 640,
+  "EmitterRod": 288,
+  "MouthGlow": 64,
+  "EmitterBead": 80,
+  "Barrel": 340,
+  "BarrelGold": 584,
+  "Fins": 616,
+  "FinBolts": 352,
+  "Body": 1744,
+  "ChamberCollars": 512,
+  "CoilRings": 648,
+  "GoldTrim": 416,
+  "GlassChamber": 56,
+  "Crackles": 276,
+  "DialFace": 1368,
+  "DialGold": 680,
+  "DialTicks": 312,
+  "DialSteel": 504,
+  "DialGlow": 120,
+  "PanelBits": 1048,
+  "VentFrames": 688,
+  "VentSlots": 368,
+  "VentGlow": 112,
+  "Spikes": 892,
+  "GripFrame": 572,
+  "GripRubber": 1424,
+  "TriggerGuard": 252,
+  "Trigger": 148
+ },
+ "total_triangles": 15712,
+ "total_vertices": 8176,
+ "mesh_count": 3,
+ "materials": {
+  "RayGun": "RayGun_Baked",
+  "RayGun_Glow": "RayGun_Glow",
+  "RayGun_GlowCore": "RayGun_GlowCore"
+ },
+ "texture": {
+  "file": "BaseColor.png",
+  "size": [
+   1024,
+   1024
+  ],
+  "packed_in_blend": true,
+  "uv_layers": [
+   "UVMap"
+  ],
+  "uv_range": [
+   0.0048,
+   0.9952
+  ]
+ },
+ "bounds_blender_min": [
+  -1.6725,
+  -0.2887,
+  0.0
+ ],
+ "bounds_blender_max": [
+  1.7446,
+  0.2887,
+  1.8908
+ ],
+ "bounds_studio_size": [
+  3.4171,
+  1.8908,
+  0.5774
+ ],
+ "glb_reimport": {
+  "meshes": 3,
+  "triangles": 15712,
+  "names": [
+   "RayGun",
+   "RayGun_Glow",
+   "RayGun_GlowCore"
+  ],
+  "images": [
+   "BaseColor 1024x1024"
+  ]
+ },
+ "fbx_reimport": {
+  "meshes": 3,
+  "triangles": 15712,
+  "names": [
+   "RayGun",
+   "RayGun_Glow",
+   "RayGun_GlowCore"
+  ],
+  "embedded_images": [
+   "RayGun_BaseColor 1024x1024"
+  ],
+  "dimensions_after_axis_conversion": {
+   "RayGun": [
+    3.327,
+    0.577,
+    1.891
+   ],
+   "RayGun_Glow": [
+    2.737,
+    0.522,
+    0.49
+   ],
+   "RayGun_GlowCore": [
+    2.087,
+    0.286,
+    0.426
+   ]
+  }
+ },
+ "checks": {
+  "loose_vertices_total": 0,
+  "zero_area_faces_total": 0,
+  "glb_triangles_match": true,
+  "fbx_triangles_match": true,
+  "every_mesh_under_20k": true
+ },
+ "notes": [
+  "Non-manifold edge counts are expected: the textured mesh is many closed shells that overlap by design (ribs on the receiver, fins sunk into the body, prongs into the dish), and the meter frames/torus are open where hidden.",
+  "Studio import, Neon look and in-game scale are untested (no Studio access in this task)."
+ ]
+}
