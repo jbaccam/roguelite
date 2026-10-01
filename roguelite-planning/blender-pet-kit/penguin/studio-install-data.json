@@ -1,0 +1,204 @@
+{
+  "asset": "penguin",
+  "rarity": "Common",
+  "strong_suit": "Slow (belly-slides through enemies and slows them)",
+  "axis": "studio = (-x, z, y) of blender; Blender front -Y = Studio front -Z",
+  "units": "studs; the model is at final size, import 1:1 and do not scale",
+  "sides": "L/R are the penguin's own left/right; its left is Blender +X = Studio -X",
+  "origin": "all positions are relative to the model origin = the ground point under the body pivot (Blender world origin)",
+  "ground_point": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "overall_size": [
+    2.3436,
+    2.2914,
+    1.7911
+  ],
+  "overall_center": [
+    0.0,
+    1.1516,
+    -0.0928
+  ],
+  "texture": "textures/penguin.png",
+  "texture_note": "one shared atlas; every MeshPart uses the same TextureID via MeshPart.TextureID (Common rarity: no Neon, no glow)",
+  "rest_rotation": "every part has identity rotation relative to the model at rest",
+  "rig": "one Motor6D per part: Part0 = joint_parent, Part1 = the part, C0/C1 placed at the part's pivot",
+  "parts": {
+    "Penguin_Body": {
+      "center": [
+        0.0,
+        0.8739,
+        -0.0008
+      ],
+      "size": [
+        1.5749,
+        1.5361,
+        1.6071
+      ],
+      "pivot": [
+        0.0,
+        0.8,
+        0.0
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pivot_is": "root (belly centre)",
+      "joint_parent": null,
+      "suggested_motion": "root part: waddle roll about Studio Z, bob in Studio Y, belly-slide pitch forward about Studio X"
+    },
+    "Penguin_Head": {
+      "center": [
+        0.0,
+        1.7,
+        -0.177
+      ],
+      "size": [
+        1.5536,
+        1.1946,
+        1.6225
+      ],
+      "pivot": [
+        0.0,
+        1.42,
+        -0.02
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.62,
+        -0.02
+      ],
+      "pivot_is": "neck, hidden under the scarf",
+      "joint_parent": "Penguin_Body",
+      "suggested_motion": "nod = pitch about Studio X, tilt = roll about Studio Z, look = yaw about Studio Y, through the neck joint"
+    },
+    "Penguin_FlipperL": {
+      "center": [
+        -0.8196,
+        0.8891,
+        -0.0124
+      ],
+      "size": [
+        0.7044,
+        0.8381,
+        0.4979
+      ],
+      "pivot": [
+        -0.6,
+        1.18,
+        0.0
+      ],
+      "pivot_from_body_pivot": [
+        -0.6,
+        0.38,
+        0.0
+      ],
+      "pivot_is": "shoulder",
+      "joint_parent": "Penguin_Body",
+      "suggested_motion": "flap = rotate about Studio Z (front-back axis) through the shoulder; out = NEGATIVE Studio Z angle for the left flipper (tip moves to Studio -X)"
+    },
+    "Penguin_FlipperR": {
+      "center": [
+        0.8196,
+        0.8891,
+        -0.0124
+      ],
+      "size": [
+        0.7044,
+        0.8381,
+        0.4979
+      ],
+      "pivot": [
+        0.6,
+        1.18,
+        0.0
+      ],
+      "pivot_from_body_pivot": [
+        0.6,
+        0.38,
+        0.0
+      ],
+      "pivot_is": "shoulder",
+      "joint_parent": "Penguin_Body",
+      "suggested_motion": "flap = rotate about Studio Z (front-back axis) through the shoulder; out = POSITIVE Studio Z angle for the right flipper"
+    },
+    "Penguin_FootL": {
+      "center": [
+        -0.2997,
+        0.2192,
+        -0.1698
+      ],
+      "size": [
+        0.4847,
+        0.4266,
+        0.5919
+      ],
+      "pivot": [
+        -0.3,
+        0.38,
+        -0.02
+      ],
+      "pivot_from_body_pivot": [
+        -0.3,
+        -0.42,
+        -0.02
+      ],
+      "pivot_is": "hip",
+      "joint_parent": "Penguin_Body",
+      "suggested_motion": "waddle = swing about Studio X (side-to-side axis) through the hip"
+    },
+    "Penguin_FootR": {
+      "center": [
+        0.2997,
+        0.2192,
+        -0.1698
+      ],
+      "size": [
+        0.4847,
+        0.4266,
+        0.5919
+      ],
+      "pivot": [
+        0.3,
+        0.38,
+        -0.02
+      ],
+      "pivot_from_body_pivot": [
+        0.3,
+        -0.42,
+        -0.02
+      ],
+      "pivot_is": "hip",
+      "joint_parent": "Penguin_Body",
+      "suggested_motion": "waddle = swing about Studio X (side-to-side axis) through the hip"
+    }
+  },
+  "locomotion": "waddle",
+  "locomotion_data": {
+    "gait": "waddle: short quick steps, body rocks side to side, flippers held out and counter-swinging",
+    "angle_convention": "degrees, rotation of the part about its own pivot in Studio axes (right-hand rule, Roblox CFrame.Angles); Blender bone angles in the previews are noted alongside",
+    "waddle": {
+      "step_period_s": 0.5,
+      "Penguin_Body": "roll about Studio Z +/-10 deg alternating each step, bob +0.04 studs in Studio Y at mid-step",
+      "Penguin_FootL": "swing about Studio X between +24 and -24 deg (opposite phase to FootR)",
+      "Penguin_FootR": "swing about Studio X between -24 and +24 deg",
+      "Penguin_FlipperL": "Studio Z between -35 and -12 deg (out, pulsing; out is negative on the left)",
+      "Penguin_FlipperR": "Studio Z between +12 and +35 deg (counter-phase to the left)",
+      "Penguin_Head": "counter-roll about Studio Z of -4 deg against the body roll so the face stays level"
+    },
+    "slide_pose": {
+      "note": "belly-slide: the penguin tips onto its belly and glides head first through enemies, slowing them",
+      "Penguin_Body": "pitch forward about Studio X by -78 deg (Blender +78 about X; the head tips toward Studio -Z); the belly then lies about 0.1 studs above the ground with the body pivot left where it is",
+      "Penguin_Head": "pitch about Studio X by +45 deg (chin up, looking ahead) relative to the tipped body",
+      "Penguin_FlipperL": "Studio Z -30 deg (swept out and back along the body, which is already behind the shoulder after the tip)",
+      "Penguin_FlipperR": "Studio Z +30 deg",
+      "Penguin_FootL": "swing about Studio X by +20 deg (toes trail behind)",
+      "Penguin_FootR": "swing about Studio X by +20 deg",
+      "ground_contact": "belly front-bottom; slide with the body pivot 0.8 studs above the ground and no extra offset"
+    }
+  }
+}

@@ -1,0 +1,359 @@
+{
+  "fbx": {
+    "file": "exports/fbx/penguin.fbx",
+    "ok": true,
+    "objects": 6,
+    "total_triangles": 6024,
+    "height_studs": 2.2914,
+    "lowest_z": 0.0059,
+    "problems": [],
+    "parts": {
+      "Penguin_Body": {
+        "triangles": 1748,
+        "pivot": [
+          0.0,
+          0.0,
+          0.8
+        ],
+        "bbox_min": [
+          -0.7874,
+          -0.8043,
+          0.1058
+        ],
+        "bbox_max": [
+          0.7875,
+          0.8028,
+          1.6419
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "penguin",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Penguin_FlipperL": {
+        "triangles": 624,
+        "pivot": [
+          0.6,
+          0.0,
+          1.18
+        ],
+        "bbox_min": [
+          0.4674,
+          -0.2614,
+          0.4701
+        ],
+        "bbox_max": [
+          1.1718,
+          0.2365,
+          1.3082
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "penguin",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Penguin_FlipperR": {
+        "triangles": 624,
+        "pivot": [
+          -0.6,
+          0.0,
+          1.18
+        ],
+        "bbox_min": [
+          -1.1718,
+          -0.2614,
+          0.4701
+        ],
+        "bbox_max": [
+          -0.4674,
+          0.2365,
+          1.3082
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "penguin",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Penguin_FootL": {
+        "triangles": 508,
+        "pivot": [
+          0.3,
+          -0.02,
+          0.38
+        ],
+        "bbox_min": [
+          0.0573,
+          -0.4657,
+          0.0059
+        ],
+        "bbox_max": [
+          0.542,
+          0.1262,
+          0.4324
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "penguin",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Penguin_FootR": {
+        "triangles": 508,
+        "pivot": [
+          -0.3,
+          -0.02,
+          0.38
+        ],
+        "bbox_min": [
+          -0.542,
+          -0.4657,
+          0.0059
+        ],
+        "bbox_max": [
+          -0.0573,
+          0.1262,
+          0.4324
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "penguin",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Penguin_Head": {
+        "triangles": 2012,
+        "pivot": [
+          0.0,
+          -0.02,
+          1.42
+        ],
+        "bbox_min": [
+          -0.7768,
+          -0.9883,
+          1.1027
+        ],
+        "bbox_max": [
+          0.7768,
+          0.6342,
+          2.2973
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "penguin",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "glb": {
+    "file": "exports/glb/penguin.glb",
+    "ok": true,
+    "objects": 6,
+    "total_triangles": 6024,
+    "height_studs": 2.2914,
+    "lowest_z": 0.0059,
+    "problems": [],
+    "parts": {
+      "Penguin_Body": {
+        "triangles": 1748,
+        "pivot": [
+          0.0,
+          0.0,
+          0.8
+        ],
+        "bbox_min": [
+          -0.7874,
+          -0.8043,
+          0.1058
+        ],
+        "bbox_max": [
+          0.7875,
+          0.8028,
+          1.6419
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "penguin",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Penguin_FlipperL": {
+        "triangles": 624,
+        "pivot": [
+          0.6,
+          0.0,
+          1.18
+        ],
+        "bbox_min": [
+          0.4674,
+          -0.2614,
+          0.4701
+        ],
+        "bbox_max": [
+          1.1718,
+          0.2365,
+          1.3082
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "penguin",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Penguin_FlipperR": {
+        "triangles": 624,
+        "pivot": [
+          -0.6,
+          0.0,
+          1.18
+        ],
+        "bbox_min": [
+          -1.1718,
+          -0.2614,
+          0.4701
+        ],
+        "bbox_max": [
+          -0.4674,
+          0.2365,
+          1.3082
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "penguin",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Penguin_FootL": {
+        "triangles": 508,
+        "pivot": [
+          0.3,
+          -0.02,
+          0.38
+        ],
+        "bbox_min": [
+          0.0573,
+          -0.4657,
+          0.0059
+        ],
+        "bbox_max": [
+          0.542,
+          0.1262,
+          0.4324
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "penguin",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Penguin_FootR": {
+        "triangles": 508,
+        "pivot": [
+          -0.3,
+          -0.02,
+          0.38
+        ],
+        "bbox_min": [
+          -0.542,
+          -0.4657,
+          0.0059
+        ],
+        "bbox_max": [
+          -0.0573,
+          0.1262,
+          0.4324
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "penguin",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Penguin_Head": {
+        "triangles": 2012,
+        "pivot": [
+          0.0,
+          -0.02,
+          1.42
+        ],
+        "bbox_min": [
+          -0.7768,
+          -0.9883,
+          1.1027
+        ],
+        "bbox_max": [
+          0.7768,
+          0.6342,
+          2.2973
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "penguin",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "texture": {
+    "file": "textures/penguin.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "ok": true
+  },
+  "install_data": {
+    "file": "studio-install-data.json",
+    "ok": true,
+    "problems": []
+  },
+  "all_ok": true,
+  "expected_parts": [
+    "Penguin_Body",
+    "Penguin_FlipperL",
+    "Penguin_FlipperR",
+    "Penguin_FootL",
+    "Penguin_FootR",
+    "Penguin_Head"
+  ],
+  "scope": "Blender re-import only (Blender 5.2.1 LTS); Studio untested"
+}
