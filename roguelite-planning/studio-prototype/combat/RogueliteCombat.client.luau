@@ -210,7 +210,7 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
  for slot,v in tracked do if not seen[slot] then v.model:Destroy();tracked[slot]=nil end end
  for state in floats do if state.Parent~=states then floats[state]=nil end end
 end)
-combat:WaitForChild('Shot').OnClientEvent:Connect(function(origin,finish,kind,id,thickness,blastRadius,contact,normal,ownerId,slotIndex,first,mobContact,shotId,projectileId,projectileSpeed,terminal)
+local function showShot(origin,finish,kind,id,thickness,blastRadius,contact,normal,ownerId,slotIndex,first,mobContact,shotId,projectileId,projectileSpeed,terminal)
  if id~='10' and contact and kind=='Ranged' and not mobContact then bulletImpact(finish,normal) end
  if first and Motion.MuzzleOffsets[id] and ownerId and slotIndex then
   local state=states:FindFirstChild(tostring(ownerId))
@@ -233,6 +233,14 @@ combat:WaitForChild('Shot').OnClientEvent:Connect(function(origin,finish,kind,id
   burst.Anchored=true;burst.CanCollide=false;burst.CanTouch=false;burst.CanQuery=false;burst.Material=Enum.Material.Neon
   burst.Color=p.Color;burst.Transparency=.6;burst.Position=finish;burst.Parent=visuals
   TweenService:Create(burst,TweenInfo.new(.25),{Size=Vector3.one*(blastRadius or 7)*2,Transparency=1}):Play();Debris:AddItem(burst,.3)
+ end
+end
+local ShotBatch=require(combat:WaitForChild('ShotBatch'))
+combat:WaitForChild('Shot').OnClientEvent:Connect(function(origin,finish,...)
+ if origin==ShotBatch.Marker then
+  for _,row in ipairs(finish) do showShot(ShotBatch.unpack(row)) end
+ else
+  showShot(origin,finish,...)
  end
 end)
 local function damageNumber(position,damage,color,name)
