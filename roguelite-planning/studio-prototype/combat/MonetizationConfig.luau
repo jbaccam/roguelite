@@ -36,6 +36,9 @@ M.Products={
  -- (Legendary armor) the cheaper one.
  BloodPhoenixBundle={productId=0,robux=2499,emeralds=1000,godly='Vampire Blade',armorSet='Phoenix',name='Blood Phoenix Bundle'},
  ShadowDragonBundle={productId=0,robux=1499,emeralds=500,godly='Shadow Daggers',armorSet='DragonScale',name='Shadow Dragon Bundle'},
+ -- Godly Starter: the buyer picks one Godly weapon (an index into GodlyWeapons) + 3 Legendary
+ -- Chests, one time. The pick is saved to the profile before the prompt (ProfileService godlyPick).
+ GodlyStarter={productId=0,robux=999,chests={Legendary=3},godlyPick=true,name='Godly Starter',random=true},
  -- Class unlocks
  ClassThrower={productId=0,robux=149,class='Thrower',name='Thrower'},
  ClassJuggler={productId=0,robux=149,class='Juggler',name='Juggler'},
@@ -46,6 +49,9 @@ M.ChestPacks={'Royal1','Royal5','Royal12'}
 M.RerollPacks={'Rerolls5','Rerolls15'}
 M.BanishPacks={'Banishes5','Banishes15'}
 M.GodlyBundles={'BloodPhoenixBundle','ShadowDragonBundle'}
+-- The Godly weapons (WeaponCatalog names) and short labels for small store tiles.
+M.GodlyWeapons={{"Reaper's Scythe",'Scythe'},{"Poseidon's Trident",'Trident'},{'Storm Bow','Storm Bow'},
+ {'Shadow Daggers','Daggers'},{'Vampire Blade','Vampire'},{'Ray Gun','Ray Gun'}}
 M.Passes={
  VIP={gamePassId=0,robux=499,name='VIP Pass'},
  QuickOpen={gamePassId=0,robux=149,name='Quick Open'},

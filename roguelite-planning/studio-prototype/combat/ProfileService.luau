@@ -35,6 +35,7 @@ local function fresh()
   rerolls=0,banishes=0,quickOpen=false,codes={},daily={day=0,bought={}},vipClaimDay=0,skills={},
   armor={},wearing={}, -- armor: 'DragonScale.Helmet' -> {tier,have}; wearing: slot -> set id
   bundles={}, -- one-time Godly bundles bought: product key -> true
+  godlyPick='', -- the Godly weapon name chosen for a pending Godly Starter purchase
   freeChestDay=0} -- Money.day() of the last free daily chest (the Wooden Chest)
  for class in d.classes do d.weapons[SIGNATURE[class]]={tier=1,have=0} end
  return d

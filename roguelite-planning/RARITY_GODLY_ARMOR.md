@@ -230,6 +230,9 @@ Rules:
   armor set + emeralds, in the store's Bundles tab (`MonetizationConfig.GodlyBundles`).
   - Blood Phoenix: Vampire Blade + Phoenix (Godly armor) + 1,000 emeralds, 2,499 R$.
   - Shadow Dragon: Shadow Daggers + Dragon Scale (Legendary armor) + 500 emeralds, 1,499 R$.
+  - Godly Starter: the buyer picks any one Godly weapon + 3 Legendary Chests, 999 R$. The pick is
+    saved to the profile before the Robux prompt, so a late receipt still grants the right one.
+    Hidden where paid random items are restricted (it includes chests).
   - Each shows COMING SOON, and the server refuses it, until its weapon is in `WeaponCatalog`
     (step 4). Icons are placeholders; the owner is making new ones.
 - **One Godly per player per run** (user, 2026-10-01). The loadout takes at most one Godly, and

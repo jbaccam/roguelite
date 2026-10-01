@@ -417,7 +417,7 @@ function L.mount(player)
   local w=T.window(screen,'StoreWindow','Store',1100,640,nil,{large=true});local b=w.Body;local W=1064
   self.selection.storeTab=focus or self.selection.storeTab or 'Daily'
   local list
-  local function buy(key) combat.PurchaseRequest:FireServer(key) end
+  local function buy(key,arg) combat.PurchaseRequest:FireServer(key,arg) end
   local function act(action,a)
    local r=combat.ProfileAction:InvokeServer(action,a)
    T.toast(screen,r.message or '',r.ok and C.lime or C.negative)
@@ -425,10 +425,11 @@ function L.mount(player)
   local draw
   local gold=C.gold
   -- Robux price button (pulses when `pulse`), or OWNED.
-  local function priceButton(parent,name,x,yy,bw,bh,key,owned,pulse)
+  local function priceButton(parent,name,x,yy,bw,bh,key,owned,pulse,arg)
    local item=Money.Products[key] or Money.Passes[key]
    -- owned: true = OWNED; a string = that label instead (e.g. COMING SOON), also not buyable.
-   local pb=T.button(parent,name,owned==true and 'OWNED' or owned or ('R$ '..item.robux),x,yy,bw,bh,function() buy(key) end,owned)
+   -- arg: sent with the purchase (e.g. which Godly the Godly Starter gives).
+   local pb=T.button(parent,name,owned==true and 'OWNED' or owned or ('R$ '..item.robux),x,yy,bw,bh,function() buy(key,arg) end,owned)
    pb.Caption.TextSize=math.min(32,bh-16)
    if owned then pb.Interactable=false elseif pulse then FX.pulse(pb,.05) end
    return pb
@@ -461,7 +462,7 @@ function L.mount(player)
    T.text(card,'Sub',sub,28,66,cw-340,24,18,C.cream)
    local size=math.min(96,h-118,math.floor((cw-340-26-(#tiles-1)*10)/math.max(#tiles,1)))
    for i,it in tiles do tile(card,'Item'..i,26+(i-1)*(size+10),h-size-18,size,it[1],it[2],it[3]) end
-   priceButton(card,'Buy',cw-268,h-78,240,62,key,owned,opts.pulse)
+   priceButton(card,'Buy',cw-268,h-78,240,62,key,owned,opts.pulse,opts.arg)
    if opts.ribbon then FX.ribbon(card,opts.ribbon,opts.ribbonWidth,opts.ribbonColor) end
    if opts.shine then FX.shine(card) end
    FX.lift(card)
@@ -625,6 +626,36 @@ function L.mount(player)
     hero(key,y,270,4,godly,string.upper(b.name),b.godly..' + the full '..set.name..' armor set. One time only.',tiles,
      Armor.Icons[Armor.pieceId(b.armorSet,'Chest')],key,state,
      {cornerColor=godly,titleColor=godly,pulse=state==false,shine=true,ribbon=premium and 'GODLY ARMOR' or 'BEST GODLY DEAL',ribbonColor=godly,ribbonWidth=premium and 190 or 220,artSize=170})
+    y+=292
+   end
+   -- Godly Starter: tap one of the six Godly tiles to choose it, then buy (+3 Legendary Chests).
+   -- Hidden where paid random items are restricted (it includes chests).
+   if not profile.restricted then
+    local gs=Money.Products.GodlyStarter
+    local pick=self.selection.godlyPick or 1
+    local ids={}
+    for i,g in Money.GodlyWeapons do for id,w in Weapons.ById do if w.name==g[1] then ids[i]=id end end end
+    local tiles={}
+    for i,g in Money.GodlyWeapons do table.insert(tiles,{ids[i] and WeaponIcons[ids[i]] or 'armory',g[2],i==pick and godly or C.muted}) end
+    table.insert(tiles,{Chests.ById.Legendary.icon,'×'..gs.chests.Legendary,C.gold})
+    local state=profile.bundles.GodlyStarter and true or not ids[pick] and 'COMING SOON' or false
+    local card=hero('GodlyStarter',y,270,4,godly,'GODLY STARTER',Money.GodlyWeapons[pick][1]..' + '..gs.chests.Legendary..' Legendary Chests. Tap a weapon to choose. One time only.',
+     tiles,Chests.ById.Legendary.icon,'GodlyStarter',state,
+     {cornerColor=godly,titleColor=godly,pulse=state==false,shine=true,ribbon='PICK YOUR GODLY',ribbonColor=godly,ribbonWidth=230,artSize=150,arg=pick})
+    -- Selection is a colour wash on the chosen tile (no outline over the nine-slice).
+    for i in Money.GodlyWeapons do
+     local t=card:FindFirstChild('Item'..i)
+     if t then
+      if i==pick then
+       -- Under the icon and label: one ZIndex below the lowest of the tile's children.
+       local z=t.ZIndex;for _,c in t:GetChildren() do if c:IsA('GuiObject') then z=math.min(z,c.ZIndex) end end
+       local w=T.make('Frame',t,{Name='Picked',BackgroundColor3=godly,BackgroundTransparency=.55,BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=math.max(0,z-1)})
+       T.make('UICorner',w,{CornerRadius=UDim.new(0,8)})
+      end
+      local hit=T.make('TextButton',t,{Name='Pick',Text='',BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=t.ZIndex+5})
+      hit.Activated:Connect(function() if self.selection.godlyPick~=i then self.selection.godlyPick=i;T.sound('ui_equip');draw() end end)
+     end
+    end
     y+=292
    end
    end

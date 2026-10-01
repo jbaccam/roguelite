@@ -211,6 +211,12 @@ local function eligible(p,key,arg)
   if d.bundles[key] then return false,'Already purchased' end
   if not Profiles.weaponIdByName(product.godly) then return false,'Coming soon' end
  end
+ if product.godlyPick then
+  if d.bundles[key] then return false,'Already purchased' end
+  local pick=arg and Config.GodlyWeapons[arg]
+  if not pick then return false,'Pick a Godly weapon first' end
+  if not Profiles.weaponIdByName(pick[1]) then return false,'Coming soon' end
+ end
  return true
 end
 -- Grants run inside ProcessReceipt (or a Studio simulation). Return true only when delivered.
@@ -227,13 +233,15 @@ function grants.Banish(p) return Profiles.grant(p,{banishes=1}) end
 local function grantProduct(p,key)
  local product=Config.Products[key]
  if grants[key] then return grants[key](p) end
- -- Godly bundle: never deliver without its weapon (the receipt stays unprocessed and retries).
- local weapon=product.godly and Profiles.weaponIdByName(product.godly)
- if product.godly and not weapon then return false end
+ -- Godly bundle / Godly Starter: never deliver without its weapon (the receipt stays unprocessed
+ -- and retries). The Starter's weapon is the pick saved on the profile before the prompt.
+ local godlyName=product.godly or product.godlyPick and Profiles.get(p).godlyPick
+ local weapon=godlyName and Profiles.weaponIdByName(godlyName)
+ if godlyName and not weapon then return false end
  -- paid: Robux emeralds, which regions that restrict paid random items cannot spend on chests.
  return Profiles.grant(p,{emeralds=product.emeralds,paid=true,chests=product.chests,class=product.class,rerolls=product.rerolls,banishes=product.banishes,
   signatureUpgrades=product.signatureUpgrades,starterPack=product.oneTime=='starterPack',
-  weapon=weapon,armorSet=product.armorSet,bundle=product.godly and key})
+  weapon=weapon,armorSet=product.armorSet,bundle=godlyName and key})
 end
 Market.ProcessReceipt=function(info)
  local p=Players:GetPlayerByUserId(info.PlayerId)
@@ -265,6 +273,8 @@ purchaseRequest.OnServerEvent:Connect(function(p,key,arg)
  if not ok then return reply(p,key,false,why) end
  pendingArg[p]=pendingArg[p] or {};pendingArg[p][key]=arg
  local product=Config.Products[key]
+ -- Saved (not just remembered) so a receipt that arrives after a rejoin still knows the pick.
+ if product.godlyPick then Profiles.get(p).godlyPick=Config.GodlyWeapons[arg][1];Profiles.save(p) end
  if product.productId>0 then Market:PromptProductPurchase(p,product.productId)
  elseif studio then
   -- Studio only: simulate a successful receipt so flows can be tested. In-memory, never saved.
