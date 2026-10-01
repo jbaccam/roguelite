@@ -232,6 +232,18 @@
         "ArmorCatalog": {
           "$path": "ArmorCatalog.luau"
         },
+        "PetConfig": {
+          "$path": "PetConfig.luau"
+        },
+        "PetRigs": {
+          "$path": "PetRigs.luau"
+        },
+        "PetFX": {
+          "$className": "RemoteEvent",
+          "$properties": {
+            "Sandboxed": true
+          }
+        },
         "SkillTreeConfig": {
           "$path": "SkillTreeConfig.luau"
         },
@@ -438,6 +450,9 @@
       },
       "AdminService": {
         "$path": "AdminService.server.luau"
+      },
+      "PetService": {
+        "$path": "PetService.server.luau"
       }
     },
     "StarterPlayer": {
@@ -481,6 +496,9 @@
         },
         "AdminPanel": {
           "$path": "../ui/AdminPanel.client.luau"
+        },
+        "PetVisuals": {
+          "$path": "PetVisuals.client.luau"
         }
       },
       "StarterCharacterScripts": {

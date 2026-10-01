@@ -44,6 +44,9 @@ function E.hit(npc,amount,d,secondary)
   if sure or math.random()<s.CritChance/100 then amount*=s.CritDamage/100 end
  end
  if npc:GetAttribute('IsElite') or npc:GetAttribute('IsBoss') then amount*=Stats.mult(s.BossDamage) end
+ -- Owl pet mark (PetService): +bonus% on every hit from the owner while the mark lasts.
+ local mark=npc:GetAttribute('PetMark_'..d.owner.UserId)
+ if type(mark)=='number' and (npc:GetAttribute('PetMarkUntil_'..d.owner.UserId) or 0)>workspace:GetServerTimeNow() then amount*=1+mark/100 end
  if RunService:IsStudio() and npc:GetAttribute('PracticeTarget') then
   local actual=math.min(h.Health,math.max(0,amount))
   if actual<=0 then return 0 end
@@ -126,6 +129,8 @@ function E.armorBlast(player,position,radius,damage)
  return count
 end
 local elapsed=0
+-- Pets (PetService) apply burn, poison and slow through the same status table as weapons.
+E.status=status
 RunService.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<.1 then return end;elapsed=0
  local now=os.clock()

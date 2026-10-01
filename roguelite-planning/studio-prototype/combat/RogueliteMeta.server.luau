@@ -319,6 +319,7 @@ profileAction.OnServerInvoke=function(p,action,a,b,c)
  elseif action=='BuyChest' and type(a)=='string' and type(b)=='number' then ok,message=Profiles.buyChest(p,a,b,restricted[p])
  elseif action=='Upgrade' and type(a)=='string' then ok,message=Profiles.upgrade(p,a)
  elseif action=='WearArmor' and type(a)=='string' and (b==nil or type(b)=='string') then ok,message=Profiles.wear(p,a,b)
+ elseif action=='EquipPet' and (a==nil or (type(a)=='string' and #a<=40)) then ok,message=Profiles.equipPet(p,a) -- nil = put the pet away
  elseif action=='BuySkill' and type(a)=='string' and #a<=40 then ok,message=Profiles.buySkill(p,a)
  elseif action=='BuyClass' and type(a)=='string' then ok,message=Profiles.buyClass(p,a,Config.ClassEmeraldPrice)
  elseif action=='BuyDeal' and type(a)=='number' then ok,message,results=Profiles.buyDeal(p,a)

@@ -29,6 +29,20 @@ function D.collect(p,d)
  if not r or not s or (d.owner and d.owner~=p) then return false end
  local radius=math.clamp(s.stats.PickupRadius or 0,0,100)
  if (r.Position-d.origin).Magnitude>radius or not visible(p,d.origin,r.Position) then return false end
+ return D.start(p,d,now)
+end
+-- The Golden Retriever pet (PetService): the same ownership, phase and rest rules as collect, but
+-- no pickup radius or line of sight (the pet brings it). PetService picks crystals within its range.
+function D.fetch(p,d)
+ if not isCombat or not isCombat() or not d or d.collected or d.target or not d.model.Parent then return false end
+ local now=workspace:GetServerTimeNow()
+ if now-d.born<Motion.REST_SECONDS then return false end
+ local r=living(p);local s=characters and characters.states[p]
+ if not r or not s or (d.owner and d.owner~=p) then return false end
+ d.fetched=true
+ return D.start(p,d,now)
+end
+function D.start(p,d,now)
  d.target=p;d.started=now
  d.startPosition=Motion.idle(d.origin,d.born,now)
  d.model:SetAttribute('MagnetOrigin',d.startPosition)
@@ -37,7 +51,7 @@ function D.collect(p,d)
  return true
 end
 local function cancel(d)
- d.target=nil;d.started=nil;d.position=d.origin
+ d.target=nil;d.started=nil;d.position=d.origin;d.fetched=nil
  d.model:SetAttribute('MagnetUserId',nil);d.model:SetAttribute('MagnetStart',nil)
 end
 function D.step(now)
@@ -47,7 +61,8 @@ function D.step(now)
   elseif isCombat and isCombat() then
    if d.target then
     local r=living(d.target)
-    if not r or not characters.states[d.target] or (r.Position-d.origin).Magnitude>100 or not visible(d.target,d.position,r.Position) then cancel(d)
+    -- A fetched crystal (Golden Retriever) skips the line-of-sight check on its way in.
+    if not r or not characters.states[d.target] or (r.Position-d.origin).Magnitude>100 or (not d.fetched and not visible(d.target,d.position,r.Position)) then cancel(d)
     else
      d.position=Motion.pull(d.startPosition,r.Position,now-d.started)
      if now-d.started>=Motion.PULL_SECONDS then

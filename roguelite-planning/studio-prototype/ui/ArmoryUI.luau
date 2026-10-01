@@ -18,6 +18,7 @@ local Weapons = require(combat:WaitForChild("WeaponCatalog"))
 local Stats = require(combat:WaitForChild("CharacterStats"))
 local Chests = require(combat:WaitForChild("ChestConfig"))
 local Armor = require(combat:WaitForChild("ArmorCatalog"))
+local Pets = require(combat:WaitForChild("PetConfig"))
 local WeaponIcons = require(RS:WaitForChild("WeaponInventoryUI")).Icons
 local C = T.Color
 local A = {}
@@ -38,7 +39,7 @@ local TRAITS = {
 }
 
 -- Armor is worn as four pieces (ArmorCatalog; cosmetic until armor chests and set bonuses exist).
--- Pets come from the Pet Chest (pets only) and don't exist yet, so their slot and tab say so.
+-- Pets (PetConfig) come from the Pet Chest (pets only); one follows you (EQUIP / UNEQUIP).
 local ARMOR_PIECES = {
 	{ id = "Helmet", label = "HELMET", plural = "HELMETS" },
 	{ id = "Chest", label = "CHEST", plural = "CHESTPLATES" },
@@ -107,6 +108,50 @@ local function describe(w)
 	end
 	if w.poison > 0 then
 		table.insert(out, "Poisons what it hits.")
+-- A 3D view of one pet: ReplicatedStorage.PetModels[id] at rest, framed from the front-left.
+-- Without the model (not installed yet) it shows a rarity-coloured disc with the pet's name.
+local function petView(parent, id, x, y, size)
+	local vp = T.make("ViewportFrame", parent, {
+		Name = "PetView",
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(x, y),
+		Size = UDim2.fromOffset(size, size),
+		Ambient = Color3.fromRGB(200, 200, 200),
+		LightColor = Color3.fromRGB(255, 250, 240),
+		LightDirection = Vector3.new(-0.3, -1, 0.5),
+	})
+	local models = RS:FindFirstChild("PetModels")
+	local template = models and models:FindFirstChild(id)
+	local pet = Pets.ById[id]
+	if not template then
+		local disc = T.make("Frame", vp, {
+			Name = "Fallback",
+			Position = UDim2.fromScale(0.1, 0.1),
+			Size = UDim2.fromScale(0.8, 0.8),
+			BackgroundColor3 = pet and Chests.RarityColor[pet.rarity] or C.dim,
+			BackgroundTransparency = 0.55,
+			BorderSizePixel = 0,
+		})
+		T.make("UICorner", disc, { CornerRadius = UDim.new(0.5, 0) })
+		local l = T.label(disc, "Name", pet and string.upper(pet.name) or id, 0, 0, 0, 0, math.max(12, math.floor(size / 7)))
+		l.Size = UDim2.fromScale(1, 1)
+		return vp
+	end
+	local m = template:Clone()
+	m.Parent = vp
+	local box, extent = m:GetBoundingBox()
+	local cam = Instance.new("Camera")
+	cam.FieldOfView = 30
+	-- The pet faces -Z: look from in front, a little left and above.
+	cam.CFrame = CFrame.lookAt(
+		box.Position + Vector3.new(-0.55, 0.35, -1).Unit * (extent.Magnitude / 2) / math.sin(math.rad(15)),
+		box.Position
+	)
+	cam.Parent = vp
+	vp.CurrentCamera = cam
+	return vp
+end
+
 	end
 	if w.slow > 0 then
 		table.insert(out, "Slows enemies down.")
@@ -295,6 +340,17 @@ function A.new(player, opts)
 		for _, sc in groups do
 			sc.Scale = s
 		end
+	end
+	-- Pets: owned record (LobbyUI parses ProfilePets) and whether its upgrade is ready.
+	local function petRec(id)
+		return profile.pets and profile.pets[id]
+	end
+	local function petReady(id)
+		local rec = petRec(id)
+		return rec ~= nil
+			and rec.tier < 4
+			and rec.have >= Chests.upgradeCost(id, rec.tier)
+			and profile.gems >= Chests.upgradeEmeralds(id, rec.tier)
 	end
 	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(fit)
 
@@ -501,6 +557,54 @@ function A.new(player, opts)
 		local class = loadout()
 		local y0 = 110
 		if state.tab == "Weapons" then
+	-- A pet card: 3D view, name, rarity (or PET CHEST while not owned), tier, tick when following you.
+	local function petCard(parent, pet, x, y)
+		local rec = petRec(pet.id)
+		local chosen = state.kind == "pet" and state.item == pet.id
+		local card = T.button(parent, "P_" .. pet.id, "", x, y, CARD, CARD_H, function()
+			select("pet", pet.id)
+		end, not chosen)
+		card.Caption.Visible = false
+		if rec and not chosen then
+			T.setTier(card, rec.tier)
+		end
+		local view = petView(card, pet.id, (CARD - 124) / 2, 6, 124)
+		view.ImageTransparency = rec and 0 or 0.62
+		local n = centred(T.label(card, "Name", pet.name, 6, 132, CARD - 12, 30, 20, rec and C.white or C.dim))
+		n.TextWrapped = false
+		n.TextScaled = true
+		T.make("UITextSizeConstraint", n, { MaxTextSize = 20, MinTextSize = 12 })
+		local k = centred(
+			T.text(card, "Rarity", rec and string.upper(pet.rarity) or "PET CHEST", 6, 164, CARD - 12, 22, 16, rec and Chests.RarityColor[pet.rarity] or C.dim)
+		)
+		if rec then
+			T.tierBadge(card, rec.tier, 10, 10)
+			if profile.pet == pet.id then
+				tick(card, CARD - 38, 10, 28)
+			end
+			if petReady(pet.id) then
+				upArrow(card, CARD - 44, 34, 34)
+			end
+		else
+			RunSetup.lock(card, CARD - 40, 12, 26)
+		end
+		if chosen then
+			n.TextColor3, k.TextColor3 = C.ink, C.ink
+			n.TextStrokeTransparency, k.TextStrokeTransparency = 1, 1
+		end
+		return card
+	end
+
+	-- Equip a pet (id) or put it away (nil). ProfileService checks ownership; the follower appears
+	-- from the server's workspace.RoguelitePets folder (PetVisuals).
+	local function equipPet(id)
+		local r = combat.ProfileAction:InvokeServer("EquipPet", id)
+		T.toast(screen, r.message or "", r.ok and C.lime or C.negative)
+		if r.ok then
+			T.sound("ui_equip")
+		end
+	end
+
 			checkbox(panel, "MyClass", "MY CLASS · " .. string.upper(class), 22, y0, 300, state.mine, function()
 				state.mine = not state.mine
 				draw()
@@ -595,13 +699,28 @@ function A.new(player, opts)
 				state.kind, state.item = "weapon", weapon
 			end
 		elseif state.tab == "Pets" then
-			y = comingPanel(grid, "Pets are coming", "Pets come from the Pet Chest and follow you into runs.", {
-				"Each pet has its own strong suit",
-				"One pet follows you at a time",
-				"Copies level it up, like weapons",
-			}) + 10
+			-- All 12 pets: owned first, then by rarity (PetConfig order); one follows you at a time.
+			local list, owned = table.clone(Pets.List), 0
+			table.sort(list, function(a, b)
+				local ra, rb = petRec(a.id), petRec(b.id)
+				if (ra ~= nil) ~= (rb ~= nil) then
+					return ra ~= nil
+				end
+				return a.order < b.order
+			end)
+			for _, pet in list do
+				owned += petRec(pet.id) and 1 or 0
+			end
+			local h = T.label(grid, "Header_Pets", "PETS · " .. owned .. " / " .. #list .. " OWNED", 4, y, lw - 60, 32, 22, C.lime)
+			h.TextXAlignment = Enum.TextXAlignment.Left
+			y += 38
+			for i, pet in list do
+				local x, dy = cell(i)
+				petCard(grid, pet, x, y + dy)
+			end
+			y += math.ceil(#list / cols) * (CARD_H + GAP) + 8
 			if not state.item then
-				state.kind, state.item = "pet", "Pet"
+				state.kind, state.item = "pet", (profile.pet and petRec(profile.pet)) and profile.pet or list[1].id
 			end
 		elseif #armorSets > 0 then
 			-- Each set with an owned piece: its pieces in the filtered slot(s), unowned ones locked.
@@ -719,11 +838,22 @@ function A.new(player, opts)
 				upArrow(b, SLOT - 40, 8, 30)
 			end
 		end)
-		slot(mid, "PetSlot", "PET", RX, rowY(2), function()
+		-- The equipped pet: its 3D view and tier, its name as the caption.
+		local petId = profile.pet and petRec(profile.pet) and profile.pet or nil
+		slot(mid, "PetSlot", petId and string.upper(Pets.ById[petId].name) or "PET", RX, rowY(2), function()
 			state.tab = "Pets"
-			select("pet", "Pet")
+			state.kind, state.item = "pet", petId
+			draw()
 		end, function(b)
-			emptySlot(b, state.kind == "pet")
+			if petId then
+				petView(b, petId, 4, 4, SLOT - 8)
+				T.tierBadge(b, petRec(petId).tier, 8, 8)
+				if state.kind == "pet" and state.item == petId then
+					T.setPrimary(b, true)
+				end
+			else
+				emptySlot(b, state.kind == "pet", next(profile.pets or {}) and "EMPTY" or nil)
+			end
 		end)
 		slot(mid, "ClassSlot", "CLASS", RX, rowY(3), function()
 			select("class", class)
@@ -804,7 +934,7 @@ function A.new(player, opts)
 	end
 
 	local function upgrade(id)
-		local before = profile.weapons[id] or profile.armor[id]
+		local before = profile.weapons[id] or profile.armor[id] or petRec(id)
 		local r = combat.ProfileAction:InvokeServer("Upgrade", id)
 		T.toast(screen, r.message or "", r.ok and C.lime or C.negative)
 		if r.ok then
@@ -1154,6 +1284,78 @@ function A.new(player, opts)
 				end
 			end
 			drawComingDetail(
+	-- A pet: rarity and strong suit, what it does at this tier and the next, UPGRADE (copies +
+	-- emeralds, like weapons) and EQUIP / UNEQUIP.
+	local function drawPetDetail(panel, id)
+		local pet = Pets.ById[id]
+		local rec = petRec(id)
+		local equipped = profile.pet == id
+		header(
+			panel,
+			nil,
+			rec and rec.tier,
+			string.upper(pet.name),
+			'<font color="'
+				.. T.hex(Chests.RarityColor[pet.rarity])
+				.. '">'
+				.. string.upper(pet.rarity)
+				.. "</font>  ·  PET  ·  "
+				.. string.upper(pet.suit),
+			rec and T.Tier[rec.tier] or C.white
+		)
+		petView(panel.IconWell, id, 6, 6, 120)
+		local tier = rec and rec.tier or 1
+		local text = '<font color="#91EF14">TIER ' .. T.Roman[tier] .. "</font>  " .. Pets.effectText(id, tier)
+		if tier < 4 then
+			text ..= '\n\n<font color="' .. T.hex(C.muted) .. '">NEXT · TIER ' .. T.Roman[tier + 1] .. "</font>  " .. Pets.effectText(id, tier + 1)
+		end
+		local d = T.text(panel, "Effect", text, 24, 166, RIGHT_W - 48, 200, 19, C.cream)
+		d.TextYAlignment = Enum.TextYAlignment.Top
+		if rec then
+			local need = rec.tier < 4 and Chests.upgradeCost(id, rec.tier) or nil
+			local gems = need and Chests.upgradeEmeralds(id, rec.tier)
+			T.upgradeBar(panel, "Copies", 24, 408, RIGHT_W - 48, 26, rec.have, need)
+			local ok = need ~= nil and rec.have >= need and profile.gems >= gems
+			local up = T.button(
+				panel,
+				"Upgrade",
+				need and ("UPGRADE  ·  " .. gems .. " EMERALDS") or "MAX TIER",
+				24,
+				444,
+				RIGHT_W - 48,
+				62,
+				function()
+					upgrade(id)
+				end,
+				not ok
+			)
+			up.Caption.TextSize = 24
+			up.Interactable = ok
+			if need and rec.have < need then
+				centred(T.text(panel, "Need", "Need " .. (need - rec.have) .. " more copies", 24, 506, RIGHT_W - 48, 20, 16, C.muted))
+			elseif need and profile.gems < gems then
+				centred(T.text(panel, "Need", "Need " .. (gems - profile.gems) .. " more emeralds", 24, 506, RIGHT_W - 48, 20, 16, C.negative))
+			end
+		else
+			centred(T.text(panel, "Need", "Comes from the Pet Chest", 24, 420, RIGHT_W - 48, 24, 18, C.muted))
+		end
+		local eq = T.button(
+			panel,
+			"Equip",
+			equipped and "UNEQUIP" or (rec and "EQUIP" or "NOT OWNED"),
+			24,
+			530,
+			RIGHT_W - 48,
+			62,
+			function()
+				equipPet((not equipped) and id or nil)
+			end,
+			equipped or not rec
+		)
+		eq.Caption.TextSize = 26
+		eq.Interactable = rec ~= nil
+	end
+
 				panel,
 				"shoulders",
 				piece.label,
@@ -1216,6 +1418,12 @@ function A.new(player, opts)
 				24,
 				(done or now or nextUp) and C.white or C.dim
 			)
+		elseif state.kind == "pet" and Pets.ById[state.item or ""] then
+			local rec = petRec(state.item)
+			if rec and rec.tier > 1 then
+				T.setTier(frame, rec.tier)
+			end
+			drawPetDetail(panel, state.item)
 			body.TextYAlignment = Enum.TextYAlignment.Top
 			if t > 1 then
 				local cost = T.text(

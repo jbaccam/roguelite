@@ -15,6 +15,7 @@ local Weapons=require(combat:WaitForChild('WeaponCatalog'))
 local Money=require(combat:WaitForChild('MonetizationConfig'))
 local Skills=require(combat:WaitForChild('SkillTreeConfig'))
 local Armor=require(combat:WaitForChild('ArmorCatalog'))
+local Pets=require(combat:WaitForChild('PetConfig')) -- sandboxed data
 local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed; this module is unsandboxed
 -- Redeemable codes (server-only so they cannot be read from the client). One use per account.
 local CODES={
@@ -34,6 +35,7 @@ local function fresh()
   receipts={},receiptOrder={},bestWaves={},mapWins={},starterPack=false,vip=false,
   rerolls=0,banishes=0,quickOpen=false,codes={},daily={day=0,bought={}},vipClaimDay=0,skills={},
   armor={},wearing={}, -- armor: 'DragonScale.Helmet' -> {tier,have}; wearing: slot -> set id
+  pets={},pet=nil, -- pets: PetConfig id -> {tier,have}; pet: the equipped pet id (nil = none)
   bundles={}, -- one-time Godly bundles bought: product key -> true
   godlyPick='', -- the Godly weapon name chosen for a pending Godly Starter purchase
   freeChestDay=0} -- Money.day() of the last free daily chest (the Wooden Chest)
@@ -51,6 +53,9 @@ function P.publish(player)
  player:SetAttribute('ProfileArmor',csv(d.armor,function(k,v) return k..':'..v.tier..':'..v.have end))
  -- ArmorService puts the worn pieces on the character from this attribute.
  player:SetAttribute('ProfileWearing',csv(d.wearing,function(k,v) return k..':'..v end))
+ -- Pets: CharacterService (stat bonus) and PetService (abilities, the follower) read these.
+ player:SetAttribute('ProfilePets',csv(d.pets,function(k,v) return k..':'..v.tier..':'..v.have end))
+ player:SetAttribute('ProfilePet',d.pet or '')
  player:SetAttribute('ProfileFreeChestDay',d.freeChestDay) -- = Money.day(): today's free chest is claimed
  player:SetAttribute('ProfilePity',csv(d.pity,function(k,v) return k..':'..v end))
  player:SetAttribute('ProfilePicks',csv(d.picks,function(k,v) return k..':'..v end))
@@ -91,7 +96,11 @@ function P.load(player)
   for _,setId in Armor.StudioGrant do
    for _,slot in Armor.Slots do local id=Armor.pieceId(setId,slot);data.armor[id]=data.armor[id] or {tier=1,have=0} end
   end
+  -- No Pet Chest yet either: Studio test profiles own every pet at Tier I.
+  for _,id in Pets.StudioGrant do data.pets[id]=data.pets[id] or {tier=1,have=0} end
  end
+ for id in data.pets do if not Pets.valid(id) then data.pets[id]=nil end end
+ if data.pet~=nil and not data.pets[data.pet] then data.pet=nil end
  -- Keys were dropped: old saves convert them to earned emeralds once.
  if type(data.keys)=='number' then data.emeralds+=math.max(0,data.keys)*Money.EmeraldsPerOldKey;data.keys=nil end
  P.profiles[player]=data;P.loaded[player]=true
@@ -149,11 +158,11 @@ function P.grant(player,g)
  P.publish(player);return true
 end
 
--- Copies of one item (a weapon, or an armor piece like 'Iron.Helmet'): the first copy unlocks it
+-- Copies of one item (a weapon, an armor piece like 'Iron.Helmet', or a pet like 'Fox'): the first copy unlocks it
 -- at Tier I; the rest fill the upgrade bar; past Tier IV each copy turns into (earned) emeralds
 -- by rarity.
 function P.addCopies(d,id,count)
- local book=Chests.isArmor(id) and d.armor or d.weapons
+ local book=Chests.isArmor(id) and d.armor or Pets.valid(id) and d.pets or d.weapons
  local rec=book[id];local new=false
  if not rec then rec={tier=1,have=0};book[id]=rec;new=true;count-=1 end
  local emeralds=0
@@ -182,6 +191,19 @@ function P.wear(player,slot,setId)
  P.publish(player)
  if not set then return true,slot=='All' and 'Armor off' or 'Took off the '..string.lower(slot) end
  return true,slot=='All' and (set.name..' set equipped') or (set.name..' '..string.lower(slot)..' equipped')
+end
+-- Equip an owned pet (PetConfig id), or put the pet away (id nil). One pet slot.
+function P.equipPet(player,id)
+ local d=P.profiles[player];if not d then return false,'Profile still loading' end
+ if id==nil then
+  if d.pet==nil then return false,'No pet equipped' end
+  d.pet=nil;P.publish(player);return true,'Pet put away'
+ end
+ if not Pets.valid(id) then return false,'Unknown pet' end
+ if not d.pets[id] then return false,"You don't own that pet yet" end
+ if d.pet==id then return false,'Already equipped' end
+ d.pet=id;P.publish(player)
+ return true,Pets.ById[id].name..' equipped'
 end
 
 local rng=Random.new()
@@ -240,18 +262,18 @@ function P.openChest(player,kind,count)
  P.publish(player)
  return true,n>1 and ('Opened '..n..'× '..chest.name) or ('Opened '..chest.name),results
 end
--- One tier up for a weapon or an armor piece: spends its copies AND emeralds (both tables in
--- ChestConfig; the emerald cost triples each tier).
+-- One tier up for a weapon, an armor piece or a pet: spends its copies AND emeralds (both tables
+-- in ChestConfig, by the item's rarity; the emerald cost triples each tier).
 function P.upgrade(player,id)
- local d=P.profiles[player];local armor=Chests.isArmor(id)
- local rec=d and (armor and d.armor or d.weapons)[id]
- if not rec then return false,armor and 'You do not own that piece' or 'You do not own that weapon' end
+ local d=P.profiles[player];local armor=Chests.isArmor(id);local pet=Pets.valid(id)
+ local rec=d and (armor and d.armor or pet and d.pets or d.weapons)[id]
+ if not rec then return false,armor and 'You do not own that piece' or pet and 'You do not own that pet' or 'You do not own that weapon' end
  if rec.tier>=4 then return false,'Already Tier IV' end
  local cost,gems=Chests.upgradeCost(id,rec.tier),Chests.upgradeEmeralds(id,rec.tier)
  if rec.have<cost then return false,'Need '..cost..' copies to upgrade' end
  if not spend(d,gems) then return false,'Need '..(gems-d.emeralds)..' more emeralds' end
  rec.have-=cost;rec.tier+=1;P.publish(player)
- local name=armor and Armor.pieceName(id) or Weapons.ById[id].name
+ local name=armor and Armor.pieceName(id) or pet and Pets.ById[id].name or Weapons.ById[id].name
  return true,name..' is now Tier '..({'I','II','III','IV'})[rec.tier]
 end
 function P.buyClass(player,class,price)

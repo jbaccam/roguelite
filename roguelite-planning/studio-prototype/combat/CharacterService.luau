@@ -7,6 +7,7 @@ local Stats=require(combat:WaitForChild('CharacterStats'))
 local EnemyCatalog=require(combat:WaitForChild('EnemyCatalog'))
 local Skills=require(combat:WaitForChild('SkillTreeConfig'))
 local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed, like this module
+local Pets=require(combat:WaitForChild('PetConfig')) -- sandboxed pet data (PetService runs the abilities)
 local playerDamaged=combat:FindFirstChild('PlayerDamaged')
 if not playerDamaged then
  playerDamaged=Instance.new('RemoteEvent');playerDamaged.Name='PlayerDamaged'
@@ -53,10 +54,16 @@ function Service.refresh(player)
  local h0=humanoid(player)
  s.raging=perks.RageAttackSpeed~=nil and h0~=nil and h0.Health>0 and h0.Health<h0.MaxHealth*Stats.ArmorPerks.RageBelow
  if s.raging then armor.AttackSpeed=(armor.AttackSpeed or 0)+perks.RageAttackSpeed end
- if next(skills) or next(armor) then
+ -- The equipped pet's flat stat (PetConfig by id and tier, from the server-set ProfilePet and
+ -- ProfilePets), plus a short pet bonus PetService sets (the Cheetah Cub's speed burst).
+ local petId,petTier=Pets.equipped(player:GetAttribute('ProfilePet'),player:GetAttribute('ProfilePets'))
+ local pet=petId and Pets.stats(petId,petTier) or {}
+ for id,v in s.petTemp or {} do pet[id]=(pet[id] or 0)+v end
+ if next(skills) or next(armor) or next(pet) then
   flat=table.clone(s.itemBonuses or {})
   for id,v in skills do flat[id]=(flat[id] or 0)+v end
   for id,v in armor do flat[id]=(flat[id] or 0)+v end
+  for id,v in pet do flat[id]=(flat[id] or 0)+v end
  end
  s.stats=Stats.resolve(s.class,count,s.overrides,flat,s.itemPercent)
  s.folder:SetAttribute('Class',s.class);s.folder:SetAttribute('AffinityCount',count)
@@ -81,6 +88,7 @@ function Service.attach(player,folder)
  local function spawned(character)
   local h=character:WaitForChild('Humanoid',10);if not h or player.Character~=character then return end
   s.leech=0;s.blocks=1;s.hits=0;s.lastContact=os.clock();s.lastBump=os.clock();s.dodgeCrit=nil
+  s.petShield=0;s.petShieldUntil=0;player:SetAttribute('PetShieldUntil',nil)
   s.held=nil;s.holdAt=nil -- the next tick re-checks the shop hold for the new body
   Service.refresh(player);h.Health=h.MaxHealth
   if s.moveStateConnection then s.moveStateConnection:Disconnect() end
@@ -101,6 +109,8 @@ function Service.attach(player,folder)
  player:GetAttributeChangedSignal('ProfileSkills'):Connect(function() Service.refresh(player) end)
  player:GetAttributeChangedSignal('ProfileWearing'):Connect(function() Service.refresh(player) end)
  player:GetAttributeChangedSignal('ProfileArmor'):Connect(function() Service.refresh(player) end)
+ player:GetAttributeChangedSignal('ProfilePet'):Connect(function() Service.refresh(player) end)
+ player:GetAttributeChangedSignal('ProfilePets'):Connect(function() Service.refresh(player) end)
  Service.refresh(player)
 end
 -- The class from the player's validated loadout (RunClass). Developer stat overrides stay until clearAdmin.
@@ -118,6 +128,25 @@ function Service.clearAdmin(player)
  local picked=player:GetAttribute('RunClass');s.class=Stats.Classes[picked] and picked or 'Brawler'
  player:SetAttribute('AdminGod',nil)
  s.folder:SetAttribute('WeaponEnabled',true)
+end
+-- Pet hooks (PetService). setPetTemp: a short flat bonus like {MoveSpeed=6}, nil clears it.
+-- givePetShield: one blocked hit for `duration` s (checked before FirstHitBlock; refreshing only
+-- resets the timer, it never stacks). The player attribute PetShieldUntil (server time) lets
+-- clients draw the bubble.
+function Service.setPetTemp(player,bonus)
+ local s=Service.states[player];if not s then return end
+ s.petTemp=bonus;Service.refresh(player)
+end
+function Service.givePetShield(player,duration)
+ local s=Service.states[player];local h=humanoid(player)
+ if not s or not h or h.Health<=0 then return false end
+ s.petShield=1;s.petShieldUntil=os.clock()+duration
+ player:SetAttribute('PetShieldUntil',workspace:GetServerTimeNow()+duration)
+ return true
+end
+function Service.hasPetShield(player)
+ local s=Service.states[player]
+ return s~=nil and (s.petShield or 0)>0 and os.clock()<(s.petShieldUntil or 0)
 end
 function Service.heal(player,amount)
  local s=Service.states[player];local h=humanoid(player)
@@ -137,6 +166,12 @@ function Service.contact(player,amount,roll,attacker)
  -- any source. Every player damage path (contact, enemy melee and projectiles, zombie slams, the
  -- boss) comes through here.
  if not s or not h or h.Health<=0 or player.Character:FindFirstChildOfClass('ForceField') or player:GetAttribute('AdminGod')==true or Service.inShop(player) then return 0 end
+ -- A pet shell shield (Turtle) blocks the next hit first, then pops.
+ if Service.hasPetShield(player) then
+  s.petShield=0;s.petShieldUntil=0;player:SetAttribute('PetShieldUntil',nil)
+  if Service.onPetShieldPop then Service.onPetShieldPop(player) end
+  return 0
+ end
  if s.stats.FirstHitBlock>0 and s.blocks>0 then s.blocks-=1;s.folder:SetAttribute('BlocksRemaining',s.blocks);return 0 end
  if (roll or math.random())<s.stats.Dodge/100 then
   -- Ninja 4-piece: the next direct hit is a guaranteed crit (CombatEffectsService.hit uses it up).
@@ -151,6 +186,8 @@ function Service.contact(player,amount,roll,attacker)
  -- applied by CombatEffectsService through onThorns).
  local thorns=s.perks and s.perks.FireThorns
  if actual>0 and thorns and typeof(attacker)=='Instance' and Service.onThorns and math.random()<thorns/100 then Service.onThorns(player,attacker) end
+ -- Pets react to real damage (the Cheetah Cub's speed burst).
+ if actual>0 and Service.onDamaged then Service.onDamaged(player,actual) end
  return actual
 end
 local remote=combat:FindFirstChild('EditPractice') or Instance.new('RemoteEvent')

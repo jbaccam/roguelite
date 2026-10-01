@@ -70,6 +70,10 @@ function L.profile(player)
  p.armor={};p.wearing={}
  for id,tier,have in string.gmatch(player:GetAttribute('ProfileArmor') or '','([^,:]+):(%d+):(%d+)') do p.armor[id]={id=id,tier=math.clamp(tonumber(tier),1,4),have=tonumber(have)} end
  for slot,set in string.gmatch(player:GetAttribute('ProfileWearing') or '','([^,:]+):([^,:]+)') do p.wearing[slot]=set end
+ -- Pets: ProfilePets ('Fox:2:1' = pet:tier:copies), ProfilePet (the equipped pet id, '' = none).
+ p.pets={}
+ for id,tier,have in string.gmatch(player:GetAttribute('ProfilePets') or '','([^,:]+):(%d+):(%d+)') do p.pets[id]={id=id,tier=math.clamp(tonumber(tier),1,4),have=tonumber(have)} end
+ local pet=player:GetAttribute('ProfilePet');p.pet=type(pet)=='string' and p.pets[pet] and pet or nil
  p.freeChestDay=player:GetAttribute('ProfileFreeChestDay') or 0 -- = MonetizationConfig.day(): today's free Wooden Chest is claimed
  p.best=csvMap(player:GetAttribute('ProfileBestWaves'))
  p.wins=csvSet(player:GetAttribute('ProfileMapWins'))

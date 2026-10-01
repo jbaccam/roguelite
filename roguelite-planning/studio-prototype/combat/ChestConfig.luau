@@ -8,6 +8,7 @@
 -- (e.g. ×5 Frying Pan, ×2 Egg).
 local C={Order={},ById={}}
 local Armor=require(script.Parent:WaitForChild('ArmorCatalog'))
+local Pets=require(script.Parent:WaitForChild('PetConfig')) -- sandboxed data; fine from here
 
 C.Rarities={'Common','Rare','Epic','Legendary','Godly'}
 C.RarityColor={
@@ -37,6 +38,10 @@ for _,set in Armor.Sets do
  end
 end
 function C.isArmor(id) return Armor.valid(id) end
+-- Pets (PetConfig) have a rarity for upgrade costs and spare copies, but are NEVER in the weapon
+-- and armor chest pools: they come from the Pet Chest only.
+for _,pet in Pets.List do C.RarityOf[pet.id]=pet.rarity end
+function C.isPet(id) return Pets.valid(id) end
 -- Items only some chests drop (ArmorCatalog `chests`: Phoenix is Legendary Chest only).
 C.OnlyIn={}
 for _,set in Armor.Sets do
