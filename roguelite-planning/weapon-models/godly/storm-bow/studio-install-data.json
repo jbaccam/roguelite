@@ -1,0 +1,118 @@
+{
+ "name": "StormBow",
+ "blender_version": "5.2.1 LTS",
+ "status": "Blender-verified, Studio untested",
+ "units": "1 Blender unit = 1 stud, authored at hero size; set the play size in Studio by uniform scale",
+ "axes": "Studio = (-x, z, y) of Blender; FBX exported with axis_forward=-Z, axis_up=Y",
+ "texture": "BaseColor.png 1024x1024, baked painted lighting; use MeshPart.TextureID (not SurfaceAppearance)",
+ "parts": {
+  "StormBow": {
+   "kind": "textured",
+   "center_studio": [
+    0.0989,
+    2.5,
+    0.0
+   ],
+   "size_studio": [
+    1.7132,
+    5.0,
+    0.5948
+   ],
+   "triangles": 14057,
+   "material": "SmoothPlastic (or Plastic), Color white",
+   "texture_id": "BaseColor.png"
+  },
+  "StormBow_Glow": {
+   "kind": "glow",
+   "center_studio": [
+    -0.058,
+    2.5,
+    0.0
+   ],
+   "size_studio": [
+    1.5399,
+    4.827,
+    0.4812
+   ],
+   "triangles": 2225,
+   "material": "Neon",
+   "color_rgb": [
+    18,
+    108,
+    255
+   ],
+   "note": "electric-blue glow: string ribbon and crackle forks, limb bolt inlays, tip bolt cores, crystal facets, eyes, beak glow, arrow rest"
+  },
+  "StormBow_GlowCore": {
+   "kind": "glow",
+   "center_studio": [
+    -0.059,
+    2.5,
+    0.0
+   ],
+   "size_studio": [
+    1.4039,
+    4.8458,
+    0.5002
+   ],
+   "triangles": 1264,
+   "material": "Neon",
+   "color_rgb": [
+    214,
+    240,
+    255
+   ],
+   "note": "white-hot: string core, crystal heart, pupils, nocking bead"
+  }
+ },
+ "grip_point_studio": [
+  -0.0203,
+  2.5,
+  0.0
+ ],
+ "grip_point_relative_to_textured_center": [
+  -0.1192,
+  0.0,
+  0.0
+ ],
+ "float_pivot_studio": [
+  -0.0203,
+  2.5,
+  0.0
+ ],
+ "float_pivot_relative_to_textured_center": [
+  -0.1192,
+  0.0,
+  0.0
+ ],
+ "arrow_rest_point_studio": [
+  -0.0135,
+  2.7842,
+  -0.203
+ ],
+ "nocking_point_studio": [
+  -0.7133,
+  2.7842,
+  0.0
+ ],
+ "arrow_direction_studio": [
+  1.0,
+  0.0,
+  0.0
+ ],
+ "notes": [
+  "Every MeshPart imports centred on its own bounding box: place each at its center_studio, relative to a shared model origin (Blender origin = bottom of the bow on the grip axis).",
+  "grip_point = middle of the dark leather wrap (hand pivot); the bow is held upright, string toward the player; the eagle head and crystal face the target (Studio -x of the bow faces the target, i.e. arrows fly along arrow_direction).",
+  "float_pivot = the grip point too (the limbs are symmetric top/bottom), for the floating idle bob and spin.",
+  "Arrows spawn at nocking_point_studio and leave past arrow_rest_point_studio (rest is on the -y face)."
+ ],
+ "vfx_notes": [
+  "Colours: electric blue RGB(18,108,255) body, white-hot RGB(214,240,255) core, gold RGB(255,205,110) sparks; keep the blue saturated (no pastel), never yellow-only.",
+  "Charge/draw: a ParticleEmitter at the crystal (Attachment at the crystal centre): Rate 20, Lifetime 0.25-0.4, Speed 1-2, SpreadAngle 180, Size 0.25->0, LightEmission 1, Color white->blue; a second tiny emitter in the eagle's beak (Rate 10, Size 0.12->0); plus a PointLight Range 8, Brightness 2, blue, pulsing with the draw.",
+  "Arrow in flight: a blue Neon arrow with a Trail (Attachment0 at the nock, Attachment1 at the head), Lifetime 0.18, WidthScale 1->0, LightEmission 1, FaceCamera true, Color white->blue; a jagged Beam (Segments 6, CurveSize random +/-0.6 re-rolled every 0.05 s) along the trail sells the lightning.",
+  "Split: at about 60% of the flight distance, or 6 studs above the target group, the arrow flashes (ParticleEmitter Burst 24, Lifetime 0.2, Speed 8-14, Size 0.4->0, white core) with a short crack-of-thunder sound and becomes 5 arrows fanned 12-16 degrees apart that tilt down onto the group.",
+  "Each of the 5 split arrows keeps a thinner lightning Trail (Lifetime 0.12, Width 0.15) and a 2-segment zig Beam to its neighbour for the first 0.1 s so the split reads as one forking bolt.",
+  "Impact: per arrow a small ground flash decal (blue ring, 2 studs, fades 0.25 s) and a ParticleEmitter Burst 10 (sparks, Speed 6-10, Lifetime 0.2-0.35, Acceleration (0,-30,0), Color blue->gold).",
+  "Idle in hand: the string, inlays, bolt tips, eyes and crystal are Neon already; an optional faint ParticleEmitter along the string (Rate 4, Lifetime 0.3, Size 0.1) gives crackle without hiding the model."
+ ]
+}

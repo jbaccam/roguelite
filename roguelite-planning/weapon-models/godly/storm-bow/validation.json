@@ -1,0 +1,150 @@
+{
+ "name": "StormBow",
+ "blender_version": "5.2.1 LTS",
+ "authored_scale_factor": 0.67666,
+ "meshes": {
+  "StormBow": {
+   "triangles": 14057,
+   "vertices": 7153,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 19,
+   "bounds_min": [
+    -0.9555,
+    -0.2974,
+    0.0
+   ],
+   "bounds_max": [
+    0.7577,
+    0.2974,
+    5.0
+   ]
+  },
+  "StormBow_Glow": {
+   "triangles": 2225,
+   "vertices": 1151,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 3,
+   "bounds_min": [
+    -0.7119,
+    -0.2406,
+    0.0865
+   ],
+   "bounds_max": [
+    0.828,
+    0.2406,
+    4.9135
+   ]
+  },
+  "StormBow_GlowCore": {
+   "triangles": 1264,
+   "vertices": 650,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    -0.6429,
+    -0.2501,
+    0.0771
+   ],
+   "bounds_max": [
+    0.761,
+    0.2501,
+    4.9229
+   ]
+  }
+ },
+ "total_triangles": 17546,
+ "total_vertices": 8954,
+ "mesh_count": 3,
+ "materials": {
+  "StormBow": "StormBow_Baked",
+  "StormBow_Glow": "StormBow_Glow",
+  "StormBow_GlowCore": "StormBow_GlowCore"
+ },
+ "texture": {
+  "file": "BaseColor.png",
+  "size": [
+   1024,
+   1024
+  ],
+  "packed_in_blend": true,
+  "uv_layers": [
+   "UVMap"
+  ],
+  "uv_range": [
+   0.005,
+   0.995
+  ]
+ },
+ "height_studs": 5.0,
+ "bounds_blender_min": [
+  -0.9555,
+  -0.2974,
+  0.0
+ ],
+ "bounds_blender_max": [
+  0.828,
+  0.2974,
+  5.0
+ ],
+ "bounds_studio_size": [
+  1.7835,
+  5.0,
+  0.5948
+ ],
+ "symmetry_top_bottom_about_grip": "limbs, plates, inlays, collars, tip bolts and string are one authored half mirrored about z = grip; the eagle head (top) and tail plume (bottom) balance the riser",
+ "glb_reimport": {
+  "meshes": 3,
+  "triangles": 17546,
+  "names": [
+   "StormBow",
+   "StormBow_Glow",
+   "StormBow_GlowCore"
+  ],
+  "images": [
+   "BaseColor 1024x1024"
+  ]
+ },
+ "fbx_reimport": {
+  "meshes": 3,
+  "triangles": 17546,
+  "names": [
+   "StormBow",
+   "StormBow_Glow",
+   "StormBow_GlowCore"
+  ],
+  "embedded_images": [
+   "StormBow_BaseColor 1024x1024"
+  ],
+  "dimensions_after_axis_conversion": {
+   "StormBow": [
+    1.713,
+    0.595,
+    5.0
+   ],
+   "StormBow_Glow": [
+    1.54,
+    0.481,
+    4.827
+   ],
+   "StormBow_GlowCore": [
+    1.404,
+    0.5,
+    4.846
+   ]
+  }
+ },
+ "checks": {
+  "loose_vertices_total": 0,
+  "zero_area_faces_total": 0,
+  "glb_triangles_match": true,
+  "fbx_triangles_match": true,
+  "every_mesh_under_20k": true
+ },
+ "notes": [
+  "Non-manifold edge counts are expected: the textured mesh is many closed parts that overlap by design (plates over the limb core, wrap on the riser, inlays set into the faces, collars over the joints, talons over the crystal).",
+  "Studio import, Neon look and in-game scale are untested (no Studio access in this task)."
+ ]
+}
