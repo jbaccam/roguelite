@@ -1,0 +1,222 @@
+{
+  "asset": "frog",
+  "axis": "studio = (-x, z, y) of blender; Blender front -Y = Studio front -Z",
+  "units": "studs; the model is at final size, import 1:1 and do not scale",
+  "sides": "L/R are the frog's own left/right; its left is Blender +X = Studio -X",
+  "origin": "all positions are relative to the model origin = the ground point under the world origin (Blender world origin)",
+  "ground_point": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "overall_size": [
+    2.2561,
+    2.0846,
+    2.3841
+  ],
+  "overall_center": [
+    0.0,
+    1.0434,
+    0.0354
+  ],
+  "texture": "textures/frog.png",
+  "texture_note": "one shared atlas; every MeshPart uses the same TextureID (Common rarity: no Neon, no glow)",
+  "rest_rotation": "every part has identity rotation relative to the model at rest",
+  "rig": "one Motor6D per part: Part0 = joint_parent, Part1 = the part, C0/C1 placed at the part's pivot",
+  "locomotion": "hop",
+  "locomotion_notes": {
+    "what": "The frog hops and slams: crouch, launch (hind legs extend back), apex, slam landing (knocks nearby enemies back), then recover to rest.",
+    "angles": "Rotation angles are about Studio X (side-to-side axis) through each part's own pivot, in degrees, same value on L and R. Positive = the Studio +X right-hand rotation (a positive body pitch tips the nose down). body_lift_studs is the Studio Y offset of the root part. Body pitch applies to the root, leg angles are relative to the body, head pitch is relative to the body.",
+    "easing": "launch snaps (ease-out, ~0.12 s), apex is a hold, slam falls fast then squashes; recover eases back to rest over ~0.25 s"
+  },
+  "hop_frames": [
+    {
+      "frame": "crouch",
+      "time_s": 0.0,
+      "body_lift_studs": -0.08,
+      "body_pitch_deg": 6.0,
+      "head_pitch_deg": 4.0,
+      "hind_legs_pitch_deg": 2.0,
+      "front_legs_pitch_deg": 8.0
+    },
+    {
+      "frame": "launch",
+      "time_s": 0.16,
+      "body_lift_studs": 0.95,
+      "body_pitch_deg": 22.0,
+      "head_pitch_deg": 8.0,
+      "hind_legs_pitch_deg": -137.0,
+      "front_legs_pitch_deg": 10.0
+    },
+    {
+      "frame": "apex",
+      "time_s": 0.36,
+      "body_lift_studs": 1.2,
+      "body_pitch_deg": 6.0,
+      "head_pitch_deg": 0.0,
+      "hind_legs_pitch_deg": -85.0,
+      "front_legs_pitch_deg": 20.0
+    },
+    {
+      "frame": "slam",
+      "time_s": 0.58,
+      "body_lift_studs": -0.2,
+      "body_pitch_deg": -6.0,
+      "head_pitch_deg": -14.0,
+      "hind_legs_pitch_deg": 8.0,
+      "front_legs_pitch_deg": 18.0
+    }
+  ],
+  "parts": {
+    "Frog_Body": {
+      "center": [
+        0.0,
+        0.75,
+        0.1501
+      ],
+      "size": [
+        1.6583,
+        1.3794,
+        2.1548
+      ],
+      "pivot": [
+        0.0,
+        0.75,
+        0.1
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pivot_is": "body centre (root part): hop bob / squash pivot",
+      "joint_parent": null,
+      "suggested_motion": "root part: hop bob up/down in Studio Y, squash/stretch, a small pitch about Studio X on takeoff and landing"
+    },
+    "Frog_Head": {
+      "center": [
+        0.0,
+        1.3469,
+        -0.4713
+      ],
+      "size": [
+        1.7189,
+        1.4776,
+        1.3706
+      ],
+      "pivot": [
+        0.0,
+        0.95,
+        -0.25
+      ],
+      "pivot_from_body_pivot": [
+        0.0,
+        0.2,
+        -0.35
+      ],
+      "pivot_is": "neck joint (nod / tilt / turn pivot)",
+      "joint_parent": "Frog_Body",
+      "suggested_motion": "nod = pitch about Studio X, tilt = roll about Studio Z, look = yaw about Studio Y, all through the neck joint"
+    },
+    "Frog_LegFL": {
+      "center": [
+        -0.385,
+        0.4899,
+        -0.6777
+      ],
+      "size": [
+        0.4687,
+        0.9761,
+        0.9113
+      ],
+      "pivot": [
+        -0.4,
+        0.76,
+        -0.4
+      ],
+      "pivot_from_body_pivot": [
+        -0.4,
+        0.01,
+        -0.5
+      ],
+      "pivot_is": "shoulder (short front leg swing)",
+      "joint_parent": "Frog_Body",
+      "suggested_motion": "short front leg: brace / slam = swing about Studio X (side-to-side axis) through the shoulder"
+    },
+    "Frog_LegFR": {
+      "center": [
+        0.385,
+        0.4899,
+        -0.6777
+      ],
+      "size": [
+        0.4687,
+        0.9761,
+        0.9113
+      ],
+      "pivot": [
+        0.4,
+        0.76,
+        -0.4
+      ],
+      "pivot_from_body_pivot": [
+        0.4,
+        0.01,
+        -0.5
+      ],
+      "pivot_is": "shoulder (short front leg swing)",
+      "joint_parent": "Frog_Body",
+      "suggested_motion": "short front leg: brace / slam = swing about Studio X (side-to-side axis) through the shoulder"
+    },
+    "Frog_LegBL": {
+      "center": [
+        -0.7594,
+        0.4888,
+        -0.1347
+      ],
+      "size": [
+        0.7373,
+        0.9755,
+        1.9067
+      ],
+      "pivot": [
+        -0.56,
+        0.72,
+        0.42
+      ],
+      "pivot_from_body_pivot": [
+        -0.56,
+        -0.03,
+        0.32
+      ],
+      "pivot_is": "hip (powerful hind leg kick / hop)",
+      "joint_parent": "Frog_Body",
+      "suggested_motion": "powerful hind leg: hop kick = swing about Studio X (side-to-side axis) through the hip"
+    },
+    "Frog_LegBR": {
+      "center": [
+        0.7594,
+        0.4888,
+        -0.1347
+      ],
+      "size": [
+        0.7373,
+        0.9755,
+        1.9067
+      ],
+      "pivot": [
+        0.56,
+        0.72,
+        0.42
+      ],
+      "pivot_from_body_pivot": [
+        0.56,
+        -0.03,
+        0.32
+      ],
+      "pivot_is": "hip (powerful hind leg kick / hop)",
+      "joint_parent": "Frog_Body",
+      "suggested_motion": "powerful hind leg: hop kick = swing about Studio X (side-to-side axis) through the hip"
+    }
+  }
+}

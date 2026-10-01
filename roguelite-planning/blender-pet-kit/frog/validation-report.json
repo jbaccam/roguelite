@@ -1,0 +1,359 @@
+{
+  "fbx": {
+    "file": "exports/fbx/frog.fbx",
+    "ok": true,
+    "objects": 6,
+    "total_triangles": 7316,
+    "head_top_studs": 2.0856,
+    "length_studs": 2.3841,
+    "problems": [],
+    "parts": {
+      "Frog_Body": {
+        "triangles": 1808,
+        "pivot": [
+          0.0,
+          0.1,
+          0.75
+        ],
+        "bbox_min": [
+          -0.8292,
+          -0.9273,
+          0.0603
+        ],
+        "bbox_max": [
+          0.8292,
+          1.2275,
+          1.4397
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "frog",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Frog_Head": {
+        "triangles": 2076,
+        "pivot": [
+          0.0,
+          -0.25,
+          0.95
+        ],
+        "bbox_min": [
+          -0.8595,
+          -1.1566,
+          0.6081
+        ],
+        "bbox_max": [
+          0.8595,
+          0.214,
+          2.0856
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "frog",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Frog_LegBL": {
+        "triangles": 1092,
+        "pivot": [
+          0.56,
+          0.42,
+          0.72
+        ],
+        "bbox_min": [
+          0.3908,
+          -1.088,
+          0.0011
+        ],
+        "bbox_max": [
+          1.1281,
+          0.8187,
+          0.9766
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "frog",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Frog_LegBR": {
+        "triangles": 1092,
+        "pivot": [
+          -0.56,
+          0.42,
+          0.72
+        ],
+        "bbox_min": [
+          -1.1281,
+          -1.088,
+          0.0011
+        ],
+        "bbox_max": [
+          -0.3908,
+          0.8187,
+          0.9766
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "frog",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Frog_LegFL": {
+        "triangles": 624,
+        "pivot": [
+          0.4,
+          -0.4,
+          0.76
+        ],
+        "bbox_min": [
+          0.1507,
+          -1.1333,
+          0.0019
+        ],
+        "bbox_max": [
+          0.6194,
+          -0.222,
+          0.978
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "frog",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Frog_LegFR": {
+        "triangles": 624,
+        "pivot": [
+          -0.4,
+          -0.4,
+          0.76
+        ],
+        "bbox_min": [
+          -0.6194,
+          -1.1333,
+          0.0019
+        ],
+        "bbox_max": [
+          -0.1507,
+          -0.222,
+          0.978
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "frog",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "glb": {
+    "file": "exports/glb/frog.glb",
+    "ok": true,
+    "objects": 6,
+    "total_triangles": 7316,
+    "head_top_studs": 2.0856,
+    "length_studs": 2.3841,
+    "problems": [],
+    "parts": {
+      "Frog_Body": {
+        "triangles": 1808,
+        "pivot": [
+          0.0,
+          0.1,
+          0.75
+        ],
+        "bbox_min": [
+          -0.8292,
+          -0.9273,
+          0.0603
+        ],
+        "bbox_max": [
+          0.8292,
+          1.2275,
+          1.4397
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "frog",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Frog_Head": {
+        "triangles": 2076,
+        "pivot": [
+          0.0,
+          -0.25,
+          0.95
+        ],
+        "bbox_min": [
+          -0.8595,
+          -1.1566,
+          0.6081
+        ],
+        "bbox_max": [
+          0.8595,
+          0.214,
+          2.0856
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "frog",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Frog_LegBL": {
+        "triangles": 1092,
+        "pivot": [
+          0.56,
+          0.42,
+          0.72
+        ],
+        "bbox_min": [
+          0.3908,
+          -1.088,
+          0.0011
+        ],
+        "bbox_max": [
+          1.1281,
+          0.8187,
+          0.9766
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "frog",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Frog_LegBR": {
+        "triangles": 1092,
+        "pivot": [
+          -0.56,
+          0.42,
+          0.72
+        ],
+        "bbox_min": [
+          -1.1281,
+          -1.088,
+          0.0011
+        ],
+        "bbox_max": [
+          -0.3908,
+          0.8187,
+          0.9766
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "frog",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Frog_LegFL": {
+        "triangles": 624,
+        "pivot": [
+          0.4,
+          -0.4,
+          0.76
+        ],
+        "bbox_min": [
+          0.1507,
+          -1.1333,
+          0.0019
+        ],
+        "bbox_max": [
+          0.6194,
+          -0.222,
+          0.978
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "frog",
+          [
+            1024,
+            1024
+          ]
+        ]
+      },
+      "Frog_LegFR": {
+        "triangles": 624,
+        "pivot": [
+          -0.4,
+          -0.4,
+          0.76
+        ],
+        "bbox_min": [
+          -0.6194,
+          -1.1333,
+          0.0019
+        ],
+        "bbox_max": [
+          -0.1507,
+          -0.222,
+          0.978
+        ],
+        "zero_area_triangles": 0,
+        "texture": [
+          "frog",
+          [
+            1024,
+            1024
+          ]
+        ]
+      }
+    }
+  },
+  "texture": {
+    "file": "textures/frog.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "ok": true
+  },
+  "install_data": {
+    "file": "studio-install-data.json",
+    "ok": true,
+    "problems": []
+  },
+  "all_ok": true,
+  "expected_parts": [
+    "Frog_Body",
+    "Frog_Head",
+    "Frog_LegBL",
+    "Frog_LegBR",
+    "Frog_LegFL",
+    "Frog_LegFR"
+  ],
+  "scope": "Blender re-import only (Blender 5.2.1 LTS); Studio untested"
+}
