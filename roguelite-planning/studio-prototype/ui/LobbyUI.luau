@@ -44,9 +44,9 @@ L.Achievements={
 L.Store={
  tabs={{'Daily','quests','DAILY'},{'Bundles','store','BUNDLES'},{'Chests','chest','CHESTS'},{'Emeralds','emerald','EMERALDS'}},
  classes={{'Thrower','12','ClassThrower'},{'Juggler','19','ClassJuggler'},{'Handyman','24','ClassHandyman'}},
- gemSizes={70,84,98,112},
+ gemSizes={70,80,90,100,112,126},
  chestRibbons={nil,'MOST POPULAR','BEST VALUE'},
- gemRibbons={nil,'MOST POPULAR',nil,'BEST VALUE'},
+ gemRibbons={nil,'MOST POPULAR',nil,nil,nil,'BEST VALUE'},
 }
 L.StationRoutes={Collection='Loadout',Workshop='Armory',Rewards='Chests',Store='Store',Quests='Quests'}
 
@@ -665,6 +665,13 @@ function L.mount(player)
     {{Chests.ById.Legendary.icon,'×'..mb.chests.Legendary..' Legendary'},{'emerald',mb.emeralds..'',C.emerald},{'quests',mb.rerolls..' Rerolls'},{'armory',mb.banishes..' Banishes'}},'chest','MegaBundle',false,
     {cornerColor=gold,titleColor=gold,pulse=true,shine=true,ribbon='INSANE DEAL',ribbonColor=gold,artSize=170})
    y+=284
+   local ub=Money.Products.UltimateBundle
+   local each=math.floor(ub.robux/ub.chests.Legendary+.5)
+   local save=math.floor((1-each/Money.Products[Money.ChestPacks[1]].robux)*100+.5)
+   hero('Ultimate',y,280,4,gold,'ULTIMATE CHEST BUNDLE','×'..ub.chests.Legendary..' Legendary Chests: '..each..' R$ each, save '..save..'%.',
+    {{Chests.ById.Legendary.icon,'×'..ub.chests.Legendary..' Legendary'},{'emerald',fmt(ub.emeralds),C.emerald},{'quests',ub.rerolls..' Rerolls'},{'armory',ub.banishes..' Banishes'}},Chests.ById.Legendary.icon,'UltimateBundle',false,
+    {cornerColor=gold,titleColor=gold,titleSize=44,pulse=true,shine=true,ribbon='ULTIMATE',ribbonColor=gold,artSize=190,raySize=320})
+   y+=304
    local owned=profile.chests.Legendary or 0
    if owned>0 then
     local ob=T.button(list,'OpenOwned','OPEN YOUR '..owned..' LEGENDARY CHEST'..(owned>1 and 'S' or ''),2,y,SW-4,60,function() self.selection.chest='Legendary';open('Chests','Legendary') end)
@@ -675,20 +682,22 @@ function L.mount(player)
   function tabs.Emeralds(SW)
    local y=4
    section('Emeralds','Open chests, buy skills and unlock classes. You also earn them in every run.',y);y+=62
-   local gw=(SW-3*14)/4
+   -- Two rows of three. Card tiers climb 1-4 (the top two packs both wear gold); the biggest pack
+   -- pulses and shines.
+   local per=3;local gw=(SW-(per-1)*14)/per;local top=#Money.EmeraldPacks
    for i,key in Money.EmeraldPacks do
-    local pack=Money.Products[key];local x=(i-1)*(gw+14)
-    local card=T.panel(list,'Emeralds_'..pack.name,x,y,gw,320,'panel');if i>1 then T.setTier(card,i) end
+    local pack=Money.Products[key];local x=((i-1)%per)*(gw+14);local cy=y+(i-1)//per*334
+    local card=T.panel(list,'Emeralds_'..pack.name,x,cy,gw,320,'panel');if i>1 then T.setTier(card,math.min(4,i)) end
     art(card,'emerald',gw/2,112,L.Store.gemSizes[i],C.emerald,190)
-    local amt=T.label(card,'Amount',tostring(pack.emeralds),10,184,gw-20,40,38,C.emerald);amt.TextXAlignment=Enum.TextXAlignment.Center
+    local amt=T.label(card,'Amount',fmt(pack.emeralds),10,184,gw-20,40,38,C.emerald);amt.TextXAlignment=Enum.TextXAlignment.Center
     local bonus=Money.bonusPercent(key)
-    local sub=T.text(card,'Bonus',bonus>0 and ('+'..bonus..'% MORE') or pack.name,10,224,gw-20,22,18,bonus>0 and C.lime or C.cream);sub.TextXAlignment=Enum.TextXAlignment.Center
-    priceButton(card,'Buy',14,254,gw-28,54,key,false,i==4)
-    if L.Store.gemRibbons[i] then FX.ribbon(card,L.Store.gemRibbons[i],170,i==4 and gold or nil) end
-    if i==4 then FX.shine(card) end
+    local sub=T.text(card,'Bonus',bonus>0 and (pack.name..'  ·  +'..bonus..'% MORE') or pack.name,10,224,gw-20,22,18,bonus>0 and C.lime or C.cream);sub.TextXAlignment=Enum.TextXAlignment.Center
+    priceButton(card,'Buy',14,254,gw-28,54,key,false,i==top)
+    if L.Store.gemRibbons[i] then FX.ribbon(card,L.Store.gemRibbons[i],170,i==top and gold or nil) end
+    if i>=top-1 then FX.shine(card) end
     FX.lift(card)
    end
-   y+=346
+   y+=math.ceil(top/per)*334+12
    section('Codes','Enter a code for free rewards.',y);y+=50
    local row=T.panel(list,'Codes',2,y,SW-4,84,'panel')
    local field=T.panel(row,'Field',16,14,SW-4-264,56,'inset')
