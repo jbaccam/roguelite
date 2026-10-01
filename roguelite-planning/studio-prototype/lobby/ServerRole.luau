@@ -2,7 +2,7 @@
 -- Match: a reserved server (TeleportService:ReserveServer). Lobby: every other live server,
 -- including player-bought VIP servers. Studio: Workspace.StudioServerRole picks 'Lobby' or
 -- 'Match'; anything else is 'Combined' (lobby and maps in one server, the old preview).
--- Until plan C ships the lobby -> match teleports (LIVE_ROLES), live servers stay Combined.
+-- Plan C (MatchService) ships the lobby -> match teleports, so live servers use real roles.
 -- Areas a role doesn't use wait in ServerStorage.InactiveAreas, so clients never stream them.
 -- The active map is the combat attribute RunMap, never cleared on Combined or Match servers.
 -- Only its PlayerSpawn is enabled, because Roblox spawns players at a random enabled SpawnLocation.
@@ -11,8 +11,10 @@ local RunService=game:GetService('RunService')
 local ServerStorage=game:GetService('ServerStorage')
 local combat=RS:WaitForChild('RogueliteCombat')
 local Maps=require(combat:WaitForChild('MapConfig'))
-local LIVE_ROLES=false
+local LIVE_ROLES=true
 local R={}
+-- A match server is ready once its map is applied (setMap); AvatarNormalizer holds spawns until then.
+local mapReady=false
 
 function R.detect(isStudio,studioRole,privateServerId,privateServerOwnerId)
  if isStudio then return (studioRole=='Lobby' or studioRole=='Match') and studioRole or 'Combined' end
@@ -21,6 +23,7 @@ end
 local role=R.detect(RunService:IsStudio(),workspace:GetAttribute('StudioServerRole'),game.PrivateServerId,game.PrivateServerOwnerId)
 if not RunService:IsStudio() and not LIVE_ROLES then role='Combined' end
 function R.get() return role end
+function R.ready() return role~='Match' or mapReady end
 function R.activeMap() local id=combat:GetAttribute('RunMap');return Maps.valid(id) and id or nil end
 
 -- Area folders by name, resolved once before players join: a character can share a folder's name.
@@ -66,6 +69,7 @@ end
 function R.setMap(id)
  if role=='Lobby' or not Maps.valid(id) then return false end
  combat:SetAttribute('RunMap',id);applyMap()
+ mapReady=true
  return true
 end
 

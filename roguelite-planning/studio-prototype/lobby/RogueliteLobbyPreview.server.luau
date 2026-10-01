@@ -1,10 +1,9 @@
--- Studio-only lobby / arena preview: step-on queue pads where the first player (host) picks
--- the map and presses START, a countdown that launches the group straight into wave 1, and a
--- travel remote for testing either area directly. A queued player stays on the pad until LEAVE.
--- Production first-join routing and reserved-match launch are separate integrations.
--- workspace.RogueliteLobby.StudioStartArea ('Arena' or 'Lobby') picks where Play starts.
+-- The lobby: step-on queue pads where the first player (host) picks the map and presses START,
+-- and a countdown that launches the group into wave 1. A queued player stays on the pad until LEAVE.
+-- Lobby servers send the group to its own match server (MatchService); the Combined role (Studio)
+-- walks it into the arena here, and keeps a travel remote for testing either area directly.
+-- workspace.RogueliteLobby.StudioStartArea ('Arena' or 'Lobby') picks where Combined Play starts.
 local RunService=game:GetService('RunService')
-if not RunService:IsStudio() then return end
 local Players=game:GetService('Players')
 local TweenService=game:GetService('TweenService')
 local SSS=game:GetService('ServerScriptService')
@@ -17,6 +16,7 @@ local State=require(script:WaitForChild('QueueState'))
 local Rules=require(RS:WaitForChild('RunSetupRules'))
 local combat=RS:WaitForChild('RogueliteCombat')
 local Shop=require(SSS:WaitForChild('ShopService'))
+local Match=require(SSS:WaitForChild('MatchService'))
 local CAPACITY=4
 local state=State.new(4,CAPACITY)
 local last,stepOff={},{}
@@ -209,8 +209,8 @@ setupRemote.OnServerEvent:Connect(function(player,action,a,b,c,d,e)
  local index=state.membership[player.UserId]
  local function reply(ok,message) setupRemote:FireClient(player,'Result',ok,message) end
  if action=='Start' or action=='Play' then
-  -- Lobby servers send parties to match servers (plan C); Studio can't teleport.
-  if Role.get()=='Lobby' then return reply(false,'Runs start in the published game. Use the combined Studio mode to play here') end
+  -- Lobby servers send parties to match servers (MatchService); Studio can't teleport.
+  if Role.get()=='Lobby' and RunService:IsStudio() then return reply(false,'Runs start in the published game. Use the combined Studio mode to play here') end
   local mapOk,mapWhy=Rules.validMap(player,a,e);if not mapOk then return reply(false,mapWhy) end
   local okL,why=Rules.validLoadout(player,b,c);if not okL then return reply(false,why) end
   -- PLAY away from the pads: take the first empty pad and stand the player on it as host.
@@ -255,6 +255,24 @@ local function launch(index)
   if p and alive(p) and ok then going[p]=true
   elseif p and not ok then setupRemote:FireClient(p,'Result',false,why) end
  end
+ -- Lobby servers: the group gets its own match server. Each member's loadout is checked again
+ -- here and once more against their own save on the match server.
+ if Role.get()=='Lobby' then
+  state:finish(index)
+  local list,loadouts={},{}
+  for p in going do
+   local class,weapon=p:GetAttribute('RunClass'),p:GetAttribute('RunWeapon')
+   if not Rules.validLoadout(p,class,weapon) then class='Brawler';weapon=Rules.Signature.Brawler end
+   loadouts[p.UserId]={class=class,weapon=weapon}
+   table.insert(list,p);travelling[p]=true;setQueue(p)
+  end
+  publish()
+  if #list==0 then return end
+  local ok,why=Match.launch(list,q.map,q.difficulty or 'Normal',loadouts)
+  -- On success they stay "travelling" until they leave, so the pad they stand on can't re-queue them.
+  if not ok then for _,p in list do travelling[p]=nil;setupRemote:FireClient(p,'Result',false,why) end end
+  return
+ end
  -- Nobody already fighting: this group starts a fresh run at wave 1 on the chosen difficulty.
  local fresh=next(going)~=nil and not arenaHasPlayers(going)
  if fresh then
@@ -283,9 +301,11 @@ local function attach(player)
  if player.Character then task.spawn(spawned,player.Character) end
 end
 for _,portal in root.Portals:GetChildren() do buildPad(portal) end
+-- A teleport that failed after it started (TeleportInitFailed): the player is still here.
+Match.onTeleportFailed=function(p,message) travelling[p]=nil;setupRemote:FireClient(p,'Result',false,message) end
 Players.PlayerAdded:Connect(attach)
 for _,p in Players:GetPlayers() do attach(p) end
-Players.PlayerRemoving:Connect(function(p) state:leave(p.UserId,now());last[p]=nil;stepOff[p]=nil;publish() end)
+Players.PlayerRemoving:Connect(function(p) state:leave(p.UserId,now());last[p]=nil;stepOff[p]=nil;travelling[p]=nil;publish() end)
 
 local elapsed=0
 RunService.Heartbeat:Connect(function(dt)

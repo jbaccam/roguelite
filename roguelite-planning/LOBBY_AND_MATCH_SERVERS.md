@@ -239,3 +239,14 @@ VIP bonus applies as it does today.
 - Best wave saves as each wave clears (`ShopService.onWaveCleared` → `ProfileService.recordProgress`), not only on Give Up. Clearing wave 20 records the win and pays the first-win bonus once. Wave emeralds still pay on Give Up until plan B's Leave Run / results screen.
 - Every wave starts at full health (`ShopService.refillHealth`, also run when a wave ends).
 - Still not built: plans B (Leave Run, victory/defeat results, spectate) and C (lobby → match teleports, session lock). Until C ships, Studio and live servers stay Combined, so lobby and arenas share one server.
+
+## Plan C built (2026-10-01, from the code audit)
+
+User decision 2026-10-01: the beta uses match servers. `ServerRole.LIVE_ROLES=true`.
+
+- **Session lock:** `combat/ProfileLock.luau` (§6). 15 fake-store checks pass in `ProfileLockTests`. `ProfileService.handOff` / `reclaim` release the save before a teleport and take it back if the teleport fails.
+- **Trips:** `lobby/MatchService.luau` (§2). Lobby pads reserve a server, write the MemoryStore entry `RogueliteMatchV1[PrivateServerId]`, hand off every save, and teleport the party (all or nobody). The match reads the entry, `setMap`s, admits only listed members (others go back to a lobby), re-checks each loadout against that player's save, and starts wave 1 when everyone is in, or 30 s after the first arrival. `AvatarNormalizer` holds spawns until the map is set.
+- **Leaving:** in a match, the death screen's Give Up is Leave Run: rewards settle and the player returns to a public lobby. Closing the game also keeps rewards, because run emeralds pay as each wave clears (`ProfileService.settleRun`, once per stint).
+- **Run end:** past wave 20 the run continues (Endless, per `PROGRESSION_AND_SESSION_FLOW.md`). The win and the wave-20 emeralds are saved at the wave-20 clear.
+- **Not built yet:** the results screen, a between-waves Leave Run button, spectating, the 10 s everyone-down countdown and doubling revives.
+- **Untested:** none of the teleport path runs in Studio. The published checklist in §7 must pass before beta players are invited.

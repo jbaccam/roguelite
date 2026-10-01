@@ -16,6 +16,8 @@ local Characters=require(SSS:WaitForChild('CharacterService'))
 local Effects=require(SSS:WaitForChild('CombatEffectsService'))
 local Stats=require(combat:WaitForChild('CharacterStats'))
 local Admin=require(combat:WaitForChild('AdminConfig'))
+local Role=require(SSS:WaitForChild('ServerRole'))
+local Match=require(SSS:WaitForChild('MatchService'))
 local studio=RunService:IsStudio()
 -- Admin panel emeralds (developers only): add or set. CharacterService checks the developer and
 -- the numbers. In Studio the profile is in memory; on a live server this is a real, saved change
@@ -206,6 +208,9 @@ local function giveUp(p)
  clearDown(p);revivesUsed[p]=0;phoenixUsed[p]=nil;p:SetAttribute('PhoenixUsed',nil)
  -- Their stint ends here; respawning in the arena starts a new one from the current wave.
  Shop.leave(p)
+ -- On a match server Give Up is Leave Run: back to a lobby while the rest play on. They stay
+ -- held (no respawn) while the teleport runs; if it can't start they play on here instead.
+ if Role.get()=='Match' and Match.toLobby({p}) then return true end
  if livingInRun()==0 then
   Shop.resetRun();for q in revivesUsed do revivesUsed[q]=0 end
   for q in phoenixUsed do phoenixUsed[q]=nil;q:SetAttribute('PhoenixUsed',nil) end
@@ -383,3 +388,5 @@ Players.PlayerRemoving:Connect(function(p)
  down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil
  if livingInRun()==0 then Shop.resume() end
 end)
+-- Match servers: read the party's entry, load the map, admit the party, start wave 1.
+Match.start()

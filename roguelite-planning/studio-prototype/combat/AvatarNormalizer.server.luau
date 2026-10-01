@@ -4,6 +4,13 @@
 -- face and hat/hair/face accessories stay so players remain recognizable.
 local Players=game:GetService('Players')
 Players.CharacterAutoLoads=false
+-- A match server spawns nobody until its map is in place (MatchService -> ServerRole.setMap).
+-- After 30 s players spawn anyway; MatchService sends them back to a lobby if the match is bad.
+local Role=require(game:GetService('ServerScriptService'):WaitForChild('ServerRole')) -- sandboxed; this script is not
+local function waitForMap()
+ local started=os.clock()
+ while not Role.ready() and os.clock()-started<30 do task.wait(.1) end
+end
 
 local KEEP_ACCESSORIES={
  [Enum.AccessoryType.Hat]=true,[Enum.AccessoryType.Hair]=true,
@@ -75,6 +82,7 @@ local function added(player)
    if player.Parent==Players and player.Character==character then spawn(player) end
   end)
  end)
+ waitForMap()
  spawn(player)
 end
 -- Server scripts (revive, give up) respawn through the same normalized path.

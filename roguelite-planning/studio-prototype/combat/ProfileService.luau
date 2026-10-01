@@ -138,6 +138,19 @@ function P.save(player,release)
  return ok
 end
 function P.get(player) return P.profiles[player] end
+-- Teleporting to another server: the last save releases the lock, and this server drops the
+-- profile so nothing here can change or save it again (receipts wait for the next server).
+-- Returns false if the save failed; the player should not be teleported then.
+function P.handOff(player)
+ if not P.save(player,true) then return false end
+ P.profiles[player]=nil;P.loaded[player]=nil;player:SetAttribute('ProfileLoaded',false)
+ return true
+end
+-- The teleport failed: load the save again (it was just released, so this is immediate).
+function P.reclaim(player)
+ if player.Parent==Players and not P.profiles[player] then P.load(player) end
+ return P.profiles[player]~=nil
+end
 -- WeaponCatalog id for a weapon name ('Vampire Blade' -> its id), nil while it isn't in the game.
 function P.weaponIdByName(name)
  for id,w in Weapons.ById do if w.name==name then return id end end

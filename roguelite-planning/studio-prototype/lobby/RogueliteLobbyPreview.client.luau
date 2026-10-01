@@ -1,6 +1,5 @@
--- Studio lobby preview client: keeps combat overlays out of the lobby, holds a queued player on
--- their pad, and draws the Studio-only LOBBY / ARENA travel switch (hotkey F8) shown in both areas.
-if not game:GetService('RunService'):IsStudio() then return end
+-- Lobby client: keeps combat overlays out of the lobby, holds a queued player on their pad, and
+-- (Combined role only) draws the LOBBY / ARENA travel switch (hotkey F8) shown in both areas.
 local Input=game:GetService('UserInputService')
 local player=game:GetService('Players').LocalPlayer
 local gui=player:WaitForChild('PlayerGui')
@@ -34,6 +33,12 @@ end)
 player:GetAttributeChangedSignal('LobbyPreviewActive'):Connect(update)
 update()
 
+-- Match servers have no lobby (ServerRole parks it), so no pads or travel switch.
+local RS=game:GetService('ReplicatedStorage')
+local role=RS:GetAttribute('ServerRole')
+while role==nil do RS:GetAttributeChangedSignal('ServerRole'):Wait();role=RS:GetAttribute('ServerRole') end
+if role=='Match' then return end
+
 -- Queued on a pad (LobbyQueue = portal id): walk and jump freely inside the ring, but its edge
 -- holds like a wall until LEAVE. Runs after physics so the corrected spot is what renders.
 local portals=workspace:WaitForChild('RogueliteLobby'):WaitForChild('Portals')
@@ -61,9 +66,6 @@ end)
 -- Travel switch, top-right (free in the lobby HUD, the arena HUD and the shop); the current
 -- area is lit. The server moves only the caller.
 -- The switch only exists where the lobby and the maps share one server (ServerRole).
-local RS=game:GetService('ReplicatedStorage')
-local role=RS:GetAttribute('ServerRole')
-while role==nil do RS:GetAttributeChangedSignal('ServerRole'):Wait();role=RS:GetAttribute('ServerRole') end
 if role~='Combined' then return end
 -- Developers travel from the ADMIN panel's Travel tab instead (ADMIN_PANEL.md).
 if require(RS:WaitForChild('RogueliteCombat'):WaitForChild('AdminConfig')).isAdmin(player) then return end

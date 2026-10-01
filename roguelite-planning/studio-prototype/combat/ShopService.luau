@@ -194,11 +194,13 @@ function S.resetPlayer(p)
 end
 -- Whole run back to wave 1 (nobody left alive after a give-up).
 -- A new loadout starter: every later run begins with it. A player standing in the lobby sees it
--- on their ring right away; run weapons are never swapped mid-run.
+-- on their ring right away, and so does a match member before wave 1 (MatchService sets it as
+-- they arrive); run weapons are never swapped mid-run.
 function S.setStarter(p,id)
  if not S.states[p] or not Characters.states[p] then return end
  S.startingWeapons[p]={id,'','','','',''}
- if not p:GetAttribute('LobbyPreviewActive') then return end
+ local beforeFirstWave=RS:GetAttribute('ServerRole')=='Match' and S.wave==1 and S.phase=='Shop'
+ if not p:GetAttribute('LobbyPreviewActive') and not beforeFirstWave then return end
  for i=1,6 do local f=slots(p)['Slot'..i];clearWeapon(f);f:SetAttribute('WeaponId',S.startingWeapons[p][i]) end
  slots(p):SetAttribute('EquippedCount',1)
 end
@@ -564,11 +566,13 @@ RunService.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<.2 then return end;elapsed=0
  local now=workspace:GetServerTimeNow()
  -- Membership follows where players are: alive in the arena joins, back in the lobby leaves.
- -- Downed players stay members (they are still in the run).
- for p in S.states do
-  local inLobby=p:GetAttribute('LobbyPreviewActive')==true
-  if S.members[p] then if inLobby then S.leave(p) end
-  elseif not inLobby and alive(p) then S.join(p) end
+ -- Downed players stay members (they are still in the run). Lobby servers have no run.
+ if RS:GetAttribute('ServerRole')~='Lobby' then
+  for p in S.states do
+   local inLobby=p:GetAttribute('LobbyPreviewActive')==true
+   if S.members[p] then if inLobby then S.leave(p) end
+   elseif not inLobby and alive(p) then S.join(p) end
+  end
  end
  if S.phase=='Shop' then beginWave() end
  local holding=S.phase=='Combat' and bossHolding(now)
