@@ -22,7 +22,7 @@ MONETIZATION_AND_REWARDS.md and PROGRESSION_AND_SESSION_FLOW.md where they disag
 - Chests work like Clash Royale: every weapon has a fixed rarity, a chest gives many copies of
   commons and a few of the rarer weapons, and copies upgrade a weapon's starting tier.
 - ~~Rarity only means *how often it drops*, never *how strong it is*.~~ Replaced 2026-09-28:
-  rarer weapons are also a little stronger (Common 100 → Legendary 120 → Godly 135), see
+  rarer weapons are also a little stronger (Common 100 → Legendary 120 → Godly 160, one per run), see
   RARITY_GODLY_ARMOR.md. Pets are the exception: rarer pets are only flashier.
 - A few **Godly** weapons are the long-term chase: very rare, flashy, clearly good, never "game over".
 - The store stops looking bland: colour backdrops per category, 3D weapon models, a real

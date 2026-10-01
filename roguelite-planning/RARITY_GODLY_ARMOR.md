@@ -101,7 +101,7 @@ are the combine upgrades.
 | Rare | blue | 105 | Same weapon, a little better |
 | Epic | purple | 110 | A special mechanic |
 | Legendary | gold | 120 | The coolest weapon in its class, plus one **extra move** (section 8) and a gold aura |
-| Godly | crimson | 135 | No class, super rare, a mechanic nothing else has (section 9) |
+| Godly | crimson | 160 | No class, super rare, a mechanic nothing else has, one per run (section 9) |
 
 \*Damage over the same time, at the same tier. Applied as a damage multiplier on top of each
 weapon's authored numbers.
@@ -224,9 +224,15 @@ Rules:
   owned weapon of the chosen class, **or** any owned Godly. That affects `RunSetupRules`,
   `ArmoryUI`, `RunSetupUI` and `RogueliteCombat.server` (`starter`).
 - **Chest only.** Never in the run shop or daily deals, and never sold directly for Robux.
+  The **only** way to use one in a match is to have pulled it from a chest and bring it in as
+  your starting weapon (user, 2026-10-01).
+- **One Godly per player per run** (user, 2026-10-01). The loadout takes at most one Godly, and
+  the server rejects any run setup, shop buy, drop or reward that would give a second one. This is
+  a hard server check, not just a UI rule.
 - **Can't be combined in a run** (no duplicates can be bought), so it stays at the tier its copies
   got it to. That's the reason to keep pulling copies.
-- **Power 135,** with its own model, VFX and sound. It gets a Godly reveal in the chest opening:
+- **Power 160** (user, 2026-10-01: "very very strong"; was 135), with its own model, VFX and
+  sound. The one-per-run rule is what keeps that fair. It gets a Godly reveal in the chest opening:
   screen flash, crimson rays and a server-wide announcement ("X found a Godly weapon!"), as
   already planned in STORE_AND_CHESTS.md.
 - Real, recognizable weapons only. See the user's feedback below.
@@ -624,7 +630,7 @@ which equals the whole Brawler class buff.
     Robux-only.
   - Robux chest packs stay flagged `random` and hidden where PolicyService restricts paid random
     items.
-  - Power is capped: Godly is 135.
+  - Power is capped: Godly is 160, one per run.
 - **Commits:** small, meaningful commits straight to `main`, pushed to `origin`
   (github.com/jbaccam/partyati) when a chunk is done.
 
