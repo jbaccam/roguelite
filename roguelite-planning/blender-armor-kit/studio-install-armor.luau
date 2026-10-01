@@ -85,10 +85,15 @@ local function addVfx(cfg, out, mounts)
 		end
 		local part, name = carrier(e)
 		assert(part, "no mesh " .. name .. " for vfx " .. tostring(e.name))
+		if part:FindFirstChild(e.name, true) then
+			continue -- already added (batches can be re-run)
+		end
 		local parent = part
 		if e.parent == "attachment" then
 			local a = e.attachment
-			local cf = CFrame.fromMatrix(v3(a.position), v3(a.axis), v3(a.secondary_axis))
+			-- Lights only carry a position; emitters also carry their axes.
+			local cf = a.axis and CFrame.fromMatrix(v3(a.position), v3(a.axis), v3(a.secondary_axis))
+				or CFrame.new(v3(a.position))
 			local att = Instance.new("Attachment")
 			att.Name = e.name
 			att.CFrame = mounts[name]:Inverse() * cf
