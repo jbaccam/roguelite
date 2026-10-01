@@ -673,6 +673,7 @@ function U.new(player,opts)
  end
 
  -- Open / close ------------------------------------------------------------------------------------
+ local pendingBrowse=false
  function self.Open(kind)
   if root then self.Close() end
   if kind and Chests.ById[kind] then selected=kind end
@@ -699,7 +700,8 @@ function U.new(player,opts)
   if opts.onVisible then opts.onVisible(false) end
   table.insert(conns,player.AttributeChanged:Connect(function(name)
    if (name=='ProfileGems' or name=='ProfileChests' or name=='ProfilePity' or name=='ProfileLoaded') and mode=='browse' then
-    task.defer(drawBrowse)
+    -- A purchase changes gems and chests together: one redraw after the last (drawBrowse re-checks mode).
+    if not pendingBrowse then pendingBrowse=true;task.defer(function() pendingBrowse=false;drawBrowse() end) end
     if gemValue and gemValue.Parent then gemValue.Text=fmt(player:GetAttribute('ProfileGems') or 0) end
    end
   end))

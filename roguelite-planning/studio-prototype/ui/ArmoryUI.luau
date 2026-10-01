@@ -54,6 +54,22 @@ local TRAITS = {
 	shots = "Fires a burst of shots.",
 }
 
+-- Player attributes this screen shows: the LobbyUI.profile fields it reads (connected, gems,
+-- classes, weapons, armor, wearing, pets, pet) and the loadout preference. ProfileService.publish
+-- sets about 24 attributes in a row; the others (ProfileDaily, ProfileBestWaves...) change nothing here.
+local REDRAW_ON = {
+	ProfileLoaded = true,
+	ProfileGems = true,
+	ProfileClasses = true,
+	ProfileWeapons = true,
+	ProfileArmor = true,
+	ProfileWearing = true,
+	ProfilePets = true,
+	ProfilePet = true,
+	LoadoutClass = true,
+	LoadoutWeapon = true,
+}
+
 -- Armor is worn as four pieces (ArmorCatalog; cosmetic until armor chests and set bonuses exist).
 -- Pets (PetConfig) come from the Pet Chest (pets only); one follows you (EQUIP / UNEQUIP).
 local ARMOR_PIECES = {
@@ -1719,6 +1735,7 @@ function A.new(player, opts)
 	end
 
 	local profileConn
+	local pendingDraw = false
 	-- tab: 'Weapons' | 'Armor' | 'Pets'. Returns {Root, Close} for the lobby's window stack.
 	function self.Open(tab)
 		if root then
@@ -1752,9 +1769,15 @@ function A.new(player, opts)
 			opts.onVisible(false)
 		end
 		T.hideTouchControls("Armory", true)
+		-- One upgrade changes several of these at once (weapons, gems): redraw once, after the last.
+		-- draw() itself returns if the screen was closed meanwhile.
 		profileConn = player.AttributeChanged:Connect(function(name)
-			if string.sub(name, 1, 7) == "Profile" or name == "LoadoutClass" or name == "LoadoutWeapon" then
-				draw()
+			if REDRAW_ON[name] and not pendingDraw then
+				pendingDraw = true
+				task.defer(function()
+					pendingDraw = false
+					draw()
+				end)
 			end
 		end)
 		-- Draws now, and again whenever the screen changes size (window resize, phone rotation).
