@@ -418,11 +418,8 @@ ABILITY.BabyDragon = function(p, root, tier)
 end
 
 -- Cheetah Cub: a short speed burst after real damage (CharacterService.contact), with a cooldown.
-local previousDamaged = Characters.onDamaged
+-- CharacterService hooks add listeners, so nothing else is chained here.
 Characters.onDamaged = function(player, actual)
-	if previousDamaged then
-		previousDamaged(player, actual)
-	end
 	local s = state[player]
 	local r = run()
 	if not s or s.id ~= "CheetahCub" or not r or r:GetAttribute("Phase") ~= "Combat" or not inRun(player) then
@@ -446,11 +443,7 @@ Characters.onDamaged = function(player, actual)
 	end)
 end
 -- Turtle shell popped by a hit.
-local previousPop = Characters.onPetShieldPop
 Characters.onPetShieldPop = function(player)
-	if previousPop then
-		previousPop(player)
-	end
 	local r = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	fx:FireAllClients(0, "ShieldPop", { target = player.UserId, position = r and r.Position })
 end

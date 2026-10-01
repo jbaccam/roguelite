@@ -212,8 +212,10 @@ function M.spawn(id,cf,practice)
  local root=npc.PrimaryPart;local h=npc:FindFirstChildOfClass('Humanoid')
  if not root or not h then npc:Destroy();return nil end
  h.HipHeight=math.max(0,T.rootHeight-root.Size.Y*.5)
- -- Difficulty and player count scale health; difficulty scales every hit (see hit).
- local hpScale,damageScale=Rules.bossScale(combat:GetAttribute('RunDifficulty'),#Players:GetPlayers())
+ -- Difficulty and the run's player count scale health; difficulty scales every hit (see hit).
+ -- Only run members count (ShopService RunMember): players in the lobby don't toughen the boss.
+ local members=0;for _,p in Players:GetPlayers() do if p:GetAttribute('RunMember') then members+=1 end end
+ local hpScale,damageScale=Rules.bossScale(combat:GetAttribute('RunDifficulty'),math.max(1,members))
  h.MaxHealth=math.ceil(def.health*hpScale);h.Health=h.MaxHealth;h.WalkSpeed=def.chaseSpeed
  npc:SetAttribute('BossDamageScale',damageScale)
  npc:SetAttribute('BossSpawnedAt',workspace:GetServerTimeNow())

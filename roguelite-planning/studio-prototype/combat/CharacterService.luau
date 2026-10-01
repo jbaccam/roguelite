@@ -19,6 +19,19 @@ assert(playerDamaged:IsA('RemoteEvent'),'RogueliteCombat.PlayerDamaged must be a
 workspace.Gravity=Stats.Movement.Gravity
 local Catalog=require(combat:WaitForChild('WeaponCatalog'))
 local Service={states={}}
+-- Hooks. Notification hooks take any number of listeners: `Service.onDamaged=fn` adds one, so a
+-- second script never silently replaces the first, whatever order they load in. Answer hooks
+-- (onPracticeBoss, onPracticeEmeralds) return a result, keep one owner and warn on a takeover.
+local hookListeners={onStatsChanged={},onPetShieldPop={},onThorns={},onDamaged={}}
+local answerHooks={onPracticeBoss=true,onPracticeEmeralds=true}
+setmetatable(Service,{__newindex=function(t,k,v)
+ if hookListeners[k] then table.insert(hookListeners[k],v);return end
+ if answerHooks[k] and rawget(t,k)~=nil and v~=nil then warn('CharacterService.'..k..' was replaced by a second owner') end
+ rawset(t,k,v)
+end})
+local function notify(name,...)
+ for _,fn in hookListeners[name] do local ok,err=pcall(fn,...);if not ok then warn('CharacterService.'..name..' listener failed:',err) end end
+end
 local BUMP_GRACE=.6 -- seconds between body-bump hits on one player
 local function humanoid(player) return player.Character and player.Character:FindFirstChildOfClass('Humanoid') end
 -- Between waves (run phase Shop) a player in the arena is out of play: nothing can damage them and
@@ -79,7 +92,7 @@ function Service.refresh(player)
   applyMoveSpeed(h,s)
   player.Character:SetAttribute('CombatClass',s.class)
  end
- if Service.onStatsChanged then Service.onStatsChanged(player) end
+ notify('onStatsChanged',player)
 end
 function Service.attach(player,folder)
  local picked=player:GetAttribute('RunClass')
@@ -169,7 +182,7 @@ function Service.contact(player,amount,roll,attacker)
  -- A pet shell shield (Turtle) blocks the next hit first, then pops.
  if Service.hasPetShield(player) then
   s.petShield=0;s.petShieldUntil=0;player:SetAttribute('PetShieldUntil',nil)
-  if Service.onPetShieldPop then Service.onPetShieldPop(player) end
+  notify('onPetShieldPop',player)
   return 0
  end
  if s.stats.FirstHitBlock>0 and s.blocks>0 then s.blocks-=1;s.folder:SetAttribute('BlocksRemaining',s.blocks);return 0 end
@@ -185,9 +198,9 @@ function Service.contact(player,amount,roll,attacker)
  -- Dragon Scale 4-piece fire thorns: a chance to set the attacking zombie on fire (normal burn,
  -- applied by CombatEffectsService through onThorns).
  local thorns=s.perks and s.perks.FireThorns
- if actual>0 and thorns and typeof(attacker)=='Instance' and Service.onThorns and math.random()<thorns/100 then Service.onThorns(player,attacker) end
+ if actual>0 and thorns and typeof(attacker)=='Instance' and #hookListeners.onThorns>0 and math.random()<thorns/100 then notify('onThorns',player,attacker) end
  -- Pets react to real damage (the Cheetah Cub's speed burst).
- if actual>0 and Service.onDamaged then Service.onDamaged(player,actual) end
+ if actual>0 then notify('onDamaged',player,actual) end
  return actual
 end
 local remote=combat:FindFirstChild('EditPractice') or Instance.new('RemoteEvent')

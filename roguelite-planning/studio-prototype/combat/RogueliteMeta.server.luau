@@ -53,28 +53,44 @@ end
 
 -- Death flow ----------------------------------------------------------------------
 -- The run's map is the combat attribute RunMap (Pine Valley when unset or unknown).
-local function runMap() local id=combat:GetAttribute('RunMap');return RunSetupRules.MapIndex[id] and id or 'PineValley' end
+-- Required before runMap: a local declared after it would be a nil global inside it.
 local RunSetupRules=require(game.ReplicatedStorage:WaitForChild('RunSetupRules'))
+local function runMap() local id=combat:GetAttribute('RunMap');return RunSetupRules.MapIndex[id] and id or 'PineValley' end
 local down,revivesUsed={},{}
 -- ShopService (required above) creates this folder, so looking it up here cannot deadlock.
 local runState=game.ReplicatedStorage:WaitForChild('RogueliteRunState')
 -- Harder difficulties pay more emeralds; wins and best waves are saved per map and difficulty.
 local function difficulty() return combat:GetAttribute('RunDifficulty') or 'Normal' end
 local function emeraldsFor(wave,map) return RunSetupRules.runEmeralds(RunSetupRules.MapIndex[map or runMap()],difficulty(),wave) end
--- Each cleared wave saves the best wave (and the win at wave 20, with its first-win bonus)
--- right away, so a run counts even if it ends without the death screen's Give Up.
+-- What one stint of a run has earned while playing `wave`: the run's payout so far minus what it
+-- already stood at when the player joined, so joining a run late never pays for missed waves.
+local function stintEmeralds(map,joined,wave) return math.max(0,emeraldsFor(wave,map)-emeraldsFor(joined or 1,map)) end
+-- The run's outcome for one player (a results screen reads it): Victory, Defeat or Left.
+local function setResult(p,outcome,map,wave,emeralds)
+ p:SetAttribute('RunResult',Http:JSONEncode({run=Shop.runId,outcome=outcome,map=map,difficulty=difficulty(),wave=wave,emeralds=emeralds}))
+end
+-- Each cleared wave saves progress right away, so nothing waits on the death screen's Give Up:
+-- the best wave, the win at wave 20 with its first-win bonus, and the run emeralds earned so far
+-- (paid as they're reached; ProfileService.settleRun pays each stint's emeralds once). Leaving,
+-- disconnecting or a server shutting down then never loses a reward. Downed players are paid up
+-- to the wave they fell on when they give up. Past wave 20 the run keeps going (Endless).
 Shop.onWaveCleared=function(wavesPassed)
  local map=runMap();local index=RunSetupRules.MapIndex[map]
  local key=RunSetupRules.runKey(map,difficulty())
- for p in Shop.states do
-  if not p:GetAttribute('LobbyPreviewActive') then
-   Profiles.recordProgress(p,key,wavesPassed,RunSetupRules.firstWinEmeralds(index,difficulty()))
+ for p,m in Shop.members do
+  Profiles.recordProgress(p,key,wavesPassed,RunSetupRules.firstWinEmeralds(index,difficulty()))
+  if down[p] then continue end
+  local earned=stintEmeralds(map,m.joined,Shop.wave)
+  Profiles.settleRun(p,m.stint,key,wavesPassed,earned)
+  if wavesPassed==RunSetupRules.WinWave and not Admin.isTestRun() then
+   setResult(p,'Victory',map,Shop.wave,earned)
+   Shop.publish(p,'VICTORY · '..earned..' emeralds saved · keep going in Endless')
   end
  end
 end
 local function livingInRun()
  local n=0
- for p in Shop.states do local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid');if h and h.Health>0 and not down[p] then n+=1 end end
+ for p in Shop.members do local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid');if h and h.Health>0 and not down[p] then n+=1 end end
  return n
 end
 local function clearDown(p)
@@ -99,16 +115,19 @@ local function phoenix(p,at)
  return true
 end
 local function onDied(p,character)
- if not Shop.states[p] or down[p] then return end
+ -- Only run members go down; a lobby fall just respawns.
+ local m=Shop.members[p]
+ if not m or not Shop.states[p] or down[p] then return end
  local root=character:FindFirstChild('HumanoidRootPart')
  if phoenix(p,root and root.Position or Vector3.zero) then return end
  local s=Shop.states[p]
  -- test: this player went down during a test run. It stays true even if resetRun clears the run flag
- -- before they give up, so a later give-up still pays nothing.
- down[p]={position=root and root.Position or Vector3.zero,wave=Shop.wave,map=runMap(),test=Admin.isTestRun()}
+ -- before they give up, so a later give-up still pays nothing. The stint is kept so a give-up
+ -- after the run was reset still settles the run they fell in.
+ down[p]={position=root and root.Position or Vector3.zero,wave=Shop.wave,map=runMap(),test=Admin.isTestRun(),stint=m.stint,joined=m.joined}
  p:SetAttribute('HoldRespawn',true)
  -- A test run (the admin panel was used) pays nothing, so the death screen shows 0 emeralds.
- p:SetAttribute('DeathInfo',Http:JSONEncode({wave=Shop.wave,level=s.level,emeralds=Admin.isTestRun() and 0 or emeraldsFor(Shop.wave),map=RunSetupRules.Maps[RunSetupRules.MapIndex[runMap()]].name,
+ p:SetAttribute('DeathInfo',Http:JSONEncode({wave=Shop.wave,level=s.level,emeralds=Admin.isTestRun() and 0 or stintEmeralds(runMap(),m.joined,Shop.wave),map=RunSetupRules.Maps[RunSetupRules.MapIndex[runMap()]].name,
   revivesLeft=math.max(0,Config.ReviveLimitPerRun-(revivesUsed[p] or 0))}))
  p:SetAttribute('RunDown',true)
  if livingInRun()==0 then Shop.pause() end
@@ -178,8 +197,15 @@ local function revive(p)
 end
 local function giveUp(p)
  local d=down[p];if not d then return false end
- if not d.test then Profiles.recordRun(p,RunSetupRules.runKey(d.map,difficulty()),math.max(0,d.wave-1),emeraldsFor(d.wave,d.map)) end
+ -- Settles up to the wave they fell on (usually already paid at the last wave clear).
+ if not d.test then
+  local earned=stintEmeralds(d.map,d.joined,d.wave)
+  Profiles.settleRun(p,d.stint,RunSetupRules.runKey(d.map,difficulty()),math.max(0,d.wave-1),earned)
+  setResult(p,'Defeat',d.map,d.wave,earned)
+ end
  clearDown(p);revivesUsed[p]=0;phoenixUsed[p]=nil;p:SetAttribute('PhoenixUsed',nil)
+ -- Their stint ends here; respawning in the arena starts a new one from the current wave.
+ Shop.leave(p)
  if livingInRun()==0 then
   Shop.resetRun();for q in revivesUsed do revivesUsed[q]=0 end
   for q in phoenixUsed do phoenixUsed[q]=nil;q:SetAttribute('PhoenixUsed',nil) end
@@ -243,16 +269,32 @@ local function grantProduct(p,key)
   signatureUpgrades=product.signatureUpgrades,starterPack=product.oneTime=='starterPack',
   weapon=weapon,armorSet=product.armorSet,bundle=godlyName and key})
 end
+-- One receipt at a time per player, so a grant and its save never interleave with another one.
+local receiptBusy={}
+local function processReceipt(p,key,purchaseId)
+ if not Profiles.get(p) then return Enum.ProductPurchaseDecision.NotProcessedYet end
+ if not Profiles.hasReceipt(p,purchaseId) then
+  local ok,granted=pcall(grantProduct,p,key)
+  if not ok or not granted then warn('RogueliteMeta: grant failed',key,granted);return Enum.ProductPurchaseDecision.NotProcessedYet end
+  Profiles.addReceipt(p,purchaseId)
+  reply(p,key,true,Config.Products[key].name..' purchased')
+ end
+ -- Acknowledge only once the grant is saved. A failed save leaves the receipt unprocessed: Roblox
+ -- retries it, the remembered PurchaseId stops a second grant here, and another server (which
+ -- never saw this grant) grants it once.
+ if not Profiles.save(p) then return Enum.ProductPurchaseDecision.NotProcessedYet end
+ return Enum.ProductPurchaseDecision.PurchaseGranted
+end
 Market.ProcessReceipt=function(info)
  local p=Players:GetPlayerByUserId(info.PlayerId)
  local key=Config.byProductId(info.ProductId)
  if not p or not key or not Profiles.get(p) then return Enum.ProductPurchaseDecision.NotProcessedYet end
- if Profiles.hasReceipt(p,info.PurchaseId) then return Enum.ProductPurchaseDecision.PurchaseGranted end
- local ok,granted=pcall(grantProduct,p,key)
- if not ok or not granted then warn('RogueliteMeta: grant failed',key,granted);return Enum.ProductPurchaseDecision.NotProcessedYet end
- Profiles.addReceipt(p,info.PurchaseId);Profiles.save(p)
- reply(p,key,true,Config.Products[key].name..' purchased')
- return Enum.ProductPurchaseDecision.PurchaseGranted
+ while receiptBusy[p] do task.wait() end
+ receiptBusy[p]=true
+ local ok,decision=pcall(processReceipt,p,key,info.PurchaseId)
+ receiptBusy[p]=nil
+ if not ok then warn('RogueliteMeta: receipt failed',decision);return Enum.ProductPurchaseDecision.NotProcessedYet end
+ return decision
 end
 local passGrant={VIP={vip=true},QuickOpen={quickOpen=true}}
 local passField={VIP='vip',QuickOpen='quickOpen'}
@@ -338,6 +380,6 @@ end
 Players.PlayerAdded:Connect(added)
 for _,p in Players:GetPlayers() do added(p);if p.Character then local h=p.Character:FindFirstChildOfClass('Humanoid');if h then h.Died:Connect(function() onDied(p,p.Character) end) end end end
 Players.PlayerRemoving:Connect(function(p)
- down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil
+ down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil
  if livingInRun()==0 then Shop.resume() end
 end)

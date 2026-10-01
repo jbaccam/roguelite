@@ -16,16 +16,44 @@ local Upgrades=require(combat.LevelUpCatalog)
 local StatSchema=require(combat.CharacterStats)
 local Maps=require(combat.MapConfig) -- sandboxed, like this module
 local S={states={},wave=1,phase='Shop'}
+-- Hooks other scripts listen to: `S.onWaveCleared=fn` adds a listener and never replaces one, so
+-- load order between listeners doesn't matter.
+local listeners={onWaveCleared={}}
+setmetatable(S,{__newindex=function(t,k,v) if listeners[k] then table.insert(listeners[k],v) else rawset(t,k,v) end end})
+local function fire(name,...)
+ for _,fn in listeners[name] do local ok,err=pcall(fn,...);if not ok then warn('ShopService.'..name..' listener failed:',err) end end
+end
 local rng=Random.new()
 local serial=0
 local function token() serial+=1;return tostring(serial) end
+-- Run membership: who is in this run, apart from who is connected. A player joins by being alive
+-- in the arena (a pad launch, Studio's arena start, admin travel) and leaves by returning to the
+-- lobby, giving up or disconnecting. Each stay is a stint with its own id, so run emeralds settle
+-- once per stint (ProfileService.settleRun). The RunMember attribute mirrors it for other scripts
+-- (boss health scaling, leaderboards).
+S.members={}
+local stints=0
+local function newRunId() return string.format('%x-%x',os.time(),rng:NextInteger(0,2^30)) end
+S.runId=newRunId()
+function S.isMember(p) return S.members[p]~=nil end
+function S.memberCount() local n=0;for _ in S.members do n+=1 end;return n end
+function S.join(p)
+ if S.members[p] or not S.states[p] then return end
+ stints+=1;S.members[p]={stint=S.runId..'/'..stints,joined=S.wave}
+ p:SetAttribute('RunMember',true)
+end
+function S.leave(p)
+ if not S.members[p] then return end
+ S.members[p]=nil;p:SetAttribute('RunMember',nil)
+end
 local run=RS:FindFirstChild('RogueliteRunState') or Instance.new('Folder')
 run.Name='RogueliteRunState';run.Parent=RS
-run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',1);run:SetAttribute('AdminTestRun',nil)
+run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',1);run:SetAttribute('AdminTestRun',nil);run:SetAttribute('RunId',S.runId)
 combat:SetAttribute('ZombiesEnabled',false)
 local remote=combat:WaitForChild('ShopAction')
--- Players standing in the Studio lobby preview are not part of the arena run.
-local function living(p) local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid');return h and h.Health>0 and not p:GetAttribute('LobbyPreviewActive') end
+local function alive(p) local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid');return h~=nil and h.Health>0 end
+-- Only run members count: players standing in the lobby are not part of the arena run.
+local function living(p) return S.members[p]~=nil and alive(p) end
 local function slots(p) return Characters.states[p].folder end
 local function owned(p)
  local result={}
@@ -176,6 +204,9 @@ function S.setStarter(p,id)
 end
 function S.resetRun()
  S.wave=1;S.phase='Shop';S.paused=nil
+ -- A new run: everyone still here starts a new stint of it at wave 1.
+ S.runId=newRunId();run:SetAttribute('RunId',S.runId)
+ for _,m in S.members do stints+=1;m.stint=S.runId..'/'..stints;m.joined=1 end
  run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',1);run:SetAttribute('WaveEndsAt',nil);run:SetAttribute('Paused',nil)
  -- A new run starts clean: not a test run, no admin pause, freeze or Keep N alive, and the map's
  -- own enemy mix (ADMIN_PANEL.md). Normal play already has these, so nothing fires.
@@ -299,7 +330,7 @@ function S.finishWave()
   S.publish(p,'Next shop · reroll cost reset')
  end
  refillHealth()
- if S.onWaveCleared then S.onWaveCleared(S.wave-1) end
+ fire('onWaveCleared',S.wave-1)
  return true
 end
 -- Admin panel run modes (ADMIN_PANEL.md "Waves"). AdminService checks the developer first.
@@ -517,7 +548,7 @@ require(combat.ZombieDeath).onDeath=function(npc,position)
  Hearts.roll(npc,position)
 end
 -- The last player leaving resets the run, so no wave, phase or test-run flag outlives an empty server.
-Players.PlayerRemoving:Connect(function(p) S.states[p]=nil;S.startingWeapons[p]=nil;if next(S.states)==nil then S.resetRun() end;task.defer(beginWave) end)
+Players.PlayerRemoving:Connect(function(p) S.leave(p);S.states[p]=nil;S.startingWeapons[p]=nil;if next(S.states)==nil then S.resetRun() end;task.defer(beginWave) end)
 -- Any boss (IsBoss: the Hammer boss today, later map bosses; scheduled or admin-spawned) holds
 -- the wave open until it is gone, then a short grace lets players sweep up its crystal shower.
 -- Only the admin panel's End wave / Jump to wave skip this.
@@ -532,6 +563,13 @@ local elapsed=0
 RunService.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<.2 then return end;elapsed=0
  local now=workspace:GetServerTimeNow()
+ -- Membership follows where players are: alive in the arena joins, back in the lobby leaves.
+ -- Downed players stay members (they are still in the run).
+ for p in S.states do
+  local inLobby=p:GetAttribute('LobbyPreviewActive')==true
+  if S.members[p] then if inLobby then S.leave(p) end
+  elseif not inLobby and alive(p) then S.join(p) end
+ end
  if S.phase=='Shop' then beginWave() end
  local holding=S.phase=='Combat' and bossHolding(now)
  if run:GetAttribute('BossHolding')~=holding then run:SetAttribute('BossHolding',holding) end

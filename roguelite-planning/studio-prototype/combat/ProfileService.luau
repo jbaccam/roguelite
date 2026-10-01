@@ -5,6 +5,7 @@
 -- only the earned part (emeralds - bought) can open chests.
 -- Studio uses an in-memory profile unless Workspace attribute EnableStudioDataStores=true,
 -- so Studio play and simulated purchases never persist.
+-- Saves hold a session lock (ProfileLock): only the server that loaded a profile writes it.
 local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')
 local Http=game:GetService('HttpService')
@@ -17,6 +18,7 @@ local Skills=require(combat:WaitForChild('SkillTreeConfig'))
 local Armor=require(combat:WaitForChild('ArmorCatalog'))
 local Pets=require(combat:WaitForChild('PetConfig')) -- sandboxed data
 local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed; this module is unsandboxed
+local Lock=require(game:GetService('ServerScriptService'):WaitForChild('ProfileLock')) -- unsandboxed, like this module
 -- Redeemable codes (server-only so they cannot be read from the client). One use per account.
 local CODES={
  RELEASE={emeralds=300},
@@ -27,6 +29,9 @@ local P={profiles={},loaded={}}
 local STORE_NAME='RogueliteProfile_v1'
 local useStore=not RunService:IsStudio() or workspace:GetAttribute('EnableStudioDataStores')==true
 local store=useStore and DataStores:GetDataStore(STORE_NAME)
+-- This server's lock id. Studio has no JobId.
+local JOB=game.JobId~='' and game.JobId or Http:GenerateGUID(false)
+local function key(player) return 'u_'..player.UserId end
 local SIGNATURE={Brawler='01',Gunner='00',Thrower='12',Juggler='19',Handyman='24',Mage='30'}
 local MAX_RECEIPTS=200
 
@@ -75,12 +80,18 @@ end
 function P.load(player)
  local data
  if store then
-  for attempt=1,3 do
-   local ok,result=pcall(store.GetAsync,store,'u_'..player.UserId)
-   if ok then data=result or fresh();break end
-   warn('ProfileService: load failed',player.UserId,result);task.wait(attempt)
+  -- Waits (up to ProfileLock.WAIT) while another server still holds this save, e.g. its
+  -- leaving save after a quick rejoin, then takes over as if that server crashed.
+  local reason
+  data,reason=Lock.claim(store,key(player),JOB,{fresh=fresh,stillWanted=function() return player.Parent==Players end})
+  if reason=='takeover' then warn('ProfileService: took over another server\'s session lock',player.UserId) end
+  if not data then
+   if reason=='error' then player:SetAttribute('ProfileLoadFailed',true) end -- never save over unknown data
+   return
   end
-  if not data then player:SetAttribute('ProfileLoadFailed',true);return end -- never save over unknown data
+  -- Left while loading: hand the lock straight back and keep nothing, so no later autosave can
+  -- write this copy over the newer save of the server they moved to.
+  if player.Parent~=Players then Lock.write(store,key(player),JOB,data,true);return end
  else data=fresh() end
  local base=fresh();for k,v in base do if data[k]==nil then data[k]=v end end
  -- Chest tiers replaced class chests and the Royal Chest (2026-09-28): convert unopened ones,
@@ -106,10 +117,25 @@ function P.load(player)
  P.profiles[player]=data;P.loaded[player]=true
  P.publish(player)
 end
-function P.save(player)
- local d=P.profiles[player];if not d or not store or not P.loaded[player] then return end
- local ok,err=pcall(store.UpdateAsync,store,'u_'..player.UserId,function() return d end)
- if not ok then warn('ProfileService: save failed',player.UserId,err) end
+-- Saves under this server's lock and returns true once the write is durable (Studio's in-memory
+-- profile counts as saved). release=true clears the lock (leaving). One write per profile at a
+-- time: receipts, autosave and leaving can ask together.
+local saving={}
+function P.save(player,release)
+ local d=P.profiles[player];if not d or not P.loaded[player] then return false end
+ if not store then return true end
+ while saving[player] do task.wait() end
+ if not P.loaded[player] then return false end -- the lock was lost while waiting
+ saving[player]=true
+ local ok,lost,err=Lock.write(store,key(player),JOB,d,release)
+ saving[player]=nil
+ if lost then
+  -- Another server owns this save now. Never write this out-of-date copy again.
+  P.loaded[player]=nil
+  warn('ProfileService: session lock lost, stopped saving',player.UserId)
+  if player.Parent==Players then player:Kick('Your progress was opened on another server. Please rejoin.') end
+ elseif not ok then warn('ProfileService: save failed',player.UserId,err) end
+ return ok
 end
 function P.get(player) return P.profiles[player] end
 -- WeaponCatalog id for a weapon name ('Vampire Blade' -> its id), nil while it isn't in the game.
@@ -303,15 +329,21 @@ function P.resetSkills(player)
  return true,'Skills reset (+'..refund..' emeralds)'
 end
 
--- Run result: emeralds for the waves passed, best wave per map.
--- A test run (the admin panel was used) grants nothing: no emeralds, wins or best waves.
-function P.recordRun(player,map,wavesPassed,emeralds)
- local d=P.profiles[player];if not d or Admin.isTestRun() then return end
- if d.vip then emeralds=math.floor(emeralds*(1+Money.VIPRunBonus)+.5) end
- d.emeralds+=emeralds
+-- Run emeralds, settled once per run (LOBBY_AND_MATCH_SERVERS.md §5). `stint` names one player's
+-- time in one run; the profile remembers what that stint already paid, so wave clears, giving up,
+-- leaving and shutdown can all settle it and only the difference ever pays. `owed` is the stint's
+-- total so far, before the VIP bonus. Returns the emeralds paid now.
+-- A test run (the admin panel was used) grants nothing.
+function P.settleRun(player,stint,map,wavesPassed,owed)
+ local d=P.profiles[player]
+ if not d or Admin.isTestRun() or type(stint)~='string' or type(owed)~='number' then return 0 end
+ if type(d.run)~='table' or d.run.id~=stint then d.run={id=stint,paid=0} end
+ if d.vip then owed=math.floor(owed*(1+Money.VIPRunBonus)+.5) end
+ local pay=math.max(0,math.floor(owed)-d.run.paid)
+ d.run.paid+=pay;d.emeralds+=pay
  if wavesPassed>(d.bestWaves[map] or 0) then d.bestWaves[map]=wavesPassed end
- if wavesPassed>=20 then d.mapWins[map]=true end
  P.publish(player)
+ return pay
 end
 
 -- Live progress as each wave clears (RogueliteMeta): best wave, and the win at wave 20 with its
@@ -385,9 +417,23 @@ function P.redeem(player,code)
  return true,'Code redeemed!'
 end
 
+-- Last save, which also hands back the lock. Leaving and shutdown can both ask; one is enough.
+local releasing={}
+local function release(p)
+ if releasing[p] then return end
+ releasing[p]=true
+ P.save(p,true);P.profiles[p]=nil;P.loaded[p]=nil;releasing[p]=nil
+end
+
 Players.PlayerAdded:Connect(P.load)
 for _,p in Players:GetPlayers() do task.spawn(P.load,p) end
-Players.PlayerRemoving:Connect(function(p) P.save(p);P.profiles[p]=nil;P.loaded[p]=nil end)
-game:BindToClose(function() for p in P.profiles do P.save(p) end end)
+Players.PlayerRemoving:Connect(release)
+-- Shutdown: every player at once, inside Roblox's 30 s window.
+game:BindToClose(function()
+ local pending=0
+ for p in P.profiles do pending+=1;task.spawn(function() release(p);pending-=1 end) end
+ local started=os.clock()
+ while pending>0 and os.clock()-started<25 do task.wait(.1) end
+end)
 task.spawn(function() while true do task.wait(120);for p in P.profiles do P.save(p) end end end)
 return P

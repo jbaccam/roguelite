@@ -11,7 +11,7 @@ local Tags=game:GetService('CollectionService')
 local RS=game:GetService('ReplicatedStorage')
 local SSS=game:GetService('ServerScriptService')
 local combat=RS:WaitForChild('RogueliteCombat')
-local Shop=require(SSS:WaitForChild('ShopService')) -- sets ZombieDeath.onDeath, which is wrapped below
+local Shop=require(SSS:WaitForChild('ShopService')) -- run phase and membership
 local Death=require(combat:WaitForChild('ZombieDeath'))
 local runState=RS:WaitForChild('RogueliteRunState')
 -- Test runs (the admin panel was used) record no kills or best waves. Time played still counts:
@@ -30,7 +30,9 @@ local store=useStore and DataStores:GetDataStore('RogueliteLeaderboardStats_v1')
 local ordered={}
 if useStore then for _,s in STATS do ordered[s.id]=DataStores:GetOrderedDataStore('RogueliteTop'..s.id..'_v1') end end
 
-local data,loaded,written={},{},{}
+-- data: this session's view of the totals (Studio boards read it). pending: kills and seconds
+-- earned since the last save. committed: the record as last saved, which the rankings publish.
+local data,pending,committed,written={},{},{},{}
 local function fresh() return {kills=0,bestWave=0,seconds=0} end
 local function key(p) return 'u_'..p.UserId end
 
@@ -39,29 +41,41 @@ local function load(p)
  if store then
   for attempt=1,3 do
    local ok,result=pcall(store.GetAsync,store,key(p))
-   if ok then d=result or fresh();loaded[p]=true;break end
+   if ok then d=result;break end
    warn('LeaderboardService: load failed',p.UserId,result);task.wait(attempt)
   end
- else loaded[p]=true end
- d=d or fresh() -- a failed load still counts this session but is never saved over the unknown record
+ end
+ -- A failed load still counts this session: saves add on top of whatever is stored.
+ d=type(d)=='table' and d or fresh()
  for k,v in fresh() do if type(d[k])~='number' then d[k]=v end end
- if p.Parent then data[p]=d;written[p]={} end
+ if p.Parent then data[p]=d;pending[p]={kills=0,seconds=0};written[p]={} end
 end
--- Values only grow, so a stale server can never lower a saved record.
+-- Kills and time are added to the stored totals, never overwritten, so two servers holding the
+-- same player (a quick rejoin) both count. The best wave keeps the larger value.
+local saving={}
 local function save(p)
- local d=data[p];if not store or not d or not loaded[p] then return end
- local ok,err=pcall(store.UpdateAsync,store,key(p),function(old)
+ local d,add=data[p],pending[p];if not store or not d then return end
+ while saving[p] do task.wait() end
+ saving[p]=true
+ local kills,seconds=add.kills,math.floor(add.seconds)
+ local ok,result=pcall(store.UpdateAsync,store,key(p),function(old)
   old=type(old)=='table' and old or {}
-  return {kills=math.max(old.kills or 0,d.kills),bestWave=math.max(old.bestWave or 0,d.bestWave),seconds=math.max(old.seconds or 0,math.floor(d.seconds))}
+  return {kills=(tonumber(old.kills) or 0)+kills,bestWave=math.max(tonumber(old.bestWave) or 0,d.bestWave),seconds=(tonumber(old.seconds) or 0)+seconds}
  end)
- if not ok then warn('LeaderboardService: save failed',p.UserId,err) end
+ saving[p]=nil
+ if not ok then warn('LeaderboardService: save failed',p.UserId,result);return end
+ add.kills-=kills;add.seconds-=seconds
+ committed[p]=result
+ -- Show the stored totals plus what is still unsaved.
+ d.kills=result.kills+add.kills;d.seconds=result.seconds+add.seconds;d.bestWave=math.max(d.bestWave,result.bestWave)
 end
+-- Rankings publish saved totals only, and never lower a ranking another server wrote.
 local function publishOrdered(p)
- local d=data[p];if not store or not d or not loaded[p] then return end
+ local c=committed[p];if not store or not c or not written[p] then return end
  for _,s in STATS do
-  local value=math.floor(d[s.field])
+  local value=math.floor(c[s.field] or 0)
   if value>0 and written[p][s.id]~=value then
-   local ok,err=pcall(ordered[s.id].SetAsync,ordered[s.id],key(p),value)
+   local ok,err=pcall(ordered[s.id].UpdateAsync,ordered[s.id],key(p),function(old) return math.max(tonumber(old) or 0,value) end)
    if ok then written[p][s.id]=value else warn('LeaderboardService: ranking write failed',s.id,err) end
   end
  end
@@ -75,18 +89,17 @@ local function credit(npc)
  local p=type(id)=='number' and Players:GetPlayerByUserId(id) or nil
  if not p or not Shop.states[p] or not data[p] then return end
  npc:SetAttribute('KillCredited',true)
- data[p].kills+=1
+ data[p].kills+=1;pending[p].kills+=1
 end
-local previousDeath=Death.onDeath
-Death.onDeath=function(npc,position)
+-- A listener alongside ShopService's drop handler (ZombieDeath keeps both).
+Death.onDeath=function(npc)
  local ok,err=pcall(credit,npc);if not ok then warn('LeaderboardService: kill credit failed',err) end
- if previousDeath then previousDeath(npc,position) end
 end
 
 -- Waves and time ------------------------------------------------------------------------
 local function inRun(p)
  local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid')
- return Shop.states[p]~=nil and h~=nil and h.Health>0 and not p:GetAttribute('RunDown') and not p:GetAttribute('LobbyPreviewActive')
+ return Shop.isMember(p) and h~=nil and h.Health>0 and not p:GetAttribute('RunDown')
 end
 local last=os.clock()
 task.spawn(function()
@@ -95,7 +108,7 @@ task.spawn(function()
   local now=os.clock();local dt=math.min(now-last,5);last=now
   local wave=runState:GetAttribute('Phase')=='Combat' and (runState:GetAttribute('Wave') or 0) or 0
   for p,d in data do
-   d.seconds+=dt
+   d.seconds+=dt;pending[p].seconds+=dt
    if wave>d.bestWave and inRun(p) and not Admin.isTestRun(runState) then d.bestWave=wave end
   end
  end
@@ -200,8 +213,18 @@ end
 
 Players.PlayerAdded:Connect(load)
 for _,p in Players:GetPlayers() do task.spawn(load,p) end
-Players.PlayerRemoving:Connect(function(p) publishOrdered(p);save(p);data[p]=nil;loaded[p]=nil;written[p]=nil end)
-game:BindToClose(function() for p in data do publishOrdered(p);save(p) end end)
+local function release(p)
+ if not data[p] then return end
+ save(p);publishOrdered(p)
+ data[p]=nil;pending[p]=nil;committed[p]=nil;written[p]=nil
+end
+Players.PlayerRemoving:Connect(release)
+game:BindToClose(function()
+ local left=0
+ for p in data do left+=1;task.spawn(function() release(p);left-=1 end) end
+ local started=os.clock()
+ while left>0 and os.clock()-started<25 do task.wait(.1) end
+end)
 task.spawn(function() while true do task.wait(120);for p in data do save(p) end end end)
 task.spawn(function()
  task.wait(2)

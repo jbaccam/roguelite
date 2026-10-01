@@ -1,6 +1,10 @@
 -- Server-only, idempotent death lifecycle. Effects never keep a corpse alive.
 local combat=script.Parent
 local Death={}
+-- onDeath(npc, position) listeners: `Death.onDeath=fn` adds one (ShopService's drops, the
+-- leaderboard's kill credit), so neither can replace the other whatever order they load in.
+local deathListeners={}
+setmetatable(Death,{__newindex=function(t,k,v) if k=='onDeath' then table.insert(deathListeners,v) else rawset(t,k,v) end end})
 -- Practice targets soak hits: no death, rewards, lifesteal or status. Studio test
 -- targets, plus the server-built lobby dummies (LobbyPracticeDummies) everywhere.
 function Death.isPractice(npc)
@@ -15,7 +19,9 @@ function Death.finish(npc)
  local root=npc:FindFirstChild('HumanoidRootPart')
  local position=root and root.Position or npc:GetPivot().Position
  combat.ZombiePopped:FireAllClients(position)
- if Death.onDeath and not npc:GetAttribute('BossPractice') then Death.onDeath(npc,position) end
+ if not npc:GetAttribute('BossPractice') then
+  for _,fn in deathListeners do local ok,err=pcall(fn,npc,position);if not ok then warn('ZombieDeath.onDeath listener failed:',err) end end
+ end
  game:GetService('CollectionService'):RemoveTag(npc,'RogueliteZombie')
  if npc:GetAttribute('IsHammerBoss') or npc:GetAttribute('IsMapBoss') then
   npc:SetAttribute('Attacking',false)
