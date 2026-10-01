@@ -533,7 +533,7 @@ function L.mount(player)
    local y=22
    local sp=Money.Products.StarterPack
    hero('Starter',y,270,4,gold,'STARTER PACK','One time only · the best deal in the game.',
-    {{'emerald',sp.emeralds..'',C.emerald},{Chests.ById.Legendary.icon,'Legendary Chest'},{'quests',sp.rerolls..' Rerolls'}},'chest','StarterPack',profile.starter,
+    {{'emerald',sp.emeralds..'',C.emerald},{Chests.ById.Legendary.icon,'×'..sp.chests.Legendary..' Legendary'},{'quests',sp.rerolls..' Rerolls'}},'chest','StarterPack',profile.starter,
     {cornerColor=gold,titleColor=gold,titleSize=46,pulse=true,shine=true,ribbon='BEST VALUE',ribbonColor=gold,artSize=170})
    y+=296
    local ab=Money.Products.ArsenalBundle

@@ -213,9 +213,24 @@ the Godly bundles (Blood Phoenix, Shadow Dragon, Godly Starter). The models are 
 
 ## Part 4: Shop ideas for later (2026-10-01)
 
-The owner compared our store with another Roblox game's shop. Our prices run higher; he's fine
-with that ("if it scales it scales"). Current extras: Ultimate Chest Bundle (100 Legendary, 7,999
-R$) and the Hoard and Treasury emerald packs.
+The owner compared our store with another Roblox game's shop and called ours too expensive
+("no one is spending 10k robux"). Prices were cut to that game's ladder on 2026-10-01 (table
+below; source of truth is `MonetizationConfig`).
+
+| Product | Before | After |
+|---|---:|---:|
+| Legendary Chest ×1 / ×5 / ×12 | 149 / 599 / 1,299 | 49 / 199 / 399 |
+| Mega Chest Bundle | 2,999 (15 chests) | 999 (30 chests) |
+| Ultimate Chest Bundle (100 chests) | 7,999 | 2,999 |
+| Emerald packs | 99 → 9,999 R$, 1 emerald per R$ | 39 → 3,749 R$, ~10 per R$ (+11% to +35%) |
+| Starter Pack | 49: 150 emeralds + 1 chest | 49: 1,500 emeralds + 2 chests |
+| Arsenal Bundle | 499 | 299 (+1,500 emeralds) |
+| Godly Starter / Shadow Dragon / Blood Phoenix | 999 / 1,499 / 2,499 | 799 / 1,199 / 1,799 |
+| Class unlock | 149 | 49 |
+
+Highest price anywhere is now 3,749 R$ (about $37). Emeralds at ~10 per Robux put a Gold Chest
+(300) near a Legendary Chest's price. Earned income is unchanged, so free players progress at the
+same pace.
 
 **VIP: improve soon, not now (owner).** Today: 499 R$ for +25% emeralds, a daily Gold Chest, open
 ×10 and a VIP tag. The other game's 799 R$ VIP also gives cosmetics people show off. Candidates:
