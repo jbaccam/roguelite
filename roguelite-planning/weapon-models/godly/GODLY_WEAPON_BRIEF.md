@@ -134,3 +134,33 @@ Keep it plain and short:
 - triangles;
 - the path to `Sheet.png` and `Compare_Catalog.png`;
 - anything still imperfect.
+
+## 8. Round 2 verdicts (2026-09-30): go all out
+
+The owner rejected the first passes of the Shadow Daggers, Trident and Storm Bow.
+
+**His words:**
+- On the daggers: "flat and greyish", "doesn't radiate enough aura", "modeling is subpar", "too much flower vibe".
+- On the trident: "doesn't look sharp enough and the edges are too smooth".
+- On the bow: it "looks like shit".
+- On the brief overall: "go all out ... use ALL your tools ... nice curves, good intricacy and detail".
+
+"Clearly beats the catalogue" is no longer the bar. **The bar is the Reaper's Scythe and the owner's reference images.** That overrides section 1's "one bake plus one fix run":
+- Budget is about 150 tool calls.
+- Up to 3 full bake/render iterations.
+- Close-up crops for your own review are allowed (keep them in a `wip/` subfolder or delete them; ship only the section 1 set).
+
+**What makes the scythe work, and what every Godly needs:**
+- **Sharp.** Needle points, hooked barbs, spikes and serrations. Every blade or tine tapers to a real point. Edges are crisp: use bevels of 1–2 small segments on hard edges, not big round fillets. Soft blobby edges read as a toy.
+- **A focal "character" piece.** On the scythe it's the hooded skull with glowing eyes. Give each weapon one sculpted focal piece: a face, a skull, a beast head, a crystal in claws, or a dial.
+- **Contrast.** Rich, saturated darks (near-black with a colour cast, deep navy, deep crimson) against hot glow. Never flat mid-grey, never pastel.
+- **Aura.** Add a compositor Glare (Fog Glow/Bloom) pass to every render, because Roblox Neon blooms in game. Glow sits in long lines (edges, veins, fullers, strings), not only in dots.
+- **Real modelling, not primitive kits.**
+  - Author blade, tine and limb silhouettes as 2D profile polygons. Extrude or solidify them with a ridge so they are diamond or lens-shaped in section, then bevel.
+  - Taper everything.
+  - Let curves flow: shafts swell into collars, plates overlap like scales or armour.
+  - Use bmesh, curves, boolean cut-ins, shrinkwrapped inlays and weighted normals.
+- **Texture.** Painterly gradients per part: dark at the base and lighter toward the edges. Add cavity darkening, an edge highlight on every bevel and AO in every crevice. Give each material 2–4 values with hue shifts (cool shadows, warm lights). No uniform fills.
+- **Self-review honestly.** Render your Preview beside the scythe's `Preview.png` and beside the reference images. Ask whether a kid would call it "sick" and whether it looks as sharp and as finished as the scythe. If not, iterate.
+
+**Reference images, where the owner supplied them, live in `<weapon>/reference/`.** Match their silhouette language, translated into our chunky stylised low-poly style. Don't copy logos or text, and don't make a 1:1 replica of another game's model.
