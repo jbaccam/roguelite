@@ -61,32 +61,17 @@ local function lowestY(model)
 	end
 	return low
 end
--- Studio caps every mesh at 2048 units per axis. The dragon's Obsidian section is 30.05 studs long,
--- 3004.59 units at the 100x import, so the importer shrank all seven dragon sections by
--- 2048 / 3004.59 about the first section's centre (Dragon_Belly) but left the skeleton at full
--- size. Every bone then turned its section about the wrong pivot, which opened gaps at the neck,
--- horns, spikes, claws and wings. Sizes and centres are restored about the same anchor, in the
--- importer RootPart's space; the skeleton is already right. Measured against Dragon.glb (the
--- restore factor is 1.467085 on every axis of every section).
-local IMPORT_RESTORE = { Dragon = { factor = 3004.590 / 2048, anchor = "Dragon_Belly" } }
-local function restoreImportShrink(npc, id, rig)
-	local fix = IMPORT_RESTORE[id]
-	if not fix or npc:GetAttribute("ImportShrinkRestored") then
-		return 0
-	end
-	local anchor = assert(npc:FindFirstChild(fix.anchor, true), "Missing " .. fix.anchor)
-	local centre = rig.CFrame:PointToObjectSpace(anchor.Position)
-	local n = 0
+-- Studio caps every mesh at 2048 units per axis (20.48 studs at the 100x import) and silently
+-- shrinks an import that exceeds it while leaving the skeleton full size. The Studio FBX files
+-- keep every section under that cap (the Dragon's big sections are split into pieces), so a
+-- section over 20.48 studs here means a bad import: fail rather than install a torn model.
+local function assertUnderMeshCap(npc, id)
 	for _, p in npc:GetDescendants() do
 		if p:IsA("MeshPart") then
-			local rel = rig.CFrame:ToObjectSpace(p.CFrame)
-			p.Size *= fix.factor
-			p.CFrame = rig.CFrame * (CFrame.new(centre + (rel.Position - centre) * fix.factor) * rel.Rotation)
-			n += 1
+			local s = p.Size
+			assert(math.max(s.X, s.Y, s.Z) <= 20.48, id .. ": " .. p.Name .. " exceeds the 2048-unit mesh cap; re-export it split")
 		end
 	end
-	npc:SetAttribute("ImportShrinkRestored", fix.factor)
-	return n
 end
 local report = {}
 for _, id in Defs.Order do
@@ -102,10 +87,7 @@ for _, id in Defs.Order do
 		end
 	end
 	local rig = assert(npc:FindFirstChild("RootPart"), "Missing importer RootPart in " .. id)
-	local restored = restoreImportShrink(npc, id, rig)
-	if restored > 0 then
-		table.insert(report, string.format("RESTORED %s %d sections x%.6f", id, restored, IMPORT_RESTORE[id].factor))
-	end
+	assertUnderMeshCap(npc, id)
 	-- The ground frame is root.CFrame * CFrame.new(0, -rootHeight, 0) and sampled points sit
 	-- groundOffset above the armature's z = 0, so the armature origin (the importer RootPart)
 	-- rests groundOffset above the ground: HRP centre = RootPart + rootHeight - groundOffset.
@@ -152,7 +134,8 @@ for _, id in Defs.Order do
 				sections += 1
 				flattenSurface(part)
 				part.RenderFidelity = Enum.RenderFidelity.Precise
-				if part.Name:match("EyeGlow$") or part.Name:match("LavaGlow$") then
+				-- Glow sections may be split into pieces (Dragon_LavaGlow_Front / _Rear).
+				if part.Name:match("_EyeGlow$") or part.Name:match("_EyeGlow_") or part.Name:match("_LavaGlow$") or part.Name:match("_LavaGlow_") then
 					part.Material = Enum.Material.Neon
 					part.TextureID = ""
 					part.Color = def.glowColor or Color3.fromRGB(255, 200, 120)

@@ -1769,10 +1769,113 @@ def boss_game_data(rig, sk, man, sections):
     return out
 
 
+ROBLOX_MAX_PART = 20.48   # studs: Roblox caps a MeshPart at 2048 per axis, and this FBX imports at x100
+STUDIO_PIECE_LIMIT = 19.5  # keep a margin under the cap
+
+
+def studio_piece_key(sec, centroid, bones):
+    """Which Studio piece a face (Body: per face) or an island (others) goes to.
+    Pieces keep every MeshPart under the Roblox size cap at the x100 import scale."""
+    x, y, z = centroid
+    if sec == 'Body':
+        return 'Front' if y < 6.0 else 'Rear'
+    if sec in ('Belly',):
+        return 'Front' if y < 6.0 else 'Rear'
+    if sec == 'LavaGlow':
+        return 'Front' if y < 4.0 else 'Rear'
+    if sec == 'Wings':
+        return 'L' if x > 0 else 'R'
+    if sec == 'Obsidian':
+        if any(b.startswith('Wing_') for b in bones):
+            return 'WingL' if x > 0 else 'WingR'
+        return 'Front' if y < 4.0 else ('Mid' if y < 12.0 else 'Tail')
+    return None
+
+
+def split_for_studio(ob, sec):
+    """Copies of `ob` split into pieces (faces kept whole, split edges duplicated so
+    every vertex keeps its exact rest position, UVs, normals and weights). Returns
+    [(piece_object, piece_name)] or [(copy, None)] if no split is needed."""
+    me = ob.data
+    n = len(me.polygons)
+    names = {g.index: g.name for g in ob.vertex_groups}
+    cen = np.zeros(n * 3)
+    me.polygons.foreach_get('center', cen)
+    cen = cen.reshape(-1, 3)
+    # islands (union-find over shared vertices)
+    parent = list(range(len(me.vertices)))
+
+    def find(a):
+        while parent[a] != a:
+            parent[a] = parent[parent[a]]
+            a = parent[a]
+        return a
+    for p in me.polygons:
+        vs = list(p.vertices)
+        r0 = find(vs[0])
+        for v in vs[1:]:
+            r = find(v)
+            if r != r0:
+                parent[r] = r0
+    face_root = [find(p.vertices[0]) for p in me.polygons]
+    isl_faces = {}
+    for i, r in enumerate(face_root):
+        isl_faces.setdefault(r, []).append(i)
+    keys = [None] * n
+    for r, faces in isl_faces.items():
+        if sec == 'Body':
+            for i in faces:
+                keys[i] = studio_piece_key(sec, cen[i], ())
+            continue
+        c = cen[faces].mean(0)
+        bones = set()
+        for i in faces:
+            for vi in me.polygons[i].vertices:
+                for g in me.vertices[vi].groups:
+                    if g.weight > 0.3:
+                        bones.add(names[g.group])
+        k = studio_piece_key(sec, c, bones)
+        for i in faces:
+            keys[i] = k
+    pieces = sorted({k for k in keys if k is not None})
+    out = []
+    if not pieces:
+        cp = ob.copy()
+        cp.data = ob.data.copy()
+        bpy.context.scene.collection.objects.link(cp)
+        return [(cp, None)]
+    for k in pieces:
+        cp = ob.copy()
+        cp.data = ob.data.copy()
+        bpy.context.scene.collection.objects.link(cp)
+        bm = bmesh.new()
+        bm.from_mesh(cp.data)
+        bm.faces.ensure_lookup_table()
+        kill = [bm.faces[i] for i in range(n) if keys[i] != k]
+        bmesh.ops.delete(bm, geom=kill, context='FACES')
+        loose = [v for v in bm.verts if not v.link_faces]
+        if loose:
+            bmesh.ops.delete(bm, geom=loose, context='VERTS')
+        bm.to_mesh(cp.data)
+        bm.free()
+        cp.data.update()
+        out.append((cp, k))
+    return out
+
+
 def studio_fbx(rig, sections):
-    """exports/game/Dragon_Studio.fbx: rest mesh + deform armature, one mesh object per
-    section named Dragon_<Section> (never a bare section name: Roblox's importer merges a
-    mesh with a same-named bone, e.g. Head), materials Dragon_<Section> on the 1024 maps."""
+    """exports/game/Dragon_Studio.fbx: rest mesh + deform armature.
+
+    Root cause of the broken Studio import (2026-09-30): the FBX imports at x100
+    (1 stud -> 100) and Roblox caps a MeshPart at 2048 per axis. Five sections were
+    longer than 20.48 studs (Obsidian 30.1, Body 28.3, LavaGlow 27.9, Belly 25.3,
+    Wings 21.7), so the importer scaled the whole import by 2048/3005 = 0.6815 to fit
+    the largest part. Meshes and bones then disagreed, so every section rendered
+    wrong (the head is the most visible: 1.75 x 1.96 x 2.52 = 0.6815 x its real size).
+    Fix: sections larger than the cap are exported as pieces, each under 19.5 studs.
+    The pieces are named Dragon_<Section>_<Piece> and keep the Dragon_<Section>
+    material. The geometry, UVs, normals, weights and bones are unchanged, and no mesh
+    name equals a bone name."""
     GAME_DIR.mkdir(parents=True, exist_ok=True)
     fbm = GAME_DIR / f'{NAME}_Studio.fbm'
     fbm.mkdir(exist_ok=True)
@@ -1781,20 +1884,42 @@ def studio_fbx(rig, sections):
         rig.animation_data.nla_tracks.remove(tr)
     apply_pose(rig, {})
     swapped = []
+    temp = []
+    report = {}
+    renamed = []
+    for sec, ob in sections.items():          # free the Dragon_<Section> names for the export copies
+        renamed.append((ob, ob.name))
+        ob.name = ob.name + '__src'
     for sec, ob in sections.items():
         src = TEXDIR / f'{NAME}_{sec}_BaseColor.png'
         img = bpy.data.images.load(str(src))
         img.name = f'{NAME}_{sec}_BaseColor'
         m = ob.data.materials[0]
         m.name = f'{NAME}_{sec}'
-        tex = [n for n in m.node_tree.nodes if n.type == 'TEX_IMAGE'][0]
-        swapped.append((ob, ob.name, tex, tex.image))
+        tex = [nd for nd in m.node_tree.nodes if nd.type == 'TEX_IMAGE'][0]
+        swapped.append((tex, tex.image))
         tex.image = img
-        ob.name = f'{NAME}_{sec}'
         shutil.copy2(src, fbm / src.name)
+        for cp, k in split_for_studio(ob, sec):
+            nm = f'{NAME}_{sec}' if k is None else f'{NAME}_{sec}_{k}'
+            cp.name = nm
+            cp.data.name = nm
+            assert cp.name == nm, (cp.name, nm)
+            cp.parent = rig
+            cp.matrix_parent_inverse = Matrix.Identity(4)
+            cp.matrix_world = Matrix.Identity(4)
+            temp.append(cp)
+            co = np.zeros(len(cp.data.vertices) * 3)
+            cp.data.vertices.foreach_get('co', co)
+            co = co.reshape(-1, 3)
+            dims = (co.max(0) - co.min(0)).round(3).tolist()
+            report[nm] = {'section': sec, 'material': f'{NAME}_{sec}', 'dims': dims,
+                          'triangles': sum(len(p.vertices) - 2 for p in cp.data.polygons),
+                          'vertices': len(cp.data.vertices)}
+            assert max(dims) < STUDIO_PIECE_LIMIT, (nm, dims)
     for o in bpy.context.view_layer.objects:
         o.select_set(False)
-    for o in list(sections.values()) + [rig]:
+    for o in temp + [rig]:
         o.select_set(True)
     bpy.context.view_layer.objects.active = rig
     path = GAME_DIR / f'{NAME}_Studio.fbx'
@@ -1803,9 +1928,18 @@ def studio_fbx(rig, sections):
                              axis_up='Y', add_leaf_bones=False, use_armature_deform_only=True, bake_anim=False,
                              primary_bone_axis='Y', secondary_bone_axis='X', mesh_smooth_type='OFF',
                              use_mesh_modifiers=False, path_mode='COPY', embed_textures=True)
-    for ob, name, tex, old in swapped:
-        ob.name = name
+    for tex, old in swapped:
         tex.image = old
+    for o in temp:
+        me = o.data
+        bpy.data.objects.remove(o)
+        bpy.data.meshes.remove(me)
+    for ob, nm in renamed:
+        ob.name = nm
+    (GAME_DIR / 'StudioMeshes.json').write_text(json.dumps({
+        'note': 'Mesh objects in Dragon_Studio.fbx. Sections larger than the Roblox MeshPart cap (2048 at the x100 '
+                'import scale = 20.48 studs) are split into pieces; every piece keeps its section material.',
+        'max_piece_dimension_studs': STUDIO_PIECE_LIMIT, 'meshes': report}, indent=2), encoding='utf-8')
     return path
 
 

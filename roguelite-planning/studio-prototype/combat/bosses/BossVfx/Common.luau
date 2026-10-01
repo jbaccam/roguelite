@@ -84,12 +84,13 @@ function C.tail(core,seconds,linger)
  K.animate(seconds,function() if not core.Parent then return true end;host.CFrame=core.CFrame end,function() C.retire({host},linger or .9) end,'bossTail',48)
  return host
 end
--- Neon boss sections whose names end with suffix (LavaGlow, EyeGlow): ramped for charge-ups and
--- always returned to the colour they had first.
+-- Neon boss sections named <Boss>_<suffix> or <Boss>_<suffix>_<Piece> (LavaGlow, EyeGlow; the
+-- Dragon's oversize sections are split into pieces): ramped for charge-ups and always
+-- returned to the colour they had first.
 function C.glow(npc,suffix)
  local list={}
  for _,p in npc:GetDescendants() do
-  if p:IsA('BasePart') and p.Name:match(suffix..'$') then
+  if p:IsA('BasePart') and (p.Name:match('_'..suffix..'$') or p.Name:match('_'..suffix..'_')) then
    local base=p:GetAttribute('BossVfxBaseColor');if typeof(base)~='Color3' then base=p.Color;p:SetAttribute('BossVfxBaseColor',base) end
    table.insert(list,{part=p,base=base})
   end

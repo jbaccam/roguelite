@@ -18,7 +18,8 @@ import json
 from pathlib import Path
 
 import bpy
-from mathutils import Vector
+import numpy as np
+from mathutils import Matrix, Vector
 
 HERE = Path(__file__).resolve().parent
 MAN = json.loads((HERE / 'manifest.json').read_text())
@@ -264,19 +265,109 @@ GAME = HERE / 'exports' / 'game'
 anim = json.loads((GAME / 'AnimationData.json').read_text(encoding='utf-8'))
 bgd = json.loads((GAME / 'BossGameData.json').read_text(encoding='utf-8'))
 studio = GAME / 'Dragon_Studio.fbx'
+SMESH = json.loads((GAME / 'StudioMeshes.json').read_text(encoding='utf-8'))['meshes']
+S_SWAP = Matrix(((1, 0, 0, 0), (0, 0, 1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))
+POSES = [('rest', None, 0), ('Idle mid', 'Idle', 36), ('Walk mid', 'Walk', 20),
+         ('FireBreath impact', 'FireBreath', MAN['attacks']['FireBreath']['impact_frame'] - 1),
+         ('TailWhip impact', 'TailWhip', MAN['attacks']['TailWhip']['impact_frame'] - 1),
+         ('FrontStomp impact', 'FrontStomp', MAN['attacks']['FrontStomp']['impact_frame'] - 1),
+         ('Death end', 'Death', round(anim['clips']['Death']['duration'] * 24))]
+
+
+def m12(v):
+    """AnimationData 12 numbers -> Blender matrix_basis (undo cf = S@m@S)."""
+    x, y, z, a, b, c, d, e, f, g, h, i = v
+    M = Matrix(((a, b, c, x), (d, e, f, y), (g, h, i, z), (0, 0, 0, 1)))
+    return S_SWAP @ M @ S_SWAP
+
+
+def eval_world(obs):
+    deps = bpy.context.evaluated_depsgraph_get()
+    out = {}
+    for o in obs:
+        e = o.evaluated_get(deps)
+        me = e.to_mesh()
+        co = np.array([v.co[:] for v in me.vertices])
+        M = np.array(o.matrix_world)
+        out[o.name] = co @ M[:3, :3].T + M[:3, 3]
+        e.to_mesh_clear()
+    return out
+
+
+# ---- source: the saved blend, rest + the same action frames
+bpy.ops.wm.open_mainfile(filepath=str(HERE / 'Dragon.blend'))
+src_rig = bpy.data.objects['Dragon_Rig']
+src_obs = [o for o in bpy.data.objects if o.type == 'MESH' and o.name.startswith('Dragon_') and o.name != 'RigBonesViz']
+deform = {b.name for b in src_rig.data.bones if b.use_deform}
+src_issues = {}
+for o in src_obs:
+    rel = src_rig.matrix_world.inverted() @ o.matrix_world
+    groups = {g.index: g.name for g in o.vertex_groups}
+    nondeform_groups = sorted(n for n in groups.values() if n not in deform)
+    over4 = bad_norm = nd_verts = 0
+    for v in o.data.vertices:
+        ws = [(groups[g.group], g.weight) for g in v.groups if g.weight > 1e-6]
+        if any(n not in deform for n, _ in ws):
+            nd_verts += 1
+        if len(ws) > 4:
+            over4 += 1
+        if abs(sum(w for _, w in ws) - 1) > 2e-3:
+            bad_norm += 1
+    src_issues[o.name] = {'object_matrix_dev': round(max(abs(rel[r][c] - (1 if r == c else 0)) for r in range(4) for c in range(4)), 6),
+                          'parent_inverse_dev': round(max(abs(o.matrix_parent_inverse[r][c] - (1 if r == c else 0)) for r in range(4) for c in range(4)), 6),
+                          'nondeform_groups': nondeform_groups, 'verts_on_nondeform': nd_verts, 'over4': over4, 'not_normalised': bad_norm}
+rig_dev = max(abs(src_rig.matrix_world[r][c] - (1 if r == c else 0)) for r in range(4) for c in range(4))
+check('source .blend: armature and every mesh object have identity transforms, no parent-inverse offset',
+      rig_dev < 1e-6 and all(s['object_matrix_dev'] < 1e-6 and s['parent_inverse_dev'] < 1e-6 for s in src_issues.values()),
+      armature_dev=rig_dev, meshes={k: [v['object_matrix_dev'], v['parent_inverse_dev']] for k, v in src_issues.items()})
+check('source .blend: weights only on exported deform bones, <= 4 influences, normalised',
+      all(not s['nondeform_groups'] and s['verts_on_nondeform'] == 0 and s['over4'] == 0 and s['not_normalised'] == 0
+          for s in src_issues.values()), details=src_issues)
+src_rest_local = {b.name: b.matrix_local.copy() for b in src_rig.data.bones if b.use_deform}
+src_pose = {}
+for label, clip, idx in POSES:
+    if clip is None:
+        src_rig.animation_data.action = None
+        for pb in src_rig.pose.bones:
+            pb.matrix_basis = Matrix.Identity(4)
+        bpy.context.scene.frame_set(1)
+    else:
+        src_rig.animation_data.action = bpy.data.actions[clip]
+        bpy.context.scene.frame_set(idx + 1)
+    bpy.context.view_layer.update()
+    src_pose[label] = eval_world(src_obs)
+src_rig.animation_data.action = None
+
+# ---- the Studio FBX, fresh
 reset()
 bpy.ops.import_scene.fbx(filepath=str(studio), use_custom_normals=True, automatic_bone_orientation=False)
 report['files']['studio_fbx'] = {'path': 'exports/game/Dragon_Studio.fbx', 'bytes': studio.stat().st_size, 'sha256': sha(studio)}
 meshes = mesh_objs()
 arm = arm_obj()
 secs = sorted(o.name for o in meshes)
-check('studio fbx: one mesh per section, named Dragon_<Section>', secs == sorted(f'Dragon_{s}' for s in MAN['sections']), found=secs)
+check('studio fbx: mesh objects as listed in StudioMeshes.json (Dragon_<Section>[_<Piece>])', secs == sorted(SMESH), found=secs)
 _bn = {b.name for b in arm.data.bones} if arm else set()
 check('studio fbx: no mesh object name equals a bone name (Roblox merges them)', not (set(secs) & _bn), clashes=sorted(set(secs) & _bn))
+dims = {}
+for o in meshes:
+    co = np.array([v.co[:] for v in o.data.vertices])
+    M = np.array(arm.matrix_world.inverted() @ o.matrix_world)
+    co = co @ M[:3, :3].T + M[:3, 3]
+    dims[o.name] = [round(float(x), 3) for x in (co.max(0) - co.min(0))]
+check('studio fbx: every MeshPart under the Roblox size cap (2048 at the x100 import = 20.48 studs per axis)',
+      all(max(d) < 20.48 for d in dims.values()), dims=dims)
 check('studio fbx: every mesh < 20k triangles', all(tris(o) < 20000 for o in meshes), triangles={o.name: tris(o) for o in meshes})
+rel_dev = {o.name: round(max(abs((arm.matrix_world.inverted() @ o.matrix_world)[r][c] - (1 if r == c else 0))
+                             for r in range(4) for c in range(4)), 6) for o in meshes}
+check('studio fbx: every mesh object is identity relative to the armature', all(v < 1e-4 for v in rel_dev.values()), deviation=rel_dev)
 names = {b.name for b in arm.data.bones} if arm else set()
 check('studio fbx: bone names match AnimationData.json', names == set(anim['bones']), count=len(names),
       missing=sorted(set(anim['bones']) - names)[:8], extra=sorted(names - set(anim['bones']))[:8])
+par_bad = [b.name for b in arm.data.bones if (b.parent.name if b.parent else None) != anim['bones'].get(b.name, {}).get('parent', '?')]
+check('studio fbx: bone parents match AnimationData.json', not par_bad, mismatched=par_bad[:10])
+rest_dev = max(max(abs(a - b) for ra, rb in zip(arm.data.bones[n].matrix_local, src_rest_local[n]) for a, b in zip(ra, rb))
+               for n in names)
+check('studio fbx: bone rests equal the source rig (bind pose = rest; FBX float precision)', rest_dev < 1e-3, max_matrix_diff=round(rest_dev, 7))
 mats = {}
 for o in meshes:
     m = o.material_slots[0].material if o.material_slots else None
@@ -285,11 +376,160 @@ for o in meshes:
         img = next((n.image for n in m.node_tree.nodes if n.type == 'TEX_IMAGE' and n.image), None)
     mats[o.name] = (m.name if m else None, img.size[0] if img else 0, bool(img and img.has_data))
 check('studio fbx: materials Dragon_<Section> with 1024 delivery textures loading',
-      all(v[0] == k and v[1] == 1024 and v[2] for k, v in mats.items()), materials=mats)
+      all(v[0] == SMESH[k]['material'] and v[1] == 1024 and v[2] for k, v in mats.items()), materials=mats)
 check('studio fbx: no animation, no control bones', not bpy.data.actions and not any(n.startswith(('IK_', 'Pole_')) for n in names),
       actions=[a.name for a in bpy.data.actions])
 fbm = sorted(p.name for p in (GAME / 'Dragon_Studio.fbm').glob('*.png'))
 check('studio fbx: delivery PNGs copied into Dragon_Studio.fbm', len(fbm) == len(MAN['sections']), files=fbm)
+
+# vertex correspondence piece -> source section, by rest position
+from mathutils import kdtree
+fbx_rest = eval_world(meshes)
+maps = {}
+for o in meshes:
+    sec_obj = f"Dragon_{SMESH[o.name]['section']}"
+    S = src_pose['rest'][sec_obj]
+    kd = kdtree.KDTree(len(S))
+    for i, p in enumerate(S):
+        kd.insert(p, i)
+    kd.balance()
+    idx, dist = [], 0.0
+    for p in fbx_rest[o.name]:
+        co, j, d = kd.find(p)
+        idx.append(j)
+        dist = max(dist, d)
+    maps[o.name] = (sec_obj, np.array(idx), dist)
+rest_match = {k: round(v[2], 6) for k, v in maps.items()}
+check('studio fbx: rest vertices equal the source evaluated rest mesh (< 0.01 stud)', max(rest_match.values()) < 0.01,
+      max_deviation=rest_match)
+head = fbx_rest['Dragon_Head']
+report['head_bounds_armature_space'] = {'min': [round(float(x), 3) for x in head.min(0)], 'max': [round(float(x), 3) for x in head.max(0)]}
+neck_tip = np.array(src_rest_local['Neck_3'].to_translation()) + (np.array(src_rest_local['Head'].to_translation()) - np.array(src_rest_local['Neck_3'].to_translation()))
+check('studio fbx: Dragon_Head sits on the neck (its bounds contain the Neck_3 -> Head joint)',
+      all(head.min(0)[k] - 0.5 <= neck_tip[k] <= head.max(0)[k] + 0.5 for k in range(3)),
+      head_min=report['head_bounds_armature_space']['min'], head_max=report['head_bounds_armature_space']['max'],
+      head_joint=[round(float(x), 3) for x in neck_tip])
+
+
+def pose_imported(clip, idx):
+    for pb in arm.pose.bones:
+        pb.matrix_basis = Matrix.Identity(4)
+    if clip is not None:
+        tr = anim['clips'][clip]['frames'][idx]['transforms']
+        for pb in arm.pose.bones:
+            pb.matrix_basis = m12(tr[pb.name])
+    bpy.context.view_layer.update()
+
+
+def compare(tag):
+    table = {}
+    for label, clip, idx in POSES:
+        pose_imported(clip, idx)
+        got = eval_world(meshes)
+        row = {}
+        for o in meshes:
+            sec_obj, idxs, _ = maps[o.name]
+            row[o.name] = round(float(np.abs(got[o.name] - src_pose[label][sec_obj][idxs]).max()), 5)
+        table[label] = row
+    return table
+
+
+dev_table = compare('as exported')
+worst = max(max(r.values()) for r in dev_table.values())
+check('studio fbx posed with AnimationData == source .blend posed with the actions (< 0.02 stud, every vertex)',
+      worst < 0.02, worst=worst, table=dev_table)
+# emulate Roblox: keep the 4 strongest influences per vertex and renormalise
+changed = 0
+for o in meshes:
+    gname = {g.index: g for g in o.vertex_groups}
+    for v in o.data.vertices:
+        ws = sorted([(g.weight, g.group) for g in v.groups if g.weight > 0], reverse=True)
+        keep = ws[:4]
+        tot = sum(w for w, _ in keep) or 1.0
+        for w, gi in ws[4:]:
+            gname[gi].remove([v.index])
+            changed += 1
+        for w, gi in keep:
+            if abs(w / tot - w) > 1e-7:
+                gname[gi].add([v.index], w / tot, 'REPLACE')
+                changed += 1
+dev_table4 = compare('4 influences')
+worst4 = max(max(r.values()) for r in dev_table4.values())
+check('same comparison after Roblox 4-influence truncation + renormalisation (< 0.02 stud)', worst4 < 0.02,
+      worst=worst4, weights_changed=changed)
+report['studio_pose_deviation'] = {'as_exported': dev_table, 'roblox_4_influences': dev_table4}
+print('DEVIATION TABLE (max |fbx - source| per mesh, studs)')
+print('pose'.ljust(20) + ' '.join(k.replace('Dragon_', '')[:14].rjust(14) for k in sorted(dims)))
+for label, row in dev_table.items():
+    print(label.ljust(20) + ' '.join(f'{row[k]:14.5f}' for k in sorted(dims)))
+
+# ---- Workbench sheet of the re-imported FBX in those poses (front 3/4)
+sc = bpy.context.scene
+cam_d = bpy.data.cameras.new('CheckCam')
+cam_d.lens = 35
+cam = bpy.data.objects.new('CheckCam', cam_d)
+sc.collection.objects.link(cam)
+sc.camera = cam
+sc.render.engine = 'BLENDER_WORKBENCH'
+sh = sc.display.shading
+sh.light = 'STUDIO'
+sh.color_type = 'TEXTURE'
+sh.show_shadows = False
+sc.render.resolution_x, sc.render.resolution_y, sc.render.resolution_percentage = 520, 390, 100
+sc.render.image_settings.file_format = 'PNG'
+world = bpy.data.worlds.new('W')
+world.color = (0.2, 0.2, 0.23)
+sc.world = world
+c = Vector((0.0, 6.0, 6.0))
+d = Vector((0.8, -0.85, 0.34)).normalized()
+cam.location = c + d * 52
+cam.rotation_euler = (c - cam.location).to_track_quat('-Z', 'Y').to_euler()
+tmp = HERE / 'previews' / '_studio_tiles'
+tmp.mkdir(exist_ok=True)
+tiles = []
+for label, clip, idx in POSES:
+    pose_imported(clip, idx)
+    p = tmp / f'{len(tiles):02d}.png'
+    sc.render.filepath = str(p)
+    bpy.ops.render.render(write_still=True)
+    tiles.append((label, p))
+
+
+def _load(p):
+    img = bpy.data.images.load(str(p))
+    a = np.zeros(img.size[0] * img.size[1] * 4, np.float32)
+    img.pixels.foreach_get(a)
+    a = a.reshape(img.size[1], img.size[0], 4)[::-1, :, :3].copy()
+    bpy.data.images.remove(img)
+    return a
+
+
+def _save(arr, path):
+    h, w = arr.shape[:2]
+    img = bpy.data.images.new('sheet', w, h, alpha=False)
+    rgba = np.concatenate([np.clip(arr[::-1], 0, 1), np.ones((h, w, 1))], 2)
+    img.pixels.foreach_set(np.ascontiguousarray(rgba, np.float32).ravel())
+    img.filepath_raw = str(path)
+    img.file_format = 'PNG'
+    img.save()
+    bpy.data.images.remove(img)
+
+
+ims = [_load(p) for _, p in tiles]
+th, tw = ims[0].shape[:2]
+cols, gap = 4, 6
+rows = (len(ims) + cols - 1) // cols
+sheet = np.full((rows * th + (rows + 1) * gap, cols * tw + (cols + 1) * gap, 3), 0.06)
+for i, im in enumerate(ims):
+    r, cc = divmod(i, cols)
+    sheet[gap + r * (th + gap):gap + r * (th + gap) + th, gap + cc * (tw + gap):gap + cc * (tw + gap) + tw] = im
+_save(sheet, HERE / 'previews' / 'StudioFBX_PoseCheck.png')
+_save(ims[0], HERE / 'previews' / 'StudioFBX_RestCheck.png')
+report['studio_pose_sheet'] = {'file': 'previews/StudioFBX_PoseCheck.png', 'tiles': [t[0] for t in tiles], 'cols': cols,
+                               'tile': [tw, th]}
+for _, p in tiles:
+    p.unlink()
+tmp.rmdir()
 need = ['Idle', 'Walk', 'Hit', 'Death', 'FireBreath', 'TailWhip', 'FrontStomp']
 check('AnimationData: id, fps and every required clip', anim['id'] == 'dragon' and anim['fps'] == 24 and all(c in anim['clips'] for c in need),
       clips=list(anim['clips']))

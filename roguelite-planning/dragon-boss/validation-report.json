@@ -37,8 +37,8 @@
     },
     "studio_fbx": {
       "path": "exports/game/Dragon_Studio.fbx",
-      "bytes": 7701980,
-      "sha256": "5FF7234683163DA48B3EFDCEB822D2A0A998AAAB78F356F510083B09A075D5EA"
+      "bytes": 8414732,
+      "sha256": "2CF64A053468F2A195695986B999804061D210D499C3B049C14306AEB2C1127B"
     }
   },
   "checks": [
@@ -68,10 +68,10 @@
       "name": "fbx: every mesh < 20k triangles",
       "ok": true,
       "triangles": {
-        "Dragon_Head": 8012,
-        "Dragon_Belly": 6988,
-        "Dragon_EyeGlow": 40,
         "Dragon_Body": 18370,
+        "Dragon_Head": 8012,
+        "Dragon_EyeGlow": 40,
+        "Dragon_Belly": 6988,
         "Dragon_LavaGlow": 936,
         "Dragon_Obsidian": 5272,
         "Dragon_Wings": 7636
@@ -99,15 +99,15 @@
       "name": "fbx: every vertex weighted, <=4 influences, normalised",
       "ok": true,
       "stats": {
-        "Dragon_Head": {
-          "vertices": 4094,
+        "Dragon_Body": {
+          "vertices": 9235,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
           "worst_sum_error": 0.0
         },
-        "Dragon_Belly": {
-          "vertices": 3548,
+        "Dragon_Head": {
+          "vertices": 4094,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
@@ -120,8 +120,8 @@
           "not_normalised": 0,
           "worst_sum_error": 0.0
         },
-        "Dragon_Body": {
-          "vertices": 9235,
+        "Dragon_Belly": {
+          "vertices": 3548,
           "unweighted": 0,
           "over4": 0,
           "not_normalised": 0,
@@ -154,10 +154,10 @@
       "name": "fbx: UVs present",
       "ok": true,
       "uv_layers": {
-        "Dragon_Head": 1,
-        "Dragon_Belly": 1,
-        "Dragon_EyeGlow": 1,
         "Dragon_Body": 1,
+        "Dragon_Head": 1,
+        "Dragon_EyeGlow": 1,
+        "Dragon_Belly": 1,
         "Dragon_LavaGlow": 1,
         "Dragon_Obsidian": 1,
         "Dragon_Wings": 1
@@ -167,10 +167,10 @@
       "name": "fbx: embedded textures load with pixel data",
       "ok": true,
       "textures": {
-        "Dragon_Head": 2048,
-        "Dragon_Belly": 2048,
-        "Dragon_EyeGlow": 2048,
         "Dragon_Body": 2048,
+        "Dragon_Head": 2048,
+        "Dragon_EyeGlow": 2048,
+        "Dragon_Belly": 2048,
         "Dragon_LavaGlow": 2048,
         "Dragon_Obsidian": 2048,
         "Dragon_Wings": 2048
@@ -180,10 +180,10 @@
       "name": "fbx: faceted normals preserved (split corner normals)",
       "ok": true,
       "split_vertex_fraction": {
-        "Dragon_Head": 1.0,
-        "Dragon_Belly": 0.998,
-        "Dragon_EyeGlow": 1.0,
         "Dragon_Body": 0.992,
+        "Dragon_Head": 1.0,
+        "Dragon_EyeGlow": 1.0,
+        "Dragon_Belly": 0.998,
         "Dragon_LavaGlow": 1.0,
         "Dragon_Obsidian": 1.0,
         "Dragon_Wings": 0.911
@@ -504,16 +504,121 @@
       }
     },
     {
-      "name": "studio fbx: one mesh per section, named Dragon_<Section>",
+      "name": "source .blend: armature and every mesh object have identity transforms, no parent-inverse offset",
+      "ok": true,
+      "armature_dev": 0.0,
+      "meshes": {
+        "Dragon_Belly": [
+          0.0,
+          0.0
+        ],
+        "Dragon_Body": [
+          0.0,
+          0.0
+        ],
+        "Dragon_EyeGlow": [
+          0.0,
+          0.0
+        ],
+        "Dragon_Head": [
+          0.0,
+          0.0
+        ],
+        "Dragon_LavaGlow": [
+          0.0,
+          0.0
+        ],
+        "Dragon_Obsidian": [
+          0.0,
+          0.0
+        ],
+        "Dragon_Wings": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "source .blend: weights only on exported deform bones, <= 4 influences, normalised",
+      "ok": true,
+      "details": {
+        "Dragon_Belly": {
+          "object_matrix_dev": 0.0,
+          "parent_inverse_dev": 0.0,
+          "nondeform_groups": [],
+          "verts_on_nondeform": 0,
+          "over4": 0,
+          "not_normalised": 0
+        },
+        "Dragon_Body": {
+          "object_matrix_dev": 0.0,
+          "parent_inverse_dev": 0.0,
+          "nondeform_groups": [],
+          "verts_on_nondeform": 0,
+          "over4": 0,
+          "not_normalised": 0
+        },
+        "Dragon_EyeGlow": {
+          "object_matrix_dev": 0.0,
+          "parent_inverse_dev": 0.0,
+          "nondeform_groups": [],
+          "verts_on_nondeform": 0,
+          "over4": 0,
+          "not_normalised": 0
+        },
+        "Dragon_Head": {
+          "object_matrix_dev": 0.0,
+          "parent_inverse_dev": 0.0,
+          "nondeform_groups": [],
+          "verts_on_nondeform": 0,
+          "over4": 0,
+          "not_normalised": 0
+        },
+        "Dragon_LavaGlow": {
+          "object_matrix_dev": 0.0,
+          "parent_inverse_dev": 0.0,
+          "nondeform_groups": [],
+          "verts_on_nondeform": 0,
+          "over4": 0,
+          "not_normalised": 0
+        },
+        "Dragon_Obsidian": {
+          "object_matrix_dev": 0.0,
+          "parent_inverse_dev": 0.0,
+          "nondeform_groups": [],
+          "verts_on_nondeform": 0,
+          "over4": 0,
+          "not_normalised": 0
+        },
+        "Dragon_Wings": {
+          "object_matrix_dev": 0.0,
+          "parent_inverse_dev": 0.0,
+          "nondeform_groups": [],
+          "verts_on_nondeform": 0,
+          "over4": 0,
+          "not_normalised": 0
+        }
+      }
+    },
+    {
+      "name": "studio fbx: mesh objects as listed in StudioMeshes.json (Dragon_<Section>[_<Piece>])",
       "ok": true,
       "found": [
-        "Dragon_Belly",
-        "Dragon_Body",
+        "Dragon_Belly_Front",
+        "Dragon_Belly_Rear",
+        "Dragon_Body_Front",
+        "Dragon_Body_Rear",
         "Dragon_EyeGlow",
         "Dragon_Head",
-        "Dragon_LavaGlow",
-        "Dragon_Obsidian",
-        "Dragon_Wings"
+        "Dragon_LavaGlow_Front",
+        "Dragon_LavaGlow_Rear",
+        "Dragon_Obsidian_Front",
+        "Dragon_Obsidian_Mid",
+        "Dragon_Obsidian_Tail",
+        "Dragon_Obsidian_WingL",
+        "Dragon_Obsidian_WingR",
+        "Dragon_Wings_L",
+        "Dragon_Wings_R"
       ]
     },
     {
@@ -522,16 +627,126 @@
       "clashes": []
     },
     {
+      "name": "studio fbx: every MeshPart under the Roblox size cap (2048 at the x100 import = 20.48 studs per axis)",
+      "ok": true,
+      "dims": {
+        "Dragon_Body_Front": [
+          14.934,
+          13.81,
+          11.118
+        ],
+        "Dragon_Body_Rear": [
+          13.96,
+          15.34,
+          8.537
+        ],
+        "Dragon_Belly_Rear": [
+          3.91,
+          14.083,
+          3.718
+        ],
+        "Dragon_EyeGlow": [
+          1.538,
+          0.517,
+          0.305
+        ],
+        "Dragon_LavaGlow_Rear": [
+          2.353,
+          15.242,
+          6.953
+        ],
+        "Dragon_Obsidian_Tail": [
+          1.392,
+          11.511,
+          6.312
+        ],
+        "Dragon_Belly_Front": [
+          7.14,
+          12.263,
+          6.799
+        ],
+        "Dragon_Head": [
+          2.571,
+          3.694,
+          2.871
+        ],
+        "Dragon_LavaGlow_Front": [
+          3.43,
+          12.648,
+          2.708
+        ],
+        "Dragon_Obsidian_Front": [
+          14.64,
+          10.963,
+          12.896
+        ],
+        "Dragon_Obsidian_Mid": [
+          15.084,
+          8.836,
+          10.486
+        ],
+        "Dragon_Obsidian_WingL": [
+          6.804,
+          4.66,
+          11.183
+        ],
+        "Dragon_Obsidian_WingR": [
+          6.801,
+          4.675,
+          11.183
+        ],
+        "Dragon_Wings_L": [
+          8.902,
+          7.397,
+          10.013
+        ],
+        "Dragon_Wings_R": [
+          8.9,
+          7.397,
+          10.012
+        ]
+      }
+    },
+    {
       "name": "studio fbx: every mesh < 20k triangles",
       "ok": true,
       "triangles": {
-        "Dragon_Body": 18370,
-        "Dragon_Belly": 6988,
-        "Dragon_Head": 8012,
+        "Dragon_Body_Front": 14791,
+        "Dragon_Body_Rear": 3579,
+        "Dragon_Belly_Rear": 4766,
         "Dragon_EyeGlow": 40,
-        "Dragon_LavaGlow": 936,
-        "Dragon_Obsidian": 5272,
-        "Dragon_Wings": 7636
+        "Dragon_LavaGlow_Rear": 576,
+        "Dragon_Obsidian_Tail": 788,
+        "Dragon_Belly_Front": 2222,
+        "Dragon_Head": 8012,
+        "Dragon_LavaGlow_Front": 360,
+        "Dragon_Obsidian_Front": 2396,
+        "Dragon_Obsidian_Mid": 1872,
+        "Dragon_Obsidian_WingL": 108,
+        "Dragon_Obsidian_WingR": 108,
+        "Dragon_Wings_L": 3818,
+        "Dragon_Wings_R": 3818
+      }
+    },
+    {
+      "name": "studio fbx: every mesh object is identity relative to the armature",
+      "ok": true,
+      "deviation": {
+        "Dragon_Body_Front": 2e-06,
+        "Dragon_Body_Rear": 2e-06,
+        "Dragon_Belly_Rear": 2e-06,
+        "Dragon_EyeGlow": 2e-06,
+        "Dragon_LavaGlow_Rear": 2e-06,
+        "Dragon_Obsidian_Tail": 2e-06,
+        "Dragon_Belly_Front": 2e-06,
+        "Dragon_Head": 2e-06,
+        "Dragon_LavaGlow_Front": 2e-06,
+        "Dragon_Obsidian_Front": 2e-06,
+        "Dragon_Obsidian_Mid": 2e-06,
+        "Dragon_Obsidian_WingL": 2e-06,
+        "Dragon_Obsidian_WingR": 2e-06,
+        "Dragon_Wings_L": 2e-06,
+        "Dragon_Wings_R": 2e-06
       }
     },
     {
@@ -542,15 +757,50 @@
       "extra": []
     },
     {
+      "name": "studio fbx: bone parents match AnimationData.json",
+      "ok": true,
+      "mismatched": []
+    },
+    {
+      "name": "studio fbx: bone rests equal the source rig (bind pose = rest; FBX float precision)",
+      "ok": true,
+      "max_matrix_diff": 0.0001805
+    },
+    {
       "name": "studio fbx: materials Dragon_<Section> with 1024 delivery textures loading",
       "ok": true,
       "materials": {
-        "Dragon_Body": [
+        "Dragon_Body_Front": [
           "Dragon_Body",
           1024,
           true
         ],
-        "Dragon_Belly": [
+        "Dragon_Body_Rear": [
+          "Dragon_Body",
+          1024,
+          true
+        ],
+        "Dragon_Belly_Rear": [
+          "Dragon_Belly",
+          1024,
+          true
+        ],
+        "Dragon_EyeGlow": [
+          "Dragon_EyeGlow",
+          1024,
+          true
+        ],
+        "Dragon_LavaGlow_Rear": [
+          "Dragon_LavaGlow",
+          1024,
+          true
+        ],
+        "Dragon_Obsidian_Tail": [
+          "Dragon_Obsidian",
+          1024,
+          true
+        ],
+        "Dragon_Belly_Front": [
           "Dragon_Belly",
           1024,
           true
@@ -560,22 +810,37 @@
           1024,
           true
         ],
-        "Dragon_EyeGlow": [
-          "Dragon_EyeGlow",
-          1024,
-          true
-        ],
-        "Dragon_LavaGlow": [
+        "Dragon_LavaGlow_Front": [
           "Dragon_LavaGlow",
           1024,
           true
         ],
-        "Dragon_Obsidian": [
+        "Dragon_Obsidian_Front": [
           "Dragon_Obsidian",
           1024,
           true
         ],
-        "Dragon_Wings": [
+        "Dragon_Obsidian_Mid": [
+          "Dragon_Obsidian",
+          1024,
+          true
+        ],
+        "Dragon_Obsidian_WingL": [
+          "Dragon_Obsidian",
+          1024,
+          true
+        ],
+        "Dragon_Obsidian_WingR": [
+          "Dragon_Obsidian",
+          1024,
+          true
+        ],
+        "Dragon_Wings_L": [
+          "Dragon_Wings",
+          1024,
+          true
+        ],
+        "Dragon_Wings_R": [
           "Dragon_Wings",
           1024,
           true
@@ -599,6 +864,178 @@
         "Dragon_Obsidian_BaseColor.png",
         "Dragon_Wings_BaseColor.png"
       ]
+    },
+    {
+      "name": "studio fbx: rest vertices equal the source evaluated rest mesh (< 0.01 stud)",
+      "ok": true,
+      "max_deviation": {
+        "Dragon_Body_Front": 7e-06,
+        "Dragon_Body_Rear": 7e-06,
+        "Dragon_Belly_Rear": 5e-06,
+        "Dragon_EyeGlow": 7e-06,
+        "Dragon_LavaGlow_Rear": 7e-06,
+        "Dragon_Obsidian_Tail": 9e-06,
+        "Dragon_Belly_Front": 6e-06,
+        "Dragon_Head": 9e-06,
+        "Dragon_LavaGlow_Front": 6e-06,
+        "Dragon_Obsidian_Front": 7e-06,
+        "Dragon_Obsidian_Mid": 5e-06,
+        "Dragon_Obsidian_WingL": 8e-06,
+        "Dragon_Obsidian_WingR": 4e-06,
+        "Dragon_Wings_L": 7e-06,
+        "Dragon_Wings_R": 6e-06
+      }
+    },
+    {
+      "name": "studio fbx: Dragon_Head sits on the neck (its bounds contain the Neck_3 -> Head joint)",
+      "ok": true,
+      "head_min": [
+        -1.289,
+        -9.032,
+        7.845
+      ],
+      "head_max": [
+        1.283,
+        -5.339,
+        10.716
+      ],
+      "head_joint": [
+        0.0,
+        -6.55,
+        9.45
+      ]
+    },
+    {
+      "name": "studio fbx posed with AnimationData == source .blend posed with the actions (< 0.02 stud, every vertex)",
+      "ok": true,
+      "worst": 5e-05,
+      "table": {
+        "rest": {
+          "Dragon_Body_Front": 1e-05,
+          "Dragon_Body_Rear": 0.0,
+          "Dragon_Belly_Rear": 0.0,
+          "Dragon_EyeGlow": 1e-05,
+          "Dragon_LavaGlow_Rear": 0.0,
+          "Dragon_Obsidian_Tail": 1e-05,
+          "Dragon_Belly_Front": 0.0,
+          "Dragon_Head": 1e-05,
+          "Dragon_LavaGlow_Front": 1e-05,
+          "Dragon_Obsidian_Front": 1e-05,
+          "Dragon_Obsidian_Mid": 0.0,
+          "Dragon_Obsidian_WingL": 1e-05,
+          "Dragon_Obsidian_WingR": 1e-05,
+          "Dragon_Wings_L": 1e-05,
+          "Dragon_Wings_R": 1e-05
+        },
+        "Idle mid": {
+          "Dragon_Body_Front": 1e-05,
+          "Dragon_Body_Rear": 1e-05,
+          "Dragon_Belly_Rear": 1e-05,
+          "Dragon_EyeGlow": 1e-05,
+          "Dragon_LavaGlow_Rear": 1e-05,
+          "Dragon_Obsidian_Tail": 1e-05,
+          "Dragon_Belly_Front": 0.0,
+          "Dragon_Head": 1e-05,
+          "Dragon_LavaGlow_Front": 1e-05,
+          "Dragon_Obsidian_Front": 1e-05,
+          "Dragon_Obsidian_Mid": 0.0,
+          "Dragon_Obsidian_WingL": 1e-05,
+          "Dragon_Obsidian_WingR": 1e-05,
+          "Dragon_Wings_L": 1e-05,
+          "Dragon_Wings_R": 1e-05
+        },
+        "Walk mid": {
+          "Dragon_Body_Front": 1e-05,
+          "Dragon_Body_Rear": 1e-05,
+          "Dragon_Belly_Rear": 0.0,
+          "Dragon_EyeGlow": 1e-05,
+          "Dragon_LavaGlow_Rear": 1e-05,
+          "Dragon_Obsidian_Tail": 1e-05,
+          "Dragon_Belly_Front": 1e-05,
+          "Dragon_Head": 1e-05,
+          "Dragon_LavaGlow_Front": 1e-05,
+          "Dragon_Obsidian_Front": 1e-05,
+          "Dragon_Obsidian_Mid": 1e-05,
+          "Dragon_Obsidian_WingL": 1e-05,
+          "Dragon_Obsidian_WingR": 1e-05,
+          "Dragon_Wings_L": 1e-05,
+          "Dragon_Wings_R": 1e-05
+        },
+        "FireBreath impact": {
+          "Dragon_Body_Front": 1e-05,
+          "Dragon_Body_Rear": 0.0,
+          "Dragon_Belly_Rear": 0.0,
+          "Dragon_EyeGlow": 1e-05,
+          "Dragon_LavaGlow_Rear": 0.0,
+          "Dragon_Obsidian_Tail": 1e-05,
+          "Dragon_Belly_Front": 1e-05,
+          "Dragon_Head": 1e-05,
+          "Dragon_LavaGlow_Front": 1e-05,
+          "Dragon_Obsidian_Front": 1e-05,
+          "Dragon_Obsidian_Mid": 0.0,
+          "Dragon_Obsidian_WingL": 1e-05,
+          "Dragon_Obsidian_WingR": 1e-05,
+          "Dragon_Wings_L": 1e-05,
+          "Dragon_Wings_R": 1e-05
+        },
+        "TailWhip impact": {
+          "Dragon_Body_Front": 1e-05,
+          "Dragon_Body_Rear": 1e-05,
+          "Dragon_Belly_Rear": 1e-05,
+          "Dragon_EyeGlow": 1e-05,
+          "Dragon_LavaGlow_Rear": 1e-05,
+          "Dragon_Obsidian_Tail": 1e-05,
+          "Dragon_Belly_Front": 1e-05,
+          "Dragon_Head": 1e-05,
+          "Dragon_LavaGlow_Front": 1e-05,
+          "Dragon_Obsidian_Front": 1e-05,
+          "Dragon_Obsidian_Mid": 1e-05,
+          "Dragon_Obsidian_WingL": 1e-05,
+          "Dragon_Obsidian_WingR": 1e-05,
+          "Dragon_Wings_L": 1e-05,
+          "Dragon_Wings_R": 0.0
+        },
+        "FrontStomp impact": {
+          "Dragon_Body_Front": 1e-05,
+          "Dragon_Body_Rear": 1e-05,
+          "Dragon_Belly_Rear": 1e-05,
+          "Dragon_EyeGlow": 0.0,
+          "Dragon_LavaGlow_Rear": 0.0,
+          "Dragon_Obsidian_Tail": 1e-05,
+          "Dragon_Belly_Front": 0.0,
+          "Dragon_Head": 1e-05,
+          "Dragon_LavaGlow_Front": 1e-05,
+          "Dragon_Obsidian_Front": 1e-05,
+          "Dragon_Obsidian_Mid": 0.0,
+          "Dragon_Obsidian_WingL": 1e-05,
+          "Dragon_Obsidian_WingR": 0.0,
+          "Dragon_Wings_L": 1e-05,
+          "Dragon_Wings_R": 1e-05
+        },
+        "Death end": {
+          "Dragon_Body_Front": 1e-05,
+          "Dragon_Body_Rear": 1e-05,
+          "Dragon_Belly_Rear": 1e-05,
+          "Dragon_EyeGlow": 1e-05,
+          "Dragon_LavaGlow_Rear": 1e-05,
+          "Dragon_Obsidian_Tail": 5e-05,
+          "Dragon_Belly_Front": 1e-05,
+          "Dragon_Head": 1e-05,
+          "Dragon_LavaGlow_Front": 1e-05,
+          "Dragon_Obsidian_Front": 1e-05,
+          "Dragon_Obsidian_Mid": 1e-05,
+          "Dragon_Obsidian_WingL": 1e-05,
+          "Dragon_Obsidian_WingR": 1e-05,
+          "Dragon_Wings_L": 1e-05,
+          "Dragon_Wings_R": 1e-05
+        }
+      }
+    },
+    {
+      "name": "same comparison after Roblox 4-influence truncation + renormalisation (< 0.02 stud)",
+      "ok": true,
+      "worst": 5e-05,
+      "weights_changed": 0
     },
     {
       "name": "AnimationData: id, fps and every required clip",
@@ -674,8 +1111,281 @@
       }
     }
   ],
+  "head_bounds_armature_space": {
+    "min": [
+      -1.289,
+      -9.032,
+      7.845
+    ],
+    "max": [
+      1.283,
+      -5.339,
+      10.716
+    ]
+  },
+  "studio_pose_deviation": {
+    "as_exported": {
+      "rest": {
+        "Dragon_Body_Front": 1e-05,
+        "Dragon_Body_Rear": 0.0,
+        "Dragon_Belly_Rear": 0.0,
+        "Dragon_EyeGlow": 1e-05,
+        "Dragon_LavaGlow_Rear": 0.0,
+        "Dragon_Obsidian_Tail": 1e-05,
+        "Dragon_Belly_Front": 0.0,
+        "Dragon_Head": 1e-05,
+        "Dragon_LavaGlow_Front": 1e-05,
+        "Dragon_Obsidian_Front": 1e-05,
+        "Dragon_Obsidian_Mid": 0.0,
+        "Dragon_Obsidian_WingL": 1e-05,
+        "Dragon_Obsidian_WingR": 1e-05,
+        "Dragon_Wings_L": 1e-05,
+        "Dragon_Wings_R": 1e-05
+      },
+      "Idle mid": {
+        "Dragon_Body_Front": 1e-05,
+        "Dragon_Body_Rear": 1e-05,
+        "Dragon_Belly_Rear": 1e-05,
+        "Dragon_EyeGlow": 1e-05,
+        "Dragon_LavaGlow_Rear": 1e-05,
+        "Dragon_Obsidian_Tail": 1e-05,
+        "Dragon_Belly_Front": 0.0,
+        "Dragon_Head": 1e-05,
+        "Dragon_LavaGlow_Front": 1e-05,
+        "Dragon_Obsidian_Front": 1e-05,
+        "Dragon_Obsidian_Mid": 0.0,
+        "Dragon_Obsidian_WingL": 1e-05,
+        "Dragon_Obsidian_WingR": 1e-05,
+        "Dragon_Wings_L": 1e-05,
+        "Dragon_Wings_R": 1e-05
+      },
+      "Walk mid": {
+        "Dragon_Body_Front": 1e-05,
+        "Dragon_Body_Rear": 1e-05,
+        "Dragon_Belly_Rear": 0.0,
+        "Dragon_EyeGlow": 1e-05,
+        "Dragon_LavaGlow_Rear": 1e-05,
+        "Dragon_Obsidian_Tail": 1e-05,
+        "Dragon_Belly_Front": 1e-05,
+        "Dragon_Head": 1e-05,
+        "Dragon_LavaGlow_Front": 1e-05,
+        "Dragon_Obsidian_Front": 1e-05,
+        "Dragon_Obsidian_Mid": 1e-05,
+        "Dragon_Obsidian_WingL": 1e-05,
+        "Dragon_Obsidian_WingR": 1e-05,
+        "Dragon_Wings_L": 1e-05,
+        "Dragon_Wings_R": 1e-05
+      },
+      "FireBreath impact": {
+        "Dragon_Body_Front": 1e-05,
+        "Dragon_Body_Rear": 0.0,
+        "Dragon_Belly_Rear": 0.0,
+        "Dragon_EyeGlow": 1e-05,
+        "Dragon_LavaGlow_Rear": 0.0,
+        "Dragon_Obsidian_Tail": 1e-05,
+        "Dragon_Belly_Front": 1e-05,
+        "Dragon_Head": 1e-05,
+        "Dragon_LavaGlow_Front": 1e-05,
+        "Dragon_Obsidian_Front": 1e-05,
+        "Dragon_Obsidian_Mid": 0.0,
+        "Dragon_Obsidian_WingL": 1e-05,
+        "Dragon_Obsidian_WingR": 1e-05,
+        "Dragon_Wings_L": 1e-05,
+        "Dragon_Wings_R": 1e-05
+      },
+      "TailWhip impact": {
+        "Dragon_Body_Front": 1e-05,
+        "Dragon_Body_Rear": 1e-05,
+        "Dragon_Belly_Rear": 1e-05,
+        "Dragon_EyeGlow": 1e-05,
+        "Dragon_LavaGlow_Rear": 1e-05,
+        "Dragon_Obsidian_Tail": 1e-05,
+        "Dragon_Belly_Front": 1e-05,
+        "Dragon_Head": 1e-05,
+        "Dragon_LavaGlow_Front": 1e-05,
+        "Dragon_Obsidian_Front": 1e-05,
+        "Dragon_Obsidian_Mid": 1e-05,
+        "Dragon_Obsidian_WingL": 1e-05,
+        "Dragon_Obsidian_WingR": 1e-05,
+        "Dragon_Wings_L": 1e-05,
+        "Dragon_Wings_R": 0.0
+      },
+      "FrontStomp impact": {
+        "Dragon_Body_Front": 1e-05,
+        "Dragon_Body_Rear": 1e-05,
+        "Dragon_Belly_Rear": 1e-05,
+        "Dragon_EyeGlow": 0.0,
+        "Dragon_LavaGlow_Rear": 0.0,
+        "Dragon_Obsidian_Tail": 1e-05,
+        "Dragon_Belly_Front": 0.0,
+        "Dragon_Head": 1e-05,
+        "Dragon_LavaGlow_Front": 1e-05,
+        "Dragon_Obsidian_Front": 1e-05,
+        "Dragon_Obsidian_Mid": 0.0,
+        "Dragon_Obsidian_WingL": 1e-05,
+        "Dragon_Obsidian_WingR": 0.0,
+        "Dragon_Wings_L": 1e-05,
+        "Dragon_Wings_R": 1e-05
+      },
+      "Death end": {
+        "Dragon_Body_Front": 1e-05,
+        "Dragon_Body_Rear": 1e-05,
+        "Dragon_Belly_Rear": 1e-05,
+        "Dragon_EyeGlow": 1e-05,
+        "Dragon_LavaGlow_Rear": 1e-05,
+        "Dragon_Obsidian_Tail": 5e-05,
+        "Dragon_Belly_Front": 1e-05,
+        "Dragon_Head": 1e-05,
+        "Dragon_LavaGlow_Front": 1e-05,
+        "Dragon_Obsidian_Front": 1e-05,
+        "Dragon_Obsidian_Mid": 1e-05,
+        "Dragon_Obsidian_WingL": 1e-05,
+        "Dragon_Obsidian_WingR": 1e-05,
+        "Dragon_Wings_L": 1e-05,
+        "Dragon_Wings_R": 1e-05
+      }
+    },
+    "roblox_4_influences": {
+      "rest": {
+        "Dragon_Body_Front": 1e-05,
+        "Dragon_Body_Rear": 0.0,
+        "Dragon_Belly_Rear": 0.0,
+        "Dragon_EyeGlow": 1e-05,
+        "Dragon_LavaGlow_Rear": 0.0,
+        "Dragon_Obsidian_Tail": 1e-05,
+        "Dragon_Belly_Front": 0.0,
+        "Dragon_Head": 1e-05,
+        "Dragon_LavaGlow_Front": 1e-05,
+        "Dragon_Obsidian_Front": 1e-05,
+        "Dragon_Obsidian_Mid": 0.0,
+        "Dragon_Obsidian_WingL": 1e-05,
+        "Dragon_Obsidian_WingR": 1e-05,
+        "Dragon_Wings_L": 1e-05,
+        "Dragon_Wings_R": 1e-05
+      },
+      "Idle mid": {
+        "Dragon_Body_Front": 1e-05,
+        "Dragon_Body_Rear": 1e-05,
+        "Dragon_Belly_Rear": 1e-05,
+        "Dragon_EyeGlow": 1e-05,
+        "Dragon_LavaGlow_Rear": 1e-05,
+        "Dragon_Obsidian_Tail": 1e-05,
+        "Dragon_Belly_Front": 0.0,
+        "Dragon_Head": 1e-05,
+        "Dragon_LavaGlow_Front": 1e-05,
+        "Dragon_Obsidian_Front": 1e-05,
+        "Dragon_Obsidian_Mid": 0.0,
+        "Dragon_Obsidian_WingL": 1e-05,
+        "Dragon_Obsidian_WingR": 1e-05,
+        "Dragon_Wings_L": 1e-05,
+        "Dragon_Wings_R": 1e-05
+      },
+      "Walk mid": {
+        "Dragon_Body_Front": 1e-05,
+        "Dragon_Body_Rear": 1e-05,
+        "Dragon_Belly_Rear": 0.0,
+        "Dragon_EyeGlow": 1e-05,
+        "Dragon_LavaGlow_Rear": 1e-05,
+        "Dragon_Obsidian_Tail": 1e-05,
+        "Dragon_Belly_Front": 1e-05,
+        "Dragon_Head": 1e-05,
+        "Dragon_LavaGlow_Front": 1e-05,
+        "Dragon_Obsidian_Front": 1e-05,
+        "Dragon_Obsidian_Mid": 1e-05,
+        "Dragon_Obsidian_WingL": 1e-05,
+        "Dragon_Obsidian_WingR": 1e-05,
+        "Dragon_Wings_L": 1e-05,
+        "Dragon_Wings_R": 1e-05
+      },
+      "FireBreath impact": {
+        "Dragon_Body_Front": 1e-05,
+        "Dragon_Body_Rear": 0.0,
+        "Dragon_Belly_Rear": 0.0,
+        "Dragon_EyeGlow": 1e-05,
+        "Dragon_LavaGlow_Rear": 0.0,
+        "Dragon_Obsidian_Tail": 1e-05,
+        "Dragon_Belly_Front": 1e-05,
+        "Dragon_Head": 1e-05,
+        "Dragon_LavaGlow_Front": 1e-05,
+        "Dragon_Obsidian_Front": 1e-05,
+        "Dragon_Obsidian_Mid": 0.0,
+        "Dragon_Obsidian_WingL": 1e-05,
+        "Dragon_Obsidian_WingR": 1e-05,
+        "Dragon_Wings_L": 1e-05,
+        "Dragon_Wings_R": 1e-05
+      },
+      "TailWhip impact": {
+        "Dragon_Body_Front": 1e-05,
+        "Dragon_Body_Rear": 1e-05,
+        "Dragon_Belly_Rear": 1e-05,
+        "Dragon_EyeGlow": 1e-05,
+        "Dragon_LavaGlow_Rear": 1e-05,
+        "Dragon_Obsidian_Tail": 1e-05,
+        "Dragon_Belly_Front": 1e-05,
+        "Dragon_Head": 1e-05,
+        "Dragon_LavaGlow_Front": 1e-05,
+        "Dragon_Obsidian_Front": 1e-05,
+        "Dragon_Obsidian_Mid": 1e-05,
+        "Dragon_Obsidian_WingL": 1e-05,
+        "Dragon_Obsidian_WingR": 1e-05,
+        "Dragon_Wings_L": 1e-05,
+        "Dragon_Wings_R": 0.0
+      },
+      "FrontStomp impact": {
+        "Dragon_Body_Front": 1e-05,
+        "Dragon_Body_Rear": 1e-05,
+        "Dragon_Belly_Rear": 1e-05,
+        "Dragon_EyeGlow": 0.0,
+        "Dragon_LavaGlow_Rear": 0.0,
+        "Dragon_Obsidian_Tail": 1e-05,
+        "Dragon_Belly_Front": 0.0,
+        "Dragon_Head": 1e-05,
+        "Dragon_LavaGlow_Front": 1e-05,
+        "Dragon_Obsidian_Front": 1e-05,
+        "Dragon_Obsidian_Mid": 0.0,
+        "Dragon_Obsidian_WingL": 1e-05,
+        "Dragon_Obsidian_WingR": 0.0,
+        "Dragon_Wings_L": 1e-05,
+        "Dragon_Wings_R": 1e-05
+      },
+      "Death end": {
+        "Dragon_Body_Front": 1e-05,
+        "Dragon_Body_Rear": 1e-05,
+        "Dragon_Belly_Rear": 1e-05,
+        "Dragon_EyeGlow": 1e-05,
+        "Dragon_LavaGlow_Rear": 1e-05,
+        "Dragon_Obsidian_Tail": 5e-05,
+        "Dragon_Belly_Front": 1e-05,
+        "Dragon_Head": 1e-05,
+        "Dragon_LavaGlow_Front": 1e-05,
+        "Dragon_Obsidian_Front": 1e-05,
+        "Dragon_Obsidian_Mid": 1e-05,
+        "Dragon_Obsidian_WingL": 1e-05,
+        "Dragon_Obsidian_WingR": 1e-05,
+        "Dragon_Wings_L": 1e-05,
+        "Dragon_Wings_R": 1e-05
+      }
+    }
+  },
+  "studio_pose_sheet": {
+    "file": "previews/StudioFBX_PoseCheck.png",
+    "tiles": [
+      "rest",
+      "Idle mid",
+      "Walk mid",
+      "FireBreath impact",
+      "TailWhip impact",
+      "FrontStomp impact",
+      "Death end"
+    ],
+    "cols": 4,
+    "tile": [
+      520,
+      390
+    ]
+  },
   "summary": {
-    "passed": 47,
-    "total": 47
+    "passed": 57,
+    "total": 57
   }
 }

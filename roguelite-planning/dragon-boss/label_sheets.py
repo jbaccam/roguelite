@@ -12,7 +12,14 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = Path(__file__).resolve().parent
-spec = json.loads((HERE / '_work' / 'sheet_labels.json').read_text())
+sl = HERE / '_work' / 'sheet_labels.json'
+spec = json.loads(sl.read_text()) if sl.exists() else {}
+vr = HERE / 'validation-report.json'
+if vr.exists():
+    ps = json.loads(vr.read_text(encoding='utf-8')).get('studio_pose_sheet')
+    if ps:
+        spec['StudioFBX_PoseCheck.png'] = {'cols': ps['cols'], 'tile': ps['tile'],
+                                           'labels': [f'Studio FBX re-import: {t}' for t in ps['tiles']]}
 try:
     FONT = ImageFont.truetype('arial.ttf', 20)
 except Exception:  # noqa: BLE001

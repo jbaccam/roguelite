@@ -189,8 +189,18 @@ reopens `Dragon.blend`, keys the clips and writes everything below. The model, t
 **Files**
 - `exports/game/Dragon_Studio.fbx`: for Studio's 3D Importer. It holds the rest mesh and the 90 deform bones, with no
   animation and no control bones.
-  - There is one mesh object per section, named `Dragon_<Section>` (`Dragon_Body`, `Dragon_Head`, …). A mesh must never
-    share a bone's name: Roblox's importer merges them, and `validate_exports.py` asserts there is no clash.
+  - Mesh objects are named `Dragon_<Section>`, or `Dragon_<Section>_<Piece>` when the section was split. No mesh
+    shares a bone's name: Roblox's importer merges them, and `validate_exports.py` asserts there is no clash.
+  - **MeshPart size cap.** This FBX imports into Roblox at ×100, and Roblox caps a MeshPart at 2048 studs per axis.
+    So every exported mesh must stay under 20.48 studs.
+    - Five sections were bigger: Obsidian 30.1, Body 28.3, LavaGlow 27.9, Belly 25.3 and Wings 21.7 studs.
+    - Studio then scaled the whole import by 2048/3005 = 0.6815 to fit the largest part. That knocked every mesh out
+      of line with its bones, so the head, claws, feet, wings and body all rendered wrong.
+    - These sections are now exported as 15 pieces, each at most 15.4 studs: Body Front/Rear, Belly Front/Rear,
+      LavaGlow Front/Rear, Wings L/R, and Obsidian Front/Mid/Tail/WingL/WingR. Head and EyeGlow stay whole.
+    - Each piece keeps its section's `Dragon_<Section>` material and texture. Faces are whole and split vertices keep
+      their exact positions, normals, UVs and weights.
+    - The piece list is in `exports/game/StudioMeshes.json`.
     LavaGlow and EyeGlow are separate, so they can be set to Neon.
   - Materials are `Dragon_<Section>`, on the 1024² delivery maps. The maps are embedded and also copied into
     `Dragon_Studio.fbm/`.
@@ -239,7 +249,22 @@ reopens `Dragon.blend`, keys the clips and writes everything below. The model, t
   names against AnimationData, `Dragon_<Section>` materials with 1024 textures, the `.fbm` PNGs) and every clip's
   frame count, NaNs and loop closure.
 
-**Not verified:** the Studio import itself, the receipt and retarget, and in-game playback.
+**Studio FBX proof (`validate_exports.py`, 57 / 57).**
+- **Source .blend:** the armature and every mesh object have identity transforms and no parent-inverse offset. Every
+  weight is on an exported deform bone (no vertices on non-deform or IK bones), with at most 4 influences, normalised.
+- **Re-import of `Dragon_Studio.fbx`:**
+  - Every mesh is identity relative to the armature and every MeshPart is under 20.48 studs.
+  - Bone names and parents match AnimationData, and bone rests match the source within 1.8e-4 (FBX float precision).
+  - At rest, the vertices match the source mesh to 1e-5. Dragon_Head spans (−1.29, −9.03, 7.85) to (1.28, −5.34, 10.72)
+    in armature space, on the Head joint at the neck.
+- **Posed comparison:** the re-import was posed with AnimationData at rest, Idle mid, Walk mid, FireBreath, TailWhip
+  and FrontStomp impacts, and Death end. Against the source posed with the actions, the max vertex deviation is
+  0.00005 stud.
+  - It is the same after emulating Roblox's 4-influence truncation (no weights change).
+  - See `previews/StudioFBX_PoseCheck.png` and `StudioFBX_RestCheck.png`.
+
+**Not verified:** the Studio import itself (to check that the size cap was the only issue), the receipt and retarget, and
+in-game playback.
 
 ## Colour and silhouette (final Reference_Match, 128 spp)
 

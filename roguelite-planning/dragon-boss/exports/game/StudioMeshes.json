@@ -1,0 +1,171 @@
+{
+  "note": "Mesh objects in Dragon_Studio.fbx. Sections larger than the Roblox MeshPart cap (2048 at the x100 import scale = 20.48 studs) are split into pieces; every piece keeps its section material.",
+  "max_piece_dimension_studs": 19.5,
+  "meshes": {
+    "Dragon_Body_Front": {
+      "section": "Body",
+      "material": "Dragon_Body",
+      "dims": [
+        14.934,
+        13.81,
+        11.118
+      ],
+      "triangles": 14791,
+      "vertices": 7559
+    },
+    "Dragon_Body_Rear": {
+      "section": "Body",
+      "material": "Dragon_Body",
+      "dims": [
+        13.96,
+        15.34,
+        8.537
+      ],
+      "triangles": 3579,
+      "vertices": 1903
+    },
+    "Dragon_Head": {
+      "section": "Head",
+      "material": "Dragon_Head",
+      "dims": [
+        2.571,
+        3.694,
+        2.871
+      ],
+      "triangles": 8012,
+      "vertices": 4094
+    },
+    "Dragon_Wings_L": {
+      "section": "Wings",
+      "material": "Dragon_Wings",
+      "dims": [
+        8.902,
+        7.397,
+        10.013
+      ],
+      "triangles": 3818,
+      "vertices": 1929
+    },
+    "Dragon_Wings_R": {
+      "section": "Wings",
+      "material": "Dragon_Wings",
+      "dims": [
+        8.9,
+        7.397,
+        10.012
+      ],
+      "triangles": 3818,
+      "vertices": 1929
+    },
+    "Dragon_Belly_Front": {
+      "section": "Belly",
+      "material": "Dragon_Belly",
+      "dims": [
+        7.14,
+        12.263,
+        6.799
+      ],
+      "triangles": 2222,
+      "vertices": 1129
+    },
+    "Dragon_Belly_Rear": {
+      "section": "Belly",
+      "material": "Dragon_Belly",
+      "dims": [
+        3.91,
+        14.083,
+        3.718
+      ],
+      "triangles": 4766,
+      "vertices": 2419
+    },
+    "Dragon_Obsidian_Front": {
+      "section": "Obsidian",
+      "material": "Dragon_Obsidian",
+      "dims": [
+        14.64,
+        10.963,
+        12.896
+      ],
+      "triangles": 2396,
+      "vertices": 1232
+    },
+    "Dragon_Obsidian_Mid": {
+      "section": "Obsidian",
+      "material": "Dragon_Obsidian",
+      "dims": [
+        15.084,
+        8.836,
+        10.486
+      ],
+      "triangles": 1872,
+      "vertices": 960
+    },
+    "Dragon_Obsidian_Tail": {
+      "section": "Obsidian",
+      "material": "Dragon_Obsidian",
+      "dims": [
+        1.392,
+        11.511,
+        6.312
+      ],
+      "triangles": 788,
+      "vertices": 408
+    },
+    "Dragon_Obsidian_WingL": {
+      "section": "Obsidian",
+      "material": "Dragon_Obsidian",
+      "dims": [
+        6.804,
+        4.66,
+        11.183
+      ],
+      "triangles": 108,
+      "vertices": 60
+    },
+    "Dragon_Obsidian_WingR": {
+      "section": "Obsidian",
+      "material": "Dragon_Obsidian",
+      "dims": [
+        6.801,
+        4.675,
+        11.183
+      ],
+      "triangles": 108,
+      "vertices": 60
+    },
+    "Dragon_LavaGlow_Front": {
+      "section": "LavaGlow",
+      "material": "Dragon_LavaGlow",
+      "dims": [
+        3.43,
+        12.648,
+        2.708
+      ],
+      "triangles": 360,
+      "vertices": 240
+    },
+    "Dragon_LavaGlow_Rear": {
+      "section": "LavaGlow",
+      "material": "Dragon_LavaGlow",
+      "dims": [
+        2.353,
+        15.242,
+        6.953
+      ],
+      "triangles": 576,
+      "vertices": 384
+    },
+    "Dragon_EyeGlow": {
+      "section": "EyeGlow",
+      "material": "Dragon_EyeGlow",
+      "dims": [
+        1.538,
+        0.517,
+        0.305
+      ],
+      "triangles": 40,
+      "vertices": 24
+    }
+  }
+}

@@ -2402,6 +2402,25 @@
     "motion": {
       "strideLength": 4.2667,
       "nominalSpeed": 2.56
-    }
+    },
+    "studio_meshes": "exports/game/StudioMeshes.json",
+    "studio_mesh_names": [
+      "Dragon_Belly_Front",
+      "Dragon_Belly_Rear",
+      "Dragon_Body_Front",
+      "Dragon_Body_Rear",
+      "Dragon_EyeGlow",
+      "Dragon_Head",
+      "Dragon_LavaGlow_Front",
+      "Dragon_LavaGlow_Rear",
+      "Dragon_Obsidian_Front",
+      "Dragon_Obsidian_Mid",
+      "Dragon_Obsidian_Tail",
+      "Dragon_Obsidian_WingL",
+      "Dragon_Obsidian_WingR",
+      "Dragon_Wings_L",
+      "Dragon_Wings_R"
+    ],
+    "studio_split_reason": "Roblox caps a MeshPart at 2048 per axis and this FBX imports at x100, so every MeshPart must stay under 20.48 studs; oversize sections are exported as pieces."
   }
 }

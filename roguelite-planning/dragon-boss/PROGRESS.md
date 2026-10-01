@@ -1,6 +1,15 @@
 # Dragon boss — progress log
 
-## State: DELIVERED (game package done)
+## State: DELIVERED (Studio FBX size-cap fix, 2026-09-30)
+
+- **Root cause:** Roblox caps a MeshPart at 2048 per axis, and this FBX imports at ×100. Five sections were over
+  20.48 studs, so Studio scaled the import by 0.6815 and the meshes no longer lined up with their bones.
+- **Fix:** `Dragon_Studio.fbx` now has 15 mesh pieces, each at most 15.4 studs (`exports/game/StudioMeshes.json`).
+  Bones, rests, AnimationData and materials are unchanged.
+- **Validation:** 57 / 57 checks pass. A posed re-import matches the source to 0.00005 stud (see
+  `previews/StudioFBX_PoseCheck.png`).
+
+## Earlier state (game package)
 
 The game package follows `plans/BOSS_GAME_PACKAGE_SPEC.md`. Build it with `DRAGON_STAGE=game`. It produces:
 
@@ -75,3 +84,4 @@ To update one attack in the saved blend, set `DRAGON_STAGE=attack DRAGON_ATTACK=
 | Polish | Teeth; attack kit replaced (FireBreath, TailWhip, FrontStomp) with videos. | 0.852 |
 | TailWhip v2 | Hip swing, hind-foot stepping, 205° arc, impact f27, drift 0, validation 34 / 34. | 0.852 |
 | Game package | Studio FBX, AnimationData (7 clips), BossGameData, GameClips sheet and mp4s; validation 46 / 46. | 0.852 |
+| Studio fix | Mesh names `Dragon_<Section>`; oversize sections split under the 2048 MeshPart cap; posed re-import proof; validation 57 / 57. | 0.852 |
