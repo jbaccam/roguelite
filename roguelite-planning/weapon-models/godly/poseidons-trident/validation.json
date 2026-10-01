@@ -1,0 +1,151 @@
+{
+ "name": "PoseidonsTrident",
+ "blender_version": "5.2.1 LTS",
+ "authored_scale_factor": 0.83784,
+ "meshes": {
+  "PoseidonsTrident": {
+   "triangles": 16404,
+   "vertices": 8428,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    -1.1637,
+    -0.6352,
+    0.0
+   ],
+   "bounds_max": [
+    1.1637,
+    0.6178,
+    6.3091
+   ]
+  },
+  "PoseidonsTrident_Glow": {
+   "triangles": 1552,
+   "vertices": 822,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    -1.2303,
+    -0.333,
+    0.518
+   ],
+   "bounds_max": [
+    1.2303,
+    0.304,
+    6.4
+   ]
+  },
+  "PoseidonsTrident_GlowCore": {
+   "triangles": 312,
+   "vertices": 164,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bounds_min": [
+    -0.2935,
+    -0.317,
+    3.3992
+   ],
+   "bounds_max": [
+    0.2935,
+    0.2857,
+    4.0311
+   ]
+  }
+ },
+ "total_triangles": 18268,
+ "total_vertices": 9414,
+ "mesh_count": 3,
+ "materials": {
+  "PoseidonsTrident": "PoseidonsTrident_Baked",
+  "PoseidonsTrident_Glow": "PoseidonsTrident_Glow",
+  "PoseidonsTrident_GlowCore": "PoseidonsTrident_GlowCore"
+ },
+ "texture": {
+  "file": "BaseColor.png",
+  "size": [
+   1024,
+   1024
+  ],
+  "packed_in_blend": true,
+  "uv_layers": [
+   "UVMap"
+  ],
+  "uv_range": [
+   0.0049,
+   0.9951
+  ]
+ },
+ "height_studs": 6.4,
+ "bounds_blender_min": [
+  -1.2303,
+  -0.6352,
+  0.0
+ ],
+ "bounds_blender_max": [
+  1.2303,
+  0.6178,
+  6.4
+ ],
+ "bounds_studio_size": [
+  2.4606,
+  6.4,
+  1.253
+ ],
+ "grip_z": 2.3884,
+ "balance_z": 3.1096,
+ "glb_reimport": {
+  "meshes": 3,
+  "triangles": 18268,
+  "names": [
+   "PoseidonsTrident",
+   "PoseidonsTrident_Glow",
+   "PoseidonsTrident_GlowCore"
+  ],
+  "images": [
+   "BaseColor 1024x1024"
+  ]
+ },
+ "fbx_reimport": {
+  "meshes": 3,
+  "triangles": 18268,
+  "names": [
+   "PoseidonsTrident",
+   "PoseidonsTrident_Glow",
+   "PoseidonsTrident_GlowCore"
+  ],
+  "embedded_images": [
+   "PoseidonsTrident_BaseColor 1024x1024"
+  ],
+  "dimensions_after_axis_conversion": {
+   "PoseidonsTrident": [
+    2.327,
+    1.253,
+    6.309
+   ],
+   "PoseidonsTrident_Glow": [
+    2.461,
+    0.637,
+    5.882
+   ],
+   "PoseidonsTrident_GlowCore": [
+    0.587,
+    0.603,
+    0.632
+   ]
+  }
+ },
+ "checks": {
+  "loose_vertices_total": 0,
+  "zero_area_faces_total": 0,
+  "glb_triangles_match": true,
+  "fbx_triangles_match": true,
+  "every_mesh_under_20k": true
+ },
+ "notes": [
+  "Non-manifold edge counts are expected: the textured mesh is many closed parts that overlap by design (coral braid on the shaft, inlays raised through the wave and spearhead faces, rods sunk into the waves).",
+  "Studio import, Neon look and in-game scale are untested (no Studio access in this task)."
+ ]
+}

@@ -1,0 +1,124 @@
+{
+ "name": "PoseidonsTrident",
+ "blender_version": "5.2.1 LTS",
+ "status": "Blender-verified, Studio untested",
+ "units": "1 Blender unit = 1 stud, authored at hero size; set the play size in Studio by uniform scale",
+ "axes": "Studio = (-x, z, y) of Blender; FBX exported with axis_forward=-Z, axis_up=Y",
+ "texture": "BaseColor.png 1024x1024, baked painted lighting; use MeshPart.TextureID (not SurfaceAppearance)",
+ "parts": {
+  "PoseidonsTrident": {
+   "kind": "textured",
+   "center_studio": [
+    -0.0,
+    3.1545,
+    -0.0087
+   ],
+   "size_studio": [
+    2.3274,
+    6.3091,
+    1.253
+   ],
+   "triangles": 16404,
+   "material": "SmoothPlastic (or Plastic), Color white",
+   "texture_id": "BaseColor.png"
+  },
+  "PoseidonsTrident_Glow": {
+   "kind": "glow",
+   "center_studio": [
+    -0.0,
+    3.459,
+    -0.0145
+   ],
+   "size_studio": [
+    2.4606,
+    5.882,
+    0.637
+   ],
+   "triangles": 1552,
+   "material": "Neon",
+   "color_rgb": [
+    0,
+    132,
+    172
+   ],
+   "note": "aqua sea-glow: spearhead and barb edge bands, wave lips, pearl, butt pearl"
+  },
+  "PoseidonsTrident_GlowCore": {
+   "kind": "glow",
+   "center_studio": [
+    -0.0,
+    3.7152,
+    -0.0156
+   ],
+   "size_studio": [
+    0.587,
+    0.6319,
+    0.6027
+   ],
+   "triangles": 312,
+   "material": "Neon",
+   "color_rgb": [
+    176,
+    255,
+    240
+   ],
+   "note": "bright pearl core showing through the front and back of the pearl"
+  }
+ },
+ "grip_point_studio": [
+  -0.0,
+  2.3884,
+  0.0
+ ],
+ "grip_point_relative_to_textured_center": [
+  -0.0,
+  -0.7661,
+  0.0087
+ ],
+ "balance_point_studio": [
+  -0.0,
+  3.1096,
+  0.0
+ ],
+ "balance_point_relative_to_textured_center": [
+  -0.0,
+  -0.045,
+  0.0087
+ ],
+ "throw_pivot_studio": [
+  -0.0,
+  3.1096,
+  0.0
+ ],
+ "tip_point_studio": [
+  -0.0,
+  6.3095,
+  0.0
+ ],
+ "tip_point_relative_to_textured_center": [
+  -0.0,
+  3.155,
+  0.0087
+ ],
+ "pearl_center_studio": [
+  -0.0,
+  3.8965,
+  0.0
+ ],
+ "notes": [
+  "Every MeshPart imports centred on its own bounding box: place each at its center_studio, relative to a shared model origin (Blender origin = bottom of the butt pearl on the shaft axis).",
+  "grip_point = middle of the coral-braided grip on the shaft axis; it sits near the balance point so one hand position serves both the melee thrust/sweep and the throw.",
+  "Melee: hold at grip_point with the shaft along the hand's grip axis, prongs forward/up.",
+  "Throw: release from grip_point, fly prongs-first along the shaft axis (+Y studio = tip direction before rotation); spin/tumble, if any, pivots on throw_pivot (approximate centre of mass). The impact point is tip_point.",
+  "A second, short coral wrap low on the shaft marks a two-hand / wind-up hold."
+ ],
+ "vfx_notes": [
+  "Signature effect: tidal wave on landing. Spawn at the world position of tip_point when the thrown trident hits the ground (or the target's feet), snapped to the floor.",
+  "Colours: wave body deep teal (20,120,160) at Transparency 0.35, crest aqua (40,215,255) Neon, foam (225,252,255), spray droplets (150,235,255). Same aqua as the trident's Neon so it reads as its power.",
+  "Wave ring: a thick open ring/torus mesh (Neon crest + translucent teal body) starting at radius 1 stud, tweened outward to ~14 studs over 0.7 s (Quad Out) while its height goes 3 -> 1.5 studs and Transparency 0.3 -> 1 over the last 0.25 s. Push enemies the ring passes away from the centre (knockback along the radial direction, no extra hits).",
+  "Foam ring burst: ParticleEmitter on an Attachment at the spawn point, Shape Cylinder (ShapeStyle Surface, ShapeInOut Outward), EmissionDirection Top, Rate 0, :Emit(70) once; Lifetime 0.6-1.0; Speed 22-30; SpreadAngle (10, 10); Acceleration (0, -40, 0); Drag 2; Size 1.2 -> 2.6 -> 0; Transparency 0.15 -> 1; LightEmission 0.5; Color foam -> aqua; Orientation VelocityParallel.",
+  "Droplets: second emitter, :Emit(40); Lifetime 0.8-1.2; Speed 14-24; SpreadAngle (70, 70); Acceleration (0, -60, 0); Size 0.35 -> 0; LightEmission 0.8; Color (150,235,255).",
+  "Mist puff: :Emit(12); Lifetime 1.2-1.6; Speed 2-4; Size 4 -> 8; Transparency 0.6 -> 1; Color (190,240,250); LightEmission 0.2.",
+  "Optional: a PointLight on the spawn point, aqua, Brightness 3 -> 0 over 0.5 s, Range 16; and while the trident is in flight a Trail between two attachments at the pearl and the butt, aqua -> transparent, Lifetime 0.25."
+ ]
+}
