@@ -152,7 +152,7 @@ function U.new(player,opts)
   local ic=T.icon(p,'Icon',12,0,104,Eggs.Icon or '');ic.ZIndex=p.ZIndex+2
   local n=owned()
   local name=left(T.label(p,'Name',Eggs.Name..(n>0 and '  <font color="#91EF14">('..n..')</font>' or ''),128,10,LIST_W-310,48,38));name.RichText=true;name.TextWrapped=false;name.ZIndex=p.ZIndex+2
-  local sub=left(T.text(p,'Sub','Hatches 1 pet  ·  rarer pets are flashier',130,70,LIST_W-150,28,21,C.cream));sub.ZIndex=p.ZIndex+2
+  local sub=left(T.text(p,'Sub','Hatches 1 random pet  ·  chances below',130,70,LIST_W-150,28,21,C.cream));sub.ZIndex=p.ZIndex+2
   local chip=T.panel(p,'Price',LIST_W-172,18,154,48,'inset');chip.ZIndex=p.ZIndex+2
   costRow(chip,fmt(Eggs.Emeralds),'emerald',24,C.emerald);zAll(chip,chip.ZIndex+1)
   local y=112
@@ -263,7 +263,9 @@ function U.new(player,opts)
   T.icon(pill,'Icon',10,6,52,'emerald')
   gemValue=left(T.label(pill,'Value',fmt(gems()),70,6,160,52,34,C.emerald));gemValue.TextWrapped=false
   local plus=T.button(gem,'Plus','+',248,math.max(-11,(64-ps)/2),ps,ps,function() self.Close();opts.openWindow('Store','Emeralds') end);plus.Caption.TextSize=36
-  local exit=add(T.button(canvas,'Exit','EXIT',LIST_X,L.exitY,240,L.exitH,function() self.Close() end,true))
+  -- EXIT sits centred under the egg card; in Studio it moves left to make room for +200 EMERALDS.
+  local exitX=RunService:IsStudio() and LIST_X or LIST_X+(LIST_W-240)/2
+  local exit=add(T.button(canvas,'Exit','EXIT',exitX,L.exitY,240,L.exitH,function() self.Close() end,true))
   T.setTier(exit,4);exit.Caption.TextSize=38;exit.Caption.TextColor3=C.negative
   if RunService:IsStudio() then
    local dev=add(T.button(canvas,'DevEmeralds','+200 EMERALDS (STUDIO)',LIST_X+256,L.exitY,290,L.exitH,function() local r=request('DevEmeralds');toast(r.message or '',r.ok);drawBrowse() end,true))
@@ -402,7 +404,7 @@ function U.new(player,opts)
   local bestRarity=Eggs.Rarities[math.max(1,o.bestRank)]
   Merchant.Say(Merchant.pick(bestRarity),3)
   if o.bestRank>=3 then Merchant.Cheer() else Merchant.Nod() end
-  -- Cards: one row under the title, leaving the middle of the screen for the pet over the egg.
+  -- Cards: centred on the screen (user, 2026-10-02), kept between the subtitle and the buttons.
   -- Up to 7 per row; ×10 can wrap to 2 rows and scrolls past what fits.
   local list=o.results
   local cw,ch,gap=186,244,16
@@ -413,7 +415,8 @@ function U.new(player,opts)
   local gridW=cols*pw-gap*k
   local btnY=L.h-(compact and 112 or 150)
   local gridH=math.min(rows*ph+4,btnY-16-(compact and 124 or 180))
-  local gridY=btnY-16-gridH
+  local top=compact and 124 or 180
+  local gridY=math.clamp((L.h-gridH)/2,top,math.max(top,btnY-16-gridH))
   local grid=T.make('ScrollingFrame',resultLayer,{Name='Grid',BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset((L.w-gridW)/2-10,gridY),Size=UDim2.fromOffset(gridW+20,gridH),CanvasSize=UDim2.fromOffset(0,rows*ph),ScrollBarThickness=8,ScrollBarImageColor3=C.lime,ScrollingDirection=Enum.ScrollingDirection.Y,ZIndex=32})
   local order={};for i=#list,1,-1 do table.insert(order,list[i]) end
   local slots={}

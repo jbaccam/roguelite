@@ -414,7 +414,9 @@ function U.new(player,opts)
   gemValue=left(T.label(pill,'Value',fmt(profile.gems),70,6,160,52,34,C.emerald));gemValue.TextWrapped=false -- 7+ digits shrink on one line
   local plus=T.button(gem,'Plus','+',248,math.max(-11,(64-ps)/2),ps,ps,function() self.Close();opts.openWindow('Store','Emeralds') end);plus.Caption.TextSize=36
   -- Exit (bottom left); the list ends above it.
-  local exit=add(T.button(canvas,'Exit','EXIT',LIST_X,L.exitY,240,L.exitH,function() self.Close() end,true))
+  -- EXIT sits centred under the list; in Studio it moves left to make room for +200 EMERALDS.
+  local exitX=RunService:IsStudio() and LIST_X or LIST_X+(LIST_W-240)/2
+  local exit=add(T.button(canvas,'Exit','EXIT',exitX,L.exitY,240,L.exitH,function() self.Close() end,true))
   T.setTier(exit,4);exit.Caption.TextSize=38;exit.Caption.TextColor3=C.negative
   if RunService:IsStudio() then
    local dev=add(T.button(canvas,'DevEmeralds','+200 EMERALDS (STUDIO)',LIST_X+256,L.exitY,290,L.exitH,function() local r=request('DevEmeralds');toast(r.message or '',r.ok);readProfile();drawBrowse() end,true))

@@ -91,6 +91,13 @@
   "text": "\t\t\t\t\"EMPTY SLOT  ·  HATCH PETS FROM EGGS\","
  },
  {
+  "repo": "ui/ChestScreenUI.luau",
+  "studio": "ReplicatedStorage.ChestScreenUI",
+  "anchor": "  local exit=add(T.button(canvas,'Exit','EXIT',LIST_X,L.exitY,240,L.exitH,function() self.Close() end,true))",
+  "where": "replace",
+  "text": "  -- EXIT sits centred under the list; in Studio it moves left to make room for +200 EMERALDS.\n  local exitX=RunService:IsStudio() and LIST_X or LIST_X+(LIST_W-240)/2\n  local exit=add(T.button(canvas,'Exit','EXIT',exitX,L.exitY,240,L.exitH,function() self.Close() end,true))"
+ },
+ {
   "repo": "combat/default.project.json",
   "studio": null,
   "anchor": "        \"ChestConfig\": {",

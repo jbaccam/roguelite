@@ -115,6 +115,12 @@ if not eggsOk then warn('LobbyUI: EggScreenUI failed to load:',EggScreenUI);EggS
     ("ui/ArmoryUI.luau", "ReplicatedStorage.ArmoryUI",
      '\t\t\t\t"EMPTY SLOT  ·  FROM THE PET CHEST",', "replace",
      '\t\t\t\t"EMPTY SLOT  ·  HATCH PETS FROM EGGS",'),
+    # --- ChestScreenUI: EXIT centred under the list outside Studio (user, 2026-10-02) ----------
+    ("ui/ChestScreenUI.luau", "ReplicatedStorage.ChestScreenUI",
+     "  local exit=add(T.button(canvas,'Exit','EXIT',LIST_X,L.exitY,240,L.exitH,function() self.Close() end,true))", "replace",
+     "  -- EXIT sits centred under the list; in Studio it moves left to make room for +200 EMERALDS.\n"
+     "  local exitX=RunService:IsStudio() and LIST_X or LIST_X+(LIST_W-240)/2\n"
+     "  local exit=add(T.button(canvas,'Exit','EXIT',exitX,L.exitY,240,L.exitH,function() self.Close() end,true))"),
     # --- Rojo project (repo only; Studio path None): the new modules ---------------------------
     ("combat/default.project.json", None,
      '        "ChestConfig": {', "before",

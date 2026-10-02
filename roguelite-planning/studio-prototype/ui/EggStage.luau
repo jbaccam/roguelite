@@ -233,7 +233,7 @@ local function popPet(id,color)
  petClone=m
  local rim=pivot0*Vector3.new(base.X,breakY-.35,base.Z)
  local start=os.clock()
- local light=Instance.new('PointLight');light.Color=color or Eggs.Glow;light.Brightness=3;light.Range=10
+ local light=Instance.new('PointLight');light.Color=color or Eggs.Glow;light.Brightness=1.2;light.Range=9
  light.Parent=m.PrimaryPart or m:FindFirstChildWhichIsA('BasePart')
  petConn=RunService.RenderStepped:Connect(function()
   if not m.Parent then return end
@@ -282,6 +282,8 @@ function S.Burst(scale,hint,petId)
  FX.play(FX.Sounds.GoldShake2,.8,.8)
  FX.play(FX.Sounds.Burst,.6,1.05)
  if petId then task.delay(.12,function() popPet(petId,hint) end) end
+ -- Once the pet is out, calm the glow so it doesn't wash the pet out (full blast hid the Frog).
+ task.delay(1.1,function() if petClone and aura then aura:SetLevel(1) end end)
 end
 
 -- Put the egg back together (CLAIM, hatch again, or leaving mid-way): the pet goes, the shards
