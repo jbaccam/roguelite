@@ -113,6 +113,7 @@ function S.publish(p,message)
  local s=S.states[p];if not s or not Characters.states[p] then return end
  s.slotRows=slotRows(p) or s.slotRows -- every slot change publishes, so this copy stays current
  local data={pendingLevels=s.pendingLevels,upgradeOffers=s.upgradeOffers,upgradeToken=s.upgradeToken,upgradeRerolls=s.upgradeRerolls,upgradeRerollPrice=E.reroll(S.wave,s.upgradeRerolls),freeRerolls=s.freeRerolls,freeUpgradeRerolls=s.freeUpgradeRerolls,baggedShards=s.baggedShards,level=s.level,shards=s.shards,wave=S.wave,phase=S.phase,rerolls=s.rerolls,rerollPrice=E.reroll(S.wave,s.rerolls),offers=s.offers,items=s.items,weapons=owned(p),ready=s.ready,revision=s.revision,message=message or s.message or '',modifier=E.modifier(Characters.states[p].stats),debug=RunService:IsStudio() and E.DEBUG_CURRENCY_ENABLED}
+ data.upgrades=s.upgradeBonuses -- plan L: the pause screen's level-up picks (id -> picks)
  s.message=data.message;S.publishProgress(p)
  slots(p):SetAttribute('ShopSnapshot',Http:JSONEncode(data))
 end
@@ -313,7 +314,8 @@ end
 -- An admin Pause holds the clock until adminPause(false), which clears AdminPaused first: a revive
 -- during it must not restart the clock while the spawner stays paused.
 function S.resume()
- if not S.paused or run:GetAttribute('AdminPaused') then return end
+ -- Plan L: a paused run (RunPaused) keeps the clock held too; RogueliteMeta resumes it on unfreeze.
+ if not S.paused or run:GetAttribute('AdminPaused') or combat:GetAttribute('RunPaused')==true then return end
  if S.phase=='Combat' then run:SetAttribute('WaveEndsAt',workspace:GetServerTimeNow()+S.paused) end
  S.paused=nil;run:SetAttribute('Paused',nil)
 end

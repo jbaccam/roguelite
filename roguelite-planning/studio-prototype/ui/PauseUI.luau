@@ -20,8 +20,9 @@ local C=T.Color
 local INK=FX.INK
 local M={}
 M.PAUSE_ICON='rbxassetid://109142479841413' -- ui/assets/hud/pause.png
--- Solo RESTART uses plan J's RunAction 'Restart'; hidden until that ships.
-M.RESTART=false
+-- Solo RESTART: plan J's RunAction 'Restart' (ab93d9a) ends the run as Left (rewards so far kept)
+-- and starts the same map and difficulty again. Set false to hide the button.
+M.RESTART=true
 -- Stats shown, by group; every value already includes items and level-ups.
 M.Groups={
  {'OFFENSE',{'Damage','AttackSpeed','CritChance','CritDamage','MeleeDamage','RangedDamage'}},

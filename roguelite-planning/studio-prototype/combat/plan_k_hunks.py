@@ -32,7 +32,7 @@ task.spawn(function()
   for stat,t in questTally do
    for p,n in t do t[p]=nil;if Shop.members[p] then questEvent(p,stat,math.floor(n)) end end
   end
-  if os.clock()>=minuteAt then minuteAt+=60;for p in Shop.members do questEvent(p,'minutes',1) end end
+  if os.clock()>=minuteAt then minuteAt+=60;if combat:GetAttribute('RunPaused')~=true then for p in Shop.members do questEvent(p,'minutes',1) end end end -- plan L: paused minutes don't count
  end
 end)"""),
     (META, "ServerScriptService.RogueliteMeta",
