@@ -117,26 +117,8 @@ task.spawn(function()
   if os.clock()>=minuteAt then minuteAt+=60;if combat:GetAttribute('RunPaused')~=true then for p in Shop.members do questEvent(p,'minutes',1) end end end -- plan L: paused minutes don't count
  end
 end)
--- Plan K quest stats from the run: level-ups, shards picked up and shop buys (ShopService hooks),
--- damage dealt (CombatEffectsService.listenDamage) and each minute in a run. The hooks run inside
--- the sandboxed ShopService / CombatEffectsService, so they only add to these tallies; this loop
--- sends them to quests once a second. Members of the run only; questEvent skips test runs.
-local questTally={levels={},shards={},buys={},damage={}}
-local function tally(stat,p,n) if Shop.members[p] then local t=questTally[stat];t[p]=(t[p] or 0)+n end end
-Shop.onLevelUp=function(p,n) tally('levels',p,n) end
-Shop.onShards=function(p,n) tally('shards',p,n) end
-Shop.onBuy=function(p) tally('buys',p,1) end
-if Effects.listenDamage then Effects.listenDamage(function(owner,_,actual) tally('damage',owner,actual) end) end -- plan J's hook; absent in older copies
-task.spawn(function()
- local minuteAt=os.clock()+60
- while true do
-  task.wait(1)
-  for stat,t in questTally do
-   for p,n in t do t[p]=nil;if Shop.members[p] then questEvent(p,stat,math.floor(n)) end end
-  end
-  if os.clock()>=minuteAt then minuteAt+=60;for p in Shop.members do questEvent(p,'minutes',1) end end
- end
-end)
+local runKills,runDamage={},{} -- plan L: this stint's kills and damage for the pause screen (the run loop publishes them)
+if Effects.listenDamage then Effects.listenDamage(function(owner,_,actual) if Shop.members[owner] then runDamage[owner]=(runDamage[owner] or 0)+actual end end) end
 -- Each cleared wave saves progress right away, so nothing waits on the death screen's Give Up:
 -- the best wave, the win at wave 20 with its first-win bonus, and the run emeralds earned so far
 -- (paid as they're reached; ProfileService.settleRun pays each stint's emeralds once). Leaving,
@@ -184,6 +166,7 @@ Death.onDeath=function(npc)
  local p=type(id)=='number' and Players:GetPlayerByUserId(id) or nil
  if not p or not Shop.states[p] then return end
  questEvent(p,'kills',1)
+ runKills[p]=(runKills[p] or 0)+1 -- plan L: the pause screen's kills this stint
  local weapon=Weapons.ById[npc:GetAttribute('LastWeaponId')]
  if weapon and weapon.utility then questEvent(p,'utilityKills',1) end
  if weapon then questEvent(p,weapon.kind=='Melee' and 'meleeKills' or 'rangedKills',1) end -- Ranged, Blast and Spread count as ranged
@@ -489,6 +472,46 @@ local function offerRejoin(p)
  local index=RunSetupRules.MapIndex[rec.map]
  p:SetAttribute('RejoinOffer',Http:JSONEncode({mapName=index and RunSetupRules.Maps[index].name or 'your run',difficulty=rec.difficulty or 'Normal',wave=rec.wave or 1}))
 end
+-- Pause (plans/2026-10-02-L-pause.md): RunAction SetPaused. The run freezes only when every living
+-- member has paused (RunPause). A freeze holds the wave clock or the shop countdown, switches each
+-- member's weapons off (restored after) and sets RogueliteCombat.RunPaused, which the spawner,
+-- enemies, bosses, statuses, pets, hearts and CharacterService (hold, no damage) all check.
+local RunPause=require(SSS:WaitForChild('RunPause'))
+local pause=RunPause.new()
+local pausedWeapons={} -- player -> WeaponEnabled before the freeze
+local shopLeft -- seconds the shop countdown had left when the run froze in the shop
+local lastPauseAction,statStint={},{}
+local function pauseLiving()
+ local list={}
+ for p in Shop.members do local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid');if h and h.Health>0 and not down[p] then table.insert(list,p) end end
+ return list
+end
+local function memberState(p) local f=combat:FindFirstChild('PlayerStates');return f and f:FindFirstChild(tostring(p.UserId)) end
+local function applyPause()
+ local frozen,count,living=RunPause.evaluate(pause,pauseLiving())
+ if combat:GetAttribute('RunPausedCount')~=count then combat:SetAttribute('RunPausedCount',count) end
+ if combat:GetAttribute('RunLivingCount')~=living then combat:SetAttribute('RunLivingCount',living) end
+ local now=workspace:GetServerTimeNow()
+ local change=RunPause.step(pause,frozen,now)
+ if change=='freeze' then
+  combat:SetAttribute('RunPaused',true)
+  for p in Shop.members do local st=memberState(p);if st then pausedWeapons[p]=st:GetAttribute('WeaponEnabled');st:SetAttribute('WeaponEnabled',false) end end
+  if Shop.phase=='Combat' then Shop.pause() end
+  local ends=runState:GetAttribute('ShopEndsAt')
+  if Shop.phase=='Shop' and type(ends)=='number' then shopLeft=math.max(0,ends-now);runState:SetAttribute('ShopEndsAt',nil) end
+ elseif change=='unfreeze' then
+  combat:SetAttribute('RunPaused',nil)
+  for p,was in pausedWeapons do local st=memberState(p);if st and p.Parent then st:SetAttribute('WeaponEnabled',was) end end
+  table.clear(pausedWeapons)
+  if shopLeft then if Shop.phase=='Shop' then runState:SetAttribute('ShopEndsAt',now+shopLeft) end;shopLeft=nil end
+  if livingInRun()>0 and not lastStandEnds then Shop.resume() end
+ end
+end
+local function setPaused(p,on)
+ if on and not Shop.members[p] then on=false end
+ if RunPause.set(pause,p,on) then p:SetAttribute('Paused',on or nil) end
+ applyPause()
+end
 local lastRunAction={}
 local useStored -- defined with the purchase code below
 runAction.OnServerEvent:Connect(function(p,action,arg)
@@ -506,6 +529,9 @@ runAction.OnServerEvent:Connect(function(p,action,arg)
     p:SetAttribute('RejoinOffer',Http:JSONEncode(info))
    end
   end
+ elseif action=='SetPaused' then -- plan L: the pause screen opening (true) or closing (false)
+  if os.clock()-(lastPauseAction[p] or 0)<.25 then return end;lastPauseAction[p]=os.clock()
+  setPaused(p,arg==true)
  elseif action=='UseReroll' or action=='UseBanish' then useStored(p,action,arg) end
 end)
 -- The run's clocks: the last stand, automatic Back to Lobby, the shop's "keep N emeralds".
@@ -535,6 +561,16 @@ game:GetService('RunService').Heartbeat:Connect(function(dt)
  local due={};for p,at in returning do if now>=at then table.insert(due,p) end end
  if #due>0 then returnToLobby(due) end
  checkAgain() -- Play Again starts when the old run is over and everyone on results has decided
+ -- Pause (plan L): who must pause changes with deaths, joins and leaves; check four times a second.
+ for p in pause.paused do if not Shop.members[p] or down[p] or not p.Parent then RunPause.forget(pause,p);p:SetAttribute('Paused',nil) end end
+ applyPause()
+ -- This stint's kills and damage, for the pause screen (RunKills / RunDamage).
+ for p,m in Shop.members do
+  if statStint[p]~=m.stint then statStint[p]=m.stint;runKills[p]=0;runDamage[p]=0 end
+  local k,dmg=runKills[p] or 0,math.floor(runDamage[p] or 0)
+  if p:GetAttribute('RunKills')~=k then p:SetAttribute('RunKills',k) end
+  if p:GetAttribute('RunDamage')~=dmg then p:SetAttribute('RunDamage',dmg) end
+ end
  for p,m in Shop.members do
   local paid=Admin.isTestRun() and 0 or Profiles.stintPaid(p,m.stint)
   if p:GetAttribute('RunEmeralds')~=paid then p:SetAttribute('RunEmeralds',paid) end
@@ -805,6 +841,7 @@ Players.PlayerRemoving:Connect(function(p)
  if (revivesUsed[p] or 0)>0 or phoenixUsed[p] then reviveCarry[p.UserId]={run=Shop.runId,revives=revivesUsed[p] or 0,phoenix=phoenixUsed[p]} end
  down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil;requestWindow[p]=nil;lastPickSave[p]=nil
  returning[p]=nil;prompting[p]=nil;runInfo[p]=nil;returnTries[p]=nil;again[p]=nil;lastRunAction[p]=nil
+ RunPause.forget(pause,p);pausedWeapons[p]=nil;lastPauseAction[p]=nil;runKills[p]=nil;runDamage[p]=nil;statStint[p]=nil -- plan L
  -- The last one standing left: the clock loop pauses the wave again for the downed players' last
  -- stand. A last stand already counting down keeps the wave paused.
  if livingInRun()==0 and not lastStandEnds then Shop.resume() end

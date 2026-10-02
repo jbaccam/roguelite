@@ -59,7 +59,9 @@ def stage_on_head(hunks):
     prefix = subprocess.run(["git", "rev-parse", "--show-prefix"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
     for path in sorted({h[0] for h in hunks}):
         gp = prefix + path
-        text = subprocess.run(["git", "show", "HEAD:" + gp], cwd=repo, capture_output=True, check=True).stdout.decode("utf-8")
+        # The index, not HEAD: a second plan staging the same file then builds on the first one's
+        # staged hunks instead of replacing them (2026-10-02: plan K over plan L dropped plan L).
+        text = subprocess.run(["git", "show", ":" + gp], cwd=repo, capture_output=True, check=True).stdout.decode("utf-8")
         for p, _, anchor, where, ins in hunks:
             if p == path:
                 text, status = apply(text, anchor, where, ins)
