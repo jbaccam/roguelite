@@ -62,9 +62,11 @@ local function fresh()
  return d
 end
 local function csv(t,fmt) local out={};for k,v in t do table.insert(out,fmt(k,v)) end;table.sort(out);return table.concat(out,',') end
+local questDirty={} -- player -> true: quest progress changed since ProfileQuests was last written
 
 function P.publish(player)
  local d=P.profiles[player];if not d then return end
+ questDirty[player]=nil -- written below, with everything else
  player:SetAttribute('ProfileGems',d.emeralds)
  player:SetAttribute('ProfileGemsEarned',d.emeralds-d.bought) -- what restricted regions may spend on chests
  player:SetAttribute('ProfileClasses',csv(d.classes,function(k) return k end))
@@ -474,7 +476,9 @@ function P.questView(player)
 end
 -- Kills come many per second: an event only marks the profile, and marked profiles publish
 -- ProfileQuests at most once a second. A test run (the admin panel was used) counts nothing.
-local questDirty={}
+-- In a run (RunMember) they wait instead (launch audit P11): only the lobby shows quests, and a
+-- multi-KB JSON every second goes to every client. Each wave clear's settleRun publishes them
+-- (P.publish), and leaving the run lets this loop catch up.
 local function publishQuests(player)
  questDirty[player]=nil
  if P.profiles[player] then player:SetAttribute('ProfileQuests',Http:JSONEncode(P.questView(player))) end
@@ -488,7 +492,7 @@ function P.questRun(player,stint)
  local d=P.profiles[player];if not d or Admin.isTestRun() then return end
  if quest('runStarted',d,Money.day(),player.UserId,stint) then questDirty[player]=true end
 end
-task.spawn(function() while true do task.wait(1);for p in questDirty do publishQuests(p) end end end)
+task.spawn(function() while true do task.wait(1);for p in questDirty do if p:GetAttribute('RunMember')~=true then publishQuests(p) end end end end)
 -- Claims: QuestService checks and marks; the grant goes through P.grant (earned emeralds).
 local function questGrant(player,ok,message,g)
  if ok==nil then return false,'Quests are not available right now' end
