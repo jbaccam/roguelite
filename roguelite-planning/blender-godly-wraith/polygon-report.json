@@ -1,0 +1,176 @@
+{
+ "asset": "crimson-wraith",
+ "blender_version": "5.2.1 LTS",
+ "authoring": "final Roblox stud size (1 Blender unit = 1 stud); import at 1:1, do not scale",
+ "axes": "Blender Z-up, the wraith faces -Y, its right hand is at -X; Studio = (-x, z, y) of Blender",
+ "origin": "Blender (0,0,0) = body axis at chest height (hover pivot); arm origins sit on the shoulder joints",
+ "texture": "textures/BaseColor.png (512x512), shared by Wraith_Body, Wraith_ArmL, Wraith_ArmR",
+ "authored_scale_factor": 0.98039,
+ "budget": "target 3000-5000 triangles total, hard cap 6000 (up to 24 on screen)",
+ "parts": {
+  "Wraith_Body": {
+   "kind": "textured",
+   "triangles": 3080,
+   "vertices": 1632,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bbox_min": [
+    -1.0451,
+    -0.7094,
+    -2.6863
+   ],
+   "bbox_max": [
+    1.0451,
+    1.0,
+    1.8137
+   ],
+   "dimensions_studs": [
+    2.0903,
+    1.7094,
+    4.5
+   ],
+   "pivot": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Wraith_ArmL": {
+   "kind": "textured",
+   "triangles": 640,
+   "vertices": 352,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bbox_min": [
+    0.5836,
+    -1.3467,
+    -0.9648
+   ],
+   "bbox_max": [
+    2.0781,
+    0.2204,
+    0.5294
+   ],
+   "dimensions_studs": [
+    1.4946,
+    1.567,
+    1.4942
+   ],
+   "pivot": [
+    0.7647,
+    0.0392,
+    0.3333
+   ]
+  },
+  "Wraith_ArmR": {
+   "kind": "textured",
+   "triangles": 640,
+   "vertices": 352,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bbox_min": [
+    -2.0781,
+    -1.3467,
+    -0.9648
+   ],
+   "bbox_max": [
+    -0.5836,
+    0.2204,
+    0.5294
+   ],
+   "dimensions_studs": [
+    1.4946,
+    1.567,
+    1.4942
+   ],
+   "pivot": [
+    -0.7647,
+    0.0392,
+    0.3333
+   ]
+  },
+  "Wraith_Glow": {
+   "kind": "glow",
+   "triangles": 588,
+   "vertices": 344,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bbox_min": [
+    -0.7844,
+    -0.5309,
+    -2.6863
+   ],
+   "bbox_max": [
+    0.7844,
+    1.0053,
+    1.2878
+   ],
+   "dimensions_studs": [
+    1.5687,
+    1.5361,
+    3.9741
+   ],
+   "pivot": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Wraith_GlowCore": {
+   "kind": "glow",
+   "triangles": 48,
+   "vertices": 30,
+   "loose_vertices": 0,
+   "zero_area_faces": 0,
+   "non_manifold_edges": 0,
+   "bbox_min": [
+    -0.1463,
+    -0.5603,
+    -0.0931
+   ],
+   "bbox_max": [
+    0.1463,
+    -0.1886,
+    1.0245
+   ],
+   "dimensions_studs": [
+    0.2925,
+    0.3717,
+    1.1176
+   ],
+   "pivot": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "total_triangles": 4996,
+ "total_vertices": 2710,
+ "height_studs": 4.5,
+ "claw_spread_studs": 3.9314,
+ "overall_width_studs": 4.1562,
+ "pre_join_part_triangles": {
+  "Cranium": 276,
+  "SkullDetail": 332,
+  "Hood": 616,
+  "HoodTrim": 244,
+  "Mantle": 484,
+  "Torso": 372,
+  "Ribs": 208,
+  "Tatters": 276,
+  "Spikes": 272,
+  "ArmCloth": 296,
+  "ArmBone": 344,
+  "Eyes_Glow": 104,
+  "HoodRune_Glow": 60,
+  "SoulCore_Glow": 48,
+  "Tatters_Glow": 376,
+  "Eyes_Core": 24,
+  "SoulCore_Core": 24
+ }
+}

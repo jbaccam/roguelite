@@ -1,0 +1,171 @@
+{
+ "name": "CrimsonWraith",
+ "blender_version": "5.2.1 LTS",
+ "status": "Blender-verified, Studio untested",
+ "units": "1 Blender unit = 1 stud, authored at final size (4.5 studs hood tip to tail tip); import 1:1",
+ "axes": "Studio = (-x, z, y) of Blender",
+ "facing": "Studio -Z forward: the skull face looks along Studio -Z (Blender -Y); the wraith's right arm is at Studio +X",
+ "model_origin": "Studio (0,0,0) = Blender origin = body axis at chest height (hover pivot / bob pivot)",
+ "texture": "textures/BaseColor.png 512x512, baked painted lighting, shared by the three textured parts; use MeshPart.TextureID (not SurfaceAppearance)",
+ "parts": {
+  "Wraith_Body": {
+   "kind": "textured",
+   "center_studio": [
+    -0.0,
+    -0.4363,
+    0.1453
+   ],
+   "size_studio": [
+    2.0902,
+    4.5,
+    1.7094
+   ],
+   "triangles": 3080,
+   "material": "SmoothPlastic (or Plastic), Color white",
+   "texture_id": "textures/BaseColor.png"
+  },
+  "Wraith_ArmL": {
+   "kind": "textured",
+   "center_studio": [
+    -1.3309,
+    -0.2177,
+    -0.5632
+   ],
+   "size_studio": [
+    1.4945,
+    1.4942,
+    1.5671
+   ],
+   "triangles": 640,
+   "material": "SmoothPlastic (or Plastic), Color white",
+   "texture_id": "textures/BaseColor.png",
+   "shoulder_pivot_studio": [
+    -0.7647,
+    0.3333,
+    0.0392
+   ],
+   "shoulder_pivot_relative_to_center_studio": [
+    0.5661,
+    0.551,
+    0.6024
+   ]
+  },
+  "Wraith_ArmR": {
+   "kind": "textured",
+   "center_studio": [
+    1.3309,
+    -0.2177,
+    -0.5632
+   ],
+   "size_studio": [
+    1.4945,
+    1.4942,
+    1.5671
+   ],
+   "triangles": 640,
+   "material": "SmoothPlastic (or Plastic), Color white",
+   "texture_id": "textures/BaseColor.png",
+   "shoulder_pivot_studio": [
+    0.7647,
+    0.3333,
+    0.0392
+   ],
+   "shoulder_pivot_relative_to_center_studio": [
+    -0.5661,
+    0.551,
+    0.6024
+   ]
+  },
+  "Wraith_Glow": {
+   "kind": "glow",
+   "center_studio": [
+    -0.0,
+    -0.6993,
+    0.2372
+   ],
+   "size_studio": [
+    1.5688,
+    3.9741,
+    1.5362
+   ],
+   "triangles": 588,
+   "material": "Neon",
+   "color_rgb": [
+    255,
+    22,
+    52
+   ],
+   "note": "crimson glow: eye sockets, mouth, soul core, tail-tatter and tail-ridge edge lines"
+  },
+  "Wraith_GlowCore": {
+   "kind": "glow",
+   "center_studio": [
+    -0.0,
+    0.4657,
+    -0.3745
+   ],
+   "size_studio": [
+    0.2926,
+    1.1176,
+    0.3717
+   ],
+   "triangles": 48,
+   "material": "Neon",
+   "color_rgb": [
+    255,
+    150,
+    128
+   ],
+   "note": "white-hot cores: eye pupils, soul core centre"
+  }
+ },
+ "points": {
+  "eyes_studio": [
+   -0.0,
+   0.9853,
+   -0.4779
+  ],
+  "eye_L_studio": [
+   -0.1157,
+   0.9853,
+   -0.4779
+  ],
+  "eye_R_studio": [
+   0.1157,
+   0.9853,
+   -0.4779
+  ],
+  "core_studio": [
+   -0.0,
+   0.0,
+   -0.1569
+  ],
+  "tail_tip_studio": [
+   -0.0,
+   -2.6863,
+   0.6275
+  ],
+  "claw_tip_L_studio": [
+   -1.6878,
+   -0.9188,
+   -1.2988
+  ],
+  "claw_tip_R_studio": [
+   1.6878,
+   -0.9188,
+   -1.2988
+  ]
+ },
+ "notes": [
+  "Every MeshPart imports centred on its own bounding box: place each at its center_studio relative to the model origin.",
+  "Arms: rotate each arm about its shoulder_pivot_studio for claw swipes. The arm root is a cloth ball centred on the pivot inside the shroud, so swings up to about 40 degrees in any direction show no gap (see previews/ClawPose.png).",
+  "claw_tip = tip of the long middle talon in the rest pose (hit point for swipes).",
+  "Glow parts are not attached to the arms; nothing on the arms glows, so they can rotate freely."
+ ],
+ "vfx_notes": [
+  "Spawn: a crimson (255,22,52) burst at the slain enemy, then the wraith rises; fade-in over ~0.2 s.",
+  "Trail: ParticleEmitter at tail_tip, Color 255,22,52 -> 60,0,15, LightEmission 1, Size 0.6 -> 0, Lifetime 0.35, Rate 30, Speed 0, Drag 4, LockedToPart false.",
+  "Soul core pulse: tween the Wraith_GlowCore part's Transparency 0 -> 0.35 or size 1 -> 1.12 at ~2 Hz.",
+  "Despawn after 6 s: crimson wisp burst at core_studio, fade all parts over ~0.3 s."
+ ]
+}

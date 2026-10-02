@@ -1,0 +1,313 @@
+{
+ "asset": "crimson-wraith",
+ "blender_version": "5.2.1 LTS",
+ "expected_total_triangles": 4996,
+ "results": {
+  "fbx": {
+   "file": "exports/fbx/Wraith.fbx",
+   "meshes": 5,
+   "total_triangles": 4996,
+   "images": [
+    "Wraith_BaseColor 512x512"
+   ],
+   "parts": {
+    "Wraith_ArmL": {
+     "triangles": 640,
+     "expected_triangles": 640,
+     "loose_vertices": 0,
+     "zero_area_faces": 0,
+     "bbox_min": [
+      0.5836,
+      -1.3467,
+      -0.9648
+     ],
+     "bbox_max": [
+      2.0781,
+      0.2204,
+      0.5294
+     ],
+     "origin": [
+      0.7647,
+      0.0392,
+      0.3333
+     ],
+     "expected_origin": [
+      0.7647,
+      0.0392,
+      0.3333
+     ],
+     "image": "Wraith_BaseColor 512x512",
+     "uv_inside_0_1": true
+    },
+    "Wraith_ArmR": {
+     "triangles": 640,
+     "expected_triangles": 640,
+     "loose_vertices": 0,
+     "zero_area_faces": 0,
+     "bbox_min": [
+      -2.0781,
+      -1.3467,
+      -0.9648
+     ],
+     "bbox_max": [
+      -0.5836,
+      0.2204,
+      0.5294
+     ],
+     "origin": [
+      -0.7647,
+      0.0392,
+      0.3333
+     ],
+     "expected_origin": [
+      -0.7647,
+      0.0392,
+      0.3333
+     ],
+     "image": "Wraith_BaseColor 512x512",
+     "uv_inside_0_1": true
+    },
+    "Wraith_Body": {
+     "triangles": 3080,
+     "expected_triangles": 3080,
+     "loose_vertices": 0,
+     "zero_area_faces": 0,
+     "bbox_min": [
+      -1.0451,
+      -0.7094,
+      -2.6863
+     ],
+     "bbox_max": [
+      1.0451,
+      1.0,
+      1.8137
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "expected_origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "image": "Wraith_BaseColor 512x512",
+     "uv_inside_0_1": true
+    },
+    "Wraith_Glow": {
+     "triangles": 588,
+     "expected_triangles": 588,
+     "loose_vertices": 0,
+     "zero_area_faces": 0,
+     "bbox_min": [
+      -0.7844,
+      -0.5309,
+      -2.6863
+     ],
+     "bbox_max": [
+      0.7844,
+      1.0053,
+      1.2878
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "expected_origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "image": null,
+     "uv_inside_0_1": true
+    },
+    "Wraith_GlowCore": {
+     "triangles": 48,
+     "expected_triangles": 48,
+     "loose_vertices": 0,
+     "zero_area_faces": 0,
+     "bbox_min": [
+      -0.1463,
+      -0.5603,
+      -0.0931
+     ],
+     "bbox_max": [
+      0.1463,
+      -0.1886,
+      1.0245
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "expected_origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "image": null,
+     "uv_inside_0_1": true
+    }
+   },
+   "problems": [],
+   "pass": true
+  },
+  "glb": {
+   "file": "exports/glb/Wraith.glb",
+   "meshes": 5,
+   "total_triangles": 4996,
+   "images": [
+    "BaseColor 512x512"
+   ],
+   "parts": {
+    "Wraith_ArmL": {
+     "triangles": 640,
+     "expected_triangles": 640,
+     "loose_vertices": 0,
+     "zero_area_faces": 0,
+     "bbox_min": [
+      0.5836,
+      -1.3467,
+      -0.9648
+     ],
+     "bbox_max": [
+      2.0781,
+      0.2204,
+      0.5294
+     ],
+     "origin": [
+      0.7647,
+      0.0392,
+      0.3333
+     ],
+     "expected_origin": [
+      0.7647,
+      0.0392,
+      0.3333
+     ],
+     "image": "BaseColor 512x512",
+     "uv_inside_0_1": true
+    },
+    "Wraith_ArmR": {
+     "triangles": 640,
+     "expected_triangles": 640,
+     "loose_vertices": 0,
+     "zero_area_faces": 0,
+     "bbox_min": [
+      -2.0781,
+      -1.3467,
+      -0.9648
+     ],
+     "bbox_max": [
+      -0.5836,
+      0.2204,
+      0.5294
+     ],
+     "origin": [
+      -0.7647,
+      0.0392,
+      0.3333
+     ],
+     "expected_origin": [
+      -0.7647,
+      0.0392,
+      0.3333
+     ],
+     "image": "BaseColor 512x512",
+     "uv_inside_0_1": true
+    },
+    "Wraith_Body": {
+     "triangles": 3080,
+     "expected_triangles": 3080,
+     "loose_vertices": 0,
+     "zero_area_faces": 0,
+     "bbox_min": [
+      -1.0451,
+      -0.7094,
+      -2.6863
+     ],
+     "bbox_max": [
+      1.0451,
+      1.0,
+      1.8137
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "expected_origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "image": "BaseColor 512x512",
+     "uv_inside_0_1": true
+    },
+    "Wraith_Glow": {
+     "triangles": 588,
+     "expected_triangles": 588,
+     "loose_vertices": 0,
+     "zero_area_faces": 0,
+     "bbox_min": [
+      -0.7844,
+      -0.5309,
+      -2.6863
+     ],
+     "bbox_max": [
+      0.7844,
+      1.0053,
+      1.2878
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "expected_origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "image": null,
+     "uv_inside_0_1": true
+    },
+    "Wraith_GlowCore": {
+     "triangles": 48,
+     "expected_triangles": 48,
+     "loose_vertices": 0,
+     "zero_area_faces": 0,
+     "bbox_min": [
+      -0.1463,
+      -0.5603,
+      -0.0931
+     ],
+     "bbox_max": [
+      0.1463,
+      -0.1886,
+      1.0245
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "expected_origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "image": null,
+     "uv_inside_0_1": true
+    }
+   },
+   "problems": [],
+   "pass": true
+  }
+ },
+ "all_pass": true,
+ "note": "Blender re-import only. Studio import, Neon look, TextureID and in-game scale are untested."
+}
