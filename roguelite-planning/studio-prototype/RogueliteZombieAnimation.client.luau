@@ -11,6 +11,14 @@ local HeldProjectiles=require(combat:WaitForChild('EnemyHeldProjectiles'))
 local tracked={}
 local MAX_MOVE_CYCLES=4 -- imported Move clip loops per second
 local EMPTY=table.freeze({})
+-- Imported bipeds run on planted IK feet (NativeEnemyFeet.bindImported); the Move clip is sampled
+-- for it at the scale the enemy is shown at.
+local function bindLegs(npc,state)
+ local data=state.data;if not data or state.config.legacy then return nil end
+ local relativeScale=npc:GetScale()/(npc:GetAttribute('EnemyBaselineModelScale') or 1)
+ local config=state.config
+ return NativeFeet.bindImported(npc,state.joints,function(t) return Motion.scalePose(Motion.sample(data,'Move',t),relativeScale) end,data.clips.Move.duration,config.runStance or (config.behavior=='Heavy' and .45 or .32))
+end
 local function untrack(npc)
  local state=tracked[npc]
  if state then
@@ -70,6 +78,7 @@ RunService.PreSimulation:Connect(function(dt)
   if state.bindingsDirty then
    state.joints=Motion.bind(npc)
    state.feet=config.legacy and NativeFeet.bind(npc,config.legacy)
+   state.legs=bindLegs(npc,state)
    state.bindingsDirty=false;state.feetRetry=now+1
   elseif config.legacy and not state.feet and now>=state.feetRetry then
    -- A rig that can't bind yet retries on its next structural change, else once a second.
@@ -104,6 +113,7 @@ RunService.PreSimulation:Connect(function(dt)
     if not data and not pending and not state.warned then warn('Missing enemy clips: '..config.id);state.warned=true end
     if state.data then
      state.moveClock=state.idleOffset/(2*math.pi)*state.data.clips.Move.duration
+     state.legs=bindLegs(npc,state)
      -- Leg bones on every rig: Thigh/Shin/Foot, Upper/LowerLeg, crab and spider LegNUpper/Lower.
      state.legBones={}
      for bone in state.data.bones do
@@ -114,8 +124,13 @@ RunService.PreSimulation:Connect(function(dt)
    if not state.data then continue end
    local data=state.data;local clip=data.clips.Move
    local relativeScale=npc:GetScale()/(npc:GetAttribute('EnemyBaselineModelScale') or 1)
-   local strideLength=(data.motion.strideLength or config.strideLength)*relativeScale
-   if walking then
+   -- gaitStride (EnemyCatalog): a gameplay stride for clips whose authored one is far too short.
+   local strideLength=(config.gaitStride or data.motion.strideLength or config.strideLength)*relativeScale
+   if state.legs then
+    -- Feet set the pace; the clip's left foot plants when footPath's does (phase 0.25).
+    if walking then state.phase=(state.phase+distance*2*math.pi/state.legs.strideLength)%(2*math.pi) end
+    state.moveClock=(state.legs.plantTime+(state.phase/(2*math.pi)-.25)*clip.duration)%clip.duration
+   elseif walking then
     -- Cadence follows distance, capped per mob at the loops its own stride needs at full speed
     -- (4-12/s), so short-legged mobs no longer glide. Example: a spider (2.6-stud stride, 20
     -- studs/s) may loop 7.7/s; the old flat cap of 4 left its feet covering half the ground.
@@ -148,10 +163,12 @@ RunService.PreSimulation:Connect(function(dt)
   local displayPoses=state.poses
   -- Zombie feet stay planted only for a standing attack; on the move they keep stepping.
   -- The feet write into their copy, never into state.poses (next frame's transition source).
-  if config.legacy then
+  if config.legacy or state.legs then
    local copy=buffers.display;table.clear(copy)
    for name,pose in state.poses do copy[name]=pose end
-   displayPoses=NativeFeet.apply(state.feet,copy,state.phase,state.stride,attacking and not walking)
+   if config.legacy then displayPoses=NativeFeet.apply(state.feet,copy,state.phase,state.stride,attacking and not walking)
+   -- Imported bipeds: IK legs while moving, the clip's own legs (idle, attack stance) standing.
+   else displayPoses=NativeFeet.applyImported(state.legs,copy,state.phase,state.stride) end
   end
   Motion.apply(state.joints,displayPoses)
   if state.data then HeldProjectiles.update(npc,config,state.data,state.poses,attacking and age or nil,attacking and attackTime(state.data,config,age) or 0) end

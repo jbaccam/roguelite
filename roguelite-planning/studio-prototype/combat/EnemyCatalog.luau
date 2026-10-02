@@ -95,8 +95,8 @@ add("spitter-zombie", "Spitter Zombie", "Pine Valley", "Ranged", 5, 10, 1.5, {
 	attackCooldown = 2.5,
 })
 -- maxMoveCycles: short-legged scuttlers need more Move loops per second than the default 4,
--- or their feet glide (crab: 1.7-stud stride at 16 studs/s wants ~9). leadTime: seconds of the
--- target's velocity to aim ahead, so a side-step doesn't leave the crab trailing behind.
+-- or their feet glide (crab: 1.7-stud stride at 16 studs/s wants ~9). Crabs chase the player
+-- straight: aiming ahead of a juking player made them veer off sideways (2026-10-01).
 add(
 	"crab",
 	"Crab",
@@ -105,9 +105,13 @@ add(
 	4,
 	11,
 	1,
-	{ height = 3, radius = 1.8, strideLength = 3.5, maxMoveCycles = 10, leadTime = 0.35 }
+	{ height = 3, radius = 1.8, strideLength = 3.5, maxMoveCycles = 10 }
 )
+-- gaitStride: ground covered per Move loop when the authored clip's own stride is far too short
+-- to read at wave speed. The snake's slither (1.6 studs) and the slime's hop (1.2) looped about
+-- once a second while the body slid 13-15 studs; at 5.5 studs they loop ~2.5 times a second.
 add("snake", "Snake", "Beach Cove", "Lunge", 3, 12, 1.5, {
+	gaitStride = 5.5,
 	height = 3,
 	radius = 1.2,
 	attackRange = 15,
@@ -145,7 +149,6 @@ add("rock-throwing-crab", "Rock-Throwing Crab", "Beach Cove", "Ranged", 6, 8, 2,
 add("skeleton", "Skeleton", "Desert Badlands", "Melee", 4, 12, 1.2)
 add("bow-skeleton", "Bow Skeleton", "Desert Badlands", "Ranged", 4, 10, 1.5, {
 	projectile = "Arrow",
-	attackFacingYaw = math.atan2(0.9, math.sqrt(0.19)),
 	projectileSpeed = 35,
 	stopRange = 20,
 	attackRange = 36,
@@ -224,7 +227,15 @@ add(
 	6,
 	8,
 	1.4,
-	{ height = 3, splitCount = 2, childScale = 0.6, attackImpact = 0.4, attackRecovery = 0.9, strideLength = 3 }
+	{
+		height = 3,
+		splitCount = 2,
+		childScale = 0.6,
+		attackImpact = 0.4,
+		attackRecovery = 0.9,
+		strideLength = 3,
+		gaitStride = 5.5,
+	}
 )
 add("obsidian-ogre", "Obsidian Ogre", "Volcanic Crater", "Heavy", 20, 7, 3, {
 	healthPerWave = 7,
@@ -254,7 +265,8 @@ for _, d in C.List do
 		d.speed = assert(ProvisionalSpeeds[d.id])
 		d.speedStatus = "Provisional QA gameplay speed; not approved final balance"
 	end
-	d.timeBasedMovement = d.id == "frost-ghost" or d.id == "lava-slime" or d.id == "snake"
+	-- Only the floating ghost animates by time; everything that touches the ground paces by it.
+	d.timeBasedMovement = d.id == "frost-ghost"
 	if d.legacy then
 		local native = Types.get(d.legacy)
 		for _, key in

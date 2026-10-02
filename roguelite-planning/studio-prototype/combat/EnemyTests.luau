@@ -20,6 +20,13 @@ return function(Catalog, Motion, NativeMotion, animationFolder)
 		Catalog.get("snake").hitRange < Catalog.get("snake").attackRange,
 		"Lunge warning range must not become damage radius"
 	)
+	-- 2026-10-01 movement pass: only the floating ghost animates by time (snake and slime pace by
+	-- the ground), nobody turns off its target to attack, and crabs chase straight.
+	check(Catalog.get("snake").gaitStride and Catalog.get("lava-slime").gaitStride, "Snake and slime pace by ground")
+	for _, d in Catalog.List do
+		check(d.timeBasedMovement == (d.id == "frost-ghost"), "Only the ghost animates by time: " .. d.id)
+		check(d.attackFacingYaw == nil and d.leadTime == nil, "Attacks and chases face the target: " .. d.id)
+	end
 	for _, d in Catalog.List do
 		check(d.health > 0 and d.speed > 0 and d.damage >= 0, "Positive bounded tuning: " .. d.id)
 		check(
@@ -32,6 +39,11 @@ return function(Catalog, Motion, NativeMotion, animationFolder)
 			check(source ~= nil, "Missing retargeted animation module: " .. d.id)
 			local data = Motion.compile(require(source))
 			check(data.motion.strideLength > 0, "Positive measured gait stride: " .. d.id)
+			local shot = data.projectile and data.projectile.releaseDirectionLocal
+			if shot then
+				-- Square to the target (square_bow_skeleton.py): the shot leaves within 5 degrees of ahead.
+				check((data.projectile.attackFacingYaw or 0) == 0 and -shot[3] > 0.996, "Shot leaves straight ahead: " .. d.id)
+			end
 			for _, name in { "Idle", "Move", "Attack" } do
 				local clip = data.clips[name]
 				clips += 1
