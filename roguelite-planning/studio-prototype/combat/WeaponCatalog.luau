@@ -1,7 +1,7 @@
 -- Studio practice tuning. IDs match the reviewed, user-sized showcase models.
 local C={Slots=6, List={}, ById={}}
-local names={'Glock','Frying Pan','Nunchucks','Katana','Kusarigama','Spatula','Baseball Bat','Draco','Fart Gun','Shotgun','T-Shirt Cannon','Rocket Launcher','Boomerang','Kunai','Molotov','Egg','Steak','Rubber Duck','Deck of Cards','Boxing Gloves','Cinder Block','Yo-Yo','Bowling Ball','Bowling Pin','Nail Gun','Wrecking Ball','Shovel','Paint Roller','Vacuum Cleaner','Power Washer','Magic Staff','Mjolnir','Excalibur',"Pandora's Box","Medusa's Head",'Crystal Ball'}
-local ranged={[0]=true,[7]=true,[8]=true,[9]=true,[10]=true,[11]=true,[12]=true,[13]=true,[14]=true,[15]=true,[18]=true,[22]=true,[24]=true,[28]=true,[29]=true,[30]=true,[33]=true,[34]=true,[35]=true}
+local names={'Glock','Frying Pan','Nunchucks','Katana','Kusarigama','Spatula','Baseball Bat','Draco','Fart Gun','Shotgun','T-Shirt Cannon','Rocket Launcher','Boomerang','Kunai','Molotov','Egg','Steak','Rubber Duck','Deck of Cards','Boxing Gloves','Cinder Block','Yo-Yo','Bowling Ball','Bowling Pin','Nail Gun','Wrecking Ball','Shovel','Paint Roller','Vacuum Cleaner','Power Washer','Magic Staff','Mjolnir','Excalibur',"Pandora's Box","Medusa's Head",'Crystal Ball',"Reaper's Scythe","Poseidon's Trident",'Storm Bow','Shadow Daggers','Vampire Blade','Ray Gun'}
+local ranged={[0]=true,[7]=true,[8]=true,[9]=true,[10]=true,[11]=true,[12]=true,[13]=true,[14]=true,[15]=true,[18]=true,[22]=true,[24]=true,[28]=true,[29]=true,[30]=true,[33]=true,[34]=true,[35]=true,[38]=true,[41]=true}
 -- Tiers trade two copies for one stronger copy; some weapons improve crowd handling.
 -- Range is in Roblox studs. Damage is per hit (Deck of Cards: total three-card volley).
 local profiles={
@@ -36,12 +36,30 @@ local profiles={
  {4,.32,20,{4,6,9,14}}, -- Vacuum
  {3,.24,30,{3,4,6,9},nil,'pierce'}, -- Washer
  {9,1.15,45,{9,14,21,32}}, -- Staff (arcane energy orb)
- {22,2.4,8,{22,33,50,75}}, -- Mjolnir
+ {22,2,8,{22,33,50,75}}, -- Mjolnir (2.4 felt slow; 2026-10-01)
  {26,1.35,8.5,{26,39,59,89}}, -- Excalibur
  {25,2,50,{25,38,57,86}}, -- Pandora
  {5,1.2,38,{5,8,12,18},nil,'shots'}, -- Medusa (slow)
  {13,1.05,48,{13,20,30,45},nil,'bounce'}, -- Crystal (lightning)
+ -- Godly (plans/2026-10-01-G): ~24 single-target DPS at Tier I (power 160); specials add crowd power.
+ {30,1.25,10,{30,45,68,102}}, -- Reaper's Scythe: 360 reap, raises wraiths
+ {34,1.5,9,{34,51,77,115}}, -- Poseidon's Trident: stab, or throw + tidal wave
+ {14,1.2,50,{14,21,32,47}}, -- Storm Bow: per storm arrow, 5 split arrows
+ {16,1.3,10,{16,24,36,54}}, -- Shadow Daggers: per chained hit
+ {32,1.3,9,{32,48,72,108}}, -- Vampire Blade: heals
+ {22,.9,48,{22,33,50,74}}, -- Ray Gun: kills disintegrate in a burst
 }
+-- Godly specials, per tier where a list (index = tier). Read by GodlyWeapons (server) and
+-- GodlyVisuals (client). Every special is capped and never triggers another special.
+C.Godly={
+ ['36']={ghostChance=1/3,ghostCap={4,4,4,6},ghostLife=6,ghostClaw=.25,ghostClawEvery=1,ghostSpeed=26,ghostReach=3,ghostSight=40,bigClaw=2},
+ ['37']={waveRadius={10,10,10,14},waveFactor=.6,wavePush=32,waveTime=.5},
+ ['38']={arrows={5,5,5,7},spread=10,loneMax=2},
+ ['39']={chain={5,5,5,7},hop=12,loneHits=2},
+ ['40']={leech={.08,.08,.08,.12},wispHeal=2,capBonus={0,0,0,5}},
+ ['41']={burstRadius={6,6,6,9},burstFactor={.5,.5,.5,.75}},
+}
+function C.isGodly(id) return C.Godly[id]~=nil end
 for i,name in names do
  local n=i-1
  local kind=ranged[n] and 'Ranged' or 'Melee'
@@ -59,12 +77,18 @@ for i,name in names do
  d.home=n>=30 and 'Mage' or (n>=24 and 'Handyman' or (n>=17 and n~=18 and 'Juggler' or (n>=12 and 'Thrower' or (n==0 or n>=7) and 'Gunner' or 'Brawler')))
 
  if n==17 or n==21 or n==23 then d.kind='Ranged' end
+ -- Godly weapons belong to no class; any class may start with an owned one.
+ if n>=36 then d.home='Godly';d.godly=true;d.special=C.Godly[d.id] end
+ if n==37 then d.hybridRange=36;d.projectileSpeed=60;d.throwable=true end
+ if n==38 then d.projectileSpeed=95 end
+ if n==39 then d.scripted=true end -- the daggers' chain is the hit; no swing box
+ if n==41 then d.projectileSpeed=150 end
  d.nativeKnockback=(n==5 and 14 or n==26 and 20 or n==20 and 16 or 0)
  if n==31 then d.hybridRange=32;d.projectileSpeed=42 end
  if n==8 then d.projectileSpeed=150 end
  local thrownSpeed={[12]=40,[13]=65,[14]=28,[15]=35,[22]=32,[23]=24}
  if thrownSpeed[n] then d.projectileSpeed=thrownSpeed[n] end
- d.elemental=d.home=='Mage' or n==8 or n==14 or n==17
+ d.elemental=d.home=='Mage' or n==8 or n==14 or n==17 or n==38 or n==41
  d.utility=d.home=='Handyman'
  d.burn=n==14 and 100 or 0;d.poison=n==8 and 100 or 0;d.slow=n==34 and 100 or 0;d.lightning=n==35 or n==31
  d.tags={d.kind=='Melee' and 'Melee' or 'Projectile',d.home}

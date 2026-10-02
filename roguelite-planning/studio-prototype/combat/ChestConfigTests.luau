@@ -15,7 +15,7 @@ return function(Chests, rolls)
 	-- Armor pieces share the pools (2026-09-30): Iron Common, Ninja+Viking Rare, Samurai+Spartan
 	-- Epic, Dragon Scale Legendary, Phoenix Godly; 4 pieces each.
 	local godlyPool = Chests.Pool.Godly
-	check(#godlyPool == 4 and Chests.godlyEnabled(), "The Phoenix pieces fill the Godly pool and turn Godly on")
+	check(#godlyPool == 10 and Chests.godlyEnabled(), "The 6 Godly weapons and 4 Phoenix pieces fill the Godly pool")
 	Chests.Pool.Godly = {}
 
 	-- Pools, rarities, colours
@@ -228,12 +228,20 @@ return function(Chests, rolls)
 	compare("Gold", rolls)
 	compare("Legendary", rolls)
 	Chests.Pool.Godly = godlyPool
-	check(Chests.godlyEnabled(), "Godly is on again with the Phoenix pool")
-	-- Phoenix drops only from the Legendary Chest.
+	check(Chests.godlyEnabled(), "Godly is on again with the Godly weapons and Phoenix")
+	-- Godly weapons drop from every chest with a Godly chance; Phoenix only from the Legendary Chest.
 	for _, kind in Chests.Order do
 		local legendary = kind == "Legendary"
-		check(Chests.godlyEnabled(kind) == legendary, kind .. (legendary and " has" or " has no") .. " Godly (Phoenix)")
-		check((rows(kind):find("Godly") ~= nil) == legendary, kind .. " summary shows Godly only for the Legendary Chest")
+		local chance = Chests.ById[kind].godly > 0
+		check(Chests.godlyEnabled(kind), kind .. " has the Godly weapons in its pool")
+		check((rows(kind):find("Godly") ~= nil) == chance, kind .. " summary shows Godly only with a Godly chance")
+		local weapons = 0
+		for _, o in Chests.odds(kind) do
+			if o.rarity == "Godly" and not o.id:find("^Phoenix%.") then
+				weapons += 1
+			end
+		end
+		check(weapons == (chance and 6 or 0), kind .. " odds list " .. weapons .. " Godly weapons")
 		local phoenix = 0
 		for _, o in Chests.odds(kind) do
 			if o.id:find("^Phoenix%.") then

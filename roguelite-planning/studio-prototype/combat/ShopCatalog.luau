@@ -3,6 +3,8 @@ local Economy=require(script.Parent.EconomyConfig)
 local C={List={},ById={}}
 local function add(d) C.ById[d.id]=d;table.insert(C.List,d) end
 for i,w in Weapons.List do
+ -- Godly weapons are never sold in a run: they come only from chests and bundles.
+ if w.godly then continue end
  local base=w.kind=='Blast' and 25 or (w.cooldown<.3 and 21 or 12+(i*7)%13)
  for tier=1,4 do
   local band=Economy.TIER_PRICE_BANDS[tier]

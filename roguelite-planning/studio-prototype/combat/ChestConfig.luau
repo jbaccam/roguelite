@@ -17,18 +17,19 @@ C.RarityColor={
  Godly=Color3.fromRGB(226,34,64),
 }
 -- Fixed rarity per weapon id (WeaponCatalog). Every class signature weapon is Common.
--- Godly weapons arrive in step 4; until then the Godly pool is empty and Godly never rolls.
+-- Godly weapons (WeaponCatalog 36-41, plans/2026-10-01-G) drop from every chest with a Godly chance.
 local RARITY={
  Common={'01','05','00','08','12','15','19','17','24','26','30','35'},
  Rare={'02','06','09','07','13','16','23','21','27','29','34','33'},
  Epic={'04','10','14','20','28'},
  Legendary={'03','11','18','22','25','32','31'},
- Godly={},
+ Godly={'36','37','38','39','40','41'},
 }
 -- Pool: everything a chest can drop per rarity. WeaponPool: weapons only (daily deals).
 C.Pool={};C.WeaponPool={};C.RarityOf={}
 for _,r in C.Rarities do
- C.Pool[r]=table.clone(RARITY[r]);C.WeaponPool[r]=table.clone(RARITY[r])
+ -- Daily deals never sell a Godly, so its weapon pool stays empty.
+ C.Pool[r]=table.clone(RARITY[r]);C.WeaponPool[r]=r=='Godly' and {} or table.clone(RARITY[r])
  for _,id in RARITY[r] do C.RarityOf[id]=r end
 end
 for _,set in Armor.Sets do
@@ -57,7 +58,7 @@ function C.poolFor(kind,rarity)
  end
  return out
 end
--- Godly rolls only where the chest's Godly pool has items (today: Phoenix, Legendary Chest only).
+-- Godly rolls only where the chest's Godly pool has items (the Godly weapons everywhere; Phoenix only in the Legendary Chest).
 function C.godlyEnabled(kind) return #C.poolFor(kind,'Godly')>0 end
 
 -- Copies spent to raise a weapon's starting tier (I->II, II->III, III->IV).
@@ -193,7 +194,8 @@ function C.odds(kind)
  local out={}
  for _,r in C.Rarities do
   local items=C.poolFor(kind,r);local pool=#items
-  if pool>0 then
+  -- A rarity this chest can't roll (Wooden: no Godly) lists nothing, not 0% rows.
+  if pool>0 and not (r=='Godly' and godly<=0) then
    local p=0
    for _,c in dist[r] do p+=c[2]*math.min(stacks(math.max(0,c[1])),pool)/pool end
    for _,id in items do table.insert(out,{id=id,rarity=r,chance=p*100}) end
