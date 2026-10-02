@@ -1,7 +1,7 @@
 -- Server-owned spawning from a normalized avatar. Armor, shirts, floating weapons and
 -- animations are authored for a standard-proportion R15 body, so tall/Rthro/custom-mesh
 -- bodies, layered clothing and animation packs are replaced. Colors, classic clothing,
--- face and hat/hair/face accessories stay so players remain recognizable.
+-- face, hair (layered too) and hat/face accessories stay so players remain recognizable.
 local Players=game:GetService('Players')
 Players.CharacterAutoLoads=false
 -- A match server spawns nobody until its map is in place (MatchService -> ServerRole.setMap).
@@ -13,10 +13,10 @@ local function waitForMap()
 end
 
 local KEEP_ACCESSORIES={
- [Enum.AccessoryType.Hat]=true,[Enum.AccessoryType.Hair]=true,
+ [Enum.AccessoryType.Hat]=true,
  [Enum.AccessoryType.Face]=true,[Enum.AccessoryType.Eyebrow]=true,[Enum.AccessoryType.Eyelash]=true,
 }
-local MAX_ACCESSORIES=4
+local MAX_ACCESSORIES=4 -- hats and face accessories; hair is always kept
 local SCALES={HeightScale=1,WidthScale=1,DepthScale=1,HeadScale=1,BodyTypeScale=0,ProportionScale=0}
 local ZEROED={
  'Head','Torso','LeftArm','RightArm','LeftLeg','RightLeg',
@@ -36,9 +36,14 @@ local function normalized(player)
  end
  for key,value in SCALES do d[key]=value end
  for _,key in ZEROED do d[key]=0 end
- local kept={}
+ local kept,capped={},0
  for _,a in source:GetAccessories(true) do
-  if not a.IsLayered and KEEP_ACCESSORIES[a.AccessoryType] and #kept<MAX_ACCESSORIES then
+  -- Most modern hair is layered (it wraps the head); other layered items are clothing, which the
+  -- armor shirts replace. A worn helmet still hides hair (ArmorService).
+  if a.AccessoryType==Enum.AccessoryType.Hair then
+   table.insert(kept,{AssetId=a.AssetId,AccessoryType=a.AccessoryType,IsLayered=a.IsLayered,Order=a.IsLayered and a.Order or nil,Puffiness=a.IsLayered and a.Puffiness or nil})
+  elseif not a.IsLayered and KEEP_ACCESSORIES[a.AccessoryType] and capped<MAX_ACCESSORIES then
+   capped+=1
    table.insert(kept,{AssetId=a.AssetId,AccessoryType=a.AccessoryType,IsLayered=false})
   end
  end
