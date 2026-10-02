@@ -359,9 +359,15 @@ def bee():
         return ({p: v["studio_rot_deg"] for p, v in f["joints"].items()}, round(f["body_up_studs"] - H, 4))
     ju, lu = fj("wings_up")
     jd, ld = fj("wings_down")
-    move = clip(r, [dict(j=ju, lift=lu, name="wings_up", t=0.0), dict(j=jd, lift=ld, name="wings_down", t=0.5)],
-                0.08, True)
-    idle = synth_bob_idle(r, h["bob"]["amplitude_studs"], 4, h["bob"]["period_s"])
+    # The wingbeat runs at 12-20 Hz: lifting the whole body with each stroke (the kit's +-0.07) made
+    # the bee look shaky in flight (user, 2026-10-02). Only the wings beat; legs and jar flutter at
+    # 40%, and the slow hover bob is halved so the up-and-down stays gentle.
+    def calm(j):
+        return {p: ([round(a * 0.4, 2) for a in v] if p in ("Bee_LegL", "Bee_LegR", "Bee_Jar") else v)
+                for p, v in j.items()}
+    move = clip(r, [dict(j=calm(ju), lift=0.0, name="wings_up", t=0.0),
+                    dict(j=calm(jd), lift=0.0, name="wings_down", t=0.5)], 0.08, True)
+    idle = synth_bob_idle(r, h["bob"]["amplitude_studs"] * 0.5, 4, h["bob"]["period_s"])
     jw, lw = fj("sting_windup")
     jdv, ldv = fj("sting_dive")
     rec = h["sting_dive"]["recover_time_s"]
