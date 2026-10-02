@@ -159,7 +159,7 @@ rise=function(p,at,health,beforePush)
   if beforePush then beforePush(root) end
   for _,npc in Tags:GetTagged('RogueliteZombie') do
    local part=npc:IsA('Model') and npc.PrimaryPart
-   if part and npc:IsDescendantOf(workspace) then
+   if part and npc:IsDescendantOf(workspace) and not npc:GetAttribute('LobbyDummy') then
     local offset=part.Position-at;offset=Vector3.new(offset.X,0,offset.Z)
     if offset.Magnitude<Config.RevivePushRadius then
      local dir=offset.Magnitude>.1 and offset.Unit or Vector3.new(1,0,0)

@@ -165,14 +165,84 @@ function L.mount(player)
  goals.Active=true
  local goalsButton=T.make('TextButton',goals,{Name='Open',Text='',BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=3})
  goalsButton.Activated:Connect(function() open('Quests','Achievements') end)
- -- Right edge: store, rewards, settings.
+ -- Right edge: store, rewards, settings, practice-dummy attacks switch.
  local right,rightScale=scaled('Right',Vector2.new(1,.5),UDim2.new(1,-12,.45,0),Vector2.new(96,592))
- T.make('UIListLayout',right,{Padding=UDim.new(0,10),HorizontalAlignment=Enum.HorizontalAlignment.Center,SortOrder=Enum.SortOrder.LayoutOrder})
+ -- Centred: the column is tall enough for the developers' ADMIN button; without it the buttons
+ -- sit centred on the same spot instead of moving up.
+ -- layout() sizes the column to its buttons and wraps it into two columns on short screens.
+ local rightList=T.make('UIListLayout',right,{Padding=UDim.new(0,10),HorizontalAlignment=Enum.HorizontalAlignment.Center,VerticalAlignment=Enum.VerticalAlignment.Center,SortOrder=Enum.SortOrder.LayoutOrder})
  local store=T.iconButton(right,'Store','store','STORE',78,function() open('Store') end);store.LayoutOrder=1
  local skills=T.iconButton(right,'Skills',SkillTree.Icons.Hud,'SKILLS',78,function() open('Skills') end);skills.LayoutOrder=2
  local awards=T.iconButton(right,'Awards','achievements','REWARDS',78,function() open('Quests','Achievements') end);awards.LayoutOrder=3
  local settings=T.iconButton(right,'Settings','settings','SETTINGS',64,function() open('Settings') end);settings.LayoutOrder=4
  -- LayoutOrder 6 (after ATTACKS) is the developers' ADMIN button, added by AdminPanel.client (ADMIN_PANEL.md).
+ -- Practice dummies: weapons auto-attack them until switched off. The server owns
+ -- PlayerStates.<id>.LobbyAttacks; this button, T / gamepad Y and Settings only ask.
+ local attacks=T.button(right,'DummyAttacks','ATTACKS',0,0,96,70,nil,false);attacks.LayoutOrder=5
+ attacks.Caption.Position=UDim2.fromOffset(4,8);attacks.Caption.Size=UDim2.new(1,-8,0,24);attacks.Caption.TextSize=18
+ local attacksState=T.label(attacks,'State','ON',4,32,88,30,26)
+ local attacksKey=T.chip(attacks,'Key','T',70,-10,C.well,C.lime)
+ local myState
+ local setLobbyAttacks=combat:WaitForChild('SetLobbyAttacks')
+ local function attacksOn() return not myState or myState:GetAttribute('LobbyAttacks')~=false end
+ -- Keyboard T, gamepad Y; touch players tap the button, so no key hint.
+ local function keyHint()
+  local t=Input:GetLastInputType()
+  if t==Enum.UserInputType.Touch then return nil end
+  return t.Name:find('^Gamepad') and 'Y' or 'T'
+ end
+ local dummyHints={}
+ local function paintAttacks()
+  local on,key=attacksOn(),keyHint()
+  T.setPrimary(attacks,on)
+  attacksState.Text=on and 'ON' or 'OFF';attacksState.TextColor3=on and C.white or C.muted
+  attacksKey.Visible=key~=nil;if key then attacksKey.Text.Text=key end
+  local how=key and ('Press '..key) or 'Tap ATTACKS'
+  for _,hint in dummyHints do
+   hint.Status.Text=on and 'Your weapons attack it automatically.' or 'Attacks are off. Your weapons ignore it.'
+   hint.How.Text=how..(on and ' to turn attacks off.' or ' to turn attacks on.')
+  end
+ end
+ local lastToggle=-1
+ local function toggleAttacks()
+  if not myState or os.clock()-lastToggle<.3 then return end;lastToggle=os.clock()
+  local on=not attacksOn()
+  setLobbyAttacks:FireServer(on)
+  T.toast(screen,on and 'Dummy attacks ON' or 'Dummy attacks OFF',on and C.lime or C.muted)
+ end
+ attacks.Activated:Connect(toggleAttacks)
+ Input.LastInputTypeChanged:Connect(paintAttacks)
+ -- Sign over each dummy saying it's a target and how to stop attacking it.
+ local function addHint(dummy)
+  if dummyHints[dummy] then return end
+  local bb=T.make('BillboardGui',player:WaitForChild('PlayerGui'),{Name='DummyHint_'..dummy.Name,Size=UDim2.fromOffset(270,92),
+   MaxDistance=60,LightInfluence=0,ResetOnSpawn=false,Enabled=screen.Enabled})
+  local panel=T.panel(bb,'Panel',0,0,270,92,'panel')
+  T.label(panel,'Title','PRACTICE DUMMY',10,6,250,28,21,C.lime)
+  local status=T.text(panel,'Status','',14,36,242,22,16);status.TextXAlignment=Enum.TextXAlignment.Center
+  local how=T.text(panel,'How','',14,60,242,22,16,C.muted);how.TextXAlignment=Enum.TextXAlignment.Center
+  dummyHints[dummy]={Gui=bb,Status=status,How=how}
+  -- Streaming: the dummy's parts arrive (and can leave) with distance, so follow its root.
+  local function adorn()
+   local root=dummy:FindFirstChild('HumanoidRootPart');bb.Adornee=root
+   if root then bb.StudsOffsetWorldSpace=Vector3.new(0,root.Size.Y*.5+2.2,0) end
+  end
+  dummy.ChildAdded:Connect(adorn);dummy.ChildRemoved:Connect(adorn);adorn()
+  paintAttacks()
+ end
+ local Tags=game:GetService('CollectionService')
+ Tags:GetInstanceAddedSignal('LobbyPracticeDummy'):Connect(addHint)
+ Tags:GetInstanceRemovedSignal('LobbyPracticeDummy'):Connect(function(d) local h=dummyHints[d];if h then h.Gui:Destroy();dummyHints[d]=nil end end)
+ for _,d in Tags:GetTagged('LobbyPracticeDummy') do addHint(d) end
+ task.spawn(function()
+  myState=combat:WaitForChild('PlayerStates'):WaitForChild(tostring(player.UserId))
+  myState:GetAttributeChangedSignal('LobbyAttacks'):Connect(function()
+   paintAttacks()
+   if self.onLobbyAttacks then self.onLobbyAttacks() end
+  end)
+  paintAttacks()
+ end)
+ paintAttacks()
  -- Bottom centre: main actions with PLAY in the middle.
  local bottom,bottomScale=scaled('Bottom',Vector2.new(.5,1),UDim2.new(.5,0,1,-8),Vector2.new(640,150))
  local order={{'Chests','chest','CHESTS',86},{'Armory','armory','ARMORY',86},{'Play','play','PLAY',122},{'Loadout','loadout','LOADOUT',86},{'Quests','quests','QUESTS',86}}
@@ -281,13 +351,16 @@ function L.mount(player)
  end
  function self.CloseWindow() if win then win.Close() end end
 
- builders.Settings=function() return T.settingsWindow(screen) end
+ builders.Settings=function()
+  return T.settingsWindow(screen,{{key='DummyAttacks',title='Dummy attacks',help='Weapons auto-attack lobby practice dummies.',get=attacksOn,toggle=toggleAttacks}})
+ end
+ self.onLobbyAttacks=function() if self.current=='Settings' and win and win.Redraw then win.Redraw() end end
 
  builders.Profile=function()
   local w=T.window(screen,'ProfileWindow','Profile',720,470);local b=w.Body;local W=684
   local card=T.panel(b,'Card',0,10,230,392,'inset')
   local portrait=T.make('ImageLabel',card,{Name='Headshot',BackgroundTransparency=1,Position=UDim2.fromOffset(35,20),Size=UDim2.fromOffset(160,160),Image=''});T.headshot(portrait,player.UserId)
-  T.label(card,'Name',player.DisplayName,10,188,210,34,24)
+  T.label(card,'Name',player.DisplayName,10,188,210,34,24).TextWrapped=false -- one line: long names shrink
   T.text(card,'User','@'..player.Name,10,222,210,20,15,C.muted).TextXAlignment=Enum.TextXAlignment.Center
   local classes=0;for _ in profile.classes do classes+=1 end
   local owned=0;for _ in profile.weapons do owned+=1 end
@@ -424,6 +497,7 @@ function L.mount(player)
   local function buy(key,arg) combat.PurchaseRequest:FireServer(key,arg) end
   local function act(action,a)
    local r=combat.ProfileAction:InvokeServer(action,a)
+   if r.ok then T.sound('ui_purchase') end
    T.toast(screen,r.message or '',r.ok and C.lime or C.negative)
   end
   local draw
@@ -540,6 +614,54 @@ function L.mount(player)
     {{'emerald',sp.emeralds..'',C.emerald},{Chests.ById.Legendary.icon,'×'..sp.chests.Legendary..' Legendary'},{'quests',sp.rerolls..' Rerolls'}},'chest','StarterPack',profile.starter,
     {cornerColor=gold,titleColor=gold,titleSize=46,pulse=true,shine=true,ribbon='BEST VALUE',ribbonColor=gold,artSize=170})
    y+=296
+   -- Godly bundles: a Godly weapon + a full armor set + emeralds, one time each. COMING SOON until
+   -- the weapon is in WeaponCatalog (the server refuses it too). Icons are placeholders: the
+   -- weapon's catalogue icon once it exists, else the armory icon.
+   local godly=Chests.RarityColor.Godly
+   section('Godly Bundles','The strongest weapons in the game, with a full armor set.',y);y+=48
+   for _,key in Money.GodlyBundles do
+    local b=Money.Products[key];local set=Armor.ById[b.armorSet]
+    local wid;for id,w in Weapons.ById do if w.name==b.godly then wid=id end end
+    local tiles={{wid and WeaponIcons[wid] or 'armory',b.godly,godly}}
+    for _,slot in Armor.Slots do table.insert(tiles,{Armor.Icons[Armor.pieceId(b.armorSet,slot)],slot}) end
+    table.insert(tiles,{'emerald',b.emeralds..'',C.emerald})
+    local state=profile.bundles[key] and true or not wid and 'COMING SOON' or false
+    local premium=set.rarity=='Godly'
+    hero(key,y,270,4,godly,string.upper(b.name),b.godly..' + the full '..set.name..' armor set. One time only.',tiles,
+     Armor.Icons[Armor.pieceId(b.armorSet,'Chest')],key,state,
+     {cornerColor=godly,titleColor=godly,pulse=state==false,shine=true,ribbon=premium and 'GODLY ARMOR' or 'BEST GODLY DEAL',ribbonColor=godly,ribbonWidth=premium and 190 or 220,artSize=170})
+    y+=292
+   end
+   -- Godly Starter: tap one of the six Godly tiles to choose it, then buy (+3 Legendary Chests).
+   -- Hidden where paid random items are restricted (it includes chests).
+   if not profile.restricted then
+    local gs=Money.Products.GodlyStarter
+    local pick=self.selection.godlyPick or 1
+    local ids={}
+    for i,g in Money.GodlyWeapons do for id,w in Weapons.ById do if w.name==g[1] then ids[i]=id end end end
+    local tiles={}
+    for i,g in Money.GodlyWeapons do table.insert(tiles,{ids[i] and WeaponIcons[ids[i]] or 'armory',g[2],i==pick and godly or C.muted}) end
+    table.insert(tiles,{Chests.ById.Legendary.icon,'×'..gs.chests.Legendary,C.gold})
+    local state=profile.bundles.GodlyStarter and true or not ids[pick] and 'COMING SOON' or false
+    local card=hero('GodlyStarter',y,270,4,godly,'GODLY STARTER',Money.GodlyWeapons[pick][1]..' + '..gs.chests.Legendary..' Legendary Chests. Tap a weapon to choose. One time only.',
+     tiles,Chests.ById.Legendary.icon,'GodlyStarter',state,
+     {cornerColor=godly,titleColor=godly,pulse=state==false,shine=true,ribbon='PICK YOUR GODLY',ribbonColor=godly,ribbonWidth=230,artSize=150,arg=pick})
+    -- Selection is a colour wash on the chosen tile (no outline over the nine-slice).
+    for i in Money.GodlyWeapons do
+     local t=card:FindFirstChild('Item'..i)
+     if t then
+      if i==pick then
+       -- Under the icon and label: one ZIndex below the lowest of the tile's children.
+       local z=t.ZIndex;for _,c in t:GetChildren() do if c:IsA('GuiObject') then z=math.min(z,c.ZIndex) end end
+       local w=T.make('Frame',t,{Name='Picked',BackgroundColor3=godly,BackgroundTransparency=.55,BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=math.max(0,z-1)})
+       T.make('UICorner',w,{CornerRadius=UDim.new(0,8)})
+      end
+      local hit=T.make('TextButton',t,{Name='Pick',Text='',BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=t.ZIndex+5})
+      hit.Activated:Connect(function() if self.selection.godlyPick~=i then self.selection.godlyPick=i;T.sound('ui_equip');draw() end end)
+     end
+    end
+    y+=292
+   end
    local ab=Money.Products.ArsenalBundle
    local tiles={}
    for _,cl in Stats.ClassOrder do table.insert(tiles,{WeaponIcons[L.Signature[cl]],'+'..ab.signatureUpgrades,C.lime}) end
@@ -614,54 +736,6 @@ function L.mount(player)
     if L.Store.chestRibbons[i] then FX.ribbon(card,L.Store.chestRibbons[i],180,i==3 and gold or nil) end
     if i==3 then FX.shine(card) end
     FX.lift(card)
-   -- Godly bundles: a Godly weapon + a full armor set + emeralds, one time each. COMING SOON until
-   -- the weapon is in WeaponCatalog (the server refuses it too). Icons are placeholders: the
-   -- weapon's catalogue icon once it exists, else the armory icon.
-   local godly=Chests.RarityColor.Godly
-   section('Godly Bundles','The strongest weapons in the game, with a full armor set.',y);y+=48
-   for _,key in Money.GodlyBundles do
-    local b=Money.Products[key];local set=Armor.ById[b.armorSet]
-    local wid;for id,w in Weapons.ById do if w.name==b.godly then wid=id end end
-    local tiles={{wid and WeaponIcons[wid] or 'armory',b.godly,godly}}
-    for _,slot in Armor.Slots do table.insert(tiles,{Armor.Icons[Armor.pieceId(b.armorSet,slot)],slot}) end
-    table.insert(tiles,{'emerald',b.emeralds..'',C.emerald})
-    local state=profile.bundles[key] and true or not wid and 'COMING SOON' or false
-    local premium=set.rarity=='Godly'
-    hero(key,y,270,4,godly,string.upper(b.name),b.godly..' + the full '..set.name..' armor set. One time only.',tiles,
-     Armor.Icons[Armor.pieceId(b.armorSet,'Chest')],key,state,
-     {cornerColor=godly,titleColor=godly,pulse=state==false,shine=true,ribbon=premium and 'GODLY ARMOR' or 'BEST GODLY DEAL',ribbonColor=godly,ribbonWidth=premium and 190 or 220,artSize=170})
-    y+=292
-   end
-   -- Godly Starter: tap one of the six Godly tiles to choose it, then buy (+3 Legendary Chests).
-   -- Hidden where paid random items are restricted (it includes chests).
-   if not profile.restricted then
-    local gs=Money.Products.GodlyStarter
-    local pick=self.selection.godlyPick or 1
-    local ids={}
-    for i,g in Money.GodlyWeapons do for id,w in Weapons.ById do if w.name==g[1] then ids[i]=id end end end
-    local tiles={}
-    for i,g in Money.GodlyWeapons do table.insert(tiles,{ids[i] and WeaponIcons[ids[i]] or 'armory',g[2],i==pick and godly or C.muted}) end
-    table.insert(tiles,{Chests.ById.Legendary.icon,'×'..gs.chests.Legendary,C.gold})
-    local state=profile.bundles.GodlyStarter and true or not ids[pick] and 'COMING SOON' or false
-    local card=hero('GodlyStarter',y,270,4,godly,'GODLY STARTER',Money.GodlyWeapons[pick][1]..' + '..gs.chests.Legendary..' Legendary Chests. Tap a weapon to choose. One time only.',
-     tiles,Chests.ById.Legendary.icon,'GodlyStarter',state,
-     {cornerColor=godly,titleColor=godly,pulse=state==false,shine=true,ribbon='PICK YOUR GODLY',ribbonColor=godly,ribbonWidth=230,artSize=150,arg=pick})
-    -- Selection is a colour wash on the chosen tile (no outline over the nine-slice).
-    for i in Money.GodlyWeapons do
-     local t=card:FindFirstChild('Item'..i)
-     if t then
-      if i==pick then
-       -- Under the icon and label: one ZIndex below the lowest of the tile's children.
-       local z=t.ZIndex;for _,c in t:GetChildren() do if c:IsA('GuiObject') then z=math.min(z,c.ZIndex) end end
-       local w=T.make('Frame',t,{Name='Picked',BackgroundColor3=godly,BackgroundTransparency=.55,BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=math.max(0,z-1)})
-       T.make('UICorner',w,{CornerRadius=UDim.new(0,8)})
-      end
-      local hit=T.make('TextButton',t,{Name='Pick',Text='',BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=t.ZIndex+5})
-      hit.Activated:Connect(function() if self.selection.godlyPick~=i then self.selection.godlyPick=i;T.sound('ui_equip');draw() end end)
-     end
-    end
-    y+=292
-   end
    end
    y+=388
    local mb=Money.Products.MegaBundle
@@ -715,7 +789,7 @@ function L.mount(player)
    profile=L.profile(player)
    local active=self.selection.storeTab
    -- Emerald pill on the right; tabs share the remaining width equally (never overlap).
-   local pillW,gap=140,8
+   local pillW,gap=160,8 -- room for "99.9K" beside the + button
    local pillsX=W-pillW
    local tw=math.floor((pillsX-16-3*gap)/4)
    for i,t in L.Store.tabs do
@@ -728,7 +802,7 @@ function L.mount(player)
    end
    local function pill(name,x,asset,value,color,target)
     local pl=T.panel(b,name,x,8,pillW,48,'inset');T.icon(pl,'Icon',8,6,36,asset)
-    local v=T.label(pl,'Value',fmt(value),48,4,52,40,22,color);v.TextXAlignment=Enum.TextXAlignment.Left
+    local v=T.label(pl,'Value',fmt(value),48,4,pillW-94,40,22,color) -- up to the + button;v.TextXAlignment=Enum.TextXAlignment.Left
     T.button(pl,'Plus','+',pillW-42,6,36,36,function() self.selection.storeTab=target;draw() end).Caption.TextSize=26
    end
    pill('EmeraldsPill',pillsX,'emerald',profile.gems,C.emerald,'Emeralds')
@@ -774,19 +848,76 @@ function L.mount(player)
  end
  Input.InputBegan:Connect(function(input,processed)
   if not screen.Enabled or setup.IsOpen() then return end
-  if input.KeyCode==Enum.KeyCode.Escape or input.KeyCode==Enum.KeyCode.ButtonB then if win then win.Close() end;return end
+  -- Screens with their own back steps (Chests: odds panel -> results -> list) handle Escape/B themselves.
+  if input.KeyCode==Enum.KeyCode.Escape or input.KeyCode==Enum.KeyCode.ButtonB then if win and not win.HandlesBack then win.Close() end;return end
   if processed or Input:GetFocusedTextBox() then return end
+  if input.KeyCode==Enum.KeyCode.T or input.KeyCode==Enum.KeyCode.ButtonY then toggleAttacks();return end
   local keys={[Enum.KeyCode.L]='Loadout',[Enum.KeyCode.C]='Chests',[Enum.KeyCode.J]='Quests',[Enum.KeyCode.K]='Skills'}
   local route=keys[input.KeyCode];if route then if self.current==route and win then win.Close() else open(route) end end
  end)
- -- Layout: scale everything to the viewport; bottom bar stays above the touch jump area.
- local function layout()
-  local v=screen.AbsoluteSize;if v.X<=0 then return end
-  local s=math.clamp(math.min(v.X/1280,v.Y/760),.55,1.1)*T.setting('HudScale')
-  leftScale.Scale=s;rightScale.Scale=s;bottomScale.Scale=s;bannerScale.Scale=s
-  goals.Visible=v.Y>=520
+ -- Layout: one HUD scale from the screen size, with a bigger minimum on touch screens (a thumb
+ -- needs ~40 px buttons), then each group is placed so none can overlap: the right column shrinks
+ -- or wraps into two columns to stay between the top and the jump button / bottom bar, and the
+ -- queue banner moves under the profile chip when the top centre is too narrow. Example: an 844x390
+ -- phone (750x311 HUD area) gets scale .75, two right columns above the jump button, and the banner
+ -- under the chip; 1920x1080 is unchanged (scale 1.1, one column, banner top centre).
+ local function jumpButton()
+  -- Roblox's touch jump button, in HUD coordinates (x, y of its top-left), or nil.
+  local tg=player.PlayerGui:FindFirstChild('TouchGui')
+  local jump=tg and tg.Enabled and tg:FindFirstChild('JumpButton',true)
+  if not (jump and jump.Visible and jump.AbsoluteSize.X>0) then return nil end
+  return jump.AbsolutePosition.X-hud.AbsolutePosition.X,jump.AbsolutePosition.Y-hud.AbsolutePosition.Y
  end
- screen:GetPropertyChangedSignal('AbsoluteSize'):Connect(layout)
+ local function between(v,lo,hi) return lo<=hi and math.clamp(v,lo,hi) or (lo+hi)/2 end
+ local function layout()
+  local v=hud.AbsoluteSize;if v.X<=0 then return end
+  local s=math.clamp(math.min(v.X/1280,v.Y/760),Input.TouchEnabled and .75 or .55,1.1)*T.setting('HudScale')
+  leftScale.Scale=s;bottomScale.Scale=s
+  goals.Visible=v.Y>=520
+  local leftRight,leftBottom=14+328*s,10+(goals.Visible and 352 or 118)*s
+  local barLeft,barTop=v.X/2-bottom.Size.X.Offset*s/2,v.Y-8-150*s
+  -- Right column: its buttons' natural height, one column if it fits, else two.
+  local items={}
+  for _,c in right:GetChildren() do if c:IsA('GuiObject') and c.Visible then table.insert(items,c) end end
+  table.sort(items,function(a,b) return a.LayoutOrder<b.LayoutOrder end)
+  local pad=rightList.Padding.Offset
+  local function height(from,to) local h=-pad;for i=from,to do h+=items[i].Size.Y.Offset+pad end;return math.max(h,0) end
+  local top,floor=8,v.Y-8
+  local jx,jy=jumpButton()
+  if jx and jx>v.X-240 then floor=math.min(floor,jy-8) end
+  if barLeft+bottom.Size.X.Offset*s>v.X-12-(96*2+pad)*s then floor=math.min(floor,barTop-8) end
+  local avail=math.max(floor-top,120)
+  local cols,colH=1,height(1,#items)
+  local rs=math.min(s,avail/math.max(colH,1))
+  if rs<s*.8 and #items>2 then
+   local half=math.ceil(#items/2)
+   cols,colH=2,math.max(height(1,half),height(half+1,#items))
+   rs=math.min(s,avail/colH)
+  end
+  -- Older clients without UIListLayout.Wraps keep one column, shrunk to fit.
+  if not pcall(function() rightList.Wraps=cols==2 end) and cols==2 then
+   cols,colH=1,height(1,#items);rs=math.min(s,avail/colH)
+  end
+  -- +16 slack: the wrap stays after the first half even with rounding or a button's hover grow
+  -- (the next button needs 70+ px, so the slack never pulls an extra one into column one).
+  right.Size=UDim2.fromOffset(cols*96+(cols-1)*pad,colH+16)
+  rightScale.Scale=rs
+  right.Position=UDim2.new(1,-12,0,between(v.Y*.45,top+colH*rs/2,floor-colH*rs/2))
+  -- Queue banner: top centre between the profile chip and the right column, else under the chip.
+  local rightLeft=v.X-12-right.Size.X.Offset*rs
+  local bw=banner.Size.X.Offset
+  local bs=math.min(s,2*(math.min(v.X/2-leftRight,rightLeft-v.X/2)-12)/bw)
+  local by=12
+  if bs<s*.8 then
+   by=leftBottom+8
+   bs=math.min(s,2*(rightLeft-v.X/2-12)/bw)
+  end
+  bannerScale.Scale=math.max(bs,.3);banner.Position=UDim2.new(.5,0,0,by)
+ end
+ hud:GetPropertyChangedSignal('AbsoluteSize'):Connect(layout)
+ banner:GetPropertyChangedSignal('Size'):Connect(layout)
+ right.ChildAdded:Connect(function() task.defer(layout) end) -- the ADMIN button arrives later
+ player.PlayerGui.ChildAdded:Connect(function(c) if c.Name=='TouchGui' then task.delay(.5,layout) end end)
  player:GetAttributeChangedSignal('Setting_HudScale'):Connect(layout)
  local pendingRedraw=false
  local function profileChanged()
@@ -796,7 +927,10 @@ function L.mount(player)
  end
  for _,attr in {'ProfileLoaded','ProfileGems','ProfileGemsEarned','ProfileClasses','ProfileWeapons','ProfilePity','ProfilePicks','ProfileChests','ProfileStarterPack','ProfileVIP','ProfileBundles','PaidRandomRestricted','ProfileSkills'} do player:GetAttributeChangedSignal(attr):Connect(profileChanged) end
  combat:WaitForChild('PurchaseResult').OnClientEvent:Connect(function(_,ok,message)
-  if screen.Enabled and type(message)=='string' then T.toast(screen,message,ok and C.lime or C.negative) end
+  if screen.Enabled and type(message)=='string' then
+   if ok then T.sound('ui_purchase') end
+   T.toast(screen,message,ok and C.lime or C.negative)
+  end
  end)
  player:GetAttributeChangedSignal('LobbyQueue'):Connect(refreshQueue)
  root:WaitForChild('Portals').DescendantAdded:Connect(function() task.defer(refreshQueue) end)
@@ -808,6 +942,7 @@ function L.mount(player)
  task.spawn(function() while screen.Parent do task.wait(.25);if player:GetAttribute('LobbyQueue') then refreshQueue() end end end)
  local function enabled()
   screen.Enabled=player:GetAttribute('LobbyPreviewActive')==true
+  for _,hint in dummyHints do hint.Gui.Enabled=screen.Enabled end
   if not screen.Enabled then if win then win.Close() end;setup.Close();clearGuide();banner.Visible=false end
  end
  player:GetAttributeChangedSignal('LobbyPreviewActive'):Connect(enabled)

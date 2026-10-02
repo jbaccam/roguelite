@@ -12,6 +12,7 @@ local Input=game:GetService('UserInputService')
 local TweenService=game:GetService('TweenService')
 local TextService=game:GetService('TextService')
 local RunService=game:GetService('RunService')
+local GuiService=game:GetService('GuiService')
 local T=require(RS:WaitForChild('UITheme'))
 local StoreFX=require(RS:WaitForChild('StoreFX'))
 local Stage=require(RS:WaitForChild('ChestStage'))
@@ -28,9 +29,9 @@ local function itemIcon(id) return WeaponIcons[id] or Armor.Icons[id] end
 local function itemName(id) local w=Weapons.ById[id];return w and w.name or Armor.pieceName(id) end
 local U={}
 
--- Authored at 1920x1080 and scaled to the viewport (like the Armory and Skill Tree).
-local DW,DH=1920,1080
-local LIST_X,LIST_Y,LIST_W=40,150,610
+-- Laid out on a canvas in design pixels (T.canvas, like the Armory): 1920x1080 on most screens,
+-- a smaller canvas on phones (844x390 -> 1500x738) where the list and the odds scroll. See plan().
+local LIST_X,LIST_W=40,610
 local ROW_H,RAR_H=104,36
 local WHITE=Color3.new(1,1,1)
 local RANK={Common=1,Rare=2,Epic=3,Legendary=4,Godly=5}
@@ -83,10 +84,12 @@ end
 function U.new(player,opts)
  local self={}
  local request=opts.request or function(...) return combat:WaitForChild('ProfileAction'):InvokeServer(...) end
- local screen=T.make('ScreenGui',player:WaitForChild('PlayerGui'),{Name='ChestScreen',ResetOnSpawn=false,DisplayOrder=58,IgnoreGuiInset=true,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,Enabled=false})
+ -- Full screen minus phone notches and rounded corners; shades and flashes may reach under them.
+ local screen=T.make('ScreenGui',player:WaitForChild('PlayerGui'),{Name='ChestScreen',ResetOnSpawn=false,DisplayOrder=58,ScreenInsets=Enum.ScreenInsets.DeviceSafeInsets,ClipToDeviceSafeArea=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,Enabled=false})
  self.Screen=screen
- local root,canvas,canvasScale
- local browse,listFrame,header,actions,oddsOverlay
+ local root,canvas
+ -- browse: the browse view's top-level pieces (direct children of the canvas, one per group).
+ local browse,listFrame,header,actions,oddsOverlay,gemValue
  local openLayer,resultLayer
  local conns={}
  local profile
@@ -104,12 +107,41 @@ function U.new(player,opts)
  Stage.Watch(syncLabels)
  for _,a in {'ProfileChests','ProfileLoaded'} do player:GetAttributeChangedSignal(a):Connect(syncLabels) end
 
- local function fit()
-  if not canvas then return end
-  local v=workspace.CurrentCamera.ViewportSize
-  canvasScale.Scale=math.min(v.X/DW,v.Y/DH)
+ -- Layout ----------------------------------------------------------------------------------------
+ -- L: where the pieces go on the current canvas (canvas px), recomputed when the screen resizes.
+ -- The chest is drawn by the 3D camera (ChestStage 'select' shot, 50° tall view): it shows about
+ -- 0.375 x canvas height right of centre, 0.38 H wide, from 0.31 H to 0.72 H down. The title and
+ -- buttons stay above or under that box. Example 1920x1080: chest x 1160-1570, y 335-778, title and
+ -- buttons above it (y 56-322). 844x390 phone (canvas 1500x738): chest y 229-531, the title stays on
+ -- top and the buttons go under the chest (y 590-714).
+ local L
+ local function plan(c)
+  local l={s=c.s,w=c.w,h=c.h,top=c.top}
+  l.tap=math.ceil(44/c.s) -- a comfortable tap (44 screen px) in canvas px: 88 on phones
+  l.plateY=math.max(56,c.top+8) -- the plate sits in the top-left corner, under Roblox's buttons
+  l.listY=l.plateY+94
+  l.exitH=math.max(76,l.tap)
+  l.exitY=c.h-28-l.exitH
+  l.listH=l.exitY-16-l.listY
+  l.info=42*c.s>=36 -- the small [i] on each row only where it is big enough to tap
+  local x0=LIST_X+LIST_W+24
+  local chestX=c.w/2+c.h*.375
+  -- Title a little right of the chest, clear of Roblox's top-right buttons when the top bar
+  -- reaches down into it (laptops, tablets, phones).
+  local right=c.w-(c.top>64 and 120/c.s or 20)
+  l.tw=math.min(860,right-x0)
+  l.tx=math.clamp(chestX+100-l.tw/2,x0,right-l.tw)
+  -- Buttons (124 tall with the hints under them): under the title when both fit above the chest,
+  -- else under the chest.
+  l.stacked=56+142+124<=c.h*.31
+  l.aw=math.min(802,l.stacked and l.tw or c.w-20-x0)
+  l.bw=math.min(300,(l.aw-170-32)/2)
+  local ac=l.stacked and l.tx+l.tw/2 or math.clamp(chestX,x0+l.aw/2,c.w-20-l.aw/2)
+  l.ax=ac-l.aw/2
+  l.ay=l.stacked and 56+142 or c.h-24-124
+  return l
  end
- local function toCanvas(abs) return (abs-canvas.AbsolutePosition)/canvasScale.Scale end
+ local function toCanvas(abs) return (abs-canvas.AbsolutePosition)/L.s end
 
  local drawBrowse -- forward
 
@@ -136,62 +168,89 @@ function U.new(player,opts)
    local n=math.max(1,limit-(profile.pity[rarity] or 0))
    table.insert(out,rarity..' guaranteed within <b>'..n..'</b> chest'..(n>1 and 's' or ''))
   end
-  line('Legendary',Chests.LegendaryPity)
+  -- A chest that always holds a Legendary already says so; a pity line for it would only confuse.
+  if def.legendary<1 then line('Legendary',Chests.LegendaryPity) end
   if Chests.godlyEnabled() and (def.godly or 0)>0 then line('Godly',Chests.GodlyPity) end
   return out
  end
 
+ local function closeOdds()
+  if oddsOverlay then oddsOverlay:Destroy();oddsOverlay=nil end
+  if actions then T.gamepadSelect(actions) end
+ end
  local function openOdds(id)
   if oddsOverlay then oddsOverlay:Destroy() end
   local def=Chests.ById[id]
-  local back=T.make('TextButton',canvas,{Name='Odds',Text='',AutoButtonColor=false,BackgroundColor3=C.shade,BackgroundTransparency=.4,Position=UDim2.fromOffset(-1000,-200),Size=UDim2.fromOffset(DW+2000,DH+400),ZIndex=40})
+  local back=T.make('TextButton',canvas,{Name='Odds',Text='',AutoButtonColor=false,BackgroundColor3=C.shade,BackgroundTransparency=.4,Position=UDim2.fromOffset(-1000,-400),Size=UDim2.fromOffset(L.w+2000,L.h+800),ZIndex=40})
+  back:SetAttribute('AuditIgnore',true);back:SetAttribute('Chest',id) -- modal shade; Chest: redrawn on resize
   oddsOverlay=back
-  back.Activated:Connect(function() back:Destroy();oddsOverlay=nil end)
-  -- One row per rarity that has weapons (Godly appears once Godly weapons exist).
+  back.Activated:Connect(closeOdds)
+  -- One section per rarity that has items (Godly appears once Godly items exist). Each wraps into
+  -- rows of cells and the sections scroll inside the panel when taller than the screen.
+  -- Example: 1340 wide panel = 12 cells a row, so Rare's 20 items take two rows.
   local odds=Chests.odds(id)
   local byR={};for _,o in odds do byR[o.rarity]=byR[o.rarity] or {};table.insert(byR[o.rarity],o) end
   local shown={};for _,r in Chests.Rarities do if byR[r] then table.insert(shown,r) end end
-  local W,H=1340,math.max(740,130+#shown*144)
-  local p=T.panel(back,'Panel',1000+(DW-W)/2,200+(DH-H)/2+20,W,H,'panel');p.ZIndex=41;p.Active=true;corners(p,def.aura)
-  local pl=plate(p,def.name..'  ·  Odds',28,-34,34);pl.ZIndex=42;for _,d in pl:GetDescendants() do if d:IsA('GuiObject') then d.ZIndex=43 end end
-  local x0,y=36,54
-  local help=left(T.text(p,'Help','Chance that one '..def.name..' includes each item. '..def.copies..' items per chest (weapons and armor).',x0,y,W-72,26,20,C.muted));help.ZIndex=42
-  y+=40
   local cell,gap=96,8
+  local W=math.min(1340,L.w-80)
+  local perRow=math.max(1,math.floor((W-72+gap)/(cell+gap)))
+  local contentH=0
+  for _,r in shown do contentH+=40+math.ceil(#byR[r]/perRow)*(cell+gap) end
+  -- The title plate and close button poke 34 px above the panel: keep them under Roblox's top bar.
+  local top=math.max(L.top+40,60)
+  local H=math.min(94+contentH+12,L.h-24-top)
+  local py=math.max(top,(L.h-H)/2+17)
+  local p=T.panel(back,'Panel',1000+(L.w-W)/2,400+py,W,H,'panel');p.ZIndex=41;p.Active=true;corners(p,def.aura)
+  local pl=plate(p,def.name..'  ·  Odds',28,-34,34);pl.ZIndex=42;for _,d in pl:GetDescendants() do if d:IsA('GuiObject') then d.ZIndex=43 end end
+  local x0=36
+  local help=left(T.text(p,'Help','Chance that one '..def.name..' includes each item. '..def.copies..' items per chest (weapons and armor).',x0,54,W-72,26,20,C.muted));help.ZIndex=42
+  local body=T.scroll(p,'Rows',8,94,W-16,H-94-12);body.ZIndex=42;body.CanvasSize=UDim2.fromOffset(0,contentH)
+  x0-=8
+  local y=0
   for _,r in shown do
    local list=byR[r]
    local col=Chests.RarityColor[r]
-   left(T.label(p,'H_'..r,string.upper(r),x0,y,300,30,26,col)).ZIndex=42
+   left(T.label(body,'H_'..r,string.upper(r),x0,y,300,30,26,col)).ZIndex=42
    y+=34
    for i,o in list do
-    local x=x0+(i-1)*(cell+gap)
-    local c=T.make('Frame',p,{Name='W_'..o.id,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(cell,cell),BackgroundColor3=col,BackgroundTransparency=.55,BorderSizePixel=0,ZIndex=42})
+    local x=x0+((i-1)%perRow)*(cell+gap)
+    local c=T.make('Frame',body,{Name='W_'..o.id,Position=UDim2.fromOffset(x,y+(i-1)//perRow*(cell+gap)),Size=UDim2.fromOffset(cell,cell),BackgroundColor3=col,BackgroundTransparency=.55,BorderSizePixel=0,ZIndex=42})
     T.make('UICorner',c,{CornerRadius=UDim.new(0,8)});T.make('UIStroke',c,{Color=col,Thickness=2})
     local ic=T.icon(c,'Icon',8,4,cell-16,itemIcon(o.id));ic.ZIndex=43
     local pct=o.chance>=10 and string.format('%.0f%%',o.chance) or o.chance>=1 and string.format('%.1f%%',o.chance) or string.format('%.2f%%',o.chance)
     local l=centred(T.label(c,'Chance',pct,0,cell-30,cell,28,22,WHITE));l.ZIndex=44
    end
-   y+=cell+14
+   y+=math.ceil(#list/perRow)*(cell+gap)+6
   end
-  local close=T.button(p,'Close','X',W-70,-26,62,62,function() back:Destroy();oddsOverlay=nil end,true);T.setTier(close,4);close.Caption.TextColor3=C.negative;close.Caption.TextSize=34;close.ZIndex=44;close.Caption.ZIndex=45
+  local cs=math.max(62,L.tap)
+  local close=T.button(p,'Close','X',W-cs-8,-26,cs,cs,closeOdds,true);T.setTier(close,4);close.Caption.TextColor3=C.negative;close.Caption.TextSize=34;close.ZIndex=44;close.Caption.ZIndex=45
   if close:FindFirstChild('RarityCorners') then close.RarityCorners.ZIndex=45 end
+  T.gamepadSelect(p)
  end
 
  local function drawList()
+  local keep=listFrame and listFrame.CanvasPosition.Y
   if listFrame then listFrame:Destroy() end
-  listFrame=T.frame(browse,'List',LIST_X,LIST_Y,LIST_W,900)
-  local y=0
+  -- Scrolls when the rows don't fit between the title and EXIT (phones, a tall selected row).
+  -- 8 px left / 14 px top padding: the chest icons poke out of their rows.
+  listFrame=T.scroll(canvas,'List',LIST_X-8,L.listY-14,LIST_W+20,L.listH+14)
+  local oddsH=math.max(52,L.tap)
+  local y,selTop,selBottom=14,0,0
   for _,id in Chests.Order do
    local def=Chests.ById[id];local sel=id==selected
-   local rowH=ROW_H+(sel and (#Chests.summary(id)*(RAR_H+6)+10+#pityLines(def)*34) or 0)
-   local row=T.button(listFrame,'Row_'..id,'',0,y,LIST_W,rowH,function()
-    if selected~=id then selected=id;if opts.selection then opts.selection.chest=id end;Stage.Select(id);FX.play(FX.Sounds.Chime,.18,1.4);drawBrowse() end
+   local pity=pityLines(def)
+   local rowH=ROW_H+(sel and (#Chests.summary(id)*(RAR_H+6)+10+math.max(#pity*34,oddsH+8)) or 0)
+   -- Tapping the chosen row again opens its odds (a big target on touch screens).
+   local row=T.button(listFrame,'Row_'..id,'',8,y,LIST_W,rowH,function()
+    if selected~=id then selected=id;if opts.selection then opts.selection.chest=id end;Stage.Select(id);FX.play(FX.Sounds.Chime,.18,1.4);drawBrowse()
+    else openOdds(id) end
    end,true)
    row.Caption.Visible=false;corners(row,def.aura)
    wash(row,def.aura,sel and .75 or .4,row.ZIndex)
    local icon=T.icon(row,'Icon',-6,-12,124,def.icon);icon.ZIndex=row.ZIndex+2
    local n=owned(id)
-   local name=left(T.label(row,'Name',def.name..(n>0 and '  <font color="#91EF14">('..n..')</font>' or ''),128,10,LIST_W-300,48,36));name.RichText=true;name.TextWrapped=false;name.ZIndex=row.ZIndex+2
+   -- Stops 8 px before the price chip; long names ("Legendary Chest  (12)") shrink to fit.
+   local name=left(T.label(row,'Name',def.name..(n>0 and '  <font color="#91EF14">('..n..')</font>' or ''),128,10,LIST_W-308,48,36));name.RichText=true;name.TextWrapped=false;name.ZIndex=row.ZIndex+2
    local sub=left(T.text(row,'Sub',def.copies..' items  ·  '..(def.legendary>=1 and 'Legendary guaranteed' or ('Legendary '..Chests.percent(def.legendary))),130,56,LIST_W-230,26,20,C.cream));sub.ZIndex=row.ZIndex+2
    -- Price chip (top right).
    local chip=T.panel(row,'Price',LIST_W-172,14,154,48,'inset');chip.ZIndex=row.ZIndex+2
@@ -201,53 +260,97 @@ function U.new(player,opts)
    elseif def.emeralds then costRow(chip,short(def.emeralds),'emerald',24,C.emerald)
    else local l=centred(T.label(chip,'Robux','ROBUX',0,0,154,48,22,C.gold));l.ZIndex=chip.ZIndex+1 end
    for _,d in chip:GetDescendants() do if d:IsA('GuiObject') then d.ZIndex=chip.ZIndex+1 end end
-   local info=T.button(row,'Info','i',LIST_W-66,ROW_H-52,48,42,function() openOdds(id) end,true);info.Caption.TextSize=26;info.ZIndex=row.ZIndex+3;info.Caption.ZIndex=row.ZIndex+4
+   if L.info and not sel then
+    local info=T.button(row,'Info','i',LIST_W-66,ROW_H-52,48,42,function() openOdds(id) end,true);info.Caption.TextSize=26;info.ZIndex=row.ZIndex+3;info.Caption.ZIndex=row.ZIndex+4
+   end
    if sel then
     local yy=rarityBars(row,id,ROW_H)
     for _,d in row:GetChildren() do if d.Name:find('^Rarity_') then d.ZIndex=row.ZIndex+2;for _,e in d:GetDescendants() do if e:IsA('GuiObject') then e.ZIndex=row.ZIndex+3 end end end end
-    for i,text in pityLines(def) do
-     local p=left(T.text(row,i==1 and 'Pity' or 'Pity'..i,text,18,yy+2+(i-1)*34,LIST_W-36,30,20,C.limeSoft));p.ZIndex=row.ZIndex+2
+    for i,text in pity do
+     local p=left(T.text(row,i==1 and 'Pity' or 'Pity'..i,text,18,yy+2+(i-1)*34,LIST_W-36-170,30,20,C.limeSoft));p.ZIndex=row.ZIndex+2
     end
+    -- Every item's odds (on phones the only way in besides tapping the row again).
+    local odds=T.button(row,'Odds','ODDS',LIST_W-164,yy+4,150,oddsH,function() openOdds(id) end,true)
+    odds.Caption.TextSize=26;odds.ZIndex=row.ZIndex+3;odds.Caption.ZIndex=row.ZIndex+4
+    selTop,selBottom=y,y+rowH
    end
    y+=rowH+10
   end
+  listFrame.CanvasSize=UDim2.fromOffset(0,y)
+  -- Keep the scroll position across redraws, but always bring the chosen row into view.
+  local at,view=keep or 0,L.listH+14
+  if selBottom-at>view then at=selBottom-view end
+  if selTop-14<at then at=selTop-14 end
+  listFrame.CanvasPosition=Vector2.new(0,math.max(0,at))
  end
 
  local function drawHeader()
   if header then header:Destroy() end
+  if actions then actions:Destroy() end
   local def=Chests.ById[selected];local n=owned(selected)
-  header=T.frame(browse,'Header',1040,56,860,330)
-  local title=centred(T.label(header,'Title',def.name,0,0,860,86,78,WHITE));title.TextWrapped=false
+  local tw=L.tw
+  header=T.frame(canvas,'Header',L.tx,56,tw,132)
+  local title=centred(T.label(header,'Title',def.name,0,0,tw,86,78,WHITE));title.TextWrapped=false
   T.make('UIGradient',title,{Color=ColorSequence.new(WHITE,def.aura:Lerp(WHITE,.35)),Rotation=90})
-  local line=T.make('Frame',header,{Name='Underline',BackgroundColor3=WHITE,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,0),Position=UDim2.fromOffset(430,90),Size=UDim2.fromOffset(640,4)})
+  local line=T.make('Frame',header,{Name='Underline',BackgroundColor3=WHITE,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,0),Position=UDim2.fromOffset(tw/2,90),Size=UDim2.fromOffset(math.min(640,tw-40),4)})
   T.make('UIGradient',line,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(1,1)})})
-  centred(T.text(header,'Owned',n>0 and ('You have <b>'..n..'</b>  ·  '..def.copies..' items each') or ('None yet  ·  '..def.copies..' items each'),0,100,860,32,26,n>0 and C.limeSoft or C.cream))
-  -- Actions: BUY (price × amount) · OPEN (owned, up to amount) · amount.
-  local bw,bh,gap=300,92,16
-  local x0=(860-(bw*2+170+gap*2))/2
+  centred(T.text(header,'Owned',n>0 and ('You have <b>'..n..'</b>  ·  '..def.copies..' items each') or ('None yet  ·  '..def.copies..' items each'),0,100,tw,32,26,n>0 and C.limeSoft or C.cream))
+  -- Actions: BUY (price × amount) · OPEN (owned, up to amount) · amount. Under the title, or
+  -- under the chest on short screens (plan()).
+  local bw,bh,gap=L.bw,92,16
+  actions=T.frame(canvas,'Actions',L.ax,L.ay,L.aw,124)
+  local x0=(L.aw-(bw*2+170+gap*2))/2
   local price=def.emeralds and def.emeralds*amount
-  local freeReady=def.daily and profile.freeChestDay~=Money.day()
-  local buy=T.button(header,'Buy','',x0,150,bw,bh,function()
+  if def.daily then
+   -- The free chest is one button: OPEN FREE CHEST claims today's chest and opens it straight away
+   -- (or opens one already owned). On cooldown it shows a live countdown to 00:00 UTC instead.
+   local ready=profile.freeChestDay~=Money.day()
+   local can=ready or n>0
+   local fw=bw*2+170+gap*2
+   local free=T.button(actions,'OpenFree','',x0,0,fw,bh,function()
+    if busy or not can then return end
+    if owned(selected)<=0 then
+     busy=true
+     local r=request('BuyChest',selected,1)
+     busy=false
+     if not r.ok then toast(r.message or '',false);readProfile();drawBrowse();return end
+     T.sound('ui_purchase');FX.play(FX.Sounds.Chime,.4,1.2)
+     -- The claimed chest arrives as a profile attribute; wait for it (normally already there).
+     for _=1,20 do readProfile();if owned(selected)>0 then break end;task.wait(.05) end
+    end
+    self.Begin(1)
+   end,not can)
+   free.Caption.Visible=false;free.Interactable=can
+   if can then
+    local l=centred(T.label(free,'Label','OPEN FREE CHEST',0,0,fw,bh,36,C.ink));l.TextStrokeTransparency=1
+    StoreFX.pulse(free,.04)
+   else
+    local l=centred(T.label(free,'Label','NEXT FREE CHEST',0,8,fw,34,26,C.muted));l.TextStrokeTransparency=1
+    local t=centred(T.label(free,'Timer','',0,44,fw,40,34,WHITE));t.TextStrokeTransparency=1
+    task.spawn(function()
+     while t.Parent do
+      if profile.freeChestDay~=Money.day() then drawBrowse();return end
+      local s=Money.secondsToReset()
+      t.Text=string.format('%d:%02d:%02d',s//3600,(s%3600)//60,s%60)
+      task.wait(1)
+     end
+    end)
+   end
+   free.SelectionOrder=1
+   return
+  end
+  local buy=T.button(actions,'Buy','',x0,0,bw,bh,function()
    if busy then return end
-   if def.daily and not freeReady then return end
-   if not def.emeralds and not def.daily then self.Close();opts.openWindow('Store','Chests');return end
+   if not def.emeralds then self.Close();opts.openWindow('Store','Chests');return end
    busy=true
    local r=request('BuyChest',selected,def.daily and 1 or amount)
    busy=false
-   if r.ok then FX.play(FX.Sounds.Chime,.4,1.2);local a=Stage.Aura(selected);if a then a:Pulse(.8) end end
+   if r.ok then T.sound('ui_purchase');FX.play(FX.Sounds.Chime,.4,1.2);local a=Stage.Aura(selected);if a then a:Pulse(.8) end end
    toast(r.message or '',r.ok)
    readProfile();drawBrowse()
   end)
   buy.Caption.Visible=false
-  if def.daily then
-   -- Free once a day (resets at 00:00 UTC, Money.day()).
-   local s=Money.secondsToReset()
-   local l=centred(T.label(buy,'Label',freeReady and 'CLAIM FREE' or 'NEXT FREE',0,freeReady and 0 or 8,bw,freeReady and bh or 34,freeReady and 34 or 28,C.ink));l.TextStrokeTransparency=1
-   if not freeReady then
-    local t=centred(T.label(buy,'Timer',string.format('in %dh %dm',s//3600,(s%3600)//60),0,48,bw,34,26,C.ink));t.TextStrokeTransparency=1
-    buy.Interactable=false
-   end
-  elseif def.emeralds then
+  if def.emeralds then
    local l=centred(T.label(buy,'Label','BUY ×'..amount,0,8,bw,34,28,C.ink));l.TextStrokeTransparency=1
    local c=costRow(buy,fmt(price),'emerald',30,WHITE);c.Position=UDim2.new(.5,0,0,64)
   else
@@ -255,50 +358,74 @@ function U.new(player,opts)
   end
   local short_=def.emeralds and price-profile.gems
   if short_ and short_>0 then
-   centred(T.text(header,'Need','Need '..fmt(short_)..' more',x0,150+bh+6,bw,26,22,C.negative))
+   centred(T.text(actions,'Need','Need '..fmt(short_)..' more',x0,bh+6,bw,26,22,C.negative))
   end
   local n2=math.min(amount,n)
-  local open=T.button(header,'Open',n>0 and ('OPEN ×'..n2) or 'OPEN',x0+bw+gap,150,bw,bh,function() self.Begin() end,n<=0)
+  local open=T.button(actions,'Open',n>0 and ('OPEN ×'..n2) or 'OPEN',x0+bw+gap,0,bw,bh,function() self.Begin() end,n<=0)
   open.Caption.TextSize=40;open.Interactable=n>0
-  if n<=0 then centred(T.text(header,'NoneOwned','Buy one first',x0+bw+gap,150+bh+6,bw,26,22,C.muted)) end
+  if n<=0 then centred(T.text(actions,'NoneOwned','Buy one first',x0+bw+gap,bh+6,bw,26,22,C.muted)) end
   if n>0 then StoreFX.pulse(open,.04) end
-  local amt=T.button(header,'Amount','×'..amount,x0+2*(bw+gap),150,170,bh,function()
+  local amt=T.button(actions,'Amount','×'..amount,x0+2*(bw+gap),0,170,bh,function()
    amount=amount==1 and 10 or amount==10 and 100 or 1;FX.play(FX.Sounds.Chime,.15,1.6);drawBrowse()
   end,true)
   corners(amt,T.Tier[2]);amt.Caption.TextSize=42;amt.Caption.TextColor3=Color3.fromRGB(150,215,255)
-  centred(T.text(header,'AmountHelp','amount',x0+2*(bw+gap),150+bh+6,170,26,20,C.muted))
+  centred(T.text(actions,'AmountHelp','amount',x0+2*(bw+gap),bh+6,170,26,20,C.muted))
+  -- Gamepad: OPEN is the first pick once there is a chest to open, else BUY.
+  open.SelectionOrder=n>0 and 1 or 2;buy.SelectionOrder=n>0 and 2 or 1;amt.SelectionOrder=3
  end
 
  drawBrowse=function()
   if mode~='browse' or not browse then return end
+  local path=T.selectionPath(canvas)
   readProfile()
   drawList();drawHeader()
+  T.restoreSelection(canvas,path)
  end
 
- local function buildBrowse()
-  browse=T.frame(canvas,'Browse',0,0,DW,DH)
+ -- Every piece of the browse view (the list, title and buttons are redrawn on their own).
+ local function browsePieces()
+  local t=table.clone(browse or {})
+  for _,o in {listFrame or false,header or false,actions or false} do if o then table.insert(t,o) end end
+  return t
+ end
+ local function clearBrowse()
+  for _,o in browsePieces() do o:Destroy() end
+  browse,listFrame,header,actions,gemValue=nil,nil,nil,nil,nil
+ end
+ local function buildBrowse(animate)
+  clearBrowse()
+  browse={}
+  local function add(o) table.insert(browse,o);return o end
   -- Readability wash behind the list.
-  -- Starts 1000 px left of the 16:9 canvas so wide screens stay shaded to their left edge.
-  local shade=T.make('Frame',browse,{Name='ListShade',BackgroundColor3=C.shade,BorderSizePixel=0,Position=UDim2.fromOffset(-1000,-200),Size=UDim2.fromOffset(1760,DH+400),BackgroundTransparency=.2,ZIndex=0})
+  -- Starts 1000 px left of the canvas so it reaches under notches and screen edges.
+  local shade=add(T.make('Frame',canvas,{Name='ListShade',BackgroundColor3=C.shade,BorderSizePixel=0,Position=UDim2.fromOffset(-1000,-200),Size=UDim2.fromOffset(1760,L.h+400),BackgroundTransparency=.2,ZIndex=0}))
+  shade:SetAttribute('AuditIgnore',true)
   T.make('UIGradient',shade,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.15),NumberSequenceKeypoint.new(.57,.15),NumberSequenceKeypoint.new(.89,.6),NumberSequenceKeypoint.new(1,1)})})
-  local pl=plate(browse,'Chests',LIST_X+10,56,50)
-  -- Emeralds (top centre) with + to the store.
-  local gem=T.panel(browse,'Emeralds',DW/2-170,30,260,64,'inset')
-  T.icon(gem,'Icon',10,6,52,'emerald')
-  local v=left(T.label(gem,'Value',fmt(profile.gems),70,6,180,52,34,C.emerald));v.Name='Value'
-  local plus=T.button(browse,'EmeraldsPlus','+',DW/2+98,34,56,56,function() self.Close();opts.openWindow('Store','Emeralds') end);plus.Caption.TextSize=36
-  -- Exit (bottom left).
-  local exit=T.button(browse,'Exit','EXIT',LIST_X,DH-104,240,76,function() self.Close() end,true)
+  local pl,pw=plate(canvas,'Chests',LIST_X+10,L.plateY,50);add(pl)
+  -- Emeralds beside the title, with + to the store (the top centre stays free for the chest title).
+  local ps=math.max(56,L.tap)
+  -- A phone-size + (88) reaches 11 above the pill: still under the top bar (plateY = top+8), above the list.
+  local gem=add(T.frame(canvas,'Emeralds',LIST_X+10+pw+14,L.plateY+3,240+8+ps,math.max(64,ps-11)))
+  local pill=T.panel(gem,'Pill',0,0,240,64,'inset')
+  T.icon(pill,'Icon',10,6,52,'emerald')
+  gemValue=left(T.label(pill,'Value',fmt(profile.gems),70,6,160,52,34,C.emerald));gemValue.TextWrapped=false -- 7+ digits shrink on one line
+  local plus=T.button(gem,'Plus','+',248,math.max(-11,(64-ps)/2),ps,ps,function() self.Close();opts.openWindow('Store','Emeralds') end);plus.Caption.TextSize=36
+  -- Exit (bottom left); the list ends above it.
+  local exit=add(T.button(canvas,'Exit','EXIT',LIST_X,L.exitY,240,L.exitH,function() self.Close() end,true))
   T.setTier(exit,4);exit.Caption.TextSize=38;exit.Caption.TextColor3=C.negative
   if RunService:IsStudio() then
-   local dev=T.button(browse,'DevEmeralds','+200 EMERALDS (STUDIO)',DW-330,DH-84,290,56,function() local r=request('DevEmeralds');toast(r.message or '',r.ok);readProfile();drawBrowse() end,true)
-   dev.Caption.TextSize=18
+   local dev=add(T.button(canvas,'DevEmeralds','+200 EMERALDS (STUDIO)',LIST_X+256,L.exitY,290,L.exitH,function() local r=request('DevEmeralds');toast(r.message or '',r.ok);readProfile();drawBrowse() end,true))
+   dev.Caption.TextSize=20
   end
-  -- Slide in while the camera flies over.
-  listFrame=nil;header=nil
   drawList();drawHeader()
-  for _,o in {listFrame,pl} do local p=o.Position;o.Position=p-UDim2.fromOffset(720,0);tween(o,.55,{Position=p},Enum.EasingStyle.Back,Enum.EasingDirection.Out,.35) end
-  local hp=header.Position;header.Position=hp-UDim2.fromOffset(0,380);tween(header,.55,{Position=hp},Enum.EasingStyle.Back,Enum.EasingDirection.Out,.55)
+  if not animate then return end
+  -- Slide in while the camera flies over.
+  for _,o in {listFrame,pl,gem} do local p=o.Position;o.Position=p-UDim2.fromOffset(720,0);tween(o,.55,{Position=p},Enum.EasingStyle.Back,Enum.EasingDirection.Out,.35) end
+  for _,o in {header,actions} do
+   local dy=o==actions and not L.stacked and 300 or -380
+   local p=o.Position;o.Position=p+UDim2.fromOffset(0,dy);tween(o,.55,{Position=p},Enum.EasingStyle.Back,Enum.EasingDirection.Out,.55)
+  end
+  T.gamepadSelect(actions)
  end
 
  -- Opening -------------------------------------------------------------------------------------
@@ -310,15 +437,16 @@ function U.new(player,opts)
   return best>=3 and Chests.RarityColor[Chests.Rarities[best]] or nil,best
  end
  local function flash(color,strength)
-  -- Full screen (root), not the 16:9 canvas, so wide screens get no side bands.
-  local f=T.make('Frame',root,{Name='Flash',BackgroundColor3=color or WHITE,BackgroundTransparency=1-(strength or .8),BorderSizePixel=0,Size=UDim2.new(1,0,1,120),Position=UDim2.fromOffset(0,-60),ZIndex=60})
+  -- Whole screen (root), reaching under notches and the top bar.
+  local f=T.make('Frame',root,{Name='Flash',BackgroundColor3=color or WHITE,BackgroundTransparency=1-(strength or .8),BorderSizePixel=0,Size=UDim2.new(1,200,1,200),Position=UDim2.fromOffset(-100,-100),ZIndex=60})
+  f:SetAttribute('AuditIgnore',true)
   tween(f,.6,{BackgroundTransparency=1},Enum.EasingStyle.Quad,Enum.EasingDirection.Out).Completed:Connect(function() f:Destroy() end)
  end
 
  local showResults -- forward
  local function drawPrompt()
   if prompt then prompt:Destroy() end
-  prompt=T.frame(openLayer,'Prompt',DW/2-400,DH-215,800,200)
+  prompt=T.frame(openLayer,'Prompt',L.w/2-400,L.h-215,800,200)
   local def=Chests.ById[opening.id]
   local t=centred(T.label(prompt,'Tap',opening.stage==0 and 'TAP TO OPEN!' or opening.stage==1 and 'TAP AGAIN!' or 'ONE MORE!',0,0,800,90,76,WHITE))
   T.make('UIGradient',t,{Color=ColorSequence.new(WHITE,def.aura:Lerp(WHITE,.3)),Rotation=90})
@@ -368,14 +496,21 @@ function U.new(player,opts)
   opening={id=selected,n=n,results=results,total=total,stage=0,best=best}
   -- Browse slides away, the camera pushes in on the chest.
   if resultLayer then resultLayer:Destroy();resultLayer=nil end
+  if oddsOverlay then oddsOverlay:Destroy();oddsOverlay=nil end
   if browse then
-   local b=browse;browse=nil
-   for _,c in b:GetChildren() do if c:IsA('GuiObject') then tween(c,.3,{Position=c.Position+UDim2.fromOffset(c.Position.X.Offset<DW/2 and -800 or 0,c.Position.X.Offset<DW/2 and 0 or -420)},Enum.EasingStyle.Quad,Enum.EasingDirection.In) end end
-   task.delay(.32,function() b:Destroy() end)
+   -- Left column slides left, the title up, buttons under the chest down.
+   local pieces=browsePieces();browse,listFrame,header,actions,gemValue=nil,nil,nil,nil,nil
+   for _,c in pieces do
+    local p=c.Position;local dx=p.X.Offset<L.w/2 and -800 or 0;local dy=dx~=0 and 0 or p.Y.Offset>L.h/2 and 420 or -420
+    tween(c,.3,{Position=p+UDim2.fromOffset(dx,dy)},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
+   end
+   task.delay(.32,function() for _,c in pieces do c:Destroy() end end)
   end
   mode='opening'
   Stage.Settle(selected);Stage.Focus(selected)
-  openLayer=T.make('TextButton',canvas,{Name='Opening',Text='',AutoButtonColor=false,BackgroundTransparency=1,Size=UDim2.fromOffset(DW,DH),ZIndex=30})
+  -- Not Selectable: a controller taps with A (InputBegan); selecting it too would double-advance.
+  openLayer=T.make('TextButton',canvas,{Name='Opening',Text='',AutoButtonColor=false,BackgroundTransparency=1,Size=UDim2.fromOffset(L.w,L.h),ZIndex=30,Selectable=false})
+  openLayer:SetAttribute('NoClickSound',true) -- each tap already plays the chest's shake sound
   openLayer.Activated:Connect(advance)
   drawPrompt()
  end
@@ -410,34 +545,44 @@ function U.new(player,opts)
   mode='results'
   local o=opening
   if openLayer then openLayer:Destroy();openLayer=nil end
-  resultLayer=T.make('TextButton',canvas,{Name='Results',Text='',AutoButtonColor=false,BackgroundTransparency=1,Size=UDim2.fromOffset(DW,DH),ZIndex=30})
-  local dim=T.make('Frame',root,{Name='ResultsDim',BackgroundColor3=C.shade,BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.new(1,0,1,120),Position=UDim2.fromOffset(0,-60),ZIndex=0})
+  resultLayer=T.make('TextButton',canvas,{Name='Results',Text='',AutoButtonColor=false,BackgroundTransparency=1,Size=UDim2.fromOffset(L.w,L.h),ZIndex=30})
+  local dim=T.make('Frame',root,{Name='ResultsDim',BackgroundColor3=C.shade,BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.new(1,200,1,200),Position=UDim2.fromOffset(-100,-100),ZIndex=0})
+  dim:SetAttribute('AuditIgnore',true)
   tween(dim,.5,{BackgroundTransparency=.38})
   resultLayer.Destroying:Connect(function() dim:Destroy() end)
   local def=Chests.ById[o.id]
-  local head=centred(T.label(resultLayer,'Title','YOU GOT!',0,40,DW,90,84,WHITE));head.ZIndex=31
+  -- Short screens (phones): smaller title, more room for the cards.
+  local compact=L.h<900
+  local head=centred(T.label(resultLayer,'Title','YOU GOT!',0,compact and 10 or 40,L.w,compact and 72 or 90,compact and 64 or 84,WHITE));head.ZIndex=31
   T.make('UIGradient',head,{Color=ColorSequence.new(WHITE,(o.best or def.aura):Lerp(WHITE,.3)),Rotation=90})
-  local sub=centred(T.text(resultLayer,'Sub',o.total..' items from '..(o.n>1 and (o.n..' '..def.name..'s') or ('a '..def.name)),0,128,DW,34,28,C.cream));sub.ZIndex=31
-  -- Grid: up to 7 per row; scrolls past three rows (×100 can give 30+ weapons).
+  local sub=centred(T.text(resultLayer,'Sub',o.total..' items from '..(o.n>1 and (o.n..' '..def.name..'s') or ('a '..def.name)),0,compact and 80 or 128,L.w,34,28,C.cream));sub.ZIndex=31
+  -- Grid: up to 7 per row (fewer on narrow screens); scrolls past what fits (×100 can give 30+).
+  -- Phones draw the cards k times bigger so their smallest text (the 14 px NEW chip) stays about
+  -- 9.5 px on screen: k = 9.5/(14 x .5) = 1.36 at scale .5.
   local list=o.results
-  local cols=math.min(7,math.max(1,#list));local cw,ch,gap=186,244,16
+  local cw,ch,gap=186,244,16
+  local k=math.clamp(9.5/(14*L.s),1,1.4)
+  local pw,ph=(cw+gap)*k,(ch+gap)*k
+  local cols=math.clamp(math.floor((L.w-40+gap*k)/pw),1,math.min(7,math.max(1,#list)))
   local rows=math.ceil(#list/cols)
-  local gridW=cols*cw+(cols-1)*gap
-  local viewH=math.min(rows*(ch+gap)+4,DH-170-186)
-  local grid=T.make('ScrollingFrame',resultLayer,{Name='Grid',BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset((DW-gridW)/2-10,180),Size=UDim2.fromOffset(gridW+20,viewH),CanvasSize=UDim2.fromOffset(0,rows*(ch+gap)),ScrollBarThickness=8,ScrollBarImageColor3=C.lime,ScrollingDirection=Enum.ScrollingDirection.Y,ZIndex=32})
+  local gridW=cols*pw-gap*k
+  local gridY=compact and 124 or 180
+  local btnY=L.h-(compact and 112 or 150)
+  local viewH=math.min(rows*ph+4,btnY-16-gridY)
+  local grid=T.make('ScrollingFrame',resultLayer,{Name='Grid',BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset((L.w-gridW)/2-10,gridY),Size=UDim2.fromOffset(gridW+20,viewH),CanvasSize=UDim2.fromOffset(0,rows*ph),ScrollBarThickness=8,ScrollBarImageColor3=C.lime,ScrollingDirection=Enum.ScrollingDirection.Y,ZIndex=32})
   -- Reveal order: commons first, the best last.
   local order={}
   for i=#list,1,-1 do table.insert(order,list[i]) end
   local slots={}
   for i,r in list do
    local col=(i-1)%cols;local row=math.floor((i-1)/cols)
-   slots[r]=Vector2.new(10+col*(cw+gap),10+row*(ch+gap))
+   slots[r]=Vector2.new(10+col*pw,10+row*ph)
   end
   skipReveal=false
   local buttons
   local function finish()
    if buttons then return end
-   buttons=T.frame(resultLayer,'Buttons',DW/2-330,DH-150,660,96);buttons.ZIndex=35
+   buttons=T.frame(resultLayer,'Buttons',L.w/2-330,btnY,660,96);buttons.ZIndex=35
    local claim=T.button(buttons,'Claim','CLAIM',0,0,320,90,function() self.Claim() end);claim.Caption.TextSize=44
    local left_=owned(o.id)
    readProfile();left_=owned(o.id)
@@ -445,12 +590,15 @@ function U.new(player,opts)
     if owned(o.id)>0 then self.Again() end
    end,true)
    again.Caption.TextSize=30;again.Interactable=left_>0
+   claim.SelectionOrder=1;again.SelectionOrder=2;T.gamepadSelect(buttons)
    buttons.Position+=UDim2.fromOffset(0,40);tween(buttons,.35,{Position=buttons.Position-UDim2.fromOffset(0,40)},Enum.EasingStyle.Back)
   end
   resultLayer.Activated:Connect(function() skipReveal=true end)
   task.spawn(function()
-   local mouth=Stage.MouthScreen(o.id) or workspace.CurrentCamera.ViewportSize/2
-   local start=toCanvas(mouth)
+   -- MouthScreen is in viewport pixels (from the window's top-left corner); GUI positions are
+   -- measured from under the top bar, so take the inset off before converting to canvas pixels.
+   local mouth=Stage.MouthScreen(o.id)
+   local start=mouth and toCanvas(mouth-GuiService:GetGuiInset()) or Vector2.new(L.w/2,L.h/2)
    -- ×10 / ×100: extra copies spray out of the chest as small icons.
    local ghosts=math.min(o.total,o.n>=100 and 60 or o.n>=10 and 26 or 8)
    for g=1,ghosts do
@@ -472,14 +620,18 @@ function U.new(player,opts)
      FX.play(rank>=4 and FX.Sounds.Legendary or FX.Sounds.Chime,rank>=4 and .6 or .5,rank>=4 and 1 or .9)
      Stage.Shake(rank>=4 and .3 or .15)
     end
+    -- Closed or claimed mid-reveal (Escape / B): stop quietly.
+    if not (canvas and grid.Parent) then return end
     local slot=slots[r]
-    local c=card(grid,r,slot.X,slot.Y,cw,ch)
+    local holder=T.frame(grid,'Slot_'..r.id,slot.X,slot.Y,cw,ch)
+    if k~=1 then T.make('UIScale',holder,{Scale=k}) end
+    local c=card(holder,r,0,0,cw,ch)
     if not skipReveal then
      -- Fly from the chest mouth to the slot (in canvas space), then pop.
-     local target=grid.AbsolutePosition/canvasScale.Scale-canvas.AbsolutePosition/canvasScale.Scale+slot-Vector2.new(0,grid.CanvasPosition.Y)
+     local target=(grid.AbsolutePosition-canvas.AbsolutePosition)/L.s+slot-Vector2.new(0,grid.CanvasPosition.Y)
      local fly=T.icon(canvas,'Fly',start.X-50,start.Y-50,100,itemIcon(r.id));fly.ZIndex=34;fly.Rotation=math.random(-30,30)
      c.Visible=false
-     tween(fly,.38,{Position=UDim2.fromOffset(target.X+(cw-100)/2,target.Y+30),Rotation=0},Enum.EasingStyle.Quad,Enum.EasingDirection.Out)
+     tween(fly,.38,{Position=UDim2.fromOffset(target.X+(cw*k-100)/2,target.Y+30*k),Rotation=0},Enum.EasingStyle.Quad,Enum.EasingDirection.Out)
      task.delay(.36,function()
       fly:Destroy();c.Visible=true
       local s=T.make('UIScale',c,{Scale=.6});tween(s,.28,{Scale=1},Enum.EasingStyle.Back)
@@ -499,7 +651,7 @@ function U.new(player,opts)
   if resultLayer then resultLayer:Destroy();resultLayer=nil end
   opening=nil
   Stage.Settle(id);Stage.Select(id)
-  mode='browse';readProfile();buildBrowse()
+  mode='browse';readProfile();buildBrowse(true)
  end
  function self.Again()
   if mode~='results' then return end
@@ -509,42 +661,62 @@ function U.new(player,opts)
   task.delay(.5,function() if mode=='browse' then self.Begin() end end)
  end
 
+ -- The screen changed size (window resize, phone rotation): redraw on the new canvas.
+ local function relayout()
+  if mode=='browse' and browse then
+   local path=T.selectionPath(canvas)
+   buildBrowse(false)
+   T.restoreSelection(canvas,path)
+   if oddsOverlay then openOdds(oddsOverlay:GetAttribute('Chest')) end
+  elseif mode=='opening' and openLayer then openLayer.Size=UDim2.fromOffset(L.w,L.h);if not opening.bursting then drawPrompt() end
+  elseif resultLayer then resultLayer.Size=UDim2.fromOffset(L.w,L.h) end -- cards keep their places until CLAIM
+ end
+
  -- Open / close ------------------------------------------------------------------------------------
  function self.Open(kind)
   if root then self.Close() end
   if kind and Chests.ById[kind] then selected=kind end
   readProfile()
   root=T.frame(screen,'Root',0,0,0,0);root.Size=UDim2.fromScale(1,1)
-  canvas=T.frame(root,'Canvas',0,0,DW,DH);canvas.AnchorPoint=Vector2.new(.5,.5);canvas.Position=UDim2.fromScale(.5,.5)
-  canvasScale=T.make('UIScale',canvas,{Scale=1});canvas.ZIndex=1
   screen.Enabled=true
-  fit()
   mode='browse'
+  -- Lays out now and again whenever the root frame changes size.
+  canvas,L=nil,nil
+  T.canvas(root,function(c,cv)
+   local first=canvas==nil
+   canvas=cv;L=plan(c)
+   if not first then relayout() end
+  end)
   local has3d=Stage.Show(selected)
   if not has3d then
    -- No chest island installed: dim the lobby instead of showing an empty sky.
-   local d=T.make('Frame',root,{Name='Dim',BackgroundColor3=C.shade,BackgroundTransparency=.35,BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=0})
+   local d=T.make('Frame',root,{Name='Dim',BackgroundColor3=C.shade,BackgroundTransparency=.35,BorderSizePixel=0,Position=UDim2.fromOffset(-100,-100),Size=UDim2.new(1,200,1,200),ZIndex=0})
+   d:SetAttribute('AuditIgnore',true)
   end
   FX.play(FX.Sounds.Charge,.25,1.25)
-  buildBrowse()
+  buildBrowse(true)
+  T.hideTouchControls('ChestScreen',true)
   if opts.onVisible then opts.onVisible(false) end
-  table.insert(conns,workspace.CurrentCamera:GetPropertyChangedSignal('ViewportSize'):Connect(fit))
   table.insert(conns,player.AttributeChanged:Connect(function(name)
    if (name=='ProfileGems' or name=='ProfileChests' or name=='ProfilePity' or name=='ProfileLoaded') and mode=='browse' then
     task.defer(drawBrowse)
-    if browse and browse:FindFirstChild('Emeralds') then browse.Emeralds.Value.Text=fmt(player:GetAttribute('ProfileGems') or 0) end
+    if gemValue and gemValue.Parent then gemValue.Text=fmt(player:GetAttribute('ProfileGems') or 0) end
    end
   end))
   table.insert(conns,Input.InputBegan:Connect(function(input,processed)
    if input.KeyCode==Enum.KeyCode.Escape or input.KeyCode==Enum.KeyCode.ButtonB then
-    if mode=='results' then self.Claim() elseif mode=='browse' then self.Close() end
+    -- Back one step: the odds panel, then the results, then the screen.
+    if oddsOverlay then closeOdds()
+    elseif mode=='results' then self.Claim() elseif mode=='browse' then self.Close() end
     return
    end
    -- (No `processed` check: the movement sink marks Space as handled, and this screen has no text boxes.)
-   if mode=='opening' and (input.KeyCode==Enum.KeyCode.Space or input.KeyCode==Enum.KeyCode.Return or input.KeyCode==Enum.KeyCode.ButtonA) then advance()
-   elseif mode=='results' and (input.KeyCode==Enum.KeyCode.Space or input.KeyCode==Enum.KeyCode.Return) then skipReveal=true end
+   local go=input.KeyCode==Enum.KeyCode.Space or input.KeyCode==Enum.KeyCode.Return or input.KeyCode==Enum.KeyCode.ButtonA
+   if mode=='opening' and go then advance()
+   elseif mode=='results' and go then skipReveal=true end
   end))
-  return {Root=root,Close=self.Close}
+  -- HandlesBack: this screen handles Escape / ButtonB itself (LobbyUI should not also close it).
+  return {Root=root,Close=self.Close,HandlesBack=true}
  end
 
  function self.Close()
@@ -556,9 +728,10 @@ function U.new(player,opts)
   Stage.Settle(id)
   Stage.Hide()
   local r=root;root=nil;r:Destroy()
-  canvas,browse,listFrame,header,oddsOverlay,openLayer,resultLayer,prompt=nil,nil,nil,nil,nil,nil,nil,nil
+  canvas,browse,listFrame,header,actions,gemValue,oddsOverlay,openLayer,resultLayer,prompt=nil,nil,nil,nil,nil,nil,nil,nil,nil,nil
   mode='closed'
   screen.Enabled=false
+  T.hideTouchControls('ChestScreen',false)
   if opts.onVisible then opts.onVisible(true) end
  end
  function self.IsOpen() return root~=nil end

@@ -35,7 +35,7 @@ function E.hit(npc,amount,d,secondary)
  local h,r=alive(npc);if not h or not d or not valid(d) then return 0 end
  if not Tags:HasTag(npc,'RogueliteZombie') then return 0 end
  -- Tag before damage: the Died handler can run immediately on a lethal shot.
- if d.id=='10' and not secondary and amount>0 then npc:SetAttribute('DesignerShirt',true) end
+ if d.id=='10' and not secondary and amount>0 and not npc:GetAttribute('LobbyDummy') then npc:SetAttribute('DesignerShirt',true) end
  local s=d.stats;local position=r.Position
  if not secondary then
   -- Ninja 4-piece: after a dodge (CharacterService.contact) the next direct hit always crits.
@@ -47,14 +47,14 @@ function E.hit(npc,amount,d,secondary)
  -- Owl pet mark (PetService): +bonus% on every hit from the owner while the mark lasts.
  local mark=npc:GetAttribute('PetMark_'..d.owner.UserId)
  if type(mark)=='number' and (npc:GetAttribute('PetMarkUntil_'..d.owner.UserId) or 0)>workspace:GetServerTimeNow() then amount*=1+mark/100 end
- if RunService:IsStudio() and npc:GetAttribute('PracticeTarget') then
+ if Death.isPractice(npc) then
   local actual=math.min(h.Health,math.max(0,amount))
   if actual<=0 then return 0 end
   h.Health=h.Health-actual>1 and h.Health-actual or h.MaxHealth
   npc:SetAttribute('PracticeHits',(npc:GetAttribute('PracticeHits') or 0)+1)
   npc:SetAttribute('PracticeDamage',(npc:GetAttribute('PracticeDamage') or 0)+actual)
   npc:SetAttribute('LastWeaponId',d.id)
-  combat.Hit:FireAllClients(position+Vector3.yAxis*2,actual,npc,position,false,secondary==true)
+  combat.Hit:FireAllClients(position+Vector3.yAxis*2,actual,npc,position,false,secondary==true,d.id)
   return actual -- no death, rewards, lifesteal farming or damage to the tester
  end
  npc:SetAttribute('LastDamageUserId',d.owner.UserId)
@@ -63,7 +63,8 @@ function E.hit(npc,amount,d,secondary)
  Characters.leech(d.owner,actual)
  combat:SetAttribute('ConfirmedHits',(combat:GetAttribute('ConfirmedHits') or 0)+1)
  -- A lethal hit is represented by the death burst, not a second hit burst.
- combat.Hit:FireAllClients(position+Vector3.new(0,2,0),actual,npc,position,h.Health<=0,secondary==true)
+ -- The weapon id lets clients add that weapon's impact sound (RogueliteSounds).
+ combat.Hit:FireAllClients(position+Vector3.new(0,2,0),actual,npc,position,h.Health<=0,secondary==true,d.id)
  if h.Health<=0 then
   local entries=E.statuses[npc]
   if entries then
@@ -128,9 +129,9 @@ function E.armorBlast(player,position,radius,damage)
  end
  return count
 end
-local elapsed=0
 -- Pets (PetService) apply burn, poison and slow through the same status table as weapons.
 E.status=status
+local elapsed=0
 RunService.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<.1 then return end;elapsed=0
  local now=os.clock()

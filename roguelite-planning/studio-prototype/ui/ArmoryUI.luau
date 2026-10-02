@@ -23,12 +23,28 @@ local WeaponIcons = require(RS:WaitForChild("WeaponInventoryUI")).Icons
 local C = T.Color
 local A = {}
 
--- Layout is authored at 1920x1080 and scaled to the viewport. Side panels hug the screen edges,
--- the slots stay centred on the avatar.
-local DW, DH = 1920, 1080
-local LEFT_W, LEFT_H = 600, 900
-local RIGHT_W, RIGHT_H = 540, 760
-local CARD, CARD_H, GAP = 170, 206, 14
+-- Layout is in design pixels on a canvas the size of the screen (T.canvas: one scale for
+-- everything, 1920x1080 on a 16:9 monitor, about 1690x780 on a phone). Side panels hug the canvas
+-- edges; the loadout slots fill the gap between them, centred on the avatar and sized to fit.
+-- Nothing is placed by independent per-group scales, so pieces cannot drift into each other when
+-- the screen's shape changes.
+local MARGIN = 24
+local LEFT_H = 900 -- tallest the side panels get; shorter canvases shrink them and lists scroll
+local RIGHT_W, RIGHT_H = 500, 760
+local UPGRADE_H = 600 -- right panel height in the upgrade view
+local CARD, CARD_H, GAP = 164, 206, 14
+local function leftWidth(cols)
+	-- 22 px border on each side, cards and gaps, and room for the scroll bar.
+	return 22 + cols * CARD + (cols - 1) * GAP + 14 + 22
+end
+-- Loadout slots: SLOT squares with a caption under each; the stat plate below them.
+local SLOT, SLOT_ROW = 124, 156
+local RING_H = 720
+-- Half-width of the avatar on screen at 1080 px tall, from the hero camera (20.5 studs, 30° FOV:
+-- 98 px per stud, R15 avatar about 4 studs wide) plus a little air.
+local AVATAR_HALF = 210
+local TOP_H = 150 -- the name and emerald pill at the top centre
+local BOTTOM_H = 86 + 18 -- CLOSE / BACK
 
 local TRAITS = {
 	pellets = "Fires a spread of pellets.",
@@ -92,22 +108,6 @@ local function armorView(parent, setId, slot, x, y, size)
 	return vp
 end
 
-local function weaponAt(w, tier)
-	tier = math.clamp(tier or 1, 1, 4)
-	local cd = w.cooldown * (w.tierCooldown[tier] or 1)
-	return { damage = w.tierDamage[tier] or w.damage, rate = 1 / cd, range = w.range }
-end
-
-local function describe(w)
-	local out = { "Home weapon of the " .. w.home .. " class." }
-	if TRAITS[w.trait] then
-		table.insert(out, TRAITS[w.trait])
-	end
-	if w.burn > 0 then
-		table.insert(out, "Sets enemies on fire.")
-	end
-	if w.poison > 0 then
-		table.insert(out, "Poisons what it hits.")
 -- A 3D view of one pet: ReplicatedStorage.PetModels[id] at rest, framed from the front-left.
 -- Without the model (not installed yet) it shows a rarity-coloured disc with the pet's name.
 local function petView(parent, id, x, y, size)
@@ -152,6 +152,22 @@ local function petView(parent, id, x, y, size)
 	return vp
 end
 
+local function weaponAt(w, tier)
+	tier = math.clamp(tier or 1, 1, 4)
+	local cd = w.cooldown * (w.tierCooldown[tier] or 1)
+	return { damage = w.tierDamage[tier] or w.damage, rate = 1 / cd, range = w.range }
+end
+
+local function describe(w)
+	local out = { "Home weapon of the " .. w.home .. " class." }
+	if TRAITS[w.trait] then
+		table.insert(out, TRAITS[w.trait])
+	end
+	if w.burn > 0 then
+		table.insert(out, "Sets enemies on fire.")
+	end
+	if w.poison > 0 then
+		table.insert(out, "Poisons what it hits.")
 	end
 	if w.slow > 0 then
 		table.insert(out, "Slows enemies down.")
@@ -279,7 +295,9 @@ function A.new(player, opts)
 		Name = "Armory",
 		ResetOnSpawn = false,
 		DisplayOrder = 58,
-		IgnoreGuiInset = true,
+		-- Full screen, minus phone notches and rounded corners. The shade may reach under them.
+		ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets,
+		ClipToDeviceSafeArea = false,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 		Enabled = false,
 	})
@@ -291,13 +309,15 @@ function A.new(player, opts)
 	-- Panels slide in only when the screen opens or switches between main and upgrade views;
 	-- a plain redraw (selecting an item, a profile update) must not move anything.
 	local animate = false
+	local justOpened = false -- the next draw is the first since Open (gamepad selection starts there)
 	local scroll = {} -- tab -> grid scroll position, kept across redraws
-	local function slideIn(frame, from, to)
+	-- Slides a panel in from `dx` canvas pixels to the side of where it was placed.
+	local function slideIn(frame, dx)
 		if not animate then
-			frame.Position = to
 			return
 		end
-		frame.Position = from
+		local to = frame.Position
+		frame.Position = to + UDim2.fromOffset(dx, 0)
 		TweenService
 			:Create(frame, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Position = to })
 			:Play()
@@ -321,26 +341,6 @@ function A.new(player, opts)
 		local need = rec and opts.need(rec)
 		return need ~= nil and rec.have >= need and profile.gems >= (Chests.upgradeEmeralds(id, rec.tier) or 0)
 	end
-
-	-- Scaled groups ------------------------------------------------------------
-	local groups = {}
-	local function group(name, anchor, pos, w, h)
-		local f = T.frame(root, name, 0, 0, w, h)
-		f.AnchorPoint = anchor
-		f.Position = pos
-		groups[f] = T.make("UIScale", f, { Scale = 1 })
-		return f
-	end
-	local function fit()
-		local v = workspace.CurrentCamera.ViewportSize
-		if v.X <= 0 then
-			return
-		end
-		local s = math.clamp(math.min(v.X / DW, v.Y / DH), 0.4, 1.25)
-		for _, sc in groups do
-			sc.Scale = s
-		end
-	end
 	-- Pets: owned record (LobbyUI parses ProfilePets) and whether its upgrade is ready.
 	local function petRec(id)
 		return profile.pets and profile.pets[id]
@@ -352,7 +352,72 @@ function A.new(player, opts)
 			and rec.have >= Chests.upgradeCost(id, rec.tier)
 			and profile.gems >= Chests.upgradeEmeralds(id, rec.tier)
 	end
-	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(fit)
+
+	-- Layout ---------------------------------------------------------------------
+	-- L: where every piece goes on the current canvas, in canvas pixels. Recomputed (and the
+	-- screen redrawn) when the screen changes size.
+	-- Example, 1920x1080: panels 580 and 500 wide, slots 316 px either side of the avatar at full
+	-- size. 844x390 phone: canvas 1688x780, 2-column list, slots about 70% size.
+	local L, canvas
+	local function plan(c)
+		local l = { w = c.w, h = c.h }
+		-- Side panels sit under Roblox's top-bar buttons (the title plate pokes 34 px above them).
+		local bandTop = math.max(c.top, 14) + 34 + 10
+		local bandBottom = c.h - MARGIN
+		-- The avatar is drawn by the 3D camera: its size follows the screen height (or the width on
+		-- screens narrower than 16:9, see ArmoryStage.FieldOfView), not this canvas.
+		local vx, vy = c.w * c.s, c.h * c.s
+		local avatarHalf = AVATAR_HALF * math.min(vy, vx * 9 / 16) / 1080 / c.s
+		local function ring(leftW)
+			local free = math.min(c.w / 2 - MARGIN - leftW, c.w / 2 - MARGIN - RIGHT_W) - 16
+			local innerMin = avatarHalf + 16
+			local inner = math.clamp(free - SLOT - 8, innerMin, math.max(innerMin, 316 * avatarHalf / AVATAR_HALF))
+			local top, bottom = TOP_H, c.h - BOTTOM_H - 12
+			local k = math.min(1, (free - inner) / (SLOT + 8), (bottom - top) / RING_H)
+			-- Hidden when the slots would be smaller than a comfortable tap (44 screen px).
+			if k * SLOT * c.s < 44 then
+				return nil
+			end
+			local cy = math.clamp(c.h / 2 + 10, top + RING_H * k / 2, bottom - RING_H * k / 2)
+			return { k = k, inner = inner / k, x = c.w / 2, y = cy }
+		end
+		l.cols = 3
+		l.ring = ring(leftWidth(3))
+		if not l.ring then
+			l.cols = 2
+			l.ring = ring(leftWidth(2))
+		end
+		l.leftW = leftWidth(l.cols)
+		-- The name and emeralds use the gap between the panels; if that's too narrow for the emerald
+		-- pill, the panels start below them instead.
+		l.topW = math.min(700, c.w - 2 * (MARGIN + math.max(l.leftW, RIGHT_W) + 16))
+		if l.topW < 260 then
+			l.topW = math.min(700, c.w - 2 * MARGIN)
+			bandTop = math.max(bandTop, TOP_H + 34 + 10)
+		end
+		local band = bandBottom - bandTop
+		l.leftH = math.min(LEFT_H, band)
+		l.leftY = bandTop + (band - l.leftH) / 2
+		l.rightH = math.min(RIGHT_H, band)
+		l.rightY = bandTop + (band - l.rightH) / 2
+		l.upgradeH = math.min(UPGRADE_H, band)
+		l.upgradeY = bandTop + (band - l.upgradeH) / 2
+		return l
+	end
+	local function group(name, x, y, w, h)
+		return T.frame(canvas, name, x, y, w, h)
+	end
+	-- Content taller than its panel scrolls inside it (short phone screens); otherwise it is drawn
+	-- straight onto the panel. Returns the frame to draw the content into.
+	local function body(panel, contentH)
+		if panel.Size.Y.Offset >= contentH then
+			return panel
+		end
+		local sc = T.scroll(panel, "Body", 0, 8, 0, 0)
+		sc.Size = UDim2.new(1, -8, 1, -16)
+		sc.CanvasSize = UDim2.fromOffset(0, contentH)
+		return sc
+	end
 
 	-- Pieces --------------------------------------------------------------------
 	local function currencyPill(parent, name, x, asset, value, color)
@@ -364,16 +429,17 @@ function A.new(player, opts)
 	end
 
 	local function drawTop()
-		local top = group("Top", Vector2.new(0.5, 0), UDim2.new(0.5, 0, 0, 14), 700, 130)
-		local name = centred(T.label(top, "PlayerName", player.DisplayName, 0, 0, 700, 56, 48))
+		local tw = L.topW
+		local top = group("Top", (L.w - tw) / 2, 14, tw, 150)
+		local name = centred(T.label(top, "PlayerName", player.DisplayName, 0, 0, tw, 56, 48))
 		name.TextWrapped = false
 		local fmt = function(n)
 			n = tonumber(n) or 0
 			return n >= 1e4 and string.format("%.1fK", n / 1e3) or tostring(n)
 		end
 		-- Emeralds are the only currency (keys were dropped); one pill, centred under the name.
-		currencyPill(top, "Emeralds", 250, "emerald", fmt(profile.gems), C.emerald)
-		top.Emeralds.Position = UDim2.fromOffset(250, 64)
+		currencyPill(top, "Emeralds", 0, "emerald", fmt(profile.gems), C.emerald)
+		top.Emeralds.Position = UDim2.fromOffset((tw - 200) / 2, 64)
 		if not profile.connected or game:GetService("RunService"):IsStudio() then
 			local chip = T.chip(
 				top,
@@ -385,7 +451,7 @@ function A.new(player, opts)
 				C.gold
 			)
 			chip.AnchorPoint = Vector2.new(0.5, 0)
-			chip.Position = UDim2.fromOffset(350, 124)
+			chip.Position = UDim2.fromOffset(tw / 2, 124)
 		end
 	end
 
@@ -491,72 +557,6 @@ function A.new(player, opts)
 		end)
 	end
 
-	-- "Coming" panel for tabs whose items are not in the game yet: a title, one line, a few facts.
-	local function comingPanel(parent, title, body, lines)
-		local h = 118 + #lines * 44
-		local box = T.panel(parent, "Coming", 0, 0, LEFT_W - 60, h, "inset")
-		local t = T.label(box, "Title", title, 20, 18, LEFT_W - 100, 40, 30)
-		t.TextXAlignment = Enum.TextXAlignment.Left
-		local b = T.text(box, "Body", body, 20, 62, LEFT_W - 100, 30, 18, C.muted)
-		b.TextYAlignment = Enum.TextYAlignment.Top
-		for i, line in lines do
-			local row = T.panel(box, "Row" .. i, 20, 104 + (i - 1) * 44, LEFT_W - 100, 38, "panel")
-			local l = T.label(row, "Text", line, 16, 2, LEFT_W - 132, 34, 20, C.cream)
-			l.TextXAlignment = Enum.TextXAlignment.Left
-		end
-		return h
-	end
-
-	local function checkbox(parent, name, text, x, y, w, on, callback)
-		local b = T.button(parent, name, "", x, y, w, 50, callback, true)
-		b.Caption.Visible = false
-		local box = T.make("Frame", b, {
-			Name = "Box",
-			Position = UDim2.fromOffset(12, 11),
-			Size = UDim2.fromOffset(28, 28),
-			BackgroundColor3 = on and C.lime or C.track,
-			BorderSizePixel = 0,
-			ZIndex = 3,
-		})
-		T.make("UICorner", box, { CornerRadius = UDim.new(0, 6) })
-		T.make("UIStroke", box, { Color = Color3.fromRGB(8, 10, 11), Thickness = 2 })
-		if on then
-			local g = tick(box, 0, 0, 28, C.lime)
-			g.Size = UDim2.fromScale(1, 1)
-			g:FindFirstChildOfClass("UIStroke"):Destroy()
-		end
-		local l = T.label(b, "Text", text, 50, 4, w - 58, 42, 20)
-		l.TextXAlignment = Enum.TextXAlignment.Left
-		return b
-	end
-
-	-- Left: the collection -------------------------------------------------------
-	local function drawCollection()
-		local left = group("Left", Vector2.new(0, 0.5), UDim2.new(0, 24, 0.5, 30), LEFT_W, LEFT_H)
-		local panel = T.panel(left, "Panel", 0, 0, LEFT_W, LEFT_H, "panel")
-		plate(left, "ARMORY", 20, -34)
-		local tabs = T.tabs(panel, 22, 44, LEFT_W - 44, 52, { "Weapons", "Armor", "Pets" }, state.tab, function(id)
-			if id == state.tab then
-				return
-			end
-			state.tab = id
-			state.kind, state.item = nil, nil
-			state.armorSlot = nil
-			draw()
-		end)
-		for id, b in tabs do
-			b.Caption.Text = string.upper(id)
-		end
-		local readyCount = 0
-		for _, w in Weapons.List do
-			if ready(w.id) then
-				readyCount += 1
-			end
-		end
-		T.badge(tabs.Weapons, readyCount > 0 and tostring(readyCount) or nil)
-		local class = loadout()
-		local y0 = 110
-		if state.tab == "Weapons" then
 	-- A pet card: 3D view, name, rarity (or PET CHEST while not owned), tier, tick when following you.
 	local function petCard(parent, pet, x, y)
 		local rec = petRec(pet.id)
@@ -605,7 +605,76 @@ function A.new(player, opts)
 		end
 	end
 
-			checkbox(panel, "MyClass", "MY CLASS · " .. string.upper(class), 22, y0, 300, state.mine, function()
+	-- "Coming" panel for tabs whose items are not in the game yet: a title, one line, a few facts.
+	local function comingPanel(parent, title, body, lines)
+		local h = 118 + #lines * 44
+		local lw = L.leftW
+		local box = T.panel(parent, "Coming", 0, 0, lw - 60, h, "inset")
+		local t = T.label(box, "Title", title, 20, 18, lw - 100, 40, 30)
+		t.TextXAlignment = Enum.TextXAlignment.Left
+		local b = T.text(box, "Body", body, 20, 62, lw - 100, 30, 18, C.muted)
+		b.TextYAlignment = Enum.TextYAlignment.Top
+		for i, line in lines do
+			local row = T.panel(box, "Row" .. i, 20, 104 + (i - 1) * 44, lw - 100, 38, "panel")
+			local l = T.label(row, "Text", line, 16, 2, lw - 132, 34, 20, C.cream)
+			l.TextXAlignment = Enum.TextXAlignment.Left
+		end
+		return h
+	end
+
+	local function checkbox(parent, name, text, x, y, w, on, callback)
+		local b = T.button(parent, name, "", x, y, w, 50, callback, true)
+		b.Caption.Visible = false
+		local box = T.make("Frame", b, {
+			Name = "Box",
+			Position = UDim2.fromOffset(12, 11),
+			Size = UDim2.fromOffset(28, 28),
+			BackgroundColor3 = on and C.lime or C.track,
+			BorderSizePixel = 0,
+			ZIndex = 3,
+		})
+		T.make("UICorner", box, { CornerRadius = UDim.new(0, 6) })
+		T.make("UIStroke", box, { Color = Color3.fromRGB(8, 10, 11), Thickness = 2 })
+		if on then
+			local g = tick(box, 0, 0, 28, C.lime)
+			g.Size = UDim2.fromScale(1, 1)
+			g:FindFirstChildOfClass("UIStroke"):Destroy()
+		end
+		local l = T.label(b, "Text", text, 50, 4, w - 58, 42, 20)
+		l.TextXAlignment = Enum.TextXAlignment.Left
+		return b
+	end
+
+	-- Left: the collection -------------------------------------------------------
+	local function drawCollection()
+		local lw, lh = L.leftW, L.leftH
+		local left = group("Left", MARGIN, L.leftY, lw, lh)
+		local panel = T.panel(left, "Panel", 0, 0, lw, lh, "panel")
+		plate(left, "ARMORY", 20, -34)
+		local tabs = T.tabs(panel, 22, 44, lw - 44, 52, { "Weapons", "Armor", "Pets" }, state.tab, function(id)
+			if id == state.tab then
+				return
+			end
+			state.tab = id
+			state.kind, state.item = nil, nil
+			state.armorSlot = nil
+			draw()
+		end)
+		for id, b in tabs do
+			b.Caption.Text = string.upper(id)
+		end
+		local readyCount = 0
+		for _, w in Weapons.List do
+			if ready(w.id) then
+				readyCount += 1
+			end
+		end
+		T.badge(tabs.Weapons, readyCount > 0 and tostring(readyCount) or nil)
+		local class = loadout()
+		local y0 = 110
+		if state.tab == "Weapons" then
+			local cbW = math.min(300, lw - 44 - 140)
+			checkbox(panel, "MyClass", "MY CLASS · " .. string.upper(class), 22, y0, cbW, state.mine, function()
 				state.mine = not state.mine
 				draw()
 			end)
@@ -617,7 +686,7 @@ function A.new(player, opts)
 				end
 			end
 			local count =
-				T.label(panel, "Owned", owned .. " / " .. total .. " OWNED", 330, y0, LEFT_W - 352, 50, 18, C.muted)
+				T.label(panel, "Owned", owned .. " / " .. total .. " OWNED", 30 + cbW, y0, lw - 52 - cbW, 50, 18, C.muted)
 			count.TextXAlignment = Enum.TextXAlignment.Right
 			y0 += 64
 		end
@@ -637,19 +706,19 @@ function A.new(player, opts)
 			for _, sl in Armor.Slots do
 				table.insert(filters, sl)
 			end
-			T.tabs(panel, 22, y0, LEFT_W - 44, 44, filters, state.armorSlot or "All", function(id)
+			T.tabs(panel, 22, y0, lw - 44, 44, filters, state.armorSlot or "All", function(id)
 				state.armorSlot = id ~= "All" and id or nil
 				state.kind, state.item = nil, nil
 				draw()
 			end)
 			y0 += 58
 		end
-		local grid = T.scroll(panel, "Grid", 22, y0, LEFT_W - 36, LEFT_H - y0 - 22)
+		local grid = T.scroll(panel, "Grid", 22, y0, lw - 36, lh - y0 - 22)
 		local tab = state.tab
 		grid:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
 			scroll[tab] = grid.CanvasPosition
 		end)
-		local cols = 3
+		local cols = L.cols
 		local function cell(i)
 			return ((i - 1) % cols) * (CARD + GAP), math.floor((i - 1) / cols) * (CARD_H + GAP)
 		end
@@ -680,7 +749,7 @@ function A.new(player, opts)
 						string.upper(c) .. (profile.classes[c] and "" or "  ·  LOCKED"),
 						4,
 						y,
-						LEFT_W - 60,
+						lw - 60,
 						32,
 						22,
 						profile.classes[c] and C.lime or C.dim
@@ -734,7 +803,7 @@ function A.new(player, opts)
 						string.upper(set.name) .. "  ·  " .. string.upper(set.rarity),
 						4,
 						y,
-						LEFT_W - 60,
+						lw - 60,
 						32,
 						22,
 						Chests.RarityColor[set.rarity]
@@ -770,11 +839,10 @@ function A.new(player, opts)
 		if scroll[tab] then
 			grid.CanvasPosition = scroll[tab]
 		end
-		slideIn(left, UDim2.new(0, -40, 0.5, 30), UDim2.new(0, 24, 0.5, 30))
+		slideIn(left, -40)
 	end
 
 	-- Centre: loadout slots around the avatar -------------------------------------
-	local SLOT = 124
 	local function slot(parent, name, caption, x, y, callback, fill)
 		local b = T.button(parent, name, "", x, y, SLOT, SLOT, callback, true)
 		b.Caption.Visible = false
@@ -796,17 +864,26 @@ function A.new(player, opts)
 	end
 
 	local function drawSlots()
+		local r = L.ring
+		if not r then
+			return -- screen too narrow for the slots (small phones): the avatar still wears it all
+		end
 		local class, weapon = loadout()
-		local mid = group("Slots", Vector2.new(0.5, 0.5), UDim2.new(0.5, 0, 0.5, 10), 1000, 720)
+		-- Two columns `inner` px either side of the avatar's centre, scaled by k to fit the gap.
+		local gw = 2 * (r.inner + SLOT + 20)
+		local mid = T.frame(canvas, "Slots", r.x, r.y, gw, RING_H)
+		mid.AnchorPoint = Vector2.new(0.5, 0.5)
+		T.make("UIScale", mid, { Scale = r.k })
+		local LX, RX = gw / 2 - r.inner - SLOT, gw / 2 + r.inner
 		local rowY = function(i)
-			return 8 + (i - 1) * 156
+			return 8 + (i - 1) * SLOT_ROW
 		end
 		-- Left column: the four armor pieces.
 		for i, piece in ARMOR_PIECES do
 			local setId = profile.wearing[piece.id]
 			setId = setId and armorModel(setId) and setId or nil
 			local id = setId and Armor.pieceId(setId, piece.id) or piece.id
-			slot(mid, piece.id .. "Slot", piece.label, 60, rowY(i), function()
+			slot(mid, piece.id .. "Slot", piece.label, LX, rowY(i), function()
 				state.tab = "Armor"
 				state.armorSlot = piece.id
 				state.kind, state.item = "armor", id
@@ -824,7 +901,6 @@ function A.new(player, opts)
 		end
 		-- Right column: starting weapon, pet, class, ready upgrades.
 		local rec = profile.weapons[weapon]
-		local RX = 1000 - 60 - SLOT
 		slot(mid, "WeaponSlot", "WEAPON", RX, rowY(1), function()
 			state.tab = "Weapons"
 			select("weapon", weapon)
@@ -895,7 +971,7 @@ function A.new(player, opts)
 		local hp = Stats.resolve(class, 0).MaxHP
 		local w = Weapons.ById[weapon]
 		local dmg = w and weaponAt(w, rec and rec.tier or 1).damage or 0
-		local plateRow = T.frame(mid, "StatPlate", 250, 640, 500, 70)
+		local plateRow = T.frame(mid, "StatPlate", gw / 2 - 250, 640, 500, 70)
 		local a = T.panel(plateRow, "Damage", 0, 0, 240, 66, "panel")
 		T.icon(a, "Icon", 14, 6, 54, WeaponIcons[weapon])
 		local al = T.label(a, "Value", dmg .. " DMG", 70, 6, 160, 54, 30)
@@ -908,12 +984,13 @@ function A.new(player, opts)
 
 	-- Right: details ---------------------------------------------------------------------
 	local function statRow(parent, y, label, value, delta)
-		local l = T.label(parent, "Stat_" .. label, label, 24, y, 260, 40, 24, C.muted)
+		-- Label | value | gain for the next tier (right column, blank when there is none).
+		local l = T.label(parent, "Stat_" .. label, label, 24, y, RIGHT_W - 292, 40, 24, C.muted)
 		l.TextXAlignment = Enum.TextXAlignment.Left
-		local v = T.label(parent, "Value_" .. label, value, 280, y, 130, 40, 28)
+		local v = T.label(parent, "Value_" .. label, value, RIGHT_W - 260, y, 130, 40, 28)
 		v.TextXAlignment = Enum.TextXAlignment.Right
 		if delta then
-			local d = T.label(parent, "Delta_" .. label, delta, 414, y, 100, 40, 24, C.lime)
+			local d = T.label(parent, "Delta_" .. label, delta, RIGHT_W - 124, y, 100, 40, 24, C.lime)
 			d.TextXAlignment = Enum.TextXAlignment.Right
 		end
 	end
@@ -939,6 +1016,7 @@ function A.new(player, opts)
 		T.toast(screen, r.message or "", r.ok and C.lime or C.negative)
 		if r.ok then
 			-- ProfileWeapons changes and redraws; celebrate in the new tier's colour.
+			T.sound("ui_upgrade")
 			Stage.Burst(T.Tier[math.min(4, (before and before.tier or 1) + 1)])
 		end
 	end
@@ -999,6 +1077,7 @@ function A.new(player, opts)
 					if setup then
 						setup:FireServer("Loadout", w.home, w.id)
 					end
+					T.sound("ui_equip")
 					T.toast(screen, w.name .. " is your " .. w.home .. " starter", C.lime)
 					draw()
 				end,
@@ -1205,85 +1284,6 @@ function A.new(player, opts)
 		all.Interactable = owned > 0
 	end
 
-	local function drawClassDetail(panel, class)
-		local c = Stats.Classes[class]
-		header(
-			panel,
-			WeaponIcons[Rules.Signature[class]],
-			nil,
-			string.upper(class),
-			"CLASS  ·  STARTER " .. string.upper(Weapons.ById[Rules.Signature[class]].name),
-			C.lime
-		)
-		local d = T.text(panel, "Description", c.description, 24, 168, RIGHT_W - 48, 60, 19, C.muted)
-		d.TextYAlignment = Enum.TextYAlignment.Top
-		local lines = {}
-		for _, sd in Stats.List do
-			local v = c.buffs[sd.id]
-			if v then
-				table.insert(
-					lines,
-					'<font color="'
-						.. T.hex(v > 0 and C.lime or C.negative)
-						.. '">'
-						.. (v > 0 and "+" or "")
-						.. v
-						.. sd.unit
-						.. "</font>  "
-						.. sd.label
-				)
-			end
-		end
-		T.label(panel, "BuffsTitle", "CLASS BUFFS", 24, 236, 300, 34, 26).TextXAlignment = Enum.TextXAlignment.Left
-		local b = T.text(panel, "Buffs", table.concat(lines, "\n"), 24, 274, RIGHT_W - 48, 210, 22)
-		b.TextYAlignment = Enum.TextYAlignment.Top
-		T.text(
-			panel,
-			"Affinity",
-			"Equip 2 home weapons in a run for the first class bonus, 4 for the stronger one.",
-			24,
-			496,
-			RIGHT_W - 48,
-			44,
-			17,
-			C.cream
-		)
-		local go = T.button(panel, "ChangeClass", "CHANGE CLASS", 24, 584, RIGHT_W - 48, 70, function()
-			opts.openWindow("Loadout")
-		end, true)
-		go.Caption.TextSize = 28
-	end
-
-	local function drawDetail()
-		local right = group("Right", Vector2.new(1, 0.5), UDim2.new(1, -24, 0.5, 30), RIGHT_W, RIGHT_H)
-		local panel = T.panel(right, "Panel", 0, 0, RIGHT_W, RIGHT_H, "panel")
-		if state.kind == "weapon" and Weapons.ById[state.item or ""] then
-			local w = Weapons.ById[state.item]
-			local rec = profile.weapons[w.id]
-			if rec and rec.tier > 1 then
-				T.setTier(panel, rec.tier)
-			end
-			drawWeaponDetail(panel, w)
-		elseif state.kind == "class" then
-			drawClassDetail(panel, state.item or loadout())
-		elseif state.kind == "pet" then
-			drawComingDetail(
-				panel,
-				"chest",
-				"PET",
-				"EMPTY SLOT  ·  FROM THE PET CHEST",
-				"Every pet helps in its own way: one fetches crystals, one heals you and your team, others knock enemies back or slow them down."
-			)
-		elseif Armor.valid(state.item) then
-			drawArmorDetail(panel, state.item)
-		else
-			local piece = ARMOR_PIECES[1]
-			for _, p in ARMOR_PIECES do
-				if p.id == state.item then
-					piece = p
-				end
-			end
-			drawComingDetail(
 	-- A pet: rarity and strong suit, what it does at this tier and the next, UPGRADE (copies +
 	-- emeralds, like weapons) and EQUIP / UNEQUIP.
 	local function drawPetDetail(panel, id)
@@ -1356,6 +1356,92 @@ function A.new(player, opts)
 		eq.Interactable = rec ~= nil
 	end
 
+	local function drawClassDetail(panel, class)
+		local c = Stats.Classes[class]
+		header(
+			panel,
+			WeaponIcons[Rules.Signature[class]],
+			nil,
+			string.upper(class),
+			"CLASS  ·  STARTER " .. string.upper(Weapons.ById[Rules.Signature[class]].name),
+			C.lime
+		)
+		local d = T.text(panel, "Description", c.description, 24, 168, RIGHT_W - 48, 60, 19, C.muted)
+		d.TextYAlignment = Enum.TextYAlignment.Top
+		local lines = {}
+		for _, sd in Stats.List do
+			local v = c.buffs[sd.id]
+			if v then
+				table.insert(
+					lines,
+					'<font color="'
+						.. T.hex(v > 0 and C.lime or C.negative)
+						.. '">'
+						.. (v > 0 and "+" or "")
+						.. v
+						.. sd.unit
+						.. "</font>  "
+						.. sd.label
+				)
+			end
+		end
+		T.label(panel, "BuffsTitle", "CLASS BUFFS", 24, 236, 300, 34, 26).TextXAlignment = Enum.TextXAlignment.Left
+		local b = T.text(panel, "Buffs", table.concat(lines, "\n"), 24, 274, RIGHT_W - 48, 210, 22)
+		b.TextYAlignment = Enum.TextYAlignment.Top
+		T.text(
+			panel,
+			"Affinity",
+			"Equip 2 home weapons in a run for the first class bonus, 4 for the stronger one.",
+			24,
+			496,
+			RIGHT_W - 48,
+			44,
+			17,
+			C.cream
+		)
+		local go = T.button(panel, "ChangeClass", "CHANGE CLASS", 24, 584, RIGHT_W - 48, 70, function()
+			opts.openWindow("Loadout")
+		end, true)
+		go.Caption.TextSize = 28
+	end
+
+	local function drawDetail()
+		local right = group("Right", L.w - MARGIN - RIGHT_W, L.rightY, RIGHT_W, L.rightH)
+		local frame = T.panel(right, "Panel", 0, 0, RIGHT_W, L.rightH, "panel")
+		local panel = body(frame, RIGHT_H - 24)
+		if state.kind == "weapon" and Weapons.ById[state.item or ""] then
+			local w = Weapons.ById[state.item]
+			local rec = profile.weapons[w.id]
+			if rec and rec.tier > 1 then
+				T.setTier(frame, rec.tier)
+			end
+			drawWeaponDetail(panel, w)
+		elseif state.kind == "class" then
+			drawClassDetail(panel, state.item or loadout())
+		elseif state.kind == "pet" and Pets.ById[state.item or ""] then
+			local rec = petRec(state.item)
+			if rec and rec.tier > 1 then
+				T.setTier(frame, rec.tier)
+			end
+			drawPetDetail(panel, state.item)
+		elseif state.kind == "pet" then
+			drawComingDetail(
+				panel,
+				"chest",
+				"PET",
+				"EMPTY SLOT  ·  FROM THE PET CHEST",
+				"Every pet helps in its own way: one fetches crystals, one heals you and your team, others knock enemies back or slow them down."
+			)
+		elseif Armor.valid(state.item) then
+			drawArmorDetail(panel, state.item)
+		else
+			local piece = ARMOR_PIECES[1]
+			for _, p in ARMOR_PIECES do
+				if p.id == state.item then
+					piece = p
+				end
+			end
+			drawComingDetail(
 				panel,
 				"shoulders",
 				piece.label,
@@ -1364,7 +1450,7 @@ function A.new(player, opts)
 					or "Copies upgrade a piece from Tier I to Tier IV, like weapons. The rarer the set, the cooler it looks."
 			)
 		end
-		slideIn(right, UDim2.new(1, 16, 0.5, 30), UDim2.new(1, -24, 0.5, 30))
+		slideIn(right, 40)
 	end
 
 	-- Upgrade view ----------------------------------------------------------------------
@@ -1373,16 +1459,19 @@ function A.new(player, opts)
 		local rec = profile.weapons[w.id]
 		local tier = rec and rec.tier or 0
 		local need = rec and opts.need(rec)
-		local left = group("Left", Vector2.new(0, 0.5), UDim2.new(0, 24, 0.5, 30), LEFT_W, LEFT_H)
-		local panel = T.panel(left, "Panel", 0, 0, LEFT_W, LEFT_H, "panel")
+		-- Full width here: the loadout slots are hidden in this view. Shorter screens scroll the tiers.
+		local LEFT_W = leftWidth(3)
+		local left = group("Left", MARGIN, L.leftY, LEFT_W, L.leftH)
+		local panel = T.panel(left, "Panel", 0, 0, LEFT_W, L.leftH, "panel")
 		plate(left, "UPGRADES", 20, -34)
 		local rowH = 190
+		local tiers = body(panel, 50 + 4 * (rowH + 14) + 12)
 		for t = 1, 4 do
 			local y = 50 + (t - 1) * (rowH + 14)
 			local done = rec and t < tier
 			local now = rec and t == tier
 			local nextUp = rec and t == tier + 1
-			local card = T.panel(panel, "Tier" .. t, 22, y, LEFT_W - 44, rowH, (now or nextUp) and "panel" or "inset")
+			local card = T.panel(tiers, "Tier" .. t, 22, y, LEFT_W - 44, rowH, (now or nextUp) and "panel" or "inset")
 			if now and t > 1 then
 				T.setTier(card, t)
 			end
@@ -1418,12 +1507,6 @@ function A.new(player, opts)
 				24,
 				(done or now or nextUp) and C.white or C.dim
 			)
-		elseif state.kind == "pet" and Pets.ById[state.item or ""] then
-			local rec = petRec(state.item)
-			if rec and rec.tier > 1 then
-				T.setTier(frame, rec.tier)
-			end
-			drawPetDetail(panel, state.item)
 			body.TextYAlignment = Enum.TextYAlignment.Top
 			if t > 1 then
 				local cost = T.text(
@@ -1453,13 +1536,14 @@ function A.new(player, opts)
 				b.Interactable = ready(w.id)
 			end
 		end
-		slideIn(left, UDim2.new(0, -40, 0.5, 30), UDim2.new(0, 24, 0.5, 30))
+		slideIn(left, -40)
 
-		local right = group("Right", Vector2.new(1, 0.5), UDim2.new(1, -24, 0.5, 30), RIGHT_W, 600)
-		local rp = T.panel(right, "Panel", 0, 0, RIGHT_W, 600, "panel")
+		local right = group("Right", L.w - MARGIN - RIGHT_W, L.upgradeY, RIGHT_W, L.upgradeH)
+		local rpanel = T.panel(right, "Panel", 0, 0, RIGHT_W, L.upgradeH, "panel")
 		if tier > 1 then
-			T.setTier(rp, tier)
+			T.setTier(rpanel, tier)
 		end
+		local rp = body(rpanel, UPGRADE_H)
 		header(
 			rp,
 			WeaponIcons[w.id],
@@ -1532,13 +1616,13 @@ function A.new(player, opts)
 				C.muted
 			)
 		end
-		slideIn(right, UDim2.new(1, 16, 0.5, 30), UDim2.new(1, -24, 0.5, 30))
+		slideIn(right, 40)
 		Stage.SetView("upgrade", w.id, T.Tier[math.max(tier, 1)])
 	end
 
 	-- Bottom: CLOSE / BACK ---------------------------------------------------------------
 	local function drawBottom()
-		local bottom = group("Bottom", Vector2.new(0.5, 1), UDim2.new(0.5, 0, 1, -18), 360, 86)
+		local bottom = group("Bottom", (L.w - 360) / 2, L.h - BOTTOM_H, 360, 86)
 		local upgradeMode = state.mode == "upgrade"
 		local b = T.button(bottom, "Close", upgradeMode and "BACK" or "CLOSE", 0, 0, 360, 86, function()
 			if state.mode == "upgrade" then
@@ -1556,7 +1640,7 @@ function A.new(player, opts)
 
 	-- Drag on the empty middle of the screen to turn the avatar.
 	local function drawDrag()
-		local drag = T.make("TextButton", root, {
+		local drag = T.make("TextButton", canvas, {
 			Name = "DragArea",
 			Text = "",
 			BackgroundTransparency = 1,
@@ -1601,10 +1685,16 @@ function A.new(player, opts)
 			return
 		end
 		profile = opts.profile()
-		for _, c in root:GetChildren() do
-			c:Destroy()
+		if not (canvas and L) then
+			return
 		end
-		table.clear(groups)
+		-- Every redraw rebuilds the buttons; a controller keeps its place (or lands on the first one).
+		local selected = T.selectionPath(canvas)
+		for _, c in canvas:GetChildren() do
+			if not c:IsA("UIScale") then
+				c:Destroy()
+			end
+		end
 		drawDrag()
 		drawTop()
 		if state.mode == "upgrade" and state.item and Weapons.ById[state.item] then
@@ -1619,8 +1709,13 @@ function A.new(player, opts)
 			Stage.SetView("hero")
 		end
 		drawBottom()
-		fit()
 		animate = false
+		if justOpened then
+			justOpened = false
+			T.gamepadSelect(canvas:FindFirstChild("Left") or canvas)
+		else
+			T.restoreSelection(canvas, selected)
+		end
 	end
 
 	local profileConn
@@ -1643,7 +1738,8 @@ function A.new(player, opts)
 				blur = T.make("BlurEffect", Lighting, { Name = "ArmoryBlur", Size = 16 }),
 				shade = T.make("Frame", screen, {
 					Name = "Shade",
-					Size = UDim2.fromScale(1, 1),
+					Position = UDim2.fromOffset(-100, -100),
+					Size = UDim2.new(1, 200, 1, 200),
 					BackgroundColor3 = C.shade,
 					BackgroundTransparency = 0.3,
 					BorderSizePixel = 0,
@@ -1655,12 +1751,20 @@ function A.new(player, opts)
 		if opts.onVisible then
 			opts.onVisible(false)
 		end
+		T.hideTouchControls("Armory", true)
 		profileConn = player.AttributeChanged:Connect(function(name)
 			if string.sub(name, 1, 7) == "Profile" or name == "LoadoutClass" or name == "LoadoutWeapon" then
 				draw()
 			end
 		end)
-		draw()
+		-- Draws now, and again whenever the screen changes size (window resize, phone rotation).
+		canvas, L = nil, nil
+		justOpened = true
+		T.canvas(root, function(c, cv)
+			canvas = cv
+			L = plan(c)
+			draw()
+		end)
 		return { Root = root, Close = self.Close }
 	end
 
@@ -1682,6 +1786,7 @@ function A.new(player, opts)
 			fallback = nil
 		end
 		Stage.Hide()
+		T.hideTouchControls("Armory", false)
 		if opts.onVisible then
 			opts.onVisible(true)
 		end

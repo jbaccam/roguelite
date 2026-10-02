@@ -253,6 +253,12 @@
         "AdminConfig": {
           "$path": "AdminConfig.luau"
         },
+        "SetLobbyAttacks": {
+          "$className": "RemoteEvent",
+          "$properties": {
+            "Sandboxed": true
+          }
+        },
         "PurchaseRequest": {
           "$className": "RemoteEvent",
           "$properties": {
@@ -426,6 +432,9 @@
       },
       "MobCollision": {
         "$path": "MobCollision.server.luau"
+      },
+      "LobbyPracticeDummies": {
+        "$path": "../lobby/LobbyPracticeDummies.server.luau"
       },
       "RogueliteLobbyPreview": {
         "$path": "../lobby/RogueliteLobbyPreview.server.luau",

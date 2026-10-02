@@ -70,3 +70,6 @@ roguelite-planning/**/render/**/*.glb
 roguelite-planning/**/render/**/*.blend
 roguelite-planning/**/render/**/*.obj
 roguelite-planning/**/render/**/*.fbm/
+
+# Roblox Studio 3D Importer extracts embedded FBX textures next to the file (duplicates of textures/).
+*.fbm/
