@@ -65,6 +65,15 @@ local REACH_BONUS = 0.5
 local LUNGE_REACH_BONUS = 0.3
 local ARC_DOT = 0.1
 local HIT_WINDOW = 0.15
+-- Ranged enemies stop to shoot (MAP_MOB_ROSTER: "stops, aims, and fires"), from the draw until
+-- this long after release; walking on through the shot slid them across the ground.
+local RANGED_PLANT_AFTER = 0.2
+-- A lunge ends this far past where the player stood at the strike, or where it connects, instead
+-- of flying its full length straight through them (a snake's dash is 11 studs).
+local LUNGE_FOLLOW = 1.5
+-- Shots lead the target: aimed where a player running straight will be when the shot arrives,
+-- at most this many seconds ahead (an arrow flies about 2 s). Changing direction still dodges.
+local MAX_LEAD = 2.5
 local function turnToward(from, to, maxAngle)
 	local angle = math.acos(math.clamp(from:Dot(to), -1, 1))
 	if angle <= maxAngle then
@@ -89,7 +98,7 @@ local function face(root, s)
 		align.Responsiveness = 60
 		align.Parent = root
 	end
-	align.CFrame = CFrame.lookAt(Vector3.zero, s.direction) * CFrame.Angles(0, s.yaw or 0, 0)
+	align.CFrame = CFrame.lookAt(Vector3.zero, s.direction)
 	align.Enabled = true
 end
 -- Attack over: the Humanoid steers its own facing again.
@@ -117,6 +126,30 @@ function A.segmentDistance(a, b, p)
 	local delta = b - a
 	local t = delta:Dot(delta) > 1e-8 and math.clamp((p - a):Dot(delta) / delta:Dot(delta), 0, 1) or 0
 	return (p - (a + delta * t)).Magnitude, t
+end
+-- Where a shot fired from `from` at `speed` meets a target at `position` moving at `velocity`
+-- (flat): the earliest t with |position + velocity*t - from| = speed*t. Example: a player 20
+-- studs away running sideways at 24 studs/s, an arrow at 35: it meets them 0.79 s later, 19
+-- studs to the side. No meeting within MAX_LEAD (outrunning the shot): aim at them as they are.
+function A.intercept(from, position, velocity, speed)
+	local v = Vector3.new(velocity.X, 0, velocity.Z)
+	local d = position - from
+	local a, b, c = v:Dot(v) - speed * speed, 2 * d:Dot(v), d:Dot(d)
+	local t
+	if math.abs(a) < 1e-6 then
+		t = b < 0 and -c / b or nil
+	else
+		local disc = b * b - 4 * a * c
+		if disc >= 0 then
+			local root = math.sqrt(disc)
+			local t1, t2 = (-b - root) / (2 * a), (-b + root) / (2 * a)
+			t = math.min(t1 > 0 and t1 or math.huge, t2 > 0 and t2 or math.huge)
+		end
+	end
+	if not t or t > MAX_LEAD then
+		return position
+	end
+	return position + v * t
 end
 local function damage(npc, player, amount)
 	local config = Catalog.fromModel(npc)
@@ -153,7 +186,7 @@ local function melee(npc, root, config, s)
 		end
 	end
 end
-local function projectile(npc, root, config, s)
+local function projectile(npc, root, config, s, target)
 	local start = root.Position + Vector3.yAxis * 0.6 + s.direction * (config.radius + 0.4)
 	if config.projectile then
 		local data = Motion.load(config.id)
@@ -166,6 +199,10 @@ local function projectile(npc, root, config, s)
 	end
 	if workspace:Raycast(root.Position, start - root.Position, s.params) then
 		return
+	end
+	-- Released at where the target will be (A.intercept); the shot still travels, so it can be dodged.
+	if target and target.Parent then
+		s.aim = A.intercept(start, target.Position, target.AssemblyLinearVelocity, config.projectileSpeed)
 	end
 	local direction = s.aim - start
 	if direction.Magnitude < 0.01 then
@@ -271,22 +308,32 @@ function A.update(npc, target, dt)
 		local lunging = config.behavior == "Lunge"
 			and age >= config.attackImpact
 			and age <= config.attackImpact + config.lungeDuration
-		if lunging then
-			-- The dash owns movement, in the direction it had at the strike.
+		local planted = config.behavior == "Ranged" and age < config.attackImpact + RANGED_PLANT_AFTER
+		if lunging or planted then
+			-- The dash owns movement, in the direction it had at the strike; a shooter stands still.
 			h:Move(Vector3.zero)
 			h:MoveTo(root.Position)
+		end
+		if lunging then
 			root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
-		else
+		end
+		if not lunging then
 			track(root, target, s, dt)
+		end
+		if lunging and not s.lungeLimit then
+			local full = config.lungeSpeed * config.lungeDuration
+			local ahead = target
+					and target.Parent
+					and Vector3.new(target.Position.X - root.Position.X, 0, target.Position.Z - root.Position.Z):Dot(
+						s.direction
+					)
+				or full
+			s.lungeLimit, s.dashed = math.clamp(ahead + LUNGE_FOLLOW, 0, full), 0
 		end
 		if age >= config.attackImpact and not s.hit then
 			s.hit = true
 			if config.behavior == "Ranged" then
-				-- Released at where the target is now; the shot still travels, so it can be dodged.
-				if target and target.Parent then
-					s.aim = target.Position
-				end
-				projectile(npc, root, config, s)
+				projectile(npc, root, config, s, target)
 			elseif config.behavior ~= "Lunge" then
 				melee(npc, root, config, s)
 			end
@@ -300,10 +347,15 @@ function A.update(npc, target, dt)
 			melee(npc, root, config, s) -- still swinging through: catch a player who steps into it
 		end
 		if lunging then
-			local move = s.direction * config.lungeSpeed * math.min(dt or 1 / 60, 0.05)
-			local wall = workspace:Raycast(root.Position, move + s.direction * config.radius, s.params)
-			if not wall then
-				root.CFrame += move
+			-- Stops once it connects or reaches the end of its run.
+			if s.dashed < s.lungeLimit and not next(s.hitPlayers) then
+				local step = math.min(config.lungeSpeed * math.min(dt or 1 / 60, 0.05), s.lungeLimit - s.dashed)
+				local move = s.direction * step
+				local wall = workspace:Raycast(root.Position, move + s.direction * config.radius, s.params)
+				if not wall then
+					root.CFrame += move
+					s.dashed += step
+				end
 			end
 			melee(npc, root, config, s)
 		end
@@ -313,8 +365,8 @@ function A.update(npc, target, dt)
 			npc:SetAttribute("Attacking", false)
 			return false
 		end
-		-- true only while a lunge dash moves the body; otherwise the chase keeps steering.
-		return lunging
+		-- true while a lunge dash moves the body or a shooter stands; otherwise the chase steers.
+		return lunging or planted
 	end
 	if now < s.nextAttack or not target or not target.Parent then
 		return false
@@ -341,20 +393,21 @@ function A.update(npc, target, dt)
 	s.hit = false
 	s.hitPlayers = {}
 	s.nextAttack = now + config.attackCooldown
-	s.yaw = config.attackFacingYaw or 0
-	if config.projectile == "Arrow" then
-		local data = Motion.load(config.id)
-		if data and data.projectile then
-			s.yaw = data.projectile.attackFacingYaw or s.yaw
-		end
-	end
+	s.lungeLimit = nil
+	-- Square to the target: the bow skeleton's shot now leaves straight ahead (its chest turns
+	-- in the clip), so nobody faces off to one side any more.
 	h.AutoRotate = false
 	face(root, s)
 	npc:SetAttribute("EnemyAttackStart", now)
 	npc:SetAttribute("EnemyAttackSerial", (npc:GetAttribute("EnemyAttackSerial") or 0) + 1)
 	npc:SetAttribute("EnemyAttackDirection", s.direction)
 	npc:SetAttribute("Attacking", true)
-	-- No stop: the enemy swings on the move and the chase keeps steering it.
+	-- Melee swings on the move and the chase keeps steering it; a shooter plants (see above).
+	if config.behavior == "Ranged" then
+		h:Move(Vector3.zero)
+		h:MoveTo(root.Position)
+		return true
+	end
 	return false
 end
 -- Drop an attack in progress without its hit (admin Freeze), so it can't land the moment the

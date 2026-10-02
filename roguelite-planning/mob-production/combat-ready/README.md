@@ -37,6 +37,14 @@ show Blender renders of all 18 models.
   contact. The projectile metadata gives exact imported-hand-local arrow rest
   and upper-string points. The arrow is a separate asset, with its origin at the
   nock and its tip 1.9 authoring units along forward.
+- Bow Skeleton shoots square to its target (2026-10-01). The authored shot left
+  53° to its right, so the game had to turn the whole skeleton 53° away from
+  the player. `square_bow_skeleton.py` turns the chest through the shot and the
+  skull back again in `StudioAnimationData.json`, then sets
+  `attackFacingYaw` to 0. Hips, legs and skull now face the target and the
+  arrow leaves straight ahead. Re-run it after any re-export of the Attack
+  clip; it applies only once. Then run
+  `studio-prototype/combat/build_enemy_animation_modules.py`.
 - Ranged origin metadata follows the held rock, the Ice Elf's throwing fist, the
   fireball above the Shaman's open casting palm, or Spitter's mouth through the
   actual imported joints.
