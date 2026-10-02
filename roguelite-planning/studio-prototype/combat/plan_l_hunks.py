@@ -106,9 +106,17 @@ HUNKS = [
     ("combat/HeartDropService.luau", "ServerScriptService.HeartDropService",
      "Players.PlayerRemoving:Connect(function(p) for _,d in H.drops do if d.target==p then cancel(d) end end end)", "after",
      "local pausedAt -- plan L: server time when the run paused"),
+    # --- Rojo project (repo only): the new RunPause module ----------------------------------------
+    ("combat/default.project.json", None,
+     '      "CharacterService": {', "before",
+     '      "RunPause": {
+        "$path": "RunPause.luau"
+      },'),
 ]
 
-MODULES = []
+MODULES = [
+    {"path": "combat/RunPause.luau", "parent": "ServerScriptService", "name": "RunPause", "sandboxLike": "ServerScriptService.RogueliteMeta"},
+]
 BASE = "29aa821"
 
 if __name__ == "__main__":
