@@ -37,6 +37,13 @@ add(S.contains(X.sweep(whip,wat,f,wat.impact),tip),'sweep: capsule at impact con
 add(not S.contains(X.sweep(whip,wat,f,wat.activeEnd),tip),'sweep: the capsule has moved on by activeEnd')
 local arc=X.sweepArc(whip,wat,f)
 add(S.contains(arc,tip) and S.contains(arc,f.ground*S.sample(wat.samples.SpadeTip,wat.activeEnd)) and not S.contains(arc,f.ground*Vector3.new(0,1,-10)),'sweep: warning arc covers the tip path, not the front')
+-- The whole tail hits: under the base (1.1 studs from the centre) is 3.4 from TailMid, which
+-- mid-to-tip alone (radius 3) missed.
+local under=f.ground*Vector3.new(.5,1,1)
+add(S.contains(X.sweep(whip,wat,f,wat.impact),under),'sweep: the tail base, under his rear, hits')
+-- Hits start where the wind-up stops (the tip's slowest moment before impact), not at impact.
+local wind={duration=2,warnStart=.2,impact=.9,activeEnd=1.3,samples={SpadeTip={{.2,0,1,8},{.3,3,1,7},{.4,5,1,5},{.5,5.2,1,4.8},{.6,4,1,6},{.9,-6,1,8}}}}
+add(math.abs(X.hitFrom(whip,wind)-.4)<1e-6 and math.abs(X.hitFrom(whip,wat)-wat.impact)<1e-6,'sweep: hits from the end of the wind-up (0.4), not impact (0.9); no wind-up samples: impact')
 -- Projectile fan and a missing sample track.
 local ys=X.yaws({count=3,spread=math.rad(18)},Vector3.new(-1,0,0))
 add(#ys==3 and math.abs(ys[2]-math.pi/2)<1e-6 and math.abs(ys[3]-ys[1]-math.rad(18))<1e-6,'projectiles: yaws spread evenly about the aim')
@@ -47,6 +54,18 @@ local defsModule=game.ReplicatedStorage.RogueliteCombat:FindFirstChild('MapBossD
 if defsModule then
  local c=defsModule:Clone();c.Parent=defsModule.Parent;local ok,Defs=pcall(require,c);c:Destroy();assert(ok,Defs)
  local function segd(a,b,p) local ab=b-a;local t=math.clamp((p-a):Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1);return (a+ab*t-p).Magnitude end
+ -- The Dragon's tail whip hits a player standing 8 studs behind him (under his rear), as the
+ -- server's hit loop tests it (tail chain inside the warning arc), and never one 8 studs in front.
+ local tw=Defs.get('Dragon').attacks.TailWhip;local DT=Defs.timing('Dragon');local twat=X.window(tw,DT)
+ local df=X.frame(CFrame.lookAt(Vector3.new(0,DT.rootHeight,0),Vector3.new(0,DT.rootHeight,-1)),DT,0)
+ local twArc=X.sweepArc(tw,twat,df)
+ local function struck(p)
+  for t=X.hitFrom(tw,twat),twat.activeEnd,1/60 do if S.contains(X.sweep(tw,twat,df,t),p) and S.contains(twArc,p) then return t end end
+  return nil
+ end
+ local behind=struck(Vector3.new(0,3,8))
+ add(behind~=nil and X.hitFrom(tw,twat)<twat.impact and struck(Vector3.new(0,3,-8))==nil,
+  ('Dragon TailWhip hits a player 8 studs behind him (at %s s; swing from %.2f s, impact %.2f s) and not 8 in front'):format(tostring(behind and math.floor(behind*100+.5)/100),X.hitFrom(tw,twat),twat.impact))
  for _,id in Defs.Order do
   local def,RT=Defs.get(id),Defs.timing(id);local rf=X.frame(CFrame.lookAt(Vector3.new(0,RT.rootHeight,0),Vector3.new(0,RT.rootHeight,-1)),RT,0)
   local stop=def.stop or math.min(8*def.scale,RT.footprintRadius or 4)+3

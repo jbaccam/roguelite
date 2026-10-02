@@ -53,7 +53,9 @@ D.Dragon={anim='dragon',name='Inferno Dragon',health=31500,scale=1.25,chaseSpeed
   FireBreath={clip='FireBreath',rate=1.2,range={4,32},cooldown=1.3,damage=12,shape='breath',point='FireOrigin',halfAngle=math.rad(24),length=30,tick=.35,track=math.rad(70)},
   -- Fireball: the long-range answer to kiting, spat on the FireBreath clip (rate must match it).
   Fireball={clip='FireBreath',rate=1.2,range={24,80},cooldown=1.4,damage=20,shape='projectiles',point='FireOrigin',count=3,spread=math.rad(16),speed=45,radius=2,life=2,perPlayer=1},
-  TailWhip={clip='TailWhip',rate=1.25,range={0,26},cooldown=1,damage=34,shape='sweep',point='SpadeTip',mid='TailMid',radius=4},
+  -- The whole tail hits once its swing starts: baseRadius around the hindquarters to TailMid,
+  -- radius from there to the spade (user, 2026-10-01: standing under his rear never got hit).
+  TailWhip={clip='TailWhip',rate=1.25,range={0,26},cooldown=1,damage=34,shape='sweep',point='SpadeTip',mid='TailMid',radius=4,baseRadius=5.5},
   FrontStomp={clip='FrontStomp',rate=1.2,range={0,16},cooldown=1.1,damage=38,shape='circle',point='StompCenter',radius=12,knockdown=.8,
    follow={radius=6.5,delay=.85,maxTargets=4,range=56,damage=26}},
  },order={'FireBreath','Fireball','FrontStomp','TailWhip','Fireball','FireBreath','TailWhip','FrontStomp'}}

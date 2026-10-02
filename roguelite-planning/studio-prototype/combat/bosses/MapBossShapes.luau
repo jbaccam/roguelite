@@ -11,6 +11,10 @@ local function band(shape,point)
  local base=(shape.center or shape.origin or shape.pivot or shape.a).Y
  return point.Y>=base-S.HEIGHT_BELOW and point.Y<=base+S.HEIGHT_ABOVE
 end
+local function inCapsule(a,b,radius,point)
+ local ab=flat(b-a);local ap=flat(point-a);local t=math.clamp(ap:Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1)
+ return (ap-ab*t).Magnitude<=radius
+end
 function S.contains(shape,point)
  if not band(shape,point) then return false end
  local k=shape.kind
@@ -28,9 +32,13 @@ function S.contains(shape,point)
   if dist<shape.inner or dist>shape.outer then return false end
   local a=S.yaw(shape.forward,d);return a>=shape.from and a<=shape.to
  end
- if k=='capsule' then
-  local ab=flat(shape.b-shape.a);local ap=flat(point-shape.a);local t=math.clamp(ap:Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1)
-  return (ap-ab*t).Magnitude<=shape.radius
+ if k=='capsule' then return inCapsule(shape.a,shape.b,shape.radius,point) end
+ -- A bent body like a tail: capsules joint to joint (points[i] to points[i+1], radii[i]).
+ if k=='chain' then
+  for i=1,#shape.points-1 do
+   if inCapsule(shape.points[i],shape.points[i+1],shape.radii[i],point) then return true end
+  end
+  return false
  end
  return false
 end

@@ -88,21 +88,51 @@ function X.lane(cf,target) local r=flat(cf.RightVector).Unit;return flat(target-
 -- Warning rectangle over the body's swept capsule (half a width past each end).
 function X.laneShape(f,dir,length,width) return {kind='line',origin=X.onGround(f,f.cf.Position)-dir*width/2,direction=dir,length=length+width,width=width} end
 function X.cone(def,at,f,t) return {kind='cone',origin=X.onGround(f,X.point(f,at,def.point,t)),direction=X.flatDir(f,X.localDir(at,def.point,t)),halfAngle=def.halfAngle,length=def.length} end
-function X.sweep(def,at,f,t) return {kind='capsule',a=X.onGround(f,X.point(f,at,def.mid,t)),b=X.onGround(f,X.point(f,at,def.point,t)),radius=def.radius} end
--- Warning arc over the tail's active path. Yaw is unwrapped sample to sample, then centred, so a
--- sweep across the boss's back never wraps into the front.
-function X.sweepArc(def,at,f)
- local pivot=X.onGround(f,f.cf.Position);local first,last,angle,lo,hi,near,far
- local steps=math.max(1,math.ceil((at.activeEnd-at.impact)*60))
- for i=0,steps do
-  local t=at.impact+(at.activeEnd-at.impact)*i/steps
-  local tip=flat(X.point(f,at,def.point,t)-pivot);local mid=flat(X.point(f,at,def.mid,t)-pivot)
-  if not first then first=tip.Magnitude>.05 and tip.Unit or flat(f.cf.LookVector).Unit;angle=Shapes.yaw(first,tip);lo,hi,near,far=angle,angle,math.huge,0
-  else angle+=Shapes.yaw(last,tip);lo,hi=math.min(lo,angle),math.max(hi,angle) end
-  last=tip;near=math.min(near,mid.Magnitude,tip.Magnitude);far=math.max(far,mid.Magnitude,tip.Magnitude)
+-- A sweep hits from the moment its swing starts, not from its impact mark: the dragon's tail
+-- crosses behind him about 0.2 s before impact, so a player at his rear was never hit. The swing
+-- starts where the wind-up stops: walking back from impact while the tip keeps slowing down.
+local hitFroms=setmetatable({},{__mode='k'})
+function X.hitFrom(def,at)
+ if def.shape~='sweep' then return at.impact end
+ if hitFroms[at] then return hitFroms[at] end
+ local list=at.samples and at.samples[def.point];local from=at.impact
+ if list and #list>2 then
+  local function speed(i) local a,b=list[i-1],list[i];return Vector3.new(b[2]-a[2],b[3]-a[3],b[4]-a[4]).Magnitude/math.max(b[1]-a[1],1e-6) end
+  local i=#list
+  while i>2 and list[i][1]>at.impact do i-=1 end
+  while i>2 and list[i-1][1]>=at.warnStart and speed(i-1)<=speed(i) do i-=1 end
+  from=math.min(at.impact,list[i-1][1])
  end
- local pad=def.radius/math.max(far,1);local half=(hi-lo)/2+pad
- return {kind='arc',pivot=pivot,forward=CFrame.Angles(0,(lo+hi)/2,0):VectorToWorldSpace(first),from=-half,to=half,inner=math.max(0,near-def.radius),outer=far+def.radius}
+ hitFroms[at]=from;return from
+end
+-- The whole tail hits: from its root at the hindquarters (baseRadius behind the boss's centre,
+-- toward the tail) through def.mid to def.point. Mid-tail to tip alone missed anyone standing
+-- under the thick base at his rear.
+function X.sweep(def,at,f,t)
+ local center=X.onGround(f,f.cf.Position)
+ local mid,tip=X.onGround(f,X.point(f,at,def.mid,t)),X.onGround(f,X.point(f,at,def.point,t))
+ local back=flat(mid-center);local baseRadius=def.baseRadius or def.radius
+ local base=back.Magnitude>baseRadius and center+back.Unit*baseRadius or center
+ return {kind='chain',a=base,points={base,mid,tip},radii={baseRadius,def.radius}}
+end
+-- Warning arc over the tail's active path, from the boss's centre out past the tip (the whole
+-- tail hits, X.sweep). Yaw is unwrapped sample to sample, then centred, so a sweep across the
+-- boss's back never wraps into the front. Hits are also held inside this arc (the hit loop).
+function X.sweepArc(def,at,f)
+ local pivot=X.onGround(f,f.cf.Position);local first,last,angle,lo,hi,near,far,nearTip
+ local from=X.hitFrom(def,at)
+ local steps=math.max(1,math.ceil((at.activeEnd-from)*60))
+ for i=0,steps do
+  local t=from+(at.activeEnd-from)*i/steps
+  local tip=flat(X.point(f,at,def.point,t)-pivot);local mid=flat(X.point(f,at,def.mid,t)-pivot)
+  if not first then first=tip.Magnitude>.05 and tip.Unit or flat(f.cf.LookVector).Unit;angle=Shapes.yaw(first,tip);lo,hi,near,far,nearTip=angle,angle,math.huge,0,math.huge
+  else angle+=Shapes.yaw(last,tip);lo,hi=math.min(lo,angle),math.max(hi,angle) end
+  last=tip;near=math.min(near,mid.Magnitude,tip.Magnitude);far=math.max(far,mid.Magnitude,tip.Magnitude);nearTip=math.min(nearTip,tip.Magnitude)
+ end
+ -- Past each end, the tip's own thickness where it sits closest to the boss (the widest angle).
+ local pad=math.asin(math.min(1,def.radius/math.max(nearTip,def.radius,1)));local half=(hi-lo)/2+pad
+ local inner=def.baseRadius and 0 or math.max(0,near-def.radius)
+ return {kind='arc',pivot=pivot,forward=CFrame.Angles(0,(lo+hi)/2,0):VectorToWorldSpace(first),from=-half,to=half,inner=inner,outer=far+def.radius}
 end
 -- Evenly spread projectile yaws (0 = world -Z) across +-spread/2 about a flat direction.
 function X.yaws(def,dir)
@@ -186,7 +216,7 @@ function M.start(npc,kind,target,force)
   for _,deg in rage.fan or {0} do local line=X.wave(def,at,f,math.rad(deg));table.insert(A.lines,line);table.insert(A.data.lines,Shapes.encode(line)) end
   A.line=A.lines[math.ceil(#A.lines/2)];A.data.shape=Shapes.encode(A.line)
  elseif def.shape=='breath' then A.data.shape=Shapes.encode(X.cone(def,at,f,at.impact))
- elseif def.shape=='sweep' then A.data.shape=Shapes.encode(X.sweepArc(def,at,f))
+ elseif def.shape=='sweep' then A.arc=X.sweepArc(def,at,f);A.data.shape=Shapes.encode(A.arc)
  elseif def.shape=='projectiles' then A.data=X.volley(def,at,f,goal,MOUTH_AIMED[kind],rage) end
  A.data.rate=def.rate or 1
  s.attack=A
@@ -375,18 +405,20 @@ local function stepAttack(npc,s,now,h,root,params,people)
     if not A.hits[e.player] and X.waveHit(def,at,line,e.root.Position,t0,age) and hit(npc,def,e,line.origin+Vector3.yAxis*2,params,line.origin) then A.hits[e.player]=true end
    end
   end
- elseif (def.shape=='breath' or def.shape=='sweep') and age>=at.impact then
-  -- Bound catch-up to this attack's active window, never a stale whole turn.
-  local breath=def.shape=='breath';local begin,finish=math.max(t0,at.impact),math.min(age,at.activeEnd)
+ elseif (def.shape=='breath' or def.shape=='sweep') and age>=X.hitFrom(def,at) then
+  -- Bound catch-up to this attack's active window, never a stale whole turn. A sweep starts with
+  -- its swing (X.hitFrom), and hits only inside its warning arc.
+  local breath=def.shape=='breath';local begin,finish=math.max(t0,X.hitFrom(def,at)),math.min(age,at.activeEnd)
   local function test(time)
    local shape=breath and X.cone(def,at,f,time) or X.sweep(def,at,f,time)
    for _,e in people do
     local p=e.player;local ready
-    if breath then ready=not A.ticks[p] or time-A.ticks[p]>=def.tick-1e-6 else ready=not A.hits[p] end
+    if breath then ready=not A.ticks[p] or time-A.ticks[p]>=def.tick-1e-6 else ready=not A.hits[p] and (not A.arc or Shapes.contains(A.arc,e.root.Position)) end
     if ready and Shapes.contains(shape,e.root.Position) and hit(npc,def,e,A.cf.Position,params,A.cf.Position) then A.ticks[p]=time;A.hits[p]=true end
    end
   end
-  if begin<=finish then for time=begin,finish,breath and 1/30 or 1/60 do test(time) end;test(finish) end
+  -- A whipping tail tip covers ~4.6 studs per 1/60 s; at 1/120 its 4-stud hit leaves no gaps.
+  if begin<=finish then for time=begin,finish,breath and 1/30 or 1/120 do test(time) end;test(finish) end
  elseif def.shape=='targets' then
   if age>=math.max(at.warnStart,at.impact-(def.lead or 0)) and not A.points then
    -- Snapshot the nearest players in range as ground spots (plus def.extra round each, more when
