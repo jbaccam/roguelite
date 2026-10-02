@@ -90,6 +90,8 @@ function R.classOrder(classes)
  return out
 end
 function R.homeWeapons(class) local out={};for _,w in Weapons.List do if w.home==class then table.insert(out,w) end end;return out end
+-- Godlies this profile owns (any class can start with one); unowned Godlies are never listed.
+function R.ownedGodlies(weapons) local out={};for _,w in Weapons.List do if w.godly and weapons[w.id] then table.insert(out,w) end end;return out end
 
 -- Server checks for a run request. Returns true or false plus a short reason.
 function R.validMap(player,mapId,diff)
@@ -109,7 +111,8 @@ function R.validLoadout(player,class,weapon)
  local p=R.progress(player)
  if not p.classes[class] then return false,'Class locked' end
  local w=type(weapon)=='string' and Weapons.ById[weapon]
- if not w or w.home~=class or not p.weapons[weapon] then return false,'Weapon not owned' end
+ -- An owned Godly starts a run with any class (it is the run's one Godly: the shop never sells one).
+ if not w or (w.home~=class and not w.godly) or not p.weapons[weapon] then return false,'Weapon not owned' end
  return true
 end
 return R

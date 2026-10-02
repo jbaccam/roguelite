@@ -189,6 +189,15 @@ function U.new(player,opts)
   -- rows of cells and the sections scroll inside the panel when taller than the screen.
   -- Example: 1340 wide panel = 12 cells a row, so Rare's 20 items take two rows.
   local odds=Chests.odds(id)
+  -- Godly weapons stay secret until owned (RARITY_GODLY_ARMOR.md step 4): one mystery cell holds
+  -- the chance of any Godly weapon. At most one Godly drops per chest, so the chances add up.
+  local mystery
+  for i=#odds,1,-1 do local o=odds[i]
+   if o.rarity=='Godly' and not Chests.isArmor(o.id) then
+    mystery=mystery or {id='GodlyMystery',rarity='Godly',chance=0};mystery.chance+=o.chance;table.remove(odds,i)
+   end
+  end
+  if mystery then table.insert(odds,mystery) end
   local byR={};for _,o in odds do byR[o.rarity]=byR[o.rarity] or {};table.insert(byR[o.rarity],o) end
   local shown={};for _,r in Chests.Rarities do if byR[r] then table.insert(shown,r) end end
   local cell,gap=96,8
@@ -216,7 +225,9 @@ function U.new(player,opts)
     local x=x0+((i-1)%perRow)*(cell+gap)
     local c=T.make('Frame',body,{Name='W_'..o.id,Position=UDim2.fromOffset(x,y+(i-1)//perRow*(cell+gap)),Size=UDim2.fromOffset(cell,cell),BackgroundColor3=col,BackgroundTransparency=.55,BorderSizePixel=0,ZIndex=42})
     T.make('UICorner',c,{CornerRadius=UDim.new(0,8)});T.make('UIStroke',c,{Color=col,Thickness=2})
-    local ic=T.icon(c,'Icon',8,4,cell-16,itemIcon(o.id));ic.ZIndex=43
+    if o.id=='GodlyMystery' then
+     local q=centred(T.label(c,'Mystery','?',0,0,cell,cell-30,58,WHITE));q.ZIndex=43
+    else local ic=T.icon(c,'Icon',8,4,cell-16,itemIcon(o.id));ic.ZIndex=43 end
     local pct=o.chance>=10 and string.format('%.0f%%',o.chance) or o.chance>=1 and string.format('%.1f%%',o.chance) or string.format('%.2f%%',o.chance)
     local l=centred(T.label(c,'Chance',pct,0,cell-30,cell,28,22,WHITE));l.ZIndex=44
    end
@@ -615,10 +626,11 @@ function U.new(player,opts)
     if not resultLayer or not resultLayer.Parent then return end
     local rank=RANK[r.rarity] or 1
     if not skipReveal and rank>=3 then
-     task.wait(rank>=4 and .5 or .25)
-     flash(Chests.RarityColor[r.rarity],rank>=4 and .55 or .3)
-     FX.play(rank>=4 and FX.Sounds.Legendary or FX.Sounds.Chime,rank>=4 and .6 or .5,rank>=4 and 1 or .9)
-     Stage.Shake(rank>=4 and .3 or .15)
+     -- Godly (rank 5): a longer beat, a crimson flash, a deeper fanfare and a harder shake.
+     task.wait(rank>=5 and .8 or rank>=4 and .5 or .25)
+     flash(Chests.RarityColor[r.rarity],rank>=5 and .8 or rank>=4 and .55 or .3)
+     FX.play(rank>=4 and FX.Sounds.Legendary or FX.Sounds.Chime,rank>=4 and .6 or .5,rank>=5 and .8 or rank>=4 and 1 or .9)
+     Stage.Shake(rank>=5 and .5 or rank>=4 and .3 or .15)
     end
     -- Closed or claimed mid-reveal (Escape / B): stop quietly.
     if not (canvas and grid.Parent) then return end

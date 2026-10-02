@@ -174,7 +174,19 @@ local function weaponAt(w, tier)
 	return { damage = w.tierDamage[tier] or w.damage, rate = 1 / cd, range = w.range }
 end
 
+-- Godly specials in a sentence each (WeaponCatalog.Godly; plans/2026-10-01-G).
+local GODLY_TEXT = {
+	["36"] = "Spins a full circle. 1 in 3 kills rise as crimson wraiths that hunt for you (up to 4).",
+	["37"] = "Stabs up close and throws at range. Where it lands, a tidal wave washes enemies away.",
+	["38"] = "Each arrow splits in the sky and rains lightning arrows on 5 enemies.",
+	["39"] = "The twin daggers zip from enemy to enemy, hitting up to 5 in a chain.",
+	["40"] = "Every hit heals you, and kills send blood wisps back into you.",
+	["41"] = "Zappy green blasts. Kills disintegrate in a burst that hits the enemies nearby.",
+}
 local function describe(w)
+	if w.godly then
+		return (GODLY_TEXT[w.id] or "") .. " Any class can start a run with it."
+	end
 	local out = { "Home weapon of the " .. w.home .. " class." }
 	if TRAITS[w.trait] then
 		table.insert(out, TRAITS[w.trait])
@@ -346,7 +358,8 @@ function A.new(player, opts)
 		end
 		local weapon = player:GetAttribute("LoadoutWeapon") or sel.weapon
 		local w = weapon and Weapons.ById[weapon]
-		if not w or w.home ~= class or not profile.weapons[weapon] then
+		-- An owned Godly starts a run with any class (RunSetupRules.validLoadout).
+		if not w or (w.home ~= class and not w.godly) or not profile.weapons[weapon] then
 			weapon = Rules.Signature[class]
 		end
 		return class, weapon
@@ -696,9 +709,12 @@ function A.new(player, opts)
 			end)
 			local owned, total = 0, 0
 			for _, w in Weapons.List do
-				total += 1
-				if profile.weapons[w.id] then
-					owned += 1
+				-- Godlies you don't own stay secret (RARITY_GODLY_ARMOR.md step 4).
+				if not w.godly or profile.weapons[w.id] then
+					total += 1
+					if profile.weapons[w.id] then
+						owned += 1
+					end
 				end
 			end
 			local count =
@@ -748,6 +764,23 @@ function A.new(player, opts)
 						table.insert(classes, c)
 					end
 				end
+			end
+			-- Owned Godlies sit above every class: any class can start with one.
+			local godlies = {}
+			for _, w in Weapons.List do
+				if w.godly and profile.weapons[w.id] then
+					table.insert(godlies, w)
+				end
+			end
+			if #godlies > 0 then
+				local h = T.label(grid, "Header_Godly", "GODLY", 4, y, lw - 60, 32, 22, Chests.RarityColor.Godly)
+				h.TextXAlignment = Enum.TextXAlignment.Left
+				y += 38
+				for i, w in godlies do
+					local x, dy = cell(i)
+					weaponCard(grid, w, x, y + dy)
+				end
+				y += math.ceil(#godlies / cols) * (CARD_H + GAP) + 8
 			end
 			for _, c in classes do
 				local list = Rules.homeWeapons(c)
@@ -1074,7 +1107,8 @@ function A.new(player, opts)
 			)
 			nt.TextXAlignment = Enum.TextXAlignment.Right
 			T.upgradeBar(panel, "Copies", 24, 446, RIGHT_W - 48, 30, rec.have, need)
-			local homeOwned = profile.classes[w.home] == true
+			local homeOwned = w.godly or profile.classes[w.home] == true
+			local startClass = w.godly and class or w.home
 			local eq = T.button(
 				panel,
 				"Equip",
@@ -1084,17 +1118,17 @@ function A.new(player, opts)
 				RIGHT_W - 48,
 				70,
 				function()
-					sel.class, sel.weapon = w.home, w.id
-					player:SetAttribute("LoadoutClass", w.home)
+					sel.class, sel.weapon = startClass, w.id
+					player:SetAttribute("LoadoutClass", startClass)
 					player:SetAttribute("LoadoutWeapon", w.id)
 					-- The lobby server validates it and swaps the weapon on the player's ring.
 					local lobby = workspace:FindFirstChild("RogueliteLobby")
 					local setup = lobby and lobby:FindFirstChild("RunSetup")
 					if setup then
-						setup:FireServer("Loadout", w.home, w.id)
+						setup:FireServer("Loadout", startClass, w.id)
 					end
 					T.sound("ui_equip")
-					T.toast(screen, w.name .. " is your " .. w.home .. " starter", C.lime)
+					T.toast(screen, w.name .. " is your " .. startClass .. " starter", C.lime)
 					draw()
 				end,
 				true
@@ -1128,11 +1162,12 @@ function A.new(player, opts)
 					{ Scale = 1.03 }
 				):Play()
 			end
-			if class ~= w.home then
+			if w.godly or class ~= w.home then
 				T.text(
 					panel,
 					"Note",
-					"Starts runs only as a " .. w.home .. ". Any class can buy it in the run shop.",
+					w.godly and "One Godly per run. It's never sold in the run shop."
+						or "Starts runs only as a " .. w.home .. ". Any class can buy it in the run shop.",
 					24,
 					668,
 					RIGHT_W - 48,

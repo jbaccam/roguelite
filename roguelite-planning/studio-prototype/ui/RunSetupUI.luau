@@ -213,6 +213,7 @@ function M.new(player,opts)
   local order=Rules.classOrder(profile.classes)
   local class=sel.class;local owned=profile.classes[class]==true
   local list=Rules.homeWeapons(class)
+  for _,w in Rules.ownedGodlies(profile.weapons) do table.insert(list,w) end -- any class can start with one
   -- Layout. Desktop: class cards in a row over the details panel and a 3-wide weapon grid.
   -- Compact (phones): three columns between the title and the buttons, class cards 2 wide,
   -- details, weapons 3 wide (2 on narrow pages); a column too tall for the room scrolls.
@@ -225,6 +226,8 @@ function M.new(player,opts)
    infoX,infoY,infoW,infoH=95,270,440,360
    wx,wy,ww,wcols,cell,wgap=560,270,625,3,150,12
    gridIn=canvas;gx,gy=wx+(ww-(3*cell+2*wgap))/2,306
+   -- Owned Godlies join the class's six: past two rows the grid scrolls.
+   if #list>6 then local rows=math.ceil(#list/3);gridIn=column('Weapons',gx,306,3*cell+2*wgap+8,2*cell+wgap,rows*cell+(rows-1)*wgap);gx,gy=0,0 end
   else
    local M0,gap=16,14;local midY=math.max(70,G.top+6);local midH=CH-68-midY
    cw,ch,cgap=120,100,10;local classW=2*cw+cgap
