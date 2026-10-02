@@ -114,7 +114,13 @@ The client reads one attribute, `ProfileQuests` (JSON). A kill only marks the pr
 | `ui/StoreFX.luau` | `card`, `tile`, `sash`, `tag`, `header` and `title` helpers. |
 | `ui/LobbyUI.luau` | The store tabs redrawn with the new helpers, the Quests window rebuilt, and the HUD tracker showing today's quests. |
 
-## Done (2026-10-02, repo; Studio sync waits for the user's okay)
+## Done (2026-10-02, repo and Studio)
+
+Studio sync (user: "yes load it in"):
+- Each existing script got Studio's own source plus only these hunks, guarded so that nothing was written if a script had changed since it was read: ProfileService, RogueliteMeta, CombatEffectsService, StoreFX, AssetPreloader.
+- LobbyUI is the repo file. Its only Studio-only lines (the by-name Godly icons) moved into StoreUI.
+- New modules QuestConfig, QuestService, StoreUI and QuestsUI were created unsandboxed, like the scripts that require them.
+- Every script was read back and matches. QuestTests pass on Studio's own copies.
 
 - QuestConfig, QuestService (pure), and QuestTests: 585 checks pass in Studio Edit on fresh copies.
 - ProfileService finds QuestService with FindFirstChild and wraps every call in pcall, so quests can never stop a payout, chest open or upgrade. RogueliteMeta's hooks check that the ProfileService functions exist.
