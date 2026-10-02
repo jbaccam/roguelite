@@ -77,6 +77,7 @@ return function(cfg)
 			part.CFrame = aim * CFrame.new(v3(data.center) * w.scale) * turn
 			part.Anchored, part.CanCollide, part.CanTouch, part.CanQuery = true, false, false, false
 			part.Massless = true
+			part.PivotOffset = CFrame.identity -- the importer's is turned and 100x
 			part.RenderFidelity = Enum.RenderFidelity.Automatic
 			if data.kind == "textured" then
 				part.Material = Enum.Material.Plastic

@@ -44,6 +44,8 @@ return function(cfg)
 		part.Size = v3(data.size)
 		part.CFrame = CFrame.new(v3(data.center)) * base.CFrame:ToObjectSpace(mesh.CFrame).Rotation
 		part.Anchored, part.CanCollide, part.CanTouch, part.CanQuery, part.Massless = true, false, false, false, true
+		-- The importer leaves a turned, 100x PivotOffset on each mesh; the model pivot must be the origin.
+		part.PivotOffset = CFrame.identity
 		part.CastShadow = data.kind == "textured"
 		if data.kind == "textured" then
 			part.Material = Enum.Material.Plastic
@@ -70,8 +72,9 @@ return function(cfg)
 		a.Position = part.CFrame:PointToObjectSpace(v3(point.at))
 		a.Parent = part
 	end
+	-- Pivot = the authored origin, upright and facing -Z (GodlyVisuals poses every part from it).
 	model.PrimaryPart = placed.Wraith_Body
-	model.WorldPivot = CFrame.identity
+	placed.Wraith_Body.PivotOffset = placed.Wraith_Body.CFrame:Inverse()
 	model:SetAttribute("SourceDisplay", "blender-godly-wraith via exports/fbx/Wraith.fbx")
 	model:SetAttribute("ImportScale", sigma)
 	local assets = combat:FindFirstChild("GodlyAssets")
