@@ -70,48 +70,57 @@ local function diamond(parent,name,cx,cy,size,color,asset,rim)
  return d,icon
 end
 
--- The lobby's left-side tracker (LobbyUI): today's quests with their own CLAIM, the streak line and
--- OPEN QUESTS. ctx: config (QuestConfig or nil while it loads), open() opens the Quests window,
--- claim(i) claims daily quest i. Returns {Root, OpenButton, update(view)}.
-Q.TRACKER_W,Q.TRACKER_H=372,404
+-- The lobby's left-side tracker (LobbyUI): one see-through panel holding today's quests (a finished
+-- one gets its own CLAIM), the reset clock and the streak, with OPEN QUESTS under it. Rows sit in
+-- the panel instead of each in its own box. ctx: config (QuestConfig or nil while it loads), open()
+-- opens the Quests window, claim(i) claims daily quest i. Returns {Root, OpenButton, update(view)}.
+Q.TRACKER_W,Q.TRACKER_H=372,382
+local CLOCK_ICON='rbxassetid://79916703515403' -- hud/clock.png
+local function hoursLeft() local sec=86400-os.time()%86400;return string.format('%dh %02dm',sec//3600,sec%3600//60) end
 function Q.tracker(parent,x,y,ctx)
- local root=T.frame(parent,'Goals',x,y,Q.TRACKER_W,Q.TRACKER_H)
- local open=T.make('TextButton',root,{Name='Open',Text='',AutoButtonColor=false,BackgroundTransparency=1,Size=UDim2.fromScale(1,1)})
- open.Activated:Connect(ctx.open)
- T.icon(root,'Icon',0,-4,46,'quests')
- FX.title(root,'Title','DAILY QUESTS',50,2,190,34,24)
- local timer=T.text(root,'Timer','',236,8,136,24,15,C.cream);timer.TextXAlignment=Enum.TextXAlignment.Right
- local rule=T.make('Frame',root,{Name='Rule',Position=UDim2.fromOffset(50,40),Size=UDim2.fromOffset(322,3),BackgroundColor3=C.lime,BorderSizePixel=0})
+ local TW=Q.TRACKER_W
+ local rowY,rowH=54,56
+ local footY=rowY+4*rowH
+ local root=T.frame(parent,'Goals',x,y,TW,Q.TRACKER_H)
+ -- The panel itself opens the window; the CLAIM buttons sit on top of it.
+ local panel=T.make('TextButton',root,{Name='Panel',Text='',AutoButtonColor=false,Size=UDim2.fromOffset(TW,footY+48),BackgroundColor3=INK,BackgroundTransparency=.38,BorderSizePixel=0})
+ T.make('UICorner',panel,{CornerRadius=UDim.new(0,14)});T.make('UIStroke',panel,{Color=INK,Thickness=2,Transparency=.35})
+ panel.Activated:Connect(ctx.open)
+ T.icon(panel,'Icon',8,4,42,'quests')
+ FX.title(panel,'Title','DAILY QUESTS',56,9,190,32,22)
+ local pill=T.make('Frame',panel,{Name='Reset',Position=UDim2.fromOffset(TW-108,11),Size=UDim2.fromOffset(98,28),BackgroundColor3=C.well,BackgroundTransparency=.15,BorderSizePixel=0})
+ T.make('UICorner',pill,{CornerRadius=UDim.new(1,0)});T.make('UIStroke',pill,{Color=INK,Thickness=2})
+ T.icon(pill,'Icon',6,3,22,CLOCK_ICON)
+ local timer=left(T.label(pill,'Time','',32,2,60,24,16));timer.TextWrapped=false
+ local rule=T.make('Frame',panel,{Name='Rule',Position=UDim2.fromOffset(12,48),Size=UDim2.fromOffset(TW-24,2),BackgroundColor3=C.lime,BorderSizePixel=0})
  T.make('UIGradient',rule,{Transparency=NumberSequence.new(0,1)})
  local rows={}
  for i=1,4 do
-  local strip=T.make('Frame',root,{Name='Quest'..i,Position=UDim2.fromOffset(0,48+(i-1)*64),Size=UDim2.fromOffset(Q.TRACKER_W,58),BackgroundColor3=INK,BackgroundTransparency=.3,BorderSizePixel=0})
-  T.make('UICorner',strip,{CornerRadius=UDim.new(0,12)})
-  T.make('UIGradient',strip,{Transparency=NumberSequence.new(0,.45)})
-  local glow=T.make('UIStroke',strip,{Color=C.gold,Thickness=2.5,Enabled=false})
-  local well=T.make('Frame',strip,{Name='Well',Position=UDim2.fromOffset(5,4),Size=UDim2.fromOffset(50,50),BackgroundColor3=C.well,BorderSizePixel=0})
-  T.make('UICorner',well,{CornerRadius=UDim.new(1,0)});T.make('UIStroke',well,{Color=INK,Thickness=3})
-  local icon=T.icon(strip,'Icon',8,7,44,'quests')
-  local name=left(T.label(strip,'Name','',62,3,204,26,19));name.TextWrapped=false
-  local track,fill=FX.progress(strip,'Progress',62,32,204,20,0,'',C.lime)
-  local reward=T.panel(strip,'Reward',272,7,94,44,'inset')
-  T.icon(reward,'Icon',6,7,30,'emerald')
-  local amount=left(T.label(reward,'Amount','',38,7,50,30,19,C.gold))
-  local chest=T.icon(reward,'Chest',62,-8,30,Chests.ById.Silver.icon)
-  local claim=FX.button(strip,'Claim','CLAIM',272,6,94,46,function() ctx.claim(i) end)
-  claim.Caption.TextSize=20;FX.pulse(claim,.05)
-  local check=FX.check(strip,322,13,32)
-  rows[i]={Strip=strip,Glow=glow,Icon=icon,Name=name,Track=track,Fill=fill,Count=track.Count,Reward=reward,Amount=amount,Chest=chest,Claim=claim,Check=check}
+  local row=T.frame(panel,'Quest'..i,0,rowY+(i-1)*rowH,TW,rowH)
+  -- Gold mark on the left edge while a finished quest waits for CLAIM.
+  local mark=T.make('Frame',row,{Name='Ready',Position=UDim2.fromOffset(4,9),Size=UDim2.fromOffset(4,rowH-18),BackgroundColor3=C.gold,BorderSizePixel=0,Visible=false})
+  T.make('UICorner',mark,{CornerRadius=UDim.new(1,0)})
+  local icon=T.icon(row,'Icon',14,8,40,'quests')
+  local name=left(T.label(row,'Name','',62,5,206,24,18));name.TextWrapped=false
+  local fill,track=T.bar(row,'Bar',62,34,150,10,C.lime)
+  local count=left(T.label(row,'Count','',218,28,52,20,14,C.muted));count.TextWrapped=false
+  local gem=T.icon(row,'Gem',TW-88,13,28,'emerald')
+  local amount=left(T.label(row,'Amount','',TW-58,13,52,30,20,C.gold));amount.TextWrapped=false
+  local chest=T.icon(row,'Chest',TW-30,2,22,Chests.ById.Silver.icon)
+  local claim=FX.button(row,'Claim','CLAIM',TW-98,9,88,38,function() ctx.claim(i) end)
+  claim.Caption.TextSize=18;FX.pulse(claim,.05)
+  local check=FX.check(row,TW-48,14,28)
+  if i<4 then T.make('Frame',row,{Name='Divider',Position=UDim2.fromOffset(14,rowH-1),Size=UDim2.fromOffset(TW-28,1),BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=.88,BorderSizePixel=0}) end
+  rows[i]={Row=row,Mark=mark,Icon=icon,Name=name,Track=track,Fill=fill,Count=count,Gem=gem,Amount=amount,Chest=chest,Claim=claim,Check=check}
  end
- local sy=48+4*64
- local streak=T.make('Frame',root,{Name='Streak',Position=UDim2.fromOffset(0,sy),Size=UDim2.fromOffset(Q.TRACKER_W,44),BackgroundColor3=Color3.fromRGB(78,22,14),BackgroundTransparency=.15,BorderSizePixel=0})
- T.make('UICorner',streak,{CornerRadius=UDim.new(0,12)});T.make('UIGradient',streak,{Transparency=NumberSequence.new(0,.5)})
- local flame=T.icon(streak,'Icon',6,2,40,'quests')
- local streakText=left(FX.title(streak,'Count','DAY STREAK',52,6,190,32,20,Color3.fromRGB(255,206,140)))
- local today=T.text(streak,'Today','',214,10,150,24,16);today.TextXAlignment=Enum.TextXAlignment.Right
- local openButton=FX.button(root,'OpenQuests','OPEN QUESTS',0,Q.TRACKER_H-48,Q.TRACKER_W,48,ctx.open,true)
- openButton.Caption.TextSize=22
- task.spawn(function() while root.Parent do timer.Text='new in '..resetText();task.wait(1) end end)
+ -- Footer: the streak.
+ T.make('Frame',panel,{Name='FootRule',Position=UDim2.fromOffset(12,footY),Size=UDim2.fromOffset(TW-24,2),BackgroundColor3=Color3.fromRGB(255,140,60),BackgroundTransparency=.5,BorderSizePixel=0})
+ local flame=T.icon(panel,'Flame',12,footY+7,34,'quests')
+ local streakText=left(FX.title(panel,'Streak','0 DAY STREAK',52,footY+10,190,28,19,Color3.fromRGB(255,206,140)))
+ local today=T.text(panel,'Today','',TW-150,footY+13,138,22,16,C.muted);today.TextXAlignment=Enum.TextXAlignment.Right
+ local openButton=FX.button(root,'OpenQuests','OPEN QUESTS',0,footY+58,TW,Q.TRACKER_H-footY-58,ctx.open,true)
+ openButton.Caption.TextSize=21
+ task.spawn(function() while root.Parent do timer.Text=hoursLeft();task.wait(20) end end)
  local self={Root=root,OpenButton=openButton}
  function self.update(view)
   view=view or {}
@@ -120,22 +129,21 @@ function Q.tracker(parent,x,y,ctx)
   local doneToday=0
   for i,r in rows do
    local d=daily[i];local q=d and Config and Config.DailyById[d.id]
-   r.Strip.Visible=q~=nil or i==1
+   r.Row.Visible=q~=nil or i==1
    if q then
-    local done=d.progress>=q.target
+    local done=d.progress>=q.target;local ready=done and not d.claimed
     if done then doneToday+=1 end
-    r.Icon.Image=Config.Icons[q.stat] or Config.Icons.quests;r.Icon.Visible=true
-    r.Name.Text=q.short or q.title
-    r.Track.Visible=true;T.setBar(r.Fill,d.progress/q.target);r.Fill.BackgroundColor3=done and C.gold or C.lime
-    r.Count.Text=Config.comma(math.min(d.progress,q.target))..' / '..Config.comma(q.target)
-    r.Reward.Visible=not done and not d.claimed;r.Amount.Text='+'..q.emeralds
-    r.Chest.Visible=q.chests~=nil
-    r.Claim.Visible=done and not d.claimed;r.Check.Visible=d.claimed==true
-    r.Glow.Enabled=done and not d.claimed
-    r.Strip.BackgroundTransparency=d.claimed and .6 or .3
+    r.Icon.Image=Config.Icons[q.stat] or Config.Icons.quests;r.Icon.Visible=true;r.Icon.ImageTransparency=d.claimed and .45 or 0
+    r.Name.Text=q.short or q.title;r.Name.TextColor3=d.claimed and C.muted or ready and C.gold or C.white
+    r.Track.Visible=true;T.setBar(r.Fill,d.progress/q.target);r.Fill.BackgroundColor3=d.claimed and C.dim or done and C.gold or C.lime
+    r.Count.Visible=not ready;r.Count.Text=Config.comma(math.min(d.progress,q.target))..' / '..Config.comma(q.target)
+    r.Gem.Visible=not done;r.Amount.Visible=not done;r.Amount.Text='+'..q.emeralds
+    r.Chest.Visible=not done and q.chests~=nil
+    r.Claim.Visible=ready;r.Check.Visible=d.claimed==true;r.Mark.Visible=ready
    else
-    r.Name.Text=i==1 and 'Quests appear once your profile loads' or ''
-    r.Icon.Visible=false;r.Track.Visible=false;r.Reward.Visible=false;r.Claim.Visible=false;r.Check.Visible=false;r.Glow.Enabled=false
+    r.Name.Text=i==1 and 'Quests appear once your profile loads' or '';r.Name.TextColor3=C.muted
+    r.Icon.Visible=false;r.Track.Visible=false;r.Count.Visible=false;r.Gem.Visible=false;r.Amount.Visible=false
+    r.Chest.Visible=false;r.Claim.Visible=false;r.Check.Visible=false;r.Mark.Visible=false
    end
   end
   if Config then flame.Image=Config.Icons.streak end

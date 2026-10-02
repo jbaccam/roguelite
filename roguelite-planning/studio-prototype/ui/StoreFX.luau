@@ -239,24 +239,41 @@ function FX.tag(card,text,fill,color)
 end
 
 -- Centred section title between lime rules and diamonds, with an optional line under it.
--- Returns the sub label (a timer can rewrite it). Takes 46 px, or 72 with a sub line.
+-- Returns the sub label (a timer can rewrite it). Takes 46 px, or 72 with a sub line. The rules
+-- and diamonds follow the title's drawn width (TextBounds), so they never sit on its letters even
+-- when a client measures the font differently (plan K).
 function FX.header(parent,title,sub,y,w)
  local tw=Text:GetTextSize(title,32,T.Font,Vector2.new(2000,100)).X
  local cx=math.floor(w/2)
  local l=T.label(parent,'Header_'..title,title,cx-tw*.75-20,y,tw*1.5+40,40,32);l.TextStrokeTransparency=1
  T.make('UIStroke',l,{Color=INK,Thickness=3})
- local function rule(x0,x1,toRight)
-  if x1-x0<20 then return end
-  local f=T.make('Frame',parent,{Name='Rule',Position=UDim2.fromOffset(x0,y+18),Size=UDim2.fromOffset(x1-x0,4),BackgroundColor3=T.Color.lime,BorderSizePixel=0})
+ local function rule(toRight)
+  local f=T.make('Frame',parent,{Name='Rule',Position=UDim2.fromOffset(0,y+18),Size=UDim2.fromOffset(0,4),BackgroundColor3=T.Color.lime,BorderSizePixel=0})
   T.make('UICorner',f,{CornerRadius=UDim.new(1,0)})
   T.make('UIGradient',f,{Transparency=NumberSequence.new(toRight and 0 or 1,toRight and 1 or 0)})
+  return f
  end
- local function diamond(x)
-  local d=T.make('Frame',parent,{Name='Diamond',AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(x,y+20),Size=UDim2.fromOffset(12,12),Rotation=45,BackgroundColor3=T.Color.lime,BorderSizePixel=0})
+ local function diamond()
+  local d=T.make('Frame',parent,{Name='Diamond',AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(0,y+20),Size=UDim2.fromOffset(12,12),Rotation=45,BackgroundColor3=T.Color.lime,BorderSizePixel=0})
   T.make('UIStroke',d,{Color=INK,Thickness=2})
+  return d
  end
- rule(8,cx-tw/2-34,false);rule(cx+tw/2+34,w-8,true)
- diamond(cx-tw/2-22);diamond(cx+tw/2+22)
+ local ruleL,ruleR,dL,dR=rule(false),rule(true),diamond(),diamond()
+ -- half: half the title's width plus its 3 px outline, in this parent's units.
+ local function place(half)
+  local x0,x1=cx-half-28,cx+half+28
+  dL.Position=UDim2.fromOffset(x0+6,y+20);dR.Position=UDim2.fromOffset(x1-6,y+20)
+  ruleL.Position=UDim2.fromOffset(8,y+18);ruleL.Size=UDim2.fromOffset(math.max(0,x0-14),4);ruleL.Visible=x0-14>20
+  ruleR.Position=UDim2.fromOffset(x1+6,y+18);ruleR.Size=UDim2.fromOffset(math.max(0,w-x1-14),4);ruleR.Visible=w-x1-14>20
+ end
+ place(tw/2+3)
+ -- TextBounds is in drawn pixels: divide out any UIScale above (Size offset / AbsoluteSize).
+ local function measure()
+  local abs=l.AbsoluteSize.X
+  if abs>0 and l.TextBounds.X>0 then place(l.TextBounds.X*(l.Size.X.Offset/abs)/2+3) end
+ end
+ l:GetPropertyChangedSignal('TextBounds'):Connect(measure);l:GetPropertyChangedSignal('AbsoluteSize'):Connect(measure)
+ task.defer(measure)
  if sub then
   local s=T.text(parent,'HeaderSub_'..title,sub,60,y+42,w-120,24,17,T.Color.cream);s.TextXAlignment=Enum.TextXAlignment.Center
   return s

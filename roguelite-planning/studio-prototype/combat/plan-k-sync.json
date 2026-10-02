@@ -168,6 +168,16 @@
    "anchor": "E.Icon='rbxassetid://117887028525234' -- UI icon: blender-egg-merchant-kit/previews/icon-egg.png",
    "where": "replace",
    "text": "E.Icon='rbxassetid://115158817562855' -- UI icon: ui/assets/hud/pet-egg.png (the user's art, plan K)"
+  },
+  {
+   "repo": "ui/StoreFX.luau",
+   "studio": "ReplicatedStorage.StoreFX",
+   "anchor": [
+    "-- Centred section title between lime rules and diamonds, with an optional line under it.",
+    " diamond(cx-tw/2-22);diamond(cx+tw/2+22)"
+   ],
+   "where": "block",
+   "text": "-- Centred section title between lime rules and diamonds, with an optional line under it.\n-- Returns the sub label (a timer can rewrite it). Takes 46 px, or 72 with a sub line. The rules\n-- and diamonds follow the title's drawn width (TextBounds), so they never sit on its letters even\n-- when a client measures the font differently (plan K).\nfunction FX.header(parent,title,sub,y,w)\n local tw=Text:GetTextSize(title,32,T.Font,Vector2.new(2000,100)).X\n local cx=math.floor(w/2)\n local l=T.label(parent,'Header_'..title,title,cx-tw*.75-20,y,tw*1.5+40,40,32);l.TextStrokeTransparency=1\n T.make('UIStroke',l,{Color=INK,Thickness=3})\n local function rule(toRight)\n  local f=T.make('Frame',parent,{Name='Rule',Position=UDim2.fromOffset(0,y+18),Size=UDim2.fromOffset(0,4),BackgroundColor3=T.Color.lime,BorderSizePixel=0})\n  T.make('UICorner',f,{CornerRadius=UDim.new(1,0)})\n  T.make('UIGradient',f,{Transparency=NumberSequence.new(toRight and 0 or 1,toRight and 1 or 0)})\n  return f\n end\n local function diamond()\n  local d=T.make('Frame',parent,{Name='Diamond',AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(0,y+20),Size=UDim2.fromOffset(12,12),Rotation=45,BackgroundColor3=T.Color.lime,BorderSizePixel=0})\n  T.make('UIStroke',d,{Color=INK,Thickness=2})\n  return d\n end\n local ruleL,ruleR,dL,dR=rule(false),rule(true),diamond(),diamond()\n -- half: half the title's width plus its 3 px outline, in this parent's units.\n local function place(half)\n  local x0,x1=cx-half-28,cx+half+28\n  dL.Position=UDim2.fromOffset(x0+6,y+20);dR.Position=UDim2.fromOffset(x1-6,y+20)\n  ruleL.Position=UDim2.fromOffset(8,y+18);ruleL.Size=UDim2.fromOffset(math.max(0,x0-14),4);ruleL.Visible=x0-14>20\n  ruleR.Position=UDim2.fromOffset(x1+6,y+18);ruleR.Size=UDim2.fromOffset(math.max(0,w-x1-14),4);ruleR.Visible=w-x1-14>20\n end\n place(tw/2+3)\n -- TextBounds is in drawn pixels: divide out any UIScale above (Size offset / AbsoluteSize).\n local function measure()\n  local abs=l.AbsoluteSize.X\n  if abs>0 and l.TextBounds.X>0 then place(l.TextBounds.X*(l.Size.X.Offset/abs)/2+3) end\n end\n l:GetPropertyChangedSignal('TextBounds'):Connect(measure);l:GetPropertyChangedSignal('AbsoluteSize'):Connect(measure)\n task.defer(measure)"
   }
  ]
 }
