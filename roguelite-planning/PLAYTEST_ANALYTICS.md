@@ -1,6 +1,6 @@
 # Play-test analytics and saved stats
 
-**Status:** built in the repo 2026-10-02 (`combat/RunAnalytics.luau`), not yet synced to Studio. Roblox's AnalyticsService only records in the **published** game; in Studio set the Workspace attribute `DebugAnalytics = true` to print each event to the Output instead.
+**Status:** built 2026-10-02 (`combat/RunAnalytics.luau`) and synced to Studio the same day. Roblox's AnalyticsService only records in the **published** game; in Studio set the Workspace attribute `DebugAnalytics = true` to print each event to the Output instead.
 
 ## What gets recorded (Creator Dashboard → Analytics)
 

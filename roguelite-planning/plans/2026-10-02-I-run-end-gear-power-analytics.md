@@ -2,7 +2,7 @@
 
 **Asked 2026-10-01** (user): implement the results screen, Leave Run between waves (extract any time, Endless included), spectating after death and the 10 s everyone-down countdown; carry Armory upgrades into runs; make gear levels scale to the maps; track gameplay for play-tests and make sure the stats that unlock content are saved.
 
-**Built in the repo 2026-10-02.** Not synced to Studio yet: Studio writes need the user's go-ahead.
+**Built 2026-10-02 and synced to Studio the same day** (user: "yes push it all in"). The guarded sync wrote 12 scripts and created RunAnalytics and RunResultsUI as one undo step. Afterwards all 14 matched the repo, kept their sandbox settings and compiled, and GearPowerTests passed 78 checks on the Studio scripts. Not play-tested yet.
 
 ## What changed
 

@@ -1,6 +1,6 @@
 # Gear Power: harder maps, matched by better gear
 
-**Status:** built in the repo 2026-10-02, not yet synced to Studio. Asked for by the user on 2026-10-01: "every map gets harder, but as players go onto harder maps they get better and higher-level gear, and once their gear reaches the map's level it should feel like the same difficulty as the first map."
+**Status:** built 2026-10-02 and synced to Studio the same day (GearPowerTests: 78 checks pass on the Studio scripts). Not play-tested yet. Asked for by the user on 2026-10-01: "every map gets harder, but as players go onto harder maps they get better and higher-level gear, and once their gear reaches the map's level it should feel like the same difficulty as the first map."
 
 ## The rule in one example
 

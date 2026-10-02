@@ -251,7 +251,7 @@ User decision 2026-10-01: the beta uses match servers. `ServerRole.LIVE_ROLES=tr
 - **Not built yet (at the time):** the results screen, a between-waves Leave Run button, spectating, the 10 s everyone-down countdown and doubling revives. All but the doubling revives were built on 2026-10-02 (below).
 - **Untested:** none of the teleport path runs in Studio. The published checklist in §7 must pass before beta players are invited.
 
-## Plan B built (2026-10-02, repo only until synced to Studio)
+## Plan B built (2026-10-02, synced to Studio the same day)
 
 User direction 2026-10-01: Endless works like Brotato's (the same wave → shop loop keeps going past wave 20, enemies keep scaling), and players can **extract** (Leave Run) whenever they want instead of having to die.
 
