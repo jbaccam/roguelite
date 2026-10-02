@@ -9,53 +9,53 @@ M.Products={
  -- In-run, used immediately. Revives (LOBBY_AND_MATCH_SERVERS.md §4): as many as you like, and the
  -- price doubles each time in the same run. The nth revive uses Revive<n>, and from the 5th on it
  -- stays Revive5. Five products because a developer product's price is fixed in the dashboard.
- Revive1={productId=0,robux=65,name='Revive',revive=1},
- Revive2={productId=0,robux=130,name='Revive',revive=2},
- Revive3={productId=0,robux=260,name='Revive',revive=3},
- Revive4={productId=0,robux=520,name='Revive',revive=4},
- Revive5={productId=0,robux=1040,name='Revive',revive=5},
- ShopReroll={productId=0,robux=15,name='Reroll',random=true},
- UpgradeReroll={productId=0,robux=15,name='Reroll',random=true},
- Banish={productId=0,robux=19,name='Banish',random=true},
+ Revive1={productId=3716085560,robux=65,name='Revive',revive=1},
+ Revive2={productId=3716085638,robux=130,name='Revive',revive=2},
+ Revive3={productId=3716085708,robux=260,name='Revive',revive=3},
+ Revive4={productId=3716085762,robux=520,name='Revive',revive=4},
+ Revive5={productId=3716085809,robux=1040,name='Revive',revive=5},
+ ShopReroll={productId=3716085846,robux=15,name='Reroll',random=true},
+ UpgradeReroll={productId=3716085906,robux=15,name='Reroll',random=true},
+ Banish={productId=3716085963,robux=19,name='Banish',random=true},
  -- Packs saved to your profile, used during runs
- Rerolls5={productId=0,robux=59,rerolls=5,name='5 Rerolls',random=true},
- Rerolls15={productId=0,robux=149,rerolls=15,name='15 Rerolls',random=true},
- Banishes5={productId=0,robux=79,banishes=5,name='5 Banishes',random=true},
- Banishes15={productId=0,robux=199,banishes=15,name='15 Banishes',random=true},
+ Rerolls5={productId=3716086015,robux=59,rerolls=5,name='5 Rerolls',random=true},
+ Rerolls15={productId=3716086057,robux=149,rerolls=15,name='15 Rerolls',random=true},
+ Banishes5={productId=3716086107,robux=79,banishes=5,name='5 Banishes',random=true},
+ Banishes15={productId=3716086145,robux=199,banishes=15,name='15 Banishes',random=true},
  -- Price ladder (2026-10-01, the owner: "too expensive"): modelled on a successful Roblox shop.
  -- Cheap entry (39-49 R$), mid tiers 150-800, nothing above ~3,750 R$. Emeralds are worth about
  -- 10 per Robux, so a Gold Chest (300) costs about what a Legendary Chest does (~30-49 R$).
  -- Emeralds: the bonus climbs 0 -> 11% -> 21% -> 28% -> 30% -> 35% (bonusPercent).
- Emeralds1={productId=0,robux=39,emeralds=400,name='Pouch'},
- Emeralds2={productId=0,robux=149,emeralds=1700,name='Stack'},
- Emeralds3={productId=0,robux=339,emeralds=4200,name='Crate'},
- Emeralds4={productId=0,robux=799,emeralds=10500,name='Vault'},
- Emeralds5={productId=0,robux=1649,emeralds=22000,name='Hoard'},
- Emeralds6={productId=0,robux=3749,emeralds=52000,name='Treasury'},
+ Emeralds1={productId=3716086201,robux=39,emeralds=400,name='Pouch'},
+ Emeralds2={productId=3716086239,robux=149,emeralds=1700,name='Stack'},
+ Emeralds3={productId=3716086267,robux=339,emeralds=4200,name='Crate'},
+ Emeralds4={productId=3716086307,robux=799,emeralds=10500,name='Vault'},
+ Emeralds5={productId=3716086334,robux=1649,emeralds=22000,name='Hoard'},
+ Emeralds6={productId=3716086358,robux=3749,emeralds=52000,name='Treasury'},
  -- Chests (Legendary Chest: one Legendary guaranteed): 49 / 40 / 33 R$ each. Keys keep their old
  -- Royal names so existing developer products stay mapped.
- Royal1={productId=0,robux=49,chests={Legendary=1},name='1 Legendary Chest',random=true},
- Royal5={productId=0,robux=199,chests={Legendary=5},name='5 Legendary Chests',random=true},
- Royal12={productId=0,robux=399,chests={Legendary=12},name='12 Legendary Chests',random=true},
+ Royal1={productId=3716086379,robux=49,chests={Legendary=1},name='1 Legendary Chest',random=true},
+ Royal5={productId=3716086403,robux=199,chests={Legendary=5},name='5 Legendary Chests',random=true},
+ Royal12={productId=3716086431,robux=399,chests={Legendary=12},name='12 Legendary Chests',random=true},
  -- Bundles
- StarterPack={productId=0,robux=49,emeralds=1500,chests={Legendary=2},rerolls=5,name='Starter Pack',oneTime='starterPack',random=true},
- ArsenalBundle={productId=0,robux=299,emeralds=1500,signatureUpgrades=3,name='Arsenal Bundle'},
- MegaBundle={productId=0,robux=999,emeralds=3000,chests={Legendary=30},rerolls=25,banishes=10,name='Mega Chest Bundle',random=true},
+ StarterPack={productId=3716086468,robux=49,emeralds=1500,chests={Legendary=2},rerolls=5,name='Starter Pack',oneTime='starterPack',random=true},
+ ArsenalBundle={productId=3716086491,robux=299,emeralds=1500,signatureUpgrades=3,name='Arsenal Bundle'},
+ MegaBundle={productId=3716086523,robux=999,emeralds=3000,chests={Legendary=30},rerolls=25,banishes=10,name='Mega Chest Bundle',random=true},
  -- 100 Legendary Chests at 30 R$ each (the best chest price in the store).
- UltimateBundle={productId=0,robux=2999,emeralds=5000,chests={Legendary=100},rerolls=50,banishes=25,name='Ultimate Chest Bundle',random=true},
+ UltimateBundle={productId=3716086557,robux=2999,emeralds=5000,chests={Legendary=100},rerolls=50,banishes=25,name='Ultimate Chest Bundle',random=true},
  -- Godly bundles (2026-10-01): one Godly weapon + a full armor set + emeralds, one time each.
  -- godly = the weapon's WeaponCatalog name. Until that weapon exists the store shows COMING SOON
  -- and the server refuses the purchase. Phoenix (Godly armor) is the premium line, Dragon Scale
  -- (Legendary armor) the cheaper one.
- BloodPhoenixBundle={productId=0,robux=1799,emeralds=3000,godly='Vampire Blade',armorSet='Phoenix',name='Blood Phoenix Bundle'},
- ShadowDragonBundle={productId=0,robux=1199,emeralds=1500,godly='Shadow Daggers',armorSet='DragonScale',name='Shadow Dragon Bundle'},
+ BloodPhoenixBundle={productId=3716086596,robux=1799,emeralds=3000,godly='Vampire Blade',armorSet='Phoenix',name='Blood Phoenix Bundle'},
+ ShadowDragonBundle={productId=3716086616,robux=1199,emeralds=1500,godly='Shadow Daggers',armorSet='DragonScale',name='Shadow Dragon Bundle'},
  -- Godly Starter: the buyer picks one Godly weapon (an index into GodlyWeapons) + 3 Legendary
  -- Chests, one time. The pick is saved to the profile before the prompt (ProfileService godlyPick).
- GodlyStarter={productId=0,robux=799,chests={Legendary=3},godlyPick=true,name='Godly Starter',random=true},
+ GodlyStarter={productId=3716086636,robux=799,chests={Legendary=3},godlyPick=true,name='Godly Starter',random=true},
  -- Class unlocks (400 emeralds is ~39 R$ of emeralds, so Robux stays close to that).
- ClassThrower={productId=0,robux=49,class='Thrower',name='Thrower'},
- ClassJuggler={productId=0,robux=49,class='Juggler',name='Juggler'},
- ClassHandyman={productId=0,robux=49,class='Handyman',name='Handyman'},
+ ClassThrower={productId=3716086758,robux=49,class='Thrower',name='Thrower'},
+ ClassJuggler={productId=3716086815,robux=49,class='Juggler',name='Juggler'},
+ ClassHandyman={productId=3716086840,robux=49,class='Handyman',name='Handyman'},
 }
 M.EmeraldPacks={'Emeralds1','Emeralds2','Emeralds3','Emeralds4','Emeralds5','Emeralds6'}
 M.ChestPacks={'Royal1','Royal5','Royal12'}
@@ -66,8 +66,8 @@ M.GodlyBundles={'BloodPhoenixBundle','ShadowDragonBundle'}
 M.GodlyWeapons={{"Reaper's Scythe",'Scythe'},{"Poseidon's Trident",'Trident'},{'Storm Bow','Storm Bow'},
  {'Shadow Daggers','Daggers'},{'Vampire Blade','Vampire'},{'Ray Gun','Ray Gun'}}
 M.Passes={
- VIP={gamePassId=0,robux=499,name='VIP Pass'},
- QuickOpen={gamePassId=0,robux=149,name='Quick Open'},
+ VIP={gamePassId=2005940558,robux=499,name='VIP Pass'},
+ QuickOpen={gamePassId=2006606580,robux=149,name='Quick Open'},
 }
 -- VIP perks (applied on the server).
 M.VIPRunBonus=.25 -- +25% emeralds from runs
@@ -105,6 +105,16 @@ end
 function M.fairEmeralds(robux)
  local base=M.Products.Emeralds1
  return math.floor((tonumber(robux) or 0)*base.emeralds/base.robux)
+end
+-- What this player is charged for a product or pass. Managed pricing (regional prices, price
+-- tests) can change it, so on the client RoguelitePrices asks Roblox and stores the answer as
+-- Price_<key> on the local player; until it answers (and on the server) it is the list price.
+function M.price(key)
+ local player=game:GetService('Players').LocalPlayer
+ local v=player and player:GetAttribute('Price_'..key)
+ if type(v)=='number' then return v end
+ local p=M.Products[key] or M.Passes[key]
+ return p and p.robux or 0
 end
 function M.byProductId(id)
  for key,p in M.Products do if p.productId==id and id~=0 then return key,p end end

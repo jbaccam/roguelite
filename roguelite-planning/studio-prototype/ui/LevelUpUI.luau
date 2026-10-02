@@ -148,10 +148,10 @@ function M.mount(player,onOpen,onDone)
   elseif paid and #data.upgradeOffers>0 then
    local banishes=player:GetAttribute('ProfileBanishes') or 0
    local rerolls=player:GetAttribute('ProfileRerolls') or 0
-   bigButton('Banish','BANISH',banishes>0 and (banishes..' SAVED') or ('R$ '..Money.Products.Banish.robux),bx,true,function()
+   bigButton('Banish','BANISH',banishes>0 and (banishes..' SAVED') or ('R$ '..Money.price('Banish')),bx,true,function()
     if (player:GetAttribute('ProfileBanishes') or 0)>0 then banishMode=true;render() else C.PurchaseRequest:FireServer('Banish') end
    end)
-   reroll=bigButton('Reroll','REROLL',rerolls>0 and (rerolls..' SAVED') or ('R$ '..Money.Products.UpgradeReroll.robux),bx+bw+24,false,function()
+   reroll=bigButton('Reroll','REROLL',rerolls>0 and (rerolls..' SAVED') or ('R$ '..Money.price('UpgradeReroll')),bx+bw+24,false,function()
     if (player:GetAttribute('ProfileRerolls') or 0)>0 then C.RunAction:FireServer('UseReroll','Upgrade') else C.PurchaseRequest:FireServer('UpgradeReroll') end
    end)
   end

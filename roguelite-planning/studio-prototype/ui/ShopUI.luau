@@ -247,7 +247,7 @@ function M.new(player,h,refresh)
   reroll.Interactable=(free>0 or data.shards>=data.rerollPrice) and data.phase=='Shop'
   if paid then
    local stored=player:GetAttribute('ProfileRerolls') or 0
-   local rb=btn(left,'RobuxReroll',stored>0 and ('USE ×'..stored) or ('R$ '..Money.Products.ShopReroll.robux),narrow and leftW-robuxW or leftW-rerollW-8-robuxW,narrow and 56 or 0,robuxW,rerollH,function()
+   local rb=btn(left,'RobuxReroll',stored>0 and ('USE ×'..stored) or ('R$ '..Money.price('ShopReroll')),narrow and leftW-robuxW or leftW-rerollW-8-robuxW,narrow and 56 or 0,robuxW,rerollH,function()
     if (player:GetAttribute('ProfileRerolls') or 0)>0 then combat.RunAction:FireServer('UseReroll','Shop') else combat.PurchaseRequest:FireServer('ShopReroll') end
    end)
    rb.Interactable=data.phase=='Shop'

@@ -614,19 +614,20 @@ end
 local grants={}
 -- Every price step grants the same revive. One that can't be used any more (the wave ended and
 -- teammates raised the player, or the run is over) is paid back at its Robux value in emeralds:
--- 65 R$ -> 666, 1040 R$ -> 10,666.
-local function grantRevive(p,key)
+-- 65 R$ -> 666, 1040 R$ -> 10,666. `spent` is the receipt's CurrencySpent: with regional pricing a
+-- player may have paid less than the list price.
+local function grantRevive(p,key,spent)
  if revive(p) then return true end
- return Profiles.grant(p,{emeralds=Config.fairEmeralds(Config.Products[key].robux),paid=true})
+ return Profiles.grant(p,{emeralds=Config.fairEmeralds(spent or Config.Products[key].robux),paid=true})
 end
-for i=1,Config.ReviveSteps do local key=Config.reviveKey(i);grants[key]=function(p) return grantRevive(p,key) end end
+for i=1,Config.ReviveSteps do local key=Config.reviveKey(i);grants[key]=function(p,spent) return grantRevive(p,key,spent) end end
 function grants.ShopReroll(p) return Shop.paidReroll(p,'Shop') or Profiles.grant(p,{rerolls=1}) end
 function grants.UpgradeReroll(p) return Shop.paidReroll(p,'Upgrade') or Profiles.grant(p,{rerolls=1}) end
 -- A bought banish is saved; the player then clicks the card to remove (RunAction UseBanish).
 function grants.Banish(p) return Profiles.grant(p,{banishes=1}) end
-local function grantProduct(p,key)
+local function grantProduct(p,key,spent)
  local product=Config.Products[key]
- if grants[key] then return grants[key](p) end
+ if grants[key] then return grants[key](p,spent) end
  -- Godly bundle / Godly Starter: never deliver without its weapon (the receipt stays unprocessed
  -- and retries). The Starter's weapon is the pick saved on the profile before the prompt.
  local godlyName=product.godly or product.godlyPick and Profiles.get(p).godlyPick
@@ -655,19 +656,19 @@ local function receiptProblem(p,key)
 end
 -- One receipt at a time per player, so a grant and its save never interleave with another one.
 local receiptBusy={}
-local function processReceipt(p,key,purchaseId)
+local function processReceipt(p,key,purchaseId,spent)
  -- Wait for the profile and the region answer (retried by Roblox) before deciding anything.
  if not Profiles.get(p) or restricted[p]==nil then return Enum.ProductPurchaseDecision.NotProcessedYet end
  if not Profiles.hasReceipt(p,purchaseId) then
   local product=Config.Products[key]
   local problem=receiptProblem(p,key)
   if problem then
-   local n=Config.fairEmeralds(product.robux)
+   local n=Config.fairEmeralds(spent or product.robux)
    if not Profiles.grant(p,{emeralds=n,paid=true}) then return Enum.ProductPurchaseDecision.NotProcessedYet end
    Profiles.addReceipt(p,purchaseId)
    reply(p,key,true,problem..' · '..n..' emeralds added instead')
   else
-   local ok,granted=pcall(grantProduct,p,key)
+   local ok,granted=pcall(grantProduct,p,key,spent)
    if not ok or not granted then warn('RogueliteMeta: grant failed',key,granted);return Enum.ProductPurchaseDecision.NotProcessedYet end
    Profiles.addReceipt(p,purchaseId)
    reply(p,key,true,product.name..' purchased')
@@ -685,7 +686,7 @@ Market.ProcessReceipt=function(info)
  if not p or not key or not Profiles.get(p) then return Enum.ProductPurchaseDecision.NotProcessedYet end
  while receiptBusy[p] do task.wait() end
  receiptBusy[p]=true
- local ok,decision=pcall(processReceipt,p,key,info.PurchaseId)
+ local ok,decision=pcall(processReceipt,p,key,info.PurchaseId,tonumber(info.CurrencySpent))
  receiptBusy[p]=nil
  if not ok then warn('RogueliteMeta: receipt failed',decision);return Enum.ProductPurchaseDecision.NotProcessedYet end
  return decision

@@ -58,7 +58,7 @@ function S.open(screen,ctx,focus)
  -- COMING SOON); neither is buyable. arg goes with the purchase (the Godly Starter's pick).
  local function priceButton(parent,name,x,y,bw,bh,key,owned,pulse,arg)
   local item=Money.Products[key] or Money.Passes[key]
-  local pb=FX.button(parent,name,owned==true and 'OWNED' or owned or ('R$ '..comma(item.robux)),x,y,bw,bh,function() buy(key,arg) end,owned and true or false)
+  local pb=FX.button(parent,name,owned==true and 'OWNED' or owned or ('R$ '..comma(Money.price(key))),x,y,bw,bh,function() buy(key,arg) end,owned and true or false)
   pb.Caption.TextSize=math.min(34,bh-18)
   if owned then pb.Interactable=false elseif pulse then FX.pulse(pb,.04) end
   return pb

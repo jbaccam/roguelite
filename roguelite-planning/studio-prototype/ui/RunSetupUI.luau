@@ -285,7 +285,7 @@ function M.new(player,opts)
   else
    T.text(box,'Earn','Earn it: '..(Rules.ClassUnlock[class] or 'an achievement'),pad,tailY,tw,noteH,16,C.gold)
    local key='Class'..class;local product=Money.Products[key];local by,bw=tailY+noteH+4,(tw-12)/2
-   if product then T.button(box,'BuyRobux','R$ '..product.robux,pad,by,bw,54,function() combat.PurchaseRequest:FireServer(key) end).Caption.TextSize=20 end
+   if product then T.button(box,'BuyRobux','R$ '..Money.price(key),pad,by,bw,54,function() combat.PurchaseRequest:FireServer(key) end).Caption.TextSize=20 end
    local eb=T.button(box,'BuyEmeralds','',pad+bw+12,by,bw,54,function()
     local r=combat.ProfileAction:InvokeServer('BuyClass',class)
     T.toast(screen,r.message or '',r.ok and C.lime or C.negative)

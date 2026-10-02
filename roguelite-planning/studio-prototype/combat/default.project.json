@@ -515,6 +515,9 @@
         "CharacterJumpHeight": 9.5
       },
       "StarterPlayerScripts": {
+        "RoguelitePrices": {
+          "$path": "../ui/RoguelitePrices.client.luau"
+        },
         "BossPresentation": {
           "$path": "../../hammer-boss/BossPresentation.client.luau"
         },

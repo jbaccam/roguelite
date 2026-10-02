@@ -69,8 +69,9 @@ function M.mount(player)
   local at=table.find(list,watching) or 0
   follow(list[(at-1+step)%#list+1]);M.redraw()
  end
- -- This revive's price (the server's DeathInfo; each revive in a run doubles it).
- local function revivePrice() return info.revivePrice or Money.Products.Revive1.robux end
+ -- This revive's price: the server's DeathInfo says which revive of the run it is (each one doubles),
+ -- and Money.price gives what Roblox charges this player for it (regional prices, price tests).
+ local function revivePrice() return Money.price(Money.reviveKey(info.revive or 1)) end
  -- Seconds left in the last stand (everyone in the run is down), nil when there is none.
  local function lastStandLeft()
   local ends=runState:GetAttribute('LastStandEndsAt')
@@ -219,7 +220,7 @@ function M.mount(player)
   end)
   revive.Caption.TextSize=26
   -- Say up front that the next one costs more (prices double, up to R$ 1040).
-  local nextPrice=info.nextRevivePrice
+  local nextPrice=Money.price(Money.reviveKey((info.revive or 1)+1))
   local noteText=(nextPrice and nextPrice>revivePrice()) and ('Back with 50% health  ·  next one R$ '..nextPrice) or 'Back in the same wave with 50% health'
   local note=readable(T.text(summary,'ReviveNote',noteText,W/2-bw/2-20-170,by-24,340,20,17,C.muted));note.TextXAlignment=Enum.TextXAlignment.Center
   local give=T.button(summary,'LeaveRun','LEAVE RUN',W/2+20,by,bw,bh,function() combat.RunAction:FireServer('LeaveRun') end,true)
