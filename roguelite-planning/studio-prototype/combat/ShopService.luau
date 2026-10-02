@@ -244,7 +244,7 @@ function S.resetRun()
  -- A new run: everyone still here starts a new stint of it at wave 1.
  S.runId=newRunId();run:SetAttribute('RunId',S.runId)
  for _,m in S.members do stints+=1;m.stint=S.runId..'/'..stints;m.joined=1 end
- run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',1);run:SetAttribute('WaveEndsAt',nil);run:SetAttribute('Paused',nil)
+ run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',1);run:SetAttribute('WaveEndsAt',nil);run:SetAttribute('Paused',nil);run:SetAttribute('ShopEndsAt',nil)
  -- A new run starts clean: not a test run, no admin pause, freeze or Keep N alive, and the map's
  -- own enemy mix (ADMIN_PANEL.md). Normal play already has these, so nothing fires.
  run:SetAttribute('AdminTestRun',nil);run:SetAttribute('AdminPaused',nil)
@@ -322,6 +322,7 @@ end
 local function startWave()
  refillHealth()
  S.phase='Combat';run:SetAttribute('Phase','Combat');run:SetAttribute('WaveEndsAt',workspace:GetServerTimeNow()+E.WAVE_SECONDS)
+ run:SetAttribute('ShopEndsAt',nil)
  combat:SetAttribute('ZombieCount',combat:GetAttribute('TestZombieCountOverride') or S.waveEnemyCount());combat:SetAttribute('ZombiesEnabled',true)
  for p in S.states do local cs=Characters.states[p];cs.blocks=1;cs.folder:SetAttribute('BlocksRemaining',cs.stats.FirstHitBlock);S.publish(p,'Wave started') end
 end
@@ -331,6 +332,35 @@ local function beginWave()
  for p,s in S.states do if living(p) then count+=1;if not s.ready or s.pendingLevels>0 then return end end end
  if count==0 then return end
  startWave()
+end
+-- Shop timer (SHOP_SECONDS from the wave clear): when it runs out, anyone still choosing gets
+-- their level-ups picked for them (the first card each time; a capped stat is skipped) and is
+-- marked ready, so one idle player can't hold the party. Shards stay unspent.
+local function autoPick(p,s)
+ local cs=Characters.states[p];if not cs then return end
+ for _=1,200 do
+  if s.pendingLevels<=0 then break end
+  if #s.upgradeOffers==0 then S.prepareUpgrades(p) end
+  local offer=s.upgradeOffers[1];local schema=offer and StatSchema.ById[offer.id]
+  local amount=schema and math.min(offer.amount,schema.max-cs.stats[offer.id]) or 0
+  if amount>0 then s.upgradeBonuses[offer.id]=(s.upgradeBonuses[offer.id] or 0)+amount end
+  s.pendingLevels-=1;s.upgradeOffers={}
+  if amount>0 then S.bonuses(p) end
+ end
+ S.prepareUpgrades(p);S.publishProgress(p)
+end
+local function shopTimeUp()
+ if S.phase~='Shop' or run:GetAttribute('AdminPaused') then return end
+ run:SetAttribute('ShopEndsAt',nil)
+ local any=false
+ for p,s in S.states do
+  if living(p) then
+   any=true
+   if s.pendingLevels>0 then autoPick(p,s) end
+   s.ready=true;s.revision+=1
+  end
+ end
+ if any then startWave() end
 end
 -- A group launched from a lobby pad goes straight into wave 1; the first shop comes after it.
 -- Only from a fresh run (resetRun), so it can never skip a later shop.
@@ -358,6 +388,7 @@ function S.finishWave()
  Shards.clear(true)
  combat:SetAttribute('ZombiesEnabled',false);S.phase='Shop';S.wave+=1
  run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',S.wave);run:SetAttribute('WaveEndsAt',nil)
+ run:SetAttribute('ShopEndsAt',workspace:GetServerTimeNow()+E.SHOP_SECONDS)
  for p,s in S.states do
   if living(p) then s.shards=math.min(E.MAX_SHARDS,s.shards+E.WAVE_REWARD_BASE+(S.wave-1)*E.WAVE_REWARD_SCALE) end
   s.rerolls=0;s.ready=false;s.revision+=1
@@ -376,7 +407,7 @@ end
 -- (signals are deferred in this place).
 local function endEnemies()
  combat:SetAttribute('ZombiesEnabled',false);Shards.clear(false)
- S.paused=nil;run:SetAttribute('Paused',nil);run:SetAttribute('AdminPaused',nil);run:SetAttribute('WaveEndsAt',nil)
+ S.paused=nil;run:SetAttribute('Paused',nil);run:SetAttribute('AdminPaused',nil);run:SetAttribute('WaveEndsAt',nil);run:SetAttribute('ShopEndsAt',nil)
  for _,s in S.states do s.ready=false;s.revision+=1 end
  task.wait()
 end
@@ -616,6 +647,8 @@ RunService.Heartbeat:Connect(function(dt)
   end
  end
  if S.phase=='Shop' then beginWave() end
+ local shopEnds=run:GetAttribute('ShopEndsAt')
+ if S.phase=='Shop' and type(shopEnds)=='number' and now>=shopEnds then shopTimeUp() end
  local holding=S.phase=='Combat' and bossHolding(now)
  if run:GetAttribute('BossHolding')~=holding then run:SetAttribute('BossHolding',holding) end
  if S.phase=='Combat' and not holding and now>=(run:GetAttribute('WaveEndsAt') or math.huge) then S.finishWave() end

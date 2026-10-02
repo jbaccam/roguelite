@@ -9,6 +9,14 @@ local Stats=require(combat.CharacterStats)
 local T=require(RS:WaitForChild('UITheme'))
 local Money=require(combat:WaitForChild('MonetizationConfig'))
 local M={}
+-- Seconds until the shop timer starts the next wave (RogueliteRunState.ShopEndsAt, set by
+-- ShopService at each wave clear), or nil when no timer runs. clock(105) = '1:45'.
+function M.shopSecondsLeft()
+ local state=RS:FindFirstChild('RogueliteRunState');local ends=state and state:GetAttribute('ShopEndsAt')
+ if type(ends)~='number' then return nil end
+ return math.max(0,math.ceil(ends-workspace:GetServerTimeNow()))
+end
+function M.clock(s) return string.format('%d:%02d',s//60,s%60) end
 -- LAYOUT SETTINGS: edit these numbers in Studio, then Stop/Play to preview.
 -- Heights/gaps are pixels. 0.025 means a 2.5% margin on each screen edge.
 M.Layout={
@@ -329,6 +337,17 @@ function M.new(player,h,refresh)
   local start=btn(root,'StartWave',data.ready and 'READY · WAITING' or 'GO (Wave '..data.wave..')',leftW+gap+12,statsH+18+leaveH,side,startH,function() self:send('Start') end)
   start.Caption.UITextSizeConstraint.MaxTextSize=22
   if data.phase~='Shop' then start.Caption.Text='WAVE IN PROGRESS';start.Interactable=false end
+  -- The shop timer: the next wave starts on its own when it runs out, even if not everyone is ready.
+  if data.phase=='Shop' then
+   local label=start.Caption.Text
+   task.spawn(function()
+    while start.Parent do
+     local left=M.shopSecondsLeft()
+     start.Caption.Text=left and (label..'  ·  '..M.clock(left)) or label
+     task.wait(.5)
+    end
+   end)
+  end
   left.CanvasSize=UDim2.fromOffset(0,top+12)
   left.ScrollBarThickness=top+12>ht+1 and 3 or 0
   if self.selected and anchor then

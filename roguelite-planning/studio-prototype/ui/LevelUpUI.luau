@@ -86,6 +86,15 @@ function M.mount(player,onOpen,onDone)
   local plate=T.panel(content,'TitlePlate',margin+(leftW-320)/2,top-92,320,58,'panel');T.caps(plate,42)
   local title=text(plate,'Title','LEVEL UP!',0,0,320,58,36);title.Font=T.Font;title.TextXAlignment=Enum.TextXAlignment.Center;title.TextStrokeTransparency=.1
   local pending=text(content,'Pending','Level '..(data.level-data.pendingLevels+1)..'  ·  '..data.pendingLevels..' to choose',margin,top-30,leftW,24,17,T.Color.muted);pending.TextXAlignment=Enum.TextXAlignment.Center
+  -- When the shop timer runs out the server picks the first card for anyone still choosing.
+  local pendingText=pending.Text
+  task.spawn(function()
+   while pending.Parent do
+    local left=ShopUI.shopSecondsLeft()
+    pending.Text=left and (pendingText..'  ·  auto-pick in '..ShopUI.clock(left)) or pendingText
+    task.wait(.5)
+   end
+  end)
   local balance=text(content,'Balance',tostring(data.shards)..' shards   ·   '..tostring(data.baggedShards or 0)..' bagged',margin,cornerTop,leftW*.7,32,23)
   balance.Visible=h>=500 and top-92>=cornerTop+36 -- only where the title plate is clear below it
   local cards=box(content,'Cards',margin,top,leftW,total);cards.BackgroundTransparency=1

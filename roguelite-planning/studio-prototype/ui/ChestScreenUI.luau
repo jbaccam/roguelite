@@ -145,6 +145,8 @@ function U.new(player,opts)
  local function toCanvas(abs) return (abs-canvas.AbsolutePosition)/L.s end
 
  local drawBrowse -- forward
+ -- Buying Quick Open (or VIP) unlocks ×10 / ×100 while the screen is open.
+ for _,a in {'ProfileQuickOpen','ProfileVIP'} do player:GetAttributeChangedSignal(a):Connect(function() if mode=='browse' then readProfile();drawBrowse() end end) end
 
  -- Browse ----------------------------------------------------------------------------------------
  local function rarityBars(parent,id,y)
@@ -303,6 +305,9 @@ function U.new(player,opts)
   local bw,bh,gap=L.bw,92,16
   actions=T.frame(canvas,'Actions',L.ax,L.ay,L.aw,124)
   local x0=(L.aw-(bw*2+170+gap*2))/2
+  -- One at a time without Quick Open (VIP includes it); the server refuses more too.
+  local quick=profile.quickOpen==true
+  if not quick then amount=1 end
   local price=def.emeralds and def.emeralds*amount
   if def.daily then
    -- The free chest is one button: OPEN FREE CHEST claims today's chest and opens it straight away
@@ -369,10 +374,11 @@ function U.new(player,opts)
   if n<=0 then centred(T.text(actions,'NoneOwned','Buy one first',x0+bw+gap,bh+6,bw,26,22,C.muted)) end
   if n>0 then StoreFX.pulse(open,.04) end
   local amt=T.button(actions,'Amount','×'..amount,x0+2*(bw+gap),0,170,bh,function()
+   if not profile.quickOpen then combat.PurchaseRequest:FireServer('QuickOpen');return end
    amount=amount==1 and 10 or amount==10 and 100 or 1;FX.play(FX.Sounds.Chime,.15,1.6);drawBrowse()
   end,true)
   corners(amt,T.Tier[2]);amt.Caption.TextSize=42;amt.Caption.TextColor3=Color3.fromRGB(150,215,255)
-  centred(T.text(actions,'AmountHelp','amount',x0+2*(bw+gap),bh+6,170,26,20,C.muted))
+  centred(T.text(actions,'AmountHelp',quick and 'amount' or 'Quick Open: ×10',x0+2*(bw+gap),bh+6,170,26,20,quick and C.muted or C.limeSoft))
   -- Gamepad: OPEN is the first pick once there is a chest to open, else BUY.
   open.SelectionOrder=n>0 and 1 or 2;buy.SelectionOrder=n>0 and 2 or 1;amt.SelectionOrder=3
  end
@@ -489,6 +495,7 @@ function U.new(player,opts)
   readProfile()
   -- The server opens min(amount, owned); ask for the chosen amount and show what it opened.
   local want=Chests.validAmount(n) and n or amount
+  if not profile.quickOpen then want=1 end
   n=math.min(want,owned(selected))
   if n<=0 then return end
   busy=true

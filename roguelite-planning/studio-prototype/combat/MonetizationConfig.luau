@@ -38,7 +38,7 @@ M.Products={
  Royal5={productId=0,robux=199,chests={Legendary=5},name='5 Legendary Chests',random=true},
  Royal12={productId=0,robux=399,chests={Legendary=12},name='12 Legendary Chests',random=true},
  -- Bundles
- StarterPack={productId=0,robux=49,emeralds=1500,chests={Legendary=2},rerolls=5,name='Starter Pack',oneTime='starterPack'},
+ StarterPack={productId=0,robux=49,emeralds=1500,chests={Legendary=2},rerolls=5,name='Starter Pack',oneTime='starterPack',random=true},
  ArsenalBundle={productId=0,robux=299,emeralds=1500,signatureUpgrades=3,name='Arsenal Bundle'},
  MegaBundle={productId=0,robux=999,emeralds=3000,chests={Legendary=30},rerolls=25,banishes=10,name='Mega Chest Bundle',random=true},
  -- 100 Legendary Chests at 30 R$ each (the best chest price in the store).
@@ -99,6 +99,12 @@ function M.bonusPercent(key)
  local base=M.Products.Emeralds1;local p=M.Products[key]
  local rate=(p.emeralds/p.robux)/(base.emeralds/base.robux)
  return math.max(0,math.floor((rate-1)*100+.5))
+end
+-- What a Robux price is worth in emeralds at the smallest pack's rate (39 R$ = 400). Used when a
+-- paid product can't be delivered as itself (already owned, region rules): 49 R$ -> 502 emeralds.
+function M.fairEmeralds(robux)
+ local base=M.Products.Emeralds1
+ return math.floor((tonumber(robux) or 0)*base.emeralds/base.robux)
 end
 function M.byProductId(id)
  for key,p in M.Products do if p.productId==id and id~=0 then return key,p end end

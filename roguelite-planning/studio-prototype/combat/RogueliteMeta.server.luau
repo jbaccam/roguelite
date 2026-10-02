@@ -46,6 +46,8 @@ local runAction=remote('RunAction','RemoteEvent')
 local profileAction=remote('ProfileAction','RemoteFunction')
 
 -- Paid random items (rerolls, emeralds spent on chests) are hidden where restricted.
+-- nil until PolicyService answers; callers treat nil as restricted (restricted[p]~=false), so
+-- nothing random can be bought in the moment between joining and the answer.
 local restricted={}
 local function checkPolicy(p)
  local ok,info=pcall(Policy.GetPolicyInfoForPlayerAsync,Policy,p)
@@ -428,7 +430,7 @@ local function eligible(p,key,arg)
  local product=Config.Products[key];local d=Profiles.get(p)
  if not product then return false,'Unknown product' end
  if not d then return false,'Profile still loading' end
- if product.random and restricted[p] then return false,'Not available in your region' end
+ if product.random and restricted[p]~=false then return false,'Not available in your region' end
  if product.revive then return canRevive(p),'No revive available right now' end
  if key=='ShopReroll' or key=='UpgradeReroll' then return Shop.states[p]~=nil,'Only during a run' end
  if product.oneTime and d[product.oneTime] then return false,'Already purchased' end
@@ -448,12 +450,14 @@ end
 -- Grants run inside ProcessReceipt (or a Studio simulation). Return true only when delivered.
 -- In-run products that can no longer be used are kept as stored rerolls/banishes (or emeralds).
 local grants={}
--- Every price step grants the same revive.
-local function grantRevive(p)
+-- Every price step grants the same revive. One that can't be used any more (the wave ended and
+-- teammates raised the player, or the run is over) is paid back at its Robux value in emeralds:
+-- 65 R$ -> 666, 1040 R$ -> 10,666.
+local function grantRevive(p,key)
  if revive(p) then return true end
- return Profiles.grant(p,{emeralds=50,paid=true})
+ return Profiles.grant(p,{emeralds=Config.fairEmeralds(Config.Products[key].robux),paid=true})
 end
-for i=1,Config.ReviveSteps do grants[Config.reviveKey(i)]=grantRevive end
+for i=1,Config.ReviveSteps do local key=Config.reviveKey(i);grants[key]=function(p) return grantRevive(p,key) end end
 function grants.ShopReroll(p) return Shop.paidReroll(p,'Shop') or Profiles.grant(p,{rerolls=1}) end
 function grants.UpgradeReroll(p) return Shop.paidReroll(p,'Upgrade') or Profiles.grant(p,{rerolls=1}) end
 -- A bought banish is saved; the player then clicks the card to remove (RunAction UseBanish).
@@ -471,15 +475,41 @@ local function grantProduct(p,key)
   signatureUpgrades=product.signatureUpgrades,starterPack=product.oneTime=='starterPack',
   weapon=weapon,armorSet=product.armorSet,bundle=godlyName and key})
 end
+-- The rules are checked again when the receipt arrives: product IDs are public and a client can
+-- prompt any of them itself, skipping PurchaseRequest. A product that can't be delivered as
+-- itself (a second Starter Pack, an owned class, a cheaper revive step than this run's, a random
+-- item in a restricted region) is paid out at its Robux value in emeralds instead.
+local function receiptProblem(p,key)
+ local product=Config.Products[key];local d=Profiles.get(p)
+ if product.random and restricted[p] then return 'Not available in your region' end
+ if product.oneTime and d[product.oneTime] then return 'Already bought' end
+ if product.class and d.classes[product.class] then return 'Already unlocked' end
+ if (product.godly or product.godlyPick) and d.bundles[key] then return 'Already bought' end
+ if product.revive then
+  local step=tonumber(string.match(key,'%d+')) or 1
+  if step<math.min((revivesUsed[p] or 0)+1,Config.ReviveSteps) then return 'That revive price has passed' end
+ end
+ return nil
+end
 -- One receipt at a time per player, so a grant and its save never interleave with another one.
 local receiptBusy={}
 local function processReceipt(p,key,purchaseId)
- if not Profiles.get(p) then return Enum.ProductPurchaseDecision.NotProcessedYet end
+ -- Wait for the profile and the region answer (retried by Roblox) before deciding anything.
+ if not Profiles.get(p) or restricted[p]==nil then return Enum.ProductPurchaseDecision.NotProcessedYet end
  if not Profiles.hasReceipt(p,purchaseId) then
-  local ok,granted=pcall(grantProduct,p,key)
-  if not ok or not granted then warn('RogueliteMeta: grant failed',key,granted);return Enum.ProductPurchaseDecision.NotProcessedYet end
-  Profiles.addReceipt(p,purchaseId)
-  reply(p,key,true,Config.Products[key].name..' purchased')
+  local product=Config.Products[key]
+  local problem=receiptProblem(p,key)
+  if problem then
+   local n=Config.fairEmeralds(product.robux)
+   if not Profiles.grant(p,{emeralds=n,paid=true}) then return Enum.ProductPurchaseDecision.NotProcessedYet end
+   Profiles.addReceipt(p,purchaseId)
+   reply(p,key,true,problem..' · '..n..' emeralds added instead')
+  else
+   local ok,granted=pcall(grantProduct,p,key)
+   if not ok or not granted then warn('RogueliteMeta: grant failed',key,granted);return Enum.ProductPurchaseDecision.NotProcessedYet end
+   Profiles.addReceipt(p,purchaseId)
+   reply(p,key,true,product.name..' purchased')
+  end
  end
  -- Acknowledge only once the grant is saved. A failed save leaves the receipt unprocessed: Roblox
  -- retries it, the remembered PurchaseId stops a second grant here, and another server (which
@@ -500,9 +530,31 @@ Market.ProcessReceipt=function(info)
 end
 local passGrant={VIP={vip=true},QuickOpen={quickOpen=true}}
 local passField={VIP='vip',QuickOpen='quickOpen'}
+-- Rate limit: one request per 0.5 s and at most 20 a minute per player, so a looping client
+-- can't spam prompts, analytics events or the revive hold.
+local requestWindow={}
+local function allowRequest(p)
+ local now=os.clock()
+ if now-(lastRequest[p] or -1e9)<.5 then return false end
+ local w=requestWindow[p]
+ if not w or now-w.start>=60 then w={start=now,count=0};requestWindow[p]=w end
+ if w.count>=20 then return false end
+ w.count+=1;lastRequest[p]=now
+ return true
+end
+-- The Godly Starter pick is saved so a receipt that arrives after a rejoin still knows it, but
+-- at most once per 10 s per player: a looping client can't drain the DataStore budget.
+local lastPickSave,pickSaveQueued={},{}
+local function savePick(p)
+ if pickSaveQueued[p] then return end
+ pickSaveQueued[p]=true
+ task.delay(math.max(0,10-(os.clock()-(lastPickSave[p] or -1e9))),function()
+  pickSaveQueued[p]=nil
+  if Profiles.get(p) then lastPickSave[p]=os.clock();Profiles.save(p) end
+ end)
+end
 purchaseRequest.OnServerEvent:Connect(function(p,key,arg)
- if type(key)~='string' or os.clock()-(lastRequest[p] or 0)<.5 then return end
- lastRequest[p]=os.clock()
+ if type(key)~='string' or not allowRequest(p) then return end
  local pass=Config.Passes[key]
  if pass then
   local d=Profiles.get(p)
@@ -516,15 +568,22 @@ purchaseRequest.OnServerEvent:Connect(function(p,key,arg)
  -- Revive: the client asks for 'Revive' and the server picks this run's price step, so nobody
  -- can ask for a cheaper one.
  if key=='Revive' or Config.isRevive(key) then key=Config.reviveKey((revivesUsed[p] or 0)+1) end
+ local product=Config.Products[key]
+ -- Not on sale yet (no product ID) outside Studio: answer before anything else happens.
+ if product and product.productId<=0 and not studio then return reply(p,key,false,'Not on sale yet') end
  local ok,why=eligible(p,key,arg)
  if not ok then return reply(p,key,false,why) end
  pendingArg[p]=pendingArg[p] or {};pendingArg[p][key]=arg
- local product=Config.Products[key]
- -- Saved (not just remembered) so a receipt that arrives after a rejoin still knows the pick.
- if product.godlyPick then Profiles.get(p).godlyPick=Config.GodlyWeapons[arg][1];Profiles.save(p) end
- if product.revive then Analytics.revivePrompt(p,(revivesUsed[p] or 0)+1) end
- -- An open Revive prompt holds the last stand's clock (prompting).
- if product.revive and product.productId>0 then prompting[p]=workspace:GetServerTimeNow() end
+ if product.godlyPick then
+  local d=Profiles.get(p);local pick=Config.GodlyWeapons[arg][1]
+  if d.godlyPick~=pick then d.godlyPick=pick;savePick(p) end
+ end
+ -- An open Revive prompt holds the last stand's clock (prompting). Asking again while one is
+ -- already open neither logs nor refreshes the hold, so re-asking can't stall the run.
+ if product.revive and not prompting[p] then
+  Analytics.revivePrompt(p,(revivesUsed[p] or 0)+1)
+  if product.productId>0 then prompting[p]=workspace:GetServerTimeNow() end
+ end
  if product.productId>0 then Market:PromptProductPurchase(p,product.productId)
  elseif studio then
   -- Studio only: simulate a successful receipt so flows can be tested. In-memory, never saved.
@@ -538,23 +597,33 @@ end)
 Market.PromptGamePassPurchaseFinished:Connect(function(p,id,bought)
  if not bought then return end
  for key,pass in Config.Passes do
-  if pass.gamePassId>0 and id==pass.gamePassId then Profiles.grant(p,passGrant[key]);reply(p,key,true,pass.name..' unlocked') end
- end
-end)
-local function checkPasses(p)
- for key,pass in Config.Passes do
-  if pass.gamePassId>0 then
-   local ok,owns=pcall(Market.UserOwnsGamePassAsync,Market,p.UserId,pass.gamePassId)
-   if ok and owns then Profiles.grant(p,passGrant[key]) end
+  if pass.gamePassId>0 and id==pass.gamePassId then
+   -- Saved right away; if the profile isn't loaded, checkPasses grants it on the next join.
+   if Profiles.grant(p,passGrant[key]) then task.spawn(Profiles.save,p) end
+   reply(p,key,true,pass.name..' unlocked')
   end
  end
+end)
+-- Passes bought anywhere (the website too) are checked at join, once the profile has loaded: a
+-- grant before that would be dropped. Whatever is granted is saved straight away.
+local function checkPasses(p)
+ for _=1,120 do if Profiles.get(p) or p.Parent~=Players then break end;task.wait(.5) end
+ local d=Profiles.get(p);if not d then return end
+ local granted=false
+ for key,pass in Config.Passes do
+  if pass.gamePassId>0 and not d[passField[key]] then
+   local ok,owns=pcall(Market.UserOwnsGamePassAsync,Market,p.UserId,pass.gamePassId)
+   if ok and owns and Profiles.grant(p,passGrant[key]) then granted=true end
+  end
+ end
+ if granted then Profiles.save(p) end
 end
 
 -- Stored rerolls / banishes used during a run (no Robux prompt).
 local lastUse={}
 useStored=function(p,action,arg)
  if os.clock()-(lastUse[p] or 0)<.3 then return end;lastUse[p]=os.clock()
- local d=Profiles.get(p);if not d or restricted[p] then return end
+ local d=Profiles.get(p);if not d or restricted[p]~=false then return end
  if action=='UseReroll' and (arg=='Shop' or arg=='Upgrade') and Shop.states[p] then
   if d.rerolls>0 and Profiles.spend(p,'rerolls') then Shop.paidReroll(p,arg) end
  elseif action=='UseBanish' and Shop.canBanish(p,arg) then
@@ -570,8 +639,8 @@ profileAction.OnServerInvoke=function(p,action,a,b,c)
  if not Profiles.get(p) then return {ok=false,message='Profile still loading'} end
  local ok,message,results
  if action=='OpenChest' and type(a)=='string' and type(b)=='number' then ok,message,results=Profiles.openChest(p,a,b)
- elseif action=='BuyChest' and type(a)=='string' and type(b)=='number' then ok,message=Profiles.buyChest(p,a,b,restricted[p])
- elseif action=='BuyEgg' and type(a)=='number' then ok,message=Profiles.buyEgg(p,a,restricted[p])
+ elseif action=='BuyChest' and type(a)=='string' and type(b)=='number' then ok,message=Profiles.buyChest(p,a,b,restricted[p]~=false)
+ elseif action=='BuyEgg' and type(a)=='number' then ok,message=Profiles.buyEgg(p,a,restricted[p]~=false)
  elseif action=='OpenEgg' and type(a)=='number' then ok,message,results=Profiles.openEgg(p,a)
  elseif action=='Upgrade' and type(a)=='string' then ok,message=Profiles.upgrade(p,a)
  elseif action=='WearArmor' and type(a)=='string' and (b==nil or type(b)=='string') then ok,message=Profiles.wear(p,a,b)
@@ -579,7 +648,7 @@ profileAction.OnServerInvoke=function(p,action,a,b,c)
  elseif action=='BuySkill' and type(a)=='string' and #a<=40 then ok,message=Profiles.buySkill(p,a)
  elseif action=='BuyClass' and type(a)=='string' then ok,message=Profiles.buyClass(p,a,Config.ClassEmeraldPrice)
  elseif action=='BuyDeal' and type(a)=='number' then ok,message,results=Profiles.buyDeal(p,a)
- elseif action=='ClaimVipChest' then ok,message=Profiles.claimVipChest(p)
+ elseif action=='ClaimVipChest' then ok,message=Profiles.claimVipChest(p,restricted[p]~=false)
  elseif action=='Redeem' and type(a)=='string' then ok,message=Profiles.redeem(p,a)
  elseif action=='ClaimQuest' and Profiles.claimQuest and type(a)=='number' then ok,message=Profiles.claimQuest(p,a)
  elseif action=='ClaimStreak' and Profiles.claimStreak and type(a)=='number' then ok,message=Profiles.claimStreak(p,a)
@@ -598,7 +667,7 @@ end
 Players.PlayerAdded:Connect(added)
 for _,p in Players:GetPlayers() do added(p);if p.Character then local h=p.Character:FindFirstChildOfClass('Humanoid');if h then h.Died:Connect(function() onDied(p,p.Character) end) end end end
 Players.PlayerRemoving:Connect(function(p)
- down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil
+ down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil;requestWindow[p]=nil;lastPickSave[p]=nil
  returning[p]=nil;prompting[p]=nil;runInfo[p]=nil;returnTries[p]=nil
  -- The last one standing left: the clock loop pauses the wave again for the downed players' last
  -- stand. A last stand already counting down keeps the wave paused.

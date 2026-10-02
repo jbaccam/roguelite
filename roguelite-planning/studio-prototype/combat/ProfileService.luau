@@ -296,6 +296,8 @@ function P.openChest(player,kind,count)
  local d=P.profiles[player];local chest=Chests.ById[kind]
  if not d or not chest then return false,'Unknown chest' end
  if not Chests.validAmount(count) then return false,'Invalid amount' end
+ -- Opening 10 or 100 at once is the Quick Open pass (VIP includes it); everyone else opens one.
+ if count>1 and not (d.quickOpen or d.vip) then return false,'Get Quick Open to open 10 at once' end
  local n=math.min(count,d.chests[kind] or 0)
  if n<=0 then return false,'No '..chest.name..' to open' end
  d.chests[kind]-=n;if d.chests[kind]<=0 then d.chests[kind]=nil end
@@ -548,12 +550,20 @@ function P.buyDeal(player,index)
  P.publish(player)
  return true,deal.kind=='Emeralds' and ('+'..deal.amount..' emeralds') or ('+'..deal.amount..' '..Weapons.ById[deal.id].name),results
 end
-function P.claimVipChest(player)
+function P.claimVipChest(player,restricted)
  local d=P.profiles[player]
  if not d or not d.vip then return false,'VIP only' end
  if d.vipClaimDay==Money.day() then return false,'Come back tomorrow' end
- d.vipClaimDay=Money.day();P.grant(player,{chests={[Money.VIPDailyChest]=1}})
- return true,'Free '..Chests.ById[Money.VIPDailyChest].name..' added'
+ d.vipClaimDay=Money.day()
+ local chest=Chests.ById[Money.VIPDailyChest]
+ -- VIP is bought with Robux, so its chest is a paid random item: where those are restricted the
+ -- chest's emerald price comes instead, as Robux emeralds (they can't buy chests there either).
+ if restricted then
+  P.grant(player,{emeralds=chest.emeralds,paid=true})
+  return true,chest.emeralds..' VIP emeralds added'
+ end
+ P.grant(player,{chests={[Money.VIPDailyChest]=1}})
+ return true,'Free '..chest.name..' added'
 end
 function P.redeem(player,code)
  local d=P.profiles[player]

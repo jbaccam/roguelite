@@ -147,11 +147,14 @@ function S.open(screen,ctx,focus)
 
  function tabs.Bundles()
   local y=44
+  -- The Starter Pack holds chests (a paid random item): hidden where those are restricted.
   local sp=Money.Products.StarterPack
-  hero('Starter',y,290,'gold','STARTER PACK','One time only · the best deal in the game.',
-   {{'emerald',comma(sp.emeralds),'Emerald'},{Chests.ById.Legendary.icon,'Legendary','Legendary','×'..sp.chests.Legendary},{'quests','Rerolls','Rare','×'..sp.rerolls}},
-   Chests.ById.Legendary.icon,'StarterPack',profile.starter,{tag='ONE TIME OFFER',sash='BEST VALUE',sashColors=RED_SASH,pulse=true,shine=true})
-  y+=290+34
+  if not profile.restricted then
+   hero('Starter',y,290,'gold','STARTER PACK','One time only · the best deal in the game.',
+    {{'emerald',comma(sp.emeralds),'Emerald'},{Chests.ById.Legendary.icon,'Legendary','Legendary','×'..sp.chests.Legendary},{'quests','Rerolls','Rare','×'..sp.rerolls}},
+    Chests.ById.Legendary.icon,'StarterPack',profile.starter,{tag='ONE TIME OFFER',sash='BEST VALUE',sashColors=RED_SASH,pulse=true,shine=true})
+   y+=290+34
+  end
   -- Godly bundles: a Godly weapon + a full armor set + emeralds, one time each. COMING SOON until
   -- the weapon is in WeaponCatalog (the server refuses it too).
   FX.header(list,'GODLY BUNDLES','The strongest weapons in the game, with a full armor set.',y,SW);y+=72+48
