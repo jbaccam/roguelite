@@ -142,6 +142,12 @@
         "SwingVisuals": {
           "$path": "SwingVisuals.luau"
         },
+        "LegendaryVisuals": {
+          "$path": "LegendaryVisuals.luau",
+          "MeshData": {
+            "$path": "LegendaryVisuals/MeshData.luau"
+          }
+        },
         "ProjectileStyleVisuals": {
           "$path": "ProjectileStyleVisuals.luau"
         },
@@ -450,6 +456,9 @@
       },
       "SpecialWeapons": {
         "$path": "SpecialWeapons.luau"
+      },
+      "LegendaryMoves": {
+        "$path": "LegendaryMoves.luau"
       },
       "UtilityWeapons": {
         "$path": "UtilityWeapons.luau"

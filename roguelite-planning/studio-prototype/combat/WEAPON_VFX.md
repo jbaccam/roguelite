@@ -86,3 +86,22 @@ User request: make horizontal strikes on all melee weapons wider for looks, even
 
 Not tested: multiple real clients, other weapons live in Play (covered by the module checks above), mobile.
 
+## Legendary Tier IV moves and the gold aura — October 2, 2026 (plan J item 8, rarity step 3)
+
+User: Legendary extra moves only at Tier IV; "make the vfx sick af and use blender if you need to model anything". Server: `LegendaryMoves` (ServerScriptService, sandboxed) owns every hit; numbers in `WeaponCatalog.Legendary`. Client: `LegendaryVisuals` (RogueliteCombat, sandboxed) draws from the `LegendaryFX` remote; sounds in `audio/RogueliteSounds.client.luau` (the existing kit, pitched). Meshes: `roguelite-planning/blender-legendary-vfx` (SlashCore, SlashGlow, ShockRing) built at runtime with EditableMesh from `LegendaryVisuals/MeshData`; Neon-part fallback if that fails.
+
+| Weapon | Move (server) | What you see |
+|---|---|---|
+| Katana | Every 3rd swing: a flying slash, 30 studs at 78 studs/s, 3.4 wide, hits each enemy it passes once for 75% of a swing | A white-hot crescent with an amber glow and a fainter wake, wind streaks off both tips, star sparks, a thin slice scorched into the ground, a cut flash on every enemy it passes, sparks where it ends |
+| Excalibur | Every swing: a golden beam slash, 22 studs at 56 studs/s, 4.4 wide, 45% | The same crescent in gold, broader, carrying its own gold light and rising holy motes |
+| Rocket Launcher | Every 4th rocket flies ~0.3 s, then splits into 3 homing minis (target first, then the two nearest); each bursts for 45% (rocket falloff, 5.5 radius) | The real rocket model with a gold band, a wobble as it charges, a gold crack of light and puff at the split, three small rockets curving out on smoke trails, each with its own pop, flash, scorch and amber ring |
+| Deck of Cards | Every 5th throw is a Royal Flush: 5 gold cards fanned over 26°, straight lines 1.25x the range, each piercing everything for 50% of the volley | "ROYAL FLUSH!" pops over your head; five gold cards reading 10, J, Q, K, A of spades fan open like a held hand, then spin out on gold trails, glinting past every enemy and bursting into glitter |
+| Bowling Ball | A roll that hits 5+ enemies is a STRIKE!: a pin explosion where the ball stopped, radius 9, 100%, knocks enemies out | "STRIKE!" slams in; ten real bowling pins stand in their triangle for a blink, then blow outward spinning; a dust ring, an amber rim, dust puffs and a camera kick |
+| Wrecking Ball | Each swing that connects sends a ground shockwave from under the first enemy hit: radius 11 over 0.42 s, 40% as it reaches each enemy, knocks them out | A dust shockwave band rolling outward with the amber dashed rim, cracked ground, rock chips, dust puffs as it passes, a small camera kick |
+| Mjolnir | Every 4th throw: a lightning strike where it lands, 0.2 s later, radius 8, 120% | A crackling blue target ring closes in; a forked bolt (with one gold fork) drops from the sky, flickering; a flash, an electric ring, a scorch mark, sparks and small arcs to the enemies caught in it |
+
+**Gold aura:** every Legendary floats with a faint gold glint. At Tier IV the full aura turns on (gold haze from the mesh, star motes, a light). It builds with the slot's `LegendaryCharge` (server-set count toward the move), shimmers faster when the next attack is the move, and flares when it fires.
+
+**Rules kept:** every move hit is a secondary hit (no crits, chains, knockback or other specials), so a move can never start another move. Movers stop at walls. At most 48 slashes/cards in flight and 256 scheduled hits per server; effects are skipped beyond 170 studs from the camera, and the camera kick is only for the player who made the move (off with the Screen shake setting). Effects use existing textures only (Slash, Star, Glow, Lightning, Ring, Scorch, Cracks, Dust).
+
+**Tests:** `LegendaryMovesTests` (pure helpers and the catalog: exactly the 7 Legendaries, moves only at Tier IV, the user's counts) PASS, 99 checks, Edit-mode harness, 2026-10-02. Not run yet: any Studio Play test of the moves or their visuals.

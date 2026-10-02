@@ -18,8 +18,14 @@ function S.new(combat,damage,rayParams)
  local chickens=require(script.Parent.EggChickens).new(combat,damage,ownParams)
  local event=combat:WaitForChild('SpecialFX');local flights={};local zones={};local serial=0
  -- hooks.landed(d,position,struck): a 'wave' throw (the Trident) landed; set by GodlyWeapons.
+ -- hooks.impact(d,position,hit): any throw stopped, once (where it hit, or where it came down),
+ -- with the enemies it hit; set by LegendaryMoves (Mjolnir's lightning, the bowling STRIKE).
  local hooks={}
  local function landed(r,position)
+  if hooks.impact and not r.impacted then
+   r.impacted=true
+   local ok,err=pcall(hooks.impact,r.d,position,r.hit);if not ok then warn('impact hook failed:',err) end
+  end
   if r.landed or not Motion.profiles[r.d.id].wave then return end
   r.landed=true
   if hooks.landed then local ok,err=pcall(hooks.landed,r.d,position,r.hit);if not ok then warn('landed hook failed:',err) end end

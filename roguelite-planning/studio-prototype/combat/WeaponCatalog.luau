@@ -88,6 +88,28 @@ C.Godly={
  ['41']={burstRadius={6,6,6,9},burstFactor={.5,.5,.5,.75}},
 }
 function C.isGodly(id) return C.Godly[id]~=nil end
+-- Legendary extra moves (RARITY_GODLY_ARMOR.md §8; user 2026-10-02: only at Tier IV). Read by
+-- LegendaryMoves (server, owns every hit) and LegendaryVisuals (client). every = the nth attack of
+-- that slot; factor = the move's hit as a share of the weapon's own hit. Every move hit is secondary
+-- (no crits, chains, knockback or other specials) and capped. Radii grow with Area Size.
+--   03 Katana: every 3rd swing throws a flying slash through a line of enemies
+--   11 Rocket Launcher: every 4th rocket splits into 3 homing mini rockets
+--   18 Deck of Cards: every 5th throw is a Royal Flush, 5 gold cards that pierce everything
+--   22 Bowling Ball: a roll that hits 5+ enemies is a STRIKE! with a pin explosion where it stops
+--   25 Wrecking Ball: each swing that connects sends out a ground shockwave ring
+--   32 Excalibur: every swing also shoots a golden beam slash
+--   31 Mjolnir: every 4th throw calls down a lightning strike where it lands
+C.Legendary={
+ ['03']={move='Slash',every=3,factor=.75,range=30,speed=78,width=3.4},
+ ['11']={move='Split',every=4,minis=3,factor=.45,radius=5.5,splitAfter=.28,speed=58,spread=18},
+ ['18']={move='Flush',every=5,cards=5,factor=.5,fan=26,rangeScale=1.25,width=1.5},
+ ['22']={move='Strike',hits=5,factor=1,radius=9,push=34},
+ ['25']={move='Shock',factor=.4,radius=11,time=.42,push=26},
+ ['32']={move='Beam',every=1,factor=.45,range=22,speed=56,width=4.4},
+ ['31']={move='Thunder',every=4,factor=1.2,radius=8,delay=.2},
+}
+-- A weapon's Legendary move is live at Tier IV only.
+function C.legendaryMove(id,tier) return (tonumber(tier) or 1)>=4 and C.Legendary[id] or nil end
 for i,name in names do
  local n=i-1
  local kind=ranged[n] and 'Ranged' or 'Melee'

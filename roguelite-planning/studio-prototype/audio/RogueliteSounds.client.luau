@@ -292,6 +292,34 @@ combat:WaitForChild('GodlyFX').OnClientEvent:Connect(function(kind,...)
  end
 end)
 
+-- Legendary Tier IV moves (LegendaryMoves -> LegendaryFX): the same kit, pitched. Spawned so a
+-- place without LegendaryFX yet never holds up the sounds below.
+task.spawn(function()
+ local fx=combat:WaitForChild('LegendaryFX')
+ local function at(t,fn) task.delay(math.clamp((t or 0)-workspace:GetServerTimeNow(),0,1.5),fn) end
+ fx.OnClientEvent:Connect(function(kind,...)
+  local a={...}
+  if kind=='Slash' then -- Katana: a sharp, airy cut
+   play('swing_blade','impact',.45,.82,a[4],.06);play('zap','impact',.14,1.7,a[4],.08)
+  elseif kind=='Beam' then -- Excalibur: a heavier, ringing sweep
+   play('swing_heavy','impact',.38,1.25,a[4],.05);play('shot_magic_b','impact',.3,.78,a[4],.06)
+  elseif kind=='Flush' then -- the deck fans and five cards whip out
+   play('shot_magic_c','impact',.32,1.3,a[3],.05);play('ui_upgrade','impact',.25,1.15,a[3],.03)
+   for i=1,3 do task.delay(.12+i*.04,function() play('swing_light','impact',.22,1.7,a[3],.1) end) end
+  elseif kind=='Split' then -- the rocket pops apart, then each mini lands
+   at(a[6],function() play('shot_rocket','impact',.32,1.6,a[4],.06) end)
+   for _,m in a[7] or {} do at(m[1],function() play('hit_thud','impact',.32,.75,m[2],.1) end) end
+  elseif kind=='Strike' then -- STRIKE: the crash, then the pins clattering down
+   play('hit_blunt','impact',.5,.8,a[2],.04);play('swing_heaviest','impact',.3,1.4,a[2],.05)
+   for i=1,4 do task.delay(.18+i*.07,function() play('hit_punch','impact',.18,1.5+i*.1,a[2],.1) end) end
+  elseif kind=='Shock' then -- the Wrecking Ball's ground slam
+   play('swing_heaviest','impact',.5,.55,a[2],.05);play('hit_thud','impact',.4,.6,a[2],.05)
+  elseif kind=='Thunder' then -- Mjolnir: the crack lands with the bolt
+   at(a[4],function() play('thunder_crack','impact',.6,1,a[2],.05);play('zap','impact',.25,.7,a[2],.06) end)
+  end
+ end)
+end)
+
 -- Crystal pickups: one plop per crystal as it reaches you, timed to the visible pull (the
 -- server starts it at MagnetStart; it lands ShardMotion.PULL_SECONDS later). The file holds 11
 -- plops sorted low to high (audio/sprites.json): quick pickups climb the ladder, a short pause

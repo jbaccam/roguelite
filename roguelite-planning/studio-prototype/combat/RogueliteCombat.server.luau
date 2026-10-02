@@ -183,8 +183,19 @@ local godly=require(script.Parent:WaitForChild('GodlyWeapons')).new(damage,funct
  local s=states[player];return s~=nil and targetable(npc,s)
 end)
 specials.hooks.landed=function(d,position,struck) godly:landed(d,position,struck) end
+-- Legendary Tier IV moves (WeaponCatalog.Legendary): slashes, the rocket split, the Royal Flush,
+-- STRIKE!, the shockwave and Mjolnir's lightning. A do-nothing stand-in if the module is missing.
+local legendary=(function()
+ local m=script.Parent:FindFirstChild('LegendaryMoves')
+ local ok,api=pcall(function() return require(m).new(damage,function(player,npc) local s=states[player];return s~=nil and targetable(npc,s) end,rayParams) end)
+ if m and ok then return api end
+ if m then warn('LegendaryMoves failed to start:',api) end
+ return {swing=function() end,contact=function() end,shoot=function() return false end,impact=function() end}
+end)()
+specials.hooks.impact=function(d,position,hit) legendary:impact(d,position,hit) end
 local function shoot(d,origin,aim,character)
  if godly:handles(d.id) then godly:launch(d,origin,aim,d.arcTarget);return end
+ if legendary:shoot(d,origin,aim,character) then return end -- the rocket split or the Royal Flush
  if specials:handles(d.id) then specials:launch(d,origin,aim);return end
  d.muzzleShotId=workspace:GetServerTimeNow() -- One visual flash per trigger, not per pellet.
  if d.id=='18' or d.id=='33' then arcs:launch(d,origin,aim);return end
@@ -330,6 +341,7 @@ RunService.Heartbeat:Connect(function(dt)
     slot.folder:SetAttribute('AttackAim',slot.aim);slot.folder:SetAttribute('AttackDirection',slot.direction);slot.folder:SetAttribute('StartTime',now)
     d.practiceTarget=Death.isPractice(target.Parent)
     d.arcTarget=target
+    if d.kind=='Melee' then legendary:swing(d,slot.attackOrigin or origin,target,slot.direction) end
     if d.kind~='Melee' then shoot(d,origin,target.Position,character)
     elseif d.scripted then godly:attack(d,origin,target) end -- the daggers' chain is the hit
    end
@@ -383,7 +395,11 @@ RunService.Heartbeat:Connect(function(dt)
         local health,npcRoot=alive(npc)
         local attackOrigin=slot.attackOrigin or origin
         local point=health and reachPoint(npc,npcRoot,attackOrigin)
-        if health and (point-attackOrigin).Magnitude<=d.range and clear(attackOrigin,point,wallParams) then slot.hit[npc]=true;damage(npc,d.damage,d);slot.folder:SetAttribute('LastContact',now) end
+        if health and (point-attackOrigin).Magnitude<=d.range and clear(attackOrigin,point,wallParams) then
+         local first=next(slot.hit)==nil -- the swing's first contact (the Wrecking Ball's shockwave)
+         slot.hit[npc]=true;damage(npc,d.damage,d);slot.folder:SetAttribute('LastContact',now)
+         if first then legendary:contact(d,npc,point) end
+        end
        end
        end
       end

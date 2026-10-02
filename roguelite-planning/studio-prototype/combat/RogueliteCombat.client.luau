@@ -39,6 +39,14 @@ end)
 local godlyFX=require(combat:WaitForChild('GodlyVisuals')).mount(combat,visuals,function(owner,index)
  local state=states:FindFirstChild(tostring(owner));return state and tracked[state:FindFirstChild('Slot'..tostring(index))]
 end)
+-- Legendary gold aura and Tier IV moves (LegendaryFX). A do-nothing stand-in if the module is missing.
+local legendaryFX=(function()
+ local m=combat:FindFirstChild('LegendaryVisuals')
+ local ok,api=pcall(function() return require(m).mount(combat,visuals) end)
+ if m and ok then return api end
+ if m then warn('LegendaryVisuals failed to start:',api) end
+ return {attach=function() end,step=function() end,hide=function() end}
+end)()
 local floats={}
 RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Value+1,function(dt)
  local now=workspace:GetServerTimeNow()
@@ -79,7 +87,7 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
      table.insert(v.parts,part)
     end end
     -- Cosmetic extras: swing ribbons, Pandora glow and a contact capsule.
-    Swing.attach(v,id,template);godlyFX.attach(v,id,template)
+    Swing.attach(v,id,template);godlyFX.attach(v,id,template);legendaryFX.attach(v,id,template,slot)
     if id=='33' then v.pandora=Pandora.idle(model) end
     local bounds=template:GetAttribute('BoundsSize')
     if typeof(bounds)=='Vector3' then v.capsule=Spacing.capsule(bounds,template:GetAttribute('BoundsCenter')) end
@@ -172,7 +180,7 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
       hand=slot:GetAttribute('AttackHand'),secondAim=slot:GetAttribute('SecondAim')}
      table.insert(frameList,v)
     else
-     v.frame=nil;v.spacing=nil;Swing.hide(v);godlyFX.hide(v)
+     v.frame=nil;v.spacing=nil;Swing.hide(v);godlyFX.hide(v);legendaryFX.hide(v)
      if v.pandora then Pandora.stepIdle(v.pandora,v.model:GetPivot(),false,0) end
      if float then float.slots[slot:GetAttribute('Index')]=nil end
     end
@@ -209,7 +217,7 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
    v.spacing=Spacing.smooth(v.spacing,offsets[i] or Vector3.zero,dt)
    if v.spacing.Magnitude>1e-3 then v.model:PivotTo(v.model:GetPivot()+v.spacing) end
   end
-  for _,v in frameList do local pivot=v.model:GetPivot();Swing.step(v,pivot,v.frame);godlyFX.step(v,pivot,v.frame) end
+  for _,v in frameList do local pivot=v.model:GetPivot();Swing.step(v,pivot,v.frame);godlyFX.step(v,pivot,v.frame);legendaryFX.step(v,pivot,v.frame) end
  end
  for slot,v in tracked do if not seen[slot] then v.model:Destroy();tracked[slot]=nil end end
  for state in floats do if state.Parent~=states then floats[state]=nil end end
