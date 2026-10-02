@@ -8,9 +8,24 @@ M.SwingDuration=.9
 M.VisualSweepHalfAngle=120
 -- Shared by rendered motion and authoritative hit sampling. Unlisted weapons
 -- retain their horizontal cut. Thrust also works with normalized +Y sword tips.
-M.MeleeStyles={['03']='Diagonal',['19']='Thrust',['16']='Slap',['20']='Downward',['26']='Downward'}
+M.MeleeStyles={['03']='Diagonal',['19']='Thrust',['16']='Slap',['20']='Downward',['26']='Downward',['36']='Reap',['37']='Thrust',['39']='Chain'}
 M.DownwardWeapons={['01']=true,['05']=true,['06']=true,['20']=true,['26']=true,['27']=true,['31']=true}
 function M.meleeStyle(id) return M.MeleeStyles[id] or 'Horizontal' end
+-- Reaper's Scythe 'Reap': one full turn around the wielder at full reach. The server hits every
+-- enemy in range as the blade's heading passes it (reapFraction), not by box sampling, so the
+-- whole disc is covered whatever the nearest target's distance.
+function M.reapFraction(age)
+ local t=math.clamp((age-M.SwingHitStart)/(M.SwingHitEnd-M.SwingHitStart),0,1)
+ return t*t*(3-2*t)
+end
+-- Where in the turn (0..1) the heading points at `offset`, for a turn that starts behind the
+-- cut direction and goes round on `side`. Same rotation as the Reap pose (CFrame.Angles about +Y).
+function M.reapFractionOf(direction,offset,side)
+ local d=Vector3.new(direction.X,0,direction.Z);local e=Vector3.new(offset.X,0,offset.Z)
+ if d.Magnitude<.01 or e.Magnitude<.01 then return .5 end
+ local angle=math.atan2(d.Unit:Cross(e.Unit).Y,d.Unit:Dot(e.Unit))
+ return (angle*(side or 1)+math.pi)/(2*math.pi)
+end
 -- Slot spacing is an avatar-scale measurement, never an animated body envelope.
 M.BaseRadius=4.2
 function M.radius(rootSize,equippedCount)
@@ -105,7 +120,8 @@ function M.pose(root,radius,slot,aim,start,now,kind,id,attackDirection,attackRan
   local sweep=t*t*(3-2*t)
   local style=attackStyle or M.meleeStyle(id)
   local wide=visual and style=='Horizontal'
-  local half=wide and M.VisualSweepHalfAngle or 105
+  local reap=style=='Reap'
+  local half=reap and 180 or wide and M.VisualSweepHalfAngle or 105
   local heading=CFrame.lookAt(center,center+cutDirection.Unit)*CFrame.Angles(0,math.rad((-half+2*half*sweep)*side),0)
   local sign=headSign(id)
   local reach=attackRange or (id=='32' and 8.5 or 6)
@@ -115,7 +131,7 @@ function M.pose(root,radius,slot,aim,start,now,kind,id,attackDirection,attackRan
   local peak=math.max(.5,reach-tip-.11)
   -- Long melee weapons must not leave a blind spot beside the player.
   -- Pull the cut inward for close targets; distant targets use the full reach.
-  if aim then
+  if aim and not reap then
    local offset=aim-center
    local distance=Vector3.new(offset.X,0,offset.Z).Magnitude
    -- Rendered: sit farther out, keeping the inner quarter of the blade on the target.
@@ -170,6 +186,7 @@ function M.pose(root,radius,slot,aim,start,now,kind,id,attackDirection,attackRan
    local distance=aim and (Vector3.new(aim.X,center.Y,aim.Z)-center).Magnitude or reach
    cut=targetFrame*CFrame.new((2.5-5.3*sweep)*side,.25,-math.min(reach,distance))*CFrame.Angles(0,math.rad((-25+55*sweep)*side),math.rad(65*side))
   end
+  if style=='Chain' then cut=cf end
   cf=cut:Lerp(cf,M.swingRecovery(age))
   active=age>=select(1,M.attackTiming(id,kind,style)) and age<=M.SwingHitEnd
  elseif kind~='Melee' and age>=0 and age<.16 then
@@ -186,7 +203,11 @@ function M.chooseStyle(id,count,serial,distance,baseRange)
  -- At the outer edge, use the stroke that can actually reach. Keep the
  -- hammer's existing ranged/melee combo decision, since it can throw.
  if id~='31' and M.DownwardWeapons[id] and distance and baseRange and distance>baseRange then return 'Downward' end
- if id=='32' then return 'Horizontal' end
+ if id=='32' or id=='36' or id=='39' then return M.meleeStyle(id) end
+ -- Trident: a stab at one enemy, a sweep through a crowd (it throws beyond reach).
+ if id=='37' then return count>1 and 'Horizontal' or 'Thrust' end
+ -- Vampire Blade: alternating wide sweeps.
+ if id=='40' then return serial%2==0 and 'Diagonal' or 'Horizontal' end
  if id=='02' then return serial%3==0 and 'Spin' or 'FigureEight' end
  if id=='03' then
   if count>1 then return serial%2==0 and 'Horizontal' or 'Diagonal' end

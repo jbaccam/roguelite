@@ -17,6 +17,13 @@ function S.new(combat,damage,rayParams)
  end
  local chickens=require(script.Parent.EggChickens).new(combat,damage,ownParams)
  local event=combat:WaitForChild('SpecialFX');local flights={};local zones={};local serial=0
+ -- hooks.landed(d,position,struck): a 'wave' throw (the Trident) landed; set by GodlyWeapons.
+ local hooks={}
+ local function landed(r,position)
+  if r.landed or not Motion.profiles[r.d.id].wave then return end
+  r.landed=true
+  if hooks.landed then local ok,err=pcall(hooks.landed,r.d,position,r.hit);if not ok then warn('landed hook failed:',err) end end
+ end
  local function nextId() serial+=1;return serial end
  local function valid(d)
   local h=d.character and d.character:FindFirstChildOfClass('Humanoid')
@@ -77,6 +84,7 @@ function S.new(combat,damage,rayParams)
    if not profile.zone and r.pierces>0 then r.pierces-=1;r.factor*=.7;return end
   end
   if profile.zone then zone(d,result and result.Position or r.position,profile.zone) end
+  landed(r,result and result.Position or r.position)
   returnOrEnd(r)
  end
  RunService.Heartbeat:Connect(function()
@@ -106,6 +114,7 @@ function S.new(combat,damage,rayParams)
    end
    if flights[r.key] and r.started==oldStart and r.t>=1 then
     if not r.returning and Motion.profiles[r.d.id].zone then zone(r.d,r.position,Motion.profiles[r.d.id].zone) end
+    if not r.returning then landed(r,r.position) end
     returnOrEnd(r)
    end
   end
@@ -124,7 +133,7 @@ function S.new(combat,damage,rayParams)
    end
   end
  end)
- local self={}
+ local self={hooks=hooks}
  function self:handles(id) return Motion.profiles[id]~=nil or id=='17' or id=='28' or id=='29' end
  function self:busy(player,index)
   for _,r in flights do if r.d.owner==player and r.d.slotIndex==index and Motion.profiles[r.d.id].returns then return true end end

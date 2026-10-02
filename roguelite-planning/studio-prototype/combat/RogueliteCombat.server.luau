@@ -178,7 +178,13 @@ local rockets=require(combat:WaitForChild('RocketProjectile')).new(combat,damage
 local projectiles=require(script.Parent:WaitForChild('StatProjectiles')).new(combat,damage,rayParams)
 local arcs=require(script.Parent:WaitForChild('ArcProjectiles')).new(combat,damage,rayParams)
 local specials=require(script.Parent:WaitForChild('SpecialWeapons')).new(combat,damage,rayParams)
+-- Godly specials (plans/2026-10-01-G): wraiths, tidal wave, storm arrows, dagger chain, healing, bursts.
+local godly=require(script.Parent:WaitForChild('GodlyWeapons')).new(damage,function(player,npc)
+ local s=states[player];return s~=nil and targetable(npc,s)
+end)
+specials.hooks.landed=function(d,position,struck) godly:landed(d,position,struck) end
 local function shoot(d,origin,aim,character)
+ if godly:handles(d.id) then godly:launch(d,origin,aim,d.arcTarget);return end
  if specials:handles(d.id) then specials:launch(d,origin,aim);return end
  d.muzzleShotId=workspace:GetServerTimeNow() -- One visual flash per trigger, not per pellet.
  if d.id=='18' or d.id=='33' then arcs:launch(d,origin,aim);return end
@@ -301,7 +307,7 @@ RunService.Heartbeat:Connect(function(dt)
     d.range=Motion.attackReach(id,slot.style,d.range)
     -- Resolve the hammer's melee/throw choice after selecting its stroke:
     -- overheads can advance farther, while other cuts retain normal reach.
-    if id=='31' and (reach-origin).Magnitude>d.range then
+    if (id=='31' or d.throwable) and (reach-origin).Magnitude>d.range then
      d.kind='Ranged';d.damage=d.damage/Stats.mult(d.stats.MeleeDamage)*Stats.mult(d.stats.RangedDamage)
      d.range=d.targetRange
     end
@@ -324,12 +330,30 @@ RunService.Heartbeat:Connect(function(dt)
     slot.folder:SetAttribute('AttackAim',slot.aim);slot.folder:SetAttribute('AttackDirection',slot.direction);slot.folder:SetAttribute('StartTime',now)
     d.practiceTarget=Death.isPractice(target.Parent)
     d.arcTarget=target
-    if d.kind~='Melee' then shoot(d,origin,target.Position,character) end
+    if d.kind~='Melee' then shoot(d,origin,target.Position,character)
+    elseif d.scripted then godly:attack(d,origin,target) end -- the daggers' chain is the hit
    end
    d=slot.definition or d
    local age=(now-slot.start)*d.motionRate
    local activeFrom,activeTo=Motion.attackTiming(id,d.kind,slot.style)
-   if d.kind=='Melee' and slot.previous<=activeTo and age>=activeFrom then
+   if d.kind=='Melee' and not d.scripted and slot.previous<=activeTo and age>=activeFrom and slot.style=='Reap' then
+    -- The Reap's blade turns a full circle: hit each enemy in reach as its heading passes it.
+    local from=slot.previous<activeFrom and -1 or Motion.reapFraction(slot.previous)
+    local to=Motion.reapFraction(math.min(age,activeTo))
+    local attackOrigin=slot.attackOrigin or origin
+    for _,npc in living or {} do
+     if not slot.hit[npc] and Tags:HasTag(npc,'RogueliteZombie') and (not npc:GetAttribute('LobbyDummy') or targetable(npc,s)) then
+      local health,npcRoot=alive(npc)
+      if health then
+       local point=reachPoint(npc,npcRoot,attackOrigin);local offset=point-attackOrigin
+       local fraction=Motion.reapFractionOf(slot.direction,offset,slot.side)
+       if fraction>from and fraction<=to and offset.Magnitude<=d.range and clear(attackOrigin,point,wallParams) then
+        slot.hit[npc]=true;damage(npc,d.damage,d);slot.folder:SetAttribute('LastContact',now)
+       end
+      end
+     end
+    end
+   elseif d.kind=='Melee' and not d.scripted and slot.previous<=activeTo and age>=activeFrom then
     local first,last=math.max(slot.previous,activeFrom),math.min(age,activeTo)
     if first<=last then
      local template=templates[id];local size=template:GetAttribute('BoundsSize');local center=template:GetAttribute('BoundsCenter')

@@ -171,6 +171,15 @@ function Service.leech(player,damage)
  local heal=math.min(damage*s.stats.LifeSteal/100*Stats.mult(s.stats.Recovery),math.max(0,s.stats.LifeStealCap-s.leech))
  s.leech+=heal;h.Health=math.min(h.MaxHealth,h.Health+heal)
 end
+-- Flat healing that shares the life-steal cap (Vampire Blade hits and wisps, GodlyWeapons).
+-- capBonus raises the cap for this heal only (the blade's Tier IV). Returns the HP healed.
+function Service.leechFlat(player,amount,capBonus)
+ local s=Service.states[player];if not s then return 0 end
+ local h=humanoid(player);if not h or h.Health<=0 then return 0 end
+ local heal=math.min(math.max(0,amount)*Stats.mult(s.stats.Recovery),math.max(0,s.stats.LifeStealCap+(capBonus or 0)-s.leech))
+ s.leech+=heal;h.Health=math.min(h.MaxHealth,h.Health+heal)
+ return heal
+end
 -- attacker: the zombie whose melee hit this is (body contact, swing, slam); nil for projectiles
 -- and other sources. It is only used for the Dragon Scale fire thorns.
 function Service.contact(player,amount,roll,attacker)

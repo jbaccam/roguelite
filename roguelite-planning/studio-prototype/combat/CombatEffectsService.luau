@@ -7,6 +7,8 @@ local Death=require(combat.ZombieDeath)
 -- Hits and chain/armor shots go to players near them plus the attacker (ShotBatch.fire), not the lobby.
 local Batch=require(combat.ShotBatch)
 local E={statuses={}}
+-- E.onHit(npc,d,actual,secondary) and E.onKill(npc,d,position,secondary): set by GodlyWeapons (the
+-- Vampire Blade's healing, the Scythe's wraiths, the Ray Gun's burst). Never on practice targets.
 local function alive(npc)
  local h=npc and npc:FindFirstChildOfClass('Humanoid');local r=npc and npc:FindFirstChild('HumanoidRootPart')
  if npc and npc:IsDescendantOf(workspace) and h and r and h.Health>0 then return h,r end
@@ -63,6 +65,7 @@ function E.hit(npc,amount,d,secondary)
  local before=h.Health;h:TakeDamage(math.max(0,amount));local actual=before-math.max(0,h.Health)
  if actual<=0 then return 0 end
  Characters.leech(d.owner,actual)
+ if E.onHit then local ok,err=pcall(E.onHit,npc,d,actual,secondary==true);if not ok then warn('onHit failed:',err) end end
  combat:SetAttribute('ConfirmedHits',(combat:GetAttribute('ConfirmedHits') or 0)+1)
  -- A lethal hit is represented by the death burst, not a second hit burst.
  -- The weapon id lets clients add that weapon's impact sound (RogueliteSounds).
@@ -77,7 +80,9 @@ function E.hit(npc,amount,d,secondary)
     end
    end end
   end
-  E.statuses[npc]=nil;Death.finish(npc);return actual
+  E.statuses[npc]=nil
+  if E.onKill then local ok,err=pcall(E.onKill,npc,d,position,secondary==true);if not ok then warn('onKill failed:',err) end end
+  Death.finish(npc);return actual
  end
  if secondary then return actual end
  local knockback=math.min(40,s.Knockback+(d.nativeKnockback or 0))

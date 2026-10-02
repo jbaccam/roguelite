@@ -8,6 +8,8 @@ M.profiles={
  ['23']={height=5,spin='tumble',reserve=true},
  ['31']={height=0,spin='rock',returns=true},
  ['08']={height=.4,spin='cloud',zone='Poison'},
+ -- Poseidon's Trident: thrown point-first and spinning, flies back; its landing raises the tidal wave.
+ ['37']={height=.6,spin='spear',returns=true,wave=true},
 }
 function M.position(origin,finish,t,height)
  return origin:Lerp(finish,t)+Vector3.yAxis*(4*height*t*(1-t))
@@ -26,6 +28,7 @@ function M.rotation(id,age,direction)
   return cf*CFrame.Angles(math.rad(9)*math.sin(age*9)*blend,math.rad(5)*math.sin(age*6)*blend,math.rad(7)*math.sin(age*11)*blend)*CFrame.Angles(-math.pi/2,0,0)
  end
  if p.spin=='point' then return cf*CFrame.Angles(-math.pi/2,0,0) end
+ if p.spin=='spear' then return cf*CFrame.Angles(-math.pi/2,0,0)*CFrame.Angles(0,age*14,0) end
  if p.spin=='flat' then return cf*CFrame.Angles(math.pi/2,0,age*18) end
  return cf*CFrame.Angles(age*(id=='23' and 9 or 13),0,0)
 end
