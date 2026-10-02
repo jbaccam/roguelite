@@ -15,6 +15,9 @@
 --     fields: shop or level-up, how it was paid, wave band), LevelPick (fields: stat, class, wave
 --     band), FrameRate (value: a player's average FPS over one wave; fields: device, most enemies
 --     alive in that wave, map) and FrameDips (value: seconds under 30 FPS in that wave).
+--   TeammateRevive (value: the revived player's teammate revives this run, 1, 2, ...; fields: map,
+--     wave band, party size): a teammate held their spot for 5 s (TeammateRevive; free, so it isn't
+--     a Revived and never moves the Robux price ladder).
 -- Unsandboxed (AnalyticsService), required by RogueliteMeta.
 -- Events are queued and sent from this module's own thread. Hooks such as ShopService's and
 -- CombatEffectsService's run inside sandboxed scripts, and a function called from there runs with
@@ -144,6 +147,13 @@ end
 -- value: which revive of the run (1 = 65 R$, 2 = 130 R$, ... the price doubles).
 function A.revivePrompt(p,n) log('LogCustomEvent',p,'RevivePrompt',n or 1) end
 function A.revived(p,count) log('LogCustomEvent',p,'Revived',count or 1) end
+-- A free teammate revive (RogueliteMeta's TeammateRevive onRevive), logged for the revived player.
+-- Counted per run: Ana's second teammate revive this run logs 2. wave: the wave they fell on.
+function A.teammateRevived(p,wave)
+ local a=active[p];local n=1
+ if a then a.teammateRevives=(a.teammateRevives or 0)+1;n=a.teammateRevives end
+ log('LogCustomEvent',p,'TeammateRevive',n,fields('Map - '..(a and a.path or '?'),waveBand(wave or Shop.wave),'Party - '..Shop.memberCount()..'p'))
+end
 -- Emeralds a run paid now (ProfileService.settleRun's return), as an economy source.
 function A.earned(p,amount)
  if type(amount)~='number' or amount<=0 then return end

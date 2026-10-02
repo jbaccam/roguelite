@@ -223,8 +223,25 @@ local function livingInRun()
  for p in Shop.members do local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid');if h and h.Health>0 and not down[p] then n+=1 end end
  return n
 end
+-- Teammate revive (TeammateRevive.luau): a living teammate holding a downed member's spot for 5 s
+-- revives them there for free, any number of times. It never touches revivesUsed, so the Robux
+-- price ladder only counts paid revives. Example: Ben holds Ana's spot for 5 s; Ana stands up there
+-- with 50% health and a 3 s shield, and her next REVIVE still costs 65 R$. Made before clearDown,
+-- which clears the spot; the service checks holds on its own 10 Hz clock.
+local TeammateRevive=require(SSS:WaitForChild('TeammateRevive')) -- unsandboxed, like this script
+local teammateRevive=TeammateRevive.new({
+ canHelp=function(q) local h=q.Character and q.Character:FindFirstChildOfClass('Humanoid');return q.Parent==Players and Shop.members[q]~=nil and not down[q] and h~=nil and h.Health>0 end,
+ isDown=function(q) return down[q]~=nil end,
+ frozen=function() return combat:GetAttribute('RunPaused')==true end, -- plan L: no reviving while frozen
+ onRevive=function(q)
+  local d=down[q];if not d then return end
+  if Analytics.teammateRevived then Analytics.teammateRevived(q,d.wave) end -- absent in an older RunAnalytics
+  rise(q,d.position,Config.ReviveHealth) -- like a paid revive: half health, the shield, the push
+ end,
+})
 local function clearDown(p)
  down[p]=nil;p:SetAttribute('RunDown',nil);p:SetAttribute('DeathInfo',nil)
+ teammateRevive.clear(p) -- their revive spot goes too
 end
 -- Everyone in the run is down (LOBBY_AND_MATCH_SERVERS.md §4): the wave stays paused and there are
 -- LAST_STAND seconds to revive before the run ends as a Defeat. Solo players reach it on death. An
@@ -271,6 +288,7 @@ local function onDied(p,character)
  p:SetAttribute('DeathInfo',Http:JSONEncode({wave=Shop.wave,level=s.level,emeralds=Admin.isTestRun() and 0 or owedFor(p,m.stint),map=RunSetupRules.Maps[RunSetupRules.MapIndex[runMap()]].name,
   revive=n,revivePrice=Config.Products[Config.reviveKey(n)].robux,nextRevivePrice=Config.Products[Config.reviveKey(n+1)].robux}))
  p:SetAttribute('RunDown',true)
+ teammateRevive.spot(p,down[p].position) -- teammates can hold it for a free revive
  Analytics.died(p,Shop.wave)
  if livingInRun()==0 then Shop.pause();if not lastStandEnds and Shop.phase=='Combat' then setLastStand(workspace:GetServerTimeNow()+LAST_STAND) end end
 end
@@ -898,6 +916,7 @@ for _,p in Players:GetPlayers() do added(p);if p.Character then local h=p.Charac
 Players.PlayerRemoving:Connect(function(p)
  if (revivesUsed[p] or 0)>0 or phoenixUsed[p] then reviveCarry[p.UserId]={run=Shop.runId,revives=revivesUsed[p] or 0,phoenix=phoenixUsed[p]} end
  down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil;requestWindow[p]=nil;lastPickSave[p]=nil
+ teammateRevive.clear(p) -- their spot, and their holds on others' spots
  returning[p]=nil;prompting[p]=nil;runInfo[p]=nil;returnTries[p]=nil;again[p]=nil;lastRunAction[p]=nil
  RunPause.forget(pause,p);pausedWeapons[p]=nil;lastPauseAction[p]=nil;runKills[p]=nil;runDamage[p]=nil;statStint[p]=nil -- plan L
  wentDown[p]=nil;soloBroken[p]=nil -- plan M

@@ -496,6 +496,9 @@
       "Contribution": {
         "$path": "Contribution.luau"
       },
+      "TeammateRevive": {
+        "$path": "TeammateRevive.luau"
+      },
       "MovementCheck": {
         "$path": "MovementCheck.luau"
       },
@@ -541,6 +544,9 @@
         },
         "EnemyVisuals": {
           "$path": "EnemyVisuals.client.luau"
+        },
+        "TeammateReviveVisuals": {
+          "$path": "TeammateReviveVisuals.client.luau"
         },
         "RogueliteChickens": {
           "$path": "RogueliteChickens.client.luau"

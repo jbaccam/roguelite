@@ -1,12 +1,15 @@
 -- "YOU DIED" splash, then one of two views while the server sets RunDown:
 -- * Teammates still fighting: SPECTATE. The camera follows one of them (‹ › on screen, Q/E,
---   LB/RB), with REVIVE and LEAVE RUN; downed players respawn when the wave ends.
+--   LB/RB), with REVIVE and LEAVE RUN; downed players respawn when the wave ends. A teammate can
+--   also revive them for free by holding their spot for 5 s (TeammateRevive): "BEN IS REVIVING YOU"
+--   then shows at the top with the hold's progress, and the screen closes when they stand up.
 -- * Nobody left standing (or solo): the run summary (stats, weapons, items, progress) under
 --   "REVIVE OR THE RUN ENDS · n", the server's last-stand clock (RogueliteRunState.LastStandEndsAt).
 --   The same clock shows under the YOU DIED splash, so it is on screen from the first moment.
 -- REVIVE is Robux, server-validated, and its price doubles with each revive in a run (DeathInfo);
 -- LEAVE RUN ends this player's run (results screen).
 local TweenService=game:GetService('TweenService')
+local RunService=game:GetService('RunService')
 local Http=game:GetService('HttpService')
 local UserInputService=game:GetService('UserInputService')
 local GuiService=game:GetService('GuiService')
@@ -42,6 +45,29 @@ function M.mount(player)
  T.make('UIStroke',clock,{Color=Color3.fromRGB(20,4,6),Thickness=4,ApplyStrokeMode=Enum.ApplyStrokeMode.Contextual})
  local clockScale=T.make('UIScale',clock,{Scale=1})
  local clockShown -- the number on the clock, to pop it only when it changes
+ -- A teammate holding this player's revive spot (TeammateRevive): "BEN IS REVIVING YOU" and the hold,
+ -- read from the spot's HoldStartedAt (server time), so it fills in step with the ring they see.
+ -- Near the top, clear of the splash and the spectate bar; phones draw it smaller (.56 at 390 tall).
+ local reviving=T.panel(root,'Reviving',0,0,560,96,'panel');reviving.AnchorPoint=Vector2.new(.5,0);reviving.Position=UDim2.new(.5,0,0,60);reviving.Visible=false
+ local revivingScale=T.make('UIScale',reviving,{Scale=1})
+ local revivingText=T.label(reviving,'Text','',20,8,520,40,30,C.lime)
+ local revivingFill=T.bar(reviving,'Progress',40,58,480,18,C.lime)
+ local spots -- Workspace.RogueliteReviveSpots, once it exists
+ local function revivingTick()
+  local spot
+  if screen.Enabled then
+   spots=spots or workspace:FindFirstChild('RogueliteReviveSpots')
+   for _,s in spots and spots:GetChildren() or {} do if s:GetAttribute('DownUserId')==player.UserId then spot=s;break end end
+  end
+  local began=spot and spot:GetAttribute('HoldStartedAt')
+  if type(began)~='number' then reviving.Visible=false;return end
+  local v=root.AbsoluteSize
+  revivingScale.Scale=math.clamp(math.min((v.X-24)/560,v.Y/700),.4,1)
+  revivingText.Text=string.upper(spot:GetAttribute('ReviverName') or 'A teammate')..' IS REVIVING YOU'
+  T.setBar(revivingFill,(workspace:GetServerTimeNow()-began)/(spot:GetAttribute('HoldSeconds') or 5))
+  reviving.Visible=true
+ end
+ RunService.RenderStepped:Connect(revivingTick)
  local summary -- built per death
  local info={};local tab='Primary';local token=0
  local uiScale=1 -- the summary's scale, set by build()
@@ -139,7 +165,7 @@ function M.mount(player)
    T.button(bar,'Next','›',W-20-aw,16,aw,64,function() cycle(1) end,true).Caption.TextSize=44
    local name=watching and (watching.DisplayName or watching.Name) or ''
    T.label(bar,'Watching','SPECTATING  '..string.upper(name),40+aw,18,W-80-2*aw,40,32)
-   readable(T.text(bar,'Hint','You respawn when the wave ends  ·  Q / E to switch',40+aw,58,W-80-2*aw,22,17,C.muted)).TextXAlignment=Enum.TextXAlignment.Center
+   readable(T.text(bar,'Hint','A teammate can revive you  ·  respawn at wave end  ·  Q / E to switch',40+aw,58,W-80-2*aw,22,17,C.muted)).TextXAlignment=Enum.TextXAlignment.Center
    local bw=320;local by=96
    local revive=T.button(bar,'Revive','REVIVE  ·  R$ '..revivePrice(),W/2-bw-16,by,bw,bh,function() combat.PurchaseRequest:FireServer('Revive') end)
    revive.Caption.TextSize=26
