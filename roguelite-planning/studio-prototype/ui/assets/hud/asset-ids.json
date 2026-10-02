@@ -77,6 +77,10 @@
     "power-bolt": {
       "source": "user-generated icons 2026-10-02 (plan K), trimmed to alpha bounds, 4% pad, 256x256",
       "asset": "rbxassetid://84260394570128"
+    },
+    "power-bicep": {
+      "source": "user-generated icon 2026-10-02 (plan K, Gear Power), trimmed to alpha bounds, 4% pad, 256x256",
+      "asset": "rbxassetid://138972895415138"
     }
   }
 }

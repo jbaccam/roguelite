@@ -8,8 +8,8 @@ local C=T.Color
 local M={}
 M.WIDTH,M.HEIGHT=680,70
 M.CARD_W,M.CARD_H=520,340
--- Power's icon: the user's flexed bicep once it arrives; '' shows the plate with text only.
-M.PowerIcon=''
+-- Power's icon: the user's flexed bicep (ui/assets/hud/power-bicep.png).
+M.PowerIcon='rbxassetid://138972895415138'
 local ARMOR_ICON='rbxassetid://80556274645944' -- Armor upgrade (shield)
 local PET_ICON='rbxassetid://117887028525234' -- pet egg
 local function left(l) l.TextXAlignment=Enum.TextXAlignment.Left;return l end
