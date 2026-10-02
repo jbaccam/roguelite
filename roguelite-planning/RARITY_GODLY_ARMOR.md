@@ -543,7 +543,7 @@ look before step 2. Results in Studio:
 - Update `WEAPON_BALANCE.md`.
 
 ### Step 3: Legendary extra moves (section 8)
-**Built 2026-10-02 (plan J item 8): all seven, Tier IV only (user), with the gold aura.** `combat/LegendaryMoves.luau` (server hits), `combat/LegendaryVisuals.luau` (client), numbers in `WeaponCatalog.Legendary`, meshes from `blender-legendary-vfx`. What each looks like: `studio-prototype/combat/WEAPON_VFX.md` "Legendary Tier IV moves". Not play-tested yet.
+**Built 2026-10-02 (plan J item 8): all seven, Tier IV only (user), with the gold aura.** `combat/LegendaryMoves.luau` (server hits), `combat/LegendaryVisuals.luau` (client), numbers in `WeaponCatalog.Legendary`, drawn in the game's flat effect style (no 3D effect meshes, user). What each looks like: `studio-prototype/combat/WEAPON_VFX.md` "Legendary Tier IV moves". Not play-tested yet.
 
 - One at a time, each with a gold aura. Reuse the existing VFX modules (`SwingVisuals`,
   `ArcVisuals`, `SpecialWeaponVisuals`, `CombatEffectsService`) and document in `WEAPON_VFX.md`.

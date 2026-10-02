@@ -10,14 +10,15 @@
 --   Strike Bowling Ball: "STRIKE!", ten pins burst out of a dust ring
 --   Shock  Wrecking Ball: a dust shockwave with an amber dashed rim rolls over cracked ground
 --   Thunder Mjolnir: a target ring charges, then a forked lightning bolt drops on it
--- Meshes (SlashCore, SlashGlow, ShockRing) are authored in roguelite-planning/blender-legendary-vfx
--- and arrive as MeshData; they are built with EditableMesh, and if that isn't possible every
--- effect still draws with Neon parts. Effects far from the camera are skipped.
+-- Drawn in the game's own flat effect language (user, 2026-10-02: no "3d and model heavy" effects):
+-- crescents are flat Neon segments with the white/amber dashed rim (VfxKit.ring, like every swing),
+-- rings are the painted ShockwaveRing texture on the ground, dust is VfxKit.cloud and the painted
+-- flipbooks, sparks and cuts are the painted Star/Slash textures. Real objects an effect throws
+-- (cards, the rocket, bowling pins) are props. Effects far from the camera are skipped.
 -- Sandboxed like the combat client that requires it: no sounds here (RogueliteSounds plays them).
 local RunService=game:GetService('RunService')
 local Players=game:GetService('Players')
 local TweenService=game:GetService('TweenService')
-local Assets=game:GetService('AssetService')
 local Catalog=require(script.Parent:WaitForChild('WeaponCatalog'))
 local K=require(script.Parent:WaitForChild('VfxKit'))
 local V={}
@@ -126,51 +127,6 @@ local function kick(ownerId,strength,seconds)
  shake.start,shake.untilT,shake.strength=now,now+seconds,strength
 end
 
--- Meshes from MeshData (blender-legendary-vfx), built once on first need -------------------------
-local templates,meshState={},nil
-local keepAlive={}
-local function linearToColor(v)
- local function s(x) return x<=.0031308 and x*12.92 or 1.055*x^(1/2.4)-.055 end
- return Color3.new(s(v[1]),s(v[2]),s(v[3]))
-end
-local function buildMeshes()
- if meshState then return end
- meshState='building'
- task.spawn(function()
-  local ok,err=pcall(function()
-   local data=require(script:WaitForChild('MeshData'))
-   for name,r in data do
-    local mesh=assert(Assets:CreateEditableMesh(),'no EditableMesh')
-    local ids={}
-    for i,v in r.v do ids[i]=mesh:AddVertex(Vector3.new(v[1],v[2],v[3])) end
-    for i,f in r.f do
-     local face=mesh:AddTriangle(ids[f[1]],ids[f[2]],ids[f[3]])
-     local color=linearToColor(r.c[i])
-     local a1,a2,a3=r.a[f[1]],r.a[f[2]],r.a[f[3]]
-     local c1=mesh:AddColor(color,a1)
-     local c2=a2==a1 and c1 or mesh:AddColor(color,a2)
-     local c3=a3==a1 and c1 or a3==a2 and c2 or mesh:AddColor(color,a3)
-     mesh:SetFaceColors(face,{c1,c2,c3})
-    end
-    local fixed=assert(Assets:CreateEditableMeshAsync(Content.fromObject(mesh),{FixedSize=true}),'no fixed mesh')
-    mesh:Destroy();table.insert(keepAlive,fixed)
-    local part=Assets:CreateMeshPartAsync(Content.fromObject(fixed))
-    part.Name=name;part.Anchored=true;part.CanCollide=false;part.CanTouch=false;part.CanQuery=false;part.CastShadow=false
-    part.DoubleSided=true;part.Material=r.glow and Enum.Material.Neon or Enum.Material.SmoothPlastic;part.Color=Color3.new(1,1,1)
-    templates[name]={part=part,size=Vector3.new(r.size[1],r.size[2],r.size[3])}
-    task.wait()
-   end
-  end)
-  meshState=ok and 'ready' or 'failed'
-  if not ok then warn('Legendary meshes: drawing with parts instead ('..tostring(err)..')') end
- end)
-end
--- A clone of a built mesh, or nil while building or after a failure (callers fall back to parts).
-local function mesh(folder,name)
- local t=templates[name];if not t then return nil end
- local p=t.part:Clone();p.Parent=folder;return p,t.size
-end
-
 function V.mount(combat,folder,lookup)
  local api={}
  -- The gold aura -------------------------------------------------------------------------------
@@ -190,7 +146,6 @@ function V.mount(combat,folder,lookup)
   end
   g.parts=#parts
   v.legendary=g
-  buildMeshes()
  end
  function api.hide(v)
   local g=v.legendary;if not g then return end
@@ -255,99 +210,129 @@ function V.mount(combat,folder,lookup)
   end
  end
 
- -- Slash (Katana) and Beam (Excalibur) ------------------------------------------------------------
- local function crescentParts(color,width)
-  -- Fallback crescent: Neon segments in the shape of the mesh (thin edge, wide middle).
-  local list={}
-  for i=1,11 do
-   local th=math.rad(-76+152*(i-1)/10)
-   local w=math.cos(th/math.rad(78)*math.pi/2)^1.2
-   local p=K.part(folder,'SlashSeg',Vector3.new(.3,.06,.1),color,1,Enum.Material.Neon)
-   list[i]={part=p,th=th,w=w}
-  end
-  return {parts=list,width=width}
+ -- A ground shockwave in the Trident's language (GodlyVisuals.shockwave): the painted ShockwaveRing
+ -- texture on a flat disc, growing fast and fading.
+ local function groundRing(position,color,radius0,radius1,duration,alpha,texture)
+  local p=K.part(folder,'LegendaryRing',Vector3.new(.06,1,1),color,1,Enum.Material.SmoothPlastic,Enum.PartType.Cylinder)
+  p.CFrame=CFrame.new(position)*CFrame.Angles(0,0,math.pi/2)
+  local d=Instance.new('Decal');d.Texture=texture or TEX.Ring;d.Color3=color;d.Transparency=alpha or 0;d.Face=Enum.NormalId.Right;d.Parent=p
+  K.animate(duration,function(t)
+   local e=1-(1-t)^3;local r=radius0+(radius1-radius0)*e
+   p.Size=Vector3.new(.06,r*2,r*2);d.Transparency=(alpha or 0)+(1-(alpha or 0))*smooth((t-.35)/.65)
+  end,function() p:Destroy() end,'legendRing',16)
  end
- local function placeCrescent(c,cf,radius,alpha)
-  for _,s in c.parts do
-   local d=Vector3.new(math.sin(s.th),0,-math.cos(s.th))
-   s.part.Size=Vector3.new(radius*.3,.06,math.max(.05,radius*.28*s.w))
-   s.part.CFrame=cf*CFrame.lookAt(d*radius*(1-.14*s.w)+Vector3.new(0,0,.6*radius),d*radius*2+Vector3.new(0,0,.6*radius))
-   s.part.Transparency=alpha
+ -- Painted dust kicked up off the ground (BossVfxAssets DustPuff flipbook).
+ local function dust(position,size,count)
+  burst(folder,position,{texture=TEX.Dust,flipbook=true,color=DUST,color2=rgb(236,228,214),size=seq(0,size*.6,1,size*1.4),alpha=seq(0,.15,.6,.45,1,1),
+   life=.55,life1=.8,speed=2,speed1=5,spread=70,accel=Vector3.yAxis*1.5,light=0,influence=.8},count or 3)
+ end
+
+ -- Slash (Katana) and Beam (Excalibur) ------------------------------------------------------------
+ -- A flying crescent built exactly like every swing's crescent (VfxKit.ring): flat Neon segments,
+ -- thick in the middle and pointed at the tips, a white/amber dashed rim on the leading edge, plus a
+ -- soft wider glow under it. It flies just off the ground, flat, like the swing it came from.
+ local SEGMENTS,HALF=12,math.rad(74)
+ local function newCrescent(bodyColor,rimColor,glowColor)
+  local list={}
+  for i=1,SEGMENTS do
+   list[i]={
+    glow=K.part(folder,'CrescentGlow',Vector3.new(.1,.04,.1),glowColor,1,Enum.Material.Neon),
+    body=K.part(folder,'CrescentBody',Vector3.new(.1,.05,.1),bodyColor,1,Enum.Material.Neon),
+    rim=K.part(folder,'CrescentRim',Vector3.new(.1,.06,.1),(i%2==0) and K.White or rimColor,1,Enum.Material.Neon),
+   }
+  end
+  return list
+ end
+ -- frame: the centre of the crescent's circle, facing the way it flies. fade 0..1.
+ local function placeCrescent(list,frame,radius,thickness,fade)
+  local span=2*HALF/SEGMENTS
+  local chord=2*radius*math.sin(span/2)*1.08
+  for i,s in list do
+   local angle=-HALF+span*(i-.5)
+   local w=math.cos(angle/HALF*math.pi/2)^1.15 -- pointed tips
+   local thick=math.max(.06,thickness*w)
+   -- The yaw convention matches VfxKit.ring: lookVector=(-sin,0,-cos).
+   local direction=Vector3.new(-math.sin(angle),0,-math.cos(angle))
+   local mid=math.max(.05,radius-thick*.5)
+   s.body.Size=Vector3.new(chord,.05,thick)
+   s.body.CFrame=frame*CFrame.lookAt(direction*mid,direction*mid*2)
+   s.body.Transparency=.42+.58*fade
+   local glowAt=math.max(.05,radius-thick*1.05)
+   s.glow.Size=Vector3.new(chord*1.04,.04,thick*2.3)
+   s.glow.CFrame=frame*CFrame.lookAt(direction*glowAt,direction*glowAt*2)+Vector3.new(0,-.03,0)
+   s.glow.Transparency=.74+.26*fade
+   s.rim.Size=Vector3.new(chord,.07,math.max(.12,thick*.3))
+   s.rim.CFrame=frame*CFrame.lookAt(direction*(radius+.02),direction*(radius+.02)*2)
+   s.rim.Transparency=.06+.94*fade
   end
  end
  local function slash(kind,ownerId,start,direction,reach,speed,width,t0)
   if not K.near(start,170) then return end
-  buildMeshes()
   local beam=kind=='Beam'
-  local coreColor,glowColor=beam and rgb(255,236,170) or STEEL,beam and rgb(255,170,30) or rgb(255,186,84)
+  -- Katana: a white crescent, amber dashes. Excalibur: pale gold, gold dashes, its own light.
+  local bodyColor=beam and rgb(255,236,170) or K.White
+  local rimColor=beam and GOLD or AMBER
+  local glowColor=beam and GOLD or rgb(255,214,150)
   local radius=width*.5
+  local thickness=radius*(beam and .38 or .3)
   local duration=math.max(.12,reach/math.max(speed,1))
-  local roll=math.rad((math.random()-.5)*(beam and 10 or 26))
-  local core,coreSize=mesh(folder,'SlashCore')
-  local glow,glowSize=mesh(folder,'SlashGlow')
-  local wake,wakeSize=mesh(folder,'SlashGlow')
-  local fallback=not core and crescentParts(coreColor,width)
-  if core then core.Color=coreColor end
-  if glow then glow.Color=glowColor end
-  if wake then wake.Color=beam and GOLD or AMBER end
-  -- Tips leave thin wind streaks; the core sheds star sparks.
+  local list=newCrescent(bodyColor,rimColor,glowColor)
+  -- Tips leave thin wind streaks; star sparks shed off the edge; Excalibur carries light and motes.
   local carrier=K.part(folder,'SlashCarrier',Vector3.new(radius*1.9,.1,.4),K.White,1)
+  local tipZ=radius*(1-math.cos(HALF)) -- the tips sit behind the leading edge
   local function tip(x)
-   local a0=Instance.new('Attachment');a0.Position=Vector3.new(x,.12,0);a0.Parent=carrier
-   local a1=Instance.new('Attachment');a1.Position=Vector3.new(x,-.12,0);a1.Parent=carrier
-   local t=Instance.new('Trail');t.Attachment0=a0;t.Attachment1=a1;t.Lifetime=beam and .26 or .18;t.MinLength=.05;t.FaceCamera=true
-   t.LightEmission=1;t.LightInfluence=0;t.Color=ColorSequence.new(K.White,glowColor);t.Transparency=seq(0,.1,.6,.6,1,1);t.WidthScale=seq(0,1,1,0);t.Parent=carrier
+   local a0=Instance.new('Attachment');a0.Position=Vector3.new(x,.1,tipZ);a0.Parent=carrier
+   local a1=Instance.new('Attachment');a1.Position=Vector3.new(x,-.1,tipZ);a1.Parent=carrier
+   local t=Instance.new('Trail');t.Attachment0=a0;t.Attachment1=a1;t.Lifetime=beam and .24 or .18;t.MinLength=.05;t.FaceCamera=true
+   t.LightEmission=.35;t.LightInfluence=.15;t.Color=ColorSequence.new(K.White,glowColor);t.Transparency=seq(0,.18,.45,.5,1,1);t.WidthScale=seq(0,1,1,.25);t.Parent=carrier
   end
-  tip(-radius*.95);tip(radius*.95)
-  local sparks=emitter(carrier,{name='SlashSparks',texture=TEX.Star,color=K.White,color2=glowColor,size=seq(0,.32,1,0),alpha=seq(0,0,.7,.3,1,1),
-   life=.25,life1=.45,speed=1,speed1=4,spread=50,rate=beam and 60 or 45,direction=Enum.NormalId.Back,light=1,shape=Enum.ParticleEmitterShape.Box,enabled=true})
+  tip(-radius*math.sin(HALF));tip(radius*math.sin(HALF))
+  local sparks=emitter(carrier,{name='SlashSparks',texture=TEX.Star,color=K.White,color2=glowColor,size=seq(0,.3,1,0),alpha=seq(0,0,.7,.3,1,1),
+   life=.22,life1=.4,speed=1,speed1=4,spread=50,rate=beam and 50 or 36,direction=Enum.NormalId.Back,light=1,shape=Enum.ParticleEmitterShape.Box,enabled=true})
   local light
-  if beam or radius>2.2 then
-   light=Instance.new('PointLight');light.Color=beam and GOLD or HOT;light.Range=beam and 13 or 8;light.Brightness=beam and 3.2 or 1.6;light.Shadows=false;light.Parent=carrier
-  end
   if beam then
-   emitter(carrier,{name='HolyMotes',texture=TEX.Glow,color=HOT,color2=GOLD,size=seq(0,.5,1,0),alpha=seq(0,.2,1,1),life=.5,life1=.8,speed=.5,speed1=2,
-    spread=180,rate=26,accel=Vector3.yAxis*5,light=1,shape=Enum.ParticleEmitterShape.Box,enabled=true})
+   light=Instance.new('PointLight');light.Color=GOLD;light.Range=12;light.Brightness=2.6;light.Shadows=false;light.Parent=carrier
+   emitter(carrier,{name='HolyMotes',texture=TEX.Glow,color=HOT,color2=GOLD,size=seq(0,.45,1,0),alpha=seq(0,.25,1,1),life=.45,life1=.7,speed=.5,speed1=2,
+    spread=180,rate=22,accel=Vector3.yAxis*5,light=1,shape=Enum.ParticleEmitterShape.Box,enabled=true})
   end
-  -- A thin slice line scorched into the ground behind it.
-  local y=groundY(start)+.06
-  local scar=K.part(folder,'SlashScar',Vector3.new(beam and .32 or .2,.04,.1),beam and GOLD or HOT,1,Enum.Material.Neon)
-  K.flash(folder,start,beam and GOLD or HOT,beam and 14 or 9,beam and 4 or 2.5,.25)
-  burst(folder,start,{texture=TEX.Slash,color=K.White,color2=glowColor,size=seq(0,radius*.9,.4,radius*1.6,1,radius*1.8),alpha=seq(0,0,.6,.3,1,1),
+  -- It flies just off the ground, flat, like the swing crescents; a thin slice is left behind.
+  local floor=groundY(start)
+  local y=math.max(floor+.6,math.min(start.Y,floor+1.4))
+  local scar=K.part(folder,'SlashScar',Vector3.new(beam and .28 or .18,.04,.1),beam and GOLD or HOT,1,Enum.Material.Neon)
+  K.flash(folder,start,beam and GOLD or HOT,beam and 13 or 8,beam and 3.2 or 2,.25)
+  burst(folder,start,{texture=TEX.Slash,color=K.White,color2=glowColor,size=seq(0,radius*.9,.4,radius*1.5,1,radius*1.7),alpha=seq(0,0,.6,.3,1,1),
    life=.14,speed=0,spread=0,light=1,spin=0,facing=Vector3.yAxis:Cross(direction).Unit},1)
   local seen,limit={},{n=10}
-  local last=start
-  local hold=.22 -- the scar lingers after the slash ends
+  local from=Vector3.new(start.X,y,start.Z)
+  local last=from
+  local hold=.22 -- the slice lingers after the crescent is gone
   K.animate(duration+hold,function(_,age)
    local f=math.min(1,age/duration)
-   local position=start+direction*(reach*f)
-   local grow=.55+.45*smooth(f/.18)
-   local fade=smooth((f-.72)/.28)+(age>duration and 1 or 0)
-   local cf=CFrame.lookAt(position,position+direction)*CFrame.Angles(0,0,roll)
-   carrier.CFrame=cf
-   if core then core.Size=coreSize*radius*grow;core.CFrame=cf;core.Transparency=math.clamp(fade,0,1) end
-   if glow then glow.Size=glowSize*radius*grow*1.04;glow.CFrame=cf*CFrame.new(0,-.02,.12*radius);glow.Transparency=.12+.88*math.clamp(fade,0,1) end
-   if wake then wake.Size=wakeSize*radius*grow*Vector3.new(1.25,1,1.6);wake.CFrame=cf*CFrame.new(0,-.04,.5*radius);wake.Transparency=.62+.38*math.clamp(fade,0,1) end
-   if fallback then placeCrescent(fallback,cf,radius*grow,math.clamp(fade,0,1)) end
-   if light then light.Brightness=(beam and 3.2 or 1.6)*(1-math.clamp(fade,0,1)) end
+   local position=from+direction*(reach*f)
+   local grow=.6+.4*smooth(f/.15) -- it unfolds as it leaves
+   local fade=math.clamp(smooth((f-.75)/.25)+(age>duration and 1 or 0),0,1)
+   local frame=CFrame.lookAt(position-direction*radius*grow,position)
+   placeCrescent(list,frame,radius*grow,thickness*grow,fade)
+   carrier.CFrame=frame*CFrame.new(0,0,-radius*grow)
+   if light then light.Brightness=2.6*(1-fade) end
    sparks.Enabled=age<duration
-   local length=(position-start).Magnitude
+   local length=(position-from).Magnitude
    scar.Size=Vector3.new(scar.Size.X,.04,math.max(.1,length))
-   scar.CFrame=CFrame.lookAt(Vector3.new((start.X+position.X)/2,y,(start.Z+position.Z)/2),Vector3.new(position.X,y,position.Z))
-   scar.Transparency=age<duration and .25 or .25+.75*smooth((age-duration)/hold)
+   scar.CFrame=CFrame.lookAt(Vector3.new((from.X+position.X)/2,floor+.06,(from.Z+position.Z)/2),Vector3.new(position.X,floor+.06,position.Z))
+   scar.Transparency=age<duration and .3 or .3+.7*smooth((age-duration)/hold)
    if age<duration then
     passing(last,position,radius,seen,limit,function(p) cutFlash(p,direction,glowColor) end)
     last=position
    end
   end,function()
-   if K.near(start+direction*reach,150) then
-    local endAt=start+direction*reach
-    K.shards(folder,endAt,glowColor,6,10,.35,.14)
-    burst(folder,endAt,{texture=TEX.Star,color=K.White,color2=glowColor,size=seq(0,.7,1,0),alpha=seq(0,0,1,1),life=.3,speed=5,speed1=9,spread=180,light=1},8)
+   local endAt=from+direction*reach
+   if K.near(endAt,150) then
+    K.shards(folder,endAt,glowColor,5,9,.32,.13)
+    burst(folder,endAt,{texture=TEX.Star,color=K.White,color2=glowColor,size=seq(0,.6,1,0),alpha=seq(0,0,1,1),life=.28,speed=4,speed1=8,spread=180,light=1},7)
    end
-   for _,p in {core,glow,wake,carrier,scar} do if p then p:Destroy() end end
-   if fallback then for _,s in fallback.parts do s.part:Destroy() end end
-  end,'legendSlash',14)
+   for _,s in list do s.glow:Destroy();s.body:Destroy();s.rim:Destroy() end
+   carrier:Destroy();scar:Destroy()
+  end,'legendSlash',10)
  end
 
  -- Royal Flush (Deck of Cards) --------------------------------------------------------------------
@@ -516,7 +501,6 @@ function V.mount(combat,folder,lookup)
  end
  local function strike(ownerId,ground,radius,hits)
   if not K.near(ground,170) then return end
-  buildMeshes()
   headline(folder,ground+Vector3.yAxis*5,'STRIKE!',{K.White,rgb(255,214,120)},rgb(196,30,36),58)
   K.flash(folder,ground+Vector3.yAxis*2,HOT,radius*2.4,5,.4)
   burst(folder,ground+Vector3.yAxis*1.5,{texture=TEX.Star,color=K.White,color2=GOLD,size=seq(0,radius*.7,1,0),alpha=seq(0,0,1,1),life=.28,speed=0,spread=0,light=1},1)
@@ -541,22 +525,14 @@ function V.mount(combat,folder,lookup)
     if t>.7 then for _,part in p.model:GetDescendants() do if part:IsA('BasePart') then part.LocalTransparencyModifier=smooth((t-.7)/.3) end end end
    end
   end,function() for _,p in pins do p.model:Destroy() end end,'legendPins',3)
-  -- The dust ring and the amber rim.
-  local ring,size=mesh(folder,'ShockRing')
-  if ring then
-   ring.Color=rgb(255,246,226)
-   K.animate(.5,function(t)
-    local e=1-(1-t)^3;local r=.4+(radius-.4)*e
-    ring.Size=Vector3.new(size.X*r/1.17,size.Y*(1.6-1.1*e),size.Z*r/1.17)
-    ring.CFrame=CFrame.new(Vector3.new(ground.X,y+size.Y*(1.6-1.1*e)*.5,ground.Z))
-    ring.Transparency=.15+.85*smooth((t-.35)/.65)
-   end,function() ring:Destroy() end,'legendRing',8)
-  end
+  -- The painted shockwave on the ground, the amber dashed rim and a ring of dust.
+  groundRing(Vector3.new(ground.X,y+.08,ground.Z),rgb(255,240,214),.5,radius*1.05,.5,.1)
   K.ring(folder,CFrame.new(Vector3.new(ground.X,y+.15,ground.Z)),{segments=24,radius0=.6,radius1=radius,width=.8,rim=AMBER,color=rgb(255,226,170),duration=.45,bodyAlpha=.5})
   for i=1,8 do
    local a=i/8*math.pi*2
    task.delay(.04*i/2,function() if folder.Parent then K.cloud(folder,ground+Vector3.new(math.cos(a),0,math.sin(a))*radius*.55+Vector3.yAxis*.5,DUST,1.6,.8,Vector3.yAxis*1.2,.35) end end)
   end
+  dust(ground+Vector3.yAxis*.4,1.8,5)
   K.shards(folder,ground+Vector3.yAxis,rgb(250,248,242),10,14,.6,.18,Enum.Material.SmoothPlastic,.8)
   kick(ownerId,.8,.28)
  end
@@ -564,19 +540,9 @@ function V.mount(combat,folder,lookup)
  -- Shockwave (Wrecking Ball) -----------------------------------------------------------------------
  local function shock(ownerId,ground,radius,duration)
   if not K.near(ground,170) then return end
-  buildMeshes()
   local y=ground.Y
-  local ring,size=mesh(folder,'ShockRing')
-  if ring then
-   ring.Color=rgb(236,224,204)
-   K.animate(duration+.25,function(_,age)
-    local t=math.min(1,age/duration);local e=1-(1-t)^2.5;local r=.5+(radius-.5)*e
-    local h=1.9-1.3*e
-    ring.Size=Vector3.new(size.X*r/1.17,size.Y*h,size.Z*r/1.17)
-    ring.CFrame=CFrame.new(Vector3.new(ground.X,y+size.Y*h*.5,ground.Z))
-    ring.Transparency=.1+.9*smooth((age-duration*.55)/(duration*.45+.25))
-   end,function() ring:Destroy() end,'legendRing',8)
-  end
+  groundRing(Vector3.new(ground.X,y+.08,ground.Z),rgb(236,222,198),.5,radius*1.05,duration+.25,.05)
+  dust(ground+Vector3.yAxis*.4,1.6,4)
   K.ring(folder,CFrame.new(Vector3.new(ground.X,y+.12,ground.Z)),{segments=28,radius0=.5,radius1=radius,width=.9,rim=AMBER,color=rgb(255,220,160),duration=duration+.12,bodyAlpha=.55})
   decal(folder,Vector3.new(ground.X,y+.04,ground.Z),TEX.Cracks,CRACK,radius*.95,.04,.8,.9)
   K.flash(folder,ground+Vector3.yAxis*1.5,AMBER,radius*1.6,2.6,.3)
@@ -593,7 +559,6 @@ function V.mount(combat,folder,lookup)
  -- Thunder (Mjolnir) -------------------------------------------------------------------------------
  local function thunder(ownerId,ground,radius,strikeAt)
   if not K.near(ground,180) then return end
-  buildMeshes()
   local y=ground.Y
   local wait=math.max(0,strikeAt-workspace:GetServerTimeNow())
   -- A crackling target ring closes in where the bolt will fall.
@@ -621,16 +586,8 @@ function V.mount(combat,folder,lookup)
    end,function() main:destroy();for _,f in forks do f:destroy() end end,'legendBolt',6)
    K.flash(folder,ground+Vector3.yAxis*6,BOLT,radius*3.5,9,.45)
    K.pop(folder,ground+Vector3.yAxis*.4,rgb(196,230,255),.6,radius*.9,.25,.2)
-   local ring,size=mesh(folder,'ShockRing')
-   if ring then
-    ring.Color=SKY;ring.Material=Enum.Material.Neon
-    K.animate(.4,function(t)
-     local e=1-(1-t)^3;local r=.5+(radius-.5)*e
-     ring.Size=Vector3.new(size.X*r/1.17,size.Y*(1.1-.7*e),size.Z*r/1.17)
-     ring.CFrame=CFrame.new(Vector3.new(ground.X,y+size.Y*(1.1-.7*e)*.5,ground.Z))
-     ring.Transparency=.2+.8*smooth((t-.3)/.7)
-    end,function() ring:Destroy() end,'legendRing',8)
-   end
+   groundRing(Vector3.new(ground.X,y+.08,ground.Z),SKY,.6,radius*1.1,.4,.05)
+   K.ring(folder,CFrame.new(Vector3.new(ground.X,y+.14,ground.Z)),{segments=20,radius0=.6,radius1=radius,width=.5,rim=BOLT,color=SKY,duration=.38,bodyAlpha=.55})
    decal(folder,Vector3.new(ground.X,y+.04,ground.Z),TEX.Scorch,rgb(28,30,40),radius*1.4,.03,1,1)
    K.shards(folder,ground+Vector3.yAxis*.5,SKY,12,15,.45,.13,nil,.7)
    burst(folder,ground+Vector3.yAxis,{texture=TEX.Lightning,color=BOLT,color2=SKY,size=seq(0,1.4,1,0),alpha=seq(0,0,1,1),life=.25,life1=.4,speed=8,speed1=16,spread=180,light=1},10)

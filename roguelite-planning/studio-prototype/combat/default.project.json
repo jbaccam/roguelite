@@ -143,10 +143,7 @@
           "$path": "SwingVisuals.luau"
         },
         "LegendaryVisuals": {
-          "$path": "LegendaryVisuals.luau",
-          "MeshData": {
-            "$path": "LegendaryVisuals/MeshData.luau"
-          }
+          "$path": "LegendaryVisuals.luau"
         },
         "ProjectileStyleVisuals": {
           "$path": "ProjectileStyleVisuals.luau"
