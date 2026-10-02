@@ -539,6 +539,9 @@
         "RogueliteZombieAnimation": {
           "$path": "../RogueliteZombieAnimation.client.luau"
         },
+        "EnemyVisuals": {
+          "$path": "EnemyVisuals.client.luau"
+        },
         "RogueliteChickens": {
           "$path": "RogueliteChickens.client.luau"
         },

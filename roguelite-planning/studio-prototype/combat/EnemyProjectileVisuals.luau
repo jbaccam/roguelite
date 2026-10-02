@@ -1,8 +1,16 @@
 -- Repository-built visuals for spell projectiles that have no imported mesh.
--- The same model is the server's flying projectile and the client's cosmetic
--- held copy, so what a caster holds is exactly what it throws. Visual only:
--- every part is anchored and non-colliding/non-queryable/non-touching.
+-- The same model is the client-drawn flying shot (EnemyVisuals) and the
+-- cosmetic held copy, so what a caster holds is exactly what it throws. Visual
+-- only: every part is anchored and non-colliding/non-queryable/non-touching.
 local V = {}
+-- Shots with neither an imported template nor a built spell: a plain ball (or wedge) in this colour.
+local colors = {
+	Spit = Color3.fromRGB(148, 200, 76),
+	Rock = Color3.fromRGB(135, 116, 93),
+	Arrow = Color3.fromRGB(224, 198, 138),
+	Icicle = Color3.fromRGB(159, 241, 255),
+	Fireball = Color3.fromRGB(255, 126, 59),
+}
 
 local function part(model, name, shape, size, color, material, transparency)
 	local p = Instance.new("Part")
@@ -92,6 +100,50 @@ end
 
 function V.has(kind)
 	return builders[kind] ~= nil
+end
+
+-- A flying shot as EnemyAttacks used to build it on the server: the imported template when there
+-- is one (Arrow, Rock), else a built spell (Fireball, Icicle), else a plain ball (Spit).
+function V.shot(kind, templates)
+	local template = templates and templates:FindFirstChild(kind)
+	local shot = template and template:Clone() or V.build(kind) or Instance.new(kind == "Icicle" and "WedgePart" or "Part")
+	if not template and not V.has(kind) then
+		if shot:IsA("Part") then
+			shot.Shape = Enum.PartType.Ball
+		end
+		shot.Size = kind == "Icicle" and Vector3.new(0.35, 0.35, 1.5) or Vector3.one * (kind == "Arrow" and 0.42 or 0.8)
+		shot.Material = kind == "Rock" and Enum.Material.Slate or Enum.Material.Neon
+		shot.Color = colors[kind] or Color3.new(1, 1, 1)
+	end
+	local function configure(p)
+		if p:IsA("BasePart") then
+			p.Anchored = true
+			p.CanCollide = false
+			p.CanTouch = false
+			p.CanQuery = false
+			p.CastShadow = false
+		end
+	end
+	configure(shot)
+	for _, p in shot:GetDescendants() do
+		configure(p)
+	end
+	shot.Name = "Enemy" .. kind
+	return shot
+end
+
+-- Seconds a shot has flown at server time `now`: since `started`, frozen at `held` while the run
+-- is paused (plan L). Example: an arrow launched at t=10 and drawn at t=10.5 has flown 0.5 s (17.5
+-- studs at 35/s); paused at t=10.5 and drawn at t=12, it still has. On Resume the client moves
+-- `started` later by the frozen time, so at t=13 it has flown 1 s, as on the server.
+function V.flown(started, now, held)
+	return math.max(0, (held and math.min(held, now) or now) - started)
+end
+
+-- Where it is then, facing along its flight.
+function V.shotFrame(origin, velocity, flown)
+	local at = origin + velocity * flown
+	return CFrame.lookAt(at, at + velocity)
 end
 
 return V

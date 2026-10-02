@@ -4,18 +4,31 @@ local RunService = game:GetService("RunService")
 local combat = game.ReplicatedStorage:WaitForChild("RogueliteCombat")
 local Catalog = require(combat:WaitForChild("EnemyCatalog"))
 local Motion = require(combat:WaitForChild("EnemyMotion"))
-local Visuals = require(combat:WaitForChild("EnemyProjectileVisuals"))
 local Characters = require(script.Parent:WaitForChild("CharacterService"))
 local A = {}
 local states = setmetatable({}, { __mode = "k" })
 local projectiles = {}
-local colors = {
-	Spit = Color3.fromRGB(148, 200, 76),
-	Rock = Color3.fromRGB(135, 116, 93),
-	Arrow = Color3.fromRGB(224, 198, 138),
-	Icicle = Color3.fromRGB(159, 241, 255),
-	Fireball = Color3.fromRGB(255, 126, 59),
-}
+A.shots = projectiles -- shots in flight, read by EnemyShotTests
+-- Shots are drawn on the clients (EnemyVisuals); the server keeps only the flight and hit test
+-- below. Each shot sends a Launch (and an End if it stops early), instead of a replicated part
+-- moved every frame: an arrow's 2 s flight was ~120 CFrame updates to every client, now 1-2 events.
+-- ("Launch", id, kind, origin, velocity, started, lifetime), ("End", id), and while the run is
+-- paused ("Hold", at) / ("Resume", frozenSeconds).
+local shotEvent = combat:FindFirstChild("EnemyShot") or Instance.new("RemoteEvent")
+shotEvent.Name = "EnemyShot"
+shotEvent.Parent = combat
+local shotSerial = 0
+-- Hits, impacts and attack serials per enemy, for Studio QA (RegularEnemyQA). A server table, not
+-- attributes: those replicated to every client on every hit and no client read them.
+A.tally = setmetatable({}, { __mode = "k" })
+local function tally(npc)
+	local t = A.tally[npc]
+	if not t then
+		t = { hits = 0, serial = 0 }
+		A.tally[npc] = t
+	end
+	return t
+end
 local function params(npc)
 	local excluded = { npc }
 	local enemies = workspace:FindFirstChild("RogueliteEnemies")
@@ -84,7 +97,17 @@ end
 -- The body turns through an AlignOrientation, never CFrame writes: re-aiming a walking Humanoid's
 -- root by CFrame every frame stops its walk dead (measured 16 -> 0 studs/s), while the constraint
 -- turns it and it keeps walking (16.3 studs/s).
+-- It is written only once the aim has turned more than ~2 degrees since the last write: each write
+-- replicates, and a target straight ahead needn't send 60 a second. Hits use s.direction itself.
+local FACE_DOT = math.cos(math.rad(2))
+function A.faceDue(faced, direction)
+	return not faced or faced:Dot(direction) < FACE_DOT
+end
 local function face(root, s)
+	if not A.faceDue(s.faced, s.direction) then
+		return
+	end
+	s.faced = s.direction
 	local align = root:FindFirstChild("AttackFacing")
 	if not align then
 		local attachment = Instance.new("Attachment")
@@ -163,8 +186,9 @@ local function damage(npc, player, amount)
 		state.lastContact = now
 	end
 	local actual = Characters.contact(player, amount, nil, npc)
-	npc:SetAttribute("EnemyHits", (npc:GetAttribute("EnemyHits") or 0) + 1)
-	npc:SetAttribute("LastEnemyDamage", actual)
+	local t = tally(npc)
+	t.hits += 1
+	t.lastDamage = actual
 end
 local function melee(npc, root, config, s)
 	for _, player in Players:GetPlayers() do
@@ -208,55 +232,49 @@ local function projectile(npc, root, config, s, target)
 	if direction.Magnitude < 0.01 then
 		return
 	end
-	local templates = combat:FindFirstChild("EnemyProjectileTemplates")
-	local template = templates and templates:FindFirstChild(config.projectile)
-	local part = template and template:Clone() or Visuals.build(config.projectile)
-		or Instance.new(config.projectile == "Icicle" and "WedgePart" or "Part")
-	if not template and not Visuals.has(config.projectile) then
-		if part:IsA("Part") then
-			part.Shape = Enum.PartType.Ball
-		end
-		part.Size = config.projectile == "Icicle" and Vector3.new(0.35, 0.35, 1.5)
-			or Vector3.one * (config.projectile == "Arrow" and 0.42 or 0.8)
-		part.Material = config.projectile == "Rock" and Enum.Material.Slate or Enum.Material.Neon
-		part.Color = colors[config.projectile]
-	end
-	local function configure(p)
-		if p:IsA("BasePart") then
-			p.Anchored = true
-			p.CanCollide = false
-			p.CanTouch = false
-			p.CanQuery = false
-			p.CastShadow = false
-		end
-	end
-	configure(part)
-	for _, p in part:GetDescendants() do
-		configure(p)
-	end
-	part.Name = "Enemy" .. config.projectile
-	part:PivotTo(CFrame.lookAt(start, start + direction))
-	part:SetAttribute("ServerEnemyProjectile", true)
-	part.Parent = workspace
+	shotSerial += 1
+	local lifetime = config.attackRange / config.projectileSpeed + 1
 	table.insert(projectiles, {
-		part = part,
+		id = shotSerial,
+		kind = config.projectile,
 		source = npc,
+		origin = start,
 		position = start,
 		velocity = direction.Unit * config.projectileSpeed,
-		remaining = config.attackRange / config.projectileSpeed + 1,
+		lifetime = lifetime,
+		remaining = lifetime,
+		flown = 0,
 		damage = npc:GetAttribute("AttackDamage") or config.damage,
 		params = s.params,
 	})
 end
+-- Server time the shots in flight last moved at, while a paused run holds them (plan L).
+local heldAt = nil
+local HEIGHTS = { -1.3, 0, 1.3 }
 RunService.Heartbeat:Connect(function(dt)
-	-- Plan L: shots in flight hang while the run is paused, then carry on (lifetime counts frames).
-	if combat:GetAttribute("RunPaused") == true then
+	if #projectiles == 0 and not heldAt then
 		return
 	end
+	local now = workspace:GetServerTimeNow()
+	-- Plan L: shots in flight hang while the run is paused, then carry on (lifetime counts frames).
+	-- Clients hold theirs at the frame these last moved and, on Resume, start them later by the
+	-- frozen time. Example: frozen from t=20 to t=35, a shot launched at t=19.5 counts from t=34.5.
+	if combat:GetAttribute("RunPaused") == true then
+		if not heldAt and #projectiles > 0 then
+			heldAt = now - dt
+			shotEvent:FireAllClients("Hold", heldAt)
+		end
+		return
+	end
+	if heldAt then
+		shotEvent:FireAllClients("Resume", now - dt - heldAt)
+		heldAt = nil
+	end
+	local enabled = combat:GetAttribute("ZombiesEnabled") == true
 	for i = #projectiles, 1, -1 do
 		local p = projectiles[i]
 		p.remaining -= dt
-		local stop = not p.part.Parent or p.remaining <= 0 or combat:GetAttribute("ZombiesEnabled") ~= true
+		local stop = p.remaining <= 0 or not enabled
 		if not stop then
 			local finish = p.position + p.velocity * dt
 			local wall = workspace:Raycast(p.position, finish - p.position, p.params)
@@ -265,7 +283,7 @@ RunService.Heartbeat:Connect(function(dt)
 			for _, player in Players:GetPlayers() do
 				local ok, pr = validPlayer(player)
 				if ok then
-					for _, height in { -1.3, 0, 1.3 } do
+					for _, height in HEIGHTS do
 						local distance, t = A.segmentDistance(p.position, finish, pr.Position + Vector3.yAxis * height)
 						if distance <= 1.15 and t < closestT then
 							closest = player
@@ -281,11 +299,20 @@ RunService.Heartbeat:Connect(function(dt)
 				stop = true
 			else
 				p.position = finish
-				p.part:PivotTo(CFrame.lookAt(finish, finish + p.velocity))
+				p.flown += dt
+				-- Sent after its first step, timed so that origin + velocity * (now - started) is
+				-- where it is now. A shot stopped on its first step isn't sent (it showed a frame at most).
+				if not p.sent then
+					p.sent = true
+					shotEvent:FireAllClients("Launch", p.id, p.kind, p.origin, p.velocity, now - p.flown, p.lifetime)
+				end
 			end
 		end
 		if stop then
-			p.part:Destroy()
+			-- A shot that runs out of time ends on the clients by itself.
+			if p.sent and p.remaining > 0 then
+				shotEvent:FireAllClients("End", p.id)
+			end
 			table.remove(projectiles, i)
 		end
 	end
@@ -341,7 +368,7 @@ function A.update(npc, target, dt)
 			elseif config.behavior ~= "Lunge" then
 				melee(npc, root, config, s)
 			end
-			npc:SetAttribute("LastEnemyImpact", now)
+			tally(npc).lastImpact = now
 		elseif
 			s.hit
 			and config.behavior ~= "Ranged"
@@ -398,13 +425,14 @@ function A.update(npc, target, dt)
 	s.hitPlayers = {}
 	s.nextAttack = now + config.attackCooldown
 	s.lungeLimit = nil
+	s.faced = nil -- release() let the Humanoid turn it, so the first facing always writes
 	-- Square to the target: the bow skeleton's shot now leaves straight ahead (its chest turns
 	-- in the clip), so nobody faces off to one side any more.
 	h.AutoRotate = false
 	face(root, s)
+	-- The client poses the swing from EnemyAttackStart; the serial is for QA only (A.tally).
 	npc:SetAttribute("EnemyAttackStart", now)
-	npc:SetAttribute("EnemyAttackSerial", (npc:GetAttribute("EnemyAttackSerial") or 0) + 1)
-	npc:SetAttribute("EnemyAttackDirection", s.direction)
+	tally(npc).serial += 1
 	npc:SetAttribute("Attacking", true)
 	-- Melee swings on the move and the chase keeps steering it; a shooter plants (see above).
 	if config.behavior == "Ranged" then
@@ -413,6 +441,12 @@ function A.update(npc, target, dt)
 		return true
 	end
 	return false
+end
+-- An attack in progress, wind-up to recovery. The chase loop updates those every frame, so their
+-- timing is exact, and looks for a new attack only on its 0.1 s tick.
+function A.busy(npc)
+	local s = states[npc]
+	return s ~= nil and s.start ~= nil
 end
 -- Drop an attack in progress without its hit (admin Freeze), so it can't land the moment the
 -- enemy updates again. The cooldown stays; the next attack starts a fresh wind-up.

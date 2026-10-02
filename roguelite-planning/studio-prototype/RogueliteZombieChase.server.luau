@@ -37,7 +37,6 @@ if not PhysicsService:IsCollisionGroupRegistered(COLLISION_GROUP) then
 end
 PhysicsService:CollisionGroupSetCollidable(COLLISION_GROUP, COLLISION_GROUP, false)
 
-local TweenService = game:GetService("TweenService")
 local templates = ServerStorage:WaitForChild("RogueliteNPCs")
 local template = templates:WaitForChild("Zombie_NPC")
 local folder = Instance.new("Folder")
@@ -219,11 +218,14 @@ local function memberSpots(point, count)
     end
     return spots
 end
+-- Static here: each client pulses the bars (EnemyVisuals), 0.1 to 0.55 transparency and back every
+-- 0.25 s. Server tweens replicated Transparency every frame, ~20 bars at each wave start.
 local function makeWarning(position)
     local mark = Instance.new("Model")
     mark.Name = "SpawnWarning"
     for _, yaw in {45, -45} do
         local bar = Instance.new("Part")
+        bar.Name = "WarningBar"
         bar.Anchored, bar.CanCollide, bar.CanQuery, bar.CanTouch, bar.CastShadow = true, false, false, false, false
         bar.Material = Enum.Material.Neon
         bar.Color = WARNING_COLOR
@@ -231,7 +233,6 @@ local function makeWarning(position)
         bar.Size = Vector3.new(0.7, 0.12, 4.2)
         bar.CFrame = CFrame.new(position + Vector3.new(0, 0.08, 0)) * CFrame.Angles(0, math.rad(yaw), 0)
         bar.Parent = mark
-        TweenService:Create(bar, TweenInfo.new(0.25, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Transparency = 0.55}):Play()
     end
     mark.Parent = warnings
     return mark
@@ -414,6 +415,7 @@ sight.FilterType = Enum.RaycastFilterType.Exclude
 local previousTarget = nil
 local elapsed = 0
 local stall = nil
+local attacks = kind == 'Mutant' and Attacks or EnemyAttacks -- the Mutant slams (ZombieAttacks)
 local function nearestTarget()
     local best, distance = nil, math.huge
     for _, player in Players:GetPlayers() do
@@ -453,13 +455,14 @@ connection = RunService.Heartbeat:Connect(function(dt)
         return
     end
     frozen = false
-    -- Standing still to attack isn't a stall (see the hop below).
-    if kind=='Mutant' then
-        if Attacks.update(npc,previousTarget) then stall = nil return end
-    elseif EnemyAttacks.update(npc,previousTarget,dt) then stall = nil return end
+    -- Standing still to attack isn't a stall (see the hop below). An attack in progress updates
+    -- every frame, so its wind-up, hit and recovery keep their exact timing; the check for a new
+    -- one waits for the 0.1 s tick (100 enemies: 1,000 checks a second instead of 6,000).
+    if attacks.busy(npc) and attacks.update(npc,previousTarget,dt) then stall = nil return end
     elapsed += dt
     if elapsed < 0.1 then return end
     elapsed = 0
+    if not attacks.busy(npc) and attacks.update(npc,previousTarget,dt) then stall = nil return end
     local statusSlow=npc:GetAttribute('StatusSlowStrength') or 0
     local vacuumSlow=(npc:GetAttribute('VacuumSlowUntil') or 0)>workspace:GetServerTimeNow() and 35 or 0
     humanoid.WalkSpeed=config.speed*(1-math.max(statusSlow,vacuumSlow)/100)

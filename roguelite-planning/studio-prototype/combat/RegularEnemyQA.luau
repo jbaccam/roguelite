@@ -8,6 +8,11 @@ local Catalog = require(combat.EnemyCatalog)
 local Attacks = require(game.ServerScriptService.EnemyAttacks)
 local Slam = require(game.ServerScriptService.ZombieAttacks)
 local Q = {}
+-- Hits, last impact and attack serial per enemy: server tables now (EnemyAttacks.tally,
+-- ZombieAttacks.tally), no longer attributes.
+local function tally(npc)
+	return Attacks.tally[npc] or Slam.tally[npc] or { hits = 0, serial = 0 }
+end
 function Q.inspect(id, mode)
 	local s = assert(Q.state, "Start QA first")
 	local phase = s.stage:GetAttribute("Phase")
@@ -219,7 +224,7 @@ function Q.start()
 				if h.FloorMaterial ~= Enum.Material.Air then
 					record.groundedSamples += 1
 				end
-				local impact = npc:GetAttribute("LastEnemyImpact") or npc:GetAttribute("LastSlamImpact")
+				local impact = tally(npc).lastImpact
 				if impact and impact ~= record.lastImpact then
 					record.lastImpact = impact
 					record.impacts += 1
@@ -272,19 +277,18 @@ function Q.start()
 			s.active = npc
 			stage:SetAttribute("ActiveEnemy", d.id)
 			stage:SetAttribute("Phase", "Attacking")
-			local serialKey = d.legacy == "Mutant" and "SlamSerial" or "EnemyAttackSerial"
 			local beforeHealth = ph.Health
 			local deadline = os.clock() + 3
 			repeat
 				task.wait(0.03)
-			until npc:GetAttribute(serialKey) or os.clock() > deadline
+			until tally(npc).serial > 0 or os.clock() > deadline
 			local record = s.records[d.id]
-			record.attackStarted = npc:GetAttribute(serialKey) ~= nil
+			record.attackStarted = tally(npc).serial > 0
 			task.wait(d.attackRecovery + (d.projectile and distance / d.projectileSpeed or 0) + 0.2)
 			s.active = nil
 			record.attackRecovered = npc:GetAttribute("Attacking") == false
 			record.playerDamage = beforeHealth - ph.Health
-			record.hits = npc:GetAttribute("EnemyHits") or npc:GetAttribute("SlamHits") or 0
+			record.hits = tally(npc).hits
 			npc.Humanoid:Move(Vector3.zero)
 			npc.Humanoid:MoveTo(root.Position)
 			stage:SetAttribute("Phase", "IdleAfterAttack")

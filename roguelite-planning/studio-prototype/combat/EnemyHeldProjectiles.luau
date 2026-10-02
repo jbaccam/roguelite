@@ -1,4 +1,4 @@
--- Cosmetic held ammo only. Server projectiles exclusively own collision/damage.
+-- Cosmetic held ammo only. The server's shot flight (EnemyAttacks) exclusively owns collision/damage.
 local combat = script.Parent
 local Motion = require(combat.EnemyMotion)
 local Visuals = require(combat.EnemyProjectileVisuals)
@@ -6,7 +6,7 @@ local H = {}
 -- Casters hold the spell they throw: the Shaman keeps a small ember in his
 -- open palm that swells into the full fireball through the wind-up; the Ice
 -- Elf conjures its icicle in the throwing fist. Both vanish at release, when
--- the server projectile (built from the same visuals) takes over.
+-- the flying shot (EnemyVisuals, built from the same visuals) takes over.
 local SPELLS = { ["ash-shaman"] = { kind = "Fireball", idle = 0.45 }, ["ice-elf"] = { kind = "Icicle", idle = 0 } }
 local states = setmetatable({}, { __mode = "k" })
 local function removeArrow(s)
