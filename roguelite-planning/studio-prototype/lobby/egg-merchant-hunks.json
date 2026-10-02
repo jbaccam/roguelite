@@ -1,0 +1,72 @@
+[
+ {
+  "repo": "combat/ProfileService.luau",
+  "studio": "ServerScriptService.ProfileService",
+  "anchor": "local Pets=require(combat:WaitForChild('PetConfig')) -- sandboxed data",
+  "where": "after",
+  "text": "local Eggs=require(combat:WaitForChild('EggConfig')) -- pet eggs; unsandboxed data like ChestConfig"
+ },
+ {
+  "repo": "combat/ProfileService.luau",
+  "studio": "ServerScriptService.ProfileService",
+  "anchor": " player:SetAttribute('ProfileChests',csv(d.chests,function(k,v) return k..':'..v end))",
+  "where": "after",
+  "text": " player:SetAttribute('ProfileEggs',d.eggs or 0) -- unhatched pet eggs (EggConfig)"
+ },
+ {
+  "repo": "combat/ProfileService.luau",
+  "studio": "ServerScriptService.ProfileService",
+  "anchor": "-- One tier up for a weapon, an armor piece or a pet: spends its copies AND emeralds (both tables",
+  "where": "before",
+  "text": "-- Pet eggs (EggConfig, the egg merchant): bought into the inventory, then hatched. Like chests,\n-- where paid random items are restricted only emeralds earned in play can buy them.\nfunction P.buyEgg(player,count,restricted)\n local d=P.profiles[player]\n if not d then return false,'Profile still loading' end\n if not Eggs.validAmount(count) then return false,'Invalid amount' end\n local price=Eggs.price(count)\n if not canSpend(d,price,restricted) then\n  if restricted and d.emeralds>=price then return false,'Only emeralds earned in runs can buy eggs in your region' end\n  return false,'Need '..(price-(restricted and d.emeralds-d.bought or d.emeralds))..' more emeralds'\n end\n spend(d,price,restricted)\n d.eggs=(d.eggs or 0)+count\n P.publish(player)\n return true,count>1 and ('Bought '..count..'× '..Eggs.Name) or ('Bought a '..Eggs.Name)\nend\n-- Hatch owned eggs (up to count): one pet per egg, rolled here. The reply has one entry per pet,\n-- {id, count, rarity, new, tier, have, emeralds}, rarest first (the same shape as openChest).\nfunction P.openEgg(player,count)\n local d=P.profiles[player]\n if not d then return false,'Profile still loading' end\n if not Eggs.validAmount(count) then return false,'Invalid amount' end\n local n=math.min(count,d.eggs or 0)\n if n<=0 then return false,'No '..Eggs.Name..' to hatch' end\n d.eggs-=n\n local tally={}\n for _=1,n do local id=Eggs.roll(rng);tally[id]=(tally[id] or 0)+1 end\n local results={}\n for id,c in tally do\n  local r=P.addCopies(d,id,c);r.count=c;r.rarity=Pets.ById[id].rarity\n  table.insert(results,r)\n end\n table.sort(results,function(a,b)\n  if RANK[a.rarity]~=RANK[b.rarity] then return RANK[a.rarity]>RANK[b.rarity] end\n  if a.count~=b.count then return a.count>b.count end\n  return a.id<b.id\n end)\n P.publish(player)\n return true,n>1 and ('Hatched '..n..' eggs') or 'Hatched an egg',results\nend"
+ },
+ {
+  "repo": "combat/RogueliteMeta.server.luau",
+  "studio": "ServerScriptService.RogueliteMeta",
+  "anchor": " elseif action=='BuyChest' and type(a)=='string' and type(b)=='number' then ok,message=Profiles.buyChest(p,a,b,restricted[p])",
+  "where": "after",
+  "text": " elseif action=='BuyEgg' and type(a)=='number' then ok,message=Profiles.buyEgg(p,a,restricted[p])\n elseif action=='OpenEgg' and type(a)=='number' then ok,message,results=Profiles.openEgg(p,a)"
+ },
+ {
+  "repo": "ui/LobbyUI.luau",
+  "studio": "ReplicatedStorage.LobbyUI",
+  "anchor": "local ChestScreenUI=require(RS:WaitForChild('ChestScreenUI'))",
+  "where": "after",
+  "text": "-- The egg merchant's screen, protected: a fault in it must never take the lobby HUD down.\nlocal eggsOk,EggScreenUI=pcall(require,RS:WaitForChild('EggScreenUI'))\nif not eggsOk then warn('LobbyUI: EggScreenUI failed to load:',EggScreenUI);EggScreenUI=nil end"
+ },
+ {
+  "repo": "ui/LobbyUI.luau",
+  "studio": "ReplicatedStorage.LobbyUI",
+  "anchor": " builders.Chests=function(kind) return chestScreen.Open(kind) end",
+  "where": "after",
+  "text": " -- Egg merchant (quest-board island): full-screen egg screen over the egg pedestal (EggScreenUI\n -- + EggStage); the walk-up ring in front of the merchant opens it. Replaces the HUD while open.\n if EggScreenUI then\n  local ok,eggScreen=pcall(EggScreenUI.new,player,{\n   profile=function() profile=L.profile(player);return profile end,\n   need=L.need,\n   openWindow=function(name,arg) task.defer(open,name,arg) end,\n   onVisible=function(visible) hud.Visible=visible end,\n  })\n  if ok then self.EggScreen=eggScreen;builders.Eggs=function() return eggScreen.Open() end\n  else warn('LobbyUI: egg screen failed:',eggScreen) end\n end"
+ },
+ {
+  "repo": "ui/StationApproach.luau",
+  "studio": "ReplicatedStorage.StationApproach",
+  "anchor": "\tQuests = { route = \"Quests\", icon = \"quests\", label = \"QUESTS\" },",
+  "where": "after",
+  "text": "\tEggs = { route = \"Eggs\", label = \"EGGS\" }, -- icon: the stand's Icon attribute (the egg merchant)"
+ },
+ {
+  "repo": "ui/StationApproach.luau",
+  "studio": "ReplicatedStorage.StationApproach",
+  "anchor": "\ticon.Image = T.Asset[info.icon] or \"\"",
+  "where": "after",
+  "text": "\tif icon.Image == \"\" then\n\t\ticon.Image = stand:GetAttribute(\"Icon\") or \"\"\n\tend"
+ },
+ {
+  "repo": "combat/default.project.json",
+  "studio": null,
+  "anchor": "        \"ChestConfig\": {",
+  "where": "before",
+  "text": "        \"EggConfig\": {\n          \"$path\": \"EggConfig.luau\"\n        },"
+ },
+ {
+  "repo": "combat/default.project.json",
+  "studio": null,
+  "anchor": "      \"ChestScreenUI\": {",
+  "where": "before",
+  "text": "      \"EggMerchant\": {\n        \"$path\": \"../ui/EggMerchant.luau\"\n      },\n      \"EggStage\": {\n        \"$path\": \"../ui/EggStage.luau\"\n      },\n      \"EggScreenUI\": {\n        \"$path\": \"../ui/EggScreenUI.luau\"\n      },"
+ }
+]

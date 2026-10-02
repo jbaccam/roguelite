@@ -492,6 +492,8 @@ profileAction.OnServerInvoke=function(p,action,a,b,c)
  local ok,message,results
  if action=='OpenChest' and type(a)=='string' and type(b)=='number' then ok,message,results=Profiles.openChest(p,a,b)
  elseif action=='BuyChest' and type(a)=='string' and type(b)=='number' then ok,message=Profiles.buyChest(p,a,b,restricted[p])
+ elseif action=='BuyEgg' and type(a)=='number' then ok,message=Profiles.buyEgg(p,a,restricted[p])
+ elseif action=='OpenEgg' and type(a)=='number' then ok,message,results=Profiles.openEgg(p,a)
  elseif action=='Upgrade' and type(a)=='string' then ok,message=Profiles.upgrade(p,a)
  elseif action=='WearArmor' and type(a)=='string' and (b==nil or type(b)=='string') then ok,message=Profiles.wear(p,a,b)
  elseif action=='EquipPet' and (a==nil or (type(a)=='string' and #a<=40)) then ok,message=Profiles.equipPet(p,a) -- nil = put the pet away

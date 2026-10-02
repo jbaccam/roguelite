@@ -226,6 +226,9 @@
         "MonetizationConfig": {
           "$path": "MonetizationConfig.luau"
         },
+        "EggConfig": {
+          "$path": "EggConfig.luau"
+        },
         "ChestConfig": {
           "$path": "ChestConfig.luau"
         },
@@ -345,6 +348,15 @@
       },
       "ChestStage": {
         "$path": "../ui/ChestStage.luau"
+      },
+      "EggMerchant": {
+        "$path": "../ui/EggMerchant.luau"
+      },
+      "EggStage": {
+        "$path": "../ui/EggStage.luau"
+      },
+      "EggScreenUI": {
+        "$path": "../ui/EggScreenUI.luau"
       },
       "ChestScreenUI": {
         "$path": "../ui/ChestScreenUI.luau"

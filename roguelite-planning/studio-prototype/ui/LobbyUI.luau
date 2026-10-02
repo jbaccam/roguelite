@@ -29,6 +29,9 @@ local ArmoryUI=require(RS:WaitForChild('ArmoryUI'))
 local StationApproach=require(RS:WaitForChild('StationApproach'))
 local SkillTreeUI=require(RS:WaitForChild('SkillTreeUI'))
 local ChestScreenUI=require(RS:WaitForChild('ChestScreenUI'))
+-- The egg merchant's screen, protected: a fault in it must never take the lobby HUD down.
+local eggsOk,EggScreenUI=pcall(require,RS:WaitForChild('EggScreenUI'))
+if not eggsOk then warn('LobbyUI: EggScreenUI failed to load:',EggScreenUI);EggScreenUI=nil end
 local SkillTree=require(combat:WaitForChild('SkillTreeConfig'))
 L.Maps=Rules.Maps
 L.Signature=Rules.Signature
@@ -454,6 +457,18 @@ function L.mount(player)
  })
  self.ChestScreen=chestScreen
  builders.Chests=function(kind) return chestScreen.Open(kind) end
+ -- Egg merchant (quest-board island): full-screen egg screen over the egg pedestal (EggScreenUI
+ -- + EggStage); the walk-up ring in front of the merchant opens it. Replaces the HUD while open.
+ if EggScreenUI then
+  local ok,eggScreen=pcall(EggScreenUI.new,player,{
+   profile=function() profile=L.profile(player);return profile end,
+   need=L.need,
+   openWindow=function(name,arg) task.defer(open,name,arg) end,
+   onVisible=function(visible) hud.Visible=visible end,
+  })
+  if ok then self.EggScreen=eggScreen;builders.Eggs=function() return eggScreen.Open() end
+  else warn('LobbyUI: egg screen failed:',eggScreen) end
+ end
 
  builders.Armory=function(tab) return armory.Open(tab) end
 

@@ -17,6 +17,7 @@ local Money=require(combat:WaitForChild('MonetizationConfig'))
 local Skills=require(combat:WaitForChild('SkillTreeConfig'))
 local Armor=require(combat:WaitForChild('ArmorCatalog'))
 local Pets=require(combat:WaitForChild('PetConfig')) -- sandboxed data
+local Eggs=require(combat:WaitForChild('EggConfig')) -- pet eggs; unsandboxed data like ChestConfig
 local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed; this module is unsandboxed
 local Lock=require(game:GetService('ServerScriptService'):WaitForChild('ProfileLock')) -- unsandboxed, like this module
 -- Redeemable codes (server-only so they cannot be read from the client). One use per account.
@@ -65,6 +66,7 @@ function P.publish(player)
  player:SetAttribute('ProfilePity',csv(d.pity,function(k,v) return k..':'..v end))
  player:SetAttribute('ProfilePicks',csv(d.picks,function(k,v) return k..':'..v end))
  player:SetAttribute('ProfileChests',csv(d.chests,function(k,v) return k..':'..v end))
+ player:SetAttribute('ProfileEggs',d.eggs or 0) -- unhatched pet eggs (EggConfig)
  player:SetAttribute('ProfileBestWaves',csv(d.bestWaves,function(k,v) return k..':'..v end))
  player:SetAttribute('ProfileMapWins',csv(d.mapWins,function(k) return k end))
  player:SetAttribute('ProfileStarterPack',d.starterPack);player:SetAttribute('ProfileVIP',d.vip)
@@ -300,6 +302,46 @@ function P.openChest(player,kind,count)
  end)
  P.publish(player)
  return true,n>1 and ('Opened '..n..'× '..chest.name) or ('Opened '..chest.name),results
+end
+-- Pet eggs (EggConfig, the egg merchant): bought into the inventory, then hatched. Like chests,
+-- where paid random items are restricted only emeralds earned in play can buy them.
+function P.buyEgg(player,count,restricted)
+ local d=P.profiles[player]
+ if not d then return false,'Profile still loading' end
+ if not Eggs.validAmount(count) then return false,'Invalid amount' end
+ local price=Eggs.price(count)
+ if not canSpend(d,price,restricted) then
+  if restricted and d.emeralds>=price then return false,'Only emeralds earned in runs can buy eggs in your region' end
+  return false,'Need '..(price-(restricted and d.emeralds-d.bought or d.emeralds))..' more emeralds'
+ end
+ spend(d,price,restricted)
+ d.eggs=(d.eggs or 0)+count
+ P.publish(player)
+ return true,count>1 and ('Bought '..count..'× '..Eggs.Name) or ('Bought a '..Eggs.Name)
+end
+-- Hatch owned eggs (up to count): one pet per egg, rolled here. The reply has one entry per pet,
+-- {id, count, rarity, new, tier, have, emeralds}, rarest first (the same shape as openChest).
+function P.openEgg(player,count)
+ local d=P.profiles[player]
+ if not d then return false,'Profile still loading' end
+ if not Eggs.validAmount(count) then return false,'Invalid amount' end
+ local n=math.min(count,d.eggs or 0)
+ if n<=0 then return false,'No '..Eggs.Name..' to hatch' end
+ d.eggs-=n
+ local tally={}
+ for _=1,n do local id=Eggs.roll(rng);tally[id]=(tally[id] or 0)+1 end
+ local results={}
+ for id,c in tally do
+  local r=P.addCopies(d,id,c);r.count=c;r.rarity=Pets.ById[id].rarity
+  table.insert(results,r)
+ end
+ table.sort(results,function(a,b)
+  if RANK[a.rarity]~=RANK[b.rarity] then return RANK[a.rarity]>RANK[b.rarity] end
+  if a.count~=b.count then return a.count>b.count end
+  return a.id<b.id
+ end)
+ P.publish(player)
+ return true,n>1 and ('Hatched '..n..' eggs') or 'Hatched an egg',results
 end
 -- One tier up for a weapon, an armor piece or a pet: spends its copies AND emeralds (both tables
 -- in ChestConfig, by the item's rarity; the emerald cost triples each tier).

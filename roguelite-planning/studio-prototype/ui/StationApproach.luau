@@ -17,6 +17,7 @@ A.Stands = {
 	Rewards = { route = "Chests", icon = "chest", label = "CHESTS" },
 	Store = { route = "Store", icon = "store", label = "STORE" },
 	Quests = { route = "Quests", icon = "quests", label = "QUESTS" },
+	Eggs = { route = "Eggs", label = "EGGS" }, -- icon: the stand's Icon attribute (the egg merchant)
 }
 local RING_RADIUS = 3.6 -- studs, drawn ring
 local ENTER = 4.2 -- open when the player's feet are this close to the ring centre
@@ -123,6 +124,9 @@ local function dress(stand, info, folder)
 	icon.Name = "Icon"
 	icon.BackgroundTransparency = 1
 	icon.Image = T.Asset[info.icon] or ""
+	if icon.Image == "" then
+		icon.Image = stand:GetAttribute("Icon") or ""
+	end
 	icon.ScaleType = Enum.ScaleType.Fit
 	icon.AnchorPoint = Vector2.new(0.5, 0)
 	icon.Position = UDim2.fromScale(0.5, 0)

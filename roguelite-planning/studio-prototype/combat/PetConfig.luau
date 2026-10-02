@@ -11,6 +11,22 @@
 -- times TierMult. Copies upgrade a pet like a weapon (ChestConfig.UpgradeByRarity by rarity).
 local P = { List = {}, ById = {}, Order = {} }
 
+-- Uploaded item art; literal data keeps this module safe for sandboxed consumers.
+P.Icons = {
+	["Bunny"] = "rbxassetid://126035665768012",
+	["GoldenRetriever"] = "rbxassetid://139974074985172",
+	["Frog"] = "rbxassetid://72068688209203",
+	["Penguin"] = "rbxassetid://134561532767972",
+	["Fox"] = "rbxassetid://104736061635962",
+	["Bee"] = "rbxassetid://135259222397245",
+	["Turtle"] = "rbxthumb://type=Asset&id=88750159550350&w=420&h=420",
+	["Monkey"] = "rbxassetid://114598472980257",
+	["LuckyCat"] = "rbxassetid://86306160093146",
+	["Owl"] = "rbxassetid://93634935695834",
+	["CheetahCub"] = "rbxassetid://91328976444641",
+	["BabyDragon"] = "rbxassetid://105864059105336",
+}
+
 P.Tiers = 4
 P.TierMult = { 1, 1.15, 1.3, 1.5 } -- damage multiplier per tier
 P.Rarities = { "Common", "Rare", "Epic", "Legendary" }
