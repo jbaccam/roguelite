@@ -323,6 +323,7 @@ function T.window(screen,name,title,w,h,onClose,opts)
  holder.Position=large and UDim2.new(.5,0,.5,76) or UDim2.new(.5,0,.53,60)
  local scale=make('UIScale',holder,{Scale=1})
  local frame=T.panel(holder,'Frame',0,0,w,h,'panel');frame.Size=UDim2.fromScale(1,1);frame.Active=true
+ if opts and opts.seeThrough then frame.ImageTransparency=opts.seeThrough end -- e.g. Quests (plan K): the world shows through a little
  local head=T.panel(holder,'TitlePlate',18,-30,0,56,'panel')
  local titleSize=game:GetService('TextService'):GetTextSize(title,32,T.Font,Vector2.new(2000,100)).X
  head.Size=UDim2.fromOffset(titleSize+76,56);head.Active=true

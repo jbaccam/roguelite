@@ -556,7 +556,7 @@ const ctx=document.createElement('canvas').getContext('2d');
 function outline(c,w,a){const s=[];for(let i=0;i<16;i++){const t=i/16*2*Math.PI;s.push(`${(Math.cos(t)*w).toFixed(1)}px ${(Math.sin(t)*w).toFixed(1)}px 0 ${rgba(c,a)}`)}return s.join(',')}
 Promise.all([fetch('/dump/'+name+'.json').then(r=>r.json()),fetch('/assetmap.json').then(r=>r.json()),document.fonts.load("32px 'Fredoka One'"),document.fonts.load("700 16px 'Source Sans 3'")]).then(([d,map])=>{
  const st=document.getElementById('st');let W=0,H=0;const missing=new Set();
- for(const e of d){W=Math.max(W,e.x+e.w);H=Math.max(H,e.y+e.h)}
+ W=d[0].w;H=d[0].h; // the root's size (clipped content can reach far outside it)
  st.style.width=W+'px';st.style.height=H+'px';
  for(const e of d){
   let host=st,ox=0,oy=0;
@@ -1991,7 +1991,7 @@ function Q.open(screen,ctx,tab)
     local pip=T.make('Frame',f,{Name='Pip'..k,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(nx+8+(k-1)*16,115),Size=UDim2.fromOffset(9,9),Rotation=45,BackgroundColor3=k<=o.level and Config.TierColors[k] or Color3.fromRGB(40,46,50),BorderSizePixel=0})
     T.make('UIStroke',pip,{Color=INK,Thickness=1.5})
    end
-   local size=74;local rx=730
+   local size=78;local rx=730
    for i,it in o.rewards do FX.tile(f,'Reward'..i,rx+(i-1)*(size+8),16,size,it[1],it[2],it[3],it[4]) end
    if o.title then
     local tile=T.make('Frame',f,{Name='TitleReward',Position=UDim2.fromOffset(rx+#o.rewards*(size+8)+4,20),Size=UDim2.fromOffset(186,76),BackgroundColor3=Color3.fromRGB(46,40,26),BorderSizePixel=0})

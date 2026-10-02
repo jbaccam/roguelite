@@ -89,6 +89,10 @@ end"""),
     ("combat/default.project.json", None,
      '      "QuestsUI": {', "before",
      '      "StatPlates": {\n        "$path": "../ui/StatPlates.luau"\n      },'),
+    # --- UITheme: a window may be very slightly see-through (Quests, plan K) ------------------------
+    ("ui/UITheme.luau", "ReplicatedStorage.UITheme",
+     " local frame=T.panel(holder,'Frame',0,0,w,h,'panel');frame.Size=UDim2.fromScale(1,1);frame.Active=true", "after",
+     " if opts and opts.seeThrough then frame.ImageTransparency=opts.seeThrough end -- e.g. Quests (plan K): the world shows through a little"),
 ]
 
 MODULES = []  # whole modules for the Studio sync: filled in Task 11

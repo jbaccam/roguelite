@@ -21,7 +21,7 @@ const ctx=document.createElement('canvas').getContext('2d');
 function outline(c,w,a){const s=[];for(let i=0;i<16;i++){const t=i/16*2*Math.PI;s.push(`${(Math.cos(t)*w).toFixed(1)}px ${(Math.sin(t)*w).toFixed(1)}px 0 ${rgba(c,a)}`)}return s.join(',')}
 Promise.all([fetch('/dump/'+name+'.json').then(r=>r.json()),fetch('/assetmap.json').then(r=>r.json()),document.fonts.load("32px 'Fredoka One'"),document.fonts.load("700 16px 'Source Sans 3'")]).then(([d,map])=>{
  const st=document.getElementById('st');let W=0,H=0;const missing=new Set();
- for(const e of d){W=Math.max(W,e.x+e.w);H=Math.max(H,e.y+e.h)}
+ W=d[0].w;H=d[0].h; // the root's size (clipped content can reach far outside it)
  st.style.width=W+'px';st.style.height=H+'px';
  for(const e of d){
   let host=st,ox=0,oy=0;
