@@ -20,6 +20,18 @@ local Pets=require(combat:WaitForChild('PetConfig')) -- sandboxed data
 local Eggs=require(combat:WaitForChild('EggConfig')) -- pet eggs; unsandboxed data like ChestConfig
 local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed; this module is unsandboxed
 local Lock=require(game:GetService('ServerScriptService'):WaitForChild('ProfileLock')) -- unsandboxed, like this module
+-- Daily quests, streak and achievements (plans/2026-10-01-H-store-and-quests.md). Optional and
+-- protected: until QuestService is installed, or if it ever errors, quests do nothing and payouts,
+-- chest opens and upgrades carry on. quest('event',...) returns QuestService.event's results or nil.
+local questModule=game:GetService('ServerScriptService'):FindFirstChild('QuestService')
+local questsOk,Quests=pcall(function() return questModule and require(questModule) end)
+if not questsOk then warn('ProfileService: QuestService failed to load:',Quests);Quests=nil end
+local function quest(fn,...)
+ if not Quests then return nil end
+ local r=table.pack(pcall(Quests[fn],...))
+ if not r[1] then warn('ProfileService: quest '..fn..' failed:',r[2]);return nil end
+ return table.unpack(r,2,r.n)
+end
 -- Redeemable codes (server-only so they cannot be read from the client). One use per account.
 local CODES={
  RELEASE={emeralds=300},
@@ -44,7 +56,8 @@ local function fresh()
   pets={},pet=nil, -- pets: PetConfig id -> {tier,have}; pet: the equipped pet id (nil = none)
   bundles={}, -- one-time Godly bundles bought: product key -> true
   godlyPick='', -- the Godly weapon name chosen for a pending Godly Starter purchase
-  freeChestDay=0} -- Money.day() of the last free daily chest (the Wooden Chest)
+  freeChestDay=0, -- Money.day() of the last free daily chest (the Wooden Chest)
+  quests={}} -- daily quests, streak, lifetime stats, achievements (QuestService.state fills it in)
  for class in d.classes do d.weapons[SIGNATURE[class]]={tier=1,have=0} end
  return d
 end
@@ -76,6 +89,7 @@ function P.publish(player)
  -- CharacterService reads this server-set attribute to apply the permanent skill bonuses.
  player:SetAttribute('ProfileSkills',Skills.serialize(d.skills))
  player:SetAttribute('ProfileDaily',Http:JSONEncode(P.dailyView(player)))
+ player:SetAttribute('ProfileQuests',Http:JSONEncode(P.questView(player)))
  player:SetAttribute('ProfileLoaded',true)
 end
 
@@ -290,6 +304,7 @@ function P.openChest(player,kind,count)
   local counts=Chests.open(kind,rng,d.pity) -- rolls with both pity counters and updates them
   for _,r in Chests.Rarities do Chests.group(r,counts[r],rng,tally,kind) end
  end
+ quest('event',d,Money.day(),player.UserId,'chests',n)
  local results={}
  for id,c in tally do
   local r=P.addCopies(d,id,c);r.count=c;r.rarity=Chests.RarityOf[id]
@@ -353,7 +368,7 @@ function P.upgrade(player,id)
  local cost,gems=Chests.upgradeCost(id,rec.tier),Chests.upgradeEmeralds(id,rec.tier)
  if rec.have<cost then return false,'Need '..cost..' copies to upgrade' end
  if not spend(d,gems) then return false,'Need '..(gems-d.emeralds)..' more emeralds' end
- rec.have-=cost;rec.tier+=1;P.publish(player)
+ rec.have-=cost;rec.tier+=1;quest('event',d,Money.day(),player.UserId,'upgrades',1);P.publish(player)
  local name=armor and Armor.pieceName(id) or pet and Pets.ById[id].name or Weapons.ById[id].name
  return true,name..' is now Tier '..({'I','II','III','IV'})[rec.tier]
 end
@@ -396,6 +411,7 @@ function P.settleRun(player,stint,map,wavesPassed,owed)
  if d.vip then owed=math.floor(owed*(1+Money.VIPRunBonus)+.5) end
  local pay=math.max(0,math.floor(owed)-d.run.paid)
  d.run.paid+=pay;d.emeralds+=pay
+ quest('event',d,Money.day(),player.UserId,'earn',pay)
  if wavesPassed>(d.bestWaves[map] or 0) then d.bestWaves[map]=wavesPassed end
  P.publish(player)
  return pay
@@ -442,6 +458,60 @@ function P.spend(player,field)
  local d=P.profiles[player]
  if not d or (field~='rerolls' and field~='banishes') or d[field]<=0 then return false end
  d[field]-=1;P.publish(player);return true
+end
+
+-- Quests (QuestService) -----------------------------------------------------------------------
+function P.questView(player)
+ local d=P.profiles[player];if not d then return {} end
+ local day=Money.day()
+ local view=quest('view',d,day,player.UserId,Money.secondsToReset())
+ if not view then return {} end
+ view.claimable=quest('claimable',d,day,player.UserId) or 0
+ return view
+end
+-- Kills come many per second: an event only marks the profile, and marked profiles publish
+-- ProfileQuests at most once a second. A test run (the admin panel was used) counts nothing.
+local questDirty={}
+local function publishQuests(player)
+ questDirty[player]=nil
+ if P.profiles[player] then player:SetAttribute('ProfileQuests',Http:JSONEncode(P.questView(player))) end
+end
+function P.questEvent(player,stat,n)
+ local d=P.profiles[player];if not d or Admin.isTestRun() then return end
+ if quest('event',d,Money.day(),player.UserId,stat,n) then questDirty[player]=true end
+end
+-- A run (one player's stint) counts once, at its first cleared wave.
+function P.questRun(player,stint)
+ local d=P.profiles[player];if not d or Admin.isTestRun() then return end
+ if quest('runStarted',d,Money.day(),player.UserId,stint) then questDirty[player]=true end
+end
+task.spawn(function() while true do task.wait(1);for p in questDirty do publishQuests(p) end end end)
+-- Claims: QuestService checks and marks; the grant goes through P.grant (earned emeralds).
+local function questGrant(player,ok,message,g)
+ if ok==nil then return false,'Quests are not available right now' end
+ if ok then P.grant(player,g) end -- publishes, ProfileQuests included
+ return ok,message
+end
+function P.claimQuest(player,index)
+ local d=P.profiles[player];if not d then return false,'Profile loading' end
+ return questGrant(player,quest('claimQuest',d,Money.day(),player.UserId,index))
+end
+function P.claimStreak(player,milestone)
+ local d=P.profiles[player];if not d then return false,'Profile loading' end
+ return questGrant(player,quest('claimStreak',d,Money.day(),player.UserId,milestone))
+end
+function P.claimRoad(player,roadId)
+ local d=P.profiles[player];if not d then return false,'Profile loading' end
+ return questGrant(player,quest('claimRoad',d,Money.day(),player.UserId,roadId))
+end
+function P.claimUnlock(player,id)
+ local d=P.profiles[player];if not d then return false,'Profile loading' end
+ -- A weapon reward needs that weapon in the game; until then the claim waits.
+ local config=quest('config');local u=config and type(id)=='string' and config.UnlockById[id]
+ if u and u.reward.weapon and not P.weaponIdByName(u.reward.weapon) then return false,'Coming soon' end
+ local ok,message,g=quest('claimUnlock',d,Money.day(),player.UserId,id,function(class) return d.classes[class]==true end)
+ if ok and g.weapon then g.weapon=P.weaponIdByName(g.weapon) end
+ return questGrant(player,ok,message,g)
 end
 
 -- Daily deals: same 5 deals for a player all day, new ones at UTC midnight. Never Godly.
@@ -500,7 +570,7 @@ local releasing={}
 local function release(p)
  if releasing[p] then return end
  releasing[p]=true
- P.save(p,true);P.profiles[p]=nil;P.loaded[p]=nil;releasing[p]=nil
+ P.save(p,true);P.profiles[p]=nil;P.loaded[p]=nil;releasing[p]=nil;questDirty[p]=nil
 end
 
 Players.PlayerAdded:Connect(P.load)

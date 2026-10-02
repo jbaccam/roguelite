@@ -63,7 +63,7 @@ function E.hit(npc,amount,d,secondary)
   Batch.fire(combat.Hit,position,d.owner,position+Vector3.yAxis*2,actual,npc,position,false,secondary==true,d.id)
   return actual -- no death, rewards, lifesteal farming or damage to the tester
  end
- npc:SetAttribute('LastDamageUserId',d.owner.UserId)
+ npc:SetAttribute('LastDamageUserId',d.owner.UserId);npc:SetAttribute('LastWeaponId',d.id) -- quests count Utility kills
  local before=h.Health;h:TakeDamage(math.max(0,amount));local actual=before-math.max(0,h.Health)
  if actual<=0 then return 0 end
  Characters.leech(d.owner,actual)

@@ -92,6 +92,9 @@ local function setResult(p,outcome,map,stint,cleared,test)
   newBest=not test and info~=nil and cleared>info.prevBest,best=best,winWave=RunSetupRules.WinWave,
   weapons=weapons,items=items,test=test==true,returnAt=at}))
 end
+-- Quest progress (ProfileService). Guarded so this script still runs beside an older ProfileService.
+local function questEvent(p,stat,n) if Profiles.questEvent then Profiles.questEvent(p,stat,n) end end
+local function questRun(p,stint) if Profiles.questRun then Profiles.questRun(p,stint) end end
 -- Each cleared wave saves progress right away, so nothing waits on the death screen's Give Up:
 -- the best wave, the win at wave 20 with its first-win bonus, and the run emeralds earned so far
 -- (paid as they're reached; ProfileService.settleRun pays each stint's emeralds once). Leaving,
@@ -107,6 +110,9 @@ Shop.onWaveCleared=function(wavesPassed)
   local bonus=Profiles.recordProgress(p,key,wavesPassed,RunSetupRules.firstWinEmeralds(index,difficulty()))
   if bonus>0 then info.firstWin=bonus end
   if down[p] then continue end
+  -- Quests: a wave survived; the stint's first cleared wave counts a run; wave 20 is a win.
+  questRun(p,m.stint);questEvent(p,'waves',1)
+  if wavesPassed==RunSetupRules.WinWave then questEvent(p,'wins',1) end
   local earned=stintEmeralds(map,m.joined,Shop.wave)
   Analytics.earned(p,Profiles.settleRun(p,m.stint,key,wavesPassed,earned))
   if wavesPassed==RunSetupRules.WinWave and not Admin.isTestRun() then
@@ -120,6 +126,23 @@ Shop.onWaveCleared=function(wavesPassed)
  local spawn=Role.playerSpawn();local list={}
  for p in Shop.members do if down[p] then table.insert(list,p) end end
  for _,p in list do task.spawn(rise,p,spawn and spawn.Position or down[p].position,1) end
+end
+-- Quest kills (QuestService), counted like the leaderboard's: real runs in Combat, credited to the
+-- last player to hit (LastDamageUserId), never practice targets. A map boss counts for every
+-- member of the run. Kills with Utility weapons also count toward Handy Work.
+local Death=require(combat:WaitForChild('ZombieDeath'))
+local Weapons=require(combat:WaitForChild('WeaponCatalog'))
+Death.onDeath=function(npc)
+ if not Profiles.questEvent then return end
+ if Shop.phase~='Combat' or Admin.isTestRun() or npc:GetAttribute('PracticeTarget') or npc:GetAttribute('BossPractice') then return end
+ if npc:GetAttribute('IsMapBoss') then for p in Shop.members do questEvent(p,'bosses',1) end end
+ if not Tags:HasTag(npc,'RogueliteZombie') then return end
+ local id=npc:GetAttribute('LastDamageUserId')
+ local p=type(id)=='number' and Players:GetPlayerByUserId(id) or nil
+ if not p or not Shop.states[p] then return end
+ questEvent(p,'kills',1)
+ local weapon=Weapons.ById[npc:GetAttribute('LastWeaponId')]
+ if weapon and weapon.utility then questEvent(p,'utilityKills',1) end
 end
 local function livingInRun()
  local n=0
@@ -527,6 +550,10 @@ profileAction.OnServerInvoke=function(p,action,a,b,c)
  elseif action=='BuyDeal' and type(a)=='number' then ok,message,results=Profiles.buyDeal(p,a)
  elseif action=='ClaimVipChest' then ok,message=Profiles.claimVipChest(p)
  elseif action=='Redeem' and type(a)=='string' then ok,message=Profiles.redeem(p,a)
+ elseif action=='ClaimQuest' and Profiles.claimQuest and type(a)=='number' then ok,message=Profiles.claimQuest(p,a)
+ elseif action=='ClaimStreak' and Profiles.claimStreak and type(a)=='number' then ok,message=Profiles.claimStreak(p,a)
+ elseif action=='ClaimRoad' and Profiles.claimRoad and type(a)=='string' and #a<=40 then ok,message=Profiles.claimRoad(p,a)
+ elseif action=='ClaimUnlock' and Profiles.claimUnlock and type(a)=='string' and #a<=40 then ok,message=Profiles.claimUnlock(p,a)
  elseif action=='Refresh' then Profiles.publish(p);ok=true;message=''
  elseif action=='DevEmeralds' and studio then ok=Profiles.grant(p,{emeralds=200});message='Studio test: +200 emeralds (not saved)'
  elseif action=='DevResetSkills' and studio then ok,message=Profiles.resetSkills(p)

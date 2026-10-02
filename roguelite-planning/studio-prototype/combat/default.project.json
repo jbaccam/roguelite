@@ -232,6 +232,9 @@
         "ChestConfig": {
           "$path": "ChestConfig.luau"
         },
+        "QuestConfig": {
+          "$path": "QuestConfig.luau"
+        },
         "ArmorCatalog": {
           "$path": "ArmorCatalog.luau"
         },
@@ -339,6 +342,12 @@
       },
       "StoreFX": {
         "$path": "../ui/StoreFX.luau"
+      },
+      "StoreUI": {
+        "$path": "../ui/StoreUI.luau"
+      },
+      "QuestsUI": {
+        "$path": "../ui/QuestsUI.luau"
       },
       "SkillTreeUI": {
         "$path": "../ui/SkillTreeUI.luau"
@@ -459,6 +468,9 @@
       },
       "ProfileService": {
         "$path": "ProfileService.luau"
+      },
+      "QuestService": {
+        "$path": "QuestService.luau"
       },
       "RogueliteMeta": {
         "$path": "RogueliteMeta.server.luau"

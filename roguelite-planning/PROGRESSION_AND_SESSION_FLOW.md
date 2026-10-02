@@ -181,6 +181,13 @@ Leveling never pauses combat. Crossing an XP threshold during a wave plays a sho
 
 ## Achievements and quests
 
+**Built 2026-10-02 (plans/2026-10-01-H-store-and-quests.md):**
+- 3 daily quests pay emeralds.
+- A streak counts days with all 3 daily quests done, with rewards on days 1-30.
+- 8 trophy roads have 5 tiers each.
+- 5 unlocks give the Thrower, Juggler and Handyman classes, Mjolnir and the Samurai set.
+- Achievements that the game can't track yet (loadout-condition wins, passive unlocks) were dropped.
+
 **Confirmed:** Deterministic unlocks tied to achievements, e.g. "Win with 4 Thrower weapons → unlock Molotovs." Some passives are gated this way so new runs feel different.
 
 - **Achievements** are permanent, one-time goals with visible requirements. Their rewards are a *specific* named unlock (class, weapon, passive, armor set) or keys. They're never random.
