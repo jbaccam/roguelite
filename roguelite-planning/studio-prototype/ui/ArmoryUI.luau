@@ -13,6 +13,7 @@ local T = require(RS:WaitForChild("UITheme"))
 local Stage = require(RS:WaitForChild("ArmoryStage"))
 local Rules = require(RS:WaitForChild("RunSetupRules"))
 local RunSetup = require(RS:WaitForChild("RunSetupUI"))
+local StatPlates = require(RS:WaitForChild("StatPlates")) -- damage, health and Power under the dais (plan K)
 local combat = RS:WaitForChild("RogueliteCombat")
 local Weapons = require(combat:WaitForChild("WeaponCatalog"))
 local Stats = require(combat:WaitForChild("CharacterStats"))
@@ -1024,24 +1025,19 @@ function A.new(player, opts)
 				centred(T.label(b, "Count", "NONE\nREADY", 0, 20, SLOT, 80, 22, C.dim)).Size = UDim2.new(1, 0, 0, 80)
 			end
 		end)
-		-- Stat plate under the dais: the starter's damage at its tier, class health, and gear power
-		-- (GEAR_POWER.md: starter, worn armor and pet tiers; maps recommend a power).
+		-- Stat plates under the dais (ui/StatPlates.luau, plan K): the starter's damage at its tier,
+		-- class health, and gear power with its ? card.
 		local hp = Stats.resolve(class, 0).MaxHP
 		local w = Weapons.ById[weapon]
 		local dmg = w and weaponAt(w, rec and rec.tier or 1).damage or 0
-		local plateRow = T.frame(mid, "StatPlate", gw / 2 - 250, 640, 500, 70)
-		local a = T.panel(plateRow, "Damage", 0, 0, 160, 66, "panel")
-		T.icon(a, "Icon", 10, 9, 48, WeaponIcons[weapon])
-		local al = T.label(a, "Value", dmg .. " DMG", 62, 8, 90, 50, 26)
-		al.TextXAlignment = Enum.TextXAlignment.Left
-		local h = T.panel(plateRow, "Health", 170, 0, 160, 66, "panel")
-		T.icon(h, "Icon", 10, 11, 44, "heart")
-		local hl = T.label(h, "Value", math.floor(hp + 0.5) .. " HP", 62, 8, 90, 50, 26)
-		hl.TextXAlignment = Enum.TextXAlignment.Left
-		local power = Rules.power(player, weapon)
-		local g = T.panel(plateRow, "Power", 340, 0, 160, 66, "panel")
-		centred(T.label(g, "Value", "POWER " .. power, 8, 4, 144, 36, 26, C.lime))
-		centred(T.text(g, "Bonus", string.format("+%d%% dmg  +%d%% hp", math.round((Stats.powerDamage(power) - 1) * 100), math.round((Stats.powerHealth(power) - 1) * 100)), 8, 38, 144, 22, 15, C.muted))
+		StatPlates.draw(mid, gw / 2, 640, math.min(StatPlates.WIDTH, gw - 16), {
+			damage = dmg,
+			health = math.floor(hp + 0.5),
+			weaponIcon = WeaponIcons[weapon],
+			weaponName = w and w.name or "Starter",
+			parts = Rules.powerParts(player, weapon),
+			maps = Rules.Maps,
+		})
 	end
 
 	-- Right: details ---------------------------------------------------------------------

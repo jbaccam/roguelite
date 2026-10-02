@@ -346,6 +346,9 @@
       "StoreUI": {
         "$path": "../ui/StoreUI.luau"
       },
+      "StatPlates": {
+        "$path": "../ui/StatPlates.luau"
+      },
       "QuestsUI": {
         "$path": "../ui/QuestsUI.luau"
       },

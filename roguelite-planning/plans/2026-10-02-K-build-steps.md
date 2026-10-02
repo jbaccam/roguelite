@@ -590,7 +590,7 @@ Promise.all([fetch('/dump/'+name+'.json').then(r=>r.json()),fetch('/assetmap.jso
    const t=document.createElement('div');t.className='txt';t.textContent=e.t;
    // Font size from TextBounds: the largest size whose wrapped lines fill the bounds' height.
    const fam=font(e.f);let size=e.tb[1];
-   for(let n=1;n<=6;n++){const s=e.tb[1]/n;ctx.font=`${fam.includes('Source')?'700 ':''}${s}px ${fam}`;if(ctx.measureText(e.t).width/n<=Math.max(e.tb[0],1)*1.2){size=s;break}}
+   for(let n=1;n<=6;n++){const s=e.tb[1]/n;ctx.font=`${fam.includes('Source')?'700 ':''}${s}px ${fam}`;if(ctx.measureText(e.t).width/n<=Math.max(e.tb[0],1)*1.2+6){size=s;break}}
    Object.assign(t.style,{fontFamily:fam,fontSize:size+'px',color:rgba(e.tc,1-e.tt),
     justifyContent:{Left:'flex-start',Center:'center',Right:'flex-end'}[e.xa],
     alignItems:{Top:'flex-start',Center:'center',Bottom:'flex-end'}[e.ya],

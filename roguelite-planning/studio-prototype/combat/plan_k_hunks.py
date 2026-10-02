@@ -65,6 +65,30 @@ end"""),
 function R.powerParts(player,weapon)
  return Stats.gearParts(function(name) return player:GetAttribute(name) end,weapon or player:GetAttribute('RunWeapon') or R.Signature.Brawler)
 end"""),
+    # --- ArmoryUI: the plates under the dais come from StatPlates ----------------------------------
+    ("ui/ArmoryUI.luau", "ReplicatedStorage.ArmoryUI",
+     'local RunSetup = require(RS:WaitForChild("RunSetupUI"))', "after",
+     'local StatPlates = require(RS:WaitForChild("StatPlates")) -- damage, health and Power under the dais (plan K)'),
+    ("ui/ArmoryUI.luau", "ReplicatedStorage.ArmoryUI",
+     ("\t\t-- Stat plate under the dais: the starter's damage at its tier, class health, and gear power",
+      '\t\tcentred(T.text(g, "Bonus", string.format("+%d%% dmg  +%d%% hp", math.round((Stats.powerDamage(power) - 1) * 100), math.round((Stats.powerHealth(power) - 1) * 100)), 8, 38, 144, 22, 15, C.muted))'),
+     "block",
+     "\t\t-- Stat plates under the dais (ui/StatPlates.luau, plan K): the starter's damage at its tier,\n"
+     "\t\t-- class health, and gear power with its ? card.\n"
+     "\t\tlocal hp = Stats.resolve(class, 0).MaxHP\n"
+     "\t\tlocal w = Weapons.ById[weapon]\n"
+     "\t\tlocal dmg = w and weaponAt(w, rec and rec.tier or 1).damage or 0\n"
+     "\t\tStatPlates.draw(mid, gw / 2, 640, math.min(StatPlates.WIDTH, gw - 16), {\n"
+     "\t\t\tdamage = dmg,\n"
+     "\t\t\thealth = math.floor(hp + 0.5),\n"
+     "\t\t\tweaponIcon = WeaponIcons[weapon],\n"
+     "\t\t\tweaponName = w and w.name or \"Starter\",\n"
+     "\t\t\tparts = Rules.powerParts(player, weapon),\n"
+     "\t\t\tmaps = Rules.Maps,\n"
+     "\t\t})"),
+    ("combat/default.project.json", None,
+     '      "QuestsUI": {', "before",
+     '      "StatPlates": {\n        "$path": "../ui/StatPlates.luau"\n      },'),
 ]
 
 MODULES = []  # whole modules for the Studio sync: filled in Task 11
