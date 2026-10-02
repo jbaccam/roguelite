@@ -28,6 +28,7 @@ function T.decorate(model,id)
  elseif id=='22' then K.trail(part,.5,.12,K.Dust,K.Dust,.7)
  elseif id=='14' then K.trail(part,.38,.2,FLAME[1],FLAME[2],.3)
  elseif id=='31' then K.trail(part,.55,.18,K.Lightning[1],K.Lightning[2],.35)
+ elseif id=='37' then require(script.Parent.GodlyVisuals).decorateThrown(model,id)
  end
 end
 function T.step(folder,r,position)

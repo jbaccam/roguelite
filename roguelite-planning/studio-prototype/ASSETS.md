@@ -147,3 +147,25 @@ Added the same day as replacements (both passed moderation and load): echoes_of_
   - Frost Cyclops: ice_windup 9119628762 "Steam Whoosh Phased 1 (SFX)", ice_slam 9118585250 "Rock Cracks Big Boulder Hits 4 (SFX)", ice_crack 9119311395 "Snowball Hit Vehicle Window 1 (SFX)", ice_wave 9118588626 "Rock Drops 10 Ft High Onto Rocks Dirt 6 (SFX)".
   - Inferno Dragon: dragon_windup 9113971433 "Creature Growls Lion 2 (SFX)", dragon_inhale 9126102843 "Time Warp Searing Build Up Large Suck Rumble (SFX)", fire_breath 9117987723 "Pyro Fire Ball Burst 15 (SFX)", tail_whoosh 9120727859 "Whoosh Giant Swish By 8 (SFX)", ground_quake 9125484359 "Deep Hits Big Reverberant Booms Rumbling Tai (SFX)", lava_hiss 9125579324 "Giant Steam Chuff Air Burst Through The Tube (SFX)", wing_flap 9120771885 "Wing Flaps 29 (SFX)".
   - The Toolbox had no free, first-party ice or magic-hum recordings, so the ice cues are rock/glass/snow hits and the Pharaoh charge is an airy riser; the effects modules pitch them. Swap an id in `BossVfxAssets.Sounds` if one sounds wrong.
+
+## Godly weapons (plans/2026-10-01-G-godly-weapons.md), 2026-10-01
+
+- **Models:** `WeaponTemplates.36`–`41` are the six Blender-built Godly weapons (`weapon-models/godly/<weapon>/`).
+  - They were imported together as `weapon-models/godly/studio-import/Godly_Weapons.fbx`.
+  - Their BaseColor atlases were uploaded as Images and set as `MeshPart.TextureID`. The ids are in `weapon-models/godly/studio-import/studio-asset-ids.json`.
+- **Icons:** `ui/assets/weapons/36.png`–`41.png`. These are the user's own OpenAI Astra renders, sent in chat and converted from webp to png unchanged.
+  - Uploaded as `rbxassetid://107381256092734` (Scythe), `111945334431090` (Trident), `86787843399026` (Storm Bow), `112261102861999` (Daggers), `90868128996170` (Vampire Blade) and `74294498569772` (Ray Gun).
+  - Provenance is in `ui/assets/weapons/provenance.json`.
+- **VFX textures:** original, painted by `weapon-models/godly/vfx/paint_godly_vfx.py` (white on transparent, tinted in game):
+  - GodlySoftGlow `119796255132573`
+  - GodlySlash `105397482701607`
+  - GodlyLightning `100197465776159`
+  - GodlyWisp `96655998397870`
+  - GodlySkull `119217505644088`
+  - GodlyPixel `133657841459974`
+
+  Also reused from BossVfxAssets: ShockwaveRing, ImpactStar, the WaterSplash and SmokePuff flipbooks, Bubble and Ember.
+- **Sounds:** no new uploads. The Godly weapons reuse the kit in `RogueliteSounds` (pitched), plus three Roblox library sounds the map bosses already use:
+  - `water_bubbles` 9120309620 (Underwater Bubbles);
+  - `thunder_crack` 9114157695 (Doppler Whooshes Crackly Airy Bursts);
+  - `ghost_rise` 9120733055 (Whoosh Rising Swish Airy).

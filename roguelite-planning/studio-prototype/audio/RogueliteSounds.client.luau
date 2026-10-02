@@ -37,6 +37,8 @@ local ID={
  ui_purchase=81834205196662,ui_upgrade=99405716010813,
  player_damage=107723670570555,player_death=139324006502013,
  washer_loop=131922039707440,crystal_pickup=119199604552182,
+ -- Roblox library sounds the map bosses already use (bosses/BossVfxAssets): Godly specials.
+ water_bubbles=9120309620,thunder_crack=9114157695,ghost_rise=9120733055,
 }
 
 -- Weapon id (WeaponCatalog) -> attack sound. pitch reshapes one file for several weapons:
@@ -79,6 +81,13 @@ local WEAPON={
  ['33']={sound='shot_magic_c',pitch=.8,volume=.5},                                -- Pandora's Box
  ['34']={sound='shot_magic_b',pitch=.85,volume=.45},                              -- Medusa's Head
  ['35']={sound='zap',pitch=1,volume=.4},                                          -- Crystal Ball
+ -- Godly (plans/2026-10-01-G): heavier, lower takes on the kit; specials add layers (GodlyFX below).
+ ['36']={sound='swing_heaviest',pitch=.8,volume=.65,hit='hit_thud',hitPitch=.8,hitVolume=.35}, -- Reaper's Scythe
+ ['37']={sound='swing_heavy',pitch=.95,volume=.6,hit='hit_blunt',hitPitch=.85,hitVolume=.3},  -- Poseidon's Trident
+ ['38']={sound='shot_magic_a',pitch=1.25,volume=.5},                              -- Storm Bow
+ ['39']={sound='swing_blade',pitch=1.3,volume=.55},                               -- Shadow Daggers
+ ['40']={sound='swing_blade',pitch=.75,volume=.6,hit='hit_thud',hitPitch=1.1,hitVolume=.3},  -- Vampire Blade
+ ['41']={sound='zap',pitch=.75,volume=.5},                                        -- Ray Gun
 }
 
 -- EnemyId (EnemyCatalog) -> {hit sound, pitch, volume scale}. Crab-family crunches are
@@ -254,6 +263,33 @@ combat:WaitForChild('Hit').OnClientEvent:Connect(function(position,_,npc,impactP
  play(m[1],'mob',lethal and .315*scale or .225*math.sqrt(scale),m[2]*(lethal and .9 or 1),at,.08)
  local w=WEAPON[weaponId]
  if w and w.hit then play(w.hit,'impact',w.hitVolume,w.hitPitch,at,.05) end
+end)
+
+-- Godly specials (GodlyWeapons -> GodlyFX): the wraith's rise and claws, the tidal wave, the
+-- storm arrows' thunder, the dagger chain's slashes, the blood wisp and the Ray Gun's burst.
+local function npcAt(npc) local r=typeof(npc)=='Instance' and npc.Parent and npc:FindFirstChild('HumanoidRootPart');return r and r.Position end
+combat:WaitForChild('GodlyFX').OnClientEvent:Connect(function(kind,...)
+ local a={...}
+ if kind=='Rise' then
+  play('ghost_rise','impact',.45,.7,a[3],.08);play('mob_ghost','impact',.35,.6,a[3],.08)
+ elseif kind=='Claw' then
+  local at=npcAt(a[2]);if at then play('swing_light','impact',.3,1.45,at,.1) end
+ elseif kind=='Wave' then
+  play('swing_heaviest','impact',.6,.6,a[2],.05);play('water_bubbles','impact',.6,1,a[2],.05)
+ elseif kind=='Rain' then
+  local split=a[4];local wait=math.clamp((a[7] or 0)+(a[8] or 0)-workspace:GetServerTimeNow(),0,.8)
+  task.delay(wait,function() play('thunder_crack','impact',.55,1.1,split,.06) end)
+ elseif kind=='Chain' then
+  local points,start,step=a[4],a[6] or 0,a[7] or .09
+  for i,point in points do
+   task.delay(math.clamp(start+.08+(i-1)*step-workspace:GetServerTimeNow(),0,1),function() play('swing_blade','weapon',.35,1.5,point,.08) end)
+  end
+ elseif kind=='Wisp' then
+  local mine=a[1]==player.UserId
+  task.delay(.5,function() play('crystal_pickup','pickup',mine and .3 or .15,.7,not mine and a[2] or nil,0,{2.55,2.6189}) end)
+ elseif kind=='Burst' then
+  play('shot_magic_a','impact',.45,.6,a[2],.06);play('zap','impact',.3,.6,a[2],.06)
+ end
 end)
 
 -- Crystal pickups: one plop per crystal as it reaches you, timed to the visible pull (the

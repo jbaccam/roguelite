@@ -35,6 +35,10 @@ end)
 require(combat:WaitForChild('SpecialWeaponVisuals')).mount(combat,visuals,function(owner,index)
  local state=states:FindFirstChild(tostring(owner));return state and tracked[state:FindFirstChild('Slot'..index)]
 end)
+-- Godly auras, trails and specials (GodlyFX: wraiths, waves, storm arrows, dagger chain, wisps, bursts).
+local godlyFX=require(combat:WaitForChild('GodlyVisuals')).mount(combat,visuals,function(owner,index)
+ local state=states:FindFirstChild(tostring(owner));return state and tracked[state:FindFirstChild('Slot'..tostring(index))]
+end)
 local floats={}
 RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Value+1,function(dt)
  local now=workspace:GetServerTimeNow()
@@ -75,7 +79,7 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
      table.insert(v.parts,part)
     end end
     -- Cosmetic extras: swing ribbons, Pandora glow and a contact capsule.
-    Swing.attach(v,id,template)
+    Swing.attach(v,id,template);godlyFX.attach(v,id,template)
     if id=='33' then v.pandora=Pandora.idle(model) end
     local bounds=template:GetAttribute('BoundsSize')
     if typeof(bounds)=='Vector3' then v.capsule=Spacing.capsule(bounds,template:GetAttribute('BoundsCenter')) end
@@ -168,7 +172,7 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
       hand=slot:GetAttribute('AttackHand'),secondAim=slot:GetAttribute('SecondAim')}
      table.insert(frameList,v)
     else
-     v.frame=nil;v.spacing=nil;Swing.hide(v)
+     v.frame=nil;v.spacing=nil;Swing.hide(v);godlyFX.hide(v)
      if v.pandora then Pandora.stepIdle(v.pandora,v.model:GetPivot(),false,0) end
      if float then float.slots[slot:GetAttribute('Index')]=nil end
     end
@@ -205,13 +209,14 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
    v.spacing=Spacing.smooth(v.spacing,offsets[i] or Vector3.zero,dt)
    if v.spacing.Magnitude>1e-3 then v.model:PivotTo(v.model:GetPivot()+v.spacing) end
   end
-  for _,v in frameList do Swing.step(v,v.model:GetPivot(),v.frame) end
+  for _,v in frameList do local pivot=v.model:GetPivot();Swing.step(v,pivot,v.frame);godlyFX.step(v,pivot,v.frame) end
  end
  for slot,v in tracked do if not seen[slot] then v.model:Destroy();tracked[slot]=nil end end
  for state in floats do if state.Parent~=states then floats[state]=nil end end
 end)
 local function showShot(origin,finish,kind,id,thickness,blastRadius,contact,normal,ownerId,slotIndex,first,mobContact,shotId,projectileId,projectileSpeed,terminal)
  if id~='10' and contact and kind=='Ranged' and not mobContact then bulletImpact(finish,normal) end
+ if godlyFX.shot(origin,finish,kind,id,thickness,blastRadius,contact,normal,ownerId,slotIndex,first,mobContact,shotId,projectileId,projectileSpeed,terminal) then return end
  if first and Motion.MuzzleOffsets[id] and ownerId and slotIndex then
   local state=states:FindFirstChild(tostring(ownerId))
   local slot=state and state:FindFirstChild('Slot'..slotIndex)
@@ -258,8 +263,9 @@ local function damageNumber(position,damage,color,name)
  Debris:AddItem(anchor,.85)
 end
 
-combat:WaitForChild('Hit').OnClientEvent:Connect(function(position,damage,npc,impactPosition,lethal,secondary)
+combat:WaitForChild('Hit').OnClientEvent:Connect(function(position,damage,npc,impactPosition,lethal,secondary,weaponId)
  if not lethal then mobImpact.hit(impactPosition or position-Vector3.yAxis*2,npc,secondary) end
+ godlyFX.hit(npc,lethal,secondary,weaponId,impactPosition or position)
  damageNumber(position,damage,Color3.fromRGB(255,246,218),'DamageNumber')
  if npc and npc.Parent then
   local previous=npc:FindFirstChild('WeaponHitFlash');if previous then previous:Destroy() end
