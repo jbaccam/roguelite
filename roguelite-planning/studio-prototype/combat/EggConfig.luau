@@ -11,7 +11,7 @@ local E={}
 
 E.Id='PetEgg'
 E.Name='Pet Egg'
-E.Icon='rbxassetid://117887028525234' -- UI icon: blender-egg-merchant-kit/previews/icon-egg.png
+E.Icon='rbxassetid://115158817562855' -- UI icon: ui/assets/hud/pet-egg.png (the user's art, plan K)
 E.Emeralds=250 -- per egg (user pick: between a Silver Chest, 160, and a Gold Chest, 300)
 E.Amounts={1,3,10} -- bought or hatched at once
 E.Rarities={'Common','Rare','Epic','Legendary'}

@@ -6,12 +6,12 @@ local combat=RS:WaitForChild('RogueliteCombat')
 local Stats=require(combat:WaitForChild('CharacterStats'))
 local C=T.Color
 local M={}
-M.WIDTH,M.HEIGHT=680,70
+M.WIDTH,M.HEIGHT=624,70 -- three 200-wide plates, 12 apart
 M.CARD_W,M.CARD_H=520,340
 -- Power's icon: the user's flexed bicep (ui/assets/hud/power-bicep.png).
 M.PowerIcon='rbxassetid://138972895415138'
 local ARMOR_ICON='rbxassetid://80556274645944' -- Armor upgrade (shield)
-local PET_ICON='rbxassetid://117887028525234' -- pet egg
+local PET_ICON='rbxassetid://115158817562855' -- pet egg (ui/assets/hud/pet-egg.png)
 local function left(l) l.TextXAlignment=Enum.TextXAlignment.Left;return l end
 local function right(l) l.TextXAlignment=Enum.TextXAlignment.Right;return l end
 
@@ -58,13 +58,13 @@ function M.draw(parent,cx,y,w,info)
  T.icon(h,'Icon',12,11,48,'heart')
  left(T.label(h,'Label','HEALTH',72,8,118,20,15,C.muted))
  left(T.label(h,'Value',tostring(info.health),72,26,118,36,30))
- local g=T.button(row,'Power','',424,0,256,M.HEIGHT,nil,false)
+ local g=T.button(row,'Power','',424,0,200,M.HEIGHT,nil,false)
  g.Caption.Visible=false
  local tx=M.PowerIcon~='' and 72 or 20
  if M.PowerIcon~='' then T.icon(g,'Icon',10,9,52,M.PowerIcon) end
- left(T.label(g,'Label','POWER',tx,8,130,20,16))
- left(T.label(g,'Value',tostring(info.parts.total),tx,26,130,36,32))
- local q=T.make('Frame',g,{Name='Help',AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(222,35),Size=UDim2.fromOffset(40,40),BackgroundColor3=C.well,BorderSizePixel=0})
+ left(T.label(g,'Label','POWER',tx,8,74,20,16))
+ left(T.label(g,'Value',tostring(info.parts.total),tx,26,74,36,32))
+ local q=T.make('Frame',g,{Name='Help',AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(168,35),Size=UDim2.fromOffset(40,40),BackgroundColor3=C.well,BorderSizePixel=0})
  T.make('UICorner',q,{CornerRadius=UDim.new(1,0)});T.make('UIStroke',q,{Color=C.ink,Thickness=3})
  T.label(q,'Mark','?',0,0,40,40,26,C.lime).Size=UDim2.fromScale(1,1)
  local card

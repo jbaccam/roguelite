@@ -85,15 +85,15 @@ function C.validAmount(n) return table.find(C.Amounts,n)~=nil end
 -- Chest comes from Robux packs and rewards). daily=true: free, one per day (the Wooden Chest,
 -- 2026-09-30), claimed through BuyChest.
 local function add(d) C.ById[d.id]=d;table.insert(C.Order,d.id) end
-add({id='Wooden',icon='rbxassetid://107136053285951',name='Wooden Chest',emeralds=nil,daily=true,copies=3,rare=.25,epic=.02,legendary=.002,godly=0,pity=false,
+add({id='Wooden',icon='rbxassetid://134997471113145',name='Wooden Chest',emeralds=nil,daily=true,copies=3,rare=.25,epic=.02,legendary=.002,godly=0,pity=false,
  aura=Color3.fromRGB(120,235,70),glow=Color3.fromRGB(255,190,80)})
-add({id='Silver',icon='rbxassetid://103320236733137',name='Silver Chest',emeralds=160,copies=6,rare=1,epic=.08,legendary=.008,godly=.0005,pity=true,
+add({id='Silver',icon='rbxassetid://129205874070637',name='Silver Chest',emeralds=160,copies=6,rare=1,epic=.08,legendary=.008,godly=.0005,pity=true,
  aura=Color3.fromRGB(70,170,255),glow=Color3.fromRGB(110,195,255)})
-add({id='Gold',icon='rbxassetid://88627612681717',name='Gold Chest',emeralds=300,copies=10,rare=2,epic=.25,legendary=.03,godly=.002,pity=true,
+add({id='Gold',icon='rbxassetid://71517836177030',name='Gold Chest',emeralds=300,copies=10,rare=2,epic=.25,legendary=.03,godly=.002,pity=true,
  aura=Color3.fromRGB(255,200,50),glow=Color3.fromRGB(255,206,90)})
-add({id='Magical',icon='rbxassetid://92681366357642',name='Magical Chest',emeralds=700,copies=18,rare=4,epic=1,legendary=.1,godly=.006,pity=true,
+add({id='Magical',icon='rbxassetid://100435943394609',name='Magical Chest',emeralds=700,copies=18,rare=4,epic=1,legendary=.1,godly=.006,pity=true,
  aura=Color3.fromRGB(176,90,255),glow=Color3.fromRGB(110,180,255)})
-add({id='Legendary',icon='rbxassetid://81753880209961',name='Legendary Chest',emeralds=nil,copies=8,rare=3,epic=1,legendary=1,godly=.02,pity=true,
+add({id='Legendary',icon='rbxassetid://97798658508261',name='Legendary Chest',emeralds=nil,copies=8,rare=3,epic=1,legendary=1,godly=.02,pity=true,
  aura=Color3.fromRGB(255,110,40),glow=Color3.fromRGB(255,176,60),accent=Color3.fromRGB(120,255,232)})
 -- Old saves: class chests become Wooden, the Royal Chest becomes Legendary (same Robux packs).
 C.Legacy={Brawler='Wooden',Gunner='Wooden',Thrower='Wooden',Juggler='Wooden',Handyman='Wooden',Mage='Wooden',Royal='Legendary'}

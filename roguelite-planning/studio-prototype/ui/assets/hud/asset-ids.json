@@ -81,6 +81,10 @@
     "power-bicep": {
       "source": "user-generated icon 2026-10-02 (plan K, Gear Power), trimmed to alpha bounds, 4% pad, 256x256",
       "asset": "rbxassetid://138972895415138"
+    },
+    "pet-egg": {
+      "source": "user-generated icon 2026-10-02 (plan K, quests and store), trimmed to alpha bounds, 4% pad, 256x256",
+      "asset": "rbxassetid://115158817562855"
     }
   }
 }
