@@ -28,10 +28,18 @@ function M.mount(player)
  T.make('UIGradient',tint,{Rotation=90,Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(.45,1),NumberSequenceKeypoint.new(1,1)})})
  local root=T.frame(screen,'Root',0,0,0,0);root.Size=UDim2.fromScale(1,1)
  local result -- the decoded RunResult
- local L,canvas,content,note,back
+ local L,canvas,content,note,back,again
  local token=0
 
  local function centred(l) l.TextXAlignment=Enum.TextXAlignment.Center;return l end
+ -- While PLAY AGAIN waits (the server's PlayAgainStatus), its button cancels and the note says why.
+ local function paintAgain()
+  if not again or not again.Parent then return end
+  local waiting=player:GetAttribute('PlayAgainStatus')
+  again.Caption.Text=waiting and 'CANCEL' or 'PLAY AGAIN'
+  if note and waiting then note.Text=waiting;note.TextColor3=C.lime elseif note then note.TextColor3=C.muted end
+ end
+ player:GetAttributeChangedSignal('PlayAgainStatus'):Connect(paintAgain)
  local function draw()
   if content then content:Destroy();content=nil;note=nil;back=nil end
   if not result or not L then return end
@@ -99,15 +107,23 @@ function M.mount(player)
    end
   end
   items.CanvasSize=UDim2.fromOffset(0,math.ceil(#list/cols)*(icell+8))
-  -- BACK TO LOBBY, and the countdown to the automatic return.
-  back=T.button(board,'BackToLobby','BACK TO LOBBY',(PW-360)/2,PH-96,360,64,function()
-   if not back or not back.Interactable then return end
-   back.Interactable=false;back.Caption.Text='RETURNING...'
-   combat.RunAction:FireServer('ReturnToLobby')
+  -- PLAY AGAIN (plan J item 9: a fresh run on this server with whoever presses it) beside BACK TO
+  -- LOBBY, and the note under them: the countdown to the automatic return, or why PLAY AGAIN waits.
+  local bw,gap=340,24;local bx=(PW-2*bw-gap)/2
+  again=T.button(board,'PlayAgain','PLAY AGAIN',bx,PH-96,bw,64,function()
+   if not again or not again.Interactable then return end
+   combat.RunAction:FireServer('PlayAgain',player:GetAttribute('PlayAgainStatus')==nil)
   end)
+  again.Caption.TextSize=28
+  back=T.button(board,'BackToLobby','BACK TO LOBBY',bx+bw+gap,PH-96,bw,64,function()
+   if not back or not back.Interactable then return end
+   back.Interactable=false;back.Caption.Text='RETURNING...';if again then again.Interactable=false end
+   combat.RunAction:FireServer('ReturnToLobby')
+  end,true)
   back.Caption.TextSize=28
   note=centred(T.label(board,'Note','',28,PH-30,PW-56,24,18,C.muted))
-  if UserInputService:GetLastInputType().Name:find('^Gamepad') then pcall(function() GuiService.SelectedObject=back end) end
+  paintAgain()
+  if UserInputService:GetLastInputType().Name:find('^Gamepad') then pcall(function() GuiService.SelectedObject=again end) end
  end
  local relayout
  canvas,relayout=T.canvas(root,function(layout) L=layout;if screen.Enabled then draw() end end)
@@ -123,7 +139,8 @@ function M.mount(player)
   -- The countdown follows the server's clock (returnAt), so a slow client never shows it wrong.
   task.spawn(function()
    while token==mine and screen.Enabled do
-    if note and result.returnAt then
+    if note and player:GetAttribute('PlayAgainStatus') then paintAgain()
+    elseif note and result.returnAt then
      local left=math.max(0,math.ceil(result.returnAt-workspace:GetServerTimeNow()))
      note.Text=left>0 and ('Back to the lobby in '..left..'s') or 'Returning to the lobby...'
     end
@@ -138,6 +155,41 @@ function M.mount(player)
  local function changed() if player:GetAttribute('RunResult') then show() else hide() end end
  player:GetAttributeChangedSignal('RunResult'):Connect(changed)
  changed()
+
+ -- Rejoin (plan J item 9): in a lobby, a run this player dropped out of that is still going (the
+ -- server's RejoinOffer). A small card at the top: REJOIN goes back to it, NOT NOW forgets it.
+ local offerGui=T.make('ScreenGui',player.PlayerGui,{Name='RejoinOffer',ResetOnSpawn=false,DisplayOrder=84,Enabled=false,
+  ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets})
+ local offerRoot=T.frame(offerGui,'Root',0,0,0,0);offerRoot.Size=UDim2.fromScale(1,1)
+ local card
+ local function drawOffer()
+  if card then card:Destroy();card=nil end
+  local ok,info=pcall(Http.JSONDecode,Http,player:GetAttribute('RejoinOffer') or '')
+  offerGui.Enabled=ok and type(info)=='table'
+  if not offerGui.Enabled then return end
+  local W,H=640,info.error and 196 or 172
+  local v=offerRoot.AbsoluteSize;local s=math.clamp((v.X-24)/W,.55,1)
+  card=T.panel(offerRoot,'Card',0,0,W,H,'panel');card.AnchorPoint=Vector2.new(.5,0);card.Position=UDim2.new(.5,0,0,12)
+  T.make('UIScale',card,{Scale=s})
+  centred(T.label(card,'Title','YOUR RUN IS STILL GOING',20,14,W-40,40,32,C.gold))
+  local sub=string.upper((info.mapName or 'Your run')..'  ·  '..(info.difficulty or 'Normal')..'  ·  WAVE '..tostring(info.wave or 1))
+  centred(T.label(card,'Sub',sub,20,56,W-40,26,20,C.muted))
+  local bh=math.max(56,math.ceil(40/s)) -- 40 px to tap on a phone
+  local join
+  join=T.button(card,'Rejoin','REJOIN',W/2-276,96,260,bh,function()
+   if not join.Interactable then return end
+   join.Interactable=false;join.Caption.Text='JOINING...'
+   combat.RunAction:FireServer('Rejoin')
+  end)
+  join.Caption.TextSize=26
+  local skip=T.button(card,'NotNow','NOT NOW',W/2+16,96,260,bh,function() combat.RunAction:FireServer('RejoinDismiss') end,true)
+  skip.Caption.TextSize=24
+  if info.error then centred(T.label(card,'Error',string.upper(info.error),20,96+bh+10,W-40,24,18,C.negative)) end
+  card.Size=UDim2.fromOffset(W,math.max(H,96+bh+(info.error and 44 or 20)))
+ end
+ player:GetAttributeChangedSignal('RejoinOffer'):Connect(drawOffer)
+ offerRoot:GetPropertyChangedSignal('AbsoluteSize'):Connect(function() if offerGui.Enabled then drawOffer() end end)
+ drawOffer()
  return M
 end
 return M

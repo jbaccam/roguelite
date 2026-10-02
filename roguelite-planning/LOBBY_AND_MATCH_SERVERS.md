@@ -101,7 +101,7 @@ User request: make the lobby dummies attackable, with a clear way to turn attack
 - It kicks back to the lobby any player who isn't a listed member. This can't normally happen.
 - After loading each member's profile, it re-checks the loadout against *that player's own save*. If the check fails, the player gets their class signature weapon.
 - It waits for all listed members, up to 30 s, before wave 1 starts. Runs open on wave 1; the first shop comes after it (user direction, 2026-09-28). A member who arrives after wave 1 has begun waits like a downed player and spawns at the next wave end.
-- If a player disconnects mid-run and rejoins the game, they land in a lobby server. There's no rejoining a match.
+- If a player disconnects mid-run and rejoins the game, they land in a lobby server, which offers REJOIN while the match still runs (plan J item 9, below).
 - **Plan C requirements** (from the plan A review):
   - `AvatarNormalizer` spawns players on join. A match server must hold that spawn until `ServerRole.setMap(entry.map)` has returned; `setMap` applies the map before it returns.
   - If `setMap` returns false (a missing or bad match entry), send the players back to a lobby.
@@ -265,7 +265,7 @@ User direction 2026-10-01: Endless works like Brotato's (the same wave → shop 
 - **Return:** a match server teleports the returning group to a public lobby (`MatchService.toLobby`); the Combined Studio role walks them into the lobby; a Studio forced-Match, or a teleport that fails, puts them back in the arena.
 - **Starter tiers:** the loadout starter enters the run at its owned tier (a Tier II Frying Pan starts at Tier II). See GEAR_POWER.md for the matching map scaling.
 - **Analytics:** see PLAYTEST_ANALYTICS.md.
-- **Still not built:** Play Again with the same party; rejoining a match after disconnecting. (Doubling revives: built, below.)
+- **Since built (below):** doubling revives, Play Again with the same party, rejoining a match after disconnecting.
 - **Not tested yet:** everything above needs a Studio Play pass (single player: die solo, revive, let the clock run out, leave between waves, win wave 20 and keep going), and the multi-player parts (spectating, wave-end respawn, last stand with two players, group return) need two real clients or the published game.
 
 ## Doubling revives built (2026-10-02, plan J items 6 and 11)
@@ -277,3 +277,17 @@ User direction 2026-10-01: Endless works like Brotato's (the same wave → shop 
   - Product IDs are 0 until the user creates the five products in the Creator Dashboard; Studio simulates the grant, live servers say "Not on sale yet".
 - **Last-stand clock on the splash:** "REVIVE OR THE RUN ENDS · n" now shows under YOU DIED from the first frame (it pops on each new second), and the summary title takes over when the splash fades. So the 10 s stays (user: fine if the countdown is visible the whole time).
 - **Not tested yet:** Studio Play (solo: die, revive at 65, die again and see 130, let the clock run out). Real prompts need the five product IDs and the published game.
+
+## Play Again and rejoining built (2026-10-02, plan J item 9)
+
+**Play Again** (results screen): PLAY AGAIN sits beside BACK TO LOBBY. Everyone who presses it goes back into a **fresh run on the same server**: same map, difficulty and loadouts, wave 1, fresh starter weapons (each player's owned tier), new stint for rewards. No new teleport or save handoff, so nothing can fail in between, and it works in Studio too.
+- It starts when nobody is still playing the old run and everyone else on the results screen has decided: pressed PLAY AGAIN, or gone back to the lobby (their 20 s clock does that on its own). While it waits, the button says CANCEL and the note says why ("Waiting for Ben", "Waiting for the run to end"). Cancelling sends them back to the lobby 10 s later.
+- Example: Ana and Ben both fall on wave 12. Ana presses PLAY AGAIN and sees "Waiting for Ben". Ben presses it too, and both land at the map spawn; wave 1 starts once both are in (or after 15 s).
+- Server: `RogueliteMeta` (RunAction `PlayAgain` true/false, player attribute `PlayAgainStatus`). Client: `ui/RunResultsUI.luau`.
+
+**Rejoin** (disconnecting mid-run): a run member who drops out on a match server leaves their build there for 10 minutes (`ShopService` stash: weapons with tiers and paid prices, items, level, XP, shards, shop offers, level-up picks). The match server writes a MemoryStore record (`RogueliteRejoinV1[userId]`) with its access code (now part of the match entry), refreshes it every minute while it runs, and removes it when the build is no longer kept (run reset, expired) or the player is back.
+- In a lobby, a fresh record shows a card at the top: "YOUR RUN IS STILL GOING · PINE VALLEY · NORMAL · WAVE 7" with REJOIN and NOT NOW (`RejoinOffer` attribute, `RunResultsUI`). REJOIN hands the save over and teleports them back (`MatchService.rejoin`); the match puts their build back and they spawn at the map spawn, even mid-wave ("Welcome back! Your build is where you left it"). A failure shows on the card ("That run has ended").
+- **Limit:** a reserved server closes when its last player leaves, so a solo player who disconnects can't rejoin (their run ends as before, rewards up to the last cleared wave kept). Rejoining needs a teammate still in the match. A record older than 150 s means that server is gone and is never offered.
+- Rewards stay single-paid: the rejoined player starts a new stint at the wave they return on.
+
+**Not tested yet:** Play Again in Studio Play (Combined: die solo, PLAY AGAIN, wave 1 starts). Rejoin needs the **published game** and two accounts: both start a run, one closes Roblox mid-wave, rejoins the game, sees the card in the lobby, presses REJOIN, lands back in the same match with the same weapons, items and level.

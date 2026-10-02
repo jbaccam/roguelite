@@ -57,7 +57,8 @@ function M.launch(players,map,difficulty,loadouts)
  if not ok then return false,"Couldn't start the run, try again" end
  local members={}
  for _,p in players do members[tostring(p.UserId)]=loadouts[p.UserId] or {} end
- if not retry(2,entries.SetAsync,entries,serverId,{map=map,difficulty=difficulty,members=members},ENTRY_SECONDS) then
+ -- code: the server's own access code, so it can send a dropped player back (rejoin, below).
+ if not retry(2,entries.SetAsync,entries,serverId,{map=map,difficulty=difficulty,members=members,code=code},ENTRY_SECONDS) then
   return false,"Couldn't start the run, try again"
  end
  -- Saves first: the match server can only load a save this lobby has released.
@@ -103,7 +104,57 @@ Teleport.TeleportInitFailed:Connect(function(player,result,message)
  trips[player]=nil
  failed(player,"Couldn't reach the server, try again")
 end)
-Players.PlayerRemoving:Connect(function(p) trips[p]=nil end)
+-- Rejoin (plan J item 9) -------------------------------------------------------------------
+-- A member who disconnects mid-run leaves their build on the match server (ShopService.stashFor).
+-- The match server writes a record under their user id with its access code, and refreshes it
+-- while it is running and the build is kept; a lobby that finds a fresh record offers REJOIN RUN.
+-- A record older than REJOIN_FRESH means that server is gone, so it isn't offered.
+local rejoins=Memory:GetHashMap('RogueliteRejoinV1')
+local REJOIN_FRESH=150
+local offered={} -- match: userId -> {at=os.time() last written}
+local function writeRejoin(userId)
+ local rec={code=M.code,server=game.PrivateServerId,map=combat:GetAttribute('RunMap'),difficulty=combat:GetAttribute('RunDifficulty'),
+  wave=Shop.wave,at=os.time()}
+ if retry(2,rejoins.SetAsync,rejoins,tostring(userId),rec,Shop.REJOIN_SECONDS or 600) then offered[userId]={at=rec.at} end
+end
+local function clearRejoin(userId)
+ offered[userId]=nil
+ task.spawn(function() retry(2,rejoins.RemoveAsync,rejoins,tostring(userId)) end)
+end
+-- Lobby: the run this player dropped out of, if its server still runs it; nil otherwise.
+function M.rejoinOffer(p)
+ if studio or Role.get()~='Lobby' then return nil end
+ local ok,rec=retry(2,rejoins.GetAsync,rejoins,tostring(p.UserId))
+ if not ok or type(rec)~='table' or type(rec.code)~='string' or os.time()-(tonumber(rec.at) or 0)>REJOIN_FRESH then return nil end
+ return rec
+end
+-- Lobby: back into that run. Returns true when the teleport started, or false and a message.
+function M.rejoin(p)
+ local rec=M.rejoinOffer(p);if not rec then return false,'That run has ended' end
+ if not Profiles.handOff(p) then return false,"Couldn't save your progress, try again" end
+ local options=Instance.new('TeleportOptions');options.ReservedServerAccessCode=rec.code
+ if not go({p},options) then Profiles.reclaim(p);return false,"Couldn't reach the run, try again" end
+ return true
+end
+function M.dismissRejoin(p) if not studio then clearRejoin(p.UserId) end end
+Players.PlayerRemoving:Connect(function(p)
+ trips[p]=nil
+ if studio or Role.get()~='Match' or not M.code then return end
+ -- Deferred: ShopService keeps the build in its own PlayerRemoving, which runs first.
+ local userId=p.UserId
+ task.defer(function() if Shop.stashFor and Shop.stashFor(userId) then writeRejoin(userId) end end)
+end)
+-- Match: keep fresh records fresh, and drop any whose build is no longer kept (expired, or the run
+-- reset) so nobody is sent into a run they can't get back.
+task.spawn(function()
+ while true do
+  task.wait(15)
+  for userId,o in offered do
+   if not (Shop.stashFor and Shop.stashFor(userId)) or Players:GetPlayerByUserId(userId) then clearRejoin(userId)
+   elseif os.time()-o.at>=60 then task.spawn(writeRejoin,userId) end
+  end
+ end
+end)
 
 -- Match side -------------------------------------------------------------------------------
 -- The member's loadout from the entry, checked against their own save once it loads; a locked
@@ -136,6 +187,7 @@ function M.start()
    return
   end
   firstArrival=firstArrival or os.clock()
+  if offered[p.UserId] then clearRejoin(p.UserId) end -- back in: the way back isn't needed now
   applyLoadout(p,want);ready[p]=true
  end
  task.spawn(function()
@@ -145,7 +197,9 @@ function M.start()
     if ok and type(value)=='table' then entry=value;break end
     task.wait(attempt)
    end
-   if entry and Role.setMap(entry.map) then combat:SetAttribute('RunDifficulty',Rules.DifficultyIndex[entry.difficulty] and entry.difficulty or 'Normal')
+   if entry and Role.setMap(entry.map) then
+    combat:SetAttribute('RunDifficulty',Rules.DifficultyIndex[entry.difficulty] and entry.difficulty or 'Normal')
+    M.code=type(entry.code)=='string' and entry.code or nil -- for rejoin records
    else bad=true;entry=nil;warn('MatchService: no usable match entry for',game.PrivateServerId) end
   end
   Players.PlayerAdded:Connect(admit)

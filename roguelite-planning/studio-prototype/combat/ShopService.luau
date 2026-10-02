@@ -204,11 +204,52 @@ local function newState(p)
  for i=1,E.OFFER_COUNT do s.offers[i]=roll(p,i,excluded) end
  return s
 end
+-- Rejoin (plan J item 9): a run member who disconnects mid-run on a match server leaves their build
+-- here (weapons, items, level, shards, the shop) for REJOIN_SECONDS. Coming back into the same run
+-- puts it back (S.attach); MatchService offers the way back from the lobby. A new run drops them.
+S.REJOIN_SECONDS=600
+S.stashes={} -- userId -> {runId,at,state,slots}
+local SLOT_KEYS={'WeaponId','Tier','CopyId','BasePrice','FinalPurchasePrice','PurchasePrice','WavePurchased'}
+local function stash(p)
+ local s=S.states[p];local cs=Characters.states[p]
+ if not s or not cs or not S.members[p] or RS:GetAttribute('ServerRole')~='Match' then return end
+ if S.wave==1 and S.phase~='Combat' then return end -- the run hasn't started: nothing to keep
+ local list={}
+ for i=1,6 do
+  local f=cs.folder:FindFirstChild('Slot'..i);local row={}
+  if f then for _,k in SLOT_KEYS do row[k]=f:GetAttribute(k) end end
+  list[i]=row
+ end
+ S.stashes[p.UserId]={runId=S.runId,at=os.clock(),state=s,slots=list}
+end
+-- The build a player left in this run, while it is kept (nil once it expired or the run reset).
+function S.stashFor(userId)
+ local st=S.stashes[userId]
+ if st and (st.runId~=S.runId or os.clock()-st.at>S.REJOIN_SECONDS) then S.stashes[userId]=nil;st=nil end
+ return st
+end
+local function restore(p)
+ local st=S.stashFor(p.UserId);if not st then return false end
+ S.stashes[p.UserId]=nil
+ local s=st.state
+ s.ready=false;s.revision+=1;s.lastRequest=-1e6
+ S.states[p]=s
+ local count=0
+ for i=1,6 do
+  local f=slots(p)['Slot'..i]
+  for k,v in st.slots[i] do f:SetAttribute(k,v) end
+  if (f:GetAttribute('WeaponId') or '')~='' then count+=1 end
+ end
+ slots(p):SetAttribute('EquippedCount',count)
+ S.bonuses(p)
+ return true
+end
 function S.attach(p)
  -- Remember the run's starting weapons so a give-up can restore them.
  local start={};for i=1,6 do start[i]=slots(p)['Slot'..i]:GetAttribute('WeaponId') or '' end
  S.startingWeapons[p]=start
- newState(p);S.publish(p)
+ newState(p)
+ if restore(p) then S.publish(p,'Welcome back! Your build is where you left it') else S.publish(p) end
  p.CharacterAdded:Connect(function() task.defer(function() local s=S.states[p];if s then s.ready=false;S.publish(p) end end) end)
  -- An Armory upgrade (or a save loading on a match server) shows on the starter right away, while
  -- the starter can still change (S.setStarter's rule); a run under way keeps its tiers.
@@ -243,6 +284,7 @@ function S.resetRun()
  S.wave=1;S.phase='Shop';S.paused=nil
  -- A new run: everyone still here starts a new stint of it at wave 1.
  S.runId=newRunId();run:SetAttribute('RunId',S.runId)
+ table.clear(S.stashes) -- builds kept for rejoining belonged to the run that just ended
  for _,m in S.members do stints+=1;m.stint=S.runId..'/'..stints;m.joined=1 end
  run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',1);run:SetAttribute('WaveEndsAt',nil);run:SetAttribute('Paused',nil);run:SetAttribute('ShopEndsAt',nil)
  -- A new run starts clean: not a test run, no admin pause, freeze or Keep N alive, and the map's
@@ -622,7 +664,7 @@ require(combat.ZombieDeath).onDeath=function(npc,position)
  Hearts.roll(npc,position)
 end
 -- The last player leaving resets the run, so no wave, phase or test-run flag outlives an empty server.
-Players.PlayerRemoving:Connect(function(p) S.leave(p);S.states[p]=nil;S.startingWeapons[p]=nil;if next(S.states)==nil then S.resetRun() end;task.defer(beginWave) end)
+Players.PlayerRemoving:Connect(function(p) stash(p);S.leave(p);S.states[p]=nil;S.startingWeapons[p]=nil;if next(S.states)==nil then S.resetRun() end;task.defer(beginWave) end)
 -- Any boss (IsBoss: the Hammer boss today, later map bosses; scheduled or admin-spawned) holds
 -- the wave open until it is gone, then a short grace lets players sweep up its crystal shower.
 -- Only the admin panel's End wave / Jump to wave skip this.

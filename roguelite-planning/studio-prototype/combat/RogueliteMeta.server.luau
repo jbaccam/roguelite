@@ -377,10 +377,98 @@ if Role.get()=='Match' then
   if not (p.Character and p.Character:FindFirstChildOfClass('Humanoid')) then respawn:Invoke(p) end
  end
 end
+-- Play Again (plan J item 9): the results screen's PLAY AGAIN. Everyone who presses it goes back
+-- into a fresh run on this server together: same map, difficulty and loadouts, wave 1. It starts
+-- once nobody is still playing the old run and everyone else on results has decided (pressed it,
+-- or gone back to the lobby, which their 20 s clock does on its own). PlayAgainStatus tells the
+-- waiting screen why it waits. Example: Ana presses it while Ben still reads his results; Ana sees
+-- "Waiting for Ben"; Ben presses it too (or leaves) and both are back at the spawn for wave 1.
+local again={} -- player -> true: pressed PLAY AGAIN and waiting
+local function againStatus(p,text) if p:GetAttribute('PlayAgainStatus')~=text then p:SetAttribute('PlayAgainStatus',text) end end
+local function startAgain()
+ local list={}
+ for p in again do if p.Parent==Players then table.insert(list,p) end end
+ table.clear(again)
+ for _,p in list do
+  returning[p]=nil;returnTries[p]=nil
+  p:SetAttribute('PlayAgainStatus',nil);p:SetAttribute('RunResult',nil)
+  if Role.get()~='Match' then p:SetAttribute('StudioArea','Arena') end
+  p:SetAttribute('HoldRespawn',false)
+ end
+ -- Fresh bodies at the map's spawn (respawning yields), then wave 1 once all of them are in the
+ -- run, or after 15 s.
+ task.spawn(function()
+  local spawn=Role.playerSpawn()
+  for _,p in list do
+   if p.Parent~=Players then continue end
+   local character=respawn:Invoke(p)
+   if character and spawn then character:PivotTo(CFrame.new(spawn.Position+Vector3.new((math.random()-.5)*6,4,(math.random()-.5)*6))) end
+  end
+  local t0=os.clock()
+  while os.clock()-t0<15 do
+   local total,inRun=0,0
+   for _,p in list do if p.Parent==Players then total+=1;if Shop.isMember(p) then inRun+=1 end end end
+   if total==0 then return end
+   if inRun>=total then break end
+   task.wait(.25)
+  end
+  Shop.startFirstWave()
+ end)
+end
+local function checkAgain()
+ for p in again do if p.Parent~=Players or not p:GetAttribute('RunResult') then again[p]=nil end end
+ if next(again)==nil then return end
+ if next(Shop.members)~=nil then
+  for p in again do againStatus(p,'Waiting for the run to end') end
+  return
+ end
+ local undecided={}
+ for _,q in Players:GetPlayers() do if not again[q] and q:GetAttribute('RunResult') then table.insert(undecided,q.DisplayName) end end
+ if #undecided>0 then
+  for p in again do againStatus(p,'Waiting for '..table.concat(undecided,', ')) end
+  return
+ end
+ startAgain()
+end
+local function playAgain(p,on)
+ if not p:GetAttribute('RunResult') then return end
+ if on then
+  again[p]=true;returning[p]=nil -- waits here instead of going back on its own
+  againStatus(p,'Starting...')
+ else
+  again[p]=nil;p:SetAttribute('PlayAgainStatus',nil)
+  -- Cancelled: back to the lobby in 10 s, and the results screen's countdown says so.
+  local at=workspace:GetServerTimeNow()+10;returning[p]=at
+  local ok,info=pcall(Http.JSONDecode,Http,p:GetAttribute('RunResult') or '')
+  if ok and type(info)=='table' then info.returnAt=at;p:SetAttribute('RunResult',Http:JSONEncode(info)) end
+ end
+ checkAgain()
+end
+-- Rejoin, lobby side (plan J item 9): a run this player dropped out of that is still going shows
+-- on their screen as RejoinOffer (RunResultsUI); REJOIN sends them back to it (MatchService).
+local function offerRejoin(p)
+ if Role.get()~='Lobby' then return end
+ local rec=Match.rejoinOffer and Match.rejoinOffer(p)
+ if not rec or p.Parent~=Players then return end
+ local index=RunSetupRules.MapIndex[rec.map]
+ p:SetAttribute('RejoinOffer',Http:JSONEncode({mapName=index and RunSetupRules.Maps[index].name or 'your run',difficulty=rec.difficulty or 'Normal',wave=rec.wave or 1}))
+end
+local lastRunAction={}
 local useStored -- defined with the purchase code below
 runAction.OnServerEvent:Connect(function(p,action,arg)
  if action=='LeaveRun' or action=='GiveUp' then leaveRun(p)
- elseif action=='ReturnToLobby' then if returning[p] then returnToLobby({p}) end
+ elseif action=='ReturnToLobby' then if returning[p] or again[p] then again[p]=nil;p:SetAttribute('PlayAgainStatus',nil);returnToLobby({p}) end
+ elseif action=='PlayAgain' or action=='Rejoin' or action=='RejoinDismiss' then
+  if os.clock()-(lastRunAction[p] or 0)<.5 then return end;lastRunAction[p]=os.clock()
+  if action=='PlayAgain' then playAgain(p,arg~=false)
+  elseif action=='RejoinDismiss' then p:SetAttribute('RejoinOffer',nil);if Match.dismissRejoin then Match.dismissRejoin(p) end
+  elseif p:GetAttribute('RejoinOffer') and Match.rejoin then
+   local ok,why=Match.rejoin(p)
+   if not ok then
+    local info=Http:JSONDecode(p:GetAttribute('RejoinOffer'));info.error=why or "Couldn't rejoin"
+    p:SetAttribute('RejoinOffer',Http:JSONEncode(info))
+   end
+  end
  elseif action=='UseReroll' or action=='UseBanish' then useStored(p,action,arg) end
 end)
 -- The run's clocks: the last stand, automatic Back to Lobby, the shop's "keep N emeralds".
@@ -409,6 +497,7 @@ game:GetService('RunService').Heartbeat:Connect(function(dt)
  end
  local due={};for p,at in returning do if now>=at then table.insert(due,p) end end
  if #due>0 then returnToLobby(due) end
+ checkAgain() -- Play Again starts when the old run is over and everyone on results has decided
  for p,m in Shop.members do
   local paid=Admin.isTestRun() and 0 or Profiles.stintPaid(p,m.stint)
   if p:GetAttribute('RunEmeralds')~=paid then p:SetAttribute('RunEmeralds',paid) end
@@ -663,12 +752,13 @@ end
 
 local function added(p)
  watch(p);task.spawn(checkPolicy,p);task.spawn(checkPasses,p)
+ task.delay(3,offerRejoin,p) -- a lobby offers the way back into a run they dropped out of
 end
 Players.PlayerAdded:Connect(added)
 for _,p in Players:GetPlayers() do added(p);if p.Character then local h=p.Character:FindFirstChildOfClass('Humanoid');if h then h.Died:Connect(function() onDied(p,p.Character) end) end end end
 Players.PlayerRemoving:Connect(function(p)
  down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil;requestWindow[p]=nil;lastPickSave[p]=nil
- returning[p]=nil;prompting[p]=nil;runInfo[p]=nil;returnTries[p]=nil
+ returning[p]=nil;prompting[p]=nil;runInfo[p]=nil;returnTries[p]=nil;again[p]=nil;lastRunAction[p]=nil
  -- The last one standing left: the clock loop pauses the wave again for the downed players' last
  -- stand. A last stand already counting down keeps the wave paused.
  if livingInRun()==0 and not lastStandEnds then Shop.resume() end
