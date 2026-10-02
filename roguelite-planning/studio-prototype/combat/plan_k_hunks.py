@@ -93,6 +93,36 @@ end"""),
     ("ui/UITheme.luau", "ReplicatedStorage.UITheme",
      " local frame=T.panel(holder,'Frame',0,0,w,h,'panel');frame.Size=UDim2.fromScale(1,1);frame.Active=true", "after",
      " if opts and opts.seeThrough then frame.ImageTransparency=opts.seeThrough end -- e.g. Quests (plan K): the world shows through a little"),
+    # --- LobbyUI: the left-side tracker comes from QuestsUI.tracker --------------------------------
+    ("ui/LobbyUI.luau", "ReplicatedStorage.LobbyUI",
+     (" local goals=T.panel(left,'Goals',0,140,300,212,'panel')",
+      " goalsButton.Activated:Connect(function() open('Quests','Daily') end)"),
+     "block",
+     """ -- Quest tracker (QuestsUI.tracker, plan K): today's quests, the streak and OPEN QUESTS. A finished
+ -- quest claims right on it; anywhere else on the tracker opens the Quests window.
+ local tracker=QuestsUI.tracker(left,0,140,{config=QuestConfig,open=function() open('Quests','Daily') end,
+  claim=function(i)
+   task.spawn(function()
+    local ok,r=pcall(function() return combat:WaitForChild('ProfileAction'):InvokeServer('ClaimQuest',i) end)
+    if ok and type(r)=='table' then
+     if r.ok then T.sound('ui_purchase') end
+     T.toast(screen,r.message or '',r.ok and C.lime or C.negative)
+    end
+   end)
+  end})
+ local goals=tracker.Root"""),
+    ("ui/LobbyUI.luau", "ReplicatedStorage.LobbyUI",
+     ("  -- Tracker: today's three daily quests; badges count rewards waiting for CLAIM.",
+      "  goalsTitle.Text='DAILY QUESTS'"),
+     "block",
+     "  -- Tracker (plan K): today's quests and the streak; badges count rewards waiting for CLAIM.\n"
+     "  local quests=profile.quests;tracker.update(quests)"),
+    ("ui/LobbyUI.luau", "ReplicatedStorage.LobbyUI",
+     "  T.badge(awards,claim>0 and tostring(claim) or nil)", "after",
+     "  T.badge(tracker.OpenButton,claim>0 and tostring(claim) or nil)"),
+    ("ui/LobbyUI.luau", "ReplicatedStorage.LobbyUI",
+     "  local leftRight,leftBottom=14+328*s,10+(goals.Visible and 352 or 118)*s", "replace",
+     "  local leftRight,leftBottom=14+(goals.Visible and QuestsUI.TRACKER_W or 328)*s,10+(goals.Visible and 140+QuestsUI.TRACKER_H or 118)*s"),
 ]
 
 MODULES = []  # whole modules for the Studio sync: filled in Task 11

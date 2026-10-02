@@ -144,20 +144,19 @@ function L.mount(player)
  -- Emeralds are the only currency: earned in runs and bought with Robux.
  local gemsValue=currency('Gems','emerald',82,C.emerald)
  local gt=T.label(left.Gems,'Tag','EMERALDS',110,10,100,28,14,C.muted);gt.TextXAlignment=Enum.TextXAlignment.Right
- local goals=T.panel(left,'Goals',0,140,300,212,'panel')
- T.icon(goals,'Icon',10,6,40,'quests')
- local goalsTitle=T.label(goals,'Title','QUESTS',54,10,236,32,22);goalsTitle.TextXAlignment=Enum.TextXAlignment.Left
- local goalRows={}
- for i=1,3 do
-  local y=50+(i-1)*52
-  local n=T.text(goals,'Goal'..i,'',14,y,272,20,16)
-  local r=T.text(goals,'Reward'..i,'',14,y+20,272,16,13,C.gold)
-  local bar=T.bar(goals,'Progress'..i,14,y+38,272,8)
-  goalRows[i]={n,r,bar}
- end
- goals.Active=true
- local goalsButton=T.make('TextButton',goals,{Name='Open',Text='',BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=3})
- goalsButton.Activated:Connect(function() open('Quests','Daily') end)
+ -- Quest tracker (QuestsUI.tracker, plan K): today's quests, the streak and OPEN QUESTS. A finished
+ -- quest claims right on it; anywhere else on the tracker opens the Quests window.
+ local tracker=QuestsUI.tracker(left,0,140,{config=QuestConfig,open=function() open('Quests','Daily') end,
+  claim=function(i)
+   task.spawn(function()
+    local ok,r=pcall(function() return combat:WaitForChild('ProfileAction'):InvokeServer('ClaimQuest',i) end)
+    if ok and type(r)=='table' then
+     if r.ok then T.sound('ui_purchase') end
+     T.toast(screen,r.message or '',r.ok and C.lime or C.negative)
+    end
+   end)
+  end})
+ local goals=tracker.Root
  -- Right edge: store, rewards, settings, practice-dummy attacks switch.
  local right,rightScale=scaled('Right',Vector2.new(1,.5),UDim2.new(1,-12,.45,0),Vector2.new(96,592))
  -- Centred: the column is tall enough for the developers' ADMIN button; without it the buttons
@@ -267,24 +266,12 @@ function L.mount(player)
   T.badge(bottomButtons.Chests,ready>0 and tostring(ready) or nil)
   local buyable=SkillTree.affordable(SkillTree.parse(player:GetAttribute('ProfileSkills')),profile.gems)
   T.badge(skills,buyable>0 and tostring(buyable) or nil)
-  -- Tracker: today's three daily quests; badges count rewards waiting for CLAIM.
-  local quests=profile.quests;local daily=quests.daily or {}
-  for i=1,3 do
-   local row=goalRows[i];local d=daily[i];local q=d and QuestConfig and QuestConfig.DailyById[d.id]
-   if q then
-    local done=d.progress>=q.target
-    row[1].Text=q.title..'  '..math.min(d.progress,q.target)..' / '..q.target
-    row[2].Text=d.claimed and 'Claimed' or done and 'Done! Claim it in Quests' or ('+'..q.emeralds..' emeralds'..(q.chests and ' + a chest' or ''))
-    row[2].TextColor3=d.claimed and C.muted or done and C.lime or C.gold
-    T.setBar(row[3],d.progress/q.target)
-   else
-    row[1].Text=i==1 and 'Quests appear once your profile loads' or '';row[2].Text='';T.setBar(row[3],0)
-   end
-  end
-  goalsTitle.Text='DAILY QUESTS'
+  -- Tracker (plan K): today's quests and the streak; badges count rewards waiting for CLAIM.
+  local quests=profile.quests;tracker.update(quests)
   local claim=quests.claimable or 0
   T.badge(bottomButtons.Quests,claim>0 and tostring(claim) or nil)
   T.badge(awards,claim>0 and tostring(claim) or nil)
+  T.badge(tracker.OpenButton,claim>0 and tostring(claim) or nil)
  end
 
  -- Guide beam from the character to the nearest open portal.
@@ -539,7 +526,7 @@ function L.mount(player)
   local s=math.clamp(math.min(v.X/1280,v.Y/760),Input.TouchEnabled and .75 or .55,1.1)*T.setting('HudScale')
   leftScale.Scale=s;bottomScale.Scale=s
   goals.Visible=v.Y>=520
-  local leftRight,leftBottom=14+328*s,10+(goals.Visible and 352 or 118)*s
+  local leftRight,leftBottom=14+(goals.Visible and QuestsUI.TRACKER_W or 328)*s,10+(goals.Visible and 140+QuestsUI.TRACKER_H or 118)*s
   local barLeft,barTop=v.X/2-bottom.Size.X.Offset*s/2,v.Y-8-150*s
   -- Right column: its buttons' natural height, one column if it fits, else two.
   local items={}
