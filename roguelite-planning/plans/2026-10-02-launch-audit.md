@@ -173,8 +173,10 @@ Wave 20 has 65 enemies; Endless reaches 100 at wave 32, plus slime splits. Each 
 
 **Where:** `RogueliteZombieChase.server.luau:350-405,433-564`, `ENEMY_SIMULATION_ARCHITECTURE.md`
 
-### F1 · Every enemy is animated every frame, near or far
+### F1 · Every enemy is animated every frame, near or far — **fixed 2026-10-02**
 *Phone & client performance*
+
+**Done:** full rate within 60 studs, every 2nd-3rd frame to 90 (big enemies further), last pose held beyond, nothing off-screen; the QA attributes are Studio-only.
 
 The client poses every enemy's bones each frame with no distance or on-screen check. It also writes two attributes per enemy per frame that only a Studio test reads. With 40-100 enemies on a mid-range phone this is the biggest CPU cost.
 
@@ -305,8 +307,10 @@ Each swing does about 30 box queries that return every part of every enemy touch
 
 **Where:** `combat/RogueliteCombat.server.luau:359-389`
 
-### P7 · Enemy projectiles are real server parts moved every frame
+### P7 · Enemy projectiles are real server parts moved every frame — **fixed 2026-10-02**
 *Server performance*
+
+**Done:** the server keeps each shot's flight and hit test and sends one Launch (and an End if it stops early) on EnemyShot; `EnemyVisuals.client.luau` draws them by server time, pause included.
 
 Each ranged enemy shot clones parts, moves them every frame and replicates every move. Estimated 600-850 updates/s at wave 20.
 
@@ -314,8 +318,10 @@ Each ranged enemy shot clones parts, moves them every frame and replicates every
 
 **Where:** `combat/EnemyAttacks.luau:189-288`
 
-### P8 · Idle enemy work runs every frame, before the 0.1 s throttle
+### P8 · Idle enemy work runs every frame, before the 0.1 s throttle — **fixed 2026-10-02**
 *Server performance*
+
+**Done:** a new attack is looked for on the 0.1 s tick (attacks in progress still update every frame); facing is written only after a 2° turn.
 
 Attack updates run per enemy per frame before the throttle check, and facing writes AlignOrientation every frame during attacks. Estimated 60k wasted calls/s at 100 enemies.
 
@@ -355,14 +361,18 @@ Kills keep the quest data dirty, and the multi-KB JSON is a player attribute eve
 ### P12 · Server-only counters are replicated on every hit
 *Server performance*
 
+**Progress 2026-10-02:** enemy-side counters (EnemyHits, LastEnemyDamage/Impact, attack serials, slam counters) moved to server tables. Still to do: the combat-side ones (CombatEffectsService) and the bosses' BossHits / LastBossDamage.
+
 LastDamageUserId, ConfirmedHits, LastKnockback, EnemyHits, BossHits and similar attributes change per hit and replicate to all clients, though no client reads them.
 
 **Fix:** Keep them in a server table, and put QA-only counters behind a Studio flag.
 
 **Where:** `combat/CombatEffectsService.luau:66-100`, `combat/EnemyAttacks.luau:166-167`, `combat/ZombieAttacks.luau:79-80`
 
-### P13 · Spawn warning markers tween on the server
+### P13 · Spawn warning markers tween on the server — **fixed 2026-10-02**
 *Server performance*
+
+**Done:** the bars are static; clients pulse them.
 
 Each spawn warning is two neon parts with endlessly repeating server tweens, which replicate Transparency every frame. About 10 run at once at the start of each wave.
 
