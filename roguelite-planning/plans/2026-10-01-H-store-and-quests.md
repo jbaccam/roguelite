@@ -53,6 +53,8 @@ For comparison:
 
 **Trophy roads.**
 
+> Superseded by [plan K](2026-10-02-K-quests-power-ui.md): 15 roads with 10 levels each; old tiers convert by target.
+
 | Road | Stat | Targets |
 |---|---|---|
 | Survivor | waves survived | 25 / 100 / 300 / 1,000 / 3,000 |

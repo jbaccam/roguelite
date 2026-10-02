@@ -38,7 +38,7 @@ Enemies on a map get exactly the extra health a player at its recommended Power 
 ## Where it shows
 
 - **Map select (Run Setup):** "Your power 6 · recommended 9" in lime when you meet it, gold when you don't.
-- **Armory:** a POWER plate under the dais with the damage and health bonus.
+- **Armory:** three plates under the dais (ui/StatPlates.luau, plan K): DAMAGE, HEALTH and POWER. Tapping POWER opens "What is Power?": your starter, armor and pet tiers adding up to your Power, the damage and health bonus, and each map's recommended Power.
 - **In runs:** the Gear power stat (Stats panel, Extra tab).
 
 ## Better gear on harder maps

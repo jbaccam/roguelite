@@ -212,3 +212,39 @@ The tracker stays at the same spot under the emeralds, 372 wide. It shows the he
 | Sword burst | Deal Damage, Heavy Hitter | Damage fist |
 
 Parts 2–4 need: a pause button (two bars on a round stone) and a name tag / ribbon for titles.
+
+## Built (repo, 2026-10-02)
+
+Build steps: [2026-10-02-K-build-steps.md](2026-10-02-K-build-steps.md). The commits, in order:
+
+| Commit | What |
+|---|---|
+| 6e8abdd, f660fc4 | Dev tools: anchored hunks, local dev server, fresh module loader, GUI dump and browser viewer |
+| d8e03b9 | QuestConfig (16 dailies, 4 a day, 15 roads × 10 levels), QuestService (old-save conversion, Achiever), QuestTests |
+| 91817fd | Run stats: level-ups, shards, buys, damage (plan J's hooks), minutes, wave 10, melee/ranged kills, eggs |
+| 6531636 | `CharacterStats.gearParts`, `RunSetupRules.powerParts` |
+| 405a292 | StatPlates in the Armory: DAMAGE, HEALTH, POWER and the "What is Power?" card |
+| bb00288 | QuestsUI: the bigger window, streak strip, 4 cards, 10-level rows, `Q.tracker`; `T.window` gains `seeThrough` |
+| 5903928 | LobbyUI uses the new tracker |
+| d215dfa | `tools/SyncPlan.luau` and the plan K manifest |
+
+**Checks in Studio Edit (fresh repo copies, no Play):**
+- QuestTests: **1,223 checks pass**.
+- Every changed script compiles.
+- `gearParts.total` equals `gearPower` on three sample profiles.
+- `UILayoutAudit.run`:
+  - the Quests window has 0 problems at 1920×1080 and 1366×768;
+  - at 1024×768 and 844×390, only the shared window chrome (title plate, close X) is flagged;
+  - the tracker and the Power plates with their card have 0 problems.
+- The Studio sync's dry run passes:
+  - 3 modules updated, StatPlates created;
+  - 13 hunks across 7 scripts, every anchor found once;
+  - the module guards match commit 7fd7cea.
+
+**Not done yet:**
+- The Studio write. It waits for the user's okay.
+- The bicep icon for Power. `StatPlates.PowerIcon` and map select get it when it arrives.
+- Play tests (the checklist in the build steps, Task 12).
+- Re-running the economy sim with the new daily and early-level payouts.
+- Checking the Damage and Shards targets against play-test numbers.
+
