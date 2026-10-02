@@ -60,10 +60,13 @@ def git(*args):
     return subprocess.run(["git", *args], cwd=REPO, capture_output=True, check=True).stdout.decode("utf-8")
 
 
+CONTEXT = 3  # --context=N: fewer context lines when another plan's hunks sit next to ours in Studio
+
+
 def hunks_of(sha, path):
     """(before, after) pairs for one commit's diff of one file; CRLF dropped."""
     out, before, after, inside = [], [], [], False
-    diff = git("show", "-U3", "--format=", sha, "--", PREFIX + path).replace("\r", "")
+    diff = git("show", f"-U{CONTEXT}", "--format=", sha, "--", PREFIX + path).replace("\r", "")
     for line in diff.split("\n"):
         if line.startswith("@@"):
             if inside:
@@ -88,6 +91,10 @@ def main():
     head = git("rev-parse", "--short", "HEAD").strip()
     # Arguments: commit shas to take hunks from (default: all of COMMITS). --modules-only: no hunks
     # (Studio's scripts already hold them, e.g. after a Rojo sync of the repo).
+    global CONTEXT
+    for a in sys.argv[1:]:
+        if a.startswith("--context="):
+            CONTEXT = int(a.split("=", 1)[1])
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     commits = [] if "--modules-only" in sys.argv else (args or COMMITS)
     hunks = []
