@@ -1,0 +1,240 @@
+{
+  "body": "fully rigid hard-surface armour; voxel-fused pieces, navy undersuit volumes overlapping every joint",
+  "reference": "../../../art-references/frozen-knight-redesign/frozen-knight-turnaround-v1.png",
+  "status": "shape review before rigging",
+  "scale": "0.0092 units per sheet pixel, floor at sheet row 764",
+  "handedness": "pipeline convention: Left at -X facing -Y (mirror of the sheet)",
+  "sword": {
+    "gripCentre": [
+      1.6082,
+      0.1171,
+      2.3074
+    ],
+    "tip": [
+      1.0629,
+      -1.7148,
+      0.7746
+    ],
+    "bladeDirection": [
+      -0.2226,
+      -0.7477,
+      -0.6256
+    ],
+    "edgeAxis": [
+      0.3747,
+      0.5229,
+      -0.7656
+    ],
+    "bladeForearmDegrees": 58.0,
+    "gripToTip": 2.45,
+    "wristToTip": 2.6459,
+    "wristToTipAlongBlade": 2.6302,
+    "flatNormal": [
+      0.8996,
+      -0.4048,
+      0.1638
+    ],
+    "backOfHand": [
+      0.8996,
+      -0.4048,
+      0.1638
+    ]
+  },
+  "bones": {
+    "Pelvis": [
+      [
+        0,
+        0.05,
+        2.48
+      ],
+      [
+        0,
+        0.05,
+        3.3
+      ],
+      null
+    ],
+    "Chest": [
+      [
+        0,
+        0.05,
+        3.3
+      ],
+      [
+        0,
+        0.02,
+        4.78
+      ],
+      "Pelvis"
+    ],
+    "Head": [
+      [
+        0,
+        0.02,
+        4.78
+      ],
+      [
+        0,
+        -0.06,
+        6.1
+      ],
+      "Chest"
+    ],
+    "LeftUpperArm": [
+      [
+        -1.1,
+        0.08,
+        4.4
+      ],
+      [
+        -1.38,
+        0.06,
+        3.42
+      ],
+      "Chest"
+    ],
+    "LeftForearm": [
+      [
+        -1.38,
+        0.06,
+        3.42
+      ],
+      [
+        -1.54,
+        0.1,
+        2.64
+      ],
+      "LeftUpperArm"
+    ],
+    "LeftHand": [
+      [
+        -1.54,
+        0.1,
+        2.64
+      ],
+      [
+        -1.6403,
+        0.1251,
+        2.1508
+      ],
+      "LeftForearm"
+    ],
+    "LeftThigh": [
+      [
+        -0.5,
+        0.06,
+        2.45
+      ],
+      [
+        -0.62,
+        -0.02,
+        1.45
+      ],
+      "Pelvis"
+    ],
+    "LeftShin": [
+      [
+        -0.62,
+        -0.02,
+        1.45
+      ],
+      [
+        -0.7,
+        0.14,
+        0.56
+      ],
+      "LeftThigh"
+    ],
+    "LeftFoot": [
+      [
+        -0.7,
+        0.14,
+        0.56
+      ],
+      [
+        -0.74,
+        -0.82,
+        0.14
+      ],
+      "LeftShin"
+    ],
+    "RightUpperArm": [
+      [
+        1.1,
+        0.08,
+        4.4
+      ],
+      [
+        1.38,
+        0.06,
+        3.42
+      ],
+      "Chest"
+    ],
+    "RightForearm": [
+      [
+        1.38,
+        0.06,
+        3.42
+      ],
+      [
+        1.54,
+        0.1,
+        2.64
+      ],
+      "RightUpperArm"
+    ],
+    "RightHand": [
+      [
+        1.54,
+        0.1,
+        2.64
+      ],
+      [
+        1.6403,
+        0.1251,
+        2.1508
+      ],
+      "RightForearm"
+    ],
+    "RightThigh": [
+      [
+        0.5,
+        0.06,
+        2.45
+      ],
+      [
+        0.62,
+        -0.02,
+        1.45
+      ],
+      "Pelvis"
+    ],
+    "RightShin": [
+      [
+        0.62,
+        -0.02,
+        1.45
+      ],
+      [
+        0.7,
+        0.14,
+        0.56
+      ],
+      "RightThigh"
+    ],
+    "RightFoot": [
+      [
+        0.7,
+        0.14,
+        0.56
+      ],
+      [
+        0.74,
+        -0.82,
+        0.14
+      ],
+      "RightShin"
+    ]
+  }
+}

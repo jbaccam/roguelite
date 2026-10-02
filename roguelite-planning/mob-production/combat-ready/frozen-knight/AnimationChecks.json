@@ -1,28 +1,28 @@
 {
-  "source": "revisions\\frozen-knight",
-  "geometryFingerprintBefore": "ecb26a724022176cd546115192773a1d67a67588e38fe708551e02a0a64a2d3a",
+  "source": "reference-rebuilds\\frozen-knight",
+  "geometryFingerprintBefore": "0b15338035dcb1e97bd9f5ec98163fb8284470e74088210e0b1d5f74a2fdfdfe",
   "loopErrors": {
     "Idle": 0.0,
     "Move": 0.0
   },
   "gait": {
-    "leftLegRightArmCovariance": 0.058001256502519166,
-    "rightLegLeftArmCovariance": 0.15564405578055085,
-    "sameSideCovariance": -0.17895914790829684,
-    "strideLength": 3.4246194759796467,
-    "nominalSpeed": 2.7396955807837173,
+    "leftLegRightArmCovariance": 0.05056489208398003,
+    "rightLegLeftArmCovariance": 0.13007929748349342,
+    "sameSideCovariance": -0.14877048117300287,
+    "strideLength": 2.6999473473368627,
+    "nominalSpeed": 2.1599578778694903,
     "opposingLimbs": true,
-    "maxPlantedAnkleHeightError": 1.1920928955078125e-07
+    "maxPlantedAnkleHeightError": 2.384185791015625e-07
   },
   "bow": {},
-  "geometryFingerprintAfter": "ecb26a724022176cd546115192773a1d67a67588e38fe708551e02a0a64a2d3a",
+  "geometryFingerprintAfter": "0b15338035dcb1e97bd9f5ec98163fb8284470e74088210e0b1d5f74a2fdfdfe",
   "geometryUnchanged": true,
   "passed": true,
   "fileHashes": {
-    "Model.blend": "f6c73797aaa0d157b2d87c82d92deba030e6b42610a8bcbe2c233b46dd79bc5a",
-    "Model.fbx": "387d336b5dd8a438fd72bef1fef5a4ffa3b9b118bb2131b570b4c0fd85c8b2db",
-    "Model.glb": "09ed3e8bb4af50c8d4004166c3b428dca42eaeab5781661a606f12b91b07f491",
-    "AnimationData.json": "4b50d691a3870723634cea7a002067c65a40f9688679f6d252e2cbf6490a9d5f",
-    "Geometry.json": "9f0829f51896efca0116c5536b0efe437dadd93697fdca5f6c245bb33929c192"
+    "Model.blend": "c4e5e9ece215fb42ebb1896407899be89893485ee74e7508440e202c322dcd60",
+    "Model.fbx": "59a19f7985004224ec8a7beb997bcedf7cbfb33d97a0f1c1d60ef00921e1d638",
+    "Model.glb": "591ba530f019db1dea82ee07eee25571fabd6fe455d6f385bc9ad5d1c4c70708",
+    "AnimationData.json": "a65f340bcc27975077eba237c70766be189f046d81ef131bea7ab495c173da2c",
+    "Geometry.json": "db9c7e355f4b7418fed9c1d0a4bc3252105b0293137f42597b7b40b1484b9969"
   }
 }

@@ -32,51 +32,51 @@
       "Idle": {
         "frames": [
           2.0,
-          74.0
+          34.0
         ],
-        "sampledMatrixDelta": 0.03023993968963623
+        "sampledMatrixDelta": 0.033343564718961716
       },
       "Move": {
         "frames": [
           2.0,
-          32.0
+          26.0
         ],
-        "sampledMatrixDelta": 0.8999829888343811
+        "sampledMatrixDelta": 0.6391076445579529
       },
       "Attack": {
         "frames": [
           2.0,
-          40.0
+          26.0
         ],
-        "sampledMatrixDelta": 3.0490933656692505
+        "sampledMatrixDelta": 1.1337485164403915
       },
       "Hit": {
         "frames": [
           2.0,
-          12.0
+          14.0
         ],
-        "sampledMatrixDelta": 0.09398864954710007
+        "sampledMatrixDelta": 0.27721960842609406
       },
       "Death": {
         "frames": [
           2.0,
           26.0
         ],
-        "sampledMatrixDelta": 1.5593720450997353
+        "sampledMatrixDelta": 2.0974375754594803
       }
     }
   },
   "errors": [],
   "sha256": {
-    "Model.blend": "c4e5e9ece215fb42ebb1896407899be89893485ee74e7508440e202c322dcd60",
-    "Model.fbx": "59a19f7985004224ec8a7beb997bcedf7cbfb33d97a0f1c1d60ef00921e1d638",
-    "Model.glb": "591ba530f019db1dea82ee07eee25571fabd6fe455d6f385bc9ad5d1c4c70708",
+    "Model.blend": "2aabda99bebaddb85703fd52d26e064f73d554add443f81e2daf3cb099188a23",
+    "Model.fbx": "e1de2956e1b47f7c5ae025dc912ec6904d4991ea410910e3757e77702233ca35",
+    "Model.glb": "6ff37c4037adbb3741e2642e87366c599c454bd50f5fd22c8edb11bbb5f6e3a2",
     "BaseColor.png": "265dd76d4f84e84a6333c8d8e4f6240ae796a3fc4be023c14234b32c9bfff01d",
-    "animations\\Attack.fbx": "1fb970c615f7d5ebb4ffa4f2a57c4189ed7a16239084436c4577aca86001e6b1",
-    "animations\\Death.fbx": "16f46d5e1627932073579cdc115d3f3a51206eec07fa6ae829b455a37475c79a",
-    "animations\\Hit.fbx": "014a89a4ee622b7845504b24c80ee9a337b36520dc22c32a24a37403edeb9eb3",
-    "animations\\Idle.fbx": "a767aba4381593b186a4ab63a6f50fedbb3d4e410a343fc1e05335244d1920cc",
-    "animations\\Move.fbx": "2151e0ed81e47005769e262e76aea25b00300cec7b667ce0a074bc13b83a8f0c"
+    "animations\\Attack.fbx": "8c7d97a0a9fee1abb215aa690b72b40d297296b816c2cd9ed9de6cab71147d3f",
+    "animations\\Death.fbx": "a84f8230e99739e7d7520c2d286699148ecc1153f82a5a3a981dce834c9e6313",
+    "animations\\Hit.fbx": "6a52f0c8c7e51ff2439241e63e527e93a69f369390ec8d65c8f9719ad900670f",
+    "animations\\Idle.fbx": "30da88c5e76e9fdfd3721c930a4b4a51244a27c47e4fc670428f560d88bfd92e",
+    "animations\\Move.fbx": "64d73cb6ee5e3af4a0408613355792ce0ea7799d29140168da95959087a6eccb"
   },
   "passed": true
 }

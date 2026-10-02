@@ -99,3 +99,107 @@ Rebuilt from the user's sheets in `../../art-references/werewolf-redesign/` (tur
 - **Verification.** `Rig.json` shows 0 failures and `ExchangeChecks.json` passes (fresh FBX/GLB re-import, 4 influences, normalized weights, texture loaded). `combat-ready/werewolf` was re-animated with the existing claw-rake choreography: loops close exactly, opposing limbs pass, and the planted-ankle error is 1.8e-7. Lean was reduced from 14° to 8° because the hunch is sculpted, and the tail sways.
 
 Blender-verified only. Studio import, retargeting and in-game appearance are untested; Studio's +0.3 saturation will push the lavender grey bluer.
+
+## Frozen Knight reference rebuild (2026-10-01)
+
+`build_frozen_knight.py` rebuilds the knight from
+`../../art-references/frozen-knight-redesign/frozen-knight-turnaround-v1.png`. The
+old in-game knight in `../revisions/frozen-knight/` is unchanged and stays as history.
+
+**What was built.** Fully rigid hard-surface armour with no `smooth_skin` mesh.
+Each piece is voxel-fused from its own sub-volumes and then decimated to a faceted
+surface. Colours are set per face from the nearest source volume, so snow caps,
+straps and the visor follow the geometry. A cavity pass and a convex-edge "wear"
+pass add low-noise painted shading. The model has:
+
+- A bucket helm with a crest fin, a chamfered front, a visor slit with two
+  emissive ice-blue eyes, and three breathing slots.
+- Three-lame pauldrons with snow caps, and an octagonal cuirass with a kite ridge emblem.
+- A leather belt with a frame buckle, a navy tunic front and back, and three tasset plates per thigh.
+- Couters and vambraces with two straps and rivets each.
+- Gloved fists, octagonal knee cops with a faceted boss, and navy shins with a front splint, strap and buckle.
+- Sabatons with a dark sole, a toe cap with snow, and a side strap.
+- Ice crystal clusters on the sword-side pauldron and the outer side of the off-side boot.
+- Navy undersuit volumes with ball ends that overlap every joint.
+
+Plates ride the bone they cover: pauldrons on UpperArm, couters on Forearm, and
+tassets and knee cops on Thigh. The model was measured from the sheet at 0.0092
+units per pixel, with the floor at sheet row 764. It is 6.335 units tall including the crest.
+
+**Handedness.** The pipeline puts Left at -X facing -Y, so this rig is the mirror
+image of the sheet. The sword is on the Right* bones, which show on the image-right
+in a front render. `frozen_knight_compare.py` renders from mirrored cameras and
+flips the strips so `Compare.png` lines up with the sheet. The raw strips in
+`frozen-knight/review/` are not flipped. The old knight had the same property.
+
+**Triangles** (after `rig_export.py`): 22,346 in total. By bone mesh: Head 2,936,
+Chest 3,098, Pelvis 1,324, Right/Left UpperArm 1,810/1,700, Forearm 1,302 each,
+Right/Left Hand 1,490/950, Thigh 1,178 each, Shin 932 each, Right/Left Foot 1,074/1,140.
+Every mesh is under 20k.
+
+**Grip and edge.** The sword handle runs through the right fist's finger tunnel.
+Each finger curls in its own plane around the handle. The thumb wraps over the top
+and rests on the index and middle fingers. The wrist stays in line with the forearm.
+The grip is diagonal: the handle sits 58 degrees from the forearm, with the index
+finger lower than the little finger, so at rest the blade hangs forward and down.
+
+The edges lie in the blade/forearm plane (the hammer-grip punching line), so the
+flat faces the back of the hand. Measurements on the built mesh, in Blender world
+rest coordinates:
+
+- Grip centre (1.608, 0.117, 2.307), tip (1.063, -1.715, 0.775).
+- Blade direction (-0.2226, -0.7477, -0.6256), edge axis (0.3747, 0.5229, -0.7656).
+- Blade to forearm 58.0 degrees. Grip to tip 2.45, wrist to tip along the blade 2.63.
+
+In `../combat-ready/attack_keys.py`, `KNIGHT_SWORD` holds the two vectors plus a
+50-degree comfortable strike grip (an 8-degree ulnar snap). `bladeLength` is 2.6.
+
+The old choreography did not work with this grip. It produced a flat lead of 0.78,
+a wrist bend of 125 degrees, and the blade passing through the chest in four
+follow-through frames. So the knight's strike keys now keep the wrist, elbow and
+blade level, with the palm up through the cut. They also set `tauLimit` 150 and
+`poleWeight` 3.
+
+`animate_mobs.py` no longer rolls the knight's forearm 90 degrees in the ready
+carry. The ready lift alone carries the blade forward with the edge down.
+
+**Blender-verified:**
+
+- `rig_export` / `polish_rig`: 0 failures. `verify_exports`: fresh FBX/GLB imports pass.
+- `animate_mobs` geometry is unchanged, loops close exactly, and gait checks pass.
+  The combat-ready `verify_exports.py` also passes.
+- Attack preview: `FLAT_LEAD` 0.66 and `WRIST_BEND` 61.5. Both maxima come from the
+  slow end of the wind-up (t 0.16 to 0.40).
+- A per-frame probe of the actual cut (t 0.45 to 0.62) gives a flat lead of at most
+  0.18, and 0.05 at the impact frame. The wrist bend during the cut is at most 46 degrees.
+- The same probe found no sword point (guard and blade) inside any body mesh in any
+  sampled frame of Attack (every frame), Idle (every 4th), Move, Hit or Death (every 2nd).
+
+**Not yet tested in Roblox:**
+
+- Studio import, the Motor6D rigid import, and retargeting. `retarget_studio.py` was not run.
+- `../combat-ready/frozen-knight/StudioAnimationData.json` and
+  `StudioRetargetChecks.json` still come from the old model, so they are stale until
+  a new import receipt is retargeted.
+- In-game look, scale and hit timing.
+
+**Remaining differences from the sheet:**
+
+- The blade hangs about 36 degrees below horizontal, against about 46 on the sheet.
+  It also reads narrower from the front, because the edge-forward grip turns the
+  flat sideways where the sheet shows the flat.
+- The cuirass is a smooth chamfered shell, without the sheet's plate breaks and
+  crack strokes.
+- The emblem and the crest fin are subtler than on the sheet.
+- The vambraces are octagonal tubes, not the sheet's flatter outer plates.
+- The textures are procedural, with no painted cracks.
+- The belt reads lighter. The side faces render lighter than the sheet (probe gain
+  about 0.73 on the helm side; median gain 0.93).
+- Fingers are not animated.
+- In the wind-up, the pauldron follows the raised upper arm, so its snow cap turns
+  outward.
+
+Run order: `QUICK=1` build for shape passes, then a full build, then
+`python frozen_knight_compare.py`, `rig_export.py`, `polish_rig.py` and
+`verify_exports.py` with `-- frozen-knight`, then
+`../combat-ready/animate_mobs.py -- frozen-knight`.

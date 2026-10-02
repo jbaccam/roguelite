@@ -15,10 +15,15 @@ end). Right* bones carry the weapon for every armed humanoid.
 # Swords were turned 90 degrees in the hand (edge_forward_blades.py) so the
 # edges run along the knuckle line; the second vector is that edge axis.
 SWORD = ((-0.0015, -0.300, 0.954), (0, 0.954, 0.300), 80)
-# The knight's sword was re-seated in the fist (reseat_knight_sword.py): the
-# handle runs through the curled fingers along -X with the edges along the
-# forearm (the punching direction), 95 degrees from the forearm.
-KNIGHT_SWORD = ((-1, 0, 0), (0, 0, 1), 95)
+# Frozen Knight reference rebuild (2026-10-01, build_frozen_knight.py): the
+# handle runs through the fist's finger tunnel in a diagonal hammer grip, 58
+# degrees from the forearm (index side lower, wrist in line), so at rest the
+# blade hangs forward and down. The edges lie in the blade/forearm plane (the
+# punching line), so the flat faces the back of the hand. Measured on the built
+# mesh: grip centre -> tip and blade width axis. The rest blade sits 58 degrees
+# from the forearm; the comfortable strike grip is 50 (an 8-degree ulnar snap),
+# which the preview solver measured as the best edge-first sweep for this grip.
+KNIGHT_SWORD = ((-0.2226, -0.7477, -0.6256), (0.3747, 0.5229, -0.7656), 50)
 DAGGER = ((0.895, -0.312, -0.318), (0.302, -0.1, 0.948), 85)
 STAFF = ((0.01, 0, -1), (1, 0, 0), 57)
 # Shaman's open casting hand: finger direction, palm normal (up at rest),
@@ -60,22 +65,27 @@ HUMANOIDS = {
     # Heavy horizontal sweep: the knight hauls the sword back behind the
     # sword hip at chest height, then cuts flat across the front with the
     # whole torso while stepping in, finishing wrapped around the far side.
-    'frozen-knight': {'weapon': {'Right': KNIGHT_SWORD}, 'bladeLength': 1.2, 'clearWeight': 400, 'strikeWindow': (.40, .70), 'keys': [
+    # Rebuilt knight (2026-10-01): the cut keeps wrist, elbow and blade level
+    # so the blade/forearm plane that holds the edges stays horizontal and the
+    # edge leads. The palm stays up through the cut, so the forearm may roll
+    # past the default 90 degrees, and the elbow follows its hints closely.
+    'frozen-knight': {'weapon': {'Right': KNIGHT_SWORD}, 'bladeLength': 2.6, 'clearWeight': 400, 'strikeWindow': (.40, .70),
+                      'tauLimit': 150, 'poleWeight': 3, 'keys': [
         {'t': 0},
         {'t': .18, 'pelvis': (0, -.03, -.03), 'chest': (0, 22, 0),
          'Right': {'w': (.45, -.05, -.35), 'pole': (.5, -.7, -.5), 'blade': (.4, -.3, .85)},
          'Left': {'w': (-.05, .45, -.50), 'pole': (-.4, -.6, -.6)}},
         {'t': .40, 'still': True, 'pelvis': (0, -.08, -.10), 'chest': (-4, 55, -4), 'head': (4, -42, 0),
-         'Right': {'w': (.62, -.35, -.15), 'pole': (.2, -.6, -1), 'blade': (.3, -.9, .25)},
+         'Right': {'w': (.62, -.35, -.05), 'pole': (.3, -.9, 0), 'blade': (.3, -.95, 0)},
          'Left': {'w': (-.10, .70, .05), 'pole': (-.5, -.4, -.8)}, 'RightFoot': (0, -.05, 0)},
         {'t': .49, 'pelvis': (0, .10, -.12), 'chest': (6, 15, -2), 'head': (0, -12, 0),
-         'Right': {'w': (.60, .50, -.20), 'pole': (.3, -.5, -1), 'blade': (.45, .88, .05)},
+         'Right': {'w': (.60, .50, -.05), 'pole': (.8, -.6, 0), 'blade': (.55, .83, 0)},
          'Left': {'w': (.15, .40, -.40), 'pole': (-.3, -.6, -.7)}, 'LeftFoot': (0, .30, .12)},
         {'t': .54, 'pelvis': (0, .18, -.14), 'chest': (10, -16, 2), 'head': (-4, 14, 0),
-         'Right': {'w': (.10, .92, -.20), 'pole': (.4, -.2, -1), 'blade': (-.6, .8, .02)},
+         'Right': {'w': (.10, .85, -.05), 'pole': (1, 0, 0), 'blade': (.15, .99, 0)},
          'Left': {'w': (.30, .05, -.55), 'pole': (0, -.8, -.5)}, 'LeftFoot': (0, .40, 0)},
         {'t': .64, 'still': True, 'pelvis': (0, .18, -.15), 'chest': (10, -44, 4), 'head': (-4, 36, 0),
-         'Right': {'w': (-.60, .55, -.25), 'pole': (.5, -.2, -1), 'blade': (-.9, -.3, -.05)},
+         'Right': {'w': (-.55, .70, -.08), 'pole': (.6, .8, 0), 'blade': (-.80, .60, 0)},
          'Left': {'w': (.35, -.30, -.60), 'pole': (0, -.8, -.4)}, 'LeftFoot': (0, .40, 0)},
         # Recovery brings the sword round the front, point forward and rising,
         # so it never passes back through the knight's own chest or head.

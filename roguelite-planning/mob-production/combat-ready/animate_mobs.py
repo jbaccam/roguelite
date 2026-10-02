@@ -156,9 +156,9 @@ def humanoid(clip,t):
         rot(side+'UpperArm',angle)
         rot(side+'UpperArm',s*(3 if HEAVY else 2),(0,1,0),True)
         rot(n,-13-(7*max(0,-swing) if moving else .9*breath)-(34 if ready else 0))
-        # The knight's handle runs through the fist tunnel across the body at
-        # rest; rolling the forearm carries the blade forward and up instead.
-        if ready and ID=='frozen-knight':rot(n,90,(0,0,1),True)
+        # The rebuilt knight (2026-10-01) grips its sword diagonally with the
+        # blade forward-down at rest; the ready lift alone carries it forward
+        # and up, edge down, so the old 90-degree forearm roll is gone.
         rot(side+'Hand',2*math.sin(math.tau*(t+phase)-.4) if moving else .5*breath,(0,0,1))
         if ready and ID=='skeleton':
             # Hold the wrist at the sword's comfortable grip (as the attack solver
