@@ -15,6 +15,8 @@ local SOURCES = {
 	{ "UITheme" },
 	{ "RogueliteUI" },
 	{ "WeaponInventoryUI" },
+	{ "RogueliteCombat", "ArmorCatalog" },
+	{ "RogueliteCombat", "PetConfig" },
 	{ "StoreFX" },
 	{ "ChestFX" },
 	{ "RogueliteCombat", "ShopCatalog" },
@@ -47,7 +49,7 @@ function P.collect(role)
 		end
 		visited[t] = true
 		for _, v in t do
-			if type(v) == "string" and string.find(v, "^rbxassetid://%d+$") then
+			if type(v) == "string" and (string.find(v, "^rbxassetid://%d+$") or string.find(v, "^rbxthumb://")) then
 				if not seen[v] then
 					seen[v] = true
 					table.insert(list, v)
