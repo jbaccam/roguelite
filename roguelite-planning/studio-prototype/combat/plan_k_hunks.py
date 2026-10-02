@@ -45,6 +45,26 @@ end)"""),
     (PROFILE, "ServerScriptService.ProfileService",
      " d.eggs-=n", "after",
      " quest('event',d,Money.day(),player.UserId,'eggs',n) -- Hatch an Egg, Hatcher (plan K)"),
+    # --- Gear power split into its parts (the Armory's Power card) --------------------------------
+    ("combat/CharacterStats.luau", "ReplicatedStorage.RogueliteCombat.CharacterStats",
+     "-- Armor set bonuses (RARITY_GODLY_ARMOR.md step 5, approved 2026-09-30). Only worn pieces of the", "before",
+     """-- gearPower split for the Armory's Power card (plan K): the starter's tier, worn armor tiers and
+-- the pet's tier. total equals gearPower(get, weapon).
+function S.gearParts(get,weapon)
+ local parts={weapon=S.ownedTier(get('ProfileWeapons'),weapon) or 1,armor=0,pet=0}
+ local tiers=S.parseArmorTiers(get('ProfileArmor') or '')
+ for slot,setId in S.parseWearing(get('ProfileWearing')) do parts.armor+=tiers[setId..'.'..slot] or 0 end
+ local pet=get('ProfilePet')
+ if type(pet)=='string' and pet~='' then parts.pet=S.ownedTier(get('ProfilePets'),pet) or 0 end
+ parts.total=parts.weapon+parts.armor+parts.pet
+ return parts
+end"""),
+    ("lobby/RunSetupRules.luau", "ReplicatedStorage.RunSetupRules",
+     "-- Saved win / best-wave key: Normal keeps the plain map id (older saves stay valid).", "before",
+     """-- The same power split into weapon, armor and pet tiers (the Armory's Power card, plan K).
+function R.powerParts(player,weapon)
+ return Stats.gearParts(function(name) return player:GetAttribute(name) end,weapon or player:GetAttribute('RunWeapon') or R.Signature.Brawler)
+end"""),
 ]
 
 MODULES = []  # whole modules for the Studio sync: filled in Task 11

@@ -57,6 +57,10 @@ end
 function R.power(player,weapon)
  return Stats.gearPower(function(name) return player:GetAttribute(name) end,weapon or player:GetAttribute('RunWeapon') or R.Signature.Brawler)
 end
+-- The same power split into weapon, armor and pet tiers (the Armory's Power card, plan K).
+function R.powerParts(player,weapon)
+ return Stats.gearParts(function(name) return player:GetAttribute(name) end,weapon or player:GetAttribute('RunWeapon') or R.Signature.Brawler)
+end
 -- Saved win / best-wave key: Normal keeps the plain map id (older saves stay valid).
 function R.runKey(mapId,diff) return (diff==nil or diff=='Normal') and mapId or mapId..'/'..diff end
 R.MapIndex={};for i,m in R.Maps do R.MapIndex[m.id]=i end

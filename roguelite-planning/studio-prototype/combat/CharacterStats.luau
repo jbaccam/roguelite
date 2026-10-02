@@ -132,6 +132,17 @@ function S.gearPower(get,weapon)
  if type(pet)=='string' and pet~='' then power+=S.ownedTier(get('ProfilePets'),pet) or 0 end
  return power
 end
+-- gearPower split for the Armory's Power card (plan K): the starter's tier, worn armor tiers and
+-- the pet's tier. total equals gearPower(get, weapon).
+function S.gearParts(get,weapon)
+ local parts={weapon=S.ownedTier(get('ProfileWeapons'),weapon) or 1,armor=0,pet=0}
+ local tiers=S.parseArmorTiers(get('ProfileArmor') or '')
+ for slot,setId in S.parseWearing(get('ProfileWearing')) do parts.armor+=tiers[setId..'.'..slot] or 0 end
+ local pet=get('ProfilePet')
+ if type(pet)=='string' and pet~='' then parts.pet=S.ownedTier(get('ProfilePets'),pet) or 0 end
+ parts.total=parts.weapon+parts.armor+parts.pet
+ return parts
+end
 -- Armor set bonuses (RARITY_GODLY_ARMOR.md step 5, approved 2026-09-30). Only worn pieces of the
 -- SAME set count: 2+ pieces give `two`, all 4 give `two` and `four`. A key that is a stat adds to
 -- that stat; any other key is a perk (a number scales with tier, true is a flag). `text` is the
