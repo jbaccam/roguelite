@@ -32,7 +32,8 @@ Input.InputBegan:Connect(function(input,processed)
   if not Input:GetFocusedTextBox() and os.clock()-released>.1 then panel.Close() end
   return
  end
- if processed or Input:GetFocusedTextBox() or input.KeyCode~=Enum.KeyCode.P then return end
+ -- F2 (P was it until plan L made P the pause key for everyone).
+ if processed or Input:GetFocusedTextBox() or input.KeyCode~=Enum.KeyCode.F2 then return end
  panel.Toggle()
 end)
 -- Studio-only hook so checks can open a tab without keyboard input (like LobbyUI's TestOpenWindow).

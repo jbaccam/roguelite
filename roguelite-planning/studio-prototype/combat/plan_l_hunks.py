@@ -110,10 +110,33 @@ HUNKS = [
     ("combat/default.project.json", None,
      '      "CharacterService": {', "before",
      '      "RunPause": {\n        "$path": "RunPause.luau"\n      },'),
+    # --- Run HUD: the PAUSE launcher (P and the Roblox menu are PauseUI's own) -----------------------
+    ("ui/RogueliteUI.luau", "ReplicatedStorage.RogueliteUI",
+     " launcher('OpenShop','store','SHOP',1,toggleShop)", "after",
+     " -- Pause (plans/2026-10-02-L-pause.md): PAUSE, P and the Roblox menu open the pause screen. Built\n"
+     " -- in its own thread: PauseUI waits for the run state, which must never hold up this HUD.\n"
+     " local pauseScreen\n"
+     " launcher('PauseButton','rbxassetid://109142479841413','PAUSE',2,function() if pauseScreen then pauseScreen.Toggle() end end)\n"
+     " task.spawn(function()\n"
+     "  local ok,PauseUI=pcall(require,RS:WaitForChild('PauseUI'))\n"
+     "  if not ok then warn('RogueliteUI: PauseUI failed to load:',PauseUI) return end\n"
+     "  local made,screen=pcall(PauseUI.new,player)\n"
+     "  if made then pauseScreen=screen else warn('RogueliteUI: pause screen failed:',screen) end\n"
+     " end)"),
+    # --- Admin panel: P is pause now; developers open the panel with F2 ------------------------------
+    ("ui/AdminPanel.client.luau", "StarterPlayer.StarterPlayerScripts.AdminPanel",
+     " if processed or Input:GetFocusedTextBox() or input.KeyCode~=Enum.KeyCode.P then return end", "replace",
+     " -- F2 (P was it until plan L made P the pause key for everyone).\n"
+     " if processed or Input:GetFocusedTextBox() or input.KeyCode~=Enum.KeyCode.F2 then return end"),
+    # --- Rojo project (repo only): PauseUI -----------------------------------------------------------
+    ("combat/default.project.json", None,
+     '      "QuestsUI": {', "before",
+     '      "PauseUI": {\n        "$path": "../ui/PauseUI.luau"\n      },'),
 ]
 
 MODULES = [
     {"path": "combat/RunPause.luau", "parent": "ServerScriptService", "name": "RunPause", "sandboxLike": "ServerScriptService.RogueliteMeta"},
+    {"path": "ui/PauseUI.luau", "parent": "ReplicatedStorage", "name": "PauseUI", "sandboxLike": "ReplicatedStorage.RogueliteUI"},
 ]
 BASE = "29aa821"
 

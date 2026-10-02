@@ -352,6 +352,9 @@
       "StatPlates": {
         "$path": "../ui/StatPlates.luau"
       },
+      "PauseUI": {
+        "$path": "../ui/PauseUI.luau"
+      },
       "QuestsUI": {
         "$path": "../ui/QuestsUI.luau"
       },

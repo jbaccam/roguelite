@@ -241,6 +241,16 @@ function UI.mount(playerGui)
   if overlay.Visible and controller.Mode=='Shop' and phase~='Shop' then close() else controller:ShowPreview('Shop') end
  end
  launcher('OpenShop','store','SHOP',1,toggleShop)
+ -- Pause (plans/2026-10-02-L-pause.md): PAUSE, P and the Roblox menu open the pause screen. Built
+ -- in its own thread: PauseUI waits for the run state, which must never hold up this HUD.
+ local pauseScreen
+ launcher('PauseButton','rbxassetid://109142479841413','PAUSE',2,function() if pauseScreen then pauseScreen.Toggle() end end)
+ task.spawn(function()
+  local ok,PauseUI=pcall(require,RS:WaitForChild('PauseUI'))
+  if not ok then warn('RogueliteUI: PauseUI failed to load:',PauseUI) return end
+  local made,screen=pcall(PauseUI.new,player)
+  if made then pauseScreen=screen else warn('RogueliteUI: pause screen failed:',screen) end
+ end)
  launcher('SettingsButton','settings','SETTINGS',4,function()
   if settingsWindow then settingsWindow.Close() return end
   settingsWindow=T.settingsWindow(gui)
