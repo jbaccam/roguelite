@@ -1,0 +1,76 @@
+{
+ "weapons": {
+  "36": {
+   "folder": "reapers-scythe",
+   "objects": {
+    "ReapersScythe": 14507,
+    "ReapersScythe_Glow": 1900,
+    "ReapersScythe_GlowCore": 496
+   },
+   "offset_studio_x": 0.0
+  },
+  "37": {
+   "folder": "poseidons-trident",
+   "objects": {
+    "PoseidonsTrident": 16404,
+    "PoseidonsTrident_Glow": 1552,
+    "PoseidonsTrident_GlowCore": 312
+   },
+   "offset_studio_x": 9.0
+  },
+  "38": {
+   "folder": "storm-bow",
+   "objects": {
+    "StormBow": 14057,
+    "StormBow_Glow": 2225,
+    "StormBow_GlowCore": 1264
+   },
+   "offset_studio_x": 18.0
+  },
+  "39": {
+   "folder": "shadow-daggers",
+   "objects": {
+    "ShadowDaggers_L": 7406,
+    "ShadowDaggers_L_Glow": 1680,
+    "ShadowDaggers_L_GlowCore": 456,
+    "ShadowDaggers_R": 8386,
+    "ShadowDaggers_R_Glow": 698,
+    "ShadowDaggers_R_GlowCore": 426
+   },
+   "offset_studio_x": 27.0
+  },
+  "40": {
+   "folder": "vampire-blade",
+   "objects": {
+    "VampireBlade": 14804,
+    "VampireBlade_Glow": 2252,
+    "VampireBlade_GlowCore": 220
+   },
+   "offset_studio_x": 36.0
+  },
+  "41": {
+   "folder": "ray-gun",
+   "objects": {
+    "RayGun": 15004,
+    "RayGun_Glow": 352,
+    "RayGun_GlowCore": 356
+   },
+   "offset_studio_x": 45.0
+  }
+ },
+ "fbx": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\weapon-models\\godly\\studio-import\\Godly_Weapons.fbx",
+ "images": [
+  "PoseidonsTrident_BaseColor",
+  "RayGun_BaseColor",
+  "ReapersScythe_BaseColor",
+  "ShadowDaggers_BaseColor",
+  "StormBow_BaseColor",
+  "VampireBlade_BaseColor"
+ ],
+ "reimport": {
+  "objects": 21,
+  "names_match": true,
+  "triangles_match": true,
+  "total_triangles": 104757
+ }
+}

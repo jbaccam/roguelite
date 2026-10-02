@@ -1,0 +1,11 @@
+{
+ "note": "Roblox image asset ids for the Godly weapon BaseColor atlases, uploaded 2026-10-01 via Studio MCP upload_image. Use as MeshPart.TextureID (SurfaceAppearance renders blank in Play).",
+ "textures": {
+  "36": "rbxassetid://81028499820107",
+  "37": "rbxassetid://99157776260222",
+  "38": "rbxassetid://102197317454414",
+  "39": "rbxassetid://135902138077868",
+  "40": "rbxassetid://76161511888035",
+  "41": "rbxassetid://107056169613395"
+ }
+}
