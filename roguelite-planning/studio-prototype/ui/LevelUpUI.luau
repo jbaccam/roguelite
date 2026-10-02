@@ -76,7 +76,9 @@ function M.mount(player,onOpen,onDone)
   -- Under the cards: the button row (banish mode on desktops stacks its hint over CANCEL: 82),
   -- then the status line. Example, 750x369 phone: 12+56+6+20+6 = 100 px.
   local blockH=(banishMode and not compact) and 82 or bh
-  local below=gapB+blockH+6+20+6
+  -- The REROLL odds note gets its own 20 px line under the status line while REROLL is for sale.
+  local showOdds=not player:GetAttribute('PaidRandomRestricted') and not banishMode and #data.upgradeOffers>0
+  local below=gapB+blockH+6+20+6+(showOdds and 22 or 0)
   local minTop=compact and 100 or 128 -- title plate (58) and level line (24) above the cards
   if not desktop then minTop=math.max(minTop,cornerTop+48) end -- Show Stats sits above the cards
   local cardH=math.clamp(h*(columns==4 and .34 or .25),145,310)
@@ -161,6 +163,12 @@ function M.mount(player,onOpen,onDone)
   end
   -- Status line under the button row (it used to be pushed up onto BANISH / REROLL on phones).
   local status=text(content,'Status',data.message or '',margin,ry+blockH+6,leftW,20,17);status.TextXAlignment=Enum.TextXAlignment.Center
+  -- Each card's tier chance at the level being picked (the server rolls at this same level and Luck).
+  if showOdds then
+   local odds=Catalog.tierOdds(data.level-data.pendingLevels+1,Stats.read(state).Luck)
+   local note=text(content,'RerollOdds',ShopUI.oddsLine('Reroll odds per card',odds),margin,ry+blockH+6+22,leftW,20,15,T.Color.cream)
+   note.RichText=true;note.TextXAlignment=Enum.TextXAlignment.Center
+  end
   if not desktop then button(content,'ShowStats',smallStats and 'Hide Stats' or 'Show Stats',w-margin-125,cornerTop,125,40,function() smallStats=not smallStats;render() end,true) end
   if desktop or smallStats then
    local sw=desktop and side or math.min(340,w-28)

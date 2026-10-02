@@ -66,8 +66,19 @@ function S.open(screen,ctx,focus)
  local function tiles(face,list_,x,y,size,gap)
   for i,it in list_ do FX.tile(face,'Item'..i,x+(i-1)*(size+gap),y,size,it[1],it[2],it[3],it[4]) end
  end
+ -- SEE ODDS, on every card with chests in it (all of them hold Legendary Chests): the chest screen
+ -- opens straight onto the Legendary Chest's odds, and closing them comes back to this tab.
+ local function seeOdds()
+  sel.chest='Legendary';local tab=sel.storeTab
+  ctx.open('Chests',{chest='Legendary',odds=true,back=function() ctx.open('Store',tab) end})
+ end
+ local function oddsButton(parent,x,y,bw,bh)
+  local ob=FX.button(parent,'Odds','SEE ODDS',x,y,bw,bh,seeOdds,true);ob.Caption.TextSize=math.min(20,bh-22)
+  return ob
+ end
  -- Wide card: title, line and item slots on the left; big art, sash and price on the right.
- -- tiles: {asset, label, rarity, amount}. opts: tag, sash, sashColors, pulse, shine, artSize, arg.
+ -- tiles: {asset, label, rarity, amount}. opts: tag, sash, sashColors, pulse, shine, artSize, arg,
+ -- odds (a SEE ODDS button left of the price, between the item slots and the art).
  local function hero(name,y,h,theme,title,sub,items,asset,key,owned,opts)
   opts=opts or {}
   local face,th=FX.card(list,name,2,y,CW,h,theme)
@@ -79,6 +90,8 @@ function S.open(screen,ctx,focus)
   local size_=math.min(104,math.floor((CW-440-(#items-1)*12)/math.max(#items,1)))
   tiles(face,items,28,h-math.floor(size_*1.08)-24,size_,12)
   priceButton(face,'Buy',CW-300,h-90,260,66,key,owned,opts.pulse,opts.arg)
+  -- Four 104 px slots end at x 480; this sits at 562-732, clear of them and of the price (746).
+  if opts.odds then oddsButton(face,CW-484,h-84,170,54) end
   if opts.tag then FX.tag(face,opts.tag,th.tag,th.accent) end
   if opts.sash then FX.sash(face,opts.sash,opts.sashColors and opts.sashColors[1],opts.sashColors and opts.sashColors[2]) end
   if opts.shine then FX.shine(face) end
@@ -152,7 +165,7 @@ function S.open(screen,ctx,focus)
   if not profile.restricted then
    hero('Starter',y,290,'gold','STARTER PACK','One time only · the best deal in the game.',
     {{'emerald',comma(sp.emeralds),'Emerald'},{Chests.ById.Legendary.icon,'Legendary','Legendary','×'..sp.chests.Legendary},{'quests','Rerolls','Rare','×'..sp.rerolls}},
-    Chests.ById.Legendary.icon,'StarterPack',profile.starter,{tag='ONE TIME OFFER',sash='BEST VALUE',sashColors=RED_SASH,pulse=true,shine=true})
+    Chests.ById.Legendary.icon,'StarterPack',profile.starter,{tag='ONE TIME OFFER',sash='BEST VALUE',sashColors=RED_SASH,pulse=true,shine=true,odds=true})
    y+=290+34
   end
   -- Godly bundles: a Godly weapon + a full armor set + emeralds, one time each. COMING SOON until
@@ -216,6 +229,8 @@ function S.open(screen,ctx,focus)
    local plus=center(FX.title(face,'Plus','+',sx,ty+22,26,44,40,th.tint))
    plus.TextColor3=th.accent
    FX.tile(face,'Chests',sx+30,ty-6,88,Chests.ById.Legendary.icon,'Legendary','Legendary','×'..gs.chests.Legendary).Rotation=-8
+   -- Under the chest sticker (it ends near y 262), never reaching the price button (x 746).
+   oddsButton(face,math.min(sx+4,CW-300-12-140),h-62,140,46)
    priceButton(face,'Buy',CW-300,h-90,260,66,'GodlyStarter',state,state==false,pick)
    FX.shine(face)
    y+=h+48
@@ -289,7 +304,7 @@ function S.open(screen,ctx,focus)
   end
   local sub=FX.header(list,'LEGENDARY CHESTS',Chests.ById.Legendary.copies..' items and a guaranteed Legendary in every chest.',y,SW)
   sub.Position=UDim2.fromOffset(200,y+42);sub.Size=UDim2.fromOffset(SW-400,24)
-  local odds=FX.button(list,'Odds','SEE ODDS',SW-178,y+36,174,40,function() sel.chest='Legendary';ctx.open('Chests','Legendary') end,true);odds.Caption.TextSize=16
+  oddsButton(list,SW-178,y+36,174,40).Caption.TextSize=16
   y+=72+46
   local cw=math.floor((SW-2*16)/3);local ch=380;local base=Money.Products[Money.ChestPacks[1]]
   for i,key in Money.ChestPacks do
@@ -309,14 +324,14 @@ function S.open(screen,ctx,focus)
   local mb=Money.Products.MegaBundle
   hero('Mega',y,290,'purple','MEGA BUNDLE','The biggest pile of chests in the game.',
    {{Chests.ById.Legendary.icon,'Legendary','Legendary','×'..mb.chests.Legendary},{'emerald',comma(mb.emeralds),'Emerald'},{'quests','Rerolls','Rare','×'..mb.rerolls},{'armory','Banishes','Epic','×'..mb.banishes}},
-   'chest','MegaBundle',false,{tag='INSANE DEAL',pulse=true,shine=true})
+   'chest','MegaBundle',false,{tag='INSANE DEAL',pulse=true,shine=true,odds=true})
   y+=290+48
   local ub=Money.Products.UltimateBundle
   local each=math.floor(ub.robux/ub.chests.Legendary+.5)
   local save=math.floor((1-each/base.robux)*100+.5)
   hero('Ultimate',y,300,'obsidian','ULTIMATE BUNDLE','×'..ub.chests.Legendary..' Legendary Chests: '..each..' R$ each, save '..save..'%.',
    {{Chests.ById.Legendary.icon,'Legendary','Legendary','×'..ub.chests.Legendary},{'emerald',ctx.fmt(ub.emeralds),'Emerald'},{'quests','Rerolls','Rare','×'..ub.rerolls},{'armory','Banishes','Epic','×'..ub.banishes}},
-   Chests.ById.Legendary.icon,'UltimateBundle',false,{tag='ULTIMATE',sash='SAVE '..save..'%',sashColors=RED_SASH,pulse=true,shine=true,artSize=250})
+   Chests.ById.Legendary.icon,'UltimateBundle',false,{tag='ULTIMATE',sash='SAVE '..save..'%',sashColors=RED_SASH,pulse=true,shine=true,artSize=250,odds=true})
   y+=300+40
   local owned=profile.chests.Legendary or 0
   if owned>0 then

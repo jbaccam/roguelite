@@ -55,6 +55,20 @@ local green=Color3.fromRGB(132,234,75)
 local red=Color3.fromRGB(250,90,99)
 local tiers={Color3.fromRGB(218,224,228),Color3.fromRGB(79,183,245),Color3.fromRGB(192,116,249),Color3.fromRGB(248,88,99)}
 local cream=T.Color.cream
+-- The REROLL odds note (shop and level-up): odds is {I,II,III,IV} from EconomyConfig.tierOdds or
+-- LevelUpCatalog.tierOdds, the same numbers the server rolls with. Each tier in its card colour.
+-- Example: oddsLine('Reroll odds per offer',{.46,.465,.075,0}) ->
+-- 'Reroll odds per offer: Tier I 46% · II 47% · III 7.5% · IV 0%'.
+function M.oddsLine(label,odds)
+ local parts={}
+ for tier=1,4 do
+  local p=(odds[tier] or 0)*100
+  local pct=p>=10 and string.format('%.0f%%',p) or p>=1 and string.format('%.1f%%',p):gsub('%.0%%','%%') or p>0 and string.format('%.2f%%',p) or '0%'
+  local c=tiers[tier]
+  table.insert(parts,string.format('<font color="#%02X%02X%02X">%s %s</font>',math.round(c.R*255),math.round(c.G*255),math.round(c.B*255),tier==1 and 'Tier I' or T.Roman[tier],pct))
+ end
+ return label..': '..table.concat(parts,' · ')
+end
 -- Green theme: lime-cornered panels; tier II-IV cards take the rarity-tinted frame.
 local function surface(parent,name,x,y,w,h,tier,kind)
  local f=T.panel(parent,name,x,y,w,h,kind or 'panel')
@@ -251,6 +265,12 @@ function M.new(player,h,refresh)
     if (player:GetAttribute('ProfileRerolls') or 0)>0 then combat.RunAction:FireServer('UseReroll','Shop') else combat.PurchaseRequest:FireServer('ShopReroll') end
    end)
    rb.Interactable=data.phase=='Shop'
+   -- Odds note under the reroll buttons (in the gap above the cards): each new offer's tier chance at
+   -- this wave and Luck. Wide: right-aligned in the 30 px under the buttons; narrow: the 22 px row.
+   local luck=Stats.read(state).Luck
+   local nw=narrow and leftW or math.min(leftW*.6,560)
+   local note=text(left,'RerollOdds',M.oddsLine('Reroll odds per offer',E.tierOdds(data.wave,luck)),leftW-nw,narrow and 58+rerollH or rerollH+5,nw,narrow and 18 or 20,narrow and 13 or 15,cream)
+   note.RichText=true;note.TextXAlignment=narrow and Enum.TextXAlignment.Left or Enum.TextXAlignment.Right
   end
   -- Phones (tap>0) keep four columns only when each card is still 240 wide; else two rows of two.
   local top=narrow and 78+rerollH or math.max(76,rerollH+30);local cols=leftW>=(tap>0 and 1000 or 660) and 4 or leftW>=420 and 2 or 1;local cardW=(leftW-(cols-1)*12)/cols

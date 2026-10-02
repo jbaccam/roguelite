@@ -227,6 +227,8 @@ The Starter Pack and Godly Starter contain chests but sit on the Bundles tab wit
 
 **Where:** `ui/StoreUI.luau:150-218,289`, `ui/ShopUI.luau:240-246`, `ui/LevelUpUI.luau:139-148`
 
+**Progress 2026-10-02:** SEE ODDS is on the Starter Pack, Godly Starter, Mega and Ultimate cards and opens the Legendary Chest odds directly (closing them returns to the store). The run shop and level-up REROLL show each tier's chance from `EconomyConfig.tierOdds` / `LevelUpCatalog.tierOdds`, the same numbers the server rolls with (checked against 200k simulated rolls). Still to build: tappable odds rows with item cards (mockup first).
+
 ### S3 · The last save on leave or shutdown only tries once
 *Saving data*
 

@@ -28,13 +28,21 @@ function C.pool(stats,banished,excluded)
  end
  return pool
 end
+-- A card's tier: one draw n in [0,1) against these growing limits for Tier IV, III and II (Luck
+-- 0-100 scales them). tierOdds turns them into {I,II,III,IV} for the REROLL odds note (LevelUpUI).
+-- Example, level 10 with no Luck: limits .05 / .25 / .43, so IV 5%, III 20%, II 18%, I 57%.
+function C.thresholds(level,luck)
+ local l=1+math.clamp(luck or 0,0,100)/100
+ return math.min(.08,.005*level*l),math.min(.28,.025*level*l),math.min(.65,.18+.025*level*l)
+end
+function C.tierOdds(level,luck) local a,b,c=C.thresholds(level,luck);return {1-c,c-b,b-a,a} end
 function C.roll(stats,banished,level,rng)
  local pool=C.pool(stats,banished);local offers={}
  -- Roll each card independently; offers appear immediately.
- local luck=1+math.clamp(stats.Luck,0,100)/100
+ local four,three,two=C.thresholds(level,stats.Luck)
  for _=1,math.min(C.OFFER_COUNT,#pool) do
   local n=rng:NextNumber()
-  local tier=n<math.min(.08,.005*level*luck) and 4 or n<math.min(.28,.025*level*luck) and 3 or n<math.min(.65,.18+.025*level*luck) and 2 or 1
+  local tier=n<four and 4 or n<three and 3 or n<two and 2 or 1
   local d=table.remove(pool,rng:NextInteger(1,#pool))
   table.insert(offers,{id=d.id,tier=tier,amount=math.min(d.values[tier],Stats.ById[d.id].max-stats[d.id])})
  end

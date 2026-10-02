@@ -52,6 +52,15 @@ function E.rollTier(wave,luck,rng)
  for tier=4,2,-1 do if draw<E.rarityChance(tier,wave,luck) then return tier end end
  return 1
 end
+-- Each shop offer's tier chances, {I,II,III,IV}, exactly as rollTier draws them: one draw checked
+-- against Tier IV's chance, then III's, then II's. The REROLL odds note (ShopUI) shows these.
+-- Example, wave 10 with no Luck: IV 0%, III 7.5%, II 46.5%, I 46%.
+function E.tierOdds(wave,luck)
+ local odds,taken={0,0,0,0},0
+ for tier=4,2,-1 do local c=math.max(taken,E.rarityChance(tier,wave,luck));odds[tier]=c-taken;taken=c end
+ odds[1]=1-taken
+ return odds
+end
 function E.weaponSlot(wave,slot,rng)
  if wave<=2 then return slot<=2 end
  if wave<=5 and slot==1 then return true end

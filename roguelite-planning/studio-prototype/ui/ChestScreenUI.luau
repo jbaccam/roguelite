@@ -91,6 +91,7 @@ function U.new(player,opts)
  local root,canvas
  -- browse: the browse view's top-level pieces (direct children of the canvas, one per group).
  local browse,listFrame,header,actions,oddsOverlay,gemValue
+ local oddsBack -- set when the store's SEE ODDS opened this screen: closing the odds goes back there
  local openLayer,resultLayer
  local conns={}
  local profile
@@ -179,6 +180,7 @@ function U.new(player,opts)
 
  local function closeOdds()
   if oddsOverlay then oddsOverlay:Destroy();oddsOverlay=nil end
+  if oddsBack then local back=oddsBack;oddsBack=nil;back();return end
   if actions then T.gamepadSelect(actions) end
  end
  local function openOdds(id)
@@ -687,8 +689,12 @@ function U.new(player,opts)
 
  -- Open / close ------------------------------------------------------------------------------------
  local pendingBrowse=false
+ -- kind: a chest id, or {chest=id,odds=true,back=fn} from the store's SEE ODDS, which opens
+ -- straight onto that chest's odds; closing them calls back() (the store reopens on its tab).
  function self.Open(kind)
   if root then self.Close() end
+  local want=type(kind)=='table' and kind or nil
+  if want then kind=want.chest end
   if kind and Chests.ById[kind] then selected=kind end
   readProfile()
   root=T.frame(screen,'Root',0,0,0,0);root.Size=UDim2.fromScale(1,1)
@@ -709,6 +715,10 @@ function U.new(player,opts)
   end
   FX.play(FX.Sounds.Charge,.25,1.25)
   buildBrowse(true)
+  if want and want.odds and Chests.ById[selected] then
+   openOdds(selected)
+   if type(want.back)=='function' then oddsBack=want.back end
+  end
   T.hideTouchControls('ChestScreen',true)
   if opts.onVisible then opts.onVisible(false) end
   table.insert(conns,player.AttributeChanged:Connect(function(name)
@@ -744,6 +754,7 @@ function U.new(player,opts)
   Stage.Hide()
   local r=root;root=nil;r:Destroy()
   canvas,browse,listFrame,header,actions,gemValue,oddsOverlay,openLayer,resultLayer,prompt=nil,nil,nil,nil,nil,nil,nil,nil,nil,nil
+  oddsBack=nil
   mode='closed'
   screen.Enabled=false
   T.hideTouchControls('ChestScreen',false)
