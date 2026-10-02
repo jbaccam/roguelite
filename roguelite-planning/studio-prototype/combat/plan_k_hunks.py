@@ -168,7 +168,7 @@ MODULES = [
     {"path": "ui/QuestsUI.luau", "parent": "ReplicatedStorage", "name": "QuestsUI"},
     {"path": "ui/StatPlates.luau", "parent": "ReplicatedStorage", "name": "StatPlates", "sandboxLike": "ReplicatedStorage.ArmoryUI"},
 ]
-BASE = "7fd7cea"  # the commit Studio's copies of plan K's whole modules are expected to match
+BASE = "e6ecedb"  # the commit Studio's copies of plan K's whole modules match (last synced 2026-10-02)
 
 if __name__ == "__main__":
     run(HUNKS, MODULES, "combat/plan-k-sync.json", BASE)
