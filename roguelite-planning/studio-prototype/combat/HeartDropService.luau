@@ -99,8 +99,20 @@ function H.step(now)
  end
 end
 Players.PlayerRemoving:Connect(function(p) for _,d in H.drops do if d.target==p then cancel(d) end end end)
+local pausedAt -- plan L: server time when the run paused
 local elapsed=0
 RunService.Heartbeat:Connect(function(dt)
- elapsed+=dt;if elapsed<1/30 then return end;elapsed=0;H.step(workspace:GetServerTimeNow())
+ elapsed+=dt;if elapsed<1/30 then return end;elapsed=0
+ local now=workspace:GetServerTimeNow()
+ -- Pause (plan L): hearts wait out a paused run; their age and ExpiresAt move later by it.
+ if RS.RogueliteCombat:GetAttribute('RunPaused')==true then pausedAt=pausedAt or now;return end
+ if pausedAt then
+  local by=now-pausedAt;pausedAt=nil
+  for _,d in H.drops do
+   d.born+=by
+   if d.model.Parent then d.model:SetAttribute('BornAt',d.born);d.model:SetAttribute('ExpiresAt',d.born+H.LIFETIME) end
+  end
+ end
+ H.step(now)
 end)
 return H

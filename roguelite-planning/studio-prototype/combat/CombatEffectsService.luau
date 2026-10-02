@@ -148,9 +148,20 @@ end
 -- Pets (PetService) apply burn, poison and slow through the same status table as weapons.
 E.status=status
 local elapsed=0
+local pausedAt -- plan L: os.clock() when the run paused
 RunService.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<.1 then return end;elapsed=0
  local now=os.clock()
+ -- Pause (plan L): statuses wait out a paused run, then their end and tick times move later by it.
+ if combat:GetAttribute('RunPaused')==true then pausedAt=pausedAt or now;return end
+ if pausedAt then
+  local by=now-pausedAt;pausedAt=nil
+  local serverBy=by
+  for npc,entries in E.statuses do
+   for _,e in entries do e.ends+=by;e.nextTick+=by end
+   for _,name in {'Burn','Poison','Slow'} do local u=npc:GetAttribute(name..'Until');if u then npc:SetAttribute(name..'Until',u+serverBy) end end
+  end
+ end
  for npc,entries in E.statuses do
   local h=alive(npc)
   if not h then E.statuses[npc]=nil;continue end

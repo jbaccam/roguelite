@@ -41,6 +41,8 @@ function Service.inShop(player)
  local run=game.ReplicatedStorage:FindFirstChild('RogueliteRunState')
  return run~=nil and run:GetAttribute('Phase')=='Shop' and player:GetAttribute('LobbyPreviewActive')~=true
 end
+-- Plan L: a paused run (RunPaused) holds players like the shop does and blocks their damage.
+function Service.frozen(player) return combat:GetAttribute('RunPaused')==true and player:GetAttribute('LobbyPreviewActive')~=true end
 local function applyMoveSpeed(h,s)
  h.UseJumpPower=false
  if s.held then h.WalkSpeed=0;h.JumpHeight=0;return end
@@ -196,7 +198,7 @@ function Service.contact(player,amount,roll,attacker)
  -- Admin god mode (AdminGod, set only by AdminService) and the between-wave shop: no damage from
  -- any source. Every player damage path (contact, enemy melee and projectiles, zombie slams, the
  -- boss) comes through here.
- if not s or not h or h.Health<=0 or player.Character:FindFirstChildOfClass('ForceField') or player:GetAttribute('AdminGod')==true or Service.inShop(player) then return 0 end
+ if not s or not h or h.Health<=0 or player.Character:FindFirstChildOfClass('ForceField') or player:GetAttribute('AdminGod')==true or Service.inShop(player) or Service.frozen(player) then return 0 end
  -- A pet shell shield (Turtle) blocks the next hit first, then pops.
  if Service.hasPetShield(player) then
   s.petShield=0;s.petShieldUntil=0;player:SetAttribute('PetShieldUntil',nil)
@@ -290,19 +292,19 @@ RunService.Heartbeat:Connect(function(dt)
    -- Shop hold: stand still from the moment the shop opens until the next wave starts. Anyone who
    -- still drifts a few studs is put back. A long jump is a server move (travel, respawn), so the
    -- hold starts again from there.
-   local held=Service.inShop(player)
+   local held=Service.inShop(player) or Service.frozen(player)
    if held~=(s.held==true) then s.held=held;s.holdAt=held and root.Position or nil;applyMoveSpeed(h,s) end
    if held and s.holdAt then
     local drift=root.Position-s.holdAt;local flat=Vector2.new(drift.X,drift.Z).Magnitude
     if flat>25 then s.holdAt=root.Position
     elseif flat>3 then player.Character:PivotTo(CFrame.new(s.holdAt)*root.CFrame.Rotation) end
    end
-   Service.heal(player,s.stats.Regeneration*step)
+   if not Service.frozen(player) then Service.heal(player,s.stats.Regeneration*step) end
    local second=math.floor(now);if s.leechSecond~=second then s.leechSecond=second;s.leech=0 end
    -- Old proximity mobs (ContactDamage > 0) keep their 0.8 s contact timer. Wave mobs set
    -- ContactDamage 0 (their swings own damage) and hurt through BumpDamage/BumpRange instead:
    -- body overlap only, at most once per BUMP_GRACE across all mobs.
-   if combat:GetAttribute('ZombiesEnabled') then
+   if combat:GetAttribute('ZombiesEnabled') and combat:GetAttribute('RunPaused')~=true then
     for _,npc in Tags:GetTagged('RogueliteZombie') do
      local nr=npc:FindFirstChild('HumanoidRootPart');local nh=npc:FindFirstChildOfClass('Humanoid')
      local contactDamage=npc:GetAttribute('ContactDamage') or 10

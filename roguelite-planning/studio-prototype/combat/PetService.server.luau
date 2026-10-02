@@ -455,6 +455,7 @@ RunService.Heartbeat:Connect(function(dt)
 	elapsed = 0
 	local r = run()
 	local isCombat = r ~= nil and r:GetAttribute("Phase") == "Combat" and combat:GetAttribute("ZombiesEnabled") == true
+		and combat:GetAttribute("RunPaused") ~= true -- plan L: pets rest while the run is paused
 	local now = os.clock()
 	if isCombat and not wasCombat then
 		-- A new wave: every pet waits half its cooldown before its first use.

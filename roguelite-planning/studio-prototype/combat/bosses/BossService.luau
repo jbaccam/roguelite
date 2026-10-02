@@ -224,6 +224,11 @@ function B.step(npc,s,now)
  if combat:GetAttribute('ZombiesEnabled')~=true then
   s.attack=nil;npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil);root.Anchored=false;h.AutoRotate=true;h:Move(Vector3.zero);return
  end
+ -- Pause (plan L): a paused run cancels the swing or charge under way and holds still.
+ if combat:GetAttribute('RunPaused')==true then
+  if s.attack then s.attack=nil;npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil);root.Anchored=false;root:SetNetworkOwner(nil);h.AutoRotate=true end
+  h:Move(Vector3.zero);h:MoveTo(root.Position);return
+ end
  if s.attack and s.attack.kind=='Charge' then stepCharge(npc,s,now,root);return end
  if s.attack then
   local attack=s.attack;local age=now-attack.start;local a=Motion.Attacks[attack.kind]

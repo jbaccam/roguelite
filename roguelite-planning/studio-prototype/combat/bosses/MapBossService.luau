@@ -465,6 +465,12 @@ function M.step(npc,s,now)
  if combat:GetAttribute('ZombiesEnabled')~=true then
   s.attack=nil;s.shots=nil;table.clear(s.follows);npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil);root.Anchored=false;h.AutoRotate=true;h:Move(Vector3.zero);return
  end
+ -- Pause (plan L): a paused run cancels the attack under way, its shots and follow-ups, and
+ -- holds still. Attacks start fresh (with their wind-up) once the run unfreezes.
+ if combat:GetAttribute('RunPaused')==true then
+  if s.attack then s.attack=nil;npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil);root.Anchored=false;h.AutoRotate=true end
+  s.shots=nil;table.clear(s.follows);h:Move(Vector3.zero);h:MoveTo(root.Position);return
+ end
  checkEnrage(npc,s,h)
  local params,people=exclusions(npc),living()
  stepShots(npc,s,now,params,people)

@@ -25,7 +25,8 @@ local waveGeneration = 0
 -- ShopService creates RogueliteRunState.
 local function adminPaused()
     local run = game:GetService('ReplicatedStorage'):FindFirstChild('RogueliteRunState')
-    return run ~= nil and run:GetAttribute('AdminPaused') == true
+    -- Plan L: a paused run (RunPaused) spawns nothing either.
+    return (run ~= nil and run:GetAttribute('AdminPaused') == true) or combat:GetAttribute('RunPaused') == true
 end
 
 combat:SetAttribute('ZombieCount',combat:GetAttribute('ZombieCount') or 5)
@@ -439,7 +440,7 @@ connection = RunService.Heartbeat:Connect(function(dt)
     end
     -- Admin Freeze: no moving and no attacks; players' hits and damage still work. The first
     -- frozen frame cancels an attack in progress, so its hit can't land the moment Freeze ends.
-    if combat:GetAttribute('AdminFreeze') == true then
+    if combat:GetAttribute('AdminFreeze') == true or combat:GetAttribute('RunPaused') == true then -- plan L: a paused run freezes them too
         if not frozen then
             frozen = true
             EnemyAttacks.cancel(npc)
@@ -635,6 +636,11 @@ adminSpawn.Parent = ServerStorage
 -- Resume after an admin Pause: refill the wave's empty slots.
 task.spawn(function()
     local run = game:GetService('ReplicatedStorage'):WaitForChild('RogueliteRunState')
+    -- Plan L: unpausing the run refills the wave's empty slots the same way.
+    combat:GetAttributeChangedSignal('RunPaused'):Connect(function()
+        if adminPaused() or combat:GetAttribute('ZombiesEnabled') ~= true or not Role.marker() then return end
+        for index = 1, spawnCount() do queueSpawn(index) end
+    end)
     run:GetAttributeChangedSignal('AdminPaused'):Connect(function()
         if adminPaused() or combat:GetAttribute('ZombiesEnabled') ~= true or not Role.marker() then return end
         for index = 1, spawnCount() do queueSpawn(index) end

@@ -249,6 +249,10 @@ local function projectile(npc, root, config, s, target)
 	})
 end
 RunService.Heartbeat:Connect(function(dt)
+	-- Plan L: shots in flight hang while the run is paused, then carry on (lifetime counts frames).
+	if combat:GetAttribute("RunPaused") == true then
+		return
+	end
 	for i = #projectiles, 1, -1 do
 		local p = projectiles[i]
 		p.remaining -= dt
