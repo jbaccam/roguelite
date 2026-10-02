@@ -493,6 +493,15 @@
       "RunAnalytics": {
         "$path": "RunAnalytics.luau"
       },
+      "Contribution": {
+        "$path": "Contribution.luau"
+      },
+      "MovementCheck": {
+        "$path": "MovementCheck.luau"
+      },
+      "MovementGuard": {
+        "$path": "MovementGuard.server.luau"
+      },
       "ArmorService": {
         "$path": "ArmorService.server.luau"
       },

@@ -60,6 +60,7 @@ end
 -- Required before runMap: a local declared after it would be a nil global inside it.
 local RunSetupRules=require(game.ReplicatedStorage:WaitForChild('RunSetupRules'))
 local Analytics=require(SSS:WaitForChild('RunAnalytics')) -- unsandboxed, like this script
+local Contribution=require(SSS:WaitForChild('Contribution')) -- pure math: rewards by contribution
 local function runMap() local id=combat:GetAttribute('RunMap');return RunSetupRules.MapIndex[id] and id or 'PineValley' end
 local down,revivesUsed={},{}
 local rise -- defined with revive below; downed teammates also rise at a wave's end
@@ -68,9 +69,15 @@ local runState=game.ReplicatedStorage:WaitForChild('RogueliteRunState')
 -- Harder difficulties pay more emeralds; wins and best waves are saved per map and difficulty.
 local function difficulty() return combat:GetAttribute('RunDifficulty') or 'Normal' end
 local function emeraldsFor(wave,map) return RunSetupRules.runEmeralds(RunSetupRules.MapIndex[map or runMap()],difficulty(),wave) end
--- What one stint of a run has earned while playing `wave`: the run's payout so far minus what it
--- already stood at when the player joined, so joining a run late never pays for missed waves.
-local function stintEmeralds(map,joined,wave) return math.max(0,emeraldsFor(wave,map)-emeraldsFor(joined or 1,map)) end
+-- Rewards by contribution (launch audit C1, Contribution.luau). waveWork is this wave's damage and
+-- kills per member; at each clear it becomes a multiplier on that wave's share of the emerald
+-- block (ledgers, one per stint, so joining late never pays for missed waves). lastHit (os.clock of
+-- a member's last damage) gates play minutes. The damage and kill hooks below run inside sandboxed
+-- modules, so they only add to these tables; this script's own loops and the wave clear read them.
+local waveWork,ledgers,lastHit={},{},{}
+local function work(p) local t=waveWork[p];if not t then t={damage=0,kills=0};waveWork[p]=t end;return t end
+-- The run emeralds a stint has earned so far, before VIP (completed 5-wave blocks only).
+local function owedFor(p,stint) local l=ledgers[p];return l and l.stint==stint and Contribution.owed(l) or 0 end
 -- The end of one player's run, for the results screen (RunResultsUI reads the RunResult attribute):
 -- outcome Victory (they reached wave 20, Endless included), Defeat or Left. Built before the run
 -- resets, so it shows the build they ended with. runInfo keeps what only a wave clear knows: the
@@ -101,7 +108,7 @@ end
 local function questEvent(p,stat,n) if Profiles.questEvent then Profiles.questEvent(p,stat,n) end end
 local function questRun(p,stint) if Profiles.questRun then Profiles.questRun(p,stint) end end
 -- Plan K quest stats from the run: level-ups, shards picked up and shop buys (ShopService hooks),
--- damage dealt (CombatEffectsService.listenDamage) and each minute in a run. The hooks run inside
+-- damage dealt (CombatEffectsService.listenDamage) and minutes of play. The hooks run inside
 -- the sandboxed ShopService / CombatEffectsService, so they only add to these tallies; this loop
 -- sends them to quests once a second. Members of the run only; questEvent skips test runs.
 local questTally={levels={},shards={},buys={},damage={}}
@@ -110,35 +117,66 @@ Shop.onLevelUp=function(p,n) tally('levels',p,n) end
 Shop.onShards=function(p,n) tally('shards',p,n) end
 Shop.onBuy=function(p) tally('buys',p,1) end
 if Effects.listenDamage then Effects.listenDamage(function(owner,_,actual) tally('damage',owner,actual) end) end -- plan J's hook; absent in older copies
+-- Minutes count per player, and only while they fight (launch audit C2): alive and not down, in a
+-- wave that isn't paused, with a hit of their own in the last 30 s. Idling in the shop or hovering
+-- out of reach earns none. Example: 4 waves of 30 s, fighting the whole time -> 2 minutes.
+local fightSeconds={}
 task.spawn(function()
- local minuteAt=os.clock()+60
  while true do
   task.wait(1)
   for stat,t in questTally do
    for p,n in t do t[p]=nil;if Shop.members[p] then questEvent(p,stat,math.floor(n)) end end
   end
-  if os.clock()>=minuteAt then minuteAt+=60;if combat:GetAttribute('RunPaused')~=true then for p in Shop.members do questEvent(p,'minutes',1) end end end -- plan L: paused minutes don't count
+  if Shop.phase=='Combat' and combat:GetAttribute('RunPaused')~=true then
+   local now=os.clock()
+   for p in Shop.members do
+    local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid')
+    if h and h.Health>0 and not down[p] and now-(lastHit[p] or -1e9)<30 then
+     fightSeconds[p]=(fightSeconds[p] or 0)+1
+     if fightSeconds[p]>=60 then fightSeconds[p]-=60;questEvent(p,'minutes',1) end
+    end
+   end
+  end
  end
 end)
 local runKills,runDamage={},{} -- plan L: this stint's kills and damage for the pause screen (the run loop publishes them)
-if Effects.listenDamage then Effects.listenDamage(function(owner,_,actual) if Shop.members[owner] then runDamage[owner]=(runDamage[owner] or 0)+actual end end) end
+if Effects.listenDamage then Effects.listenDamage(function(owner,_,actual)
+ if not Shop.members[owner] then return end
+ runDamage[owner]=(runDamage[owner] or 0)+actual
+ work(owner).damage+=actual;lastHit[owner]=os.clock() -- contribution (C1) and play minutes (C2)
+end) end
 -- Each cleared wave saves progress right away, so nothing waits on the death screen's Give Up:
 -- the best wave, the win at wave 20 with its first-win bonus, and the run emeralds earned so far
 -- (paid as they're reached; ProfileService.settleRun pays each stint's emeralds once). Leaving,
--- disconnecting or a server shutting down then never loses a reward. Downed players are paid up
--- to the wave they fell on when they give up. Past wave 20 the run keeps going (Endless).
+-- disconnecting or a server shutting down then never loses a reward. Each wave's share of the
+-- emeralds follows the player's contribution to it (Contribution.luau); downed players are paid
+-- for what they did too. Past wave 20 the run keeps going (Endless) and pays the same way.
 Shop.onWaveCleared=function(wavesPassed)
  local map=runMap();local index=RunSetupRules.MapIndex[map]
  if Shop.memberCount()>1 then for p,m in Shop.members do soloBroken[p]=m.stint end end -- plan M: not solo
  local key=RunSetupRules.runKey(map,difficulty())
+ -- This wave's multipliers over the members still here: someone who left mid-wave takes their
+ -- share with them, so the others aren't paid less for it.
+ local tallies={};for p in Shop.members do tallies[p]=waveWork[p] or {damage=0,kills=0} end
+ local multiplier=Contribution.multipliers(tallies);table.clear(waveWork)
+ -- The emeralds this clear completes for a solo player: a block on waves 5, 10, 15 ..., else 0.
+ local block=emeraldsFor(Shop.wave,map)-emeraldsFor(Shop.wave-1,map)
  for p,m in Shop.members do
   -- The best wave before this stint is read before this clear can raise it (NEW BEST on results).
   local info=runInfo[p]
   if not info or info.stint~=m.stint then info={stint=m.stint,prevBest=Profiles.bestWave(p,key),firstWin=0};runInfo[p]=info end
   local bonus=Profiles.recordProgress(p,key,wavesPassed,RunSetupRules.firstWinEmeralds(index,difficulty()))
   if bonus>0 then info.firstWin=bonus end
+  local l=ledgers[p];if not l or l.stint~=m.stint then l=Contribution.ledger(m.stint);ledgers[p]=l end
+  Contribution.addWave(l,multiplier[p] or 0,block)
+  Analytics.earned(p,Profiles.settleRun(p,m.stint,key,wavesPassed,Contribution.owed(l)))
   if down[p] then continue end
-  -- Quests: a wave survived; the stint's first cleared wave counts a run; wave 20 is a win.
+  if wavesPassed==RunSetupRules.WinWave and not Admin.isTestRun() then
+   Shop.publish(p,'VICTORY! Keep going in Endless, or LEAVE RUN to take your rewards')
+  end
+  -- Quests, for a wave this player fought in (damage or a kill): a wave survived; the stint's first
+  -- such wave counts a run; wave 20 is a win.
+  if (multiplier[p] or 0)<=0 then continue end
   questRun(p,m.stint);questEvent(p,'waves',1)
   if wavesPassed==RunSetupRules.WinWave then questEvent(p,'wins',1) end
   if wavesPassed==10 then questEvent(p,'deepRuns',1) end -- Reach Wave 10 in One Run
@@ -148,11 +186,6 @@ Shop.onWaveCleared=function(wavesPassed)
    local cs=Characters.states[p]
    Profiles.questWin(p,{diff=difficulty(),solo=m.joined==1 and soloBroken[p]~=m.stint,
     flawless=m.joined==1 and wentDown[p]~=m.stint,class=cs and cs.class})
-  end
-  local earned=stintEmeralds(map,m.joined,Shop.wave)
-  Analytics.earned(p,Profiles.settleRun(p,m.stint,key,wavesPassed,earned))
-  if wavesPassed==RunSetupRules.WinWave and not Admin.isTestRun() then
-   Shop.publish(p,'VICTORY! Keep going in Endless, or LEAVE RUN to take your rewards')
   end
  end
  -- The run is won from here on (the shop's victory banner); Endless keeps the same loop.
@@ -180,6 +213,7 @@ Death.onDeath=function(npc)
  if not p or not Shop.states[p] then return end
  questEvent(p,'kills',1)
  runKills[p]=(runKills[p] or 0)+1 -- plan L: the pause screen's kills this stint
+ if Shop.members[p] then work(p).kills+=1 end -- contribution (C1); a pet's kill is its owner's
  local weapon=Weapons.ById[npc:GetAttribute('LastWeaponId')]
  if weapon and weapon.utility then questEvent(p,'utilityKills',1) end
  if weapon then questEvent(p,weapon.kind=='Melee' and 'meleeKills' or 'rangedKills',1) end -- Ranged, Blast and Spread count as ranged
@@ -234,7 +268,7 @@ local function onDied(p,character)
  -- A test run (the admin panel was used) pays nothing, so the death screen shows 0 emeralds.
  -- revive: which revive of this run REVIVE would buy; its price and the one after (prices double).
  local n=(revivesUsed[p] or 0)+1
- p:SetAttribute('DeathInfo',Http:JSONEncode({wave=Shop.wave,level=s.level,emeralds=Admin.isTestRun() and 0 or stintEmeralds(runMap(),m.joined,Shop.wave),map=RunSetupRules.Maps[RunSetupRules.MapIndex[runMap()]].name,
+ p:SetAttribute('DeathInfo',Http:JSONEncode({wave=Shop.wave,level=s.level,emeralds=Admin.isTestRun() and 0 or owedFor(p,m.stint),map=RunSetupRules.Maps[RunSetupRules.MapIndex[runMap()]].name,
   revive=n,revivePrice=Config.Products[Config.reviveKey(n)].robux,nextRevivePrice=Config.Products[Config.reviveKey(n+1)].robux}))
  p:SetAttribute('RunDown',true)
  Analytics.died(p,Shop.wave)
@@ -255,6 +289,7 @@ runState:GetAttributeChangedSignal('Wave'):Connect(function()
  for q in phoenixUsed do if not down[q] then phoenixUsed[q]=nil;q:SetAttribute('PhoenixUsed',nil) end end
  for q in revivesUsed do if not down[q] then revivesUsed[q]=0 end end -- and revives start at 65 R$ again
  runState:SetAttribute('Won',nil) -- and isn't won yet
+ table.clear(waveWork) -- and no half-fought wave of the old run counts toward its first clear
 end)
 local function watch(p)
  p.CharacterAdded:Connect(function(character)
@@ -326,7 +361,7 @@ local function finish(p,outcome)
  local map=d and d.map or runMap();local wave=d and d.wave or Shop.wave
  local test=(d and d.test) or Admin.isTestRun()
  local cleared=math.max(0,wave-1)
- if not test then Analytics.earned(p,Profiles.settleRun(p,stint,RunSetupRules.runKey(map,difficulty()),cleared,stintEmeralds(map,d and d.joined or m.joined,wave))) end
+ if not test then Analytics.earned(p,Profiles.settleRun(p,stint,RunSetupRules.runKey(map,difficulty()),cleared,owedFor(p,stint))) end
  if cleared>=RunSetupRules.WinWave then outcome='Victory' end -- won, then left or fell in Endless
  setResult(p,outcome,map,stint,cleared,test)
  Analytics.runEnded(p,outcome,map,difficulty(),wave,cleared,test)
@@ -578,6 +613,12 @@ game:GetService('RunService').Heartbeat:Connect(function(dt)
  -- Pause (plan L): who must pause changes with deaths, joins and leaves; check four times a second.
  for p in pause.paused do if not Shop.members[p] or down[p] or not p.Parent then RunPause.forget(pause,p);p:SetAttribute('Paused',nil) end end
  applyPause()
+ -- Fought in this wave (damage or a kill): LeaderboardService counts a wave toward Highest Wave
+ -- only for a player whose ContributedWave is this run's id and wave, e.g. 'a1b2-3c:7'.
+ if Shop.phase=='Combat' then
+  local tag=Shop.runId..':'..Shop.wave
+  for p in Shop.members do local t=waveWork[p];if t and (t.damage>0 or t.kills>0) and p:GetAttribute('ContributedWave')~=tag then p:SetAttribute('ContributedWave',tag) end end
+ end
  -- This stint's kills and damage, for the pause screen (RunKills / RunDamage).
  for p,m in Shop.members do
   if statStint[p]~=m.stint then statStint[p]=m.stint;runKills[p]=0;runDamage[p]=0 end
@@ -860,6 +901,7 @@ Players.PlayerRemoving:Connect(function(p)
  returning[p]=nil;prompting[p]=nil;runInfo[p]=nil;returnTries[p]=nil;again[p]=nil;lastRunAction[p]=nil
  RunPause.forget(pause,p);pausedWeapons[p]=nil;lastPauseAction[p]=nil;runKills[p]=nil;runDamage[p]=nil;statStint[p]=nil -- plan L
  wentDown[p]=nil;soloBroken[p]=nil -- plan M
+ waveWork[p]=nil;ledgers[p]=nil;lastHit[p]=nil;fightSeconds[p]=nil -- contribution (C1, C2)
  -- The last one standing left: the clock loop pauses the wave again for the downed players' last
  -- stand. A last stand already counting down keeps the wave paused.
  if livingInRun()==0 and not lastStandEnds then Shop.resume() end

@@ -143,6 +143,10 @@ local function inRun(p)
  local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid')
  return Shop.isMember(p) and h~=nil and h.Health>0 and not p:GetAttribute('RunDown')
 end
+-- A wave counts toward Highest Wave only once the player has fought in it (damage or a kill), so
+-- hovering out of reach can't climb the board (launch audit C1). RogueliteMeta sets ContributedWave
+-- to '<RunId>:<wave>', e.g. 'a1b2-3c:7'; a value from an older run never matches.
+local function fought(p,wave) return p:GetAttribute('ContributedWave')==tostring(runState:GetAttribute('RunId') or '')..':'..wave end
 local last=os.clock()
 task.spawn(function()
  while true do
@@ -152,7 +156,7 @@ task.spawn(function()
   local map=runMap()
   for p,d in data do
    d.seconds+=dt;pending[p].seconds+=dt
-   if wave>0 and inRun(p) and not Admin.isTestRun(runState) then
+   if wave>0 and inRun(p) and fought(p,wave) and not Admin.isTestRun(runState) then
     if wave>d.bestWave then d.bestWave=wave end
     if wave>(d.mapWaves[map] or 0) then d.mapWaves[map]=wave end
    end

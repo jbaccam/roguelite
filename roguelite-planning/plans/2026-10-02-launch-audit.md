@@ -108,8 +108,10 @@ After 3 failed tries (about 3 s) the profile gives up for the whole session. In 
 
 **Where:** `combat/ProfileLock.luau:8,34-37`, `combat/ProfileService.luau:104-106`, `lobby/MatchService.luau:66,113`
 
-### C1 · No movement checks in the arena, so fly cheaters farm rewards
+### C1 · No movement checks in the arena, so fly cheaters farm rewards — **fixed 2026-10-02**
 *Cheating & admin*
+
+**Done:** `combat/MovementGuard.server.luau` + `MovementCheck.luau` sample each run member 10×/s and snap blatant speed (over 1.5× their own speed + 16 studs a second, 0.4 s in a row), teleports (120+ studs at once), hovering (16+ studs up, not falling, 2.5 s) and leaving the arena walls (1 s) back to the last safe spot. Rewards follow contribution (`Contribution.luau`, the user's formula): each wave's emeralds are base × (0.5 + 0.5 × contributors × share), capped at 2×, 0 for no damage and no kills; 5-wave blocks pay their base × the average multiplier of the waves played. Quest waves/runs/wins and the Highest Wave leaderboard need damage or a kill in that wave.
 
 Waves end on a 30 s timer and pay everyone alive. Nothing checks speed, height or map bounds. A fly or noclip cheater hovers above melee mobs, survives, and collects emeralds, quests, Endless rewards and a Highest Wave leaderboard spot.
 
@@ -238,8 +240,10 @@ One DataStore hiccup when a player leaves drops everything since the last 120 s 
 
 **Where:** `combat/ProfileService.luau:140-164,571-586`, `combat/ProfileLock.luau:46-57`
 
-### C2 · Idling in the shop fills the play-time quest and road
+### C2 · Idling in the shop fills the play-time quest and road — **fixed 2026-10-02**
 *Cheating & admin*
+
+**Done:** minutes count per player, only in a wave that isn't paused, alive and not down, with a hit of their own in the last 30 s.
 
 The "minutes" counter ticks for everyone in a run in any phase, including the shop where players can't be hurt. Because there's no shop timer (G1), a player can sit in the first shop for 20 minutes to finish "Play 20 Minutes" and fill the Playtime road (up to about 6,875 emeralds).
 
@@ -337,8 +341,10 @@ At 10 Hz each player loops over all enemies with several lookups each, about 18k
 
 **Where:** `combat/CharacterService.luau:284-325`
 
-### P11 · Quest data is re-sent to every client once a second during runs
+### P11 · Quest data is re-sent to every client once a second during runs — **fixed 2026-10-02**
 *Server performance*
+
+**Done:** while a player is a run member, ProfileQuests waits; each wave clear's settleRun publishes it, and leaving the run catches up.
 
 Kills keep the quest data dirty, and the multi-KB JSON is a player attribute every client receives, though only the lobby reads it.
 

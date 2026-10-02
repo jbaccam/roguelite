@@ -1,6 +1,6 @@
 # Plan M: feats, weekly quests and bigger achievement rewards
 
-Status: design approved by the user on 2026-10-02 ("Looks good, go on"). UI waits on an HTML mockup with the real icons (memory: UI mockup first).
+Status: design approved by the user on 2026-10-02 ("Looks good, go on"), mockup approved ("looks good make it work and push it"), **built and synced to Studio the same day** (record at the end).
 
 ## What the user asked for
 
@@ -197,3 +197,16 @@ Saved beside the stats:
 - **Two real clients**: party → not solo. Note it in the test log; never claim it passed without evidence.
 - **UI**: built in Edit from fresh repo modules into CoreGui, with `UILayoutAudit.run` at 1920×1080, 1366×768, 2560×1080, 844×390 and 1024×768.
 - **Economy**: re-run `economy-sims/chest_pace_sim.py` with weekly income added (+1,200/week + a Gold Chest).
+
+## Build record (2026-10-02)
+
+- **Commits:** `3bc89e8` boss teeth icon (`rbxassetid://140040643870888`, `ui/assets/hud/boss-teeth.png`), `9a1aa13` this spec, `db73bbf` the build.
+- **Mockup:** `roguelite-planning/previews/plan-m-mockup/quests-m.html` (built on plan K's approved quests mockup; served by `tools/dev_server.py`).
+- **Shared scripts:** `combat/plan_m_hunks.py` (6 hunks in RogueliteMeta, 1 in ProfileService). The pre-launch session (launch audit C1/C2/P11) had uncommitted and staged edits in the same two files, so `db73bbf` was built from a temporary index: HEAD + plan M's hunks only, with their staged work left staged. Their contribution gate sits in front of plan M's lines in `onWaveCleared`, so `wave25Runs` and the win record also need the player to have fought that wave (agreed with that session).
+- **Studio:** `tools/SyncPlan.luau` with `combat/plan-m-sync.json` (base `e28f1c7`): dry run clean, then QuestConfig, QuestService and QuestsUI updated, 6 + 1 hunks added. Afterwards Studio's three modules equal the repo, every hunk is present, both shared scripts compile, and QuestTests passes on Studio's own sources (2149 checks).
+- **UI:** built in Edit into CoreGui from fresh repo modules. `UILayoutAudit` finds 0 problems at 1920×1080, 1366×768 and 2560×1080 on Daily, Weekly and Achievements. At 1024×768 and 844×390 only the shared window chrome (TitlePlate, Close) is flagged, as in plans H and K. One existing unlock tile label ("Handyman") overflows at 844×390; it predates this plan.
+
+**Not tested yet (needs Play or real clients):**
+- A real win: the no-down feat blocked by a death plus revive, Lone Wolf solo, the class record, the WEEKLY tab and the CLAIM round trips. Needs Play; the user play-tests (memory: user does the play-testing).
+- That a party run never counts as solo. Needs two real clients.
+- The ★ glyph on feat rows in Roblox's renderer (gui_view draws HTML). If it shows as a box, swap in a star icon (`QuestConfig.Icons.star`) when the user makes one.
