@@ -134,7 +134,7 @@ end
 -- open Revive purchase prompt holds the clock at 5 s or more (prompting).
 local LAST_STAND=10
 local lastStandEnds -- server time, while everyone is down
-local prompting={} -- player -> true while their Revive purchase prompt is open
+local prompting={} -- player -> server time their Revive purchase prompt opened, while it is open
 local function setLastStand(ends)
  lastStandEnds=ends;runState:SetAttribute('LastStandEndsAt',ends)
 end
@@ -200,7 +200,14 @@ local function canRevive(p) return down[p]~=nil and (revivesUsed[p] or 0)<Config
 -- Respawn at `at` with `health` (fraction of max), a short shield and nearby zombies pushed back.
 -- beforePush(root) runs once the body is placed (the Phoenix blast), before the push.
 rise=function(p,at,health,beforePush)
+ local d=down[p]
  local character=respawn:Invoke(p)
+ -- Their run ended while the body loaded (Leave Run, or the last stand ran out): they're on the
+ -- results screen, so the new body goes again and the respawn hold stays.
+ if d and down[p]~=d then
+  if character and p.Character==character then p.Character=nil;character:Destroy() end
+  return
+ end
  clearDown(p);p:SetAttribute('HoldRespawn',false)
  task.spawn(function()
   if not character then return end
@@ -287,10 +294,24 @@ end
 -- Back to Lobby (the results screen's button, or RETURN_SECONDS after the results). A match server
 -- teleports the group to a public lobby; Studio's Combined role walks them into the lobby here.
 -- A Studio Match, or a teleport that can't start, puts them back in the arena instead.
+local returnTries={} -- player -> failed Back to Lobby attempts on a live match server
 local function returnToLobby(list)
  for _,p in list do returning[p]=nil end
- if Role.get()=='Match' and Match.toLobby(list) then return end
+ if Role.get()=='Match' and not studio then
+  Match.toLobby(list)
+  -- Anyone whose save couldn't be handed over (or whose teleport couldn't start) is still loaded
+  -- here: try again in 5 s, and after three tries play on in this match instead.
+  local stay={}
+  for _,p in list do
+   if p.Parent==Players and Profiles.get(p) then
+    returnTries[p]=(returnTries[p] or 0)+1
+    if returnTries[p]<3 then returning[p]=workspace:GetServerTimeNow()+5 else table.insert(stay,p) end
+   else returnTries[p]=nil end
+  end
+  list=stay
+ end
  for _,p in list do
+  returnTries[p]=nil
   if p.Parent~=Players then continue end
   p:SetAttribute('RunResult',nil)
   if Role.get()~='Match' then p:SetAttribute('StudioArea','Lobby') end -- the lobby's spawn handler places them
@@ -319,8 +340,12 @@ game:GetService('RunService').Heartbeat:Connect(function(dt)
  -- Everyone still in the run is down, however it happened (a death, or the last one standing
  -- leaving or disconnecting): the last stand.
  if not lastStandEnds and next(down)~=nil and livingInRun()==0 and Shop.phase=='Combat' then Shop.pause();setLastStand(now+LAST_STAND) end
+ -- A Revive prompt left open for a minute stops holding the clock.
+ for q,at in prompting do if now-at>60 then prompting[q]=nil end end
  if lastStandEnds then
-  if livingInRun()>0 or next(down)==nil then setLastStand(nil)
+  -- Someone is standing again (a Phoenix rise, a late joiner) or nobody is left down: the wave
+  -- clock runs again.
+  if livingInRun()>0 or next(down)==nil then setLastStand(nil);Shop.resume()
   elseif next(prompting) then
    -- A Revive prompt is open: the clock waits, with 5 s left once it closes.
    if lastStandEnds<now+5 then setLastStand(now+5) end
@@ -445,7 +470,7 @@ purchaseRequest.OnServerEvent:Connect(function(p,key,arg)
  if product.godlyPick then Profiles.get(p).godlyPick=Config.GodlyWeapons[arg][1];Profiles.save(p) end
  if key=='Revive' then Analytics.revivePrompt(p) end
  -- An open Revive prompt holds the last stand's clock (prompting).
- if key=='Revive' and product.productId>0 then prompting[p]=true end
+ if key=='Revive' and product.productId>0 then prompting[p]=workspace:GetServerTimeNow() end
  if product.productId>0 then Market:PromptProductPurchase(p,product.productId)
  elseif studio then
   -- Studio only: simulate a successful receipt so flows can be tested. In-memory, never saved.
@@ -516,8 +541,10 @@ Players.PlayerAdded:Connect(added)
 for _,p in Players:GetPlayers() do added(p);if p.Character then local h=p.Character:FindFirstChildOfClass('Humanoid');if h then h.Died:Connect(function() onDied(p,p.Character) end) end end end
 Players.PlayerRemoving:Connect(function(p)
  down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil
- returning[p]=nil;prompting[p]=nil;runInfo[p]=nil
- if livingInRun()==0 then Shop.resume() end -- teammates left who are all down: the clock loop starts their last stand
+ returning[p]=nil;prompting[p]=nil;runInfo[p]=nil;returnTries[p]=nil
+ -- The last one standing left: the clock loop pauses the wave again for the downed players' last
+ -- stand. A last stand already counting down keeps the wave paused.
+ if livingInRun()==0 and not lastStandEnds then Shop.resume() end
 end)
 -- Match servers: read the party's entry, load the map, admit the party, start wave 1.
 Match.start()

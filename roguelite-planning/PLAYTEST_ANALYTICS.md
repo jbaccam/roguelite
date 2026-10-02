@@ -7,7 +7,7 @@
 | Question | Where to look | Event |
 |---|---|---|
 | How far do runs get? Where do they stop? | Funnels → **Run** | Started → Wave 5 → 10 → 15 → Won (wave 20). One funnel per run. |
-| Which wave do players reach on each map? | Progression → path `PineValley/Normal` etc. | A "level complete" per wave cleared, a "fail" on the wave of a death |
+| Which wave do players reach on each map? | Custom → **RunEnd**, split by field 2 (Map) | value = waves cleared (average, max). Roblox doesn't chart progression events yet, so none are sent |
 | What kills players? | Custom → **Death** | value = wave; Cause (enemy id such as `crab`, `Boss attack`, `Projectile`), Map, Class |
 | How do runs end? | Custom → **RunEnd** | value = waves cleared; Outcome (Victory / Defeat / Left / Disconnected), Map, Class |
 | How long are runs? | Custom → **RunMinutes** | value = minutes; Outcome, Map |

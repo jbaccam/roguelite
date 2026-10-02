@@ -4,7 +4,7 @@
 -- attribute DebugAnalytics=true to print each event instead.
 -- What it answers (Creator Dashboard > Analytics):
 --   Funnels > "Run" (one per run): started -> wave 5 -> 10 -> 15 -> 20 (win). Where runs stop.
---   Progression, path "<map>/<difficulty>": a level per wave cleared, a fail on the wave of a death.
+--   (No progression events: Roblox doesn't chart LogProgressionEvent yet; RunEnd carries the waves.)
 --   Custom events: RunStart (value: gear power; fields: map, class, how soon after the last run),
 --     RunEnd (value: waves cleared; fields: outcome, map, class), Death (value: wave; fields: cause,
 --     map, class), RevivePrompt / Revived (value: revive number), and the emeralds a run pays
@@ -62,20 +62,18 @@ function A.runStarted(p,stint,map,difficulty,joinedWave,partySize)
  local again=since==nil and 'First run' or since<=600 and 'Again <10m' or 'Later'
  active[p]={stint=stint,path=path,map=map,difficulty=difficulty,started=os.clock(),funnel=stint}
  log('LogFunnelStepEvent',p,'Run',stint,1,'Started')
- log('LogProgressionStartEvent',p,path,math.max(1,joinedWave or 1))
  log('LogCustomEvent',p,'RunStart',power,fields('Map - '..path,classOf(p),again..' · '..(partySize or 1)..'p'))
  log('LogCustomEvent',p,'RunStarter',power,fields('Weapon - '..weapon,classOf(p),'Map - '..path))
 end
 function A.waveCleared(p,wavesPassed)
  local a=active[p];if not a then return end
- log('LogProgressionCompleteEvent',p,a.path,wavesPassed)
+ a.cleared=wavesPassed
  local step=MILESTONES[wavesPassed]
  if step then log('LogFunnelStepEvent',p,'Run',a.funnel,step,step==5 and 'Won (wave 20)' or 'Wave '..wavesPassed) end
 end
 function A.died(p,wave)
  local a=active[p];local hit=lastHit[p]
  local cause=hit and os.clock()-hit.at<5 and hit.cause or 'Unknown'
- log('LogProgressionFailEvent',p,a and a.path or '?',wave)
  log('LogCustomEvent',p,'Death',wave,fields('Cause - '..cause,'Map - '..(a and a.path or '?'),classOf(p)))
 end
 function A.revivePrompt(p) log('LogCustomEvent',p,'RevivePrompt',1) end
@@ -97,7 +95,7 @@ function A.runEnded(p,outcome,map,difficulty,wave,cleared,test)
 end
 Players.PlayerRemoving:Connect(function(p)
  local a=active[p]
- if a then A.runEnded(p,'Disconnected',a.map,a.difficulty,0,0,false) end
+ if a then A.runEnded(p,'Disconnected',a.map,a.difficulty,(a.cleared or 0)+1,a.cleared or 0,false) end
  active[p]=nil;lastHit[p]=nil
 end)
 return A
