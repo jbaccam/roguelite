@@ -317,9 +317,11 @@ local run=game:GetService('ReplicatedStorage'):FindFirstChild('RogueliteRunState
 local wave=run and run:GetAttribute('Wave') or 1
 local id=overrideId or EnemyCatalog.forSlot(index,wave,combat:GetAttribute('EnemyRoster'))
 local config=EnemyCatalog.scaled(id,wave)
--- Run difficulty (set by the lobby at launch) scales health and damage on top of wave growth.
-local difficulty=RunSetupRules.difficulty(combat:GetAttribute('RunDifficulty'))
-config.health=math.max(1,math.ceil(config.health*difficulty.hp));config.damage*=difficulty.damage
+-- The map's place on the ladder and the run difficulty (both set at launch) scale health and
+-- damage on top of wave growth (RunSetupRules.enemyScale): later maps' health starts some waves ahead.
+local extraWaves,hpScale,damageScale=RunSetupRules.enemyScale(combat:GetAttribute('RunMap'),combat:GetAttribute('RunDifficulty'))
+if extraWaves>0 then config.health=EnemyCatalog.scaled(id,wave+extraWaves).health end
+config.health=math.max(1,math.ceil(config.health*hpScale));config.damage*=damageScale
 local kind=config.legacy or id
 local selected=templates:FindFirstChild(config.template)
 if not selected then warn('Missing regular enemy template: '..config.template);return end
@@ -489,13 +491,7 @@ connection = RunService.Heartbeat:Connect(function(dt)
     local obstruction = workspace:Raycast(root.Position, target.Position - root.Position, sight)
     if not obstruction then
         waypoints = nil
-        -- leadTime (crabs): aim where the player is heading, fading out up close so it never overshoots.
-        local aim = target.Position
-        if config.leadTime then
-            local v = target.AssemblyLinearVelocity
-            aim += Vector3.new(v.X, 0, v.Z) * config.leadTime * math.clamp((distance - config.stopRange) / 8, 0, 1)
-        end
-        local delta = aim - root.Position
+        local delta = target.Position - root.Position
         local flat = Vector3.new(delta.X, 0, delta.Z)
         local direction = (distance >= config.stopRange and flat.Magnitude > 0.01) and flat.Unit or Vector3.zero
         direction += separation * 1.8

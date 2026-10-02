@@ -10,12 +10,18 @@ local R={}
 
 -- PROGRESSION_AND_SESSION_FLOW.md: five maps, each won at wave 20, and three difficulties per map.
 -- The next map opens after winning the previous one on Hard.
+-- Regular enemies get tougher down the ladder (R.enemyScale), on top of wave growth and
+-- difficulty. enemyWaves: their health starts that many waves further along; enemyHp then
+-- multiplies it, enemyDamage multiplies their hits. Example, a Volcanic Crater goblin at wave 1:
+-- 4 HP +2 a wave, 16 waves ahead = 36, x1.6 = 58 HP, four Tier I pan hits (16 each); at wave 20,
+-- 119 HP against a Pine Valley zombie's 41. Each map's Normal stays a little under the previous
+-- map's Hard (x1.6 HP). Map bosses have their own health (MapBossDefs).
 R.Maps={
- {id='PineValley',name='Pine Valley',boss='Hammer Zombie Boss',emeralds=20,unlock='Available after the tutorial'},
- {id='BeachCove',name='Beach Cove',boss='Giant King Crab',emeralds=40,unlock='Win Pine Valley on Hard'},
- {id='DesertBasin',name='Desert Basin',boss='Pharaoh',emeralds=60,unlock='Win Beach Cove on Hard'},
- {id='FrozenPass',name='Frozen Pass',boss='Frost Cyclops',emeralds=80,unlock='Win Desert Basin on Hard'},
- {id='VolcanicCrater',name='Volcanic Crater',boss='Dragon',emeralds=100,unlock='Win Frozen Pass on Hard'},
+ {id='PineValley',name='Pine Valley',boss='Hammer Zombie Boss',emeralds=20,unlock='Available after the tutorial',enemyWaves=0,enemyHp=1,enemyDamage=1},
+ {id='BeachCove',name='Beach Cove',boss='Giant King Crab',emeralds=40,unlock='Win Pine Valley on Hard',enemyWaves=4,enemyHp=1.15,enemyDamage=1.2},
+ {id='DesertBasin',name='Desert Basin',boss='Pharaoh',emeralds=60,unlock='Win Beach Cove on Hard',enemyWaves=8,enemyHp=1.3,enemyDamage=1.4},
+ {id='FrozenPass',name='Frozen Pass',boss='Frost Cyclops',emeralds=80,unlock='Win Desert Basin on Hard',enemyWaves=12,enemyHp=1.45,enemyDamage=1.6},
+ {id='VolcanicCrater',name='Volcanic Crater',boss='Dragon',emeralds=100,unlock='Win Frozen Pass on Hard',enemyWaves=16,enemyHp=1.6,enemyDamage=1.8},
 }
 -- Difficulty multiplies enemy health and damage and the emeralds a run pays (reward).
 R.Difficulties={
@@ -26,11 +32,18 @@ R.Difficulties={
 R.DifficultyIndex={};for i,d in R.Difficulties do R.DifficultyIndex[d.id]=d end
 function R.difficulty(id) return R.DifficultyIndex[id] or R.Difficulties[1] end
 -- Bosses: health x the difficulty's hp x (1 + BossPlayerHp per extra player); damage x its damage.
--- Normal solo is the authored number (a 2-player Normal Hammer: 24,000 x 1.75 = 42,000).
+-- Normal solo is the authored number (a 2-player Normal Hammer: 18,000 x 1.75 = 31,500).
 R.BossPlayerHp=.75
 function R.bossScale(id,players)
  local d=R.difficulty(id)
  return d.hp*(1+R.BossPlayerHp*math.max(0,(players or 1)-1)),d.damage
+end
+-- Regular enemies on a map and difficulty: extra waves of health growth, then the health and
+-- damage multipliers. Example, a Frozen Pass werewolf at wave 1 on Hard: 8 HP +3 a wave, 12
+-- waves ahead = 44, x1.45 x1.6 = 103 HP; 1.8 damage x1.6 x1.3 = 3.7 per hit.
+function R.enemyScale(mapId,diff)
+ local m=R.Maps[R.MapIndex[mapId] or 1];local d=R.difficulty(diff)
+ return m.enemyWaves or 0,(m.enemyHp or 1)*d.hp,(m.enemyDamage or 1)*d.damage
 end
 -- Saved win / best-wave key: Normal keeps the plain map id (older saves stay valid).
 function R.runKey(mapId,diff) return (diff==nil or diff=='Normal') and mapId or mapId..'/'..diff end

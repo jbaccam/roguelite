@@ -20,7 +20,7 @@ local D={}
 D.Order={'KingCrab','Pharaoh','FrostCyclops','Dragon'}
 D.ENRAGE_AT=.5
 D.FIRST_ATTACK=1.2 -- seconds after spawn before the first attack
-D.KingCrab={anim='king-crab',name='Giant King Crab',health=28000,scale=1.4,chaseSpeed=22,glowColor=nil,deathSeconds=nil,
+D.KingCrab={anim='king-crab',name='Giant King Crab',health=21000,scale=1.4,chaseSpeed=22,glowColor=nil,deathSeconds=nil,
  enrage={cooldown=.6,chase=3,extra=4,follow=2},
  attacks={
   ClawCrush={clip='ClawCrush',rate=1.3,range={0,20},cooldown=1,damage=28,shape='circle',point='ClawImpact',radius=9,
@@ -31,7 +31,7 @@ D.KingCrab={anim='king-crab',name='Giant King Crab',health=28000,scale=1.4,chase
 -- The Pharaoh's staff crook releases the bolts ~10 studs ahead and 14 up, so they pass over anyone
 -- within ~13 studs (MapBossServiceTests 4). He holds off at 20 (stop), bolts start at 15, and a
 -- player who closes in gets the tombs instead. The bolts fly 48 x 2.5 = 120 studs.
-D.Pharaoh={anim='pharaoh',name='The Pharaoh',health=32000,scale=1.4,chaseSpeed=20,glowColor=Color3.fromRGB(120,235,255),stop=20,
+D.Pharaoh={anim='pharaoh',name='The Pharaoh',health=24000,scale=1.4,chaseSpeed=20,glowColor=Color3.fromRGB(120,235,255),stop=20,
  enrage={cooldown=.6,chase=3,extra=2,follow=2},
  attacks={
   CursedBolts={clip='CursedBolts',rate=1.25,range={15,100},cooldown=.9,damage=22,shape='projectiles',point='BoltOrigin',count=5,spread=math.rad(34),speed=48,radius=1.6,life=2.5,perPlayer=1},
@@ -40,14 +40,14 @@ D.Pharaoh={anim='pharaoh',name='The Pharaoh',health=32000,scale=1.4,chaseSpeed=2
 -- The cyclops holds off at 18 studs (stop) and uses Stomp's wave from range. Ground Slam's club
 -- lands ~11.6 studs ahead, so radius 15 reaches ~27 studs; rate 1 keeps its warning at
 -- radius/22 + .25 s (0.93 s of the 0.96 s wind-up).
-D.FrostCyclops={anim='frost-cyclops',name='Frost Cyclops',health=36000,scale=1.4,chaseSpeed=21,glowColor=nil,stop=18,
+D.FrostCyclops={anim='frost-cyclops',name='Frost Cyclops',health=27000,scale=1.4,chaseSpeed=21,glowColor=nil,stop=18,
  enrage={cooldown=.6,chase=3,follow=2,fan={-28,0,28}},
  attacks={
   GroundSlam={clip='GroundSlam',rate=1,range={0,22},cooldown=1,damage=32,shape='circle',point='ClubImpact',radius=15,knockdown=.7,
    follow={radius=6,delay=.85,maxTargets=4,range=48,damage=22}},
   Stomp={clip='Stomp',rate=1.3,range={10,75},cooldown=1.3,damage=30,shape='wave',point='StompImpact',length=78,width=7,travel=80},
  },order={'GroundSlam','Stomp','GroundSlam','Stomp','Stomp'}}
-D.Dragon={anim='dragon',name='Inferno Dragon',health=42000,scale=1.25,chaseSpeed=22,glowColor=Color3.fromRGB(255,150,40),
+D.Dragon={anim='dragon',name='Inferno Dragon',health=31500,scale=1.25,chaseSpeed=22,glowColor=Color3.fromRGB(255,150,40),
  enrage={cooldown=.6,chase=3,follow=2,track=1.6},
  attacks={
   FireBreath={clip='FireBreath',rate=1.2,range={4,32},cooldown=1.3,damage=12,shape='breath',point='FireOrigin',halfAngle=math.rad(24),length=30,tick=.35,track=math.rad(70)},

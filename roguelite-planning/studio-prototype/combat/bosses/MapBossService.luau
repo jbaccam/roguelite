@@ -225,8 +225,11 @@ function M.spawn(id,cf,practice)
  for _,p in npc:GetDescendants() do if p:IsA('BasePart') then p.Anchored=false end end
  npc.Parent=folder;root:SetNetworkOwner(nil);h.AutoRotate=true
  local s={id=id,def=def,T=T,next=workspace:GetServerTimeNow()+Defs.FIRST_ATTACK,index=0,lastHealth=h.Health,stop=def.stop or math.min(8*scale,T.footprintRadius or 4)+3,follows={},followSerial=0};M.states[npc]=s
+ -- One flinch per 2 s, as the Hammer boss (BossService): restarting it on every hit froze the
+ -- boss in its first frame while it kept walking.
  h.HealthChanged:Connect(function(health)
-  if health<s.lastHealth and health>0 and not s.attack then npc:SetAttribute('BossHitStart',workspace:GetServerTimeNow()) end;s.lastHealth=health
+  local now=workspace:GetServerTimeNow()
+  if health<s.lastHealth and health>0 and not s.attack and now-(npc:GetAttribute('BossHitStart') or -math.huge)>=2 then npc:SetAttribute('BossHitStart',now) end;s.lastHealth=health
  end)
  h.Died:Connect(function() Death.finish(npc) end)
  Tags:AddTag(npc,'RogueliteZombie');Tags:AddTag(npc,'MapBoss')

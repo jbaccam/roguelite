@@ -359,11 +359,12 @@ local function frame(npc,state,now,dt)
  local death=npc:GetAttribute('BossDeathStart');local hit=npc:GetAttribute('BossHitStart')
  local attacking=ctx and ctx.serial==serial and npc:GetAttribute('Attacking') and age and age>=0 and age<=(npc:GetAttribute('BossDuration') or ctx.attack.duration)
  local clip,time
+ local v=root.AssemblyLinearVelocity;local moving=Vector2.new(v.X,v.Z).Magnitude>.4
  if death then clip,time='Death',now-death
  elseif attacking then clip,time=attackClip(ctx,age,motion)
- elseif hit and now-hit<clipDuration(motion,'Hit') then clip,time='Hit',now-hit
+ -- A flinch never replaces the walk: on the move it would slide the boss along in one pose.
+ elseif hit and now-hit<clipDuration(motion,'Hit') and not moving then clip,time='Hit',now-hit
  else
-  local v=root.AssemblyLinearVelocity;local moving=Vector2.new(v.X,v.Z).Magnitude>.4
   clip=moving and 'Walk' or 'Idle'
   -- Ground distance, not elapsed time, advances the planted-foot gait; cadence capped.
   state.phase+=moving and math.min(distance/(T.strideLength or 4)*clipDuration(motion,'Walk'),dt*MAX_GAIT_RATE) or dt

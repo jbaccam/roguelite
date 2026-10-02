@@ -58,6 +58,27 @@ Mob rosters per map live in [Map Mob Roster](MAP_MOB_ROSTER.md). Castle Fields r
 
 **Proposal: how each map gets harder.** Enemy health, damage and spawn budget rise with the map number; later maps add more ranged and lunging enemies earlier in the run. Difficulty comes from role mix and timing first, raw stat inflation second.
 
+**Built 2026-10-01: regular-enemy stats per map** (`RunSetupRules.Maps`, `R.enemyScale`). The user found late-map mobs dying to one hit from a Tier I pan at base stats. Each map now has three numbers:
+- **Extra waves:** health starts that many waves further along its growth.
+- **Health multiplier:** applied after the extra waves.
+- **Damage multiplier:** applied to each hit.
+
+Difficulty multiplies on top. Map bosses keep their own health.
+
+| Map | Extra waves | Health | Damage | Example at wave 1 → 20, Normal |
+| --- | ---: | ---: | ---: | --- |
+| Pine Valley | 0 | ×1 | ×1 | Zombie 3 → 41 HP |
+| Beach Cove | 4 | ×1.15 | ×1.2 | Crab 14 → 58 HP |
+| Desert Basin | 8 | ×1.3 | ×1.4 | Skeleton 26 → 76 HP (2 → 5 pan hits) |
+| Frozen Pass | 12 | ×1.45 | ×1.6 | Werewolf 64 → 147 HP |
+| Volcanic Crater | 16 | ×1.6 | ×1.8 | Goblin 58 → 119 HP (4 → 8 pan hits) |
+
+Each map's Normal stays a little under the previous map's Hard. The ramp is gentle because runs still start every weapon at Tier I: chest tiers don't carry into runs yet (`ShopService` `newState`).
+
+**Boss health, 2026-10-01:** cut 25%. Hammer 18,000, King Crab 21,000, Pharaoh 24,000, Frost Cyclops 27,000, Dragon 31,500.
+- **Why:** a balanced wave-20 build (about 16 level-ups and a few shop items) deals roughly 300–560 DPS. At 24,000 HP that took 60–115 s. It now takes about 45–90 s.
+- **Starting kit:** six Tier I weapons at base stats deal only 80–120 DPS (Gunner about 210).
+
 **Proposal: intended power per map.** Map 1 is winnable with a Tier I starter. Map 3 is comfortable around a Tier II starter with armor. Map 5 expects roughly a Tier III starter plus upgraded armor. Skilled players can win below those targets. This is what makes chest upgrades matter: they're the key to pushing into the next map.
 
 ## The 20-wave run

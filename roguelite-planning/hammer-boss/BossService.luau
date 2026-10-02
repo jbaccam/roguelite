@@ -15,7 +15,9 @@ knock.Name='MapBossKnockdown';knock.Parent=combat
 -- Wave chase speed: under the 24 studs/s player base but closing; the charge catches kiters.
 local CHASE_SPEED=18
 -- Normal, one player; RunSetupRules.bossScale adds difficulty and player count.
-local HEALTH=24000
+local HEALTH=18000 -- 24000 until 2026-10-01: a balanced wave-20 build took 60-115 s; now ~45-90 s
+-- Seconds between hit flinches (BossPresentation plays one only while he stands).
+local FLINCH_GAP=2
 local lastPracticeRequest=-math.huge
 function B.practice(player,action)
  -- Developers only (the admin panel), in Studio and on live servers; CharacterService checks too.
@@ -187,8 +189,11 @@ function B.spawn(cf,practice)
  for _,p in npc:GetDescendants() do if p:IsA('BasePart') then p.Anchored=false end end
  npc.Parent=folder;root:SetNetworkOwner(nil);h.AutoRotate=true
  local s={next=workspace:GetServerTimeNow()+2,index=0,lastHealth=h.Health};B.states[npc]=s
+ -- One flinch per FLINCH_GAP: six weapons hitting every few frames restarted it on its first frame,
+ -- so he froze in that pose while he kept walking (slid) into his next attack.
  h.HealthChanged:Connect(function(health)
-  if health<s.lastHealth and health>0 and not s.attack then npc:SetAttribute('BossHitStart',workspace:GetServerTimeNow()) end;s.lastHealth=health
+  local now=workspace:GetServerTimeNow()
+  if health<s.lastHealth and health>0 and not s.attack and now-(npc:GetAttribute('BossHitStart') or -math.huge)>=FLINCH_GAP then npc:SetAttribute('BossHitStart',now) end;s.lastHealth=health
  end)
  h.Died:Connect(function() Death.finish(npc) end)
  Tags:AddTag(npc,'RogueliteZombie');Tags:AddTag(npc,'HammerBoss')

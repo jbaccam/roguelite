@@ -80,6 +80,7 @@ Run.PreSimulation:Connect(function(dt)
   local distance=Vector2.new(displacement.X,displacement.Z).Magnitude
   local start=npc:GetAttribute('BossStart');local kind=npc:GetAttribute('BossAttack');local a=kind and Motion.Attacks[kind];local age=start and now-start
   local death=npc:GetAttribute('BossDeathStart');local hit=npc:GetAttribute('BossHitStart');local clip,time
+  local v=root.AssemblyLinearVelocity;local moving=Vector2.new(v.X,v.Z).Magnitude>.4
   -- Charge: ChargeStart in place, then ChargeRun paced by the ground the server has covered.
   local charging=kind=='Charge' and Motion.hasCharge and age and age>=0 and npc:GetAttribute('Attacking') and not death
   local chargeSpeed=npc:GetAttribute('BossChargeSpeed') or Motion.Charge.speed
@@ -91,9 +92,9 @@ Run.PreSimulation:Connect(function(dt)
    -- Brake: ChargeStart backwards, ending on the carry pose the Slam starts from.
    else clip,time='ChargeBrake',run*(1-math.clamp((age-runEnd)/Motion.Charge.brake,0,1)) end
   elseif a and age and age>=0 and age<=a.duration and npc:GetAttribute('Attacking') then clip,time=kind,age
-  elseif hit and now-hit<Motion.duration('Hit') then clip,time='Hit',now-hit
+  -- A flinch never replaces the walk: on the move it would slide him along in one frozen pose.
+  elseif hit and now-hit<Motion.duration('Hit') and not moving then clip,time='Hit',now-hit
   else
-   local v=root.AssemblyLinearVelocity;local moving=Vector2.new(v.X,v.Z).Magnitude>.4
    clip=moving and 'Walk' or 'Idle'
    -- Ground distance, not elapsed time, advances the planted-foot gait.
    -- Chase speed outpaces the authored stride; cap cadence so the heavy gait stays weighty.
