@@ -1,7 +1,8 @@
 -- Daily quests, the streak and achievements on a saved profile table (QuestConfig,
--- plans/2026-10-01-H-store-and-quests.md). Pure logic: no Instances or attributes, so QuestTests
--- runs it on plain tables. ProfileService owns the profile: it calls these, grants what a claim
--- returns and publishes the view. `day` is MonetizationConfig.day() (UTC days).
+-- plans/2026-10-01-H-store-and-quests.md; 4 a day and 10-level roads: plans/2026-10-02-K-quests-power-ui.md).
+-- Pure logic: no Instances or attributes, so QuestTests runs it on plain tables. ProfileService
+-- owns the profile: it calls these, grants what a claim returns and publishes the view. `day` is
+-- MonetizationConfig.day() (UTC days).
 local S={}
 -- QuestConfig, loaded on first use. Tests run fresh copies side by side: S.use(config) sets it.
 function S.config()
@@ -16,6 +17,19 @@ function S.config()
 end
 function S.use(config) S.Config=config end
 
+-- Plan H saves count up to five tiers per road. Each old tier becomes the level with the same
+-- target (Slayer tier 3 = 10,000 kills = level 4). Levels skipped in between aren't paid: the old
+-- tiers paid more. Runs once per profile (roadsVersion).
+local function convertRoads(st)
+ local C=S.config()
+ for id,tier in st.roads do
+  local old=C.LegacyRoadTargets[id];local road=C.RoadById[id]
+  if old and road and type(tier)=='number' and tier>0 then
+   st.roads[id]=table.find(road.targets,old[math.min(tier,#old)]) or tier
+  end
+ end
+end
+
 -- d.quests, created or filled in on first use and rolled over when the day changes.
 function S.state(d,day,userId)
  local C=S.config()
@@ -28,6 +42,7 @@ function S.state(d,day,userId)
  sk.count=sk.count or 0;sk.last=sk.last or 0;sk.best=sk.best or 0
  sk.pending=type(sk.pending)=='table' and sk.pending or {}
  st.roads=type(st.roads)=='table' and st.roads or {}
+ if st.roadsVersion~=C.RoadsVersion then convertRoads(st);st.roadsVersion=C.RoadsVersion end
  st.unlocks=type(st.unlocks)=='table' and st.unlocks or {}
  if st.day~=day or type(st.list)~='table' then
   st.day=day;st.list=C.rollDaily(day,userId);st.progress={};st.claimed={};st.allDone=false
@@ -35,7 +50,7 @@ function S.state(d,day,userId)
  return st
 end
 
--- The streak as of `day`: it is broken (0) once a whole day passed without finishing all three.
+-- The streak as of `day`: it is broken (0) once a whole day passed without finishing them all.
 function S.streak(st,day) local sk=st.streak;return sk.last>=day-1 and sk.count or 0 end
 -- Its spot on the 30-day track: 1..30, 0 with no streak.
 function S.position(count) return count>0 and (count-1)%S.config().StreakCycle+1 or 0 end
@@ -47,7 +62,7 @@ local function finishedAll(st)
  end
  return #st.list>0
 end
--- All three done today for the first time: the streak grows (or starts again at 1).
+-- Every daily quest done today for the first time: the streak grows (or starts again at 1).
 local function countDay(st,day)
  if st.allDone or not finishedAll(st) then return end
  st.allDone=true
@@ -81,8 +96,18 @@ function S.runStarted(d,day,userId,stint)
  return S.event(d,day,userId,'runs',1)
 end
 
--- Lifetime stat value, including the derived best streak.
-function S.stat(st,stat) if stat=='bestStreak' then return st.streak.best end;return st.stats[stat] or 0 end
+-- Lifetime stat value, including the derived ones: the best streak, and Achiever's count of levels
+-- claimed on every other road plus unlocks claimed.
+function S.stat(st,stat)
+ if stat=='bestStreak' then return st.streak.best end
+ if stat=='achievements' then
+  local n=0
+  for id,level in st.roads do if id~='Achiever' and type(level)=='number' then n+=level end end
+  for _,claimed in st.unlocks do if claimed==true then n+=1 end end
+  return n
+ end
+ return st.stats[stat] or 0
+end
 
 -- Progress toward an unlock: have, need. Map records come from the profile (bestWaves keys are
 -- 'PineValley' or 'PineValley/Hard'; mapWins the same).
@@ -106,7 +131,8 @@ function S.view(d,day,userId,resetIn)
  for i,id in st.list do daily[i]={id=id,progress=st.progress[id] or 0,claimed=st.claimed[id]==true} end
  local unlocks={}
  for _,u in C.Unlocks do local have,need=S.unlockProgress(d,st,u);unlocks[u.id]={have=have,need=need,claimed=st.unlocks[u.id]==true} end
- local stats={};for k,v in st.stats do stats[k]=v end;stats.bestStreak=st.streak.best
+ local stats={};for k,v in st.stats do stats[k]=v end
+ stats.bestStreak=st.streak.best;stats.achievements=S.stat(st,'achievements')
  local count=S.streak(st,day)
  return {day=day,resetIn=resetIn,daily=daily,allDone=st.allDone==true,
   streak={count=count,position=S.position(count),best=st.streak.best,today=st.streak.last==day,pending=table.clone(st.streak.pending)},
