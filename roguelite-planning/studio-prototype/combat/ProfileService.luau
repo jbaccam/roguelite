@@ -359,17 +359,40 @@ function P.settleRun(player,stint,map,wavesPassed,owed)
  return pay
 end
 
+-- What a stint has paid in run emeralds so far (VIP bonus included), for the results screen.
+function P.stintPaid(player,stint)
+ local d=P.profiles[player]
+ return d and type(d.run)=='table' and d.run.id==stint and d.run.paid or 0
+end
+-- The saved best wave for a run key (the map, or map/difficulty).
+function P.bestWave(player,map)
+ local d=P.profiles[player];return d and d.bestWaves[map] or 0
+end
+-- Run counts for analytics (RunAnalytics): runsStarted, and when the last run ended (os.time), so
+-- "started another run soon after" spans servers. markRunStart returns the seconds since that end
+-- (nil for a first run). Missing in older saves means 0.
+function P.markRunStart(player)
+ local d=P.profiles[player];if not d then return nil end
+ d.runsStarted=(d.runsStarted or 0)+1
+ return d.lastRunEnd and os.time()-d.lastRunEnd or nil
+end
+function P.markRunEnd(player)
+ local d=P.profiles[player];if d then d.lastRunEnd=os.time() end
+end
+
 -- Live progress as each wave clears (RogueliteMeta): best wave, and the win at wave 20 with its
--- one-time first-win bonus. Wave emeralds still pay at the run's end (recordRun). A test run
--- (the admin panel was used) saves nothing.
+-- one-time first-win bonus. A test run (the admin panel was used) saves nothing. Returns the
+-- first-win bonus paid now (0 when there is none), for the results screen.
 function P.recordProgress(player,map,wavesPassed,firstWinBonus)
- local d=P.profiles[player];if not d or Admin.isTestRun() then return end
- local changed=false
+ local d=P.profiles[player];if not d or Admin.isTestRun() then return 0 end
+ local changed,bonus=false,0
  if wavesPassed>(d.bestWaves[map] or 0) then d.bestWaves[map]=wavesPassed;changed=true end
  if wavesPassed>=20 and not d.mapWins[map] then
-  d.mapWins[map]=true;d.emeralds+=math.max(0,math.floor(firstWinBonus or 0));changed=true
+  bonus=math.max(0,math.floor(firstWinBonus or 0))
+  d.mapWins[map]=true;d.emeralds+=bonus;changed=true
  end
  if changed then P.publish(player) end
+ return bonus
 end
 
 -- Stored rerolls/banishes spent during a run.

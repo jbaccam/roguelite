@@ -331,6 +331,9 @@
       "DeathScreenUI": {
         "$path": "../ui/DeathScreenUI.luau"
       },
+      "RunResultsUI": {
+        "$path": "../ui/RunResultsUI.luau"
+      },
       "StoreFX": {
         "$path": "../ui/StoreFX.luau"
       },
@@ -447,6 +450,9 @@
       },
       "RogueliteMeta": {
         "$path": "RogueliteMeta.server.luau"
+      },
+      "RunAnalytics": {
+        "$path": "RunAnalytics.luau"
       },
       "ArmorService": {
         "$path": "ArmorService.server.luau"

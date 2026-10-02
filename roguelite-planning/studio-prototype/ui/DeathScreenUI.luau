@@ -1,5 +1,9 @@
--- "YOU DIED" splash, then the run summary: stats, equipped weapons, items and progress,
--- with REVIVE (Robux, server-validated) and GIVE UP. Shown while the server sets RunDown.
+-- "YOU DIED" splash, then one of two views while the server sets RunDown:
+-- * Teammates still fighting: SPECTATE. The camera follows one of them (‹ › on screen, Q/E,
+--   LB/RB), with REVIVE and LEAVE RUN; downed players respawn when the wave ends.
+-- * Nobody left standing (or solo): the run summary (stats, weapons, items, progress) under
+--   "REVIVE OR THE RUN ENDS · n", the server's last-stand clock (RogueliteRunState.LastStandEndsAt).
+-- REVIVE is Robux, server-validated; LEAVE RUN ends this player's run (results screen).
 local TweenService=game:GetService('TweenService')
 local Http=game:GetService('HttpService')
 local UserInputService=game:GetService('UserInputService')
@@ -33,6 +37,30 @@ function M.mount(player)
  local summary -- built per death
  local info={};local tab='Primary';local token=0
  local uiScale=1 -- the summary's scale, set by build()
+ local runState=RS:WaitForChild('RogueliteRunState')
+ local mode -- 'spectate' or 'summary', chosen by build()
+ local watching -- the teammate the camera follows while spectating
+ local countdown -- the summary title, rewritten as the last stand counts down
+ -- Teammates still in this run and standing (ShopService's RunMember, server-set).
+ local function teammates()
+  local list={}
+  for _,p in game:GetService('Players'):GetPlayers() do
+   local h=p~=player and p:GetAttribute('RunMember') and not p:GetAttribute('RunDown') and p.Character and p.Character:FindFirstChildOfClass('Humanoid')
+   if h and h.Health>0 then table.insert(list,p) end
+  end
+  table.sort(list,function(a,b) return a.UserId<b.UserId end)
+  return list
+ end
+ local function follow(p)
+  watching=p
+  local h=p and p.Character and p.Character:FindFirstChildOfClass('Humanoid')
+  if h then workspace.CurrentCamera.CameraSubject=h end
+ end
+ local function cycle(step)
+  local list=teammates();if #list==0 then return end
+  local at=table.find(list,watching) or 0
+  follow(list[(at-1+step)%#list+1]);M.redraw()
+ end
  -- Fitted body text may shrink, but not below 9 px on screen (at scale .55 that is 17 layout px).
  local function readable(l)
   local c=l:FindFirstChildOfClass('UITextSizeConstraint')
@@ -76,6 +104,39 @@ function M.mount(player)
   local v=root.AbsoluteSize
   if v.X<100 or v.Y<100 then return end
   if summary then summary:Destroy() end
+  countdown=nil
+  local mates=teammates()
+  mode=#mates>0 and 'spectate' or 'summary'
+  if mode=='spectate' then
+   -- A light shade so the arena reads; a bar at the bottom: who you watch, REVIVE, LEAVE RUN.
+   shade.BackgroundTransparency=.82;vignette.BackgroundTransparency=.55
+   if not table.find(mates,watching) then follow(mates[1]) end
+   local W,H=880,224
+   local s=math.min(1,(v.X-24)/W);local bh=math.max(56,math.ceil(40/s))
+   uiScale=s
+   summary=T.frame(root,'Spectate',0,0,W,H+bh-56);summary.AnchorPoint=Vector2.new(.5,1)
+   T.make('UIScale',summary,{Scale=s})
+   summary.Position=UDim2.new(.5,0,1,-12)
+   local bar=T.panel(summary,'Bar',0,0,W,H+bh-56,'panel')
+   local aw=math.max(64,math.ceil(40/s))
+   T.button(bar,'Prev','‹',20,16,aw,64,function() cycle(-1) end,true).Caption.TextSize=44
+   T.button(bar,'Next','›',W-20-aw,16,aw,64,function() cycle(1) end,true).Caption.TextSize=44
+   local name=watching and (watching.DisplayName or watching.Name) or ''
+   T.label(bar,'Watching','SPECTATING  '..string.upper(name),40+aw,18,W-80-2*aw,40,32)
+   readable(T.text(bar,'Hint','You respawn when the wave ends  ·  Q / E to switch',40+aw,58,W-80-2*aw,22,17,C.muted)).TextXAlignment=Enum.TextXAlignment.Center
+   local bw=320;local by=96
+   local revive=T.button(bar,'Revive','REVIVE  ·  R$ '..Money.Products.Revive.robux,W/2-bw-16,by,bw,bh,function() combat.PurchaseRequest:FireServer('Revive') end)
+   revive.Caption.TextSize=26
+   if (info.revivesLeft or 0)<=0 then revive.Interactable=false;revive.Caption.Text='NO REVIVES LEFT' end
+   local leave=T.button(bar,'LeaveRun','LEAVE RUN',W/2+16,by,bw,bh,function() combat.RunAction:FireServer('LeaveRun') end,true)
+   leave.Caption.TextSize=26;leave.Caption.TextColor3=C.negative
+   readable(T.text(bar,'LeaveNote','Keep '..(info.emeralds or 0)..' emeralds',W/2+16,by+bh+6,bw,20,16,C.muted)).TextXAlignment=Enum.TextXAlignment.Center
+   if UserInputService:GetLastInputType().Name:find('^Gamepad') then GuiService.SelectedObject=revive.Interactable and revive or leave end
+   return
+  end
+  shade.BackgroundTransparency=.2;vignette.BackgroundTransparency=.35
+  -- Nobody to watch: back to your own body (it lies where you fell).
+  if watching then watching=nil;local own=player.Character and player.Character:FindFirstChildOfClass('Humanoid');if own then workspace.CurrentCamera.CameraSubject=own end end
   local W=1180
   local s=math.min(1,(v.X-24)/W)
   local bh=math.max(64,math.ceil(40/s)) -- REVIVE / GIVE UP stay 40 px to tap
@@ -87,7 +148,7 @@ function M.mount(player)
   -- Centre near 52% of the height, but always 8 px inside the safe area.
   local cy=math.clamp(v.Y*.52,8+H*s/2,math.max(8+H*s/2,v.Y-8-H*s/2))
   local title=T.panel(summary,'Title',(W-620)/2,0,620,62,'panel');T.caps(title,46)
-  T.label(title,'Text','RUN OVER  ·  '..string.upper(info.map or 'Pine Valley')..'  ·  WAVE '..(info.wave or 1),0,0,620,62,26)
+  countdown=T.label(title,'Text','DOWN  ·  '..string.upper(info.map or 'Pine Valley')..'  ·  WAVE '..(info.wave or 1),0,0,620,62,26)
   local by=H-6-bh -- buttons; their notes sit just above, the body ends above the notes
   local BH=by-28-76
   local body=T.panel(summary,'Body',0,76,W,BH,'panel')
@@ -146,9 +207,9 @@ function M.mount(player)
   revive.Caption.TextSize=26;revive.Interactable=not restrictedRevive
   if restrictedRevive then revive.Caption.Text='NO REVIVES LEFT' end
   local note=readable(T.text(summary,'ReviveNote','Back in the same wave with 50% health',W/2-bw/2-20-170,by-24,340,20,17,C.muted));note.TextXAlignment=Enum.TextXAlignment.Center
-  local give=T.button(summary,'GiveUp','GIVE UP',W/2+20,by,bw,bh,function() combat.RunAction:FireServer('GiveUp') end,true)
+  local give=T.button(summary,'LeaveRun','LEAVE RUN',W/2+20,by,bw,bh,function() combat.RunAction:FireServer('LeaveRun') end,true)
   give.Caption.TextSize=26;give.Caption.TextColor3=C.negative
-  local keys=readable(T.text(summary,'GiveUpNote','Keep '..(info.emeralds or 0)..' emerald'..((info.emeralds or 0)==1 and '' or 's')..' and return to wave 1',W/2+bw/2+20-170,by-24,340,20,17,C.muted));keys.TextXAlignment=Enum.TextXAlignment.Center
+  local keys=readable(T.text(summary,'LeaveNote','Keep '..(info.emeralds or 0)..' emerald'..((info.emeralds or 0)==1 and '' or 's')..' and see your results',W/2+bw/2+20-170,by-24,340,20,17,C.muted));keys.TextXAlignment=Enum.TextXAlignment.Center
   summary.Position=UDim2.fromOffset(v.X/2,cy+v.Y*.06);TweenService:Create(summary,TweenInfo.new(.35,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(v.X/2,cy)}):Play()
   -- Controller: keep the selection across a redraw, else start on REVIVE (GIVE UP when no revive).
   if path then T.restoreSelection(root,path)
@@ -182,8 +243,35 @@ function M.mount(player)
    TweenService:Create(shade,TweenInfo.new(.3),{BackgroundTransparency=.2}):Play()
    task.delay(.25,function() if token==mine and screen.Enabled then splash.Visible=false;sub.Visible=false;build() end end)
   end)
+  -- Keep the view right while down: switch views when the last teammate falls (or one is revived),
+  -- follow someone else when the watched teammate falls, and count the last stand down.
+  task.spawn(function()
+   while token==mine and screen.Enabled do
+    task.wait(.25)
+    if token~=mine or not summary then continue end
+    local mates=teammates()
+    if (#mates>0 and 'spectate' or 'summary')~=mode then M.redraw()
+    elseif mode=='spectate' and not table.find(mates,watching) then follow(mates[1]);M.redraw() end
+    local ends=runState:GetAttribute('LastStandEndsAt')
+    if countdown and countdown.Parent then
+     countdown.TextColor3=ends and C.negative or C.white
+     countdown.Text=ends and ('REVIVE OR THE RUN ENDS  ·  '..math.max(0,math.ceil(ends-workspace:GetServerTimeNow())))
+      or 'DOWN  ·  '..string.upper(info.map or 'Pine Valley')..'  ·  WAVE '..(info.wave or 1)
+    end
+   end
+  end)
  end
- local function hide() token+=1;screen.Enabled=false;T.hideTouchControls('DeathScreen',false);if summary then summary:Destroy();summary=nil end end
+ local function hide()
+  token+=1;screen.Enabled=false;T.hideTouchControls('DeathScreen',false);if summary then summary:Destroy();summary=nil end
+  -- Spectating ends: the camera goes back to this player's own body when there is one.
+  if watching then watching=nil;local own=player.Character and player.Character:FindFirstChildOfClass('Humanoid');if own then workspace.CurrentCamera.CameraSubject=own end end
+ end
+ -- Q / E and the bumpers switch the teammate you watch.
+ UserInputService.InputBegan:Connect(function(input,processed)
+  if not screen.Enabled or mode~='spectate' or UserInputService:GetFocusedTextBox() then return end
+  if input.KeyCode==Enum.KeyCode.Q or input.KeyCode==Enum.KeyCode.ButtonL1 then cycle(-1)
+  elseif input.KeyCode==Enum.KeyCode.E or input.KeyCode==Enum.KeyCode.ButtonR1 then cycle(1) end
+ end)
  local function changed() if player:GetAttribute('RunDown') then show() else hide() end end
  player:GetAttributeChangedSignal('RunDown'):Connect(changed)
  root:GetPropertyChangedSignal('AbsoluteSize'):Connect(function() if summary then M.redraw() end end)

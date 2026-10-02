@@ -186,7 +186,8 @@ function M.new(player,h,refresh)
   local side=math.clamp(w*.23,tap>0 and 200 or 148,math.max(L.StatsWidth,tap>0 and 200 or 148));local gap=16;local leftW=w-side-gap-12
   local left=Instance.new('ScrollingFrame');left.Name='ShopMain';left.Position=UDim2.fromOffset(0,0);left.Size=UDim2.fromOffset(leftW+12,ht);left.BackgroundTransparency=1;left.BorderSizePixel=0;left.ScrollBarThickness=3;left.VerticalScrollBarInset=Enum.ScrollBarInset.None;left.ClipsDescendants=true;left.Parent=root
   local inset=Instance.new('UIPadding');inset.PaddingLeft=UDim.new(0,6);inset.PaddingTop=UDim.new(0,6);inset.Parent=left
-  local startH=th(62);local statsH=math.max(90,ht-startH-10)
+  -- Under the stats: LEAVE RUN (between waves; tap twice) above GO.
+  local startH=th(62);local leaveH=th(40);local statsH=math.max(90,ht-startH-leaveH-18)
   local stats=surface(root,'StatsColumn',leftW+gap+12,0,side,statsH)
   local secondary=self.statTab=='Secondary'
   local statTitle=heading(stats,'Title','Stats',12,10,side-24,34,28);statTitle.TextXAlignment=Enum.TextXAlignment.Center
@@ -223,7 +224,9 @@ function M.new(player,h,refresh)
    btn(stats,'NextStats','›',side-10-pagerW,py,pagerW,pagerH,function() self.statPage=page<pages and page+1 or 1;refresh() end,true)
   end
   local narrow=leftW<500
-  heading(left,'ShopTitle','Shop (Wave '..data.wave..')',0,0,leftW*(narrow and .62 or .39),46,30)
+  -- Past the win (RogueliteRunState.Won), the shop is Endless's.
+  local runState=RS:FindFirstChild('RogueliteRunState');local won=runState~=nil and runState:GetAttribute('Won')==true
+  heading(left,'ShopTitle',won and ('Endless (Wave '..data.wave..')') or ('Shop (Wave '..data.wave..')'),0,0,leftW*(narrow and .62 or .39),46,30,won and T.Color.gold or nil)
   local balance=Instance.new('Frame');balance.Name='Shards';balance.BackgroundTransparency=1;balance.Position=UDim2.fromOffset(leftW*(narrow and .65 or .40),0);balance.Size=UDim2.fromOffset(leftW*(narrow and .35 or .14),46);balance.Parent=left;price(balance,data.shards,'',leftW<500 and 23 or 32,white)
   -- Robux reroll sits beside the shard reroll (hidden where paid random items are restricted).
   local paid=not player:GetAttribute('PaidRandomRestricted')
@@ -312,7 +315,18 @@ function M.new(player,h,refresh)
    end
   end
   top+=math.max(inventoryH,40+math.ceil(shown/3)*(slotSize+8))
-  local start=btn(root,'StartWave',data.ready and 'READY · WAITING' or 'GO (Wave '..data.wave..')',leftW+gap+12,statsH+10,side,startH,function() self:send('Start') end)
+  -- LEAVE RUN ends the run for this player with what it has paid (RogueliteMeta), then the results.
+  -- The first tap arms it for 3 s and shows what they keep; the second leaves.
+  local armed=self.leaveArmed and os.clock()-self.leaveArmed<3
+  local keep=player:GetAttribute('RunEmeralds') or 0
+  local leave=btn(root,'LeaveRun',armed and ('LEAVE? KEEP '..keep..' EMERALDS') or 'LEAVE RUN',leftW+gap+12,statsH+10,side,leaveH,function()
+   if self.leaveArmed and os.clock()-self.leaveArmed<3 then self.leaveArmed=nil;combat.RunAction:FireServer('LeaveRun');return end
+   self.leaveArmed=os.clock();refresh()
+   task.delay(3.05,function() if self.leaveArmed and os.clock()-self.leaveArmed>=3 then self.leaveArmed=nil;refresh() end end)
+  end,true)
+  leave.Caption.TextColor3=red;leave.Caption.UITextSizeConstraint.MaxTextSize=18
+  leave.Interactable=data.phase=='Shop'
+  local start=btn(root,'StartWave',data.ready and 'READY · WAITING' or 'GO (Wave '..data.wave..')',leftW+gap+12,statsH+18+leaveH,side,startH,function() self:send('Start') end)
   start.Caption.UITextSizeConstraint.MaxTextSize=22
   if data.phase~='Shop' then start.Caption.Text='WAVE IN PROGRESS';start.Interactable=false end
   left.CanvasSize=UDim2.fromOffset(0,top+12)

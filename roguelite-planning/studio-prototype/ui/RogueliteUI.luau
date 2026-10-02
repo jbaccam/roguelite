@@ -236,7 +236,7 @@ function UI.mount(playerGui)
  -- Toggle: with the footer gone, the same button (and B) closes a mid-wave shop view.
  -- Between waves the shop stays open; START WAVE closes it.
  local function toggleShop()
-  if player:GetAttribute('RunDown') then return end -- not under the death screen
+  if player:GetAttribute('RunDown') or player:GetAttribute('RunResult') then return end -- not under the death or results screen
   local phase=(shopView:snapshot() or {}).phase
   if overlay.Visible and controller.Mode=='Shop' and phase~='Shop' then close() else controller:ShowPreview('Shop') end
  end
@@ -496,11 +496,16 @@ function UI.mount(playerGui)
   if gui.Enabled and type(message)=='string' then T.toast(gui,message,ok and C.lime or C.negative) end
  end)
  require(RS:WaitForChild('DeathScreenUI')).mount(player)
+ -- The results screen (the run ended for this player): menus close under it and the shop stays
+ -- shut while it shows, though the run may go on for the others.
+ require(RS:WaitForChild('RunResultsUI')).mount(player)
+ local function ended() return player:GetAttribute('RunResult')~=nil end
+ player:GetAttributeChangedSignal('RunResult'):Connect(function() if ended() then controller:Close() end end)
  local levelMount=require(RS:WaitForChild('LevelUpUI'))
- levelUpView=levelMount.mount(player,function() close() end,function(phaseNow) if phaseNow=='Shop' then controller:ShowPreview('Shop') end end)
+ levelUpView=levelMount.mount(player,function() close() end,function(phaseNow) if phaseNow=='Shop' and not ended() then controller:ShowPreview('Shop') end end)
  local lastPhase=nil
  local function phaseChanged()
-  local data=shopView:snapshot();if not data then return end
+  local data=shopView:snapshot();if not data or ended() then return end
   if data.phase~=lastPhase then
    lastPhase=data.phase
    -- Sandbox (phase Practice) has no shop: close any open menu, as a wave start does.

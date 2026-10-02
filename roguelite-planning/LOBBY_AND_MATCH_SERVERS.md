@@ -248,5 +248,22 @@ User decision 2026-10-01: the beta uses match servers. `ServerRole.LIVE_ROLES=tr
 - **Trips:** `lobby/MatchService.luau` (§2). Lobby pads reserve a server, write the MemoryStore entry `RogueliteMatchV1[PrivateServerId]`, hand off every save, and teleport the party (all or nobody). The match reads the entry, `setMap`s, admits only listed members (others go back to a lobby), re-checks each loadout against that player's save, and starts wave 1 when everyone is in, or 30 s after the first arrival. `AvatarNormalizer` holds spawns until the map is set.
 - **Leaving:** in a match, the death screen's Give Up is Leave Run: rewards settle and the player returns to a public lobby. Closing the game also keeps rewards, because run emeralds pay as each wave clears (`ProfileService.settleRun`, once per stint).
 - **Run end:** past wave 20 the run continues (Endless, per `PROGRESSION_AND_SESSION_FLOW.md`). The win and the wave-20 emeralds are saved at the wave-20 clear.
-- **Not built yet:** the results screen, a between-waves Leave Run button, spectating, the 10 s everyone-down countdown and doubling revives.
+- **Not built yet (at the time):** the results screen, a between-waves Leave Run button, spectating, the 10 s everyone-down countdown and doubling revives. All but the doubling revives were built on 2026-10-02 (below).
 - **Untested:** none of the teleport path runs in Studio. The published checklist in §7 must pass before beta players are invited.
+
+## Plan B built (2026-10-02, repo only until synced to Studio)
+
+User direction 2026-10-01: Endless works like Brotato's (the same wave → shop loop keeps going past wave 20, enemies keep scaling), and players can **extract** (Leave Run) whenever they want instead of having to die.
+
+- **Results screen** (`ui/RunResultsUI.luau`, fed by the `RunResult` attribute from `RogueliteMeta.setResult`): VICTORY! / DEFEAT / EXTRACTED, map and difficulty (and ENDLESS), emeralds the run paid, FIRST WIN +n, NEW BEST, waves cleared, level, best wave, and the weapons and items the run ended with. BACK TO LOBBY, or automatic after 20 s.
+  - **Victory** = the run reached wave 20, whether the player then left or fell in Endless. Clearing wave 20 no longer ends anything: the shop shows "Endless (Wave 21)" in gold and the status line says "VICTORY! Keep going in Endless, or LEAVE RUN to take your rewards".
+  - **Defeat** = everyone down and the last stand ran out, or the last one down left.
+  - **Left (EXTRACTED)** = Leave Run before wave 20 while others play on, or between waves.
+- **Leave Run** in the between-wave shop (above GO; tap twice, the second tap shows "LEAVE? KEEP n EMERALDS") and on the death screen (replaces GIVE UP; RunAction `LeaveRun`, the old `GiveUp` still works). Not offered mid-wave while alive. A player who leaves between waves has their body removed (so nothing in the arena can reach it) until they return.
+- **Spectating:** a downed player with teammates still standing watches one of them (‹ ›, Q/E, LB/RB) and sees REVIVE and LEAVE RUN. **Downed players respawn at the map's spawn with full health when the wave ends**, keeping their build.
+- **Last stand:** when everyone in the run is down (solo players on death), the wave stays paused and the death screen shows "REVIVE OR THE RUN ENDS · 10". An open Revive purchase prompt holds the clock (at least 5 s left once it closes). Then the run ends as a Defeat for everyone in it.
+- **Return:** a match server teleports the returning group to a public lobby (`MatchService.toLobby`); the Combined Studio role walks them into the lobby; a Studio forced-Match, or a teleport that fails, puts them back in the arena.
+- **Starter tiers:** the loadout starter enters the run at its owned tier (a Tier II Frying Pan starts at Tier II). See GEAR_POWER.md for the matching map scaling.
+- **Analytics:** see PLAYTEST_ANALYTICS.md.
+- **Still not built:** doubling revive prices (Revive1…Revive5) and more than one revive per run; Play Again with the same party; rejoining a match after disconnecting.
+- **Not tested yet:** everything above needs a Studio Play pass (single player: die solo, revive, let the clock run out, leave between waves, win wave 20 and keep going), and the multi-player parts (spectating, wave-end respawn, last stand with two players, group return) need two real clients or the published game.

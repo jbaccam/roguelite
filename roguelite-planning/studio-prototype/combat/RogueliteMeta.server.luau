@@ -57,8 +57,10 @@ end
 -- The run's map is the combat attribute RunMap (Pine Valley when unset or unknown).
 -- Required before runMap: a local declared after it would be a nil global inside it.
 local RunSetupRules=require(game.ReplicatedStorage:WaitForChild('RunSetupRules'))
+local Analytics=require(SSS:WaitForChild('RunAnalytics')) -- unsandboxed, like this script
 local function runMap() local id=combat:GetAttribute('RunMap');return RunSetupRules.MapIndex[id] and id or 'PineValley' end
 local down,revivesUsed={},{}
+local rise -- defined with revive below; downed teammates also rise at a wave's end
 -- ShopService (required above) creates this folder, so looking it up here cannot deadlock.
 local runState=game.ReplicatedStorage:WaitForChild('RogueliteRunState')
 -- Harder difficulties pay more emeralds; wins and best waves are saved per map and difficulty.
@@ -67,9 +69,28 @@ local function emeraldsFor(wave,map) return RunSetupRules.runEmeralds(RunSetupRu
 -- What one stint of a run has earned while playing `wave`: the run's payout so far minus what it
 -- already stood at when the player joined, so joining a run late never pays for missed waves.
 local function stintEmeralds(map,joined,wave) return math.max(0,emeraldsFor(wave,map)-emeraldsFor(joined or 1,map)) end
--- The run's outcome for one player (a results screen reads it): Victory, Defeat or Left.
-local function setResult(p,outcome,map,wave,emeralds)
- p:SetAttribute('RunResult',Http:JSONEncode({run=Shop.runId,outcome=outcome,map=map,difficulty=difficulty(),wave=wave,emeralds=emeralds}))
+-- The end of one player's run, for the results screen (RunResultsUI reads the RunResult attribute):
+-- outcome Victory (they reached wave 20, Endless included), Defeat or Left. Built before the run
+-- resets, so it shows the build they ended with. runInfo keeps what only a wave clear knows: the
+-- best wave before this stint (NEW BEST) and a first-win bonus paid during it.
+local runInfo={} -- player -> {stint,prevBest,firstWin}
+local RETURN_SECONDS=20 -- Back to Lobby happens on its own after this
+local returning={} -- player -> server time of their automatic Back to Lobby
+local function setResult(p,outcome,map,stint,cleared,test)
+ local key=RunSetupRules.runKey(map,difficulty())
+ local info=runInfo[p];if info and info.stint~=stint then info=nil end
+ local best=Profiles.bestWave(p,key)
+ local s=Shop.states[p];local cs=Characters.states[p]
+ local weapons,items={},{}
+ if cs then for i=1,6 do local f=cs.folder:FindFirstChild('Slot'..i);local id=f and f:GetAttribute('WeaponId') or ''
+  if id~='' then table.insert(weapons,{id=id,tier=f:GetAttribute('Tier') or 1}) end end end
+ for _,it in s and s.items or {} do table.insert(items,{id=it.id,count=it.count}) end
+ local at=workspace:GetServerTimeNow()+RETURN_SECONDS;returning[p]=at
+ p:SetAttribute('RunResult',Http:JSONEncode({run=Shop.runId,outcome=outcome,map=map,
+  mapName=RunSetupRules.Maps[RunSetupRules.MapIndex[map] or 1].name,difficulty=difficulty(),waves=cleared,
+  level=s and s.level or 1,emeralds=test and 0 or Profiles.stintPaid(p,stint),firstWin=not test and info and info.firstWin or 0,
+  newBest=not test and info~=nil and cleared>info.prevBest,best=best,winWave=RunSetupRules.WinWave,
+  weapons=weapons,items=items,test=test==true,returnAt=at}))
 end
 -- Each cleared wave saves progress right away, so nothing waits on the death screen's Give Up:
 -- the best wave, the win at wave 20 with its first-win bonus, and the run emeralds earned so far
@@ -80,15 +101,25 @@ Shop.onWaveCleared=function(wavesPassed)
  local map=runMap();local index=RunSetupRules.MapIndex[map]
  local key=RunSetupRules.runKey(map,difficulty())
  for p,m in Shop.members do
-  Profiles.recordProgress(p,key,wavesPassed,RunSetupRules.firstWinEmeralds(index,difficulty()))
+  -- The best wave before this stint is read before this clear can raise it (NEW BEST on results).
+  local info=runInfo[p]
+  if not info or info.stint~=m.stint then info={stint=m.stint,prevBest=Profiles.bestWave(p,key),firstWin=0};runInfo[p]=info end
+  local bonus=Profiles.recordProgress(p,key,wavesPassed,RunSetupRules.firstWinEmeralds(index,difficulty()))
+  if bonus>0 then info.firstWin=bonus end
   if down[p] then continue end
   local earned=stintEmeralds(map,m.joined,Shop.wave)
-  Profiles.settleRun(p,m.stint,key,wavesPassed,earned)
+  Analytics.earned(p,Profiles.settleRun(p,m.stint,key,wavesPassed,earned))
   if wavesPassed==RunSetupRules.WinWave and not Admin.isTestRun() then
-   setResult(p,'Victory',map,Shop.wave,earned)
-   Shop.publish(p,'VICTORY · '..earned..' emeralds saved · keep going in Endless')
+   Shop.publish(p,'VICTORY! Keep going in Endless, or LEAVE RUN to take your rewards')
   end
  end
+ -- The run is won from here on (the shop's victory banner); Endless keeps the same loop.
+ if wavesPassed>=RunSetupRules.WinWave then runState:SetAttribute('Won',true) end
+ -- Downed teammates come back for the shop with their build, at the map's spawn and full health
+ -- (LOBBY_AND_MATCH_SERVERS.md §4). Spawned: respawning yields, and this runs inside finishWave.
+ local spawn=Role.playerSpawn();local list={}
+ for p in Shop.members do if down[p] then table.insert(list,p) end end
+ for _,p in list do task.spawn(rise,p,spawn and spawn.Position or down[p].position,1) end
 end
 local function livingInRun()
  local n=0
@@ -98,7 +129,15 @@ end
 local function clearDown(p)
  down[p]=nil;p:SetAttribute('RunDown',nil);p:SetAttribute('DeathInfo',nil)
 end
-local rise -- defined with revive below
+-- Everyone in the run is down (LOBBY_AND_MATCH_SERVERS.md §4): the wave stays paused and there are
+-- LAST_STAND seconds to revive before the run ends as a Defeat. Solo players reach it on death. An
+-- open Revive purchase prompt holds the clock at 5 s or more (prompting).
+local LAST_STAND=10
+local lastStandEnds -- server time, while everyone is down
+local prompting={} -- player -> true while their Revive purchase prompt is open
+local function setLastStand(ends)
+ lastStandEnds=ends;runState:SetAttribute('LastStandEndsAt',ends)
+end
 -- Phoenix 4-piece (armor set perk, CharacterStats.ArmorSets): once per run the first death rises
 -- right away at the death spot with half health and a fire blast; no death screen, and the paid
 -- revive stays unused for a later death. phoenixUsed resets with the run (giveUp, wave 1).
@@ -132,7 +171,8 @@ local function onDied(p,character)
  p:SetAttribute('DeathInfo',Http:JSONEncode({wave=Shop.wave,level=s.level,emeralds=Admin.isTestRun() and 0 or stintEmeralds(runMap(),m.joined,Shop.wave),map=RunSetupRules.Maps[RunSetupRules.MapIndex[runMap()]].name,
   revivesLeft=math.max(0,Config.ReviveLimitPerRun-(revivesUsed[p] or 0))}))
  p:SetAttribute('RunDown',true)
- if livingInRun()==0 then Shop.pause() end
+ Analytics.died(p,Shop.wave)
+ if livingInRun()==0 then Shop.pause();if not lastStandEnds and Shop.phase=='Combat' then setLastStand(workspace:GetServerTimeNow()+LAST_STAND) end end
 end
 -- The flag can be set after a player went down: their death screen shows 0 and their give-up pays nothing.
 runState:GetAttributeChangedSignal('AdminTestRun'):Connect(function()
@@ -147,6 +187,7 @@ end)
 runState:GetAttributeChangedSignal('Wave'):Connect(function()
  if runState:GetAttribute('Wave')~=1 then return end
  for q in phoenixUsed do if not down[q] then phoenixUsed[q]=nil;q:SetAttribute('PhoenixUsed',nil) end end
+ runState:SetAttribute('Won',nil) -- and isn't won yet
 end)
 local function watch(p)
  p.CharacterAdded:Connect(function(character)
@@ -195,34 +236,114 @@ local function revive(p)
  local at=down[p].position;revivesUsed[p]=(revivesUsed[p] or 0)+1
  rise(p,at,Config.ReviveHealth)
  Shop.resume()
+ if lastStandEnds then setLastStand(nil) end
+ Analytics.revived(p,revivesUsed[p])
  return true
 end
-local function giveUp(p)
- local d=down[p];if not d then return false end
- -- Settles up to the wave they fell on (usually already paid at the last wave clear).
- if not d.test then
-  local earned=stintEmeralds(d.map,d.joined,d.wave)
-  Profiles.settleRun(p,d.stint,RunSetupRules.runKey(d.map,difficulty()),math.max(0,d.wave-1),earned)
-  setResult(p,'Defeat',d.map,d.wave,earned)
- end
- clearDown(p);revivesUsed[p]=0;phoenixUsed[p]=nil;p:SetAttribute('PhoenixUsed',nil)
- -- Their stint ends here; respawning in the arena starts a new one from the current wave.
+-- One player's run ends (LOBBY_AND_MATCH_SERVERS.md §5): Leave Run (between waves, or from the
+-- death screen) or a Defeat when the last stand runs out. Settles the stint's emeralds up to the
+-- wave reached (usually already paid at the last clear), shows the results and takes them out of
+-- the run, while anyone else plays on. They stay out of the arena (dead, or with no body after
+-- leaving between waves, so nothing can reach it) until Back to Lobby (returnToLobby).
+local function finish(p,outcome)
+ local d=down[p];local m=Shop.members[p]
+ local stint=d and d.stint or m and m.stint;if not stint then return false end
+ local map=d and d.map or runMap();local wave=d and d.wave or Shop.wave
+ local test=(d and d.test) or Admin.isTestRun()
+ local cleared=math.max(0,wave-1)
+ if not test then Analytics.earned(p,Profiles.settleRun(p,stint,RunSetupRules.runKey(map,difficulty()),cleared,stintEmeralds(map,d and d.joined or m.joined,wave))) end
+ if cleared>=RunSetupRules.WinWave then outcome='Victory' end -- won, then left or fell in Endless
+ setResult(p,outcome,map,stint,cleared,test)
+ Analytics.runEnded(p,outcome,map,difficulty(),wave,cleared,test)
+ clearDown(p);revivesUsed[p]=0;phoenixUsed[p]=nil;p:SetAttribute('PhoenixUsed',nil);prompting[p]=nil
  Shop.leave(p)
- -- On a match server Give Up is Leave Run: back to a lobby while the rest play on. They stay
- -- held (no respawn) while the teleport runs; if it can't start they play on here instead.
- if Role.get()=='Match' and Match.toLobby({p}) then return true end
- if livingInRun()==0 then
-  Shop.resetRun();for q in revivesUsed do revivesUsed[q]=0 end
-  for q in phoenixUsed do phoenixUsed[q]=nil;q:SetAttribute('PhoenixUsed',nil) end
- else Shop.resetPlayer(p) end
- p:SetAttribute('HoldRespawn',false) -- AvatarNormalizer respawns normally
+ p:SetAttribute('HoldRespawn',true)
+ local character=p.Character;local h=character and character:FindFirstChildOfClass('Humanoid')
+ if h and h.Health>0 then p.Character=nil;character:Destroy() end
  return true
+end
+-- After players leave: an empty run starts over (a fresh wave 1 for whoever comes next); a run
+-- whose only members are down goes into its last stand.
+local function afterLeave()
+ if next(Shop.members)==nil then
+  setLastStand(nil);Shop.resetRun();for q in revivesUsed do revivesUsed[q]=0 end
+  for q in phoenixUsed do phoenixUsed[q]=nil;q:SetAttribute('PhoenixUsed',nil) end
+ elseif livingInRun()==0 and next(down)~=nil and not lastStandEnds and Shop.phase=='Combat' then
+  Shop.pause();setLastStand(workspace:GetServerTimeNow()+LAST_STAND)
+ end
+end
+-- Leave Run: from the death screen any time, or alive between waves (not mid-wave). A downed
+-- player whose teammates still fight has Left; the last one standing (or solo) is a Defeat.
+local function leaveRun(p)
+ if down[p] then finish(p,livingInRun()>0 and 'Left' or 'Defeat')
+ elseif Shop.members[p] and Shop.phase=='Shop' then
+  local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid')
+  if not h or h.Health<=0 then return false end
+  finish(p,'Left')
+ else return false end
+ afterLeave()
+ return true
+end
+-- Back to Lobby (the results screen's button, or RETURN_SECONDS after the results). A match server
+-- teleports the group to a public lobby; Studio's Combined role walks them into the lobby here.
+-- A Studio Match, or a teleport that can't start, puts them back in the arena instead.
+local function returnToLobby(list)
+ for _,p in list do returning[p]=nil end
+ if Role.get()=='Match' and Match.toLobby(list) then return end
+ for _,p in list do
+  if p.Parent~=Players then continue end
+  p:SetAttribute('RunResult',nil)
+  if Role.get()~='Match' then p:SetAttribute('StudioArea','Lobby') end -- the lobby's spawn handler places them
+  p:SetAttribute('HoldRespawn',false) -- a body that fell respawns through AvatarNormalizer
+  if not (p.Character and p.Character:FindFirstChildOfClass('Humanoid')) then respawn:Invoke(p) end
+ end
+end
+-- A teleport that failed after it started (MatchService): back into this match.
+if Role.get()=='Match' then
+ Match.onTeleportFailed=function(p)
+  p:SetAttribute('RunResult',nil)
+  if not (p.Character and p.Character:FindFirstChildOfClass('Humanoid')) then respawn:Invoke(p) end
+ end
 end
 local useStored -- defined with the purchase code below
 runAction.OnServerEvent:Connect(function(p,action,arg)
- if action=='GiveUp' then giveUp(p)
+ if action=='LeaveRun' or action=='GiveUp' then leaveRun(p)
+ elseif action=='ReturnToLobby' then if returning[p] then returnToLobby({p}) end
  elseif action=='UseReroll' or action=='UseBanish' then useStored(p,action,arg) end
 end)
+-- The run's clocks: the last stand, automatic Back to Lobby, the shop's "keep N emeralds".
+local sinceClock=0
+game:GetService('RunService').Heartbeat:Connect(function(dt)
+ sinceClock+=dt;if sinceClock<.25 then return end;sinceClock=0
+ local now=workspace:GetServerTimeNow()
+ -- Everyone still in the run is down, however it happened (a death, or the last one standing
+ -- leaving or disconnecting): the last stand.
+ if not lastStandEnds and next(down)~=nil and livingInRun()==0 and Shop.phase=='Combat' then Shop.pause();setLastStand(now+LAST_STAND) end
+ if lastStandEnds then
+  if livingInRun()>0 or next(down)==nil then setLastStand(nil)
+  elseif next(prompting) then
+   -- A Revive prompt is open: the clock waits, with 5 s left once it closes.
+   if lastStandEnds<now+5 then setLastStand(now+5) end
+  elseif now>=lastStandEnds then
+   setLastStand(nil)
+   local list={};for p in Shop.members do if down[p] then table.insert(list,p) end end
+   for _,p in list do finish(p,'Defeat') end
+   afterLeave()
+  end
+ end
+ local due={};for p,at in returning do if now>=at then table.insert(due,p) end end
+ if #due>0 then returnToLobby(due) end
+ for p,m in Shop.members do
+  local paid=Admin.isTestRun() and 0 or Profiles.stintPaid(p,m.stint)
+  if p:GetAttribute('RunEmeralds')~=paid then p:SetAttribute('RunEmeralds',paid) end
+  -- A stint is a run for analytics once its first wave is under way.
+  if Shop.phase=='Combat' then Analytics.runStarted(p,m.stint,runMap(),difficulty(),m.joined,Shop.memberCount()) end
+ end
+end)
+-- Wave clears for analytics (the progression funnel), after the rewards above.
+Shop.onWaveCleared=function(wavesPassed)
+ for p in Shop.members do if not down[p] then Analytics.waveCleared(p,wavesPassed) end end
+end
 
 -- Purchases -----------------------------------------------------------------------
 local lastRequest={}
@@ -322,11 +443,18 @@ purchaseRequest.OnServerEvent:Connect(function(p,key,arg)
  local product=Config.Products[key]
  -- Saved (not just remembered) so a receipt that arrives after a rejoin still knows the pick.
  if product.godlyPick then Profiles.get(p).godlyPick=Config.GodlyWeapons[arg][1];Profiles.save(p) end
+ if key=='Revive' then Analytics.revivePrompt(p) end
+ -- An open Revive prompt holds the last stand's clock (prompting).
+ if key=='Revive' and product.productId>0 then prompting[p]=true end
  if product.productId>0 then Market:PromptProductPurchase(p,product.productId)
  elseif studio then
   -- Studio only: simulate a successful receipt so flows can be tested. In-memory, never saved.
   if grantProduct(p,key) then reply(p,key,true,'Studio test: '..product.name..' granted (not saved)') else reply(p,key,false,'Grant failed') end
  else reply(p,key,false,'Not on sale yet') end
+end)
+Market.PromptProductPurchaseFinished:Connect(function(userId,productId)
+ local p=Players:GetPlayerByUserId(userId)
+ if p and productId==Config.Products.Revive.productId then prompting[p]=nil end
 end)
 Market.PromptGamePassPurchaseFinished:Connect(function(p,id,bought)
  if not bought then return end
@@ -386,7 +514,8 @@ Players.PlayerAdded:Connect(added)
 for _,p in Players:GetPlayers() do added(p);if p.Character then local h=p.Character:FindFirstChildOfClass('Humanoid');if h then h.Died:Connect(function() onDied(p,p.Character) end) end end end
 Players.PlayerRemoving:Connect(function(p)
  down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil
- if livingInRun()==0 then Shop.resume() end
+ returning[p]=nil;prompting[p]=nil;runInfo[p]=nil
+ if livingInRun()==0 then Shop.resume() end -- teammates left who are all down: the clock loop starts their last stand
 end)
 -- Match servers: read the party's entry, load the map, admit the party, start wave 1.
 Match.start()
