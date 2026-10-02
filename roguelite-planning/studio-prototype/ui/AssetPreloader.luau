@@ -22,6 +22,7 @@ local SOURCES = {
 	{ "RogueliteCombat", "ChestConfig" },
 	{ "RogueliteCombat", "MonetizationConfig" },
 	{ "RogueliteCombat", "SkillTreeConfig" },
+	{ "RogueliteCombat", "QuestConfig" },
 }
 
 -- Match servers do not display these lobby-only screens. Keep combat/shop and
@@ -31,6 +32,7 @@ local LOBBY_ONLY = {
  ChestFX = true,
  ChestConfig = true,
  SkillTreeConfig = true,
+ QuestConfig = true,
 }
 
 local started = false

@@ -1,3 +1,23 @@
+# Colour store and working quests — October 2, 2026
+
+Plan: `../../plans/2026-10-01-H-store-and-quests.md`. The user approved the direction from an HTML mockup ("way better") and asked for no text touching borders, a fancier quests page, and quests that actually work.
+
+- **Store (`StoreUI.luau`, new).** LobbyUI's `builders.Store` now calls `StoreUI.open(screen, ctx, focus)`. The window, tabs and buttons stay in the green theme. Every offer is a saturated colour card (`StoreFX.card`) with a glow and rays behind big art that sticks out past the card's top edge. Item slots are rarity coloured (`StoreFX.tile`), tags hang off a card's top-left edge (`StoreFX.tag`) instead of the bouncing lime ribbon, and diagonal corner sashes say BEST VALUE or ONE TIME (`StoreFX.sash`).
+- **Godly Starter.** The chosen Godly lifts, glows and gets a check; the others go grey. The big art and its name switch to the chosen one.
+- **Gem piles.** Emerald packs show more gems the bigger the pack is.
+- **Quests (`QuestsUI.luau`, new).** Two tabs, DAILY and ACHIEVEMENTS, with claim badges:
+  - DAILY has three quest cards (a coloured header, icon, progress and rewards; gold when done, with CLAIM) and a 30-day streak track (reward diamonds, CLAIM under rewards waiting to be claimed).
+  - ACHIEVEMENTS has unlocks plus 8 trophy roads with rank diamonds, tier pips, reward slots and CLAIM.
+  - The left HUD tracker shows today's three quests.
+  - The server side is QuestConfig/QuestService (see the plan).
+- **New StoreFX helpers:**
+  - `card`, `art`, `tile`, `sash`, `tag`, `header`, `title`, `sub` (white outlined copy for colour cards), `progress` and `check`;
+  - `button`, whose caption sits in the middle 70% of the button height so it never touches the border when windows scale down on phones.
+- **Checks (Studio Edit, fresh repo copies in CoreGui, not saved in the place):**
+  - `UILayoutAudit.run` reports 0 problems on all four store tabs and both quest tabs at 1920x1080, 1366x768, 1280x720, 1024x768, 844x390, 667x375 and 750x369.
+  - The only flags left are the shared window chrome (title plate, close X) at phone scale, which every `T.window` has.
+  - The windows were also redrawn from a GUI dump in a browser and checked by eye.
+
 # Every screen size and device — September 30, 2026
 
 A friend playing fullscreen 16:9 saw the Armory's loadout slots on top of the item list; in Studio (a wider viewport) it looked fine. Cause: the Armory scaled its left list, slot ring and details panel separately, each pinned to a different screen edge, and their widths (600 + 1000 + 540) are wider than 1920, so they collided at 16:9 and narrower and only separated on wide windows. The whole UI was audited against desktop (16:9, 16:10, 4:3, ultrawide, 4K), tablets and phones, and these rules now apply:

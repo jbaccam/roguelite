@@ -9,15 +9,16 @@ local Social=game:GetService('SocialService')
 local T=require(RS:WaitForChild('UITheme'))
 local combat=RS:WaitForChild('RogueliteCombat')
 local Weapons=require(combat:WaitForChild('WeaponCatalog'))
-local Stats=require(combat:WaitForChild('CharacterStats'))
 local ShopCatalog=require(combat:WaitForChild('ShopCatalog'))
 local Chests=require(combat:WaitForChild('ChestConfig'))
-local Money=require(combat:WaitForChild('MonetizationConfig'))
-local Armor=require(combat:WaitForChild('ArmorCatalog'))
 local RunService=game:GetService('RunService')
 local Http=game:GetService('HttpService')
-local WeaponIcons=require(RS:WaitForChild('WeaponInventoryUI')).Icons
-local FX=require(RS:WaitForChild('StoreFX'))
+-- Store and Quests windows (plans/2026-10-01-H-store-and-quests.md).
+local StoreUI=require(RS:WaitForChild('StoreUI'))
+local QuestsUI=require(RS:WaitForChild('QuestsUI'))
+-- Daily quest names for the HUD tracker; nil (and the tracker says so) until it is installed.
+local questModule=combat:WaitForChild('QuestConfig',10)
+local QuestConfig=questModule and require(questModule)
 local C=T.Color
 local L={}
 
@@ -36,21 +37,6 @@ local SkillTree=require(combat:WaitForChild('SkillTreeConfig'))
 L.Maps=Rules.Maps
 L.Signature=Rules.Signature
 L.ClassUnlock=Rules.ClassUnlock
-L.Achievements={
- {'Reach wave 10 on Pine Valley','Thrower class'},{'Win Pine Valley','Juggler class'},
- {'Defeat 1,000 enemies with Utility weapons','Handyman class'},{'Win any map holding 4 Thrower weapons','Molotov'},
- {'Win a map using only Gun weapons','Rocket Launcher'},{'Chain lightning 1,000 times','Tinfoil Antlers'},
- {'Kill 500 burning enemies',"Grandma's Oven Mitt"},{'Win with 3 or more projectile weapons','Two Straws, One Juice Box'},
- {'Defeat 3 different map bosses','Bone Crown'},{'Win Frozen Pass','Mjolnir'},{'Reach wave 30 in any Endless run','An armor set'},
-}
--- Store layout. Prices and grants come from MonetizationConfig; the server validates everything.
-L.Store={
- tabs={{'Daily','quests','DAILY'},{'Bundles','store','BUNDLES'},{'Chests','chest','CHESTS'},{'Emeralds','emerald','EMERALDS'}},
- classes={{'Thrower','12','ClassThrower'},{'Juggler','19','ClassJuggler'},{'Handyman','24','ClassHandyman'}},
- gemSizes={70,80,90,100,112,126},
- chestRibbons={nil,'MOST POPULAR','BEST VALUE'},
- gemRibbons={nil,'MOST POPULAR',nil,nil,nil,'BEST VALUE'},
-}
 L.StationRoutes={Collection='Loadout',Workshop='Armory',Rewards='Chests',Store='Store',Quests='Quests'}
 
 -- Profile adapter (ProfileService attributes): ProfileGems (emeralds, the only currency),
@@ -89,6 +75,9 @@ function L.profile(player)
  p.rerolls=player:GetAttribute('ProfileRerolls') or 0;p.banishes=player:GetAttribute('ProfileBanishes') or 0
  local ok,daily=pcall(Http.JSONDecode,Http,player:GetAttribute('ProfileDaily') or '')
  p.daily=ok and type(daily)=='table' and daily or {deals={}}
+ -- Daily quests, streak and achievements (QuestService view); {} until the server sends it.
+ local okQ,quests=pcall(Http.JSONDecode,Http,player:GetAttribute('ProfileQuests') or '')
+ p.quests=okQ and type(quests)=='table' and quests or {}
  return p
 end
 -- Upgrading spends copies from chests: have/need shown as numbers, e.g. 5 / 4 -> upgrade -> 1 / 10.
@@ -116,7 +105,8 @@ local function cost(parent,amount,asset,size)
  local g=T.make('Frame',parent,{Name='Cost',BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),AutomaticSize=Enum.AutomaticSize.X,Size=UDim2.fromOffset(0,size+6),ZIndex=3})
  T.make('UIListLayout',g,{FillDirection=Enum.FillDirection.Horizontal,VerticalAlignment=Enum.VerticalAlignment.Center,Padding=UDim.new(0,6),SortOrder=Enum.SortOrder.LayoutOrder})
  local tw=game:GetService('TextService'):GetTextSize(tostring(amount),size,T.Font,Vector2.new(1000,100)).X
- local l=T.label(g,'Amount',tostring(amount),0,0,tw+4,size+6,size);l.LayoutOrder=1;l.TextWrapped=false;l.ZIndex=3
+ -- A little wider than the text so it still fits at the smallest (phone) scale.
+ local l=T.label(g,'Amount',tostring(amount),0,0,math.ceil(tw*1.2)+6,size+6,size);l.LayoutOrder=1;l.TextWrapped=false;l.ZIndex=3
  if asset then local i=T.icon(g,'Icon',0,0,size+6,asset);i.LayoutOrder=2;i.ZIndex=3 end
  return g
 end
@@ -167,7 +157,7 @@ function L.mount(player)
  end
  goals.Active=true
  local goalsButton=T.make('TextButton',goals,{Name='Open',Text='',BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=3})
- goalsButton.Activated:Connect(function() open('Quests','Achievements') end)
+ goalsButton.Activated:Connect(function() open('Quests','Daily') end)
  -- Right edge: store, rewards, settings, practice-dummy attacks switch.
  local right,rightScale=scaled('Right',Vector2.new(1,.5),UDim2.new(1,-12,.45,0),Vector2.new(96,592))
  -- Centred: the column is tall enough for the developers' ADMIN button; without it the buttons
@@ -277,11 +267,24 @@ function L.mount(player)
   T.badge(bottomButtons.Chests,ready>0 and tostring(ready) or nil)
   local buyable=SkillTree.affordable(SkillTree.parse(player:GetAttribute('ProfileSkills')),profile.gems)
   T.badge(skills,buyable>0 and tostring(buyable) or nil)
+  -- Tracker: today's three daily quests; badges count rewards waiting for CLAIM.
+  local quests=profile.quests;local daily=quests.daily or {}
   for i=1,3 do
-   local a=L.Achievements[i];local row=goalRows[i]
-   row[1].Text=a[1];row[2].Text='Unlocks '..a[2];T.setBar(row[3],0)
+   local row=goalRows[i];local d=daily[i];local q=d and QuestConfig and QuestConfig.DailyById[d.id]
+   if q then
+    local done=d.progress>=q.target
+    row[1].Text=q.title..'  '..math.min(d.progress,q.target)..' / '..q.target
+    row[2].Text=d.claimed and 'Claimed' or done and 'Done! Claim it in Quests' or ('+'..q.emeralds..' emeralds'..(q.chests and ' + a chest' or ''))
+    row[2].TextColor3=d.claimed and C.muted or done and C.lime or C.gold
+    T.setBar(row[3],d.progress/q.target)
+   else
+    row[1].Text=i==1 and 'Quests appear once your profile loads' or '';row[2].Text='';T.setBar(row[3],0)
+   end
   end
-  goalsTitle.Text='QUESTS'
+  goalsTitle.Text='DAILY QUESTS'
+  local claim=quests.claimable or 0
+  T.badge(bottomButtons.Quests,claim>0 and tostring(claim) or nil)
+  T.badge(awards,claim>0 and tostring(claim) or nil)
  end
 
  -- Guide beam from the character to the nearest open portal.
@@ -472,368 +475,15 @@ function L.mount(player)
 
  builders.Armory=function(tab) return armory.Open(tab) end
 
- builders.Quests=function(tab)
-  local w=T.window(screen,'QuestsWindow','Quests',860,560);local b=w.Body;local W=824
-  self.selection.questTab=tab or self.selection.questTab or 'Daily'
-  local draw
-  draw=function()
-   for _,c in b:GetChildren() do c:Destroy() end
-   local active=self.selection.questTab
-   T.tabs(b,0,4,W,46,{'Daily','Weekly','Achievements'},active,function(id) self.selection.questTab=id;draw() end)
-   if active~='Achievements' then
-    local empty=T.panel(b,'Empty',0,64,W,220,'panel')
-    T.icon(empty,'Icon',30,40,140,active=='Daily' and 'quests' or 'achievements')
-    T.label(empty,'Title',active..' quests',190,44,W-220,40,30).TextXAlignment=Enum.TextXAlignment.Left
-    T.text(empty,'Body',(active=='Daily' and 'Three rotating goals every day' or 'Bigger goals every week')..' that pay emeralds. Missing a day never loses anything permanent.',190,90,W-220,50,18,C.muted)
-    T.chip(empty,'Status','COMING SOON',190,150,C.well,C.gold)
-    return
-   end
-   local list=T.scroll(b,'List',0,60,W,440)
-   for i,a in L.Achievements do
-    local y=(i-1)*84
-    local row=T.panel(list,'Achievement'..i,2,y,W-24,76,'panel')
-    T.icon(row,'Icon',12,10,56,'achievements')
-    local n=T.label(row,'Name',a[1],80,8,W-360,28,20);n.TextXAlignment=Enum.TextXAlignment.Left
-    local fill=T.bar(row,'Progress',80,44,W-360,14);T.setBar(fill,0)
-    T.text(row,'Reward','Unlocks',W-270,10,220,18,13,C.muted)
-    T.text(row,'RewardName',a[2],W-270,28,220,26,19,C.gold)
-   end
-   list.CanvasSize=UDim2.fromOffset(0,#L.Achievements*84)
-   preview(b,W-340,-24,profile)
-  end
-  draw()
-  return w
- end
-
- builders.Store=function(focus)
-  local w=T.window(screen,'StoreWindow','Store',1100,640,nil,{large=true});local b=w.Body;local W=1064
-  self.selection.storeTab=focus or self.selection.storeTab or 'Daily'
-  local list
-  local function buy(key,arg) combat.PurchaseRequest:FireServer(key,arg) end
-  local function act(action,a)
-   local r=combat.ProfileAction:InvokeServer(action,a)
-   if r.ok then T.sound('ui_purchase') end
-   T.toast(screen,r.message or '',r.ok and C.lime or C.negative)
-  end
-  local draw
-  local gold=C.gold
-  -- Robux price button (pulses when `pulse`), or OWNED.
-  local function priceButton(parent,name,x,yy,bw,bh,key,owned,pulse,arg)
-   local item=Money.Products[key] or Money.Passes[key]
-   -- owned: true = OWNED; a string = that label instead (e.g. COMING SOON), also not buyable.
-   -- arg: sent with the purchase (e.g. which Godly the Godly Starter gives).
-   local pb=T.button(parent,name,owned==true and 'OWNED' or owned or ('R$ '..item.robux),x,yy,bw,bh,function() buy(key,arg) end,owned)
-   pb.Caption.TextSize=math.min(32,bh-16)
-   if owned then pb.Interactable=false elseif pulse then FX.pulse(pb,.05) end
-   return pb
-  end
-  -- Contents tile inside a bundle card.
-  local function tile(parent,name,x,yy,size,asset,text,color)
-   local t=T.panel(parent,name,x,yy,size,size,'inset')
-   local ic=T.icon(t,'Icon',size*.18,size*.06,size*.64,asset)
-   local l=T.text(t,'Label',text,9,size*.66,size-18,size*.28,15,color);l.TextXAlignment=Enum.TextXAlignment.Center
-   FX.popIcon(t,ic)
-   return t
-  end
-  -- Card with rays + glow behind a big icon that grows on hover.
-  local function art(card,asset,cx,cy,size,color,raySize)
-   -- Rays are clipped to the card's inner area so they never spill past its border.
-   local clip=card:FindFirstChild('RayClip') or T.make('Frame',card,{Name='RayClip',BackgroundTransparency=1,ClipsDescendants=true,Position=UDim2.fromOffset(10,10),Size=UDim2.new(1,-20,1,-20)})
-   local _,rays=FX.burst(clip,cx-10,cy-10,raySize or size*1.7,color)
-   local ic=T.icon(card,'Art',cx-size/2,cy-size/2,size,asset)
-   FX.popIcon(card,ic,rays)
-   return ic
-  end
-  -- Wide hero card: title/sub/tiles on the left, big art + price on the right.
-  local function hero(name,y,h,tier,color,title,sub,tiles,asset,key,owned,opts)
-   opts=opts or {}
-   local SW=W-14;local cw=SW-4
-   local card=T.panel(list,name,2,y,cw,h,'panel');if tier then T.setTier(card,tier) end
-   if opts.cornerColor then card.RarityCorners.ImageColor3=opts.cornerColor end
-   art(card,asset,cw-150,h/2-36,opts.artSize or 150,color,opts.raySize)
-   local t=T.label(card,'Title',title,26,16,cw-340,50,opts.titleSize or 42,opts.titleColor);t.TextXAlignment=Enum.TextXAlignment.Left
-   T.text(card,'Sub',sub,28,66,cw-340,24,18,C.cream)
-   local size=math.min(96,h-118,math.floor((cw-340-26-(#tiles-1)*10)/math.max(#tiles,1)))
-   for i,it in tiles do tile(card,'Item'..i,26+(i-1)*(size+10),h-size-18,size,it[1],it[2],it[3]) end
-   priceButton(card,'Buy',cw-268,h-78,240,62,key,owned,opts.pulse,opts.arg)
-   if opts.ribbon then FX.ribbon(card,opts.ribbon,opts.ribbonWidth,opts.ribbonColor) end
-   if opts.shine then FX.shine(card) end
-   FX.lift(card)
-   return card
-  end
-  local function section(title,sub,y)
-   local t=T.label(list,'Section_'..title,title,4,y,400,36,30);t.TextXAlignment=Enum.TextXAlignment.Left
-   local tw=game:GetService('TextService'):GetTextSize(title,30,T.Font,Vector2.new(1000,100)).X
-   if sub then return T.text(list,'Sub_'..title,sub,tw+18,y+9,W-tw-40,22,17,C.cream) end
-  end
-  local tabs={}
-  function tabs.Daily(SW)
-   local y=4
-   local timer=section('Daily Deals','',y);y+=58
-   local function tick()
-    local sec=Money.secondsToReset()
-    timer.Text=string.format('New deals in %02d:%02d:%02d',sec//3600,sec%3600//60,sec%60)
-   end
-   tick()
-   task.spawn(function() while timer.Parent do task.wait(1);if timer.Parent then tick() end end end)
-   local deals=profile.daily.deals or {}
-   local n=math.max(1,#deals);local cw=(SW-(n-1)*12)/n;local ch=292
-   for i,deal in deals do
-    local x=(i-1)*(cw+12)
-    local free=deal.kind=='Emeralds'
-    local rarity=deal.rarity or 'Common'
-    local card=T.panel(list,'Deal'..i,x,y,cw,ch,'panel');T.setTier(card,free and 4 or 2)
-    -- Weapon deals wear their rarity's colour (ChestConfig.RarityColor), like chest reveal cards.
-    local color=free and C.emerald or Chests.RarityColor[rarity]
-    if not free and card:FindFirstChild('RarityCorners') then card.RarityCorners.ImageColor3=color end
-    art(card,free and 'emerald' or WeaponIcons[deal.id],cw/2,104,92,color,150)
-    local amt=T.label(card,'Amount',(free and '+' or '×')..deal.amount,0,22,cw,34,32,free and C.emerald or C.gold);amt.TextXAlignment=Enum.TextXAlignment.Center;amt.ZIndex=3
-    local name=free and 'Emeralds' or Weapons.ById[deal.id].name
-    local nm=T.text(card,'Name',name,10,156,cw-20,22,18);nm.TextXAlignment=Enum.TextXAlignment.Center
-    if deal.kind=='Weapon' then
-     local rl=T.text(card,'Rarity',string.upper(rarity)..'  ·  '..(deal.each or deal.price)..' each',10,180,cw-20,20,15,color);rl.TextXAlignment=Enum.TextXAlignment.Center
-     local rec=profile.weapons[deal.id]
-     if rec then T.upgradeBar(card,'Bar',14,204,cw-28,18,rec.have,L.need(rec)) else local l=T.text(card,'New','NEW WEAPON',14,202,cw-28,20,15,C.gold);l.TextXAlignment=Enum.TextXAlignment.Center end
-    end
-    local label=deal.bought and 'CLAIMED' or deal.currency=='Free' and 'FREE' or ''
-    local pb=T.button(card,'Buy',label,12,ch-64,cw-24,52,function() act('BuyDeal',i) end,deal.bought)
-    pb.Caption.TextSize=24
-    if deal.bought then pb.Interactable=false
-    elseif deal.currency=='Emeralds' then cost(pb,deal.price,'emerald',22) end
-    if deal.currency=='Free' and not deal.bought then FX.ribbon(card,'FREE!',110,gold);FX.pulse(pb,.06) end
-    FX.lift(card)
-   end
-   y+=ch+30
-   if profile.vip then
-    local claimed=profile.daily.vipClaimed
-    local row=T.panel(list,'VipDaily',2,y,SW-4,130,'panel');T.setTier(row,3)
-    art(row,'chest',80,65,90,T.Tier[3],160)
-    local t=T.label(row,'Title','VIP DAILY CHEST',160,22,500,40,34);t.TextXAlignment=Enum.TextXAlignment.Left
-    T.text(row,'Sub','A free '..Chests.ById[Money.VIPDailyChest].name..', every single day.',162,66,500,24,18,C.cream)
-    local cb=T.button(row,'Claim',claimed and 'CLAIMED' or 'CLAIM',SW-4-242,34,220,62,function() act('ClaimVipChest') end,claimed)
-    cb.Caption.TextSize=28;cb.Interactable=not claimed;if not claimed then FX.pulse(cb,.06) end
-   else
-    local row=T.panel(list,'VipPromo',2,y,SW-4,130,'panel');T.setTier(row,3)
-    art(row,'chest',80,65,90,T.Tier[3],160)
-    local t=T.label(row,'Title','FREE '..string.upper(Chests.ById[Money.VIPDailyChest].name)..' EVERY DAY',160,20,SW-440,40,32);t.TextXAlignment=Enum.TextXAlignment.Left
-    T.text(row,'Sub','Plus +25% emeralds from every run and open ×10 chests.',162,64,SW-440,24,18,C.cream)
-    local go=T.button(row,'Go','GET VIP',SW-4-242,34,220,62,function() self.selection.storeTab='Bundles';draw() end)
-    go.Caption.TextSize=28;FX.pulse(go,.05);FX.shine(row)
-   end
-   return y+146
-  end
-  function tabs.Bundles(SW)
-   local y=22
-   local sp=Money.Products.StarterPack
-   hero('Starter',y,270,4,gold,'STARTER PACK','One time only · the best deal in the game.',
-    {{'emerald',sp.emeralds..'',C.emerald},{Chests.ById.Legendary.icon,'×'..sp.chests.Legendary..' Legendary'},{'quests',sp.rerolls..' Rerolls'}},'chest','StarterPack',profile.starter,
-    {cornerColor=gold,titleColor=gold,titleSize=46,pulse=true,shine=true,ribbon='BEST VALUE',ribbonColor=gold,artSize=170})
-   y+=296
-   -- Godly bundles: a Godly weapon + a full armor set + emeralds, one time each. COMING SOON until
-   -- the weapon is in WeaponCatalog (the server refuses it too). Icons are placeholders: the
-   -- weapon's catalogue icon once it exists, else the armory icon.
-   local godly=Chests.RarityColor.Godly
-   section('Godly Bundles','The strongest weapons in the game, with a full armor set.',y);y+=48
-   for _,key in Money.GodlyBundles do
-    local b=Money.Products[key];local set=Armor.ById[b.armorSet]
-    local wid;for id,w in Weapons.ById do if w.name==b.godly then wid=id end end
-    local tiles={{wid and WeaponIcons[wid] or 'armory',b.godly,godly}}
-    for _,slot in Armor.Slots do table.insert(tiles,{Armor.Icons[Armor.pieceId(b.armorSet,slot)],slot}) end
-    table.insert(tiles,{'emerald',b.emeralds..'',C.emerald})
-    local state=profile.bundles[key] and true or not wid and 'COMING SOON' or false
-    local premium=set.rarity=='Godly'
-    hero(key,y,270,4,godly,string.upper(b.name),b.godly..' + the full '..set.name..' armor set. One time only.',tiles,
-     Armor.Icons[Armor.pieceId(b.armorSet,'Chest')],key,state,
-     {cornerColor=godly,titleColor=godly,pulse=state==false,shine=true,ribbon=premium and 'GODLY ARMOR' or 'BEST GODLY DEAL',ribbonColor=godly,ribbonWidth=premium and 190 or 220,artSize=170})
-    y+=292
-   end
-   -- Godly Starter: tap one of the six Godly tiles to choose it, then buy (+3 Legendary Chests).
-   -- Hidden where paid random items are restricted (it includes chests).
-   if not profile.restricted then
-    local gs=Money.Products.GodlyStarter
-    local pick=self.selection.godlyPick or 1
-    local ids={}
-    for i,g in Money.GodlyWeapons do for id,w in Weapons.ById do if w.name==g[1] then ids[i]=id end end end
-    local tiles={}
-    for i,g in Money.GodlyWeapons do table.insert(tiles,{ids[i] and WeaponIcons[ids[i]] or 'armory',g[2],i==pick and godly or C.muted}) end
-    table.insert(tiles,{Chests.ById.Legendary.icon,'×'..gs.chests.Legendary,C.gold})
-    local state=profile.bundles.GodlyStarter and true or not ids[pick] and 'COMING SOON' or false
-    local card=hero('GodlyStarter',y,270,4,godly,'GODLY STARTER',Money.GodlyWeapons[pick][1]..' + '..gs.chests.Legendary..' Legendary Chests. Tap a weapon to choose. One time only.',
-     tiles,Chests.ById.Legendary.icon,'GodlyStarter',state,
-     {cornerColor=godly,titleColor=godly,pulse=state==false,shine=true,ribbon='PICK YOUR GODLY',ribbonColor=godly,ribbonWidth=230,artSize=150,arg=pick})
-    -- Selection is a colour wash on the chosen tile (no outline over the nine-slice).
-    for i in Money.GodlyWeapons do
-     local t=card:FindFirstChild('Item'..i)
-     if t then
-      if i==pick then
-       -- Under the icon and label: one ZIndex below the lowest of the tile's children.
-       local z=t.ZIndex;for _,c in t:GetChildren() do if c:IsA('GuiObject') then z=math.min(z,c.ZIndex) end end
-       local w=T.make('Frame',t,{Name='Picked',BackgroundColor3=godly,BackgroundTransparency=.55,BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=math.max(0,z-1)})
-       T.make('UICorner',w,{CornerRadius=UDim.new(0,8)})
-      end
-      local hit=T.make('TextButton',t,{Name='Pick',Text='',BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=t.ZIndex+5})
-      hit.Activated:Connect(function() if self.selection.godlyPick~=i then self.selection.godlyPick=i;T.sound('ui_equip');draw() end end)
-     end
-    end
-    y+=292
-   end
-   local ab=Money.Products.ArsenalBundle
-   local tiles={}
-   for _,cl in Stats.ClassOrder do table.insert(tiles,{WeaponIcons[L.Signature[cl]],'+'..ab.signatureUpgrades,C.lime}) end
-   table.insert(tiles,{'emerald',ab.emeralds..'',C.emerald})
-   hero('Arsenal',y,250,2,T.Tier[2],'ARSENAL BUNDLE','+'..ab.signatureUpgrades..' upgrades to every class starter weapon.',tiles,WeaponIcons['00'],'ArsenalBundle',false,{pulse=true,shine=true})
-   y+=272
-   hero('VIP',y,250,3,T.Tier[3],'VIP PASS','Permanent. Yours on every visit.',
-    {{'emerald','+25% Emeralds'},{'chest','Daily Chest'},{'store','Open ×10'},{'profile','VIP Tag'}},'profile','VIP',profile.vip,{pulse=true,shine=true,ribbon='VIP',ribbonWidth=120})
-   y+=272
-   hero('QuickOpen',y,220,nil,C.lime,'QUICK OPEN','Open 10 chests in one click.',
-    {{'chest','×10'}},'chest','QuickOpen',profile.quickOpen,{artSize=130})
-   y+=244
-   if not profile.restricted then
-    local half=(SW-16)/2
-    for i,spec in {{'Rerolls','Reroll level-up and shop choices.',Money.RerollPacks,'quests',profile.rerolls,2},{'Banishes','Remove unwanted level-ups for the run.',Money.BanishPacks,'armory',profile.banishes,4}} do
-     local x=(i-1)*(half+16)
-     local card=T.panel(list,spec[1],x,y,half,290,'panel');T.setTier(card,spec[6])
-     art(card,spec[4],80,86,100,T.Tier[spec[6]],170)
-     local t=T.label(card,'Title',string.upper(spec[1]),150,24,half-170,44,40);t.TextXAlignment=Enum.TextXAlignment.Left
-     T.text(card,'Sub',spec[2],152,72,half-170,44,17,C.cream)
-     T.text(card,'Have','You have '..spec[5],152,118,half-170,20,16,C.muted)
-     local key='pack'..spec[1];self.selection[key]=self.selection[key] or 1
-     local idx=self.selection[key];local packKey=spec[3][idx];local pack=Money.Products[packKey]
-     local sw=(half-36-16)/3
-     T.button(card,'Less','-',18,158,sw,52,function() self.selection[key]=math.max(1,idx-1);draw() end,true).Caption.TextSize=32
-     local amt=T.panel(card,'Qty',26+sw,158,sw,52,'inset');T.label(amt,'Text','×'..(pack.rerolls or pack.banishes),0,0,sw,52,28)
-     T.button(card,'More','+',34+2*sw,158,sw,52,function() self.selection[key]=math.min(#spec[3],idx+1);draw() end,true).Caption.TextSize=32
-     priceButton(card,'Buy',18,222,half-36,56,packKey,false,true)
-     FX.lift(card)
-    end
-    y+=310
-   end
-   section('Classes','Play them right now.',y);y+=48
-   local tw=(SW-2*14)/3
-   for i,cl in L.Store.classes do
-    local x=(i-1)*(tw+14);local owned=profile.classes[cl[1]]==true
-    local t=T.rarityPanel(list,'Class_'..cl[1],x,y,tw,290,2)
-    art(t,WeaponIcons[cl[2]],tw/2,86,120,T.Tier[2],190)
-    local n=T.label(t,'Name',cl[1],10,160,tw-20,36,32);n.TextXAlignment=Enum.TextXAlignment.Center
-    local d=T.text(t,'Desc',Stats.Classes[cl[1]].description,16,196,tw-32,36,15,C.cream);d.TextXAlignment=Enum.TextXAlignment.Center
-    local half=(tw-32-10)/2
-    priceButton(t,'Buy',16,238,half,44,cl[3],owned)
-    local eb=T.button(t,'BuyEmeralds','',26+half,238,half,44,function()
-     local r=combat.ProfileAction:InvokeServer('BuyClass',cl[1]);T.toast(screen,r.message or '',r.ok and C.lime or C.negative)
-    end,true)
-    eb.Caption.Visible=false;if owned then eb.Interactable=false end
-    cost(eb,owned and 'OWNED' or Money.ClassEmeraldPrice,not owned and 'emerald' or nil,19)
-    FX.lift(t)
-   end
-   return y+304
-  end
-  function tabs.Chests(SW)
-   local y=4
-   if profile.restricted then
-    T.text(list,'Restricted','Chest packs are not available in your region. Open chests with emeralds earned in runs in the Chests menu.',4,8,SW-8,50,18,C.muted)
-    return 70
-   end
-   section('Legendary Chests',Chests.ById.Legendary.copies..' weapons and a guaranteed Legendary in every chest.',y)
-   local odds=T.button(list,'Odds','SEE ODDS',SW-186,y,182,40,function() self.selection.chest='Legendary';open('Chests','Legendary') end,true);odds.Caption.TextSize=18
-   y+=66
-   local cw=(SW-2*14)/3;local base=Money.Products[Money.ChestPacks[1]]
-   for i,key in Money.ChestPacks do
-    local pack=Money.Products[key];local nChests=pack.chests.Legendary
-    local card=T.panel(list,key,(i-1)*(cw+14),y,cw,360,'panel');T.setTier(card,i+1)
-    art(card,Chests.ById.Legendary.icon,cw/2,168,120+i*14,T.Tier[i+1],250)
-    local t=T.label(card,'Count','×'..nChests,0,26,cw,54,52,C.gold);t.TextXAlignment=Enum.TextXAlignment.Center;t.ZIndex=3
-    local n=T.text(card,'Name',nChests==1 and 'LEGENDARY CHEST' or 'LEGENDARY CHESTS',10,80,cw-20,24,20);n.TextXAlignment=Enum.TextXAlignment.Center;n.ZIndex=3
-    local each=math.floor(pack.robux/nChests+.5)
-    local save=nChests>1 and math.floor((1-each/base.robux)*100+.5) or 0
-    local d=T.text(card,'Drops',(nChests*Chests.ById.Legendary.copies)..' weapons'..(save>0 and ('  ·  SAVE '..save..'%') or ''),10,252,cw-20,22,17,save>0 and C.lime or C.cream);d.TextXAlignment=Enum.TextXAlignment.Center
-    priceButton(card,'Buy',16,288,cw-32,58,key,false,i==3)
-    if L.Store.chestRibbons[i] then FX.ribbon(card,L.Store.chestRibbons[i],180,i==3 and gold or nil) end
-    if i==3 then FX.shine(card) end
-    FX.lift(card)
-   end
-   y+=388
-   local mb=Money.Products.MegaBundle
-   hero('Mega',y,260,4,gold,'MEGA CHEST BUNDLE','The biggest pile of chests in the game.',
-    {{Chests.ById.Legendary.icon,'×'..mb.chests.Legendary..' Legendary'},{'emerald',mb.emeralds..'',C.emerald},{'quests',mb.rerolls..' Rerolls'},{'armory',mb.banishes..' Banishes'}},'chest','MegaBundle',false,
-    {cornerColor=gold,titleColor=gold,pulse=true,shine=true,ribbon='INSANE DEAL',ribbonColor=gold,artSize=170})
-   y+=284
-   local ub=Money.Products.UltimateBundle
-   local each=math.floor(ub.robux/ub.chests.Legendary+.5)
-   local save=math.floor((1-each/Money.Products[Money.ChestPacks[1]].robux)*100+.5)
-   hero('Ultimate',y,280,4,gold,'ULTIMATE CHEST BUNDLE','×'..ub.chests.Legendary..' Legendary Chests: '..each..' R$ each, save '..save..'%.',
-    {{Chests.ById.Legendary.icon,'×'..ub.chests.Legendary..' Legendary'},{'emerald',fmt(ub.emeralds),C.emerald},{'quests',ub.rerolls..' Rerolls'},{'armory',ub.banishes..' Banishes'}},Chests.ById.Legendary.icon,'UltimateBundle',false,
-    {cornerColor=gold,titleColor=gold,titleSize=44,pulse=true,shine=true,ribbon='ULTIMATE',ribbonColor=gold,artSize=190,raySize=320})
-   y+=304
-   local owned=profile.chests.Legendary or 0
-   if owned>0 then
-    local ob=T.button(list,'OpenOwned','OPEN YOUR '..owned..' LEGENDARY CHEST'..(owned>1 and 'S' or ''),2,y,SW-4,60,function() self.selection.chest='Legendary';open('Chests','Legendary') end)
-    ob.Caption.TextSize=26;FX.pulse(ob,.03);y+=72
-   end
-   return y
-  end
-  function tabs.Emeralds(SW)
-   local y=4
-   section('Emeralds','Open chests, buy skills and unlock classes. You also earn them in every run.',y);y+=62
-   -- Two rows of three. Card tiers climb 1-4 (the top two packs both wear gold); the biggest pack
-   -- pulses and shines.
-   local per=3;local gw=(SW-(per-1)*14)/per;local top=#Money.EmeraldPacks
-   for i,key in Money.EmeraldPacks do
-    local pack=Money.Products[key];local x=((i-1)%per)*(gw+14);local cy=y+(i-1)//per*334
-    local card=T.panel(list,'Emeralds_'..pack.name,x,cy,gw,320,'panel');if i>1 then T.setTier(card,math.min(4,i)) end
-    art(card,'emerald',gw/2,112,L.Store.gemSizes[i],C.emerald,190)
-    local amt=T.label(card,'Amount',fmt(pack.emeralds),10,184,gw-20,40,38,C.emerald);amt.TextXAlignment=Enum.TextXAlignment.Center
-    local bonus=Money.bonusPercent(key)
-    local sub=T.text(card,'Bonus',bonus>0 and (pack.name..'  ·  +'..bonus..'% MORE') or pack.name,10,224,gw-20,22,18,bonus>0 and C.lime or C.cream);sub.TextXAlignment=Enum.TextXAlignment.Center
-    priceButton(card,'Buy',14,254,gw-28,54,key,false,i==top)
-    if L.Store.gemRibbons[i] then FX.ribbon(card,L.Store.gemRibbons[i],170,i==top and gold or nil) end
-    if i>=top-1 then FX.shine(card) end
-    FX.lift(card)
-   end
-   y+=math.ceil(top/per)*334+12
-   section('Codes','Enter a code for free rewards.',y);y+=50
-   local row=T.panel(list,'Codes',2,y,SW-4,84,'panel')
-   local field=T.panel(row,'Field',16,14,SW-4-264,56,'inset')
-   local box=T.make('TextBox',field,{Name='Input',BackgroundTransparency=1,Position=UDim2.fromOffset(16,0),Size=UDim2.new(1,-32,1,0),Font=T.Font,TextSize=24,TextColor3=C.white,PlaceholderText='Enter code',PlaceholderColor3=C.dim,Text='',ClearTextOnFocus=false,TextXAlignment=Enum.TextXAlignment.Left})
-   T.button(row,'Claim','CLAIM',SW-4-234,14,218,56,function() if box.Text~='' then act('Redeem',box.Text);box.Text='' end end).Caption.TextSize=28
-   return y+100
-  end
-  draw=function()
-   local keep=list and list.Parent and self.selection.storeTabDrawn==self.selection.storeTab and list.CanvasPosition
-   for _,c in b:GetChildren() do c:Destroy() end
-   profile=L.profile(player)
-   local active=self.selection.storeTab
-   -- Emerald pill on the right; tabs share the remaining width equally (never overlap).
-   local pillW,gap=160,8 -- room for "99.9K" beside the + button
-   local pillsX=W-pillW
-   local tw=math.floor((pillsX-16-3*gap)/4)
-   for i,t in L.Store.tabs do
-    local tb=T.button(b,'Tab_'..t[1],'',(i-1)*(tw+gap),0,tw,64,function() self.selection.storeTab=t[1];draw() end,t[1]~=active)
-    tb.Caption.Visible=false
-    local ic=T.icon(tb,'Icon',10,10,44,t[2])
-    local l=T.label(tb,'Label',t[3],58,0,tw-68,64,18);l.TextXAlignment=Enum.TextXAlignment.Left;l.TextWrapped=false;l.TextScaled=true
-    T.make('UITextSizeConstraint',l,{MinTextSize=10,MaxTextSize=18})
-    FX.popIcon(tb,ic)
-   end
-   local function pill(name,x,asset,value,color,target)
-    local pl=T.panel(b,name,x,8,pillW,48,'inset');T.icon(pl,'Icon',8,6,36,asset)
-    local v=T.label(pl,'Value',fmt(value),48,4,pillW-94,40,22,color) -- up to the + button;v.TextXAlignment=Enum.TextXAlignment.Left
-    T.button(pl,'Plus','+',pillW-42,6,36,36,function() self.selection.storeTab=target;draw() end).Caption.TextSize=26
-   end
-   pill('EmeraldsPill',pillsX,'emerald',profile.gems,C.emerald,'Emeralds')
-   list=T.scroll(b,'Offers',0,78,W,500)
-   local h=tabs[active](W-14)
-   list.CanvasSize=UDim2.fromOffset(0,h)
-   if keep then list.CanvasPosition=keep end
-   self.selection.storeTabDrawn=active
-  end
-  -- Deals roll over at UTC midnight; ask the server for today's set if ours is stale.
-  if profile.daily.deals and (profile.daily.resetIn or 0)>0 and Money.secondsToReset()>(profile.daily.resetIn or 0) then
-   task.spawn(function() combat.ProfileAction:InvokeServer('Refresh') end)
-  end
-  draw();self.redraw=draw
-  return w
- end
+ -- Quests and Store windows: QuestsUI and StoreUI draw them from this profile.
+ local windowCtx={
+  profile=function() profile=L.profile(player);return profile end,
+  need=L.need,selection=self.selection,cost=cost,fmt=fmt,signature=L.Signature,config=QuestConfig,
+  open=function(name,arg) task.defer(open,name,arg) end,
+  setRedraw=function(fn) self.redraw=fn end,
+ }
+ builders.Quests=function(tab) return QuestsUI.open(screen,windowCtx,tab) end
+ builders.Store=function(focus) return StoreUI.open(screen,windowCtx,focus) end
 
  -- World stations: no E prompts. Stepping onto the glowing ring in front of a stand opens its window
  -- with a quick camera push and fade; the ring re-arms once you step off (StationApproach).
@@ -940,7 +590,7 @@ function L.mount(player)
   if pendingRedraw then return end;pendingRedraw=true
   task.defer(function() pendingRedraw=false;if win and self.redraw then self.redraw() end end)
  end
- for _,attr in {'ProfileLoaded','ProfileGems','ProfileGemsEarned','ProfileClasses','ProfileWeapons','ProfilePity','ProfilePicks','ProfileChests','ProfileStarterPack','ProfileVIP','ProfileBundles','PaidRandomRestricted','ProfileSkills'} do player:GetAttributeChangedSignal(attr):Connect(profileChanged) end
+ for _,attr in {'ProfileLoaded','ProfileGems','ProfileGemsEarned','ProfileClasses','ProfileWeapons','ProfilePity','ProfilePicks','ProfileChests','ProfileStarterPack','ProfileVIP','ProfileBundles','PaidRandomRestricted','ProfileSkills','ProfileQuests'} do player:GetAttributeChangedSignal(attr):Connect(profileChanged) end
  combat:WaitForChild('PurchaseResult').OnClientEvent:Connect(function(_,ok,message)
   if screen.Enabled and type(message)=='string' then
    if ok then T.sound('ui_purchase') end
