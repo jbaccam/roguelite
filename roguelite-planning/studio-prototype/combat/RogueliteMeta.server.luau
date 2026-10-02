@@ -95,6 +95,26 @@ end
 -- Quest progress (ProfileService). Guarded so this script still runs beside an older ProfileService.
 local function questEvent(p,stat,n) if Profiles.questEvent then Profiles.questEvent(p,stat,n) end end
 local function questRun(p,stint) if Profiles.questRun then Profiles.questRun(p,stint) end end
+-- Plan K quest stats from the run: level-ups, shards picked up and shop buys (ShopService hooks),
+-- damage dealt (CombatEffectsService.listenDamage) and each minute in a run. The hooks run inside
+-- the sandboxed ShopService / CombatEffectsService, so they only add to these tallies; this loop
+-- sends them to quests once a second. Members of the run only; questEvent skips test runs.
+local questTally={levels={},shards={},buys={},damage={}}
+local function tally(stat,p,n) if Shop.members[p] then local t=questTally[stat];t[p]=(t[p] or 0)+n end end
+Shop.onLevelUp=function(p,n) tally('levels',p,n) end
+Shop.onShards=function(p,n) tally('shards',p,n) end
+Shop.onBuy=function(p) tally('buys',p,1) end
+if Effects.listenDamage then Effects.listenDamage(function(owner,_,actual) tally('damage',owner,actual) end) end -- plan J's hook; absent in older copies
+task.spawn(function()
+ local minuteAt=os.clock()+60
+ while true do
+  task.wait(1)
+  for stat,t in questTally do
+   for p,n in t do t[p]=nil;if Shop.members[p] then questEvent(p,stat,math.floor(n)) end end
+  end
+  if os.clock()>=minuteAt then minuteAt+=60;for p in Shop.members do questEvent(p,'minutes',1) end end
+ end
+end)
 -- Each cleared wave saves progress right away, so nothing waits on the death screen's Give Up:
 -- the best wave, the win at wave 20 with its first-win bonus, and the run emeralds earned so far
 -- (paid as they're reached; ProfileService.settleRun pays each stint's emeralds once). Leaving,
@@ -113,6 +133,7 @@ Shop.onWaveCleared=function(wavesPassed)
   -- Quests: a wave survived; the stint's first cleared wave counts a run; wave 20 is a win.
   questRun(p,m.stint);questEvent(p,'waves',1)
   if wavesPassed==RunSetupRules.WinWave then questEvent(p,'wins',1) end
+  if wavesPassed==10 then questEvent(p,'deepRuns',1) end -- Reach Wave 10 in One Run
   local earned=stintEmeralds(map,m.joined,Shop.wave)
   Analytics.earned(p,Profiles.settleRun(p,m.stint,key,wavesPassed,earned))
   if wavesPassed==RunSetupRules.WinWave and not Admin.isTestRun() then
@@ -143,6 +164,7 @@ Death.onDeath=function(npc)
  questEvent(p,'kills',1)
  local weapon=Weapons.ById[npc:GetAttribute('LastWeaponId')]
  if weapon and weapon.utility then questEvent(p,'utilityKills',1) end
+ if weapon then questEvent(p,weapon.kind=='Melee' and 'meleeKills' or 'rangedKills',1) end -- Ranged, Blast and Spread count as ranged
 end
 local function livingInRun()
  local n=0

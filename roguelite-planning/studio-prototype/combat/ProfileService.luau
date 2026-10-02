@@ -343,6 +343,7 @@ function P.openEgg(player,count)
  local n=math.min(count,d.eggs or 0)
  if n<=0 then return false,'No '..Eggs.Name..' to hatch' end
  d.eggs-=n
+ quest('event',d,Money.day(),player.UserId,'eggs',n) -- Hatch an Egg, Hatcher (plan K)
  local tally={}
  for _=1,n do local id=Eggs.roll(rng);tally[id]=(tally[id] or 0)+1 end
  local results={}

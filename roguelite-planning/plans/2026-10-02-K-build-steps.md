@@ -1369,7 +1369,7 @@ local function tally(stat,p,n) if Shop.members[p] then local t=questTally[stat];
 Shop.onLevelUp=function(p,n) tally('levels',p,n) end
 Shop.onShards=function(p,n) tally('shards',p,n) end
 Shop.onBuy=function(p) tally('buys',p,1) end
-Effects.listenDamage(function(owner,_,actual) tally('damage',owner,actual) end)
+if Effects.listenDamage then Effects.listenDamage(function(owner,_,actual) tally('damage',owner,actual) end) end -- plan J's hook; absent in older copies
 task.spawn(function()
  local minuteAt=os.clock()+60
  while true do
