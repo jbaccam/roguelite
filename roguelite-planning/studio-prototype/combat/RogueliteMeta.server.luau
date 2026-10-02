@@ -191,8 +191,10 @@ local function onDied(p,character)
  down[p]={position=root and root.Position or Vector3.zero,wave=Shop.wave,map=runMap(),test=Admin.isTestRun(),stint=m.stint,joined=m.joined}
  p:SetAttribute('HoldRespawn',true)
  -- A test run (the admin panel was used) pays nothing, so the death screen shows 0 emeralds.
+ -- revive: which revive of this run REVIVE would buy; its price and the one after (prices double).
+ local n=(revivesUsed[p] or 0)+1
  p:SetAttribute('DeathInfo',Http:JSONEncode({wave=Shop.wave,level=s.level,emeralds=Admin.isTestRun() and 0 or stintEmeralds(runMap(),m.joined,Shop.wave),map=RunSetupRules.Maps[RunSetupRules.MapIndex[runMap()]].name,
-  revivesLeft=math.max(0,Config.ReviveLimitPerRun-(revivesUsed[p] or 0))}))
+  revive=n,revivePrice=Config.Products[Config.reviveKey(n)].robux,nextRevivePrice=Config.Products[Config.reviveKey(n+1)].robux}))
  p:SetAttribute('RunDown',true)
  Analytics.died(p,Shop.wave)
  if livingInRun()==0 then Shop.pause();if not lastStandEnds and Shop.phase=='Combat' then setLastStand(workspace:GetServerTimeNow()+LAST_STAND) end end
@@ -210,6 +212,7 @@ end)
 runState:GetAttributeChangedSignal('Wave'):Connect(function()
  if runState:GetAttribute('Wave')~=1 then return end
  for q in phoenixUsed do if not down[q] then phoenixUsed[q]=nil;q:SetAttribute('PhoenixUsed',nil) end end
+ for q in revivesUsed do if not down[q] then revivesUsed[q]=0 end end -- and revives start at 65 R$ again
  runState:SetAttribute('Won',nil) -- and isn't won yet
 end)
 local function watch(p)
@@ -219,7 +222,8 @@ local function watch(p)
  end)
 end
 local respawn=SSS:WaitForChild('AvatarNormalizer'):WaitForChild('RespawnPlayer')
-local function canRevive(p) return down[p]~=nil and (revivesUsed[p] or 0)<Config.ReviveLimitPerRun end
+-- No limit per run; each revive costs more (Config.reviveKey).
+local function canRevive(p) return down[p]~=nil end
 -- Respawn at `at` with `health` (fraction of max), a short shield and nearby zombies pushed back.
 -- beforePush(root) runs once the body is placed (the Phoenix blast), before the push.
 rise=function(p,at,health,beforePush)
@@ -403,7 +407,7 @@ local function eligible(p,key,arg)
  if not product then return false,'Unknown product' end
  if not d then return false,'Profile still loading' end
  if product.random and restricted[p] then return false,'Not available in your region' end
- if key=='Revive' then return canRevive(p),'No revive available right now' end
+ if product.revive then return canRevive(p),'No revive available right now' end
  if key=='ShopReroll' or key=='UpgradeReroll' then return Shop.states[p]~=nil,'Only during a run' end
  if product.oneTime and d[product.oneTime] then return false,'Already purchased' end
  if product.class and d.classes[product.class] then return false,'Already unlocked' end
@@ -422,10 +426,12 @@ end
 -- Grants run inside ProcessReceipt (or a Studio simulation). Return true only when delivered.
 -- In-run products that can no longer be used are kept as stored rerolls/banishes (or emeralds).
 local grants={}
-function grants.Revive(p)
+-- Every price step grants the same revive.
+local function grantRevive(p)
  if revive(p) then return true end
  return Profiles.grant(p,{emeralds=50,paid=true})
 end
+for i=1,Config.ReviveSteps do grants[Config.reviveKey(i)]=grantRevive end
 function grants.ShopReroll(p) return Shop.paidReroll(p,'Shop') or Profiles.grant(p,{rerolls=1}) end
 function grants.UpgradeReroll(p) return Shop.paidReroll(p,'Upgrade') or Profiles.grant(p,{rerolls=1}) end
 -- A bought banish is saved; the player then clicks the card to remove (RunAction UseBanish).
@@ -485,15 +491,18 @@ purchaseRequest.OnServerEvent:Connect(function(p,key,arg)
   return
  end
  if type(arg)~='number' then arg=nil end
+ -- Revive: the client asks for 'Revive' and the server picks this run's price step, so nobody
+ -- can ask for a cheaper one.
+ if key=='Revive' or Config.isRevive(key) then key=Config.reviveKey((revivesUsed[p] or 0)+1) end
  local ok,why=eligible(p,key,arg)
  if not ok then return reply(p,key,false,why) end
  pendingArg[p]=pendingArg[p] or {};pendingArg[p][key]=arg
  local product=Config.Products[key]
  -- Saved (not just remembered) so a receipt that arrives after a rejoin still knows the pick.
  if product.godlyPick then Profiles.get(p).godlyPick=Config.GodlyWeapons[arg][1];Profiles.save(p) end
- if key=='Revive' then Analytics.revivePrompt(p) end
+ if product.revive then Analytics.revivePrompt(p,(revivesUsed[p] or 0)+1) end
  -- An open Revive prompt holds the last stand's clock (prompting).
- if key=='Revive' and product.productId>0 then prompting[p]=workspace:GetServerTimeNow() end
+ if product.revive and product.productId>0 then prompting[p]=workspace:GetServerTimeNow() end
  if product.productId>0 then Market:PromptProductPurchase(p,product.productId)
  elseif studio then
   -- Studio only: simulate a successful receipt so flows can be tested. In-memory, never saved.
@@ -502,7 +511,7 @@ purchaseRequest.OnServerEvent:Connect(function(p,key,arg)
 end)
 Market.PromptProductPurchaseFinished:Connect(function(userId,productId)
  local p=Players:GetPlayerByUserId(userId)
- if p and productId==Config.Products.Revive.productId then prompting[p]=nil end
+ if p and Config.isRevive(Config.byProductId(productId)) then prompting[p]=nil end
 end)
 Market.PromptGamePassPurchaseFinished:Connect(function(p,id,bought)
  if not bought then return end

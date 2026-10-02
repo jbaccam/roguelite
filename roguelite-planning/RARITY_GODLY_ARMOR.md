@@ -591,7 +591,8 @@ which equals the whole Brawler class buff.
     toward the bonus. Tier IV = ×1.3.
   - Numbers round to the stat's step. Chances and blast damage scale too. `FirstHitBlock` stays 1.
 - **Phoenix vs the Robux revive:** the Phoenix rise triggers first, with no death screen. After a
-  second death, the normal death screen offers the paid revive (still `ReviveLimitPerRun = 1`).
+  second death, the normal death screen offers the paid revive (no limit since 2026-10-02; the
+  price doubles each revive in a run, LOBBY_AND_MATCH_SERVERS.md §4).
 - **Upgrade costs (weapons and armor, same table):**
   - Copies as before (`ChestConfig.UpgradeByRarity`), PLUS emeralds that triple each tier
     (`ChestConfig.UpgradeEmeralds`).

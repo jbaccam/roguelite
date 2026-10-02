@@ -6,8 +6,14 @@
 local M={}
 
 M.Products={
- -- In-run, used immediately
- Revive={productId=0,robux=65,name='Revive'},
+ -- In-run, used immediately. Revives (LOBBY_AND_MATCH_SERVERS.md §4): as many as you like, and the
+ -- price doubles each time in the same run. The nth revive uses Revive<n>, and from the 5th on it
+ -- stays Revive5. Five products because a developer product's price is fixed in the dashboard.
+ Revive1={productId=0,robux=65,name='Revive',revive=1},
+ Revive2={productId=0,robux=130,name='Revive',revive=2},
+ Revive3={productId=0,robux=260,name='Revive',revive=3},
+ Revive4={productId=0,robux=520,name='Revive',revive=4},
+ Revive5={productId=0,robux=1040,name='Revive',revive=5},
  ShopReroll={productId=0,robux=15,name='Reroll',random=true},
  UpgradeReroll={productId=0,robux=15,name='Reroll',random=true},
  Banish={productId=0,robux=19,name='Banish',random=true},
@@ -71,8 +77,11 @@ M.ClassEmeraldPrice=400
 -- Quick Open: open up to this many chests at once.
 M.QuickOpenCount=10
 
--- Revive: death-screen continue for the current run.
-M.ReviveLimitPerRun=1
+-- Revive: death-screen continue for the current run. No limit per run; the count resets each run.
+-- Example: a first revive costs 65 R$, a second in the same run 130, a sixth 1040.
+M.ReviveSteps=5
+function M.reviveKey(n) return 'Revive'..math.clamp(math.floor(tonumber(n) or 1),1,M.ReviveSteps) end
+function M.isRevive(key) local p=type(key)=='string' and M.Products[key];return p and p.revive~=nil or false end
 M.ReviveHealth=.5
 M.ReviveInvulnerableSeconds=3
 M.RevivePushRadius=22

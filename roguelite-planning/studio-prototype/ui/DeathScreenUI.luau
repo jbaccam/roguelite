@@ -3,7 +3,9 @@
 --   LB/RB), with REVIVE and LEAVE RUN; downed players respawn when the wave ends.
 -- * Nobody left standing (or solo): the run summary (stats, weapons, items, progress) under
 --   "REVIVE OR THE RUN ENDS · n", the server's last-stand clock (RogueliteRunState.LastStandEndsAt).
--- REVIVE is Robux, server-validated; LEAVE RUN ends this player's run (results screen).
+--   The same clock shows under the YOU DIED splash, so it is on screen from the first moment.
+-- REVIVE is Robux, server-validated, and its price doubles with each revive in a run (DeathInfo);
+-- LEAVE RUN ends this player's run (results screen).
 local TweenService=game:GetService('TweenService')
 local Http=game:GetService('HttpService')
 local UserInputService=game:GetService('UserInputService')
@@ -34,6 +36,12 @@ function M.mount(player)
  T.make('UIStroke',splash,{Color=Color3.fromRGB(20,4,6),Thickness=7,ApplyStrokeMode=Enum.ApplyStrokeMode.Contextual})
  local splashScale=T.make('UIScale',splash,{Scale=1})
  local sub=T.label(root,'Wave','',0,0,0,0,30,C.white);sub.AnchorPoint=Vector2.new(.5,0);sub.Position=UDim2.new(.5,0,.45,82);sub.Size=UDim2.fromOffset(700,40)
+ -- The last stand's clock under the splash, so the countdown shows from the first moment of death;
+ -- the summary title takes over once the splash fades. It pops on each new second.
+ local clock=T.label(root,'Clock','',0,0,0,0,40,C.negative);clock.AnchorPoint=Vector2.new(.5,0);clock.Position=UDim2.new(.5,0,.45,132);clock.Size=UDim2.fromOffset(700,52);clock.Visible=false
+ T.make('UIStroke',clock,{Color=Color3.fromRGB(20,4,6),Thickness=4,ApplyStrokeMode=Enum.ApplyStrokeMode.Contextual})
+ local clockScale=T.make('UIScale',clock,{Scale=1})
+ local clockShown -- the number on the clock, to pop it only when it changes
  local summary -- built per death
  local info={};local tab='Primary';local token=0
  local uiScale=1 -- the summary's scale, set by build()
@@ -60,6 +68,13 @@ function M.mount(player)
   local list=teammates();if #list==0 then return end
   local at=table.find(list,watching) or 0
   follow(list[(at-1+step)%#list+1]);M.redraw()
+ end
+ -- This revive's price (the server's DeathInfo; each revive in a run doubles it).
+ local function revivePrice() return info.revivePrice or Money.Products.Revive1.robux end
+ -- Seconds left in the last stand (everyone in the run is down), nil when there is none.
+ local function lastStandLeft()
+  local ends=runState:GetAttribute('LastStandEndsAt')
+  return ends and math.max(0,math.ceil(ends-workspace:GetServerTimeNow())) or nil
  end
  -- Fitted body text may shrink, but not below 9 px on screen (at scale .55 that is 17 layout px).
  local function readable(l)
@@ -125,13 +140,12 @@ function M.mount(player)
    T.label(bar,'Watching','SPECTATING  '..string.upper(name),40+aw,18,W-80-2*aw,40,32)
    readable(T.text(bar,'Hint','You respawn when the wave ends  ·  Q / E to switch',40+aw,58,W-80-2*aw,22,17,C.muted)).TextXAlignment=Enum.TextXAlignment.Center
    local bw=320;local by=96
-   local revive=T.button(bar,'Revive','REVIVE  ·  R$ '..Money.Products.Revive.robux,W/2-bw-16,by,bw,bh,function() combat.PurchaseRequest:FireServer('Revive') end)
+   local revive=T.button(bar,'Revive','REVIVE  ·  R$ '..revivePrice(),W/2-bw-16,by,bw,bh,function() combat.PurchaseRequest:FireServer('Revive') end)
    revive.Caption.TextSize=26
-   if (info.revivesLeft or 0)<=0 then revive.Interactable=false;revive.Caption.Text='NO REVIVES LEFT' end
    local leave=T.button(bar,'LeaveRun','LEAVE RUN',W/2+16,by,bw,bh,function() combat.RunAction:FireServer('LeaveRun') end,true)
    leave.Caption.TextSize=26;leave.Caption.TextColor3=C.negative
    readable(T.text(bar,'LeaveNote','Keep '..(info.emeralds or 0)..' emeralds',W/2+16,by+bh+6,bw,20,16,C.muted)).TextXAlignment=Enum.TextXAlignment.Center
-   if UserInputService:GetLastInputType().Name:find('^Gamepad') then GuiService.SelectedObject=revive.Interactable and revive or leave end
+   if UserInputService:GetLastInputType().Name:find('^Gamepad') then GuiService.SelectedObject=revive end
    return
   end
   shade.BackgroundTransparency=.2;vignette.BackgroundTransparency=.35
@@ -198,22 +212,23 @@ function M.mount(player)
   end
   grid.CanvasSize=UDim2.fromOffset(0,math.ceil(#items/cols)*80)
   -- Actions.
-  local restrictedRevive=(info.revivesLeft or 0)<=0
   -- Buttons 40 apart; each note is 340 wide over its button, so the two never meet.
   local bw=300
-  local revive=T.button(summary,'Revive','REVIVE  ·  R$ '..Money.Products.Revive.robux,W/2-bw-20,by,bw,bh,function()
+  local revive=T.button(summary,'Revive','REVIVE  ·  R$ '..revivePrice(),W/2-bw-20,by,bw,bh,function()
    combat.PurchaseRequest:FireServer('Revive')
   end)
-  revive.Caption.TextSize=26;revive.Interactable=not restrictedRevive
-  if restrictedRevive then revive.Caption.Text='NO REVIVES LEFT' end
-  local note=readable(T.text(summary,'ReviveNote','Back in the same wave with 50% health',W/2-bw/2-20-170,by-24,340,20,17,C.muted));note.TextXAlignment=Enum.TextXAlignment.Center
+  revive.Caption.TextSize=26
+  -- Say up front that the next one costs more (prices double, up to R$ 1040).
+  local nextPrice=info.nextRevivePrice
+  local noteText=(nextPrice and nextPrice>revivePrice()) and ('Back with 50% health  ·  next one R$ '..nextPrice) or 'Back in the same wave with 50% health'
+  local note=readable(T.text(summary,'ReviveNote',noteText,W/2-bw/2-20-170,by-24,340,20,17,C.muted));note.TextXAlignment=Enum.TextXAlignment.Center
   local give=T.button(summary,'LeaveRun','LEAVE RUN',W/2+20,by,bw,bh,function() combat.RunAction:FireServer('LeaveRun') end,true)
   give.Caption.TextSize=26;give.Caption.TextColor3=C.negative
   local keys=readable(T.text(summary,'LeaveNote','Keep '..(info.emeralds or 0)..' emerald'..((info.emeralds or 0)==1 and '' or 's')..' and see your results',W/2+bw/2+20-170,by-24,340,20,17,C.muted));keys.TextXAlignment=Enum.TextXAlignment.Center
   summary.Position=UDim2.fromOffset(v.X/2,cy+v.Y*.06);TweenService:Create(summary,TweenInfo.new(.35,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(v.X/2,cy)}):Play()
-  -- Controller: keep the selection across a redraw, else start on REVIVE (GIVE UP when no revive).
+  -- Controller: keep the selection across a redraw, else start on REVIVE.
   if path then T.restoreSelection(root,path)
-  elseif UserInputService:GetLastInputType().Name:find('^Gamepad') then GuiService.SelectedObject=revive.Interactable and revive or give end
+  elseif UserInputService:GetLastInputType().Name:find('^Gamepad') then GuiService.SelectedObject=revive end
  end
  function M.redraw() if summary and screen.Enabled then build() end end
  local function show()
@@ -226,9 +241,11 @@ function M.mount(player)
   -- The splash never wider than the screen (its text shrinks to fit).
   -- Just enabled: the root may not have a size yet on the first death; use the camera's.
   local vx=root.AbsoluteSize.X;if vx<100 then vx=workspace.CurrentCamera.ViewportSize.X end
-  splash.Size=UDim2.fromOffset(math.min(900,vx-24),150);sub.Size=UDim2.fromOffset(math.min(700,vx-24),40)
+  splash.Size=UDim2.fromOffset(math.min(900,vx-24),150);sub.Size=UDim2.fromOffset(math.min(700,vx-24),40);clock.Size=UDim2.fromOffset(math.min(700,vx-24),52)
   shade.BackgroundTransparency=1;vignette.BackgroundTransparency=1
   splash.Visible=true;sub.Visible=true;splash.TextTransparency=1;sub.TextTransparency=1
+  -- The clock is up from the first frame (no fade-in), so a solo player sees every second.
+  clock.Visible=true;clock.TextTransparency=0;clock.Text='';clockShown=nil
   sub.Text='Wave '..(info.wave or 1)..'  ·  Level '..(info.level or 1)
   splashScale.Scale=1.6
   TweenService:Create(shade,TweenInfo.new(.6),{BackgroundTransparency=.45}):Play()
@@ -240,29 +257,43 @@ function M.mount(player)
    if token~=mine or not screen.Enabled then return end
    TweenService:Create(splash,TweenInfo.new(.25),{TextTransparency=1}):Play()
    TweenService:Create(sub,TweenInfo.new(.25),{TextTransparency=1}):Play()
+   TweenService:Create(clock,TweenInfo.new(.25),{TextTransparency=1}):Play()
    TweenService:Create(shade,TweenInfo.new(.3),{BackgroundTransparency=.2}):Play()
-   task.delay(.25,function() if token==mine and screen.Enabled then splash.Visible=false;sub.Visible=false;build() end end)
+   task.delay(.25,function() if token==mine and screen.Enabled then splash.Visible=false;sub.Visible=false;clock.Visible=false;build() end end)
   end)
+  -- The splash clock: "REVIVE OR THE RUN ENDS · n" while everyone in the run is down.
+  local function tickClock()
+   if not clock.Visible then return end
+   local left=lastStandLeft()
+   clock.Text=left and ('REVIVE OR THE RUN ENDS  ·  '..left) or ''
+   if left and left~=clockShown then
+    clockShown=left;clockScale.Scale=1.25
+    TweenService:Create(clockScale,TweenInfo.new(.3,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
+   end
+  end
+  tickClock()
   -- Keep the view right while down: switch views when the last teammate falls (or one is revived),
   -- follow someone else when the watched teammate falls, and count the last stand down.
   task.spawn(function()
    while token==mine and screen.Enabled do
-    task.wait(.25)
-    if token~=mine or not summary then continue end
+    task.wait(.1)
+    if token~=mine then continue end
+    tickClock()
+    if not summary then continue end
     local mates=teammates()
     if (#mates>0 and 'spectate' or 'summary')~=mode then M.redraw()
     elseif mode=='spectate' and not table.find(mates,watching) then follow(mates[1]);M.redraw() end
-    local ends=runState:GetAttribute('LastStandEndsAt')
+    local left=lastStandLeft()
     if countdown and countdown.Parent then
-     countdown.TextColor3=ends and C.negative or C.white
-     countdown.Text=ends and ('REVIVE OR THE RUN ENDS  ·  '..math.max(0,math.ceil(ends-workspace:GetServerTimeNow())))
+     countdown.TextColor3=left and C.negative or C.white
+     countdown.Text=left and ('REVIVE OR THE RUN ENDS  ·  '..left)
       or 'DOWN  ·  '..string.upper(info.map or 'Pine Valley')..'  ·  WAVE '..(info.wave or 1)
     end
    end
   end)
  end
  local function hide()
-  token+=1;screen.Enabled=false;T.hideTouchControls('DeathScreen',false);if summary then summary:Destroy();summary=nil end
+  token+=1;screen.Enabled=false;clock.Visible=false;T.hideTouchControls('DeathScreen',false);if summary then summary:Destroy();summary=nil end
   -- Spectating ends: the camera goes back to this player's own body when there is one.
   if watching then watching=nil;local own=player.Character and player.Character:FindFirstChildOfClass('Humanoid');if own then workspace.CurrentCamera.CameraSubject=own end end
  end
@@ -276,7 +307,7 @@ function M.mount(player)
  player:GetAttributeChangedSignal('RunDown'):Connect(changed)
  root:GetPropertyChangedSignal('AbsoluteSize'):Connect(function() if summary then M.redraw() end end)
  combat:WaitForChild('PurchaseResult').OnClientEvent:Connect(function(key,ok,message)
-  if screen.Enabled and key=='Revive' and type(message)=='string' then T.toast(screen,message,ok and C.lime or C.negative) end
+  if screen.Enabled and Money.isRevive(key) and type(message)=='string' then T.toast(screen,message,ok and C.lime or C.negative) end
  end)
  changed()
  return M

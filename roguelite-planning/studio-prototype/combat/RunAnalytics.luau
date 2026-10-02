@@ -7,7 +7,7 @@
 --   (No progression events: Roblox doesn't chart LogProgressionEvent yet; RunEnd carries the waves.)
 --   Custom events: RunStart (value: gear power; fields: map, class, how soon after the last run),
 --     RunEnd (value: waves cleared; fields: outcome, map, class), Death (value: wave; fields: cause,
---     map, class), RevivePrompt / Revived (value: revive number), and the emeralds a run pays
+--     map, class), RevivePrompt / Revived (value: revive number in the run), and the emeralds a run pays
 --     (economy, source Gameplay).
 -- Unsandboxed (AnalyticsService), required by RogueliteMeta.
 local Analytics=game:GetService('AnalyticsService')
@@ -76,7 +76,8 @@ function A.died(p,wave)
  local cause=hit and os.clock()-hit.at<5 and hit.cause or 'Unknown'
  log('LogCustomEvent',p,'Death',wave,fields('Cause - '..cause,'Map - '..(a and a.path or '?'),classOf(p)))
 end
-function A.revivePrompt(p) log('LogCustomEvent',p,'RevivePrompt',1) end
+-- value: which revive of the run (1 = 65 R$, 2 = 130 R$, ... the price doubles).
+function A.revivePrompt(p,n) log('LogCustomEvent',p,'RevivePrompt',n or 1) end
 function A.revived(p,count) log('LogCustomEvent',p,'Revived',count or 1) end
 -- Emeralds a run paid now (ProfileService.settleRun's return), as an economy source.
 function A.earned(p,amount)

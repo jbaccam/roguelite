@@ -2,7 +2,7 @@
 
 **Status:** Planning proposal  
 **Updated:** 2026-09-26  
-**Confirmed direction:** Purchases may provide bounded, transparent convenience, early access to earnable sidegrades, expression, and the approved limited death-screen revive. They must not sell exclusive or uncapped combat power, and must not sell random gameplay rewards.
+**Confirmed direction:** Purchases may provide bounded, transparent convenience, early access to earnable sidegrades, expression, and the approved death-screen revive (unlimited uses, the price doubling each time up to 1040 R$). They must not sell exclusive or uncapped combat power, and must not sell random gameplay rewards.
 
 Progression itself is defined in [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md): keys from waves survived, chests with weapon and armor copies, copies raising starting tiers, and achievement unlocks.
 
@@ -12,7 +12,7 @@ The user wants chests to be the main spend: **emeralds** (premium currency, sold
 
 Implemented (`studio-prototype/combat/MonetizationConfig.luau`, `ChestConfig.luau`, `ProfileService.luau`, `RogueliteMeta.server.luau`):
 
-- Developer products: Revive 65, Shop Reroll 15, Upgrade Reroll 15, emerald packs 100/550/1200/2600 for 99/449/899/1799, Starter Pack 199 (300 emeralds + Royal Chest, once), early classes 149 each (or 400 emeralds). VIP game pass 399. Robux values are placeholders; Roblox charges the dashboard price.
+- Developer products: Revive 65 / 130 / 260 / 520 / 1040 (one product per price step), Shop Reroll 15, Upgrade Reroll 15, emerald packs 100/550/1200/2600 for 99/449/899/1799, Starter Pack 199 (300 emeralds + Royal Chest, once), early classes 149 each (or 400 emeralds). VIP game pass 399. Robux values are placeholders; Roblox charges the dashboard price.
 - Chests: class chests (3 keys or 60 emeralds, 3 weapons) and a Royal Chest (250 emeralds, 8 weapons from all 36). Exact per-weapon odds are shown before opening. Pick-your-weapon every 10th chest per type.
 - **Policy:** rerolls and emerald-opened chests are paid random items. `PolicyService.ArePaidRandomItemsRestricted` players never see or can use them (server-enforced); odds are always displayed.
 - Receipts are idempotent (processed PurchaseIds stored in the profile). Grants happen only in `ProcessReceipt`; a revive bought after it is no longer usable is refunded as 50 emeralds.
@@ -100,9 +100,9 @@ A fixed, guaranteed pack: one early class unlock of the player's choice, a discl
 
 ### Buyable death-screen revive
 
-- When the player dies, show **REVIVE** and **GIVE UP**.
-- REVIVE opens a repeatable Developer Product prompt. The recommended first price test is about **65 Robux**.
-- Limited to one paid revive per player per run.
+- When the player dies, show **REVIVE** and **LEAVE RUN**.
+- REVIVE opens a Developer Product prompt. **No limit per run, and the price doubles each time** (user, 2026-09-28; built 2026-10-02): the nth revive in a run uses product `Revive1`…`Revive5` = 65 / 130 / 260 / 520 / 1040 R$, and from the 5th on it stays 1040. The count resets each run. The death screen shows this revive's price and the next one's ("next one R$ 130").
+- The client only asks for "a revive"; the server picks the price step from its own count, so a client can't ask for a cheaper one.
 - Restores 50% health, grants three seconds of invulnerability, pushes nearby enemies away, and resumes the same wave and boss state.
 - The server grants it only through validated `MarketplaceService.ProcessReceipt` handling.
 - A revived win counts, pays normal keys, and records its revive count for leaderboard filtering.
@@ -134,7 +134,7 @@ A direct, **non-random** purchase of a chosen weapon or armor copy is technicall
 - Run XP, starting levels or shards
 - Shop rerolls, locks, discounts or improved rarity odds
 - Extra weapon or passive slots
-- Unlimited or repeated revive chains, boss skips, or any other mid-run offer
+- Boss skips, or any mid-run offer other than the doubling-price revive (capped at 1040 R$ each)
 - Paid-only classes, weapons, armor sets or maps
 - Any product framed or balanced as necessary for progression
 

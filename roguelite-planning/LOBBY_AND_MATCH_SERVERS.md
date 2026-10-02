@@ -265,5 +265,15 @@ User direction 2026-10-01: Endless works like Brotato's (the same wave → shop 
 - **Return:** a match server teleports the returning group to a public lobby (`MatchService.toLobby`); the Combined Studio role walks them into the lobby; a Studio forced-Match, or a teleport that fails, puts them back in the arena.
 - **Starter tiers:** the loadout starter enters the run at its owned tier (a Tier II Frying Pan starts at Tier II). See GEAR_POWER.md for the matching map scaling.
 - **Analytics:** see PLAYTEST_ANALYTICS.md.
-- **Still not built:** doubling revive prices (Revive1…Revive5) and more than one revive per run; Play Again with the same party; rejoining a match after disconnecting.
+- **Still not built:** Play Again with the same party; rejoining a match after disconnecting. (Doubling revives: built, below.)
 - **Not tested yet:** everything above needs a Studio Play pass (single player: die solo, revive, let the clock run out, leave between waves, win wave 20 and keep going), and the multi-player parts (spectating, wave-end respawn, last stand with two players, group return) need two real clients or the published game.
+
+## Doubling revives built (2026-10-02, plan J items 6 and 11)
+
+- **Revives:** no limit per run. The nth revive buys product `Revive<n>` from `MonetizationConfig` (65 / 130 / 260 / 520 / 1040 R$; from the 5th on, `Revive5`). The count resets when the player's run ends and when a new run starts at wave 1. `ReviveLimitPerRun` is gone.
+  - The client sends `PurchaseRequest('Revive')`; `RogueliteMeta` turns that into this player's next step, so a client can't ask for a cheaper product. Receipts for any step grant the same revive (or 50 emeralds when it can't be used any more).
+  - `DeathInfo` carries `revive` (which revive this is), `revivePrice` and `nextRevivePrice`. The death screen's button shows "REVIVE · R$ 130" and the note says "Back with 50% health · next one R$ 260".
+  - An open prompt for any step holds the last stand's clock. Analytics `RevivePrompt` and `Revived` carry the revive number.
+  - Product IDs are 0 until the user creates the five products in the Creator Dashboard; Studio simulates the grant, live servers say "Not on sale yet".
+- **Last-stand clock on the splash:** "REVIVE OR THE RUN ENDS · n" now shows under YOU DIED from the first frame (it pops on each new second), and the summary title takes over when the splash fades. So the 10 s stays (user: fine if the countdown is visible the whole time).
+- **Not tested yet:** Studio Play (solo: die, revive at 65, die again and see 130, let the clock run out). Real prompts need the five product IDs and the published game.
