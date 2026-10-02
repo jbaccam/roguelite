@@ -19,10 +19,10 @@
   "geometryUnchanged": true,
   "passed": true,
   "fileHashes": {
-    "Model.blend": "6733ba09e439d9662e2583de1855980be9a64d47baa25e343ca6fc36cceb30d6",
-    "Model.fbx": "f011af4792c9cf5fa7b75503918253dc67d8a52f2c5fc335aa8bfd055c1785f2",
-    "Model.glb": "d7ab3d702bf6c3c5c1b79e9bd522c46fc52a2fd97e4baede7328dff3ce8dc817",
-    "AnimationData.json": "21d4b719eb9c65b0adef692f648ac50d91512ef184e3944c1f6e37c7bf6055cc",
+    "Model.blend": "31f8535f40e57c68e915487bfaecae483fe8ba878b48a00a6f02f38141702669",
+    "Model.fbx": "e264964993f58351408ccf1bec97e7e5ab3fa1b42fafb972f7b64834afce9303",
+    "Model.glb": "0411a9d57002e9e3a8ddfe27997050651689099b941c29b315bb04ab7a44303a",
+    "AnimationData.json": "8ab7806ceb43fb3be84833b648a879d9e275072d482432eed013cc77045d7baa",
     "Geometry.json": "10934bcb0683df3a9f16c56875f90d8ab592188cb29e31b6e601481840e962c5"
   }
 }

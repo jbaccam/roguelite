@@ -1,5 +1,7 @@
 -- Edit-time assembly of native UI imports; run after retargeted clips are installed.
 -- The accepted raw model is never edited. Native rig geometry and every boss are preserved.
+-- Optional: set `local ONLY={werewolf=true}` above this text to rebuild just those templates.
+local ONLY = ONLY
 local storage = game:GetService("ServerStorage")
 local raw = assert(storage:FindFirstChild("RegularEnemyRawImports"), "Import accepted FBX meshes first")
 local folder = assert(storage:FindFirstChild("RogueliteNPCs"), "Missing existing NPC folder")
@@ -16,6 +18,9 @@ freshCatalog:Destroy()
 local animationFolder = assert(combat:FindFirstChild("EnemyAnimations"), "Install retargeted animation modules first")
 local receipts = {}
 for _, config in catalog.List do
+	if ONLY and not ONLY[config.id] then
+		continue
+	end
 	if config.legacy then
 		local native = assert(folder:FindFirstChild(config.template), "Missing preferred native rig")
 		local h = assert(native:FindFirstChildOfClass("Humanoid"), "Missing native humanoid")
@@ -135,6 +140,7 @@ for _, config in catalog.List do
 	npc:SetAttribute("ContactDamage", 0)
 	npc:SetAttribute("AttackDamage", config.damage)
 	npc:SetAttribute("ContactRange", config.attackRange)
+	npc:SetAttribute("RebuildRevision", nil) -- raw-import bookkeeping from AdoptRegularEnemyImport
 	root.Anchored = false
 	if existing then
 		existing:Destroy()
@@ -152,7 +158,7 @@ for _, config in catalog.List do
 	)
 end
 local projectileSources = storage:FindFirstChild("RegularEnemyProjectiles")
-if projectileSources then
+if projectileSources and not ONLY then
 	local destination = combat:FindFirstChild("EnemyProjectileTemplates") or Instance.new("Folder")
 	destination.Name = "EnemyProjectileTemplates"
 	destination.Parent = combat

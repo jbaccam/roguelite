@@ -63,11 +63,11 @@ and, for swords, the sharpened edge (not the flat) facing the swing's travel.
 | Enemy | Attack |
 |---|---|
 | Skeleton | Forward diagonal chop: sword cocked behind the shoulder, over the top and down at the target, off foot steps in. At impact the flat faces the target at most 0.20 (edge at least 0.74) |
-| Frozen Knight | Heavy horizontal sweep: sword hauled back past the hip, cut flat across the front with the whole torso |
+| Frozen Knight | Heavy horizontal sweep, edge leading: sword hauled back past the hip, cut flat across the front with the whole torso, follow-through wrapping past the far hip (2026-10-01 rebuild) |
 | Fire Goblin | Reverse-grip ice-pick stab: fist raised overhead, blade down, driven down and forward with a hop |
 | Mummy | Wide hook: elbow up at shoulder height, fist round at head height |
 | Obsidian Ogre | Straight cross from a jaw-level chamber, hip and shoulder through, lead hand back to guard |
-| Werewolf | Pouncing double claw rake from high and wide |
+| Werewolf | Pouncing double claw rake from high and wide, both claws raking on past the hips (2026-10-01 rebuild) |
 | Ice Elf | Overhand icicle throw, sighting along the off hand |
 | Ash Shaman | Staff planted; open palm gathers the fireball at the hip and thrusts it at chest height |
 | Spitter Zombie | Rear back gulping, lurch forward with the face level to spit |
@@ -194,3 +194,14 @@ python roguelite-planning/mob-production/combat-ready/retarget_studio.py skeleto
 
 `verify_preserved_contacts.py` accepts `fire-goblin` or `bow-skeleton` after `--`.
 `verify_crawler_contacts.py` checks all five arthropods.
+
+## Werewolf and Frozen Knight rebuilds in Studio (2026-10-01)
+
+Both mobs were rebuilt from new reference sheets (`../reference-rebuilds/`, "Werewolf reference rebuild" and "Frozen Knight reference rebuild" in that README). Their attacks gained a longer follow-through: the knight's cut wraps past the far hip, and the werewolf's claws rake on past the hips.
+
+- **Import.** The user imported `../studio-import/sources/{werewolf,frozen-knight}-rebuild.fbx` with Studio's 3D Importer, using Keep Zero Influence Bones. Both came in as Bone rigs, with every MeshPart on a Motor6D to RootPart. That includes the fully rigid knight, which previously imported as a Motor6D chain.
+- **Adoption.** `../../studio-prototype/combat/AdoptRegularEnemyImport.luau` ran ScaleTo 0.01 and put the RootPart at the origin. It filed each import as `ServerStorage.RegularEnemyRawImports.<id>` and moved the old raws to `RegularEnemyRawImportsHistory.<id>-before-rebuild`. It also dumped the receipts. The old receipts are in `../studio-import/history/before-2026-10-01-rebuild/`. A sum over every bone, part and motor number matched the Studio data exactly.
+- **Retarget.** `retarget_studio.py` passes for both, with a world reconstruction error under 3e-7. `build_enemy_animation_modules.py` changed only these two mobs and their `EnemyMotionTuning` entries.
+- **Studio write.** The 13 modules were written to Studio after checking that Studio's Source equalled HEAD. `InstallRegularEnemyTemplates.luau` now takes an optional `ONLY` set and rebuilt just `Werewolf_NPC` (17 bones, HipHeight 2.15) and `FrozenKnight_NPC` (16 bones, HipHeight 1.91).
+- **Check.** Edit-mode copies at rest and posed on the attack impact frame were textured, attached and correctly posed in a plain viewport capture.
+- **Not tested.** No Play test was run. Gameplay, hit timing, multiple clients and the Frozen Pass lighting are untested.

@@ -69,7 +69,7 @@ HUMANOIDS = {
     # so the blade/forearm plane that holds the edges stays horizontal and the
     # edge leads. The palm stays up through the cut, so the forearm may roll
     # past the default 90 degrees, and the elbow follows its hints closely.
-    'frozen-knight': {'weapon': {'Right': KNIGHT_SWORD}, 'bladeLength': 2.6, 'clearWeight': 400, 'strikeWindow': (.40, .70),
+    'frozen-knight': {'weapon': {'Right': KNIGHT_SWORD}, 'bladeLength': 2.6, 'clearWeight': 400, 'strikeWindow': (.40, .72),
                       'tauLimit': 150, 'poleWeight': 3, 'keys': [
         {'t': 0},
         {'t': .18, 'pelvis': (0, -.03, -.03), 'chest': (0, 22, 0),
@@ -84,15 +84,17 @@ HUMANOIDS = {
         {'t': .54, 'pelvis': (0, .18, -.14), 'chest': (10, -16, 2), 'head': (-4, 14, 0),
          'Right': {'w': (.10, .85, -.05), 'pole': (1, 0, 0), 'blade': (.15, .99, 0)},
          'Left': {'w': (.30, .05, -.55), 'pole': (0, -.8, -.5)}, 'LeftFoot': (0, .40, 0)},
-        {'t': .64, 'still': True, 'pelvis': (0, .18, -.15), 'chest': (10, -44, 4), 'head': (-4, 36, 0),
-         'Right': {'w': (-.55, .70, -.08), 'pole': (.6, .8, 0), 'blade': (-.80, .60, 0)},
-         'Left': {'w': (.35, -.30, -.60), 'pole': (0, -.8, -.4)}, 'LeftFoot': (0, .40, 0)},
+        # Follow-through (2026-10-01: user asked for the blade to carry further):
+        # the cut wraps well past the far hip with the torso fully turned.
+        {'t': .67, 'still': True, 'pelvis': (0, .20, -.16), 'chest': (12, -58, 5), 'head': (-4, 46, 0),
+         'Right': {'w': (-.74, .50, -.12), 'pole': (.5, .9, 0), 'blade': (-.95, .30, 0)},
+         'Left': {'w': (.35, -.35, -.60), 'pole': (0, -.8, -.4)}, 'LeftFoot': (0, .40, 0)},
         # Recovery brings the sword round the front, point forward and rising,
         # so it never passes back through the knight's own chest or head.
-        {'t': .74, 'pelvis': (0, .12, -.09), 'chest': (6, -22, 2), 'head': (-2, 16, 0),
+        {'t': .77, 'pelvis': (0, .12, -.09), 'chest': (6, -22, 2), 'head': (-2, 16, 0),
          'Right': {'w': (.05, .80, -.18), 'pole': (.4, -.2, -1), 'blade': (.10, .92, .38)},
          'Left': {'w': (.25, -.10, -.55), 'pole': (0, -.8, -.5)}, 'LeftFoot': (0, .28, .04)},
-        {'t': .86, 'pelvis': (0, .05, -.04), 'chest': (3, -8, 0), 'head': (0, 6, 0),
+        {'t': .88, 'pelvis': (0, .05, -.04), 'chest': (3, -8, 0), 'head': (0, 6, 0),
          'Right': {'w': (.25, .30, -.50), 'pole': (.4, -.6, -.6), 'blade': (.05, .55, .83)},
          'LeftFoot': (0, .10, .06)},
         {'t': 1},
@@ -183,10 +185,11 @@ HUMANOIDS = {
         {'t': .50, 'pelvis': (0, .30, -.12), 'chest': (28, -4, 0), 'head': (-22, 2, 0),
          'Right': {'w': (.05, .88, .18), 'pole': (.8, -.3, -.4), 'flex': (20, 0, 0)},
          'Left': {'w': (.12, .84, .26), 'pole': (.8, -.3, -.4), 'flex': (20, 0, 0)}, 'LeftFoot': (0, .45, 0)},
-        {'t': .60, 'still': True, 'pelvis': (0, .30, -.16), 'chest': (34, -6, 0), 'head': (-26, 4, 0),
-         'Right': {'w': (-.30, .55, -.45), 'pole': (.8, .1, -.5), 'flex': (30, 0, 0)},
-         'Left': {'w': (-.20, .60, -.35), 'pole': (.8, .1, -.5), 'flex': (30, 0, 0)}, 'LeftFoot': (0, .45, 0)},
-        {'t': .82, 'pelvis': (0, .10, -.05), 'chest': (10, 0, 0), 'LeftFoot': (0, .15, .08)},
+        # Follow-through (2026-10-01): both claws rake on past the hips.
+        {'t': .63, 'still': True, 'pelvis': (0, .33, -.19), 'chest': (40, -8, 0), 'head': (-30, 5, 0),
+         'Right': {'w': (-.42, .42, -.62), 'pole': (.8, .1, -.5), 'flex': (36, 0, 0)},
+         'Left': {'w': (-.32, .48, -.54), 'pole': (.8, .1, -.5), 'flex': (36, 0, 0)}, 'LeftFoot': (0, .45, 0)},
+        {'t': .84, 'pelvis': (0, .10, -.05), 'chest': (10, 0, 0), 'LeftFoot': (0, .15, .08)},
         {'t': 1},
     ]},
     # Icicle throw: the elf lifts the conjured icicle behind its head with the

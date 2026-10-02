@@ -1,11 +1,11 @@
 {
   "id": "werewolf",
   "boneCount": 17,
-  "rigType": "Motor6D",
-  "maxWorldMatrixReconstructionError": 2.182268846184776e-07,
-  "maxNativeMotorPartError": 4.547299745638611e-07,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 2.7069810748514556e-07,
+  "maxNativeMotorPartError": 0.0,
   "passed": true,
-  "sourceAnimationHash": "4a9d7c62bf9ec6de0a5cad9072637b96e2088d62c4d86438c5275eaa730d7ca9",
-  "importReceiptHash": "d906e0001b72ce597f13f2aded8b3f67b854e460f42eb3e5eebfb898bbf9440e",
-  "outputHash": "89d56211f15723ada5dbc8d569c129d0ffdfb1a3c1baf7f68dbc4bff39f8553e"
+  "sourceAnimationHash": "8ab7806ceb43fb3be84833b648a879d9e275072d482432eed013cc77045d7baa",
+  "importReceiptHash": "011d9377e534b02af975febf3438a079dda0e520659c4984e0482b6393352b32",
+  "outputHash": "17f1a176c755ebd0d3806996d73b9aa4f52284760c4808a19247f1b05b154492"
 }

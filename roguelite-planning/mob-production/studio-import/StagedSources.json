@@ -106,5 +106,17 @@
     "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\revisions\\werewolf\\Model.fbx",
     "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\werewolf.fbx",
     "Sha256": "43F4C0BBC75F404F7305D693F334F284A55C02B157B5B0B528C7CBA78EB4BA0C"
+  },
+  {
+    "Id": "werewolf-rebuild",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\reference-rebuilds\\werewolf\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\werewolf-rebuild.fbx",
+    "Sha256": "AA3F24F53A04F1BCA7B27F0FA46C9DBBFB10F476CF795D438D7DFDB33D3BE307"
+  },
+  {
+    "Id": "frozen-knight-rebuild",
+    "Source": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\reference-rebuilds\\frozen-knight\\Model.fbx",
+    "Staged": "C:\\Users\\Jeremiah\\Documents\\ChatGPT\\Roblox\\roguelite-planning\\mob-production\\studio-import\\sources\\frozen-knight-rebuild.fbx",
+    "Sha256": "E1DE2956E1B47F7C5AE025DC912EC6904D4991EA410910E3757E77702233CA35"
   }
 ]
