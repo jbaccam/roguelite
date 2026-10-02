@@ -153,14 +153,16 @@ Shop.onWaveCleared=function(wavesPassed)
  for _,p in list do task.spawn(rise,p,spawn and spawn.Position or down[p].position,1) end
 end
 -- Quest kills (QuestService), counted like the leaderboard's: real runs in Combat, credited to the
--- last player to hit (LastDamageUserId), never practice targets. A map boss counts for every
--- member of the run. Kills with Utility weapons also count toward Handy Work.
+-- last player to hit (LastDamageUserId), never practice targets. A boss counts for every member
+-- of the run: a map boss (IsMapBoss) or Pine Valley's Hammer boss (IsHammerBoss, which BossService
+-- tags instead), so "Defeat a Map Boss", the Boss Hunter road and the daily streak all see both.
+-- Kills with Utility weapons also count toward Handy Work.
 local Death=require(combat:WaitForChild('ZombieDeath'))
 local Weapons=require(combat:WaitForChild('WeaponCatalog'))
 Death.onDeath=function(npc)
  if not Profiles.questEvent then return end
  if Shop.phase~='Combat' or Admin.isTestRun() or npc:GetAttribute('PracticeTarget') or npc:GetAttribute('BossPractice') then return end
- if npc:GetAttribute('IsMapBoss') then for p in Shop.members do questEvent(p,'bosses',1) end end
+ if npc:GetAttribute('IsMapBoss') or npc:GetAttribute('IsHammerBoss') then for p in Shop.members do questEvent(p,'bosses',1) end end
  if not Tags:HasTag(npc,'RogueliteZombie') then return end
  local id=npc:GetAttribute('LastDamageUserId')
  local p=type(id)=='number' and Players:GetPlayerByUserId(id) or nil

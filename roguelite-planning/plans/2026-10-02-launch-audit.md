@@ -117,7 +117,7 @@ Waves end on a 30 s timer and pay everyone alive. Nothing checks speed, height o
 
 **Where:** `combat/ShopService.luau:362,621`, `combat/RogueliteMeta.server.luau:123-138`, `combat/LeaderboardService.server.luau:112`
 
-### G2 · The Pine Valley boss doesn't count for boss quests or the streak
+### G2 · The Pine Valley boss doesn't count for boss quests or the streak — **fixed 2026-10-02**
 *Gameplay bugs*
 
 Boss quests check IsMapBoss, but the Hammer boss only sets IsBoss/IsHammerBoss. A new player who rolls "Defeat a Map Boss" and beats the Hammer boss can't finish it, so they lose their daily streak and Boss Hunter progress.
