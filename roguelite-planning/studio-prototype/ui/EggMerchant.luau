@@ -87,9 +87,10 @@ local function pose(t,dt)
  set('Pack',breathe*.025+.01,0,sway*.02)
  set('Shoulder_R',.06+breathe*.03,0,.08)
  set('Elbow_R',.25)
- -- Left hand holds the little egg in front of him, like the concept art.
- set('Shoulder_L',.32+breathe*.02,0,-.1)
- set('Elbow_L',1.05)
+ -- Left hand holds the little egg up in front of him, like the concept art (the rest pose already
+ -- bends that elbow 22 degrees).
+ set('Shoulder_L',.3+breathe*.02,0,-.06)
+ set('Elbow_L',.7)
  set('Hip_L',0,0,-.02);set('Hip_R',0,0,.02)
  eggHop=0;eggSpin=0
  -- An idle egg toss now and then: the forearm flicks and the egg hops and spins.
@@ -99,7 +100,7 @@ local function pose(t,dt)
   else
    local up=math.sin(math.clamp(toss/.8,0,1)*math.pi)
    eggHop=up*1.4;eggSpin=toss/.8*math.pi*2
-   set('Elbow_L',1.05+math.max(0,math.sin(math.clamp(toss/.18,0,1)*math.pi))*.45)
+   set('Elbow_L',.7+math.max(0,math.sin(math.clamp(toss/.18,0,1)*math.pi))*.45)
   end
  end
  local k=t-(modeUntil-(M.Duration[mode] or 0))
@@ -109,18 +110,20 @@ local function pose(t,dt)
   set('Elbow_R',.35,0,.25+w*.5)
   set('Neck',0,0,-.08)
  elseif mode=='present' then
-  -- Right arm out toward the egg, palm up; the body turns a little with it.
+  -- Right arm out toward the egg, palm up (the forearm twists -80 degrees about its own length
+  -- before the elbow bends); the body turns a little with it.
   set('Waist',breathe*.02,-.16,0)
   set('Shoulder_R',1.05+breathe*.03,0,.75)
-  set('Elbow_R',.45)
+  set('Elbow_R',.5,-1.4,0)
  elseif mode=='nod' then
   set('Neck',-math.max(0,math.sin(k*9))*.32,0,0) -- +X looks up, so a nod is negative
   set('Shoulder_R',.2,0,.25);set('Elbow_R',.6)
  elseif mode=='cheer' then
   local hop=math.max(0,math.sin(k*8))
   rootOffset=CFrame.new(0,hop*.45,0)
-  set('Shoulder_R',.2,0,2.6+hop*.15);set('Elbow_R',.3)
-  set('Shoulder_L',.2,0,-2.6-hop*.15);set('Elbow_L',.3)
+  -- Both arms up in front (raising the left arm sideways would hit the bedroll on the pack).
+  set('Shoulder_R',2.5+hop*.15,0,.35);set('Elbow_R',.3)
+  set('Shoulder_L',2.5+hop*.15,0,-.35);set('Elbow_L',.3)
   set('Neck',.2,0,0) -- chin up
  end
 end
@@ -131,7 +134,8 @@ local headYaw,headPitch=0,0
 local function look(dt)
  local want=lookAt
  if not want then
-  local hrp=player.Character and player.Character:FindFirstChild('HumanoidRootPart')
+  local char=player and player.Character
+  local hrp=char and char:FindFirstChild('HumanoidRootPart')
   if hrp and (hrp.Position-pivot0.Position).Magnitude<34 then want=hrp.Position+Vector3.new(0,1.2,0) end
  end
  local yaw,pitch=0,0
@@ -230,6 +234,19 @@ local function greet()
  local d=(hrp.Position-pivot0.Position).Magnitude
  if d<18 and not greeted then greeted=true;M.Wave();M.Say(M.pick('greet'))
  elseif d>30 then greeted=false end
+end
+
+-- Edit-mode checks (no Play session): pose the installed merchant in one mode and leave him there,
+-- or put every part back. Example: M.DebugPose(workspace.RogueliteLobby.EggMerchant.Merchant,'present')
+function M.DebugPose(m,modeName)
+ if model~=m then setup(m) else M.DebugReset() end -- rest = the installed pose, never a posed one
+ mode=modeName or 'idle';modeUntil=os.clock()+(M.Duration[mode] or 1)
+ for _=1,40 do frame(.5) end
+end
+function M.DebugReset()
+ if not model then return end
+ for name,p in parts do p.CFrame=pivot0*rest[name] end
+ mode='idle'
 end
 
 -- Starts once the merchant has streamed in (the EggMerchant model is Persistent); safe to call

@@ -1,0 +1,244 @@
+{
+  "axis": "studio = (-x, z, y) of blender; front = -Z",
+  "parts": {
+    "Merchant_Head": {
+      "centre": [
+        -0.0112,
+        5.49,
+        0.075
+      ],
+      "size": [
+        1.9425,
+        1.78,
+        1.75
+      ],
+      "tris": 1140
+    },
+    "Merchant_Torso": {
+      "centre": [
+        0.0,
+        3.88,
+        0.06
+      ],
+      "size": [
+        2.44,
+        2.04,
+        2.04
+      ],
+      "tris": 1544
+    },
+    "Merchant_Hips": {
+      "centre": [
+        0.0626,
+        2.2422,
+        -0.1028
+      ],
+      "size": [
+        3.0749,
+        1.8957,
+        1.9944
+      ],
+      "tris": 1932
+    },
+    "Merchant_Pack": {
+      "centre": [
+        -0.27,
+        5.5759,
+        1.682
+      ],
+      "size": [
+        3.82,
+        3.9118,
+        2.204
+      ],
+      "tris": 5996
+    },
+    "Merchant_UpperArm_L": {
+      "centre": [
+        -1.8241,
+        4.1955,
+        0.0
+      ],
+      "size": [
+        1.3566,
+        1.5149,
+        1.31
+      ],
+      "tris": 472
+    },
+    "Merchant_UpperArm_R": {
+      "centre": [
+        1.8211,
+        4.1955,
+        0.0
+      ],
+      "size": [
+        1.3506,
+        1.5149,
+        1.31
+      ],
+      "tris": 472
+    },
+    "Merchant_LowerArm_L": {
+      "centre": [
+        -1.9241,
+        3.2662,
+        -0.4652
+      ],
+      "size": [
+        1.3138,
+        1.6273,
+        1.964
+      ],
+      "tris": 1224
+    },
+    "Merchant_LowerArm_R": {
+      "centre": [
+        1.9267,
+        3.1457,
+        -0.1606
+      ],
+      "size": [
+        1.2979,
+        1.8213,
+        1.4835
+      ],
+      "tris": 872
+    },
+    "Merchant_Leg_L": {
+      "centre": [
+        -0.6,
+        1.42,
+        -0.0951
+      ],
+      "size": [
+        1.3126,
+        2.84,
+        1.5028
+      ],
+      "tris": 744
+    },
+    "Merchant_Leg_R": {
+      "centre": [
+        0.6,
+        1.42,
+        -0.0951
+      ],
+      "size": [
+        1.3126,
+        2.84,
+        1.5028
+      ],
+      "tris": 744
+    },
+    "Merchant_HandEgg": {
+      "centre": [
+        -1.946,
+        3.1672,
+        -1.0623
+      ],
+      "size": [
+        0.6638,
+        0.8419,
+        0.6979
+      ],
+      "tris": 168
+    }
+  },
+  "joints": {
+    "Neck": {
+      "parent": "Merchant_Torso",
+      "child": "Merchant_Head",
+      "pivot": [
+        0.0,
+        4.85,
+        0.0
+      ]
+    },
+    "Waist": {
+      "parent": "Merchant_Hips",
+      "child": "Merchant_Torso",
+      "pivot": [
+        0.0,
+        2.95,
+        0.0
+      ]
+    },
+    "Pack": {
+      "parent": "Merchant_Torso",
+      "child": "Merchant_Pack",
+      "pivot": [
+        0.0,
+        4.2,
+        0.62
+      ]
+    },
+    "Shoulder_L": {
+      "parent": "Merchant_Torso",
+      "child": "Merchant_UpperArm_L",
+      "pivot": [
+        -1.8,
+        4.28,
+        0.0
+      ]
+    },
+    "Shoulder_R": {
+      "parent": "Merchant_Torso",
+      "child": "Merchant_UpperArm_R",
+      "pivot": [
+        1.8,
+        4.28,
+        0.0
+      ]
+    },
+    "Elbow_L": {
+      "parent": "Merchant_UpperArm_L",
+      "child": "Merchant_LowerArm_L",
+      "pivot": [
+        -1.8919,
+        3.6264,
+        0.0
+      ]
+    },
+    "Elbow_R": {
+      "parent": "Merchant_UpperArm_R",
+      "child": "Merchant_LowerArm_R",
+      "pivot": [
+        1.8919,
+        3.6264,
+        0.0
+      ]
+    },
+    "Hip_L": {
+      "parent": "Merchant_Hips",
+      "child": "Merchant_Leg_L",
+      "pivot": [
+        -0.6,
+        2.3,
+        0.0
+      ]
+    },
+    "Hip_R": {
+      "parent": "Merchant_Hips",
+      "child": "Merchant_Leg_R",
+      "pivot": [
+        0.6,
+        2.3,
+        0.0
+      ]
+    },
+    "HandEgg": {
+      "parent": "Merchant_LowerArm_L",
+      "child": "Merchant_HandEgg",
+      "pivot": [
+        -1.956,
+        3.1703,
+        -1.0489
+      ]
+    }
+  },
+  "height": 6.38,
+  "top_with_pack": 7.532,
+  "root": "Merchant_Hips",
+  "texture": "textures/merchant-baked.png (TextureID on every MeshPart)"
+}

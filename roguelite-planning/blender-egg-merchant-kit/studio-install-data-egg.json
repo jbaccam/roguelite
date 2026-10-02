@@ -1,0 +1,243 @@
+{
+  "axis": "studio = (-x, z, y) of blender; front = -Z",
+  "parts": {
+    "Pedestal_Base": {
+      "kind": "textured",
+      "centre": [
+        -0.0,
+        0.94,
+        0.0
+      ],
+      "size": [
+        5.678,
+        1.88,
+        5.678
+      ],
+      "tris": 6172
+    },
+    "Pedestal_Nest": {
+      "kind": "textured",
+      "centre": [
+        -0.1608,
+        2.3101,
+        -0.1007
+      ],
+      "size": [
+        5.8415,
+        1.9002,
+        5.6305
+      ],
+      "tris": 3718
+    },
+    "Egg_Bottom": {
+      "kind": "textured",
+      "centre": [
+        -0.0049,
+        3.2831,
+        -0.0025
+      ],
+      "size": [
+        3.3473,
+        2.9662,
+        3.3395
+      ],
+      "tris": 1008
+    },
+    "Egg_Top_1": {
+      "kind": "textured",
+      "centre": [
+        0.6291,
+        4.9791,
+        -0.8573
+      ],
+      "size": [
+        1.7689,
+        1.7443,
+        1.5679
+      ],
+      "tris": 176
+    },
+    "Egg_Top_2": {
+      "kind": "textured",
+      "centre": [
+        -0.6612,
+        4.9877,
+        -0.5047
+      ],
+      "size": [
+        1.9301,
+        1.7618,
+        2.0224
+      ],
+      "tris": 220
+    },
+    "Egg_Top_3": {
+      "kind": "textured",
+      "centre": [
+        -0.6407,
+        4.9837,
+        0.8785
+      ],
+      "size": [
+        1.7783,
+        1.7592,
+        1.4964
+      ],
+      "tris": 180
+    },
+    "Egg_Top_4": {
+      "kind": "textured",
+      "centre": [
+        0.6334,
+        5.0073,
+        0.5231
+      ],
+      "size": [
+        2.001,
+        1.7308,
+        1.9996
+      ],
+      "tris": 228
+    },
+    "Egg_Top_5": {
+      "kind": "textured",
+      "centre": [
+        0.0205,
+        5.9632,
+        0.0043
+      ],
+      "size": [
+        2.1639,
+        0.8737,
+        2.1465
+      ],
+      "tris": 248
+    },
+    "Egg_Crack_1": {
+      "kind": "glow",
+      "centre": [
+        0.0554,
+        4.6167,
+        -1.2849
+      ],
+      "size": [
+        2.6352,
+        1.1042,
+        0.7796
+      ],
+      "tris": 116
+    },
+    "Egg_Crack_2": {
+      "kind": "glow",
+      "centre": [
+        0.0036,
+        4.9836,
+        0.0552
+      ],
+      "size": [
+        3.3265,
+        1.8929,
+        3.2102
+      ],
+      "tris": 596
+    },
+    "Egg_Inner_Glow": {
+      "kind": "floor",
+      "centre": [
+        -0.0,
+        3.938,
+        0.0
+      ],
+      "size": [
+        3.0792,
+        0.32,
+        3.0792
+      ],
+      "tris": 94
+    }
+  },
+  "egg": {
+    "centre": [
+      -0.0049,
+      4.1,
+      -0.0025
+    ],
+    "height": 4.6,
+    "break_height": 4.4304,
+    "top": 6.4,
+    "bottom": 1.8
+  },
+  "shards": {
+    "Egg_Top_1": {
+      "centroid": [
+        0.7858,
+        4.96,
+        -0.9689
+      ],
+      "outward": [
+        0.5519,
+        0.4819,
+        -0.6805
+      ]
+    },
+    "Egg_Top_2": {
+      "centroid": [
+        -0.8638,
+        5.0803,
+        -0.6785
+      ],
+      "outward": [
+        -0.6891,
+        0.4819,
+        -0.5412
+      ]
+    },
+    "Egg_Top_3": {
+      "centroid": [
+        -0.7792,
+        4.9461,
+        0.9861
+      ],
+      "outward": [
+        -0.5432,
+        0.4819,
+        0.6875
+      ]
+    },
+    "Egg_Top_4": {
+      "centroid": [
+        0.8297,
+        5.0947,
+        0.7261
+      ],
+      "outward": [
+        0.6594,
+        0.4819,
+        0.577
+      ]
+    },
+    "Egg_Top_5": {
+      "centroid": [
+        -0.005,
+        5.9094,
+        0.0189
+      ],
+      "outward": [
+        -0.1188,
+        0.9898,
+        -0.0792
+      ]
+    }
+  },
+  "glow_colour": [
+    255,
+    208,
+    118
+  ],
+  "notes": {
+    "textured": "MeshPart TextureID = textures/egg-kit-baked.png",
+    "glow": "Neon in glow_colour; Crack_1 shown at tap 1, Crack_2 added at tap 2, both hidden at the burst",
+    "floor": "Neon in glow_colour; Egg_Inner_Glow shown when the top is gone",
+    "intact": "all Egg_Top_* and Egg_Bottom tile seamlessly at rest (shared vertices, zero gap)"
+  }
+}

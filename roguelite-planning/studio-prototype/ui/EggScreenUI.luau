@@ -72,6 +72,15 @@ local function costRow(parent,amount,icon,size,color)
  return g
 end
 local function zAll(obj,z) for _,d in obj:GetDescendants() do if d:IsA('GuiObject') then d.ZIndex=z end end end
+-- Owned check mark drawn from frames (FredokaOne has no check glyph), like the Armory's.
+local function tick(parent,x,y,size,z)
+ local g=T.make('Frame',parent,{Name='Owned',BackgroundColor3=C.lime,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(size,size),BorderSizePixel=0,ZIndex=z})
+ T.make('UICorner',g,{CornerRadius=UDim.new(1,0)});T.make('UIStroke',g,{Color=Color3.fromRGB(8,10,11),Thickness=2})
+ local w=math.max(2,math.floor(size*.14))
+ T.make('Frame',g,{BackgroundColor3=C.ink,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.36,.58),Size=UDim2.fromOffset(w,size*.3),Rotation=-45,ZIndex=z+1})
+ T.make('Frame',g,{BackgroundColor3=C.ink,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.58,.46),Size=UDim2.fromOffset(w,size*.56),Rotation=40,ZIndex=z+1})
+ return g
+end
 
 -- opts: profile() -> LobbyUI profile, onVisible(bool) hides the lobby HUD, openWindow(name,arg),
 -- need(rec) -> copies for the next tier.
@@ -132,21 +141,21 @@ function U.new(player,opts)
   if card then card:Destroy() end
   card=T.scroll(canvas,'Card',LIST_X-8,L.listY-14,LIST_W+20,L.listH+14)
   local panelH=0
-  local cell,gap=138,8
+  -- 112 px cells: the whole card (about 810 px) fits a 1080p screen without scrolling.
+  local cell,gap=112,8
   local perRow=4
   local odds=Eggs.odds()
   local byR={};for _,o in odds do byR[o.rarity]=byR[o.rarity] or {};table.insert(byR[o.rarity],o) end
   for _,r in Eggs.Rarities do if byR[r] then panelH+=44+math.ceil(#byR[r]/perRow)*(cell+gap)+6 end end
-  local p=T.panel(card,'Egg',8,14,LIST_W,150+panelH+18,'panel');corners(p,Eggs.Aura)
+  local p=T.panel(card,'Egg',8,14,LIST_W,112+panelH+18,'panel');corners(p,Eggs.Aura)
   wash(p,Eggs.Aura,.45,p.ZIndex)
-  local ic=T.icon(p,'Icon',10,-6,138,Eggs.Icon or '');ic.ZIndex=p.ZIndex+2
+  local ic=T.icon(p,'Icon',12,0,104,Eggs.Icon or '');ic.ZIndex=p.ZIndex+2
   local n=owned()
-  local name=left(T.label(p,'Name',Eggs.Name..(n>0 and '  <font color="#91EF14">('..n..')</font>' or ''),156,16,LIST_W-330,50,40));name.RichText=true;name.TextWrapped=false;name.ZIndex=p.ZIndex+2
-  local sub=left(T.text(p,'Sub','Hatches 1 pet  ·  rarer pets are flashier',158,66,LIST_W-180,28,21,C.cream));sub.ZIndex=p.ZIndex+2
+  local name=left(T.label(p,'Name',Eggs.Name..(n>0 and '  <font color="#91EF14">('..n..')</font>' or ''),128,10,LIST_W-310,48,38));name.RichText=true;name.TextWrapped=false;name.ZIndex=p.ZIndex+2
+  local sub=left(T.text(p,'Sub','Hatches 1 pet  ·  rarer pets are flashier',130,70,LIST_W-150,28,21,C.cream));sub.ZIndex=p.ZIndex+2
   local chip=T.panel(p,'Price',LIST_W-172,18,154,48,'inset');chip.ZIndex=p.ZIndex+2
   costRow(chip,fmt(Eggs.Emeralds),'emerald',24,C.emerald);zAll(chip,chip.ZIndex+1)
-  local help=left(T.text(p,'Help','Chance per egg',18,108,LIST_W-36,30,22,C.muted));help.ZIndex=p.ZIndex+2
-  local y=150
+  local y=112
   for _,r in Eggs.Rarities do
    local list=byR[r]
    if list then
@@ -161,13 +170,13 @@ function U.new(player,opts)
      local x=14+((i-1)%perRow)*(cell+gap)
      local c=T.make('Frame',p,{Name='Pet_'..o.id,Position=UDim2.fromOffset(x,y+(i-1)//perRow*(cell+gap)),Size=UDim2.fromOffset(cell,cell),BackgroundColor3=col,BackgroundTransparency=.55,BorderSizePixel=0,ZIndex=p.ZIndex+2})
      T.make('UICorner',c,{CornerRadius=UDim.new(0,8)});T.make('UIStroke',c,{Color=col,Thickness=2})
-     local pi=T.icon(c,'Icon',(cell-92)/2,4,92,petIcon(o.id));pi.ZIndex=c.ZIndex+1
-     local nm=centred(T.label(c,'Name',petName(o.id),4,cell-46,cell-8,22,17,WHITE));nm.ZIndex=c.ZIndex+2;nm.TextWrapped=false
+     local pi=T.icon(c,'Icon',(cell-70)/2,4,70,petIcon(o.id));pi.ZIndex=c.ZIndex+1
+     local nm=centred(T.label(c,'Name',petName(o.id),4,cell-40,cell-8,20,15,WHITE));nm.ZIndex=c.ZIndex+2;nm.TextWrapped=false
      local pct=o.chance>=10 and string.format('%.0f%%',o.chance) or string.format('%.1f%%',o.chance)
-     local pl=centred(T.label(c,'Chance',pct,4,cell-26,cell-8,24,21,col:Lerp(WHITE,.55)));pl.ZIndex=c.ZIndex+2
+     local pl=centred(T.label(c,'Chance',pct,4,cell-21,cell-8,19,18,col:Lerp(WHITE,.55)));pl.ZIndex=c.ZIndex+2
      local held=opts.profile and opts.profile().pets
      if type(held)=='table' and held[o.id] then
-      local tick=T.label(c,'Owned','✓',cell-30,2,26,26,22,C.lime);tick.ZIndex=c.ZIndex+2
+      tick(c,cell-30,4,24,c.ZIndex+2)
      end
     end
     y+=math.ceil(#list/perRow)*(cell+gap)+6

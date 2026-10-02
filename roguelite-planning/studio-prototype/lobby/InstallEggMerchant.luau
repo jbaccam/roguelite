@@ -17,6 +17,9 @@
 -- ServerStorage.EggMerchantBackup, so putting it back is a drag. Re-running repairs in place.
 -- Textured parts use MeshPart.TextureID (one uploaded atlas per group; a multi-model FBX import
 -- gives every mesh the same texture, and SurfaceAppearance can render blank in Play).
+-- opts.test: accept plain Parts as stand-ins for the meshes and leave the practice dummy alone
+-- (an Edit-mode check of the fitting, assembly and placement before the real import).
+-- opts.egg / opts.merchant: the two install-data tables, to run without the HTTP server.
 return function(base, opts)
 	base = base or "http://127.0.0.1:8857/"
 	opts = opts or {}
@@ -30,8 +33,9 @@ return function(base, opts)
 	local function v3(t)
 		return Vector3.new(t[1], t[2], t[3])
 	end
-	local EGG = json("studio-install-data-egg.json")
-	local MER = json("studio-install-data-merchant.json")
+	local EGG = opts.egg or json("studio-install-data-egg.json")
+	local MER = opts.merchant or json("studio-install-data-merchant.json")
+	local partClass = opts.test and "BasePart" or "MeshPart"
 
 	-- Where things stand (world): the dummy's spot, facing the path (+Z).
 	local EGG_XZ = Vector2.new(-1401.94, 155.0)
@@ -45,7 +49,7 @@ return function(base, opts)
 		return EGG.parts[name] ~= nil or MER.parts[name] ~= nil
 	end
 	for _, d in workspace:GetDescendants() do
-		if d:IsA("MeshPart") and want(d.Name) then
+		if d:IsA(partClass) and want(d.Name) then
 			-- Prefer a fresh import over the installed copy when both exist.
 			if not found[d.Name] or (root and found[d.Name]:IsDescendantOf(root)) then
 				found[d.Name] = d
@@ -104,12 +108,16 @@ return function(base, opts)
 		p.CanTouch = false
 		p.Locked = true
 		if textured then
-			p.TextureID = texture or p.TextureID
+			if p:IsA("MeshPart") then
+				p.TextureID = texture or p.TextureID
+			end
 			p.Material = Enum.Material.SmoothPlastic
 			p.Color = Color3.new(1, 1, 1)
 			p.CastShadow = true
 		else
-			p.TextureID = ""
+			if p:IsA("MeshPart") then
+				p.TextureID = ""
+			end
 			p.Material = Enum.Material.Neon
 			p.CastShadow = false
 		end
@@ -216,7 +224,7 @@ return function(base, opts)
 
 	-- The practice dummy that stood here goes to the backup folder.
 	local dummy = lobby:FindFirstChild("Scenery") and lobby.Scenery:FindFirstChild("Practice_Dummy_86")
-	if dummy and (Vector2.new(dummy.Position.X, dummy.Position.Z) - EGG_XZ).Magnitude < 3 then
+	if dummy and not opts.test and (Vector2.new(dummy.Position.X, dummy.Position.Z) - EGG_XZ).Magnitude < 3 then
 		dummy.Parent = backup
 		table.insert(report, "moved Practice_Dummy_86 to ServerStorage.EggMerchantBackup")
 	end
@@ -225,6 +233,9 @@ return function(base, opts)
 	root.Name = "EggMerchant"
 	root.ModelStreamingMode = Enum.ModelStreamingMode.Persistent
 	local ignore = { root, eggModel, merModel, backup }
+	if dummy then
+		table.insert(ignore, dummy) -- test mode leaves it standing on the egg's spot
+	end
 	local eggY = ground(EGG_XZ, ignore)
 	local merY = ground(MERCHANT_XZ, ignore)
 	local eggPos = Vector3.new(EGG_XZ.X, eggY, EGG_XZ.Y)

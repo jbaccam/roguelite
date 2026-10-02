@@ -1,0 +1,385 @@
+{
+  "asset": "Egg Merchant NPC",
+  "blender_version": "5.2.1 LTS",
+  "authoring": "final Roblox stud size; import at 1:1, do not scale. Blender Z-up, facing -Y, soles on z=0",
+  "texture": "textures/merchant-baked.png (1024x1024, baked icon lighting, one atlas for every part)",
+  "rest_pose": {
+    "arm_splay_deg": 8.0,
+    "elbow_bend_deg": {
+      "L": 22.0,
+      "R": 12.0
+    }
+  },
+  "joints_blender": {
+    "Neck": {
+      "parent": "Merchant_Torso",
+      "child": "Merchant_Head",
+      "pivot": [
+        0.0,
+        0.0,
+        4.85
+      ]
+    },
+    "Waist": {
+      "parent": "Merchant_Hips",
+      "child": "Merchant_Torso",
+      "pivot": [
+        0.0,
+        0.0,
+        2.95
+      ]
+    },
+    "Pack": {
+      "parent": "Merchant_Torso",
+      "child": "Merchant_Pack",
+      "pivot": [
+        0.0,
+        0.62,
+        4.2
+      ]
+    },
+    "Shoulder_L": {
+      "parent": "Merchant_Torso",
+      "child": "Merchant_UpperArm_L",
+      "pivot": [
+        1.8,
+        0.0,
+        4.28
+      ]
+    },
+    "Shoulder_R": {
+      "parent": "Merchant_Torso",
+      "child": "Merchant_UpperArm_R",
+      "pivot": [
+        -1.8,
+        0.0,
+        4.28
+      ]
+    },
+    "Elbow_L": {
+      "parent": "Merchant_UpperArm_L",
+      "child": "Merchant_LowerArm_L",
+      "pivot": [
+        1.8919,
+        0.0,
+        3.6264
+      ]
+    },
+    "Elbow_R": {
+      "parent": "Merchant_UpperArm_R",
+      "child": "Merchant_LowerArm_R",
+      "pivot": [
+        -1.8919,
+        0.0,
+        3.6264
+      ]
+    },
+    "Hip_L": {
+      "parent": "Merchant_Hips",
+      "child": "Merchant_Leg_L",
+      "pivot": [
+        0.6,
+        0.0,
+        2.3
+      ]
+    },
+    "Hip_R": {
+      "parent": "Merchant_Hips",
+      "child": "Merchant_Leg_R",
+      "pivot": [
+        -0.6,
+        0.0,
+        2.3
+      ]
+    },
+    "HandEgg": {
+      "parent": "Merchant_LowerArm_L",
+      "child": "Merchant_HandEgg",
+      "pivot": [
+        1.956,
+        -1.0489,
+        3.1703
+      ]
+    }
+  },
+  "parts": {
+    "Merchant_Head": {
+      "triangles": 1140,
+      "vertices": 586,
+      "bbox_min": [
+        -0.96,
+        -0.8,
+        4.6
+      ],
+      "bbox_max": [
+        0.9825,
+        0.95,
+        6.38
+      ],
+      "dimensions_studs": [
+        1.9425,
+        1.75,
+        1.78
+      ],
+      "uv_range": [
+        0.0072,
+        0.9436,
+        0.0072,
+        0.961
+      ]
+    },
+    "Merchant_Torso": {
+      "triangles": 1544,
+      "vertices": 828,
+      "bbox_min": [
+        -1.22,
+        -0.96,
+        2.86
+      ],
+      "bbox_max": [
+        1.22,
+        1.08,
+        4.9
+      ],
+      "dimensions_studs": [
+        2.44,
+        2.04,
+        2.04
+      ],
+      "uv_range": [
+        0.0072,
+        0.9927,
+        0.0072,
+        0.937
+      ]
+    },
+    "Merchant_Hips": {
+      "triangles": 1932,
+      "vertices": 1000,
+      "bbox_min": [
+        -1.6,
+        -1.1,
+        1.2943
+      ],
+      "bbox_max": [
+        1.4749,
+        0.8944,
+        3.19
+      ],
+      "dimensions_studs": [
+        3.0749,
+        1.9944,
+        1.8957
+      ],
+      "uv_range": [
+        0.0072,
+        0.9928,
+        0.0072,
+        0.9776
+      ]
+    },
+    "Merchant_Pack": {
+      "triangles": 5996,
+      "vertices": 3246,
+      "bbox_min": [
+        -1.64,
+        0.58,
+        3.62
+      ],
+      "bbox_max": [
+        2.18,
+        2.784,
+        7.5318
+      ],
+      "dimensions_studs": [
+        3.82,
+        2.204,
+        3.9118
+      ],
+      "uv_range": [
+        0.0072,
+        0.9928,
+        0.0072,
+        0.9927
+      ]
+    },
+    "Merchant_UpperArm_L": {
+      "triangles": 472,
+      "vertices": 240,
+      "bbox_min": [
+        1.1458,
+        -0.655,
+        3.438
+      ],
+      "bbox_max": [
+        2.5024,
+        0.655,
+        4.9529
+      ],
+      "dimensions_studs": [
+        1.3566,
+        1.31,
+        1.5149
+      ],
+      "uv_range": [
+        0.0614,
+        0.9054,
+        0.0429,
+        0.925
+      ]
+    },
+    "Merchant_UpperArm_R": {
+      "triangles": 472,
+      "vertices": 240,
+      "bbox_min": [
+        -2.4964,
+        -0.655,
+        3.438
+      ],
+      "bbox_max": [
+        -1.1458,
+        0.655,
+        4.9529
+      ],
+      "dimensions_studs": [
+        1.3506,
+        1.31,
+        1.5149
+      ],
+      "uv_range": [
+        0.0229,
+        0.9054,
+        0.0072,
+        0.925
+      ]
+    },
+    "Merchant_LowerArm_L": {
+      "triangles": 1224,
+      "vertices": 648,
+      "bbox_min": [
+        1.2672,
+        -1.4471,
+        2.4526
+      ],
+      "bbox_max": [
+        2.581,
+        0.5168,
+        4.0799
+      ],
+      "dimensions_studs": [
+        1.3138,
+        1.964,
+        1.6273
+      ],
+      "uv_range": [
+        0.0072,
+        0.9604,
+        0.0072,
+        0.9776
+      ]
+    },
+    "Merchant_LowerArm_R": {
+      "triangles": 872,
+      "vertices": 456,
+      "bbox_min": [
+        -2.5757,
+        -0.9023,
+        2.2351
+      ],
+      "bbox_max": [
+        -1.2777,
+        0.5812,
+        4.0564
+      ],
+      "dimensions_studs": [
+        1.2979,
+        1.4835,
+        1.8213
+      ],
+      "uv_range": [
+        0.0587,
+        0.9051,
+        0.0072,
+        0.9048
+      ]
+    },
+    "Merchant_Leg_L": {
+      "triangles": 744,
+      "vertices": 382,
+      "bbox_min": [
+        -0.0563,
+        -0.8465,
+        0.0
+      ],
+      "bbox_max": [
+        1.2563,
+        0.6563,
+        2.84
+      ],
+      "dimensions_studs": [
+        1.3126,
+        1.5028,
+        2.84
+      ],
+      "uv_range": [
+        0.1,
+        0.9771,
+        0.0072,
+        0.7241
+      ]
+    },
+    "Merchant_Leg_R": {
+      "triangles": 744,
+      "vertices": 382,
+      "bbox_min": [
+        -1.2563,
+        -0.8465,
+        0.0
+      ],
+      "bbox_max": [
+        0.0563,
+        0.6563,
+        2.84
+      ],
+      "dimensions_studs": [
+        1.3126,
+        1.5028,
+        2.84
+      ],
+      "uv_range": [
+        0.0072,
+        0.9496,
+        0.0072,
+        0.9771
+      ]
+    },
+    "Merchant_HandEgg": {
+      "triangles": 168,
+      "vertices": 86,
+      "bbox_min": [
+        1.6141,
+        -1.4113,
+        2.7463
+      ],
+      "bbox_max": [
+        2.2779,
+        -0.7134,
+        3.5882
+      ],
+      "dimensions_studs": [
+        0.6638,
+        0.6979,
+        0.8419
+      ],
+      "uv_range": [
+        0.0266,
+        0.8153,
+        0.0072,
+        0.816
+      ]
+    }
+  },
+  "height_studs": 6.38,
+  "top_with_pack": 7.532,
+  "total_triangles": 15308
+}

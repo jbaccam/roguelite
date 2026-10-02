@@ -1,0 +1,302 @@
+{
+  "fbx": {
+    "ok": true,
+    "problems": [],
+    "objects": 11,
+    "parts": {
+      "Pedestal_Base": {
+        "tris": 6172,
+        "dims": [
+          5.678,
+          5.678,
+          1.88
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Pedestal_Nest": {
+        "tris": 3718,
+        "dims": [
+          5.8415,
+          5.6305,
+          1.9002
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Bottom": {
+        "tris": 1008,
+        "dims": [
+          3.3473,
+          3.3395,
+          2.9662
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Top_1": {
+        "tris": 176,
+        "dims": [
+          1.7689,
+          1.5679,
+          1.7443
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Top_2": {
+        "tris": 220,
+        "dims": [
+          1.9301,
+          2.0224,
+          1.7618
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Top_3": {
+        "tris": 180,
+        "dims": [
+          1.7783,
+          1.4964,
+          1.7592
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Top_4": {
+        "tris": 228,
+        "dims": [
+          2.001,
+          1.9996,
+          1.7308
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Top_5": {
+        "tris": 248,
+        "dims": [
+          2.1639,
+          2.1465,
+          0.8737
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Crack_1": {
+        "tris": 116,
+        "dims": [
+          2.6352,
+          0.7796,
+          1.1042
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Crack_2": {
+        "tris": 596,
+        "dims": [
+          3.3265,
+          3.2102,
+          1.8929
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Inner_Glow": {
+        "tris": 94,
+        "dims": [
+          3.0792,
+          3.0792,
+          0.32
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      }
+    }
+  },
+  "glb": {
+    "ok": true,
+    "problems": [],
+    "objects": 11,
+    "parts": {
+      "Pedestal_Base": {
+        "tris": 6172,
+        "dims": [
+          5.678,
+          5.678,
+          1.88
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Pedestal_Nest": {
+        "tris": 3718,
+        "dims": [
+          5.8415,
+          5.6305,
+          1.9002
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Bottom": {
+        "tris": 1008,
+        "dims": [
+          3.3473,
+          3.3395,
+          2.9662
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Top_1": {
+        "tris": 176,
+        "dims": [
+          1.7689,
+          1.5679,
+          1.7443
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Top_2": {
+        "tris": 220,
+        "dims": [
+          1.9301,
+          2.0224,
+          1.7618
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Top_3": {
+        "tris": 180,
+        "dims": [
+          1.7783,
+          1.4964,
+          1.7592
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Top_4": {
+        "tris": 228,
+        "dims": [
+          2.001,
+          1.9996,
+          1.7308
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Top_5": {
+        "tris": 248,
+        "dims": [
+          2.1639,
+          2.1465,
+          0.8737
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Crack_1": {
+        "tris": 116,
+        "dims": [
+          2.6352,
+          0.7796,
+          1.1042
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Crack_2": {
+        "tris": 596,
+        "dims": [
+          3.3265,
+          3.2102,
+          1.8929
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      },
+      "Egg_Inner_Glow": {
+        "tris": 94,
+        "dims": [
+          3.0792,
+          3.0792,
+          0.32
+        ],
+        "uv_layers": [
+          "UVMap"
+        ],
+        "zero_area_faces": 0,
+        "identity_transform": true
+      }
+    }
+  }
+}

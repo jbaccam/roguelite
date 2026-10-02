@@ -169,3 +169,10 @@ Added the same day as replacements (both passed moderation and load): echoes_of_
   - `water_bubbles` 9120309620 (Underwater Bubbles);
   - `thunder_crack` 9114157695 (Doppler Whooshes Crackly Airy Bursts);
   - `ghost_rise` 9120733055 (Whoosh Rising Swish Airy).
+
+## Egg merchant, egg pedestal and egg hatch — 2026-10-02
+
+- **Models:** repository-authored in `../blender-egg-merchant-kit/` (`build_egg.py`, `build_merchant.py`), from the user's concept `../art-references/egg-merchant/egg-merchant-concept-v1.png` (without the egg in the hood and the belt on the big egg). `package_studio.py` joins both into `exports/fbx/egg-merchant-studio.fbx` for one Studio 3D Import; `lobby/InstallEggMerchant.luau` places them on the quest-board island. No Creator Store geometry.
+- **Textures** (baked atlases, set as MeshPart.TextureID by the installer): egg kit `rbxassetid://140294240008480` (`textures/egg-kit-baked.png`), merchant `rbxassetid://130996618550776` (`textures/merchant-baked.png`).
+- **Egg icon** (UI, `previews/icon-egg.png`): `rbxassetid://117887028525234` (EggConfig.Icon, the EGGS stand label).
+- **Sounds:** no new uploads. The hatch reuses ChestFX sounds: the Gold chest's wood-crack taps for the two cracks, Charge, Burst, Chime and the Legendary sting.

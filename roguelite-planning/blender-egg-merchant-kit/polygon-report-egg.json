@@ -1,0 +1,308 @@
+{
+  "blender_version": "5.2.1 LTS",
+  "units": "studs at final size; import 1:1, do not scale",
+  "axes": "Blender Z-up, front -Y; every object origin at world origin with identity transform",
+  "texture": "textures/egg-kit-baked.png (1024x1024, baked icon lighting, UVMap)",
+  "painted_source": "textures/egg-kit.png (2048x2048, unbaked)",
+  "parts": {
+    "Pedestal_Base": {
+      "kind": "textured",
+      "triangles": 6172,
+      "vertices": 3216,
+      "bbox_min": [
+        -2.839,
+        -2.839,
+        0.0
+      ],
+      "bbox_max": [
+        2.839,
+        2.839,
+        1.88
+      ],
+      "dimensions_studs": [
+        5.678,
+        5.678,
+        1.88
+      ],
+      "uv_range": [
+        0.0059,
+        0.9935,
+        0.0059,
+        0.9941
+      ]
+    },
+    "Pedestal_Nest": {
+      "kind": "textured",
+      "triangles": 3718,
+      "vertices": 2049,
+      "bbox_min": [
+        -2.76,
+        -2.9159,
+        1.36
+      ],
+      "bbox_max": [
+        3.0815,
+        2.7146,
+        3.2602
+      ],
+      "dimensions_studs": [
+        5.8415,
+        5.6305,
+        1.9002
+      ],
+      "uv_range": [
+        0.0059,
+        0.9935,
+        0.0059,
+        0.9822
+      ]
+    },
+    "Egg_Bottom": {
+      "kind": "textured",
+      "triangles": 1008,
+      "vertices": 506,
+      "bbox_min": [
+        -1.6688,
+        -1.6723,
+        1.8
+      ],
+      "bbox_max": [
+        1.6785,
+        1.6672,
+        4.7662
+      ],
+      "dimensions_studs": [
+        3.3473,
+        3.3395,
+        2.9662
+      ],
+      "uv_range": [
+        0.0059,
+        0.9405,
+        0.0059,
+        0.9408
+      ]
+    },
+    "Egg_Top_1": {
+      "kind": "textured",
+      "triangles": 176,
+      "vertices": 90,
+      "bbox_min": [
+        -1.5135,
+        -1.6413,
+        4.1069
+      ],
+      "bbox_max": [
+        0.2553,
+        -0.0734,
+        5.8513
+      ],
+      "dimensions_studs": [
+        1.7689,
+        1.5679,
+        1.7443
+      ],
+      "uv_range": [
+        0.0427,
+        0.9092,
+        0.0059,
+        0.8919
+      ]
+    },
+    "Egg_Top_2": {
+      "kind": "textured",
+      "triangles": 220,
+      "vertices": 112,
+      "bbox_min": [
+        -0.3039,
+        -1.5159,
+        4.1068
+      ],
+      "bbox_max": [
+        1.6262,
+        0.5065,
+        5.8685
+      ],
+      "dimensions_studs": [
+        1.9301,
+        2.0224,
+        1.7618
+      ],
+      "uv_range": [
+        0.0059,
+        0.9253,
+        0.3117,
+        0.9408
+      ]
+    },
+    "Egg_Top_3": {
+      "kind": "textured",
+      "triangles": 180,
+      "vertices": 92,
+      "bbox_min": [
+        -0.2485,
+        0.1303,
+        4.1041
+      ],
+      "bbox_max": [
+        1.5298,
+        1.6267,
+        5.8633
+      ],
+      "dimensions_studs": [
+        1.7783,
+        1.4964,
+        1.7592
+      ],
+      "uv_range": [
+        0.0059,
+        0.9255,
+        0.0917,
+        0.8918
+      ]
+    },
+    "Egg_Top_4": {
+      "kind": "textured",
+      "triangles": 228,
+      "vertices": 116,
+      "bbox_min": [
+        -1.634,
+        -0.4767,
+        4.1419
+      ],
+      "bbox_max": [
+        0.3671,
+        1.5229,
+        5.8727
+      ],
+      "dimensions_studs": [
+        2.001,
+        1.9996,
+        1.7308
+      ],
+      "uv_range": [
+        0.1041,
+        0.9253,
+        0.0193,
+        0.9407
+      ]
+    },
+    "Egg_Top_5": {
+      "kind": "textured",
+      "triangles": 248,
+      "vertices": 126,
+      "bbox_min": [
+        -1.1025,
+        -1.0689,
+        5.5263
+      ],
+      "bbox_max": [
+        1.0614,
+        1.0775,
+        6.4
+      ],
+      "dimensions_studs": [
+        2.1639,
+        2.1465,
+        0.8737
+      ],
+      "uv_range": [
+        0.0756,
+        0.8742,
+        0.0059,
+        0.8541
+      ]
+    },
+    "Egg_Crack_1": {
+      "kind": "glow",
+      "triangles": 116,
+      "vertices": 80,
+      "bbox_min": [
+        -1.373,
+        -1.6747,
+        4.0645
+      ],
+      "bbox_max": [
+        1.2622,
+        -0.8951,
+        5.1688
+      ],
+      "dimensions_studs": [
+        2.6352,
+        0.7796,
+        1.1042
+      ],
+      "uv_range": [
+        0.01,
+        0.99,
+        0.0279,
+        0.8833
+      ]
+    },
+    "Egg_Crack_2": {
+      "kind": "glow",
+      "triangles": 596,
+      "vertices": 404,
+      "bbox_min": [
+        -1.6669,
+        -1.5499,
+        4.0372
+      ],
+      "bbox_max": [
+        1.6596,
+        1.6603,
+        5.9301
+      ],
+      "dimensions_studs": [
+        3.3265,
+        3.2102,
+        1.8929
+      ],
+      "uv_range": [
+        0.01,
+        0.99,
+        0.0712,
+        0.9023
+      ]
+    },
+    "Egg_Inner_Glow": {
+      "kind": "floor",
+      "triangles": 94,
+      "vertices": 49,
+      "bbox_min": [
+        -1.5396,
+        -1.5396,
+        3.778
+      ],
+      "bbox_max": [
+        1.5396,
+        1.5396,
+        4.098
+      ],
+      "dimensions_studs": [
+        3.0792,
+        3.0792,
+        0.32
+      ],
+      "uv_range": [
+        0.01,
+        0.99,
+        0.01,
+        0.776
+      ]
+    }
+  },
+  "totals": {
+    "egg_all_pieces": 2866,
+    "pedestal_and_nest": 9890,
+    "all": 12756
+  },
+  "egg": {
+    "height": 4.6,
+    "width_x": 3.3473,
+    "depth_y": 3.3395,
+    "bottom_z": 1.8,
+    "top_z": 6.4,
+    "break_z_mean": 4.4304
+  }
+}

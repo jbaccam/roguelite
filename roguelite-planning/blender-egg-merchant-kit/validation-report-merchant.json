@@ -1,0 +1,93 @@
+{
+  "fbx": {
+    "ok": true,
+    "problems": [],
+    "total_triangles": 15308,
+    "transforms": {
+      "Merchant_HandEgg": "identity",
+      "Merchant_Head": "identity",
+      "Merchant_Hips": "identity",
+      "Merchant_Leg_L": "identity",
+      "Merchant_Leg_R": "identity",
+      "Merchant_LowerArm_L": "identity",
+      "Merchant_LowerArm_R": "identity",
+      "Merchant_Pack": "identity",
+      "Merchant_Torso": "identity",
+      "Merchant_UpperArm_L": "identity",
+      "Merchant_UpperArm_R": "identity"
+    },
+    "scene_objects": [
+      "Merchant_HandEgg",
+      "Merchant_Head",
+      "Merchant_Hips",
+      "Merchant_Leg_L",
+      "Merchant_Leg_R",
+      "Merchant_LowerArm_L",
+      "Merchant_LowerArm_R",
+      "Merchant_Pack",
+      "Merchant_Torso",
+      "Merchant_UpperArm_L",
+      "Merchant_UpperArm_R"
+    ]
+  },
+  "glb": {
+    "ok": true,
+    "problems": [],
+    "total_triangles": 15308,
+    "transforms": {
+      "Merchant_HandEgg": "identity",
+      "Merchant_Head": "identity",
+      "Merchant_Hips": "identity",
+      "Merchant_Leg_L": "identity",
+      "Merchant_Leg_R": "identity",
+      "Merchant_LowerArm_L": "identity",
+      "Merchant_LowerArm_R": "identity",
+      "Merchant_Pack": "identity",
+      "Merchant_Torso": "identity",
+      "Merchant_UpperArm_L": "identity",
+      "Merchant_UpperArm_R": "identity"
+    },
+    "scene_objects": [
+      "Merchant_HandEgg",
+      "Merchant_Head",
+      "Merchant_Hips",
+      "Merchant_Leg_L",
+      "Merchant_Leg_R",
+      "Merchant_LowerArm_L",
+      "Merchant_LowerArm_R",
+      "Merchant_Pack",
+      "Merchant_Torso",
+      "Merchant_UpperArm_L",
+      "Merchant_UpperArm_R"
+    ]
+  },
+  "pose_check": {
+    "shoulder_R": {
+      "swing_deg": 80,
+      "toward": "out, 25 deg to the front",
+      "quaternion_wxyz": [
+        0.80504,
+        -0.25598,
+        0.53394,
+        0.03598
+      ]
+    },
+    "elbow_R": {
+      "flex_deg": 70,
+      "twist_deg_for_palm_up": 165.0,
+      "palm_up_dot": 0.938,
+      "quaternion_wxyz_in_rest_frame": [
+        0.10692,
+        -0.16824,
+        -0.7251,
+        -0.65916
+      ]
+    },
+    "neck": {
+      "turn_deg": 20,
+      "toward": "his right (-X blender / +X studio)"
+    },
+    "render": "previews/merchant-pose-check.png"
+  },
+  "ok": true
+}
