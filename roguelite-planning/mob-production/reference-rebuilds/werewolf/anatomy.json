@@ -1,0 +1,215 @@
+{
+  "body": "fused faceted fur skin with voxel-merged mane, bib and fur shards",
+  "reference": "../../../art-references/werewolf-redesign/werewolf-turnaround-v1.png",
+  "status": "shape review before rigging",
+  "bones": {
+    "Pelvis": [
+      [
+        0,
+        0.04,
+        2.62
+      ],
+      [
+        0,
+        0.02,
+        3.42
+      ],
+      null
+    ],
+    "Chest": [
+      [
+        0,
+        0.02,
+        3.42
+      ],
+      [
+        0,
+        -0.22,
+        5.28
+      ],
+      "Pelvis"
+    ],
+    "Head": [
+      [
+        0,
+        -0.22,
+        5.28
+      ],
+      [
+        0,
+        -0.55,
+        6.45
+      ],
+      "Chest"
+    ],
+    "Tail": [
+      [
+        0,
+        0.7,
+        2.8
+      ],
+      [
+        0,
+        1.25,
+        1.85
+      ],
+      "Pelvis"
+    ],
+    "LeftUpperArm": [
+      [
+        -1.42,
+        -0.03,
+        4.88
+      ],
+      [
+        -1.62,
+        0.03,
+        3.74
+      ],
+      "Chest"
+    ],
+    "LeftForearm": [
+      [
+        -1.62,
+        0.03,
+        3.74
+      ],
+      [
+        -1.88,
+        -0.08,
+        2.62
+      ],
+      "LeftUpperArm"
+    ],
+    "LeftHand": [
+      [
+        -1.88,
+        -0.08,
+        2.62
+      ],
+      [
+        -1.9,
+        -0.13,
+        1.82
+      ],
+      "LeftForearm"
+    ],
+    "LeftThigh": [
+      [
+        -0.56,
+        0.04,
+        2.65
+      ],
+      [
+        -0.78,
+        -0.06,
+        1.6
+      ],
+      "Pelvis"
+    ],
+    "LeftShin": [
+      [
+        -0.78,
+        -0.06,
+        1.6
+      ],
+      [
+        -0.86,
+        0.14,
+        0.52
+      ],
+      "LeftThigh"
+    ],
+    "LeftFoot": [
+      [
+        -0.86,
+        0.14,
+        0.52
+      ],
+      [
+        -0.92,
+        -0.75,
+        0.18
+      ],
+      "LeftShin"
+    ],
+    "RightUpperArm": [
+      [
+        1.42,
+        -0.03,
+        4.88
+      ],
+      [
+        1.62,
+        0.03,
+        3.74
+      ],
+      "Chest"
+    ],
+    "RightForearm": [
+      [
+        1.62,
+        0.03,
+        3.74
+      ],
+      [
+        1.88,
+        -0.08,
+        2.62
+      ],
+      "RightUpperArm"
+    ],
+    "RightHand": [
+      [
+        1.88,
+        -0.08,
+        2.62
+      ],
+      [
+        1.9,
+        -0.13,
+        1.82
+      ],
+      "RightForearm"
+    ],
+    "RightThigh": [
+      [
+        0.56,
+        0.04,
+        2.65
+      ],
+      [
+        0.78,
+        -0.06,
+        1.6
+      ],
+      "Pelvis"
+    ],
+    "RightShin": [
+      [
+        0.78,
+        -0.06,
+        1.6
+      ],
+      [
+        0.86,
+        0.14,
+        0.52
+      ],
+      "RightThigh"
+    ],
+    "RightFoot": [
+      [
+        0.86,
+        0.14,
+        0.52
+      ],
+      [
+        0.92,
+        -0.75,
+        0.18
+      ],
+      "RightShin"
+    ]
+  }
+}

@@ -73,6 +73,30 @@ if skin:
             for n,value in arms.items():row[n]=value*arm
             w[vertex.index]=0
             for n,value in row.items():w[vertex.index,inds[n]]=value
+    if ID=='werewolf':
+        # Fur skin regions. Below the armpit the arms hang clear of the torso,
+        # so a sharp |x| split is safe; the face ruff (ManeMask) stays on the
+        # Chest/Head even where its shards flare out past the shoulders.
+        def smooth(a,b,x):
+            t=max(0,min(1,(x-a)/(b-a)));return t*t*(3-2*t)
+        mane=skin.data.attributes.get('ManeMask');mane=[d.value for d in mane.data] if mane else [0]*len(skin.data.vertices)
+        for vertex in skin.data.vertices:
+            x,y,z=vertex.co;side='Right' if x>0 else 'Left';ax=abs(x)
+            t=smooth(3.9,4.7,z);arm=smooth(1.12+.10*t,1.25+.37*t,ax) if z>2.1 else 0
+            if mane[vertex.index]>.5 and z>4.9:arm=0
+            leg=1-smooth(2.55,3.0,z)
+            chest=smooth(3.25,3.95,z);head=smooth(5.35,5.80,z)
+            torso={'Pelvis':1-chest,'Chest':chest*(1-head),'Head':chest*head}
+            knee=smooth(1.35,1.80,z);foot=1-smooth(.50,.78,z)
+            legs={side+'Thigh':knee*(1-foot),side+'Shin':(1-knee)*(1-foot),side+'Foot':foot}
+            elbow=smooth(3.50,3.95,z);hand=1-smooth(2.62,2.86,z)
+            arms={side+'UpperArm':elbow*(1-hand),side+'Forearm':(1-elbow)*(1-hand),side+'Hand':hand}
+            row={}
+            for n,value in torso.items():row[n]=row.get(n,0)+value*(1-arm)*(1-leg)
+            for n,value in legs.items():row[n]=row.get(n,0)+value*(1-arm)*leg
+            for n,value in arms.items():row[n]=row.get(n,0)+value*arm
+            w[vertex.index]=0
+            for n,value in row.items():w[vertex.index,inds[n]]=value
     edges=np.array([list(e.vertices) for e in skin.data.edges],dtype=int);src=np.concatenate((edges[:,0],edges[:,1]));dst=np.concatenate((edges[:,1],edges[:,0]));degree=np.bincount(src,minlength=len(w))[:,None]
     for _ in range(5):
         accum=np.zeros_like(w);np.add.at(accum,src,w[dst]);w=.52*w+.48*accum/np.maximum(1,degree)

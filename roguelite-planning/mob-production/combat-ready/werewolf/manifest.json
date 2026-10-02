@@ -1,6 +1,6 @@
 {
   "id": "werewolf",
-  "source": "revisions\\werewolf",
+  "source": "reference-rebuilds\\werewolf",
   "geometryUnchanged": true,
   "clips": {
     "Idle": {
@@ -25,8 +25,8 @@
     }
   },
   "motion": {
-    "strideLength": 4.439551924844562,
-    "nominalSpeed": 6.659327887266842,
+    "strideLength": 3.6686641603770975,
+    "nominalSpeed": 5.502996240565647,
     "attackImpact": 0.3958333333333333,
     "attackRecovery": 0.4591666666666666,
     "attackDuration": 0.7916666666666666

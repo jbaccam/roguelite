@@ -1,28 +1,28 @@
 {
-  "source": "revisions\\werewolf",
-  "geometryFingerprintBefore": "1ed487ce8b8c08a6fca1fc796d27d842c315ab6a64de5c4b6690dd3c136b951f",
+  "source": "reference-rebuilds\\werewolf",
+  "geometryFingerprintBefore": "15a7f4d3591c2b253e3029a65d9428eda5d1c7283ccb6b0bad2752b721a202a0",
   "loopErrors": {
     "Idle": 0.0,
     "Move": 0.0
   },
   "gait": {
-    "leftLegRightArmCovariance": 0.3090492391086723,
-    "rightLegLeftArmCovariance": 0.3090492391086723,
-    "sameSideCovariance": -0.34117759209867565,
-    "strideLength": 4.439551924844562,
-    "nominalSpeed": 6.659327887266842,
+    "leftLegRightArmCovariance": 0.2959754488023702,
+    "rightLegLeftArmCovariance": 0.2959754488023702,
+    "sameSideCovariance": -0.32673280387264186,
+    "strideLength": 3.6686641603770975,
+    "nominalSpeed": 5.502996240565647,
     "opposingLimbs": true,
     "maxPlantedAnkleHeightError": 1.7881393432617188e-07
   },
   "bow": {},
-  "geometryFingerprintAfter": "1ed487ce8b8c08a6fca1fc796d27d842c315ab6a64de5c4b6690dd3c136b951f",
+  "geometryFingerprintAfter": "15a7f4d3591c2b253e3029a65d9428eda5d1c7283ccb6b0bad2752b721a202a0",
   "geometryUnchanged": true,
   "passed": true,
   "fileHashes": {
-    "Model.blend": "0ef5b9d5a0515984905a3c9365dbe0085955516269fa1012d3d1b081af5b7624",
-    "Model.fbx": "bf2c26bcfa76d3b7c4fd61959386290065eafd30262b26028ad3267c01011240",
-    "Model.glb": "8e5bdbb389b25e8dd8040501a8e7ad5b726dcf4681ddca2acc4d0d551ed038b0",
-    "AnimationData.json": "4a9d7c62bf9ec6de0a5cad9072637b96e2088d62c4d86438c5275eaa730d7ca9",
-    "Geometry.json": "69c7dc455de9a82a04f4c56cda52ac337c4bc35a655f3143e6c6f843e7c12b7f"
+    "Model.blend": "6733ba09e439d9662e2583de1855980be9a64d47baa25e343ca6fc36cceb30d6",
+    "Model.fbx": "f011af4792c9cf5fa7b75503918253dc67d8a52f2c5fc335aa8bfd055c1785f2",
+    "Model.glb": "d7ab3d702bf6c3c5c1b79e9bd522c46fc52a2fd97e4baede7328dff3ce8dc817",
+    "AnimationData.json": "21d4b719eb9c65b0adef692f648ac50d91512ef184e3944c1f6e37c7bf6055cc",
+    "Geometry.json": "10934bcb0683df3a9f16c56875f90d8ab592188cb29e31b6e601481840e962c5"
   }
 }

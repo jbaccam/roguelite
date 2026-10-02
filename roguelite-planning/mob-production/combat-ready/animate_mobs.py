@@ -12,7 +12,7 @@ import attack_design, creature_attacks
 ROOT=Path(__file__).resolve().parent
 BASE=ROOT.parent
 ID=sys.argv[sys.argv.index('--')+1]
-OVERRIDES={'obsidian-ogre','snake','rock-throwing-crab','skeleton','bow-skeleton','fire-goblin','lava-slime','ash-shaman','spitter-zombie'}
+OVERRIDES={'obsidian-ogre','snake','rock-throwing-crab','skeleton','bow-skeleton','fire-goblin','lava-slime','ash-shaman','spitter-zombie','werewolf','frozen-knight'}
 SOURCE=BASE/('reference-rebuilds' if ID in OVERRIDES else 'revisions')/ID
 OUT=ROOT/ID;OUT.mkdir(parents=True,exist_ok=True)
 bpy.ops.wm.open_mainfile(filepath=str(SOURCE/'Model.blend'))
@@ -131,7 +131,7 @@ def footpath(phase):
 
 def humanoid(clip,t):
     wave=math.sin(math.tau*t);moving=clip=='Move';breath=math.sin(math.tau*t)
-    lean={'werewolf':14,'spitter-zombie':9,'obsidian-ogre':8,'mummy':8,'fire-goblin':10,'ash-shaman':5,'frozen-knight':4,'ice-elf':3}.get(ID,5)
+    lean={'werewolf':8,'spitter-zombie':9,'obsidian-ogre':8,'mummy':8,'fire-goblin':10,'ash-shaman':5,'frozen-knight':4,'ice-elf':3}.get(ID,5)
     lower=leg_length*((.17 if HEAVY or FAST else .15) if moving else (.13 if HEAVY else .12 if FAST else .11))
     hipx=(.026*leg_length*math.cos(math.tau*t) if moving else .010*leg_length*breath)
     hipz=-lower+(.02*leg_length*math.cos(math.tau*2*t) if moving else .006*leg_length*breath)
@@ -202,6 +202,10 @@ def humanoid(clip,t):
             y,z,planted=footpath(t+offset);target+=Vector((0,y,z))
         else:target.y+=(.025 if side=='Left' else -.025)*leg_length
         leg_ik(side,target)
+    if 'Tail' in pb:
+        # Bushy tail sways side to side, twice per stride while moving.
+        rot('Tail',(7 if moving else 4)*math.sin(math.tau*t*(2 if moving else 1)-.6),(0,0,1))
+        rot('Tail',(-3 if moving else -1.5)*math.cos(math.tau*t*(2 if moving else 1)),(1,0,0),True)
 
 def creature(clip,t):
     w=math.sin(math.tau*t);a,b=envelope(t);moving=clip=='Move';attack=clip=='Attack'
