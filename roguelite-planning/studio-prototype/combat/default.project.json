@@ -412,6 +412,9 @@
       "RogueliteZombieChase": {
         "$path": "../RogueliteZombieChase.server.luau"
       },
+      "RunPause": {
+        "$path": "RunPause.luau"
+      },
       "CharacterService": {
         "$path": "CharacterService.luau"
       },

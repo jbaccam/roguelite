@@ -109,9 +109,7 @@ HUNKS = [
     # --- Rojo project (repo only): the new RunPause module ----------------------------------------
     ("combat/default.project.json", None,
      '      "CharacterService": {', "before",
-     '      "RunPause": {
-        "$path": "RunPause.luau"
-      },'),
+     '      "RunPause": {\n        "$path": "RunPause.luau"\n      },'),
 ]
 
 MODULES = [
