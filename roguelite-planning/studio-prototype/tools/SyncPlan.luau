@@ -70,7 +70,43 @@ return function(base, manifestPath, dryRun)
 			targets[h.studio] = t
 			table.insert(order, h.studio)
 		end
-		if string.find(t.source, h.text, 1, true) then
+		if h.where == "swap" then
+			-- swap (plan J): an exact multi-line `before` (a diff hunk with its context) found once is
+			-- replaced by `after`; `after` already there counts as present.
+			local function count(text)
+				if text == "" then
+					return 0
+				end
+				local n, from = 0, 1
+				while true do
+					local s, e = string.find(t.source, text, from, true)
+					if not s then
+						return n
+					end
+					n += 1
+					from = e + 1
+				end
+			end
+			-- Already applied: an insertion (after contains before) is there when `after` is; a
+			-- removal or change is there when `after` is and `before` is gone.
+			local applied
+			if string.find(h.after, h.before, 1, true) then
+				applied = count(h.after) >= 1
+			else
+				applied = count(h.after) >= 1 and count(h.before) == 0
+			end
+			if applied then
+				t.present += 1
+			else
+				local n = count(h.before)
+				if n ~= 1 then
+					return "ABORT: swap in " .. h.studio .. " found its text " .. n .. " times (" .. (h.label or "?") .. "): " .. string.sub(h.before, 1, 80)
+				end
+				local s, e = string.find(t.source, h.before, 1, true)
+				t.source = string.sub(t.source, 1, s - 1) .. h.after .. string.sub(t.source, e + 1)
+				t.added += 1
+			end
+		elseif string.find(t.source, h.text, 1, true) then
 			t.present += 1
 		else
 			local lines = string.split(t.source, "\n")
@@ -121,6 +157,10 @@ return function(base, manifestPath, dryRun)
 	end
 
 	if dryRun then
+		for _, r in manifest.remotes or {} do
+			local parent = resolve(r.parent)
+			table.insert(report, r.name .. ": " .. (not parent and "PARENT MISSING" or parent:FindFirstChild(r.name) and "exists" or "would create"))
+		end
 		for _, e in modules do
 			table.insert(report, e.m.name .. ": " .. (not e.inst and "would create" or e.inst.Source:gsub("\r\n", "\n") == e.source and "unchanged" or "would update"))
 		end
@@ -131,6 +171,25 @@ return function(base, manifestPath, dryRun)
 	end
 
 	History:SetWaypoint("Before " .. manifestPath)
+	-- remotes (plan J): {parent, name, sandboxLike} RemoteEvents the scripts wait for, made once.
+	for _, r in manifest.remotes or {} do
+		local parent = resolve(r.parent)
+		if parent and not parent:FindFirstChild(r.name) then
+			local ev = Instance.new("RemoteEvent")
+			ev.Name = r.name
+			local like = r.sandboxLike and resolve(r.sandboxLike)
+			if like then
+				pcall(function()
+					ev.Sandboxed = like.Sandboxed
+				end)
+				pcall(function()
+					ev.Capabilities = like.Capabilities
+				end)
+			end
+			ev.Parent = parent
+			table.insert(report, r.name .. ": created")
+		end
+	end
 	for _, e in modules do
 		local inst, created = e.inst, false
 		if not inst then

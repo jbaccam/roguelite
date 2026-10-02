@@ -140,7 +140,7 @@ function M.dismissRejoin(p) if not studio then clearRejoin(p.UserId) end end
 Players.PlayerRemoving:Connect(function(p)
  trips[p]=nil
  if studio or Role.get()~='Match' or not M.code then return end
- -- Deferred: ShopService keeps the build in its own PlayerRemoving, which runs first.
+ -- Deferred, so ShopService's own PlayerRemoving (which keeps the build) has run by then.
  local userId=p.UserId
  task.defer(function() if Shop.stashFor and Shop.stashFor(userId) then writeRejoin(userId) end end)
 end)

@@ -60,7 +60,8 @@ function L.falloff(distance,radius) return 1-.65*math.clamp(distance/math.max(ra
 function L.ringDelay(distance,radius,duration) return math.clamp(distance/math.max(radius,.01),0,1)*duration end
 
 function L.new(damage,canTarget,rayParams)
- local fx=combat:WaitForChild('LegendaryFX')
+ -- Looked up when needed, never waited on: a place without the remote still runs (no visuals).
+ local fx=combat:FindFirstChild('LegendaryFX')
  local counts={} -- 'userId:slot:weaponId' -> attacks so far (Tier IV only)
  local movers={};local moverCount=0;local scheduled={};local serial=0
  local function nextKey() serial+=1;return serial end
@@ -94,7 +95,10 @@ function L.new(damage,canTarget,rayParams)
   if #scheduled>=L.MaxScheduled then return end
   scheduled[#scheduled+1]={at=at,fn=fn}
  end
- local function send(position,owner,...) Batch.fire(fx,position,owner,...) end
+ local function send(position,owner,...)
+  fx=fx or combat:FindFirstChild('LegendaryFX')
+  if fx then Batch.fire(fx,position,owner,...) end
+ end
  local function area(d) return Stats.mult(d.stats.AreaSize) end
  local function slotFolder(d)
   local state=combat.PlayerStates:FindFirstChild(tostring(d.owner.UserId))

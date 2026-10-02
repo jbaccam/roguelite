@@ -389,6 +389,10 @@ local function startAgain()
  local list={}
  for p in again do if p.Parent==Players then table.insert(list,p) end end
  table.clear(again)
+ -- Always a clean run: the old one may have emptied through a disconnect, which doesn't reset it.
+ setLastStand(nil);Shop.resetRun()
+ for q in revivesUsed do revivesUsed[q]=0 end
+ for q in phoenixUsed do phoenixUsed[q]=nil;q:SetAttribute('PhoenixUsed',nil) end
  for _,p in list do
   returning[p]=nil;returnTries[p]=nil
   p:SetAttribute('PlayAgainStatus',nil);p:SetAttribute('RunResult',nil)
@@ -444,6 +448,18 @@ local function playAgain(p,on)
  end
  checkAgain()
 end
+-- Restart (the pause screen's RESTART, plan L; solo only): this run ends as Left (rewards so far
+-- kept, as with Leave Run) and the player goes straight into Play Again, with no results screen.
+local function restart(p)
+ if not Shop.members[p] or Shop.memberCount()~=1 then return false end
+ local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid')
+ if not down[p] and (not h or h.Health<=0) then return false end
+ if not finish(p,'Left') then return false end
+ afterLeave()
+ again[p]=true;returning[p]=nil
+ checkAgain()
+ return true
+end
 -- Rejoin, lobby side (plan J item 9): a run this player dropped out of that is still going shows
 -- on their screen as RejoinOffer (RunResultsUI); REJOIN sends them back to it (MatchService).
 local function offerRejoin(p)
@@ -458,9 +474,10 @@ local useStored -- defined with the purchase code below
 runAction.OnServerEvent:Connect(function(p,action,arg)
  if action=='LeaveRun' or action=='GiveUp' then leaveRun(p)
  elseif action=='ReturnToLobby' then if returning[p] or again[p] then again[p]=nil;p:SetAttribute('PlayAgainStatus',nil);returnToLobby({p}) end
- elseif action=='PlayAgain' or action=='Rejoin' or action=='RejoinDismiss' then
+ elseif action=='PlayAgain' or action=='Restart' or action=='Rejoin' or action=='RejoinDismiss' then
   if os.clock()-(lastRunAction[p] or 0)<.5 then return end;lastRunAction[p]=os.clock()
   if action=='PlayAgain' then playAgain(p,arg~=false)
+  elseif action=='Restart' then restart(p)
   elseif action=='RejoinDismiss' then p:SetAttribute('RejoinOffer',nil);if Match.dismissRejoin then Match.dismissRejoin(p) end
   elseif p:GetAttribute('RejoinOffer') and Match.rejoin then
    local ok,why=Match.rejoin(p)
@@ -750,13 +767,22 @@ profileAction.OnServerInvoke=function(p,action,a,b,c)
  return {ok=ok==true,message=message,results=results}
 end
 
+-- Rejoining the same run (plan J item 9) keeps its revive count and Phoenix rise, so dropping out
+-- and back in can't reset the revive price to 65 R$.
+local reviveCarry={} -- userId -> {run,revives,phoenix}
 local function added(p)
+ local c=reviveCarry[p.UserId];reviveCarry[p.UserId]=nil
+ if c and c.run==Shop.runId then
+  revivesUsed[p]=c.revives
+  if c.phoenix then phoenixUsed[p]=true;p:SetAttribute('PhoenixUsed',true) end
+ end
  watch(p);task.spawn(checkPolicy,p);task.spawn(checkPasses,p)
  task.delay(3,offerRejoin,p) -- a lobby offers the way back into a run they dropped out of
 end
 Players.PlayerAdded:Connect(added)
 for _,p in Players:GetPlayers() do added(p);if p.Character then local h=p.Character:FindFirstChildOfClass('Humanoid');if h then h.Died:Connect(function() onDied(p,p.Character) end) end end end
 Players.PlayerRemoving:Connect(function(p)
+ if (revivesUsed[p] or 0)>0 or phoenixUsed[p] then reviveCarry[p.UserId]={run=Shop.runId,revives=revivesUsed[p] or 0,phoenix=phoenixUsed[p]} end
  down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil;requestWindow[p]=nil;lastPickSave[p]=nil
  returning[p]=nil;prompting[p]=nil;runInfo[p]=nil;returnTries[p]=nil;again[p]=nil;lastRunAction[p]=nil
  -- The last one standing left: the clock loop pauses the wave again for the downed players' last

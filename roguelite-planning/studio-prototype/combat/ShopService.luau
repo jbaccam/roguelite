@@ -98,8 +98,20 @@ function S.publishProgress(p)
  state:SetAttribute('RunXPRequired',XP.required(s.level))
  state:SetAttribute('PendingLevelUps',s.pendingLevels)
 end
+-- A weapon slot's attributes, as a rejoin keeps them (stash, below); nil when the slots are gone.
+local SLOT_KEYS={'WeaponId','Tier','CopyId','BasePrice','FinalPurchasePrice','PurchasePrice','WavePurchased'}
+local function slotRows(p)
+ local cs=Characters.states[p];local folder=cs and cs.folder;if not folder or not folder.Parent then return nil end
+ local rows={}
+ for i=1,6 do
+  local f=folder:FindFirstChild('Slot'..i);if not f then return nil end
+  local row={};for _,k in SLOT_KEYS do row[k]=f:GetAttribute(k) end;rows[i]=row
+ end
+ return rows
+end
 function S.publish(p,message)
  local s=S.states[p];if not s or not Characters.states[p] then return end
+ s.slotRows=slotRows(p) or s.slotRows -- every slot change publishes, so this copy stays current
  local data={pendingLevels=s.pendingLevels,upgradeOffers=s.upgradeOffers,upgradeToken=s.upgradeToken,upgradeRerolls=s.upgradeRerolls,upgradeRerollPrice=E.reroll(S.wave,s.upgradeRerolls),freeRerolls=s.freeRerolls,freeUpgradeRerolls=s.freeUpgradeRerolls,baggedShards=s.baggedShards,level=s.level,shards=s.shards,wave=S.wave,phase=S.phase,rerolls=s.rerolls,rerollPrice=E.reroll(S.wave,s.rerolls),offers=s.offers,items=s.items,weapons=owned(p),ready=s.ready,revision=s.revision,message=message or s.message or '',modifier=E.modifier(Characters.states[p].stats),debug=RunService:IsStudio() and E.DEBUG_CURRENCY_ENABLED}
  s.message=data.message;S.publishProgress(p)
  slots(p):SetAttribute('ShopSnapshot',Http:JSONEncode(data))
@@ -209,18 +221,14 @@ end
 -- puts it back (S.attach); MatchService offers the way back from the lobby. A new run drops them.
 S.REJOIN_SECONDS=600
 S.stashes={} -- userId -> {runId,at,state,slots}
-local SLOT_KEYS={'WeaponId','Tier','CopyId','BasePrice','FinalPurchasePrice','PurchasePrice','WavePurchased'}
 local function stash(p)
- local s=S.states[p];local cs=Characters.states[p]
- if not s or not cs or not S.members[p] or RS:GetAttribute('ServerRole')~='Match' then return end
+ local s=S.states[p]
+ if not s or not S.members[p] or RS:GetAttribute('ServerRole')~='Match' then return end
  if S.wave==1 and S.phase~='Combat' then return end -- the run hasn't started: nothing to keep
- local list={}
- for i=1,6 do
-  local f=cs.folder:FindFirstChild('Slot'..i);local row={}
-  if f then for _,k in SLOT_KEYS do row[k]=f:GetAttribute(k) end end
-  list[i]=row
- end
- S.stashes[p.UserId]={runId=S.runId,at=os.clock(),state=s,slots=list}
+ -- The live slots if they're still here, else the copy S.publish keeps: CharacterService and the
+ -- combat script tear the slots down in their own PlayerRemoving, in no fixed order.
+ local rows=slotRows(p) or s.slotRows;if not rows then return end
+ S.stashes[p.UserId]={runId=S.runId,at=os.clock(),state=s,slots=rows}
 end
 -- The build a player left in this run, while it is kept (nil once it expired or the run reset).
 function S.stashFor(userId)

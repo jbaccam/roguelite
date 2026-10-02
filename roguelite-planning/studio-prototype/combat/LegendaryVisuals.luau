@@ -601,7 +601,7 @@ function V.mount(combat,folder,lookup)
   end)
  end
 
- combat:WaitForChild('LegendaryFX').OnClientEvent:Connect(function(kind,...)
+ local function onFx(kind,...)
   local a={...}
   if kind=='Slash' or kind=='Beam' then slash(kind,a[2],a[4],a[5],a[6],a[7],a[8],a[9])
   elseif kind=='Flush' then flush(a[1],a[3],a[4],a[5],a[6])
@@ -609,6 +609,11 @@ function V.mount(combat,folder,lookup)
   elseif kind=='Strike' then strike(a[1],a[2],a[3],a[4])
   elseif kind=='Shock' then shock(a[1],a[2],a[3],a[4])
   elseif kind=='Thunder' then thunder(a[1],a[2],a[3],a[4]) end
+ end
+ -- Spawned: mount() must return at once, or the combat client's render loop would wait on it.
+ task.spawn(function()
+  local fx=combat:WaitForChild('LegendaryFX',60)
+  if fx then fx.OnClientEvent:Connect(onFx) end
  end)
  return api
 end

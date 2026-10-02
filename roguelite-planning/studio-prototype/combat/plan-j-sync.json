@@ -1,0 +1,26 @@
+{
+ "modules": [
+  {
+   "path": "combat/LegendaryMoves.luau",
+   "parent": "ServerScriptService",
+   "name": "LegendaryMoves",
+   "sandboxLike": "ServerScriptService.GodlyWeapons",
+   "base": "29aa821"
+  },
+  {
+   "path": "combat/LegendaryVisuals.luau",
+   "parent": "ReplicatedStorage.RogueliteCombat",
+   "name": "LegendaryVisuals",
+   "sandboxLike": "ReplicatedStorage.RogueliteCombat.GodlyVisuals",
+   "base": "29aa821"
+  }
+ ],
+ "remotes": [
+  {
+   "parent": "ReplicatedStorage.RogueliteCombat",
+   "name": "LegendaryFX",
+   "sandboxLike": "ReplicatedStorage.RogueliteCombat.GodlyFX"
+  }
+ ],
+ "hunks": []
+}
