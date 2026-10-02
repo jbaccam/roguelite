@@ -71,7 +71,7 @@ local REDRAW_ON = {
 }
 
 -- Armor is worn as four pieces (ArmorCatalog; cosmetic until armor chests and set bonuses exist).
--- Pets (PetConfig) come from the Pet Chest (pets only); one follows you (EQUIP / UNEQUIP).
+-- Pets (PetConfig) hatch from Pet Eggs (the egg merchant); one follows you (EQUIP / UNEQUIP).
 local ARMOR_PIECES = {
 	{ id = "Helmet", label = "HELMET", plural = "HELMETS" },
 	{ id = "Chest", label = "CHEST", plural = "CHESTPLATES" },
@@ -594,7 +594,7 @@ function A.new(player, opts)
 		end)
 	end
 
-	-- A pet card: 3D view, name, rarity (or PET CHEST while not owned), tier, tick when following you.
+	-- A pet card: 3D view, name, rarity (or PET EGG while not owned), tier, tick when following you.
 	local function petCard(parent, pet, x, y)
 		local rec = petRec(pet.id)
 		local chosen = state.kind == "pet" and state.item == pet.id
@@ -612,7 +612,7 @@ function A.new(player, opts)
 		n.TextScaled = true
 		T.make("UITextSizeConstraint", n, { MaxTextSize = 20, MinTextSize = 12 })
 		local k = centred(
-			T.text(card, "Rarity", rec and string.upper(pet.rarity) or "PET CHEST", 6, 164, CARD - 12, 22, 16, rec and Chests.RarityColor[pet.rarity] or C.dim)
+			T.text(card, "Rarity", rec and string.upper(pet.rarity) or "PET EGG", 6, 164, CARD - 12, 22, 16, rec and Chests.RarityColor[pet.rarity] or C.dim)
 		)
 		if rec then
 			T.tierBadge(card, rec.tier, 10, 10)
@@ -1401,7 +1401,7 @@ function A.new(player, opts)
 				centred(T.text(panel, "Need", "Need " .. (gems - profile.gems) .. " more emeralds", 24, 506, RIGHT_W - 48, 20, 16, C.negative))
 			end
 		else
-			centred(T.text(panel, "Need", "Comes from the Pet Chest", 24, 420, RIGHT_W - 48, 24, 18, C.muted))
+			centred(T.text(panel, "Need", "Hatch it from a Pet Egg (egg merchant)", 24, 420, RIGHT_W - 48, 24, 18, C.muted))
 		end
 		local eq = T.button(
 			panel,
@@ -1493,7 +1493,7 @@ function A.new(player, opts)
 				panel,
 				"chest",
 				"PET",
-				"EMPTY SLOT  ·  FROM THE PET CHEST",
+				"EMPTY SLOT  ·  HATCH PETS FROM EGGS",
 				"Every pet helps in its own way: one fetches crystals, one heals you and your team, others knock enemies back or slow them down."
 			)
 		elseif Armor.valid(state.item) then

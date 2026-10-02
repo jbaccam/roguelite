@@ -289,6 +289,12 @@ Armor rules (already decided in `CURRENT_GAME_STRUCTURE.md` / `PROGRESSION_AND_S
 
 ### 11. Pets (12) and the Pet Chest
 
+> **Changed 2026-10-02 (user): pets hatch from a Pet Egg** sold by the egg merchant on the
+> quest-board island, not from a Pet Chest (which was never built). 250 emeralds an egg, ×1/×3/×10,
+> one pet per egg, rarity odds Common/Rare/Epic/Legendary 50/30/15/5 split evenly inside each
+> rarity (`studio-prototype/combat/EggConfig.luau`). The 3-tap hatch mirrors the chest opening.
+> Where this section says Pet Chest, read Pet Egg.
+
 The user, 2026-09-28: pets are **not** hatched from eggs. They come from chests, from a **Pet
 Chest** that holds pets only (weapon, armor and pet chests never mix).
 

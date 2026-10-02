@@ -80,6 +80,9 @@ return function(base, dryRun)
 				return "ABORT: anchor found " .. hits .. " times in " .. h.studio .. ": " .. h.anchor
 			end
 			local ins = string.split(h.text, "\n")
+			if h.where == "replace" then
+				table.remove(lines, at) -- the anchor line itself is swapped for the text
+			end
 			local pos = h.where == "after" and at + 1 or at
 			for k, l in ins do
 				table.insert(lines, pos + k - 1, l)

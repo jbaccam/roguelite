@@ -6,7 +6,7 @@ MONETIZATION_AND_REWARDS.md and PROGRESSION_AND_SESSION_FLOW.md where they disag
 > **Partly replaced 2026-09-28 by [RARITY_GODLY_ARMOR.md](RARITY_GODLY_ARMOR.md) (user-approved).**
 > Rarity now also means a little more power. Chests hold a handful of items (Gold: 30 → 10).
 > Upgrade costs, daily-deal prices, the Godly odds and pity, the six Godly weapons, the seven armor
-> sets and the twelve pets are all defined there. Pets come from a **Pet Chest**, not eggs. Where
+> sets and the twelve pets are all defined there. Pets hatch from a **Pet Egg** (egg merchant, 2026-10-02). Where
 > this file disagrees, that one wins.
 
 > **Decision 2026-09-27 (user): keys are dropped. Emeralds are the only currency** for chests,
@@ -38,7 +38,7 @@ Each part is built, verified in Studio Play, and shown to the user before the ne
 | 1 | Store look and compliance fixes (the emeralds-only switch is already done) | Makes the store clear and appealing |
 | 2 | Weapon rarities, chest tiers, chest-opening reveal | The Clash Royale loop |
 | 3 | Godly weapons (brainstorm, models, VFX, stats) | New content; needs its own design pass |
-| 4 | Armor chests and a Pet Chest (pets only; no eggs, user 2026-09-28) | When those systems exist; same template |
+| 4 | Armor in the chests (2026-09-30); pets from the egg merchant's Pet Egg (2026-10-02, replaces the Pet Chest) | Same 3-tap template |
 | 5 | Polish: featured item of the day, lobby chest room | Nice to have |
 
 ## Part 0: upgrades count in runs

@@ -56,6 +56,41 @@
   "text": "\tif icon.Image == \"\" then\n\t\ticon.Image = stand:GetAttribute(\"Icon\") or \"\"\n\tend"
  },
  {
+  "repo": "ui/ArmoryUI.luau",
+  "studio": "ReplicatedStorage.ArmoryUI",
+  "anchor": "-- Pets (PetConfig) come from the Pet Chest (pets only); one follows you (EQUIP / UNEQUIP).",
+  "where": "replace",
+  "text": "-- Pets (PetConfig) hatch from Pet Eggs (the egg merchant); one follows you (EQUIP / UNEQUIP)."
+ },
+ {
+  "repo": "ui/ArmoryUI.luau",
+  "studio": "ReplicatedStorage.ArmoryUI",
+  "anchor": "\t-- A pet card: 3D view, name, rarity (or PET CHEST while not owned), tier, tick when following you.",
+  "where": "replace",
+  "text": "\t-- A pet card: 3D view, name, rarity (or PET EGG while not owned), tier, tick when following you."
+ },
+ {
+  "repo": "ui/ArmoryUI.luau",
+  "studio": "ReplicatedStorage.ArmoryUI",
+  "anchor": "\t\t\tT.text(card, \"Rarity\", rec and string.upper(pet.rarity) or \"PET CHEST\", 6, 164, CARD - 12, 22, 16, rec and Chests.RarityColor[pet.rarity] or C.dim)",
+  "where": "replace",
+  "text": "\t\t\tT.text(card, \"Rarity\", rec and string.upper(pet.rarity) or \"PET EGG\", 6, 164, CARD - 12, 22, 16, rec and Chests.RarityColor[pet.rarity] or C.dim)"
+ },
+ {
+  "repo": "ui/ArmoryUI.luau",
+  "studio": "ReplicatedStorage.ArmoryUI",
+  "anchor": "\t\t\tcentred(T.text(panel, \"Need\", \"Comes from the Pet Chest\", 24, 420, RIGHT_W - 48, 24, 18, C.muted))",
+  "where": "replace",
+  "text": "\t\t\tcentred(T.text(panel, \"Need\", \"Hatch it from a Pet Egg (egg merchant)\", 24, 420, RIGHT_W - 48, 24, 18, C.muted))"
+ },
+ {
+  "repo": "ui/ArmoryUI.luau",
+  "studio": "ReplicatedStorage.ArmoryUI",
+  "anchor": "\t\t\t\t\"EMPTY SLOT  ·  FROM THE PET CHEST\",",
+  "where": "replace",
+  "text": "\t\t\t\t\"EMPTY SLOT  ·  HATCH PETS FROM EGGS\","
+ },
+ {
   "repo": "combat/default.project.json",
   "studio": null,
   "anchor": "        \"ChestConfig\": {",

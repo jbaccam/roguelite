@@ -99,6 +99,22 @@ if not eggsOk then warn('LobbyUI: EggScreenUI failed to load:',EggScreenUI);EggS
     ("ui/StationApproach.luau", "ReplicatedStorage.StationApproach",
      '\ticon.Image = T.Asset[info.icon] or ""', "after",
      '\tif icon.Image == "" then\n\t\ticon.Image = stand:GetAttribute("Icon") or ""\n\tend'),
+    # --- ArmoryUI: pets now hatch from eggs, not a Pet Chest ('replace' swaps the anchor line) ----
+    ("ui/ArmoryUI.luau", "ReplicatedStorage.ArmoryUI",
+     '-- Pets (PetConfig) come from the Pet Chest (pets only); one follows you (EQUIP / UNEQUIP).', "replace",
+     '-- Pets (PetConfig) hatch from Pet Eggs (the egg merchant); one follows you (EQUIP / UNEQUIP).'),
+    ("ui/ArmoryUI.luau", "ReplicatedStorage.ArmoryUI",
+     '\t-- A pet card: 3D view, name, rarity (or PET CHEST while not owned), tier, tick when following you.', "replace",
+     '\t-- A pet card: 3D view, name, rarity (or PET EGG while not owned), tier, tick when following you.'),
+    ("ui/ArmoryUI.luau", "ReplicatedStorage.ArmoryUI",
+     '\t\t\tT.text(card, "Rarity", rec and string.upper(pet.rarity) or "PET CHEST", 6, 164, CARD - 12, 22, 16, rec and Chests.RarityColor[pet.rarity] or C.dim)', "replace",
+     '\t\t\tT.text(card, "Rarity", rec and string.upper(pet.rarity) or "PET EGG", 6, 164, CARD - 12, 22, 16, rec and Chests.RarityColor[pet.rarity] or C.dim)'),
+    ("ui/ArmoryUI.luau", "ReplicatedStorage.ArmoryUI",
+     '\t\t\tcentred(T.text(panel, "Need", "Comes from the Pet Chest", 24, 420, RIGHT_W - 48, 24, 18, C.muted))', "replace",
+     '\t\t\tcentred(T.text(panel, "Need", "Hatch it from a Pet Egg (egg merchant)", 24, 420, RIGHT_W - 48, 24, 18, C.muted))'),
+    ("ui/ArmoryUI.luau", "ReplicatedStorage.ArmoryUI",
+     '\t\t\t\t"EMPTY SLOT  ·  FROM THE PET CHEST",', "replace",
+     '\t\t\t\t"EMPTY SLOT  ·  HATCH PETS FROM EGGS",'),
     # --- Rojo project (repo only; Studio path None): the new modules ---------------------------
     ("combat/default.project.json", None,
      '        "ChestConfig": {', "before",
@@ -121,6 +137,9 @@ def apply(text, anchor, where, ins):
     i = hits[0]
     crlf = lines[i].endswith("\r")
     new = [l + ("\r" if crlf else "") for l in ins.split("\n")]
+    if where == "replace":
+        lines[i:i + 1] = new
+        return "\n".join(lines), "applied"
     lines[i + 1:i + 1] = new if where == "after" else []
     if where == "before":
         lines[i:i] = new
