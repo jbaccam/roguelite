@@ -241,10 +241,22 @@ Build steps: [2026-10-02-K-build-steps.md](2026-10-02-K-build-steps.md). The com
   - 13 hunks across 7 scripts, every anchor found once;
   - the module guards match commit 7fd7cea.
 
+**Synced to Studio (user: "push it to studio", 2026-10-02):**
+- Run with `tools/SyncPlan.luau`:
+  - QuestConfig, QuestService and QuestsUI updated; StatPlates created (unsandboxed, like ArmoryUI);
+  - 21 hunks across 9 scripts.
+- After the sync:
+  - a second dry run reports everything present or unchanged;
+  - QuestTests pass on Studio's own copies (1,223 checks);
+  - every patched script compiles.
+- The same sync carries the user's later art:
+  - a flexed bicep on the POWER plate, which is now 200 wide like the others;
+  - flat chest icons for Wooden, Silver, Gold, Magical and Legendary (ChestConfig, ui/assets/chests);
+  - a pet egg icon (EggConfig, QuestConfig, StatPlates; hud/pet-egg.png).
+  These show in the store, quest rewards, the streak track and chest lists.
+
 **Not done yet:**
-- The Studio write. It waits for the user's okay.
-- The bicep icon for Power. `StatPlates.PowerIcon` and map select get it when it arrives.
-- Play tests (the checklist in the build steps, Task 12).
+- The bicep in front of map select's "Your power n · recommended m" line. It's one centred rich-text sentence, so the icon needs a measured position.
+- Play tests (the checklist in the build steps, Task 12), including `UILayoutAudit.sweep` in Play.
 - Re-running the economy sim with the new daily and early-level payouts.
 - Checking the Damage and Shards targets against play-test numbers.
-
