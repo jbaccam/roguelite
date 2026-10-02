@@ -1024,19 +1024,24 @@ function A.new(player, opts)
 				centred(T.label(b, "Count", "NONE\nREADY", 0, 20, SLOT, 80, 22, C.dim)).Size = UDim2.new(1, 0, 0, 80)
 			end
 		end)
-		-- Stat plate under the dais: class health and the starter's damage at its tier.
+		-- Stat plate under the dais: the starter's damage at its tier, class health, and gear power
+		-- (GEAR_POWER.md: starter, worn armor and pet tiers; maps recommend a power).
 		local hp = Stats.resolve(class, 0).MaxHP
 		local w = Weapons.ById[weapon]
 		local dmg = w and weaponAt(w, rec and rec.tier or 1).damage or 0
 		local plateRow = T.frame(mid, "StatPlate", gw / 2 - 250, 640, 500, 70)
-		local a = T.panel(plateRow, "Damage", 0, 0, 240, 66, "panel")
-		T.icon(a, "Icon", 14, 6, 54, WeaponIcons[weapon])
-		local al = T.label(a, "Value", dmg .. " DMG", 70, 6, 160, 54, 30)
+		local a = T.panel(plateRow, "Damage", 0, 0, 160, 66, "panel")
+		T.icon(a, "Icon", 10, 9, 48, WeaponIcons[weapon])
+		local al = T.label(a, "Value", dmg .. " DMG", 62, 8, 90, 50, 26)
 		al.TextXAlignment = Enum.TextXAlignment.Left
-		local h = T.panel(plateRow, "Health", 260, 0, 240, 66, "panel")
-		T.icon(h, "Icon", 14, 8, 50, "heart")
-		local hl = T.label(h, "Value", math.floor(hp + 0.5) .. " HP", 72, 6, 160, 54, 30)
+		local h = T.panel(plateRow, "Health", 170, 0, 160, 66, "panel")
+		T.icon(h, "Icon", 10, 11, 44, "heart")
+		local hl = T.label(h, "Value", math.floor(hp + 0.5) .. " HP", 62, 8, 90, 50, 26)
 		hl.TextXAlignment = Enum.TextXAlignment.Left
+		local power = Rules.power(player, weapon)
+		local g = T.panel(plateRow, "Power", 340, 0, 160, 66, "panel")
+		centred(T.label(g, "Value", "POWER " .. power, 8, 4, 144, 36, 26, C.lime))
+		centred(T.text(g, "Bonus", string.format("+%d%% dmg  +%d%% hp", math.round((Stats.powerDamage(power) - 1) * 100), math.round((Stats.powerHealth(power) - 1) * 100)), 8, 38, 144, 22, 15, C.muted))
 	end
 
 	-- Right: details ---------------------------------------------------------------------

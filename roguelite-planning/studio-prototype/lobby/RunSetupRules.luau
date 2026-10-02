@@ -10,18 +10,20 @@ local R={}
 
 -- PROGRESSION_AND_SESSION_FLOW.md: five maps, each won at wave 20, and three difficulties per map.
 -- The next map opens after winning the previous one on Hard.
--- Regular enemies get tougher down the ladder (R.enemyScale), on top of wave growth and
--- difficulty. enemyWaves: their health starts that many waves further along; enemyHp then
--- multiplies it, enemyDamage multiplies their hits. Example, a Volcanic Crater goblin at wave 1:
--- 4 HP +2 a wave, 16 waves ahead = 36, x1.6 = 58 HP, four Tier I pan hits (16 each); at wave 20,
--- 119 HP against a Pine Valley zombie's 41. Each map's Normal stays a little under the previous
--- map's Hard (x1.6 HP). Map bosses have their own health (MapBossDefs).
+-- power: the map's recommended gear power (GEAR_POWER.md, CharacterStats.gearPower), 4 more per
+-- map, about one more tier on every slot. Enemies there get the health a player at that power
+-- deals extra damage against, and the damage they have extra health for (R.enemyScale), so gear
+-- that matches the map plays like a fresh account in Pine Valley. Example, Desert Basin (power 9):
+-- enemies x1.96 health and x1.48 damage; a power 9 player deals x1.96 and has x1.48 health.
+-- Each map's Normal stays under the previous map's Hard (x1.6 health).
+-- bossBase: how much tougher than the Hammer (18,000) the map's boss is authored (MapBossDefs),
+-- which the power scaling replaces rather than stacks on (R.bossScale).
 R.Maps={
- {id='PineValley',name='Pine Valley',boss='Hammer Zombie Boss',emeralds=20,unlock='Available after the tutorial',enemyWaves=0,enemyHp=1,enemyDamage=1},
- {id='BeachCove',name='Beach Cove',boss='Giant King Crab',emeralds=40,unlock='Win Pine Valley on Hard',enemyWaves=4,enemyHp=1.15,enemyDamage=1.2},
- {id='DesertBasin',name='Desert Basin',boss='Pharaoh',emeralds=60,unlock='Win Beach Cove on Hard',enemyWaves=8,enemyHp=1.3,enemyDamage=1.4},
- {id='FrozenPass',name='Frozen Pass',boss='Frost Cyclops',emeralds=80,unlock='Win Desert Basin on Hard',enemyWaves=12,enemyHp=1.45,enemyDamage=1.6},
- {id='VolcanicCrater',name='Volcanic Crater',boss='Dragon',emeralds=100,unlock='Win Frozen Pass on Hard',enemyWaves=16,enemyHp=1.6,enemyDamage=1.8},
+ {id='PineValley',name='Pine Valley',boss='Hammer Zombie Boss',emeralds=20,unlock='Available after the tutorial',power=1,bossBase=1},
+ {id='BeachCove',name='Beach Cove',boss='Giant King Crab',emeralds=40,unlock='Win Pine Valley on Hard',power=5,bossBase=21000/18000},
+ {id='DesertBasin',name='Desert Basin',boss='Pharaoh',emeralds=60,unlock='Win Beach Cove on Hard',power=9,bossBase=24000/18000},
+ {id='FrozenPass',name='Frozen Pass',boss='Frost Cyclops',emeralds=80,unlock='Win Desert Basin on Hard',power=13,bossBase=27000/18000},
+ {id='VolcanicCrater',name='Volcanic Crater',boss='Dragon',emeralds=100,unlock='Win Frozen Pass on Hard',power=17,bossBase=31500/18000},
 }
 -- Difficulty multiplies enemy health and damage and the emeralds a run pays (reward).
 R.Difficulties={
@@ -31,19 +33,29 @@ R.Difficulties={
 }
 R.DifficultyIndex={};for i,d in R.Difficulties do R.DifficultyIndex[d.id]=d end
 function R.difficulty(id) return R.DifficultyIndex[id] or R.Difficulties[1] end
--- Bosses: health x the difficulty's hp x (1 + BossPlayerHp per extra player); damage x its damage.
--- Normal solo is the authored number (a 2-player Normal Hammer: 18,000 x 1.75 = 31,500).
-R.BossPlayerHp=.75
-function R.bossScale(id,players)
- local d=R.difficulty(id)
- return d.hp*(1+R.BossPlayerHp*math.max(0,(players or 1)-1)),d.damage
+-- The map a run is on (MapConfig ids; Pine Valley when unset or unknown).
+local function mapOf(mapId)
+ return R.Maps[R.MapIndex[mapId or combat:GetAttribute('RunMap')] or 1]
 end
--- Regular enemies on a map and difficulty: extra waves of health growth, then the health and
--- damage multipliers. Example, a Frozen Pass werewolf at wave 1 on Hard: 8 HP +3 a wave, 12
--- waves ahead = 44, x1.45 x1.6 = 103 HP; 1.8 damage x1.6 x1.3 = 3.7 per hit.
+-- Bosses: health x the difficulty's hp x (1 + BossPlayerHp per extra player) x the map's power
+-- health / its bossBase; damage x the difficulty's damage x the map's power damage. Normal solo
+-- in Pine Valley is the authored number (a 2-player Normal Hammer: 18,000 x 1.75 = 31,500). A
+-- Normal solo Dragon: 31,500 x 2.92 / 1.75 = 52,560 = the Hammer's 18,000 x 2.92.
+R.BossPlayerHp=.75
+function R.bossScale(id,players,mapId)
+ local d=R.difficulty(id);local m=mapOf(mapId)
+ return d.hp*(1+R.BossPlayerHp*math.max(0,(players or 1)-1))*Stats.powerDamage(m.power)/(m.bossBase or 1),d.damage*Stats.powerHealth(m.power)
+end
+-- Regular enemies on a map and difficulty: (extra waves of health growth, health multiplier,
+-- damage multiplier). The first is always 0 now (the spawner still reads it). Example, a Frozen
+-- Pass werewolf (power 13) at wave 1 on Hard: 8 HP x2.44 x1.6 = 31 HP; 1.8 damage x1.72 x1.3 = 4.
 function R.enemyScale(mapId,diff)
- local m=R.Maps[R.MapIndex[mapId] or 1];local d=R.difficulty(diff)
- return m.enemyWaves or 0,(m.enemyHp or 1)*d.hp,(m.enemyDamage or 1)*d.damage
+ local m=mapOf(mapId);local d=R.difficulty(diff)
+ return 0,Stats.powerDamage(m.power)*d.hp,Stats.powerHealth(m.power)*d.damage
+end
+-- A player's gear power with `weapon` as the starter (CharacterStats.gearPower), for the lobby.
+function R.power(player,weapon)
+ return Stats.gearPower(function(name) return player:GetAttribute(name) end,weapon or player:GetAttribute('RunWeapon') or R.Signature.Brawler)
 end
 -- Saved win / best-wave key: Normal keeps the plain map id (older saves stay valid).
 function R.runKey(mapId,diff) return (diff==nil or diff=='Normal') and mapId or mapId..'/'..diff end

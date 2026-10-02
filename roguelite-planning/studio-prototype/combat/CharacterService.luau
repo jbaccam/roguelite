@@ -72,13 +72,19 @@ function Service.refresh(player)
  local petId,petTier=Pets.equipped(player:GetAttribute('ProfilePet'),player:GetAttribute('ProfilePets'))
  local pet=petId and Pets.stats(petId,petTier) or {}
  for id,v in s.petTemp or {} do pet[id]=(pet[id] or 0)+v end
- if next(skills) or next(armor) or next(pet) then
-  flat=table.clone(s.itemBonuses or {})
-  for id,v in skills do flat[id]=(flat[id] or 0)+v end
-  for id,v in armor do flat[id]=(flat[id] or 0)+v end
-  for id,v in pet do flat[id]=(flat[id] or 0)+v end
- end
- s.stats=Stats.resolve(s.class,count,s.overrides,flat,s.itemPercent)
+ flat=table.clone(s.itemBonuses or {})
+ for id,v in skills do flat[id]=(flat[id] or 0)+v end
+ for id,v in armor do flat[id]=(flat[id] or 0)+v end
+ for id,v in pet do flat[id]=(flat[id] or 0)+v end
+ -- Gear power (GEAR_POWER.md) from the starter's owned tier, worn armor and the pet: the GearPower
+ -- stat, its damage share in CombatEffectsService.hit and its health share as a max-health percent,
+ -- so it multiplies every other health bonus. An admin override of GearPower counts too.
+ local weapon=player:GetAttribute('RunWeapon')
+ flat.GearPower=Stats.gearPower(function(name) return player:GetAttribute(name) end,type(weapon)=='string' and weapon or Stats.Classes.Brawler.build[1])
+ local power=s.overrides.GearPower or flat.GearPower
+ local percent=table.clone(s.itemPercent or {})
+ percent.MaxHP=(percent.MaxHP or 0)+(Stats.powerHealth(power)-1)*100
+ s.stats=Stats.resolve(s.class,count,s.overrides,flat,percent)
  s.folder:SetAttribute('Class',s.class);s.folder:SetAttribute('AffinityCount',count)
  for _,d in Stats.List do
   local value=s.stats[d.id];s.folder:SetAttribute('Stat_'..d.id,value)
@@ -124,6 +130,9 @@ function Service.attach(player,folder)
  player:GetAttributeChangedSignal('ProfileArmor'):Connect(function() Service.refresh(player) end)
  player:GetAttributeChangedSignal('ProfilePet'):Connect(function() Service.refresh(player) end)
  player:GetAttributeChangedSignal('ProfilePets'):Connect(function() Service.refresh(player) end)
+ -- Gear power follows the starter and its owned tier.
+ player:GetAttributeChangedSignal('ProfileWeapons'):Connect(function() Service.refresh(player) end)
+ player:GetAttributeChangedSignal('RunWeapon'):Connect(function() Service.refresh(player) end)
  Service.refresh(player)
 end
 -- The class from the player's validated loadout (RunClass). Developer stat overrides stay until clearAdmin.
@@ -208,8 +217,9 @@ function Service.contact(player,amount,roll,attacker)
  -- applied by CombatEffectsService through onThorns).
  local thorns=s.perks and s.perks.FireThorns
  if actual>0 and thorns and typeof(attacker)=='Instance' and #hookListeners.onThorns>0 and math.random()<thorns/100 then notify('onThorns',player,attacker) end
- -- Pets react to real damage (the Cheetah Cub's speed burst).
- if actual>0 then notify('onDamaged',player,actual) end
+ -- Pets react to real damage (the Cheetah Cub's speed burst); analytics remembers the attacker
+ -- (nil for projectiles and boss attacks) as a death cause.
+ if actual>0 then notify('onDamaged',player,actual,attacker) end
  return actual
 end
 local remote=combat:FindFirstChild('EditPractice') or Instance.new('RemoteEvent')

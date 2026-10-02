@@ -171,7 +171,11 @@ function M.new(player,opts)
   end
   local effect=diff=='Normal' and 'Standard enemies  ·  standard emeralds'
    or string.format('Enemies  x%s health  ·  x%s damage  ·  x%s emeralds',tier.hp,tier.damage,tier.reward)
-  centred(T.text(canvas,'DiffEffect',effect,0,cp and 304 or 438,CW,22,cp and 17 or 18,C.muted))
+  -- Gear power (GEAR_POWER.md): at the map's recommended power it plays like Pine Valley does for a
+  -- new player. Yours counts the starter you'd take (picked here or in the Armory), armor and pet.
+  local mine=Rules.power(player,sel.weapon or player:GetAttribute('LoadoutWeapon') or player:GetAttribute('RunWeapon'))
+  effect=string.format('<font color="%s">Your power %d  ·  recommended %d</font>   ·   %s',T.hex(mine>=m.power and C.lime or C.gold),mine,m.power,effect)
+  centred(T.text(canvas,'DiffEffect',effect,0,cp and 304 or 438,CW,24,cp and 17 or 18,C.muted))
   -- Rewards for this map and difficulty.
   local tiles={
    {'emerald',Rules.winEmeralds(i,diff)..' EMERALDS','by wave '..Rules.WinWave..'  ·  paid every 5 waves',C.emerald},

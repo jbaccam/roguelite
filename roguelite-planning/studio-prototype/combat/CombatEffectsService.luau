@@ -47,6 +47,8 @@ function E.hit(npc,amount,d,secondary)
   if sure then owner.dodgeCrit=nil end
   if sure or math.random()<s.CritChance/100 then amount*=s.CritDamage/100 end
  end
+ -- Gear power (CharacterStats.powerDamage): every hit, status tick, pet and armor blast passes here.
+ amount*=Stats.powerDamage(s.GearPower)
  if npc:GetAttribute('IsElite') or npc:GetAttribute('IsBoss') then amount*=Stats.mult(s.BossDamage) end
  -- Owl pet mark (PetService): +bonus% on every hit from the owner while the mark lasts.
  local mark=npc:GetAttribute('PetMark_'..d.owner.UserId)

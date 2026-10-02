@@ -516,7 +516,8 @@ look before step 2. Results in Studio:
   Armory's Weapons, Armor and Pets tabs.
 - **Found, not caused by this step:** upgraded tiers still never reach a run. A Tier II Frying Pan
   starts the run in slot 1 at Tier 1. `STORE_AND_CHESTS.md` Part 0 was never built; nothing reads
-  the profile tier at run start.
+  the profile tier at run start. **Fixed 2026-10-02** (repo): `ShopService.starterTier` puts the
+  owned tier on the starter; maps now scale to gear tiers (GEAR_POWER.md).
 - Not testable in Studio: DataStore migration of real saves, Robux Legendary Chests,
   PolicyService-restricted accounts.
 

@@ -170,10 +170,19 @@ function S.bonuses(p)
  Characters.refresh(p)
 end
 S.startingWeapons={}
+-- The loadout starter enters a run at the tier the player owns it at (ProfileWeapons, written by
+-- ProfileService): a Tier II Frying Pan starts the run in slot 1 at Tier II.
+local function starterTier(p)
+ local f=slots(p).Slot1;local start=S.startingWeapons[p]
+ local id=f:GetAttribute('WeaponId')
+ if not start or id=='' or id~=start[1] then return end
+ f:SetAttribute('Tier',StatSchema.ownedTier(p:GetAttribute('ProfileWeapons'),id) or 1)
+end
 local function newState(p)
  local s={shards=E.STARTING_SHARDS,level=1,xp=0,pendingLevels=0,upgradeOffers={},upgradeBonuses={},banished={},baggedShards=0,upgradeRerolls=0,upgradeToken=token(),rerolls=0,offers={},items={},ready=false,revision=1,lastRequest=-1e6,freeRerolls=0,freeUpgradeRerolls=0}
  S.states[p]=s
  for i=1,6 do local f=slots(p)['Slot'..i];f:SetAttribute('Tier',1);f:SetAttribute('FinalPurchasePrice',0);f:SetAttribute('BasePrice',0);f:SetAttribute('WavePurchased',0);f:SetAttribute('CopyId',token()) end
+ starterTier(p)
  local excluded={}
  for i=1,E.OFFER_COUNT do s.offers[i]=roll(p,i,excluded) end
  return s
@@ -184,6 +193,11 @@ function S.attach(p)
  S.startingWeapons[p]=start
  newState(p);S.publish(p)
  p.CharacterAdded:Connect(function() task.defer(function() local s=S.states[p];if s then s.ready=false;S.publish(p) end end) end)
+ -- An Armory upgrade (or a save loading on a match server) shows on the starter right away, while
+ -- the starter can still change (S.setStarter's rule); a run under way keeps its tiers.
+ p:GetAttributeChangedSignal('ProfileWeapons'):Connect(function()
+  if S.states[p] and Characters.states[p] and S.canSwapStarter(p) then starterTier(p);S.publish(p) end
+ end)
 end
 -- Fresh run state for one player: starting weapons, shards, level and shop.
 function S.resetPlayer(p)
@@ -196,12 +210,16 @@ end
 -- A new loadout starter: every later run begins with it. A player standing in the lobby sees it
 -- on their ring right away, and so does a match member before wave 1 (MatchService sets it as
 -- they arrive); run weapons are never swapped mid-run.
+function S.canSwapStarter(p)
+ local beforeFirstWave=RS:GetAttribute('ServerRole')=='Match' and S.wave==1 and S.phase=='Shop'
+ return p:GetAttribute('LobbyPreviewActive')==true or beforeFirstWave
+end
 function S.setStarter(p,id)
  if not S.states[p] or not Characters.states[p] then return end
  S.startingWeapons[p]={id,'','','','',''}
- local beforeFirstWave=RS:GetAttribute('ServerRole')=='Match' and S.wave==1 and S.phase=='Shop'
- if not p:GetAttribute('LobbyPreviewActive') and not beforeFirstWave then return end
+ if not S.canSwapStarter(p) then return end
  for i=1,6 do local f=slots(p)['Slot'..i];clearWeapon(f);f:SetAttribute('WeaponId',S.startingWeapons[p][i]) end
+ starterTier(p)
  slots(p):SetAttribute('EquippedCount',1)
 end
 function S.resetRun()

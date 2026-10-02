@@ -53,6 +53,7 @@ stat('FirstHitBlock','First-hit blocks',0,0,1,1,'','Defense','One block per wave
 stat('ContactReduction','Contact resistance',0,0,60,5,'%','Defense','Reduces zombie contact damage before armor.')
 stat('ShopDiscount','Shop discount',0,0,30,5,'%','Economy','Reduces unlocked shop offer prices; locked prices stay fixed.')
 stat('ShopPricePercent','Shop price modifier',0,-80,200,5,'%','Economy','Positive values increase prices; negative values reduce them. Combined multiplier is bounded.')
+stat('GearPower','Gear power',0,0,40,1,'','Gear','Tiers of the gear you brought: starting weapon, worn armor and pet. Each point above 1 adds 12% damage and 6% max health.')
 S.Classes={
  Brawler={description='Durable close-range bruiser. Slower movement and weaker ranged damage.',buffs={MaxHP=25,Armor=4,MeleeDamage=20,Knockback=8,ContactReduction=15,MoveSpeed=-2,RangedDamage=-15},build={'01','03','06','02'},two={MeleeDamage=15,Armor=2},four={LifeSteal=5}},
  Gunner={description='Fast ranged attacks and piercing. Less health and weaker melee.',buffs={RangedDamage=20,ProjectileSpeed=35,CritChance=5,MaxHP=-15,MeleeDamage=-15},build={'00','07','09','08'},two={Pierce=1},four={ProjectileCount=1}},
@@ -107,6 +108,30 @@ function S.weapon(base,s,class,tier)
  return d
 end
 function S.format(d,value) return string.format(value%1==0 and '%d' or '%.1f',value)..d.unit end
+-- Gear power (GEAR_POWER.md): one point per tier of what a player brings into a run, the starting
+-- weapon, each worn armor piece and the pet. A fresh account has 1 (a Tier I starter). Each point
+-- above 1 adds 12% to all damage dealt and 6% max health. Example: a Tier II Frying Pan and four
+-- Tier I armor pieces = 2 + 4 = 6 power, so x1.6 damage and x1.3 health. Maps scale their enemies by
+-- the same curve at their recommended power (RunSetupRules), so matching it feels like Pine Valley.
+S.PowerDamagePerPoint=.12;S.PowerHealthPerPoint=.06
+function S.powerDamage(power) return 1+S.PowerDamagePerPoint*math.max(0,(tonumber(power) or 1)-1) end
+function S.powerHealth(power) return 1+S.PowerHealthPerPoint*math.max(0,(tonumber(power) or 1)-1) end
+-- The tier of `id` in a profile list ('01:2:3,Fox:1:0' = id:tier:copies), nil when not owned.
+function S.ownedTier(text,id)
+ if type(text)~='string' or type(id)~='string' then return nil end
+ for key,tier in string.gmatch(text,'([^,:]+):(%d+):%d+') do if key==id then return math.clamp(tonumber(tier) or 1,1,4) end end
+ return nil
+end
+-- get(name): the server-set profile attributes (player:GetAttribute). weapon: the starter's id.
+-- Only owned things count: the starter's owned tier (1 if unknown), owned worn pieces, the pet.
+function S.gearPower(get,weapon)
+ local power=S.ownedTier(get('ProfileWeapons'),weapon) or 1
+ local tiers=S.parseArmorTiers(get('ProfileArmor') or '')
+ for slot,setId in S.parseWearing(get('ProfileWearing')) do power+=tiers[setId..'.'..slot] or 0 end
+ local pet=get('ProfilePet')
+ if type(pet)=='string' and pet~='' then power+=S.ownedTier(get('ProfilePets'),pet) or 0 end
+ return power
+end
 -- Armor set bonuses (RARITY_GODLY_ARMOR.md step 5, approved 2026-09-30). Only worn pieces of the
 -- SAME set count: 2+ pieces give `two`, all 4 give `two` and `four`. A key that is a stat adds to
 -- that stat; any other key is a perk (a number scales with tier, true is a flag). `text` is the
