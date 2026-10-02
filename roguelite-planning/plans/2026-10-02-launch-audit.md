@@ -8,8 +8,6 @@ Paths are relative to `roguelite-planning/studio-prototype/` unless they start w
 
 ## Decisions needed from you
 
-- **Quick Open pass:** Gate ×10/×100 opening behind Quick Open/VIP, or drop the pass and its wording? (M2)
-- **Late revive refund:** When a paid revive can't be used, refund about the price paid (65 R$ → 650 emeralds, 1040 R$ → 10,400), or keep a revive credit for the next death? (M5)
 - **Admin 109021050:** Is this your account? If not, remove it before launch. (C3)
 - **Lucky Cat Luck:** Luck raises run shop odds and comes from emerald-bought eggs. Allow it in writing, or keep Luck pets out of paid eggs? (M12)
 - **Run shop weapons:** Only weapons the player owns (what the docs say) or every weapon (what the code does)? (G6)
@@ -27,7 +25,7 @@ All 31 developer products and both game passes still have ID 0. On a live server
 
 **Where:** `combat/MonetizationConfig.luau:12-70`, `combat/RogueliteMeta.server.luau:510-532`
 
-### M2 · Quick Open (149 R$) and VIP "open ×10" sell something everyone already has
+### M2 · Quick Open (149 R$) and VIP "open ×10" sell something everyone already has — **fixed 2026-10-02**
 *Purchases & store*
 
 The chest screen lets every player open ×10 or ×100, and the server only checks that the amount is 1, 10 or 100. A free player gets the paid perk, and paying players get nothing for 149 R$. That is a refund and moderation risk.
@@ -36,7 +34,7 @@ The chest screen lets every player open ×10 or ×100, and the server only check
 
 **Where:** `ui/ChestScreenUI.luau:371-373`, `combat/ProfileService.luau:295-299`, `ui/StoreUI.luau:141,231-236`
 
-### M3 · Starter Pack and VIP daily chest skip the paid-random-items region check
+### M3 · Starter Pack and VIP daily chest skip the paid-random-items region check — **fixed 2026-10-02**
 *Purchases & store*
 
 The Starter Pack holds 2 Legendary Chests but isn't marked random, and the VIP daily chest never checks the region flag. A player in a region that bans paid random items can buy the pack for 49 R$ and open the chests.
@@ -45,7 +43,7 @@ The Starter Pack holds 2 Legendary Chests but isn't marked random, and the VIP d
 
 **Where:** `combat/MonetizationConfig.luau:41`, `combat/ProfileService.luau:551-557`, `combat/RogueliteMeta.server.luau:431`
 
-### M4 · Receipts skip the purchase rules, so cheaters can pay less or re-buy one-time packs
+### M4 · Receipts skip the purchase rules, so cheaters can pay less or re-buy one-time packs — **fixed 2026-10-02**
 *Purchases & store*
 
 The rules (revive price step, one-time Starter Pack, class already owned, region) are only checked before the prompt. A cheater can prompt a product ID directly. For example: buy Revive1 at 65 R$ every time instead of 130→1040, or buy the 49 R$ Starter Pack (1500 emeralds + 2 Legendary Chests) over and over. This goes live the moment the IDs are filled in.
@@ -54,7 +52,7 @@ The rules (revive price step, one-time Starter Pack, class already owned, region
 
 **Where:** `combat/RogueliteMeta.server.luau:427-500`
 
-### S1 · Spamming one purchase request forces a save every half-second
+### S1 · Spamming one purchase request forces a save every half-second — **fixed 2026-10-02**
 *Saving data*
 
 Picking a Godly Starter saves the profile on every PurchaseRequest, limited only to once per 0.5 s. One cheater looping it uses about 120 DataStore writes a minute. That drains the server's budget, so other players' saves, receipts and joins start failing.
@@ -63,7 +61,7 @@ Picking a Godly Starter saves the profile on every PurchaseRequest, limited only
 
 **Where:** `combat/RogueliteMeta.server.luau:504,524`, `combat/ProfileService.luau:140-155`
 
-### G1 · No shop timer: one idle player freezes the whole party
+### G1 · No shop timer: one idle player freezes the whole party — **fixed 2026-10-02**
 *Gameplay bugs*
 
 The next wave only starts when every living player presses GO and has picked all level-ups. One AFK player in a 4-player party holds everyone in the shop until Roblox kicks them about 20 minutes later. The design doc promises a timer and a safe default pick.
@@ -72,7 +70,7 @@ The next wave only starts when every living player presses GO and has picked all
 
 **Where:** `combat/ShopService.luau:328-334,618`, `PROGRESSION_AND_SESSION_FLOW.md:237-239`
 
-### L1 · Studio is behind the repo: sync before you publish
+### L1 · Studio is behind the repo: sync before you publish — **fixed 2026-10-02**
 *Place & project cleanup*
 
 Studio doesn't have today's work yet. That's the revive price ladder, analytics, Plan K quests, King Crab boss changes and MapBoss modules. Studio is also ahead in one file: AssetPreloader preloads armor/pet icons and rbxthumb images, which the repo doesn't have. The Phoenix armor icon IDs differ between the two.
@@ -83,7 +81,7 @@ Studio doesn't have today's work yet. That's the revive price ladder, analytics,
 
 ## High
 
-### M5 · A revive bought too late turns 1040 R$ into 50 emeralds
+### M5 · A revive bought too late turns 1040 R$ into 50 emeralds — **fixed 2026-10-02**
 *Purchases & store*
 
 If the wave ends while the revive dialog is open, teammates auto-raise the player, and the receipt then pays a flat 50 emeralds (about 5 R$). With a 30 s wave this overlap happens in normal party play. A revive can also be marked delivered when the run ended during the respawn.
@@ -92,7 +90,7 @@ If the wave ends while the revive dialog is open, teammates auto-raise the playe
 
 **Where:** `combat/RogueliteMeta.server.luau:149,290-298,452-455`
 
-### M6 · Game pass perks can silently fail to apply
+### M6 · Game pass perks can silently fail to apply — **fixed 2026-10-02**
 *Purchases & store*
 
 The pass check runs at join, before the profile has loaded, and the grant is thrown away if the profile isn't ready. It's never retried or saved right away. A player who bought VIP on the website can join and not get VIP.
@@ -456,7 +454,7 @@ There are 97 "Before…" backup folders (about 10,800 objects and 515 old script
 
 ## Low
 
-### M9 · The region check allows purchases until PolicyService answers
+### M9 · The region check allows purchases until PolicyService answers — **fixed 2026-10-02**
 *Purchases & store*
 
 Until the async PolicyService call returns, a player counts as unrestricted. One failed call marks a normal player restricted for the whole session, which hides chest packs from them.
@@ -465,7 +463,7 @@ Until the async PolicyService call returns, a player counts as unrestricted. One
 
 **Where:** `combat/RogueliteMeta.server.luau:49-54`
 
-### M10 · Re-asking for a revive keeps the last stand going forever
+### M10 · Re-asking for a revive keeps the last stand going forever — **fixed 2026-10-02**
 *Purchases & store*
 
 Each Revive request (every 0.5 s) refreshes the hold on the last-stand clock and logs an analytics event, without the player paying. A griefer can keep a fully downed party's run from ever ending.
