@@ -40,6 +40,10 @@ Guarded like `ui/SyncUIRuntime.luau`: a Studio script is written only when every
 
 Order: RunAnalytics before RogueliteMeta (it requires it); RunResultsUI before RogueliteUI; CharacterStats before CharacterService, RunSetupRules and the UI.
 
+`SyncRunEndRuntime.luau` does this. Serve `cur` = the files at the latest commit that has plan I (3cb6462 or later) and `base` = f71e614 (before plan I). Checked 2026-10-02: Studio holds none of plan I yet, but it does hold the egg merchant's lines (cce0dcc, synced by that session), which are in `cur`, so the guard passes.
+
+Code review (subagent, 2026-10-02) found four real issues, fixed in 3cb6462: the wave clock stayed paused after a last stand ended without a revive; a respawn finishing after the player had left gave them a live body behind the results; a failed save handoff stranded a player on results; an open revive prompt could hold the last stand forever.
+
 ## Play-test checklist (the user runs it)
 
 Single player, Studio Combined:
