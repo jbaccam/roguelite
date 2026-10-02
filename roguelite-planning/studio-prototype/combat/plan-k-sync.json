@@ -1,0 +1,131 @@
+{
+ "modules": [
+  {
+   "path": "combat/QuestConfig.luau",
+   "parent": "ReplicatedStorage.RogueliteCombat",
+   "name": "QuestConfig",
+   "base": "7fd7cea"
+  },
+  {
+   "path": "combat/QuestService.luau",
+   "parent": "ServerScriptService",
+   "name": "QuestService",
+   "base": "7fd7cea"
+  },
+  {
+   "path": "ui/QuestsUI.luau",
+   "parent": "ReplicatedStorage",
+   "name": "QuestsUI",
+   "base": "7fd7cea"
+  },
+  {
+   "path": "ui/StatPlates.luau",
+   "parent": "ReplicatedStorage",
+   "name": "StatPlates",
+   "sandboxLike": "ReplicatedStorage.ArmoryUI",
+   "base": "7fd7cea"
+  }
+ ],
+ "hunks": [
+  {
+   "repo": "combat/RogueliteMeta.server.luau",
+   "studio": "ServerScriptService.RogueliteMeta",
+   "anchor": "local function questRun(p,stint) if Profiles.questRun then Profiles.questRun(p,stint) end end",
+   "where": "after",
+   "text": "-- Plan K quest stats from the run: level-ups, shards picked up and shop buys (ShopService hooks),\n-- damage dealt (CombatEffectsService.listenDamage) and each minute in a run. The hooks run inside\n-- the sandboxed ShopService / CombatEffectsService, so they only add to these tallies; this loop\n-- sends them to quests once a second. Members of the run only; questEvent skips test runs.\nlocal questTally={levels={},shards={},buys={},damage={}}\nlocal function tally(stat,p,n) if Shop.members[p] then local t=questTally[stat];t[p]=(t[p] or 0)+n end end\nShop.onLevelUp=function(p,n) tally('levels',p,n) end\nShop.onShards=function(p,n) tally('shards',p,n) end\nShop.onBuy=function(p) tally('buys',p,1) end\nif Effects.listenDamage then Effects.listenDamage(function(owner,_,actual) tally('damage',owner,actual) end) end -- plan J's hook; absent in older copies\ntask.spawn(function()\n local minuteAt=os.clock()+60\n while true do\n  task.wait(1)\n  for stat,t in questTally do\n   for p,n in t do t[p]=nil;if Shop.members[p] then questEvent(p,stat,math.floor(n)) end end\n  end\n  if os.clock()>=minuteAt then minuteAt+=60;for p in Shop.members do questEvent(p,'minutes',1) end end\n end\nend)"
+  },
+  {
+   "repo": "combat/RogueliteMeta.server.luau",
+   "studio": "ServerScriptService.RogueliteMeta",
+   "anchor": "  if wavesPassed==RunSetupRules.WinWave then questEvent(p,'wins',1) end",
+   "where": "after",
+   "text": "  if wavesPassed==10 then questEvent(p,'deepRuns',1) end -- Reach Wave 10 in One Run"
+  },
+  {
+   "repo": "combat/RogueliteMeta.server.luau",
+   "studio": "ServerScriptService.RogueliteMeta",
+   "anchor": " if weapon and weapon.utility then questEvent(p,'utilityKills',1) end",
+   "where": "after",
+   "text": " if weapon then questEvent(p,weapon.kind=='Melee' and 'meleeKills' or 'rangedKills',1) end -- Ranged, Blast and Spread count as ranged"
+  },
+  {
+   "repo": "combat/ProfileService.luau",
+   "studio": "ServerScriptService.ProfileService",
+   "anchor": " d.eggs-=n",
+   "where": "after",
+   "text": " quest('event',d,Money.day(),player.UserId,'eggs',n) -- Hatch an Egg, Hatcher (plan K)"
+  },
+  {
+   "repo": "combat/CharacterStats.luau",
+   "studio": "ReplicatedStorage.RogueliteCombat.CharacterStats",
+   "anchor": "-- Armor set bonuses (RARITY_GODLY_ARMOR.md step 5, approved 2026-09-30). Only worn pieces of the",
+   "where": "before",
+   "text": "-- gearPower split for the Armory's Power card (plan K): the starter's tier, worn armor tiers and\n-- the pet's tier. total equals gearPower(get, weapon).\nfunction S.gearParts(get,weapon)\n local parts={weapon=S.ownedTier(get('ProfileWeapons'),weapon) or 1,armor=0,pet=0}\n local tiers=S.parseArmorTiers(get('ProfileArmor') or '')\n for slot,setId in S.parseWearing(get('ProfileWearing')) do parts.armor+=tiers[setId..'.'..slot] or 0 end\n local pet=get('ProfilePet')\n if type(pet)=='string' and pet~='' then parts.pet=S.ownedTier(get('ProfilePets'),pet) or 0 end\n parts.total=parts.weapon+parts.armor+parts.pet\n return parts\nend"
+  },
+  {
+   "repo": "lobby/RunSetupRules.luau",
+   "studio": "ReplicatedStorage.RunSetupRules",
+   "anchor": "-- Saved win / best-wave key: Normal keeps the plain map id (older saves stay valid).",
+   "where": "before",
+   "text": "-- The same power split into weapon, armor and pet tiers (the Armory's Power card, plan K).\nfunction R.powerParts(player,weapon)\n return Stats.gearParts(function(name) return player:GetAttribute(name) end,weapon or player:GetAttribute('RunWeapon') or R.Signature.Brawler)\nend"
+  },
+  {
+   "repo": "ui/ArmoryUI.luau",
+   "studio": "ReplicatedStorage.ArmoryUI",
+   "anchor": "local RunSetup = require(RS:WaitForChild(\"RunSetupUI\"))",
+   "where": "after",
+   "text": "local StatPlates = require(RS:WaitForChild(\"StatPlates\")) -- damage, health and Power under the dais (plan K)"
+  },
+  {
+   "repo": "ui/ArmoryUI.luau",
+   "studio": "ReplicatedStorage.ArmoryUI",
+   "anchor": [
+    "\t\t-- Stat plate under the dais: the starter's damage at its tier, class health, and gear power",
+    "\t\tcentred(T.text(g, \"Bonus\", string.format(\"+%d%% dmg  +%d%% hp\", math.round((Stats.powerDamage(power) - 1) * 100), math.round((Stats.powerHealth(power) - 1) * 100)), 8, 38, 144, 22, 15, C.muted))"
+   ],
+   "where": "block",
+   "text": "\t\t-- Stat plates under the dais (ui/StatPlates.luau, plan K): the starter's damage at its tier,\n\t\t-- class health, and gear power with its ? card.\n\t\tlocal hp = Stats.resolve(class, 0).MaxHP\n\t\tlocal w = Weapons.ById[weapon]\n\t\tlocal dmg = w and weaponAt(w, rec and rec.tier or 1).damage or 0\n\t\tStatPlates.draw(mid, gw / 2, 640, math.min(StatPlates.WIDTH, gw - 16), {\n\t\t\tdamage = dmg,\n\t\t\thealth = math.floor(hp + 0.5),\n\t\t\tweaponIcon = WeaponIcons[weapon],\n\t\t\tweaponName = w and w.name or \"Starter\",\n\t\t\tparts = Rules.powerParts(player, weapon),\n\t\t\tmaps = Rules.Maps,\n\t\t})"
+  },
+  {
+   "repo": "ui/UITheme.luau",
+   "studio": "ReplicatedStorage.UITheme",
+   "anchor": " local frame=T.panel(holder,'Frame',0,0,w,h,'panel');frame.Size=UDim2.fromScale(1,1);frame.Active=true",
+   "where": "after",
+   "text": " if opts and opts.seeThrough then frame.ImageTransparency=opts.seeThrough end -- e.g. Quests (plan K): the world shows through a little"
+  },
+  {
+   "repo": "ui/LobbyUI.luau",
+   "studio": "ReplicatedStorage.LobbyUI",
+   "anchor": [
+    " local goals=T.panel(left,'Goals',0,140,300,212,'panel')",
+    " goalsButton.Activated:Connect(function() open('Quests','Daily') end)"
+   ],
+   "where": "block",
+   "text": " -- Quest tracker (QuestsUI.tracker, plan K): today's quests, the streak and OPEN QUESTS. A finished\n -- quest claims right on it; anywhere else on the tracker opens the Quests window.\n local tracker=QuestsUI.tracker(left,0,140,{config=QuestConfig,open=function() open('Quests','Daily') end,\n  claim=function(i)\n   task.spawn(function()\n    local ok,r=pcall(function() return combat:WaitForChild('ProfileAction'):InvokeServer('ClaimQuest',i) end)\n    if ok and type(r)=='table' then\n     if r.ok then T.sound('ui_purchase') end\n     T.toast(screen,r.message or '',r.ok and C.lime or C.negative)\n    end\n   end)\n  end})\n local goals=tracker.Root"
+  },
+  {
+   "repo": "ui/LobbyUI.luau",
+   "studio": "ReplicatedStorage.LobbyUI",
+   "anchor": [
+    "  -- Tracker: today's three daily quests; badges count rewards waiting for CLAIM.",
+    "  goalsTitle.Text='DAILY QUESTS'"
+   ],
+   "where": "block",
+   "text": "  -- Tracker (plan K): today's quests and the streak; badges count rewards waiting for CLAIM.\n  local quests=profile.quests;tracker.update(quests)"
+  },
+  {
+   "repo": "ui/LobbyUI.luau",
+   "studio": "ReplicatedStorage.LobbyUI",
+   "anchor": "  T.badge(awards,claim>0 and tostring(claim) or nil)",
+   "where": "after",
+   "text": "  T.badge(tracker.OpenButton,claim>0 and tostring(claim) or nil)"
+  },
+  {
+   "repo": "ui/LobbyUI.luau",
+   "studio": "ReplicatedStorage.LobbyUI",
+   "anchor": "  local leftRight,leftBottom=14+328*s,10+(goals.Visible and 352 or 118)*s",
+   "where": "replace",
+   "text": "  local leftRight,leftBottom=14+(goals.Visible and QuestsUI.TRACKER_W or 328)*s,10+(goals.Visible and 140+QuestsUI.TRACKER_H or 118)*s"
+  }
+ ]
+}

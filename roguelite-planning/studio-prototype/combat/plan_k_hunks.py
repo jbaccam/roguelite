@@ -125,7 +125,12 @@ end"""),
      "  local leftRight,leftBottom=14+(goals.Visible and QuestsUI.TRACKER_W or 328)*s,10+(goals.Visible and 140+QuestsUI.TRACKER_H or 118)*s"),
 ]
 
-MODULES = []  # whole modules for the Studio sync: filled in Task 11
+MODULES = [
+    {"path": "combat/QuestConfig.luau", "parent": "ReplicatedStorage.RogueliteCombat", "name": "QuestConfig"},
+    {"path": "combat/QuestService.luau", "parent": "ServerScriptService", "name": "QuestService"},
+    {"path": "ui/QuestsUI.luau", "parent": "ReplicatedStorage", "name": "QuestsUI"},
+    {"path": "ui/StatPlates.luau", "parent": "ReplicatedStorage", "name": "StatPlates", "sandboxLike": "ReplicatedStorage.ArmoryUI"},
+]
 BASE = "7fd7cea"  # the commit Studio's copies of plan K's whole modules are expected to match
 
 if __name__ == "__main__":
