@@ -517,6 +517,21 @@ function P.claimUnlock(player,id)
  return questGrant(player,ok,message,g)
 end
 
+-- Plan M: a map win's record (difficulty, solo, no-down, class) for feats and weekly quests,
+-- and their claims. A test run counts nothing, like questEvent.
+function P.questWin(player,info)
+ local d=P.profiles[player];if not d or Admin.isTestRun() then return end
+ if quest('win',d,Money.day(),player.UserId,info) then questDirty[player]=true end
+end
+function P.claimWeekly(player,index)
+ local d=P.profiles[player];if not d then return false,'Profile loading' end
+ return questGrant(player,quest('claimWeekly',d,Money.day(),player.UserId,index))
+end
+function P.claimFeat(player,id)
+ local d=P.profiles[player];if not d then return false,'Profile loading' end
+ return questGrant(player,quest('claimFeat',d,Money.day(),player.UserId,id))
+end
+
 -- Daily deals: same 5 deals for a player all day, new ones at UTC midnight. Never Godly.
 local function dealList(userId)
  local day=Money.day();local r=Random.new(day*100003+userId%100003)

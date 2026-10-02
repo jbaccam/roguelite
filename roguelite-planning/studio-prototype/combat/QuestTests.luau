@@ -1,7 +1,8 @@
 -- QuestService checks (plans/2026-10-01-H-store-and-quests.md, plans/2026-10-02-K-quests-power-ui.md):
 -- the config's shape, the daily roll of 4, progress, claims, the streak (growing, breaking, the
--- 30-day wrap), 10-level roads, old-save conversion, Achiever, the plan K stats, unlocks and the
--- view. Run in Studio Edit on fresh copies (plans/2026-10-02-K-build-steps.md "Running Luau checks"):
+-- 30-day wrap), 10-level roads, old-save conversion, Achiever, the plan K stats, unlocks, the
+-- view, and plan M's weekly quests, wins and feats (plans/2026-10-02-M-feats-weekly-roads.md).
+-- Run in Studio Edit on fresh copies (plans/2026-10-02-K-build-steps.md "Running Luau checks"):
 -- `QuestTests(QuestService, QuestConfig)` returns the number of checks.
 return function(S, C)
 	S.use(C)
@@ -24,7 +25,7 @@ return function(S, C)
 		return st
 	end
 
-	-- Config: 16 dailies, 15 roads x 10 levels that grow, plan H targets kept, art for every stat.
+	-- Config: 16 dailies, 19 roads x 10 levels that grow, plan H targets kept, art for every stat.
 	check(#C.Daily == 16 and C.DailyCount == 4 and C.DailyPlay == 3, "16 daily quests, 4 a day, 3 of them run quests")
 	local statSet = {}
 	for _, s in C.Stats do
@@ -38,7 +39,7 @@ return function(S, C)
 		check(C.Icons[q.stat] ~= nil, "Daily quest has art: " .. q.id)
 		check(q.target > 0 and q.emeralds > 0 and q.weight > 0, "Daily numbers are positive: " .. q.id)
 	end
-	check(#C.Roads == 15 and C.Levels == 10 and #C.TierNames == 10, "15 roads, 10 levels")
+	check(#C.Roads == 19 and C.Levels == 10 and #C.TierNames == 10, "19 roads, 10 levels")
 	check(#C.TierRewards == 10 and #C.TierColors == 10, "A reward and a colour per level")
 	for _, r in C.Roads do
 		check(#r.targets == 10, r.id .. " has 10 levels")
@@ -53,7 +54,10 @@ return function(S, C)
 			check(table.find(C.RoadById[id].targets, target) ~= nil, id .. " keeps old target " .. target)
 		end
 	end
-	check(C.RoadById.Achiever.targets[10] <= (#C.Roads - 1) * C.Levels + #C.Unlocks, "Achiever's last level is reachable")
+	check(
+		C.RoadById.Achiever.targets[10] == (#C.Roads - 1) * C.Levels + #C.Unlocks + #C.Feats,
+		"Achiever's last level is everything else"
+	)
 	check(C.short(250000) == "250K" and C.short(1e9) == "1B" and C.short(999) == "999" and C.short(12345) == "12.3K", "Short numbers")
 	check(C.duration(30) == "30 minutes" and C.duration(60) == "1 hour" and C.duration(600) == "10 hours", "Durations")
 	check(C.clock(434) == "7:14" and C.amount(C.RoadById.Playtime, 600) == "10 hours", "Clock and road amounts")
@@ -250,5 +254,127 @@ return function(S, C)
 	check(view.stats.achievements == 0 and view.stats.bestStreak == 1, "View has the derived stats")
 	-- 4 quests + the day-1 streak reward + Slayer's next level (+ any road the quests cleared).
 	check(S.claimable(d, 50000, uid) >= 6, "Badge counts every waiting reward")
+
+	-- Plan M config: level 1 pays 50, 12 feats with rewards and art, weekly quests count saved stats.
+	check(C.TierRewards[1].emeralds == 50, "Level 1 pays 50")
+	check(#C.Feats == 12, "12 feats")
+	for _, f in C.Feats do
+		check(C.FeatRewards[f.stars] ~= nil and C.Icons[f.icon] ~= nil and C.FeatById[f.id] == f, "Feat has a reward and art: " .. f.id)
+	end
+	for id, q in C.WeeklyById do
+		check(statSet[q.stat] == true and C.Icons[q.stat] ~= nil and q.target > 0 and q.emeralds > 0, "Weekly quest counts a saved stat: " .. id)
+	end
+	-- Weeks run Monday to Sunday: UTC day 4 (1970-01-05) was a Monday.
+	check(C.week(4) == C.week(10) and C.week(3) ~= C.week(4) and C.week(11) ~= C.week(10), "Weeks start on Monday")
+	check(C.weekResetIn(4, 100) == 6 * 86400 + 100 and C.weekResetIn(10, 100) == 100, "Week reset countdown")
+
+	-- Weekly roll: 2 normal + 1 hard, the hard one only from what the player can do.
+	local nightmareSeen, lockedSeen = false, false
+	for week = 3000, 3200 do
+		local list = C.rollWeekly(week, uid, { Hard = false, Nightmare = false })
+		local a, b, c = C.WeeklyById[list[1]], C.WeeklyById[list[2]], C.WeeklyById[list[3]]
+		check(#list == 3 and not a.hard and not b.hard and c.hard, "2 normal + 1 hard")
+		check(list[1] ~= list[2], "No repeats in a week")
+		check(c.needs == nil, "A new player never rolls a locked hard quest")
+		check(table.concat(C.rollWeekly(week, uid, {}), ",") == table.concat(list, ","), "Same roll all week")
+		local full = C.rollWeekly(week, uid, { Hard = true, Nightmare = true })
+		nightmareSeen = nightmareSeen or full[3] == "NightmareWin"
+		lockedSeen = lockedSeen or C.WeeklyById[full[3]].needs ~= nil
+	end
+	check(nightmareSeen and lockedSeen, "Unlocked players can roll Hard and Nightmare quests")
+	check(not S.canPlay(profile()).Hard, "No wins: no Hard quests")
+	local monday = 20003 -- (20003 + 3) % 7 == 0
+	d = profile()
+	st = S.state(d, monday, uid)
+	local week1 = table.concat(st.weekList, ",")
+	check(#st.weekList == 3 and st.week == C.week(monday), "Three weekly quests")
+	d.mapWins.PineValley = true
+	d.mapWins["PineValley/Hard"] = true
+	check(S.canPlay(d).Hard and S.canPlay(d).Nightmare, "A Hard win opens Nightmare quests")
+	st = S.state(d, monday + 3, uid)
+	check(table.concat(st.weekList, ",") == week1, "Unlocking Hard midweek keeps the week's list")
+	check(S.claimWeekly(d, monday + 3, uid, 1) == false, "Unfinished weekly can't be claimed")
+	local w1 = C.WeeklyById[st.weekList[1]]
+	S.event(d, monday + 3, uid, w1.stat, w1.target * 2)
+	check(st.weekProgress[w1.id] == w1.target, "Weekly progress stops at the target")
+	ok, _, grant = S.claimWeekly(d, monday + 3, uid, 1)
+	check(ok and grant.emeralds == 300 and next(grant.chests) == nil, "A weekly pays 300")
+	check(S.claimWeekly(d, monday + 3, uid, 1) == false, "A weekly pays once")
+	check(st.stats.weeklies == 1, "Claims count toward Weekly Warrior")
+	local w3 = C.WeeklyById[st.weekList[3]]
+	S.event(d, monday + 4, uid, w3.stat, w3.target)
+	ok, _, grant = S.claimWeekly(d, monday + 4, uid, 3)
+	check(ok and grant.emeralds == 600 and grant.chests.Gold == 1, "The hard weekly pays 600 + a Gold Chest")
+	check(S.claimWeekly(d, monday + 4, uid, 4) == false and S.claimWeekly(d, monday + 4, uid, "1") == false, "Bad weekly index refused")
+	st = S.state(d, monday + 7, uid)
+	check(st.week == C.week(monday + 7) and next(st.weekProgress) == nil and next(st.weekClaimed) == nil, "New week, fresh progress")
+	check(st.stats.weeklies == 2, "Weekly Warrior keeps counting")
+	-- A claimed daily quest feeds "Finish 12 Daily Quests".
+	local dw
+	for w = 3000, 3600 do
+		local l = C.rollWeekly(w, uid, S.canPlay(profile()))
+		if l[1] == "Dailies" or l[2] == "Dailies" then
+			dw = w
+			break
+		end
+	end
+	check(dw ~= nil, "Some week rolls Finish 12 Daily Quests")
+	d = profile()
+	local dday = dw * 7 - 3 -- that week's Monday
+	st = S.state(d, dday, uid)
+	local q1 = C.DailyById[st.list[1]]
+	S.event(d, dday, uid, q1.stat, q1.target)
+	S.claimQuest(d, dday, uid, 1)
+	check(st.weekProgress.Dailies == 1, "A claimed daily counts toward the weekly")
+
+	-- Wins (QuestService.win) and feats.
+	d = profile()
+	check(S.claimFeat(d, 1, uid, "LoneWolf") == false, "Lone Wolf needs a solo win")
+	check(S.claimFeat(d, 1, uid, "Nope") == false and S.claimFeat(d, 1, uid, 5) == false, "Unknown feat refused")
+	check(S.win(d, 1, uid, "bad") == false, "Bad win refused")
+	S.win(d, 1, uid, { diff = "Normal", solo = true, flawless = false, class = "Brawler" })
+	ok, _, grant = S.claimFeat(d, 1, uid, "LoneWolf")
+	check(ok and grant.emeralds == 300 and grant.chests.Silver == 1, "Lone Wolf pays one star")
+	check(S.claimFeat(d, 1, uid, "LoneWolf") == false, "A feat pays once")
+	check(S.claimFeat(d, 1, uid, "LoneLegend") == false, "A Normal solo win isn't Lone Legend")
+	check(S.claimFeat(d, 1, uid, "Untouchable") == false, "Going down blocks Untouchable")
+	check(d.quests.stats.hardWins == 0 and d.quests.stats.flawlessWins == 0, "A Normal win with a death counts neither")
+	S.win(d, 1, uid, { diff = "Nightmare", solo = true, flawless = true, class = "Gunner" })
+	check(S.claimFeat(d, 1, uid, "LoneLegend") == true, "A Nightmare solo win counts for Hard")
+	ok, _, grant = S.claimFeat(d, 1, uid, "FlawlessNightmare")
+	check(ok and grant.emeralds == 1500 and grant.chests.Magical == 1, "Flawless Nightmare pays three stars")
+	ok, _, grant = S.claimFeat(d, 1, uid, "Untouchable")
+	check(ok and grant.emeralds == 750 and grant.chests.Gold == 1, "Untouchable pays two stars")
+	local ws = d.quests.stats
+	check(ws.hardWins == 1 and ws.nightmareWins == 1 and ws.flawlessWins == 1, "A Nightmare no-down win counts all three")
+	check(S.claimFeat(d, 1, uid, "JackOfAllTrades") == false, "Two classes aren't three")
+	S.win(d, 1, uid, { diff = "Normal", class = "Brawler" })
+	check(S.claimFeat(d, 1, uid, "JackOfAllTrades") == false, "The same class twice counts once")
+	S.win(d, 1, uid, { diff = "Normal", class = "Mage" })
+	check(S.claimFeat(d, 1, uid, "JackOfAllTrades") == true, "Three classes")
+	check(S.claimFeat(d, 1, uid, "MasterOfAll") == false, "Three classes aren't six")
+	-- Feats from saved map records count right away; solo and no-down don't.
+	d = profile()
+	d.mapWins["PineValley/Nightmare"] = true
+	check(S.claimFeat(d, 1, uid, "StepItUp") and S.claimFeat(d, 1, uid, "NightmareWalker"), "A saved Nightmare win counts for Hard too")
+	check(S.claimFeat(d, 1, uid, "LoneWolf") == false and S.claimFeat(d, 1, uid, "Untouchable") == false, "Saved wins aren't solo or no-down")
+	d.mapWins["VolcanicCrater/Hard"] = true
+	check(S.claimFeat(d, 1, uid, "DragonSlayer") == false, "A Hard Volcanic Crater win isn't Dragon Slayer")
+	d.mapWins["VolcanicCrater/Nightmare"] = true
+	check(S.claimFeat(d, 1, uid, "DragonSlayer") == true, "Dragon Slayer")
+	d.bestWaves.BeachCove = 45
+	d.bestWaves["FrozenPass/Hard"] = 40
+	d.bestWaves["FrozenPass/Nightmare"] = 28
+	check(S.claimFeat(d, 1, uid, "DeepDiver") and not S.claimFeat(d, 1, uid, "Abyss"), "Wave 45 is Deep Diver, not Abyss")
+	check(S.claimFeat(d, 1, uid, "NightShift") == false, "Hard waves don't count for Night Shift")
+	d.bestWaves["FrozenPass/Nightmare"] = 31
+	check(S.claimFeat(d, 1, uid, "NightShift") == true, "Night Shift")
+	check(S.stat(d.quests, "achievements") == 5, "Feats count toward Achiever")
+	view = S.view(d, 1, uid, 3600)
+	check(#view.weekly == 3 and view.feats.DragonSlayer.claimed and view.feats.Abyss.have == 45, "View has weekly quests and feats")
+	check(view.weekResetIn == C.weekResetIn(1, 3600), "View has the week's reset time")
+	local before = S.claimable(d, 1, uid)
+	d.bestWaves.BeachCove = 50
+	check(S.claimable(d, 1, uid) == before + 1, "Badge counts a ready feat")
 	return checks
 end

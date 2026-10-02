@@ -1,8 +1,8 @@
 -- Daily quests, the daily streak and achievements (plans/2026-10-01-H-store-and-quests.md; 4 a day
--- from 16, and 10-level roads: plans/2026-10-02-K-quests-power-ui.md). Shared data: QuestService
--- (server) checks progress and grants, the lobby UI draws from it. Rewards: emeralds (counted as
--- earned), chests by ChestConfig id, a class, a weapon by WeaponCatalog name, or a full armor set
--- by ArmorCatalog id.
+-- from 16, and 10-level roads: plans/2026-10-02-K-quests-power-ui.md; weekly quests, feats and 19
+-- roads: plans/2026-10-02-M-feats-weekly-roads.md). Shared data: QuestService (server) checks
+-- progress and grants, the lobby UI draws from it. Rewards: emeralds (counted as earned), chests by
+-- ChestConfig id, a class, a weapon by WeaponCatalog name, or a full armor set by ArmorCatalog id.
 local Q={}
 local function rgb(r,g,b) return Color3.fromRGB(r,g,b) end
 
@@ -35,7 +35,15 @@ Q.Icons={
  speed='rbxassetid://117216104224040', -- wings (Move Speed)
  frost='rbxassetid://104227388119878', -- frost streaks (Attack Speed)
  heart='rbxassetid://87748663271804', -- Max HP
+ -- Plan M. The user makes the solo / no-down / Nightmare / classes art; until then each borrows one.
+ solo='rbxassetid://138623258102251', -- profile (hud/profile.png) until the lone wolf arrives
+ flawless='rbxassetid://87748663271804', -- Max HP heart until the shield arrives
+ nightmare='rbxassetid://140040643870888', -- boss teeth until the skull arrives
+ classes='rbxassetid://79366861483753', -- achievements until the masks arrive
+ weekly='rbxassetid://133092049631498', -- calendar
 }
+-- Stats that share another stat's art.
+for stat,art in {hardWins='wins',nightmareWins='nightmare',flawlessWins='flawless',wave25Runs='waves',weeklies='weekly'} do Q.Icons[stat]=Q.Icons[art] end
 
 -- Daily pool. Every day rolls DailyPlay run quests (`play`: they need a run), then the rest from
 -- everything left, by weight. color: the card's header band. short: the tracker's name.
@@ -91,11 +99,55 @@ Q.Streak={
 }
 Q.StreakByDay={};for _,s in Q.Streak do Q.StreakByDay[s.day]=s end
 
+-- Weekly quests (plan M): 3 a week, new every Monday 00:00 UTC. Two from Weekly (each about 5-8
+-- runs), then one from WeeklyHard that the player can do when the week rolls (needs: 'Hard' = a win
+-- on Normal anywhere, 'Nightmare' = a win on Hard anywhere). The list is saved when it rolls.
+Q.Weekly={
+ {id='Wins',stat='wins',target=3,emeralds=300,title='Win 3 Maps',color=rgb(64,150,240)},
+ {id='Bosses',stat='bosses',target=5,emeralds=300,title='Defeat 5 Map Bosses',color=rgb(236,140,36)},
+ {id='Waves',stat='waves',target=100,emeralds=300,title='Survive 100 Waves',color=rgb(30,150,170)},
+ {id='Runs',stat='runs',target=10,emeralds=300,title='Play 10 Runs',color=rgb(156,96,236)},
+ {id='Hours',stat='minutes',target=120,emeralds=300,title='Play 2 Hours',color=rgb(214,150,40)},
+ {id='DeepRuns',stat='deepRuns',target=5,emeralds=300,title='Reach Wave 10 in 5 Runs',color=rgb(40,180,96)},
+ {id='Dailies',stat='quests',target=12,emeralds=300,title='Finish 12 Daily Quests',color=rgb(110,90,230)},
+ {id='Levels',stat='levels',target=100,emeralds=300,title='Level Up 100 Times',color=rgb(70,170,230)},
+ {id='Chests',stat='chests',target=10,emeralds=300,title='Open 10 Chests',color=rgb(214,164,40)},
+}
+Q.WeeklyHard={
+ {id='HardWins',stat='hardWins',target=3,title='Win 3 Maps on Hard',needs='Hard'},
+ {id='NightmareWin',stat='nightmareWins',target=1,title='Win a Map on Nightmare',needs='Nightmare'},
+ {id='Flawless',stat='flawlessWins',target=1,title='Win Without Going Down'},
+ {id='BossHunt',stat='bosses',target=12,title='Defeat 12 Map Bosses'},
+ {id='WinMany',stat='wins',target=8,title='Win 8 Maps'},
+ {id='Endless',stat='wave25Runs',target=1,title='Reach Wave 25 in One Run'},
+}
+for _,q in Q.WeeklyHard do q.hard=true;q.emeralds=600;q.chests={Gold=1};q.color=rgb(200,64,28) end
+Q.WeeklyById={}
+for _,list in {Q.Weekly,Q.WeeklyHard} do for _,q in list do Q.WeeklyById[q.id]=q end end
+Q.WeeklyCount=3
+-- Week number: UTC day 0 (1970-01-01) was a Thursday, so +3 starts every week on a Monday.
+function Q.week(day) return (day+3)//7 end
+-- Seconds until next Monday 00:00 UTC, given the seconds left today.
+function Q.weekResetIn(day,todayLeft) return (6-(day+3)%7)*86400+todayLeft end
+-- The week's quests for one player: 2 normal, then 1 hard they can do. can = {Hard=bool, Nightmare=bool}.
+function Q.rollWeekly(week,userId,can)
+ local r=Random.new(week*104723+(userId or 0)%99991)
+ local out={}
+ local function pick(list,ok)
+  local pool={}
+  for _,q in list do if ok(q) and not table.find(out,q.id) then table.insert(pool,q) end end
+  if #pool>0 then table.insert(out,pool[r:NextInteger(1,#pool)].id) end
+ end
+ for _=1,Q.WeeklyCount-1 do pick(Q.Weekly,function() return true end) end
+ pick(Q.WeeklyHard,function(q) return q.needs==nil or (can and can[q.needs])==true end)
+ return out
+end
+
 -- Roads: lifetime stats with ten levels each. Each level is also a future title ("Slayer Skilled").
 Q.TierNames={'Rookie','Beginner','Intermediate','Skilled','Advanced','Expert','Elite','Master','Grandmaster','Legend'}
 Q.Levels=#Q.TierNames
 Q.TierRewards={
- {emeralds=25},
+ {emeralds=50}, -- 25 until plan M
  {emeralds=50,chests={Silver=1}},
  {emeralds=100,chests={Silver=1}},
  {emeralds=200,chests={Gold=1}},
@@ -126,7 +178,13 @@ Q.Roads={
  {id='Runner',name='Runner',stat='runs',goal='Play %s runs',targets={3,10,25,50,100,200,350,500,750,1000}},
  {id='HeavyHitter',name='Heavy Hitter',stat='damage',goal='Deal %s damage',format='short',targets={5e4,2.5e5,1e6,3e6,1e7,3e7,1e8,3e8,1e9,3e9}},
  {id='Leveler',name='Leveler',stat='levels',goal='Level up %s times',targets={10,50,150,400,1000,2000,4000,7500,12000,20000}},
- {id='Achiever',name='Achiever',stat='achievements',goal='Reach %s achievement levels',targets={3,10,20,30,45,60,80,100,120,145}},
+ -- Plan M. Shard Hoarder's targets are first guesses, like the Shards daily.
+ {id='Bruiser',name='Bruiser',stat='meleeKills',goal='Defeat %s enemies with melee',targets={50,250,1000,5000,12500,25000,50000,100000,250000,500000}},
+ {id='Sharpshooter',name='Sharpshooter',stat='rangedKills',goal='Defeat %s enemies with ranged',targets={50,250,1000,5000,12500,25000,50000,100000,250000,500000}},
+ {id='ShardHoarder',name='Shard Hoarder',stat='shards',goal='Collect %s shards',format='short',targets={300,1500,5000,15000,40000,100000,200000,400000,750000,1500000}},
+ {id='WeeklyWarrior',name='Weekly Warrior',stat='weeklies',goal='Finish %s weekly quests',targets={1,3,6,10,20,35,52,80,120,156}},
+ -- Last level = everything else: 18 roads x 10 + 5 unlocks + 12 feats.
+ {id='Achiever',name='Achiever',stat='achievements',goal='Reach %s achievement levels',targets={3,10,25,40,60,85,110,140,170,197}},
 }
 Q.RoadById={};for _,r in Q.Roads do Q.RoadById[r.id]=r end
 -- Plan H's five tiers per road. QuestService converts saves that still count those (roadsVersion).
@@ -150,9 +208,34 @@ Q.UnlockById={};for _,u in Q.Unlocks do Q.UnlockById[u.id]=u end
 -- An unlock achievement for a class you already own pays its emerald price instead.
 Q.ClassRefund=400
 
+-- Difficulty ranks for goals: `diff` means that difficulty or harder.
+Q.DiffRank={Normal=1,Hard=2,Nightmare=3}
+-- Feats (plan M): one-time challenges, paid by stars. Goals as for unlocks, plus `diff`, and
+-- solo / flawless (read from the wins QuestService.win recorded; a goal uses one of them, never
+-- both) and classes = how many classes have won a map.
+Q.FeatRewards={{emeralds=300,chests={Silver=1}},{emeralds=750,chests={Gold=1}},{emeralds=1500,chests={Magical=1}}}
+Q.Feats={
+ {id='LoneWolf',name='Lone Wolf',desc='Win a map solo',stars=1,icon='solo',goal={win='*',solo=true}},
+ {id='StepItUp',name='Step It Up',desc='Win any map on Hard',stars=1,icon='wins',goal={win='*',diff='Hard'}},
+ {id='JackOfAllTrades',name='Jack of All Trades',desc='Win with 3 different classes',stars=1,icon='classes',goal={classes=3}},
+ {id='Untouchable',name='Untouchable',desc='Win a map without going down',stars=2,icon='flawless',goal={win='*',flawless=true}},
+ {id='LoneLegend',name='Lone Legend',desc='Win solo on Hard',stars=2,icon='solo',goal={win='*',diff='Hard',solo=true}},
+ {id='NightmareWalker',name='Nightmare Walker',desc='Win any map on Nightmare',stars=2,icon='nightmare',goal={win='*',diff='Nightmare'}},
+ {id='DeepDiver',name='Deep Diver',desc='Reach wave 40 on any map',stars=2,icon='waves',goal={best='*',wave=40}},
+ {id='Abyss',name='Abyss',desc='Reach wave 50 on any map',stars=3,icon='waves',goal={best='*',wave=50}},
+ {id='NightShift',name='Night Shift',desc='Reach wave 30 on Nightmare',stars=3,icon='nightmare',goal={best='*',diff='Nightmare',wave=30}},
+ {id='MasterOfAll',name='Master of All',desc='Win with all 6 classes',stars=3,icon='classes',goal={classes=6}},
+ {id='FlawlessNightmare',name='Flawless Nightmare',desc='Win on Nightmare without going down',stars=3,icon='flawless',goal={win='*',diff='Nightmare',flawless=true}},
+ {id='DragonSlayer',name='Dragon Slayer',desc='Win Volcanic Crater on Nightmare',stars=3,icon='bosses',goal={win='VolcanicCrater',diff='Nightmare'}},
+}
+Q.FeatById={};for _,f in Q.Feats do Q.FeatById[f.id]=f end
+-- Diamond colours by stars: bronze, silver, gold.
+Q.StarColors={rgb(214,132,58),rgb(200,210,218),rgb(255,200,60)}
+
 -- Lifetime stats the server counts (QuestService.event). bestStreak and achievements are derived.
 Q.Stats={'waves','kills','runs','bosses','earn','chests','upgrades','wins','quests','utilityKills',
- 'deepRuns','minutes','levels','shards','meleeKills','rangedKills','buys','damage','eggs'}
+ 'deepRuns','minutes','levels','shards','meleeKills','rangedKills','buys','damage','eggs',
+ 'hardWins','nightmareWins','flawlessWins','wave25Runs','weeklies'}
 
 -- 1234567 -> '1,234,567'
 function Q.comma(n)

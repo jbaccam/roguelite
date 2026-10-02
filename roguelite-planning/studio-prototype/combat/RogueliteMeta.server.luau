@@ -76,6 +76,9 @@ local function stintEmeralds(map,joined,wave) return math.max(0,emeraldsFor(wave
 -- resets, so it shows the build they ended with. runInfo keeps what only a wave clear knows: the
 -- best wave before this stint (NEW BEST) and a first-win bonus paid during it.
 local runInfo={} -- player -> {stint,prevBest,firstWin}
+-- Plan M feats: the stint a player last died in (any death, even one a revive or a phoenix
+-- undoes) and the last stint that cleared a wave with company. Solo and no-down need neither.
+local wentDown,soloBroken={},{}
 local RETURN_SECONDS=20 -- Back to Lobby happens on its own after this
 local returning={} -- player -> server time of their automatic Back to Lobby
 local function setResult(p,outcome,map,stint,cleared,test)
@@ -126,6 +129,7 @@ if Effects.listenDamage then Effects.listenDamage(function(owner,_,actual) if Sh
 -- to the wave they fell on when they give up. Past wave 20 the run keeps going (Endless).
 Shop.onWaveCleared=function(wavesPassed)
  local map=runMap();local index=RunSetupRules.MapIndex[map]
+ if Shop.memberCount()>1 then for p,m in Shop.members do soloBroken[p]=m.stint end end -- plan M: not solo
  local key=RunSetupRules.runKey(map,difficulty())
  for p,m in Shop.members do
   -- The best wave before this stint is read before this clear can raise it (NEW BEST on results).
@@ -138,6 +142,13 @@ Shop.onWaveCleared=function(wavesPassed)
   questRun(p,m.stint);questEvent(p,'waves',1)
   if wavesPassed==RunSetupRules.WinWave then questEvent(p,'wins',1) end
   if wavesPassed==10 then questEvent(p,'deepRuns',1) end -- Reach Wave 10 in One Run
+  if wavesPassed==25 then questEvent(p,'wave25Runs',1) end -- plan M: Reach Wave 25 in One Run
+  -- Plan M: the win's record for feats and weekly quests. Solo and no-down count from wave 1 only.
+  if wavesPassed==RunSetupRules.WinWave and Profiles.questWin then
+   local cs=Characters.states[p]
+   Profiles.questWin(p,{diff=difficulty(),solo=m.joined==1 and soloBroken[p]~=m.stint,
+    flawless=m.joined==1 and wentDown[p]~=m.stint,class=cs and cs.class})
+  end
   local earned=stintEmeralds(map,m.joined,Shop.wave)
   Analytics.earned(p,Profiles.settleRun(p,m.stint,key,wavesPassed,earned))
   if wavesPassed==RunSetupRules.WinWave and not Admin.isTestRun() then
@@ -211,6 +222,7 @@ local function onDied(p,character)
  -- Only run members go down; a lobby fall just respawns.
  local m=Shop.members[p]
  if not m or not Shop.states[p] or down[p] then return end
+ wentDown[p]=m.stint -- plan M: before the phoenix check, so a phoenix save still counts
  local root=character:FindFirstChild('HumanoidRootPart')
  if phoenix(p,root and root.Position or Vector3.zero) then return end
  local s=Shop.states[p]
@@ -819,6 +831,8 @@ profileAction.OnServerInvoke=function(p,action,a,b,c)
  elseif action=='ClaimStreak' and Profiles.claimStreak and type(a)=='number' then ok,message=Profiles.claimStreak(p,a)
  elseif action=='ClaimRoad' and Profiles.claimRoad and type(a)=='string' and #a<=40 then ok,message=Profiles.claimRoad(p,a)
  elseif action=='ClaimUnlock' and Profiles.claimUnlock and type(a)=='string' and #a<=40 then ok,message=Profiles.claimUnlock(p,a)
+ elseif action=='ClaimWeekly' and Profiles.claimWeekly and type(a)=='number' then ok,message=Profiles.claimWeekly(p,a) -- plan M
+ elseif action=='ClaimFeat' and Profiles.claimFeat and type(a)=='string' and #a<=40 then ok,message=Profiles.claimFeat(p,a) -- plan M
  elseif action=='Refresh' then Profiles.publish(p);ok=true;message=''
  elseif action=='DevEmeralds' and studio then ok=Profiles.grant(p,{emeralds=200});message='Studio test: +200 emeralds (not saved)'
  elseif action=='DevResetSkills' and studio then ok,message=Profiles.resetSkills(p)
@@ -845,6 +859,7 @@ Players.PlayerRemoving:Connect(function(p)
  down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil;requestWindow[p]=nil;lastPickSave[p]=nil
  returning[p]=nil;prompting[p]=nil;runInfo[p]=nil;returnTries[p]=nil;again[p]=nil;lastRunAction[p]=nil
  RunPause.forget(pause,p);pausedWeapons[p]=nil;lastPauseAction[p]=nil;runKills[p]=nil;runDamage[p]=nil;statStint[p]=nil -- plan L
+ wentDown[p]=nil;soloBroken[p]=nil -- plan M
  -- The last one standing left: the clock loop pauses the wave again for the downed players' last
  -- stand. A last stand already counting down keeps the wave paused.
  if livingInRun()==0 and not lastStandEnds then Shop.resume() end

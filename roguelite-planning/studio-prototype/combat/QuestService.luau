@@ -1,5 +1,6 @@
 -- Daily quests, the streak and achievements on a saved profile table (QuestConfig,
--- plans/2026-10-01-H-store-and-quests.md; 4 a day and 10-level roads: plans/2026-10-02-K-quests-power-ui.md).
+-- plans/2026-10-01-H-store-and-quests.md; 4 a day and 10-level roads: plans/2026-10-02-K-quests-power-ui.md;
+-- weekly quests and feats: plans/2026-10-02-M-feats-weekly-roads.md).
 -- Pure logic: no Instances or attributes, so QuestTests runs it on plain tables. ProfileService
 -- owns the profile: it calls these, grants what a claim returns and publishes the view. `day` is
 -- MonetizationConfig.day() (UTC days).
@@ -30,7 +31,19 @@ local function convertRoads(st)
  end
 end
 
--- d.quests, created or filled in on first use and rolled over when the day changes.
+-- Map record keys are 'PineValley' (Normal) or 'PineValley/Hard': the key's difficulty rank.
+local function keyRank(key)
+ local diff=string.match(key,'/(.+)$')
+ return diff and S.config().DiffRank[diff] or 1
+end
+-- What the weekly roll may hand out (plan M): Hard needs a win anywhere, Nightmare a Hard win.
+function S.canPlay(d)
+ local top=0
+ for key,won in d.mapWins or {} do if won then top=math.max(top,keyRank(key)) end end
+ return {Hard=top>=1,Nightmare=top>=2}
+end
+
+-- d.quests, created or filled in on first use and rolled over when the day or week changes.
 function S.state(d,day,userId)
  local C=S.config()
  local st=type(d.quests)=='table' and d.quests or {}
@@ -44,8 +57,17 @@ function S.state(d,day,userId)
  st.roads=type(st.roads)=='table' and st.roads or {}
  if st.roadsVersion~=C.RoadsVersion then convertRoads(st);st.roadsVersion=C.RoadsVersion end
  st.unlocks=type(st.unlocks)=='table' and st.unlocks or {}
+ -- Plan M: the hardest difficulty won solo / without going down, classes that won, feats claimed.
+ st.wonWith=type(st.wonWith)=='table' and st.wonWith or {}
+ st.classWins=type(st.classWins)=='table' and st.classWins or {}
+ st.feats=type(st.feats)=='table' and st.feats or {}
  if st.day~=day or type(st.list)~='table' then
   st.day=day;st.list=C.rollDaily(day,userId);st.progress={};st.claimed={};st.allDone=false
+ end
+ -- The week's list is saved when it rolls, so unlocking Hard midweek never changes it.
+ local week=C.week(day)
+ if st.week~=week or type(st.weekList)~='table' then
+  st.week=week;st.weekList=C.rollWeekly(week,userId,S.canPlay(d));st.weekProgress={};st.weekClaimed={}
  end
  return st
 end
@@ -74,18 +96,41 @@ local function countDay(st,day)
  if S.config().StreakByDay[pos] then table.insert(sk.pending,pos) end
 end
 
--- Adds n to a lifetime stat and to today's quests that count it. Returns true when anything changed.
+-- n more of a lifetime stat, and for today's and this week's quests that count it (capped at
+-- their targets).
+local function track(st,stat,n)
+ local C=S.config()
+ st.stats[stat]+=n
+ for _,id in st.list do
+  local q=C.DailyById[id]
+  if q and q.stat==stat then st.progress[id]=math.min(q.target,(st.progress[id] or 0)+n) end
+ end
+ for _,id in st.weekList do
+  local q=C.WeeklyById[id]
+  if q and q.stat==stat then st.weekProgress[id]=math.min(q.target,(st.weekProgress[id] or 0)+n) end
+ end
+end
+-- Adds n to a lifetime stat and to the quests that count it. Returns true when anything changed.
 function S.event(d,day,userId,stat,n)
  n=math.floor(tonumber(n) or 0)
  if n<=0 or type(stat)~='string' then return false end
  local st=S.state(d,day,userId)
  if st.stats[stat]==nil then return false end
- st.stats[stat]+=n
- for _,id in st.list do
-  local q=S.config().DailyById[id]
-  if q and q.stat==stat then st.progress[id]=math.min(q.target,(st.progress[id] or 0)+n) end
- end
+ track(st,stat,n)
  countDay(st,day)
+ return true
+end
+-- A map win (plan M), from the server's run state: diff (difficulty id), solo (the only member at
+-- every wave clear from wave 1), flawless (no death from wave 1), class (the class it was won with).
+function S.win(d,day,userId,info)
+ if type(info)~='table' then return false end
+ local C=S.config();local st=S.state(d,day,userId)
+ local rank=C.DiffRank[info.diff] or 1
+ if rank>=2 then track(st,'hardWins',1) end
+ if rank>=3 then track(st,'nightmareWins',1) end
+ if info.flawless==true then track(st,'flawlessWins',1);st.wonWith.flawless=math.max(st.wonWith.flawless or 0,rank) end
+ if info.solo==true then st.wonWith.solo=math.max(st.wonWith.solo or 0,rank) end
+ if type(info.class)=='string' and #info.class<=24 then st.classWins[info.class]=true end
  return true
 end
 -- A run counts the first time its stint clears a wave.
@@ -97,32 +142,41 @@ function S.runStarted(d,day,userId,stint)
 end
 
 -- Lifetime stat value, including the derived ones: the best streak, and Achiever's count of levels
--- claimed on every other road plus unlocks claimed.
+-- claimed on every other road plus unlocks and feats claimed.
 function S.stat(st,stat)
  if stat=='bestStreak' then return st.streak.best end
  if stat=='achievements' then
   local n=0
   for id,level in st.roads do if id~='Achiever' and type(level)=='number' then n+=level end end
   for _,claimed in st.unlocks do if claimed==true then n+=1 end end
+  for _,claimed in st.feats do if claimed==true then n+=1 end end
   return n
  end
  return st.stats[stat] or 0
 end
 
--- Progress toward an unlock: have, need. Map records come from the profile (bestWaves keys are
--- 'PineValley' or 'PineValley/Hard'; mapWins the same).
+-- Progress toward an unlock's or a feat's goal: have, need. Map records come from the profile
+-- (bestWaves keys are 'PineValley' or 'PineValley/Hard'; mapWins the same). diff = that
+-- difficulty or harder; solo / flawless read the wins QuestService.win recorded (any map).
 local function onMap(key,map) return map=='*' or key==map or string.sub(key,1,#map+1)==map..'/' end
-function S.unlockProgress(d,st,u)
- local g=u.goal
+function S.goalProgress(d,st,g)
  if g.stat then return math.min(S.stat(st,g.stat),g.target),g.target end
+ if g.classes then
+  local n=0;for _,won in st.classWins do if won==true then n+=1 end end
+  return math.min(n,g.classes),g.classes
+ end
+ local need=S.config().DiffRank[g.diff] or 1
  if g.win then
-  for key in d.mapWins or {} do if onMap(key,g.win) then return 1,1 end end
+  if g.solo then return (st.wonWith.solo or 0)>=need and 1 or 0,1 end
+  if g.flawless then return (st.wonWith.flawless or 0)>=need and 1 or 0,1 end
+  for key,won in d.mapWins or {} do if won and onMap(key,g.win) and keyRank(key)>=need then return 1,1 end end
   return 0,1
  end
  local best=0
- for key,w in d.bestWaves or {} do if onMap(key,g.best) and w>best then best=w end end
+ for key,w in d.bestWaves or {} do if onMap(key,g.best) and keyRank(key)>=need and w>best then best=w end end
  return math.min(best,g.wave),g.wave
 end
+function S.unlockProgress(d,st,u) return S.goalProgress(d,st,u.goal) end
 
 -- What the client draws (JSON on the ProfileQuests attribute).
 function S.view(d,day,userId,resetIn)
@@ -131,19 +185,26 @@ function S.view(d,day,userId,resetIn)
  for i,id in st.list do daily[i]={id=id,progress=st.progress[id] or 0,claimed=st.claimed[id]==true} end
  local unlocks={}
  for _,u in C.Unlocks do local have,need=S.unlockProgress(d,st,u);unlocks[u.id]={have=have,need=need,claimed=st.unlocks[u.id]==true} end
+ local feats={}
+ for _,f in C.Feats do local have,need=S.goalProgress(d,st,f.goal);feats[f.id]={have=have,need=need,claimed=st.feats[f.id]==true} end
+ local weekly={}
+ for i,id in st.weekList do weekly[i]={id=id,progress=st.weekProgress[id] or 0,claimed=st.weekClaimed[id]==true} end
  local stats={};for k,v in st.stats do stats[k]=v end
  stats.bestStreak=st.streak.best;stats.achievements=S.stat(st,'achievements')
  local count=S.streak(st,day)
  return {day=day,resetIn=resetIn,daily=daily,allDone=st.allDone==true,
   streak={count=count,position=S.position(count),best=st.streak.best,today=st.streak.last==day,pending=table.clone(st.streak.pending)},
-  stats=stats,roads=table.clone(st.roads),unlocks=unlocks}
+  stats=stats,roads=table.clone(st.roads),unlocks=unlocks,
+  weekly=weekly,weekResetIn=resetIn and C.weekResetIn(day,resetIn),feats=feats}
 end
 -- How many rewards are waiting for CLAIM (the badge on the Quests buttons).
 function S.claimable(d,day,userId)
  local C=S.config();local st=S.state(d,day,userId);local n=#st.streak.pending
  for _,id in st.list do local q=C.DailyById[id];if q and not st.claimed[id] and (st.progress[id] or 0)>=q.target then n+=1 end end
+ for _,id in st.weekList do local q=C.WeeklyById[id];if q and not st.weekClaimed[id] and (st.weekProgress[id] or 0)>=q.target then n+=1 end end
  for _,r in C.Roads do local t=(st.roads[r.id] or 0)+1;if r.targets[t] and S.stat(st,r.stat)>=r.targets[t] then n+=1 end end
  for _,u in C.Unlocks do if not st.unlocks[u.id] then local have,need=S.unlockProgress(d,st,u);if have>=need then n+=1 end end end
+ for _,f in C.Feats do if not st.feats[f.id] then local have,need=S.goalProgress(d,st,f.goal);if have>=need then n+=1 end end end
  return n
 end
 
@@ -161,8 +222,29 @@ function S.claimQuest(d,day,userId,index)
  if not q then return false,'Unknown quest' end
  if st.claimed[id] then return false,'Already claimed' end
  if (st.progress[id] or 0)<q.target then return false,'Not finished yet' end
- st.claimed[id]=true;st.stats.quests+=1
+ st.claimed[id]=true;track(st,'quests',1) -- Questor, and the weekly "Finish 12 Daily Quests"
  return true,q.title..' complete!',merge(q)
+end
+-- Weekly quest `index` (1-3) of this week (plan M).
+function S.claimWeekly(d,day,userId,index)
+ local st=S.state(d,day,userId)
+ local id=type(index)=='number' and st.weekList[index];local q=id and S.config().WeeklyById[id]
+ if not q then return false,'Unknown quest' end
+ if st.weekClaimed[id] then return false,'Already claimed' end
+ if (st.weekProgress[id] or 0)<q.target then return false,'Not finished yet' end
+ st.weekClaimed[id]=true;track(st,'weeklies',1) -- Weekly Warrior
+ return true,q.title..' complete!',merge(q)
+end
+-- A feat, once (plan M): pays its stars' reward.
+function S.claimFeat(d,day,userId,id)
+ local C=S.config();local st=S.state(d,day,userId)
+ local f=type(id)=='string' and C.FeatById[id]
+ if not f then return false,'Unknown feat' end
+ if st.feats[f.id] then return false,'Already claimed' end
+ local have,need=S.goalProgress(d,st,f.goal)
+ if have<need then return false,'Not finished yet' end
+ st.feats[f.id]=true
+ return true,f.name..' complete!',merge(C.FeatRewards[f.stars])
 end
 function S.claimStreak(d,day,userId,milestone)
  local st=S.state(d,day,userId);local pending=st.streak.pending

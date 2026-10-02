@@ -1,8 +1,10 @@
--- Quests window: DAILY (the streak strip and today's quest cards) and ACHIEVEMENTS (10-level roads
--- and unlocks), drawn as colour cards (StoreFX); plus the lobby's left-side tracker (Q.tracker). It
--- shows the server's ProfileQuests view (QuestService) through QuestConfig; every CLAIM asks the
--- server (ProfileAction ClaimQuest / ClaimStreak / ClaimRoad / ClaimUnlock), which checks it and
--- grants the reward. plans/2026-10-01-H-store-and-quests.md, plans/2026-10-02-K-quests-power-ui.md
+-- Quests window: DAILY (the streak strip and today's quest cards), WEEKLY (this week's 3 quests) and
+-- ACHIEVEMENTS (10-level roads, feats and unlocks), drawn as colour cards (StoreFX); plus the lobby's
+-- left-side tracker (Q.tracker). It shows the server's ProfileQuests view (QuestService) through
+-- QuestConfig; every CLAIM asks the server (ProfileAction ClaimQuest / ClaimStreak / ClaimWeekly /
+-- ClaimRoad / ClaimFeat / ClaimUnlock), which checks it and grants the reward.
+-- plans/2026-10-01-H-store-and-quests.md, plans/2026-10-02-K-quests-power-ui.md,
+-- plans/2026-10-02-M-feats-weekly-roads.md
 local RS=game:GetService('ReplicatedStorage')
 local TextService=game:GetService('TextService')
 local TweenService=game:GetService('TweenService')
@@ -30,6 +32,12 @@ local function left(l) l.TextXAlignment=Enum.TextXAlignment.Left;return l end
 local function weaponId(name) for id,w in Weapons.ById do if w.name==name then return id end end end
 local function textWidth(s,size) return TextService:GetTextSize(s,size,T.Font,Vector2.new(4000,200)).X end
 local function resetText() local sec=86400-os.time()%86400;return string.format('%02d:%02d:%02d',sec//3600,sec%3600//60,sec%60) end
+-- Time to the next Monday 00:00 UTC: '3d 04h', or 'hh:mm:ss' on the last day.
+local function weekText(Config)
+ local now=os.time();local sec=Config.weekResetIn(now//86400,86400-now%86400)
+ if sec>=86400 then return string.format('%dd %02dh',sec//86400,sec%86400//3600) end
+ return string.format('%02d:%02d:%02d',sec//3600,sec%3600//60,sec%60)
+end
 
 -- Slots for a reward: {asset, label, rarity, amount}.
 function Q.rewardTiles(Config,r,signature)
@@ -45,17 +53,20 @@ function Q.rewardTiles(Config,r,signature)
  return out
 end
 
--- What can be claimed right now: daily (quests + streak) and achievements, from the view.
+-- What can be claimed right now, from the view: daily (quests + streak), achievements (roads, feats
+-- and unlocks) and weekly.
 function Q.counts(Config,view)
- local daily,ach=0,0
+ local daily,ach,weekly=0,0,0
  for _,d in view.daily or {} do local q=Config.DailyById[d.id];if q and not d.claimed and d.progress>=q.target then daily+=1 end end
  daily+=#(view.streak and view.streak.pending or {})
+ for _,w in view.weekly or {} do local q=Config.WeeklyById[w.id];if q and not w.claimed and w.progress>=q.target then weekly+=1 end end
  for _,r in Config.Roads do
   local t=((view.roads or {})[r.id] or 0)+1
   if r.targets[t] and ((view.stats or {})[r.stat] or 0)>=r.targets[t] then ach+=1 end
  end
  for _,u in Config.Unlocks do local s=(view.unlocks or {})[u.id];if s and not s.claimed and s.have>=s.need then ach+=1 end end
- return daily,ach
+ for _,f in Config.Feats do local s=(view.feats or {})[f.id];if s and not s.claimed and s.have>=s.need then ach+=1 end end
+ return daily,ach,weekly
 end
 
 -- Rotated rank diamond with an upright icon on it; rim = {colour, pulses} for the top levels.
@@ -161,8 +172,8 @@ function Q.open(screen,ctx,tab)
  local Config=ctx.config
  local w=T.window(screen,'QuestsWindow','Quests',WIN_W,WIN_H,nil,{large=true,seeThrough=.05});local b=w.Body
  local sel=ctx.selection
- local function valid(t) return (t=='Daily' or t=='Achievements') and t or nil end
- sel.questTab=valid(tab) or valid(sel.questTab) or 'Daily' -- the old Weekly tab is gone
+ local function valid(t) return (t=='Daily' or t=='Weekly' or t=='Achievements') and t or nil end
+ sel.questTab=valid(tab) or valid(sel.questTab) or 'Daily'
  local list,draw
  local view
  local function act(action,a)
@@ -252,17 +263,68 @@ function Q.open(screen,ctx,tab)
   return y+ch+20
  end
 
+ -- Plan M: this week's 3 quests (2 normal, then the hard one) and what they pay together.
+ function tabs.Weekly()
+  local weekly=view.weekly or {}
+  local y=8
+  local function sub() return 'New quests in '..weekText(Config)..' · every Monday' end
+  local timer=FX.header(list,'WEEKLY QUESTS',sub(),y,SW);y+=72+8
+  task.spawn(function() while timer.Parent do task.wait(1);if timer.Parent then timer.Text=sub() end end end)
+  local gap=18;local count=math.max(#weekly,1);local cw=math.floor((SW-(count-1)*gap)/count);local ch=470
+  local claimed,emeralds,gold=0,0,0
+  for i,w in weekly do
+   local q=Config.WeeklyById[w.id]
+   if not q then continue end
+   if w.claimed then claimed+=1 end
+   emeralds+=q.emeralds;gold+=q.chests and q.chests.Gold or 0
+   local done=w.progress>=q.target
+   local f,cth=FX.card(list,'Weekly'..i,(i-1)*(cw+gap)+2,y,cw-4,ch,w.claimed and 'steel' or done and 'gold' or q.hard and 'ember' or 'night')
+   local fw=cw-4
+   local band=T.make('Frame',f,{Name='Band',Position=UDim2.fromOffset(12,22),Size=UDim2.new(1,-24,0,56),BackgroundColor3=w.claimed and Color3.fromRGB(110,120,126) or q.color,BorderSizePixel=0})
+   T.make('UICorner',band,{CornerRadius=UDim.new(0,12)});T.make('UIStroke',band,{Color=INK,Thickness=3})
+   T.make('UIGradient',band,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.fromRGB(170,170,170))})
+   center(FX.title(band,'Title',q.title,8,4,fw-40,48,25))
+   if q.hard and not done and not w.claimed then
+    local hint=T.text(f,'Hint','harder · bigger reward',16,84,fw-32,20,15,Color3.fromRGB(255,206,140))
+    hint.TextXAlignment=Enum.TextXAlignment.Right
+   end
+   FX.art(f,Config.Icons[q.stat] or Config.Icons.quests,fw/2,172,116,cth,done and 300 or 220)
+   FX.progress(f,'Progress',20,244,fw-40,36,w.progress/q.target,Config.comma(w.progress)..' / '..Config.comma(q.target),done and C.gold or C.lime)
+   center(T.label(f,'RewardsTitle','REWARDS',12,292,fw-24,20,16,C.cream))
+   local items=Q.rewardTiles(Config,q,ctx.signature)
+   local size=80;local tw=#items*size+(#items-1)*12
+   for k,it in items do FX.tile(f,'Reward'..k,math.floor((fw-tw)/2)+(k-1)*(size+12),316,size,it[1],it[2],it[3],it[4]) end
+   local bt=FX.button(f,'Claim',w.claimed and 'CLAIMED' or done and 'CLAIM' or 'IN PROGRESS',16,ch-68,fw-32,54,function() act('ClaimWeekly',i) end,not done or w.claimed)
+   bt.Caption.TextSize=24
+   if w.claimed or not done then bt.Interactable=false else FX.pulse(bt,.05) end
+   if done and not w.claimed then FX.tag(f,'COMPLETE!',cth.tag,cth.accent);FX.shine(f)
+   elseif q.hard and not w.claimed then FX.tag(f,'HARD',cth.tag,cth.accent) end
+   if w.claimed then FX.check(f,fw-36,-10,30) end
+  end
+  y+=ch+22
+  -- The week at a glance: how many are claimed and what all of them pay.
+  local strip=T.make('Frame',list,{Name='WeekSummary',Position=UDim2.fromOffset(2,y),Size=UDim2.fromOffset(CW,52),BackgroundColor3=INK,BackgroundTransparency=.35,BorderSizePixel=0})
+  T.make('UICorner',strip,{CornerRadius=UDim.new(0,12)});T.make('UIStroke',strip,{Color=INK,Thickness=2,Transparency=.35})
+  T.icon(strip,'Icon',10,4,44,Config.Icons.weekly)
+  left(FX.title(strip,'Count','THIS WEEK: '..claimed..' / '..#weekly..' CLAIMED',64,10,420,32,21))
+  local pays='All '..#weekly..' pay '..Config.comma(emeralds)..' emeralds'..(gold==1 and ' + a Gold Chest' or gold>1 and (' + '..gold..' Gold Chests') or '')
+  local total=T.text(strip,'Pays',pays,480,14,CW-500,24,18,C.cream);total.TextXAlignment=Enum.TextXAlignment.Right
+  return y+52+20
+ end
+
  function tabs.Achievements()
   local y=8
   local done,total=0,0
   for _,r in Config.Roads do done+=math.min(view.roads[r.id] or 0,#r.targets);total+=#r.targets end
   for _,u in Config.Unlocks do total+=1;if (view.unlocks[u.id] or {}).claimed then done+=1 end end
+  for _,f in Config.Feats do total+=1;if ((view.feats or {})[f.id] or {}).claimed then done+=1 end end
   FX.header(list,'ACHIEVEMENTS','Claim one and it levels up to a harder goal with a bigger reward.',y,SW);y+=72+8
   FX.progress(list,'Total',math.floor(SW/2-270),y,540,30,done/math.max(total,1),done..' / '..total..' complete',C.lime)
   y+=30+30
   local RH=124
-  -- One row. o: name, count ('(4/10)'), chip (level name), chipColor, goal, ratio, text, state
-  -- ('ready'/'open'/'done'), color, rim, icon, rewards, title, levels, level, onClaim.
+  -- One row. o: name, count ('(4/10)'), stars (a feat's 1-3), chip (level name), chipColor, goal,
+  -- ratio, text, state ('ready'/'open'/'done'), color, rim, icon, rewards, nextRewards (the level
+  -- after, as a NEXT: line), title, levels, level, onClaim.
   local function row(key,yy,o)
    local f,rth=FX.card(list,key,2,yy,CW,RH,o.state=='ready' and 'gold' or o.state=='done' and 'steel' or 'night')
    diamond(f,'Rank',70,RH/2-2,78,o.color,o.icon,o.rim)
@@ -274,6 +336,13 @@ function Q.open(screen,ctx,tab)
     local c=FX.title(f,'Count',o.count,x,13,textWidth(o.count,26)+8,34,26)
     c.TextColor3=o.state=='ready' and Color3.fromRGB(255,243,192) or C.limeSoft
     x+=textWidth(o.count,26)+18
+   end
+   if o.stars then
+    for k=1,3 do
+     local s=T.label(f,'Star'..k,'★',x+(k-1)*30,8,30,40,30,k<=o.stars and C.gold or Color3.fromRGB(58,68,72))
+     s.TextWrapped=false;s.TextStrokeTransparency=1;T.make('UIStroke',s,{Color=INK,Thickness=2.5})
+    end
+    x+=100
    end
    if o.chip then
     local cw_=textWidth(o.chip,15)+28
@@ -287,8 +356,19 @@ function Q.open(screen,ctx,tab)
     local pip=T.make('Frame',f,{Name='Pip'..k,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(nx+8+(k-1)*16,115),Size=UDim2.fromOffset(9,9),Rotation=45,BackgroundColor3=k<=o.level and Config.TierColors[k] or Color3.fromRGB(40,46,50),BorderSizePixel=0})
     T.make('UIStroke',pip,{Color=INK,Thickness=1.5})
    end
-   local size=78;local rx=730
-   for i,it in o.rewards do FX.tile(f,'Reward'..i,rx+(i-1)*(size+8),16,size,it[1],it[2],it[3],it[4]) end
+   -- With a NEXT: line under them the tiles shrink a little to make room.
+   local size=o.nextRewards and 70 or 78;local rx=730
+   for i,it in o.rewards do FX.tile(f,'Reward'..i,rx+(i-1)*(size+8),o.nextRewards and 6 or 16,size,it[1],it[2],it[3],it[4]) end
+   if o.nextRewards then
+    left(T.label(f,'NextLabel','NEXT:',rx,94,54,24,15,C.cream)).TextWrapped=false
+    local nx2=rx+54
+    for i,it in o.nextRewards do
+     T.icon(f,'NextIcon'..i,nx2,94,24,it[1]);nx2+=26
+     local text=it[2]..(it[4] and (' '..it[4]) or '')
+     local l=left(T.label(f,'NextText'..i,text,nx2,94,textWidth(text,15)+16,24,15,it[3]=='Emerald' and (C.emerald or C.lime) or C.white))
+     l.TextWrapped=false;nx2+=textWidth(text,15)+12
+    end
+   end
    if o.title then
     local tile=T.make('Frame',f,{Name='TitleReward',Position=UDim2.fromOffset(rx+#o.rewards*(size+8)+4,20),Size=UDim2.fromOffset(186,76),BackgroundColor3=Color3.fromRGB(46,40,26),BorderSizePixel=0})
     T.make('UICorner',tile,{CornerRadius=UDim.new(0,12)});T.make('UIStroke',tile,{Color=INK,Thickness=3})
@@ -328,9 +408,37 @@ function Q.open(screen,ctx,tab)
     state=e.state,color=Config.TierColors[e.nextL],rim=Q.Rims[e.nextL],
     icon=Config.Icons[r.stat] or Config.Icons.quests,
     rewards=finished and {} or Q.rewardTiles(Config,Config.TierRewards[e.nextL]),
+    -- Plan M: what the level after this one pays, so the bigger prizes show.
+    nextRewards=not finished and e.nextL<#r.targets and Q.rewardTiles(Config,Config.TierRewards[e.nextL+1]) or nil,
     title=not finished and (r.name..' '..Config.TierNames[e.nextL]) or nil,
     levels=#r.targets,level=e.level,
     onClaim=function() act('ClaimRoad',r.id) end,
+   })
+   y+=RH+18
+  end
+  -- Feats (plan M): one-time challenges, more stars = harder = bigger reward. Ready first, then the
+  -- easiest, so the next one to chase sits near the top.
+  y+=12
+  FX.header(list,'FEATS','One-time challenges. More stars = harder = bigger reward.',y,SW);y+=72+8
+  local feats={}
+  for i,f in Config.Feats do
+   local s=(view.feats or {})[f.id] or {have=0,need=1}
+   local state=s.claimed and 'done' or s.have>=s.need and 'ready' or 'open'
+   table.insert(feats,{f=f,s=s,state=state,i=i})
+  end
+  table.sort(feats,function(a,b)
+   if order[a.state]~=order[b.state] then return order[a.state]<order[b.state] end
+   if a.f.stars~=b.f.stars then return a.f.stars<b.f.stars end
+   return a.i<b.i
+  end)
+  for _,e in feats do
+   local f,s=e.f,e.s;local g=f.goal
+   local have=Config.comma(math.min(s.have,s.need))..' / '..Config.comma(s.need)
+   row('Feat_'..f.id,y,{
+    name=f.name,stars=f.stars,goal=f.desc,ratio=s.have/math.max(s.need,1),
+    text=g.best and ('Best wave '..have) or g.classes and (have..' classes') or have,
+    state=e.state,color=Config.StarColors[f.stars],icon=Config.Icons[f.icon] or Config.Icons.achievements,
+    rewards=Q.rewardTiles(Config,Config.FeatRewards[f.stars]),onClaim=function() act('ClaimFeat',f.id) end,
    })
    y+=RH+18
   end
@@ -362,14 +470,17 @@ function Q.open(screen,ctx,tab)
   local profile=ctx.profile()
   view=profile.quests or {}
   local active=sel.questTab
-  local dailyN,achN=0,0
-  if view.daily and Config then dailyN,achN=Q.counts(Config,view) end
-  local tw=math.floor((W-8)/2)
-  for i,t in {{'Daily','quests','DAILY',dailyN},{'Achievements','achievements','ACHIEVEMENTS',achN}} do
+  local dailyN,achN,weekN=0,0,0
+  if view.daily and Config then dailyN,achN,weekN=Q.counts(Config,view) end
+  local tw=math.floor((W-16)/3)
+  local weeklyIcon=Config and Config.Icons.weekly or 'quests'
+  for i,t in {{'Daily','quests','DAILY',dailyN},{'Weekly',weeklyIcon,'WEEKLY',weekN},{'Achievements','achievements','ACHIEVEMENTS',achN}} do
    local tb=FX.button(b,'Tab_'..t[1],'',(i-1)*(tw+8),0,tw,64,function() sel.questTab=t[1];draw() end,t[1]~=active)
    tb.Caption.Visible=false
-   local ic=T.icon(tb,'Icon',math.floor(tw/2)-120,10,44,t[2])
-   local l=T.label(tb,'Label',t[3],math.floor(tw/2)-66,0,220,64,22);l.TextXAlignment=Enum.TextXAlignment.Left;l.TextWrapped=false
+   -- Icon and label centred together on the tab.
+   local x0=math.floor((tw-(44+10+textWidth(t[3],22)))/2)
+   local ic=T.icon(tb,'Icon',x0,10,44,t[2])
+   local l=T.label(tb,'Label',t[3],x0+54,0,220,64,22);l.TextXAlignment=Enum.TextXAlignment.Left;l.TextWrapped=false
    FX.popIcon(tb,ic)
    T.badge(tb,t[4]>0 and tostring(t[4]) or nil)
   end
