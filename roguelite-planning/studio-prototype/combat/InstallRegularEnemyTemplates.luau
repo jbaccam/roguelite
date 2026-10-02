@@ -64,7 +64,19 @@ for _, config in catalog.List do
 	if existing and not existing:GetAttribute("RegularEnemyAssemblerOwned") then
 		error("Refusing to replace an unowned template: " .. config.template)
 	end
-	local npc = source:Clone()
+	-- Built in a fresh Model at scale 1, not in the clone itself: the raw import is ScaleTo(0.01),
+	-- and a Humanoid scales its walking force by its model's scale, so at 0.01 the mob barely
+	-- accelerated and slid as if on ice (EnemyTemplateTests). Part sizes don't change.
+	local npc = Instance.new("Model")
+	for _, child in source:Clone():GetChildren() do
+		child.Parent = npc
+	end
+	npc.WorldPivot = source:GetPivot() -- the root below is placed and faced by it
+	for key, value in source:GetAttributes() do
+		if not key:match("^RBX") then
+			npc:SetAttribute(key, value)
+		end
+	end
 	npc.Name = config.template
 	local bounds, size = npc:GetBoundingBox()
 	local baseY = bounds.Position.Y - size.Y * 0.5
@@ -128,7 +140,8 @@ for _, config in catalog.List do
 	npc:SetAttribute("ZombieType", config.id)
 	npc:SetAttribute("RegularEnemyAssemblerOwned", true)
 	npc:SetAttribute("EnemyMotionVersion", 1)
-	npc:SetAttribute("EnemyBaselineModelScale", data.baselineModelScale or source:GetScale())
+	-- Clients scale the clips by GetScale() / this: the clips were measured at the raw import's scale.
+	npc:SetAttribute("EnemyBaselineModelScale", (data.baselineModelScale or source:GetScale()) / source:GetScale())
 	npc:SetAttribute("EnemyImportReceiptHash", data.importReceiptHash)
 	npc:SetAttribute("SourceAsset", assert(data.sourceImportAsset, "Missing mesh import provenance"))
 	npc:SetAttribute("AnimationSourceAsset", data.sourceAnimationAsset)

@@ -79,7 +79,17 @@ for _, id in Defs.Order do
 	local def, T = Defs.get(id), Defs.rawTiming(id)
 	assert(def and T, "Missing defs or timing for " .. id)
 	local source = assert(raw:FindFirstChild(id), "Missing raw import " .. id)
-	local npc = source:Clone()
+	-- A fresh Model at scale 1, not the raw import's clone (ScaleTo 0.01): a Humanoid scales its
+	-- walking force by its model's scale, so at 0.01 the boss slid as if on ice (EnemyTemplateTests).
+	local npc = Instance.new("Model")
+	for _, child in source:Clone():GetChildren() do
+		child.Parent = npc
+	end
+	for key, value in source:GetAttributes() do
+		if not key:match("^RBX") then
+			npc:SetAttribute(key, value)
+		end
+	end
 	npc.Name = id .. "_NPC"
 	for _, v in npc:GetChildren() do
 		if v:IsA("AnimationController") then
