@@ -17,6 +17,11 @@ Ground rules (also in memory): repo first, then ask "push it to Studio?" before 
 | 11 | Is 10 s too short for a solo kid to decide on a revive? | "Fine if there's a timer or indicator showing the countdown; if not, give me 20 seconds." | The death screen shows "REVIVE OR THE RUN ENDS · n", but not during the 2.3 s YOU DIED splash. Show the countdown from the first moment (on the splash too). If it can't be visible the whole time, set `LAST_STAND` in RogueliteMeta to 20. |
 | 12 | The Highest Wave leaderboard counts any map. One per map? | "Have the leaderboard cycle through all maps, and have one for total too. Same with top kills." | `combat/LeaderboardService.server.luau`: Highest Wave and Kills each per map plus a Total, and the lobby boards cycle through them (Total, Pine Valley … Volcanic Crater). Per-map stats need new saved fields and OrderedDataStores; keep the existing totals. Time Played stays one board. |
 
+## Noted, no change now
+
+- **Emeralds per run are low** (user, 2026-10-02): a Pine Valley win pays 80 (+100 the first time), half a Silver Chest. Keep the run payouts as they are; quests, dailies and other sources should make up the pace. Revisit with play-test data: the analytics economy source `RunWaves` against the other sources.
+- **Gear Power only recommends** a map; it never locks one. Unlocks stay win-based (Normal win opens Hard, Hard win opens Nightmare and the next map).
+
 ## Still open from the first playtest list (not answered here)
 
 - Push to Studio: done for plan I. Run the plan I play-test checklist.
