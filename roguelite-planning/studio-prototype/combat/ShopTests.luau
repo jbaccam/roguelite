@@ -61,7 +61,9 @@ local ok,err=xpcall(function()
   for id in entry.modifiers do check(Stats.ById[id]~=nil,'valid item stat '..id) end
   for id in entry.percent or {} do check(Stats.ById[id]~=nil,'valid percent '..id) end
   if entry.weaponId then
-   local band=E.TIER_PRICE_BANDS[entry.tier];check(entry.basePrice>=band[1] and entry.basePrice<=band[2],'weapon tier band')
+   -- The tier's band, times the rarity premium (EconomyConfig.RARITY_PRICE: a Legendary x1.5).
+   local f=E.RARITY_PRICE[Weapons.ById[entry.weaponId].rarity] or 1
+   local band=E.TIER_PRICE_BANDS[entry.tier];check(entry.basePrice>=math.floor(band[1]*f) and entry.basePrice<=math.ceil(band[2]*f),'weapon tier band')
    local base=Weapons.ById[entry.weaponId];local s=Stats.resolve('Brawler',1)
    near(Stats.weapon(base,s,'Brawler',entry.tier).damage,Stats.weapon(base,s,'Brawler',1).damage*base.tierDamage[entry.tier]/base.tierDamage[1],'tier applied')
   end

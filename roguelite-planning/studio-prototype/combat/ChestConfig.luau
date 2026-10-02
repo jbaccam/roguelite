@@ -16,15 +16,11 @@ C.RarityColor={
  Epic=Color3.fromRGB(192,116,249),Legendary=Color3.fromRGB(255,196,60),
  Godly=Color3.fromRGB(226,34,64),
 }
--- Fixed rarity per weapon id (WeaponCatalog). Every class signature weapon is Common.
--- Godly weapons (WeaponCatalog 36-41, plans/2026-10-01-G) drop from every chest with a Godly chance.
-local RARITY={
- Common={'01','05','00','08','12','15','19','17','24','26','30','35'},
- Rare={'02','06','09','07','13','16','23','21','27','29','34','33'},
- Epic={'04','10','14','20','28'},
- Legendary={'03','11','18','22','25','32','31'},
- Godly={'36','37','38','39','40','41'},
-}
+-- Fixed rarity per weapon id, from WeaponCatalog.RarityLists (the run shop and weapon stats read the
+-- same lists; same order as before, so seeded daily deals don't change). Every class signature weapon
+-- is Common. Godly weapons (WeaponCatalog 36-41, plans/2026-10-01-G) drop from every chest with a
+-- Godly chance.
+local RARITY=require(script.Parent:WaitForChild('WeaponCatalog')).RarityLists
 -- Pool: everything a chest can drop per rarity. WeaponPool: weapons only (daily deals).
 C.Pool={};C.WeaponPool={};C.RarityOf={}
 for _,r in C.Rarities do

@@ -7,7 +7,7 @@ return function(combat)
  local function check(ok,message) checks+=1;assert(ok,message) end
  local stats=S.resolve('Brawler',1,{})
  for _,id in {'16','20','26','32'} do check(C.ById[id].kind=='Melee','Melee classification '..id) end
- check(C.ById['31'].cooldown>=2,'Hammer must retain a long cooldown')
+ check(C.ById['31'].cooldown>=1.95,'Hammer must retain a long cooldown') -- 1.97 s: Legendary power (WeaponCatalog)
  check(C.ById['05'].nativeKnockback>0 and C.ById['26'].nativeKnockback>0,'Native knockback')
  local heavy=S.weapon(C.ById['31'],stats,'Brawler',1)
  local light=S.weapon(C.ById['03'],stats,'Brawler',1)

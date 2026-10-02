@@ -4,51 +4,79 @@ local names={'Glock','Frying Pan','Nunchucks','Katana','Kusarigama','Spatula','B
 local ranged={[0]=true,[7]=true,[8]=true,[9]=true,[10]=true,[11]=true,[12]=true,[13]=true,[14]=true,[15]=true,[18]=true,[22]=true,[24]=true,[28]=true,[29]=true,[30]=true,[33]=true,[34]=true,[35]=true,[38]=true,[41]=true}
 -- Tiers trade two copies for one stronger copy; some weapons improve crowd handling.
 -- Range is in Roblox studs. Damage is per hit (Deck of Cards: total three-card volley).
+-- {damage, cooldown, range, tierDamage, tierCooldown, trait}: damage and cooldown as authored, before
+-- rarity power (below). Tier tables are built from them; only Boxing Gloves author their own.
+-- The pre-2026-10-02 tier tables are kept in WEAPON_BALANCE.md (and WeaponBalanceTests' Tier IV check).
 local profiles={
- {12,.72,45,{12,18,27,40}}, -- Glock
- {16,1.05,6,{16,25,39,60}}, -- Pan
- {6,.5,6,{6,9,14,21}}, -- Nunchucks
- {18,.95,11,{18,27,41,62}}, -- Katana
- {15,1.15,12,{15,23,35,53}}, -- Kusarigama
- {9,.55,6,{9,14,21,32}}, -- Spatula
- {20,1.25,8,{20,30,46,70}}, -- Bat
- {3,.17,42,{3,4,6,9}}, -- Draco
- {4,.8,28,{4,6,9,14}}, -- Fart Gun (poison)
- {3,1.1,24,{3,4,5,7},nil,'pellets'}, -- Shotgun
- {18,1.35,40,{18,27,40,60},nil,'pierce'}, -- T-shirt
- {32,2.4,70,{32,48,72,108}}, -- Rocket
- {7,.9,35,{7,10,14,20},nil,'bounce'}, -- Boomerang
- {6,.48,38,{6,9,14,21},nil,'pierce'}, -- Kunai
- {3,1.7,38,{3,5,8,12}}, -- Molotov (burn)
- {10,.85,32,{10,15,23,35}}, -- Egg
- {16,.85,6,{16,24,36,54}}, -- Steak
- {5,.32,12,{5,8,12,18},nil,'bounce'}, -- Duck
- {15,.95,42,{15,21,30,42},nil,'cards'}, -- Cards
+ {12,.72,45}, -- Glock
+ {16,1.05,6}, -- Pan
+ {6,.5,6}, -- Nunchucks
+ {18,.95,11}, -- Katana
+ {15,1.15,12}, -- Kusarigama
+ {9,.55,6}, -- Spatula
+ {20,1.25,8}, -- Bat
+ {3,.17,42}, -- Draco
+ {4,.8,28}, -- Fart Gun (poison)
+ {3,1.1,24,nil,nil,'pellets'}, -- Shotgun
+ {18,1.35,40,nil,nil,'pierce'}, -- T-shirt
+ {32,2.4,70}, -- Rocket
+ {7,.9,35,nil,nil,'bounce'}, -- Boomerang
+ {6,.48,38,nil,nil,'pierce'}, -- Kunai
+ {3,1.7,38}, -- Molotov (burn)
+ {10,.85,32}, -- Egg
+ {16,.85,6}, -- Steak
+ {5,.32,12,nil,nil,'bounce'}, -- Duck
+ {15,.95,42,nil,nil,'cards'}, -- Cards
  {8,.42,6.5,{8,15,28,48},{1,.94,.88,.76}}, -- Gloves: alternating quick jabs (T4 ~150 DPS: the close-range trade)
- {30,1.35,7,{30,45,68,102}}, -- Block
- {8,.7,28,{8,12,18,27},nil,'bounce'}, -- Yo-yo
- {24,1.6,35,{24,36,54,81},nil,'pierce'}, -- Ball
- {13,1.25,28,{13,20,30,45}}, -- Pin
- {4,.28,40,{4,6,8,12},nil,'pierce'}, -- Nails
- {28,1.6,12,{28,42,63,95}}, -- Wrecking ball
- {18,1.15,8,{18,28,42,64}}, -- Shovel
- {10,.8,9,{10,15,23,35}}, -- Roller
- {4,.32,20,{4,6,9,14}}, -- Vacuum
- {3,.24,30,{3,4,6,9},nil,'pierce'}, -- Washer
- {9,1.15,45,{9,14,21,32}}, -- Staff (arcane energy orb)
- {22,2,8,{22,33,50,75}}, -- Mjolnir (2.4 felt slow; 2026-10-01)
- {26,1.35,8.5,{26,39,59,89}}, -- Excalibur
- {25,2,50,{25,38,57,86}}, -- Pandora
- {5,1.2,38,{5,8,12,18},nil,'shots'}, -- Medusa (slow)
- {13,1.05,48,{13,20,30,45},nil,'bounce'}, -- Crystal (lightning)
+ {30,1.35,7}, -- Block
+ {8,.7,28,nil,nil,'bounce'}, -- Yo-yo
+ {24,1.6,35,nil,nil,'pierce'}, -- Ball
+ {13,1.25,28}, -- Pin
+ {4,.28,40,nil,nil,'pierce'}, -- Nails
+ {28,1.6,12}, -- Wrecking ball
+ {18,1.15,8}, -- Shovel
+ {10,.8,9}, -- Roller
+ {4,.32,20}, -- Vacuum
+ {3,.24,30,nil,nil,'pierce'}, -- Washer
+ {9,1.15,45}, -- Staff (arcane energy orb)
+ {22,2,8}, -- Mjolnir (2.4 felt slow; 2026-10-01)
+ {26,1.35,8.5}, -- Excalibur
+ {25,2,50}, -- Pandora
+ {5,1.2,38,nil,nil,'shots'}, -- Medusa (slow)
+ {13,1.05,48,nil,nil,'bounce'}, -- Crystal (lightning)
  -- Godly (plans/2026-10-01-G): ~24 single-target DPS at Tier I (power 160); specials add crowd power.
- {30,1.25,10,{30,45,68,102}}, -- Reaper's Scythe: 360 reap, raises wraiths
- {34,1.5,9,{34,51,77,115}}, -- Poseidon's Trident: stab, or throw + tidal wave
- {14,1.2,50,{14,21,32,47}}, -- Storm Bow: per storm arrow, 5 split arrows
- {16,1.3,10,{16,24,36,54}}, -- Shadow Daggers: per chained hit
- {32,1.3,9,{32,48,72,108}}, -- Vampire Blade: heals
- {22,.9,48,{22,33,50,74}}, -- Ray Gun: kills disintegrate in a burst
+ {30,1.25,10}, -- Reaper's Scythe: 360 reap, raises wraiths
+ {34,1.5,9}, -- Poseidon's Trident: stab, or throw + tidal wave
+ {14,1.2,50}, -- Storm Bow: per storm arrow, 5 split arrows
+ {16,1.3,10}, -- Shadow Daggers: per chained hit
+ {32,1.3,9}, -- Vampire Blade: heals
+ {22,.9,48}, -- Ray Gun: kills disintegrate in a burst
 }
+-- Rarity (RARITY_GODLY_ARMOR.md §4): one per weapon, forever. ChestConfig builds its chest pools from
+-- these lists, in this order, so chest odds, Armory tags and the run shop always agree.
+C.Rarities={'Common','Rare','Epic','Legendary','Godly'}
+C.RarityLists={
+ Common={'01','05','00','08','12','15','19','17','24','26','30','35'},
+ Rare={'02','06','09','07','13','16','23','21','27','29','34','33'},
+ Epic={'04','10','14','20','28'},
+ Legendary={'03','11','18','22','25','32','31'},
+ Godly={'36','37','38','39','40','41'},
+}
+C.RarityOf={}
+for _,r in C.Rarities do for _,id in C.RarityLists[r] do C.RarityOf[id]=r end end
+-- Rarity power (§4; user 2026-10-02: "put it in the base stats instead of a multiplier"): damage per
+-- second x1.05 Rare, x1.1 Epic, x1.2 Legendary, built into each weapon's own base numbers so the Armory
+-- and shop show it. Damage rounds down to a whole number and the cooldown shortens by what rounding
+-- took, so damage per second is exactly x power. Godly numbers are authored at their power (160).
+-- Example: Katana 18 dmg every .95 s becomes 21 dmg every .924 s (x1.2 per second).
+C.RarityPower={Common=1,Rare=1.05,Epic=1.1,Legendary=1.2,Godly=1}
+-- Tiers (§6, Brotato style; user 2026-10-02): each tier x1.4 damage and cooldown x{1,.9,.8,.7}, so
+-- an upgrade hits harder AND faster. Six weapons step differently to keep Tier IV within 10% of its
+-- old damage per second: Shotgun, Boomerang, Deck of Cards and Nail Gun also gain pellets, bounces,
+-- cards or pierce each tier, so their damage steps gentler; Frying Pan and Molotov stepped steeper
+-- before. Example Glock: 12 / 17 / 24 / 33 damage every .72 / .65 / .58 / .50 s.
+C.TierGrowth=1.4;C.TierCooldown={1,.9,.8,.7}
+C.TierGrowthById={['01']=1.45,['09']=1.25,['12']=1.35,['14']=1.5,['18']=1.3,['24']=1.35}
 -- Godly specials, per tier where a list (index = tier). Read by GodlyWeapons (server) and
 -- GodlyVisuals (client). Every special is capped and never triggers another special.
 C.Godly={
@@ -67,8 +95,16 @@ for i,name in names do
  local d={id=string.format('%02d',n),name=name,kind=kind}
  -- Damage/cooldown pairs are authored per weapon, not shared by an entire class.
  local profile=profiles[i]
- d.damage=profile[1];d.cooldown=profile[2];d.range=profile[3]
- d.tierDamage=profile[4];d.tierCooldown=profile[5] or {1,.95,.9,.84}
+ d.rarity=C.RarityOf[d.id] or 'Common'
+ d.authoredDamage=profile[1];d.authoredCooldown=profile[2] -- before rarity power
+ local raw=profile[1]*C.RarityPower[d.rarity]
+ d.damage=math.floor(raw+1e-6);d.cooldown=math.round(profile[2]*d.damage/raw*1000)/1000;d.range=profile[3]
+ if profile[4] then d.tierDamage=profile[4];d.tierCooldown=profile[5]
+ else
+  local growth=C.TierGrowthById[d.id] or C.TierGrowth
+  d.tierDamage={};for t=1,4 do d.tierDamage[t]=math.floor(d.damage*growth^(t-1)+.5) end
+  d.tierCooldown=table.clone(C.TierCooldown)
+ end
  d.trait=profile[6] or ''
  if n==10 then d.projectileSpeed=48 end
  if n==11 then d.projectileSpeed=80;d.blastRadius=9 end

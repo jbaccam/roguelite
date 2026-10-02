@@ -5,10 +5,13 @@ local function add(d) C.ById[d.id]=d;table.insert(C.List,d) end
 for i,w in Weapons.List do
  -- Godly weapons are never sold in a run: they come only from chests and bundles.
  if w.godly then continue end
- local base=w.kind=='Blast' and 25 or (w.cooldown<.3 and 21 or 12+(i*7)%13)
+ -- Authored cooldown: rarity power's slightly faster cooldown doesn't move a weapon's price band.
+ local base=w.kind=='Blast' and 25 or ((w.authoredCooldown or w.cooldown)<.3 and 21 or 12+(i*7)%13)
+ -- Rarer weapons cost more (EconomyConfig.RARITY_PRICE): a Legendary x1.5.
+ local rarityPrice=Economy.RARITY_PRICE and Economy.RARITY_PRICE[w.rarity or 'Common'] or 1
  for tier=1,4 do
   local band=Economy.TIER_PRICE_BANDS[tier]
-  local price=math.floor(band[1]+(base-12)/13*(band[2]-band[1]))
+  local price=math.floor(math.floor(band[1]+(base-12)/13*(band[2]-band[1]))*rarityPrice+.5)
   add({id='weapon_'..w.id..'_'..tier,weaponId=w.id,name=w.name,kind='Weapon',tier=tier,basePrice=price,icon=w.id=='01' and 'pan' or w.home=='Mage' and 'staff' or 'pan',description=w.home..' · '..w.kind,modifiers={}})
  end
 end

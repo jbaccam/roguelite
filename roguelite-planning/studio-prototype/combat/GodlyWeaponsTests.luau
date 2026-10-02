@@ -24,7 +24,8 @@ return function(G, Weapons, Stats, Chests, Shop, Motion)
 		check(Chests.RarityOf[id] == "Godly", id .. " is Godly in the chests")
 		check(Shop.ById["weapon_" .. id .. "_1"] == nil, id .. " is never sold in the run shop")
 	end
-	check(Weapons.ById["31"].cooldown == 2, "Mjolnir attacks every 2.0 s")
+	-- About every 2.0 s: 1.97 since Legendary power went into its base numbers (26 dmg, WeaponCatalog).
+	check(math.abs(Weapons.ById["31"].cooldown - 2) < 0.05, "Mjolnir attacks about every 2.0 s")
 	check(#Chests.WeaponPool.Godly == 0, "daily deals never offer a Godly")
 	check(Chests.godlyEnabled("Silver") and Chests.godlyEnabled("Legendary"), "Godly weapons drop from chests")
 

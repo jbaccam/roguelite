@@ -5,8 +5,23 @@ local E={
  OFFER_COUNT=4, ITEM_CAPACITY=16, MAX_ITEM_COPIES=5,
  WAVE_SECONDS=30, WAVE_REWARD_BASE=12, WAVE_REWARD_SCALE=3, KILL_SHARDS=1, DESIGNER_BONUS_SHARDS=2,
  TIER_PRICE_BANDS={{12,25},{30,55},{60,95},{110,160}}, TIER_DAMAGE_MULTIPLIERS={1,1.2,1.45,1.75},
- TIER_NAMES={'Common','Uncommon','Rare','Legendary'},
+ -- Tier words never borrow rarity words (RARITY_GODLY_ARMOR.md §5): Common..Legendary mean rarity only.
+ TIER_NAMES={'Tier I','Tier II','Tier III','Tier IV'},
 }
+-- Run-shop weapon rarity (RARITY_GODLY_ARMOR.md §5, gentler per the user 2026-10-02: "don't make it
+-- too rare, and it should depend on wave and luck"). A weapon offer is picked by weight: Common 1,
+-- and a rarer weapon's weight grows from its wave-1 value to its wave-20 value. Luck multiplies it by
+-- (1 + Luck/100), never past a Common's 1. Godly weapons are never sold in runs.
+-- Example, no Luck: a weapon offer is Legendary about 10% of the time on wave 1, 16% on wave 20
+-- (19% if every weapon were equally likely).
+E.RARITY_OFFER={Common={1,1},Rare={.8,1},Epic={.6,.9},Legendary={.4,.8}}
+function E.rarityWeight(rarity,wave,luck)
+ local w=E.RARITY_OFFER[rarity];if not w then return 0 end
+ local t=math.clamp(((tonumber(wave) or 1)-1)/19,0,1)
+ return math.min(1,(w[1]+(w[2]-w[1])*t)*(1+math.clamp(tonumber(luck) or 0,0,100)/100))
+end
+-- Rarer weapons cost more in runs: half the §5 premium (which was x1.15 / x1.4 / x2).
+E.RARITY_PRICE={Common=1,Rare=1.1,Epic=1.2,Legendary=1.5}
 function E.integer(v,min,max) return type(v)=='number' and v==v and v%1==0 and v>=min and v<=max end
 function E.price(base,wave,modifier)
  return math.max(1,math.floor((base+wave*E.FLAT_WAVE_PRICE+base*wave*E.INFLATION_RATE)*math.clamp(modifier or 1,.2,3)*E.GLOBAL_SHOP_PRICE_MODIFIER+1e-8))

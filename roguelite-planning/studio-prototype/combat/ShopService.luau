@@ -139,6 +139,19 @@ local function choose(pool,p,wantWeapon)
   end
   if #matched>0 then pool=matched end
  end
+ -- Weapons are picked by rarity weight (EconomyConfig.rarityWeight): rarer ones show up less,
+ -- less so as waves go on and with Luck. Items stay equally likely.
+ if pool[1] and pool[1].kind=='Weapon' and E.rarityWeight then
+  local total,weights=0,{}
+  for i,entry in pool do
+   local w=Weapons.ById[entry.weaponId];weights[i]=E.rarityWeight(w and w.rarity or 'Common',S.wave,cs.stats.Luck);total+=weights[i]
+  end
+  if total>0 then
+   local x=rng:NextNumber()*total
+   for i,w in weights do x-=w;if x<=0 then return pool[i] end end
+   return pool[#pool]
+  end
+ end
  return pool[rng:NextInteger(1,#pool)]
 end
 local function roll(p,slot,excluded)
@@ -526,7 +539,7 @@ function S.request(p,action,revision,arg,extra)
   if not E.integer(arg,1,6) then return fail('Invalid weapon slot') end
   local f=slots(p)['Slot'..arg];local id=f:GetAttribute('WeaponId');local tier=f:GetAttribute('Tier') or 1
   if id=='' or f:GetAttribute('CopyId')~=extra then return fail('Weapon changed; select it again') end
-  if tier>=4 then return fail('Legendary is the highest tier') end
+  if tier>=4 then return fail('Tier IV is the highest tier') end
   local partner
   for i=1,6 do local other=slots(p)['Slot'..i]
    if i~=arg and other:GetAttribute('WeaponId')==id and other:GetAttribute('Tier')==tier then partner=other;break end

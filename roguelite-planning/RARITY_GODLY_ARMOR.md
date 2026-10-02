@@ -528,6 +528,8 @@ look before step 2. Results in Studio:
   PolicyService-restricted accounts.
 
 ### Step 2: Rarity power, run-shop rarity, Brotato tiers, Tier IV bumps
+**Built 2026-10-02 (plan J item 8), except the Tier IV bumps (user: later).** Changes from the plan below, per the user: rarity power lives in each weapon's own base damage (and cooldown), not a multiplier in `CharacterStats.weapon()`; run-shop offers are gentler than §5 (Legendary weight 0.4 on wave 1 → 0.8 on wave 20, times Luck) and prices are half the §5 premium (×1.1 / 1.2 / 1.5). Six weapons step other than ×1.4 to keep Tier IV within 10%. Full numbers: `studio-prototype/combat/WEAPON_BALANCE.md` "Rarity power and Brotato tiers".
+
 - Add `rarity` to each weapon in `WeaponCatalog`, and make `ChestConfig` read its pools from it
   (sandboxing note in section 4).
 - Rarity power multiplier in `CharacterStats.weapon()` (section 4).
