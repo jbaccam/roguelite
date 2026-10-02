@@ -11,7 +11,11 @@ local Stats=require(combat:WaitForChild('CharacterStats'))
 local Chests=require(combat:WaitForChild('ChestConfig'))
 local Money=require(combat:WaitForChild('MonetizationConfig'))
 local Armor=require(combat:WaitForChild('ArmorCatalog'))
-local WeaponIcons=require(RS:WaitForChild('WeaponInventoryUI')).Icons
+local WeaponArt=require(RS:WaitForChild('WeaponInventoryUI'))
+local WeaponIcons=WeaponArt.Icons
+-- A weapon's icon, or its uploaded art by name while it isn't in WeaponCatalog yet (from a
+-- Studio edit to the old store, kept 2026-10-02).
+local function iconFor(id,name) return (id and WeaponIcons[id]) or (WeaponArt.IconsByName and WeaponArt.IconsByName[name]) or 'armory' end
 local C=T.Color
 local S={}
 
@@ -154,7 +158,7 @@ function S.open(screen,ctx,focus)
   for _,key in Money.GodlyBundles do
    local bd=Money.Products[key];local set=Armor.ById[bd.armorSet]
    local wid=weaponId(bd.godly)
-   local items={{wid and WeaponIcons[wid] or 'armory',godlyShort(bd.godly),'Godly'}}
+   local items={{iconFor(wid,bd.godly),godlyShort(bd.godly),'Godly'}}
    for _,slot in Armor.Slots do table.insert(items,{Armor.Icons[Armor.pieceId(bd.armorSet,slot)],slot,set.rarity}) end
    table.insert(items,{'emerald',comma(bd.emeralds),'Emerald'})
    local state=profile.bundles[key] and true or not wid and 'COMING SOON' or false
@@ -173,7 +177,7 @@ function S.open(screen,ctx,focus)
    local h=340
    local face,th=FX.card(list,'GodlyStarter',2,y,CW,h,'obsidian')
    FX.tag(face,'PICK YOUR GODLY',th.tag,th.accent)
-   FX.art(face,ids[pick] and WeaponIcons[ids[pick]] or 'armory',CW-170,75,230,th,420)
+   FX.art(face,iconFor(ids[pick],Money.GodlyWeapons[pick][1]),CW-170,75,230,th,420)
    local nm=center(FX.title(face,'Picked',string.upper(Money.GodlyWeapons[pick][1]),CW-305,198,270,36,30,Color3.fromRGB(255,150,160)))
    nm.TextColor3=Color3.fromRGB(255,96,112)
    FX.title(face,'Title','GODLY STARTER',28,22,CW-440,58,52,th.tint)
@@ -188,7 +192,7 @@ function S.open(screen,ctx,focus)
     if chosen then
      T.make('ImageLabel',face,{Name='PickGlow',BackgroundTransparency=1,Image=FX.Asset.glow,ImageColor3=Color3.fromRGB(255,60,90),ImageTransparency=.05,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(x+size/2,ty+36),Size=UDim2.fromOffset(170,170)})
     end
-    local t=FX.tile(face,'Item'..i,x,ty,size,ids[i] and WeaponIcons[ids[i]] or 'armory',g[2],'Godly')
+    local t=FX.tile(face,'Item'..i,x,ty,size,iconFor(ids[i],g[1]),g[2],'Godly')
     if chosen then
      -- Lifted and 10% bigger around its centre, white rim, check badge.
      t.AnchorPoint=Vector2.new(.5,.5);t.Position=UDim2.fromOffset(x+size/2,ty+t.Size.Y.Offset/2-8)

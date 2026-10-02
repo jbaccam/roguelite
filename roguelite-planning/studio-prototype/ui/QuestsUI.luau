@@ -10,7 +10,8 @@ local combat=RS:WaitForChild('RogueliteCombat')
 local Weapons=require(combat:WaitForChild('WeaponCatalog'))
 local Chests=require(combat:WaitForChild('ChestConfig'))
 local Armor=require(combat:WaitForChild('ArmorCatalog'))
-local WeaponIcons=require(RS:WaitForChild('WeaponInventoryUI')).Icons
+local WeaponArt=require(RS:WaitForChild('WeaponInventoryUI'))
+local WeaponIcons=WeaponArt.Icons
 local C=T.Color
 local Q={}
 
@@ -30,7 +31,7 @@ function Q.rewardTiles(Config,r,signature)
   if n and n>0 then table.insert(out,{Chests.ById[kind].icon,kind,FX.ChestRarity[kind],n>1 and ('×'..n) or nil}) end
  end
  if r.class then table.insert(out,{WeaponIcons[signature and signature[r.class] or ''] or 'profile',r.class,'Rare'}) end
- if r.weapon then local id=weaponId(r.weapon);table.insert(out,{id and WeaponIcons[id] or 'armory',r.weapon,'Legendary'}) end
+ if r.weapon then local id=weaponId(r.weapon);table.insert(out,{(id and WeaponIcons[id]) or (WeaponArt.IconsByName and WeaponArt.IconsByName[r.weapon]) or 'armory',r.weapon,'Legendary'}) end
  if r.armorSet then local set=Armor.ById[r.armorSet];table.insert(out,{Armor.Icons[Armor.pieceId(r.armorSet,'Chest')],set and set.name or r.armorSet,set and set.rarity or 'Epic'}) end
  return out
 end
