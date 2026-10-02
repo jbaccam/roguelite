@@ -16,6 +16,10 @@ end
 local catalog = require(freshCatalog.EnemyCatalog)
 freshCatalog:Destroy()
 local animationFolder = assert(combat:FindFirstChild("EnemyAnimations"), "Install retargeted animation modules first")
+-- The importer baked the lava slime's molten material into its own, yellower upload
+-- (rbxassetid://73217942093673: its lava averages 255,186,26 against BaseColor.png's 252,126,19).
+-- The basalt chunks got the authored atlas, so every slime mesh uses that one.
+local ATLAS_OVERRIDES = { ["lava-slime"] = "rbxassetid://100144175087527" }
 local receipts = {}
 for _, config in catalog.List do
 	if ONLY and not ONLY[config.id] then
@@ -114,6 +118,13 @@ for _, config in catalog.List do
 				weld.Part0 = root
 				weld.Part1 = part
 				weld.Parent = root
+			end
+			if ATLAS_OVERRIDES[config.id] and part:IsA("MeshPart") then
+				local surface = part:FindFirstChildOfClass("SurfaceAppearance")
+				if surface then
+					surface:Destroy()
+				end
+				part.TextureID = ATLAS_OVERRIDES[config.id]
 			end
 		end
 	end
