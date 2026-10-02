@@ -55,7 +55,8 @@ function Q.open(screen,ctx,tab)
  local Config=ctx.config
  local w=T.window(screen,'QuestsWindow','Quests',1100,640,nil,{large=true});local b=w.Body
  local sel=ctx.selection
- sel.questTab=(tab=='Daily' or tab=='Achievements') and tab or sel.questTab or 'Daily'
+ local function valid(t) return (t=='Daily' or t=='Achievements') and t or nil end
+ sel.questTab=valid(tab) or valid(sel.questTab) or 'Daily' -- the old Weekly tab is gone
  local list,draw
  local view
  local function act(action,a)
