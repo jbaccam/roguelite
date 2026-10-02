@@ -85,6 +85,10 @@
     "pet-egg": {
       "source": "user-generated icon 2026-10-02 (plan K, quests and store), trimmed to alpha bounds, 4% pad, 256x256",
       "asset": "rbxassetid://115158817562855"
+    },
+    "boss-teeth": {
+      "source": "user-generated icon 2026-10-02 (boss kills: Boss Hunter, boss quests; boss-hunter-2026-10-02-v1/BossHunter.png), trimmed to alpha bounds, 4% pad, 256x256",
+      "asset": "rbxassetid://140040643870888"
     }
   }
 }
