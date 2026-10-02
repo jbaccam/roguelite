@@ -49,6 +49,19 @@ local Icons={
  ["40"]="rbxassetid://90868128996170",
  ["41"]="rbxassetid://74294498569772",
 }
+-- Godly art exists before the weapons become playable. Match names instead of guessing IDs.
+I.IconsByName={
+	["Reaper's Scythe"] = "rbxassetid://98038611477072",
+	["Poseidon's Trident"] = "rbxassetid://115347871654580",
+	["Storm Bow"] = "rbxassetid://88739156797064",
+	["Shadow Daggers"] = "rbxassetid://115284484769679",
+	["Vampire Blade"] = "rbxassetid://122685349145201",
+	["Ray Gun"] = "rbxassetid://110188341033662",
+}
+for _,weapon in Catalog.List do
+ local asset=I.IconsByName[weapon.name]
+ if asset then Icons[weapon.id]=asset end
+end
 I.Icons=Icons
 
 function I.preview(parent,template,x,y,w,h)
@@ -77,6 +90,8 @@ end
 function I.new(player,helpers,refresh)
  local panel,label,button=helpers.panel,helpers.label,helpers.button
  local state=combat.PlayerStates:WaitForChild(tostring(player.UserId))
+ -- The state folder can replicate before its six slots; wait before reading nextFree.
+ for slot=1,Catalog.Slots do state:WaitForChild('Slot'..slot) end
  -- Give weapon (ADMIN panel): the selected slot starts at, and moves on to, the next free slot.
  local function nextFree() for i=1,6 do if state['Slot'..i]:GetAttribute('WeaponId')=='' then return i end end end
  local self={selected=nextFree() or 1,filter='',state=state,tier=1}

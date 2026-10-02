@@ -87,6 +87,10 @@ local function armorModel(setId)
 end
 
 local function armorView(parent, setId, slot, x, y, size)
+	local asset = Armor.Icons[Armor.pieceId(setId, slot)]
+	if asset then
+		return T.icon(parent, "ArmorView", x, y, size, asset)
+	end
 	local vp = T.make("ViewportFrame", parent, {
 		Name = "ArmorView",
 		BackgroundTransparency = 1,
@@ -127,6 +131,10 @@ end
 -- A 3D view of one pet: ReplicatedStorage.PetModels[id] at rest, framed from the front-left.
 -- Without the model (not installed yet) it shows a rarity-coloured disc with the pet's name.
 local function petView(parent, id, x, y, size)
+	local asset = Pets.Icons[id]
+	if asset then
+		return T.icon(parent, "PetView", x, y, size, asset)
+	end
 	local vp = T.make("ViewportFrame", parent, {
 		Name = "PetView",
 		BackgroundTransparency = 1,

@@ -22,11 +22,12 @@ local Chests=require(combat:WaitForChild('ChestConfig'))
 local Weapons=require(combat:WaitForChild('WeaponCatalog'))
 local WeaponIcons=require(RS:WaitForChild('WeaponInventoryUI')).Icons
 local Armor=require(combat:WaitForChild('ArmorCatalog'))
+local Pets=require(combat:WaitForChild('PetConfig'))
 local Money=require(combat:WaitForChild('MonetizationConfig'))
 local C=T.Color
 -- Chests drop weapons and armor pieces ('Iron.Helmet'); both get an icon and a name here.
-local function itemIcon(id) return WeaponIcons[id] or Armor.Icons[id] end
-local function itemName(id) local w=Weapons.ById[id];return w and w.name or Armor.pieceName(id) end
+local function itemIcon(id) return WeaponIcons[id] or Armor.Icons[id] or Pets.Icons[id] end
+local function itemName(id) local w=Weapons.ById[id];local p=Pets.ById[id];return w and w.name or p and p.name or Armor.pieceName(id) end
 local U={}
 
 -- Laid out on a canvas in design pixels (T.canvas, like the Armory): 1920x1080 on most screens,
@@ -188,16 +189,9 @@ function U.new(player,opts)
   -- One section per rarity that has items (Godly appears once Godly items exist). Each wraps into
   -- rows of cells and the sections scroll inside the panel when taller than the screen.
   -- Example: 1340 wide panel = 12 cells a row, so Rare's 20 items take two rows.
+  -- Every chest with a Godly chance lists all six Godly weapons by name and icon (user, 2026-10-01).
   local odds=Chests.odds(id)
-  -- Godly weapons stay secret until owned (RARITY_GODLY_ARMOR.md step 4): one mystery cell holds
-  -- the chance of any Godly weapon. At most one Godly drops per chest, so the chances add up.
-  local mystery
-  for i=#odds,1,-1 do local o=odds[i]
-   if o.rarity=='Godly' and not Chests.isArmor(o.id) then
-    mystery=mystery or {id='GodlyMystery',rarity='Godly',chance=0};mystery.chance+=o.chance;table.remove(odds,i)
-   end
-  end
-  if mystery then table.insert(odds,mystery) end
+  -- Show each Godly weapon with its own icon and catalog-provided chance.
   local byR={};for _,o in odds do byR[o.rarity]=byR[o.rarity] or {};table.insert(byR[o.rarity],o) end
   local shown={};for _,r in Chests.Rarities do if byR[r] then table.insert(shown,r) end end
   local cell,gap=96,8
@@ -225,9 +219,7 @@ function U.new(player,opts)
     local x=x0+((i-1)%perRow)*(cell+gap)
     local c=T.make('Frame',body,{Name='W_'..o.id,Position=UDim2.fromOffset(x,y+(i-1)//perRow*(cell+gap)),Size=UDim2.fromOffset(cell,cell),BackgroundColor3=col,BackgroundTransparency=.55,BorderSizePixel=0,ZIndex=42})
     T.make('UICorner',c,{CornerRadius=UDim.new(0,8)});T.make('UIStroke',c,{Color=col,Thickness=2})
-    if o.id=='GodlyMystery' then
-     local q=centred(T.label(c,'Mystery','?',0,0,cell,cell-30,58,WHITE));q.ZIndex=43
-    else local ic=T.icon(c,'Icon',8,4,cell-16,itemIcon(o.id));ic.ZIndex=43 end
+    local ic=T.icon(c,'Icon',8,4,cell-16,itemIcon(o.id));ic.ZIndex=43
     local pct=o.chance>=10 and string.format('%.0f%%',o.chance) or o.chance>=1 and string.format('%.1f%%',o.chance) or string.format('%.2f%%',o.chance)
     local l=centred(T.label(c,'Chance',pct,0,cell-30,cell,28,22,WHITE));l.ZIndex=44
    end
