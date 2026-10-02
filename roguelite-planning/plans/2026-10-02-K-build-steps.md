@@ -531,7 +531,7 @@ const num=s=>(String(s).match(/(\d{5,})/)||[])[1];
 const font=f=>f==='FredokaOne'?"'Fredoka One',sans-serif":"'Source Sans 3',sans-serif";
 const ctx=document.createElement('canvas').getContext('2d');
 function outline(c,w,a){const s=[];for(let i=0;i<16;i++){const t=i/16*2*Math.PI;s.push(`${(Math.cos(t)*w).toFixed(1)}px ${(Math.sin(t)*w).toFixed(1)}px 0 ${rgba(c,a)}`)}return s.join(',')}
-Promise.all([fetch('/dump/'+name+'.json').then(r=>r.json()),fetch('/assetmap.json').then(r=>r.json())]).then(([d,map])=>{
+Promise.all([fetch('/dump/'+name+'.json').then(r=>r.json()),fetch('/assetmap.json').then(r=>r.json()),document.fonts.load("32px 'Fredoka One'"),document.fonts.load("700 16px 'Source Sans 3'")]).then(([d,map])=>{
  const st=document.getElementById('st');let W=0,H=0;const missing=new Set();
  for(const e of d){W=Math.max(W,e.x+e.w);H=Math.max(H,e.y+e.h)}
  st.style.width=W+'px';st.style.height=H+'px';
@@ -567,7 +567,7 @@ Promise.all([fetch('/dump/'+name+'.json').then(r=>r.json()),fetch('/assetmap.jso
    const t=document.createElement('div');t.className='txt';t.textContent=e.t;
    // Font size from TextBounds: the largest size whose wrapped lines fill the bounds' height.
    const fam=font(e.f);let size=e.tb[1];
-   for(let n=1;n<=6;n++){const s=e.tb[1]/n;ctx.font=`${s}px ${fam}`;if(ctx.measureText(e.t).width/n<=Math.max(e.tb[0],1)*1.12){size=s;break}}
+   for(let n=1;n<=6;n++){const s=e.tb[1]/n;ctx.font=`${fam.includes('Source')?'700 ':''}${s}px ${fam}`;if(ctx.measureText(e.t).width/n<=Math.max(e.tb[0],1)*1.2){size=s;break}}
    Object.assign(t.style,{fontFamily:fam,fontSize:size+'px',color:rgba(e.tc,1-e.tt),
     justifyContent:{Left:'flex-start',Center:'center',Right:'flex-end'}[e.xa],
     alignItems:{Top:'flex-start',Center:'center',Bottom:'flex-end'}[e.ya],

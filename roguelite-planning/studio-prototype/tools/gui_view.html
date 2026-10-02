@@ -1,0 +1,73 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>GUI View</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Source+Sans+3:wght@700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#4d7f9e;font-family:system-ui,sans-serif}
+#bar{color:#fff;background:#111;padding:6px 10px;font-size:14px}
+#vp{position:relative;overflow:hidden}
+#st{position:absolute;left:0;top:0;transform-origin:0 0}
+.e,.c{position:absolute;box-sizing:border-box}
+.txt{position:absolute;inset:0;display:flex;white-space:pre-wrap;line-height:1;overflow:visible}
+</style></head>
+<body><div id="bar"></div><div id="vp"><div id="st"></div></div>
+<script>
+// Redraws a tools/GuiDump.luau dump: /studio-prototype/tools/gui_view.html?name=<dump name>
+const name=new URLSearchParams(location.search).get('name')||'preview';
+const rgba=(c,a=1)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const num=s=>(String(s).match(/(\d{5,})/)||[])[1];
+const font=f=>f==='FredokaOne'?"'Fredoka One',sans-serif":"'Source Sans 3',sans-serif";
+const ctx=document.createElement('canvas').getContext('2d');
+function outline(c,w,a){const s=[];for(let i=0;i<16;i++){const t=i/16*2*Math.PI;s.push(`${(Math.cos(t)*w).toFixed(1)}px ${(Math.sin(t)*w).toFixed(1)}px 0 ${rgba(c,a)}`)}return s.join(',')}
+Promise.all([fetch('/dump/'+name+'.json').then(r=>r.json()),fetch('/assetmap.json').then(r=>r.json()),document.fonts.load("32px 'Fredoka One'"),document.fonts.load("700 16px 'Source Sans 3'")]).then(([d,map])=>{
+ const st=document.getElementById('st');let W=0,H=0;const missing=new Set();
+ for(const e of d){W=Math.max(W,e.x+e.w);H=Math.max(H,e.y+e.h)}
+ st.style.width=W+'px';st.style.height=H+'px';
+ for(const e of d){
+  let host=st,ox=0,oy=0;
+  if(e.cl){const c=document.createElement('div');c.className='c';Object.assign(c.style,{left:e.cl[0]+'px',top:e.cl[1]+'px',width:e.cl[2]+'px',height:e.cl[3]+'px',overflow:'hidden'});st.appendChild(c);host=c;ox=e.cl[0];oy=e.cl[1]}
+  const el=document.createElement('div');el.className='e';el.title=e.n;
+  Object.assign(el.style,{left:(e.x-ox)+'px',top:(e.y-oy)+'px',width:e.w+'px',height:e.h+'px'});
+  if(e.r)el.style.transform=`rotate(${e.r}deg)`;
+  if(e.cr!=null)el.style.borderRadius=e.cr+'px';
+  if(e.bg){
+   if(e.gr){const mul=g=>[e.bg[0]*g[0]/255,e.bg[1]*g[1]/255,e.bg[2]*g[2]/255];
+    const stops=[mul(e.gr[0])].concat(e.gr[3]?[mul(e.gr[3])]:[]).concat([mul(e.gr[1])]);
+    el.style.background=`linear-gradient(${e.gr[2]+90}deg,${stops.map(c=>rgba(c,1-e.bt)).join(',')})`;
+   }else el.style.background=rgba(e.bg,1-e.bt);
+  }
+  if(e.gt&&(e.gt[0]>0||e.gt[1]>0))el.style.webkitMaskImage=`linear-gradient(${((e.gr&&e.gr[2])||0)+90}deg,rgba(0,0,0,${1-e.gt[0]}),rgba(0,0,0,${1-e.gt[1]}))`;
+  if(e.bs)el.style.boxShadow=`0 0 0 ${e.bs[1]}px ${rgba(e.bs[0],1-e.bs[2])}`;
+  if(e.img){
+   const f=map[num(e.img)];
+   if(!f){missing.add(e.img);el.style.outline='1px dashed #f0f'}
+   else{
+    const url=`url(/${f})`,white=e.ic.every(v=>v>248);
+    const L=document.createElement('div');L.style.cssText='position:absolute;inset:0';
+    if(e.sl){L.style.borderStyle='solid';L.style.borderWidth='0';L.style.borderImage=`${url} ${e.sl[0]} fill / ${e.sl[0]*e.sl[1]}px stretch`;
+     if(!white)L.style.filter=`brightness(${(e.ic[0]+e.ic[1]+e.ic[2])/765})`}
+    else if(white){L.style.background=`${url} center/contain no-repeat`}
+    else{Object.assign(L.style,{backgroundColor:rgba(e.ic),webkitMaskImage:url,webkitMaskSize:'contain',webkitMaskRepeat:'no-repeat',webkitMaskPosition:'center'})}
+    L.style.opacity=1-e.it;el.appendChild(L);
+   }
+  }
+  if(e.t!=null){
+   const t=document.createElement('div');t.className='txt';t.textContent=e.t;
+   // Font size from TextBounds: the largest size whose wrapped lines fill the bounds' height.
+   const fam=font(e.f);let size=e.tb[1];
+   for(let n=1;n<=6;n++){const s=e.tb[1]/n;ctx.font=`${fam.includes('Source')?'700 ':''}${s}px ${fam}`;if(ctx.measureText(e.t).width/n<=Math.max(e.tb[0],1)*1.2){size=s;break}}
+   Object.assign(t.style,{fontFamily:fam,fontSize:size+'px',color:rgba(e.tc,1-e.tt),
+    justifyContent:{Left:'flex-start',Center:'center',Right:'flex-end'}[e.xa],
+    alignItems:{Top:'flex-start',Center:'center',Bottom:'flex-end'}[e.ya],
+    textAlign:{Left:'left',Center:'center',Right:'right'}[e.xa]});
+   if(e.ts)t.style.textShadow=outline(e.ts[0],e.ts[1],1-e.ts[2]);else if(e.tst!=null)t.style.textShadow=outline([0,0,0],1,1-e.tst);
+   el.appendChild(t);
+  }
+  host.appendChild(el);
+ }
+ const vp=document.getElementById('vp');
+ function fit(){const s=Math.min(1,vp.clientWidth/W);st.style.transform=`scale(${s})`;vp.style.height=H*s+'px'}
+ addEventListener('resize',fit);fit();
+ document.getElementById('bar').textContent=`${name}: ${d.length} objects, ${W}x${H}`+(missing.size?` · ${missing.size} images without a local PNG (dashed)`:'');
+});
+</script></body></html>
