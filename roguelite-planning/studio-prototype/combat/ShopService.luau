@@ -17,8 +17,12 @@ local StatSchema=require(combat.CharacterStats)
 local Maps=require(combat.MapConfig) -- sandboxed, like this module
 local S={states={},wave=1,phase='Shop'}
 -- Hooks other scripts listen to: `S.onWaveCleared=fn` adds a listener and never replaces one, so
--- load order between listeners doesn't matter.
-local listeners={onWaveCleared={}}
+-- load order between listeners doesn't matter. Listeners run inside this sandboxed module's
+-- thread, so they should only record (RunAnalytics queues its events and sends them itself).
+--   onWaveCleared(wavesPassed)      onBuy(p,offerId,price)     onReroll(p,kind,how,cost)
+--   onLevelPick(p,upgradeId)        onLevelUp(p,gained)        onShards(p,collected)
+-- kind is 'Shop' or 'Upgrade'; how is 'Shards', 'Free' (a saved reroll) or 'Bought' (Robux/stored).
+local listeners={onWaveCleared={},onBuy={},onReroll={},onLevelPick={},onLevelUp={},onShards={}}
 setmetatable(S,{__newindex=function(t,k,v) if listeners[k] then table.insert(listeners[k],v) else rawset(t,k,v) end end})
 local function fire(name,...)
  for _,fn in listeners[name] do local ok,err=pcall(fn,...);if not ok then warn('ShopService.'..name..' listener failed:',err) end end
@@ -289,6 +293,7 @@ function S.paidReroll(p,kind)
  if now and kind=='Shop' then rerollOffers(p);s.ready=false
  elseif now then rerollUpgrades(p)
  elseif kind=='Shop' then s.freeRerolls+=1 else s.freeUpgradeRerolls+=1 end
+ if now then fire('onReroll',p,kind,'Bought',0) end
  s.revision+=1;reprice(p);S.publish(p,now and 'Rerolled' or 'Free reroll saved for the next shop')
  return true
 end
@@ -454,7 +459,7 @@ function S.request(p,action,revision,arg,extra)
    -- Level-up rerolls are Robux (or saved) only; shards cannot buy them.
    if s.freeUpgradeRerolls<=0 then return fail('Level-up rerolls use REROLL') end
    s.freeUpgradeRerolls-=1
-   rerollUpgrades(p)
+   rerollUpgrades(p);fire('onReroll',p,'Upgrade','Free',0)
   else
    if not E.integer(arg,1,Upgrades.OFFER_COUNT) then return fail('Invalid upgrade') end
    local offer=s.upgradeOffers[arg];if not offer then return fail('Upgrade unavailable') end
@@ -463,6 +468,7 @@ function S.request(p,action,revision,arg,extra)
     local amount=math.min(offer.amount,StatSchema.ById[offer.id].max-cs.stats[offer.id])
     if amount<=0 then return fail('This stat is already capped; choose another offer or reroll') end
     s.upgradeBonuses[offer.id]=(s.upgradeBonuses[offer.id] or 0)+amount
+    fire('onLevelPick',p,offer.id)
     s.pendingLevels-=1;s.upgradeOffers={}
     S.bonuses(p);S.prepareUpgrades(p)
   end
@@ -496,6 +502,7 @@ function S.request(p,action,revision,arg,extra)
     if existing then existing.count+=1 else table.insert(s.items,{id=entry.id,count=1}) end
    end
    s.shards-=o.price;o.sold=true;o.locked=false
+   fire('onBuy',p,o.id,o.price)
    S.bonuses(p)
    local soldOut=true
    for _,offerNow in s.offers do if not offerNow.sold then soldOut=false;break end end
@@ -508,12 +515,13 @@ function S.request(p,action,revision,arg,extra)
  elseif action=='Reroll' then
   local available=false;for _,o in s.offers do if not o.locked or o.sold then available=true end end
   if not available then return fail('Unlock an offer before rerolling') end
+  local how,cost='Free',0
   if s.freeRerolls>0 then s.freeRerolls-=1
   else
    local price=E.reroll(S.wave,s.rerolls);if s.shards<price then return fail('Not enough shards to reroll') end
-   s.shards-=price;s.rerolls+=1
+   s.shards-=price;s.rerolls+=1;how,cost='Shards',price
   end
-  rerollOffers(p)
+  rerollOffers(p);fire('onReroll',p,'Shop',how,cost)
  elseif action=='Combine' then
   if not E.integer(arg,1,6) then return fail('Invalid weapon slot') end
   local f=slots(p)['Slot'..arg];local id=f:GetAttribute('WeaponId');local tier=f:GetAttribute('Tier') or 1
@@ -558,6 +566,8 @@ function S.creditShards(p,amount,pickedUp)
   s.shards=math.min(E.MAX_SHARDS,s.shards+total)
   local level,xp,gained=XP.add(s.level,s.xp,math.min(1000000,total*XP.XP_PER_SHARD))
   s.level=level;s.xp=xp;s.pendingLevels+=gained
+  fire('onShards',p,total)
+  if gained>0 then fire('onLevelUp',p,gained) end
  end
  S.publishProgress(p);return true
 end

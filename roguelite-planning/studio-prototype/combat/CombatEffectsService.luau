@@ -9,6 +9,12 @@ local Batch=require(combat.ShotBatch)
 local E={statuses={}}
 -- E.onHit(npc,d,actual,secondary) and E.onKill(npc,d,position,secondary): set by GodlyWeapons (the
 -- Vampire Blade's healing, the Scythe's wraiths, the Ray Gun's burst). Never on practice targets.
+-- Damage listeners: E.listenDamage(fn) adds fn(owner,sourceId,actual,secondary) for every real
+-- (non-practice) hit, status tick, chain and blast. sourceId is the weapon id, or e.g. 'Armor'.
+-- Several can listen (RunAnalytics' damage by weapon, the Deal Damage quest). They run inside
+-- this sandboxed module's thread, so they should only add up numbers.
+local damageListeners={}
+function E.listenDamage(fn) if type(fn)=='function' then table.insert(damageListeners,fn) end end
 local function alive(npc)
  local h=npc and npc:FindFirstChildOfClass('Humanoid');local r=npc and npc:FindFirstChild('HumanoidRootPart')
  if npc and npc:IsDescendantOf(workspace) and h and r and h.Health>0 then return h,r end
@@ -66,6 +72,7 @@ function E.hit(npc,amount,d,secondary)
  npc:SetAttribute('LastDamageUserId',d.owner.UserId);npc:SetAttribute('LastWeaponId',d.id) -- quests count Utility kills
  local before=h.Health;h:TakeDamage(math.max(0,amount));local actual=before-math.max(0,h.Health)
  if actual<=0 then return 0 end
+ for _,fn in damageListeners do local ok,err=pcall(fn,d.owner,d.id,actual,secondary==true);if not ok then warn('listenDamage failed:',err) end end
  Characters.leech(d.owner,actual)
  if E.onHit then local ok,err=pcall(E.onHit,npc,d,actual,secondary==true);if not ok then warn('onHit failed:',err) end end
  combat:SetAttribute('ConfirmedHits',(combat:GetAttribute('ConfirmedHits') or 0)+1)

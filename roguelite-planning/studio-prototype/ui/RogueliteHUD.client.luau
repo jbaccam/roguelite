@@ -128,3 +128,38 @@ RunService.Heartbeat:Connect(function(dt)
  end
  view:SetBossHealth(selected,health and health.Health,health and health.MaxHealth)
 end)
+-- Frame rate for play-test analytics (RunAnalytics FrameRate / FrameDips): while this player is in a
+-- run and a wave is on, count rendered frames; when the wave ends, send the average FPS, how many
+-- seconds fell under 30, and the kind of device. Spawned and self-contained, so it can never stall
+-- the HUD; an older server without PerfReport just means no reports.
+task.spawn(function()
+ local combat=ReplicatedStorage:WaitForChild('RogueliteCombat')
+ local report=combat:WaitForChild('PerfReport',60)
+ if not report then return end
+ local function device()
+  if UserInputService.GamepadEnabled and not UserInputService.KeyboardEnabled and not UserInputService.TouchEnabled then return 'Console' end
+  if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
+   local v=workspace.CurrentCamera.ViewportSize
+   return math.min(v.X,v.Y)>=700 and 'Tablet' or 'Phone'
+  end
+  return 'Desktop'
+ end
+ local frames,time,dips,secondFrames,secondTime=0,0,0,0,0
+ local counting=false
+ RunService.RenderStepped:Connect(function(dt)
+  local state=ReplicatedStorage:FindFirstChild('RogueliteRunState')
+  local on=state~=nil and state:GetAttribute('Phase')=='Combat' and player:GetAttribute('RunMember')==true
+  if on then
+   frames+=1;time+=dt;secondFrames+=1;secondTime+=dt
+   if secondTime>=1 then
+    if secondFrames/secondTime<30 then dips+=1 end
+    secondFrames,secondTime=0,0
+   end
+  elseif counting then
+   -- The wave just ended (or this player left the run): one report for it, if it lasted 5 s.
+   if time>=5 then report:FireServer(math.clamp(math.floor(frames/time+.5),1,1000),math.min(dips,3600),device()) end
+   frames,time,dips,secondFrames,secondTime=0,0,0,0,0
+  end
+  counting=on
+ end)
+end)
