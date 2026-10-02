@@ -25,7 +25,10 @@ D.KingCrab={anim='king-crab',name='Giant King Crab',health=21000,scale=1.4,chase
  attacks={
   ClawCrush={clip='ClawCrush',rate=1.3,range={0,20},cooldown=1,damage=28,shape='circle',point='ClawImpact',radius=9,
    follow={radius=5.5,delay=.8,maxTargets=4,range=48,damage=18}},
-  SidewaysRush={clips={'RushStart','RushLoop','RushEnd'},rate=1.25,range={8,70},cooldown=1.4,damage=24,shape='lane',length=70,width=12,speed=42},
+  -- Hits the whole side-on body: at scale 1.4 the claws reach 14 studs from his centre and the
+  -- shell 7 the other way, so a 21-wide band shifted 3.5 toward the claws (X.laneSide). It was
+  -- 12 wide on his centre line, and the claws never hit (2026-10-02).
+  SidewaysRush={clips={'RushStart','RushLoop','RushEnd'},rate=1.25,range={8,70},cooldown=1.4,damage=24,shape='lane',length=70,width=21,offset=3.5,speed=42},
   BubbleBarrage={clip='BubbleBarrage',rate=1.2,range={10,72},cooldown=1.1,damage=10,shape='projectiles',point='BubbleOrigin',count=13,spread=math.rad(52),speed=30,radius=2,life=2.6,perPlayer=2},
  },order={'ClawCrush','BubbleBarrage','SidewaysRush','ClawCrush','SidewaysRush','BubbleBarrage'}}
 -- The Pharaoh's staff crook releases the bolts ~10 studs ahead and 14 up, so they pass over anyone

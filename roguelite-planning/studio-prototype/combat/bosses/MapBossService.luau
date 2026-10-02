@@ -85,8 +85,16 @@ function X.laneFacing(pos,target,look)
  return CFrame.lookAt(pos,pos+side)
 end
 function X.lane(cf,target) local r=flat(cf.RightVector).Unit;return flat(target-cf.Position):Dot(r)>=0 and r or -r end
+-- Mid-rush the crab's body is turned 90 degrees (RushStart): its claws face the left of the
+-- lane (+Y x dir). def.offset shifts the hit band that way, so it runs from shell to claw tips.
+function X.laneSide(dir,def) return Vector3.yAxis:Cross(dir)*(def.offset or 0) end
 -- Warning rectangle over the body's swept capsule (half a width past each end).
-function X.laneShape(f,dir,length,width) return {kind='line',origin=X.onGround(f,f.cf.Position)-dir*width/2,direction=dir,length=length+width,width=width} end
+function X.laneShape(f,dir,length,width,side) return {kind='line',origin=X.onGround(f,f.cf.Position)-dir*width/2+(side or Vector3.zero),direction=dir,length=length+width,width=width} end
+-- The rushing body's hit between two distances travelled along the lane.
+function X.rushBody(def,cf,dir,groundY,from,to)
+ local base=Vector3.new(cf.X,groundY,cf.Z)+X.laneSide(dir,def)
+ return {kind='capsule',a=base+dir*from,b=base+dir*to,radius=def.width/2}
+end
 function X.cone(def,at,f,t) return {kind='cone',origin=X.onGround(f,X.point(f,at,def.point,t)),direction=X.flatDir(f,X.localDir(at,def.point,t)),halfAngle=def.halfAngle,length=def.length} end
 -- A sweep hits from the moment its swing starts, not from its impact mark: the dragon's tail
 -- crosses behind him about 0.2 s before impact, so a player at his rear was never hit. The swing
@@ -204,7 +212,7 @@ function M.start(npc,kind,target,force)
   -- Clamped short of a wall at body height; the body travels at `speed` after RushStart.
   A.dir=laneDir;local wall=workspace:Raycast(cf.Position,A.dir*def.length,params)
   A.length=wall and math.max(0,wall.Distance-math.min(8,s.T.footprintRadius or 4)/2-1) or def.length;A.travelled=0
-  A.data={dir={A.dir.X,A.dir.Z},length=A.length,shape=Shapes.encode(X.laneShape(f,A.dir,A.length,def.width))}
+  A.data={dir={A.dir.X,A.dir.Z},length=A.length,shape=Shapes.encode(X.laneShape(f,A.dir,A.length,def.width,X.laneSide(A.dir,def)))}
  end
  A.at=X.window(def,s.T,A.length);local at=A.at;A.duration=X.duration(def,at)
  local rage=s.enraged and s.def.enrage or {}
@@ -385,10 +393,10 @@ local function stepAttack(npc,s,now,h,root,params,people)
   end
  end
  if def.shape=='lane' then
-  local travel=math.clamp((age-at.impact)*def.speed,0,A.length);local base=Vector3.new(A.cf.X,f.groundY,A.cf.Z)
+  local travel=math.clamp((age-at.impact)*def.speed,0,A.length)
   root.CFrame=A.cf+A.dir*travel
   if travel>A.travelled then
-   local body={kind='capsule',a=base+A.dir*A.travelled,b=base+A.dir*travel,radius=def.width/2}
+   local body=X.rushBody(def,A.cf,A.dir,f.groundY,A.travelled,travel)
    for _,e in people do
     if not A.hits[e.player] and Shapes.contains(body,e.root.Position) and hit(npc,def,e,root.Position,params,body.b) then A.hits[e.player]=true end
    end

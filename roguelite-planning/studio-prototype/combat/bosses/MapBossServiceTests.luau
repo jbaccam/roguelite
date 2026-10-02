@@ -29,6 +29,14 @@ add(X.lane(cf,cf*Vector3.new(10,0,-3)):Dot(cf.RightVector)>.99,'lane: toward a t
 add(X.lane(cf,cf*Vector3.new(-10,0,-3)):Dot(cf.RightVector)<-.99,'lane: toward a target on the left')
 local goal=Vector3.new(10,4,0);local faced=X.laneFacing(cf.Position,goal,cf.LookVector);local toGoal=(goal-cf.Position).Unit
 add(math.abs(faced.LookVector:Dot(toGoal))<1e-6 and X.lane(faced,goal):Dot(toGoal)>.99,'lane: turns side-on so the lane runs through the target')
+-- The crab rushes side-on, claws to the left of the lane: the hit and its warning run from the
+-- shell (7 studs right of the path) to the claw tips (14 left), not just 6 either side.
+local crabRush={shape='lane',width=21,offset=3.5};local rd=Vector3.new(0,0,-1);local left=Vector3.yAxis:Cross(rd)
+local rcf=CFrame.lookAt(Vector3.new(0,4,0),Vector3.new(0,4,-1));local body=X.rushBody(crabRush,rcf,rd,0,0,10)
+local warnLane=X.laneShape(X.frame(rcf,T,0),rd,30,21,X.laneSide(rd,crabRush))
+local function both(p) return S.contains(body,p) and S.contains(warnLane,p) end
+add(both(Vector3.new(0,3,-5)+left*13.5) and both(Vector3.new(0,3,-5)-left*6.5) and not S.contains(body,Vector3.new(0,3,-5)-left*8) and not S.contains(warnLane,Vector3.new(0,3,-5)-left*8),
+ 'lane: the crab rush hits claw tips 13.5 left and shell 6.5 right, not 8 right; the warning matches')
 local lw=X.window(rush,T,30)
 add(math.abs(lw.impact-.8)<1e-6 and math.abs(lw.duration-(.8+1+.6))<1e-6,'lane: duration = RushStart + length/speed + RushEnd')
 -- 3. Sweep: the TailWhip capsule at impact contains the sampled SpadeTip.
