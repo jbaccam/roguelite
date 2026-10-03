@@ -179,6 +179,7 @@ function C.describe(w)
  if w.blastRadius then table.insert(out,'Explodes on impact.') end
  return table.concat(out,' ')
 end
+local HOME_MOVED={['19']='Brawler',['20']='Brawler',['05']='Juggler',['04']='Juggler'}
 for i,name in names do
  local n=i-1
  local kind=ranged[n] and 'Ranged' or 'Melee'
@@ -202,6 +203,10 @@ for i,name in names do
  if n==18 then d.projectileSpeed=90 end
  if n==33 then d.projectileSpeed=45;d.blastRadius=7 end
  d.home=n>=30 and 'Mage' or (n>=24 and 'Handyman' or (n>=17 and n~=18 and 'Juggler' or (n>=12 and 'Thrower' or (n==0 or n>=7) and 'Gunner' or 'Brawler')))
+ -- 2026-10-03: Brawler is the hand-to-hand class, Juggler the tricks and toys. Swapped in equal-rarity
+ -- pairs so every class keeps 2 Common, 2 Rare, 1 Epic, 1 Legendary: Boxing Gloves <-> Spatula (Common),
+ -- Cinder Block <-> Kusarigama (Epic).
+ d.home=HOME_MOVED[d.id] or d.home
 
  if n==17 or n==21 or n==23 then d.kind='Ranged' end
  -- Godly weapons belong to no class; any class may start with an owned one.

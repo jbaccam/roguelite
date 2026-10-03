@@ -69,7 +69,7 @@ R.WinWave=20
 -- wave-20 boss. The ELITE (5, 15) and HORDE (10) tags promised waves that were never built, so they're
 -- gone (the user, 2026-10-02; audit G5).
 R.Milestones={{5},{10},{15},{20,'BOSS'}}
-R.Signature={Brawler='01',Gunner='00',Thrower='12',Juggler='19',Handyman='24',Mage='30'}
+R.Signature={Brawler='01',Gunner='00',Thrower='12',Juggler='17',Handyman='24',Mage='30'} -- Juggler: Rubber Duck since 2026-10-03 (was Boxing Gloves)
 R.ClassUnlock={Thrower='Reach wave 10 on Pine Valley',Juggler='Win Pine Valley',Handyman='Defeat 1,000 enemies with Utility weapons'}
 -- Emeralds a run pays: one payout per 5 waves reached (wave 12 on Pine Valley Normal = 2 x 20 = 40).
 function R.runEmeralds(index,diff,wave)

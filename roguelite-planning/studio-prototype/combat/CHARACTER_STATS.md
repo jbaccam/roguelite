@@ -32,27 +32,29 @@ The script also handles respawns after death, using `Players.RespawnTime`. Any c
 
 Every class retains access to every weapon. Six home weapons belong to each class. Two/four home weapons grant additive affinity bonuses, subject to caps. Duplicate home weapons count toward affinity.
 
+Rebalanced 2026-10-03 so no class is plainly worse: each has 3–4 buffs and 1–3 drawbacks, and a drawback never weakens the class's own weapons (Thrower lost −10% attack speed, Juggler's damage penalty went from −15% to −10%, Handyman lost −2 speed and −5 crit). Gunner's faster ranged attacks are data now (`rangedAttackSpeed`) and shown with its buffs.
+
 | Class | Base buffs | Base drawbacks | 2 home weapons | 4 home weapons (additional) |
 | --- | --- | --- | --- | --- |
-| Brawler | +25 HP, +4 Armor, +20% melee, +8 knockback, 15% contact resistance | −2 movement speed, −15% ranged | +15% melee, +2 Armor | 5% life steal |
-| Gunner | +20% ranged, +35% projectile speed, +5 critical points, 10% faster ranged cadence | −15 HP, −15% melee | +1 pierce | +1 projectile |
-| Thrower | +25% range, +1 bounce, +10% ranged | −10% attack speed, −2 Armor | +15% ranged | +1 projectile |
-| Juggler | +3 movement speed, +15% attack speed, +12 knockback | −15% general damage | +15% range, +5 knockback | +1 bounce, +15% attack speed |
-| Handyman | +25% utility, +20% area, +1 HP/s regeneration | −2 movement speed, −5 critical points | 10% cooldown reduction | +20% utility |
+| Brawler | +25 HP, +3 Armor, +20% melee, +8 knockback | −2 movement speed, −15% ranged | +15% melee, +2 Armor | 5% life steal |
+| Gunner | +20% ranged, +35% projectile speed, +5 critical points, +10% ranged attack speed | −15 HP, −15% melee | +1 pierce | +1 projectile |
+| Thrower | +25% range, +1 bounce, +15% ranged | −2 Armor, −10% melee | +15% ranged | +1 projectile |
+| Juggler | +3 movement speed, +15% attack speed, +12 knockback | −10% general damage | +15% range, +5 knockback | +1 bounce, +15% attack speed |
+| Handyman | +5% damage, +15% utility, +20% area, +1 HP/s regeneration | −10 HP | 10% cooldown reduction | +20% utility |
 | Mage | +25% elemental, +30% duration, 15% burn chance, +1 chain target | −20 HP, −2 Armor, −10% melee | +15% elemental | +1 burn-spread target |
 
 **Class weapon fit (2026-10-03).** On top of the table, every equipped weapon gets its own damage change from how close its home class is to yours: own class **+15%**, then one number per pair of classes (the same both ways). Godly weapons are unchanged. It stacks with the class stats. Values: `CharacterStats.ClassFit`.
 
 | Your class → weapon's class | Brawler | Gunner | Thrower | Juggler | Handyman | Mage |
 | --- | --- | --- | --- | --- | --- | --- |
-| Brawler | **+15** | −15 | −10 | 0 | −5 | −10 |
-| Gunner | −15 | **+15** | 0 | −10 | −5 | −5 |
-| Thrower | −10 | 0 | **+15** | 0 | −10 | −5 |
-| Juggler | 0 | −10 | 0 | **+15** | −5 | −10 |
-| Handyman | −5 | −5 | −10 | −5 | **+15** | −10 |
-| Mage | −10 | −5 | −5 | −10 | −10 | **+15** |
+| Brawler | **+15** | −15 | −5 | −5 | 0 | −10 |
+| Gunner | −15 | **+15** | 0 | −5 | 0 | −5 |
+| Thrower | −5 | 0 | **+15** | 0 | 0 | −5 |
+| Juggler | −5 | −5 | 0 | **+15** | 0 | −5 |
+| Handyman | 0 | 0 | 0 | 0 | **+15** | −5 |
+| Mage | −10 | −5 | −5 | −5 | −5 | **+15** |
 
-Why: Brawler and Juggler both swing at close range; Gunner, Thrower and Juggler fire or toss projectiles; fists vs guns is the one opposite pair. Example: a Brawler's Glock takes −15% and the Brawler's −15% ranged, about −28% in total (Brotato's Brawler is −50 ranged, so this is gentler); a Brawler's Boxing Gloves (Juggler) take nothing. Shop cards show "your class +15%" in green, "similar class 0%" in cream, or "off-class −X%" in red. The Armory and run-setup class panels list the class's row.
+Why: Handyman is handy with anything (0 with everyone but Mage, and everyone can use its tools). Gunner, Thrower and Juggler all fire or toss things. Fists vs guns is the one opposite pair. Mage weapons are the strongest and most specialised, so Mage pays the most outside its own class. Example: a Brawler's Glock takes −15% and the Brawler's −15% ranged, about −28% in total (Brotato's Brawler is −50 ranged, so this is gentler). Shop cards show "your class +15%" in green, "similar class 0%" in cream, or "off-class −X%" in red.
 
 These prototype choices supersede the older proposal that classes need no drawbacks. Distinct orbital/return animations and deployables remain separate weapon-kit work; this change applies class statistics to the existing attack styles.
 

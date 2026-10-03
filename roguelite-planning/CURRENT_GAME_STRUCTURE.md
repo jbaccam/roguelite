@@ -75,12 +75,14 @@ New accounts own **Brawler, Gunner, and Mage**. **Thrower, Juggler, and Handyman
 
 | Class | Play style | Signature starter | Other home weapons |
 | --- | --- | --- | --- |
-| **Brawler** | Close-range arcs, orbiting protection, durability | **Frying Pan** | Nunchucks, Katana, Kusarigama, Spatula, Baseball Bat |
+| **Brawler** | Hand-to-hand: close-range arcs, heavy hits, durability | **Frying Pan** | Boxing Gloves, Nunchucks, Baseball Bat, Cinder Block, Katana |
 | **Gunner** | Fast projectiles, magazines, piercing and spread | **Glock** | Draco, Fart Gun, Shotgun, T-Shirt Cannon, Rocket Launcher |
 | **Thrower** | Returning projectiles, volleys, area denial | **Boomerang** | Kunais, Molotovs, Eggs, Steak, Deck of Cards |
-| **Juggler** | Orbitals, rebounds, repeated contact and knockback | **Boxing Gloves** | Rubber Ducks, Cinder Blocks, Yo-Yo, Bowling Ball, Bowling Pins |
+| **Juggler** | Tricks and toys: rebounds, spins, repeated contact and knockback | **Rubber Duck** | Spatula, Yo-Yo, Bowling Pins, Kusarigama, Bowling Ball |
 | **Handyman** | Construction tools, deployables, lanes and utility | **Nail Gun** | Wrecking Ball, Shovel, Paint Roller, Vacuum Cleaner, Power Washer |
 | **Mage** | Elemental zones, chain effects, mythic late unlocks | **Magic Staff** | Mjolnir, Excalibur, Pandora's Box, Medusa's Head, Crystal Ball |
+
+Weapon classes were regrouped on 2026-10-03 so each class reads as one idea: Boxing Gloves and Cinder Block moved to Brawler, Spatula and Kusarigama to Juggler (equal-rarity swaps, so every class still has 2 Common, 2 Rare, 1 Epic, 1 Legendary). Juggler's starter became the Rubber Duck; saves that own Juggler are given it on load.
 
 ### Class and off-class rules
 

@@ -262,6 +262,8 @@ local function launch(index)
   local list,loadouts={},{}
   for p in going do
    local class,weapon=p:GetAttribute('RunClass'),p:GetAttribute('RunWeapon')
+   -- A weapon that changed class (2026-10-03) falls back to that class's starter first.
+   if not Rules.validLoadout(p,class,weapon) and Rules.validLoadout(p,class,Rules.Signature[class]) then weapon=Rules.Signature[class] end
    if not Rules.validLoadout(p,class,weapon) then class='Brawler';weapon=Rules.Signature.Brawler end
    loadouts[p.UserId]={class=class,weapon=weapon}
    table.insert(list,p);travelling[p]=true;setQueue(p)

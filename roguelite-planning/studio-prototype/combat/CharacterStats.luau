@@ -54,27 +54,30 @@ stat('ContactReduction','Contact resistance',0,0,60,5,'%','Defense','Reduces zom
 stat('ShopDiscount','Shop discount',0,0,30,5,'%','Economy','Reduces unlocked shop offer prices; locked prices stay fixed.')
 stat('ShopPricePercent','Shop price modifier',0,-80,200,5,'%','Economy','Positive values increase prices; negative values reduce them. Combined multiplier is bounded.')
 stat('GearPower','Gear power',0,0,40,1,'','Gear','Tiers of the gear you brought: starting weapon, worn armor and pet. Each point above 1 adds 12% damage and 6% max health.')
+-- Classes (rebalanced 2026-10-03 so none is plainly worse): each has 3-4 buffs and 1-3 drawbacks,
+-- and a drawback never weakens the class's own weapons. rangedAttackSpeed: % faster attacks with
+-- non-melee weapons only (Gunner); the UI shows it with the buffs (S.classLines).
 S.Classes={
- Brawler={description='Durable close-range bruiser. Slower movement and weaker ranged damage.',buffs={MaxHP=25,Armor=4,MeleeDamage=20,Knockback=8,ContactReduction=15,MoveSpeed=-2,RangedDamage=-15},build={'01','03','06','02'},two={MeleeDamage=15,Armor=2},four={LifeSteal=5}},
- Gunner={description='Fast ranged attacks and piercing. Less health and weaker melee.',buffs={RangedDamage=20,ProjectileSpeed=35,CritChance=5,MaxHP=-15,MeleeDamage=-15},build={'00','07','09','08'},two={Pierce=1},four={ProjectileCount=1}},
- Thrower={description='Long-range volleys and rebounds. Lower attack speed and armor.',buffs={AttackRange=25,Bounce=1,RangedDamage=10,AttackSpeed=-10,Armor=-2},build={'12','13','14','18'},two={RangedDamage=15},four={ProjectileCount=1}},
- Juggler={description='Mobile knockback and rebound build. Lower damage per hit.',buffs={MoveSpeed=3,AttackSpeed=15,Knockback=12,Damage=-15},build={'19','17','21','22'},two={AttackRange=15,Knockback=5},four={Bounce=1,AttackSpeed=15}},
- Handyman={description='Wide utility attacks and recovery. Slower movement and fewer criticals.',buffs={UtilityPower=25,AreaSize=20,Regeneration=1,MoveSpeed=-2,CritChance=-5},build={'24','25','28','29'},two={CooldownReduction=10},four={UtilityPower=20}},
- Mage={description='Elemental damage, burn and chains. Fragile with weaker physical attacks.',buffs={ElementalDamage=25,Duration=30,BurnChance=15,ChainCount=1,MaxHP=-20,Armor=-2,MeleeDamage=-10},build={'30','31','34','35'},two={ElementalDamage=15},four={BurnSpread=1}},
+ Brawler={description='Hand-to-hand fighter: tough and hits hard up close. Slower, with weak ranged damage.',buffs={MaxHP=25,Armor=3,MeleeDamage=20,Knockback=8,MoveSpeed=-2,RangedDamage=-15},build={'01','03','06','19'},two={MeleeDamage=15,Armor=2},four={LifeSteal=5}},
+ Gunner={description='Fast, piercing gunfire. Less health and weak melee damage.',buffs={RangedDamage=20,ProjectileSpeed=35,CritChance=5,MaxHP=-15,MeleeDamage=-15},rangedAttackSpeed=10,build={'00','07','09','08'},two={Pierce=1},four={ProjectileCount=1}},
+ Thrower={description='Long-range throws that rebound. Thin armor and weak melee damage.',buffs={AttackRange=25,Bounce=1,RangedDamage=15,Armor=-2,MeleeDamage=-10},build={'12','13','14','18'},two={RangedDamage=15},four={ProjectileCount=1}},
+ Juggler={description='Quick tricks with toys: fast attacks, big knockback, always moving. Lower damage per hit.',buffs={MoveSpeed=3,AttackSpeed=15,Knockback=12,Damage=-10},build={'17','21','22','23'},two={AttackRange=15,Knockback=5},four={Bounce=1,AttackSpeed=15}},
+ Handyman={description='Handy with anything: no penalty with almost any weapon, bigger blasts and slow healing. A little less health.',buffs={Damage=5,UtilityPower=15,AreaSize=20,Regeneration=1,MaxHP=-10},build={'24','25','28','29'},two={CooldownReduction=10},four={UtilityPower=20}},
+ Mage={description='Elemental damage, burn and chains. Fragile, with weak physical attacks.',buffs={ElementalDamage=25,Duration=30,BurnChance=15,ChainCount=1,MaxHP=-20,Armor=-2,MeleeDamage=-10},build={'30','31','34','35'},two={ElementalDamage=15},four={BurnSpread=1}},
 }
 -- Class weapon fit (2026-10-03, Brotato-style but gentler): each equipped weapon's damage changes by
 -- how close its home class is to yours. Own class +15%. Each pair of classes has one number, the same
--- both ways: 0 for close cousins (Brawler/Juggler swing at close range, Gunner/Thrower and
--- Thrower/Juggler fire or toss projectiles), -5 a bit off, -10 different, -15 opposite (fists vs
--- guns). Godly weapons belong to no class: no change. Stacks with the class stats above, so a
--- Brawler's Glock takes -15% and the Brawler's -15% ranged: 0.85 x 0.85 = about -28%.
+-- both ways: 0 = close enough, -5 a bit off, -10 different, -15 opposite (fists vs guns). Handyman is
+-- handy with anything: 0 with every class but Mage. Godly weapons belong to no class: no change.
+-- Stacks with the class stats above, so a Brawler's Glock takes -15% and the Brawler's -15% ranged:
+-- 0.85 x 0.85 = about -28%.
 S.ClassFit={Own=15,
- Brawler={Gunner=-15,Thrower=-10,Juggler=0,Handyman=-5,Mage=-10},
- Gunner={Brawler=-15,Thrower=0,Juggler=-10,Handyman=-5,Mage=-5},
- Thrower={Brawler=-10,Gunner=0,Juggler=0,Handyman=-10,Mage=-5},
- Juggler={Brawler=0,Gunner=-10,Thrower=0,Handyman=-5,Mage=-10},
- Handyman={Brawler=-5,Gunner=-5,Thrower=-10,Juggler=-5,Mage=-10},
- Mage={Brawler=-10,Gunner=-5,Thrower=-5,Juggler=-10,Handyman=-10},
+ Brawler={Gunner=-15,Thrower=-5,Juggler=-5,Handyman=0,Mage=-10},
+ Gunner={Brawler=-15,Thrower=0,Juggler=-5,Handyman=0,Mage=-5},
+ Thrower={Brawler=-5,Gunner=0,Juggler=0,Handyman=0,Mage=-5},
+ Juggler={Brawler=-5,Gunner=-5,Thrower=0,Handyman=0,Mage=-5},
+ Handyman={Brawler=0,Gunner=0,Thrower=0,Juggler=0,Mage=-5},
+ Mage={Brawler=-10,Gunner=-5,Thrower=-5,Juggler=-5,Handyman=-5},
 }
 -- 'home' (+15), 'similar' (0) or 'off' (negative), and the percent; nil,0 for Godly or no class.
 function S.classFit(base,class)
@@ -91,6 +94,25 @@ function S.classFitText(class)
  for _,other in S.ClassOrder do local v=row[other];if v then byPct[v]=byPct[v] or {};table.insert(byPct[v],other) end end
  local out={class..' +'..S.ClassFit.Own..'%'}
  for _,v in {0,-5,-10,-15} do if byPct[v] then table.insert(out,table.concat(byPct[v],', ')..' '..v..'%') end end
+ return table.concat(out,' · ')
+end
+-- A class's always-on stats for the UI: good and bad lists of {value=, unit=, label=} in stat order,
+-- plus Gunner's ranged attack speed. unit is '%', ' HP/s' or ''. Example Brawler good[1]: 25, '', 'Max health'.
+function S.statUnit(d) return d.unit=='%' and '%' or d.unit==' HP/s' and ' HP/s' or '' end
+function S.classLines(class)
+ local c=S.Classes[class];local good,bad={},{}
+ if not c then return good,bad end
+ for _,d in S.List do
+  local v=c.buffs[d.id]
+  if v then table.insert(v>0 and good or bad,{value=v,unit=S.statUnit(d),label=d.label}) end
+ end
+ if c.rangedAttackSpeed then table.insert(good,{value=c.rangedAttackSpeed,unit='%',label='Ranged attack speed'}) end
+ return good,bad
+end
+-- '+15% Melee damage · +2 Armor' for a home-weapon bonus table (two / four).
+function S.bonusText(t)
+ local out={}
+ for _,d in S.List do local v=t[d.id];if v then table.insert(out,(v>0 and '+' or '')..v..S.statUnit(d)..' '..d.label) end end
  return table.concat(out,' · ')
 end
 function S.valid(id,value)
@@ -124,7 +146,8 @@ function S.weapon(base,s,class,tier)
  if base.kind=='Blast' then d.damage*=S.mult(s.ExplosionDamage) end
  d.classFit,d.classFitPercent=S.classFit(base,class)
  d.damage*=S.mult(d.classFitPercent)
- local speed=S.mult(s.AttackSpeed)*(class=='Gunner' and base.kind~='Melee' and 1.1 or 1)
+ local cc=S.Classes[class]
+ local speed=S.mult(s.AttackSpeed)*(cc and cc.rangedAttackSpeed and base.kind~='Melee' and 1+cc.rangedAttackSpeed/100 or 1)
  d.cooldown=math.max(base.kind=='Melee' and .18 or .08,base.cooldown*(base.tierCooldown and base.tierCooldown[tier] or 1)/speed*(1-s.CooldownReduction/100))
  -- Animation speed is independent of damage cadence: heavy weapons strike
  -- crisply, then wait for their longer cooldown. Nunchucks use a slower cut.

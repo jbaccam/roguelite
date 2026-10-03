@@ -45,7 +45,7 @@ local store=useStore and DataStores:GetDataStore(STORE_NAME)
 -- This server's lock id. Studio has no JobId.
 local JOB=game.JobId~='' and game.JobId or Http:GenerateGUID(false)
 local function key(player) return 'u_'..player.UserId end
-local SIGNATURE={Brawler='01',Gunner='00',Thrower='12',Juggler='19',Handyman='24',Mage='30'}
+local SIGNATURE={Brawler='01',Gunner='00',Thrower='12',Juggler='17',Handyman='24',Mage='30'} -- as RunSetupRules.Signature
 local MAX_RECEIPTS=200
 
 local function fresh()
@@ -163,6 +163,9 @@ function P.load(player)
  if data.pet~=nil and not data.pets[data.pet] then data.pet=nil end
  -- Keys were dropped: old saves convert them to earned emeralds once.
  if type(data.keys)=='number' then data.emeralds+=math.max(0,data.keys)*Money.EmeraldsPerOldKey;data.keys=nil end
+ -- Every owned class owns its starting weapon. Juggler's changed from Boxing Gloves to Rubber Duck
+ -- (2026-10-03), so Juggler owners get the duck; anything they already owned is kept.
+ for class in data.classes do local id=SIGNATURE[class];if id and not data.weapons[id] then data.weapons[id]={tier=1,have=0} end end
  P.profiles[player]=data;P.loaded[player]=true
  applySettings(player,data) -- before ProfileLoaded, so music never starts at the wrong volume
  P.publish(player)
