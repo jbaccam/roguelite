@@ -1,0 +1,13 @@
+{
+ "ReplicatedStorage.RogueliteCombat.ShardMotion": "combat/ShardMotion.luau",
+ "ReplicatedStorage.RogueliteCombat.ChestConfig": "combat/ChestConfig.luau",
+ "ReplicatedStorage.RogueliteCombat.TutorialConfig": "combat/TutorialConfig.luau",
+ "ReplicatedStorage.StoreUI": "ui/StoreUI.luau",
+ "ReplicatedStorage.ChestScreenUI": "ui/ChestScreenUI.luau",
+ "ReplicatedStorage.TutorialGuideUI": "ui/TutorialGuideUI.luau",
+ "ServerScriptService.ShardDropService": "combat/ShardDropService.luau",
+ "ServerScriptService.EnemyAttacks": "combat/EnemyAttacks.luau",
+ "ServerScriptService.ProfileService": "combat/ProfileService.luau",
+ "StarterPlayer.StarterPlayerScripts.ShardVisuals": "combat/ShardVisuals.client.luau",
+ "StarterPlayer.StarterPlayerScripts.TutorialGuide": "ui/TutorialGuide.client.luau"
+}

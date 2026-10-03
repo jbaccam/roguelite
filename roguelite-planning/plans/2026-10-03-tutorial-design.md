@@ -99,7 +99,7 @@ From the user's first play-test:
 - **The lobby camera sat inside the Kills leaderboard.** The lobby spawn was 19 studs in front of it and the camera about 20 behind the player; the board's visible parts don't block the camera (CanCollide off). The spawn moved 14 studs toward the portals (Studio only: `Workspace.RogueliteLobby.LobbySpawn`, z 18 → 4).
 - **Fewer different items per chest** (all chests, not just the tutorial): all copies of one rarity go to one item, so a Silver Chest is about 2 items, was 4–5 (`ChestConfig`).
 
-## Play-test fixes, round 2 (2026-10-03)
+## Play-test fixes, round 2 (2026-10-03; 10ace4f, synced to Studio the same day)
 
 - **Arrows sat 58 px too high on full-screen menus** (level-up cards, chest screen, results,
   Armory): every GuiObject's AbsolutePosition is measured from under Roblox's top bar, and only

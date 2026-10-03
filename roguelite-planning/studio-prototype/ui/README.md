@@ -21,6 +21,7 @@ Spec section: "Play-test fixes, round 2" in `../../plans/2026-10-03-tutorial-des
   - `ChestConfigTests` pass 145 checks with 20000 rolls;
   - the guide UI mounted in CoreGui against mock layouts: the lobby box was clear of every panel, the run box went to a corner, and the chest screen used the compact box right of the menu;
   - `ShardMotion.burst` arcs and lands.
+- **Studio:** synced 2026-10-03 with `tools/LaunchSync.luau` at 10ace4f (`combat/tutorial-playtest2-sync-map.json`): 11 scripts, all or nothing, each guarded on Studio's exact Source, which still matched ac17bde. Afterwards all 11 matched 10ace4f with Sandboxed unchanged. This also carried deb1bc0's Legendary Chest numbers.
 - **Not run:** no Play test of these yet. The pickup VFX and the burst have not been seen in motion.
 
 # Tutorial play-test fixes — October 3, 2026
