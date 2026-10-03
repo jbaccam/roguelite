@@ -11,7 +11,9 @@ local Items=require(combat:WaitForChild('ShopCatalog'))
 local Maps=require(combat:WaitForChild('MapConfig'))
 local E=require(combat:WaitForChild('EconomyConfig'))
 local XP=require(combat:WaitForChild('RunXP'))
-local A={UserIds=table.freeze({341854066,109021050}),BossId='Hammer',BossIds=table.freeze({'Hammer','KingCrab','Pharaoh','FrostCyclops','Dragon'})} -- 341854066: EggaRowls; frozen so nothing can add a developer at runtime
+-- 341854066: EggaRowls. 109021050: leavked, the user's friend and map builder (confirmed by the user
+-- 2026-10-02, launch audit C3). Frozen so nothing can add a developer at runtime.
+local A={UserIds=table.freeze({341854066,109021050}),BossId='Hammer',BossIds=table.freeze({'Hammer','KingCrab','Pharaoh','FrostCyclops','Dragon'})}
 local admins={};for _,id in A.UserIds do admins[id]=true end
 function A.isAdminId(id) return type(id)=='number' and admins[id]==true end
 function A.isAdmin(player) return typeof(player)=='Instance' and player:IsA('Player') and A.isAdminId(player.UserId) end

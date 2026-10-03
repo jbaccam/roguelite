@@ -8,10 +8,10 @@ Paths are relative to `roguelite-planning/studio-prototype/` unless they start w
 
 ## Decisions needed from you
 
-- **Admin 109021050:** Is this your account? If not, remove it before launch. (C3)
+- ~~**Admin 109021050:**~~ leavked, the user's friend and map builder; kept. (C3)
 - **Lucky Cat Luck:** Luck raises run shop odds and comes from emerald-bought eggs. Allow it in writing, or keep Luck pets out of paid eggs? (M12)
-- **Run shop weapons:** Only weapons the player owns (what the docs say) or every weapon (what the code does)? (G6)
-- **Elite and horde waves:** Build elites on 5/15, horde on 10 and longer waves, or remove the markers for launch? (G5)
+- ~~**Run shop weapons:**~~ owned only; new weapons from chests and the daily shop. (G6)
+- ~~**Elite and horde waves:**~~ markers removed. (G5)
 - **Mid-run Robux rerolls:** The root AGENTS.md says the revive is the only thing bought mid-run, but rerolls and banishes are sold mid-run (your 2026-09-27 decision). Update the rule so future work follows it.
 
 ## Must fix before launch
@@ -274,6 +274,8 @@ The "minutes" counter ticks for everyone in a run in any phase, including the sh
 ### C3 · A second admin account, and two admin tools skip the "alone on server" check
 *Cheating & admin*
 
+**Progress 2026-10-02:** 109021050 is leavked, the user's friend and map builder: kept, and noted in AdminConfig. The shared alone-on-server check for EditPractice and EquipWeapon is still to do.
+
 AdminConfig lists 341854066 (EggaRowls) and 109021050, which isn't documented anywhere. Admins can grant themselves emeralds on live servers. EditPractice and EquipWeapon also skip the check that stops admin tools in a server with other players, which can void everyone's rewards for that run.
 
 **Fix:** Confirm or remove 109021050. Put the alone-on-server check in one shared function and use it in all three handlers.
@@ -298,8 +300,10 @@ Wave 1 starts 30 s after the first player arrives, and the starter swap only wor
 
 **Where:** `lobby/MatchService.luau:22,159-160`, `combat/ShopService.luau:230-241`
 
-### G5 · Elite, horde and longer waves are advertised but not built
+### G5 · Elite, horde and longer waves are advertised but not built — **fixed 2026-10-02**
 *Gameplay bugs*
+
+**Fixed (the user's call: remove them):** run setup's ELITE / HORDE tags are gone (plain ticks at 5, 10, 15 stay, each pays a block of run emeralds; BOSS at 20 stays), and CURRENT_GAME_STRUCTURE.md no longer claims them.
 
 The run-setup screen shows ELITE (5, 15), HORDE (10) and BOSS markers. On the server every wave is 30 s with 8 + 3×(wave-1) enemies, and nothing ever sets IsElite. Endless has no elites or bosses.
 
@@ -307,8 +311,10 @@ The run-setup screen shows ELITE (5, 15), HORDE (10) and BOSS markers. On the se
 
 **Where:** `lobby/RunSetupRules.luau:68`, `combat/ShopService.luau:314`, `combat/EconomyConfig.luau:6`
 
-### G6 · The run shop sells weapons the player doesn't own
+### G6 · The run shop sells weapons the player doesn't own — **fixed 2026-10-02**
 *Gameplay bugs*
+
+**Fixed (the user's call: owned only):** ShopService offers only weapons in ProfileWeapons or in the player's slots; with no owned weapon left for a weapon slot it offers an item. New weapons unlock from chests and the daily shop, whose Legendary deal is now 800 emeralds a copy (was 500). Checked over 4,000 rolls: no unowned weapon offered.
 
 The docs say only owned weapons appear in the run shop. The code offers every non-Godly weapon, so chest drops only matter for the starter, and "unlock Mjolnir" rewards a weapon already in every shop.
 

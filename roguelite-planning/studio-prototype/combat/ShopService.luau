@@ -167,22 +167,42 @@ local function choose(pool,p,wantWeapon)
  end
  return pool[rng:NextInteger(1,#pool)]
 end
+-- Weapons the run shop may offer this player: the ones they own (ProfileWeapons, "id:tier:have"
+-- from ProfileService) plus whatever they carry now (the user, 2026-10-02; audit G6). New weapons
+-- unlock from chests and the lobby's daily shop. Example: a new player owns the Glock, Frying Pan
+-- and Magic Staff, so their shop offers those three (any tier) and items.
+local function offerable(p)
+ local set={}
+ for id in string.gmatch(p:GetAttribute('ProfileWeapons') or '','([^,:]+):%d+:%d+') do set[id]=true end
+ for i=1,6 do local id=slots(p)['Slot'..i]:GetAttribute('WeaponId');if id and id~='' then set[id]=true end end
+ return set
+end
 local function roll(p,slot,excluded)
  local s=S.states[p];local cs=Characters.states[p]
  local wantWeapon=E.weaponSlot(S.wave,slot,rng)
  local tier=E.rollTier(S.wave,cs.stats.Luck,rng)
- local pool={}
- for try=tier,1,-1 do
-  for _,entry in Catalog.List do
-   if (entry.kind=='Weapon')==wantWeapon and entry.tier==try and not excluded[entry.id] then
-    local count=0
-    for _,it in s.items do if it.id==entry.id then count=it.count;break end end
-    if entry.kind=='Weapon' or count<entry.cap then table.insert(pool,entry) end
+ local owned=offerable(p)
+ local function fill(weapons)
+  local pool={}
+  for try=tier,1,-1 do
+   for _,entry in Catalog.List do
+    if (entry.kind=='Weapon')==weapons and entry.tier==try and not excluded[entry.id] and (not weapons or owned[entry.weaponId]) then
+     local count=0
+     for _,it in s.items do if it.id==entry.id then count=it.count;break end end
+     if entry.kind=='Weapon' or count<entry.cap then table.insert(pool,entry) end
+    end
    end
+   if #pool>0 then break end
   end
-  if #pool>0 then break end
+  return pool
  end
- -- Exhausted item pools can still produce a usable weapon rather than a dead offer.
+ -- An owned weapon, else an item; with the item pool exhausted too, any owned weapon of any tier.
+ local pool=fill(wantWeapon)
+ if #pool==0 and wantWeapon then pool=fill(false) end
+ if #pool==0 then
+  for _,entry in Catalog.List do if entry.kind=='Weapon' and owned[entry.weaponId] and not excluded[entry.id] then table.insert(pool,entry) end end
+ end
+ -- Last resort (nothing owned is known yet): any weapon, rather than a dead offer.
  if #pool==0 then
   for _,entry in Catalog.List do if entry.kind=='Weapon' and not excluded[entry.id] then table.insert(pool,entry) end end
  end

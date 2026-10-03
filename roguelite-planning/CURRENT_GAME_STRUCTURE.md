@@ -51,7 +51,7 @@ The player selects:
 - At the end of each wave, drops pull in. Leftover value goes into the shard bag.
 - Banked level-ups resolve as four stat cards (reroll costs shards).
 - A four-offer shop sells weapons and passive items. The player can buy, reroll, lock, recycle and combine.
-- Elites on waves 5 and 15, a horde on wave 10, and the map boss on wave 20.
+- The map boss on wave 20. (Elite and horde waves were planned for 5, 10 and 15 but not built; their run-setup labels were removed for launch, 2026-10-02.)
 - **Win:** The wave 20 boss dies. Then the player can Keep Going into Endless.
 - **Loss:** The player keeps the keys earned for waves already passed.
 
@@ -237,7 +237,7 @@ When a solo player dies, the run pauses and the death screen shows **REVIVE** an
 ### Must be decided before the prototype
 
 1. Tier I–IV chains for the six prototype weapons.
-2. Pine Valley's 20-wave spawn script, elite waves 5/15, horde wave 10, and Hammer Zombie Boss kit.
+2. Pine Valley's 20-wave spawn script and Hammer Zombie Boss kit (elite and horde waves not built).
 3. Shop tier-unlock waves and prices retuned for 20 waves.
 4. Tutorial weapon and base-class behavior.
 5. Final revive price, timeout and co-op behavior.

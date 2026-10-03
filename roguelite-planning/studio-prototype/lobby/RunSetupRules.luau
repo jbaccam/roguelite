@@ -65,7 +65,10 @@ end
 function R.runKey(mapId,diff) return (diff==nil or diff=='Normal') and mapId or mapId..'/'..diff end
 R.MapIndex={};for i,m in R.Maps do R.MapIndex[m.id]=i end
 R.WinWave=20
-R.Milestones={{5,'ELITE'},{10,'HORDE'},{15,'ELITE'},{20,'BOSS'}}
+-- Run setup's wave markers: plain ticks at 5, 10 and 15 (each pays a block of run emeralds) and the
+-- wave-20 boss. The ELITE (5, 15) and HORDE (10) tags promised waves that were never built, so they're
+-- gone (the user, 2026-10-02; audit G5).
+R.Milestones={{5},{10},{15},{20,'BOSS'}}
 R.Signature={Brawler='01',Gunner='00',Thrower='12',Juggler='19',Handyman='24',Mage='30'}
 R.ClassUnlock={Thrower='Reach wave 10 on Pine Valley',Juggler='Win Pine Valley',Handyman='Defeat 1,000 enemies with Utility weapons'}
 -- Emeralds a run pays: one payout per 5 waves reached (wave 12 on Pine Valley Normal = 2 x 20 = 40).

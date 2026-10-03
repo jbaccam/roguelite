@@ -204,7 +204,9 @@ end
 -- (weapons only). Never Godly. Every price per copy is well above that rarity's spare-copy value, so buying a deal to
 -- cash the copies in never pays.
 C.DealOdds={{'Common',55},{'Rare',35},{'Epic',8},{'Legendary',2}}
-C.DealPrice={Common=15,Rare=40,Epic=150,Legendary=500} -- emeralds per copy
+-- Emeralds per copy. The daily shop is how new weapons unlock now that the run shop sells only owned
+-- ones, and rarer weapons cost more: a Legendary went 500 -> 800 (the user, 2026-10-02).
+C.DealPrice={Common=15,Rare=40,Epic=150,Legendary=800}
 C.DealAmount={Common={2,5},Rare={1,3},Epic={1,1},Legendary={1,1}}
 function C.rollDeal(rng)
  local roll=rng:NextNumber()*100;local rarity=C.DealOdds[#C.DealOdds][1]
