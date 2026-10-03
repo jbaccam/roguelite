@@ -12,7 +12,8 @@ Spec: `../../plans/2026-10-03-tutorial-design.md`. Build steps: `../../plans/202
   - every changed file compiles;
   - `TutorialTests` pass 45 checks;
   - the guide UI mounted in CoreGui against a mock lobby: the box chose a clear corner, and the arrow landed under or over each target and turned as it glided.
-- **Not run:** no Play test yet, and the Studio sync is waiting for the user's okay.
+- **Studio:** synced 2026-10-03 with `tools/LaunchSync.luau` at 5f1ac5c: 16 scripts updated and 5 created, all or nothing. Each update was guarded on Studio's exact Source, and only tutorial commits separated those from HEAD. Afterwards all 21 matched the commit, and the new scripts copied Sandboxed and Capabilities from their neighbours. The art is uploaded (`assets/tutorial/asset-ids.json`).
+- **Not run:** no Play test yet.
 
 # No pop-in on first open — October 3, 2026
 

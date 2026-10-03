@@ -1,6 +1,6 @@
 # First-join tutorial — design
 
-**Status:** Approved design, 2026-10-03. **Built in the repo the same day** (commits 72cacce–50e3982, [build steps](2026-10-03-tutorial-build-steps.md)); not in Studio yet and not play-tested.
+**Status:** Approved design, 2026-10-03. **Built in the repo the same day** (commits 72cacce–50e3982, [build steps](2026-10-03-tutorial-build-steps.md)); synced to Studio the same day (5f1ac5c); not play-tested yet. Admin panel → Waves → Tutorial starts it in Studio.
 **Replaces:** the "Recommended tutorial — proposed" section of [LOBBY_AND_FIRST_RUN.md](../LOBBY_AND_FIRST_RUN.md).
 **Inspiration:** a reference game's tutorial (20 screenshots the user shared on 2026-10-03). We copy its pacing and guidance style, but use our game's systems.
 
