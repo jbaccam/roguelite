@@ -110,6 +110,75 @@ C.Legendary={
 }
 -- A weapon's Legendary move is live at Tier IV only.
 function C.legendaryMove(id,tier) return (tonumber(tier) or 1)>=4 and C.Legendary[id] or nil end
+
+-- Player-facing lines built from the numbers above (the item card in the chest odds, 2026-10-02), so
+-- the words can't drift from the tuning. Example: godlyText('40',1) = 'Every hit heals you for 8% of
+-- its damage. Every kill sends a blood wisp back to you that heals 2 HP.'
+local function num(x) local s=string.format('%.1f',x);return (s:gsub('%.0$','')) end
+local function pct(x) return num(x*100)..'%' end
+local function at(v,tier) if type(v)~='table' then return v end;return v[math.clamp(math.floor(tonumber(tier) or 1),1,#v)] end
+local function ord(n) local t=n%100;return n..((t>=11 and t<=13) and 'th' or ({'st','nd','rd'})[n%10] or 'th') end
+-- The special at a tier, in one or two sentences.
+function C.godlyText(id,tier)
+ local s=C.Godly[id];if not s then return nil end
+ local function v(k) return at(s[k],tier) end
+ if id=='36' then return '1 in '..math.round(1/s.ghostChance)..' kills raises a crimson wraith that hunts for '..num(s.ghostLife)..' s, clawing for '..pct(s.ghostClaw)..' of your damage (up to '..v('ghostCap')..' at once).'
+ elseif id=='37' then return 'Stabs up close and throws at range. Where it lands, a '..num(v('waveRadius'))..'-stud tidal wave hits for '..pct(s.waveFactor)..' damage and pushes enemies away.'
+ elseif id=='38' then return 'Each arrow splits in the sky and rains storm arrows on '..v('arrows')..' enemies.'
+ elseif id=='39' then return 'The twin daggers zip from enemy to enemy, hitting up to '..v('chain')..' in a chain.'
+ elseif id=='40' then return 'Every hit heals you for '..pct(v('leech'))..' of its damage. Every kill sends a blood wisp back to you that heals '..num(s.wispHeal)..' HP.'
+ elseif id=='41' then return 'Kills disintegrate in a '..num(v('burstRadius'))..'-stud burst that hits nearby enemies for '..pct(v('burstFactor'))..' damage.' end
+ return nil
+end
+-- What Tier IV adds to the special (nil when nothing changes).
+function C.godlyUpgradeText(id)
+ local s=C.Godly[id];if not s then return nil end
+ local function v(k,t) return at(s[k],t) end
+ if id=='36' and v('ghostCap',4)~=v('ghostCap',1) then return 'Tier IV keeps up to '..v('ghostCap',4)..' wraiths.'
+ elseif id=='37' and v('waveRadius',4)~=v('waveRadius',1) then return 'Tier IV makes the wave '..num(v('waveRadius',4))..' studs wide.'
+ elseif id=='38' and v('arrows',4)~=v('arrows',1) then return 'Tier IV rains '..v('arrows',4)..' storm arrows.'
+ elseif id=='39' and v('chain',4)~=v('chain',1) then return 'Tier IV chains up to '..v('chain',4)..' enemies.'
+ elseif id=='40' and v('leech',4)~=v('leech',1) then return 'Tier IV heals '..pct(v('leech',4))..(v('capBonus',4)>0 and ' and raises your healing cap by '..num(v('capBonus',4))..' HP/s.' or '.')
+ elseif id=='41' and v('burstRadius',4)~=v('burstRadius',1) then return 'Tier IV makes the burst '..num(v('burstRadius',4))..' studs wide and hit for '..pct(v('burstFactor',4))..'.' end
+ return nil
+end
+-- The special's numbers that change with tier, one table row each: label, field and how to show it.
+C.GodlyRows={
+ ['36']={{label='Wraiths at once',field='ghostCap'}},
+ ['37']={{label='Wave size (studs)',field='waveRadius'}},
+ ['38']={{label='Storm arrows',field='arrows'}},
+ ['39']={{label='Enemies chained',field='chain'}},
+ ['40']={{label='Heal per hit',field='leech',percent=true}},
+ ['41']={{label='Burst size (studs)',field='burstRadius'},{label='Burst damage',field='burstFactor',percent=true}},
+}
+function C.godlyRowValue(id,row,tier) local v=at(C.Godly[id][row.field],tier);return row.percent and pct(v) or num(v),v end
+-- Legendary Tier IV moves: a short name and one sentence.
+C.LegendaryNames={Slash='Flying slash',Split='Mini rockets',Flush='Royal Flush',Strike='STRIKE!',Shock='Shockwave',Beam='Beam slash',Thunder='Lightning strike'}
+function C.legendaryText(id)
+ local m=C.Legendary[id];if not m then return nil end
+ local every=m.every and (m.every==1 and 'Every' or 'Every '..ord(m.every))
+ if m.move=='Slash' then return every..' swing throws a flying slash through a line of enemies for '..pct(m.factor)..' damage.'
+ elseif m.move=='Split' then return every..' rocket splits into '..m.minis..' homing mini rockets ('..pct(m.factor)..' damage each).'
+ elseif m.move=='Flush' then return every..' throw is a Royal Flush: '..m.cards..' gold cards that pierce everything.'
+ elseif m.move=='Strike' then return 'A roll that hits '..m.hits..'+ enemies is a STRIKE! with a pin explosion.'
+ elseif m.move=='Shock' then return 'Each swing that connects sends out a ground shockwave ('..pct(m.factor)..' damage).'
+ elseif m.move=='Beam' then return every..' swing also shoots a golden beam slash ('..pct(m.factor)..' damage).'
+ elseif m.move=='Thunder' then return every..' throw calls down a lightning strike ('..pct(m.factor)..' damage).' end
+ return nil
+end
+-- One-line description: home class and traits (the same words as the Armory's).
+local TRAITS={pellets='Fires a spread of pellets.',pierce='Shots pierce through enemies.',bounce='Bounces between enemies.',cards='Throws a three-card volley.',shots='Fires a burst of shots.'}
+function C.describe(w)
+ if w.godly then return 'Any class can start a run with it.' end
+ local out={'Home weapon of the '..w.home..' class.'}
+ if TRAITS[w.trait] then table.insert(out,TRAITS[w.trait]) end
+ if w.burn>0 then table.insert(out,'Sets enemies on fire.') end
+ if w.poison>0 then table.insert(out,'Poisons what it hits.') end
+ if w.slow>0 then table.insert(out,'Slows enemies down.') end
+ if w.lightning then table.insert(out,'Lightning chains to nearby enemies.') end
+ if w.blastRadius then table.insert(out,'Explodes on impact.') end
+ return table.concat(out,' ')
+end
 for i,name in names do
  local n=i-1
  local kind=ranged[n] and 'Ranged' or 'Melee'

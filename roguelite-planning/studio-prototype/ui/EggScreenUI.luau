@@ -23,6 +23,8 @@ local combat=RS:WaitForChild('RogueliteCombat')
 local Eggs=require(combat:WaitForChild('EggConfig'))
 local Chests=require(combat:WaitForChild('ChestConfig'))
 local Pets=require(combat:WaitForChild('PetConfig'))
+-- Tapping a pet opens its card (ItemCardUI, like the chest odds); it also owns the chance formatter.
+local Card=require(RS:WaitForChild('ItemCardUI'))
 local C=T.Color
 local U={}
 
@@ -91,6 +93,8 @@ function U.new(player,opts)
  self.Screen=screen
  local root,canvas
  local browse,card,header,actions,gemValue
+ -- The pet card over the egg screen (ItemCardUI handle), the pet cells by id and the pets in display order.
+ local itemCard,petCells,petList
  local openLayer,resultLayer,prompt
  local conns={}
  local amount=1
@@ -136,27 +140,47 @@ function U.new(player,opts)
  -- Browse ----------------------------------------------------------------------------------------
  -- The egg card: icon, name, owned count, then every pet by rarity with its chance (12 pets fit
  -- without an overlay). Scrolls when the screen is short (phones).
+ -- The pet card closes first (B / Esc / X / BACK / a tap outside); the controller goes back to the
+ -- cell of the pet it showed last. silent: closed because the screen is redrawn or closing.
+ local function closeItem(silent) if itemCard then itemCard.Close(silent) end;itemCard=nil end
+ local function openItem(id)
+  if mode~='browse' or not (canvas and petList) then return end
+  if itemCard then itemCard.Close(true) end
+  itemCard=Card.open(canvas,L,{list=petList,id=id,source='egg',profile=opts.profile,zindex=50,
+   onClose=function(lastId,silent)
+    itemCard=nil
+    if not silent and petCells and petCells[lastId] then Card.reselect(petCells[lastId]) end
+   end})
+ end
  local function drawCard()
   local keep=card and card.CanvasPosition.Y
   if card then card:Destroy() end
   card=T.scroll(canvas,'Card',LIST_X-8,L.listY-14,LIST_W+20,L.listH+14)
   local panelH=0
-  -- 112 px cells: the whole card (about 810 px) fits a 1080p screen without scrolling.
-  local cell,gap=112,8
-  local perRow=4
+  -- 112 px cells: the whole card (about 810 px) fits a 1080p screen without scrolling. Where 15 px
+  -- names would draw under 9.5 screen px (phones and 4:3 tablets, canvas scale under .63) the card
+  -- uses three bigger cells a row (188 px, 22 px names) and scrolls.
+  local big=L.s<.63
+  local cell,gap=big and 188 or 112,8
+  local perRow=big and 3 or 4
   local odds=Eggs.odds()
   local byR={};for _,o in odds do byR[o.rarity]=byR[o.rarity] or {};table.insert(byR[o.rarity],o) end
-  for _,r in Eggs.Rarities do if byR[r] then panelH+=44+math.ceil(#byR[r]/perRow)*(cell+gap)+6 end end
+  -- Rarest first, like the chest odds (user, 2026-10-02); the card's < > walk the same order.
+  local order=Card.rarestFirst(Eggs.Rarities)
+  petList={};petCells={}
+  for _,r in order do for _,o in byR[r] or {} do table.insert(petList,o) end end
+  for _,r in order do if byR[r] then panelH+=44+math.ceil(#byR[r]/perRow)*(cell+gap)+6 end end
   local p=T.panel(card,'Egg',8,14,LIST_W,112+panelH+18,'panel');corners(p,Eggs.Aura)
   wash(p,Eggs.Aura,.45,p.ZIndex)
   local ic=T.icon(p,'Icon',12,0,104,Eggs.Icon or '');ic.ZIndex=p.ZIndex+2
   local n=owned()
   local name=left(T.label(p,'Name',Eggs.Name..(n>0 and '  <font color="#91EF14">('..n..')</font>' or ''),128,10,LIST_W-310,48,38));name.RichText=true;name.TextWrapped=false;name.ZIndex=p.ZIndex+2
-  local sub=left(T.text(p,'Sub','Hatches 1 random pet  ·  chances below',130,70,LIST_W-150,28,21,C.cream));sub.ZIndex=p.ZIndex+2
+  local sub=left(T.text(p,'Sub','Hatches 1 random pet  ·  tap a pet for details',130,70,LIST_W-150,28,21,C.cream));sub.ZIndex=p.ZIndex+2
   local chip=T.panel(p,'Price',LIST_W-172,18,154,48,'inset');chip.ZIndex=p.ZIndex+2
   costRow(chip,fmt(Eggs.Emeralds),'emerald',24,C.emerald);zAll(chip,chip.ZIndex+1)
+  local held=opts.profile and opts.profile().pets
   local y=112
-  for _,r in Eggs.Rarities do
+  for _,r in order do
    local list=byR[r]
    if list then
     local col=Chests.RarityColor[r]
@@ -164,24 +188,22 @@ function U.new(player,opts)
     T.make('UICorner',bar,{CornerRadius=UDim.new(0,6)});T.make('UIStroke',bar,{Color=col:Lerp(Color3.new(0,0,0),.55),Thickness=2})
     T.make('UIGradient',bar,{Color=ColorSequence.new(WHITE,Color3.fromRGB(150,150,150))})
     left(T.label(bar,'Name',string.upper(r),16,0,300,36,24,WHITE)).ZIndex=bar.ZIndex+1
-    right(T.label(bar,'Amount',Eggs.Odds[r]..'%',LIST_W-28-316,0,300,36,24,WHITE)).ZIndex=bar.ZIndex+1
+    right(T.label(bar,'Amount',Card.percent(Eggs.Odds[r]),LIST_W-28-316,0,300,36,24,WHITE)).ZIndex=bar.ZIndex+1
     y+=44
     for i,o in list do
      local x=14+((i-1)%perRow)*(cell+gap)
-     local c=T.make('Frame',p,{Name='Pet_'..o.id,Position=UDim2.fromOffset(x,y+(i-1)//perRow*(cell+gap)),Size=UDim2.fromOffset(cell,cell),BackgroundColor3=col,BackgroundTransparency=.55,BorderSizePixel=0,ZIndex=p.ZIndex+2})
-     T.make('UICorner',c,{CornerRadius=UDim.new(0,8)});T.make('UIStroke',c,{Color=col,Thickness=2})
-     local pi=T.icon(c,'Icon',(cell-70)/2,4,70,petIcon(o.id));pi.ZIndex=c.ZIndex+1
-     local nm=centred(T.label(c,'Name',petName(o.id),4,cell-40,cell-8,20,15,WHITE));nm.ZIndex=c.ZIndex+2;nm.TextWrapped=false
-     local pct=o.chance>=10 and string.format('%.0f%%',o.chance) or string.format('%.1f%%',o.chance)
-     local pl=centred(T.label(c,'Chance',pct,4,cell-21,cell-8,19,18,col:Lerp(WHITE,.55)));pl.ZIndex=c.ZIndex+2
-     local held=opts.profile and opts.profile().pets
-     if type(held)=='table' and held[o.id] then
-      tick(c,cell-30,4,24,c.ZIndex+2)
-     end
+     -- Tappable: opens the pet's card ("i" corner, press feedback, lime ring on a controller).
+     petCells[o.id]=Card.cell(p,{name='Pet_'..o.id,x=x,y=y+(i-1)//perRow*(cell+gap),size=cell,color=col,icon=petIcon(o.id),
+      -- 112 px cells: the name gets two lines, so "Golden Retriever" stays 15 px instead of shrinking.
+      iconSize=big and 112 or 54,iconY=big and 6 or 2,title=petName(o.id),titleY=big and 122 or 56,titleH=big and 28 or 38,titleSize=big and 22 or 15,
+      chance=Card.percent(o.chance),chanceY=big and 152 or 93,chanceH=big and 28 or 18,chanceSize=big and 22 or 17,chanceColor=col:Lerp(WHITE,.55),
+      badge=big and 30 or 24,owned=type(held)=='table' and held[o.id]~=nil,z=p.ZIndex+2,
+      onOpen=function() openItem(o.id) end})
     end
     y+=math.ceil(#list/perRow)*(cell+gap)+6
    end
   end
+  Card.settle(p,L.s) -- text shrinks to its box on phones instead of spilling out
   card.CanvasSize=UDim2.fromOffset(0,p.Size.Y.Offset+28)
   card.CanvasPosition=Vector2.new(0,keep or 0)
  end
@@ -237,7 +259,7 @@ function U.new(player,opts)
   if mode~='browse' or not browse then return end
   local path=T.selectionPath(canvas)
   drawCard();drawHeader()
-  T.restoreSelection(canvas,path)
+  if itemCard then itemCard.Redraw() else T.restoreSelection(canvas,path) end -- the open card shows the new tier
  end
 
  local function browsePieces()
@@ -343,6 +365,7 @@ function U.new(player,opts)
   local best,rank,petId=bestOf(results)
   opening={n=total,results=results,total=total,stage=0,best=best,bestRank=rank,petId=petId}
   if resultLayer then resultLayer:Destroy();resultLayer=nil end
+  closeItem(true)
   if browse then
    local pieces=browsePieces();browse,card,header,actions,gemValue=nil,nil,nil,nil,nil
    for _,c in pieces do
@@ -491,6 +514,7 @@ function U.new(player,opts)
    local path=T.selectionPath(canvas)
    buildBrowse(false)
    T.restoreSelection(canvas,path)
+   if itemCard then itemCard.Redraw(L) end -- same pet, on the new canvas
   elseif mode=='opening' and openLayer then openLayer.Size=UDim2.fromOffset(L.w,L.h);if not opening.bursting then drawPrompt() end
   elseif resultLayer then resultLayer.Size=UDim2.fromOffset(L.w,L.h) end
  end
@@ -526,8 +550,16 @@ function U.new(player,opts)
   end))
   table.insert(conns,Input.InputBegan:Connect(function(input)
    if input.KeyCode==Enum.KeyCode.Escape or input.KeyCode==Enum.KeyCode.ButtonB then
-    if mode=='results' then self.Claim() elseif mode=='browse' then self.Close() end
+    -- Back one step: the pet card, then the results, then the screen.
+    if itemCard then closeItem(false)
+    elseif mode=='results' then self.Claim() elseif mode=='browse' then self.Close() end
     return
+   end
+   -- LB / RB (and the arrow keys) walk the pet list on the open card.
+   if itemCard then
+    local k=input.KeyCode
+    if k==Enum.KeyCode.ButtonL1 or k==Enum.KeyCode.Left then itemCard.Step(-1);return end
+    if k==Enum.KeyCode.ButtonR1 or k==Enum.KeyCode.Right then itemCard.Step(1);return end
    end
    local go=input.KeyCode==Enum.KeyCode.Space or input.KeyCode==Enum.KeyCode.Return or input.KeyCode==Enum.KeyCode.ButtonA
    if mode=='opening' and go then advance()
@@ -546,6 +578,7 @@ function U.new(player,opts)
   Merchant.Present(false);Merchant.Say(Merchant.pick('bye'),2.2)
   local r=root;root=nil;r:Destroy()
   canvas,browse,card,header,actions,gemValue,openLayer,resultLayer,prompt=nil,nil,nil,nil,nil,nil,nil,nil,nil
+  itemCard,petCells,petList=nil,nil,nil
   mode='closed'
   screen.Enabled=false
   T.hideTouchControls('EggScreen',false)
@@ -555,7 +588,9 @@ function U.new(player,opts)
  function self.Mode() return mode end
  function self.SetAmount(n) if Eggs.validAmount(n) then amount=n;drawBrowse() end end
  function self.Advance() advance() end
- -- Studio-only hook so tests can drive the real screen: TestEgg:Fire('Open'|'Begin'|'Advance'|'Claim'|'Close'|'SetAmount', arg).
+ function self.OpenItem(id) openItem(id) end -- a pet's card (tests and previews)
+ function self.CloseItem() closeItem(true) end
+ -- Studio-only hook so tests can drive the real screen: TestEgg:Fire('Open'|'Begin'|'Advance'|'Claim'|'Close'|'SetAmount'|'OpenItem', arg).
  if RunService:IsStudio() then
   local hook=Instance.new('BindableEvent');hook.Name='TestEgg';hook.Parent=screen
   hook.Event:Connect(function(cmd,arg) if type(self[cmd])=='function' then self[cmd](arg) end end)

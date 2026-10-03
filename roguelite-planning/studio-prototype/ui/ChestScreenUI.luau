@@ -1,6 +1,7 @@
 -- Full-screen chest screen (lobby), green theme (UITheme) over the 3D chest island (ChestStage).
 -- Browse: the chest list on the left (owned count, price, what's inside by rarity, [i] for every
 -- weapon's odds), and over the chosen chest its title with BUY / OPEN / amount (×1, ×10, ×100).
+-- In the odds (rarest first) every item can be tapped for its card (ItemCardUI, 2026-10-02).
 -- Opening: the camera pushes in, the player taps three times: two shakes that charge the aura,
 -- then the lid bursts open and the weapons fly out onto cards. ×10 and ×100 open in one go with a
 -- bigger burst and more items flying out, not one animation per chest.
@@ -21,6 +22,8 @@ local combat=RS:WaitForChild('RogueliteCombat')
 local Chests=require(combat:WaitForChild('ChestConfig'))
 local Weapons=require(combat:WaitForChild('WeaponCatalog'))
 local WeaponIcons=require(RS:WaitForChild('WeaponInventoryUI')).Icons
+-- Tapping an item in the odds opens its card (ItemCardUI); it also owns the one chance formatter.
+local Card=require(RS:WaitForChild('ItemCardUI'))
 local Armor=require(combat:WaitForChild('ArmorCatalog'))
 local Pets=require(combat:WaitForChild('PetConfig'))
 local Money=require(combat:WaitForChild('MonetizationConfig'))
@@ -92,6 +95,8 @@ function U.new(player,opts)
  -- browse: the browse view's top-level pieces (direct children of the canvas, one per group).
  local browse,listFrame,header,actions,oddsOverlay,gemValue
  local oddsBack -- set when the store's SEE ODDS opened this screen: closing the odds goes back there
+ -- The item card over the odds (ItemCardUI handle), the odds cells by item id and the odds in display order.
+ local itemCard,oddsCells,oddsList
  local openLayer,resultLayer
  local conns={}
  local profile
@@ -178,15 +183,29 @@ function U.new(player,opts)
   return out
  end
 
+ -- The item card closes first (B / Esc / X / BACK / a tap outside); the controller goes back to
+ -- the cell of the item it showed last. silent: closed because the odds are redrawn or closing.
+ local function closeItem(silent) if itemCard then itemCard.Close(silent) end;itemCard=nil end
+ local function openItem(id)
+  if not (oddsOverlay and oddsList) then return end
+  if itemCard then itemCard.Close(true) end
+  itemCard=Card.open(canvas,L,{list=oddsList,id=id,source='chest',kind=oddsOverlay:GetAttribute('Chest'),profile=readProfile,zindex=50,
+   onClose=function(lastId,silent)
+    itemCard=nil
+    if not silent and oddsCells and oddsCells[lastId] then Card.reselect(oddsCells[lastId]) end
+   end})
+ end
  local function closeOdds()
+  closeItem(true)
   if oddsOverlay then oddsOverlay:Destroy();oddsOverlay=nil end
+  oddsCells,oddsList=nil,nil
   if oddsBack then local back=oddsBack;oddsBack=nil;back();return end
   if actions then T.gamepadSelect(actions) end
  end
  local function openOdds(id)
   if oddsOverlay then oddsOverlay:Destroy() end
   local def=Chests.ById[id]
-  local back=T.make('TextButton',canvas,{Name='Odds',Text='',AutoButtonColor=false,BackgroundColor3=C.shade,BackgroundTransparency=.4,Position=UDim2.fromOffset(-1000,-400),Size=UDim2.fromOffset(L.w+2000,L.h+800),ZIndex=40})
+  local back=T.make('TextButton',canvas,{Name='Odds',Text='',AutoButtonColor=false,Selectable=false,BackgroundColor3=C.shade,BackgroundTransparency=.4,Position=UDim2.fromOffset(-1000,-400),Size=UDim2.fromOffset(L.w+2000,L.h+800),ZIndex=40})
   back:SetAttribute('AuditIgnore',true);back:SetAttribute('Chest',id) -- modal shade; Chest: redrawn on resize
   oddsOverlay=back
   back.Activated:Connect(closeOdds)
@@ -197,7 +216,11 @@ function U.new(player,opts)
   local odds=Chests.odds(id)
   -- Show each Godly weapon with its own icon and catalog-provided chance.
   local byR={};for _,o in odds do byR[o.rarity]=byR[o.rarity] or {};table.insert(byR[o.rarity],o) end
-  local shown={};for _,r in Chests.Rarities do if byR[r] then table.insert(shown,r) end end
+  -- Rarest first (user, 2026-10-02): the Godly and Legendary items are on screen without scrolling.
+  local shown={};for _,r in Card.rarestFirst(Chests.Rarities) do if byR[r] then table.insert(shown,r) end end
+  -- Every item can be tapped for its card; < > on the card walk this same order.
+  oddsList={};oddsCells={}
+  for _,r in shown do for _,o in byR[r] do table.insert(oddsList,o) end end
   local cell,gap=96,8
   local W=math.min(1340,L.w-80)
   local perRow=math.max(1,math.floor((W-72+gap)/(cell+gap)))
@@ -208,9 +231,37 @@ function U.new(player,opts)
   local H=math.min(94+contentH+12,L.h-24-top)
   local py=math.max(top,(L.h-H)/2+17)
   local p=T.panel(back,'Panel',1000+(L.w-W)/2,400+py,W,H,'panel');p.ZIndex=41;p.Active=true;corners(p,def.aura)
+  -- A controller stays inside the odds while they are open.
+  p.SelectionGroup=true
+  p.SelectionBehaviorUp=Enum.SelectionBehavior.Stop;p.SelectionBehaviorDown=Enum.SelectionBehavior.Stop
+  p.SelectionBehaviorLeft=Enum.SelectionBehavior.Stop;p.SelectionBehaviorRight=Enum.SelectionBehavior.Stop
   local pl=plate(p,def.name..'  ·  Odds',28,-34,34);pl.ZIndex=42;for _,d in pl:GetDescendants() do if d:IsA('GuiObject') then d.ZIndex=43 end end
+  pl.Title.Position=UDim2.fromOffset(30,0);pl.Title.Size=UDim2.new(1,-60,1,0) -- between the stone caps, on small screens too
   local x0=36
-  local help=left(T.text(p,'Help','Chance that one '..def.name..' includes each item. '..def.copies..' items per chest (weapons and armor).',x0,54,W-72,26,20,C.muted));help.ZIndex=42
+  -- Help line: "Tap / Click any item…"; with a controller, the selected item and A Details · B Back.
+  local help=left(T.text(p,'Help','',x0,54,W-72,26,20,C.muted));help.ZIndex=42
+  local hint=T.frame(p,'PadHint',W-36-330,50,330,34);hint.ZIndex=42
+  for i,k in {{Enum.KeyCode.ButtonA,'Details'},{Enum.KeyCode.ButtonB,'Back'}} do
+   local gx=(i-1)*165
+   local g=T.icon(hint,'Glyph'..i,gx,0,34,Card.keyImage(k[1]));g.ZIndex=43
+   left(T.label(hint,'Say'..i,k[2],gx+40,0,120,34,22,WHITE)).ZIndex=43
+  end
+  local chosen
+  local function setHelp()
+   local input=Card.input()
+   hint.Visible=input=='pad'
+   help.Size=UDim2.fromOffset(W-72-(input=='pad' and 340 or 0),26)
+   if input=='pad' and chosen then
+    local col=Chests.RarityColor[chosen.rarity] or WHITE
+    help.Text='<font color="'..T.hex(col:Lerp(WHITE,.3))..'">'..itemName(chosen.id)..'</font>   ·   '..string.upper(chosen.rarity)..'   ·   '..Card.percent(chosen.chance)
+    help.TextColor3=WHITE
+   else
+    help.Text=(input=='touch' and 'Tap' or input=='pad' and 'Pick' or 'Click')..' any item to see its stats.  Chance that one '..def.name..' includes it · '..def.copies..' items per chest.'
+    help.TextColor3=C.muted
+   end
+  end
+  local inputConn=Input.LastInputTypeChanged:Connect(function() if back.Parent then setHelp() end end)
+  back.Destroying:Connect(function() inputConn:Disconnect() end)
   local body=T.scroll(p,'Rows',8,94,W-16,H-94-12);body.ZIndex=42;body.CanvasSize=UDim2.fromOffset(0,contentH)
   x0-=8
   local y=0
@@ -221,18 +272,19 @@ function U.new(player,opts)
    y+=34
    for i,o in list do
     local x=x0+((i-1)%perRow)*(cell+gap)
-    local c=T.make('Frame',body,{Name='W_'..o.id,Position=UDim2.fromOffset(x,y+(i-1)//perRow*(cell+gap)),Size=UDim2.fromOffset(cell,cell),BackgroundColor3=col,BackgroundTransparency=.55,BorderSizePixel=0,ZIndex=42})
-    T.make('UICorner',c,{CornerRadius=UDim.new(0,8)});T.make('UIStroke',c,{Color=col,Thickness=2})
-    local ic=T.icon(c,'Icon',8,4,cell-16,itemIcon(o.id));ic.ZIndex=43
-    local pct=o.chance>=10 and string.format('%.0f%%',o.chance) or o.chance>=1 and string.format('%.1f%%',o.chance) or string.format('%.2f%%',o.chance)
-    local l=centred(T.label(c,'Chance',pct,0,cell-30,cell,28,22,WHITE));l.ZIndex=44
+    oddsCells[o.id]=Card.cell(body,{name='W_'..o.id,x=x,y=y+(i-1)//perRow*(cell+gap),size=cell,color=col,icon=itemIcon(o.id),iconSize=cell-16,iconY=4,
+     chance=Card.percent(o.chance),chanceY=cell-30,chanceSize=22,z=42,
+     onOpen=function() openItem(o.id) end,onSelect=function() chosen=o;setHelp() end})
    end
    y+=math.ceil(#list/perRow)*(cell+gap)+6
   end
+  setHelp()
   local cs=math.max(62,L.tap)
   local close=T.button(p,'Close','X',W-cs-8,-26,cs,cs,closeOdds,true);T.setTier(close,4);close.Caption.TextColor3=C.negative;close.Caption.TextSize=34;close.ZIndex=44;close.Caption.ZIndex=45
   if close:FindFirstChild('RarityCorners') then close.RarityCorners.ZIndex=45 end
-  T.gamepadSelect(p)
+  close.SelectionOrder=99 -- a controller lands on the first item, not the X
+  Card.settle(p,L.s) -- text shrinks to its box on phones instead of spilling out
+  T.gamepadSelect(body)
  end
 
  local function drawList()
@@ -258,7 +310,7 @@ function U.new(player,opts)
    local n=owned(id)
    -- Stops 8 px before the price chip; long names ("Legendary Chest  (12)") shrink to fit.
    local name=left(T.label(row,'Name',def.name..(n>0 and '  <font color="#91EF14">('..n..')</font>' or ''),128,10,LIST_W-308,48,36));name.RichText=true;name.TextWrapped=false;name.ZIndex=row.ZIndex+2
-   local sub=left(T.text(row,'Sub',def.copies..' items  ·  '..(def.legendary>=1 and 'Legendary guaranteed' or ('Legendary '..Chests.percent(def.legendary))),130,56,LIST_W-230,26,20,C.cream));sub.ZIndex=row.ZIndex+2
+   local sub=left(T.text(row,'Sub',def.copies..' items  ·  '..(def.legendary>=1 and 'Legendary guaranteed' or ('Legendary '..Card.percent(def.legendary*100))),130,56,LIST_W-230,26,20,C.cream));sub.ZIndex=row.ZIndex+2
    -- Price chip (top right).
    local chip=T.panel(row,'Price',LIST_W-172,14,154,48,'inset');chip.ZIndex=row.ZIndex+2
    if def.daily then
@@ -510,7 +562,8 @@ function U.new(player,opts)
   opening={id=selected,n=n,results=results,total=total,stage=0,best=best}
   -- Browse slides away, the camera pushes in on the chest.
   if resultLayer then resultLayer:Destroy();resultLayer=nil end
-  if oddsOverlay then oddsOverlay:Destroy();oddsOverlay=nil end
+  closeItem(true)
+  if oddsOverlay then oddsOverlay:Destroy();oddsOverlay=nil;oddsCells,oddsList=nil,nil end
   if browse then
    -- Left column slides left, the title up, buttons under the chest down.
    local pieces=browsePieces();browse,listFrame,header,actions,gemValue=nil,nil,nil,nil,nil
@@ -683,6 +736,7 @@ function U.new(player,opts)
    buildBrowse(false)
    T.restoreSelection(canvas,path)
    if oddsOverlay then openOdds(oddsOverlay:GetAttribute('Chest')) end
+   if itemCard then itemCard.Redraw(L) end -- same item, on the new canvas
   elseif mode=='opening' and openLayer then openLayer.Size=UDim2.fromOffset(L.w,L.h);if not opening.bursting then drawPrompt() end
   elseif resultLayer then resultLayer.Size=UDim2.fromOffset(L.w,L.h) end -- cards keep their places until CLAIM
  end
@@ -727,13 +781,24 @@ function U.new(player,opts)
     if not pendingBrowse then pendingBrowse=true;task.defer(function() pendingBrowse=false;drawBrowse() end) end
     if gemValue and gemValue.Parent then gemValue.Text=fmt(player:GetAttribute('ProfileGems') or 0) end
    end
+   -- The open item card shows what you own and at what tier.
+   if itemCard and (name=='ProfileWeapons' or name=='ProfileArmor' or name=='ProfilePets' or name=='ProfilePity' or name=='ProfileLoaded') then
+    task.defer(function() if itemCard then itemCard.Redraw() end end)
+   end
   end))
   table.insert(conns,Input.InputBegan:Connect(function(input,processed)
    if input.KeyCode==Enum.KeyCode.Escape or input.KeyCode==Enum.KeyCode.ButtonB then
-    -- Back one step: the odds panel, then the results, then the screen.
-    if oddsOverlay then closeOdds()
+    -- Back one step: the item card, the odds panel, then the results, then the screen.
+    if itemCard then closeItem(false)
+    elseif oddsOverlay then closeOdds()
     elseif mode=='results' then self.Claim() elseif mode=='browse' then self.Close() end
     return
+   end
+   -- LB / RB (and the arrow keys) walk the odds list on the open card.
+   if itemCard then
+    local k=input.KeyCode
+    if k==Enum.KeyCode.ButtonL1 or k==Enum.KeyCode.Left then itemCard.Step(-1);return end
+    if k==Enum.KeyCode.ButtonR1 or k==Enum.KeyCode.Right then itemCard.Step(1);return end
    end
    -- (No `processed` check: the movement sink marks Space as handled, and this screen has no text boxes.)
    local go=input.KeyCode==Enum.KeyCode.Space or input.KeyCode==Enum.KeyCode.Return or input.KeyCode==Enum.KeyCode.ButtonA
@@ -754,7 +819,7 @@ function U.new(player,opts)
   Stage.Hide()
   local r=root;root=nil;r:Destroy()
   canvas,browse,listFrame,header,actions,gemValue,oddsOverlay,openLayer,resultLayer,prompt=nil,nil,nil,nil,nil,nil,nil,nil,nil,nil
-  oddsBack=nil
+  oddsBack,itemCard,oddsCells,oddsList=nil,nil,nil,nil
   mode='closed'
   screen.Enabled=false
   T.hideTouchControls('ChestScreen',false)
@@ -765,7 +830,11 @@ function U.new(player,opts)
  function self.Select(id) if Chests.ById[id] and mode=='browse' then selected=id;Stage.Select(id);drawBrowse() end end
  function self.SetAmount(n) if Chests.validAmount(n) then amount=n;drawBrowse() end end
  function self.Advance() advance() end
- -- Studio-only hook so tests can drive the real screen: TestChest:Fire('Open'|'Select'|'Begin'|'Advance'|'Claim'|'Close'|'SetAmount', arg).
+ -- The odds of a chest, and an item's card over them (tests and previews).
+ function self.OpenOdds(id) if mode=='browse' and canvas and Chests.ById[id or selected] then openOdds(id or selected) end end
+ function self.OpenItem(id) if oddsOverlay then openItem(id) end end
+ function self.CloseItem() closeItem(true) end
+ -- Studio-only hook so tests can drive the real screen: TestChest:Fire('Open'|'Select'|'Begin'|'Advance'|'Claim'|'Close'|'SetAmount'|'OpenOdds'|'OpenItem', arg).
  if RunService:IsStudio() then
   local hook=Instance.new('BindableEvent');hook.Name='TestChest';hook.Parent=screen
   hook.Event:Connect(function(cmd,arg) if type(self[cmd])=='function' then self[cmd](arg) end end)

@@ -238,7 +238,7 @@ The store and death screen print prices from MonetizationConfig. If a dashboard 
 
 **Where:** `combat/MonetizationConfig.luau:1-3`, `ui/StoreUI.luau:61`, `ui/DeathScreenUI.luau:73,143,217`
 
-### M8 · Odds aren't shown on every paid random item
+### M8 · Odds aren't shown on every paid random item — **fixed 2026-10-02**
 *Purchases & store*
 
 The Starter Pack and Godly Starter contain chests but sit on the Bundles tab with no SEE ODDS button. Robux rerolls and reroll packs give random results with no odds note.

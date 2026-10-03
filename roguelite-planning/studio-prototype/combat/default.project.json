@@ -388,6 +388,9 @@
       "ChestScreenUI": {
         "$path": "../ui/ChestScreenUI.luau"
       },
+      "ItemCardUI": {
+        "$path": "../ui/ItemCardUI.luau"
+      },
       "AdminPanelUI": {
         "$path": "../ui/AdminPanelUI.luau"
       },
