@@ -171,6 +171,7 @@ end
 
 -- What an id is ------------------------------------------------------------------------------------
 local REVIVE='rbxassetid://93648739105819' -- ui/assets/hud/revive.png (hud/asset-ids.json)
+K.ReviveIcon=REVIVE -- exported so AssetPreloader keeps it warm
 -- Icons for stats and perks: the level-up art (LevelUpCatalog.IconIds), or its nearest match.
 local ICON_ALIAS={BurnChance='ElementalDamage',PoisonChance='ElementalDamage',FirstHitBlock='Armor',ContactReduction='Armor',CritDamage='CritChance',
  RageAttackSpeed='AttackSpeed',FireThorns='ElementalDamage',DodgeCrit='Dodge',leech='LifeSteal',PhoenixBlast=REVIVE}

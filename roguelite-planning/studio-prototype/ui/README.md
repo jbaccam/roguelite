@@ -1,3 +1,13 @@
+# No pop-in on first open — October 3, 2026
+
+Menus, the map-select islands and the Armory hall used to appear a beat late the first time. The preloader ran in the background and the loading screen faded before it finished. The islands and hall were also only added to the camera when their screen opened, so the renderer built them on screen.
+
+- **Loading screen waits:** after the character spawns it shows "Getting the menus ready" until `AssetPreloader` sets `PlayerGui.AssetWarmReady`, for at most 10 seconds (`WARM_SECONDS`). It sets `PlayerGui.LoadingScreenUp` while it covers the screen.
+- **Stages stay loaded:** `MapSelectBackdrop.Prepare` and `ArmoryStage.Prepare` park the islands and hall in the camera for the whole session (14000 studs from the lobby). Hide no longer removes them. The lock-silhouette Highlights are turned off while map select is closed.
+- **One look behind the loading screen:** while `LoadingScreenUp` is set, the preloader points the camera at each island and both Armory shots for 0.15 s each. The renderer then already has their meshes and textures. It hands the camera back afterwards.
+- **More images:** the preloader now also reads `EggConfig`, `StatPlates`, `ItemCardUI` (`ReviveIcon`) and the trip art in `ReplicatedFirst.LoadingScreenUI`. After that it fetches `WeaponTemplates`, `PetModels` and `ArmorSets` (match servers skip armor). This doesn't hold the loading screen.
+- **Phone memory (launch audit F7):** everything stays resident for the session. That was already true for images, and is now also true for the islands and hall. This still needs an F9 Memory check on a low-end phone.
+
 # Colour store and working quests — October 2, 2026
 
 Plan: `../../plans/2026-10-01-H-store-and-quests.md`. The user approved the direction from an HTML mockup ("way better") and asked for no text touching borders, a fancier quests page, and quests that actually work.

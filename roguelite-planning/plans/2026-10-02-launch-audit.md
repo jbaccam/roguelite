@@ -457,6 +457,8 @@ Every image from 11 modules, all 5 map islands and the Armory hall with 13 weapo
 
 **Fix:** Load the islands and Armory the first time those screens open. Check F9 Memory on a low-end phone.
 
+**2026-10-03:** Went the other way for feel. Loading on first open is what made islands and icons pop in. The loading screen now waits for the preloader, and the stages stay parked in the camera (`ui/README.md`, "No pop-in on first open"). The phone memory check is still open. If it's too high, skip parking the stages on touch devices.
+
 **Where:** `ui/AssetPreloader.luau:76-133`
 
 ### U3 · Controller players can't change the volume

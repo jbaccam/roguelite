@@ -345,9 +345,16 @@ end
 
 -- Clones the hall ahead of time (AssetPreloader) so the first Show has nothing to build.
 function S.Prepare()
-	if stage then
+	local camera = workspace.CurrentCamera
+	if stage and stage.Parent == camera then
 		return true
 	end
+	if stage and pcall(function()
+		stage.Parent = camera
+	end) then
+		return true
+	end
+	stage = nil -- destroyed along with a replaced camera: clone the hall again
 	local hall = source()
 	if not hall then
 		return false
@@ -365,7 +372,20 @@ function S.Prepare()
 		end
 	end
 	dress(copy)
+	-- Parked in the camera from now on (1600 studs from the islands, 14000 from the lobby) so the
+	-- renderer keeps its meshes and textures. Parenting on Show made pieces appear a beat late.
+	stage.Parent = camera
 	return true
+end
+
+-- Camera shots that show the whole hall, for AssetPreloader's warm-up behind the loading screen.
+function S.WarmViews()
+	local out = {}
+	for _, name in { "hero", "upgrade" } do
+		local eye, look, fov = camCFrame(name)
+		table.insert(out, { cframe = CFrame.lookAt(eye, look), fov = fov })
+	end
+	return out
 end
 
 function S.Available()
@@ -568,7 +588,7 @@ function S.Hide()
 	if glow then
 		glow:Destroy()
 	end
-	stage.Parent = nil
+	-- The hall stays parked in the camera (see Prepare); it is far outside the lobby's view.
 	local camera = workspace.CurrentCamera
 	local humanoid = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 	camera.CameraSubject = humanoid or saved.subject

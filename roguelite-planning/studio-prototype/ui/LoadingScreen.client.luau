@@ -11,6 +11,8 @@ local TeleportService=game:GetService('TeleportService')
 local ContentProvider=game:GetService('ContentProvider')
 local LS=require(script.Parent:WaitForChild('LoadingScreenUI'))
 local MAX_SECONDS=30
+-- Longest wait for AssetPreloader (icons, map-select islands, Armory hall) once the character is in.
+local WARM_SECONDS=10
 local player=Players.LocalPlayer
 local playerGui=player:WaitForChild('PlayerGui')
 pcall(function() ReplicatedFirst:RemoveDefaultLoadingScreen() end)
@@ -33,16 +35,21 @@ do
  local dest=LS.Dest[destId]
  local gui,screen=LS.screenGui(destId,difficulty)
  gui.Parent=playerGui
+ -- AssetPreloader only points the camera at its stages while this is set (the screen hides it).
+ playerGui:SetAttribute('LoadingScreenUp',true)
  ContentProvider:PreloadAsync({gui})
  local started=os.clock()
- local function finish() if gui.Parent then screen:finish(function() gui:Destroy() end) end end
+ local function finish()
+  playerGui:SetAttribute('LoadingScreenUp',false)
+  if gui.Parent then screen:finish(function() gui:Destroy() end) end
+ end
  task.delay(MAX_SECONDS,finish)
  task.spawn(function()
   screen:step(dest.going,0,.4)
   if not game:IsLoaded() then game.Loaded:Wait() end
   screen:step('Loading your save',.4,.7)
   waitFor(function() return player:GetAttribute('ProfileLoaded')==true or player:GetAttribute('ProfileLoadFailed')~=nil end,15,gui)
-  screen:step(dest.area,.7,.96)
+  screen:step(dest.area,.7,.9)
   waitFor(function()
    local c=player.Character
    return c~=nil and c:FindFirstChild('HumanoidRootPart')~=nil
@@ -53,6 +60,11 @@ do
   local loaded=false
   task.spawn(function() pcall(ContentProvider.PreloadAsync,ContentProvider,preload);loaded=true end)
   waitFor(function() return loaded end,3,gui)
+  -- Every menu icon and the 3D backdrops, so nothing pops in on the first open. The preloader
+  -- starts with the HUD (lobby or arena) and sets AssetWarmReady when it is done.
+  screen:step('Getting the menus ready',.9,.99)
+  waitFor(function() return playerGui:GetAttribute('AssetWarmReady')==true end,
+   math.min(WARM_SECONDS,math.max(0,MAX_SECONDS-(os.clock()-started))),gui)
   finish()
  end)
 end

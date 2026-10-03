@@ -69,6 +69,7 @@ local function build(maps)
 			shadow.FillTransparency = 1
 			shadow.OutlineTransparency = 1
 			shadow.DepthMode = Enum.HighlightDepthMode.Occluded
+			shadow.Enabled = false -- only while the screen is open (Show/Hide)
 			shadow.Adornee = island
 			shadow.Parent = island
 			shadows[i] = shadow
@@ -77,9 +78,28 @@ local function build(maps)
 	return true
 end
 
--- Clones the islands ahead of time (AssetPreloader) so the first Show has nothing to build.
+local keepStage
+
+-- Clones the islands ahead of time (AssetPreloader) and parks them in the camera for good, so
+-- the renderer keeps their meshes and textures. Parenting them on Show made parts of an island
+-- appear a beat late. They sit 14000 studs from the lobby and arena, far outside either view.
 function B.Prepare(maps)
-	return build(maps)
+	shownMaps = shownMaps or maps
+	if not build(maps) then
+		return false
+	end
+	keepStage(workspace.CurrentCamera)
+	return true
+end
+
+-- One camera shot per island, for AssetPreloader's warm-up behind the loading screen.
+function B.WarmViews()
+	local out = {}
+	for i in order do
+		local center = ORIGIN + STEP * (i - 1)
+		table.insert(out, { cframe = CFrame.lookAt(center + HERO, center + LOOK), fov = FOV })
+	end
+	return out
 end
 
 local function ease(t)
@@ -99,7 +119,7 @@ end
 
 -- The islands live in the current camera. When the camera is replaced they move to the new one;
 -- if they were destroyed with the old camera they are cloned again.
-local function keepStage(camera)
+function keepStage(camera)
 	if stage and stage.Parent == camera then
 		return
 	end
@@ -112,6 +132,9 @@ local function keepStage(camera)
 	table.clear(shadows)
 	if build(shownMaps) then
 		stage.Parent = camera
+		for _, shadow in shadows do
+			shadow.Enabled = conn ~= nil
+		end
 		if shadows[toSlot] then
 			shadows[toSlot].FillTransparency = shownLocked and 0 or 1
 		end
@@ -142,6 +165,9 @@ function B.Show(maps, index, locked)
 	if not conn then
 		saved = { type = camera.CameraType, subject = camera.CameraSubject, fov = camera.FieldOfView }
 		keepStage(camera)
+		for _, shadow in shadows do
+			shadow.Enabled = true
+		end
 		blur = Instance.new("BlurEffect")
 		blur.Name = "MapSelectBlur"
 		blur.Size = BLUR
@@ -174,8 +200,10 @@ function B.Hide()
 	blur:Destroy()
 	grade:Destroy()
 	blur, grade = nil, nil
-	if stage and stage.Parent then -- (a stage destroyed with its camera is rebuilt on the next Show)
-		stage.Parent = nil
+	-- The islands stay parked in the camera (see Prepare); a stage destroyed with its camera is
+	-- rebuilt on the next Show. Highlights cost a pass every frame, so they go off.
+	for _, shadow in shadows do
+		shadow.Enabled = false
 	end
 	local camera = workspace.CurrentCamera
 	local humanoid = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
