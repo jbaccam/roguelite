@@ -177,6 +177,8 @@ Each tick, every player rebuilds enemy lists, and every weapon slot (even on coo
 ### P5 · 65-100+ full Humanoid enemies simulated on the server
 *Server performance*
 
+**Progress 2026-10-02 (repo only, commit 7cdf115; not in Studio, not measured):** one Heartbeat steps every enemy (EnemyScheduler) instead of one connection each; attacks in progress still update every frame. Think clocks keep their phase (0.1 s on average) and new enemies take the least busy frame: in EnemySchedulerTests the old clocks drifted until all 60 enemies thought on one frame. Enemies more than 90 studs from every player with a clear line think every 0.3 s. Eight unused Humanoid states are off (Running, Jumping, Freefall, Landed stay) and enemy parts have CanTouch off. Before/after numbers wait for a measurement session (tools/MobPerfProbe.luau, tools/MobMotionProbe.luau).
+
 Wave 20 has 65 enemies; Endless reaches 100 at wave 32, plus slime splits. Each is a full R15 Humanoid owned by the server, with most state types still on. This is the known prototype limit and hasn't been measured.
 
 **Fix:** Measure first (see the test list). Turn off unused Humanoid states, slow MoveTo for far enemies, and consider capping Endless at 65 until it's measured.
@@ -325,6 +327,8 @@ The docs say only owned weapons appear in the run shop. The code offers every no
 ### P6 · Melee hit checks run 120 times a second against every enemy part
 *Server performance*
 
+**Progress 2026-10-02 (repo only, commit e788358; not in Studio, not measured):** each enemy is judged once per tick instead of once per returned part, sampling stops once nobody else in reach can be hit, and the gloves' parts are read once. The 120 Hz sampling and the boxes are unchanged, so swings hit the same enemies (MeleeSweepTests: same 5,188 hits; enemy checks 436,981 -> 30,006).
+
 Each swing does about 30 box queries that return every part of every enemy touched. Boxing Gloves also call GetDescendants on each sample.
 
 **Fix:** Query only one hit part per enemy, cache the gloves' parts, and cap sampling at 30-60 Hz.
@@ -356,6 +360,8 @@ Attack updates run per enemy per frame before the throttle check, and facing wri
 ### P9 · Each enemy's chase tick repeats shared work
 *Server performance*
 
+**Progress 2026-10-02 (repo only, commit 2ad238a; not in Studio, not measured):** the players' bodies, the marker and the Freeze/Pause flags are read once per frame for all enemies; separation no longer copies and sorts its neighbours (EnemySpatialGridTests: same push within 1e-5 studs).
+
 Every enemy looks up the map marker and recomputes the nearest player 10 times a second, and separation sorts its neighbours just to keep an old order.
 
 **Fix:** Cache the marker per map, compute players once per tick, and drop the sort.
@@ -364,6 +370,8 @@ Every enemy looks up the map marker and recomputes the nearest player 10 times a
 
 ### P10 · Contact damage checks every enemy for every player
 *Server performance*
+
+**Progress 2026-10-02 (repo only, commit 24f21cc; not in Studio, not measured):** each enemy's parts and contact numbers are read once and its position once per tick for all players; players whose timers are running are skipped (ContactTests: the same 97 contacts as the old loop; Instance reads 432,953 -> 5,588).
 
 At 10 Hz each player loops over all enemies with several lookups each, about 18k calls/s with 4 players and 65 enemies.
 
