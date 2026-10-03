@@ -71,4 +71,7 @@ function E.weaponSlot(wave,slot,rng)
  return rng:NextNumber()<.35
 end
 function E.classBonus(wave) return wave<=5 and (6-wave)*.03 or 0 end
+-- Shared drops (a boss's crystal shower): which of `count` players gets the nth one. Round-robin,
+-- so 50 across 3 players is 17 / 17 / 16 (TutorialTests).
+function E.shareIndex(n,count) return (n-1)%math.max(1,count)+1 end
 return E
