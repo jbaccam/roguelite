@@ -1,10 +1,10 @@
 -- Shared schema and pure calculations. Only the server writes effective attributes.
 local S={List={},ById={},Classes={},ClassOrder={'Brawler','Gunner','Thrower','Juggler','Handyman','Mage'}}
 local Motion=require(script.Parent.WeaponMotion)
--- Air speed x1.6 (was 1.3, before that 1.12; user 2026-10-03: "jumping should be like the optimal
--- way to move around", then "i need more of a speed boost when im in the air"): a Brawler runs 22
--- and flies 35.2. MovementGuard scales its speed limit by this same number.
-S.Movement={Gravity=150,JumpHeight=9.5,AirSpeedMultiplier=1.6}
+-- Air speed x1.45 (user 2026-10-03: "jumping should be like the optimal way to move around", then
+-- "i need more of a speed boost when im in the air" -> 1.6, then "just a little too fast"; was
+-- 1.12, then 1.3): a Brawler runs 22 and flies 31.9. MovementGuard scales its limit by this number.
+S.Movement={Gravity=150,JumpHeight=9.5,AirSpeedMultiplier=1.45}
 local function stat(id,label,base,min,max,step,unit,group,help)
  local d={id=id,label=label,base=base,min=min,max=max,step=step,unit=unit or '',group=group,help=help}
  table.insert(S.List,d);S.ById[id]=d

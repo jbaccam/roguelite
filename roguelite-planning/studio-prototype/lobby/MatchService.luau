@@ -30,6 +30,29 @@ local entries=Memory:GetHashMap('RogueliteMatchV1')
 local studio=RunService:IsStudio()
 local trips={} -- player -> {options, tries}: teleports in flight, for TeleportInitFailed
 
+-- Trip log (user, 2026-10-03: "i go to queue into an arena and it just queues me into the lobby").
+-- Each step of a trip (launch, reserve, save hand-off, teleport, arrival, being sent back) goes
+-- with its error onto the player's key in the DataStore RogueliteTripLog_v1 (the last 30), so a
+-- failure on a live server can be read from Studio. Never written from Studio.
+local tripLog=not studio and game:GetService('DataStoreService'):GetDataStore('RogueliteTripLog_v1') or nil
+local function log(players,event,detail)
+ if not tripLog then return end
+ local rec={t=os.time(),job=string.sub(game.JobId,1,8),role=Role.get(),place=game.PlaceId,ev=event,d=detail~=nil and string.sub(tostring(detail),1,240) or nil}
+ for _,p in players do
+  local id=typeof(p)=='Instance' and p.UserId or tonumber(p)
+  if id then
+   task.spawn(function()
+    pcall(tripLog.UpdateAsync,tripLog,'u_'..id,function(old)
+     old=type(old)=='table' and old or {};table.insert(old,rec)
+     while #old>30 do table.remove(old,1) end
+     return old
+    end)
+   end)
+  end
+ end
+end
+M.log=log
+
 local function retry(times,fn,...)
  local ok,a,b
  for attempt=1,times do
@@ -63,7 +86,7 @@ local function go(players,options,travel)
  setTravel(players,travel)
  task.wait(.3) -- lets TravelTo reach the clients first, so their screen is set as the teleport GUI
  local ok,err=retry(2,Teleport.TeleportAsync,Teleport,game.PlaceId,players,options)
- if not ok then warn('MatchService: teleport failed',err);setTravel(players,nil);return false end
+ if not ok then warn('MatchService: teleport failed',err);setTravel(players,nil);return false,err end
  for _,p in players do trips[p]={options=options,tries=0} end
  return true
 end
@@ -73,42 +96,54 @@ end
 -- extra (optional): {tutorial=true} makes it the first-join tutorial run (TutorialDirector).
 function M.launch(players,map,difficulty,loadouts,extra)
  if studio then return false,'Runs start in the published game. Use the combined Studio mode to play here' end
+ local tutorial=type(extra)=='table' and extra.tutorial==true or nil
+ log(players,'launch',('map=%s difficulty=%s players=%d tutorial=%s'):format(tostring(map),tostring(difficulty),#players,tostring(tutorial)))
  local ok,code,serverId=retry(2,Teleport.ReserveServer,Teleport,game.PlaceId)
- if not ok then return false,"Couldn't start the run, try again" end
+ if not ok then log(players,'reserve failed',code);return false,"Couldn't start the run, try again" end
  local members={}
  for _,p in players do members[tostring(p.UserId)]=loadouts[p.UserId] or {} end
  -- code: the server's own access code, so it can send a dropped player back (rejoin, below).
- local tutorial=type(extra)=='table' and extra.tutorial==true or nil
- if not retry(2,entries.SetAsync,entries,serverId,{map=map,difficulty=difficulty,members=members,code=code,tutorial=tutorial},ENTRY_SECONDS) then
+ local okEntry,errEntry=retry(2,entries.SetAsync,entries,serverId,{map=map,difficulty=difficulty,members=members,code=code,tutorial=tutorial},ENTRY_SECONDS)
+ if not okEntry then
+  log(players,'entry failed',errEntry)
   return false,"Couldn't start the run, try again"
  end
+ log(players,'entry written',('server=%s set=%s'):format(string.sub(tostring(serverId),1,8),tostring(errEntry)))
  -- Saves first: the match server can only load a save this lobby has released.
  local handed={}
  for _,p in players do
   if p.Parent~=Players or not Profiles.handOff(p) then
+   log({p},'hand-off failed',p.Parent==Players and 'save' or 'left')
    for _,q in handed do Profiles.reclaim(q) end
    return false,"Couldn't save everyone's progress, try again"
   end
   table.insert(handed,p)
  end
  local options=Instance.new('TeleportOptions');options.ReservedServerAccessCode=code
- if not go(handed,options,{map=map,difficulty=difficulty}) then
+ local sent,why=go(handed,options,{map=map,difficulty=difficulty})
+ if not sent then
+  log(handed,'teleport failed',why)
   for _,p in handed do Profiles.reclaim(p) end
   return false,"Couldn't start the run, try again"
  end
+ log(handed,'teleport started',string.sub(tostring(serverId),1,8))
  return true
 end
 
--- Match: back to a public lobby server. Returns true when the teleport started.
-function M.toLobby(players)
+-- Match: back to a public lobby server. Returns true when the teleport started. reason (optional):
+-- why, for the trip log and the player's loading screen (a run ending normally passes none).
+function M.toLobby(players,reason)
  if studio or Role.get()~='Match' then return false end
+ log(players,'to lobby',reason or 'run over')
  local going={}
  for _,p in players do
   -- A save still loading is released by ProfileService when the player leaves.
   if p.Parent==Players and (not Profiles.get(p) or Profiles.handOff(p)) then table.insert(going,p) end
  end
  if #going==0 then return false end
- if not go(going,nil,{map='Lobby'}) then
+ local sent,why=go(going,nil,{map='Lobby',reason=reason})
+ if not sent then
+  log(going,'teleport failed',why)
   for _,p in going do Profiles.reclaim(p) end
   return false
  end
@@ -118,6 +153,7 @@ end
 Teleport.TeleportInitFailed:Connect(function(player,result,message)
  local trip=trips[player];if not trip then return end
  warn('MatchService: teleport init failed',player.UserId,result,message)
+ log({player},'teleport init failed',tostring(result)..' '..tostring(message))
  if trip.tries<1 then
   trip.tries+=1;task.wait(2)
   if player.Parent==Players and pcall(Teleport.TeleportAsync,Teleport,game.PlaceId,{player},trip.options) then return end
@@ -199,32 +235,44 @@ function M.start()
  if started or Role.get()~='Match' or not RunService:IsRunning() then return end
  started=true
  local entry,bad=nil,false
+ local badWhy -- for the trip log
  local ready={} -- member -> loadout applied
  local firstArrival
  local function admit(p)
-  if bad then if not M.toLobby({p}) then p:Kick('This run could not start. Please rejoin.') end;return end
+  if bad then
+   log({p},'sent back',badWhy)
+   if not M.toLobby({p},'This run could not start ('..tostring(badWhy)..')') then p:Kick('This run could not start. Please rejoin.') end
+   return
+  end
   if not entry then ready[p]=true;firstArrival=firstArrival or os.clock();return end -- Studio stand-in: everyone plays
   local want=entry.members[tostring(p.UserId)]
   if want==nil then
-   if not M.toLobby({p}) then p:Kick('This run is private.') end
+   log({p},'sent back','not listed in this match')
+   if not M.toLobby({p},'That run is private') then p:Kick('This run is private.') end
    return
   end
+  log({p},'arrived',('map=%s server=%s'):format(tostring(entry.map),string.sub(game.PrivateServerId,1,8)))
   firstArrival=firstArrival or os.clock()
   if offered[p.UserId] then clearRejoin(p.UserId) end -- back in: the way back isn't needed now
   applyLoadout(p,want);ready[p]=true
  end
  task.spawn(function()
   if not studio then
+   local lastErr
    for attempt=1,5 do
     local ok,value=pcall(entries.GetAsync,entries,game.PrivateServerId)
     if ok and type(value)=='table' then entry=value;break end
+    lastErr=ok and ('no entry (got '..typeof(value)..')') or tostring(value)
     task.wait(attempt)
    end
    if entry and Role.setMap(entry.map) then
     combat:SetAttribute('RunDifficulty',Rules.DifficultyIndex[entry.difficulty] and entry.difficulty or 'Normal')
     if entry.tutorial==true then combat:SetAttribute('TutorialRun',true) end -- TutorialDirector runs it
     M.code=type(entry.code)=='string' and entry.code or nil -- for rejoin records
-   else bad=true;entry=nil;warn('MatchService: no usable match entry for',game.PrivateServerId) end
+   else
+    badWhy=entry and ('map '..tostring(entry.map)..' could not be set') or ('match entry: '..tostring(lastErr))
+    bad=true;entry=nil;warn('MatchService: no usable match entry for',game.PrivateServerId,badWhy)
+   end
   end
   Players.PlayerAdded:Connect(admit)
   for _,p in Players:GetPlayers() do task.spawn(admit,p) end
@@ -243,6 +291,8 @@ function M.start()
    local waited=os.clock()-(firstArrival or os.clock())
    if arrived>0 and (loaded>=expected or waited>=PARTY_WAIT and loaded>=arrived or waited>=LOAD_WAIT) then
     if combat:GetAttribute('TutorialRun')==true then task.wait(Tutorial.WELCOME_SECONDS) end
+    local here={};for p in ready do if p.Parent==Players then table.insert(here,p) end end
+    log(here,'wave 1',('arrived=%d loaded=%d expected=%d waited=%ds'):format(arrived,loaded,expected,math.floor(waited)))
     Shop.startFirstWave();break
    end
   end

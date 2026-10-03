@@ -21,8 +21,21 @@ pcall(function() ReplicatedFirst:RemoveDefaultLoadingScreen() end)
 local function arriving()
  local ok,data=pcall(TeleportService.GetLocalPlayerTeleportData,TeleportService)
  local trip=ok and type(data)=='table' and data.loading
- if type(trip)=='table' and LS.valid(trip.map) then return trip.map,trip.difficulty end
- return 'Lobby',nil
+ if type(trip)=='table' and LS.valid(trip.map) then return trip.map,trip.difficulty,type(trip.reason)=='string' and trip.reason or nil end
+ return 'Lobby',nil,nil
+end
+-- A match that sent this player back says why (MatchService.toLobby reason, 2026-10-03): shown for
+-- 8 s once the screen is gone, so nobody is just dropped in the lobby without a word.
+local function notice(text)
+ local g=Instance.new('ScreenGui');g.Name='TripNotice';g.ResetOnSpawn=false;g.IgnoreGuiInset=false;g.DisplayOrder=900;g.Parent=playerGui
+ local l=Instance.new('TextLabel');l.Name='Text';l.AnchorPoint=Vector2.new(.5,0);l.Position=UDim2.new(.5,0,0,96);l.Size=UDim2.new(.9,0,0,46)
+ l.BackgroundColor3=Color3.fromRGB(17,23,26);l.BackgroundTransparency=.08;l.BorderSizePixel=0;l.Font=Enum.Font.FredokaOne;l.TextScaled=true
+ l.TextColor3=Color3.fromRGB(255,212,212);l.TextStrokeTransparency=.5;l.Text=text;l.Parent=g
+ Instance.new('UICorner',l).CornerRadius=UDim.new(0,10)
+ local s=Instance.new('UIStroke');s.Color=Color3.fromRGB(8,10,11);s.Thickness=3;s.Parent=l
+ local c=Instance.new('UISizeConstraint');c.MaxSize=Vector2.new(760,46);c.Parent=l
+ local pad=Instance.new('UIPadding');pad.PaddingLeft=UDim.new(0,14);pad.PaddingRight=UDim.new(0,14);pad.PaddingTop=UDim.new(0,6);pad.PaddingBottom=UDim.new(0,6);pad.Parent=l
+ task.delay(8,function() g:Destroy() end)
 end
 -- Waits until done() is true, the time runs out, or the screen is gone.
 local function waitFor(done,seconds,screenGui)
@@ -32,7 +45,7 @@ end
 
 -- Arrival -------------------------------------------------------------------------------------
 do
- local destId,difficulty=arriving()
+ local destId,difficulty,reason=arriving()
  local dest=LS.Dest[destId]
  local gui,screen=LS.screenGui(destId,difficulty)
  gui.Parent=playerGui
@@ -44,6 +57,7 @@ do
  local reported=false
  local function report()
   if reported then return end;reported=true
+  if reason then notice(reason) end
   local combat=game:GetService('ReplicatedStorage'):WaitForChild('RogueliteCombat',30)
   local remote=combat and combat:WaitForChild('RunAction',30)
   if remote then remote:FireServer('Loaded') end

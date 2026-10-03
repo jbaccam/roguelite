@@ -393,6 +393,7 @@ end
 local function finish(p,outcome)
  local d=down[p];local m=Shop.members[p]
  local stint=d and d.stint or m and m.stint;if not stint then return false end
+ if Match.log then Match.log({p},'run finished',tostring(outcome)..' at wave '..tostring(Shop.wave)) end -- trip log (MatchService)
  local map=d and d.map or runMap();local wave=d and d.wave or Shop.wave
  local test=(d and d.test) or Admin.isTestRun()
  local cleared=math.max(0,wave-1)
