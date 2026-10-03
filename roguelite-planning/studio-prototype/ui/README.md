@@ -1,3 +1,21 @@
+# Tutorial play-test fixes — October 3, 2026
+
+The user's first play-test of the tutorial. Spec section: "Play-test fixes" in `../../plans/2026-10-03-tutorial-design.md`.
+
+- **Any pick counts (`TutorialGuide.client`):** the first shop moves to GO after any buy, or when the suggested Glock is gone or too dear. The Armory step finishes on any upgrade, or skips when nothing can be upgraded. The Equip step finishes on any armor change. OPEN AGAIN is suggested only for a Silver Chest, and the offer step skips if the store can't open. Lines no longer ask for one particular pick. Admin-panel restarts start every step's state over.
+- **Placement (`TutorialGuideUI`):** the arrow's target is never covered. Spots are the corners, middle-left and middle-right, then a 13 × 9 grid farthest-from-centre first. A piece inside the panel it belongs to counts once. The mockup's lobby now has the real lobby's panels and the same rule; there the box sits in the sky right of centre.
+- **Eggbert:** the guide's name (`TutorialConfig.GuideName`), on his tag, in his welcome line and on his lobby speech bubble (`EggMerchant`).
+- **Victory:** the tutorial's last clear goes to phase `Victory` (`ShopService.finishWave`): no shop, level-up cards or countdown. The HUD reads VICTORY and the guide shows only the banner.
+- **All runs:** held players don't attack (`RogueliteCombat`; pets too: `PetService`). A wave boss lands facing the nearest run member (`BossService.spawn`). Melee reach bonus is +0.9 (was +1.5; `EnemyAttacks`). Chests give one item per rarity (`ChestConfig`; Silver about 2 different items, was 4–5).
+- **Lobby spawn (Studio only):** `Workspace.RogueliteLobby.LobbySpawn` moved from z 18 to z 4, 14 studs toward the portals, so the camera no longer sits inside `Leaderboards.Leaderboard_Kills`.
+- **Checked (Studio Edit, nothing saved):**
+  - every changed file compiles;
+  - `TutorialTests` pass 46 checks;
+  - `ChestConfigTests` pass 137 checks with 20000 rolls, including the new one-item-per-rarity check;
+  - different items per chest over 20000 chests: Wooden 1.27, Silver 2.09, Gold 2.29, Magical 3.11, Legendary 4.02;
+  - in the mockup, the guide box lands clear of every panel on each screen.
+- **Not run:** no Play test of these fixes yet.
+
 # First-join tutorial — October 3, 2026
 
 Spec: `../../plans/2026-10-03-tutorial-design.md`. Build steps: `../../plans/2026-10-03-tutorial-build-steps.md`. Mockup: `roguelite-planning/previews/tutorial-guide/guide.html` (dev server).

@@ -1,8 +1,8 @@
 -- The tutorial guide's look (plans/2026-10-03-tutorial-design.md; mockup approved from
--- roguelite-planning/previews/tutorial-guide/guide.html): the Egg Merchant's portrait and text box
--- bottom-left, ONE arrow that glides between targets, and the VICTORY banner. Presentation only:
--- TutorialGuide.client decides what is said and pointed at.
---   G.new(player, assets) -> guide
+-- roguelite-planning/previews/tutorial-guide/guide.html): the guide's portrait (Eggbert, the egg
+-- merchant) and text box wherever they cover no UI, ONE arrow that glides between targets, and the
+-- VICTORY banner. Presentation only: TutorialGuide.client decides what is said and pointed at.
+--   G.new(player, assets, name) -> guide   (name: his name tag)
 --   guide.say(text, button)   types the line in (button: {label=, onClick=} or nil); same text = no-op
 --   guide.hide()              tucks the box away (the arrow too)
 --   guide.point(obj)          the arrow glides to a GuiObject (any ScreenGui) and rests there,
@@ -25,6 +25,7 @@ G.TIP=6/256 -- the tip's height in arrow.png (ui/assets/tutorial/make_arrow.py)
 G.GLIDE=.55
 G.BOX_W,G.BOX_H=860,300 -- the guide (portrait + box) at scale 1
 local CPS=46 -- typed characters per second
+G.TAG_H=32
 
 local function ease(t) return t<.5 and 4*t*t*t or 1-(-2*t+2)^3/2 end
 -- Where a ScreenGui's (0,0) is on the real screen: GuiObject.AbsolutePosition is relative to its
@@ -41,7 +42,7 @@ local function origin(layer,full)
  return Vector2.new(math.max(x,topLeft.X),topLeft.Y)
 end
 
-function G.new(player,assets)
+function G.new(player,assets,name)
  local o={}
  local screen=T.make('ScreenGui',player:WaitForChild('PlayerGui'),{Name='TutorialGuide',ResetOnSpawn=false,DisplayOrder=95,
   ScreenInsets=Enum.ScreenInsets.None,ZIndexBehavior=Enum.ZIndexBehavior.Sibling})
@@ -55,9 +56,11 @@ function G.new(player,assets)
  T.make('UIGradient',box,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(.7,.08),NumberSequenceKeypoint.new(1,1)})})
  T.make('Frame',box,{Name='Edge',Size=UDim2.new(0,6,1,0),BackgroundColor3=C.lime,BorderSizePixel=0})
  local text=T.label(box,'Line','',140,14,G.BOX_W-150-180,122,36);text.TextXAlignment=Enum.TextXAlignment.Left
- local tag=T.make('Frame',guide,{Name='NameTag',Position=UDim2.fromOffset(290,G.BOX_H-212),Size=UDim2.fromOffset(196,32),BackgroundColor3=C.lime,BorderSizePixel=0})
+ local label=string.upper(name or 'Egg Merchant')
+ local tagW=math.clamp(#label*14+28,90,260) -- about 14 px a capital at size 20, plus padding
+ local tag=T.make('Frame',guide,{Name='NameTag',Position=UDim2.fromOffset(290,G.BOX_H-212),Size=UDim2.fromOffset(tagW,G.TAG_H),BackgroundColor3=C.lime,BorderSizePixel=0})
  T.make('UICorner',tag,{CornerRadius=UDim.new(0,4)})
- local tagText=T.label(tag,'Text','EGG MERCHANT',8,2,180,28,20,C.ink);tagText.TextStrokeTransparency=1
+ local tagText=T.label(tag,'Text',label,8,2,tagW-16,28,20,C.ink);tagText.TextStrokeTransparency=1
  local portrait=T.make('ImageLabel',guide,{Name='Portrait',BackgroundTransparency=1,Position=UDim2.fromOffset(0,0),Size=UDim2.fromOffset(300,300),Image=assets.portrait or '',ScaleType=Enum.ScaleType.Fit})
  local buttonHolder=T.frame(guide,'Buttons',G.BOX_W-200,G.BOX_H-74,190,58)
  -- The arrow.
@@ -92,12 +95,14 @@ function G.new(player,assets)
   TweenService:Create(guideScale,info,{Scale=s}):Play()
  end
 
- -- Placement: the box never covers the game's UI (the user, 2026-10-03). Every visible button,
- -- panel, picture and text on screen (other than backdrops over 60% of it) is an obstacle. The
- -- guide takes the first spot that covers none of them, trying a smaller size before giving up:
- -- bottom-left, top-left, bottom-right, top-right, middle-left. If every spot covers something it
- -- takes the one that covers the least, and never the arrow's target. Checked a few times a
- -- second while it's showing; it glides to a new spot.
+ -- Placement: the box never covers the game's UI or the arrow's target (the user, 2026-10-03).
+ -- Obstacles: every visible button, panel, picture and text on screen, other than backdrops over
+ -- 60% of it; a piece lying inside the obstacle it belongs to counts once, as that obstacle. Spots,
+ -- biggest size first: the corners, middle-left and middle-right, then anywhere on a grid,
+ -- farthest from the screen's centre first (the middle is where the action is). The first spot
+ -- that covers nothing wins (the lobby: its open sky, right of centre, since its corners all have
+ -- panels). If none does, the one that covers least, and the target only if it must. It stays
+ -- while its spot is still clear, and glides to a new one.
  local SKIP={TutorialGuide=true,BossIntro=true}
  local function solid(c)
   if c:IsA('TextLabel') or c:IsA('TextButton') or c:IsA('TextBox') then
@@ -114,27 +119,34 @@ function G.new(player,assets)
   if x1-x0<=0 or y1-y0<=0 then return nil end
   return Vector2.new(x0,y0),Vector2.new(x1-x0,y1-y0)
  end
+ local function inside(p,s,o)
+  return o~=nil and p.X>=o[1].X-1 and p.Y>=o[1].Y-1 and p.X+s.X<=o[1].X+o[2].X+1 and p.Y+s.Y<=o[1].Y+o[2].Y+1
+ end
  local function obstacles()
   local list={}
   local full=root.AbsoluteSize;local maxArea=full.X*full.Y*.6 -- bigger = a backdrop or shade
   -- clip: what a scrolling list or clipping frame above shows (rows scrolled out don't count).
-  local function walk(obj,off,clip)
+  -- owner: the nearest obstacle above; pieces inside it are already covered by it.
+  local function walk(obj,off,clip,owner)
    for _,c in obj:GetChildren() do
     if c:IsA('GuiObject') then
      if c.Visible then
       local p,size=clipped(c.AbsolutePosition+off,c.AbsoluteSize,clip)
-      if p and size.X>4 and size.Y>4 and size.X*size.Y<maxArea and solid(c) then table.insert(list,{p,size}) end
+      local mine=owner
+      if p and size.X>4 and size.Y>4 and size.X*size.Y<maxArea and solid(c) and not inside(p,size,owner) then
+       mine={p,size};table.insert(list,mine)
+      end
       if p or not clip then
        local inner=clip
        if c.ClipsDescendants then inner={c.AbsolutePosition+off,c.AbsoluteSize};if clip then local q,z=clipped(inner[1],inner[2],clip);inner=q and {q,z} or nil end end
-       if inner or not c.ClipsDescendants then walk(c,off,inner) end
+       if inner or not c.ClipsDescendants then walk(c,off,inner,mine) end
       end
      end
-    elseif c:IsA('Folder') then walk(c,off,clip) end
+    elseif c:IsA('Folder') then walk(c,off,clip,owner) end
    end
   end
   for _,g in player.PlayerGui:GetChildren() do
-   if g:IsA('ScreenGui') and g.Enabled and not SKIP[g.Name] then walk(g,origin(g,full),nil) end
+   if g:IsA('ScreenGui') and g.Enabled and not SKIP[g.Name] then walk(g,origin(g,full),nil,nil) end
   end
   return list
  end
@@ -145,45 +157,67 @@ function G.new(player,assets)
  end
  -- The guide's drawn parts at a spot: the portrait, the text box and the name tag.
  local function parts(pos,s)
-  return {{pos,Vector2.new(300,300)*s},{pos+Vector2.new(150,G.BOX_H-180)*s,Vector2.new(G.BOX_W-150,150)*s},{pos+Vector2.new(290,G.BOX_H-212)*s,Vector2.new(196,32)*s}}
+  return {{pos,Vector2.new(300,300)*s},{pos+Vector2.new(150,G.BOX_H-180)*s,Vector2.new(G.BOX_W-150,150)*s},{pos+Vector2.new(290,G.BOX_H-212)*s,Vector2.new(tagW,G.TAG_H)*s}}
+ end
+ -- Spots for the guide at scale s (top-left corners), in the order they're tried.
+ local function spots(full,top,s)
+  local m=18*s;local w,h=G.BOX_W*s,G.BOX_H*s
+  local x0,y0=m,top+56*s
+  local x1,y1=math.max(x0,full.X-m-w),math.max(y0,full.Y-m-h)
+  local midY=math.clamp((full.Y-h)/2,y0,y1)
+  local list={Vector2.new(x0,y1),Vector2.new(x0,y0),Vector2.new(x1,y1),Vector2.new(x1,y0),Vector2.new(x0,midY),Vector2.new(x1,midY)}
+  local grid,centre={},Vector2.new(full.X-w,full.Y-h)/2 -- a centred guide's corner
+  for i=0,12 do for j=0,8 do table.insert(grid,Vector2.new(x0+(x1-x0)*i/12,y0+(y1-y0)*j/8)) end end
+  table.sort(grid,function(a,b) return (a-centre).Magnitude>(b-centre).Magnitude end)
+  table.move(grid,1,#grid,#list+1,list)
+  return list
  end
  local placedAt=0
- local targetRect -- set by the arrow: the target's rect, padded (never covered)
+ local placed=false -- placed since it last appeared
+ local searchAt=0 -- no new search before this while it stays (a recent one found nothing better)
+ local targetRect -- set by the arrow: the target's rect, padded
  local function place(instant)
   local full=root.AbsoluteSize;if full.X<=0 then return end
+  local now=os.clock();placedAt=now
   local list=obstacles()
   local top=(GuiService:GetGuiInset()).Y
   local best,bestS,bestScore
-  -- Staying put wins ties, so the box doesn't hop between equally good spots.
+  -- Overlap in px², the target's far above anything else; a spot that can't beat the best stops early.
   local function try(pos,s)
    local score=0
    for _,part in parts(pos,s) do
-    if part[1].X<0 or part[1].Y<0 or part[1].X+part[2].X>full.X or part[1].Y+part[2].Y>full.Y then score+=1e7 end
-    for _,o in list do score+=overlap(part[1],part[2],o[1],o[2]) end
-    if targetRect then score+=overlap(part[1],part[2],targetRect[1],targetRect[2])*50 end
+    local p,z=part[1],part[2]
+    if p.X<0 or p.Y<0 or p.X+z.X>full.X or p.Y+z.Y>full.Y then score+=1e7 end
+    if targetRect then local o=overlap(p,z,targetRect[1],targetRect[2]);if o>0 then score+=1e6+o*50 end end
+    for _,o in list do
+     score+=overlap(p,z,o[1],o[2])
+     if bestScore and score>=bestScore then return score end
+    end
    end
    if not bestScore or score<bestScore then best,bestS,bestScore=pos,s,score end
-   return score==0
+   return score
   end
-  if not (placedAt>0 and spot.s>=scale*.99 and try(spot.pos,spot.s)) then
-   for _,k in {1,.8,.66,.52} do
-    local s=scale*k;local m=18*s;local w,h=G.BOX_W*s,G.BOX_H*s
-    local found=false
-    for _,pos in {Vector2.new(m,full.Y-m-h),Vector2.new(m,top+56*s),Vector2.new(full.X-m-w,full.Y-m-h),Vector2.new(full.X-m-w,top+56*s),Vector2.new(m,(full.Y-h)/2)} do
-     if try(pos,s) then found=true;break end
-    end
-    if found then break end
-   end
+  -- Where it is goes first, so staying put wins ties.
+  if placed then
+   local here=try(spot.pos,spot.s)
+   if here==0 and spot.s>=scale*.99 then return end
+   if now<searchAt then return end
   end
+  local found=false
+  for _,k in {1,.8,.66,.52} do
+   local s=scale*k
+   for _,pos in spots(full,top,s) do if try(pos,s)==0 then found=true;break end end
+   if found then break end
+  end
+  placed=true;searchAt=now+1.2
   if best and ((best-spot.pos).Magnitude>2 or math.abs(bestS-spot.s)>.01) then moveGuide(best,bestS,instant) end
-  placedAt=os.clock()
  end
 
  -- Text box ---------------------------------------------------------------------------------
  local current,shown,typed=nil,false,0
  local function show(on)
   if shown==on then return end;shown=on
-  if on then placedAt=0;place(true) end -- appear straight in a clear spot
+  if on then placed=false;searchAt=0;place(true) end -- appear straight in a clear spot
   TweenService:Create(guide,TweenInfo.new(on and .35 or .2,Enum.EasingStyle.Quad),{GroupTransparency=on and 0 or 1}):Play()
  end
  function o.say(line,button)
@@ -254,7 +288,7 @@ function G.new(player,assets)
  end
  function o.point(obj)
   if obj==A.target then return end
-  A.target=obj
+  A.target=obj;searchAt=0 -- a new target: move off it at once if the box is on it
   local tip,rot=aim(obj)
   if tip then glide(tip,rot) end -- otherwise frame() picks it up once it shows, or fades the arrow
  end

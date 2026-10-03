@@ -31,7 +31,7 @@ The base character remains the player's Roblox avatar. The exact tutorial weapon
 
 ## Tutorial — approved 2026-10-03
 
-**Superseded:** the approved design is [plans/2026-10-03-tutorial-design.md](plans/2026-10-03-tutorial-design.md). It has 3 waves with the boss on wave 3, the Egg Merchant as guide, a guided Glock buy, a 650 HP boss with a super-jump intro, and a reward of 3 Silver Chests + 100 emeralds, then the guided chests → Armory → Play. The older proposal below is kept for history; it predates emeralds replacing keys.
+**Superseded:** the approved design is [plans/2026-10-03-tutorial-design.md](plans/2026-10-03-tutorial-design.md). It has 3 waves with the boss on wave 3, Eggbert the egg merchant as guide, a suggested Glock buy (any pick counts), a 650 HP boss with a super-jump intro, and a reward of 3 Silver Chests + 100 emeralds, then the guided chests → Armory → Play. The older proposal below is kept for history; it predates emeralds replacing keys.
 
 ### Earlier proposal (2026-09-26)
 

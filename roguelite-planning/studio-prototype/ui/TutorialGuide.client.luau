@@ -1,10 +1,12 @@
 -- The tutorial guide, client side (plans/2026-10-03-tutorial-design.md). Five times a second it
--- decides what the Egg Merchant says and what the arrow points at, from what is on screen and the
--- replicated state, and TutorialGuideUI draws it:
+-- decides what Eggbert (the egg merchant) says and what the arrow points at, from what is on
+-- screen and the replicated state, and TutorialGuideUI draws it:
 --   the run part: RogueliteCombat.TutorialRun with this player in the run, then its results screen;
 --   the lobby part: ProfileTutorial Chests -> Armory -> Equip -> Offer -> Play, in the lobby.
 -- Lobby steps are saved on the server (ProfileAction 'TutorialStep', forward only) once the thing
--- they ask for is done, so a rejoin carries on where it stopped. While the arrow points at a lobby
+-- they ask for is done, so a rejoin carries on where it stopped. The arrow suggests one thing, but
+-- any pick counts: every step moves on whatever the player chooses, and skips itself when there
+-- is nothing left to choose (user, 2026-10-03: picking something else got the guide stuck). While the arrow points at a lobby
 -- bottom button, the other bottom buttons are dimmed and can't be clicked.
 -- Presentation and requests only: every reward, step and purchase is checked on the server.
 local Players=game:GetService('Players')
@@ -17,10 +19,11 @@ local combat=RS:WaitForChild('RogueliteCombat')
 local Config=require(combat:WaitForChild('TutorialConfig'))
 local Weapons=require(combat:WaitForChild('WeaponCatalog'))
 local Armor=require(combat:WaitForChild('ArmorCatalog'))
+local Chests=require(combat:WaitForChild('ChestConfig'))
 local GuideUI=require(RS:WaitForChild('TutorialGuideUI'))
 local pg=player:WaitForChild('PlayerGui')
 local guide
-local function ui() if not guide then guide=GuideUI.new(player,Config.Asset) end;return guide end
+local function ui() if not guide then guide=GuideUI.new(player,Config.Asset,Config.GuideName) end;return guide end
 
 -- What's on screen ------------------------------------------------------------------------------
 local function screen(name) local g=pg:FindFirstChild(name);return g and g:IsA('ScreenGui') and g.Enabled and g or nil end
@@ -57,6 +60,34 @@ local function weaponTier(id)
  for k,tier in string.gmatch(player:GetAttribute('ProfileWeapons') or '','([^,:]+):(%d+):%d+') do if k==id then return tonumber(tier) end end
  return 0
 end
+-- Every owned weapon, armor piece and pet: id -> tier.
+local function tierMap()
+ local m={}
+ for _,attr in {'ProfileWeapons','ProfileArmor','ProfilePets'} do
+  for id,tier in string.gmatch(player:GetAttribute(attr) or '','([^,:]+):(%d+):%d+') do m[id]=tonumber(tier) end
+ end
+ return m
+end
+-- Something owned is a tier above `base` (a tierMap); a new item at Tier I isn't an upgrade.
+local function upgradedSince(base)
+ for id,tier in tierMap() do if tier>(base[id] or 1) then return true end end
+ return false
+end
+-- Enough copies AND emeralds for the next tier (ProfileService.upgrade's rule), for one item or
+-- (id nil) anything owned.
+local function canUpgrade(id)
+ local gems=player:GetAttribute('ProfileGems') or 0
+ for _,attr in {'ProfileWeapons','ProfileArmor','ProfilePets'} do
+  for k,tier,have in string.gmatch(player:GetAttribute(attr) or '','([^,:]+):(%d+):(%d+)') do
+   tier,have=tonumber(tier),tonumber(have)
+   if (id==nil or k==id) and tier<4 then
+    local need,cost=Chests.upgradeCost(k,tier),Chests.upgradeEmeralds(k,tier)
+    if need and have>=need and gems>=(cost or 0) then return true end
+   end
+  end
+ end
+ return false
+end
 local function wearing(slot)
  for k,set in string.gmatch(player:GetAttribute('ProfileWearing') or '','([^,:]+):([^,:]+)') do if k==slot then return set end end
  return nil
@@ -70,6 +101,7 @@ end
 -- Things the run part reacts to ------------------------------------------------------------------
 local seenRunAt,sawCrystal,bannerShown=nil,false,false
 local redUntil,redShown=0,0
+local runId -- RogueliteRunState.RunId these belong to
 task.spawn(function()
  local drops=workspace:WaitForChild('RogueliteShardDrops',60)
  if drops then drops.ChildAdded:Connect(function() if combat:GetAttribute('TutorialRun')==true then sawCrystal=true end end) end
@@ -93,10 +125,13 @@ local function runStep()
  end
  if combat:GetAttribute('TutorialRun')~=true or not player:GetAttribute('RunMember') then return nil end
  local run=RS:FindFirstChild('RogueliteRunState');if not run then return nil end
+ -- A new run (the admin panel's Start tutorial again): its lines and banner start over.
+ if run:GetAttribute('RunId')~=runId then runId=run:GetAttribute('RunId');seenRunAt=nil;sawCrystal=false;bannerShown=false;redShown=0;redUntil=0 end
  seenRunAt=seenRunAt or os.clock()
  if run:GetAttribute('TutorialWon') then
+  -- The banner alone: no box under it (user, 2026-10-03: too much on screen at the victory).
   if not bannerShown then bannerShown=true;ui().banner(string.upper(Config.MapName),'VICTORY',Config.VICTORY_DELAY) end
-  return {line='BossDown'}
+  return {hide=true}
  end
  if screen('BossIntro') then return {hide=true} end -- the boss entrance has the screen
  local phase,wave=run:GetAttribute('Phase'),run:GetAttribute('Wave') or 1
@@ -116,14 +151,17 @@ local function runStep()
  for _,g in pg:GetChildren() do if g:IsA('ScreenGui') and g.Enabled then shop=find(g,'ShopLayout');if shop then break end end end
  local offers=Config.Offers[wave]
  if offers then
-  local snap=snapshot()
-  for i,o in snap and snap.offers or {} do
-   if o.id==offers[1] and not o.sold then
+  -- The arrow suggests the guided offer (the Glock) while it can be bought; any buy counts.
+  -- After one, GO; nothing bought and the Glock gone or too dear, buy-then-GO.
+  local snap=snapshot();local list=snap and snap.offers or {}
+  for _,o in list do if o.sold then return {line='ShopGo',target=shop and find(shop,'StartWave',true)} end end
+  for i,o in list do
+   if o.id==offers[1] and (snap.shards or 0)>=(o.price or math.huge) then
     local card=shop and find(shop,'Offer'..i)
     return {line='Shop',target=card and find(card,'Buy',true)}
    end
   end
-  return {line='ShopGo',target=shop and find(shop,'StartWave',true)}
+  return {line='Shop2',target=shop and find(shop,'StartWave',true)}
  end
  return {line='Shop2',target=shop and find(shop,'StartWave',true)}
 end
@@ -137,7 +175,13 @@ local function report(step)
   if not ok or type(r)~='table' or not r.ok then task.wait(1);asked[step]=nil end
  end)
 end
-local offerOpened,playSince=false,nil
+local offerOpened,offerSince,playSince=false,nil,nil
+local base={} -- what a lobby step started from: Armory = tierMap(), Equip = ProfileWearing
+local lastStep -- a new step (or the admin panel restarting the tutorial) starts these over
+local function stepChanged(step)
+ if step==lastStep then return end
+ lastStep=step;table.clear(base);table.clear(asked);offerOpened=false;offerSince=nil;playSince=nil
+end
 local function openWindow(name,arg)
  local hud=pg:FindFirstChild('RogueliteLobbyHUD');local hook=hud and hud:FindFirstChild('GuideOpenWindow')
  if hook then hook:Fire(name,arg);return true end
@@ -147,13 +191,20 @@ local function lobbyStep()
  local step=player:GetAttribute('ProfileTutorial')
  local index=Config.stepIndex(step)
  if not index or index<2 or step=='Done' or player:GetAttribute('LobbyPreviewActive')~=true then return nil end
+ stepChanged(step)
  local chests,armory=screen('ChestScreen'),screen('Armory')
  local silver=count('ProfileChests',Config.SeedChest)
  if step=='Chests' then
   if chests then
    local results=find(chests,'Results')
    if results then
-    if silver>0 then return {line='ChestMore',target=find(results,'Again',true) or find(results,'Claim',true)} end
+    if silver>0 then
+     -- OPEN AGAIN reopens the chest just opened (its caption counts that kind): point at it only
+     -- when that's the Silver Chest, otherwise CLAIM back to the list.
+     local again=find(results,'Again',true);local caption=again and again:FindFirstChild('Caption')
+     if caption and caption.Text==('OPEN AGAIN ('..silver..')') then return {line='ChestMore',target=again} end
+     return {line='ChestMore',target=find(results,'Claim',true)}
+    end
     return {line='ChestOpen',target=find(results,'Claim',true)}
    end
    if find(chests,'Opening') then return {line='ChestTap'} end
@@ -166,10 +217,14 @@ local function lobbyStep()
   if silver<=0 then report('Armory') end
   return {line='Chests',target=lobbyButton('Chests'),dim='Chests'}
  elseif step=='Armory' then
-  if weaponTier(Config.Weapon)>=2 then report('Equip') end
+  base.Armory=base.Armory or tierMap()
+  -- Done once anything is a tier up (the arrow suggests the pan, which the seeded chest made
+  -- ready), or when nothing can be upgraded any more (copies or emeralds went elsewhere).
+  if upgradedSince(base.Armory) or weaponTier(Config.Weapon)>=2 or not canUpgrade() then report('Equip') end
   if chests then return {line='Armory',target=find(chests,'Exit',true)} end
   if armory then
    local big=find(armory,'UpgradeBig',true);if big then return {line='Upgrade',target=big} end
+   if not canUpgrade(Config.Weapon) then return {line='Upgrade'} end -- something else is ready
    local up=find(armory,'Upgrades',true)
    if up and titled(up.Parent,Weapons.ById[Config.Weapon].name) then return {line='Upgrade',target=up} end
    local card=find(armory,'W_'..Config.Weapon,true)
@@ -177,7 +232,11 @@ local function lobbyStep()
   end
   return {line='Armory',target=lobbyButton('Armory'),dim='Armory'}
  elseif step=='Equip' then
-  if wearing(Config.SeedArmorSlot)==Config.SeedArmorSet then report('Offer') end
+  local worn=player:GetAttribute('ProfileWearing') or ''
+  base.Equip=base.Equip or worn
+  -- Done once they wear the seeded piece or change what they wear at all (any armor counts), or
+  -- own no armor to put on.
+  if wearing(Config.SeedArmorSlot)==Config.SeedArmorSet or worn~=base.Equip or (player:GetAttribute('ProfileArmor') or '')=='' then report('Offer') end
   if armory then
    local eq=find(armory,'Equip',true)
    local set=Armor.ById[Config.SeedArmorSet]
@@ -194,6 +253,9 @@ local function lobbyStep()
   local open=hud and hud:GetAttribute('OpenWindow')
   if not offerOpened then
    if open==nil and openWindow('Store','Bundles') then offerOpened=true end
+   -- The store couldn't open (another window stays up, or no hook): skip the offer.
+   offerSince=offerSince or os.clock()
+   if not offerOpened and os.clock()-offerSince>6 then report('Play') end
    return {line='Offer'}
   end
   if open~='Store' then report('Play');return {line='Play'} end -- closed it themselves

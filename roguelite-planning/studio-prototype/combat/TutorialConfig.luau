@@ -42,28 +42,31 @@ end
 -- How long the PLAY arrow stays before the tutorial counts as done.
 T.PLAY_SECONDS=10
 
--- What the Egg Merchant says, by id (TutorialGuide picks the id).
+-- The guide is the egg merchant from the lobby, Eggbert (named by the user, 2026-10-03): the name
+-- tag over his portrait and his speech bubble in the lobby (EggMerchant).
+T.GuideName='Eggbert'
+-- What Eggbert says, by id (TutorialGuide picks the id). Arrows suggest; lines never ask for one
+-- particular pick, and every step moves on whatever the player picks (user, 2026-10-03).
 T.Lines={
- Welcome="Welcome to Wavebreaker! I'm the Egg Merchant. Let's get you ready.",
+ Welcome="Welcome to Wavebreaker! I'm Eggbert. Let's get you ready.",
  Pan="Your pan swings by itself. Just move!",
  Crystals="Grab the crystals: they're XP and money.",
- LevelUp="You leveled up! Pick an upgrade.",
- Shop="After every wave you can shop. Crystals pay for it. Grab that Glock!",
+ LevelUp="You leveled up! Pick any upgrade.",
+ Shop="After every wave you can shop. Crystals pay for it. Buy anything you like!",
  ShopGo="Nice! Press GO when you're ready.",
  Survive="Survive wave 3 and beat the boss!",
  LevelUp2="Two level-ups! Pick your upgrades.",
  Shop2="Your turn. Buy what you like, then press GO.",
  Boss="Here he comes! Beat the Hammer Zombie Boss!",
  RedCircle="Red circle = move!",
- BossDown="You beat the boss!",
  Loot="Let's go spend that loot.",
  Chests="Welcome to the lobby! Let's open what you earned.",
  ChestOpen="Chests give you weapons and armor. Copies make them stronger!",
  ChestTap="Tap the chest to open it!",
  ChestMore="Open the rest!",
  Armory="Now let's power up your gear.",
- Upgrade="Your pan has enough copies. Upgrade it!",
- Equip="You got armor too. Put it on!",
+ Upgrade="Copies and emeralds power up your gear. Upgrade something!",
+ Equip="You got armor too. Put some on!",
  Equipped="Looking good! Armor stays on you every run.",
  Offer="Want a head start? Here's a one-time deal.",
  Play="Now go break some waves!",

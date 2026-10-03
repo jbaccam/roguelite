@@ -337,7 +337,9 @@ RunService.Heartbeat:Connect(function(dt)
   -- attack that fires (nothing can revive an enemy mid-tick). `living` is its list, nil when this
   -- player isn't targeting.
   local living,can
-  if equippedCount>0 and Characters.states[player] and s.folder:GetAttribute('WeaponEnabled') then
+  -- Held players (a boss entrance or a paused run, CharacterService.frozen) don't attack: guns
+  -- fired at the boss through his super-jump cutscene (user, 2026-10-03).
+  if equippedCount>0 and Characters.states[player] and s.folder:GetAttribute('WeaponEnabled') and not Characters.frozen(player) then
    snap=snap or snapshot(enemies);living=snap.list
    -- targetable(npc,s) on the snapshot's flags.
    local zombies,lobby=combat:GetAttribute('ZombiesEnabled'),s.folder:GetAttribute('LobbyAttacks')~=false

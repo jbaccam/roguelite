@@ -4,8 +4,9 @@
 -- e.g. 'Iron.Helmet') is its own item with its set's rarity, pooled with that rarity's weapons.
 -- A chest holds a handful of item copies. Rare and Epic amounts are whole copies plus a chance
 -- of one more (.25 = a 25% chance of one, 1 = exactly one); Legendary and Godly are a chance of
--- one copy (1 = always). Commons fill the rest. Copies of one rarity are grouped into 1-3 weapons
--- (e.g. ×5 Frying Pan, ×2 Egg).
+-- one copy (1 = always). Commons fill the rest. All copies of one rarity are ONE item (e.g. a
+-- Silver Chest: ×5 Frying Pan and ×1 Glock). Until 2026-10-03 they were split over 1-3 items, so a
+-- Silver Chest gave 4-5 different items and players unlocked and levelled too many at once (user).
 local C={Order={},ById={}}
 local Armor=require(script.Parent:WaitForChild('ArmorCatalog'))
 local Pets=require(script.Parent:WaitForChild('PetConfig')) -- sandboxed data; fine from here
@@ -98,8 +99,8 @@ add({id='Legendary',icon='rbxassetid://97798658508261',name='Legendary Chest',em
 -- Old saves: class chests become Wooden, the Royal Chest becomes Legendary (same Robux packs).
 C.Legacy={Brawler='Wooden',Gunner='Wooden',Thrower='Wooden',Juggler='Wooden',Handyman='Wooden',Mage='Wooden',Royal='Legendary'}
 
--- How many stacks a rarity's copies are grouped into.
-local function stacks(copies) return copies<=0 and 0 or copies==1 and 1 or copies<=3 and 2 or 3 end
+-- How many stacks (different items) a rarity's copies are grouped into: one.
+local function stacks(copies) return copies<=0 and 0 or 1 end
 -- Whole copies, plus one more with the fraction's chance (.25 -> 0 or 1; 1 -> 1).
 local function amount(rng,x) return math.floor(x)+(rng:NextNumber()<x%1 and 1 or 0) end
 
@@ -126,7 +127,7 @@ function C.open(kind,rng,pity)
  return counts
 end
 
--- Split `copies` of one rarity over 1-3 different items that chest `kind` can drop.
+-- Give `copies` of one rarity to items that chest `kind` can drop: stacks() of them (now one).
 -- Returns {id=count}.
 function C.group(rarity,copies,rng,into,kind)
  into=into or {}

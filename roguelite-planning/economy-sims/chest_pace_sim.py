@@ -1,8 +1,8 @@
 """Chest pacing simulator for RARITY_GODLY_ARMOR.md (2026-09-28).
 
 Mirrors ChestConfig's rules: fixed item count per chest, whole + fractional Rare/Epic counts,
-Legendary/Godly chances with pity, copies of one rarity grouped into 1-3 weapons (first stack
-biggest). A simulated player spends every emerald on one chest type and upgrades greedily.
+Legendary/Godly chances with pity, all copies of one rarity on one item (1-3 until 2026-10-03).
+A simulated player spends every emerald on one chest type and upgrades greedily.
 
 INCOME IS A GUESS (emeralds per hour played, incl. 200 daily per ~1.5 h session). Replace it
 with real run data when available. Run: python chest_pace_sim.py
@@ -21,7 +21,7 @@ def income(hours):
     return (200 if hours < 4 else 450 if hours < 15 else 900 if hours < 40 else 1500) + 200 / 1.5
 
 
-def stacks(c): return 0 if c <= 0 else 1 if c == 1 else 2 if c <= 3 else 3
+def stacks(c): return 0 if c <= 0 else 1
 
 
 def group(rarity, copies, tally):

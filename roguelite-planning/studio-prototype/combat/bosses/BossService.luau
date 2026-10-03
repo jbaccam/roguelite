@@ -180,6 +180,17 @@ function B.spawn(cf,practice)
  -- practice: an admin-panel boss (BossPractice: no loot). Callers check the developer first.
  local template=game.ServerStorage.RogueliteNPCs:FindFirstChild('HammerBoss_NPC');if not template then return nil end
  local folder=workspace:FindFirstChild('RogueliteEnemies');if not folder then return nil end
+ if not practice then
+  -- A wave boss lands facing the nearest run member: BossEncounter's spot has no facing, so he
+  -- fell facing world -Z, away from the map's spawn (user, 2026-10-03).
+  local near,best=nil,math.huge
+  for _,p in Players:GetPlayers() do
+   local r=p:GetAttribute('RunMember') and p.Character and p.Character:FindFirstChild('HumanoidRootPart')
+   if r then local d=(r.Position-cf.Position).Magnitude;if d<best then near,best=r,d end end
+  end
+  local to=near and Vector3.new(near.Position.X,cf.Position.Y,near.Position.Z)
+  if to and (to-cf.Position).Magnitude>.5 then cf=CFrame.lookAt(cf.Position,to) end
+ end
  local npc=template:Clone();npc.Name='HammerBoss';Motion.prepare(npc);npc:PivotTo(cf);npc:SetAttribute('BossPractice',practice==true)
  local root=npc.PrimaryPart;local h=npc.Humanoid;h.WalkSpeed=CHASE_SPEED
  -- Only run members count (ShopService RunMember): players in the lobby don't toughen the boss.

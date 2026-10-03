@@ -19,7 +19,9 @@ local S={states={},wave=1,phase='Shop'}
 -- The first-join tutorial (plans/2026-10-03-tutorial-design.md): TutorialDirector sets S.tutorial
 -- while a tutorial run is on, nil otherwise. Plain data from TutorialConfig: startShards, waves
 -- ([wave]={count,roster}), offers ([shop wave][slot]=ShopCatalog id), waveSeconds (the director
--- ends each wave when its enemies are dead) and noShopTimer.
+-- ends each wave when its enemies are dead) and noShopTimer. Clearing its last wave goes to phase
+-- 'Victory' instead of a shop: no shop or level-up cards under the VICTORY banner until
+-- RogueliteMeta ends the run.
 -- Hooks other scripts listen to: `S.onWaveCleared=fn` adds a listener and never replaces one, so
 -- load order between listeners doesn't matter. Listeners run inside this sandboxed module's
 -- thread, so they should only record (RunAnalytics queues its events and sends them itself).
@@ -488,10 +490,12 @@ function S.finishWave()
  -- Combat; any that nobody alive can take are bagged as before (2026-10-03).
  if Shards.sweep then Shards.sweep() end
  Shards.clear(true)
- combat:SetAttribute('ZombiesEnabled',false);S.phase='Shop';S.wave+=1
- run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',S.wave);run:SetAttribute('WaveEndsAt',nil)
+ local won=S.tutorial~=nil and S.tutorial.waves~=nil and S.wave>=#S.tutorial.waves -- the tutorial's last wave
+ local phase=won and 'Victory' or 'Shop'
+ combat:SetAttribute('ZombiesEnabled',false);S.phase=phase;S.wave+=1
+ run:SetAttribute('Phase',phase);run:SetAttribute('Wave',S.wave);run:SetAttribute('WaveEndsAt',nil)
  -- The tutorial's shops wait for the player (no countdown).
- run:SetAttribute('ShopEndsAt',not (S.tutorial and S.tutorial.noShopTimer) and workspace:GetServerTimeNow()+E.SHOP_SECONDS or nil)
+ run:SetAttribute('ShopEndsAt',not won and not (S.tutorial and S.tutorial.noShopTimer) and workspace:GetServerTimeNow()+E.SHOP_SECONDS or nil)
  for p,s in S.states do
   if living(p) then s.shards=math.min(E.MAX_SHARDS,s.shards+E.WAVE_REWARD_BASE+(S.wave-1)*E.WAVE_REWARD_SCALE) end
   s.rerolls=0;s.ready=false;s.revision+=1

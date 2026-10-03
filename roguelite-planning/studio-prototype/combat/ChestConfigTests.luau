@@ -134,6 +134,20 @@ return function(Chests, rolls)
 	for _, kind in Chests.Order do
 		conserved(kind, 5000)
 	end
+	-- One item per rarity (user, 2026-10-03): a Silver Chest is about 2 different items, not 4-5
+	for _, kind in Chests.Order do
+		for _ = 1, 500 do
+			local counts = Chests.rollCounts(kind, rng)
+			for _, r in Chests.Rarities do
+				local n = 0
+				for _ in Chests.group(r, counts[r], rng, nil, kind) do
+					n += 1
+				end
+				assert(n == (counts[r] > 0 and 1 or 0), kind .. " " .. r .. " gave " .. n .. " items")
+			end
+		end
+		checks += 1
+	end
 
 	-- odds() matches a simulation (4.5 standard deviations per weapon)
 	local function compare(kind, n)

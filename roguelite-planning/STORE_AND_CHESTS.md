@@ -124,8 +124,8 @@ Copies past Tier IV turn into emeralds.
 Better chests roll better items (user direction, 2026-09-27: "a legendary in a wooden might be
 1%, in magical like 50%, in legendary guaranteed"). Each chest has a fixed number of copies,
 a guaranteed number of Rare and Epic copies, and a per-chest chance of a Legendary or Godly
-copy. Everything else is Common. Copies of the same rarity are grouped into 1–3 weapons
-(Clash Royale style stacks, e.g. ×12 Frying Pan, ×6 Glock). The pool is all 36 weapons (plus
+copy. Everything else is Common. All copies of one rarity are one item (Clash Royale style
+stacks, e.g. ×12 Frying Pan, ×6 Glock; 1–3 items per rarity until 2026-10-03). The pool is all 36 weapons (plus
 Godly); locked-class weapons still drop and show a "Class locked" note.
 
 | Chest | Emeralds | Copies | Rare copies | Epic copies | Legendary | Godly |

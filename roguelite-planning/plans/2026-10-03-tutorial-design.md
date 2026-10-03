@@ -1,6 +1,6 @@
 # First-join tutorial — design
 
-**Status:** Approved design, 2026-10-03. **Built in the repo the same day** (commits 72cacce–50e3982, [build steps](2026-10-03-tutorial-build-steps.md)); synced to Studio the same day (5f1ac5c); not play-tested yet. Admin panel → Waves → Tutorial starts it in Studio.
+**Status:** Approved design, 2026-10-03. **Built in the repo the same day** (commits 72cacce–50e3982, [build steps](2026-10-03-tutorial-build-steps.md)); synced to Studio the same day (5f1ac5c). The user's first play-test the same day led to the fixes under "Play-test fixes" below. Admin panel → Waves → Tutorial starts it in Studio.
 **Replaces:** the "Recommended tutorial — proposed" section of [LOBBY_AND_FIRST_RUN.md](../LOBBY_AND_FIRST_RUN.md).
 **Inspiration:** a reference game's tutorial (20 screenshots the user shared on 2026-10-03). We copy its pacing and guidance style, but use our game's systems.
 
@@ -10,8 +10,9 @@ A brand-new player spawns straight into Pine Valley. In about 3 minutes they lea
 
 ## Guide style (whole tutorial)
 
-- **The Egg Merchant is the guide.** His portrait sits bottom-left with a dark text box beside it, like the reference. Each line stays on screen until the player does the action, or until it times out for lines with no action.
-- **The box never covers the game's UI** (the user, 2026-10-03). It sits in the first corner where it covers no visible button, panel, picture or text: bottom-left, top-left, bottom-right, top-right, then middle-left. It tries a smaller size before giving up, and glides to its new spot.
+- **Eggbert, the egg merchant, is the guide** (named by the user, 2026-10-03). His portrait sits beside a dark text box, like the reference. Each line stays on screen until the player does the action, or until it times out for lines with no action.
+- **The box never covers the game's UI or the arrow's target** (the user, 2026-10-03). It takes the first spot that covers no visible button, panel, picture or text: bottom-left, top-left, bottom-right, top-right, middle-left, middle-right, then anywhere on a grid, farthest from the screen's centre first. In the lobby every corner has a panel, so it sits in the open sky right of centre. It tries a smaller size before giving up, and glides to its new spot.
+- **Arrows suggest; any pick counts.** A line never asks for one particular thing ("Buy anything you like!", "Upgrade something!"), and every step moves on whatever the player picks. A step that has nothing left to pick skips itself.
 - **One gliding arrow.** It never disappears and jumps. It eases along a curve from one target to the next, turns to face the new target, and bobs gently while resting. The player's eye should be able to follow it.
 - **No paid prompts during the run part.** That means no revive offer and no store.
 
@@ -84,6 +85,19 @@ While a guided step is running, the other bottom buttons are dimmed and can't be
 | 6. Free | Arrow on **PLAY** for 10 s or until clicked, then it fades. Tutorial complete | "Now go break some waves!" |
 
 The offer is the Store's own Starter Pack, shown as it is today: the guide opens the Store on its BUNDLES tab, and its box has a NO THANKS button. **Correction (2026-10-03):** an earlier version of this spec said the pack has no chests. The live config (`MonetizationConfig.StarterPack`) includes 2 Legendary Chests, and StoreUI already hides it where paid random items are restricted. What the pack contains is a store decision, separate from the tutorial.
+
+## Play-test fixes (2026-10-03)
+
+From the user's first play-test:
+
+- **Stuck on a different pick.** The first shop said "Grab that Glock!" and waited for the Glock; buying something else left the arrow on a Glock they could no longer afford. Now any buy moves it to GO, and so does a Glock that's gone or too dear. The Armory step waited for the pan's Tier II; now any upgrade counts, and the step skips itself when nothing can be upgraded (copies or emeralds spent elsewhere). The Equip step waited for the Iron helmet; now any armor change counts. OPEN AGAIN is pointed at only when it reopens a Silver Chest. The offer step skips itself if the store can't open.
+- **The box covered the Chests button.** The five fixed corners all overlapped lobby panels, and covering the target was only a penalty. Now the target is a hard rule, a grid of spots is tried, and a piece inside a panel counts once (with the panel).
+- **Too much on screen at the victory.** The boss wave's clear opened the shop and the level-up cards under the VICTORY banner. Clearing the tutorial's last wave now goes to phase `Victory` (no shop, no countdown, HUD reads VICTORY), and the guide shows only the banner.
+- **Ranged weapons shot the boss during his entrance.** Held players (`CharacterService.frozen`: a boss entrance or a paused run) don't target anything now, and pets rest through the entrance too. All runs.
+- **The boss fell facing the wrong way.** BossEncounter's spawn had no facing, so he faced world -Z, away from the map's spawn. A wave boss now lands facing the nearest run member. All runs.
+- **Zombies reached too far.** Melee swings connect out to reach + 0.9 studs, was + 1.5 (a normal zombie: 5.5 studs, was 6.1). All runs.
+- **The lobby camera sat inside the Kills leaderboard.** The lobby spawn was 19 studs in front of it and the camera about 20 behind the player; the board's visible parts don't block the camera (CanCollide off). The spawn moved 14 studs toward the portals (Studio only: `Workspace.RogueliteLobby.LobbySpawn`, z 18 → 4).
+- **Fewer different items per chest** (all chests, not just the tutorial): all copies of one rarity go to one item, so a Silver Chest is about 2 items, was 4–5 (`ChestConfig`).
 
 ## Rules
 

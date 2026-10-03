@@ -193,7 +193,8 @@ local function makeBubble()
  local p=T.panel(bubble,'Panel',10,0,420,96,'panel')
  local tail=T.make('Frame',bubble,{Name='Tail',AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(220,96),Size=UDim2.fromOffset(22,22),Rotation=45,BackgroundColor3=Color3.fromRGB(24,28,30),BorderSizePixel=0,ZIndex=0})
  T.make('UIStroke',tail,{Color=Color3.fromRGB(145,239,20),Thickness=2})
- local name=T.label(p,'Name','EGG MERCHANT',22,6,376,26,20,T.Color.lime);name.TextXAlignment=Enum.TextXAlignment.Left
+ -- His name (user, 2026-10-03), as the tutorial guide's tag says it (TutorialConfig.GuideName).
+ local name=T.label(p,'Name','EGGBERT',22,6,376,26,20,T.Color.lime);name.TextXAlignment=Enum.TextXAlignment.Left
  bubbleText=T.label(p,'Line','',22,32,376,56,28,T.Color.white);bubbleText.TextXAlignment=Enum.TextXAlignment.Left;bubbleText.TextWrapped=true
  bubble.Parent=player:WaitForChild('PlayerGui')
 end

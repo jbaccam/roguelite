@@ -132,6 +132,8 @@ RunService.Heartbeat:Connect(function(dt)
  local combatFolder=ReplicatedStorage:FindFirstChild('RogueliteCombat')
  if state and combatFolder and combatFolder:GetAttribute('TutorialRun')==true then
   remaining=nil;bossLabel=state:GetAttribute('BossHolding')==true and 'BOSS' or nil
+  -- Won (phase Victory, ShopService): VICTORY instead of the next wave's number.
+  if phase=='Victory' then validWave=false;bossLabel='' end
  end
  view:SetTimer(not practice and remaining or nil,not practice and validWave and math.floor(wave) or nil,phase,practice and "SANDBOX" or bossLabel)
  -- A run where the admin panel was used pays no rewards (ADMIN_PANEL.md).

@@ -58,10 +58,11 @@ unlock it so they can start with it every time.
 | Magical | 700 | 18 | 4 | 1 | 10% | 0.6% | yes |
 | Legendary (Robux / rewards) | — | 8 | 3 | 1 | 1 guaranteed | 2% | yes |
 
-- Everything else in the chest is Common. Copies of one rarity are still grouped into 1–3 weapons
-  (`ChestConfig.group`).
-  - Example Gold Chest: ×5 Frying Pan, ×2 Egg, ×1 Glock, ×1 Shotgun, ×1 Kunai, plus a 25% chance
-    of an Epic and a 3% chance of a Legendary.
+- Everything else in the chest is Common. All copies of one rarity are ONE item
+  (`ChestConfig.group`; 1–3 items until 2026-10-03, when a Silver Chest's 4–5 different items
+  had players unlocking and levelling too many at once).
+  - Example Gold Chest: ×8 Frying Pan and ×2 Glock, plus a 25% chance of an Epic and a 3% chance
+    of a Legendary.
 - **Rare can now be a chance** (Wooden 25%). `rollCounts`, `summary` and `odds` must handle a
   fractional `rare` the same way they already handle a fractional `epic`.
 - **Pity** (counted on chests with "Pity counts" = yes):
