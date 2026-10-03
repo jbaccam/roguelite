@@ -1,7 +1,8 @@
 -- Weapon-specific looks for server swept projectiles (StatProjectiles).
--- Each Shot packet is one server step of one projectile; packets that share
--- a projectileId are drawn as one travelling head with its own trail. The
--- server path, hits and damage are unchanged.
+-- Each call is one 60 Hz step of one projectile (RogueliteCombat.client flies
+-- the server's legs step by step); steps that share a projectileId are drawn
+-- as one travelling head with its own trail. The server path, hits and damage
+-- are unchanged.
 local RunService=game:GetService('RunService')
 local K=require(script.Parent:WaitForChild('VfxKit'))
 local V={}

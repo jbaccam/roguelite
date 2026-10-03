@@ -243,7 +243,7 @@ function Service.request(player,action,key,value)
   local preset=Stats.Classes[s.class].build
   for index,id in preset do if not combat.WeaponTemplates:FindFirstChild(id) then return false end end
   for i=1,6 do
-   local slot=s.folder:FindFirstChild('Slot'..i);slot:SetAttribute('WeaponId',preset[i] or '');slot:SetAttribute('StartTime',-1e6)
+   local slot=s.folder:FindFirstChild('Slot'..i);slot:SetAttribute('WeaponId',preset[i] or '');slot:SetAttribute('Attack',nil) -- the packed attack (ShotBatch.packAttack)
   end
   s.folder:SetAttribute('EquippedCount',#preset);Service.refresh(player)
  elseif action=='Reset' then s.overrides={};Service.refresh(player)

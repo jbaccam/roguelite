@@ -4,9 +4,33 @@ local combat=game.ReplicatedStorage:WaitForChild('RogueliteCombat')
 local Stats=require(combat.CharacterStats)
 local Characters=require(script.Parent.CharacterService)
 local Death=require(combat.ZombieDeath)
--- Hits and chain/armor shots go to players near them plus the attacker (ShotBatch.fire), not the lobby.
+-- Hits and chain/armor shots go to players near them plus the attacker (ShotBatch), not the lobby.
 local Batch=require(combat.ShotBatch)
+local STUDIO=RunService:IsStudio()
+-- A frame's non-lethal hits go out together over HitFX, unreliable (ShotBatch.hitWriter says
+-- why), flushed at the start of the next frame with the chain bolts queued before them. A kill
+-- goes at once on the reliable Hit remote, after the hits still queued: it must reach clients
+-- before the enemy's removal does (the Ray Gun dissolves the body it gets).
+-- Made here when the place lacks it. If even that fails, hits go one by one on Hit as before.
+local hitFX=combat:FindFirstChild('HitFX')
+if not hitFX then
+ local ok,made=pcall(function()
+  local r=Instance.new('UnreliableRemoteEvent');r.Name='HitFX';r.Sandboxed=true
+  r.Capabilities=SecurityCapabilities.new(Enum.SecurityCapability.Basic,Enum.SecurityCapability.RemoteEvent);r.Parent=combat
+  return r
+ end)
+ if ok then hitFX=made else warn('HitFX could not be made; hits go one by one:',made) end
+end
+local hits=hitFX and Batch.hitWriter(hitFX) or {flush=function() end,push=function(_,owner,position,actual,npc,lethal,secondary,dot,id)
+ Batch.fire(combat.Hit,position,owner,position+Vector3.yAxis*2,actual,npc,position,lethal,secondary,id,owner.UserId,dot)
+end}
+local bolts=Batch.writer(combat:WaitForChild('Shot'))
+local function flush() bolts:flush();hits:flush() end
+RunService.PreSimulation:Connect(flush)
 local E={statuses={}}
+-- When each enemy was last knocked back (os.clock()), kept on the server: as an attribute it
+-- replicated on every shove. Weapons and pets (PetService) share it: one shove per 0.12 s.
+E.knockedAt=setmetatable({},{__mode='k'})
 -- E.onHit(npc,d,actual,secondary) and E.onKill(npc,d,position,secondary): set by GodlyWeapons (the
 -- Vampire Blade's healing, the Scythe's wraiths, the Ray Gun's burst). Never on practice targets.
 -- Damage listeners: E.listenDamage(fn) adds fn(owner,sourceId,actual,secondary) for every real
@@ -39,13 +63,16 @@ local function status(npc,d,name,duration,amount,spread)
  local entries=E.statuses[npc];if not entries then entries={};E.statuses[npc]=entries end
  local key=tostring(d.owner.UserId)..name;local old=entries[key]
  entries[key]={name=name,d=d,ends=os.clock()+duration,nextTick=old and old.nextTick or os.clock()+1,amount=amount,stacks=name=='Poison' and math.min(d.stats.PoisonStacks,(old and old.stacks or 0)+1) or 1,spread=spread}
- npc:SetAttribute(name..'Until',workspace:GetServerTimeNow()+duration)
+ -- Only CharacterStatsTests reads these; no client does, so live servers don't replicate them.
+ if STUDIO then npc:SetAttribute(name..'Until',workspace:GetServerTimeNow()+duration) end
 end
-function E.hit(npc,amount,d,secondary)
+-- dot: a burn/poison tick or a zone tick (SpecialWeapons). Clients show its number but not a
+-- splat or flash. It changes nothing else here.
+function E.hit(npc,amount,d,secondary,dot)
  local h,r=alive(npc);if not h or not d or not valid(d) then return 0 end
  if not Tags:HasTag(npc,'RogueliteZombie') then return 0 end
  -- Tag before damage: the Died handler can run immediately on a lethal shot.
- if d.id=='10' and not secondary and amount>0 and not npc:GetAttribute('LobbyDummy') then npc:SetAttribute('DesignerShirt',true) end
+ if d.id=='10' and not secondary and amount>0 and not npc:GetAttribute('LobbyDummy') and not npc:GetAttribute('DesignerShirt') then npc:SetAttribute('DesignerShirt',true) end
  local s=d.stats;local position=r.Position
  if not secondary then
   -- Ninja 4-piece: after a dodge (CharacterService.contact) the next direct hit always crits.
@@ -63,22 +90,33 @@ function E.hit(npc,amount,d,secondary)
   local actual=math.min(h.Health,math.max(0,amount))
   if actual<=0 then return 0 end
   h.Health=h.Health-actual>1 and h.Health-actual or h.MaxHealth
-  npc:SetAttribute('PracticeHits',(npc:GetAttribute('PracticeHits') or 0)+1)
-  npc:SetAttribute('PracticeDamage',(npc:GetAttribute('PracticeDamage') or 0)+actual)
-  npc:SetAttribute('LastWeaponId',d.id)
-  Batch.fire(combat.Hit,position,d.owner,position+Vector3.yAxis*2,actual,npc,position,false,secondary==true,d.id)
+  -- QA counters (ArcAttackTests): Studio only, they replicated on every practice hit.
+  if STUDIO then
+   npc:SetAttribute('PracticeHits',(npc:GetAttribute('PracticeHits') or 0)+1)
+   npc:SetAttribute('PracticeDamage',(npc:GetAttribute('PracticeDamage') or 0)+actual)
+   npc:SetAttribute('LastWeaponId',d.id)
+  end
+  hits:push(d.owner,position,actual,npc,false,secondary==true,dot==true,d.id)
   return actual -- no death, rewards, lifesteal farming or damage to the tester
  end
- npc:SetAttribute('LastDamageUserId',d.owner.UserId);npc:SetAttribute('LastWeaponId',d.id) -- quests count Utility kills
+ -- Kill credit, read when the enemy dies (quests count Utility kills; leaderboard, shard and
+ -- heart owners). Written before the damage, as before, but only when it changes: one player's
+ -- minigun no longer rewrites both on every bullet. The value at any moment is the same.
+ if npc:GetAttribute('LastDamageUserId')~=d.owner.UserId then npc:SetAttribute('LastDamageUserId',d.owner.UserId) end
+ if npc:GetAttribute('LastWeaponId')~=d.id then npc:SetAttribute('LastWeaponId',d.id) end
  local before=h.Health;h:TakeDamage(math.max(0,amount));local actual=before-math.max(0,h.Health)
  if actual<=0 then return 0 end
  for _,fn in damageListeners do local ok,err=pcall(fn,d.owner,d.id,actual,secondary==true);if not ok then warn('listenDamage failed:',err) end end
  Characters.leech(d.owner,actual)
  if E.onHit then local ok,err=pcall(E.onHit,npc,d,actual,secondary==true);if not ok then warn('onHit failed:',err) end end
- combat:SetAttribute('ConfirmedHits',(combat:GetAttribute('ConfirmedHits') or 0)+1)
+ if STUDIO then combat:SetAttribute('ConfirmedHits',(combat:GetAttribute('ConfirmedHits') or 0)+1) end
  -- A lethal hit is represented by the death burst, not a second hit burst.
- -- The weapon id lets clients add that weapon's impact sound (RogueliteSounds).
- Batch.fire(combat.Hit,position,d.owner,position+Vector3.new(0,2,0),actual,npc,position,h.Health<=0,secondary==true,d.id)
+ -- The weapon id lets clients add that weapon's impact sound (RogueliteSounds). A kill also
+ -- carries its owner and dot flag (HitFX packs those).
+ if h.Health<=0 then
+  flush()
+  Batch.fire(combat.Hit,position,d.owner,position+Vector3.new(0,2,0),actual,npc,position,true,secondary==true,d.id,d.owner.UserId,dot==true)
+ else hits:push(d.owner,position,actual,npc,false,secondary==true,dot==true,d.id) end
  if h.Health<=0 then
   local entries=E.statuses[npc]
   if entries then
@@ -95,9 +133,9 @@ function E.hit(npc,amount,d,secondary)
  end
  if secondary then return actual end
  local knockback=math.min(40,s.Knockback+(d.nativeKnockback or 0))
- if knockback>0 and os.clock()-(npc:GetAttribute('LastKnockback') or -1e6)>.12 then
+ if knockback>0 and os.clock()-(E.knockedAt[npc] or -1e6)>.12 then
   local pr=d.character:FindFirstChild('HumanoidRootPart');local delta=pr and Vector3.new(position.X-pr.Position.X,0,position.Z-pr.Position.Z)
-  if delta and delta.Magnitude>.01 then r:ApplyImpulse(delta.Unit*knockback*r.AssemblyMass*(npc:GetAttribute('IsBoss') and .25 or 1));npc:SetAttribute('LastKnockback',os.clock()) end
+  if delta and delta.Magnitude>.01 then r:ApplyImpulse(delta.Unit*knockback*r.AssemblyMass*(npc:GetAttribute('IsBoss') and .25 or 1));E.knockedAt[npc]=os.clock() end
  end
  local elemental=Stats.mult(s.Damage)*Stats.mult(s.ElementalDamage)
  if math.random()<math.max(s.BurnChance,d.burn or 0)/100 then status(npc,d,'Burn',3*Stats.mult(s.Duration),6*elemental*Stats.mult(s.BurnDamage),true) end
@@ -111,7 +149,7 @@ function E.hit(npc,amount,d,secondary)
   if sourceCount>0 and state.hits%s.ChainEvery==0 then
    for i,target in near(position,12*Stats.mult(s.AreaSize),{[npc]=true},d.character) do
     if i>count then break end
-    Batch.fire(combat.Shot,position,d.owner,position,target.HumanoidRootPart.Position,'Lightning',d.id)
+    bolts:push(d.owner,position,target.HumanoidRootPart.Position,'Lightning',d.id)
     E.hit(target,d.damage*.4*Stats.mult(s.ChainDamage),d,true)
    end
   end
@@ -169,11 +207,11 @@ RunService.Heartbeat:Connect(function(dt)
   for key,e in entries do
    if now>=e.ends or not valid(e.d) then entries[key]=nil
    elseif e.name=='Slow' then slow=math.max(slow,e.amount)
-   elseif now>=e.nextTick then e.nextTick=now+1;E.hit(npc,e.amount*e.stacks,e.d,true) end
+   elseif now>=e.nextTick then e.nextTick=now+1;E.hit(npc,e.amount*e.stacks,e.d,true,true) end
   end
   if h.Parent and h.Health>0 then
    slow*=npc:GetAttribute('IsBoss') and .5 or 1
-   npc:SetAttribute('StatusSlowStrength',slow)
+   if npc:GetAttribute('StatusSlowStrength')~=slow then npc:SetAttribute('StatusSlowStrength',slow) end
    local vacuumSlow=(npc:GetAttribute('VacuumSlowUntil') or 0)>workspace:GetServerTimeNow() and 35 or 0
    h.WalkSpeed=(npc:GetAttribute('BaseMoveSpeed') or 12)*(1-math.max(slow,vacuumSlow)/100)
   end

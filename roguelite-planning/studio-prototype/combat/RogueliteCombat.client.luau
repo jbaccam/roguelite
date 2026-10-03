@@ -16,6 +16,8 @@ require(combat:WaitForChild('RocketVisuals')).mount(combat,visuals)
 local bulletImpact=require(combat:WaitForChild('BulletImpactVisuals')).mount(visuals)
 local muzzleFlash=require(combat:WaitForChild('MuzzleFlashVisuals')).mount(visuals)
 local mobImpact=require(combat:WaitForChild('MobImpactVisuals')).mount(visuals)
+-- Damage numbers and hit flashes, pooled and capped.
+local hitFeedback=require(combat:WaitForChild('HitFeedbackVisuals')).mount(visuals)
 local shirtShot=require(combat:WaitForChild('ShirtVisuals')).mount(visuals)
 local Swing=require(combat:WaitForChild('SwingVisuals')).mount(visuals)
 local Spacing=require(combat:WaitForChild('WeaponSpacing'))
@@ -48,6 +50,15 @@ local legendaryFX=(function()
  return {attach=function() end,step=function() end,hide=function() end}
 end)()
 local floats={}
+-- Each attack arrives packed in the slot's 'Attack' attribute (ShotBatch.attackOf), and AimPosition
+-- now changes only every 1.5 studs or so (RogueliteCombat.server), so a gun glides toward it
+-- instead of stepping; a jump of 4+ studs (a new target) still snaps.
+local Wire=require(combat:WaitForChild('ShotBatch'))
+local function glide(v,aim,dt)
+ if aim==nil or v.aim==nil or (aim-v.aim).Magnitude>4 then v.aim=aim
+ else v.aim=v.aim:Lerp(aim,1-math.exp(-20*dt)) end
+ return v.aim
+end
 RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Value+1,function(dt)
  local now=workspace:GetServerTimeNow()
  local seen={}
@@ -96,18 +107,20 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
    end
    if v then
     local visible=root and hum and hum.Health>0 and state:GetAttribute('WeaponEnabled')
+    local aimed=glide(v,slot:GetAttribute('AimPosition'),dt)
     if visible then
-     local start=slot:GetAttribute('StartTime') or -1e6
-     local rate=slot:GetAttribute('MotionRate') or 1
+     local a=Wire.attackOf(slot)
+     local start=a.start or -1e6
+     local rate=a.rate or 1
      local animationNow=start+(now-start)*rate
      local age=animationNow-start
-     local kind=slot:GetAttribute('AttackKind') or d.kind
-     local style=slot:GetAttribute('AttackStyle')
-     local side=slot:GetAttribute('AttackSide') or 1
-     local attackRoot=slot:GetAttribute('AttackRoot') or root.CFrame
+     local kind=a.kind or d.kind
+     local style=a.style
+     local side=a.side or 1
+     local attackRoot=a.root or root.CFrame
      local _,activeEnd,duration=Motion.attackTiming(id,kind,style)
-     local aim=slot:GetAttribute('AimPosition')
-     if kind=='Melee' and age>=0 and age<duration then aim=slot:GetAttribute('AttackAim') end
+     local aim=aimed
+     if kind=='Melee' and age>=0 and age<duration then aim=a.aim end
      local radius=state:GetAttribute('RingRadius') or Motion.radius(root.Size,state:GetAttribute('EquippedCount'))
      local index=slot:GetAttribute('Index')
      local pose,idlePose
@@ -125,11 +138,11 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
         if v.gloves then for _,g in v.gloves do v.attackReturn.gloves[g.part]=g.part.CFrame end end
        end
        if v.chain then
-        local cut=Chains.pose(v.chain,attackRoot,slot:GetAttribute('AttackDirection'),aim,math.min(age,activeEnd),slot:GetAttribute('SwingRange') or d.range,style,side,true)
+        local cut=Chains.pose(v.chain,attackRoot,a.direction,aim,math.min(age,activeEnd),a.range or d.range,style,side,true)
         pose=age<=activeEnd and cut or Chains.swingReturn(v.chain,cut,idle,age,v.attackReturn)
        else
         local cut=Motion.pose(attackRoot,radius,index,aim,start,start+math.min(age,activeEnd),kind,id,
-         slot:GetAttribute('AttackDirection'),slot:GetAttribute('SwingRange') or d.range,
+         a.direction,a.range or d.range,
          template:GetAttribute('BoundsSize'),template:GetAttribute('BoundsCenter'),style,side,true)
         pose=age<=activeEnd and cut or Motion.swingReturn(cut,idle,age,v.attackReturn,id,style)
        end
@@ -147,9 +160,9 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
      if v.gloves then for _,g in v.gloves do g.part.CFrame=pose*g.localCF end end
      if v.gloves and age>=0 and age<duration then
       for _,g in v.gloves do
-       local target=g.side==slot:GetAttribute('AttackHand') and aim or slot:GetAttribute('SecondAim')
+       local target=g.side==a.hand and aim or a.second
        if target then
-        local cut=Motion.glovePose(attackRoot,target,math.min(age,activeEnd),g.side,slot:GetAttribute('SwingRange') or d.range)
+        local cut=Motion.glovePose(attackRoot,target,math.min(age,activeEnd),g.side,a.range or d.range)
         local rest=pose*g.localCF
         local handPose=cut:Lerp(rest,Motion.swingRecovery(age))
         if age<Motion.SwingHitStart then handPose=(v.attackReturn.gloves[g.part] or rest):Lerp(handPose,Motion.entryAlpha(age))
@@ -176,8 +189,8 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
       Pandora.stepIdle(v.pandora,pose,true,ArcMotion.lid(opening))
      end
      v.frame={visible=true,active=age>=0 and age<duration,age=age,start=start,kind=kind,style=style,side=side,
-      attackRoot=attackRoot,rate=rate,direction=slot:GetAttribute('AttackDirection'),range=slot:GetAttribute('SwingRange') or d.range,
-      hand=slot:GetAttribute('AttackHand'),secondAim=slot:GetAttribute('SecondAim')}
+      attackRoot=attackRoot,rate=rate,direction=a.direction,range=a.range or d.range,
+      hand=a.hand,secondAim=a.second}
      table.insert(frameList,v)
     else
      v.frame=nil;v.spacing=nil;Swing.hide(v);godlyFX.hide(v);legendaryFX.hide(v)
@@ -248,42 +261,47 @@ local function showShot(origin,finish,kind,id,thickness,blastRadius,contact,norm
   TweenService:Create(burst,TweenInfo.new(.25),{Size=Vector3.one*(blastRadius or 7)*2,Transparency=1}):Play();Debris:AddItem(burst,.3)
  end
 end
-local ShotBatch=require(combat:WaitForChild('ShotBatch'))
-combat:WaitForChild('Shot').OnClientEvent:Connect(function(origin,finish,...)
- if origin==ShotBatch.Marker then
-  for _,row in ipairs(finish) do showShot(ShotBatch.unpack(row)) end
- else
-  showShot(origin,finish,...)
- end
-end)
-local function damageNumber(position,damage,color,name)
- -- Settings menu (UITheme) can hide hit numbers; your own damage taken always shows.
- if name~='PlayerDamageNumber' and player:GetAttribute('Setting_DamageNumbers')==false then return end
- local anchor=Instance.new('Part');anchor.Name=name or 'DamageNumber';anchor.Size=Vector3.one*.1;anchor.Transparency=1;anchor.Anchored=true;anchor.CanCollide=false;anchor.CanTouch=false;anchor.CanQuery=false;anchor.Position=position+Vector3.new((math.random()-.5)*.8,0,0);anchor.Parent=visuals
- local gui=Instance.new('BillboardGui');gui.Size=UDim2.fromOffset(name=='PlayerDamageNumber' and 160 or 100,name=='PlayerDamageNumber' and 90 or 60);gui.AlwaysOnTop=true;gui.MaxDistance=100;gui.Parent=anchor
- local text=Instance.new('TextLabel');text.Size=UDim2.fromScale(1,1);text.BackgroundTransparency=1;text.Text=(name=='PlayerDamageNumber' and '-' or '')..tostring(math.round(damage));text.Font=name=='PlayerDamageNumber' and Enum.Font.GothamBlack or Enum.Font.GothamBold;text.TextSize=name=='PlayerDamageNumber' and 44 or 30;text.TextColor3=color;text.TextStrokeColor3=Color3.fromRGB(28,22,20);text.TextStrokeTransparency=.12;text.Parent=gui
- local outline
- if name=='PlayerDamageNumber' then outline=Instance.new('UIStroke');outline.Thickness=2;outline.Color=Color3.fromRGB(46,10,17);outline.Parent=text;text.TextStrokeTransparency=1 end
- local scale=Instance.new('UIScale');scale.Scale=.65;scale.Parent=text
- TweenService:Create(scale,TweenInfo.new(.13,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
- TweenService:Create(anchor,TweenInfo.new(.8,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=anchor.Position+Vector3.new(0,2,0)}):Play()
- task.delay(.42,function()if text.Parent then if outline then TweenService:Create(outline,TweenInfo.new(.3),{Transparency=1}):Play() end;TweenService:Create(text,TweenInfo.new(.3),{TextTransparency=1,TextStrokeTransparency=1}):Play()end end)
- Debris:AddItem(anchor,.85)
+-- Bullets (StatProjectiles) come as a 'Fly' row per straight leg, then 'Land' or 'Drop', and are
+-- flown here step by step through showShot (BulletFlights).
+local flights=require(combat:WaitForChild('BulletFlights')).new(showShot)
+RunService.RenderStepped:Connect(function() if next(flights.bullets) then flights.step(os.clock()) end end)
+local function onShot(...)
+ if not flights.row(os.clock(),...) then showShot(...) end
 end
-
-combat:WaitForChild('Hit').OnClientEvent:Connect(function(position,damage,npc,impactPosition,lethal,secondary,weaponId)
- if not lethal then mobImpact.hit(impactPosition or position-Vector3.yAxis*2,npc,secondary) end
- godlyFX.hit(npc,lethal,secondary,weaponId,impactPosition or position)
- damageNumber(position,damage,Color3.fromRGB(255,246,218),'DamageNumber')
- if npc and npc.Parent then
-  local previous=npc:FindFirstChild('WeaponHitFlash');if previous then previous:Destroy() end
-  local flash=Instance.new('Highlight');flash.Name='WeaponHitFlash';flash.FillColor=Color3.new(1,1,1)
-  flash.FillTransparency=0;flash.OutlineTransparency=1;flash.DepthMode=Enum.HighlightDepthMode.Occluded;flash.Parent=npc
-  task.delay(.045,function()
-   if flash.Parent then TweenService:Create(flash,TweenInfo.new(.09),{FillTransparency=1}):Play() end
-  end)
-  Debris:AddItem(flash,.15)
+combat:WaitForChild('Shot').OnClientEvent:Connect(function(origin,finish,...)
+ if origin==Wire.Marker then
+  for _,row in ipairs(finish) do onShot(Wire.unpack(row)) end
+ else
+  onShot(origin,finish,...)
  end
+ flights.launched(os.clock())
+end)
+local function damageNumber(position,damage,color,name,mine)
+ -- Settings menu (UITheme) can hide hit numbers; your own damage taken always shows.
+ local taken=name=='PlayerDamageNumber'
+ if not taken and player:GetAttribute('Setting_DamageNumbers')==false then return end
+ hitFeedback.number(position,damage,color,taken,mine)
+end
+-- mine: your own hit (teammates' numbers give way first). dot: a burn, poison or zone tick, which
+-- shows its number but no splat or flash.
+local function onHit(position,damage,npc,impactPosition,lethal,secondary,weaponId,mine,dot)
+ if typeof(position)~='Vector3' or type(damage)~='number' then return end
+ if not lethal and not dot then mobImpact.hit(impactPosition or position-Vector3.yAxis*2,npc,secondary) end
+ godlyFX.hit(npc,lethal,secondary,weaponId,impactPosition or position)
+ damageNumber(position,damage,Color3.fromRGB(255,246,218),'DamageNumber',mine)
+ if npc and npc.Parent and not dot then hitFeedback.flash(npc) end
+end
+-- Kills, one at a time and reliable (CombatEffectsService); they carry their owner and dot flag.
+combat:WaitForChild('Hit').OnClientEvent:Connect(function(position,damage,npc,impactPosition,lethal,secondary,weaponId,ownerId,dot)
+ onHit(position,damage,npc,impactPosition,lethal,secondary,weaponId,ownerId==player.UserId,dot==true)
+end)
+-- Every other hit, a frame's worth per message (ShotBatch.hitWriter).
+task.spawn(function()
+ combat:WaitForChild('HitFX').OnClientEvent:Connect(function(buf,...)
+  for _,h in Wire.readHits(buf,table.pack(...)) do
+   onHit(h.position+Vector3.yAxis*2,h.damage,h.npc,h.position,h.lethal,h.secondary,h.weaponId,h.mine,h.dot)
+  end
+ end)
 end)
 
 -- Four full-resolution gradients stay transparent in the center; no image download.

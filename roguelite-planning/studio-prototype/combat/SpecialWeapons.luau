@@ -132,8 +132,9 @@ function S.new(combat,damage,rayParams)
     for _,npc in Tags:GetTagged('RogueliteZombie') do
      local root=npc:FindFirstChild('HumanoidRootPart');local h=npc:FindFirstChildOfClass('Humanoid')
      if h and h.Health>0 and root and allowed(npc,z.d) and (root.Position-z.position).Magnitude<=z.radius and not workspace:Raycast(z.position+Vector3.yAxis*.3,root.Position-z.position-Vector3.yAxis*.3,wall) then
-      -- Secondary ticks cannot proc crit, chains, knockback or status stacks.
-      damage(npc,z.d.damage*.4,z.d,true)
+      -- Secondary ticks cannot proc crit, chains, knockback or status stacks. A damage-over-time
+      -- tick (last true): clients show its number without a splat or flash.
+      damage(npc,z.d.damage*.4,z.d,true,true)
      end
     end
    end

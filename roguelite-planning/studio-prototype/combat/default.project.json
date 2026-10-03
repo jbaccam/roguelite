@@ -37,6 +37,15 @@
         "MobImpactVisuals": {
           "$path": "MobImpactVisuals.luau"
         },
+        "ShotBatch": {
+          "$path": "ShotBatch.luau"
+        },
+        "BulletFlights": {
+          "$path": "BulletFlights.luau"
+        },
+        "HitFeedbackVisuals": {
+          "$path": "HitFeedbackVisuals.luau"
+        },
         "ZombieDeath": {
           "$path": "ZombieDeath.luau"
         },
@@ -426,6 +435,9 @@
       },
       "StatProjectiles": {
         "$path": "StatProjectiles.luau"
+      },
+      "TargetGrid": {
+        "$path": "TargetGrid.luau"
       },
       "ShardDropService": {
         "$path": "ShardDropService.luau"

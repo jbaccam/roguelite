@@ -182,10 +182,12 @@ task.spawn(function()
  ContentProvider:PreloadAsync(list)
 end)
 
--- Weapon attacks: the server stamps StartTime on a weapon slot at every attack, melee or ranged.
+-- Weapon attacks: the server writes a slot's packed 'Attack' attribute at every attack, melee or
+-- ranged (ShotBatch.attackOf reads it), and clears it when the slot resets.
 -- Swings are timed to the blade's active frames; shots and throws play at once.
 local LEAD=.05
 local states=combat:WaitForChild('PlayerStates')
+local Wire=require(combat:WaitForChild('ShotBatch'))
 
 -- Continuous weapons (Power Washer) hold one looping sound per weapon slot instead of a sound
 -- per shot. Each attack keeps it alive; it fades out once attacks stop for LOOP_HOLD seconds.
@@ -222,16 +224,16 @@ RunService.Heartbeat:Connect(function()
 end)
 
 local function onAttack(state,slot)
- local id=slot:GetAttribute('WeaponId');local w=WEAPON[id];local start=slot:GetAttribute('StartTime')
+ local id=slot:GetAttribute('WeaponId');local w=WEAPON[id];local a=Wire.attackOf(slot);local start=a.start
  if not w or type(start)~='number' then return end
  local mine=state.Name==tostring(player.UserId)
  local owner=not mine and Players:GetPlayerByUserId(tonumber(state.Name) or 0)
  local root=owner and owner.Character and owner.Character:FindFirstChild('HumanoidRootPart')
  if not mine and not root then return end
  if w.loop then keepLoop(slot,w,mine,root);return end
- local kind=slot:GetAttribute('AttackKind');local offset=0
+ local kind=a.kind;local offset=0
  if kind=='Melee' or id=='32' then
-  offset=Motion.attackTiming(id,kind,slot:GetAttribute('AttackStyle'))/(slot:GetAttribute('MotionRate') or 1)-LEAD
+  offset=Motion.attackTiming(id,kind,a.style)/(a.rate or 1)-LEAD
  end
  local wait=math.clamp(start+offset-workspace:GetServerTimeNow(),0,.5)
  for i=1,w.count or 1 do
@@ -243,7 +245,7 @@ end
 local function watchState(state)
  local function watchSlot(slot)
   if slot:IsA('Folder') and slot.Name:match('^Slot%d') then
-   slot:GetAttributeChangedSignal('StartTime'):Connect(function() onAttack(state,slot) end)
+   slot:GetAttributeChangedSignal('Attack'):Connect(function() onAttack(state,slot) end)
   end
  end
  for _,slot in state:GetChildren() do watchSlot(slot) end
@@ -254,7 +256,7 @@ states.ChildAdded:Connect(watchState)
 
 -- Mob hits: the creature's splat plus the weapon's optional impact layer. Damage-over-time
 -- ticks (secondary) stay silent so poison and burn don't drown out real hits.
-combat:WaitForChild('Hit').OnClientEvent:Connect(function(position,_,npc,impactPosition,lethal,secondary,weaponId)
+local function onHit(position,npc,impactPosition,lethal,secondary,weaponId)
  if secondary then return end
  local at=typeof(impactPosition)=='Vector3' and impactPosition or position
  if typeof(at)~='Vector3' then return end
@@ -263,6 +265,15 @@ combat:WaitForChild('Hit').OnClientEvent:Connect(function(position,_,npc,impactP
  play(m[1],'mob',lethal and .315*scale or .225*math.sqrt(scale),m[2]*(lethal and .9 or 1),at,.08)
  local w=WEAPON[weaponId]
  if w and w.hit then play(w.hit,'impact',w.hitVolume,w.hitPitch,at,.05) end
+end
+-- Kills come one at a time on Hit; every other hit comes a frame's worth at a time on HitFX.
+combat:WaitForChild('Hit').OnClientEvent:Connect(function(position,_,npc,impactPosition,lethal,secondary,weaponId)
+ onHit(position,npc,impactPosition,lethal,secondary,weaponId)
+end)
+task.spawn(function()
+ combat:WaitForChild('HitFX').OnClientEvent:Connect(function(buf,...)
+  for _,h in Wire.readHits(buf,table.pack(...)) do onHit(h.position,h.npc,h.position,h.lethal,h.secondary,h.weaponId) end
+ end)
 end)
 
 -- Godly specials (GodlyWeapons -> GodlyFX): the wraith's rise and claws, the tidal wave, the

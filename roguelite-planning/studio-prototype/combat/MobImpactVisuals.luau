@@ -21,8 +21,14 @@ function V.mount(visuals)
  local lastHit=setmetatable({},{__mode='k'})
  task.spawn(function() pcall(function() ContentProvider:PreloadAsync({WHITE,RED}) end) end)
 
+ -- Finished bursts are kept and reused, sprites and all: a burst was a part, a BillboardGui and
+ -- up to 19 ImageLabels built and destroyed per hit or death. At most the two budgets are kept.
+ local spare={}
  local function remove(index)
-  active[index].anchor:Destroy();table.remove(active,index)
+  local e=table.remove(active,index)
+  e.gui.Enabled=false
+  for _,p in e.particles do p.picture.Visible=false end
+  if #spare<hitBudget+deathBudget then table.insert(spare,e) else e.anchor:Destroy() end
  end
  local function create(position,death,npc)
   local camera=workspace.CurrentCamera
@@ -33,14 +39,20 @@ function V.mount(visuals)
    if e.death==death then count+=1;oldest=oldest or i end
   end
   if count>=(death and deathBudget or hitBudget) then remove(oldest) end
-  local anchor=Instance.new('Part');anchor.Name=death and 'MobDeathBurst' or 'MobHitBurst'
-  anchor.Size=Vector3.one*.05;anchor.Transparency=1;anchor.Anchored=true
-  anchor.CanCollide=false;anchor.CanTouch=false;anchor.CanQuery=false;anchor.CastShadow=false
-  anchor.Position=position+Vector3.yAxis*.35;anchor.Parent=visuals
-  local gui=Instance.new('BillboardGui');gui.Name='RadialSprites';gui.Adornee=anchor
-  gui.AlwaysOnTop=false;gui.LightInfluence=0;gui.MaxDistance=120
-  gui.Size=UDim2.fromOffset(1,1);gui.ClipsDescendants=false;gui.Parent=anchor
-  local e={anchor=anchor,gui=gui,born=os.clock(),particles={},duration=0,death=death,position=anchor.Position}
+  local old=table.remove(spare)
+  local anchor,gui,pictures
+  if old then anchor,gui,pictures=old.anchor,old.gui,old.pictures
+  else
+   anchor=Instance.new('Part');anchor.Size=Vector3.one*.05;anchor.Transparency=1;anchor.Anchored=true
+   anchor.CanCollide=false;anchor.CanTouch=false;anchor.CanQuery=false;anchor.CastShadow=false
+   gui=Instance.new('BillboardGui');gui.Name='RadialSprites';gui.Adornee=anchor
+   gui.AlwaysOnTop=false;gui.LightInfluence=0;gui.MaxDistance=120
+   gui.Size=UDim2.fromOffset(1,1);gui.ClipsDescendants=false;gui.Parent=anchor
+   pictures={}
+  end
+  anchor.Name=death and 'MobDeathBurst' or 'MobHitBurst'
+  anchor.Position=position+Vector3.yAxis*.35;anchor.Parent=visuals;gui.Enabled=true
+  local e={anchor=anchor,gui=gui,pictures=pictures,born=os.clock(),particles={},duration=0,death=death,position=anchor.Position}
   if not death and npc and npc.Parent then
    local root=npc:FindFirstChild('HumanoidRootPart')
    if root then
@@ -55,9 +67,14 @@ function V.mount(visuals)
  local function particle(e,white,angle,r0,r1,length,delay,lifetime,irregular)
   local rect=white and whites[rng:NextInteger(1,#whites)]
    or reds[irregular and 4 or rng:NextInteger(1,3)]
-  local picture=Instance.new('ImageLabel');picture.Name=white and 'OutwardStreak' or 'RoundSplat'
-  picture.BackgroundTransparency=1;picture.AnchorPoint=Vector2.new(.5,.5)
-  picture.Image=white and WHITE or RED;picture.ScaleType=Enum.ScaleType.Fit
+  -- This burst's next kept sprite, or a new one. Every property set below is reset on reuse.
+  local picture=e.pictures[#e.particles+1]
+  if not picture then
+   picture=Instance.new('ImageLabel');picture.BackgroundTransparency=1;picture.AnchorPoint=Vector2.new(.5,.5)
+   picture.ScaleType=Enum.ScaleType.Fit;e.pictures[#e.particles+1]=picture
+  end
+  picture.Name=white and 'OutwardStreak' or 'RoundSplat'
+  picture.Image=white and WHITE or RED;picture.ImageTransparency=0
   picture.ImageRectOffset=Vector2.new(math.round(rect[1]*atlasScale),math.round(rect[2]*atlasScale))
   picture.ImageRectSize=Vector2.new(math.round(rect[3]*atlasScale),math.round(rect[4]*atlasScale))
   picture.ImageColor3=white and Color3.new(1,1,1) or Color3.fromRGB(205,210,210)
@@ -95,6 +112,7 @@ function V.mount(visuals)
  connection=RunService.RenderStepped:Connect(function()
   if not visuals.Parent then
    for i=#active,1,-1 do remove(i) end
+   for _,e in spare do e.anchor:Destroy() end;table.clear(spare)
    connection:Disconnect()
    return
   end

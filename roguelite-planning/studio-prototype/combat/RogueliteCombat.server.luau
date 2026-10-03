@@ -17,16 +17,34 @@ local states={}
 local Shop=require(script.Parent:WaitForChild('ShopService'))
 local Role=require(script.Parent:WaitForChild('ServerRole'))
 local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed, like this script
+local Wire=require(combat:WaitForChild('ShotBatch')) -- packs each attack into one attribute
 -- Slot 1 holds the loadout starter the lobby validated (RunWeapon); Brawler's signature until one is picked.
 -- Each class build opens with its signature weapon. RunSetupRules isn't sandboxed, so this script can't require it.
 local function starter(player)
  local id=player:GetAttribute('RunWeapon')
  return type(id)=='string' and Catalog.ById[id] and templates:FindFirstChild(id) and id or Stats.Classes.Brawler.build[1]
 end
+-- What clients draw a weapon from (P3). Each attack is one packed 'Attack' attribute (Wire.packAttack;
+-- it was 12 attributes), cleared on reset. AimPosition only turns an idle gun toward its target, so
+-- it no longer follows the target at 30 Hz: it is written when the aim moves 1.5+ studs (at most 10
+-- times a second), drifts .25+ studs for .3 s, appears or clears, and when the weapon fires; melee
+-- slots don't need it. Clients glide between writes. Example: 4 players with 3 guns and 3 swords
+-- each, all tracking walking enemies: ~720 writes a second before, ~120 now.
+local function aimAt(slot,aim,now,firing)
+ local sent=slot.aimSent
+ if aim==nil then
+  if sent~=nil then slot.aimSent=nil;slot.folder:SetAttribute('AimPosition',nil) end
+  return
+ end
+ local moved=sent and (aim-sent).Magnitude or math.huge;local age=now-(slot.aimAt or -1e6)
+ if sent==nil or moved>1.5 and age>=.1 or moved>.25 and age>=.3 or firing and moved>.05 then
+  slot.aimSent=aim;slot.aimAt=now;slot.folder:SetAttribute('AimPosition',aim)
+ end
+end
 local function reset(slot,now)
  slot.start=-1e6;slot.ready=now;slot.previous=0;slot.hit={};slot.definition=nil
- slot.lastTarget=nil
- slot.folder:SetAttribute('StartTime',slot.start);slot.folder:SetAttribute('AimPosition',nil)
+ slot.lastTarget=nil;slot.aimNpc=nil;slot.nextSearch=nil
+ slot.folder:SetAttribute('Attack',nil);slot.aimSent=nil;slot.folder:SetAttribute('AimPosition',nil)
 end
 local function add(player)
  local f=Instance.new('Folder');f.Name=tostring(player.UserId)
@@ -173,7 +191,8 @@ local function reachPoint(npc,root,from)
  if bestDistance<.05 then return from+(root.Position-from).Unit*.05 end
  return best
 end
-local function damage(npc,amount,d,secondary) return Effects.hit(npc,amount,d,secondary) end
+-- dot: a zone tick (SpecialWeapons); clients skip its splat and flash (CombatEffectsService).
+local function damage(npc,amount,d,secondary,dot) return Effects.hit(npc,amount,d,secondary,dot) end
 local rockets=require(combat:WaitForChild('RocketProjectile')).new(combat,damage,rayParams)
 local projectiles=require(script.Parent:WaitForChild('StatProjectiles')).new(combat,damage,rayParams)
 local arcs=require(script.Parent:WaitForChild('ArcProjectiles')).new(combat,damage,rayParams)
@@ -222,6 +241,43 @@ local function definition(slot,base,cs,player,character,index)
  end
  return c.d
 end
+-- Targeting (P4, TargetGrid): one snapshot of the living enemies per tick, shared by every player
+-- and slot, picked from nearest first with the first clear line winning. Enemies killed earlier in
+-- the tick fail `fresh`, as the old per-player rebuild dropped them.
+local Grid=require(script.Parent:WaitForChild('TargetGrid'))
+local function snapshot(enemies)
+ local list,byNpc={},{}
+ for _,npc in enemies do
+  local hum,root=alive(npc)
+  if hum then
+   local e={npc=npc,hum=hum,root=root,position=root.Position,boss=shelled(npc),dummy=npc:GetAttribute('LobbyDummy'),practice=Death.isPractice(npc)}
+   table.insert(list,e);byNpc[npc]=e
+  end
+ end
+ local snap=Grid.new(list);snap.byNpc=byNpc
+ return snap
+end
+local function fresh(e) return e.hum.Health>0 and e.npc.Parent~=nil and e.root.Parent~=nil end
+-- Where an enemy is measured to from `origin`: a boss's nearest side, anyone else's root.
+local function measured(e,origin) return e.boss and reachPoint(e.npc,e.root,origin) or e.position end
+-- The nearest enemy `can` accepts in range with a clear line from origin, and its point.
+local function nearest(snap,origin,range,can,wallParams)
+ return Grid.nearest(snap,origin,range,can,function(e) return measured(e,origin) end,function(point,e) return fresh(e) and clear(origin,point,wallParams) end)
+end
+-- A cooling weapon keeps last tick's target while it is still alive, allowed and in range.
+local function kept(slot,snap,origin,range,can)
+ local e=slot.aimNpc and snap.byNpc[slot.aimNpc]
+ if not e or not can(e) or not fresh(e) then return end
+ local point=measured(e,origin)
+ local distance=(point-origin).Magnitude
+ if distance<range and distance>.01 then return e,point end
+end
+-- WeaponMotion.chooseStyle reads the crowd size for only some weapons. Asking it for no crowd and a
+-- huge one tells whether the count can change this stroke; when it can't, the crowd's raycasts are
+-- skipped (the Boxing Gloves still look for a second enemy to punch).
+local function crowdMatters(id,serial,distance,range) return Motion.chooseStyle(id,0,serial,distance,range)~=Motion.chooseStyle(id,math.huge,serial,distance,range) end
+-- LastContact only drives the Frying Pan's wobble (RogueliteCombat.client).
+local function contact(slot,id,now) if id=='16' then slot.folder:SetAttribute('LastContact',now) end end
 -- One reused melee overlap query; its enemy list is reassigned only when the tagged set differs.
 local overlap=OverlapParams.new();overlap.FilterType=Enum.RaycastFilterType.Include
 local overlapList={}
@@ -238,6 +294,7 @@ local elapsed=0
 RunService.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<1/30 then return end;elapsed=0
  local now=workspace:GetServerTimeNow();local enemies=Tags:GetTagged('RogueliteZombie')
+ local snap -- built on the first player who needs it
  for player,s in states do
   local character=player.Character;local root=character and character:FindFirstChild('HumanoidRootPart');local hum=character and character:FindFirstChildOfClass('Humanoid')
   if character~=s.character then s.character=character;for _,slot in s.slots do reset(slot,now+.25) end end
@@ -250,21 +307,15 @@ RunService.Heartbeat:Connect(function(dt)
   if math.abs((s.folder:GetAttribute('RingRadius') or 0)-radius)>.04 then s.folder:SetAttribute('RingRadius',radius) end
   radius=s.folder:GetAttribute('RingRadius')
   local wallParams=rayParams(character,true)
-  -- One pass over the enemies per player per tick, shared by every slot and by the attack that
-  -- fires (nothing can revive an enemy mid-tick). Each slot still takes the nearest clear target,
-  -- ties to the earlier enemy. Rebuilt for the next player: earlier attacks may have killed one.
-  local targetParts,targetPositions,targetBosses,living
+  -- The tick's one snapshot (built for the first player who targets) serves every slot and the
+  -- attack that fires (nothing can revive an enemy mid-tick). `living` is its list, nil when this
+  -- player isn't targeting.
+  local living,can
   if equippedCount>0 and Characters.states[player] and s.folder:GetAttribute('WeaponEnabled') then
-   targetParts,targetPositions,targetBosses,living={},{},{},{}
-   for _,npc in enemies do local health,part=alive(npc)
-    if health then
-     living[#living+1]=npc
-     if targetable(npc,s) then
-      targetParts[#targetParts+1]=part;targetPositions[#targetPositions+1]=part.Position
-      targetBosses[#targetBosses+1]=shelled(npc)
-     end
-    end
-   end
+   snap=snap or snapshot(enemies);living=snap.list
+   -- targetable(npc,s) on the snapshot's flags.
+   local zombies,lobby=combat:GetAttribute('ZombiesEnabled'),s.folder:GetAttribute('LobbyAttacks')~=false
+   can=function(e) if e.dummy then return e.practice and lobby end;return zombies or e.practice end
   end
   local prepared={};local targetCount=0
   for index,slot in s.slots do
@@ -276,19 +327,21 @@ RunService.Heartbeat:Connect(function(dt)
    if d.kind=='Melee' and Motion.DownwardWeapons[id] then
     searchRange=math.max(searchRange,Motion.attackReach(id,'Downward',d.range))
    end
-   local target,best,point=nil,searchRange,nil
-   if targetParts then
-    for i,part in targetParts do local position=targetBosses[i] and reachPoint(part.Parent,part,origin) or targetPositions[i];local distance=(position-origin).Magnitude
-     if distance<best and distance>.01 and clear(origin,position,wallParams) then target=part;best=distance;point=position end
-    end
+   local found,point
+   if living then
+    -- Cooling down (it can't attack this tick): keep the target, searching again at 10 Hz.
+    if now<slot.ready and now<(slot.nextSearch or 0) then found,point=kept(slot,snap,origin,searchRange,can) end
+    if not found then found,point=nearest(snap,origin,searchRange,can,wallParams);slot.nextSearch=now+.1 end
    end
-   if target then targetCount+=1 end
-   table.insert(prepared,{index=index,slot=slot,id=id,definition=d,origin=origin,target=target,point=point})
+   slot.aimNpc=found and found.npc
+   if found then targetCount+=1 end
+   table.insert(prepared,{index=index,slot=slot,id=id,definition=d,origin=origin,found=found,target=found and found.root,point=point})
   end
   for _,entry in prepared do
    local index,slot,id=entry.index,entry.slot,entry.id
    local d,origin,target=entry.definition,entry.origin,entry.target
-   if target and (not target.Parent or not alive(target.Parent)) then target=nil end
+   -- An earlier slot's attack may have killed it.
+   if target and not fresh(entry.found) then target=nil end
    if target then
     -- Each weapon owns its clock. Independent opening offsets can overlap;
     -- they have no rank, reserved turn, or dependency on another weapon firing.
@@ -300,7 +353,10 @@ RunService.Heartbeat:Connect(function(dt)
     slot.lastTarget=now
    end
    local _,_,duration=Motion.attackTiming(id,d.kind,slot.style)
-   if target then slot.folder:SetAttribute('AimPosition',target.Position) elseif (now-slot.start)*d.motionRate>duration then slot.folder:SetAttribute('AimPosition',nil) end
+   -- Clients pose a melee weapon from its attack alone, so only the others are aimed between attacks
+   -- (the last attack's kind is what clients draw: a thrown hammer aims).
+   if target then if (slot.definition or d).kind~='Melee' then aimAt(slot,target.Position,now) end
+   elseif (now-slot.start)*d.motionRate>duration then aimAt(slot,nil,now) end
    if not s.folder:GetAttribute('WeaponEnabled') then continue end
    if target and now>=slot.ready and not specials:busy(player,index) then
     -- Small symmetric variation changes the relative timing every cycle while
@@ -308,12 +364,19 @@ RunService.Heartbeat:Connect(function(dt)
     d=table.clone(d) -- this attack's own copy; the slot's cached definition stays unchanged
     local interval=d.cooldown*(equippedCount>1 and slot.random:NextNumber(.9,1.1) or 1)
     slot.serial=(slot.serial or 0)+1
-    local nearby,second=0,nil
-    for _,npc in living do local h,r=alive(npc);if h and (r.Position-origin).Magnitude<=d.range and clear(origin,r.Position,wallParams) then nearby+=1;if r~=target and (r.Position-target.Position).Magnitude<8 then second=r end end end
     -- Distances use the reach point (a boss's nearest side); a map boss's swing still faces the root.
     local reach=entry.point or target.Position
     local targetOffset=reach-origin
-    slot.style=Motion.chooseStyle(id,nearby,slot.serial,Vector3.new(targetOffset.X,0,targetOffset.Z).Magnitude,d.range)
+    local flat=Vector3.new(targetOffset.X,0,targetOffset.Z).Magnitude
+    -- The crowd in reach (living enemies with a clear line, in tag order) sets some strokes, and
+    -- the Boxing Gloves' second punch goes to the last of them within 8 studs of the target.
+    local nearby,second=0,nil
+    if id=='19' or crowdMatters(id,slot.serial,flat,d.range) then
+     local crowd=Grid.around(snap,origin,d.range)
+     if crowd~=living then table.sort(crowd,Grid.byOrder) end
+     for _,e in crowd do local h,r=alive(e.npc);if h and (r.Position-origin).Magnitude<=d.range and clear(origin,r.Position,wallParams) then nearby+=1;if r~=target and (r.Position-target.Position).Magnitude<8 then second=r end end end
+    end
+    slot.style=Motion.chooseStyle(id,nearby,slot.serial,flat,d.range)
     slot.side=Motion.chooseSide(slot.serial)
     d.range=Motion.attackReach(id,slot.style,d.range)
     -- Resolve the hammer's melee/throw choice after selecting its stroke:
@@ -327,18 +390,15 @@ RunService.Heartbeat:Connect(function(dt)
     local aim=d.kind=='Melee' and target.Parent:GetAttribute('IsHammerBoss') and (reach-origin).Magnitude>.1 and reach or target.Position
     _,_,duration=Motion.attackTiming(id,d.kind,slot.style)
     interval=math.max(interval,duration/d.motionRate)
-    slot.folder:SetAttribute('AttackSide',slot.side)
     slot.hand=slot.serial%2==1 and -1 or 1;slot.secondAim=second and second.Position or nil
     slot.attackRoot=Motion.attackRoot(root.CFrame,aim)
     slot.attackOrigin=Motion.combatOrigin(slot.attackRoot,radius,index,id,d.kind)
-    slot.folder:SetAttribute('AttackRoot',slot.attackRoot);slot.folder:SetAttribute('AttackStyle',slot.style)
-    slot.folder:SetAttribute('AttackKind',d.kind);slot.folder:SetAttribute('AttackHand',slot.hand);slot.folder:SetAttribute('SecondAim',slot.secondAim)
     slot.start=now;slot.ready=now+interval;slot.previous=0;slot.hit={};slot.aim=aim;slot.definition=d
     local delta=Vector3.new(aim.X-origin.X,0,aim.Z-origin.Z)
     slot.direction=delta.Magnitude>.01 and delta.Unit or Motion.frame(root.CFrame).LookVector
-    slot.folder:SetAttribute('MotionRate',d.motionRate);slot.folder:SetAttribute('ReachScale',Stats.mult(d.stats.AttackRange))
-    slot.folder:SetAttribute('SwingRange',d.range)
-    slot.folder:SetAttribute('AttackAim',slot.aim);slot.folder:SetAttribute('AttackDirection',slot.direction);slot.folder:SetAttribute('StartTime',now)
+    -- One attribute for the whole attack (it was 12, plus an unread ReachScale), and the gun on target as it fires.
+    slot.folder:SetAttribute('Attack',Wire.packAttack({start=now,rate=d.motionRate,kind=d.kind,style=slot.style,side=slot.side,hand=slot.hand,range=d.range,root=slot.attackRoot,aim=slot.aim,direction=slot.direction,second=slot.secondAim}))
+    if d.kind~='Melee' then aimAt(slot,target.Position,now,true) end
     d.practiceTarget=Death.isPractice(target.Parent)
     d.arcTarget=target
     if d.kind=='Melee' then legendary:swing(d,slot.attackOrigin or origin,target,slot.direction) end
@@ -353,14 +413,15 @@ RunService.Heartbeat:Connect(function(dt)
     local from=slot.previous<activeFrom and -1 or Motion.reapFraction(slot.previous)
     local to=Motion.reapFraction(math.min(age,activeTo))
     local attackOrigin=slot.attackOrigin or origin
-    for _,npc in living or {} do
+    for _,e in living or {} do
+     local npc=e.npc
      if not slot.hit[npc] and Tags:HasTag(npc,'RogueliteZombie') and (not npc:GetAttribute('LobbyDummy') or targetable(npc,s)) then
       local health,npcRoot=alive(npc)
       if health then
        local point=reachPoint(npc,npcRoot,attackOrigin);local offset=point-attackOrigin
        local fraction=Motion.reapFractionOf(slot.direction,offset,slot.side)
        if fraction>from and fraction<=to and offset.Magnitude<=d.range and clear(attackOrigin,point,wallParams) then
-        slot.hit[npc]=true;damage(npc,d.damage,d);slot.folder:SetAttribute('LastContact',now)
+        slot.hit[npc]=true;damage(npc,d.damage,d);contact(slot,id,now)
        end
       end
      end
@@ -397,7 +458,7 @@ RunService.Heartbeat:Connect(function(dt)
         local point=health and reachPoint(npc,npcRoot,attackOrigin)
         if health and (point-attackOrigin).Magnitude<=d.range and clear(attackOrigin,point,wallParams) then
          local first=next(slot.hit)==nil -- the swing's first contact (the Wrecking Ball's shockwave)
-         slot.hit[npc]=true;damage(npc,d.damage,d);slot.folder:SetAttribute('LastContact',now)
+         slot.hit[npc]=true;damage(npc,d.damage,d);contact(slot,id,now)
          if first then legendary:contact(d,npc,point) end
         end
        end

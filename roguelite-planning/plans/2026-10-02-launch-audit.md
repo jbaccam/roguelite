@@ -130,8 +130,10 @@ Boss quests check IsMapBoss, but the Hammer boss only sets IsBoss/IsHammerBoss. 
 
 **Where:** `combat/RogueliteMeta.server.luau:159`, `../hammer-boss/BossService.luau:183`
 
-### P1 · Every bullet sends network data every frame
+### P1 · Every bullet sends network data every frame — **fixed 2026-10-02**
 *Server performance*
+
+**Done:** a bullet sends one Fly row per straight leg and a Land/Drop row where it stops; `BulletFlights` replays the steps on the client into the unchanged visuals.
 
 Each in-flight bullet adds a 17-value row to the Shot remote every Heartbeat. Estimated: a Draco is about 135 rows/s, 15-28 KB/s per client. Four gun builds could reach 50-200 KB/s per client, against a usual budget of about 50.
 
@@ -139,8 +141,10 @@ Each in-flight bullet adds a 17-value row to the Shot remote every Heartbeat. Es
 
 **Where:** `combat/StatProjectiles.luau:21-40`, `combat/RogueliteCombat.server.luau:196-201`
 
-### P2 · One remote call per hit, never batched
+### P2 · One remote call per hit, never batched — **fixed 2026-10-02**
 *Server performance*
+
+**Done:** non-lethal hits go once a frame per player on the HitFX UnreliableRemoteEvent (packed, under ~760 bytes a message); kills stay reliable and immediate on Hit; damage-over-time ticks show a number but no splat or flash.
 
 Every hit, burn tick, zone tick and chain hit is its own FireAllClients. Late game with 4 players this is an estimated 300-800 calls/s.
 
@@ -148,8 +152,10 @@ Every hit, burn tick, zone tick and chain hit is its own FireAllClients. Late ga
 
 **Where:** `combat/CombatEffectsService.luau:69,81,161`, `combat/UtilityWeapons.luau:42-47`, `combat/SpecialWeapons.luau:121-134`
 
-### P3 · Weapon aim is replicated 30 times a second per weapon
+### P3 · Weapon aim is replicated 30 times a second per weapon — **fixed 2026-10-02**
 *Server performance*
+
+**Done:** one packed Attack attribute per attack instead of 12; AimPosition only after a 1.5-stud move (10 Hz max) or a slow drift, never for melee; the client glides between writes.
 
 AimPosition is rewritten almost every tick for every armed slot, and each attack writes 12 more attributes. All of it replicates to every client. Estimated 30-40 KB/s per client.
 
@@ -157,8 +163,10 @@ AimPosition is rewritten almost every tick for every armed slot, and each attack
 
 **Where:** `combat/RogueliteCombat.server.luau:292,319-330`
 
-### P4 · Targeting scans every enemy for every weapon, 30 times a second
+### P4 · Targeting scans every enemy for every weapon, 30 times a second — **fixed 2026-10-02**
 *Server performance*
+
+**Done:** one shared enemy snapshot and grid per tick (`TargetGrid.luau`), nearest first with the first clear line; cooling weapons re-search at 10 Hz. Tests: the same pick as the old scan in 2,400 random crowds, 60% fewer line checks.
 
 Each tick, every player rebuilds enemy lists, and every weapon slot (even on cooldown) checks every enemy, raycasting candidates. Estimated with 65 enemies and 24 slots: about 60k API calls and 3k-20k raycasts per second. Likely the biggest Lua cost.
 
@@ -186,8 +194,10 @@ The client poses every enemy's bones each frame with no distance or on-screen ch
 
 **Where:** `RogueliteZombieAnimation.client.luau:70-178`
 
-### F2 · Damage numbers and hit effects are unlimited and rebuilt every hit
+### F2 · Damage numbers and hit effects are unlimited and rebuilt every hit — **fixed 2026-10-02**
 *Phone & client performance*
+
+**Done:** `HitFeedbackVisuals` pools 28 hit numbers (teammates' give way first), 6 damage-taken numbers and 10 hit-flash Highlights; splat bursts are reused.
 
 Each hit creates a part, a BillboardGui, labels, 3 tweens and a Highlight, and every client draws all four players' hits. Estimated at about 100 hits/s in a horde: 1,500-2,000 objects created and destroyed per second and around 30 live Highlights (Roblox caps those at 31). Expect stutter and heat on phones.
 
@@ -366,10 +376,10 @@ Kills keep the quest data dirty, and the multi-KB JSON is a player attribute eve
 
 **Where:** `combat/ProfileService.luau:473-489`, `combat/RogueliteMeta.server.luau:102-117,156-167`
 
-### P12 · Server-only counters are replicated on every hit
+### P12 · Server-only counters are replicated on every hit — **fixed 2026-10-02 (bosses left)**
 *Server performance*
 
-**Progress 2026-10-02:** enemy-side counters (EnemyHits, LastEnemyDamage/Impact, attack serials, slam counters) moved to server tables. Still to do: the combat-side ones (CombatEffectsService) and the bosses' BossHits / LastBossDamage.
+**Progress 2026-10-02:** enemy-side counters (EnemyHits, LastEnemyDamage/Impact, attack serials, slam counters) moved to server tables. Combat side done too: ConfirmedHits, practice counters and status Until attributes are Studio-only, knockback times are a server table shared with pets, and kill-credit attributes are written only when they change. Still to do: the bosses' BossHits / LastBossDamage.
 
 LastDamageUserId, ConfirmedHits, LastKnockback, EnemyHits, BossHits and similar attributes change per hit and replicate to all clients, though no client reads them.
 

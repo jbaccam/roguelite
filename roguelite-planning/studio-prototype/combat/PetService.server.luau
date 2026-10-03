@@ -211,11 +211,15 @@ local function flat(v)
 end
 local function knock(e, from, speed)
 	local delta = flat(e.r.Position - from)
-	if delta.Magnitude < 0.01 or os.clock() - (e.npc:GetAttribute("LastKnockback") or -1e6) <= 0.12 then
+	-- One shove per 0.12 s, shared with weapon knockback through CombatEffectsService's server table
+	-- (an attribute here replicated to every client on each shove; launch audit P12).
+	if delta.Magnitude < 0.01 or os.clock() - (Effects.knockedAt and Effects.knockedAt[e.npc] or -1e6) <= 0.12 then
 		return
 	end
 	e.r:ApplyImpulse(delta.Unit * speed * e.r.AssemblyMass * (e.npc:GetAttribute("IsBoss") and 0.25 or 1))
-	e.npc:SetAttribute("LastKnockback", os.clock())
+	if Effects.knockedAt then
+		Effects.knockedAt[e.npc] = os.clock()
+	end
 end
 local function alive(e)
 	return e.h.Health > 0 and e.npc.Parent ~= nil

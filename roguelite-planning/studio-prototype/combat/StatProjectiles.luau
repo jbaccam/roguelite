@@ -1,4 +1,10 @@
 -- Bounded server-simulated swept projectiles. Pierce and bounce never revisit a target.
+-- Clients hear about a bullet only where its path changes: a 'Fly' row for each straight leg
+-- (the launch, the leg after a pierce or bounce, a retarget), a 'Land' row where a leg stops
+-- (wall, enemy, range end; terminal once the bullet is done) and 'Drop' when it is cancelled.
+-- RogueliteCombat.client flies each leg itself and draws it step by step as before. It used to
+-- be a row every Heartbeat: a 40-stud shot at 110 studs/s was ~22 rows, now 2. The server's
+-- sweep, hits and damage are unchanged.
 local RunService=game:GetService('RunService')
 local Tags=game:GetService('CollectionService')
 local Motion=require(game.ReplicatedStorage.RogueliteCombat.WeaponMotion)
@@ -8,37 +14,54 @@ local P={}
 function P.new(combat,damage,rayParams)
  local active={}
  local serial=0
+ -- Rows reach players near them plus the shooter, batched per frame (ShotBatch.writer).
  local shots=ShotBatch.writer(combat.Shot)
- local batching=false
- -- Shots reach players near their origin plus the shooter (ShotBatch.fire).
- local function emitShot(owner,...)
-  if batching then shots:push(owner,...) else ShotBatch.fire(combat.Shot,(...),owner,...) end
+ -- A leg from `from` to the end of the bullet's range along its heading. Rows use the Shot
+ -- argument order: origin, finish, kind, id, thickness, blastRadius, contact, normal, ownerId,
+ -- slotIndex, first, mobContact, shotId, projectileId, projectileSpeed, terminal.
+ local function fly(r,from)
+  local d=r.d;r.open=true
+  shots:push(d.owner,from,r.position+r.direction*r.remaining,'Fly',d.id,d.projectileRadius*2,nil,nil,nil,d.owner.UserId,d.slotIndex,r.first,nil,r.shotId,r.visualId,d.projectileSpeed)
+  r.first=false
+ end
+ -- The leg stops at `at`. Not terminal (a pierce or bounce) leaves the client waiting for the
+ -- next leg or a Drop.
+ local function land(r,at,contact,normal,mobContact,terminal)
+  shots:push(r.d.owner,at,nil,'Land',nil,nil,nil,contact,normal,nil,nil,nil,mobContact,nil,r.visualId,nil,terminal)
+  if terminal then r.open=false end
+ end
+ local function stop(i)
+  local r=table.remove(active,i)
+  if r.open then shots:push(r.d.owner,r.position,nil,'Drop',nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,r.visualId) end
  end
  local function cast(r,delta)
   -- The projectile's own params (its hit enemies excluded), rebuilt only when it hits another.
   return workspace:Spherecast(r.position,r.d.projectileRadius,delta,Targets.sweepParams(r,rayParams(r.d.character,false)))
  end
  RunService.Heartbeat:Connect(function(dt)
-  batching=#active>1
   for i=#active,1,-1 do
    local r=active[i];local d=r.d;local h=d.character:FindFirstChildOfClass('Humanoid')
-   if (not combat:GetAttribute('ZombiesEnabled') and not d.practiceTarget) or d.owner.Character~=d.character or not h or h.Health<=0 or os.clock()>r.expires then table.remove(active,i);continue end
+   if (not combat:GetAttribute('ZombiesEnabled') and not d.practiceTarget) or d.owner.Character~=d.character or not h or h.Health<=0 or os.clock()>r.expires then stop(i);continue end
+   local turned=false
    if r.target and not Targets.alive(r.target) then
     local replacement=Targets.replacement(r.position,d,r.hit,r.remaining,r.launchOrigin,rayParams)
-    if not replacement then table.remove(active,i);continue end
+    if not replacement then stop(i);continue end
     r.target=replacement
     local point=Targets.predict(replacement,r.position,function(distance) return distance/d.projectileSpeed end,0,r.remaining,rayParams,d.character)
     r.direction=(point-r.position).Magnitude>.01 and (point-r.position).Unit or r.direction
+    turned=true
    end
+   -- The launch row on its first step, as the old first row was; a new leg after a retarget.
+   if not r.open or turned then fly(r,r.position) end
    local distance=math.min(d.projectileSpeed*math.min(dt,.1),r.remaining)
    local delta=r.direction*distance;local result=cast(r,delta)
    local finish=result and result.Position or r.position+delta
    local hitModel=result and result.Instance:FindFirstAncestorOfClass('Model')
    local mobContact=hitModel~=nil and Tags:HasTag(hitModel,'RogueliteZombie')
-   emitShot(d.owner,r.position,finish,'Ranged',d.id,d.projectileRadius*2,nil,result~=nil and d.kind~='Blast',result and result.Normal,d.owner.UserId,d.slotIndex,r.first,mobContact,r.shotId,r.visualId,d.projectileSpeed,result~=nil and (not mobContact or (r.pierce<=0 and r.bounce<=0)) or r.remaining<=distance)
+   local terminal=result~=nil and (not mobContact or (r.pierce<=0 and r.bounce<=0)) or r.remaining<=distance
+   if result or terminal then land(r,finish,result~=nil and d.kind~='Blast',result and result.Normal,mobContact,terminal) end
    -- Preserve Shot-before-damage ordering on contact; never wait another frame.
    if result then shots:flush() end
-   r.first=false
    r.remaining-=(finish-r.position).Magnitude;r.position=finish
    if result then
     if d.kind=='Blast' then
@@ -48,11 +71,11 @@ function P.new(combat,damage,rayParams)
       local root=candidate:FindFirstChild('HumanoidRootPart');local hum=candidate:FindFirstChildOfClass('Humanoid')
       if root and hum and hum.Health>0 and (root.Position-finish).Magnitude<=d.blastRadius and not workspace:Raycast(blastOrigin,root.Position-blastOrigin,wall) then damage(candidate,d.damage,d) end
      end
-     emitShot(d.owner,finish-r.direction*.15,finish,'Blast',d.id,d.projectileRadius*2,d.blastRadius)
-     table.remove(active,i);continue
+     shots:push(d.owner,finish-r.direction*.15,finish,'Blast',d.id,d.projectileRadius*2,d.blastRadius)
+     stop(i);continue
     end
     local npc=result.Instance:FindFirstAncestorOfClass('Model')
-    if not npc or not Tags:HasTag(npc,'RogueliteZombie') then table.remove(active,i);continue end
+    if not npc or not Tags:HasTag(npc,'RogueliteZombie') then stop(i);continue end
     r.hit[npc]=true;damage(npc,d.damage*r.factor,d)
     if r.pierce>0 then r.pierce-=1;r.factor*=.7
     elseif r.bounce>0 then
@@ -64,14 +87,15 @@ function P.new(combat,damage,rayParams)
        if length<range and length>.01 and not workspace:Raycast(finish,root.Position-finish,wall) then best=root;range=length end
       end
      end
-     if not best then table.remove(active,i);continue end
+     if not best then stop(i);continue end
      local point=Targets.predict(best,finish,function(distance) return distance/d.projectileSpeed end,0,r.remaining,rayParams,d.character)
      r.direction=(point-finish).Magnitude>.01 and (point-finish).Unit or r.direction;r.bounce-=1;r.factor*=.6
      r.target=best
-    else table.remove(active,i);continue end
+    else stop(i);continue end
     r.position+=r.direction*.05;r.remaining-=.05
+    if r.remaining>.01 then fly(r,r.position) end -- on through the enemy, or off to the next
    end
-   if r.remaining<=.01 then table.remove(active,i) end
+   if r.remaining<=.01 then stop(i) end
   end
   shots:flush()
  end)

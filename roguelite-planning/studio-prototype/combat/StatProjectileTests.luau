@@ -64,5 +64,24 @@ P:launch(definition({ProjectileSpeed=-50}),origin,origin+Vector3.new(0,0,-45));t
 a,ha=target('BlastPrimary',origin+Vector3.new(0,0,-15));b,hb=target('BlastNearby',origin+Vector3.new(6,0,-15))
 R:launch(player.Character,definition({ExplosionDamage=50,AreaSize=50},'11'),origin,origin+Vector3.new(0,0,-40));task.wait(.6)
 assert(ha.Health<1000 and hb.Health<1000,'rocket blast and area damage');clear()
+-- Shot rows (launch audit P1): a Fly row per straight leg and a Land row where it stops, not a
+-- row every frame. A stand-in combat folder records what clients would get.
+local ShotBatch=require(combat.ShotBatch)
+local rows={}
+local function record(first,...)
+ if first==ShotBatch.Marker then for _,row in (...) do table.insert(rows,table.pack(ShotBatch.unpack(row))) end
+ else table.insert(rows,table.pack(first,...)) end
+end
+local stand={Shot={FireAllClients=function(_,...) record(...) end,FireClient=function(_,_,...) record(...) end},GetAttribute=function(_,name) return combat:GetAttribute(name) end}
+local W=require(game.ServerScriptService.StatProjectiles).new(stand,damage,params)
+local function kinds() local list={};for _,row in rows do table.insert(list,row[3]) end;return table.concat(list,',') end
+a,ha=target('RowsA',origin+Vector3.new(0,0,-10));b,hb=target('RowsB',origin+Vector3.new(0,0,-20))
+W:launch(definition({Pierce=1}),origin,origin+Vector3.new(0,0,-45));task.wait(.6)
+assert(kinds()=='Fly,Land,Fly,Land','pierce rows: '..kinds())
+assert(rows[2][7]==true and rows[2][12]==true and rows[2][16]==false,'first enemy: contact row, not terminal')
+assert(rows[4][16]==true and math.abs(hb.Health-(1000-baseDamage*.7))<.02,'second enemy ends it, damage unchanged')
+clear();table.clear(rows)
+W:launch(definition(),origin,origin+Vector3.new(0,0,-45));task.wait(1)
+assert(kinds()=='Fly,Land' and rows[2][16]==true and rows[2][7]==false,'a miss lands at its range end: '..kinds())
 folder:Destroy();combat:SetAttribute('ZombiesEnabled',false)
-return {passed=true,groups={'native tier piercing','native tier rebound','piercing falloff','bounce falloff and unique targets','wall occlusion','projectile size','physical travel speed','rocket splash'},hits=hits}
+return {passed=true,groups={'native tier piercing','native tier rebound','piercing falloff','bounce falloff and unique targets','wall occlusion','projectile size','physical travel speed','rocket splash','fly and land rows'},hits=hits}
