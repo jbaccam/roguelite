@@ -211,7 +211,8 @@ function UI.mount(playerGui)
  local upgradesTab=button(footer,"UpgradesTab","Upgrades",130,8,140,48,function() controller:ShowPreview("Upgrades") end,true)
  local closeButton=button(footer,"Close","Back to game",280,8,210,48,close,true)
  -- The Shop / Upgrades / Back to game row is hidden (user, 2026-09-29): the shop opens and
- -- closes with the phase, and during a wave SHOP and B toggle the view.
+ -- closes with the phase only. There is no SHOP button or key: players never open it on their own
+ -- mid-wave or in the sandbox (user, 2026-10-02; that also ends audit F4's mid-wave rebuilds).
  footer.Visible=false
  -- A modal button frees the first-person cursor only while it is visible, so the overlay
  -- carries its own empty one now that closeButton is hidden.
@@ -233,14 +234,6 @@ function UI.mount(playerGui)
  local function launcher(name,asset,caption,order,fn)
   local b=T.iconButton(menu,name,asset,caption,58,fn);b.LayoutOrder=order;return b
  end
- -- Toggle: with the footer gone, the same button (and B) closes a mid-wave shop view.
- -- Between waves the shop stays open; START WAVE closes it.
- local function toggleShop()
-  if player:GetAttribute('RunDown') or player:GetAttribute('RunResult') then return end -- not under the death or results screen
-  local phase=(shopView:snapshot() or {}).phase
-  if overlay.Visible and controller.Mode=='Shop' and phase~='Shop' then close() else controller:ShowPreview('Shop') end
- end
- launcher('OpenShop','store','SHOP',1,toggleShop)
  -- Pause (plans/2026-10-02-L-pause.md): PAUSE, P and the Roblox menu open the pause screen. Built
  -- in its own thread: PauseUI waits for the run state, which must never hold up this HUD.
  local pauseScreen
@@ -255,11 +248,6 @@ function UI.mount(playerGui)
   if settingsWindow then settingsWindow.Close() return end
   settingsWindow=T.settingsWindow(gui)
   settingsWindow.Root.Destroying:Connect(function() settingsWindow=nil end)
- end)
- -- B on keyboard, X on a controller (X is unbound in runs; a selected menu button may mark it processed).
- Input.InputBegan:Connect(function(input,processed)
-  if Input:GetFocusedTextBox() then return end
-  if (input.KeyCode==Enum.KeyCode.B and not processed) or input.KeyCode==Enum.KeyCode.ButtonX then toggleShop() end
  end)
  -- Build strip: live server slots plus snapshot items.
  local Catalog=require(RS.RogueliteCombat.ShopCatalog)

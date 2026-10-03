@@ -413,8 +413,10 @@ The Deck calls GetDescendants on 3 cards (about 70 GUI parts each) every frame, 
 
 **Where:** `combat/RogueliteCombat.client.luau:179-192`
 
-### F4 · Opening the shop mid-wave rebuilds it on every crystal
+### F4 · Opening the shop mid-wave rebuilds it on every crystal — **fixed 2026-10-02**
 *Phone & client performance*
+
+**Done (the user's call):** the in-run SHOP button and its B / gamepad X keys are gone; the shop only opens between waves, on its own.
 
 With the shop open during a wave, every shard pickup clears and rebuilds hundreds of UI objects. On a phone that's a hitch per pickup.
 
