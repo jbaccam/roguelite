@@ -3,7 +3,7 @@
   "tail": 1.6,
   "note": "Times are in beats (one beat = 60/128 s = 0.469 s, one bar = 4 beats). A shot plays clips/<id>.mp4 when that file exists, otherwise its still, otherwise a placeholder card. 'in' is where to start inside the clip, in seconds.",
   "shots": [
-    {"id": "G01_horde_incoming", "beats": 4, "kind": "gameplay", "text": ["THE HORDE", "IS COMING"], "textBeats": [0, 2], "in": 0, "from": "black",
+    {"id": "G01_horde_incoming", "beats": 4, "kind": "gameplay", "text": ["THE SWARM", "IS COMING"], "textBeats": [0, 2], "in": 0, "from": "black",
      "record": "Pine Valley, admin Waves -> Jump to wave 15. Low camera at knee height in front of your squad, horde running at the lens. TrailerCam: two keys, slow push toward the squad."},
     {"id": "G02_squad_shreds", "beats": 4, "kind": "gameplay", "text": ["SURVIVE"], "transition": "punch",
      "record": "Same wave. Give yourself Tier IV Godly weapons in all 6 slots (admin Give weapon) and God mode; friends fight next to you. TrailerCam ORBIT on yourself, radius ~30. Your weapons keep firing while you film."},
@@ -12,7 +12,7 @@
     {"id": "G04_scythe_wraiths", "beats": 2, "kind": "gameplay", "transition": "flash",
      "record": "Close-up: Reaper's Scythe 360 reap raising wraiths. ORBIT radius ~15, fast (press ] twice)."},
     {"id": "T01_title", "beats": 4, "kind": "title", "still": "lobby_islands", "transition": "impact",
-     "title": "WAVEBREAKER", "subtitle": "SURVIVE THE HORDE"},
+     "title": "WAVEBREAKER", "subtitle": "SURVIVE THE SWARM"},
     {"id": "S01_portals", "beats": 2, "kind": "still", "still": "lobby_portals", "move": "push", "text": ["PICK YOUR CLASS"], "transition": "whip"},
     {"id": "G05_armory_loadout", "beats": 2, "kind": "gameplay", "transition": "cut",
      "record": "Lobby: open the Armory (Weapons tab), click through 3 weapons, then CHANGE CLASS. Screen recording, UI on."},
@@ -54,6 +54,6 @@
     {"id": "G20_victory", "beats": 2, "kind": "gameplay", "text": ["VICTORY!"], "transition": "punch",
      "record": "Results screen VICTORY with your squad (clear wave 20 on any map)."},
     {"id": "T02_endcard", "beats": 4, "kind": "end", "still": "lobby_islands", "transition": "impact",
-     "title": "WAVEBREAKER", "subtitle": "SURVIVE THE HORDE", "cta": "PLAY FREE ON ROBLOX"}
+     "title": "WAVEBREAKER", "subtitle": "SURVIVE THE SWARM", "cta": "PLAY FREE ON ROBLOX"}
   ]
 }
