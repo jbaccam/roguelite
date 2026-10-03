@@ -185,7 +185,7 @@ end
 local function hit(npc,def,e,from,params,source)
  if workspace:Raycast(from,e.root.Position-from,params) then return false end
  local actual=Characters.contact(e.player,def.damage*(npc:GetAttribute('BossDamageScale') or 1))
- npc:SetAttribute('BossHits',(npc:GetAttribute('BossHits') or 0)+1);npc:SetAttribute('LastBossDamage',actual)
+ if Run:IsStudio() then npc:SetAttribute('BossHits',(npc:GetAttribute('BossHits') or 0)+1);npc:SetAttribute('LastBossDamage',actual) end -- QA only (hammer-boss/test_heavy_studio): live servers don't replicate them (audit P12)
  if def.knockdown and actual>0 then knock:FireClient(e.player,source,def.knockdown) end
  return true
 end

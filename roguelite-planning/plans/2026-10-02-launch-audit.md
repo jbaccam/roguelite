@@ -382,10 +382,10 @@ Kills keep the quest data dirty, and the multi-KB JSON is a player attribute eve
 
 **Where:** `combat/ProfileService.luau:473-489`, `combat/RogueliteMeta.server.luau:102-117,156-167`
 
-### P12 · Server-only counters are replicated on every hit — **fixed 2026-10-02 (bosses left)**
+### P12 · Server-only counters are replicated on every hit — **fixed 2026-10-02**
 *Server performance*
 
-**Progress 2026-10-02:** enemy-side counters (EnemyHits, LastEnemyDamage/Impact, attack serials, slam counters) moved to server tables. Combat side done too: ConfirmedHits, practice counters and status Until attributes are Studio-only, knockback times are a server table shared with pets, and kill-credit attributes are written only when they change. Still to do: the bosses' BossHits / LastBossDamage.
+**Progress 2026-10-02:** enemy-side counters (EnemyHits, LastEnemyDamage/Impact, attack serials, slam counters) moved to server tables. Combat side done too: ConfirmedHits, practice counters and status Until attributes are Studio-only, knockback times are a server table shared with pets, and kill-credit attributes are written only when they change. The bosses' BossHits / LastBossDamage are written only in Studio (a QA test reads them).
 
 LastDamageUserId, ConfirmedHits, LastKnockback, EnemyHits, BossHits and similar attributes change per hit and replicate to all clients, though no client reads them.
 

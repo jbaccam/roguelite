@@ -151,7 +151,7 @@ local function stepCharge(npc,s,now,root)
     if (q-(a2+ab*t)).Magnitude<=C.halfWidth then
      A.hits[p]=true
      local actual=Characters.contact(p,C.damage*(npc:GetAttribute('BossDamageScale') or 1))
-     npc:SetAttribute('BossHits',(npc:GetAttribute('BossHits') or 0)+1);npc:SetAttribute('LastBossDamage',actual)
+     if Run:IsStudio() then npc:SetAttribute('BossHits',(npc:GetAttribute('BossHits') or 0)+1);npc:SetAttribute('LastBossDamage',actual) end -- QA only (hammer-boss/test_heavy_studio): live servers don't replicate them (audit P12)
      if actual>0 then knock:FireClient(p,to-A.dir*2,C.knockdown) end
     end
    end
@@ -212,7 +212,7 @@ local function damage(npc,s,time)
    if hit and not workspace:Raycast(attack.cf.Position,pr.Position-attack.cf.Position,exclusions(npc)) then
     attack.hits[p]=true -- consume even when armor/dodge/first-hit block prevents damage
     local actual=Characters.contact(p,a.damage*(npc:GetAttribute('BossDamageScale') or 1))
-    npc:SetAttribute('BossHits',(npc:GetAttribute('BossHits') or 0)+1);npc:SetAttribute('LastBossDamage',actual)
+    if Run:IsStudio() then npc:SetAttribute('BossHits',(npc:GetAttribute('BossHits') or 0)+1);npc:SetAttribute('LastBossDamage',actual) end -- QA only (hammer-boss/test_heavy_studio): live servers don't replicate them (audit P12)
    end
   end
  end
