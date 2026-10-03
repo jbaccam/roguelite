@@ -335,6 +335,10 @@ local function launch(index)
  -- Lobby servers: the group gets its own match server. Each member's loadout is checked again
  -- here and once more against their own save on the match server.
  if Role.get()=='Lobby' then
+  -- The pad's map and difficulty, read BEFORE finish resets the queue. They used to be read after
+  -- it, so every pad launch went out with map=nil and the match server, unable to set a map, sent
+  -- the party straight back to a lobby (trip log, 2026-10-03: "it just queues me into the lobby").
+  local map,difficulty=q.map,q.difficulty or 'Normal'
   state:finish(index)
   local list,loadouts={},{}
   for p in going do
@@ -347,7 +351,7 @@ local function launch(index)
   end
   publish()
   if #list==0 then return end
-  local ok,why=Match.launch(list,q.map,q.difficulty or 'Normal',loadouts)
+  local ok,why=Match.launch(list,map,difficulty,loadouts)
   -- On success they stay "travelling" until they leave, so the pad they stand on can't re-queue them.
   if not ok then for _,p in list do travelling[p]=nil;setupRemote:FireClient(p,'Result',false,why) end end
   return

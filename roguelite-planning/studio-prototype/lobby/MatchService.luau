@@ -98,6 +98,9 @@ function M.launch(players,map,difficulty,loadouts,extra)
  if studio then return false,'Runs start in the published game. Use the combined Studio mode to play here' end
  local tutorial=type(extra)=='table' and extra.tutorial==true or nil
  log(players,'launch',('map=%s difficulty=%s players=%d tutorial=%s'):format(tostring(map),tostring(difficulty),#players,tostring(tutorial)))
+ -- A match server can't start without a map: refuse here rather than send the party on a trip
+ -- that bounces them straight back (pad launches went out with map=nil, 2026-10-03).
+ if not Rules.MapIndex[map] then log(players,'refused','no valid map');return false,'Pick a map first' end
  local ok,code,serverId=retry(2,Teleport.ReserveServer,Teleport,game.PlaceId)
  if not ok then log(players,'reserve failed',code);return false,"Couldn't start the run, try again" end
  local members={}
