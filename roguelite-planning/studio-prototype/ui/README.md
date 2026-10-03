@@ -7,7 +7,8 @@ Play-test report: the tutorial began while the player was still loading. Zombies
 - **Eggbert waits too:** `TutorialGuide` hides while `PlayerGui.LoadingScreen` exists, and his welcome clock starts when it's gone.
 - **No empty shop before wave 1:** on match servers and in the tutorial, `RogueliteUI` no longer opens the wave-1 shop (wave 1 starts by itself there). A Studio arena start and the admin Waves button still get it, because its GO starts the wave.
 - **Why the art was gray:** each art half started at `ImageTransparency` 1 and faded in once `IsLoaded`. Roblox never loads a fully transparent image, so `IsLoaded` stayed false and the art only came in at the 20 s fallback. Shorter screens stayed charcoal the whole time. Checked in Studio Edit with a CoreGui probe: at 1, a label wasn't loaded after 5 s, even right after a successful `PreloadAsync({gui})`. At .995 it loaded in 0.3 s. The halves now start at .995, the same trick `AssetPreloader` uses.
-- **Not run:** no Play test, and nothing synced to Studio yet.
+- **Studio:** synced 2026-10-03 at 9a99d1a with one guarded execute_luau call (8 scripts, all or nothing). Each script was written only if Studio's Source still equalled ee48545 and the new source compiled. A read-only dump right before showed all 8 at ee48545. Afterwards every script matched 9a99d1a.
+- **Not run:** no Play test (the user tests it).
 
 # Tutorial play-test, round 2: arrows, placement, crystals, chests — October 3, 2026
 
