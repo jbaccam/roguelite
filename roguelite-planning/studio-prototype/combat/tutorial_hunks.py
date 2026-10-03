@@ -14,6 +14,14 @@ SHARDS = "combat/ShardDropService.luau"
 SHARDS_S = "ServerScriptService.ShardDropService"
 SHOP = "combat/ShopService.luau"
 SHOP_S = "ServerScriptService.ShopService"
+BOSS = "combat/bosses/BossService.luau"
+BOSS_S = "ServerScriptService.BossService"
+EFFECTS = "combat/CombatEffectsService.luau"
+EFFECTS_S = "ServerScriptService.CombatEffectsService"
+CHAR = "combat/CharacterService.luau"
+CHAR_S = "ServerScriptService.CharacterService"
+CHASE = "RogueliteZombieChase.server.luau"
+CHASE_S = "ServerScriptService.RogueliteZombieChase"
 
 HUNKS = [
     # --- EconomyConfig: the shared-crystal split ------------------------------------------------
@@ -97,6 +105,59 @@ HUNKS = [
      "  end\n"
      " end\n"
      "end"),
+    # --- Boss super-jump intro (every wave boss) ------------------------------------------------
+    (BOSS, BOSS_S,
+     "local FLINCH_GAP=2", "after",
+     "-- Super-jump entrance (2026-10-03): a wave boss (not an admin/practice one) drops in from the\n"
+     "-- sky and lands hammer-first. drop: seconds of rumble and growing shadow before he falls; fall:\n"
+     "-- the fall; after: the landing and the camera orbit (BossIntro.client). Until BossIntroUntil he\n"
+     "-- can't be hurt (CombatEffectsService) and stands still, and CinematicUntil holds the players\n"
+     "-- (CharacterService.frozen) and the enemies (RogueliteZombieChase).\n"
+     "B.INTRO={drop=1.2,fall=.65,after=3.6}"),
+    (BOSS, BOSS_S,
+     " h.MaxHealth=math.ceil(HEALTH*hpScale);h.Health=h.MaxHealth;npc:SetAttribute('BossDamageScale',damageScale)", "replace",
+     " -- The tutorial's boss (TutorialDirector sets TutorialBossHealth) has a fixed, small health.\n"
+     " local fixed=not practice and combat:GetAttribute('TutorialBossHealth')\n"
+     " h.MaxHealth=type(fixed)=='number' and fixed or math.ceil(HEALTH*hpScale);h.Health=h.MaxHealth;npc:SetAttribute('BossDamageScale',damageScale)"),
+    (BOSS, BOSS_S,
+     " local s={next=workspace:GetServerTimeNow()+2,index=0,lastHealth=h.Health};B.states[npc]=s", "after",
+     " if not practice then\n"
+     "  -- The entrance (B.INTRO): his Slam clip is timed so the hammer hits the ground as he lands;\n"
+     "  -- it deals no damage (no s.attack). He stays anchored where he lands until it's over.\n"
+     "  local now=workspace:GetServerTimeNow();local I=B.INTRO\n"
+     "  local land=now+I.drop+I.fall;local done=land+I.after\n"
+     "  npc:SetAttribute('BossIntroStart',now);npc:SetAttribute('BossIntroLand',land);npc:SetAttribute('BossIntroUntil',done)\n"
+     "  npc:SetAttribute('BossAttack','Slam');npc:SetAttribute('BossStart',land-Motion.Attacks.Slam.active);npc:SetAttribute('BossFrame',root.CFrame)\n"
+     "  npc:SetAttribute('BossGroundY',root.Position.Y-Motion.RootHeight-.1)\n"
+     "  npc:SetAttribute('BossSerial',(npc:GetAttribute('BossSerial') or 0)+1);npc:SetAttribute('Attacking',true)\n"
+     "  root.Anchored=true;h.AutoRotate=false\n"
+     "  s.intro=done;s.next=done+.6\n"
+     "  combat:SetAttribute('CinematicUntil',done)\n"
+     " end"),
+    (BOSS, BOSS_S,
+     " if h.Health<=0 then s.attack=nil;return end", "after",
+     " -- The super-jump entrance (B.INTRO): stand still until it's over, then fight.\n"
+     " if s.intro then\n"
+     "  if now<s.intro then h:Move(Vector3.zero);return end\n"
+     "  s.intro=nil;npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil)\n"
+     "  root.Anchored=false;root:SetNetworkOwner(nil);h.AutoRotate=true\n"
+     " end"),
+    (EFFECTS, EFFECTS_S,
+     " if not Tags:HasTag(npc,'RogueliteZombie') then return 0 end", "after",
+     " -- A wave boss can't be hurt during its super-jump entrance (BossService BossIntroUntil).\n"
+     " if (npc:GetAttribute('BossIntroUntil') or 0)>workspace:GetServerTimeNow() then return 0 end"),
+    (CHAR, CHAR_S,
+     "function Service.frozen(player) return combat:GetAttribute('RunPaused')==true and player:GetAttribute('LobbyPreviewActive')~=true end", "replace",
+     "-- A boss entrance (CinematicUntil, BossService.INTRO) holds them the same way for its few seconds.\n"
+     "function Service.frozen(player)\n"
+     " local held=combat:GetAttribute('RunPaused')==true or (combat:GetAttribute('CinematicUntil') or 0)>workspace:GetServerTimeNow()\n"
+     " return held and player:GetAttribute('LobbyPreviewActive')~=true\n"
+     "end"),
+    (CHASE, CHASE_S,
+     "        frozen = combat:GetAttribute('AdminFreeze') == true or combat:GetAttribute('RunPaused') == true,", "replace",
+     "        -- A boss entrance (CinematicUntil) holds them too while the camera is on the boss.\n"
+     "        frozen = combat:GetAttribute('AdminFreeze') == true or combat:GetAttribute('RunPaused') == true\n"
+     "            or (combat:GetAttribute('CinematicUntil') or 0) > workspace:GetServerTimeNow(),"),
     (SHOP, SHOP_S,
      " Shards.clear(true)", "replace",
      " -- Leftover crystals fly to the players and count as pickups (XP and shards) while it's still\n"

@@ -71,6 +71,8 @@ end
 function E.hit(npc,amount,d,secondary,dot)
  local h,r=alive(npc);if not h or not d or not valid(d) then return 0 end
  if not Tags:HasTag(npc,'RogueliteZombie') then return 0 end
+ -- A wave boss can't be hurt during its super-jump entrance (BossService BossIntroUntil).
+ if (npc:GetAttribute('BossIntroUntil') or 0)>workspace:GetServerTimeNow() then return 0 end
  -- Tag before damage: the Died handler can run immediately on a lethal shot.
  if d.id=='10' and not secondary and amount>0 and not npc:GetAttribute('LobbyDummy') and not npc:GetAttribute('DesignerShirt') then npc:SetAttribute('DesignerShirt',true) end
  local s=d.stats;local position=r.Position

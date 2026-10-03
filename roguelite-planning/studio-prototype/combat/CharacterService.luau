@@ -42,7 +42,11 @@ function Service.inShop(player)
  return run~=nil and run:GetAttribute('Phase')=='Shop' and player:GetAttribute('LobbyPreviewActive')~=true
 end
 -- Plan L: a paused run (RunPaused) holds players like the shop does and blocks their damage.
-function Service.frozen(player) return combat:GetAttribute('RunPaused')==true and player:GetAttribute('LobbyPreviewActive')~=true end
+-- A boss entrance (CinematicUntil, BossService.INTRO) holds them the same way for its few seconds.
+function Service.frozen(player)
+ local held=combat:GetAttribute('RunPaused')==true or (combat:GetAttribute('CinematicUntil') or 0)>workspace:GetServerTimeNow()
+ return held and player:GetAttribute('LobbyPreviewActive')~=true
+end
 local function applyMoveSpeed(h,s)
  h.UseJumpPower=false
  if s.held then h.WalkSpeed=0;h.JumpHeight=0;return end

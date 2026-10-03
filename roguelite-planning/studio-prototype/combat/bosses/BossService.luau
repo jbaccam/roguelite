@@ -18,6 +18,12 @@ local CHASE_SPEED=18
 local HEALTH=18000 -- 24000 until 2026-10-01: a balanced wave-20 build took 60-115 s; now ~45-90 s
 -- Seconds between hit flinches (BossPresentation plays one only while he stands).
 local FLINCH_GAP=2
+-- Super-jump entrance (2026-10-03): a wave boss (not an admin/practice one) drops in from the
+-- sky and lands hammer-first. drop: seconds of rumble and growing shadow before he falls; fall:
+-- the fall; after: the landing and the camera orbit (BossIntro.client). Until BossIntroUntil he
+-- can't be hurt (CombatEffectsService) and stands still, and CinematicUntil holds the players
+-- (CharacterService.frozen) and the enemies (RogueliteZombieChase).
+B.INTRO={drop=1.2,fall=.65,after=3.6}
 local lastPracticeRequest=-math.huge
 function B.practice(player,action)
  -- Developers only (the admin panel), in Studio and on live servers; CharacterService checks too.
@@ -179,7 +185,9 @@ function B.spawn(cf,practice)
  -- Only run members count (ShopService RunMember): players in the lobby don't toughen the boss.
  local members=0;for _,p in Players:GetPlayers() do if p:GetAttribute('RunMember') then members+=1 end end
  local hpScale,damageScale=Rules.bossScale(combat:GetAttribute('RunDifficulty'),math.max(1,members))
- h.MaxHealth=math.ceil(HEALTH*hpScale);h.Health=h.MaxHealth;npc:SetAttribute('BossDamageScale',damageScale)
+ -- The tutorial's boss (TutorialDirector sets TutorialBossHealth) has a fixed, small health.
+ local fixed=not practice and combat:GetAttribute('TutorialBossHealth')
+ h.MaxHealth=type(fixed)=='number' and fixed or math.ceil(HEALTH*hpScale);h.Health=h.MaxHealth;npc:SetAttribute('BossDamageScale',damageScale)
  npc:SetAttribute('IsBoss',true);npc:SetAttribute('IsHammerBoss',true);npc:SetAttribute('ZombieType','HammerBoss')
  npc:SetAttribute('ContactDamage',0);npc:SetAttribute('ContactRange',0);npc:SetAttribute('BaseMoveSpeed',h.WalkSpeed)
  for name in Motion.Data.parts do
@@ -189,6 +197,19 @@ function B.spawn(cf,practice)
  for _,p in npc:GetDescendants() do if p:IsA('BasePart') then p.Anchored=false end end
  npc.Parent=folder;root:SetNetworkOwner(nil);h.AutoRotate=true
  local s={next=workspace:GetServerTimeNow()+2,index=0,lastHealth=h.Health};B.states[npc]=s
+ if not practice then
+  -- The entrance (B.INTRO): his Slam clip is timed so the hammer hits the ground as he lands;
+  -- it deals no damage (no s.attack). He stays anchored where he lands until it's over.
+  local now=workspace:GetServerTimeNow();local I=B.INTRO
+  local land=now+I.drop+I.fall;local done=land+I.after
+  npc:SetAttribute('BossIntroStart',now);npc:SetAttribute('BossIntroLand',land);npc:SetAttribute('BossIntroUntil',done)
+  npc:SetAttribute('BossAttack','Slam');npc:SetAttribute('BossStart',land-Motion.Attacks.Slam.active);npc:SetAttribute('BossFrame',root.CFrame)
+  npc:SetAttribute('BossGroundY',root.Position.Y-Motion.RootHeight-.1)
+  npc:SetAttribute('BossSerial',(npc:GetAttribute('BossSerial') or 0)+1);npc:SetAttribute('Attacking',true)
+  root.Anchored=true;h.AutoRotate=false
+  s.intro=done;s.next=done+.6
+  combat:SetAttribute('CinematicUntil',done)
+ end
  -- One flinch per FLINCH_GAP: six weapons hitting every few frames restarted it on its first frame,
  -- so he froze in that pose while he kept walking (slid) into his next attack.
  h.HealthChanged:Connect(function(health)
@@ -221,6 +242,12 @@ function B.step(npc,s,now)
  if not npc.Parent then B.states[npc]=nil;return end
  local h=npc.Humanoid;local root=npc.PrimaryPart
  if h.Health<=0 then s.attack=nil;return end
+ -- The super-jump entrance (B.INTRO): stand still until it's over, then fight.
+ if s.intro then
+  if now<s.intro then h:Move(Vector3.zero);return end
+  s.intro=nil;npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil)
+  root.Anchored=false;root:SetNetworkOwner(nil);h.AutoRotate=true
+ end
  if combat:GetAttribute('ZombiesEnabled')~=true then
   s.attack=nil;npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil);root.Anchored=false;h.AutoRotate=true;h:Move(Vector3.zero);return
  end

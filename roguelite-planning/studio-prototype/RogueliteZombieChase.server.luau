@@ -112,7 +112,9 @@ local function shared()
         targets = targets,
         marker = Role.marker(),
         -- Admin Freeze, or plan L's paused run.
-        frozen = combat:GetAttribute('AdminFreeze') == true or combat:GetAttribute('RunPaused') == true,
+        -- A boss entrance (CinematicUntil) holds them too while the camera is on the boss.
+        frozen = combat:GetAttribute('AdminFreeze') == true or combat:GetAttribute('RunPaused') == true
+            or (combat:GetAttribute('CinematicUntil') or 0) > workspace:GetServerTimeNow(),
     }
     return frameShared
 end
