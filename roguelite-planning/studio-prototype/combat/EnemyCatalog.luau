@@ -38,7 +38,7 @@ local function add(id, name, map, behavior, health, speed, damage, options)
 		healthPerWave = 2,
 		speed = speed,
 		damage = damage,
-		damagePerWave = 0.6,
+		damagePerWave = 1.5, -- 2.5x Brotato's 0.6, with damage 5x its numbers (see ZombieTypes)
 		radius = 1.6,
 		height = 6,
 		stopRange = 3.2,
@@ -65,7 +65,7 @@ add(
 	"Melee",
 	3,
 	12,
-	1,
+	5,
 	{ legacy = "Regular", template = "Zombie_NPC", attackImpact = 0.24, attackRecovery = 0.58, attackCooldown = 0.8 }
 )
 add(
@@ -75,17 +75,17 @@ add(
 	"Melee",
 	1,
 	16,
-	1,
+	5,
 	{ legacy = "Baby", template = "BabyZombie_NPC", attackImpact = 0.18, attackRecovery = 0.45, attackCooldown = 0.8 }
 )
-add("tank-zombie", "Tank Zombie", "Pine Valley", "Heavy", 20, 9.5, 2, {
+add("tank-zombie", "Tank Zombie", "Pine Valley", "Heavy", 20, 9.5, 10, {
 	legacy = "Mutant",
 	template = "MutantZombie_NPC",
 	attackImpact = Types.Slam.impact,
 	attackRecovery = Types.Slam.recovery,
 	attackCooldown = Types.Slam.cooldown,
 })
-add("spitter-zombie", "Spitter Zombie", "Pine Valley", "Ranged", 5, 10, 1.5, {
+add("spitter-zombie", "Spitter Zombie", "Pine Valley", "Ranged", 5, 10, 7.5, {
 	projectile = "Spit",
 	projectileSpeed = 27,
 	stopRange = 18,
@@ -104,13 +104,13 @@ add(
 	"Melee",
 	4,
 	11,
-	1,
+	5,
 	{ height = 3, radius = 1.8, strideLength = 3.5, maxMoveCycles = 10 }
 )
 -- gaitStride: ground covered per Move loop when the authored clip's own stride is far too short
 -- to read at wave speed. The snake's slither (1.6 studs) and the slime's hop (1.2) looped about
 -- once a second while the body slid 13-15 studs; at 5.5 studs they loop ~2.5 times a second.
-add("snake", "Snake", "Beach Cove", "Lunge", 3, 12, 1.5, {
+add("snake", "Snake", "Beach Cove", "Lunge", 3, 12, 7.5, {
 	gaitStride = 5.5,
 	height = 3,
 	radius = 1.2,
@@ -124,7 +124,7 @@ add("snake", "Snake", "Beach Cove", "Lunge", 3, 12, 1.5, {
 	attackCooldown = 2,
 	strideLength = 5,
 })
-add("hermit-crab", "Hermit Crab", "Beach Cove", "Heavy", 12, 7, 2, {
+add("hermit-crab", "Hermit Crab", "Beach Cove", "Heavy", 12, 7, 10, {
 	height = 4,
 	radius = 2,
 	healthPerWave = 5,
@@ -134,7 +134,7 @@ add("hermit-crab", "Hermit Crab", "Beach Cove", "Heavy", 12, 7, 2, {
 	strideLength = 3.2,
 	maxMoveCycles = 10,
 })
-add("rock-throwing-crab", "Rock-Throwing Crab", "Beach Cove", "Ranged", 6, 8, 2, {
+add("rock-throwing-crab", "Rock-Throwing Crab", "Beach Cove", "Ranged", 6, 8, 10, {
 	height = 3,
 	projectile = "Rock",
 	projectileSpeed = 26,
@@ -146,8 +146,8 @@ add("rock-throwing-crab", "Rock-Throwing Crab", "Beach Cove", "Ranged", 6, 8, 2,
 	strideLength = 3.5,
 	maxMoveCycles = 10,
 })
-add("skeleton", "Skeleton", "Desert Badlands", "Melee", 4, 12, 1.2)
-add("bow-skeleton", "Bow Skeleton", "Desert Badlands", "Ranged", 4, 10, 1.5, {
+add("skeleton", "Skeleton", "Desert Badlands", "Melee", 4, 12, 6)
+add("bow-skeleton", "Bow Skeleton", "Desert Badlands", "Ranged", 4, 10, 7.5, {
 	projectile = "Arrow",
 	projectileSpeed = 35,
 	stopRange = 20,
@@ -163,10 +163,10 @@ add(
 	"Heavy",
 	10,
 	8,
-	2,
+	10,
 	{ healthPerWave = 4, attackImpact = 0.48, attackRecovery = 1.15, attackCooldown = 1.6 }
 )
-add("scorpion", "Scorpion", "Desert Badlands", "Lunge", 6, 10, 1.8, {
+add("scorpion", "Scorpion", "Desert Badlands", "Lunge", 6, 10, 9, {
 	height = 4,
 	attackRange = 12,
 	hitRange = 3.8,
@@ -178,7 +178,7 @@ add("scorpion", "Scorpion", "Desert Badlands", "Lunge", 6, 10, 1.8, {
 	attackCooldown = 2.2,
 	strideLength = 3.8,
 })
-add("frost-ghost", "Frost Ghost", "Frozen Pass", "Melee", 5, 11, 1.3, { height = 4, strideLength = 5 })
+add("frost-ghost", "Frost Ghost", "Frozen Pass", "Melee", 5, 11, 6.5, { height = 4, strideLength = 5 })
 add(
 	"werewolf",
 	"Werewolf",
@@ -186,7 +186,7 @@ add(
 	"Melee",
 	8,
 	16,
-	1.8,
+	9,
 	{ healthPerWave = 3, attackImpact = 0.24, attackRecovery = 0.65, attackCooldown = 1, strideLength = 7 }
 )
 add(
@@ -196,10 +196,10 @@ add(
 	"Heavy",
 	14,
 	7.5,
-	2.2,
+	11,
 	{ healthPerWave = 5, attackImpact = 0.58, attackRecovery = 1.3, attackCooldown = 1.9 }
 )
-add("ice-elf", "Ice Elf", "Frozen Pass", "Ranged", 5, 11, 1.8, {
+add("ice-elf", "Ice Elf", "Frozen Pass", "Ranged", 5, 11, 9, {
 	projectile = "Icicle",
 	projectileSpeed = 32,
 	stopRange = 20,
@@ -208,7 +208,7 @@ add("ice-elf", "Ice Elf", "Frozen Pass", "Ranged", 5, 11, 1.8, {
 	attackRecovery = 1.15,
 	attackCooldown = 2.3,
 })
-add("fire-goblin", "Fire Goblin", "Volcanic Crater", "Melee", 4, 12, 1.3, { height = 5, strideLength = 5 })
+add("fire-goblin", "Fire Goblin", "Volcanic Crater", "Melee", 4, 12, 6.5, { height = 5, strideLength = 5 })
 add(
 	"ember-spider",
 	"Ember Spider",
@@ -216,7 +216,7 @@ add(
 	"Melee",
 	2,
 	17,
-	1,
+	5,
 	{ height = 3, radius = 1.3, attackImpact = 0.2, attackRecovery = 0.52, attackCooldown = 0.9, strideLength = 3.8 }
 )
 add(
@@ -226,7 +226,7 @@ add(
 	"Splitter",
 	6,
 	8,
-	1.4,
+	7,
 	{
 		height = 3,
 		splitCount = 2,
@@ -237,7 +237,7 @@ add(
 		gaitStride = 5.5,
 	}
 )
-add("obsidian-ogre", "Obsidian Ogre", "Volcanic Crater", "Heavy", 20, 7, 3, {
+add("obsidian-ogre", "Obsidian Ogre", "Volcanic Crater", "Heavy", 20, 7, 15, {
 	healthPerWave = 7,
 	height = 8,
 	radius = 2.4,
@@ -248,7 +248,7 @@ add("obsidian-ogre", "Obsidian Ogre", "Volcanic Crater", "Heavy", 20, 7, 3, {
 	attackCooldown = 2.2,
 	strideLength = 6,
 })
-add("ash-shaman", "Ash Shaman", "Volcanic Crater", "Ranged", 6, 9, 2, {
+add("ash-shaman", "Ash Shaman", "Volcanic Crater", "Ranged", 6, 9, 10, {
 	projectile = "Fireball",
 	projectileSpeed = 25,
 	stopRange = 20,

@@ -333,6 +333,15 @@ RunService.Heartbeat:Connect(function(dt)
   if math.abs((s.folder:GetAttribute('RingRadius') or 0)-radius)>.04 then s.folder:SetAttribute('RingRadius',radius) end
   radius=s.folder:GetAttribute('RingRadius')
   local wallParams=rayParams(character,true)
+  -- Melee from a jump (2026-10-03: "melee weapons need to do a better job at hitting mobs when im
+  -- jumping"): melee slots find and measure targets from where the player would stand, `lift` studs
+  -- below. From a jump's peak (~9.5 up) a zombie 4 studs away was 9+ studs off, past every melee
+  -- reach, so nothing swung until landing. The swing already strikes at its target's height
+  -- (WeaponMotion.attackRoot).
+  local lift=0
+  local ground=workspace:Raycast(root.Position,Vector3.new(0,-20,0),wallParams)
+  if ground then lift=math.clamp(root.Position.Y-(ground.Position.Y+hum.HipHeight+root.Size.Y*.5),0,16) end
+  if lift<.5 then lift=0 end
   -- The tick's one snapshot (built for the first player who targets) serves every slot and the
   -- attack that fires (nothing can revive an enemy mid-tick). `living` is its list, nil when this
   -- player isn't targeting.
@@ -351,6 +360,7 @@ RunService.Heartbeat:Connect(function(dt)
    local cs=Characters.states[player];if not cs then continue end
    local d=definition(slot,base,cs,player,character,index)
    local origin=Motion.combatOrigin(root.CFrame,radius,index,id,d.kind)
+   if d.kind=='Melee' then origin-=Vector3.yAxis*lift end
    local searchRange=d.targetRange or d.range
    if d.kind=='Melee' and Motion.DownwardWeapons[id] then
     searchRange=math.max(searchRange,Motion.attackReach(id,'Downward',d.range))

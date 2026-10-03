@@ -14,6 +14,7 @@ if Role.get()=='Lobby' then return end -- lobby servers have no runs
 local Shop=require(SSS:WaitForChild('ShopService'))
 local Check=require(SSS:WaitForChild('MovementCheck'))
 local Maps=require(combat:WaitForChild('MapConfig'))
+local Stats=require(combat:WaitForChild('CharacterStats')) -- the air speed bonus (already loaded by ShopService)
 
 -- The arena's walls: the first of these that the active map has, as a box with a 30-stud margin.
 -- Measured 2026-10-02: Pine Valley's MapOneBoundary spans 147 studs each way from the middle,
@@ -88,8 +89,9 @@ RunService.Heartbeat:Connect(function(dt)
   hook(p,root)
   local s=states[p]
   if not s then states[p]=Check.new(root.Position,now);continue end
-  -- Their own top speed: the MoveSpeed stat with the air bonus (CharacterService sets both).
-  local speed=math.max(h.WalkSpeed,(character:GetAttribute('Stat_MoveSpeed') or 16)*1.12)
+  -- Their own top speed: the MoveSpeed stat with the air bonus (their own client applies that, so
+  -- the server's WalkSpeed never shows it). Held players keep it: the window still holds the running.
+  local speed=math.max(h.WalkSpeed,(character:GetAttribute('Stat_MoveSpeed') or 16)*Stats.Movement.AirSpeedMultiplier)
   local why=Check.step(s,now,root.Position,speed,groundGap(root),root.AssemblyLinearVelocity.Y,Check.inside(walls,root.Position))
   if why then snap(p,character,root,s,why) end
  end

@@ -41,7 +41,7 @@ local ok,err=xpcall(function()
   check(Types.scaled('Baby',wave).health==wave,'baby wave HP')
   check(Types.scaled('Mutant',wave).health==math.max(50,20+11*(wave-1)),'mutant wave HP')
   check(Types.scaled('Mutant',wave).damage==0,'mutant never adds contact damage')
-  check(math.abs(Types.scaled('Mutant',wave).slamDamage-(2+.85*(wave-1)))<.001,'mutant slam wave damage')
+  check(math.abs(Types.scaled('Mutant',wave).slamDamage-(10+2.1*(wave-1)))<.001,'mutant slam wave damage')
   check(math.abs(Types.scaled('Regular',wave).damage-(1+.6*(wave-1)))<.001,'contact growth')
  end
  check(Types.forSlot(5,1)=='Regular' and Types.forSlot(5,8)=='Mutant','mutant wave gate')

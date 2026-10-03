@@ -12,9 +12,11 @@ Enemy balance follows the supplied Brotato enemy table's linear growth, without 
 
 | Type | HP wave 1 | HP per later wave | Damage wave 1 | Damage per later wave |
 | --- | ---: | ---: | ---: | ---: |
-| Regular (Baby Alien reference) | 3 | 2 | 1 | 0.6 |
-| Baby (Chaser reference) | 1 | 1 | 1 | 0.6 |
-| Mutant (Bruiser reference; starts wave 8) | 20, floored at 50 | 11 | 2 slam | 0.85 slam |
+| Regular (Baby Alien reference) | 3 | 2 | 5 | 1.5 |
+| Baby (Chaser reference) | 1 | 1 | 5 | 1.5 |
+| Mutant (Bruiser reference; starts wave 8) | 20, floored at 50 | 11 | 10 slam | 2.1 slam |
+
+**Damage x5, growth x2.5 (2026-10-03).** Brotato's damage (1, +0.6 a wave) is made for a 10 HP player; ours has 100-125, so a zombie hit was 1% of a health bar and standing in a crowd never killed (the user: "if i just sit there i wouldnt ever even die"). Every regular mob on every map now starts at 5x its old damage and grows 1.5 a wave (was 0.6). A zombie hits 5 / 18.5 / 33.5 at waves 1 / 10 / 20; boss hits are 28-38. Zombie swings also share a 0.3 s gate per player now (was 0.8 s), and body bumps are per mob (below and [ZOMBIE_VARIANTS.md](ZOMBIE_VARIANTS.md)).
 
 Regular HP is 3/11/21/41 at waves 1/5/10/20; Mutant HP is 97 on its first wave (8), and 229 on wave 20. Since 2026-09-28 tanks have a health floor (`ZombieTypes.Mutant.minHealth`): the user found wave-1 tanks spawned from the Studio mob picker died in two tier-1 hits (20 HP against a 19.2-damage Frying Pan). The floor was 80 (4-5 pan hits), which the user found far too strong on 2026-10-02, so it is 50: three Tier I Brawler pan hits. Waves 1–3 give 50, wave 4 gives 53; wave 8 onward is unchanged (97 on its first natural wave). Spawned enemies retain their wave's health and damage. Movement, player HP, character class bonuses, status damage and spawn population remain existing game tuning, so this is a first balance pass rather than a claim of identical Brotato difficulty.
 

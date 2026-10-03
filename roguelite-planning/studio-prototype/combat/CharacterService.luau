@@ -32,7 +32,12 @@ end})
 local function notify(name,...)
  for _,fn in hookListeners[name] do local ok,err=pcall(fn,...);if not ok then warn('CharacterService.'..name..' listener failed:',err) end end
 end
-local BUMP_GRACE=.6 -- seconds between body-bump hits on one player
+-- Body bumps (walking into mobs): one mob bumps a player at most every BUMP_GRACE seconds, and the
+-- whole crowd at most every BUMP_CROWD_GAP. It was one bump per 0.6 s from all mobs together, so
+-- crossing a crowd cost one or two bumps ("i can literally just walk through them", 2026-10-03).
+-- Example, wave 1 zombies (bump 3): a half-second walk through a pack is ~3 bumps, ~8 HP after armor.
+local BUMP_GRACE=.6
+local BUMP_CROWD_GAP=.2
 local function humanoid(player) return player.Character and player.Character:FindFirstChildOfClass('Humanoid') end
 -- Enemy hits are judged from the player's own screen (2026-10-03). Measured in Studio Play: the
 -- server sees a player's body 220 ms late, and the player sees the enemies 200 ms late. Kiting
@@ -93,14 +98,17 @@ function Service.frozen(player)
  local held=combat:GetAttribute('RunPaused')==true or (combat:GetAttribute('CinematicUntil') or 0)>workspace:GetServerTimeNow()
  return held and player:GetAttribute('LobbyPreviewActive')~=true
 end
-local function applyMoveSpeed(h,s)
+-- The air bonus is the player's own client's to apply (RogueliteCombat.client), from the GroundSpeed
+-- and AirSpeed set here: the server hears about a jump ~0.2 s late and its WalkSpeed change takes as
+-- long to get back, so when it switched the speed itself the bonus missed most of a 0.7 s jump.
+-- MovementGuard allows that speed. Always derived from the resolved stat; repeated jumps never stack.
+local function applyMoveSpeed(h,s,character)
  h.UseJumpPower=false
+ local ground=s.held and 0 or s.stats.MoveSpeed
+ if character then character:SetAttribute('GroundSpeed',ground);character:SetAttribute('AirSpeed',ground*Stats.Movement.AirSpeedMultiplier) end
  if s.held then h.WalkSpeed=0;h.JumpHeight=0;return end
  h.JumpHeight=Stats.Movement.JumpHeight
- local state=h:GetState()
- local airborne=h.Health>0 and (state==Enum.HumanoidStateType.Jumping or state==Enum.HumanoidStateType.Freefall)
- -- Always derive from the resolved ground stat; repeated jumps never stack.
- h.WalkSpeed=s.stats.MoveSpeed*(airborne and Stats.Movement.AirSpeedMultiplier or 1)
+ h.WalkSpeed=ground
 end
 function Service.refresh(player)
  local s=Service.states[player];if not s then return end
@@ -147,7 +155,7 @@ function Service.refresh(player)
  if h then
   local missing=h.MaxHealth-h.Health;local alive=h.Health>0
   h.MaxHealth=s.stats.MaxHP;if alive then h.Health=math.clamp(h.MaxHealth-missing,1,h.MaxHealth) end
-  applyMoveSpeed(h,s)
+  applyMoveSpeed(h,s,player.Character)
   player.Character:SetAttribute('CombatClass',s.class)
  end
  notify('onStatsChanged',player)
@@ -162,10 +170,6 @@ function Service.attach(player,folder)
   s.petShield=0;s.petShieldUntil=0;player:SetAttribute('PetShieldUntil',nil)
   s.held=nil;s.holdAt=nil -- the next tick re-checks the shop hold for the new body
   Service.refresh(player);h.Health=h.MaxHealth
-  if s.moveStateConnection then s.moveStateConnection:Disconnect() end
-  s.moveStateConnection=h.StateChanged:Connect(function()
-   if player.Character==character and Service.states[player]==s then applyMoveSpeed(h,s) end
-  end)
   if s.rageConnection then s.rageConnection:Disconnect() end
   s.rageConnection=h.HealthChanged:Connect(function(health)
    if player.Character~=character or Service.states[player]~=s or not (s.perks and s.perks.RageAttackSpeed) then return end
@@ -331,7 +335,7 @@ function Service.request(player,action,key,value)
 end
 remote.OnServerEvent:Connect(function(...) Service.request(...) end)
 Players.PlayerRemoving:Connect(function(p)
- local s=Service.states[p];if s and s.moveStateConnection then s.moveStateConnection:Disconnect() end
+ local s=Service.states[p]
  if s and s.rageConnection then s.rageConnection:Disconnect() end
  Service.states[p]=nil
 end)
@@ -390,7 +394,7 @@ RunService.Heartbeat:Connect(function(dt)
    -- still drifts a few studs is put back. A long jump is a server move (travel, respawn), so the
    -- hold starts again from there.
    local held=Service.inShop(player) or Service.frozen(player)
-   if held~=(s.held==true) then s.held=held;s.holdAt=held and root.Position or nil;applyMoveSpeed(h,s) end
+   if held~=(s.held==true) then s.held=held;s.holdAt=held and root.Position or nil;applyMoveSpeed(h,s,player.Character) end
    if held and s.holdAt then
     local drift=root.Position-s.holdAt;local flat=Vector2.new(drift.X,drift.Z).Magnitude
     if flat>25 then s.holdAt=root.Position
@@ -398,7 +402,8 @@ RunService.Heartbeat:Connect(function(dt)
    end
    if not Service.frozen(player) then Service.heal(player,s.stats.Regeneration*step) end
    local second=math.floor(now);if s.leechSecond~=second then s.leechSecond=second;s.leech=0 end
-   -- Body overlap only (contactRecord above), at most once per BUMP_GRACE across all mobs. It
+   -- Body overlap only (contactRecord above): each mob once per BUMP_GRACE, the crowd once per
+   -- BUMP_CROWD_GAP (one bump a check at most). It
    -- tests the player's path since the last check, as their screen has it (Service.seen), not
    -- just where they are now: a sprint covers ~2.4 studs between checks, and running straight
    -- through a zombie fell between two of them (user, 2026-10-03). A path is one check long
@@ -407,19 +412,20 @@ RunService.Heartbeat:Connect(function(dt)
    local from=s.pathFrom
    if not from or now-(s.pathAt or 0)>.25 or (position-from).Magnitude>10 then from=position end
    s.pathFrom,s.pathAt=position,now
-   local bumpReady,contactReady=now-s.lastBump>=BUMP_GRACE,now-s.lastContact>=.8
+   local bumpReady,contactReady=now-s.lastBump>=BUMP_CROWD_GAP,now-s.lastContact>=.8
    if (bumpReady or contactReady) and combat:GetAttribute('ZombiesEnabled') and combat:GetAttribute('RunPaused')~=true then
     contacts=contacts or contactList()
+    local bumped=s.bumped;if not bumped then bumped=setmetatable({},{__mode='k'});s.bumped=bumped end -- mob -> its last bump
     for i,r in contacts.records do
      local npc=contacts.npcs[i]
-     local ready=if r.bump then bumpReady else contactReady
+     local ready=if r.bump then bumpReady and now-(bumped[npc] or -math.huge)>=BUMP_GRACE else contactReady
      local enemy=ready and (r.root.Parent and Service.seenEnemy(player,r.root) or r.position)
      local touch=ready and Service.nearestOnPath(from,position,enemy)
      local delta=ready and touch-enemy
      if ready and math.abs(delta.Y)<4.5 and Vector2.new(delta.X,delta.Z).Magnitude<r.range and r.root.Parent==npc and r.hum.Health>0 then
       local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances={npc,player.Character,workspace:FindFirstChild('RogueliteEnemies')}
       if not workspace:Raycast(r.position,touch-r.position,params) then
-       if r.bump then s.lastBump=now else s.lastContact=now end
+       if r.bump then s.lastBump=now;bumped[npc]=now else s.lastContact=now end
        Service.contact(player,r.damage,nil,npc);break
       end
      end

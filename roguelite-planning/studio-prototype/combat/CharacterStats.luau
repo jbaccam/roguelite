@@ -1,7 +1,9 @@
 -- Shared schema and pure calculations. Only the server writes effective attributes.
 local S={List={},ById={},Classes={},ClassOrder={'Brawler','Gunner','Thrower','Juggler','Handyman','Mage'}}
 local Motion=require(script.Parent.WeaponMotion)
-S.Movement={Gravity=150,JumpHeight=9.5,AirSpeedMultiplier=1.12}
+-- Air speed x1.3 (was 1.12; user 2026-10-03: "jumping should be like the optimal way to move
+-- around"): a Brawler runs 22 and flies 28.6, so hopping covers ~25% more ground than walking.
+S.Movement={Gravity=150,JumpHeight=9.5,AirSpeedMultiplier=1.3}
 local function stat(id,label,base,min,max,step,unit,group,help)
  local d={id=id,label=label,base=base,min=min,max=max,step=step,unit=unit or '',group=group,help=help}
  table.insert(S.List,d);S.ById[id]=d

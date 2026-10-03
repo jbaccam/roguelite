@@ -28,7 +28,7 @@ The single-client Play smoke test confirmed live baby/mutant spawns, correct Max
 | Baby | 24 | 16 | 6 contact | Faster cadence and small bob, closer stopping distance |
 | Mutant | 240 | 9.5 | 26 slam | Permanently hunched idle/walk; no additional contact hit |
 
-Damage values precede character armor, dodge and first-hit blocking. The regular/baby contact cooldown remains the existing player-wide 0.8 seconds. Initial five-slot composition is regular, baby, regular, regular, mutant; the pattern repeats with one mutant per eight slots and two babies per eight. These are provisional tuning values requiring the actual Play check, not a demonstrated balanced encounter.
+Damage values precede character armor, dodge and first-hit blocking. The regular/baby contact cooldown remains the existing player-wide 0.8 seconds (since 2026-10-03, zombie swings share a 0.3-second gate instead; see below). Initial five-slot composition is regular, baby, regular, regular, mutant; the pattern repeats with one mutant per eight slots and two babies per eight. These are provisional tuning values requiring the actual Play check, not a demonstrated balanced encounter.
 
 The mutant raises its arms for 0.32 seconds, lands at 0.46 seconds, recovers by 1.0 second, and can start another slam after 2.15 seconds. Its orange ground warning becomes an impact flash. Target direction and circle are committed at attack start. The server validates current life, wave toggle, range, vertical separation, walls, and one impact per attack. Death/removal cancels damage. Player damage uses the existing authoritative `CharacterService.contact` path and red damage popup. There is no new client-to-server attack remote.
 
@@ -64,6 +64,8 @@ The warning is a 5.2-stud radius circle centered 3.5 studs ahead. Characters abo
 ## Body bumps (2026-09-29)
 
 Wave mobs still set `ContactDamage` 0 (their timed swings own damage), but running into one now hurts too. Each spawn sets `BumpDamage` = half its hit (rounded, at least 1) and `BumpRange` = min(stopRange, radius + 1.5) − 0.3 (2.8 studs for a normal zombie). `CharacterService` deals it when a player's body overlaps a mob with clear line of sight, at most once per 0.6 s per player across all mobs (its own timer, separate from the old 0.8 s contact timer). The range sits inside the mob's stop distance, so fighting at normal reach never bumps. Example: a wave-10 zombie that hits for 12 bumps for 6; dashing through a pack for 1.5 s costs about 2–3 bumps.
+
+**Crowds hurt (2026-10-03).** The user could "literally just walk through them and sometimes come out unscathed". Now each mob bumps a player at most once per 0.6 s, and the whole crowd at most once per 0.2 s (`CharacterService` BUMP_GRACE / BUMP_CROWD_GAP), with mob damage x5 ([WEAPON_BALANCE.md](WEAPON_BALANCE.md)). Example, wave 1: a zombie hits 5 and bumps 3; a half-second walk through a pack is about 3 bumps plus a swing or two, ~15 HP after Brawler armor (was 1-2). Zombie swings share a 0.3 s gate per player (was 0.8 s), so a full ring lands ~3 hits a second: about 9 s to kill a Brawler standing still on wave 1.
 
 ## Harder to dodge, no gliding (2026-09-30)
 

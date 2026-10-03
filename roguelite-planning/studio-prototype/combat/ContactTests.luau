@@ -5,7 +5,8 @@
 -- (the cached record must follow) and some lines of sight are blocked.
 -- Usage (execute_luau, Edit, dev server running): tests(<CharacterService source text>).
 -- Returns {passed, checks, ticks, contacts, oldReads, newReads}. The pre-P10 source (git 2ad238a)
--- passes too, with newReads equal to oldReads, so the copy below is the old loop.
+-- passes too, with newReads equal to oldReads, so the copy below is the old loop (with the
+-- 2026-10-03 bump timing: each mob once per 0.6 s, the crowd once per 0.2 s).
 -- 2026-10-02: 699 checks, 97 contacts in 600 ticks (4 players, 70 enemies); 5,588 reads, was 432,953.
 return function(source)
 	local checks = 0
@@ -86,6 +87,7 @@ return function(source)
 		function character.PivotTo(_, cf)
 			root.Position = cf.Position
 		end
+		function character.SetAttribute() end -- GroundSpeed / AirSpeed (CharacterService)
 		function character.FindFirstChildOfClass(_, class)
 			return class == "Humanoid" and h or nil
 		end
@@ -147,7 +149,7 @@ return function(source)
 	local oldTimers = {}
 	for _, p in players do
 		Service.states[p] = { lastBump = 0, lastContact = 0, stats = { Regeneration = 0, Recovery = 0, MoveSpeed = 16 } }
-		oldTimers[p] = { lastBump = 0, lastContact = 0 }
+		oldTimers[p] = { lastBump = 0, lastContact = 0, bumped = {} }
 	end
 
 	-- The contact loop before P10, over the same world.
@@ -183,12 +185,13 @@ return function(source)
 					contactDamage = attribute(npc, "BumpDamage") or 0
 					contactRange = attribute(npc, "BumpRange") or 0
 				end
-				local ready = if bump then now - s.lastBump >= 0.6 else now - s.lastContact >= 0.8
+				-- 2026-10-03: each mob bumps once per 0.6 s, the crowd once per 0.2 s (was 0.6 s for all).
+				local ready = if bump then now - s.lastBump >= 0.2 and now - (s.bumped[npc] or -math.huge) >= 0.6 else now - s.lastContact >= 0.8
 				local delta = nr and nearest(from, root.Position, nr.Position) - nr.Position
 				if ready and contactDamage > 0 and not attribute(npc, "PracticeTarget") and nr and nh and nh.Health > 0 and math.abs(delta.Y) < 4.5 and Vector2.new(delta.X, delta.Z).Magnitude < contactRange then
 					local index = table.find(players, player)
 					if not (blocked[npc] and blocked[npc][index]) then
-						if bump then s.lastBump = now else s.lastContact = now end
+						if bump then s.lastBump = now; s.bumped[npc] = now else s.lastContact = now end
 						table.insert(out, { player = player, amount = contactDamage, npc = npc })
 						break
 					end

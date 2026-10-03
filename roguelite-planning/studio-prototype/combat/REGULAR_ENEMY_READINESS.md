@@ -34,7 +34,7 @@ The native values retain existing balance. All other HP, damage and movement val
 | Obsidian Ogre | 20 | 12 | Heavy melee |
 | Ash Shaman | 6 | 13 | Ranged fireball |
 
-Native health grows by 2/1/11 per wave for Regular/Baby/Tank. Tank first appears at wave 8 with 97 HP. Native Regular/Baby damage remains `1 + .6*(wave-1)` with the existing shared .8-second damage gate; Tank slam remains `2 + .85*(wave-1)`. Attack animation now anticipates the Regular/Baby melee impact. `EnemyCatalog.luau` and `ZombieTypes.luau` are authoritative.
+Native health grows by 2/1/11 per wave for Regular/Baby/Tank. Tank first appears at wave 8 with 97 HP. Native Regular/Baby damage is `5 + 1.5*(wave-1)` with a shared 0.3-second swing gate per player; Tank slam is `10 + 2.1*(wave-1)` (2026-10-03: x5 damage, x2.5 growth, gate was 0.8 s; [WEAPON_BALANCE.md](WEAPON_BALANCE.md)). Attack animation now anticipates the Regular/Baby melee impact. `EnemyCatalog.luau` and `ZombieTypes.luau` are authoritative.
 
 ### Wave-ready speeds (2026-09-28)
 

@@ -392,3 +392,24 @@ task.spawn(function()
   if root and me:GetAttribute('RunMember') then view:FireServer(root.Position) end
  end)
 end)
+
+-- Air speed (2026-10-03, "jumping should be like the optimal way to move around"): this body runs at
+-- the server's GroundSpeed and switches to its AirSpeed the frame it leaves the ground (CharacterService;
+-- both 0 while held). A server WalkSpeed write that lands mid-jump is put back to the air speed.
+local function airSpeed(character)
+ local h=character:WaitForChild('Humanoid',15);if not h then return end
+ local function apply()
+  local ground=character:GetAttribute('GroundSpeed');if type(ground)~='number' then return end
+  local state=h:GetState()
+  local flying=state==Enum.HumanoidStateType.Jumping or state==Enum.HumanoidStateType.Freefall
+  local want=flying and character:GetAttribute('AirSpeed') or ground
+  if type(want)=='number' and math.abs(h.WalkSpeed-want)>.01 then h.WalkSpeed=want end
+ end
+ h.StateChanged:Connect(apply)
+ h:GetPropertyChangedSignal('WalkSpeed'):Connect(apply)
+ character:GetAttributeChangedSignal('GroundSpeed'):Connect(apply)
+ character:GetAttributeChangedSignal('AirSpeed'):Connect(apply)
+ apply()
+end
+player.CharacterAdded:Connect(airSpeed)
+if player.Character then task.spawn(airSpeed,player.Character) end

@@ -188,13 +188,17 @@ function A.intercept(from, position, velocity, speed)
 	end
 	return position + v * t
 end
+-- Zombie swings share one gate per player: at most one lands every ZOMBIE_SWING_GAP seconds,
+-- whoever swings. It was 0.8 s, so a full ring of zombies hit like one zombie and standing still
+-- in a crowd never killed (user, 2026-10-03). Example, wave 1 (5 damage, Brawler armor 3): a
+-- ring lands ~3 hits a second, ~14 HP/s, so 125 HP lasts about 9 s.
+local ZOMBIE_SWING_GAP = 0.3
 local function damage(npc, player, amount)
 	local config = Catalog.fromModel(npc)
 	if config and config.legacy then
-		-- Preserve the original native-zombie shared contact grace period.
 		local state = Characters.states[player]
 		local now = os.clock()
-		if not state or now - state.lastContact < 0.8 then
+		if not state or now - state.lastContact < ZOMBIE_SWING_GAP then
 			return
 		end
 		state.lastContact = now

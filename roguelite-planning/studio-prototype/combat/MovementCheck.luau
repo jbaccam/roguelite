@@ -3,7 +3,7 @@
 -- last safe spot. Limits are generous on purpose: a false snap-back on a real player is worse than
 -- a slow cheat slipping by, so only blatant speed, hovering or leaving the arena trips it.
 -- Example: MoveSpeed 24 -> up to 24 x 1.5 + 16 = 52 studs in any 1 s window (a 2x speed hack is
--- 48, so it passes; the usual 100+ studs/s ones don't). Normal top speed is 40 x 1.12 in the air.
+-- 48, so it passes; the usual 100+ studs/s ones don't). Normal top speed is 40 x 1.3 in the air.
 local M={
  WINDOW=1, -- seconds of movement each speed test covers
  SPEED_SLACK=1.5, -- x the player's own move speed (lag bursts, the air bonus, boss knockback)
