@@ -80,11 +80,13 @@ function LS.new(root,destId,difficulty)
  local frame=make('Frame',root,{Name='LoadingScreen',Size=UDim2.fromScale(1,1),BackgroundColor3=C.back,BorderSizePixel=0,ZIndex=1,Active=true})
  frame:SetAttribute('Destination',self.destination)
  -- Art: two halves inside one frame sized to cover the screen. Charcoal shows until they load.
+ -- They start at .995, not 1: Roblox never loads a fully transparent image, so IsLoaded stayed
+ -- false and the art only came in at the 20 s fallback (gray screens, 2026-10-03).
  local art=make('Frame',frame,{Name='Art',AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),BackgroundTransparency=1,ZIndex=1})
  local halves={}
  for i,id in dest.art do
   halves[i]=make('ImageLabel',art,{Name=i==1 and 'Left' or 'Right',BackgroundTransparency=1,Position=UDim2.fromScale((i-1)*.5,0),
-   Size=UDim2.fromScale(.5,1),Image=id,ImageTransparency=1,ScaleType=Enum.ScaleType.Stretch,ZIndex=1})
+   Size=UDim2.fromScale(.5,1),Image=id,ImageTransparency=.995,ScaleType=Enum.ScaleType.Stretch,ZIndex=1})
  end
  task.spawn(function()
   local start=os.clock()

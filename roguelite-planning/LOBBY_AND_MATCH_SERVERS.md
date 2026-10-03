@@ -100,7 +100,7 @@ User request: make the lobby dummies attackable, with a clear way to turn attack
 - The match server reads its entry using `game.PrivateServerId`.
 - It kicks back to the lobby any player who isn't a listed member. This can't normally happen.
 - After loading each member's profile, it re-checks the loadout against *that player's own save*. If the check fails, the player gets their class signature weapon.
-- It waits for all listed members, up to 30 s, before wave 1 starts. Runs open on wave 1; the first shop comes after it (user direction, 2026-09-28). A member who arrives after wave 1 has begun waits like a downed player and spawns at the next wave end.
+- It waits for all listed members, up to 30 s, before wave 1 starts. A member counts once their loading screen has faded (`ClientLoaded`, set by `RunAction 'Loaded'`), not when their character spawns (2026-10-03). The tutorial adds `WELCOME_SECONDS` for Eggbert's welcome. Runs open on wave 1; the first shop comes after it (user direction, 2026-09-28). A member who arrives after wave 1 has begun waits like a downed player and spawns at the next wave end.
 - If a player disconnects mid-run and rejoins the game, they land in a lobby server, which offers REJOIN while the match still runs (plan J item 9, below).
 - **Plan C requirements** (from the plan A review):
   - `AvatarNormalizer` spawns players on join. A match server must hold that spawn until `ServerRole.setMap(entry.map)` has returned; `setMap` applies the map before it returns.
@@ -245,7 +245,7 @@ VIP bonus applies as it does today.
 User decision 2026-10-01: the beta uses match servers. `ServerRole.LIVE_ROLES=true`.
 
 - **Session lock:** `combat/ProfileLock.luau` (§6). 15 fake-store checks pass in `ProfileLockTests`. `ProfileService.handOff` / `reclaim` release the save before a teleport and take it back if the teleport fails.
-- **Trips:** `lobby/MatchService.luau` (§2). Lobby pads reserve a server, write the MemoryStore entry `RogueliteMatchV1[PrivateServerId]`, hand off every save, and teleport the party (all or nobody). The match reads the entry, `setMap`s, admits only listed members (others go back to a lobby), re-checks each loadout against that player's save, and starts wave 1 when everyone is in, or 30 s after the first arrival. `AvatarNormalizer` holds spawns until the map is set.
+- **Trips:** `lobby/MatchService.luau` (§2). Lobby pads reserve a server, write the MemoryStore entry `RogueliteMatchV1[PrivateServerId]`, hand off every save, and teleport the party (all or nobody). The match reads the entry, `setMap`s, admits only listed members (others go back to a lobby), re-checks each loadout against that player's save, and starts wave 1 when everyone is in and past their loading screen (`ClientLoaded`), or 30 s after the first arrival. `AvatarNormalizer` holds spawns until the map is set.
 - **Leaving:** in a match, the death screen's Give Up is Leave Run: rewards settle and the player returns to a public lobby. Closing the game also keeps rewards, because run emeralds pay as each wave clears (`ProfileService.settleRun`, once per stint).
 - **Run end:** past wave 20 the run continues (Endless, per `PROGRESSION_AND_SESSION_FLOW.md`). The win and the wave-20 emeralds are saved at the wave-20 clear.
 - **Not built yet (at the time):** the results screen, a between-waves Leave Run button, spectating, the 10 s everyone-down countdown and doubling revives. All but the doubling revives were built on 2026-10-02 (below).

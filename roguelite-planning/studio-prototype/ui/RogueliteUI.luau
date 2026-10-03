@@ -502,12 +502,19 @@ function UI.mount(playerGui)
  local levelMount=require(RS:WaitForChild('LevelUpUI'))
  levelUpView=levelMount.mount(player,function() close() end,function(phaseNow) if phaseNow=='Shop' and not ended() then controller:ShowPreview('Shop') end end)
  local lastPhase=nil
+ -- On match servers and in the tutorial, wave 1 starts by itself once everyone's loading screen
+ -- is gone (MatchService, TutorialDirector): no empty shop over the arena before it. Elsewhere
+ -- (a Studio arena start, the admin Waves button) the wave-1 shop's GO starts it.
+ local function firstWaveStartsItself(data)
+  return data.wave==1 and (RS:GetAttribute('ServerRole')=='Match' or RS.RogueliteCombat:GetAttribute('TutorialRun')==true)
+ end
  local function phaseChanged()
   local data=shopView:snapshot();if not data or ended() then return end
   if data.phase~=lastPhase then
    lastPhase=data.phase
    -- Sandbox (phase Practice) has no shop: close any open menu, as a wave start does.
-   if data.phase=='Shop' then controller:ShowPreview('Shop') elseif data.phase=='Combat' or data.phase=='Practice' then close() end
+   if data.phase=='Shop' then if not firstWaveStartsItself(data) then controller:ShowPreview('Shop') end
+   elseif data.phase=='Combat' or data.phase=='Practice' then close() end
   end
  end
  shopView.state:GetAttributeChangedSignal('ShopSnapshot'):Connect(phaseChanged)

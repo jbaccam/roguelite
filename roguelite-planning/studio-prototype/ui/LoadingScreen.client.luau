@@ -1,7 +1,8 @@
 -- Loading screens (ReplicatedFirst.LoadingScreen, a LocalScript beside LoadingScreenUI).
 -- Joining or arriving: shows where this player landed (the `loading` teleport data that MatchService
 -- sets, else the lobby) and follows real steps: the game loads, the save loads (ProfileLoaded), the
--- character spawns. Then it fades out. Never stays longer than MAX_SECONDS.
+-- character spawns. Then it fades out. Never stays longer than MAX_SECONDS. Once it is gone it
+-- tells the server (RunAction 'Loaded'): a match holds wave 1 until everyone can see it.
 -- Leaving: when the server sets the player's TravelTo attribute (MatchService, just before a
 -- teleport) the screen for that destination comes up at once and is handed to SetTeleportGui, so
 -- the same art covers the trip. Teleport data and TravelTo are cosmetic only.
@@ -39,9 +40,17 @@ do
  playerGui:SetAttribute('LoadingScreenUp',true)
  ContentProvider:PreloadAsync({gui})
  local started=os.clock()
+ -- The player can see the game now: MatchService (and the Studio tutorial) start wave 1 on this.
+ local reported=false
+ local function report()
+  if reported then return end;reported=true
+  local combat=game:GetService('ReplicatedStorage'):WaitForChild('RogueliteCombat',30)
+  local remote=combat and combat:WaitForChild('RunAction',30)
+  if remote then remote:FireServer('Loaded') end
+ end
  local function finish()
   playerGui:SetAttribute('LoadingScreenUp',false)
-  if gui.Parent then screen:finish(function() gui:Destroy() end) end
+  if gui.Parent then screen:finish(function() gui:Destroy();report() end) else task.spawn(report) end
  end
  task.delay(MAX_SECONDS,finish)
  task.spawn(function()

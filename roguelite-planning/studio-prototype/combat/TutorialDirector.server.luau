@@ -2,9 +2,11 @@
 --   Lobby servers: a player who hasn't played the tutorial run yet (ProfileTutorial 'Run') goes
 --     straight to a solo tutorial match (MatchService.launch with {tutorial=true}).
 --   Match servers: MatchService sets RogueliteCombat.TutorialRun from the match entry; this script
---     then runs it. Studio's Combined role: only with Workspace.StudioTutorial=true (otherwise
---     ProfileService counts every Studio profile as done); the player is put in the Pine Valley
---     arena as a Brawler with the Frying Pan and wave 1 starts.
+--     then runs it. MatchService starts wave 1 once the player's loading screen is gone, plus
+--     WELCOME_SECONDS for Eggbert's welcome.
+--   Studio's Combined role: only with Workspace.StudioTutorial=true (otherwise ProfileService
+--     counts every Studio profile as done); the player is put in the Pine Valley arena as a
+--     Brawler with the Frying Pan and wave 1 starts the same way.
 -- The tutorial is the normal run with ShopService.tutorial (waves, the Glock offer, no starting
 -- shards, no shop timer), worth-5 crystals, the boss on wave 3 with a fixed health, no respawns,
 -- and each wave ending once its enemies are dead. RogueliteMeta pays the reward and ends the run
@@ -140,6 +142,8 @@ if studio and Role.get()=='Combined' then
   task.spawn(function()
    local t0=os.clock()
    while p.Parent==Players and not Shop.isMember(p) and os.clock()-t0<20 do task.wait(.25) end
+   -- On a first join their loading screen still covers the arena (MatchService waits the same way).
+   while p.Parent==Players and p:GetAttribute('ClientLoaded')~=true and os.clock()-t0<30 do task.wait(.25) end
    task.wait(Config.WELCOME_SECONDS) -- the welcome line first
    if active and Shop.isMember(p) and Shop.phase=='Shop' and Shop.wave==1 then Shop.startFirstWave() end
   end)

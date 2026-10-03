@@ -2,9 +2,10 @@
 -- Lobby: reserve a private match server, write who is coming and what they play (a MemoryStore
 -- entry the clients never see), hand every save over (ProfileService.handOff) and teleport the
 -- party. Match: read that entry, load its map, admit only the party, give each member their
--- validated loadout and start wave 1 once everyone is in. Give Up in a match, and anyone who isn't
--- listed, goes back to a public lobby server. Teleports only work in the published game; Studio
--- plays in the Combined role, or as a Match with Workspace.StudioServerRole (ServerRole).
+-- validated loadout and start wave 1 once everyone is in and past the loading screen. Give Up in
+-- a match, and anyone who isn't listed, goes back to a public lobby server. Teleports only work
+-- in the published game; Studio plays in the Combined role, or as a Match with
+-- Workspace.StudioServerRole (ServerRole).
 -- Unsandboxed (TeleportService, MemoryStoreService), like ProfileService and RogueliteMeta.
 local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')
@@ -17,6 +18,7 @@ local Profiles=require(SSS:WaitForChild('ProfileService'))
 local Shop=require(SSS:WaitForChild('ShopService'))
 local Rules=require(RS:WaitForChild('RunSetupRules'))
 local combat=RS:WaitForChild('RogueliteCombat')
+local Tutorial=require(combat:WaitForChild('TutorialConfig'))
 local M={}
 local ENTRY_SECONDS=3600 -- a match entry outlives any trip; the run itself can go on longer
 local PARTY_WAIT=30 -- wave 1 waits this long for missing members
@@ -222,13 +224,19 @@ function M.start()
   end
   Players.PlayerAdded:Connect(admit)
   for _,p in Players:GetPlayers() do task.spawn(admit,p) end
-  -- Wave 1 starts once every listed member is in the arena, or PARTY_WAIT after the first one.
+  -- Wave 1 starts once every listed member is in the arena with their loading screen gone
+  -- (ClientLoaded, from the client's RunAction 'Loaded'), or PARTY_WAIT after the first one
+  -- arrives. A run member is in the arena as soon as their character spawns, which is up to
+  -- ~15 s before their screen clears: zombies used to reach them behind it (2026-10-03). The
+  -- tutorial then gives Eggbert's welcome line WELCOME_SECONDS before the zombies come.
   while not bad do
    task.wait(.5)
-   local expected,arrived=0,0
-   if entry then for id in entry.members do expected+=1;local p=Players:GetPlayerByUserId(tonumber(id));if p and ready[p] and Shop.isMember(p) then arrived+=1 end end
-   else for p in ready do if p.Parent==Players then expected+=1;if Shop.isMember(p) then arrived+=1 end end end end
-   if arrived>0 and (arrived>=expected or os.clock()-(firstArrival or os.clock())>=PARTY_WAIT) then
+   local expected,arrived,loaded=0,0,0
+   local function count(p) if Shop.isMember(p) then arrived+=1;if p:GetAttribute('ClientLoaded')==true then loaded+=1 end end end
+   if entry then for id in entry.members do expected+=1;local p=Players:GetPlayerByUserId(tonumber(id));if p and ready[p] then count(p) end end
+   else for p in ready do if p.Parent==Players then expected+=1;count(p) end end end
+   if arrived>0 and (loaded>=expected or os.clock()-(firstArrival or os.clock())>=PARTY_WAIT) then
+    if combat:GetAttribute('TutorialRun')==true then task.wait(Tutorial.WELCOME_SECONDS) end
     Shop.startFirstWave();break
    end
   end

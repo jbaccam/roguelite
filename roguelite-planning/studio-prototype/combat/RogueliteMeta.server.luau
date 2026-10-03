@@ -617,7 +617,10 @@ runAction.OnServerEvent:Connect(function(p,action,arg)
  elseif action=='SetPaused' then -- plan L: the pause screen opening (true) or closing (false)
   if os.clock()-(lastPauseAction[p] or 0)<.25 then return end;lastPauseAction[p]=os.clock()
   setPaused(p,arg==true)
- elseif action=='UseReroll' or action=='UseBanish' then useStored(p,action,arg) end
+ elseif action=='UseReroll' or action=='UseBanish' then useStored(p,action,arg)
+ -- The loading screen is gone (ReplicatedFirst.LoadingScreen). Only times wave 1 (MatchService,
+ -- TutorialDirector), which never waits longer than its own cap for it.
+ elseif action=='Loaded' then p:SetAttribute('ClientLoaded',true) end
 end)
 -- The run's clocks: the last stand, automatic Back to Lobby, the shop's "keep N emeralds".
 local sinceClock=0

@@ -1,3 +1,14 @@
+# Wave 1 waits for the loading screen; loading art shows — October 3, 2026
+
+Play-test report: the tutorial began while the player was still loading. Zombies were already chasing, a few were dead, the player had levelled up, and Eggbert's welcome was missed. Half the loading screens stayed gray.
+
+- **Why wave 1 was early:** a match started wave 1 as soon as each member's character spawned. On the client the loading screen stays up after that, up to about 15 s (menus warming up, then the fade). Meanwhile the pan swung by itself behind the screen. Eggbert's 5 s welcome also typed out and timed out underneath it.
+- **Wave 1 now waits:** once the arrival screen has fully faded, `LoadingScreen` fires `RunAction 'Loaded'`, and `RogueliteMeta` sets the player's `ClientLoaded`. `MatchService` starts wave 1 when every member has it, still at most 30 s after the first arrival (`PARTY_WAIT`). The tutorial then waits `WELCOME_SECONDS` (3) more. The Studio tutorial (`TutorialDirector`) waits the same way. Example: the screen clears 9 s after the character spawns, so the welcome shows at 9 s and wave 1 starts at about 12–12.5 s (the server checks twice a second).
+- **Eggbert waits too:** `TutorialGuide` hides while `PlayerGui.LoadingScreen` exists, and his welcome clock starts when it's gone.
+- **No empty shop before wave 1:** on match servers and in the tutorial, `RogueliteUI` no longer opens the wave-1 shop (wave 1 starts by itself there). A Studio arena start and the admin Waves button still get it, because its GO starts the wave.
+- **Why the art was gray:** each art half started at `ImageTransparency` 1 and faded in once `IsLoaded`. Roblox never loads a fully transparent image, so `IsLoaded` stayed false and the art only came in at the 20 s fallback. Shorter screens stayed charcoal the whole time. Checked in Studio Edit with a CoreGui probe: at 1, a label wasn't loaded after 5 s, even right after a successful `PreloadAsync({gui})`. At .995 it loaded in 0.3 s. The halves now start at .995, the same trick `AssetPreloader` uses.
+- **Not run:** no Play test, and nothing synced to Studio yet.
+
 # Tutorial play-test, round 2: arrows, placement, crystals, chests — October 3, 2026
 
 Spec section: "Play-test fixes, round 2" in `../../plans/2026-10-03-tutorial-design.md`.

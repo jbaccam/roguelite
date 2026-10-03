@@ -146,6 +146,9 @@ local function runStep()
  local run=RS:FindFirstChild('RogueliteRunState');if not run then return nil end
  -- A new run (the admin panel's Start tutorial again): its lines and banner start over.
  if run:GetAttribute('RunId')~=runId then runId=run:GetAttribute('RunId');seenRunAt=nil;crystal=nil;pickedAt=nil;bannerShown=false;redShown=0;redUntil=0 end
+ -- The loading screen still covers the arena: the welcome waits for it (it used to type out and
+ -- time out underneath, 2026-10-03).
+ if pg:FindFirstChild('LoadingScreen') then return {hide=true} end
  seenRunAt=seenRunAt or os.clock()
  if run:GetAttribute('TutorialWon') then
   -- The banner alone: no box under it (user, 2026-10-03: too much on screen at the victory).
