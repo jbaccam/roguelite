@@ -161,7 +161,9 @@ end)
 -- class or weapon falls back to the class's signature weapon (Brawler if the class is locked).
 local function applyLoadout(p,want)
  local started=os.clock()
- while p.Parent==Players and p:GetAttribute('ProfileLoaded')~=true and not p:GetAttribute('ProfileLoadFailed') and os.clock()-started<30 do task.wait(.2) end
+ -- A DataStore outage is retried for about a minute (ProfileLock.ERROR_SECONDS) before the player
+ -- is asked to rejoin, so wait that long too rather than hand out a default loadout at 30 s.
+ while p.Parent==Players and p:GetAttribute('ProfileLoaded')~=true and not p:GetAttribute('ProfileLoadFailed') and os.clock()-started<75 do task.wait(.2) end
  local class=type(want)=='table' and want.class or nil
  local weapon=type(want)=='table' and want.weapon or nil
  if not Rules.validLoadout(p,class,weapon) then

@@ -5,7 +5,11 @@
 local L={}
 L.WAIT=15 -- another server's lock: keep retrying this long (its leaving save is usually in flight), then take over
 L.RETRY=3
-L.ATTEMPTS=3 -- store errors before a load gives up
+-- Store errors (a DataStore outage): keep trying for ERROR_SECONDS, waiting 2, 4, 6, then 8 s between
+-- tries, and only then give up (launch audit S2). Example: an outage that clears after 40 s still
+-- loads the save, about 8 tries in. Giving up never writes anything: the player is told to rejoin.
+L.ERROR_SECONDS=60
+L.ERROR_WAIT_MAX=8
 
 local function lockOf(record) return type(record)=='table' and type(record.lock)=='table' and record.lock or nil end
 L.lockOf=lockOf
@@ -17,7 +21,7 @@ L.lockOf=lockOf
 function L.claim(store,key,job,opts)
  local sleep,clock,now=opts.sleep or task.wait,opts.clock or os.clock,opts.now or os.time
  local takeoverAt=clock()+(opts.wait or L.WAIT)
- local errors=0
+ local errors,firstError=0,nil
  while true do
   local takeover=clock()>=takeoverAt
   local taken,record,overrode=false,nil,false
@@ -32,11 +36,11 @@ function L.claim(store,key,job,opts)
   end)
   if ok and taken then return record,overrode and 'takeover' or nil end
   if not ok then
-   errors+=1;warn('ProfileLock: load failed',key,err)
-   if errors>=L.ATTEMPTS then return nil,'error' end
+   errors+=1;firstError=firstError or clock();warn('ProfileLock: load failed',key,err)
+   if clock()-firstError>=(opts.errorSeconds or L.ERROR_SECONDS) then return nil,'error' end
   end
   if opts.stillWanted and not opts.stillWanted() then return nil,'cancelled' end
-  sleep(ok and L.RETRY or errors)
+  sleep(ok and L.RETRY or math.min(L.ERROR_WAIT_MAX,errors*2))
  end
 end
 

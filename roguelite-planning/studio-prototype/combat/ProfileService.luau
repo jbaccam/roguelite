@@ -99,14 +99,24 @@ function P.load(player)
  local data
  if store then
   -- Waits (up to ProfileLock.WAIT) while another server still holds this save, e.g. its
-  -- leaving save after a quick rejoin, then takes over as if that server crashed.
+  -- leaving save after a quick rejoin, then takes over as if that server crashed. A DataStore
+  -- outage is retried for about a minute (ProfileLock.ERROR_SECONDS). ProfileLoadState tells the
+  -- player (SaveStatus): 'loading' shows "Loading your save..." if it takes a moment.
   local reason
+  player:SetAttribute('ProfileLoadState','loading')
   data,reason=Lock.claim(store,key(player),JOB,{fresh=fresh,stillWanted=function() return player.Parent==Players end})
   if reason=='takeover' then warn('ProfileService: took over another server\'s session lock',player.UserId) end
   if not data then
-   if reason=='error' then player:SetAttribute('ProfileLoadFailed',true) end -- never save over unknown data
+   -- Never play on a blank profile or save over unknown data: say so, then send them to rejoin.
+   if reason=='error' and player.Parent==Players then
+    player:SetAttribute('ProfileLoadFailed',true);player:SetAttribute('ProfileLoadState','failed')
+    task.delay(4,function()
+     if player.Parent==Players and not P.profiles[player] then player:Kick("We couldn't load your save. Your progress is safe: please rejoin in a minute.") end
+    end)
+   end
    return
   end
+  player:SetAttribute('ProfileLoadState',nil)
   -- Left while loading: hand the lock straight back and keep nothing, so no later autosave can
   -- write this copy over the newer save of the server they moved to.
   if player.Parent~=Players then Lock.write(store,key(player),JOB,data,true);return end
@@ -596,22 +606,32 @@ function P.redeem(player,code)
 end
 
 -- Last save, which also hands back the lock. Leaving and shutdown can both ask; one is enough.
-local releasing={}
+-- A failed write is tried again 3 more times, 1, 2 and 3 s apart, keeping the profile until it's
+-- saved (launch audit S3): one DataStore hiccup no longer loses everything since the last autosave.
+-- A lost lock stops at once (another server owns the save). releaseCount: saves still running.
+local releasing,releaseCount={},0
 local function release(p)
  if releasing[p] then return end
- releasing[p]=true
- P.save(p,true);P.profiles[p]=nil;P.loaded[p]=nil;releasing[p]=nil;questDirty[p]=nil
+ releasing[p]=true;releaseCount+=1
+ local ok=P.save(p,true)
+ for pause=1,3 do
+  if ok or not P.loaded[p] then break end
+  task.wait(pause);ok=P.save(p,true)
+ end
+ if not ok and P.loaded[p] then warn('ProfileService: last save failed after 4 tries',p.UserId) end
+ P.profiles[p]=nil;P.loaded[p]=nil;releasing[p]=nil;questDirty[p]=nil
+ releaseCount-=1
 end
 
 Players.PlayerAdded:Connect(P.load)
 for _,p in Players:GetPlayers() do task.spawn(P.load,p) end
 Players.PlayerRemoving:Connect(release)
--- Shutdown: every player at once, inside Roblox's 30 s window.
+-- Shutdown: every player at once, inside Roblox's 30 s window, and the leave-saves already running
+-- (a player who left just before) are waited for too.
 game:BindToClose(function()
- local pending=0
- for p in P.profiles do pending+=1;task.spawn(function() release(p);pending-=1 end) end
+ for p in P.profiles do task.spawn(release,p) end
  local started=os.clock()
- while pending>0 and os.clock()-started<25 do task.wait(.1) end
+ while releaseCount>0 and os.clock()-started<27 do task.wait(.1) end
 end)
 task.spawn(function() while true do task.wait(120);for p in P.profiles do P.save(p) end end end)
 return P

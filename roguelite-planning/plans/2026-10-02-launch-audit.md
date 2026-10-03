@@ -99,8 +99,10 @@ The pass check runs at join, before the profile has loaded, and the grant is thr
 
 **Where:** `combat/RogueliteMeta.server.luau:507-551,596`
 
-### S2 · If a save fails to load, the player is never told
+### S2 · If a save fails to load, the player is never told — **fixed 2026-10-02**
 *Saving data*
+
+**Done:** store errors are retried for about a minute (2, 4, 6, then 8 s apart). After 2 s of loading the player sees "Loading your save..." (ui/SaveStatus.client.luau); if it still fails, "Couldn't load your save" and, 4 s later, a kick asking them to rejoin. Nothing is ever written over the save. Match servers wait 75 s for the save before a default loadout.
 
 After 3 failed tries (about 3 s) the profile gives up for the whole session. In the lobby every action says "Profile still loading", the party can't launch, and on a match server the player plays 20 waves and earns nothing. Nothing is overwritten, which is good.
 
@@ -233,8 +235,10 @@ The Starter Pack and Godly Starter contain chests but sit on the Bundles tab wit
 
 **Progress 2026-10-02:** SEE ODDS is on the Starter Pack, Godly Starter, Mega and Ultimate cards and opens the Legendary Chest odds directly (closing them returns to the store). The run shop and level-up REROLL show each tier's chance from `EconomyConfig.tierOdds` / `LevelUpCatalog.tierOdds`, the same numbers the server rolls with (checked against 200k simulated rolls). Still to build: tappable odds rows with item cards (mockup first).
 
-### S3 · The last save on leave or shutdown only tries once
+### S3 · The last save on leave or shutdown only tries once — **fixed 2026-10-02**
 *Saving data*
+
+**Done:** the last save is tried up to 4 times (1, 2, 3 s apart), keeping the profile until it saves; a lost lock stops at once. BindToClose waits for every save still running, leave-saves included, up to 27 s.
 
 One DataStore hiccup when a player leaves drops everything since the last 120 s autosave and leaves the session lock stuck for up to 15 s. On shutdown, BindToClose doesn't wait for leave-saves already running.
 

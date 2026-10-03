@@ -548,6 +548,9 @@
         "TeammateReviveVisuals": {
           "$path": "TeammateReviveVisuals.client.luau"
         },
+        "SaveStatus": {
+          "$path": "../ui/SaveStatus.client.luau"
+        },
         "RogueliteChickens": {
           "$path": "RogueliteChickens.client.luau"
         },

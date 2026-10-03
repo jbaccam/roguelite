@@ -59,10 +59,17 @@ function T.run(L)
   local d,why=L.claim(store,'u_5','A',{fresh=fresh,clock=clock,sleep=sleep,stillWanted=function() return false end})
   check('cancelled when the player left',d==nil and why=='cancelled' and store.data.u_5.lock.job=='B')
  end
- -- Store errors: give up after ATTEMPTS so the profile is never saved over unknown data.
+ -- Store errors: keep trying for ERROR_SECONDS (launch audit S2), then give up, so the profile is
+ -- never saved over unknown data.
  do local store=fakeStore();store.fail=99;local clock,sleep=clockPair()
   local d,why=L.claim(store,'u_6','A',{fresh=fresh,clock=clock,sleep=sleep})
   check('gives up after store errors',d==nil and why=='error')
+  check('only after about a minute of tries',clock()>=L.ERROR_SECONDS and clock()<L.ERROR_SECONDS+L.ERROR_WAIT_MAX and store.writes==0)
+  -- An outage that clears after 40 s still loads.
+  local outage=fakeStore();local c2,s2=clockPair();local base=outage.UpdateAsync
+  function outage:UpdateAsync(key,fn) if c2()<40 then error('fake outage') end;return base(self,key,fn) end
+  local d3,why3=L.claim(outage,'u_8','A',{fresh=fresh,clock=c2,sleep=s2})
+  check('a 40 s outage still loads',d3~=nil and why3==nil and c2()>=40 and c2()<60)
   store.fail=1
   local d2=L.claim(store,'u_6','A',{fresh=fresh,clock=clock,sleep=sleep})
   check('retries one store error',d2~=nil)
