@@ -80,6 +80,34 @@ end)
 local function marker()
     return Role.marker() or error('No RogueliteZombieSpawn in the active map ' .. tostring(Role.activeMap()))
 end
+
+-- Work every enemy's tick used to repeat (launch audit P9), done once per frame instead: the
+-- players' bodies, the map marker and the Freeze/Pause flags. At 100 enemies that was ~1,000
+-- player scans and marker lookups a second, plus 12,000 attribute reads for the two flags.
+-- Health and positions are still read live, so a player who dies mid-frame is dropped at once.
+-- The frame number comes from PreSimulation, which runs before any Heartbeat callback.
+local frameNumber, frameShared = 0, nil
+RunService.PreSimulation:Connect(function() frameNumber += 1 end)
+local function shared()
+    if frameShared and frameShared.frame == frameNumber then return frameShared end
+    local targets = {}
+    for _, player in Players:GetPlayers() do
+        local character = player.Character
+        local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
+        local targetHumanoid = character and character:FindFirstChildOfClass("Humanoid")
+        if targetRoot and targetHumanoid then
+            table.insert(targets, {root = targetRoot, humanoid = targetHumanoid, userId = player.UserId})
+        end
+    end
+    frameShared = {
+        frame = frameNumber,
+        targets = targets,
+        marker = Role.marker(),
+        -- Admin Freeze, or plan L's paused run.
+        frozen = combat:GetAttribute('AdminFreeze') == true or combat:GetAttribute('RunPaused') == true,
+    }
+    return frameShared
+end
 local spawnZombie
 
 -- Spawn director: Brotato-style telegraphed groups spread around the players.
@@ -416,16 +444,14 @@ local previousTarget = nil
 local elapsed = 0
 local stall = nil
 local attacks = kind == 'Mutant' and Attacks or EnemyAttacks -- the Mutant slams (ZombieAttacks)
-local function nearestTarget()
+-- The nearest living player from this frame's list (ties to the earlier player, as before).
+local function nearestTarget(targets)
     local best, distance = nil, math.huge
-    for _, player in Players:GetPlayers() do
-        local character = player.Character
-        local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
-        local targetHumanoid = character and character:FindFirstChildOfClass("Humanoid")
-        if targetRoot and targetHumanoid and targetHumanoid.Health > 0 then
-            local offset=targetRoot.Position-root.Position
+    for _, t in targets do
+        if t.humanoid.Health > 0 then
+            local offset=t.root.Position-root.Position
             local d = Vector2.new(offset.X,offset.Z).Magnitude
-            if d < distance then best, distance = targetRoot, d end
+            if d < distance then best, distance = t, d end
         end
     end
     return best, distance
@@ -440,9 +466,10 @@ connection = RunService.Heartbeat:Connect(function(dt)
         connection:Disconnect()
         return
     end
+    local frame = shared()
     -- Admin Freeze: no moving and no attacks; players' hits and damage still work. The first
     -- frozen frame cancels an attack in progress, so its hit can't land the moment Freeze ends.
-    if combat:GetAttribute('AdminFreeze') == true or combat:GetAttribute('RunPaused') == true then -- plan L: a paused run freezes them too
+    if frame.frozen then -- plan L: a paused run freezes them too
         if not frozen then
             frozen = true
             EnemyAttacks.cancel(npc)
@@ -466,14 +493,15 @@ connection = RunService.Heartbeat:Connect(function(dt)
     local statusSlow=npc:GetAttribute('StatusSlowStrength') or 0
     local vacuumSlow=(npc:GetAttribute('VacuumSlowUntil') or 0)>workspace:GetServerTimeNow() and 35 or 0
     humanoid.WalkSpeed=config.speed*(1-math.max(statusSlow,vacuumSlow)/100)
-    local target, distance = nearestTarget()
+    local nearest, distance = nearestTarget(frame.targets)
+    local target = nearest and nearest.root
     if target ~= previousTarget then
         previousTarget = target
         generation += 1
         waypoints = nil
     end
     npc:SetAttribute("Chasing", target ~= nil)
-    npc:SetAttribute("TargetUserId", target and Players:GetPlayerFromCharacter(target.Parent).UserId or 0)
+    npc:SetAttribute("TargetUserId", nearest and nearest.userId or 0)
     if not target then
         humanoid:Move(Vector3.zero)
         humanoid:MoveTo(root.Position)
@@ -487,7 +515,7 @@ connection = RunService.Heartbeat:Connect(function(dt)
         return
     end
     -- Markers are CanQuery=false now; the marker entry (last, so nil is safe) is only for older places.
-    local m = Role.marker()
+    local m = frame.marker
     if target.Parent ~= sightTarget or m ~= sightMarker then
         sightTarget, sightMarker = target.Parent, m
         sight.FilterDescendantsInstances = {folder, sightTarget, m}
