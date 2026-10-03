@@ -419,9 +419,13 @@ npc:SetAttribute('SpawnWave',wave)
 npc:SetAttribute('ContactRange',config.attackRange)
 -- Body bump (CharacterService): pushing into a mob's body costs half its hit, so a swarm
 -- can't be run through for free between swings. The range sits inside the mob's stop
--- distance, so standing and fighting at normal reach never triggers it.
+-- distance, so standing and fighting at normal reach never triggers it. It's the body as it
+-- is (2026-10-03): its narrower ground side (a humanoid's depth) halved, plus 0.8 for the
+-- player's half-body and a touch. The old radius + 1.5 bumped from 1.5 studs in front of a
+-- skeleton and 3.6 off an ogre ("hit in stupid angles or ranges").
 npc:SetAttribute('BumpDamage',math.max(1,math.floor(config.damage*.5+.5)))
-npc:SetAttribute('BumpRange',math.min(config.stopRange,config.radius+1.5)-.3)
+local body=npc:GetExtentsSize()
+npc:SetAttribute('BumpRange',math.min(config.stopRange-.3,math.min(body.X,body.Z)/2+.8))
 npc.Parent = folder
 local root = npc:WaitForChild("HumanoidRootPart")
 local humanoid = npc:WaitForChild("Humanoid")

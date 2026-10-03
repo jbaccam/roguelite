@@ -47,3 +47,42 @@ All the changed scripts compile.
 - Synced again at 618c18e with `tools/LaunchSync.luau` (`hit-fairness-sync-map.json`, plus the PlayerView remote): 7 scripts, each guarded on its pre-fix version. Afterwards all 7 matched, Sandboxed was unchanged, and the remote matched HitFX's capabilities.
 
 Not yet play-tested.
+
+## Every mob's reach, measured (2026-10-03, round 2)
+
+User: "make sure i can train all the other mobs too without getting hit in stupid angles or ranges".
+
+Every melee mob hit out to the same 4.6 studs centre to centre (the native zombie 4.5), whatever its size. Their body bumps used a rough radius + 1.5.
+
+**How it was measured.** In Studio Edit, each mob's template was posed at its attack's strike frame with fresh copies of EnemyMotion, or ZombieMotion for the native zombies. `EnemyMotion.boneWorld` gave how far forward of the root the striking limb gets:
+- jointed parts: their outer box edges;
+- skinned meshes: the hand bone, plus the blade's forward share for the sword and dagger users (blade lengths from `mob-production/combat-ready/attack_keys.py`).
+
+The client already lines each clip's strike frame up with the server's impact time (RogueliteZombieAnimation), so timing was right; only range was off.
+
+**Reach** = limb + 0.75 (the player's half-body). **Stop** (where the chase stops) = 0.6 inside the reach, so a mob still connects on a player standing still. Lunges keep their dash trigger and take reach as `hitRange`. All of these live in `EnemyCatalog.Reach`.
+
+| Mob | Limb at strike | Reach (was) | Stop (was) |
+|---|---|---|---|
+| Regular zombie | 2.63 (arm swipe) | 3.4 (4.5) | 2.8 (3.5) |
+| Baby zombie | 1.36 | 2.1 (3.1) | 1.5 (2.1) |
+| Skeleton | 2.03 + sword | 3.7 (4.6) | 3.1 (3.2) |
+| Frozen Knight | 2.28 + 2.6 sword across a sweep | 4.7 (4.6) | 4.1 (3.2) |
+| Fire Goblin | 2.23 + dagger | 3.6 (4.6) | 3.0 (3.2) |
+| Mummy | 2.79 | 3.5 (4.6) | 2.9 (3.2) |
+| Werewolf | 3.4 + claws | 4.6 (4.6) | 4.0 (3.2) |
+| Obsidian Ogre | 3.65 + fist | 5.0 (6.0) | 4.4 (4.4) |
+| Crab | 2.87 | 3.6 (4.6) | 3.0 (3.2) |
+| Hermit Crab | 3.14 | 3.9 (4.6) | 3.3 (3.2) |
+| Frost Ghost | 1.52 | 2.3 (4.6) | 1.7 (3.2) |
+| Ember Spider | 1.80 | 2.6 (4.6) | 2.0 (3.2) |
+| Lava Slime | 1.24 | 2.0 (4.6) | 1.8 (3.2) |
+| Scorpion (lunge) | 2.93 | 3.7 (3.8 + 0.6) | 7 |
+| Snake (lunge) | 2.28 | 3.0 (3.4 + 0.6) | 9 |
+
+- **Split Lava Slime children** scale the limb part of the reach by their size (`EnemyAttacks`).
+- **Body bump** (`RogueliteZombieChase`) is now the body's narrower ground side halved, plus 0.8, capped 0.3 inside the stop distance. Examples: zombie 1.4 (was 2.5), skeleton 1.6 (2.8), ogre 2.2 (3.6), tank 2.1 (4.2).
+- **The tank zombie's slam** draws its full 6.5-stud disc during the windup (ZombieSlamVisuals), so it stays as it was.
+- **Arcs:** every swing is ~75 degrees each side of the facing (round 1).
+
+**Checked:** `EnemyTests` pass 253,034 checks (54 clips); the changed scripts compile. Not yet play-tested.

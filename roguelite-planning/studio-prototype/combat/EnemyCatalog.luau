@@ -279,6 +279,39 @@ for _, d in C.List do
 		d.balanceStatus = "Existing authoritative Pine Valley tuning"
 	end
 end
+-- Reach measured from each mob's own attack (2026-10-03; user: "make sure i can train all the
+-- other mobs too without getting hit in stupid angles or ranges"). Every melee mob hit out to the
+-- same 4.6 studs (4.5 for the native zombie), whatever its size: an ember spider hit from about 2.8
+-- studs past its body. reach = how far forward its striking limb (and blade) gets at the strike
+-- frame, measured on the template in Studio Edit (EnemyMotion / ZombieMotion poses through
+-- EnemyMotion.boneWorld), plus 0.75 for the player's half-body. stop = where its chase stops,
+-- 0.6 inside that, so it still reaches a player who stands still. A lunge keeps its dash trigger
+-- (attackRange) and takes reach as hitRange. The tank's slam is a telegraphed disc (unchanged).
+C.Reach = {
+	["regular-zombie"] = { 3.4, 2.8 }, -- arm swipe 2.63 (was 4.5)
+	["baby-zombie"] = { 2.1, 1.5 }, -- 1.36 (was 3.1)
+	skeleton = { 3.7, 3.1 }, -- hand 2.03 + sword (1.2, about 80% forward at the chop)
+	["frozen-knight"] = { 4.7, 4.1 }, -- hand 2.28 + sword (2.6, about 65% forward across the sweep)
+	["fire-goblin"] = { 3.6, 3.0 }, -- hand 2.23 + dagger 0.6
+	mummy = { 3.5, 2.9 }, -- fist 2.79
+	werewolf = { 4.6, 4.0 }, -- claw hand 3.4 + claws 0.5
+	["obsidian-ogre"] = { 5.0, 4.4 }, -- wrist 3.65 + mitten fist 0.6 (was 6)
+	crab = { 3.6, 3.0 }, -- claw 2.87
+	["hermit-crab"] = { 3.9, 3.3 }, -- claw 3.14
+	["frost-ghost"] = { 2.3, 1.7 }, -- arm 1.52
+	["ember-spider"] = { 2.6, 2.0 }, -- body and fangs 1.80
+	["lava-slime"] = { 2.0, 1.8 }, -- body 1.24; stops at the player's edge (split children scale it, EnemyAttacks)
+	scorpion = { 3.7 }, -- claws 2.93 (lunge; was 3.8 + 0.6)
+	snake = { 3.0 }, -- head 2.28 (lunge; was 3.4 + 0.6)
+}
+for id, r in C.Reach do
+	local d = assert(C.ById[id], id)
+	d.hitRange = r[1]
+	if d.behavior ~= "Lunge" then
+		d.attackRange = r[1]
+		d.stopRange = r[2]
+	end
+end
 function C.get(id)
 	return C.ById[id] or C.ById[C.ByLegacy[id]]
 end

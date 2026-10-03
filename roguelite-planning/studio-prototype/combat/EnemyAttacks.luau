@@ -82,7 +82,7 @@ local TURN_RATE = math.rad(540)
 -- players 220 ms late (CharacterService.seen, HIT_FAIRNESS.md).
 local TRIGGER_BONUS = 0.4
 local REACH_BONUS = 0
-local LUNGE_REACH_BONUS = 0.2
+local LUNGE_REACH_BONUS = 0 -- reach is measured per mob now (EnemyCatalog.Reach)
 local ARC_DOT = 0.26
 local HIT_WINDOW = 0.08
 -- Ranged enemies stop to shoot (MAP_MOB_ROSTER: "stops, aims, and fires"), from the draw until
@@ -205,11 +205,16 @@ local function melee(npc, root, config, s)
 			-- client has it, the enemy where they saw it. Walls use the bodies here.
 			local delta = Characters.seen(player, pr) - Characters.seenEnemy(player, root)
 			local flat = Vector3.new(delta.X, 0, delta.Z)
+			-- A split lava slime is smaller: its limb part of the reach shrinks with it (0.75 is the
+			-- player's half-body, EnemyCatalog.Reach).
+			local reach = config.hitRange or config.attackRange
+			if npc:GetAttribute("SplitChild") and config.childScale then
+				reach = (reach - 0.75) * config.childScale + 0.75
+			end
 			if
 				math.abs(delta.Y) <= config.maxHeight
 				and flat.Magnitude
-					<= (config.hitRange or config.attackRange)
-						+ (config.behavior == "Lunge" and LUNGE_REACH_BONUS or REACH_BONUS)
+					<= reach + (config.behavior == "Lunge" and LUNGE_REACH_BONUS or REACH_BONUS)
 				and (flat.Magnitude < 0.1 or flat.Unit:Dot(s.direction) > ARC_DOT)
 				and not workspace:Raycast(root.Position, pr.Position - root.Position, s.params)
 			then
