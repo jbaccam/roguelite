@@ -13,5 +13,6 @@
  "ReplicatedStorage.LobbyUI": "ui/LobbyUI.luau",
  "ReplicatedStorage.RogueliteCombat.AdminConfig": "combat/AdminConfig.luau",
  "ServerScriptService.AdminService": "combat/AdminService.server.luau",
- "ReplicatedStorage.AdminPanelUI": "ui/AdminPanelUI.luau"
+ "ReplicatedStorage.AdminPanelUI": "ui/AdminPanelUI.luau",
+ "StarterPlayer.StarterPlayerScripts.RogueliteHUD": "ui/RogueliteHUD.client.luau"
 }

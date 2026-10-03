@@ -396,7 +396,8 @@ local function finish(p,outcome)
  local map=d and d.map or runMap();local wave=d and d.wave or Shop.wave
  local test=(d and d.test) or Admin.isTestRun()
  local cleared=math.max(0,wave-1)
- if not test then Analytics.earned(p,Profiles.settleRun(p,stint,RunSetupRules.runKey(map,difficulty()),cleared,owedFor(p,stint))) end
+ -- The tutorial pays its own reward and keeps no map progress (no Pine Valley best wave).
+ if not test and not tutorialRun() then Analytics.earned(p,Profiles.settleRun(p,stint,RunSetupRules.runKey(map,difficulty()),cleared,owedFor(p,stint))) end
  if cleared>=RunSetupRules.WinWave then outcome='Victory' end -- won, then left or fell in Endless
  setResult(p,outcome,map,stint,cleared,test)
  Analytics.runEnded(p,outcome,map,difficulty(),wave,cleared,test)

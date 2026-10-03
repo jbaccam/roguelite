@@ -128,6 +128,11 @@ RunService.Heartbeat:Connect(function(dt)
  local bossLabel=remaining==0 and state:GetAttribute("BossHolding")==true and "BOSS" or nil
  -- Sandbox (phase Practice, from the admin panel): no countdown and no wave number.
  local practice=state~=nil and state:GetAttribute("Phase")=="Practice"
+ -- The tutorial's waves have no clock (they end once cleared): no countdown, BOSS while he's up.
+ local combatFolder=ReplicatedStorage:FindFirstChild('RogueliteCombat')
+ if state and combatFolder and combatFolder:GetAttribute('TutorialRun')==true then
+  remaining=nil;bossLabel=state:GetAttribute('BossHolding')==true and 'BOSS' or nil
+ end
  view:SetTimer(not practice and remaining or nil,not practice and validWave and math.floor(wave) or nil,phase,practice and "SANDBOX" or bossLabel)
  -- A run where the admin panel was used pays no rewards (ADMIN_PANEL.md).
  view:SetTestRun(state~=nil and state:GetAttribute("AdminTestRun")==true)

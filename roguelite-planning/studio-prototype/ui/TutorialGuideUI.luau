@@ -239,11 +239,8 @@ function G.new(player,assets)
   if fade then fade:Cancel() end
   fade=TweenService:Create(arrow,TweenInfo.new(on and .2 or .3),{ImageTransparency=on and 0 or 1});fade:Play()
  end
- function o.point(obj)
-  if obj==A.target then return end
-  A.target=obj
-  local tip,rot=aim(obj)
-  if not tip then if A.shown then A.shown=false;fadeArrow(false) end;return end
+ -- A new curve from where the arrow is now to the target's tip spot.
+ local function glide(tip,rot)
   if not A.shown then
    -- Appearing: come in from a little way back along its pointing line.
    A.x,A.y=tip.X,tip.Y+(rot==0 and 160 or -160)*scale;A.rot=rot
@@ -252,7 +249,14 @@ function G.new(player,assets)
   local d=tip-A.from;local len=math.max(d.Magnitude,1)
   local bulge=math.min(170*scale,len*.32)
   A.ctrl=(A.from+tip)/2+Vector2.new(-d.Y,d.X)/len*bulge-Vector2.new(0,40*scale)
-  A.shown=true;fadeArrow(true)
+  A.glideTo=A.target;A.lost=nil
+  if not A.shown then A.shown=true;fadeArrow(true) end
+ end
+ function o.point(obj)
+  if obj==A.target then return end
+  A.target=obj
+  local tip,rot=aim(obj)
+  if tip then glide(tip,rot) end -- otherwise frame() picks it up once it shows, or fades the arrow
  end
  local function frame()
   -- Keep the box clear of the UI (place) and of the target and its arrow (targetRect).
@@ -261,9 +265,18 @@ function G.new(player,assets)
    if at then local pad=G.ARROW*scale*1.2;targetRect={at-Vector2.new(pad*.4,pad),size+Vector2.new(pad*.8,pad*2)} else targetRect=nil end
    if os.clock()-placedAt>.35 then place(false) end
   end
-  if not A.shown or not A.target then return end
+  if not A.shown and not A.target then return end
   local tip,rot=aim(A.target)
-  if not tip then A.shown=false;fadeArrow(false);return end
+  if not tip then
+   -- The target is gone (a screen rebuilt its buttons, or there's nothing to point at): hold
+   -- still for a moment so the next target is glided to from here, then fade out.
+   if A.shown then
+    A.lost=A.lost or os.clock()
+    if os.clock()-A.lost>.6 then A.shown=false;A.lost=nil;fadeArrow(false) end
+   end
+   return
+  end
+  if A.glideTo~=A.target or A.lost then glide(tip,rot) end
   if rot~=A.rot1 then A.from=Vector2.new(A.x,A.y);A.t0=os.clock();A.rot0=A.rot;A.rot1=rot;A.ctrl=(A.from+tip)/2 end
   local k=math.clamp((os.clock()-A.t0)/G.GLIDE,0,1);local e=ease(k);local u=1-e
   local p=A.from*u*u+A.ctrl*2*u*e+tip*e*e

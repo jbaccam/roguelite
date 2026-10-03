@@ -183,7 +183,8 @@ local function lobbyStep()
    local set=Armor.ById[Config.SeedArmorSet]
    if eq and set and titled(eq.Parent,string.upper(set.name)) then return {line='Equip',target=eq} end
    local card=find(armory,'A_'..Config.SeedArmor,true)
-   return {line='Equip',target=card or find(armory,'Tab_Armor',true)}
+   -- Still on the pan's upgrade view (no cards there): its BACK button (named Close) first.
+   return {line='Equip',target=card or find(armory,'Tab_Armor',true) or find(armory,'Close',true)}
   end
   if chests then return {line='Equip',target=find(chests,'Exit',true)} end
   return {line='Equip',target=lobbyButton('Armory'),dim='Armory'}

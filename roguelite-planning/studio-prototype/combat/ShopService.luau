@@ -191,13 +191,16 @@ local function offerable(p)
 end
 local function roll(p,slot,excluded)
  local s=S.states[p];local cs=Characters.states[p]
- -- The tutorial's guided offer (S.tutorial.offers), unless it's already on show (a reroll then
- -- rolls this slot normally).
+ -- The tutorial's guided offer (S.tutorial.offers), tagged forced=<wave>. Once this wave's is
+ -- on show (or sold), a reroll or refill rolls the slot normally. The previous shop's offers don't
+ -- count, even when they held the same item.
  local forced=S.tutorial and S.tutorial.offers and S.tutorial.offers[S.wave] and S.tutorial.offers[S.wave][slot]
  local forcedEntry=forced and Catalog.ById[forced]
- if forcedEntry and not excluded[forcedEntry.id] then
+ local forcedShown=false
+ if forcedEntry then for _,o in s.offers do if o.forced==S.wave then forcedShown=true;break end end end
+ if forcedEntry and not forcedShown then
   excluded[forcedEntry.id]=true
-  return {id=forcedEntry.id,token=token(),price=E.price(forcedEntry.basePrice,S.wave,E.modifier(cs.stats)),locked=false,sold=false}
+  return {id=forcedEntry.id,token=token(),price=E.price(forcedEntry.basePrice,S.wave,E.modifier(cs.stats)),locked=false,sold=false,forced=S.wave}
  end
  local wantWeapon=E.weaponSlot(S.wave,slot,rng)
  local tier=E.rollTier(S.wave,cs.stats.Luck,rng)

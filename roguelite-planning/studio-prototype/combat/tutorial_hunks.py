@@ -37,6 +37,8 @@ ADMIN = "combat/AdminService.server.luau"
 ADMIN_S = "ServerScriptService.AdminService"
 PANEL = "ui/AdminPanelUI.luau"
 PANEL_S = "ReplicatedStorage.AdminPanelUI"
+HUD = "ui/RogueliteHUD.client.luau"
+HUD_S = "StarterPlayer.StarterPlayerScripts.RogueliteHUD"
 TUTOR = "combat/TutorialDirector.server.luau"
 MATCH = "lobby/MatchService.luau"
 MATCH_S = "ServerScriptService.MatchService"
@@ -200,13 +202,16 @@ HUNKS = [
      + NEW_STATE_OLD.replace("shards=E.STARTING_SHARDS", "shards=S.tutorial and S.tutorial.startShards or E.STARTING_SHARDS")),
     (SHOP, SHOP_S,
      " local wantWeapon=E.weaponSlot(S.wave,slot,rng)", "before",
-     " -- The tutorial's guided offer (S.tutorial.offers), unless it's already on show (a reroll then\n"
-     " -- rolls this slot normally).\n"
+     " -- The tutorial's guided offer (S.tutorial.offers), tagged forced=<wave>. Once this wave's is\n"
+     " -- on show (or sold), a reroll or refill rolls the slot normally. The previous shop's offers don't\n"
+     " -- count, even when they held the same item.\n"
      " local forced=S.tutorial and S.tutorial.offers and S.tutorial.offers[S.wave] and S.tutorial.offers[S.wave][slot]\n"
      " local forcedEntry=forced and Catalog.ById[forced]\n"
-     " if forcedEntry and not excluded[forcedEntry.id] then\n"
+     " local forcedShown=false\n"
+     " if forcedEntry then for _,o in s.offers do if o.forced==S.wave then forcedShown=true;break end end end\n"
+     " if forcedEntry and not forcedShown then\n"
      "  excluded[forcedEntry.id]=true\n"
-     "  return {id=forcedEntry.id,token=token(),price=E.price(forcedEntry.basePrice,S.wave,E.modifier(cs.stats)),locked=false,sold=false}\n"
+     "  return {id=forcedEntry.id,token=token(),price=E.price(forcedEntry.basePrice,S.wave,E.modifier(cs.stats)),locked=false,sold=false,forced=S.wave}\n"
      " end"),
     (SHOP, SHOP_S,
      " S.phase='Combat';run:SetAttribute('Phase','Combat');run:SetAttribute('WaveEndsAt',workspace:GetServerTimeNow()+E.WAVE_SECONDS)", "replace",
@@ -419,6 +424,18 @@ HUNKS = [
      " player:GetAttributeChangedSignal('StudioArea'):Connect(changed)", "after",
      " combat:GetAttributeChangedSignal('TutorialRun'):Connect(changed)\n"
      " player:GetAttributeChangedSignal('ProfileTutorial'):Connect(changed)"),
+    # --- Review fixes (2026-10-03) -------------------------------------------------------------
+    (HUD, HUD_S,
+     ' view:SetTimer(not practice and remaining or nil,not practice and validWave and math.floor(wave) or nil,phase,practice and "SANDBOX" or bossLabel)', "before",
+     " -- The tutorial's waves have no clock (they end once cleared): no countdown, BOSS while he's up.\n"
+     " local combatFolder=ReplicatedStorage:FindFirstChild('RogueliteCombat')\n"
+     " if state and combatFolder and combatFolder:GetAttribute('TutorialRun')==true then\n"
+     "  remaining=nil;bossLabel=state:GetAttribute('BossHolding')==true and 'BOSS' or nil\n"
+     " end"),
+    (META, META_S,
+     " if not test then Analytics.earned(p,Profiles.settleRun(p,stint,RunSetupRules.runKey(map,difficulty()),cleared,owedFor(p,stint))) end", "replace",
+     " -- The tutorial pays its own reward and keeps no map progress (no Pine Valley best wave).\n"
+     " if not test and not tutorialRun() then Analytics.earned(p,Profiles.settleRun(p,stint,RunSetupRules.runKey(map,difficulty()),cleared,owedFor(p,stint))) end"),
     (SHOP, SHOP_S,
      " Shards.clear(true)", "replace",
      " -- Leftover crystals fly to the players and count as pickups (XP and shards) while it's still\n"
