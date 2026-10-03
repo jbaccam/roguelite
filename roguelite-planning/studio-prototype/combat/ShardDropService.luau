@@ -107,7 +107,8 @@ function D.step(now)
    if d.target then
     local r=living(d.target)
     -- A fetched crystal (Golden Retriever) skips the line-of-sight check on its way in.
-    if not r or not characters.states[d.target] or (r.Position-d.origin).Magnitude>100 or (not d.fetched and not visible(d.target,d.position,r.Position)) then cancel(d)
+    -- A boss crystal (forced) flies to its player from anywhere, walls or not.
+    if not r or not characters.states[d.target] or (not d.forced and ((r.Position-d.origin).Magnitude>100 or (not d.fetched and not visible(d.target,d.position,r.Position)))) then cancel(d)
     else
      d.position=Motion.pull(d.startPosition,r.Position,now-d.started)
      if now-d.started>=Motion.PULL_SECONDS then
@@ -121,8 +122,12 @@ function D.step(now)
   end
  end
 end
--- A defeated wave boss showers public crystals (anyone may collect) over a wide disc.
+-- A defeated wave boss showers crystals over a wide disc, and they fly to the run's players (D.spawn).
 D.BOSS_DROPS=50;D.BOSS_DROP_VALUE=4
+-- Boss crystals start flying this long after the shower, one every BOSS_FLY_STAGGER seconds.
+D.BOSS_FLY_DELAY=.6;D.BOSS_FLY_STAGGER=.02
+-- A kill's crystal value; nil = EconomyConfig.KILL_SHARDS. The tutorial (TutorialDirector) sets 5.
+D.killValue=nil
 local function dropAt(at,owner,value,bonus)
  local model=Instance.new('Model');model.Name='CrystalShard'
  local root=Instance.new('Part');root.Name='ShardMarker';root.Size=Vector3.one*.1;root.Transparency=1
@@ -163,21 +168,62 @@ function D.spawn(npc,position)
  for _,p in Players:GetPlayers() do if p.Character then table.insert(exclude,p.Character) end end
  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances=exclude
  if npc:GetAttribute('IsHammerBoss') or npc:GetAttribute('IsMapBoss') then
+  -- The run's living players share them out evenly (EconomyConfig.shareIndex: 50 across 3 players
+  -- is 17 / 17 / 16). Each crystal bursts out to its spot, then flies to its player on its own,
+  -- no walking over needed (2026-10-03). With nobody alive in the run they stay public, as before.
+  local takers={}
+  for _,p in Players:GetPlayers() do if p:GetAttribute('RunMember') and living(p) and characters and characters.states[p] then table.insert(takers,p) end end
+  table.sort(takers,function(a,b) return a.UserId<b.UserId end)
+  local now=workspace:GetServerTimeNow()
   local first
   for n=1,D.BOSS_DROPS do
    -- Golden-angle spiral: evenly filled disc, 3 to 14 studs from the body.
    local angle=n*2.39996;local radius=3+math.sqrt(n/D.BOSS_DROPS)*11
    local spot=position+Vector3.new(math.cos(angle)*radius,0,math.sin(angle)*radius)
    local ground=workspace:Raycast(spot+Vector3.new(0,6,0),Vector3.new(0,-100,0),params)
-   local d=dropAt(ground and ground.Position+Vector3.new(0,1.15,0) or spot,nil,D.BOSS_DROP_VALUE,0)
+   local owner=#takers>0 and takers[E.shareIndex(n,#takers)] or nil
+   local d=dropAt(ground and ground.Position+Vector3.new(0,1.15,0) or spot,owner,D.BOSS_DROP_VALUE,0)
+   if owner then d.forced=true;D.start(owner,d,now+D.BOSS_FLY_DELAY+n*D.BOSS_FLY_STAGGER) end
    first=first or d
   end
   return first
  end
  local ground=workspace:Raycast(position+Vector3.new(0,2,0),Vector3.new(0,-100,0),params)
  local at=ground and ground.Position+Vector3.new(0,1.15,0) or position
- local value=E.KILL_SHARDS+(npc:GetAttribute('DesignerShirt')==true and E.DESIGNER_BONUS_SHARDS or 0)
- return dropAt(at,owner,value,value-E.KILL_SHARDS)
+ local base=D.killValue or E.KILL_SHARDS
+ local value=base+(npc:GetAttribute('DesignerShirt')==true and E.DESIGNER_BONUS_SHARDS or 0)
+ return dropAt(at,owner,value,value-base)
+end
+-- Wave end (ShopService.finishWave, while still in Combat): every crystal left on the ground or
+-- still flying is credited now as a normal pickup (shards and XP) to its owner, else the nearest
+-- living run member, and drawn flying to them: the model stays for the pull, then goes. One with
+-- nobody to take it stays for D.clear(true) to bag, as before (2026-10-03).
+function D.sweep()
+ local now=workspace:GetServerTimeNow()
+ for i=#D.drops,1,-1 do
+  local d=D.drops[i]
+  if d.collected or not d.model.Parent then continue end
+  local p=d.target or d.owner
+  if not (p and living(p) and characters.states[p]) then
+   p=nil;local nearest=math.huge
+   for _,q in Players:GetPlayers() do
+    local root=living(q)
+    if root and characters.states[q] and q:GetAttribute('RunMember') then
+     local distance=(root.Position-d.origin).Magnitude
+     if distance<nearest then nearest=distance;p=q end
+    end
+   end
+  end
+  if p and award(p,d.value,true) then
+   d.collected=true
+   if d.target~=p or (d.started or now)>now then
+    d.model:SetAttribute('MagnetOrigin',Motion.idle(d.origin,d.born,now));d.model:SetAttribute('MagnetStart',now);d.model:SetAttribute('MagnetUserId',p.UserId)
+   end
+   table.remove(D.drops,i);unindex(d)
+   local model=d.model
+   task.delay(Motion.PULL_SECONDS+.1,function() model:Destroy() end)
+  end
+ end
 end
 function D.clear(bank)
  for i=#D.drops,1,-1 do

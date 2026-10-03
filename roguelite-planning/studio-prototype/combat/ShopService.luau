@@ -465,6 +465,9 @@ function S.stopWave()
 end
 function S.finishWave()
  if S.phase~='Combat' then return false end
+ -- Leftover crystals fly to the players and count as pickups (XP and shards) while it's still
+ -- Combat; any that nobody alive can take are bagged as before (2026-10-03).
+ if Shards.sweep then Shards.sweep() end
  Shards.clear(true)
  combat:SetAttribute('ZombiesEnabled',false);S.phase='Shop';S.wave+=1
  run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',S.wave);run:SetAttribute('WaveEndsAt',nil)
