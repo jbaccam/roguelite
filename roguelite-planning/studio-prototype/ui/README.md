@@ -1,3 +1,19 @@
+# First-join tutorial — October 3, 2026
+
+Spec: `../../plans/2026-10-03-tutorial-design.md`. Build steps: `../../plans/2026-10-03-tutorial-build-steps.md`. Mockup: `roguelite-planning/previews/tutorial-guide/guide.html` (dev server).
+
+- **The run:** 3 waves in Pine Valley with the Frying Pan; a guided Glock buy in the first shop; the Hammer Zombie Boss on wave 3 with 650 HP; the player can't die. Run by `combat/TutorialDirector.server.luau` through small guarded hooks (`ShopService.tutorial`, `ShardDropService.killValue`, combat attributes `TutorialRun`, `HammerBossWave`, `TutorialBossHealth`, `WaveNoRespawn`).
+- **Every run:** crystals left at wave end fly to the players and count as pickups (`ShardDropService.sweep`). Boss crystals fly straight to the run's players, split evenly. Wave bosses super-jump in: `BossService.INTRO` + `combat/BossIntro.client.luau`, which handle the shadow, fall, shockwave, camera orbit and name card. Players and enemies are held meanwhile (`CinematicUntil`).
+- **The guide (`TutorialGuideUI` + `TutorialGuide.client`):** the Egg Merchant's portrait and a typed line, one gliding arrow, and the VICTORY banner. **The box never covers the UI:** each moment it takes the first corner that covers no visible button, panel, picture or text, shrinking if needed. Arrow targets are found by name (`Offer1`/`Choose`, `ShopLayout`/`Offer<n>`/`Buy`, `StartWave`, `BackToLobby`, `Row_Silver`, `Open`, `Claim`, `Again`, `Exit`, `W_01`, `Upgrades`, `UpgradeBig`, `Tab_Armor`, `A_Iron.Helmet`, `Equip`, `Close`, lobby `Bottom`/`Chests`/`Armory`/`Play`). Renaming one of these means updating `TutorialGuide.client`.
+- **Lobby part:** progress is saved in `ProfileService` (`tutorial.step`, `ProfileTutorial`). It moves forward only via `ProfileAction 'TutorialStep'`. The guide opens the Store on BUNDLES through LobbyUI's new `GuideOpenWindow` hook.
+- **Art:** `assets/tutorial/arrow.png` (`make_arrow.py`) and `assets/tutorial/merchant-portrait.png` (`blender-egg-merchant-kit/render_portrait.py`). Their asset ids go in `TutorialConfig.Asset` once uploaded.
+- **Studio:** to try it, set `Workspace.StudioTutorial = true` before Play. Without it Studio skips the tutorial, so normal play-testing is unchanged.
+- **Checked (Studio Edit, nothing saved):**
+  - every changed file compiles;
+  - `TutorialTests` pass 45 checks;
+  - the guide UI mounted in CoreGui against a mock lobby: the box chose a clear corner, and the arrow landed under or over each target and turned as it glided.
+- **Not run:** no Play test yet, and the Studio sync is waiting for the user's okay.
+
 # No pop-in on first open — October 3, 2026
 
 Menus, the map-select islands and the Armory hall used to appear a beat late the first time. The preloader ran in the background and the loading screen faded before it finished. The islands and hall were also only added to the camera when their screen opened, so the renderer built them on screen.

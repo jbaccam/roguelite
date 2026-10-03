@@ -243,7 +243,7 @@ When a solo player dies, the run pauses and the death screen shows **REVIVE** an
 1. Tier I–IV chains for the six prototype weapons.
 2. Pine Valley's 20-wave spawn script and Hammer Zombie Boss kit (elite and horde waves not built).
 3. Shop tier-unlock waves and prices retuned for 20 waves.
-4. Tutorial weapon and base-class behavior.
+4. ~~Tutorial weapon and base-class behavior.~~ Decided 2026-10-03: Brawler with the Frying Pan ([tutorial design](plans/2026-10-03-tutorial-design.md)).
 5. Final revive price, timeout and co-op behavior.
 6. Performance budgets for enemies, projectiles, drops, VFX and audio voices.
 

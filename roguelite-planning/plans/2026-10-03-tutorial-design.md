@@ -1,6 +1,6 @@
 # First-join tutorial — design
 
-**Status:** Approved design, 2026-10-03. Not built yet.
+**Status:** Approved design, 2026-10-03. **Built in the repo the same day** (commits 72cacce–50e3982, [build steps](2026-10-03-tutorial-build-steps.md)); not in Studio yet and not play-tested.
 **Replaces:** the "Recommended tutorial — proposed" section of [LOBBY_AND_FIRST_RUN.md](../LOBBY_AND_FIRST_RUN.md).
 **Inspiration:** a reference game's tutorial (20 screenshots the user shared on 2026-10-03). We copy its pacing and guidance style, but use our game's systems.
 
@@ -11,6 +11,7 @@ A brand-new player spawns straight into Pine Valley. In about 3 minutes they lea
 ## Guide style (whole tutorial)
 
 - **The Egg Merchant is the guide.** His portrait sits bottom-left with a dark text box beside it, like the reference. Each line stays on screen until the player does the action, or until it times out for lines with no action.
+- **The box never covers the game's UI** (the user, 2026-10-03). It sits in the first corner where it covers no visible button, panel, picture or text: bottom-left, top-left, bottom-right, top-right, then middle-left. It tries a smaller size before giving up, and glides to its new spot.
 - **One gliding arrow.** It never disappears and jumps. It eases along a curve from one target to the next, turns to face the new target, and bobs gently while resting. The player's eye should be able to follow it.
 - **No paid prompts during the run part.** That means no revive offer and no store.
 
@@ -76,13 +77,13 @@ While a guided step is running, the other bottom buttons are dimmed and can't be
 | Step | Player does | Egg Merchant |
 |---|---|---|
 | 1. Arrive | Spawn in the lobby plaza. The arrow glides to **Chests** | "Welcome to the lobby! Let's open what you earned." |
-| 2. Chests | Silver Chest ×3 is already picked. Arrow on **Open**, then the usual 3-tap open (the seeded chest). Arrow on **Open (2)** for the rest | "Chests give you weapons and armor. Copies make them stronger!" |
+| 2. Chests | Arrow on the Silver Chest row, then **Open**, then the usual 3-tap open (the seeded chest). Arrow on **OPEN AGAIN** for each of the other two. Opening several at once needs Quick Open, so they open one at a time | "Chests give you weapons and armor. Copies make them stronger!" |
 | 3. Armory | Arrow → Exit → **Armory** → the Frying Pan card (upgrade-ready badge) → **Upgrade**. Tier I → II costs 2 copies + 60 emeralds, leaving 40 | "Your pan now starts every run stronger." |
 | 4. Equip | Arrow glides to the new armor piece → **Equip** | "Armor stays on you every run." |
 | 5. Offer | Exit → the **Starter Pack** pops up once, with **No Thanks** | — |
 | 6. Free | Arrow on **PLAY** for 10 s or until clicked, then it fades. Tutorial complete | "Now go break some waves!" |
 
-The Starter Pack keeps its approved contents from `MONETIZATION_AND_REWARDS.md`, with **no chests**, unlike the reference. Selling random rewards is not allowed.
+The offer is the Store's own Starter Pack, shown as it is today: the guide opens the Store on its BUNDLES tab, and its box has a NO THANKS button. **Correction (2026-10-03):** an earlier version of this spec said the pack has no chests. The live config (`MonetizationConfig.StarterPack`) includes 2 Legendary Chests, and StoreUI already hides it where paid random items are restricted. What the pack contains is a store decision, separate from the tutorial.
 
 ## Rules
 
@@ -90,7 +91,7 @@ The Starter Pack keeps its approved contents from `MONETIZATION_AND_REWARDS.md`,
 - **Leaving during the run:** next join restarts the tutorial run. No reward has been given yet.
 - **Leaving during the lobby part:** next join spawns in the lobby and the guide resumes at the saved step.
 - **Paying out once:** rewards are paid only once. There's no replay of the run part for now; "Replay tutorial" from Help is a later idea.
-- **Studio:** Studio practice grants no saved rewards, and production DataStores stay off.
+- **Studio:** Studio practice grants no saved rewards, and production DataStores stay off. Studio profiles live in memory, so the tutorial would start on every Play. It only runs with **`Workspace.StudioTutorial = true`**; without it every Studio profile counts as done.
 
 ## Build pieces
 

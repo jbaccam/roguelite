@@ -24,7 +24,7 @@
 
 Admin test runs (the admin panel was used) are not recorded as play-test data.
 
-**Not tracked yet** (from EXECUTION_PLAN_ASTRA.md "Prototype analytics"): the tutorial (there is no tutorial yet). Damage by weapon, passive picks (level-ups and shop items), shop rerolls and purchases, enemy count and frame rate were added on 2026-10-02 (plan J item 7).
+**Not tracked yet** (from EXECUTION_PLAN_ASTRA.md "Prototype analytics"): the tutorial (built 2026-10-03, not tracked yet). Damage by weapon, passive picks (level-ups and shop items), shop rerolls and purchases, enemy count and frame rate were added on 2026-10-02 (plan J item 7).
 
 **How events are sent (2026-10-02):** every event is queued and sent once a second from RunAnalytics' own thread (a leaving player's right away). Hooks such as `ShopService.onBuy` and `CombatEffectsService.listenDamage` run inside sandboxed scripts, and Roblox runs a directly called function with the caller's capabilities ([script capabilities](https://create.roblox.com/docs/scripting/capabilities)), so they only record. This also covers the wave funnel steps, which came from ShopService's wave clock. Frame rate comes from `RogueliteHUD.client` over the `PerfReport` remote (whole numbers, a known device, one report per 10 s, players in a run only).
 
