@@ -22,9 +22,9 @@ The comedy comes from using serious and ridiculous equipment together: a Katana 
 
 ```text
 First join as Roblox avatar
-  -> short guided tutorial with one fixed weapon (three waves + easy boss)
-  -> result screen grants keys for one chest
-  -> lobby: open first chest, choose class, starting weapon and armor
+  -> short guided tutorial in Pine Valley with the Frying Pan (3 waves, easy boss on wave 3)
+  -> result screen grants 3 Silver Chests + 100 emeralds
+  -> lobby: guided chest opening, first upgrade and equip in the Armory, then Play
   -> Pine Valley: survive to wave 20 and beat the Hammer Zombie Boss
   -> Cash Out, or Keep Going into Endless for more keys
   -> keys open chests; duplicate copies raise starting tiers
@@ -32,7 +32,7 @@ First join as Roblox avatar
   -> achievements and quests unlock specific classes, weapons, passives and armor
 ```
 
-See [Lobby and first-run flow](LOBBY_AND_FIRST_RUN.md) for the tutorial and lobby detail.
+See [Tutorial design](plans/2026-10-03-tutorial-design.md) and [Lobby and first-run flow](LOBBY_AND_FIRST_RUN.md) for the tutorial and lobby detail.
 
 ## 3. Run structure
 
