@@ -6,20 +6,24 @@ local T={}
 -- The run: Pine Valley as a Brawler with the Frying Pan, three waves, the boss on wave 3.
 T.Map='PineValley';T.MapName='Pine Valley';T.Class='Brawler';T.Weapon='01'
 T.START_SHARDS=0 -- no starting crystals: the money clearly comes from crystals
-T.CRYSTAL_VALUE=5 -- each kill's crystal (shards and XP); normal runs use EconomyConfig.KILL_SHARDS
+-- Crystals are normal ones: one per kill, worth 1 (EconomyConfig.KILL_SHARDS). They were worth 5,
+-- which levelled players up on the 4th kill (user, 2026-10-03: "1 crystal should BE ONE CRYSTAL").
 T.BOSS_WAVE=3
 -- A fixed boss health, no difficulty or party scaling: a weak build (~22 damage a second) needs
 -- about 30 s, a typical one (~35) about 19 s.
 T.BOSS_HP=650
 T.VICTORY_DELAY=4 -- seconds between the boss wave clearing and the results screen (VICTORY banner)
-T.MAX_WAVE_SECONDS=90 -- a wave that somehow never empties ends anyway
-T.WELCOME_SECONDS=3 -- the welcome line shows this long, after the loading screen, before wave 1
+T.MAX_WAVE_SECONDS=180 -- a wave that somehow never empties ends anyway
+-- After the loading screen, Eggbert's welcome shows this long before wave 1 (user, 2026-10-03:
+-- "the tutorial needs like 5 seconds after loading in before starting").
+T.WELCOME_SECONDS=5
 -- Enemies per wave, all spawned at once and never respawned; the wave ends when they are dead.
 -- roster: EnemyCatalog ids (nil = the map's own mix, which has a Baby Zombie in every 4).
+-- More of them (user, 2026-10-03: "we need more zombie killing"; was 6 / 15 / 4).
 T.Waves={
- {count=6,roster='regular-zombie'},
- {count=15},
- {count=4,roster='regular-zombie'}, -- plus the boss
+ {count=24,roster='regular-zombie'},
+ {count=30},
+ {count=10,roster='regular-zombie'}, -- plus the boss
 }
 -- Forced shop offers: [shop wave][slot] = ShopCatalog id. The shop after wave 1 is wave 2's.
 T.Offers={[2]={[1]='weapon_00_1'}} -- slot 1: the Glock, Tier I
@@ -78,13 +82,13 @@ T.Asset={portrait='rbxassetid://108357696326171',arrow='rbxassetid://74984560082
 -- The tutorial's economy, walked the way the run pays it (ShopService): each kill's crystal is
 -- shards and XP, and a clear pays EconomyConfig's wave reward for the wave that comes next.
 -- glockBase/itemBase: ShopCatalog base prices of the Glock (Tier I) and a Protein Shake.
--- Returns what the player has at each shop. Example (2026-10-03 numbers): shop 1 has 45 shards
--- at level 2 (1 card); after the Glock (24) and a Protein Shake (18), shop 2 has 96 at level 4
--- (2 cards).
+-- Returns what the player has at each shop. Example (2026-10-03 numbers): 24 kills + 15 for the
+-- clear = 39 shards at shop 1, level 2 (1 card, at the 20th kill); after the Glock (24) 15 are
+-- left, too few for a Protein Shake (18); 30 more kills + 18 = 63 at shop 2, level 3 (1 card).
 function T.economy(E,XP,glockBase,itemBase)
  local shards,level,xp=T.START_SHARDS,1,0
  local function kills(n)
-  local amount=n*T.CRYSTAL_VALUE;shards+=amount
+  local amount=n*E.KILL_SHARDS;shards+=amount
   local l,x,gained=XP.add(level,xp,amount);level,xp=l,x
   return gained
  end

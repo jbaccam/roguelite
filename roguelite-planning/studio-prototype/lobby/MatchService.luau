@@ -22,6 +22,10 @@ local Tutorial=require(combat:WaitForChild('TutorialConfig'))
 local M={}
 local ENTRY_SECONDS=3600 -- a match entry outlives any trip; the run itself can go on longer
 local PARTY_WAIT=30 -- wave 1 waits this long for missing members
+-- ...and this long for members already here whose loading screen is still up. Their screen is
+-- gone by ~33 s (LoadingScreen MAX_SECONDS 30 + the fade), so only a client that never reports
+-- waits the full time.
+local LOAD_WAIT=45
 local entries=Memory:GetHashMap('RogueliteMatchV1')
 local studio=RunService:IsStudio()
 local trips={} -- player -> {options, tries}: teleports in flight, for TeleportInitFailed
@@ -225,17 +229,19 @@ function M.start()
   Players.PlayerAdded:Connect(admit)
   for _,p in Players:GetPlayers() do task.spawn(admit,p) end
   -- Wave 1 starts once every listed member is in the arena with their loading screen gone
-  -- (ClientLoaded, from the client's RunAction 'Loaded'), or PARTY_WAIT after the first one
-  -- arrives. A run member is in the arena as soon as their character spawns, which is up to
-  -- ~15 s before their screen clears: zombies used to reach them behind it (2026-10-03). The
-  -- tutorial then gives Eggbert's welcome line WELCOME_SECONDS before the zombies come.
+  -- (ClientLoaded, from the client's RunAction 'Loaded'). After PARTY_WAIT it stops waiting for
+  -- members who never arrived, but still waits (up to LOAD_WAIT) for those here whose screen is
+  -- up. A run member is in the arena as soon as their character spawns, which is up to ~15 s
+  -- before their screen clears: zombies used to reach them behind it (2026-10-03). The tutorial
+  -- then gives Eggbert's welcome line WELCOME_SECONDS before the zombies come.
   while not bad do
    task.wait(.5)
    local expected,arrived,loaded=0,0,0
    local function count(p) if Shop.isMember(p) then arrived+=1;if p:GetAttribute('ClientLoaded')==true then loaded+=1 end end end
    if entry then for id in entry.members do expected+=1;local p=Players:GetPlayerByUserId(tonumber(id));if p and ready[p] then count(p) end end
    else for p in ready do if p.Parent==Players then expected+=1;count(p) end end end
-   if arrived>0 and (loaded>=expected or os.clock()-(firstArrival or os.clock())>=PARTY_WAIT) then
+   local waited=os.clock()-(firstArrival or os.clock())
+   if arrived>0 and (loaded>=expected or waited>=PARTY_WAIT and loaded>=arrived or waited>=LOAD_WAIT) then
     if combat:GetAttribute('TutorialRun')==true then task.wait(Tutorial.WELCOME_SECONDS) end
     Shop.startFirstWave();break
    end

@@ -131,7 +131,8 @@ D.BOSS_DROPS=50;D.BOSS_DROP_VALUE=4
 -- BOSS_FLY_STAGGER seconds: a pile, a beat, then a stream.
 D.BOSS_BURST_STAGGER=.012
 D.BOSS_FLY_DELAY=1.4;D.BOSS_FLY_STAGGER=.02
--- A kill's crystal value; nil = EconomyConfig.KILL_SHARDS. The tutorial (TutorialDirector) sets 5.
+-- A kill's crystal value; nil = EconomyConfig.KILL_SHARDS. Nothing sets it now (the tutorial used
+-- 5 until 2026-10-03; crystals are worth 1 everywhere).
 D.killValue=nil
 local function dropAt(at,owner,value,bonus)
  local model=Instance.new('Model');model.Name='CrystalShard'

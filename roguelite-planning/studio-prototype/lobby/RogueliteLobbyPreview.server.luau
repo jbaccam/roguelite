@@ -254,12 +254,29 @@ travelRemote.OnServerEvent:Connect(function(player,area)
 end)
 
 -- Queue -----------------------------------------------------------------------------
+-- Just outside a pad's ring on the side facing the lobby spawn (never radially, which could be an
+-- island edge or the portal), on the ground found by a raycast.
+local function besidePad(pad,char)
+ local toward=Vector3.new(lobbySpawn.Position.X-pad.center.X,0,lobbySpawn.Position.Z-pad.center.Z)
+ toward=toward.Magnitude>.5 and toward.Unit or Vector3.zAxis
+ local spot=pad.center+toward*(PAD_RADIUS+4)
+ local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances={char}
+ local hit=workspace:Raycast(spot+Vector3.new(0,12,0),Vector3.new(0,-40,0),params)
+ spot=Vector3.new(spot.X,(hit and hit.Position.Y or pad.center.Y)+3.5,spot.Z)
+ return CFrame.lookAt(spot,spot+toward)
+end
 leaveRemote.OnServerEvent:Connect(function(player)
  if os.clock()-(last[player] or -math.huge)<.4 then return end
  last[player]=os.clock()
  local index=state.membership[player.UserId]
- -- Standing on the pad would re-join next tick; wait until they step off first.
- if state:leave(player.UserId,now()) then stepOff[player]=index;setQueue(player);publish() end
+ -- LEAVE puts them off the pad at once (user, 2026-10-03: "when you click leave when your in
+ -- queue it should force you off the pad"). LobbyQueue is cleared first, so the client stops
+ -- holding them in the ring; stepOff still keeps them from re-joining until they walk back on.
+ if state:leave(player.UserId,now()) then
+  stepOff[player]=index;setQueue(player);publish()
+  local pad=pads[index];local char,hrp=alive(player)
+  if pad and hrp then char:PivotTo(besidePad(pad,char)) end
+ end
 end)
 setupRemote.OnServerEvent:Connect(function(player,action,a,b,c,d,e)
  if os.clock()-(last[player] or -math.huge)<.3 then return end

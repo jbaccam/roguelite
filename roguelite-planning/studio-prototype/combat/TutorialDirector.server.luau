@@ -8,7 +8,7 @@
 --     counts every Studio profile as done); the player is put in the Pine Valley arena as a
 --     Brawler with the Frying Pan and wave 1 starts the same way.
 -- The tutorial is the normal run with ShopService.tutorial (waves, the Glock offer, no starting
--- shards, no shop timer), worth-5 crystals, the boss on wave 3 with a fixed health, no respawns,
+-- shards, no shop timer), normal worth-1 crystals, the boss on wave 3 with a fixed health, no respawns,
 -- and each wave ending once its enemies are dead. RogueliteMeta pays the reward and ends the run
 -- after the boss wave; the mode switches off once nobody is left in the run.
 -- Unsandboxed, like RogueliteMeta: it requires MatchService and ProfileService users.
@@ -65,14 +65,14 @@ local function apply(on)
  active=on
  if on then
   Shop.tutorial={startShards=Config.START_SHARDS,waves=Config.Waves,offers=Config.Offers,waveSeconds=3600,noShopTimer=true}
-  Shards.killValue=Config.CRYSTAL_VALUE
+  -- Crystals stay normal (worth 1); Shards.killValue is left alone (2026-10-03).
   set('HammerBossWave',Config.BOSS_WAVE);set('TutorialBossHealth',Config.BOSS_HP);set('WaveNoRespawn',true)
   -- Anyone already waiting for wave 1 got the normal starting crystals: none in the tutorial.
   if Shop.wave==1 and Shop.phase=='Shop' then
    for p,s in Shop.states do s.shards=Config.START_SHARDS;s.revision+=1;Shop.publish(p) end
   end
  else
-  Shop.tutorial=nil;Shards.killValue=nil
+  Shop.tutorial=nil
   for name,v in saved do combat:SetAttribute(name,v[1]) end
   table.clear(saved)
  end

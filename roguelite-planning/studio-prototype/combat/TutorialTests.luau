@@ -6,14 +6,15 @@ return function(T,E,XP,glockBase,itemBase)
  local function check(condition,message) assert(condition,message);checks+=1 end
  glockBase=glockBase or 19;itemBase=itemBase or 14
 
- -- The economy: one level-up card after wave 1 and enough crystals for the guided Glock;
- -- two cards after wave 2 and a full shop.
+ -- The economy (crystals worth 1, like normal runs): one level-up card after wave 1, earned late
+ -- in it, and enough crystals for the guided Glock; one more card after wave 2.
  local shop1,shop2=T.economy(E,XP,glockBase,itemBase)
  check(shop1.cards==1 and shop1.level==2,'wave 1 gives exactly one level-up (level 2), got '..shop1.cards)
+ check(math.ceil(XP.required(1)/E.KILL_SHARDS)>=T.Waves[1].count*.75,'the first level-up comes late in wave 1, not in its first kills')
  check(shop1.shards>=shop1.glock,('shop 1 affords the Glock: %d shards, Glock %d'):format(shop1.shards,shop1.glock))
  check(shop1.shards-shop1.glock<shop1.glock,'shop 1 is not rich enough for two Glocks')
- check(shop2.cards==2 and shop2.level==4,'wave 2 gives two level-ups (level 4), got '..shop2.cards..' / level '..shop2.level)
- check(shop2.shards>=80 and shop2.shards<=110,'shop 2 has about 95 shards, got '..shop2.shards)
+ check(shop2.cards==1 and shop2.level==3,'wave 2 gives one level-up (level 3), got '..shop2.cards..' / level '..shop2.level)
+ check(shop2.shards>=50 and shop2.shards<=75,'shop 2 has about 63 shards, got '..shop2.shards)
 
  -- Waves: three, the boss on the last, every count positive.
  check(#T.Waves==T.BOSS_WAVE,'the boss wave is the last tutorial wave')

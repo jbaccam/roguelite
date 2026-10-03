@@ -1,3 +1,15 @@
+# Tutorial pacing, one-crystal crystals, LEAVE off the pad — October 3, 2026
+
+Play-test report: zombies still ran in right after loading, level-ups came too fast, crystals gave 5 each, there wasn't enough zombie killing, and LEAVE left you standing on the pad.
+
+- **Crystals worth 1:** the tutorial set each kill's crystal to 5 (`CRYSTAL_VALUE`, `Shards.killValue`). That's gone: one crystal per mob, worth 1, the same as normal runs. The first level-up used to come on the 4th kill.
+- **More zombies:** waves are now 24 / 30 / 10 + boss (were 6 / 15 / 4). The numbers still work: 24 kills + 15 for the clear = 39 crystals at shop 1, enough for the guided Glock (24). The first level-up comes at the 20th kill, late in wave 1. Shop 2 has 63 crystals at level 3. `TutorialTests` assert this, and the same walk was checked in Python. `MAX_WAVE_SECONDS` 90 → 180 for the bigger waves.
+- **5 s welcome:** `WELCOME_SECONDS` 3 → 5 after the loading screen, before wave 1.
+- **Slow loads:** `MatchService`'s 30 s `PARTY_WAIT` counted from joining the server, but a loading screen can last ~33 s, so a slow load could still start wave 1 under it. Now after 30 s it only stops waiting for members who never arrived. Members who are here but still loading are waited on up to `LOAD_WAIT` (45 s).
+- **Level-up line:** Eggbert picks "You leveled up!" or "Two level-ups!" from the pending count, not the wave, since each shop now has one card.
+- **LEAVE:** it now also moves you just outside the ring, on the side facing the lobby spawn, on the ground found by a raycast. Walk back on to rejoin.
+- **Not run:** no Play test (the user tests).
+
 # Parties, the full Armor tab, a bigger air boost — October 3, 2026
 
 - **Parties (user: "when i click play he automatically gets put in a pod with me"):** the Party window now has INVITE on every other player in the server (INVITED while pending, IN YOUR PARTY once in). The invited player gets a card with ACCEPT / DECLINE (60 s) and a badge on the party button. LEAVE PARTY leaves it. Up to 4, a pad's capacity.

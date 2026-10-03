@@ -177,9 +177,11 @@ local function runStep()
  if phase~='Shop' then return nil end
  if wave==1 then return {line='Welcome'} end -- waiting for wave 1
  local st=myState()
- if (st and st:GetAttribute('PendingLevelUps') or 0)>0 then
+ local pending=st and st:GetAttribute('PendingLevelUps') or 0
+ if pending>0 then
+  -- By the count, not the wave: with worth-1 crystals each shop has one card (2026-10-03).
   local card=find(screen('LevelUpOffers'),'Offer1')
-  return {line=wave==2 and 'LevelUp' or 'LevelUp2',target=card and find(card,'Choose',true)}
+  return {line=pending>=2 and 'LevelUp2' or 'LevelUp',target=card and find(card,'Choose',true)}
  end
  local shop
  for _,g in pg:GetChildren() do if g:IsA('ScreenGui') and g.Enabled then shop=find(g,'ShopLayout');if shop then break end end end
