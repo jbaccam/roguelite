@@ -45,18 +45,22 @@ local function humanoid(player) return player.Character and player.Character:Fin
 -- far from where the server has them.
 local VIEW_DELAY=.2 -- seconds an enemy shows late on a client (measured 190-205 ms), plus half the ping
 local REPORT_FRESH=.3
-local view=combat:FindFirstChild('PlayerView')
-if not view then
- view=Instance.new('UnreliableRemoteEvent');view.Name='PlayerView'
- view.Sandboxed=true
- view.Capabilities=SecurityCapabilities.new(Enum.SecurityCapability.Basic,Enum.SecurityCapability.RemoteEvent)
- view.Parent=combat
-end
+-- The remote is a Studio instance (RogueliteCombat.PlayerView, an UnreliableRemoteEvent): this
+-- sandboxed module may not make one (setting its Sandboxed flag needs CapabilityControl; trying it
+-- on 2026-10-03 stopped this module loading, and every script that needs it). Without it, hits
+-- use the bodies here, as before.
 local reports=setmetatable({},{__mode='k'}) -- player -> {position, at}
-view.OnServerEvent:Connect(function(player,position)
- if typeof(position)~='Vector3' or position~=position or position.Magnitude>1e6 then return end
- reports[player]={position=position,at=workspace:GetServerTimeNow()}
-end)
+local function listen(view)
+ view.OnServerEvent:Connect(function(player,position)
+  if typeof(position)~='Vector3' or position~=position or position.Magnitude>1e6 then return end
+  reports[player]={position=position,at=workspace:GetServerTimeNow()}
+ end)
+end
+local view=combat:FindFirstChild('PlayerView')
+if view then listen(view)
+elseif combat.ChildAdded then
+ local added;added=combat.ChildAdded:Connect(function(c) if c.Name=='PlayerView' then added:Disconnect();listen(c) end end)
+end
 -- Where `player`'s body is on their own screen: their latest report while it's fresh and within
 -- reach of their body here (the server is about their speed x 0.25 s behind), else their body here.
 function Service.seen(player,root)
