@@ -350,14 +350,15 @@ function P.openChest(player,kind,count)
  if n<=0 then return false,'No '..chest.name..' to open' end
  d.chests[kind]-=n;if d.chests[kind]<=0 then d.chests[kind]=nil end
  local tally={}
- for _=1,n do
-  local counts=Chests.open(kind,rng,d.pity) -- rolls with both pity counters and updates them
-  for _,r in Chests.Rarities do Chests.group(r,counts[r],rng,tally,kind) end
- end
- -- The tutorial's first Silver Chest (P.tutorialReward) also holds its seeded copies.
+ -- The tutorial's first Silver Chest (P.tutorialReward) holds its seeded copies instead of a roll.
+ local seed
  if type(d.tutorial)=='table' and d.tutorial.seed then
   local T=tutorialConfig()
-  if T and kind==T.SeedChest then d.tutorial.seed=nil;for id,c in T.SeedCopies do tally[id]=(tally[id] or 0)+c end end
+  if T and kind==T.SeedChest then d.tutorial.seed=nil;seed=T.SeedCopies end
+ end
+ for i=1,n do
+  if i==1 and seed then for id,c in seed do tally[id]=(tally[id] or 0)+c end
+  else Chests.fill(kind,Chests.open(kind,rng,d.pity),rng,tally) end -- rolls with both pity counters and updates them
  end
  quest('event',d,Money.day(),player.UserId,'chests',n)
  local results={}
@@ -375,8 +376,8 @@ function P.openChest(player,kind,count)
 end
 -- First-join tutorial (plans/2026-10-03-tutorial-design.md; numbers in TutorialConfig). Its run
 -- pays once, when the boss wave is cleared: 3 Silver Chests and 100 emeralds. The next Silver
--- Chest opened also holds 2 Frying Pan copies and an Iron helmet (openChest), so the lobby steps
--- can upgrade the pan and equip the helmet. The lobby steps then only move forward:
+-- Chest opened is 2 Frying Pan copies and an Iron helmet instead of a roll (openChest), so the
+-- lobby steps can upgrade the pan and equip the helmet. The lobby steps then only move forward:
 -- Chests -> Armory -> Equip -> Offer -> Play -> Done (TutorialConfig.canStep).
 function P.tutorialReward(player)
  local d=P.profiles[player];local T=tutorialConfig()

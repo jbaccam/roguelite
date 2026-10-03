@@ -99,6 +99,30 @@ From the user's first play-test:
 - **The lobby camera sat inside the Kills leaderboard.** The lobby spawn was 19 studs in front of it and the camera about 20 behind the player; the board's visible parts don't block the camera (CanCollide off). The spawn moved 14 studs toward the portals (Studio only: `Workspace.RogueliteLobby.LobbySpawn`, z 18 → 4).
 - **Fewer different items per chest** (all chests, not just the tutorial): all copies of one rarity go to one item, so a Silver Chest is about 2 items, was 4–5 (`ChestConfig`).
 
+## Play-test fixes, round 2 (2026-10-03)
+
+- **Arrows sat 58 px too high on full-screen menus** (level-up cards, chest screen, results,
+  Armory): every GuiObject's AbsolutePosition is measured from under Roblox's top bar, and only
+  the HUD layers had the top bar added back. Now every layer does (`TutorialGuideUI`).
+- **The box went over the fight and over the chest.** World things now count: the player's own
+  character always, the boss during the run, the chest models on the chest screen. During the run
+  the box keeps to the corners and sides only. On the chest screen it tries right of the chest
+  menu first, in a compact shape (portrait over a shorter box) when the wide one doesn't fit.
+- **Crystals are taught.** In wave 1, once a crystal is on the ground the arrow points at it
+  ("Crystals! Walk over them to grab them."); after the first pickup it points at the crystal
+  counter for 7 s ("Crystals are your XP and your money for the shop.").
+- **Zombie reach:** no reach bonus now. A normal zombie connects at 4.6 studs centre to centre,
+  about an arm between the bodies (was 5.5 at +0.9, 6.1 at +1.5).
+- **Boss crystals burst out of him:** each one arcs from his body to its spot and hops as it
+  lands, with a sparkle where they leave him. They fly to the players 1.4 s later, and the
+  wave-end sweep no longer cuts that short (it used to pull them all in at once).
+- **Pickup VFX (all runs):** when crystals land on a player, a cyan ring spreads, a white star
+  flashes, shards fly out and a glow lights up, with "+N" for the local player. More crystals at
+  once make it bigger and brighter.
+- **Chests: a few items, not a pile** (all chests): RARITY_GODLY_ARMOR.md section 1. A Silver
+  Chest is now 1 item, Gold 1–2, Magical 2, Legendary 4. The tutorial's first Silver Chest is
+  exactly the pan copies and the Iron helmet.
+
 ## Rules
 
 - **When it starts:** on first join (no `tutorial.done` in the profile), the player goes straight into a solo tutorial run. They never see the lobby first. This applies even when joining a friend; it only takes 3 minutes.

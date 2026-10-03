@@ -302,7 +302,7 @@ function S.open(screen,ctx,focus)
    T.text(list,'Restricted','Chest packs are not available in your region. Open chests with emeralds earned in runs in the Chests menu.',4,8,SW-8,50,18,C.muted)
    return 70
   end
-  local sub=FX.header(list,'LEGENDARY CHESTS',Chests.ById.Legendary.copies..' items and a guaranteed Legendary in every chest.',y,SW)
+  local sub=FX.header(list,'LEGENDARY CHESTS',Chests.itemsText('Legendary')..' in every chest, one a guaranteed Legendary.',y,SW)
   sub.Position=UDim2.fromOffset(200,y+42);sub.Size=UDim2.fromOffset(SW-400,24)
   oddsButton(list,SW-178,y+36,174,40).Caption.TextSize=16
   y+=72+46
@@ -315,7 +315,7 @@ function S.open(screen,ctx,focus)
    center(T.label(face,'Name',n==1 and 'LEGENDARY CHEST' or 'LEGENDARY CHESTS',12,214,cw-24,26,21))
    local each=math.floor(pack.robux/n+.5)
    local save=n>1 and math.floor((1-each/base.robux)*100+.5) or 0
-   center(FX.sub(face,'Drops',(n*Chests.ById.Legendary.copies)..' items'..(save>0 and ('  ·  SAVE '..save..'%') or ''),12,244,cw-24,22,17,save>0 and Color3.fromRGB(220,255,170) or nil))
+   center(FX.sub(face,'Drops',(n*(Chests.itemRange('Legendary')))..' items'..(save>0 and ('  ·  SAVE '..save..'%') or ''),12,244,cw-24,22,17,save>0 and Color3.fromRGB(220,255,170) or nil))
    priceButton(face,'Buy',16,ch-80,cw-32,62,key,false,i==3)
    if S.ChestSashes[i] then FX.sash(face,S.ChestSashes[i],RED_SASH[1],RED_SASH[2]) end
    if i==3 then FX.shine(face) end

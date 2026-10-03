@@ -14,6 +14,7 @@ local RS=game:GetService('ReplicatedStorage')
 local RunService=game:GetService('RunService')
 local Http=game:GetService('HttpService')
 local Tags=game:GetService('CollectionService')
+local GuiService=game:GetService('GuiService')
 local player=Players.LocalPlayer
 local combat=RS:WaitForChild('RogueliteCombat')
 local Config=require(combat:WaitForChild('TutorialConfig'))
@@ -99,13 +100,31 @@ local function lobbyButton(name)
 end
 
 -- Things the run part reacts to ------------------------------------------------------------------
-local seenRunAt,sawCrystal,bannerShown=nil,false,false
+local seenRunAt,bannerShown=nil,false
 local redUntil,redShown=0,0
 local runId -- RogueliteRunState.RunId these belong to
-task.spawn(function()
- local drops=workspace:WaitForChild('RogueliteShardDrops',60)
- if drops then drops.ChildAdded:Connect(function() if combat:GetAttribute('TutorialRun')==true then sawCrystal=true end end) end
-end)
+-- Crystals (user, 2026-10-03: the tutorial never talked about collecting them). Wave 1: once one
+-- is on the ground the arrow points at it ("walk over them"); after the first pickup it points at
+-- the crystal counter for a few seconds ("XP and money").
+local crystal,pickedAt -- the crystal pointed at; when the first pickup was seen
+local function nearestCrystal()
+ local drops=workspace:FindFirstChild('RogueliteShardDrops')
+ local root=player.Character and player.Character:FindFirstChild('HumanoidRootPart')
+ if not drops or not root then return nil end
+ if crystal and crystal.Parent==drops and not crystal:GetAttribute('MagnetUserId') then return crystal end
+ local best,bestDistance
+ for _,m in drops:GetChildren() do
+  local origin=m:GetAttribute('Origin')
+  if m:IsA('Model') and typeof(origin)=='Vector3' and not m:GetAttribute('MagnetUserId') then
+   local d=(origin-root.Position).Magnitude
+   if not bestDistance or d<bestDistance then best,bestDistance=m,d end
+  end
+ end
+ crystal=best
+ return best
+end
+-- During a fight the box keeps to the screen's corners and sides, clear of the player and the boss.
+local function fightContext() return {edges=true,avoid=Tags:GetTagged('HammerBoss')} end
 -- The boss's first two attacks after his entrance: "Red circle = move!"
 local function watchBoss(npc)
  npc:GetAttributeChangedSignal('BossSerial'):Connect(function()
@@ -126,7 +145,7 @@ local function runStep()
  if combat:GetAttribute('TutorialRun')~=true or not player:GetAttribute('RunMember') then return nil end
  local run=RS:FindFirstChild('RogueliteRunState');if not run then return nil end
  -- A new run (the admin panel's Start tutorial again): its lines and banner start over.
- if run:GetAttribute('RunId')~=runId then runId=run:GetAttribute('RunId');seenRunAt=nil;sawCrystal=false;bannerShown=false;redShown=0;redUntil=0 end
+ if run:GetAttribute('RunId')~=runId then runId=run:GetAttribute('RunId');seenRunAt=nil;crystal=nil;pickedAt=nil;bannerShown=false;redShown=0;redUntil=0 end
  seenRunAt=seenRunAt or os.clock()
  if run:GetAttribute('TutorialWon') then
   -- The banner alone: no box under it (user, 2026-10-03: too much on screen at the victory).
@@ -136,9 +155,21 @@ local function runStep()
  if screen('BossIntro') then return {hide=true} end -- the boss entrance has the screen
  local phase,wave=run:GetAttribute('Phase'),run:GetAttribute('Wave') or 1
  if phase=='Combat' then
-  if wave==1 then return {line=sawCrystal and 'Crystals' or (os.clock()-seenRunAt<5 and 'Welcome' or 'Pan')} end
-  if wave<Config.BOSS_WAVE then return {line='Survive'} end
-  return {line=os.clock()<redUntil and 'RedCircle' or 'Boss'}
+  local fight=fightContext()
+  if wave==1 then
+   if os.clock()-seenRunAt<5 then return {line='Welcome',ctx=fight} end
+   local st=myState()
+   if not pickedAt and (st and st:GetAttribute('Shards') or 0)>Config.START_SHARDS then pickedAt=os.clock() end
+   if pickedAt then
+    if os.clock()-pickedAt<7 then return {line='CrystalsUse',target=find(screen('RogueliteHUD'),'Shards'),ctx=fight} end
+    return {line='Pan',ctx=fight}
+   end
+   local c=nearestCrystal()
+   if c then return {line='Crystals',target=c,ctx=fight} end
+   return {line='Pan',ctx=fight}
+  end
+  if wave<Config.BOSS_WAVE then return {line='Survive',ctx=fight} end
+  return {line=os.clock()<redUntil and 'RedCircle' or 'Boss',ctx=fight}
  end
  if phase~='Shop' then return nil end
  if wave==1 then return {line='Welcome'} end -- waiting for wave 1
@@ -187,7 +218,22 @@ local function openWindow(name,arg)
  if hook then hook:Fire(name,arg);return true end
  return false
 end
-local function lobbyStep()
+-- The chest screen (user, 2026-10-03: the box covered the chest): right of the chest menu first,
+-- never over the chests on the island.
+local function chestContext(chests)
+ local island=workspace:FindFirstChild('RogueliteLobby');island=island and island:FindFirstChild('ChestIsland')
+ local models=island and island:FindFirstChild('Chests');local avoid={}
+ if models then for _,m in models:GetChildren() do if m:IsA('Model') then table.insert(avoid,m) end end end
+ local row=find(chests,'Row_'..Config.SeedChest)
+ local prefer
+ if row then
+  local right=row.AbsolutePosition.X+row.AbsoluteSize.X+(GuiService:GetGuiInset()).X+16
+  local full=pg:FindFirstChild('TutorialGuide') and pg.TutorialGuide.AbsoluteSize or workspace.CurrentCamera.ViewportSize
+  prefer={right,0,full.X,full.Y}
+ end
+ return {avoid=avoid,prefer=prefer}
+end
+local function lobbyLine()
  local step=player:GetAttribute('ProfileTutorial')
  local index=Config.stepIndex(step)
  if not index or index<2 or step=='Done' or player:GetAttribute('LobbyPreviewActive')~=true then return nil end
@@ -268,6 +314,12 @@ local function lobbyStep()
  end
  return nil
 end
+local function lobbyStep()
+ local d=lobbyLine()
+ local chests=screen('ChestScreen')
+ if d and not d.hide and chests then d.ctx=chestContext(chests) end
+ return d
+end
 
 -- Dimming the other lobby bottom buttons -------------------------------------------------------
 local dimmed={} -- button -> true
@@ -307,6 +359,7 @@ local function apply(d)
   if guide then guide.hide() end;undim();return
  end
  local g=ui()
+ g.context(d.ctx)
  g.say(Config.Lines[d.line] or '',d.button)
  g.point(d.target)
  dimOthers(d.dim)

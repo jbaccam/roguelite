@@ -25,8 +25,8 @@ T.Waves={
 T.Offers={[2]={[1]='weapon_00_1'}} -- slot 1: the Glock, Tier I
 -- Paid once, when the boss wave is cleared.
 T.Reward={chests={Silver=3},emeralds=100}
--- The first Silver Chest opened after the reward also holds these copies (on top of its roll):
--- two Frying Pans (enough for the Tier II upgrade) and an Iron helmet to equip.
+-- The first Silver Chest opened after the reward is these copies instead of a roll: two Frying
+-- Pans (enough for the Tier II upgrade) and an Iron helmet to equip.
 T.SeedChest='Silver'
 T.SeedCopies={['01']=2,['Iron.Helmet']=1}
 T.SeedArmor='Iron.Helmet'
@@ -50,7 +50,8 @@ T.GuideName='Eggbert'
 T.Lines={
  Welcome="Welcome to Wavebreaker! I'm Eggbert. Let's get you ready.",
  Pan="Your pan swings by itself. Just move!",
- Crystals="Grab the crystals: they're XP and money.",
+ Crystals="Crystals! Walk over them to grab them.",
+ CrystalsUse="Crystals are your XP and your money for the shop.",
  LevelUp="You leveled up! Pick any upgrade.",
  Shop="After every wave you can shop. Crystals pay for it. Buy anything you like!",
  ShopGo="Nice! Press GO when you're ready.",

@@ -124,8 +124,13 @@ function D.step(now)
 end
 -- A defeated wave boss showers crystals over a wide disc, and they fly to the run's players (D.spawn).
 D.BOSS_DROPS=50;D.BOSS_DROP_VALUE=4
--- Boss crystals start flying this long after the shower, one every BOSS_FLY_STAGGER seconds.
-D.BOSS_FLY_DELAY=.6;D.BOSS_FLY_STAGGER=.02
+-- The shower bursts out of the boss (user, 2026-10-03: "the crystals don't pop out of the boss very
+-- satisfyingly"): crystal n leaves his body BOSS_BURST_STAGGER*n seconds in and arcs to its spot
+-- (ShardMotion.burst, drawn by ShardVisuals from BurstFrom / BurstDelay), all landed by about
+-- 1.2 s. They start flying to their players BOSS_FLY_DELAY after the shower, one every
+-- BOSS_FLY_STAGGER seconds: a pile, a beat, then a stream.
+D.BOSS_BURST_STAGGER=.012
+D.BOSS_FLY_DELAY=1.4;D.BOSS_FLY_STAGGER=.02
 -- A kill's crystal value; nil = EconomyConfig.KILL_SHARDS. The tutorial (TutorialDirector) sets 5.
 D.killValue=nil
 local function dropAt(at,owner,value,bonus)
@@ -183,6 +188,7 @@ function D.spawn(npc,position)
    local ground=workspace:Raycast(spot+Vector3.new(0,6,0),Vector3.new(0,-100,0),params)
    local owner=#takers>0 and takers[E.shareIndex(n,#takers)] or nil
    local d=dropAt(ground and ground.Position+Vector3.new(0,1.15,0) or spot,owner,D.BOSS_DROP_VALUE,0)
+   d.model:SetAttribute('BurstFrom',position+Vector3.new(0,3,0));d.model:SetAttribute('BurstDelay',n*D.BOSS_BURST_STAGGER)
    if owner then d.forced=true;D.start(owner,d,now+D.BOSS_FLY_DELAY+n*D.BOSS_FLY_STAGGER) end
    first=first or d
   end
@@ -216,12 +222,16 @@ function D.sweep()
   end
   if p and award(p,d.value,true) then
    d.collected=true
-   if d.target~=p or (d.started or now)>now then
+   -- A boss crystal still waiting its turn keeps it, so its burst and the stream play out (the
+   -- boss's death usually ends the wave at once); anything else flies now.
+   local flyAt=now
+   if d.target==p and d.started and d.started>now then flyAt=d.started
+   elseif d.target~=p or (d.started or now)>now then
     d.model:SetAttribute('MagnetOrigin',Motion.idle(d.origin,d.born,now));d.model:SetAttribute('MagnetStart',now);d.model:SetAttribute('MagnetUserId',p.UserId)
    end
    table.remove(D.drops,i);unindex(d)
    local model=d.model
-   task.delay(Motion.PULL_SECONDS+.1,function() model:Destroy() end)
+   task.delay(flyAt-now+Motion.PULL_SECONDS+.1,function() model:Destroy() end)
   end
  end
 end

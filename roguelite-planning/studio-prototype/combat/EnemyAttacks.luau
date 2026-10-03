@@ -71,12 +71,14 @@ local TURN_RATE = math.rad(540)
 -- TRIGGER_BONUS studs before attackRange, then hits anyone within its reach + REACH_BONUS whose
 -- direction is within ~95 degrees of the facing (ARC_DOT), checked every frame for HIT_WINDOW
 -- seconds from impact instead of one frame. Example, a normal zombie (4.6 reach, 0.35 s impact):
--- it swings at 5.35 studs and connects out to 5.5 studs for 0.15 s.
--- (2026-10-01: the user kept a longer reach, +1.5 at 6.1 studs, over the arm's-length +0.5 at
--- 5.1. 2026-10-03: "a little too much range, a little too easy to get hit": +0.9, in between.)
-local TRIGGER_BONUS = 0.75
-local REACH_BONUS = 0.9
-local LUNGE_REACH_BONUS = 0.45
+-- it swings at 5 studs and connects out to its reach, 4.6 studs centre to centre: about 2 studs
+-- between the bodies, an arm. A player who backs off as it swings sees it whiff.
+-- (2026-10-01: the user kept a longer reach, +1.5 at 6.1 studs, over the arm's-length +0.5. On
+-- 2026-10-03 it was "a little too much range" at +0.9, then still "hitting me when im not even
+-- really in their physical range": no bonus now.)
+local TRIGGER_BONUS = 0.4
+local REACH_BONUS = 0
+local LUNGE_REACH_BONUS = 0.2
 local ARC_DOT = -0.1
 local HIT_WINDOW = 0.15
 -- Ranged enemies stop to shoot (MAP_MOB_ROSTER: "stops, aims, and fires"), from the draw until

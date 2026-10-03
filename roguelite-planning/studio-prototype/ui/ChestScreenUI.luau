@@ -256,7 +256,7 @@ function U.new(player,opts)
     help.Text='<font color="'..T.hex(col:Lerp(WHITE,.3))..'">'..itemName(chosen.id)..'</font>   ·   '..string.upper(chosen.rarity)..'   ·   '..Card.percent(chosen.chance)
     help.TextColor3=WHITE
    else
-    help.Text=(input=='touch' and 'Tap' or input=='pad' and 'Pick' or 'Click')..' any item to see its stats.  Chance that one '..def.name..' includes it · '..def.copies..' items per chest.'
+    help.Text=(input=='touch' and 'Tap' or input=='pad' and 'Pick' or 'Click')..' any item to see its stats.  Chance that one '..def.name..' includes it · '..Chests.itemsText(def.id)..' per chest.'
     help.TextColor3=C.muted
    end
   end
@@ -310,7 +310,7 @@ function U.new(player,opts)
    local n=owned(id)
    -- Stops 8 px before the price chip; long names ("Legendary Chest  (12)") shrink to fit.
    local name=left(T.label(row,'Name',def.name..(n>0 and '  <font color="#91EF14">('..n..')</font>' or ''),128,10,LIST_W-308,48,36));name.RichText=true;name.TextWrapped=false;name.ZIndex=row.ZIndex+2
-   local sub=left(T.text(row,'Sub',def.copies..' items  ·  '..(def.legendary>=1 and 'Legendary guaranteed' or ('Legendary '..Card.percent(def.legendary*100))),130,56,LIST_W-230,26,20,C.cream));sub.ZIndex=row.ZIndex+2
+   local sub=left(T.text(row,'Sub',Chests.itemsText(id)..'  ·  '..(def.legendary>=1 and 'Legendary guaranteed' or ('Legendary '..Card.percent(def.legendary*100))),130,56,LIST_W-230,26,20,C.cream));sub.ZIndex=row.ZIndex+2
    -- Price chip (top right).
    local chip=T.panel(row,'Price',LIST_W-172,14,154,48,'inset');chip.ZIndex=row.ZIndex+2
    if def.daily then
@@ -353,7 +353,7 @@ function U.new(player,opts)
   T.make('UIGradient',title,{Color=ColorSequence.new(WHITE,def.aura:Lerp(WHITE,.35)),Rotation=90})
   local line=T.make('Frame',header,{Name='Underline',BackgroundColor3=WHITE,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,0),Position=UDim2.fromOffset(tw/2,90),Size=UDim2.fromOffset(math.min(640,tw-40),4)})
   T.make('UIGradient',line,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(1,1)})})
-  centred(T.text(header,'Owned',n>0 and ('You have <b>'..n..'</b>  ·  '..def.copies..' items each') or ('None yet  ·  '..def.copies..' items each'),0,100,tw,32,26,n>0 and C.limeSoft or C.cream))
+  centred(T.text(header,'Owned',n>0 and ('You have <b>'..n..'</b>  ·  '..Chests.itemsText(def.id)..' each') or ('None yet  ·  '..Chests.itemsText(def.id)..' each'),0,100,tw,32,26,n>0 and C.limeSoft or C.cream))
   -- Actions: BUY (price × amount) · OPEN (owned, up to amount) · amount. Under the title, or
   -- under the chest on short screens (plan()).
   local bw,bh,gap=L.bw,92,16
@@ -622,7 +622,8 @@ function U.new(player,opts)
   local compact=L.h<900
   local head=centred(T.label(resultLayer,'Title','YOU GOT!',0,compact and 10 or 40,L.w,compact and 72 or 90,compact and 64 or 84,WHITE));head.ZIndex=31
   T.make('UIGradient',head,{Color=ColorSequence.new(WHITE,(o.best or def.aura):Lerp(WHITE,.3)),Rotation=90})
-  local sub=centred(T.text(resultLayer,'Sub',o.total..' items from '..(o.n>1 and (o.n..' '..def.name..'s') or ('a '..def.name)),0,compact and 80 or 128,L.w,34,28,C.cream));sub.ZIndex=31
+  local items=#o.results -- different items (their copies are on the cards)
+  local sub=centred(T.text(resultLayer,'Sub',items..(items==1 and ' item from ' or ' items from ')..(o.n>1 and (o.n..' '..def.name..'s') or ('a '..def.name)),0,compact and 80 or 128,L.w,34,28,C.cream));sub.ZIndex=31
   -- Grid: up to 7 per row (fewer on narrow screens); scrolls past what fits (×100 can give 30+).
   -- Phones draw the cards k times bigger so their smallest text (the 14 px NEW chip) stays about
   -- 9.5 px on screen: k = 9.5/(14 x .5) = 1.36 at scale .5.

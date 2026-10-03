@@ -131,14 +131,17 @@ Godly); locked-class weapons still drop and show a "Class locked" note.
 Current numbers (2026-10-03; source of truth `ChestConfig`, design in RARITY_GODLY_ARMOR.md
 section 1, which replaced the bigger 2026-09-27 table):
 
-| Chest | Emeralds | Copies | Rare copies | Epic copies | Legendary | Godly |
-|---|---:|---:|---:|---|---:|---:|
-| Wooden | free daily | 3 | 25% chance of 1 | 2% | 0.2% | — |
-| Silver | 160 | 6 | 1 | 8% | 0.8% | 0.05% |
-| Gold | 300 | 10 | 2 | 25% | 3% | 0.2% |
-| Magical | 700 | 18 | 4 | 1 | 10% | 0.6% |
-| Legendary | Robux / rewards | 20 | 5 | 2 | 100% | 2% |
-| Godly (later, not built) | Robux / rewards | 30 | 8 | 4 | 2 | 25% |
+A chest is a few items (2026-10-03): each item rolls a rarity, and its copies depend on that
+rarity. Each item's odds and copies:
+
+| Chest | Emeralds | Items | Common | Rare | Epic | Legendary | Godly |
+|---|---:|---|---|---|---|---|---|
+| Wooden | free daily | 1 | 78% · ×3 | 20% · ×1 | 1.8% | 0.2% | — |
+| Silver | 160 | 1 | 60% · ×4 | 35% · ×2 | 4% | 0.95% | 0.05% |
+| Gold | 300 | 1–2 | 45% · ×6 | 42% · ×3 | 11% | 1.9% | 0.1% |
+| Magical | 700 | 2 | 20% · ×8 | 40% · ×4 | 35% · ×2 | 4.7% | 0.3% |
+| Legendary | Robux / rewards | 4 | ×12 | ×5 | ×2 | ×1 | 2% (a fifth item) |
+| Godly (later, not built) | Robux / rewards | — | — | — | — | — | — |
 
 Godly also has a visible pity bar (guaranteed after 150 Silver-or-better chests; config value).
 

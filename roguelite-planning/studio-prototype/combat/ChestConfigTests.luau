@@ -35,28 +35,57 @@ return function(Chests, rolls)
 	check(Chests.RarityOf["31"] == "Legendary", "Mjolnir is Legendary")
 	check(not Chests.godlyEnabled(), "Godly is off while its pool is empty")
 
-	-- Section 1: the chest table {emeralds, items, rare, epic, legendary, godly, pity}
+	-- Section 1: the chest table (2026-10-03: a few items per chest, each one a roll)
 	local want = {
-		Wooden = { "daily", 3, 0.25, 0.02, 0.002, 0, false }, -- free once a day
-		Silver = { 160, 6, 1, 0.08, 0.008, 0.0005, true },
-		Gold = { 300, 10, 2, 0.25, 0.03, 0.002, true },
-		Magical = { 700, 18, 4, 1, 0.1, 0.006, true },
-		Legendary = { nil, 20, 5, 2, 1, 0.02, true },
+		Wooden = { price = "daily", items = 1, pity = false,
+			odds = { Common = 0.78, Rare = 0.2, Epic = 0.018, Legendary = 0.002 },
+			stack = { Common = 3, Rare = 1, Epic = 1, Legendary = 1 } },
+		Silver = { price = 160, items = 1, pity = true,
+			odds = { Common = 0.6, Rare = 0.35, Epic = 0.04, Legendary = 0.0095, Godly = 0.0005 },
+			stack = { Common = 4, Rare = 2, Epic = 1, Legendary = 1, Godly = 1 } },
+		Gold = { price = 300, items = 1.5, pity = true,
+			odds = { Common = 0.45, Rare = 0.42, Epic = 0.11, Legendary = 0.019, Godly = 0.001 },
+			stack = { Common = 6, Rare = 3, Epic = 1, Legendary = 1, Godly = 1 } },
+		Magical = { price = 700, items = 2, pity = true,
+			odds = { Common = 0.2, Rare = 0.4, Epic = 0.35, Legendary = 0.047, Godly = 0.003 },
+			stack = { Common = 8, Rare = 4, Epic = 2, Legendary = 1, Godly = 1 } },
 	}
 	for kind, w in want do
 		local d = Chests.ById[kind]
-		check(
-			(w[1] == "daily" and d.daily == true and d.emeralds == nil or d.emeralds == w[1])
-				and d.copies == w[2]
-				and d.rare == w[3]
-				and d.epic == w[4]
-				and d.legendary == w[5]
-				and d.godly == w[6]
-				and d.pity == w[7],
-			kind .. " matches the section 1 table"
-		)
+		local same = (w.price == "daily" and d.daily == true and d.emeralds == nil or d.emeralds == w.price)
+			and d.items == w.items
+			and d.pity == w.pity
+		local sum = 0
+		for r, q in w.odds do
+			same = same and d.odds[r] == q
+			sum += q
+		end
+		for r in d.odds do
+			same = same and w.odds[r] ~= nil
+		end
+		for r, n in w.stack do
+			same = same and d.stack[r] == n
+		end
+		check(same, kind .. " matches the section 1 table")
+		check(math.abs(sum - 1) < 1e-9, kind .. " odds add up to 1")
 	end
+	local L = Chests.ById.Legendary
+	check(
+		L.emeralds == nil
+			and L.pity
+			and table.concat(L.fixed, ",") == "Common,Rare,Epic,Legendary"
+			and L.bonusGodly == 0.02
+			and L.stack.Common == 12
+			and L.stack.Rare == 5
+			and L.stack.Epic == 2
+			and L.stack.Legendary == 1,
+		"Legendary Chest: x12 common, x5 rare, x2 epic, x1 Legendary, 2% Godly"
+	)
 	check(Chests.LegendaryPity == 50 and Chests.GodlyPity == 150, "Pity is 50 Legendary / 150 Godly")
+	-- Items per chest (user, 2026-10-03: a Silver Chest is 1-2 items at most). Godly is off here.
+	for kind, text in { Wooden = "1 item", Silver = "1 item", Gold = "1–2 items", Magical = "2 items", Legendary = "4 items" } do
+		check(Chests.itemsText(kind) == text, kind .. " holds " .. text .. ", says " .. Chests.itemsText(kind))
+	end
 
 	-- Section 2: upgrade costs (copies + emeralds tripling each tier) and spare-copy emeralds
 	for r, e in { Common = 60, Rare = 120, Epic = 250, Legendary = 500, Godly = 1000 } do
@@ -95,70 +124,56 @@ return function(Chests, rolls)
 		end
 		return table.concat(out, " ")
 	end
-	local summaries = {
-		Wooden = "Common=×0–3 Rare=25% Epic=2% Legendary=0.2%",
-		Silver = "Common=×3–5 Rare=×1 Epic=8% Legendary=0.8%",
-		Gold = "Common=×6–8 Rare=×2 Epic=25% Legendary=3%",
-		Magical = "Common=×12–13 Rare=×4 Epic=×1 Legendary=10%",
+	local summaries = { -- Godly off: Silver's, Gold's and Magical's Godly share goes to Common
+		Wooden = "Common=78%  ·  ×3 Rare=20% Epic=1.8% Legendary=0.2%",
+		Silver = "Common=60%  ·  ×4 Rare=35%  ·  ×2 Epic=4% Legendary=0.95%",
+		Gold = "Common=57%  ·  ×6 Rare=54%  ·  ×3 Epic=16% Legendary=2.8%",
+		Magical = "Common=36%  ·  ×8 Rare=64%  ·  ×4 Epic=58%  ·  ×2 Legendary=9.2%",
 		Legendary = "Common=×12 Rare=×5 Epic=×2 Legendary=×1",
 	}
 	for kind, text in summaries do
 		check(rows(kind) == text, kind .. " summary: " .. rows(kind))
 	end
 
-	-- Item counts are conserved by rollCounts and group
-	local function conserved(kind, n)
+	-- Every chest: an item count in its range, all different items, each with its rarity's stack
+	local function counted(kind, n)
 		local d = Chests.ById[kind]
+		local lo, hi = Chests.itemRange(kind)
 		for _ = 1, n do
-			local counts = Chests.rollCounts(kind, rng)
-			local total = 0
-			for _, r in Chests.Rarities do
-				total += counts[r]
-				assert(counts[r] >= 0, kind .. " negative " .. r)
-			end
-			assert(total == d.copies, kind .. " rolled " .. total .. " items, not " .. d.copies)
-			local tally, grouped = {}, 0
-			for _, r in Chests.Rarities do
-				Chests.group(r, counts[r], rng, tally)
-			end
-			for _, c in tally do
-				grouped += c
-			end
-			assert(grouped == total, kind .. " grouped " .. grouped .. " of " .. total .. " items")
-			if not Chests.godlyEnabled() then
-				assert(counts.Godly == 0, kind .. " rolled a Godly while Godly is off")
-			end
-		end
-		checks += 1
-	end
-	for _, kind in Chests.Order do
-		conserved(kind, 5000)
-	end
-	-- One item per rarity (user, 2026-10-03): a Silver Chest is about 2 different items, not 4-5
-	for _, kind in Chests.Order do
-		for _ = 1, 500 do
-			local counts = Chests.rollCounts(kind, rng)
-			for _, r in Chests.Rarities do
-				local n = 0
-				for _ in Chests.group(r, counts[r], rng, nil, kind) do
-					n += 1
+			local rolls = Chests.roll(kind, rng)
+			assert(#rolls >= lo and #rolls <= hi, kind .. " rolled " .. #rolls .. " items")
+			local want, copies = {}, 0
+			for _, r in rolls do
+				want[r] = (want[r] or 0) + 1
+				copies += d.stack[r]
+				if not Chests.godlyEnabled() then
+					assert(r ~= "Godly", kind .. " rolled a Godly while Godly is off")
 				end
-				assert(n == (counts[r] > 0 and 1 or 0), kind .. " " .. r .. " gave " .. n .. " items")
+			end
+			local got, items, total = {}, 0, 0
+			for id, c in Chests.fill(kind, rolls, rng) do
+				local r = Chests.RarityOf[id]
+				assert(c == d.stack[r], kind .. " gave " .. c .. " copies of a " .. r)
+				got[r] = (got[r] or 0) + 1
+				items += 1
+				total += c
+			end
+			assert(items == #rolls and total == copies, kind .. " gave " .. items .. " items for " .. #rolls .. " rolls")
+			for r, k in want do
+				assert(got[r] == k, kind .. " " .. r .. " items " .. tostring(got[r]) .. " of " .. k)
 			end
 		end
 		checks += 1
+	end
+	for _, kind in Chests.Order do
+		counted(kind, 5000)
 	end
 
-	-- odds() matches a simulation (4.5 standard deviations per weapon)
+	-- odds() matches a simulation (4.5 standard deviations per item)
 	local function compare(kind, n)
 		local seen, sim = {}, Random.new(7)
 		for _ = 1, n do
-			local counts = Chests.rollCounts(kind, sim)
-			local tally = {}
-			for _, r in Chests.Rarities do
-				Chests.group(r, counts[r], sim, tally)
-			end
-			for id in tally do
+			for id in Chests.fill(kind, Chests.roll(kind, sim), sim) do
 				seen[id] = (seen[id] or 0) + 1
 			end
 		end
@@ -174,74 +189,83 @@ return function(Chests, rolls)
 		end
 		local pooled = 0
 		for _, r in Chests.Rarities do
-			pooled += #Chests.Pool[r]
+			if Chests.chance(kind, r) > 0 then
+				pooled += #Chests.poolFor(kind, r)
+			end
 		end
-		check(listed == pooled, kind .. " odds list every pooled weapon once")
+		check(listed == pooled, kind .. " odds list every item it can hold once")
+		for id in seen do
+			assert(Chests.chance(kind, Chests.RarityOf[id]) > 0, kind .. " dropped " .. id .. " it can't hold")
+		end
 	end
 	for _, kind in Chests.Order do
 		compare(kind, rolls)
 	end
 
 	-- Legendary pity
+	local function has(list, r)
+		return table.find(list, r) ~= nil
+	end
 	local pity = { Legendary = Chests.LegendaryPity - 1, Godly = 0 }
-	local counts = Chests.open("Silver", rng, pity)
-	check(counts.Legendary == 1 and pity.Legendary == 0, "The 50th pity chest has a Legendary and resets the counter")
+	check(has(Chests.open("Silver", rng, pity), "Legendary") and pity.Legendary == 0, "The 50th pity chest has a Legendary and resets the counter")
 	pity = { Legendary = 10, Godly = 0 }
 	Chests.open("Wooden", rng, pity)
 	check(pity.Legendary == 10 and pity.Godly == 0, "Wooden chests don't count toward pity")
 	pity = { Legendary = 0, Godly = 0 }
 	local gap, worst = 0, 0
 	for _ = 1, 20000 do
-		local c = Chests.open("Silver", rng, pity)
 		gap += 1
-		if c.Legendary > 0 then
+		if has(Chests.open("Silver", rng, pity), "Legendary") then
 			worst = math.max(worst, gap)
 			gap = 0
 		end
 	end
-	check(
-		worst == Chests.LegendaryPity,
-		"Over 20,000 Silver chests the longest Legendary wait is exactly 50, got " .. worst
-	)
+	check(worst == Chests.LegendaryPity, "Over 20,000 Silver chests the longest Legendary wait is exactly 50, got " .. worst)
 	-- Godly off: never rolls, never counts
 	pity = { Legendary = 0, Godly = Chests.GodlyPity - 1 }
-	counts = Chests.open("Gold", rng, pity)
-	check(
-		counts.Godly == 0 and pity.Godly == Chests.GodlyPity - 1,
-		"No Godly and no Godly pity while Godly is off"
-	)
+	check(not has(Chests.open("Gold", rng, pity), "Godly") and pity.Godly == Chests.GodlyPity - 1, "No Godly and no Godly pity while Godly is off")
 
 	-- Godly on (temporary pool on this copy only)
 	Chests.Pool.Godly = { "G1", "G2", "G3" }
+	for _, id in Chests.Pool.Godly do
+		Chests.RarityOf[id] = "Godly"
+	end
 	check(Chests.godlyEnabled(), "A Godly pool turns Godly on")
 	check(
-		rows("Gold") == "Common=×5–8 Rare=×2 Epic=25% Legendary=3% Godly=0.2%",
+		rows("Gold") == "Common=57%  ·  ×6 Rare=54%  ·  ×3 Epic=16% Legendary=2.8% Godly=0.15%",
 		"Gold summary with Godly: " .. rows("Gold")
 	)
 	check(not rows("Wooden"):find("Godly"), "Wooden never shows Godly")
+	check(Chests.itemsText("Legendary") == "4–5 items", "the Legendary Chest's Godly is a fifth item")
 	pity = { Legendary = 0, Godly = Chests.GodlyPity - 1 }
-	counts = Chests.open("Gold", rng, pity)
-	check(counts.Godly == 1 and pity.Godly == 0, "The 150th pity chest has a Godly and resets the counter")
+	check(has(Chests.open("Gold", rng, pity), "Godly") and pity.Godly == 0, "The 150th pity chest has a Godly and resets the counter")
 	pity = { Legendary = 0, Godly = 5 }
 	Chests.open("Wooden", rng, pity)
 	check(pity.Godly == 5, "Wooden chests don't count toward Godly pity")
 	pity = { Legendary = 0, Godly = 0 }
 	gap, worst = 0, 0
 	for _ = 1, 6000 do
-		local c = Chests.open("Silver", rng, pity)
 		gap += 1
-		if c.Godly > 0 then
+		if has(Chests.open("Silver", rng, pity), "Godly") then
 			worst = math.max(worst, gap)
 			gap = 0
 		end
 	end
 	check(worst == Chests.GodlyPity, "Over 6,000 Silver chests the longest Godly wait is exactly 150, got " .. worst)
+	-- Both due on a one-item chest: the Godly now, the Legendary on the next chest.
+	pity = { Legendary = Chests.LegendaryPity - 1, Godly = Chests.GodlyPity - 1 }
+	local first = Chests.open("Silver", rng, pity)
+	check(has(first, "Godly") and not has(first, "Legendary") and pity.Legendary == Chests.LegendaryPity, "a one-item chest owing both gives the Godly first")
+	check(has(Chests.open("Silver", rng, pity), "Legendary") and pity.Legendary == 0, "and the Legendary comes in the next chest")
 	for _, kind in Chests.Order do
-		conserved(kind, 2000)
+		counted(kind, 2000)
 	end
 	compare("Gold", rolls)
 	compare("Legendary", rolls)
 	Chests.Pool.Godly = godlyPool
+	for _, id in { "G1", "G2", "G3" } do
+		Chests.RarityOf[id] = nil
+	end
 	check(Chests.godlyEnabled(), "Godly is on again with the Godly weapons and Phoenix")
 	-- Godly weapons drop from every chest with a Godly chance; Phoenix only from the Legendary Chest.
 	for _, kind in Chests.Order do
@@ -264,13 +288,11 @@ return function(Chests, rolls)
 		end
 		check(phoenix == (legendary and 4 or 0), kind .. " odds list " .. phoenix .. " Phoenix pieces")
 	end
+	check(Chests.ById.Legendary.legendary == 1 and Chests.ById.Silver.legendary < 1, "the chest screen reads a guaranteed Legendary as 1")
 	local prng, seen = Random.new(7), {}
 	for _ = 1, 3000 do
-		local counts = Chests.open("Magical", prng, { Legendary = 0, Godly = Chests.GodlyPity - 1 })
-		for r, n in counts do
-			for id in Chests.group(r, n, prng, nil, "Magical") do
-				seen[id] = true
-			end
+		for id in Chests.fill("Magical", Chests.open("Magical", prng, { Legendary = 0, Godly = Chests.GodlyPity - 1 }), prng) do
+			seen[id] = true
 		end
 	end
 	for id in seen do

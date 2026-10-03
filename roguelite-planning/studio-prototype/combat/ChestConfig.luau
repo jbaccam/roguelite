@@ -2,11 +2,9 @@
 -- before opening). Numbers: roguelite-planning/RARITY_GODLY_ARMOR.md sections 1-3.
 -- Chests hold weapons AND armor pieces (user, 2026-09-30): every armor piece (ArmorCatalog,
 -- e.g. 'Iron.Helmet') is its own item with its set's rarity, pooled with that rarity's weapons.
--- A chest holds a handful of item copies. Rare and Epic amounts are whole copies plus a chance
--- of one more (.25 = a 25% chance of one, 1 = exactly one); Legendary and Godly are a chance of
--- one copy (1 = always). Commons fill the rest. All copies of one rarity are ONE item (e.g. a
--- Silver Chest: ×5 Frying Pan and ×1 Glock). Until 2026-10-03 they were split over 1-3 items, so a
--- Silver Chest gave 4-5 different items and players unlocked and levelled too many at once (user).
+-- A chest holds a FEW ITEMS (below, "What a chest holds"): a Silver Chest is one item, e.g. ×4
+-- Iron Legs or ×2 Ninja Legs. Until 2026-10-03 a chest was a pile of copies spread over every
+-- rarity, and a Silver Chest gave 3-5 different items (user: "it should be like 1-2 max").
 local C={Order={},ById={}}
 local Armor=require(script.Parent:WaitForChild('ArmorCatalog'))
 local Pets=require(script.Parent:WaitForChild('PetConfig')) -- sandboxed data; fine from here
@@ -82,69 +80,134 @@ C.GodlyPity=150
 C.Amounts={1,10,100}
 function C.validAmount(n) return table.find(C.Amounts,n)~=nil end
 
+-- What a chest holds (user, 2026-10-03: "the silver chest should be like 1-2 items max ... we gotta
+-- lower the amount of items you get from chests"). Each chest is a few ITEMS, each one a roll:
+--   items  how many rolls (1.5 = one, plus a 50% chance of a second)
+--   odds   each roll's rarity (they add up to 1)
+--   stack  copies of the item a roll gives, by rarity: commons come in bigger stacks than rares
+-- One chest never holds the same item twice. The Legendary Chest instead always holds one item of
+-- each rarity in `fixed` (×12 common, ×5 rare, ×2 epic, ×1 Legendary), plus `bonusGodly`: the
+-- chance of a Godly item on top.
+-- Example, a Silver Chest: one item; 60% it's ×4 of a common, 35% ×2 of a rare, 4% an epic.
 -- aura: the chest's glow and opening colour. emeralds=nil: not sold for emeralds (the Legendary
 -- Chest comes from Robux packs and rewards). daily=true: free, one per day (the Wooden Chest,
 -- 2026-09-30), claimed through BuyChest.
 local function add(d) C.ById[d.id]=d;table.insert(C.Order,d.id) end
-add({id='Wooden',icon='rbxassetid://134997471113145',name='Wooden Chest',emeralds=nil,daily=true,copies=3,rare=.25,epic=.02,legendary=.002,godly=0,pity=false,
+add({id='Wooden',icon='rbxassetid://134997471113145',name='Wooden Chest',emeralds=nil,daily=true,pity=false,
+ items=1,odds={Common=.78,Rare=.2,Epic=.018,Legendary=.002},stack={Common=3,Rare=1,Epic=1,Legendary=1},
  aura=Color3.fromRGB(120,235,70),glow=Color3.fromRGB(255,190,80)})
-add({id='Silver',icon='rbxassetid://129205874070637',name='Silver Chest',emeralds=160,copies=6,rare=1,epic=.08,legendary=.008,godly=.0005,pity=true,
+add({id='Silver',icon='rbxassetid://129205874070637',name='Silver Chest',emeralds=160,pity=true,
+ items=1,odds={Common=.6,Rare=.35,Epic=.04,Legendary=.0095,Godly=.0005},stack={Common=4,Rare=2,Epic=1,Legendary=1,Godly=1},
  aura=Color3.fromRGB(70,170,255),glow=Color3.fromRGB(110,195,255)})
-add({id='Gold',icon='rbxassetid://71517836177030',name='Gold Chest',emeralds=300,copies=10,rare=2,epic=.25,legendary=.03,godly=.002,pity=true,
+add({id='Gold',icon='rbxassetid://71517836177030',name='Gold Chest',emeralds=300,pity=true,
+ items=1.5,odds={Common=.45,Rare=.42,Epic=.11,Legendary=.019,Godly=.001},stack={Common=6,Rare=3,Epic=1,Legendary=1,Godly=1},
  aura=Color3.fromRGB(255,200,50),glow=Color3.fromRGB(255,206,90)})
-add({id='Magical',icon='rbxassetid://100435943394609',name='Magical Chest',emeralds=700,copies=18,rare=4,epic=1,legendary=.1,godly=.006,pity=true,
+add({id='Magical',icon='rbxassetid://100435943394609',name='Magical Chest',emeralds=700,pity=true,
+ items=2,odds={Common=.2,Rare=.4,Epic=.35,Legendary=.047,Godly=.003},stack={Common=8,Rare=4,Epic=2,Legendary=1,Godly=1},
  aura=Color3.fromRGB(176,90,255),glow=Color3.fromRGB(110,180,255)})
--- Legendary (Robux / rewards): 20 copies, was 8 (user, 2026-10-03: more commons, rares and epics):
--- ×12 common, ×5 rare, ×2 epic and the guaranteed Legendary: a Magical Chest's commons, more of the rest.
-add({id='Legendary',icon='rbxassetid://97798658508261',name='Legendary Chest',emeralds=nil,copies=20,rare=5,epic=2,legendary=1,godly=.02,pity=true,
+-- Legendary (Robux / rewards): 20 copies, was 8 (user, 2026-10-03: more commons, rares and epics).
+add({id='Legendary',icon='rbxassetid://97798658508261',name='Legendary Chest',emeralds=nil,pity=true,
+ fixed={'Common','Rare','Epic','Legendary'},bonusGodly=.02,stack={Common=12,Rare=5,Epic=2,Legendary=1,Godly=1},
  aura=Color3.fromRGB(255,110,40),glow=Color3.fromRGB(255,176,60),accent=Color3.fromRGB(120,255,232)})
 -- Old saves: class chests become Wooden, the Royal Chest becomes Legendary (same Robux packs).
 C.Legacy={Brawler='Wooden',Gunner='Wooden',Thrower='Wooden',Juggler='Wooden',Handyman='Wooden',Mage='Wooden',Royal='Legendary'}
 
--- How many stacks (different items) a rarity's copies are grouped into: one.
-local function stacks(copies) return copies<=0 and 0 or 1 end
--- Whole copies, plus one more with the fraction's chance (.25 -> 0 or 1; 1 -> 1).
-local function amount(rng,x) return math.floor(x)+(rng:NextNumber()<x%1 and 1 or 0) end
+-- A roll's rarity odds for chest `kind`. Godly only once a Godly can drop there; until then its
+-- share goes to Common.
+function C.oddsFor(kind)
+ local odds=table.clone(C.ById[kind].odds or {})
+ if (odds.Godly or 0)>0 and not C.godlyEnabled(kind) then odds.Common=(odds.Common or 0)+odds.Godly;odds.Godly=nil end
+ return odds
+end
+local function pick(odds,rng)
+ local x,last=rng:NextNumber(),nil
+ for _,r in C.Rarities do
+  local q=odds[r]
+  if q and q>0 then last=r;if x<q then return r end;x-=q end
+ end
+ return last
+end
 
--- Copies per rarity for one chest (forceLegendary / forceGodly = pity).
-function C.rollCounts(kind,rng,forceLegendary,forceGodly)
- local d=C.ById[kind]
- local rare=amount(rng,d.rare)
- local epic=amount(rng,d.epic)
- local legendary=(forceLegendary or rng:NextNumber()<d.legendary) and 1 or 0
- local godly=C.godlyEnabled(kind) and (forceGodly or rng:NextNumber()<d.godly) and 1 or 0
- return {Common=math.max(0,d.copies-rare-epic-legendary-godly),Rare=rare,Epic=epic,Legendary=legendary,Godly=godly}
+-- The rarities of one chest's items, e.g. {'Common'} or {'Rare','Epic'} (forceLegendary /
+-- forceGodly = pity). Pity puts the guaranteed rarity on the first item: a Godly first, then a
+-- Legendary on the next item (with only one item it waits for the next chest).
+function C.roll(kind,rng,forceLegendary,forceGodly)
+ local d=C.ById[kind];local godly=C.godlyEnabled(kind)
+ if d.fixed then
+  local out=table.clone(d.fixed)
+  if godly and (forceGodly or rng:NextNumber()<(d.bonusGodly or 0)) then table.insert(out,'Godly') end
+  return out
+ end
+ local odds=C.oddsFor(kind);local out={}
+ local n=math.floor(d.items)+(rng:NextNumber()<d.items%1 and 1 or 0)
+ for i=1,n do out[i]=pick(odds,rng) end
+ if forceGodly and godly and not table.find(out,'Godly') then out[1]='Godly' end
+ if forceLegendary and not table.find(out,'Legendary') then
+  for i,r in out do if r~='Godly' then out[i]='Legendary';break end end
+ end
+ return out
 end
 
 -- One chest with pity. `pity` (the saved {Legendary=n, Godly=n}) is updated in place. Only pity
--- chests count, and Godly pity only counts once a Godly can drop.
+-- chests count, and Godly pity only counts once a Godly can drop. Returns the rolled rarities.
 function C.open(kind,rng,pity)
  local d=C.ById[kind]
  local godlyCounts=d.pity and C.godlyEnabled(kind)
- local counts=C.rollCounts(kind,rng,
+ local rolls=C.roll(kind,rng,
   d.pity and (pity.Legendary or 0)>=C.LegendaryPity-1,
   godlyCounts and (pity.Godly or 0)>=C.GodlyPity-1)
- if d.pity then pity.Legendary=counts.Legendary>0 and 0 or (pity.Legendary or 0)+1 end
- if godlyCounts then pity.Godly=counts.Godly>0 and 0 or (pity.Godly or 0)+1 end
- return counts
+ if d.pity then pity.Legendary=table.find(rolls,'Legendary') and 0 or (pity.Legendary or 0)+1 end
+ if godlyCounts then pity.Godly=table.find(rolls,'Godly') and 0 or (pity.Godly or 0)+1 end
+ return rolls
 end
 
--- Give `copies` of one rarity to items that chest `kind` can drop: stacks() of them (now one).
--- Returns {id=count}.
-function C.group(rarity,copies,rng,into,kind)
+-- The items for one chest's rolls: a different item for each roll, with its rarity's stack of
+-- copies. Adds to `into` ({id=copies}) and returns it.
+function C.fill(kind,rolls,rng,into)
  into=into or {}
- local pool=table.clone(C.poolFor(kind,rarity));local n=math.min(stacks(copies),#pool)
- if n==0 then return into end
- -- Distinct weapons; the first stack is the biggest (like ×5 / ×3 / ×1).
- local picked={}
- for i=1,n do table.insert(picked,table.remove(pool,rng:NextInteger(1,#pool))) end
- local shares={}
- local left=copies-n
- for i=1,n do shares[i]=1 end
- for _=1,left do local i=rng:NextNumber()<.55 and 1 or rng:NextInteger(1,n);shares[i]+=1 end
- table.sort(shares,function(a,b) return a>b end)
- for i,id in picked do into[id]=(into[id] or 0)+shares[i] end
+ local d=C.ById[kind];local used={}
+ for _,r in rolls do
+  local pool={}
+  for _,id in C.poolFor(kind,r) do if not used[id] then table.insert(pool,id) end end
+  if #pool>0 then
+   local id=pool[rng:NextInteger(1,#pool)];used[id]=true
+   into[id]=(into[id] or 0)+(d.stack[r] or 1)
+  end
+ end
  return into
+end
+
+-- Rolls of rarity r one chest holds on average (pity aside).
+function C.expected(kind,r)
+ local d=C.ById[kind]
+ if d.fixed then
+  local n=0;for _,x in d.fixed do if x==r then n+=1 end end
+  if r=='Godly' and C.godlyEnabled(kind) then n+=d.bonusGodly or 0 end
+  return n
+ end
+ return d.items*(C.oddsFor(kind)[r] or 0)
+end
+-- Chance that one chest holds at least one item of rarity r (1 = always; pity aside).
+function C.chance(kind,r)
+ local d=C.ById[kind];if not d then return 0 end
+ if d.fixed then
+  if table.find(d.fixed,r) then return 1 end
+  return r=='Godly' and C.godlyEnabled(kind) and (d.bonusGodly or 0) or 0
+ end
+ local q=C.oddsFor(kind)[r] or 0
+ if q<=0 then return 0 end
+ return 1-(1-q)^math.floor(d.items)*(1-d.items%1*q)
+end
+-- How many different items one chest holds: lo, hi.
+function C.itemRange(kind)
+ local d=C.ById[kind]
+ if d.fixed then return #d.fixed,#d.fixed+((d.bonusGodly or 0)>0 and C.godlyEnabled(kind) and 1 or 0) end
+ return math.floor(d.items),math.ceil(d.items)
+end
+-- '1 item', '1–2 items', '4–5 items'.
+function C.itemsText(kind)
+ local lo,hi=C.itemRange(kind)
+ return (lo==hi and tostring(lo) or (lo..'–'..hi))..(hi==1 and ' item' or ' items')
 end
 
 -- 0.25 -> '25%', 0.002 -> '0.2%', 0.0005 -> '0.05%'.
@@ -154,54 +217,38 @@ function C.percent(x)
  if s:find('%.') then s=s:gsub('0+$',''):gsub('%.$','') end
  return s..'%'
 end
--- '×2', '25%' or '×1 + 25%'; nil when it can't drop.
-local function amountText(x)
- local whole,frac=math.floor(x),x%1
- if whole>0 and frac>0 then return '×'..whole..' + '..C.percent(frac) end
- if whole>0 then return '×'..whole end
- if frac>0 then return C.percent(frac) end
- return nil
-end
 
--- Rarity summary for the chest screen. Rarities this chest can't drop are left out.
+-- The chest screen's rows, one per rarity the chest can hold: the chance it has an item of that
+-- rarity and that item's copies ('60%  ·  ×4', '4%', or '×12' when it's always there).
 function C.summary(kind)
  local d=C.ById[kind];local out={}
- local godly=C.godlyEnabled(kind) and d.godly or 0
- local most=d.copies-math.floor(d.rare)-math.floor(d.epic)-math.floor(d.legendary)-math.floor(godly)
- local least=math.max(0,d.copies-math.ceil(d.rare)-math.ceil(d.epic)-math.ceil(d.legendary)-math.ceil(godly))
- table.insert(out,{rarity='Common',text=least==most and ('×'..most) or ('×'..least..'–'..most)})
- for _,r in {{'Rare',d.rare},{'Epic',d.epic},{'Legendary',d.legendary},{'Godly',godly}} do
-  local text=amountText(r[2])
-  if text then table.insert(out,{rarity=r[1],text=text}) end
+ for _,r in C.Rarities do
+  local p=C.chance(kind,r)
+  if p>0 then
+   local n=d.stack[r] or 1
+   table.insert(out,{rarity=r,text=p>=.9995 and ('×'..n) or (C.percent(p)..(n>1 and ('  ·  ×'..n) or ''))})
+  end
  end
  return out
 end
 
--- Chance (percent) that one chest includes at least one copy of each item, grouped by
--- rarity. Exact for the rules above (stacks are distinct items picked uniformly).
+-- Chance (percent) that one chest includes each item, grouped by rarity: the rolls expected to
+-- land on its rarity, shared over that rarity's items. Exact: one chest's rolls are different
+-- items picked uniformly, and no chest rolls more items of a rarity than it has.
 function C.odds(kind)
- local d=C.ById[kind];if not d then return {} end
- local godly=C.godlyEnabled(kind) and d.godly or 0
- -- {count, probability} cases for each rarity's roll.
- local function split(x) local w,f=math.floor(x),x%1;return f>0 and {{w,1-f},{w+1,f}} or {{w,1}} end
- local function once(p) return p>=1 and {{1,1}} or p>0 and {{1,p},{0,1-p}} or {{0,1}} end
- local dist={Rare=split(d.rare),Epic=split(d.epic),Legendary=once(d.legendary),Godly=once(godly),Common={}}
- -- Commons are whatever the other rolls leave.
- for _,r in dist.Rare do for _,e in dist.Epic do for _,l in dist.Legendary do for _,g in dist.Godly do
-  table.insert(dist.Common,{d.copies-r[1]-e[1]-l[1]-g[1],r[2]*e[2]*l[2]*g[2]})
- end end end end
+ if not C.ById[kind] then return {} end
  local out={}
  for _,r in C.Rarities do
-  local items=C.poolFor(kind,r);local pool=#items
-  -- A rarity this chest can't roll (Wooden: no Godly) lists nothing, not 0% rows.
-  if pool>0 and not (r=='Godly' and godly<=0) then
-   local p=0
-   for _,c in dist[r] do p+=c[2]*math.min(stacks(math.max(0,c[1])),pool)/pool end
+  local items=C.poolFor(kind,r);local expected=C.expected(kind,r)
+  if #items>0 and expected>0 then
+   local p=math.min(1,expected/#items)
    for _,id in items do table.insert(out,{id=id,rarity=r,chance=p*100}) end
   end
  end
  return out
 end
+-- The chest screen and item cards read each chest's Legendary and Godly chance (1 = always).
+for _,d in C.ById do d.legendary=C.chance(d.id,'Legendary');d.godly=C.chance(d.id,'Godly') end
 
 -- Daily deals (the "item shop sale"): each paid slot picks a rarity, then a weapon of it
 -- (weapons only). Never Godly. Every price per copy is well above that rarity's spare-copy value, so buying a deal to

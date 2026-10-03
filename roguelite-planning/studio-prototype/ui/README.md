@@ -1,3 +1,28 @@
+# Tutorial play-test, round 2: arrows, placement, crystals, chests — October 3, 2026
+
+Spec section: "Play-test fixes, round 2" in `../../plans/2026-10-03-tutorial-design.md`.
+
+- **Arrow height (`TutorialGuideUI`):** screen = AbsolutePosition + the top bar's inset, for every layer. Full-screen layers (IgnoreGuiInset) read their own top-left as (0, -58), and the old code added nothing for them, so arrows sat 58 px high on the level-up cards, chest screen and results.
+- **Placement:**
+  - `guide.context{avoid, prefer, edges}`. The player's character is always kept clear.
+  - The run passes the boss and `edges` (corners and sides only).
+  - The chest screen passes the chest models and `prefer` (right of the chest menu).
+  - A compact shape (portrait over a 480-wide box) is tried after the wide one at each size.
+  - A context change looks for a new spot at once.
+- **Crystals (`TutorialGuide.client`):** wave 1 points at the nearest crystal on the ground (arrows can point at world Models now), then at the HUD's `Shards` counter for 7 s after the first pickup.
+- **All runs:**
+  - Melee reach bonus 0 (`EnemyAttacks`).
+  - Boss crystals burst from the boss (`ShardMotion.burst`, `BurstFrom`/`BurstDelay`, a sparkle) and fly 1.4 s later; the wave-end sweep keeps their turn.
+  - Pickup VFX in `ShardVisuals.client` (ring, star, shards, glow, "+N", scaled by how many land within 0.1 s).
+- **Chests (`ChestConfig`):** a few items each, each item a rarity roll with a stack by rarity: Silver 1 item, Gold 1–2, Magical 2, Legendary 4. The API is `roll` / `open` / `fill`, plus `chance`, `itemRange`, `itemsText` and `expected`; `rollCounts` and `group` are gone. `ChestScreenUI` and `StoreUI` say items, not copies ("1 item each", "1 item from a Silver Chest"). The tutorial seed replaces the first Silver Chest's roll. `ChestConfigTests` were rewritten with hand-worked summaries. The sim's before/after pace is in RARITY_GODLY_ARMOR.md section 1.
+- **Checked (Studio Edit, nothing saved):**
+  - every changed file compiles;
+  - `TutorialTests` pass 47 checks;
+  - `ChestConfigTests` pass 145 checks with 20000 rolls;
+  - the guide UI mounted in CoreGui against mock layouts: the lobby box was clear of every panel, the run box went to a corner, and the chest screen used the compact box right of the menu;
+  - `ShardMotion.burst` arcs and lands.
+- **Not run:** no Play test of these yet. The pickup VFX and the burst have not been seen in motion.
+
 # Tutorial play-test fixes — October 3, 2026
 
 The user's first play-test of the tutorial. Spec section: "Play-test fixes" in `../../plans/2026-10-03-tutorial-design.md`.

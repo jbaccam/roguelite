@@ -48,31 +48,48 @@ unlock it so they can start with it every time.
 
 ## Decisions
 
-### 1. Weapon chests: a handful of items, not a flood
+### 1. Weapon chests: a few items, not a flood
 
-| Chest | Emeralds | Items | Rare | Epic | Legendary | Godly | Pity counts |
-|---|---:|---:|---|---|---|---|---|
-| Wooden | free daily | 3 | 25% chance of 1 | 2% | 0.2% | — | no |
-| Silver | 160 | 6 | 1 | 8% | 0.8% | 0.05% | yes |
-| Gold | 300 | 10 | 2 | 25% | 3% | 0.2% (1 in 500) | yes |
-| Magical | 700 | 18 | 4 | 1 | 10% | 0.6% | yes |
-| Legendary (Robux / rewards) | — | 20 | 5 | 2 | 1 guaranteed | 2% | yes |
-| *Godly (later, not built)* | — | *30* | *8* | *4* | *2* | *25%* | *yes* |
+**Changed 2026-10-03 (user, after opening Silver Chests in Studio: "THREE PAIRS OF LEGS FROM A
+SILVER CHEST??? AND AN EPIC ... it should be like 1-2 max ... we gotta lower the amount of items
+you get from chests").** A chest is now a few ITEMS. Each item is one roll: its rarity from the
+chest's odds, its copies from the chest's stack for that rarity (commons in bigger stacks). One
+chest never holds the same item twice. `ChestConfig`: `items`, `odds`, `stack`; the Legendary
+Chest has `fixed` items instead, plus `bonusGodly`.
 
+| Chest | Emeralds | Items | Common | Rare | Epic | Legendary | Godly | Pity counts |
+|---|---:|---|---|---|---|---|---|---|
+| Wooden | free daily | 1 | 78% · ×3 | 20% · ×1 | 1.8% | 0.2% | — | no |
+| Silver | 160 | 1 | 60% · ×4 | 35% · ×2 | 4% | 0.95% | 0.05% | yes |
+| Gold | 300 | 1–2 (50% a second) | 45% · ×6 | 42% · ×3 | 11% | 1.9% | 0.1% | yes |
+| Magical | 700 | 2 | 20% · ×8 | 40% · ×4 | 35% · ×2 | 4.7% | 0.3% | yes |
+| Legendary (Robux / rewards) | — | 4 (+ Godly) | ×12 | ×5 | ×2 | ×1 | 2% | yes |
+| *Godly (later, not built)* | — | — | — | — | — | — | — | *yes* |
+
+The percentages are each item roll's odds. Per chest (what the chest screen shows): Gold has a
+Legendary 2.8% of the time and an Epic 16%; Magical has a Legendary 9.2% and an Epic 58%.
+
+- **Example:** a Silver Chest is one item. 60% of the time it's ×4 of one common (×4 Iron Legs),
+  35% ×2 of one rare, 4% one epic.
+- **What it does to pace** (`economy-sims/chest_pace_sim.py --compare`, median of 150 simulated
+  players spending all their emeralds on one chest; the income model is still a guess):
+
+  | Chest | Items per chest | Copies per chest | First Epic | First Legendary | First Tier IV |
+  |---|---|---|---|---|---|
+  | Silver | 2.1 → 1.0 | 6.0 → 3.1 | 4.6 h → 6.3 h | 15 h → 15 h | 10 h → 18 h |
+  | Gold | 2.3 → 1.5 | 10 → 6.1 | 2.7 h → 4.3 h | 14 h → 12 h | 9.5 h → 16 h |
+  | Magical | 3.1 → 2.0 | 18 → 7.9 | 2.1 h → 2.1 h | 11 h → 13 h | 7.8 h → 22 h |
+
+  Legendaries come about as fast (pity sets that pace); upgrades come much slower. Magical is now
+  the Epic chest: per emerald it gives the most Epic copies and the fewest commons.
 - **Legendary Chest: 20 copies, was 8** (user, 2026-10-03: "more copies of commons and rares and
-  epic"). It's ×12 common, ×5 rare, ×2 epic and the guaranteed Legendary: as many commons as a
-  Magical Chest (×12–13 common, ×4 rare, ×1 epic, 10% Legendary) and more of the rest. Still about 4 different
-  items, one per rarity. It sells for 49 R$, about 490 emeralds' worth, under the Magical's 700.
+  epic"). It's ×12 common, ×5 rare, ×2 epic and the guaranteed Legendary. It sells for 49 R$,
+  about 490 emeralds' worth.
 - **Godly Chest: for later** (user, 2026-10-03: "add godly chest into our documentation for
-  later"). The row above is a starting proposal only; see "Later: the Godly Chest" below.
-
-- Everything else in the chest is Common. All copies of one rarity are ONE item
-  (`ChestConfig.group`; 1–3 items until 2026-10-03, when a Silver Chest's 4–5 different items
-  had players unlocking and levelling too many at once).
-  - Example Gold Chest: ×8 Frying Pan and ×2 Glock, plus a 25% chance of an Epic and a 3% chance
-    of a Legendary.
-- **Rare can now be a chance** (Wooden 25%). `rollCounts`, `summary` and `odds` must handle a
-  fractional `rare` the same way they already handle a fractional `epic`.
+  later"). See "Later: the Godly Chest" below; its proposal still uses the old copy model and
+  needs redoing in items when it's built.
+- The tutorial's first Silver Chest is its seeded copies (2 Frying Pans and an Iron helmet)
+  instead of a roll.
 - **Pity** (counted on chests with "Pity counts" = yes):
   - Legendary: guaranteed within **50** chests (unchanged).
   - Godly: guaranteed within **150** chests (new counter `pity.Godly`).
