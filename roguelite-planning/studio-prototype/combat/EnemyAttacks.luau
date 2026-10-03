@@ -197,7 +197,9 @@ local function melee(npc, root, config, s)
 	for _, player in Players:GetPlayers() do
 		local ok, pr = validPlayer(player)
 		if ok and not s.hitPlayers[player] then
-			local delta = pr.Position - root.Position
+			-- Judged as the player's screen shows it (CharacterService.seen): their body where their
+			-- client has it, the enemy where they saw it. Walls use the bodies here.
+			local delta = Characters.seen(player, pr) - Characters.seenEnemy(player, root)
 			local flat = Vector3.new(delta.X, 0, delta.Z)
 			if
 				math.abs(delta.Y) <= config.maxHeight
@@ -205,7 +207,7 @@ local function melee(npc, root, config, s)
 					<= (config.hitRange or config.attackRange)
 						+ (config.behavior == "Lunge" and LUNGE_REACH_BONUS or REACH_BONUS)
 				and (flat.Magnitude < 0.1 or flat.Unit:Dot(s.direction) > ARC_DOT)
-				and not workspace:Raycast(root.Position, delta, s.params)
+				and not workspace:Raycast(root.Position, pr.Position - root.Position, s.params)
 			then
 				s.hitPlayers[player] = true
 				damage(npc, player, npc:GetAttribute("AttackDamage") or config.damage)
@@ -286,8 +288,11 @@ RunService.Heartbeat:Connect(function(dt)
 			for _, player in Players:GetPlayers() do
 				local ok, pr = validPlayer(player)
 				if ok then
+					-- Shots are drawn on time (server clock), so only the player's side lags: their
+					-- body where their client has it (CharacterService.seen).
+					local at = Characters.seen(player, pr)
 					for _, height in HEIGHTS do
-						local distance, t = A.segmentDistance(p.position, finish, pr.Position + Vector3.yAxis * height)
+						local distance, t = A.segmentDistance(p.position, finish, at + Vector3.yAxis * height)
 						if distance <= 1.15 and t < closestT then
 							closest = player
 							closestT = t

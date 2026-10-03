@@ -83,7 +83,7 @@ function A.update(npc,target)
             for _,player in Players:GetPlayers() do
                 local char=player.Character;local pr=char and char:FindFirstChild('HumanoidRootPart')
                 local ph=char and char:FindFirstChildOfClass('Humanoid')
-                if Characters.states[player] and ph and ph.Health>0 and pr and Types.inSlam(s.center,pr.Position) then
+                if Characters.states[player] and ph and ph.Health>0 and pr and Types.inSlam(s.center,Characters.seen(player,pr)) then -- as their screen shows them
                     -- A low eye-to-body ray prevents damage through arena walls.
                     local origin=root.Position+Vector3.yAxis
                     if not workspace:Raycast(origin,pr.Position-origin,p) then

@@ -36,7 +36,8 @@ return function(source)
 	local combatAttributes = { ZombiesEnabled = true }
 	local function newEnemy(i)
 		local npc = { Name = "Zombie_" .. i, attributes = {}, signals = {} }
-		local root = { Parent = npc, Position = Vector3.new(rng:NextNumber(-12, 12), rng:NextNumber(-1, 1), rng:NextNumber(-12, 12)) }
+		-- Standing still: CharacterService.seenEnemy (where a player saw it) is then where it is.
+		local root = { Parent = npc, Position = Vector3.new(rng:NextNumber(-12, 12), rng:NextNumber(-1, 1), rng:NextNumber(-12, 12)), AssemblyLinearVelocity = Vector3.zero }
 		local hum = { Health = 10, Parent = npc }
 		npc.root, npc.hum = root, hum
 		function npc.FindFirstChild(_, name)
@@ -98,9 +99,10 @@ return function(source)
 	local heartbeat
 	local enemyFolder = { Name = "RogueliteEnemies" }
 	local remoteStub = { Name = "", OnServerEvent = signal(), IsA = function(_, c) return c == "RemoteEvent" end }
+	local viewStub = { Name = "PlayerView", OnServerEvent = signal() } -- the clients' position reports
 	local combat = {
 		WaitForChild = function(_, name) return { Name = name } end,
-		FindFirstChild = function() return remoteStub end,
+		FindFirstChild = function(_, name) return name == "PlayerView" and viewStub or remoteStub end,
 		GetAttribute = function(_, name) return combatAttributes[name] end,
 		GetAttributeChangedSignal = function() return signal() end,
 	}
@@ -117,6 +119,7 @@ return function(source)
 		FindFirstChild = function() return nil end, -- no RogueliteRunState: not in the shop
 	}
 	local workspace = {
+		GetServerTimeNow = function() return now end, -- CharacterService.frozen (boss entrances) and .seen
 		FindFirstChild = function(_, name) return name == "RogueliteEnemies" and enemyFolder or nil end,
 		Raycast = function(_, origin, direction, params)
 			local npc, character = params.FilterDescendantsInstances[1], params.FilterDescendantsInstances[2]
@@ -232,5 +235,21 @@ return function(source)
 		total += #expected
 	end
 	check(total > 50, "the crowd made real contacts (" .. total .. ")")
+
+	-- Hits judged from the player's screen (2026-10-03): their own report while fresh and near
+	-- their body here, and an enemy moved back along its velocity by the view delay.
+	local p1 = players[1]
+	local here = p1.root.Position
+	viewStub.OnServerEvent.fire(p1, here + Vector3.new(3, 0, 0))
+	check(Service.seen(p1, p1.root) == here + Vector3.new(3, 0, 0), "a fresh report near the body is where they are")
+	now += 0.5
+	check(Service.seen(p1, p1.root) == here, "a report 0.5 s old is dropped for the body here")
+	viewStub.OnServerEvent.fire(p1, here + Vector3.new(40, 0, 0))
+	check(Service.seen(p1, p1.root) == here, "a report 40 studs from the body is ignored")
+	viewStub.OnServerEvent.fire(p1, "nowhere")
+	check(Service.seen(p1, p1.root) == here, "a report that isn't a position changes nothing")
+	local walker = { Position = Vector3.new(10, 0, 0), AssemblyLinearVelocity = Vector3.new(12, 3, 0) }
+	local seen = Service.seenEnemy(p1, walker)
+	check(math.abs(seen.X - (10 - 12 * 0.2)) < 1e-6 and seen.Y == 0, "a zombie walking at 12 studs/s shows 2.4 studs behind (no ping here)")
 	return { passed = true, checks = checks, ticks = ticks, contacts = total, oldReads = oldReads, newReads = reads }
 end

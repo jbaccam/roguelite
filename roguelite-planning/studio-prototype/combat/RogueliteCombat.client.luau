@@ -380,3 +380,15 @@ if RunService:IsStudio() and not require(combat:WaitForChild('AdminConfig')).isA
  run:GetAttributeChangedSignal('Phase'):Connect(refreshStop);refreshStop()
  Input.InputBegan:Connect(function(input,processed)if processed or Input:GetFocusedTextBox()then return end;if input.KeyCode==Enum.KeyCode.Z then toggle('Zombies')elseif input.KeyCode==Enum.KeyCode.K then toggle('Weapons')elseif input.KeyCode==Enum.KeyCode.X then stopWave()end end)
 end
+
+-- Where this body is on this screen, 30 times a second while in a run (CharacterService.seen):
+-- the server sees a body about 0.2 s late, so enemy hits are judged on this instead (2026-10-03).
+task.spawn(function()
+ local view=combat:WaitForChild('PlayerView',30);if not view then return end
+ local me=Players.LocalPlayer;local since=0
+ RunService.Heartbeat:Connect(function(dt)
+  since+=dt;if since<1/30 then return end;since=0
+  local root=me.Character and me.Character:FindFirstChild('HumanoidRootPart')
+  if root and me:GetAttribute('RunMember') then view:FireServer(root.Position) end
+ end)
+end)

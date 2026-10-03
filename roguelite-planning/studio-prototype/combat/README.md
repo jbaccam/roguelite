@@ -1,5 +1,7 @@
 # Six-slot weapon practice
 
+October 3 hit fairness: [enemy hits judged from the player's screen](HIT_FAIRNESS.md). The server saw players 220 ms late and players saw enemies 200 ms late, so hits landed after dodges.
+
 September 23 accuracy and utility update: [predictive throws, close melee, vacuum and water streams](TRAVEL_ACCURACY.md).
 
 

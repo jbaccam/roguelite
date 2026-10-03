@@ -34,6 +34,48 @@ local function notify(name,...)
 end
 local BUMP_GRACE=.6 -- seconds between body-bump hits on one player
 local function humanoid(player) return player.Character and player.Character:FindFirstChildOfClass('Humanoid') end
+-- Enemy hits are judged from the player's own screen (2026-10-03). Measured in Studio Play: the
+-- server sees a player's body 220 ms late, and the player sees the enemies 200 ms late. Kiting
+-- at 22 studs/s from a zombie chasing at 12, the server's distance was ~7 studs shorter than the
+-- one on screen, so hits landed after a dodge, on every kind of enemy (user: "if i triggered their
+-- hit animation, they are going to hit me regardless if i move away"). So each client reports
+-- where its body is (PlayerView, 30 a second, RogueliteCombat.client), and hits use
+-- Service.seen(player) against Service.seenEnemy(player, root): where that enemy was on their
+-- screen. A report is used only while fresh and near the body here, so it can't carry a player
+-- far from where the server has them.
+local VIEW_DELAY=.2 -- seconds an enemy shows late on a client (measured 190-205 ms), plus half the ping
+local REPORT_FRESH=.3
+local view=combat:FindFirstChild('PlayerView')
+if not view then
+ view=Instance.new('UnreliableRemoteEvent');view.Name='PlayerView'
+ view.Sandboxed=true
+ view.Capabilities=SecurityCapabilities.new(Enum.SecurityCapability.Basic,Enum.SecurityCapability.RemoteEvent)
+ view.Parent=combat
+end
+local reports=setmetatable({},{__mode='k'}) -- player -> {position, at}
+view.OnServerEvent:Connect(function(player,position)
+ if typeof(position)~='Vector3' or position~=position or position.Magnitude>1e6 then return end
+ reports[player]={position=position,at=workspace:GetServerTimeNow()}
+end)
+-- Where `player`'s body is on their own screen: their latest report while it's fresh and within
+-- reach of their body here (the server is about their speed x 0.25 s behind), else their body here.
+function Service.seen(player,root)
+ root=root or (player.Character and player.Character:FindFirstChild('HumanoidRootPart'))
+ if not root then return nil end
+ local r=reports[player];local here=root.Position
+ if r and workspace:GetServerTimeNow()-r.at<REPORT_FRESH then
+  local h=humanoid(player);local speed=math.max(h and h.WalkSpeed or 16,16)
+  if (r.position-here).Magnitude<=3+speed*.35 then return r.position end
+ end
+ return here
+end
+-- Where an enemy (its root) is on `player`'s screen: moved back along its ground velocity by the
+-- view delay. Example: a zombie walking at 12 studs/s shows 2.4 studs behind where it is.
+function Service.seenEnemy(player,enemyRoot)
+ local v=enemyRoot.AssemblyLinearVelocity
+ local ok,ping=pcall(player.GetNetworkPing,player)
+ return enemyRoot.Position-Vector3.new(v.X,0,v.Z)*(VIEW_DELAY+math.min(.15,(ok and ping or 0)/2))
+end
 -- Between waves (run phase Shop) a player in the arena is out of play: nothing can damage them and
 -- they can't walk or jump until the next wave starts. Players in the Studio lobby aren't in the run.
 -- The run state is looked up, never waited on: ShopService creates it after requiring this module.
@@ -350,11 +392,11 @@ RunService.Heartbeat:Connect(function(dt)
    local bumpReady,contactReady=now-s.lastBump>=BUMP_GRACE,now-s.lastContact>=.8
    if (bumpReady or contactReady) and combat:GetAttribute('ZombiesEnabled') and combat:GetAttribute('RunPaused')~=true then
     contacts=contacts or contactList()
-    local position=root.Position
+    local position=Service.seen(player,root) -- body overlap as their screen shows it
     for i,r in contacts.records do
      local npc=contacts.npcs[i]
      local ready=if r.bump then bumpReady else contactReady
-     local delta=ready and position-r.position
+     local delta=ready and position-(r.root.Parent and Service.seenEnemy(player,r.root) or r.position)
      if ready and math.abs(delta.Y)<4.5 and Vector2.new(delta.X,delta.Z).Magnitude<r.range and r.root.Parent==npc and r.hum.Health>0 then
       local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances={npc,player.Character,workspace:FindFirstChild('RogueliteEnemies')}
       if not workspace:Raycast(r.position,position-r.position,params) then

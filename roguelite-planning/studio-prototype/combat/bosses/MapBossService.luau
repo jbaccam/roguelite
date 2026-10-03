@@ -173,11 +173,12 @@ local function exclusions(npc)
  for _,p in Players:GetPlayers() do if p.Character then table.insert(list,p.Character) end end
  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances=list;return params
 end
+-- root aims attacks; at (CharacterService.seen: where their screen has them) is what hits test.
 local function living()
  local list={}
  for _,p in Players:GetPlayers() do
   local ch=p.Character;local pr=ch and ch:FindFirstChild('HumanoidRootPart');local ph=ch and ch:FindFirstChildOfClass('Humanoid')
-  if pr and ph and ph.Health>0 and Characters.states[p] then table.insert(list,{player=p,root=pr}) end
+  if pr and ph and ph.Health>0 and Characters.states[p] then table.insert(list,{player=p,root=pr,at=Characters.seen(p,pr)}) end
  end
  return list
 end
@@ -330,7 +331,7 @@ local function stepShots(npc,s,now,params,people)
   if wall then p=wall.Position end
   for _,e in people do
    local n=B.hits[e.player] or 0
-   if n<def.perPlayer and segmentDistance(shot.pos,p,e.root.Position)<=def.radius+1.2 and hit(npc,def,e,shot.pos,params,p) then B.hits[e.player]=n+1;shot.done=true;break end
+   if n<def.perPlayer and segmentDistance(shot.pos,p,e.at)<=def.radius+1.2 and hit(npc,def,e,shot.pos,params,p) then B.hits[e.player]=n+1;shot.done=true;break end
   end
   shot.pos=p
   if wall or t>=def.life then shot.done=true end
@@ -373,7 +374,7 @@ local function stepFollows(npc,s,now,params,people)
   local Q=s.follows[i]
   if now>=Q.at then
    for _,e in people do for _,c in Q.points do
-    if not Q.hits[e.player] and Shapes.contains({kind='circle',center=c,radius=Q.def.radius},e.root.Position) and hit(npc,Q.def,e,c+Vector3.yAxis*2,params,c) then Q.hits[e.player]=true end
+    if not Q.hits[e.player] and Shapes.contains({kind='circle',center=c,radius=Q.def.radius},e.at) and hit(npc,Q.def,e,c+Vector3.yAxis*2,params,c) then Q.hits[e.player]=true end
    end end
    table.remove(s.follows,i)
   end
@@ -398,19 +399,19 @@ local function stepAttack(npc,s,now,h,root,params,people)
   if travel>A.travelled then
    local body=X.rushBody(def,A.cf,A.dir,f.groundY,A.travelled,travel)
    for _,e in people do
-    if not A.hits[e.player] and Shapes.contains(body,e.root.Position) and hit(npc,def,e,root.Position,params,body.b) then A.hits[e.player]=true end
+    if not A.hits[e.player] and Shapes.contains(body,e.at) and hit(npc,def,e,root.Position,params,body.b) then A.hits[e.player]=true end
    end
    A.travelled=travel
   end
  else root.CFrame=A.cf end
  if def.shape=='circle' and age>=at.impact and not A.fired then
   A.fired=true;local c=X.circle(def,at,f)
-  for _,e in people do if Shapes.contains(c,e.root.Position) and hit(npc,def,e,c.center+Vector3.yAxis*2,params,c.center) then A.hits[e.player]=true end end
+  for _,e in people do if Shapes.contains(c,e.at) and hit(npc,def,e,c.center+Vector3.yAxis*2,params,c.center) then A.hits[e.player]=true end end
   if def.follow then queueFollow(npc,s,A,now,root,params,people) end
  elseif def.shape=='wave' and age>=at.impact then
   for _,e in people do
    for _,line in A.lines or {A.line} do
-    if not A.hits[e.player] and X.waveHit(def,at,line,e.root.Position,t0,age) and hit(npc,def,e,line.origin+Vector3.yAxis*2,params,line.origin) then A.hits[e.player]=true end
+    if not A.hits[e.player] and X.waveHit(def,at,line,e.at,t0,age) and hit(npc,def,e,line.origin+Vector3.yAxis*2,params,line.origin) then A.hits[e.player]=true end
    end
   end
  elseif (def.shape=='breath' or def.shape=='sweep') and age>=X.hitFrom(def,at) then
@@ -421,8 +422,8 @@ local function stepAttack(npc,s,now,h,root,params,people)
    local shape=breath and X.cone(def,at,f,time) or X.sweep(def,at,f,time)
    for _,e in people do
     local p=e.player;local ready
-    if breath then ready=not A.ticks[p] or time-A.ticks[p]>=def.tick-1e-6 else ready=not A.hits[p] and (not A.arc or Shapes.contains(A.arc,e.root.Position)) end
-    if ready and Shapes.contains(shape,e.root.Position) and hit(npc,def,e,A.cf.Position,params,A.cf.Position) then A.ticks[p]=time;A.hits[p]=true end
+    if breath then ready=not A.ticks[p] or time-A.ticks[p]>=def.tick-1e-6 else ready=not A.hits[p] and (not A.arc or Shapes.contains(A.arc,e.at)) end
+    if ready and Shapes.contains(shape,e.at) and hit(npc,def,e,A.cf.Position,params,A.cf.Position) then A.ticks[p]=time;A.hits[p]=true end
    end
   end
   -- A whipping tail tip covers ~4.6 studs per 1/60 s; at 1/120 its 4-stud hit leaves no gaps.
@@ -437,7 +438,7 @@ local function stepAttack(npc,s,now,h,root,params,people)
   if A.points and age>=at.impact+def.eruptDelay and not A.fired then
    A.fired=true
    for _,e in people do for _,c in A.points do
-    if not A.hits[e.player] and Shapes.contains({kind='circle',center=c,radius=def.radius},e.root.Position) and hit(npc,def,e,c+Vector3.yAxis*2,params,c) then A.hits[e.player]=true end
+    if not A.hits[e.player] and Shapes.contains({kind='circle',center=c,radius=def.radius},e.at) and hit(npc,def,e,c+Vector3.yAxis*2,params,c) then A.hits[e.player]=true end
    end end
   end
  elseif def.shape=='projectiles' and age>=at.impact and not A.fired then

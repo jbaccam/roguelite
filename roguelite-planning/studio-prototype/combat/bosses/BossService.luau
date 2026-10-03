@@ -152,8 +152,9 @@ local function stepCharge(npc,s,now,root)
   local a2,b2=Vector2.new(from.X,from.Z),Vector2.new(to.X,to.Z);local ab=b2-a2
   for _,p in Players:GetPlayers() do
    local char=p.Character;local pr=char and char:FindFirstChild('HumanoidRootPart');local ph=char and char:FindFirstChildOfClass('Humanoid')
-   if pr and ph and ph.Health>0 and Characters.states[p] and not A.hits[p] and math.abs(pr.Position.Y-to.Y)<=7 then
-    local q=Vector2.new(pr.Position.X,pr.Position.Z);local t=math.clamp((q-a2):Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1)
+   local at=pr and Characters.seen(p,pr) -- where their screen has them (CharacterService.seen)
+   if pr and ph and ph.Health>0 and Characters.states[p] and not A.hits[p] and math.abs(at.Y-to.Y)<=7 then
+    local q=Vector2.new(at.X,at.Z);local t=math.clamp((q-a2):Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1)
     if (q-(a2+ab*t)).Magnitude<=C.halfWidth then
      A.hits[p]=true
      local actual=Characters.contact(p,C.damage*(npc:GetAttribute('BossDamageScale') or 1))
@@ -238,9 +239,10 @@ local function damage(npc,s,time)
  for _,p in Players:GetPlayers() do
   local char=p.Character;local pr=char and char:FindFirstChild('HumanoidRootPart');local ph=char and char:FindFirstChildOfClass('Humanoid')
   if pr and ph and ph.Health>0 and Characters.states[p] and not attack.hits[p] then
-   local hit=Motion.touches(head,pr.Position) or Motion.sweeps(attack.cf.Position,head.Position,pr.Position)
+   local at=Characters.seen(p,pr) -- where their screen has them (CharacterService.seen)
+   local hit=Motion.touches(head,at) or Motion.sweeps(attack.cf.Position,head.Position,at)
    -- Slam: a ground shock disc; a normal jump (about 5 studs up) doesn't clear it.
-   if kind=='Slam' then local delta=pr.Position-center;hit=Vector2.new(delta.X,delta.Z).Magnitude<=a.radius and math.abs(delta.Y)<=6 end
+   if kind=='Slam' then local delta=at-center;hit=Vector2.new(delta.X,delta.Z).Magnitude<=a.radius and math.abs(delta.Y)<=6 end
    if hit and not workspace:Raycast(attack.cf.Position,pr.Position-attack.cf.Position,exclusions(npc)) then
     attack.hits[p]=true -- consume even when armor/dodge/first-hit block prevents damage
     local actual=Characters.contact(p,a.damage*(npc:GetAttribute('BossDamageScale') or 1))

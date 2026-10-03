@@ -45,11 +45,13 @@ local function sparkle(at)
 end
 -- Pickup burst (user, 2026-10-03: "nice blue vfx when collecting crystals ... the more you pick up
 -- at once the brighter it gets"). When crystals land on a player (MagnetStart + PULL_SECONDS, the
--- moment RogueliteSounds plays its plop): a soft cyan ring spreads around them, a white
--- four-point star flashes, little blue and white shards fly out, a glow lights them up, and the
--- local player sees "+N" (it keeps adding while pickups keep coming). Pickups within
--- BURST_WINDOW are one burst; its size and brightness k run from .25 for one crystal to 1 at 24
--- or more. Flat effects only (billboard shapes and particles), like the game's other VFX.
+-- moment RogueliteSounds plays its plop), where they land: little blue and white shards burst out,
+-- a thin soft ring eases outwards, a few blue orbs drift up and a gentle glow fades; the local
+-- player sees "+N" (it keeps adding while pickups keep coming). It stays where it happened, so a
+-- running player leaves it behind. Pickups within BURST_WINDOW are one burst; its size and
+-- brightness k run from .25 for one crystal to 1 at 24 or more. Flat effects only (billboard shapes
+-- and particles), like the game's other VFX. (A first version flashed a big white star on the
+-- player's middle and followed them: "way too forced and bright".)
 local TweenService=game:GetService('TweenService')
 local BURST_WINDOW=.1
 local CYAN,PALE,WHITE=Color3.fromRGB(90,200,255),Color3.fromRGB(190,240,255),Color3.new(1,1,1)
@@ -60,16 +62,7 @@ local function circle(parent,name,size,z)
  local c=Instance.new('UICorner');c.CornerRadius=UDim.new(.5,0);c.Parent=f
  return f
 end
--- One ray of the star: a thin bar, bright in the middle and fading to its tips.
-local function ray(parent,length,width,angle)
- local f=Instance.new('Frame');f.Name='Ray';f.AnchorPoint=Vector2.new(.5,.5);f.Position=UDim2.fromScale(.5,.5)
- f.Size=UDim2.fromScale(length,width);f.Rotation=angle;f.BackgroundColor3=WHITE;f.BorderSizePixel=0;f.ZIndex=4;f.Parent=parent
- local g=Instance.new('UIGradient')
- g.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.42,.15),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(.58,.15),NumberSequenceKeypoint.new(1,1)})
- g.Parent=f
- local c=Instance.new('UICorner');c.CornerRadius=UDim.new(.5,0);c.Parent=f
-end
-local shardEmitter -- template, cloned per burst
+local shardEmitter,orbEmitter -- templates, cloned per burst
 do
  local e=Instance.new('ParticleEmitter');e.Name='PickupShards'
  e.Texture='rbxasset://textures/particles/sparkles_main.dds'
@@ -81,6 +74,15 @@ do
  e.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(.7,.2),NumberSequenceKeypoint.new(1,1)})
  e.Rate=0;e.Enabled=false
  shardEmitter=e
+ local o=Instance.new('ParticleEmitter');o.Name='PickupOrbs'
+ o.Texture='rbxasset://textures/particles/sparkles_main.dds'
+ o.Color=ColorSequence.new(PALE,CYAN);o.LightEmission=1;o.LightInfluence=0
+ o.Lifetime=NumberRange.new(.7,1.1);o.Speed=NumberRange.new(2,5);o.SpreadAngle=Vector2.new(35,35)
+ o.EmissionDirection=Enum.NormalId.Top;o.Acceleration=Vector3.new(0,2,0);o.Drag=1.5
+ o.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,.25),NumberSequenceKeypoint.new(.3,.4),NumberSequenceKeypoint.new(1,0)})
+ o.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.3),NumberSequenceKeypoint.new(1,1)})
+ o.Rate=0;o.Enabled=false
+ orbEmitter=o
 end
 local counter={} -- the local player's "+N": {gui, label, total, untilAt}
 local function plus(root,value)
@@ -113,35 +115,33 @@ local function burst(p,n,value)
  local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart');if not root then return end
  local k=math.clamp(math.log(n+1)/math.log(25),.25,1)
  if p~=Players.LocalPlayer then k*=.6 end -- someone else's: smaller, and no number
- -- Ring, glow and star: one billboard on the player, drawn over them so the ring circles them.
- local size=4+6*k
- local g=Instance.new('BillboardGui');g.Name='CrystalPickup';g.Adornee=root;g.Size=UDim2.fromScale(size,size)
- g.StudsOffsetWorldSpace=Vector3.new(0,.4,0);g.AlwaysOnTop=true;g.LightInfluence=0;g.Brightness=1+1.5*k;g.ResetOnSpawn=false
- local glow=circle(g,'Glow',.3,1);glow.BackgroundColor3=CYAN;glow.BackgroundTransparency=.45
- tween(glow,.4,{Size=UDim2.fromScale(.5,.5),BackgroundTransparency=1})
- for i=1,(k>.75 and 3 or k>.45 and 2 or 1) do
-  local ring=circle(g,'Ring',.22,2)
-  local stroke=Instance.new('UIStroke');stroke.Color=i==1 and PALE or CYAN;stroke.Thickness=2+4*k;stroke.Transparency=0;stroke.Parent=ring
-  task.delay((i-1)*.08,function()
-   tween(ring,.5,{Size=UDim2.fromScale(.95-(i-1)*.12,.95-(i-1)*.12)})
-   tween(stroke,.5,{Transparency=1,Thickness=1})
+ -- Where it happened, at the waist; it stays there.
+ local anchor=Instance.new('Part');anchor.Name='CrystalPickupFX';anchor.Anchored=true;anchor.CanCollide=false;anchor.CanQuery=false
+ anchor.CanTouch=false;anchor.CastShadow=false;anchor.Transparency=1;anchor.Size=Vector3.one*.2
+ anchor.CFrame=CFrame.new(root.Position+Vector3.new(0,-.4,0));anchor.Parent=folder
+ local a=Instance.new('Attachment');a.Parent=anchor
+ -- The shards bursting out (the part the user liked), and the orbs drifting up.
+ local e=shardEmitter:Clone();e.Speed=NumberRange.new(8+6*k,14+12*k);e.Parent=a
+ e:Emit(math.floor(6+30*k))
+ local o=orbEmitter:Clone();o.Parent=a
+ o:Emit(math.floor(2+6*k))
+ -- A thin soft ring easing outwards and a faint glow behind it (no star, no AlwaysOnTop flash).
+ local size=3.5+5*k
+ local g=Instance.new('BillboardGui');g.Name='Ring';g.Adornee=anchor;g.Size=UDim2.fromScale(size,size)
+ g.LightInfluence=0;g.Brightness=1+.4*k;g.ResetOnSpawn=false;g.Parent=anchor
+ local glow=circle(g,'Glow',.25,1);glow.BackgroundColor3=CYAN;glow.BackgroundTransparency=.72
+ tween(glow,.55,{Size=UDim2.fromScale(.55,.55),BackgroundTransparency=1},Enum.EasingStyle.Sine)
+ for i=1,(k>.6 and 2 or 1) do
+  local ring=circle(g,'Ring',.2,2)
+  local stroke=Instance.new('UIStroke');stroke.Color=i==1 and PALE or CYAN;stroke.Thickness=1.2+2*k;stroke.Transparency=.25;stroke.Parent=ring
+  task.delay((i-1)*.1,function()
+   tween(ring,.65,{Size=UDim2.fromScale(1-(i-1)*.18,1-(i-1)*.18)},Enum.EasingStyle.Quint)
+   tween(stroke,.65,{Transparency=1,Thickness=.6},Enum.EasingStyle.Sine)
   end)
  end
- local star=Instance.new('Frame');star.Name='Star';star.AnchorPoint=Vector2.new(.5,.5);star.Position=UDim2.fromScale(.5,.5)
- star.Size=UDim2.fromScale(.1,.1);star.BackgroundTransparency=1;star.ZIndex=4;star.Parent=g
- ray(star,1,.07,0);ray(star,1,.07,90);ray(star,.55,.05,45);ray(star,.55,.05,-45)
- star.Rotation=-15
- tween(star,.12,{Size=UDim2.fromScale(.55+.25*k,.55+.25*k),Rotation=0},Enum.EasingStyle.Back)
- task.delay(.12,function() tween(star,.3,{Size=UDim2.fromScale(0,0),Rotation=25},Enum.EasingStyle.Quad) end)
- g.Parent=Players.LocalPlayer:FindFirstChildOfClass('PlayerGui')
- -- Shards and light, from the player's middle.
- local a=Instance.new('Attachment');a.Name='CrystalPickupFX';a.Parent=root
- local e=shardEmitter:Clone();e.Speed=NumberRange.new(8+6*k,14+12*k);e.Parent=a
- e:Emit(math.floor(6+34*k))
- local light=Instance.new('PointLight');light.Color=CYAN;light.Brightness=1.5+5*k;light.Range=8+10*k;light.Shadows=false;light.Parent=a
- tween(light,.5,{Brightness=0})
- task.delay(.7,function() g:Destroy() end)
- task.delay(1,function() a:Destroy() end)
+ local light=Instance.new('PointLight');light.Color=CYAN;light.Brightness=.6+2*k;light.Range=6+8*k;light.Shadows=false;light.Parent=a
+ tween(light,.6,{Brightness=0},Enum.EasingStyle.Sine)
+ task.delay(1.3,function() anchor:Destroy() end)
  if p==Players.LocalPlayer and value>0 then plus(root,value) end
 end
 local pending={} -- player -> {n, value}: this burst window's pickups
