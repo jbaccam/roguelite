@@ -41,7 +41,18 @@ Every class retains access to every weapon. Six home weapons belong to each clas
 | Handyman | +25% utility, +20% area, +1 HP/s regeneration | −2 movement speed, −5 critical points | 10% cooldown reduction | +20% utility |
 | Mage | +25% elemental, +30% duration, 15% burn chance, +1 chain target | −20 HP, −2 Armor, −10% melee | +15% elemental | +1 burn-spread target |
 
-**Class weapon fit (2026-10-03).** On top of the table, every equipped weapon gets its own damage change: a weapon from your class deals **+15%**, a weapon from another class **-10%**, and a Godly weapon is unchanged. It stacks with the class stats. Example: a Brawler's fist gets +15% and the Brawler's +20% melee; a Brawler's Gunner pistol gets -10% and the Brawler's -15% ranged, about -24% in total (Brotato's Brawler is -50 ranged, so this is gentler). Values: `CharacterStats.ClassFit`. Shop cards show it as "your class +15%" in green or "off-class -10%" in red.
+**Class weapon fit (2026-10-03).** On top of the table, every equipped weapon gets its own damage change from how close its home class is to yours: own class **+15%**, then one number per pair of classes (the same both ways). Godly weapons are unchanged. It stacks with the class stats. Values: `CharacterStats.ClassFit`.
+
+| Your class → weapon's class | Brawler | Gunner | Thrower | Juggler | Handyman | Mage |
+| --- | --- | --- | --- | --- | --- | --- |
+| Brawler | **+15** | −15 | −10 | 0 | −5 | −10 |
+| Gunner | −15 | **+15** | 0 | −10 | −5 | −5 |
+| Thrower | −10 | 0 | **+15** | 0 | −10 | −5 |
+| Juggler | 0 | −10 | 0 | **+15** | −5 | −10 |
+| Handyman | −5 | −5 | −10 | −5 | **+15** | −10 |
+| Mage | −10 | −5 | −5 | −10 | −10 | **+15** |
+
+Why: Brawler and Juggler both swing at close range; Gunner, Thrower and Juggler fire or toss projectiles; fists vs guns is the one opposite pair. Example: a Brawler's Glock takes −15% and the Brawler's −15% ranged, about −28% in total (Brotato's Brawler is −50 ranged, so this is gentler); a Brawler's Boxing Gloves (Juggler) take nothing. Shop cards show "your class +15%" in green, "similar class 0%" in cream, or "off-class −X%" in red. The Armory and run-setup class panels list the class's row.
 
 These prototype choices supersede the older proposal that classes need no drawbacks. Distinct orbital/return animations and deployables remain separate weapon-kit work; this change applies class statistics to the existing attack styles.
 

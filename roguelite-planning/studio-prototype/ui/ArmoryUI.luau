@@ -1451,7 +1451,9 @@ function A.new(player, opts)
 		T.text(
 			panel,
 			"Affinity",
-			"Your class's weapons deal +15% damage, other classes' weapons -10%. Equip 2 home weapons in a run for the first class bonus, 4 for the stronger one.",
+			"Weapon damage by class: "
+				.. Stats.classFitText(class)
+				.. ". Equip 2 home weapons in a run for the first class bonus, 4 for the stronger one.",
 			24,
 			496,
 			RIGHT_W - 48,

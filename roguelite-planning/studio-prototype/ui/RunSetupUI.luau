@@ -280,7 +280,7 @@ function M.new(player,opts)
   T.text(box,'Description',Stats.Classes[class].description,pad,descY,tw,descH,cp and 17 or 18,C.muted)
   T.text(box,'Buffs',table.concat(lines,'\n'),pad,buffY,tw,buffH,cp and 18 or 19)
   if owned then
-   T.text(box,'Affinity','Class weapons +15% damage, other classes -10%. 2 and 4 home weapons add class bonuses.',pad,tailY,tw,40,16,C.cream)
+   T.text(box,'Affinity',Stats.classFitText(class)..'. 2 and 4 home weapons add class bonuses.',pad,tailY,tw,40,16,C.cream)
    T.text(box,'Armor','Armor: none yet  ·  armor sets arrive with chest rewards',pad,tailY+42,tw,noteH,16,C.dim)
   else
    T.text(box,'Earn','Earn it: '..(Rules.ClassUnlock[class] or 'an achievement'),pad,tailY,tw,noteH,16,C.gold)

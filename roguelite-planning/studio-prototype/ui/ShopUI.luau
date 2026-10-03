@@ -156,10 +156,11 @@ function M.new(player,h,refresh)
   end
   return row*26
  end
- -- 'Brawler · your class +15%' / 'Gunner · off-class -10%' and its colour (CharacterStats.classFit).
+ -- 'Brawler · your class +15%' / 'Juggler · similar class 0%' / 'Gunner · off-class -15%' and its colour (CharacterStats.classFit).
  local function classLine(base)
   local fit,pct=Stats.classFit(base,state:GetAttribute('Class'))
   if fit=='home' then return base.home..' · your class +'..pct..'%',green end
+  if fit=='similar' then return base.home..' · similar class 0%',cream end
   if fit=='off' then return base.home..' · off-class '..pct..'%',red end
   return base.home,cream
  end

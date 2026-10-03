@@ -27,10 +27,11 @@ for _,class in S.ClassOrder do
   for _,d in S.List do check(s[d.id]>=d.min and s[d.id]<=d.max,'bounded '..d.id) end
   for _,w in C.List do local d=S.weapon(w,s,class);check(d.damage>0 and d.cooldown>=.08 and d.range>0,'weapon math '..w.name) end
  end
- -- Class weapon fit: own class x1.15, another class x0.9, godly unchanged (same stats, no class = x1).
+ -- Class weapon fit: own class x1.15, other classes by the pair table, godly unchanged (no class = x1).
  local s=S.resolve(class,0)
  for _,w in C.List do
-  local want=w.godly and 1 or w.home==class and 1.15 or .9
+  local want=w.godly and 1 or 1+(w.home==class and S.ClassFit.Own or S.ClassFit[class][w.home])/100
+  if not w.godly and w.home~=class then check(S.ClassFit[class][w.home]==S.ClassFit[w.home][class],'class fit symmetric '..class..' '..w.home) end
   equal(S.weapon(w,s,class).damage/S.weapon(w,s,nil).damage,want,'class fit '..class..' '..w.name)
  end
  check(edit('Class',class),'class request');check(edit('Build'),'build request')

@@ -62,15 +62,36 @@ S.Classes={
  Handyman={description='Wide utility attacks and recovery. Slower movement and fewer criticals.',buffs={UtilityPower=25,AreaSize=20,Regeneration=1,MoveSpeed=-2,CritChance=-5},build={'24','25','28','29'},two={CooldownReduction=10},four={UtilityPower=20}},
  Mage={description='Elemental damage, burn and chains. Fragile with weaker physical attacks.',buffs={ElementalDamage=25,Duration=30,BurnChance=15,ChainCount=1,MaxHP=-20,Armor=-2,MeleeDamage=-10},build={'30','31','34','35'},two={ElementalDamage=15},four={BurnSpread=1}},
 }
--- Class weapon fit (2026-10-03, Brotato-style but gentler): each weapon from your own class deals
--- +15% damage, each weapon from another class -10%. Godly weapons belong to no class: no change.
--- This is per weapon and stacks with the class stats above, so a Brawler's Gunner pistol also takes
--- the Brawler's -15% ranged: 0.9 x 0.85 = about -24%, while a Brawler's own fist gets +15% and +20% melee.
-S.ClassFit={home=15,off=-10}
+-- Class weapon fit (2026-10-03, Brotato-style but gentler): each equipped weapon's damage changes by
+-- how close its home class is to yours. Own class +15%. Each pair of classes has one number, the same
+-- both ways: 0 for close cousins (Brawler/Juggler swing at close range, Gunner/Thrower and
+-- Thrower/Juggler fire or toss projectiles), -5 a bit off, -10 different, -15 opposite (fists vs
+-- guns). Godly weapons belong to no class: no change. Stacks with the class stats above, so a
+-- Brawler's Glock takes -15% and the Brawler's -15% ranged: 0.85 x 0.85 = about -28%.
+S.ClassFit={Own=15,
+ Brawler={Gunner=-15,Thrower=-10,Juggler=0,Handyman=-5,Mage=-10},
+ Gunner={Brawler=-15,Thrower=0,Juggler=-10,Handyman=-5,Mage=-5},
+ Thrower={Brawler=-10,Gunner=0,Juggler=0,Handyman=-10,Mage=-5},
+ Juggler={Brawler=0,Gunner=-10,Thrower=0,Handyman=-5,Mage=-10},
+ Handyman={Brawler=-5,Gunner=-5,Thrower=-10,Juggler=-5,Mage=-10},
+ Mage={Brawler=-10,Gunner=-5,Thrower=-5,Juggler=-10,Handyman=-10},
+}
+-- 'home' (+15), 'similar' (0) or 'off' (negative), and the percent; nil,0 for Godly or no class.
 function S.classFit(base,class)
- if base.godly or not S.Classes[class] then return nil,0 end
- if base.home==class then return 'home',S.ClassFit.home end
- return 'off',S.ClassFit.off
+ local row=S.ClassFit[class]
+ if base.godly or not S.Classes[class] or not row then return nil,0 end
+ if base.home==class then return 'home',S.ClassFit.Own end
+ local pct=row[base.home] or 0
+ return pct<0 and 'off' or 'similar',pct
+end
+-- One line for class screens: 'Brawler +15% · Juggler 0% · Handyman -5% · Thrower, Mage -10% · Gunner -15%'.
+function S.classFitText(class)
+ local row=S.ClassFit[class];if not row then return '' end
+ local byPct={}
+ for _,other in S.ClassOrder do local v=row[other];if v then byPct[v]=byPct[v] or {};table.insert(byPct[v],other) end end
+ local out={class..' +'..S.ClassFit.Own..'%'}
+ for _,v in {0,-5,-10,-15} do if byPct[v] then table.insert(out,table.concat(byPct[v],', ')..' '..v..'%') end end
+ return table.concat(out,' · ')
 end
 function S.valid(id,value)
  local d=S.ById[id]
