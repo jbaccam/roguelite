@@ -476,8 +476,10 @@ MatchService, ProfileLock, MapBossService/Defs/Shapes, GodlyWeapons and ShotBatc
 
 **Where:** `combat/default.project.json`
 
-### L3 · Test models and a default Baseplate are still in Workspace
+### L3 · Test models and a default Baseplate are still in Workspace — **fixed 2026-10-02**
 *Place & project cleanup*
+
+**Done (the user approved, after saving `Documents/roguelite-archive-2026-10-02.rbxl`):** ZombieVariantPreviews, Zombie_R15_ProvidedTextures_Studio, the 3 stray Log_Master copies (near the world origin, not Pine Valley), the stray 13_Rock_Cluster, the empty folders, the Workspace Lighting folder and the Baseplate (nothing stood on it) are gone. Lantern_Post_41 is anchored, back at its mirrored spot and has its WarmLens again. RogueliteEnvironmentAssets (the evergreen import) stays.
 
 Players can see: ZombieVariantPreviews (baby, mutant and Hammer boss rigs) at about (52, 6, 38), the zombie practice target, 3 stray Log_Master copies and 13_Rock_Cluster around the Pine Valley edge, and a visible 2048×2048 Baseplate at y = -8. There are also empty folders (LukeSandboxTesting, RogueliteWeaponShowcase×2, a Lighting folder). Lobby Lantern_Post_41 is unanchored and unwelded, so it falls or can be pushed.
 
@@ -485,8 +487,10 @@ Players can see: ZombieVariantPreviews (baby, mutant and Hammer boss rigs) at ab
 
 **Where:** `Studio: Workspace (checked 2026-10-02)`
 
-### L4 · ServerStorage holds ~26,000 objects of backups and raw imports
+### L4 · ServerStorage holds ~26,000 objects of backups and raw imports — **fixed 2026-10-02**
 *Place & project cleanup*
+
+**Done:** 88 old backups, 10 old lobby versions and 19 old raw imports and kits removed (15,519 objects, 515 old scripts) by `tools/CleanupPlace.luau`; ServerStorage is down to about 29,700 objects. Today's 10 backups (another session's map work, still in use) and the imports install scripts still use were kept. Details: plans/2026-10-02-cleanup-manifest.md.
 
 There are 97 "Before…" backup folders (about 10,800 objects and 515 old scripts), three old lobby versions, raw enemy, boss and pet imports, and plugin storage. That makes the place file bigger and server start slower.
 
