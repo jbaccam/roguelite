@@ -64,7 +64,8 @@ function G.new(player,assets)
  local arrow=T.make('ImageLabel',root,{Name='Arrow',BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Size=UDim2.fromOffset(G.ARROW,G.ARROW),
   Image=assets.arrow or '',ImageTransparency=1,ZIndex=5})
  -- The VICTORY banner.
- local bannerLayer=T.make('Frame',root,{Name='Banner',Size=UDim2.fromScale(1,1),BackgroundColor3=C.shade,BackgroundTransparency=1,BorderSizePixel=0,Visible=false,ZIndex=3})
+ -- Active: it takes the clicks while it shows (the shop under it must not start another wave).
+ local bannerLayer=T.make('Frame',root,{Name='Banner',Size=UDim2.fromScale(1,1),BackgroundColor3=C.shade,BackgroundTransparency=1,BorderSizePixel=0,Visible=false,ZIndex=3,Active=true})
  local bannerScale=T.make('UIScale',bannerLayer,{Scale=1})
  local bannerTop=T.label(bannerLayer,'Top','',0,0,0,0,46,C.white);bannerTop.AnchorPoint=Vector2.new(.5,.5);bannerTop.Position=UDim2.new(.5,0,.5,-110);bannerTop.Size=UDim2.fromOffset(900,60);bannerTop.ZIndex=4
  local bannerBig=T.label(bannerLayer,'Big','',0,0,0,0,150,C.gold);bannerBig.AnchorPoint=Vector2.new(.5,.5);bannerBig.Position=UDim2.fromScale(.5,.5);bannerBig.Size=UDim2.fromOffset(1100,170);bannerBig.ZIndex=4
