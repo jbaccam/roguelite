@@ -1,0 +1,11 @@
+{
+  "plan": "No pop-in on first open (2026-10-03, commit 73a11ab)",
+  "modules": [
+    {"path": "ui/AssetPreloader.luau", "parent": "ReplicatedStorage", "name": "AssetPreloader", "base": "1814ff8"},
+    {"path": "ui/MapSelectBackdrop.luau", "parent": "ReplicatedStorage", "name": "MapSelectBackdrop", "base": "1814ff8"},
+    {"path": "ui/ArmoryStage.luau", "parent": "ReplicatedStorage", "name": "ArmoryStage", "base": "1814ff8"},
+    {"path": "ui/ItemCardUI.luau", "parent": "ReplicatedStorage", "name": "ItemCardUI", "base": "1814ff8"},
+    {"path": "ui/LoadingScreen.client.luau", "parent": "ReplicatedFirst", "name": "LoadingScreen", "base": "1814ff8"}
+  ],
+  "hunks": []
+}
