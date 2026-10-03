@@ -2,7 +2,8 @@
 -- ACHIEVEMENTS (10-level roads, feats and unlocks), drawn as colour cards (StoreFX); plus the lobby's
 -- left-side tracker (Q.tracker). It shows the server's ProfileQuests view (QuestService) through
 -- QuestConfig; every CLAIM asks the server (ProfileAction ClaimQuest / ClaimStreak / ClaimWeekly /
--- ClaimRoad / ClaimFeat / ClaimUnlock), which checks it and grants the reward.
+-- ClaimRoad / ClaimFeat / ClaimUnlock), which checks it and grants the reward; once it says yes, a
+-- short flat CLAIM effect plays (Q.claimFX, user 2026-10-03).
 -- plans/2026-10-01-H-store-and-quests.md, plans/2026-10-02-K-quests-power-ui.md,
 -- plans/2026-10-02-M-feats-weekly-roads.md
 local RS=game:GetService('ReplicatedStorage')
@@ -39,13 +40,14 @@ local function weekText(Config)
  return string.format('%02d:%02d:%02d',sec//3600,sec%3600//60,sec%60)
 end
 
--- Slots for a reward: {asset, label, rarity, amount}.
+-- Slots for a reward: {asset, label, rarity, amount, kind, count}; kind ('emerald'/'chest') and
+-- count tell the CLAIM effect what to throw.
 function Q.rewardTiles(Config,r,signature)
  local out={}
- if r.emeralds and r.emeralds>0 then table.insert(out,{'emerald',Config.comma(r.emeralds),'Emerald'}) end
+ if r.emeralds and r.emeralds>0 then table.insert(out,{'emerald',Config.comma(r.emeralds),'Emerald',nil,'emerald',r.emeralds}) end
  for _,kind in {'Wooden','Silver','Gold','Magical','Legendary'} do
   local n=r.chests and r.chests[kind]
-  if n and n>0 then table.insert(out,{Chests.ById[kind].icon,kind,FX.ChestRarity[kind],n>1 and ('×'..n) or nil}) end
+  if n and n>0 then table.insert(out,{Chests.ById[kind].icon,kind,FX.ChestRarity[kind],n>1 and ('×'..n) or nil,'chest',n}) end
  end
  if r.class then table.insert(out,{WeaponIcons[signature and signature[r.class] or ''] or 'profile',r.class,'Rare'}) end
  if r.weapon then local id=weaponId(r.weapon);table.insert(out,{(id and WeaponIcons[id]) or (WeaponArt.IconsByName and WeaponArt.IconsByName[r.weapon]) or 'armory',r.weapon,'Legendary'}) end
@@ -67,6 +69,211 @@ function Q.counts(Config,view)
  for _,u in Config.Unlocks do local s=(view.unlocks or {})[u.id];if s and not s.claimed and s.have>=s.need then ach+=1 end end
  for _,f in Config.Feats do local s=(view.feats or {})[f.id];if s and not s.claimed and s.have>=s.need then ach+=1 end end
  return daily,ach,weekly
+end
+
+-- CLAIM effect (user, 2026-10-03) ----------------------------------------------------------------
+-- Once the server says a claim worked: the reward slots pop, emeralds splatter out and fly into the
+-- HUD's emerald counter, a chest squashes and stretches in a sparkle ring, a title card gets a shine
+-- sweep, all over a soft glow (~1 s). The window redraws on the result (a claimed row re-sorts), so
+-- the slots are copied at click time (Q.snapshot) and the effect plays from where they were, on its
+-- own layer in the ScreenGui above the window. Flat images and tweens only (no 3D effects); nothing
+-- in it takes input, and the layer and everything in it is destroyed after 1.7 s.
+local RunService=game:GetService('RunService')
+local STAR='rbxassetid://119142062258395' -- ChestFX.Tex.star
+local RING='rbxassetid://112313196019616' -- ChestFX.Tex.ring
+local WHITE=Color3.new(1,1,1)
+local function tween(o,time,props,style,dir)
+ local tw=TweenService:Create(o,TweenInfo.new(time,style or Enum.EasingStyle.Quad,dir or Enum.EasingDirection.Out),props);tw:Play();return tw
+end
+local function later(t,o,fn) task.delay(t,function() if o.Parent then fn() end end) end
+local function commas(n) local s=tostring(math.floor(n));local k;repeat s,k=s:gsub('^(%d+)(%d%d%d)','%1,%2') until k==0;return s end
+-- Reward slots say what they are: ClaimKind ('emerald', 'chest', 'title' or 'item'), ClaimAmount
+-- and ClaimColor (the flash colour).
+local function tagReward(o,kind,amount,color)
+ o:SetAttribute('ClaimKind',kind);o:SetAttribute('ClaimAmount',amount);o:SetAttribute('ClaimColor',color)
+ return o
+end
+local function rewardTile(parent,name,x,y,size,it)
+ return tagReward(FX.tile(parent,name,x,y,size,it[1],it[2],it[3],it[4]),it[5] or 'item',it[6],(FX.Rarity[it[3]] or FX.Rarity.Common).top)
+end
+local function rewardsOf(face)
+ local out={}
+ for _,c in face:GetChildren() do if c:GetAttribute('ClaimKind') then table.insert(out,c) end end
+ return out
+end
+-- Each slot's place on screen now, plus a copy to pop.
+function Q.snapshot(parts)
+ local out={}
+ for _,o in parts do
+  if o.Parent and o.AbsoluteSize.X>0 then
+   table.insert(out,{kind=o:GetAttribute('ClaimKind'),amount=o:GetAttribute('ClaimAmount'),color=o:GetAttribute('ClaimColor'),
+    pos=o.AbsolutePosition,size=o.AbsoluteSize,design=o.Size.X.Offset,copy=o:Clone()})
+  end
+ end
+ return out
+end
+local function fadeOut(root,time)
+ local all=root:GetDescendants();table.insert(all,root)
+ for _,o in all do
+  local goal={}
+  if o:IsA('GuiObject') and o.BackgroundTransparency<1 then goal.BackgroundTransparency=1 end
+  if o:IsA('ImageLabel') then goal.ImageTransparency=1 end
+  if o:IsA('TextLabel') then goal.TextTransparency=1;goal.TextStrokeTransparency=1 end
+  if o:IsA('UIStroke') then goal.Transparency=1 end
+  if next(goal) then tween(o,time,goal,Enum.EasingStyle.Quad,Enum.EasingDirection.In) end
+ end
+end
+-- Scale punch on a live element (the HUD counter, the tracker's check), from `from` if given. Its
+-- UIScale goes again once no effect needs it; an element with its own UIScale is left alone.
+local punching={}
+local function punch(o,peak,from)
+ if not (o and o.Parent) then return end
+ local s=o:FindFirstChild('ClaimPop')
+ if not s then
+  if o:FindFirstChildOfClass('UIScale') then return end
+  s=T.make('UIScale',o,{Name='ClaimPop',Scale=1})
+ end
+ punching[s]=(punching[s] or 0)+1
+ if from then s.Scale=from end
+ tween(s,.07,{Scale=peak})
+ later(.07,s,function() tween(s,.24,{Scale=1},Enum.EasingStyle.Back) end)
+ task.delay(.45,function() punching[s]-=1;if punching[s]<=0 then punching[s]=nil;s:Destroy() end end)
+end
+-- The lobby HUD's emerald counter icon (LobbyUI: HUD.Left.Gems.Icon) while it is on screen.
+local function emeraldCounter(screen)
+ local hud=screen:FindFirstChild('HUD');local side=hud and hud:FindFirstChild('Left')
+ local row=side and side:FindFirstChild('Gems');local icon=row and row:FindFirstChild('Icon')
+ if icon and hud.Visible and side.Visible and icon.AbsoluteSize.X>0 then return icon end
+end
+-- Stars flying out of c to about `spread` (x, y) away, spinning and fading.
+local function sparkles(layer,c,base,spread,n,color)
+ for i=1,n do
+  local a=(i+math.random()*.6)/n*math.pi*2;local dir=Vector2.new(math.cos(a),math.sin(a))
+  local size=math.max(8,base*(.16+math.random()*.12));local d=.7+math.random()*.5
+  local p=c+dir*base*.3
+  local st=T.make('ImageLabel',layer,{Name='Sparkle',BackgroundTransparency=1,Image=STAR,ImageColor3=color:Lerp(WHITE,.55),AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(p.X,p.Y),Size=UDim2.fromOffset(size,size),Rotation=math.random(0,90),ZIndex=4})
+  tween(st,.45,{Position=UDim2.fromOffset(c.X+dir.X*spread.X*d,c.Y+dir.Y*spread.Y*d),Rotation=st.Rotation+math.random(-140,140)},Enum.EasingStyle.Quart)
+  tween(st,.45,{ImageTransparency=1,Size=UDim2.fromOffset(size*.3,size*.3)},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
+ end
+end
+-- shots: Q.snapshot entries {kind, amount, color, pos, size, design, copy}; copy may be nil.
+-- Positions are AbsolutePosition minus the ScreenGui's own, so top-bar and safe-area insets cancel.
+function Q.claimFX(screen,shots)
+ if not (screen and screen.Parent and screen.Enabled) or #shots==0 then
+  for _,s in shots do if s.copy then s.copy:Destroy() end end;return
+ end
+ local layer=T.make('Frame',screen,{Name='ClaimFX',BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=45,Active=false,Interactable=false})
+ task.delay(1.7,function() layer:Destroy() end)
+ local origin=screen.AbsolutePosition
+ local counter=emeraldCounter(screen)
+ local goal=counter and counter.AbsolutePosition+counter.AbsoluteSize/2-origin
+ local function image(name,asset,p,size,color,z)
+  return T.make('ImageLabel',layer,{Name=name,BackgroundTransparency=1,Image=asset,ImageColor3=color,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(p.X,p.Y),Size=UDim2.fromOffset(size,size),ZIndex=z})
+ end
+ local gems,total={},0
+ for _,s in shots do
+  local c=s.pos+s.size/2-origin;local base=math.min(s.size.X,s.size.Y);local color=s.color or C.gold
+  -- Soft flash under the slot: glow and fast rays (StoreFX.burst) that grow as they fade.
+  local burst,rays=FX.burst(layer,c.X,c.Y,base*1.5,color,150);burst.ZIndex=1
+  burst.Glow.ImageTransparency=.1;rays.ImageTransparency=.3
+  tween(burst,.45,{Size=UDim2.fromOffset(base*3,base*3)},Enum.EasingStyle.Quart)
+  tween(burst.Glow,.55,{ImageTransparency=1},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
+  tween(rays,.5,{ImageTransparency=1},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
+  -- The slot pops: punch up 22%, settle with a small bounce, then lift away and fade (0.7 s).
+  local g=s.copy
+  if g then
+   local k=s.size.X/math.max(s.design,1) -- the window's scale, so the copy matches on phones too
+   g.AnchorPoint=Vector2.new(.5,.5);g.Position=UDim2.fromOffset(c.X,c.Y);g.ZIndex=2
+   local sc=g:FindFirstChildOfClass('UIScale') or T.make('UIScale',g,{})
+   sc.Scale=k;g.Parent=layer
+   tween(sc,.08,{Scale=k*1.22})
+   later(.08,g,function() tween(sc,.26,{Scale=k},Enum.EasingStyle.Back) end)
+   later(.48,g,function() fadeOut(g,.22);tween(g,.22,{Position=UDim2.fromOffset(c.X,c.Y-base*.15)}) end)
+  end
+  if s.kind=='chest' then
+   -- Squash and stretch on the chest art, from its base, inside a sparkle ring.
+   local icon=g and g:FindFirstChild('Icon')
+   if icon and icon:IsA('ImageLabel') then
+    local p,z=icon.Position,icon.Size
+    icon.ScaleType=Enum.ScaleType.Stretch;icon.AnchorPoint=Vector2.new(.5,1)
+    icon.Position=p+UDim2.fromOffset(z.X.Offset/2,z.Y.Offset)
+    local function to(x,y,t,style) tween(icon,t,{Size=UDim2.fromOffset(z.X.Offset*x,z.Y.Offset*y)},style) end
+    to(1.3,.7,.07)
+    later(.07,icon,function() to(.85,1.25,.1) end)
+    later(.17,icon,function() to(1,1,.3,Enum.EasingStyle.Back) end)
+   end
+   local ring=image('Ring',RING,c,base*.6,color:Lerp(WHITE,.35),3)
+   tween(ring,.45,{Size=UDim2.fromOffset(base*2.4,base*2.4)},Enum.EasingStyle.Quart)
+   tween(ring,.45,{ImageTransparency=1},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
+   sparkles(layer,c,base,Vector2.new(base,base),8,color)
+  elseif s.kind=='title' then
+   -- One quick shine sweep across the title card.
+   if g then
+    local clip=T.make('Frame',g,{Name='ClaimShine',BackgroundTransparency=1,ClipsDescendants=true,Position=UDim2.fromOffset(5,5),Size=UDim2.new(1,-10,1,-10),ZIndex=6})
+    local bar=T.make('Frame',clip,{Name='Shine',BackgroundColor3=WHITE,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.new(-.2,0,.5,0),Size=UDim2.new(0,56,2.5,0),Rotation=22,ZIndex=6})
+    T.make('UIGradient',bar,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,.2),NumberSequenceKeypoint.new(1,1)})})
+    tween(bar,.4,{Position=UDim2.new(1.2,0,.5,0)},Enum.EasingStyle.Quad,Enum.EasingDirection.InOut)
+   end
+   sparkles(layer,c,base,Vector2.new(s.size.X*.62,s.size.Y*.9),6,color)
+  elseif s.kind=='emerald' then
+   -- Emeralds splatter out of the slot (more for bigger amounts: 6 at 50, 12 from 1,500), mostly
+   -- upwards, then each arcs into the counter; with no counter on screen they drop and fade.
+   total+=s.amount or 0
+   for _=1,math.clamp(6+math.floor((s.amount or 0)/250),6,12) do
+    local a=-math.pi/2+(math.random()*2-1)*math.pi*.8;local dir=Vector2.new(math.cos(a),math.sin(a))
+    local size=math.clamp(base*(.3+math.random()*.14),12,36)
+    local p0=c+dir*base*.15;local p1=c+dir*base*((goal and .65 or .8)+math.random()*.7)
+    local gem=image('Emerald',T.Asset.emerald,p0,size*.4,WHITE,3);gem.Rotation=math.random(-30,30)
+    table.insert(gems,{img=gem,size=size,p0=p0,p1=p1,dir=dir,ctrl=p1+dir*base*.8,drop=base*1.6,drift=base*.5,
+     burst=.2+math.random()*.1,fly=.3+math.random()*.12,r0=gem.Rotation,spin=(math.random()<.5 and -1 or 1)*(90+math.random()*180)})
+   end
+   sparkles(layer,c,base,Vector2.new(base,base),4,color)
+  else
+   sparkles(layer,c,base,Vector2.new(base,base),6,color)
+  end
+ end
+ if #gems==0 then return end
+ for i,g in gems do g.wait=.04+(i-1)*.022 end
+ -- First emerald in: a glow on the counter and "+50" rising off it; every one bumps the counter.
+ local function land(n)
+  punch(counter,n==1 and 1.3 or 1.15)
+  if n>1 then return end
+  local cs=math.min(counter.AbsoluteSize.X,counter.AbsoluteSize.Y)
+  local glow=image('CounterGlow',FX.Asset.glow,goal,cs*1.2,FX.Rarity.Emerald.top,1);glow.ImageTransparency=.15
+  tween(glow,.4,{Size=UDim2.fromOffset(cs*3,cs*3)},Enum.EasingStyle.Quart)
+  tween(glow,.45,{ImageTransparency=1},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
+  if total<=0 then return end
+  local text='+'..commas(total);local size=math.clamp(math.floor(cs*.6),14,30)
+  local l=FX.title(layer,'Plus',text,goal.X+cs*.6,goal.Y-size*.75,textWidth(text,size)*1.15+12,size*1.5,size,C.emerald);l.ZIndex=6
+  tween(l,.7,{Position=UDim2.fromOffset(goal.X+cs*.6,goal.Y-size*.75-cs*.7)})
+  later(.35,l,function() fadeOut(l,.35) end)
+ end
+ local t0=os.clock();local arrived=0;local conn
+ conn=RunService.Heartbeat:Connect(function()
+  if not layer.Parent then conn:Disconnect();return end
+  local t=os.clock()-t0;local live=false
+  for _,g in gems do
+   if g.img.Parent then
+    live=true
+    local pos,scale=g.p1,1
+    if t<g.burst then
+     local a=1-(1-t/g.burst)^3
+     pos=g.p0:Lerp(g.p1,a);scale=.4+.6*a
+    elseif goal then
+     -- Ease-in along a curve that swings outwards first: it hangs, then gets pulled in.
+     local a=math.clamp((t-g.burst-g.wait)/g.fly,0,1);local e=a*a
+     pos=g.p1:Lerp(g.ctrl,e):Lerp(g.ctrl:Lerp(goal,e),e);scale=1-.5*e
+     if a>=1 then g.img:Destroy();arrived+=1;land(arrived);continue end
+    else
+     local a=math.clamp((t-g.burst)/.45,0,1)
+     pos=g.p1+g.dir*g.drift*a+Vector2.new(0,g.drop*a*a);g.img.ImageTransparency=a
+     if a>=1 then g.img:Destroy();continue end
+    end
+    g.img.Position=UDim2.fromOffset(pos.X,pos.Y);g.img.Size=UDim2.fromOffset(g.size*scale,g.size*scale);g.img.Rotation=g.r0+g.spin*t
+   end
+  end
+  if not live then conn:Disconnect() end
+ end)
 end
 
 -- Rotated rank diamond with an upright icon on it; rim = {colour, pulses} for the top levels.
@@ -118,7 +325,11 @@ function Q.tracker(parent,x,y,ctx)
   local gem=T.icon(row,'Gem',TW-88,13,28,'emerald')
   local amount=left(T.label(row,'Amount','',TW-58,13,52,30,20,C.gold));amount.TextWrapped=false
   local chest=T.icon(row,'Chest',TW-30,2,22,Chests.ById.Silver.icon)
-  local claim=FX.button(row,'Claim','CLAIM',TW-98,9,88,38,function() ctx.claim(i) end)
+  local claim=FX.button(row,'Claim','CLAIM',TW-98,9,88,38,function()
+   -- Remembered for the CLAIM effect, which plays once the server's view shows it claimed.
+   local r=rows[i];r.Pending={id=r.Id,t=os.clock(),pos=r.Claim.AbsolutePosition,size=r.Claim.AbsoluteSize}
+   ctx.claim(i)
+  end)
   claim.Caption.TextSize=18;FX.pulse(claim,.05)
   local check=FX.check(row,TW-48,14,28)
   if i<4 then T.make('Frame',row,{Name='Divider',Position=UDim2.fromOffset(14,rowH-1),Size=UDim2.fromOffset(TW-28,1),BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=.88,BorderSizePixel=0}) end
@@ -151,6 +362,16 @@ function Q.tracker(parent,x,y,ctx)
     r.Gem.Visible=not done;r.Amount.Visible=not done;r.Amount.Text='+'..q.emeralds
     r.Chest.Visible=not done and q.chests~=nil
     r.Claim.Visible=ready;r.Check.Visible=d.claimed==true;r.Mark.Visible=ready
+    -- This row's CLAIM went through (user, 2026-10-03): emeralds from the button into the counter
+    -- just above, and the check pops in. A click left unconfirmed for 8 s is forgotten.
+    local p=r.Pending
+    if p and (p.id~=d.id or os.clock()-p.t>8) then r.Pending=nil;p=nil end
+    if p and d.claimed then
+     r.Pending=nil
+     Q.claimFX(root:FindFirstAncestorOfClass('ScreenGui'),{{kind='emerald',amount=q.emeralds,color=FX.Rarity.Emerald.top,pos=p.pos,size=p.size}})
+     punch(r.Check,1.3,.3)
+    end
+    r.Id=d.id
    else
     r.Name.Text=i==1 and 'Quests appear once your profile loads' or '';r.Name.TextColor3=C.muted
     r.Icon.Visible=false;r.Track.Visible=false;r.Count.Visible=false;r.Gem.Visible=false;r.Amount.Visible=false
@@ -176,9 +397,13 @@ function Q.open(screen,ctx,tab)
  sel.questTab=valid(tab) or valid(sel.questTab) or 'Daily'
  local list,draw
  local view
- local function act(action,a)
+ -- parts: the reward slots being claimed. They are copied before asking, because the redraw on the
+ -- result can replace them before InvokeServer returns; the CLAIM effect plays only on success.
+ local function act(action,a,parts)
+  local shots=Q.snapshot(parts or {})
   local r=combat.ProfileAction:InvokeServer(action,a)
   if r.ok then T.sound('ui_purchase') end
+  if r.ok and w.Root.Parent then Q.claimFX(screen,shots) else for _,s in shots do s.copy:Destroy() end end
   T.toast(screen,r.message or '',r.ok and C.lime or C.negative)
  end
 
@@ -221,6 +446,7 @@ function Q.open(screen,ctx,tab)
    local reward=Q.rewardTiles(Config,m)[1]
    local _,icon=diamond(face,'Node'..i,nx,ty,54,reached and Color3.fromRGB(255,190,60) or Q.Locked,reward and reward[1])
    if icon and not reached and not pending[m.day] then icon.ImageTransparency=.35 end
+   if icon and reward then tagReward(icon,reward[5] or 'item',reward[6],(FX.Rarity[reward[3]] or FX.Rarity.Common).top) end
    local label=(m.chests and reward and reward[4]) or (m.emeralds and Config.comma(m.emeralds)) or nil
    if label then
     local a=left(T.label(face,'NodeAmount'..i,label,nx-8,ty+6,48,22,17));a.TextStrokeTransparency=1
@@ -228,7 +454,7 @@ function Q.open(screen,ctx,tab)
    end
    center(T.label(face,'Day'..i,'DAY '..m.day,nx-44,ty+32,88,20,16,reached and C.white or C.muted))
    if pending[m.day] then
-    local cb=FX.button(face,'ClaimDay'..m.day,pending[m.day]>1 and ('CLAIM ×'..pending[m.day]) or 'CLAIM',nx-52,ty+54,104,34,function() act('ClaimStreak',m.day) end)
+    local cb=FX.button(face,'ClaimDay'..m.day,pending[m.day]>1 and ('CLAIM ×'..pending[m.day]) or 'CLAIM',nx-52,ty+54,104,34,function() act('ClaimStreak',m.day,icon and {icon}) end)
     cb.Caption.TextSize=17;FX.pulse(cb,.06)
    end
   end
@@ -253,8 +479,8 @@ function Q.open(screen,ctx,tab)
    center(T.label(f,'RewardsTitle','REWARDS',12,250,fw-24,20,16,C.cream))
    local items=Q.rewardTiles(Config,q,ctx.signature)
    local size=70;local tw=#items*size+(#items-1)*10
-   for k,it in items do FX.tile(f,'Reward'..k,math.floor((fw-tw)/2)+(k-1)*(size+10),274,size,it[1],it[2],it[3],it[4]) end
-   local bt=FX.button(f,'Claim',d.claimed and 'CLAIMED' or done and 'CLAIM' or 'IN PROGRESS',16,ch-66,fw-32,52,function() act('ClaimQuest',i) end,not done or d.claimed)
+   for k,it in items do rewardTile(f,'Reward'..k,math.floor((fw-tw)/2)+(k-1)*(size+10),274,size,it) end
+   local bt=FX.button(f,'Claim',d.claimed and 'CLAIMED' or done and 'CLAIM' or 'IN PROGRESS',16,ch-66,fw-32,52,function() act('ClaimQuest',i,rewardsOf(f)) end,not done or d.claimed)
    bt.Caption.TextSize=24
    if d.claimed or not done then bt.Interactable=false else FX.pulse(bt,.05) end
    if done and not d.claimed then FX.tag(f,'COMPLETE!',cth.tag,cth.accent);FX.shine(f) end
@@ -293,8 +519,8 @@ function Q.open(screen,ctx,tab)
    center(T.label(f,'RewardsTitle','REWARDS',12,292,fw-24,20,16,C.cream))
    local items=Q.rewardTiles(Config,q,ctx.signature)
    local size=80;local tw=#items*size+(#items-1)*12
-   for k,it in items do FX.tile(f,'Reward'..k,math.floor((fw-tw)/2)+(k-1)*(size+12),316,size,it[1],it[2],it[3],it[4]) end
-   local bt=FX.button(f,'Claim',w.claimed and 'CLAIMED' or done and 'CLAIM' or 'IN PROGRESS',16,ch-68,fw-32,54,function() act('ClaimWeekly',i) end,not done or w.claimed)
+   for k,it in items do rewardTile(f,'Reward'..k,math.floor((fw-tw)/2)+(k-1)*(size+12),316,size,it) end
+   local bt=FX.button(f,'Claim',w.claimed and 'CLAIMED' or done and 'CLAIM' or 'IN PROGRESS',16,ch-68,fw-32,54,function() act('ClaimWeekly',i,rewardsOf(f)) end,not done or w.claimed)
    bt.Caption.TextSize=24
    if w.claimed or not done then bt.Interactable=false else FX.pulse(bt,.05) end
    if done and not w.claimed then FX.tag(f,'COMPLETE!',cth.tag,cth.accent);FX.shine(f)
@@ -356,9 +582,11 @@ function Q.open(screen,ctx,tab)
     local pip=T.make('Frame',f,{Name='Pip'..k,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(nx+8+(k-1)*16,115),Size=UDim2.fromOffset(9,9),Rotation=45,BackgroundColor3=k<=o.level and Config.TierColors[k] or Color3.fromRGB(40,46,50),BorderSizePixel=0})
     T.make('UIStroke',pip,{Color=INK,Thickness=1.5})
    end
-   -- With a NEXT: line under them the tiles shrink a little to make room.
+   -- With a NEXT: line under them the tiles shrink a little to make room. ty/th: the tiles' top and
+   -- height (FX.tile is 8% taller than wide); the title card uses the same.
    local size=o.nextRewards and 70 or 78;local rx=730
-   for i,it in o.rewards do FX.tile(f,'Reward'..i,rx+(i-1)*(size+8),o.nextRewards and 6 or 16,size,it[1],it[2],it[3],it[4]) end
+   local ty,th=o.nextRewards and 6 or 16,math.floor(size*1.08)
+   for i,it in o.rewards do rewardTile(f,'Reward'..i,rx+(i-1)*(size+8),ty,size,it) end
    if o.nextRewards then
     left(T.label(f,'NextLabel','NEXT:',rx,94,54,24,15,C.cream)).TextWrapped=false
     local nx2=rx+54
@@ -370,14 +598,30 @@ function Q.open(screen,ctx,tab)
     end
    end
    if o.title then
-    local tile=T.make('Frame',f,{Name='TitleReward',Position=UDim2.fromOffset(rx+#o.rewards*(size+8)+4,20),Size=UDim2.fromOffset(186,76),BackgroundColor3=Color3.fromRGB(46,40,26),BorderSizePixel=0})
-    T.make('UICorner',tile,{CornerRadius=UDim.new(0,12)});T.make('UIStroke',tile,{Color=INK,Thickness=3})
-    T.icon(tile,'Icon',6,14,48,Config.Icons.title)
-    left(T.label(tile,'Label','TITLE',60,6,118,18,14,C.cream))
-    left(T.label(tile,'Name',o.title,60,24,120,46,16))
+    -- Title reward card (fixed 2026-10-03): the ribbon, TITLE and the name crowded each other (6 px
+    -- from ribbon to text, the name's box touching TITLE's), the card sat up to 14 px below the tiles
+    -- and hung over the NEXT: line, and a long name that hit its 9 px floor on a small screen spilled
+    -- up over TITLE. Now the card has the tiles' top and height and up to 236 px (stopping 16 px short
+    -- of CLAIM); the ribbon is a square on the left; TITLE and the name share the column right of it,
+    -- 4 px apart and centred together. The name may shrink to 7 px, then cuts off with "...", only
+    -- grows downwards, and the card clips anything left over.
+    local tx=rx+#o.rewards*(size+8)+4
+    local tw=math.min(236,CW-216-tx)
+    local tile=T.make('Frame',f,{Name='TitleReward',Position=UDim2.fromOffset(tx,ty),Size=UDim2.fromOffset(tw,th),BackgroundColor3=Color3.fromRGB(46,40,26),BorderSizePixel=0,ClipsDescendants=true})
+    T.make('UICorner',tile,{CornerRadius=UDim.new(0,12)});T.make('UIStroke',tile,{Color=INK,Thickness=3,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+    local is=math.min(th-20,52)
+    T.icon(tile,'Icon',8,math.floor((th-is)/2),is,Config.Icons.title)
+    local cx=8+is+10;local cw=tw-cx-8
+    -- One line when it fits (12% slack: text draws wider at small window scales), else two.
+    local nh=textWidth(o.title,17)*1.12<=cw and 24 or 40
+    local top=math.max(4,math.floor((th-(16+4+nh))/2))
+    local cap=left(T.label(tile,'Label','TITLE',cx,top,cw,16,14,C.cream));cap.TextWrapped=false;cap.TextStrokeTransparency=.5;cap.FitText.MinTextSize=7
+    local name=left(T.label(tile,'Name',o.title,cx,top+20,cw,math.min(nh,th-top-24),17))
+    name.TextYAlignment=Enum.TextYAlignment.Top;name.TextTruncate=Enum.TextTruncate.AtEnd;name.FitText.MinTextSize=7
+    tagReward(tile,'title',nil,C.gold)
    end
    local text=o.state=='ready' and 'CLAIM' or o.state=='done' and 'DONE' or (math.floor(math.min(o.ratio,1)*100)..'%')
-   local bt=FX.button(f,'Claim',text,CW-200,33,176,58,o.onClaim,o.state~='ready')
+   local bt=FX.button(f,'Claim',text,CW-200,33,176,58,function() o.onClaim(rewardsOf(f)) end,o.state~='ready')
    bt.Caption.TextSize=o.state=='ready' and 28 or 22
    if o.state=='ready' then FX.pulse(bt,.05);FX.tag(f,'READY!',rth.tag,rth.accent);FX.shine(f) else bt.Interactable=false end
    if o.state=='done' then FX.check(f,CW-212,22,30) end
@@ -406,7 +650,7 @@ function Q.open(screen,ctx,tab)
     name=f.name,stars=f.stars,goal=f.desc,ratio=s.have/math.max(s.need,1),
     text=g.best and ('Best wave '..have) or g.classes and (have..' classes') or have,
     state=e.state,color=Config.StarColors[f.stars],icon=Config.Icons[f.icon] or Config.Icons.achievements,
-    rewards=Q.rewardTiles(Config,Config.FeatRewards[f.stars]),onClaim=function() act('ClaimFeat',f.id) end,
+    rewards=Q.rewardTiles(Config,Config.FeatRewards[f.stars]),onClaim=function(parts) act('ClaimFeat',f.id,parts) end,
    })
    y+=RH+18
   end
@@ -445,7 +689,7 @@ function Q.open(screen,ctx,tab)
     nextRewards=not finished and e.nextL<#r.targets and Q.rewardTiles(Config,Config.TierRewards[e.nextL+1]) or nil,
     title=not finished and (r.name..' '..Config.TierNames[e.nextL]) or nil,
     levels=#r.targets,level=e.level,
-    onClaim=function() act('ClaimRoad',r.id) end,
+    onClaim=function(parts) act('ClaimRoad',r.id,parts) end,
    })
    y+=RH+18
   end
@@ -464,7 +708,7 @@ function Q.open(screen,ctx,tab)
    row('Unlock_'..u.id,y,{
     name=u.name,goal=u.desc,ratio=s.have/math.max(s.need,1),text=Config.comma(math.min(s.have,s.need))..' / '..Config.comma(s.need),
     state=e.state,color=e.state=='open' and Q.Locked or C.lime,icon=Config.Icons[u.icon],
-    rewards=Q.rewardTiles(Config,u.reward,ctx.signature),onClaim=function() act('ClaimUnlock',u.id) end,
+    rewards=Q.rewardTiles(Config,u.reward,ctx.signature),onClaim=function(parts) act('ClaimUnlock',u.id,parts) end,
    })
    y+=RH+18
   end

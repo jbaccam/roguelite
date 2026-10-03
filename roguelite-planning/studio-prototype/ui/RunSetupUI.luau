@@ -257,21 +257,24 @@ function M.new(player,opts)
    local card=T.button(cardsIn,'Class_'..c,'',x,y,cw,ch,function() sel.class=c;sel.weapon=nil;draw() end,not selected)
    card.Caption.Visible=false
    local is=cp and 44 or 72
-   local art=T.icon(card,'Icon',(cw-is)/2,cp and 6 or 12,is,WeaponIcons[Rules.Signature[c]]);art.ImageTransparency=cOwned and 0 or .6
+   -- Phones: the icon sits left of centre (28-72), between the padlock (4-28) and the badge (72-116).
+   local art=T.icon(card,'Icon',cp and 28 or (cw-is)/2,cp and 6 or 12,is,WeaponIcons[Rules.Signature[c]]);art.ImageTransparency=cOwned and 0 or .6
    local n=T.label(card,'Name',c,0,cp and 52 or 86,cw,cp and 24 or 32,cp and 20 or 24,cOwned and C.white or C.dim);n.Size=UDim2.new(1,0,0,cp and 24 or 32);n.TextWrapped=false
    -- Weapon fit badge: damage with this class's weapons when you play the picked class
    -- (CharacterStats.ClassFit). Desktop: over the corner; phones: inside it (the column clips).
+   -- DMG under the number (2026-10-03: a bare "-5%" read like a discount); the details panel says
+   -- what it means. Same width as before, taller: "DMG" fits under "+15%" without a wider badge.
    local _,pct=Stats.classFit({home=c},class)
-   local bw,bh=cp and 46 or 58,cp and 22 or 28
-   local badge=T.fitBadge(card,'Fit',cp and cw-bw-4 or cw-bw+8,cp and 4 or -8,bw,bh,pct);badge.ZIndex=5
+   local bw,bh=cp and 44 or 58,cp and 36 or 44
+   local badge=T.fitBadge(card,'Fit',cp and cw-bw-4 or cw-bw+8,cp and 4 or -8,bw,bh,pct,'DMG');badge.ZIndex=5;badge.Word.TextSize=cp and 12 or 13
    for _,d in badge:GetDescendants() do if d:IsA('GuiObject') then d.ZIndex=6 end end
    if not cOwned then
     M.lock(card,cp and 4 or 8,cp and 4 or 8,cp and 24 or 28)
     local l=T.label(card,'Locked','LOCKED',0,cp and 76 or 120,cw,cp and 20 or 22,16,C.gold);l.Size=UDim2.new(1,0,0,cp and 20 or 22)
    end
   end
-  -- Class details, top to bottom: name, description, always-on buffs | drawbacks, the 2 / 4 home
-  -- weapon bonuses, then what the card badges mean. Drawn into a holder; if it is taller than the
+  -- Class details, top to bottom: name, description, what the card badges mean, always-on buffs |
+  -- drawbacks, then the 2 / 4 home weapon bonuses. Drawn into a holder; if it is taller than the
   -- panel (phones, or a locked class with its buy buttons) the holder moves into a scroll.
   local c=Stats.Classes[class]
   local pad=cp and 14 or 18;local tw=infoW-2*pad
@@ -283,15 +286,17 @@ function M.new(player,opts)
   local descH=math.ceil(TextService:GetTextSize(c.description,cp and 16 or 16,T.Body,Vector2.new(tw,1000)).Y)+2
   T.text(box,'Description',c.description,pad,y,tw,descH,16,C.muted).TextYAlignment=Enum.TextYAlignment.Top
   y+=descH+8
+  -- What the card badges mean, high up in cream (2026-10-03: small grey text at the bottom went
+  -- unread and the badges looked like discounts). Example as a Mage: Gunner card -5% DMG.
+  local legend="Card badges: your damage with each class's weapons as a "..class..'. Godly weapons: no change.'
+  local legendH=math.ceil(TextService:GetTextSize(legend,16,T.Body,Vector2.new(tw,1000)).Y)+2
+  T.text(box,'FitLegend',legend,pad,y,tw,legendH,16,C.cream).TextYAlignment=Enum.TextYAlignment.Top
+  y+=legendH+8
   local good,bad=Stats.classLines(class)
   local _,h=T.statColumns(box,'AlwaysOn',pad,y,tw,good,bad,{size=cp and 15 or 16,stack=cp})
   y+=h+8
   _,h=T.homeRows(box,'HomeBonus',pad,y,tw,{{n=2,text=Stats.bonusText(c.two)},{n=4,text='also '..Stats.bonusText(c.four)}},{size=cp and 14 or 15,stack=cp,labelW=126})
-  y+=h+6
-  local legend="Card badges: damage with each class's weapons as a "..class..'. Godly weapons: no change.'
-  local legendH=math.ceil(TextService:GetTextSize(legend,13,T.Body,Vector2.new(tw,1000)).Y)+2
-  T.text(box,'FitLegend',legend,pad,y,tw,legendH,13,C.dim).TextYAlignment=Enum.TextYAlignment.Top
-  y+=legendH+8
+  y+=h+8
   if not owned then
    T.text(box,'Earn','Earn it: '..(Rules.ClassUnlock[class] or 'an achievement'),pad,y,tw,cp and 40 or 24,16,C.gold)
    y+=(cp and 40 or 24)+4

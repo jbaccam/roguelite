@@ -8,6 +8,14 @@ Play-test report: zombies still ran in right after loading, level-ups came too f
 - **Slow loads:** `MatchService`'s 30 s `PARTY_WAIT` counted from joining the server, but a loading screen can last ~33 s, so a slow load could still start wave 1 under it. Now after 30 s it only stops waiting for members who never arrived. Members who are here but still loading are waited on up to `LOAD_WAIT` (45 s).
 - **Level-up line:** Eggbert picks "You leveled up!" or "Two level-ups!" from the pending count, not the wave, since each shop now has one card.
 - **LEAVE:** it now also moves you just outside the ring, on the side facing the lobby spawn, on the ground found by a raycast. Walk back on to rejoin.
+- **Class badges (`RunSetupUI`):** a bare "-5%" read like a discount. Each badge is your damage with that card's class's weapons when playing the class you picked (`CharacterStats.ClassFit`; example as a Mage: Mage +15%, Gunner -5%, Brawler -10%). It now shows "DMG" under the number (`T.fitBadge` with a word), and a 16 px cream line under the class description explains it. It used to be 13 px grey text at the bottom. On phones the card icon moved left so the badge doesn't cover it.
+- **Achievements title card (`QuestsUI`):** the ribbon, "TITLE" and the name crowded each other; the card sat up to 14 px below the reward tiles and hung over the NEXT: line; and long names spilled up over TITLE. Now the card has the tiles' top and height, the ribbon is a square on the left, and TITLE and the name are centred together. The name truncates with "..." and the card clips.
+- **CLAIM effect (`QuestsUI`, `Q.claimFX`):** once the server confirms a claim, on its own layer above the window (~1 s, flat images and tweens only):
+  - the reward slot pops, over a glow-and-rays flash;
+  - emeralds splatter out and arc into the HUD counter (6 at 50, up to 12), the counter bumps and "+50" rises off it;
+  - chests squash and stretch inside a sparkle ring; title cards get a shine sweep;
+  - the lobby tracker's CLAIM flies emeralds into the counter and pops the check.
+  The slots are copied at click time because the window redraws on the result. Nothing takes input, and the layer is destroyed at 1.7 s.
 - **Not run:** no Play test (the user tests).
 
 # Parties, the full Armor tab, a bigger air boost — October 3, 2026
