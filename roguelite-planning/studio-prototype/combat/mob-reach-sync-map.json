@@ -1,0 +1,5 @@
+{
+ "ReplicatedStorage.RogueliteCombat.EnemyCatalog": "combat/EnemyCatalog.luau",
+ "ServerScriptService.EnemyAttacks": "combat/EnemyAttacks.luau",
+ "ServerScriptService.RogueliteZombieChase": "RogueliteZombieChase.server.luau"
+}

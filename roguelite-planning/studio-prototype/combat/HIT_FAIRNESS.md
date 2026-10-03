@@ -85,4 +85,4 @@ The client already lines each clip's strike frame up with the server's impact ti
 - **The tank zombie's slam** draws its full 6.5-stud disc during the windup (ZombieSlamVisuals), so it stays as it was.
 - **Arcs:** every swing is ~75 degrees each side of the facing (round 1).
 
-**Checked:** `EnemyTests` pass 253,034 checks (54 clips); the changed scripts compile. Not yet play-tested.
+**Checked:** `EnemyTests` pass 253,034 checks (54 clips); the changed scripts compile. Synced to Studio at 552806f (`mob-reach-sync-map.json`): 3 scripts, each guarded on its previous commit. Afterwards all 3 matched with Sandboxed unchanged. Not yet play-tested.
