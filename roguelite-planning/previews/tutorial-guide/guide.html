@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutorial Guide Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --lime:#91EF14; --limeSoft:#D2FFA1; --white:#F8F9F5; --muted:#AEB7B9; --gold:#FFCB40; --ink:#0A0E08;
+  --bg:#1b2420;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#121815; } }
+:root[data-theme="dark"]{ --bg:#121815; }
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--white);font-family:'Fredoka',system-ui,sans-serif;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;border-radius:6px;
+  background:
+   radial-gradient(ellipse at 50% 120%, #4f8f3a 0%, #3f7a30 38%, transparent 60%),
+   linear-gradient(#8ec9f0 0%, #b9dff5 36%, #6aa84a 37%, #4e8a37 100%);}
+/* pine silhouettes on the horizon */
+#stage::before{content:"";position:absolute;left:0;right:0;top:250px;height:160px;
+  background:repeating-linear-gradient(90deg,transparent 0 40px,#2f5e2a 40px 70px,transparent 70px 130px);
+  clip-path:polygon(0 100%,3% 20%,6% 100%,9% 30%,12% 100%,15% 10%,18% 100%,21% 35%,24% 100%,27% 15%,30% 100%,33% 25%,36% 100%,39% 5%,42% 100%,45% 30%,48% 100%,51% 18%,54% 100%,57% 28%,60% 100%,63% 12%,66% 100%,69% 32%,72% 100%,75% 8%,78% 100%,81% 26%,84% 100%,87% 14%,90% 100%,93% 30%,96% 100%,100% 20%,100% 100%);opacity:.8}
+.nine{border:0;border-image:url(panel.png) 48 fill / 26px / 0 stretch}
+.inset{border:0;border-image:url(inset.png) 48 fill / 26px / 0 stretch}
+.btn{border:0;border-image:url(button.png) 48 fill / 24px / 0 stretch;color:var(--white);display:flex;align-items:center;justify-content:center;
+  font-size:30px;-webkit-text-stroke:1.5px #000;paint-order:stroke fill;cursor:pointer;user-select:none}
+.btn.neutral{border-image-source:url(panel.png)}
+.title{font-size:58px;-webkit-text-stroke:3px #000;paint-order:stroke fill;text-align:center}
+.scene{position:absolute;inset:0;opacity:0;transition:opacity .35s;pointer-events:none}
+.scene.on{opacity:1;pointer-events:auto}
+/* level-up cards */
+.cards{position:absolute;left:330px;top:330px;display:flex;gap:28px}
+.card{width:380px;height:330px;position:relative;padding:26px}
+.card h3{margin:0;font-size:34px;-webkit-text-stroke:1.5px #000;paint-order:stroke fill;color:#DAE0E4}
+.card p{margin:14px 0 0;font:700 25px/1.25 system-ui;color:var(--white)}
+.card p b{color:var(--lime)}
+.card .btn{position:absolute;left:24px;right:24px;bottom:22px;height:64px}
+/* shop */
+.offers{position:absolute;left:250px;top:300px;display:flex;gap:24px}
+.offer{width:300px;height:380px;position:relative;padding:22px;text-align:center}
+.offer .art{height:150px;display:flex;align-items:center;justify-content:center;font-size:96px}
+.offer h3{margin:4px 0 0;font-size:32px;-webkit-text-stroke:1.5px #000;paint-order:stroke fill}
+.offer small{display:block;color:var(--muted);font:700 18px system-ui;margin-top:4px}
+.offer .btn{position:absolute;left:30px;right:30px;bottom:22px;height:62px}
+.go{position:absolute;right:250px;top:560px;width:420px;height:110px;font-size:40px}
+.bal{position:absolute;left:250px;top:220px;font-size:38px;-webkit-text-stroke:1.5px #000;paint-order:stroke fill;color:#7fdcff}
+/* lobby bar */
+.bar{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);display:flex;gap:40px;align-items:flex-end}
+.ib{display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer}
+.ib img{width:104px;height:104px;object-fit:contain;filter:drop-shadow(0 4px 0 rgba(0,0,0,.35))}
+.ib span{font-size:26px;-webkit-text-stroke:1.5px #000;paint-order:stroke fill;margin-top:-8px}
+.ib.big img{width:146px;height:146px}
+.ib.big span{color:var(--lime);font-size:34px}
+.ib.dim{opacity:.38;filter:grayscale(.6);pointer-events:none}
+/* the guide: portrait + text box, bottom left */
+#guide{position:absolute;left:36px;bottom:24px;width:860px;height:300px;transition:bottom .45s cubic-bezier(.3,1.2,.4,1),transform .35s cubic-bezier(.2,1.4,.4,1),opacity .25s}
+#guide.hidden{transform:translateY(40px);opacity:0}
+#box{position:absolute;left:150px;bottom:30px;width:700px;height:150px;padding:18px 34px 18px 140px;display:flex;align-items:center;
+  background:linear-gradient(90deg,rgba(8,12,10,.92) 0%,rgba(8,12,10,.85) 70%,rgba(8,12,10,0) 100%);border-radius:6px}
+#box::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--lime);border-radius:3px}
+#name{position:absolute;left:290px;bottom:166px;padding:4px 18px;font-size:22px;color:var(--ink);background:var(--lime);border-radius:4px;letter-spacing:.04em}
+#text{font-size:36px;line-height:1.15;-webkit-text-stroke:1.5px #000;paint-order:stroke fill}
+#portrait{position:absolute;left:0;bottom:0;width:300px;height:300px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+#arrow{position:absolute;left:0;top:0;width:128px;height:128px;margin:-64px 0 0 -64px;pointer-events:none;transition:opacity .3s;will-change:transform}
+#hud{position:fixed;left:12px;top:12px;display:flex;gap:10px;align-items:center;font:600 15px system-ui;z-index:5}
+#hud button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid #3a4a40;background:#24302a;color:var(--white);cursor:pointer}
+#hud span{color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="hud"><button id="next">Next step ▶</button><button id="auto">Auto: on</button><span id="stepName"></span></div>
+<div id="stage">
+  <!-- Run: level-up cards -->
+  <section class="scene" id="sc-level">
+    <div class="title" style="position:absolute;left:0;right:0;top:200px">LEVEL UP!</div>
+    <div class="cards">
+      <div class="card nine"><h3>Damage I</h3><p><b>+5%</b> Damage</p><div class="btn" id="t-choose1">Choose</div></div>
+      <div class="card nine"><h3>Max HP I</h3><p><b>+5</b> Max HP</p><div class="btn" id="t-choose2">Choose</div></div>
+      <div class="card nine"><h3>Attack Speed I</h3><p><b>+5%</b> Attack Speed</p><div class="btn" id="t-choose3">Choose</div></div>
+    </div>
+  </section>
+  <!-- Run: shop -->
+  <section class="scene" id="sc-shop">
+    <div class="bal">◆ 45 crystals</div>
+    <div class="offers">
+      <div class="offer nine"><div class="art">🔫</div><h3>Glock</h3><small>GUNNER · RANGED · TIER I</small><div class="btn" id="t-buy">Buy · 24</div></div>
+      <div class="offer nine"><div class="art">🥤</div><h3>Protein Shake</h3><small>+8% DAMAGE</small><div class="btn">Buy · 18</div></div>
+      <div class="offer nine"><div class="art">🍳</div><h3>Frying Pan</h3><small>BRAWLER · MELEE · TIER I</small><div class="btn">Buy · 17</div></div>
+    </div>
+    <div class="btn go" id="t-go">GO (Wave 2)</div>
+  </section>
+  <!-- Lobby: bottom bar -->
+  <section class="scene" id="sc-lobby">
+    <div class="bar">
+      <div class="ib" id="t-chests"><img src="hud-chest.png" alt=""><span>CHESTS</span></div>
+      <div class="ib" id="t-armory"><img src="hud-armory.png" alt=""><span>ARMORY</span></div>
+      <div class="ib big" id="t-play"><img src="hud-play.png" alt=""><span>PLAY</span></div>
+      <div class="ib" id="t-loadout"><img src="hud-loadout.png" alt=""><span>LOADOUT</span></div>
+      <div class="ib" id="t-quests"><img src="hud-quests.png" alt=""><span>QUESTS</span></div>
+    </div>
+  </section>
+  <!-- The guide -->
+  <div id="guide">
+    <div id="box"><div id="text"></div></div>
+    <div id="name">EGG MERCHANT</div>
+    <img id="portrait" src="merchant-portrait.png" alt="Egg Merchant">
+  </div>
+  <img id="arrow" src="arrow.png" alt="">
+</div>
+<script>
+// Steps: the scene shown, the line, and the arrow's target (null = no target: the arrow fades where it is).
+const STEPS=[
+ {scene:'sc-level',line:"Welcome to Wavebreaker! I'm the Egg Merchant. Let's get you ready.",target:null,name:'Welcome (run)'},
+ {scene:'sc-level',line:"You leveled up! Pick an upgrade.",target:'t-choose2',name:'Level-up cards'},
+ {scene:'sc-shop',line:"After every wave you can shop. Crystals pay for it. Grab that Glock!",target:'t-buy',name:'Shop: Glock'},
+ {scene:'sc-shop',line:"Nice! Press GO when you're ready.",target:'t-go',name:'Shop: GO'},
+ {scene:'sc-lobby',line:"Welcome to the lobby! Let's open what you earned.",target:'t-chests',dim:true,name:'Lobby: Chests'},
+ {scene:'sc-lobby',line:"Now let's power up your gear.",target:'t-armory',dim:true,name:'Lobby: Armory'},
+ {scene:'sc-lobby',line:"Armor stays on you every run. Now go break some waves!",target:'t-play',dim:true,name:'Lobby: Play'},
+];
+const stage=document.getElementById('stage'),arrow=document.getElementById('arrow'),text=document.getElementById('text');
+// The 1920x1080 design canvas, scaled to fit under the control bar.
+function place(){const s=Math.min(innerWidth/1920,(innerHeight-56)/1080);stage.style.transformOrigin='0 0';
+ stage.style.left=((innerWidth-1920*s)/2)+'px';stage.style.top=(28+(innerHeight-56-1080*s)/2)+'px';stage.style.transform=`scale(${s})`;stage.dataset.s=s}
+addEventListener('resize',place);place();
+
+// The arrow: one image that glides along a curve to each new target, turns to face it, then bobs.
+const A={x:960,y:700,rot:180,from:null,to:null,ctrl:null,t0:0,dur:550,rot0:180,rot1:180,target:null,shown:false};
+function targetPoint(el){
+ // Tip on the target's edge: below it pointing up (so it never covers a card's text above a
+ // button), or above it pointing down when the target sits in the bottom part of the screen.
+ const st=stage.getBoundingClientRect(),s=+stage.dataset.s,r=el.getBoundingClientRect();
+ const cx=(r.left+r.width/2-st.left)/s,top=(r.top-st.top)/s,bottom=(r.bottom-st.top)/s;
+ const below=(top+bottom)/2<1080*.62;
+ return below?{x:cx,y:bottom+70,rot:0}:{x:cx,y:top-70,rot:180};
+}
+function point(id){
+ const el=id&&document.getElementById(id);
+ A.target=el||null;
+ // The guide box never covers its target: it rises above it when they'd overlap.
+ const guide=document.getElementById('guide');let lift=24;
+ if(el){const st=stage.getBoundingClientRect(),s=+stage.dataset.s,r=el.getBoundingClientRect();
+  const left=(r.left-st.left)/s,top=(r.top-st.top)/s;
+  if(left<36+860+20&&top>1080-24-300-20) lift=Math.max(24,1080-top+70);}
+ guide.style.bottom=lift+'px';
+ if(!el){arrow.style.opacity=0;A.shown=false;return}
+ const p=targetPoint(el);
+ if(!A.shown){A.x=p.x;A.y=p.y-160;A.rot=p.rot}
+ A.from={x:A.x,y:A.y};A.to=p;A.t0=performance.now();A.rot0=A.rot;A.rot1=p.rot;
+ const mx=(A.from.x+p.x)/2,my=(A.from.y+p.y)/2,dx=p.x-A.from.x,dy=p.y-A.from.y,len=Math.hypot(dx,dy)||1;
+ const bulge=Math.min(160,len*.32);A.ctrl={x:mx-dy/len*bulge,y:my+dx/len*bulge-40};
+ arrow.style.opacity=1;A.shown=true;
+}
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function frame(now){
+ if(A.target){
+  const live=targetPoint(A.target);A.to.x=live.x;A.to.y=live.y; // follow a moving target
+  const k=Math.min(1,(now-A.t0)/A.dur),e=ease(k),u=1-e;
+  const x=u*u*A.from.x+2*u*e*A.ctrl.x+e*e*A.to.x,y=u*u*A.from.y+2*u*e*A.ctrl.y+e*e*A.to.y;
+  let d=((A.rot1-A.rot0+540)%360)-180;A.rot=A.rot0+d*e;
+  A.x=x;A.y=y;
+  const bob=k>=1?Math.sin(now/170)*9:0, rad=(A.rot-90)*Math.PI/180; // bob along the pointing axis
+  arrow.style.transform=`translate(${A.x+Math.cos(rad)*bob*-1}px,${A.y+Math.sin(rad)*bob*-1}px) rotate(${A.rot}deg)`;
+ }
+ requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// Typewriter text (the in-game box types at the same speed).
+let typing=0;
+function say(line){const id=++typing;text.textContent='';let i=0;(function tick(){if(id!==typing)return;text.textContent=line.slice(0,++i);if(i<line.length)setTimeout(tick,22)})()}
+
+let step=-1,auto=true,timer=null;
+function go(n){
+ step=(n+STEPS.length)%STEPS.length;const s=STEPS[step];
+ document.querySelectorAll('.scene').forEach(e=>e.classList.toggle('on',e.id===s.scene));
+ document.querySelectorAll('#sc-lobby .ib').forEach(e=>e.classList.toggle('dim',!!s.dim&&e.id!==s.target));
+ document.getElementById('stepName').textContent=`${step+1}/${STEPS.length} · ${s.name}`;
+ say(s.line);setTimeout(()=>point(s.target),60);
+ clearTimeout(timer);if(auto)timer=setTimeout(()=>go(step+1),3200);
+}
+document.getElementById('next').onclick=()=>go(step+1);
+document.getElementById('auto').onclick=e=>{auto=!auto;e.target.textContent='Auto: '+(auto?'on':'off');if(auto)go(step+1);else clearTimeout(timer)};
+document.querySelectorAll('[id^="t-"]').forEach(el=>el.addEventListener('click',()=>{if(STEPS[step].target===el.id)go(step+1)}));
+go(0);
+</script>
+</body>
+</html>
