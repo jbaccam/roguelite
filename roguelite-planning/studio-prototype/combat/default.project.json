@@ -476,6 +476,9 @@
       "EnemyAttacks": {
         "$path": "EnemyAttacks.luau"
       },
+      "EnemyScheduler": {
+        "$path": "EnemyScheduler.luau"
+      },
       "BossService": {
         "$path": "../../hammer-boss/BossService.luau"
       },

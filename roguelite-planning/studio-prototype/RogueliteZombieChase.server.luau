@@ -45,10 +45,18 @@ folder.Parent = workspace
 
 local SpatialGrid = require(script.Parent:WaitForChild("EnemySpatialGrid"))
 local neighborGrid = SpatialGrid.new(folder, 4.5)
--- Registered before enemy callbacks: one lazy snapshot per Heartbeat, never across frames.
-RunService.Heartbeat:Connect(function() neighborGrid:invalidate() end)
+-- One lazy snapshot per frame (the scheduler below invalidates it before stepping anyone).
 folder.ChildAdded:Connect(function() neighborGrid:invalidate() end)
 folder.ChildRemoved:Connect(function() neighborGrid:invalidate() end)
+local Scheduler = require(script.Parent:WaitForChild("EnemyScheduler"))
+-- States wave enemies never use (launch audit P5). Each enabled state is one more transition the
+-- Humanoid checks every physics step, for every enemy (Swimming looks for water under each one).
+-- Running, Jumping, Freefall and Landed stay on: enemies hop when stuck and take path jump points.
+local UNUSED_STATES = {
+    Enum.HumanoidStateType.Climbing, Enum.HumanoidStateType.Swimming, Enum.HumanoidStateType.Seated,
+    Enum.HumanoidStateType.FallingDown, Enum.HumanoidStateType.Ragdoll, Enum.HumanoidStateType.GettingUp,
+    Enum.HumanoidStateType.PlatformStanding, Enum.HumanoidStateType.Flying, Enum.HumanoidStateType.StrafingNoPhysics,
+}
 
 -- Pathfinding budget: ComputeAsync is the costliest call here and every blocked zombie asked once
 -- a second, so the server shares PATH_RATE computes per second (bursts up to PATH_BURST), oldest
@@ -108,6 +116,42 @@ local function shared()
     }
     return frameShared
 end
+
+-- Every wave enemy, stepped by one Heartbeat in spawn order (EnemyScheduler, launch audit P5):
+-- each record is {step, elapsed, interval}, added by spawnZombie and dropped once done.
+local mobs = {}
+-- Server time spent stepping them (chase and attacks), for tools/MobPerfProbe.luau: EnemyMs is
+-- the average per server frame over the last second, EnemyPeakMs the worst frame in it,
+-- EnemyCount the enemies stepped. Attributes on this script: server-only, nothing replicates.
+local meter = {time = 0, peak = 0, frames = 0, since = os.clock()}
+local function measure(spent, count)
+    meter.time += spent
+    meter.frames += 1
+    if spent > meter.peak then meter.peak = spent end
+    local now = os.clock()
+    if now - meter.since >= 1 then
+        script:SetAttribute('EnemyMs', math.floor(meter.time * 1e6 / meter.frames + 0.5) / 1000)
+        script:SetAttribute('EnemyPeakMs', math.floor(meter.peak * 1e6 + 0.5) / 1000)
+        script:SetAttribute('EnemyCount', count)
+        meter.time, meter.peak, meter.frames, meter.since = 0, 0, 0, now
+    end
+end
+local function stepMob(record, dt, frame) record.step(dt, frame) end
+local function stepFailed(record, message)
+    -- Reported once per enemy; the others keep going and it is still stepped every frame.
+    if record.warned then return end
+    record.warned = true
+    warn('Enemy step failed: ' .. tostring(message))
+end
+RunService.Heartbeat:Connect(function(dt)
+    local n = #mobs
+    if n == 0 then measure(0, 0) return end
+    local started = os.clock()
+    neighborGrid:invalidate()
+    Scheduler.run(mobs, n, stepMob, stepFailed, dt, shared())
+    Scheduler.compact(mobs)
+    measure(os.clock() - started, n)
+end)
 local spawnZombie
 
 -- Spawn director: Brotato-style telegraphed groups spread around the players.
@@ -417,6 +461,9 @@ for _, part in npc:GetDescendants() do
     if part:IsA("BasePart") then
         part.Anchored = false
         part.CollisionGroup = COLLISION_GROUP
+        -- No script listens for an enemy's touches (melee and shots use spatial queries, which
+        -- CanQuery keeps working). Every template but the regular zombie already had this off.
+        part.CanTouch = false
     end
 end
 -- The Humanoid can't steer a very light body. The baby zombie (0.33 mass, every limb Massless)
@@ -431,7 +478,7 @@ root:SetNetworkOwner(nil)
 humanoid.WalkSpeed = config.speed
 npc:SetAttribute('BaseMoveSpeed',config.speed)
 humanoid.AutoRotate = true
-humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
+for _, state in UNUSED_STATES do humanoid:SetStateEnabled(state, false) end
 CollectionService:AddTag(npc, "RogueliteZombie")
 
 local waypoints, waypointIndex = nil, 1
@@ -441,7 +488,6 @@ local path, blockedAt = nil, -math.huge -- one reused Path; when sight was last 
 local sight, sightTarget, sightMarker = RaycastParams.new(), nil, nil
 sight.FilterType = Enum.RaycastFilterType.Exclude
 local previousTarget = nil
-local elapsed = 0
 local stall = nil
 local attacks = kind == 'Mutant' and Attacks or EnemyAttacks -- the Mutant slams (ZombieAttacks)
 -- The nearest living player from this frame's list (ties to the earlier player, as before).
@@ -458,15 +504,17 @@ local function nearestTarget(targets)
 end
 
 local frozen = false
-local connection
-connection = RunService.Heartbeat:Connect(function(dt)
+-- Stepped every frame by the scheduler (was this enemy's own Heartbeat connection). Its first
+-- think comes 0.1 s after spawn, up to 5 frames later to spread the crowd (EnemyScheduler).
+local record = {elapsed = Scheduler.startElapsed(mobs), interval = Scheduler.THINK}
+record.step = function(dt, frame)
+    if record.done then return end
     if not npc.Parent or humanoid.Health <= 0 then
         generation += 1
         npc:SetAttribute("Chasing", false)
-        connection:Disconnect()
+        record.done = true
         return
     end
-    local frame = shared()
     -- Admin Freeze: no moving and no attacks; players' hits and damage still work. The first
     -- frozen frame cancels an attack in progress, so its hit can't land the moment Freeze ends.
     if frame.frozen then -- plan L: a paused run freezes them too
@@ -484,11 +532,11 @@ connection = RunService.Heartbeat:Connect(function(dt)
     frozen = false
     -- Standing still to attack isn't a stall (see the hop below). An attack in progress updates
     -- every frame, so its wind-up, hit and recovery keep their exact timing; the check for a new
-    -- one waits for the 0.1 s tick (100 enemies: 1,000 checks a second instead of 6,000).
+    -- one waits for the 0.1 s think (100 enemies: 1,000 checks a second instead of 6,000).
     if attacks.busy(npc) and attacks.update(npc,previousTarget,dt) then stall = nil return end
-    elapsed += dt
-    if elapsed < 0.1 then return end
-    elapsed = 0
+    if not Scheduler.due(record, dt) then return end
+    -- Every 0.1 s, unless this think finds the target far off with a clear line (below).
+    record.interval = Scheduler.THINK
     if not attacks.busy(npc) and attacks.update(npc,previousTarget,dt) then stall = nil return end
     local statusSlow=npc:GetAttribute('StatusSlowStrength') or 0
     local vacuumSlow=(npc:GetAttribute('VacuumSlowUntil') or 0)>workspace:GetServerTimeNow() and 35 or 0
@@ -523,6 +571,8 @@ connection = RunService.Heartbeat:Connect(function(dt)
     local obstruction = workspace:Raycast(root.Position, target.Position - root.Position, sight)
     if not obstruction then
         waypoints = nil
+        -- More than 90 studs from every player with a clear line: think every 0.3 s.
+        record.interval = Scheduler.interval(distance)
         local delta = target.Position - root.Position
         local flat = Vector3.new(delta.X, 0, delta.Z)
         local direction = (distance >= config.stopRange and flat.Magnitude > 0.01) and flat.Unit or Vector3.zero
@@ -593,7 +643,8 @@ connection = RunService.Heartbeat:Connect(function(dt)
     else
         humanoid:Move(Vector3.zero) -- Do not keep pushing through an unreachable obstacle.
     end
-end)
+end
+table.insert(mobs, record)
 end
 
 local function resetWave()
