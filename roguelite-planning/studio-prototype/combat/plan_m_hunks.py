@@ -68,7 +68,7 @@ MODULES = [
     {"path": "combat/QuestService.luau", "parent": "ServerScriptService", "name": "QuestService"},
     {"path": "ui/QuestsUI.luau", "parent": "ReplicatedStorage", "name": "QuestsUI"},
 ]
-BASE = "e28f1c7"  # the quest modules as Studio has them (before the boss icon, 3bc89e8)
+BASE = "db73bbf"  # Studio holds the plan M build (db73bbf); e28f1c7 for the first sync
 
 if __name__ == "__main__":
     run(HUNKS, MODULES, "combat/plan-m-sync.json", BASE)

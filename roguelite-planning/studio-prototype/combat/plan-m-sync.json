@@ -4,19 +4,19 @@
    "path": "combat/QuestConfig.luau",
    "parent": "ReplicatedStorage.RogueliteCombat",
    "name": "QuestConfig",
-   "base": "e28f1c7"
+   "base": "db73bbf"
   },
   {
    "path": "combat/QuestService.luau",
    "parent": "ServerScriptService",
    "name": "QuestService",
-   "base": "e28f1c7"
+   "base": "db73bbf"
   },
   {
    "path": "ui/QuestsUI.luau",
    "parent": "ReplicatedStorage",
    "name": "QuestsUI",
-   "base": "e28f1c7"
+   "base": "db73bbf"
   }
  ],
  "hunks": [

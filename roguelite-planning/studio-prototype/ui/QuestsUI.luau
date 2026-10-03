@@ -383,7 +383,40 @@ function Q.open(screen,ctx,tab)
    if o.state=='done' then FX.check(f,CW-212,22,30) end
   end
   local order={ready=1,open=2,done=3}
-  -- Roads first: each shows its next level (n/10) until Legend is done.
+  -- Feats first (plan M), kept short: everything ready to claim plus the easiest open ones, at
+  -- least 3 rows, and SHOW ALL for the rest. Ready first, then by stars, so the next to chase leads.
+  FX.header(list,'FEATS','One-time challenges. More stars = harder = bigger reward.',y,SW);y+=72+8
+  local feats,ready={},0
+  for i,f in Config.Feats do
+   local s=(view.feats or {})[f.id] or {have=0,need=1}
+   local state=s.claimed and 'done' or s.have>=s.need and 'ready' or 'open'
+   if state=='ready' then ready+=1 end
+   table.insert(feats,{f=f,s=s,state=state,i=i})
+  end
+  table.sort(feats,function(a,b)
+   if order[a.state]~=order[b.state] then return order[a.state]<order[b.state] end
+   if a.f.stars~=b.f.stars then return a.f.stars<b.f.stars end
+   return a.i<b.i
+  end)
+  local shown=sel.allFeats and #feats or math.min(#feats,math.max(3,ready))
+  for k=1,shown do
+   local e=feats[k];local f,s=e.f,e.s;local g=f.goal
+   local have=Config.comma(math.min(s.have,s.need))..' / '..Config.comma(s.need)
+   row('Feat_'..f.id,y,{
+    name=f.name,stars=f.stars,goal=f.desc,ratio=s.have/math.max(s.need,1),
+    text=g.best and ('Best wave '..have) or g.classes and (have..' classes') or have,
+    state=e.state,color=Config.StarColors[f.stars],icon=Config.Icons[f.icon] or Config.Icons.achievements,
+    rewards=Q.rewardTiles(Config,Config.FeatRewards[f.stars]),onClaim=function() act('ClaimFeat',f.id) end,
+   })
+   y+=RH+18
+  end
+  if sel.allFeats or shown<#feats then
+   local bt=FX.button(list,'FeatsToggle',sel.allFeats and 'SHOW FEWER' or ('SHOW ALL '..#feats..' FEATS'),math.floor(SW/2-170),y,340,48,function() sel.allFeats=not sel.allFeats;draw() end,true)
+   bt.Caption.TextSize=20
+   y+=48+18
+  end
+  y+=12
+  -- Then the roads: each shows its next level (n/10) until Legend is done.
   FX.header(list,'TROPHY ROADS',nil,y,SW);y+=46+16
   local roads={}
   for i,r in Config.Roads do
@@ -413,32 +446,6 @@ function Q.open(screen,ctx,tab)
     title=not finished and (r.name..' '..Config.TierNames[e.nextL]) or nil,
     levels=#r.targets,level=e.level,
     onClaim=function() act('ClaimRoad',r.id) end,
-   })
-   y+=RH+18
-  end
-  -- Feats (plan M): one-time challenges, more stars = harder = bigger reward. Ready first, then the
-  -- easiest, so the next one to chase sits near the top.
-  y+=12
-  FX.header(list,'FEATS','One-time challenges. More stars = harder = bigger reward.',y,SW);y+=72+8
-  local feats={}
-  for i,f in Config.Feats do
-   local s=(view.feats or {})[f.id] or {have=0,need=1}
-   local state=s.claimed and 'done' or s.have>=s.need and 'ready' or 'open'
-   table.insert(feats,{f=f,s=s,state=state,i=i})
-  end
-  table.sort(feats,function(a,b)
-   if order[a.state]~=order[b.state] then return order[a.state]<order[b.state] end
-   if a.f.stars~=b.f.stars then return a.f.stars<b.f.stars end
-   return a.i<b.i
-  end)
-  for _,e in feats do
-   local f,s=e.f,e.s;local g=f.goal
-   local have=Config.comma(math.min(s.have,s.need))..' / '..Config.comma(s.need)
-   row('Feat_'..f.id,y,{
-    name=f.name,stars=f.stars,goal=f.desc,ratio=s.have/math.max(s.need,1),
-    text=g.best and ('Best wave '..have) or g.classes and (have..' classes') or have,
-    state=e.state,color=Config.StarColors[f.stars],icon=Config.Icons[f.icon] or Config.Icons.achievements,
-    rewards=Q.rewardTiles(Config,Config.FeatRewards[f.stars]),onClaim=function() act('ClaimFeat',f.id) end,
    })
    y+=RH+18
   end
