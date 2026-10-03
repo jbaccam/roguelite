@@ -1,0 +1,13 @@
+{
+ "ReplicatedStorage.RogueliteCombat.TutorialConfig": "combat/TutorialConfig.luau",
+ "ReplicatedStorage.TutorialGuideUI": "ui/TutorialGuideUI.luau",
+ "StarterPlayer.StarterPlayerScripts.TutorialGuide": "ui/TutorialGuide.client.luau",
+ "ServerScriptService.ShopService": "combat/ShopService.luau",
+ "StarterPlayer.StarterPlayerScripts.RogueliteHUD": "ui/RogueliteHUD.client.luau",
+ "ServerScriptService.RogueliteCombat": "combat/RogueliteCombat.server.luau",
+ "ServerScriptService.PetService": "combat/PetService.server.luau",
+ "ServerScriptService.BossService": "combat/bosses/BossService.luau",
+ "ServerScriptService.EnemyAttacks": "combat/EnemyAttacks.luau",
+ "ReplicatedStorage.RogueliteCombat.ChestConfig": "combat/ChestConfig.luau",
+ "ReplicatedStorage.EggMerchant": "ui/EggMerchant.luau"
+}

@@ -14,6 +14,7 @@ The user's first play-test of the tutorial. Spec section: "Play-test fixes" in `
   - `ChestConfigTests` pass 137 checks with 20000 rolls, including the new one-item-per-rarity check;
   - different items per chest over 20000 chests: Wooden 1.27, Silver 2.09, Gold 2.29, Magical 3.11, Legendary 4.02;
   - in the mockup, the guide box lands clear of every panel on each screen.
+- **Studio:** synced 2026-10-03 with `tools/LaunchSync.luau` at ac17bde (`combat/tutorial-playtest-sync-map.json`): 11 scripts, all or nothing, each guarded on Studio's exact Source, which still matched 7b4e1a4. Afterwards all 11 matched ac17bde with Sandboxed unchanged. The LobbySpawn move was made in Studio Edit (an undo point named "Move LobbySpawn toward the portals"); the Kills board is now 32.9 studs behind it.
 - **Not run:** no Play test of these fixes yet.
 
 # First-join tutorial — October 3, 2026
