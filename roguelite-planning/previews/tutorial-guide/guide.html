@@ -56,7 +56,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--white);font-fami
 .ib.big span{color:var(--lime);font-size:34px}
 .ib.dim{opacity:.38;filter:grayscale(.6);pointer-events:none}
 /* the guide: portrait + text box, bottom left */
-#guide{position:absolute;left:36px;bottom:24px;width:860px;height:300px;transition:bottom .45s cubic-bezier(.3,1.2,.4,1),transform .35s cubic-bezier(.2,1.4,.4,1),opacity .25s}
+#guide{position:absolute;left:24px;top:756px;width:860px;height:300px;transform-origin:0 0;transition:left .45s ease,top .45s ease,transform .45s ease,opacity .25s}
 #guide.hidden{transform:translateY(40px);opacity:0}
 #box{position:absolute;left:150px;bottom:30px;width:700px;height:150px;padding:18px 34px 18px 140px;display:flex;align-items:center;
   background:linear-gradient(90deg,rgba(8,12,10,.92) 0%,rgba(8,12,10,.85) 70%,rgba(8,12,10,0) 100%);border-radius:6px}
@@ -140,12 +140,7 @@ function targetPoint(el){
 function point(id){
  const el=id&&document.getElementById(id);
  A.target=el||null;
- // The guide box never covers its target: it rises above it when they'd overlap.
- const guide=document.getElementById('guide');let lift=24;
- if(el){const st=stage.getBoundingClientRect(),s=+stage.dataset.s,r=el.getBoundingClientRect();
-  const left=(r.left-st.left)/s,top=(r.top-st.top)/s;
-  if(left<36+860+20&&top>1080-24-300-20) lift=Math.max(24,1080-top+70);}
- guide.style.bottom=lift+'px';
+ setTimeout(placeGuide,30);
  if(!el){arrow.style.opacity=0;A.shown=false;return}
  const p=targetPoint(el);
  if(!A.shown){A.x=p.x;A.y=p.y-160;A.rot=p.rot}
@@ -153,6 +148,27 @@ function point(id){
  const mx=(A.from.x+p.x)/2,my=(A.from.y+p.y)/2,dx=p.x-A.from.x,dy=p.y-A.from.y,len=Math.hypot(dx,dy)||1;
  const bulge=Math.min(160,len*.32);A.ctrl={x:mx-dy/len*bulge,y:my+dx/len*bulge-40};
  arrow.style.opacity=1;A.shown=true;
+}
+// The box never covers the game's UI: it takes the first spot that covers none of the shown
+// buttons, cards and text (bottom-left, top-left, bottom-right, top-right, middle-left), trying a
+// smaller size before giving up, and glides there. Same rule as TutorialGuideUI in the game.
+function placeGuide(){
+ const guide=document.getElementById('guide'),st=stage.getBoundingClientRect(),s=+stage.dataset.s;
+ const obs=[...document.querySelectorAll('.scene.on .btn,.scene.on .card,.scene.on .offer,.scene.on .ib,.scene.on .bal,.scene.on .title')].map(e=>{const r=e.getBoundingClientRect();return [(r.left-st.left)/s,(r.top-st.top)/s,r.width/s,r.height/s]});
+ if(A.shown&&A.to){obs.push([A.to.x-70,A.to.rot===0?A.to.y:A.to.y-150,140,150])} // the arrow where it lands
+ const parts=(x,y,k)=>[[x,y,300*k,300*k],[x+150*k,y+120*k,710*k,150*k]];
+ const hit=(a,b)=>Math.max(0,Math.min(a[0]+a[2],b[0]+b[2])-Math.max(a[0],b[0]))*Math.max(0,Math.min(a[1]+a[3],b[1]+b[3])-Math.max(a[1],b[1]));
+ let best=null;
+ for(const k of [1,.8,.66]){
+  const m=24*k,w=860*k,h=300*k;
+  for(const [x,y] of [[m,1080-m-h],[m,m+20],[1920-m-w,1080-m-h],[1920-m-w,m+20],[m,(1080-h)/2]]){
+   let score=0;for(const p of parts(x,y,k))for(const o of obs)score+=hit(p,o);
+   if(!best||score<best.score)best={x,y,k,score};
+   if(score===0)break;
+  }
+  if(best.score===0)break;
+ }
+ guide.style.left=best.x+'px';guide.style.top=best.y+'px';guide.style.bottom='auto';guide.style.transform=`scale(${best.k})`;
 }
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 function frame(now){

@@ -45,7 +45,7 @@ return function(T,E,XP,glockBase,itemBase)
  check(T.SeedCopies[T.SeedArmor]==1 and T.SeedArmor==T.SeedArmorSet..'.'..T.SeedArmorSlot,'the seeded armor piece id matches its set and slot')
 
  -- Every line the guide can show exists.
- for _,id in {'Welcome','Pan','Crystals','LevelUp','Shop','ShopGo','Survive','LevelUp2','Shop2','Boss','RedCircle','BossDown','Loot','Chests','ChestOpen','ChestTap','ChestMore','Armory','Upgrade','Equip','Offer','Play'} do
+ for _,id in {'Welcome','Pan','Crystals','LevelUp','Shop','ShopGo','Survive','LevelUp2','Shop2','Boss','RedCircle','BossDown','Loot','Chests','ChestOpen','ChestTap','ChestMore','Armory','Upgrade','Equip','Equipped','Offer','Play'} do
   check(type(T.Lines[id])=='string' and #T.Lines[id]>0,'line '..id)
  end
  return checks

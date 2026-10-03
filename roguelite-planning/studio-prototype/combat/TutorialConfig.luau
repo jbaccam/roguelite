@@ -4,7 +4,7 @@
 local T={}
 
 -- The run: Pine Valley as a Brawler with the Frying Pan, three waves, the boss on wave 3.
-T.Map='PineValley';T.Class='Brawler';T.Weapon='01'
+T.Map='PineValley';T.MapName='Pine Valley';T.Class='Brawler';T.Weapon='01'
 T.START_SHARDS=0 -- no starting crystals: the money clearly comes from crystals
 T.CRYSTAL_VALUE=5 -- each kill's crystal (shards and XP); normal runs use EconomyConfig.KILL_SHARDS
 T.BOSS_WAVE=3
@@ -64,8 +64,9 @@ T.Lines={
  Armory="Now let's power up your gear.",
  Upgrade="Your pan has enough copies. Upgrade it!",
  Equip="You got armor too. Put it on!",
+ Equipped="Looking good! Armor stays on you every run.",
  Offer="Want a head start? Here's a one-time deal.",
- Play="Armor stays on you every run. Now go break some waves!",
+ Play="Now go break some waves!",
 }
 -- Art for the guide (uploaded images; '' until uploaded).
 T.Asset={portrait='',arrow=''}
