@@ -282,10 +282,48 @@ Players.PlayerRemoving:Connect(function(p)
  if s and s.rageConnection then s.rageConnection:Disconnect() end
  Service.states[p]=nil
 end)
+-- Body contact (launch audit P10). Each player used to look up every enemy's parts and five
+-- attributes 10 times a second: ~18,000 calls a second with 4 players and 65 enemies. Now each
+-- enemy's parts and contact numbers are read once (they are set at spawn, before the tag; a
+-- change to one drops the record), the tick reads each enemy's position once for all players,
+-- and nobody is checked while both of their contact timers are still running. The same enemy
+-- is picked as before: the first in tag order in range with a clear line.
+local CONTACT_ATTRIBUTES={'ContactDamage','ContactRange','BumpDamage','BumpRange','PracticeTarget'}
+local contactRecords=setmetatable({},{__mode='k'})
+local watched=setmetatable({},{__mode='k'})
+local function contactRecord(npc)
+ local r=contactRecords[npc];if r then return r end
+ local nr=npc:FindFirstChild('HumanoidRootPart');local nh=npc:FindFirstChildOfClass('Humanoid')
+ if not nr or not nh then return nil end -- looked for again next tick
+ if not watched[npc] then
+  watched[npc]=true
+  for _,name in CONTACT_ATTRIBUTES do npc:GetAttributeChangedSignal(name):Connect(function() contactRecords[npc]=nil end) end
+ end
+ -- Old proximity mobs (ContactDamage > 0) keep their 0.8 s contact timer. Wave mobs set
+ -- ContactDamage 0 (their swings own damage) and hurt through BumpDamage/BumpRange instead.
+ local damage=npc:GetAttribute('ContactDamage') or 10
+ local range=npc:GetAttribute('ContactRange') or 4.5
+ local bump=damage<=0
+ if bump then damage=npc:GetAttribute('BumpDamage') or 0;range=npc:GetAttribute('BumpRange') or 0 end
+ r={root=nr,hum=nh,damage=damage,range=range,bump=bump,practice=npc:GetAttribute('PracticeTarget')}
+ contactRecords[npc]=r
+ return r
+end
+-- This tick's enemies that can hurt by contact, in tag order (npcs[i] has records[i]), each
+-- record with the enemy's position now.
+local function contactList()
+ local npcs,records={},{}
+ for _,npc in Tags:GetTagged('RogueliteZombie') do
+  local r=contactRecord(npc)
+  if r and r.damage>0 and not r.practice then r.position=r.root.Position;npcs[#npcs+1]=npc;records[#records+1]=r end
+ end
+ return {npcs=npcs,records=records}
+end
 local elapsed=0
 RunService.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<.1 then return end;local step=elapsed;elapsed=0
  local now=os.clock()
+ local contacts -- built for the first player who can be hit this tick
  for player,s in Service.states do
   local h=humanoid(player);local root=player.Character and player.Character:FindFirstChild('HumanoidRootPart')
   if h and root and h.Health>0 then
@@ -301,23 +339,20 @@ RunService.Heartbeat:Connect(function(dt)
    end
    if not Service.frozen(player) then Service.heal(player,s.stats.Regeneration*step) end
    local second=math.floor(now);if s.leechSecond~=second then s.leechSecond=second;s.leech=0 end
-   -- Old proximity mobs (ContactDamage > 0) keep their 0.8 s contact timer. Wave mobs set
-   -- ContactDamage 0 (their swings own damage) and hurt through BumpDamage/BumpRange instead:
-   -- body overlap only, at most once per BUMP_GRACE across all mobs.
-   if combat:GetAttribute('ZombiesEnabled') and combat:GetAttribute('RunPaused')~=true then
-    for _,npc in Tags:GetTagged('RogueliteZombie') do
-     local nr=npc:FindFirstChild('HumanoidRootPart');local nh=npc:FindFirstChildOfClass('Humanoid')
-     local contactDamage=npc:GetAttribute('ContactDamage') or 10
-     local contactRange=npc:GetAttribute('ContactRange') or 4.5
-     local bump=contactDamage<=0
-     if bump then contactDamage=npc:GetAttribute('BumpDamage') or 0;contactRange=npc:GetAttribute('BumpRange') or 0 end
-     local ready=if bump then now-s.lastBump>=BUMP_GRACE else now-s.lastContact>=.8
-     local delta=nr and root.Position-nr.Position
-     if ready and contactDamage>0 and not npc:GetAttribute('PracticeTarget') and nr and nh and nh.Health>0 and math.abs(delta.Y)<4.5 and Vector2.new(delta.X,delta.Z).Magnitude<contactRange then
+   -- Body overlap only (contactRecord above), at most once per BUMP_GRACE across all mobs.
+   local bumpReady,contactReady=now-s.lastBump>=BUMP_GRACE,now-s.lastContact>=.8
+   if (bumpReady or contactReady) and combat:GetAttribute('ZombiesEnabled') and combat:GetAttribute('RunPaused')~=true then
+    contacts=contacts or contactList()
+    local position=root.Position
+    for i,r in contacts.records do
+     local npc=contacts.npcs[i]
+     local ready=if r.bump then bumpReady else contactReady
+     local delta=ready and position-r.position
+     if ready and math.abs(delta.Y)<4.5 and Vector2.new(delta.X,delta.Z).Magnitude<r.range and r.root.Parent==npc and r.hum.Health>0 then
       local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances={npc,player.Character,workspace:FindFirstChild('RogueliteEnemies')}
-      if not workspace:Raycast(nr.Position,root.Position-nr.Position,params) then
-       if bump then s.lastBump=now else s.lastContact=now end
-       Service.contact(player,contactDamage,nil,npc);break
+      if not workspace:Raycast(r.position,position-r.position,params) then
+       if r.bump then s.lastBump=now else s.lastContact=now end
+       Service.contact(player,r.damage,nil,npc);break
       end
      end
     end
