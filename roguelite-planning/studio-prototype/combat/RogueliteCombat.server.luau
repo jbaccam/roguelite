@@ -290,6 +290,32 @@ local function meleeOverlap(enemies)
  end
  return overlap
 end
+-- Melee sweeps (launch audit P6). A swing samples its blade 120 times a second and each box query
+-- returns every part of every enemy it touches (16-30 each); every part used to repeat the whole
+-- enemy check (ancestor search, tag, attributes, reach, a raycast). Now each enemy is judged once
+-- per tick, and sampling stops once every enemy the tick could still hit has been judged, or
+-- doesn't start when there is none (TargetGrid.open/sweep). The sampling rate and boxes are
+-- unchanged, so swings hit exactly what they hit before.
+local owners=setmetatable({},{__mode='k'}) -- part -> its enemy Model (false: none)
+local function ownerOf(part)
+ local npc=owners[part]
+ if npc==nil then npc=part:FindFirstAncestorOfClass('Model') or false;owners[part]=npc end
+ return npc
+end
+-- The Boxing Gloves' parts (which side each is on, and its size), read once instead of a
+-- GetDescendants walk per sample: the template never changes.
+local gloveParts=setmetatable({},{__mode='k'})
+local function glovesOf(template)
+ local list=gloveParts[template]
+ if not list then
+  list={};local pivot=template:GetPivot()
+  for _,part in template:GetDescendants() do if part:IsA('BasePart') then
+   table.insert(list,{side=pivot:ToObjectSpace(part.CFrame).X<0 and -1 or 1,size=part.Size})
+  end end
+  gloveParts[template]=list
+ end
+ return list
+end
 local elapsed=0
 RunService.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<1/30 then return end;elapsed=0
@@ -431,8 +457,13 @@ RunService.Heartbeat:Connect(function(dt)
     if first<=last then
      local template=templates[id];local size=template:GetAttribute('BoundsSize');local center=template:GetAttribute('BoundsCenter')
      local overlap=meleeOverlap(enemies)
+     local attackOrigin=slot.attackOrigin or origin
+     -- Who this tick could still hit (`living` is the tick's snapshot; nil never happens here,
+     -- and would only turn the early stop off).
+     local open,remaining
+     if living then open,remaining=Grid.open(snap,attackOrigin,d.range,slot.hit) end
      local steps=math.max(1,math.ceil((last-first)*120))
-     for i=0,steps do
+     local function sample(i)
       local sampleAge=first+(last-first)*i/steps
       local pose=Motion.pose(slot.attackRoot or root.CFrame,radius,index,slot.aim,slot.start,slot.start+sampleAge,d.kind,id,slot.direction,d.range,size,center,slot.style,slot.side)
       if chainRigs[id] then pose=Chains.pose(chainRigs[id],slot.attackRoot or root.CFrame,slot.direction,slot.aim,sampleAge,d.range,slot.style,slot.side) end
@@ -441,30 +472,28 @@ RunService.Heartbeat:Connect(function(dt)
       local boxes=chainRigs[id] and Chains.hitBoxes(chainRigs[id],pose,sampleAge) or {{cf=pose*CFrame.new(center),size=size}}
       if id=='19' then
        boxes={}
-       for _,part in template:GetDescendants() do if part:IsA('BasePart') then
-        local side=template:GetPivot():ToObjectSpace(part.CFrame).X<0 and -1 or 1
+       for _,glove in glovesOf(template) do
+        local side=glove.side
         if side==slot.hand or slot.secondAim then
          local aim=side==slot.hand and slot.aim or slot.secondAim
-         table.insert(boxes,{cf=Motion.glovePose(slot.attackRoot,aim,sampleAge,side,d.range),size=part.Size})
-        end
-       end end
-      end
-      for _,box in boxes do
-       for _,part in workspace:GetPartBoundsInBox(box.cf,box.size+Vector3.one*.4,overlap) do
-       local npc=part:FindFirstAncestorOfClass('Model')
-       if npc and not slot.hit[npc] and Tags:HasTag(npc,'RogueliteZombie') and (not npc:GetAttribute('LobbyDummy') or targetable(npc,s)) then
-        local health,npcRoot=alive(npc)
-        local attackOrigin=slot.attackOrigin or origin
-        local point=health and reachPoint(npc,npcRoot,attackOrigin)
-        if health and (point-attackOrigin).Magnitude<=d.range and clear(attackOrigin,point,wallParams) then
-         local first=next(slot.hit)==nil -- the swing's first contact (the Wrecking Ball's shockwave)
-         slot.hit[npc]=true;damage(npc,d.damage,d);contact(slot,id,now)
-         if first then legendary:contact(d,npc,point) end
+         table.insert(boxes,{cf=Motion.glovePose(slot.attackRoot,aim,sampleAge,side,d.range),size=glove.size})
         end
        end
+      end
+      return boxes
+     end
+     local function judge(npc)
+      if not slot.hit[npc] and Tags:HasTag(npc,'RogueliteZombie') and (not npc:GetAttribute('LobbyDummy') or targetable(npc,s)) then
+       local health,npcRoot=alive(npc)
+       local point=health and reachPoint(npc,npcRoot,attackOrigin)
+       if health and (point-attackOrigin).Magnitude<=d.range and clear(attackOrigin,point,wallParams) then
+        local first=next(slot.hit)==nil -- the swing's first contact (the Wrecking Ball's shockwave)
+        slot.hit[npc]=true;damage(npc,d.damage,d);contact(slot,id,now)
+        if first then legendary:contact(d,npc,point) end
        end
       end
      end
+     Grid.sweep(steps,sample,function(box) return workspace:GetPartBoundsInBox(box.cf,box.size+Vector3.one*.4,overlap) end,ownerOf,judge,open,remaining)
     end
    end
    slot.previous=age

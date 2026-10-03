@@ -55,4 +55,39 @@ function G.nearest(grid,origin,range,can,measure,clear)
  table.sort(found,function(a,b) if a.distance~=b.distance then return a.distance<b.distance end;return a.e.order<b.e.order end)
  for _,f in found do if clear(f.point,f.e) then return f.e,f.point end end
 end
+-- Melee sweeps (launch audit P6). The enemies a swing could still hit this tick: not in `hit`,
+-- and a boss (measured to its nearest side) or with its root within `range` of origin. Returns
+-- them as a set and how many there are.
+function G.open(grid,origin,range,hit)
+ local open,count={},0
+ for _,e in grid.list do
+  if not hit[e.npc] and (e.boss or (e.position-origin).Magnitude<=range) then open[e.npc]=true;count+=1 end
+ end
+ return open,count
+end
+-- One tick of a sweep's hit checks. sample(i) gives the boxes of sample i (0..steps), query(box)
+-- the parts touching a box, owner(part) the enemy a part belongs to (nil: none), and judge(npc)
+-- checks an enemy and hits it if it can be hit. Nothing moves within a tick, so an enemy's
+-- answer is the same for all its parts, boxes and samples: it is judged once, at its first part
+-- (the old loop judged every part until one hit). Sampling stops once every enemy in `open` has
+-- been judged (open nil: never). Returns the samples and queries made.
+function G.sweep(steps,sample,query,owner,judge,open,remaining)
+ local judged,samples,queries={},0,0
+ for i=0,steps do
+  if open and remaining<=0 then break end
+  samples+=1
+  for _,box in sample(i) do
+   queries+=1
+   for _,part in query(box) do
+    local npc=owner(part)
+    if npc and not judged[npc] then
+     judged[npc]=true
+     if open and open[npc] then remaining-=1 end
+     judge(npc)
+    end
+   end
+  end
+ end
+ return samples,queries
+end
 return G
