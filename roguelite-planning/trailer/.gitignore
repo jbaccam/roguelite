@@ -1,0 +1,6 @@
+# Recorded gameplay, licensed music and the PNG exports (rebuilt with --screenshots) stay on the
+# PC; build/ is ignored by the root .gitignore. stills/raw/ is committed: it's the build's input.
+clips/
+screenshots/
+music.wav
+music.mp3
