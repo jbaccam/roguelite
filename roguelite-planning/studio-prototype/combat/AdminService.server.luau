@@ -150,6 +150,16 @@ end
 function actions.GiveItem(p,id) return Shop.adminItem(p,id) end
 function actions.Shards(p,mode,n) return Shop.adminShards(p,mode,n) end
 function actions.Level(p,mode,n) return Shop.adminLevel(p,mode,n) end
+-- Tutorial (plans/2026-10-03-tutorial-design.md): TutorialDirector's ServerStorage.TutorialControl
+-- does the work. Start: the run from the top. Lobby: the reward now, then the lobby steps. End:
+-- back to normal play. Each starts a fresh run, which also clears the test-run mark.
+local function tutorial(p,what)
+ local control=SS:FindFirstChild('TutorialControl');if not control then return false,'Tutorial not installed' end
+ return control:Invoke(what,p)
+end
+function actions.TutorialStart(p) return tutorial(p,'Start') end
+function actions.TutorialLobby(p) return tutorial(p,'Lobby') end
+function actions.TutorialEnd(p) return tutorial(p,'End') end
 for _,name in Admin.Actions do assert(actions[name],'AdminService has no handler for '..name) end
 
 -- The shared-run gate, checked before anything is marked. A reason string blocks the request.
@@ -162,6 +172,8 @@ local function blocked(p,action)
  end
  -- Travel can't do anything outside Studio's combined server, so it must not mark the run either.
  if action=='Travel' and not (RunService:IsStudio() and Role.get()=='Combined') then return 'Needs lobby/match teleports (plan C)' end
+ -- The tutorial buttons too: Studio profiles live in memory, so its reward can be paid again there.
+ if string.sub(action,1,8)=='Tutorial' and not (RunService:IsStudio() and Role.get()=='Combined') then return 'Studio only: the live tutorial starts on first join' end
  return nil
 end
 

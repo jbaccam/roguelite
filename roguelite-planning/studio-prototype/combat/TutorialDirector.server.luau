@@ -118,25 +118,71 @@ RunService.Heartbeat:Connect(function(dt)
  end
 end)
 
--- Studio, Combined role, Workspace.StudioTutorial=true: play the tutorial run right here.
+-- Studio's Combined role: play the tutorial run right here, for a fresh profile with
+-- Workspace.StudioTutorial=true, or from the admin panel (ServerStorage.TutorialControl below).
 if studio and Role.get()=='Combined' then
- local function start(p)
-  if not profileLoaded(p) or not needsRun(p) then return end
-  if Shop.memberCount()>0 and not active then warn('TutorialDirector: a run is already going here; no tutorial');return end
+ local Profiles=require(SSS:WaitForChild('ProfileService'))
+ -- Into the Pine Valley arena as a Brawler with the Frying Pan; wave 1 once they're in the run.
+ local function startHere(p)
+  for q in Shop.members do if q~=p then return false,'Another run is going here' end end
+  local char=p.Character;local h=char and char:FindFirstChildOfClass('Humanoid')
+  if not h or h.Health<=0 then return false,'Respawn first' end
+  p:SetAttribute('RunResult',nil)
   Role.setMap(Config.Map);combat:SetAttribute('RunDifficulty','Normal')
+  run:SetAttribute('TutorialWon',nil)
   combat:SetAttribute('TutorialRun',true);apply(true)
   p:SetAttribute('RunClass',Config.Class);p:SetAttribute('RunWeapon',Config.Weapon)
   task.wait() -- RogueliteCombat takes the starter from RunWeapon (deferred signals)
   Shop.resetRun()
-  local char=p.Character or p.CharacterAdded:Wait()
   local spawn=Role.playerSpawn()
   p:SetAttribute('StudioArea','Arena')
   if spawn then char:PivotTo(CFrame.new(spawn.Position+Vector3.new(0,4,0))) end
-  local t0=os.clock()
-  while p.Parent==Players and not Shop.isMember(p) and os.clock()-t0<20 do task.wait(.25) end
-  task.wait(Config.WELCOME_SECONDS) -- the welcome line first
-  if Shop.isMember(p) then Shop.startFirstWave() end
+  task.spawn(function()
+   local t0=os.clock()
+   while p.Parent==Players and not Shop.isMember(p) and os.clock()-t0<20 do task.wait(.25) end
+   task.wait(Config.WELCOME_SECONDS) -- the welcome line first
+   if active and Shop.isMember(p) and Shop.phase=='Shop' and Shop.wave==1 then Shop.startFirstWave() end
+  end)
+  return true,'Tutorial started'
+ end
+ -- Out of it: the mode off, a fresh run, back to the lobby spawn.
+ local function endHere(p)
+  combat:SetAttribute('TutorialRun',nil);run:SetAttribute('TutorialWon',nil);combat:SetAttribute('CinematicUntil',nil);apply(false)
+  Shop.resetRun()
+  p:SetAttribute('RunResult',nil)
+  local lobby=workspace:FindFirstChild('RogueliteLobby');local spawn=lobby and lobby:FindFirstChild('LobbySpawn')
+  local char=p.Character
+  p:SetAttribute('StudioArea','Lobby')
+  if char and spawn then char:PivotTo(CFrame.new(spawn.Position+Vector3.new(0,4,0))) end
+ end
+ local function start(p)
+  if not profileLoaded(p) or not needsRun(p) then return end
+  if not (p.Character and p.Character:FindFirstChildOfClass('Humanoid')) then p.CharacterAdded:Wait() end
+  local ok,why=startHere(p)
+  if not ok then warn('TutorialDirector: no tutorial:',why) end
  end
  Players.PlayerAdded:Connect(function(p) task.spawn(start,p) end)
  for _,p in Players:GetPlayers() do task.spawn(start,p) end
+ -- The admin panel's Tutorial buttons (AdminService checks the developer first):
+ --   Start: progress back to the start (reward unpaid) and the run from the top
+ --   Lobby: the run skipped: reward paid now, then the lobby steps (chests, Armory, offer, Play)
+ --   End:   tutorial done, back to normal play in the lobby
+ local control=game:GetService('ServerStorage'):FindFirstChild('TutorialControl') or Instance.new('BindableFunction')
+ control.Name='TutorialControl'
+ control.OnInvoke=function(what,p)
+  if typeof(p)~='Instance' or not p:IsA('Player') then return false,'No player' end
+  if what=='Start' then
+   if not Profiles.tutorialAdmin(p,'Run') then return false,'Profile not ready' end
+   return startHere(p)
+  elseif what=='Lobby' then
+   endHere(p)
+   if not Profiles.tutorialAdmin(p,'Chests') then return false,'Profile not ready' end
+   return true,'Tutorial lobby part: open your chests'
+  elseif what=='End' then
+   endHere(p);Profiles.tutorialAdmin(p,'Done')
+   return true,'Tutorial ended'
+  end
+  return false,'Unknown tutorial action'
+ end
+ control.Parent=game:GetService('ServerStorage')
 end

@@ -61,6 +61,7 @@ local rules={
  Sandbox=none,Waves=none,EndWave=none,Pause=flag,
  JumpWave=function(a,b) return int(a,1,20) and b==nil end,
  God=flag,Weapons=flag,
+ TutorialStart=none,TutorialLobby=none,TutorialEnd=none, -- Studio's combined server only (AdminService)
  GiveItem=function(a,b) local e=type(a)=='string' and Items.ById[a];return e and e.kind~='Weapon' and b==nil end,
  Shards=function(a,b) return (a=='Add' and int(b,-E.MAX_SHARDS,E.MAX_SHARDS)) or (a=='Set' and int(b,0,E.MAX_SHARDS)) end,
  Level=function(a,b) return (a=='Add' and int(b,1,100)) or (a=='Set' and int(b,1,XP.MAX_LEVEL)) end,

@@ -642,12 +642,15 @@ game:GetService('RunService').Heartbeat:Connect(function(dt)
    afterLeave()
   end
  end
- -- The won tutorial run ends: everyone in it goes to the tutorial results screen.
+ -- The won tutorial run ends: everyone in it goes to the tutorial results screen (unless the
+ -- admin panel ended or restarted the tutorial meanwhile: TutorialWon is cleared then).
  if tutorialEndAt and os.clock()>=tutorialEndAt then
   tutorialEndAt=nil
-  local list={};for p in Shop.members do table.insert(list,p) end
-  for _,p in list do finish(p,'Victory') end
-  afterLeave()
+  if tutorialRun() and runState:GetAttribute('TutorialWon') then
+   local list={};for p in Shop.members do table.insert(list,p) end
+   for _,p in list do finish(p,'Victory') end
+   afterLeave()
+  end
  end
  local due={};for p,at in returning do if now>=at then table.insert(due,p) end end
  if #due>0 then returnToLobby(due) end

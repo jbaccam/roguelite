@@ -10,5 +10,8 @@
  "ServerScriptService.ProfileService": "combat/ProfileService.luau",
  "ServerScriptService.RogueliteMeta": "combat/RogueliteMeta.server.luau",
  "ReplicatedStorage.RunResultsUI": "ui/RunResultsUI.luau",
- "ReplicatedStorage.LobbyUI": "ui/LobbyUI.luau"
+ "ReplicatedStorage.LobbyUI": "ui/LobbyUI.luau",
+ "ReplicatedStorage.RogueliteCombat.AdminConfig": "combat/AdminConfig.luau",
+ "ServerScriptService.AdminService": "combat/AdminService.server.luau",
+ "ReplicatedStorage.AdminPanelUI": "ui/AdminPanelUI.luau"
 }

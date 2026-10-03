@@ -31,6 +31,12 @@ RESULTS = "ui/RunResultsUI.luau"
 RESULTS_S = "ReplicatedStorage.RunResultsUI"
 LOBBYUI = "ui/LobbyUI.luau"
 LOBBYUI_S = "ReplicatedStorage.LobbyUI"
+ADMINCFG = "combat/AdminConfig.luau"
+ADMINCFG_S = "ReplicatedStorage.RogueliteCombat.AdminConfig"
+ADMIN = "combat/AdminService.server.luau"
+ADMIN_S = "ServerScriptService.AdminService"
+PANEL = "ui/AdminPanelUI.luau"
+PANEL_S = "ReplicatedStorage.AdminPanelUI"
 TUTOR = "combat/TutorialDirector.server.luau"
 MATCH = "lobby/MatchService.luau"
 MATCH_S = "ServerScriptService.MatchService"
@@ -316,12 +322,15 @@ HUNKS = [
      "  tutorial=tutorialRun() and outcome=='Victory' and Tutorial.Reward or nil})) -- the tutorial's results (RunResultsUI)"),
     (META, META_S,
      " local due={};for p,at in returning do if now>=at then table.insert(due,p) end end", "before",
-     " -- The won tutorial run ends: everyone in it goes to the tutorial results screen.\n"
+     " -- The won tutorial run ends: everyone in it goes to the tutorial results screen (unless the\n"
+     " -- admin panel ended or restarted the tutorial meanwhile: TutorialWon is cleared then).\n"
      " if tutorialEndAt and os.clock()>=tutorialEndAt then\n"
      "  tutorialEndAt=nil\n"
-     "  local list={};for p in Shop.members do table.insert(list,p) end\n"
-     "  for _,p in list do finish(p,'Victory') end\n"
-     "  afterLeave()\n"
+     "  if tutorialRun() and runState:GetAttribute('TutorialWon') then\n"
+     "   local list={};for p in Shop.members do table.insert(list,p) end\n"
+     "   for _,p in list do finish(p,'Victory') end\n"
+     "   afterLeave()\n"
+     "  end\n"
      " end"),
     (META, META_S,
      " elseif action=='ClaimFeat' and Profiles.claimFeat and type(a)=='string' and #a<=40 then ok,message=Profiles.claimFeat(p,a) -- plan M", "after",
@@ -358,6 +367,58 @@ HUNKS = [
      " -- GuideOpenWindow:Fire('Store','Bundles') opens one, Fire() closes the open one.\n"
      " local guideHook=Instance.new('BindableEvent');guideHook.Name='GuideOpenWindow';guideHook.Parent=screen\n"
      " guideHook.Event:Connect(function(name,arg) if name then open(name,arg) elseif win then win.Close() end end)"),
+    # --- Admin panel: Start / Lobby part / End tutorial (Studio's combined server) ----------------
+    (PROFILE, PROFILE_S,
+     "-- Pet eggs (EggConfig, the egg merchant): bought into the inventory, then hatched. Like chests,", "before",
+     "-- Studio only (the admin panel's Tutorial buttons, through TutorialDirector), and only on an\n"
+     "-- in-memory profile: set tutorial progress directly. 'Run' starts over with the reward unpaid,\n"
+     "-- 'Chests' pays the reward now (the lobby part), anything else just sets the step ('Done').\n"
+     "function P.tutorialAdmin(player,step)\n"
+     " local d=P.profiles[player];local T=tutorialConfig()\n"
+     " if store or not RunService:IsStudio() or not d or not T or not T.stepIndex(step) then return false end\n"
+     " if step=='Run' or step=='Chests' then d.tutorial={step='Run'} else d.tutorial.step=step end\n"
+     " if step=='Chests' then return P.tutorialReward(player) end\n"
+     " P.publish(player)\n"
+     " return true\n"
+     "end"),
+    (ADMINCFG, ADMINCFG_S,
+     " God=flag,Weapons=flag,", "after",
+     " TutorialStart=none,TutorialLobby=none,TutorialEnd=none, -- Studio's combined server only (AdminService)"),
+    (ADMIN, ADMIN_S,
+     "function actions.Level(p,mode,n) return Shop.adminLevel(p,mode,n) end", "after",
+     "-- Tutorial (plans/2026-10-03-tutorial-design.md): TutorialDirector's ServerStorage.TutorialControl\n"
+     "-- does the work. Start: the run from the top. Lobby: the reward now, then the lobby steps. End:\n"
+     "-- back to normal play. Each starts a fresh run, which also clears the test-run mark.\n"
+     "local function tutorial(p,what)\n"
+     " local control=SS:FindFirstChild('TutorialControl');if not control then return false,'Tutorial not installed' end\n"
+     " return control:Invoke(what,p)\n"
+     "end\n"
+     "function actions.TutorialStart(p) return tutorial(p,'Start') end\n"
+     "function actions.TutorialLobby(p) return tutorial(p,'Lobby') end\n"
+     "function actions.TutorialEnd(p) return tutorial(p,'End') end"),
+    (ADMIN, ADMIN_S,
+     " if action=='Travel' and not (RunService:IsStudio() and Role.get()=='Combined') then return 'Needs lobby/match teleports (plan C)' end", "after",
+     " -- The tutorial buttons too: Studio profiles live in memory, so its reward can be paid again there.\n"
+     " if string.sub(action,1,8)=='Tutorial' and not (RunService:IsStudio() and Role.get()=='Combined') then return 'Studio only: the live tutorial starts on first join' end"),
+    (PANEL, PANEL_S,
+     "  return 272", "replace",
+     "  -- Tutorial (plans/2026-10-03-tutorial-design.md), Studio's combined server only.\n"
+     "  local y=272\n"
+     "  heading(c,'TutorialTitle','Tutorial',y);y+=36\n"
+     "  local here=RunService:IsStudio() and RS:GetAttribute('ServerRole')=='Combined'\n"
+     "  local on=combat:GetAttribute('TutorialRun')==true\n"
+     "  local step=player:GetAttribute('ProfileTutorial') or 'Done'\n"
+     "  local b1=button(c,'TutorialStart','Start tutorial',0,y,220,function() send('TutorialStart') end,true)\n"
+     "  local b2=button(c,'TutorialLobby','Lobby part',230,y,200,function() send('TutorialLobby') end)\n"
+     "  local b3=button(c,'TutorialEnd','End tutorial',440,y,200,function() send('TutorialEnd') end,on or step~='Done')\n"
+     "  for _,b in {b1,b2,b3} do b.Interactable=here end\n"
+     "  local now=on and 'the tutorial run' or step=='Done' and 'off' or ('lobby step: '..step)\n"
+     "  note(c,'TutorialNote',here and ('Start: the 3-wave run from the top. Lobby part: skip to the reward and the chest/Armory steps. Now: '..now) or 'Studio only: the live tutorial starts on first join',y+48,here and C.muted or C.gold)\n"
+     "  return y+84"),
+    (PANEL, PANEL_S,
+     " player:GetAttributeChangedSignal('StudioArea'):Connect(changed)", "after",
+     " combat:GetAttributeChangedSignal('TutorialRun'):Connect(changed)\n"
+     " player:GetAttributeChangedSignal('ProfileTutorial'):Connect(changed)"),
     (SHOP, SHOP_S,
      " Shards.clear(true)", "replace",
      " -- Leftover crystals fly to the players and count as pickups (XP and shards) while it's still\n"

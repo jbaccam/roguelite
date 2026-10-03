@@ -394,6 +394,17 @@ function P.tutorialStep(player,step)
  d.tutorial.step=step;P.publish(player)
  return true,''
 end
+-- Studio only (the admin panel's Tutorial buttons, through TutorialDirector), and only on an
+-- in-memory profile: set tutorial progress directly. 'Run' starts over with the reward unpaid,
+-- 'Chests' pays the reward now (the lobby part), anything else just sets the step ('Done').
+function P.tutorialAdmin(player,step)
+ local d=P.profiles[player];local T=tutorialConfig()
+ if store or not RunService:IsStudio() or not d or not T or not T.stepIndex(step) then return false end
+ if step=='Run' or step=='Chests' then d.tutorial={step='Run'} else d.tutorial.step=step end
+ if step=='Chests' then return P.tutorialReward(player) end
+ P.publish(player)
+ return true
+end
 -- Pet eggs (EggConfig, the egg merchant): bought into the inventory, then hatched. Like chests,
 -- where paid random items are restricted only emeralds earned in play can buy them.
 function P.buyEgg(player,count,restricted)

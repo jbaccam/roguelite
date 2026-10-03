@@ -147,7 +147,19 @@ function M.new(player)
   local paused=run:GetAttribute('AdminPaused')==true
   local e=button(c,'EndWave','End this wave',0,216,220,function() send('EndWave') end);e.Interactable=fighting
   local p=button(c,'Pause',paused and 'Resume' or 'Pause',230,216,160,function() send('Pause',not paused) end,paused);p.Interactable=fighting
-  return 272
+  -- Tutorial (plans/2026-10-03-tutorial-design.md), Studio's combined server only.
+  local y=272
+  heading(c,'TutorialTitle','Tutorial',y);y+=36
+  local here=RunService:IsStudio() and RS:GetAttribute('ServerRole')=='Combined'
+  local on=combat:GetAttribute('TutorialRun')==true
+  local step=player:GetAttribute('ProfileTutorial') or 'Done'
+  local b1=button(c,'TutorialStart','Start tutorial',0,y,220,function() send('TutorialStart') end,true)
+  local b2=button(c,'TutorialLobby','Lobby part',230,y,200,function() send('TutorialLobby') end)
+  local b3=button(c,'TutorialEnd','End tutorial',440,y,200,function() send('TutorialEnd') end,on or step~='Done')
+  for _,b in {b1,b2,b3} do b.Interactable=here end
+  local now=on and 'the tutorial run' or step=='Done' and 'off' or ('lobby step: '..step)
+  note(c,'TutorialNote',here and ('Start: the 3-wave run from the top. Lobby part: skip to the reward and the chest/Armory steps. Now: '..now) or 'Studio only: the live tutorial starts on first join',y+48,here and C.muted or C.gold)
+  return y+84
  end
  function tabs.Player(c)
   heading(c,'PlayerTitle','Player',0)
@@ -214,6 +226,8 @@ function M.new(player)
  for _,a in {'Phase','Wave','AdminPaused'} do run:GetAttributeChangedSignal(a):Connect(changed) end
  for _,a in {'AdminFreeze','TestZombieCountOverride','RunMap'} do combat:GetAttributeChangedSignal(a):Connect(changed) end
  player:GetAttributeChangedSignal('StudioArea'):Connect(changed)
+ combat:GetAttributeChangedSignal('TutorialRun'):Connect(changed)
+ player:GetAttributeChangedSignal('ProfileTutorial'):Connect(changed)
  return self
 end
 return M
