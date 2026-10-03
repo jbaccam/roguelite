@@ -1,9 +1,0 @@
-{
-  "name": "CopyTheScene",
-  "tree": {
-    "$className": "DataModel",
-    "ReplicatedStorage": {"CopyTheScene": {"$path": "src/shared"}},
-    "ServerScriptService": {"CopyTheSceneServer": {"$path": "src/server"}},
-    "StarterPlayer": {"StarterPlayerScripts": {"CopyTheSceneClient": {"$path": "src/client/Main.client.luau"}}}
-  }
-}
