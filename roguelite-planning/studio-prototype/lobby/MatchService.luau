@@ -36,15 +36,28 @@ end
 
 -- Failed trip from the lobby (set by RogueliteLobbyPreview to tell the player).
 M.onTeleportFailed=nil
+-- The loading screen (ReplicatedFirst.LoadingScreen) shows where a player is going: TravelTo brings
+-- it up before the teleport, and the `loading` teleport data picks the art on arrival. Cosmetic only;
+-- the match still reads its own entry.
+local function setTravel(players,travel)
+ for _,p in players do
+  if p.Parent==Players then p:SetAttribute('TravelTo',travel and travel.map);p:SetAttribute('TravelDifficulty',travel and travel.difficulty) end
+ end
+end
 local function failed(p,message)
  Profiles.reclaim(p)
+ setTravel({p},nil)
  -- A match player who gave up was held dead for the trip; let them respawn and play on.
  p:SetAttribute('HoldRespawn',false)
  if M.onTeleportFailed then M.onTeleportFailed(p,message) end
 end
-local function go(players,options)
+local function go(players,options,travel)
+ options=options or Instance.new('TeleportOptions')
+ options:SetTeleportData({loading=travel})
+ setTravel(players,travel)
+ task.wait(.3) -- lets TravelTo reach the clients first, so their screen is set as the teleport GUI
  local ok,err=retry(2,Teleport.TeleportAsync,Teleport,game.PlaceId,players,options)
- if not ok then warn('MatchService: teleport failed',err);return false end
+ if not ok then warn('MatchService: teleport failed',err);setTravel(players,nil);return false end
  for _,p in players do trips[p]={options=options,tries=0} end
  return true
 end
@@ -71,7 +84,7 @@ function M.launch(players,map,difficulty,loadouts)
   table.insert(handed,p)
  end
  local options=Instance.new('TeleportOptions');options.ReservedServerAccessCode=code
- if not go(handed,options) then
+ if not go(handed,options,{map=map,difficulty=difficulty}) then
   for _,p in handed do Profiles.reclaim(p) end
   return false,"Couldn't start the run, try again"
  end
@@ -87,7 +100,7 @@ function M.toLobby(players)
   if p.Parent==Players and (not Profiles.get(p) or Profiles.handOff(p)) then table.insert(going,p) end
  end
  if #going==0 then return false end
- if not go(going,nil) then
+ if not go(going,nil,{map='Lobby'}) then
   for _,p in going do Profiles.reclaim(p) end
   return false
  end
@@ -133,7 +146,7 @@ function M.rejoin(p)
  local rec=M.rejoinOffer(p);if not rec then return false,'That run has ended' end
  if not Profiles.handOff(p) then return false,"Couldn't save your progress, try again" end
  local options=Instance.new('TeleportOptions');options.ReservedServerAccessCode=rec.code
- if not go({p},options) then Profiles.reclaim(p);return false,"Couldn't reach the run, try again" end
+ if not go({p},options,{map=rec.map,difficulty=rec.difficulty}) then Profiles.reclaim(p);return false,"Couldn't reach the run, try again" end
  return true
 end
 function M.dismissRejoin(p) if not studio then clearRejoin(p.UserId) end end

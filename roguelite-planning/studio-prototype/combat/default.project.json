@@ -398,6 +398,16 @@
         "$path": "../ui/AssetPreloader.luau"
       }
     },
+    "ReplicatedFirst": {
+      "$className": "ReplicatedFirst",
+      "$ignoreUnknownInstances": true,
+      "LoadingScreenUI": {
+        "$path": "../ui/LoadingScreenUI.luau"
+      },
+      "LoadingScreen": {
+        "$path": "../ui/LoadingScreen.client.luau"
+      }
+    },
     "ServerStorage": {
       "$ignoreUnknownInstances": true,
       "RogueliteNPCs": {
