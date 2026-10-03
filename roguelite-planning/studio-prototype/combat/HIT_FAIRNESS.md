@@ -86,3 +86,14 @@ The client already lines each clip's strike frame up with the server's impact ti
 - **Arcs:** every swing is ~75 degrees each side of the facing (round 1).
 
 **Checked:** `EnemyTests` pass 253,034 checks (54 clips); the changed scripts compile. Synced to Studio at 552806f (`mob-reach-sync-map.json`): 3 scripts, each guarded on its previous commit. Afterwards all 3 matched with Sandboxed unchanged. Not yet play-tested.
+
+## Round 3: running through zombies took no damage (2026-10-03)
+
+User, after round 2: "now its a little too hard to get hit im literally running straight thru zombies and im not taking damage". Hits were judged on the player's real position, but two other things still used the server's copy, 0.22 s (about 5 studs) behind:
+
+- **The swing start, its turn and shooters' aim.** A zombie only started its swing once the late copy of a charging player came into range, by which time the real player had already run through it. These now use `CharacterService.seen` too (`EnemyAttacks` `seenOf`).
+- **Body bumps** were tested 10 times a second, on two points. A sprint covers ~2.4 studs between checks, so running through a 1.4-stud zombie bump usually fell between two of them. Bumps now test the player's path since the last check (`CharacterService.nearestOnPath`). A path counts only if it's one check long (under 0.25 s and 10 studs).
+
+The reach table, arcs and bump sizes are unchanged.
+
+**Checked:** `ContactTests` pass 713 checks. The reference loop sweeps the same way and agrees on all 104 contacts (97 before sweeping), and a new check runs a sprint through a zombie between two checks. The changed scripts compile. Not yet play-tested.

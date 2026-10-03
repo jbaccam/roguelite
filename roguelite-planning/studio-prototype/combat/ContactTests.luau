@@ -156,11 +156,21 @@ return function(source)
 		oldReads += 1
 		return npc.attributes[name]
 	end
+	-- Each player's position as the last tick ended: bumps test the path from there (2026-10-03).
+	local pathEnd = {}
+	local function nearest(a, b, p)
+		local ab = Vector3.new(b.X - a.X, 0, b.Z - a.Z)
+		local len = ab:Dot(ab)
+		if len < 1e-6 then return b end
+		return a + (b - a) * math.clamp(Vector3.new(p.X - a.X, 0, p.Z - a.Z):Dot(ab) / len, 0, 1)
+	end
 	local function old()
 		local out = {}
 		if not combatAttributes.ZombiesEnabled or combatAttributes.RunPaused == true then return out end
 		for player in Service.states do
 			local s, root = oldTimers[player], player.root
+			local from = pathEnd[player]
+			if not from or (root.Position - from).Magnitude > 10 then from = root.Position end
 			oldReads += 1 -- GetTagged
 			for _, npc in tagged do
 				oldReads += 2
@@ -174,7 +184,7 @@ return function(source)
 					contactRange = attribute(npc, "BumpRange") or 0
 				end
 				local ready = if bump then now - s.lastBump >= 0.6 else now - s.lastContact >= 0.8
-				local delta = nr and root.Position - nr.Position
+				local delta = nr and nearest(from, root.Position, nr.Position) - nr.Position
 				if ready and contactDamage > 0 and not attribute(npc, "PracticeTarget") and nr and nh and nh.Health > 0 and math.abs(delta.Y) < 4.5 and Vector2.new(delta.X, delta.Z).Magnitude < contactRange then
 					local index = table.find(players, player)
 					if not (blocked[npc] and blocked[npc][index]) then
@@ -226,6 +236,9 @@ return function(source)
 		local expected = old()
 		table.clear(contacts)
 		heartbeat(0.1)
+		for _, p in players do
+			pathEnd[p] = p.root.Position
+		end
 		ticks += 1
 		check(#contacts == #expected, "tick " .. tick .. ": " .. #contacts .. " contacts, expected " .. #expected)
 		for i, c in expected do
@@ -251,5 +264,10 @@ return function(source)
 	local walker = { Position = Vector3.new(10, 0, 0), AssemblyLinearVelocity = Vector3.new(12, 3, 0) }
 	local seen = Service.seenEnemy(p1, walker)
 	check(math.abs(seen.X - (10 - 12 * 0.2)) < 1e-6 and seen.Y == 0, "a zombie walking at 12 studs/s shows 2.4 studs behind (no ping here)")
+	-- A sprint (2.4 studs a check) straight through a zombie at 0.3 studs off its middle: both
+	-- checks are 1.2 studs away, past a 1.4 bump only along the path between them.
+	local through = Service.nearestOnPath(Vector3.new(0, 0, -1.2), Vector3.new(0, 0, 1.2), Vector3.new(0.3, 0, 0))
+	check(through.Magnitude < 1e-6, "running through a zombie between two checks passes its middle")
+	check(Service.nearestOnPath(Vector3.new(1, 0, 1), Vector3.new(1, 0, 1), Vector3.zero) == Vector3.new(1, 0, 1), "standing still is the one point")
 	return { passed = true, checks = checks, ticks = ticks, contacts = total, oldReads = oldReads, newReads = reads }
 end

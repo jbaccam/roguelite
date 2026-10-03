@@ -372,6 +372,12 @@ local function contactList()
  end
  return {npcs=npcs,records=records}
 end
+-- The point of the path a->b nearest p, measured on the ground (bumps sweep the path, below).
+function Service.nearestOnPath(a,b,p)
+ local ab=Vector3.new(b.X-a.X,0,b.Z-a.Z);local len=ab:Dot(ab)
+ if len<1e-6 then return b end
+ return a+(b-a)*math.clamp(Vector3.new(p.X-a.X,0,p.Z-a.Z):Dot(ab)/len,0,1)
+end
 local elapsed=0
 RunService.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<.1 then return end;local step=elapsed;elapsed=0
@@ -392,18 +398,27 @@ RunService.Heartbeat:Connect(function(dt)
    end
    if not Service.frozen(player) then Service.heal(player,s.stats.Regeneration*step) end
    local second=math.floor(now);if s.leechSecond~=second then s.leechSecond=second;s.leech=0 end
-   -- Body overlap only (contactRecord above), at most once per BUMP_GRACE across all mobs.
+   -- Body overlap only (contactRecord above), at most once per BUMP_GRACE across all mobs. It
+   -- tests the player's path since the last check, as their screen has it (Service.seen), not
+   -- just where they are now: a sprint covers ~2.4 studs between checks, and running straight
+   -- through a zombie fell between two of them (user, 2026-10-03). A path is one check long
+   -- (under 0.25 s and 10 studs); anything else starts over from here.
+   local position=Service.seen(player,root)
+   local from=s.pathFrom
+   if not from or now-(s.pathAt or 0)>.25 or (position-from).Magnitude>10 then from=position end
+   s.pathFrom,s.pathAt=position,now
    local bumpReady,contactReady=now-s.lastBump>=BUMP_GRACE,now-s.lastContact>=.8
    if (bumpReady or contactReady) and combat:GetAttribute('ZombiesEnabled') and combat:GetAttribute('RunPaused')~=true then
     contacts=contacts or contactList()
-    local position=Service.seen(player,root) -- body overlap as their screen shows it
     for i,r in contacts.records do
      local npc=contacts.npcs[i]
      local ready=if r.bump then bumpReady else contactReady
-     local delta=ready and position-(r.root.Parent and Service.seenEnemy(player,r.root) or r.position)
+     local enemy=ready and (r.root.Parent and Service.seenEnemy(player,r.root) or r.position)
+     local touch=ready and Service.nearestOnPath(from,position,enemy)
+     local delta=ready and touch-enemy
      if ready and math.abs(delta.Y)<4.5 and Vector2.new(delta.X,delta.Z).Magnitude<r.range and r.root.Parent==npc and r.hum.Health>0 then
       local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances={npc,player.Character,workspace:FindFirstChild('RogueliteEnemies')}
-      if not workspace:Raycast(r.position,position-r.position,params) then
+      if not workspace:Raycast(r.position,touch-r.position,params) then
        if r.bump then s.lastBump=now else s.lastContact=now end
        Service.contact(player,r.damage,nil,npc);break
       end

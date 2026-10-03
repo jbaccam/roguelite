@@ -142,9 +142,16 @@ local function release(npc, h)
 		h.AutoRotate = true
 	end
 end
+-- Where a target body really is: its player's own report (CharacterService.seen), not the
+-- server's copy 0.22 s behind. Swings start, turn and aim on this (2026-10-03): on the old copy a
+-- zombie only began its swing once a player charging at it had already run through it.
+local function seenOf(target)
+	local player = Players:GetPlayerFromCharacter(target.Parent)
+	return player and Characters.seen(player, target) or target.Position
+end
 local function track(root, target, s, dt)
 	if target and target.Parent then
-		local delta = target.Position - root.Position
+		local delta = seenOf(target) - root.Position
 		local flat = Vector3.new(delta.X, 0, delta.Z)
 		if flat.Magnitude > 0.05 then
 			s.direction = turnToward(s.direction, flat.Unit, TURN_RATE * math.min(dt or 1 / 60, 0.1))
@@ -240,7 +247,7 @@ local function projectile(npc, root, config, s, target)
 	end
 	-- Released at where the target will be (A.intercept); the shot still travels, so it can be dodged.
 	if target and target.Parent then
-		s.aim = A.intercept(start, target.Position, target.AssemblyLinearVelocity, config.projectileSpeed)
+		s.aim = A.intercept(start, seenOf(target), target.AssemblyLinearVelocity, config.projectileSpeed)
 	end
 	local direction = s.aim - start
 	if direction.Magnitude < 0.01 then
@@ -372,7 +379,7 @@ function A.update(npc, target, dt)
 			local full = config.lungeSpeed * config.lungeDuration
 			local ahead = target
 					and target.Parent
-					and Vector3.new(target.Position.X - root.Position.X, 0, target.Position.Z - root.Position.Z):Dot(
+					and Vector3.new(seenOf(target).X - root.Position.X, 0, seenOf(target).Z - root.Position.Z):Dot(
 						s.direction
 					)
 				or full
@@ -424,7 +431,8 @@ function A.update(npc, target, dt)
 	if not valid then
 		return false
 	end
-	local delta = target.Position - root.Position
+	local at = seenOf(target)
+	local delta = at - root.Position
 	local flat = Vector3.new(delta.X, 0, delta.Z)
 	local trigger = config.attackRange
 		+ ((config.behavior == "Ranged" or config.behavior == "Lunge") and 0 or TRIGGER_BONUS)
@@ -436,7 +444,7 @@ function A.update(npc, target, dt)
 		return false
 	end
 	s.direction = flat.Unit
-	s.aim = target.Position
+	s.aim = at
 	s.start = now
 	s.hit = false
 	s.hitPlayers = {}
