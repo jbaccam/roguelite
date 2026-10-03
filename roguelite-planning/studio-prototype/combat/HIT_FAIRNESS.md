@@ -36,4 +36,4 @@ Swings, enemy shots, tank slams, body bumps and both kinds of boss all had this 
 - the 699 that compare the contact loop with the old one;
 - 5 new ones: a fresh report near the body is used, an old one or one 40 studs off isn't, a non-position report changes nothing, and a zombie at 12 studs/s shows 2.4 studs behind.
 
-All five changed scripts compile. Not yet play-tested.
+All the changed scripts compile. Synced to Studio on 2026-10-03 with `tools/LaunchSync.luau` at 8674bd9 (`hit-fairness-sync-map.json`): 7 scripts, each guarded on Studio's exact Source, which matched each file's previous commit. Afterwards all 7 matched with Sandboxed unchanged. Not yet play-tested.

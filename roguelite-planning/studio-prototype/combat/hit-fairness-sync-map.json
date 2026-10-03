@@ -1,0 +1,9 @@
+{
+ "ServerScriptService.CharacterService": "combat/CharacterService.luau",
+ "ServerScriptService.EnemyAttacks": "combat/EnemyAttacks.luau",
+ "ServerScriptService.ZombieAttacks": "combat/ZombieAttacks.luau",
+ "ServerScriptService.BossService": "combat/bosses/BossService.luau",
+ "ServerScriptService.MapBossService": "combat/bosses/MapBossService.luau",
+ "StarterPlayer.StarterPlayerScripts.RogueliteCombat": "combat/RogueliteCombat.client.luau",
+ "StarterPlayer.StarterPlayerScripts.ShardVisuals": "combat/ShardVisuals.client.luau"
+}
