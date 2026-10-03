@@ -96,4 +96,4 @@ User, after round 2: "now its a little too hard to get hit im literally running 
 
 The reach table, arcs and bump sizes are unchanged.
 
-**Checked:** `ContactTests` pass 713 checks. The reference loop sweeps the same way and agrees on all 104 contacts (97 before sweeping), and a new check runs a sprint through a zombie between two checks. The changed scripts compile. Not yet play-tested.
+**Checked:** `ContactTests` pass 713 checks. The reference loop sweeps the same way and agrees on all 104 contacts (97 before sweeping), and a new check runs a sprint through a zombie between two checks. The changed scripts compile. Synced to Studio at f738365 (CharacterService and EnemyAttacks, each guarded on its previous commit, all or nothing). Afterwards both matched with Sandboxed unchanged. Not yet play-tested.
