@@ -65,6 +65,10 @@ S.Classes={
  Handyman={description='Handy with anything: no penalty with almost any weapon, bigger blasts and slow healing. A little less health.',buffs={Damage=5,UtilityPower=15,AreaSize=20,Regeneration=1,MaxHP=-10},build={'24','25','28','29'},two={CooldownReduction=10},four={UtilityPower=20}},
  Mage={description='Elemental damage, burn and chains. Fragile, with weak physical attacks.',buffs={ElementalDamage=25,Duration=30,BurnChance=15,ChainCount=1,MaxHP=-20,Armor=-2,MeleeDamage=-10},build={'30','31','34','35'},two={ElementalDamage=15},four={BurnSpread=1}},
 }
+-- Each class's starting weapon, also its icon on class cards and tags. RunSetupRules.Signature is
+-- this table; ProfileService keeps a copy (it doesn't load this module). Juggler: Rubber Duck since
+-- 2026-10-03 (was Boxing Gloves).
+S.Signature={Brawler='01',Gunner='00',Thrower='12',Juggler='17',Handyman='24',Mage='30'}
 -- Class weapon fit (2026-10-03, Brotato-style but gentler): each equipped weapon's damage changes by
 -- how close its home class is to yours. Own class +15%. Each pair of classes has one number, the same
 -- both ways: 0 = close enough, -5 a bit off, -10 different, -15 opposite (fists vs guns). Handyman is
@@ -97,14 +101,15 @@ function S.classFitText(class)
  return table.concat(out,' · ')
 end
 -- A class's always-on stats for the UI: good and bad lists of {value=, unit=, label=} in stat order,
--- plus Gunner's ranged attack speed. unit is '%', ' HP/s' or ''. Example Brawler good[1]: 25, '', 'Max health'.
+-- plus Gunner's ranged attack speed. unit is '%' or ''. Example Brawler good[1]: 25, '', 'Max health'.
 function S.statUnit(d) return d.unit=='%' and '%' or d.unit==' HP/s' and ' HP/s' or '' end
 function S.classLines(class)
  local c=S.Classes[class];local good,bad={},{}
  if not c then return good,bad end
  for _,d in S.List do
   local v=c.buffs[d.id]
-  if v then table.insert(v>0 and good or bad,{value=v,unit=S.statUnit(d),label=d.label}) end
+  -- Regeneration reads '+1  HP/s Regeneration': the unit joins the label so the number stays short.
+  if v then table.insert(v>0 and good or bad,{value=v,unit=d.unit=='%' and '%' or '',label=(d.unit==' HP/s' and 'HP/s ' or '')..d.label}) end
  end
  if c.rangedAttackSpeed then table.insert(good,{value=c.rangedAttackSpeed,unit='%',label='Ranged attack speed'}) end
  return good,bad

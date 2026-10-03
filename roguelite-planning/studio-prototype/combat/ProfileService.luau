@@ -45,7 +45,7 @@ local store=useStore and DataStores:GetDataStore(STORE_NAME)
 -- This server's lock id. Studio has no JobId.
 local JOB=game.JobId~='' and game.JobId or Http:GenerateGUID(false)
 local function key(player) return 'u_'..player.UserId end
-local SIGNATURE={Brawler='01',Gunner='00',Thrower='12',Juggler='17',Handyman='24',Mage='30'} -- as RunSetupRules.Signature
+local SIGNATURE={Brawler='01',Gunner='00',Thrower='12',Juggler='17',Handyman='24',Mage='30'} -- a copy of CharacterStats.Signature
 local MAX_RECEIPTS=200
 
 local function fresh()

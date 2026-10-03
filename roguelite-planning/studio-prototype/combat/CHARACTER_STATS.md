@@ -54,7 +54,15 @@ Rebalanced 2026-10-03 so no class is plainly worse: each has 3–4 buffs and 1�
 | Handyman | 0 | 0 | 0 | 0 | **+15** | −5 |
 | Mage | −10 | −5 | −5 | −5 | −5 | **+15** |
 
-Why: Handyman is handy with anything (0 with everyone but Mage, and everyone can use its tools). Gunner, Thrower and Juggler all fire or toss things. Fists vs guns is the one opposite pair. Mage weapons are the strongest and most specialised, so Mage pays the most outside its own class. Example: a Brawler's Glock takes −15% and the Brawler's −15% ranged, about −28% in total (Brotato's Brawler is −50 ranged, so this is gentler). Shop cards show "your class +15%" in green, "similar class 0%" in cream, or "off-class −X%" in red.
+Why: Handyman is handy with anything (0 with everyone but Mage, and everyone can use its tools). Gunner, Thrower and Juggler all fire or toss things. Fists vs guns is the one opposite pair. Mage weapons are the strongest and most specialised, so Mage pays the most outside its own class. Example: a Brawler's Glock takes −15% and the Brawler's −15% ranged, about −28% in total (Brotato's Brawler is −50 ranged, so this is gentler). Where players see it (2026-10-03, shared pieces in `UITheme`: `statColumns`, `homeRows`, `fitTiles`, `fitBadge`, `tag`, `section`):
+
+- **Armory, class details:** Always on (buffs | drawbacks), the 2 / 4 home weapon bonuses, and the class's row as six tiles (each class's starter icon and number, own class framed in lime).
+- **Run setup, choosing a class:** the details panel shows buffs | drawbacks and the home weapon bonuses; every class card gets a badge with the number for the picked class. Cards are 140 tall (were 150) so the 470 × 380 panel fits every class without scrolling.
+- **Item card (chest odds):** class and type tags under the image, and a "Damage by class" strip (the weapon's column, the loadout's class tagged YOU).
+- **Run shop:** the class tag under the name, and a fit bar ("−15%  ·  OFF-CLASS"). Narrow phone cards step down: class only, then an icon tag with the class in the bar.
+- Colours everywhere: lime = your class, cream = 0%, reds for −5 / −10 / −15.
+
+Layout checks (Studio Edit, UILayoutAudit, no Play): the item card at 7 screen sizes; the Armory and run-setup panels for all six classes at 1080p, 768p and phone scale; the shop tag and bar at card widths 156–300 and scales 1 / .7 / .55. The full Armory, run-setup and shop screens were not opened in Play.
 
 These prototype choices supersede the older proposal that classes need no drawbacks. Distinct orbital/return animations and deployables remain separate weapon-kit work; this change applies class statistics to the existing attack styles.
 

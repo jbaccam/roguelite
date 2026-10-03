@@ -221,6 +221,181 @@ function T.chip(parent,name,text,x,y,color,textColor)
  local l=T.label(c,'Text',text,0,0,0,0,14,textColor);l.Size=UDim2.fromScale(1,1);l.TextStrokeTransparency=.6
  return c
 end
+-- Rounded tag with an optional icon on the left, e.g. a weapon's class and type on cards:
+-- [pan icon] BRAWLER   [MELEE]. o: icon, color (background), textColor, h (28), size (15), maxW
+-- (the text shrinks to fit).
+-- Returns the tag and its width, so callers can line several up.
+function T.tag(parent,name,text,x,y,o)
+ o=o or {}
+ local h=o.h or 28;local size=o.size or 15;local iconW=o.icon and h-6 or 0
+ -- Text measured at design size draws a little wider at small canvas scales: 12% slack.
+ local tw=game:GetService('TextService'):GetTextSize(text,size,T.Font,Vector2.new(1000,100)).X*1.12
+ local w=math.ceil(tw)+(o.icon and iconW+14 or 20)
+ if o.maxW and w>o.maxW then tw=tw-(w-o.maxW);w=o.maxW end
+ local c=make('Frame',parent,{Name=name,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(w,h),BackgroundColor3=o.color or Color3.fromRGB(42,50,54),BorderSizePixel=0})
+ make('UICorner',c,{CornerRadius=UDim.new(0,7)})
+ make('UIStroke',c,{Color=Color3.fromRGB(8,10,11),Thickness=2})
+ if o.icon then T.icon(c,'Icon',4,3,iconW,o.icon) end
+ local l=T.label(c,'Text',text,o.icon and iconW+7 or 7,0,math.ceil(tw)+6,h,size,o.textColor);l.TextStrokeTransparency=.5
+ l.FitText.MinTextSize=9 -- may shrink to the 9 px floor in scaled-down screens (run shop on phones)
+ if text=='' then l.Visible=false;w=iconW+8;c.Size=UDim2.fromOffset(w,h) end
+ return c,w
+end
+
+-- Class weapon fit (CharacterStats.ClassFit): one colour per number, the same on every screen.
+-- Your class +15 lime; 0 cream (no change); -5 pale red; -10 red; -15 deep red.
+function T.fitColor(p)
+ if p>0 then return T.Color.lime elseif p==0 then return T.Color.cream
+ elseif p>=-5 then return Color3.fromRGB(255,176,168) elseif p>=-10 then return T.Color.negative end
+ return Color3.fromRGB(255,74,84)
+end
+function T.fitText(p) return (p>0 and '+' or '')..p..'%' end
+-- Section heading: cream caps with a fading rule to the right, plus an optional muted note.
+-- Returns the height used.
+function T.section(parent,name,text,x,y,w,size,note)
+ size=size or 19
+ local TS=game:GetService('TextService')
+ local tw=math.ceil(TS:GetTextSize(text,size,T.Font,Vector2.new(1000,100)).X*1.12)
+ local l=T.label(parent,name,text,x,y,tw+8,size+6,size,T.Color.cream);l.TextXAlignment=Enum.TextXAlignment.Left;l.TextStrokeTransparency=.5
+ l.FitText.MinTextSize=9 -- at phone scale (.5) a heading must shrink below 60% to stay in its box
+ local after=x+tw+12
+ if note then
+  local nw=math.ceil(TS:GetTextSize(note,size-5,T.Body,Vector2.new(1000,100)).X*1.12)
+  T.text(parent,name..'Note',note,after,y+2,math.min(nw+8,x+w-after),size+2,size-5,T.Color.muted)
+  after+=nw+14
+ end
+ if after<x+w-10 then
+  local rule=make('Frame',parent,{Name=name..'Rule',Position=UDim2.fromOffset(after,y+math.floor((size+6)/2)),Size=UDim2.fromOffset(x+w-after,2),BackgroundColor3=T.Color.cream,BorderSizePixel=0})
+  make('UIGradient',rule,{Transparency=NumberSequence.new(.5,1)})
+ end
+ return size+6
+end
+-- A class's always-on stats in an inset: BUFFS (lime) and DRAWBACKS (red) side by side, or one
+-- above the other with o.stack (narrow phone columns). good/bad: CharacterStats.classLines.
+-- o.size: row text size (18). Returns the inset and its height.
+function T.statColumns(parent,name,x,y,w,good,bad,o)
+ o=o or {}
+ local size=o.size or 18;local rowH=math.floor(size*1.4);local headH=math.floor(size*.75)+8;local pad=8
+ local valW=math.floor(size*3.3)
+ local box=T.panel(parent,name,x,y,w,0,'inset')
+ local function column(key,cx,cy,cw,title,list,color)
+  local head=T.label(box,key..'Head',title,cx,cy,cw,headH,math.floor(size*.75),color)
+  head.TextXAlignment=Enum.TextXAlignment.Left;head.TextStrokeTransparency=.5
+  if #list==0 then list={{value=nil,label='None'}} end
+  for i,l in list do
+   local ry=cy+headH+(i-1)*rowH
+   if l.value then
+    local v=T.label(box,key..'Value'..i,(l.value>0 and '+' or '')..l.value..l.unit,cx,ry,valW,rowH,size,color)
+    v.TextXAlignment=Enum.TextXAlignment.Right;v.TextStrokeTransparency=.4
+   end
+   local t=T.text(box,key..'Label'..i,l.label,cx+(l.value and valW+8 or 0),ry,cw-(l.value and valW+8 or 0),rowH,size-1,l.value and T.Color.white or T.Color.dim)
+   t.TextYAlignment=Enum.TextYAlignment.Center
+  end
+  return headH+#list*rowH
+ end
+ local h
+ if o.stack then
+  local a=column('Buffs',14,pad,w-24,'BUFFS',good,T.Color.lime)
+  make('Frame',box,{Name='Divider',Position=UDim2.fromOffset(10,pad+a+5),Size=UDim2.fromOffset(w-20,2),BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=.45,BorderSizePixel=0})
+  local b=column('Drawbacks',14,pad+a+12,w-24,'DRAWBACKS',bad,T.Color.negative)
+  h=pad+a+12+b+pad
+ else
+  -- Each column gets room in proportion to what it holds: value + its longest label.
+  local TS=game:GetService('TextService')
+  local function need(list)
+   local m=0
+   for _,l in list do m=math.max(m,TS:GetTextSize(l.label,size-1,T.Body,Vector2.new(1000,100)).X) end
+   return valW+8+m*1.12
+  end
+  local ng,nb=need(good),need(bad)
+  local lw=math.floor(math.clamp((w-8)*ng/(ng+nb),(w-8)*.4,(w-8)*.6))
+  local a=column('Buffs',12,pad,lw-16,'BUFFS',good,T.Color.lime)
+  local b=column('Drawbacks',lw+12,pad,w-lw-24,'DRAWBACKS',bad,T.Color.negative)
+  h=pad+math.max(a,b)+pad
+  make('Frame',box,{Name='Divider',Position=UDim2.fromOffset(lw,8),Size=UDim2.fromOffset(2,h-16),BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=.45,BorderSizePixel=0})
+ end
+ box.Size=UDim2.fromOffset(w,h)
+ return box,h
+end
+-- Home weapon bonus rows: {{n=2,text='+15% Melee damage · +2 Armor'},{n=4,text='also +5% Life steal'}}.
+-- Diamond pips count the weapons. The label sits in its own column (o.labelW) so wrapped text
+-- lines up, or above the text with o.stack. Returns the inset and its height.
+function T.homeRows(parent,name,x,y,w,rows,o)
+ o=o or {}
+ local size=o.size or 17;local labelW=o.labelW or 136;local TS=game:GetService('TextService')
+ local box=T.panel(parent,name,x,y,w,0,'inset')
+ local cy=4
+ for i,r in rows do
+  if not o.stack then labelW=math.max(labelW,math.ceil(TS:GetTextSize(r.n..' HOME WEAPONS',size-2,T.Font,Vector2.new(1000,100)).X*1.12)+12) end
+  local tx=12+30+(o.stack and 0 or labelW)
+  local textW=w-tx-12
+  local th=math.ceil(TS:GetTextSize(r.text,size,T.Body,Vector2.new(textW,1000)).Y)
+  local labelH=size+2
+  local rh=o.stack and labelH+th+12 or math.max(size+18,th+14)
+  if i>1 then make('Frame',box,{Name='Divider'..i,Position=UDim2.fromOffset(10,cy-1),Size=UDim2.fromOffset(w-20,2),BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=.45,BorderSizePixel=0}) end
+  for k=1,4 do
+   local p=make('Frame',box,{Name='Pip'..i..'_'..k,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(19+((k-1)%2)*13,cy+rh/2-6+math.floor((k-1)/2)*13),Size=UDim2.fromOffset(9,9),Rotation=45,BorderSizePixel=0,BackgroundColor3=k<=r.n and T.Color.lime or Color3.fromRGB(58,66,70)})
+   make('UIStroke',p,{Color=Color3.fromRGB(8,10,11),Thickness=1.5})
+  end
+  local label=T.label(box,'Label'..i,r.n..' HOME WEAPONS',42,o.stack and cy+6 or cy+math.floor((rh-labelH)/2),o.stack and textW+labelW or labelW-8,labelH,size-2,T.Color.cream)
+  label.TextXAlignment=Enum.TextXAlignment.Left;label.TextStrokeTransparency=.5
+  local t=T.text(box,'Text'..i,r.text,tx,o.stack and cy+6+labelH or cy+math.floor((rh-th)/2),textW,th+2,size,T.Color.white)
+  t.TextYAlignment=Enum.TextYAlignment.Top
+  cy+=rh
+ end
+ box.Size=UDim2.fromOffset(w,cy+4)
+ return box,cy+4
+end
+-- One tile per class: its signature weapon icon, name and fit number. entries:
+-- {{name=,image=,pct=,own=true (lime frame),you=true (YOU tag above)}}. o: icon (44), h (tile
+-- height), gap (8), nameSize (13), pctSize (21), youSize (12), cols (all in one row; 3 gives a
+-- 3x2 grid where tiles would be too narrow for the names). Returns the frame and its height.
+function T.fitTiles(parent,name,x,y,w,entries,o)
+ o=o or {}
+ local gap=o.gap or 8;local icon=o.icon or 44;local nameSize=o.nameSize or 13;local pctSize=o.pctSize or 21;local youSize=o.youSize or 12
+ local n=#entries;local cols=o.cols or n;local rows=math.ceil(n/cols)
+ local tw=math.floor((w-(cols-1)*gap)/cols);local th=o.h or (icon+nameSize+pctSize+22)
+ local rowGap=gap+10 -- room for a YOU tag on the row below
+ local total=rows*th+(rows-1)*rowGap
+ local row=T.frame(parent,name,x,y,w,total)
+ for i,e in entries do
+  local tile=make('Frame',row,{Name='Tile_'..e.name,Position=UDim2.fromOffset(((i-1)%cols)*(tw+gap),math.floor((i-1)/cols)*(th+rowGap)),Size=UDim2.fromOffset(tw,th),BackgroundColor3=e.own and Color3.fromRGB(32,48,24) or Color3.fromRGB(26,32,36),BorderSizePixel=0})
+  make('UICorner',tile,{CornerRadius=UDim.new(0,9)})
+  make('UIStroke',tile,{Color=e.own and T.Color.lime or Color3.fromRGB(8,10,11),Thickness=2})
+  T.icon(tile,'Icon',(tw-icon)/2,5,icon,e.image)
+  local nl=T.text(tile,'Name',e.name,2,icon+6,tw-4,nameSize+6,nameSize,T.Color.muted);nl.TextXAlignment=Enum.TextXAlignment.Center
+  T.label(tile,'Pct',T.fitText(e.pct),0,icon+nameSize+12,tw,pctSize+6,pctSize,T.fitColor(e.pct))
+  if e.you then
+   local yh=youSize+10
+   local you=T.tag(tile,'You','YOU',0,0,{h=yh,size=youSize,color=T.Color.lime,textColor=T.Color.ink})
+   you.Position=UDim2.new(.5,-you.Size.X.Offset/2,0,-math.floor(yh*.6));you.ZIndex=3;you.Text.ZIndex=4;you.Text.TextStrokeTransparency=1
+  end
+ end
+ return row,total
+end
+-- The shop's fit badge: the number big, one word under it (YOUR CLASS / SIMILAR / OFF-CLASS), or
+-- both on one line with inline=true ('+15%  ·  YOUR CLASS').
+function T.fitBadge(parent,name,x,y,w,h,pct,word,inline)
+ local top,bottom,textColor
+ if pct>0 then top,bottom,textColor=Color3.fromRGB(63,125,16),Color3.fromRGB(36,77,8),Color3.fromRGB(234,255,208)
+ elseif pct==0 then top,bottom,textColor=Color3.fromRGB(74,69,53),Color3.fromRGB(44,42,32),T.Color.cream
+ else top,bottom,textColor=Color3.fromRGB(109,30,36),Color3.fromRGB(67,18,22),Color3.fromRGB(255,212,212) end
+ local b=make('Frame',parent,{Name=name,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(w,h),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0})
+ make('UICorner',b,{CornerRadius=UDim.new(0,9)})
+ make('UIStroke',b,{Color=Color3.fromRGB(8,10,11),Thickness=2})
+ make('UIGradient',b,{Rotation=90,Color=ColorSequence.new(top,bottom)})
+ if inline then
+  T.label(b,'Pct',T.fitText(pct)..(word and '  ·  '..word or ''),6,0,w-12,h,math.floor(h*.62),textColor).FitText.MinTextSize=9
+  return b
+ end
+ local pctH=word and math.floor(h*.58) or h
+ T.label(b,'Pct',T.fitText(pct),2,word and 3 or 0,w-4,pctH,math.floor(pctH*.82),textColor)
+ if word then
+  local l=T.label(b,'Word',word,2,pctH,w-4,h-pctH-3,math.max(10,math.floor(h*.22)),textColor);l.TextStrokeTransparency=.6
+ end
+ return b
+end
+
 -- rbxthumb content goes through the normal image cache: no web call each time a window opens,
 -- and AssetPreloader warms the local player's portrait at join.
 function T.headshotId(userId) return 'rbxthumb://type=AvatarHeadShot&id='..userId..'&w=150&h=150' end

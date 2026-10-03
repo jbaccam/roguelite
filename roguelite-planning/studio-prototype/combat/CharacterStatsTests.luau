@@ -22,6 +22,10 @@ local counts={}
 for _,w in C.List do counts[w.home]=(counts[w.home] or 0)+1 end
 for _,class in S.ClassOrder do
  check(counts[class]==6,'six home weapons '..class)
+ -- 2026-10-03 class rework: the starter is one of the class's own weapons, the class panels have
+ -- buffs and drawbacks to show, and Gunner's ranged attack speed is real data.
+ check(C.ById[S.Signature[class]] and C.ById[S.Signature[class]].home==class,'starter belongs to '..class)
+ local good,bad=S.classLines(class);check(#good>=3 and #bad>=1,'buffs and drawbacks '..class)
  for _,count in {0,2,4,6} do
   local s=S.resolve(class,count)
   for _,d in S.List do check(s[d.id]>=d.min and s[d.id]<=d.max,'bounded '..d.id) end
@@ -39,6 +43,7 @@ for _,class in S.ClassOrder do
  equal(humanoid.MaxHealth,state.stats.MaxHP,'avatar health');equal(humanoid.WalkSpeed,state.stats.MoveSpeed,'avatar speed')
  for _,d in S.List do equal(player.Character:GetAttribute('Stat_'..d.id),state.stats[d.id],'avatar '..d.id) end
 end
+do local s=S.resolve('Gunner',0);check(S.weapon(C.ById['00'],s,'Gunner').cooldown<S.weapon(C.ById['00'],s,'Brawler').cooldown,'Gunner ranged attack speed') end
 table.insert(results,'six classes, 36 weapons, avatar attributes and affinity calculations')
 for _,bad in {0/0,math.huge,-math.huge,'100',{},100000} do check(not edit('Stat','Damage',bad),'reject malformed/out of range') end
 check(not edit('Stat','DoesNotExist',10),'reject unknown stat')

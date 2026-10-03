@@ -398,7 +398,7 @@ function A.new(player, opts)
 	-- size. 844x390 phone: canvas 1688x780, 2-column list, slots about 70% size.
 	local L, canvas
 	local function plan(c)
-		local l = { w = c.w, h = c.h }
+		local l = { w = c.w, h = c.h, s = c.s }
 		-- Side panels sit under Roblox's top-bar buttons (the title plate pokes 34 px above them).
 		local bandTop = math.max(c.top, 14) + 34 + 10
 		local bandBottom = c.h - MARGIN
@@ -1426,45 +1426,48 @@ function A.new(player, opts)
 			"CLASS  ·  STARTER " .. string.upper(Weapons.ById[Rules.Signature[class]].name),
 			C.lime
 		)
-		local d = T.text(panel, "Description", c.description, 24, 168, RIGHT_W - 48, 60, 19, C.muted)
+		local d = T.text(panel, "Description", c.description, 24, 166, RIGHT_W - 48, 48, 18, C.muted)
 		d.TextYAlignment = Enum.TextYAlignment.Top
-		local lines = {}
-		for _, sd in Stats.List do
-			local v = c.buffs[sd.id]
-			if v then
-				table.insert(
-					lines,
-					'<font color="'
-						.. T.hex(v > 0 and C.lime or C.negative)
-						.. '">'
-						.. (v > 0 and "+" or "")
-						.. v
-						.. sd.unit
-						.. "</font>  "
-						.. sd.label
-				)
-			end
+		-- Always on (buffs | drawbacks), the 2 / 4 home weapon bonuses, then the class's row of the
+		-- weapon fit table (CharacterStats.ClassFit), one tile per class with its starter's icon.
+		-- Phones (canvas scale under .62) get bigger text and a 3 x 2 grid of tiles, and the panel
+		-- scrolls: text can't draw smaller than 9-12 screen px, so at scale .5 it needs ~24 design px.
+		local big = L.s ~= nil and L.s < 0.62
+		local sz = big and { sect = 26, stat = 24, home = 22, labelW = 196, icon = 44, name = 20, pct = 26, cols = 3 }
+			or { sect = 20, stat = 19, home = 18, labelW = 150, icon = 38, name = 16, pct = 21 }
+		local y = 220
+		y += T.section(panel, "AlwaysOnTitle", "ALWAYS ON", 24, y, RIGHT_W - 48, sz.sect) + 6
+		local good, bad = Stats.classLines(class)
+		local _, h = T.statColumns(panel, "AlwaysOn", 24, y, RIGHT_W - 48, good, bad, { size = sz.stat, stack = big })
+		y += h + 10
+		y += T.section(panel, "HomeTitle", "HOME WEAPON BONUS", 24, y, RIGHT_W - 48, sz.sect) + 6
+		_, h = T.homeRows(panel, "HomeBonus", 24, y, RIGHT_W - 48, {
+			{ n = 2, text = Stats.bonusText(c.two) },
+			{ n = 4, text = "also " .. Stats.bonusText(c.four) },
+		}, { size = sz.home, labelW = sz.labelW, stack = big })
+		y += h + 10
+		y += T.section(panel, "FitTitle", "WEAPON DAMAGE BY CLASS", 24, y, RIGHT_W - 48, sz.sect, not big and "Godly: no change" or nil)
+			+ 8
+		local entries = {}
+		for _, other in Stats.ClassOrder do
+			local _, pct = Stats.classFit({ home = other }, class)
+			table.insert(entries, { name = other, image = WeaponIcons[Rules.Signature[other]], pct = pct, own = other == class })
 		end
-		T.label(panel, "BuffsTitle", "CLASS BUFFS", 24, 236, 300, 34, 26).TextXAlignment = Enum.TextXAlignment.Left
-		local b = T.text(panel, "Buffs", table.concat(lines, "\n"), 24, 274, RIGHT_W - 48, 210, 22)
-		b.TextYAlignment = Enum.TextYAlignment.Top
-		T.text(
-			panel,
-			"Affinity",
-			"Weapon damage by class: "
-				.. Stats.classFitText(class)
-				.. ". Equip 2 home weapons in a run for the first class bonus, 4 for the stronger one.",
-			24,
-			496,
-			RIGHT_W - 48,
-			72,
-			17,
-			C.cream
-		)
-		local go = T.button(panel, "ChangeClass", "CHANGE CLASS", 24, 584, RIGHT_W - 48, 70, function()
+		_, h = T.fitTiles(panel, "WeaponFit", 24, y, RIGHT_W - 48, entries, {
+			icon = sz.icon,
+			nameSize = sz.name,
+			pctSize = sz.pct,
+			gap = 6,
+			cols = sz.cols,
+		})
+		y += h + 12
+		local go = T.button(panel, "ChangeClass", "CHANGE CLASS", 24, math.max(y, 640), RIGHT_W - 48, 70, function()
 			opts.openWindow("Loadout")
 		end, true)
 		go.Caption.TextSize = 28
+		if panel:IsA("ScrollingFrame") then
+			panel.CanvasSize = UDim2.fromOffset(0, math.max(panel.CanvasSize.Y.Offset, math.max(y, 640) + 70 + 16))
+		end
 	end
 
 	local function drawDetail()

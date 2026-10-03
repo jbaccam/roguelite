@@ -26,6 +26,11 @@ return function(base)
 		ItemCardUI = "ui/ItemCardUI.luau",
 		ChestScreenUI = "ui/ChestScreenUI.luau",
 		EggScreenUI = "ui/EggScreenUI.luau",
+		ArmoryUI = "ui/ArmoryUI.luau",
+		RunSetupUI = "ui/RunSetupUI.luau",
+		ShopUI = "ui/ShopUI.luau",
+		EconomyConfig = "combat/EconomyConfig.luau",
+		ShopCatalog = "combat/ShopCatalog.luau",
 	}
 	-- Where each module lives in Studio: its fresh copy sees that instance as `script`, so
 	-- `script.Parent.X` requires still find their (Studio) siblings.
@@ -44,6 +49,11 @@ return function(base)
 		ItemCardUI = "ReplicatedStorage.ItemCardUI",
 		ChestScreenUI = "ReplicatedStorage.ChestScreenUI",
 		EggScreenUI = "ReplicatedStorage.EggScreenUI",
+		ArmoryUI = "ReplicatedStorage.ArmoryUI",
+		RunSetupUI = "ReplicatedStorage.RunSetupUI",
+		ShopUI = "ReplicatedStorage.ShopUI",
+		EconomyConfig = "ReplicatedStorage.RogueliteCombat.EconomyConfig",
+		ShopCatalog = "ReplicatedStorage.RogueliteCombat.ShopCatalog",
 	}
 	local function resolve(path)
 		local parts = string.split(path or "", ".")

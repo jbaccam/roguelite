@@ -17,6 +17,7 @@
 -- Studio: ReplicatedStorage.ItemCardUI, a ModuleScript with the same Sandboxed / Capabilities
 -- settings as ReplicatedStorage.ChestScreenUI (it is required by ChestScreenUI and EggScreenUI).
 local RS=game:GetService('ReplicatedStorage')
+local Players=game:GetService('Players')
 local Input=game:GetService('UserInputService')
 local GuiService=game:GetService('GuiService')
 local TextService=game:GetService('TextService')
@@ -375,7 +376,14 @@ function K.open(canvas,L,args)
   local kind=it.kind=='weapon' and (it.w.godly and (it.w.kind..' · any class') or (it.w.kind..' · '..it.w.home))
    or it.kind=='armor' and ('armor · '..it.slot) or ('pet · '..it.pet.suit)
   local ky=wy+wh+6
-  T.label(p,'Kind',string.upper(kind),pad,ky,hw,subH,compact and 22 or 24,C.cream)
+  if it.kind=='weapon' and not it.w.godly then
+   -- A class weapon: two tags, its class (with the class's starter icon) and its type.
+   local th=subH-2
+   local _,cw1=T.tag(p,'ClassTag',string.upper(it.w.home),pad,ky+1,{h=th,size=th-12,icon=WeaponIcons[Stats.Signature[it.w.home]]})
+   T.tag(p,'TypeTag',string.upper(it.w.kind=='Blast' and 'Explosive' or it.w.kind),pad+cw1+8,ky+1,{h=th,size=th-12,color=Color3.fromRGB(27,33,37),textColor=C.muted})
+  else
+   T.label(p,'Kind',string.upper(kind),pad,ky,hw,subH,compact and 22 or 24,C.cream)
+  end
   -- Owned or not, and at what tier.
   local py=ky+subH+8
   local pill=T.panel(p,'Owned',pad,py,hw,ph,'inset')
@@ -454,6 +462,19 @@ function K.open(canvas,L,args)
    else
     head('ABOUT')
     para('Text',Weapons.describe(w),24,WHITE)
+   end
+   -- Damage by class: this weapon's column of CharacterStats.ClassFit, the loadout's class tagged YOU.
+   if not w.godly then
+    local lp=Players.LocalPlayer;local mine=lp and lp:GetAttribute('LoadoutClass') or 'Brawler'
+    y+=4
+    y+=T.section(body,'FitTitle','DAMAGE BY CLASS',0,y,rw,compact and 24 or 20,'you play '..mine)+(compact and 18 or 14)
+    local entries={}
+    for _,c in Stats.ClassOrder do
+     local _,pct=Stats.classFit(w,c)
+     table.insert(entries,{name=c,image=WeaponIcons[Stats.Signature[c]],pct=pct,own=c==w.home,you=c==mine})
+    end
+    local _,fh=T.fitTiles(body,'WeaponFit',0,y,rw,entries,{icon=compact and 44 or 34,nameSize=compact and 19 or 14,pctSize=compact and 26 or 20,youSize=compact and 17 or 13,gap=compact and 8 or 8})
+    y+=fh+6
    end
    rows=weaponRows(it)
   elseif it.kind=='armor' then

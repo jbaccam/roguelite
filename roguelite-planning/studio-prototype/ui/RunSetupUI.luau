@@ -8,6 +8,7 @@ local Lighting=game:GetService('Lighting')
 local Input=game:GetService('UserInputService')
 local TweenService=game:GetService('TweenService')
 local GuiService=game:GetService('GuiService')
+local TextService=game:GetService('TextService')
 local T=require(RS:WaitForChild('UITheme'))
 local Rules=require(RS:WaitForChild('RunSetupRules'))
 local Backdrop=require(RS:WaitForChild('MapSelectBackdrop'))
@@ -225,13 +226,14 @@ function M.new(player,opts)
   local cw,ch,cgap,cardsAt,cardsIn -- class card size, gap, position of card n, its parent
   local infoX,infoY,infoW,infoH,wx,wy,ww,wcols,cell,wgap,gridIn,gx,gy
   if not cp then
-   cw,ch,cgap=170,150,14;local x0=(CW-(#order*cw+(#order-1)*cgap))/2
+   -- Cards 140 tall (were 150) so the details panel is 380 tall and fits every class unscrolled.
+   cw,ch,cgap=170,140,14;local x0=(CW-(#order*cw+(#order-1)*cgap))/2
    cardsIn=canvas;cardsAt=function(n) return x0+(n-1)*(cw+cgap),100 end
-   infoX,infoY,infoW,infoH=95,270,440,360
-   wx,wy,ww,wcols,cell,wgap=560,270,625,3,150,12
-   gridIn=canvas;gx,gy=wx+(ww-(3*cell+2*wgap))/2,306
+   infoX,infoY,infoW,infoH=95,252,470,380
+   wx,wy,ww,wcols,cell,wgap=585,252,600,3,150,12
+   gridIn=canvas;gx,gy=wx+(ww-(3*cell+2*wgap))/2,290
    -- Owned Godlies join the class's six: past two rows the grid scrolls.
-   if #list>6 then local rows=math.ceil(#list/3);gridIn=column('Weapons',gx,306,3*cell+2*wgap+8,2*cell+wgap,rows*cell+(rows-1)*wgap);gx,gy=0,0 end
+   if #list>6 then local rows=math.ceil(#list/3);gridIn=column('Weapons',gx,290,3*cell+2*wgap+8,2*cell+wgap,rows*cell+(rows-1)*wgap);gx,gy=0,0 end
   else
    local M0,gap=16,14;local midY=math.max(70,G.top+6);local midH=CH-68-midY
    cw,ch,cgap=120,100,10;local classW=2*cw+cgap
@@ -257,40 +259,55 @@ function M.new(player,opts)
    local is=cp and 44 or 72
    local art=T.icon(card,'Icon',(cw-is)/2,cp and 6 or 12,is,WeaponIcons[Rules.Signature[c]]);art.ImageTransparency=cOwned and 0 or .6
    local n=T.label(card,'Name',c,0,cp and 52 or 86,cw,cp and 24 or 32,cp and 20 or 24,cOwned and C.white or C.dim);n.Size=UDim2.new(1,0,0,cp and 24 or 32);n.TextWrapped=false
+   -- Weapon fit badge: damage with this class's weapons when you play the picked class
+   -- (CharacterStats.ClassFit). Desktop: over the corner; phones: inside it (the column clips).
+   local _,pct=Stats.classFit({home=c},class)
+   local bw,bh=cp and 46 or 58,cp and 22 or 28
+   local badge=T.fitBadge(card,'Fit',cp and cw-bw-4 or cw-bw+8,cp and 4 or -8,bw,bh,pct);badge.ZIndex=5
+   for _,d in badge:GetDescendants() do if d:IsA('GuiObject') then d.ZIndex=6 end end
    if not cOwned then
-    M.lock(card,cw-(cp and 30 or 40),cp and 6 or 10,cp and 24 or 28)
+    M.lock(card,cp and 4 or 8,cp and 4 or 8,cp and 24 or 28)
     local l=T.label(card,'Locked','LOCKED',0,cp and 76 or 120,cw,cp and 20 or 22,16,C.gold);l.Size=UDim2.new(1,0,0,cp and 20 or 22)
    end
   end
-  -- Class details. Rows top to bottom; the panel scrolls when they don't fit (phones).
-  local lines={}
-  for _,d in Stats.List do
-   local v=Stats.Classes[class].buffs[d.id]
-   if v then table.insert(lines,'<font color="'..T.hex(v>0 and C.lime or C.negative)..'">'..(v>0 and '+' or '')..v..d.unit..'</font>  '..d.label) end
-  end
-  local pad=20;local tw=infoW-2*pad
-  local nameY,nameH=cp and 10 or 14,cp and 36 or 40
-  local descY,descH=nameY+nameH+4,cp and 60 or 48
-  local buffY,buffH=descY+descH+4,(cp and 22 or 21)*#lines
-  local tailY=buffY+buffH+8;local noteH=cp and 40 or 24 -- second note: two lines on phones
-  local contentH=owned and tailY+42+noteH+12 or tailY+noteH+4+54+12
+  -- Class details, top to bottom: name, description, always-on buffs | drawbacks, the 2 / 4 home
+  -- weapon bonuses, then what the card badges mean. Drawn into a holder; if it is taller than the
+  -- panel (phones, or a locked class with its buy buttons) the holder moves into a scroll.
+  local c=Stats.Classes[class]
+  local pad=cp and 14 or 18;local tw=infoW-2*pad
   local info=T.panel(canvas,'ClassInfo',infoX,infoY,infoW,infoH,'panel')
-  local box=body(info,contentH)
-  local n=T.label(box,'Name',class,pad,nameY,tw,nameH,cp and 28 or 32);n.TextXAlignment=Enum.TextXAlignment.Left
-  T.text(box,'Description',Stats.Classes[class].description,pad,descY,tw,descH,cp and 17 or 18,C.muted)
-  T.text(box,'Buffs',table.concat(lines,'\n'),pad,buffY,tw,buffH,cp and 18 or 19)
-  if owned then
-   T.text(box,'Affinity',Stats.classFitText(class)..'. 2 and 4 home weapons add class bonuses.',pad,tailY,tw,40,16,C.cream)
-   T.text(box,'Armor','Armor: none yet  ·  armor sets arrive with chest rewards',pad,tailY+42,tw,noteH,16,C.dim)
-  else
-   T.text(box,'Earn','Earn it: '..(Rules.ClassUnlock[class] or 'an achievement'),pad,tailY,tw,noteH,16,C.gold)
-   local key='Class'..class;local product=Money.Products[key];local by,bw=tailY+noteH+4,(tw-12)/2
-   if product then T.button(box,'BuyRobux','R$ '..Money.price(key),pad,by,bw,54,function() combat.PurchaseRequest:FireServer(key) end).Caption.TextSize=20 end
-   local eb=T.button(box,'BuyEmeralds','',pad+bw+12,by,bw,54,function()
+  local box=T.frame(info,'Content',0,0,infoW,0)
+  local y=cp and 10 or 14
+  local n=T.label(box,'Name',class,pad,y,tw,cp and 34 or 36,cp and 28 or 30);n.TextXAlignment=Enum.TextXAlignment.Left
+  y+=cp and 36 or 38
+  local descH=math.ceil(TextService:GetTextSize(c.description,cp and 16 or 16,T.Body,Vector2.new(tw,1000)).Y)+2
+  T.text(box,'Description',c.description,pad,y,tw,descH,16,C.muted).TextYAlignment=Enum.TextYAlignment.Top
+  y+=descH+8
+  local good,bad=Stats.classLines(class)
+  local _,h=T.statColumns(box,'AlwaysOn',pad,y,tw,good,bad,{size=cp and 15 or 16,stack=cp})
+  y+=h+8
+  _,h=T.homeRows(box,'HomeBonus',pad,y,tw,{{n=2,text=Stats.bonusText(c.two)},{n=4,text='also '..Stats.bonusText(c.four)}},{size=cp and 14 or 15,stack=cp,labelW=126})
+  y+=h+6
+  local legend="Card badges: damage with each class's weapons as a "..class..'. Godly weapons: no change.'
+  local legendH=math.ceil(TextService:GetTextSize(legend,13,T.Body,Vector2.new(tw,1000)).Y)+2
+  T.text(box,'FitLegend',legend,pad,y,tw,legendH,13,C.dim).TextYAlignment=Enum.TextYAlignment.Top
+  y+=legendH+8
+  if not owned then
+   T.text(box,'Earn','Earn it: '..(Rules.ClassUnlock[class] or 'an achievement'),pad,y,tw,cp and 40 or 24,16,C.gold)
+   y+=(cp and 40 or 24)+4
+   local key='Class'..class;local product=Money.Products[key];local bw=(tw-12)/2
+   if product then T.button(box,'BuyRobux','R$ '..Money.price(key),pad,y,bw,54,function() combat.PurchaseRequest:FireServer(key) end).Caption.TextSize=20 end
+   local eb=T.button(box,'BuyEmeralds','',pad+bw+12,y,bw,54,function()
     local r=combat.ProfileAction:InvokeServer('BuyClass',class)
     T.toast(screen,r.message or '',r.ok and C.lime or C.negative)
    end,true)
    eb.Caption.Visible=false;opts.cost(eb,Money.ClassEmeraldPrice,'emerald',20)
+   y+=54+12
+  end
+  box.Size=UDim2.fromOffset(infoW,y)
+  if y>infoH then
+   local sc=T.scroll(info,'Body',0,8,0,0);sc.Size=UDim2.new(1,-8,1,-16);sc.CanvasSize=UDim2.fromOffset(0,y)
+   box.Parent=sc
   end
   -- Starting weapon grid. Phone cells (under 150) shrink the art and give names two lines.
   local h=T.label(canvas,'WeaponTitle','STARTING WEAPON',wx,wy,ww,30,cp and 22 or 24);h.TextXAlignment=Enum.TextXAlignment.Left

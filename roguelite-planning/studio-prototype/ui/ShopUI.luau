@@ -8,6 +8,8 @@ local Weapons=require(combat.WeaponCatalog)
 local Stats=require(combat.CharacterStats)
 local T=require(RS:WaitForChild('UITheme'))
 local Money=require(combat:WaitForChild('MonetizationConfig'))
+local WeaponIcons=require(RS:WaitForChild('WeaponInventoryUI')).Icons
+local Signature=Stats.Signature
 local M={}
 -- Seconds until the shop timer starts the next wave (RogueliteRunState.ShopEndsAt, set by
 -- ShopService at each wave clear), or nil when no timer runs. clock(105) = '1:45'.
@@ -156,13 +158,28 @@ function M.new(player,h,refresh)
   end
   return row*26
  end
- -- 'Brawler · your class +15%' / 'Juggler · similar class 0%' / 'Gunner · off-class -15%' and its colour (CharacterStats.classFit).
- local function classLine(base)
+ -- Class weapon fit (CharacterStats.classFit) for this player's class: the class tag
+ -- 'GUNNER · RANGED' (with the class's starter icon) under the name, and the fit bar
+ -- '-15%  ·  OFF-CLASS'. Narrow phone cards step down so text stays readable (minText): the class
+ -- alone, then an icon-only tag with the class moved into the bar ('-15%  ·  GUNNER').
+ local FIT_WORD={home='YOUR CLASS',similar='SIMILAR',off='OFF-CLASS'}
+ local TS=game:GetService('TextService')
+ local function width(text,size,icon) return TS:GetTextSize(text,size,T.Font,Vector2.new(1000,100)).X*1.12+(icon and size+20 or 20) end
+ local function classFitRow(p,base,tagX,tagY,tagMaxW,tagH,barX,barY,barW,barH)
   local fit,pct=Stats.classFit(base,state:GetAttribute('Class'))
-  if fit=='home' then return base.home..' · your class +'..pct..'%',green end
-  if fit=='similar' then return base.home..' · similar class 0%',cream end
-  if fit=='off' then return base.home..' · off-class '..pct..'%',red end
-  return base.home,cream
+  local word=fit and FIT_WORD[fit] or 'ANY CLASS'
+  local kind=string.upper(base.kind=='Blast' and 'Explosive' or base.kind)
+  local name=base.godly and 'GODLY' or string.upper(base.home)
+  local icon=not base.godly and WeaponIcons[Signature[base.home]] or nil
+  local size=math.max(tagH-10,minText)
+  local text=name..' · '..kind
+  if width(text,size,icon)>tagMaxW then text=name end
+  if width(text,size,icon)>tagMaxW then text=nil;word=name end
+  if text then T.tag(p,'ClassTag',text,tagX,tagY,{h=tagH,size=tagH-10,maxW=tagMaxW,icon=icon})
+  elseif icon then T.tag(p,'ClassTag','',tagX,tagY,{h=tagH,size=tagH-10,icon=icon}) end
+  -- A bar too narrow for its word keeps just the number (the colour still says which).
+  if width(T.fitText(pct)..'  ·  '..word,math.max(math.floor(barH*.62),minText),false)-8>barW then word=nil end
+  T.fitBadge(p,'Fit',barX,barY,barW,barH,pct,word,true)
  end
  local function weaponStats(p,base,tier,x,y,w)
   local s=Stats.read(state);local d=Stats.weapon(base,s,state:GetAttribute('Class'),tier)
@@ -292,12 +309,10 @@ function M.new(player,h,refresh)
      local well=surface(card,'IconWell',12,12,64,64,nil,'inset')
      art(well,entry,4,4,56,56)
      heading(card,'Name',entry.name..(entry.weaponId and entry.tier>1 and (' '..({'I','II','III','IV'})[entry.tier]) or ''),86,12,cardW-98,43,22,tiers[entry.tier])
-     local kind,kindColor=entry.kind..(#entry.tags>0 and ' · '..entry.tags[1] or ''),cream
-     if entry.weaponId then kind,kindColor=classLine(Weapons.ById[entry.weaponId]) end
-     text(card,'Kind',kind,86,56,cardW-98,22,17,kindColor)
+     if not entry.weaponId then text(card,'Kind',entry.kind..(#entry.tags>0 and ' · '..entry.tags[1] or ''),86,56,cardW-98,22,17,cream) end
      if entry.weaponId then
       weaponStats(card,Weapons.ById[entry.weaponId],entry.tier,14,98,cardW-28)
-      text(card,'Class',entry.description,14,199,cardW-28,22,17)
+      classFitRow(card,Weapons.ById[entry.weaponId],86,56,cardW-98,26,14,197,cardW-28,24)
       local d=Stats.weapon(Weapons.ById[entry.weaponId],Stats.read(state),state:GetAttribute('Class'),entry.tier)
       local traits={};if d.projectileCount>1 then table.insert(traits,'Projectiles: '..d.projectileCount) end;if d.nativePierce>0 then table.insert(traits,'Pierce: '..d.nativePierce) end;if d.nativeBounce>0 then table.insert(traits,'Bounce: '..d.nativeBounce) end
       if d.burn>0 then table.insert(traits,'Ignites') elseif d.poison>0 then table.insert(traits,'Poisons') elseif d.slow>0 then table.insert(traits,'Slows') elseif d.lightning then table.insert(traits,'Lightning') end
@@ -399,8 +414,8 @@ function M.new(player,h,refresh)
     text(detail,'Tier',E.TIER_NAMES[copy and copy.tier or entry.tier],98,60,dw-112,24,tap>0 and 16 or 14)
     if base then
      weaponStats(detail,base,copy.tier,16,104,dw-32)
-     local typeText,typeColor=classLine(base)
-     text(detail,'Type',typeText..' · '..base.kind,16,193,dw-32,24,tap>0 and 16 or 14,typeColor)
+     local fw=math.min(150,math.floor((dw-40)*.48))
+     classFitRow(detail,base,16,193,dw-40-fw,24,dw-16-fw,193,fw,24)
      local combine=btn(detail,'Combine',copy.tier==4 and 'Maximum tier' or copy.canCombine and 'Combine → '..E.TIER_NAMES[copy.tier+1] or 'Need matching weapon + tier',14,combineY,dw-28,b1,function() T.sound('ui_upgrade');self:send('Combine',sel.slot,sel.copy);self.selected=nil end,true)
      combine.Interactable=data.phase=='Shop' and copy.canCombine==true;combine.Caption.TextColor3=combine.Interactable and white or Color3.fromRGB(135,146,150)
      local sell=btn(detail,'Sell','',14,sellY,dw-28,b1,function() self:send('Sell',sel.slot,sel.copy);self.selected=nil end,true)
