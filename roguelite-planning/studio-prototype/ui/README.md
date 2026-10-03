@@ -13,7 +13,11 @@ Spec section: "Play-test fixes, round 2" in `../../plans/2026-10-03-tutorial-des
 - **All runs:**
   - Melee reach bonus 0 (`EnemyAttacks`).
   - Boss crystals burst from the boss (`ShardMotion.burst`, `BurstFrom`/`BurstDelay`, a sparkle) and fly 1.4 s later; the wave-end sweep keeps their turn.
-  - Pickup VFX in `ShardVisuals.client`: shards bursting out, a thin soft ring easing outwards, a few blue orbs drifting up, a faint glow, and "+N"; scaled by how many land within 0.1 s. It stays where it happened. The first version's big white star on the player's middle, which followed them, was "way too forced and bright" and is gone.
+  - Pickup VFX in `ShardVisuals.client` (third version, 618c18e, after "make the star look more like the reference images ... starts small gets larger and pops ... clean and nonchalant and smooth"):
+    - A star at hip height on the side the crystals came from, a little toward the camera. It grows over 0.15 s, swells a touch, then pops; one or two tiny twinkles join it for bigger hauls.
+    - At the pop, shards burst out from a spot riding along with the player, and a faint thin ring spreads.
+    - No "+N" ("kinda annoying") and no light on the body.
+    - Scaled by how many land within 0.1 s.
 - **Chests (`ChestConfig`):** a few items each, each item a rarity roll with a stack by rarity: Silver 1 item, Gold 1–2, Magical 2, Legendary 4. The API is `roll` / `open` / `fill`, plus `chance`, `itemRange`, `itemsText` and `expected`; `rollCounts` and `group` are gone. `ChestScreenUI` and `StoreUI` say items, not copies ("1 item each", "1 item from a Silver Chest"). The tutorial seed replaces the first Silver Chest's roll. `ChestConfigTests` were rewritten with hand-worked summaries. The sim's before/after pace is in RARITY_GODLY_ARMOR.md section 1.
 - **Checked (Studio Edit, nothing saved):**
   - every changed file compiles;
