@@ -62,7 +62,7 @@ Why: Handyman is handy with anything (0 with everyone but Mage, and everyone can
 - **Run shop:** the class tag under the name, and a fit bar ("−15%  ·  OFF-CLASS"). Narrow phone cards step down: class only, then an icon tag with the class in the bar.
 - Colours everywhere: lime = your class, cream = 0%, reds for −5 / −10 / −15.
 
-Layout checks (Studio Edit, UILayoutAudit, no Play): the item card at 7 screen sizes; the Armory and run-setup panels for all six classes at 1080p, 768p and phone scale; the shop tag and bar at card widths 156–300 and scales 1 / .7 / .55. The full Armory, run-setup and shop screens were not opened in Play.
+Layout checks (Studio Edit, UILayoutAudit, no Play): the item card at 7 screen sizes; the Armory and run-setup panels for all six classes at 1080p, 768p and phone scale; the shop tag and bar at card widths 156–300 and scales 1 / .7 / .55. The full Armory, run-setup and shop screens were not opened in Play. Studio sync, 2026-10-03: CharacterStats, WeaponCatalog, ProfileService, RunSetupRules, RogueliteLobbyPreview (server), UITheme, ArmoryUI, ItemCardUI, RunSetupUI and ShopUI written from commit 0b2b759, each only after checking Studio still held the expected earlier version. No Play test has run on it yet.
 
 These prototype choices supersede the older proposal that classes need no drawbacks. Distinct orbital/return animations and deployables remain separate weapon-kit work; this change applies class statistics to the existing attack styles.
 
