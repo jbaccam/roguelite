@@ -6,6 +6,10 @@
   - **Known gap:** parties live in one lobby server. After a run, each player returns to a lobby on their own, so you may need to party again.
 - **Armor tab:** it only listed sets you own a piece of, so with no armor it showed the old "Armor is coming" placeholder. It now lists every set: owned first, unowned pieces locked, the same as Pets. The placeholder only shows if no armor meshes have loaded ("Armor is loading").
 - **Air speed:** `AirSpeedMultiplier` 1.3 → 1.6 (a Brawler goes from 28.6 to 35.2 studs/s in the air). `MovementGuard`'s speed limit uses the same number, so jumping can't trip it.
+- **Studio:** synced 2026-10-03 at 10978f8 with one guarded execute_luau call: 5 scripts updated and `RogueliteLobbyPreview.PartyState` created (Sandboxed copied from `QueueState`). Afterwards all 6 matched 10978f8.
+  - Studio's `CharacterStats` and `MovementCheck` were still from before ee48545: none of ee48545 (mobs ×5 damage, the client-applied jump boost) had been synced, and Studio's air boost was 1.12. Their only difference from 10978f8 was the air-speed line and a comment, so they were guarded on those exact older versions (0b2b759, f17271d).
+  - Studio's older `CharacterService` applies the boost on the server. Its `MovementGuard` allows `MoveSpeed × 1.12 × 1.5 + 16` per second: 53 for a Brawler, who now covers about 35 in the air.
+- **Saves reset:** the user asked to reset EggaRowls (341854066) and leavked (109021050) so both play the tutorial fresh. Neither was in a server (no lock). Both `RogueliteProfile_v1` records were backed up to `output/profile-backups/` (untracked) and then removed, and both read back empty.
 - **Not run:** no Play test (the user tests).
 
 # Wave 1 waits for the loading screen; loading art shows — October 3, 2026
