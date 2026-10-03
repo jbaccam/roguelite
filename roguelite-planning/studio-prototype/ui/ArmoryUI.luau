@@ -71,7 +71,8 @@ local REDRAW_ON = {
 	LoadoutWeapon = true,
 }
 
--- Armor is worn as four pieces (ArmorCatalog; cosmetic until armor chests and set bonuses exist).
+-- Armor is worn as four pieces (ArmorCatalog); pieces come from chests, and 2 or 4 of a set give
+-- its bonuses. The Armor tab lists every set, owned first, unowned pieces locked (like Pets).
 -- Pets (PetConfig) hatch from Pet Eggs (the egg merchant); one follows you (EQUIP / UNEQUIP).
 local ARMOR_PIECES = {
 	{ id = "Helmet", label = "HELMET", plural = "HELMETS" },
@@ -731,17 +732,20 @@ function A.new(player, opts)
 			count.TextXAlignment = Enum.TextXAlignment.Right
 			y0 += 64
 		end
-		-- Armor sets whose meshes are installed and that own at least one piece.
-		local armorSets = {}
+		-- Every armor set whose meshes are installed: sets with an owned piece first, then the rest
+		-- in catalog order. Only listing owned sets left a player with no armor on the old
+		-- "Armor is coming" panel (user, 2026-10-03).
+		local armorSets, unowned = {}, {}
 		for _, set in Armor.Sets do
 			local owns = false
 			for _, sl in Armor.Slots do
 				owns = owns or profile.armor[Armor.pieceId(set.id, sl)] ~= nil
 			end
-			if owns and armorModel(set.id) then
-				table.insert(armorSets, set)
+			if armorModel(set.id) then
+				table.insert(owns and armorSets or unowned, set)
 			end
 		end
+		table.move(unowned, 1, #unowned, #armorSets + 1, armorSets)
 		if state.tab == "Armor" and #armorSets > 0 then
 			local filters = { "All" }
 			for _, sl in Armor.Slots do
@@ -850,7 +854,7 @@ function A.new(player, opts)
 				state.kind, state.item = "pet", (profile.pet and petRec(profile.pet)) and profile.pet or list[1].id
 			end
 		elseif #armorSets > 0 then
-			-- Each set with an owned piece: its pieces in the filtered slot(s), unowned ones locked.
+			-- Each set (owned first): its pieces in the filtered slot(s), unowned ones locked.
 			local slots = state.armorSlot and { state.armorSlot } or Armor.Slots
 			local first
 			for _, set in armorSets do
@@ -884,7 +888,8 @@ function A.new(player, opts)
 				state.kind, state.item = "armor", first
 			end
 		else
-			y = comingPanel(grid, "Armor is coming", "Armor pieces come from armor chests.", {
+			-- Only when no set's meshes have arrived yet (ReplicatedStorage.ArmorSets).
+			y = comingPanel(grid, "Armor is loading", "Reopen the Armory in a moment. Armor pieces come from chests.", {
 				"Helmet, chestplate, leggings and boots",
 				"2 pieces of one set: a set bonus",
 				"All 4 pieces: the set's special perk",

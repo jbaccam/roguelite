@@ -1,3 +1,13 @@
+# Parties, the full Armor tab, a bigger air boost — October 3, 2026
+
+- **Parties (user: "when i click play he automatically gets put in a pod with me"):** the Party window now has INVITE on every other player in the server (INVITED while pending, IN YOUR PARTY once in). The invited player gets a card with ACCEPT / DECLINE (60 s) and a badge on the party button. LEAVE PARTY leaves it. Up to 4, a pad's capacity.
+  - When anyone in a party steps on a portal or presses PLAY, `RogueliteLobbyPreview` moves the rest of the party standing in the lobby onto that pad (`pullParty`). It does this again when the host presses START, for anyone who joined the party after that. Members don't have to do anything; launch uses their current loadout. A solo pad has no room, so solo stays solo. Someone who pressed LEAVE on that pad isn't pulled back.
+  - Rules are in the pure `lobby/PartyState.luau` (beside `QueueState`). State reaches clients as `PartyMembers`, `PartyInviteFrom` and `PartyInviteUntil`, and requests go through the `Party` RemoteEvent on `workspace.RogueliteLobby`.
+  - **Known gap:** parties live in one lobby server. After a run, each player returns to a lobby on their own, so you may need to party again.
+- **Armor tab:** it only listed sets you own a piece of, so with no armor it showed the old "Armor is coming" placeholder. It now lists every set: owned first, unowned pieces locked, the same as Pets. The placeholder only shows if no armor meshes have loaded ("Armor is loading").
+- **Air speed:** `AirSpeedMultiplier` 1.3 → 1.6 (a Brawler goes from 28.6 to 35.2 studs/s in the air). `MovementGuard`'s speed limit uses the same number, so jumping can't trip it.
+- **Not run:** no Play test (the user tests).
+
 # Wave 1 waits for the loading screen; loading art shows — October 3, 2026
 
 Play-test report: the tutorial began while the player was still loading. Zombies were already chasing, a few were dead, the player had levelled up, and Eggbert's welcome was missed. Half the loading screens stayed gray.

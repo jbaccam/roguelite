@@ -1,5 +1,7 @@
 -- The lobby: step-on queue pads where the first player (host) picks the map and presses START,
 -- and a countdown that launches the group into wave 1. A queued player stays on the pad until LEAVE.
+-- Parties (PartyState, the Party window): when one member joins a pad, by PLAY or by stepping on,
+-- the rest of the party standing in the lobby is put on the same pad.
 -- Lobby servers send the group to its own match server (MatchService); the Combined role (Studio)
 -- walks it into the arena here, and keeps a travel remote for testing either area directly.
 -- workspace.RogueliteLobby.StudioStartArea ('Arena' or 'Lobby') picks where Combined Play starts.
@@ -19,6 +21,8 @@ local Shop=require(SSS:WaitForChild('ShopService'))
 local Match=require(SSS:WaitForChild('MatchService'))
 local CAPACITY=4
 local state=State.new(4,CAPACITY)
+local Party=require(script:WaitForChild('PartyState'))
+local parties=Party.new(CAPACITY)
 local last,stepOff={},{}
 local travelling={}
 -- Lobby servers spawn players here; the combined Studio preview places them by script instead.
@@ -37,6 +41,9 @@ local travelRemote=remote('StudioTravel')
 -- onto it), ('Ready', class, weapon) from anyone on a pad, ('Loadout', class, weapon) from the
 -- Loadout screen or Armory EQUIP while in the lobby. Server replies ('Result', ok, message).
 local setupRemote=remote('RunSetup')
+-- Party window: ('Invite', userId), ('Accept', inviter userId), ('Decline'), ('Leave'). Only
+-- players in this server; the server replies ('Result', ok, message).
+local partyRemote=remote('Party')
 
 -- Pad visuals: a raised light ring and a column of light that fades as it rises. White while
 -- the pad is empty, red while players are on it.
@@ -154,6 +161,57 @@ end
 local function setQueue(player) player:SetAttribute('LobbyQueue',state.membership[player.UserId]) end
 local function leave(player) if state:leave(player.UserId,now()) then setQueue(player);publish() end end
 
+-- Parties ---------------------------------------------------------------------------
+-- Every player's PartyMembers ('id,id' in join order, nil when not in one) and pending invite
+-- (PartyInviteFrom = inviter's user id, PartyInviteUntil = server time it expires).
+local function publishParties()
+ for _,p in Players:GetPlayers() do
+  local party=parties.partyOf[p.UserId]
+  local ids={};if party then for _,id in party do table.insert(ids,tostring(id)) end end
+  p:SetAttribute('PartyMembers',party and table.concat(ids,',') or nil)
+  local invite=parties.invites[p.UserId]
+  p:SetAttribute('PartyInviteFrom',invite and invite.from or nil);p:SetAttribute('PartyInviteUntil',invite and invite.expires or nil)
+ end
+end
+-- The rest of player's party follows them onto pad `index`: anyone standing in the lobby who isn't
+-- queued, travelling, or just pressed LEAVE on this pad. Each still needs the map unlocked at launch.
+local function pullParty(player,index)
+ local pad=pads[index];if not pad then return end
+ for _,id in parties:members(player.UserId) do
+  local p=id~=player.UserId and Players:GetPlayerByUserId(id)
+  if not p or state.membership[id] or travelling[p] or p:GetAttribute('MapTravelPending') or stepOff[p]==index then continue end
+  local char,hrp=alive(p)
+  if hrp and inLobby(hrp) and state:join(id,index,now()) then
+   local a=math.random()*math.pi*2
+   char:PivotTo(CFrame.new(pad.center+Vector3.new(math.cos(a)*3,3.5,math.sin(a)*3))*(hrp.CFrame-hrp.Position))
+   stepOff[p]=nil;setQueue(p)
+   partyRemote:FireClient(p,'Result',true,player.DisplayName..' took the party to portal '..index)
+  end
+ end
+ publish()
+end
+local lastParty={}
+partyRemote.OnServerEvent:Connect(function(player,action,arg)
+ if os.clock()-(lastParty[player] or -math.huge)<.3 then return end
+ lastParty[player]=os.clock()
+ local function reply(ok,message) partyRemote:FireClient(player,'Result',ok,message) end
+ if action=='Invite' then
+  local other=type(arg)=='number' and Players:GetPlayerByUserId(arg)
+  if not other then return reply(false,'That player is not in this server') end
+  local ok,why=parties:invite(player.UserId,other.UserId,now())
+  if not ok then return reply(false,why) end
+  reply(true,'Invited '..other.DisplayName)
+ elseif action=='Accept' then
+  local ok,why=parties:accept(player.UserId,arg,now())
+  local from=type(arg)=='number' and Players:GetPlayerByUserId(arg)
+  if ok and from then partyRemote:FireClient(from,'Result',true,player.DisplayName..' joined your party') end
+  reply(ok,not ok and why or from and ('You joined '..from.DisplayName.."'s party") or 'You joined the party')
+ elseif action=='Decline' then parties:decline(player.UserId)
+ elseif action=='Leave' then if parties:leave(player.UserId) then reply(true,'You left the party') end
+ else return end
+ publishParties()
+end)
+
 -- Areas -----------------------------------------------------------------------------
 local function areaSpawn(area,spread)
  -- The active map's spawn; the lobby's if RunMap is somehow invalid, rather than erroring.
@@ -226,6 +284,8 @@ setupRemote.OnServerEvent:Connect(function(player,action,a,b,c,d,e)
   if not index then return reply(false,'Step onto a portal pad first') end
   if not state:start(player.UserId,index,now(),a,d==true,e) then return reply(false,d==true and 'Solo needs an empty pad' or 'Only the host can start') end
   player:SetAttribute('RunClass',b);player:SetAttribute('RunWeapon',c)
+  -- The party comes along (a solo pad has no room, so solo stays solo).
+  pullParty(player,index)
   publish();reply(true,'Starting')
  elseif action=='Ready' then
   if not index then return reply(false,'Step onto a portal pad first') end
@@ -307,7 +367,10 @@ for _,portal in root.Portals:GetChildren() do buildPad(portal) end
 Match.onTeleportFailed=function(p,message) travelling[p]=nil;setupRemote:FireClient(p,'Result',false,message) end
 Players.PlayerAdded:Connect(attach)
 for _,p in Players:GetPlayers() do attach(p) end
-Players.PlayerRemoving:Connect(function(p) state:leave(p.UserId,now());last[p]=nil;stepOff[p]=nil;travelling[p]=nil;publish() end)
+Players.PlayerRemoving:Connect(function(p)
+ state:leave(p.UserId,now());last[p]=nil;stepOff[p]=nil;travelling[p]=nil;publish()
+ parties:remove(p.UserId);lastParty[p]=nil;publishParties()
+end)
 
 local elapsed=0
 RunService.Heartbeat:Connect(function(dt)
@@ -328,8 +391,9 @@ RunService.Heartbeat:Connect(function(dt)
   -- the lobby (travel) still ends the queue; anyone who got off the pad is put back on it.
   if index and not lobby then leave(p);index=nil
   elseif index and pads[index] and not nearPad(hrp,pads[index]) then char:PivotTo(CFrame.new(pads[index].center+Vector3.new(0,3.5,0))*(hrp.CFrame-hrp.Position)) end
-  if under and not index and stepOff[p]~=under and state:join(p.UserId,under,now()) then setQueue(p) end
+  if under and not index and stepOff[p]~=under and state:join(p.UserId,under,now()) then setQueue(p);pullParty(p,under) end
  end
+ if parties:expire(now()) then publishParties() end
  -- A host who never presses START frees the pad for someone else.
  for _,id in state:stale(now()) do
   local p=Players:GetPlayerByUserId(id)

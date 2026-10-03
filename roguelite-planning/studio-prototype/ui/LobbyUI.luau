@@ -132,6 +132,10 @@ function L.mount(player)
  local party=T.button(left,'PartyButton','',258,0,70,70,function() open('Party') end,true);party.Caption.Visible=false
  T.icon(party,'Icon',9,9,52,'party')
  local plus=T.label(party,'Plus','+',44,38,26,26,24,C.lime)
+ -- Party helpers (the Party window and the invite card): member ids from a player's PartyMembers,
+ -- and requests to the lobby server's Party remote.
+ local function partyIds(p) local out={};for id in string.gmatch(p:GetAttribute('PartyMembers') or '','%d+') do table.insert(out,tonumber(id)) end;return out end
+ local function partyFire(...) local lobby=workspace:FindFirstChild('RogueliteLobby');local r=lobby and lobby:FindFirstChild('Party');if r then r:FireServer(...) end end
  local function currency(name,asset,y,color)
   local row=T.panel(left,name,0,y,220,48,'inset')
   T.icon(row,'Icon',8,4,40,asset)
@@ -380,27 +384,65 @@ function L.mount(player)
   return w
  end
 
+ -- Party (user, 2026-10-03): invite players in this server. When one of you steps on a portal or
+ -- presses PLAY, the rest of the party is put on that pad too (RogueliteLobbyPreview, PartyState).
+ -- PartyMembers ('id,id') and PartyInviteFrom / PartyInviteUntil are server attributes.
  builders.Party=function()
   local w=T.window(screen,'PartyWindow','Party',560,480);local b=w.Body;local W=524
-  T.text(b,'Help','Stand on the same portal pad to queue together — up to 4 players per portal.',6,8,W-12,40,17,C.muted)
-  local invite=T.button(b,'Invite','INVITE FRIENDS',6,52,W-12,50,function()
-   local ok,can=pcall(Social.CanSendGameInviteAsync,Social,player)
-   if ok and can then pcall(Social.PromptGameInvite,Social,player) end
-  end)
-  invite.Caption.TextSize=22
+  T.text(b,'Help','Invite players here to your party. When one of you steps on a portal or presses PLAY, the whole party goes together (up to 4).',6,2,W-12,46,17,C.muted)
+  local top=T.frame(b,'Top',0,52,W,50)
   sectionTitle(b,'ServerTitle','In this server',6,114,W)
   local list=T.scroll(b,'Players',0,150,W,262)
-  local y=0
-  for _,other in Players:GetPlayers() do
-   local row=T.panel(list,'Player_'..other.UserId,4,y,W-20,60,'panel')
-   local img=T.make('ImageLabel',row,{Name='Headshot',BackgroundTransparency=1,Position=UDim2.fromOffset(10,8),Size=UDim2.fromOffset(44,44),Image=''});T.headshot(img,other.UserId)
-   local n=T.label(row,'Name',other.DisplayName..(other==player and '  (you)' or ''),64,6,W-200,28,19);n.TextXAlignment=Enum.TextXAlignment.Left
-   T.text(row,'User','@'..other.Name,64,32,W-200,20,14,C.muted)
-   local q=other:GetAttribute('LobbyQueue')
-   T.chip(row,'Status',q and ('PORTAL '..q) or 'IN LOBBY',W-150,19,q and C.limeDark or C.well)
-   y+=68
+  local function draw()
+   if not w.Root.Parent then return end
+   top:ClearAllChildren()
+   for _,c in list:GetChildren() do if c:IsA('GuiObject') then c:Destroy() end end
+   local mine=partyIds(player)
+   local half=(W-24)/2
+   local invite=T.button(top,'Invite','INVITE FRIENDS',6,0,#mine>0 and half or W-12,50,function()
+    local ok,can=pcall(Social.CanSendGameInviteAsync,Social,player)
+    if ok and can then pcall(Social.PromptGameInvite,Social,player) end
+   end)
+   invite.Caption.TextSize=22
+   if #mine>0 then
+    local leaveParty=T.button(top,'LeaveParty','LEAVE PARTY  ·  '..#mine..' / 4',W-6-half,0,half,50,function() partyFire('Leave') end,true)
+    leaveParty.Caption.TextSize=20;leaveParty.Caption.TextColor3=C.negative
+   end
+   -- You, then your party, then everyone else.
+   local order=Players:GetPlayers()
+   local function rank(p) return p==player and 0 or table.find(mine,p.UserId) and 1 or 2 end
+   table.sort(order,function(a,c) if rank(a)~=rank(c) then return rank(a)<rank(c) end;return a.DisplayName<c.DisplayName end)
+   local y=0
+   for _,other in order do
+    local row=T.panel(list,'Player_'..other.UserId,4,y,W-20,60,'panel')
+    local img=T.make('ImageLabel',row,{Name='Headshot',BackgroundTransparency=1,Position=UDim2.fromOffset(10,8),Size=UDim2.fromOffset(44,44),Image=''});T.headshot(img,other.UserId)
+    local n=T.label(row,'Name',other.DisplayName..(other==player and '  (you)' or ''),64,6,W-230,28,19);n.TextXAlignment=Enum.TextXAlignment.Left
+    n.TextTruncate=Enum.TextTruncate.AtEnd;n.TextWrapped=false
+    local q=other:GetAttribute('LobbyQueue')
+    T.text(row,'User','@'..other.Name..'  ·  '..(q and ('PORTAL '..q) or 'IN LOBBY'),64,32,W-230,20,14,C.muted)
+    if table.find(mine,other.UserId) then
+     local chip=T.chip(row,'Status','IN YOUR PARTY',0,19,C.limeDark);chip.AnchorPoint=Vector2.new(1,0);chip.Position=UDim2.fromOffset(W-34,19)
+    elseif other~=player then
+     local sent=other:GetAttribute('PartyInviteFrom')==player.UserId and (other:GetAttribute('PartyInviteUntil') or 0)>workspace:GetServerTimeNow()
+     if sent then
+      local s=T.button(row,'Invite','INVITED',W-160,8,130,44,nil,true);s.Interactable=false
+     elseif #mine<4 then
+      T.button(row,'Invite','INVITE',W-160,8,130,44,function() partyFire('Invite',other.UserId) end)
+     end
+    end
+    y+=68
+   end
+   list.CanvasSize=UDim2.fromOffset(0,y)
   end
-  list.CanvasSize=UDim2.fromOffset(0,y)
+  -- Redrawn while open when anyone's party, invite or portal changes, or someone joins or leaves.
+  local pending,conns=false,{}
+  local function redraw() if pending then return end;pending=true;task.defer(function() pending=false;draw() end) end
+  local function watch(p) for _,attr in {'PartyMembers','PartyInviteFrom','LobbyQueue'} do table.insert(conns,p:GetAttributeChangedSignal(attr):Connect(redraw)) end end
+  for _,p in Players:GetPlayers() do watch(p) end
+  table.insert(conns,Players.PlayerAdded:Connect(function(p) watch(p);redraw() end))
+  table.insert(conns,Players.PlayerRemoving:Connect(redraw))
+  w.Root.Destroying:Connect(function() for _,c in conns do c:Disconnect() end end)
+  draw()
   return w
  end
 
@@ -587,6 +629,32 @@ function L.mount(player)
    if ok then T.sound('ui_purchase') end
    T.toast(screen,message,ok and C.lime or C.negative)
   end
+ end)
+ -- Party invites: a card under the toast line with ACCEPT / DECLINE until it expires, and a badge
+ -- on the party button. Server replies (invited, joined, taken to a portal) show as toasts.
+ local inviteCard
+ local function refreshInvite()
+  local from=player:GetAttribute('PartyInviteFrom')
+  local inviter=type(from)=='number' and Players:GetPlayerByUserId(from) or nil
+  local show=inviter~=nil and (player:GetAttribute('PartyInviteUntil') or 0)>workspace:GetServerTimeNow()
+  T.badge(party,show and '1' or nil)
+  if inviteCard and (not show or inviteCard:GetAttribute('From')~=from) then inviteCard:Destroy();inviteCard=nil end
+  if not show or inviteCard then return end
+  local card=T.panel(screen,'PartyInvite',0,0,470,126,'panel');card.AnchorPoint=Vector2.new(.5,0);card.Position=UDim2.new(.5,0,0,158);card.ZIndex=40
+  card:SetAttribute('From',from);inviteCard=card
+  T.make('UIScale',card,{Scale=math.min(1,(screen.AbsoluteSize.X-24)/470)})
+  local img=T.make('ImageLabel',card,{Name='Headshot',BackgroundTransparency=1,Position=UDim2.fromOffset(18,14),Size=UDim2.fromOffset(46,46),Image=''});T.headshot(img,from)
+  local msg=T.label(card,'Text',inviter.DisplayName..' invited you to their party',74,12,378,50,20);msg.TextXAlignment=Enum.TextXAlignment.Left
+  T.button(card,'Accept','ACCEPT',18,68,210,46,function() partyFire('Accept',from) end)
+  local no=T.button(card,'Decline','DECLINE',242,68,210,46,function() partyFire('Decline') end,true);no.Caption.TextColor3=C.negative
+ end
+ for _,attr in {'PartyInviteFrom','PartyInviteUntil'} do player:GetAttributeChangedSignal(attr):Connect(refreshInvite) end
+ refreshInvite()
+ task.spawn(function()
+  local r=root:WaitForChild('Party',30);if not r then return end
+  r.OnClientEvent:Connect(function(kind,ok,message)
+   if kind=='Result' and type(message)=='string' and message~='' then T.toast(screen,message,ok and C.lime or C.negative) end
+  end)
  end)
  player:GetAttributeChangedSignal('LobbyQueue'):Connect(refreshQueue)
  root:WaitForChild('Portals').DescendantAdded:Connect(function() task.defer(refreshQueue) end)
