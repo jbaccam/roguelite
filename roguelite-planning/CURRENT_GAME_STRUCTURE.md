@@ -10,7 +10,7 @@ This is the fastest document to read for the complete current plan. [PROGRESSION
 
 ## 1. Game identity
 
-**Title (confirmed 2026-10-02):** **Wavebreaker: Survive the Horde**. "Wavebreaker" is the brand. The subtitle tells new players what the game is, because a kid scrolling past may read "wave" as ocean or tsunami. Ads go to players with no context, so the title states the fantasy and the challenge in easy words.
+**Title (confirmed 2026-10-03):** **Wavebreaker: Survive the Swarm**. "Wavebreaker" is the brand. The subtitle tells new players what the game is, because a kid scrolling past may read "wave" as ocean or tsunami. Ads go to players with no context, so the title states the fantasy and the challenge in easy words. "Swarm" replaced "Horde" (2026-10-02) after keyword research on Creator Exchange. Several swarm-survival games have millions of visits (Final Swarm 52.3M, Swarm Survival 17.4M, Survive The Swarm 9.7M), and kids already know the word from Bee Swarm Simulator. Only three horde games passed 10M. Two existing games are already called "Survive The Swarm"; one had 6.2K players online. The "Wavebreaker:" brand keeps this title distinct.
 
 **Confirmed:** A funny, three-dimensional Roblox survivor roguelite played as the player's normal Roblox avatar. There is no roster of replacement heroes. A player picks a class, a starting weapon, armor pieces and a pet, enters one of five maps, automatically attacks crowds, builds up weapons and stats between waves, and tries to survive to wave 20. The player can then keep going in Endless or cash out, and returns to the lobby with keys to open chests.
 

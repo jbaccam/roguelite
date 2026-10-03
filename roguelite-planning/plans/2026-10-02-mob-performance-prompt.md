@@ -1,6 +1,6 @@
 # Task: make 50–65 mobs run smoothly (server first, then phones)
 
-You're working on a Roblox wave-survival roguelite, "Wavebreaker: Survive the Horde".
+You're working on a Roblox wave-survival roguelite, "Wavebreaker: Survive the Swarm".
 Repo: `C:\Users\Jeremiah\Documents\ChatGPT\Roblox`. The game code is under `roguelite-planning/studio-prototype/`.
 Studio place: "roguelite" (placeId 107877054949326), shared with the user, a friend in Team Create and other agent sessions.
 
