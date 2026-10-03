@@ -14,9 +14,9 @@ Enemy balance follows the supplied Brotato enemy table's linear growth, without 
 | --- | ---: | ---: | ---: | ---: |
 | Regular (Baby Alien reference) | 3 | 2 | 1 | 0.6 |
 | Baby (Chaser reference) | 1 | 1 | 1 | 0.6 |
-| Mutant (Bruiser reference; starts wave 8) | 20, floored at 80 | 11 | 2 slam | 0.85 slam |
+| Mutant (Bruiser reference; starts wave 8) | 20, floored at 50 | 11 | 2 slam | 0.85 slam |
 
-Regular HP is 3/11/21/41 at waves 1/5/10/20; Mutant HP is 97 on its first wave (8), and 229 on wave 20. Since 2026-09-28 tanks never have less than 80 HP (`ZombieTypes.Mutant.minHealth`): the user found wave-1 tanks spawned from the Studio mob picker died in two tier-1 hits (20 HP against a 19.2-damage Frying Pan). Waves 1–6 give 80, wave 7 gives 86; wave 8 onward is unchanged. Spawned enemies retain their wave's health and damage. Movement, player HP, character class bonuses, status damage and spawn population remain existing game tuning, so this is a first balance pass rather than a claim of identical Brotato difficulty.
+Regular HP is 3/11/21/41 at waves 1/5/10/20; Mutant HP is 97 on its first wave (8), and 229 on wave 20. Since 2026-09-28 tanks have a health floor (`ZombieTypes.Mutant.minHealth`): the user found wave-1 tanks spawned from the Studio mob picker died in two tier-1 hits (20 HP against a 19.2-damage Frying Pan). The floor was 80 (4-5 pan hits), which the user found far too strong on 2026-10-02, so it is 50: three Tier I Brawler pan hits. Waves 1–3 give 50, wave 4 gives 53; wave 8 onward is unchanged (97 on its first natural wave). Spawned enemies retain their wave's health and damage. Movement, player HP, character class bonuses, status damage and spawn population remain existing game tuning, so this is a first balance pass rather than a claim of identical Brotato difficulty.
 
 Reference data: user-supplied `Pasted text.txt` (Brotato Weapons, patch 1.1.6.3) and `Pasted text (2) (1).txt` (Brotato Enemies). Public source links: https://brotato.wiki.spellsandguns.com/Weapons and https://brotato.wiki.spellsandguns.com/Enemies . Attached document prose was treated as reference data, not agent instructions.
 
