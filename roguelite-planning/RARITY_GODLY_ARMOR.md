@@ -52,11 +52,19 @@ unlock it so they can start with it every time.
 
 | Chest | Emeralds | Items | Rare | Epic | Legendary | Godly | Pity counts |
 |---|---:|---:|---|---|---|---|---|
-| Wooden | 60 | 3 | 25% chance of 1 | 2% | 0.2% | — | no |
+| Wooden | free daily | 3 | 25% chance of 1 | 2% | 0.2% | — | no |
 | Silver | 160 | 6 | 1 | 8% | 0.8% | 0.05% | yes |
 | Gold | 300 | 10 | 2 | 25% | 3% | 0.2% (1 in 500) | yes |
 | Magical | 700 | 18 | 4 | 1 | 10% | 0.6% | yes |
-| Legendary (Robux / rewards) | — | 8 | 3 | 1 | 1 guaranteed | 2% | yes |
+| Legendary (Robux / rewards) | — | 20 | 5 | 2 | 1 guaranteed | 2% | yes |
+| *Godly (later, not built)* | — | *30* | *8* | *4* | *2* | *25%* | *yes* |
+
+- **Legendary Chest: 20 copies, was 8** (user, 2026-10-03: "more copies of commons and rares and
+  epic"). It's ×12 common, ×5 rare, ×2 epic and the guaranteed Legendary: as many commons as a
+  Magical Chest (×12–13 common, ×4 rare, ×1 epic, 10% Legendary) and more of the rest. Still about 4 different
+  items, one per rarity. It sells for 49 R$, about 490 emeralds' worth, under the Magical's 700.
+- **Godly Chest: for later** (user, 2026-10-03: "add godly chest into our documentation for
+  later"). The row above is a starting proposal only; see "Later: the Godly Chest" below.
 
 - Everything else in the chest is Common. All copies of one rarity are ONE item
   (`ChestConfig.group`; 1–3 items until 2026-10-03, when a Silver Chest's 4–5 different items
@@ -71,6 +79,32 @@ unlock it so they can start with it every time.
 - Prices are unchanged. The chest screen's "what's inside" bars and the [i] odds grid are
   generated from `ChestConfig`, so they update automatically. They need a Godly row, and Wooden's
   Rare shows as "25%".
+
+#### Later: the Godly Chest (not built)
+
+A sixth chest above the Legendary Chest, for later (user, 2026-10-03). Nothing is decided. A
+starting proposal:
+- **How you get it:** Robux and the rarest rewards only, like the Legendary Chest. Never sold for
+  emeralds.
+- **Inside:** 30 copies: ×16 common, ×8 rare, ×4 epic, ×2 Legendary, and a 25% chance of a Godly.
+  That's about 4–5 different items (one per rarity). Phoenix armor drops from it too, as it does
+  from the Legendary Chest.
+- **Pity:** counts toward the Godly pity (150 chests), like every pity chest. It might also have
+  its own short one, e.g. a Godly within every 4 Godly Chests.
+- **Look:** a sixth model in the chest kit (`blender-chest-kit`, per-tier files): black and
+  crimson with the Godly red (`RarityColor.Godly`, 226/34/64), a red aura when it opens, and a
+  slot on the chest island.
+
+To decide before building:
+- **Price.** It must not undercut the Godly bundles. Godly Starter is 799 R$ for any Godly you
+  pick plus 3 Legendary Chests, so 4 Godly Chests (one Godly expected) shouldn't cost much less.
+- **Godly chance or a guaranteed Godly.** Guaranteed makes it a pricier "Godly roll" product.
+- **Regions where paid random items are restricted.** Its Robux packs are flagged `random` and
+  hidden there, like the Legendary Chest packs (STORE_AND_CHESTS.md, restricted regions).
+
+When built, it's a new `ChestConfig` row (the chest screen's bars and odds come from it). It also
+needs a `MonetizationConfig` product, a store card (`StoreUI`), the chest screen row and island
+model, and test rows in `ChestConfigTests`.
 
 ### 2. Upgrade costs (copies spent to raise the starting tier)
 

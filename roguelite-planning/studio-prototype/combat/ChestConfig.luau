@@ -94,7 +94,9 @@ add({id='Gold',icon='rbxassetid://71517836177030',name='Gold Chest',emeralds=300
  aura=Color3.fromRGB(255,200,50),glow=Color3.fromRGB(255,206,90)})
 add({id='Magical',icon='rbxassetid://100435943394609',name='Magical Chest',emeralds=700,copies=18,rare=4,epic=1,legendary=.1,godly=.006,pity=true,
  aura=Color3.fromRGB(176,90,255),glow=Color3.fromRGB(110,180,255)})
-add({id='Legendary',icon='rbxassetid://97798658508261',name='Legendary Chest',emeralds=nil,copies=8,rare=3,epic=1,legendary=1,godly=.02,pity=true,
+-- Legendary (Robux / rewards): 20 copies, was 8 (user, 2026-10-03: more commons, rares and epics):
+-- ×12 common, ×5 rare, ×2 epic and the guaranteed Legendary: a Magical Chest's commons, more of the rest.
+add({id='Legendary',icon='rbxassetid://97798658508261',name='Legendary Chest',emeralds=nil,copies=20,rare=5,epic=2,legendary=1,godly=.02,pity=true,
  aura=Color3.fromRGB(255,110,40),glow=Color3.fromRGB(255,176,60),accent=Color3.fromRGB(120,255,232)})
 -- Old saves: class chests become Wooden, the Royal Chest becomes Legendary (same Robux packs).
 C.Legacy={Brawler='Wooden',Gunner='Wooden',Thrower='Wooden',Juggler='Wooden',Handyman='Wooden',Mage='Wooden',Royal='Legendary'}

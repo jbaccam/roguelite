@@ -41,7 +41,7 @@ return function(Chests, rolls)
 		Silver = { 160, 6, 1, 0.08, 0.008, 0.0005, true },
 		Gold = { 300, 10, 2, 0.25, 0.03, 0.002, true },
 		Magical = { 700, 18, 4, 1, 0.1, 0.006, true },
-		Legendary = { nil, 8, 3, 1, 1, 0.02, true },
+		Legendary = { nil, 20, 5, 2, 1, 0.02, true },
 	}
 	for kind, w in want do
 		local d = Chests.ById[kind]
@@ -100,7 +100,7 @@ return function(Chests, rolls)
 		Silver = "Common=×3–5 Rare=×1 Epic=8% Legendary=0.8%",
 		Gold = "Common=×6–8 Rare=×2 Epic=25% Legendary=3%",
 		Magical = "Common=×12–13 Rare=×4 Epic=×1 Legendary=10%",
-		Legendary = "Common=×3 Rare=×3 Epic=×1 Legendary=×1",
+		Legendary = "Common=×12 Rare=×5 Epic=×2 Legendary=×1",
 	}
 	for kind, text in summaries do
 		check(rows(kind) == text, kind .. " summary: " .. rows(kind))

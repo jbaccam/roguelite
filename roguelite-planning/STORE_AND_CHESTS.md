@@ -128,13 +128,17 @@ copy. Everything else is Common. All copies of one rarity are one item (Clash Ro
 stacks, e.g. ×12 Frying Pan, ×6 Glock; 1–3 items per rarity until 2026-10-03). The pool is all 36 weapons (plus
 Godly); locked-class weapons still drop and show a "Class locked" note.
 
+Current numbers (2026-10-03; source of truth `ChestConfig`, design in RARITY_GODLY_ARMOR.md
+section 1, which replaced the bigger 2026-09-27 table):
+
 | Chest | Emeralds | Copies | Rare copies | Epic copies | Legendary | Godly |
 |---|---:|---:|---:|---|---:|---:|
-| Wooden | 60 | 7 | 1 | 10% chance of 1 | 1% | — |
-| Silver | 160 | 16 | 2 | 35% chance of 1 | 4% | 0.1% |
-| Gold | 300 | 30 | 5 | 1 | 15% | 0.25% |
-| Magical | 700 | 40 | 10 | 3 | 50% | 1% |
-| Legendary | Robux / rewards | 14 | 4 | 2 | 100% | 3% |
+| Wooden | free daily | 3 | 25% chance of 1 | 2% | 0.2% | — |
+| Silver | 160 | 6 | 1 | 8% | 0.8% | 0.05% |
+| Gold | 300 | 10 | 2 | 25% | 3% | 0.2% |
+| Magical | 700 | 18 | 4 | 1 | 10% | 0.6% |
+| Legendary | Robux / rewards | 20 | 5 | 2 | 100% | 2% |
+| Godly (later, not built) | Robux / rewards | 30 | 8 | 4 | 2 | 25% |
 
 Godly also has a visible pity bar (guaranteed after 150 Silver-or-better chests; config value).
 
@@ -248,6 +252,9 @@ same pace.
   Chests and an Epic Chest. We could add chests to Hoard and Treasury the same way.
 - **Weapon bundle.** Copies of several weapons at once (theirs: 4 weapons for 599 R$). For us: a
   class's weapons, to raise their tiers.
+- **Godly Chest** (user, 2026-10-03). A sixth chest above the Legendary Chest, Robux and rare
+  rewards only. Proposal and open questions (price vs the Godly bundles, chance vs guaranteed
+  Godly, restricted regions): RARITY_GODLY_ARMOR.md, "Later: the Godly Chest".
 
 ## Server rules (all parts)
 
