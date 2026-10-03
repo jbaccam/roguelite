@@ -8,6 +8,7 @@ local RS=game:GetService('ReplicatedStorage')
 local Http=game:GetService('HttpService')
 local Input=game:GetService('UserInputService')
 local GuiService=game:GetService('GuiService')
+local TextService=game:GetService('TextService')
 local T=require(RS:WaitForChild('UITheme'))
 local FX=require(RS:WaitForChild('StoreFX'))
 local combat=RS:WaitForChild('RogueliteCombat')
@@ -45,9 +46,23 @@ local function glass(parent,name,x,y,w,h)
  T.make('UICorner',g,{CornerRadius=UDim.new(0,16)});T.make('UIStroke',g,{Color=INK,Thickness=2,Transparency=.35})
  return g
 end
+-- A player's name on one line, up to `size` px. Long names shrink: display names run to 20
+-- characters, and "xX_DragonSlayer99_Xx" fits a 4-player card at 18 px on PC and 12 px on an
+-- 844x390 phone. Below 13 px (11 on a phone) it ends in "…" instead, so it never runs into the next
+-- card. Under the canvas UIScale text sizes are screen pixels (`s` is the scale), and the box is too
+-- short for two lines at the smallest size, so a name never wraps.
+local function fitName(parent,text,x,y,w,h,size,s,color)
+ local min=math.max(11,math.floor(13*s))
+ local shown=text
+ while #shown>1 and TextService:GetTextSize(shown==text and text or shown..'…',min,T.Font,Vector2.new(1e4,100)).X>(w-4)*s do shown=shown:sub(1,(utf8.offset(shown,-1) or #shown)-1) end
+ local l=left(T.label(parent,'Name',shown==text and text or shown..'…',x,y,w,h,size,color));l.FitText.MinTextSize=min
+ return l
+end
+-- With a note, the title keeps the left 55% and the note the rest, so on a narrow panel (387 on a
+-- 667x375 phone) "LEVEL-UPS" and "level 9 · 9 picks" shrink instead of running into each other.
 local function section(parent,y,w,title,note)
- left(FX.title(parent,'Section_'..title,title,24,y,w-48,32,24))
- if note then right(T.text(parent,'Note_'..title,note,w/2,y+6,w/2-24,24,16,C.muted)) end
+ left(FX.title(parent,'Section_'..title,title,24,y,note and math.floor(w*.55)-32 or w-48,32,24))
+ if note then right(T.text(parent,'Note_'..title,note,math.floor(w*.55),y+6,math.ceil(w*.45)-24,24,16,C.muted)) end
  local rule=T.make('Frame',parent,{Name='Rule_'..title,Position=UDim2.fromOffset(24,y+38),Size=UDim2.fromOffset(w-48,2),BackgroundColor3=C.lime,BorderSizePixel=0})
  T.make('UIGradient',rule,{Transparency=NumberSequence.new(0,1)})
  return y+48
@@ -55,7 +70,7 @@ end
 
 -- opts (previews and tests only): parent (where the ScreenGui goes), state (a PlayerStates-like
 -- folder), runState, flags (stands in for RogueliteCombat's run attributes), remote
--- ({FireServer=fn}), party() (the run's living members).
+-- ({FireServer=fn}), party() (the run's members, downed ones included, you first).
 function M.new(player,opts)
  opts=opts or {}
  player=player or Players.LocalPlayer
@@ -82,11 +97,13 @@ function M.new(player,opts)
   local waveText=(runState:GetAttribute('Won') and 'ENDLESS WAVE ' or 'WAVE ')..wave
   return string.upper(m and m.name or 'RUN'),string.upper(diff),color,waveText,wave
  end
+ -- Everyone in the run, downed players too (their card says down; they don't count toward
+ -- "n / m PAUSED"). You first, then the rest in a fixed order so cards don't swap around.
  local function party()
   if opts.party then return opts.party() end
   local list={}
-  for _,p in Players:GetPlayers() do if p:GetAttribute('RunMember') and not p:GetAttribute('RunDown') then table.insert(list,p) end end
-  table.sort(list,function(a,b) return a.UserId<b.UserId end)
+  for _,p in Players:GetPlayers() do if p:GetAttribute('RunMember') then table.insert(list,p) end end
+  table.sort(list,function(a,b) if (a==player)~=(b==player) then return a==player end;return a.UserId<b.UserId end)
   return list
  end
 
@@ -112,38 +129,62 @@ function M.new(player,opts)
   local w,h=L.w,L.h
   local frozen=flags:GetAttribute('RunPaused')==true
   local members=party()
-  local solo=#members<=1
+  local solo=#members<=1 -- the server's RESTART rule too: one run member, downed or not
+  -- Only living members count toward "n / m PAUSED" (the server's RunPausedCount / RunLivingCount);
+  -- a downed player never blocks a freeze. Counted here too until those attributes arrive.
+  local up,upPaused=0,0
+  for _,p in members do if not p:GetAttribute('RunDown') then up+=1;if p:GetAttribute('Paused') then upPaused+=1 end end end
+  local count,living=flags:GetAttribute('RunPausedCount') or upPaused,flags:GetAttribute('RunLivingCount') or up
+  local many=living>1 -- with everyone else down you pause alone, as in solo
+  -- Short screens (phones): an 844x390 phone gets a 1688x780 canvas and Roblox's top bar covers up
+  -- to 116 of it, so the plate and the map line share one row and the buttons close up. Every PC
+  -- window gets a canvas at least 1080 tall and keeps the roomy layout.
+  local tight=h-L.top<800
   -- Title plate, then map · difficulty · wave, the status pill and (in a party) who has paused.
-  local y=L.top+12
-  local plate=T.panel(canvas,'TitlePlate',w/2-150,y,300,66,'panel');T.caps(plate,44)
+  local y=L.top+(tight and 4 or 12)
+  local mapName,diff,diffColor,waveText=runInfo()
+  -- Phones: the map line sits right of the plate, on the plate's middle, and the pair is centred
+  -- on the screen. There the line draws as tall as its box (30 → 15 px at .5 scale), so the box is
+  -- the text's width at that size: one line, nothing left over to push the pair off centre.
+  local iw=w
+  if tight then iw=math.min(w-440,TextService:GetTextSize(mapName..'  ·  '..diff..'  ·  '..waveText,math.min(22,math.floor(30*L.s)),T.Font,Vector2.new(1e4,100)).X/L.s+8) end
+  local px=tight and w/2-(350+iw)/2+18 or w/2-150 -- the left stone pokes 18 out of the plate
+  local plate=T.panel(canvas,'TitlePlate',px,y,300,66,'panel');T.caps(plate,44)
   T.icon(plate,'Icon',40,11,44,M.PAUSE_ICON)
   left(T.label(plate,'Title','PAUSED',92,8,180,50,40))
-  y+=74
-  local mapName,diff,diffColor,waveText=runInfo()
-  local info=center(T.text(canvas,'RunInfo',string.format('%s  ·  <font color="%s">%s</font>  ·  %s',mapName,T.hex(diffColor),diff,waveText),0,y,w,30,22))
+  if not tight then y+=74 end
+  local info=center(T.text(canvas,'RunInfo',string.format('%s  ·  <font color="%s">%s</font>  ·  %s',mapName,T.hex(diffColor),diff,waveText),tight and px+332 or 0,tight and y+18 or y,iw,30,22))
   info.Font=T.Font
-  y+=40
-  local count,living=flags:GetAttribute('RunPausedCount') or (frozen and 1 or 0),flags:GetAttribute('RunLivingCount') or #members
-  local status=frozen and (solo and 'GAME FROZEN' or 'EVERYONE PAUSED  ·  GAME FROZEN') or (solo and 'PAUSING…' or (count..' / '..math.max(living,1)..' PAUSED  ·  THE GAME KEEPS GOING UNTIL EVERYONE PAUSES'))
-  local pw=math.min(w-80,frozen and (solo and 360 or 560) or (solo and 300 or 820))
+  y+=tight and 74 or 40
+  -- Shorter words on phones. The pill is at least its design width and grows to fit the words at
+  -- full size (19 px; a phone draws them as tall as the pill allows), so they stay on one line.
+  local status=frozen and (many and 'EVERYONE PAUSED  ·  GAME FROZEN' or 'GAME FROZEN') or (many and (count..' / '..living..' PAUSED  ·  '..(tight and 'GAME KEEPS GOING UNTIL ALL PAUSE' or 'THE GAME KEEPS GOING UNTIL EVERYONE PAUSES')) or 'PAUSING…')
+  local pw=math.min(w-80,math.max(frozen and (many and 560 or 360) or (many and 820 or 300),TextService:GetTextSize(status,math.min(frozen and 22 or 19,math.floor(38*L.s)),T.Font,Vector2.new(1e4,100)).X/L.s+48))
   local pill=T.make('Frame',canvas,{Name='Status',Position=UDim2.fromOffset(w/2-pw/2,y),Size=UDim2.fromOffset(pw,46),BackgroundColor3=frozen and Color3.fromRGB(47,95,14) or Color3.fromRGB(110,74,10),BorderSizePixel=0})
   T.make('UICorner',pill,{CornerRadius=UDim.new(1,0)});T.make('UIStroke',pill,{Color=INK,Thickness=3})
   local pl=center(FX.title(pill,'Text',status,12,4,pw-24,38,frozen and 22 or 19,nil));pl.TextColor3=frozen and C.limeSoft or Color3.fromRGB(255,217,138)
   y+=56
   if not solo then
-   local cw=210;local total=#members*cw+(#members-1)*20;local x=w/2-total/2
+   -- One card per member (up to 4): headshot, the name on its own line across the card, then
+   -- ✓ paused / playing / down. Your card has a lime edge. Phones get wider cards (340 vs 300) so
+   -- a 20-character name still draws at 11+ px there: 4 cards fill 1396 of an 844x390 phone's 1688.
+   local n=#members;local cw=math.min(tight and 340 or 300,math.floor((w-64-(n-1)*12)/n));local x=w/2-(n*cw+(n-1)*12)/2
    for i,p in members do
-    local c=T.make('Frame',canvas,{Name='Member'..i,Position=UDim2.fromOffset(x+(i-1)*(cw+20),y),Size=UDim2.fromOffset(cw,40),BackgroundColor3=INK,BackgroundTransparency=.45,BorderSizePixel=0})
+    local down,paused,you=p:GetAttribute('RunDown')==true,p:GetAttribute('Paused')==true,p==player
+    local c=T.make('Frame',canvas,{Name='Member'..i,Position=UDim2.fromOffset(x+(i-1)*(cw+12),y),Size=UDim2.fromOffset(cw,54),BackgroundColor3=INK,BackgroundTransparency=down and .62 or .45,BorderSizePixel=0})
     T.make('UICorner',c,{CornerRadius=UDim.new(0,12)})
-    local head=T.make('ImageLabel',c,{Name='Head',BackgroundTransparency=1,Position=UDim2.fromOffset(6,4),Size=UDim2.fromOffset(32,32)});T.headshot(head,p.UserId)
+    if you then T.make('UIStroke',c,{Color=C.lime,Thickness=2,Transparency=.25}) end
+    local head=T.make('ImageLabel',c,{Name='Head',BackgroundTransparency=1,Position=UDim2.fromOffset(6,6),Size=UDim2.fromOffset(42,42),ImageTransparency=down and .55 or 0});T.headshot(head,p.UserId)
     T.make('UICorner',head,{CornerRadius=UDim.new(1,0)})
-    local n=left(T.label(c,'Name',p.DisplayName,44,4,124,32,17));n.TextWrapped=false
-    if p:GetAttribute('Paused') then FX.check(c,cw-36,7,26) else right(T.text(c,'Playing','playing',cw-70,8,62,24,14,C.gold)) end
+    fitName(c,p.DisplayName,54,4,cw-60,24,18,L.s,down and C.muted or C.white)
+    local sx=54
+    if paused and not down then FX.check(c,54,31,18);sx=78 end
+    left(T.text(c,'Status',(down and 'down' or paused and 'paused' or 'playing')..(you and '  ·  you' or ''),sx,29,cw-sx-10,22,15,down and C.negative or paused and C.limeSoft or C.gold))
    end
-   y+=52
+   y+=66
   end
   -- Three columns below: stats | buttons | build. Side panels share what's left of the width.
-  local top=y+10;local panelH=h-top-24
+  local top=y+(tight and 0 or 10);local panelH=h-top-(tight and 12 or 24)
   local side=math.clamp(math.floor((w-MID_W-4*40)/2),300,SIDE_W)
   local gap=math.floor((w-2*side-MID_W)/4)
   local lx,mx,rx=gap,gap*2+side,gap*3+side+MID_W
@@ -173,29 +214,32 @@ function M.new(player,opts)
    sy+=27
   end
   ls.CanvasSize=UDim2.fromOffset(0,sy+16)
-  -- Centre: actions.
-  local by=top+44
-  local resume=FX.button(canvas,'Resume','RESUME',mx,by,MID_W,86,function() self.Close() end);resume.Caption.TextSize=34
-  center(T.text(canvas,'ResumeHint',Input.TouchEnabled and '' or 'or press P',mx,by+90,MID_W,22,15,C.muted))
-  by+=132
-  local settings=FX.button(canvas,'Settings','SETTINGS',mx,by,MID_W,70,function()
+  -- Centre: actions. Phones close up the gaps (RESUME to the leave note: 496 → 388 tall), keep
+  -- buttons 72 tall (the 36 px tap minimum at .5 scale) and use one short line per note, each with
+  -- room above the next button. A party's RESTART says SOLO ONLY on the button itself there.
+  local bh=tight and 72 or 70
+  local by=top+(tight and 0 or 44)
+  local resume=FX.button(canvas,'Resume','RESUME',mx,by,MID_W,tight and 80 or 86,function() self.Close() end);resume.Caption.TextSize=34
+  center(T.text(canvas,'ResumeHint',Input.TouchEnabled and '' or 'or press P',mx,by+(tight and 84 or 90),MID_W,22,15,C.muted))
+  by+=tight and 118 or 132
+  local settings=FX.button(canvas,'Settings','SETTINGS',mx,by,MID_W,bh,function()
    if settingsWindow then settingsWindow.Close() return end
    settingsWindow=T.settingsWindow(gui);settingsWindow.Root.Destroying:Connect(function() settingsWindow=nil end)
   end,true);settings.Caption.TextSize=26
-  by+=90
+  by+=bh+(tight and 12 or 20)
   if M.RESTART then
-   local restart=FX.button(canvas,'Restart','RESTART',mx,by,MID_W,70,function() if solo then remote:FireServer('Restart');self.Close(true) end end,true)
+   local restart=FX.button(canvas,'Restart',(tight and not solo) and 'RESTART  ·  SOLO ONLY' or 'RESTART',mx,by,MID_W,bh,function() if solo then remote:FireServer('Restart');self.Close(true) end end,true)
    restart.Caption.TextSize=26
-   if not solo then restart.Interactable=false;center(T.text(canvas,'RestartHint','Restart is for solo runs',mx,by+72,MID_W,22,14,C.muted)) end
-   by+=110
+   if not solo then restart.Interactable=false;if not tight then center(T.text(canvas,'RestartHint','Restart is for solo runs',mx,by+bh+2,MID_W,22,14,C.muted)) end end
+   by+=bh+(tight and 12 or 40)
   end
-  local leave=FX.button(canvas,'Leave','LEAVE RUN',mx,by,MID_W,70,function()
+  local leave=FX.button(canvas,'Leave','LEAVE RUN',mx,by,MID_W,bh,function()
    if leaveArmed and os.clock()-leaveArmed<3 then remote:FireServer('LeaveRun');self.Close(true);return end
    leaveArmed=os.clock();redraw()
   end,true)
   local armed=leaveArmed and os.clock()-leaveArmed<3
   leave.Caption.Text=armed and 'TAP AGAIN TO LEAVE' or 'LEAVE RUN';leave.Caption.TextSize=armed and 22 or 26;leave.Caption.TextColor3=C.negative
-  center(T.text(canvas,'LeaveHint','Leaving keeps the emeralds you earned so far',mx,by+76,MID_W,44,15,C.muted))
+  center(T.text(canvas,'LeaveHint',tight and 'You keep the emeralds earned so far' or 'Leaving keeps the emeralds you earned so far',mx,by+bh+(tight and 8 or 6),MID_W,tight and 22 or 44,15,C.muted))
   if armed then task.delay(3.1,function() if self.open and leaveArmed and os.clock()-leaveArmed>=3 then leaveArmed=nil;redraw() end end) end
   -- Right: build. Weapons (6), items (16 kinds, copies stack ×5), level-ups (16 cards, picks stack).
   local R1=glass(canvas,'Build',rx,top,side,panelH)
@@ -231,7 +275,8 @@ function M.new(player,opts)
   local picks,total={},0
   for id,n in snap.upgrades or {} do if n>0 then table.insert(picks,{id=id,n=n});total+=n end end
   table.sort(picks,function(a,b) if a.n~=b.n then return a.n>b.n end;return a.id<b.id end)
-  ry=section(rs,ry,side,'LEVEL-UPS','level '..(snap.level or 1)..(snap.upgrades and ('  ·  '..total..' picks') or ''))
+  -- A narrow panel (phones) drops "level n" from the note; THIS RUN in STATS shows the level.
+  ry=section(rs,ry,side,'LEVEL-UPS',side<450 and snap.upgrades and (total..' picks') or ('level '..(snap.level or 1)..(snap.upgrades and ('  ·  '..total..' picks') or '')))
   for i,u in picks do
    local x=24+((i-1)%8)*(cell+6);local yy=ry+math.floor((i-1)/8)*(cell+12)
    local c=T.make('Frame',rs,{Name='LevelUp_'..u.id,Position=UDim2.fromOffset(x,yy),Size=UDim2.fromOffset(cell,cell+6),BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=.94,BorderSizePixel=0})
