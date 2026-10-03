@@ -16,7 +16,8 @@ Play-test report: zombies still ran in right after loading, level-ups came too f
   - chests squash and stretch inside a sparkle ring; title cards get a shine sweep;
   - the lobby tracker's CLAIM flies emeralds into the counter and pops the check.
   The slots are copied at click time because the window redraws on the result. Nothing takes input, and the layer is destroyed at 1.7 s.
-- **Not run:** no Play test (the user tests).
+- **Studio:** synced 2026-10-03 at b03f62a with one guarded execute_luau call (8 scripts, each guarded on its exact 9589a61 version, which a read-only check had just confirmed). Afterwards all 8 matched b03f62a.
+- **Not run:** no Play test (the user tests). The "sent back to the lobby from a match" report isn't diagnosed yet; it needs the live F9 log.
 
 # Parties, the full Armor tab, a bigger air boost — October 3, 2026
 
