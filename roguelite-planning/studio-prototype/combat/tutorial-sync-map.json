@@ -1,0 +1,14 @@
+{
+ "ReplicatedStorage.RogueliteCombat.EconomyConfig": "combat/EconomyConfig.luau",
+ "ServerScriptService.ShardDropService": "combat/ShardDropService.luau",
+ "ServerScriptService.ShopService": "combat/ShopService.luau",
+ "ServerScriptService.BossService": "combat/bosses/BossService.luau",
+ "ServerScriptService.CombatEffectsService": "combat/CombatEffectsService.luau",
+ "ServerScriptService.CharacterService": "combat/CharacterService.luau",
+ "ServerScriptService.RogueliteZombieChase": "RogueliteZombieChase.server.luau",
+ "ServerScriptService.MatchService": "lobby/MatchService.luau",
+ "ServerScriptService.ProfileService": "combat/ProfileService.luau",
+ "ServerScriptService.RogueliteMeta": "combat/RogueliteMeta.server.luau",
+ "ReplicatedStorage.RunResultsUI": "ui/RunResultsUI.luau",
+ "ReplicatedStorage.LobbyUI": "ui/LobbyUI.luau"
+}

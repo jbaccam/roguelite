@@ -271,6 +271,9 @@
         "AdminConfig": {
           "$path": "AdminConfig.luau"
         },
+        "TutorialConfig": {
+          "$path": "TutorialConfig.luau"
+        },
         "SetLobbyAttacks": {
           "$className": "RemoteEvent",
           "$properties": {
@@ -396,6 +399,9 @@
       },
       "AssetPreloader": {
         "$path": "../ui/AssetPreloader.luau"
+      },
+      "TutorialGuideUI": {
+        "$path": "../ui/TutorialGuideUI.luau"
       }
     },
     "ReplicatedFirst": {
@@ -547,6 +553,9 @@
       },
       "PetService": {
         "$path": "PetService.server.luau"
+      },
+      "TutorialDirector": {
+        "$path": "TutorialDirector.server.luau"
       }
     },
     "StarterPlayer": {
@@ -608,6 +617,12 @@
         },
         "PetVisuals": {
           "$path": "PetVisuals.client.luau"
+        },
+        "TutorialGuide": {
+          "$path": "../ui/TutorialGuide.client.luau"
+        },
+        "BossIntro": {
+          "$path": "BossIntro.client.luau"
         }
       },
       "StarterCharacterScripts": {

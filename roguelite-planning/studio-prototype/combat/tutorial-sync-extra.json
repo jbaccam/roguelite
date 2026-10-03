@@ -1,0 +1,10 @@
+{
+ "new": [
+  ["ReplicatedStorage.RogueliteCombat.TutorialConfig", "combat/TutorialConfig.luau", "ModuleScript", "ReplicatedStorage.RogueliteCombat.CharacterStats"],
+  ["ReplicatedStorage.TutorialGuideUI", "ui/TutorialGuideUI.luau", "ModuleScript", "ReplicatedStorage.LobbyUI"],
+  ["ServerScriptService.TutorialDirector", "combat/TutorialDirector.server.luau", "Script", "ServerScriptService.RogueliteMeta"],
+  ["StarterPlayer.StarterPlayerScripts.TutorialGuide", "ui/TutorialGuide.client.luau", "LocalScript", "StarterPlayer.StarterPlayerScripts.RogueliteLobbyHUD"],
+  ["StarterPlayer.StarterPlayerScripts.BossIntro", "combat/BossIntro.client.luau", "LocalScript", "StarterPlayer.StarterPlayerScripts.BossPresentation"]
+ ],
+ "remotes": []
+}
