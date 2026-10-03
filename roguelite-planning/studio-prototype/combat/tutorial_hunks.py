@@ -27,6 +27,10 @@ PROFILE = "combat/ProfileService.luau"
 PROFILE_S = "ServerScriptService.ProfileService"
 META = "combat/RogueliteMeta.server.luau"
 META_S = "ServerScriptService.RogueliteMeta"
+RESULTS = "ui/RunResultsUI.luau"
+RESULTS_S = "ReplicatedStorage.RunResultsUI"
+LOBBYUI = "ui/LobbyUI.luau"
+LOBBYUI_S = "ReplicatedStorage.LobbyUI"
 TUTOR = "combat/TutorialDirector.server.luau"
 MATCH = "lobby/MatchService.luau"
 MATCH_S = "ServerScriptService.MatchService"
@@ -322,6 +326,38 @@ HUNKS = [
     (META, META_S,
      " elseif action=='ClaimFeat' and Profiles.claimFeat and type(a)=='string' and #a<=40 then ok,message=Profiles.claimFeat(p,a) -- plan M", "after",
      " elseif action=='TutorialStep' and Profiles.tutorialStep and type(a)=='string' and #a<=20 then ok,message=Profiles.tutorialStep(p,a) -- the tutorial's lobby steps"),
+    # --- RunResultsUI: the tutorial's results -----------------------------------------------------
+    (RESULTS, RESULTS_S,
+     "  local cap=T.label(reward,'Caption','EMERALDS EARNED',es+28,RA*.5+6,RW-es-40,26,20,C.muted);cap.TextXAlignment=Enum.TextXAlignment.Left", "after",
+     "  -- The tutorial (r.tutorial = TutorialConfig.Reward): its emeralds count up from 0.\n"
+     "  if r.tutorial then\n"
+     "   local target=r.tutorial.emeralds or 0;value.Text='+0'\n"
+     "   task.spawn(function() for i=1,24 do task.wait(.035);if not value.Parent then return end;value.Text='+'..math.floor(target*i/24+.5) end end)\n"
+     "  end"),
+    (RESULTS, RESULTS_S,
+     "  for i,t in {{tostring(r.waves or 0),endless and 'WAVES (ENDLESS)' or 'WAVES CLEARED'},{tostring(r.level or 1),'LEVEL REACHED'},{tostring(r.best or 0),'BEST WAVE'}} do", "replace",
+     "  local tiles={{tostring(r.waves or 0),endless and 'WAVES (ENDLESS)' or 'WAVES CLEARED'},{tostring(r.level or 1),'LEVEL REACHED'},{tostring(r.best or 0),'BEST WAVE'}}\n"
+     "  -- The tutorial: its chests instead of the best wave.\n"
+     "  if r.tutorial then local n=0;for _,c in r.tutorial.chests or {} do n+=c end;tiles[3]={'×'..n,'SILVER CHESTS'} end\n"
+     "  for i,t in tiles do"),
+    (RESULTS, RESULTS_S,
+     "   local tile=T.panel(board,'Stat'..i,sx+(i-1)*(tw+14),ay,tw,RA,'inset')", "after",
+     "   -- The tutorial's tiles pop in one after another.\n"
+     "   if r.tutorial then local pop=T.make('UIScale',tile,{Scale=0});TweenService:Create(pop,TweenInfo.new(.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out,0,false,.3+.35*i),{Scale=1}):Play() end"),
+    (RESULTS, RESULTS_S,
+     "  note=centred(T.label(board,'Note','',28,PH-30,PW-56,24,18,C.muted))", "before",
+     "  -- The tutorial: no PLAY AGAIN; LOBBY is the one big button (the guide's arrow points at it).\n"
+     "  if r.tutorial then\n"
+     "   again.Visible=false\n"
+     "   back.Position=UDim2.fromOffset((PW-bw)/2,PH-96);T.setPrimary(back,true);back.Caption.Text='LOBBY'\n"
+     "  end"),
+    # --- LobbyUI: the guide can open and close windows -----------------------------------------
+    (LOBBYUI, LOBBYUI_S,
+     " function self.CloseWindow() if win then win.Close() end end", "after",
+     " -- The tutorial guide (TutorialGuide) opens and closes windows too, in every build:\n"
+     " -- GuideOpenWindow:Fire('Store','Bundles') opens one, Fire() closes the open one.\n"
+     " local guideHook=Instance.new('BindableEvent');guideHook.Name='GuideOpenWindow';guideHook.Parent=screen\n"
+     " guideHook.Event:Connect(function(name,arg) if name then open(name,arg) elseif win then win.Close() end end)"),
     (SHOP, SHOP_S,
      " Shards.clear(true)", "replace",
      " -- Leftover crystals fly to the players and count as pickups (XP and shards) while it's still\n"

@@ -69,6 +69,11 @@ function M.mount(player)
   T.icon(reward,'Emerald',16,20,es,'emerald')
   local value=T.label(reward,'Value','+'..(r.emeralds or 0),es+28,8,RW-es-40,RA*.5,64,C.emerald);value.TextXAlignment=Enum.TextXAlignment.Left
   local cap=T.label(reward,'Caption','EMERALDS EARNED',es+28,RA*.5+6,RW-es-40,26,20,C.muted);cap.TextXAlignment=Enum.TextXAlignment.Left
+  -- The tutorial (r.tutorial = TutorialConfig.Reward): its emeralds count up from 0.
+  if r.tutorial then
+   local target=r.tutorial.emeralds or 0;value.Text='+0'
+   task.spawn(function() for i=1,24 do task.wait(.035);if not value.Parent then return end;value.Text='+'..math.floor(target*i/24+.5) end end)
+  end
   local chips={}
   if (r.firstWin or 0)>0 then table.insert(chips,{'FIRST WIN +'..r.firstWin,Color3.fromRGB(120,88,10),C.gold}) end
   if r.newBest then table.insert(chips,{'NEW BEST',C.limeDark,C.limeSoft}) end
@@ -79,8 +84,13 @@ function M.mount(player)
    cx+=chip.Size.X.Offset+8
   end
   local sx=28+RW+20;local tw=(PW-28-sx-28)/3
-  for i,t in {{tostring(r.waves or 0),endless and 'WAVES (ENDLESS)' or 'WAVES CLEARED'},{tostring(r.level or 1),'LEVEL REACHED'},{tostring(r.best or 0),'BEST WAVE'}} do
+  local tiles={{tostring(r.waves or 0),endless and 'WAVES (ENDLESS)' or 'WAVES CLEARED'},{tostring(r.level or 1),'LEVEL REACHED'},{tostring(r.best or 0),'BEST WAVE'}}
+  -- The tutorial: its chests instead of the best wave.
+  if r.tutorial then local n=0;for _,c in r.tutorial.chests or {} do n+=c end;tiles[3]={'×'..n,'SILVER CHESTS'} end
+  for i,t in tiles do
    local tile=T.panel(board,'Stat'..i,sx+(i-1)*(tw+14),ay,tw,RA,'inset')
+   -- The tutorial's tiles pop in one after another.
+   if r.tutorial then local pop=T.make('UIScale',tile,{Scale=0});TweenService:Create(pop,TweenInfo.new(.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out,0,false,.3+.35*i),{Scale=1}):Play() end
    centred(T.label(tile,'Value',t[1],8,10,tw-16,RA-52,48,i==3 and r.newBest and C.lime or C.white))
    centred(T.label(tile,'Caption',t[2],8,RA-42,tw-16,26,18,C.muted))
   end
@@ -121,6 +131,11 @@ function M.mount(player)
    combat.RunAction:FireServer('ReturnToLobby')
   end,true)
   back.Caption.TextSize=28
+  -- The tutorial: no PLAY AGAIN; LOBBY is the one big button (the guide's arrow points at it).
+  if r.tutorial then
+   again.Visible=false
+   back.Position=UDim2.fromOffset((PW-bw)/2,PH-96);T.setPrimary(back,true);back.Caption.Text='LOBBY'
+  end
   note=centred(T.label(board,'Note','',28,PH-30,PW-56,24,18,C.muted))
   paintAgain()
   if UserInputService:GetLastInputType().Name:find('^Gamepad') then pcall(function() GuiService.SelectedObject=again end) end

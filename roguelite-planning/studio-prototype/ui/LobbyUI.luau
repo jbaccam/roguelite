@@ -343,6 +343,10 @@ function L.mount(player)
   hook.Event:Connect(function(name,arg) if name then open(name,arg) elseif win then win.Close() end end)
  end
  function self.CloseWindow() if win then win.Close() end end
+ -- The tutorial guide (TutorialGuide) opens and closes windows too, in every build:
+ -- GuideOpenWindow:Fire('Store','Bundles') opens one, Fire() closes the open one.
+ local guideHook=Instance.new('BindableEvent');guideHook.Name='GuideOpenWindow';guideHook.Parent=screen
+ guideHook.Event:Connect(function(name,arg) if name then open(name,arg) elseif win then win.Close() end end)
 
  builders.Settings=function()
   return T.settingsWindow(screen,{{key='DummyAttacks',title='Dummy attacks',help='Weapons auto-attack lobby practice dummies.',get=attacksOn,toggle=toggleAttacks}})
