@@ -156,6 +156,13 @@ function M.new(player,h,refresh)
   end
   return row*26
  end
+ -- 'Brawler · your class +15%' / 'Gunner · off-class -10%' and its colour (CharacterStats.classFit).
+ local function classLine(base)
+  local fit,pct=Stats.classFit(base,state:GetAttribute('Class'))
+  if fit=='home' then return base.home..' · your class +'..pct..'%',green end
+  if fit=='off' then return base.home..' · off-class '..pct..'%',red end
+  return base.home,cream
+ end
  local function weaponStats(p,base,tier,x,y,w)
   local s=Stats.read(state);local d=Stats.weapon(base,s,state:GetAttribute('Class'),tier)
   local rows={{'Damage',string.format('%.1f',d.damage),d.damage-base.damage},{'Cooldown',string.format('%.2f s',d.cooldown),base.cooldown-d.cooldown},{'Critical',string.format('x%.1f (%s)',s.CritDamage/100,Stats.format(Stats.ById.CritChance,s.CritChance)),s.CritChance-Stats.ById.CritChance.base},{'Range',string.format('%.1f',d.range),d.range-base.range}}
@@ -284,8 +291,9 @@ function M.new(player,h,refresh)
      local well=surface(card,'IconWell',12,12,64,64,nil,'inset')
      art(well,entry,4,4,56,56)
      heading(card,'Name',entry.name..(entry.weaponId and entry.tier>1 and (' '..({'I','II','III','IV'})[entry.tier]) or ''),86,12,cardW-98,43,22,tiers[entry.tier])
-     local kind=entry.weaponId and Weapons.ById[entry.weaponId].home or (entry.kind..(#entry.tags>0 and ' · '..entry.tags[1] or ''))
-     text(card,'Kind',kind,86,56,cardW-98,22,17,cream)
+     local kind,kindColor=entry.kind..(#entry.tags>0 and ' · '..entry.tags[1] or ''),cream
+     if entry.weaponId then kind,kindColor=classLine(Weapons.ById[entry.weaponId]) end
+     text(card,'Kind',kind,86,56,cardW-98,22,17,kindColor)
      if entry.weaponId then
       weaponStats(card,Weapons.ById[entry.weaponId],entry.tier,14,98,cardW-28)
       text(card,'Class',entry.description,14,199,cardW-28,22,17)
@@ -390,11 +398,12 @@ function M.new(player,h,refresh)
     text(detail,'Tier',E.TIER_NAMES[copy and copy.tier or entry.tier],98,60,dw-112,24,tap>0 and 16 or 14)
     if base then
      weaponStats(detail,base,copy.tier,16,104,dw-32)
-     text(detail,'Type',base.home..' · '..base.kind,16,193,dw-32,24,tap>0 and 16 or 14)
+     local typeText,typeColor=classLine(base)
+     text(detail,'Type',typeText..' · '..base.kind,16,193,dw-32,24,tap>0 and 16 or 14,typeColor)
      local combine=btn(detail,'Combine',copy.tier==4 and 'Maximum tier' or copy.canCombine and 'Combine → '..E.TIER_NAMES[copy.tier+1] or 'Need matching weapon + tier',14,combineY,dw-28,b1,function() T.sound('ui_upgrade');self:send('Combine',sel.slot,sel.copy);self.selected=nil end,true)
      combine.Interactable=data.phase=='Shop' and copy.canCombine==true;combine.Caption.TextColor3=combine.Interactable and white or Color3.fromRGB(135,146,150)
      local sell=btn(detail,'Sell','',14,sellY,dw-28,b1,function() self:send('Sell',sel.slot,sel.copy);self.selected=nil end,true)
-     price(sell,E.refund(copy.paid),'Recycle +',19,white);sell.Interactable=data.phase=='Shop'
+     price(sell,copy.sell or 0,'Recycle +',19,white);sell.Interactable=data.phase=='Shop'
     else
      local used=effects(detail,entry,16,104,dw-32)
      text(detail,'Description',entry.description,16,118+used,dw-32,math.max(32,dh-178-used-(b2-32)),15)

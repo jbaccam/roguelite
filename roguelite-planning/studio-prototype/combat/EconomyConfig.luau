@@ -1,5 +1,5 @@
 local E={
- WEAPON_SELL_REFUND=.50, REROLL_BASE_WAVE=.75, REROLL_STEP_WAVE=.40,
+ WEAPON_SELL_REFUND=.25, REROLL_BASE_WAVE=.75, REROLL_STEP_WAVE=.40,
  FLAT_WAVE_PRICE=1, INFLATION_RATE=.10, GLOBAL_SHOP_PRICE_MODIFIER=1,
  STARTING_SHARDS=60, MAX_SHARDS=1000000, DEBUG_CURRENCY_ENABLED=true,
  OFFER_COUNT=4, ITEM_CAPACITY=16, MAX_ITEM_COPIES=5,
@@ -32,7 +32,11 @@ function E.reroll(wave,count)
  local step=math.max(1,math.floor(wave*E.REROLL_STEP_WAVE))
  return math.floor(wave*E.REROLL_BASE_WAVE)+step*(count+1)
 end
-function E.refund(paid) return math.floor(paid*E.WEAPON_SELL_REFUND) end
+-- Selling (recycling) a weapon pays 25% of what that weapon, at its tier, costs in the shop right
+-- now for this player, at least 1. It does not matter what was paid, so a free starting weapon sells
+-- too. Example: a base-20 Tier I weapon costs 23 on wave 1 (sells for 5) and 50 on wave 10 (sells for
+-- 12). Using the player's own price means a discount can never make selling a profit.
+function E.sellValue(base,wave,modifier) return math.max(1,math.floor(E.price(base,wave,modifier)*E.WEAPON_SELL_REFUND)) end
 function E.modifier(stats) return math.clamp(1+(stats.ShopPricePercent or 0)/100-(stats.ShopDiscount or 0)/100,.2,3) end
 -- Ordered rarity thresholds. Luck is earned within the run and never changed by Robux.
 local rarity={

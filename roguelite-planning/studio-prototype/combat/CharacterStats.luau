@@ -62,6 +62,16 @@ S.Classes={
  Handyman={description='Wide utility attacks and recovery. Slower movement and fewer criticals.',buffs={UtilityPower=25,AreaSize=20,Regeneration=1,MoveSpeed=-2,CritChance=-5},build={'24','25','28','29'},two={CooldownReduction=10},four={UtilityPower=20}},
  Mage={description='Elemental damage, burn and chains. Fragile with weaker physical attacks.',buffs={ElementalDamage=25,Duration=30,BurnChance=15,ChainCount=1,MaxHP=-20,Armor=-2,MeleeDamage=-10},build={'30','31','34','35'},two={ElementalDamage=15},four={BurnSpread=1}},
 }
+-- Class weapon fit (2026-10-03, Brotato-style but gentler): each weapon from your own class deals
+-- +15% damage, each weapon from another class -10%. Godly weapons belong to no class: no change.
+-- This is per weapon and stacks with the class stats above, so a Brawler's Gunner pistol also takes
+-- the Brawler's -15% ranged: 0.9 x 0.85 = about -24%, while a Brawler's own fist gets +15% and +20% melee.
+S.ClassFit={home=15,off=-10}
+function S.classFit(base,class)
+ if base.godly or not S.Classes[class] then return nil,0 end
+ if base.home==class then return 'home',S.ClassFit.home end
+ return 'off',S.ClassFit.off
+end
 function S.valid(id,value)
  local d=S.ById[id]
  local count=table.find({'ProjectileCount','Pierce','Bounce','PoisonStacks','ChainCount','ChainBonus','ChainEvery','BurnSpread','FirstHitBlock'},id)
@@ -91,6 +101,8 @@ function S.weapon(base,s,class,tier)
  if base.elemental then d.damage*=S.mult(s.ElementalDamage) end
  if base.utility then d.damage*=S.mult(s.UtilityPower) end
  if base.kind=='Blast' then d.damage*=S.mult(s.ExplosionDamage) end
+ d.classFit,d.classFitPercent=S.classFit(base,class)
+ d.damage*=S.mult(d.classFitPercent)
  local speed=S.mult(s.AttackSpeed)*(class=='Gunner' and base.kind~='Melee' and 1.1 or 1)
  d.cooldown=math.max(base.kind=='Melee' and .18 or .08,base.cooldown*(base.tierCooldown and base.tierCooldown[tier] or 1)/speed*(1-s.CooldownReduction/100))
  -- Animation speed is independent of damage cadence: heavy weapons strike

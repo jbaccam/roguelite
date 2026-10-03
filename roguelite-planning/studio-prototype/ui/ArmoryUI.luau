@@ -1451,11 +1451,11 @@ function A.new(player, opts)
 		T.text(
 			panel,
 			"Affinity",
-			"Equip 2 home weapons in a run for the first class bonus, 4 for the stronger one.",
+			"Your class's weapons deal +15% damage, other classes' weapons -10%. Equip 2 home weapons in a run for the first class bonus, 4 for the stronger one.",
 			24,
 			496,
 			RIGHT_W - 48,
-			44,
+			72,
 			17,
 			C.cream
 		)

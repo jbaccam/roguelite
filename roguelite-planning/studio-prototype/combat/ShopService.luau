@@ -59,10 +59,18 @@ local function alive(p) local h=p.Character and p.Character:FindFirstChildOfClas
 -- Only run members count: players standing in the lobby are not part of the arena run.
 local function living(p) return S.members[p]~=nil and alive(p) end
 local function slots(p) return Characters.states[p].folder end
+-- What selling the weapon in slot folder f pays now (EconomyConfig.sellValue). Godly weapons are
+-- never in the run shop, so they are valued at the top of their tier's price band.
+local function sellValue(p,f)
+ local tier=math.clamp(f:GetAttribute('Tier') or 1,1,4)
+ local entry=Catalog.ById['weapon_'..(f:GetAttribute('WeaponId') or '')..'_'..tier]
+ local cs=Characters.states[p]
+ return E.sellValue(entry and entry.basePrice or E.TIER_PRICE_BANDS[tier][2],S.wave,E.modifier(cs and cs.stats or {}))
+end
 local function owned(p)
  local result={}
  for i=1,6 do local f=slots(p)['Slot'..i]
-  result[i]={slot=i,id=f:GetAttribute('WeaponId') or '',copy=f:GetAttribute('CopyId') or '',tier=f:GetAttribute('Tier') or 1,paid=f:GetAttribute('FinalPurchasePrice') or 0,basePrice=f:GetAttribute('BasePrice') or 0,wave=f:GetAttribute('WavePurchased') or 0}
+  result[i]={slot=i,id=f:GetAttribute('WeaponId') or '',copy=f:GetAttribute('CopyId') or '',tier=f:GetAttribute('Tier') or 1,paid=f:GetAttribute('FinalPurchasePrice') or 0,basePrice=f:GetAttribute('BasePrice') or 0,wave=f:GetAttribute('WavePurchased') or 0,sell=f:GetAttribute('WeaponId')~='' and sellValue(p,f) or 0}
  end
  for _,weapon in result do
   for _,other in result do
@@ -654,7 +662,7 @@ function S.request(p,action,revision,arg,extra)
   if not E.integer(arg,1,6) then return fail('Invalid weapon slot') end
   local f=slots(p)['Slot'..arg]
   if f:GetAttribute('WeaponId')=='' or f:GetAttribute('CopyId')~=extra then return fail('Weapon changed; select it again') end
-  s.shards=math.min(E.MAX_SHARDS,s.shards+E.refund(f:GetAttribute('FinalPurchasePrice') or 0))
+  s.shards=math.min(E.MAX_SHARDS,s.shards+sellValue(p,f))
   clearWeapon(f)
  elseif action=='Start' then
   if s.pendingLevels>0 then return fail('Choose your earned level-up upgrades first') end

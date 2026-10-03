@@ -835,8 +835,8 @@ Initial values: FLAT_WAVE_PRICE = 1, INFLATION_RATE = 0.06,
 GLOBAL_SHOP_PRICE_MODIFIER = 1.
 
 ShopPriceModifier = clamp(1 + ShopPricePercent / 100 - ShopDiscount / 100, 0.2, 3)
-SellValue = floor(FinalPurchasePrice * WEAPON_SELL_REFUND)
-WEAPON_SELL_REFUND = 0.50
+SellValue = max(1, floor(FinalPrice(weapon at its tier, current wave, this player) * WEAPON_SELL_REFUND))
+WEAPON_SELL_REFUND = 0.25   (2026-10-03: was 50% of what was paid, so free starters sold for 0)
 ```
 
 Wave 1 rerolls cost 2, 4, 6, 8 shards; wave 8 costs 8, 10, 12, 14. RerollCount resets to zero upon entering the next wave's shop. A base-price-20 offer costs 22, 32, 48 and 88 at waves 1, 5, 10 and 20 with no modifier. Discounts apply immediately to unlocked offers; locked prices remain fixed. Shop price increases are red, discounts green, and unchanged values neutral. No harvesting or reroll-discount stat is fabricated.

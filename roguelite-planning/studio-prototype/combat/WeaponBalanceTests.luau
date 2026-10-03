@@ -21,7 +21,7 @@ local ok,err=xpcall(function()
   local previous
   signatures[tostring(w.damage)..':'..tostring(w.cooldown)]=true
   for tier=1,4 do
-   local d=Stats.weapon(w,neutral,'Brawler',tier)
+   local d=Stats.weapon(w,neutral,nil,tier) -- no class: raw weapon numbers, without the class weapon fit
    check(math.abs(d.damage-w.tierDamage[tier])<.001,'actual tier damage '..w.id)
    check(d.cooldown>0 and d.range>0,'positive combat values '..w.id)
    if previous then check(d.damage>previous.damage and d.cooldown<previous.cooldown,'tier progression '..w.id) end

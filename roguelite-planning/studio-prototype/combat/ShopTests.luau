@@ -42,7 +42,7 @@ end
 local ok,err=xpcall(function()
  for _,wave in {1,5,10,20} do for _,base in {8,20,55,160} do near(E.price(base,wave,1),math.floor(base+wave+base*wave*.10+1e-8),'inflation') end end
  near(E.price(20,1,1),23,'example wave1');near(E.price(20,5,1),35,'example wave5');near(E.price(20,10,1),50,'example wave10');near(E.price(20,20,1),80,'example wave20')
- near(E.refund(30),15,'30 refund');near(E.refund(47),23,'odd refund');near(E.reroll(1,0),1,'wave1 reroll');near(E.reroll(8,3),18,'wave8 reroll4')
+ near(E.sellValue(20,1,1),5,'sell wave1');near(E.sellValue(20,10,1),12,'sell wave10');near(E.sellValue(1,1,.2),1,'sell at least 1');near(E.reroll(1,0),1,'wave1 reroll');near(E.reroll(8,3),18,'wave8 reroll4')
  near(E.rarityChance(2,1,0),0,'tier2 locked on wave1');near(E.rarityChance(2,2,0),.06,'tier2 wave2')
  near(E.rarityChance(3,5,0),0,'tier3 locked before wave6');near(E.rarityChance(3,6,0),.015,'tier3 wave6')
  near(E.rarityChance(4,11,0),0,'tier4 locked before wave12');near(E.rarityChance(4,12,0),.0015,'tier4 wave12')
@@ -89,7 +89,9 @@ local ok,err=xpcall(function()
  check(request('Buy',1,token),'buy locked weapon');local slot=cs.folder.Slot2;check(slot:GetAttribute('WeaponId')=='00','equipped immediately');near(slot:GetAttribute('FinalPurchasePrice'),47,'actual paid saved')
  local copy=slot:GetAttribute('CopyId');local rev=Shop.states[p].revision;shards=Shop.states[p].shards
  check(not request('Buy',1,token),'reject replay sold');near(Shop.states[p].shards,shards,'no repeat charge')
- Shop.wave=20;check(request('Sell',2,copy),'sell later wave');near(Shop.states[p].shards,shards+23,'sale ignores inflation');check(slot:GetAttribute('WeaponId')=='','sale removed');check(not request('Sell',2,copy),'reject sell replay')
+ Shop.wave=20;check(request('Sell',2,copy),'sell later wave');near(Shop.states[p].shards,shards+E.sellValue(Catalog.ById['weapon_00_1'].basePrice,20,1),'sale pays 25% of the current price');check(slot:GetAttribute('WeaponId')=='','sale removed');check(not request('Sell',2,copy),'reject sell replay')
+ local snap=game:GetService('HttpService'):JSONDecode(cs.folder:GetAttribute('ShopSnapshot'))
+ if cs.folder.Slot1:GetAttribute('WeaponId')~='' then check(snap.weapons[1].sell>=1,'free starter still sells') end
  Shop.wave=1
  for _=2,6 do check(buy('weapon_03_2',30),'fill slots') end
  shards=Shop.states[p].shards;check(not buy('weapon_11_4',130),'full slots reject');near(Shop.states[p].shards,shards,'full slots no charge');check(cs.folder.Slot6:GetAttribute('WeaponId')=='03','no deletion on full')

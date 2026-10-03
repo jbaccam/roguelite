@@ -41,6 +41,8 @@ Every class retains access to every weapon. Six home weapons belong to each clas
 | Handyman | +25% utility, +20% area, +1 HP/s regeneration | −2 movement speed, −5 critical points | 10% cooldown reduction | +20% utility |
 | Mage | +25% elemental, +30% duration, 15% burn chance, +1 chain target | −20 HP, −2 Armor, −10% melee | +15% elemental | +1 burn-spread target |
 
+**Class weapon fit (2026-10-03).** On top of the table, every equipped weapon gets its own damage change: a weapon from your class deals **+15%**, a weapon from another class **-10%**, and a Godly weapon is unchanged. It stacks with the class stats. Example: a Brawler's fist gets +15% and the Brawler's +20% melee; a Brawler's Gunner pistol gets -10% and the Brawler's -15% ranged, about -24% in total (Brotato's Brawler is -50 ranged, so this is gentler). Values: `CharacterStats.ClassFit`. Shop cards show it as "your class +15%" in green or "off-class -10%" in red.
+
 These prototype choices supersede the older proposal that classes need no drawbacks. Distinct orbital/return animations and deployables remain separate weapon-kit work; this change applies class statistics to the existing attack styles.
 
 ## Verification
