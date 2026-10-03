@@ -893,6 +893,7 @@ profileAction.OnServerInvoke=function(p,action,a,b,c)
  elseif action=='ClaimWeekly' and Profiles.claimWeekly and type(a)=='number' then ok,message=Profiles.claimWeekly(p,a) -- plan M
  elseif action=='ClaimFeat' and Profiles.claimFeat and type(a)=='string' and #a<=40 then ok,message=Profiles.claimFeat(p,a) -- plan M
  elseif action=='Refresh' then Profiles.publish(p);ok=true;message=''
+ elseif action=='SaveSettings' and type(a)=='table' and Profiles.saveSettings then ok,message=Profiles.saveSettings(p,a) -- U1: settings follow the player
  elseif action=='DevEmeralds' and studio then ok=Profiles.grant(p,{emeralds=200});message='Studio test: +200 emeralds (not saved)'
  elseif action=='DevResetSkills' and studio then ok,message=Profiles.resetSkills(p)
  else return {ok=false,message='Unknown action'} end

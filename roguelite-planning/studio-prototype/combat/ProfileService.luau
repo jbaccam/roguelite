@@ -95,6 +95,27 @@ function P.publish(player)
  player:SetAttribute('ProfileLoaded',true)
 end
 
+-- Settings (launch audit U1): HUD size, screen shake, damage numbers, music and SFX volume, saved
+-- with the profile so they follow the player lobby -> match -> lobby. They're set once at load as
+-- the Setting_* attributes the client already reads (never by later publishes, which would undo a
+-- change still on its way here). P.saveSettings keeps what the client sends, checked and clamped.
+local SETTINGS={HudScale='scale',ScreenShake='bool',DamageNumbers='bool',MusicVolume='volume',SfxVolume='volume'}
+local function cleanSetting(kind,v)
+ if kind=='bool' then if type(v)=='boolean' then return v end;return nil end -- (not `and v or nil`: false must survive)
+ if type(v)~='number' or v~=v then return nil end
+ if kind=='volume' then return math.round(math.clamp(v,0,1)*20)/20 end -- the slider's 5% steps
+ return math.clamp(v,.85,1.15) -- HUD size: Small .85, Normal 1, Large 1.15
+end
+function P.saveSettings(player,t)
+ local d=P.profiles[player];if not d or type(t)~='table' then return false,'Profile loading' end
+ if type(d.settings)~='table' then d.settings={} end
+ for name,kind in SETTINGS do local v=cleanSetting(kind,t[name]);if v~=nil then d.settings[name]=v end end
+ return true,'' -- saved by the autosave, a hand-off or leaving, like everything else
+end
+local function applySettings(player,d)
+ if type(d.settings)~='table' then return end
+ for name,kind in SETTINGS do local v=cleanSetting(kind,d.settings[name]);if v~=nil then player:SetAttribute('Setting_'..name,v) end end
+end
 function P.load(player)
  local data
  if store then
@@ -143,6 +164,7 @@ function P.load(player)
  -- Keys were dropped: old saves convert them to earned emeralds once.
  if type(data.keys)=='number' then data.emeralds+=math.max(0,data.keys)*Money.EmeraldsPerOldKey;data.keys=nil end
  P.profiles[player]=data;P.loaded[player]=true
+ applySettings(player,data) -- before ProfileLoaded, so music never starts at the wrong volume
  P.publish(player)
 end
 -- Saves under this server's lock and returns true once the write is durable (Studio's in-memory

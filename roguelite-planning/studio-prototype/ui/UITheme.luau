@@ -402,7 +402,8 @@ function T.toast(screen,text,color)
  return t
 end
 
--- Local presentation settings, stored as LocalPlayer attributes for this session.
+-- Local presentation settings, stored as LocalPlayer attributes. SettingsSync.client saves changes
+-- with the profile, and ProfileService sets them again when the next server loads it.
 -- Combat presentation reads Setting_ScreenShake and Setting_DamageNumbers; RogueliteSounds and
 -- RogueliteMusic apply Setting_SfxVolume and Setting_MusicVolume (0-1) to their SoundGroups.
 T.SettingDefaults={HudScale=1,ScreenShake=true,DamageNumbers=true,MusicVolume=1,SfxVolume=1}
@@ -472,7 +473,7 @@ function T.settingsWindow(screen,extras)
    local on=extra.get()
    T.button(body,extra.key,on and 'ON' or 'OFF',w*.5+w*.25,y+2,w*.25-6,44,extra.toggle,not on).Caption.TextSize=20
   end
-  T.text(body,'Note','Settings last for this session.',14,422+#extras*84,w-28,20,14,T.Color.dim)
+  T.text(body,'Note','Settings are saved with your profile.',14,422+#extras*84,w-28,20,14,T.Color.dim)
  end
  draw()
  win.Redraw=function() if win.Root.Parent then draw() end end

@@ -551,6 +551,9 @@
         "SaveStatus": {
           "$path": "../ui/SaveStatus.client.luau"
         },
+        "SettingsSync": {
+          "$path": "../ui/SettingsSync.client.luau"
+        },
         "RogueliteChickens": {
           "$path": "RogueliteChickens.client.luau"
         },

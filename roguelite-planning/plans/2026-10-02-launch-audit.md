@@ -195,8 +195,10 @@ Each hit creates a part, a BillboardGui, labels, 3 tweens and a Highlight, and e
 
 **Where:** `combat/RogueliteCombat.client.luau:251-279`, `combat/MobImpactVisuals.luau:27-54`
 
-### U1 · Settings reset every time you go lobby → match → lobby
+### U1 · Settings reset every time you go lobby → match → lobby — **fixed 2026-10-02**
 *UI & controls*
+
+**Done:** the five settings are saved in the profile (ProfileAction SaveSettings, sent by `ui/SettingsSync.client.luau` a second after a change, checked and clamped) and set on the player at load, before ProfileLoaded. Run music waits for ProfileLoaded (up to 8 s) before it starts.
 
 Music, sound, HUD size, shake and damage-number settings are stored only for the current server session. A player sets music to 0% in the lobby, presses PLAY, and the match starts at 100%.
 

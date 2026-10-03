@@ -96,6 +96,10 @@ end
 -- Give the lobby up to 5 s to mark a joining player, so the lobby doesn't start with run music.
 local joined=os.clock()
 while player:GetAttribute('LobbyPreviewActive')==nil and os.clock()-joined<5 do task.wait(.25) end
+-- The saved music volume arrives with the profile (ProfileService sets Setting_MusicVolume before
+-- ProfileLoaded): wait for it, up to 8 s, so someone who turned music off never hears a burst of
+-- it on joining a match (launch audit U1).
+while player:GetAttribute('ProfileLoaded')~=true and os.clock()-joined<8 do task.wait(.25) end
 while true do
  local mode=wanted()
  if (current and current.mode)~=mode then
