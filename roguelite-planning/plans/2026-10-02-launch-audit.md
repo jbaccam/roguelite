@@ -206,8 +206,10 @@ Music, sound, HUD size, shake and damage-number settings are stored only for the
 
 **Where:** `ui/UITheme.luau:405-414`
 
-### U2 · Roblox's player list and chat probably cover the HUD on PC and console
+### U2 · Roblox's player list and chat probably cover the HUD on PC and console — **fixed 2026-10-02**
 *UI & controls*
+
+**Done:** RogueliteHUD turns off the PlayerList core GUI on every device (with the health bar). With a keyboard, the TextChatService chat window moves to the middle of the left edge in runs and bottom-left in the lobby; phones keep Roblox's tap-to-open chat. Needs a look in a live game (chat doesn't show in Studio Edit).
 
 Only the default health bar is turned off. The Roblox player list (top right) would sit over the weapon strip, and chat (top left) over health and XP. This comes from reading the code; I haven't seen it in a live game.
 

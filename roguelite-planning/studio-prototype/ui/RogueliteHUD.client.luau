@@ -47,11 +47,34 @@ task.spawn(function()
  while role==nil do ReplicatedStorage:GetAttributeChangedSignal("ServerRole"):Wait();role=ReplicatedStorage:GetAttribute("ServerRole") end
  if role=="Match" then require(ReplicatedStorage:WaitForChild("AssetPreloader")).start(player) end
 end)
+-- Roblox's own UI around the HUD (launch audit U2): no health bar (the HUD has its own) and no
+-- player list on any device (the party strip and pause screen show the party). SetCoreGuiEnabled
+-- can fail until the core scripts load, so each retries.
 task.spawn(function()
- for _=1,10 do
-  if pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health,false) end) then break end
-  task.wait(0.2)
+ for _,kind in {Enum.CoreGuiType.Health,Enum.CoreGuiType.PlayerList} do
+  for _=1,10 do
+   if pcall(function() StarterGui:SetCoreGuiEnabled(kind,false) end) then break end
+   task.wait(0.2)
+  end
  end
+end)
+-- Chat (TextChatService) sits top-left by default: over the health and XP block in a run and the
+-- quest tracker in the lobby. With a keyboard it moves to the middle of the left edge in a run
+-- (under the health block, clear of the timer and the boss bar) and bottom-left in the lobby (left
+-- of the PLAY row). Phones keep Roblox's chat button, whose window only opens when tapped.
+task.spawn(function()
+ local window=game:GetService('TextChatService'):WaitForChild('ChatWindowConfiguration',10);if not window then return end
+ local Input=game:GetService('UserInputService')
+ local function place()
+  if Input.TouchEnabled and not Input.KeyboardEnabled then return end
+  local lobby=player:GetAttribute('LobbyPreviewActive')==true
+  pcall(function()
+   window.HorizontalAlignment=Enum.HorizontalAlignment.Left
+   window.VerticalAlignment=lobby and Enum.VerticalAlignment.Bottom or Enum.VerticalAlignment.Center
+   window.WidthScale=.85;window.HeightScale=lobby and .8 or .9
+  end)
+ end
+ place();player:GetAttributeChangedSignal('LobbyPreviewActive'):Connect(place)
 end)
 local connections={}
 local generation=0
