@@ -914,12 +914,13 @@ function A.new(player, opts)
 		fill(b)
 		return b
 	end
-	local function emptySlot(b, chosen, text)
-		-- Dark text on the lime "selected" fill; grey on the charcoal one.
+	local function emptySlot(b, chosen)
+		-- Dark text on the lime "selected" fill; grey on the charcoal one. "EMPTY", never "SOON":
+		-- pets and armor are in the game (user, 2026-10-03: "why does pet say soon").
 		local ink = chosen and C.ink or C.dim
 		local plus = centred(T.label(b, "Plus", "+", 0, 14, SLOT, 70, 64, ink))
 		plus.Size = UDim2.new(1, 0, 0, 80)
-		local soon = centred(T.text(b, "Soon", text or "SOON", 10, SLOT - 34, SLOT - 20, 22, 15, ink))
+		local soon = centred(T.text(b, "Soon", "EMPTY", 10, SLOT - 34, SLOT - 20, 22, 15, ink))
 		if chosen then
 			plus.TextStrokeTransparency, soon.TextStrokeTransparency = 1, 1
 			T.setPrimary(b, true)
@@ -958,13 +959,16 @@ function A.new(player, opts)
 						T.setPrimary(b, true)
 					end
 				else
-					emptySlot(b, state.kind == "armor" and state.item == id, next(profile.armor) and "EMPTY" or nil)
+					emptySlot(b, state.kind == "armor" and state.item == id)
 				end
 			end)
 		end
-		-- Right column: starting weapon, pet, class, ready upgrades.
+		-- Right column: starting weapon, pet, class, centred against the four armor slots. There is no
+		-- "ready upgrades" slot any more: it opened the first upgradable item, whatever it was, and
+		-- players spent emeralds on gear they didn't care about (user, 2026-10-03). The starting
+		-- weapon still shows its own upgrade arrow.
 		local rec = profile.weapons[weapon]
-		slot(mid, "WeaponSlot", "WEAPON", RX, rowY(1), function()
+		slot(mid, "WeaponSlot", "WEAPON", RX, rowY(1.5), function()
 			state.tab = "Weapons"
 			select("weapon", weapon)
 		end, function(b)
@@ -979,7 +983,7 @@ function A.new(player, opts)
 		end)
 		-- The equipped pet: its 3D view and tier, its name as the caption.
 		local petId = profile.pet and petRec(profile.pet) and profile.pet or nil
-		slot(mid, "PetSlot", petId and string.upper(Pets.ById[petId].name) or "PET", RX, rowY(2), function()
+		slot(mid, "PetSlot", petId and string.upper(Pets.ById[petId].name) or "PET", RX, rowY(2.5), function()
 			state.tab = "Pets"
 			state.kind, state.item = "pet", petId
 			draw()
@@ -991,10 +995,10 @@ function A.new(player, opts)
 					T.setPrimary(b, true)
 				end
 			else
-				emptySlot(b, state.kind == "pet", next(profile.pets or {}) and "EMPTY" or nil)
+				emptySlot(b, state.kind == "pet")
 			end
 		end)
-		slot(mid, "ClassSlot", "CLASS", RX, rowY(3), function()
+		slot(mid, "ClassSlot", "CLASS", RX, rowY(3.5), function()
 			select("class", class)
 		end, function(b)
 			local icon = T.icon(b, "Icon", 22, 8, SLOT - 44, WeaponIcons[Rules.Signature[class]])
@@ -1002,32 +1006,6 @@ function A.new(player, opts)
 			centred(T.label(b, "Name", string.upper(class), 4, SLOT - 34, SLOT - 8, 28, 20, C.lime))
 			if state.kind == "class" then
 				T.setPrimary(b, true)
-			end
-		end)
-		local readyList = {}
-		for _, w in Weapons.List do
-			if ready(w.id) then
-				table.insert(readyList, w.id)
-			end
-		end
-		slot(mid, "ReadySlot", "UPGRADES", RX, rowY(4), function()
-			if readyList[1] then
-				state.tab = "Weapons"
-				state.mine = false
-				state.kind, state.item = "weapon", readyList[1]
-				state.mode = "upgrade"
-				animate = true
-				draw()
-			else
-				T.toast(screen, "Open chests to collect copies for upgrades", C.muted)
-			end
-		end, function(b)
-			if #readyList > 0 then
-				upArrow(b, (SLOT - 44) / 2, 12, 44)
-				centred(T.label(b, "Count", #readyList .. " READY", 0, SLOT - 44, SLOT, 36, 24, C.gold)).Size =
-					UDim2.new(1, 0, 0, 36)
-			else
-				centred(T.label(b, "Count", "NONE\nREADY", 0, 20, SLOT, 80, 22, C.dim)).Size = UDim2.new(1, 0, 0, 80)
 			end
 		end)
 		-- Stat plates under the dais (ui/StatPlates.luau, plan K): the starter's damage at its tier,
