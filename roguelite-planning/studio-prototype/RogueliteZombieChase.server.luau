@@ -438,7 +438,8 @@ humanoid.Died:Connect(function()
 end)
 -- Schedule replacements in this script's lifecycle, independently of the damage caller.
 npc.Destroying:Connect(function()
-    if splitChild or admin or not npc:GetAttribute('DeathPopped') then return end
+    -- WaveNoRespawn (the tutorial): a wave is a fixed number of enemies that ends when they're dead.
+    if splitChild or admin or not npc:GetAttribute('DeathPopped') or combat:GetAttribute('WaveNoRespawn') == true then return end
     task.delay(RESPAWN_DELAY, function()
         if thisWave == waveGeneration and combat:GetAttribute('ZombiesEnabled') then queueSpawn(index) end
     end)

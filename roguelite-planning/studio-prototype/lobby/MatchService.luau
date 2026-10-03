@@ -64,14 +64,16 @@ end
 
 -- Lobby: send a party to a new match. loadouts: userId -> {class=,weapon=}, already validated.
 -- All or nobody: returns true, or false and a message for the players.
-function M.launch(players,map,difficulty,loadouts)
+-- extra (optional): {tutorial=true} makes it the first-join tutorial run (TutorialDirector).
+function M.launch(players,map,difficulty,loadouts,extra)
  if studio then return false,'Runs start in the published game. Use the combined Studio mode to play here' end
  local ok,code,serverId=retry(2,Teleport.ReserveServer,Teleport,game.PlaceId)
  if not ok then return false,"Couldn't start the run, try again" end
  local members={}
  for _,p in players do members[tostring(p.UserId)]=loadouts[p.UserId] or {} end
  -- code: the server's own access code, so it can send a dropped player back (rejoin, below).
- if not retry(2,entries.SetAsync,entries,serverId,{map=map,difficulty=difficulty,members=members,code=code},ENTRY_SECONDS) then
+ local tutorial=type(extra)=='table' and extra.tutorial==true or nil
+ if not retry(2,entries.SetAsync,entries,serverId,{map=map,difficulty=difficulty,members=members,code=code,tutorial=tutorial},ENTRY_SECONDS) then
   return false,"Couldn't start the run, try again"
  end
  -- Saves first: the match server can only load a save this lobby has released.
@@ -214,6 +216,7 @@ function M.start()
    end
    if entry and Role.setMap(entry.map) then
     combat:SetAttribute('RunDifficulty',Rules.DifficultyIndex[entry.difficulty] and entry.difficulty or 'Normal')
+    if entry.tutorial==true then combat:SetAttribute('TutorialRun',true) end -- TutorialDirector runs it
     M.code=type(entry.code)=='string' and entry.code or nil -- for rejoin records
    else bad=true;entry=nil;warn('MatchService: no usable match entry for',game.PrivateServerId) end
   end

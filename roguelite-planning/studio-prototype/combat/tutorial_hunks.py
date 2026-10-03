@@ -23,6 +23,21 @@ CHAR_S = "ServerScriptService.CharacterService"
 CHASE = "RogueliteZombieChase.server.luau"
 CHASE_S = "ServerScriptService.RogueliteZombieChase"
 
+TUTOR = "combat/TutorialDirector.server.luau"
+MATCH = "lobby/MatchService.luau"
+MATCH_S = "ServerScriptService.MatchService"
+
+
+def line_starting(path, prefix):
+    """The one line of a repo file that starts with prefix (no trailing \\r)."""
+    hits = [l.rstrip("\r") for l in (Path(__file__).resolve().parent.parent / path).read_text(encoding="utf-8").split("\n") if l.startswith(prefix)]
+    assert len(hits) == 1, f"{path}: {len(hits)} lines start with {prefix!r}"
+    return hits[0]
+
+
+NEW_STATE = line_starting(SHOP, " local s={shards=")
+NEW_STATE_OLD = NEW_STATE.replace("shards=S.tutorial and S.tutorial.startShards or E.STARTING_SHARDS", "shards=E.STARTING_SHARDS")
+
 HUNKS = [
     # --- EconomyConfig: the shared-crystal split ------------------------------------------------
     (ECON, ECON_S,
@@ -158,6 +173,64 @@ HUNKS = [
      "        -- A boss entrance (CinematicUntil) holds them too while the camera is on the boss.\n"
      "        frozen = combat:GetAttribute('AdminFreeze') == true or combat:GetAttribute('RunPaused') == true\n"
      "            or (combat:GetAttribute('CinematicUntil') or 0) > workspace:GetServerTimeNow(),"),
+    # --- ShopService: the tutorial run (S.tutorial, set by TutorialDirector) ----------------------
+    (SHOP, SHOP_S,
+     "local S={states={},wave=1,phase='Shop'}", "after",
+     "-- The first-join tutorial (plans/2026-10-03-tutorial-design.md): TutorialDirector sets S.tutorial\n"
+     "-- while a tutorial run is on, nil otherwise. Plain data from TutorialConfig: startShards, waves\n"
+     "-- ([wave]={count,roster}), offers ([shop wave][slot]=ShopCatalog id), waveSeconds (the director\n"
+     "-- ends each wave when its enemies are dead) and noShopTimer."),
+    (SHOP, SHOP_S,
+     NEW_STATE_OLD, "replace",
+     " -- A tutorial run starts with no crystals (S.tutorial.startShards).\n"
+     + NEW_STATE_OLD.replace("shards=E.STARTING_SHARDS", "shards=S.tutorial and S.tutorial.startShards or E.STARTING_SHARDS")),
+    (SHOP, SHOP_S,
+     " local wantWeapon=E.weaponSlot(S.wave,slot,rng)", "before",
+     " -- The tutorial's guided offer (S.tutorial.offers), unless it's already on show (a reroll then\n"
+     " -- rolls this slot normally).\n"
+     " local forced=S.tutorial and S.tutorial.offers and S.tutorial.offers[S.wave] and S.tutorial.offers[S.wave][slot]\n"
+     " local forcedEntry=forced and Catalog.ById[forced]\n"
+     " if forcedEntry and not excluded[forcedEntry.id] then\n"
+     "  excluded[forcedEntry.id]=true\n"
+     "  return {id=forcedEntry.id,token=token(),price=E.price(forcedEntry.basePrice,S.wave,E.modifier(cs.stats)),locked=false,sold=false}\n"
+     " end"),
+    (SHOP, SHOP_S,
+     " S.phase='Combat';run:SetAttribute('Phase','Combat');run:SetAttribute('WaveEndsAt',workspace:GetServerTimeNow()+E.WAVE_SECONDS)", "replace",
+     " -- A tutorial wave has its own count and enemies, and no clock: TutorialDirector ends it.\n"
+     " local tutorialWave=S.tutorial and S.tutorial.waves and S.tutorial.waves[S.wave]\n"
+     " S.phase='Combat';run:SetAttribute('Phase','Combat');run:SetAttribute('WaveEndsAt',workspace:GetServerTimeNow()+(S.tutorial and S.tutorial.waveSeconds or E.WAVE_SECONDS))"),
+    (SHOP, SHOP_S,
+     " combat:SetAttribute('ZombieCount',combat:GetAttribute('TestZombieCountOverride') or S.waveEnemyCount());combat:SetAttribute('ZombiesEnabled',true)", "replace",
+     " if tutorialWave then combat:SetAttribute('EnemyRoster',tutorialWave.roster) end\n"
+     " combat:SetAttribute('ZombieCount',combat:GetAttribute('TestZombieCountOverride') or tutorialWave and tutorialWave.count or S.waveEnemyCount());combat:SetAttribute('ZombiesEnabled',true)"),
+    (SHOP, SHOP_S,
+     " run:SetAttribute('ShopEndsAt',workspace:GetServerTimeNow()+E.SHOP_SECONDS)", "replace",
+     " -- The tutorial's shops wait for the player (no countdown).\n"
+     " run:SetAttribute('ShopEndsAt',not (S.tutorial and S.tutorial.noShopTimer) and workspace:GetServerTimeNow()+E.SHOP_SECONDS or nil)"),
+    # --- CharacterService: nobody dies in the tutorial ---------------------------------------------
+    (CHAR, CHAR_S,
+     " local before=h.Health;h:TakeDamage(Stats.incoming(amount,s.stats));local actual=before-h.Health", "replace",
+     " local before=h.Health;local incoming=Stats.incoming(amount,s.stats)\n"
+     " -- The tutorial (TutorialRun): hits still land and show, but health never goes below 1.\n"
+     " if combat:GetAttribute('TutorialRun')==true then incoming=math.min(incoming,math.max(0,h.Health-1)) end\n"
+     " h:TakeDamage(incoming);local actual=before-h.Health"),
+    # --- RogueliteZombieChase: tutorial waves don't refill ------------------------------------------
+    (CHASE, CHASE_S,
+     "    if splitChild or admin or not npc:GetAttribute('DeathPopped') then return end", "replace",
+     "    -- WaveNoRespawn (the tutorial): a wave is a fixed number of enemies that ends when they're dead.\n"
+     "    if splitChild or admin or not npc:GetAttribute('DeathPopped') or combat:GetAttribute('WaveNoRespawn') == true then return end"),
+    # --- MatchService: tutorial matches ------------------------------------------------------------
+    (MATCH, MATCH_S,
+     "function M.launch(players,map,difficulty,loadouts)", "replace",
+     "-- extra (optional): {tutorial=true} makes it the first-join tutorial run (TutorialDirector).\n"
+     "function M.launch(players,map,difficulty,loadouts,extra)"),
+    (MATCH, MATCH_S,
+     " if not retry(2,entries.SetAsync,entries,serverId,{map=map,difficulty=difficulty,members=members,code=code},ENTRY_SECONDS) then", "replace",
+     " local tutorial=type(extra)=='table' and extra.tutorial==true or nil\n"
+     " if not retry(2,entries.SetAsync,entries,serverId,{map=map,difficulty=difficulty,members=members,code=code,tutorial=tutorial},ENTRY_SECONDS) then"),
+    (MATCH, MATCH_S,
+     "    combat:SetAttribute('RunDifficulty',Rules.DifficultyIndex[entry.difficulty] and entry.difficulty or 'Normal')", "after",
+     "    if entry.tutorial==true then combat:SetAttribute('TutorialRun',true) end -- TutorialDirector runs it"),
     (SHOP, SHOP_S,
      " Shards.clear(true)", "replace",
      " -- Leftover crystals fly to the players and count as pickups (XP and shards) while it's still\n"

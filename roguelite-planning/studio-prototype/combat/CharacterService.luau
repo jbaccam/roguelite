@@ -215,7 +215,10 @@ function Service.contact(player,amount,roll,attacker)
   if s.perks and s.perks.DodgeCrit then s.dodgeCrit=true end
   return 0
  end
- local before=h.Health;h:TakeDamage(Stats.incoming(amount,s.stats));local actual=before-h.Health
+ local before=h.Health;local incoming=Stats.incoming(amount,s.stats)
+ -- The tutorial (TutorialRun): hits still land and show, but health never goes below 1.
+ if combat:GetAttribute('TutorialRun')==true then incoming=math.min(incoming,math.max(0,h.Health-1)) end
+ h:TakeDamage(incoming);local actual=before-h.Health
  -- Only the damaged player needs this feedback. The server supplies actual health
  -- lost after armor and health clamping; clients never submit damage values.
  if actual>0 then playerDamaged:FireClient(player,actual) end

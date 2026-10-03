@@ -13,6 +13,7 @@ T.BOSS_WAVE=3
 T.BOSS_HP=650
 T.VICTORY_DELAY=4 -- seconds between the boss wave clearing and the results screen (VICTORY banner)
 T.MAX_WAVE_SECONDS=90 -- a wave that somehow never empties ends anyway
+T.WELCOME_SECONDS=3 -- Studio: the welcome line shows this long before wave 1 starts
 -- Enemies per wave, all spawned at once and never respawned; the wave ends when they are dead.
 -- roster: EnemyCatalog ids (nil = the map's own mix, which has a Baby Zombie in every 4).
 T.Waves={

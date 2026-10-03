@@ -16,6 +16,10 @@ local Upgrades=require(combat.LevelUpCatalog)
 local StatSchema=require(combat.CharacterStats)
 local Maps=require(combat.MapConfig) -- sandboxed, like this module
 local S={states={},wave=1,phase='Shop'}
+-- The first-join tutorial (plans/2026-10-03-tutorial-design.md): TutorialDirector sets S.tutorial
+-- while a tutorial run is on, nil otherwise. Plain data from TutorialConfig: startShards, waves
+-- ([wave]={count,roster}), offers ([shop wave][slot]=ShopCatalog id), waveSeconds (the director
+-- ends each wave when its enemies are dead) and noShopTimer.
 -- Hooks other scripts listen to: `S.onWaveCleared=fn` adds a listener and never replaces one, so
 -- load order between listeners doesn't matter. Listeners run inside this sandboxed module's
 -- thread, so they should only record (RunAnalytics queues its events and sends them itself).
@@ -187,6 +191,14 @@ local function offerable(p)
 end
 local function roll(p,slot,excluded)
  local s=S.states[p];local cs=Characters.states[p]
+ -- The tutorial's guided offer (S.tutorial.offers), unless it's already on show (a reroll then
+ -- rolls this slot normally).
+ local forced=S.tutorial and S.tutorial.offers and S.tutorial.offers[S.wave] and S.tutorial.offers[S.wave][slot]
+ local forcedEntry=forced and Catalog.ById[forced]
+ if forcedEntry and not excluded[forcedEntry.id] then
+  excluded[forcedEntry.id]=true
+  return {id=forcedEntry.id,token=token(),price=E.price(forcedEntry.basePrice,S.wave,E.modifier(cs.stats)),locked=false,sold=false}
+ end
  local wantWeapon=E.weaponSlot(S.wave,slot,rng)
  local tier=E.rollTier(S.wave,cs.stats.Luck,rng)
  local owned=offerable(p)
@@ -237,7 +249,8 @@ local function starterTier(p)
  f:SetAttribute('Tier',StatSchema.ownedTier(p:GetAttribute('ProfileWeapons'),id) or 1)
 end
 local function newState(p)
- local s={shards=E.STARTING_SHARDS,level=1,xp=0,pendingLevels=0,upgradeOffers={},upgradeBonuses={},banished={},baggedShards=0,upgradeRerolls=0,upgradeToken=token(),rerolls=0,offers={},items={},ready=false,revision=1,lastRequest=-1e6,freeRerolls=0,freeUpgradeRerolls=0}
+ -- A tutorial run starts with no crystals (S.tutorial.startShards).
+ local s={shards=S.tutorial and S.tutorial.startShards or E.STARTING_SHARDS,level=1,xp=0,pendingLevels=0,upgradeOffers={},upgradeBonuses={},banished={},baggedShards=0,upgradeRerolls=0,upgradeToken=token(),rerolls=0,offers={},items={},ready=false,revision=1,lastRequest=-1e6,freeRerolls=0,freeUpgradeRerolls=0}
  S.states[p]=s
  for i=1,6 do local f=slots(p)['Slot'..i];f:SetAttribute('Tier',1);f:SetAttribute('FinalPurchasePrice',0);f:SetAttribute('BasePrice',0);f:SetAttribute('WavePurchased',0);f:SetAttribute('CopyId',token()) end
  starterTier(p)
@@ -401,9 +414,12 @@ local function refillHealth()
 end
 local function startWave()
  refillHealth()
- S.phase='Combat';run:SetAttribute('Phase','Combat');run:SetAttribute('WaveEndsAt',workspace:GetServerTimeNow()+E.WAVE_SECONDS)
+ -- A tutorial wave has its own count and enemies, and no clock: TutorialDirector ends it.
+ local tutorialWave=S.tutorial and S.tutorial.waves and S.tutorial.waves[S.wave]
+ S.phase='Combat';run:SetAttribute('Phase','Combat');run:SetAttribute('WaveEndsAt',workspace:GetServerTimeNow()+(S.tutorial and S.tutorial.waveSeconds or E.WAVE_SECONDS))
  run:SetAttribute('ShopEndsAt',nil)
- combat:SetAttribute('ZombieCount',combat:GetAttribute('TestZombieCountOverride') or S.waveEnemyCount());combat:SetAttribute('ZombiesEnabled',true)
+ if tutorialWave then combat:SetAttribute('EnemyRoster',tutorialWave.roster) end
+ combat:SetAttribute('ZombieCount',combat:GetAttribute('TestZombieCountOverride') or tutorialWave and tutorialWave.count or S.waveEnemyCount());combat:SetAttribute('ZombiesEnabled',true)
  for p in S.states do local cs=Characters.states[p];cs.blocks=1;cs.folder:SetAttribute('BlocksRemaining',cs.stats.FirstHitBlock);S.publish(p,'Wave started') end
 end
 local function beginWave()
@@ -471,7 +487,8 @@ function S.finishWave()
  Shards.clear(true)
  combat:SetAttribute('ZombiesEnabled',false);S.phase='Shop';S.wave+=1
  run:SetAttribute('Phase','Shop');run:SetAttribute('Wave',S.wave);run:SetAttribute('WaveEndsAt',nil)
- run:SetAttribute('ShopEndsAt',workspace:GetServerTimeNow()+E.SHOP_SECONDS)
+ -- The tutorial's shops wait for the player (no countdown).
+ run:SetAttribute('ShopEndsAt',not (S.tutorial and S.tutorial.noShopTimer) and workspace:GetServerTimeNow()+E.SHOP_SECONDS or nil)
  for p,s in S.states do
   if living(p) then s.shards=math.min(E.MAX_SHARDS,s.shards+E.WAVE_REWARD_BASE+(S.wave-1)*E.WAVE_REWARD_SCALE) end
   s.rerolls=0;s.ready=false;s.revision+=1
