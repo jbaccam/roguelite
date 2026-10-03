@@ -69,18 +69,22 @@ end
 local TURN_RATE = math.rad(540)
 -- Melee forgiveness (user, 2026-09-30: dodging by changing direction was too easy). A swing starts
 -- TRIGGER_BONUS studs before attackRange, then hits anyone within its reach + REACH_BONUS whose
--- direction is within ~95 degrees of the facing (ARC_DOT), checked every frame for HIT_WINDOW
+-- direction is within ARC_DOT of the facing (~75 degrees each side), checked every frame for HIT_WINDOW
 -- seconds from impact instead of one frame. Example, a normal zombie (4.6 reach, 0.35 s impact):
 -- it swings at 5 studs and connects out to its reach, 4.6 studs centre to centre: about 2 studs
 -- between the bodies, an arm. A player who backs off as it swings sees it whiff.
 -- (2026-10-01: the user kept a longer reach, +1.5 at 6.1 studs, over the arm's-length +0.5. On
 -- 2026-10-03 it was "a little too much range" at +0.9, then still "hitting me when im not even
 -- really in their physical range": no bonus now.)
+-- The arc was ~95 degrees each side and the window 0.15 s, which caught players circling past a
+-- zombie's side ("it happens especially when i circle them", 2026-10-03): now ~75 degrees each
+-- side of the facing (cos 75 = 0.26) and 0.08 s. Most of that complaint was the server seeing
+-- players 220 ms late (CharacterService.seen, HIT_FAIRNESS.md).
 local TRIGGER_BONUS = 0.4
 local REACH_BONUS = 0
 local LUNGE_REACH_BONUS = 0.2
-local ARC_DOT = -0.1
-local HIT_WINDOW = 0.15
+local ARC_DOT = 0.26
+local HIT_WINDOW = 0.08
 -- Ranged enemies stop to shoot (MAP_MOB_ROSTER: "stops, aims, and fires"), from the draw until
 -- this long after release; walking on through the shot slid them across the ground.
 local RANGED_PLANT_AFTER = 0.2
