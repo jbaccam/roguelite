@@ -7,6 +7,7 @@ Menus, the map-select islands and the Armory hall used to appear a beat late the
 - **One look behind the loading screen:** while `LoadingScreenUp` is set, the preloader points the camera at each island and both Armory shots for 0.15 s each. The renderer then already has their meshes and textures. It hands the camera back afterwards.
 - **More images:** the preloader now also reads `EggConfig`, `StatPlates`, `ItemCardUI` (`ReviveIcon`) and the trip art in `ReplicatedFirst.LoadingScreenUI`. After that it fetches `WeaponTemplates`, `PetModels` and `ArmorSets` (match servers skip armor). This doesn't hold the loading screen.
 - **Phone memory (launch audit F7):** everything stays resident for the session. That was already true for images, and is now also true for the islands and hall. This still needs an F9 Memory check on a low-end phone.
+- **Studio:** synced 2026-10-03 with `tools/SyncPlan.luau` + `ui/no-popin-sync.json` (all five scripts guarded on 1814ff8; afterwards each matched 73a11ab). No play test run yet.
 
 # Colour store and working quests — October 2, 2026
 
