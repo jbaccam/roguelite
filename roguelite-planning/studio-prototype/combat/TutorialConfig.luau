@@ -68,8 +68,8 @@ T.Lines={
  Offer="Want a head start? Here's a one-time deal.",
  Play="Now go break some waves!",
 }
--- Art for the guide (uploaded images; '' until uploaded).
-T.Asset={portrait='',arrow=''}
+-- Art for the guide (uploaded 2026-10-03; ui/assets/tutorial/asset-ids.json).
+T.Asset={portrait='rbxassetid://108357696326171',arrow='rbxassetid://74984560082682'}
 
 -- The tutorial's economy, walked the way the run pays it (ShopService): each kill's crystal is
 -- shards and XP, and a clear pays EconomyConfig's wave reward for the wave that comes next.
