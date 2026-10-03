@@ -61,6 +61,12 @@ end
 local RunSetupRules=require(game.ReplicatedStorage:WaitForChild('RunSetupRules'))
 local Analytics=require(SSS:WaitForChild('RunAnalytics')) -- unsandboxed, like this script
 local Contribution=require(SSS:WaitForChild('Contribution')) -- pure math: rewards by contribution
+-- The first-join tutorial (TutorialConfig), guarded: nil until it is in the place. tutorialEndAt:
+-- when (os.clock) the won tutorial run ends for everyone (the clock loop below).
+local tutorialModule=combat:FindFirstChild('TutorialConfig')
+local Tutorial=tutorialModule and require(tutorialModule)
+local function tutorialRun() return Tutorial~=nil and combat:GetAttribute('TutorialRun')==true end
+local tutorialEndAt
 local function runMap() local id=combat:GetAttribute('RunMap');return RunSetupRules.MapIndex[id] and id or 'PineValley' end
 local down,revivesUsed={},{}
 local rise -- defined with revive below; downed teammates also rise at a wave's end
@@ -102,7 +108,8 @@ local function setResult(p,outcome,map,stint,cleared,test)
   mapName=RunSetupRules.Maps[RunSetupRules.MapIndex[map] or 1].name,difficulty=difficulty(),waves=cleared,
   level=s and s.level or 1,emeralds=test and 0 or Profiles.stintPaid(p,stint),firstWin=not test and info and info.firstWin or 0,
   newBest=not test and info~=nil and cleared>info.prevBest,best=best,winWave=RunSetupRules.WinWave,
-  weapons=weapons,items=items,test=test==true,returnAt=at}))
+  weapons=weapons,items=items,test=test==true,returnAt=at,
+  tutorial=tutorialRun() and outcome=='Victory' and Tutorial.Reward or nil})) -- the tutorial's results (RunResultsUI)
 end
 -- Quest progress (ProfileService). Guarded so this script still runs beside an older ProfileService.
 local function questEvent(p,stat,n) if Profiles.questEvent then Profiles.questEvent(p,stat,n) end end
@@ -152,6 +159,16 @@ end) end
 -- emeralds follows the player's contribution to it (Contribution.luau); downed players are paid
 -- for what they did too. Past wave 20 the run keeps going (Endless) and pays the same way.
 Shop.onWaveCleared=function(wavesPassed)
+ -- The tutorial: no map progress, emeralds or quests. Clearing its boss wave pays its reward once
+ -- (ProfileService.tutorialReward) and ends the run as a Victory after VICTORY_DELAY, so the
+ -- crystals land and the guide's VICTORY banner shows first (the clock loop below ends it).
+ if tutorialRun() then
+  if wavesPassed>=Tutorial.BOSS_WAVE and not tutorialEndAt then
+   if Profiles.tutorialReward then for p in Shop.members do Profiles.tutorialReward(p) end end
+   runState:SetAttribute('TutorialWon',true);tutorialEndAt=os.clock()+Tutorial.VICTORY_DELAY
+  end
+  return
+ end
  local map=runMap();local index=RunSetupRules.MapIndex[map]
  if Shop.memberCount()>1 then for p,m in Shop.members do soloBroken[p]=m.stint end end -- plan M: not solo
  local key=RunSetupRules.runKey(map,difficulty())
@@ -625,6 +642,13 @@ game:GetService('RunService').Heartbeat:Connect(function(dt)
    afterLeave()
   end
  end
+ -- The won tutorial run ends: everyone in it goes to the tutorial results screen.
+ if tutorialEndAt and os.clock()>=tutorialEndAt then
+  tutorialEndAt=nil
+  local list={};for p in Shop.members do table.insert(list,p) end
+  for _,p in list do finish(p,'Victory') end
+  afterLeave()
+ end
  local due={};for p,at in returning do if now>=at then table.insert(due,p) end end
  if #due>0 then returnToLobby(due) end
  checkAgain() -- Play Again starts when the old run is over and everyone on results has decided
@@ -892,6 +916,7 @@ profileAction.OnServerInvoke=function(p,action,a,b,c)
  elseif action=='ClaimUnlock' and Profiles.claimUnlock and type(a)=='string' and #a<=40 then ok,message=Profiles.claimUnlock(p,a)
  elseif action=='ClaimWeekly' and Profiles.claimWeekly and type(a)=='number' then ok,message=Profiles.claimWeekly(p,a) -- plan M
  elseif action=='ClaimFeat' and Profiles.claimFeat and type(a)=='string' and #a<=40 then ok,message=Profiles.claimFeat(p,a) -- plan M
+ elseif action=='TutorialStep' and Profiles.tutorialStep and type(a)=='string' and #a<=20 then ok,message=Profiles.tutorialStep(p,a) -- the tutorial's lobby steps
  elseif action=='Refresh' then Profiles.publish(p);ok=true;message=''
  elseif action=='SaveSettings' and type(a)=='table' and Profiles.saveSettings then ok,message=Profiles.saveSettings(p,a) -- U1: settings follow the player
  elseif action=='DevEmeralds' and studio then ok=Profiles.grant(p,{emeralds=200});message='Studio test: +200 emeralds (not saved)'

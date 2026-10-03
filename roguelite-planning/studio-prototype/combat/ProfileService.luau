@@ -45,6 +45,12 @@ local store=useStore and DataStores:GetDataStore(STORE_NAME)
 -- This server's lock id. Studio has no JobId.
 local JOB=game.JobId~='' and game.JobId or Http:GenerateGUID(false)
 local function key(player) return 'u_'..player.UserId end
+-- TutorialConfig, looked up when needed: nil until it is in the place (then the tutorial is off).
+local function tutorialConfig()
+ local module=combat:FindFirstChild('TutorialConfig')
+ local ok,T=pcall(function() return module and require(module) end)
+ return ok and T or nil
+end
 local SIGNATURE={Brawler='01',Gunner='00',Thrower='12',Juggler='17',Handyman='24',Mage='30'} -- a copy of CharacterStats.Signature
 local MAX_RECEIPTS=200
 
@@ -56,6 +62,7 @@ local function fresh()
   pets={},pet=nil, -- pets: PetConfig id -> {tier,have}; pet: the equipped pet id (nil = none)
   bundles={}, -- one-time Godly bundles bought: product key -> true
   godlyPick='', -- the Godly weapon name chosen for a pending Godly Starter purchase
+  tutorial={step='Run'}, -- first-join tutorial (TutorialConfig.Steps); old saves count as done (P.load)
   freeChestDay=0, -- Money.day() of the last free daily chest (the Wooden Chest)
   quests={}} -- daily quests, streak, lifetime stats, achievements (QuestService.state fills it in)
  for class in d.classes do d.weapons[SIGNATURE[class]]={tier=1,have=0} end
@@ -88,6 +95,7 @@ function P.publish(player)
  player:SetAttribute('ProfileBundles',csv(d.bundles,function(k) return k end))
  player:SetAttribute('ProfileRerolls',d.rerolls);player:SetAttribute('ProfileBanishes',d.banishes)
  player:SetAttribute('ProfileQuickOpen',d.quickOpen)
+ player:SetAttribute('ProfileTutorial',type(d.tutorial)=='table' and d.tutorial.step or 'Done') -- TutorialDirector, TutorialGuide
  -- CharacterService reads this server-set attribute to apply the permanent skill bonuses.
  player:SetAttribute('ProfileSkills',Skills.serialize(d.skills))
  player:SetAttribute('ProfileDaily',Http:JSONEncode(P.dailyView(player)))
@@ -142,6 +150,9 @@ function P.load(player)
   -- write this copy over the newer save of the server they moved to.
   if player.Parent~=Players then Lock.write(store,key(player),JOB,data,true);return end
  else data=fresh() end
+ -- Tutorial: a save from before it existed has no `tutorial` and counts as done. Studio profiles
+ -- (in memory) play it only with Workspace.StudioTutorial=true, so normal Studio play skips it.
+ if type(data.tutorial)~='table' or (not store and workspace:GetAttribute('StudioTutorial')~=true) then data.tutorial={step='Done'} end
  local base=fresh();for k,v in base do if data[k]==nil then data[k]=v end end
  -- Chest tiers replaced class chests and the Royal Chest (2026-09-28): convert unopened ones,
  -- and the old every-10th-chest picks became the Legendary pity counter.
@@ -343,6 +354,11 @@ function P.openChest(player,kind,count)
   local counts=Chests.open(kind,rng,d.pity) -- rolls with both pity counters and updates them
   for _,r in Chests.Rarities do Chests.group(r,counts[r],rng,tally,kind) end
  end
+ -- The tutorial's first Silver Chest (P.tutorialReward) also holds its seeded copies.
+ if type(d.tutorial)=='table' and d.tutorial.seed then
+  local T=tutorialConfig()
+  if T and kind==T.SeedChest then d.tutorial.seed=nil;for id,c in T.SeedCopies do tally[id]=(tally[id] or 0)+c end end
+ end
  quest('event',d,Money.day(),player.UserId,'chests',n)
  local results={}
  for id,c in tally do
@@ -356,6 +372,27 @@ function P.openChest(player,kind,count)
  end)
  P.publish(player)
  return true,n>1 and ('Opened '..n..'× '..chest.name) or ('Opened '..chest.name),results
+end
+-- First-join tutorial (plans/2026-10-03-tutorial-design.md; numbers in TutorialConfig). Its run
+-- pays once, when the boss wave is cleared: 3 Silver Chests and 100 emeralds. The next Silver
+-- Chest opened also holds 2 Frying Pan copies and an Iron helmet (openChest), so the lobby steps
+-- can upgrade the pan and equip the helmet. The lobby steps then only move forward:
+-- Chests -> Armory -> Equip -> Offer -> Play -> Done (TutorialConfig.canStep).
+function P.tutorialReward(player)
+ local d=P.profiles[player];local T=tutorialConfig()
+ if not d or not T or type(d.tutorial)~='table' or d.tutorial.rewarded then return false end
+ d.tutorial.rewarded=true;d.tutorial.seed=true;d.tutorial.step=T.Steps[2]
+ d.emeralds+=T.Reward.emeralds or 0
+ for kind,n in T.Reward.chests or {} do if Chests.ById[kind] then d.chests[kind]=(d.chests[kind] or 0)+n end end
+ P.publish(player)
+ return true
+end
+function P.tutorialStep(player,step)
+ local d=P.profiles[player];local T=tutorialConfig()
+ if not d or not T or type(d.tutorial)~='table' then return false,'Profile loading' end
+ if not T.canStep(d.tutorial.step,step) then return false,'' end
+ d.tutorial.step=step;P.publish(player)
+ return true,''
 end
 -- Pet eggs (EggConfig, the egg merchant): bought into the inventory, then hatched. Like chests,
 -- where paid random items are restricted only emeralds earned in play can buy them.

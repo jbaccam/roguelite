@@ -23,6 +23,10 @@ CHAR_S = "ServerScriptService.CharacterService"
 CHASE = "RogueliteZombieChase.server.luau"
 CHASE_S = "ServerScriptService.RogueliteZombieChase"
 
+PROFILE = "combat/ProfileService.luau"
+PROFILE_S = "ServerScriptService.ProfileService"
+META = "combat/RogueliteMeta.server.luau"
+META_S = "ServerScriptService.RogueliteMeta"
 TUTOR = "combat/TutorialDirector.server.luau"
 MATCH = "lobby/MatchService.luau"
 MATCH_S = "ServerScriptService.MatchService"
@@ -231,6 +235,93 @@ HUNKS = [
     (MATCH, MATCH_S,
      "    combat:SetAttribute('RunDifficulty',Rules.DifficultyIndex[entry.difficulty] and entry.difficulty or 'Normal')", "after",
      "    if entry.tutorial==true then combat:SetAttribute('TutorialRun',true) end -- TutorialDirector runs it"),
+    # --- ProfileService: tutorial progress, the one-time reward, the seeded chest -----------------
+    (PROFILE, PROFILE_S,
+     "  freeChestDay=0, -- Money.day() of the last free daily chest (the Wooden Chest)", "before",
+     "  tutorial={step='Run'}, -- first-join tutorial (TutorialConfig.Steps); old saves count as done (P.load)"),
+    (PROFILE, PROFILE_S,
+     " local base=fresh();for k,v in base do if data[k]==nil then data[k]=v end end", "before",
+     " -- Tutorial: a save from before it existed has no `tutorial` and counts as done. Studio profiles\n"
+     " -- (in memory) play it only with Workspace.StudioTutorial=true, so normal Studio play skips it.\n"
+     " if type(data.tutorial)~='table' or (not store and workspace:GetAttribute('StudioTutorial')~=true) then data.tutorial={step='Done'} end"),
+    (PROFILE, PROFILE_S,
+     " player:SetAttribute('ProfileQuickOpen',d.quickOpen)", "after",
+     " player:SetAttribute('ProfileTutorial',type(d.tutorial)=='table' and d.tutorial.step or 'Done') -- TutorialDirector, TutorialGuide"),
+    (PROFILE, PROFILE_S,
+     " quest('event',d,Money.day(),player.UserId,'chests',n)", "before",
+     " -- The tutorial's first Silver Chest (P.tutorialReward) also holds its seeded copies.\n"
+     " if type(d.tutorial)=='table' and d.tutorial.seed then\n"
+     "  local T=tutorialConfig()\n"
+     "  if T and kind==T.SeedChest then d.tutorial.seed=nil;for id,c in T.SeedCopies do tally[id]=(tally[id] or 0)+c end end\n"
+     " end"),
+    (PROFILE, PROFILE_S,
+     "-- Pet eggs (EggConfig, the egg merchant): bought into the inventory, then hatched. Like chests,", "before",
+     "-- First-join tutorial (plans/2026-10-03-tutorial-design.md; numbers in TutorialConfig). Its run\n"
+     "-- pays once, when the boss wave is cleared: 3 Silver Chests and 100 emeralds. The next Silver\n"
+     "-- Chest opened also holds 2 Frying Pan copies and an Iron helmet (openChest), so the lobby steps\n"
+     "-- can upgrade the pan and equip the helmet. The lobby steps then only move forward:\n"
+     "-- Chests -> Armory -> Equip -> Offer -> Play -> Done (TutorialConfig.canStep).\n"
+     "function P.tutorialReward(player)\n"
+     " local d=P.profiles[player];local T=tutorialConfig()\n"
+     " if not d or not T or type(d.tutorial)~='table' or d.tutorial.rewarded then return false end\n"
+     " d.tutorial.rewarded=true;d.tutorial.seed=true;d.tutorial.step=T.Steps[2]\n"
+     " d.emeralds+=T.Reward.emeralds or 0\n"
+     " for kind,n in T.Reward.chests or {} do if Chests.ById[kind] then d.chests[kind]=(d.chests[kind] or 0)+n end end\n"
+     " P.publish(player)\n"
+     " return true\n"
+     "end\n"
+     "function P.tutorialStep(player,step)\n"
+     " local d=P.profiles[player];local T=tutorialConfig()\n"
+     " if not d or not T or type(d.tutorial)~='table' then return false,'Profile loading' end\n"
+     " if not T.canStep(d.tutorial.step,step) then return false,'' end\n"
+     " d.tutorial.step=step;P.publish(player)\n"
+     " return true,''\n"
+     "end"),
+    (PROFILE, PROFILE_S,
+     "local function key(player) return 'u_'..player.UserId end", "after",
+     "-- TutorialConfig, looked up when needed: nil until it is in the place (then the tutorial is off).\n"
+     "local function tutorialConfig()\n"
+     " local module=combat:FindFirstChild('TutorialConfig')\n"
+     " local ok,T=pcall(function() return module and require(module) end)\n"
+     " return ok and T or nil\n"
+     "end"),
+    # --- RogueliteMeta: the tutorial's end ----------------------------------------------------------
+    (META, META_S,
+     "local Contribution=require(SSS:WaitForChild('Contribution')) -- pure math: rewards by contribution", "after",
+     "-- The first-join tutorial (TutorialConfig), guarded: nil until it is in the place. tutorialEndAt:\n"
+     "-- when (os.clock) the won tutorial run ends for everyone (the clock loop below).\n"
+     "local tutorialModule=combat:FindFirstChild('TutorialConfig')\n"
+     "local Tutorial=tutorialModule and require(tutorialModule)\n"
+     "local function tutorialRun() return Tutorial~=nil and combat:GetAttribute('TutorialRun')==true end\n"
+     "local tutorialEndAt"),
+    (META, META_S,
+     " local map=runMap();local index=RunSetupRules.MapIndex[map]", "before",
+     " -- The tutorial: no map progress, emeralds or quests. Clearing its boss wave pays its reward once\n"
+     " -- (ProfileService.tutorialReward) and ends the run as a Victory after VICTORY_DELAY, so the\n"
+     " -- crystals land and the guide's VICTORY banner shows first (the clock loop below ends it).\n"
+     " if tutorialRun() then\n"
+     "  if wavesPassed>=Tutorial.BOSS_WAVE and not tutorialEndAt then\n"
+     "   if Profiles.tutorialReward then for p in Shop.members do Profiles.tutorialReward(p) end end\n"
+     "   runState:SetAttribute('TutorialWon',true);tutorialEndAt=os.clock()+Tutorial.VICTORY_DELAY\n"
+     "  end\n"
+     "  return\n"
+     " end"),
+    (META, META_S,
+     "  weapons=weapons,items=items,test=test==true,returnAt=at}))", "replace",
+     "  weapons=weapons,items=items,test=test==true,returnAt=at,\n"
+     "  tutorial=tutorialRun() and outcome=='Victory' and Tutorial.Reward or nil})) -- the tutorial's results (RunResultsUI)"),
+    (META, META_S,
+     " local due={};for p,at in returning do if now>=at then table.insert(due,p) end end", "before",
+     " -- The won tutorial run ends: everyone in it goes to the tutorial results screen.\n"
+     " if tutorialEndAt and os.clock()>=tutorialEndAt then\n"
+     "  tutorialEndAt=nil\n"
+     "  local list={};for p in Shop.members do table.insert(list,p) end\n"
+     "  for _,p in list do finish(p,'Victory') end\n"
+     "  afterLeave()\n"
+     " end"),
+    (META, META_S,
+     " elseif action=='ClaimFeat' and Profiles.claimFeat and type(a)=='string' and #a<=40 then ok,message=Profiles.claimFeat(p,a) -- plan M", "after",
+     " elseif action=='TutorialStep' and Profiles.tutorialStep and type(a)=='string' and #a<=20 then ok,message=Profiles.tutorialStep(p,a) -- the tutorial's lobby steps"),
     (SHOP, SHOP_S,
      " Shards.clear(true)", "replace",
      " -- Leftover crystals fly to the players and count as pickups (XP and shards) while it's still\n"
