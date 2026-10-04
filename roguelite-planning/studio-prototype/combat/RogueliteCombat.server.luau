@@ -192,7 +192,8 @@ local function reachPoint(npc,root,from)
  return best
 end
 -- dot: a zone tick (SpecialWeapons); clients skip its splat and flash (CombatEffectsService).
-local function damage(npc,amount,d,secondary,dot) return Effects.hit(npc,amount,d,secondary,dot) end
+-- stream: a Vacuum / Power Washer tick's share of an attack (UtilityWeapons; CombatEffectsService.hit).
+local function damage(npc,amount,d,secondary,dot,stream) return Effects.hit(npc,amount,d,secondary,dot,stream) end
 local rockets=require(combat:WaitForChild('RocketProjectile')).new(combat,damage,rayParams)
 local projectiles=require(script.Parent:WaitForChild('StatProjectiles')).new(combat,damage,rayParams)
 local arcs=require(script.Parent:WaitForChild('ArcProjectiles')).new(combat,damage,rayParams)

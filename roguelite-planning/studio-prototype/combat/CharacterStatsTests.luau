@@ -95,6 +95,26 @@ neutral.BurnSpread=1
 E.statuses[npc][tostring(player.UserId)..'Burn'].spread=true
 E.hit(npc,20000,d,true);check(E.statuses[second]~=nil,'burn spread');check(not E.statuses[second][tostring(player.UserId)..'Burn'].spread,'spread cannot recurse')
 table.insert(results,'critical/boss damage, burn, slow, poison caps, chains and bounded burn spread')
+-- Vacuum / Power Washer stream ticks (2026-10-03) are the weapon's own hits: they crit and proc at
+-- their share of an attack (CombatEffectsService.hit's stream). Plain secondary hits and status
+-- ticks still don't, and a tick never knocks back.
+local uid=tostring(player.UserId)
+local wd=S.weapon(C.ById['29'],neutral,'Gunner');wd.stats=neutral;wd.owner=player;wd.character=player.Character
+local stream=target('Stream',Vector3.new(60,500,0));local _,hn=target('StreamNear',Vector3.new(64,500,0))
+local function slowed() return E.statuses[stream]~=nil and E.statuses[stream][uid..'Slow']~=nil end
+neutral.ChainCount=0;neutral.BurnChance=0;neutral.PoisonChance=0;neutral.SlowChance=0;neutral.CritChance=100;neutral.CritDamage=200;neutral.Knockback=20
+equal(E.hit(stream,10,wd,true,nil,.5),20,'stream tick crits');equal(E.hit(stream,10,wd,true),10,'plain secondary hit does not crit')
+check(E.knockedAt[stream]==nil,'stream tick never knocks back')
+neutral.CritChance=0;neutral.Knockback=0;neutral.SlowChance=100
+E.hit(stream,1,wd,true);check(not slowed(),'plain secondary hit does not proc')
+E.hit(stream,1,wd,true,true);check(not slowed(),'status tick does not proc')
+E.hit(stream,1,wd,true,nil,0);check(not slowed(),'proc chance scales with the tick share')
+E.hit(stream,1,wd,true,nil,1);check(slowed(),'stream tick procs the slow (Ice Cube)')
+neutral.SlowChance=0;neutral.ChainCount=1;neutral.ChainEvery=1;state.hits=0
+local nb=hn.Health;E.hit(stream,1,wd,true,nil,.5);equal(hn.Health,nb,'half a hit: no chain yet')
+E.hit(stream,1,wd,true,nil,.5);check(hn.Health<nb,'two half-hit ticks chain lightning once')
+neutral.ChainCount=0
+table.insert(results,'Vacuum / Power Washer stream ticks crit and proc at their share of an attack')
 folder:Destroy()
 check(edit('Reset'),'reset');check(edit('Heal'),'heal')
 table.insert(results,'reset and heal requests')

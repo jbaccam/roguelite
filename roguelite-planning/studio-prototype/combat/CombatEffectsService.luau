@@ -68,7 +68,15 @@ local function status(npc,d,name,duration,amount,spread)
 end
 -- dot: a burn/poison tick or a zone tick (SpecialWeapons). Clients show its number but not a
 -- splat or flash. It changes nothing else here.
-function E.hit(npc,amount,d,secondary,dot)
+-- stream (2026-10-03): a Vacuum / Power Washer stream tick (UtilityWeapons), as its share of one
+-- attack: a .12 s tick of a .32 s cooldown is .375. The tick is the weapon's own hit (user: their
+-- cards say "Any weapon"), so it crits and rolls burn, poison, slow and lightning, each at share x
+-- its chance, so a stream procs as often a second as a weapon attacking at its cooldown. Example:
+-- Ice Cube 15% -> 5.6% a tick. Clients still draw it as a light tick (secondary on the wire), and it
+-- never knocks back (the Vacuum pulls). What it sets off (chains, burn ticks) stays secondary.
+function E.hit(npc,amount,d,secondary,dot,stream)
+ local own=not secondary or type(stream)=='number' -- the weapon's own hit: crits and procs
+ local share=type(stream)=='number' and math.clamp(stream,0,1) or 1
  local h,r=alive(npc);if not h or not d or not valid(d) then return 0 end
  if not Tags:HasTag(npc,'RogueliteZombie') then return 0 end
  -- A wave boss can't be hurt during its super-jump entrance (BossService BossIntroUntil).
@@ -76,7 +84,7 @@ function E.hit(npc,amount,d,secondary,dot)
  -- Tag before damage: the Died handler can run immediately on a lethal shot.
  if d.id=='10' and not secondary and amount>0 and not npc:GetAttribute('LobbyDummy') and not npc:GetAttribute('DesignerShirt') then npc:SetAttribute('DesignerShirt',true) end
  local s=d.stats;local position=r.Position
- if not secondary then
+ if own then
   -- Ninja 4-piece: after a dodge (CharacterService.contact) the next direct hit always crits.
   local owner=Characters.states[d.owner];local sure=owner and owner.dodgeCrit
   if sure then owner.dodgeCrit=nil end
@@ -133,23 +141,24 @@ function E.hit(npc,amount,d,secondary,dot)
   if E.onKill then local ok,err=pcall(E.onKill,npc,d,position,secondary==true);if not ok then warn('onKill failed:',err) end end
   Death.finish(npc);return actual
  end
- if secondary then return actual end
+ if not own then return actual end
  local knockback=math.min(40,s.Knockback+(d.nativeKnockback or 0))
- if knockback>0 and os.clock()-(E.knockedAt[npc] or -1e6)>.12 then
+ if knockback>0 and not secondary and os.clock()-(E.knockedAt[npc] or -1e6)>.12 then
   local pr=d.character:FindFirstChild('HumanoidRootPart');local delta=pr and Vector3.new(position.X-pr.Position.X,0,position.Z-pr.Position.Z)
   if delta and delta.Magnitude>.01 then r:ApplyImpulse(delta.Unit*knockback*r.AssemblyMass*(npc:GetAttribute('IsBoss') and .25 or 1));E.knockedAt[npc]=os.clock() end
  end
  local elemental=Stats.mult(s.Damage)*Stats.mult(s.ElementalDamage)
- if math.random()<math.max(s.BurnChance,d.burn or 0)/100 then status(npc,d,'Burn',3*Stats.mult(s.Duration),6*elemental*Stats.mult(s.BurnDamage),true) end
- if math.random()<math.max(s.PoisonChance,d.poison or 0)/100 then status(npc,d,'Poison',4*Stats.mult(s.Duration),3*elemental*Stats.mult(s.PoisonDamage),false) end
+ if math.random()<share*math.max(s.BurnChance,d.burn or 0)/100 then status(npc,d,'Burn',3*Stats.mult(s.Duration),6*elemental*Stats.mult(s.BurnDamage),true) end
+ if math.random()<share*math.max(s.PoisonChance,d.poison or 0)/100 then status(npc,d,'Poison',4*Stats.mult(s.Duration),3*elemental*Stats.mult(s.PoisonDamage),false) end
  -- A weapon's native slow (WeaponCatalog.SlowById, Medusa 35% for 2 s) or the player's stats, whichever is bigger.
- if math.random()<math.max(s.SlowChance,d.slow or 0)/100 then status(npc,d,'Slow',math.max(s.SlowDuration,d.slowFor or 0)*Stats.mult(s.Duration),math.min(70,math.max(s.SlowStrength,d.slowStrength or 0)),false) end
+ if math.random()<share*math.max(s.SlowChance,d.slow or 0)/100 then status(npc,d,'Slow',math.max(s.SlowDuration,d.slowFor or 0)*Stats.mult(s.Duration),math.min(70,math.max(s.SlowStrength,d.slowStrength or 0)),false) end
  local state=Characters.states[d.owner]
  if state then
-  state.hits+=1
+  -- A stream tick counts as its share of a hit: with ChainEvery 5, about every 13 ticks at .375.
+  local before=state.hits;state.hits+=share
   local sourceCount=math.max(s.ChainCount,d.lightning and 1 or 0)
   local count=math.min(6,sourceCount+s.ChainBonus)
-  if sourceCount>0 and state.hits%s.ChainEvery==0 then
+  if sourceCount>0 and math.floor(state.hits/s.ChainEvery)>math.floor(before/s.ChainEvery) then
    for i,target in near(position,12*Stats.mult(s.AreaSize),{[npc]=true},d.character) do
     if i>count then break end
     bolts:push(d.owner,position,target.HumanoidRootPart.Position,'Lightning',d.id)

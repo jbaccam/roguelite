@@ -44,7 +44,9 @@ function W.new(combat,damage,rayParams)
     if not root or not h or h.Health<=0 or (d.practiceTarget and not npc:GetAttribute('PracticeTarget')) then continue end
     if not U.inCone(origin,direction,root.Position,length,width,vacuum and 4 or 2) then continue end
     if workspace:Raycast(origin,root.Position-origin,wallParams) then continue end
-    if tickDamage then damage(npc,d.damage*.12/d.cooldown,d,true) end
+    -- A tick is .12 s of the weapon's damage per second, and its own hit: it crits and procs items
+    -- at that share of an attack (CombatEffectsService.hit's stream, 2026-10-03).
+    if tickDamage then local share=.12/d.cooldown;damage(npc,d.damage*share,d,true,nil,math.min(1,share)) end
     if not vacuum or h.Health<=0 or not root.Parent then continue end
     -- Shared per enemy: overlapping vacuums cannot refresh a hold forever.
     local hold=npc:GetAttribute('VacuumHoldUntil') or 0
