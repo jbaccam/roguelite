@@ -257,6 +257,10 @@ function Service.contact(player,amount,roll,attacker)
  -- any source. Every player damage path (contact, enemy melee and projectiles, zombie slams, the
  -- boss) comes through here.
  if not s or not h or h.Health<=0 or player.Character:FindFirstChildOfClass('ForceField') or player:GetAttribute('AdminGod')==true or Service.inShop(player) or Service.frozen(player) then return 0 end
+ -- Dash i-frames (CharacterStats.Dash.IFrames, 0.35 s from the server's DashAt stamp): every hit in
+ -- that window misses, so dashing through a swing or a crowd is safe.
+ local dashAt=player:GetAttribute('DashAt')
+ if type(dashAt)=='number' and Stats.Dash and workspace:GetServerTimeNow()-dashAt<(Stats.Dash.IFrames or 0) then return 0 end
  -- A pet shell shield (Turtle) blocks the next hit first, then pops.
  if Service.hasPetShield(player) then
   s.petShield=0;s.petShieldUntil=0;player:SetAttribute('PetShieldUntil',nil)

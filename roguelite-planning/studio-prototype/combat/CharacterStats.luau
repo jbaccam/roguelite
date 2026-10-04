@@ -9,9 +9,12 @@ S.Movement={Gravity=150,JumpHeight=9.5,AirSpeedMultiplier=1.45}
 -- 2026-10-04 "like a Jett dash ... an actual dash, not a speed boost"): a burst, Peak studs/s at
 -- once, easing out ((1-u)^Ease, an ease-out quart in distance) to the run speed by Seconds, on the
 -- ground or in the air, once every Cooldown s. At a run of 24: 0.3 x (24 + (280-24)/4) = 26.4 studs,
--- 21 of them in the first 0.14 s. Distance: the most it covers (an air run of 32: 28.2). No damage,
--- no invulnerability. Allowance: the extra studs MovementGuard lets an approved dash cover.
-S.Dash={Peak=280,Ease=3,Seconds=.3,Cooldown=3,Distance=28,Allowance=30}
+-- 21 of them in the first 0.14 s. Distance: the most it covers (an air run of 32: 28.2). No damage.
+-- Allowance: the extra studs MovementGuard lets an approved dash cover.
+-- IFrames (user, 2026-10-04: "very very brief invincibility"): no damage from any source for this
+-- long after the server approves the dash (DashAt). 0.35 s covers the 0.3 s burst plus the request's
+-- trip to the server; one dash every 3 s makes that about 12% of the time at most.
+S.Dash={Peak=280,Ease=3,Seconds=.3,Cooldown=3,Distance=28,Allowance=30,IFrames=.35}
 -- Who can dash: Brawlers (the hand-to-hand class), and any class whose starting weapon is melee,
 -- e.g. a Mage who starts with Excalibur. weapon: the starter's WeaponCatalog entry (nil = none).
 function S.dashes(class,weapon) return class=='Brawler' or (type(weapon)=='table' and weapon.kind=='Melee') end
