@@ -18,13 +18,16 @@ local function equal(a,b,message) check(math.abs(a-b)<.02,(message or 'differenc
 local function edit(action,key,value) state.lastRequest=-1e6;return Service.request(player,action,key,value) end
 combat:SetAttribute('ZombiesEnabled',false);state.folder:SetAttribute('WeaponEnabled',false)
 local force=player.Character:FindFirstChildOfClass('ForceField');if force then force:Destroy() end
+-- Weapons per class, counting every class in each weapon's list (2026-10-04 multi-class design; the
+-- design's table with the 2026-10-03 Brawler <-> Juggler swap applied): 54 memberships over 36 weapons.
 local counts={}
-for _,w in C.List do counts[w.home]=(counts[w.home] or 0)+1 end
+for _,w in C.List do for _,c in w.classes do counts[c]=(counts[c] or 0)+1 end end
+local WANT={Brawler=9,Gunner=7,Thrower=11,Juggler=10,Handyman=9,Mage=8}
 for _,class in S.ClassOrder do
- check(counts[class]==6,'six home weapons '..class)
+ check(counts[class]==WANT[class],'weapons in '..class..': '..tostring(counts[class]))
  -- 2026-10-03 class rework: the starter is one of the class's own weapons, the class panels have
  -- buffs and drawbacks to show, and Gunner's ranged attack speed is real data.
- check(C.ById[S.Signature[class]] and C.ById[S.Signature[class]].home==class,'starter belongs to '..class)
+ check(C.ById[S.Signature[class]] and C.ById[S.Signature[class]].home==class and S.inClass(C.ById[S.Signature[class]],class),'starter belongs to '..class)
  local good,bad=S.classLines(class);check(#good>=3 and #bad>=1,'buffs and drawbacks '..class)
  for _,count in {0,2,4,6} do
   local s=S.resolve(class,count)
@@ -32,10 +35,16 @@ for _,class in S.ClassOrder do
   for _,w in C.List do local d=S.weapon(w,s,class);check(d.damage>0 and d.cooldown>=.08 and d.range>0,'weapon math '..w.name) end
  end
  -- Class weapon fit: own class x1.15, other classes by the pair table, godly unchanged (no class = x1).
+ -- A weapon in several classes takes the best of them (2026-10-04).
  local s=S.resolve(class,0)
  for _,w in C.List do
-  local want=w.godly and 1 or 1+(w.home==class and S.ClassFit.Own or S.ClassFit[class][w.home])/100
-  if not w.godly and w.home~=class then check(S.ClassFit[class][w.home]==S.ClassFit[w.home][class],'class fit symmetric '..class..' '..w.home) end
+  local best=nil
+  for _,c in w.classes do
+   local pct=c==class and S.ClassFit.Own or S.ClassFit[class][c]
+   if c~=class then check(S.ClassFit[class][c]==S.ClassFit[c][class],'class fit symmetric '..class..' '..c) end
+   best=math.max(best or pct,pct)
+  end
+  local want=w.godly and 1 or 1+best/100
   equal(S.weapon(w,s,class).damage/S.weapon(w,s,nil).damage,want,'class fit '..class..' '..w.name)
  end
  check(edit('Class',class),'class request');check(edit('Build'),'build request')
@@ -44,7 +53,27 @@ for _,class in S.ClassOrder do
  for _,d in S.List do equal(player.Character:GetAttribute('Stat_'..d.id),state.stats[d.id],'avatar '..d.id) end
 end
 do local s=S.resolve('Gunner',0);check(S.weapon(C.ById['00'],s,'Gunner').cooldown<S.weapon(C.ById['00'],s,'Brawler').cooldown,'Gunner ranged attack speed') end
-table.insert(results,'six classes, 36 weapons, avatar attributes and affinity calculations')
+-- Multi-class weapons (2026-10-04). Best fit: the Nail Gun (Handyman, Gunner) is +15% for a Gunner
+-- (0 from Handyman alone); a Mage takes the better of Mage-Handyman and Mage-Gunner (both -5).
+do
+ local nail=C.ById['24']
+ local fit,pct,via=S.classFit(nail,'Gunner');check(fit=='home' and pct==S.ClassFit.Own and via=='Gunner','Nail Gun fits a Gunner +15%')
+ local _,mage=S.classFit(nail,'Mage');check(mage==math.max(S.ClassFit.Mage.Handyman,S.ClassFit.Mage.Gunner),'best of two classes')
+ local _,brawler=S.classFit(C.ById['04'],'Brawler');check(brawler==math.max(S.ClassFit.Brawler.Juggler,S.ClassFit.Brawler.Thrower),'Kusarigama best fit for a Brawler')
+ local _,bare=S.classFit({home='Thrower'},'Gunner');check(bare==S.ClassFit.Gunner.Thrower,'a bare {home=} still works (class chips)')
+ check(select(2,S.classFit(C.ById['36'],'Gunner'))==0 and not S.inClass(C.ById['36'],'Gunner'),'Godly stays class-neutral')
+ -- Set counting: two Kusarigamas (Juggler, Thrower) count 2 for a Juggler and for a Thrower, 0 for a Brawler.
+ local saved={};for i=1,6 do saved[i]=state.folder['Slot'..i]:GetAttribute('WeaponId') end
+ for i=1,6 do state.folder['Slot'..i]:SetAttribute('WeaponId',i<=2 and '04' or '') end
+ for class,want in {Juggler=2,Thrower=2,Brawler=0} do
+  check(edit('Class',class),'class '..class);check(state.folder:GetAttribute('AffinityCount')==want,'multi-class set count '..class..': '..tostring(state.folder:GetAttribute('AffinityCount')))
+ end
+ -- Utility Power follows the list: Spatula and Cinder Block list Handyman second.
+ check(C.ById['05'].utility and C.ById['20'].utility and C.ById['11'].utility and not C.ById['00'].utility,'utility flag from any listed Handyman')
+ for i=1,6 do state.folder['Slot'..i]:SetAttribute('WeaponId',saved[i] or '') end
+ Service.refresh(player)
+end
+table.insert(results,'six classes, 36 weapons in 54 class lists, best class fit, multi-class set counts, avatar attributes and affinity calculations')
 for _,bad in {0/0,math.huge,-math.huge,'100',{},100000} do check(not edit('Stat','Damage',bad),'reject malformed/out of range') end
 check(not edit('Stat','DoesNotExist',10),'reject unknown stat')
 check(not edit('Stat','Pierce',.5),'reject fractional count')

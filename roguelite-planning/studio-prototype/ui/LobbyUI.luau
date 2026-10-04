@@ -85,7 +85,7 @@ end
 L.UpgradeCost=Chests.UpgradeCost
 function L.need(rec) return rec and rec.tier<4 and (rec.id and Chests.upgradeCost(rec.id,rec.tier) or L.UpgradeCost[rec.tier]) or nil end
 function L.mapUnlocked(p,index) return Rules.mapUnlocked(p.wins,index) end
-local function homeWeapons(class) local out={};for _,w in Weapons.List do if w.home==class then table.insert(out,w) end end;return out end
+local function homeWeapons(class) return Rules.classWeapons(class) end -- every weapon listing the class (2026-10-04)
 local function passives() local out={};for _,e in ShopCatalog.List do if not e.weaponId then table.insert(out,e) end end;return out end
 local function fmt(n) n=tonumber(n) or 0;if n>=1e6 then return string.format('%.1fM',n/1e6) elseif n>=1e4 then return string.format('%.1fK',n/1e3) end;return tostring(n) end
 

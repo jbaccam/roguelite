@@ -197,7 +197,9 @@ local function describe(w)
 	if w.godly then
 		return (GODLY_TEXT[w.id] or "") .. " Any class can start a run with it."
 	end
-	local out = { "Home weapon of the " .. w.home .. " class." }
+	-- Every class it belongs to (2026-10-04): "Home weapon of the Thrower and Juggler classes."
+	local many = w.classes ~= nil and #w.classes > 1
+	local out = { "Home weapon of the " .. Weapons.classNames(w) .. (many and " classes." or " class.") }
 	if TRAITS[w.trait] then
 		table.insert(out, TRAITS[w.trait])
 	end
@@ -369,8 +371,9 @@ function A.new(player, opts)
 		end
 		local weapon = player:GetAttribute("LoadoutWeapon") or sel.weapon
 		local w = weapon and Weapons.ById[weapon]
-		-- An owned Godly starts a run with any class (RunSetupRules.validLoadout).
-		if not w or (w.home ~= class and not w.godly) or not profile.weapons[weapon] then
+		-- An owned Godly starts a run with any class, any other weapon with the class anywhere in its
+		-- list (RunSetupRules.validLoadout, 2026-10-04).
+		if not w or (not Weapons.inClass(w, class) and not w.godly) or not profile.weapons[weapon] then
 			weapon = Rules.Signature[class]
 		end
 		return class, weapon
@@ -796,8 +799,23 @@ function A.new(player, opts)
 				end
 				y += math.ceil(#godlies / cols) * (CARD_H + GAP) + 8
 			end
+			-- Each weapon once (2026-10-04: weapons list several classes). Your class shows every weapon
+			-- with it anywhere in the list (MY CLASS as a Thrower: 11); the other classes show the rest
+			-- under their first (home) class, e.g. the Kunai under THROWER for a Brawler.
+			local shown = {}
 			for _, c in classes do
-				local list = Rules.homeWeapons(c)
+				local list = {}
+				for _, w in Rules.classWeapons(c) do
+					if not shown[w.id] and (c == class or w.home == c) then
+						table.insert(list, w)
+					end
+				end
+				for _, w in list do
+					shown[w.id] = true
+				end
+				if #list == 0 then
+					continue
+				end
 				table.sort(list, function(a, b)
 					local ra, rb = profile.weapons[a.id], profile.weapons[b.id]
 					if (ra ~= nil) ~= (rb ~= nil) then
@@ -1066,12 +1084,14 @@ function A.new(player, opts)
 	local function drawWeaponDetail(panel, w)
 		local rec = profile.weapons[w.id]
 		local tier = rec and rec.tier or 1
+		-- Every class (2026-10-04): "RARE  ·  THROWER · JUGGLER  ·  RANGED".
+		local classText = string.upper(w.godly and w.home or Weapons.classNames(w, " · "))
 		header(
 			panel,
 			WeaponIcons[w.id],
 			rec and tier,
 			w.name,
-			rarityTag(w.id) .. "  ·  " .. string.upper(w.home) .. "  ·  " .. string.upper(w.kind),
+			rarityTag(w.id) .. "  ·  " .. classText .. "  ·  " .. string.upper(w.kind),
 			rec and T.Tier[tier] or C.white
 		)
 		local desc = T.text(panel, "Description", describe(w), 24, 168, RIGHT_W - 48, 66, 19, C.muted)
@@ -1100,8 +1120,16 @@ function A.new(player, opts)
 			)
 			nt.TextXAlignment = Enum.TextXAlignment.Right
 			T.upgradeBar(panel, "Copies", 24, 446, RIGHT_W - 48, 30, rec.have, need)
-			local homeOwned = w.godly or profile.classes[w.home] == true
-			local startClass = w.godly and class or w.home
+			-- EQUIP keeps your class when the weapon is in its list (2026-10-04: a Gunner's Nail Gun
+			-- starts as a Gunner); otherwise the first class in the list you own, else its home (locked).
+			local startClass = (w.godly or Weapons.inClass(w, class)) and class or nil
+			for _, c in w.classes or { w.home } do
+				if not startClass and profile.classes[c] then
+					startClass = c
+				end
+			end
+			local homeOwned = startClass ~= nil
+			startClass = startClass or w.home
 			local eq = T.button(
 				panel,
 				"Equip",
@@ -1155,12 +1183,15 @@ function A.new(player, opts)
 					{ Scale = 1.03 }
 				):Play()
 			end
-			if w.godly or class ~= w.home then
+			if w.godly or not Weapons.inClass(w, class) then
+				-- "Starts runs as a Thrower or Juggler." (every class in its list)
+				local list = w.classes or { w.home }
+				local who = #list > 1 and table.concat(list, ", ", 1, #list - 1) .. " or " .. list[#list] or list[1]
 				T.text(
 					panel,
 					"Note",
 					w.godly and "One Godly per run. It's never sold in the run shop."
-						or "Starts runs only as a " .. w.home .. ". Any class can buy it in the run shop.",
+						or "Starts runs as a " .. who .. ". Any class can buy it in the run shop.",
 					24,
 					668,
 					RIGHT_W - 48,

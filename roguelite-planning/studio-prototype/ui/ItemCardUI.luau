@@ -373,14 +373,17 @@ function K.open(canvas,L,args)
    T.icon(well,'Lock',hw-58,8,46,'lock').ZIndex=3
   end
   -- What it is (the rarity is already on the tag): 'MELEE · ANY CLASS', 'ARMOR · CHEST', 'PET · FIRE'.
-  local kind=it.kind=='weapon' and (it.w.godly and (it.w.kind..' · any class') or (it.w.kind..' · '..it.w.home))
+  local kind=it.kind=='weapon' and (it.w.godly and (it.w.kind..' · any class') or (it.w.kind..' · '..Weapons.classNames(it.w,' · ')))
    or it.kind=='armor' and ('armor · '..it.slot) or ('pet · '..it.pet.suit)
   local ky=wy+wh+6
   if it.kind=='weapon' and not it.w.godly then
-   -- A class weapon: two tags, its class (with the class's starter icon) and its type.
+   -- A class weapon: two tags, its classes (with the first class's starter icon; 2026-10-04 every
+   -- class: 'THROWER · JUGGLER') and its type. The type tag drops when both don't fit the column.
    local th=subH-2
-   local _,cw1=T.tag(p,'ClassTag',string.upper(it.w.home),pad,ky+1,{h=th,size=th-12,icon=WeaponIcons[Stats.Signature[it.w.home]]})
-   T.tag(p,'TypeTag',string.upper(it.w.kind=='Blast' and 'Explosive' or it.w.kind),pad+cw1+8,ky+1,{h=th,size=th-12,color=Color3.fromRGB(27,33,37),textColor=C.muted})
+   local _,cw1=T.tag(p,'ClassTag',string.upper(Weapons.classNames(it.w,' · ')),pad,ky+1,{h=th,size=th-12,maxW=hw,icon=WeaponIcons[Stats.Signature[it.w.home]]})
+   local typeText=string.upper(it.w.kind=='Blast' and 'Explosive' or it.w.kind)
+   local tt,tw2=T.tag(p,'TypeTag',typeText,pad+cw1+8,ky+1,{h=th,size=th-12,color=Color3.fromRGB(27,33,37),textColor=C.muted})
+   if cw1+8+tw2>hw then tt:Destroy() end
   else
    T.label(p,'Kind',string.upper(kind),pad,ky,hw,subH,compact and 22 or 24,C.cream)
   end
@@ -458,7 +461,7 @@ function K.open(canvas,L,args)
     local m=Weapons.Legendary[it.id]
     head('TIER IV MOVE  ·  '..string.upper((Weapons.LegendaryNames and Weapons.LegendaryNames[m.move]) or m.move))
     para('Text',Weapons.legendaryText(it.id),24,WHITE)
-    para('More',Weapons.describe(w)..(compact and '' or ' Starts runs only as a '..w.home..'; any class can buy it in the run shop.'),20,C.muted)
+    para('More',Weapons.describe(w)..(compact and '' or ' Starts runs as a '..Weapons.classNames(w):gsub(' and ',' or ')..'; any class can buy it in the run shop.'),20,C.muted)
    else
     head('ABOUT')
     para('Text',Weapons.describe(w),24,WHITE)
@@ -471,7 +474,7 @@ function K.open(canvas,L,args)
     local entries={}
     for _,c in Stats.ClassOrder do
      local _,pct=Stats.classFit(w,c)
-     table.insert(entries,{name=c,image=WeaponIcons[Stats.Signature[c]],pct=pct,own=c==w.home,you=c==mine})
+     table.insert(entries,{name=c,image=WeaponIcons[Stats.Signature[c]],pct=pct,own=Weapons.inClass(w,c),you=c==mine}) -- own: every listed class (2026-10-04)
     end
     local _,fh=T.fitTiles(body,'WeaponFit',0,y,rw,entries,{icon=compact and 44 or 34,nameSize=compact and 19 or 14,pctSize=compact and 26 or 20,youSize=compact and 17 or 13,gap=compact and 8 or 8})
     y+=fh+6

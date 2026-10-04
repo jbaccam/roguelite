@@ -41,7 +41,7 @@ See [Tutorial design](plans/2026-10-03-tutorial-design.md) and [Lobby and first-
 The player selects:
 
 1. A class.
-2. One owned starting weapon from that class, entering at its saved tier (I–IV).
+2. One owned starting weapon that lists that class (or an owned Godly), entering at its saved tier (I–IV).
 3. Owned armor pieces: helmet, chestplate, leggings and boots (**confirmed 2026-09-27:** individual pieces, not one outfit).
 4. An unlocked map.
 
@@ -69,20 +69,20 @@ Owned weapons and armor with their copy counts / starting tiers, unlocked classe
 
 ## 4. Classes and complete weapon roster
 
-There are **six classes with six home weapons each**, for **36 weapons**. Every weapon belongs to exactly one "home" class. A class decides which owned weapons can be the starting weapon and which weapons count toward its affinity bonuses. It does **not** stop the player from buying other classes' weapons during a run.
+There are **six classes** and **36 class weapons** (plus six Godly weapons that belong to no class). Each class has six **home** weapons (the table below). Since 2026-10-04 a weapon can also belong to more classes, like Brotato: each lists 1–3, home first, so a class has 7–11 weapons (Brawler 9, Gunner 7, Thrower 11, Juggler 10, Handyman 9, Mage 8). Full lists and rules: [Character stats](studio-prototype/combat/CHARACTER_STATS.md#classes) and the [design](plans/2026-10-04-multi-class-weapons-design.md). A class decides which owned weapons can be the starting weapon (any that lists it; no cap of six) and which weapons count toward its affinity bonuses (every listed class counts). Class fit uses the weapon's best class. It does **not** stop the player from buying other classes' weapons during a run.
 
 ### Starting access
 
 New accounts own **Brawler, Gunner, and Mage**. **Thrower, Juggler, and Handyman** unlock through early achievements, or through an optional early purchase. The intended pace is one new class within the first few runs.
 
-| Class | Play style | Signature starter | Other home weapons |
-| --- | --- | --- | --- |
-| **Brawler** | Hand-to-hand: close-range arcs, heavy hits, durability | **Frying Pan** | Boxing Gloves, Nunchucks, Baseball Bat, Cinder Block, Katana |
-| **Gunner** | Fast projectiles, magazines, piercing and spread | **Glock** | Draco, Fart Gun, Shotgun, T-Shirt Cannon, Rocket Launcher |
-| **Thrower** | Returning projectiles, volleys, area denial | **Boomerang** | Kunais, Molotovs, Eggs, Steak, Deck of Cards |
-| **Juggler** | Tricks and toys: rebounds, spins, repeated contact and knockback | **Rubber Duck** | Spatula, Yo-Yo, Bowling Pins, Kusarigama, Bowling Ball |
-| **Handyman** | Construction tools, deployables, lanes and utility. Builds a nail turret it upgrades in the shop (2026-10-03; [HANDYMAN_TURRET.md](studio-prototype/combat/HANDYMAN_TURRET.md), off until its templates are installed) | **Nail Gun** | Wrecking Ball, Shovel, Paint Roller, Vacuum Cleaner, Power Washer |
-| **Mage** | Elemental zones, chain effects, mythic late unlocks | **Magic Staff** | Mjolnir, Excalibur, Pandora's Box, Medusa's Head, Crystal Ball |
+| Class | Play style | Signature starter | Other home weapons | Also in this class (2026-10-04) |
+| --- | --- | --- | --- | --- |
+| **Brawler** | Hand-to-hand: close-range arcs, heavy hits, durability | **Frying Pan** | Boxing Gloves, Nunchucks, Baseball Bat, Cinder Block, Katana | Bowling Pin, Shovel, Excalibur |
+| **Gunner** | Fast projectiles, magazines, piercing and spread | **Glock** | Draco, Fart Gun, Shotgun, T-Shirt Cannon, Rocket Launcher | Nail Gun |
+| **Thrower** | Returning projectiles, volleys, area denial | **Boomerang** | Kunais, Molotovs, Eggs, Steak, Deck of Cards | Kusarigama, T-Shirt Cannon, Rubber Duck, Bowling Ball, Mjolnir |
+| **Juggler** | Tricks and toys: rebounds, spins, repeated contact and knockback | **Rubber Duck** | Spatula, Yo-Yo, Bowling Pins, Kusarigama, Bowling Ball | Boomerang, Eggs, Deck of Cards, Boxing Gloves |
+| **Handyman** | Construction tools, deployables, lanes and utility. Builds a nail turret it upgrades in the shop (2026-10-03; [HANDYMAN_TURRET.md](studio-prototype/combat/HANDYMAN_TURRET.md), off until its templates are installed) | **Nail Gun** | Wrecking Ball, Shovel, Paint Roller, Vacuum Cleaner, Power Washer | Spatula, Rocket Launcher, Cinder Block |
+| **Mage** | Elemental zones, chain effects, mythic late unlocks | **Magic Staff** | Mjolnir, Excalibur, Pandora's Box, Medusa's Head, Crystal Ball | Fart Gun, Molotovs |
 
 Weapon classes were regrouped on 2026-10-03 so each class reads as one idea: Boxing Gloves and Cinder Block moved to Brawler, Spatula and Kusarigama to Juggler (equal-rarity swaps, so every class still has 2 Common, 2 Rare, 1 Epic, 1 Legendary). Juggler's starter became the Rubber Duck; saves that own Juggler are given it on load.
 
@@ -91,11 +91,11 @@ Weapon classes were regrouped on 2026-10-03 so each class reads as one idea: Box
 ### Class and off-class rules
 
 - A class supplies one always-active specialization, even when using off-class weapons.
-- Every weapon has one **home class** and two or more **combat tags**.
+- Every weapon has one **home class** (its first class; it may list up to two more) and two or more **combat tags**.
 - Any class may buy any owned weapon during a run.
 - Off-class weapons keep their full base behavior and can receive bonuses through shared tags.
-- **Two** equipped home-class weapons activate the class's first affinity bonus. **Four** activate its stronger bonus. With six slots, two stay flexible for off-class weapons.
-- Example: Nail Gun belongs to Handyman but also has Gun, Rapid and Projectile tags, so a Gunner can roll it and benefit from Gun-tag effects.
+- **Two** equipped weapons of the class (any listed class counts) activate the class's first affinity bonus. **Four** activate its stronger bonus. With six slots, two stay flexible for off-class weapons.
+- Example: the Nail Gun's home is Handyman and it also lists Gunner (2026-10-04), so a Gunner can start with it, gets the +15% class fit and counts it toward the Gunner's 2 / 4 bonuses.
 
 **Current class values:** [Character stat implementation](studio-prototype/combat/CHARACTER_STATS.md) is authoritative. It implements six class presets with explicit buffs and debuffs, home-weapon affinity bonuses, and 46 visible stats.
 

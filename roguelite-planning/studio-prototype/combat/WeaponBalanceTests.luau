@@ -130,5 +130,26 @@ local ok,err=xpcall(function()
   end
  end
  check(E.TIER_NAMES[4]=='Tier IV','tier words are not rarity words')
+ -- Multi-class weapons (2026-10-04): every non-Godly weapon lists 1-3 distinct known classes, the first
+ -- is its home from before the change (the 2026-10-03 homes below), Godly weapons list none, and the
+ -- Utility / Elemental flags follow the whole list.
+ local OLD_HOME={Brawler={'01','02','03','06','19','20'},Gunner={'00','07','08','09','10','11'},Thrower={'12','13','14','15','16','18'},
+  Juggler={'04','05','17','21','22','23'},Handyman={'24','25','26','27','28','29'},Mage={'30','31','32','33','34','35'}}
+ local homeOf={};for class,ids in OLD_HOME do for _,id in ids do homeOf[id]=class end end
+ for _,w in Weapons.List do
+  if w.godly then check(#w.classes==0 and w.home=='Godly' and not Weapons.inClass(w,'Brawler'),'godly has no class '..w.id)
+  else
+   check(#w.classes>=1 and #w.classes<=3,'1-3 classes '..w.id)
+   check(w.classes[1]==homeOf[w.id] and w.home==w.classes[1],'first class is the old home '..w.id)
+   local seen={}
+   for _,c in w.classes do check(Stats.Classes[c]~=nil and not seen[c] and Weapons.inClass(w,c),'known, distinct class '..w.id..' '..c);seen[c]=true end
+   check(w.utility==(seen.Handyman==true),'utility follows a listed Handyman '..w.id)
+   if seen.Mage then check(w.elemental,'listed Mage is elemental '..w.id) end
+  end
+ end
+ local nail=Weapons.ById['24'];check(#nail.classes==2 and nail.classes[2]=='Gunner','Nail Gun: Handyman, Gunner')
+ check(Weapons.ById['05'].utility and Weapons.ById['20'].utility,'Spatula and Cinder Block take Utility Power')
+ check(Weapons.classNames(Weapons.ById['12'])=='Thrower and Juggler' and Weapons.classNames(Weapons.ById['12'],' · ')=='Thrower · Juggler' and Weapons.classNames(Weapons.ById['13'])=='Thrower','class names')
+ check(string.find(Weapons.describe(Weapons.ById['12']),'Thrower and Juggler classes.',1,true)~=nil,'card text lists every class')
 end,debug.traceback)
 script:SetAttribute('Result',game.HttpService:JSONEncode({passed=ok,assertions=checked,error=ok and '' or err}))

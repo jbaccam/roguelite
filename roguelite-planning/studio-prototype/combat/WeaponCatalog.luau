@@ -185,9 +185,30 @@ function C.slowText(w)
  if not w or (w.slow or 0)<=0 then return nil end
  return 'Slows enemies '..num(w.slowStrength or 25)..'% for '..num(w.slowFor or 2)..' s.'
 end
+-- Weapons in more than one class (2026-10-04, plans/2026-10-04-multi-class-weapons-design.md; user:
+-- "weapons can belong to many classes if it makes sense, just like Brotato"). d.classes is the home
+-- class, then these; d.home stays classes[1] for older code. Class fit takes the best match, set
+-- bonuses and the Elemental / Utility flags count every listed class, and any listed class can
+-- start with it. Example: Nail Gun = Handyman, Gunner: a Gunner gets +15% with it (was 0) and can
+-- start with it. Kusarigama, Spatula, Boxing Gloves and Cinder Block follow the 2026-10-03 Brawler <->
+-- Juggler swap (the design's table was written from the older homes), so their home stays first.
+C.AlsoClasses={['04']={'Thrower'},['05']={'Handyman'},['08']={'Mage'},['10']={'Thrower'},['11']={'Handyman'},
+ ['12']={'Juggler'},['14']={'Mage'},['15']={'Juggler'},['17']={'Thrower'},['18']={'Juggler'},['19']={'Juggler'},
+ ['20']={'Handyman'},['22']={'Thrower'},['23']={'Brawler'},['24']={'Gunner'},['26']={'Brawler'},['31']={'Thrower'},['32']={'Brawler'}}
+-- Whether `class` is one of w's classes (a Godly has none). A bare {home=} table counts its home.
+function C.inClass(w,class)
+ if type(w)~='table' or w.godly then return false end
+ return table.find(w.classes or {w.home},class)~=nil
+end
+-- 'Thrower and Juggler'; with sep, joined by it instead ('THROWER · JUGGLER' with ' · ').
+function C.classNames(w,sep)
+ local list=w.classes or {w.home}
+ if sep or #list<2 then return table.concat(list,sep or '') end
+ return table.concat(list,', ',1,#list-1)..' and '..list[#list]
+end
 function C.describe(w)
  if w.godly then return 'Any class can start a run with it.' end
- local out={'Home weapon of the '..w.home..' class.'}
+ local out={'Home weapon of the '..C.classNames(w)..((w.classes and #w.classes>1) and ' classes.' or ' class.')}
  if TRAITS[w.trait] then table.insert(out,TRAITS[w.trait]) end
  if w.burn>0 then table.insert(out,'Sets enemies on fire.') end
  if w.poison>0 then table.insert(out,'Poisons what it hits.') end
@@ -224,10 +245,11 @@ for i,name in names do
  -- pairs so every class keeps 2 Common, 2 Rare, 1 Epic, 1 Legendary: Boxing Gloves <-> Spatula (Common),
  -- Cinder Block <-> Kusarigama (Epic).
  d.home=HOME_MOVED[d.id] or d.home
+ d.classes={d.home};for _,c in C.AlsoClasses[d.id] or {} do table.insert(d.classes,c) end
 
  if n==17 or n==21 or n==23 then d.kind='Ranged' end
  -- Godly weapons belong to no class; any class may start with an owned one.
- if n>=36 then d.home='Godly';d.godly=true;d.special=C.Godly[d.id] end
+ if n>=36 then d.home='Godly';d.classes={};d.godly=true;d.special=C.Godly[d.id] end
  if n==37 then d.hybridRange=36;d.projectileSpeed=60;d.throwable=true end
  if n==38 then d.projectileSpeed=95 end
  if n==39 then d.scripted=true end -- the daggers' chain is the hit; no swing box
@@ -237,11 +259,14 @@ for i,name in names do
  if n==8 then d.projectileSpeed=150 end
  local thrownSpeed={[12]=40,[13]=65,[14]=28,[15]=35,[22]=32,[23]=24}
  if thrownSpeed[n] then d.projectileSpeed=thrownSpeed[n] end
- d.elemental=d.home=='Mage' or n==8 or n==14 or n==17 or n==38 or n==41
- d.utility=d.home=='Handyman'
+ -- Any listed class counts (2026-10-04): Spatula, Rocket Launcher and Cinder Block (Handyman second)
+ -- now take Utility Power and count for the utilityKills quest.
+ d.elemental=C.inClass(d,'Mage') or n==8 or n==14 or n==17 or n==38 or n==41
+ d.utility=C.inClass(d,'Handyman')
  d.burn=n==14 and 100 or 0;d.poison=n==8 and 100 or 0;d.slow=C.SlowById[d.id] and 100 or 0;d.lightning=n==35 or n==31
  if C.SlowById[d.id] then d.slowStrength=C.SlowById[d.id].strength;d.slowFor=C.SlowById[d.id].seconds end
  d.tags={d.kind=='Melee' and 'Melee' or 'Projectile',d.home}
+ for i=2,#d.classes do table.insert(d.tags,d.classes[i]) end
  if d.elemental then table.insert(d.tags,'Elemental') end
  if d.utility then table.insert(d.tags,'Utility') end
  table.insert(C.List,d);C.ById[d.id]=d

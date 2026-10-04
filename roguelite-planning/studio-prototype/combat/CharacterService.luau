@@ -117,7 +117,9 @@ end
 function Service.refresh(player)
  local s=Service.states[player];if not s then return end
  local count=0
- for _,slot in s.folder:GetChildren() do local d=Catalog.ById[slot:GetAttribute('WeaponId')];if d and d.home==s.class then count+=1 end end
+ -- 2 / 4 class weapons: a weapon counts for every class in its list (2026-10-04), so a Kusarigama
+ -- (Juggler, Thrower) counts for a Juggler and for a Thrower.
+ for _,slot in s.folder:GetChildren() do local d=Catalog.ById[slot:GetAttribute('WeaponId')];if d and Stats.inClass(d,s.class) then count+=1 end end
  -- Permanent skill-tree bonuses join the run's item bonuses as flat terms. ProfileSkills is
  -- written only by ProfileService on the server, so clients cannot change it.
  local flat=s.itemBonuses

@@ -108,7 +108,10 @@ function R.classOrder(classes)
  for pass=1,2 do for _,c in Stats.ClassOrder do if (classes[c]==true)==(pass==1) then table.insert(out,c) end end end
  return out
 end
-function R.homeWeapons(class) local out={};for _,w in Weapons.List do if w.home==class then table.insert(out,w) end end;return out end
+-- Every weapon with `class` anywhere in its list (2026-10-04: no cap of six, e.g. 11 for Thrower),
+-- in catalog order. These are the weapons the class may start with when owned.
+function R.classWeapons(class) local out={};for _,w in Weapons.List do if Weapons.inClass(w,class) then table.insert(out,w) end end;return out end
+R.homeWeapons=R.classWeapons -- the old name
 -- Godlies this profile owns (any class can start with one); unowned Godlies are never listed.
 function R.ownedGodlies(weapons) local out={};for _,w in Weapons.List do if w.godly and weapons[w.id] then table.insert(out,w) end end;return out end
 
@@ -131,7 +134,11 @@ function R.validLoadout(player,class,weapon)
  if not p.classes[class] then return false,'Class locked' end
  local w=type(weapon)=='string' and Weapons.ById[weapon]
  -- An owned Godly starts a run with any class (it is the run's one Godly: the shop never sells one).
- if not w or (w.home~=class and not w.godly) or not p.weapons[weapon] then return false,'Weapon not owned' end
+ -- Any owned weapon with the class in its list starts (2026-10-04): a Gunner may start with the Nail
+ -- Gun (Handyman, Gunner). Every lobby and match fallback calls this, so a saved starter that no
+ -- longer fits drops to the class's signature weapon.
+ if not w or not p.weapons[weapon] then return false,'Weapon not owned' end
+ if not Weapons.inClass(w,class) and not w.godly then return false,w.name..' is not a '..class..' weapon' end
  return true
 end
 return R
