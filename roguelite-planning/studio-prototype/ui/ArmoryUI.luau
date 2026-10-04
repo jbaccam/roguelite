@@ -1567,7 +1567,8 @@ function A.new(player, opts)
 				(done or now or nextUp) and T.Tier[t] or C.dim
 			)
 			title.TextXAlignment = Enum.TextXAlignment.Left
-			if done then
+			-- Mark the currently unlocked tier, matching NOW.
+			if now then
 				tick(card, 190, 24, 26)
 			end
 			local tag = now and "NOW" or nextUp and "NEXT" or nil
