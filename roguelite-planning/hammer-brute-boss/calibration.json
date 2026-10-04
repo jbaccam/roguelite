@@ -1,0 +1,208 @@
+{
+ "note": "CALIBRATION: per-material linear RGB gains applied to the eyedropped PALETTE in hb_paint.py. Updated only by calibrate.py from compare-report.json (reference / render probe ratios). Never baked into the palette constants.",
+ "CALIBRATION": {
+  "skin": [
+   0.9067,
+   1.1442,
+   0.928
+  ],
+  "shirt": [
+   1.2678,
+   1.2678,
+   1.2678
+  ],
+  "iron": [
+   0.3827,
+   0.4225,
+   0.4046
+  ],
+  "trousers": [
+   1.7136,
+   1.7136,
+   1.7136
+  ],
+  "wood": [
+   0.8766,
+   0.8451,
+   0.8543
+  ],
+  "band": [
+   0.9028,
+   0.737,
+   0.7112
+  ],
+  "tooth": [
+   1.15,
+   1.15,
+   1.15
+  ]
+ },
+ "history": [
+  {
+   "iou": 0.9085,
+   "step": {
+    "skin": [
+     0.987,
+     0.842,
+     0.952
+    ],
+    "shirt": [
+     1.16,
+     0.916,
+     1.172
+    ],
+    "iron": [
+     0.6,
+     0.6,
+     0.6
+    ],
+    "trousers": [
+     1.6,
+     1.069,
+     1.467
+    ],
+    "wood": [
+     0.803,
+     0.615,
+     0.771
+    ],
+    "band": [
+     0.944,
+     0.628,
+     0.775
+    ],
+    "tooth": [
+     1.175,
+     1.014,
+     1.316
+    ]
+   }
+  },
+  {
+   "iou": 0.9084,
+   "step": {
+    "skin": [
+     1.067,
+     1.025,
+     1.052
+    ],
+    "shirt": [
+     1.041,
+     0.995,
+     1.046
+    ],
+    "iron": [
+     0.76,
+     0.6,
+     0.757
+    ],
+    "trousers": [
+     1.238,
+     0.932,
+     1.06
+    ],
+    "wood": [
+     1.229,
+     1.034,
+     1.095
+    ],
+    "band": [
+     1.143,
+     0.964,
+     1.063
+    ],
+    "tooth": [
+     1.126,
+     1.065,
+     1.143
+    ]
+   }
+  },
+  {
+   "iou": 0.9091,
+   "step": {
+    "skin": [
+     0.832,
+     0.86,
+     0.904
+    ],
+    "shirt": [
+     0.918,
+     0.928,
+     1.002
+    ],
+    "iron": [
+     0.811,
+     0.761,
+     0.868
+    ],
+    "trousers": [
+     1.098,
+     0.991,
+     1.26
+    ],
+    "wood": [
+     0.86,
+     0.862,
+     0.987
+    ],
+    "band": [
+     0.809,
+     0.788,
+     0.842
+    ],
+    "tooth": [
+     1.032,
+     1.003,
+     1.124
+    ]
+   }
+  },
+  {
+   "fix_pass_2026_10_03": true,
+   "common_cast_removed": [
+    0.9669,
+    0.6483,
+    0.9753
+   ],
+   "gains_before": {
+    "skin": [
+     0.8767,
+     0.7418,
+     0.905
+    ],
+    "shirt": [
+     1.109,
+     0.8459,
+     1.2275
+    ],
+    "iron": [
+     0.37,
+     0.2739,
+     0.3946
+    ],
+    "trousers": [
+     2.1737,
+     0.9886,
+     1.9592
+    ],
+    "wood": [
+     0.8476,
+     0.5479,
+     0.8332
+    ],
+    "band": [
+     0.8729,
+     0.4778,
+     0.6936
+    ],
+    "tooth": [
+     1.3659,
+     1.0824,
+     1.6907
+    ]
+   },
+   "note": "After pass 3 every material carried the same green suppression (geometric mean over all calibrated materials = the common cast above): the review lawn bounced green light onto the figure, and the gains were painting magenta into the albedo to cancel it (the shirt read pink, the trousers purple). The fix pass makes the lawn bounce neutral grey in setup_review and divides the common cast out of every gain. Trousers and teeth keep a luminance-only gain (their hue residual was the cast plus shadow). Not re-measured by another calibration pass (the 3-pass limit was reached); the final compare is reported in the README. The shirt also keeps a luminance-only gain so its hue comes from the dirty-cream palette."
+  }
+ ]
+}

@@ -1,0 +1,1418 @@
+{
+ "asset": "HammerBrute",
+ "reference": {
+  "file": "source/boss-reference.png",
+  "sha256": "B401488FE31019B7D2179CBCF652D17082BA92E1B5ED7AD2BF2D5A64736CA6F6",
+  "size": [
+   1086,
+   1448
+  ]
+ },
+ "units": "1 Blender unit = 1 Roblox stud; Z up, the character faces -Y, +X is the character's left",
+ "dimensions_studs": {
+  "top_of_head_reference_pose": 13.7,
+  "top_of_head_rest_pose": 13.653,
+  "width_reference_pose_incl_hammer": 13.368,
+  "depth_reference_pose_incl_hammer": 7.11,
+  "lowest_point_reference_pose": 0.0,
+  "world_scale_applied": 1.01588,
+  "shoulder_joint_span": 6.197,
+  "arm_lengths_upper_fore": [
+   3.657,
+   3.556
+  ],
+  "hammer_head_half_extents_along_haft_strike_side": [
+   1.575,
+   2.215,
+   1.29
+  ],
+  "haft_radius": 0.366,
+  "haft_length_head_centre_to_butt": 11.062
+ },
+ "points_in_Hammer_bone_space_blender": {
+  "HammerFace": {
+   "position": [
+    0.0,
+    2.7937,
+    2.2146
+   ],
+   "normal": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "note": "centre of the FLAT striking face (the face that lands in a Slam)"
+  },
+  "HammerGrip": {
+   "position": [
+    0.0,
+    -3.3468,
+    0.0
+   ],
+   "note": "on the haft axis halfway between the two carry grips"
+  },
+  "axes": "Hammer bone: +Y along the haft toward the head, +Z = striking-face normal, X = Y x Z; origin = right carry grip (centre of the right finger tunnel)",
+  "helper_bones_in_blend": [
+   "HammerFace",
+   "HammerGrip"
+  ]
+ },
+ "grip": {
+  "note": "Distances s are measured along the haft from the hammer-head centre toward the butt. Hammer bone space: origin = right carry grip on the haft axis, +Y toward the head, +Z = striking-face normal. Both thumbs point at the head (a sledgehammer grip), so the right hand can slide down to the left one for Slam/Swing/Spin without regripping.",
+  "units": "final studs (design units x world_scale 1.01588)",
+  "haft_radius": 0.3657,
+  "carry_grips": {
+   "right": {
+    "s": 2.7937,
+    "hammer_bone_y": 0.0
+   },
+   "left": {
+    "s": 9.4873,
+    "hammer_bone_y": -6.6936
+   },
+   "distance_between": 6.6936
+  },
+  "butt_end": {
+   "s": 11.0619,
+   "hammer_bone_y": -8.2682
+  },
+  "attack_grip_range_right_hand": {
+   "s": [
+    2.7937,
+    7.4667
+   ],
+   "hammer_bone_y": [
+    0.0,
+    -4.6731
+   ],
+   "how": "Slide the right hand toward the butt by translating the Hammer bone along its own +Y relative to RightHand: Hammer_in_RightHand(slide) = Hammer_in_RightHand(0) @ Translate(0, slide, 0), slide in [0, 4.673]."
+  },
+  "left_hand_stays_at": "the left carry grip (the butt end) in every attack; IK_Grip_L rides on the Hammer bone",
+  "iron_bands": {
+   "s": [
+    6.0953,
+    6.9893,
+    7.8426
+   ],
+   "raise": 0.0305,
+   "note": "Near-flush (raised 0.03) so a sliding fist stays inside the -0.03 contact window."
+  },
+  "collar_s": [
+   1.5949,
+   1.727
+  ],
+  "butt_cap_raise": 0.0914,
+  "Hammer_in_RightHand_4x4": [
+   [
+    0.04062,
+    0.97815,
+    0.20391,
+    -0.0
+   ],
+   [
+    0.19109,
+    -0.20791,
+    0.9593,
+    0.9143
+   ],
+   [
+    0.98073,
+    0.0,
+    -0.19536,
+    -0.73144
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "LeftHand_in_Hammer_4x4": [
+   [
+    -0.13354,
+    0.62826,
+    0.76646,
+    -0.0138
+   ],
+   [
+    0.97815,
+    0.20791,
+    0.0,
+    -6.88366
+   ],
+   [
+    -0.15936,
+    0.74971,
+    -0.64229,
+    -1.15525
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "reference_wrists": {
+   "Right": {
+    "flex_deg": -4.37,
+    "deviation_deg": -1.19,
+    "elbow_flex_deg": 38.46
+   },
+   "Left": {
+    "flex_deg": 2.68,
+    "deviation_deg": 0.88,
+    "elbow_flex_deg": 63.97
+   }
+  },
+  "reference_pose_contact_measured_on_rig": {
+   "Right": {
+    "Index": [
+     -0.0076,
+     0.0034,
+     -0.0086
+    ],
+    "Middle": [
+     -0.0053,
+     -0.0051,
+     0.0048
+    ],
+    "Ring": [
+     -0.0018,
+     0.001,
+     0.0014
+    ],
+    "Pinky": [
+     -0.0045,
+     0.0012,
+     -0.0015
+    ],
+    "Thumb": [
+     0.0093,
+     0.0037,
+     0.0391
+    ]
+   },
+   "Left": {
+    "Index": [
+     -0.0076,
+     0.0034,
+     -0.0086
+    ],
+    "Middle": [
+     -0.0053,
+     -0.0051,
+     0.0048
+    ],
+    "Ring": [
+     -0.0018,
+     0.001,
+     0.0014
+    ],
+    "Pinky": [
+     -0.0044,
+     0.0012,
+     -0.0015
+    ],
+    "Thumb": [
+     0.0093,
+     0.0037,
+     0.0391
+    ]
+   },
+   "fingers_all_in_window": true,
+   "window": [
+    -0.03,
+    0.02
+   ]
+  }
+ },
+ "bones": [
+  {
+   "name": "Root",
+   "parent": null,
+   "length": 1.2191,
+   "head_rest": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "name": "HumanoidRootPart",
+   "parent": "Root",
+   "length": 0.9143,
+   "head_rest": [
+    0.0,
+    0.1016,
+    4.7747
+   ]
+  },
+  {
+   "name": "LowerTorso",
+   "parent": "HumanoidRootPart",
+   "length": 2.4466,
+   "head_rest": [
+    0.0,
+    0.1016,
+    4.7747
+   ]
+  },
+  {
+   "name": "UpperTorso",
+   "parent": "LowerTorso",
+   "length": 3.5052,
+   "head_rest": [
+    0.0,
+    0.3048,
+    7.2128
+   ]
+  },
+  {
+   "name": "Head",
+   "parent": "UpperTorso",
+   "length": 2.1841,
+   "head_rest": [
+    0.0,
+    0.254,
+    11.1239
+   ]
+  },
+  {
+   "name": "Jaw",
+   "parent": "Head",
+   "length": 1.4625,
+   "head_rest": [
+    0.0,
+    -0.0203,
+    11.8554
+   ]
+  },
+  {
+   "name": "Brow",
+   "parent": "Head",
+   "length": 0.4571,
+   "head_rest": [
+    0.0,
+    -1.2902,
+    12.8408
+   ]
+  },
+  {
+   "name": "EyelidUpper",
+   "parent": "Head",
+   "length": 0.4369,
+   "head_rest": [
+    0.0,
+    -1.2902,
+    12.4649
+   ]
+  },
+  {
+   "name": "Shirt_Front_1",
+   "parent": "UpperTorso",
+   "length": 0.8454,
+   "head_rest": [
+    0.0,
+    -2.3365,
+    9.3969
+   ]
+  },
+  {
+   "name": "Shirt_Front_2",
+   "parent": "Shirt_Front_1",
+   "length": 0.868,
+   "head_rest": [
+    0.0,
+    -2.7937,
+    8.6858
+   ]
+  },
+  {
+   "name": "Shirt_Back",
+   "parent": "UpperTorso",
+   "length": 1.4948,
+   "head_rest": [
+    0.0,
+    2.0826,
+    8.6858
+   ]
+  },
+  {
+   "name": "RightUpperArm",
+   "parent": "UpperTorso",
+   "length": 3.6572,
+   "head_rest": [
+    -3.0984,
+    0.254,
+    10.7684
+   ]
+  },
+  {
+   "name": "RightLowerArm",
+   "parent": "RightUpperArm",
+   "length": 1.7778,
+   "head_rest": [
+    -5.4264,
+    -0.255,
+    7.9941
+   ]
+  },
+  {
+   "name": "RightLowerArmTwist",
+   "parent": "RightLowerArm",
+   "length": 1.7778,
+   "head_rest": [
+    -6.3847,
+    -1.2233,
+    6.8519
+   ]
+  },
+  {
+   "name": "RightHand",
+   "parent": "RightLowerArmTwist",
+   "length": 1.1175,
+   "head_rest": [
+    -7.3431,
+    -2.1915,
+    5.7097
+   ]
+  },
+  {
+   "name": "RightIndex1",
+   "parent": "RightHand",
+   "length": 0.6705,
+   "head_rest": [
+    -8.0048,
+    -3.5714,
+    5.2526
+   ]
+  },
+  {
+   "name": "RightIndex2",
+   "parent": "RightIndex1",
+   "length": 0.5283,
+   "head_rest": [
+    -8.2175,
+    -3.9604,
+    4.7496
+   ]
+  },
+  {
+   "name": "RightIndex3",
+   "parent": "RightIndex2",
+   "length": 0.447,
+   "head_rest": [
+    -8.2225,
+    -4.2893,
+    4.3363
+   ]
+  },
+  {
+   "name": "RightMiddle1",
+   "parent": "RightHand",
+   "length": 0.704,
+   "head_rest": [
+    -7.9988,
+    -3.21,
+    4.9096
+   ]
+  },
+  {
+   "name": "RightMiddle2",
+   "parent": "RightMiddle1",
+   "length": 0.5547,
+   "head_rest": [
+    -8.2233,
+    -3.6374,
+    4.3972
+   ]
+  },
+  {
+   "name": "RightMiddle3",
+   "parent": "RightMiddle2",
+   "length": 0.4693,
+   "head_rest": [
+    -8.2291,
+    -3.9977,
+    3.9755
+   ]
+  },
+  {
+   "name": "RightRing1",
+   "parent": "RightHand",
+   "length": 0.6571,
+   "head_rest": [
+    -7.9014,
+    -2.7939,
+    4.6333
+   ]
+  },
+  {
+   "name": "RightRing2",
+   "parent": "RightRing1",
+   "length": 0.5177,
+   "head_rest": [
+    -8.1119,
+    -3.2141,
+    4.1741
+   ]
+  },
+  {
+   "name": "RightRing3",
+   "parent": "RightRing2",
+   "length": 0.438,
+   "head_rest": [
+    -8.1181,
+    -3.5673,
+    3.7956
+   ]
+  },
+  {
+   "name": "RightPinky1",
+   "parent": "RightHand",
+   "length": 0.5632,
+   "head_rest": [
+    -7.7658,
+    -2.3785,
+    4.3887
+   ]
+  },
+  {
+   "name": "RightPinky2",
+   "parent": "RightPinky1",
+   "length": 0.4437,
+   "head_rest": [
+    -7.9466,
+    -2.7563,
+    4.0122
+   ]
+  },
+  {
+   "name": "RightPinky3",
+   "parent": "RightPinky2",
+   "length": 0.3755,
+   "head_rest": [
+    -7.9526,
+    -3.0729,
+    3.7012
+   ]
+  },
+  {
+   "name": "RightThumb1",
+   "parent": "RightHand",
+   "length": 0.5587,
+   "head_rest": [
+    -7.2731,
+    -3.0384,
+    5.7997
+   ]
+  },
+  {
+   "name": "RightThumb2",
+   "parent": "RightThumb1",
+   "length": 0.447,
+   "head_rest": [
+    -7.3098,
+    -3.5348,
+    5.5458
+   ]
+  },
+  {
+   "name": "RightThumb3",
+   "parent": "RightThumb2",
+   "length": 0.386,
+   "head_rest": [
+    -7.3219,
+    -3.8958,
+    5.2825
+   ]
+  },
+  {
+   "name": "Hammer",
+   "parent": "RightHand",
+   "length": 1.2191,
+   "head_rest": [
+    -7.2205,
+    -2.9668,
+    4.8409
+   ]
+  },
+  {
+   "name": "LeftUpperArm",
+   "parent": "UpperTorso",
+   "length": 3.6572,
+   "head_rest": [
+    3.0984,
+    0.254,
+    10.7684
+   ]
+  },
+  {
+   "name": "LeftLowerArm",
+   "parent": "LeftUpperArm",
+   "length": 1.7778,
+   "head_rest": [
+    5.4264,
+    -0.255,
+    7.9941
+   ]
+  },
+  {
+   "name": "LeftLowerArmTwist",
+   "parent": "LeftLowerArm",
+   "length": 1.7778,
+   "head_rest": [
+    6.3847,
+    -1.2233,
+    6.8519
+   ]
+  },
+  {
+   "name": "LeftHand",
+   "parent": "LeftLowerArmTwist",
+   "length": 1.1175,
+   "head_rest": [
+    7.3431,
+    -2.1915,
+    5.7097
+   ]
+  },
+  {
+   "name": "LeftIndex1",
+   "parent": "LeftHand",
+   "length": 0.6705,
+   "head_rest": [
+    7.4577,
+    -3.1628,
+    4.4471
+   ]
+  },
+  {
+   "name": "LeftIndex2",
+   "parent": "LeftIndex1",
+   "length": 0.5283,
+   "head_rest": [
+    7.8253,
+    -3.3839,
+    3.9319
+   ]
+  },
+  {
+   "name": "LeftIndex3",
+   "parent": "LeftIndex2",
+   "length": 0.447,
+   "head_rest": [
+    8.069,
+    -3.4123,
+    3.464
+   ]
+  },
+  {
+   "name": "LeftMiddle1",
+   "parent": "LeftHand",
+   "length": 0.704,
+   "head_rest": [
+    7.8862,
+    -2.9676,
+    4.6097
+   ]
+  },
+  {
+   "name": "LeftMiddle2",
+   "parent": "LeftMiddle1",
+   "length": 0.5547,
+   "head_rest": [
+    8.2521,
+    -3.2103,
+    4.0594
+   ]
+  },
+  {
+   "name": "LeftMiddle3",
+   "parent": "LeftMiddle2",
+   "length": 0.4693,
+   "head_rest": [
+    8.4921,
+    -3.2482,
+    3.5607
+   ]
+  },
+  {
+   "name": "LeftRing1",
+   "parent": "LeftHand",
+   "length": 0.6571,
+   "head_rest": [
+    8.2469,
+    -2.6839,
+    4.8298
+   ]
+  },
+  {
+   "name": "LeftRing2",
+   "parent": "LeftRing1",
+   "length": 0.5177,
+   "head_rest": [
+    8.5643,
+    -2.9222,
+    4.3062
+   ]
+  },
+  {
+   "name": "LeftRing3",
+   "parent": "LeftRing2",
+   "length": 0.438,
+   "head_rest": [
+    8.7692,
+    -2.9669,
+    3.8329
+   ]
+  },
+  {
+   "name": "LeftPinky1",
+   "parent": "LeftHand",
+   "length": 0.5632,
+   "head_rest": [
+    8.567,
+    -2.3716,
+    5.0551
+   ]
+  },
+  {
+   "name": "LeftPinky2",
+   "parent": "LeftPinky1",
+   "length": 0.4437,
+   "head_rest": [
+    8.8179,
+    -2.5856,
+    4.5986
+   ]
+  },
+  {
+   "name": "LeftPinky3",
+   "parent": "LeftPinky2",
+   "length": 0.3755,
+   "head_rest": [
+    8.9769,
+    -2.6319,
+    4.1869
+   ]
+  },
+  {
+   "name": "LeftThumb1",
+   "parent": "LeftHand",
+   "length": 0.5587,
+   "head_rest": [
+    6.9352,
+    -2.425,
+    4.9961
+   ]
+  },
+  {
+   "name": "LeftThumb2",
+   "parent": "LeftThumb1",
+   "length": 0.447,
+   "head_rest": [
+    6.9892,
+    -2.5705,
+    4.4593
+   ]
+  },
+  {
+   "name": "LeftThumb3",
+   "parent": "LeftThumb2",
+   "length": 0.386,
+   "head_rest": [
+    7.0926,
+    -2.6468,
+    4.0312
+   ]
+  },
+  {
+   "name": "Belly",
+   "parent": "LowerTorso",
+   "length": 1.8398,
+   "head_rest": [
+    0.0,
+    -1.2699,
+    6.654
+   ]
+  },
+  {
+   "name": "RightUpperLeg",
+   "parent": "LowerTorso",
+   "length": 2.0488,
+   "head_rest": [
+    -1.5746,
+    0.2032,
+    4.5207
+   ]
+  },
+  {
+   "name": "RightLowerLeg",
+   "parent": "RightUpperLeg",
+   "length": 1.6435,
+   "head_rest": [
+    -1.6457,
+    -0.0508,
+    2.4889
+   ]
+  },
+  {
+   "name": "RightFoot",
+   "parent": "RightLowerLeg",
+   "length": 1.1517,
+   "head_rest": [
+    -1.7473,
+    0.7111,
+    1.0362
+   ]
+  },
+  {
+   "name": "RightToes",
+   "parent": "RightFoot",
+   "length": 0.6306,
+   "head_rest": [
+    -1.6779,
+    -0.282,
+    0.4571
+   ]
+  },
+  {
+   "name": "LeftUpperLeg",
+   "parent": "LowerTorso",
+   "length": 2.8863,
+   "head_rest": [
+    1.5746,
+    0.2032,
+    4.5207
+   ]
+  },
+  {
+   "name": "LeftLowerLeg",
+   "parent": "LeftUpperLeg",
+   "length": 1.5672,
+   "head_rest": [
+    3.0984,
+    -1.1683,
+    2.4889
+   ]
+  },
+  {
+   "name": "LeftFoot",
+   "parent": "LeftLowerLeg",
+   "length": 1.1517,
+   "head_rest": [
+    3.6775,
+    -1.0667,
+    1.0362
+   ]
+  },
+  {
+   "name": "LeftToes",
+   "parent": "LeftFoot",
+   "length": 0.6306,
+   "head_rest": [
+    3.8161,
+    -2.0526,
+    0.4571
+   ]
+  }
+ ],
+ "bone_count_deform": 59,
+ "non_deform_helpers_not_exported": [
+  "IK_Grip_L",
+  "HammerFace",
+  "HammerGrip",
+  "IK_Hand_R",
+  "Pole_Elbow_R",
+  "IK_Foot_R",
+  "Pole_Knee_R",
+  "IK_Hand_L",
+  "Pole_Elbow_L",
+  "IK_Foot_L",
+  "Pole_Knee_L"
+ ],
+ "hinge_conventions": {
+  "LowerArm": "+X rotation = elbow flexion (both sides)",
+  "LowerLeg": "+X rotation = knee flexion (both sides)",
+  "fingers_and_thumbs": "+X rotation = curl toward the palm",
+  "Jaw": "+X opens",
+  "EyelidUpper": "+X closes",
+  "LowerArmTwist": "roll about Y; share forearm roll ~50/50 with Hand"
+ },
+ "idle_start_pose": "ReferencePose action, frame 1 (= RigTest_ROM frame 1)",
+ "sections": {
+  "HammerBrute_Body": {
+   "triangles": 13074,
+   "vertices": 6569,
+   "faces": 10067,
+   "material": "HammerBrute_Body",
+   "texture_master": "HammerBrute_Body_BaseColor_2048.png",
+   "texture_delivery": "HammerBrute_Body_BaseColor.png"
+  },
+  "HammerBrute_Head": {
+   "triangles": 4998,
+   "vertices": 2554,
+   "faces": 3019,
+   "material": "HammerBrute_Head",
+   "texture_master": "HammerBrute_Head_BaseColor_2048.png",
+   "texture_delivery": "HammerBrute_Head_BaseColor.png"
+  },
+  "HammerBrute_Shirt": {
+   "triangles": 6200,
+   "vertices": 3054,
+   "faces": 6200,
+   "material": "HammerBrute_Shirt",
+   "texture_master": "HammerBrute_Shirt_BaseColor_2048.png",
+   "texture_delivery": "HammerBrute_Shirt_BaseColor.png"
+  },
+  "HammerBrute_Gear": {
+   "triangles": 6923,
+   "vertices": 3499,
+   "faces": 5463,
+   "material": "HammerBrute_Gear",
+   "texture_master": "HammerBrute_Gear_BaseColor_2048.png",
+   "texture_delivery": "HammerBrute_Gear_BaseColor.png"
+  },
+  "HammerBrute_Trousers": {
+   "triangles": 7598,
+   "vertices": 3748,
+   "faces": 7598,
+   "material": "HammerBrute_Trousers",
+   "texture_master": "HammerBrute_Trousers_BaseColor_2048.png",
+   "texture_delivery": "HammerBrute_Trousers_BaseColor.png"
+  },
+  "HammerBrute_Hammer": {
+   "triangles": 3768,
+   "vertices": 1898,
+   "faces": 3630,
+   "material": "HammerBrute_Hammer",
+   "texture_master": "HammerBrute_Hammer_BaseColor_2048.png",
+   "texture_delivery": "HammerBrute_Hammer_BaseColor.png"
+  },
+  "HammerBrute_EyeGlow": {
+   "triangles": 320,
+   "vertices": 168,
+   "faces": 320,
+   "material": "HammerBrute_EyeGlow",
+   "texture_master": "HammerBrute_EyeGlow_BaseColor_512.png",
+   "texture_delivery": "HammerBrute_EyeGlow_BaseColor.png"
+  }
+ },
+ "triangles_total": 42881,
+ "actions": {
+  "ReferencePose": {
+   "frame_range": [
+    1,
+    2
+   ],
+   "markers": {}
+  },
+  "RigTest_ROM": {
+   "frame_range": [
+    1,
+    97
+   ],
+   "markers": {}
+  }
+ },
+ "rig_test_rom": {
+  "poses": [
+   [
+    1,
+    "idle (reference)"
+   ],
+   [
+    9,
+    "overhead two-hand slam (top)"
+   ],
+   [
+    17,
+    "slam impact (face flat on ground)"
+   ],
+   [
+    25,
+    "spin wind-up (over right shoulder)"
+   ],
+   [
+    33,
+    "charge crouch"
+   ],
+   [
+    41,
+    "deep squat"
+   ],
+   [
+    49,
+    "arms forward"
+   ],
+   [
+    57,
+    "torso twist"
+   ],
+   [
+    65,
+    "death kneel (hammer dropped)"
+   ],
+   [
+    73,
+    "fists open (hammer set down)"
+   ],
+   [
+    81,
+    "head turn, jaw open, brow, blink"
+   ],
+   [
+    89,
+    "belly + shirt bones"
+   ]
+  ],
+  "metrics": {
+   "idle (reference)": {},
+   "overhead two-hand slam (top)": {
+    "Right": {
+     "cost": 73.246,
+     "wrist_flex": 2.315,
+     "wrist_dev": -1.074,
+     "elbow_flex": 126.824,
+     "twist": 71.375
+    },
+    "Left": {
+     "cost": 283.58,
+     "wrist_flex": 3.156,
+     "wrist_dev": 0.68,
+     "elbow_flex": 104.848,
+     "twist": -108.881
+    },
+    "adjust": [
+     0.375,
+     -1.65,
+     -0.587,
+     2.25,
+     -17.625,
+     96.875
+    ]
+   },
+   "slam impact (face flat on ground)": {
+    "Right": {
+     "cost": 0.569,
+     "wrist_flex": -0.552,
+     "wrist_dev": 0.419,
+     "elbow_flex": 53.397,
+     "twist": 10.971
+    },
+    "Left": {
+     "cost": 8.603,
+     "wrist_flex": 2.603,
+     "wrist_dev": 1.104,
+     "elbow_flex": 63.661,
+     "twist": 9.977
+    },
+    "adjust": [
+     0.2,
+     0.013,
+     -0.638,
+     -0.375,
+     0.0,
+     10.0
+    ]
+   },
+   "spin wind-up (over right shoulder)": {
+    "Right": {
+     "cost": 2.439,
+     "wrist_flex": 1.481,
+     "wrist_dev": -0.406,
+     "elbow_flex": 137.59,
+     "twist": 29.137
+    },
+    "Left": {
+     "cost": 10.177,
+     "wrist_flex": -2.969,
+     "wrist_dev": 0.954,
+     "elbow_flex": 123.211,
+     "twist": 3.532
+    },
+    "adjust": [
+     -0.887,
+     -1.063,
+     0.263,
+     40.125,
+     -11.625,
+     -40.625
+    ]
+   },
+   "charge crouch": {
+    "Right": {
+     "cost": 1.682,
+     "wrist_flex": -0.952,
+     "wrist_dev": -0.719,
+     "elbow_flex": 72.84,
+     "twist": 18.068
+    },
+    "Left": {
+     "cost": 55.736,
+     "wrist_flex": 0.424,
+     "wrist_dev": 1.601,
+     "elbow_flex": 97.645,
+     "twist": 10.267
+    },
+    "adjust": [
+     0.2,
+     -0.25,
+     0.325,
+     14.25,
+     1.5,
+     -2.5
+    ]
+   },
+   "deep squat": {
+    "Right": {
+     "cost": 0.285,
+     "wrist_flex": -0.085,
+     "wrist_dev": -0.431,
+     "elbow_flex": 65.406,
+     "twist": 20.432
+    },
+    "Left": {
+     "cost": 2.153,
+     "wrist_flex": 0.203,
+     "wrist_dev": -0.357,
+     "elbow_flex": 81.083,
+     "twist": 8.55
+    },
+    "adjust": [
+     -0.088,
+     -0.038,
+     0.188,
+     11.625,
+     9.0,
+     0.0
+    ]
+   },
+   "arms forward": {
+    "Right": {
+     "cost": 36.89,
+     "wrist_flex": 1.399,
+     "wrist_dev": -1.603,
+     "elbow_flex": 90.126,
+     "twist": 59.932
+    },
+    "Left": {
+     "cost": 23.349,
+     "wrist_flex": 2.363,
+     "wrist_dev": 1.877,
+     "elbow_flex": 63.88,
+     "twist": -50.8
+    },
+    "adjust": [
+     -0.175,
+     -0.288,
+     -0.55,
+     -12.0,
+     10.125,
+     43.125
+    ]
+   },
+   "torso twist": {},
+   "death kneel (hammer dropped)": {},
+   "fists open (hammer set down)": {},
+   "head turn, jaw open, brow, blink": {},
+   "belly + shirt bones": {}
+  }
+ },
+ "checks": {
+  "names": {
+   "mesh_names": [
+    "HammerBrute_Body",
+    "HammerBrute_EyeGlow",
+    "HammerBrute_Gear",
+    "HammerBrute_Hammer",
+    "HammerBrute_Head",
+    "HammerBrute_Shirt",
+    "HammerBrute_Trousers"
+   ],
+   "clashes_with_bones": [],
+   "material_clashes_with_bones": [],
+   "materials_named_like_meshes": true
+  },
+  "weights": {
+   "HammerBrute_Body": {
+    "vertices": 6569,
+    "max_influences": 4,
+    "unweighted": 0,
+    "max_sum_error": 0.0001,
+    "non_deform_groups": []
+   },
+   "HammerBrute_EyeGlow": {
+    "vertices": 168,
+    "max_influences": 2,
+    "unweighted": 0,
+    "max_sum_error": 0.0,
+    "non_deform_groups": []
+   },
+   "HammerBrute_Gear": {
+    "vertices": 3499,
+    "max_influences": 3,
+    "unweighted": 0,
+    "max_sum_error": 0.0001,
+    "non_deform_groups": []
+   },
+   "HammerBrute_Hammer": {
+    "vertices": 1898,
+    "max_influences": 1,
+    "unweighted": 0,
+    "max_sum_error": 0.0,
+    "non_deform_groups": []
+   },
+   "HammerBrute_Head": {
+    "vertices": 2554,
+    "max_influences": 3,
+    "unweighted": 0,
+    "max_sum_error": 0.0001,
+    "non_deform_groups": []
+   },
+   "HammerBrute_Shirt": {
+    "vertices": 3054,
+    "max_influences": 4,
+    "unweighted": 0,
+    "max_sum_error": 0.0001,
+    "non_deform_groups": []
+   },
+   "HammerBrute_Trousers": {
+    "vertices": 3748,
+    "max_influences": 4,
+    "unweighted": 0,
+    "max_sum_error": 0.0001,
+    "non_deform_groups": []
+   }
+  },
+  "grip_reference_pose": {
+   "Right": {
+    "Index": [
+     -0.0076,
+     0.0034,
+     -0.0086
+    ],
+    "Middle": [
+     -0.0053,
+     -0.0051,
+     0.0048
+    ],
+    "Ring": [
+     -0.0018,
+     0.001,
+     0.0014
+    ],
+    "Pinky": [
+     -0.0045,
+     0.0012,
+     -0.0015
+    ],
+    "Thumb": [
+     0.0093,
+     0.0037,
+     0.0391
+    ]
+   },
+   "Left": {
+    "Index": [
+     -0.0076,
+     0.0034,
+     -0.0086
+    ],
+    "Middle": [
+     -0.0053,
+     -0.0051,
+     0.0048
+    ],
+    "Ring": [
+     -0.0018,
+     0.001,
+     0.0014
+    ],
+    "Pinky": [
+     -0.0044,
+     0.0012,
+     -0.0015
+    ],
+    "Thumb": [
+     0.0093,
+     0.0037,
+     0.0391
+    ]
+   },
+   "fingers_all_in_window": true,
+   "window": [
+    -0.03,
+    0.02
+   ]
+  }
+ },
+ "textures": {
+  "HammerBrute_Body_BaseColor.png": {
+   "sha256": "ACFF4EE0482E210D74AAC6B4D97C73134A69B306E33CE0EDA4278A9E4AE947C9",
+   "bytes": 1102858
+  },
+  "HammerBrute_Body_BaseColor_2048.png": {
+   "sha256": "753C56AD5B01780A403B7D3789D2A0B96969945CB1A7E7A51E9AC4F959827839",
+   "bytes": 2853943
+  },
+  "HammerBrute_EyeGlow_BaseColor.png": {
+   "sha256": "9C0E00306E692436EB466535E95DF85C40D5D442B524F108BA7B988ABA2149A6",
+   "bytes": 4590
+  },
+  "HammerBrute_EyeGlow_BaseColor_512.png": {
+   "sha256": "9C0E00306E692436EB466535E95DF85C40D5D442B524F108BA7B988ABA2149A6",
+   "bytes": 4590
+  },
+  "HammerBrute_Gear_BaseColor.png": {
+   "sha256": "E4B0054A19042FBCE4E5A022599857D8E12FF3BF878561A438FFA7DA3C17AE1E",
+   "bytes": 570687
+  },
+  "HammerBrute_Gear_BaseColor_2048.png": {
+   "sha256": "643699C9E10B5FD7C5096BD143275A0DEB8EC9F6E2DEEB48445ABF51B1817C45",
+   "bytes": 1278225
+  },
+  "HammerBrute_Hammer_BaseColor.png": {
+   "sha256": "006F047ED1984143B2131F4B4A9A67D9F12010830B2BE76AD4126494B6BD6BCB",
+   "bytes": 619883
+  },
+  "HammerBrute_Hammer_BaseColor_2048.png": {
+   "sha256": "E635816DA2DC942A3BCF72539DC3302DF0FAF52671B2E69AA13F61BEC81BAC9E",
+   "bytes": 1627963
+  },
+  "HammerBrute_Head_BaseColor.png": {
+   "sha256": "E199EA6792B1B3ACB6A2FCAF2C3313F0731B69C844CBCBB9A86B856F7ECDA26B",
+   "bytes": 705089
+  },
+  "HammerBrute_Head_BaseColor_2048.png": {
+   "sha256": "A1C91237BA6AE7BE08A181FDA3330952B954B262C751DCE65EE2B0613A8A54ED",
+   "bytes": 1772195
+  },
+  "HammerBrute_Shirt_BaseColor.png": {
+   "sha256": "B8AAFC8E794DB0DB597065D40074F8EAF6A84F1950B9C5FB154BACC69D0E2C05",
+   "bytes": 858680
+  },
+  "HammerBrute_Shirt_BaseColor_2048.png": {
+   "sha256": "C319839E5C68DD80CEFE34F438919BBDE6EB9C9400FF0A5F4C4273C1E2ACA1D4",
+   "bytes": 2424998
+  },
+  "HammerBrute_Trousers_BaseColor.png": {
+   "sha256": "240FDB2FF39928AF7765AD59A21B8E41746F6BADBDB9DE8A2599599950E1371E",
+   "bytes": 723023
+  },
+  "HammerBrute_Trousers_BaseColor_2048.png": {
+   "sha256": "65B814FC4BB306DE056E32594B6EF39586F1D1C87184A6F3A379E2B0ACB3130B",
+   "bytes": 1911966
+  }
+ },
+ "camera_solution": {
+  "image": [
+   1086,
+   1448
+  ],
+  "principal_point_px": [
+   543.0,
+   724.0
+  ],
+  "focal_px": 2238.46,
+  "blender_lens_mm_sensor36_fit_vertical": 55.652,
+  "camera_location": [
+   -1.2572,
+   -30.622,
+   6.7235
+  ],
+  "pitch_deg": -0.1428,
+  "yaw_deg": 1.1935,
+  "vertical_fov_deg": 35.846,
+  "rms_reprojection_px": 1.86,
+  "crown_height_studs": 13.7,
+  "anchors": [
+   {
+    "name": "head_top_back",
+    "pixel": [
+     538,
+     214
+    ],
+    "world": [
+     -0.681,
+     0.35,
+     13.7
+    ],
+    "reprojected": [
+     538.0,
+     214.0
+    ],
+    "depth": 30.96
+   },
+   {
+    "name": "foot_L_front_bottom_left",
+    "pixel": [
+     752,
+     1262
+    ],
+    "world": [
+     1.922,
+     -2.85,
+     0.0
+    ],
+    "reprojected": [
+     751.98,
+     1258.85
+    ],
+    "depth": 27.849
+   },
+   {
+    "name": "foot_L_front_bottom_right",
+    "pixel": [
+     969,
+     1246
+    ],
+    "world": [
+     4.7183,
+     -2.45,
+     0.0
+    ],
+    "reprojected": [
+     969.02,
+     1250.1
+    ],
+    "depth": 28.307
+   },
+   {
+    "name": "foot_R_front_bottom",
+    "pixel": [
+     470,
+     1224
+    ],
+    "world": [
+     -1.6087,
+     -0.8,
+     0.0
+    ],
+    "reprojected": [
+     470.0,
+     1223.05
+    ],
+    "depth": 29.825
+   }
+  ],
+  "priors": {
+   "f": [
+    2300.0,
+    400.0
+   ],
+   "pitch": [
+    0.0,
+    2.0
+   ],
+   "yaw": [
+    0.0,
+    1.0
+   ]
+  },
+  "depth_priors_note": "Y of each anchor is a stance prior: the left foot 1.9 studs ahead of the right, the back of the crown 0.35 behind the pelvis centre (he hunches forward). Everything else is solved."
+ }
+}

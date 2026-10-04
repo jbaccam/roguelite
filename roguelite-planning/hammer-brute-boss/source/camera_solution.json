@@ -1,0 +1,107 @@
+{
+ "image": [
+  1086,
+  1448
+ ],
+ "principal_point_px": [
+  543.0,
+  724.0
+ ],
+ "focal_px": 2238.46,
+ "blender_lens_mm_sensor36_fit_vertical": 55.652,
+ "camera_location": [
+  -1.2572,
+  -30.622,
+  6.7235
+ ],
+ "pitch_deg": -0.1428,
+ "yaw_deg": 1.1935,
+ "vertical_fov_deg": 35.846,
+ "rms_reprojection_px": 1.86,
+ "crown_height_studs": 13.7,
+ "anchors": [
+  {
+   "name": "head_top_back",
+   "pixel": [
+    538,
+    214
+   ],
+   "world": [
+    -0.681,
+    0.35,
+    13.7
+   ],
+   "reprojected": [
+    538.0,
+    214.0
+   ],
+   "depth": 30.96
+  },
+  {
+   "name": "foot_L_front_bottom_left",
+   "pixel": [
+    752,
+    1262
+   ],
+   "world": [
+    1.922,
+    -2.85,
+    0.0
+   ],
+   "reprojected": [
+    751.98,
+    1258.85
+   ],
+   "depth": 27.849
+  },
+  {
+   "name": "foot_L_front_bottom_right",
+   "pixel": [
+    969,
+    1246
+   ],
+   "world": [
+    4.7183,
+    -2.45,
+    0.0
+   ],
+   "reprojected": [
+    969.02,
+    1250.1
+   ],
+   "depth": 28.307
+  },
+  {
+   "name": "foot_R_front_bottom",
+   "pixel": [
+    470,
+    1224
+   ],
+   "world": [
+    -1.6087,
+    -0.8,
+    0.0
+   ],
+   "reprojected": [
+    470.0,
+    1223.05
+   ],
+   "depth": 29.825
+  }
+ ],
+ "priors": {
+  "f": [
+   2300.0,
+   400.0
+  ],
+  "pitch": [
+   0.0,
+   2.0
+  ],
+  "yaw": [
+   0.0,
+   1.0
+  ]
+ },
+ "depth_priors_note": "Y of each anchor is a stance prior: the left foot 1.9 studs ahead of the right, the back of the crown 0.35 behind the pelvis centre (he hunches forward). Everything else is solved."
+}

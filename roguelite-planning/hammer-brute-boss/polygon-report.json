@@ -1,0 +1,92 @@
+{
+ "sections": {
+  "HammerBrute_Body": 13074,
+  "HammerBrute_Head": 4998,
+  "HammerBrute_Shirt": 6200,
+  "HammerBrute_Gear": 6923,
+  "HammerBrute_Trousers": 7598,
+  "HammerBrute_Hammer": 3768,
+  "HammerBrute_EyeGlow": 320
+ },
+ "total_triangles": 42881,
+ "limit_per_mesh": 20000,
+ "all_under_limit": true,
+ "weights": {
+  "Skin": [
+   0,
+   53
+  ],
+  "Shirt": [
+   0,
+   56
+  ],
+  "Trousers": [
+   0,
+   7
+  ],
+  "Sash": [
+   0,
+   8
+  ],
+  "SashTail": [
+   0,
+   2
+  ],
+  "SuspenderRight": [
+   0,
+   6
+  ],
+  "SuspenderLeft": [
+   0,
+   6
+  ],
+  "BuckleRight": [
+   0,
+   1
+  ],
+  "BuckleLeft": [
+   0,
+   1
+  ],
+  "TeethUpper": [
+   0,
+   1
+  ],
+  "TeethLower": [
+   0,
+   1
+  ],
+  "EyeGlow": [
+   0,
+   2
+  ],
+  "HammerHead": [
+   0,
+   1
+  ],
+  "HammerHaft": [
+   0,
+   1
+  ],
+  "HammerIron0": [
+   0,
+   1
+  ],
+  "HammerIron1": [
+   0,
+   1
+  ],
+  "HammerIron2": [
+   0,
+   1
+  ],
+  "HammerIron3": [
+   0,
+   1
+  ],
+  "HammerIron4": [
+   0,
+   1
+  ]
+ }
+}
