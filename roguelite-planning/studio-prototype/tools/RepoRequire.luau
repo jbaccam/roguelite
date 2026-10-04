@@ -13,6 +13,7 @@
 --   local base='http://127.0.0.1:8934/'
 --   local R=loadstring(HS:GetAsync(base..'studio-prototype/tools/RepoRequire.luau?t='..os.clock(),true))()(base)
 --   print(R.run('MapBossServiceTests'))                -- a test module's PASS/FAIL lines
+--   print(R.run('MapBossPresentationTests'))           -- the client's pure helpers (R4)
 --   print(R.compiles('combat/bosses/MapBossService.luau')) -- true, or false and the error
 --   local X=R.require('MapBossService')._shapes          -- Edit: the pure builders only
 return function(base, rev)
@@ -25,6 +26,10 @@ return function(base, rev)
 		MapBossService = "combat/bosses/MapBossService.luau",
 		MapBossServiceTests = "combat/bosses/MapBossServiceTests.luau",
 		MapBossShapesTests = "combat/bosses/MapBossShapesTests.luau",
+		-- The LocalScript's repo text returns its pure helpers in Edit (it stops before anything
+		-- client-side); a plain require can't load a LocalScript, so only this loader runs it.
+		MapBossPresentation = "combat/bosses/MapBossPresentation.client.luau",
+		MapBossPresentationTests = "combat/bosses/MapBossPresentationTests.luau",
 	}
 	-- Where each module lives in Studio (SyncMapBossRuntime): its `script`, or the stand-in's Parent.
 	local STUDIO = {
@@ -34,6 +39,8 @@ return function(base, rev)
 		MapBossService = { "ServerScriptService" },
 		MapBossServiceTests = { "ServerScriptService" },
 		MapBossShapesTests = { "ServerScriptService" },
+		MapBossPresentation = { "StarterPlayer", "StarterPlayerScripts" },
+		MapBossPresentationTests = { "ServerScriptService" },
 	}
 	local function folder(name)
 		local parts = STUDIO[name]

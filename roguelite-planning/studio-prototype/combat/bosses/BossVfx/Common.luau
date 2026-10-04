@@ -53,7 +53,18 @@ function C.live(ctx)
  local h=npc:FindFirstChildOfClass('Humanoid');return not h or h.Health>0
 end
 -- The server's warning/hit shape for this attack (MapBossAttackData.shape), decoded to Vector3s.
+-- A combo's data.shape is its first phase only: use C.phaseShape.
 function C.shape(ctx) local s=ctx.data and ctx.data.shape;return type(s)=='table' and Shapes.decode(s) or nil end
+-- A combo's phase i shape (MapBossAttackData.phases[i].shape: its warning, and a sweep's hit arc),
+-- decoded; nil without one. ctx.phases[i] (MapBossPresentation) has the phase's merged def and its
+-- warnStart / impact / activeEnd on the attack clock.
+function C.phaseShape(ctx,i)
+ local list=ctx.data and ctx.data.phases;local p=type(list)=='table' and list[i]
+ local s=type(p)=='table' and p.shape;return type(s)=='table' and Shapes.decode(s) or nil
+end
+-- A forward charge's finish slam: its circle where the run now ends (it moves with
+-- BossChargeLength) and its impact on the attack clock. nil without a finish.
+function C.finish(ctx) local ch=ctx.charge;if not ch or not ch.finish then return nil end;return ch.finish,ch.finishImpact end
 -- Per-frame driver for one effect layer: update(age,dt) runs on the attack's server clock until it
 -- returns true, age reaches untilAge, or the attack stops. cleanup(stopped) always runs.
 function C.follow(ctx,untilAge,update,cleanup)

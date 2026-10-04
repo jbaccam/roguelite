@@ -29,6 +29,10 @@ return {
 		MoltenRock_BaseColor = "rbxassetid://139356687572385",
 		Obelisk_BaseColor = "rbxassetid://114053127280741",
 		ShellChip_BaseColor = "rbxassetid://118642052631884",
+		-- Hammer Brute (2026-10-03): boss-vfx-kit/textures/EarthCracks.png, white-on-clear, tinted in
+		-- game. Not uploaded yet: nil until its "rbxassetid://..." goes here, and C.texture /
+		-- C.plate skip the crack decals meanwhile.
+		EarthCracks = nil,
 	},
 	-- 4x4 grid sheets, 256 px frames, left-to-right then top-to-bottom (Roblox Grid4x4).
 	Flipbook = {
@@ -62,5 +66,11 @@ return {
 		ground_quake = "rbxassetid://9125484359", -- Deep Hits Big Reverberant Booms Rumbling Tail 1
 		lava_hiss = "rbxassetid://9125579324", -- Giant Steam Chuff Air Burst Through The Tube 6
 		wing_flap = "rbxassetid://9120771885", -- Wing Flaps 29 (FrontStomp rear gust)
+		-- Hammer Brute: the game's own small kit (audio/uploaded_ids.json, RogueliteSounds) and the
+		-- Roblox bundled boom the old Hammer used, pitch-shifted per use in BossVfx/Hammer.
+		hammer_whoosh = "rbxassetid://71697578984386", -- swing_heaviest
+		hammer_thud = "rbxassetid://100368763538547", -- hit_thud
+		hammer_boom = "rbxasset://sounds/impact_explosion_03.mp3", -- Roblox bundled (old Hammer slam, BossIntro)
+		zombie_roar = "rbxassetid://137815495955079", -- mob_zombie
 	},
 }

@@ -2,13 +2,103 @@
 -- BossPresentation: sampled Bone.Transform clips with priority Death > attack > Hit > Walk/Idle,
 -- and warnings drawn from the server's MapBossAttackData through MapBossShapes, the same shapes
 -- the server hit-tests. Effects come from BossVfx/<BossId>. Visual only.
+-- Hammer Brute runtime (MapBossService R1-R3, client R4, 2026-10-03). Each path below only runs
+-- when the server sends its data, so the four older bosses take exactly the old code:
+--   combos (def.phases, data.phases): every phase's warning from the commit, each filled on its own
+--     timing; a later phase starts faint (P.phaseAlpha). VFX read ctx.phases / C.phaseShape.
+--   the forward charge (P.isCharge): re-timed from BossChargeLength (else data.length); the lane
+--     reshaped in place and the finish circle (data.finish) moved down it as the run grows.
+--   pseudo attacks (P.pseudo): the intro clip (def.intro.clip, timed to BossIntroLand) and the
+--     enrage roar (def.roar): the clip only, no warning or attack hooks.
+--   the intro hook fires at BossIntroLand; with a roar, the enrage hook fires as the roar starts.
+--   new hook `followup` when follow-up circles appear (their eruption is still `aftershock`).
 local Tags=game:GetService('CollectionService')
 local Run=game:GetService('RunService')
 local Players=game:GetService('Players')
 local Http=game:GetService('HttpService')
 local combat=game.ReplicatedStorage:WaitForChild('RogueliteCombat')
-local EnemyMotion=require(combat:WaitForChild('EnemyMotion'))
 local Shapes=require(combat:WaitForChild('MapBossShapes'))
+
+-- Pure helpers (P): timing and warning geometry. MapBossPresentationTests runs them in Edit through
+-- tools/RepoRequire, which runs this file's repo text: it returns P before anything client-side.
+local P={}
+-- Same windows as MapBossService: the rush is RushStart, travel at speed, then RushEnd. The timing
+-- from MapBossDefs.timing is already scaled and rate-adjusted (real seconds, final studs). A pseudo
+-- attack (P.pseudo) is its clip's timing, or just its length from T.clips.
+function P.window(a,T,length)
+ if a.pseudo then
+  local at=T.attacks and T.attacks[a.clip];if at then return at end
+  local d=T.clips and T.clips[a.clip];return d and {warnStart=0,impact=0,activeEnd=0,recoveryEnd=d,duration=d} or nil
+ end
+ if not a.clips then return T.attacks and T.attacks[a.clip] end
+ local rate=a.rate or 1;local rs,re=(T.clips[a.clips[1]] or 0)/rate,(T.clips[a.clips[3]] or 0)/rate;local move=(length or a.length)/a.speed
+ return {warnStart=0,impact=rs,activeEnd=rs+move,recoveryEnd=rs+move+re,duration=rs+move+re}
+end
+-- BossAttack names a clip that is no attack: the def's intro clip (MapBossService spawn) or its
+-- enrage roar (startRoar). Played like an attack at rate 1; nil for anything else.
+function P.pseudo(def,kind)
+ if def.intro and kind==def.intro.clip then return {clip=kind,rate=1,pseudo='intro'} end
+ if def.roar and kind==def.roar then return {clip=kind,rate=1,pseudo='roar'} end
+ return nil
+end
+-- MapBossService X.merged: the attack def with a phase's (or a finish's) fields on top.
+function P.merged(def,part) local m=table.clone(def);m.phases=nil;m.finish=nil;for k,v in part do m[k]=v end;return m end
+-- MapBossService X.isCharge: the Hammer-style charge, whose length changes as he runs.
+function P.isCharge(a) return a.shape=='lane' and (a.facing=='forward' or a.contact~=nil) end
+-- A charge's window, duration and finish times for its current length: MapBossService X.laneTiming
+-- (the finish clip starts where the run ends, at.activeEnd).
+function P.chargeTiming(a,T,length)
+ local at=P.window(a,T,length);local duration=at.recoveryEnd or at.duration;local finishStart,finishImpact
+ local fa=a.finish and a.clips and T.attacks and T.attacks[a.clips[3]]
+ if fa then finishStart=at.activeEnd;finishImpact=finishStart+fa.impact;duration=math.max(duration,finishImpact+.05) end
+ return {at=at,duration=duration,finishStart=finishStart,finishImpact=finishImpact}
+end
+-- A combo's phases from MapBossAttackData.phases (the server's times and shapes), falling back to
+-- the clip's own phase timing: {index, def (merged), warnStart, impact, activeEnd, shape (decoded)}.
+-- nil unless the def has phases and every phase has an impact (then the old single-shape path).
+function P.phases(a,data,T)
+ if type(a.phases)~='table' or type(data.phases)~='table' then return nil end
+ local at=T.attacks and T.attacks[a.clip];local list={}
+ for i,part in a.phases do
+  local d=type(data.phases[i])=='table' and data.phases[i] or {};local w=at and at.phases and at.phases[i] or {}
+  local impact=d.impact or w.impact;if type(impact)~='number' then return nil end
+  list[i]={index=i,def=P.merged(a,part),warnStart=d.warnStart or w.warnStart or 0,impact=impact,activeEnd=d.activeEnd or w.activeEnd or impact,
+   shape=type(d.shape)=='table' and Shapes.decode(d.shape) or nil}
+ end
+ return list
+end
+-- A combo clip's own window may lack impact or activeEnd (MapBossService reads phase 1's impact):
+-- fill them from the phases, so the attack hooks run from the first hit to the last.
+function P.comboWindow(at,list)
+ if at.impact and at.activeEnd and at.warnStart then return at end
+ local w=table.clone(at);w.warnStart=w.warnStart or 0;w.impact=w.impact or list[1].impact;w.activeEnd=w.activeEnd or list[#list].activeEnd
+ return w
+end
+-- A later combo phase (or the charge's finish) starts at 35% alpha and fills to full by its
+-- impact - 0.35 s, so the hit that comes first reads first. The first phase is always full.
+function P.phaseAlpha(later,age,warnStart,impact)
+ if not later then return 1 end
+ return .35+.65*math.clamp((age-warnStart)/math.max(.05,impact-.35-warnStart),0,1)
+end
+-- A layer's transparency at alpha (1 = as painted; nil or 1 leaves it exactly as it was).
+function P.fade(t,alpha) if not alpha or alpha>=1 then return t end;return 1-(1-t)*alpha end
+-- A sweep reaching all the way round (MapBossService X.sweepArc: from=-pi, to=pi).
+function P.fullRing(shape) return shape.kind=='arc' and shape.to-shape.from>=2*math.pi-1e-3 end
+-- Closed outlines for the warning edge. A full ring is its outer circle (and inner, if any) with no
+-- seam back to the pivot: Shapes.outline closes an arc radially. Anything else: Shapes.outline.
+function P.edgeLoops(shape,n)
+ if not P.fullRing(shape) then return {Shapes.outline(shape,n)} end
+ local loops={Shapes.outline({kind='circle',center=shape.pivot,radius=shape.outer},n)}
+ if (shape.inner or 0)>.05 then table.insert(loops,Shapes.outline({kind='circle',center=shape.pivot,radius=shape.inner},n)) end
+ return loops
+end
+-- The charge lane (a line published for baseLength) at its current length: same start and width.
+function P.laneAt(base,baseLength,length) local s=table.clone(base);s.length=base.length+(length-baseLength);return s end
+-- A shape moved `by` studs along dir (the finish circle follows the end of the run).
+function P.moved(shape,dir,by) local s=table.clone(shape);s.center=shape.center+dir*by;return s end
+if not Run:IsRunning() then return P end -- Edit (the tests): helpers only
+
+local EnemyMotion=require(combat:WaitForChild('EnemyMotion'))
 local Defs=require(combat:WaitForChild('MapBossDefs'))
 local Maps=require(combat:WaitForChild('MapConfig'))
 local animations=combat:WaitForChild('BossAnimations')
@@ -62,12 +152,21 @@ local function call(state,name,...)
  if not r[1] then warn('BossVfx.'..state.id..'.'..name..': '..tostring(r[2]));return end
  return table.unpack(r,2,r.n)
 end
--- Same windows as MapBossService: the rush is RushStart, travel at speed, then RushEnd. The timing
--- from MapBossDefs.timing is already scaled and rate-adjusted (real seconds, final studs).
-local function window(a,T,length)
- if not a.clips then return T.attacks and T.attacks[a.clip] end
- local rate=a.rate or 1;local rs,re=(T.clips[a.clips[1]] or 0)/rate,(T.clips[a.clips[3]] or 0)/rate;local move=(length or a.length)/a.speed
- return {warnStart=0,impact=rs,activeEnd=rs+move,recoveryEnd=rs+move+re,duration=rs+move+re}
+local window=P.window
+-- The forward charge's current run (P.isCharge): BossChargeLength (else data.length) re-times the
+-- window, the duration and the finish; the server sends it on 0.5-stud changes and exactly at the
+-- stop, and republishes the data (final lane and finish) once he has stopped.
+local function chargeStep(npc,ctx)
+ local ch=ctx.charge;local length=npc:GetAttribute('BossChargeLength')
+ if type(length)~='number' then length=ctx.data.length or ctx.def.length end
+ if length==ch.length and ctx.raw==ch.raw then return end
+ ch.length,ch.raw=length,ctx.raw
+ local t=P.chargeTiming(ctx.def,ctx.timing,length);ctx.attack=t.at
+ ch.duration,ch.finishStart,ch.finishImpact=t.duration,t.finishStart,t.finishImpact
+ local d=ctx.data;local published=d.length or length
+ local lane=type(d.shape)=='table' and Shapes.decode(d.shape);ch.lane=lane and lane.kind=='line' and P.laneAt(lane,published,length) or nil
+ local f=type(d.finish)=='table' and type(d.finish.shape)=='table' and Shapes.decode(d.finish.shape)
+ ch.finish=f and f.kind=='circle' and ch.finishImpact and P.moved(f,ch.dir,length-published) or nil
 end
 local function context(npc,state,kind,a,start,serial)
  local cf=npc:GetAttribute('BossFrame');if typeof(cf)~='CFrame' then return nil end
@@ -76,13 +175,21 @@ local function context(npc,state,kind,a,start,serial)
   timing=T,tint=state.tint,raw=raw,data=data,ground=cf*CFrame.new(0,-T.rootHeight,0),scale=T.scale or 1,enraged=npc:GetAttribute('BossEnraged')~=nil}
  local at=window(a,T,data.length);if not at then return nil end
  ctx.attack=at
+ if a.pseudo then ctx.pseudo=a.pseudo
+ elseif a.phases then
+  ctx.phases=P.phases(a,data,T);if ctx.phases then ctx.attack=P.comboWindow(at,ctx.phases) end
+ elseif P.isCharge(a) then
+  local d=type(data.dir)=='table' and Vector3.new(data.dir[1],0,data.dir[2]) or Shapes.flat(cf.LookVector)
+  ctx.charge={dir=d.Magnitude>1e-3 and d.Unit or Vector3.new(0,0,-1)};chargeStep(npc,ctx)
+ end
+ -- ctx.attack, not a local copy: the charge re-times it.
  function ctx.points(name,t)
-  local p=Shapes.sample(at.samples and at.samples[name],t)
+  local at=ctx.attack;local p=Shapes.sample(at.samples and at.samples[name],t)
   if not p then local fixed=at.points and at.points[name];p=fixed and Vector3.new(table.unpack(fixed.rootAtImpactStudio)) or Vector3.zero end
   return ctx.ground*p
  end
  function ctx.dirAt(name,t)
-  local d=Shapes.sample(at.dirs and at.dirs[name],t) or (at.directionAtImpactStudio and Vector3.new(table.unpack(at.directionAtImpactStudio)))
+  local at=ctx.attack;local d=Shapes.sample(at.dirs and at.dirs[name],t) or (at.directionAtImpactStudio and Vector3.new(table.unpack(at.directionAtImpactStudio)))
   return d and d.Magnitude>1e-3 and ctx.ground:VectorToWorldSpace(d).Unit or ctx.cf.LookVector
  end
  return ctx
@@ -93,8 +200,10 @@ local function attackClip(ctx,age,motion)
  if a.shape~='lane' then return a.clip,age*rate end
  if age<at.impact then return a.clips[1],age*rate end
  if age<at.activeEnd then
-  -- Loop phase follows the ground covered: one rushStrideLength per RushLoop cycle.
+  -- Loop phase follows the ground covered: one rushStrideLength per RushLoop cycle. The Hammer's
+  -- ChargeRun: one chargeStrideLength per cycle (without it, the clip at its authored speed).
   local travelled=(age-at.impact)*a.speed
+  if ctx.charge then return a.clips[2],travelled/(ctx.timing.chargeStrideLength or a.speed*clipDuration(motion,a.clips[2]))*clipDuration(motion,a.clips[2]) end
   return a.clips[2],travelled/(ctx.timing.rushStrideLength or 2.2)*clipDuration(motion,a.clips[2])
  end
  return a.clips[3],(age-at.activeEnd)*rate
@@ -126,6 +235,8 @@ end
 -- Fill geometry for one shape into `list`; `grow` also records how each part scales.
 local function fillShape(w,shape,y,tint,transparency,list,grow)
  local function flat(v) return Vector3.new(v.X,y,v.Z) end
+ -- A full ring with nothing cut from its middle (the Hammer's Spin) fills as one disc.
+ if P.fullRing(shape) and (shape.inner or 0)<=.05 then shape={kind='circle',center=shape.pivot,radius=shape.outer} end
  if shape.kind=='circle' then
   local c=flat(shape.center);local p=slab(w,'WarningFill',Vector3.new(.045,shape.radius*2,shape.radius*2),CFrame.new(c)*CFrame.Angles(0,0,math.pi/2),tint,transparency,list);p.Shape=Enum.PartType.Cylinder
   if grow then table.insert(grow,{part=p,mode='disc',cf=p.CFrame,size=p.Size}) end
@@ -148,12 +259,17 @@ local function fillShape(w,shape,y,tint,transparency,list,grow)
   end
  end
 end
+-- One edge segment from a to b (flat points at the warning height).
+local function edgeFrame(a,b)
+ local m=(a+b)/2+Vector3.yAxis*.03;return Vector3.new(EDGE_WIDTH,.06,(b-a).Magnitude+.1),CFrame.lookAt(m,b+Vector3.yAxis*.03)
+end
 local function edgeShape(w,shape,y,tint)
  local function flat(v) return Vector3.new(v.X,y,v.Z) end
- local pts=Shapes.outline(shape,48)
- for i=1,#pts do
-  local a,b=flat(pts[i]),flat(pts[i%#pts+1]);local len=(b-a).Magnitude
-  if len>.01 then local m=(a+b)/2+Vector3.yAxis*.03;slab(w,'WarningEdge',Vector3.new(EDGE_WIDTH,.06,len+.1),CFrame.lookAt(m,b+Vector3.yAxis*.03),tint,EDGE,w.edges) end
+ for _,pts in P.edgeLoops(shape,48) do
+  for i=1,#pts do
+   local a,b=flat(pts[i]),flat(pts[i%#pts+1])
+   if (b-a).Magnitude>.01 then local size,cf=edgeFrame(a,b);slab(w,'WarningEdge',size,cf,tint,EDGE,w.edges) end
+  end
  end
 end
 local function drawShape(w,shape,y,tint,noGrow)
@@ -165,6 +281,10 @@ local function newWarning(serial,raw)
  local w={folder=Instance.new('Folder'),parts={},fills={},edges={},grow={},growParts={},raw=raw,serial=serial};w.folder.Name='BossWarning';w.folder.Parent=workspace
  return w
 end
+-- One hit's layers inside a warning (a combo phase, the charge lane or its finish): its own fills,
+-- edges and grow layer and paint state, in the warning's folder and part list, so release(w)
+-- returns them all.
+local function subWarning(w) return {folder=w.folder,parts=w.parts,fills={},edges={},grow={},growParts={}} end
 local function buildWarning(ctx)
  local w=newWarning(ctx.serial,ctx.raw)
  local tint=ctx.tint or Color3.fromRGB(224,45,49);local d=ctx.data
@@ -181,9 +301,10 @@ local function buildWarning(ctx)
  elseif d.shape then drawShape(w,Shapes.decode(d.shape),ctx.groundY+.07,tint) end
  return w
 end
--- k: 0 when the warning appears, 1 at impact. left: seconds to impact.
+-- k: 0 when the warning appears, 1 at impact. left: seconds to impact. alpha (optional, a later
+-- combo phase): every layer at that share of its opacity (P.fade).
 -- Each layer is only rewritten when its value moved (the edge holds still until the flicker).
-local function paintWarning(w,k,left,now)
+local function paintWarning(w,k,left,now,alpha)
  debug.profilebegin('Boss:PaintWarning')
  k=math.clamp(k,0,1)
  local e=1-(1-k)^1.6 -- fast start, easing into the edge
@@ -196,13 +317,85 @@ local function paintWarning(w,k,left,now)
    else p.Size=Vector3.new(g.size.X*e,g.size.Y,g.size.Z*e);p.CFrame=CFrame.new(g.pivot+(g.cf.Position-g.pivot)*e)*g.cf.Rotation end
   end
  end
- local grow=e<.02 and 1 or GROW_FILL-.12*k
+ local grow=P.fade(e<.02 and 1 or GROW_FILL-.12*k,alpha)
  if grow~=w.growT then w.growT=grow;for _,g in w.grow do g.part.Transparency=grow end end
  local flicker=left<.3 and (.5+.5*math.sin(now*48)) or 0
- local fill,edge=FILL-.1*k,EDGE*(1-flicker)
+ local fill,edge=P.fade(FILL-.1*k,alpha),P.fade(EDGE*(1-flicker),alpha)
  if fill~=w.fillT then w.fillT=fill;for _,p in w.fills do p.Transparency=fill end end
  if edge~=w.edgeT then w.edgeT=edge;for _,p in w.edges do p.Transparency=edge end end
  debug.profileend()
+end
+-- Hide one hit's layers once it has landed; painting again (a charge that ran on) shows them.
+local function hideWarning(s)
+ if s.hidden then return end
+ s.hidden=true;s.e,s.growT,s.fillT,s.edgeT=nil,nil,nil,nil
+ for _,list in {s.fills,s.edges,s.growParts} do for _,p in list do p.Transparency=1 end end
+end
+-- One hit's layers, filling from warnStart to impact (alpha: P.phaseAlpha), held full to holdTo
+-- (the charge lane, through the run; default impact), then hidden.
+local function paintHit(s,age,warnStart,impact,now,alpha,holdTo)
+ local stop=holdTo or impact
+ if age>=stop then hideWarning(s);return end
+ s.hidden=false
+ paintWarning(s,(age-warnStart)/math.max(.05,impact-warnStart),(age<impact and impact or stop)-age,now,alpha)
+end
+-- Combos and the forward charge: one sub-warning per hit, all drawn at the commit.
+local function plannedWarning(ctx)
+ local w=newWarning(ctx.serial,ctx.raw);local tint=ctx.tint or Color3.fromRGB(224,45,49);local y=ctx.groundY+.07;w.subs={}
+ if ctx.phases then
+  for i,ph in ctx.phases do local s=subWarning(w);if ph.shape then drawShape(s,ph.shape,y,tint) end;w.subs[i]=s end
+ else
+  local ch=ctx.charge
+  if ch.lane then w.lane=subWarning(w);w.lane.length=ch.lane.length;drawShape(w.lane,ch.lane,y,tint) end
+  -- The finish slam's circle, on the floor where the server measured it; it moves with the run.
+  if ch.finish then w.finish=subWarning(w);w.finish.center=ch.finish.center;drawShape(w.finish,ch.finish,ch.finish.center.Y+.07,tint) end
+ end
+ return w
+end
+-- The lane at its new length, in place: the fill, the grow layer's extent and the four edges.
+local function placeLane(s,shape,y)
+ local o=Vector3.new(shape.origin.X,y,shape.origin.Z);local dir=shape.direction;local mid=o+dir*shape.length/2
+ local f=s.fills[1];if f then f.Size=Vector3.new(shape.width,.045,shape.length);f.CFrame=CFrame.lookAt(mid,mid+dir) end
+ local g=s.grow[1];if g then g.origin=Vector3.new(o.X,y+.02,o.Z);g.size=Vector3.new(shape.width,.045,shape.length);s.e=nil end
+ local pts=Shapes.outline(shape)
+ if #s.edges==#pts then
+  for i,p in s.edges do
+   local a,b=pts[i],pts[i%#pts+1];p.Size,p.CFrame=edgeFrame(Vector3.new(a.X,y,a.Z),Vector3.new(b.X,y,b.Z))
+  end
+ end
+ s.length=shape.length
+end
+-- Every part of a sub-warning moved by `by` (the finish circle down the lane).
+local function moveWarning(s,by)
+ for _,list in {s.fills,s.edges,s.growParts} do for _,p in list do p.CFrame+=by end end
+ for _,g in s.grow do if g.cf then g.cf+=by end;if g.origin then g.origin+=by end;if g.pivot then g.pivot+=by end end
+end
+-- Combos: each phase fills on its own timing and hides at its impact. The charge: the lane fills to
+-- the launch and stays up for the run, reshaped as it grows; the finish circle fills as a later hit.
+-- Released after the last hit, or when the attack stops.
+local function stepPlanned(state,ctx,age,now,live)
+ local at=ctx.attack;local last
+ if ctx.phases then last=0;for _,ph in ctx.phases do last=math.max(last,ph.impact) end
+ else last=math.max(at.activeEnd,ctx.charge.finishImpact or 0) end
+ local w=state.warning
+ if not live or age<at.warnStart or age>=last then if w then release(w);state.warning=nil end;return end
+ if not w or w.serial~=ctx.serial or not w.subs then if w then release(w) end;w=profiled('Boss:BuildWarning',plannedWarning,ctx);state.warning=w end
+ if ctx.phases then
+  for i,s in w.subs do
+   local ph=ctx.phases[i];paintHit(s,age,ph.warnStart,ph.impact,now,P.phaseAlpha(i>1,age,ph.warnStart,ph.impact))
+  end
+  return
+ end
+ local ch=ctx.charge
+ if w.lane then
+  if ch.lane and math.abs(ch.lane.length-w.lane.length)>1e-3 then placeLane(w.lane,ch.lane,ctx.groundY+.07) end
+  paintHit(w.lane,age,at.warnStart,at.impact,now,nil,at.activeEnd)
+ end
+ if w.finish and ch.finish and ch.finishImpact then
+  local by=ch.finish.center-w.finish.center
+  if by.Magnitude>1e-3 then moveWarning(w.finish,by);w.finish.center=ch.finish.center end
+  paintHit(w.finish,age,at.warnStart,ch.finishImpact,now,P.phaseAlpha(true,age,at.warnStart,ch.finishImpact))
+ end
 end
 
 -- Projectiles: the server's shots replayed from origin, yaws, speed and life (MapBossShapes.shot),
@@ -253,6 +446,8 @@ local function stepFollow(npc,state,now,death)
     for _,p in F.points do drawShape(F.w,{kind='circle',center=p,radius=F.radius},p.Y+.07,state.tint or Color3.fromRGB(224,45,49)) end
    end)
    state.follow=F
+   -- The boss module's followup hook (optional; the Hammer's cracks open here and grow until they erupt).
+   call(state,'followup',{npc=npc,id=state.id,kind=F.kind,points=F.points,radius=F.radius,at=F.at,born=now,tint=state.tint,scale=state.T.scale or 1})
   end
  end
  local F=state.follow;if not F then return end
@@ -265,14 +460,38 @@ local function stepFollow(npc,state,now,death)
  paintWarning(F.w,(now-F.born)/math.max(.05,F.at-F.born),F.at-now,now)
 end
 -- Once per boss: the spawn intro (only if it spawned in the last 3 s) and the enrage burst.
+-- A sky-drop boss (BossIntroLand) gets its intro on the landing instead, within 3 s of it.
+-- A boss with a roar (def.roar and its clip) enrages as the roar starts: BossEnraged can come
+-- mid-attack, and the roar waits for that attack. A client that missed the roar (it joined late)
+-- still enrages at the next attack, or 10 s on.
+local function roars(state) local r=state.def.roar;return r~=nil and state.T.clips~=nil and state.T.clips[r]~=nil end
 local function stepMoments(npc,state,now,death)
  if death then return end
  if not state.introDone then
-  state.introDone=true;local born=npc:GetAttribute('BossSpawnedAt')
-  if type(born)=='number' and now-born<3 then call(state,'intro',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1}) end
+  local land=npc:GetAttribute('BossIntroLand')
+  if type(land)=='number' then
+   if now>=land then
+    state.introDone=true
+    local cf=npc:GetAttribute('BossFrame');local ground=typeof(cf)=='CFrame' and Vector3.new(cf.X,npc:GetAttribute('BossGroundY') or cf.Y-state.T.rootHeight,cf.Z) or nil
+    if now-land<3 then call(state,'intro',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1,land=land,ground=ground,timing=state.T}) end
+   end
+  else
+   state.introDone=true;local born=npc:GetAttribute('BossSpawnedAt')
+   if type(born)=='number' and now-born<3 then call(state,'intro',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1}) end
+  end
  end
- if not state.enraged and npc:GetAttribute('BossEnraged') then
-  state.enraged=true;call(state,'enrage',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1})
+ local enraged=npc:GetAttribute('BossEnraged')
+ if not state.enraged and enraged then
+  if not roars(state) then
+   state.enraged=true;call(state,'enrage',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1})
+  else
+   local ctx=state.ctx;local current=ctx and ctx.serial==npc:GetAttribute('BossSerial')
+   local roaring=current and ctx.kind==state.def.roar
+   local after=current and type(enraged)=='number' and ctx.start>enraged
+   if roaring or after or (type(enraged)=='number' and now-enraged>10) then
+    state.enraged=true;call(state,'enrage',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1,roar=roaring and ctx or nil,timing=state.T})
+   end
+  end
  end
 end
 
@@ -338,8 +557,24 @@ task.spawn(function()
  run:GetAttributeChangedSignal('Wave'):Connect(check)
  combat:GetAttributeChangedSignal('RunMap'):Connect(check)
  check()
+ -- Endless mode (RogueliteZombieChase) books a random boss in the shop before its wave
+ -- (EndlessBossId) and spawns it 5 s in: warm that one too. An id without a map-boss def (the
+ -- legacy Hammer, until MapBossDefs has D.Hammer) is skipped.
+ local function endless()
+  local id=run:GetAttribute('EndlessBossId');local def=type(id)=='string' and Defs.get(id)
+  if def then warm(def.anim) end
+ end
+ run:GetAttributeChangedSignal('EndlessBossId'):Connect(endless)
+ endless()
 end)
 
+-- BossAttack's def: an attack, else the intro clip or the roar (P.pseudo, cached per boss).
+local function attackDef(state,kind)
+ local a=state.def.attacks[kind];if a then return a end
+ state.pseudo=state.pseudo or {};local p=state.pseudo[kind]
+ if p==nil then p=P.pseudo(state.def,kind) or false;state.pseudo[kind]=p end
+ return p or nil
+end
 local function frame(npc,state,now,dt)
  local h=npc:FindFirstChildOfClass('Humanoid');local root=npc.PrimaryPart;if not h or not root then return end
  if state.bindingsDirty or not next(state.joints) then state.bindingsDirty=false;state.joints=EnemyMotion.bind(npc) end
@@ -347,7 +582,7 @@ local function frame(npc,state,now,dt)
  local displacement=state.previousPosition and root.Position-state.previousPosition or Vector3.zero
  state.previousPosition=root.Position
  local distance=Vector2.new(displacement.X,displacement.Z).Magnitude
- local start=npc:GetAttribute('BossStart');local kind=npc:GetAttribute('BossAttack');local a=kind and state.def.attacks[kind];local age=start and now-start
+ local start=npc:GetAttribute('BossStart');local kind=npc:GetAttribute('BossAttack');local a=kind and attackDef(state,kind);local age=start and now-start
  local serial=npc:GetAttribute('BossSerial') or 0
  if a and start and serial~=(state.ctx and state.ctx.serial) then state.ctx=context(npc,state,kind,a,start,serial) end
  local ctx=state.ctx
@@ -355,9 +590,11 @@ local function frame(npc,state,now,dt)
   local raw=npc:GetAttribute('MapBossAttackData');if raw~=ctx.raw then ctx.raw=raw;ctx.data=decode(raw) end
   -- The breath turns during its active window (MapBossService tracking); follow the new frame.
   local cf=npc:GetAttribute('BossFrame');if typeof(cf)=='CFrame' and cf~=ctx.cf then ctx.cf=cf;ctx.ground=cf*CFrame.new(0,-T.rootHeight,0) end
+  if ctx.charge then chargeStep(npc,ctx) end
  end
  local death=npc:GetAttribute('BossDeathStart');local hit=npc:GetAttribute('BossHitStart')
- local attacking=ctx and ctx.serial==serial and npc:GetAttribute('Attacking') and age and age>=0 and age<=(npc:GetAttribute('BossDuration') or ctx.attack.duration)
+ -- A charge's own re-timed duration: BossDuration comes again only once he has stopped.
+ local attacking=ctx and ctx.serial==serial and npc:GetAttribute('Attacking') and age and age>=0 and age<=(ctx.charge and ctx.charge.duration or npc:GetAttribute('BossDuration') or ctx.attack.duration)
  local clip,time
  local v=root.AssemblyLinearVelocity;local moving=Vector2.new(v.X,v.Z).Magnitude>.4
  if death then clip,time='Death',now-death
@@ -381,18 +618,24 @@ local function frame(npc,state,now,dt)
  local baseline=npc:GetAttribute('EnemyBaselineModelScale')
  EnemyMotion.apply(state.joints,baseline and EnemyMotion.scalePose(poses,npc:GetScale()/baseline) or poses)
  -- Warnings: from the moment the boss commits to impact (tombs: to their eruption); the grow
- -- layer reaches the edge at impact.
+ -- layer reaches the edge at impact. Combos and the charge: stepPlanned. The intro and the roar
+ -- warn nothing.
  local at=ctx and ctx.attack
- local warnEnd=at and (ctx.def.shape=='targets' and at.impact+ctx.def.eruptDelay or at.impact)
- if not death and attacking and age>=at.warnStart and age<warnEnd then
-  local w=state.warning
-  if not w or w.serial~=ctx.serial or w.raw~=ctx.raw then if w then release(w) end;w=profiled('Boss:BuildWarning',buildWarning,ctx);state.warning=w end
-  paintWarning(w,(age-at.warnStart)/math.max(.05,warnEnd-at.warnStart),warnEnd-age,now)
- elseif state.warning then release(state.warning);state.warning=nil end
+ if ctx and (ctx.phases or ctx.charge) then stepPlanned(state,ctx,age or -1,now,not death and attacking)
+ elseif ctx and ctx.pseudo then if state.warning then release(state.warning);state.warning=nil end
+ else
+  local warnEnd=at and (ctx.def.shape=='targets' and at.impact+ctx.def.eruptDelay or at.impact)
+  if not death and attacking and age>=at.warnStart and age<warnEnd then
+   local w=state.warning
+   if not w or w.serial~=ctx.serial or w.raw~=ctx.raw then if w then release(w) end;w=profiled('Boss:BuildWarning',buildWarning,ctx);state.warning=w end
+   paintWarning(w,(age-at.warnStart)/math.max(.05,warnEnd-at.warnStart),warnEnd-age,now)
+  elseif state.warning then release(state.warning);state.warning=nil end
+ end
  stepFollow(npc,state,now,death)
  stepMoments(npc,state,now,death)
  -- Effects: windup once at warnStart, impact once at impact, active every frame in the active window.
- if attacking and not death then
+ -- The intro and the roar play their clip only (their effects: the intro and enrage hooks).
+ if attacking and not death and not ctx.pseudo then
   if not ctx.woundUp and age>=at.warnStart then ctx.woundUp=true;if age<at.impact then call(state,'windup',ctx) end end
   if not ctx.impacted and age>=at.impact then
    ctx.impacted=true;if age<math.max(at.activeEnd,at.impact+.5) then call(state,'impact',ctx) end

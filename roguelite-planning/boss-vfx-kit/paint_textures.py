@@ -648,6 +648,59 @@ def paint_lava_cracks(n=1024):
     return c, a * smoothstep(0.99, 0.94, r)
 
 
+def paint_earth_cracks(n=1024):
+    """Hammer Brute slam cracks, white-on-clear: the Decal's Color3 tints them dirt-brown in game
+    (multiply), so value is the only colour here. Deep crack cores sit in the darkest band, broken
+    lighter lips run along them, a shattered crater ring and a dusty stain mark the centre, and a few
+    loose chips lie round it. Chunky shapes, 3 soft value bands, low noise."""
+    rng = np.random.default_rng(41)
+    x, y = grid(n)
+    r = np.hypot(x, y)
+    aa = 1.5 * 2 / n
+    white = np.ones((n, n, 3))
+    c = np.zeros((n, n, 3))
+    a = np.zeros((n, n))
+    # dusty stain under the impact: faint, broken at its rim
+    th = np.arctan2(y, x)
+    rb = 0.62 + 0.12 * (fbm3(np.cos(th) * 1.7, np.sin(th) * 1.7, 0.9, 3, 45) - 0.5) * 2
+    stain = smoothstep(rb, rb * 0.35, r) ** 0.9 * (0.55 + 0.45 * fbm3(x * 3.2, y * 3.2, 0.3, 3, 47))
+    c, a = over(c, a, white * 0.78, stain * 0.38)
+    # the cracks: a few thick, angular mains out of the crater, tapering, barely branching (many thin
+    # branches read as roots), plus a broken ring crack round the impact joining them
+    segs = crack_tree(rng, 8, 0.19, (0.55, 0.78), 0.085, 0.3, 0.3, 0.04, 0.008, max_depth=1)
+    ring_r, k = 0.42, 22
+    rr = ring_r + rng.uniform(-0.03, 0.03, k)
+    for i in range(k):
+        if rng.random() < 0.18:
+            continue
+        a0, a1 = TAU * i / k, TAU * (i + 1) / k
+        r0, r1 = rr[i], rr[(i + 1) % k]
+        segs.append((math.cos(a0) * r0, math.sin(a0) * r0, math.cos(a1) * r1, math.sin(a1) * r1, 0.014, 0.014))
+    F, Wd = crack_field(n, segs, 0.07)
+    lip = cov(F - 0.022, aa) * (0.7 + 0.3 * fbm3(x * 14, y * 14, 0.6, 2, 49))
+    c, a = over(c, a, white, lip * 0.85)
+    depth = np.clip(-F / np.maximum(Wd, 1e-4), 0, 1)
+    core_v = bands(1 - depth, [rgb(64, 64, 64), rgb(112, 112, 112), rgb(160, 160, 160)], [0.35, 0.7], 0.08)
+    c, a = over(c, a, core_v, cov(F, aa))
+    # crater: a ring of broken plates round a dark pit
+    rn = r + (fbm3(x * 8, y * 8, 0.3, 2, 43) - 0.5) * 0.07
+    plates = smoothstep(0.235, 0.215, rn) * smoothstep(0.08, 0.1, rn)
+    seams = np.abs(np.sin(th * 7 + fbm3(x * 5, y * 5, 0.1, 2, 51) * 3.0))
+    plate_v = mix(white * 0.92, white * 0.62, smoothstep(0.12, 0.2, rn))
+    c, a = over(c, a, plate_v, plates * smoothstep(0.06, 0.16, seams) * 0.95)
+    pit = smoothstep(0.1, 0.075, rn)
+    c, a = over(c, a, mix(white * 0.4, white * 0.22, smoothstep(0.08, 0.0, r)), pit)
+    # loose chips scattered round the crater
+    chips = []
+    for _ in range(26):
+        ang, rad = rng.uniform(0, TAU), rng.uniform(0.22, 0.7)
+        chips.append((math.cos(ang) * rad, math.sin(ang) * rad, rng.uniform(0.008, 0.02),
+                      int(rng.integers(0, 2)), 1.0))
+    gc, ga = grains_layer(n, chips, [rgb(150, 150, 150), rgb(235, 235, 235)])
+    c, a = over(c, a, gc, ga * 0.9)
+    return c, a * smoothstep(0.99, 0.93, r)
+
+
 def paint_scorch_mark(n=512):
     rng = np.random.default_rng(29)
     x, y = grid(n)
@@ -1013,6 +1066,7 @@ TEXTURES = [
     ("SnowSparkle.png", paint_snow_sparkle, 256, "sprite", None),
     ("LavaCracks.png", paint_lava_cracks, 1024, "decal", None),
     ("ScorchMark.png", paint_scorch_mark, 512, "decal", None),
+    ("EarthCracks.png", paint_earth_cracks, 1024, "decal", None),
     ("Flame_Flipbook4x4.png", paint_flame, 1024, "flipbook", "4x4"),
     ("Ember.png", paint_ember, 128, "sprite", None),
     ("SmokePuff_Flipbook4x4.png", paint_smoke, 1024, "flipbook", "4x4"),

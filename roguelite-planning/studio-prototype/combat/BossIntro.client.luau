@@ -7,6 +7,8 @@
 -- Presentation only: the server holds him (anchored where he lands, can't be hurt), the players and
 -- the enemies until BossIntroUntil. The falling body is this client moving the anchored root
 -- locally; it is put back on the server's spot at the landing. The camera is always handed back.
+-- Map bosses with a def.intro (MapBossService; the Hammer Brute) set the same attributes and
+-- BossIntroName, and MapBossPresentation plays their intro clip (IntroLand) timed to the landing.
 local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')
 local Tags=game:GetService('CollectionService')
@@ -104,7 +106,9 @@ local function play(npc)
  local fx=Instance.new('Folder');fx.Name='BossIntroFX';fx.Parent=workspace
  local shadow=disc(fx,'Shadow',spot+Vector3.yAxis*.06,3,Color3.new(0,0,0),.9)
  local crater
- local ui=overlay(NAMES[npc:GetAttribute('ZombieType')] or string.upper(npc.Name))
+ -- The card: the old Hammer's name, else the map boss's BossIntroName (MapBossDefs introName), else
+ -- its BossName in capitals.
+ local ui=overlay(NAMES[npc.Name] or npc:GetAttribute('BossIntroName') or string.upper(npc:GetAttribute('BossName') or npc.Name))
  ui.bars(true)
  local shake=T.setting('ScreenShake')~=false and 1 or 0
  -- Camera: where it was (to come back to), relative to the player so a nudge doesn't matter.
@@ -177,6 +181,15 @@ end
 local function watchBoss(npc) task.spawn(play,npc) end
 Tags:GetInstanceAddedSignal('HammerBoss'):Connect(watchBoss)
 for _,npc in Tags:GetTagged('HammerBoss') do watchBoss(npc) end
+-- Map bosses play it only with a sky-drop entrance (BossIntroStart). The tag can land a moment
+-- before the intro attributes, so a boss without them yet is given 2 s for BossIntroStart.
+local function watchMapBoss(npc)
+ if npc:GetAttribute('BossIntroStart')~=nil then watchBoss(npc);return end
+ local c;c=npc:GetAttributeChangedSignal('BossIntroStart'):Connect(function() c:Disconnect();watchBoss(npc) end)
+ task.delay(2,function() if c.Connected then c:Disconnect() end end)
+end
+Tags:GetInstanceAddedSignal('MapBoss'):Connect(watchMapBoss)
+for _,npc in Tags:GetTagged('MapBoss') do watchMapBoss(npc) end
 
 -- Self-heal to the regular camera (Custom, your Humanoid, FOV 70) on arrival and after every spawn,
 -- unless a camera stage holds it (2026-10-03: players were left in a narrow "isometric" view). Here
