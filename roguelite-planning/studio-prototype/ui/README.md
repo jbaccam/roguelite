@@ -3,6 +3,7 @@
 - **Why it reset:** a pick (Armory EQUIP AS STARTER, the PLAY screen, LOCK IN) set `RunClass`/`RunWeapon` on the lobby server's Player only. A run's match server got it in the launch, but the lobby you came back to, or a rejoin, was a new server with no pick: Brawler and the Frying Pan. Armor (`wearing`) and the pet were already saved in the profile.
 - **Now:** every pick the lobby accepts (`RogueliteLobbyPreview` `pick`, after `Rules.validLoadout`) is also saved in the profile (`ProfileService.setLoadout`, field `loadout`). It goes to the DataStore with the autosave, hand-off and leave saves, like Settings. On arrival in a lobby, once the save loads, `restoreLoadout` puts it back as `RunClass`/`RunWeapon` (the ring's starter) and `LoadoutClass`/`LoadoutWeapon` (the lobby screens), checked like a launch: a starter that moved class falls back to that class's own. A pick made before the save loads wins. `LobbyUI`'s selection follows those attributes, so PLAY opens on the saved class.
 - **Not changed:** match servers still use the loadout the run was launched with; the tutorial still starts as Brawler with the pan. Studio profiles are in memory (no production DataStores), so each Studio Play starts as Brawler; the pick lasts the whole Play.
+- **Studio:** synced 2026-10-03 at b492423 together with the tutorial UI round below (b22ff42): `tools/LaunchSync.luau` with `combat/tutorial-playtest3-sync.json`, 9 scripts in one all-or-nothing write. A read-only check first showed all 9 at ed7f723, the dry run compiled all 9 and passed every guard, and afterwards all 9 matched b492423.
 - **Not run:** no Play test; parse-checked only.
 
 # Tutorial UI: boss bar after the entrance, Eggbert holds still, no VICTORY — October 3, 2026
@@ -20,6 +21,7 @@ Spec section: "Play-test fixes, round 3" in `../../plans/2026-10-03-tutorial-des
 - **Checked (Studio Edit, nothing saved):**
   - all changed files parse (StyLua);
   - the old (HEAD) and new `TutorialGuideUI`, loaded from the dev server, were mounted in CoreGui against the same mock run HUD at 844×390 (with a thumbstick that flickers), 1366×768 and 1920×1080. They ran on a fake clock through 6 s of a fight, with a boss and a crystal target moving in the world and the counter's digits changing, then a boss bar appearing under the box. Old: 3 jumps before the bar on every screen, and on the phone sizes 0.42 → 0.34 → 0.28 (about 10 px text). New: no move until the bar, one move off it, one size per screen.
+- **Studio:** synced 2026-10-03 at b492423 with the loadout fix above (one LaunchSync write, 9 scripts; all matched afterwards).
 - **Not run:** no Play test (the user tests). The boss bar and HUD changes have only been parse-checked.
 
 # Private pads, stale servers — October 3, 2026

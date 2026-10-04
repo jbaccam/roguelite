@@ -1,0 +1,14 @@
+{
+ "rev": "b492423",
+ "scripts": [
+  {"studio": "ReplicatedStorage.TutorialGuideUI", "repo": "ui/TutorialGuideUI.luau", "class": "ModuleScript", "guard": "git/ed7f723/studio-prototype/ui/TutorialGuideUI.luau"},
+  {"studio": "StarterPlayer.StarterPlayerScripts.TutorialGuide", "repo": "ui/TutorialGuide.client.luau", "class": "LocalScript", "guard": "git/ed7f723/studio-prototype/ui/TutorialGuide.client.luau"},
+  {"studio": "StarterPlayer.StarterPlayerScripts.RogueliteHUD", "repo": "ui/RogueliteHUD.client.luau", "class": "LocalScript", "guard": "git/ed7f723/studio-prototype/ui/RogueliteHUD.client.luau"},
+  {"studio": "ReplicatedStorage.RogueliteCombat.TutorialConfig", "repo": "combat/TutorialConfig.luau", "class": "ModuleScript", "guard": "git/ed7f723/studio-prototype/combat/TutorialConfig.luau"},
+  {"studio": "ServerScriptService.RogueliteMeta", "repo": "combat/RogueliteMeta.server.luau", "class": "Script", "guard": "git/ed7f723/studio-prototype/combat/RogueliteMeta.server.luau"},
+  {"studio": "ServerScriptService.ShopService", "repo": "combat/ShopService.luau", "class": "ModuleScript", "guard": "git/ed7f723/studio-prototype/combat/ShopService.luau"},
+  {"studio": "ServerScriptService.ProfileService", "repo": "combat/ProfileService.luau", "class": "ModuleScript", "guard": "git/ed7f723/studio-prototype/combat/ProfileService.luau"},
+  {"studio": "ServerScriptService.RogueliteLobbyPreview", "repo": "lobby/RogueliteLobbyPreview.server.luau", "class": "Script", "guard": "git/ed7f723/studio-prototype/lobby/RogueliteLobbyPreview.server.luau"},
+  {"studio": "ReplicatedStorage.LobbyUI", "repo": "ui/LobbyUI.luau", "class": "ModuleScript", "guard": "git/ed7f723/studio-prototype/ui/LobbyUI.luau"}
+ ]
+}
