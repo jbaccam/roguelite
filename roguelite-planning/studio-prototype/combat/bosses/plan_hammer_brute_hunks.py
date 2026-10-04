@@ -4,8 +4,11 @@ MapBossPresentation, MapBossService, BossVfx/* and the other combat/bosses files
 except MapBossServiceTests, which another session had open when R6-R7 landed (2026-10-03).
     python plan_hammer_brute_hunks.py [--check] [--stage] [--json]   (see tools/hunks.py)
 R7: the rebuilt Hammer is a map boss (IsMapBoss, tag MapBoss, MapBossId 'Hammer', skinned sections
-HammerBrute_*). Every 'Hammer' spawn checks MapBossDefs.ready('Hammer') and keeps the old BossService
-Hammer until his def, timing, clips and template are all in the place.
+HammerBrute_*). Every 'Hammer' spawn asks MapBossDefs.legacy('Hammer') and keeps the old BossService
+Hammer until his def, timing, clips, template and runtime are all in the place.
+HUNKS go from the scripts before R7 (what Studio has until R8) straight to the final text.
+FROM_20BFF04 moves the repo's 20bff04 text (the first R7 commit) to the same final text:
+    python plan_hammer_brute_hunks.py --from-20bff04 --stage   (once, for the R6-R7 review fixes)
 """
 import sys
 from pathlib import Path
@@ -26,6 +29,81 @@ PETS_S = "ServerScriptService.PetService"
 GUIDE = "ui/TutorialGuide.client.luau"
 GUIDE_S = "StarterPlayer.StarterPlayerScripts.TutorialGuide"
 TESTS = "combat/bosses/MapBossServiceTests.luau"  # run from the repo (tools/RepoRequire), not synced
+
+# --- Final texts (R7 and the 2026-10-03 review fixes), shared by HUNKS and FROM_20BFF04 -----------
+CHASE_GATE = (
+    "-- MapBossService, or nil when this place lacks it or it fails to load. It never waits, so the old\n"
+    "-- Hammer and the regular enemies never depend on the map-boss modules.\n"
+    "local function mapBossService()\n"
+    "    local module = script.Parent:FindFirstChild('MapBossService')\n"
+    "    local ok, service = pcall(function() return module and require(module) end)\n"
+    "    return ok and service or nil\n"
+    "end\n"
+    "-- A map boss this place can run: MapBossDefs.ready (its def, timing, client clips, template and\n"
+    "-- runtime). A MapBossDefs from before ready() (Studio behind the repo) is read the old way.\n"
+    "local function mapReady(id, defs)\n"
+    "    if not defs then return false end\n"
+    "    if defs.ready then return defs.ready(id) end\n"
+    "    local def, anims = defs.get(id), combat:FindFirstChild('BossAnimations')\n"
+    "    return id ~= 'Hammer' and def ~= nil and templates:FindFirstChild(id .. '_NPC') ~= nil and anims ~= nil and anims:FindFirstChild(def.anim) ~= nil and defs.timing(id) ~= nil\n"
+    "end\n"
+    "-- The Hammer stays on BossService until the rebuilt Hammer Brute is ready here: MapBossDefs.legacy,\n"
+    "-- the gate BossEncounter asks too. A MapBossDefs without legacy() (older, or none) keeps the old one.\n"
+    "local function oldHammer(id, defs)\n"
+    "    if id ~= 'Hammer' then return false end\n"
+    "    if defs and defs.legacy then local ok, old = pcall(defs.legacy, id); return not ok or old end\n"
+    "    return true\n"
+    "end")
+CHASE_ADMIN = (
+    "            -- The old BossService Hammer until the rebuilt one is ready (oldHammer); then the map-boss path below.\n"
+    "            if id == 'Hammer' and oldHammer(id, bossDefs()) then")
+GUIDE_LIST = (
+    "-- The bosses: the old Hammer (tag HammerBoss) and map bosses, the rebuilt Hammer Brute included\n"
+    "-- (MapBoss). Kept up to date by the tag signals below, not looked up every frame.\n"
+    "local bossList={}\n"
+    "local function fightContext() return {edges=true,avoid=bossList} end")
+GUIDE_WATCH = (
+    "local function listBosses() bossList=Tags:GetTagged('HammerBoss');for _,npc in Tags:GetTagged('MapBoss') do table.insert(bossList,npc) end end\n"
+    "for _,tag in {'HammerBoss','MapBoss'} do Tags:GetInstanceAddedSignal(tag):Connect(listBosses);Tags:GetInstanceRemovedSignal(tag):Connect(listBosses) end\n"
+    "listBosses()\n"
+    "Tags:GetInstanceAddedSignal('MapBoss'):Connect(watchBoss)\n"
+    "for _,npc in Tags:GetTagged('MapBoss') do watchBoss(npc) end")
+TESTS_CLIPS = (
+    " -- Every clip an attack, intro or roar plays is one the build generates (ATTACK_CLIPS, which\n"
+    " -- build_boss_modules.py ATTACKS mirrors, and the client's aliased() reads).\n"
+    " local unlisted={}\n"
+    " for id in Defs do\n"
+    "  local def=Defs.get(id)\n"
+    "  if def then\n"
+    "   local listed,used=Defs.ATTACK_CLIPS[def.anim] or {},{}\n"
+    "   for _,a in def.attacks do for _,c in a.clips or {a.clip} do table.insert(used,c) end end\n"
+    "   if def.intro then table.insert(used,def.intro.clip) end;if def.roar then table.insert(used,def.roar) end\n"
+    "   for _,c in used do if not table.find(listed,c) then table.insert(unlisted,id..'.'..tostring(c)) end end\n"
+    "  end\n"
+    " end\n"
+    " add(#unlisted==0,('every attack, intro and roar clip is in ATTACK_CLIPS (missing: %s)'):format(#unlisted>0 and table.concat(unlisted,', ') or 'none'))")
+TESTS_LEGACY = (
+    " -- MapBossDefs.legacy / ready (rebuild R6): the one gate every 'Hammer' spawn asks. A stubbed\n"
+    " -- has(kind,name) stands in for the place, so each missing piece is tried on its own.\n"
+    " check('legacy: the Hammer is the old one unless def, timing, clips, template, MapBossService and MapBossShapes are all here; never another boss',function()\n"
+    "  local asked={};local function all(kind,name) asked[kind..':'..name]=true;return true end\n"
+    "  if Defs.legacy('Hammer',all)~=false or Defs.ready('Hammer',all)~=true then return false end\n"
+    "  for _,key in {'timing:Hammer','clips:hammer-brute','template:Hammer_NPC','server:MapBossService','shared:MapBossShapes'} do if not asked[key] then return false end end\n"
+    "  for _,missing in {'timing','clips','template','server','shared'} do\n"
+    "   local function has(kind) return kind~=missing end\n"
+    "   if Defs.legacy('Hammer',has)~=true or Defs.ready('Hammer',has) then return false end\n"
+    "  end\n"
+    "  local function none() return false end\n"
+    "  return Defs.legacy('KingCrab',none)==false and Defs.legacy('KingCrab',all)==false and not Defs.ready('KingCrab',none)\n"
+    "   and Defs.legacy('Nope',all)==false and Defs.ready('Nope',all)==false\n"
+    " end)\n"
+    " -- In this place: the Hammer stays the old one while MapBossTiming has no 'hammer-brute'.\n"
+    " local okNow,readyNow=pcall(function()\n"
+    "  local list={};for _,id in Defs.Order do if Defs.ready(id) then table.insert(list,id) end end\n"
+    "  assert(Defs.timing('Hammer')~=nil or Defs.legacy('Hammer')==true,'the Hammer is not legacy without his timing')\n"
+    "  return #list>0 and table.concat(list,', ') or 'none'\n"
+    " end)\n"
+    " add(okNow,('legacy here: Hammer=%s (ready now: %s)'):format(tostring(okNow and Defs.legacy('Hammer')),tostring(readyNow)))")
 
 HUNKS = [
     # --- R4 BossIntro: map bosses with a sky-drop entrance (MapBossService def.intro) -------------
@@ -54,16 +132,7 @@ HUNKS = [
     (CHASE, CHASE_S,
      ("-- The Hammer stays on BossService until MapBossDefs has his def (as BossEncounter does).",
       "local function oldHammer(id, defs) return id == 'Hammer' and not (defs and defs.get('Hammer')) end"), "block",
-     "-- A map boss this place can run: MapBossDefs.ready (its def, timing, client clips and template).\n"
-     "-- A MapBossDefs from before ready() (Studio behind the repo) is read the old way, Hammer excluded.\n"
-     "local function mapReady(id, defs)\n"
-     "    if not defs then return false end\n"
-     "    if defs.ready then return defs.ready(id) end\n"
-     "    local def, anims = defs.get(id), combat:FindFirstChild('BossAnimations')\n"
-     "    return id ~= 'Hammer' and def ~= nil and templates:FindFirstChild(id .. '_NPC') ~= nil and anims ~= nil and anims:FindFirstChild(def.anim) ~= nil and defs.timing(id) ~= nil\n"
-     "end\n"
-     "-- The Hammer stays on BossService until the rebuilt Hammer Brute is ready here (as BossEncounter does).\n"
-     "local function oldHammer(id, defs) return id == 'Hammer' and not mapReady(id, defs) end"),
+     CHASE_GATE),
     (CHASE, CHASE_S,
      "    local defs, anims, list = bossDefs(), combat:FindFirstChild('BossAnimations'), {}", "replace",
      "    local defs, list = bossDefs(), {}"),
@@ -74,9 +143,25 @@ HUNKS = [
      "        else\n"
      "            ok = mapReady(id, defs)"),
     (CHASE, CHASE_S,
+     "    else boss = require(script.Parent:WaitForChild('MapBossService')).spawn(p.id, cf, false, {intro = true}) end", "replace",
+     "    else\n"
+     "        local service = mapBossService()\n"
+     "        local ok, made = pcall(function() return service and service.spawn(p.id, cf, false, {intro = true}) end)\n"
+     "        if not ok then warn('Endless boss ' .. p.id .. ' failed to spawn: ' .. tostring(made)) end\n"
+     "        boss = ok and made or nil\n"
+     "        -- The rebuilt Hammer failing to spawn brings the old one instead (as BossEncounter does).\n"
+     "        if not boss and p.id == 'Hammer' then boss = Bosses.spawn(cf + Vector3.yAxis * (BossMotion.RootHeight - T.rootHeight), false); old = boss ~= nil end\n"
+     "    end"),
+    (CHASE, CHASE_S,
      "            if id == 'Hammer' then", "replace",
-     "            -- The old BossService Hammer until the rebuilt one is ready (oldHammer); then the map-boss path below.\n"
-     "            if oldHammer(id, bossDefs()) then"),
+     CHASE_ADMIN),
+    (CHASE, CHASE_S,
+     ("                local timing = require(combat:WaitForChild('MapBossDefs')).timing(id)",
+      "                local boss = at and require(script.Parent:WaitForChild('MapBossService')).spawn(id, CFrame.lookAt(at, Vector3.new(position.X, at.Y, position.Z)), true)"), "block",
+     "                local defs, service = bossDefs(), mapBossService()\n"
+     "                local timing = defs and service and defs.timing(id)\n"
+     "                local at = timing and point + Vector3.yAxis * (timing.rootHeight + 0.1)\n"
+     "                local boss = at and service.spawn(id, CFrame.lookAt(at, Vector3.new(position.X, at.Y, position.Z)), true)"),
 
     # --- R7 RogueliteCombat: the shell weapons measure to, and the melee aim at it ------------------
     (COMBAT, COMBAT_S,
@@ -113,13 +198,10 @@ HUNKS = [
     # --- R7 TutorialGuide: the tutorial's boss is a map boss once the rebuilt Hammer is in --------------
     (GUIDE, GUIDE_S,
      "local function fightContext() return {edges=true,avoid=Tags:GetTagged('HammerBoss')} end", "replace",
-     "-- The boss: the old Hammer (tag HammerBoss) or a map boss, the rebuilt Hammer Brute included (MapBoss).\n"
-     "local function bosses() local list=Tags:GetTagged('HammerBoss');for _,npc in Tags:GetTagged('MapBoss') do table.insert(list,npc) end;return list end\n"
-     "local function fightContext() return {edges=true,avoid=bosses()} end"),
+     GUIDE_LIST),
     (GUIDE, GUIDE_S,
      "for _,npc in Tags:GetTagged('HammerBoss') do watchBoss(npc) end", "after",
-     "Tags:GetInstanceAddedSignal('MapBoss'):Connect(watchBoss)\n"
-     "for _,npc in Tags:GetTagged('MapBoss') do watchBoss(npc) end"),
+     GUIDE_WATCH),
 
     # --- R6 MapBossServiceTests: the real defs now include the Hammer --------------------------------
     (TESTS, None,
@@ -128,34 +210,32 @@ HUNKS = [
      "  if not Defs.timing(id) then continue end"),
     (TESTS, None,
      " local function segd(a,b,p) local ab=b-a;local t=math.clamp((p-a):Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1);return (a+ab*t-p).Magnitude end", "before",
-     " -- Every clip an attack, intro or roar plays is one the build generates (ATTACK_CLIPS, which\n"
-     " -- build_boss_modules.py ATTACKS mirrors, and the client's aliased() reads).\n"
-     " local unlisted={}\n"
-     " for id in Defs do\n"
-     "  local def=Defs.get(id)\n"
-     "  if def then\n"
-     "   local listed,used=Defs.ATTACK_CLIPS[def.anim] or {},{}\n"
-     "   for _,a in def.attacks do for _,c in a.clips or {a.clip} do table.insert(used,c) end end\n"
-     "   if def.intro then table.insert(used,def.intro.clip) end;if def.roar then table.insert(used,def.roar) end\n"
-     "   for _,c in used do if not table.find(listed,c) then table.insert(unlisted,id..'.'..tostring(c)) end end\n"
-     "  end\n"
-     " end\n"
-     " add(#unlisted==0,('every attack, intro and roar clip is in ATTACK_CLIPS (missing: %s)'):format(#unlisted>0 and table.concat(unlisted,', ') or 'none'))\n"
-     " -- MapBossDefs.ready (rebuild R6): true exactly when the def, timing, client clips and template are\n"
-     " -- all here, so 'Hammer' keeps the BossService Hammer until his template and animations are installed.\n"
-     " local okReady,readyNow=pcall(function()\n"
-     "  local anims=game.ReplicatedStorage.RogueliteCombat:FindFirstChild('BossAnimations');local npcs=game:GetService('ServerStorage'):FindFirstChild('RogueliteNPCs');local list={}\n"
-     "  for _,id in Defs.Order do\n"
-     "   local def=Defs.get(id);local want=def~=nil and Defs.timing(id)~=nil and anims~=nil and anims:FindFirstChild(def.anim)~=nil and npcs~=nil and npcs:FindFirstChild(id..'_NPC')~=nil\n"
-     "   if Defs.ready(id)~=want then error(id..' ready '..tostring(Defs.ready(id))..', expected '..tostring(want)) end\n"
-     "   if want then table.insert(list,id) end\n"
-     "  end\n"
-     "  assert(Defs.ready('Nope')==false,'an unknown id is ready')\n"
-     "  assert(Defs.timing('Hammer')~=nil or Defs.ready('Hammer')==false,'the Hammer is ready without his timing')\n"
-     "  return #list>0 and table.concat(list,', ') or 'none'\n"
-     " end)\n"
-     " add(okReady,('ready: only with def, timing, client clips and template all present (ready now: %s)'):format(tostring(readyNow)))"),
+     TESTS_CLIPS + "\n" + TESTS_LEGACY),
+]
+
+# 20bff04 -> final (the 2026-10-03 review of R6-R7): run before HUNKS on files that have 20bff04's text.
+FROM_20BFF04 = [
+    (CHASE, CHASE_S,
+     ("-- A map boss this place can run: MapBossDefs.ready (its def, timing, client clips and template).",
+      "local function oldHammer(id, defs) return id == 'Hammer' and not mapReady(id, defs) end"), "block",
+     CHASE_GATE),
+    (CHASE, CHASE_S,
+     ("            -- The old BossService Hammer until the rebuilt one is ready (oldHammer); then the map-boss path below.",
+      "            if oldHammer(id, bossDefs()) then"), "block",
+     CHASE_ADMIN),
+    (GUIDE, GUIDE_S,
+     ("-- The boss: the old Hammer (tag HammerBoss) or a map boss, the rebuilt Hammer Brute included (MapBoss).",
+      "local function fightContext() return {edges=true,avoid=bosses()} end"), "block",
+     GUIDE_LIST),
+    (GUIDE, GUIDE_S,
+     ("Tags:GetInstanceAddedSignal('MapBoss'):Connect(watchBoss)",
+      "for _,npc in Tags:GetTagged('MapBoss') do watchBoss(npc) end"), "block",
+     GUIDE_WATCH),
+    (TESTS, None,
+     (" -- MapBossDefs.ready (rebuild R6): true exactly when the def, timing, client clips and template are",
+      " add(okReady,('ready: only with def, timing, client clips and template all present (ready now: %s)'):format(tostring(readyNow)))"), "block",
+     TESTS_LEGACY),
 ]
 
 if __name__ == "__main__":
-    run(HUNKS)
+    run(FROM_20BFF04 + HUNKS if "--from-20bff04" in sys.argv else HUNKS)

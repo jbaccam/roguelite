@@ -15,12 +15,16 @@ Hammer Brute rebuild (R6, 2026-10-03). All of it is optional, so the other four 
     X.phaseWindows). A phase point on another bone or offset than the clip's point of that name
     is sampled here, and the phase then carries the clip's tracks plus its own.
   chargeStrideLength: studs per ChargeRun cycle (motion, BossGameData, or attacks.ChargeRun).
-  IntroLand is an attack entry like the others; Roar and the Charge clips need durations only.
+  IntroLand and ChargeSlam (the charge's finish slam) need attack timing entries like the attacks;
+  Roar, ChargeStart and ChargeRun need durations only (DURATION_ONLY).
 
 Usage: python build_boss_modules.py [id ...]   (default: every boss in FOLDERS)
 A boss whose exports/game package isn't there yet is skipped with a message. MapBossTiming keeps
 the entry of every boss not rebuilt in this run, so `python build_boss_modules.py hammer-brute`
-adds the Hammer without dropping the other four.
+adds the Hammer without dropping the other four. Everything is computed and checked before anything
+is written: a failed assert, or a MapBossTiming that would lose a boss whose BossAnimations folder
+exists (an unreadable MapBossTiming.luau), writes nothing and exits non-zero.
+Tests: python test_build_boss_modules.py
 """
 import json, math, sys
 from pathlib import Path
@@ -99,6 +103,8 @@ def bone_axis(data, clip, bone, t, cache):
 def swap(v): return np.array([v[0], v[2], v[1]], dtype=float)
 
 
+# -0.0 (the X flip of an exact 0) is kept: writing it as 0.0 would change 144 values in the four bosses'
+# installed MapBossTiming (2026-10-03 review M4, left for a deliberate regeneration).
 def r6(v): return [round(float(x), 5) for x in v]
 
 
@@ -216,10 +222,12 @@ def timing(id, data, game):
     return entry
 
 
-def write_animations(id, studio):
+def render_animations(id, studio):
+    """One boss's BossAnimations modules as {path inside BossAnimations/<id>/: source}, and the largest
+    module's length. Nothing is written here, so a failed assert leaves the folder as it was."""
     missing = [c for c in BASIC + ATTACKS[id] if c not in studio['clips']]
     assert not missing, f'{id}: missing clips {missing}'
-    target = OUT / id; target.mkdir(parents=True, exist_ok=True)
+    files = {}
     metadata = {k: v for k, v in studio.items() if k != 'clips'}
     metadata['sourceAnimationAsset'] = FOLDERS[id] + '/exports/game/StudioAnimationData.json'
     raw = json.dumps(metadata, separators=(',', ':'), allow_nan=False)
@@ -232,9 +240,8 @@ def write_animations(id, studio):
         assert ']=]' not in raw_clip
         clip_source = 'return game:GetService("HttpService"):JSONDecode([=[' + raw_clip + ']=])\n'
         if len(clip_source) < LIMIT:
-            (target / (clip + '.luau')).write_text(clip_source, encoding='utf-8'); largest = max(largest, len(clip_source))
+            files[clip + '.luau'] = clip_source; largest = max(largest, len(clip_source))
         else:
-            clip_folder = target / clip; clip_folder.mkdir(exist_ok=True)
             clip_meta = {k: v for k, v in clip_data.items() if k != 'frames'}
             pieces = ['local clip=game:GetService("HttpService"):JSONDecode([=[' + json.dumps(clip_meta, separators=(',', ':')) + ']=])', 'clip.frames={}']
             # Frames per chunk scale with the bone count (the 90-bone Dragon needs smaller chunks).
@@ -244,26 +251,64 @@ def write_animations(id, studio):
                 chunk = 'return game:GetService("HttpService"):JSONDecode([=[' + json.dumps(clip_data['frames'][begin:begin + per], separators=(',', ':'), allow_nan=False) + ']=])\n'
                 assert len(chunk) < LIMIT, f'{id}/{clip}: a {per}-frame chunk is {len(chunk)} characters'
                 chunk_name = 'Frames' + str(chunk_index).zfill(2)
-                (clip_folder / (chunk_name + '.luau')).write_text(chunk, encoding='utf-8'); largest = max(largest, len(chunk))
+                files[clip + '/' + chunk_name + '.luau'] = chunk; largest = max(largest, len(chunk))
                 pieces.append('for _,frame in require(script:WaitForChild("' + chunk_name + '")) do table.insert(clip.frames,frame) end')
-            (clip_folder / 'init.luau').write_text('\n'.join(pieces) + '\nreturn clip\n', encoding='utf-8')
+            files[clip + '/init.luau'] = '\n'.join(pieces) + '\nreturn clip\n'
         text += 'data.clips.' + clip + '=require(script:WaitForChild("' + clip + '"))\n'
-    (target / 'init.luau').write_text(text + 'return data\n', encoding='utf-8')
+    files['init.luau'] = text + 'return data\n'
     assert largest < LIMIT
-    return sum(f.stat().st_size for f in target.rglob('*.luau')), largest
+    return files, largest
 
 
-def existing():
-    """MapBossTiming's current entries (in file order), so bosses not rebuilt keep theirs."""
+def write_animations(id, files):
+    """Writes BossAnimations/<id>/ from render_animations. Stale modules of that boss go first (a clip
+    that moved between <Clip>.luau and a <Clip>/ folder, or left the package); nothing outside its
+    own folder is touched, and an unchanged module isn't rewritten. Returns the folder's size."""
+    assert id in FOLDERS
+    target = OUT / id
+    assert target.parent == OUT
+    target.mkdir(parents=True, exist_ok=True)
+    for path in list(target.rglob('*.luau')):
+        if path.relative_to(target).as_posix() not in files: path.unlink()
+    for folder in sorted((p for p in target.rglob('*') if p.is_dir()), key=lambda p: len(p.parts), reverse=True):
+        if not any(folder.iterdir()): folder.rmdir()
+    for rel, text in files.items():
+        path = target / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if not path.exists() or path.read_text(encoding='utf-8') != text: path.write_text(text, encoding='utf-8')
+    return sum(f.stat().st_size for f in target.rglob('*.luau'))
+
+
+def existing(path=None):
+    """MapBossTiming's current entries (in file order), so bosses not rebuilt keep theirs. Only a missing
+    file reads as empty; an unreadable or malformed one raises (it must never become an empty table)."""
+    path = path or HERE / 'MapBossTiming.luau'
     try:
-        text = (HERE / 'MapBossTiming.luau').read_text(encoding='utf-8')
-        return json.loads(text[text.index('[=[') + 3:text.rindex(']=]')])
-    except (OSError, ValueError):
+        text = path.read_text(encoding='utf-8')
+    except FileNotFoundError:
         return {}
+    return json.loads(text[text.index('[=[') + 3:text.rindex(']=]')])
+
+
+def check_complete(table):
+    """Every boss with generated modules (a BossAnimations/<id> folder) keeps its MapBossTiming entry:
+    a run that would drop one stops before writing anything."""
+    lost = [id for id in FOLDERS if (OUT / id).is_dir() and id not in table]
+    if lost: raise SystemExit(f'MapBossTiming would lose {", ".join(lost)} (their BossAnimations exist): nothing written')
+
+
+def timing_source(table):
+    raw = json.dumps(table, separators=(',', ':'), allow_nan=False)
+    assert ']=]' not in raw
+    source = ('-- Generated by build_boss_modules.py: clip durations and sampled gameplay points per boss.\n'
+              '-- Points are {t,x,y,z} in the ground frame (root.CFrame * CFrame.new(0,-rootHeight,0)), Studio axes.\n'
+              'return game:GetService("HttpService"):JSONDecode([=[' + raw + ']=])\n')
+    assert len(source) < LIMIT, f'MapBossTiming is {len(source)} characters'
+    return source
 
 
 def main(ids):
-    table, built = existing(), 0
+    table, built = existing(), {}
     for id in ids:
         game_dir = PLANNING / FOLDERS[id] / 'exports' / 'game'
         missing = [n for n in PACKAGE if not (game_dir / n).exists()]
@@ -274,18 +319,15 @@ def main(ids):
         studio = json.loads((game_dir / 'StudioAnimationData.json').read_text(encoding='utf-8'))
         data = json.loads((game_dir / 'AnimationData.json').read_text(encoding='utf-8'))
         game = json.loads((game_dir / 'BossGameData.json').read_text(encoding='utf-8'))
-        size, largest = write_animations(id, studio)
-        table[id] = timing(id, data, game); built += 1
-        print(f'{id}: {size} bytes, largest module {largest} characters', flush=True)
+        built[id] = render_animations(id, studio)
+        table[id] = timing(id, data, game)
     if not built:
         print('Nothing built; MapBossTiming unchanged', flush=True)
         return
-    raw = json.dumps(table, separators=(',', ':'), allow_nan=False)
-    assert ']=]' not in raw
-    source = ('-- Generated by build_boss_modules.py: clip durations and sampled gameplay points per boss.\n'
-              '-- Points are {t,x,y,z} in the ground frame (root.CFrame * CFrame.new(0,-rootHeight,0)), Studio axes.\n'
-              'return game:GetService("HttpService"):JSONDecode([=[' + raw + ']=])\n')
-    assert len(source) < LIMIT, f'MapBossTiming is {len(source)} characters'
+    source = timing_source(table)
+    check_complete(table)
+    for id, (files, largest) in built.items():
+        print(f'{id}: {write_animations(id, files)} bytes, largest module {largest} characters', flush=True)
     (HERE / 'MapBossTiming.luau').write_text(source, encoding='utf-8')
     print(f'MapBossTiming: {len(source)} characters', flush=True)
 

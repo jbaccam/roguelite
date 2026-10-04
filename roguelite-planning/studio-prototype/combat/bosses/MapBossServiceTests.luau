@@ -244,20 +244,27 @@ if Defs then
   end
  end
  add(#unlisted==0,('every attack, intro and roar clip is in ATTACK_CLIPS (missing: %s)'):format(#unlisted>0 and table.concat(unlisted,', ') or 'none'))
- -- MapBossDefs.ready (rebuild R6): true exactly when the def, timing, client clips and template are
- -- all here, so 'Hammer' keeps the BossService Hammer until his template and animations are installed.
- local okReady,readyNow=pcall(function()
-  local anims=game.ReplicatedStorage.RogueliteCombat:FindFirstChild('BossAnimations');local npcs=game:GetService('ServerStorage'):FindFirstChild('RogueliteNPCs');local list={}
-  for _,id in Defs.Order do
-   local def=Defs.get(id);local want=def~=nil and Defs.timing(id)~=nil and anims~=nil and anims:FindFirstChild(def.anim)~=nil and npcs~=nil and npcs:FindFirstChild(id..'_NPC')~=nil
-   if Defs.ready(id)~=want then error(id..' ready '..tostring(Defs.ready(id))..', expected '..tostring(want)) end
-   if want then table.insert(list,id) end
+ -- MapBossDefs.legacy / ready (rebuild R6): the one gate every 'Hammer' spawn asks. A stubbed
+ -- has(kind,name) stands in for the place, so each missing piece is tried on its own.
+ check('legacy: the Hammer is the old one unless def, timing, clips, template, MapBossService and MapBossShapes are all here; never another boss',function()
+  local asked={};local function all(kind,name) asked[kind..':'..name]=true;return true end
+  if Defs.legacy('Hammer',all)~=false or Defs.ready('Hammer',all)~=true then return false end
+  for _,key in {'timing:Hammer','clips:hammer-brute','template:Hammer_NPC','server:MapBossService','shared:MapBossShapes'} do if not asked[key] then return false end end
+  for _,missing in {'timing','clips','template','server','shared'} do
+   local function has(kind) return kind~=missing end
+   if Defs.legacy('Hammer',has)~=true or Defs.ready('Hammer',has) then return false end
   end
-  assert(Defs.ready('Nope')==false,'an unknown id is ready')
-  assert(Defs.timing('Hammer')~=nil or Defs.ready('Hammer')==false,'the Hammer is ready without his timing')
+  local function none() return false end
+  return Defs.legacy('KingCrab',none)==false and Defs.legacy('KingCrab',all)==false and not Defs.ready('KingCrab',none)
+   and Defs.legacy('Nope',all)==false and Defs.ready('Nope',all)==false
+ end)
+ -- In this place: the Hammer stays the old one while MapBossTiming has no 'hammer-brute'.
+ local okNow,readyNow=pcall(function()
+  local list={};for _,id in Defs.Order do if Defs.ready(id) then table.insert(list,id) end end
+  assert(Defs.timing('Hammer')~=nil or Defs.legacy('Hammer')==true,'the Hammer is not legacy without his timing')
   return #list>0 and table.concat(list,', ') or 'none'
  end)
- add(okReady,('ready: only with def, timing, client clips and template all present (ready now: %s)'):format(tostring(readyNow)))
+ add(okNow,('legacy here: Hammer=%s (ready now: %s)'):format(tostring(okNow and Defs.legacy('Hammer')),tostring(readyNow)))
  local function segd(a,b,p) local ab=b-a;local t=math.clamp((p-a):Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1);return (a+ab*t-p).Magnitude end
  -- The Dragon's tail whip hits a player standing 8 studs behind him (under his rear), as the
  -- server's hit loop tests it (tail chain inside the warning arc), and never one 8 studs in front.

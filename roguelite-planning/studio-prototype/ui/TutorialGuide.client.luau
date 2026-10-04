@@ -124,9 +124,10 @@ local function nearestCrystal()
  return best
 end
 -- During a fight the box keeps to the screen's corners and sides, clear of the player and the boss.
--- The boss: the old Hammer (tag HammerBoss) or a map boss, the rebuilt Hammer Brute included (MapBoss).
-local function bosses() local list=Tags:GetTagged('HammerBoss');for _,npc in Tags:GetTagged('MapBoss') do table.insert(list,npc) end;return list end
-local function fightContext() return {edges=true,avoid=bosses()} end
+-- The bosses: the old Hammer (tag HammerBoss) and map bosses, the rebuilt Hammer Brute included
+-- (MapBoss). Kept up to date by the tag signals below, not looked up every frame.
+local bossList={}
+local function fightContext() return {edges=true,avoid=bossList} end
 -- The boss's first two attacks after his entrance: "Red circle = move!"
 local function watchBoss(npc)
  npc:GetAttributeChangedSignal('BossSerial'):Connect(function()
@@ -137,6 +138,9 @@ local function watchBoss(npc)
 end
 Tags:GetInstanceAddedSignal('HammerBoss'):Connect(watchBoss)
 for _,npc in Tags:GetTagged('HammerBoss') do watchBoss(npc) end
+local function listBosses() bossList=Tags:GetTagged('HammerBoss');for _,npc in Tags:GetTagged('MapBoss') do table.insert(bossList,npc) end end
+for _,tag in {'HammerBoss','MapBoss'} do Tags:GetInstanceAddedSignal(tag):Connect(listBosses);Tags:GetInstanceRemovedSignal(tag):Connect(listBosses) end
+listBosses()
 Tags:GetInstanceAddedSignal('MapBoss'):Connect(watchBoss)
 for _,npc in Tags:GetTagged('MapBoss') do watchBoss(npc) end
 

@@ -25,10 +25,17 @@
 --   intro {drop,fall,after,clip} and introName: a wave boss's sky-drop entrance. tutorial
 --     {order,enrage,follow}: the TutorialBossHealth boss's attack order, and false turns enrage or
 --     follow-ups off.
--- D.ready(id) (server): true only when this place can run the boss on this runtime, def, timing,
---   client clips and template all present. Every spawn of 'Hammer' checks it, and falls back to the
---   old BossService Hammer until his template and animations are installed (rebuild R6, 2026-10-03).
-local Timing=require(script.Parent:WaitForChild('MapBossTiming'))
+-- D.ready(id) (server): true only when this place can run the boss on this runtime (def, timing,
+--   client clips, template, MapBossService and MapBossShapes all present). D.legacy(id): true for the
+--   'Hammer' until then, and every 'Hammer' spawn (BossEncounter, RogueliteZombieChase) asks it and
+--   spawns the old BossService Hammer instead (rebuild R6, 2026-10-03).
+-- The server never waits for MapBossTiming (its ReplicatedStorage is complete at load): a place
+-- without it has no timings, so nothing is ready and wave 20 still gets the old Hammer. A client
+-- waits for it to replicate.
+local Run=game:GetService('RunService')
+local timingModule=script.Parent:FindFirstChild('MapBossTiming') or (not Run:IsServer() and script.Parent:WaitForChild('MapBossTiming',60)) or nil
+if not timingModule then warn('MapBossDefs: no MapBossTiming here, so no map boss is ready') end
+local Timing=timingModule and require(timingModule) or {}
 local D={}
 -- The installer's order (InstallMapBossTemplates). The Hammer is Pine Valley's, the first map.
 D.Order={'Hammer','KingCrab','Pharaoh','FrostCyclops','Dragon'}
@@ -151,15 +158,29 @@ function D.timing(id)
  cache[id]=T
  return T
 end
--- Server (and Edit): true when this place can run `id` on this runtime: its def, its generated timing,
--- its clip modules (RogueliteCombat.BossAnimations[anim], which clients play) and its template
--- (ServerStorage.RogueliteNPCs.<id>_NPC). With any one missing, callers keep the old path: 'Hammer'
--- spawns the BossService Hammer, so a def synced ahead of his template never breaks wave 20.
--- Example: today D.Hammer is here but MapBossTiming has no 'hammer-brute', so ready('Hammer') is false.
--- Clients can't see ServerStorage, so it is false there.
-function D.ready(id)
- local def=D.get(id);if not def or not D.timing(id) then return false end
- local anims=script.Parent:FindFirstChild('BossAnimations');local npcs=game:GetService('ServerStorage'):FindFirstChild('RogueliteNPCs')
- return anims~=nil and anims:FindFirstChild(def.anim)~=nil and npcs~=nil and npcs:FindFirstChild(id..'_NPC')~=nil
+-- Whether one piece of a map boss is in this place: ('timing', id) its generated timing (a malformed
+-- one counts as missing), ('clips', anim) RogueliteCombat.BossAnimations[anim], ('template', name)
+-- ServerStorage.RogueliteNPCs[name], ('server', name) a ServerScriptService module, ('shared', name)
+-- a RogueliteCombat module. Tests pass their own `has` to D.ready and D.legacy instead.
+local function present(kind,name)
+ if kind=='timing' then local ok,T=pcall(D.timing,name);return ok and T~=nil end
+ local parent
+ if kind=='clips' then parent=script.Parent:FindFirstChild('BossAnimations')
+ elseif kind=='template' then parent=game:GetService('ServerStorage'):FindFirstChild('RogueliteNPCs')
+ elseif kind=='server' then parent=game:GetService('ServerScriptService')
+ elseif kind=='shared' then parent=script.Parent end
+ return parent~=nil and parent:FindFirstChild(name)~=nil
 end
+-- Server (and Edit): true when this place can run `id` on this runtime: its def, its generated timing,
+-- its clip modules (which clients play), its template (RogueliteNPCs.<id>_NPC), and MapBossService and
+-- MapBossShapes to run it. Never throws. Clients can't see ServerStorage, so it is false there.
+-- Example: today D.Hammer is here but MapBossTiming has no 'hammer-brute', so ready('Hammer') is false.
+function D.ready(id,has)
+ has=has or present;local def=D.get(id)
+ return def~=nil and has('timing',id) and has('clips',def.anim) and has('template',id..'_NPC') and has('server','MapBossService') and has('shared','MapBossShapes')
+end
+-- The one gate for the bosses with an older runtime: true while 'Hammer' must still spawn the old
+-- BossService Hammer, i.e. until every piece of the rebuilt Hammer Brute is here (D.ready). Never for
+-- any other id. BossEncounter and RogueliteZombieChase both ask this.
+function D.legacy(id,has) return id=='Hammer' and not D.ready(id,has) end
 return D

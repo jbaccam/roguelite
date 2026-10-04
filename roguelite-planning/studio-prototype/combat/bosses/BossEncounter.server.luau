@@ -7,6 +7,17 @@ local run=RS:WaitForChild('RogueliteRunState')
 local combat=RS:WaitForChild('RogueliteCombat')
 local Motion=require(combat:WaitForChild('BossMotion'))
 local Maps=require(combat:WaitForChild('MapConfig'))
+-- A map-boss module, or nil when this place lacks it or it fails to load. It never waits, so a
+-- part-synced place still gets its wave-20 boss: the old Hammer needs none of them.
+local function module(parent,name)
+ local m=parent:FindFirstChild(name);if not m then return nil end
+ local ok,v=pcall(require,m);if not ok then warn('BossEncounter: '..name..' failed to load: '..tostring(v)) end
+ return ok and v or nil
+end
+-- 'Hammer' is the old BossService Hammer until this place can run the rebuilt Hammer Brute
+-- (MapBossDefs.legacy: his def, timing, clips, template and runtime all here). A missing, failing or
+-- older MapBossDefs keeps the old one.
+local function oldHammer(Defs) local ok,old=pcall(function() return Defs.legacy('Hammer') end);return not (ok and old==false) end
 -- Encounter selection is server-owned; no client spawn or damage remote.
 local current,lastWave
 local function update()
@@ -19,17 +30,18 @@ local function update()
  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances={workspace:FindFirstChild('RogueliteEnemies'),marker}
  local p=marker.Position+Vector3.new(0,0,-15);local ground=workspace:Raycast(p+Vector3.yAxis*35,-Vector3.yAxis*100,params)
  if not ground then return end
- -- 'Hammer' stays on the old BossService until this place can run the rebuilt Hammer Brute: his def,
- -- timing, clips and template (MapBossDefs.ready). A missing, failing or older MapBossDefs counts as
- -- not ready, so wave 20 always has a boss.
- local module=combat:FindFirstChild('MapBossDefs')
- local ok,Defs=pcall(function() return module and require(module) end);if not ok then Defs=nil end
- if map.boss=='Hammer' and not (Defs and Defs.ready and Defs.ready('Hammer')) then current=B.spawn(CFrame.new(ground.Position+Vector3.yAxis*(Motion.RootHeight+.1)),false)
- elseif Defs then
+ local Defs=module(combat,'MapBossDefs');current=nil
+ if not (map.boss=='Hammer' and oldHammer(Defs)) then
   -- Wave bosses make their entrance (def.intro, where the def has one).
-  local MB=require(script.Parent:WaitForChild('MapBossService'));local T=Defs.timing(map.boss)
-  current=T and MB.spawn(map.boss,CFrame.new(ground.Position+Vector3.yAxis*(T.rootHeight+.1)),false,{intro=true})
+  local MB=module(script.Parent,'MapBossService');local okT,T=pcall(function() return Defs.timing(map.boss) end)
+  if MB and okT and T then
+   local ok,npc=pcall(MB.spawn,map.boss,CFrame.new(ground.Position+Vector3.yAxis*(T.rootHeight+.1)),false,{intro=true})
+   if not ok then warn('BossEncounter: '..map.boss..' failed to spawn: '..tostring(npc)) end
+   current=ok and npc or nil
+  end
  end
+ -- The old Hammer: while the rebuilt one isn't ready here, or when he failed to spawn.
+ if not current and map.boss=='Hammer' then current=B.spawn(CFrame.new(ground.Position+Vector3.yAxis*(Motion.RootHeight+.1)),false) end
  if current then
   lastWave=wave;run:SetAttribute('BossAlive',true)
   current.Destroying:Connect(function() run:SetAttribute('BossAlive',false) end)

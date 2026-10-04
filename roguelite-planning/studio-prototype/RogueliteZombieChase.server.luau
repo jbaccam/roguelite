@@ -780,16 +780,28 @@ local function bossDefs()
     local ok, defs = pcall(function() return module and require(module) end)
     return ok and defs or nil
 end
--- A map boss this place can run: MapBossDefs.ready (its def, timing, client clips and template).
--- A MapBossDefs from before ready() (Studio behind the repo) is read the old way, Hammer excluded.
+-- MapBossService, or nil when this place lacks it or it fails to load. It never waits, so the old
+-- Hammer and the regular enemies never depend on the map-boss modules.
+local function mapBossService()
+    local module = script.Parent:FindFirstChild('MapBossService')
+    local ok, service = pcall(function() return module and require(module) end)
+    return ok and service or nil
+end
+-- A map boss this place can run: MapBossDefs.ready (its def, timing, client clips, template and
+-- runtime). A MapBossDefs from before ready() (Studio behind the repo) is read the old way.
 local function mapReady(id, defs)
     if not defs then return false end
     if defs.ready then return defs.ready(id) end
     local def, anims = defs.get(id), combat:FindFirstChild('BossAnimations')
     return id ~= 'Hammer' and def ~= nil and templates:FindFirstChild(id .. '_NPC') ~= nil and anims ~= nil and anims:FindFirstChild(def.anim) ~= nil and defs.timing(id) ~= nil
 end
--- The Hammer stays on BossService until the rebuilt Hammer Brute is ready here (as BossEncounter does).
-local function oldHammer(id, defs) return id == 'Hammer' and not mapReady(id, defs) end
+-- The Hammer stays on BossService until the rebuilt Hammer Brute is ready here: MapBossDefs.legacy,
+-- the gate BossEncounter asks too. A MapBossDefs without legacy() (older, or none) keeps the old one.
+local function oldHammer(id, defs)
+    if id ~= 'Hammer' then return false end
+    if defs and defs.legacy then local ok, old = pcall(defs.legacy, id); return not ok or old end
+    return true
+end
 -- The bosses this place can spawn: a template in RogueliteNPCs, and a def, timing and client
 -- animations for the map bosses. A missing one is never picked.
 local function endlessBosses()
@@ -849,7 +861,14 @@ local function endlessSpawn(p)
     local cf = face and (face - at).Magnitude > 0.5 and CFrame.lookAt(at, face) or CFrame.new(at)
     local boss
     if old then boss = Bosses.spawn(cf, false)
-    else boss = require(script.Parent:WaitForChild('MapBossService')).spawn(p.id, cf, false, {intro = true}) end
+    else
+        local service = mapBossService()
+        local ok, made = pcall(function() return service and service.spawn(p.id, cf, false, {intro = true}) end)
+        if not ok then warn('Endless boss ' .. p.id .. ' failed to spawn: ' .. tostring(made)) end
+        boss = ok and made or nil
+        -- The rebuilt Hammer failing to spawn brings the old one instead (as BossEncounter does).
+        if not boss and p.id == 'Hammer' then boss = Bosses.spawn(cf + Vector3.yAxis * (BossMotion.RootHeight - T.rootHeight), false); old = boss ~= nil end
+    end
     if not boss then return nil end
     -- Spawn already scaled it by difficulty, players and map power. Every Endless boss then gets the
     -- map's own boss health (18,000 x RunSetupRules bossBase) x(1 + 0.15 an Endless wave), whoever it
@@ -971,14 +990,15 @@ adminSpawn.OnInvoke = function(action, id, count, position)
         local point = pickSpawnPoint({}, position, {20, 40}, 20)
         if point then
             -- The old BossService Hammer until the rebuilt one is ready (oldHammer); then the map-boss path below.
-            if oldHammer(id, bossDefs()) then
+            if id == 'Hammer' and oldHammer(id, bossDefs()) then
                 local at = point + Vector3.yAxis * (BossMotion.RootHeight + 0.1)
                 local boss = Bosses.spawn(CFrame.lookAt(at, Vector3.new(position.X, at.Y, position.Z)), true)
                 if boss then boss:SetAttribute('AdminSpawn', true); made += 1 end
             elseif table.find(BossIds, id) then
-                local timing = require(combat:WaitForChild('MapBossDefs')).timing(id)
+                local defs, service = bossDefs(), mapBossService()
+                local timing = defs and service and defs.timing(id)
                 local at = timing and point + Vector3.yAxis * (timing.rootHeight + 0.1)
-                local boss = at and require(script.Parent:WaitForChild('MapBossService')).spawn(id, CFrame.lookAt(at, Vector3.new(position.X, at.Y, position.Z)), true)
+                local boss = at and service.spawn(id, CFrame.lookAt(at, Vector3.new(position.X, at.Y, position.Z)), true)
                 if boss then boss:SetAttribute('AdminSpawn', true); made += 1 end
             else
                 adminSerial += 1
