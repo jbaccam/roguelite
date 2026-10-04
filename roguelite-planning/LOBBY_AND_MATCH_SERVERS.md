@@ -21,7 +21,7 @@ server, so the Tab player list shows just them.
 | Beach Cove ending (no King Crab yet) | **Clear wave 20, no boss.** Pine Valley keeps the Hammer boss at wave 20. |
 | Dying | **Spectate survivors** (‹ › to switch), **respawn at the end of the wave**. |
 | Paid revives | **Unlimited per run; the price doubles**: 65, 130, 260, 520, 1040 R$, then stays at 1040. |
-| Leaving | **Leave Run** between waves (and on the death screen) keeps rewards and returns to the lobby. |
+| Leaving | **Leave Run** between waves (and on the death screen) keeps rewards and returns to the lobby. **2026-10-03:** any time, mid-wave included (user: "if they wanna leave let them leave"). |
 | Endless / Play Again | Not in this version. Endless will get the same Cash Out → lobby later. |
 
 ## 1. Server roles
@@ -86,7 +86,7 @@ User request: make the lobby dummies attackable, with a clear way to turn attack
 
 ## 2. The trip: lobby → match
 
-1. The host presses START on a pad, or PLAY claims a free pad (existing rules, still up to 4 players, Open or Solo).
+1. The host presses START on a pad, or PLAY claims a free pad (existing rules, still up to 4 players, Open or Solo; Private replaced Solo on 2026-10-03). Since 2026-10-03 the launch also waits for everyone on the pad to lock in a class (see "Leaving, party pads and bigger waves" at the end).
 2. The lobby server re-checks every member: map and difficulty unlocked (`RunSetupRules.validMap`), and class and weapon owned (`validLoadout`).
 3. `TeleportService:ReserveServer(game.PlaceId)` returns an access code and a private server ID.
 4. The lobby writes the match entry to a MemoryStore hash map, key = private server ID, expiry 1 hour. The entry is `{map, difficulty, members = {[userId] = {class, weapon}}}`. It is stored server-side and never passes through a client, so it can't be faked.
@@ -167,7 +167,7 @@ VIP bonus applies as it does today.
   1. The match server saves and releases each profile.
   2. It teleports players to a public lobby server with `TeleportAsync(game.PlaceId, players)`. A group teleported together lands in the same lobby server.
   3. In Combined Studio mode, Back to Lobby uses the existing in-place move.
-- **Leave Run** is offered in the between-wave shop and on the death screen. Leaving mid-wave while alive isn't offered; closing the game counts as Left.
+- **Leave Run** is offered in the between-wave shop, on the death screen and (since 2026-10-03) in the pause menu, at any time, mid-wave included. Closing the game counts as Left. See "Leaving, party pads and bigger waves" at the end.
 
 ## 6. Saving between servers (session lock)
 
@@ -256,10 +256,10 @@ User decision 2026-10-01: the beta uses match servers. `ServerRole.LIVE_ROLES=tr
 User direction 2026-10-01: Endless works like Brotato's (the same wave → shop loop keeps going past wave 20, enemies keep scaling), and players can **extract** (Leave Run) whenever they want instead of having to die.
 
 - **Results screen** (`ui/RunResultsUI.luau`, fed by the `RunResult` attribute from `RogueliteMeta.setResult`): VICTORY! / DEFEAT / EXTRACTED, map and difficulty (and ENDLESS), emeralds the run paid, FIRST WIN +n, NEW BEST, waves cleared, level, best wave, and the weapons and items the run ended with. BACK TO LOBBY, or automatic after 20 s.
-  - **Victory** = the run reached wave 20, whether the player then left or fell in Endless. Clearing wave 20 no longer ends anything: the shop shows "Endless (Wave 21)" in gold and the status line says "VICTORY! Keep going in Endless, or LEAVE RUN to take your rewards".
+  - **Victory** = the run reached wave 20, whether the player then left or fell in Endless. Clearing wave 20 no longer ends anything: the shop shows "Endless (Wave 21)" in gold and the status line says "VICTORY! Keep going in Endless, or LEAVE RUN to take your rewards". Since 2026-10-03 a YOU WON! panel also opens over the shop with LEAVE / KEEP GOING (not in the tutorial).
   - **Defeat** = everyone down and the last stand ran out, or the last one down left.
   - **Left (EXTRACTED)** = Leave Run before wave 20 while others play on, or between waves.
-- **Leave Run** in the between-wave shop (above GO; tap twice, the second tap shows "LEAVE? KEEP n EMERALDS") and on the death screen (replaces GIVE UP; RunAction `LeaveRun`, the old `GiveUp` still works). Not offered mid-wave while alive. A player who leaves between waves has their body removed (so nothing in the arena can reach it) until they return.
+- **Leave Run** in the between-wave shop (above GO; tap twice, the second tap shows "LEAVE? KEEP n EMERALDS") and on the death screen (replaces GIVE UP; RunAction `LeaveRun`, the old `GiveUp` still works). Not offered mid-wave while alive. *(Both changed 2026-10-03: one confirm popup instead of two taps, and leaving is allowed mid-wave. See the last section.)* A player who leaves between waves has their body removed (so nothing in the arena can reach it) until they return.
 - **Spectating:** a downed player with teammates still standing watches one of them (‹ ›, Q/E, LB/RB) and sees REVIVE and LEAVE RUN. **Downed players respawn at the map's spawn with full health when the wave ends**, keeping their build.
 - **Last stand:** when everyone in the run is down (solo players on death), the wave stays paused and the death screen shows "REVIVE OR THE RUN ENDS · 10". An open Revive purchase prompt holds the clock (at least 5 s left once it closes). Then the run ends as a Defeat for everyone in it.
 - **Return:** a match server teleports the returning group to a public lobby (`MatchService.toLobby`); the Combined Studio role walks them into the lobby; a Studio forced-Match, or a teleport that fails, puts them back in the arena.
@@ -291,3 +291,31 @@ User direction 2026-10-01: Endless works like Brotato's (the same wave → shop 
 - Rewards stay single-paid: the rejoined player starts a new stint at the wave they return on.
 
 **Not tested yet:** Play Again in Studio Play (Combined: die solo, PLAY AGAIN, wave 1 starts). Rejoin needs the **published game** and two accounts: both start a run, one closes Roblox mid-wave, rejoins the game, sees the card in the lobby, presses REJOIN, lands back in the same match with the same weapons, items and level.
+
+## Leaving, party pads and bigger waves (2026-10-03)
+
+From the friends play-test. Commits 8d5ef6c, a699e1c and a1a1f7a. **Repo only, syntax-checked. Not yet in Studio and not play-tested.**
+
+**Leaving a run**
+- **Why the pause menu froze a player:** three things together. `PauseUI` closed itself without unpausing. The server refused a mid-wave Leave Run without saying so. And a resume sent within 0.25 s of a pause was dropped. A paused solo player was left frozen with no menu up.
+- **Fixes:**
+  - Alive players may now leave mid-wave (user: "if they wanna leave let them leave"). They keep what was settled at their last cleared wave, since emeralds pay at each clear. Leaving counts as Left, except a downed player with nobody else in the run still alive, which is a Defeat.
+  - Every refusal answers with `RunAction 'LeaveResult'` and a reason, and the menu that asked stays open and shows it.
+  - Pausing is limited to once every 0.25 s per player, but a resume always goes through (`RunPause`). `PauseUI` re-sends a lost pause or resume, up to 3 times.
+- **One confirm popup** (`UITheme.leaveConfirm`): "Leave the run? You keep N emeralds." with STAY / LEAVE. Used by the pause menu, the shop and the death screen; it replaces the shop's "tap twice". A controller starts on STAY.
+- **LEAVE WITH PARTY:** only the host of a Private pad gets it (`MatchService.partyLeader`, attribute `RunLeader`; the server checks again). The whole party is settled as Left and goes home in one teleport, still a party, and is regrouped in the lobby. Members see "<name> ended the run for the party". Refused on Open pads, so nobody can end a stranger's run.
+- **Win:** after wave 20 a YOU WON! panel offers LEAVE (results, then the lobby) or KEEP GOING (Endless). Shown once, never in the tutorial.
+- `RunPauseTests` now has 32 checks (was 17).
+
+**Waves**
+- 40 s per wave (`EconomyConfig.WAVE_SECONDS`, was 30). The tutorial keeps its own clock.
+- The HUD shows WAVE 7 / 20, then ENDLESS 21.
+- Wave size scales with the players who are up, and enemies come in swarms: [SHARD_CURRENCY.md](SHARD_CURRENCY.md) (numbers) and [REGULAR_ENEMY_READINESS.md](studio-prototype/combat/REGULAR_ENEMY_READINESS.md) (swarms).
+
+**Party pads** (`QueueState`, `RogueliteLobbyPreview`, `LobbyUI`, `RunSetupUI`)
+- Everyone put on a pad gets the class step, except a host who just pressed START (player attribute `LobbyLockedIn`). Before, party members pulled on after START got no class screen and a 3 s launch.
+- The launch waits up to 20 s after each player arrives for them to LOCK IN (`PICK_SECONDS`), never more than 30 s after START (`PICK_LIMIT`). Once everyone on the pad has locked in, a full pad launches in 3 s.
+- Example: Ana presses START on Private and Ben is pulled on at 0 s, so the launch is set for 20 s. Ben locks in at 6 s: launch at 9 s. Had he locked in at 15 s: 18 s.
+- The class screen shows "STARTING IN n". The banner shows your locked-in class, or "PLAY: pick your class and LOCK IN", plus how many are still picking.
+- Accepting an invite while the leader is on a pad moves you onto it. A Private pad grows to fit the party.
+- Anyone who never locks in plays their saved class and starter.

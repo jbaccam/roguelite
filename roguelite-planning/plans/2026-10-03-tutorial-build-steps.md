@@ -11,7 +11,7 @@
   - `ShardDropService.killValue`.
   
   Shared scripts read these through small, guarded hunks, so a normal run never sees them.
-- **Two changes affect every run:** wave-end crystals fly in (`ShardDropService.sweep`), and boss crystals fly to the run's players, split round-robin. The boss super-jump intro is also used by every wave boss (`BossService` attributes, `BossIntro.client`).
+- **Two changes affect every run:** wave-end crystals fly in (`ShardDropService.sweep`; tutorial only since db71be9, 2026-10-03, so other runs fill the crystal bag), and boss crystals fly to the run's players, split round-robin. The boss super-jump intro is also used by every wave boss (`BossService` attributes, `BossIntro.client`).
 - **The client guide (`TutorialGuide.client` + `TutorialGuideUI`)** reads only replicated state: the run state, the player's attributes and the open screens. It points at named GUI objects.
   - Lobby progress is saved on the server (`ProfileService.tutorial.step`) and moves forward only (`ProfileAction 'TutorialStep'`).
 - **Shared scripts change only through anchored hunks** (`combat/tutorial_hunks.py`, `tools/hunks.py`). They are committed from a private index, as HEAD + our hunks, because other sessions edit the same files.

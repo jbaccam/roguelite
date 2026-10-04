@@ -18,9 +18,16 @@ CharacterService mirrors effective values as `Stat_<id>` on the avatar and its r
 
 All 36 weapons consume general damage, compatible melee/ranged/elemental/utility damage, critical chance/multiplier, attack cadence and range. Elemental and Utility tags come from WeaponCatalog. Projectiles use server swept collision and bounded travel, size, extra shot counts, unique-target piercing and bounces. Added piercing hits multiply damage by 0.7; bounces multiply it by 0.6. Explosives use area and explosion bonuses; piercing/bounce do not apply to explosions. Lightning never recursively triggers itself. Burn/poison/slow have bounded durations and stacking; burn spreading cannot propagate a second generation. Boss/elite damage requires the relevant enemy attribute. Slow and knockback have reduced boss effects.
 
+**Which weapons use the weapon-only stats (2026-10-03).** One rule, `CharacterStats.usesStat`, answers this for the server's launchers (through `CharacterStats.shotStat`), the run shop's offers and the cards' "Works with" line, so they can't disagree.
+- Extra shots: guns, staffs, cards, throws that don't come back, rockets, Pandora's Box and the Storm Bow.
+- Pierce and bounce: bullets, cards, and throws that aren't fire or gas (Boomerang, Mjolnir and the Trident included).
+- None of them: melee swings, the Rubber Duck's spray, the Vacuum and the Power Washer.
+- Example: Two Straws gives a Glock 2 bullets and a Frying Pan nothing.
+- Lightning and area stats also count your own sources: with Battery Pack, every weapon chains lightning, so Tinfoil Antlers helps them all.
+
 Attack range moves melee reach without rescaling the equipped mesh. Authored model sizes, including the katana scale 0.013698526658117772, are preserved. Projectile Size changes projectile collision/visuals, not the equipped weapon model.
 
-Pickup Radius and Luck apply to rare heart drops (`HeartDropService`, retuned 2026-09-29): 1% per real kill plus Luck × 0.02%, capped at 3%; a heart heals 15 HP before Recovery, is pulled by any living player within max(4, Pickup Radius) (wasted at full health), and expires after 10 s. (The original 15%/8 HP green orb was removed on 2026-09-22.) XP, currency, shop odds and purchases remain deferred. Utility Power applies to existing Handyman weapons; there is no new summon system in this change.
+Pickup Radius and Luck apply to rare heart drops (`HeartDropService`, retuned 2026-09-29): 1% per real kill plus Luck × 0.02%, capped at 3%; a heart heals 15 HP before Recovery, is pulled by any living player within max(4, Pickup Radius) (wasted at full health), and expires after 10 s. (The original 15%/8 HP green orb was removed on 2026-09-22.) XP, currency, shop odds and purchases remain deferred. Utility Power applies to existing Handyman weapons. (This change added no summon; since 2026-10-03 the Handyman builds a turret, see Class abilities below.)
 
 ## Normalized avatars
 
@@ -65,6 +72,18 @@ Why: Handyman is handy with anything (0 with everyone but Mage, and everyone can
 Layout checks (Studio Edit, UILayoutAudit, no Play): the item card at 7 screen sizes; the Armory and run-setup panels for all six classes at 1080p, 768p and phone scale; the shop tag and bar at card widths 156–300 and scales 1 / .7 / .55. The full Armory, run-setup and shop screens were not opened in Play. Studio sync, 2026-10-03: CharacterStats, WeaponCatalog, ProfileService, RunSetupRules, RogueliteLobbyPreview (server), UITheme, ArmoryUI, ItemCardUI, RunSetupUI and ShopUI written from commit 0b2b759, each only after checking Studio still held the expected earlier version. No Play test has run on it yet.
 
 These prototype choices supersede the older proposal that classes need no drawbacks. Distinct orbital/return animations and deployables remain separate weapon-kit work; this change applies class statistics to the existing attack styles.
+
+## Class abilities (2026-10-03)
+
+Two classes got an ability from the play-test round. Repo only, syntax-checked: not yet in Studio, not play-tested.
+
+**Melee dash** (play-test: "dash for melee based characters", so melee builds can close in).
+- **Who:** Brawlers always; any other class only when its starting weapon is melee, e.g. a Mage who starts with Excalibur (`CharacterStats.dashes`).
+- **How:** Q, gamepad X, or the DASH button (bottom right on keyboard and gamepad; beside the jump button on touch). It works on the ground and in the air.
+- **Numbers** (`CharacterStats.Dash`): 20 studs in 0.18 s (111 studs/s), then 3 s cooldown. No damage and no invulnerability.
+- **Server checks:** the client moves its own body and sends `RunAction 'Dash'`. `RogueliteMeta` approves it (class or starter, cooldown, mid-wave or sandbox, not paused, not held) and stamps `DashAt`. `MovementGuard` then allows 26 extra studs for 1.5 s. For 0.6 s after a dash, enemy hits use the player's seen position up to 20 studs ahead ([HIT_FAIRNESS.md](HIT_FAIRNESS.md#round-4-melee-from-a-jump-and-the-dash-2026-10-03)).
+
+**Handyman turret.** The Handyman builds a nail turret it can upgrade in the run shop (Tier I–IV). B, R1 or the BUILD button moves it. It stays off until its templates are installed. Rules and numbers: [HANDYMAN_TURRET.md](HANDYMAN_TURRET.md). Art: `roguelite-planning/blender-handyman-turret/`. The Handyman's class description now starts "Builds a nail turret you can upgrade."
 
 ## Verification
 

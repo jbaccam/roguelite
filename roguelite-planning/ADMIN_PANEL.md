@@ -29,7 +29,7 @@ It works in Studio and in the published game, but only for listed developer acco
 
 ## Opening it
 
-- **Where the button goes:** a small **ADMIN** icon button. It sits at the bottom of the arena HUD's right-edge launcher column and beside the lobby HUD's right-side buttons (STORE / SKILLS / REWARDS / SETTINGS).
+- **Where the button goes:** a small **ADMIN** icon button. It sits at the bottom of the arena HUD's right-edge launcher column and beside the lobby HUD's right-side buttons (STORE / SKILLS / REWARDS / SETTINGS; since 2026-10-03 STORE / SKILLS / EGGS / SETTINGS / ATTACKS).
 - **Hotkey:** **P** (today's STATS key) toggles it in both areas.
 - **Who sees it:** developers only. Everyone else sees nothing new.
 - **What it replaces:** the old **STATS** and **GEAR** launchers and footer tabs in the arena HUD, and their I/P keys, are removed. Their contents move into the panel.

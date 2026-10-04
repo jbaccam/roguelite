@@ -4,7 +4,7 @@ Confirmed user decision: the blue crystal shard replaces gold coins as the run's
 
 Every real mob death during combat creates a blue crystal pickup at the death location. The initial implementation retains the existing economy values: one crystal pickup is worth **2 shards and 2 run XP**, the starting balance is **60 shards**, and survivors receive **12 + completed wave × 3 shards** at wave end. Shop prices, rerolls and sell refunds all use shards. These remain prototype tuning values.
 
-Run XP is awarded only on confirmed magnetic pickup, at 1 XP per shard value. Start at level 1, 0/20 XP; each following level costs 10 more XP (30, 40, etc.). Overflow carries through multiple levels. Level is bounded at 1,000. Spending, debug currency edits, starting shards and wave-clear currency do not change XP. Uncollected drops banked at wave end currently give currency only. XP and level are temporary server-owned session state, not account progression; they reset with a new session. Earned levels increment PendingLevelUps for the planned upgrade-choice system; this HUD implementation does not grant stat upgrades or implement choice resolution.
+Run XP is awarded only on confirmed magnetic pickup, at 1 XP per shard value. Start at level 1, 0/20 XP; each following level costs 10 more XP (30, 40, etc.). Overflow carries through multiple levels. Level is bounded at 1,000. Spending, debug currency edits, starting shards and wave-clear currency do not change XP. Uncollected drops left at wave end go into the crystal bag and pay out later (see 2026-10-03 below). XP and level are temporary server-owned session state, not account progression; they reset with a new session. Earned levels increment PendingLevelUps for the planned upgrade-choice system; this HUD implementation does not grant stat upgrades or implement choice resolution.
 
 The HUD uses the user's supplied blue shard icon and green potion XP-bar artwork. Image cropping/masking preserves the original frame, potion and faceted fill while replacing baked sample numbers with live XP and level labels. The fill animates to the replicated XP ratio. The shard counter in the shop uses the same supplied icon. See `studio-prototype/combat/RUN_XP.md` for tests and tuning.
 
@@ -29,4 +29,21 @@ Verification results are recorded in `studio-prototype/combat/SHARD_TEST_RESULTS
 **2026-09-29 (user playtest: crystals and hearts too easy):**
 - A kill crystal is now worth **1 shard and 1 XP** (`EconomyConfig.KILL_SHARDS`). The designer-shirt bonus (+2) and the boss shower (50 × 4) are unchanged.
 - Hearts: **1% per kill** plus Luck × 0.02% (cap 3%), at most **3** on the field. **Any** living player in range pulls one, even at full health (it's wasted), and an unclaimed heart **expires after 10 s**, blinking for its last 3 s. Heal stays 15.
-- Wave population is now `min(100, 8 + (wave - 1) * 3)`: 8 at wave 1, 35 at wave 10, 65 at wave 20 (was 5 / 23 / 43).
+- Wave population is now `min(100, 8 + (wave - 1) * 3)`: 8 at wave 1, 35 at wave 10, 65 at wave 20 (was 5 / 23 / 43). Since 2026-10-03 this is only the base; the wave scales it up (below).
+
+**2026-10-03 (play-test round; repo only, syntax-checked, not yet in Studio, not play-tested):**
+- **The crystal bag works like Brotato's.** Crystals still on the ground when a wave ends go into their owner's bag at full value. Public ones go to the nearest living player's bag. Next wave, each pickup pays double out of the bag until it's empty. Example: bag 30, you pick up a 5-crystal: +10 shards and 10 XP, bag 25.
+  - The bug: `ShardDropService.sweep` picked up every ground crystal at wave end before `clear(true)` could bag it, so the bag always stayed at 0. Now `sweep` only finishes crystals already flying to a player; ground ones are left for `clear(true)`.
+  - The tutorial keeps the old fly-in of every crystal (`ShopService` calls `sweep(true)` in tutorial runs). It starts at 0 crystals, and its guided Glock buy needs them.
+  - The shop shows a bag icon and amount beside the crystal count, hidden at 0.
+- **Ground cap:** at most 50 crystals lie on the ground (`ShardDropService.MAX_GROUND`). Past that, a new kill's value joins the nearest ground crystal with the same owner, so nothing is lost: 60 kills leave 50 crystals worth 60. A public crystal never merges into an owned one.
+- **Colours per player.** Each player gets a `CrystalSlot` (the lowest free number, kept until they leave). In runs with 2+ players, a crystal wears its owner's colour: blue, orange, pink, yellow, then round again. Public crystals are white. Solo stays all blue. A diamond in each teammate's colour floats over their name, and yours sits on your shard icon. Only the killer can take a kill's crystal (unchanged).
+- **Bigger waves that scale with players** (`EnemyScheduler.population`): `min(100, base × 1.2 × player factor)`, with base `8 + 3 × (wave − 1)` and factor 1 / 1.6 / 2.1 / 2.5 for 1–4 run members who are alive and not downed (checked every second).
+
+  | Wave | 1 | 5 | 10 | 20 |
+  | --- | ---: | ---: | ---: | ---: |
+  | Solo | 10 | 24 | 42 | 78 |
+  | 4 players | 24 | 60 | 100 | 100 |
+
+  The alive cap is still 100. Performance work so far targeted 65 mobs and 100 hasn't been measured: run `tools/MobPerfProbe.luau` at 100 before 4-player groups. Swarm rules: `studio-prototype/combat/REGULAR_ENEMY_READINESS.md`.
+- **Waves last 40 s** (`EconomyConfig.WAVE_SECONDS`, was 30; the tutorial keeps its own clock). Enemies refill as they die, so a wave has about a third more kills and crystals. The per-wave shard reward is unchanged.

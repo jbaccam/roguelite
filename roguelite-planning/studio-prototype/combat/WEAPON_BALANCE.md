@@ -189,7 +189,7 @@ Tier I numbers before character bonuses. The cooldown includes rarity power. DPS
 - That lead is capped at 1.5 studs + 0.3 s of the body's speed, so standing still can't stretch reach.
 - Chain weapons (Nunchucks, Kusarigama, Wrecking Ball) now pull their swing in for a close target, so the longer reach leaves no gap beside the player.
 
-**Floating ring** (`WeaponMotion.SlotLayout`). The weapons float on a wider ring: 6.2 studs plus 0.36 per extra weapon (was 4.2 + 0.24), with neighbours 70° apart (was 60°). Slot order is the same.
+**Floating ring** (`WeaponMotion.SlotLayout`). The weapons float on a wider ring: 6.2 studs plus 0.36 per extra weapon (was 4.2 + 0.24), with slots at 0 / 70 / 140 / 210 / 280 / 320° (was every 60°). Slot order is the same.
 - Example: 4 weapons sit 7.28 studs out, 8.4 studs apart (was 4.92 and 4.9).
 - Melee reach is measured from the player's centre, not the slot, so the ring doesn't change it.
 
@@ -197,6 +197,7 @@ Tier I numbers before character bonuses. The cooldown includes rarity power. DPS
 - It now slows 35% for 2 s (`WeaponCatalog.SlowById`; bosses take half), and its card says "Slows enemies 35% for 2 s."
 - Slowed enemies get an ice-blue tint, a flat frost patch at their feet, and a frost ring when the slow lands (`HitFeedbackVisuals`).
 - Example: a zombie walking 12 studs/s crawls at 7.8 for 2 s after each hit.
-- It drops from chests (Rare pool) and daily deals, and the run shop offers it once owned.
+- It drops from chests (Rare pool) and daily deals. The run shop offers it to everyone: since db71be9 (same day) run shops offer every non-Godly weapon, owned or not.
+- Ice Cube now slows the same way (35% for 2 s, bosses half) on 15% of hits from any weapon (`SlowStrength` 10 on top of the base 25%; [SHOP_GAMEPLAY_READINESS.md](SHOP_GAMEPLAY_READINESS.md)).
 
 Tests: `WeaponBalanceTests` (every weapon's range and rate against its old numbers, the Glock and Pan examples, Medusa's slow and card text; the Tier IV check scales the five buffed melee weapons' old Tier IV by their damage change), `MeleeSweepTests` (jump allowance), `WeaponFollowTests` (ring), `WeaponBehaviorTests` (chain pull-in). Not yet run in Studio.

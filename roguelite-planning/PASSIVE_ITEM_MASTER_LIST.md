@@ -2,6 +2,8 @@
 
 Updated: 2026-09-23. Current working roster: **37 temporary shop passives**, separate from the 36 weapons and from free level-up stat upgrades. This catalog supersedes earlier brainstorm lists; unlisted brainstorm candidates are not in the roster.
 
+**2026-10-03 (implemented shop, repo only):** the run shop (`ShopCatalog`) now has **44 items**: these 37 plus seven player buffs (Banana Peel, Couch Cushion, Lucky Penny, Chicken Soup, Roller Skates, Metal Detector, Vitamin Gummies). Marshmallow, Peas, Stinky Sock, Oven Mitt and Ice Cube now cause their own status, and Bone Crown also adds 5% damage, so the numbers below for those rows are out of date. Current numbers: [Shop gameplay readiness](studio-prototype/combat/SHOP_GAMEPLAY_READINESS.md).
+
 The user approved the simpler direction and requested a few spooky/science additions, including Tooth Fairy's Teeth Collection. The five additions selected here are working selections; all numeric values are starting proposals awaiting balance tests, not implemented mechanics. Existing healing/status concepts retain their intended behavior with unresolved numbers explicitly marked TBD.
 
 ## Rules

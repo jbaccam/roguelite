@@ -179,7 +179,7 @@ Each tick, every player rebuilds enemy lists, and every weapon slot (even on coo
 
 **Progress 2026-10-02 (repo only, commit 7cdf115; not in Studio, not measured):** one Heartbeat steps every enemy (EnemyScheduler) instead of one connection each; attacks in progress still update every frame. Think clocks keep their phase (0.1 s on average) and new enemies take the least busy frame: in EnemySchedulerTests the old clocks drifted until all 60 enemies thought on one frame. Enemies more than 90 studs from every player with a clear line think every 0.3 s. Eight unused Humanoid states are off (Running, Jumping, Freefall, Landed stay) and enemy parts have CanTouch off. Before/after numbers wait for a measurement session (tools/MobPerfProbe.luau, tools/MobMotionProbe.luau).
 
-Wave 20 has 65 enemies; Endless reaches 100 at wave 32, plus slime splits. Each is a full R15 Humanoid owned by the server, with most state types still on. This is the known prototype limit and hasn't been measured.
+Wave 20 has 65 enemies; Endless reaches 100 at wave 32, plus slime splits. **2026-10-03:** waves are bigger and scale with players (`EnemyScheduler.population`, [SHARD_CURRENCY.md](../SHARD_CURRENCY.md)): solo wave 20 is 78, and a 4-player party hits the 100 cap from wave 10. Measure at 100 (`tools/MobPerfProbe.luau`) before 4-player groups. Each is a full R15 Humanoid owned by the server, with most state types still on. This is the known prototype limit and hasn't been measured.
 
 **Fix:** Measure first (see the test list). Turn off unused Humanoid states, slow MoveTo for far enemies, and consider capping Endless at 65 until it's measured.
 
@@ -317,6 +317,8 @@ The run-setup screen shows ELITE (5, 15), HORDE (10) and BOSS markers. On the se
 *Gameplay bugs*
 
 **Fixed (the user's call: owned only):** ShopService offers only weapons in ProfileWeapons or in the player's slots; with no owned weapon left for a weapon slot it offers an item. New weapons unlock from chests and the daily shop, whose Legendary deal is now 800 emeralds a copy (was 500). Checked over 4,000 rolls: no unowned weapon offered.
+
+**Reversed 2026-10-03 (db71be9, user: "we should offer all weapons in the shop besides god tier ones"):** the run shop offers every non-Godly weapon again, owned or not. Ownership decides starters and the Armory. Repo only, not yet in Studio.
 
 The docs say only owned weapons appear in the run shop. The code offers every non-Godly weapon, so chest drops only matter for the starter, and "unlock Mjolnir" rewards a weapon already in every shop.
 

@@ -12,6 +12,8 @@ Equipped weapons remain visible as floating 3D models arranged around the player
 
 - Up to six equipped weapon slots (as implemented in [LOADOUT.md](studio-prototype/combat/LOADOUT.md)) are visible in a spaced formation following the avatar. Each slot may contain the weapon's required pieces, such as paired gloves.
 
+- **Wider ring (2026-10-03, repo only, not yet in Studio):** radius 6.2 studs plus 0.36 per extra weapon (was 4.2 + 0.24). Slots sit at 0 / 70 / 140 / 210 / 280 / 320 degrees (was every 60). Example: 4 weapons sit 7.28 studs out and 8.4 studs apart. Melee reach is measured from the player's centre, so the ring doesn't change it. Source: `WeaponMotion.SlotLayout`; details in [WEAPON_BALANCE.md](studio-prototype/combat/WEAPON_BALANCE.md#melee-vs-ranged-2026-10-03).
+
 - Aim is independent of avatar facing and movement. Weapons may target different directions and attack asynchronously. Exact target priority is weapon-specific and still needs tuning.
 
 - Weapons occupy assigned floating slots. The formation does not spin 360 degrees around the avatar. Any earlier orbital-weapon concepts must be reconciled with this fixed-slot rule before implementation.

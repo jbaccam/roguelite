@@ -65,9 +65,11 @@ The boss's crystals don't land on the ground. They fly straight to players.
 - **Solo:** all of them go to the player.
 - **Multiplayer:** they split evenly among living players, and any remainder goes round-robin. For example, 50 crystals across 3 players gives 17 / 17 / 16.
 
-### Wave-end crystals fly in (all runs)
+### Wave-end crystals fly in (tutorial only)
 
-When a wave ends, leftover crystals on the ground visibly fly to the nearest living player and count as normal pickups (XP + shards). Today they are silently bagged by `Shards.clear(true)`. This matches what `CURRENT_GAME_STRUCTURE.md` §3 already promises: "drops pull in".
+When a wave ends, leftover crystals on the ground visibly fly to the nearest living player and count as normal pickups (XP + shards). Before this they were silently bagged by `Shards.clear(true)`.
+
+**Changed 2026-10-03 (db71be9):** this is now tutorial only (`ShopService` calls `Shards.sweep(true)` in tutorial runs). It was built for every run, but then nothing was ever bagged. Other runs now use Brotato's crystal bag: ground crystals go into the bag at full value and the next wave's pickups pay double out of it ([SHARD_CURRENCY.md](../SHARD_CURRENCY.md)). The tutorial keeps the fly-in because it starts at 0 crystals and its guided Glock buy needs them. Crystals already flying to a player at wave end still finish as pickups in every run.
 
 ## Part 2 — the lobby
 
@@ -157,7 +159,7 @@ Server (new modules must be **Sandboxed** with copied Capabilities, and must not
    - boss on wave 3 with a fixed HP
    - the health floor (`Health.server.luau`)
    - publishing `TutorialStep` for the client
-4. **Crystals:** the wave-end fly-in, and the boss crystals flying to and splitting between players (`ShardDropService`, all runs).
+4. **Crystals:** the wave-end fly-in (tutorial only since 2026-10-03), and the boss crystals flying to and splitting between players (`ShardDropService`, all runs).
 5. **Boss intro:** the server spawns the boss off-sky with a short invulnerable window; the client handles the drop, slam and camera orbit (all runs).
 
 Client:
@@ -169,7 +171,7 @@ Client:
 ## Build order
 
 1. An HTML mockup of the Egg Merchant text box and the gliding arrow, served from `roguelite-planning/previews/` and opened through the dev server.
-2. Wave-end and boss crystal fly-in (useful in every run on its own).
+2. Wave-end and boss crystal fly-in (useful in every run on its own; the wave-end part became tutorial only on 2026-10-03).
 3. Boss super-jump intro (also useful on its own).
 4. `TutorialDirector` + the `ShopService` hooks + the health floor.
 5. `TutorialGuide` for the run part.

@@ -100,7 +100,7 @@ Nineteen intermissions of about 10–15 seconds put a full clear around **15–2
 
 After every wave, as already built in the prototype:
 
-1. Remaining crystals pull in; uncollected value goes into the shard bag.
+1. Crystals already flying to a player finish as pickups; crystals still on the ground go into the shard bag at full value, and next wave each pickup pays double out of it (Brotato's rule, 2026-10-03; the tutorial pulls every crystal in instead). See [Crystal shard currency](SHARD_CURRENCY.md).
 2. Banked level-ups resolve one at a time: **four** stat cards, reroll costs shards. See [level-up readiness](studio-prototype/combat/LEVEL_UP_READINESS.md).
 3. The four-offer shop opens. See [shop readiness](studio-prototype/combat/SHOP_GAMEPLAY_READINESS.md) for the current offer rules.
 4. The next wave starts when everyone is ready or the timer ends.
@@ -158,7 +158,7 @@ Leveling never pauses combat. Crossing an XP threshold during a wave plays a sho
 "Blueprint" was the old word for *you own this weapon*. It's gone. Ownership is now just "you have at least one copy".
 
 - An owned weapon can be picked as the starting weapon if it belongs to the selected class.
-- Only owned weapons appear in the run shop. Unlocking weapons makes new runs play differently.
+- ~~Only owned weapons appear in the run shop.~~ **Changed 2026-10-03 (user: "we should offer all weapons in the shop besides god tier ones"):** run shops offer every non-Godly weapon, owned or not. Owning a weapon decides which starters you can pick and what the Armory upgrades. Repo only, not yet in Studio.
 - **Proposal:** New accounts own the three starter-class signatures plus about half the roster, so shops feel varied from the first run. Most of the rest drops from Class Chests. A smaller set gets its first copy only from an achievement (see below). After that, their duplicates can drop from chests too.
 
 ## Armor

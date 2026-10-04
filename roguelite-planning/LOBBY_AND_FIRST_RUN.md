@@ -24,6 +24,7 @@ The base character remains the player's Roblox avatar. The exact tutorial weapon
 2. **Class step (everyone):** class cards, class details and the starting-weapon grid over the same island. The host also picks Open (up to 4) or Solo.
 3. **Stepping onto a pad** opens the map step for the first player (host) and the class step with READY for everyone after. **PLAY away from the pads** opens the same screens; START claims the first empty pad and moves the player onto it as host (no walking or guide beam). The countdown only starts after the host presses START.
 4. **Joiners must have the map and difficulty unlocked themselves.** READY is refused otherwise, and anyone who still lacks it at launch stays in the lobby with the reason.
+5. **Since 2026-10-03:** READY is now LOCK IN, Solo is now Private, and everyone put on a pad (including party members pulled on after START) gets the class step. The countdown waits up to 20 s for each LOCK IN. Rules: [LOBBY_AND_MATCH_SERVERS.md](LOBBY_AND_MATCH_SERVERS.md), "Leaving, party pads and bigger waves".
 - Queue/Ready confirms the setup. Freeze it when committed; changing it requires leaving the queue or clearing ready status. Party members choose their own loadouts; the leader chooses the shared destination. Do not require unique classes.
 - First lobby visit briefly introduces Loadout and Play and guides the first chest opening. Reveal other systems (Armory, achievements, quests) as relevant instead of touring every station or opening several reward panels.
 

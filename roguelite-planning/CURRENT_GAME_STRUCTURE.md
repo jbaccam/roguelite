@@ -1,7 +1,7 @@
 # Current Game Structure
 
 **Status:** Consolidated pre-production plan  
-**Updated:** 2026-09-26  
+**Updated:** 2026-10-03 (play-test round: repo only, not yet in Studio, not play-tested)  
 **Scope:** What the game currently is, what content belongs to it, and what still needs design work.
 
 This is the fastest document to read for the complete current plan. [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md) is authoritative for progression, maps, keys, chests, armor and achievements. The master design and specialist documents contain the deeper reasoning. **Confirmed** items came directly from project direction. **Proposed** items are the strongest current recommendation and can still change.
@@ -49,12 +49,14 @@ The player selects:
 
 - The avatar moves freely in an open arena while up to six equipped weapons attack automatically.
 - Every mob death drops a blue crystal worth shards and run XP. See [Crystal shard currency](SHARD_CURRENCY.md).
+- Waves last 40 s (2026-10-03; were 30). The HUD shows the goal: WAVE 7 / 20, then ENDLESS 21. Wave size grows with the wave and with the number of players up, and enemies come in swarms from one side. See [Crystal shard currency](SHARD_CURRENCY.md).
 - Level-ups are banked during combat and never interrupt it.
-- At the end of each wave, drops pull in. Leftover value goes into the shard bag.
+- At the end of each wave, crystals still on the ground go into the crystal bag at full value (Brotato's rule, 2026-10-03). Next wave each pickup pays double out of the bag. Example: bag 30, a 5-crystal pickup pays 10, bag 25. Only the tutorial pulls every crystal in.
 - Banked level-ups resolve as four stat cards (reroll costs shards).
 - A four-offer shop sells weapons and passive items. The player can buy, reroll, lock, recycle and combine.
 - The map boss on wave 20. (Elite and horde waves were planned for 5, 10 and 15 but not built; their run-setup labels were removed for launch, 2026-10-02.)
-- **Win:** The wave 20 boss dies. Then the player can Keep Going into Endless.
+- **Win:** The wave 20 boss dies. A YOU WON! panel offers LEAVE (collect) or KEEP GOING into Endless (2026-10-03).
+- **Leaving:** any time, mid-wave included (2026-10-03), through one confirm popup. The player keeps what was settled at their last cleared wave. See [LOBBY_AND_MATCH_SERVERS.md](LOBBY_AND_MATCH_SERVERS.md).
 - **Loss:** The player keeps the keys earned for waves already passed.
 
 ### What resets after a run
@@ -79,10 +81,12 @@ New accounts own **Brawler, Gunner, and Mage**. **Thrower, Juggler, and Handyman
 | **Gunner** | Fast projectiles, magazines, piercing and spread | **Glock** | Draco, Fart Gun, Shotgun, T-Shirt Cannon, Rocket Launcher |
 | **Thrower** | Returning projectiles, volleys, area denial | **Boomerang** | Kunais, Molotovs, Eggs, Steak, Deck of Cards |
 | **Juggler** | Tricks and toys: rebounds, spins, repeated contact and knockback | **Rubber Duck** | Spatula, Yo-Yo, Bowling Pins, Kusarigama, Bowling Ball |
-| **Handyman** | Construction tools, deployables, lanes and utility | **Nail Gun** | Wrecking Ball, Shovel, Paint Roller, Vacuum Cleaner, Power Washer |
+| **Handyman** | Construction tools, deployables, lanes and utility. Builds a nail turret it upgrades in the shop (2026-10-03; [HANDYMAN_TURRET.md](studio-prototype/combat/HANDYMAN_TURRET.md), off until its templates are installed) | **Nail Gun** | Wrecking Ball, Shovel, Paint Roller, Vacuum Cleaner, Power Washer |
 | **Mage** | Elemental zones, chain effects, mythic late unlocks | **Magic Staff** | Mjolnir, Excalibur, Pandora's Box, Medusa's Head, Crystal Ball |
 
 Weapon classes were regrouped on 2026-10-03 so each class reads as one idea: Boxing Gloves and Cinder Block moved to Brawler, Spatula and Kusarigama to Juggler (equal-rarity swaps, so every class still has 2 Common, 2 Rare, 1 Epic, 1 Legendary). Juggler's starter became the Rubber Duck; saves that own Juggler are given it on load.
+
+**Melee dash (2026-10-03):** Brawlers, and any class whose starter is melee, can dash 20 studs (Q, gamepad X or the DASH button; 3 s cooldown, no damage, no invulnerability). See [Character stats](studio-prototype/combat/CHARACTER_STATS.md#class-abilities-2026-10-03).
 
 ### Class and off-class rules
 
@@ -118,7 +122,7 @@ The Glock is the approved model for upgrade quality:
 
 ### Permanent progression (saved)
 
-- **Ownership:** Having one copy of a weapon means you own it. Owned weapons can be the starter (for their class) and appear in run shops.
+- **Ownership:** Having one copy of a weapon means you own it. Owned weapons can be the starter (for their class). Run shops offer every non-Godly weapon, owned or not (2026-10-03; before, only owned and carried ones).
 - **Starting tier:** Copies from chests stack on the same rule as in-run combining: 2 copies = Tier II start, 4 = Tier III, 8 = Tier IV.
 - **Armor (confirmed 2026-09-27):** Four piece slots: helmet, chestplate, leggings and boots. Pieces drop from armor chests. Each piece gives defensive stats. Wearing 2 pieces of one set gives its set bonus, and all 4 give its signature perk, so completing a set is a longer grind. Tiers I–IV use the same copy rule per piece.
 - **Pets (planned):** One pet slot. Pets hatch from pet eggs (pets only) and follow the player into runs. Copies level them up.
@@ -134,6 +138,10 @@ The **current implemented rules** are in [Shop gameplay readiness](studio-protot
 - Shops 1–2 have two weapons and two items. Shops 3–5 guarantee one weapon. Later slots roll 35% weapon / 65% item.
 - Owned weapon identities and home classes get a modest pool preference. The general pool always stays available.
 - Luck raises tier chances within caps. No paid purchase changes shop odds.
+- Every non-Godly weapon can be offered, owned or not (2026-10-03). Mjolnir now shows up too.
+- Items that only some weapons use (Two Straws, Bouncy Ball, Sharp Pencil, Support Ketchup, Hot Sauce, Tinfoil Antlers) are offered only while a carried weapon uses them. Their cards say "Works with: …" or "None of your weapons use this". One rule decides it: `CharacterStats.usesStat`.
+- Status items cause their own status on any weapon's hit (Marshmallow, Peas, Stinky Sock, Oven Mitt, Ice Cube). Bone Crown also adds 5% damage.
+- 44 items (2026-10-03): seven new player buffs, such as Banana Peel (5% dodge) and Vitamin Gummies (+2 HP/s, +10 max HP).
 
 **Still planned:** A player can **Track** one equipped weapon to protect against duplicate starvation. Offer cards will show why they appeared (**DUPLICATE, CLASS, TAG MATCH, WILDCARD**). Tier unlock waves (currently Tier IV from wave 8) need retuning for 20-wave runs.
 
@@ -141,7 +149,7 @@ The **current implemented rules** are in [Shop gameplay readiness](studio-protot
 
 A **passive** is a temporary shop item that modifies the run without using a weapon slot or attacking on its own. It resets after the run.
 
-The working roster is [PASSIVE_ITEM_MASTER_LIST.md](PASSIVE_ITEM_MASTER_LIST.md): **37 passives**. About 20 are proposed as available from the start. The rest unlock through achievements. Some passives appear on the avatar as hats, glasses or backpacks.
+The working roster is [PASSIVE_ITEM_MASTER_LIST.md](PASSIVE_ITEM_MASTER_LIST.md): **37 passives**. The run shop's catalog (`ShopCatalog`) has 44 items since 2026-10-03; the seven new player-buff items and their numbers are in [Shop gameplay readiness](studio-prototype/combat/SHOP_GAMEPLAY_READINESS.md). About 20 are proposed as available from the start. The rest unlock through achievements. Some passives appear on the avatar as hats, glasses or backpacks.
 
 Level-up stat choices are free and happen between waves as four cards. They are separate from shop items.
 

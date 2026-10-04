@@ -97,3 +97,15 @@ User, after round 2: "now its a little too hard to get hit im literally running 
 The reach table, arcs and bump sizes are unchanged.
 
 **Checked:** `ContactTests` pass 713 checks. The reference loop sweeps the same way and agrees on all 104 contacts (97 before sweeping), and a new check runs a sprint through a zombie between two checks. The changed scripts compile. Synced to Studio at f738365 (CharacterService and EnemyAttacks, each guarded on its previous commit, all or nothing). Afterwards both matched with Sandboxed unchanged. Not yet play-tested.
+
+## Round 4: melee from a jump, and the dash (2026-10-03)
+
+The same "judge it from the player's screen" idea, now for the player's own melee and for the new dash. Numbers and the full weapon table: [WEAPON_BALANCE.md](WEAPON_BALANCE.md#melee-vs-ranged-2026-10-03).
+
+- **Melee reach is flat within one jump** (`TargetGrid.distance`, `TargetGrid.jumpHeight`). For an enemy within one full jump above or below, only the sideways distance counts. The allowance is the jump height plus 4 studs of body: JumpHeight 9.5 at gravity 150 gives 13.5 studs.
+  - Example: at the peak of a jump the player is 9.5 studs up. A zombie 5 studs out on the ground (4 one way, 3 the other) counts as 5 studs. It used to count as 10.7, past every melee reach.
+- **Melee swings start from the player's seen body** (`CharacterService.seen`), not the server's late copy. A bunny-hopping player was about 7 studs behind on the server. The lead is capped (1.5 studs + 0.3 s of the body's speed), so standing still can't stretch reach.
+- **After a dash** (`CharacterStats.Dash`, see [CHARACTER_STATS.md](CHARACTER_STATS.md#class-abilities-2026-10-03)): for 0.6 s after an approved dash (`DashAt`), enemy hits still use the player's seen position when it is up to 20 more studs (the dash length) ahead of the server's body than the usual 3 + speed × 0.35 limit. Dashing out of a swing dodges it. `MovementGuard` lets an approved dash cover 26 extra studs for 1.5 s (`MovementCheck.allow`; a new dash replaces the allowance, never adds to it).
+- **Tests added:** `MeleeSweepTests` (jump allowance), `MovementCheckTests` (a dash passes, the same burst without one is a strike, a speed hack with a dash allowance is still caught by 1.2 s).
+
+**Status:** repo only, syntax-checked. Tests not run in Studio, not synced, not play-tested.

@@ -1,5 +1,13 @@
 # Six-slot weapon practice
 
+October 3 play-test round (commits c9e5cde..a1a1f7a; syntax-checked, synced to Studio 2026-10-03 without ee48545, see `../ui/README.md`; not play-tested):
+- [Melee vs ranged](WEAPON_BALANCE.md#melee-vs-ranged-2026-10-03): ranged range about −20–25% and cooldown about +12%, melee reach +15–25%, Medusa's Head slows 35% for 2 s, a wider weapon ring.
+- [Melee from a jump and after a dash](HIT_FAIRNESS.md#round-4-melee-from-a-jump-and-the-dash-2026-10-03): melee reach is flat within one full jump above or below.
+- [Melee dash and the Handyman turret](CHARACTER_STATS.md#class-abilities-2026-10-03): Q / gamepad X / DASH; the turret has its own page, [HANDYMAN_TURRET.md](HANDYMAN_TURRET.md).
+- [Run shop](SHOP_GAMEPLAY_READINESS.md): every non-Godly weapon offered, "Works with" lines, 7 new player-buff items (44 in all), and the Brotato crystal bag ([SHARD_CURRENCY.md](../../SHARD_CURRENCY.md)).
+- Bigger waves that scale with players, in swarms: [REGULAR_ENEMY_READINESS.md](REGULAR_ENEMY_READINESS.md).
+- Players no longer collide with each other (`MobCollision`: `RoguelitePlayers` vs itself off), so teammates can't stack into a tower.
+
 October 3 hit fairness: [enemy hits judged from the player's screen](HIT_FAIRNESS.md). The server saw players 220 ms late and players saw enemies 200 ms late, so hits landed after dodges.
 
 September 23 accuracy and utility update: [predictive throws, close melee, vacuum and water streams](TRAVEL_ACCURACY.md).
@@ -94,7 +102,7 @@ Live Studio correction: PlayerDamaged must be sandboxed, with Basic/RemoteEvent 
 Server-confirmed contact damage now sends the damaged player the actual health lost after armor, blocking, dodging, force fields, and health clamping. That client displays the amount above their avatar in red using the same rise, pop, and fade treatment as the white numbers shown for damage dealt to mobs. Other clients do not receive the private feedback event, and clients cannot submit damage values. Studio practice damage uses the same authoritative contact path. Visual appearance in the actual client play loop still requires Studio verification.
 
 
-## Diagonal slash and thrust � 2026-09-22
+## Diagonal slash and thrust � 2026-09-22
 
 `WeaponMotion.MeleeStyles` now assigns Katana (`03`) a target-relative upper-right to lower-left cut, Boxing Gloves (`19`) a forward punch, and Excalibur (`32`) a forward stab. Unlisted melee weapons retain their horizontal sweep; chain weapons retain their specialized motion. The existing imported glove pair moves together, rather than alternating individual fists. No animation asset upload is required.
 
