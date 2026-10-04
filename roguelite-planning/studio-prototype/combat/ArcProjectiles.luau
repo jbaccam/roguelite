@@ -2,6 +2,7 @@ local RunService=game:GetService('RunService')
 local Tags=game:GetService('CollectionService')
 local Motion=require(game.ReplicatedStorage.RogueliteCombat.ArcMotion)
 local Targets=require(game.ReplicatedStorage.RogueliteCombat.ProjectileTarget)
+local Stats=require(game.ReplicatedStorage.RogueliteCombat.CharacterStats) -- shot stats via usesStat (2026-10-03)
 local A={}
 function A.new(combat,damage,rayParams)
  local event=combat:WaitForChild('ArcShot');local active={};local serial=0;local random=Random.new()
@@ -82,7 +83,7 @@ function A.new(combat,damage,rayParams)
  local self={}
  function self:launch(d,origin,aim)
   local existing=0;for _ in active do existing+=1 end
-  local count=(d.projectileCount or (d.id=='18' and 3 or 1))+d.stats.ProjectileCount
+  local count=(d.projectileCount or (d.id=='18' and 3 or 1))+Stats.shotStat(d,'ProjectileCount')
   if existing+count>192 then return end
   for i=1,count do
    serial+=1
@@ -97,7 +98,7 @@ function A.new(combat,damage,rayParams)
    end
    local distance=(target-from).Magnitude
    local side,height,bend=Motion.shape(d.id,distance,i,random)
-   local r={serial=serial,d=def,origin=from,finish=target,position=from,started=workspace:GetServerTimeNow()+delay,duration=Motion.duration(d.id,distance,d.projectileSpeed),side=side,height=height,t=0,index=i,hit={},pierce=math.min(4,d.stats.Pierce+(d.nativePierce or 0)),bounce=math.min(4,d.stats.Bounce+(d.nativeBounce or 0)),factor=1,remaining=d.range}
+   local r={serial=serial,d=def,origin=from,finish=target,position=from,started=workspace:GetServerTimeNow()+delay,duration=Motion.duration(d.id,distance,d.projectileSpeed),side=side,height=height,t=0,index=i,hit={},pierce=math.min(4,Stats.shotStat(d,'Pierce')+(d.nativePierce or 0)),bounce=math.min(4,Stats.shotStat(d,'Bounce')+(d.nativeBounce or 0)),factor=1,remaining=d.range}
    active[serial]=r
    -- Arc-length allowance preserves normal curved shots at maximum target range.
    r.remaining=d.range*2;r.launchOrigin=from;r.expires=workspace:GetServerTimeNow()+10;r.redirects=0

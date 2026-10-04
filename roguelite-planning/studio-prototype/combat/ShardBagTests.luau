@@ -1,6 +1,7 @@
 -- Temporary normal Studio server Script; excluded from the shipping project.
 local RS=game.ReplicatedStorage
 local C=RS.RogueliteCombat
+local E=require(C.EconomyConfig)
 local S=require(game.ServerScriptService.ShopService)
 local D=require(game.ServerScriptService.ShardDropService)
 local Characters=require(game.ServerScriptService.CharacterService)
@@ -40,9 +41,37 @@ local ok,err=xpcall(function()
  drop(2);D.clear(false);check(s.baggedShards==7,'Practice abort does not add bags')
  S.phase='Shop';check(not S.creditShards(p,1,true),'No pickup awards outside combat')
  check(not S.creditShards(p,-1,false) and not S.creditShards(p,0/0,false),'Invalid values rejected')
- S.phase='Combat';drop(2);check(S.finishWave(),'Wave transition completes')
- check(s.baggedShards==9,'Unused bags survive and new leftovers add to them')
- check(Characters.states[p].folder:GetAttribute('BaggedShards')==9,'Bag count replicated to HUD')
+ -- Wave end (2026-10-03, Brotato's bag): a crystal already flying in is a pickup and uses the bag
+ -- (3 pays 6, bag 7 -> 4); one still on the ground goes into the bag at full value (4 + 2 = 6).
+ -- Before the fix the wave-end sweep picked up the ground one too and the bag never filled.
+ S.phase='Combat';drop(2);local flying=drop(3);check(D.collect(p,flying),'A pull is under way at wave end')
+ local beforeEnd=s.shards;check(S.finishWave(),'Wave transition completes')
+ check(s.baggedShards==6,'Ground crystals are bagged, the flying one picked up: bag '..s.baggedShards)
+ check(s.shards>=beforeEnd+6,'The flying crystal paid double out of the bag')
+ check(Characters.states[p].folder:GetAttribute('BaggedShards')==6,'Bag count replicated to HUD')
+ -- The user's example: bag 30, picking up a 5-crystal pays 10 (shards and XP) and leaves 25.
+ S.phase='Combat';s.baggedShards=30;local sh=s.shards
+ check(S.creditShards(p,5,true) and s.shards==sh+10 and s.baggedShards==25,'Bag 30: a 5-crystal pays 10, bag 25')
+ -- Ground cap (ShardDropService.MAX_GROUND = 50): 60 kills leave 50 crystals worth all 60, and a
+ -- crystal of another owner (here a public one) never merges into them.
+ D.clear(false)
+ local fixtures=Instance.new('Folder');fixtures.Name='ShardBagFixtures';fixtures.Parent=workspace
+ local far=p.Character.HumanoidRootPart.Position+Vector3.new(300,0,0)
+ local function deadMob(owned)
+  local m=Instance.new('Model');m.Name='ShardBagMob'
+  local r=Instance.new('Part');r.Name='HumanoidRootPart';r.Anchored=true;r.CanCollide=false;r.Position=far;r.Parent=m;m.PrimaryPart=r
+  local h=Instance.new('Humanoid');h.BreakJointsOnDeath=false;h.Parent=m;m.Parent=fixtures
+  game.CollectionService:AddTag(m,'RogueliteZombie')
+  if owned then m:SetAttribute('LastDamageUserId',p.UserId) end
+  h.Health=0;return m
+ end
+ for _=1,60 do D.spawn(deadMob(true),far) end
+ local ground,total=0,0;for _,d in D.drops do ground+=1;total+=d.value end
+ check(ground==D.MAX_GROUND and total==60*E.KILL_SHARDS,'60 kills: '..ground..' crystals worth '..total)
+ D.spawn(deadMob(false),far)
+ local public;for _,d in D.drops do if d.owner==nil then public=d end end
+ check(#D.drops==D.MAX_GROUND+1 and public~=nil and public.value==E.KILL_SHARDS,'A public crystal never merges into owned ones')
+ D.clear(false);fixtures:Destroy()
  -- Leave normal test state, with visible bags and earned choices for client inspection.
  s.level=4;s.pendingLevels=3;s.upgradeOffers={};S.prepareUpgrades(p);S.publish(p)
 end,debug.traceback)

@@ -165,7 +165,7 @@ function S.new(combat,damage,rayParams)
   end
   local profile=Motion.profiles[d.id];if not profile then return end
   local existing=0;for _ in flights do existing+=1 end
-  local count=math.min(5,1+d.stats.ProjectileCount)
+  local count=math.min(5,1+Stats.shotStat(d,'ProjectileCount')) -- CharacterStats.usesStat (2026-10-03)
   if profile.returns then count=1 end
   if existing+count>128 then return end
   local state=combat.PlayerStates:FindFirstChild(tostring(d.owner.UserId));local slot=state and state:FindFirstChild('Slot'..d.slotIndex)
@@ -179,7 +179,7 @@ function S.new(combat,damage,rayParams)
    -- A rolling ball continues through the first target down the entire lane.
    if d.id=='22' and (target-origin).Magnitude>.01 then target=origin+(target-origin).Unit*d.range end
    local key=nextId();local height=math.min(profile.height,(target-origin).Magnitude*.2)
-   local r={key=key,d=def,origin=origin,finish=target,position=origin,launchOrigin=origin,started=workspace:GetServerTimeNow()+delay,height=height,duration=Motion.duration(origin,target,d.projectileSpeed),t=0,hit={},factor=1,bounces=math.min(4,d.nativeBounce+d.stats.Bounce),pierces=math.min(4,d.nativePierce+d.stats.Pierce),remaining=d.range*1.8,expires=workspace:GetServerTimeNow()+8,radius=math.clamp(d.id=='22' and .65 or d.id=='08' and .45 or d.projectileRadius,.12,1.2)}
+   local r={key=key,d=def,origin=origin,finish=target,position=origin,launchOrigin=origin,started=workspace:GetServerTimeNow()+delay,height=height,duration=Motion.duration(origin,target,d.projectileSpeed),t=0,hit={},factor=1,bounces=math.min(4,d.nativeBounce+Stats.shotStat(d,'Bounce')),pierces=math.min(4,d.nativePierce+Stats.shotStat(d,'Pierce')),remaining=d.range*1.8,expires=workspace:GetServerTimeNow()+8,radius=math.clamp(d.id=='22' and .65 or d.id=='08' and .45 or d.projectileRadius,.12,1.2)}
    flights[key]=r
    event:FireAllClients('Launch',key,d.id,d.owner.UserId,d.slotIndex,reserve,origin,target,r.started,r.duration,height)
   end

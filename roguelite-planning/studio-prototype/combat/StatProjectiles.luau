@@ -10,10 +10,13 @@ local Tags=game:GetService('CollectionService')
 local Motion=require(game.ReplicatedStorage.RogueliteCombat.WeaponMotion)
 local Targets=require(game.ReplicatedStorage.RogueliteCombat.ProjectileTarget)
 local ShotBatch=require(game.ReplicatedStorage.RogueliteCombat.ShotBatch)
+local Stats=require(game.ReplicatedStorage.RogueliteCombat.CharacterStats)
 local P={}
-function P.new(combat,damage,rayParams)
+-- firstKey (2026-10-03): where this instance's projectile keys start. Clients key flights by them
+-- (BulletFlights), so a second instance (HandymanTurretService, 2^30) never reuses RogueliteCombat's 1, 2, 3...
+function P.new(combat,damage,rayParams,firstKey)
  local active={}
- local serial=0
+ local serial=firstKey or 0
  -- Rows reach players near them plus the shooter, batched per frame (ShotBatch.writer).
  local shots=ShotBatch.writer(combat.Shot)
  -- A leg from `from` to the end of the bullet's range along its heading. Rows use the Shot
@@ -115,7 +118,8 @@ function P.new(combat,damage,rayParams)
   end
   if (aim-origin).Magnitude<.01 then return end
   serial+=1
-  table.insert(active,{visualId=serial,d=d,target=d.arcTarget,launchOrigin=origin,position=origin,direction=(aim-origin).Unit,remaining=d.range,hit={},pierce=math.min(4,d.stats.Pierce+(d.nativePierce or 0)),bounce=math.min(4,d.stats.Bounce+(d.nativeBounce or 0)),factor=1,first=first,shotId=d.muzzleShotId,expires=os.clock()+10})
+  -- Item pierce and bounce only where the weapon uses them (CharacterStats.usesStat, 2026-10-03).
+  table.insert(active,{visualId=serial,d=d,target=d.arcTarget,launchOrigin=origin,position=origin,direction=(aim-origin).Unit,remaining=d.range,hit={},pierce=math.min(4,Stats.shotStat(d,'Pierce')+(d.nativePierce or 0)),bounce=math.min(4,Stats.shotStat(d,'Bounce')+(d.nativeBounce or 0)),factor=1,first=first,shotId=d.muzzleShotId,expires=os.clock()+10})
  end
  return self
 end

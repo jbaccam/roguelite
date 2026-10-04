@@ -157,7 +157,7 @@ function G.new(damage,canTarget)
   local spec=special(d);if not spec or not ownerAlive(d) then return end
   local main=target and target.Parent;if not main or not alive(main) then return end
   local _,mainRoot=alive(main)
-  local n=G.tierValue(spec.arrows,d.tier)+math.clamp(d.stats.ProjectileCount,0,2)
+  local n=G.tierValue(spec.arrows,d.tier)+math.clamp(Stats.shotStat(d,'ProjectileCount'),0,2) -- CharacterStats.usesStat
   local list=G.arrowTargets(main,around(d,mainRoot.Position,spec.spread*area(d),{[main]=true}),n,spec.loneMax)
   local now=workspace:GetServerTimeNow()
   -- The arrow climbs to a split point above the group, then the storm arrows strike down.

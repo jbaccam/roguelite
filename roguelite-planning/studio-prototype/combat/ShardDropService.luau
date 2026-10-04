@@ -14,8 +14,8 @@ local function living(p)
 end
 function D.configure(c,phase,credit) characters=c;isCombat=phase;award=credit end
 -- Lookup only: drops are bucketed by their fixed origin on a CELL-stud X/Z grid, so the pickup pass
--- and the Golden Retriever look at drops near a player instead of every drop. Nothing here merges,
--- caps or deletes uncollected drops; each keeps its value and identity (ShardTests).
+-- and the Golden Retriever look at drops near a player instead of every drop. Nothing here caps or
+-- deletes uncollected drops; only D.spawn's ground cap merges new value into a crystal (ShardTests).
 -- A drop put straight into D.drops (tests) has no cell and is always checked, as before.
 local CELL=16
 local buckets,serial={},0
@@ -134,6 +134,9 @@ D.BOSS_FLY_DELAY=1.4;D.BOSS_FLY_STAGGER=.02
 -- A kill's crystal value; nil = EconomyConfig.KILL_SHARDS. Nothing sets it now (the tutorial used
 -- 5 until 2026-10-03; crystals are worth 1 everywhere).
 D.killValue=nil
+-- At most this many crystals lie on the ground at once (D.spawn merges past it). Clients draw the
+-- nearest 128, so all of them show.
+D.MAX_GROUND=50
 local function dropAt(at,owner,value,bonus)
  local model=Instance.new('Model');model.Name='CrystalShard'
  local root=Instance.new('Part');root.Name='ShardMarker';root.Size=Vector3.one*.1;root.Transparency=1
@@ -199,17 +202,31 @@ function D.spawn(npc,position)
  local at=ground and ground.Position+Vector3.new(0,1.15,0) or position
  local base=D.killValue or E.KILL_SHARDS
  local value=base+(npc:GetAttribute('DesignerShirt')==true and E.DESIGNER_BONUS_SHARDS or 0)
+ -- Ground cap (user, 2026-10-03): past D.MAX_GROUND crystals on the ground, this kill's value joins
+ -- the nearest ground crystal with the same owner (same colour), so nothing is lost: 60 kills leave
+ -- 50 crystals worth 60 in all. With none of that owner's down it drops as usual. Crystals already
+ -- flying to a player don't count.
+ local n,into,best=0,nil,math.huge
+ for _,d in D.drops do
+  if not d.target and not d.collected and d.model.Parent then
+   n+=1
+   if d.owner==owner then local distance=(d.origin-at).Magnitude;if distance<best then into,best=d,distance end end
+  end
+ end
+ if n>=D.MAX_GROUND and into then into.value+=value;into.model:SetAttribute('ShardValue',into.value);return into end
  return dropAt(at,owner,value,value-base)
 end
--- Wave end (ShopService.finishWave, while still in Combat): every crystal left on the ground or
--- still flying is credited now as a normal pickup (shards and XP) to its owner, else the nearest
--- living run member, and drawn flying to them: the model stays for the pull, then goes. One with
--- nobody to take it stays for D.clear(true) to bag, as before (2026-10-03).
-function D.sweep()
+-- Wave end (ShopService.finishWave, while still in Combat): a crystal already flying to a player
+-- (a pickup in flight, or a boss crystal waiting its turn) is credited now as their normal pickup
+-- (shards and XP) and finishes its flight: the model stays for the pull, then goes. Crystals still
+-- on the ground stay for D.clear(true), which bags them for their owner (user, 2026-10-03: the bag
+-- works like Brotato's). This used to pick those up too, so nothing was ever bagged. `all` (the
+-- tutorial, ShopService.finishWave) still pulls in every crystal, ground ones included, as before.
+function D.sweep(all)
  local now=workspace:GetServerTimeNow()
  for i=#D.drops,1,-1 do
   local d=D.drops[i]
-  if d.collected or not d.model.Parent then continue end
+  if d.collected or not d.model.Parent or not (all or d.target) then continue end
   local p=d.target or d.owner
   if not (p and living(p) and characters.states[p]) then
    p=nil;local nearest=math.huge
@@ -252,6 +269,16 @@ function D.clear(bank)
   remove(i)
  end
 end
+-- Each player's crystal colour (ShardMotion.slotColor, 2026-10-03): the lowest CrystalSlot nobody
+-- else here holds, kept until they leave, so a teammate leaving never recolours anyone. Clients
+-- tint each drop by its OwnerUserId's slot. Example: Ana 1, Ben 2; Ana leaves, Cal joins -> Cal 1.
+local function giveCrystalSlot(p)
+ if p:GetAttribute('CrystalSlot') then return end
+ local used={};for _,q in Players:GetPlayers() do local s=q~=p and q:GetAttribute('CrystalSlot');if s then used[s]=true end end
+ local n=1;while used[n] do n+=1 end
+ p:SetAttribute('CrystalSlot',n)
+end
+Players.PlayerAdded:Connect(giveCrystalSlot);for _,p in Players:GetPlayers() do giveCrystalSlot(p) end
 Players.PlayerRemoving:Connect(function(p)
  sight[p]=nil
  for i=#D.drops,1,-1 do if D.drops[i].owner==p then remove(i) elseif D.drops[i].target==p then cancel(D.drops[i]) end end

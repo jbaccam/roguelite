@@ -137,6 +137,70 @@ local ok,err=xpcall(function()
  check(buy('alien',38),'buy alien battery');near(cs.stats.ChainDamage,15,'alien battery boosts chains')
  check(buy('mask',70),'buy burial mask');near(cs.stats.ContactReduction,25,'mask adds contact defense')
  check(buy('potato',20),'buy support potato');check(cs.stats.PickupRadius>8,'potato aids shard pickup')
+ -- 2026-10-03: every non-Godly weapon can be offered, not just owned ones. A fresh profile that owns
+ -- only the Glock, Frying Pan and Magic Staff can see Medusa's Head and Crystal Ball, never a Godly.
+ reset();local savedProfile=p:GetAttribute('ProfileWeapons');p:SetAttribute('ProfileWeapons','00:1:1,01:1:1,30:1:1')
+ local set=Shop.offerableWeapons(p)
+ check(set['34'] and set['35'] and set['31'],'unowned weapons offerable (Medusa, Crystal Ball, Mjolnir)')
+ for _,w in Weapons.List do if w.godly then check(not set[w.id] and Catalog.ById['weapon_'..w.id..'_1']==nil,'godly never offered '..w.id) end end
+ check(request('Shards','Set',100000),'fund offer rolls')
+ local unowned=false
+ for _=1,30 do
+  check(request('Reroll'),'roll offers')
+  for _,o in Shop.states[p].offers do
+   local entry=Catalog.ById[o.id]
+   if entry.weaponId then
+    check(not Weapons.ById[entry.weaponId].godly,'no godly offer')
+    if entry.weaponId~='00' and entry.weaponId~='01' and entry.weaponId~='30' and entry.weaponId~='03' then unowned=true end
+   end
+  end
+ end
+ check(unowned,'an unowned weapon was offered in 30 rerolls');p:SetAttribute('ProfileWeapons',savedProfile)
+ -- Works with (CharacterStats.usesStat, the rule the server's launchers use too).
+ local function W(id) return Weapons.ById[id] end
+ check(Stats.usesStat(W('00'),'ProjectileCount') and Stats.usesStat(W('00'),'Pierce') and Stats.usesStat(W('00'),'Bounce'),'Glock bullets use shot stats')
+ check(not Stats.usesStat(W('01'),'ProjectileCount') and not Stats.usesStat(W('01'),'Pierce'),'Frying Pan swings use none')
+ check(not Stats.usesStat(W('12'),'ProjectileCount') and Stats.usesStat(W('12'),'Bounce'),'Boomerang returns: bounce, no extra copies')
+ check(Stats.usesStat(W('14'),'ProjectileCount') and not Stats.usesStat(W('14'),'Pierce'),'Molotov: extra throws, no pierce')
+ check(Stats.usesStat(W('11'),'ProjectileCount') and not Stats.usesStat(W('11'),'Bounce') and Stats.usesStat(W('11'),'ExplosionDamage'),'Rocket: extra rockets, explosion damage')
+ check(not Stats.usesStat(W('29'),'ProjectileCount') and not Stats.usesStat(W('17'),'Pierce'),'streams and spray use none')
+ check(Stats.usesStat(W('38'),'ProjectileCount') and not Stats.usesStat(W('38'),'Pierce'),'Storm Bow: more arrows only')
+ check(not Stats.usesStat(W('31'),'ProjectileCount') and Stats.usesStat(W('31'),'Pierce'),'Mjolnir throw: pierce, no copies')
+ check(not Stats.usesStat(W('00'),'ChainBonus') and Stats.usesStat(W('00'),'ChainBonus',{ChainCount=1}) and Stats.usesStat(W('35'),'ChainBonus'),'lightning needs a source')
+ local works=Catalog.worksWith(Catalog.ById.straws,{'01','00','30','00'});check(#works==2 and works[1]=='00' and works[2]=='30','Two Straws works with Glock and Magic Staff')
+ check(#Catalog.worksWith(Catalog.ById.straws,{'01','12'})==0,'Two Straws: none for Frying Pan + Boomerang')
+ check(Catalog.worksWith(Catalog.ById.protein,{'01'})==nil and Catalog.weaponStats(Catalog.ById.alien)==nil,'general items work with everything')
+ -- No dead items: each weapon-only item has some non-Godly weapon that uses it.
+ for _,entry in Catalog.List do
+  if Catalog.weaponStats(entry) then
+   local ids={};for _,w in Weapons.List do if not w.godly then table.insert(ids,w.id) end end
+   check(#Catalog.worksWith(entry,ids,Stats.resolve('Brawler',0))>0,'item usable by some weapon '..entry.id)
+  end
+ end
+ -- Offers skip items none of the carried weapons use: a lone Frying Pan never sees Two Straws.
+ reset();for i=1,6 do cs.folder['Slot'..i]:SetAttribute('WeaponId',i==1 and '01' or '') end
+ check(not Shop.usableItem(Catalog.ById.straws,{'01'},cs.stats) and not Shop.usableItem(Catalog.ById.ketchup,{'01'},cs.stats),'pan: no shot or explosion items')
+ check(Shop.usableItem(Catalog.ById.straws,{'00'},cs.stats) and Shop.usableItem(Catalog.ById.protein,{'01'},cs.stats),'glock: straws; pan: protein')
+ check(request('Shards','Set',100000),'fund gated rolls');Shop.wave=20
+ for _=1,40 do
+  check(request('Reroll'),'gated roll')
+  for _,o in Shop.states[p].offers do local entry=Catalog.ById[o.id];if not entry.weaponId then check(Shop.usableItem(entry,{'01'},cs.stats),'offered item works with the pan: '..o.id) end end
+ end
+ Shop.wave=1
+ -- Reworked and new items (2026-10-03).
+ reset();check(request('Shards','Set',100000),'fund new items')
+ local before=table.clone(cs.stats)
+ check(buy('marshmallow',20),'buy marshmallow');near(cs.stats.BurnChance,before.BurnChance+5,'marshmallow lights fires');near(cs.stats.BurnDamage,before.BurnDamage+20,'marshmallow burn damage')
+ check(buy('crown',44),'buy crown');near(cs.stats.Damage,before.Damage+5,'crown general damage');near(cs.stats.BossDamage,before.BossDamage+20,'crown boss damage')
+ check(buy('banana',18),'buy banana peel');near(cs.stats.Dodge,before.Dodge+5,'banana dodge')
+ check(buy('soup',34),'buy chicken soup');near(cs.stats.Recovery,before.Recovery+15,'soup recovery')
+ check(buy('gummies',66),'buy gummies');near(cs.stats.Regeneration,before.Regeneration+2,'gummies regeneration')
+ -- READY x/y (RogueliteRunState ShopReady / ShopPlayers): living run members who pressed GO.
+ reset();Shop.join(p);Shop.states[p].ready=false;Shop.publishReady()
+ near(RS.RogueliteRunState:GetAttribute('ShopPlayers'),1,'ready total');near(RS.RogueliteRunState:GetAttribute('ShopReady'),0,'none ready')
+ Shop.states[p].ready=true;Shop.publishReady();near(RS.RogueliteRunState:GetAttribute('ShopReady'),1,'one ready')
+ Shop.phase='Combat';Shop.publishReady();check(RS.RogueliteRunState:GetAttribute('ShopReady')==nil,'no ready count outside the shop')
+ Shop.phase='Shop';Shop.states[p].ready=false
 end,debug.traceback)
 pcall(reset)
 script:SetAttribute('Result',game.HttpService:JSONEncode({passed=ok,assertions=checked,error=ok and '' or err}))
