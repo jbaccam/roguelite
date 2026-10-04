@@ -33,14 +33,9 @@ function X.flatDir(f,d)
  local look=flat(f.cf.LookVector).Unit;if not d then return look end
  d=flat(f.ground:VectorToWorldSpace(d));return d.Magnitude>.05 and d.Unit or look
 end
-function X.window(def,T,length)
- if def.clips then -- the crab's rush: RushStart, travel at `speed`, RushEnd (clips played at def.rate)
-  local c=T.clips or {};local rate=def.rate or 1;local rs,re=c[def.clips[1]],c[def.clips[3]];if not rs or not re then return nil end
-  rs,re=rs/rate,re/rate;local move=(length or def.length)/def.speed
-  return {warnStart=0,impact=rs,activeEnd=rs+move,recoveryEnd=rs+move+re,duration=rs+move+re}
- end
- return T.attacks and T.attacks[def.clip]
-end
+-- An attack's window; a lane's is RushStart, travel at `speed`, RushEnd (MapBossShapes.window, the
+-- client's too).
+X.window=Shapes.window
 -- When the boss may act again: recovery, stretched to cover delayed hits (wave travel, eruptions).
 function X.duration(def,at)
  local d=at.recoveryEnd or at.duration
@@ -170,7 +165,7 @@ function X.volley(def,at,f,goal,mouthAimed,rage)
  return {origin={origin.X,origin.Y,origin.Z},yaws=X.yaws(fan,dir),height=f.groundY+math.clamp(origin.Y-f.groundY,1.5,3.5),speed=def.speed,life=def.life,radius=def.radius}
 end
 -- The attack def with a part's fields on top: one combo phase (def.phases[i]) or a lane's finish.
-function X.merged(def,part) local m=table.clone(def);m.phases=nil;m.finish=nil;for k,v in part do m[k]=v end;return m end
+X.merged=Shapes.merged
 -- A combo (def.phases, the Hammer's SwingSpin and SpinSlam) is one clip with several hits. Each
 -- phase's window is the clip's timing with that phase's own times (at.phases, in order, scaled by
 -- MapBossDefs). hitAfter: a later swing never starts hitting before the one before it ends.
@@ -254,22 +249,20 @@ function X.finishFrame(def,T,cf,dir,length,groundY)
  return at,X.frame(cf+dir*length,T,groundY)
 end
 -- The Hammer-style charge (a forward lane or a contact run): it follows the floor, its length can
--- change, and clients get it as BossChargeLength.
-function X.isCharge(def) return def.shape=='lane' and (def.facing=='forward' or def.contact~=nil) end
+-- change, and clients get it as BossChargeLength (MapBossShapes.isCharge).
+X.isCharge=Shapes.isCharge
 -- A lane's window, duration and data for its current length: the warning, and the finish slam where
 -- the run ends (on the end floor, A.endGround, once he has stopped). The contact run re-times it on
--- every change, so the server's hits stay exact.
+-- every change, so the server's hits stay exact. The times are MapBossShapes.laneTimes, which the
+-- client re-times its charge with.
 function X.laneTiming(T,A)
- local def=A.def
- A.at=X.window(def,T,A.length);A.duration=X.duration(def,A.at)
+ local def=A.def;local t=Shapes.laneTimes(def,T,A.length)
+ A.at,A.duration=t.at,t.duration
  A.data.length=A.length;A.data.shape=Shapes.encode(X.laneShape(A.frame,A.dir,A.length,def.width,X.laneSide(A.dir,def)))
  local F=A.finish
  if F then
   F.at,F.frame=X.finishFrame(def,T,A.cf,A.dir,A.length,A.endGround or A.ground);F.start=A.at.activeEnd
-  if F.at then
-   A.duration=math.max(A.duration,F.start+F.at.impact+.05)
-   A.data.finish={shape=Shapes.encode(X.circle(F.def,F.at,F.frame)),impact=F.start+F.at.impact}
-  end
+  if F.at then A.data.finish={shape=Shapes.encode(X.circle(F.def,F.at,F.frame)),impact=t.finishImpact} end
  end
 end
 -- A charge that has stopped: the finish slam lands on the floor where he ended (A.endGround), and the

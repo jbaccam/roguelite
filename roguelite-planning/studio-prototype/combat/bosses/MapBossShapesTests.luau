@@ -30,6 +30,21 @@ local ends=S.shotEnds({serial=7,ends={['1']=12.5}},7)
 add(ends and ends['1']==12.5,'shot ends apply to their own volley')
 add(S.shotEnds({serial=6,ends={['1']=12.5}},7)==nil,'shot ends from the last volley stop nothing')
 add(S.shotEnds({['1']=12.5},7)==nil and S.shotEnds(nil,7)==nil,'unserialed or missing shot ends stop nothing')
+-- Timing shared by MapBossService and MapBossPresentation (Hammer Brute review, 2026-10-03).
+local lane={clips={'A','B','C'},rate=1.25,speed=32,length=40,shape='lane'}
+local LT={clips={A=.5,B=.53,C=1},attacks={C={impact=.5},Slam={impact=.7}}}
+local w=S.window(lane,LT,20)
+add(math.abs(w.impact-.4)<1e-9 and math.abs(w.activeEnd-(.4+20/32))<1e-9 and math.abs(w.duration-(.4+20/32+.8))<1e-9 and w.warnStart==0 and math.abs(S.window(lane,LT).activeEnd-(.4+40/32))<1e-9,
+ 'lane window: start clip / rate, travel length / speed (default def.length), end clip / rate')
+add(S.window(lane,{clips={A=.5}},20)==nil and S.window(lane,{},20)==nil and S.laneTimes(lane,{},20)==nil and S.window({clip='Slam'},LT)==LT.attacks.Slam,
+ 'window: nil without both lane clips (or any clip timing); a clip attack is its timing')
+local finishing=table.clone(lane);finishing.finish={shape='circle'}
+local fin=S.laneTimes(finishing,LT,20)
+add(math.abs(fin.finishStart-w.activeEnd)<1e-9 and math.abs(fin.finishImpact-(w.activeEnd+.5))<1e-9 and math.abs(fin.duration-math.max(w.duration,w.activeEnd+.55))<1e-9 and fin.finishAt==LT.attacks.C
+ and S.laneTimes(lane,LT,20).finishImpact==nil and S.laneTimes(lane,LT,20).duration==w.duration,'lane times: the finish starts where the run ends, and the duration covers its impact; none without def.finish')
+local m=S.merged({clip='X',damage=1,phases={{}},finish={}},{damage=2,shape='circle'})
+add(m.damage==2 and m.shape=='circle' and m.clip=='X' and m.phases==nil and m.finish==nil and S.isCharge({shape='lane',facing='forward'}) and S.isCharge({shape='lane',contact=4}) and not S.isCharge(lane) and not S.isCharge({shape='circle',contact=4}),
+ 'merged puts the part on top without phases or finish; isCharge: a forward or contact lane only')
 local passed=0;for _,line in r do if line:sub(1,4)=='PASS' then passed+=1 end end
 table.insert(r,('%d PASS, %d FAIL'):format(passed,#r-passed))
 return table.concat(r,'\n')

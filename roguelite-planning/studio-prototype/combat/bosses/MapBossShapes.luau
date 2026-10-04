@@ -1,5 +1,6 @@
 -- Shared boss hit and warning geometry. The server's hit tests and the client's ground
--- warnings read the same shape tables, so a warning is exactly where damage lands.
+-- warnings read the same shape tables, so a warning is exactly where damage lands. The attack
+-- windows and lane timing (S.window, S.laneTimes) are shared the same way.
 -- Shapes are flat on the ground; `contains` also requires the point within a height band.
 local S={}
 S.HEIGHT_BELOW,S.HEIGHT_ABOVE=2,5.5 -- players jumping over a low wave clear it
@@ -82,6 +83,34 @@ end
 -- by shot index. The client launches on its own clock and can read the attribute before the new
 -- volley's reset arrives, so ends carrying another attack's serial are stale and stop nothing.
 function S.shotEnds(t,serial) return type(t)=='table' and t.serial==serial and type(t.ends)=='table' and t.ends or nil end
+-- Attack timing the server (MapBossService X) and the client (MapBossPresentation P) both read, so
+-- the two can't drift. T is MapBossDefs.timing: scaled and rate-adjusted (real seconds).
+-- An attack's window: its clip's timing, or a lane's (the crab's rush, the Hammer's charge): the start
+-- clip, travel at `speed` for `length` (default def.length), the end clip, both clips at def.rate.
+-- nil without both clips' timing.
+function S.window(def,T,length)
+ if def.clips then
+  local c=T.clips or {};local rate=def.rate or 1;local rs,re=c[def.clips[1]],c[def.clips[3]];if not rs or not re then return nil end
+  rs,re=rs/rate,re/rate;local move=(length or def.length)/def.speed
+  return {warnStart=0,impact=rs,activeEnd=rs+move,recoveryEnd=rs+move+re,duration=rs+move+re}
+ end
+ return T.attacks and T.attacks[def.clip]
+end
+-- The attack def with a part's fields on top: one combo phase (def.phases[i]) or a lane's finish.
+function S.merged(def,part) local m=table.clone(def);m.phases=nil;m.finish=nil;for k,v in part do m[k]=v end;return m end
+-- The Hammer-style charge (a forward lane or a contact run): its length can change as he runs.
+function S.isCharge(def) return def.shape=='lane' and (def.facing=='forward' or def.contact~=nil) end
+-- A lane's times for `length`: {at (S.window), duration (its recovery; with a finish, until just past
+-- the finish slam's impact), finishAt (the end clip's timing), finishStart (where the run ends) and
+-- finishImpact (both on the attack clock)}. The finish fields only with def.finish and its timing.
+-- nil without the window.
+function S.laneTimes(def,T,length)
+ local at=S.window(def,T,length);if not at then return nil end
+ local t={at=at,duration=at.recoveryEnd or at.duration}
+ local fa=def.finish and def.clips and T.attacks and T.attacks[def.clips[3]]
+ if fa then t.finishAt,t.finishStart=fa,at.activeEnd;t.finishImpact=t.finishStart+fa.impact;t.duration=math.max(t.duration,t.finishImpact+.05) end
+ return t
+end
 -- JSON-safe copies for the MapBossAttackData attribute (Vector3 <-> {x,y,z}).
 local VEC={center=true,origin=true,pivot=true,direction=true,forward=true,a=true,b=true}
 function S.encode(shape) local t={};for k,v in shape do t[k]=typeof(v)=='Vector3' and {v.X,v.Y,v.Z} or v end;return t end

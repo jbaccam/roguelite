@@ -12,7 +12,8 @@
 --   pseudo attacks (P.pseudo): the intro clip (def.intro.clip, timed to BossIntroLand) and the
 --     enrage roar (def.roar): the clip only, no warning or attack hooks.
 --   the intro hook fires at BossIntroLand; with a roar, the enrage hook fires as the roar starts.
---   new hook `followup` when follow-up circles appear (their eruption is still `aftershock`).
+--   new hook `followup` when follow-up circles appear (their eruption is still `aftershock`), and
+--     `roar` as each roar starts (its peak; a roar a pause cancelled is played again with it).
 local Tags=game:GetService('CollectionService')
 local Run=game:GetService('RunService')
 local Players=game:GetService('Players')
@@ -23,17 +24,15 @@ local Shapes=require(combat:WaitForChild('MapBossShapes'))
 -- Pure helpers (P): timing and warning geometry. MapBossPresentationTests runs them in Edit through
 -- tools/RepoRequire, which runs this file's repo text: it returns P before anything client-side.
 local P={}
--- Same windows as MapBossService: the rush is RushStart, travel at speed, then RushEnd. The timing
--- from MapBossDefs.timing is already scaled and rate-adjusted (real seconds, final studs). A pseudo
--- attack (P.pseudo) is its clip's timing, or just its length from T.clips.
+-- The server's windows (MapBossShapes.window): the rush is RushStart, travel at speed, then RushEnd.
+-- The timing from MapBossDefs.timing is already scaled and rate-adjusted (real seconds, final studs).
+-- A pseudo attack (P.pseudo) is its clip's timing, or just its length from T.clips.
 function P.window(a,T,length)
  if a.pseudo then
   local at=T.attacks and T.attacks[a.clip];if at then return at end
   local d=T.clips and T.clips[a.clip];return d and {warnStart=0,impact=0,activeEnd=0,recoveryEnd=d,duration=d} or nil
  end
- if not a.clips then return T.attacks and T.attacks[a.clip] end
- local rate=a.rate or 1;local rs,re=(T.clips[a.clips[1]] or 0)/rate,(T.clips[a.clips[3]] or 0)/rate;local move=(length or a.length)/a.speed
- return {warnStart=0,impact=rs,activeEnd=rs+move,recoveryEnd=rs+move+re,duration=rs+move+re}
+ return Shapes.window(a,T,length)
 end
 -- BossAttack names a clip that is no attack: the def's intro clip (MapBossService spawn) or its
 -- enrage roar (startRoar). Played like an attack at rate 1; nil for anything else.
@@ -42,29 +41,25 @@ function P.pseudo(def,kind)
  if def.roar and kind==def.roar then return {clip=kind,rate=1,pseudo='roar'} end
  return nil
 end
--- MapBossService X.merged: the attack def with a phase's (or a finish's) fields on top.
-function P.merged(def,part) local m=table.clone(def);m.phases=nil;m.finish=nil;for k,v in part do m[k]=v end;return m end
--- MapBossService X.isCharge: the Hammer-style charge, whose length changes as he runs.
-function P.isCharge(a) return a.shape=='lane' and (a.facing=='forward' or a.contact~=nil) end
--- A charge's window, duration and finish times for its current length: MapBossService X.laneTiming
--- (the finish clip starts where the run ends, at.activeEnd).
-function P.chargeTiming(a,T,length)
- local at=P.window(a,T,length);local duration=at.recoveryEnd or at.duration;local finishStart,finishImpact
- local fa=a.finish and a.clips and T.attacks and T.attacks[a.clips[3]]
- if fa then finishStart=at.activeEnd;finishImpact=finishStart+fa.impact;duration=math.max(duration,finishImpact+.05) end
- return {at=at,duration=duration,finishStart=finishStart,finishImpact=finishImpact}
-end
--- Where the charge's run ends on the attack clock. Only the server's stop ends it: the data's
--- stoppedAt (MapBossService X.stopCharge), as `confirmed`. The predicted end (the window's activeEnd
--- from BossChargeLength) runs late, since that length arrives after a latency and in 0.5-stud steps,
--- so it only counts once CHARGE_HOLD s have passed it with no stop (a server without stoppedAt).
--- `latched` is the end already in use: it only ever moves earlier, so ChargeSlam never goes back to
--- ChargeRun. nil: still running.
+-- Shared with MapBossService (MapBossShapes): the attack def with a phase's (or a finish's) fields on
+-- top; whether it is the Hammer-style charge, whose length changes as he runs; and a lane's times for
+-- a length (its window, duration and finish times), which the charge is re-timed with.
+P.merged,P.isCharge,P.laneTimes=Shapes.merged,Shapes.isCharge,Shapes.laneTimes
+-- Where the charge's run ends on the attack clock, and whether that is a guess. The server's stop
+-- ends it: the data's stoppedAt (MapBossService X.stopCharge), as `confirmed`. The predicted end
+-- (the window's activeEnd from BossChargeLength) runs late, since that length arrives after a latency
+-- and in 0.5-stud steps, so with no stop CHARGE_HOLD s past it (a long stall, or a server without
+-- stoppedAt) the run ends now, a guess: ChargeSlam from its first frame, its impact still ahead.
+-- `latched`/`guessed`: the end already in use. A confirmed stop replaces a later end, and re-anchors a
+-- guess while the slam's impact (slamAt after it) is still ahead; it is already past when it arrives,
+-- so min(confirmed, age) keeps ChargeSlam. Nothing ever goes back to ChargeRun. nil: still running.
 P.CHARGE_HOLD=.75
-function P.chargeStop(latched,predicted,confirmed,age)
- local stop=confirmed or (age>=predicted+P.CHARGE_HOLD and predicted or nil)
- if latched and (not stop or stop>latched) then return latched end
- return stop
+function P.chargeStop(latched,guessed,predicted,confirmed,age,slamAt)
+ if confirmed and (not latched or confirmed<=latched) then return confirmed,false end
+ if confirmed and guessed and age<latched+(slamAt or 0) then return math.min(confirmed,age),false end
+ if latched then return latched,guessed end
+ if age>=predicted+P.CHARGE_HOLD then return age,true end
+ return nil,false
 end
 -- The charge's clip at `age`: 1 ChargeStart, 2 ChargeRun, 3 ChargeSlam (then also its clip time,
 -- from the run's end at the attack's rate).
@@ -176,8 +171,9 @@ local window=P.window
 -- The forward charge's current run (P.isCharge), every frame. BossChargeLength (else data.length)
 -- re-times the predicted window and moves the lane and the finish circle; the server sends it on
 -- 0.5-stud changes and at the stop, when it also republishes the data with stoppedAt. The run ends
--- at P.chargeStop (the server's stop), so:
+-- at P.chargeStop (the server's stop; a guess at now only after a long stall), so:
 --   ch.stopAge   the run's end on the attack clock; nil while he is still running (ChargeRun plays on)
+--   ch.guessed   stopAge is that guess (a confirmed stop may still re-anchor it)
 --   ch.runEnd    the lane warning's end: stopAge, else at least just ahead of now (held while running)
 --   ch.finishShow  the finish circle's impact for its warning (runEnd + the slam clip's impact)
 --   ch.finishImpact  the finish slam's impact, once the stop is known (nil before)
@@ -187,7 +183,7 @@ local function chargeStep(npc,ctx,age)
  if type(length)~='number' then length=ctx.data.length or ctx.def.length end
  if length~=ch.length or ctx.raw~=ch.raw then
   ch.length,ch.raw=length,ctx.raw
-  local t=P.chargeTiming(ctx.def,ctx.timing,length);ctx.attack=t.at
+  local t=P.laneTimes(ctx.def,ctx.timing,length);ctx.attack=t.at
   ch.predicted,ch.tail,ch.slamAt=t.at.activeEnd,t.duration-t.at.activeEnd,t.finishImpact and t.finishImpact-t.finishStart
   local d=ctx.data;local published=d.length or length
   -- This attack's stop only: stoppedAt from an earlier charge is before this one started.
@@ -196,9 +192,9 @@ local function chargeStep(npc,ctx,age)
   local f=type(d.finish)=='table' and type(d.finish.shape)=='table' and Shapes.decode(d.finish.shape)
   ch.finish=f and f.kind=='circle' and ch.slamAt and P.moved(f,ch.dir,length-published) or nil
  end
- age=age or -math.huge
- ch.stopAge=P.chargeStop(ch.stopAge,ch.predicted,ch.confirmed,age)
- ch.runEnd=ch.stopAge or math.max(ch.predicted,age+.05)
+ -- The end only moves on this attack's own clock (age nil: no BossStart, or another attack's).
+ if age then ch.stopAge,ch.guessed=P.chargeStop(ch.stopAge,ch.guessed,ch.predicted,ch.confirmed,age,ch.slamAt) end
+ ch.runEnd=ch.stopAge or math.max(ch.predicted,(age or -math.huge)+.05)
  ch.finishShow=ch.slamAt and ch.runEnd+ch.slamAt or nil
  ch.finishImpact=ch.stopAge and ch.slamAt and ch.stopAge+ch.slamAt or nil
  ch.duration=(ch.stopAge or ch.predicted+P.CHARGE_HOLD)+ch.tail
@@ -507,7 +503,8 @@ end
 -- A boss with a roar (def.roar and its clip) enrages as the roar starts: BossEnraged can come
 -- mid-attack, and the roar waits for that attack (and through a pause, Admin Freeze or BossManual).
 -- A client that missed the roar (it joined late) enrages at the next real attack after BossEnraged,
--- never while the run is paused.
+-- never while the run is paused. Every roar the server starts also gets the `roar` hook (its peak):
+-- one a pause cancelled is played again from the start, so its peak comes again with it.
 local function roars(state) local r=state.def.roar;return r~=nil and state.T.clips~=nil and state.T.clips[r]~=nil end
 local function stepMoments(npc,state,now,death)
  if death then return end
@@ -525,18 +522,20 @@ local function stepMoments(npc,state,now,death)
   end
  end
  local enraged=npc:GetAttribute('BossEnraged')
- if not state.enraged and enraged then
-  if not roars(state) then
-   state.enraged=true;call(state,'enrage',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1})
-  else
-   local ctx=state.ctx;local current=ctx and ctx.serial==npc:GetAttribute('BossSerial')
-   local roaring=current and ctx.kind==state.def.roar
-   local after=current and not ctx.pseudo and type(enraged)=='number' and ctx.start>enraged and combat:GetAttribute('RunPaused')~=true
-   if roaring or after then
-    state.enraged=true;call(state,'enrage',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1,roar=roaring and ctx or nil,timing=state.T})
-   end
+ if not roars(state) then
+  if not state.enraged and enraged then state.enraged=true;call(state,'enrage',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1}) end
+  return
+ end
+ if not enraged then return end
+ local ctx=state.ctx;local current=ctx and ctx.serial==npc:GetAttribute('BossSerial')
+ local roaring=current and ctx.kind==state.def.roar
+ if not state.enraged then
+  local after=current and not ctx.pseudo and type(enraged)=='number' and ctx.start>enraged and combat:GetAttribute('RunPaused')~=true
+  if roaring or after then
+   state.enraged=true;call(state,'enrage',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1,roar=roaring and ctx or nil,roars=true,timing=state.T})
   end
  end
+ if roaring and state.roarSerial~=ctx.serial then state.roarSerial=ctx.serial;call(state,'roar',ctx) end
 end
 
 local function track(npc)
@@ -602,8 +601,9 @@ task.spawn(function()
  combat:GetAttributeChangedSignal('RunMap'):Connect(check)
  check()
  -- Endless mode (RogueliteZombieChase) books a random boss in the shop before its wave
- -- (EndlessBossId) and spawns it 5 s in: warm that one too. An id without a map-boss def (the
- -- legacy Hammer, until MapBossDefs has D.Hammer) is skipped.
+ -- (EndlessBossId) and spawns it 5 s in: warm that one too. An id without a map-boss def is
+ -- skipped, and warm() stops at a def whose clips aren't installed (the Hammer Brute until his
+ -- BossAnimations are: the old BossService Hammer spawns meanwhile, MapBossDefs.ready).
  local function endless()
   local id=run:GetAttribute('EndlessBossId');local def=type(id)=='string' and Defs.get(id)
   if def then warm(def.anim) end

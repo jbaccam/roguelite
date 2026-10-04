@@ -10,8 +10,9 @@
 --   dirt thrown forward where he stops, then the finish slam where the circle has moved to.
 -- Follow-up cracks (followup / aftershock): each circle opens a crack decal that grows until it
 --   erupts in a dirt burst.
--- Enrage (fired as the roar starts): the eyes ignite red and stay; at the roar's peak a red roar
---   ring, steam puffs and a shake; steam keeps rising off his head for the rest of the fight.
+-- Enrage (fired once, as the first roar starts): the eyes ignite red and stay, and steam keeps
+--   rising off his head for the rest of the fight. Roar (each roar, a replayed one too): at its peak
+--   a red roar ring, steam puffs and a shake.
 -- Intro (fired at the landing): a landing ring, dust wall, cracks and shake (BossIntro.client has
 --   the boom, its own shockwave and the camera).
 -- Shapes and times come from the server's data (ctx.phases, C.phaseShape, C.shape, C.finish), so
@@ -96,7 +97,8 @@ local function crescent(ctx,from,to,key)
   local p=ctx.points(POINT,age)
   if not last then last,lastAge=p,age;return end
   local step=p-last;local dt=age-lastAge
-  if dt<=1e-4 or step.Magnitude<.3 then return end
+  -- A piece per 1.2 studs of head travel, not per frame: the same crescent at 60 and 240 fps.
+  if dt<=1e-4 or step.Magnitude<1.2*s then return end
   if step.Magnitude/dt>=SWEEP_SPEED then
    if not whooshed then whooshed=true;C.cue('hammer_whoosh',p,.8,.72) end
    piece(last,p,center,s,rim)
@@ -215,7 +217,7 @@ function H.followup(m)
     end,function() plate:Destroy() end,'bossPlate',64)
    end
    -- Grit trickles up out of the opening crack.
-   local h=C.host(p+up*.3,life+.6,up)
+   local h=C.host(p+up*.3,life+1.4,up) -- outlives the 0.8 s retire below
    C.fx(h,'DustPuff',{Rate=6,Speed={1,3},SpreadAngle=60,Lifetime={.5,.8},Size=ns({0,.6},{1,1.8}),Color=DUST,Transparency=ns({0,.4},{.6,.6},{1,1}),LightInfluence=.8,Rotation={0,360}})
    task.delay(life,function() C.retire({h},.8) end)
   end
@@ -238,32 +240,38 @@ end
 -- Enrage --------------------------------------------------------------------------------------
 -- His head, near enough for effects: the root plus most of his height (the glow mesh is skinned,
 -- so its part doesn't move with the head).
-local function headOffset(m) local T=m.timing or {};return ((T.height or 13.7)-(T.rootHeight or 4))*.88 end
+local function headOffset(T) T=T or {};return ((T.height or 13.7)-(T.rootHeight or 4))*.88 end
+-- The roar's peak: a red roar ring, a star, steam off his head and shoulders, the roar and a shake.
+local function roarPeak(npc,scale,T)
+ local root=npc.PrimaryPart;if not root then return end
+ local r=6*(scale or 1);local p=root.Position;local head=p+up*headOffset(T);local y=C.feet(npc);local g=Vector3.new(p.X,y or p.Y-((T and T.rootHeight) or 4),p.Z)
+ C.shake(p,1.5,.7);if not C.near(p,40) then return end
+ C.cue('zombie_roar',head,.95,.55);C.cue('ground_quake',g,.55,.9)
+ C.ring(g+up*.08,'ShockwaveRing',r,r*7,.8,RED,0,true);C.ring(g+up*.11,'ShockwaveRing',r*.5,r*4.5,.55,WHITE,.2,true)
+ C.star(head,RED,r*2,.26);C.light(head,RED,40,3.5,.8)
+ C.emit(head,up,'SmokePuff',{emit=12,Speed={6,11},SpreadAngle=70,Drag=2.5,Lifetime={.9,1.3},Size=ns({0,1.5},{1,4.5}),Color=STEAM,Transparency=ns({0,.25},{.5,.45},{1,1}),Acceleration=Vector3.new(0,4,0),LightInfluence=.6,Rotation={0,360},RotSpeed={-40,40}})
+ for _,x in {-1,1} do -- off both shoulders
+  local sp=p+up*headOffset(T)*.8+root.CFrame.RightVector*x*3*(scale or 1)
+  C.emit(sp,(up+root.CFrame.RightVector*x*.6).Unit,'SmokePuff',{emit=5,Speed={5,9},SpreadAngle=30,Drag=2.5,Lifetime={.8,1.2},Size=ns({0,1.2},{1,3.5}),Color=STEAM,Transparency=ns({0,.3},{.5,.5},{1,1}),LightInfluence=.6,Rotation={0,360}})
+ end
+ C.dustRing(g,r,14,DUST,{16,24},4*(scale or 1))
+end
+-- Once: the eyes ignite and stay red, and steam keeps rising off his head for the rest of the fight
+-- (on the root, so it follows him). The roar's peak comes with each roar (H.roar); a boss without a
+-- roar clip (m.roars unset) gets it now.
 function H.enrage(m)
  local npc=m.npc;local root=npc.PrimaryPart;if not root then return end
- local r=6*(m.scale or 1)
- -- The eyes ignite and stay red.
  local glow=C.glow(npc,'EyeGlow')
  if #glow>0 then K.animate(.3,function(t) C.setGlow(glow,RED,t) end,function() C.setGlow(glow,RED,1) end,'bossGlow',8) end
- -- Steam keeps rising off his head for the rest of the fight (on the root, so it follows him).
- local at=Instance.new('Attachment');at.Name='BossVfxSteam';at.Position=Vector3.new(0,headOffset(m),0);at.Parent=root
+ local at=Instance.new('Attachment');at.Name='BossVfxSteam';at.Position=Vector3.new(0,headOffset(m.timing),0);at.Parent=root
  C.fx(at,'SmokePuff',{Rate=1.2,EmissionDirection=Enum.NormalId.Top,Speed={2,4},SpreadAngle=25,Lifetime={1,1.4},Size=ns({0,.8},{1,2.6}),Color=STEAM,Transparency=ns({0,.5},{.4,.6},{1,1}),Acceleration=Vector3.new(0,3,0),LightInfluence=.6,Rotation={0,360},RotSpeed={-30,30}})
- -- The roar: its peak (the clip's impact when it has one, else 0.3 s in), or right now.
- local function roar()
-  local p=root.Position;local head=p+up*headOffset(m);local y=C.feet(npc);local g=Vector3.new(p.X,y or p.Y-((m.timing and m.timing.rootHeight) or 4),p.Z)
-  C.shake(p,1.5,.7);if not C.near(p,40) then return end
-  C.cue('zombie_roar',head,.95,.55);C.cue('ground_quake',g,.55,.9)
-  C.ring(g+up*.08,'ShockwaveRing',r,r*7,.8,RED,0,true);C.ring(g+up*.11,'ShockwaveRing',r*.5,r*4.5,.55,WHITE,.2,true)
-  C.star(head,RED,r*2,.26);C.light(head,RED,40,3.5,.8)
-  C.emit(head,up,'SmokePuff',{emit=12,Speed={6,11},SpreadAngle=70,Drag=2.5,Lifetime={.9,1.3},Size=ns({0,1.5},{1,4.5}),Color=STEAM,Transparency=ns({0,.25},{.5,.45},{1,1}),Acceleration=Vector3.new(0,4,0),LightInfluence=.6,Rotation={0,360},RotSpeed={-40,40}})
-  for _,x in {-1,1} do -- off both shoulders
-   local sp=p+up*headOffset(m)*.8+root.CFrame.RightVector*x*3*(m.scale or 1)
-   C.emit(sp,(up+root.CFrame.RightVector*x*.6).Unit,'SmokePuff',{emit=5,Speed={5,9},SpreadAngle=30,Drag=2.5,Lifetime={.8,1.2},Size=ns({0,1.2},{1,3.5}),Color=STEAM,Transparency=ns({0,.3},{.5,.5},{1,1}),LightInfluence=.6,Rotation={0,360}})
-  end
-  C.dustRing(g,r,14,DUST,{16,24},4*(m.scale or 1))
- end
- local ctx=m.roar
- if ctx then local peak=ctx.attack and ctx.attack.impact or 0;C.at(ctx,peak>0 and peak or .3,roar) else roar() end
+ if not m.roars then roarPeak(npc,m.scale,m.timing) end
+end
+-- Each roar the server starts (a replay after a pause cancelled one too): the peak at the clip's
+-- impact when it has one, else 0.3 s in, while that roar is still live.
+function H.roar(ctx)
+ local peak=ctx.attack and ctx.attack.impact or 0
+ C.at(ctx,peak>0 and peak or .3,function() roarPeak(ctx.npc,ctx.scale,ctx.timing) end)
 end
 
 -- Intro: the landing ---------------------------------------------------------------------------
