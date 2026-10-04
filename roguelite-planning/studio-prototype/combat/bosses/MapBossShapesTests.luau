@@ -30,4 +30,6 @@ local ends=S.shotEnds({serial=7,ends={['1']=12.5}},7)
 add(ends and ends['1']==12.5,'shot ends apply to their own volley')
 add(S.shotEnds({serial=6,ends={['1']=12.5}},7)==nil,'shot ends from the last volley stop nothing')
 add(S.shotEnds({['1']=12.5},7)==nil and S.shotEnds(nil,7)==nil,'unserialed or missing shot ends stop nothing')
+local passed=0;for _,line in r do if line:sub(1,4)=='PASS' then passed+=1 end end
+table.insert(r,('%d PASS, %d FAIL'):format(passed,#r-passed))
 return table.concat(r,'\n')

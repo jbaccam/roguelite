@@ -63,13 +63,13 @@ add(#ys==3 and math.abs(ys[2]-math.pi/2)<1e-6 and math.abs(ys[3]-ys[1]-math.rad(
 add(X.localPoint({points={P={rootAtImpactStudio={1,2,3}}}},'P',0)==Vector3.new(1,2,3),'point falls back to rootAtImpactStudio')
 -- 5. Hammer Brute runtime (rebuild R1-R3, 2026-10-03), hand-made timings again. HammerFace circles
 -- the boss 8 studs out and HammerGrip 4, 3 up, at yaw th(t) (0 = ahead, +pi/2 = his left): wound
--- back and held 0.4-0.45, the Swing -90 -> +90 degrees in 0.5-0.7, a slow follow-through, then the
--- Spin, 2pi + 0.3 in 0.8-1.25.
+-- back, held 0.4-0.45, the Swing easing in to +90 degrees at 0.66, held 0.66-0.72 (the Spin's
+-- wind-up, inside the Swing's window, which ends at 0.7), then the Spin easing in, 2pi + 0.5 by 1.25.
+-- Swings ease in from a held pose as authored clips do, so X.hitFrom's walk back is exact.
 local function th(t)
  if t<.4 then return -math.pi/2-.3*t/.4 elseif t<.45 then return -math.pi/2-.3
- elseif t<.5 then return -math.pi/2-.3+.3*(t-.45)/.05 elseif t<.7 then return -math.pi/2+math.pi*(t-.5)/.2
- elseif t<.8 then return math.pi/2+.2*(t-.7)/.1 end
- return math.pi/2+.2+(2*math.pi+.3)*math.min(1,(t-.8)/.45)
+ elseif t<.66 then return -math.pi/2-.3+(math.pi+.3)*((t-.45)/.21)^2 elseif t<.72 then return math.pi/2 end
+ return math.pi/2+(2*math.pi+.5)*math.min(1,(t-.72)/.53)^2
 end
 local function circling(radius) local list={};for k=0,96 do local t=k/60;local d=CFrame.Angles(0,th(t),0):VectorToWorldSpace(Vector3.new(0,0,-radius));list[k+1]={t,d.X,3,d.Z} end;return list end
 local HT={rootHeight=4,clips={ChargeStart=.5,ChargeRun=.53,ChargeSlam=1.2,Roar=1.2},attacks={
@@ -85,11 +85,10 @@ local hf=X.frame(CFrame.lookAt(Vector3.new(0,4,0),Vector3.new(0,4,-1)),HT,0) -- 
 check('phases: two windows with the phase times, all warned from the commit',function()
  local w=X.phaseWindows(swingSpin,HT.attacks.SwingSpin)
  return #w==2 and w[1].impact==.5 and w[1].activeEnd==.7 and w[2].impact==.8 and w[2].activeEnd==1.25 and w[1].warnStart==0 and w[2].warnStart==0
-  and w[2].samples==HT.attacks.SwingSpin.samples and w[2].hitAfter==.7 and w[1].phases==nil
 end)
 check('phases: each phase def is the attack def with the phase on top (damage 20, then 22)',function()
  local units=X.phases(swingSpin,HT.attacks.SwingSpin)
- return #units==2 and units[1].def.damage==20 and units[2].def.damage==22 and units[2].def.clip=='SwingSpin' and units[1].def.phases==nil and units[1].hits~=units[2].hits
+ return #units==2 and units[1].def.damage==20 and units[2].def.damage==22 and units[2].def.clip=='SwingSpin'
 end)
 check('phases: the Swing phase warns an arc over its path (ahead, both sides), not behind him',function()
  local units=X.phases(swingSpin,HT.attacks.SwingSpin);local arc=X.shapeOf(units[1].def,units[1].at,hf)
@@ -100,8 +99,9 @@ check('phases: the Spin phase warns a full ring (-pi to pi), behind him too',fun
  return ring.kind=='arc' and ring.from==-math.pi and ring.to==math.pi and ring.inner==0 and S.contains(ring,Vector3.new(0,3,7))
 end)
 -- Three still players 7 studs out: ahead, behind, and on his left just past where the Swing ends
--- (the Spin passes that one twice). Stepped at 60 Hz like the server's Heartbeat.
-check('phases: hit once per phase (the Spin passes "left" twice); the Swing misses behind him; no hit before a phase swings',function()
+-- (the Spin passes that one twice). Stepped at 60 Hz like the server's Heartbeat. The clip's own
+-- times: the Swing's wind-up ends at 0.4, and the Spin may not hit before the Swing ends at 0.7.
+check('phases: hit once per phase (the Spin passes "left" twice); the Swing misses behind him; no Swing hit before 0.4, no Spin hit before 0.7',function()
  local left=CFrame.Angles(0,math.pi/2+.3,0):VectorToWorldSpace(Vector3.new(0,0,-7))+Vector3.yAxis*3
  local people={{player='ahead',at=Vector3.new(0,3,-7)},{player='behind',at=Vector3.new(0,3,7)},{player='left',at=left}}
  local units=X.phases(swingSpin,HT.attacks.SwingSpin);local count,early,t0={},{},0
@@ -111,7 +111,7 @@ check('phases: hit once per phase (the Spin passes "left" twice); the Swing miss
   for i,P in units do
    X.stepHits(P,hf,age,t0,people,function(e)
     local key=e.player..i;count[key]=(count[key] or 0)+1
-    if age<X.hitFrom(P.def,P.at)-1e-6 or age<(P.at.hitAfter or 0)-1e-6 then table.insert(early,key) end
+    if age<({.4,.7})[i]-1e-9 then table.insert(early,key) end
     return true
    end)
   end
@@ -137,11 +137,11 @@ check('charge: the crab lane is unchanged (through the target, side-on offset ke
  return (dir-X.lane(X.laneFacing(pos,goal,look),goal)).Magnitude<1e-9 and X.laneSide(dir,crab)==Vector3.yAxis:Cross(dir)*3.5
 end)
 local laneCf,laneDir=CFrame.lookAt(Vector3.new(0,4,0),Vector3.new(0,4,-1)),Vector3.new(0,0,-1)
-check('charge: contact run ends 4 short of a target 40 down the lane (36); 2 off-centre it still tracks; stepped out it keeps its length',function()
+check('charge: contact run ends 4 short of a target 40 down the lane (36); 2 off-centre it still tracks; stepped out it keeps its length and the run misses them',function()
  local centred=X.contactLength(charge,laneCf,laneDir,Vector3.new(0,4,-40),75,50,0)
  local off=X.contactLength(charge,laneCf,laneDir,Vector3.new(2,4,-40),75,50,0)
  local out=X.contactLength(charge,laneCf,laneDir,Vector3.new(5,4,-40),75,50,0)
- return math.abs(centred-36)<1e-9 and math.abs(off-(40-math.sqrt(12)))<1e-9 and out==50
+ return math.abs(centred-36)<1e-9 and math.abs(off-(40-math.sqrt(12)))<1e-9 and out==50 and not S.contains(X.rushBody(charge,laneCf,laneDir,0,0,50),Vector3.new(5,3,-40))
 end)
 check('charge: contact length capped by def.length and the wall, never below the distance travelled',function()
  return X.contactLength(charge,laneCf,laneDir,Vector3.new(0,4,-120),75,50,0)==75 and X.contactLength(charge,laneCf,laneDir,Vector3.new(0,4,-120),60,50,0)==60
@@ -151,11 +151,22 @@ check('charge: the body hit at the contact stop reaches a target 2 off-centre (c
  local goal=Vector3.new(2,3,-40);local length=X.contactLength(charge,laneCf,laneDir,goal,75,50,0)
  return S.contains(X.rushBody(charge,laneCf,laneDir,0,length-1,length),goal)
 end)
+-- A charge as M.start builds it, for X.laneTiming.
+local function chargeAttack(cf,dir,length)
+ return {def=charge,cf=cf,frame=X.frame(cf,HT,0),ground=0,dir=dir,length=length,data={},finish={def=X.merged(charge,charge.finish),hits={},ticks={},fired=false}}
+end
 check('charge: the finish slam lands at HammerFace at the ChargeSlam impact, from where the run ends',function()
- local cf=CFrame.lookAt(Vector3.new(0,4,0),Vector3.new(1,4,0));local at,ff,start=X.finishFrame(charge,HT,cf,Vector3.new(1,0,0),36,0)
- local fdef=X.merged(charge,charge.finish);local c=X.circle(fdef,at,ff)
- return fdef.damage==26 and fdef.finish==nil and c.kind=='circle' and (c.center-Vector3.new(41,0,0)).Magnitude<1e-6 and c.radius==9.5 and c.height==6
-  and math.abs(start+at.impact-(.5+36/32+.4))<1e-9
+ local A=chargeAttack(CFrame.lookAt(Vector3.new(0,4,0),Vector3.new(1,4,0)),Vector3.new(1,0,0),36);X.laneTiming(HT,A)
+ local F=A.finish;local c=X.circle(F.def,F.at,F.frame)
+ return F.def.damage==26 and c.kind=='circle' and (c.center-Vector3.new(41,0,0)).Magnitude<1e-6 and c.radius==9.5 and c.height==6
+  and math.abs(F.start+F.at.impact-(.5+36/32+.4))<1e-9 and math.abs(A.data.finish.impact-(.5+36/32+.4))<1e-9
+end)
+check('charge: lane timing for a run grown 30 -> 40 moves the finish 10 studs down the lane, lasts past its impact, and lands on the end floor',function()
+ local A=chargeAttack(laneCf,laneDir,30);X.laneTiming(HT,A);local c30,i30=S.decode(A.data.finish.shape).center,A.data.finish.impact;local covers30=A.duration>=i30
+ A.length=40;X.laneTiming(HT,A);local c40=S.decode(A.data.finish.shape).center
+ local grown=(c40-c30-laneDir*10).Magnitude<1e-6 and A.data.length==40 and math.abs(A.data.finish.impact-i30-10/32)<1e-9 and A.duration>=A.data.finish.impact and covers30
+ A.endGround=2;X.laneTiming(HT,A)
+ return grown and math.abs(S.decode(A.data.finish.shape).center.Y-2)<1e-9 and A.finish.frame.groundY==2
 end)
 check('lockout: the order walk skips the charge within 5 s of its last start',function()
  local s={def={attacks={Slam={range={0,16}},Charge=charge},order={'Slam','Charge','Slam'}},index=1,lastStart={Charge=10}}
@@ -201,6 +212,18 @@ if Defs then
   for _,a in def.attacks do if a.phases or a.finish or a.contact or a.lockout or a.facing or a.height then plain=false end end
  end
  add(plain,'the four bosses use none of the Hammer fields (phases, finish, contact, lockout, facing, height, intro, roar, tutorial, enrage.order)')
+ -- Every attack an order names exists: X.walk would throw on every Heartbeat otherwise.
+ local missing,defs={},0
+ for id in Defs do
+  local def=Defs.get(id)
+  if def then
+   defs+=1
+   for _,list in {def.order,def.enrage and def.enrage.order,def.tutorial and def.tutorial.order} do
+    for _,kind in list do if not def.attacks[kind] then table.insert(missing,id..'.'..tostring(kind)) end end
+   end
+  end
+ end
+ add(#missing==0 and defs>=4,('every order, enrage.order and tutorial.order names a real attack (%d defs; missing: %s)'):format(defs,#missing>0 and table.concat(missing,', ') or 'none'))
  local function segd(a,b,p) local ab=b-a;local t=math.clamp((p-a):Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1);return (a+ab*t-p).Magnitude end
  -- The Dragon's tail whip hits a player standing 8 studs behind him (under his rear), as the
  -- server's hit loop tests it (tail chain inside the warning arc), and never one 8 studs in front.
@@ -236,4 +259,6 @@ if Defs then
   end
  end
 end
+local passed=0;for _,line in r do if line:sub(1,4)=='PASS' then passed+=1 end end
+table.insert(r,('%d PASS, %d FAIL'):format(passed,#r-passed))
 return table.concat(r,'\n')

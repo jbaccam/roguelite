@@ -247,12 +247,30 @@ function X.contactLength(def,cf,dir,targetPos,wallLength,previous,travelled)
  return math.max(travelled or 0,math.min(cap,along-math.sqrt(math.max(0,def.contact^2-side^2))))
 end
 -- A lane's finish (def.finish, the ChargeSlam): the end clip's own timing, measured from where the
--- run ends (cf moved `length` along dir), starting at the lane window's activeEnd, RushStart +
--- length/speed. Returns that timing, the frame and the start (attack seconds); nil without timing.
+-- run ends (cf moved `length` along dir) on the floor at groundY. Its clip starts at the lane
+-- window's activeEnd (X.laneTiming). Returns that timing and the frame; nil without timing.
 function X.finishFrame(def,T,cf,dir,length,groundY)
- local at=T.attacks and def.clips and T.attacks[def.clips[3]];local w=X.window(def,T,length)
- if not at or not w then return nil end
- return at,X.frame(cf+dir*length,T,groundY),w.activeEnd
+ local at=T.attacks and def.clips and T.attacks[def.clips[3]];if not at then return nil end
+ return at,X.frame(cf+dir*length,T,groundY)
+end
+-- The Hammer-style charge (a forward lane or a contact run): it follows the floor, its length can
+-- change, and clients get it as BossChargeLength.
+function X.isCharge(def) return def.shape=='lane' and (def.facing=='forward' or def.contact~=nil) end
+-- A lane's window, duration and data for its current length: the warning, and the finish slam where
+-- the run ends (on the end floor, A.endGround, once he has stopped). The contact run re-times it on
+-- every change, so the server's hits stay exact.
+function X.laneTiming(T,A)
+ local def=A.def
+ A.at=X.window(def,T,A.length);A.duration=X.duration(def,A.at)
+ A.data.length=A.length;A.data.shape=Shapes.encode(X.laneShape(A.frame,A.dir,A.length,def.width,X.laneSide(A.dir,def)))
+ local F=A.finish
+ if F then
+  F.at,F.frame=X.finishFrame(def,T,A.cf,A.dir,A.length,A.endGround or A.ground);F.start=A.at.activeEnd
+  if F.at then
+   A.duration=math.max(A.duration,F.start+F.at.impact+.05)
+   A.data.finish={shape=Shapes.encode(X.circle(F.def,F.at,F.frame)),impact=F.start+F.at.impact}
+  end
+ end
 end
 -- def.lockout: an attack's own minimum gap between its starts (the charge: 5 s), on top of cooldowns.
 function X.lockedOut(s,kind,now)
@@ -316,26 +334,17 @@ local function hit(npc,def,e,from,params,source)
 end
 local function publish(npc,A) npc:SetAttribute('MapBossAttackData',Http:JSONEncode(A.data)) end
 local function segmentDistance(a,b,p) local ab=b-a;local t=math.clamp((p-a):Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1);return (a+ab*t-p).Magnitude end
--- A lane's window, duration and published length, warning and finish for its current length. The
--- forward charge's contact run re-times it (stepAttack); the client re-times the end clip from it.
-local function laneTiming(s,A)
- local def=A.def
- A.at=X.window(def,s.T,A.length);A.duration=X.duration(def,A.at)
- A.data.length=A.length;A.data.shape=Shapes.encode(X.laneShape(A.frame,A.dir,A.length,def.width,X.laneSide(A.dir,def)))
- local F=A.finish
- if F then
-  F.at,F.frame,F.start=X.finishFrame(def,s.T,A.cf,A.dir,A.length,A.ground)
-  if F.at then
-   A.duration=math.max(A.duration,F.start+F.at.impact+.05)
-   A.data.finish={shape=Shapes.encode(X.circle(F.def,F.at,F.frame)),impact=F.start+F.at.impact}
-  end
- end
-end
+-- Holding still for an attack, the intro or the roar (commit), and back to the chase (release).
+-- The server keeps network ownership of the boss either way: a released root left to the nearest
+-- client would let it push him around.
+local function commit(npc,h,root) npc:SetAttribute('Attacking',true);h:Move(Vector3.zero);h:MoveTo(root.Position);h.AutoRotate=false;root.Anchored=true end
+local function release(npc,h,root) npc:SetAttribute('Attacking',false);root.Anchored=false;root:SetNetworkOwner(nil);h.AutoRotate=true end
 function M.start(npc,kind,target,force)
  local s=M.states[npc];local def=s and s.def.attacks[kind];local h=npc:FindFirstChildOfClass('Humanoid');local root=npc.PrimaryPart
  if not def or s.attack or not h or h.Health<=0 or not root or not X.window(def,s.T) then return false end
- -- A combo needs its clip's phase timings (MapBossTiming phases).
+ -- A combo needs its clip's phase timings (MapBossTiming phases), and a finish its end clip's.
  if def.phases and not X.phaseWindows(def,X.window(def,s.T)) then return false end
+ if def.finish and not (def.clips and s.T.attacks and s.T.attacks[def.clips[3]]) then return false end
  local goal=target and target.Parent and target.Position or root.Position+root.CFrame.LookVector*12
  local delta=goal-root.Position;local params=exclusions(npc)
  if not force and (not target or math.abs(delta.Y)>10 or workspace:Raycast(root.Position,delta,params)) then return false end
@@ -361,7 +370,7 @@ function M.start(npc,kind,target,force)
   A.length=def.contact and X.contactLength(def,cf,A.dir,Vector3.new(goal.X,cf.Y,goal.Z),A.limit,A.limit,0) or A.limit
   A.target=def.contact and target or nil
   if def.finish then A.finish={def=X.merged(def,def.finish),hits={},ticks={},fired=false} end
-  A.data={dir={A.dir.X,A.dir.Z}};laneTiming(s,A)
+  A.data={dir={A.dir.X,A.dir.Z}};X.laneTiming(s.T,A)
  else A.at=X.window(def,s.T);A.duration=X.duration(def,A.at) end
  local at=A.at
  local rage=s.enraged and s.def.enrage or {}
@@ -389,9 +398,12 @@ function M.start(npc,kind,target,force)
  A.data.rate=def.rate or 1
  s.attack=A;s.lastStart[kind]=now -- def.lockout (X.lockedOut)
  npc:SetAttribute('BossAttack',kind);npc:SetAttribute('BossStart',now);npc:SetAttribute('BossFrame',cf);npc:SetAttribute('BossGroundY',f.groundY);npc:SetAttribute('BossDuration',A.duration)
+ -- A charge's length (X.isCharge) changes as he runs. Client contract: re-time the end clip from
+ -- BossChargeLength, falling back to data.length. It is set before BossSerial, so no client reads
+ -- the last charge's value; stepAttack sends it on 0.5-stud changes, and exactly when he stops.
+ if X.isCharge(def) then A.sentLength=A.length;npc:SetAttribute('BossChargeLength',A.length) end
  A.serial=(npc:GetAttribute('BossSerial') or 0)+1
- publish(npc,A);npc:SetAttribute('BossSerial',A.serial);npc:SetAttribute('Attacking',true)
- h:Move(Vector3.zero);h:MoveTo(root.Position);h.AutoRotate=false;root.Anchored=true
+ publish(npc,A);npc:SetAttribute('BossSerial',A.serial);commit(npc,h,root)
  return true
 end
 function M.spawn(id,cf,practice,opts)
@@ -452,8 +464,7 @@ function M.spawn(id,cf,practice,opts)
   if def.introName then npc:SetAttribute('BossIntroName',def.introName) end
   npc:SetAttribute('BossAttack',intro.clip);npc:SetAttribute('BossStart',land-(clip and clip.impact or 0));npc:SetAttribute('BossFrame',root.CFrame)
   npc:SetAttribute('BossGroundY',root.Position.Y-T.rootHeight-.1)
-  npc:SetAttribute('BossSerial',(npc:GetAttribute('BossSerial') or 0)+1);npc:SetAttribute('Attacking',true)
-  root.Anchored=true;h.AutoRotate=false
+  npc:SetAttribute('BossSerial',(npc:GetAttribute('BossSerial') or 0)+1);commit(npc,h,root)
   s.intro=done;s.next=done+.6
   combat:SetAttribute('CinematicUntil',done)
  end
@@ -583,24 +594,25 @@ local function startRoar(npc,s,now,h,root,params)
  s.attack=A
  npc:SetAttribute('BossAttack',A.kind);npc:SetAttribute('BossStart',now);npc:SetAttribute('BossFrame',cf);npc:SetAttribute('BossGroundY',ground and ground.Position.Y or cf.Y-s.T.rootHeight);npc:SetAttribute('BossDuration',duration)
  A.serial=(npc:GetAttribute('BossSerial') or 0)+1
- publish(npc,A);npc:SetAttribute('BossSerial',A.serial);npc:SetAttribute('Attacking',true)
- h:Move(Vector3.zero);h:MoveTo(root.Position);h.AutoRotate=false;root.Anchored=true
+ publish(npc,A);npc:SetAttribute('BossSerial',A.serial);commit(npc,h,root)
  return true
 end
 local function stepAttack(npc,s,now,h,root,params,people)
  local A=s.attack;local age=now-A.start;local t0=A.sampled
  if A.roar then
+  -- Only a finished roar counts: one cancelled by a pause plays again afterwards (X.roarDue).
   root.CFrame=A.cf;A.sampled=age
-  if age>=A.duration then s.attack=nil;npc:SetAttribute('Attacking',false);root.Anchored=false;root:SetNetworkOwner(nil);h.AutoRotate=true end
+  if age>=A.duration then s.attack=nil;s.roared=true;release(npc,h,root) end
   return
  end
  local def=A.def;local rage=s.enraged and s.def.enrage or {}
  if A.target and not A.stopped and A.target.Parent then
   -- The forward charge (def.contact) runs on while its target stays in the lane; once he has
-  -- stopped, the run is fixed. A new length goes out (data.length, BossDuration) so the client
-  -- re-times the end clip, and the warning and the finish slam move with it.
+  -- stopped, the run is fixed. The server re-times on every change, so its hits stay exact;
+  -- clients get BossChargeLength on 0.5-stud changes (M.start), the rest when he stops.
   local length=X.contactLength(def,A.cf,A.dir,A.target.Position,A.limit,A.length,A.travelled)
-  if math.abs(length-A.length)>.05 then A.length=length;laneTiming(s,A);publish(npc,A);npc:SetAttribute('BossDuration',A.duration) end
+  if math.abs(length-A.length)>.05 then A.length=length;X.laneTiming(s.T,A) end
+  if math.abs(A.length-(A.sentLength or -1))>=.5 then A.sentLength=A.length;npc:SetAttribute('BossChargeLength',A.length) end
  end
  local at,f=A.at,A.frame
  if def.track and age>=at.impact-.1 and age<at.activeEnd then
@@ -615,14 +627,31 @@ local function stepAttack(npc,s,now,h,root,params,people)
  end
  if def.shape=='lane' then
   local travel=math.clamp((age-at.impact)*def.speed,0,A.length)
-  root.CFrame=A.cf+A.dir*travel
-  if travel>=A.length then A.stopped=true end
+  if def.facing=='forward' then
+   -- A forward runner follows the floor (BossService.stepCharge), so a slope doesn't leave him
+   -- floating or buried; until he moves he stays where he committed. The crab's rush is level.
+   local to=A.cf.Position+A.dir*travel
+   if travel>A.travelled then
+    local floor=workspace:Raycast(to+Vector3.yAxis*6,-Vector3.yAxis*(s.T.rootHeight+14),params)
+    if floor then A.floorY=floor.Position.Y end
+   end
+   root.CFrame=A.cf.Rotation+Vector3.new(to.X,A.floorY and A.floorY+s.T.rootHeight or A.cf.Y,to.Z)
+  else root.CFrame=A.cf+A.dir*travel end
   if travel>A.travelled then
-   local body=X.rushBody(def,A.cf,A.dir,f.groundY,A.travelled,travel)
+   local body=X.rushBody(def,A.cf,A.dir,A.floorY or f.groundY,A.travelled,travel)
    for _,e in people do
     if not A.hits[e.player] and Shapes.contains(body,e.at) and hit(npc,def,e,root.Position,params,body.b) then A.hits[e.player]=true end
    end
    A.travelled=travel
+  end
+  if travel>=A.length and not A.stopped then
+   A.stopped=true
+   if X.isCharge(def) then
+    -- Stopped: the finish slam lands on the floor where he ended (A.endGround), and late readers
+    -- get the exact final length, warning, finish and duration: the run's one data republish.
+    A.endGround=A.floorY;X.laneTiming(s.T,A)
+    A.sentLength=A.length;npc:SetAttribute('BossChargeLength',A.length);publish(npc,A);npc:SetAttribute('BossDuration',A.duration)
+   end
   end
  else root.CFrame=A.cf end
  -- Circle, wave, breath and sweep hits (X.stepHits): the attack itself, or each combo phase with
@@ -657,9 +686,7 @@ local function stepAttack(npc,s,now,h,root,params,people)
  local impact=at.impact or A.phases and A.phases[1].at.impact
  if impact and age>=impact and not A.impacted then A.impacted=true;npc:SetAttribute('BossImpactStart',now) end
  A.sampled=age
- if age>=A.duration then
-  s.attack=nil;s.next=now+def.cooldown*(rage.cooldown or 1);npc:SetAttribute('Attacking',false);root.Anchored=false;root:SetNetworkOwner(nil);h.AutoRotate=true
- end
+ if age>=A.duration then s.attack=nil;s.next=now+def.cooldown*(rage.cooldown or 1);release(npc,h,root) end
 end
 -- Below ENRAGE_AT health: faster chase, shorter cooldowns and the def.enrage extras (see MapBossDefs).
 -- Never for the tutorial boss whose def says so (X.allows).
@@ -675,16 +702,15 @@ function M.step(npc,s,now)
  -- The sky-drop entrance (def.intro, M.spawn): stand still until it's over, then fight.
  if s.intro then
   if now<s.intro then h:Move(Vector3.zero);return end
-  s.intro=nil;npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil)
-  root.Anchored=false;root:SetNetworkOwner(nil);h.AutoRotate=true
+  s.intro=nil;npc:SetAttribute('BossStart',nil);release(npc,h,root)
  end
  if combat:GetAttribute('ZombiesEnabled')~=true then
-  s.attack=nil;s.shots=nil;table.clear(s.follows);npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil);root.Anchored=false;h.AutoRotate=true;h:Move(Vector3.zero);return
+  s.attack=nil;s.shots=nil;table.clear(s.follows);npc:SetAttribute('BossStart',nil);release(npc,h,root);h:Move(Vector3.zero);return
  end
  -- Pause (plan L): a paused run cancels the attack under way, its shots and follow-ups, and
  -- holds still. Attacks start fresh (with their wind-up) once the run unfreezes.
  if combat:GetAttribute('RunPaused')==true then
-  if s.attack then s.attack=nil;npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil);root.Anchored=false;h.AutoRotate=true end
+  if s.attack then s.attack=nil;npc:SetAttribute('BossStart',nil);release(npc,h,root) end
   s.shots=nil;table.clear(s.follows);h:Move(Vector3.zero);h:MoveTo(root.Position);return
  end
  checkEnrage(npc,s,h)
@@ -695,8 +721,8 @@ function M.step(npc,s,now)
  if npc:GetAttribute('BossManual') and Run:IsStudio() then h:Move(Vector3.zero);return end
  -- Admin Freeze: no moving and no new attacks; an attack already under way finishes above.
  if combat:GetAttribute('AdminFreeze')==true then h:Move(Vector3.zero);h:MoveTo(root.Position);return end
- -- Enraged: the roar first, once (an attack under way finished above).
- if X.roarDue(s) then s.roared=true;if startRoar(npc,s,now,h,root,params) then return end end
+ -- Enraged: the roar first, once (an attack under way finished above); without its clip, never.
+ if X.roarDue(s) then if startRoar(npc,s,now,h,root,params) then return end;s.roared=true end
  local target,dist=nil,math.huge
  for _,e in people do local d=(e.root.Position-root.Position).Magnitude;if d<dist then target,dist=e.root,d end end
  if not target then h:Move(Vector3.zero);return end
