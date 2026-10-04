@@ -1,0 +1,299 @@
+{
+ "rev": "a1a1f7a",
+ "date": "2026-10-03",
+ "how": "one guarded execute_luau: each script written only if Studio's Source equalled its guard; every source compiled first; all re-read equal afterwards",
+ "scripts": [
+  {
+   "studio": "ReplicatedStorage.AdminPanelUI",
+   "repo": "ui/AdminPanelUI.luau",
+   "guard": "git/97affa7/studio-prototype/ui/AdminPanelUI.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.ArmoryStage",
+   "repo": "ui/ArmoryStage.luau",
+   "guard": "git/97affa7/studio-prototype/ui/ArmoryStage.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.ArmoryUI",
+   "repo": "ui/ArmoryUI.luau",
+   "guard": "git/97affa7/studio-prototype/ui/ArmoryUI.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.AssetPreloader",
+   "repo": "ui/AssetPreloader.luau",
+   "guard": "git/97affa7/studio-prototype/ui/AssetPreloader.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.ChestStage",
+   "repo": "ui/ChestStage.luau",
+   "guard": "git/97affa7/studio-prototype/ui/ChestStage.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.DeathScreenUI",
+   "repo": "ui/DeathScreenUI.luau",
+   "guard": "git/97affa7/studio-prototype/ui/DeathScreenUI.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.EggStage",
+   "repo": "ui/EggStage.luau",
+   "guard": "git/97affa7/studio-prototype/ui/EggStage.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.LobbyUI",
+   "repo": "ui/LobbyUI.luau",
+   "guard": "git/97affa7/studio-prototype/ui/LobbyUI.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.MapSelectBackdrop",
+   "repo": "ui/MapSelectBackdrop.luau",
+   "guard": "git/97affa7/studio-prototype/ui/MapSelectBackdrop.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.PauseUI",
+   "repo": "ui/PauseUI.luau",
+   "guard": "git/97affa7/studio-prototype/ui/PauseUI.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.QuestsUI",
+   "repo": "ui/QuestsUI.luau",
+   "guard": "git/97affa7/studio-prototype/ui/QuestsUI.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.RogueliteCombat.AdminConfig",
+   "repo": "combat/AdminConfig.luau",
+   "guard": "git/97affa7/studio-prototype/combat/AdminConfig.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.RogueliteCombat.ChainWeaponMotion",
+   "repo": "combat/ChainWeaponMotion.luau",
+   "guard": "git/97affa7/studio-prototype/combat/ChainWeaponMotion.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.RogueliteCombat.CharacterStats",
+   "repo": "combat/CharacterStats.luau",
+   "guard": "git/97affa7/studio-prototype/combat/CharacterStats.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.RogueliteCombat.EconomyConfig",
+   "repo": "combat/EconomyConfig.luau",
+   "guard": "git/97affa7/studio-prototype/combat/EconomyConfig.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.RogueliteCombat.HitFeedbackVisuals",
+   "repo": "combat/HitFeedbackVisuals.luau",
+   "guard": "git/97affa7/studio-prototype/combat/HitFeedbackVisuals.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.RogueliteCombat.ProjectileStyleVisuals",
+   "repo": "combat/ProjectileStyleVisuals.luau",
+   "guard": "git/97affa7/studio-prototype/combat/ProjectileStyleVisuals.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.RogueliteCombat.ShardMotion",
+   "repo": "combat/ShardMotion.luau",
+   "guard": "git/97affa7/studio-prototype/combat/ShardMotion.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.RogueliteCombat.ShopCatalog",
+   "repo": "combat/ShopCatalog.luau",
+   "guard": "git/97affa7/studio-prototype/combat/ShopCatalog.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.RogueliteCombat.WeaponCatalog",
+   "repo": "combat/WeaponCatalog.luau",
+   "guard": "git/97affa7/studio-prototype/combat/WeaponCatalog.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.RogueliteCombat.WeaponMotion",
+   "repo": "combat/WeaponMotion.luau",
+   "guard": "git/97affa7/studio-prototype/combat/WeaponMotion.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.RogueliteUI",
+   "repo": "ui/RogueliteUI.luau",
+   "guard": "git/97affa7/studio-prototype/ui/RogueliteUI.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.RunResultsUI",
+   "repo": "ui/RunResultsUI.luau",
+   "guard": "git/97affa7/studio-prototype/ui/RunResultsUI.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.RunSetupUI",
+   "repo": "ui/RunSetupUI.luau",
+   "guard": "git/97affa7/studio-prototype/ui/RunSetupUI.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.ShopUI",
+   "repo": "ui/ShopUI.luau",
+   "guard": "git/97affa7/studio-prototype/ui/ShopUI.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.SkillTreeUI",
+   "repo": "ui/SkillTreeUI.luau",
+   "guard": "git/97affa7/studio-prototype/ui/SkillTreeUI.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.StationApproach",
+   "repo": "ui/StationApproach.luau",
+   "guard": "git/97affa7/studio-prototype/ui/StationApproach.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.StoreUI",
+   "repo": "ui/StoreUI.luau",
+   "guard": "git/97affa7/studio-prototype/ui/StoreUI.luau"
+  },
+  {
+   "studio": "ReplicatedStorage.UITheme",
+   "repo": "ui/UITheme.luau",
+   "guard": "git/97affa7/studio-prototype/ui/UITheme.luau"
+  },
+  {
+   "studio": "ServerScriptService.AdminService",
+   "repo": "combat/AdminService.server.luau",
+   "guard": "git/97affa7/studio-prototype/combat/AdminService.server.luau"
+  },
+  {
+   "studio": "ServerScriptService.ArcProjectiles",
+   "repo": "combat/ArcProjectiles.luau",
+   "guard": "git/97affa7/studio-prototype/combat/ArcProjectiles.luau"
+  },
+  {
+   "studio": "ServerScriptService.CombatEffectsService",
+   "repo": "combat/CombatEffectsService.luau",
+   "guard": "git/97affa7/studio-prototype/combat/CombatEffectsService.luau"
+  },
+  {
+   "studio": "ServerScriptService.EnemyScheduler",
+   "repo": "combat/EnemyScheduler.luau",
+   "guard": "git/97affa7/studio-prototype/combat/EnemyScheduler.luau"
+  },
+  {
+   "studio": "ServerScriptService.GodlyWeapons",
+   "repo": "combat/GodlyWeapons.luau",
+   "guard": "git/97affa7/studio-prototype/combat/GodlyWeapons.luau"
+  },
+  {
+   "studio": "ServerScriptService.MatchService",
+   "repo": "lobby/MatchService.luau",
+   "guard": "git/97affa7/studio-prototype/lobby/MatchService.luau"
+  },
+  {
+   "studio": "ServerScriptService.MobCollision",
+   "repo": "combat/MobCollision.server.luau",
+   "guard": "git/97affa7/studio-prototype/combat/MobCollision.server.luau"
+  },
+  {
+   "studio": "ServerScriptService.MovementCheck",
+   "repo": "combat/MovementCheck.luau",
+   "guard": "git/97affa7/studio-prototype/combat/MovementCheck.luau"
+  },
+  {
+   "studio": "ServerScriptService.ProfileService",
+   "repo": "combat/ProfileService.luau",
+   "guard": "git/97affa7/studio-prototype/combat/ProfileService.luau"
+  },
+  {
+   "studio": "ServerScriptService.QuestService",
+   "repo": "combat/QuestService.luau",
+   "guard": "git/97affa7/studio-prototype/combat/QuestService.luau"
+  },
+  {
+   "studio": "ServerScriptService.RogueliteLobbyPreview",
+   "repo": "lobby/RogueliteLobbyPreview.server.luau",
+   "guard": "git/97affa7/studio-prototype/lobby/RogueliteLobbyPreview.server.luau"
+  },
+  {
+   "studio": "ServerScriptService.RogueliteLobbyPreview.QueueState",
+   "repo": "lobby/QueueState.luau",
+   "guard": "git/97affa7/studio-prototype/lobby/QueueState.luau"
+  },
+  {
+   "studio": "ServerScriptService.RogueliteMeta",
+   "repo": "combat/RogueliteMeta.server.luau",
+   "guard": "git/97affa7/studio-prototype/combat/RogueliteMeta.server.luau"
+  },
+  {
+   "studio": "ServerScriptService.RogueliteZombieChase",
+   "repo": "RogueliteZombieChase.server.luau",
+   "guard": "git/97affa7/studio-prototype/RogueliteZombieChase.server.luau"
+  },
+  {
+   "studio": "ServerScriptService.RunAnalytics",
+   "repo": "combat/RunAnalytics.luau",
+   "guard": "git/97affa7/studio-prototype/combat/RunAnalytics.luau"
+  },
+  {
+   "studio": "ServerScriptService.RunPause",
+   "repo": "combat/RunPause.luau",
+   "guard": "git/97affa7/studio-prototype/combat/RunPause.luau"
+  },
+  {
+   "studio": "ServerScriptService.ShardDropService",
+   "repo": "combat/ShardDropService.luau",
+   "guard": "git/97affa7/studio-prototype/combat/ShardDropService.luau"
+  },
+  {
+   "studio": "ServerScriptService.ShopService",
+   "repo": "combat/ShopService.luau",
+   "guard": "git/97affa7/studio-prototype/combat/ShopService.luau"
+  },
+  {
+   "studio": "ServerScriptService.SpecialWeapons",
+   "repo": "combat/SpecialWeapons.luau",
+   "guard": "git/97affa7/studio-prototype/combat/SpecialWeapons.luau"
+  },
+  {
+   "studio": "ServerScriptService.StatProjectiles",
+   "repo": "combat/StatProjectiles.luau",
+   "guard": "git/97affa7/studio-prototype/combat/StatProjectiles.luau"
+  },
+  {
+   "studio": "ServerScriptService.TargetGrid",
+   "repo": "combat/TargetGrid.luau",
+   "guard": "git/97affa7/studio-prototype/combat/TargetGrid.luau"
+  },
+  {
+   "studio": "StarterPlayer.StarterPlayerScripts.BossIntro",
+   "repo": "combat/BossIntro.client.luau",
+   "guard": "git/97affa7/studio-prototype/combat/BossIntro.client.luau"
+  },
+  {
+   "studio": "StarterPlayer.StarterPlayerScripts.RogueliteSounds",
+   "repo": "audio/RogueliteSounds.client.luau",
+   "guard": "git/97affa7/studio-prototype/audio/RogueliteSounds.client.luau"
+  },
+  {
+   "studio": "StarterPlayer.StarterPlayerScripts.ShardVisuals",
+   "repo": "combat/ShardVisuals.client.luau",
+   "guard": "git/97affa7/studio-prototype/combat/ShardVisuals.client.luau"
+  }
+ ],
+ "merged": {
+  "note": "Studio held these at commits before ee48545 (never synced). Written as Studio + this round's diff (git merge-file studio 97affa7 a1a1f7a), so ee48545 (mob damage x5, zombie swing gate, client air-speed booster) is still NOT in Studio. RogueliteCombat.server came out equal to a1a1f7a.",
+  "scripts": {
+   "ServerScriptService.CharacterService": "combat/CharacterService.luau (studio was f738365)",
+   "StarterPlayer.StarterPlayerScripts.RogueliteCombat": "combat/RogueliteCombat.client.luau (studio was 8674bd9; air-speed booster block left out)",
+   "ServerScriptService.RogueliteCombat": "combat/RogueliteCombat.server.luau (studio was ac17bde)",
+   "ServerScriptService.MovementGuard": "combat/MovementGuard.server.luau (studio was f17271d; keeps its 1.12 air slack, adds the CharacterStats require for Dash)"
+  }
+ },
+ "created": [
+  {
+   "studio": "ReplicatedStorage.RogueliteCombat.HandymanTurret",
+   "repo": "combat/HandymanTurret.luau",
+   "sandboxLike": "ReplicatedStorage.RogueliteCombat.CharacterStats"
+  },
+  {
+   "studio": "ServerScriptService.HandymanTurretService",
+   "repo": "combat/HandymanTurretService.server.luau",
+   "sandboxLike": "ServerScriptService.RogueliteCombat"
+  },
+  {
+   "studio": "StarterPlayer.StarterPlayerScripts.HandymanTurret",
+   "repo": "combat/HandymanTurret.client.luau",
+   "sandboxed": false
+  }
+ ],
+ "notInStudio": "13 *Tests modules (load them through tools/RepoRequire); turret templates (FBX import + InstallHandymanTurret still to do)"
+}
