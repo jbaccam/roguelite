@@ -213,7 +213,21 @@ function M.new(player,opts)
    local d=portal and portal:GetAttribute('Difficulty')
    mapText=id and Rules.Maps[mapIndex].name..(d and d~='Normal' and '  ·  '..d or '') or 'Host is choosing the map'
   elseif mode~='Loadout' then mapText=Rules.Maps[sel.map].name..(sel.difficulty~='Normal' and '  ·  '..sel.difficulty or '') end
-  if mapText then T.label(canvas,'MapChip',string.upper(mapText),hx,cp and 40 or 64,hw,cp and 24 or 26,cp and 18 or 19,C.cream) end
+  if mapText then
+   local chip=T.label(canvas,'MapChip',string.upper(mapText),hx,cp and 40 or 64,hw,cp and 24 or 26,cp and 18 or 19,C.cream)
+   -- A member on a pad already counting down (pulled along by their party, 2026-10-03) sees the
+   -- time left, so they know to LOCK IN. The loop ends with the redraw or close that removes the chip.
+   if mode=='Member' then
+    local base=chip.Text
+    task.spawn(function()
+     while chip.Parent do
+      local portal=myPortal();local at=portal and portal:GetAttribute('LaunchAt')
+      chip.Text=type(at)=='number' and base..'  ·  STARTING IN '..math.max(0,math.ceil(at-workspace:GetServerTimeNow())) or base
+      task.wait(.25)
+     end
+    end)
+   end
+  end
   stage(mapIndex,false)
   local order=Rules.classOrder(profile.classes)
   local class=sel.class;local owned=profile.classes[class]==true

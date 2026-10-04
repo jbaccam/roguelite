@@ -82,9 +82,11 @@ local function failed(p,message)
  p:SetAttribute('HoldRespawn',false)
  if M.onTeleportFailed then M.onTeleportFailed(p,message) end
 end
-local function go(players,options,travel)
+-- party (optional): {leader=userId,ids={userIds}} for a party sent home together (Leave With Party);
+-- the lobby puts it back together (RogueliteLobbyPreview).
+local function go(players,options,travel,party)
  options=options or Instance.new('TeleportOptions')
- options:SetTeleportData({loading=travel})
+ options:SetTeleportData({loading=travel,party=party})
  setTravel(players,travel)
  task.wait(.3) -- lets TravelTo reach the clients first, so their screen is set as the teleport GUI
  local ok,err=retry(2,Teleport.TeleportAsync,Teleport,game.PlaceId,players,options)
@@ -99,6 +101,8 @@ end
 function M.launch(players,map,difficulty,loadouts,extra)
  if studio then return false,'Runs start in the published game. Use the combined Studio mode to play here' end
  local tutorial=type(extra)=='table' and extra.tutorial==true or nil
+ -- extra.leader: a Private pad's host, who leads its party in the match (M.setParty, below).
+ local leader=type(extra)=='table' and tonumber(extra.leader) or nil
  log(players,'launch',('map=%s difficulty=%s players=%d tutorial=%s'):format(tostring(map),tostring(difficulty),#players,tostring(tutorial)))
  -- A match server can't start without a map: refuse here rather than send the party on a trip
  -- that bounces them straight back (pad launches went out with map=nil, 2026-10-03).
@@ -108,7 +112,7 @@ function M.launch(players,map,difficulty,loadouts,extra)
  local members={}
  for _,p in players do members[tostring(p.UserId)]=loadouts[p.UserId] or {} end
  -- code: the server's own access code, so it can send a dropped player back (rejoin, below).
- local okEntry,errEntry=retry(2,entries.SetAsync,entries,serverId,{map=map,difficulty=difficulty,members=members,code=code,tutorial=tutorial},ENTRY_SECONDS)
+ local okEntry,errEntry=retry(2,entries.SetAsync,entries,serverId,{map=map,difficulty=difficulty,members=members,code=code,tutorial=tutorial,leader=leader},ENTRY_SECONDS)
  if not okEntry then
   log(players,'entry failed',errEntry)
   return false,"Couldn't start the run, try again"
@@ -137,7 +141,7 @@ end
 
 -- Match: back to a public lobby server. Returns true when the teleport started. reason (optional):
 -- why, for the trip log and the player's loading screen (a run ending normally passes none).
-function M.toLobby(players,reason)
+function M.toLobby(players,reason,party)
  if studio or Role.get()~='Match' then return false end
  log(players,'to lobby',reason or 'run over')
  local going={}
@@ -146,7 +150,7 @@ function M.toLobby(players,reason)
   if p.Parent==Players and (not Profiles.get(p) or Profiles.handOff(p)) then table.insert(going,p) end
  end
  if #going==0 then return false end
- local sent,why=go(going,nil,{map='Lobby',reason=reason})
+ local sent,why=go(going,nil,{map='Lobby',reason=reason},party)
  if not sent then
   log(going,'teleport failed',why)
   for _,p in going do Profiles.reclaim(p) end
@@ -218,6 +222,20 @@ task.spawn(function()
  end
 end)
 
+-- Private pads (2026-10-03, LEAVE WITH PARTY): the run's party leader (the host who started the
+-- Private pad) and its members. Set from the match entry, or by Studio's Combined launch; nil for
+-- Open pads (matches with randoms), so nobody there can end the run for others. RunLeader on
+-- RogueliteCombat lets the leader's screens offer the button; RogueliteMeta checks it again.
+local runParty={leader=nil,ids={}}
+function M.setParty(leader,ids)
+ runParty.leader=type(leader)=='number' and leader or nil;runParty.ids={}
+ -- ids: the entry's members ({['123']=loadout}) or a list of user ids ({123,456}).
+ if runParty.leader then for k,v in ids or {} do local n=tonumber(type(v)=='number' and v or k);if n then runParty.ids[n]=true end end;runParty.ids[runParty.leader]=true end
+ combat:SetAttribute('RunLeader',runParty.leader)
+end
+function M.partyLeader() return runParty.leader end
+function M.inParty(userId) return runParty.leader~=nil and runParty.ids[userId]==true end
+
 -- Match side -------------------------------------------------------------------------------
 -- The member's loadout from the entry, checked against their own save once it loads; a locked
 -- class or weapon falls back to the class's signature weapon (Brawler if the class is locked).
@@ -274,6 +292,7 @@ function M.start()
     combat:SetAttribute('RunDifficulty',Rules.DifficultyIndex[entry.difficulty] and entry.difficulty or 'Normal')
     if entry.tutorial==true then combat:SetAttribute('TutorialRun',true) end -- TutorialDirector runs it
     M.code=type(entry.code)=='string' and entry.code or nil -- for rejoin records
+    M.setParty(tonumber(entry.leader),entry.members) -- a Private pad's party (LEAVE WITH PARTY)
    else
     badWhy=entry and ('map '..tostring(entry.map)..' could not be set') or ('match entry: '..tostring(lastErr))
     bad=true;entry=nil;warn('MatchService: no usable match entry for',game.PrivateServerId,badWhy)

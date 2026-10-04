@@ -5,7 +5,8 @@
 -- - the spread: a wave's groups (4 enemies every 0.2 s) no longer think all on one frame;
 -- - the runner: everyone is stepped once per frame in order, an error or a yield in one enemy's
 --   step never stops or repeats the others, and enemies added mid-frame wait a frame;
--- - compact: finished enemies drop out, the order of the rest is kept.
+-- - compact: finished enemies drop out, the order of the rest is kept;
+-- - wave population (2026-10-03): 20% bigger swarms, each extra player adds less, the 100 cap holds.
 -- Returns {passed, checks, oldPeak, newPeak, ...}.
 return function(S)
 	local checks = 0
@@ -150,6 +151,24 @@ return function(S)
 	check(#list == 3 and list[1].id == 1 and list[2].id == 3 and list[3].id == 6, "compact keeps the order of the living")
 	S.compact(list)
 	check(#list == 3, "compact twice changes nothing")
+
+	-- Wave population: base x1.2, then x1.6 / 2.1 / 2.5 for 2 / 3 / 4 players up, at most 100.
+	check(S.playerScale(1) == 1 and S.playerScale(2) == 1.6 and S.playerScale(3) == 2.1 and S.playerScale(4) == 2.5, "player scale 1 / 1.6 / 2.1 / 2.5")
+	check(S.playerScale(0) == 1 and S.playerScale(nil) == 1 and S.playerScale(6) == 2.5, "nobody up counts as one; past 4 stays x2.5")
+	check(S.population(8, 1) == 10 and S.population(20, 1) == 24 and S.population(35, 1) == 42 and S.population(65, 1) == 78, "solo waves 1 / 5 / 10 / 20: 10, 24, 42, 78")
+	check(S.population(8, 4) == 24 and S.population(20, 4) == 60 and S.population(35, 4) == 100 and S.population(65, 4) == 100, "4 players: 24, 60, 100, 100 (capped)")
+	check(S.population(35, 2) == 67 and S.population(35, 3) == 88, "wave 10 with 2 and 3 players: 67, 88")
+	check(S.population(0, 4) == 0, "an empty wave stays empty (practice, QA)")
+	check(S.MAX_POPULATION == 100, "the cap is unchanged")
+	local last = 0
+	for n = 1, 4 do
+		local p = S.population(30, n)
+		check(p > last, "more players, more enemies: " .. p)
+		last = p
+	end
+	for n = 2, 4 do
+		check(S.playerScale(n) - S.playerScale(n - 1) < S.playerScale(n - 1) - (n > 2 and S.playerScale(n - 2) or 0), "each extra player adds less")
+	end
 
 	result.passed = true
 	result.checks = checks

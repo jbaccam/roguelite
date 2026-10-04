@@ -6,27 +6,54 @@ local Motion=require(combat:WaitForChild('ShardMotion'))
 local Visual=require(combat:WaitForChild('CrystalShardVisual'))
 local drops=workspace:WaitForChild('RogueliteShardDrops')
 local folder=Instance.new('Folder');folder.Name='LocalCrystalVisuals';folder.Parent=workspace
-local template=Visual.create(nil,'CrystalShard',1.5)
--- Keep deep-blue facets readable; only the pale cyan faces emit light.
-for _,part in template:GetDescendants() do
- if part:IsA('BasePart') and part.Name=='AzureFacet' and part.Color.G>.7 then
-  part.Material=Enum.Material.Neon
-  part.Color=part.Color:Lerp(Color3.fromRGB(130,235,255),.3)
+-- One crystal template per colour. tint nil = today's blue; a tint (ShardMotion.CRYSTAL_COLORS)
+-- maps each facet from its deep (dark) to its pale (light) end by how bright the blue facet was,
+-- and its glow, aura and neon faces follow (2026-10-03).
+local function build(tint)
+ local template=Visual.create(nil,'CrystalShard',1.5)
+ -- Keep deep-blue facets readable; only the pale cyan faces emit light.
+ for _,part in template:GetDescendants() do
+  if part:IsA('BasePart') and part.Name=='AzureFacet' then
+   local neon=part.Color.G>.7
+   if tint then part.Color=tint.dark:Lerp(tint.light,math.clamp((part.Color.G*255-92)/125,0,1)) end
+   if neon then
+    part.Material=Enum.Material.Neon
+    part.Color=part.Color:Lerp(tint and tint.glow or Color3.fromRGB(130,235,255),.3)
+   end
+  end
  end
+ local glow=Instance.new('PointLight');glow.Name='ShardGlow'
+ glow.Color=tint and tint.glow or Color3.fromRGB(100,210,255);glow.Brightness=.45;glow.Range=5;glow.Shadows=false
+ glow.Parent=template.PrimaryPart
+ local attachment=Instance.new('Attachment');attachment.Name='AuraOrigin';attachment.Parent=template.PrimaryPart
+ local aura=Instance.new('ParticleEmitter');aura.Name='BlueAura'
+ aura.Texture='rbxasset://textures/particles/smoke_main.dds'
+ aura.Color=tint and ColorSequence.new(tint.glow,tint.dark:Lerp(tint.glow,.4)) or ColorSequence.new(Color3.fromRGB(115,210,255),Color3.fromRGB(55,150,245))
+ aura.LightEmission=1;aura.LightInfluence=0;aura.Rate=5
+ aura.Lifetime=NumberRange.new(.8,1.2);aura.Speed=NumberRange.new(.05,.18)
+ aura.SpreadAngle=Vector2.new(180,180);aura.Rotation=NumberRange.new(0,360);aura.RotSpeed=NumberRange.new(-18,18)
+ aura.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,1.35),NumberSequenceKeypoint.new(.5,2.15),NumberSequenceKeypoint.new(1,2.6)})
+ aura.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.2,.82),NumberSequenceKeypoint.new(.6,.91),NumberSequenceKeypoint.new(1,1)})
+ aura.LockedToPart=true;aura.Parent=attachment
+ return template
 end
-local glow=Instance.new('PointLight');glow.Name='ShardGlow'
-glow.Color=Color3.fromRGB(100,210,255);glow.Brightness=.45;glow.Range=5;glow.Shadows=false
-glow.Parent=template.PrimaryPart
-local attachment=Instance.new('Attachment');attachment.Name='AuraOrigin';attachment.Parent=template.PrimaryPart
-local aura=Instance.new('ParticleEmitter');aura.Name='BlueAura'
-aura.Texture='rbxasset://textures/particles/smoke_main.dds'
-aura.Color=ColorSequence.new(Color3.fromRGB(115,210,255),Color3.fromRGB(55,150,245))
-aura.LightEmission=1;aura.LightInfluence=0;aura.Rate=5
-aura.Lifetime=NumberRange.new(.8,1.2);aura.Speed=NumberRange.new(.05,.18)
-aura.SpreadAngle=Vector2.new(180,180);aura.Rotation=NumberRange.new(0,360);aura.RotSpeed=NumberRange.new(-18,18)
-aura.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,1.35),NumberSequenceKeypoint.new(.5,2.15),NumberSequenceKeypoint.new(1,2.6)})
-aura.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.2,.82),NumberSequenceKeypoint.new(.6,.91),NumberSequenceKeypoint.new(1,1)})
-aura.LockedToPart=true;aura.Parent=attachment
+-- Keys: 1-4 (ShardMotion.colorIndex; 1 is today's blue) and 'public'. Built on first use.
+local templates={[1]=build(nil)}
+local function templateFor(key)
+ local t=templates[key]
+ if not t then t=build(key=='public' and Motion.PUBLIC_COLOR or Motion.CRYSTAL_COLORS[key]);templates[key]=t end
+ return t
+end
+-- Colour per killer (user, 2026-10-03: "different color crystals for diff people who killed"):
+-- with 2+ players in the run (RunMember), a crystal wears its owner's CrystalSlot colour (the
+-- killer's, from ShardDropService), a public one is white, and pickup bursts take the collector's.
+-- Solo keeps today's blue everywhere. slotOf: userId -> CrystalSlot, kept by the watchers below.
+local slotOf,multi={},false
+local function colorKey(owner)
+ if not multi then return 1 end
+ local slot=owner~=0 and slotOf[owner]
+ return slot and Motion.colorIndex(slot) or 'public'
+end
 -- A boss shower's sparkle: one burst of light where the crystals leave him (BurstFrom), once per boss.
 local sparkled={}
 local function sparkle(at)
@@ -74,14 +101,14 @@ local function ray(parent,length,width,angle)
  local c=Instance.new('UICorner');c.CornerRadius=UDim.new(.5,0);c.Parent=f
 end
 -- A star that grows, swells and pops: `size` studs across at full size, starting after `delay`.
-local function star(adornee,size,delay,offset)
+local function star(adornee,size,delay,offset,pale)
  local g=Instance.new('BillboardGui');g.Name='PickupStar';g.Adornee=adornee;g.Size=UDim2.fromScale(size,size)
  g.StudsOffset=offset -- toward the camera, so the body never hides it
  g.LightInfluence=0;g.Brightness=1.15;g.ResetOnSpawn=false;g.Parent=adornee
  local body=Instance.new('Frame');body.Name='Body';body.AnchorPoint=Vector2.new(.5,.5);body.Position=UDim2.fromScale(.5,.5)
  body.Size=UDim2.fromScale(1,1);body.BackgroundTransparency=1;body.Rotation=math.random(-20,20);body.Parent=g
  local scale=Instance.new('UIScale');scale.Scale=.12;scale.Parent=body
- local glow=circle(body,'Glow',.42,1);glow.BackgroundColor3=PALE;glow.BackgroundTransparency=.62
+ local glow=circle(body,'Glow',.42,1);glow.BackgroundColor3=pale or PALE;glow.BackgroundTransparency=.62
  ray(body,1,.06,0);ray(body,1,.06,90);ray(body,.5,.04,45);ray(body,.5,.04,-45)
  task.delay(delay,function()
   if not g.Parent then return end
@@ -113,6 +140,10 @@ local function burst(p,n,froms)
  local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart');if not root then return end
  local k=math.clamp(math.log(n+1)/math.log(25),.25,1)
  if p~=Players.LocalPlayer then k*=.6 end -- someone else's: smaller
+ -- The collector's crystal colour with 2+ in the run; slot 1 and solo keep today's blue.
+ local slot=multi and slotOf[p.UserId]
+ local tint=slot and Motion.colorIndex(slot)~=1 and Motion.slotColor(slot) or nil
+ local pale,cyan=tint and tint.light or PALE,tint and tint.glow or CYAN
  -- The side they came from (their average direction), else the camera's right.
  local side=Vector3.zero
  for _,from in froms do local d=from-root.Position;d=Vector3.new(d.X,0,d.Z);if d.Magnitude>.1 then side+=d.Unit end end
@@ -120,20 +151,21 @@ local function burst(p,n,froms)
  side=side.Magnitude>.01 and side.Unit or Vector3.xAxis
  local at=Instance.new('Attachment');at.Name='CrystalPickupFX'
  at.Position=root.CFrame:VectorToObjectSpace(side*.9)+Vector3.new(0,-.5,0);at.Parent=root
- star(at,1.3+1.5*k,0,Vector3.new(0,0,1.4))
+ star(at,1.3+1.5*k,0,Vector3.new(0,0,1.4),pale)
  for i=1,(k>.7 and 2 or k>.4 and 1 or 0) do
   local jitter=Vector3.new(math.random()*1.2-.6,math.random()*1.2-.4,1.6)
-  star(at,.55+.3*k,.05+.05*i,jitter)
+  star(at,.55+.3*k,.05+.05*i,jitter,pale)
  end
  task.delay(POP,function()
   if not at.Parent then return end
   local e=shardEmitter:Clone();e.Speed=NumberRange.new(7+5*k,12+10*k);e.Parent=at
+  if tint then e.Color=ColorSequence.new(WHITE,cyan) end
   e:Emit(math.floor(5+25*k))
   -- A faint thin ring around the hips, easing outwards.
   local g=Instance.new('BillboardGui');g.Name='PickupRing';g.Adornee=root;g.Size=UDim2.fromScale(4.5+2.5*k,4.5+2.5*k)
   g.StudsOffset=Vector3.new(0,-.5,0);g.LightInfluence=0;g.ResetOnSpawn=false;g.Parent=at
   local ring=circle(g,'Ring',.5,1)
-  local stroke=Instance.new('UIStroke');stroke.Color=PALE;stroke.Thickness=1.6;stroke.Transparency=.5;stroke.Parent=ring
+  local stroke=Instance.new('UIStroke');stroke.Color=pale;stroke.Thickness=1.6;stroke.Transparency=.5;stroke.Parent=ring
   tween(ring,.5,{Size=UDim2.fromScale(1,1)},Enum.EasingStyle.Quint)
   tween(stroke,.5,{Transparency=1,Thickness=.5})
  end)
@@ -169,7 +201,47 @@ do
  for _,m in drops:GetChildren() do watch(m) end
  drops.ChildAdded:Connect(watch)
 end
+-- Whose colour is whose: with 2+ players in the run, a small diamond in each teammate's colour
+-- floats over their name (yours is on the HUD's shard counter, RogueliteUI). Solo shows none.
+local marks={} -- player -> BillboardGui
+local markGui=Players.LocalPlayer:WaitForChild('PlayerGui')
+local function mark(p)
+ local slot=slotOf[p.UserId]
+ local head=multi and slot and p~=Players.LocalPlayer and p:GetAttribute('RunMember') and p.Character and p.Character:FindFirstChild('Head')
+ local b=marks[p]
+ if not head then if b then b:Destroy();marks[p]=nil end;return end
+ if not b then
+  b=Instance.new('BillboardGui');b.Name='CrystalColorMark';b.Size=UDim2.fromOffset(18,18)
+  b.StudsOffsetWorldSpace=Vector3.new(0,3.6,0) -- above the Roblox name over the head
+  b.AlwaysOnTop=true;b.LightInfluence=0;b.MaxDistance=70;b.ResetOnSpawn=false
+  local d=Instance.new('Frame');d.Name='Diamond';d.AnchorPoint=Vector2.new(.5,.5);d.Position=UDim2.fromScale(.5,.5)
+  d.Size=UDim2.fromScale(.7,.7);d.Rotation=45;d.BorderSizePixel=0;d.Parent=b
+  local s=Instance.new('UIStroke');s.Color=Color3.fromRGB(8,10,11);s.Thickness=2;s.Parent=d
+  b.Parent=markGui;marks[p]=b
+ end
+ b.Adornee=head;b.Diamond.BackgroundColor3=Motion.slotColor(slot).mark
+end
+local function recount()
+ local n=0;for _,p in Players:GetPlayers() do if p:GetAttribute('RunMember') then n+=1 end end
+ multi=n>=2
+ for _,p in Players:GetPlayers() do mark(p) end
+end
+local function watchPlayer(p)
+ slotOf[p.UserId]=p:GetAttribute('CrystalSlot')
+ p:GetAttributeChangedSignal('CrystalSlot'):Connect(function() slotOf[p.UserId]=p:GetAttribute('CrystalSlot');recount() end)
+ p:GetAttributeChangedSignal('RunMember'):Connect(recount)
+ p.CharacterAdded:Connect(function(c) c:WaitForChild('Head',10);if p.Parent then mark(p) end end)
+end
+for _,p in Players:GetPlayers() do watchPlayer(p) end
+Players.PlayerAdded:Connect(function(p) watchPlayer(p);recount() end)
+Players.PlayerRemoving:Connect(function(p)
+ slotOf[p.UserId]=nil
+ local b=marks[p];if b then b:Destroy();marks[p]=nil end
+ task.defer(recount)
+end)
+recount()
 local visuals={}
+local shownKey={} -- drop model -> the colour key its visual was built with
 local refresh=0
 -- Drops being pulled first, then nearest. Only the best 128 are drawn and only the first 32 need
 -- their rank (glow and aura), so the rest are never sorted.
@@ -202,7 +274,8 @@ RunService.RenderStepped:Connect(function(dt)
    local e=entries[m]
    if not e then
     local origin=m:GetAttribute('Origin')
-    if typeof(origin)=='Vector3' then e={model=m,origin=origin};entries[m]=e end
+    -- Its owner (the killer; 0 = public) never changes either.
+    if typeof(origin)=='Vector3' then e={model=m,origin=origin,owner=m:GetAttribute('OwnerUserId') or 0};entries[m]=e end
    end
    if e then
     e.seen=pass;e.distance=(e.origin-position).Magnitude;e.active=m:GetAttribute('MagnetUserId')~=nil
@@ -222,16 +295,19 @@ RunService.RenderStepped:Connect(function(dt)
   local wanted={}
   for i=1,count do
    local m=list[i].model;wanted[m]=true
-   if not visuals[m] then local v=template:Clone();v.Parent=folder;visuals[m]=v end
+   -- Rebuilt in the right colour when it changes (a second player joining the run, say).
+   local key=colorKey(list[i].owner)
+   if visuals[m] and shownKey[m]~=key then visuals[m]:Destroy();visuals[m]=nil end
+   if not visuals[m] then local v=templateFor(key):Clone();v.Parent=folder;visuals[m]=v;shownKey[m]=key end
    -- Bound translucent overdraw and dynamic lights in dense drop piles.
    local v=visuals[m]
    v.PrimaryPart.ShardGlow.Enabled=i<=12 and list[i].distance<45
    v.PrimaryPart.AuraOrigin.BlueAura.Enabled=i<=32 and list[i].distance<70
   end
-  for m,v in visuals do if not wanted[m] then v:Destroy();visuals[m]=nil end end
+  for m,v in visuals do if not wanted[m] then v:Destroy();visuals[m]=nil;shownKey[m]=nil end end
  end
  for m,v in visuals do
-  if not m.Parent then v:Destroy();visuals[m]=nil;continue end
+  if not m.Parent then v:Destroy();visuals[m]=nil;shownKey[m]=nil;continue end
   local origin=m:GetAttribute('Origin');local born=m:GetAttribute('BornAt') or now
   local pos=Motion.idle(origin,born,now)
   local spin=Motion.rotation(born,now)

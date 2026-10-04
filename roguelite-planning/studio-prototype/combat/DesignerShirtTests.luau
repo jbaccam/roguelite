@@ -39,6 +39,7 @@ local ok,err=xpcall(function()
  check(#Drops.drops==before,'practice grants no shards')
  local Physics=game:GetService('PhysicsService')
  check(not Physics:CollisionGroupsAreCollidable('RoguelitePlayers','RogueliteZombies'),'players cannot stand on mobs')
+ check(not Physics:CollisionGroupsAreCollidable('RoguelitePlayers','RoguelitePlayers'),'players cannot stack on each other')
  check(Physics:CollisionGroupsAreCollidable('RogueliteZombies','Default'),'mobs retain arena collisions')
  for _,x in p.Character:GetDescendants() do if x:IsA('BasePart') then check(x.CollisionGroup=='RoguelitePlayers','all avatar parts assigned') end end
  local extra=Instance.new('Part');extra.Name='LateAccessoryTest';extra.Parent=p.Character;task.wait()

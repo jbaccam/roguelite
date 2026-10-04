@@ -103,6 +103,25 @@ function S.run(records, n, step, onError, a, b)
 	return finished
 end
 
+-- Wave population: how many enemy slots a wave keeps filled, from its base size (ZombieCount,
+-- ShopService.waveEnemyCount) and the players up in the run (2026-10-03, user: "scale spawn rate for
+-- multiplayer depending on how many people", then "up the mob count a little bit, there should be
+-- larger swarms"). SWARM makes every wave 20% bigger; PLAYER_SCALE adds less for each extra player,
+-- because a team also kills faster: 1 x1.0, 2 x1.6, 3 x2.1, 4 x2.5 (more than 4 only in Studio).
+-- Never above MAX_POPULATION, the cap the waves always had (unmeasured past it, launch audit P5).
+-- Example: wave 10's base is 35 -> 42 solo, 67 for 2 players, 88 for 3, 100 (105 capped) for 4.
+S.SWARM = 1.2
+S.PLAYER_SCALE = { 1, 1.6, 2.1, 2.5 }
+S.MAX_POPULATION = 100
+function S.playerScale(players)
+	local n = math.max(1, math.floor(tonumber(players) or 1))
+	return S.PLAYER_SCALE[math.min(n, #S.PLAYER_SCALE)]
+end
+function S.population(base, players)
+	base = math.max(0, tonumber(base) or 0)
+	return math.min(S.MAX_POPULATION, math.floor(base * S.SWARM * S.playerScale(players) + 0.5))
+end
+
 -- Drops finished records (record.done), keeping the order of the rest.
 function S.compact(records)
 	local j = 0

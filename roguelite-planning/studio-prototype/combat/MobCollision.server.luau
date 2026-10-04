@@ -1,4 +1,4 @@
--- Players cannot stand on mobs; mobs still collide with arena geometry.
+-- Players cannot stand on mobs or on each other; mobs still collide with arena geometry.
 local Physics=game:GetService('PhysicsService')
 local Players=game:GetService('Players')
 local Tags=game:GetService('CollectionService')
@@ -7,6 +7,9 @@ for _,name in {'RoguelitePlayers','RogueliteZombies'} do
 end
 Physics:CollisionGroupSetCollidable('RoguelitePlayers','RogueliteZombies',false)
 Physics:CollisionGroupSetCollidable('RogueliteZombies','RogueliteZombies',false)
+-- Players stacked on each other's heads into a "tower" in the 2026-10-03 friends play-test; teammates
+-- now pass through each other (still solid against the arena, scenery and lobby dummies).
+Physics:CollisionGroupSetCollidable('RoguelitePlayers','RoguelitePlayers',false)
 local bound=setmetatable({},{__mode='k'})
 local function bind(model,group)
  if bound[model] then return end;bound[model]=true

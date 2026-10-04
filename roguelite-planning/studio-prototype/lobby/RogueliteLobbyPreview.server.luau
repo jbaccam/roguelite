@@ -1,7 +1,8 @@
 -- The lobby: step-on queue pads where the first player (host) picks the map and presses START,
 -- and a countdown that launches the group into wave 1. A queued player stays on the pad until LEAVE.
 -- Parties (PartyState, the Party window): when one member joins a pad, by PLAY or by stepping on,
--- the rest of the party standing in the lobby is put on the same pad.
+-- the rest of the party standing in the lobby is put on the same pad; so is someone who accepts an
+-- invite while the party is on one. Everyone put on a pad gets the class step (LobbyUI).
 -- Lobby servers send the group to its own match server (MatchService); the Combined role (Studio)
 -- walks it into the arena here, and keeps a travel remote for testing either area directly.
 -- workspace.RogueliteLobby.StudioStartArea ('Arena' or 'Lobby') picks where Combined Play starts.
@@ -130,6 +131,8 @@ local function publish()
   portal:SetAttribute('QueueCount',n);portal:SetAttribute('Capacity',cap);portal:SetAttribute('QueueState',phase)
   portal:SetAttribute('LaunchAt',q.launchAt);portal:SetAttribute('HostId',q.host);portal:SetAttribute('MapId',q.map);portal:SetAttribute('Solo',q.solo)
   portal:SetAttribute('Difficulty',q.difficulty)
+  -- How many on the pad still have to lock in a class (the banner says so; QueueState waits for them).
+  portal:SetAttribute('Picking',n>0 and state:picking(index) or nil)
   local text=phase=='Launching' and 'Entering...' or phase=='Counting' and string.format('Starting in %ds',math.max(0,math.ceil(q.launchAt-now())))
    or phase=='Choosing' and nameOf(q.host)..' is choosing' or ''
   local mapIndex=q.map and Rules.MapIndex[q.map]
@@ -159,7 +162,13 @@ local function nearPad(hrp,pad)
  local o=hrp.Position-pad.center
  return Vector2.new(o.X,o.Z).Magnitude<=PAD_RADIUS+2 and math.abs(o.Y)<20
 end
-local function setQueue(player) player:SetAttribute('LobbyQueue',state.membership[player.UserId]) end
+-- LobbyQueue: the pad they are on. LobbyLockedIn: they locked in a class on it (START or LOCK IN),
+-- so the banner shows that class instead of asking them to pick one.
+local function setQueue(player)
+ local index=state.membership[player.UserId]
+ player:SetAttribute('LobbyQueue',index)
+ player:SetAttribute('LobbyLockedIn',index and state.queues[index].picked[player.UserId] or nil)
+end
 local function leave(player) if state:leave(player.UserId,now()) then setQueue(player);publish() end end
 
 -- Parties ---------------------------------------------------------------------------
@@ -176,20 +185,62 @@ local function publishParties()
 end
 -- The rest of player's party follows them onto pad `index`: anyone standing in the lobby who isn't
 -- queued, travelling, or just pressed LEAVE on this pad. Each still needs the map unlocked at launch.
-local function pullParty(player,index)
+-- Each gets the class step on arrival (LobbyUI), and the countdown waits for their pick (QueueState).
+-- A Private pad of player's takes members who joined the party after START too; a full or departing
+-- pad says why (2026-10-03). note (optional): what the pulled players are told instead.
+local function pullParty(player,index,note)
  local pad=pads[index];if not pad then return end
+ local q=state.queues[index]
+ if q.solo and q.allow and q.allow[player.UserId] then state:allowParty(index,parties:members(player.UserId),now()) end
  for _,id in parties:members(player.UserId) do
   local p=id~=player.UserId and Players:GetPlayerByUserId(id)
   if not p or state.membership[id] or travelling[p] or p:GetAttribute('MapTravelPending') or stepOff[p]==index then continue end
   local char,hrp=alive(p)
-  if hrp and inLobby(hrp) and state:join(id,index,now()) then
+  if not (hrp and inLobby(hrp)) then continue end
+  if state:join(id,index,now()) then
    local a=math.random()*math.pi*2
    char:PivotTo(CFrame.new(pad.center+Vector3.new(math.cos(a)*3,3.5,math.sin(a)*3))*(hrp.CFrame-hrp.Position))
    stepOff[p]=nil;setQueue(p)
-   partyRemote:FireClient(p,'Result',true,player.DisplayName..' took the party to portal '..index)
+   partyRemote:FireClient(p,'Result',true,note or player.DisplayName..' took the party to portal '..index)
+  else
+   local cap=state:capacityOf(q)
+   partyRemote:FireClient(p,'Result',false,q.locked and ('Portal %d is already leaving'):format(index) or ("Portal %d is full (%d / %d), so you couldn't join %s"):format(index,#q.members,cap,player.DisplayName))
   end
  end
  publish()
+end
+-- An accepted invite (user, 2026-10-03: "if player 1 is in a portal and invites player 2 to his party
+-- it doesn't put player 2 in his portal"): the new member goes onto the pad the party is on (the
+-- inviter's, else another member's), stepping off their own pad if they were on one and there is
+-- room. If no one else is on a pad but they are, the party comes to theirs, as when stepping on.
+-- Example: Ana counts down on Private portal 2, Ben accepts her invite -> Ben on portal 2 (2 / 2),
+-- class step open, the launch waits for his pick.
+local function joinPartyPad(player,from)
+ local anchor=from and state.membership[from.UserId] and from or nil
+ if not anchor then
+  for _,id in parties:members(player.UserId) do
+   local p=id~=player.UserId and state.membership[id] and Players:GetPlayerByUserId(id)
+   if p then anchor=p;break end
+  end
+ end
+ local mine=state.membership[player.UserId]
+ if not anchor then
+  if mine and not state.queues[mine].locked then pullParty(player,mine) end
+  return
+ end
+ local index=state.membership[anchor.UserId]
+ if mine==index then return end
+ local q=state.queues[index]
+ if q.solo and q.allow and q.allow[anchor.UserId] then state:allowParty(index,parties:members(anchor.UserId),now()) end
+ if mine then
+  if state.queues[mine].locked then return end -- already leaving from their own pad
+  if q.locked or #q.members>=state:capacityOf(q) then
+   return partyRemote:FireClient(player,'Result',false,('Portal %d is %s, so you stay on portal %d'):format(index,q.locked and 'already leaving' or 'full',mine))
+  end
+  leave(player)
+ end
+ stepOff[player]=nil
+ pullParty(anchor,index,('You joined %s on portal %d'):format(anchor.DisplayName,index))
 end
 local lastParty={}
 partyRemote.OnServerEvent:Connect(function(player,action,arg)
@@ -207,6 +258,7 @@ partyRemote.OnServerEvent:Connect(function(player,action,arg)
   local from=type(arg)=='number' and Players:GetPlayerByUserId(arg)
   if ok and from then partyRemote:FireClient(from,'Result',true,player.DisplayName..' joined your party') end
   reply(ok,not ok and why or from and ('You joined '..from.DisplayName.."'s party") or 'You joined the party')
+  if ok then publishParties();joinPartyPad(player,from or nil) end
  elseif action=='Decline' then parties:decline(player.UserId)
  elseif action=='Leave' then if parties:leave(player.UserId) then reply(true,'You left the party') end
  else return end
@@ -309,7 +361,7 @@ setupRemote.OnServerEvent:Connect(function(player,action,a,b,c,d,e)
   -- d: Private (only this player's party may join; just them when not in one), else Open.
   local allow={};for _,id in parties:members(player.UserId) do allow[id]=true end
   if not state:start(player.UserId,index,now(),a,d==true,e,allow) then return reply(false,d==true and 'Private needs a pad with only you and your party on it' or 'Only the host can start') end
-  pick(player,b,c)
+  pick(player,b,c);setQueue(player) -- START is the host's lock-in (QueueState.start)
   -- The party comes along (Open or Private; a Private pad holds exactly the party).
   pullParty(player,index)
   local q=state.queues[index]
@@ -320,6 +372,9 @@ setupRemote.OnServerEvent:Connect(function(player,action,a,b,c,d,e)
   if q.map then local mapOk,mapWhy=Rules.validMap(player,q.map,q.difficulty);if not mapOk then return reply(false,mapWhy) end end
   local okL,why=Rules.validLoadout(player,a,b);if not okL then return reply(false,why) end
   pick(player,a,b)
+  -- Locked in: the countdown stops waiting for this player (QueueState.lockIn), and the run uses
+  -- this class and starter (launch reads RunClass / RunWeapon; the match server re-checks them).
+  state:lockIn(player.UserId,now());setQueue(player);publish()
   -- What happens next, not just "Ready" (2026-10-03: "are we readied up and is it gonna start").
   reply(true,q.launchAt and ('Locked in as %s. Starting in %ds'):format(a,math.max(1,math.ceil(q.launchAt-now()))) or ('Locked in as %s. Waiting for the host to start'):format(a))
  elseif action=='Loadout' then
@@ -350,6 +405,7 @@ local function launch(index)
   -- it, so every pad launch went out with map=nil and the match server, unable to set a map, sent
   -- the party straight back to a lobby (trip log, 2026-10-03: "it just queues me into the lobby").
   local map,difficulty=q.map,q.difficulty or 'Normal'
+  local leader=q.solo and q.host or nil -- a Private pad's host leads its party (LEAVE WITH PARTY, 2026-10-03)
   state:finish(index)
   local list,loadouts={},{}
   for p in going do
@@ -362,7 +418,7 @@ local function launch(index)
   end
   publish()
   if #list==0 then return end
-  local ok,why=Match.launch(list,map,difficulty,loadouts)
+  local ok,why=Match.launch(list,map,difficulty,loadouts,leader and {leader=leader} or nil)
   -- On success they stay "travelling" until they leave, so the pad they stand on can't re-queue them.
   if not ok then for _,p in list do travelling[p]=nil;setupRemote:FireClient(p,'Result',false,why) end end
   return
@@ -372,6 +428,7 @@ local function launch(index)
  if fresh then
   Role.setMap(q.map);combat:SetAttribute('RunDifficulty',q.difficulty or 'Normal')
   Shop.resetRun()
+  if Match.setParty then Match.setParty(q.solo and q.host or nil,q.members) end -- Private: its party (LEAVE WITH PARTY)
  end
  state:finish(index)
  for p in going do setQueue(p);moveTo(p,'Arena',4) end
@@ -397,8 +454,31 @@ local function restoreLoadout(player)
  -- The lobby screens (LobbyUI, ArmoryUI, RunSetupUI) show the pick from these.
  player:SetAttribute('LoadoutClass',class);player:SetAttribute('LoadoutWeapon',weapon)
 end
+-- Back from LEAVE WITH PARTY (2026-10-03): the match server sends the party home in one teleport
+-- with {leader, ids} in its teleport data (MatchService.toLobby), and the party is put back together
+-- here with the leader first. Teleport data passes through the client, so a member is only added
+-- when both their data and the leader's list each other. Example: Ana (leader) and Ben land, each
+-- listing both -> party {Ana, Ben}; Cal claiming to be in it is listed by neither -> not added.
+local homecoming={} -- userId -> {leader=,ids={[userId]=true},at=}, kept 60 s
+local function regroup(player)
+ local ok,data=pcall(function() return player:GetJoinData().TeleportData end)
+ local claim=ok and type(data)=='table' and type(data.party)=='table' and data.party or nil
+ if not claim or type(claim.leader)~='number' or type(claim.ids)~='table' then return end
+ local mine={leader=claim.leader,ids={},at=now()}
+ for _,id in claim.ids do if type(id)=='number' then mine.ids[id]=true end end
+ if not mine.ids[player.UserId] or not mine.ids[claim.leader] then return end
+ for id,c in homecoming do if now()-c.at>60 then homecoming[id]=nil end end
+ homecoming[player.UserId]=mine
+ local leader=mine.leader
+ local function agree(id) local c=homecoming[id];return c~=nil and c.leader==leader and c.ids[player.UserId]==true and mine.ids[id]==true and Players:GetPlayerByUserId(id)~=nil end
+ local function add(id) if parties:invite(leader,id,now()) then parties:accept(id,leader,now()) end end
+ if player.UserId==leader then for id in mine.ids do if id~=leader and agree(id) then add(id) end end
+ elseif agree(leader) then add(player.UserId) end
+ publishParties()
+end
 local function attach(player)
  task.spawn(restoreLoadout,player)
+ task.spawn(regroup,player)
  player:SetAttribute('StudioArea',(Role.get()=='Lobby' or root:GetAttribute('StudioStartArea')=='Lobby') and 'Lobby' or 'Arena')
  local function spawned(char)
   leave(player);stepOff[player]=nil

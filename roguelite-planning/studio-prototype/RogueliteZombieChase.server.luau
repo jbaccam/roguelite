@@ -30,7 +30,25 @@ local function adminPaused()
 end
 
 combat:SetAttribute('ZombieCount',combat:GetAttribute('ZombieCount') or 5)
-local function spawnCount() return math.clamp(combat:GetAttribute('ZombieCount') or 5,0,100) end
+-- ZombieCount is the wave's base size (ShopService.waveEnemyCount); the wave keeps
+-- EnemyScheduler.population of it filled: 20% bigger swarms, and more for each player up in the run
+-- (2026-10-03). Up = a run member alive and not downed, so a teammate going down or leaving lowers
+-- it (slots past the new count stop refilling) and a revive or rejoin raises it (watched below).
+-- The tutorial and the admin panel's Keep N alive keep their exact count.
+local Population = require(script.Parent:WaitForChild("EnemyScheduler"))
+local function playersUp()
+    local n = 0
+    for _, player in Players:GetPlayers() do
+        local humanoid = player:GetAttribute('RunMember') == true and not player:GetAttribute('RunDown') and player.Character and player.Character:FindFirstChildOfClass('Humanoid')
+        if humanoid and humanoid.Health > 0 then n += 1 end
+    end
+    return n
+end
+local function spawnCount()
+    local base = math.clamp(combat:GetAttribute('ZombieCount') or 5,0,100)
+    if combat:GetAttribute('TutorialRun') == true or combat:GetAttribute('WaveNoRespawn') == true or combat:GetAttribute('TestZombieCountOverride') ~= nil then return base end
+    return Population.population(base, playersUp())
+end
 local COLLISION_GROUP = "RogueliteZombies"
 if not PhysicsService:IsCollisionGroupRegistered(COLLISION_GROUP) then
     PhysicsService:RegisterCollisionGroup(COLLISION_GROUP)
@@ -168,13 +186,23 @@ local MIN_PLAYER_DISTANCE = 22
 local SPAWN_BAND = {28, 70}
 local STAND_RADIUS = 5
 local RELOCATE_BAND = {14, 30}
-local RESPAWN_DELAY = 2
+local RESPAWN_DELAY = 1 -- was 2; a killed enemy's slot now also gathers into a swarm (SWARM_GATHER)
+-- Swarms (user, 2026-10-03: "there should be larger swarms of mobs"): groups of GROUP_SIZE, and a
+-- batch's groups come together from one side: up to SWARM_SIZE enemies per swarm, every group within
+-- SWARM_ARC of one heading around one player, SWARM_GAP after the swarm before; the next swarm comes
+-- about a third of a turn further round. Killed enemies' slots gather up to SWARM_GATHER s (sooner
+-- once SWARM_MIN wait) and come back as one swarm, not a trickle of singles. A slot stays empty
+-- 1 + 0-2.5 + 1 s (telegraph), about the old 2 + 0.3 + 1, so arrivals per second stay the same.
+-- Example: 7 kills in 3 s -> one 7-strong swarm from the north-east instead of 7 singles.
+local GROUP_SIZE = {4, 6} -- was 2-4
+local SWARM_SIZE, SWARM_ARC, SWARM_GAP = 18, math.rad(40), 0.8
+local SWARM_GATHER, SWARM_MIN = 2.5, 6
 local MIN_MASS = 4 -- enemy bodies below this get a denser root (see spawnZombie)
 local WARNING_COLOR = Color3.fromRGB(214, 58, 52)
 local warnings = Instance.new("Folder")
 warnings.Name = "RogueliteSpawnWarnings"
 warnings.Parent = workspace
-local queued, queuedSet, flushScheduled = {}, {}, false
+local queued, queuedSet = {}, {}
 
 local function arena()
     local m = marker()
@@ -257,15 +285,17 @@ local function groundAt(point, context)
     if #workspace:GetPartBoundsInBox(CFrame.new(hit.Position + Vector3.new(0, 3.5, 0)), Vector3.new(3, 5, 3), context.overlap) > 0 then return nil end
     return hit.Position
 end
--- Prefer a ring around a random living player so pressure comes from every side.
-local function pickSpawnPoint(avoid, anchor, band, minimum)
+-- Prefer a ring around a random living player so pressure comes from every side. heading (a swarm,
+-- optional): {origin, angle} tries that player's side first (within SWARM_ARC), then anywhere.
+local function pickSpawnPoint(avoid, anchor, band, minimum, heading)
     local context = spawnContext()
     local center, radius, roots = context.center, context.radius, context.roots
     for attempt = 1, 32 do
-        local origin = anchor or (#roots > 0 and attempt <= 24 and roots[math.random(#roots)].Position)
+        local swarm = heading and attempt <= 16
+        local origin = swarm and heading.origin or anchor or (#roots > 0 and attempt <= 24 and roots[math.random(#roots)].Position)
         local candidate
         if origin then
-            local angle = math.random() * math.pi * 2
+            local angle = swarm and heading.angle + (math.random() * 2 - 1) * SWARM_ARC or math.random() * math.pi * 2
             local distance = band[1] + math.random() * (band[2] - band[1])
             candidate = Vector3.new(origin.X + math.cos(angle) * distance, center.Y, origin.Z + math.sin(angle) * distance)
         else
@@ -287,7 +317,8 @@ local function memberSpots(point, count)
     local context = spawnContext()
     for n = 1, count do
         local angle = (n / count + math.random() * 0.15) * math.pi * 2
-        local offset = count > 1 and GROUP_RADIUS * (0.55 + math.random() * 0.45) or 0
+        -- Groups over 4 get a wider ring (6 -> x1.22), so their bodies don't spawn inside each other.
+        local offset = count > 1 and GROUP_RADIUS * math.max(1, math.sqrt(count / 4)) * (0.55 + math.random() * 0.45) or 0
         spots[n] = groundAt(point + Vector3.new(math.cos(angle) * offset, 0, math.sin(angle) * offset), context) or point
     end
     return spots
@@ -347,14 +378,16 @@ end
 -- A big refill picks PICKS_PER_FRAME groups a frame instead of all at once; each group's
 -- telegraph still starts GROUP_STAGGER after the previous one, timed from the flush.
 local PICKS_PER_FRAME = 4
+local heading = math.random() * math.pi * 2 -- the side the last swarm came from
 local function flushQueue()
-    flushScheduled = false
     local generation, batch, chosen, delay = waveGeneration, queued, {}, 0
     queued = {}
     local started, picks = os.clock(), 0
-    local i = 1
+    local i, swarmLeft, swarm = 1, 0, nil
+    -- The tutorial keeps its old spawns: groups of 2-4 from every side.
+    local tutorial = combat:GetAttribute('TutorialRun') == true or combat:GetAttribute('WaveNoRespawn') == true
     while i <= #batch do
-        local size = math.min(#batch - i + 1, math.random(2, 4))
+        local size = math.min(#batch - i + 1, tutorial and math.random(2, 4) or math.random(GROUP_SIZE[1], GROUP_SIZE[2]))
         local members = table.move(batch, i, i + size - 1, 1, {})
         i += size
         if picks >= PICKS_PER_FRAME then picks = 0; task.wait() end
@@ -362,9 +395,18 @@ local function flushQueue()
         -- still goes to telegraphGroup, which releases it (and so does a wave reset mid-flush).
         local point
         if generation == waveGeneration then
+            -- A new swarm: a third of a turn (+-23 degrees) on from the last, around one player.
+            if swarmLeft <= 0 and not tutorial then
+                if swarm then delay += SWARM_GAP end
+                local roots = livingRoots()
+                heading = (heading + math.pi * 2 / 3 + (math.random() - 0.5) * 0.8) % (math.pi * 2)
+                swarm = #roots > 0 and {origin = roots[math.random(#roots)].Position, angle = heading} or nil
+                swarmLeft = SWARM_SIZE
+            end
+            swarmLeft -= size
             picks += 1
             local picked
-            picked, point = pcall(pickSpawnPoint, chosen, nil, SPAWN_BAND, MIN_PLAYER_DISTANCE)
+            picked, point = pcall(pickSpawnPoint, chosen, nil, SPAWN_BAND, MIN_PLAYER_DISTANCE, swarm)
             if not picked then warn('Spawn point failed: ' .. tostring(point)); point = nil end
             if point then table.insert(chosen, point) end
         end
@@ -372,14 +414,26 @@ local function flushQueue()
         delay += GROUP_STAGGER
     end
 end
-local function queueSpawn(index)
-    if adminPaused() or queuedSet[index] or folder:FindFirstChild(string.format('Zombie_%02d', index)) then return end
+-- One flush timer at a time; a sooner flush replaces a later one (a swarm that filled up early goes now).
+local flushAt, flushToken = nil, 0
+local function scheduleFlush(delay)
+    local at = os.clock() + delay
+    if flushAt and flushAt <= at then return end
+    flushAt, flushToken = at, flushToken + 1
+    local token = flushToken
+    task.delay(delay, function()
+        if token ~= flushToken then return end
+        flushAt = nil
+        flushQueue()
+    end)
+end
+-- respawn: a killed enemy's slot, which waits for company (SWARM_GATHER, SWARM_MIN); a wave's first
+-- fill and refills go at once. Slots past the wave's count (fewer players up) stay empty.
+local function queueSpawn(index, respawn)
+    if adminPaused() or queuedSet[index] or index > spawnCount() or folder:FindFirstChild(string.format('Zombie_%02d', index)) then return end
     queuedSet[index] = waveGeneration
     table.insert(queued, index)
-    if not flushScheduled then
-        flushScheduled = true
-        task.delay(0.3, flushQueue)
-    end
+    scheduleFlush(respawn and #queued < SWARM_MIN and SWARM_GATHER or 0.3)
 end
 
 -- admin: an extra enemy from the admin panel (AdminSpawn): named Admin_nn, outside the wave's
@@ -445,7 +499,7 @@ npc.Destroying:Connect(function()
     -- WaveNoRespawn (the tutorial): a wave is a fixed number of enemies that ends when they're dead.
     if splitChild or admin or not npc:GetAttribute('DeathPopped') or combat:GetAttribute('WaveNoRespawn') == true then return end
     task.delay(RESPAWN_DELAY, function()
-        if thisWave == waveGeneration and combat:GetAttribute('ZombiesEnabled') then queueSpawn(index) end
+        if thisWave == waveGeneration and combat:GetAttribute('ZombiesEnabled') then queueSpawn(index, true) end
     end)
 end)
 local angle = (index - 1) * math.pi * 2 / math.max(1,spawnCount())
@@ -675,6 +729,20 @@ combat:GetAttributeChangedSignal('ZombiesEnabled'):Connect(resetWave)
 combat:GetAttributeChangedSignal('ZombieCount'):Connect(resetWave)
 combat:GetAttributeChangedSignal('EnemyRoster'):Connect(resetWave)
 resetWave()
+-- More players up mid-wave (a revive, a rejoin, a late arrival) fill the new slots at once; fewer
+-- need nothing here (queueSpawn leaves slots past the count empty). Checked once a second.
+-- Example: 2 players at wave 10 keep 67 enemies; one goes down -> 42 as they die; revived -> 67.
+task.spawn(function()
+    local population = 0
+    while true do
+        task.wait(1)
+        local count = combat:GetAttribute('ZombiesEnabled') == true and Role.marker() and not adminPaused() and spawnCount() or 0
+        if count > population then
+            for index = population + 1, count do queueSpawn(index) end
+        end
+        population = count
+    end
+end)
 
 -- Admin panel spawner (ADMIN_PANEL.md). Only AdminService calls it, after checking the developer.
 -- ('Spawn', id, count, position): extra enemies (or bosses: AdminConfig.BossIds) on open floor 20-40 studs
