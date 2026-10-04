@@ -780,18 +780,25 @@ local function bossDefs()
     local ok, defs = pcall(function() return module and require(module) end)
     return ok and defs or nil
 end
--- The Hammer stays on BossService until MapBossDefs has his def (as BossEncounter does).
-local function oldHammer(id, defs) return id == 'Hammer' and not (defs and defs.get('Hammer')) end
+-- A map boss this place can run: MapBossDefs.ready (its def, timing, client clips and template).
+-- A MapBossDefs from before ready() (Studio behind the repo) is read the old way, Hammer excluded.
+local function mapReady(id, defs)
+    if not defs then return false end
+    if defs.ready then return defs.ready(id) end
+    local def, anims = defs.get(id), combat:FindFirstChild('BossAnimations')
+    return id ~= 'Hammer' and def ~= nil and templates:FindFirstChild(id .. '_NPC') ~= nil and anims ~= nil and anims:FindFirstChild(def.anim) ~= nil and defs.timing(id) ~= nil
+end
+-- The Hammer stays on BossService until the rebuilt Hammer Brute is ready here (as BossEncounter does).
+local function oldHammer(id, defs) return id == 'Hammer' and not mapReady(id, defs) end
 -- The bosses this place can spawn: a template in RogueliteNPCs, and a def, timing and client
 -- animations for the map bosses. A missing one is never picked.
 local function endlessBosses()
-    local defs, anims, list = bossDefs(), combat:FindFirstChild('BossAnimations'), {}
+    local defs, list = bossDefs(), {}
     for _, id in BossIds do
         local ok
         if oldHammer(id, defs) then ok = templates:FindFirstChild('HammerBoss_NPC') ~= nil
         else
-            local def = defs and defs.get(id)
-            ok = def ~= nil and templates:FindFirstChild(id .. '_NPC') ~= nil and anims ~= nil and anims:FindFirstChild(def.anim) ~= nil and defs.timing(id) ~= nil
+            ok = mapReady(id, defs)
         end
         if ok then table.insert(list, id) end
     end
@@ -963,7 +970,8 @@ adminSpawn.OnInvoke = function(action, id, count, position)
     for _ = 1, math.clamp(math.floor(count), 0, table.find(BossIds, id) and 5 or 50) do
         local point = pickSpawnPoint({}, position, {20, 40}, 20)
         if point then
-            if id == 'Hammer' then
+            -- The old BossService Hammer until the rebuilt one is ready (oldHammer); then the map-boss path below.
+            if oldHammer(id, bossDefs()) then
                 local at = point + Vector3.yAxis * (BossMotion.RootHeight + 0.1)
                 local boss = Bosses.spawn(CFrame.lookAt(at, Vector3.new(position.X, at.Y, position.Z)), true)
                 if boss then boss:SetAttribute('AdminSpawn', true); made += 1 end

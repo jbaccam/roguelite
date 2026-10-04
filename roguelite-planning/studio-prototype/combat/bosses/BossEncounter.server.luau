@@ -19,10 +19,13 @@ local function update()
  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances={workspace:FindFirstChild('RogueliteEnemies'),marker}
  local p=marker.Position+Vector3.new(0,0,-15);local ground=workspace:Raycast(p+Vector3.yAxis*35,-Vector3.yAxis*100,params)
  if not ground then return end
- local Defs=require(combat:WaitForChild('MapBossDefs'))
- -- 'Hammer' stays on the old BossService until MapBossDefs has his def (Hammer Brute rebuild R6).
- if map.boss=='Hammer' and not Defs.get('Hammer') then current=B.spawn(CFrame.new(ground.Position+Vector3.yAxis*(Motion.RootHeight+.1)),false)
- else
+ -- 'Hammer' stays on the old BossService until this place can run the rebuilt Hammer Brute: his def,
+ -- timing, clips and template (MapBossDefs.ready). A missing, failing or older MapBossDefs counts as
+ -- not ready, so wave 20 always has a boss.
+ local module=combat:FindFirstChild('MapBossDefs')
+ local ok,Defs=pcall(function() return module and require(module) end);if not ok then Defs=nil end
+ if map.boss=='Hammer' and not (Defs and Defs.ready and Defs.ready('Hammer')) then current=B.spawn(CFrame.new(ground.Position+Vector3.yAxis*(Motion.RootHeight+.1)),false)
+ elseif Defs then
   -- Wave bosses make their entrance (def.intro, where the def has one).
   local MB=require(script.Parent:WaitForChild('MapBossService'));local T=Defs.timing(map.boss)
   current=T and MB.spawn(map.boss,CFrame.new(ground.Position+Vector3.yAxis*(T.rootHeight+.1)),false,{intro=true})

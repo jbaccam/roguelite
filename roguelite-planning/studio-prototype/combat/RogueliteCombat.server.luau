@@ -159,6 +159,12 @@ local function clear(origin,finish,p) return workspace:Raycast(origin,finish-ori
 -- and the hands holding it are not his body, or reaching the hammer would hit him. Every other
 -- enemy is measured to its root, as before.
 local HELD={Hammer=true,LeftHand=true,RightHand=true}
+-- The rebuilt Hammer Brute (a map boss, MapBossId 'Hammer') is skinned: his hands are part of his
+-- body mesh, and only the hammer is its own section.
+local HELD_BRUTE={HammerBrute_Hammer=true}
+-- The sections left out of a boss's shell: the old Hammer's hammer and hands, the new one's hammer.
+-- Non-nil only for a Hammer Brute, old or rebuilt.
+local function heldBy(npc) if npc:GetAttribute('IsHammerBoss')==true then return HELD end;return npc:GetAttribute('MapBossId')=='Hammer' and HELD_BRUTE or nil end
 local function shelled(npc) return npc:GetAttribute('IsMapBoss')==true or npc:GetAttribute('IsHammerBoss')==true end
 -- A boss's body sections in child order, kept until a child is added or removed (or it is
 -- destroyed): walking every child per slot per tick and per melee hit was the cost.
@@ -176,11 +182,11 @@ local function bodySections(npc,root)
 end
 local function reachPoint(npc,root,from)
  if not shelled(npc) then return root.Position end
- local hammer=npc:GetAttribute('IsHammerBoss')==true
+ local skip=heldBy(npc)
  local best,bestDistance=root.Position,(root.Position-from).Magnitude
  for _,p in bodySections(npc,root) do
   -- Parent check: the removal signal is deferred, so a section can leave before the cache drops.
-  if p.Parent==npc and not (hammer and HELD[p.Name]) then
+  if p.Parent==npc and not (skip and skip[p.Name]) then
    local l=p.CFrame:PointToObjectSpace(from);local h=p.Size*.5
    local q=p.CFrame:PointToWorldSpace(Vector3.new(math.clamp(l.X,-h.X,h.X),math.clamp(l.Y,-h.Y,h.Y),math.clamp(l.Z,-h.Z,h.Z)))
    local distance=(q-from).Magnitude
@@ -440,9 +446,9 @@ RunService.Heartbeat:Connect(function(dt)
      d.kind='Ranged';d.damage=d.damage/Stats.mult(d.stats.MeleeDamage)*Stats.mult(d.stats.RangedDamage)
      d.range=d.targetRange
     end
-    -- A melee swing at the Hammer Brute lands on his shell (that point), not inside him at his root;
-    -- standing inside a body section, it still swings at his root.
-    local aim=d.kind=='Melee' and target.Parent:GetAttribute('IsHammerBoss') and (reach-origin).Magnitude>.1 and reach or target.Position
+    -- A melee swing at the Hammer Brute (old or rebuilt) lands on his shell (that point), not inside
+    -- him at his root; standing inside a body section, it still swings at his root.
+    local aim=d.kind=='Melee' and heldBy(target.Parent)~=nil and (reach-origin).Magnitude>.1 and reach or target.Position
     _,_,duration=Motion.attackTiming(id,d.kind,slot.style)
     interval=math.max(interval,duration/d.motionRate)
     slot.hand=slot.serial%2==1 and -1 or 1;slot.secondAim=second and second.Position or nil

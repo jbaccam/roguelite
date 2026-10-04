@@ -124,7 +124,9 @@ local function nearestCrystal()
  return best
 end
 -- During a fight the box keeps to the screen's corners and sides, clear of the player and the boss.
-local function fightContext() return {edges=true,avoid=Tags:GetTagged('HammerBoss')} end
+-- The boss: the old Hammer (tag HammerBoss) or a map boss, the rebuilt Hammer Brute included (MapBoss).
+local function bosses() local list=Tags:GetTagged('HammerBoss');for _,npc in Tags:GetTagged('MapBoss') do table.insert(list,npc) end;return list end
+local function fightContext() return {edges=true,avoid=bosses()} end
 -- The boss's first two attacks after his entrance: "Red circle = move!"
 local function watchBoss(npc)
  npc:GetAttributeChangedSignal('BossSerial'):Connect(function()
@@ -135,6 +137,8 @@ local function watchBoss(npc)
 end
 Tags:GetInstanceAddedSignal('HammerBoss'):Connect(watchBoss)
 for _,npc in Tags:GetTagged('HammerBoss') do watchBoss(npc) end
+Tags:GetInstanceAddedSignal('MapBoss'):Connect(watchBoss)
+for _,npc in Tags:GetTagged('MapBoss') do watchBoss(npc) end
 
 -- The run part: {line=Lines id, target=GuiObject or nil}, {hide=true}, or nil when not in it.
 local function runStep()

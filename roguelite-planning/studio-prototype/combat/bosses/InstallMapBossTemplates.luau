@@ -1,7 +1,11 @@
--- Edit-time assembly of the four map-boss templates (plan F Task 4). Paste into execute_luau
+-- Edit-time assembly of the map-boss templates (plan F Task 4). Paste into execute_luau
 -- (Edit) after MapBossTiming and MapBossDefs are synced. The raw imports in
--- ServerStorage.MapBossRawImports are never edited. An older <Id>_NPC is moved to
+-- ServerStorage.MapBossRawImports are never edited; each is named by its MapBossDefs id (the
+-- SOURCE FBX imported, then renamed: Hammer, KingCrab, ...). An older <Id>_NPC is moved to
 -- ServerStorage.BeforeMapBoss_<yyyymmdd> before its replacement is parented.
+-- ONLY (a global set before this code, e.g. ONLY={'Hammer'}) installs just those ids and fails on
+-- a missing raw import or timing. Without it every Defs.Order id is installed, and one without a
+-- raw import or timing yet (the Hammer Brute before R8) is reported SKIPPED and left alone.
 assert(not game:GetService("RunService"):IsRunning(), "Run the installer in Edit mode")
 local storage = game:GetService("ServerStorage")
 local combat = game.ReplicatedStorage.RogueliteCombat
@@ -18,6 +22,8 @@ local function fresh(m)
 end
 local Defs = fresh(assert(combat:FindFirstChild("MapBossDefs"), "Sync MapBossDefs and MapBossTiming first"))
 local SOURCE = {
+	-- The Hammer Brute (rebuild R6): HammerBrute_EyeGlow goes Neon below, so the enrage can tint it red.
+	Hammer = "hammer-brute-boss/exports/game/HammerBrute_Studio.fbx",
 	KingCrab = "king-crab-boss/exports/game/KingCrab_Studio.fbx",
 	FrostCyclops = "frost-cyclops-boss/exports/game/FrostCyclops_Studio.fbx",
 	Pharaoh = "pharaoh-boss/exports/game/Pharaoh_Studio.fbx",
@@ -74,9 +80,14 @@ local function assertUnderMeshCap(npc, id)
 	end
 end
 local report = {}
-for _, id in Defs.Order do
+local only = ONLY
+for _, id in only or Defs.Order do
 	-- The template is built at authored size; MapBossService applies def.scale at spawn.
 	local def, T = Defs.get(id), Defs.rawTiming(id)
+	if not only and not (def and T and raw:FindFirstChild(id)) then
+		table.insert(report, "SKIPPED " .. id .. ": " .. (not def and "no def" or not T and "no MapBossTiming entry" or "no raw import"))
+		continue
+	end
 	assert(def and T, "Missing defs or timing for " .. id)
 	local source = assert(raw:FindFirstChild(id), "Missing raw import " .. id)
 	-- A fresh Model at scale 1, not the raw import's clone (ScaleTo 0.01): a Humanoid scales its

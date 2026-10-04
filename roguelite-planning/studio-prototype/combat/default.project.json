@@ -76,6 +76,24 @@
         "BossMotion": {
           "$path": "../../hammer-boss/BossMotion.luau"
         },
+        "MapBossDefs": {
+          "$path": "bosses/MapBossDefs.luau"
+        },
+        "MapBossTiming": {
+          "$path": "bosses/MapBossTiming.luau"
+        },
+        "MapBossShapes": {
+          "$path": "bosses/MapBossShapes.luau"
+        },
+        "BossVfxAssets": {
+          "$path": "bosses/BossVfxAssets.luau"
+        },
+        "BossVfx": {
+          "$path": "bosses/BossVfx"
+        },
+        "BossAnimations": {
+          "$path": "bosses/BossAnimations"
+        },
         "ZombiePopped": {
           "$className": "RemoteEvent"
         },
@@ -489,10 +507,13 @@
         "$path": "EnemyScheduler.luau"
       },
       "BossService": {
-        "$path": "../../hammer-boss/BossService.luau"
+        "$path": "bosses/BossService.luau"
       },
       "BossEncounter": {
-        "$path": "../../hammer-boss/BossEncounter.server.luau"
+        "$path": "bosses/BossEncounter.server.luau"
+      },
+      "MapBossService": {
+        "$path": "bosses/MapBossService.luau"
       },
       "SpecialWeapons": {
         "$path": "SpecialWeapons.luau"
@@ -578,6 +599,9 @@
         },
         "BossPresentation": {
           "$path": "../../hammer-boss/BossPresentation.client.luau"
+        },
+        "MapBossPresentation": {
+          "$path": "bosses/MapBossPresentation.client.luau"
         },
         "ShardVisuals": {
           "$path": "ShardVisuals.client.luau"

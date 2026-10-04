@@ -4,6 +4,8 @@
 -- New modules are created unsandboxed, like the rest of the map-boss chain (see the
 -- roguelite-new-modules note: MapBossPresentation, MapBossService and BossVfx are all unsandboxed).
 -- It warns if the dragon template is still the old shrunk import (see InstallMapBossTemplates).
+-- MapBossServiceTests, MapBossShapesTests and MapBossPresentationTests run from the repo through
+-- tools/RepoRequire.luau and are not synced.
 assert(not game:GetService("RunService"):IsRunning(), "Run the sync in Edit mode")
 local Http = game:GetService("HttpService")
 local RS, SSS, SS = game.ReplicatedStorage, game.ServerScriptService, game.ServerStorage
@@ -53,9 +55,14 @@ if not vfx then
 	vfx.Name = "BossVfx"
 	vfx.Parent = RC
 end
-for _, name in { "Common", "Dragon", "FrostCyclops", "KingCrab", "Pharaoh" } do
+for _, name in { "Common", "Dragon", "FrostCyclops", "Hammer", "KingCrab", "Pharaoh" } do
 	put(vfx, "ModuleScript", name, BASE .. "BossVfx/" .. name .. ".luau")
 end
+-- Wave bosses: BossEncounter routes 'Hammer' to this runtime once MapBossDefs.ready('Hammer') (the
+-- Hammer Brute rebuild); until then it spawns the old BossService Hammer. Its other routing
+-- (RogueliteZombieChase admin and Endless spawns, BossIntro, the shell and tutorial readers) is in
+-- plan_hammer_brute_hunks.py, synced with tools/SyncPlan.
+put(SSS, "Script", "BossEncounter", BASE .. "BossEncounter.server.luau")
 -- Animation modules: ANIMATIONS lists repo files under BossAnimations/ ('king-crab/ClawCrush/Frames01');
 -- a trailing 'init' is the folder's own module.
 for _, rel in ANIMATIONS or {} do

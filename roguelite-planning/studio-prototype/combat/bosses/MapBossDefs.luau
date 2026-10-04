@@ -25,11 +25,40 @@
 --   intro {drop,fall,after,clip} and introName: a wave boss's sky-drop entrance. tutorial
 --     {order,enrage,follow}: the TutorialBossHealth boss's attack order, and false turns enrage or
 --     follow-ups off.
+-- D.ready(id) (server): true only when this place can run the boss on this runtime, def, timing,
+--   client clips and template all present. Every spawn of 'Hammer' checks it, and falls back to the
+--   old BossService Hammer until his template and animations are installed (rebuild R6, 2026-10-03).
 local Timing=require(script.Parent:WaitForChild('MapBossTiming'))
 local D={}
-D.Order={'KingCrab','Pharaoh','FrostCyclops','Dragon'}
+-- The installer's order (InstallMapBossTemplates). The Hammer is Pine Valley's, the first map.
+D.Order={'Hammer','KingCrab','Pharaoh','FrostCyclops','Dragon'}
 D.ENRAGE_AT=.5
 D.FIRST_ATTACK=1.2 -- seconds after spawn before the first attack
+-- Pine Valley's wave-20 boss (and the tutorial's, at TutorialBossHealth), rebuilt on this runtime
+-- (plans/2026-10-03-hammer-brute-rebuild-design.md section 4). He chases at 20 (23 enraged), under the
+-- players' 24. Charge starts at 22 studs, so the order walk picks it only when nobody is in melee
+-- reach, and never within 5 s of the last one (lockout). Every slam (Slam, SpinSlam's second hit, the
+-- ChargeSlam) opens CRACKS under up to 3 players it missed, 0.85 s later. The eyes glow white
+-- (glowColor, the installer's Neon EyeGlow) until the enrage turns them red (BossVfx/Hammer).
+local CRACKS={radius=5.5,delay=.85,maxTargets=3,range=40,damage=16}
+D.Hammer={anim='hammer-brute',name='Hammer Brute',introName='HAMMER ZOMBIE BOSS',health=18000,scale=1,chaseSpeed=20,glowColor=Color3.fromRGB(255,255,255),
+ intro={drop=1.2,fall=.65,after=3.6,clip='IntroLand'},roar='Roar',
+ enrage={cooldown=.6,chase=3,follow=2,order={'SwingSpin','Slam','Charge','SpinSlam','Swing','SpinSlam','Spin'}},
+ tutorial={order={'Slam','Swing','Charge','Slam','Spin'},enrage=false,follow=false},
+ attacks={
+  Slam={clip='Slam',range={0,16},cooldown=.8,damage=26,shape='circle',point='HammerFace',radius=9.5,height=6,knockdown=.6,follow=CRACKS},
+  Swing={clip='Swing',range={0,14},cooldown=.8,damage=20,shape='sweep',point='HammerFace',mid='HammerGrip',radius=3.2,baseRadius=4},
+  Spin={clip='Spin',range={0,14},cooldown=1,damage=22,shape='sweep',point='HammerFace',mid='HammerGrip',radius=3.2,baseRadius=4},
+  SwingSpin={clip='SwingSpin',range={0,14},cooldown=1,phases={
+   {shape='sweep',damage=20,point='HammerFace',mid='HammerGrip',radius=3.2,baseRadius=4},
+   {shape='sweep',damage=22,point='HammerFace',mid='HammerGrip',radius=3.2,baseRadius=4}}},
+  SpinSlam={clip='SpinSlam',range={0,14},cooldown=1.1,phases={
+   {shape='sweep',damage=22,point='HammerFace',mid='HammerGrip',radius=3.2,baseRadius=4},
+   {shape='circle',damage=26,point='HammerFace',radius=9.5,height=6,knockdown=.6,follow=CRACKS}}},
+  Charge={clips={'ChargeStart','ChargeRun','ChargeSlam'},facing='forward',range={22,70},lockout=5,cooldown=1,damage=24,
+   shape='lane',length=75,width=9,speed=32,contact=4,knockdown=.6,
+   finish={shape='circle',damage=26,point='HammerFace',radius=9.5,height=6,knockdown=.6,follow=CRACKS}},
+ },order={'Slam','Swing','Charge','Slam','Spin','SwingSpin'}}
 D.KingCrab={anim='king-crab',name='Giant King Crab',health=21000,scale=1.4,chaseSpeed=22,glowColor=nil,deathSeconds=nil,
  enrage={cooldown=.6,chase=3,extra=4,follow=2},
  attacks={
@@ -72,7 +101,8 @@ D.Dragon={anim='dragon',name='Inferno Dragon',health=31500,scale=1.25,chaseSpeed
   FrontStomp={clip='FrontStomp',rate=1.2,range={0,16},cooldown=1.1,damage=38,shape='circle',point='StompCenter',radius=12,knockdown=.8,
    follow={radius=6.5,delay=.85,maxTargets=4,range=56,damage=26}},
  },order={'FireBreath','Fireball','FrontStomp','TailWhip','Fireball','FireBreath','TailWhip','FrontStomp'}}
-D.ATTACK_CLIPS={['king-crab']={'ClawCrush','RushStart','RushLoop','RushEnd','BubbleBarrage'},['frost-cyclops']={'GroundSlam','Stomp'},['pharaoh']={'CursedBolts','TombEruption'},['dragon']={'FireBreath','TailWhip','FrontStomp'}}
+D.ATTACK_CLIPS={['king-crab']={'ClawCrush','RushStart','RushLoop','RushEnd','BubbleBarrage'},['frost-cyclops']={'GroundSlam','Stomp'},['pharaoh']={'CursedBolts','TombEruption'},['dragon']={'FireBreath','TailWhip','FrontStomp'},
+ ['hammer-brute']={'Slam','Swing','Spin','SwingSpin','SpinSlam','ChargeStart','ChargeRun','ChargeSlam','IntroLand','Roar'}}
 function D.get(id) return D[id] and type(D[id])=='table' and D[id].anim and D[id] or nil end
 function D.isBoss(id) return D.get(id)~=nil end
 -- The generated timing as authored (the template installer builds the unscaled template from it).
@@ -80,7 +110,7 @@ function D.rawTiming(id) local d=D.get(id);return d and Timing[d.anim] end
 
 -- Scaled, rate-adjusted timing (see the header). Built once per boss.
 local TIMES={'duration','warnStart','impact','activeEnd','recoveryEnd','chargeStart','channelStart','channelEnd'}
-local LENGTHS={'rootHeight','height','footprintRadius','groundOffset','strideLength','rushStrideLength'}
+local LENGTHS={'rootHeight','height','footprintRadius','groundOffset','strideLength','rushStrideLength','chargeStrideLength'}
 local cache={}
 local function rateOf(def,clip)
  for _,a in def.attacks do if a.clip==clip or (a.clips and table.find(a.clips,clip)) then return a.rate or 1 end end
@@ -120,5 +150,16 @@ function D.timing(id)
  for name,at in raw.attacks or {} do T.attacks[name]=D.scaleAttack(at,s,rateOf(def,name)) end
  cache[id]=T
  return T
+end
+-- Server (and Edit): true when this place can run `id` on this runtime: its def, its generated timing,
+-- its clip modules (RogueliteCombat.BossAnimations[anim], which clients play) and its template
+-- (ServerStorage.RogueliteNPCs.<id>_NPC). With any one missing, callers keep the old path: 'Hammer'
+-- spawns the BossService Hammer, so a def synced ahead of his template never breaks wave 20.
+-- Example: today D.Hammer is here but MapBossTiming has no 'hammer-brute', so ready('Hammer') is false.
+-- Clients can't see ServerStorage, so it is false there.
+function D.ready(id)
+ local def=D.get(id);if not def or not D.timing(id) then return false end
+ local anims=script.Parent:FindFirstChild('BossAnimations');local npcs=game:GetService('ServerStorage'):FindFirstChild('RogueliteNPCs')
+ return anims~=nil and anims:FindFirstChild(def.anim)~=nil and npcs~=nil and npcs:FindFirstChild(id..'_NPC')~=nil
 end
 return D

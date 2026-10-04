@@ -231,6 +231,33 @@ if Defs then
   end
  end
  add(#missing==0 and defs>=4,('every order, enrage.order and tutorial.order names a real attack (%d defs; missing: %s)'):format(defs,#missing>0 and table.concat(missing,', ') or 'none'))
+ -- Every clip an attack, intro or roar plays is one the build generates (ATTACK_CLIPS, which
+ -- build_boss_modules.py ATTACKS mirrors, and the client's aliased() reads).
+ local unlisted={}
+ for id in Defs do
+  local def=Defs.get(id)
+  if def then
+   local listed,used=Defs.ATTACK_CLIPS[def.anim] or {},{}
+   for _,a in def.attacks do for _,c in a.clips or {a.clip} do table.insert(used,c) end end
+   if def.intro then table.insert(used,def.intro.clip) end;if def.roar then table.insert(used,def.roar) end
+   for _,c in used do if not table.find(listed,c) then table.insert(unlisted,id..'.'..tostring(c)) end end
+  end
+ end
+ add(#unlisted==0,('every attack, intro and roar clip is in ATTACK_CLIPS (missing: %s)'):format(#unlisted>0 and table.concat(unlisted,', ') or 'none'))
+ -- MapBossDefs.ready (rebuild R6): true exactly when the def, timing, client clips and template are
+ -- all here, so 'Hammer' keeps the BossService Hammer until his template and animations are installed.
+ local okReady,readyNow=pcall(function()
+  local anims=game.ReplicatedStorage.RogueliteCombat:FindFirstChild('BossAnimations');local npcs=game:GetService('ServerStorage'):FindFirstChild('RogueliteNPCs');local list={}
+  for _,id in Defs.Order do
+   local def=Defs.get(id);local want=def~=nil and Defs.timing(id)~=nil and anims~=nil and anims:FindFirstChild(def.anim)~=nil and npcs~=nil and npcs:FindFirstChild(id..'_NPC')~=nil
+   if Defs.ready(id)~=want then error(id..' ready '..tostring(Defs.ready(id))..', expected '..tostring(want)) end
+   if want then table.insert(list,id) end
+  end
+  assert(Defs.ready('Nope')==false,'an unknown id is ready')
+  assert(Defs.timing('Hammer')~=nil or Defs.ready('Hammer')==false,'the Hammer is ready without his timing')
+  return #list>0 and table.concat(list,', ') or 'none'
+ end)
+ add(okReady,('ready: only with def, timing, client clips and template all present (ready now: %s)'):format(tostring(readyNow)))
  local function segd(a,b,p) local ab=b-a;local t=math.clamp((p-a):Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1);return (a+ab*t-p).Magnitude end
  -- The Dragon's tail whip hits a player standing 8 studs behind him (under his rear), as the
  -- server's hit loop tests it (tail chain inside the warning arc), and never one 8 studs in front.
@@ -245,6 +272,8 @@ if Defs then
  add(behind~=nil and X.hitFrom(tw,twat)<twat.impact and struck(Vector3.new(0,3,-8))==nil,
   ('Dragon TailWhip hits a player 8 studs behind him (at %s s; swing from %.2f s, impact %.2f s) and not 8 in front'):format(tostring(behind and math.floor(behind*100+.5)/100),X.hitFrom(tw,twat),twat.impact))
  for _,id in Defs.Order do
+  -- The Hammer Brute's def comes before his generated timing (rebuild R6): an id without one is skipped.
+  if not Defs.timing(id) then continue end
   local def,RT=Defs.get(id),Defs.timing(id);local rf=X.frame(CFrame.lookAt(Vector3.new(0,RT.rootHeight,0),Vector3.new(0,RT.rootHeight,-1)),RT,0)
   local stop=def.stop or math.min(8*def.scale,RT.footprintRadius or 4)+3
   for kind,a in def.attacks do

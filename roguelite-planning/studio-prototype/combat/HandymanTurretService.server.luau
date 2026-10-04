@@ -117,7 +117,8 @@ local function reachPoint(e,from)
  if not e.boss then return e.position end
  local best,bestDistance=e.position,(e.position-from).Magnitude
  for _,p in e.npc:GetChildren() do
-  if p:IsA('MeshPart') and not (e.hammer and (p.Name=='Hammer' or p.Name=='LeftHand' or p.Name=='RightHand')) then
+  -- Not the Hammer Brute's hammer (nor the old one's hands): RogueliteCombat.server reachPoint.
+  if p:IsA('MeshPart') and p.Name~='HammerBrute_Hammer' and not (e.hammer and (p.Name=='Hammer' or p.Name=='LeftHand' or p.Name=='RightHand')) then
    local l=p.CFrame:PointToObjectSpace(from);local h=p.Size*.5
    local q=p.CFrame:PointToWorldSpace(Vector3.new(math.clamp(l.X,-h.X,h.X),math.clamp(l.Y,-h.Y,h.Y),math.clamp(l.Z,-h.Z,h.Z)))
    local distance=(q-from).Magnitude

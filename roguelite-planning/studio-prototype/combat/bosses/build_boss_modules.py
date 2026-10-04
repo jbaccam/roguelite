@@ -6,9 +6,21 @@ chunking into Frames sub-modules). For each boss it reads
   <asset-folder>/exports/game/AnimationData.json         (original clips, for point sampling)
   <asset-folder>/exports/game/BossGameData.json          (attack times and named points)
 and writes MapBossTiming.luau. Gameplay points are re-sampled every 1/24 s from warnStart to
-recoveryEnd by forward kinematics over the ORIGINAL bones, in the boss's ground frame, Studio axes.
+recoveryEnd by forward kinematics over the ORIGINAL bones, in the boss's ground frame, Studio axes
+(a clip authored at another rate, AnimationData clip "fps", is read at its own frames).
 
-Usage: python build_boss_modules.py [id ...]   (default: all four)
+Hammer Brute rebuild (R6, 2026-10-03). All of it is optional, so the other four come out byte-identical:
+  phases: a combo's hits in order (BossGameData attacks.<Clip>.phases), each with its own times and
+    points. A phase inherits its clip's sampled tracks in the runtime (MapBossService
+    X.phaseWindows). A phase point on another bone or offset than the clip's point of that name
+    is sampled here, and the phase then carries the clip's tracks plus its own.
+  chargeStrideLength: studs per ChargeRun cycle (motion, BossGameData, or attacks.ChargeRun).
+  IntroLand is an attack entry like the others; Roar and the Charge clips need durations only.
+
+Usage: python build_boss_modules.py [id ...]   (default: every boss in FOLDERS)
+A boss whose exports/game package isn't there yet is skipped with a message. MapBossTiming keeps
+the entry of every boss not rebuilt in this run, so `python build_boss_modules.py hammer-brute`
+adds the Hammer without dropping the other four.
 """
 import json, math, sys
 from pathlib import Path
@@ -18,15 +30,20 @@ HERE = Path(__file__).resolve().parent
 PLANNING = HERE.parents[2]
 OUT = HERE / 'BossAnimations'
 LIMIT = 190000
-FOLDERS = {'king-crab': 'king-crab-boss', 'frost-cyclops': 'frost-cyclops-boss', 'pharaoh': 'pharaoh-boss', 'dragon': 'dragon-boss'}
+FOLDERS = {'king-crab': 'king-crab-boss', 'frost-cyclops': 'frost-cyclops-boss', 'pharaoh': 'pharaoh-boss', 'dragon': 'dragon-boss',
+           'hammer-brute': 'hammer-brute-boss'}
 # Mirrors MapBossDefs.ATTACK_CLIPS.
 ATTACKS = {
     'king-crab': ['ClawCrush', 'RushStart', 'RushLoop', 'RushEnd', 'BubbleBarrage'],
     'frost-cyclops': ['GroundSlam', 'Stomp'],
     'pharaoh': ['CursedBolts', 'TombEruption'],
     'dragon': ['FireBreath', 'TailWhip', 'FrontStomp'],
+    'hammer-brute': ['Slam', 'Swing', 'Spin', 'SwingSpin', 'SpinSlam', 'ChargeStart', 'ChargeRun', 'ChargeSlam', 'IntroLand', 'Roar'],
 }
 BASIC = ['Idle', 'Walk', 'Hit', 'Death']
+# Clips the runtime needs only the durations of (MapBossTiming clips): their attack timing isn't required.
+DURATION_ONLY = {'RushStart', 'RushLoop', 'RushEnd', 'ChargeStart', 'ChargeRun', 'Roar'}
+PACKAGE = ['StudioAnimationData.json', 'AnimationData.json', 'BossGameData.json']
 # Points whose forward direction is stored per sample (bolts, breath, bubbles).
 DIRECTED = {('pharaoh', 'CursedBolts'): 'BoltOrigin', ('dragon', 'FireBreath'): 'FireOrigin', ('king-crab', 'BubbleBarrage'): 'BubbleOrigin'}
 # Extra sampled bones: (id, clip) -> {point: (bone, offset)}.
@@ -50,11 +67,20 @@ def worlds(bones, transforms):  # same as retarget_studio.worlds, in the Y/Z-swa
     return result
 
 
-def frame_index(frames, t): return min(int(round(t * 24)), len(frames) - 1)
+def fps_of(data, clip): return data['clips'][clip].get('fps') or data.get('fps') or 24
+
+
+def frame_index(frames, t, fps=24): return min(int(round(t * fps)), len(frames) - 1)
+
+
+def last_sample(frames, fps, t):
+    """The last 1/24 s sample at or before both t (rounded up) and the clip's last frame."""
+    end = len(frames) - 1 if fps == 24 else int(math.floor((len(frames) - 1) * 24 / fps + 1e-6))
+    return min(end, int(math.ceil(t * 24 - 1e-6)))
 
 
 def sample_point(data, clip, bone, offset, t, cache=None):
-    frames = data['clips'][clip]['frames']; i = frame_index(frames, t)
+    frames = data['clips'][clip]['frames']; i = frame_index(frames, t, fps_of(data, clip))
     w = (cache[i] if cache is not None and i in cache else worlds(data['bones'], frames[i]['transforms']))
     if cache is not None: cache[i] = w
     w = w[bone]
@@ -65,7 +91,7 @@ def sample_point(data, clip, bone, offset, t, cache=None):
 
 def bone_axis(data, clip, bone, t, cache):
     """World rotation of `bone` at clip time t, in the swapped basis."""
-    frames = data['clips'][clip]['frames']; i = frame_index(frames, t)
+    frames = data['clips'][clip]['frames']; i = frame_index(frames, t, fps_of(data, clip))
     if i not in cache: cache[i] = worlds(data['bones'], frames[i]['transforms'])
     return cache[i][bone][:3, :3]
 
@@ -83,7 +109,7 @@ def sample_attack(id, clip, data, attack, ground_offset=0.0):
     points.update(EXTRA_POINTS.get((id, clip), {}))
     frames = data['clips'][clip]['frames']
     first = max(0, int(math.floor(attack['warnStart'] * 24 + 1e-6)))
-    last = min(len(frames) - 1, int(math.ceil(attack['recoveryEnd'] * 24 - 1e-6)))
+    last = last_sample(frames, fps_of(data, clip), attack['recoveryEnd'])
     cache = {}; samples = {n: [] for n in points}
     for i in range(first, last + 1):
         t = i / 24
@@ -111,6 +137,53 @@ def sample_attack(id, clip, data, attack, ground_offset=0.0):
     return attack
 
 
+def lift(points, ground_offset):
+    """Points without samples, rootAtImpactStudio measured from the soles (y + ground_offset)."""
+    out = {n: {k: v for k, v in p.items() if k != 'samples'} for n, p in (points or {}).items()}
+    for p in out.values():
+        if 'rootAtImpactStudio' in p: p['rootAtImpactStudio'] = [p['rootAtImpactStudio'][0], round(p['rootAtImpactStudio'][1] + ground_offset, 5), p['rootAtImpactStudio'][2]]
+    return out
+
+
+def check_impact(label, points, samples, t):
+    """The runtime interpolates samples; flag a package whose impact point disagrees with its clip
+    (e.g. an impact time left on a 30 fps frame that the 24 fps resample doesn't contain)."""
+    for n, p in points.items():
+        if 'rootAtImpactStudio' not in p: continue
+        track = samples[n]
+        j = max(1, min(len(track) - 1, next((k for k, s in enumerate(track) if s[0] >= t - 1e-6), len(track) - 1)))
+        s0, s1 = track[j - 1], track[j]; f = 0 if s1[0] == s0[0] else min(1, max(0, (t - s0[0]) / (s1[0] - s0[0])))
+        at = [u + (v - u) * f for u, v in zip(s0[1:], s1[1:])]; off = max(abs(u - v) for u, v in zip(at, p['rootAtImpactStudio']))
+        if off > .25: print(f'WARN {label} {n}: sampled point at impact {t} is {off:.2f} studs from rootAtImpactStudio', flush=True)
+
+
+def phase_entries(id, clip, data, attack, a, ground_offset):
+    """A combo's phases in order (see the header): each phase's own fields and lifted points. A phase
+    point the clip already tracks (same name, bone and offset) uses the clip's track; any other is
+    sampled over the clip's window, and the phase then carries the clip's tracks plus its own."""
+    out, clip_points = [], attack.get('points') or {}
+    for i, ph in enumerate(attack.get('phases') or [], 1):
+        p = {k: v for k, v in ph.items() if k not in ('points', 'samples')}
+        if ph.get('points'):
+            p['points'] = lift(ph['points'], ground_offset)
+            def same(n, q): c = clip_points.get(n) or {}; return c.get('bone') == q.get('bone') and c.get('offset') == q.get('offset')
+            mine = {n: q for n, q in ph['points'].items() if not same(n, q)}
+            if mine:
+                # Over the clip's own sample window, as sample_attack does.
+                first = max(0, int(math.floor(a['warnStart'] * 24 + 1e-6)))
+                last = last_sample(data['clips'][clip]['frames'], fps_of(data, clip), a['recoveryEnd'])
+                cache, own = {}, {}
+                for n, q in mine.items():
+                    own[n] = []
+                    for k in range(first, last + 1):
+                        x, y, z = sample_point(data, clip, q['bone'], q['offset'], k / 24, cache)
+                        own[n].append([round(k / 24, 5), *r6([x, y + ground_offset, z])])
+                p['samples'] = {**a['samples'], **own}
+            check_impact(f'{id} {clip} phase {i}', p['points'], p.get('samples') or a['samples'], p.get('impact', a['impact']))
+        out.append(p)
+    return out
+
+
 def timing(id, data, game):
     height = float(game['height'])
     motion = {**(game.get('motion') or {}), **(data.get('motion') or {})}
@@ -127,23 +200,18 @@ def timing(id, data, game):
     }
     rush = motion.get('rushStrideLength') or game.get('rushStrideLength') or ((game.get('attacks') or {}).get('RushLoop') or {}).get('strideLength')
     if rush: entry['rushStrideLength'] = float(rush)
+    # The Hammer's charge: ChargeRun is paced by the ground he covers (MapBossPresentation).
+    charge = motion.get('chargeStrideLength') or game.get('chargeStrideLength') or ((game.get('attacks') or {}).get('ChargeRun') or {}).get('strideLength')
+    if charge: entry['chargeStrideLength'] = float(charge)
     for clip, attack in (game.get('attacks') or {}).items():
         if clip not in data['clips'] or 'warnStart' not in attack: continue
         a = {k: v for k, v in attack.items() if k != 'points'}
-        a['points'] = {n: {k: v for k, v in p.items() if k != 'samples'} for n, p in (attack.get('points') or {}).items()}
-        for p in a['points'].values():
-            if 'rootAtImpactStudio' in p: p['rootAtImpactStudio'] = [p['rootAtImpactStudio'][0], round(p['rootAtImpactStudio'][1] + entry['groundOffset'], 5), p['rootAtImpactStudio'][2]]
+        a['points'] = lift(attack.get('points'), entry['groundOffset'])
         entry['attacks'][clip] = sample_attack(id, clip, data, a, entry['groundOffset'])
-        # The runtime interpolates samples; flag a package whose impact point disagrees with its clip
-        # (e.g. an impact time left on a 30 fps frame that the 24 fps resample doesn't contain).
-        for n, p in a['points'].items():
-            track = a['samples'][n]; t = a['impact']
-            j = max(1, min(len(track) - 1, next((k for k, s in enumerate(track) if s[0] >= t - 1e-6), len(track) - 1)))
-            s0, s1 = track[j - 1], track[j]; f = 0 if s1[0] == s0[0] else min(1, max(0, (t - s0[0]) / (s1[0] - s0[0])))
-            at = [u + (v - u) * f for u, v in zip(s0[1:], s1[1:])]; off = max(abs(u - v) for u, v in zip(at, p['rootAtImpactStudio']))
-            if off > .25: print(f'WARN {id} {clip} {n}: sampled point at impact {t} is {off:.2f} studs from rootAtImpactStudio', flush=True)
+        check_impact(f'{id} {clip}', a['points'], a['samples'], a['impact'])
+        if 'phases' in a: a['phases'] = phase_entries(id, clip, data, attack, a, entry['groundOffset'])
     for clip in ATTACKS[id]:
-        if clip.startswith('Rush'): continue  # rush clips need durations only
+        if clip in DURATION_ONLY: continue
         assert clip in entry['attacks'], f'{id}: BossGameData has no attack timing for {clip}'
     return entry
 
@@ -185,16 +253,33 @@ def write_animations(id, studio):
     return sum(f.stat().st_size for f in target.rglob('*.luau')), largest
 
 
+def existing():
+    """MapBossTiming's current entries (in file order), so bosses not rebuilt keep theirs."""
+    try:
+        text = (HERE / 'MapBossTiming.luau').read_text(encoding='utf-8')
+        return json.loads(text[text.index('[=[') + 3:text.rindex(']=]')])
+    except (OSError, ValueError):
+        return {}
+
+
 def main(ids):
-    table = {}
+    table, built = existing(), 0
     for id in ids:
         game_dir = PLANNING / FOLDERS[id] / 'exports' / 'game'
+        missing = [n for n in PACKAGE if not (game_dir / n).exists()]
+        if missing:
+            kept = ' (its MapBossTiming entry is kept)' if id in table else ''
+            print(f'{id}: skipped, {FOLDERS[id]}/exports/game has no {", ".join(missing)} yet{kept}', flush=True)
+            continue
         studio = json.loads((game_dir / 'StudioAnimationData.json').read_text(encoding='utf-8'))
         data = json.loads((game_dir / 'AnimationData.json').read_text(encoding='utf-8'))
         game = json.loads((game_dir / 'BossGameData.json').read_text(encoding='utf-8'))
         size, largest = write_animations(id, studio)
-        table[id] = timing(id, data, game)
+        table[id] = timing(id, data, game); built += 1
         print(f'{id}: {size} bytes, largest module {largest} characters', flush=True)
+    if not built:
+        print('Nothing built; MapBossTiming unchanged', flush=True)
+        return
     raw = json.dumps(table, separators=(',', ':'), allow_nan=False)
     assert ']=]' not in raw
     source = ('-- Generated by build_boss_modules.py: clip durations and sampled gameplay points per boss.\n'

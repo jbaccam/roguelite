@@ -7,7 +7,11 @@ return function(Catalog, Motion, NativeMotion, animationFolder)
 		checks += 1
 	end
 	check(#Catalog.List == 21, "Roster must contain exactly 21 regular enemies")
-	check(Catalog.get("HammerBoss") == nil and Catalog.get("pharaoh") == nil, "Bosses must stay excluded")
+	-- The old Hammer's ZombieType is HammerBoss; the rebuilt one's, a map boss, is its MapBossDefs id.
+	check(
+		Catalog.get("HammerBoss") == nil and Catalog.get("Hammer") == nil and Catalog.get("pharaoh") == nil,
+		"Bosses must stay excluded"
+	)
 	check(Catalog.scaled("regular-zombie", 1).health == 3, "Preserve regular starting HP")
 	check(Catalog.scaled("baby-zombie", 1).health == 1, "Preserve baby starting HP")
 	check(Catalog.scaled("tank-zombie", 8).health == 97, "Preserve wave 8 tank HP")
