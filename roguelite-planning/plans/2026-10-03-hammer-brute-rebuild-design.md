@@ -242,3 +242,17 @@ New file `combat/bosses/BossVfx/Hammer.luau`, built on `BossVfx/Common`. Effects
 - Balance beyond the starting numbers above.
 - Multiplayer behaviour on live servers. The user tests that.
 - Deleting the old `hammer-boss/`, `hammer-boss-faithful/` and `hammer-boss-rebuild/` folders. They stay as history.
+
+## Change of plan (user, 2026-10-04): keep the original model
+
+The user rejected the fresh remodel ("bring back the old hammer boss and just make his attacks better like how we discussed his move sets"). The remodel work-in-progress stays in `hammer-brute-boss/` (commit 74b0021) as history only. What changes:
+
+- **Model.** The original `hammer-boss/finished` model, the 16-section Motor6D template `ServerStorage.RogueliteNPCs.HammerBoss_NPC`, keeps its mesh, textures and in-game size: the template is authored at 1.0, and the map-boss def uses `scale=1.15`. No re-import is needed.
+- **Runtime.** It runs on the map-boss runtime that is already in Studio (§4–§6 unchanged): combos, the forward charge with a finish slam, follow-up cracks, enrage with a roar, the sky-drop intro and the tutorial variant. `EnemyMotion.bind` drives Motor6D rigs by joint name, so the old template plays sampled `Motor6D.Transform` clips.
+- **Animation.** All 14 clips in §3 are re-authored in Blender on the old rig in a new self-contained folder, `roguelite-planning/hammer-boss-moves/`:
+  - the same names, timings and feel targets;
+  - the same §7 joint, grip, hammer-clearance and foot checks, adapted to rigid sections;
+  - no finger, jaw or twist bones (the old rig has none).
+  - The old model's measured limits are in `hammer-boss/README.md`, and the new clips must respect them: elbow hinge 12–130°, wrist bend ≤ 35°, shoulder swivel ≤ 75°, the shaft kept outside the torso core, and the carry grips at 2.72 / 8.05 along the haft.
+- **Hand-off format.** `hammer-boss-moves/exports/game/PartPoses.json` holds, per clip and frame, each Studio part's CFrame relative to HumanoidRootPart (Studio axes, template scale 1.0). Alongside it go `BossGameData.json` (§3 attack timings and phases; `HammerFace`/`HammerGrip` given as offsets in the `Hammer` part's space) and `motion` (`strideLength`, `nominalSpeed`, `chargeStrideLength`). The Studio side converts part poses to `Motor6D.Transform = C0⁻¹ · P0⁻¹ · P1 · C1`, using a read-only dump of the template's Motor6Ds.
+- **Template.** `Hammer_NPC` is installed as a copy of `HammerBoss_NPC` with map-boss attributes, plus two small Neon eye plates named `HammerBrute_EyeGlow` welded to the head (white, red when enraged). Weapon, turret and pet reach skip the `Hammer` part and the hands, as the legacy runtime did.
