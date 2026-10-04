@@ -20,7 +20,7 @@ local S={states={},wave=1,phase='Shop'}
 -- while a tutorial run is on, nil otherwise. Plain data from TutorialConfig: startShards, waves
 -- ([wave]={count,roster}), offers ([shop wave][slot]=ShopCatalog id), waveSeconds (the director
 -- ends each wave when its enemies are dead) and noShopTimer. Clearing its last wave goes to phase
--- 'Victory' instead of a shop: no shop or level-up cards under the VICTORY banner until
+-- 'Victory' instead of a shop: no shop or level-up cards before the results screen, until
 -- RogueliteMeta ends the run.
 -- Hooks other scripts listen to: `S.onWaveCleared=fn` adds a listener and never replaces one, so
 -- load order between listeners doesn't matter. Listeners run inside this sandboxed module's

@@ -12,7 +12,7 @@ T.BOSS_WAVE=3
 -- A fixed boss health, no difficulty or party scaling: a weak build (~22 damage a second) needs
 -- about 30 s, a typical one (~35) about 19 s.
 T.BOSS_HP=650
-T.VICTORY_DELAY=4 -- seconds between the boss wave clearing and the results screen (VICTORY banner)
+T.VICTORY_DELAY=4 -- seconds between the boss wave clearing and the results screen (his crystals land)
 T.MAX_WAVE_SECONDS=180 -- a wave that somehow never empties ends anyway
 -- After the loading screen, Eggbert's welcome shows this long before wave 1 (user, 2026-10-03:
 -- "the tutorial needs like 5 seconds after loading in before starting").

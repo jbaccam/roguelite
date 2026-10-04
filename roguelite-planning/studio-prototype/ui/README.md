@@ -1,3 +1,20 @@
+# Tutorial UI: boss bar after the entrance, Eggbert holds still, no VICTORY — October 3, 2026
+
+Spec section: "Play-test fixes, round 3" in `../../plans/2026-10-03-tutorial-design.md`.
+
+- **Boss bar waited for nothing (`RogueliteHUD.client`):** it showed the nearest living boss, and the boss exists from the start of his entrance, so the bar slid in over the cutscene. A boss before his `BossIntroUntil` is skipped now, the same check `CombatEffectsService` uses for "can't be hurt yet". All runs: the wave-20 boss's entrance too.
+- **Eggbert's box moved around and shrank (`TutorialGuideUI`):** it searched for a spot every 1.2 s and tried 0.8 / 0.66 / 0.52 sizes. Where no spot was fully clear (phones), the least-covered one kept changing as the boss, crystals, the player and the phone thumbstick moved. Now:
+  - it picks a spot when it appears, when the screen size or the kind of screen changes, and when UI or an on-screen arrow target comes under it (checked twice a second). It moves only to a spot at least 3% of its area better;
+  - things moving in the world (the boss, crystals, the player) are kept clear when a spot is picked, but never move it;
+  - it is always the screen's own size, wide or compact;
+  - a phone's whole thumbstick area counts as UI, so a thumb press doesn't push it;
+  - `TutorialGuide.client` points the arrow before the line, so a box that appears already keeps clear of the new target.
+- **No VICTORY:** the guide's VICTORY banner is gone (it came from the reference game). After the boss wave the guide hides until the results screen, which is the win screen. The HUD's timer plate shows the boss wave's number instead of VICTORY in phase `Victory`. The results screen's title (VICTORY! / DEFEAT / EXTRACTED, `RunResultsUI`) is unchanged.
+- **Checked (Studio Edit, nothing saved):**
+  - all changed files parse (StyLua);
+  - the old (HEAD) and new `TutorialGuideUI`, loaded from the dev server, were mounted in CoreGui against the same mock run HUD at 844×390 (with a thumbstick that flickers), 1366×768 and 1920×1080. They ran on a fake clock through 6 s of a fight, with a boss and a crystal target moving in the world and the counter's digits changing, then a boss bar appearing under the box. Old: 3 jumps before the bar on every screen, and on the phone sizes 0.42 → 0.34 → 0.28 (about 10 px text). New: no move until the bar, one move off it, one size per screen.
+- **Not run:** no Play test (the user tests). The boss bar and HUD changes have only been parse-checked.
+
 # Private pads, stale servers — October 3, 2026
 
 - **Still sent back after the fix:** the trip log showed lobby `cb7f40c8` launching with `map=nil` at 00:04 UTC and not refusing it, so it ran pre-fix code. The place had been published at 00:02:10, after the fix was in Studio. Live servers keep the version they started with, and the bounce had sent the player to an older public lobby. Fix: after publishing, shut down all servers (roblox.com game page ⋯ → Shut Down All Servers). Each trip-log line now carries `ver` (game.PlaceVersion).

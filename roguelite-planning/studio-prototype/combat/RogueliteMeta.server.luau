@@ -161,7 +161,7 @@ end) end
 Shop.onWaveCleared=function(wavesPassed)
  -- The tutorial: no map progress, emeralds or quests. Clearing its boss wave pays its reward once
  -- (ProfileService.tutorialReward) and ends the run as a Victory after VICTORY_DELAY, so the
- -- crystals land and the guide's VICTORY banner shows first (the clock loop below ends it).
+ -- boss's crystals land first (the clock loop below ends it).
  if tutorialRun() then
   if wavesPassed>=Tutorial.BOSS_WAVE and not tutorialEndAt then
    if Profiles.tutorialReward then for p in Shop.members do Profiles.tutorialReward(p) end end

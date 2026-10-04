@@ -100,7 +100,7 @@ local function lobbyButton(name)
 end
 
 -- Things the run part reacts to ------------------------------------------------------------------
-local seenRunAt,bannerShown=nil,false
+local seenRunAt=nil
 local redUntil,redShown=0,0
 local runId -- RogueliteRunState.RunId these belong to
 -- Crystals (user, 2026-10-03: the tutorial never talked about collecting them). Wave 1: once one
@@ -144,17 +144,15 @@ local function runStep()
  end
  if combat:GetAttribute('TutorialRun')~=true or not player:GetAttribute('RunMember') then return nil end
  local run=RS:FindFirstChild('RogueliteRunState');if not run then return nil end
- -- A new run (the admin panel's Start tutorial again): its lines and banner start over.
- if run:GetAttribute('RunId')~=runId then runId=run:GetAttribute('RunId');seenRunAt=nil;crystal=nil;pickedAt=nil;bannerShown=false;redShown=0;redUntil=0 end
+ -- A new run (the admin panel's Start tutorial again): its lines start over.
+ if run:GetAttribute('RunId')~=runId then runId=run:GetAttribute('RunId');seenRunAt=nil;crystal=nil;pickedAt=nil;redShown=0;redUntil=0 end
  -- The loading screen still covers the arena: the welcome waits for it (it used to type out and
  -- time out underneath, 2026-10-03).
  if pg:FindFirstChild('LoadingScreen') then return {hide=true} end
  seenRunAt=seenRunAt or os.clock()
- if run:GetAttribute('TutorialWon') then
-  -- The banner alone: no box under it (user, 2026-10-03: too much on screen at the victory).
-  if not bannerShown then bannerShown=true;ui().banner(string.upper(Config.MapName),'VICTORY',Config.VICTORY_DELAY) end
-  return {hide=true}
- end
+ -- Won: nothing until the results screen (user, 2026-10-03: no VICTORY banner; it came from the
+ -- reference game, and the results screen is the win screen).
+ if run:GetAttribute('TutorialWon') then return {hide=true} end
  if screen('BossIntro') then return {hide=true} end -- the boss entrance has the screen
  local phase,wave=run:GetAttribute('Phase'),run:GetAttribute('Wave') or 1
  if phase=='Combat' then
@@ -364,9 +362,10 @@ local function apply(d)
   if guide then guide.hide() end;undim();return
  end
  local g=ui()
+ -- The target before the line: a box that appears picks its spot clear of the new target.
  g.context(d.ctx)
- g.say(Config.Lines[d.line] or '',d.button)
  g.point(d.target)
+ g.say(Config.Lines[d.line] or '',d.button)
  dimOthers(d.dim)
 end
 local elapsed=0

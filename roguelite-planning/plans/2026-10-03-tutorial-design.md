@@ -11,7 +11,7 @@ A brand-new player spawns straight into Pine Valley. In about 3 minutes they lea
 ## Guide style (whole tutorial)
 
 - **Eggbert, the egg merchant, is the guide** (named by the user, 2026-10-03). His portrait sits beside a dark text box, like the reference. Each line stays on screen until the player does the action, or until it times out for lines with no action.
-- **The box never covers the game's UI or the arrow's target** (the user, 2026-10-03). It takes the first spot that covers no visible button, panel, picture or text: bottom-left, top-left, bottom-right, top-right, middle-left, middle-right, then anywhere on a grid, farthest from the screen's centre first. In the lobby every corner has a panel, so it sits in the open sky right of centre. It tries a smaller size before giving up, and glides to its new spot.
+- **The box never covers the game's UI or the arrow's target** (the user, 2026-10-03). It takes the first spot that covers no visible button, panel, picture or text: bottom-left, top-left, bottom-right, top-right, middle-left, middle-right, then anywhere on a grid, farthest from the screen's centre first. In the lobby every corner has a panel, so it sits in the open sky right of centre. **It stays still and keeps one size per screen** (round 3): it picks a spot when it appears or the screen changes, and moves only when UI or its arrow's target comes under it.
 - **Arrows suggest; any pick counts.** A line never asks for one particular thing ("Buy anything you like!", "Upgrade something!"), and every step moves on whatever the player picks. A step that has nothing left to pick skips itself.
 - **One gliding arrow.** It never disappears and jumps. It eases along a curve from one target to the next, turns to face the new target, and bobs gently while resting. The player's eye should be able to follow it.
 - **No paid prompts during the run part.** That means no revive offer and no store.
@@ -35,7 +35,7 @@ Tutorial economy:
 | Break 2 | 75 XP → **Level 4**, so 2 cards. About 95 crystals. The player shops on their own; the arrow rests on Ready | "Your turn. Buy what you like." |
 | Wave 3 | The **boss intro** (below), then the weakened Hammer Zombie Boss plus a few zombies | On his first attack telegraph: "Red circle = move!" |
 | Boss dies | Burst. All 50 boss crystals fly straight to the player (rule below). The level bar climbs several levels during the victory | "You beat the boss!" |
-| Victory | PINE VALLEY — VICTORY banner, then the results screen. The wave track, reward tiles and level bar fill in step by step. Rewards: **3 Silver Chests + 100 emeralds**. The arrow glides to LOBBY | "Let's go spend that loot." |
+| Victory | The results screen, after the boss's crystals land (no VICTORY banner: round 3). The wave track, reward tiles and level bar fill in step by step. Rewards: **3 Silver Chests + 100 emeralds**. The arrow glides to LOBBY | "Let's go spend that loot." |
 
 ### Tutorial boss
 
@@ -122,6 +122,17 @@ From the user's first play-test:
 - **Chests: a few items, not a pile** (all chests): RARITY_GODLY_ARMOR.md section 1. A Silver
   Chest is now 1 item, Gold 1–2, Magical 2, Legendary 4. The tutorial's first Silver Chest is
   exactly the pan copies and the Iron helmet.
+
+## Play-test fixes, round 3 (2026-10-03)
+
+- **The boss bar showed during the boss's entrance**, over the cutscene. It now appears once the
+  entrance ends (`BossIntroUntil`), as step 4 of the boss intro above says. All runs.
+- **Eggbert's box moved around and changed size on some screens.** It re-searched for a spot
+  every 1.2 s and tried smaller sizes; on phones no spot was fully clear, so it chased whichever
+  one was least covered as the boss, crystals and thumbstick moved. It now stays where it is at
+  one size per screen, and moves only when UI or its arrow's target comes under it.
+- **No VICTORY banner.** It came from the reference game, not from us. After the boss wave the
+  results screen is the win screen, and the HUD shows the boss wave's number instead of VICTORY.
 
 ## Rules
 

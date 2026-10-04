@@ -132,8 +132,9 @@ RunService.Heartbeat:Connect(function(dt)
  local combatFolder=ReplicatedStorage:FindFirstChild('RogueliteCombat')
  if state and combatFolder and combatFolder:GetAttribute('TutorialRun')==true then
   remaining=nil;bossLabel=state:GetAttribute('BossHolding')==true and 'BOSS' or nil
-  -- Won (phase Victory, ShopService): VICTORY instead of the next wave's number.
-  if phase=='Victory' then validWave=false;bossLabel='' end
+  -- Won (phase Victory, ShopService, which already counts the next wave): the boss wave's number
+  -- and no clock until the results screen. No VICTORY text (user, 2026-10-03).
+  if phase=='Victory' and validWave then wave-=1;bossLabel='' end
  end
  view:SetTimer(not practice and remaining or nil,not practice and validWave and math.floor(wave) or nil,phase,practice and "SANDBOX" or bossLabel)
  -- A run where the admin panel was used pays no rewards (ADMIN_PANEL.md).
@@ -145,12 +146,15 @@ RunService.Heartbeat:Connect(function(dt)
  view:SetShards(own and own:GetAttribute('Shards') or 0,own and own:GetAttribute('BaggedShards') or 0)
  view:SetXP(own and own:GetAttribute('RunXP'),own and own:GetAttribute('RunXPRequired'),own and own:GetAttribute('RunLevel'))
  local root=player.Character and player.Character:FindFirstChild('HumanoidRootPart')
- -- The nearest living boss in this arena; kiting it across the map keeps the bar up.
+ -- The nearest living boss in this arena; kiting it across the map keeps the bar up. A boss in
+ -- his entrance (BossService BossIntroUntil) has no bar yet: it slides in once the camera is back
+ -- (user, 2026-10-03: it sat over the cutscene).
  local selected,health;local nearest=600
+ local now=workspace:GetServerTimeNow()
  if root and activeHumanoid and activeHumanoid.Health>0 then
   for _,tag in {'HammerBoss','MapBoss'} do for _,npc in game:GetService('CollectionService'):GetTagged(tag) do
    local h=npc:FindFirstChildOfClass('Humanoid');local part=npc.PrimaryPart
-   if npc:IsDescendantOf(workspace) and h and h.Health>0 and part then
+   if npc:IsDescendantOf(workspace) and h and h.Health>0 and part and now>=(npc:GetAttribute('BossIntroUntil') or 0) then
     local distance=(part.Position-root.Position).Magnitude
     if distance<nearest then selected,health,nearest=npc,h,distance end
    end

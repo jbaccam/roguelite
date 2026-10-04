@@ -1,7 +1,7 @@
 -- The tutorial guide's look (plans/2026-10-03-tutorial-design.md; mockup approved from
 -- roguelite-planning/previews/tutorial-guide/guide.html): the guide's portrait (Eggbert, the egg
--- merchant) and text box wherever they cover no UI, ONE arrow that glides between targets, and the
--- VICTORY banner. Presentation only: TutorialGuide.client decides what is said and pointed at.
+-- merchant) and text box wherever they cover no UI, and ONE arrow that glides between targets.
+-- Presentation only: TutorialGuide.client decides what is said and pointed at.
 --   G.new(player, assets, name) -> guide   (name: his name tag)
 --   guide.say(text, button)   types the line in (button: {label=, onClick=} or nil); same text = no-op
 --   guide.hide()              tucks the box away (the arrow too)
@@ -12,7 +12,6 @@
 --                             cover (the player's own character always counts), ctx.prefer = a
 --                             screen rect {x0,y0,x1,y1} to try first, ctx.edges = corners and sides
 --                             only (the run: never over the fight)
---   guide.banner(top, big, seconds)
 --   guide.Screen, guide.destroy()
 -- The arrow is one image: a new target starts a 0.55 s eased curve (a quadratic Bezier bulging to
 -- the side) while it turns to its new direction; at rest it keeps following the target (layouts
@@ -88,25 +87,17 @@ function G.new(player,assets,name)
  -- The arrow.
  local arrow=T.make('ImageLabel',root,{Name='Arrow',BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Size=UDim2.fromOffset(G.ARROW,G.ARROW),
   Image=assets.arrow or '',ImageTransparency=1,ZIndex=5})
- -- The VICTORY banner.
- -- Active: it takes the clicks while it shows (the shop under it must not start another wave).
- local bannerLayer=T.make('Frame',root,{Name='Banner',Size=UDim2.fromScale(1,1),BackgroundColor3=C.shade,BackgroundTransparency=1,BorderSizePixel=0,Visible=false,ZIndex=3,Active=true})
- local bannerScale=T.make('UIScale',bannerLayer,{Scale=1})
- local bannerTop=T.label(bannerLayer,'Top','',0,0,0,0,46,C.white);bannerTop.AnchorPoint=Vector2.new(.5,.5);bannerTop.Position=UDim2.new(.5,0,.5,-110);bannerTop.Size=UDim2.fromOffset(900,60);bannerTop.ZIndex=4
- local bannerBig=T.label(bannerLayer,'Big','',0,0,0,0,150,C.gold);bannerBig.AnchorPoint=Vector2.new(.5,.5);bannerBig.Position=UDim2.fromScale(.5,.5);bannerBig.Size=UDim2.fromOffset(1100,170);bannerBig.ZIndex=4
- bannerBig.TextStrokeTransparency=0
- for i,side in {-1,1} do
-  local line=T.make('Frame',bannerLayer,{Name='Line'..i,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.new(.5,side*560,.5,0),Size=UDim2.fromOffset(300,6),BackgroundColor3=C.gold,BorderSizePixel=0,ZIndex=4})
-  T.make('UIGradient',line,{Transparency=NumberSequence.new(side<0 and 1 or 0,side<0 and 0 or 1)})
- end
 
  -- Where the guide sits: spot = {pos (top-left, screen px), s (its scale), shape}; placement moves it.
  local spot={pos=Vector2.zero,s=1,shape='wide'}
+ local placed=false -- false: pick a spot afresh (new screen size or a new kind of screen)
+ -- One size per screen: the guide is always drawn at `scale` (user, 2026-10-03: it shrank on small
+ -- screens). A new screen size picks a new spot at the new size.
  local function layout()
   local v=root.AbsoluteSize;if v.X<=0 then return end
-  scale=math.clamp(math.min(v.X/1700,v.Y/950),.42,1.25)
+  local s=math.clamp(math.min(v.X/1700,v.Y/950),.42,1.25)
+  if s~=scale then scale=s;placed=false end
   arrow.Size=UDim2.fromOffset(G.ARROW*scale,G.ARROW*scale)
-  bannerScale.Scale=math.clamp(math.min(v.X/1500,v.Y/850),.4,1.3)
  end
  root:GetPropertyChangedSignal('AbsoluteSize'):Connect(layout);layout()
  local function moveGuide(pos,s,shape,instant)
@@ -119,15 +110,50 @@ function G.new(player,assets,name)
   TweenService:Create(guideScale,info,{Scale=s}):Play()
  end
 
+ -- The arrow tip's spot for a target and its rotation (0 = pointing up, 180 = down), in this
+ -- screen's pixels, and the target's own rect; nil when the target isn't on screen.
+ local function aim(obj)
+  if typeof(obj)~='Instance' or not obj.Parent then return nil end
+  local full=root.AbsoluteSize;local gap=6*scale
+  if obj:IsA('Model') or obj:IsA('BasePart') then
+   -- A world thing (a crystal on the ground): pointed at from above.
+   local pos=obj:IsA('Model') and obj:GetPivot().Position or obj.Position
+   local v=workspace.CurrentCamera:WorldToViewportPoint(pos)
+   if v.Z<=0 or v.X<0 or v.Y<0 or v.X>full.X or v.Y>full.Y then return nil end
+   local size=Vector2.new(36,36)*scale;local at=Vector2.new(v.X,v.Y)-size/2
+   return Vector2.new(v.X,at.Y-gap),180,at,size
+  end
+  if not obj:IsA('GuiObject') then return nil end
+  local layer=obj:FindFirstAncestorWhichIsA('LayerCollector')
+  if not layer or (layer:IsA('ScreenGui') and not layer.Enabled) then return nil end
+  local p=obj
+  while p and p~=layer do if p:IsA('GuiObject') and not p.Visible then return nil end;p=p.Parent end
+  local size=obj.AbsoluteSize;if size.X<2 or size.Y<2 then return nil end
+  local at=obj.AbsolutePosition+inset()
+  local cx,cy=at.X+size.X/2,at.Y+size.Y/2
+  if cy<full.Y*.62 then return Vector2.new(cx,at.Y+size.Y+gap),0,at,size end
+  return Vector2.new(cx,at.Y-gap),180,at,size
+ end
+ -- The arrow (drawn in the Arrow section below); A.target is what it points at.
+ local A={x=0,y=0,rot=180,shown=false,target=nil,from=nil,ctrl=nil,t0=0,rot0=180,rot1=180}
+
  -- Placement: the box never covers the game's UI, the arrow's target, the player's character or
- -- what the step says to keep clear (the user, 2026-10-03). Obstacles: every visible button,
- -- panel, picture and text on screen (not backdrops over 60% of it; a piece inside the obstacle
- -- it belongs to counts once, as that obstacle). Hard ones: the target and the world things in
- -- ctx.avoid plus the character, drawn as their screen rects, padded. Spots, in this order, the
- -- wide shape first at each size and then the compact one: inside ctx.prefer (next to the chest
- -- menu), the corners and the middle of each side, then (unless ctx.edges, the run) a grid,
+ -- what the step says to keep clear (the user, 2026-10-03), and it STAYS STILL (the user, the same
+ -- day: on small screens it hopped around and shrank). Until then it searched again every 1.2 s
+ -- and tried smaller sizes; where no spot was fully clear (phones), the least-covered one kept
+ -- changing as the boss, crystals and the player moved, so it jumped from corner to corner.
+ -- Now it picks a spot only when it appears, when the screen size or the kind of screen (ctx)
+ -- changes, and when UI or an on-screen target comes under it; then it moves only to a clearly
+ -- better spot. Things moving in the world (the boss, crystals, the player) are kept clear when a
+ -- spot is picked but never move it, and it is always the screen's own size.
+ -- Obstacles: every visible button, panel, picture and text on screen (not backdrops over 60% of
+ -- it; a piece inside the obstacle it belongs to counts once, as that obstacle), and a phone's
+ -- whole thumbstick area (the stick shows wherever the thumb lands). Hard ones: the target and
+ -- the world things in ctx.avoid plus the character, drawn as their screen rects, padded. Spots,
+ -- in this order, the wide shape first and then the compact one: inside ctx.prefer (next to the
+ -- chest menu), the corners and the middle of each side, then (unless ctx.edges, the run) a grid,
  -- farthest from the screen's centre first. The first spot that covers nothing wins; if none
- -- does, the one that covers least. It stays while its spot is still clear.
+ -- does, the one that covers least.
  local SKIP={TutorialGuide=true,BossIntro=true}
  local ctx={}
  local function solid(c)
@@ -159,10 +185,13 @@ function G.new(player,assets,name)
      if c.Visible then
       local p,size=clipped(c.AbsolutePosition+off,c.AbsoluteSize,clip)
       local mine=owner
-      if p and size.X>4 and size.Y>4 and size.X*size.Y<maxArea and solid(c) and not inside(p,size,owner) then
+      if c.Name=='DynamicThumbstickFrame' then
+       -- A phone's thumbstick: the whole area counts all the time, so a thumb press never moves it.
+       if p then table.insert(list,{p,size}) end
+      elseif p and size.X>4 and size.Y>4 and size.X*size.Y<maxArea and solid(c) and not inside(p,size,owner) then
        mine={p,size};table.insert(list,mine)
       end
-      if p or not clip then
+      if c.Name~='DynamicThumbstickFrame' and (p or not clip) then
        local inner=clip
        if c.ClipsDescendants then inner={c.AbsolutePosition+off,c.AbsoluteSize};if clip then local q,z=clipped(inner[1],inner[2],clip);inner=q and {q,z} or nil end end
        if inner or not c.ClipsDescendants then walk(c,off,inner,mine) end
@@ -232,11 +261,9 @@ function G.new(player,assets,name)
   end
   return list
  end
- local TRIES={{'wide',1},{'wide',.8},{'compact',1},{'compact',.8},{'wide',.66},{'compact',.66},{'wide',.52},{'compact',.52}}
- local placedAt=0
- local placed=false -- placed since it last appeared
- local searchAt=0 -- no new search before this while it stays (a recent one found nothing better)
- local targetRect -- set by the arrow: the target's rect, padded
+ local TRIES={'wide','compact'} -- both at the screen's own size
+ local checkAt=0 -- next look for UI or a target that came under it
+ local uiAt=0 -- the UI and target under it when it last placed itself
  -- A different kind of screen (edges only, or another preferred area) looks for a spot at once.
  local function ctxKey(c)
   local r=c.prefer
@@ -244,23 +271,46 @@ function G.new(player,assets,name)
  end
  function o.context(c)
   c=c or {}
-  if ctxKey(c)~=ctxKey(ctx) then placed=false;searchAt=0;placedAt=0 end
+  if ctxKey(c)~=ctxKey(ctx) then placed=false end
   ctx=c
  end
- local function place(instant)
+ -- The arrow's target as a rect to keep clear (padded for the arrow beside it), and whether it's
+ -- on-screen UI. A target in the world (a crystal) only counts when a spot is picked.
+ local function targetArea(target)
+  local _,_,at,size=aim(target)
+  if not at then return nil,false end
+  local pad=G.ARROW*scale*1.2
+  return {at-Vector2.new(pad*.4,pad),size+Vector2.new(pad*.8,pad*2)},target:IsA('GuiObject')
+ end
+ -- How much UI and on-screen target the guide covers at a spot (px², the target far above the rest).
+ local function uiCover(pos,shape,list,target)
+  local r,gui=targetArea(target)
+  local score=0
+  for _,part in parts(pos,scale,shape) do
+   if r and gui then score+=overlap(part[1],part[2],r[1],r[2])*50 end
+   for _,o_ in list do score+=overlap(part[1],part[2],o_[1],o_[2]) end
+  end
+  return score
+ end
+ -- Less than 3% of the guide's area isn't worth a move (a counter's digits growing under it).
+ local function slack(shape)
+  local a=0;for _,part in parts(Vector2.zero,scale,shape) do a+=part[2].X*part[2].Y end
+  return a*.03
+ end
+ local function place(instant,list)
   local full=root.AbsoluteSize;if full.X<=0 then return end
-  local now=os.clock();placedAt=now
-  local list=obstacles()
+  list=list or obstacles()
   local hard={}
-  if targetRect then table.insert(hard,targetRect) end
+  local r=targetArea(A.target)
+  if r then table.insert(hard,r) end
   local things=table.clone(ctx.avoid or {});if player.Character then table.insert(things,player.Character) end
-  for _,thing in things do local r=worldRect(thing);if r then table.insert(hard,r) end end
+  for _,thing in things do local w=worldRect(thing);if w then table.insert(hard,w) end end
   local top=inset().Y
-  local best,bestS,bestShape,bestScore
+  local best,bestShape,bestScore
   -- Overlap in px²; the hard ones far above anything else. A spot that can't beat the best stops early.
-  local function try(pos,s,shape)
+  local function try(pos,shape)
    local score=0
-   for _,part in parts(pos,s,shape) do
+   for _,part in parts(pos,scale,shape) do
     local p,z=part[1],part[2]
     if p.X<0 or p.Y<0 or p.X+z.X>full.X or p.Y+z.Y>full.Y then score+=1e7 end
     for _,h in hard do local o_=overlap(p,z,h[1],h[2]);if o_>0 then score+=1e6+o_*50 end end
@@ -269,31 +319,28 @@ function G.new(player,assets,name)
      if bestScore and score>=bestScore then return score end
     end
    end
-   if not bestScore or score<bestScore then best,bestS,bestShape,bestScore=pos,s,shape,score end
+   if not bestScore or score<bestScore then best,bestShape,bestScore=pos,shape,score end
    return score
   end
-  -- Where it is goes first, so staying put wins ties.
-  if placed then
-   -- Clear at full size and wide with no preferred area: nothing could be better. Otherwise it
-   -- looks again at most every 1.2 s (a new target looks at once).
-   local here=try(spot.pos,spot.s,spot.shape)
-   if here==0 and spot.s>=scale*.99 and spot.shape=='wide' and not ctx.prefer or now<searchAt then return end
+  -- Where it is goes first (same kind of screen and size): it stays unless a spot is clearly better.
+  local here=placed and math.abs(spot.s-scale)<.001 and try(spot.pos,spot.shape) or nil
+  if here~=0 then
+   for _,shape in TRIES do
+    for _,pos in spots(full,top,scale,shape) do if try(pos,shape)==0 then break end end
+    if bestScore==0 then break end
+   end
   end
-  local found=false
-  for _,tr in TRIES do
-   local s=scale*tr[2]
-   for _,pos in spots(full,top,s,tr[1]) do if try(pos,s,tr[1])==0 then found=true;break end end
-   if found then break end
-  end
-  placed=true;searchAt=now+1.2
-  if best and ((best-spot.pos).Magnitude>2 or math.abs(bestS-spot.s)>.01 or bestShape~=spot.shape) then moveGuide(best,bestS,bestShape,instant) end
+  if here and here-bestScore<slack(spot.shape) then best,bestShape=spot.pos,spot.shape end
+  placed=true
+  if best and ((best-spot.pos).Magnitude>2 or math.abs(scale-spot.s)>.001 or bestShape~=spot.shape) then moveGuide(best,scale,bestShape,instant) end
+  uiAt=uiCover(spot.pos,spot.shape,list,A.target)
  end
 
  -- Text box ---------------------------------------------------------------------------------
  local current,shown,typed=nil,false,0
  local function show(on)
   if shown==on then return end;shown=on
-  if on then placed=false;searchAt=0;place(true) end -- appear straight in a clear spot
+  if on then place(true) end -- appear straight in a clear spot: where it was, while that still is
   TweenService:Create(guide,TweenInfo.new(on and .35 or .2,Enum.EasingStyle.Quad),{GroupTransparency=on and 0 or 1}):Play()
  end
  function o.say(line,button)
@@ -319,31 +366,6 @@ function G.new(player,assets,name)
  function o.hide() current=nil;show(false);o.point(nil) end
 
  -- Arrow ------------------------------------------------------------------------------------
- local A={x=0,y=0,rot=180,shown=false,target=nil,from=nil,ctrl=nil,t0=0,rot0=180,rot1=180}
- -- The arrow tip's spot for a target and its rotation (0 = pointing up, 180 = down), in this
- -- screen's pixels; nil when the target isn't on screen.
- local function aim(obj)
-  if typeof(obj)~='Instance' or not obj.Parent then return nil end
-  local full=root.AbsoluteSize;local gap=6*scale
-  if obj:IsA('Model') or obj:IsA('BasePart') then
-   -- A world thing (a crystal on the ground): pointed at from above.
-   local pos=obj:IsA('Model') and obj:GetPivot().Position or obj.Position
-   local v=workspace.CurrentCamera:WorldToViewportPoint(pos)
-   if v.Z<=0 or v.X<0 or v.Y<0 or v.X>full.X or v.Y>full.Y then return nil end
-   local size=Vector2.new(36,36)*scale;local at=Vector2.new(v.X,v.Y)-size/2
-   return Vector2.new(v.X,at.Y-gap),180,at,size
-  end
-  if not obj:IsA('GuiObject') then return nil end
-  local layer=obj:FindFirstAncestorWhichIsA('LayerCollector')
-  if not layer or (layer:IsA('ScreenGui') and not layer.Enabled) then return nil end
-  local p=obj
-  while p and p~=layer do if p:IsA('GuiObject') and not p.Visible then return nil end;p=p.Parent end
-  local size=obj.AbsoluteSize;if size.X<2 or size.Y<2 then return nil end
-  local at=obj.AbsolutePosition+inset()
-  local cx,cy=at.X+size.X/2,at.Y+size.Y/2
-  if cy<full.Y*.62 then return Vector2.new(cx,at.Y+size.Y+gap),0,at,size end
-  return Vector2.new(cx,at.Y-gap),180,at,size
- end
  local function setArrow(tip,rot,bob)
   -- The image turns about its centre: put the centre so the tip lands on `tip`.
   local r=math.rad(rot);local dir=Vector2.new(math.sin(r),-math.cos(r)) -- where it points
@@ -372,16 +394,20 @@ function G.new(player,assets,name)
  end
  function o.point(obj)
   if obj==A.target then return end
-  A.target=obj;searchAt=0 -- a new target: move off it at once if the box is on it
+  A.target=obj;checkAt=0 -- a new target: move off it at once if the box is on it
   local tip,rot=aim(obj)
   if tip then glide(tip,rot) end -- otherwise frame() picks it up once it shows, or fades the arrow
  end
  local function frame()
-  -- Keep the box clear of the UI (place) and of the target and its arrow (targetRect).
+  -- The box: a fresh spot when it has none for this screen; otherwise, twice a second, a look for
+  -- UI or an on-screen target that came under it since (the boss bar sliding in, a panel opening).
   if shown then
-   local _,_,at,size=aim(A.shown and A.target or nil)
-   if at then local pad=G.ARROW*scale*1.2;targetRect={at-Vector2.new(pad*.4,pad),size+Vector2.new(pad*.8,pad*2)} else targetRect=nil end
-   if os.clock()-placedAt>.35 then place(false) end
+   if not placed then place(false)
+   elseif os.clock()>=checkAt then
+    checkAt=os.clock()+.5
+    local list=obstacles()
+    if uiCover(spot.pos,spot.shape,list,A.target)>uiAt+slack(spot.shape) then place(false,list) end
+   end
   end
   if not A.shown and not A.target then return end
   local tip,rot=aim(A.target)
@@ -406,23 +432,6 @@ function G.new(player,assets,name)
  local conn=RunService.RenderStepped:Connect(frame)
  o.frame=frame -- Edit-mode previews step it by hand (RenderStepped doesn't run there)
  function o.where() return spot.pos,spot.s,spot.shape end -- previews: where the guide sits
-
- -- Banner -----------------------------------------------------------------------------------
- local bannerToken=0
- function o.banner(top,big,seconds)
-  bannerToken+=1;local mine=bannerToken
-  bannerTop.Text=top or '';bannerBig.Text=big or ''
-  bannerLayer.Visible=true;bannerLayer.BackgroundTransparency=1
-  TweenService:Create(bannerLayer,TweenInfo.new(.4),{BackgroundTransparency=.45}):Play()
-  local pop=bannerBig:FindFirstChild('Pop') or T.make('UIScale',bannerBig,{Name='Pop',Scale=1})
-  pop.Scale=1.6;TweenService:Create(pop,TweenInfo.new(.5,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
-  T.sound('ui_upgrade')
-  task.delay(seconds or 3,function()
-   if mine~=bannerToken then return end
-   TweenService:Create(bannerLayer,TweenInfo.new(.3),{BackgroundTransparency=1}):Play()
-   task.wait(.3);if mine==bannerToken then bannerLayer.Visible=false end
-  end)
- end
  function o.destroy() conn:Disconnect();screen:Destroy() end
  return o
 end
