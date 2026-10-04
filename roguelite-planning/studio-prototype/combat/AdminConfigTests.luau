@@ -149,7 +149,7 @@ return function(Admin, Enemies, Items)
 		{ "Explode" },
 		{ "travel", "Lobby" },
 		-- Travel
-		{ "Travel", "DesertBasin" },
+		{ "Travel", "AtlantisDepths" }, -- no such map (DesertBasin became a real map after 2026-09-28)
 		{ "Travel" },
 		{ "Travel", { "Lobby" } },
 		{ "Travel", "Lobby", 1 },

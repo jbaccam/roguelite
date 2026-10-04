@@ -147,7 +147,8 @@ return function(H, G, Weapons, Stats, E, Catalog)
 				local first = spots[1].radius
 				check(first >= band[1] - 1e-9 and first <= band[2] + 1e-9, string.format("First ring %.2f inside %d-%d", first, band[1], band[2]))
 				for _, spot in spots do
-					check(near((H.offset(spot)).Magnitude, spot.radius, 1e-6), "Offset length is its radius")
+					-- Vector3 is 32-bit in Roblox: a 10-stud offset carries ~1e-6 error.
+					check(near((H.offset(spot)).Magnitude, spot.radius, 1e-4), "Offset length is its radius")
 				end
 			end
 			check(H.spaced(points(H.ring(n, band, nil, 0)), H.SPACING), "Exact ring spaced too")
