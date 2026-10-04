@@ -137,9 +137,9 @@ local function reachPoint(e,from)
  if not e.boss then return e.position end
  local best,bestDistance=e.position,(e.position-from).Magnitude
  for _,p in e.npc:GetChildren() do
-  -- Not the Hammer's hammer nor the hands holding it, on the old Hammer or the map-boss one (R9, the
-  -- same template): RogueliteCombat.server reachPoint.
-  if p:IsA('MeshPart') and not ((p.Name=='Hammer' or p.Name=='LeftHand' or p.Name=='RightHand') and (e.hammer or e.npc:GetAttribute('MapBossId')=='Hammer')) then
+  -- Not the Hammer's hammer nor the hands holding it (e.hammer: the old Hammer or the map-boss one,
+  -- R9, the same template): RogueliteCombat.server reachPoint.
+  if p:IsA('MeshPart') and not (e.hammer and (p.Name=='Hammer' or p.Name=='LeftHand' or p.Name=='RightHand')) then
    local l=p.CFrame:PointToObjectSpace(from);local h=p.Size*.5
    local q=p.CFrame:PointToWorldSpace(Vector3.new(math.clamp(l.X,-h.X,h.X),math.clamp(l.Y,-h.Y,h.Y),math.clamp(l.Z,-h.Z,h.Z)))
    local distance=(q-from).Magnitude
@@ -154,7 +154,7 @@ local function snapshot()
  for _,npc in Tags:GetTagged('RogueliteZombie') do
   local hum=npc:FindFirstChildOfClass('Humanoid');local root=npc:FindFirstChild('HumanoidRootPart')
   if hum and root and hum.Health>0 and npc:IsDescendantOf(workspace) then
-   table.insert(list,{npc=npc,hum=hum,root=root,position=root.Position,boss=shelled(npc),hammer=npc:GetAttribute('IsHammerBoss')==true,dummy=npc:GetAttribute('LobbyDummy'),practice=Death.isPractice(npc)})
+   table.insert(list,{npc=npc,hum=hum,root=root,position=root.Position,boss=shelled(npc),hammer=npc:GetAttribute('IsHammerBoss')==true or npc:GetAttribute('MapBossId')=='Hammer',dummy=npc:GetAttribute('LobbyDummy'),practice=Death.isPractice(npc)})
   end
  end
  return Grid.new(list)

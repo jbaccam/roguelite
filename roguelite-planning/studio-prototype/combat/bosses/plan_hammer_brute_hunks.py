@@ -12,8 +12,9 @@ changes it (20bff04 -> 0b9b6a8 was the first such step; git keeps the history):
     python plan_hammer_brute_hunks.py --upgrade --stage
 R9 (2026-10-04): the map-boss Hammer keeps the old 16-part template, so the shell (RogueliteCombat,
 HandymanTurretService, PetService) skips its Hammer part and hands, as for the old Hammer. The R9
-list moves the R7 text (the repo and Studio since 6987d7e) to the final text and runs by default:
-    python plan_hammer_brute_hunks.py --stage        (R9 + HUNKS; --pre-r7 for a file from before R7)
+list moves the R7 text (Studio since 6987d7e) to the final text (--from-r7); R9_REVIEW moves the
+repo's 8e838ed text there (the default run). The turret and pet loops read MapBossId once per enemy.
+    python plan_hammer_brute_hunks.py --stage        (R9_REVIEW + HUNKS; --from-r7, --pre-r7)
 """
 import sys
 from pathlib import Path
@@ -125,14 +126,20 @@ COMBAT_HELD = (
     "-- BossService Hammer and on the map-boss one alike, which keeps the same 16-part template (R9,\n"
     "-- MapBossId 'Hammer'). Non-nil only for a Hammer.\n"
     "local function heldBy(npc) if npc:GetAttribute('IsHammerBoss')==true or npc:GetAttribute('MapBossId')=='Hammer' then return HELD end;return nil end")
+# The turret and pet reach loops read MapBossId once per enemy, not once per part (R9 review): the
+# turret's snapshot sets e.hammer for either Hammer, and PetService reads it above its part loop.
 TURRET_HELD = (
-    "  -- Not the Hammer's hammer nor the hands holding it, on the old Hammer or the map-boss one (R9, the\n"
-    "  -- same template): RogueliteCombat.server reachPoint.\n"
-    "  if p:IsA('MeshPart') and not ((p.Name=='Hammer' or p.Name=='LeftHand' or p.Name=='RightHand') and (e.hammer or e.npc:GetAttribute('MapBossId')=='Hammer')) then")
-PETS_HELD = (
-    "\t\t-- Not the Hammer's hammer nor the hands holding it (the map-boss Hammer keeps the old 16-part\n"
-    "\t\t-- template, R9): they aren't his body (RogueliteCombat.server reachPoint).\n"
-    "\t\tif (p:IsA(\"MeshPart\") or p == root) and not ((p.Name == \"Hammer\" or p.Name == \"LeftHand\" or p.Name == \"RightHand\") and npc:GetAttribute(\"MapBossId\") == \"Hammer\") then")
+    "  -- Not the Hammer's hammer nor the hands holding it (e.hammer: the old Hammer or the map-boss one,\n"
+    "  -- R9, the same template): RogueliteCombat.server reachPoint.\n"
+    "  if p:IsA('MeshPart') and not (e.hammer and (p.Name=='Hammer' or p.Name=='LeftHand' or p.Name=='RightHand')) then")
+TURRET_SNAPSHOT_BEFORE = "   table.insert(list,{npc=npc,hum=hum,root=root,position=root.Position,boss=shelled(npc),hammer=npc:GetAttribute('IsHammerBoss')==true,dummy=npc:GetAttribute('LobbyDummy'),practice=Death.isPractice(npc)})"
+TURRET_SNAPSHOT = "   table.insert(list,{npc=npc,hum=hum,root=root,position=root.Position,boss=shelled(npc),hammer=npc:GetAttribute('IsHammerBoss')==true or npc:GetAttribute('MapBossId')=='Hammer',dummy=npc:GetAttribute('LobbyDummy'),practice=Death.isPractice(npc)})"
+PETS_BEST = "\tlocal best, bestDistance = root.Position, (root.Position - from).Magnitude"
+PETS_HAMMER = (
+    "\t-- The Hammer's hammer and the hands holding it aren't his body (the map-boss Hammer keeps the old\n"
+    "\t-- 16-part template, R9; RogueliteCombat.server reachPoint).\n"
+    "\tlocal hammer = npc:GetAttribute(\"MapBossId\") == \"Hammer\"")
+PETS_HELD = "\t\tif (p:IsA(\"MeshPart\") or p == root) and not (hammer and (p.Name == \"Hammer\" or p.Name == \"LeftHand\" or p.Name == \"RightHand\")) then"
 
 HUNKS = [
     # --- R4 BossIntro: map bosses with a sky-drop entrance (MapBossService def.intro) -------------
@@ -212,6 +219,8 @@ HUNKS = [
     (TURRET, TURRET_S,
      "  if p:IsA('MeshPart') and not (e.hammer and (p.Name=='Hammer' or p.Name=='LeftHand' or p.Name=='RightHand')) then", "replace",
      TURRET_HELD),
+    (TURRET, TURRET_S, TURRET_SNAPSHOT_BEFORE, "replace", TURRET_SNAPSHOT),
+    (PETS, PETS_S, PETS_BEST, "after", PETS_HAMMER),
     (PETS, PETS_S,
      "\t\tif p:IsA(\"MeshPart\") or p == root then", "replace",
      PETS_HELD),
@@ -244,8 +253,8 @@ UPGRADE = [
      CHASE_FALLBACK),
 ]
 
-# R7 text -> R9 final text (what the repo and Studio have had since 6987d7e). Runs before HUNKS, which
-# then find every R9 text present.
+# R7 text -> R9 final text (what Studio has had since 6987d7e). Runs before HUNKS (--from-r7), which
+# then add the rest (the turret snapshot, the pets' hammer local) or find it present.
 R9 = [
     (COMBAT, COMBAT_S,
      ("-- The rebuilt Hammer Brute (a map boss, MapBossId 'Hammer') is skinned: his hands are part of his",
@@ -261,10 +270,24 @@ R9 = [
      PETS_HELD),
 ]
 
+# 8e838ed text -> final (the R9 quality review, 2026-10-04): the repo's committed turret and pet lines.
+R9_REVIEW = [
+    (TURRET, TURRET_S,
+     ("  -- Not the Hammer's hammer nor the hands holding it, on the old Hammer or the map-boss one (R9, the",
+      "  if p:IsA('MeshPart') and not ((p.Name=='Hammer' or p.Name=='LeftHand' or p.Name=='RightHand') and (e.hammer or e.npc:GetAttribute('MapBossId')=='Hammer')) then"), "block",
+     TURRET_HELD),
+    (PETS, PETS_S,
+     ("\t\t-- Not the Hammer's hammer nor the hands holding it (the map-boss Hammer keeps the old 16-part",
+      "\t\tif (p:IsA(\"MeshPart\") or p == root) and not ((p.Name == \"Hammer\" or p.Name == \"LeftHand\" or p.Name == \"RightHand\") and npc:GetAttribute(\"MapBossId\") == \"Hammer\") then"), "block",
+     PETS_HELD),
+]
+
 if __name__ == "__main__":
-    # Default: files with the R7 text (R9, then HUNKS all present). --upgrade: from 0b9b6a8's text.
-    # --pre-r7: files from before R7 (HUNKS alone go straight to the final text).
+    # Default: the repo's text since 8e838ed (R9_REVIEW, then HUNKS). --from-r7: Studio's R7 text (the
+    # R9 push). --upgrade: from 0b9b6a8's text. --pre-r7: from before R7 (HUNKS alone).
     if "--pre-r7" in sys.argv:
         run(HUNKS)
-    else:
+    elif "--from-r7" in sys.argv or "--upgrade" in sys.argv:
         run((UPGRADE if "--upgrade" in sys.argv else []) + R9 + HUNKS)
+    else:
+        run(R9_REVIEW + HUNKS)

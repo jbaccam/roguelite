@@ -2,7 +2,7 @@
 -- (Edit) after MapBossTiming and MapBossDefs are synced. The raw imports in
 -- ServerStorage.MapBossRawImports are never edited; each is named by its MapBossDefs id (the
 -- SOURCE FBX imported, then renamed: Hammer, KingCrab, ...). An older <Id>_NPC is moved to
--- ServerStorage.BeforeMapBoss_<yyyymmdd> before its replacement is parented.
+-- ServerStorage.BeforeMapBoss_<yyyymmdd_hhmmss> (one folder per run) before its replacement is parented.
 -- ONLY (a global set before this code, e.g. ONLY={'Hammer'}) installs just those ids and fails on
 -- a missing raw import or timing. Without it every Defs.Order id is installed, and one without a
 -- raw import or timing yet is reported SKIPPED and left alone.
@@ -35,11 +35,18 @@ local SOURCE = {
 	Pharaoh = "pharaoh-boss/exports/game/Pharaoh_Studio.fbx",
 	Dragon = "dragon-boss/exports/game/Dragon_Studio.fbx",
 }
+-- One new backup folder per run, named by the date and time (and _2, _3... after another run in the
+-- same second), so a second run on one day never puts a second <Id>_NPC beside the first.
 local backup
 local function backupFolder()
 	if not backup then
-		local name = "BeforeMapBoss_" .. os.date("%Y%m%d")
-		backup = storage:FindFirstChild(name) or Instance.new("Folder")
+		local base = "BeforeMapBoss_" .. os.date("%Y%m%d_%H%M%S")
+		local name, n = base, 1
+		while storage:FindFirstChild(name) do
+			n += 1
+			name = base .. "_" .. n
+		end
+		backup = Instance.new("Folder")
 		backup.Name = name
 		backup.Parent = storage
 	end

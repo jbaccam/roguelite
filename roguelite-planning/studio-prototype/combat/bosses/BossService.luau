@@ -41,9 +41,20 @@ function B.practice(player,action)
  -- Developers only (the admin panel), in Studio and on live servers; CharacterService checks too.
  if not Admin.isAdmin(player) or (action~='SpawnBoss' and action~='RemoveBoss') then return false end
  -- The map-boss Hammer when he is ready: MapBossService.practice makes the same checks and spawns him
- -- 20 studs ahead, no rewards. Remove boss below takes either Hammer.
- local map=action=='SpawnBoss' and mapHammer()
- if map then return map.practice(player,'Hammer') end
+ -- 20 studs ahead, no rewards. Remove boss below takes either Hammer. If his spawn throws, no
+ -- half-built one is left (nor zombies switched on by it), the status says why, and the old Hammer
+ -- spawns below instead.
+ local map=action=='SpawnBoss' and mapHammer();local failed
+ if map then
+  local wasEnabled=combat:GetAttribute('ZombiesEnabled')
+  local ok,result=pcall(map.practice,player,'Hammer')
+  if ok then return result end
+  failed=tostring(result);warn('BossService: map-boss Hammer practice spawn failed, the old Hammer instead: '..failed)
+  local enemies=workspace:FindFirstChild('RogueliteEnemies')
+  for _,npc in enemies and enemies:GetChildren() or {} do if npc:GetAttribute('MapBossId')=='Hammer' and npc:GetAttribute('BossPractice') then npc:Destroy() end end
+  combat:SetAttribute('ZombiesEnabled',wasEnabled)
+  combat:SetAttribute('PracticeBossStatus','Map-boss Hammer failed: '..failed)
+ end
  local ch=player.Character;local h=ch and ch:FindFirstChildOfClass('Humanoid');local root=ch and ch:FindFirstChild('HumanoidRootPart')
  local folder=workspace:FindFirstChild('RogueliteEnemies')
  if not Characters.states[player] or not h or h.Health<=0 or not root or not folder or os.clock()-lastPracticeRequest<.5 then return false end
@@ -86,7 +97,7 @@ function B.practice(player,action)
   combat:SetAttribute('ZombiesEnabled',wasEnabled)
   combat:SetAttribute('PracticeBossStatus','Boss template unavailable');return false
  end
- combat:SetAttribute('PracticeBossStatus','Practice boss active · no rewards')
+ combat:SetAttribute('PracticeBossStatus',failed and 'Old Hammer instead (map-boss Hammer failed: '..failed..')' or 'Practice boss active · no rewards')
  npc.Destroying:Connect(function() combat:SetAttribute('PracticeBossStatus','Practice boss gone · spawn another') end)
  return true
 end

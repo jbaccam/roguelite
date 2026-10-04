@@ -319,20 +319,38 @@ All work happens in `roguelite-planning/studio-prototype/`. Tests go in `combat/
 
 R8 is replaced: no FBX import. The Hammer keeps the 16-part Motor6D template `HammerBoss_NPC`, and his clips are re-authored in `hammer-boss-moves/` (design doc, "Change of plan").
 
-**Done (R9):**
-- `receipts/hammer-old-receipt.json`: a read-only Studio dump of `HammerBoss_NPC` (`combat/bosses/DumpMotorReceipt.luau`). Its joints are `Boss_<Part>`, and that is the name `EnemyMotion.bind` gives them.
+**Done in the repo (R9, 8e838ed, plus the review fixes):**
+- `combat/bosses/DumpMotorReceipt.luau`: a read-only Studio dump of a Motor6D template, for `receipts/hammer-old-receipt.json`.
+  - **Not run yet.** Studio stayed in Play through R9, so the receipt doesn't exist.
+  - Until it does, the converter tests use a receipt made from `hammer-boss/finished/studio-asset-manifest.json`. In that receipt the joints are `Boss_<Part>`, which is the name `EnemyMotion.bind` gives them.
 - `combat/bosses/partposes_to_motor6d.py` (tests: `test_partposes_to_motor6d.py`):
   - It reads `PartPoses.json` and writes `StudioAnimationData.json` (rigType Motor6D, `T = C0⁻¹·P0⁻¹·P1·C1` per joint) and `AnimationData.json` (one bone per part under Root at the root height, in the build's basis).
   - BossGameData point offsets are in the part's own Studio space.
-  - On the legacy clips, every frame is rebuilt within 1e-4 studs.
-- `build_boss_modules.py`: `FOLDERS['hammer-brute']='hammer-boss-moves'`. It runs the converter itself when `PartPoses.json` is there. The other four bosses stay byte-identical.
+  - The receipt's model scale must be 1.0.
+  - A supplied rotation may be off a true rotation by 2e-6 at most.
+  - Every frame is rebuilt within 1e-4 studs of the poses as supplied (on the legacy clips: 4.6e-6), and nothing is written unless all of it passes.
+- `build_boss_modules.py`: `FOLDERS['hammer-brute']='hammer-boss-moves'`.
+  - It converts `PartPoses.json` in memory and writes the derived files with the rest of its output.
+  - A plain run skips hammer-brute while the receipt or the clips are incomplete. Naming it (`python build_boss_modules.py hammer-brute`) stops the run instead.
+  - The other four bosses stay byte-identical.
 - `MapBossDefs`: `D.Hammer.scale=1.15` (the old `BossMotion.SCALE`). The client scales the Transforms' translations by `GetScale()/EnemyBaselineModelScale` (1.15/1), the same factor `ScaleTo` gives C0/C1.
 - `InstallMapBossTemplates`: `Hammer_NPC` is a copy of `HammerBoss_NPC` (`COPY`), which stays in place for the legacy runtime.
   - The meshes, textures and SurfaceAppearances are kept as they are.
   - The legacy attributes are removed and the map-boss attributes added.
   - Two Neon `HammerBrute_EyeGlow` plates are welded to the Head.
+  - An existing `Hammer_NPC` goes to a new `BeforeMapBoss_<yyyymmdd_hhmmss>` folder each run.
 - `plan_hammer_brute_hunks.py` R9: the shell in RogueliteCombat, HandymanTurretService and PetService skips the `Hammer` part and the hands for `MapBossId=='Hammer'` too.
-- `BossService.practice`: Spawn boss goes to `MapBossService.practice(player,'Hammer')` once `MapBossDefs.ready('Hammer')`. Remove boss removes either Hammer.
+  - The turret and pet loops read `MapBossId` once per enemy.
+  - `--from-r7` is the list for Studio's text.
+- `BossService.practice`: Spawn boss goes to `MapBossService.practice(player,'Hammer')` once `MapBossDefs.ready('Hammer')`.
+  - If that throws, the half-built boss is removed and the status shows the error. The old Hammer spawns instead.
+  - Remove boss removes either Hammer.
+
+**Still to do in Studio (Edit only):**
+1. Dump the receipt with `DumpMotorReceipt.luau`, rerun the tests on it, and compare it with `studio-asset-manifest.json`.
+2. Run the Studio compile checks and the three boss suites.
+3. Do the guarded push of MapBossDefs, BossService and the three shell hunks.
+4. Check that `legacy('Hammer')` is still true.
 
 **Final install, once the clips land (gate still closed until step 4):**
 1. **Package** in `hammer-boss-moves/exports/game/`:

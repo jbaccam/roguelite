@@ -19,10 +19,14 @@ Hammer Brute rebuild (R6, 2026-10-03). All of it is optional, so the other four 
   Roar, ChargeStart and ChargeRun need durations only (DURATION_ONLY).
 Hammer on the old template (R9, 2026-10-04): his clips are re-authored as part poses on the original
 16-part Motor6D template (hammer-boss-moves). When <asset-folder>/exports/game/PartPoses.json is
-there, partposes_to_motor6d.py first writes StudioAnimationData.json and AnimationData.json from it
-and receipts/hammer-old-receipt.json (PART_POSES); the rest of the build is the same. Their
-AnimationData carries rootHeight (the template's HumanoidRootPart above its soles), used when
-BossGameData has no bodyCentreHeight.
+there, partposes_to_motor6d.py converts it in memory with receipts/hammer-old-receipt.json
+(PART_POSES) into the StudioAnimationData and AnimationData the rest of the build reads; those two
+files (and StudioRetargetChecks.json) are written into the package with the build's own output, so
+a failed run writes none of them. Their AnimationData carries rootHeight (the template's
+HumanoidRootPart above its soles), used when BossGameData has no bodyCentreHeight.
+A part-pose boss that can't be built yet (no receipt, a failed conversion, or clips still missing)
+is skipped with a message when no ids are given, so a plain run still rebuilds the other bosses; when
+it is named (`python build_boss_modules.py hammer-brute`) the run stops instead.
 
 Usage: python build_boss_modules.py [id ...]   (default: every boss in FOLDERS)
 A boss whose exports/game package isn't there yet is skipped with a message. MapBossTiming keeps
@@ -317,34 +321,46 @@ def timing_source(table):
 
 
 def convert_part_poses(id, game_dir):
-    """A part-pose boss (PART_POSES) with its PartPoses.json there: partposes_to_motor6d writes its
-    StudioAnimationData.json and AnimationData.json (derived inputs, before anything this build
-    writes). A failed conversion stops the build. True when it ran."""
+    """A part-pose boss (PART_POSES) with its PartPoses.json there: partposes_to_motor6d.package's
+    (outputs, studio, data), converted in memory; main writes the outputs with the rest. None for
+    any other boss or package. A failed conversion raises SystemExit; nothing is written."""
     receipt = PART_POSES.get(id)
-    if not receipt or not (game_dir / 'PartPoses.json').exists(): return False
+    if not receipt or not (game_dir / 'PartPoses.json').exists(): return None
     import partposes_to_motor6d
     try:
-        partposes_to_motor6d.convert_package(game_dir.parent.parent, receipt)
+        _, outputs, studio, data, _ = partposes_to_motor6d.package(game_dir.parent.parent, receipt)
     except (ValueError, FileNotFoundError, AssertionError, KeyError) as error:
         raise SystemExit(f'{id}: PartPoses.json not converted ({error}); nothing written')
-    return True
+    return outputs, studio, data
 
 
-def main(ids):
-    table, built = existing(), {}
+def main(ids, named=True):
+    """named: the ids were asked for. A plain run (named=False) skips a PART_POSES boss that can't be
+    built yet instead of stopping, and keeps its MapBossTiming entry and BossAnimations as they are."""
+    table, built, derived = existing(), {}, {}
     for id in ids:
         game_dir = PLANNING / FOLDERS[id] / 'exports' / 'game'
-        convert_part_poses(id, game_dir)
-        missing = [n for n in PACKAGE if not (game_dir / n).exists()]
-        if missing:
-            kept = ' (its MapBossTiming entry is kept)' if id in table else ''
-            print(f'{id}: skipped, {FOLDERS[id]}/exports/game has no {", ".join(missing)} yet{kept}', flush=True)
+        try:
+            converted = convert_part_poses(id, game_dir)
+            needed = ['BossGameData.json'] if converted else PACKAGE
+            missing = [n for n in needed if not (game_dir / n).exists()]
+            if missing:
+                kept = ' (its MapBossTiming entry is kept)' if id in table else ''
+                print(f'{id}: skipped, {FOLDERS[id]}/exports/game has no {", ".join(missing)} yet{kept}', flush=True)
+                continue
+            if converted:
+                outputs, studio, data = converted
+            else:
+                studio = json.loads((game_dir / 'StudioAnimationData.json').read_text(encoding='utf-8'))
+                data = json.loads((game_dir / 'AnimationData.json').read_text(encoding='utf-8'))
+            game = json.loads((game_dir / 'BossGameData.json').read_text(encoding='utf-8'))
+            rendered, entry = render_animations(id, studio), timing(id, data, game)
+        except (SystemExit, AssertionError, ValueError, KeyError) as error:
+            if named or id not in PART_POSES: raise
+            print(f'{id}: skipped (receipt / clips incomplete: {error}); its MapBossTiming entry and BossAnimations are left as they are', flush=True)
             continue
-        studio = json.loads((game_dir / 'StudioAnimationData.json').read_text(encoding='utf-8'))
-        data = json.loads((game_dir / 'AnimationData.json').read_text(encoding='utf-8'))
-        game = json.loads((game_dir / 'BossGameData.json').read_text(encoding='utf-8'))
-        built[id] = render_animations(id, studio)
-        table[id] = timing(id, data, game)
+        built[id], table[id] = rendered, entry
+        if converted: derived[id] = (game_dir, outputs)
     if not built:
         print('Nothing built; MapBossTiming unchanged', flush=True)
         return
@@ -352,9 +368,14 @@ def main(ids):
     check_complete(table)
     for id, (files, largest) in built.items():
         print(f'{id}: {write_animations(id, files)} bytes, largest module {largest} characters', flush=True)
+    if derived:
+        import partposes_to_motor6d
+        for id, (game_dir, outputs) in derived.items():
+            partposes_to_motor6d.write_package(game_dir, outputs)
+            print(f'{id}: wrote {", ".join(outputs)} in {FOLDERS[id]}/exports/game', flush=True)
     (HERE / 'MapBossTiming.luau').write_text(source, encoding='utf-8')
     print(f'MapBossTiming: {len(source)} characters', flush=True)
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:] or list(FOLDERS))
+    main(sys.argv[1:] or list(FOLDERS), named=bool(sys.argv[1:]))
