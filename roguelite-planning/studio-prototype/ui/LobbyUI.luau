@@ -115,6 +115,15 @@ function L.mount(player)
  local screen=T.make('ScreenGui',player:WaitForChild('PlayerGui'),{Name='RogueliteLobbyHUD',ResetOnSpawn=false,DisplayOrder=35,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,ClipToDeviceSafeArea=true,Enabled=false})
  local hud=T.frame(screen,'HUD',0,0,0,0);hud.Size=UDim2.fromScale(1,1)
  local self={Screen=screen,current=nil,selection={map=1,class=player:GetAttribute('LoadoutClass') or 'Brawler',weapon=player:GetAttribute('LoadoutWeapon')}}
+ -- The server puts back the saved pick once the save loads (RogueliteLobbyPreview restoreLoadout),
+ -- usually after this mounts: the selection follows it, so PLAY opens on that class.
+ for _,name in {'LoadoutClass','LoadoutWeapon'} do
+  player:GetAttributeChangedSignal(name):Connect(function()
+   local class,weapon=player:GetAttribute('LoadoutClass'),player:GetAttribute('LoadoutWeapon')
+   if class then self.selection.class=class end
+   if weapon then self.selection.weapon=weapon end
+  end)
+ end
  local open -- forward
  local function scaled(name,anchor,position,size)
   local f=T.frame(hud,name,0,0,size.X,size.Y);f.AnchorPoint=anchor;f.Position=position

@@ -19,6 +19,7 @@ local Rules=require(RS:WaitForChild('RunSetupRules'))
 local combat=RS:WaitForChild('RogueliteCombat')
 local Shop=require(SSS:WaitForChild('ShopService'))
 local Match=require(SSS:WaitForChild('MatchService'))
+local Profiles=require(SSS:WaitForChild('ProfileService')) -- MatchService loads it already
 local CAPACITY=4
 local state=State.new(4,CAPACITY)
 local Party=require(script:WaitForChild('PartyState'))
@@ -278,6 +279,12 @@ leaveRemote.OnServerEvent:Connect(function(player)
   if pad and hrp then char:PivotTo(besidePad(pad,char)) end
  end
 end)
+-- A class and starter that passed Rules.validLoadout: this server's run uses them, and the profile
+-- keeps them for the next lobby (ProfileService.setLoadout).
+local function pick(player,class,weapon)
+ player:SetAttribute('RunClass',class);player:SetAttribute('RunWeapon',weapon)
+ Profiles.setLoadout(player,class,weapon)
+end
 setupRemote.OnServerEvent:Connect(function(player,action,a,b,c,d,e)
  if os.clock()-(last[player] or -math.huge)<.3 then return end
  last[player]=os.clock()
@@ -302,7 +309,7 @@ setupRemote.OnServerEvent:Connect(function(player,action,a,b,c,d,e)
   -- d: Private (only this player's party may join; just them when not in one), else Open.
   local allow={};for _,id in parties:members(player.UserId) do allow[id]=true end
   if not state:start(player.UserId,index,now(),a,d==true,e,allow) then return reply(false,d==true and 'Private needs a pad with only you and your party on it' or 'Only the host can start') end
-  player:SetAttribute('RunClass',b);player:SetAttribute('RunWeapon',c)
+  pick(player,b,c)
   -- The party comes along (Open or Private; a Private pad holds exactly the party).
   pullParty(player,index)
   local q=state.queues[index]
@@ -312,14 +319,14 @@ setupRemote.OnServerEvent:Connect(function(player,action,a,b,c,d,e)
   local q=state.queues[index]
   if q.map then local mapOk,mapWhy=Rules.validMap(player,q.map,q.difficulty);if not mapOk then return reply(false,mapWhy) end end
   local okL,why=Rules.validLoadout(player,a,b);if not okL then return reply(false,why) end
-  player:SetAttribute('RunClass',a);player:SetAttribute('RunWeapon',b)
+  pick(player,a,b)
   -- What happens next, not just "Ready" (2026-10-03: "are we readied up and is it gonna start").
   reply(true,q.launchAt and ('Locked in as %s. Starting in %ds'):format(a,math.max(1,math.ceil(q.launchAt-now()))) or ('Locked in as %s. Waiting for the host to start'):format(a))
  elseif action=='Loadout' then
   -- The ring shows the new starter at once (RogueliteCombat). Silent on success.
   if not player:GetAttribute('LobbyPreviewActive') then return reply(false,'Change your loadout in the lobby') end
   local okL,why=Rules.validLoadout(player,a,b);if not okL then return reply(false,why) end
-  player:SetAttribute('RunClass',a);player:SetAttribute('RunWeapon',b)
+  pick(player,a,b)
  end
 end)
 local function launch(index)
@@ -374,7 +381,24 @@ local function launch(index)
  publish()
 end
 
+-- Back in a lobby (after a run, a rejoin or on a new server): the class and starter they last
+-- picked (ProfileService.loadout), not Brawler and the Frying Pan (user, 2026-10-03: "it keeps
+-- resetting me back to brawler and the pan"). Checked like a launch: a starter that moved class
+-- falls back to that class's own. A pick made here before the save loaded wins.
+local function restoreLoadout(player)
+ local started=os.clock()
+ while player.Parent==Players and player:GetAttribute('ProfileLoaded')~=true and os.clock()-started<90 do task.wait(.25) end
+ if player.Parent~=Players or player:GetAttribute('RunClass')~=nil then return end
+ local class,weapon=Profiles.loadout(player)
+ if not class then return end
+ if not Rules.validLoadout(player,class,weapon) and Rules.validLoadout(player,class,Rules.Signature[class]) then weapon=Rules.Signature[class] end
+ if not Rules.validLoadout(player,class,weapon) then return end
+ player:SetAttribute('RunClass',class);player:SetAttribute('RunWeapon',weapon)
+ -- The lobby screens (LobbyUI, ArmoryUI, RunSetupUI) show the pick from these.
+ player:SetAttribute('LoadoutClass',class);player:SetAttribute('LoadoutWeapon',weapon)
+end
 local function attach(player)
+ task.spawn(restoreLoadout,player)
  player:SetAttribute('StudioArea',(Role.get()=='Lobby' or root:GetAttribute('StudioStartArea')=='Lobby') and 'Lobby' or 'Arena')
  local function spawned(char)
   leave(player);stepOff[player]=nil

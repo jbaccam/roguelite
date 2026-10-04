@@ -60,6 +60,7 @@ local function fresh()
   rerolls=0,banishes=0,quickOpen=false,codes={},daily={day=0,bought={}},vipClaimDay=0,skills={},
   armor={},wearing={}, -- armor: 'DragonScale.Helmet' -> {tier,have}; wearing: slot -> set id
   pets={},pet=nil, -- pets: PetConfig id -> {tier,have}; pet: the equipped pet id (nil = none)
+  loadout={}, -- the class and starter last picked in a lobby: {class=,weapon=} (P.setLoadout); {} = none yet
   bundles={}, -- one-time Godly bundles bought: product key -> true
   godlyPick='', -- the Godly weapon name chosen for a pending Godly Starter purchase
   tutorial={step='Run'}, -- first-join tutorial (TutorialConfig.Steps); old saves count as done (P.load)
@@ -119,6 +120,20 @@ function P.saveSettings(player,t)
  if type(d.settings)~='table' then d.settings={} end
  for name,kind in SETTINGS do local v=cleanSetting(kind,t[name]);if v~=nil then d.settings[name]=v end end
  return true,'' -- saved by the autosave, a hand-off or leaving, like everything else
+end
+-- The class and starter weapon last picked in a lobby (RogueliteLobbyPreview saves them once
+-- RunSetupRules.validLoadout accepts them), so the next lobby, after a run or a rejoin, starts
+-- with them instead of Brawler and the Frying Pan (user, 2026-10-03). RunClass/RunWeapon only
+-- live on one server. Saved by the autosave, a hand-off or leaving, like the settings.
+function P.setLoadout(player,class,weapon)
+ local d=P.profiles[player]
+ if not d or type(class)~='string' or type(weapon)~='string' then return end
+ d.loadout={class=class,weapon=weapon}
+end
+function P.loadout(player)
+ local d=P.profiles[player];local l=d and d.loadout
+ if type(l)=='table' and type(l.class)=='string' and type(l.weapon)=='string' then return l.class,l.weapon end
+ return nil
 end
 local function applySettings(player,d)
  if type(d.settings)~='table' then return end

@@ -1,3 +1,10 @@
+# Your class and starter stick between lobbies — October 3, 2026
+
+- **Why it reset:** a pick (Armory EQUIP AS STARTER, the PLAY screen, LOCK IN) set `RunClass`/`RunWeapon` on the lobby server's Player only. A run's match server got it in the launch, but the lobby you came back to, or a rejoin, was a new server with no pick: Brawler and the Frying Pan. Armor (`wearing`) and the pet were already saved in the profile.
+- **Now:** every pick the lobby accepts (`RogueliteLobbyPreview` `pick`, after `Rules.validLoadout`) is also saved in the profile (`ProfileService.setLoadout`, field `loadout`). It goes to the DataStore with the autosave, hand-off and leave saves, like Settings. On arrival in a lobby, once the save loads, `restoreLoadout` puts it back as `RunClass`/`RunWeapon` (the ring's starter) and `LoadoutClass`/`LoadoutWeapon` (the lobby screens), checked like a launch: a starter that moved class falls back to that class's own. A pick made before the save loads wins. `LobbyUI`'s selection follows those attributes, so PLAY opens on the saved class.
+- **Not changed:** match servers still use the loadout the run was launched with; the tutorial still starts as Brawler with the pan. Studio profiles are in memory (no production DataStores), so each Studio Play starts as Brawler; the pick lasts the whole Play.
+- **Not run:** no Play test; parse-checked only.
+
 # Tutorial UI: boss bar after the entrance, Eggbert holds still, no VICTORY — October 3, 2026
 
 Spec section: "Play-test fixes, round 3" in `../../plans/2026-10-03-tutorial-design.md`.
