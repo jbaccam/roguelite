@@ -767,8 +767,9 @@ end
 local lastRequest={}
 local pendingArg={} -- e.g. which level-up card a bought Banish targets
 -- delivered: true when the product itself was granted (not emeralds instead), so the lobby can play
--- its contents reveal (StoreUI.reveal, 2026-10-03).
-local function reply(p,key,ok,message,delivered) purchaseResult:FireClient(p,key,ok,message,delivered) end
+-- its contents reveal (StoreUI.reveal, 2026-10-03). gift (2026-10-04): {to=name} on the buyer's
+-- "Gift sent" (a toast), {from=name, pick?, emeralds?} on a gift arriving (the reveal says GIFT FROM).
+local function reply(p,key,ok,message,delivered,gift) purchaseResult:FireClient(p,key,ok,message,delivered,gift) end
 -- Returns true when the product can be bought right now (checked before prompting).
 local function eligible(p,key,arg)
  local product=Config.Products[key];local d=Profiles.get(p)
@@ -838,13 +839,173 @@ local function receiptProblem(p,key)
 end
 -- One receipt at a time per player, so a grant and its save never interleave with another one.
 local receiptBusy={}
+
+-- Gifting (2026-10-04, user: "add gifting to the store, like be able to buy stuff for other people";
+-- MONETIZATION_AND_REWARDS.md "Gifting"). Anyone in this server or any Roblox friend, developer
+-- products only (MonetizationConfig.giftable). The flow, all on the server:
+--  1. GIFT (PurchaseRequest 'GiftRequest', Gift.request below): checks the product, the buyer and
+--     the recipient (here, or IsFriendsWith), saves an intent keyed by the buyer, then prompts.
+--  2. The receipt (processReceipt): a fresh intent is bound to the PurchaseId (Gift.bind); the buyer
+--     gets nothing and the gift goes into the recipient's inbox, keyed by the recipient (Gift.send).
+--     Only once that write succeeds is the receipt granted, so Roblox retries anything that failed.
+--  3. Delivery (Gift.deliver): on joining, on a MessagingService 'Gift:<userId>' from the buyer's
+--     server, or straight away when they're here, once they stand in the lobby (the popup is a lobby
+--     screen; a player mid-run gets theirs back in the lobby). Each gift is granted like a purchase
+--     (a second Starter Pack pays emeralds, as receipts do), recorded as receipt 'gift:<PurchaseId>'
+--     and saved BEFORE it leaves the inbox: a crash in between delivers again, and the record stops a
+--     second grant. (Taking the inbox first and granting after would lose gifts in that crash.)
+-- Studio keeps intents and inboxes in memory unless EnableStudioDataStores (ProfileService's rule),
+-- so simulated purchases never persist. MessagingService is pcalled and never blocks a purchase.
+-- Example: Ben (lobby A) gifts Ana (lobby B, his friend) a Starter Pack: Ben pays 49 R$ and sees
+-- "Gift sent to Ana!"; Ana's server gets the message and she sees GIFT FROM BEN with its contents.
+local Gift={due={},busy={},retryAt={},subs={},intents={},friendCache={},last={},window={},
+ useStore=not studio or workspace:GetAttribute('EnableStudioDataStores')==true, -- the same rule as ProfileService
+ INTENT='RogueliteGiftIntent_v1',INBOX='RogueliteGiftInbox_v1',memory={}}
+Gift.memory[Gift.INTENT]={};Gift.memory[Gift.INBOX]={}
+function Gift.copy(v) if type(v)~='table' then return v end;local c={};for k,x in v do c[k]=Gift.copy(x) end;return c end
+-- UpdateAsync on one of the two stores (or its in-memory copy in Studio). fn(old) returns the new
+-- value, or nil to write nothing; results leave through fn's upvalues. Returns false on an error.
+function Gift.update(name,key,fn)
+ if Gift.useStore then
+  local store=game:GetService('DataStoreService'):GetDataStore(name)
+  local ok,err=pcall(store.UpdateAsync,store,key,function(old) return fn(old) end)
+  if not ok then warn('RogueliteMeta: gift store',name,key,err) end
+  return ok
+ end
+ local mem=Gift.memory[name];local new=fn(Gift.copy(mem[key]))
+ if new~=nil then mem[key]=Gift.copy(new) end
+ return true
+end
+-- One gift for player p, granted like its receipt would be. Returns 'item', or 'emeralds' with the
+-- amount and why (owned one-time pack or class, a random item in a restricted region, a product no
+-- longer sold: its Robux value in emeralds, e.g. 49 R$ -> 502), or nil when it can't be granted yet
+-- (it stays in the inbox).
+function Gift.grant(p,g)
+ local product=Config.Products[g.key]
+ local spent=(tonumber(g.spent) or 0)>0 and g.spent or product and product.robux or 0 -- a test purchase can say 0 R$
+ local problem=not product and 'No longer sold' or receiptProblem(p,g.key)
+ if problem then
+  local n=Config.fairEmeralds(spent)
+  if not Profiles.grant(p,{emeralds=n,paid=true}) then return nil end
+  return 'emeralds',n,problem
+ end
+ -- The Godly Starter grants the profile's saved pick: the gift's, just for this grant.
+ local d=Profiles.get(p);local keep=d.godlyPick
+ if product.godlyPick then local pick=Config.GodlyWeapons[g.pick];if not pick then return nil end;d.godlyPick=pick[1] end
+ local ok,granted=pcall(grantProduct,p,g.key,spent)
+ d.godlyPick=keep
+ if not ok or not granted then return nil end
+ return 'item'
+end
+-- Reads p's inbox, grants what isn't granted yet, saves, then takes the delivered gifts out (and
+-- any malformed entry, logged). Shows each popup. Returns false to try again later.
+function Gift.claim(p)
+ local key='u_'..p.UserId
+ local inbox
+ if not Gift.update(Gift.INBOX,key,function(old) inbox=old;return nil end) then return false end
+ local list,bad=Config.giftList(inbox)
+ if bad>0 then warn('RogueliteMeta: skipped',bad,'malformed gift(s) for',p.UserId) end
+ local done,shown={},{}
+ for _,g in list do
+  local id='gift:'..g.receipt
+  if Profiles.hasReceipt(p,id) then done[g.receipt]=true;continue end -- granted before; only its removal failed
+  local ok,how,n,problem=pcall(Gift.grant,p,g)
+  if ok and how then Profiles.addReceipt(p,id);done[g.receipt]=true;table.insert(shown,{g=g,how=how,n=n,problem=problem})
+  else warn('RogueliteMeta: gift grant failed',g.key,g.receipt,how) end
+ end
+ local saved=#shown==0 or Profiles.save(p)
+ for _,s in shown do
+  local from=type(s.g.fromName)=='string' and #s.g.fromName<=40 and s.g.fromName or 'a friend'
+  if s.how=='emeralds' then reply(p,s.g.key,true,'Gift from '..from..': '..s.problem..' · '..s.n..' emeralds instead',false,{from=from,emeralds=s.n})
+  else reply(p,s.g.key,true,'Gift from '..from..'!',true,{from=from,pick=s.g.pick}) end
+ end
+ -- Unsaved: the inbox keeps them, and the receipts recorded above stop a second grant next time.
+ if not saved then return false end
+ if next(done)~=nil or bad>0 then
+  Gift.update(Gift.INBOX,key,function(old) local left,n=Config.giftInboxRemove(old,done);return n>0 and left or nil end)
+ end
+ return true
+end
+-- Delivers p's gifts once their save, region answer and lobby are ready; otherwise it stays due and
+-- the sweep (below) tries again every 5 s. One at a time with p's receipts.
+function Gift.deliver(p)
+ Gift.due[p]=true
+ if Gift.busy[p] then return end
+ Gift.busy[p]=true
+ while Gift.due[p] and p.Parent==Players and os.clock()>=(Gift.retryAt[p] or 0) do
+  if not Profiles.get(p) or restricted[p]==nil or p:GetAttribute('LobbyPreviewActive')~=true then break end
+  Gift.due[p]=nil
+  while receiptBusy[p] do task.wait() end
+  receiptBusy[p]=true
+  local ok,done=pcall(Gift.claim,p)
+  receiptBusy[p]=nil
+  if not (ok and done) then
+   if not ok then warn('RogueliteMeta: gift delivery failed',done) end
+   Gift.due[p]=true;Gift.retryAt[p]=os.clock()+30 -- a DataStore hiccup: again in 30 s
+  end
+ end
+ Gift.busy[p]=nil
+end
+-- The intent this receipt pays for (bound to it), or nil for a normal purchase. wait=true: the store
+-- couldn't be read, so the receipt waits; a gift must never become the buyer's purchase by accident.
+function Gift.bind(p,key,purchaseId)
+ if not Config.giftable(key) then return nil end
+ local found
+ local ok=Gift.update(Gift.INTENT,'u_'..p.UserId,function(old)
+  local intent,changed=Config.giftIntentBind(old,key,purchaseId,os.time())
+  found=intent
+  return changed and old or nil
+ end)
+ if not ok then return nil,true end
+ local mine=Gift.intents[p];if found and mine and mine[key] and mine[key].id==found.id then mine[key]=nil end
+ return found
+end
+-- Puts the paid gift in the recipient's inbox (once per receipt) and tells their server. Returns
+-- false when the write failed or the inbox is full: the receipt is retried.
+function Gift.send(p,key,purchaseId,spent,intent)
+ local gift={from=p.UserId,fromName=p.DisplayName,key=key,receipt=purchaseId,at=os.time(),pick=intent.pick,spent=spent}
+ local status
+ local ok=Gift.update(Gift.INBOX,'u_'..intent.to,function(old)
+  local inbox;inbox,status=Config.giftInboxAdd(old,gift,Config.GiftInboxMax)
+  return status=='added' and inbox or nil
+ end)
+ if not ok or status=='full' then return false end
+ local q=Players:GetPlayerByUserId(intent.to)
+ if q then task.spawn(Gift.deliver,q)
+ elseif Gift.useStore then
+  task.spawn(function()
+   local okP,err=pcall(function() game:GetService('MessagingService'):PublishAsync('Gift:'..intent.to,p.UserId) end)
+   if not okP then warn('RogueliteMeta: gift message failed (delivered on their next join)',err) end
+  end)
+ end
+ return true
+end
+-- The receipt is saved: its intent binding goes (a leftover one is harmless and expires).
+function Gift.finish(p,key,purchaseId)
+ task.spawn(Gift.update,Gift.INTENT,'u_'..p.UserId,function(old) return Config.giftIntentDone(old,key,purchaseId) and old or nil end)
+end
+-- Forget a pending GIFT (by id): a normal BUY of the same product, or a GIFT prompt closed unpaid.
+function Gift.cancel(p,key,id)
+ local mine=Gift.intents[p];if mine and mine[key] and mine[key].id==id then mine[key]=nil end
+ Gift.update(Gift.INTENT,'u_'..p.UserId,function(old) return Config.giftIntentCancel(old,key,id) and old or nil end)
+end
+
 local function processReceipt(p,key,purchaseId,spent)
  -- Wait for the profile and the region answer (retried by Roblox) before deciding anything.
  if not Profiles.get(p) or restricted[p]==nil then return Enum.ProductPurchaseDecision.NotProcessedYet end
+ local gifted
  if not Profiles.hasReceipt(p,purchaseId) then
   local product=Config.Products[key]
-  local problem=receiptProblem(p,key)
-  if problem then
+  -- A gift (2026-10-04): the buyer gets nothing; the receipt is done once the recipient's inbox has it.
+  local intent,wait=Gift.bind(p,key,purchaseId)
+  if wait then return Enum.ProductPurchaseDecision.NotProcessedYet end
+  local problem=not intent and receiptProblem(p,key)
+  if intent then
+   if not Gift.send(p,key,purchaseId,(spent or 0)>0 and spent or product.robux,intent) then return Enum.ProductPurchaseDecision.NotProcessedYet end
+   Profiles.addReceipt(p,purchaseId);gifted=true
+   local name=type(intent.toName)=='string' and intent.toName or 'your friend'
+   reply(p,key,true,'Gift sent to '..name..'!',false,{to=name})
+  elseif problem then
    local n=Config.fairEmeralds(spent or product.robux)
    if not Profiles.grant(p,{emeralds=n,paid=true}) then return Enum.ProductPurchaseDecision.NotProcessedYet end
    Profiles.addReceipt(p,purchaseId)
@@ -860,6 +1021,7 @@ local function processReceipt(p,key,purchaseId,spent)
  -- retries it, the remembered PurchaseId stops a second grant here, and another server (which
  -- never saw this grant) grants it once.
  if not Profiles.save(p) then return Enum.ProductPurchaseDecision.NotProcessedYet end
+ if gifted then Gift.finish(p,key,purchaseId) end
  return Enum.ProductPurchaseDecision.PurchaseGranted
 end
 Market.ProcessReceipt=function(info)
@@ -898,8 +1060,116 @@ local function savePick(p)
   if Profiles.get(p) then lastPickSave[p]=os.clock();Profiles.save(p) end
  end)
 end
-purchaseRequest.OnServerEvent:Connect(function(p,key,arg)
+-- IsFriendsWith (a web call), remembered for a minute per pair. nil: Roblox didn't answer.
+function Gift.isFriend(p,to)
+ local cache=Gift.friendCache[p];if not cache then cache={};Gift.friendCache[p]=cache end
+ local c=cache[to];if c and os.clock()-c.at<60 then return c.yes end
+ local ok,yes=pcall(p.IsFriendsWith,p,to)
+ if not ok then return nil end
+ cache[to]={yes=yes==true,at=os.clock()};return yes==true
+end
+-- A display name for "Gift sent to Ana!" (only the buyer sees it).
+function Gift.nameOf(id)
+ local q=Players:GetPlayerByUserId(id);if q then return q.DisplayName end
+ local ok,infos=pcall(function() return game:GetService('UserService'):GetUserInfosByUserIdsAsync({id}) end)
+ local info=ok and type(infos)=='table' and infos[1]
+ return type(info)=='table' and type(info.DisplayName)=='string' and info.DisplayName or 'your friend'
+end
+-- PurchaseRequest('GiftRequest', productKey, recipientUserId, pick): the store's GIFT confirm.
+-- Everything is checked here (the client only asks), then the intent is saved and the buyer's
+-- normal prompt opens. At most one per 2 s and 8 a minute: each can cost a friends check and a
+-- DataStore write. Example: Ben gifts Thrower to Ana, who has it: "Ana already unlocked it".
+function Gift.request(p,key,to,pick)
+ if type(key)~='string' then return end
+ local product=Config.Products[key]
+ if not Config.giftable(key) then return reply(p,key,false,"That can't be gifted") end
+ local now=os.clock();local w=Gift.window[p]
+ if now-(Gift.last[p] or -1e9)<2 then return reply(p,key,false,'Slow down') end
+ if not w or now-w.start>=60 then w={start=now,count=0};Gift.window[p]=w end
+ if w.count>=8 then return reply(p,key,false,'Too many gifts. Try again in a minute') end
+ w.count+=1;Gift.last[p]=now
+ if product.productId<=0 and not studio then return reply(p,key,false,'Not on sale yet') end
+ if not Profiles.get(p) then return reply(p,key,false,'Profile still loading') end
+ if product.random and restricted[p]~=false then return reply(p,key,false,'Not available in your region') end
+ -- Godly products need their weapon in the game; the Godly Starter also its pick (an index).
+ local godly=product.godly or product.godlyPick and type(pick)=='number' and Config.GodlyWeapons[pick] and Config.GodlyWeapons[pick][1]
+ if product.godlyPick and not godly then return reply(p,key,false,'Pick a Godly weapon first') end
+ if godly and not Profiles.weaponIdByName(godly) then return reply(p,key,false,'Coming soon') end
+ local q=type(to)=='number' and to==to and to%1==0 and Players:GetPlayerByUserId(to) or nil
+ local friends=false
+ -- The friends check is a web call: only for a well-formed id that isn't here and isn't the buyer.
+ if not q and Config.giftRecipientOk({buyer=p.UserId,to=to,friends=true}) then
+  friends=Gift.isFriend(p,to)
+  if friends==nil then return reply(p,key,false,"Couldn't check your friends list. Try again") end
+ end
+ local ok,why=Config.giftRecipientOk({buyer=p.UserId,to=to,inServer=q~=nil,friends=friends,studio=studio})
+ if not ok then return reply(p,key,false,why) end
+ -- Here we can see what they own (offline friends can't be checked: theirs pays emeralds instead).
+ local owns=q and Config.giftBlocked(key,Profiles.get(q))
+ if owns then return reply(p,key,false,q.DisplayName..' '..owns) end
+ local intent={id=Http:GenerateGUID(false),to=to,toName=Gift.nameOf(to),at=os.time(),pick=product.godlyPick and pick or nil}
+ -- Saved before the prompt, so a receipt on another server (or after a crash) still knows it.
+ if not Gift.update(Gift.INTENT,'u_'..p.UserId,function(old) return Config.giftIntentPut(old,key,intent,os.time()) end) then
+  return reply(p,key,false,"Couldn't start the gift. Try again")
+ end
+ Gift.intents[p]=Gift.intents[p] or {};Gift.intents[p][key]=intent
+ if product.productId>0 then Market:PromptProductPurchase(p,product.productId)
+ elseif studio then
+  -- Studio only, a product with no ID yet: a simulated receipt through the same gift path.
+  task.spawn(function()
+   while receiptBusy[p] do task.wait() end
+   receiptBusy[p]=true
+   local okR,decision=pcall(processReceipt,p,key,'studio-'..Http:GenerateGUID(false),product.robux)
+   receiptBusy[p]=nil
+   if not okR or decision~=Enum.ProductPurchaseDecision.PurchaseGranted then reply(p,key,false,'Gift failed') end
+  end)
+ end
+end
+-- A GIFT prompt closed without buying: its intent goes 20 s later, unless its receipt bound it
+-- meanwhile (isPurchased can be wrong; the receipt never is). Example: Ben cancels his gift to Ana
+-- and later buys a Starter Pack for himself: it's his.
+function Gift.closed(p,key)
+ local mine=key and Gift.intents[p] and Gift.intents[p][key];if not mine then return end
+ task.delay(20,Gift.cancel,p,key,mine.id)
+end
+function Gift.subscribe(p)
+ if not Gift.useStore or Role.get()=='Match' then return end -- a match never delivers (no lobby); the next lobby does
+ local ok,conn=pcall(function()
+  return game:GetService('MessagingService'):SubscribeAsync('Gift:'..p.UserId,function() if p.Parent==Players then task.spawn(Gift.deliver,p) end end)
+ end)
+ if not ok then warn('RogueliteMeta: gift subscribe failed (gifts still arrive on the next join)',conn);return end
+ if p.Parent==Players then Gift.subs[p]=conn else conn:Disconnect() end
+end
+function Gift.forget(p)
+ local c=Gift.subs[p];if c then pcall(function() c:Disconnect() end) end
+ for _,t in {Gift.due,Gift.busy,Gift.retryAt,Gift.subs,Gift.intents,Gift.friendCache,Gift.last,Gift.window} do t[p]=nil end
+end
+-- Gifts that couldn't be delivered yet (no save, no region answer, not in the lobby, a DataStore
+-- retry) are tried again every 5 s; nothing is read until the player is ready.
+task.spawn(function()
+ while true do
+  task.wait(5)
+  local list={};for p in Gift.due do table.insert(list,p) end
+  for _,p in list do if p.Parent~=Players then Gift.due[p]=nil elseif not Gift.busy[p] then task.spawn(Gift.deliver,p) end end
+ end
+end)
+-- Admin panel "Simulate gift to me" (AdminService GiftTest, Studio only): a fake Starter Pack gift
+-- from "Studio test" goes into this player's in-memory inbox and through the delivery above, so the
+-- GIFT FROM popup can be checked without Robux. A second one pays emeralds (already owned).
+local giftControl=game:GetService('ServerStorage'):FindFirstChild('GiftControl') or Instance.new('BindableFunction')
+giftControl.Name='GiftControl'
+giftControl.OnInvoke=function(what,p)
+ if what~='Test' or typeof(p)~='Instance' or not p:IsA('Player') then return false,'No player' end
+ if not studio or Gift.useStore then return false,'Studio only, with in-memory saves' end
+ local gift={from=p.UserId,fromName='Studio test',key='StarterPack',receipt='studio-'..Http:GenerateGUID(false),at=os.time(),spent=Config.Products.StarterPack.robux}
+ Gift.update(Gift.INBOX,'u_'..p.UserId,function(old) return (Config.giftInboxAdd(old,gift,Config.GiftInboxMax)) end)
+ task.spawn(Gift.deliver,p)
+ return true,p:GetAttribute('LobbyPreviewActive')==true and 'Test gift sent' or 'Test gift waiting: it shows in the lobby'
+end
+giftControl.Parent=game:GetService('ServerStorage')
+purchaseRequest.OnServerEvent:Connect(function(p,key,arg,to,pick)
  if type(key)~='string' or not allowRequest(p) then return end
+ if key=='GiftRequest' then return Gift.request(p,arg,to,pick) end -- arg: the product key
  local pass=Config.Passes[key]
  if pass then
   local d=Profiles.get(p)
@@ -918,6 +1188,9 @@ purchaseRequest.OnServerEvent:Connect(function(p,key,arg)
  if product and product.productId<=0 and not studio then return reply(p,key,false,'Not on sale yet') end
  local ok,why=eligible(p,key,arg)
  if not ok then return reply(p,key,false,why) end
+ -- A normal BUY forgets a pending GIFT of the same product first, so this receipt is the buyer's.
+ local gifting=Gift.intents[p] and Gift.intents[p][key]
+ if gifting then Gift.cancel(p,key,gifting.id) end
  pendingArg[p]=pendingArg[p] or {};pendingArg[p][key]=arg
  if product.godlyPick then
   local d=Profiles.get(p);local pick=Config.GodlyWeapons[arg][1]
@@ -935,9 +1208,10 @@ purchaseRequest.OnServerEvent:Connect(function(p,key,arg)
   if grantProduct(p,key) then reply(p,key,true,'Studio test: '..product.name..' granted (not saved)',true) else reply(p,key,false,'Grant failed') end
  else reply(p,key,false,'Not on sale yet') end
 end)
-Market.PromptProductPurchaseFinished:Connect(function(userId,productId)
+Market.PromptProductPurchaseFinished:Connect(function(userId,productId,isPurchased)
  local p=Players:GetPlayerByUserId(userId)
  if p and Config.isRevive(Config.byProductId(productId)) then prompting[p]=nil end
+ if p and not isPurchased then Gift.closed(p,Config.byProductId(productId)) end -- a GIFT prompt cancelled
 end)
 Market.PromptGamePassPurchaseFinished:Connect(function(p,id,bought)
  if not bought then return end
@@ -1022,6 +1296,7 @@ local function added(p)
  end
  watch(p);task.spawn(checkPolicy,p);task.spawn(checkPasses,p)
  task.delay(3,offerRejoin,p) -- a lobby offers the way back into a run they dropped out of
+ Gift.due[p]=true;task.spawn(Gift.subscribe,p) -- gifts waiting in their inbox, and new ones while here
 end
 Players.PlayerAdded:Connect(added)
 for _,p in Players:GetPlayers() do added(p);if p.Character then local h=p.Character:FindFirstChildOfClass('Humanoid');if h then h.Died:Connect(function() onDied(p,p.Character) end) end end end
@@ -1033,6 +1308,7 @@ Players.PlayerRemoving:Connect(function(p)
  RunPause.forget(pause,p);pausedWeapons[p]=nil;lastPauseAction[p]=nil;runKills[p]=nil;runDamage[p]=nil;statStint[p]=nil -- plan L
  wentDown[p]=nil;soloBroken[p]=nil -- plan M
  waveWork[p]=nil;ledgers[p]=nil;lastHit[p]=nil;fightSeconds[p]=nil -- contribution (C1, C2)
+ Gift.forget(p) -- gifting (2026-10-04): its subscription and checks
  -- The last one standing left: the clock loop pauses the wave again for the downed players' last
  -- stand. A last stand already counting down keeps the wave paused.
  if livingInRun()==0 and not lastStandEnds then Shop.resume() end

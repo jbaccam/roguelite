@@ -173,6 +173,13 @@ end
 function actions.TutorialStart(p) return tutorial(p,'Start') end
 function actions.TutorialLobby(p) return tutorial(p,'Lobby') end
 function actions.TutorialEnd(p) return tutorial(p,'End') end
+-- Simulate gift to me (2026-10-04): RogueliteMeta's ServerStorage.GiftControl puts a fake Starter
+-- Pack gift from "Studio test" in this developer's in-memory inbox and runs the real delivery, so
+-- the GIFT FROM popup shows without Robux (a second one pays emeralds: already owned).
+function actions.GiftTest(p)
+ local control=SS:FindFirstChild('GiftControl');if not control then return false,'Gifting not installed' end
+ return control:Invoke('Test',p)
+end
 for _,name in Admin.Actions do assert(actions[name],'AdminService has no handler for '..name) end
 
 -- The shared-run gate, checked before anything is marked. A reason string blocks the request.
@@ -187,6 +194,8 @@ local function blocked(p,action)
  if action=='Travel' and not (RunService:IsStudio() and Role.get()=='Combined') then return 'Needs lobby/match teleports (plan C)' end
  -- The tutorial buttons too: Studio profiles live in memory, so its reward can be paid again there.
  if string.sub(action,1,8)=='Tutorial' and not (RunService:IsStudio() and Role.get()=='Combined') then return 'Studio only: the live tutorial starts on first join' end
+ -- A fake gift is a free Starter Pack: never on a live server (real gifts come from Robux).
+ if action=='GiftTest' and not RunService:IsStudio() then return 'Studio only: real gifts come from Robux' end
  return nil
 end
 

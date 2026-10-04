@@ -688,22 +688,42 @@ function L.mount(player)
   task.defer(function() pendingRedraw=false;if win and self.redraw then self.redraw() end end)
  end
  for _,attr in {'ProfileLoaded','ProfileGems','ProfileGemsEarned','ProfileClasses','ProfileWeapons','ProfilePity','ProfilePicks','ProfileChests','ProfileStarterPack','ProfileVIP','ProfileBundles','PaidRandomRestricted','ProfileSkills','ProfileQuests'} do player:GetAttributeChangedSignal(attr):Connect(profileChanged) end
- combat:WaitForChild('PurchaseResult').OnClientEvent:Connect(function(key,ok,message,delivered)
+ -- Gifts (2026-10-04): gift={to=name} on the buyer's "Gift sent to Ana!" (a toast: nothing arrived
+ -- for them); gift={from=name, pick, emeralds} on one arriving, which plays the reveal with GIFT FROM
+ -- <name> (just the emeralds when it was paid as emeralds). Arriving gifts wait for the lobby HUD and
+ -- an open reveal, then play one after another.
+ local giftQueue={}
+ local showResult
+ local function nextGift()
+  if not screen.Enabled or #giftQueue==0 then return end
+  local pg=player:WaitForChild('PlayerGui')
+  local open=pg:FindFirstChild('PurchaseReveal')
+  if open then open.Destroying:Once(function() task.delay(.4,nextGift) end);return end
+  showResult(table.unpack(table.remove(giftQueue,1),1,5))
+  -- The next one waits for this reveal to close (or 3 s after a toast).
+  if #giftQueue>0 then if pg:FindFirstChild('PurchaseReveal') then task.defer(nextGift) else task.delay(3,nextGift) end end
+ end
+ showResult=function(key,ok,message,delivered,gift)
+  if type(gift)~='table' then gift=nil end
+  if gift and gift.from and (not screen.Enabled or player:WaitForChild('PlayerGui'):FindFirstChild('PurchaseReveal')) then
+   table.insert(giftQueue,{key,ok,message,delivered,gift});nextGift();return
+  end
   if screen.Enabled and type(message)=='string' then
    if ok then T.sound('ui_purchase') end
    -- A store item that arrived as itself plays its contents reveal instead of the toast
    -- (StoreUI.reveal, 2026-10-03); one paid out as emeralds ("... emeralds added instead") just
    -- says so. Protected: a fault in the reveal still shows the toast.
    local shown=false
-   if ok and (delivered==true or not message:find('instead',1,true)) then
-    local okR,gui=pcall(StoreUI.reveal,player:WaitForChild('PlayerGui'),key,{signature=L.Signature,pick=self.selection.godlyPick,hud=screen,
-     note=message:find('^Studio test') and message or nil})
+   if ok and not (gift and gift.to) and (delivered==true or not message:find('instead',1,true) or (gift and gift.emeralds)) then
+    local okR,gui=pcall(StoreUI.reveal,player:WaitForChild('PlayerGui'),key,{signature=L.Signature,pick=gift and gift.pick or self.selection.godlyPick,hud=screen,
+     note=(message:find('^Studio test') or (gift and gift.emeralds)) and message or nil,from=gift and gift.from,emeralds=gift and gift.emeralds})
     if not okR then warn('LobbyUI: purchase reveal failed:',gui) end
     shown=okR and gui~=nil
    end
    if not shown then T.toast(screen,message,ok and C.lime or C.negative) end
   end
- end)
+ end
+ combat:WaitForChild('PurchaseResult').OnClientEvent:Connect(showResult)
  -- Party invites: a card under the toast line with ACCEPT / DECLINE until it expires, and a badge
  -- on the party button. Server replies (invited, joined, taken to a portal) show as toasts.
  local inviteCard
@@ -742,6 +762,7 @@ function L.mount(player)
   screen.Enabled=player:GetAttribute('LobbyPreviewActive')==true
   for _,hint in dummyHints do hint.Gui.Enabled=screen.Enabled end
   if not screen.Enabled then if win then win.Close() end;setup.Close();clearGuide();banner.Visible=false end
+  if screen.Enabled then task.defer(nextGift) end -- gifts that arrived while away (2026-10-04)
  end
  player:GetAttributeChangedSignal('LobbyPreviewActive'):Connect(enabled)
  player.CharacterRemoving:Connect(clearGuide)

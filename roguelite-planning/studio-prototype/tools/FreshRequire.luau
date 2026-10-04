@@ -31,6 +31,8 @@ return function(base)
 		ShopUI = "ui/ShopUI.luau",
 		EconomyConfig = "combat/EconomyConfig.luau",
 		ShopCatalog = "combat/ShopCatalog.luau",
+		MonetizationConfig = "combat/MonetizationConfig.luau", -- gifting (2026-10-04)
+		GiftTests = "combat/GiftTests.luau",
 	}
 	-- Where each module lives in Studio: its fresh copy sees that instance as `script`, so
 	-- `script.Parent.X` requires still find their (Studio) siblings.
@@ -54,6 +56,7 @@ return function(base)
 		ShopUI = "ReplicatedStorage.ShopUI",
 		EconomyConfig = "ReplicatedStorage.RogueliteCombat.EconomyConfig",
 		ShopCatalog = "ReplicatedStorage.RogueliteCombat.ShopCatalog",
+		MonetizationConfig = "ReplicatedStorage.RogueliteCombat.MonetizationConfig",
 	}
 	local function resolve(path)
 		local parts = string.split(path or "", ".")

@@ -35,6 +35,17 @@ Store is now four tabs (DAILY, BUNDLES, CHESTS, EMERALDS) with key/emerald count
 
 In-run: level-up cards have **BANISH** (removes that stat for the run, replaces the card) and the reroll buttons use stored rerolls/banishes before prompting Robux. Single Banish R$ 19, single reroll R$ 15. Codes live server-side in `ProfileService.luau` (RELEASE, CHESTS, REROLL). Chest packs, rerolls and banishes are hidden where paid random items are restricted.
 
+## Gifting — 2026-10-04 (user: "add gifting to the store, like be able to buy stuff for other people")
+
+You pay, someone else gets it. Example: Ben gifts Ana a Starter Pack: Ben pays 49 R$ and sees "Gift sent to Ana!"; Ana gets 1,500 emeralds, 2 Legendary Chests and 5 rerolls with a **GIFT FROM BEN** popup.
+
+- **Who:** anyone in your server, or any Roblox friend (online or not). Never yourself (Studio allows it for testing).
+- **What:** every developer product in the store, including one-time packs, classes and Godly bundles (the Godly Starter carries your pick). Not revives, in-run rerolls or banish (`noGift` in `MonetizationConfig`), and not game passes: Roblox can't gift those, so VIP and Quick Open have no GIFT button.
+- **Store:** GIFT next to BUY (in the corner of class cards) opens a picker: players here first, then friends (online first), headshots and a search box, then "Gift Starter Pack to Ana?" with what they get and the price. Players here who already own that one-time pack, Godly bundle or class are greyed out.
+- **Delivery:** right away if they're in the lobby of any server; in a run, when they're back in the lobby; offline, on their next join. A gift they can't receive as itself (e.g. a second Starter Pack, which we can't check for offline friends) pays its Robux value in emeralds, as receipts already do (49 R$ → 502).
+- **Server (`RogueliteMeta`, "Gifting"):** GIFT saves an intent (`RogueliteGiftIntent_v1`, key `u_<buyer>`, 10 minutes to pay), then opens the buyer's normal prompt. The receipt binds that intent to its PurchaseId, writes the gift to `RogueliteGiftInbox_v1` (key `u_<recipient>`, once per receipt) and only then grants the receipt, so failures retry. The recipient's server grants each gift, records `gift:<PurchaseId>` with the receipts, saves, and only then removes it from the inbox: a crash delivers again and the record stops a second grant. MessagingService (`Gift:<userId>`) only speeds it up; without it, gifts arrive on the next join.
+- **Studio:** intents and inboxes stay in memory (the profile rule: `EnableStudioDataStores`). The admin panel's Waves tab has **Simulate gift to me** (a fake Starter Pack from "Studio test"; the second one pays emeralds). Pure checks: `combat/GiftTests.luau`.
+
 ## Product philosophy
 
 The paid offer should feel helpful without making ordinary play feel pointless. A paying player may unlock a class sooner or look different, but a free player must be able to reach the same weapons, armor, tiers and maps, win every map, and build equally powerful runs.

@@ -61,11 +61,13 @@ return function(Admin, Enemies, Items)
 	check(folderIsTest == true, "isTestRun() sees the flag on the run folder")
 	-- Every action name, in sorted order.
 	-- 2026-10-03: the tutorial and turret actions were missing here (15 listed, 19 real); EndlessBoss makes 20.
+	-- 2026-10-04: GiftTest (Simulate gift to me) makes 21.
 	local expectedActions = {
 		"ClearMobs",
 		"EndWave",
 		"EndlessBoss",
 		"Freeze",
+		"GiftTest",
 		"GiveItem",
 		"God",
 		"JumpWave",
@@ -83,7 +85,7 @@ return function(Admin, Enemies, Items)
 		"Waves",
 		"Weapons",
 	}
-	check(#Admin.Actions == 20, "20 admin actions, found " .. #Admin.Actions)
+	check(#Admin.Actions == 21, "21 admin actions, found " .. #Admin.Actions)
 	check(
 		table.concat(Admin.Actions, ",") == table.concat(expectedActions, ","),
 		"action names: " .. table.concat(Admin.Actions, ",")
@@ -115,6 +117,7 @@ return function(Admin, Enemies, Items)
 		{ "Waves" },
 		{ "EndWave" },
 		{ "EndlessBoss" },
+		{ "GiftTest" },
 		{ "Pause", true },
 		{ "JumpWave", 1 },
 		{ "JumpWave", 20 },
@@ -182,6 +185,7 @@ return function(Admin, Enemies, Items)
 		{ "EndWave", true },
 		{ "EndlessBoss", "Dragon" },
 		{ "EndlessBoss", nil, 1 },
+		{ "GiftTest", "StarterPack" },
 		{ "Pause", 1 },
 		{ "God", 1 },
 		{ "God", true, 1 },

@@ -163,6 +163,13 @@ function M.new(player)
   for _,b in {b1,b2,b3} do b.Interactable=here end
   local now=on and 'the tutorial run' or step=='Done' and 'off' or ('lobby step: '..step)
   note(c,'TutorialNote',here and ('Start: the 3-wave run from the top. Lobby part: skip to the reward and the chest/Armory steps. Now: '..now) or 'Studio only: the live tutorial starts on first join',y+48,here and C.muted or C.gold)
+  y+=84
+  -- Gifts (2026-10-04): a fake Starter Pack gift through the real inbox delivery (AdminService
+  -- GiftTest), so the GIFT FROM popup can be checked without Robux. Studio only.
+  heading(c,'GiftTitle','Gifts',y);y+=36
+  local studio=RunService:IsStudio()
+  button(c,'GiftTest','Simulate gift to me',0,y,260,function() send('GiftTest') end,true).Interactable=studio
+  note(c,'GiftNote',studio and 'A Starter Pack from "Studio test" pops up in the lobby. The second one pays emeralds (already owned).' or 'Studio only: real gifts come from Robux',y+48,studio and C.muted or C.gold)
   return y+84
  end
  function tabs.Player(c)

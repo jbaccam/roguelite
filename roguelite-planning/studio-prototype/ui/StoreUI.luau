@@ -64,10 +64,26 @@ function S.open(screen,ctx,focus)
   if r.ok and w.Root.Parent then Quests.claimFX(screen,shots,gemIcon) else for _,s in shots do s.copy:Destroy() end end
   T.toast(screen,r.message or '',r.ok and C.lime or C.negative)
  end
+ -- GIFT (2026-10-04, user: "add gifting to the store"): opens the recipient picker for this product
+ -- (S.giftPicker); the server checks everything again. You can gift a one-time pack or class you
+ -- already own. Charcoal, so BUY stays the main button.
+ local function giftButton(parent,name,x,y,bw,bh,key,arg)
+  local gb=FX.button(parent,name,'GIFT',x,y,bw,bh,function() S.giftPicker(screen.Parent,key,{arg=arg,window=w.Root,signature=ctx.signature}) end,true)
+  gb.Caption.TextSize=math.min(24,bh-22)
+  return gb
+ end
  -- Robux price button (breathes when `pulse`). owned: true = OWNED, a string = that label (e.g.
  -- COMING SOON); neither is buyable. arg goes with the purchase (the Godly Starter's pick).
+ -- A giftable product's GIFT takes the right part of the space when it is 200+ px wide (BUY 169 +
+ -- GIFT 83 on a 260 px hero card); class cards are narrower and put theirs in a corner. No GIFT on
+ -- COMING SOON.
  local function priceButton(parent,name,x,y,bw,bh,key,owned,pulse,arg)
   local item=Money.Products[key] or Money.Passes[key]
+  if bw>=200 and Money.giftable(key) and type(owned)~='string' then
+   local gw=math.clamp(math.floor(bw*.32),64,100)
+   giftButton(parent,name..'Gift',x+bw-gw,y,gw,bh,key,arg)
+   bw-=gw+8
+  end
   local pb=FX.button(parent,name,owned==true and 'OWNED' or owned or ('R$ '..comma(Money.price(key))),x,y,bw,bh,function() buy(key,arg) end,owned and true or false)
   pb.Caption.TextSize=math.min(34,bh-18)
   if owned then pb.Interactable=false elseif pulse then FX.pulse(pb,.04) end
@@ -299,6 +315,7 @@ function S.open(screen,ctx,focus)
    local d=center(FX.sub(f,'Desc',Stats.Classes[cl[1]].description,18,172,tw-36,44,16));d.TextYAlignment=Enum.TextYAlignment.Top
    local hw=math.floor((tw-36-10)/2)
    priceButton(f,'Buy',18,th_-80,hw,58,cl[3],owned)
+   giftButton(f,'Gift',tw-96,16,82,46,cl[3]) -- top right, clear of the art and the OWNED tag
    local eb=FX.button(f,'BuyEmeralds','',28+hw,th_-80,hw,58,function()
     local r=combat.ProfileAction:InvokeServer('BuyClass',cl[1]);T.toast(screen,r.message or '',r.ok and C.lime or C.negative)
    end,true)
@@ -491,11 +508,12 @@ local function counterIn(hud)
  end
 end
 -- opts: signature, pick (S.contents), hud (the lobby HUD's ScreenGui, for the emerald counter),
--- note (a small line under the title, e.g. Studio's "not saved"). Returns the reveal's ScreenGui,
--- or nil when the product has nothing to show.
+-- note (a small line under the title, e.g. Studio's "not saved"), from (a gift's sender: the header
+-- says GIFT FROM BEN, 2026-10-04), emeralds (a gift paid as emeralds, e.g. a second Starter Pack:
+-- just those). Returns the reveal's ScreenGui, or nil when the product has nothing to show.
 function S.reveal(playerGui,key,opts)
  opts=opts or {}
- local items=S.contents(key,opts)
+ local items=opts.emeralds and {{'emerald',comma(opts.emeralds),'Emerald',nil,'emerald',opts.emeralds}} or S.contents(key,opts)
  if #items==0 or not playerGui then return nil end
  local old=playerGui:FindFirstChild('PurchaseReveal');if old then old:Destroy() end
  local product=Money.Products[key] or Money.Passes[key]
@@ -515,7 +533,7 @@ function S.reveal(playerGui,key,opts)
  -- 1. YOU GOT and the product's name pop in.
  local head=T.frame(stage,'Head',0,14,DW,136);head.ZIndex=3
  local hs=T.make('UIScale',head,{Scale=.4});tween(hs,.4,{Scale=1},Enum.EasingStyle.Back)
- center(T.label(head,'You','YOU GOT',0,0,DW,32,26,C.cream))
+ center(T.label(head,'You',opts.from and ('GIFT FROM '..string.upper(opts.from)) or 'YOU GOT',0,0,DW,32,26,opts.from and C.gold or C.cream))
  -- Emerald packs say the amount ('1,700 EMERALDS', not 'STACK'), classes 'THROWER CLASS'.
  local name=product and product.name or tostring(key)
  if #items==1 and items[1][5]=='emerald' then name=comma(items[1][6])..' emeralds' elseif product and product.class then name=product.class..' class' end
@@ -605,6 +623,180 @@ function S.reveal(playerGui,key,opts)
   T.gamepadSelect(stage)
  end)
  task.delay(doneAt+8,finish)
+ return gui
+end
+
+-- Gift picker (2026-10-04, user: "add gifting to the store, like be able to buy stuff for other
+-- people") -----------------------------------------------------------------------------------------
+-- GIFT on a store card opens this: who gets it, then a confirm ("Gift Starter Pack to Ana?" with
+-- what they get and the price). Players in this server first, then your Roblox friends (online
+-- first, then the rest, A-Z), each with a headshot, and a search box. Someone here who already owns
+-- that one-time pack, Godly bundle or class is greyed out; offline friends can't be checked (theirs
+-- pays emeralds instead). Studio lists you too, so one test player can try the whole flow. GIFT sends
+-- PurchaseRequest('GiftRequest', key, userId, pick); the server checks everything again, then opens
+-- the normal Robux prompt. Its own ScreenGui above the lobby HUD (below the reveal), laid out at
+-- 600 x 460 and scaled to fit: an 844x390 phone draws it at about .65 (60 px rows -> 39). opts: arg (the Godly Starter's
+-- pick), window (the Store: closing it closes this), signature (class -> weapon id, for the tiles).
+local Players=game:GetService('Players')
+local friendsCache -- {at=os.clock(), list}: at most one friends fetch a minute
+local function csvSet(text) local out={};for v in string.gmatch(text or '','[^,]+') do out[v]=true end;return out end
+-- What a player here owns, from their Profile* attributes, in a profile's shape (Money.giftBlocked).
+local function ownedBy(q)
+ if q:GetAttribute('ProfileLoaded')~=true then return nil end
+ return {starterPack=q:GetAttribute('ProfileStarterPack')==true,classes=csvSet(q:GetAttribute('ProfileClasses')),bundles=csvSet(q:GetAttribute('ProfileBundles'))}
+end
+-- Your friends: {id, name, user, online}, then done(list, ok). Up to Roblox's 200.
+local function loadFriends(done)
+ if friendsCache and os.clock()-friendsCache.at<60 then done(friendsCache.list,true);return end
+ task.spawn(function()
+  local me=Players.LocalPlayer;local online={};local out={}
+  local okO,list=pcall(function() return me:GetFriendsOnline(200) end)
+  if okO and type(list)=='table' then for _,f in list do if type(f.VisitorId)=='number' then online[f.VisitorId]=true end end end
+  local okF,pages=pcall(function() return Players:GetFriendsAsync(me.UserId) end)
+  if okF and pages then
+   for _=1,10 do
+    local okP,page=pcall(function() return pages:GetCurrentPage() end)
+    if not okP or type(page)~='table' then break end
+    for _,f in page do
+     if type(f.Id)=='number' then table.insert(out,{id=f.Id,name=f.DisplayName or f.Username or '?',user=f.Username or '',online=online[f.Id]==true or f.IsOnline==true}) end
+    end
+    if pages.IsFinished or not pcall(function() pages:AdvanceToNextPageAsync() end) then break end
+   end
+   friendsCache={at=os.clock(),list=out}
+  end
+  done(out,okF and pages~=nil)
+ end)
+end
+function S.giftPicker(playerGui,key,opts)
+ opts=opts or {}
+ local product=Money.Products[key]
+ if not product or not playerGui or not Money.giftable(key) then return nil end
+ local old=playerGui:FindFirstChild('GiftPicker');if old then old:Destroy() end
+ local me=Players.LocalPlayer
+ local studio=game:GetService('RunService'):IsStudio()
+ local pick=product.godlyPick and Money.GodlyWeapons[opts.arg or 1]
+ local title=product.name..(pick and (' ('..pick[2]..')') or '')
+ local price='R$ '..comma(Money.price(key))
+ local items=S.contents(key,{pick=opts.arg,signature=opts.signature})
+ local art=S.RevealArt[key] or items[1] and items[1][1] or 'store'
+ local gui=T.make('ScreenGui',playerGui,{Name='GiftPicker',ResetOnSpawn=false,DisplayOrder=87,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets})
+ local function close() if gui.Parent then gui:Destroy() end end
+ if opts.window then opts.window.Destroying:Connect(close) end
+ local DW,DH=600,460;local BW,BH=DW-44,DH-62
+ local back=T.make('TextButton',gui,{Name='Backdrop',Text='',AutoButtonColor=false,Active=true,Modal=true,Selectable=false,Position=UDim2.fromOffset(0,-120),Size=UDim2.new(1,0,1,120),BackgroundColor3=C.shade,BackgroundTransparency=.35,BorderSizePixel=0})
+ back:SetAttribute('NoClickSound',true);back.Activated:Connect(close)
+ -- Centred like a large window (the backdrop starts 120 px above the screen; the title plate pokes 30 up).
+ local stage=T.frame(back,'Stage',0,0,DW,DH);stage.AnchorPoint=Vector2.new(.5,.5);stage.Position=UDim2.new(.5,0,.5,76)
+ local scale=T.make('UIScale',stage,{Scale=1})
+ local function fit() local v=gui.AbsoluteSize;if v.X>0 then scale.Scale=math.clamp(math.min((v.X-24)/DW,(v.Y-24)/(DH+40)),.3,1.25) end end
+ gui:GetPropertyChangedSignal('AbsoluteSize'):Connect(fit);fit()
+ local frame=T.panel(stage,'Frame',0,0,DW,DH,'panel');frame.Active=true
+ local plate=T.panel(stage,'TitlePlate',18,-30,0,56,'panel');plate.Active=true
+ plate.Size=UDim2.fromOffset(game:GetService('TextService'):GetTextSize('Gift',32,T.Font,Vector2.new(2000,100)).X+76,56);T.caps(plate,40)
+ T.label(plate,'Title','Gift',0,0,0,0,32).Size=UDim2.fromScale(1,1)
+ local x=T.button(stage,'Close','X',DW-62,-22,58,58,close,true);T.setTier(x,4);x.Caption.TextColor3=C.negative;x.Caption.TextSize=34
+ local body=T.frame(stage,'Body',22,40,BW,BH)
+ local view,chosen,query,sent='pick',nil,'',false
+ local friends,friendsState={},'loading'
+ local draw,refill
+ -- Everyone here (you too in Studio, last), then friends not here: online first, then A-Z.
+ local function candidates()
+  local here,seen={},{}
+  for _,q in Players:GetPlayers() do
+   if q~=me or studio then
+    seen[q.UserId]=true
+    local owned=ownedBy(q)
+    table.insert(here,{id=q.UserId,display=q.DisplayName,name=q.DisplayName..(q==me and ' (you)' or ''),user=q.Name,where='server',me=q==me,blocked=owned and Money.giftBlocked(key,owned)})
+   end
+  end
+  table.sort(here,function(a,b) if a.me~=b.me then return b.me end;return a.name:lower()<b.name:lower() end)
+  local fl={}
+  for _,f in friends do if not seen[f.id] then table.insert(fl,{id=f.id,display=f.name,name=f.name,user=f.user,where=f.online and 'online' or 'offline'}) end end
+  table.sort(fl,function(a,b) if a.where~=b.where then return a.where=='online' end;return a.name:lower()<b.name:lower() end)
+  return here,fl
+ end
+ local function matches(c) local q=query:lower();return q=='' or c.name:lower():find(q,1,true)~=nil or c.user:lower():find(q,1,true)~=nil end
+ local CHIP={server={'HERE',C.limeDark,C.white},online={'ONLINE',Color3.fromRGB(16,90,52),C.emerald},offline={'OFFLINE',C.well,C.muted}}
+ local function row(parent,c,y,w)
+  local b=T.button(parent,'Player_'..c.id,'',0,y,w,60,function() chosen=c;view='confirm';T.sound('ui_equip');draw() end,true)
+  b.Caption.Visible=false
+  local img=T.make('ImageLabel',b,{Name='Headshot',BackgroundTransparency=1,Position=UDim2.fromOffset(10,8),Size=UDim2.fromOffset(44,44),Image=''})
+  T.make('UICorner',img,{CornerRadius=UDim.new(0,8)});T.headshot(img,c.id)
+  local n=T.label(b,'Name',c.name,64,6,w-210,28,19);n.TextXAlignment=Enum.TextXAlignment.Left;n.TextTruncate=Enum.TextTruncate.AtEnd;n.TextWrapped=false
+  T.text(b,'User','@'..c.user,64,32,w-210,20,14,C.muted)
+  local chip=c.blocked and {string.upper(c.blocked),Color3.fromRGB(70,20,24),C.negative} or CHIP[c.where]
+  local ch=T.chip(b,'Status',chip[1],0,19,chip[2],chip[3]);ch.AnchorPoint=Vector2.new(1,0);ch.Position=UDim2.fromOffset(w-14,19)
+  if c.blocked then b.Interactable=false end
+ end
+ local function drawPick()
+  T.icon(body,'Art',0,0,64,art)
+  local t=T.label(body,'Product','GIFT '..string.upper(title),76,2,BW-76,34,26,C.lime);t.TextXAlignment=Enum.TextXAlignment.Left;t.TextWrapped=false
+  T.text(body,'Price',price..'  ·  you pay, they get it',76,38,BW-76,22,16,C.muted)
+  local field=T.panel(body,'Search',0,74,BW,48,'inset')
+  local box=T.make('TextBox',field,{Name='Input',BackgroundTransparency=1,Position=UDim2.fromOffset(14,0),Size=UDim2.new(1,-28,1,0),Font=T.Font,TextSize=20,TextColor3=C.white,PlaceholderText='Search players and friends',PlaceholderColor3=C.dim,Text=query,ClearTextOnFocus=false,TextXAlignment=Enum.TextXAlignment.Left})
+  local list=T.scroll(body,'List',0,132,BW,BH-132)
+  local function fill()
+   if not list.Parent then return end
+   for _,c in list:GetChildren() do if c:IsA('GuiObject') then c:Destroy() end end
+   local here,fl=candidates()
+   local y,w=0,BW-14
+   local function line(name,text,color) T.text(list,name,text,6,y,w,24,15,color or C.dim);y+=32 end
+   local function section(text) local l=T.label(list,'Section_'..text,text,4,y,w,26,16,C.muted);l.TextXAlignment=Enum.TextXAlignment.Left;y+=30 end
+   section('IN THIS SERVER')
+   local any=false
+   for _,c in here do if matches(c) then row(list,c,y,w);y+=68;any=true end end
+   if not any then line('NoneHere',query=='' and 'Nobody else is here right now.' or 'No match here.') end
+   section('FRIENDS')
+   if friendsState=='loading' then line('Loading','Loading your friends...')
+   elseif friendsState=='failed' then line('Failed',"Couldn't load your friends. Close and try again.",C.negative)
+   else
+    local shown=0
+    for _,c in fl do
+     if matches(c) then
+      if shown>=60 then line('More','Search to find more friends.');break end -- 60 rows, not 200 headshots
+      row(list,c,y,w);y+=68;shown+=1
+     end
+    end
+    if shown==0 then line('NoneFriends',query=='' and 'No friends to show.' or 'No friend matches.') end
+   end
+   list.CanvasSize=UDim2.fromOffset(0,y)
+  end
+  box:GetPropertyChangedSignal('Text'):Connect(function() query=box.Text;fill() end)
+  fill()
+  return fill
+ end
+ local WHERE={server='In this server: they get it right away.',online='Online: it reaches them in the lobby.',offline='Offline: it waits for their next visit.'}
+ local function drawConfirm()
+  local c=chosen
+  local img=T.make('ImageLabel',body,{Name='Headshot',BackgroundTransparency=1,Position=UDim2.fromOffset(BW/2-58,0),Size=UDim2.fromOffset(116,116),Image=''})
+  T.make('UICorner',img,{CornerRadius=UDim.new(0,16)});T.make('UIStroke',img,{Color=C.lime,Thickness=3});T.headshot(img,c.id)
+  center(T.label(body,'Question','Gift '..title..' to '..c.display..'?',10,126,BW-20,64,32))
+  center(T.text(body,'Where',price..'  ·  '..WHERE[c.where],10,194,BW-20,24,17,C.muted))
+  -- What they get: the store card's slots.
+  local n=math.max(#items,1);local gap=10
+  local size=math.min(76,math.floor((BW-(n-1)*gap)/n));local x0=(BW-(#items*size+(#items-1)*gap))/2
+  for i,it in items do FX.tile(body,'Item'..i,x0+(i-1)*(size+gap),232,size,it[1],it[2],it[3],it[4]) end
+  local half=(BW-16)/2
+  FX.button(body,'Back','BACK',0,BH-66,half,62,function() view='pick';draw() end,true).Caption.TextSize=26
+  local go=FX.button(body,'Send','GIFT  ·  '..price,half+16,BH-66,half,62,function()
+   if sent then return end;sent=true
+   combat.PurchaseRequest:FireServer('GiftRequest',key,c.id,opts.arg)
+   T.sound('ui_equip');close()
+  end)
+  go.Caption.TextSize=26;FX.pulse(go,.04)
+ end
+ draw=function()
+  if not gui.Parent then return end
+  for _,c in body:GetChildren() do c:Destroy() end
+  refill=nil
+  if view=='confirm' and chosen then drawConfirm() else refill=drawPick() end
+  T.gamepadSelect(body)
+ end
+ draw()
+ loadFriends(function(list,ok)
+  friends=list;friendsState=(not ok and #list==0) and 'failed' or 'ready'
+  if gui.Parent and refill then refill() end
+ end)
  return gui
 end
 return S

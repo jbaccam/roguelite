@@ -3,20 +3,21 @@
 -- productId / gamePassId 0 = not created yet: live servers refuse the purchase, Studio
 -- simulates the grant into the in-memory profile so every flow can be tested.
 -- random=true marks paid random items (hidden where PolicyService restricts them).
+-- noGift=true marks in-run products, which can't be gifted (Gifting, at the end).
 local M={}
 
 M.Products={
  -- In-run, used immediately. Revives (LOBBY_AND_MATCH_SERVERS.md §4): as many as you like, and the
  -- price doubles each time in the same run. The nth revive uses Revive<n>, and from the 5th on it
  -- stays Revive5. Five products because a developer product's price is fixed in the dashboard.
- Revive1={productId=3716085560,robux=65,name='Revive',revive=1},
- Revive2={productId=3716085638,robux=130,name='Revive',revive=2},
- Revive3={productId=3716085708,robux=260,name='Revive',revive=3},
- Revive4={productId=3716085762,robux=520,name='Revive',revive=4},
- Revive5={productId=3716085809,robux=1040,name='Revive',revive=5},
- ShopReroll={productId=3716085846,robux=15,name='Reroll',random=true},
- UpgradeReroll={productId=3716085906,robux=15,name='Reroll',random=true},
- Banish={productId=3716085963,robux=19,name='Banish',random=true},
+ Revive1={productId=3716085560,robux=65,name='Revive',revive=1,noGift=true},
+ Revive2={productId=3716085638,robux=130,name='Revive',revive=2,noGift=true},
+ Revive3={productId=3716085708,robux=260,name='Revive',revive=3,noGift=true},
+ Revive4={productId=3716085762,robux=520,name='Revive',revive=4,noGift=true},
+ Revive5={productId=3716085809,robux=1040,name='Revive',revive=5,noGift=true},
+ ShopReroll={productId=3716085846,robux=15,name='Reroll',random=true,noGift=true},
+ UpgradeReroll={productId=3716085906,robux=15,name='Reroll',random=true,noGift=true},
+ Banish={productId=3716085963,robux=19,name='Banish',random=true,noGift=true},
  -- Packs saved to your profile, used during runs
  Rerolls5={productId=3716086015,robux=59,rerolls=5,name='5 Rerolls',random=true},
  Rerolls15={productId=3716086057,robux=149,rerolls=15,name='15 Rerolls',random=true},
@@ -121,4 +122,127 @@ function M.byProductId(id)
 end
 function M.day() return math.floor(os.time()/86400) end
 function M.secondsToReset() return 86400-os.time()%86400 end
+
+-- Gifting (2026-10-04, user: "add gifting to the store, like be able to buy stuff for other people").
+-- Developer products only (Roblox game passes can't be gifted), never the in-run ones (noGift). The
+-- buyer pays; RogueliteMeta saves a gift intent before the prompt, the receipt puts the gift in the
+-- recipient's inbox, and their server (or their next join) delivers it. Pure helpers below, shared
+-- by the server, the store and GiftTests. Example: Ben gifts Ana a Starter Pack for 49 R$: Ana gets
+-- 1,500 emeralds, 2 Legendary Chests and 5 rerolls, or 502 emeralds if she already had one.
+M.GiftIntentSeconds=600 -- a GIFT prompt has 10 minutes to be paid, else the purchase is the buyer's
+M.GiftBoundSeconds=30*86400 -- a paid gift's intent waits this long for its receipt to finish
+M.GiftInboxMax=100 -- gifts waiting for one player; one more waits in the buyer's receipt retries
+function M.giftable(key)
+ local p=type(key)=='string' and M.Products[key]
+ return (p and not p.noGift) and true or false
+end
+-- Who may receive a gift: anyone in the buyer's server or any Roblox friend, never the buyer
+-- (Studio allows yourself and negative test ids, so one test player can try the whole flow).
+-- o: buyer, to (user ids), inServer, friends, studio. Returns ok, and why not.
+function M.giftRecipientOk(o)
+ local to=o.to
+ if type(to)~='number' or to~=to or to%1~=0 or to==0 or (to<0 and not o.studio) then return false,'Pick someone to gift' end
+ if to==o.buyer and not o.studio then return false,"You can't gift to yourself" end
+ if not (o.inServer or o.friends) then return false,'You can gift to players here or your friends' end
+ return true
+end
+-- Why a player can't receive `key` as itself (nil: they can), from what they own: a profile, or the
+-- same fields read from their Profile* attributes: {starterPack=bool, classes={Thrower=true},
+-- bundles={GodlyStarter=true}}. Example: Ana owns the Starter Pack -> 'already has it'.
+function M.giftBlocked(key,owned)
+ local p=M.Products[key];if not p or type(owned)~='table' then return nil end
+ if p.oneTime and owned[p.oneTime]==true then return 'already has it' end
+ if p.class and type(owned.classes)=='table' and owned.classes[p.class] then return 'already unlocked it' end
+ if (p.godly or p.godlyPick) and type(owned.bundles)=='table' and owned.bundles[key] then return 'already has it' end
+ return nil
+end
+-- Gift intents, one DataStore key per buyer: {[productKey]={pending=intent, bound={[purchaseId]=intent}}},
+-- intent = {id, to, toName, at, pick}. A new GIFT replaces `pending`; the receipt moves it to `bound`
+-- under its PurchaseId, so a retried receipt (failed inbox write, crash, another server) still finds
+-- its gift however late. Example: Ben taps GIFT at 12:00 and pays at 12:03: Ana's gift. A receipt at
+-- 12:11 finds nothing fresh: a normal purchase for Ben.
+local function intentEntry(record,key) return type(record)=='table' and type(record[key])=='table' and record[key] or nil end
+function M.giftIntentPut(record,key,intent,now)
+ record=type(record)=='table' and record or {}
+ -- Tidy while here: forgotten prompts and long-finished bindings go.
+ for k,e in record do
+  if type(e)~='table' then record[k]=nil;continue end
+  if type(e.pending)=='table' and not (now-(tonumber(e.pending.at) or -math.huge)<=M.GiftIntentSeconds) then e.pending=nil end
+  if type(e.bound)=='table' then
+   for r,b in e.bound do if type(b)~='table' or not (now-(tonumber(b.at) or -math.huge)<=M.GiftBoundSeconds) then e.bound[r]=nil end end
+   if next(e.bound)==nil then e.bound=nil end
+  end
+  if e.pending==nil and e.bound==nil then record[k]=nil end
+ end
+ local e=record[key] or {};record[key]=e
+ e.pending=intent
+ return record
+end
+-- The intent this receipt pays for, bound to it. Returns the intent (nil: a normal purchase) and
+-- whether the record changed (and must be written).
+function M.giftIntentBind(record,key,receipt,now)
+ local e=intentEntry(record,key)
+ if not e or type(receipt)~='string' then return nil,false end
+ local b=type(e.bound)=='table' and e.bound[receipt]
+ if type(b)=='table' then return b,false end
+ local p=e.pending
+ if type(p)~='table' or type(p.to)~='number' or not (now-(tonumber(p.at) or -math.huge)<=M.GiftIntentSeconds) then return nil,false end
+ e.pending=nil;e.bound=type(e.bound)=='table' and e.bound or {};e.bound[receipt]=p
+ return p,true
+end
+-- The receipt is finished: its binding goes. Returns whether the record changed.
+function M.giftIntentDone(record,key,receipt)
+ local e=intentEntry(record,key)
+ if not e or type(e.bound)~='table' or e.bound[receipt]==nil then return false end
+ e.bound[receipt]=nil
+ if next(e.bound)==nil then e.bound=nil end
+ if e.pending==nil and e.bound==nil then record[key]=nil end
+ return true
+end
+-- A GIFT prompt closed unpaid (or a normal BUY of the same product): its pending intent goes, but
+-- only that one (by id), never a newer GIFT or a bound one. Returns whether the record changed.
+function M.giftIntentCancel(record,key,id)
+ local e=intentEntry(record,key)
+ if not e or type(e.pending)~='table' or e.pending.id~=id then return false end
+ e.pending=nil
+ if e.bound==nil or next(e.bound)==nil then record[key]=nil end
+ return true
+end
+-- A gift in a recipient's inbox (one DataStore key per recipient: {gifts={...}}): {from=buyer id,
+-- fromName, key=product, receipt=the buyer's PurchaseId, at=os.time(), pick? (Godly Starter),
+-- spent? (Robux paid)}. Shape only: a product no longer sold still arrives (as emeralds).
+function M.giftValid(g)
+ return type(g)=='table' and type(g.from)=='number' and type(g.key)=='string' and #g.key<=40
+  and type(g.receipt)=='string' and #g.receipt>0 and #g.receipt<=100 and type(g.at)=='number'
+  and (g.pick==nil or type(g.pick)=='number') and (g.spent==nil or type(g.spent)=='number')
+  and (g.fromName==nil or type(g.fromName)=='string')
+end
+-- Adds one gift, once per receipt. Returns the inbox and 'added', 'duplicate' or 'full'.
+function M.giftInboxAdd(inbox,gift,max)
+ inbox=type(inbox)=='table' and inbox or {}
+ if type(inbox.gifts)~='table' then inbox.gifts={} end
+ for _,g in inbox.gifts do if type(g)=='table' and g.receipt==gift.receipt then return inbox,'duplicate' end end
+ if #inbox.gifts>=(max or M.GiftInboxMax) then return inbox,'full' end
+ table.insert(inbox.gifts,gift)
+ return inbox,'added'
+end
+-- The inbox's gifts, oldest first, and how many entries are malformed (logged, then dropped).
+function M.giftList(inbox)
+ local list,bad={},0
+ local gifts=type(inbox)=='table' and type(inbox.gifts)=='table' and inbox.gifts or {}
+ for _,g in gifts do if M.giftValid(g) then table.insert(list,g) else bad+=1 end end
+ table.sort(list,function(a,b) if a.at~=b.at then return a.at<b.at end;return a.receipt<b.receipt end)
+ return list,bad
+end
+-- Takes out delivered gifts (done: receipt -> true) and malformed entries; gifts that arrived
+-- meanwhile stay. Returns the inbox and how many went.
+function M.giftInboxRemove(inbox,done)
+ if type(inbox)~='table' or type(inbox.gifts)~='table' then return {gifts={}},0 end
+ local keep,n={},0
+ for _,g in inbox.gifts do
+  if M.giftValid(g) and not done[g.receipt] then table.insert(keep,g) else n+=1 end
+ end
+ inbox.gifts=keep
+ return inbox,n
+end
 return M
