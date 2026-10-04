@@ -7,7 +7,12 @@ Approved 2026-10-04 in chat. Brotato's turrets, adapted to our game. The user as
 
 Decisions: turrets come from shop items, and the Handyman is Brotato's Engineer.
 
-This replaces the class-ability turret, the BUILD button and the shop's UPGRADE TURRET button. It keeps the destructible turret work (9f6e956): health per turret, mobs attacking turrets, the break burst, the HP bar.
+This replaces the class-ability turret, the BUILD button and the shop's UPGRADE TURRET button.
+
+**Update 2026-10-04, the user:** "let's not let mobs destroy the turrets", and "I don't want to make more turret models".
+- Turrets are indestructible. The destructible layer from 9f6e956 is removed: health, the HP bar, breaking, and mobs targeting turrets.
+- Spare Parts and Duct Tape are dropped.
+- No new models: the 4 items use the existing T1–T4 templates.
 
 ## 1. Turret items
 
@@ -43,21 +48,15 @@ At every wave start, each player's turrets are placed again:
   - Pierce and Bounce, through `CharacterStats.shotStat`
   - status procs on direct hits: burn, slow, poison, lightning
   - BossDamage
-- **Incoming damage:** the owner's Armor and Contact resistance still reduce damage to the turret, as built in 9f6e956.
+## 4. Turrets can't be destroyed
 
-## 4. Health and breaking
-
-Kept from 9f6e956:
-- **Health:** a Tier I turret has 60 + 15 × (wave − 1), × 1.5 per tier above I. Mobs nearer to a turret than to any player attack it.
-- **Breaking:** a broken turret stays down until the next wave's placement.
-- **Removed:** the BROKEN countdown and the rebuild-with-BUILD path. The HP bar stays.
+- Mobs ignore turrets, and turrets don't block players or mobs.
+- A turret lasts the whole wave and is placed again at the next wave start.
 
 ## 5. Support items
 
 Base prices are in the normal item bands. Icons reuse existing stat or item icons.
 - **Scrap Magnet** (tier 2, 40): every 40 crystals picked up this wave builds a temporary Nail Turret at the player's ring, up to 3 per wave per copy. Temporary turrets last until the wave ends, don't count toward the player's 10, and do count toward the server's 30.
-- **Spare Parts** (tier 2, 38): a broken turret rebuilds at its spot after 10 s, with full health. One copy covers all of that player's turrets.
-- **Duct Tape** (tier 1, 20): turret health +50% per copy.
 - **Toolbelt** (tier 1, 18): +6 Utility Power.
 
 ## 6. Handyman = Engineer
@@ -66,7 +65,7 @@ Changes to the `CharacterStats` Handyman entry and class rules:
 - **Utility Power:** +15 to start (unchanged). Every Utility Power gain from items, level-up cards and set bonuses counts × 1.25. Example: a +12 card gives him +15.
 - **Free turret:** he starts every run owning 1 Nail Turret item, which counts toward his 10.
 - **Ring:** his turret ring is 4–8 studs.
-- **Price:** turret items (including Scrap Magnet, Spare Parts, Duct Tape and Toolbelt) cost him 20% less.
+- **Price:** turret items (including Scrap Magnet and Toolbelt) cost him 20% less.
 - **Damage:** positive Damage gains from items, level-ups and sets count × 0.5. His +5% Damage buff is removed. Example: an item giving +10% Damage gives him +5%.
 - **Unchanged:** his other buffs and drawbacks (Area +20%, Regen +1, Max HP −10, the two/four set bonuses).
 - **Class description:** "Engineer: starts with a Nail Turret. Turrets spawn close to you. Utility Power gains +25%. Damage gains halved."
@@ -75,7 +74,6 @@ Changes to the `CharacterStats` Handyman entry and class rules:
 
 - **Player tab, Turrets:**
   - Give Nail / Twin / Quad / Gatling: adds the item to your run inventory.
-  - Break turret: breaks the one nearest to you.
   - Clear turrets.
 - The old Give turret / Tier I–IV buttons are removed.
 
@@ -97,7 +95,7 @@ A Gunner with 2 Nail Turrets and no Utility Power gets 10 DPS.
 - the Brotato stat rule: Damage, Attack speed and Crit ignored; Pierce and procs applied
 - the ring placement maths: radius bands, spacing, fallback
 - the 10 / 30 caps
-- Scrap Magnet counting, Spare Parts timing, Duct Tape health
+- Scrap Magnet counting
 - the Handyman × 1.25 and × 0.5 rules, and his turret price
 
 `ShopTests` covers turret items being offered, priced, discounted for Handyman and capped.
