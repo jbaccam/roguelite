@@ -13,6 +13,9 @@ local Money=require(combat:WaitForChild('MonetizationConfig'))
 local Armor=require(combat:WaitForChild('ArmorCatalog'))
 local WeaponArt=require(RS:WaitForChild('WeaponInventoryUI'))
 local WeaponIcons=WeaponArt.Icons
+-- The quests' CLAIM effect, for the DAILY tab's claims (user, 2026-10-03). QuestsUI doesn't require
+-- this module, so there is no cycle.
+local Quests=require(RS:WaitForChild('QuestsUI'))
 -- A weapon's icon, or its uploaded art by name while it isn't in WeaponCatalog yet (from a
 -- Studio edit to the old store, kept 2026-10-02).
 local function iconFor(id,name) return (id and WeaponIcons[id]) or (WeaponArt.IconsByName and WeaponArt.IconsByName[name]) or 'armory' end
@@ -49,9 +52,16 @@ function S.open(screen,ctx,focus)
  local profile=ctx.profile()
  local list,draw
  local function buy(key,arg) combat.PurchaseRequest:FireServer(key,arg) end
- local function act(action,a)
+ -- The window's emerald pill icon, looked up each time (every redraw replaces it).
+ local function gemIcon() local p=b:FindFirstChild('EmeraldsPill');return p and p:FindFirstChild('Icon') end
+ -- parts: the art the CLAIM effect (QuestsUI) plays from once the server says yes: emeralds fly
+ -- into the pill, a chest squashes, a weapon pops. Copied before asking, because the redraw on the
+ -- result replaces them (user, 2026-10-03).
+ local function act(action,a,parts)
+  local shots=Quests.snapshot(parts or {})
   local r=combat.ProfileAction:InvokeServer(action,a)
   if r.ok then T.sound('ui_purchase') end
+  if r.ok and w.Root.Parent then Quests.claimFX(screen,shots,gemIcon) else for _,s in shots do s.copy:Destroy() end end
   T.toast(screen,r.message or '',r.ok and C.lime or C.negative)
  end
  -- Robux price button (breathes when `pulse`). owned: true = OWNED, a string = that label (e.g.
@@ -122,7 +132,8 @@ function S.open(screen,ctx,focus)
   for i,deal in deals do
    local free=deal.kind=='Emeralds';local rarity=deal.rarity or 'Common'
    local face,th=FX.card(list,'Deal'..i,(i-1)*(cw+gap),y,cw,ch,free and 'emerald' or S.DealTheme[rarity] or 'steel')
-   FX.art(face,free and 'emerald' or WeaponIcons[deal.id],cw/2,50,116,th,220)
+   local art=FX.art(face,free and 'emerald' or WeaponIcons[deal.id],cw/2,50,116,th,220)
+   Quests.tagReward(art,free and 'emerald' or 'item',free and deal.amount or nil,free and FX.Rarity.Emerald.top or (FX.Rarity[rarity] or FX.Rarity.Common).top)
    center(FX.title(face,'Amount',(free and '+' or '×')..comma(deal.amount),12,110,cw-24,42,38,th.tint))
    local name=free and 'Emeralds' or Weapons.ById[deal.id].name
    center(T.label(face,'Name',name,12,154,cw-24,26,20))
@@ -133,7 +144,7 @@ function S.open(screen,ctx,focus)
     else center(FX.title(face,'New','NEW WEAPON',12,208,cw-24,24,18,C.gold)) end
    end
    local label=deal.bought and 'CLAIMED' or deal.currency=='Free' and 'FREE' or ''
-   local pb=FX.button(face,'Buy',label,14,ch-70,cw-28,56,function() act('BuyDeal',i) end,deal.bought)
+   local pb=FX.button(face,'Buy',label,14,ch-70,cw-28,56,function() act('BuyDeal',i,{art}) end,deal.bought)
    pb.Caption.TextSize=24
    if deal.bought then pb.Interactable=false
    elseif deal.currency=='Emeralds' then ctx.cost(pb,deal.price,'emerald',22) end
@@ -142,12 +153,14 @@ function S.open(screen,ctx,focus)
   y+=ch+44
   local chest=Chests.ById[Money.VIPDailyChest]
   local face,th=FX.card(list,profile.vip and 'VipDaily' or 'VipPromo',2,y,CW,160,'purple')
-  FX.art(face,chest.icon,100,62,150,th,300)
+  local art=FX.art(face,chest.icon,100,62,150,th,300)
   if profile.vip then
    local claimed=profile.daily.vipClaimed
+   -- Where paid random items are restricted the chest comes as its emerald price instead.
+   Quests.tagReward(art,profile.restricted and 'emerald' or 'chest',profile.restricted and chest.emeralds or 1,(FX.Rarity[FX.ChestRarity[chest.id]] or FX.Rarity.Common).top)
    FX.title(face,'Title','VIP DAILY CHEST',200,28,CW-480,50,44,th.tint)
    FX.sub(face,'Sub','A free '..chest.name..', every single day.',202,82,CW-480,24,18)
-   local cb=FX.button(face,'Claim',claimed and 'CLAIMED' or 'CLAIM',CW-268,48,240,64,function() act('ClaimVipChest') end,claimed)
+   local cb=FX.button(face,'Claim',claimed and 'CLAIMED' or 'CLAIM',CW-268,48,240,64,function() act('ClaimVipChest',nil,{art}) end,claimed)
    cb.Caption.TextSize=30;cb.Interactable=not claimed;if not claimed then FX.pulse(cb,.05) end
   else
    FX.title(face,'Title','FREE '..string.upper(chest.name)..' EVERY DAY',200,28,CW-480,50,40,th.tint)

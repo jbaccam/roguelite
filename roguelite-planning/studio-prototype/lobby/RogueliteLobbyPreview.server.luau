@@ -303,14 +303,16 @@ setupRemote.OnServerEvent:Connect(function(player,action,a,b,c,d,e)
   player:SetAttribute('RunClass',b);player:SetAttribute('RunWeapon',c)
   -- The party comes along (a solo pad has no room, so solo stays solo).
   pullParty(player,index)
-  publish();reply(true,'Starting')
+  local q=state.queues[index]
+  publish();reply(true,('Starting in %ds'):format(math.max(1,math.ceil((q.launchAt or now())-now()))))
  elseif action=='Ready' then
   if not index then return reply(false,'Step onto a portal pad first') end
   local q=state.queues[index]
   if q.map then local mapOk,mapWhy=Rules.validMap(player,q.map,q.difficulty);if not mapOk then return reply(false,mapWhy) end end
   local okL,why=Rules.validLoadout(player,a,b);if not okL then return reply(false,why) end
   player:SetAttribute('RunClass',a);player:SetAttribute('RunWeapon',b)
-  reply(true,'Ready')
+  -- What happens next, not just "Ready" (2026-10-03: "are we readied up and is it gonna start").
+  reply(true,q.launchAt and ('Locked in as %s. Starting in %ds'):format(a,math.max(1,math.ceil(q.launchAt-now()))) or ('Locked in as %s. Waiting for the host to start'):format(a))
  elseif action=='Loadout' then
   -- The ring shows the new starter at once (RogueliteCombat). Silent on success.
   if not player:GetAttribute('LobbyPreviewActive') then return reply(false,'Change your loadout in the lobby') end

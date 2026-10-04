@@ -30,6 +30,7 @@ local M,GAP=24,16 -- canvas margin, gap between pieces
 local BONUS_W,PANEL_H,HINT_H=340,560,48
 local INFO_W,INFO_H=872,170
 local CLOSE_W,CLOSE_H=240,86
+local BOARD_MIN=720 -- narrowest board band: a new player's first two rings at zoom 1 (tiles reach ±354)
 local PAD_ACTION='SkillTreeGamepad'
 local HINTS={
  KeyboardAndMouse='Drag to look around  ·  Scroll to zoom',
@@ -116,8 +117,8 @@ function U.new(player,opts)
 
  -- Layout ----------------------------------------------------------------------
  -- P: where every piece goes on the current canvas (canvas px), recomputed when the screen
- -- changes size. 1920x1080: bonuses at x 24..364; title, board and info card centred in
- -- 388..1896; the board gets the band between the title (ends 154) and the info card (starts 890).
+ -- changes size. 1920x1080: bonuses at x 24..364; title, board and info card centred on the screen
+ -- (x 960); the board gets 388..1532 between the title (ends 154) and the info card (starts 890).
  -- 844x390 phone (canvas 1500x738 inside the safe area): title and emeralds share one row, the
  -- info card runs under the bonus column (which stops above it and scrolls) and the board keeps
  -- tiles tappable instead of fitting the whole tree (the player pans).
@@ -127,7 +128,12 @@ function U.new(player,opts)
   local chip=studio or not (hudProfile and hudProfile.connected)
   p.compact=c.h<900
   p.x0,p.x1=M+BONUS_W+M,c.w-M
-  p.cx=(p.x0+p.x1)/2
+  -- Centred on the screen (2026-10-03: centred in the room right of the bonus column, the tree,
+  -- title and card opened 180 px right of centre). The board band mirrors the column's edge; where
+  -- that leaves under BOARD_MIN (small phones) it widens right instead of reaching under the
+  -- column. Canvas 1500 (844x390 phone): band 388..1112, centre 750; 1334 (iPhone SE): 388..1108.
+  p.fx0,p.fx1=p.x0,math.min(p.x1,math.max(c.w-p.x0,p.x0+BOARD_MIN))
+  p.cx=(p.fx0+p.fx1)/2
   -- Short screens: a slightly smaller plate and pill side by side (544 px wide, fits between the
   -- top-bar buttons on an iPhone SE).
   p.plateSize,p.pillW=p.compact and 36 or 40,p.compact and 190 or 220
@@ -150,8 +156,7 @@ function U.new(player,opts)
   p.colExtra=8+HINT_H+(studio and 48 or 0)
   p.panelH=math.clamp(colBottom-colTop-p.colExtra,180,PANEL_H)
   p.colY=colTop+math.max(0,(colBottom-colTop-p.panelH-p.colExtra)/2)
-  -- Board: the free area right of the column, below the title (and the top bar), above the card.
-  p.fx0,p.fx1=p.x0,p.x1
+  -- Board: that band, below the title (and the top bar), above the card.
   p.fy0=math.max(p.topY+p.topH,c.top)+8
   p.fy1=p.infoY-8
   p.fcx,p.fcy=(p.fx0+p.fx1)/2,(p.fy0+p.fy1)/2
@@ -217,7 +222,8 @@ function U.new(player,opts)
   tween(v,time,{Value=1},Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,delay)
   task.delay(time+(delay or 0)+.1,function() if glide==v then stopGlide() end end)
  end
- -- Pans just enough to bring a skill (tile, name and price) inside the free area.
+ -- Pans just enough to bring a skill (tile, name and price) inside the free area: anywhere right of
+ -- the bonus column (to x1), not only the centred band.
  local function showNode(id,animated)
   local d=Skills.ById[id]
   if not (d and P and board) then return end
@@ -230,7 +236,7 @@ function U.new(player,opts)
    if s1>hi then return v-(s1-hi) end
    return v
   end
-  local to=Vector2.new(axis(pan.X,P.fcx,P.fx0,P.fx1,x-h-12,x+h+12),axis(pan.Y,P.fcy,P.fy0,P.fy1,y-h-12,y+h+56))
+  local to=Vector2.new(axis(pan.X,P.fcx,P.fx0,P.x1,x-h-12,x+h+12),axis(pan.Y,P.fcy,P.fy0,P.fy1,y-h-12,y+h+56))
   if (to-pan).Magnitude<1 then return end
   if animated then glideTo(zoom,to,.3) else pan=to;place() end
  end
@@ -652,9 +658,9 @@ function U.new(player,opts)
     -- Screen px to canvas px: a 100 px drag on a phone (scale .5) pans 200 canvas px.
     pan=panStart+(Vector2.new(input.Position.X,input.Position.Y)-dragStart)/L.s;place()
    elseif input.UserInputType==Enum.UserInputType.MouseWheel then
-    -- Only over the board, so the wheel still scrolls the bonus list.
+    -- Only over the board (right of the bonus column), so the wheel still scrolls the bonus list.
     local cp=toCanvas(Vector2.new(input.Position.X,input.Position.Y))
-    if cp.X>=P.fx0 and cp.X<=P.fx1 and cp.Y>=P.fy0 and cp.Y<=P.fy1 then zoomAt(input.Position.Z>0 and 1.1 or 1/1.1,cp) end
+    if cp.X>=P.fx0 and cp.X<=P.x1 and cp.Y>=P.fy0 and cp.Y<=P.fy1 then zoomAt(input.Position.Z>0 and 1.1 or 1/1.1,cp) end
    end
   end))
   table.insert(conns,Input.InputEnded:Connect(function(input)

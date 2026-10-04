@@ -273,28 +273,53 @@ function M.new(player,opts)
     local l=T.label(card,'Locked','LOCKED',0,cp and 76 or 120,cw,cp and 20 or 22,16,C.gold);l.Size=UDim2.new(1,0,0,cp and 20 or 22)
    end
   end
-  -- Class details, top to bottom: name, description, what the card badges mean, always-on buffs |
+  -- Class details, top to bottom: name, description, weapon damage (the card badges), always-on buffs |
   -- drawbacks, then the 2 / 4 home weapon bonuses. Drawn into a holder; if it is taller than the
   -- panel (phones, or a locked class with its buy buttons) the holder moves into a scroll.
   local c=Stats.Classes[class]
   local pad=cp and 14 or 18;local tw=infoW-2*pad
   local info=T.panel(canvas,'ClassInfo',infoX,infoY,infoW,infoH,'panel')
   local box=T.frame(info,'Content',0,0,infoW,0)
-  local y=cp and 10 or 14
+  -- Spacing 2 px tighter (2026-10-03) so the weapon damage chips fit on desktop: a class with 4 buff
+  -- rows ends about 364 px down the 380 px panel, unscrolled.
+  local y=cp and 10 or 12
   local n=T.label(box,'Name',class,pad,y,tw,cp and 34 or 36,cp and 28 or 30);n.TextXAlignment=Enum.TextXAlignment.Left
-  y+=cp and 36 or 38
+  y+=36
   local descH=math.ceil(TextService:GetTextSize(c.description,cp and 16 or 16,T.Body,Vector2.new(tw,1000)).Y)+2
   T.text(box,'Description',c.description,pad,y,tw,descH,16,C.muted).TextYAlignment=Enum.TextYAlignment.Top
-  y+=descH+8
-  -- What the card badges mean, high up in cream (2026-10-03: small grey text at the bottom went
-  -- unread and the badges looked like discounts). Example as a Mage: Gunner card -5% DMG.
-  local legend="Card badges: your damage with each class's weapons as a "..class..'. Godly weapons: no change.'
-  local legendH=math.ceil(TextService:GetTextSize(legend,16,T.Body,Vector2.new(tw,1000)).Y)+2
-  T.text(box,'FitLegend',legend,pad,y,tw,legendH,16,C.cream).TextYAlignment=Enum.TextYAlignment.Top
-  y+=legendH+8
+  y+=descH+6
+  -- The card badges spelled out (2026-10-03: the legend sentence didn't explain the +/-): your damage
+  -- with each class's weapons as this class, one chip per class (its card's icon), best first,
+  -- coloured like the badges. Gunner: Gunner +15%, Thrower 0%, Handyman 0%, Juggler -5%, Mage -5%,
+  -- Brawler -15%. Desktop: 3 x 2 with 'Godly: no change' on the heading line (66 px in all);
+  -- phones: 2 across and the Godly line under them.
+  local fits={}
+  for i,other in Stats.ClassOrder do local _,pct=Stats.classFit({home=other},class);table.insert(fits,{c=other,pct=pct,i=i}) end
+  table.sort(fits,function(a,b) if a.pct~=b.pct then return a.pct>b.pct end return a.i<b.i end)
+  local head,godly='WEAPON DAMAGE AS A '..string.upper(class),'Godly: no change'
+  local headW=math.ceil(TextService:GetTextSize(head,14,T.Font,Vector2.new(1000,100)).X*1.12)
+  local noteW=math.ceil(TextService:GetTextSize(godly,14,T.Body,Vector2.new(1000,100)).X*1.12)
+  local inline=headW+12+noteW<=tw
+  local headH=T.section(box,'FitTitle',head,pad,y,inline and tw-noteW-8 or tw,14)
+  if inline then T.text(box,'FitGodly',godly,pad+tw-noteW,y,noteW,headH,14,C.muted).TextXAlignment=Enum.TextXAlignment.Right end
+  y+=headH+3
+  local cols=tw>=400 and 3 or 2;local fw,fh=math.floor((tw-(cols-1)*6)/cols),20
+  for k,f in fits do
+   local own=f.c==class
+   local chip=T.make('Frame',box,{Name='Fit_'..f.c,Position=UDim2.fromOffset(pad+((k-1)%cols)*(fw+6),y+math.floor((k-1)/cols)*(fh+3)),Size=UDim2.fromOffset(fw,fh),BackgroundColor3=own and Color3.fromRGB(32,48,24) or Color3.fromRGB(26,32,36),BorderSizePixel=0})
+   T.make('UICorner',chip,{CornerRadius=UDim.new(0,6)})
+   T.make('UIStroke',chip,{Color=own and C.lime or Color3.fromRGB(8,10,11),Thickness=own and 2 or 1.5})
+   T.icon(chip,'Icon',3,1,fh-2,WeaponIcons[Rules.Signature[f.c]])
+   T.text(chip,'Name',f.c,fh+4,0,fw-fh-52,fh,14,own and C.white or C.muted)
+   T.label(chip,'Pct',T.fitText(f.pct),fw-46,0,42,fh,15,T.fitColor(f.pct)).TextXAlignment=Enum.TextXAlignment.Right
+  end
+  local rows=math.ceil(#fits/cols)
+  y+=rows*fh+(rows-1)*3
+  if not inline then T.text(box,'FitGodly','Godly weapons: no change',pad,y+3,tw,18,14,C.muted);y+=21 end
+  y+=6
   local good,bad=Stats.classLines(class)
   local _,h=T.statColumns(box,'AlwaysOn',pad,y,tw,good,bad,{size=cp and 15 or 16,stack=cp})
-  y+=h+8
+  y+=h+6
   _,h=T.homeRows(box,'HomeBonus',pad,y,tw,{{n=2,text=Stats.bonusText(c.two)},{n=4,text='also '..Stats.bonusText(c.four)}},{size=cp and 14 or 15,stack=cp,labelW=126})
   y+=h+8
   if not owned then
@@ -336,13 +361,17 @@ function M.new(player,opts)
   -- Host: open pad (up to 4) or solo. Compact: bottom-left, with BACK / START right of it.
   local tabs=mode=='Host' or mode=='Play'
   if tabs then T.tabs(canvas,cp and 16 or 95,cp and CH-60 or 636,cp and 240 or 260,cp and 54 or 62,{'Open','Solo'},sel.solo and 'Solo' or 'Open',function(id) sel.solo=id=='Solo';draw() end) end
-  local labels={Play='START',Host='START',Member='READY',Loadout='CONFIRM'}
+  -- LOCK IN, not READY: a member's button only confirms their class and weapon; there is no ready
+  -- check, the run starts when the host's countdown ends (2026-10-03: "are we readied up?").
+  local labels={Play='START',Host='START',Member='LOCK IN',Loadout='CONFIRM'}
   local weaponOwned=profile.weapons[pick]~=nil
   local back=(mode=='Play' or mode=='Host') and function() self.step='Map';draw() end or self.Close
   local _,go=buttons((mode=='Play' or mode=='Host') and 'BACK' or 'CLOSE',back,owned and labels[mode] or 'LOCKED',function()
    player:SetAttribute('LoadoutClass',class);player:SetAttribute('LoadoutWeapon',pick)
    if mode=='Play' or mode=='Host' then
     player:SetAttribute('LobbyMap',Rules.Maps[sel.map].id)
+    -- LobbyUI won't reopen this screen when the server puts this player on the pad it just started.
+    self.startedAt=os.clock()
     setupRemote:FireServer(mode=='Play' and 'Play' or 'Start',Rules.Maps[sel.map].id,class,pick,sel.solo==true,sel.difficulty)
    elseif mode=='Member' then setupRemote:FireServer('Ready',class,pick)
    else setupRemote:FireServer('Loadout',class,pick);self.Close() end
@@ -412,7 +441,7 @@ function M.new(player,opts)
   if processed and key~=Enum.KeyCode.ButtonB then return end
   if key==Enum.KeyCode.Escape or key==Enum.KeyCode.ButtonB then
    if self.step=='Class' and (self.mode=='Play' or self.mode=='Host') then self.step='Map';draw() else self.Close() end
-  -- Enter / Start: NEXT, START, READY or CONFIRM (the same button the screen shows).
+  -- Enter / Start: NEXT, START, LOCK IN or CONFIRM (the same button the screen shows).
   elseif key==Enum.KeyCode.Return or key==Enum.KeyCode.KeypadEnter or key==Enum.KeyCode.ButtonStart then
    if primary and primary.action and primary.button.Parent and primary.button.Interactable then primary.action() end
   -- D-pad moves the controller selection once a button is selected, so the bumpers change map too.

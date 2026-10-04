@@ -313,13 +313,27 @@ function L.mount(player)
   banner.Visible=q~=nil or self.guiding==true
   leave.Visible=q~=nil
   banner.Size=UDim2.fromOffset(q and 420 or 330,74) -- No LEAVE button while only guiding.
+  -- Says what happens next in big text (2026-10-03: "its not really clear whats happening"):
+  -- STARTING IN 8 (lime) once the host pressed START, ENTERING PORTAL... at launch, otherwise who
+  -- is picking the map. Example: "STARTING IN 8" / "Pine Valley  ·  2 / 4 players  ·  Gunner".
+  bannerTitle.TextColor3=C.white
   if q then
-   bannerTitle.Text='PORTAL '..q..'  ·  '..(portal and portal:GetAttribute('QueueCount') or 1)..' / '..(portal and portal:GetAttribute('Capacity') or 4)
+   local count,cap=portal and portal:GetAttribute('QueueCount') or 1,portal and portal:GetAttribute('Capacity') or 4
+   local phase=portal and portal:GetAttribute('QueueState')
    local launchAt=portal and portal:GetAttribute('LaunchAt')
-   local launch=portal and portal:GetAttribute('QueueState')=='Launching' and 'entering portal'
-    or launchAt and string.format('starting in %ds',math.max(0,math.ceil(launchAt-workspace:GetServerTimeNow()))) or 'host is choosing'
    local mapId=portal and portal:GetAttribute('MapId')
-   bannerSub.Text=(mapId and L.Maps[Rules.MapIndex[mapId]].name or 'Map not chosen')..'  ·  '..self.selection.class..'  ·  '..launch
+   local mapName=mapId and Rules.MapIndex[mapId] and L.Maps[Rules.MapIndex[mapId]].name
+   local players=count..' / '..cap..(cap==1 and ' (solo)' or ' players')
+   if phase=='Launching' then
+    bannerTitle.Text='ENTERING PORTAL...';bannerTitle.TextColor3=C.lime
+    bannerSub.Text=(mapName or '')..'  ·  '..players
+   elseif launchAt then
+    bannerTitle.Text='STARTING IN '..math.max(0,math.ceil(launchAt-workspace:GetServerTimeNow()));bannerTitle.TextColor3=C.lime
+    bannerSub.Text=(mapName or '')..'  ·  '..players..'  ·  '..self.selection.class
+   else
+    bannerTitle.Text='PORTAL '..q..'  ·  '..count..' / '..cap
+    bannerSub.Text=portal and portal:GetAttribute('HostId')==player.UserId and 'Pick a map, then press START' or 'Waiting for the host to pick a map'
+   end
   else
    bannerTitle.Text='FIND A PORTAL';bannerSub.Text='Follow the green beam to a queue pad'
   end
@@ -534,7 +548,16 @@ function L.mount(player)
   lastQueue=q
   if q then
    if win then win.Close() end
-   task.defer(function() local mode=padMode();if mode and player:GetAttribute('LobbyQueue')==q then setup.Open(mode) end end)
+   -- No setup screen on a pad whose countdown is already running: this player just pressed START
+   -- (PLAY puts them on the pad it starts) or their party took them along, so there's nothing to
+   -- choose and the banner shows the countdown. It used to reopen with READY, which looked like a
+   -- second step (2026-10-03: "i have to click ready twice").
+   task.delay(.25,function()
+    if player:GetAttribute('LobbyQueue')~=q then return end
+    local portal=myPortal();local phase=portal and portal:GetAttribute('QueueState')
+    if phase=='Counting' or phase=='Launching' or (setup.startedAt and os.clock()-setup.startedAt<5) then return end
+    local mode=padMode();if mode then setup.Open(mode) end
+   end)
   elseif setup.mode=='Host' or setup.mode=='Member' then setup.Close() end
  end)
  local function portalChanged(portal)

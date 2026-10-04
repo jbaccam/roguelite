@@ -89,6 +89,121 @@ function M.statColor(id,value,base)
  local delta=value-base;if id=='ShopPricePercent' or id=='ChainEvery' then delta=-delta end
  return delta>0 and green or delta<0 and red or white
 end
+
+-- BUY effect (user, 2026-10-03) ------------------------------------------------------------------
+-- Once the server confirms a buy (its offer comes back sold): the card punches 6% and fades over a
+-- soft glow and rays, and 3-5 copies of the bought thing's own icon (a Glock, a Spatula, a Pot Lid)
+-- burst up out of it spinning, then swoop into the inventory slot it landed in, which bumps; about
+-- 0.8 s. The card is copied at click time, because the redraw on the result removes it. Flat images
+-- and tweens on their own layer in the ScreenGui (QuestsUI's CLAIM effect is a lobby module, which
+-- this sandboxed one can't require); nothing in it takes input, and the layer goes after 1.2 s.
+local TweenService=game:GetService('TweenService')
+local GLOW='rbxassetid://101092695897243' -- StoreFX.Asset.glow
+local RAYS='rbxassetid://75268019571051' -- StoreFX.Asset.rays
+local function tween(o,time,props,style,dir)
+ local tw=TweenService:Create(o,TweenInfo.new(time,style or Enum.EasingStyle.Quad,dir or Enum.EasingDirection.Out),props);tw:Play();return tw
+end
+local function later(t,o,fn) task.delay(t,function() if o.Parent then fn() end end) end
+local function fadeOut(root,time)
+ local all=root:GetDescendants();table.insert(all,root)
+ for _,o in all do
+  local goal={}
+  if o:IsA('GuiObject') and o.BackgroundTransparency<1 then goal.BackgroundTransparency=1 end
+  if o:IsA('ImageLabel') or o:IsA('ImageButton') or o:IsA('ViewportFrame') then goal.ImageTransparency=1 end
+  if o:IsA('TextLabel') or o:IsA('TextButton') then goal.TextTransparency=1;goal.TextStrokeTransparency=1 end
+  if o:IsA('UIStroke') then goal.Transparency=1 end
+  if next(goal) then tween(o,time,goal,Enum.EasingStyle.Quad,Enum.EasingDirection.In) end
+ end
+end
+-- Scale bump on the slot it landed in; a slot with its own UIScale is left alone.
+local function bump(o,peak)
+ if not (o and o.Parent) then return end
+ local s=o:FindFirstChild('BuyPop')
+ if not s then
+  if o:FindFirstChildOfClass('UIScale') then return end
+  s=T.make('UIScale',o,{Name='BuyPop',Scale=1})
+ end
+ tween(s,.07,{Scale=peak})
+ later(.07,s,function() tween(s,.22,{Scale=1},Enum.EasingStyle.Back) end)
+end
+-- b: what the click saw {card (its copy), design, pos, size, well, wellSize}; find() -> the slot it
+-- landed in and the shop list that clips it, looked up again as the copies fly (a redraw replaces
+-- them); asset: its icon; color: its tier colour; n: copies. Positions are AbsolutePosition minus
+-- the ScreenGui's own, so top-bar and safe-area insets cancel.
+local function buyFX(screen,b,find,asset,color,n)
+ local layer=T.make('Frame',screen,{Name='BuyFX',BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=45,Active=false,Interactable=false})
+ task.delay(1.2,function() layer:Destroy() end)
+ local origin=screen.AbsolutePosition
+ local c=b.well-origin;local base=math.max(b.wellSize,24)
+ local function image(name,img,p,size,col,z)
+  return T.make('ImageLabel',layer,{Name=name,BackgroundTransparency=1,Image=img,ImageColor3=col,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(p.X,p.Y),Size=UDim2.fromOffset(size,size),ZIndex=z})
+ end
+ -- The card: punch up 6%, settle, fade (the real one is already gone); its icon has left it.
+ local g=b.card;local k=b.size.X/math.max(b.design,1);local gc=b.pos+b.size/2-origin
+ for _,d in g:GetDescendants() do if d:IsA('GuiButton') then d.Active=false;d.Selectable=false;d.Interactable=false end end
+ local well=g:FindFirstChild('IconWell')
+ if well then for _,d in well:GetChildren() do if d:IsA('GuiObject') then d.Visible=false end end end
+ g.AnchorPoint=Vector2.new(.5,.5);g.Position=UDim2.fromOffset(gc.X,gc.Y);g.ZIndex=1
+ local sc=T.make('UIScale',g,{Scale=k});g.Parent=layer
+ tween(sc,.07,{Scale=k*1.06})
+ later(.07,sc,function() tween(sc,.2,{Scale=k},Enum.EasingStyle.Back) end)
+ later(.2,g,function() fadeOut(g,.2) end)
+ -- Soft glow and a sixth of a turn of rays behind the icon, growing as they fade.
+ local glow=image('Glow',GLOW,c,base*1.4,color,2);glow.ImageTransparency=.15
+ tween(glow,.4,{Size=UDim2.fromOffset(base*3.4,base*3.4)},Enum.EasingStyle.Quart)
+ tween(glow,.45,{ImageTransparency=1},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
+ local rays=image('Rays',RAYS,c,base*1.6,color,2);rays.ImageTransparency=.5
+ tween(rays,.45,{Size=UDim2.fromOffset(base*3.2,base*3.2),Rotation=60},Enum.EasingStyle.Quart)
+ tween(rays,.45,{ImageTransparency=1},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
+ -- The copies fan up and out of the icon (0.16 s), then each swoops to the slot (0.32 s, 0.04 s
+ -- apart): X eases in-out on a holder frame while Y backs in on the image inside, so they arc.
+ local copies={}
+ for i=1,n do
+  local a=-math.pi/2+((i-.5)/n*2-1)*math.pi*.42+(math.random()*2-1)*.15;local dir=Vector2.new(math.cos(a),math.sin(a))
+  local size=base*(.8+math.random()*.15);local p1=c+dir*base*(.9+math.random()*.4)
+  local spin=(math.random()<.5 and -1 or 1)*(200+math.random()*160)
+  local holder=T.make('Frame',layer,{Name='Copy',BackgroundTransparency=1,Position=UDim2.fromOffset(c.X,0),Size=UDim2.new(),ZIndex=3})
+  local img=T.make('ImageLabel',holder,{Name='Icon',BackgroundTransparency=1,Image=asset,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(0,c.Y),Size=UDim2.fromOffset(size*.5,size*.5),Rotation=math.random(-20,20),ScaleType=Enum.ScaleType.Fit,ZIndex=3})
+  tween(holder,.16,{Position=UDim2.fromOffset(p1.X,0)},Enum.EasingStyle.Quart)
+  tween(img,.16,{Position=UDim2.fromOffset(0,p1.Y),Size=UDim2.fromOffset(size,size),Rotation=img.Rotation+spin*.3},Enum.EasingStyle.Quart)
+  table.insert(copies,{holder=holder,img=img,p1=p1,spin=spin})
+ end
+ later(.16,layer,function()
+  local target,clip=find()
+  local goal,slot
+  if target and target.Parent and target.AbsoluteSize.X>0 then
+   goal=target.AbsolutePosition+target.AbsoluteSize/2-origin;slot=math.min(target.AbsoluteSize.X,target.AbsoluteSize.Y)
+   -- Scrolled out of view (small screens): aim at the nearest edge of the shop list instead.
+   if clip and clip.Parent then
+    local lo=clip.AbsolutePosition-origin;local hi=lo+clip.AbsoluteSize
+    goal=Vector2.new(math.clamp(goal.X,lo.X,hi.X),math.clamp(goal.Y,lo.Y,hi.Y))
+   end
+  end
+  local landed=0
+  for i,cp in copies do
+   later((i-1)*.04,cp.holder,function()
+    if not goal then
+     -- Nowhere to land: drop a little and fade.
+     tween(cp.img,.35,{Position=UDim2.fromOffset(0,cp.p1.Y+base*.8),ImageTransparency=1,Rotation=cp.img.Rotation+cp.spin*.5},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
+     return
+    end
+    tween(cp.holder,.32,{Position=UDim2.fromOffset(goal.X,0)},Enum.EasingStyle.Sine,Enum.EasingDirection.InOut)
+    tween(cp.img,.32,{Position=UDim2.fromOffset(0,goal.Y)},Enum.EasingStyle.Back,Enum.EasingDirection.In)
+    tween(cp.img,.32,{Size=UDim2.fromOffset(slot*.6,slot*.6),Rotation=cp.img.Rotation+cp.spin},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
+    later(.32,cp.holder,function()
+     cp.holder:Destroy();landed+=1
+     local now=find()
+     bump(now,landed==1 and 1.22 or 1.1)
+     if landed>1 then return end
+     -- First one in: a quick glow on the slot.
+     local flash=image('SlotGlow',GLOW,goal,slot*1.1,color,2);flash.ImageTransparency=.1
+     tween(flash,.35,{Size=UDim2.fromOffset(slot*2.4,slot*2.4)},Enum.EasingStyle.Quart)
+     tween(flash,.35,{ImageTransparency=1},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
+    end)
+   end)
+  end
+ end)
+end
 function M.new(player,h,refresh)
  local state=combat.PlayerStates:WaitForChild(tostring(player.UserId))
  local self={state=state,selected=nil}
@@ -105,6 +220,48 @@ function M.new(player,h,refresh)
  end
  function self:send(action,arg,extra)
   local data=self:snapshot();if data then combat.ShopAction:FireServer(action,data.revision,arg,extra) end
+ end
+ -- BUY effect: what each Buy click saw (offer token -> the card copied, where its icon was), kept
+ -- until a snapshot shows that offer sold; render() plays it then. A refused buy is dropped once
+ -- its offer is gone (rerolled, next wave) or after 4 s.
+ self.bought={}
+ local function remember(card,well,i,o,data)
+  local old=self.bought[o.token];if old then old.card:Destroy() end
+  local unsold,copies,count=0,{},0
+  for _,x in data.offers do if not x.sold and (x.token==o.token or not self.bought[x.token]) then unsold+=1 end end -- one already being bought counts as sold
+  for _,w in data.weapons do copies[w.copy]=true end
+  for _,it in data.items do if it.id==o.id then count=it.count end end
+  self.bought[o.token]={index=i,id=o.id,wave=data.wave,t=os.clock(),last=unsold==1,copies=copies,count=count,card=card:Clone(),design=card.Size.X.Offset,
+   pos=card.AbsolutePosition,size=card.AbsoluteSize,well=well.AbsolutePosition+well.AbsoluteSize/2,wellSize=well.AbsoluteSize.X}
+ end
+ -- Whether the bought thing is in the inventory now: one more of the item, or a weapon copy id the
+ -- click didn't see. Buying the last offer refills the shop (its token goes), and so does a reroll
+ -- after a refused buy; only this tells them apart.
+ local function arrived(b,data)
+  local entry=Catalog.ById[b.id]
+  if entry and entry.weaponId then for _,w in data.weapons do if w.id==entry.weaponId and not b.copies[w.copy] then return true end end
+  elseif entry then for _,it in data.items do if it.id==b.id and it.count>b.count then return true end end end
+  return false
+ end
+ -- The confirmed buy's effect, from where its card was to the slot it landed in: the item's slot,
+ -- or the weapon slot with a copy id the click didn't see (a new weapon, or the one it merged into).
+ local function playBuy(b,data,parent)
+  local entry=Catalog.ById[b.id];local screen=parent.Parent and parent:FindFirstAncestorOfClass('ScreenGui')
+  if not (entry and screen and screen.Enabled) then b.card:Destroy();return end
+  local region,slot=entry.weaponId and 'Weapons' or 'Items',nil
+  if entry.weaponId then
+   for k,w in data.weapons do if w.id==entry.weaponId and not b.copies[w.copy] then slot='WeaponSlot'..k;break end end
+  else
+   for k,it in data.items do if it.id==entry.id then slot='ItemSlot'..k;break end end
+  end
+  -- Looked up by name each time: a later redraw rebuilds the layout with the same names.
+  local function find()
+   local layout=parent:FindFirstChild('ShopLayout');local main=layout and layout:FindFirstChild('ShopMain')
+   local r=main and main:FindFirstChild(region)
+   return r and slot and r:FindFirstChild(slot),main
+  end
+  local asset=entry.weaponId and WeaponIcons[entry.weaponId] or T.Asset[entry.icon] or entry.icon
+  buyFX(screen,b,find,asset,tiers[entry.tier] or white,math.clamp(2+entry.tier,3,5))
  end
  local refreshQueued=false
  local function queueRefresh()
@@ -322,7 +479,7 @@ function M.new(player,h,refresh)
       text(card,'Description',entry.description,14,110+used,cardW-28,math.max(40,cardH-185-used-(buyH-43)),18)
      end
      local bw=math.min(136,cardW-32)
-     local buy=btn(card,'Buy','', (cardW-bw)/2,cardH-16-buyH,bw,buyH,function() T.sound('ui_purchase');self:send('Buy',i,o.token) end)
+     local buy=btn(card,'Buy','', (cardW-bw)/2,cardH-16-buyH,bw,buyH,function() T.sound('ui_purchase');remember(card,well,i,o,data);self:send('Buy',i,o.token) end)
      price(buy,o.price,'',30,data.shards>=o.price and white or red);buy.Interactable=data.shards>=o.price and data.phase=='Shop'
      btn(left,'Lock'..i,o.locked and 'Locked' or 'Lock',x+8,y+cardH+10,cardW-16,lockH,function() self:send('Lock',i,o.token) end,not o.locked)
     end
@@ -429,6 +586,15 @@ function M.new(player,h,refresh)
   end
   local key=inventoryOnly and 'InventoryScroll' or 'ShopScroll'
   task.defer(function() if left.Parent then left.CanvasPosition=Vector2.new(0,self[key] or 0);left:GetPropertyChangedSignal('CanvasPosition'):Connect(function() self[key]=left.CanvasPosition.Y end) end end)
+  -- BUY effect: a buy the server took shows its offer sold (the last unsold one: the shop refilled,
+  -- so its token is gone). Deferred after the scroll restore above, so the slot is where it shows.
+  for token,b in self.bought do
+   local o=data.offers[b.index];local gone=true
+   for _,x in data.offers do if x.token==token then gone=false;break end end
+   if os.clock()-b.t>4 or data.wave~=b.wave then self.bought[token]=nil;b.card:Destroy()
+   elseif (o and o.token==token and o.sold) or (b.last and gone and arrived(b,data)) then self.bought[token]=nil;task.defer(playBuy,b,data,parent)
+   elseif gone then self.bought[token]=nil;b.card:Destroy() end
+  end
   return data
  end
  return self

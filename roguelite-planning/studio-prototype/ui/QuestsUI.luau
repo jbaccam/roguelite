@@ -77,7 +77,8 @@ end
 -- sweep, all over a soft glow (~1 s). The window redraws on the result (a claimed row re-sorts), so
 -- the slots are copied at click time (Q.snapshot) and the effect plays from where they were, on its
 -- own layer in the ScreenGui above the window. Flat images and tweens only (no 3D effects); nothing
--- in it takes input, and the layer and everything in it is destroyed after 1.7 s.
+-- in it takes input, and the layer and everything in it is destroyed after 1.7 s. The Store's DAILY
+-- claims (free emeralds, the VIP chest, deals) play it too (StoreUI, user 2026-10-03).
 local RunService=game:GetService('RunService')
 local STAR='rbxassetid://119142062258395' -- ChestFX.Tex.star
 local RING='rbxassetid://112313196019616' -- ChestFX.Tex.ring
@@ -93,6 +94,7 @@ local function tagReward(o,kind,amount,color)
  o:SetAttribute('ClaimKind',kind);o:SetAttribute('ClaimAmount',amount);o:SetAttribute('ClaimColor',color)
  return o
 end
+Q.tagReward=tagReward -- the Store's free daily claims use the same effect (user, 2026-10-03)
 local function rewardTile(parent,name,x,y,size,it)
  return tagReward(FX.tile(parent,name,x,y,size,it[1],it[2],it[3],it[4]),it[5] or 'item',it[6],(FX.Rarity[it[3]] or FX.Rarity.Common).top)
 end
@@ -101,13 +103,21 @@ local function rewardsOf(face)
  for _,c in face:GetChildren() do if c:GetAttribute('ClaimKind') then table.insert(out,c) end end
  return out
 end
--- Each slot's place on screen now, plus a copy to pop.
+-- Each slot's place on screen now, plus a copy to pop. A bare image (a streak node's icon, a Store
+-- card's art) is copied into a frame of its size as that frame's Icon, so it pops and squashes like
+-- a slot; its hover UIScale goes (the measured size already includes it).
 function Q.snapshot(parts)
  local out={}
  for _,o in parts do
   if o.Parent and o.AbsoluteSize.X>0 then
+   local copy=o:Clone()
+   if copy:IsA('ImageLabel') then
+    local box=T.make('Frame',nil,{Name=o.Name,BackgroundTransparency=1,Size=o.Size})
+    for _,s in copy:GetChildren() do if s:IsA('UIScale') then s:Destroy() end end
+    copy.Name='Icon';copy.AnchorPoint=Vector2.zero;copy.Position=UDim2.new();copy.Parent=box;copy=box
+   end
    table.insert(out,{kind=o:GetAttribute('ClaimKind'),amount=o:GetAttribute('ClaimAmount'),color=o:GetAttribute('ClaimColor'),
-    pos=o.AbsolutePosition,size=o.AbsoluteSize,design=o.Size.X.Offset,copy=o:Clone()})
+    pos=o.AbsolutePosition,size=o.AbsoluteSize,design=o.Size.X.Offset,copy=copy})
   end
  end
  return out
@@ -158,14 +168,22 @@ local function sparkles(layer,c,base,spread,n,color)
 end
 -- shots: Q.snapshot entries {kind, amount, color, pos, size, design, copy}; copy may be nil.
 -- Positions are AbsolutePosition minus the ScreenGui's own, so top-bar and safe-area insets cancel.
-function Q.claimFX(screen,shots)
+-- target (optional, 2026-10-03): the emerald counter to fly into instead of the lobby HUD's (the
+-- Store window's pill), or a function that finds it: a window that redraws on the result replaces
+-- its counter mid-flight, so it is looked up again as the emeralds land.
+function Q.claimFX(screen,shots,target)
  if not (screen and screen.Parent and screen.Enabled) or #shots==0 then
   for _,s in shots do if s.copy then s.copy:Destroy() end end;return
  end
  local layer=T.make('Frame',screen,{Name='ClaimFX',BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=45,Active=false,Interactable=false})
  task.delay(1.7,function() layer:Destroy() end)
  local origin=screen.AbsolutePosition
- local counter=emeraldCounter(screen)
+ local function counterNow()
+  local o=target;if type(o)=='function' then o=o() end
+  if o and o.Parent and o.AbsoluteSize.X>0 then return o end
+  return emeraldCounter(screen)
+ end
+ local counter=counterNow()
  local goal=counter and counter.AbsolutePosition+counter.AbsoluteSize/2-origin
  local function image(name,asset,p,size,color,z)
   return T.make('ImageLabel',layer,{Name=name,BackgroundTransparency=1,Image=asset,ImageColor3=color,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(p.X,p.Y),Size=UDim2.fromOffset(size,size),ZIndex=z})
@@ -235,10 +253,10 @@ function Q.claimFX(screen,shots)
  if #gems==0 then return end
  for i,g in gems do g.wait=.04+(i-1)*.022 end
  -- First emerald in: a glow on the counter and "+50" rising off it; every one bumps the counter.
+ local cs=counter and math.min(counter.AbsoluteSize.X,counter.AbsoluteSize.Y)
  local function land(n)
-  punch(counter,n==1 and 1.3 or 1.15)
+  punch(counterNow() or counter,n==1 and 1.3 or 1.15)
   if n>1 then return end
-  local cs=math.min(counter.AbsoluteSize.X,counter.AbsoluteSize.Y)
   local glow=image('CounterGlow',FX.Asset.glow,goal,cs*1.2,FX.Rarity.Emerald.top,1);glow.ImageTransparency=.15
   tween(glow,.4,{Size=UDim2.fromOffset(cs*3,cs*3)},Enum.EasingStyle.Quart)
   tween(glow,.45,{ImageTransparency=1},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
