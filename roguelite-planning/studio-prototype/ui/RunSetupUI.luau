@@ -31,6 +31,42 @@ function M.lock(parent,x,y,size)
  return g
 end
 
+-- Starting-weapon tiles (2026-10-04, user: "I don't like scrolling, it should be just smaller boxes
+-- or better UI design and layout"): every starter shows at once and the tiles shrink to fit. An
+-- owned tile of size S is padding, the icon, then a thin upgrade bar: tileParts(S) -> padding, bar
+-- height, icon size. Example: S 85 -> 3, 6, 71 (53 screen px on a phone's .75x page).
+function M.tileParts(S)
+ local p=S>=110 and 7 or S>=90 and 5 or 3;local bar=S>=110 and 14 or S>=90 and 8 or 6
+ return p,bar,S-2*p-bar-2
+end
+-- The biggest owned tile S (at most maxS) that fits o owned and u NOT OWNED tiles in W x H page px
+-- with gap g, never scrolling. NOT OWNED tiles first try their own smaller rows (3/4 of S, at least
+-- lockedMin) under the owned ones, else every tile shares one grid. Rows are balanced: 17 in 3 rows
+-- is 6, 6, 5. Returns {S, s (NOT OWNED size), cols, rows, colsL, rowsL, split, group, w, h}.
+-- Example: desktop 600 x 338, gap 10, 8 owned + 3 not owned -> owned 113 (4 x 2), not owned 84 (3 x 1);
+-- with 6 owned Godlies too (14 + 3) -> one grid of 91 (6, 6, 5).
+function M.weaponTiles(o,u,W,H,g,maxS,lockedMin)
+ local function grid(n,S)
+  if n<=0 then return 0,0,0,0 end
+  local most=math.max(1,math.floor((W+g)/(S+g)));local rows=math.ceil(n/most);local cols=math.ceil(n/rows)
+  return cols,rows,cols*S+(cols-1)*g,rows*S+(rows-1)*g
+ end
+ local group=g+6 -- between the owned rows and the NOT OWNED rows
+ local S=math.floor(maxS)
+ while S>24 do
+  local s=math.min(S-1,math.max(math.floor(S*.75),lockedMin or 0))
+  if o>0 and u>0 and s>=24 then
+   local cO,rO,wO,hO=grid(o,S);local cL,rL,wL,hL=grid(u,s)
+   if wO<=W and wL<=W and hO+group+hL<=H then return {S=S,s=s,cols=cO,rows=rO,colsL=cL,rowsL=rL,split=true,group=group,w=math.max(wO,wL),h=hO+group+hL} end
+  end
+  local c,r,w,h=grid(o+u,S)
+  if w<=W and h<=H then return {S=S,s=S,cols=c,rows=r,split=false,w=w,h=h} end
+  S-=1
+ end
+ local c,r,w,h=grid(o+u,S)
+ return {S=S,s=S,cols=c,rows=r,split=false,w=w,h=h}
+end
+
 -- opts: profile() -> LobbyUI profile, need(rec), cost(parent,amount,asset,size),
 -- selection (shared with the lobby HUD), findPortal(), hostMap() -> map id chosen by my pad's host.
 function M.new(player,opts)
@@ -54,7 +90,8 @@ function M.new(player,opts)
  local function plan(L)
   local w,h=L.w/U,L.h/U
   -- corner: width of Roblox's top-bar buttons (~180 screen px) at each top corner, in page px.
-  local g={w=w,h=h,top=L.top/U,corner=180/(L.s*U),compact=w<DW-.5 or h<DH-.5}
+  -- px: screen px per page px (.75 on phones), so sizes can be held to a screen minimum.
+  local g={w=w,h=h,top=L.top/U,corner=180/(L.s*U),px=L.s*U,compact=w<DW-.5 or h<DH-.5}
   g.cw=g.compact and w or DW;g.ch=g.compact and math.max(h,MIN_H) or DH
   return g
  end
@@ -67,12 +104,6 @@ function M.new(player,opts)
   local go=T.button(canvas,'Primary',primaryText,c+gap,y,bw,bh,primaryFn);go.Caption.TextSize=cp and 24 or 26;go.Interactable=enabled~=false
   primary={button=go,action=enabled~=false and primaryFn or nil}
   return back,go
- end
- -- Compact layout column; scrolls when its content is taller than the room.
- local function column(name,x,y,w,h,contentH)
-  if contentH<=h then return T.frame(canvas,name,x,y,w,h) end
-  local sc=T.scroll(canvas,name,x,y,w,h);sc.CanvasSize=UDim2.fromOffset(0,contentH)
-  return sc
  end
  -- Panel content taller than the panel scrolls inside it; otherwise it is drawn on the panel.
  local function body(panel,contentH)
@@ -231,60 +262,72 @@ function M.new(player,opts)
   stage(mapIndex,false)
   local order=Rules.classOrder(profile.classes)
   local class=sel.class;local owned=profile.classes[class]==true
-  local list=Rules.homeWeapons(class)
-  for _,w in Rules.ownedGodlies(profile.weapons) do table.insert(list,w) end -- any class can start with one
-  -- Layout. Desktop: class cards in a row over the details panel and a 3-wide weapon grid.
-  -- Compact (phones): three columns between the title and the buttons, class cards 2 wide,
-  -- details, weapons 3 wide (2 on narrow pages); a column too tall for the room scrolls.
-  -- Example: 1000x492 page (iPhone 14) -> classes 250, details 320, weapons 3 x 114 px cells.
+  -- Starters (2026-10-04): every weapon with this class anywhere in its list, owned first, then owned
+  -- Godlies (any class can start with one), then NOT OWNED. Up to 17 (Thrower 11 + 6 Godlies).
+  local list,unowned={},{}
+  for _,w in Rules.classWeapons(class) do table.insert(profile.weapons[w.id] and list or unowned,w) end
+  for _,w in Rules.ownedGodlies(profile.weapons) do table.insert(list,w) end
+  local nOwned=#list
+  table.move(unowned,1,#unowned,#list+1,list)
+  -- Starter tiles never scroll (2026-10-04): M.weaponTiles sizes them to the room. Icons stay at
+  -- least 48 screen px (65 page px on a .75x phone page); NOT OWNED tiles are never under that either.
+  local iconMin=math.ceil(48/G.px)+1;local lockedMin=iconMin+8
+  -- Layout. Desktop: class cards in a row over the details panel (left) and the starting weapons
+  -- (right, 600 x 338 under their heading, clear of the buttons at 636). Phones: the same shape:
+  -- the six class cards in one short row under the title, then details and weapons side by side;
+  -- the weapons get the width their tiles need, the details at least 300.
+  -- Example: 889x500 page (667x375 phone, 58 px top bar): cards 136 x 46, details 303, 17 weapons
+  -- 6 x 3 at 85 px (icons 53 screen px). The tightest, 1066x480 (800x360): owned 81 px (7 x 2) and
+  -- NOT OWNED 73 px (3 x 1), icons 50 and 49 screen px.
   local cw,ch,cgap,cardsAt,cardsIn -- class card size, gap, position of card n, its parent
-  local infoX,infoY,infoW,infoH,wx,wy,ww,wcols,cell,wgap,gridIn,gx,gy
+  local infoX,infoY,infoW,infoH,wx,wy,ww,tiles,tgap,headH,gridY
   if not cp then
    -- Cards 140 tall (were 150) so the details panel is 380 tall and fits every class unscrolled.
    cw,ch,cgap=170,140,14;local x0=(CW-(#order*cw+(#order-1)*cgap))/2
    cardsIn=canvas;cardsAt=function(n) return x0+(n-1)*(cw+cgap),100 end
    infoX,infoY,infoW,infoH=95,252,470,380
-   wx,wy,ww,wcols,cell,wgap=585,252,600,3,150,12
-   gridIn=canvas;gx,gy=wx+(ww-(3*cell+2*wgap))/2,290
-   -- Owned Godlies join the class's six: past two rows the grid scrolls.
-   if #list>6 then local rows=math.ceil(#list/3);gridIn=column('Weapons',gx,290,3*cell+2*wgap+8,2*cell+wgap,rows*cell+(rows-1)*wgap);gx,gy=0,0 end
+   wx,wy,ww,tgap,headH=585,252,600,10,30;gridY=wy+headH+6
+   tiles=M.weaponTiles(nOwned,#list-nOwned,ww,626-gridY,tgap,150,lockedMin)
   else
-   local M0,gap=16,14;local midY=math.max(70,G.top+6);local midH=CH-68-midY
-   cw,ch,cgap=120,100,10;local classW=2*cw+cgap
-   local avail=CW-2*M0-classW-2*gap
-   wgap=10;cell=math.floor(math.min((avail-320-28)/3,(midH-44)/2,124));wcols=3
-   if cell<104 then wcols=2;cell=math.clamp(math.floor(math.min((avail-320-18)/2,(midH-54)/3)),104,124) end
-   ww=wcols*cell+(wcols-1)*wgap+8 -- +8: room for a scroll bar
-   infoW=math.min(440,avail-ww);infoH=midH;infoY=midY;wy=midY
-   local x0=(CW-(classW+infoW+ww+2*gap))/2
-   infoX=x0+classW+gap;wx=infoX+infoW+gap
-   local rows=math.ceil(#order/2)
-   cardsIn=column('Classes',x0,midY,classW,midH,rows*ch+(rows-1)*cgap)
-   cardsAt=function(n) return ((n-1)%2)*(cw+cgap),math.floor((n-1)/2)*(ch+cgap) end
-   local wrows=math.ceil(#list/wcols)
-   gridIn=column('Weapons',wx,wy+34,ww,midH-34,wrows*cell+(wrows-1)*wgap);gx,gy=0,0
+   -- The map chip (Play, Host, Member) sits at 40-64; without it the cards move up to the top bar.
+   local M0,gap=16,14;local midY=math.max(mapText and 70 or 48,G.top+6)
+   cw,ch,cgap=math.min(190,math.floor((CW-2*M0-5*8)/#order)),46,8
+   local x0=(CW-(#order*cw+(#order-1)*cgap))/2
+   cardsIn=canvas;cardsAt=function(n) return x0+(n-1)*(cw+cgap),midY end
+   local top=midY+ch+8;local h=CH-64-top -- the buttons start at CH-60
+   tgap,headH=6,20;gridY=top+headH+4
+   tiles=M.weaponTiles(nOwned,#list-nOwned,CW-2*M0-gap-300,CH-64-gridY,tgap,112,lockedMin)
+   ww=math.max(tiles.w,250) -- the heading row needs about 250
+   infoW=math.min(440,CW-2*M0-gap-ww);infoH=h;infoY=top;wy=top
+   infoX=(CW-(infoW+gap+ww))/2;wx=infoX+infoW+gap
   end
-  -- Class cards: owned first, then locked. Names centred; locked cards dimmed with a padlock.
+  -- Class cards: owned first, then locked; locked cards dimmed with a padlock. Desktop: icon over
+  -- the name, the fit badge over the corner. Phones: icon left, then the name over an inline badge.
   for k,c in order do
    local cOwned=profile.classes[c]==true;local selected=class==c
    local x,y=cardsAt(k)
    local card=T.button(cardsIn,'Class_'..c,'',x,y,cw,ch,function() sel.class=c;sel.weapon=nil;draw() end,not selected)
    card.Caption.Visible=false
-   local is=cp and 44 or 72
-   -- Phones: the icon sits left of centre (28-72), between the padlock (4-28) and the badge (72-116).
-   local art=T.icon(card,'Icon',cp and 28 or (cw-is)/2,cp and 6 or 12,is,WeaponIcons[Rules.Signature[c]]);art.ImageTransparency=cOwned and 0 or .6
-   local n=T.label(card,'Name',c,0,cp and 52 or 86,cw,cp and 24 or 32,cp and 20 or 24,cOwned and C.white or C.dim);n.Size=UDim2.new(1,0,0,cp and 24 or 32);n.TextWrapped=false
    -- Weapon fit badge: damage with this class's weapons when you play the picked class
-   -- (CharacterStats.ClassFit). Desktop: over the corner; phones: inside it (the column clips).
-   -- DMG under the number (2026-10-03: a bare "-5%" read like a discount); the details panel says
-   -- what it means. Same width as before, taller: "DMG" fits under "+15%" without a wider badge.
+   -- (CharacterStats.ClassFit). DMG with the number (2026-10-03: a bare "-5%" read like a discount);
+   -- the details panel says what it means.
    local _,pct=Stats.classFit({home=c},class)
-   local bw,bh=cp and 44 or 58,cp and 36 or 44
-   local badge=T.fitBadge(card,'Fit',cp and cw-bw-4 or cw-bw+8,cp and 4 or -8,bw,bh,pct,'DMG');badge.ZIndex=5;badge.Word.TextSize=cp and 12 or 13
-   for _,d in badge:GetDescendants() do if d:IsA('GuiObject') then d.ZIndex=6 end end
-   if not cOwned then
-    M.lock(card,cp and 4 or 8,cp and 4 or 8,cp and 24 or 28)
-    local l=T.label(card,'Locked','LOCKED',0,cp and 76 or 120,cw,cp and 20 or 22,16,C.gold);l.Size=UDim2.new(1,0,0,cp and 20 or 22)
+   if cp then
+    local art=T.icon(card,'Icon',6,7,32,WeaponIcons[Rules.Signature[c]]);art.ImageTransparency=cOwned and 0 or .6
+    local n=T.label(card,'Name',c,44,2,cw-50,21,17,cOwned and C.white or C.dim);n.TextXAlignment=Enum.TextXAlignment.Left;n.TextWrapped=false
+    T.fitBadge(card,'Fit',44,24,math.min(cw-50,88),19,pct,'DMG',true)
+    if not cOwned then M.lock(card,2,2,18) end
+   else
+    local is=72
+    local art=T.icon(card,'Icon',(cw-is)/2,12,is,WeaponIcons[Rules.Signature[c]]);art.ImageTransparency=cOwned and 0 or .6
+    local n=T.label(card,'Name',c,0,86,cw,32,24,cOwned and C.white or C.dim);n.Size=UDim2.new(1,0,0,32);n.TextWrapped=false
+    local bw,bh=58,44
+    local badge=T.fitBadge(card,'Fit',cw-bw+8,-8,bw,bh,pct,'DMG');badge.ZIndex=5;badge.Word.TextSize=13
+    for _,d in badge:GetDescendants() do if d:IsA('GuiObject') then d.ZIndex=6 end end
+    if not cOwned then
+     M.lock(card,8,8,28)
+     local l=T.label(card,'Locked','LOCKED',0,120,cw,22,16,C.gold);l.Size=UDim2.new(1,0,0,22)
+    end
    end
   end
   -- Class details, top to bottom: name, description, weapon damage (the card badges), always-on buffs |
@@ -353,24 +396,59 @@ function M.new(player,opts)
    local sc=T.scroll(info,'Body',0,8,0,0);sc.Size=UDim2.new(1,-8,1,-16);sc.CanvasSize=UDim2.fromOffset(0,y)
    box.Parent=sc
   end
-  -- Starting weapon grid. Phone cells (under 150) shrink the art and give names two lines.
-  local h=T.label(canvas,'WeaponTitle','STARTING WEAPON',wx,wy,ww,30,cp and 22 or 24);h.TextXAlignment=Enum.TextXAlignment.Left
-  local pick=sel.weapon or Rules.Signature[class]
-  local big=cell>=150;local is=big and 70 or math.min(70,cell-68)
+  -- Starting weapons (2026-10-04, no scrolling): every tile shows at once (M.weaponTiles), the block
+  -- centred under its heading. Owned: icon, tier badge and upgrade bar; the pick is the lime tile.
+  -- NOT OWNED: a dim well with a padlock, in its own smaller rows when they fit. Names: the pick's
+  -- beside the heading; hovering, gamepad-selecting or tapping a tile shows that one's instead.
+  local bx=wx+math.floor((ww-tiles.w)/2)
+  local gridIn=T.frame(canvas,'Weapons',bx,gridY,tiles.w,tiles.h)
+  local head,hs='STARTING WEAPON',cp and 18 or 24
+  local headW=math.ceil(TextService:GetTextSize(head,hs,T.Font,Vector2.new(1000,100)).X*1.12)+6
+  T.label(canvas,'WeaponTitle',head,bx,wy,headW,headH,hs).TextXAlignment=Enum.TextXAlignment.Left
+  local nameL=T.label(canvas,'WeaponName','',bx+headW+10,wy,math.max(80,wx+ww-(bx+headW+10)),headH,hs-4,C.lime);nameL.TextXAlignment=Enum.TextXAlignment.Left
+  -- The pick, if it is an owned starter for this class; else the class's signature weapon (a
+  -- saved Handyman Nail Gun opened as a Mage shows the Magic Staff). The server checks it again.
+  local pick=Rules.Signature[class];local pickW
+  for _,w in list do if w.id==sel.weapon and profile.weapons[w.id] then pick=w.id end end
+  for _,w in list do if w.id==pick then pickW=w end end
+  local function showName(w)
+   if not nameL.Parent then return end
+   w=w or pickW;local locked=w~=nil and not profile.weapons[w.id]
+   nameL.Text=w and string.upper(w.name)..(locked and '  ·  NOT OWNED' or '') or ''
+   nameL.TextColor3=locked and C.dim or w==pickW and C.lime or C.white
+  end
+  showName()
+  local S,s,g=tiles.S,tiles.s,tgap
   for k,wpn in list do
    local rec=profile.weapons[wpn.id];local canPick=owned and rec~=nil;local selected=canPick and pick==wpn.id
-   local c=T.button(gridIn,'Weapon_'..wpn.id,'',gx+((k-1)%wcols)*(cell+wgap),gy+math.floor((k-1)/wcols)*(cell+wgap),cell,cell,function()
-    if canPick then sel.weapon=wpn.id;draw() end
-   end,not selected)
-   c.Caption.Visible=false
-   if rec and not selected then T.setTier(c,rec.tier) end
-   local art=T.icon(c,'Icon',(cell-is)/2,big and 12 or 6,is,WeaponIcons[wpn.id]);art.ImageTransparency=rec and 0 or .6
-   if big then centred(T.text(c,'Name',wpn.name,10,84,cell-20,22,17,rec and C.white or C.dim))
-   else centred(T.text(c,'Name',wpn.name,6,8+is,cell-12,36,16,rec and C.white or C.dim)) end
+   local size,x,y=S,((k-1)%tiles.cols)*(S+g),math.floor((k-1)/tiles.cols)*(S+g)
+   if tiles.split and not rec then
+    local j=k-nOwned;size=s
+    x=((j-1)%tiles.colsL)*(s+g);y=tiles.rows*(S+g)-g+tiles.group+math.floor((j-1)/tiles.colsL)*(s+g)
+   end
+   local c
    if rec then
-    T.tierBadge(c,rec.tier,big and 10 or 6,big and 10 or 6)
-    if big then T.upgradeBar(c,'Upgrade',16,cell-36,cell-32,18,rec.have,opts.need(rec)) else T.upgradeBar(c,'Upgrade',10,cell-22,cell-20,16,rec.have,opts.need(rec)) end
-   else centred(T.text(c,'Locked','NOT OWNED',8,big and cell-38 or cell-24,cell-16,20,16,C.dim)) end
+    c=T.button(gridIn,'Weapon_'..wpn.id,'',x,y,size,size,function() if canPick then sel.weapon=wpn.id;draw() end end,not selected)
+    c.Caption.Visible=false
+    if not selected then T.setTier(c,rec.tier) end
+    local p,barH,is=M.tileParts(size)
+    T.icon(c,'Icon',(size-is)/2,p,is,WeaponIcons[wpn.id])
+    T.tierBadge(c,rec.tier,3,3)
+    -- Copies toward the next tier: "2 / 5" in the bar on big tiles, the bar alone on small ones.
+    local need=opts.need(rec)
+    if barH>=14 then T.upgradeBar(c,'Upgrade',p+2,size-p-barH,size-2*p-4,barH,rec.have,need)
+    else T.setBar((T.bar(c,'Upgrade',p+2,size-p-barH,size-2*p-4,barH,need and rec.have>=need and C.gold or C.lime)),need and rec.have/need or 1) end
+   else
+    c=T.make('ImageButton',gridIn,{Name='Weapon_'..wpn.id,BackgroundTransparency=1,Image='',AutoButtonColor=false,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(size,size)})
+    T.panel(c,'Well',0,0,size,size,'inset')
+    local p=size>=90 and 6 or 4
+    local art=T.icon(c,'Icon',p,p,size-2*p,WeaponIcons[wpn.id]);art.ImageTransparency=.55;art.ImageColor3=Color3.fromRGB(150,150,150);art.ZIndex=2
+    local ls=math.clamp(math.floor(size*.26),16,26);M.lock(c,size-ls-3,3,ls)
+    c.Activated:Connect(function() showName(wpn) end) -- touch has no hover: a tap names it
+   end
+   c:SetAttribute('Owned',rec~=nil)
+   c.MouseEnter:Connect(function() showName(wpn) end);c.MouseLeave:Connect(function() showName() end)
+   c.SelectionGained:Connect(function() showName(wpn) end);c.SelectionLost:Connect(function() showName() end)
   end
   -- Host: Open pad (anyone, up to 4) or Private (only you and your party; just you when you're not
   -- in one). Private was Solo (user, 2026-10-03: "what if were in a group ... that wanted it to be

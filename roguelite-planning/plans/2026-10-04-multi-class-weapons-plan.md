@@ -59,8 +59,8 @@ Totals become Brawler 9, Gunner 7, Thrower 11, Juggler 10, Handyman 9, Mage 8 (s
 
 - [ ] List = class weapons, owned first (catalog order), then owned Godlies, then NOT OWNED.
 - [ ] `pick`: `sel.weapon` only if it is owned and in the list (or an owned Godly), else the signature.
-- [ ] Desktop grid always goes into a `Weapons` column (scroll when rows > 2); compact already does. Rows = ceil(n / cols).
-- [ ] Layout test `ui/RunSetupLayoutTests.luau` (client, like `ShopLayoutTests`): own RunSetupUI instance, a fake profile owning Thrower and 7 of its 11 weapons, Loadout mode, sizes 2560x1440 .. 667x375 by resizing `RunSetup.Root`; checks the grid scrolls, holds 11 cells, owned before NOT OWNED, and is disjoint from ClassInfo, Back, Primary.
+- [ ] ~~Desktop grid always goes into a scrolling `Weapons` column.~~ Replaced the same day (user: "I don't like scrolling, it should be just smaller boxes"): `M.weaponTiles` sizes the tiles so every entry shows at once (no scroll frame), NOT OWNED in smaller rows when that keeps owned tiles bigger, icons at least 48 screen px. Phones get the desktop's shape: class cards in one short row, then details and tiles side by side.
+- [ ] Layout test `ui/RunSetupLayoutTests.luau` (client, like `ShopLayoutTests`): own RunSetupUI instance, a fake Thrower profile (8 of 11 owned, plus the 6 Godlies, then without them), Loadout mode, sizes 2560x1440 .. 667x375 by resizing `RunSetup.Root`; checks no scroll frame, tiles inside the area and the screen, no overlaps, icons >= 48 px, order, the lime pick.
 
 ## Task 5: Armory, item card, shop label
 
