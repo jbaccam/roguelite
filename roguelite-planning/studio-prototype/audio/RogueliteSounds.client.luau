@@ -108,9 +108,10 @@ local MOB_DEFAULT={'mob_zombie',.85}
 
 -- Named cues from UI modules (T.sound) and how loud each plays.
 local CUE={ui_error=.5,ui_equip=.6,ui_purchase=.6,ui_upgrade=.6}
--- Named cues that reuse a kit sound, pitched: {sound, volume, pitch}. dash: the melee dash's whoosh
--- (2026-10-03), the light swing played low and airy.
-local ALIAS={dash={'swing_light',.55,.7}}
+-- Named cues built from kit sounds, pitched: layers of {sound, volume, pitch, delay s}. dash: the
+-- melee dash (2026-10-04, "like a Jett dash"): a punchy whoosh (the heavy swing, quick), an air-burst
+-- pop (the rocket launch, way up) and an airy tail as it eases out (the light swing, low).
+local ALIAS={dash={{'swing_heavy',.6,1.3,0},{'shot_rocket',.22,1.9,0},{'swing_light',.3,.75,.12}}}
 
 -- At most this many sounds of a kind start within a quarter second, so hordes stay crisp.
 local LIMIT={weapon=12,mob=8,impact=6,ui=4,player=2,pickup=10}
@@ -436,17 +437,24 @@ if not cue then
  warn('RogueliteSounds: ReplicatedStorage.RogueliteSoundCue is missing; run audio/InstallSoundCue.luau')
  cue=Instance.new('BindableEvent');cue.Name='RogueliteSoundCue';cue.Parent=RS
 end
+-- ALIAS layers. at: nil for your own (flat), else a teammate's position; scale: their volume.
+local function playAlias(layers,at,scale)
+ for _,l in layers do
+  if l[4]>0 then task.delay(l[4],function() play(l[1],'dash',l[2]*scale,l[3],at,.05) end)
+  else play(l[1],'dash',l[2]*scale,l[3],at,.05) end
+ end
+end
 cue.Event:Connect(function(name)
- local a=ALIAS[name];if a then play(a[1],'player',a[2],a[3],nil,.05);return end
+ local a=ALIAS[name];if a then playAlias(a,nil,1);return end
  if CUE[name] then play(name,'ui',CUE[name],1,nil,.02) end
 end)
--- Your own dash whooshes the moment you press it (RogueliteCombat.client fires the 'dash' cue); a
+-- Your own dash plays the moment you press it (RogueliteCombat.client fires the 'dash' cue); a
 -- teammate's when the server approves it (their DashAt), at them and quieter.
 local function watchDash(p)
  if p==player then return end
  p:GetAttributeChangedSignal('DashAt'):Connect(function()
   local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
-  if root then play(ALIAS.dash[1],'impact',ALIAS.dash[2]*.6,ALIAS.dash[3],root.Position,.05) end
+  if root then playAlias(ALIAS.dash,root.Position,.55) end
  end)
 end
 for _,p in Players:GetPlayers() do watchDash(p) end
@@ -483,6 +491,13 @@ task.spawn(function()
    local now=f:GetAttribute('Tier')
    if type(now)=='number' and type(tier)=='number' and now>tier then local p=at();if p then play('ui_upgrade','impact',.4,1.1,p,.02);play('hit_blunt','impact',.25,1.3,p,.05) end end
    tier=now
+  end)
+  -- Broken by mobs (2026-10-04, Broken = server time): a crunch from the same kit, the thud and the
+  -- blunt hit pitched down with a short shotgun crackle on top. Only when it just happened.
+  f:GetAttributeChangedSignal('Broken'):Connect(function()
+   local broken=f:GetAttribute('Broken');local p=at()
+   if type(broken)~='number' or not p or workspace:GetServerTimeNow()-broken>=1 then return end
+   play('hit_thud','impact',.55,.7,p,.05);play('hit_blunt','impact',.45,.6,p,.05);play('shot_shotgun','impact',.18,1.6,p,.05)
   end)
  end
  local function hook(folder)

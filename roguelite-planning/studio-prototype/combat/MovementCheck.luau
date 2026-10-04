@@ -25,7 +25,7 @@ function M.reset(s,position,t)
 end
 -- An approved dash (CharacterStats.Dash; RogueliteMeta stamps DashAt, MovementGuard calls this):
 -- `studs` more pass every speed test for the next DASH_SECONDS. A new dash replaces the old
--- allowance, never adds to it. Example: air speed 31.9 allows 63.9 studs a window, 89.9 after a dash.
+-- allowance, never adds to it. Example: air speed 31.9 allows 63.9 studs a window, 93.9 after a dash.
 function M.allow(s,t,studs) s.bonus=math.max(0,studs or 0);s.bonusUntil=t+M.DASH_SECONDS end
 local function flat(a,b) return Vector3.new(a.X-b.X,0,a.Z-b.Z).Magnitude end
 -- One sample. speed: the player's own top speed (studs/s); gap: studs down to the ground (math.huge

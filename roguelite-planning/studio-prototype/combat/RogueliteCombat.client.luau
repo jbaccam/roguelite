@@ -414,42 +414,277 @@ end
 player.CharacterAdded:Connect(airSpeed)
 if player.Character then task.spawn(airSpeed,player.Character) end
 
--- Melee dash (2026-10-03, play-test: "dash for melee based characters"): Brawlers and any class
--- whose starting weapon is melee (CharacterStats.dashes) burst Dash.Distance studs the way they're
--- moving (facing, when standing still), on the ground or in the air: Q, gamepad X or the DASH
--- button. This body moves itself at once (its client owns its physics) and tells the server
--- (RunAction 'Dash'), which checks the class, the cooldown and that the wave is on, then stamps
--- DashAt for MovementGuard and the other screens. Example: 20 studs in 0.18 s is 111 studs/s,
--- ready again 3 s later. No damage and no invulnerability.
+-- Melee dash (2026-10-03; reworked 2026-10-04, user: "like a Jett dash in Valorant: smooth af and
+-- clean, an actual dash, not a speed boost"). Brawlers and any class whose starting weapon is melee
+-- (CharacterStats.dashes) dash the way they're moving, else where the camera looks, on the ground or
+-- in the air: Q, gamepad X or the DASH button. A burst, not a sprint (CharacterStats.Dash): 280
+-- studs/s at once, easing out to the run speed over 0.3 s, about 26 studs (21 in the first 0.14 s),
+-- cut short by a wall; an air dash holds level through the burst. This body moves itself (its client
+-- owns its physics) and tells the server (RunAction 'Dash'), which checks the class, the cooldown and
+-- that the wave is on, then stamps DashAt for MovementGuard and the other screens. Every screen draws
+-- the pose (lean in, arms swept back, legs tucked), afterimages, streaks, a wind ring and end wisps;
+-- the dasher also gets speed lines and an FOV punch. Ready again 3 s later. No damage, no invulnerability.
 task.spawn(function()
  local RS=game:GetService('ReplicatedStorage')
  local Stats=require(combat:WaitForChild('CharacterStats'));local D=Stats.Dash
  local runAction=combat:WaitForChild('RunAction',60)
- if not D or not runAction then return end
+ if not D or not D.Peak or not runAction then return end
  local T=require(RS:WaitForChild('UITheme'))
+ local K=require(combat:WaitForChild('VfxKit'))
  local readyAt=0 -- os.clock() when this player's dash is ready again
- -- A flat streak behind a dashing body: a camera-facing Trail between two root attachments.
- local function streak(root)
-  local top=Instance.new('Attachment');top.Name='DashStreakTop';top.Position=Vector3.new(0,1.2,0);top.Parent=root
-  local low=Instance.new('Attachment');low.Name='DashStreakLow';low.Position=Vector3.new(0,-1.6,0);low.Parent=root
-  local t=Instance.new('Trail');t.Name='DashStreak';t.Attachment0=top;t.Attachment1=low;t.FaceCamera=true
-  t.Lifetime=.25;t.MinLength=.05;t.LightEmission=.6;t.LightInfluence=0
-  t.Color=ColorSequence.new(Color3.fromRGB(248,249,245),Color3.fromRGB(145,239,20))
-  t.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.3),NumberSequenceKeypoint.new(1,1)})
-  t.WidthScale=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(1,.25)})
-  t.Parent=visuals
-  task.delay(D.Seconds+.04,function() t.Enabled=false end)
-  for _,o in {t,top,low} do Debris:AddItem(o,D.Seconds+.35) end
+ local WHITE,LIME,MINT=Color3.fromRGB(248,249,245),Color3.fromRGB(145,239,20),Color3.fromRGB(210,255,161)
+ -- Burst speed t s in, for a run speed: Peak, easing out ((1-u)^Ease) to the run speed by Seconds.
+ -- Example (run 24): 280 at once, 132 at 0.06 s, 56 at 0.15 s, 24 at 0.3 s.
+ local function speedAt(t,run) local u=math.clamp(t/D.Seconds,0,1);return run+(D.Peak-run)*(1-u)^D.Ease end
+
+ -- The pose, layered on the Animator's frame (Motor6D.Transform, every frame before physics; the
+ -- R15 rig AvatarNormalizer gives everyone): radians at full weight. f/r: the dash direction's
+ -- forward / right share in the body's own frame, so a side dash leans sideways.
+ local JOINTS={Root='LowerTorso',Waist='UpperTorso',Neck='Head',RightShoulder='RightUpperArm',LeftShoulder='LeftUpperArm',
+  RightElbow='RightLowerArm',LeftElbow='LeftLowerArm',RightHip='RightUpperLeg',LeftHip='LeftUpperLeg',RightKnee='RightLowerLeg',LeftKnee='LeftLowerLeg'}
+ local function offset(name,w,f,r)
+  if name=='Root' then return CFrame.Angles(-.42*f*w,0,-.32*r*w) -- the whole body leans into it (24 degrees)
+  elseif name=='Waist' then return CFrame.Angles(-.22*f*w,0,-.16*r*w)
+  elseif name=='Neck' then return CFrame.Angles(.4*f*w,0,.28*r*w) -- the head stays up, eyes ahead
+  elseif name=='RightShoulder' then return CFrame.Angles(-1.05*w,0,.3*w) -- arms swept back and out
+  elseif name=='LeftShoulder' then return CFrame.Angles(-1.05*w,0,-.3*w)
+  elseif name=='RightElbow' or name=='LeftElbow' then return CFrame.Angles(.35*w,0,0)
+  elseif name=='RightHip' then return CFrame.Angles(.62*w,0,0) -- legs tucked under, one more than the other
+  elseif name=='LeftHip' then return CFrame.Angles(.36*w,0,0)
+  elseif name=='RightKnee' then return CFrame.Angles(-.95*w,0,0)
+  else return CFrame.Angles(-.6*w,0,0) end
  end
- -- Teammates' dashes streak when the server approves them (their sound: RogueliteSounds).
+ -- In over 0.04 s, held through the burst, eased back out over 0.12 s (gone by 0.29 s).
+ local function weight(t)
+  if t<.04 then return 1-(1-t/.04)^2 end
+  if t<.17 then return 1 end
+  return 1-K.smooth((t-.17)/.12)
+ end
+ local function jointsOf(character)
+  local list={}
+  for name,partName in JOINTS do
+   local part=character:FindFirstChild(partName);local j=part and part:FindFirstChild(name)
+   if j and j:IsA('Motor6D') then list[name]=j end
+  end
+  return list
+ end
+ -- A joint the Animator didn't write this frame still holds last frame's pose: start from the base
+ -- under it, so the lean never stacks up.
+ local function pose(e,w)
+  local l=e.root.CFrame:VectorToObjectSpace(e.dir);local f,r=-l.Z,l.X
+  for name,j in e.joints do
+   if j.Parent then
+    local base=j.Transform
+    if e.written[j]==base then base=e.bases[j] end
+    local cf=base*offset(name,w,f,r)
+    j.Transform=cf;e.written[j]=cf;e.bases[j]=base
+   end
+  end
+ end
+ local function unpose(e) for _,j in e.joints do if e.written[j]==j.Transform then j.Transform=e.bases[j] end end end
+
+ -- Streaks: a wide camera-facing ribbon on the root and a thin one on each hand, built once per body
+ -- and lit only while dashing (cleared first, so one never stretches from the last dash).
+ local rigs=setmetatable({},{__mode='k'}) -- character -> its streak Trails
+ local function ribbon(part,half,life,alpha)
+  local a0=Instance.new('Attachment');a0.Name='DashStreakA';a0.Position=Vector3.new(0,half,0);a0.Parent=part
+  local a1=Instance.new('Attachment');a1.Name='DashStreakB';a1.Position=Vector3.new(0,-half,0);a1.Parent=part
+  local t=Instance.new('Trail');t.Name='DashStreak';t.Attachment0=a0;t.Attachment1=a1;t.FaceCamera=true;t.Enabled=false
+  t.Lifetime=life;t.MinLength=.05;t.LightEmission=.7;t.LightInfluence=0;t.Color=ColorSequence.new(WHITE,LIME)
+  t.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,alpha),NumberSequenceKeypoint.new(.5,.7),NumberSequenceKeypoint.new(1,1)})
+  t.WidthScale=NumberSequence.new(1,.1);t.Parent=part
+  return t
+ end
+ local function setTrails(character,on)
+  local list=rigs[character]
+  if not list then
+   if not on then return end
+   list={}
+   local root=character:FindFirstChild('HumanoidRootPart');if root then table.insert(list,ribbon(root,1.25,.2,.3)) end
+   for _,name in {'RightHand','LeftHand'} do local p=character:FindFirstChild(name);if p then table.insert(list,ribbon(p,.1,.16,.05)) end end
+   rigs[character]=list
+  end
+  for _,t in list do if t.Parent then if on then pcall(t.Clear,t) end;t.Enabled=on end end
+ end
+
+ -- Afterimages: Neon copies of the body (blocks, the head a ball), pooled: at most 9 (three dashes'
+ -- worth, the oldest reused) x 11 parts. Three a dash at 0.02 / 0.07 / 0.12 s (white, lime, mint),
+ -- each fading from 0.4 to clear over 0.26 s.
+ local GHOST_PARTS={'Head','UpperTorso','LowerTorso','RightUpperArm','RightLowerArm','LeftUpperArm','LeftLowerArm','RightUpperLeg','RightLowerLeg','LeftUpperLeg','LeftLowerLeg'}
+ local GHOST_AT,GHOST_COLOR={.02,.07,.12},{WHITE,LIME,MINT}
+ local ghosts,ghostNext={},0
+ local function ghost(character,color)
+  ghostNext=ghostNext%9+1
+  local g=ghosts[ghostNext]
+  if not g then
+   g={parts={}};ghosts[ghostNext]=g
+   for i,name in GHOST_PARTS do g.parts[i]=K.part(visuals,'DashGhost',Vector3.one,WHITE,1,Enum.Material.Neon,name=='Head' and Enum.PartType.Ball or nil) end
+  end
+  g.born=os.clock()
+  for i,name in GHOST_PARTS do
+   local src=character:FindFirstChild(name);local p=g.parts[i]
+   if src and src:IsA('BasePart') then
+    local size=src.Size*.96;if name=='Head' then size=Vector3.one*math.min(size.X,size.Y,size.Z) end
+    p.Size=size;p.CFrame=src.CFrame;p.Color=color;p.Transparency=.4
+   else p.Transparency=1 end
+  end
+ end
+
+ -- The start: a flat wind ring on the ground (upright, facing the dash, in the air) and five flat
+ -- slivers of wind kicked back along the ground, fading over 0.26 s.
+ local function kick(at,dir)
+  local list={}
+  for i=1,5 do
+   local back=CFrame.fromAxisAngle(Vector3.yAxis,(i-3)*.32+(math.random()-.5)*.15):VectorToWorldSpace(-dir)
+   list[i]={part=K.part(visuals,'DashWind',Vector3.new(.14,.05,2),i%2==0 and LIME or WHITE,1,Enum.Material.Neon),dir=back,len=1.8+math.random()*1.4}
+  end
+  K.animate(.26,function(t)
+   local e=1-(1-t)^3
+   for _,s in list do
+    local from=at+s.dir*(1+4.5*e)
+    s.part.Size=Vector3.new(.14*(1-t*.5),.05,s.len*(1-.4*t));s.part.CFrame=CFrame.lookAt(from,from+s.dir)
+    s.part.Transparency=.15+.85*K.smooth(t)
+   end
+  end,function() for _,s in list do s.part:Destroy() end end,'dashWind',12)
+ end
+ local function burst(character,root,dir)
+  local p=root.Position
+  local ground=K.groundBelow(p,{character,visuals,workspace:FindFirstChild('RogueliteEnemies')},nil)
+  if ground and p.Y-ground<5.5 then
+   local at=Vector3.new(p.X,ground+.12,p.Z)
+   K.ring(visuals,CFrame.new(at),{radius0=1,radius1=5,width=.6,duration=.3,segments=14,color=WHITE,rim=LIME,bodyAlpha=.3,hold=.02})
+   kick(at,dir)
+  else
+   K.ring(visuals,CFrame.fromMatrix(p-dir*.5,dir:Cross(Vector3.yAxis).Unit,dir),{radius0=.8,radius1=3.6,width=.45,duration=.28,segments=14,color=WHITE,rim=LIME,bodyAlpha=.3,hold=.02})
+  end
+ end
+ -- The end: three thin wind wisps curling open around where the dash lands.
+ local function wisps(at,dir)
+  local yaw=math.atan2(-dir.X,-dir.Z)
+  for i=1,3 do
+   local frame=CFrame.new(at+Vector3.new(0,-.8+i*.55,0))*CFrame.Angles(0,yaw+(i-2)*.7,0)*CFrame.Angles((i-2)*.5,0,(math.random()-.5)*.6)
+   local from=math.pi*(.6+math.random()*.8)
+   K.ring(visuals,frame,{from=from,to=from+2.3,radius0=.5,radius1=1.8+i*.3,width=.16,duration=.4,reveal=.1,segments=7,color=i==2 and LIME or WHITE,bodyAlpha=.2})
+  end
+ end
+
+ -- Dashes being drawn, any player's: character -> {root, start, dir, own, near, joints, ghosts, wisped}.
+ -- Effects only within 180 studs of the camera; the pose always.
+ local active={}
+ local function begin(character,root,dir,own)
+  local old=active[character];if old then unpose(old) end
+  local e={root=root,start=os.clock(),dir=dir,own=own,near=own or K.near(root.Position,180),joints=jointsOf(character),bases={},written={},ghosts=0,wisped=false}
+  active[character]=e
+  if e.near then setTrails(character,true);burst(character,root,dir) end
+ end
+ -- A teammate's approved dash (their sound: RogueliteSounds): the way their body is going, else facing.
  local function watch(p)
   if p==player then return end
   p:GetAttributeChangedSignal('DashAt'):Connect(function()
-   local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart');if root then streak(root) end
+   local character=p.Character;local root=character and character:FindFirstChild('HumanoidRootPart');if not root then return end
+   local v=root.AssemblyLinearVelocity;local dir=Vector3.new(v.X,0,v.Z)
+   if dir.Magnitude<30 then local look=root.CFrame.LookVector;dir=Vector3.new(look.X,0,look.Z) end
+   if dir.Magnitude>.1 then begin(character,root,dir.Unit,false) end
   end)
  end
  for _,p in Players:GetPlayers() do watch(p) end
  Players.PlayerAdded:Connect(watch)
+
+ -- Your own dash only: speed lines streaking in from the screen edge (a 2D flash, 0.24 s; 3 px lines
+ -- the tutorial guide ignores) and an FOV punch of +7 that always returns to UITheme's constant
+ -- through its camera helpers (never set directly), skipped while a camera stage holds the camera
+ -- and with Screen shake off.
+ local lines=Instance.new('ScreenGui');lines.Name='RogueliteDashLines';lines.IgnoreGuiInset=true;lines.ResetOnSpawn=false;lines.DisplayOrder=18;lines.Enabled=false
+ lines.Parent=player:WaitForChild('PlayerGui')
+ local speedLines={}
+ for i=1,14 do
+  local a=(i-.5)/14*math.pi*2+(i%3)*.09
+  speedLines[i]={angle=a,len=90+(i*53)%110,frame=T.make('Frame',lines,{Name='SpeedLine',AnchorPoint=Vector2.new(.5,.5),BorderSizePixel=0,BackgroundColor3=WHITE,BackgroundTransparency=1,Rotation=math.deg(a)})}
+ end
+ local linesAt
+ local function punch()
+  if not T.cameraFov or not T.CAMERA_FOV or player:GetAttribute('Setting_ScreenShake')==false then return end
+  T.cameraFov(T.CAMERA_FOV+7,TweenInfo.new(.07,Enum.EasingStyle.Quad,Enum.EasingDirection.Out))
+  task.delay(.08,function() T.cameraFov(T.CAMERA_FOV,TweenInfo.new(.3,Enum.EasingStyle.Quad,Enum.EasingDirection.InOut)) end)
+  -- If the camera was busy for the way back, put it back once it's free (never left wide).
+  task.delay(.7,function()
+   local c=workspace.CurrentCamera
+   if c and c.FieldOfView>T.CAMERA_FOV+.5 and T.cameraOwner()==nil and c.CameraType==Enum.CameraType.Custom then
+    T.cameraFov(T.CAMERA_FOV,TweenInfo.new(.2))
+   end
+  end)
+ end
+
+ -- This player's dash in progress: a pooled world-plane LinearVelocity on the root, set every frame
+ -- before physics (a velocity set once would lose to the Humanoid's own walking).
+ local drive
+ local cast=RaycastParams.new();cast.FilterType=Enum.RaycastFilterType.Exclude;cast.RespectCanCollide=true
+ pcall(function() cast.CollisionGroup='RoguelitePlayers' end) -- mobs and teammates never stop a dash (MobCollision)
+ -- Hand back the run speed along the dash: a tiny carry, no slide, no dead stop; into a wall, none.
+ local function finish(d,wall)
+  drive=nil;d.push.Enabled=false
+  local root,h=d.root,d.h
+  if not root.Parent or h.Health<=0 then return end
+  local flat=d.dir*h.WalkSpeed
+  if wall and wall.Magnitude>.01 then wall=wall.Unit;flat-=wall*math.min(0,flat:Dot(wall)) end
+  local v=root.AssemblyLinearVelocity;root.AssemblyLinearVelocity=Vector3.new(flat.X,v.Y,flat.Z)
+ end
+ local function stepDrive(dt)
+  local d=drive;if not d then return end
+  local root,h=d.root,d.h
+  if not root.Parent or h.Health<=0 or player.Character~=d.character then drive=nil;d.push.Enabled=false;return end
+  local t=os.clock()-d.start
+  if t>=D.Seconds then finish(d);return end
+  local speed=speedAt(t,math.max(h.WalkSpeed,0))
+  -- A wall ahead (steeper than 50 degrees, within this frame's travel and a body's reach) ends it here.
+  local ok,hit=pcall(workspace.Spherecast,workspace,root.Position,1,d.dir*(speed*math.max(dt,1/60)+1.4),cast)
+  if ok and hit and hit.Normal.Y<.65 then finish(d,Vector3.new(hit.Normal.X,0,hit.Normal.Z));return end
+  if d.air and t<D.Seconds*.55 then
+   -- In the air: level through the burst (no hop, no drop), then gravity takes over again.
+   d.push.VelocityConstraintMode=Enum.VelocityConstraintMode.Vector;d.push.VectorVelocity=d.dir*speed
+  else
+   d.push.VelocityConstraintMode=Enum.VelocityConstraintMode.Plane;d.push.PlaneVelocity=Vector2.new(d.dir.X,d.dir.Z)*speed
+  end
+ end
+ RunService.PreSimulation:Connect(function(dt)
+  stepDrive(dt)
+  local now=os.clock()
+  for character,e in active do
+   local t=now-e.start
+   if not e.root.Parent or t>=.3 then unpose(e);active[character]=nil
+   else pose(e,weight(t)) end
+  end
+ end)
+ RunService.RenderStepped:Connect(function()
+  local now=os.clock()
+  for character,e in active do
+   local t=now-e.start
+   -- A teammate's direction follows their body while it's really dashing.
+   if not e.own then local v=e.root.AssemblyLinearVelocity;local flat=Vector3.new(v.X,0,v.Z);if flat.Magnitude>40 then e.dir=flat.Unit end end
+   if e.near then
+    while e.ghosts<3 and t>=GHOST_AT[e.ghosts+1] do e.ghosts+=1;ghost(character,GHOST_COLOR[e.ghosts]) end
+    if not e.wisped and t>=.2 then e.wisped=true;setTrails(character,false);wisps(e.root.Position,e.dir) end
+   end
+  end
+  for _,g in ghosts do
+   if g.born then
+    local t=(now-g.born)/.26
+    if t>=1 then g.born=nil;for _,p in g.parts do p.Transparency=1 end
+    else local a=.4+.6*K.smooth(t);for _,p in g.parts do if p.Transparency<1 then p.Transparency=a end end end
+   end
+  end
+  if linesAt then
+   local t=(now-linesAt)/.24
+   if t>=1 then linesAt=nil;lines.Enabled=false
+   else
+    local e=1-(1-t)^2
+    for _,s in speedLines do
+     s.frame.Position=UDim2.fromScale(.5+math.cos(s.angle)*(.56-.1*e),.5+math.sin(s.angle)*(.54-.1*e))
+     s.frame.Size=UDim2.fromOffset(s.len*(1-.35*e),3);s.frame.BackgroundTransparency=.15+.85*K.smooth(t)
+    end
+   end
+  end
+ end)
  -- The button shows: a run member mid-wave (or in the sandbox), standing, whose class or starter dashes.
  local function allowed()
   if player:GetAttribute('RunMember')~=true or player:GetAttribute('RunDown') or player:GetAttribute('RunResult')~=nil or player:GetAttribute('LobbyPreviewActive')==true then return false end
@@ -470,28 +705,30 @@ task.spawn(function()
   return h,root
  end
  local function dash()
-  if os.clock()<readyAt or not allowed() then return end
+  if drive or os.clock()<readyAt or not allowed() then return end
   local h,root=body();if not root then return end
+  local character=root.Parent
   local attachment=root:FindFirstChild('RootAttachment') or root:FindFirstChildWhichIsA('Attachment');if not attachment then return end
+  -- The way you're moving, else where the camera looks (third person and shift-lock alike).
   local move=h.MoveDirection;local dir=Vector3.new(move.X,0,move.Z)
+  local camera=workspace.CurrentCamera
+  if dir.Magnitude<.1 and camera then local look=camera.CFrame.LookVector;dir=Vector3.new(look.X,0,look.Z) end
   if dir.Magnitude<.1 then local look=root.CFrame.LookVector;dir=Vector3.new(look.X,0,look.Z) end
   if dir.Magnitude<.1 then return end
   dir=dir.Unit;readyAt=os.clock()+D.Cooldown
-  -- A world-plane LinearVelocity drives the burst (a velocity set once would lose to the Humanoid's
-  -- own walking); up and down stay free, so gravity and jumps carry on.
-  local push=Instance.new('LinearVelocity');push.Name='RogueliteDash';push.Attachment0=attachment
-  push.RelativeTo=Enum.ActuatorRelativeTo.World;push.VelocityConstraintMode=Enum.VelocityConstraintMode.Plane
-  push.PrimaryTangentAxis=Vector3.xAxis;push.SecondaryTangentAxis=Vector3.zAxis
-  push.PlaneVelocity=Vector2.new(dir.X,dir.Z)*(D.Distance/D.Seconds);push.MaxForce=math.huge;push.Parent=root
-  streak(root);T.sound('dash')
+  local push=root:FindFirstChild('RogueliteDash')
+  if not push then
+   push=Instance.new('LinearVelocity');push.Name='RogueliteDash';push.Attachment0=attachment;push.Enabled=false
+   push.RelativeTo=Enum.ActuatorRelativeTo.World;push.PrimaryTangentAxis=Vector3.xAxis;push.SecondaryTangentAxis=Vector3.zAxis
+   push.MaxForce=math.huge;push.Parent=root
+  end
+  cast.FilterDescendantsInstances={character,visuals,workspace:FindFirstChild('RogueliteEnemies')}
+  drive={character=character,root=root,h=h,push=push,dir=dir,start=os.clock(),air=h.FloorMaterial==Enum.Material.Air}
+  stepDrive(0)
+  if drive then push.Enabled=true end
+  begin(character,root,dir,true)
+  T.sound('dash');punch();linesAt=os.clock();lines.Enabled=true
   runAction:FireServer('Dash')
-  task.delay(D.Seconds,function()
-   push:Destroy()
-   -- Hand back running speed, not 111 studs/s, so the burst stops where it should (no slide).
-   if root.Parent and h.Health>0 then
-    local v=root.AssemblyLinearVelocity;root.AssemblyLinearVelocity=Vector3.new(dir.X*h.WalkSpeed,v.Y,dir.Z*h.WalkSpeed)
-   end
-  end)
  end
  Input.InputBegan:Connect(function(input,processed)
   if processed or Input:GetFocusedTextBox() then return end

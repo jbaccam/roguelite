@@ -5,11 +5,13 @@ local Motion=require(script.Parent.WeaponMotion)
 -- "i need more of a speed boost when im in the air" -> 1.6, then "just a little too fast"; was
 -- 1.12, then 1.3): a Brawler runs 22 and flies 31.9. MovementGuard scales its limit by this number.
 S.Movement={Gravity=150,JumpHeight=9.5,AirSpeedMultiplier=1.45}
--- Dash (2026-10-03, play-test: "dash for melee based characters", so melee builds can close in):
--- Distance studs in Seconds (20 in 0.18 s = 111 studs/s), on the ground or in the air, once every
--- Cooldown s. No damage, no invulnerability. Allowance: the extra studs MovementGuard lets an
--- approved dash cover (its 20, plus slack for the running speed it hands back to).
-S.Dash={Distance=20,Seconds=.18,Cooldown=3,Allowance=26}
+-- Dash (2026-10-03, play-test: "dash for melee based characters", so melee builds can close in;
+-- 2026-10-04 "like a Jett dash ... an actual dash, not a speed boost"): a burst, Peak studs/s at
+-- once, easing out ((1-u)^Ease, an ease-out quart in distance) to the run speed by Seconds, on the
+-- ground or in the air, once every Cooldown s. At a run of 24: 0.3 x (24 + (280-24)/4) = 26.4 studs,
+-- 21 of them in the first 0.14 s. Distance: the most it covers (an air run of 32: 28.2). No damage,
+-- no invulnerability. Allowance: the extra studs MovementGuard lets an approved dash cover.
+S.Dash={Peak=280,Ease=3,Seconds=.3,Cooldown=3,Distance=28,Allowance=30}
 -- Who can dash: Brawlers (the hand-to-hand class), and any class whose starting weapon is melee,
 -- e.g. a Mage who starts with Excalibur. weapon: the starter's WeaponCatalog entry (nil = none).
 function S.dashes(class,weapon) return class=='Brawler' or (type(weapon)=='table' and weapon.kind=='Melee') end
