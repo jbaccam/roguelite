@@ -2,7 +2,12 @@
 
 Added 2026-10-03. User: "make Handyman able to build a turret … that can be upgraded, and implement it into the game so it's balanced."
 
-**Status: repo only.** Nothing has been synced to Studio, and no Studio test or Play test has run. The turret models are made (`roguelite-planning/blender-handyman-turret`) but not imported. Until they are installed the whole feature stays off: no turrets, no BUILD button, no shop upgrade, and one warning in the server output.
+**Status (2026-10-04): installed in Studio, not play-tested with the models yet.**
+- Scripts synced 2026-10-03. `TurretTests` passed in Edit (114 checks). In Play, admin Give refused cleanly ("models are not installed") before the import.
+- The four FBX files went through Import 3D (Import Queue, Studio Default, creator EggaRowls = the game owner). The importer read the FBX's centimetres as studs, so every part came in exactly 100× (T1 base 205 studs instead of 2.05). Each model was scaled by exactly 0.01 about its pivot; that is a unit fix, not a re-scale of the art.
+- `InstallHandymanTurret` then reported all four tiers `ok`: scale fix 1.000, turn (0,0,0), fit error 0, muzzles 1/2/4/6. Templates: `ReplicatedStorage.RogueliteCombat.HandymanTurrets.T1-T4`. The colour maps came in as TextureIDs.
+- Icons uploaded: `H.Icons` holds `previews/icon_T1-4.png`.
+- Turrets turn on at the next server start (Play).
 
 ## How it plays
 

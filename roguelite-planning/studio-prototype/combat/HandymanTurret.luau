@@ -102,7 +102,7 @@ end
 function H.yaw(direction) return math.atan2(-direction.X,-direction.Z) end
 -- BUILD button and shop art per tier: the uploaded blender-handyman-turret/previews/icon_T<n>.png
 -- (512 px). Empty until they're uploaded in Studio; the button shows a live view of the model then.
-H.Icons={'','','',''}
+H.Icons={'rbxassetid://100505469530773','rbxassetid://110375220181503','rbxassetid://112292832566551','rbxassetid://78790900806318'} -- previews/icon_T1-4.png, uploaded 2026-10-04
 -- The installed turret models, or nil until all four are there (RogueliteCombat.HandymanTurrets
 -- T1-T4, each a Model with Base, Head and Barrel parts: InstallHandymanTurret.luau).
 function H.templates(combat)
