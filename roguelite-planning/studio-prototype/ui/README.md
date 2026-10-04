@@ -8,6 +8,7 @@
 - **Skill tree centred (`SkillTreeUI`):** the board, title and info card were centred in the space right of the bonus column, 180 px right of centre at 1920x1080. They're now centred on the screen, with the board band mirroring the column's edge (at least 720 px wide on small phones).
 - **Class box lists weapon damage (`RunSetupUI`):** the legend sentence is replaced by "WEAPON DAMAGE AS A GUNNER" plus one chip per class: icon, name and percent, best first, coloured like the badges. "Godly: no change" is on the heading line. Desktop is 3 x 2; phones are 2 across.
 - **Free claims and buys get effects:** the Store's DAILY free emeralds, the VIP chest and the deals play the CLAIM effect, flying into the Store's own emerald pill (`StoreUI` → `QuestsUI.claimFX` with a target). In the run shop (`ShopUI`, sandboxed, so it has its own compact copy), a confirmed buy throws 3–5 copies of the bought thing's icon, a Glock or a Spatula, which swoop into the slot it landed in. The card punches and fades over a glow, and the slot bumps (~0.8 s).
+- **Studio:** 6c7f421 (the map fix) and then 6e0d885 (7 scripts) synced 2026-10-03 with guarded execute_luau calls. Each script was written only if Studio held its exact previous commit; afterwards all matched.
 - **Not run:** no Play test (the user tests).
 
 # Tutorial pacing, one-crystal crystals, LEAVE off the pad — October 3, 2026
