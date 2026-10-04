@@ -293,6 +293,14 @@ All work happens in `roguelite-planning/studio-prototype/`. Tests go in `combat/
 - [ ] Grep check: `grep -rn "IsHammerBoss\|BossMotion\|'HammerBoss'" studio-prototype --include=*.luau` finds only comments and history, none in live code paths.
 - [ ] Commit through `plan_hammer_brute_hunks.py --stage` for the shared files, plus `git add` for whole files this plan owns.
 
+### Studio record (2026-10-03)
+
+- **Runtime pushed at ad37f52** (R1-R7 and both review rounds), in one guarded write. Record: `studio-prototype/combat/bosses/hammer-brute-runtime-sync-2026-10-03.json`.
+  - Whole files written as HEAD: MapBossShapes, MapBossDefs, BossVfxAssets, BossVfx/Common, BossEncounter, MapBossService and MapBossPresentation. BossVfx/Hammer was created, unsandboxed like the other BossVfx modules.
+  - Our hunks went onto Studio's own text: RogueliteZombieChase, RogueliteCombat, HandymanTurretService, PetService, TutorialGuide and BossIntro.
+- **The Hammer is still the old one in Studio** (`MapBossDefs.legacy('Hammer') == true`). Studio has no hammer-brute timing, BossAnimations or `Hammer_NPC` yet. The four other bosses are ready.
+- **Checked in Edit:** the three boss suites against Studio's own module sources (47, 26 and 16 PASS, 0 FAIL). No Play test has run.
+
 ### Task R8: Studio sync package (prepared, not run)
 
 **Files:** extend `combat/bosses/SyncMapBossRuntime.luau` for Hammer. Add `combat/bosses/HAMMER_BRUTE_INSTALL.md` with the exact order:

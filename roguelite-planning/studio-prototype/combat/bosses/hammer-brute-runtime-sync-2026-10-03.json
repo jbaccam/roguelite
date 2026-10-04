@@ -1,0 +1,32 @@
+{
+ "what": "Hammer Brute rebuild R1-R7 runtime pushed to Studio (place 107877054949326, Edit) in one guarded execute_luau write. The Hammer stays on the old BossService path: Studio has no hammer-brute timing, BossAnimations or Hammer_NPC yet (MapBossDefs.legacy('Hammer') == true).",
+ "date": "2026-10-03",
+ "head": "ad37f52",
+ "method": "Read-only dump of every LuaSourceContainer with a target name (24 found, no duplicates); each Studio text matched exactly to a commit; whole files written as committed HEAD; shared scripts = Studio's current text + plan_hammer_brute_hunks.py HUNKS (every result equals HEAD, so no other session's unsynced commit went in). Guard: every target equal to its dumped base and every new text compiling before any write; ScriptEditorService:UpdateSourceAsync (Source fallback) with rollback; every script re-read equal.",
+ "written": [
+  {"studio": "ReplicatedStorage.RogueliteCombat.MapBossShapes", "base": "27f1490", "to": "HEAD ad37f52"},
+  {"studio": "ReplicatedStorage.RogueliteCombat.MapBossDefs", "base": "f82021b", "to": "HEAD ad37f52"},
+  {"studio": "ReplicatedStorage.RogueliteCombat.BossVfxAssets", "base": "2570b93", "to": "HEAD ad37f52"},
+  {"studio": "ReplicatedStorage.RogueliteCombat.BossVfx.Common", "base": "1369910", "to": "HEAD ad37f52"},
+  {"studio": "ServerScriptService.BossEncounter", "base": "48f933f", "to": "HEAD ad37f52"},
+  {"studio": "ServerScriptService.MapBossService", "base": "8674bd9", "to": "HEAD ad37f52"},
+  {"studio": "StarterPlayer.StarterPlayerScripts.MapBossPresentation", "base": "1039ad9", "to": "HEAD ad37f52"},
+  {"studio": "ServerScriptService.RogueliteZombieChase", "base": "f28ca7b", "hunks": 6},
+  {"studio": "ServerScriptService.RogueliteCombat", "base": "d8a0e03", "hunks": 4},
+  {"studio": "ServerScriptService.HandymanTurretService", "base": "d8a0e03", "hunks": 1},
+  {"studio": "ServerScriptService.PetService", "base": "ac17bde", "hunks": 1},
+  {"studio": "StarterPlayer.StarterPlayerScripts.TutorialGuide", "base": "b22ff42", "hunks": 2},
+  {"studio": "StarterPlayer.StarterPlayerScripts.BossIntro", "base": "c9e5cde", "hunks": 3}
+ ],
+ "created": [
+  {"studio": "ReplicatedStorage.RogueliteCombat.BossVfx.Hammer", "from": "HEAD ad37f52", "sandboxed": false, "like": "BossVfx.Common"}
+ ],
+ "unchanged": ["MapBossTiming (= HEAD)", "BossVfx.KingCrab, Pharaoh, FrostCyclops, Dragon (= HEAD)", "BossService (= HEAD 8674bd9)", "BossMotion, BossPresentation (legacy, untouched)", "BossAnimations (untouched)"],
+ "skipped": ["ServerStorage.RogueliteTests.MapBossServiceTests (f82021b) and MapBossShapesTests (5c9dd5a): test modules, not runtime; the suites run from the repo", "EarthCracks texture: no upload until the final install"],
+ "verified": {
+  "Studio modules' own Source, fresh (no cache, no instances), repo test suites": {"MapBossServiceTests": "47 PASS, 0 FAIL", "MapBossShapesTests": "26 PASS, 0 FAIL", "MapBossPresentationTests": "16 PASS, 0 FAIL"},
+  "MapBossDefs": "Hammer ready=false legacy=true; KingCrab, Pharaoh, FrostCyclops, Dragon ready=true legacy=false",
+  "compile": "all 14 written or created scripts compile from their Studio Source; sandbox flags unchanged (RogueliteCombat, HandymanTurretService, PetService sandboxed)"
+ },
+ "notRun": "No Play test. The place must be saved in Studio to keep this sync."
+}
