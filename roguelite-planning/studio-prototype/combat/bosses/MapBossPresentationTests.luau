@@ -77,6 +77,7 @@ local function chargeAttack(length)
 end
 -- What the client receives: the server's data through JSON.
 local function wire(t) return Http:JSONDecode(Http:JSONEncode(t)) end
+local function wire2(shape) return S.decode(wire(S.encode(shape))) end -- a shape as clients get it
 
 check('charge: re-timed at 20, 36.5 and 75 studs, the window, duration and finish times match the server (X.window, X.laneTiming)',function()
  for _,len in {20,36.5,75} do
@@ -196,6 +197,39 @@ check('merged: the phase on top, phases and finish dropped, the def itself untou
  return m.shape=='circle' and m.damage==26 and m.radius==9.5 and m.finish==nil and m.clips==charge.clips and charge.shape=='lane' and charge.finish~=nil
 end)
 
+-- Tracking (2026-10-04): the intro on an attack's clip, the aimed frame, the homing run.
+check('pseudo: the intro clip is the intro before BossIntroUntil even when an attack uses it (the Hammer lands on his Slam), the attack after',function()
+ local def={intro={drop=1.2,fall=.65,after=3.6,clip='Slam'},attacks={Slam={clip='Slam',shape='circle'}}}
+ return P.pseudo(def,'Slam',true).pseudo=='intro' and P.pseudo(def,'Slam',false)==nil and P.pseudo(def,'Slam')==nil and P.pseudo(def,'Swing',true)==nil
+end)
+check('aim: turning the commit frame\'s warning shapes by the BossFrame turn is the server rebuilding them in the turned frame',function()
+ local units=X.phases(swingSpin,HT.attacks.SwingSpin);local cf0=CFrame.lookAt(Vector3.new(3,4,-2),Vector3.new(3,4,-3))
+ local turn=-.7;local cf1=CFrame.new(cf0.Position)*CFrame.Angles(0,turn,0)*cf0.Rotation
+ local f0,f1=X.frame(cf0,HT,0),X.frame(cf1,HT,0)
+ local client=S.rotated(wire2(X.shapeOf(units[2].def,units[2].at,f0)),cf0.Position,S.wrap(S.yawOf(cf1)-S.yawOf(cf0)))
+ local server=X.shapeOf(units[2].def,units[2].at,f1)
+ local slam={point='HammerFace',radius=9.5,shape='circle'}
+ local c=S.rotated(X.circle(slam,HT.attacks.ChargeSlam,f0),cf0.Position,turn)
+ return (client.pivot-server.pivot).Magnitude<1e-4 and (client.forward-server.forward).Magnitude<1e-4 and math.abs(client.outer-server.outer)<1e-4 and client.from==server.from
+  and (c.center-X.circle(slam,HT.attacks.ChargeSlam,f1).center).Magnitude<1e-6
+end)
+check('homing: the client\'s lane from the last heading sent is the server\'s (body, heading, end), and the finish circle turned to that end is the server\'s',function()
+ local homing=with(charge,{home=math.rad(40)})
+ local function attack(len) return {def=homing,cf=laneCf,frame=X.frame(laneCf,HT,0),ground=0,dir=laneDir,length=len,data={},finish={def=X.merged(homing,homing.finish),hits={},ticks={},fired=false}} end
+ local commit=attack(40);commit.pos,commit.travelled=laneCf.Position,0;X.laneTiming(HT,commit);local d0=wire(commit.data)
+ local A=attack(40);A.pos,A.travelled=laneCf.Position,0
+ for k=1,30 do X.homeStep(A,homing,Vector3.new(12,3,-25),1/60,k/60*32) end
+ X.laneTiming(HT,A);local lane,fin=S.decode(A.data.shape),S.decode(A.data.finish.shape)
+ -- The server has just sent BossChargeHead / BossChargeHeadAt for this heading.
+ local g=Vector3.new(A.pos.X,0,A.pos.Z);local start=Vector3.new(laneCf.X,0,laneCf.Z)
+ local body,dir,stop=P.homeRun(start,laneDir,CFrame.lookAt(g,g+A.dir),A.travelled,40,A.travelled)
+ local e0=start+laneDir*d0.length;local loc=CFrame.lookAt(e0,e0+laneDir):PointToObjectSpace(S.decode(d0.finish.shape).center)
+ local center=CFrame.lookAt(stop,stop+dir):PointToWorldSpace(loc)
+ local nothing=P.homeRun(start,laneDir,nil,nil,40,10)
+ -- Vector3 is 32-bit: within 1e-3 studs.
+ return (body-g).Magnitude<1e-3 and (dir-A.dir).Magnitude<1e-3 and ((body-dir*homing.width/2)-lane.origin).Magnitude<1e-3
+  and math.abs((stop-body).Magnitude+homing.width-lane.length)<1e-3 and (center-fin.center).Magnitude<1e-3 and (nothing-(start+laneDir*10)).Magnitude<1e-6
+end)
 local passed=0;for _,line in r do if line:sub(1,4)=='PASS' then passed+=1 end end
 table.insert(r,('%d PASS, %d FAIL'):format(passed,#r-passed))
 return table.concat(r,'\n')

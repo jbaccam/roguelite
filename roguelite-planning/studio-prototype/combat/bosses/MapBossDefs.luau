@@ -25,6 +25,9 @@
 --   intro {drop,fall,after,clip} and introName: a wave boss's sky-drop entrance. tutorial
 --     {order,enrage,follow}: the TutorialBossHealth boss's attack order, and false turns enrage or
 --     follow-ups off.
+--   aim {rate,lock} (boss or attack): a circle, sweep, wave or combo turns its frame toward its target
+--     at up to `rate` rad/s, holding still from `lock` s before each hit. home (a forward lane): the
+--     run's heading turns toward the target at up to `home` rad/s (2026-10-04).
 -- D.ready(id) (server): true only when this place can run the boss on this runtime (def, timing,
 --   client clips, template, MapBossService and MapBossShapes all present). D.legacy(id): true for the
 --   'Hammer' until then, and every 'Hammer' spawn (BossEncounter, RogueliteZombieChase) asks it and
@@ -46,35 +49,39 @@ local D={}
 D.Order={'Hammer','KingCrab','Pharaoh','FrostCyclops','Dragon'}
 D.ENRAGE_AT=.5
 D.FIRST_ATTACK=1.2 -- seconds after spawn before the first attack
--- Pine Valley's wave-20 boss (and the tutorial's, at TutorialBossHealth), rebuilt on this runtime
+-- Pine Valley's wave-20 boss (and the tutorial's, at TutorialBossHealth), on this runtime
 -- (plans/2026-10-03-hammer-brute-rebuild-design.md section 4). He chases at 20 (23 enraged), under the
 -- players' 24. Charge starts at 22 studs, so the order walk picks it only when nobody is in melee
--- reach, and never within 5 s of the last one (lockout). Every slam (Slam, SpinSlam's second hit, the
--- ChargeSlam) opens CRACKS under up to 3 players it missed, 0.85 s later. The eyes glow white
+-- reach, and never within 5 s of the last one (lockout). Every slam (Slam, SpinSlam's last hit, the
+-- Charge's closing Slam) opens CRACKS under up to 3 players it missed, 0.85 s later. The eyes glow white
 -- (glowColor, the installer's Neon HammerBrute_EyeGlow plates) until the enrage turns them red
 -- (BossVfx/Hammer).
 -- He keeps the original 16-part Motor6D model (R9, 2026-10-04): Hammer_NPC is a copy of HammerBoss_NPC,
 -- authored at 1.0, and scale 1.15 is that model's in-game size (the old BossMotion.SCALE): 11.92
 -- studs authored, 13.7 in game. The clips are Motor6D.Transforms (partposes_to_motor6d.py).
+-- Chaining and tracking (user, 2026-10-04: "chaining attacks and better player tracking is all i
+-- need"): the clips are Slam, Swing, Spin (two revolutions: two sweep phases), SwingSpin (a swing and
+-- two spins), SpinSlam (two spins and a slam) and the Charge, which ends in the regular Slam. The intro
+-- lands on the Slam clip; no roar, so the enrage shows on BossEnraged like the other bosses.
+--   aim: every hit's frame turns toward its target at up to 150 deg/s until 0.3 s before that hit
+--     (MapBossService X.aimOpen; a combo re-aims in each phase's wind-up).
+--   home (the Charge): the run's heading turns toward the target at up to 40 deg/s.
 local CRACKS={radius=5.5,delay=.85,maxTargets=3,range=40,damage=16}
+local function sweep(damage) return {shape='sweep',damage=damage,point='HammerFace',mid='HammerGrip',radius=3.2,baseRadius=4} end
+local SLAM={shape='circle',damage=26,point='HammerFace',radius=9.5,height=6,knockdown=.6,follow=CRACKS}
 D.Hammer={anim='hammer-brute',name='Hammer Brute',introName='HAMMER ZOMBIE BOSS',health=18000,scale=1.15,chaseSpeed=20,glowColor=Color3.fromRGB(255,255,255),
- intro={drop=1.2,fall=.65,after=3.6,clip='IntroLand'},roar='Roar',
- enrage={cooldown=.6,chase=3,follow=2,order={'SwingSpin','Slam','Charge','SpinSlam','Swing','SpinSlam','Spin'}},
+ intro={drop=1.2,fall=.65,after=3.6,clip='Slam'},roar=nil,aim={rate=math.rad(150),lock=.3},
+ enrage={cooldown=.6,chase=3,follow=2,order={'SwingSpin','SpinSlam','Slam','SwingSpin','Charge','SpinSlam','Spin'}},
  tutorial={order={'Slam','Swing','Charge','Slam','Spin'},enrage=false,follow=false},
  attacks={
   Slam={clip='Slam',range={0,16},cooldown=.8,damage=26,shape='circle',point='HammerFace',radius=9.5,height=6,knockdown=.6,follow=CRACKS},
   Swing={clip='Swing',range={0,14},cooldown=.8,damage=20,shape='sweep',point='HammerFace',mid='HammerGrip',radius=3.2,baseRadius=4},
-  Spin={clip='Spin',range={0,14},cooldown=1,damage=22,shape='sweep',point='HammerFace',mid='HammerGrip',radius=3.2,baseRadius=4},
-  SwingSpin={clip='SwingSpin',range={0,14},cooldown=1,phases={
-   {shape='sweep',damage=20,point='HammerFace',mid='HammerGrip',radius=3.2,baseRadius=4},
-   {shape='sweep',damage=22,point='HammerFace',mid='HammerGrip',radius=3.2,baseRadius=4}}},
-  SpinSlam={clip='SpinSlam',range={0,14},cooldown=1.1,phases={
-   {shape='sweep',damage=22,point='HammerFace',mid='HammerGrip',radius=3.2,baseRadius=4},
-   {shape='circle',damage=26,point='HammerFace',radius=9.5,height=6,knockdown=.6,follow=CRACKS}}},
-  Charge={clips={'ChargeStart','ChargeRun','ChargeSlam'},facing='forward',range={22,70},lockout=5,cooldown=1,damage=24,
-   shape='lane',length=75,width=9,speed=32,contact=4,knockdown=.6,
-   finish={shape='circle',damage=26,point='HammerFace',radius=9.5,height=6,knockdown=.6,follow=CRACKS}},
- },order={'Slam','Swing','Charge','Slam','Spin','SwingSpin'}}
+  Spin={clip='Spin',range={0,14},cooldown=1,phases={sweep(22),sweep(22)}},
+  SwingSpin={clip='SwingSpin',range={0,14},cooldown=1,phases={sweep(20),sweep(22),sweep(22)}},
+  SpinSlam={clip='SpinSlam',range={0,14},cooldown=1.1,phases={sweep(22),sweep(22),SLAM}},
+  Charge={clips={'ChargeStart','ChargeRun','Slam'},facing='forward',home=math.rad(40),range={22,70},lockout=5,cooldown=1,damage=24,
+   shape='lane',length=75,width=9,speed=32,contact=4,knockdown=.6,finish=SLAM},
+ },order={'Slam','Swing','Charge','Spin','SwingSpin','Slam','SpinSlam'}}
 D.KingCrab={anim='king-crab',name='Giant King Crab',health=21000,scale=1.4,chaseSpeed=22,glowColor=nil,deathSeconds=nil,
  enrage={cooldown=.6,chase=3,extra=4,follow=2},
  attacks={
@@ -118,7 +125,7 @@ D.Dragon={anim='dragon',name='Inferno Dragon',health=31500,scale=1.25,chaseSpeed
    follow={radius=6.5,delay=.85,maxTargets=4,range=56,damage=26}},
  },order={'FireBreath','Fireball','FrontStomp','TailWhip','Fireball','FireBreath','TailWhip','FrontStomp'}}
 D.ATTACK_CLIPS={['king-crab']={'ClawCrush','RushStart','RushLoop','RushEnd','BubbleBarrage'},['frost-cyclops']={'GroundSlam','Stomp'},['pharaoh']={'CursedBolts','TombEruption'},['dragon']={'FireBreath','TailWhip','FrontStomp'},
- ['hammer-brute']={'Slam','Swing','Spin','SwingSpin','SpinSlam','ChargeStart','ChargeRun','ChargeSlam','IntroLand','Roar'}}
+ ['hammer-brute']={'Slam','Swing','Spin','SwingSpin','SpinSlam','ChargeStart','ChargeRun'}}
 function D.get(id) return D[id] and type(D[id])=='table' and D[id].anim and D[id] or nil end
 function D.isBoss(id) return D.get(id)~=nil end
 -- The generated timing as authored (the template installer builds the unscaled template from it).

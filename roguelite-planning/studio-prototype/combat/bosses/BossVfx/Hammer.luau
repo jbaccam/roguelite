@@ -69,10 +69,12 @@ local function slam(ctx,g,r,big)
  dust(g+up*.5,up,16,{10,16},r*.7,80)
  dirt(g+up*.3,up,28,{14,24},55,1.3*s)
 end
--- Where a circle lands: the server's shape, else the sampled head on the ground.
+-- Where a circle lands: the server's shape, read as it lands (an aimed attack has turned since it was
+-- published; C.shape and C.phaseShape turn it to the frame now), else the sampled head on the ground.
 local function slamAt(ctx,u,big)
- local c=u.shape and u.shape.kind=='circle' and u.shape.center or groundAt(ctx,ctx.points(u.point or POINT,u.impact))
- slam(ctx,c,(u.shape and u.shape.radius) or u.radius or 9.5,big)
+ local shape=ctx.phases and C.phaseShape(ctx,u.key) or not ctx.phases and C.shape(ctx) or nil
+ local c=shape and shape.kind=='circle' and shape.center or groundAt(ctx,ctx.points(u.point or POINT,u.impact))
+ slam(ctx,c,(shape and shape.radius) or u.radius or 9.5,big)
 end
 
 -- Sweeps ----------------------------------------------------------------------------------
@@ -117,12 +119,12 @@ local function units(ctx)
  if ctx.phases then
   local prev=0
   for i,ph in ctx.phases do
-   table.insert(list,{key=i,kind=ph.def.shape,from=prev,impact=ph.impact,to=ph.activeEnd,shape=ph.shape or C.phaseShape(ctx,i),radius=ph.def.radius,point=ph.def.point})
+   table.insert(list,{key=i,kind=ph.def.shape,from=prev,impact=ph.impact,to=ph.activeEnd,radius=ph.def.radius,point=ph.def.point})
    prev=ph.activeEnd
   end
  else
   local at=ctx.attack
-  list[1]={key=1,kind=ctx.def.shape,from=at.warnStart or 0,impact=at.impact,to=at.activeEnd,shape=C.shape(ctx),radius=ctx.def.radius,point=ctx.def.point}
+  list[1]={key=1,kind=ctx.def.shape,from=at.warnStart or 0,impact=at.impact,to=at.activeEnd,radius=ctx.def.radius,point=ctx.def.point}
  end
  return list
 end
@@ -160,35 +162,44 @@ local function skid(ctx,pos,dir)
 end
 -- From the launch to the finish slam. The run ends only at the server's stop (the presentation's
 -- ctx.charge.stopAge, from data.stoppedAt; nil while he runs), so footfalls carry on until then and
--- the skid lands at the confirmed final length (ctx.charge.length). Footfalls follow the replicated
--- body, which is where the player sees him.
+-- the skid lands where the run ends (a homing run's ctx.charge.endPos, else the final length down the
+-- lane). Footfalls follow the replicated body, which is where the player sees him: the ground it has
+-- covered (a homing run curves), on his current heading.
 local function charge(ctx)
  if ctx.hammerCharge or not ctx.charge then return end;ctx.hammerCharge=true
- local ch,def=ctx.charge,ctx.def;local s=ctx.scale or 1;local dir=ch.dir
+ local ch,def=ctx.charge,ctx.def;local s=ctx.scale or 1
  local start=groundAt(ctx,ctx.cf.Position)
  local stride=ctx.timing.chargeStrideLength or def.speed*.53;local half=math.max(1,stride/2)
+ local root0=ctx.npc.PrimaryPart;local last=root0 and root0.Position;local covered=0
  local function travelled(age)
   local root=ctx.npc.PrimaryPart
-  if root then return math.clamp(C.flat(root.Position-start):Dot(dir),0,def.length or 75) end
+  if root then
+   local step=last and C.flat(root.Position-last).Magnitude or 0;last=root.Position
+   if step<20 then covered+=step end -- a streamed-in jump is not ground covered
+   return covered
+  end
   return math.clamp((age-ctx.attack.impact)*def.speed,0,ch.stopAge and ch.length or def.length or 75)
  end
- local nextStep,side,stopped,slammed=math.max(half*.5,travelled(C.age(ctx))),1,false,false
+ local nextStep,side,stopped,slammed=half*.5,1,false,false
  local snd,sh=C.cue('stone_rumble',start,.45,1.15,true)
  local slamFinish=(ctx.timing.clips and ctx.timing.clips[def.clips[3]] or 1.5)/(def.rate or 1)
  local maxAge=ctx.attack.impact+(def.length or 75)/def.speed+.75+slamFinish+.5 -- .75: the client's hold for the stop
  C.follow(ctx,maxAge,function(age)
-  local travel=travelled(age)
+  local travel=travelled(age);local dir=ch.heading or ch.dir
   local root=ctx.npc.PrimaryPart;local floorY=root and root.Position.Y-ctx.timing.rootHeight or ctx.groundY
-  local base=Vector3.new(start.X,floorY,start.Z);local pos=base+dir*travel
+  local pos=root and Vector3.new(root.Position.X,floorY,root.Position.Z) or Vector3.new(start.X,floorY,start.Z)+ch.dir*travel
   if sh then sh.CFrame=CFrame.new(pos+up*2) end
   if not stopped then
    -- A footfall every half stride, alternating feet: dust kicked back and a small thump.
    while travel>=nextStep do
-    local f=base+dir*nextStep+dir:Cross(up)*side*1.6*s
+    local f=pos+dir:Cross(up)*side*1.6*s
     if C.near(f) then dust(f+up*.3,-dir+up*.6,3,{5,9},3.5*s,40) end
     C.shake(f,.3,.12);C.cue('hammer_thud',f,.3,.55);side=-side;nextStep+=half
    end
-   if ch.stopAge and age>=ch.stopAge then stopped=true;C.stopSound(snd,sh,.15);skid(ctx,base+dir*ch.length,dir) end
+   if ch.stopAge and age>=ch.stopAge then
+    stopped=true;C.stopSound(snd,sh,.15)
+    local e=ch.endPos or start+ch.dir*ch.length;skid(ctx,Vector3.new(e.X,floorY,e.Z),dir)
+   end
   end
   if stopped and not ch.finishImpact then return true end
   if ch.finishImpact and not slammed and age>=ch.finishImpact-.22 and not ctx.hammerWhoosh then ctx.hammerWhoosh=true;C.cue('hammer_whoosh',pos,.7,.62) end

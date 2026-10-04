@@ -52,15 +52,21 @@ function C.live(ctx)
  if not npc.Parent or npc:GetAttribute('BossDeathStart') or npc:GetAttribute('BossSerial')~=ctx.serial or npc:GetAttribute('BossStart')~=ctx.start then return false end
  local h=npc:FindFirstChildOfClass('Humanoid');return not h or h.Health>0
 end
+-- An aimed attack (data.yaw: MapBossService def.aim) turns after its shapes were published: they are
+-- turned to the frame the boss has now (ctx.cf, from BossFrame). Others come back as published.
+local function aimed(ctx,s)
+ local y=ctx.data and ctx.data.yaw;if type(y)~='number' then return s end
+ return Shapes.rotated(s,ctx.cf.Position,Shapes.wrap(Shapes.yawOf(ctx.cf)-y))
+end
 -- The server's warning/hit shape for this attack (MapBossAttackData.shape), decoded to Vector3s.
 -- A combo's data.shape is its first phase only: use C.phaseShape.
-function C.shape(ctx) local s=ctx.data and ctx.data.shape;return type(s)=='table' and Shapes.decode(s) or nil end
+function C.shape(ctx) local s=ctx.data and ctx.data.shape;return type(s)=='table' and aimed(ctx,Shapes.decode(s)) or nil end
 -- A combo's phase i shape (MapBossAttackData.phases[i].shape: its warning, and a sweep's hit arc),
 -- decoded; nil without one. ctx.phases[i] (MapBossPresentation) has the phase's merged def and its
 -- warnStart / impact / activeEnd on the attack clock.
 function C.phaseShape(ctx,i)
  local list=ctx.data and ctx.data.phases;local p=type(list)=='table' and list[i]
- local s=type(p)=='table' and p.shape;return type(s)=='table' and Shapes.decode(s) or nil
+ local s=type(p)=='table' and p.shape;return type(s)=='table' and aimed(ctx,Shapes.decode(s)) or nil
 end
 -- A forward charge's finish slam: its circle where the run now ends (it moves with
 -- BossChargeLength) and its impact on the attack clock, which is nil until the server's stop is

@@ -50,12 +50,59 @@ function X.wave(def,at,f,yaw)
  if yaw and yaw~=0 then dir=CFrame.Angles(0,yaw,0):VectorToWorldSpace(dir) end
  return {kind='line',origin=X.onGround(f,X.point(f,at,def.point,at.impact)),direction=dir,length=def.length,width=def.width}
 end
--- Turns cf's facing toward goal by at most maxTurn radians about +Y (the breath's tracking).
+-- The yaw that turns cf's facing toward goal, at most maxTurn radians either way (0 when goal is on
+-- top of it).
+function X.turnAngle(cf,goal,maxTurn)
+ local d=flat(goal-cf.Position);if d.Magnitude<.1 then return 0 end
+ return math.clamp(Shapes.yaw(cf.LookVector,d),-maxTurn,maxTurn)
+end
+-- Turns cf's facing toward goal by at most maxTurn radians about +Y (the breath's tracking, aim).
 function X.turnToward(cf,goal,maxTurn)
  local d=flat(goal-cf.Position);if d.Magnitude<.1 then return cf end
- local a=math.clamp(Shapes.yaw(cf.LookVector,d),-maxTurn,maxTurn)
- return CFrame.new(cf.Position)*CFrame.Angles(0,a,0)*cf.Rotation
+ return CFrame.new(cf.Position)*CFrame.Angles(0,X.turnAngle(cf,goal,maxTurn),0)*cf.Rotation
 end
+-- Aim (def.aim={rate,lock}, the Hammer; the boss def's, or an attack's own): the attack frame keeps
+-- turning toward its target until aim.lock s before the hit coming next, then holds, so its warning
+-- stops moving before the hit. A combo re-aims in each phase's wind-up: from the phase before it's
+-- activeEnd to this phase's impact - lock. True when clip time `age` is inside one of those windows.
+function X.aimOpen(A,age,lock)
+ local list=A.phases or {A}
+ for i,P in list do
+  local from=i>1 and list[i-1].at.activeEnd or 0
+  if age>=from and age<P.at.impact-lock then return true end
+ end
+ return false
+end
+-- One aim step: A.cf turns toward goal at up to aim.rate over dt (yaw only, about the root), while
+-- the window is open. True when it turned.
+function X.aimStep(A,age,dt,goal,aim)
+ if not goal or dt<=0 or not X.aimOpen(A,age,aim.lock) then return false end
+ local a=X.turnAngle(A.cf,goal,aim.rate*dt);if math.abs(a)<1e-7 then return false end
+ A.cf=CFrame.new(A.cf.Position)*CFrame.Angles(0,a,0)*A.cf.Rotation;return true
+end
+-- Republishing a turned frame (BossFrame) or heading (BossChargeHead): only once it has turned more
+-- than SEND_TURN (1 degree) from the one sent, and exactly when the aim locks (the frame the hit
+-- uses). A few updates a second, not one a frame.
+X.SEND_TURN=math.rad(1)
+function X.frameDue(sentYaw,yaw,locked)
+ local d=math.abs(Shapes.wrap(yaw-sentYaw));return d>X.SEND_TURN or (locked and d>1e-6)
+end
+function X.headDue(sent,dir) return math.abs(Shapes.yaw(sent,dir))>X.SEND_TURN end
+-- Charge homing (def.home rad/s, the Hammer's run): the heading turns toward goal by at most maxTurn.
+function X.homeDir(dir,pos,goal,maxTurn)
+ local d=flat(goal-pos);if d.Magnitude<.1 then return dir end
+ return CFrame.Angles(0,math.clamp(Shapes.yaw(dir,d),-maxTurn,maxTurn),0):VectorToWorldSpace(dir)
+end
+-- One homing step: the heading turns toward goal (nil: it holds) at up to def.home over dt, then the
+-- body moves on to `travel` (the run's distance so far) along it. Returns the step's two ends: the
+-- body hit's segment of the real path.
+function X.homeStep(A,def,goal,dt,travel)
+ if goal then A.dir=X.homeDir(A.dir,A.pos,goal,def.home*math.max(0,dt)) end
+ local a=A.pos;A.pos=a+A.dir*math.max(0,travel-A.travelled);A.travelled=math.max(A.travelled,travel)
+ return a,A.pos
+end
+-- The body's hit on a homing run: one step's segment of the path, on the floor.
+function X.pathBody(def,a,b,groundY) return {kind='capsule',a=Vector3.new(a.X,groundY,a.Z),b=Vector3.new(b.X,groundY,b.Z),radius=def.width/2} end
 -- Follow-up circle spots: one under each target, plus `extra` more 7-11 studs round each (seeded).
 function X.followSpots(targets,extra,cap,rng)
  local list={}
@@ -197,6 +244,17 @@ function X.shapeOf(def,at,f)
  elseif def.shape=='wave' then return X.wave(def,at,f) end
  return nil
 end
+-- After an aim turn: the shapes an attack holds, rebuilt from its new frame (a sweep's arc, a wave's
+-- lines, each combo phase's arc or line). Circles are built from the frame when they hit anyway.
+function X.reshape(A,f,rage)
+ local def,at=A.def,A.at
+ if A.phases then
+  for _,P in A.phases do local shape=X.shapeOf(P.def,P.at,f);if P.def.shape=='sweep' then P.arc=shape elseif P.def.shape=='wave' then P.line=shape end end
+ elseif def.shape=='sweep' then A.arc=X.sweepArc(def,at,f)
+ elseif def.shape=='wave' then
+  A.lines={};for _,deg in rage and rage.fan or {0} do table.insert(A.lines,X.wave(def,at,f,math.rad(deg))) end;A.line=A.lines[math.ceil(#A.lines/2)]
+ end
+end
 -- One hit unit's circle, wave, breath or sweep hits between clip times t0 and age: the attack itself
 -- (P = A), a combo phase, or a lane's finish. strike(e,from,source) lands one hit (the server's line
 -- of sight and damage) and says whether it counted. True when a circle fired (its follow-up is due).
@@ -254,14 +312,17 @@ X.isCharge=Shapes.isCharge
 -- A lane's window, duration and data for its current length: the warning, and the finish slam where
 -- the run ends (on the end floor, A.endGround, once he has stopped). The contact run re-times it on
 -- every change, so the server's hits stay exact. The times are MapBossShapes.laneTimes, which the
--- client re-times its charge with.
+-- client re-times its charge with. A homing run (A.pos, def.home): the lane and the finish go on
+-- from where the body is now, along its heading.
 function X.laneTiming(T,A)
  local def=A.def;local t=Shapes.laneTimes(def,T,A.length)
  A.at,A.duration=t.at,t.duration
- A.data.length=A.length;A.data.shape=Shapes.encode(X.laneShape(A.frame,A.dir,A.length,def.width,X.laneSide(A.dir,def)))
+ local cf,f,rest=A.cf,A.frame,A.length
+ if A.pos then cf=CFrame.lookAt(A.pos,A.pos+A.dir);f=X.frame(cf,T,A.ground);rest=A.length-A.travelled end
+ A.data.length=A.length;A.data.shape=Shapes.encode(X.laneShape(f,A.dir,rest,def.width,X.laneSide(A.dir,def)))
  local F=A.finish
  if F then
-  F.at,F.frame=X.finishFrame(def,T,A.cf,A.dir,A.length,A.endGround or A.ground);F.start=A.at.activeEnd
+  F.at,F.frame=X.finishFrame(def,T,cf,A.dir,rest,A.endGround or A.ground);F.start=A.at.activeEnd
   if F.at then A.data.finish={shape=Shapes.encode(X.circle(F.def,F.at,F.frame)),impact=t.finishImpact} end
  end
 end
@@ -368,6 +429,8 @@ function M.start(npc,kind,target,force)
   A.length=def.contact and X.contactLength(def,cf,A.dir,Vector3.new(goal.X,cf.Y,goal.Z),A.limit,A.limit,0) or A.limit
   A.target=def.contact and target or nil
   if def.finish then A.finish={def=X.merged(def,def.finish),hits={},ticks={},fired=false} end
+  -- def.home (the Hammer): a homing run. The body and its heading live in A.pos / A.dir (stepAttack).
+  if def.home and def.facing=='forward' then A.pos,A.sentDir,A.homeTarget=cf.Position,A.dir,target end
   A.data={dir={A.dir.X,A.dir.Z}};X.laneTiming(s.T,A)
  else A.at=X.window(def,s.T);A.duration=X.duration(def,A.at) end
  local at=A.at
@@ -394,12 +457,19 @@ function M.start(npc,kind,target,force)
  elseif def.shape=='sweep' then A.arc=X.sweepArc(def,at,f);A.data.shape=Shapes.encode(A.arc)
  elseif def.shape=='projectiles' then A.data=X.volley(def,at,f,goal,MOUTH_AIMED[kind],rage) end
  A.data.rate=def.rate or 1
+ -- def.aim (the boss def's, or the attack's own): the frame turns toward the target until each hit's
+ -- lock (stepAttack). data.yaw is the frame's heading the shapes were built in: clients turn them by
+ -- the BossFrame they get.
+ local aim=(def.phases or def.shape=='circle' or def.shape=='sweep' or def.shape=='wave') and (def.aim or s.def.aim) or nil
+ if aim then A.aim,A.aimTarget,A.sentYaw=aim,target,Shapes.yawOf(cf);A.data.yaw=A.sentYaw end
  s.attack=A;s.lastStart[kind]=now -- def.lockout (X.lockedOut)
  npc:SetAttribute('BossAttack',kind);npc:SetAttribute('BossStart',now);npc:SetAttribute('BossFrame',cf);npc:SetAttribute('BossGroundY',f.groundY);npc:SetAttribute('BossDuration',A.duration)
  -- A charge's length (X.isCharge) changes as he runs. Client contract: re-time the end clip from
  -- BossChargeLength, falling back to data.length. It is set before BossSerial, so no client reads
  -- the last charge's value; stepAttack sends it on 0.5-stud changes, and exactly when he stops.
  if X.isCharge(def) then A.sentLength=A.length;npc:SetAttribute('BossChargeLength',A.length) end
+ -- A homing run's heading (stepAttack): none until it turns, never the last charge's.
+ if A.pos then npc:SetAttribute('BossChargeHead',nil);npc:SetAttribute('BossChargeHeadAt',nil) end
  A.serial=(npc:GetAttribute('BossSerial') or 0)+1
  publish(npc,A);npc:SetAttribute('BossSerial',A.serial);commit(npc,h,root)
  return true
@@ -608,7 +678,14 @@ local function stepAttack(npc,s,now,h,root,params,people)
   -- The forward charge (def.contact) runs on while its target stays in the lane; once he has
   -- stopped, the run is fixed. The server re-times on every change, so its hits stay exact;
   -- clients get BossChargeLength on 0.5-stud changes (M.start), the rest when he stops.
-  local length=X.contactLength(def,A.cf,A.dir,A.target.Position,A.limit,A.length,A.travelled)
+  local length
+  if A.pos then
+   -- Homing: measured along the current heading from where the body is now, and capped by the wall
+   -- ahead of it on that heading (the run so far counts toward def.length).
+   local wall=workspace:Raycast(A.pos,A.dir*math.max(.1,def.length-A.travelled),params)
+   local cap=wall and math.max(0,wall.Distance-math.min(8,s.T.footprintRadius or 4)/2-1) or def.length-A.travelled
+   length=A.travelled+math.min(cap,X.contactLength(def,CFrame.new(A.pos),A.dir,A.target.Position,cap,A.length-A.travelled,0))
+  else length=X.contactLength(def,A.cf,A.dir,A.target.Position,A.limit,A.length,A.travelled) end
   if math.abs(length-A.length)>.05 then A.length=length;X.laneTiming(s.T,A) end
   if math.abs(A.length-(A.sentLength or -1))>=.5 then A.sentLength=A.length;npc:SetAttribute('BossChargeLength',A.length) end
  end
@@ -623,7 +700,42 @@ local function stepAttack(npc,s,now,h,root,params,people)
    A.frame=X.frame(A.cf,s.T,A.ground);f=A.frame;npc:SetAttribute('BossFrame',A.cf)
   end
  end
- if def.shape=='lane' then
+ local aim=A.aim
+ if aim then
+  -- Aim (X.aimStep): the frame, the body and every shape it holds turn toward the target until the
+  -- next hit's lock. Clients get BossFrame once it has turned 1 degree, and exactly at the lock.
+  local target=A.aimTarget and A.aimTarget.Parent and A.aimTarget or nil
+  if not target then local best=math.huge;for _,e in people do local d=(e.root.Position-A.cf.Position).Magnitude;if d<best then target,best=e.root,d end end end
+  if X.aimStep(A,age,age-t0,target and target.Position,aim) then A.frame=X.frame(A.cf,s.T,A.ground);f=A.frame;X.reshape(A,f,rage) end
+  local yaw=Shapes.yawOf(A.cf)
+  if X.frameDue(A.sentYaw,yaw,not X.aimOpen(A,age,aim.lock)) then A.sentYaw=yaw;npc:SetAttribute('BossFrame',A.cf) end
+ end
+ if def.shape=='lane' and A.pos then
+  -- Homing (def.home): the heading turns toward the target as he runs and the body follows it; the
+  -- body hit sweeps each step's segment of the real path. Clients get the heading as BossChargeHead
+  -- (on the ground where the body was, facing it) and BossChargeHeadAt (the distance run there) once
+  -- it has turned 1 degree.
+  local travel=math.clamp((age-at.impact)*def.speed,0,A.length)
+  if travel>A.travelled then
+   local goal=A.homeTarget and A.homeTarget.Parent and A.homeTarget.Position or nil
+   local a,b=X.homeStep(A,def,goal,age-t0,travel)
+   local floor=workspace:Raycast(b+Vector3.yAxis*6,-Vector3.yAxis*(s.T.rootHeight+14),params)
+   if floor then A.floorY=floor.Position.Y end
+   local body=X.pathBody(def,a,b,A.floorY or f.groundY)
+   for _,e in people do
+    if not A.hits[e.player] and Shapes.contains(body,e.at) and hit(npc,def,e,b,params,body.b) then A.hits[e.player]=true end
+   end
+   if X.headDue(A.sentDir,A.dir) then
+    A.sentDir=A.dir;local g=Vector3.new(A.pos.X,A.ground,A.pos.Z)
+    npc:SetAttribute('BossChargeHeadAt',A.travelled);npc:SetAttribute('BossChargeHead',CFrame.lookAt(g,g+A.dir))
+   end
+  end
+  root.CFrame=CFrame.lookAt(A.pos,A.pos+A.dir).Rotation+Vector3.new(A.pos.X,A.floorY and A.floorY+s.T.rootHeight or A.cf.Y,A.pos.Z)
+  if travel>=A.length and not A.stopped then
+   A.stopped=true;X.stopCharge(s.T,A)
+   A.sentLength=A.length;npc:SetAttribute('BossChargeLength',A.length);publish(npc,A);npc:SetAttribute('BossDuration',A.duration)
+  end
+ elseif def.shape=='lane' then
   local travel=math.clamp((age-at.impact)*def.speed,0,A.length)
   if def.facing=='forward' then
    -- A forward runner follows the floor (BossService.stepCharge), so a slope doesn't leave him

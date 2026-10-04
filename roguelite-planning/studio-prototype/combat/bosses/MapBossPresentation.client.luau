@@ -9,8 +9,12 @@
 --   the forward charge (P.isCharge): re-timed from BossChargeLength (else data.length); the lane
 --     reshaped in place and the finish circle (data.finish) moved down it as the run grows. It runs
 --     until the server's stop (data.stoppedAt, P.chargeStop), then ChargeSlam from that stop.
---   pseudo attacks (P.pseudo): the intro clip (def.intro.clip, timed to BossIntroLand) and the
---     enrage roar (def.roar): the clip only, no warning or attack hooks.
+--   pseudo attacks (P.pseudo): the intro clip (def.intro.clip, timed to BossIntroLand; before
+--     BossIntroUntil even when it is also an attack's clip) and the enrage roar (def.roar): the clip
+--     only, no warning or attack hooks.
+--   aim (data.yaw, MapBossService def.aim): the frame turns toward the target until each hit's lock;
+--     the warning turns in place with BossFrame (turnWarning) and C.shape / C.phaseShape turn with it.
+--   homing (def.home): the lane runs from the body on along BossChargeHead (P.homeRun).
 --   the intro hook fires at BossIntroLand; with a roar, the enrage hook fires as the roar starts.
 --   new hook `followup` when follow-up circles appear (their eruption is still `aftershock`), and
 --     `roar` as each roar starts (its peak; a roar a pause cancelled is played again with it).
@@ -35,11 +39,25 @@ function P.window(a,T,length)
  return Shapes.window(a,T,length)
 end
 -- BossAttack names a clip that is no attack: the def's intro clip (MapBossService spawn) or its
--- enrage roar (startRoar). Played like an attack at rate 1; nil for anything else.
-function P.pseudo(def,kind)
- if def.intro and kind==def.intro.clip then return {clip=kind,rate=1,pseudo='intro'} end
- if def.roar and kind==def.roar then return {clip=kind,rate=1,pseudo='roar'} end
+-- enrage roar (startRoar). Played like an attack at rate 1; nil for anything else. The intro's clip
+-- can also be an attack's (the Hammer lands on his Slam): during the intro (inIntro: BossStart before
+-- BossIntroUntil) it is the intro, otherwise the attack.
+function P.pseudo(def,kind,inIntro)
+ local attack=def.attacks and def.attacks[kind]
+ if def.intro and kind==def.intro.clip and (inIntro or not attack) then return {clip=kind,rate=1,pseudo='intro'} end
+ if def.roar and kind==def.roar and not attack then return {clip=kind,rate=1,pseudo='roar'} end
  return nil
+end
+-- A homing run (def.home, MapBossService X.homeStep) as the client knows it: the body goes straight
+-- on from the last heading the server sent (BossChargeHead, a ground CFrame facing it, and
+-- BossChargeHeadAt, the distance run there; before any, the commit: start, dir0, 0). Returns the body
+-- `travelled` along the path, the heading, and the run's end `length` along.
+function P.homeRun(start,dir0,head,headAt,length,travelled)
+ local from,dir,at0=start,dir0,0
+ if typeof(head)=='CFrame' and type(headAt)=='number' then
+  local d=Shapes.flat(head.LookVector);if d.Magnitude>1e-3 then from,dir,at0=Vector3.new(head.X,start.Y,head.Z),d.Unit,headAt end
+ end
+ return from+dir*math.max(0,travelled-at0),dir,from+dir*math.max(0,length-at0)
 end
 -- Shared with MapBossService (MapBossShapes): the attack def with a phase's (or a finish's) fields on
 -- top; whether it is the Hammer-style charge, whose length changes as he runs; and a lane's times for
@@ -178,6 +196,8 @@ local window=P.window
 --   ch.finishShow  the finish circle's impact for its warning (runEnd + the slam clip's impact)
 --   ch.finishImpact  the finish slam's impact, once the stop is known (nil before)
 --   ch.duration  the attacking window: the stop (or the hold past the prediction) plus the slam clip
+-- A homing run (ch.home, def.home): the lane goes from the body on along the heading the server sent
+-- (P.homeRun), and the finish circle sits where that ends, turned with it (ch.heading, ch.endPos).
 local function chargeStep(npc,ctx,age)
  local ch=ctx.charge;local length=npc:GetAttribute('BossChargeLength')
  if type(length)~='number' then length=ctx.data.length or ctx.def.length end
@@ -191,6 +211,19 @@ local function chargeStep(npc,ctx,age)
   local lane=type(d.shape)=='table' and Shapes.decode(d.shape);ch.lane=lane and lane.kind=='line' and P.laneAt(lane,published,length) or nil
   local f=type(d.finish)=='table' and type(d.finish.shape)=='table' and Shapes.decode(d.finish.shape)
   ch.finish=f and f.kind=='circle' and ch.slamAt and P.moved(f,ch.dir,length-published) or nil
+  -- Homing: the finish's place relative to the end of the straight run it was published for.
+  if ch.home and ch.finish and not ch.confirmed and not ch.finishLocal then
+   local e=ch.start+ch.dir*published;ch.finishLocal=CFrame.lookAt(e,e+ch.dir):PointToObjectSpace(f.center)
+  end
+ end
+ if ch.home then
+  local travelled=math.clamp(((age or 0)-ctx.attack.impact)*ctx.def.speed,0,length)
+  local body,dir,finish=P.homeRun(ch.start,ch.dir,npc:GetAttribute('BossChargeHead'),npc:GetAttribute('BossChargeHeadAt'),length,travelled)
+  local w=ctx.def.width;ch.heading,ch.endPos=dir,finish
+  ch.lane={kind='line',origin=body-dir*w/2,direction=dir,length=Shapes.flat(finish-body).Magnitude+w,width=w}
+  if ch.finish and ch.finishLocal and not ch.confirmed then
+   ch.finish=table.clone(ch.finish);ch.finish.center=CFrame.lookAt(finish,finish+dir):PointToWorldSpace(ch.finishLocal)
+  end
  end
  -- The end only moves on this attack's own clock (age nil: no BossStart, or another attack's).
  if age then ch.stopAge,ch.guessed=P.chargeStop(ch.stopAge,ch.guessed,ch.predicted,ch.confirmed,age,ch.slamAt) end
@@ -211,7 +244,8 @@ local function context(npc,state,kind,a,start,serial)
   ctx.phases=P.phases(a,data,T);if ctx.phases then ctx.attack=P.comboWindow(at,ctx.phases) end
  elseif P.isCharge(a) then
   local d=type(data.dir)=='table' and Vector3.new(data.dir[1],0,data.dir[2]) or Shapes.flat(cf.LookVector)
-  ctx.charge={dir=d.Magnitude>1e-3 and d.Unit or Vector3.new(0,0,-1)};chargeStep(npc,ctx)
+  ctx.charge={dir=d.Magnitude>1e-3 and d.Unit or Vector3.new(0,0,-1),home=a.home~=nil and a.facing=='forward',start=Vector3.new(cf.X,ctx.groundY,cf.Z)}
+  chargeStep(npc,ctx)
  end
  -- ctx.attack, not a local copy: the charge re-times it.
  function ctx.points(name,t)
@@ -389,11 +423,12 @@ local function plannedWarning(ctx)
  end
  return w
 end
--- The lane at its new length, in place: the fill, the grow layer's extent and the four edges.
+-- The lane at its new length (and, homing, its new start and heading), in place: the fill, the grow
+-- layer's extent and the four edges.
 local function placeLane(s,shape,y)
  local o=Vector3.new(shape.origin.X,y,shape.origin.Z);local dir=shape.direction;local mid=o+dir*shape.length/2
  local f=s.fills[1];if f then f.Size=Vector3.new(shape.width,.045,shape.length);f.CFrame=CFrame.lookAt(mid,mid+dir) end
- local g=s.grow[1];if g then g.origin=Vector3.new(o.X,y+.02,o.Z);g.size=Vector3.new(shape.width,.045,shape.length);s.e=nil end
+ local g=s.grow[1];if g then g.origin=Vector3.new(o.X,y+.02,o.Z);g.dir=dir;g.size=Vector3.new(shape.width,.045,shape.length);s.e=nil end
  local pts=Shapes.outline(shape)
  if #s.edges==#pts then
   for i,p in s.edges do
@@ -401,6 +436,20 @@ local function placeLane(s,shape,y)
   end
  end
  s.length=shape.length
+end
+-- An aimed attack's warning turned in place by `angle` about the vertical axis through pivot (the
+-- boss's frame turned: BossFrame against data.yaw), its grow layers' geometry too, so each fill keeps
+-- growing where it now lies. Never rebuilt.
+local function turnWarning(w,pivot,angle)
+ local p=Vector3.new(pivot.X,0,pivot.Z);local r=CFrame.new(p)*CFrame.Angles(0,angle,0)*CFrame.new(-p)
+ for _,part in w.parts do if part.Parent==w.folder then part.CFrame=r*part.CFrame end end
+ local function regrow(s)
+  for _,g in s.grow do
+   if g.cf then g.cf=r*g.cf end;if g.pivot then g.pivot=r*g.pivot end;if g.origin then g.origin=r*g.origin end;if g.dir then g.dir=r:VectorToWorldSpace(g.dir) end
+  end
+  s.e=nil
+ end
+ regrow(w);for _,s in w.subs or {} do regrow(s) end;if w.lane then regrow(w.lane) end;if w.finish then regrow(w.finish) end
 end
 -- Every part of a sub-warning moved by `by` (the finish circle down the lane).
 local function moveWarning(s,by)
@@ -427,7 +476,7 @@ local function stepPlanned(state,ctx,age,now,live)
  -- only ever end once, so neither hides and comes back.
  local ch=ctx.charge
  if w.lane then
-  if ch.lane and math.abs(ch.lane.length-w.lane.length)>1e-3 then placeLane(w.lane,ch.lane,ctx.groundY+.07) end
+  if ch.lane and (ch.home or math.abs(ch.lane.length-w.lane.length)>1e-3) then placeLane(w.lane,ch.lane,ctx.groundY+.07) end
   paintHit(w.lane,age,at.warnStart,at.impact,now,nil,ch.runEnd)
  end
  if w.finish and ch.finish and ch.finishShow then
@@ -523,7 +572,7 @@ local function stepMoments(npc,state,now,death)
  end
  local enraged=npc:GetAttribute('BossEnraged')
  if not roars(state) then
-  if not state.enraged and enraged then state.enraged=true;call(state,'enrage',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1}) end
+  if not state.enraged and enraged then state.enraged=true;call(state,'enrage',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1,timing=state.T}) end
   return
  end
  if not enraged then return end
@@ -613,7 +662,11 @@ task.spawn(function()
 end)
 
 -- BossAttack's def: an attack, else the intro clip or the roar (P.pseudo, cached per boss).
-local function attackDef(state,kind)
+-- During the intro (inIntro) its clip is the intro even when it is also an attack's.
+local function attackDef(state,kind,inIntro)
+ if inIntro and state.def.intro and kind==state.def.intro.clip then
+  state.introDef=state.introDef or P.pseudo(state.def,kind,true);return state.introDef
+ end
  local a=state.def.attacks[kind];if a then return a end
  state.pseudo=state.pseudo or {};local p=state.pseudo[kind]
  if p==nil then p=P.pseudo(state.def,kind) or false;state.pseudo[kind]=p end
@@ -626,7 +679,9 @@ local function frame(npc,state,now,dt)
  local displacement=state.previousPosition and root.Position-state.previousPosition or Vector3.zero
  state.previousPosition=root.Position
  local distance=Vector2.new(displacement.X,displacement.Z).Magnitude
- local start=npc:GetAttribute('BossStart');local kind=npc:GetAttribute('BossAttack');local a=kind and attackDef(state,kind);local age=start and now-start
+ local start=npc:GetAttribute('BossStart');local kind=npc:GetAttribute('BossAttack');local age=start and now-start
+ -- The sky-drop intro (MapBossService spawn) plays before BossIntroUntil; every attack starts after it.
+ local introUntil=npc:GetAttribute('BossIntroUntil');local a=kind and attackDef(state,kind,start~=nil and type(introUntil)=='number' and start<introUntil)
  local serial=npc:GetAttribute('BossSerial') or 0
  if a and start and serial~=(state.ctx and state.ctx.serial) then state.ctx=context(npc,state,kind,a,start,serial) end
  local ctx=state.ctx
@@ -675,6 +730,14 @@ local function frame(npc,state,now,dt)
    if not w or w.serial~=ctx.serial or w.raw~=ctx.raw then if w then release(w) end;w=profiled('Boss:BuildWarning',buildWarning,ctx);state.warning=w end
    paintWarning(w,(age-at.warnStart)/math.max(.05,warnEnd-at.warnStart),warnEnd-age,now)
   elseif state.warning then release(state.warning);state.warning=nil end
+ end
+ -- An aimed attack (data.yaw, MapBossService def.aim): its shapes were published in the frame it
+ -- committed in; the warning turns in place with every BossFrame the server sends after.
+ local w=state.warning
+ if w and ctx and w.serial==ctx.serial and type(ctx.data.yaw)=='number' then
+  w.yaw=w.yaw or ctx.data.yaw
+  local turn=Shapes.wrap(Shapes.yawOf(ctx.cf)-w.yaw)
+  if math.abs(turn)>1e-4 then turnWarning(w,ctx.cf.Position,turn);w.yaw=Shapes.yawOf(ctx.cf) end
  end
  stepFollow(npc,state,now,death)
  stepMoments(npc,state,now,death)

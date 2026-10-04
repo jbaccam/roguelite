@@ -45,6 +45,14 @@ add(math.abs(fin.finishStart-w.activeEnd)<1e-9 and math.abs(fin.finishImpact-(w.
 local m=S.merged({clip='X',damage=1,phases={{}},finish={}},{damage=2,shape='circle'})
 add(m.damage==2 and m.shape=='circle' and m.clip=='X' and m.phases==nil and m.finish==nil and S.isCharge({shape='lane',facing='forward'}) and S.isCharge({shape='lane',contact=4}) and not S.isCharge(lane) and not S.isCharge({shape='circle',contact=4}),
  'merged puts the part on top without phases or finish; isCharge: a forward or contact lane only')
+-- Aim and homing (2026-10-04): headings and shapes turned about a boss's root.
+local yaws=true
+for _,a in {0,.5,-1.2,math.pi/2,3} do if math.abs(S.yawOf(CFrame.new(1,2,3)*CFrame.Angles(0,a,0))-a)>1e-6 then yaws=false end end
+add(yaws and math.abs(S.wrap(math.rad(359))-math.rad(-1))<1e-9 and math.abs(S.wrap(math.rad(-181))-math.rad(179))<1e-9 and S.wrap(.25)==.25,'yawOf reads a CFrame.Angles yaw back; wrap folds into [-pi, pi)')
+local turned=S.rotated({kind='circle',center=Vector3.new(5,1,0),radius=3},Vector3.new(1,7,0),math.pi/2)
+local lane=S.rotated({kind='line',origin=Vector3.new(1,0,-2),direction=F,length=10,width=4},Vector3.new(1,0,0),math.pi/2)
+add((turned.center-Vector3.new(1,1,-4)).Magnitude<1e-6 and turned.radius==3 and (lane.origin-Vector3.new(-1,0,0)).Magnitude<1e-6 and (lane.direction-Vector3.new(-1,0,0)).Magnitude<1e-6 and lane.length==10,
+ 'rotated turns points about the vertical axis through the pivot (height kept) and directions with them')
 local passed=0;for _,line in r do if line:sub(1,4)=='PASS' then passed+=1 end end
 table.insert(r,('%d PASS, %d FAIL'):format(passed,#r-passed))
 return table.concat(r,'\n')

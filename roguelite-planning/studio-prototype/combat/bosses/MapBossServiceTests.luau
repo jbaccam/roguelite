@@ -203,6 +203,88 @@ check('roar: due once after enrage, never mid-attack, only with def.roar',functi
  s.enraged=true;s.attack={};local mid=X.roarDue(s);s.attack=nil;local due=X.roarDue(s);s.roared=true
  return before==false and mid==false and due==true and X.roarDue(s)==false and X.roarDue({def={},enraged=true})==false
 end)
+-- R10. Tracking (user, 2026-10-04: "chaining attacks and better player tracking is all i need").
+local AIM={rate=math.rad(150),lock=.3}
+local function facing() return CFrame.lookAt(Vector3.new(0,4,0),Vector3.new(0,4,-1)) end
+check('aim: turns at most rate x dt toward the target (150 deg/s over 0.1 s: 15 deg), yaw only about the root',function()
+ local A={cf=facing(),at={impact=.7}}
+ local turned=X.aimStep(A,.2,.1,Vector3.new(10,3,0),AIM)
+ local yaw=S.yawOf(A.cf)
+ return turned and math.abs(math.abs(yaw)-math.rad(15))<1e-6 and yaw<0 and A.cf.Position==Vector3.new(0,4,0) and math.abs(A.cf.LookVector.Y)<1e-9
+  and not X.aimStep(A,.2,.1,Vector3.new(0,4,0),AIM) -- a target on top of him turns nothing
+end)
+-- A target circling him at 6 rad/s, 12 studs out, stepped at 60 Hz: when does the frame turn?
+local function circle(A,stop)
+ local turns={}
+ for k=1,math.floor(stop*60) do
+  local age=k/60;local a=age*6
+  if X.aimStep(A,age,1/60,Vector3.new(math.sin(a)*12,3,-math.cos(a)*12),AIM) then table.insert(turns,age) end
+ end
+ return turns
+end
+check('aim: one hit turns until impact - lock (0.7 - 0.3) and then holds',function()
+ local A={cf=facing(),at={impact=.7}};local turns=circle(A,1.2)
+ return #turns>0 and turns[#turns]<.4 and turns[#turns]>.38 and X.aimOpen(A,.39,AIM.lock) and not X.aimOpen(A,.4,AIM.lock) and not X.aimOpen(A,.9,AIM.lock)
+end)
+check('aim: a combo re-aims in each phase\'s wind-up (after the phase before ends, until its impact - lock), never mid-hit',function()
+ local A={cf=facing(),phases={{at={impact=.5,activeEnd=.7}},{at={impact=1.3,activeEnd=1.5}},{at={impact=2,activeEnd=2.2}}}}
+ local turns=circle(A,2.5);local inside={[1]=false,[2]=false,[3]=false};local outside=false
+ for _,t in turns do
+  if t<.2 then inside[1]=true elseif t>=.7 and t<1 then inside[2]=true elseif t>=1.5 and t<1.7 then inside[3]=true else outside=true end
+ end
+ return inside[1] and inside[2] and inside[3] and not outside and not X.aimOpen(A,.6,AIM.lock) and X.aimOpen(A,.75,AIM.lock) and not X.aimOpen(A,1.2,AIM.lock)
+end)
+check('aim: the turned frame turns every shape it holds (the sweep arc and the circle) about the root, and nothing else',function()
+ local units=X.phases(swingSpin,HT.attacks.SwingSpin);local A={def=swingSpin,at=HT.attacks.SwingSpin,phases=units}
+ local f0=X.frame(facing(),HT,0);X.reshape(A,f0);local arc0=units[1].arc
+ local cf=CFrame.new(0,4,0)*CFrame.Angles(0,.6,0)*facing().Rotation;local f1=X.frame(cf,HT,0);X.reshape(A,f1)
+ local want=S.rotated(arc0,Vector3.new(0,0,0),.6);local arc=units[1].arc
+ local slam={point='HammerFace',radius=9.5};local c0,c1=X.circle(slam,HT.attacks.ChargeSlam,f0),X.circle(slam,HT.attacks.ChargeSlam,f1)
+ return (arc.pivot-want.pivot).Magnitude<1e-6 and (arc.forward-want.forward).Magnitude<1e-6 and math.abs(arc.from-want.from)<1e-6 and math.abs(arc.to-want.to)<1e-6 and math.abs(arc.outer-want.outer)<1e-6
+  and (c1.center-S.rotated(c0,Vector3.zero,.6).center).Magnitude<1e-6
+end)
+check('frame republish: only past 1 degree from the one sent (across +-180 too), and exactly once the aim locks',function()
+ local due=X.frameDue
+ local ok=not due(0,math.rad(.9),false) and due(0,math.rad(1.1),false) and due(0,math.rad(.5),true) and not due(0,0,true)
+  and not due(math.rad(179.6),math.rad(-179.6),false) and due(math.rad(179),math.rad(-179),false)
+ -- A target drifting round slowly (0.45 deg a frame): a send every third frame, not every frame.
+ local sent,count=0,0
+ for k=1,60 do local yaw=math.rad(.45)*k;if due(sent,yaw,false) then sent=yaw;count+=1 end end
+ return ok and count==20 and X.headDue(Vector3.new(0,0,-1),CFrame.Angles(0,math.rad(1.2),0).LookVector) and not X.headDue(Vector3.new(0,0,-1),CFrame.Angles(0,math.rad(.8),0).LookVector)
+end)
+local homing=with(charge,{home=math.rad(40)})
+check('homing: the heading turns at most home x dt toward the target (40 deg/s over 0.1 s: 4 deg); the body moves on along the new heading',function()
+ local A={pos=Vector3.new(0,4,0),dir=Vector3.new(0,0,-1),travelled=0}
+ local a,b=X.homeStep(A,homing,Vector3.new(30,3,-1),.1,3.2)
+ local turned=math.abs(S.yaw(Vector3.new(0,0,-1),A.dir))
+ return math.abs(turned-math.rad(4))<1e-6 and a==Vector3.new(0,4,0) and (b-(a+A.dir*3.2)).Magnitude<1e-9 and A.travelled==3.2 and math.abs(A.dir.Magnitude-1)<1e-9 and A.dir.Y==0
+  and X.homeDir(Vector3.new(0,0,-1),Vector3.zero,Vector3.new(0,0,-9),1)==Vector3.new(0,0,-1)
+end)
+-- A target 8 studs right of his line, 30 ahead, standing still: the straight charge (width 9) misses
+-- them; the homing run curves after them and one of its per-step body segments reaches them.
+check('homing: a run curves after a target off the straight lane and its per-step body hit reaches them; the straight lane misses them',function()
+ local goal=Vector3.new(8,3,-30);local A={pos=Vector3.new(0,4,0),dir=Vector3.new(0,0,-1),travelled=0};local struck=false
+ for k=1,80 do
+  local a,b=X.homeStep(A,homing,goal,1/60,math.min(36,k/60*32))
+  if S.contains(X.pathBody(homing,a,b,0),Vector3.new(goal.X,3,goal.Z)) then struck=true end
+ end
+ local straight=X.rushBody(homing,facing(),Vector3.new(0,0,-1),0,0,36)
+ return struck and not S.contains(straight,Vector3.new(goal.X,3,goal.Z)) and A.travelled==36
+end)
+check('homing: lane timing runs the lane and the finish on from the body along its heading; at the commit it is the straight one',function()
+ local function attack(len) return {def=homing,cf=laneCf,frame=X.frame(laneCf,HT,0),ground=0,dir=laneDir,length=len,data={},finish={def=X.merged(homing,homing.finish),hits={},ticks={},fired=false}} end
+ local plain=attack(40);X.laneTiming(HT,plain)
+ local commit=attack(40);commit.pos,commit.travelled=laneCf.Position,0;X.laneTiming(HT,commit)
+ local Http=game:GetService('HttpService');local same=Http:JSONEncode(plain.data)==Http:JSONEncode(commit.data)
+ local A=attack(40);A.pos,A.travelled=Vector3.new(6,4,-14),15;A.dir=CFrame.Angles(0,-.4,0):VectorToWorldSpace(laneDir);X.laneTiming(HT,A)
+ local lane=S.decode(A.data.shape);local fin=S.decode(A.data.finish.shape)
+ local endCf=CFrame.lookAt(A.pos,A.pos+A.dir)+A.dir*25;local want=X.circle(A.finish.def,HT.attacks.ChargeSlam,X.frame(endCf,HT,0))
+ return same and (lane.origin-(Vector3.new(6,0,-14)-A.dir*homing.width/2)).Magnitude<1e-6 and (lane.direction-A.dir).Magnitude<1e-6 and math.abs(lane.length-(25+homing.width))<1e-6
+  and (fin.center-want.center).Magnitude<1e-6 and A.data.length==40
+end)
+check('homing: only a forward lane with def.home homes (the crab rush and a plain charge keep straight lanes)',function()
+ return Defs==nil or (Defs.get('KingCrab').attacks.SidewaysRush.home==nil and Defs.get('KingCrab').attacks.SidewaysRush.facing==nil)
+end)
 -- 4. Real defs: every projectile attack reaches a still player straight ahead (root 3 up) anywhere
 -- in its range and at the boss's hold-off distance, replaying the server's shot test.
 if Defs then
@@ -215,10 +297,18 @@ if Defs then
  -- Hammer (once it has a def) rewires anything here.
  local plain=true
  for _,id in {'KingCrab','Pharaoh','FrostCyclops','Dragon'} do
-  local def=Defs.get(id);if def.tutorial or def.intro or def.roar or (def.enrage and def.enrage.order) then plain=false end
-  for _,a in def.attacks do if a.phases or a.finish or a.contact or a.lockout or a.facing or a.height then plain=false end end
+  local def=Defs.get(id);if def.tutorial or def.intro or def.roar or def.aim or (def.enrage and def.enrage.order) then plain=false end
+  for _,a in def.attacks do if a.phases or a.finish or a.contact or a.lockout or a.facing or a.height or a.aim or a.home then plain=false end end
  end
- add(plain,'the four bosses use none of the Hammer fields (phases, finish, contact, lockout, facing, height, intro, roar, tutorial, enrage.order)')
+ add(plain,'the four bosses use none of the Hammer fields (phases, finish, contact, lockout, facing, height, aim, home, intro, roar, tutorial, enrage.order)')
+ -- The Hammer's chained moves (2026-10-04): Spin two sweeps, SwingSpin a swing and two spins, SpinSlam two
+ -- spins and a slam; the Charge homes and ends in the Slam's clip and circle; every hit aims; no roar.
+ local H=Defs.get('Hammer');local a=H and H.attacks
+ local function kinds(x) local list={};for i,p in x.phases or {} do list[i]=p.shape end;return table.concat(list,',') end
+ add(H~=nil and kinds(a.Spin)=='sweep,sweep' and kinds(a.SwingSpin)=='sweep,sweep,sweep' and kinds(a.SpinSlam)=='sweep,sweep,circle' and a.SpinSlam.phases[3].follow~=nil
+  and a.Charge.clips[3]=='Slam' and a.Charge.home and a.Charge.finish.shape=='circle' and a.Charge.finish.follow~=nil and H.roar==nil and H.intro.clip=='Slam'
+  and H.aim and H.aim.lock==.3 and math.abs(H.aim.rate-math.rad(150))<1e-9 and table.concat(Defs.ATTACK_CLIPS['hammer-brute'],',')=='Slam,Swing,Spin,SwingSpin,SpinSlam,ChargeStart,ChargeRun',
+  'Hammer: Spin, SwingSpin and SpinSlam chain 2-3 phases, the Charge homes into the Slam, every hit aims, no roar; ATTACK_CLIPS matches')
  -- Every attack an order names exists: X.walk would throw on every Heartbeat otherwise.
  local missing,defs={},0
  for id in Defs do

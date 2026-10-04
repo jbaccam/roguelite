@@ -15,8 +15,8 @@ Hammer Brute rebuild (R6, 2026-10-03). All of it is optional, so the other four 
     X.phaseWindows). A phase point on another bone or offset than the clip's point of that name
     is sampled here, and the phase then carries the clip's tracks plus its own.
   chargeStrideLength: studs per ChargeRun cycle (motion, BossGameData, or attacks.ChargeRun).
-  IntroLand and ChargeSlam (the charge's finish slam) need attack timing entries like the attacks;
-  Roar, ChargeStart and ChargeRun need durations only (DURATION_ONLY).
+  ChargeStart and ChargeRun need durations only (DURATION_ONLY); the intro and the charge's finish
+  play the Slam, which has its attack timing anyway (2026-10-04: no IntroLand, Roar or ChargeSlam).
 Hammer on the old template (R9, 2026-10-04): his clips are re-authored as part poses on the original
 16-part Motor6D template (hammer-boss-moves). When <asset-folder>/exports/game/PartPoses.json is
 there, partposes_to_motor6d.py converts it in memory with receipts/hammer-old-receipt.json
@@ -54,11 +54,11 @@ ATTACKS = {
     'frost-cyclops': ['GroundSlam', 'Stomp'],
     'pharaoh': ['CursedBolts', 'TombEruption'],
     'dragon': ['FireBreath', 'TailWhip', 'FrontStomp'],
-    'hammer-brute': ['Slam', 'Swing', 'Spin', 'SwingSpin', 'SpinSlam', 'ChargeStart', 'ChargeRun', 'ChargeSlam', 'IntroLand', 'Roar'],
+    'hammer-brute': ['Slam', 'Swing', 'Spin', 'SwingSpin', 'SpinSlam', 'ChargeStart', 'ChargeRun'],
 }
 BASIC = ['Idle', 'Walk', 'Hit', 'Death']
 # Clips the runtime needs only the durations of (MapBossTiming clips): their attack timing isn't required.
-DURATION_ONLY = {'RushStart', 'RushLoop', 'RushEnd', 'ChargeStart', 'ChargeRun', 'Roar'}
+DURATION_ONLY = {'RushStart', 'RushLoop', 'RushEnd', 'ChargeStart', 'ChargeRun'}
 PACKAGE = ['StudioAnimationData.json', 'AnimationData.json', 'BossGameData.json']
 # Points whose forward direction is stored per sample (bolts, breath, bubbles).
 DIRECTED = {('pharaoh', 'CursedBolts'): 'BoltOrigin', ('dragon', 'FireBreath'): 'FireOrigin', ('king-crab', 'BubbleBarrage'): 'BubbleOrigin'}

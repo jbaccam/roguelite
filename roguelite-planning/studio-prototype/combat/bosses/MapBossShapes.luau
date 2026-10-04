@@ -8,6 +8,22 @@ local function flat(v) return Vector3.new(v.X,0,v.Z) end
 S.flat=flat
 -- Signed yaw from a to b about +Y; positive turns toward -X for a -Z forward (CFrame.Angles).
 function S.yaw(a,b) a,b=flat(a),flat(b);return math.atan2(a:Cross(b).Y,a:Dot(b)) end
+-- A frame's heading as a CFrame.Angles(0,yaw,0) angle (0 = facing -Z), and an angle wrapped to
+-- [-pi, pi).
+function S.yawOf(cf) local l=cf.LookVector;return math.atan2(-l.X,-l.Z) end
+function S.wrap(a) return (a+math.pi)%(2*math.pi)-math.pi end
+-- A shape turned `angle` (CFrame.Angles yaw) about the vertical axis through pivot. A boss frame that
+-- turns about its root (aim, the breath) turns every shape built from it the same way, so the client
+-- turns the commit's shapes instead of rebuilding them.
+local POINTS,DIRS={center=true,origin=true,pivot=true,a=true,b=true},{direction=true,forward=true}
+function S.rotated(shape,pivot,angle)
+ local r=CFrame.Angles(0,angle,0);local s=table.clone(shape)
+ local function turn(v) local base=Vector3.new(pivot.X,v.Y,pivot.Z);return base+r:VectorToWorldSpace(v-base) end
+ for k in POINTS do if typeof(shape[k])=='Vector3' then s[k]=turn(shape[k]) end end
+ for k in DIRS do if typeof(shape[k])=='Vector3' then s[k]=r:VectorToWorldSpace(shape[k]) end end
+ if type(shape.points)=='table' then s.points={};for i,v in shape.points do s.points[i]=typeof(v)=='Vector3' and turn(v) or v end end
+ return s
+end
 -- A shape's own height (the Hammer's Slam circle: 6) raises the top of its band, so a plain jump
 -- doesn't clear it; without one, HEIGHT_ABOVE.
 local function band(shape,point)
