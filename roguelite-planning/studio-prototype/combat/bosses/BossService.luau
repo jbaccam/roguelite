@@ -25,9 +25,25 @@ local FLINCH_GAP=2
 -- (CharacterService.frozen) and the enemies (RogueliteZombieChase).
 B.INTRO={drop=1.2,fall=.65,after=3.6}
 local lastPracticeRequest=-math.huge
+-- The map-boss Hammer (R9, 2026-10-04): MapBossService, once this place can run him there
+-- (MapBossDefs.ready('Hammer'): his def, timing, clips, Hammer_NPC and the runtime); nil until then,
+-- or if those modules fail to load, and the old Hammer spawns as before. Required on first use, never
+-- at load, so this module never waits on the map-boss modules.
+local function mapHammer()
+ local defs=combat:FindFirstChild('MapBossDefs');local service=game:GetService('ServerScriptService'):FindFirstChild('MapBossService')
+ if not defs or not service then return nil end
+ local ok,result=pcall(function() local D=require(defs);return D.ready and D.ready('Hammer') and require(service) or nil end)
+ if not ok then warn('BossService: map-boss Hammer unavailable: '..tostring(result)) end
+ return ok and result or nil
+end
+-- The admin panel's Spawn boss / Remove boss (CharacterService.onPracticeBoss).
 function B.practice(player,action)
  -- Developers only (the admin panel), in Studio and on live servers; CharacterService checks too.
  if not Admin.isAdmin(player) or (action~='SpawnBoss' and action~='RemoveBoss') then return false end
+ -- The map-boss Hammer when he is ready: MapBossService.practice makes the same checks and spawns him
+ -- 20 studs ahead, no rewards. Remove boss below takes either Hammer.
+ local map=action=='SpawnBoss' and mapHammer()
+ if map then return map.practice(player,'Hammer') end
  local ch=player.Character;local h=ch and ch:FindFirstChildOfClass('Humanoid');local root=ch and ch:FindFirstChild('HumanoidRootPart')
  local folder=workspace:FindFirstChild('RogueliteEnemies')
  if not Characters.states[player] or not h or h.Health<=0 or not root or not folder or os.clock()-lastPracticeRequest<.5 then return false end
@@ -35,7 +51,8 @@ function B.practice(player,action)
  if phase and not table.find({'Shop','Combat','Practice'},phase:GetAttribute('Phase')) then return false end
  lastPracticeRequest=os.clock()
  if action=='RemoveBoss' then
-  for _,npc in folder:GetChildren() do if npc:GetAttribute('IsHammerBoss') and npc:GetAttribute('BossPractice') then npc:Destroy() end end
+  -- A practice Hammer, old or map-boss (MapBossId 'Hammer').
+  for _,npc in folder:GetChildren() do if (npc:GetAttribute('IsHammerBoss') or npc:GetAttribute('MapBossId')=='Hammer') and npc:GetAttribute('BossPractice') then npc:Destroy() end end
   combat:SetAttribute('PracticeBossStatus','Practice boss removed');return true
  end
  for _,npc in folder:GetChildren() do

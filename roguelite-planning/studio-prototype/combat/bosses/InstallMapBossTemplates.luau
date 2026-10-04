@@ -5,11 +5,17 @@
 -- ServerStorage.BeforeMapBoss_<yyyymmdd> before its replacement is parented.
 -- ONLY (a global set before this code, e.g. ONLY={'Hammer'}) installs just those ids and fails on
 -- a missing raw import or timing. Without it every Defs.Order id is installed, and one without a
--- raw import or timing yet (the Hammer Brute before R8) is reported SKIPPED and left alone.
+-- raw import or timing yet is reported SKIPPED and left alone.
+-- The Hammer (R9, 2026-10-04) has no raw import: Hammer_NPC is a copy of the original 16-part Motor6D
+-- template RogueliteNPCs.HammerBoss_NPC (COPY), which stays for the legacy runtime. Its meshes,
+-- textures and SurfaceAppearances are kept as they are (they render in game today); the old
+-- runtime's attributes go, the map-boss ones come, and two Neon eye plates are welded to the head.
+-- Until MapBossTiming has 'hammer-brute' it is SKIPPED (ONLY={'Hammer'} fails), so the gate
+-- (MapBossDefs.ready) stays closed.
 assert(not game:GetService("RunService"):IsRunning(), "Run the installer in Edit mode")
 local storage = game:GetService("ServerStorage")
 local combat = game.ReplicatedStorage.RogueliteCombat
-local raw = assert(storage:FindFirstChild("MapBossRawImports"), "Import the boss FBX files first")
+local raw = storage:FindFirstChild("MapBossRawImports")
 local folder = assert(storage:FindFirstChild("RogueliteNPCs"), "Missing RogueliteNPCs")
 -- Studio caches module results in Edit: require a fresh copy.
 local function fresh(m)
@@ -22,8 +28,8 @@ local function fresh(m)
 end
 local Defs = fresh(assert(combat:FindFirstChild("MapBossDefs"), "Sync MapBossDefs and MapBossTiming first"))
 local SOURCE = {
-	-- The Hammer Brute (rebuild R6): HammerBrute_EyeGlow goes Neon below, so the enrage can tint it red.
-	Hammer = "hammer-brute-boss/exports/game/HammerBrute_Studio.fbx",
+	-- The original model (R9): HammerBoss_NPC's meshes; his clips come from hammer-boss-moves.
+	Hammer = "hammer-boss/finished/HammerBoss.blend",
 	KingCrab = "king-crab-boss/exports/game/KingCrab_Studio.fbx",
 	FrostCyclops = "frost-cyclops-boss/exports/game/FrostCyclops_Studio.fbx",
 	Pharaoh = "pharaoh-boss/exports/game/Pharaoh_Studio.fbx",
@@ -79,16 +85,84 @@ local function assertUnderMeshCap(npc, id)
 		end
 	end
 end
-local report = {}
-local only = ONLY
-for _, id in only or Defs.Order do
-	-- The template is built at authored size; MapBossService applies def.scale at spawn.
-	local def, T = Defs.get(id), Defs.rawTiming(id)
-	if not only and not (def and T and raw:FindFirstChild(id)) then
-		table.insert(report, "SKIPPED " .. id .. ": " .. (not def and "no def" or not T and "no MapBossTiming entry" or "no raw import"))
-		continue
+-- Ids installed as a copy of an existing Motor6D template instead of from a raw import (R9).
+local COPY = { Hammer = "HammerBoss_NPC" }
+-- The old runtime's attributes (BossService.spawn, BossMotion.prepare, effects), on any instance.
+local LEGACY_ATTRIBUTES = { "IsHammerBoss", "BossRest", "BossVisualScale", "BossVfxBaseColor" }
+-- The Hammer's eye plates over his painted eyes, Head-local at template scale 1. Measured on
+-- hammer-boss/finished/HammerBoss.blend (the white faces of the Head texture): both eyes 0.47 either
+-- side of the Head's centre and 0.41 above it, their front 1.01 ahead of it; each plate sits just in
+-- front, a little inside the white. His right eye is round (a disc), his left narrowed (a slit).
+-- Named *_EyeGlow, so BossVfx/Hammer (Common.glow) tints them red on enrage.
+local EYES = {
+	{ offset = Vector3.new(0.47, 0.409, -1.034), size = Vector3.new(0.03, 0.26, 0.26), shape = Enum.PartType.Cylinder, turn = CFrame.Angles(0, math.pi / 2, 0) },
+	{ offset = Vector3.new(-0.47, 0.409, -1.034), size = Vector3.new(0.26, 0.1, 0.03), shape = Enum.PartType.Block, turn = CFrame.identity },
+}
+local function eyePlates(npc, def)
+	local head = assert(npc:FindFirstChild("Head"), "Missing Head")
+	local scale = npc:GetScale()
+	for _, e in EYES do
+		local plate = Instance.new("Part")
+		plate.Name = "HammerBrute_EyeGlow"
+		plate.Shape = e.shape
+		plate.Size = e.size * scale
+		plate.CFrame = head.CFrame * CFrame.new(e.offset * scale) * e.turn
+		plate.Material = Enum.Material.Neon
+		plate.Color = def.glowColor or Color3.new(1, 1, 1)
+		plate.Anchored = false
+		plate.CanCollide = false
+		plate.CanTouch = false
+		plate.CanQuery = false
+		plate.CastShadow = false
+		plate.Massless = true
+		local weld = Instance.new("Weld")
+		weld.Name = "EyeGlowWeld"
+		weld.Part0 = head
+		weld.Part1 = plate
+		weld.C0 = head.CFrame:ToObjectSpace(plate.CFrame)
+		weld.Parent = plate
+		plate.Parent = npc
 	end
-	assert(def and T, "Missing defs or timing for " .. id)
+	return #EYES
+end
+-- COPY: the template as it is (meshes, textures, SurfaceAppearances, Motor6Ds and Humanoid), without
+-- the old runtime's attributes, plus the eye plates. Returns the model, its root, its Humanoid and
+-- the report's text.
+local function copied(id, def)
+	local source = assert(folder:FindFirstChild(COPY[id]), "Missing RogueliteNPCs." .. COPY[id])
+	local npc = source:Clone()
+	npc.Name = id .. "_NPC"
+	for _, inst in { npc, table.unpack(npc:GetDescendants()) } do
+		for _, key in LEGACY_ATTRIBUTES do
+			if inst:GetAttribute(key) ~= nil then
+				inst:SetAttribute(key, nil)
+			end
+		end
+	end
+	local root = assert(npc.PrimaryPart or npc:FindFirstChild("HumanoidRootPart"), "Missing HumanoidRootPart in " .. COPY[id])
+	local humanoid = assert(npc:FindFirstChildOfClass("Humanoid"), "Missing Humanoid in " .. COPY[id])
+	assertUnderMeshCap(npc, id)
+	local motors, sections = 0, 0
+	for _, v in npc:GetDescendants() do
+		if v:IsA("Motor6D") then
+			motors += 1
+		elseif v:IsA("MeshPart") then
+			sections += 1
+			local surface = v:FindFirstChildOfClass("SurfaceAppearance")
+			assert(v.TextureID:match("^rbxassetid://") or (surface and surface.ColorMap ~= ""), "Untextured section " .. v.Name)
+		end
+	end
+	local eyes = eyePlates(npc, def)
+	if not humanoid:FindFirstChildOfClass("Animator") then
+		Instance.new("Animator").Parent = humanoid
+	end
+	npc.PrimaryPart = root
+	return npc, root, humanoid, string.format("copy of %s motors=%d sections=%d eyes=%d", COPY[id], motors, sections, eyes)
+end
+-- A raw import as a template (the other four). Returns the model, its new root and Humanoid, the
+-- report's text and the ground height.
+local function imported(id, def, T)
+	assert(raw, "Import the boss FBX files first")
 	local source = assert(raw:FindFirstChild(id), "Missing raw import " .. id)
 	-- A fresh Model at scale 1, not the raw import's clone (ScaleTo 0.01): a Humanoid scales its
 	-- walking force by its model's scale, so at 0.01 the boss slid as if on ice (EnemyTemplateTests).
@@ -169,6 +243,40 @@ for _, id in only or Defs.Order do
 	humanoid.Name = "Humanoid"
 	humanoid.RigType = Enum.HumanoidRigType.R15
 	humanoid.AutomaticScalingEnabled = false
+	humanoid.Parent = npc
+	Instance.new("Animator").Parent = humanoid
+	npc.PrimaryPart = root
+	local bones = 0
+	for _, v in npc:GetDescendants() do
+		if v:IsA("Bone") then
+			bones += 1
+		end
+	end
+	return npc, root, humanoid, string.format("bones=%d sections=%d", bones, sections), centre.Y - T.rootHeight
+end
+local report = {}
+local only = ONLY
+for _, id in only or Defs.Order do
+	-- The template is built at authored size; MapBossService applies def.scale at spawn.
+	local def, T = Defs.get(id), Defs.rawTiming(id)
+	local available = if COPY[id] then folder:FindFirstChild(COPY[id]) else raw and raw:FindFirstChild(id)
+	if not only and not (def and T and available) then
+		table.insert(report, "SKIPPED " .. id .. ": " .. (not def and "no def" or not T and "no MapBossTiming entry" or COPY[id] and "no " .. COPY[id] or "no raw import"))
+		continue
+	end
+	assert(def and T, "Missing defs or timing for " .. id)
+	local npc, root, humanoid, extra, ground
+	if COPY[id] then
+		npc, root, humanoid, extra = copied(id, def)
+		-- The timing's root height must be this template's (HumanoidRootPart centre above the soles):
+		-- MapBossService sets HipHeight from it.
+		ground = root.Position.Y - T.rootHeight
+		assert(math.abs(lowestY(npc) - ground) < 0.05, string.format("%s: MapBossTiming rootHeight %.3f is not the template's %.3f", id, T.rootHeight, root.Position.Y - lowestY(npc)))
+	else
+		npc, root, humanoid, extra, ground = imported(id, def, T)
+	end
+	local groundOffset = T.groundOffset or 0
+	humanoid.AutomaticScalingEnabled = false
 	humanoid.RequiresNeck = false
 	humanoid.BreakJointsOnDeath = false
 	humanoid.HipHeight = math.max(0, T.rootHeight - root.Size.Y * 0.5)
@@ -176,9 +284,6 @@ for _, id in only or Defs.Order do
 	humanoid.Health = def.health
 	humanoid.WalkSpeed = def.chaseSpeed
 	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-	humanoid.Parent = npc
-	Instance.new("Animator").Parent = humanoid
-	npc.PrimaryPart = root
 	npc:SetAttribute("IsBoss", true)
 	npc:SetAttribute("IsMapBoss", true)
 	npc:SetAttribute("MapBossId", id)
@@ -198,27 +303,20 @@ for _, id in only or Defs.Order do
 		existing.Parent = backupFolder()
 	end
 	npc.Parent = folder
-	local bones = 0
-	for _, v in npc:GetDescendants() do
-		if v:IsA("Bone") then
-			bones += 1
-		end
-	end
 	table.insert(
 		report,
 		string.format(
-			"INSTALLED %s bones=%d sections=%d hrpHeight=%.3f hipHeight=%.3f lowestMeshAboveGround=%.3f",
+			"INSTALLED %s %s hrpHeight=%.3f hipHeight=%.3f lowestMeshAboveGround=%.3f",
 			id,
-			bones,
-			sections,
+			extra,
 			root.Size.Y,
 			humanoid.HipHeight,
-			lowestY(npc) - (centre.Y - T.rootHeight)
+			lowestY(npc) - ground
 		)
 	)
 end
 -- VFX mesh templates: children of the BossVfxAssets ids module (plan F Task 10 fills its Source).
-local kit = raw:FindFirstChild("VfxKit")
+local kit = raw and raw:FindFirstChild("VfxKit")
 if kit then
 	local assets = combat:FindFirstChild("BossVfxAssets")
 	if not assets then

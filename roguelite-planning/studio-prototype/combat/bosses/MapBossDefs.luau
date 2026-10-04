@@ -51,9 +51,13 @@ D.FIRST_ATTACK=1.2 -- seconds after spawn before the first attack
 -- players' 24. Charge starts at 22 studs, so the order walk picks it only when nobody is in melee
 -- reach, and never within 5 s of the last one (lockout). Every slam (Slam, SpinSlam's second hit, the
 -- ChargeSlam) opens CRACKS under up to 3 players it missed, 0.85 s later. The eyes glow white
--- (glowColor, the installer's Neon EyeGlow) until the enrage turns them red (BossVfx/Hammer).
+-- (glowColor, the installer's Neon HammerBrute_EyeGlow plates) until the enrage turns them red
+-- (BossVfx/Hammer).
+-- He keeps the original 16-part Motor6D model (R9, 2026-10-04): Hammer_NPC is a copy of HammerBoss_NPC,
+-- authored at 1.0, and scale 1.15 is that model's in-game size (the old BossMotion.SCALE): 11.92
+-- studs authored, 13.7 in game. The clips are Motor6D.Transforms (partposes_to_motor6d.py).
 local CRACKS={radius=5.5,delay=.85,maxTargets=3,range=40,damage=16}
-D.Hammer={anim='hammer-brute',name='Hammer Brute',introName='HAMMER ZOMBIE BOSS',health=18000,scale=1,chaseSpeed=20,glowColor=Color3.fromRGB(255,255,255),
+D.Hammer={anim='hammer-brute',name='Hammer Brute',introName='HAMMER ZOMBIE BOSS',health=18000,scale=1.15,chaseSpeed=20,glowColor=Color3.fromRGB(255,255,255),
  intro={drop=1.2,fall=.65,after=3.6,clip='IntroLand'},roar='Roar',
  enrage={cooldown=.6,chase=3,follow=2,order={'SwingSpin','Slam','Charge','SpinSlam','Swing','SpinSlam','Spin'}},
  tutorial={order={'Slam','Swing','Charge','Slam','Spin'},enrage=false,follow=false},

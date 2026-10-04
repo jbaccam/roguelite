@@ -315,6 +315,38 @@ All work happens in `roguelite-planning/studio-prototype/`. Tests go in `combat/
 
 - [ ] Commit.
 
+### Task R9: the original model on the map-boss runtime (2026-10-04)
+
+R8 is replaced: no FBX import. The Hammer keeps the 16-part Motor6D template `HammerBoss_NPC`, and his clips are re-authored in `hammer-boss-moves/` (design doc, "Change of plan").
+
+**Done (R9):**
+- `receipts/hammer-old-receipt.json`: a read-only Studio dump of `HammerBoss_NPC` (`combat/bosses/DumpMotorReceipt.luau`). Its joints are `Boss_<Part>`, and that is the name `EnemyMotion.bind` gives them.
+- `combat/bosses/partposes_to_motor6d.py` (tests: `test_partposes_to_motor6d.py`):
+  - It reads `PartPoses.json` and writes `StudioAnimationData.json` (rigType Motor6D, `T = C0⁻¹·P0⁻¹·P1·C1` per joint) and `AnimationData.json` (one bone per part under Root at the root height, in the build's basis).
+  - BossGameData point offsets are in the part's own Studio space.
+  - On the legacy clips, every frame is rebuilt within 1e-4 studs.
+- `build_boss_modules.py`: `FOLDERS['hammer-brute']='hammer-boss-moves'`. It runs the converter itself when `PartPoses.json` is there. The other four bosses stay byte-identical.
+- `MapBossDefs`: `D.Hammer.scale=1.15` (the old `BossMotion.SCALE`). The client scales the Transforms' translations by `GetScale()/EnemyBaselineModelScale` (1.15/1), the same factor `ScaleTo` gives C0/C1.
+- `InstallMapBossTemplates`: `Hammer_NPC` is a copy of `HammerBoss_NPC` (`COPY`), which stays in place for the legacy runtime.
+  - The meshes, textures and SurfaceAppearances are kept as they are.
+  - The legacy attributes are removed and the map-boss attributes added.
+  - Two Neon `HammerBrute_EyeGlow` plates are welded to the Head.
+- `plan_hammer_brute_hunks.py` R9: the shell in RogueliteCombat, HandymanTurretService and PetService skips the `Hammer` part and the hands for `MapBossId=='Hammer'` too.
+- `BossService.practice`: Spawn boss goes to `MapBossService.practice(player,'Hammer')` once `MapBossDefs.ready('Hammer')`. Remove boss removes either Hammer.
+
+**Final install, once the clips land (gate still closed until step 4):**
+1. **Package** in `hammer-boss-moves/exports/game/`:
+   - `PartPoses.json`: all 14 clips and all 16 parts per frame.
+   - `BossGameData.json`, containing:
+     - `attacks` with the §3 timings and `phases`; `HammerFace`/`HammerGrip` as `{"bone":"Hammer","offset":[Studio Hammer-part space]}` plus `rootAtImpactStudio` (the build warns past 0.25 studs);
+     - `height`, `footprintRadius` and `bodyCentreHeight` = 4.45 (authored scale);
+     - `motion` {`strideLength`, `nominalSpeed`, `chargeStrideLength`}.
+2. **Build:** run `python build_boss_modules.py hammer-brute`, then both Python test files.
+3. **Guarded push** of `MapBossTiming` and the new `BossAnimations/hammer-brute` modules, made unsandboxed like the other bosses' animation folders.
+4. **Template:** `ONLY={'Hammer'}` plus `InstallMapBossTemplates` in Edit. This opens the gate: check `ready('Hammer')==true`.
+5. **Checks:** the three boss suites, then a plain capture of `Hammer_NPC`.
+6. **Play-test:** the user play-tests: the wave-20 sky drop, the tutorial, the Spawn boss button, and enrage turning the eyes red.
+
 ---
 
 # Final

@@ -151,8 +151,9 @@ local function reachPoint(npc, root, from)
 	end
 	local best, bestDistance = root.Position, (root.Position - from).Magnitude
 	for _, p in npc:GetChildren() do
-		-- Not the rebuilt Hammer Brute's hammer: it isn't his body (RogueliteCombat.server reachPoint).
-		if (p:IsA("MeshPart") or p == root) and p.Name ~= "HammerBrute_Hammer" then
+		-- Not the Hammer's hammer nor the hands holding it (the map-boss Hammer keeps the old 16-part
+		-- template, R9): they aren't his body (RogueliteCombat.server reachPoint).
+		if (p:IsA("MeshPart") or p == root) and not ((p.Name == "Hammer" or p.Name == "LeftHand" or p.Name == "RightHand") and npc:GetAttribute("MapBossId") == "Hammer") then
 			local l = p.CFrame:PointToObjectSpace(from)
 			local h = p.Size * 0.5
 			local q = p.CFrame:PointToWorldSpace(

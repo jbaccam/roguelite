@@ -10,6 +10,10 @@ HUNKS go from the scripts before R7 (what Studio has until R8) straight to the f
 UPGRADE moves the repo's last committed text (now 0b9b6a8) to the same final text, for the commit that
 changes it (20bff04 -> 0b9b6a8 was the first such step; git keeps the history):
     python plan_hammer_brute_hunks.py --upgrade --stage
+R9 (2026-10-04): the map-boss Hammer keeps the old 16-part template, so the shell (RogueliteCombat,
+HandymanTurretService, PetService) skips its Hammer part and hands, as for the old Hammer. The R9
+list moves the R7 text (the repo and Studio since 6987d7e) to the final text and runs by default:
+    python plan_hammer_brute_hunks.py --stage        (R9 + HUNKS; --pre-r7 for a file from before R7)
 """
 import sys
 from pathlib import Path
@@ -113,6 +117,23 @@ TESTS_LEGACY = (
     " end)\n"
     " add(okNow,('legacy here: Hammer=%s (ready now: %s)'):format(tostring(okNow and Defs.legacy('Hammer')),tostring(readyNow)))")
 
+# R9 (2026-10-04): the map-boss Hammer keeps the old 16-part template (Hammer_NPC, a copy of
+# HammerBoss_NPC), so its shell skips the same hammer and hands as the old Hammer's, not a
+# HammerBrute_Hammer section. The Hammer part and the hands only drop out for a Hammer.
+COMBAT_HELD = (
+    "-- The sections left out of a boss's shell, the hammer and the hands holding it: on the old\n"
+    "-- BossService Hammer and on the map-boss one alike, which keeps the same 16-part template (R9,\n"
+    "-- MapBossId 'Hammer'). Non-nil only for a Hammer.\n"
+    "local function heldBy(npc) if npc:GetAttribute('IsHammerBoss')==true or npc:GetAttribute('MapBossId')=='Hammer' then return HELD end;return nil end")
+TURRET_HELD = (
+    "  -- Not the Hammer's hammer nor the hands holding it, on the old Hammer or the map-boss one (R9, the\n"
+    "  -- same template): RogueliteCombat.server reachPoint.\n"
+    "  if p:IsA('MeshPart') and not ((p.Name=='Hammer' or p.Name=='LeftHand' or p.Name=='RightHand') and (e.hammer or e.npc:GetAttribute('MapBossId')=='Hammer')) then")
+PETS_HELD = (
+    "\t\t-- Not the Hammer's hammer nor the hands holding it (the map-boss Hammer keeps the old 16-part\n"
+    "\t\t-- template, R9): they aren't his body (RogueliteCombat.server reachPoint).\n"
+    "\t\tif (p:IsA(\"MeshPart\") or p == root) and not ((p.Name == \"Hammer\" or p.Name == \"LeftHand\" or p.Name == \"RightHand\") and npc:GetAttribute(\"MapBossId\") == \"Hammer\") then")
+
 HUNKS = [
     # --- R4 BossIntro: map bosses with a sky-drop entrance (MapBossService def.intro) -------------
     (INTRO, INTRO_S,
@@ -170,15 +191,10 @@ HUNKS = [
      "                local at = timing and point + Vector3.yAxis * (timing.rootHeight + 0.1)\n"
      "                local boss = at and service.spawn(id, CFrame.lookAt(at, Vector3.new(position.X, at.Y, position.Z)), true)"),
 
-    # --- R7 RogueliteCombat: the shell weapons measure to, and the melee aim at it ------------------
+    # --- R7 RogueliteCombat: the shell weapons measure to, and the melee aim at it (R9 final text) ----
     (COMBAT, COMBAT_S,
      "local HELD={Hammer=true,LeftHand=true,RightHand=true}", "after",
-     "-- The rebuilt Hammer Brute (a map boss, MapBossId 'Hammer') is skinned: his hands are part of his\n"
-     "-- body mesh, and only the hammer is its own section.\n"
-     "local HELD_BRUTE={HammerBrute_Hammer=true}\n"
-     "-- The sections left out of a boss's shell: the old Hammer's hammer and hands, the new one's hammer.\n"
-     "-- Non-nil only for a Hammer Brute, old or rebuilt.\n"
-     "local function heldBy(npc) if npc:GetAttribute('IsHammerBoss')==true then return HELD end;return npc:GetAttribute('MapBossId')=='Hammer' and HELD_BRUTE or nil end"),
+     COMBAT_HELD),
     (COMBAT, COMBAT_S,
      " local hammer=npc:GetAttribute('IsHammerBoss')==true", "replace",
      " local skip=heldBy(npc)"),
@@ -192,15 +208,13 @@ HUNKS = [
      "    -- him at his root; standing inside a body section, it still swings at his root.\n"
      "    local aim=d.kind=='Melee' and heldBy(target.Parent)~=nil and (reach-origin).Magnitude>.1 and reach or target.Position"),
 
-    # --- R7 turrets and pets measure to the same shell ------------------------------------------------
+    # --- R7 turrets and pets measure to the same shell (R9 final text) --------------------------------
     (TURRET, TURRET_S,
      "  if p:IsA('MeshPart') and not (e.hammer and (p.Name=='Hammer' or p.Name=='LeftHand' or p.Name=='RightHand')) then", "replace",
-     "  -- Not the Hammer Brute's hammer (nor the old one's hands): RogueliteCombat.server reachPoint.\n"
-     "  if p:IsA('MeshPart') and p.Name~='HammerBrute_Hammer' and not (e.hammer and (p.Name=='Hammer' or p.Name=='LeftHand' or p.Name=='RightHand')) then"),
+     TURRET_HELD),
     (PETS, PETS_S,
      "\t\tif p:IsA(\"MeshPart\") or p == root then", "replace",
-     "\t\t-- Not the rebuilt Hammer Brute's hammer: it isn't his body (RogueliteCombat.server reachPoint).\n"
-     "\t\tif (p:IsA(\"MeshPart\") or p == root) and p.Name ~= \"HammerBrute_Hammer\" then"),
+     PETS_HELD),
 
     # --- R7 TutorialGuide: the tutorial's boss is a map boss once the rebuilt Hammer is in --------------
     (GUIDE, GUIDE_S,
@@ -230,5 +244,27 @@ UPGRADE = [
      CHASE_FALLBACK),
 ]
 
+# R7 text -> R9 final text (what the repo and Studio have had since 6987d7e). Runs before HUNKS, which
+# then find every R9 text present.
+R9 = [
+    (COMBAT, COMBAT_S,
+     ("-- The rebuilt Hammer Brute (a map boss, MapBossId 'Hammer') is skinned: his hands are part of his",
+      "local function heldBy(npc) if npc:GetAttribute('IsHammerBoss')==true then return HELD end;return npc:GetAttribute('MapBossId')=='Hammer' and HELD_BRUTE or nil end"), "block",
+     COMBAT_HELD),
+    (TURRET, TURRET_S,
+     ("  -- Not the Hammer Brute's hammer (nor the old one's hands): RogueliteCombat.server reachPoint.",
+      "  if p:IsA('MeshPart') and p.Name~='HammerBrute_Hammer' and not (e.hammer and (p.Name=='Hammer' or p.Name=='LeftHand' or p.Name=='RightHand')) then"), "block",
+     TURRET_HELD),
+    (PETS, PETS_S,
+     ("\t\t-- Not the rebuilt Hammer Brute's hammer: it isn't his body (RogueliteCombat.server reachPoint).",
+      "\t\tif (p:IsA(\"MeshPart\") or p == root) and p.Name ~= \"HammerBrute_Hammer\" then"), "block",
+     PETS_HELD),
+]
+
 if __name__ == "__main__":
-    run(UPGRADE + HUNKS if "--upgrade" in sys.argv else HUNKS)
+    # Default: files with the R7 text (R9, then HUNKS all present). --upgrade: from 0b9b6a8's text.
+    # --pre-r7: files from before R7 (HUNKS alone go straight to the final text).
+    if "--pre-r7" in sys.argv:
+        run(HUNKS)
+    else:
+        run((UPGRADE if "--upgrade" in sys.argv else []) + R9 + HUNKS)

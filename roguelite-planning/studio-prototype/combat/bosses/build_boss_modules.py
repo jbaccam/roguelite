@@ -17,6 +17,12 @@ Hammer Brute rebuild (R6, 2026-10-03). All of it is optional, so the other four 
   chargeStrideLength: studs per ChargeRun cycle (motion, BossGameData, or attacks.ChargeRun).
   IntroLand and ChargeSlam (the charge's finish slam) need attack timing entries like the attacks;
   Roar, ChargeStart and ChargeRun need durations only (DURATION_ONLY).
+Hammer on the old template (R9, 2026-10-04): his clips are re-authored as part poses on the original
+16-part Motor6D template (hammer-boss-moves). When <asset-folder>/exports/game/PartPoses.json is
+there, partposes_to_motor6d.py first writes StudioAnimationData.json and AnimationData.json from it
+and receipts/hammer-old-receipt.json (PART_POSES); the rest of the build is the same. Their
+AnimationData carries rootHeight (the template's HumanoidRootPart above its soles), used when
+BossGameData has no bodyCentreHeight.
 
 Usage: python build_boss_modules.py [id ...]   (default: every boss in FOLDERS)
 A boss whose exports/game package isn't there yet is skipped with a message. MapBossTiming keeps
@@ -35,7 +41,9 @@ PLANNING = HERE.parents[2]
 OUT = HERE / 'BossAnimations'
 LIMIT = 190000
 FOLDERS = {'king-crab': 'king-crab-boss', 'frost-cyclops': 'frost-cyclops-boss', 'pharaoh': 'pharaoh-boss', 'dragon': 'dragon-boss',
-           'hammer-brute': 'hammer-brute-boss'}
+           'hammer-brute': 'hammer-boss-moves'}
+# Bosses whose clips arrive as part poses on a Motor6D template: id -> that template's receipt (R9).
+PART_POSES = {'hammer-brute': HERE / 'receipts' / 'hammer-old-receipt.json'}
 # Mirrors MapBossDefs.ATTACK_CLIPS.
 ATTACKS = {
     'king-crab': ['ClawCrush', 'RushStart', 'RushLoop', 'RushEnd', 'BubbleBarrage'],
@@ -196,7 +204,8 @@ def timing(id, data, game):
     entry = {
         # Height of the HumanoidRootPart centre above the ground (armature origin): the package's
         # body centre, else 40% of the height (a root bone on the ground reports 0).
-        'rootHeight': float(game['bodyCentreHeight']) if game.get('bodyCentreHeight') else max(float(game.get('rootHeight') or 0), round(0.4 * height, 2)),
+        # A part-pose package's AnimationData has the template's own (R9).
+        'rootHeight': float(game['bodyCentreHeight']) if game.get('bodyCentreHeight') else float(data['rootHeight']) if data.get('rootHeight') else max(float(game.get('rootHeight') or 0), round(0.4 * height, 2)),
         'height': height, 'footprintRadius': float(game['footprintRadius']),
         # Soles below the armature's z=0 in every clip (Frost Cyclops); sampled points include it.
         'groundOffset': float(game.get('groundOffset') or 0),
@@ -307,10 +316,25 @@ def timing_source(table):
     return source
 
 
+def convert_part_poses(id, game_dir):
+    """A part-pose boss (PART_POSES) with its PartPoses.json there: partposes_to_motor6d writes its
+    StudioAnimationData.json and AnimationData.json (derived inputs, before anything this build
+    writes). A failed conversion stops the build. True when it ran."""
+    receipt = PART_POSES.get(id)
+    if not receipt or not (game_dir / 'PartPoses.json').exists(): return False
+    import partposes_to_motor6d
+    try:
+        partposes_to_motor6d.convert_package(game_dir.parent.parent, receipt)
+    except (ValueError, FileNotFoundError, AssertionError, KeyError) as error:
+        raise SystemExit(f'{id}: PartPoses.json not converted ({error}); nothing written')
+    return True
+
+
 def main(ids):
     table, built = existing(), {}
     for id in ids:
         game_dir = PLANNING / FOLDERS[id] / 'exports' / 'game'
+        convert_part_poses(id, game_dir)
         missing = [n for n in PACKAGE if not (game_dir / n).exists()]
         if missing:
             kept = ' (its MapBossTiming entry is kept)' if id in table else ''

@@ -159,12 +159,10 @@ local function clear(origin,finish,p) return workspace:Raycast(origin,finish-ori
 -- and the hands holding it are not his body, or reaching the hammer would hit him. Every other
 -- enemy is measured to its root, as before.
 local HELD={Hammer=true,LeftHand=true,RightHand=true}
--- The rebuilt Hammer Brute (a map boss, MapBossId 'Hammer') is skinned: his hands are part of his
--- body mesh, and only the hammer is its own section.
-local HELD_BRUTE={HammerBrute_Hammer=true}
--- The sections left out of a boss's shell: the old Hammer's hammer and hands, the new one's hammer.
--- Non-nil only for a Hammer Brute, old or rebuilt.
-local function heldBy(npc) if npc:GetAttribute('IsHammerBoss')==true then return HELD end;return npc:GetAttribute('MapBossId')=='Hammer' and HELD_BRUTE or nil end
+-- The sections left out of a boss's shell, the hammer and the hands holding it: on the old
+-- BossService Hammer and on the map-boss one alike, which keeps the same 16-part template (R9,
+-- MapBossId 'Hammer'). Non-nil only for a Hammer.
+local function heldBy(npc) if npc:GetAttribute('IsHammerBoss')==true or npc:GetAttribute('MapBossId')=='Hammer' then return HELD end;return nil end
 local function shelled(npc) return npc:GetAttribute('IsMapBoss')==true or npc:GetAttribute('IsHammerBoss')==true end
 -- A boss's body sections in child order, kept until a child is added or removed (or it is
 -- destroyed): walking every child per slot per tick and per melee hit was the cost.
