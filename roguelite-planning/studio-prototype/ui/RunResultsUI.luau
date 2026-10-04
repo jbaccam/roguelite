@@ -136,6 +136,12 @@ function M.mount(player)
    again.Visible=false
    back.Position=UDim2.fromOffset((PW-bw)/2,PH-96);T.setPrimary(back,true);back.Caption.Text='LOBBY'
   end
+  -- Left with the party (LEAVE WITH PARTY, 2026-10-03): the party goes home together, so no PLAY
+  -- AGAIN (the server refuses it too); BACK TO LOBBY takes everyone still on their results.
+  if r.party and not r.tutorial then
+   again.Visible=false
+   back.Position=UDim2.fromOffset((PW-bw)/2,PH-96);T.setPrimary(back,true)
+  end
   note=centred(T.label(board,'Note','',28,PH-30,PW-56,24,18,C.muted))
   paintAgain()
   if UserInputService:GetLastInputType().Name:find('^Gamepad') then pcall(function() GuiService.SelectedObject=again end) end
@@ -151,6 +157,8 @@ function M.mount(player)
   T.sound(data.outcome=='Victory' and 'ui_upgrade' or 'ui_equip')
   relayout() -- the screen was off: measure it again (this draws)
   if not content then draw() end
+  -- The party leader ended the run (LEAVE WITH PARTY): say so up front, not just in the note.
+  if type(data.notice)=='string' then T.toast(screen,data.notice,C.gold) end
   -- The countdown follows the server's clock (returnAt), so a slow client never shows it wrong.
   task.spawn(function()
    while token==mine and screen.Enabled do
@@ -158,6 +166,11 @@ function M.mount(player)
     elseif note and result.returnAt then
      local left=math.max(0,math.ceil(result.returnAt-workspace:GetServerTimeNow()))
      note.Text=left>0 and ('Back to the lobby in '..left..'s') or 'Returning to the lobby...'
+     -- A party that left together: who ended it, and that you all go back together.
+     if result.party then
+      note.Text=(result.notice and (result.notice..'  ·  ') or '')..(left>0 and ('Back to the lobby with your party in '..left..'s') or 'Returning to the lobby with your party...')
+      note.TextColor3=result.notice and C.gold or C.muted
+     end
     end
     task.wait(.25)
    end
@@ -205,6 +218,29 @@ function M.mount(player)
  player:GetAttributeChangedSignal('RejoinOffer'):Connect(drawOffer)
  offerRoot:GetPropertyChangedSignal('AbsoluteSize'):Connect(function() if offerGui.Enabled then drawOffer() end end)
  drawOffer()
+
+ -- Victory (user, 2026-10-03: "better clarification on when to leave and when the game is done
+ -- (round 20)"): clearing wave 20 (RogueliteRunState.Won, RogueliteMeta) opens "YOU WON!" over the
+ -- shop: LEAVE collects the rewards (results, then the lobby), KEEP GOING carries on into Endless
+ -- (harder waves, emeralds every 5 more). Emeralds are paid at each clear, so they're safe either
+ -- way. Shown once, when the win happens (not to someone rejoining an Endless run), and closed when
+ -- the next wave starts. Never in the tutorial, which has no VICTORY banner on purpose (b22ff42).
+ local victoryGui=T.make('ScreenGui',player.PlayerGui,{Name='VictoryPanel',ResetOnSpawn=false,DisplayOrder=75,
+  ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets})
+ local victoryWin
+ task.spawn(function()
+  local runState=RS:WaitForChild('RogueliteRunState',60);if not runState then return end
+  local Rules=require(RS:WaitForChild('RunSetupRules'))
+  runState:GetAttributeChangedSignal('Won'):Connect(function()
+   if runState:GetAttribute('Won')~=true then if victoryWin then victoryWin.Close() end;return end
+   if victoryWin or combat:GetAttribute('TutorialRun')==true or not player:GetAttribute('RunMember') or player:GetAttribute('RunResult') then return end
+   local index=Rules.MapIndex[combat:GetAttribute('RunMap')]
+   local sub=('WAVE %d CLEARED  ·  %s  ·  %s'):format(Rules.WinWave,string.upper(index and Rules.Maps[index].name or 'Pine Valley'),string.upper(combat:GetAttribute('RunDifficulty') or 'Normal'))
+   T.sound('ui_upgrade')
+   victoryWin=T.leaveConfirm(victoryGui,{victory=true,sub=sub,onClose=function() victoryWin=nil end,
+    closeOn={runState:GetAttributeChangedSignal('Phase')},closeIf=function() return runState:GetAttribute('Phase')=='Combat' end})
+  end)
+ end)
  return M
 end
 return M

@@ -7,7 +7,7 @@
 --   "REVIVE OR THE RUN ENDS · n", the server's last-stand clock (RogueliteRunState.LastStandEndsAt).
 --   The same clock shows under the YOU DIED splash, so it is on screen from the first moment.
 -- REVIVE is Robux, server-validated, and its price doubles with each revive in a run (DeathInfo);
--- LEAVE RUN ends this player's run (results screen).
+-- LEAVE RUN asks first (UITheme.leaveConfirm), then ends this player's run (results screen).
 local TweenService=game:GetService('TweenService')
 local RunService=game:GetService('RunService')
 local Http=game:GetService('HttpService')
@@ -88,7 +88,7 @@ function M.mount(player)
  local function follow(p)
   watching=p
   local h=p and p.Character and p.Character:FindFirstChildOfClass('Humanoid')
-  if h then workspace.CurrentCamera.CameraSubject=h end
+  if h then T.cameraFollow(h) end -- the regular camera on them (UITheme), so a self-heal keeps it there
  end
  local function cycle(step)
   local list=teammates();if #list==0 then return end
@@ -169,7 +169,7 @@ function M.mount(player)
    local bw=320;local by=96
    local revive=T.button(bar,'Revive','REVIVE  ·  R$ '..revivePrice(),W/2-bw-16,by,bw,bh,function() combat.PurchaseRequest:FireServer('Revive') end)
    revive.Caption.TextSize=26
-   local leave=T.button(bar,'LeaveRun','LEAVE RUN',W/2+16,by,bw,bh,function() combat.RunAction:FireServer('LeaveRun') end,true)
+   local leave=T.button(bar,'LeaveRun','LEAVE RUN',W/2+16,by,bw,bh,function() M.confirmLeave() end,true)
    leave.Caption.TextSize=26;leave.Caption.TextColor3=C.negative
    readable(T.text(bar,'LeaveNote','Keep '..(info.emeralds or 0)..' emeralds',W/2+16,by+bh+6,bw,20,16,C.muted)).TextXAlignment=Enum.TextXAlignment.Center
    if UserInputService:GetLastInputType().Name:find('^Gamepad') then GuiService.SelectedObject=revive end
@@ -177,7 +177,7 @@ function M.mount(player)
   end
   shade.BackgroundTransparency=.2;vignette.BackgroundTransparency=.35
   -- Nobody to watch: back to your own body (it lies where you fell).
-  if watching then watching=nil;local own=player.Character and player.Character:FindFirstChildOfClass('Humanoid');if own then workspace.CurrentCamera.CameraSubject=own end end
+  if watching then watching=nil;T.cameraFollow(nil) end
   local W=1180
   local s=math.min(1,(v.X-24)/W)
   local bh=math.max(64,math.ceil(40/s)) -- REVIVE / GIVE UP stay 40 px to tap
@@ -249,7 +249,7 @@ function M.mount(player)
   local nextPrice=Money.price(Money.reviveKey((info.revive or 1)+1))
   local noteText=(nextPrice and nextPrice>revivePrice()) and ('Back with 50% health  ·  next one R$ '..nextPrice) or 'Back in the same wave with 50% health'
   local note=readable(T.text(summary,'ReviveNote',noteText,W/2-bw/2-20-170,by-24,340,20,17,C.muted));note.TextXAlignment=Enum.TextXAlignment.Center
-  local give=T.button(summary,'LeaveRun','LEAVE RUN',W/2+20,by,bw,bh,function() combat.RunAction:FireServer('LeaveRun') end,true)
+  local give=T.button(summary,'LeaveRun','LEAVE RUN',W/2+20,by,bw,bh,function() M.confirmLeave() end,true)
   give.Caption.TextSize=26;give.Caption.TextColor3=C.negative
   local keys=readable(T.text(summary,'LeaveNote','Keep '..(info.emeralds or 0)..' emerald'..((info.emeralds or 0)==1 and '' or 's')..' and see your results',W/2+bw/2+20-170,by-24,340,20,17,C.muted));keys.TextXAlignment=Enum.TextXAlignment.Center
   summary.Position=UDim2.fromOffset(v.X/2,cy+v.Y*.06);TweenService:Create(summary,TweenInfo.new(.35,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(v.X/2,cy)}):Play()
@@ -258,6 +258,14 @@ function M.mount(player)
   elseif UserInputService:GetLastInputType().Name:find('^Gamepad') then GuiService.SelectedObject=revive end
  end
  function M.redraw() if summary and screen.Enabled then build() end end
+ -- LEAVE RUN (both views) asks first, with the pause menu's and the shop's popup (UITheme.leaveConfirm,
+ -- 2026-10-03): "Leave the run? You keep 340 emeralds." It sits on this screen, so a rebuild keeps
+ -- it, and it closes when this screen does (a revive) or the run ends.
+ local confirmWin
+ function M.confirmLeave()
+  if confirmWin or not screen.Enabled then return end
+  confirmWin=T.leaveConfirm(screen,{keep=info.emeralds,onClose=function() confirmWin=nil end})
+ end
  local function show()
   local raw=player:GetAttribute('DeathInfo');local ok,d=pcall(Http.JSONDecode,Http,raw or '')
   info=ok and d or {}
@@ -321,8 +329,9 @@ function M.mount(player)
  end
  local function hide()
   token+=1;screen.Enabled=false;clock.Visible=false;T.hideTouchControls('DeathScreen',false);if summary then summary:Destroy();summary=nil end
+  if confirmWin then confirmWin.Close() end -- back on their feet: no leave question left over
   -- Spectating ends: the camera goes back to this player's own body when there is one.
-  if watching then watching=nil;local own=player.Character and player.Character:FindFirstChildOfClass('Humanoid');if own then workspace.CurrentCamera.CameraSubject=own end end
+  if watching then watching=nil;T.cameraFollow(nil) end
  end
  -- Q / E and the bumpers switch the teammate you watch.
  UserInputService.InputBegan:Connect(function(input,processed)

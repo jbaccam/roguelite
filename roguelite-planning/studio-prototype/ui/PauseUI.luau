@@ -82,7 +82,9 @@ function M.new(player,opts)
  local veil=T.make('TextButton',gui,{Name='Veil',Text='',AutoButtonColor=false,Active=true,Modal=true,Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.fromRGB(4,7,8),BackgroundTransparency=.34,BorderSizePixel=0})
  local root=T.frame(gui,'Root',0,0,0,0);root.Size=UDim2.fromScale(1,1)
  local self={Gui=gui,Root=root,open=false}
- local settingsWindow,leaveArmed,redraw
+ -- confirmWin: the Leave Run popup; restarting: when RESTART was pressed (waiting on the server);
+ -- sync: keeps the server's pause in step with this menu (set below, live screens only).
+ local settingsWindow,confirmWin,restarting,sync,redraw
 
  local function snapshot()
   local raw=state:GetAttribute('ShopSnapshot');if not raw then return {} end
@@ -94,7 +96,9 @@ function M.new(player,opts)
   local diff=flags:GetAttribute('RunDifficulty') or 'Normal'
   local wave=runState:GetAttribute('Wave') or 1
   local color=diff=='Hard' and C.gold or diff=='Nightmare' and C.negative or C.lime
-  local waveText=(runState:GetAttribute('Won') and 'ENDLESS WAVE ' or 'WAVE ')..wave
+  -- The goal in sight (2026-10-03): WAVE 7 / 20 until the win, then ENDLESS WAVE 21. The tutorial
+  -- keeps plain WAVE 2.
+  local waveText=runState:GetAttribute('Won') and ('ENDLESS WAVE '..wave) or flags:GetAttribute('TutorialRun') and ('WAVE '..wave) or ('WAVE '..wave..' / '..Rules.WinWave)
   return string.upper(m and m.name or 'RUN'),string.upper(diff),color,waveText,wave
  end
  -- Everyone in the run, downed players too (their card says down; they don't count toward
@@ -109,14 +113,17 @@ function M.new(player,opts)
 
  function self.Close(silent)
   if not self.open then return end
-  self.open=false;gui.Enabled=false;leaveArmed=nil
+  self.open=false;gui.Enabled=false;restarting=nil
   if settingsWindow then settingsWindow.Close() end
+  if confirmWin then confirmWin.Close() end
   if not silent then remote:FireServer('SetPaused',false) end
+  if sync then sync(true) end
  end
  function self.Open()
   if self.open or player:GetAttribute('RunDown') or player:GetAttribute('RunResult') or not player:GetAttribute('RunMember') then return end
   self.open=true;gui.Enabled=true;redraw()
   remote:FireServer('SetPaused',true)
+  if sync then sync(true) end
   T.gamepadSelect(root)
  end
  function self.Toggle() if self.open then self.Close() else self.Open() end end
@@ -228,19 +235,27 @@ function M.new(player,opts)
   end,true);settings.Caption.TextSize=26
   by+=bh+(tight and 12 or 20)
   if M.RESTART then
-   local restart=FX.button(canvas,'Restart',(tight and not solo) and 'RESTART  ·  SOLO ONLY' or 'RESTART',mx,by,MID_W,bh,function() if solo then remote:FireServer('Restart');self.Close(true) end end,true)
+   -- The menu stays up until the run really restarts (its results flash closes it, below) or the
+   -- server says no, so a refused restart can't leave the run paused behind a closed menu.
+   local restart=FX.button(canvas,'Restart',restarting and 'RESTARTING...' or (tight and not solo) and 'RESTART  ·  SOLO ONLY' or 'RESTART',mx,by,MID_W,bh,function()
+    if not solo or restarting then return end
+    local mine=os.clock();restarting=mine;remote:FireServer('Restart');redraw()
+    task.delay(5,function() if restarting==mine and self.open then restarting=nil;redraw();T.toast(gui,"Couldn't restart. Try again",C.negative) end end)
+   end,true)
    restart.Caption.TextSize=26
    if not solo then restart.Interactable=false;if not tight then center(T.text(canvas,'RestartHint','Restart is for solo runs',mx,by+bh+2,MID_W,22,14,C.muted)) end end
    by+=bh+(tight and 12 or 40)
   end
+  -- LEAVE RUN opens the shared confirm (UITheme.leaveConfirm, 2026-10-03), any time in the run. The
+  -- menu stays open until the run has ended for this player (the results close it, below); a
+  -- refusal shows in the popup. It used to send LeaveRun and close itself without unpausing, while
+  -- the server refused mid-wave leaves: a paused solo run stayed frozen with no menu up.
   local leave=FX.button(canvas,'Leave','LEAVE RUN',mx,by,MID_W,bh,function()
-   if leaveArmed and os.clock()-leaveArmed<3 then remote:FireServer('LeaveRun');self.Close(true);return end
-   leaveArmed=os.clock();redraw()
+   if confirmWin then return end
+   confirmWin=T.leaveConfirm(gui,{onClose=function() confirmWin=nil end})
   end,true)
-  local armed=leaveArmed and os.clock()-leaveArmed<3
-  leave.Caption.Text=armed and 'TAP AGAIN TO LEAVE' or 'LEAVE RUN';leave.Caption.TextSize=armed and 22 or 26;leave.Caption.TextColor3=C.negative
+  leave.Caption.TextSize=26;leave.Caption.TextColor3=C.negative
   center(T.text(canvas,'LeaveHint',tight and 'You keep the emeralds earned so far' or 'Leaving keeps the emeralds you earned so far',mx,by+bh+(tight and 8 or 6),MID_W,tight and 22 or 44,15,C.muted))
-  if armed then task.delay(3.1,function() if self.open and leaveArmed and os.clock()-leaveArmed>=3 then leaveArmed=nil;redraw() end end) end
   -- Right: build. Weapons (6), items (16 kinds, copies stack ×5), level-ups (16 cards, picks stack).
   local R1=glass(canvas,'Build',rx,top,side,panelH)
   local rs=T.scroll(R1,'List',0,0,side,panelH);rs.ScrollBarThickness=4
@@ -298,6 +313,31 @@ function M.new(player,opts)
  for _,p in Players:GetPlayers() do watch(p) end
  Players.PlayerAdded:Connect(watch);Players.PlayerRemoving:Connect(changed)
  if opts.parent then relayout();return self end -- previews: no input hooks
+ -- Keep the server's pause in step with this menu (2026-10-03): if the server still has this player
+ -- paused with the menu shut (a lost resume), or not paused with it open, ask again, up to 3 times
+ -- per change. Example: P tapped twice fast and the resume got lost -> 0.6 s later it goes again and
+ -- the run unfreezes.
+ local tries,queued=0,false
+ sync=function(fresh)
+  if fresh then tries=0 end
+  if queued then return end
+  queued=true
+  task.delay(.6,function()
+   queued=false
+   if not player:GetAttribute('RunMember') then return end
+   local want=self.open and not player:GetAttribute('RunDown') and not player:GetAttribute('RunResult')
+   if (player:GetAttribute('Paused')==true)==(want==true) or tries>=3 then return end
+   tries+=1;remote:FireServer('SetPaused',want==true);sync()
+  end)
+ end
+ player:GetAttributeChangedSignal('Paused'):Connect(function() sync(true) end)
+ -- RESTART refused (RunAction 'LeaveResult' with no request number; the Leave Run popup hears its
+ -- own): say why, and it can be pressed again.
+ if typeof(remote)=='Instance' then remote.OnClientEvent:Connect(function(kind,ok,why,token)
+  if kind~='LeaveResult' or ok==true or token~=nil or not restarting then return end
+  restarting=nil
+  if self.open then redraw();T.toast(gui,type(why)=='string' and why or "Couldn't restart",C.negative) end
+ end) end
  -- The death and results screens take over: close quietly (the server forgets the pause).
  for _,a in {'RunDown','RunResult','RunMember'} do player:GetAttributeChangedSignal(a):Connect(function() if self.open and (player:GetAttribute('RunDown') or player:GetAttribute('RunResult') or not player:GetAttribute('RunMember')) then self.Close() end end) end
  -- P toggles (not while typing); the Roblox menu (Esc, a controller's Start) opens it behind.

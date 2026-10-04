@@ -4,7 +4,32 @@
 -- values, so RunPauseTests runs it with stand-in players; RogueliteMeta applies the freeze.
 local R={}
 
-function R.new() return {paused={},frozen=false,frozenAt=nil} end
+function R.new() return {paused={},frozen=false,frozenAt=nil,lastPause={}} end
+
+-- Requests (RunAction SetPaused, 2026-10-03): a pause at most once every RATE seconds per player,
+-- so spamming P can't flicker the freeze; a resume always goes through. The old shared limit
+-- dropped a resume sent within 0.25 s of the pause (P tapped twice), leaving a solo run frozen with
+-- the menu closed. Example: pause at 10.0, resume at 10.1 -> both apply; pause again at 10.2 ->
+-- dropped (the menu re-sends it, PauseUI).
+R.RATE=.25
+function R.allow(st,p,on,now)
+ if on~=true then return true end
+ if now-(st.lastPause[p] or -math.huge)<R.RATE then return false end
+ st.lastPause[p]=now
+ return true
+end
+-- Leave Run (2026-10-03): may this player leave right now? Returns true, or false and the reason
+-- the menu shows. s = {member, down, alive, withParty, leader}. Any time from the death screen, the
+-- shop or the pause menu, mid-wave included: the server used to refuse an alive player mid-wave
+-- without a word while the pause menu closed itself, which left the run frozen. LEAVE WITH PARTY
+-- is the private party's leader's alone (leader=true, MatchService).
+function R.canLeave(s)
+ if s.withParty and not s.leader then return false,'Only the party leader can end the run for the party' end
+ if s.down then return true end
+ if not s.member then return false,'You are not in a run' end
+ if not s.alive then return false,'Wait until you are back on your feet' end
+ return true
+end
 
 -- Mark p paused (true) or playing. Returns true when it changed anything.
 function R.set(st,p,on)
@@ -15,7 +40,7 @@ function R.set(st,p,on)
 end
 function R.isPaused(st,p) return st.paused[p]==true end
 -- Left the run or the server.
-function R.forget(st,p) st.paused[p]=nil end
+function R.forget(st,p) st.paused[p]=nil;st.lastPause[p]=nil end
 -- A new run, a reset, results: nobody is paused and nothing is frozen.
 function R.clear(st) table.clear(st.paused);st.frozen=false;st.frozenAt=nil end
 
