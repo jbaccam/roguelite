@@ -190,7 +190,8 @@ local function build(p,manual)
  local wall=workspace:Raycast(from,spot-from,params)
  if wall then spot=from+look*math.max(0,(wall.Position-from).Magnitude-1.5) end
  local ground=workspace:Raycast(spot+Vector3.yAxis*3,-Vector3.yAxis*40,params)
- local position=ground and ground.Position or spot-Vector3.yAxis*(hum.HipHeight+root.Size.Y*.5)
+ -- 2 = the normalized R15 HipHeight; this sandboxed script may not read a player's (AvatarAppearance).
+ local position=ground and ground.Position or spot-Vector3.yAxis*(2+root.Size.Y*.5)
  local tier=tierOf(p)
  local t=turrets[p];local new=t==nil
  if new then

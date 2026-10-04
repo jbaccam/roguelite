@@ -354,7 +354,9 @@ RunService.Heartbeat:Connect(function(dt)
   local bodyFrame=CFrame.new(body)*root.CFrame.Rotation
   local lift=0
   local ground=workspace:Raycast(body,Vector3.new(0,-20,0),wallParams)
-  if ground then lift=math.clamp(body.Y-(ground.Position.Y+hum.HipHeight+root.Size.Y*.5),0,16) end
+  -- 2 = the normalized R15 HipHeight (AvatarNormalizer). This sandboxed script may not read a player's
+  -- HipHeight (AvatarAppearance capability): reading it errored every melee tick (2026-10-03 Play test).
+  if ground then lift=math.clamp(body.Y-(ground.Position.Y+2+root.Size.Y*.5),0,16) end
   if lift<.5 then lift=0 end
   -- The tick's one snapshot (built for the first player who targets) serves every slot and the
   -- attack that fires (nothing can revive an enemy mid-tick). `living` is its list, nil when this
