@@ -59,6 +59,7 @@ local rules={
  KeepAlive=function(a,b) return int(a,0,100) and enemyList(b) end,
  ClearMobs=none,Freeze=flag,
  Sandbox=none,Waves=none,EndWave=none,Pause=flag,
+ EndlessBoss=none, -- a random Endless boss now (in a wave) or with the next wave (in the shop)
  JumpWave=function(a,b) return int(a,1,20) and b==nil end,
  God=flag,Weapons=flag,
  TutorialStart=none,TutorialLobby=none,TutorialEnd=none, -- Studio's combined server only (AdminService)

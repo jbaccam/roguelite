@@ -162,6 +162,41 @@ RunService.Heartbeat:Connect(function(dt)
  end
  view:SetBossHealth(selected,health and health.Health,health and health.MaxHealth)
 end)
+-- Endless bosses (RogueliteZombieChase, 2026-10-03): the server books one in the shop before its
+-- wave (RogueliteRunState EndlessBossWave / EndlessBossName / EndlessBossId). A gold line at the top
+-- says so then, and again when that wave starts: wave 24's shop -> "A BOSS approaches next wave:
+-- Inferno Dragon", its start -> "BOSS INCOMING: Inferno Dragon". Meanwhile the boss's animation
+-- modules load one a frame, so its arrival doesn't decode them all in one frame (MapBossPresentation
+-- still compiles them when it lands). Spawned and protected: it can never stall this HUD.
+task.spawn(function()
+ local T=require(ReplicatedStorage:WaitForChild('UITheme'))
+ local state=ReplicatedStorage:WaitForChild('RogueliteRunState',math.huge)
+ local combat=ReplicatedStorage:WaitForChild('RogueliteCombat')
+ local shown,warmed={},{}
+ local function warm(id)
+  if type(id)~='string' or warmed[id] then return end
+  warmed[id]=true
+  task.spawn(pcall,function()
+   local defs=combat:FindFirstChild('MapBossDefs');local anims=combat:FindFirstChild('BossAnimations')
+   local def=defs and anims and require(defs).get(id)
+   local source=def and anims:FindFirstChild(def.anim);if not source then return end -- the old Hammer: BossPresentation's own data
+   local list=source:GetDescendants()
+   for i=#list,1,-1 do if list[i]:IsA('ModuleScript') then task.wait();require(list[i]) end end
+   if source:IsA('ModuleScript') then task.wait();require(source) end
+  end)
+ end
+ local function check()
+  local wave,bossWave,name,phase=state:GetAttribute('Wave'),state:GetAttribute('EndlessBossWave'),state:GetAttribute('EndlessBossName'),state:GetAttribute('Phase')
+  if type(bossWave)~='number' or bossWave~=wave or type(name)~='string' then return end
+  warm(state:GetAttribute('EndlessBossId'))
+  local key=tostring(state:GetAttribute('RunId'))..'/'..bossWave..'/'..tostring(phase)
+  if shown[key] or (phase~='Shop' and phase~='Combat') then return end
+  shown[key]=true
+  T.toast(view.Gui,phase=='Shop' and ('A BOSS approaches next wave: '..name) or ('BOSS INCOMING: '..name),T.Color.gold)
+ end
+ for _,a in {'EndlessBossWave','EndlessBossName','Phase','Wave'} do state:GetAttributeChangedSignal(a):Connect(check) end
+ check()
+end)
 -- Frame rate for play-test analytics (RunAnalytics FrameRate / FrameDips): while this player is in a
 -- run and a wave is on, count rendered frames; when the wave ends, send the average FPS, how many
 -- seconds fell under 30, and the kind of device. Spawned and self-contained, so it can never stall

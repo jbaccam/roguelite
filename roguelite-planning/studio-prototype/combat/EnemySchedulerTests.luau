@@ -7,6 +7,8 @@
 --   step never stops or repeats the others, and enemies added mid-frame wait a frame;
 -- - compact: finished enemies drop out, the order of the rest is kept;
 -- - wave population (2026-10-03): 20% bigger swarms, each extra player adds less, the 100 cap holds.
+-- - Endless (2026-10-03): waves 1-20 untouched, every later wave harder, capped speed, tough slots,
+--   and the seeded boss schedule (never back to back, at most 3 waves without, no repeat picks).
 -- Returns {passed, checks, oldPeak, newPeak, ...}.
 return function(S)
 	local checks = 0
@@ -168,6 +170,95 @@ return function(S)
 	end
 	for n = 2, 4 do
 		check(S.playerScale(n) - S.playerScale(n - 1) < S.playerScale(n - 1) - (n > 2 and S.playerScale(n - 2) or 0), "each extra player adds less")
+	end
+	-- Reserved cap slots (an Endless boss): 4 players keep 90 while it is up; a smaller wave is untouched.
+	check(S.population(80, 4, 10) == 90 and S.population(80, 4) == 100 and S.population(68, 1, 10) == 82, "a boss's 10 slots: 90 for 4 players, solo wave 21's 82 untouched")
+
+	-- Endless (2026-10-03): waves 1-20 unchanged, then every wave harder than the last.
+	local E = S.Endless
+	local function near(a, b) return math.abs(a - b) < 1e-3 end
+	for _, w in { 1, 10, 20, 0 / 0, "x", false } do
+		local e = S.endless(w or nil)
+		check(e.waves == 0 and e.health == 1 and e.damage == 1 and e.speed == 0 and e.tough == 0 and e.bossHealth == 1 and e.bossDamage == 1, "no Endless scaling at wave " .. tostring(w))
+	end
+	local e25, e30, e40 = S.endless(25), S.endless(30), S.endless(40)
+	check(near(e25.health, 1.7623) and near(e30.health, 3.1058) and near(e40.health, 9.6463), "health x1.76 / x3.11 / x9.65 at 25 / 30 / 40")
+	check(near(e25.damage, 1.3) and near(e30.damage, 1.6) and near(e40.damage, 2.2), "damage x1.3 / x1.6 / x2.2")
+	check(near(e25.speed, 0.05) and near(e30.speed, 0.1) and near(e40.speed, 0.1), "speed +5% / +10% / +10% (capped)")
+	check(near(e25.tough, 0.1) and near(e30.tough, 0.2) and near(e40.tough, 0.3) and near(S.endless(60).tough, 0.3), "tough share 10% / 20% / 30% (capped)")
+	check(near(e30.bossHealth, 2.5) and near(e30.bossDamage, 1.4), "wave 30's boss: x2.5 health, x1.4 damage")
+	for w = 21, 60 do
+		local a, b = S.endless(w - 1), S.endless(w)
+		check(b.health > a.health and b.damage > a.damage and b.bossHealth > a.bossHealth, "wave " .. w .. " is harder than " .. (w - 1))
+		-- A zombie (3 + 2 a wave): at least 9% tougher than the wave before, all the way.
+		check((3 + 2 * (w - 1)) * b.health >= (3 + 2 * (w - 2)) * a.health * 1.09, "zombie health climbs at wave " .. w)
+	end
+	check(near(S.endlessSpeed(16, e30), 17.6) and S.endlessSpeed(21, e40) == 21 and S.endlessSpeed(20, e40) == 21 and S.endlessSpeed(16, S.endless(20)) == 16, "speed: 16 -> 17.6, never past 21, unchanged up to 20")
+	for _, speed in { 9.5, 12, 16, 17, 20, 21 } do
+		check(S.endlessSpeed(speed, S.endless(80)) <= math.max(speed, E.maxSpeed) and E.maxSpeed < 22, "kiting stays possible at " .. speed)
+	end
+	-- Tough slots: evenly spread, and a slot picked at a lower share stays picked.
+	for _, share in { 0.02, 0.1, 0.2, 0.3 } do
+		local count = 0
+		for i = 1, 100 do
+			if S.toughSlot(i, share) then
+				count += 1
+				check(S.toughSlot(i, math.min(1, share + 0.1)), "slot " .. i .. " stays tough as the share grows")
+			end
+		end
+		check(math.abs(count - share * 100) <= 2, "share " .. share .. " picks " .. count .. " of 100 slots")
+	end
+	check(not S.toughSlot(5, 0), "share 0 picks nothing")
+	local byId = {
+		crab = { behavior = "Melee", health = 4, healthPerWave = 2 },
+		hermit = { behavior = "Heavy", health = 12, healthPerWave = 5 },
+		ogre = { behavior = "Heavy", health = 20, healthPerWave = 7 },
+		archer = { behavior = "Ranged", health = 6, healthPerWave = 2 },
+	}
+	check(S.toughest({ "crab", "hermit", "crab", "archer" }, byId) == "hermit", "a roster's Heavy is its toughest")
+	check(S.toughest({ "hermit", "ogre" }, byId) == "ogre", "two Heavies: the one with more wave-20 health")
+	check(S.toughest({ "crab", "archer", "nope" }, byId) == "archer", "no Heavy: the most health; unknown ids skipped")
+	check(S.toughest({}, byId) == nil, "an empty roster has none")
+
+	-- Endless bosses: never right after a boss wave (wave 20's counts), always after 3 without.
+	local noDraw = { NextNumber = function() error("drew when the rules decide") end }
+	local state = S.endlessState("KingCrab")
+	check(state.last == 20 and #state.recent == 1 and state.recent[1] == "KingCrab", "history starts at wave 20's map boss")
+	check(not S.endlessBossDue(state, 20, noDraw) and not S.endlessBossDue(state, 21, noDraw), "no Endless boss at 20 or 21 (20 was a boss wave)")
+	check(S.endlessBossDue(state, 24, noDraw), "guaranteed at 24: 21-23 had none")
+	local low, high = { NextNumber = function() return 0.34 end }, { NextNumber = function() return 0.35 end }
+	check(S.endlessBossDue(state, 22, low) and not S.endlessBossDue(state, 22, high) and S.endlessBossDue(state, 23, low), "waves 22-23: a 35% roll")
+	-- Over many seeded runs: a boss every 2, 3 or 4 waves (35% / 23% / 42%), about 3.07 on average.
+	local rng2 = Random.new(7)
+	local gaps, total, bosses = { 0, 0, 0, 0, 0 }, 0, 0
+	local sim = S.endlessState(nil)
+	for w = 21, 30020 do
+		if S.endlessBossDue(sim, w, rng2) then
+			local gap = w - sim.last
+			check(gap >= 2 and gap <= 4, "boss gap " .. gap)
+			gaps[gap] += 1
+			total += gap
+			bosses += 1
+			S.endlessBossRecord(sim, w, "X")
+		end
+	end
+	check(math.abs(total / bosses - 3.07) < 0.05 and math.abs(gaps[2] / bosses - 0.35) < 0.02, "mean gap " .. total / bosses)
+	result.endlessMeanGap = total / bosses
+	-- Picks: never the last two bosses while another exists; any when all are recent; nil with none.
+	local rng3 = Random.new(11)
+	local all = { "Hammer", "KingCrab", "Pharaoh", "FrostCyclops", "Dragon" }
+	local hist = S.endlessState("Hammer")
+	for w = 1, 200 do
+		local id = S.endlessBossPick(all, hist.recent, rng3)
+		check(id ~= nil and not table.find(hist.recent, id), "pick " .. w .. " avoids the last two")
+		S.endlessBossRecord(hist, 20 + w * 3, id)
+		check(#hist.recent <= E.bossRecent and hist.recent[#hist.recent] == id, "history keeps the last two, newest last")
+	end
+	check(S.endlessBossPick({ "Hammer" }, { "Hammer" }, rng3) == "Hammer", "the only boss in the place repeats")
+	check(S.endlessBossPick({}, {}, rng3) == nil, "no boss templates: no pick (Endless goes on without)")
+	local a1, a2 = Random.new(5), Random.new(5)
+	for _ = 1, 20 do
+		check(S.endlessBossPick(all, {}, a1) == S.endlessBossPick(all, {}, a2), "the same seed picks the same bosses")
 	end
 
 	result.passed = true

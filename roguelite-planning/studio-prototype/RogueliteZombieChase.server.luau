@@ -36,6 +36,9 @@ combat:SetAttribute('ZombieCount',combat:GetAttribute('ZombieCount') or 5)
 -- it (slots past the new count stop refilling) and a revive or rejoin raises it (watched below).
 -- The tutorial and the admin panel's Keep N alive keep their exact count.
 local Population = require(script.Parent:WaitForChild("EnemyScheduler"))
+-- Endless (Population.Endless): the boss of an Endless wave while it is up (set below). It takes
+-- bossSlots of the 100 cap: 4 players at wave 25 keep 90 enemies beside it, 100 once it falls.
+local endlessBoss = nil
 local function playersUp()
     local n = 0
     for _, player in Players:GetPlayers() do
@@ -47,7 +50,7 @@ end
 local function spawnCount()
     local base = math.clamp(combat:GetAttribute('ZombieCount') or 5,0,100)
     if combat:GetAttribute('TutorialRun') == true or combat:GetAttribute('WaveNoRespawn') == true or combat:GetAttribute('TestZombieCountOverride') ~= nil then return base end
-    return Population.population(base, playersUp())
+    return Population.population(base, playersUp(), endlessBoss and endlessBoss.Parent and Population.Endless.bossSlots or 0)
 end
 local COLLISION_GROUP = "RogueliteZombies"
 if not PhysicsService:IsCollisionGroupRegistered(COLLISION_GROUP) then
@@ -436,6 +439,15 @@ local function queueSpawn(index, respawn)
     scheduleFlush(respawn and #queued < SWARM_MIN and SWARM_GATHER or 0.3)
 end
 
+-- Endless: the map's toughest type (Population.toughest), for a growing share of wave slots.
+-- Pine Valley has no roster (its zombie mix): its tank zombie.
+local function toughestId()
+    local ids, roster = {}, combat:GetAttribute('EnemyRoster')
+    if type(roster) == 'string' then
+        for id in roster:gmatch('[^,%s]+') do if EnemyCatalog.ById[id] then table.insert(ids, id) end end
+    end
+    return Population.toughest(ids, EnemyCatalog.ById) or EnemyCatalog.ByLegacy.Mutant
+end
 -- admin: an extra enemy from the admin panel (AdminSpawn): named Admin_nn, outside the wave's
 -- slots, never respawned. index is then its serial number.
 spawnZombie = function(index,overrideId,spawnPosition,splitChild,admin)
@@ -446,12 +458,17 @@ local thisWave = waveGeneration
 local run=game:GetService('ReplicatedStorage'):FindFirstChild('RogueliteRunState')
 local wave=run and run:GetAttribute('Wave') or 1
 local id=overrideId or EnemyCatalog.forSlot(index,wave,combat:GetAttribute('EnemyRoster'))
+-- Endless (waves past 20, never the tutorial): stronger, a little faster, more of the toughest type.
+-- All 1 (no change) up to wave 20. Example, wave 30: x3.11 health, x1.6 damage, +10% speed, 20% tough.
+local hard=Population.endless(combat:GetAttribute('TutorialRun')~=true and wave or 0)
+if not overrideId and Population.toughSlot(index,hard.tough) then id=toughestId() end
 local config=EnemyCatalog.scaled(id,wave)
 -- The map's place on the ladder and the run difficulty (both set at launch) scale health and
 -- damage on top of wave growth (RunSetupRules.enemyScale): later maps' health starts some waves ahead.
 local extraWaves,hpScale,damageScale=RunSetupRules.enemyScale(combat:GetAttribute('RunMap'),combat:GetAttribute('RunDifficulty'))
 if extraWaves>0 then config.health=EnemyCatalog.scaled(id,wave+extraWaves).health end
-config.health=math.max(1,math.ceil(config.health*hpScale));config.damage*=damageScale
+config.health=math.max(1,math.ceil(config.health*hpScale*hard.health));config.damage*=damageScale*hard.damage
+config.speed=Population.endlessSpeed(config.speed,hard)
 local kind=config.legacy or id
 local selected=templates:FindFirstChild(config.template)
 if not selected then warn('Missing regular enemy template: '..config.template);return end
@@ -744,6 +761,180 @@ task.spawn(function()
     end
 end)
 
+-- Endless bosses (2026-10-03, user: "start spawning bosses randomly in endless mode"). Past wave 20
+-- the shop before each wave decides if that wave brings a boss (Population.endlessBossDue: 35%,
+-- never right after a boss wave, always after 3 without) and which (endlessBossPick: one whose
+-- template is in this place, not one of the last two). RogueliteRunState EndlessBossWave / Id / Name
+-- tell the HUD, which says so at the top of the screen and loads the boss's animations meanwhile.
+-- Population.Endless.bossDelay (5 s) into that wave it lands 28-42 studs from a run member through
+-- wave 20's spawns (BossService / MapBossService: entrance, boss bar, crystal shower), with the
+-- map's own wave-20 boss health x the Endless scale. ShopService holds the wave open while it lives.
+-- Example: Pine Valley Normal solo, wave 26's shop -> "A BOSS approaches next wave: Inferno Dragon";
+-- it lands with the Hammer's 18,000 x 1.9 = 34,200 HP, not the Dragon's own number.
+local Maps = require(combat:WaitForChild('MapConfig'))
+local HAMMER_HEALTH = 18000 -- BossService HEALTH: RunSetupRules bossBase is relative to it
+local endless = {state = nil, rng = nil, decided = nil, pending = nil}
+local function runState() return game:GetService('ReplicatedStorage'):FindFirstChild('RogueliteRunState') end
+local function bossDefs()
+    local module = combat:FindFirstChild('MapBossDefs')
+    local ok, defs = pcall(function() return module and require(module) end)
+    return ok and defs or nil
+end
+-- The Hammer stays on BossService until MapBossDefs has his def (as BossEncounter does).
+local function oldHammer(id, defs) return id == 'Hammer' and not (defs and defs.get('Hammer')) end
+-- The bosses this place can spawn: a template in RogueliteNPCs, and a def, timing and client
+-- animations for the map bosses. A missing one is never picked.
+local function endlessBosses()
+    local defs, anims, list = bossDefs(), combat:FindFirstChild('BossAnimations'), {}
+    for _, id in BossIds do
+        local ok
+        if oldHammer(id, defs) then ok = templates:FindFirstChild('HammerBoss_NPC') ~= nil
+        else
+            local def = defs and defs.get(id)
+            ok = def ~= nil and templates:FindFirstChild(id .. '_NPC') ~= nil and anims ~= nil and anims:FindFirstChild(def.anim) ~= nil and defs.timing(id) ~= nil
+        end
+        if ok then table.insert(list, id) end
+    end
+    return list
+end
+local function endlessClear(run)
+    endless.pending = nil
+    run:SetAttribute('EndlessBossWave', nil); run:SetAttribute('EndlessBossId', nil); run:SetAttribute('EndlessBossName', nil)
+end
+-- Book `id` for `wave` (the HUD shows it from now); it lands `delay` s into that wave.
+local function endlessQueue(run, wave, id, delay)
+    local defs = bossDefs()
+    local def = not oldHammer(id, defs) and defs and defs.get(id)
+    endless.pending = {wave = wave, id = id, delay = delay, prev = endless.state and endless.state.last}
+    if endless.state then Population.endlessBossRecord(endless.state, wave, id) end
+    run:SetAttribute('EndlessBossId', id)
+    run:SetAttribute('EndlessBossName', def and def.name or 'Hammer Brute') -- the boss bar's name for the old Hammer
+    run:SetAttribute('EndlessBossWave', wave)
+    return endless.pending
+end
+local function endlessSpawn(p)
+    local defs = bossDefs()
+    local old = oldHammer(p.id, defs)
+    local T = not old and defs and defs.timing(p.id)
+    if not old and not T then return nil end
+    -- A run member's side of the arena, 28-42 studs off on open floor (as admin spawns pick);
+    -- else wave 20's spot by the map's marker (BossEncounter).
+    local roots = {}
+    for _, player in Players:GetPlayers() do
+        local character = player:GetAttribute('RunMember') == true and not player:GetAttribute('RunDown') and player.Character
+        local root = character and character:FindFirstChild('HumanoidRootPart')
+        if root then table.insert(roots, root) end
+    end
+    local near = roots[math.random(math.max(1, #roots))]
+    local picked, point = pcall(pickSpawnPoint, {}, near and near.Position, {28, 42}, 26)
+    if not picked then point = nil end
+    local m = Role.marker()
+    if not point and m then
+        local params = RaycastParams.new()
+        params.FilterType = Enum.RaycastFilterType.Exclude
+        params.FilterDescendantsInstances = {folder, m}
+        local ground = workspace:Raycast(m.Position + Vector3.new(0, 35, -15), Vector3.new(0, -100, 0), params)
+        point = ground and ground.Position
+    end
+    if not point then return nil end
+    local at = point + Vector3.yAxis * ((old and BossMotion.RootHeight or T.rootHeight) + 0.1)
+    local face = near and Vector3.new(near.Position.X, at.Y, near.Position.Z)
+    local cf = face and (face - at).Magnitude > 0.5 and CFrame.lookAt(at, face) or CFrame.new(at)
+    local boss
+    if old then boss = Bosses.spawn(cf, false)
+    else boss = require(script.Parent:WaitForChild('MapBossService')).spawn(p.id, cf, false, {intro = true}) end
+    if not boss then return nil end
+    -- Spawn already scaled it by difficulty, players and map power. Every Endless boss then gets the
+    -- map's own boss health (18,000 x RunSetupRules bossBase) x(1 + 0.15 an Endless wave), whoever it
+    -- is: wave 30 in Pine Valley is 45,000 solo, 78,750 for two players.
+    local scale = Population.endless(math.max(p.wave, Population.Endless.FROM + 1))
+    local index = RunSetupRules.MapIndex[combat:GetAttribute('RunMap')] or 1
+    local own = HAMMER_HEALTH * (RunSetupRules.Maps[index].bossBase or 1)
+    local authored = old and HAMMER_HEALTH or defs.get(p.id).health
+    local h = boss:FindFirstChildOfClass('Humanoid')
+    if h then h.MaxHealth = math.ceil(h.MaxHealth * own / authored * scale.bossHealth); h.Health = h.MaxHealth end
+    boss:SetAttribute('BossDamageScale', (boss:GetAttribute('BossDamageScale') or 1) * scale.bossDamage)
+    boss:SetAttribute('EndlessBoss', p.wave)
+    return boss
+end
+local function bossUp()
+    for _, npc in folder:GetChildren() do
+        local h = npc:GetAttribute('IsBoss') and npc:FindFirstChildOfClass('Humanoid')
+        if h and h.Health > 0 then return true end
+    end
+    return false
+end
+-- Waits out pauses and entrances; gives up if the wave moved on or another boss is up.
+local function endlessArrive(p)
+    local run = runState()
+    while true do
+        if endless.pending ~= p or not run or run:GetAttribute('Wave') ~= p.wave or run:GetAttribute('Phase') ~= 'Combat' or combat:GetAttribute('ZombiesEnabled') ~= true then return end
+        if not adminPaused() and run:GetAttribute('Paused') ~= true and (combat:GetAttribute('CinematicUntil') or 0) <= workspace:GetServerTimeNow() then break end
+        task.wait(0.5)
+    end
+    if bossUp() then return end -- one boss at a time: one already up (an admin's) is this wave's
+    p.landed = true
+    local ok, boss = pcall(endlessSpawn, p)
+    if not ok then warn('Endless boss failed: ' .. tostring(boss)) end
+    if ok and boss then p.boss = boss; endlessBoss = boss; return end
+    -- Never break a run: no boss this wave after all, so it doesn't count as a boss wave.
+    if endless.state and endless.state.last == p.wave and p.prev then endless.state.last = p.prev end
+end
+local function endlessCheck()
+    local run = runState(); if not run then return end
+    local wave, phase = run:GetAttribute('Wave'), run:GetAttribute('Phase')
+    if type(wave) ~= 'number' then return end
+    if endless.pending and endless.pending.wave ~= wave then endlessClear(run) end
+    if wave <= Population.Endless.FROM or combat:GetAttribute('TutorialRun') == true then
+        endless.state, endless.decided = nil, nil -- the history starts over at wave 21
+    elseif phase == 'Shop' and (endless.decided or 0) < wave then
+        endless.decided = wave
+        if not endless.state then
+            local map = Maps.get(combat:GetAttribute('RunMap'))
+            endless.state, endless.rng = Population.endlessState(map and map.boss), Random.new()
+        end
+        if not endless.pending and Population.endlessBossDue(endless.state, wave, endless.rng) then
+            local ok, list = pcall(endlessBosses)
+            local id = ok and Population.endlessBossPick(list, endless.state.recent, endless.rng)
+            if id then endlessQueue(run, wave, id, Population.Endless.bossDelay) end -- none in the place: no boss
+        end
+    end
+    local p = endless.pending
+    if p and p.wave == wave then
+        if phase == 'Combat' and not p.armed then p.armed = true; task.delay(p.delay, endlessArrive, p)
+        elseif phase ~= 'Combat' and not p.landed then p.armed = false end
+    end
+end
+local function endlessCheckSafe()
+    local ok, err = pcall(endlessCheck)
+    if not ok then warn('Endless boss check failed: ' .. tostring(err)) end
+end
+task.spawn(function()
+    local run = game:GetService('ReplicatedStorage'):WaitForChild('RogueliteRunState')
+    for _, name in {'Wave', 'Phase'} do run:GetAttributeChangedSignal(name):Connect(function() task.defer(endlessCheckSafe) end) end
+    endlessCheckSafe()
+end)
+-- The admin panel's Spawn Endless boss (AdminService): a random boss with the Endless pick and
+-- scale, landing now in a wave, or 5 s into the next wave from the shop. Up to wave 20 it is
+-- scaled as wave 21. Returns ok, message.
+local function endlessAdmin()
+    local run = runState()
+    local wave, phase = run and run:GetAttribute('Wave'), run and run:GetAttribute('Phase')
+    if type(wave) ~= 'number' or (phase ~= 'Combat' and phase ~= 'Shop') then return false, 'Start Waves first (the sandbox has no waves)' end
+    if combat:GetAttribute('TutorialRun') == true then return false, 'Not in the tutorial' end
+    if phase == 'Combat' and bossUp() then return false, 'A boss is already up' end
+    local ok, list = pcall(endlessBosses)
+    local id = ok and Population.endlessBossPick(list, endless.state and endless.state.recent or {}, endless.rng or Random.new())
+    if not id then return false, 'No boss templates in this place' end
+    local p = endlessQueue(run, wave, id, phase == 'Combat' and 0 or Population.Endless.bossDelay)
+    local name = run:GetAttribute('EndlessBossName')
+    if phase ~= 'Combat' then return true, name .. ' comes ' .. Population.Endless.bossDelay .. ' s into the next wave' end
+    p.armed = true
+    task.spawn(endlessArrive, p)
+    if p.landed and not p.boss then return false, 'No open floor for ' .. name end
+    return true, 'Endless boss: ' .. name
+end
+
 -- Admin panel spawner (ADMIN_PANEL.md). Only AdminService calls it, after checking the developer.
 -- ('Spawn', id, count, position): extra enemies (or bosses: AdminConfig.BossIds) on open floor 20-40 studs
 -- around position. They fight normally, take no wave slot and never respawn. Returns how many
@@ -761,6 +952,8 @@ adminSpawn.OnInvoke = function(action, id, count, position)
     elseif action == 'Freeze' then
         combat:SetAttribute('AdminFreeze', id == true or nil)
         return true
+    elseif action == 'EndlessBoss' then
+        return endlessAdmin()
     elseif action ~= 'Spawn' or typeof(position) ~= 'Vector3' or type(count) ~= 'number' then
         return 0
     end

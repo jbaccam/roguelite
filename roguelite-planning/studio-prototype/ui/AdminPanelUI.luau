@@ -147,8 +147,12 @@ function M.new(player)
   local paused=run:GetAttribute('AdminPaused')==true
   local e=button(c,'EndWave','End this wave',0,216,220,function() send('EndWave') end);e.Interactable=fighting
   local p=button(c,'Pause',paused and 'Resume' or 'Pause',230,216,160,function() send('Pause',not paused) end,paused);p.Interactable=fighting
+  -- Endless bosses (RogueliteZombieChase, 2026-10-03): test one without playing 20 waves.
+  heading(c,'EndlessTitle','Endless',272)
+  local eb=button(c,'EndlessBoss','Spawn Endless boss',0,308,260,function() send('EndlessBoss') end,true);eb.Interactable=fighting or phase=='Shop'
+  note(c,'EndlessNote','In a wave it lands now; in the shop it comes with the next wave. Wave 21: Jump to 20, End this wave, GO.',356)
   -- Tutorial (plans/2026-10-03-tutorial-design.md), Studio's combined server only.
-  local y=272
+  local y=392
   heading(c,'TutorialTitle','Tutorial',y);y+=36
   local here=RunService:IsStudio() and RS:GetAttribute('ServerRole')=='Combined'
   local on=combat:GetAttribute('TutorialRun')==true

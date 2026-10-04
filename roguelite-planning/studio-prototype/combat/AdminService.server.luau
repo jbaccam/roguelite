@@ -135,6 +135,12 @@ function actions.Waves(p)
 end
 function actions.JumpWave(p,n) if not spawner() then return false,NO_ARENA end;Shop.jumpToWave(n);return true,'Wave '..n end
 function actions.EndWave(p) if not Shop.endWave() then return false,'No wave running' end;return true,'Wave ended' end
+-- Endless boss (2026-10-03): the spawner picks and scales it as Endless does (RogueliteZombieChase).
+function actions.EndlessBoss(p)
+ local sp=spawner();if not sp then return false,NO_ARENA end
+ local ok,message=sp:Invoke('EndlessBoss')
+ return ok==true,type(message)=='string' and message or 'No Endless boss'
+end
 function actions.Pause(p,on)
  if not Shop.adminPause(on) then return false,on and 'No wave running' or 'Not paused' end
  return true,on and 'Paused' or 'Resumed'
