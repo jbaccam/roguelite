@@ -116,6 +116,7 @@ local function play(npc)
  side=side.Magnitude>1 and side.Unit or Vector3.new(0,0,1)
  local watch=CFrame.lookAt(spot+side*(radius*1.9)+Vector3.yAxis*radius*.8,chest+Vector3.yAxis*4)
  local angle0=math.atan2(side.X,side.Z)
+ T.cameraTake('BossIntro',function() return playing end)
  camera.CameraType=Enum.CameraType.Scriptable
  local landed,carded,uncarded,conn=false,false,false,nil
  local orbitEnd
@@ -123,10 +124,9 @@ local function play(npc)
   if conn then conn:Disconnect();conn=nil end
   fx:Destroy();ui.gui:Destroy()
   if root.Parent then root.CFrame=frame end
-  local h=player.Character and player.Character:FindFirstChildOfClass('Humanoid')
-  camera.CameraType=Enum.CameraType.Custom
-  if h then camera.CameraSubject=h end
   playing=false
+  -- The regular camera: Custom, your Humanoid (or the teammate you spectate), FOV 70 (UITheme).
+  T.cameraRelease('BossIntro')
  end
  local function step()
   local t=workspace:GetServerTimeNow()
@@ -177,3 +177,10 @@ end
 local function watchBoss(npc) task.spawn(play,npc) end
 Tags:GetInstanceAddedSignal('HammerBoss'):Connect(watchBoss)
 for _,npc in Tags:GetTagged('HammerBoss') do watchBoss(npc) end
+
+-- Self-heal to the regular camera (Custom, your Humanoid, FOV 70) on arrival and after every spawn,
+-- unless a camera stage holds it (2026-10-03: players were left in a narrow "isometric" view). Here
+-- because this script runs on every server role, lobby and match.
+local function heal() task.defer(T.cameraHeal) end
+player.CharacterAdded:Connect(function(character) character:WaitForChild('Humanoid',10);heal() end)
+if player.Character then heal() end

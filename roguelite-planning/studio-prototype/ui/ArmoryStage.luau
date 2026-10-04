@@ -12,6 +12,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local PromptService = game:GetService("ProximityPromptService")
+local T = require(RS:WaitForChild("UITheme"))
 local S = {}
 
 -- The hall's pivot is the dais top centre (the avatar's feet); its open front faces -Z, towards
@@ -62,7 +63,7 @@ S.Display = {
 }
 
 local stage, avatar, avatarRoot, idleTrack, floater, showcase, conn
-local saved
+local saved, dimTween
 local view, fromView, blendStart = "hero", "hero", 0
 local yaw = 0 -- avatar turntable (drag to spin)
 local spinStart = os.clock()
@@ -399,20 +400,22 @@ function S.Show(weaponId)
 	end
 	local camera = workspace.CurrentCamera
 	if not conn then
+		-- No camera state is saved: Hide hands back the regular camera (FOV 70), never the FOV found
+		-- here, which was 62 when the Armory opened mid station punch-in (2026-10-03).
 		saved = {
-			type = camera.CameraType,
-			subject = camera.CameraSubject,
-			fov = camera.FieldOfView,
 			exposure = Lighting.ExposureCompensation,
 			prompts = PromptService.Enabled,
 		}
 		-- World prompts (lobby stands) must not draw over the Armory.
 		PromptService.Enabled = false
-		TweenService:Create(Lighting, TweenInfo.new(0.3), { ExposureCompensation = saved.exposure - EXPOSURE_DROP })
-			:Play()
+		-- Kept so Hide can stop it: a dim still running after Hide would leave the lobby darker.
+		dimTween =
+			TweenService:Create(Lighting, TweenInfo.new(0.3), { ExposureCompensation = saved.exposure - EXPOSURE_DROP })
+		dimTween:Play()
 		stage.Parent = camera
 		view, fromView, blendStart, yaw = "hero", "hero", 0, 0
 		buildAvatar()
+		T.cameraTake("Armory", S.IsShown)
 		conn = RunService.RenderStepped:Connect(render)
 	end
 	S.SetStarter(weaponId)
@@ -589,11 +592,12 @@ function S.Hide()
 		glow:Destroy()
 	end
 	-- The hall stays parked in the camera (see Prepare); it is far outside the lobby's view.
-	local camera = workspace.CurrentCamera
-	local humanoid = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-	camera.CameraSubject = humanoid or saved.subject
-	camera.CameraType = saved.type == Enum.CameraType.Scriptable and Enum.CameraType.Custom or saved.type
-	camera.FieldOfView = saved.fov
+	-- The regular camera (Custom, your Humanoid, FOV 70), facing the way you were.
+	T.cameraRelease("Armory")
+	if dimTween then
+		dimTween:Cancel()
+		dimTween = nil
+	end
 	Lighting.ExposureCompensation = saved.exposure
 	PromptService.Enabled = saved.prompts
 end

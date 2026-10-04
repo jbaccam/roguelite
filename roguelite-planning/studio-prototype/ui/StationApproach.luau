@@ -161,7 +161,6 @@ end
 -- Quick "step in" transition: short camera push and a dip to dark while the window opens.
 local fade
 local function transition(openFn)
-	local camera = workspace.CurrentCamera
 	if not fade then
 		local gui = Instance.new("ScreenGui")
 		gui.Name = "StationTransition"
@@ -176,20 +175,21 @@ local function transition(openFn)
 		fade.Parent = gui
 		gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 	end
-	local fov = camera.FieldOfView
 	local quick = TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 	TweenService:Create(fade, quick, { BackgroundTransparency = 0.45 }):Play()
-	if camera.CameraType == Enum.CameraType.Custom then
-		TweenService:Create(camera, quick, { FieldOfView = fov - 8 }):Play()
-	end
+	-- FOV punch on the regular camera: always 70 -> 62 -> 70 (T.CAMERA_FOV), never from the FOV it
+	-- finds. Starting from the current FOV ratcheted 70 -> 62 -> 54 when a chest, egg or Armory stage
+	-- saved it mid-punch (2026-10-03). A stage taking the camera cancels the punch, and the punch back
+	-- is skipped while one holds it.
+	T.cameraFov(T.CAMERA_FOV - 8, quick)
 	task.delay(0.12, function()
-		openFn()
+		local ok, err = pcall(openFn)
+		if not ok then
+			warn("StationApproach: open failed:", err)
+		end
 		local out = TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 		TweenService:Create(fade, out, { BackgroundTransparency = 1 }):Play()
-		-- The Armory takes the camera over; only restore FOV if we still own it.
-		if workspace.CurrentCamera.CameraType == Enum.CameraType.Custom then
-			TweenService:Create(workspace.CurrentCamera, out, { FieldOfView = fov }):Play()
-		end
+		T.cameraFov(T.CAMERA_FOV, out)
 	end)
 end
 

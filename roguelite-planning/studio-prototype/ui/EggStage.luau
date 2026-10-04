@@ -20,6 +20,7 @@ local TweenService=game:GetService('TweenService')
 local Eggs=require(RS:WaitForChild('RogueliteCombat'):WaitForChild('EggConfig'))
 local FX=require(RS:WaitForChild('ChestFX'))
 local Merchant=require(RS:WaitForChild('EggMerchant'))
+local T=require(RS:WaitForChild('UITheme'))
 local S={}
 
 local player=Players.LocalPlayer
@@ -100,7 +101,7 @@ local function fade(p,to,time)
 end
 
 -- Camera ----------------------------------------------------------------------------------------
-local camConn,saved
+local camConn,saved -- saved: the player's own view to fly back to (UITheme keeps it once for all stages)
 local eye,look,fov
 local tEye,tLook,tFov
 local rate=4
@@ -123,6 +124,7 @@ local function overview()
  return c+pivot0.LookVector*30+Vector3.new(0,16,0),c+Vector3.new(0,3,0),55
 end
 local function drive(dt)
+ if T.cameraOwner()~='Eggs' then return end -- the chest stage opened on top during our fly-back
  local cam=workspace.CurrentCamera
  local k=1-math.exp(-dt*rate)
  eye=eye:Lerp(tEye,k);look=look:Lerp(tLook,k);fov+=(tFov-fov)*k
@@ -152,7 +154,8 @@ end
 function S.Show()
  if not S.Prepare() then return false end
  local cam=workspace.CurrentCamera
- if not saved then saved={cf=cam.CFrame,fov=cam.FieldOfView} end
+ -- No FOV is saved: Hide always goes back to the regular 70 (2026-10-03, see UITheme.cameraTake).
+ saved=T.cameraTake('Eggs',S.IsShown)
  eye=cam.CFrame.Position;look=cam.CFrame.Position+cam.CFrame.LookVector*20;fov=cam.FieldOfView
  tEye,tLook,tFov=overview();rate=2.6
  if camConn then camConn:Disconnect() end
@@ -180,18 +183,17 @@ function S.MouthScreen()
 end
 function S.Hide()
  if not camConn then return end
- local cam=workspace.CurrentCamera
  local back=saved;saved=nil
- local function release() cam.CameraType=Enum.CameraType.Custom;setControls(true) end
+ -- Release hands back the regular camera (Custom, your Humanoid, FOV 70) unless another stage holds it.
+ local function release() camConn:Disconnect();camConn=nil;T.cameraRelease('Eggs');setControls(true) end
  if back then
-  tEye=back.cf.Position;tLook=back.cf.Position+back.cf.LookVector*20;tFov=back.fov;rate=4.5
+  tEye=back.Position;tLook=back.Position+back.LookVector*20;tFov=T.CAMERA_FOV;rate=4.5
   local conn=camConn
   task.delay(.55,function()
    if camConn~=conn then return end
-   conn:Disconnect();camConn=nil
-   release();cam.FieldOfView=back.fov
+   release()
   end)
- else camConn:Disconnect();camConn=nil;release() end
+ else release() end
 end
 function S.IsShown() return camConn~=nil end
 

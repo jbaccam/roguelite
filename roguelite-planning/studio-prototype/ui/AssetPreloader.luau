@@ -183,7 +183,8 @@ local function lookAtStages(player, gui, views)
 		return
 	end
 	local camera = workspace.CurrentCamera
-	local savedType, savedFov = camera.CameraType, camera.FieldOfView
+	local T = require(RS:WaitForChild("UITheme"))
+	T.cameraTake("Preload")
 	camera.CameraType = Enum.CameraType.Scriptable
 	pcall(function() -- the camera is always handed back below
 		for _, v in views do
@@ -198,12 +199,9 @@ local function lookAtStages(player, gui, views)
 			until os.clock() - t >= WARM_HOLD
 		end
 	end)
-	local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-	if humanoid then
-		camera.CameraSubject = humanoid
-	end
-	camera.CameraType = savedType == Enum.CameraType.Scriptable and Enum.CameraType.Custom or savedType
-	camera.FieldOfView = savedFov
+	-- The regular camera (Custom, your Humanoid, FOV 70), not the type and FOV found before the
+	-- warm-up (2026-10-03: every stage hands back the same constant).
+	T.cameraRelease("Preload")
 end
 
 local function warmModels(role)

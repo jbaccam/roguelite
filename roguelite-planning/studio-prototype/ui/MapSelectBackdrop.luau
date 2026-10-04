@@ -8,7 +8,7 @@ local RS = game:GetService("ReplicatedStorage")
 local Lighting = game:GetService("Lighting")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-local Players = game:GetService("Players")
+local T = require(RS:WaitForChild("UITheme"))
 local B = {}
 
 local ORIGIN = Vector3.new(0, 420, -14000) -- far from the lobby and arena, low enough for the same sky haze
@@ -36,7 +36,6 @@ local SILHOUETTE = Color3.fromRGB(12, 14, 20)
 local order = {} -- map ids in ladder order, set on first Show
 local shadows = {} -- ladder index -> that island's silhouette Highlight
 local stage, blur, grade, conn
-local saved -- camera state before the backdrop took over
 local shownMaps, shownLocked -- what Show was last given, to rebuild a lost stage
 local slot, fromSlot, toSlot, slideStart = 1, 1, 1, 0
 
@@ -163,7 +162,6 @@ function B.Show(maps, index, locked)
 	local camera = workspace.CurrentCamera
 	shownMaps, shownLocked = maps, locked
 	if not conn then
-		saved = { type = camera.CameraType, subject = camera.CameraSubject, fov = camera.FieldOfView }
 		keepStage(camera)
 		for _, shadow in shadows do
 			shadow.Enabled = true
@@ -176,6 +174,9 @@ function B.Show(maps, index, locked)
 		grade.Name = "MapSelectGrade"
 		grade.Parent = Lighting
 		fromSlot, toSlot, slideStart = index, index, 0
+		-- No camera state is saved: Hide hands back the regular camera (FOV 70), never the FOV found
+		-- here, so a backdrop opened over another stage can't carry its 32 degrees home (2026-10-03).
+		T.cameraTake("MapSelect", B.IsShown)
 		conn = RunService.RenderStepped:Connect(render)
 	elseif index ~= toSlot then
 		fromSlot, toSlot, slideStart = slot, index, os.clock()
@@ -205,11 +206,8 @@ function B.Hide()
 	for _, shadow in shadows do
 		shadow.Enabled = false
 	end
-	local camera = workspace.CurrentCamera
-	local humanoid = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-	camera.CameraSubject = humanoid or saved.subject
-	camera.CameraType = saved.type == Enum.CameraType.Scriptable and Enum.CameraType.Custom or saved.type
-	camera.FieldOfView = saved.fov
+	-- The regular camera (Custom, your Humanoid, FOV 70), facing the way you were.
+	T.cameraRelease("MapSelect")
 end
 
 function B.IsShown()
