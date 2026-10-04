@@ -52,7 +52,7 @@ Some numbers in the first bullets are older than their code: the tier odds and t
   | Metal Detector | 2 | 36 | +8 luck, +20% pickup radius |
   | Vitamin Gummies | 3 | 66 | +2 HP/s regeneration, +10 max HP |
 
-- **Shop screen (2026-10-03).** A bag icon and amount sit beside the crystal count while the crystal bag holds any ([SHARD_CURRENCY.md](../../SHARD_CURRENCY.md)). In multiplayer, GO shows READY x/y (living run members who pressed GO). The weapon popup stacks stats, then traits, then the class row, so "Range" is no longer hidden; it scrolls on short screens. A Handyman gets UPGRADE TURRET ([HANDYMAN_TURRET.md](HANDYMAN_TURRET.md)).
+- **Shop screen (2026-10-03).** A bag icon and amount sit beside the crystal count while the crystal bag holds any ([SHARD_CURRENCY.md](../../SHARD_CURRENCY.md)). In multiplayer, GO shows READY x/y (living run members who pressed GO). The weapon popup stacks stats, then traits, then the class row, so "Range" is no longer hidden; it scrolls on short screens. Since 2026-10-04 turrets are shop items and UPGRADE TURRET is gone ([HANDYMAN_TURRET.md](HANDYMAN_TURRET.md)).
 - **Tests added (2026-10-03):** `ShopTests` (offerable weapons, usable items), `ShopLayoutTests`, `ShardBagTests`. Not run in Studio yet.
 
 ## Build paths supported by the catalog

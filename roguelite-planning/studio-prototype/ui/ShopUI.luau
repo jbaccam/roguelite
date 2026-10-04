@@ -324,15 +324,20 @@ function M.new(player,h,refresh)
  local TS=game:GetService('TextService')
  local function width(text,size,icon) return TS:GetTextSize(text,size,T.Font,Vector2.new(1000,100)).X*1.12+(icon and size+20 or 20) end
  local function classFitRow(p,base,tagX,tagY,tagMaxW,tagH,barX,barY,barW,barH)
-  local fit,pct=Stats.classFit(base,state:GetAttribute('Class'))
+  local fit,pct,via=Stats.classFit(base,state:GetAttribute('Class'))
   local word=fit and FIT_WORD[fit] or 'ANY CLASS'
   local kind=string.upper(base.kind=='Blast' and 'Explosive' or base.kind)
-  local name=base.godly and 'GODLY' or string.upper(base.home)
-  local icon=not base.godly and WeaponIcons[Signature[base.home]] or nil
+  -- Every class (2026-10-04): 'THROWER · JUGGLER · RANGED', with the starter icon of the class that
+  -- gives the fit (yours when it's listed). Narrow cards step down to every class, then that one
+  -- class, then the icon alone with that class in the bar.
+  local best=base.godly and 'GODLY' or string.upper(via or base.home)
+  local name=base.godly and 'GODLY' or string.upper(table.concat(base.classes or {base.home},' · '))
+  local icon=not base.godly and WeaponIcons[Signature[via or base.home]] or nil
   local size=math.max(tagH-10,minText)
   local text=name..' · '..kind
   if width(text,size,icon)>tagMaxW then text=name end
-  if width(text,size,icon)>tagMaxW then text=nil;word=name end
+  if width(text,size,icon)>tagMaxW then text=best end
+  if width(text,size,icon)>tagMaxW then text=nil;word=best end
   if text then T.tag(p,'ClassTag',text,tagX,tagY,{h=tagH,size=tagH-10,maxW=tagMaxW,icon=icon})
   elseif icon then T.tag(p,'ClassTag','',tagX,tagY,{h=tagH,size=tagH-10,icon=icon}) end
   -- A bar too narrow for its word keeps just the number (the colour still says which).
@@ -421,8 +426,6 @@ function M.new(player,h,refresh)
   local inset=Instance.new('UIPadding');inset.PaddingLeft=UDim.new(0,6);inset.PaddingTop=UDim.new(0,6);inset.Parent=left
   -- Under the stats: LEAVE RUN (between waves; tap twice) above GO.
   local startH=th(62);local leaveH=th(40);local statsH=math.max(90,ht-startH-leaveH-18)
-  -- A Handyman's UPGRADE TURRET (data.turret, HANDYMAN_TURRET.md) takes a row above LEAVE RUN.
-  local turretH=data.turret and th(50) or 0;if turretH>0 then statsH=math.max(90,statsH-turretH-8) end
   -- A party's headshots between LEAVE RUN and GO (ReadyRoster below), only while 2+ are counted.
   local partyState=RS:FindFirstChild('RogueliteRunState')
   local rosterH=data.phase=='Shop' and (partyState and partyState:GetAttribute('ShopPlayers') or 0)>1 and th(48) or 0
@@ -659,18 +662,6 @@ function M.new(player,h,refresh)
      task.wait(.5)
     end
    end)
-  end
-  -- UPGRADE TURRET (Handyman only, HANDYMAN_TURRET.md): 'TURRET → II · 32' with the crystal, between
-  -- the stats and LEAVE RUN, which move down one row. It sends the tier it shows; ShopService checks
-  -- the class, the tier and the price again.
-  if turretH>0 then
-   leave.Position+=UDim2.fromOffset(0,turretH+8);start.Position+=UDim2.fromOffset(0,turretH+8)
-   if roster then roster.Position+=UDim2.fromOffset(0,turretH+8) end
-   local t=data.turret
-   local tb=btn(root,'UpgradeTurret','',leftW+gap+12,statsH+10,side,turretH,function() T.sound('ui_upgrade');self:send('UpgradeTurret',t.tier) end)
-   if t.next then price(tb,t.price,'TURRET → '..T.Roman[t.next]..' · ',20,data.shards>=t.price and white or red)
-   else tb.Caption.Text='TURRET · TIER IV' end
-   tb.Interactable=t.next~=nil and data.shards>=(t.price or math.huge) and data.phase=='Shop'
   end
   left.CanvasSize=UDim2.fromOffset(0,top+12)
   left.ScrollBarThickness=top+12>ht+1 and 3 or 0

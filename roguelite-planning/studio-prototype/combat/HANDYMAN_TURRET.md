@@ -1,255 +1,246 @@
-# Handyman turret
+# Turrets (turret items and the Engineer Handyman)
 
-Added 2026-10-03. User: "make Handyman able to build a turret … that can be upgraded, and implement it into the game so it's balanced."
+**2026-10-03:** the Handyman got a nail turret: one per Handyman, moved with BUILD, upgraded in the shop.
 
-**Status (2026-10-04): installed in Studio, not play-tested with the models yet.**
-- Scripts synced 2026-10-03. `TurretTests` passed in Edit (114 checks). In Play, admin Give refused cleanly ("models are not installed") before the import.
-- The four FBX files went through Import 3D (Import Queue, Studio Default, creator EggaRowls = the game owner). The importer read the FBX's centimetres as studs, so every part came in exactly 100× (T1 base 205 studs instead of 2.05). Each model was scaled by exactly 0.01 about its pivot; that is a unit fix, not a re-scale of the art.
-- `InstallHandymanTurret` then reported all four tiers `ok`: scale fix 1.000, turn (0,0,0), fit error 0, muzzles 1/2/4/6. Templates: `ReplicatedStorage.RogueliteCombat.HandymanTurrets.T1-T4`. The colour maps came in as TextureIDs.
-- Icons uploaded: `H.Icons` holds `previews/icon_T1-4.png`.
-- Turrets turn on at the next server start (Play).
+**2026-10-04: turret items.** It is now Brotato's turrets. Design: [plans/2026-10-04-turret-items-engineer-design.md](../../plans/2026-10-04-turret-items-engineer-design.md); plan: [plans/2026-10-04-turret-items-engineer-plan.md](../../plans/2026-10-04-turret-items-engineer-plan.md). The user asked:
+- "make the turrets scale in the amount of them and don't have the player place them, let them be automatically placed";
+- "take direct inspiration from Brotato";
+- "let's not let mobs destroy the turrets";
+- "I don't want to make more turret models".
 
-**2026-10-04: mobs can break it** (user: "lets let mobs destroy it"). Done in the repo only. It is not synced to Studio, no Studio tests have run, and it has not been play-tested. See [Health and breaking](#health-and-breaking).
+**Status:** done in the repo only. It is not synced to Studio, no Studio tests have run, and it has not been play-tested.
+
+**What changed on 2026-10-04:**
+- **Removed:**
+  - BUILD: B, R1, the on-screen button and RunAction `BuildTurret`;
+  - the automatic one turret per Handyman;
+  - the shop's UPGRADE TURRET (ShopAction `UpgradeTurret`);
+  - the admin Give / Tier I–IV / Break buttons.
+- **Turrets can't be destroyed again.** The layer commit 9f6e956 added is gone:
+  - turret health, the HP bar, the hit flash, the break burst and crunch, and BROKEN with its rebuild;
+  - mobs targeting turrets (`HandymanTurret.posts / nearer`, and the turret branches in `RogueliteZombieChase`, `EnemyAttacks` and `ZombieAttacks`).
+
+  Those three mob scripts are back to their text before 9f6e956.
+- **No new models:** the four items use the existing T1–T4 templates.
 
 ## How it plays
 
-- **Handyman only.** It is a class ability, not a weapon slot. The class description now says so.
-- **Built for you.** When a wave (or the admin sandbox) starts and you have no turret, one is built 3.5 studs in front of you, on the ground, facing where you face.
-- **BUILD moves it.** Press **B** (keyboard), **R1** (gamepad) or the on-screen **BUILD** button, and the turret is rebuilt where you stand. Then BUILD waits **8 s**.
-  - The button shows the turret, its key and the seconds left.
-  - With a keyboard or gamepad it sits in the bottom-right corner, left of the melee DASH button. On touch screens it sits just above the jump button.
-  - It moves out of the way of the HUD's menu column and the boss bar.
-  - Taken keys it avoids: Q / pad X (dash), E / pad Y (revive), P (pause), pad B (back).
-- **It shoots by itself.** It fires nails at the nearest enemy in range that it can see. The head turns toward its target, the barrel pitches, kicks back on each nail, and shows a flat muzzle flash. Tier IV's six-barrel cluster spins.
-- **Each nail counts as yours.** Nails go through the normal damage path, so these all count for you:
-  - crits, burn, poison, slow and lightning from your items
+- **Turrets are shop items.** Each copy you own is one more turret. Any class can buy them.
+
+| Item | Item tier | Model | Each cycle | Cooldown | DPS | Pierce | Base price |
+|---|---|---|---|---|---|---|---|
+| Nail Turret (`turret_nail`) | I | T1 | 4 | 0.80 s | 5.0 | 0 | 24 |
+| Twin Nailer (`turret_twin`) | II | T2 | 6 | 0.72 s | 8.3 | 1 | 46 |
+| Quad Nailer (`turret_quad`) | III | T3 | 8 | 0.64 s | 12.5 | 1 | 85 |
+| Gatling Rig (`turret_gatling`) | IV | T4 | 3 nails of 3.67 | 0.56 s | 19.6 | 2 | 150 |
+
+- **Placed for you at every wave start, on a ring around you:**
+  - The ring is 8–14 studs out, or 4–8 for a Handyman.
+  - The turrets are at even angles with a little jitter, and at least 5 studs apart.
+  - Each one faces where you face.
+  - The first spot is straight ahead of you.
+- **During a wave they never move.**
+  - Turrets added mid-wave (the admin panel, Scrap Magnet) go to free spots on a ring around where you are then.
+  - Items you buy in the shop show up at the next wave start.
+- **Ground:**
+  - Each spot is ray-cast down to solid, fairly flat floor within 4 studs of your feet, inside the arena circle (the spawn marker's `SpawnAreaCenter` / `SpawnAreaRadius`), with a clear line from you.
+  - If a spot fails, it tries half as far out, then your own spot.
+  - Example: a ring spot 12 studs out over a cliff edge becomes 6 studs out on the same line.
+- **They shoot by themselves.**
+  - Each fires nails at the nearest enemy in range that it can see.
+  - The head turns toward its target, the barrel pitches, kicks back on each nail, and shows a flat muzzle flash.
+  - The Gatling Rig's six-barrel cluster spins.
+- **Each nail counts as yours:**
   - kill credit and crystals
   - run contribution and the "damage by source" analytics (source `Turret`)
   - the `utilityKills` quest stat
-- **Mobs can break it** (below). It doesn't block enemies or players.
-- **It holds fire** between waves, while the run is paused, during a boss entrance, while you are down, and when your weapons are switched off.
-- **It goes away** when you leave the run (lobby, results, disconnect), when the run resets, or if you end up 500+ studs from it (another arena). It never shows in the lobby.
-- **Multiplayer:** each Handyman has their own turret.
-
-## Health and breaking
-
-Added 2026-10-04. All the numbers are in `HandymanTurret.luau` (`HEALTH`, `HEALTH_PER_WAVE`, `HEALTH_TIER`, `REBUILD_DELAY`, `LOW_HEALTH`), so they are easy to retune once the turret's cost is decided.
-
-### Health
-
-- **Formula:** Tier I has 60 + 15 per wave after the first. Each tier above I multiplies that by 1.5.
-- **Gear power:** it also gets the owner's gear power health share (+6% per point above 1), like the owner's own max health. A later map's mobs hit harder by exactly that share (`RunSetupRules.enemyScale`), so the turret lasts as long there. A fresh account in Pine Valley gets the table below unchanged.
-- **Armour:** the owner's Armor and Contact resistance cut each hit, as they do for the player (`CharacterStats.incoming`). Example: 11 damage with 5 armour is 11 / (1 + 5/15) = 8.25.
-- **No player-only defences:** dodge, the first-hit block, the pet shield and the zombies' shared 0.3 s swing gap don't protect it.
-- **No regeneration** during a wave. Every wave starts it at full health for that wave, like players (`ShopService` refills them).
-
-| Tier | Wave 1 | Wave 5 | Wave 10 | Wave 20 |
-|---|---|---|---|---|
-| I | 60 | 120 | 195 | 345 |
-| II | 90 | 180 | 293 | 518 |
-| III | 135 | 270 | 439 | 776 |
-| IV | 203 | 405 | 658 | 1,164 |
-
-Tier I takes about 11 hits from a regular zombie of the same wave (5 + 1.5 damage per wave, one hit every 0.8 s):
-
-| Wave | Zombie hit | Hits to break | One zombie | Three | Ten |
-|---|---|---|---|---|---|
-| 1 | 5 | 12 | 9.0 s | 3.2 s | 1.0 s |
-| 5 | 11 | 11 | 8.2 s | 2.9 s | 0.9 s |
-| 10 | 18.5 | 11 | 8.2 s | 2.8 s | 0.8 s |
-| 20 | 33.5 | 11 | 8.2 s | 2.7 s | 0.8 s |
-
-So it holds a few seconds against a small group, and a swarm breaks it in about a second.
-
-### Who attacks it
-
-- **Wave mobs whose nearest target it is.** A mob picks the turret when the turret is closer than every living player. The distance is measured on the ground to the turret's edge, as to a body. A turret between you and a swarm soaks their hits and pulls them off you.
-  - Example: a zombie 10 studs from you and 6 from your turret goes for the turret. You step to 5 studs from it, and it comes back to you.
-  - Several turrets and several players work the same way: the mob picks the nearest of all of them.
-- **Melee mobs** walk to its edge and use their normal swing, with the same reach, arc and damage as against a player.
-- **Lunging mobs** (snake, scorpion) dash at it.
-- **Ranged mobs** (spitter, rock crab, bow skeleton…) stop at their range and shoot it. A shot aimed at the turret can still hit a player who steps in front of it.
-- **The Mutant's slam** hits every standing turret inside its ground circle, whoever it was aimed at.
-- **Bosses don't hit it yet.** Their attack code (`combat/bosses/`) was mid-remodel. Adding it later means one loop over `HandymanTurret.posts` in each boss hit test, like the Mutant's.
-- **Other attacks don't hit it:** a swing or shot aimed at a player, and body bumps.
-
-### Breaking and rebuilding
-
-- **At 0 HP it breaks:** the model goes with a short flat burst (an orange ground ring, amber sparks, a dust puff, all gone in half a second) and a crunch (the thud and blunt hit pitched down, with a shotgun crackle). Nothing is left behind. It stops firing and is no longer a target.
-- **BUILD again:** 5 s after the break, or sooner if its own 8 s cooldown ends first (`H.rebuildAt`). Building puts a fresh full-HP turret where you stand, and starts the usual 8 s cooldown.
-  - Examples: broken 1 s after a move → BUILD in 5 s, not 7. Broken 4 s after a move → BUILD in 4 s. Not moved recently → BUILD right away.
-- **The next wave** rebuilds a broken turret at your position, like the wave-start build.
-- **BUILD on a standing turret** still moves it, and it keeps its damage. Moving isn't a repair.
-
-### What you see
-
-- **Health bar:** a small bar (58 × 10 px, the same size on phones) over each turret. It is lime, and red under 30%.
-- **Hit flash:** each hit flashes the bar and the model white for 0.1 s.
-- **BUILD button:** while the turret is broken and can't be rebuilt yet, the button turns charcoal, reads **BROKEN** in red, greys the turret icon and counts down the seconds. When it can be rebuilt, it is lime **BUILD** again with the ready pop.
-
-### Balance effect
-
-- **Less damage in a swarm.** The turret used to add about +8% damage at best (see Balance). Now a swarm that reaches it breaks it in about a second. It then does nothing until you rebuild it (5–8 s) or the next wave starts. Placed in the open with a swarm on it, it loses most of that uptime.
-- **A decoy.** In exchange, each turret's life soaks about 11 hits that would have been aimed at the Handyman. At wave 10 a Tier I turret absorbs 195 damage, about twice a fresh Handyman's 90 HP, and pulls mobs off you while it lasts.
-- **Placement matters.** The best place is between you and the swarm, or where mobs reach it one or two at a time. Upgrades now also make it tougher (×1.5 health per tier).
-- **No trim to the class.** Check this in play-tests before changing the numbers. The usual levers are `HEALTH` and `REBUILD_DELAY`.
+  - your status items (see Numbers)
+- **They can't be destroyed,** and they block nothing: mobs and players walk through them. Mobs ignore them.
+- **They hold fire** between waves, while the run is paused, during a boss entrance, while you are down, and when your weapons are switched off.
+- **They go away** when you leave the run (lobby, results, disconnect) or the run resets. If you end up 500+ studs from them (another arena), they are placed around you again. They never show in the lobby.
 
 ## Numbers
 
-The turret counts as a ranged Handyman Utility weapon. Every bonus a Nail Gun gets also applies to it: Damage, Ranged damage, Utility Power, the Handyman's own-class +15%, Attack speed, Cooldown reduction, Attack range and Projectile speed. Extra projectiles, Pierce and Bounce also apply, through the shared rule `CharacterStats.usesStat`, so the turret is a bullet weapon there.
+**Brotato's structure rule:** a turret's damage is its base × (1 + Utility Power).
+- Example: +30% Utility Power makes a Nail Turret's nail 4 × 1.3 = **5.2**.
+- **Ignored:**
+  - Damage, Melee / Ranged damage, Attack speed, Cooldown reduction, Crit and Life steal;
+  - the class-fit +15%;
+  - Knockback (its push would start at your body, not the turret);
+  - Attack range, projectile speed and size. Range is 25 studs for every turret.
+- **Applied:**
+  - Extra projectiles (Two Straws: +1 nail per shot);
+  - Pierce and Bounce (through `CharacterStats.shotStat`);
+  - burn, slow, poison and lightning procs on direct hits (burn ticks use Elemental damage but not Damage);
+  - Boss damage;
+  - your gear power's damage share (see the judgment calls).
+- **How the server does it:** `HandymanTurret.weapon` builds the definition. Its hit stats (`turretStats`) are your stats with the ignored ones set to 0. The definition is marked `structure`, so `CombatEffectsService` never gives it the Ninja set's dodge crit and never life-steals from it.
 
-Its tiers step like the weapons' (`WeaponCatalog.TierGrowth` and `TierCooldown`): damage ×1.4 per tier, cooldown ×1 / 0.9 / 0.8 / 0.7.
+**Balance:** each tier is 40–50% of the average class ranged weapon of the same tier (`TurretTests` checks this against `WeaponCatalog`):
+- Tier I: 5.0 vs 11.2 DPS
+- Tier II: 8.3 vs 17.2
+- Tier III: 12.5 vs 27.4
+- Tier IV: 19.6 vs 43.2
 
-The table shows each tier before character bonuses. "vs ranged" compares it with the average class ranged weapon at the same tier (22 weapons, Godly left out, single target, after the 2026-10-03 melee vs ranged pass).
+25 studs is shorter than the ranged average (28.8) and the Nail Gun's 30.
 
-| Tier | Damage per cycle | Cooldown | DPS | Nails per cycle | Pierce | Range | vs ranged |
-|---|---|---|---|---|---|---|---|
-| I | 4 | 0.80 s | 5.0 | 1 | 0 | 25 | 45% (avg 11.2) |
-| II | 6 | 0.72 s | 8.3 | 1 | 1 | 25 | 48% (avg 17.2) |
-| III | 8 | 0.64 s | 12.5 | 1 | 1 | 25 | 46% (avg 27.4) |
-| IV | 11 (3 × 3.67) | 0.56 s (a nail every 0.187 s) | 19.6 | 3 | 2 | 25 | 46% (avg 43.2) |
+**The Gatling Rig** fires 3 nails each cycle, each a third as strong, one third of the cooldown apart, each at the nearest enemy then, with a ±3° spray. It does the same DPS but covers a crowd better.
 
-- **Tier IV is a gatling.** Each cycle fires 3 nails, each a third as strong, one third of the cooldown apart. Each nail goes at the nearest enemy at that moment with a ±3° spray. The damage per second is the same; it just covers a crowd better.
-- **Range: 25 studs.** That is shorter than the class ranged weapons' average (28.8) and the Nail Gun's (30), both after the ranged range cut.
+**Worked example (Handyman, design §8):**
 
-### Upgrades
+| Wave | Turrets | Utility Power | Turret DPS (sum) |
+|---|---|---|---|
+| 1 | 1 Nail (free) | +15% | 5.75 |
+| 5 | 3 Nail | +30% | 19.5 |
+| 10 | 4 Nail + 1 Twin | +45% | 41.1 |
+| 15 | 6 Nail + 2 Twin + 1 Quad | +70% | 100.6 |
 
-You buy upgrades in the run shop between waves. **UPGRADE TURRET** sits above LEAVE RUN, for Handymen only, and reads like `TURRET → II · 32` with the crystal icon.
+A Gunner with 2 Nail Turrets and no Utility Power gets 10 DPS.
 
-- **Price:** each step costs what one more weapon copy of your current tier costs, because combining two copies is how a weapon steps up a tier. That is the middle of the tier's weapon price band: **18 / 42 / 77** for II / III / IV.
-- On top of that come the shop's usual wave inflation and your discounts (`EconomyConfig.price`).
-- The tier belongs to the run: a new run starts at Tier I, and a rejoin keeps it.
+## Items and the shop
 
-| Upgrade | Base | Wave 3 | Wave 5 | Wave 8 | Wave 10 | Wave 14 |
-|---|---|---|---|---|---|---|
-| I → II | 18 | 26 | 32 | 40 | 46 | 57 |
-| II → III | 42 | 57 | 68 | 83 | 94 | 114 |
-| III → IV | 77 | 103 | 120 | 146 | 164 | 198 |
+**Prices:** the normal `EconomyConfig.price`, with wave inflation and your discounts. Example: a Nail Turret is 24 + 5 + 24 × 5 × 10% = **41** at wave 5.
 
-### Worked example
+**Limits:**
+- 10 turrets per player. At 10 the shop stops offering turret items to you, and a buy or an admin grant is refused ("You already have 10 turrets").
+- 30 turrets on the server, Scrap Magnet's included. At a wave start the 30 are shared out fairly (`HandymanTurret.share`): one each in turn, best turrets first. Example: 4 players with 10 each get 8, 8, 7 and 7. Someone arriving later gets what is left.
 
-A Handyman on wave 5 with the class buffs and two home weapons (+5% Damage, +15% Utility Power, own class +15%, 10% cooldown reduction):
+**Shop weighting**, like Handyman weapons: a Handyman, or anyone carrying a Handyman-class weapon, gets 15% of item offers from the structure items (the four turrets, Scrap Magnet, Toolbelt), plus the early-wave class bonus. Example: 30% on wave 1.
 
-- **Tier I nail:** 4 × 1.05 × 1.15 × 1.15 = **5.55** damage, every 0.8 × 0.9 = **0.72 s**. That is **7.7 DPS**, or two nails for an 11 HP wave-5 zombie.
-- **Upgrade to Tier II:** 18 + 5 + 18 × 5 × 10% = **32 shards**. The nail becomes 8.33 damage every 0.648 s, which is **12.9 DPS**, and it pierces one enemy.
-- **Tier IV, for comparison:** 3.67 × 1.389 = 5.09 per nail every 0.168 s, which is **30.3 DPS**.
+**Selling:** items can't be sold in this game (only weapons recycle), so turret items can't either.
 
-## Balance
+**Support items:**
+- **Scrap Magnet** (tier II, 40, the Fridge Magnet's art):
+  - Each 40 crystals you pick up in a wave builds a temporary Nail Turret near you, up to 3 a wave per copy.
+  - It counts crystals before the crystal bag's bonus.
+  - Temporary turrets last until the wave ends, don't count toward your 10, and do count toward the server's 30.
+  - Example: 2 copies and 130 crystals give 3 temporary turrets.
+- **Toolbelt** (tier I, 18, the Utility Power level-up art): +6% Utility Power.
 
-- **Target:** 40–50% of a ranged weapon of the same tier, and it lands at 45–48%. The turret is extra damage on top of six weapon slots, so a Handyman with six weapons gains about 0.46 / 6 ≈ **+8%** damage.
-- **Only where it stands.** It covers a 25-stud circle and can only move every 8 s. When the Handyman kites away from it, it does nothing, so the real gain is lower than +8%.
-- **Price:** about one weapon copy per tier. Early on, that is worse value than buying a new weapon. It is never a must-buy, but it is always offered and never needs a slot.
-- **Compared with the other classes:** Gunner gets +20% ranged damage, +10% ranged attack speed and +1 projectile at four home weapons. Mage gets +25% elemental damage and +30% duration. Handyman's own buffs are the mildest offence (+5% damage, +15% to Handyman weapons only), and the turret's +8% doesn't make it clearly stronger.
-- **No Handyman buff was trimmed.** If play-tests show otherwise, the first thing to trim is the class's +5% Damage.
-- **Since 2026-10-04 mobs can break it,** so that +8% is now a best case, and the turret is also a decoy. See [Balance effect](#balance-effect).
+## Handyman = Brotato's Engineer
+
+- **Utility Power:** +15 to start. Every Utility Power gain from items, level-up cards and set bonuses counts × 1.25.
+  - Example: a +12 card gives him +15.
+  - His four-weapon set bonus (+20) counts +25.
+- **Damage:** positive Damage gains count × 0.5, and his +5% Damage buff is gone.
+  - Example: an item with +10% Damage gives him +5%.
+  - A loss (−3) isn't halved.
+- **How gains work** (`CharacterStats.gained`): a class's `gain` multiplies what its set bonuses, items, level-ups, skills, armour and pets add to a stat, when that adds up to more than 0. His base and his own class buffs aren't gains.
+- **Free turret:** he starts every run owning 1 Nail Turret item, which counts toward his 10.
+  - Until the run starts (wave 1's shop, or the sandbox), it follows his class. A match server sets the class after the run state exists, so picking Handyman adds it and picking another class takes it back.
+  - Someone who joins a run in progress as a Handyman gets it too.
+- **Ring:** 4–8 studs ("structures spawn close to each other"). With 9 or 10 turrets the extras go on a second ring 5 studs further out: 8 at 8 studs, then 2 at 13.
+- **Price:** structure items (the four turrets, Scrap Magnet and Toolbelt) cost him 20% less. Example: a wave-5 Nail Turret is 32, not 41.
+- **Unchanged:** Area +20%, Regen +1, Max HP −10, and two home weapons' 10% cooldown reduction.
+- **Class description:** "Engineer: starts with a Nail Turret. Turrets spawn close to you. Utility Power gains +25%. Damage gains halved."
 
 ## Server authority and performance
 
-- **The server decides everything:** placement, targeting, damage, health, breaking, tier, upgrades and cooldown.
-- **BUILD** is `RunAction` `BuildTurret`. No new remote; RogueliteMeta's handler ignores the action.
-  - It is checked by `HandymanTurret.canBuild`: installed, Handyman (or an admin turret), run member, not in the lobby, alive, not down, phase Combat or Practice, not paused or held, off cooldown.
-  - It is limited to one request every 0.25 s.
-- **The upgrade** is ShopService's `UpgradeTurret` action. It is checked by `HandymanTurret.canUpgrade`: installed, Handyman, below Tier IV, enough shards, and the tier the button showed (so a stale double-click can't buy twice). ShopService's own checks also apply: shop phase, revision, rate limit, alive in the run.
-- **Targeting** runs at 10 Hz. It uses one TargetGrid snapshot per tick, built only while a turret is firing, and picks the nearest allowed enemy in range with one line-of-sight ray. A boss is measured to its nearest body box, like for weapons.
-- **Fire rate** keeps the turret's own clock, with at most two nails per tick, so the average rate is exact. Nothing is banked across a hold.
-- **Nails** are a second `StatProjectiles` instance whose projectile keys start at 2^30, so clients never mix them up with weapon bullets. They use the Nail Gun's projectile look (`ProjectileStyleVisuals.Styles.Turret`).
-- **Replication:** there are no server parts and no server CFrame writes. Each turret is a Folder in `workspace.RogueliteTurrets`:
-  - `Position`, `Yaw`, `Tier`, `BuiltAt` and `ReadyAt`
+- **The server decides everything:** who has turrets (their items), where they stand, and what they shoot and when.
+  - Clients send nothing for turrets. RunAction `BuildTurret` has no listener any more.
+  - ShopService ignores ShopAction `UpgradeTurret` quietly: no message and no revision change.
+- **Placement:**
+  - Ground and sight rays run only when turrets are placed: at a wave start, or for a mid-wave addition.
+  - Each spot tries at most 3 points with 2 rays each.
+- **Targeting:**
+  - Runs at 10 Hz from one TargetGrid snapshot per tick, built only while a turret is firing.
+  - A turret picks a target again only when a nail is due that tick, or every 0.3 s for its aim, so 30 idle-ish turrets don't each cast every tick.
+  - It takes the nearest allowed enemy in range with one line-of-sight ray. A boss is measured to its nearest body box, like for weapons.
+- **Fire rate:** each turret keeps its own clock, with at most two nails per tick, so the average rate is exact. Nothing is banked across a hold.
+- **Nails:**
+  - They are a second `StatProjectiles` instance whose projectile keys start at 2^30, so clients never mix them up with weapon bullets.
+  - Their `slotIndex` is 100 + the turret's Index, so clients know which turret fired. It never matches a weapon slot.
+  - They use the Nail Gun's projectile look (`ProjectileStyleVisuals.Styles.Turret`).
+- **Replication:** there are no server parts and no server CFrame writes. Each turret is a Folder in `workspace.RogueliteTurrets` named `UserId_n`, with these attributes:
+  - `OwnerUserId` and `Index` (1–10 from items, 11 up for Scrap Magnet's)
+  - `Tier`, `Position`, `Yaw` and `Temp`
+  - `BuiltAt`, the server time it was placed. The client pops it in.
   - `Aim`, written at most 5 times a second when the target moves 1.5+ studs
-  - `Health` (to 0.1, written when a hit changes it), `MaxHealth`, and `Broken` (server time it broke; nil while standing)
-- **Mob hits (2026-10-04):** no new remote or module, and no cross-sandbox calls. They work like this:
-  - The sandboxed service keeps one plain table per turret in `HandymanTurret.posts` (`H.newPost`). It holds `Position` (the turret's middle), `Parent` (its Folder), `hp`, `pad` (its half-width past a player's 0.75) and `taken`.
-  - `RogueliteZombieChase` (unsandboxed) passes that table to a mob as its target when `HandymanTurret.nearer` picks it. That is one extra line per mob per think, a loop over at most a few turrets, with no raycasts of its own.
-  - `EnemyAttacks` and `ZombieAttacks` attack the table as they would a player's root. A hit only adds to `taken`.
-  - Every frame the service takes `taken` off, with the owner's armour (`H.takeHit`). It drops hits between waves and while the run is held, like `CharacterService.contact`.
-  - Broken or removed turrets have `hp` 0, so mobs drop them on their next think.
-- **Clients** draw the models, turn the head, pitch the barrel, add recoil, spin and flashes. They skip turrets more than 250 studs from the camera, and freeze them while the run is paused.
+  - Folders are reused by Index from wave to wave.
+- **Clients:**
+  - They draw the models, turn the heads, pitch the barrels, and add recoil, spin and flashes.
+  - They skip turrets more than 250 studs from the camera.
+  - They pose idle turrets (no nail for 1.5 s) at 20 Hz instead of every frame.
+  - They freeze everything while the run is paused.
 - **Sounds** come from `RogueliteSounds`, reusing the kit:
-  - each nail: the pistol pop, higher and quieter
-  - a build: a thud and a metal tick
-  - a tier up: the upgrade chime
-  - a break: a crunch (the thud and blunt hit pitched down, a quiet shotgun crackle)
+  - each nail: the pistol pop, higher and quieter. It is its own sound kind (`turret`, 4 per 0.25 s), so 30 turrets never crowd out weapon sounds.
+  - each placement: a thud and a metal tick
+  - a tier change on the same Index: the upgrade chime
 
 ## Admin panel
 
-The Player tab has a **Handyman turret** section, using the AdminService action `Turret`:
+The Player tab has a **Turrets** section, using the AdminService action `Turret`:
+- **Give Nail / Give Twin / Give Quad / Give Gatling** (`Give 1–4`):
+  - Adds one of that item to your run inventory through `ShopService.adminItem`, so the 10 limit holds.
+  - In a wave or the sandbox it stands at once. In the shop it comes with the next wave.
+- **Clear turrets:** your turret items go, and every standing turret goes now. Other players' turrets come back at the next wave.
 
-- **Give turret:** builds one at you now, whatever your class, for this run.
-- **Tier I–IV:** sets your turret's tier for this run.
-- **Break turret** (2026-10-04): your turret drops to 0 HP now, as if mobs broke it. Use it to see the burst, the BROKEN button and the rebuild.
-- **Clear turrets:** removes every turret. None comes back until the next wave or that player's BUILD.
+The generic **Give item** grid lists the turret items, Scrap Magnet and Toolbelt too.
 
 ## Files
 
-- New:
-  - `HandymanTurret.luau`: rules and numbers.
+- **Rewritten:**
+  - `HandymanTurret.luau`: the rules and numbers (items, the Brotato rule, ring maths, caps, Scrap Magnet, Engineer rules).
   - `HandymanTurretService.server.luau`: the server.
-  - `HandymanTurret.client.luau`: drawing and BUILD.
-  - `InstallHandymanTurret.luau`: the Studio installer.
+  - `HandymanTurret.client.luau`: the drawing. BUILD is gone.
   - `TurretTests.luau`
   - this doc
-- Edited with small hooks:
-  - `ShopService` (`UpgradeTurret` and the snapshot's `turret` row) and `ShopUI` (the button)
-  - `StatProjectiles` (`firstKey`)
-  - `ProjectileStyleVisuals` (the nail style alias)
-  - `RogueliteMeta` (`utilityKills`)
-  - `RunAnalytics` (the `Turret` source name)
-  - `RogueliteSounds`
-  - `AdminConfig`, `AdminService`, `AdminPanelUI`
-  - `CharacterStats` (the Handyman description)
-  - `default.project.json`
-- Edited for mobs breaking it (2026-10-04):
-  - `RogueliteZombieChase.server.luau`: a look-up of `HandymanTurret` and one `Turret.nearer` line after the nearest-player pick
-  - `EnemyAttacks.luau`: a turret target can start an attack (reach + pad); swings, lunges and shots aimed at it can hit it (`hitTurret`)
-  - `ZombieAttacks.luau`: the Mutant slams a turret target, and a slam hits every turret in its circle
-  - `RogueliteSounds` (the crunch), `AdminConfig` and `AdminPanelUI` (Break turret)
+- **Small hooks:**
+  - `ShopCatalog`: the 6 items, built from `HandymanTurret`.
+  - `ShopService`:
+    - `offerPrice` (the Handyman discount) in rolls and reprices;
+    - the 10-cap in offers, buys and `adminItem`;
+    - the structure weighting;
+    - the free Nail Turret (`freeTurret` in `newState` and `onStatsChanged`);
+    - `onShards` passes the crystals;
+    - `UpgradeTurret` is ignored;
+    - the snapshot's `turret` row is gone.
+  - `ShopTests`
+  - `CharacterStats`: the Handyman entry, `gained` and `resolve`.
+  - `CombatEffectsService`: `d.structure` means no dodge crit and no life steal.
+  - `RogueliteSounds`: the turret sound kind; the break crunch is gone.
+  - `AdminConfig`, `AdminService`, `AdminPanelUI` and `AdminConfigTests`.
+  - `ShopUI`: UPGRADE TURRET is gone.
+  - `CHARACTER_STATS.md`, `README.md` and `SHOP_GAMEPLAY_READINESS.md`: one line each.
+- **Back to before 9f6e956:** `RogueliteZombieChase.server.luau`, `EnemyAttacks.luau` and `ZombieAttacks.luau`.
+- **Unchanged:**
+  - `InstallHandymanTurret.luau` and the T1–T4 templates
+  - `StatProjectiles` (`firstKey`) and `ProjectileStyleVisuals` (the nail look)
+  - `RogueliteMeta` (`utilityKills`) and `RunAnalytics` (the `Turret` source)
+  - `default.project.json`. There are no new modules or remotes.
 
 ## Studio steps (each needs the user's okay)
 
-1. **Import:** File > Import 3D, default settings, scale 1:1, for `blender-handyman-turret/exports/fbx/HandymanTurret_T1.fbx` … `T4.fbx`.
-   - Upload `textures/HandymanTurret_T{n}.png` if the import has no colour map.
-   - Upload `previews/icon_T{n}.png` and paste the four ids into `HandymanTurret.Icons`. Until then the BUILD button shows a live view of the model.
-2. **Install:** run `InstallHandymanTurret.luau` (its header has the command). Pass `{textures = {...}}` if you uploaded the textures.
-   - It matches each part to the spec's centres and sizes with a 90° turn search, and refuses an import more than 15% off size.
-   - It sets the Head, Barrel and Glow pivots from the spec, the Muzzle attachments from `muzzlesFromBarrelPivot`, and T4's `MuzzleCentre`.
-   - Check that every line of its report says `ok`.
-3. **Sync scripts:** `HandymanTurret` must be in RS.RogueliteCombat **before** the new ShopService, though ShopService still loads without it.
-   - New ModuleScript `ReplicatedStorage.RogueliteCombat.HandymanTurret`: **Sandboxed = true, Capabilities copied from CharacterStats** (ShopService requires it).
-   - New Script `ServerScriptService.HandymanTurretService`: **Sandboxed = true, Capabilities copied from SSS.RogueliteCombat**.
-   - New LocalScript `StarterPlayer.StarterPlayerScripts.HandymanTurret`: unsandboxed, like PetVisuals.
-   - Then sync the edited files listed above. AdminConfig and AdminService go together: AdminService asserts that every action has a handler.
-4. **Tests (Studio Edit, no Play):** `TurretTests(HandymanTurret, TargetGrid, WeaponCatalog, CharacterStats, EconomyConfig)`. The call is in its header.
-5. **Play-test (the user):**
-   - A Handyman run: the turret appears at wave 1, BUILD moves it with an 8 s cooldown, and the shop button upgrades it.
-   - Tier IV spins.
-   - Pause freezes it.
-   - Another class gets no button.
-   - Phone layout: BUILD above the jump button, clear of DASH.
-
-**For the 2026-10-04 breaking change**, sync `HandymanTurret`, `HandymanTurretService`, the `HandymanTurret` LocalScript, `TurretTests`, `EnemyAttacks`, `ZombieAttacks`, `RogueliteZombieChase`, `RogueliteSounds`, `AdminConfig` and `AdminPanelUI`. All of them already exist in Studio, so their Sandboxed settings stay as they are. `HandymanTurret` must load before the chase script uses it, but the chase only looks it up, so a missing one just means mobs ignore turrets. Then:
-- **Tests:** re-run `TurretTests` in Edit. `EnemyShotTests` should still pass, because the stubs have no turret.
-- **Play-test (the user):**
-  - Admin panel > Player > Give turret, and stand behind it with mobs coming. They should go for the turret, the bar should drop and flash, and it should turn red under 30%.
-  - Let it break: you should see the burst and hear the crunch, and the button should read BROKEN with a 5 s countdown. BUILD then puts a fresh full-HP turret at you.
-  - **Break turret** does the same without waiting for mobs.
-  - The next wave rebuilds a broken turret.
-  - A spitter shoots it, and a Mutant's slam hits it.
-  - Tier IV has 1.5³ ≈ 3.4× Tier I's health.
+1. **Sync scripts.** All of them already exist in Studio, so their Sandboxed settings stay as they are:
+   - `HandymanTurret` must be in `RS.RogueliteCombat` before the new `ShopCatalog`. ShopCatalog looks it up with `pcall`, so without it there are just no turret items.
+   - The scripts: `HandymanTurret`, `HandymanTurretService`, the `HandymanTurret` LocalScript, `ShopCatalog`, `ShopService`, `CharacterStats`, `CombatEffectsService`, `RogueliteZombieChase`, `EnemyAttacks`, `ZombieAttacks`, `RogueliteSounds`, `AdminConfig`, `AdminService`, `AdminPanelUI` and `ShopUI`.
+   - `AdminConfig` and `AdminService` go together.
+   - `CharacterStats`, `ShopService` and `ShopUI` also carry the multi-class weapons work. Sync them with it.
+2. **Tests, in Edit with no Play:**
+   - `TurretTests(HandymanTurret, TargetGrid, WeaponCatalog, CharacterStats, EconomyConfig, ShopCatalog)`. The call is in its header.
+   - `AdminConfigTests(AdminConfig, EnemyCatalog, ShopCatalog)`.
+3. **Tests in Play:** `ShopTests`, as a temporary server Script.
+4. **Play-test (the user):** see the checklist in the report, or:
+   - **A Handyman run:**
+     - Wave 1 has one Nail Turret 4–8 studs away, facing you.
+     - A Nail Turret offer reads 20% under the Gunner's price.
+     - Buying two more gives 3 turrets at wave 2, on the ring and 5+ studs apart.
+   - **A Gunner:** no free turret. A bought Nail Turret stands 8–14 studs out.
+   - **Admin:** Give Gatling mid-wave makes it stand at once and spin. Clear turrets removes them.
+   - **Scrap Magnet:** 40 crystals in a wave makes a temporary Nail Turret appear. It's gone in the shop.
+   - **Mobs ignore turrets** and walk through them.
+   - **Pause** freezes them.
+   - **A phone:** the shop's right column has no UPGRADE TURRET row, and there's no BUILD button.
 
 ## Not done / judgment calls
 
-- **Gamepad R1, keyboard B.** Pad X went to the dash. R1 is otherwise only the death screen's spectate cycle, and BUILD is hidden while you are dead.
-- **Ranged damage and attack speed apply,** not only Utility Power. The turret is treated as a ranged Utility weapon, so there is one shared calculation.
-- **Stat items count for it,** but the shop's "Works with" line on item cards lists only carried weapons, so it doesn't name the turret.
-- **No second turret at Tier IV.** The gatling fits the spinning barrel model and keeps one turret per player.
-- **Knockback** from items pushes enemies away from the owner, not from the turret (shared CombatEffectsService code). The turret has no knockback of its own.
-- **`AdminConfigTests` was already stale:** it expects 15 actions, and the place had 18 before `Turret`. It wasn't updated here.
-- **Breaking (2026-10-04):**
-  - **Gear power share added** to the requested formula, so a later map's mobs, which hit harder by that share, don't break it faster than Pine Valley's.
-  - **Not scaled by difficulty or Endless.** On Hard (×1.3 enemy damage) or past wave 20 (Endless damage, ×1.6 at wave 30), it breaks sooner, the same as players feel it.
-  - **The zombies' shared 0.3 s swing gap is a player-only defence,** so a ring of zombies hits the turret with every swing.
-  - **Only area attacks hit it collaterally** (the Mutant's slam). A swing or shot aimed at a player doesn't hit a turret beside them.
-  - **Bosses don't hit it yet,** because `combat/bosses/` was mid-remodel.
-  - **Admin God protects you, not your turret,** so you can watch it break while testing.
-  - **Moving keeps its damage,** and every new wave refills it. A broken one is rebuilt at full HP.
-  - **The health state lives on each turret,** not the player, and mob targeting takes any number of turrets. This is so a later "several turrets per player" (Turret Kit) carries over.
+- **Gear power still counts** for turret damage, as it does for every hit (`CombatEffectsService`). The design's formula names only Utility Power, but later maps' enemies are tougher by exactly the gear-power share (`RunSetupRules.enemyScale`). Without it, turrets would fall behind there.
+- **Status procs use your chances but not Damage.** Burn ticks scale with Elemental and Burn damage only, since Damage is ignored for structures.
+- **Knockback, Attack range and projectile speed/size are ignored too**, beyond the design's list. Range is fixed at 25 ("range 25 studs for every turret"). Knockback pushes from the owner's body (shared code), which is wrong for a turret.
+- **Weighting by "favoured":** the design says turret items get "the Handyman class weighting, like Handyman weapons". So it is the weapon same-class rule (15% + early bonus) applied to the structure items, for a Handyman or anyone carrying a Handyman-class weapon.
+- **The free turret follows class changes only before the run starts.** After wave 1 starts, admin class changes don't add or remove it.
+- **Fallback spots can be closer than 5 studs** to another turret (half radius, or your own spot). That is rare: only over cliffs, walls or the arena edge.
+- **Scrap Magnet counts crystals before the bag bonus** (a boss crystal of value 4 counts 4). A temporary turret blocked by the server's 30 is built later in the wave if room appears.
+- **Clear turrets also removes your turret items.** Otherwise they would come straight back at the next wave.
+- **No sell for turret items:** the game has no item selling, so "they sell like any item" means not at all.
+- **Studio may lag the repo.** Diff Studio against the repo before debugging a play-test report.

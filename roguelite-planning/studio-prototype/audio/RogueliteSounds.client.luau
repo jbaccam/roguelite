@@ -460,16 +460,19 @@ end
 for _,p in Players:GetPlayers() do watchDash(p) end
 Players.PlayerAdded:Connect(watchDash)
 
--- Handyman turret (HANDYMAN_TURRET.md, 2026-10-03), from the same kit: each nail is the Nail Gun's
--- pistol pop played higher and quieter (the first 'Fly' row of each turret projectile, id 'Turret',
--- on Shot); building or moving it (BuiltAt) is a heavy clunk with a metal tick; a tier up (Tier)
--- adds the upgrade chime. Positioned at the turret; your own turret's nails a little louder.
+-- Turrets (HANDYMAN_TURRET.md, 2026-10-03), from the same kit: each nail is the Nail Gun's pistol
+-- pop played higher and quieter (the first 'Fly' row of each turret projectile, id 'Turret', on
+-- Shot); each placement (BuiltAt, every wave start since turret items, 2026-10-04) is a heavy clunk
+-- with a metal tick; a tier up (Tier) adds the upgrade chime. Positioned at the turret; your own
+-- turrets' nails a little louder. The per-kind limit (allow) keeps 30 turrets from stacking up.
+-- Turrets can't be destroyed since 2026-10-04, so the break crunch went.
 task.spawn(function()
  local heard,prunedAt={},os.clock()
  local function row(origin,_,kind,id,_,_,_,_,ownerId,_,_,_,_,key)
   if kind~='Fly' or id~='Turret' or key==nil or heard[key] then return end
   heard[key]=os.clock()
-  if typeof(origin)=='Vector3' then play('shot_pistol','weapon',ownerId==player.UserId and .2 or .12,1.75,origin,.06) end
+  -- Kind 'turret' (4 per 0.25 s, LIMIT's default) so up to 30 turrets never crowd out weapon sounds.
+  if typeof(origin)=='Vector3' then play('shot_pistol','turret',ownerId==player.UserId and .2 or .12,1.75,origin,.06) end
  end
  combat:WaitForChild('Shot').OnClientEvent:Connect(function(a,b,...)
   if a==Wire.Marker then for _,r in ipairs(b) do row(Wire.unpack(r)) end else row(a,b,...) end
@@ -491,13 +494,6 @@ task.spawn(function()
    local now=f:GetAttribute('Tier')
    if type(now)=='number' and type(tier)=='number' and now>tier then local p=at();if p then play('ui_upgrade','impact',.4,1.1,p,.02);play('hit_blunt','impact',.25,1.3,p,.05) end end
    tier=now
-  end)
-  -- Broken by mobs (2026-10-04, Broken = server time): a crunch from the same kit, the thud and the
-  -- blunt hit pitched down with a short shotgun crackle on top. Only when it just happened.
-  f:GetAttributeChangedSignal('Broken'):Connect(function()
-   local broken=f:GetAttribute('Broken');local p=at()
-   if type(broken)~='number' or not p or workspace:GetServerTimeNow()-broken>=1 then return end
-   play('hit_thud','impact',.55,.7,p,.05);play('hit_blunt','impact',.45,.6,p,.05);play('shot_shotgun','impact',.18,1.6,p,.05)
   end)
  end
  local function hook(folder)

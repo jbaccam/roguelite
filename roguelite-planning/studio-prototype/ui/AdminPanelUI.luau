@@ -194,15 +194,14 @@ function M.new(player)
    button(c,'Item_'..e.id,e.name,((i-1)%cols)*(cw+8),256+math.floor((i-1)/cols)*48,cw,function() send('GiveItem',e.id) end).Caption.TextSize=15
   end
   local y=256+math.ceil(#items/cols)*48+16
-  -- Handyman turret (HANDYMAN_TURRET.md): AdminService action Turret.
-  heading(c,'TurretTitle','Handyman turret',y);y+=36
-  button(c,'TurretGive','Give turret',0,y,170,function() send('Turret','Give') end,true)
-  for t=1,4 do button(c,'TurretTier'..t,'Tier '..T.Roman[t],180+(t-1)*96,y,88,function() send('Turret','Tier',t) end) end
-  button(c,'TurretClear','Clear turrets',566,y,180,function() send('Turret','Clear') end)
-  -- Break (2026-10-04): yours to 0 HP now, as mobs would, to see the burst, BROKEN and the rebuild.
-  button(c,'TurretBreak','Break turret',0,y+48,170,function() send('Turret','Break') end)
-  note(c,'TurretNote','Give: one at you now, any class, this run. Tier: yours this run. Break: yours to 0 HP (BUILD within 5 s). Clear: all, until the next wave or BUILD (B / pad R1).',y+96)
-  y+=132
+  -- Turrets (HANDYMAN_TURRET.md, turret items 2026-10-04): AdminService action Turret.
+  heading(c,'TurretTitle','Turrets',y);y+=36
+  local names={'Give Nail','Give Twin','Give Quad','Give Gatling'}
+  local tw=(CW-3*8-188)/4
+  for t=1,4 do button(c,'TurretGive'..t,names[t],(t-1)*(tw+8),y,tw,function() send('Turret','Give',t) end,true).Caption.TextSize=15 end
+  button(c,'TurretClear','Clear turrets',CW-180,y,180,function() send('Turret','Clear') end)
+  note(c,'TurretNote','Give: one more turret item in your run inventory (10 at most); in a wave it stands at once. Clear: your turret items and every standing turret; others come back next wave.',y+48)
+  y+=84
   -- Class, stat edits, heal and emeralds: the old STATS panel, without its mob controls (Mobs tab).
   local stats=T.frame(c,'StatsView',0,y,CW,1)
   local h=statsView:render(stats,CW,{skipMobs=true});stats.Size=UDim2.fromOffset(CW,h);y+=h+16

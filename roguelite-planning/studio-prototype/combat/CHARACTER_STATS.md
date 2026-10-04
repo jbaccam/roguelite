@@ -37,7 +37,24 @@ The script also handles respawns after death, using `Players.RespawnTime`. Any c
 
 ## Classes
 
-Every class retains access to every weapon. Six home weapons belong to each class. Two/four home weapons grant additive affinity bonuses, subject to caps. Duplicate home weapons count toward affinity.
+Every class retains access to every weapon. Two/four home weapons grant additive affinity bonuses, subject to caps. Duplicate home weapons count toward affinity.
+
+**Weapons in several classes (2026-10-04, [design](../../plans/2026-10-04-multi-class-weapons-design.md)).** Every non-Godly weapon lists 1–3 classes in `WeaponCatalog` (`classes`; the first is its old home, and `home` stays as that first class for older code). Godly weapons list none, as before.
+- **Set bonuses** count a weapon for every class in its list. Example: two Kusarigamas (Juggler, Thrower) give a Juggler or a Thrower the 2-weapon bonus.
+- **Utility Power and the Utility tag** (and the `utilityKills` quest) apply when Handyman is anywhere in the list, so the Spatula, Rocket Launcher and Cinder Block now take Utility Power. Elemental follows a listed Mage the same way (no weapon changed).
+- **Starting weapon:** any owned weapon whose list includes the class, with no cap of six (`RunSetupRules.classWeapons` / `validLoadout`). A saved starter that no longer fits falls back to the class's signature weapon.
+- **Run shop:** the "same class" weighting matches an offer that shares any class with a carried weapon.
+
+| Class | Weapons (signature first; ² = listed second) | Count |
+| --- | --- | --- |
+| Brawler | Frying Pan, Nunchucks, Katana, Baseball Bat, Boxing Gloves, Cinder Block, Bowling Pin², Shovel², Excalibur² | 9 |
+| Gunner | Glock, Draco, Fart Gun, Shotgun, T-Shirt Cannon, Rocket Launcher, Nail Gun² | 7 |
+| Thrower | Boomerang, Kunai, Molotov, Egg, Steak, Deck of Cards, Kusarigama², T-Shirt Cannon², Rubber Duck², Bowling Ball², Mjolnir² | 11 |
+| Juggler | Rubber Duck, Kusarigama, Spatula, Yo-Yo, Bowling Ball, Bowling Pin, Boomerang², Egg², Deck of Cards², Boxing Gloves² | 10 |
+| Handyman | Nail Gun, Wrecking Ball, Shovel, Paint Roller, Vacuum Cleaner, Power Washer, Spatula², Rocket Launcher², Cinder Block² | 9 |
+| Mage | Magic Staff, Mjolnir, Excalibur, Pandora's Box, Medusa's Head, Crystal Ball, Fart Gun², Molotov² | 8 |
+
+The design's table was written from the homes before the 2026-10-03 Brawler ↔ Juggler swap. The four swapped weapons follow that swap so their first class stays today's home: Kusarigama is Juggler, Thrower (design: Brawler, Thrower), Spatula Juggler, Handyman (Brawler, Handyman), Boxing Gloves Brawler, Juggler (Juggler, Brawler), Cinder Block Brawler, Handyman (Juggler, Handyman). So Brawler has 9 and Juggler 10 (design: 10 and 9).
 
 Rebalanced 2026-10-03 so no class is plainly worse: each has 3–4 buffs and 1–3 drawbacks, and a drawback never weakens the class's own weapons (Thrower lost −10% attack speed, Juggler's damage penalty went from −15% to −10%, Handyman lost −2 speed and −5 crit). Gunner's faster ranged attacks are data now (`rangedAttackSpeed`) and shown with its buffs.
 
@@ -47,10 +64,10 @@ Rebalanced 2026-10-03 so no class is plainly worse: each has 3–4 buffs and 1�
 | Gunner | +20% ranged, +35% projectile speed, +5 critical points, +10% ranged attack speed | −15 HP, −15% melee | +1 pierce | +1 projectile |
 | Thrower | +25% range, +1 bounce, +15% ranged | −2 Armor, −10% melee | +15% ranged | +1 projectile |
 | Juggler | +3 movement speed, +15% attack speed, +12 knockback | −10% general damage | +15% range, +5 knockback | +1 bounce, +15% attack speed |
-| Handyman | +5% damage, +15% utility, +20% area, +1 HP/s regeneration | −10 HP | 10% cooldown reduction | +20% utility |
+| Handyman | +15% utility, +20% area, +1 HP/s regeneration (Engineer since 2026-10-04: Utility Power gains ×1.25, Damage gains ×0.5; the +5% damage went) | −10 HP | 10% cooldown reduction | +20% utility (counts +25) |
 | Mage | +25% elemental, +30% duration, 15% burn chance, +1 chain target | −20 HP, −2 Armor, −10% melee | +15% elemental | +1 burn-spread target |
 
-**Class weapon fit (2026-10-03).** On top of the table, every equipped weapon gets its own damage change from how close its home class is to yours: own class **+15%**, then one number per pair of classes (the same both ways). Godly weapons are unchanged. It stacks with the class stats. Values: `CharacterStats.ClassFit`.
+**Class weapon fit (2026-10-03).** On top of the table, every equipped weapon gets its own damage change from how close its home class is to yours: own class **+15%**, then one number per pair of classes (the same both ways). Godly weapons are unchanged. It stacks with the class stats. Values: `CharacterStats.ClassFit`. Since 2026-10-04 a weapon in several classes uses the **best** of them (`CharacterStats.classFit`): a Gunner with the Nail Gun (Handyman, Gunner) gets +15%, where it was 0; a Brawler with the Kusarigama (Juggler, Thrower) gets −5. The cards show every class ("THROWER · JUGGLER · RANGED") and the badge shows the best fit.
 
 | Your class → weapon's class | Brawler | Gunner | Thrower | Juggler | Handyman | Mage |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -83,7 +100,7 @@ Two classes got an ability from the play-test round. Repo only, syntax-checked: 
 - **Numbers** (`CharacterStats.Dash`): 20 studs in 0.18 s (111 studs/s), then 3 s cooldown. No damage and no invulnerability.
 - **Server checks:** the client moves its own body and sends `RunAction 'Dash'`. `RogueliteMeta` approves it (class or starter, cooldown, mid-wave or sandbox, not paused, not held) and stamps `DashAt`. `MovementGuard` then allows 26 extra studs for 1.5 s. For 0.6 s after a dash, enemy hits use the player's seen position up to 20 studs ahead ([HIT_FAIRNESS.md](HIT_FAIRNESS.md#round-4-melee-from-a-jump-and-the-dash-2026-10-03)).
 
-**Handyman turret.** The Handyman builds a nail turret it can upgrade in the run shop (Tier I–IV). B, R1 or the BUILD button moves it. It stays off until its templates are installed. Rules and numbers: [HANDYMAN_TURRET.md](HANDYMAN_TURRET.md). Art: `roguelite-planning/blender-handyman-turret/`. The Handyman's class description now starts "Builds a nail turret you can upgrade."
+**Turrets (turret items since 2026-10-04).** Turrets are run-shop items any class can buy (Nail Turret, Twin Nailer, Quad Nailer, Gatling Rig; up to 10 each, 30 on the server). They are placed for you on a ring at every wave start; there is no BUILD button or turret upgrade any more. The Handyman is Brotato's Engineer: a free Nail Turret each run, a tighter ring (4–8 studs), turret items 20% off, Utility Power gains ×1.25 and Damage gains ×0.5 (`CharacterStats.gained`). Turrets can't be destroyed. Rules and numbers: [HANDYMAN_TURRET.md](HANDYMAN_TURRET.md). Art: `roguelite-planning/blender-handyman-turret/`. The class description reads "Engineer: starts with a Nail Turret. Turrets spawn close to you. Utility Power gains +25%. Damage gains halved."
 
 ## Verification
 

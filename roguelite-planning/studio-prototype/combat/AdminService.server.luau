@@ -156,11 +156,12 @@ end
 function actions.GiveItem(p,id) return Shop.adminItem(p,id) end
 function actions.Shards(p,mode,n) return Shop.adminShards(p,mode,n) end
 function actions.Level(p,mode,n) return Shop.adminLevel(p,mode,n) end
--- Handyman turret: HandymanTurretService puts its handler on ShopService (Shop.turretAdmin).
-function actions.Turret(p,mode,tier)
+-- Turrets: HandymanTurretService puts its handler on ShopService (Shop.turretAdmin): Give n (a
+-- turret item, n = 1-4) or Clear (2026-10-04).
+function actions.Turret(p,mode,n)
  local handler=Shop.turretAdmin
  if type(handler)~='function' then return false,'Turrets are not running (HandymanTurretService)' end
- return handler(p,mode,tier)
+ return handler(p,mode,n)
 end
 -- Tutorial (plans/2026-10-03-tutorial-design.md): TutorialDirector's ServerStorage.TutorialControl
 -- does the work. Start: the run from the top. Lobby: the reward now, then the lobby steps. End:

@@ -208,23 +208,7 @@ local function damage(npc, player, amount)
 	t.hits += 1
 	t.lastDamage = actual
 end
--- Handyman turret (HANDYMAN_TURRET.md, 2026-10-04): when a turret is a mob's nearest target the
--- chase hands this module its table (HandymanTurret.newPost) instead of a player's root. A hit adds
--- the same damage a player would take before their own defences to its `taken`; the sandboxed
--- HandymanTurretService takes that off with the owner's armour and breaks it at 0 HP. Plain data,
--- so nothing here calls into a sandboxed script. Example: a wave-5 zombie's 11 on a 120 HP turret.
-local function hitTurret(post, amount)
-	if post.hp > 0 then
-		post.taken += amount
-	end
-end
 local function melee(npc, root, config, s)
-	-- A split lava slime is smaller: its limb part of the reach shrinks with it (0.75 is the
-	-- player's half-body, EnemyCatalog.Reach).
-	local reach = config.hitRange or config.attackRange
-	if npc:GetAttribute("SplitChild") and config.childScale then
-		reach = (reach - 0.75) * config.childScale + 0.75
-	end
 	for _, player in Players:GetPlayers() do
 		local ok, pr = validPlayer(player)
 		if ok and not s.hitPlayers[player] then
@@ -232,6 +216,12 @@ local function melee(npc, root, config, s)
 			-- client has it, the enemy where they saw it. Walls use the bodies here.
 			local delta = Characters.seen(player, pr) - Characters.seenEnemy(player, root)
 			local flat = Vector3.new(delta.X, 0, delta.Z)
+			-- A split lava slime is smaller: its limb part of the reach shrinks with it (0.75 is the
+			-- player's half-body, EnemyCatalog.Reach).
+			local reach = config.hitRange or config.attackRange
+			if npc:GetAttribute("SplitChild") and config.childScale then
+				reach = (reach - 0.75) * config.childScale + 0.75
+			end
 			if
 				math.abs(delta.Y) <= config.maxHeight
 				and flat.Magnitude
@@ -242,22 +232,6 @@ local function melee(npc, root, config, s)
 				s.hitPlayers[player] = true
 				damage(npc, player, npc:GetAttribute("AttackDamage") or config.damage)
 			end
-		end
-	end
-	-- The turret this attack is aimed at (hitTurret): the same reach and arc, to its edge (pad).
-	local post = s.post
-	if post and post.hp > 0 and not s.hitPlayers[post] then
-		local delta = post.Position - root.Position
-		local flat = Vector3.new(delta.X, 0, delta.Z)
-		if
-			math.abs(delta.Y) <= config.maxHeight
-			and flat.Magnitude
-				<= reach + post.pad + (config.behavior == "Lunge" and LUNGE_REACH_BONUS or REACH_BONUS)
-			and (flat.Magnitude < 0.1 or flat.Unit:Dot(s.direction) > ARC_DOT)
-			and not workspace:Raycast(root.Position, delta, s.params)
-		then
-			s.hitPlayers[post] = true -- also ends a lunge, as a player hit does
-			hitTurret(post, npc:GetAttribute("AttackDamage") or config.damage)
 		end
 	end
 end
@@ -297,7 +271,6 @@ local function projectile(npc, root, config, s, target)
 		flown = 0,
 		damage = npc:GetAttribute("AttackDamage") or config.damage,
 		params = s.params,
-		post = s.post, -- a shot at a turret can hit it (hitTurret)
 	})
 end
 -- Server time the shots in flight last moved at, while a paused run holds them (plan L).
@@ -347,19 +320,7 @@ RunService.Heartbeat:Connect(function(dt)
 					end
 				end
 			end
-			-- The turret it was shot at: its middle, widened by its pad, like a body's 1.15.
-			local post = p.post
-			if post and post.hp > 0 then
-				local distance, t = A.segmentDistance(p.position, finish, post.Position)
-				if distance <= 1.15 + post.pad and t < closestT then
-					closest = post
-					closestT = t
-				end
-			end
-			if closest and closest == post then
-				hitTurret(post, p.damage)
-				stop = true
-			elseif closest then
+			if closest then
 				damage(p.source, closest, p.damage)
 				stop = true
 			elseif wall then
@@ -469,11 +430,8 @@ function A.update(npc, target, dt)
 	if now < s.nextAttack or not target or not target.Parent then
 		return false
 	end
-	-- A turret (hitTurret) is a target while it stands; its pad puts its edge where a body's would be.
-	-- It is a table: a player's root is a Part, and reading .turret on a Part would throw.
-	local post = typeof(target) == "table" and target.turret and target or nil
-	local player = not post and Players:GetPlayerFromCharacter(target.Parent)
-	local valid = if post then post.hp > 0 else player and validPlayer(player)
+	local player = Players:GetPlayerFromCharacter(target.Parent)
+	local valid = player and validPlayer(player)
 	if not valid then
 		return false
 	end
@@ -482,7 +440,6 @@ function A.update(npc, target, dt)
 	local flat = Vector3.new(delta.X, 0, delta.Z)
 	local trigger = config.attackRange
 		+ ((config.behavior == "Ranged" or config.behavior == "Lunge") and 0 or TRIGGER_BONUS)
-		+ (post and post.pad or 0)
 	if flat.Magnitude > trigger or math.abs(delta.Y) > config.maxHeight or flat.Magnitude < 0.01 then
 		return false
 	end
@@ -495,7 +452,6 @@ function A.update(npc, target, dt)
 	s.start = now
 	s.hit = false
 	s.hitPlayers = {}
-	s.post = post
 	s.nextAttack = now + config.attackCooldown
 	s.lungeLimit = nil
 	s.faced = nil -- release() let the Humanoid turn it, so the first facing always writes

@@ -78,7 +78,10 @@ S.Classes={
  Gunner={description='Fast, piercing gunfire. Less health and weak melee damage.',buffs={RangedDamage=20,ProjectileSpeed=35,CritChance=5,MaxHP=-15,MeleeDamage=-15},rangedAttackSpeed=10,build={'00','07','09','08'},two={Pierce=1},four={ProjectileCount=1}},
  Thrower={description='Long-range throws that rebound. Thin armor and weak melee damage.',buffs={AttackRange=25,Bounce=1,RangedDamage=15,Armor=-2,MeleeDamage=-10},build={'12','13','14','18'},two={RangedDamage=15},four={ProjectileCount=1}},
  Juggler={description='Quick tricks with toys: fast attacks, big knockback, always moving. Lower damage per hit.',buffs={MoveSpeed=3,AttackSpeed=15,Knockback=12,Damage=-10},build={'17','21','22','23'},two={AttackRange=15,Knockback=5},four={Bounce=1,AttackSpeed=15}},
- Handyman={description='Builds a nail turret you can upgrade. Handy with anything: no penalty with almost any weapon, bigger blasts and slow healing. A little less health.',buffs={Damage=5,UtilityPower=15,AreaSize=20,Regeneration=1,MaxHP=-10},build={'24','25','28','29'},two={CooldownReduction=10},four={UtilityPower=20}},
+ -- Handyman = Brotato's Engineer (2026-10-04, HANDYMAN_TURRET.md): a free Nail Turret each run and a
+ -- tighter turret ring (HandymanTurret.Engineer); gain: Utility Power gains x1.25, Damage gains x0.5
+ -- (S.gained). His +5% Damage buff went.
+ Handyman={description='Engineer: starts with a Nail Turret. Turrets spawn close to you. Utility Power gains +25%. Damage gains halved.',buffs={UtilityPower=15,AreaSize=20,Regeneration=1,MaxHP=-10},build={'24','25','28','29'},two={CooldownReduction=10},four={UtilityPower=20},gain={UtilityPower=1.25,Damage=.5}},
  Mage={description='Elemental damage, burn and chains. Fragile, with weak physical attacks.',buffs={ElementalDamage=25,Duration=30,BurnChance=15,ChainCount=1,MaxHP=-20,Armor=-2,MeleeDamage=-10},build={'30','31','34','35'},two={ElementalDamage=15},four={BurnSpread=1}},
 }
 -- Each class's starting weapon, also its icon on class cards and tags. RunSetupRules.Signature is
@@ -86,7 +89,7 @@ S.Classes={
 -- 2026-10-03 (was Boxing Gloves).
 S.Signature={Brawler='01',Gunner='00',Thrower='12',Juggler='17',Handyman='24',Mage='30'}
 -- Class weapon fit (2026-10-03, Brotato-style but gentler): each equipped weapon's damage changes by
--- how close its home class is to yours. Own class +15%. Each pair of classes has one number, the same
+-- how close its class (the closest of its classes since 2026-10-04) is to yours. Own class +15%. Each pair of classes has one number, the same
 -- both ways: 0 = close enough, -5 a bit off, -10 different, -15 opposite (fists vs guns). Handyman is
 -- handy with anything: 0 with every class but Mage. Godly weapons belong to no class: no change.
 -- Stacks with the class stats above, so a Brawler's Glock takes -15% and the Brawler's -15% ranged:
@@ -99,13 +102,26 @@ S.ClassFit={Own=15,
  Handyman={Brawler=0,Gunner=0,Thrower=0,Juggler=0,Mage=-5},
  Mage={Brawler=-10,Gunner=-5,Thrower=-5,Juggler=-5,Handyman=-5},
 }
--- 'home' (+15), 'similar' (0) or 'off' (negative), and the percent; nil,0 for Godly or no class.
+-- 'home' (+15), 'similar' (0) or 'off' (negative), the percent, and the weapon's class that gave it;
+-- nil,0 for Godly or no class. A weapon in several classes (WeaponCatalog.classes, 2026-10-04) uses
+-- the best of them: a Gunner with the Nail Gun (Handyman, Gunner) gets +15% (was 0 from Handyman).
+-- base may be a bare {home=class} (the class screens' per-class chips).
 function S.classFit(base,class)
  local row=S.ClassFit[class]
  if base.godly or not S.Classes[class] or not row then return nil,0 end
- if base.home==class then return 'home',S.ClassFit.Own end
- local pct=row[base.home] or 0
- return pct<0 and 'off' or 'similar',pct
+ local best,via=nil,nil
+ for _,c in base.classes or {base.home} do
+  local pct=c==class and S.ClassFit.Own or row[c]
+  if pct and (best==nil or pct>best) then best,via=pct,c end
+ end
+ if best==nil then return 'similar',0 end
+ if via==class then return 'home',best,via end
+ return best<0 and 'off' or 'similar',best,via
+end
+-- Whether `class` is one of the weapon's classes (set bonuses count every listed class). Godly: never.
+function S.inClass(base,class)
+ if type(base)~='table' or base.godly then return false end
+ return table.find(base.classes or {base.home},class)~=nil
 end
 -- One line for class screens: 'Brawler +15% · Juggler 0% · Handyman -5% · Thrower, Mage -10% · Gunner -15%'.
 function S.classFitText(class)
@@ -141,11 +157,22 @@ function S.valid(id,value)
  local count=table.find({'ProjectileCount','Pierce','Bounce','PoisonStacks','ChainCount','ChainBonus','ChainEvery','BurnSpread','FirstHitBlock'},id)
  return d~=nil and type(value)=='number' and value==value and value>=d.min and value<=d.max and (not count or value%1==0)
 end
+-- Stat gains (2026-10-04, the Handyman as Brotato's Engineer): a class's `gain` multiplies what its
+-- set bonuses (two / four), items, level-up cards, skills, armour and pets add to a stat, when that
+-- adds up to more than 0. The stat's base and the class's own buffs aren't gains. Examples for the
+-- Handyman (gain UtilityPower 1.25, Damage 0.5): a +12 Utility Power card gives +15; an item with
+-- +10% Damage gives +5%; a -3 never changes.
+function S.gained(c,id,amount)
+ local g=c and c.gain and c.gain[id]
+ if g and amount>0 then return amount*g end
+ return amount
+end
 function S.resolve(class,count,overrides,bonuses,percent)
  local result={};local c=S.Classes[class] or S.Classes.Brawler
  for _,d in S.List do
-  local value=d.base+(c.buffs[d.id] or 0)+(count>=2 and (c.two[d.id] or 0) or 0)+(count>=4 and (c.four[d.id] or 0) or 0)
-  value=(value+((bonuses or {})[d.id] or 0))*(1+((percent or {})[d.id] or 0)/100)
+  local sets=(count>=2 and (c.two[d.id] or 0) or 0)+(count>=4 and (c.four[d.id] or 0) or 0)
+  local value=d.base+(c.buffs[d.id] or 0)+S.gained(c,d.id,sets+((bonuses or {})[d.id] or 0))
+  value=value*(1+((percent or {})[d.id] or 0)/100)
   if table.find({'ProjectileCount','Pierce','Bounce','PoisonStacks','ChainCount','ChainBonus','ChainEvery','BurnSpread','FirstHitBlock'},d.id) then value=math.round(value) end
   if overrides and overrides[d.id]~=nil then value=overrides[d.id] end
   result[d.id]=math.clamp(value,d.min,d.max)

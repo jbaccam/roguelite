@@ -131,6 +131,10 @@ return function(Admin, Enemies, Items)
 		{ "Level", "Add", 100 },
 		{ "Level", "Set", 10 },
 		{ "Level", "Set", MAX_LEVEL },
+		-- Turrets (turret items, 2026-10-04): Give 1-4 or Clear.
+		{ "Turret", "Give", 1 },
+		{ "Turret", "Give", 4 },
+		{ "Turret", "Clear" },
 	}
 	for _, call in valid do
 		check(Admin.check(call[1], call[2], call[3]), "should pass: " .. show(call))
@@ -212,6 +216,15 @@ return function(Admin, Enemies, Items)
 		{ "Level", "Set", 0 },
 		{ "Level", "Set", MAX_LEVEL + 1 },
 		{ "Level", "Set", 0 / 0 },
+		-- Turrets: the old Give-without-tier, Tier and Break are gone.
+		{ "Turret", "Give" },
+		{ "Turret", "Give", 0 },
+		{ "Turret", "Give", 5 },
+		{ "Turret", "Give", 1.5 },
+		{ "Turret", "Give", "1" },
+		{ "Turret", "Tier", 2 },
+		{ "Turret", "Break" },
+		{ "Turret", "Clear", 1 },
 	}
 	for _, call in invalid do
 		check(not Admin.check(call[1], call[2], call[3]), "should fail: " .. show(call))

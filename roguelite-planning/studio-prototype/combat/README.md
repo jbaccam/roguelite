@@ -3,7 +3,7 @@
 October 3 play-test round (commits c9e5cde..a1a1f7a; syntax-checked, synced to Studio 2026-10-03 without ee48545, see `../ui/README.md`; not play-tested):
 - [Melee vs ranged](WEAPON_BALANCE.md#melee-vs-ranged-2026-10-03): ranged range about −20–25% and cooldown about +12%, melee reach +15–25%, Medusa's Head slows 35% for 2 s, a wider weapon ring.
 - [Melee from a jump and after a dash](HIT_FAIRNESS.md#round-4-melee-from-a-jump-and-the-dash-2026-10-03): melee reach is flat within one full jump above or below.
-- [Melee dash and the Handyman turret](CHARACTER_STATS.md#class-abilities-2026-10-03): Q / gamepad X / DASH; the turret has its own page, [HANDYMAN_TURRET.md](HANDYMAN_TURRET.md).
+- [Melee dash and turrets](CHARACTER_STATS.md#class-abilities-2026-10-03): Q / gamepad X / DASH; turrets (shop items since 2026-10-04, placed for you each wave) have their own page, [HANDYMAN_TURRET.md](HANDYMAN_TURRET.md).
 - [Run shop](SHOP_GAMEPLAY_READINESS.md): every non-Godly weapon offered, "Works with" lines, 7 new player-buff items (44 in all), and the Brotato crystal bag ([SHARD_CURRENCY.md](../../SHARD_CURRENCY.md)).
 - Bigger waves that scale with players, in swarms: [REGULAR_ENEMY_READINESS.md](REGULAR_ENEMY_READINESS.md).
 - Players no longer collide with each other (`MobCollision`: `RoguelitePlayers` vs itself off), so teammates can't stack into a tower.

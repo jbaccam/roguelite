@@ -198,6 +198,16 @@ local ok,err=xpcall(function()
  check(buy('banana',18),'buy banana peel');near(cs.stats.Dodge,before.Dodge+5,'banana dodge')
  check(buy('soup',34),'buy chicken soup');near(cs.stats.Recovery,before.Recovery+15,'soup recovery')
  check(buy('gummies',66),'buy gummies');near(cs.stats.Regeneration,before.Regeneration+2,'gummies regeneration')
+ -- Same-class weighting (2026-10-04): a weapon offer joins choose()'s "same class" pool when it shares
+ -- any class with a carried weapon. Carrying a Kusarigama (Juggler, Thrower): Kunai (Thrower), Yo-Yo
+ -- (Juggler) and Boomerang (Thrower, Juggler) match; Magic Staff (Mage) and Glock (Gunner) don't.
+ local function has(list,wid) for _,e in list do if e.weaponId==wid then return true end end;return false end
+ local pool={Catalog.ById.weapon_13_1,Catalog.ById.weapon_21_1,Catalog.ById.weapon_12_1,Catalog.ById.weapon_30_1,Catalog.ById.weapon_00_1}
+ local sc=Shop.sameClassPool(pool,{'04'})
+ check(has(sc,'13') and has(sc,'21') and has(sc,'12') and not has(sc,'30') and not has(sc,'00'),'same class by any shared class')
+ -- A second class counts too: a Nail Gun (Handyman, Gunner) pulls in the Glock, not the Staff.
+ sc=Shop.sameClassPool(pool,{'24'});check(has(sc,'00') and not has(sc,'30') and not has(sc,'13'),'Nail Gun shares Gunner')
+ check(#Shop.sameClassPool(pool,{'36'})==0 and #Shop.sameClassPool(pool,{})==0,'a Godly or nothing carried shares no class')
  -- READY x/y (RogueliteRunState ShopReady / ShopPlayers): living run members who pressed GO.
  reset();Shop.join(p);Shop.states[p].ready=false;Shop.publishReady()
  near(RS.RogueliteRunState:GetAttribute('ShopPlayers'),1,'ready total');near(RS.RogueliteRunState:GetAttribute('ShopReady'),0,'none ready')
@@ -207,6 +217,61 @@ local ok,err=xpcall(function()
  Shop.phase='Combat';Shop.publishReady();check(RS.RogueliteRunState:GetAttribute('ShopReady')==nil,'no ready count outside the shop')
  check(p:GetAttribute('ShopReady')==nil,'no player ready mark outside the shop')
  Shop.phase='Shop';Shop.states[p].ready=false
+ -- Turret items (2026-10-04, HANDYMAN_TURRET.md): the free Nail Turret follows the class until the
+ -- run starts; offered, priced, 20% off for a Handyman, capped at 10; UPGRADE TURRET ignored.
+ local Turret=require(C.HandymanTurret)
+ local nail,twin,quad=Catalog.ById.turret_nail,Catalog.ById.turret_twin,Catalog.ById.turret_quad
+ check(nail and twin and quad and nail.turret==1 and nail.structure,'turret items in the catalog')
+ reset();cs.class='Gunner';Characters.refresh(p)
+ check(Turret.owned(Shop.states[p].items)==0,'a Gunner starts with no turret')
+ cs.class='Handyman';Characters.refresh(p)
+ check(Turret.count(Shop.states[p].items,'turret_nail')==1,'picking Handyman before the run adds his free Nail Turret')
+ cs.class='Gunner';Characters.refresh(p)
+ check(Turret.count(Shop.states[p].items,'turret_nail')==0,'another class before the run takes it back')
+ cs.class='Handyman';Characters.refresh(p);Shop.resetPlayer(p)
+ local s=Shop.states[p]
+ check(Turret.count(s.items,'turret_nail')==1 and Turret.owned(s.items)==1,'a new Handyman run starts with one')
+ Shop.wave=2;cs.class='Gunner';Characters.refresh(p)
+ check(Turret.count(s.items,'turret_nail')==1,'once the run is under way a class change keeps it')
+ cs.class='Handyman';Characters.refresh(p)
+ check(Turret.count(s.items,'turret_nail')==1,'and never adds a second')
+ -- Prices: EconomyConfig.price, and 20% off structure items for a Handyman only.
+ Shop.wave=5
+ near(Shop.offerPrice(p,nail),32,'Handyman: a wave-5 Nail Turret is 32 (41 less 20%)')
+ near(Shop.offerPrice(p,Catalog.ById.toolbelt),E.price(18,5,.8),'Handyman: Toolbelt 20% off')
+ near(Shop.offerPrice(p,Catalog.ById.protein),E.price(14,5,1),'Handyman: other items full price')
+ cs.class='Gunner';Characters.refresh(p)
+ near(Shop.offerPrice(p,nail),41,'Gunner: a wave-5 Nail Turret is 41')
+ cs.class='Handyman';Characters.refresh(p)
+ check(request('Shards','Set',100000),'fund turret rolls')
+ -- Offered, at the server's price.
+ local seenTurret=false
+ for _=1,60 do
+  check(request('Reroll'),'turret roll')
+  for _,o in s.offers do
+   local entry=Catalog.ById[o.id]
+   if entry.turret then seenTurret=true;near(o.price,Shop.offerPrice(p,entry),'offered turret price '..o.id) end
+  end
+ end
+ check(seenTurret,'a Handyman was offered a turret item in 60 rerolls')
+ local o=offer('turret_quad',1);check(request('Buy',1,o.token),'buy a Quad Nailer')
+ check(Turret.count(s.items,'turret_quad')==1 and Turret.owned(s.items)==2,'two turrets owned')
+ -- Capped at 10: the admin grant, a buy and the offers all stop.
+ for _=1,8 do check(Shop.adminItem(p,'turret_nail'),'give a Nail Turret') end
+ check(Turret.owned(s.items)==10,'10 turrets')
+ check(not Shop.adminItem(p,'turret_twin'),'an 11th from the admin panel is refused')
+ local shards=s.shards
+ o=offer('turret_twin',1);check(not request('Buy',1,o.token),'buying an 11th is refused');near(s.shards,shards,'no charge for the refused 11th')
+ for _=1,40 do
+  check(request('Reroll'),'capped roll')
+  for _,x in s.offers do check(not Catalog.ById[x.id].turret,'no turret offers at 10: '..x.id) end
+ end
+ -- UPGRADE TURRET is gone: an old client's request does nothing and says nothing.
+ local rev=s.revision;local message=s.message
+ check(not request('UpgradeTurret',1),'UpgradeTurret refused')
+ check(s.revision==rev and s.message==message,'quietly: no change, no message')
+ check(game:GetService('HttpService'):JSONDecode(cs.folder:GetAttribute('ShopSnapshot')).turret==nil,'no turret row in the snapshot')
+ Shop.wave=1
 end,debug.traceback)
 pcall(reset)
 script:SetAttribute('Result',game.HttpService:JSONEncode({passed=ok,assertions=checked,error=ok and '' or err}))

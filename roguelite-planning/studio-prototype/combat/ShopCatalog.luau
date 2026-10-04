@@ -78,6 +78,21 @@ item('soup','Chicken Soup',2,34,'rbxassetid://87748663271804',{MaxHP=6,Recovery=
 item('skates','Roller Skates',2,38,'rbxassetid://117216104224040',{Dodge=3},'You move 10% faster, and 3% of enemy hits miss you.',5,'Utility',{MoveSpeed=10})
 item('detector','Metal Detector',2,36,'rbxassetid://133081616364253',{Luck=8},'+8 luck, and you grab crystals from 20% farther away.',5,'Utility',{PickupRadius=20})
 item('gummies','Vitamin Gummies',3,66,'rbxassetid://86810106921196',{Regeneration=2,MaxHP=10},'Heal 2 HP every second, and +10 max health.')
+-- Turret items (2026-10-04, Brotato's structures; HANDYMAN_TURRET.md): every copy owned is one more
+-- turret, placed near you at each wave start, at most 10 (cap). Any class can buy them. structure:
+-- the Handyman (Engineer) gets 20% off them and sees them more often (ShopService). Their numbers
+-- and icons come from HandymanTurret, looked up so a place without it still loads the catalog.
+local turretOk,Turret=pcall(require,script.Parent:FindFirstChild('HandymanTurret'))
+if turretOk and type(Turret)=='table' and Turret.Items then
+ for _,it in Turret.Items do
+  item(it.id,it.name,it.tier,it.price,Turret.Icons[it.tier],{},Turret.describe(it.tier),Turret.MAX_OWNED,'Turret')
+  C.ById[it.id].turret=it.tier;C.ById[it.id].structure=true
+ end
+ -- Scrap Magnet: the Fridge Magnet's art. Toolbelt: the Utility Power level-up art (LevelUpCatalog.IconIds).
+ item(Turret.SCRAP_MAGNET,'Scrap Magnet',2,40,'rbxassetid://79860440384816',{},'Each '..Turret.SCRAP_EVERY..' crystals you pick up in a wave builds a temporary Nail Turret near you, up to '..Turret.SCRAP_PER_COPY..' a wave per copy. They go when the wave ends.')
+ item(Turret.TOOLBELT,'Toolbelt',1,18,'rbxassetid://133538769433103',{UtilityPower=6},'+6% Utility Power: utility weapons and turrets deal more damage.')
+ C.ById[Turret.SCRAP_MAGNET].structure=true;C.ById[Turret.TOOLBELT].structure=true
+end
 local itemTags={
  protein={'Damage'},cheese={'Health'},potato={'Health'},shoes={'Mobility'},headband={'AttackSpeed'},glasses={'Range'},
  potlid={'Armor'},sock={'Luck'},magnet={'Economy'},coupons={'Economy'},ketchup={'Explosion'},hotsauce={'Explosion'},
@@ -89,7 +104,7 @@ local itemTags={
  banana={'Mobility'},cushion={'Armor','Health'},penny={'Luck'},soup={'Health'},skates={'Mobility'},detector={'Luck','Economy'},gummies={'Health'},
 }
 for _,entry in C.List do
- if entry.kind~='Weapon' then entry.tags=itemTags[entry.id] or {} end
+ if entry.kind~='Weapon' then entry.tags=itemTags[entry.id] or (entry.structure and {'Structure'}) or {} end
 end
 -- "Works with" (2026-10-03). An item whose every stat only some weapons use (CharacterStats
 -- .usesStat) lists them; nil for an item that helps every build. Example: Sharp Pencil -> {'Pierce'};

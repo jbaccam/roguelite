@@ -15,8 +15,8 @@ local XP=require(combat.RunXP)
 local Upgrades=require(combat.LevelUpCatalog)
 local StatSchema=require(combat.CharacterStats)
 local Maps=require(combat.MapConfig) -- sandboxed, like this module
--- Handyman turret rules (HANDYMAN_TURRET.md): pure and sandboxed. Looked up, not waited on, so a
--- place without it still loads the shop; the turret upgrade is just unavailable then.
+-- Turret item rules (HANDYMAN_TURRET.md, items since 2026-10-04): pure and sandboxed. Looked up, not
+-- waited on, so a place without it still loads the shop; there are no turret items then.
 local Turret=(function()
  local m=combat:FindFirstChild('HandymanTurret');if not m then return nil end
  local ok,t=pcall(require,m);if ok then return t end
@@ -33,7 +33,8 @@ local S={states={},wave=1,phase='Shop'}
 -- load order between listeners doesn't matter. Listeners run inside this sandboxed module's
 -- thread, so they should only record (RunAnalytics queues its events and sends them itself).
 --   onWaveCleared(wavesPassed)      onBuy(p,offerId,price)     onReroll(p,kind,how,cost)
---   onLevelPick(p,upgradeId)        onLevelUp(p,gained)        onShards(p,collected)
+--   onLevelPick(p,upgradeId)        onLevelUp(p,gained)        onShards(p,collected,crystals)
+-- (onShards' crystals: what was picked up before the bag's bonus; Scrap Magnet counts it.)
 -- kind is 'Shop' or 'Upgrade'; how is 'Shards', 'Free' (a saved reroll) or 'Bought' (Robux/stored).
 local listeners={onWaveCleared={},onBuy={},onReroll={},onLevelPick={},onLevelUp={},onShards={}}
 setmetatable(S,{__newindex=function(t,k,v) if listeners[k] then table.insert(listeners[k],v) else rawset(t,k,v) end end})
@@ -135,35 +136,52 @@ function S.publish(p,message)
  s.slotRows=slotRows(p) or s.slotRows -- every slot change publishes, so this copy stays current
  local data={pendingLevels=s.pendingLevels,upgradeOffers=s.upgradeOffers,upgradeToken=s.upgradeToken,upgradeRerolls=s.upgradeRerolls,upgradeRerollPrice=E.reroll(S.wave,s.upgradeRerolls),freeRerolls=s.freeRerolls,freeUpgradeRerolls=s.freeUpgradeRerolls,baggedShards=s.baggedShards,level=s.level,shards=s.shards,wave=S.wave,phase=S.phase,rerolls=s.rerolls,rerollPrice=E.reroll(S.wave,s.rerolls),offers=s.offers,items=s.items,weapons=owned(p),ready=s.ready,revision=s.revision,message=message or s.message or '',modifier=E.modifier(Characters.states[p].stats),debug=RunService:IsStudio() and E.DEBUG_CURRENCY_ENABLED}
  data.upgrades=s.upgradeBonuses -- plan L: the pause screen's level-up picks (id -> picks)
- -- Handyman turret row {tier, next, price} (UPGRADE TURRET in ShopUI); nil for everyone else.
- if Turret then data.turret=Turret.offer(Characters.states[p].class,s.turretTier,S.wave,data.modifier,Turret.templates(combat)~=nil) end
  s.message=data.message;S.publishProgress(p)
  slots(p):SetAttribute('ShopSnapshot',Http:JSONEncode(data))
 end
+-- An offer's price for this player: wave inflation and their discounts (EconomyConfig.price), and
+-- the Handyman's 20% off structure items (HandymanTurret.priceFactor, 2026-10-04). Example, wave 5:
+-- a Nail Turret is 41, or 32 for a Handyman.
+local function offerPrice(p,entry)
+ local cs=Characters.states[p]
+ return E.price(entry.basePrice,S.wave,E.modifier(cs.stats)*(Turret and Turret.priceFactor(cs.class,entry) or 1))
+end
+S.offerPrice=offerPrice -- ShopTests
 local function reprice(p)
- local s=S.states[p];local modifier=E.modifier(Characters.states[p].stats)
- for _,o in s.offers do if not o.locked and not o.sold then o.price=E.price(Catalog.ById[o.id].basePrice,S.wave,modifier) end end
+ local s=S.states[p]
+ for _,o in s.offers do if not o.locked and not o.sold then o.price=offerPrice(p,Catalog.ById[o.id]) end end
 end
 local wanted={
  Brawler={Health=true,Armor=true,Melee=true},Gunner={Projectile=true,Pierce=true,Crit=true,AttackSpeed=true},
  Thrower={Projectile=true,Bounce=true,Pierce=true},Juggler={Mobility=true,Bounce=true,Crit=true},
  Handyman={Explosion=true,Economy=true,Armor=true},Mage={Burn=true,Slow=true,Poison=true,Lightning=true},
 }
+-- Weapon offers that share any class with a carried weapon (2026-10-04: weapons list several
+-- classes). Example: carrying a Kusarigama (Juggler, Thrower), a Kunai (Thrower) and a Yo-Yo
+-- (Juggler) match, a Magic Staff (Mage) doesn't. ids: the carried weapon ids.
+local function sameClassPool(pool,ids)
+ local classes={}
+ for _,id in ids do local w=Weapons.ById[id];if w and not w.godly then for _,c in w.classes or {w.home} do classes[c]=true end end end
+ local out={}
+ for _,entry in pool do
+  local w=Weapons.ById[entry.weaponId]
+  if w and not w.godly then for _,c in w.classes or {w.home} do if classes[c] then table.insert(out,entry);break end end end
+ end
+ return out
+end
+S.sameClassPool=sameClassPool -- ShopTests
 local function choose(pool,p,wantWeapon)
  local cs=Characters.states[p]
  if wantWeapon then
-  local ownedIds,ownedHomes={},{}
+  local ownedIds,carried={},{}
   for i=1,6 do
    local id=slots(p)['Slot'..i]:GetAttribute('WeaponId')
-   local weapon=Weapons.ById[id]
-   if weapon then ownedIds[id]=true;ownedHomes[weapon.home]=true end
+   if Weapons.ById[id] then ownedIds[id]=true;table.insert(carried,id) end
   end
   local n=rng:NextNumber()
-  local same,sameClass={},{}
-  for _,entry in pool do
-   if ownedIds[entry.weaponId] then table.insert(same,entry) end
-   if ownedHomes[Weapons.ById[entry.weaponId].home] then table.insert(sameClass,entry) end
-  end
+  local same={}
+  for _,entry in pool do if ownedIds[entry.weaponId] then table.insert(same,entry) end end
+  local sameClass=sameClassPool(pool,carried)
   -- 10% an owned weapon (duplicates merge up a tier), 15% one from an owned weapon's class.
   if n<.10 and #same>0 then pool=same
   elseif n<.25+E.classBonus(S.wave) and #sameClass>0 then pool=sameClass end
@@ -224,12 +242,14 @@ local function roll(p,slot,excluded)
  if forcedEntry then for _,o in s.offers do if o.forced==S.wave then forcedShown=true;break end end end
  if forcedEntry and not forcedShown then
   excluded[forcedEntry.id]=true
-  return {id=forcedEntry.id,token=token(),price=E.price(forcedEntry.basePrice,S.wave,E.modifier(cs.stats)),locked=false,sold=false,forced=S.wave}
+  return {id=forcedEntry.id,token=token(),price=offerPrice(p,forcedEntry),locked=false,sold=false,forced=S.wave}
  end
  local wantWeapon=E.weaponSlot(S.wave,slot,rng)
  local tier=E.rollTier(S.wave,cs.stats.Luck,rng)
  local owned=offerable(p)
  local carried={};for i=1,6 do local id=slots(p)['Slot'..i]:GetAttribute('WeaponId');if id and id~='' then table.insert(carried,id) end end
+ -- Turret items stop at 10 owned (HandymanTurret.offerable, 2026-10-04).
+ local turrets=Turret and Turret.owned(s.items) or 0
  local function fill(weapons)
   local pool={}
   for try=tier,1,-1 do
@@ -237,7 +257,7 @@ local function roll(p,slot,excluded)
     if (entry.kind=='Weapon')==weapons and entry.tier==try and not excluded[entry.id] and (not weapons or owned[entry.weaponId]) then
      local count=0
      for _,it in s.items do if it.id==entry.id then count=it.count;break end end
-     if entry.kind=='Weapon' or (count<entry.cap and usable(entry,carried,cs.stats)) then table.insert(pool,entry) end
+     if entry.kind=='Weapon' or (count<entry.cap and usable(entry,carried,cs.stats) and (not Turret or Turret.offerable(entry,turrets))) then table.insert(pool,entry) end
     end
    end
    if #pool>0 then break end
@@ -254,9 +274,13 @@ local function roll(p,slot,excluded)
  if #pool==0 then
   for _,entry in Catalog.List do if entry.kind=='Weapon' and not excluded[entry.id] then table.insert(pool,entry) end end
  end
+ -- Structure items (the turrets, Scrap Magnet, Toolbelt) get the Handyman class weighting, as Handyman
+ -- weapons do (HandymanTurret.weightPool, 2026-10-04): a Handyman, or anyone carrying a Handyman
+ -- weapon, gets 15% (+ the early-wave class bonus) of item offers from them.
+ if Turret and #pool>0 and pool[1].kind~='Weapon' then pool=Turret.weightPool(pool,Turret.favoured(cs.class,carried),rng:NextNumber(),E.classBonus(S.wave)) end
  local entry=choose(pool,p,wantWeapon and #pool>0 and pool[1].kind=='Weapon')
  excluded[entry.id]=true
- return {id=entry.id,token=token(),price=E.price(entry.basePrice,S.wave,E.modifier(cs.stats)),locked=false,sold=false}
+ return {id=entry.id,token=token(),price=offerPrice(p,entry),locked=false,sold=false}
 end
 function S.bonuses(p)
  local s=S.states[p];local cs=Characters.states[p];if not s or not cs then return end
@@ -276,10 +300,33 @@ local function starterTier(p)
  if not start or id=='' or id~=start[1] then return end
  f:SetAttribute('Tier',StatSchema.ownedTier(p:GetAttribute('ProfileWeapons'),id) or 1)
 end
+-- The Handyman's free Nail Turret (the Engineer, 2026-10-04): every run starts with one in his items,
+-- counting toward his 10. A match server sets the class after the run state exists, so until the
+-- run starts (wave 1's shop, or the sandbox) it follows class changes: picking Handyman adds it,
+-- picking another class takes it back. fresh: a brand-new run state, which gets it at any wave
+-- (someone joining at wave 7 starts their run then). Example: Brawler -> Handyman in the lobby gives
+-- 1 Nail Turret; -> Gunner again leaves none.
+local function freeTurret(p,fresh)
+ local s=S.states[p];local cs=Characters.states[p]
+ if not Turret or not s or not cs then return false end
+ if not fresh and not (S.wave==1 and (S.phase=='Shop' or S.phase=='Practice')) then return false end
+ local want=Turret.startsWithTurret(cs.class);if want==(s.freeTurret==true) then return false end
+ local id=Turret.Engineer.free;if not Catalog.ById[id] then return false end
+ local it;for _,x in s.items do if x.id==id then it=x end end
+ if want then
+  if it then it.count=math.min(Catalog.ById[id].cap,it.count+1) else table.insert(s.items,1,{id=id,count=1}) end
+  s.freeTurret=true
+ else
+  if it then it.count-=1;if it.count<=0 then table.remove(s.items,table.find(s.items,it)) end end
+  s.freeTurret=nil
+ end
+ return true
+end
 local function newState(p)
  -- A tutorial run starts with no crystals (S.tutorial.startShards).
  local s={shards=S.tutorial and S.tutorial.startShards or E.STARTING_SHARDS,level=1,xp=0,pendingLevels=0,upgradeOffers={},upgradeBonuses={},banished={},baggedShards=0,upgradeRerolls=0,upgradeToken=token(),rerolls=0,offers={},items={},ready=false,revision=1,lastRequest=-1e6,freeRerolls=0,freeUpgradeRerolls=0}
  S.states[p]=s
+ freeTurret(p,true)
  for i=1,6 do local f=slots(p)['Slot'..i];f:SetAttribute('Tier',1);f:SetAttribute('FinalPurchasePrice',0);f:SetAttribute('BasePrice',0);f:SetAttribute('WavePurchased',0);f:SetAttribute('CopyId',token()) end
  starterTier(p)
  local excluded={}
@@ -611,6 +658,7 @@ function S.adminItem(p,id)
  local existing;for _,it in s.items do if it.id==id then existing=it end end
  if existing and existing.count>=entry.cap then return false,'Item copy limit reached' end
  if not existing and #s.items>=E.ITEM_CAPACITY then return false,'Item inventory full' end
+ if entry.turret and Turret and Turret.owned(s.items)>=Turret.MAX_OWNED then return false,'You already have '..Turret.MAX_OWNED..' turrets' end
  if existing then existing.count+=1 else table.insert(s.items,{id=id,count=1}) end
  s.revision+=1;S.bonuses(p);S.publish(p,entry.name..' added')
  return true,entry.name..' added'
@@ -618,6 +666,8 @@ end
 function S.request(p,action,revision,arg,extra)
  local s=S.states[p];local cs=Characters.states[p]
  if not s or not cs or not living(p) or type(action)~='string' then return false end
+ -- UPGRADE TURRET went with turret items (2026-10-04): an old client's click does nothing, quietly.
+ if action=='UpgradeTurret' then return false end
  if os.clock()-s.lastRequest<.12 then return false end;s.lastRequest=os.clock()
  local function fail(msg) S.publish(p,msg);return false end
  if revision~=s.revision then return fail('Shop changed. Please try again.') end
@@ -678,6 +728,7 @@ function S.request(p,action,revision,arg,extra)
     for _,it in s.items do if it.id==entry.id then existing=it end end
     if existing and existing.count>=entry.cap then return fail('Item copy limit reached') end
     if not existing and #s.items>=E.ITEM_CAPACITY then return fail('Item inventory full') end
+    if entry.turret and Turret and Turret.owned(s.items)>=Turret.MAX_OWNED then return fail('You already have '..Turret.MAX_OWNED..' turrets') end
     if existing then existing.count+=1 else table.insert(s.items,{id=entry.id,count=1}) end
    end
    s.shards-=o.price;o.sold=true;o.locked=false
@@ -719,15 +770,6 @@ function S.request(p,action,revision,arg,extra)
   if f:GetAttribute('WeaponId')=='' or f:GetAttribute('CopyId')~=extra then return fail('Weapon changed; select it again') end
   s.shards=math.min(E.MAX_SHARDS,s.shards+sellValue(p,f))
   clearWeapon(f)
- elseif action=='UpgradeTurret' then
-  -- Handyman turret (HANDYMAN_TURRET.md): the next tier, priced like a weapon tier step (HandymanTurret
-  -- .canUpgrade checks class, Tier IV, price; arg is the tier the button showed). The tier lives in
-  -- this run state, so a new run starts at Tier I and a rejoin keeps it.
-  if not Turret then return fail('Turret unavailable') end
-  local tier=Turret.tier(s.turretTier)
-  local ok,why,cost=Turret.canUpgrade(cs.class,tier,arg,s.shards,S.wave,E.modifier(cs.stats),Turret.templates(combat)~=nil)
-  if not ok then return fail(why) end
-  s.shards-=cost;s.turretTier=tier+1
  elseif action=='Start' then
   if s.pendingLevels>0 then return fail('Choose your earned level-up upgrades first') end
   s.ready=true
@@ -739,7 +781,7 @@ function S.request(p,action,revision,arg,extra)
  return true
 end
 remote.OnServerEvent:Connect(S.request)
-Characters.onStatsChanged=function(p) if S.states[p] then reprice(p);S.states[p].revision+=1;S.publish(p) end end
+Characters.onStatsChanged=function(p) if S.states[p] then freeTurret(p,false);reprice(p);S.states[p].revision+=1;S.publish(p) end end
 -- Collected units consume stored units one-for-one. Leftovers grant nothing until picked up.
 -- Example: bag 30, a 5-crystal pickup pays 10 shards and 10 crystals' XP, and the bag drops to 25.
 function S.creditShards(p,amount,pickedUp)
@@ -755,7 +797,7 @@ function S.creditShards(p,amount,pickedUp)
   s.shards=math.min(E.MAX_SHARDS,s.shards+total)
   local level,xp,gained=XP.add(s.level,s.xp,math.min(1000000,total*XP.XP_PER_SHARD))
   s.level=level;s.xp=xp;s.pendingLevels+=gained
-  fire('onShards',p,total)
+  fire('onShards',p,total,amount)
   if gained>0 then fire('onLevelUp',p,gained) end
  end
  S.publishProgress(p);return true

@@ -85,8 +85,9 @@ function E.hit(npc,amount,d,secondary,dot,stream)
  if d.id=='10' and not secondary and amount>0 and not npc:GetAttribute('LobbyDummy') and not npc:GetAttribute('DesignerShirt') then npc:SetAttribute('DesignerShirt',true) end
  local s=d.stats;local position=r.Position
  if own then
-  -- Ninja 4-piece: after a dodge (CharacterService.contact) the next direct hit always crits.
-  local owner=Characters.states[d.owner];local sure=owner and owner.dodgeCrit
+  -- Ninja 4-piece: after a dodge (CharacterService.contact) the next direct hit always crits. Not a
+  -- turret's nail (d.structure, HandymanTurret 2026-10-04: turrets never crit), so it keeps it.
+  local owner=Characters.states[d.owner];local sure=owner and owner.dodgeCrit and not d.structure
   if sure then owner.dodgeCrit=nil end
   if sure or math.random()<s.CritChance/100 then amount*=s.CritDamage/100 end
  end
@@ -117,7 +118,7 @@ function E.hit(npc,amount,d,secondary,dot,stream)
  local before=h.Health;h:TakeDamage(math.max(0,amount));local actual=before-math.max(0,h.Health)
  if actual<=0 then return 0 end
  for _,fn in damageListeners do local ok,err=pcall(fn,d.owner,d.id,actual,secondary==true);if not ok then warn('listenDamage failed:',err) end end
- Characters.leech(d.owner,actual)
+ if not d.structure then Characters.leech(d.owner,actual) end -- turrets don't life-steal (HandymanTurret)
  if E.onHit then local ok,err=pcall(E.onHit,npc,d,actual,secondary==true);if not ok then warn('onHit failed:',err) end end
  if STUDIO then combat:SetAttribute('ConfirmedHits',(combat:GetAttribute('ConfirmedHits') or 0)+1) end
  -- A lethal hit is represented by the death burst, not a second hit burst.
