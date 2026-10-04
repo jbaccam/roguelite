@@ -1,0 +1,120 @@
+{
+  "blender_version": "5.2.1 LTS",
+  "tiers": {
+    "T1": {
+      "ok": true,
+      "problems": [],
+      "barrel_front_z": -1.72,
+      "raw_fbx_node_rotation_deg": {
+        "Base": [
+          -90.0,
+          -0.0,
+          0.0
+        ],
+        "Head": [
+          -90.0,
+          -0.0,
+          0.0
+        ],
+        "Barrel": [
+          -90.0,
+          -0.0,
+          0.0
+        ]
+      },
+      "triangles": 2144,
+      "height": 3.409,
+      "radius": 1.784,
+      "muzzles": 1,
+      "spin": false
+    },
+    "T2": {
+      "ok": true,
+      "problems": [],
+      "barrel_front_z": -2.12,
+      "raw_fbx_node_rotation_deg": {
+        "Base": [
+          -90.0,
+          -0.0,
+          0.0
+        ],
+        "Head": [
+          -90.0,
+          -0.0,
+          0.0
+        ],
+        "Barrel": [
+          -90.0,
+          -0.0,
+          0.0
+        ]
+      },
+      "triangles": 3388,
+      "height": 3.925,
+      "radius": 2.148,
+      "muzzles": 2,
+      "spin": false
+    },
+    "T3": {
+      "ok": true,
+      "problems": [],
+      "barrel_front_z": -2.22,
+      "raw_fbx_node_rotation_deg": {
+        "Base": [
+          -90.0,
+          -0.0,
+          0.0
+        ],
+        "Head": [
+          -90.0,
+          -0.0,
+          0.0
+        ],
+        "Barrel": [
+          -90.0,
+          -0.0,
+          0.0
+        ]
+      },
+      "triangles": 5568,
+      "height": 4.391,
+      "radius": 2.241,
+      "muzzles": 4,
+      "spin": false
+    },
+    "T4": {
+      "ok": true,
+      "problems": [],
+      "barrel_front_z": -2.4,
+      "raw_fbx_node_rotation_deg": {
+        "Base": [
+          -90.0,
+          -0.0,
+          0.0
+        ],
+        "Head": [
+          -90.0,
+          -0.0,
+          0.0
+        ],
+        "Barrel": [
+          -90.0,
+          -0.0,
+          0.0
+        ],
+        "Glow": [
+          -90.0,
+          -0.0,
+          0.0
+        ]
+      },
+      "triangles": 7886,
+      "height": 5.105,
+      "radius": 2.421,
+      "muzzles": 6,
+      "spin": true
+    }
+  },
+  "ok": true,
+  "note": "Blender re-import only (FBX twice: normal and raw axes; GLB once). Studio untested."
+}

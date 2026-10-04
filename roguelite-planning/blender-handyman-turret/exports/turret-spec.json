@@ -1,0 +1,586 @@
+{
+  "axes": "Roblox axes, studs, relative to the Base pivot. roblox = (-x, z, y) of Blender. Barrels point to -Z (the model LookVector) at rest. Studio's FBX importer has turned these kits 180 degrees about Y and once laid a file on its back: normalise the import with the part centres below (see README).",
+  "forward": [
+    0,
+    0,
+    -1
+  ],
+  "up": [
+    0,
+    1,
+    0
+  ],
+  "joints": {
+    "Head": "yaw about +Y through Head.pivot (on the Base centre line)",
+    "Barrel": "pitch about the Head's X axis through Barrel.pivot; recoil along +Z (backwards)",
+    "spin": "when spin is true, the whole Barrel part spins about its own forward (Z) axis through Barrel.pivot"
+  },
+  "glow_srgb": [
+    248,
+    88,
+    99
+  ],
+  "tiers": {
+    "T1": {
+      "fbx": "exports/fbx/HandymanTurret_T1.fbx",
+      "glb": "exports/glb/HandymanTurret_T1.glb",
+      "texture": "HandymanTurret_T1.png",
+      "icon": "previews/icon_T1.png",
+      "parts": {
+        "Base": {
+          "mesh": "HandymanTurret_T1_Base",
+          "pivot": [
+            -0.0,
+            0.0,
+            0.0
+          ],
+          "center": [
+            -0.0,
+            1.025,
+            0.365
+          ],
+          "size": [
+            3.1329,
+            2.05,
+            2.8372
+          ],
+          "pivotOffset": [
+            -0.0,
+            -1.025,
+            -0.365
+          ],
+          "triangles": 824,
+          "vertices": 442
+        },
+        "Head": {
+          "mesh": "HandymanTurret_T1_Head",
+          "pivot": [
+            -0.0,
+            2.05,
+            0.0
+          ],
+          "center": [
+            -0.0031,
+            2.7293,
+            0.2246
+          ],
+          "size": [
+            1.5538,
+            1.3586,
+            2.0107
+          ],
+          "pivotOffset": [
+            0.0031,
+            -0.6793,
+            -0.2246
+          ],
+          "triangles": 856,
+          "vertices": 460
+        },
+        "Barrel": {
+          "mesh": "HandymanTurret_T1_Barrel",
+          "pivot": [
+            -0.0,
+            2.78,
+            -0.62
+          ],
+          "center": [
+            -0.0,
+            2.78,
+            -1.11
+          ],
+          "size": [
+            0.5543,
+            0.5543,
+            1.22
+          ],
+          "pivotOffset": [
+            -0.0,
+            0.0,
+            0.49
+          ],
+          "triangles": 464,
+          "vertices": 240
+        }
+      },
+      "muzzles": [
+        [
+          -0.0,
+          2.78,
+          -1.72
+        ]
+      ],
+      "muzzlesFromBarrelPivot": [
+        [
+          0.0,
+          0.0,
+          -1.1
+        ]
+      ],
+      "muzzleCentre": [
+        0.0,
+        2.78,
+        -1.72
+      ],
+      "height": 3.409,
+      "radius": 1.784,
+      "triangles": {
+        "Base": 824,
+        "Head": 856,
+        "Barrel": 464,
+        "total": 2144
+      },
+      "spin": false
+    },
+    "T2": {
+      "fbx": "exports/fbx/HandymanTurret_T2.fbx",
+      "glb": "exports/glb/HandymanTurret_T2.glb",
+      "texture": "HandymanTurret_T2.png",
+      "icon": "previews/icon_T2.png",
+      "parts": {
+        "Base": {
+          "mesh": "HandymanTurret_T2_Base",
+          "pivot": [
+            -0.0,
+            0.0,
+            0.0
+          ],
+          "center": [
+            -0.0,
+            1.1,
+            0.41
+          ],
+          "size": [
+            3.5119,
+            2.2,
+            3.1848
+          ],
+          "pivotOffset": [
+            -0.0,
+            -1.1,
+            -0.41
+          ],
+          "triangles": 988,
+          "vertices": 530
+        },
+        "Head": {
+          "mesh": "HandymanTurret_T2_Head",
+          "pivot": [
+            -0.0,
+            2.2,
+            0.0
+          ],
+          "center": [
+            -0.0,
+            3.0623,
+            0.0284
+          ],
+          "size": [
+            2.4757,
+            1.7246,
+            2.6631
+          ],
+          "pivotOffset": [
+            -0.0,
+            -0.8623,
+            -0.0284
+          ],
+          "triangles": 1600,
+          "vertices": 876
+        },
+        "Barrel": {
+          "mesh": "HandymanTurret_T2_Barrel",
+          "pivot": [
+            -0.0,
+            2.98,
+            -0.72
+          ],
+          "center": [
+            -0.0,
+            2.98,
+            -1.385
+          ],
+          "size": [
+            0.86,
+            0.5,
+            1.47
+          ],
+          "pivotOffset": [
+            -0.0,
+            0.0,
+            0.665
+          ],
+          "triangles": 800,
+          "vertices": 416
+        }
+      },
+      "muzzles": [
+        [
+          0.21,
+          2.98,
+          -2.12
+        ],
+        [
+          -0.21,
+          2.98,
+          -2.12
+        ]
+      ],
+      "muzzlesFromBarrelPivot": [
+        [
+          0.21,
+          -0.0,
+          -1.4
+        ],
+        [
+          -0.21,
+          -0.0,
+          -1.4
+        ]
+      ],
+      "muzzleCentre": [
+        0.0,
+        2.98,
+        -2.12
+      ],
+      "height": 3.925,
+      "radius": 2.148,
+      "triangles": {
+        "Base": 988,
+        "Head": 1600,
+        "Barrel": 800,
+        "total": 3388
+      },
+      "spin": false
+    },
+    "T3": {
+      "fbx": "exports/fbx/HandymanTurret_T3.fbx",
+      "glb": "exports/glb/HandymanTurret_T3.glb",
+      "texture": "HandymanTurret_T3.png",
+      "icon": "previews/icon_T3.png",
+      "parts": {
+        "Base": {
+          "mesh": "HandymanTurret_T3_Base",
+          "pivot": [
+            -0.0,
+            0.0,
+            0.0
+          ],
+          "center": [
+            -0.0,
+            1.2,
+            0.0
+          ],
+          "size": [
+            3.1849,
+            2.4,
+            3.1849
+          ],
+          "pivotOffset": [
+            -0.0,
+            -1.2,
+            0.0
+          ],
+          "triangles": 2080,
+          "vertices": 1104
+        },
+        "Head": {
+          "mesh": "HandymanTurret_T3_Head",
+          "pivot": [
+            -0.0,
+            2.4,
+            0.0
+          ],
+          "center": [
+            -0.0,
+            3.3956,
+            0.1521
+          ],
+          "size": [
+            2.8238,
+            1.9913,
+            3.1707
+          ],
+          "pivotOffset": [
+            -0.0,
+            -0.9956,
+            -0.1521
+          ],
+          "triangles": 2320,
+          "vertices": 1279
+        },
+        "Barrel": {
+          "mesh": "HandymanTurret_T3_Barrel",
+          "pivot": [
+            -0.0,
+            3.2,
+            -0.82
+          ],
+          "center": [
+            -0.0,
+            3.2,
+            -1.46
+          ],
+          "size": [
+            0.94,
+            0.82,
+            1.52
+          ],
+          "pivotOffset": [
+            -0.0,
+            0.0,
+            0.64
+          ],
+          "triangles": 1168,
+          "vertices": 608
+        }
+      },
+      "muzzles": [
+        [
+          0.19,
+          3.02,
+          -2.22
+        ],
+        [
+          0.19,
+          3.38,
+          -2.22
+        ],
+        [
+          -0.19,
+          3.02,
+          -2.22
+        ],
+        [
+          -0.19,
+          3.38,
+          -2.22
+        ]
+      ],
+      "muzzlesFromBarrelPivot": [
+        [
+          0.19,
+          -0.18,
+          -1.4
+        ],
+        [
+          0.19,
+          0.18,
+          -1.4
+        ],
+        [
+          -0.19,
+          -0.18,
+          -1.4
+        ],
+        [
+          -0.19,
+          0.18,
+          -1.4
+        ]
+      ],
+      "muzzleCentre": [
+        0.0,
+        3.2,
+        -2.22
+      ],
+      "height": 4.391,
+      "radius": 2.241,
+      "triangles": {
+        "Base": 2080,
+        "Head": 2320,
+        "Barrel": 1168,
+        "total": 5568
+      },
+      "spin": false
+    },
+    "T4": {
+      "fbx": "exports/fbx/HandymanTurret_T4.fbx",
+      "glb": "exports/glb/HandymanTurret_T4.glb",
+      "texture": "HandymanTurret_T4.png",
+      "icon": "previews/icon_T4.png",
+      "parts": {
+        "Base": {
+          "mesh": "HandymanTurret_T4_Base",
+          "pivot": [
+            -0.0,
+            0.0,
+            0.0
+          ],
+          "center": [
+            -0.0,
+            1.3,
+            0.0
+          ],
+          "size": [
+            3.3743,
+            2.6,
+            3.3743
+          ],
+          "pivotOffset": [
+            -0.0,
+            -1.3,
+            0.0
+          ],
+          "triangles": 2880,
+          "vertices": 1524
+        },
+        "Head": {
+          "mesh": "HandymanTurret_T4_Head",
+          "pivot": [
+            -0.0,
+            2.6,
+            0.0
+          ],
+          "center": [
+            -0.0,
+            3.8525,
+            0.1506
+          ],
+          "size": [
+            4.4713,
+            2.5049,
+            3.3737
+          ],
+          "pivotOffset": [
+            -0.0,
+            -1.2525,
+            -0.1506
+          ],
+          "triangles": 3490,
+          "vertices": 1870
+        },
+        "Barrel": {
+          "mesh": "HandymanTurret_T4_Barrel",
+          "pivot": [
+            -0.0,
+            3.38,
+            -0.92
+          ],
+          "center": [
+            -0.0,
+            3.38,
+            -1.59
+          ],
+          "size": [
+            0.85,
+            0.85,
+            1.62
+          ],
+          "pivotOffset": [
+            -0.0,
+            0.0,
+            0.67
+          ],
+          "triangles": 1424,
+          "vertices": 744
+        },
+        "Glow": {
+          "mesh": "HandymanTurret_T4_Glow",
+          "pivot": [
+            -0.0,
+            2.6,
+            0.0
+          ],
+          "center": [
+            -0.0,
+            3.9749,
+            -0.18
+          ],
+          "size": [
+            3.8472,
+            1.1498,
+            1.96
+          ],
+          "pivotOffset": [
+            -0.0,
+            -1.3749,
+            0.18
+          ],
+          "triangles": 92,
+          "vertices": 60,
+          "parent": "Head"
+        }
+      },
+      "muzzles": [
+        [
+          -0.0,
+          3.65,
+          -2.4
+        ],
+        [
+          0.2338,
+          3.515,
+          -2.4
+        ],
+        [
+          0.2338,
+          3.245,
+          -2.4
+        ],
+        [
+          0.0,
+          3.11,
+          -2.4
+        ],
+        [
+          -0.2338,
+          3.245,
+          -2.4
+        ],
+        [
+          -0.2338,
+          3.515,
+          -2.4
+        ]
+      ],
+      "muzzlesFromBarrelPivot": [
+        [
+          0.0,
+          0.27,
+          -1.48
+        ],
+        [
+          0.2338,
+          0.135,
+          -1.48
+        ],
+        [
+          0.2338,
+          -0.135,
+          -1.48
+        ],
+        [
+          0.0,
+          -0.27,
+          -1.48
+        ],
+        [
+          -0.2338,
+          -0.135,
+          -1.48
+        ],
+        [
+          -0.2338,
+          0.135,
+          -1.48
+        ]
+      ],
+      "muzzleCentre": [
+        0.0,
+        3.38,
+        -2.4
+      ],
+      "height": 5.105,
+      "radius": 2.421,
+      "triangles": {
+        "Base": 2880,
+        "Head": 3490,
+        "Barrel": 1424,
+        "Glow": 92,
+        "total": 7886
+      },
+      "spin": true
+    }
+  }
+}

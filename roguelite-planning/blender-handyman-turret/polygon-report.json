@@ -1,0 +1,203 @@
+{
+  "blender_version": "5.2.1 LTS",
+  "authoring": "final Roblox stud size; import 1:1; never scale beyond +/-15% (baked 0-1 atlas)",
+  "budgets": {
+    "1": 3000,
+    "2": 4500,
+    "3": 6000,
+    "4": 8000
+  },
+  "tiers": {
+    "T1": {
+      "triangles": {
+        "Base": 824,
+        "Head": 856,
+        "Barrel": 464,
+        "total": 2144
+      },
+      "budget": 3000,
+      "within_budget": true,
+      "height_studs": 3.409,
+      "radius_studs": 1.784,
+      "parts": {
+        "Base": {
+          "mesh": "HandymanTurret_T1_Base",
+          "size": [
+            3.1329,
+            2.05,
+            2.8372
+          ],
+          "triangles": 824,
+          "vertices": 442
+        },
+        "Head": {
+          "mesh": "HandymanTurret_T1_Head",
+          "size": [
+            1.5538,
+            1.3586,
+            2.0107
+          ],
+          "triangles": 856,
+          "vertices": 460
+        },
+        "Barrel": {
+          "mesh": "HandymanTurret_T1_Barrel",
+          "size": [
+            0.5543,
+            0.5543,
+            1.22
+          ],
+          "triangles": 464,
+          "vertices": 240
+        }
+      },
+      "texture": "textures/HandymanTurret_T1.png (1024x1024, baked lighting, 8 samples)"
+    },
+    "T2": {
+      "triangles": {
+        "Base": 988,
+        "Head": 1600,
+        "Barrel": 800,
+        "total": 3388
+      },
+      "budget": 4500,
+      "within_budget": true,
+      "height_studs": 3.925,
+      "radius_studs": 2.148,
+      "parts": {
+        "Base": {
+          "mesh": "HandymanTurret_T2_Base",
+          "size": [
+            3.5119,
+            2.2,
+            3.1848
+          ],
+          "triangles": 988,
+          "vertices": 530
+        },
+        "Head": {
+          "mesh": "HandymanTurret_T2_Head",
+          "size": [
+            2.4757,
+            1.7246,
+            2.6631
+          ],
+          "triangles": 1600,
+          "vertices": 876
+        },
+        "Barrel": {
+          "mesh": "HandymanTurret_T2_Barrel",
+          "size": [
+            0.86,
+            0.5,
+            1.47
+          ],
+          "triangles": 800,
+          "vertices": 416
+        }
+      },
+      "texture": "textures/HandymanTurret_T2.png (1024x1024, baked lighting, 8 samples)"
+    },
+    "T3": {
+      "triangles": {
+        "Base": 2080,
+        "Head": 2320,
+        "Barrel": 1168,
+        "total": 5568
+      },
+      "budget": 6000,
+      "within_budget": true,
+      "height_studs": 4.391,
+      "radius_studs": 2.241,
+      "parts": {
+        "Base": {
+          "mesh": "HandymanTurret_T3_Base",
+          "size": [
+            3.1849,
+            2.4,
+            3.1849
+          ],
+          "triangles": 2080,
+          "vertices": 1104
+        },
+        "Head": {
+          "mesh": "HandymanTurret_T3_Head",
+          "size": [
+            2.8238,
+            1.9913,
+            3.1707
+          ],
+          "triangles": 2320,
+          "vertices": 1279
+        },
+        "Barrel": {
+          "mesh": "HandymanTurret_T3_Barrel",
+          "size": [
+            0.94,
+            0.82,
+            1.52
+          ],
+          "triangles": 1168,
+          "vertices": 608
+        }
+      },
+      "texture": "textures/HandymanTurret_T3.png (1024x1024, baked lighting, 8 samples)"
+    },
+    "T4": {
+      "triangles": {
+        "Base": 2880,
+        "Head": 3490,
+        "Barrel": 1424,
+        "Glow": 92,
+        "total": 7886
+      },
+      "budget": 8000,
+      "within_budget": true,
+      "height_studs": 5.105,
+      "radius_studs": 2.421,
+      "parts": {
+        "Base": {
+          "mesh": "HandymanTurret_T4_Base",
+          "size": [
+            3.3743,
+            2.6,
+            3.3743
+          ],
+          "triangles": 2880,
+          "vertices": 1524
+        },
+        "Head": {
+          "mesh": "HandymanTurret_T4_Head",
+          "size": [
+            4.4713,
+            2.5049,
+            3.3737
+          ],
+          "triangles": 3490,
+          "vertices": 1870
+        },
+        "Barrel": {
+          "mesh": "HandymanTurret_T4_Barrel",
+          "size": [
+            0.85,
+            0.85,
+            1.62
+          ],
+          "triangles": 1424,
+          "vertices": 744
+        },
+        "Glow": {
+          "mesh": "HandymanTurret_T4_Glow",
+          "size": [
+            3.8472,
+            1.1498,
+            1.96
+          ],
+          "triangles": 92,
+          "vertices": 60
+        }
+      },
+      "texture": "textures/HandymanTurret_T4.png (1024x1024, baked lighting, 8 samples)"
+    }
+  }
+}

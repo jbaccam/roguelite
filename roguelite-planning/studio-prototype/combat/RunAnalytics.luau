@@ -79,7 +79,7 @@ local TIERS={'I','II','III','IV'}
 local function sourceName(id)
  local w=Weapons.ById[id]
  if w then return w.name end
- return (id=='Armor' or id=='Pet') and id or 'Other'
+ return (id=='Armor' or id=='Pet' or id=='Turret') and id or 'Other' -- Turret: the Handyman turret's nails
 end
 
 -- Death cause: the enemy behind the last hit within 5 s (CharacterService passes melee attackers),

@@ -190,6 +190,13 @@ function M.new(player)
    button(c,'Item_'..e.id,e.name,((i-1)%cols)*(cw+8),256+math.floor((i-1)/cols)*48,cw,function() send('GiveItem',e.id) end).Caption.TextSize=15
   end
   local y=256+math.ceil(#items/cols)*48+16
+  -- Handyman turret (HANDYMAN_TURRET.md): AdminService action Turret.
+  heading(c,'TurretTitle','Handyman turret',y);y+=36
+  button(c,'TurretGive','Give turret',0,y,170,function() send('Turret','Give') end,true)
+  for t=1,4 do button(c,'TurretTier'..t,'Tier '..T.Roman[t],180+(t-1)*96,y,88,function() send('Turret','Tier',t) end) end
+  button(c,'TurretClear','Clear turrets',566,y,180,function() send('Turret','Clear') end)
+  note(c,'TurretNote','Give: one at you now, any class, for this run. Tier: your turret this run. Clear: every turret, until the next wave or BUILD (B / pad R1).',y+48)
+  y+=84
   -- Class, stat edits, heal and emeralds: the old STATS panel, without its mob controls (Mobs tab).
   local stats=T.frame(c,'StatsView',0,y,CW,1)
   local h=statsView:render(stats,CW,{skipMobs=true});stats.Size=UDim2.fromOffset(CW,h);y+=h+16

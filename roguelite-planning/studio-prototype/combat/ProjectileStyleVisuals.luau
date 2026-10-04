@@ -136,6 +136,8 @@ Styles['24']={
   s.model.PrimaryPart.CFrame=cf;s.parts.head.CFrame=cf*CFrame.new(0,0,.25)
  end,
 }
+-- The Handyman turret fires the same nails (id 'Turret', HANDYMAN_TURRET.md).
+Styles.Turret=Styles['24']
 -- Yo-Yo: the disc flies out on a string from its finger loop, then reels back.
 Styles['21']={
  build=function(folder,v)

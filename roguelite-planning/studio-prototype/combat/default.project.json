@@ -274,6 +274,9 @@
         "TutorialConfig": {
           "$path": "TutorialConfig.luau"
         },
+        "HandymanTurret": {
+          "$path": "HandymanTurret.luau"
+        },
         "SetLobbyAttacks": {
           "$className": "RemoteEvent",
           "$properties": {
@@ -557,6 +560,9 @@
       "PetService": {
         "$path": "PetService.server.luau"
       },
+      "HandymanTurretService": {
+        "$path": "HandymanTurretService.server.luau"
+      },
       "TutorialDirector": {
         "$path": "TutorialDirector.server.luau"
       }
@@ -620,6 +626,9 @@
         },
         "PetVisuals": {
           "$path": "PetVisuals.client.luau"
+        },
+        "HandymanTurret": {
+          "$path": "HandymanTurret.client.luau"
         },
         "TutorialGuide": {
           "$path": "../ui/TutorialGuide.client.luau"
