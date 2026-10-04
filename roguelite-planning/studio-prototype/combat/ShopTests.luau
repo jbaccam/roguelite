@@ -198,8 +198,11 @@ local ok,err=xpcall(function()
  -- READY x/y (RogueliteRunState ShopReady / ShopPlayers): living run members who pressed GO.
  reset();Shop.join(p);Shop.states[p].ready=false;Shop.publishReady()
  near(RS.RogueliteRunState:GetAttribute('ShopPlayers'),1,'ready total');near(RS.RogueliteRunState:GetAttribute('ShopReady'),0,'none ready')
+ check(p:GetAttribute('ShopReady')==false,'counted and not ready: the player shows false')
  Shop.states[p].ready=true;Shop.publishReady();near(RS.RogueliteRunState:GetAttribute('ShopReady'),1,'one ready')
+ check(p:GetAttribute('ShopReady')==true,'counted and ready: the player shows true')
  Shop.phase='Combat';Shop.publishReady();check(RS.RogueliteRunState:GetAttribute('ShopReady')==nil,'no ready count outside the shop')
+ check(p:GetAttribute('ShopReady')==nil,'no player ready mark outside the shop')
  Shop.phase='Shop';Shop.states[p].ready=false
 end,debug.traceback)
 pcall(reset)

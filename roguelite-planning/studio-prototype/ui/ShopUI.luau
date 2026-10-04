@@ -423,6 +423,10 @@ function M.new(player,h,refresh)
   local startH=th(62);local leaveH=th(40);local statsH=math.max(90,ht-startH-leaveH-18)
   -- A Handyman's UPGRADE TURRET (data.turret, HANDYMAN_TURRET.md) takes a row above LEAVE RUN.
   local turretH=data.turret and th(50) or 0;if turretH>0 then statsH=math.max(90,statsH-turretH-8) end
+  -- A party's headshots between LEAVE RUN and GO (ReadyRoster below), only while 2+ are counted.
+  local partyState=RS:FindFirstChild('RogueliteRunState')
+  local rosterH=data.phase=='Shop' and (partyState and partyState:GetAttribute('ShopPlayers') or 0)>1 and th(48) or 0
+  if rosterH>0 then statsH=math.max(90,statsH-rosterH-8) end
   local stats=surface(root,'StatsColumn',leftW+gap+12,0,side,statsH)
   local secondary=self.statTab=='Secondary'
   local statTitle=heading(stats,'Title','Stats',12,10,side-24,34,28);statTitle.TextXAlignment=Enum.TextXAlignment.Center
@@ -600,7 +604,7 @@ function M.new(player,h,refresh)
   end,true)
   leave.Caption.TextColor3=red;leave.Caption.UITextSizeConstraint.MaxTextSize=18
   leave.Interactable=data.phase=='Shop'
-  local start=btn(root,'StartWave',data.ready and 'READY · WAITING' or 'GO (Wave '..data.wave..')',leftW+gap+12,statsH+18+leaveH,side,startH,function() self:send('Start') end)
+  local start=btn(root,'StartWave',data.ready and 'READY · WAITING' or 'GO (Wave '..data.wave..')',leftW+gap+12,statsH+18+leaveH+(rosterH>0 and rosterH+8 or 0),side,startH,function() self:send('Start') end)
   start.Caption.UITextSizeConstraint.MaxTextSize=22
   if data.phase~='Shop' then start.Caption.Text='WAVE IN PROGRESS';start.Interactable=false end
   -- READY 2/4 under GO in multiplayer (user, 2026-10-03): living run members who pressed GO, out of
@@ -608,11 +612,40 @@ function M.new(player,h,refresh)
   -- by the timer loop below; hidden solo, where the caption keeps the whole button.
   local readyLine=T.label(start,'ReadyCount','',8,0,0,0,16,cream);readyLine.Visible=false
   readyLine.Position=UDim2.new(0,8,.55,0);readyLine.Size=UDim2.new(1,-16,.45,-4);readyLine.TextStrokeTransparency=.3
+  -- WHO is ready (user, 2026-10-03: "icon that shows whos ready"): each counted teammate's headshot
+  -- above GO, from their ShopReady (ShopService.publishReady). Ready: full colour, a lime ring and a
+  -- check (the pause menu's look); still shopping: dimmed, grey ring. Example: 4 in the party, 2
+  -- pressed GO -> two lit heads with checks and two dim ones, with READY 2/4 on the button.
+  local roster,shown
+  if rosterH>0 then
+   roster=Instance.new('Frame');roster.Name='ReadyRoster';roster.BackgroundTransparency=1
+   roster.Position=start.Position-UDim2.fromOffset(0,rosterH+8);roster.Size=UDim2.fromOffset(side,rosterH);roster.Parent=root
+  end
+  local function drawRoster()
+   if not roster then return end
+   local list={}
+   for _,p in game:GetService('Players'):GetPlayers() do local r=p:GetAttribute('ShopReady');if r~=nil then table.insert(list,{p=p,ready=r==true}) end end
+   table.sort(list,function(a,b) return a.p.UserId<b.p.UserId end)
+   local key='';for _,e in list do key..=e.p.UserId..(e.ready and '+' or '-') end
+   if key==shown then return end;shown=key -- redraw only when someone joins, leaves or readies
+   roster:ClearAllChildren()
+   local n=#list;if n==0 then return end
+   local d=math.min(rosterH-6,math.floor((side-(n-1)*8)/n));local x=(side-(n*d+(n-1)*8))/2
+   for i,e in list do
+    local head=Instance.new('ImageLabel');head.Name='Head_'..e.p.UserId;head.BackgroundColor3=T.Color.well;head.BorderSizePixel=0
+    head.Position=UDim2.fromOffset(x+(i-1)*(d+8),(rosterH-d)/2);head.Size=UDim2.fromOffset(d,d);head.ImageTransparency=e.ready and 0 or .55;head.Parent=roster
+    T.headshot(head,e.p.UserId)
+    T.make('UICorner',head,{CornerRadius=UDim.new(1,0)})
+    T.make('UIStroke',head,{Color=e.ready and T.Color.lime or T.Color.dim,Thickness=e.ready and 3 or 2})
+    if e.ready then local s=math.floor(d*.42);require(RS:WaitForChild('StoreFX')).check(head,d-s+3,d-s+3,s) end
+   end
+  end
   local function showReady()
    local n,total=runState and runState:GetAttribute('ShopReady'),runState and runState:GetAttribute('ShopPlayers')
    local on=data.phase=='Shop' and type(n)=='number' and type(total)=='number' and total>1
    readyLine.Text=on and ('READY '..n..'/'..total) or '';readyLine.Visible=on
    start.Caption.Size=on and UDim2.new(1,-16,.55,-4) or UDim2.new(1,-16,1,-8)
+   drawRoster()
   end
   showReady()
   -- The shop timer: the next wave starts on its own when it runs out, even if not everyone is ready.
@@ -632,6 +665,7 @@ function M.new(player,h,refresh)
   -- the class, the tier and the price again.
   if turretH>0 then
    leave.Position+=UDim2.fromOffset(0,turretH+8);start.Position+=UDim2.fromOffset(0,turretH+8)
+   if roster then roster.Position+=UDim2.fromOffset(0,turretH+8) end
    local t=data.turret
    local tb=btn(root,'UpgradeTurret','',leftW+gap+12,statsH+10,side,turretH,function() T.sound('ui_upgrade');self:send('UpgradeTurret',t.tier) end)
    if t.next then price(tb,t.price,'TURRET → '..T.Roman[t.next]..' · ',20,data.shards>=t.price and white or red)

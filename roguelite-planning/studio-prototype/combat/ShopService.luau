@@ -790,6 +790,13 @@ function S.publishReady()
  end
  if run:GetAttribute('ShopReady')~=ready then run:SetAttribute('ShopReady',ready) end
  if run:GetAttribute('ShopPlayers')~=total then run:SetAttribute('ShopPlayers',total) end
+ -- Who (user, 2026-10-03: "icon that shows whos ready"): each counted player's own ShopReady,
+ -- true or false; nil for anyone the count leaves out (down, in the lobby, outside the shop).
+ -- ShopUI draws their headshots above GO from it.
+ for p,s in S.states do
+  local mine=nil;if S.phase=='Shop' and living(p) then mine=s.ready==true end
+  if p:GetAttribute('ShopReady')~=mine then p:SetAttribute('ShopReady',mine) end
+ end
 end
 local elapsed=0
 RunService.Heartbeat:Connect(function(dt)
