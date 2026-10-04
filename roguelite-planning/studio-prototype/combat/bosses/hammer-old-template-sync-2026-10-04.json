@@ -1,0 +1,30 @@
+{
+ "what": "Hammer on the old template (R9) pushed to Studio (place 107877054949326, Edit) in one guarded execute_luau write: MapBossDefs (scale 1.15), BossService (practice buttons through MapBossService once ready, pcall-guarded) and the shell hunks. The gate stays closed: no hammer-brute timing, BossAnimations or Hammer_NPC, so MapBossDefs.legacy('Hammer') == true and the old BossService Hammer still spawns.",
+ "date": "2026-10-04",
+ "head": "62085f6 (R9 code at 8e838ed + review fixes 445e132)",
+ "receipt": {
+  "file": "studio-prototype/combat/bosses/receipts/hammer-old-receipt.json",
+  "how": "Read-only DumpMotorReceipt.luau of ServerStorage.RogueliteNPCs.HammerBoss_NPC in Edit, posted to the dev server (/dump/hammer-old-receipt)",
+  "found": "17 parts (16 MeshParts with a BossSurface SurfaceAppearance, TextureID empty; HumanoidRootPart 3.2x2.6x2.5), 16 Motor6Ds Boss_<Part> (bind names the same), model scale 1, HumanoidRootPart 4.45 above the soles, Humanoid HipHeight 3.15 / MaxHealth 1800 / WalkSpeed 4.5 / Animator, model attributes IsHammerBoss, IsBoss, ZombieType HammerBoss, SourceAsset, BaseMoveSpeed, ContactDamage, ContactRange; BossRest on every section; no tags",
+  "driftAgainstStudioAssetManifest": "none: part CFrames (HumanoidRootPart-relative), sizes, classes, MeshIds, TextureIDs, SurfaceAppearance maps, attributes (BossRest included), Motor6D Part0/Part1/C0/C1, model attributes and the Humanoid's HipHeight/MaxHealth/WalkSpeed all equal; largest numeric difference 1.0e-7 (rounding)"
+ },
+ "method": "Read-only dump of the targets' Source (no duplicates: the only other script with a target's name is the client StarterPlayerScripts.RogueliteCombat); each text matched exactly to a commit; whole files written as HEAD (only R9 commits between their Studio base and HEAD); shared scripts = Studio's own text + plan_hammer_brute_hunks.py --from-r7 (R9 + HUNKS), each result equal to HEAD, so no other session's unsynced commit went in. get_studio_state checked Edit right before the write. Guard: every target equal to its dumped base and every new text compiling before any write; ScriptEditorService:UpdateSourceAsync (Source fallback) with rollback; every script re-read equal, then re-dumped and byte-compared to HEAD.",
+ "written": [
+  {"studio": "ReplicatedStorage.RogueliteCombat.MapBossDefs", "base": "ad37f52", "to": "HEAD (content of 8e838ed)", "result": "written, re-read equal, = HEAD"},
+  {"studio": "ServerScriptService.BossService", "base": "8674bd9", "to": "HEAD (content of 445e132)", "result": "written, re-read equal, = HEAD"},
+  {"studio": "ServerScriptService.RogueliteCombat", "base": "20bff04", "hunks": "R9 heldBy block (the legacy HELD set for MapBossId 'Hammer')", "result": "written, re-read equal, = HEAD"},
+  {"studio": "ServerScriptService.PetService", "base": "20bff04", "hunks": "R9 hammer local above the loop + reach line", "result": "written, re-read equal, = HEAD"}
+ ],
+ "unchanged": [
+  {"studio": "ServerScriptService.HandymanTurretService", "base": "d14613f (= HEAD)", "why": "another session had already synced the HEAD turret file, which carries the R9 lines from 8e838ed/445e132; the hunks were all present"},
+  "MapBossService, MapBossShapes, MapBossTiming, MapBossPresentation (= HEAD, not targets)",
+  "HammerBoss_NPC (only read), BossAnimations (untouched)"
+ ],
+ "notWritten": ["Hammer_NPC (InstallMapBossTemplates not run: the gate stays closed until all 14 clips exist)", "BossAnimations/hammer-brute and the MapBossTiming hammer-brute entry (no clips yet)", "InstallMapBossTemplates.luau and DumpMotorReceipt.luau are paste tools, not Studio scripts"],
+ "verified": {
+  "before the push (repo HEAD through tools/RepoRequire, read-only)": {"compiles": "MapBossDefs, BossService, InstallMapBossTemplates, DumpMotorReceipt, RogueliteCombat.server, PetService.server, HandymanTurretService.server, MapBossService, MapBossPresentation.client", "MapBossServiceTests": "47 PASS, 0 FAIL", "MapBossShapesTests": "26 PASS, 0 FAIL", "MapBossPresentationTests": "16 PASS, 0 FAIL"},
+  "after the push": {"MapBossDefs (Studio's own source, fresh, no instances)": "Hammer scale=1.15, legacy('Hammer')=true, ready('Hammer')=false, timing(Hammer)=nil; ready: KingCrab, Pharaoh, FrostCyclops, Dragon", "templates": "Hammer_NPC absent, HammerBoss_NPC present", "BossService (Studio's own source)": "compiles; pcall-guarded map practice; still CharacterService.onPracticeBoss", "suites": "47, 26, 16 PASS, 0 FAIL (MapBossServiceTests: legacy here: Hammer=true)", "byte check": "all five targets' Studio Source == HEAD"},
+  "python (real receipt)": {"test_partposes_to_motor6d.py": "15 PASS, 0 failed", "test_build_boss_modules.py": "6 PASS, 0 failed", "legacy round trip": "16 joints, 459 frames: centre 1.10e-6, corner 4.63e-6, vs unrounded legacy 4.63e-6 studs (worst ChargeRun frame 14 Hammer)", "moves sample (Idle, Walk, Slam)": "135 frames, corner 1.11e-6 studs"}
+ },
+ "playTests": "none run (the user does the play-testing; no Play session was started)"
+}

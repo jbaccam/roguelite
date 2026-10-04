@@ -320,9 +320,10 @@ All work happens in `roguelite-planning/studio-prototype/`. Tests go in `combat/
 R8 is replaced: no FBX import. The Hammer keeps the 16-part Motor6D template `HammerBoss_NPC`, and his clips are re-authored in `hammer-boss-moves/` (design doc, "Change of plan").
 
 **Done in the repo (R9, 8e838ed, plus the review fixes):**
-- `combat/bosses/DumpMotorReceipt.luau`: a read-only Studio dump of a Motor6D template, for `receipts/hammer-old-receipt.json`.
-  - **Not run yet.** Studio stayed in Play through R9, so the receipt doesn't exist.
-  - Until it does, the converter tests use a receipt made from `hammer-boss/finished/studio-asset-manifest.json`. In that receipt the joints are `Boss_<Part>`, which is the name `EnemyMotion.bind` gives them.
+- `combat/bosses/DumpMotorReceipt.luau`: a read-only Studio dump of a Motor6D template.
+  - It was run in Edit on 2026-10-04 and wrote `receipts/hammer-old-receipt.json`.
+  - The receipt has 17 parts, 16 `Boss_<Part>` Motor6Ds, model scale 1, and the root 4.45 above the soles.
+  - It shows no drift from `hammer-boss/finished/studio-asset-manifest.json` (largest difference 1e-7).
 - `combat/bosses/partposes_to_motor6d.py` (tests: `test_partposes_to_motor6d.py`):
   - It reads `PartPoses.json` and writes `StudioAnimationData.json` (rigType Motor6D, `T = C0⁻¹·P0⁻¹·P1·C1` per joint) and `AnimationData.json` (one bone per part under Root at the root height, in the build's basis).
   - BossGameData point offsets are in the part's own Studio space.
@@ -346,11 +347,15 @@ R8 is replaced: no FBX import. The Hammer keeps the 16-part Motor6D template `Ha
   - If that throws, the half-built boss is removed and the status shows the error. The old Hammer spawns instead.
   - Remove boss removes either Hammer.
 
-**Still to do in Studio (Edit only):**
-1. Dump the receipt with `DumpMotorReceipt.luau`, rerun the tests on it, and compare it with `studio-asset-manifest.json`.
-2. Run the Studio compile checks and the three boss suites.
-3. Do the guarded push of MapBossDefs, BossService and the three shell hunks.
-4. Check that `legacy('Hammer')` is still true.
+**Studio record (2026-10-04, Edit only; record: `combat/bosses/hammer-old-template-sync-2026-10-04.json`):**
+- **Receipt:** dumped as above. Both Python test files pass on it, and the legacy round trip is 4.63e-6 studs.
+- **One guarded push, every write re-read equal and then byte-equal to HEAD:**
+  - MapBossDefs (from base ad37f52) and BossService (from base 8674bd9), as whole files at HEAD.
+  - The `--from-r7` hunks on Studio's own RogueliteCombat and PetService.
+  - HandymanTurretService already equalled HEAD, because another session had synced it with the R9 lines.
+- **Checks:** everything compiles at HEAD, and the three boss suites pass before and after the push (47, 26 and 16, 0 FAIL).
+- **Gate:** Studio's own MapBossDefs gives scale 1.15, `legacy('Hammer')==true` and `ready('Hammer')==false`. Hammer_NPC and BossAnimations/hammer-brute were not installed.
+- **Play:** no Play test has run.
 
 **Final install, once the clips land (gate still closed until step 4):**
 1. **Package** in `hammer-boss-moves/exports/game/`:
@@ -360,7 +365,7 @@ R8 is replaced: no FBX import. The Hammer keeps the 16-part Motor6D template `Ha
      - `height`, `footprintRadius` and `bodyCentreHeight` = 4.45 (authored scale);
      - `motion` {`strideLength`, `nominalSpeed`, `chargeStrideLength`}.
 2. **Build:** run `python build_boss_modules.py hammer-brute`, then both Python test files.
-3. **Guarded push** of `MapBossTiming` and the new `BossAnimations/hammer-brute` modules, made unsandboxed like the other bosses' animation folders.
+3. **Guarded push** of `MapBossTiming` and the new `BossAnimations/hammer-brute` modules. Give them the same Sandboxed setting as the other bosses' animation modules. A plugin read of `Sandboxed` failed on those modules on 2026-10-04, so check it in the Properties pane.
 4. **Template:** `ONLY={'Hammer'}` plus `InstallMapBossTemplates` in Edit. This opens the gate: check `ready('Hammer')==true`.
 5. **Checks:** the three boss suites, then a plain capture of `Hammer_NPC`.
 6. **Play-test:** the user play-tests: the wave-20 sky drop, the tutorial, the Spawn boss button, and enrage turning the eyes red.
