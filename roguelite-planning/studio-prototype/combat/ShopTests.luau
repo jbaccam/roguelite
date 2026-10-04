@@ -80,9 +80,11 @@ local ok,err=xpcall(function()
  check(not request('Shards','Set',100,0),'reject stale revision')
  local old=E.DEBUG_CURRENCY_ENABLED;E.DEBUG_CURRENCY_ENABLED=false;check(not request('Shards','Set',100),'disabled production control');E.DEBUG_CURRENCY_ENABLED=old
  local o=offer('weapon_00_1',1,47);local token=o.token
+ -- A reroll excludes what's on display now; offer() above swapped slot 1's first roll out, so that one may return.
+ local shown={};for _,x in Shop.states[p].offers do shown[x.id]=true end
  check(request('Lock',1,token),'lock');local shards=Shop.states[p].shards;local price=E.reroll(1,0)
  check(request('Reroll'),'reroll');near(Shop.states[p].shards,shards-price,'reroll charge');near(Shop.states[p].rerolls,1,'reroll count');check(Shop.states[p].offers[1]==o and o.price==47,'locked price and identity')
- for _,offerNow in Shop.states[p].offers do check(not seen[offerNow.id] or offerNow==o,'reroll repeated old offer') end
+ for _,offerNow in Shop.states[p].offers do check(not shown[offerNow.id] or offerNow==o,'reroll repeated old offer') end
  cs.overrides.ShopPricePercent=15;Characters.refresh(p);check(o.price==47,'locked unaffected by stat');near(E.modifier(cs.stats),1.15,'positive price modifier')
  cs.overrides.ShopPricePercent=-10;Characters.refresh(p);near(E.modifier(cs.stats),.9,'negative price modifier')
  cs.overrides={};Characters.refresh(p)
@@ -135,7 +137,8 @@ local ok,err=xpcall(function()
  near(cs.stats.ChainCount,0,'antlers do not create lightning')
  check(buy('battery',72),'buy battery');near(cs.stats.ChainCount,1,'battery creates lightning')
  check(buy('alien',38),'buy alien battery');near(cs.stats.ChainDamage,15,'alien battery boosts chains')
- check(buy('mask',70),'buy burial mask');near(cs.stats.ContactReduction,25,'mask adds contact defense')
+ local contactBefore=cs.stats.ContactReduction -- the class/armor base varies (no class has +15 since the 2026-10-03 class rebalance)
+ check(buy('mask',70),'buy burial mask');near(cs.stats.ContactReduction,contactBefore+10,'mask adds contact defense')
  check(buy('potato',20),'buy support potato');check(cs.stats.PickupRadius>8,'potato aids shard pickup')
  -- 2026-10-03: every non-Godly weapon can be offered, not just owned ones. A fresh profile that owns
  -- only the Glock, Frying Pan and Magic Staff can see Medusa's Head and Crystal Ball, never a Godly.

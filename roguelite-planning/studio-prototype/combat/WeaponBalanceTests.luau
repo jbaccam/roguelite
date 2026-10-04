@@ -52,7 +52,7 @@ local ok,err=xpcall(function()
   check(Types.scaled('Mutant',wave).health==math.max(50,20+11*(wave-1)),'mutant wave HP')
   check(Types.scaled('Mutant',wave).damage==0,'mutant never adds contact damage')
   check(math.abs(Types.scaled('Mutant',wave).slamDamage-(10+2.1*(wave-1)))<.001,'mutant slam wave damage')
-  check(math.abs(Types.scaled('Regular',wave).damage-(1+.6*(wave-1)))<.001,'contact growth')
+  check(math.abs(Types.scaled('Regular',wave).damage-(5+1.5*(wave-1)))<.001,'contact growth') -- ee48545: x5 / growth x2.5 (18.5 at wave 10)
  end
  check(Types.forSlot(5,1)=='Regular' and Types.forSlot(5,8)=='Mutant','mutant wave gate')
  check(Types.Regular.health==3,'scaling does not mutate shared base')
