@@ -36,7 +36,7 @@ end
 local leaveRemote=remote('LeaveQueue')
 -- Studio travel panel. One argument, 'Lobby' or 'Arena'; moves only the caller.
 local travelRemote=remote('StudioTravel')
--- Run setup screen: ('Start', mapId, class, weapon, solo, difficulty) from a pad's host,
+-- Run setup screen: ('Start', mapId, class, weapon, private, difficulty) from a pad's host,
 -- ('Play', same arguments) from PLAY away from the pads (claims a free pad and moves the caller
 -- onto it), ('Ready', class, weapon) from anyone on a pad, ('Loadout', class, weapon) from the
 -- Loadout screen or Armory EQUIP while in the lobby. Server replies ('Result', ok, message).
@@ -133,7 +133,7 @@ local function publish()
    or phase=='Choosing' and nameOf(q.host)..' is choosing' or ''
   local mapIndex=q.map and Rules.MapIndex[q.map]
   local diffText=q.difficulty and q.difficulty~='Normal' and '  ·  '..string.upper(q.difficulty) or ''
-  local mapText=mapIndex and (Rules.Maps[mapIndex].name..diffText..(q.solo and '  ·  SOLO' or '')) or ''
+  local mapText=mapIndex and (Rules.Maps[mapIndex].name..diffText..(q.solo and '  ·  PRIVATE' or '')) or ''
   local shown=n..'/'..cap..'|'..text..'|'..mapText
   if pad.shown~=shown then
    pad.shown=shown;pad.count.Text=n..'/'..cap;pad.status.Text=text;pad.map.Text=mapText
@@ -299,9 +299,11 @@ setupRemote.OnServerEvent:Connect(function(player,action,a,b,c,d,e)
    index=free;setQueue(player)
   end
   if not index then return reply(false,'Step onto a portal pad first') end
-  if not state:start(player.UserId,index,now(),a,d==true,e) then return reply(false,d==true and 'Solo needs an empty pad' or 'Only the host can start') end
+  -- d: Private (only this player's party may join; just them when not in one), else Open.
+  local allow={};for _,id in parties:members(player.UserId) do allow[id]=true end
+  if not state:start(player.UserId,index,now(),a,d==true,e,allow) then return reply(false,d==true and 'Private needs a pad with only you and your party on it' or 'Only the host can start') end
   player:SetAttribute('RunClass',b);player:SetAttribute('RunWeapon',c)
-  -- The party comes along (a solo pad has no room, so solo stays solo).
+  -- The party comes along (Open or Private; a Private pad holds exactly the party).
   pullParty(player,index)
   local q=state.queues[index]
   publish();reply(true,('Starting in %ds'):format(math.max(1,math.ceil((q.launchAt or now())-now()))))
@@ -414,7 +416,13 @@ RunService.Heartbeat:Connect(function(dt)
   -- the lobby (travel) still ends the queue; anyone who got off the pad is put back on it.
   if index and not lobby then leave(p);index=nil
   elseif index and pads[index] and not nearPad(hrp,pads[index]) then char:PivotTo(CFrame.new(pads[index].center+Vector3.new(0,3.5,0))*(hrp.CFrame-hrp.Position)) end
-  if under and not index and stepOff[p]~=under and state:join(p.UserId,under,now()) then setQueue(p);pullParty(p,under) end
+  if under and not index and stepOff[p]~=under then
+   if state:join(p.UserId,under,now()) then setQueue(p);pullParty(p,under)
+   elseif state.queues[under].solo then
+    -- Someone else's Private pad: say so once (stepOff holds until they walk off).
+    stepOff[p]=under;setupRemote:FireClient(p,'Result',false,'That portal is private')
+   end
+  end
  end
  if parties:expire(now()) then publishParties() end
  -- A host who never presses START frees the pad for someone else.

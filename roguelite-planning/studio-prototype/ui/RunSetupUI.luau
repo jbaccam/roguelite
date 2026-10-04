@@ -358,9 +358,11 @@ function M.new(player,opts)
     if big then T.upgradeBar(c,'Upgrade',16,cell-36,cell-32,18,rec.have,opts.need(rec)) else T.upgradeBar(c,'Upgrade',10,cell-22,cell-20,16,rec.have,opts.need(rec)) end
    else centred(T.text(c,'Locked','NOT OWNED',8,big and cell-38 or cell-24,cell-16,20,16,C.dim)) end
   end
-  -- Host: open pad (up to 4) or solo. Compact: bottom-left, with BACK / START right of it.
+  -- Host: Open pad (anyone, up to 4) or Private (only you and your party; just you when you're not
+  -- in one). Private was Solo (user, 2026-10-03: "what if were in a group ... that wanted it to be
+  -- private"). sel.solo still carries it. Compact: bottom-left, with BACK / START right of it.
   local tabs=mode=='Host' or mode=='Play'
-  if tabs then T.tabs(canvas,cp and 16 or 95,cp and CH-60 or 636,cp and 240 or 260,cp and 54 or 62,{'Open','Solo'},sel.solo and 'Solo' or 'Open',function(id) sel.solo=id=='Solo';draw() end) end
+  if tabs then T.tabs(canvas,cp and 16 or 95,cp and CH-60 or 636,cp and 240 or 260,cp and 54 or 62,{'Open','Private'},sel.solo and 'Private' or 'Open',function(id) sel.solo=id=='Private';draw() end) end
   -- LOCK IN, not READY: a member's button only confirms their class and weapon; there is no ready
   -- check, the run starts when the host's countdown ends (2026-10-03: "are we readied up?").
   local labels={Play='START',Host='START',Member='LOCK IN',Loadout='CONFIRM'}

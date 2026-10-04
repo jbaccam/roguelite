@@ -7,13 +7,17 @@ QueueState.__index=QueueState
 QueueState.COUNTDOWN=10 -- seconds after the host presses START
 QueueState.FULL_COUNTDOWN=3 -- a full pad (or a solo run) launches sooner
 QueueState.CHOOSING_LIMIT=60 -- a host who never presses START gives the pad up
-local function reset(q) q.members={};q.locked=false;q.launchAt=nil;q.host=nil;q.phase='Idle';q.since=nil;q.solo=false;q.map=nil;q.difficulty=nil end
+-- solo = a Private pad (user, 2026-10-03: "what if were in a group with 2 people that wanted it to
+-- be private"): only the ids in q.allow (the host's party, the host included) may join, and it holds
+-- that many. Without allow it is the old solo pad: the host alone. Example: Ana and Ben in a party,
+-- Ana starts Private -> Ben may join (2 of 2, the short countdown), Cal stepping on is refused.
+local function reset(q) q.members={};q.locked=false;q.launchAt=nil;q.host=nil;q.phase='Idle';q.since=nil;q.solo=false;q.map=nil;q.difficulty=nil;q.allow=nil;q.allowCount=nil end
 function QueueState.new(count,capacity)
  local self=setmetatable({queues={},membership={},capacity=capacity},QueueState)
  for i=1,count do self.queues[i]={};reset(self.queues[i]) end
  return self
 end
-function QueueState:capacityOf(q) return q.solo and 1 or self.capacity end
+function QueueState:capacityOf(q) return q.solo and math.min(self.capacity,q.allowCount or 1) or self.capacity end
 function QueueState:leave(id,now)
  local index=self.membership[id]
  if not index then return false end
@@ -28,6 +32,7 @@ end
 function QueueState:join(id,index,now)
  local q=self.queues[index]
  if not q or q.locked or self.membership[id] or #q.members>=self:capacityOf(q) then return false end
+ if q.solo and not (q.allow and q.allow[id]) then return false end -- a Private pad: its party only
  table.insert(q.members,id);self.membership[id]=index
  if #q.members==1 then q.host=id;q.phase='Choosing';q.since=now end
  if q.phase=='Counting' and #q.members>=self:capacityOf(q) then q.launchAt=math.min(q.launchAt,now+QueueState.FULL_COUNTDOWN) end
@@ -37,11 +42,16 @@ end
 function QueueState:freePad()
  for index,q in self.queues do if q.phase=='Idle' and not q.locked and #q.members==0 then return index end end
 end
--- Host confirms the map and difficulty. Solo is refused once someone else is already on the pad.
-function QueueState:start(id,index,now,map,solo,difficulty)
+-- Host confirms the map and difficulty. Private (solo) takes allow, a set of user ids (the host's
+-- party), and is refused while anyone outside it is on the pad.
+function QueueState:start(id,index,now,map,solo,difficulty,allow)
  local q=self.queues[index]
  if not q or q.locked or q.host~=id or q.phase~='Choosing' then return false end
- if solo and #q.members>1 then return false end
+ if solo then
+  for _,m in q.members do if m~=id and not (allow and allow[m]) then return false end end
+  q.allow=table.clone(allow or {});q.allow[id]=true
+  local n=0;for _ in q.allow do n+=1 end;q.allowCount=n
+ end
  q.phase='Counting';q.map=map;q.solo=solo==true;q.difficulty=difficulty or 'Normal'
  local full=#q.members>=self:capacityOf(q)
  q.launchAt=now+(full and QueueState.FULL_COUNTDOWN or QueueState.COUNTDOWN)

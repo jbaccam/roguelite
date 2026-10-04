@@ -37,7 +37,9 @@ local trips={} -- player -> {options, tries}: teleports in flight, for TeleportI
 local tripLog=not studio and game:GetService('DataStoreService'):GetDataStore('RogueliteTripLog_v1') or nil
 local function log(players,event,detail)
  if not tripLog then return end
- local rec={t=os.time(),job=string.sub(game.JobId,1,8),role=Role.get(),place=game.PlaceId,ev=event,d=detail~=nil and string.sub(tostring(detail),1,240) or nil}
+ -- ver: the place version this server runs. Servers keep the version they started with, so an old
+ -- lobby can still run a fixed bug after a publish (2026-10-03: map=nil after the fix went out).
+ local rec={t=os.time(),job=string.sub(game.JobId,1,8),role=Role.get(),place=game.PlaceId,ver=game.PlaceVersion,ev=event,d=detail~=nil and string.sub(tostring(detail),1,240) or nil}
  for _,p in players do
   local id=typeof(p)=='Instance' and p.UserId or tonumber(p)
   if id then

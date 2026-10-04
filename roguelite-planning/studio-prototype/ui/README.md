@@ -1,3 +1,9 @@
+# Private pads, stale servers — October 3, 2026
+
+- **Still sent back after the fix:** the trip log showed lobby `cb7f40c8` launching with `map=nil` at 00:04 UTC and not refusing it, so it ran pre-fix code. The place had been published at 00:02:10, after the fix was in Studio. Live servers keep the version they started with, and the bounce had sent the player to an older public lobby. Fix: after publishing, shut down all servers (roblox.com game page ⋯ → Shut Down All Servers). Each trip-log line now carries `ver` (game.PlaceVersion).
+- **Private replaces Solo (`QueueState`, `RogueliteLobbyPreview`, `RunSetupUI`):** the host picks Open (anyone, up to 4) or Private (only their party; just them when not in one). A Private pad's `allow` is the host's party (PartyState), and it holds exactly that many: a full party gets the 3 s countdown. Anyone else stepping on is refused with "That portal is private". Starting Private with a stranger on the pad is refused with a reason. The pad sign says PRIVATE, the banner says "· private", and the portal guide beam skips Private pads. With no party list it behaves exactly like the old Solo.
+- **Not run:** no Play test.
+
 # Portal runs fixed (map=nil), clear START flow, more effects — October 3, 2026
 
 - **Portal runs went back to the lobby:** the trip log (`MatchService`, DataStore `RogueliteTripLog_v1`) showed `launch: map=nil` and then `sent back: map nil could not be set`. `RogueliteLobbyPreview.launch` called `state:finish(index)`, which clears the pad's map and difficulty, before reading `q.map`, and it had done so since plan C. Fixed in 6c7f421: map and difficulty are read first, and `MatchService.launch` refuses a launch without a valid map. The trip log stays: each trip step, with its error, for the last 30 per player. A player sent back sees the reason.

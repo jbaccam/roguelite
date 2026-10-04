@@ -290,7 +290,7 @@ function L.mount(player)
   local best,dist
   for _,portal in portals:GetChildren() do
    local zone=portal:FindFirstChild('QueueZone')
-   if zone and (portal:GetAttribute('QueueCount') or 0)<4 then
+   if zone and (portal:GetAttribute('QueueCount') or 0)<4 and not portal:GetAttribute('Solo') then -- not someone's Private pad
     local d=(zone.Position-hrp.Position).Magnitude
     if not dist or d<dist then best,dist=zone,d end
    end
@@ -323,7 +323,7 @@ function L.mount(player)
    local launchAt=portal and portal:GetAttribute('LaunchAt')
    local mapId=portal and portal:GetAttribute('MapId')
    local mapName=mapId and Rules.MapIndex[mapId] and L.Maps[Rules.MapIndex[mapId]].name
-   local players=count..' / '..cap..(cap==1 and ' (solo)' or ' players')
+   local players=count..' / '..cap..(portal and portal:GetAttribute('Solo') and ' · private' or ' players')
    if phase=='Launching' then
     bannerTitle.Text='ENTERING PORTAL...';bannerTitle.TextColor3=C.lime
     bannerSub.Text=(mapName or '')..'  ·  '..players
