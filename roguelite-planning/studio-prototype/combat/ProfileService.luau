@@ -701,11 +701,24 @@ function P.claimVipChest(player,restricted)
  P.grant(player,{chests={[Money.VIPDailyChest]=1}})
  return true,'Free '..chest.name..' added'
 end
+-- Hidden codes (user, 2026-10-04: "a hidden code for my friends ... gives them a starter pack"). The
+-- repo is public, so these live only in the place: ServerScriptService.SecretCodes, a Folder of
+-- StringValues named by the code (upper case), each Value a MonetizationConfig product key whose
+-- contents it grants for free (not counted as bought). Example: SecretCodes.<CODE>.Value =
+-- 'StarterPack' gives 1,500 emeralds, 2 Legendary chests, 5 rerolls and marks the pack owned.
+-- ServerScriptService never reaches clients. One use per account, like the codes above.
+local function secretReward(code)
+ local folder=game:GetService('ServerScriptService'):FindFirstChild('SecretCodes')
+ local entry=folder and folder:FindFirstChild(code)
+ local product=entry and entry:IsA('StringValue') and Money.Products[entry.Value]
+ if not product then return nil end
+ return {emeralds=product.emeralds,chests=product.chests,rerolls=product.rerolls,banishes=product.banishes,starterPack=product.oneTime=='starterPack'}
+end
 function P.redeem(player,code)
  local d=P.profiles[player]
  if not d or type(code)~='string' or #code>30 then return false,'Invalid code' end
  code=string.upper(code:gsub('%s',''))
- local reward=CODES[code]
+ local reward=CODES[code] or secretReward(code)
  if not reward then return false,'Invalid code' end
  if d.codes[code] then return false,'Code already used' end
  d.codes[code]=true;P.grant(player,reward)
