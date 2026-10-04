@@ -272,6 +272,11 @@ function X.laneTiming(T,A)
   end
  end
 end
+-- A charge that has stopped: the finish slam lands on the floor where he ended (A.endGround), and the
+-- data says when the run ended on the server clock (stoppedAt = start + the final window's activeEnd,
+-- which is also the finish's clock). Clients start ChargeSlam from it, not from their own prediction,
+-- which runs on a BossChargeLength that arrives late and in 0.5-stud steps.
+function X.stopCharge(T,A) A.endGround=A.floorY;X.laneTiming(T,A);A.data.stoppedAt=A.start+A.at.activeEnd end
 -- def.lockout: an attack's own minimum gap between its starts (the charge: 5 s), on top of cooldowns.
 function X.lockedOut(s,kind,now)
  local a=s.def.attacks[kind];local last=s.lastStart and s.lastStart[kind]
@@ -647,9 +652,9 @@ local function stepAttack(npc,s,now,h,root,params,people)
   if travel>=A.length and not A.stopped then
    A.stopped=true
    if X.isCharge(def) then
-    -- Stopped: the finish slam lands on the floor where he ended (A.endGround), and late readers
-    -- get the exact final length, warning, finish and duration: the run's one data republish.
-    A.endGround=A.floorY;X.laneTiming(s.T,A)
+    -- Stopped (X.stopCharge): late readers get the exact final length, warning, finish, duration
+    -- and stoppedAt: the run's one data republish.
+    X.stopCharge(s.T,A)
     A.sentLength=A.length;npc:SetAttribute('BossChargeLength',A.length);publish(npc,A);npc:SetAttribute('BossDuration',A.duration)
    end
   end

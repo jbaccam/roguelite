@@ -63,7 +63,8 @@ function C.phaseShape(ctx,i)
  local s=type(p)=='table' and p.shape;return type(s)=='table' and Shapes.decode(s) or nil
 end
 -- A forward charge's finish slam: its circle where the run now ends (it moves with
--- BossChargeLength) and its impact on the attack clock. nil without a finish.
+-- BossChargeLength) and its impact on the attack clock, which is nil until the server's stop is
+-- known (ctx.charge.stopAge). nil without a finish.
 function C.finish(ctx) local ch=ctx.charge;if not ch or not ch.finish then return nil end;return ch.finish,ch.finishImpact end
 -- Per-frame driver for one effect layer: update(age,dt) runs on the attack's server clock until it
 -- returns true, age reaches untilAge, or the attack stops. cleanup(stopped) always runs.

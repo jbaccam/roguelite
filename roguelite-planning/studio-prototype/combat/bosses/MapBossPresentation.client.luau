@@ -7,7 +7,8 @@
 --   combos (def.phases, data.phases): every phase's warning from the commit, each filled on its own
 --     timing; a later phase starts faint (P.phaseAlpha). VFX read ctx.phases / C.phaseShape.
 --   the forward charge (P.isCharge): re-timed from BossChargeLength (else data.length); the lane
---     reshaped in place and the finish circle (data.finish) moved down it as the run grows.
+--     reshaped in place and the finish circle (data.finish) moved down it as the run grows. It runs
+--     until the server's stop (data.stoppedAt, P.chargeStop), then ChargeSlam from that stop.
 --   pseudo attacks (P.pseudo): the intro clip (def.intro.clip, timed to BossIntroLand) and the
 --     enrage roar (def.roar): the clip only, no warning or attack hooks.
 --   the intro hook fires at BossIntroLand; with a roar, the enrage hook fires as the roar starts.
@@ -52,6 +53,25 @@ function P.chargeTiming(a,T,length)
  local fa=a.finish and a.clips and T.attacks and T.attacks[a.clips[3]]
  if fa then finishStart=at.activeEnd;finishImpact=finishStart+fa.impact;duration=math.max(duration,finishImpact+.05) end
  return {at=at,duration=duration,finishStart=finishStart,finishImpact=finishImpact}
+end
+-- Where the charge's run ends on the attack clock. Only the server's stop ends it: the data's
+-- stoppedAt (MapBossService X.stopCharge), as `confirmed`. The predicted end (the window's activeEnd
+-- from BossChargeLength) runs late, since that length arrives after a latency and in 0.5-stud steps,
+-- so it only counts once CHARGE_HOLD s have passed it with no stop (a server without stoppedAt).
+-- `latched` is the end already in use: it only ever moves earlier, so ChargeSlam never goes back to
+-- ChargeRun. nil: still running.
+P.CHARGE_HOLD=.75
+function P.chargeStop(latched,predicted,confirmed,age)
+ local stop=confirmed or (age>=predicted+P.CHARGE_HOLD and predicted or nil)
+ if latched and (not stop or stop>latched) then return latched end
+ return stop
+end
+-- The charge's clip at `age`: 1 ChargeStart, 2 ChargeRun, 3 ChargeSlam (then also its clip time,
+-- from the run's end at the attack's rate).
+function P.chargePhase(impact,stop,age,rate)
+ if age<impact then return 1 end
+ if not stop or age<stop then return 2 end
+ return 3,(age-stop)*(rate or 1)
 end
 -- A combo's phases from MapBossAttackData.phases (the server's times and shapes), falling back to
 -- the clip's own phase timing: {index, def (merged), warnStart, impact, activeEnd, shape (decoded)}.
@@ -153,20 +173,35 @@ local function call(state,name,...)
  return table.unpack(r,2,r.n)
 end
 local window=P.window
--- The forward charge's current run (P.isCharge): BossChargeLength (else data.length) re-times the
--- window, the duration and the finish; the server sends it on 0.5-stud changes and exactly at the
--- stop, and republishes the data (final lane and finish) once he has stopped.
-local function chargeStep(npc,ctx)
+-- The forward charge's current run (P.isCharge), every frame. BossChargeLength (else data.length)
+-- re-times the predicted window and moves the lane and the finish circle; the server sends it on
+-- 0.5-stud changes and at the stop, when it also republishes the data with stoppedAt. The run ends
+-- at P.chargeStop (the server's stop), so:
+--   ch.stopAge   the run's end on the attack clock; nil while he is still running (ChargeRun plays on)
+--   ch.runEnd    the lane warning's end: stopAge, else at least just ahead of now (held while running)
+--   ch.finishShow  the finish circle's impact for its warning (runEnd + the slam clip's impact)
+--   ch.finishImpact  the finish slam's impact, once the stop is known (nil before)
+--   ch.duration  the attacking window: the stop (or the hold past the prediction) plus the slam clip
+local function chargeStep(npc,ctx,age)
  local ch=ctx.charge;local length=npc:GetAttribute('BossChargeLength')
  if type(length)~='number' then length=ctx.data.length or ctx.def.length end
- if length==ch.length and ctx.raw==ch.raw then return end
- ch.length,ch.raw=length,ctx.raw
- local t=P.chargeTiming(ctx.def,ctx.timing,length);ctx.attack=t.at
- ch.duration,ch.finishStart,ch.finishImpact=t.duration,t.finishStart,t.finishImpact
- local d=ctx.data;local published=d.length or length
- local lane=type(d.shape)=='table' and Shapes.decode(d.shape);ch.lane=lane and lane.kind=='line' and P.laneAt(lane,published,length) or nil
- local f=type(d.finish)=='table' and type(d.finish.shape)=='table' and Shapes.decode(d.finish.shape)
- ch.finish=f and f.kind=='circle' and ch.finishImpact and P.moved(f,ch.dir,length-published) or nil
+ if length~=ch.length or ctx.raw~=ch.raw then
+  ch.length,ch.raw=length,ctx.raw
+  local t=P.chargeTiming(ctx.def,ctx.timing,length);ctx.attack=t.at
+  ch.predicted,ch.tail,ch.slamAt=t.at.activeEnd,t.duration-t.at.activeEnd,t.finishImpact and t.finishImpact-t.finishStart
+  local d=ctx.data;local published=d.length or length
+  -- This attack's stop only: stoppedAt from an earlier charge is before this one started.
+  ch.confirmed=type(d.stoppedAt)=='number' and d.stoppedAt>=ctx.start-1e-3 and d.stoppedAt-ctx.start or nil
+  local lane=type(d.shape)=='table' and Shapes.decode(d.shape);ch.lane=lane and lane.kind=='line' and P.laneAt(lane,published,length) or nil
+  local f=type(d.finish)=='table' and type(d.finish.shape)=='table' and Shapes.decode(d.finish.shape)
+  ch.finish=f and f.kind=='circle' and ch.slamAt and P.moved(f,ch.dir,length-published) or nil
+ end
+ age=age or -math.huge
+ ch.stopAge=P.chargeStop(ch.stopAge,ch.predicted,ch.confirmed,age)
+ ch.runEnd=ch.stopAge or math.max(ch.predicted,age+.05)
+ ch.finishShow=ch.slamAt and ch.runEnd+ch.slamAt or nil
+ ch.finishImpact=ch.stopAge and ch.slamAt and ch.stopAge+ch.slamAt or nil
+ ch.duration=(ch.stopAge or ch.predicted+P.CHARGE_HOLD)+ch.tail
 end
 local function context(npc,state,kind,a,start,serial)
  local cf=npc:GetAttribute('BossFrame');if typeof(cf)~='CFrame' then return nil end
@@ -198,12 +233,18 @@ end
 local function attackClip(ctx,age,motion)
  local a,at=ctx.def,ctx.attack;local rate=a.rate or 1
  if a.shape~='lane' then return a.clip,age*rate end
+ -- The Hammer's charge: ChargeRun until the server's stop (chargeStep), one chargeStrideLength of
+ -- ground per cycle (without it, the clip at its authored speed); then ChargeSlam from that stop.
+ if ctx.charge then
+  local phase,slam=P.chargePhase(at.impact,ctx.charge.stopAge,age,rate)
+  if phase==1 then return a.clips[1],age*rate elseif phase==3 then return a.clips[3],slam end
+  local run=clipDuration(motion,a.clips[2])
+  return a.clips[2],(age-at.impact)*a.speed/(ctx.timing.chargeStrideLength or a.speed*run)*run
+ end
  if age<at.impact then return a.clips[1],age*rate end
  if age<at.activeEnd then
-  -- Loop phase follows the ground covered: one rushStrideLength per RushLoop cycle. The Hammer's
-  -- ChargeRun: one chargeStrideLength per cycle (without it, the clip at its authored speed).
+  -- Loop phase follows the ground covered: one rushStrideLength per RushLoop cycle.
   local travelled=(age-at.impact)*a.speed
-  if ctx.charge then return a.clips[2],travelled/(ctx.timing.chargeStrideLength or a.speed*clipDuration(motion,a.clips[2]))*clipDuration(motion,a.clips[2]) end
   return a.clips[2],travelled/(ctx.timing.rushStrideLength or 2.2)*clipDuration(motion,a.clips[2])
  end
  return a.clips[3],(age-at.activeEnd)*rate
@@ -376,7 +417,7 @@ end
 local function stepPlanned(state,ctx,age,now,live)
  local at=ctx.attack;local last
  if ctx.phases then last=0;for _,ph in ctx.phases do last=math.max(last,ph.impact) end
- else last=math.max(at.activeEnd,ctx.charge.finishImpact or 0) end
+ else last=math.max(ctx.charge.runEnd,ctx.charge.finishShow or 0) end
  local w=state.warning
  if not live or age<at.warnStart or age>=last then if w then release(w);state.warning=nil end;return end
  if not w or w.serial~=ctx.serial or not w.subs then if w then release(w) end;w=profiled('Boss:BuildWarning',plannedWarning,ctx);state.warning=w end
@@ -386,15 +427,17 @@ local function stepPlanned(state,ctx,age,now,live)
   end
   return
  end
+ -- The lane holds until the server's stop (ch.runEnd), and the finish circle until its slam: both
+ -- only ever end once, so neither hides and comes back.
  local ch=ctx.charge
  if w.lane then
   if ch.lane and math.abs(ch.lane.length-w.lane.length)>1e-3 then placeLane(w.lane,ch.lane,ctx.groundY+.07) end
-  paintHit(w.lane,age,at.warnStart,at.impact,now,nil,at.activeEnd)
+  paintHit(w.lane,age,at.warnStart,at.impact,now,nil,ch.runEnd)
  end
- if w.finish and ch.finish and ch.finishImpact then
+ if w.finish and ch.finish and ch.finishShow then
   local by=ch.finish.center-w.finish.center
   if by.Magnitude>1e-3 then moveWarning(w.finish,by);w.finish.center=ch.finish.center end
-  paintHit(w.finish,age,at.warnStart,ch.finishImpact,now,P.phaseAlpha(true,age,at.warnStart,ch.finishImpact))
+  paintHit(w.finish,age,at.warnStart,ch.finishShow,now,P.phaseAlpha(true,age,at.warnStart,ch.finishShow))
  end
 end
 
@@ -462,8 +505,9 @@ end
 -- Once per boss: the spawn intro (only if it spawned in the last 3 s) and the enrage burst.
 -- A sky-drop boss (BossIntroLand) gets its intro on the landing instead, within 3 s of it.
 -- A boss with a roar (def.roar and its clip) enrages as the roar starts: BossEnraged can come
--- mid-attack, and the roar waits for that attack. A client that missed the roar (it joined late)
--- still enrages at the next attack, or 10 s on.
+-- mid-attack, and the roar waits for that attack (and through a pause, Admin Freeze or BossManual).
+-- A client that missed the roar (it joined late) enrages at the next real attack after BossEnraged,
+-- never while the run is paused.
 local function roars(state) local r=state.def.roar;return r~=nil and state.T.clips~=nil and state.T.clips[r]~=nil end
 local function stepMoments(npc,state,now,death)
  if death then return end
@@ -487,8 +531,8 @@ local function stepMoments(npc,state,now,death)
   else
    local ctx=state.ctx;local current=ctx and ctx.serial==npc:GetAttribute('BossSerial')
    local roaring=current and ctx.kind==state.def.roar
-   local after=current and type(enraged)=='number' and ctx.start>enraged
-   if roaring or after or (type(enraged)=='number' and now-enraged>10) then
+   local after=current and not ctx.pseudo and type(enraged)=='number' and ctx.start>enraged and combat:GetAttribute('RunPaused')~=true
+   if roaring or after then
     state.enraged=true;call(state,'enrage',{npc=npc,id=state.id,tint=state.tint,scale=state.T.scale or 1,roar=roaring and ctx or nil,timing=state.T})
    end
   end
@@ -590,7 +634,8 @@ local function frame(npc,state,now,dt)
   local raw=npc:GetAttribute('MapBossAttackData');if raw~=ctx.raw then ctx.raw=raw;ctx.data=decode(raw) end
   -- The breath turns during its active window (MapBossService tracking); follow the new frame.
   local cf=npc:GetAttribute('BossFrame');if typeof(cf)=='CFrame' and cf~=ctx.cf then ctx.cf=cf;ctx.ground=cf*CFrame.new(0,-T.rootHeight,0) end
-  if ctx.charge then chargeStep(npc,ctx) end
+  -- The charge's run, latched end and duration on this frame's clock (age; nil without BossStart).
+  if ctx.charge then chargeStep(npc,ctx,ctx.serial==serial and age or nil) end
  end
  local death=npc:GetAttribute('BossDeathStart');local hit=npc:GetAttribute('BossHitStart')
  -- A charge's own re-timed duration: BossDuration comes again only once he has stopped.

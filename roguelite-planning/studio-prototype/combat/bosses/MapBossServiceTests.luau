@@ -168,6 +168,13 @@ check('charge: lane timing for a run grown 30 -> 40 moves the finish 10 studs do
  A.endGround=2;X.laneTiming(HT,A)
  return grown and math.abs(S.decode(A.data.finish.shape).center.Y-2)<1e-9 and A.finish.frame.groundY==2
 end)
+check('charge stop: the data says when the run ended (stoppedAt = start + ChargeStart + length/speed, the finish clock) and its final length; none before the stop',function()
+ local A=chargeAttack(laneCf,laneDir,30);A.start=100;X.laneTiming(HT,A);local before=A.data.stoppedAt
+ A.length=36;A.floorY=2;X.stopCharge(HT,A)
+ local wire=game:GetService('HttpService'):JSONDecode(game:GetService('HttpService'):JSONEncode(A.data))
+ return before==nil and math.abs(A.data.stoppedAt-(100+.5+36/32))<1e-9 and math.abs(A.data.stoppedAt-(A.start+A.finish.start))<1e-9 and A.data.length==36
+  and A.finish.frame.groundY==2 and math.abs(wire.stoppedAt-A.data.stoppedAt)<1e-3 and wire.length==36
+end)
 check('lockout: the order walk skips the charge within 5 s of its last start',function()
  local s={def={attacks={Slam={range={0,16}},Charge=charge},order={'Slam','Charge','Slam'}},index=1,lastStart={Charge=10}}
  local any=function() return true end

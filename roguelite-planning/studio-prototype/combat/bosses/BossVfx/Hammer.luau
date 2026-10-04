@@ -156,31 +156,37 @@ local function skid(ctx,pos,dir)
  dirt(pos+dir*2*s+up*.4,dir+up*.8,26,{14,22},35,1.3*s)
  dust(pos+dir*1.5*s+up*.4,dir+up*.3,10,{9,14},4.5*s,70)
 end
--- From the launch to the finish slam, on the server's clock and the run's current length (the
--- presentation re-times ctx.attack and ctx.charge from BossChargeLength as he runs).
+-- From the launch to the finish slam. The run ends only at the server's stop (the presentation's
+-- ctx.charge.stopAge, from data.stoppedAt; nil while he runs), so footfalls carry on until then and
+-- the skid lands at the confirmed final length (ctx.charge.length). Footfalls follow the replicated
+-- body, which is where the player sees him.
 local function charge(ctx)
  if ctx.hammerCharge or not ctx.charge then return end;ctx.hammerCharge=true
  local ch,def=ctx.charge,ctx.def;local s=ctx.scale or 1;local dir=ch.dir
  local start=groundAt(ctx,ctx.cf.Position)
  local stride=ctx.timing.chargeStrideLength or def.speed*.53;local half=math.max(1,stride/2)
- local travel0=math.clamp((C.age(ctx)-ctx.attack.impact)*def.speed,0,ch.length)
- local nextStep,side,stopped,slammed=math.max(half*.5,travel0),1,false,false
+ local function travelled(age)
+  local root=ctx.npc.PrimaryPart
+  if root then return math.clamp(C.flat(root.Position-start):Dot(dir),0,def.length or 75) end
+  return math.clamp((age-ctx.attack.impact)*def.speed,0,ch.stopAge and ch.length or def.length or 75)
+ end
+ local nextStep,side,stopped,slammed=math.max(half*.5,travelled(C.age(ctx))),1,false,false
  local snd,sh=C.cue('stone_rumble',start,.45,1.15,true)
  local slamFinish=(ctx.timing.clips and ctx.timing.clips[def.clips[3]] or 1.5)/(def.rate or 1)
- local maxAge=ctx.attack.impact+(def.length or 75)/def.speed+slamFinish+.5
+ local maxAge=ctx.attack.impact+(def.length or 75)/def.speed+.75+slamFinish+.5 -- .75: the client's hold for the stop
  C.follow(ctx,maxAge,function(age)
-  local at=ctx.attack;local travel=math.clamp((age-at.impact)*def.speed,0,ch.length)
+  local travel=travelled(age)
   local root=ctx.npc.PrimaryPart;local floorY=root and root.Position.Y-ctx.timing.rootHeight or ctx.groundY
-  local pos=Vector3.new(start.X,floorY,start.Z)+dir*travel
+  local base=Vector3.new(start.X,floorY,start.Z);local pos=base+dir*travel
   if sh then sh.CFrame=CFrame.new(pos+up*2) end
   if not stopped then
    -- A footfall every half stride, alternating feet: dust kicked back and a small thump.
    while travel>=nextStep do
-    local f=Vector3.new(start.X,floorY,start.Z)+dir*nextStep+dir:Cross(up)*side*1.6*s
+    local f=base+dir*nextStep+dir:Cross(up)*side*1.6*s
     if C.near(f) then dust(f+up*.3,-dir+up*.6,3,{5,9},3.5*s,40) end
     C.shake(f,.3,.12);C.cue('hammer_thud',f,.3,.55);side=-side;nextStep+=half
    end
-   if age>=at.activeEnd then stopped=true;C.stopSound(snd,sh,.15);skid(ctx,pos,dir) end
+   if ch.stopAge and age>=ch.stopAge then stopped=true;C.stopSound(snd,sh,.15);skid(ctx,base+dir*ch.length,dir) end
   end
   if stopped and not ch.finishImpact then return true end
   if ch.finishImpact and not slammed and age>=ch.finishImpact-.22 and not ctx.hammerWhoosh then ctx.hammerWhoosh=true;C.cue('hammer_whoosh',pos,.7,.62) end

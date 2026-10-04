@@ -90,6 +90,41 @@ check('charge: without a finish, the duration is the lane window\'s (the crab ru
  local plain=with(charge,{finish=false});local t=P.chargeTiming(plain,HT,30)
  return t.finishImpact==nil and near(t.duration,X.window(plain,HT,30).duration) and P.chargeTiming(crab,{clips={RushStart=.8,RushLoop=.5,RushEnd=.6}},30).finishImpact==nil
 end)
+-- The run's end. A target backs down the lane at 12 studs/s: the contact length is 20 + 12 t, so the
+-- server (32 studs/s after the 0.5 s ChargeStart) stops at t = 1.8 with 41.6 studs. The client sees
+-- BossChargeLength 100 ms late in 0.5-stud steps, and the stop data (stoppedAt) 100 ms after the stop.
+check('charge stop: ChargeRun holds past the late prediction until stoppedAt arrives, then ChargeSlam from now - stoppedAt; it never goes back to the run',function()
+ local start,imp,lat,dt,rate=1000,.5,.1,1/60,1.25
+ local stopT=36/20;local stoppedAt=start+stopT;local final=20+12*stopT
+ local stop,last,oldEnd,first,slamAt,back=nil,0,nil,nil,nil,false
+ for k=0,180 do
+  local age=k*dt;local seen=age-lat
+  local length=seen>=stopT and final or 20+math.floor(math.max(0,12*seen)/.5)*.5
+  local predicted=imp+length/32
+  if not oldEnd and age>=imp and age>=predicted then oldEnd=age end -- the old client's switch
+  stop=P.chargeStop(stop,predicted,seen>=stopT and stoppedAt-start or nil,age)
+  local phase,slam=P.chargePhase(imp,stop,age,rate)
+  if phase<last then back=true end;last=phase
+  if phase==3 and not first then first,slamAt=age,slam end
+ end
+ return oldEnd~=nil and oldEnd<stopT and not back and first~=nil and first>=stopT+lat-1e-9 and first<stopT+lat+dt+1e-9
+  and near(slamAt,(start+first-stoppedAt)*rate) and near(stop,stopT)
+end)
+check('charge stop: with no stop data, the prediction counts only 0.75 s after it passes; a late longer length then never reopens the run',function()
+ local stop,last,back,latchedAt=nil,0,false,nil
+ for k=0,240 do
+  local age=k/60;local predicted=.5+(age<2.3 and 30 or 40)/32 -- 1.4375, then a late 1.75
+  stop=P.chargeStop(stop,predicted,nil,age)
+  local phase=P.chargePhase(.5,stop,age)
+  if phase<last then back=true end;last=phase
+  if stop and not latchedAt then latchedAt=age end
+ end
+ return not back and last==3 and near(stop,.5+30/32) and latchedAt>=.5+30/32+P.CHARGE_HOLD-1e-9 and latchedAt<.5+30/32+P.CHARGE_HOLD+1/60
+end)
+check('charge stop: a latched end only moves earlier (a later stop is ignored, an earlier one taken); still running inside the hold',function()
+ return P.chargeStop(1.4,1.2,1.6,2)==1.4 and P.chargeStop(1.4,1.2,1.3,2)==1.3 and P.chargeStop(nil,1.2,nil,1.5)==nil and P.chargeStop(nil,1.2,nil,1.95)==1.2
+  and P.chargeStop(nil,1.2,1.7,1.5)==1.7 and P.chargePhase(.5,1.7,1.5)==2 and P.chargePhase(.5,nil,9)==2 and P.chargePhase(.5,nil,.2)==1
+end)
 check('charge: the lane and finish published at 30 studs, redrawn for 40, equal what the server publishes at 40',function()
  local A=chargeAttack(30);X.laneTiming(HT,A);local d30=wire(A.data)
  A.length=40;X.laneTiming(HT,A);local d40=wire(A.data)
