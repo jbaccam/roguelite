@@ -413,3 +413,188 @@ local function airSpeed(character)
 end
 player.CharacterAdded:Connect(airSpeed)
 if player.Character then task.spawn(airSpeed,player.Character) end
+
+-- Melee dash (2026-10-03, play-test: "dash for melee based characters"): Brawlers and any class
+-- whose starting weapon is melee (CharacterStats.dashes) burst Dash.Distance studs the way they're
+-- moving (facing, when standing still), on the ground or in the air: Q, gamepad X or the DASH
+-- button. This body moves itself at once (its client owns its physics) and tells the server
+-- (RunAction 'Dash'), which checks the class, the cooldown and that the wave is on, then stamps
+-- DashAt for MovementGuard and the other screens. Example: 20 studs in 0.18 s is 111 studs/s,
+-- ready again 3 s later. No damage and no invulnerability.
+task.spawn(function()
+ local RS=game:GetService('ReplicatedStorage')
+ local Stats=require(combat:WaitForChild('CharacterStats'));local D=Stats.Dash
+ local runAction=combat:WaitForChild('RunAction',60)
+ if not D or not runAction then return end
+ local T=require(RS:WaitForChild('UITheme'))
+ local readyAt=0 -- os.clock() when this player's dash is ready again
+ -- A flat streak behind a dashing body: a camera-facing Trail between two root attachments.
+ local function streak(root)
+  local top=Instance.new('Attachment');top.Name='DashStreakTop';top.Position=Vector3.new(0,1.2,0);top.Parent=root
+  local low=Instance.new('Attachment');low.Name='DashStreakLow';low.Position=Vector3.new(0,-1.6,0);low.Parent=root
+  local t=Instance.new('Trail');t.Name='DashStreak';t.Attachment0=top;t.Attachment1=low;t.FaceCamera=true
+  t.Lifetime=.25;t.MinLength=.05;t.LightEmission=.6;t.LightInfluence=0
+  t.Color=ColorSequence.new(Color3.fromRGB(248,249,245),Color3.fromRGB(145,239,20))
+  t.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.3),NumberSequenceKeypoint.new(1,1)})
+  t.WidthScale=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(1,.25)})
+  t.Parent=visuals
+  task.delay(D.Seconds+.04,function() t.Enabled=false end)
+  for _,o in {t,top,low} do Debris:AddItem(o,D.Seconds+.35) end
+ end
+ -- Teammates' dashes streak when the server approves them (their sound: RogueliteSounds).
+ local function watch(p)
+  if p==player then return end
+  p:GetAttributeChangedSignal('DashAt'):Connect(function()
+   local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart');if root then streak(root) end
+  end)
+ end
+ for _,p in Players:GetPlayers() do watch(p) end
+ Players.PlayerAdded:Connect(watch)
+ -- The button shows: a run member mid-wave (or in the sandbox), standing, whose class or starter dashes.
+ local function allowed()
+  if player:GetAttribute('RunMember')~=true or player:GetAttribute('RunDown') or player:GetAttribute('RunResult')~=nil or player:GetAttribute('LobbyPreviewActive')==true then return false end
+  local run=RS:FindFirstChild('RogueliteRunState');local phase=run and run:GetAttribute('Phase')
+  if phase~='Combat' and phase~='Practice' then return false end
+  local own=states:FindFirstChild(tostring(player.UserId))
+  return Stats.dashes(own and own:GetAttribute('Class') or player:GetAttribute('RunClass'),Catalog.ById[player:GetAttribute('RunWeapon')])
+ end
+ -- Usable this moment: alive, not held (a pause or a boss entrance: GroundSpeed 0), not on the pause screen.
+ local function body()
+  local character=player.Character;local h=character and character:FindFirstChildOfClass('Humanoid')
+  local root=character and character:FindFirstChild('HumanoidRootPart')
+  if not h or not root or h.Health<=0 or player:GetAttribute('Paused') then return nil end
+  if (character:GetAttribute('GroundSpeed') or 1)<=0 or combat:GetAttribute('RunPaused')==true then return nil end
+  if (combat:GetAttribute('CinematicUntil') or 0)>workspace:GetServerTimeNow() then return nil end
+  local state=h:GetState()
+  if state==Enum.HumanoidStateType.Seated or state==Enum.HumanoidStateType.PlatformStanding or state==Enum.HumanoidStateType.Dead then return nil end
+  return h,root
+ end
+ local function dash()
+  if os.clock()<readyAt or not allowed() then return end
+  local h,root=body();if not root then return end
+  local attachment=root:FindFirstChild('RootAttachment') or root:FindFirstChildWhichIsA('Attachment');if not attachment then return end
+  local move=h.MoveDirection;local dir=Vector3.new(move.X,0,move.Z)
+  if dir.Magnitude<.1 then local look=root.CFrame.LookVector;dir=Vector3.new(look.X,0,look.Z) end
+  if dir.Magnitude<.1 then return end
+  dir=dir.Unit;readyAt=os.clock()+D.Cooldown
+  -- A world-plane LinearVelocity drives the burst (a velocity set once would lose to the Humanoid's
+  -- own walking); up and down stay free, so gravity and jumps carry on.
+  local push=Instance.new('LinearVelocity');push.Name='RogueliteDash';push.Attachment0=attachment
+  push.RelativeTo=Enum.ActuatorRelativeTo.World;push.VelocityConstraintMode=Enum.VelocityConstraintMode.Plane
+  push.PrimaryTangentAxis=Vector3.xAxis;push.SecondaryTangentAxis=Vector3.zAxis
+  push.PlaneVelocity=Vector2.new(dir.X,dir.Z)*(D.Distance/D.Seconds);push.MaxForce=math.huge;push.Parent=root
+  streak(root);T.sound('dash')
+  runAction:FireServer('Dash')
+  task.delay(D.Seconds,function()
+   push:Destroy()
+   -- Hand back running speed, not 111 studs/s, so the burst stops where it should (no slide).
+   if root.Parent and h.Health>0 then
+    local v=root.AssemblyLinearVelocity;root.AssemblyLinearVelocity=Vector3.new(dir.X*h.WalkSpeed,v.Y,dir.Z*h.WalkSpeed)
+   end
+  end)
+ end
+ Input.InputBegan:Connect(function(input,processed)
+  if processed or Input:GetFocusedTextBox() then return end
+  if input.KeyCode==Enum.KeyCode.Q or input.KeyCode==Enum.KeyCode.ButtonX then dash() end
+ end)
+ -- The DASH button: the Movement Speed wing (its level-up card art) on a lime face; charcoal with a
+ -- dark sweep draining down and the seconds left while it recharges; greyed while held. Bottom
+ -- right with its key (Q, or the pad's X) on keyboard and gamepad screens; beside the jump button
+ -- on touch screens. Below the HUD (DisplayOrder 19), so menus and the shop cover it.
+ local gui=Instance.new('ScreenGui');gui.Name='RogueliteDash';gui.ResetOnSpawn=false;gui.DisplayOrder=19;gui.Enabled=false
+ gui.ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets;gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+ gui.Parent=player:WaitForChild('PlayerGui')
+ local area=T.frame(gui,'SafeArea',0,0,0,0);area.Size=UDim2.fromScale(1,1)
+ local SIZE=76
+ local b=T.button(area,'DashButton','DASH',0,0,SIZE,SIZE,nil,false)
+ b.AnchorPoint=Vector2.new(.5,.5);b.Selectable=false;b:SetAttribute('NoClickSound',true) -- the whoosh is its sound
+ local scale=T.make('UIScale',b,{Scale=1})
+ local caption=b.Caption;caption.Position=UDim2.new(0,4,1,-27);caption.Size=UDim2.new(1,-8,0,22);caption.TextSize=18;caption.ZIndex=2
+ T.icon(b,'Icon',16,4,44,'rbxassetid://117216104224040').ZIndex=2 -- LevelUpCatalog's MoveSpeed wing
+ local sweep=T.make('Frame',b,{Name='Cooldown',AnchorPoint=Vector2.new(0,1),Position=UDim2.new(0,5,1,-5),Size=UDim2.new(1,-10,0,0),BackgroundColor3=T.Color.shade,BackgroundTransparency=.3,BorderSizePixel=0,ZIndex=3,Visible=false})
+ T.make('UICorner',sweep,{CornerRadius=UDim.new(0,8)})
+ local seconds=T.label(b,'Seconds','',0,0,0,0,30);seconds.Size=UDim2.fromScale(1,1);seconds.ZIndex=4;seconds.Visible=false
+ local key=T.make('Frame',b,{Name='Key',AnchorPoint=Vector2.new(.5,.5),Position=UDim2.new(1,-6,0,6),Size=UDim2.fromOffset(28,28),BackgroundColor3=T.Color.well,BorderSizePixel=0,ZIndex=5})
+ T.make('UICorner',key,{CornerRadius=UDim.new(0,7)});T.make('UIStroke',key,{Color=Color3.fromRGB(8,10,11),Thickness=2})
+ local keyText=T.label(key,'Text','Q',0,0,0,0,17);keyText.Size=UDim2.fromScale(1,1)
+ local keyPad=T.make('ImageLabel',key,{Name='Pad',BackgroundTransparency=1,Position=UDim2.fromOffset(2,2),Size=UDim2.new(1,-4,1,-4),ScaleType=Enum.ScaleType.Fit,Image='',Visible=false})
+ -- A finger or a click dashes on the press itself, not the release.
+ b.InputBegan:Connect(function(input)
+  if input.UserInputType==Enum.UserInputType.Touch or input.UserInputType==Enum.UserInputType.MouseButton1 then dash() end
+ end)
+ -- Input in use: the HUD's rule (RogueliteUI touchPlay), Roblox's preferred input where it has one.
+ local function prefers(kind,fallback)
+  local ok,yes=pcall(function() return Input.PreferredInput==Enum.PreferredInput[kind] end)
+  if ok then return yes end
+  return fallback()
+ end
+ local function touchPlay()
+  return prefers('Touch',function()
+   local last=Input:GetLastInputType()
+   if last==Enum.UserInputType.Touch then return true end
+   return (last==Enum.UserInputType.None or last==Enum.UserInputType.Focus) and Input.TouchEnabled and not Input.KeyboardEnabled
+  end)
+ end
+ local function padPlay() return prefers('Gamepad',function() return Input:GetLastInputType().Name:find('Gamepad')~=nil end) end
+ local function rectOf(o) local p=o.AbsolutePosition-area.AbsolutePosition;return {p.X,p.Y,p.X+o.AbsoluteSize.X,p.Y+o.AbsoluteSize.Y} end
+ -- Where it sits, in safe-area pixels. Touch: left of the jump button and a little higher, sized to
+ -- it (a 70 px phone jump button gets a 56 px dash, a 120 px tablet one 92). Otherwise the bottom
+ -- right corner at the HUD launchers' scale (.7-1.1). Then clear of the HUD's menu column and boss
+ -- bar: left of what sits on the right edge, above anything else.
+ local function layout()
+  local w,h=area.AbsoluteSize.X,area.AbsoluteSize.Y;if w<2 or h<2 then return end
+  local touch=touchPlay();local s,c
+  if touch then
+   local small=math.min(w,h)<=500
+   local jump=small and {w-95,h-90,w-25,h-20} or {w-170,h-210,w-50,h-90}
+   local touchGui=player.PlayerGui:FindFirstChild('TouchGui');local frame=touchGui and touchGui:FindFirstChild('TouchControlFrame')
+   local button=frame and frame:FindFirstChild('JumpButton')
+   if button and button:IsA('GuiObject') and button.Visible and button.AbsoluteSize.X>0 then jump=rectOf(button) end
+   local J=jump[3]-jump[1];s=math.clamp(J*.8,52,96)/SIZE
+   c=Vector2.new(jump[1]-10-SIZE*s/2,(jump[2]+jump[4])/2-J*.35)
+  else
+   s=math.clamp(math.min(w/1100,h/620)*T.setting('HudScale'),.7,1.1)
+   c=Vector2.new(w-16-SIZE*s/2,h-16-SIZE*s/2)
+  end
+  local half=SIZE*s/2+8;local list={}
+  local hud=player.PlayerGui:FindFirstChild('RogueliteHUD');local base=hud and hud:FindFirstChild('SafeArea');base=base and base:FindFirstChild('HUD')
+  for _,name in {'Menu','BossHealth'} do
+   local o=base and base:FindFirstChild(name)
+   if o and o.Visible and o.AbsoluteSize.X>0 then table.insert(list,rectOf(o)) end
+  end
+  for _=1,3 do
+   local hit
+   for _,r in list do if c.X+half>r[1] and c.X-half<r[3] and c.Y+half>r[2] and c.Y-half<r[4] then hit=r;break end end
+   if not hit then break end
+   c=hit[3]>=w-40 and Vector2.new(hit[1]-half,c.Y) or Vector2.new(c.X,hit[2]-half)
+  end
+  scale.Scale=s;b.Position=UDim2.fromOffset(c.X,c.Y)
+  local pad=not touch and padPlay()
+  key.Visible=not touch;keyText.Visible=not pad;keyPad.Visible=pad
+  if pad and keyPad.Image=='' then local ok,img=pcall(function() return Input:GetImageForKeyCode(Enum.KeyCode.ButtonX) end);keyPad.Image=ok and img or '' end
+ end
+ area:GetPropertyChangedSignal('AbsoluteSize'):Connect(layout)
+ Input.LastInputTypeChanged:Connect(function() if gui.Enabled then layout() end end)
+ player:GetAttributeChangedSignal('Setting_HudScale'):Connect(layout)
+ -- Shown or hidden, ready or not, five times a second (the layout follows the HUD once a second);
+ -- the sweep every frame while it recharges.
+ local since,ticks=1,0
+ RunService.RenderStepped:Connect(function(dt)
+  since+=dt
+  if since>=.2 then
+   since=0;ticks+=1
+   local on=allowed()
+   if gui.Enabled~=on then gui.Enabled=on;if on then layout() end
+   elseif on and ticks%5==0 then layout() end
+   if on then local ok=body()~=nil;if b.Interactable~=ok then b.Interactable=ok end end
+  end
+  if not gui.Enabled then return end
+  local left=readyAt-os.clock();local cooling=left>0
+  if b:GetAttribute('Neutral')~=cooling then T.setPrimary(b,not cooling) end
+  sweep.Visible=cooling;seconds.Visible=cooling
+  if cooling then
+   local f=math.clamp(left/D.Cooldown,0,1)
+   sweep.Size=UDim2.new(1,-10,f,-10*f);seconds.Text=tostring(math.ceil(left))
+  end
+ end)
+end)

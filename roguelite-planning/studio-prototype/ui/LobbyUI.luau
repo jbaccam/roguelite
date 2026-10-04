@@ -170,7 +170,7 @@ function L.mount(player)
    end)
   end})
  local goals=tracker.Root
- -- Right edge: store, rewards, settings, practice-dummy attacks switch.
+ -- Right edge: store, skills, eggs, settings, practice-dummy attacks switch.
  local right,rightScale=scaled('Right',Vector2.new(1,.5),UDim2.new(1,-12,.45,0),Vector2.new(96,592))
  -- Centred: the column is tall enough for the developers' ADMIN button; without it the buttons
  -- sit centred on the same spot instead of moving up.
@@ -178,7 +178,9 @@ function L.mount(player)
  local rightList=T.make('UIListLayout',right,{Padding=UDim.new(0,10),HorizontalAlignment=Enum.HorizontalAlignment.Center,VerticalAlignment=Enum.VerticalAlignment.Center,SortOrder=Enum.SortOrder.LayoutOrder})
  local store=T.iconButton(right,'Store','store','STORE',78,function() open('Store') end);store.LayoutOrder=1
  local skills=T.iconButton(right,'Skills',SkillTree.Icons.Hud,'SKILLS',78,function() open('Skills') end);skills.LayoutOrder=2
- local awards=T.iconButton(right,'Awards','achievements','REWARDS',78,function() open('Quests','Achievements') end);awards.LayoutOrder=3
+ -- REWARDS (Quests window, Achievements tab) is gone (user, 2026-10-03: "they both lead to the same
+ -- place"); QUESTS and OPEN QUESTS still open it. Its slot (LayoutOrder 3) is now EGGS, added once
+ -- the egg screen loads (below).
  local settings=T.iconButton(right,'Settings','settings','SETTINGS',64,function() open('Settings') end);settings.LayoutOrder=4
  -- LayoutOrder 6 (after ATTACKS) is the developers' ADMIN button, added by AdminPanel.client (ADMIN_PANEL.md).
  -- Practice dummies: weapons auto-attack them until switched off. The server owns
@@ -268,6 +270,22 @@ function L.mount(player)
  local leave=T.button(banner,'Leave','LEAVE',300,14,96,46,function() local r=workspace:FindFirstChild('RogueliteLobby') and workspace.RogueliteLobby:FindFirstChild('LeaveQueue');if r then r:FireServer() end end,true)
  leave.Caption.TextSize=18;leave.Caption.TextColor3=C.negative
 
+ -- SKILLS shows "2 TO BUY" on a lime pill (user, 2026-10-03: the bare red number read as an alert,
+ -- "indicator for skill tree means what?"): how many skills your emeralds buy right now. The Skill
+ -- Tree uses the same pill and puts lime price tags on exactly those skills. Hidden at 0.
+ local function buyChip(button,n)
+  local chip=button:FindFirstChild('BuyChip')
+  if not chip then
+   chip=T.make('Frame',button,{Name='BuyChip',AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,-8),Size=UDim2.fromOffset(80,24),BackgroundColor3=C.lime,BorderSizePixel=0,ZIndex=5})
+   T.make('UICorner',chip,{CornerRadius=UDim.new(1,0)});T.make('UIStroke',chip,{Color=C.ink,Thickness=2})
+   local l=T.label(chip,'Text','',0,0,0,0,16,C.ink);l.Size=UDim2.fromScale(1,1);l.TextStrokeTransparency=1;l.TextWrapped=false;l.ZIndex=6
+  end
+  chip.Visible=n>0
+  local text=n..' TO BUY'
+  chip.Text.Text=text
+  -- 15% wider than the measured text: FredokaOne draws a little wider at small HUD scales.
+  chip.Size=UDim2.fromOffset(math.ceil(game:GetService('TextService'):GetTextSize(text,16,T.Font,Vector2.new(400,40)).X*1.15)+16,24)
+ end
  local profile
  local function refreshHud()
   profile=L.profile(player)
@@ -278,12 +296,11 @@ function L.mount(player)
   local ready=0;for _,n in profile.chests do ready+=n end
   T.badge(bottomButtons.Chests,ready>0 and tostring(ready) or nil)
   local buyable=SkillTree.affordable(SkillTree.parse(player:GetAttribute('ProfileSkills')),profile.gems)
-  T.badge(skills,buyable>0 and tostring(buyable) or nil)
+  buyChip(skills,buyable)
   -- Tracker (plan K): today's quests and the streak; badges count rewards waiting for CLAIM.
   local quests=profile.quests;tracker.update(quests)
   local claim=quests.claimable or 0
   T.badge(bottomButtons.Quests,claim>0 and tostring(claim) or nil)
-  T.badge(awards,claim>0 and tostring(claim) or nil)
   T.badge(tracker.OpenButton,claim>0 and tostring(claim) or nil)
  end
 
@@ -338,7 +355,13 @@ function L.mount(player)
     bannerSub.Text=(mapName or '')..'  ·  '..players
    elseif launchAt then
     bannerTitle.Text='STARTING IN '..math.max(0,math.ceil(launchAt-workspace:GetServerTimeNow()));bannerTitle.TextColor3=C.lime
-    bannerSub.Text=(mapName or '')..'  ·  '..players..'  ·  '..self.selection.class
+    -- The class the server locked in (RunClass), not the one being browsed: that one used to show
+    -- here and looked locked when it wasn't (2026-10-03). Not locked in yet: say how. Others still
+    -- picking hold the countdown, so say that too. Example: "Pine Valley · 2 / 2 · private · Gunner · 1 picking".
+    local picking=portal and portal:GetAttribute('Picking') or 0
+    if player:GetAttribute('LobbyLockedIn')==true then
+     bannerSub.Text=(mapName or '')..'  ·  '..players..'  ·  '..(player:GetAttribute('RunClass') or self.selection.class)..(picking>0 and '  ·  '..picking..' picking' or '')
+    else bannerSub.Text='PLAY: pick your class and LOCK IN  ·  '..players end
    else
     bannerTitle.Text='PORTAL '..q..'  ·  '..count..' / '..cap
     bannerSub.Text=portal and portal:GetAttribute('HostId')==player.UserId and 'Pick a map, then press START' or 'Waiting for the host to pick a map'
@@ -359,7 +382,8 @@ function L.mount(player)
   win=build(arg)
   if win then
    local mine=win
-   win.Root.Destroying:Connect(function() if win==mine then win=nil;self.current=nil;screen:SetAttribute('OpenWindow',nil) end end)
+   -- Closing any window self-heals the regular camera unless a stage still holds it (2026-10-03).
+   win.Root.Destroying:Connect(function() if win==mine then win=nil;self.current=nil;screen:SetAttribute('OpenWindow',nil) end;task.defer(T.cameraHeal) end)
    self.current=name;screen:SetAttribute('OpenWindow',name)
   end
  end
@@ -525,7 +549,13 @@ function L.mount(player)
    openWindow=function(name,arg) task.defer(open,name,arg) end,
    onVisible=function(visible) hud.Visible=visible end,
   })
-  if ok then self.EggScreen=eggScreen;builders.Eggs=function() return eggScreen.Open() end
+  if ok then
+   self.EggScreen=eggScreen;builders.Eggs=function() return eggScreen.Open() end
+   -- EGGS on the right column, in REWARDS' old slot (user, 2026-10-03: "it was too hard to find the
+   -- eggs"): opens the same screen as walking up to the merchant, from anywhere in the lobby. Not in
+   -- the bottom bar: a 6th button there pushes PLAY off centre and onto the phone jump button.
+   local okIcon,EggConfig=pcall(require,combat:WaitForChild('EggConfig'))
+   local eggs=T.iconButton(right,'Eggs',okIcon and EggConfig.Icon or 'chest','EGGS',78,function() open('Eggs') end);eggs.LayoutOrder=3
   else warn('LobbyUI: egg screen failed:',eggScreen) end
  end
 
@@ -557,14 +587,16 @@ function L.mount(player)
   lastQueue=q
   if q then
    if win then win.Close() end
-   -- No setup screen on a pad whose countdown is already running: this player just pressed START
-   -- (PLAY puts them on the pad it starts) or their party took them along, so there's nothing to
-   -- choose and the banner shows the countdown. It used to reopen with READY, which looked like a
-   -- second step (2026-10-03: "i have to click ready twice").
+   -- No setup screen for the host who just pressed START (PLAY puts them on the pad it starts; the
+   -- server marks them LobbyLockedIn): it used to reopen with READY, which looked like a second step
+   -- (2026-10-03: "i have to click ready twice"). Everyone else gets the class step, also on a pad
+   -- already counting down: party members pulled along by START used to get none (2026-10-03:
+   -- "class selection not showing for other players who get queued in via party"). The countdown
+   -- waits for their LOCK IN (QueueState).
    task.delay(.25,function()
     if player:GetAttribute('LobbyQueue')~=q then return end
     local portal=myPortal();local phase=portal and portal:GetAttribute('QueueState')
-    if phase=='Counting' or phase=='Launching' or (setup.startedAt and os.clock()-setup.startedAt<5) then return end
+    if phase=='Launching' or player:GetAttribute('LobbyLockedIn')==true or (setup.startedAt and os.clock()-setup.startedAt<5) then return end
     local mode=padMode();if mode then setup.Open(mode) end
    end)
   elseif setup.mode=='Host' or setup.mode=='Member' then setup.Close() end
@@ -656,10 +688,20 @@ function L.mount(player)
   task.defer(function() pendingRedraw=false;if win and self.redraw then self.redraw() end end)
  end
  for _,attr in {'ProfileLoaded','ProfileGems','ProfileGemsEarned','ProfileClasses','ProfileWeapons','ProfilePity','ProfilePicks','ProfileChests','ProfileStarterPack','ProfileVIP','ProfileBundles','PaidRandomRestricted','ProfileSkills','ProfileQuests'} do player:GetAttributeChangedSignal(attr):Connect(profileChanged) end
- combat:WaitForChild('PurchaseResult').OnClientEvent:Connect(function(_,ok,message)
+ combat:WaitForChild('PurchaseResult').OnClientEvent:Connect(function(key,ok,message,delivered)
   if screen.Enabled and type(message)=='string' then
    if ok then T.sound('ui_purchase') end
-   T.toast(screen,message,ok and C.lime or C.negative)
+   -- A store item that arrived as itself plays its contents reveal instead of the toast
+   -- (StoreUI.reveal, 2026-10-03); one paid out as emeralds ("... emeralds added instead") just
+   -- says so. Protected: a fault in the reveal still shows the toast.
+   local shown=false
+   if ok and (delivered==true or not message:find('instead',1,true)) then
+    local okR,gui=pcall(StoreUI.reveal,player:WaitForChild('PlayerGui'),key,{signature=L.Signature,pick=self.selection.godlyPick,hud=screen,
+     note=message:find('^Studio test') and message or nil})
+    if not okR then warn('LobbyUI: purchase reveal failed:',gui) end
+    shown=okR and gui~=nil
+   end
+   if not shown then T.toast(screen,message,ok and C.lime or C.negative) end
   end
  end)
  -- Party invites: a card under the toast line with ACCEPT / DECLINE until it expires, and a badge

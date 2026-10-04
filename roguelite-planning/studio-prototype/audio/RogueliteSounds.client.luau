@@ -108,6 +108,9 @@ local MOB_DEFAULT={'mob_zombie',.85}
 
 -- Named cues from UI modules (T.sound) and how loud each plays.
 local CUE={ui_error=.5,ui_equip=.6,ui_purchase=.6,ui_upgrade=.6}
+-- Named cues that reuse a kit sound, pitched: {sound, volume, pitch}. dash: the melee dash's whoosh
+-- (2026-10-03), the light swing played low and airy.
+local ALIAS={dash={'swing_light',.55,.7}}
 
 -- At most this many sounds of a kind start within a quarter second, so hordes stay crisp.
 local LIMIT={weapon=12,mob=8,impact=6,ui=4,player=2,pickup=10}
@@ -434,5 +437,59 @@ if not cue then
  cue=Instance.new('BindableEvent');cue.Name='RogueliteSoundCue';cue.Parent=RS
 end
 cue.Event:Connect(function(name)
+ local a=ALIAS[name];if a then play(a[1],'player',a[2],a[3],nil,.05);return end
  if CUE[name] then play(name,'ui',CUE[name],1,nil,.02) end
+end)
+-- Your own dash whooshes the moment you press it (RogueliteCombat.client fires the 'dash' cue); a
+-- teammate's when the server approves it (their DashAt), at them and quieter.
+local function watchDash(p)
+ if p==player then return end
+ p:GetAttributeChangedSignal('DashAt'):Connect(function()
+  local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
+  if root then play(ALIAS.dash[1],'impact',ALIAS.dash[2]*.6,ALIAS.dash[3],root.Position,.05) end
+ end)
+end
+for _,p in Players:GetPlayers() do watchDash(p) end
+Players.PlayerAdded:Connect(watchDash)
+
+-- Handyman turret (HANDYMAN_TURRET.md, 2026-10-03), from the same kit: each nail is the Nail Gun's
+-- pistol pop played higher and quieter (the first 'Fly' row of each turret projectile, id 'Turret',
+-- on Shot); building or moving it (BuiltAt) is a heavy clunk with a metal tick; a tier up (Tier)
+-- adds the upgrade chime. Positioned at the turret; your own turret's nails a little louder.
+task.spawn(function()
+ local heard,prunedAt={},os.clock()
+ local function row(origin,_,kind,id,_,_,_,_,ownerId,_,_,_,_,key)
+  if kind~='Fly' or id~='Turret' or key==nil or heard[key] then return end
+  heard[key]=os.clock()
+  if typeof(origin)=='Vector3' then play('shot_pistol','weapon',ownerId==player.UserId and .2 or .12,1.75,origin,.06) end
+ end
+ combat:WaitForChild('Shot').OnClientEvent:Connect(function(a,b,...)
+  if a==Wire.Marker then for _,r in ipairs(b) do row(Wire.unpack(r)) end else row(a,b,...) end
+  local now=os.clock()
+  if now-prunedAt>2 then prunedAt=now;for k,t in heard do if now-t>2 then heard[k]=nil end end end
+ end)
+ local function watch(f)
+  local tier=f:GetAttribute('Tier')
+  local function at() local p=f:GetAttribute('Position');return typeof(p)=='Vector3' and p+Vector3.yAxis or nil end
+  local function clunk()
+   local p=at();if not p then return end
+   play('hit_thud','impact',.45,1.2,p,.05);play('hit_blunt','impact',.25,1.6,p,.05)
+  end
+  f:GetAttributeChangedSignal('BuiltAt'):Connect(clunk)
+  -- A new turret arrives with BuiltAt already set.
+  local built=f:GetAttribute('BuiltAt')
+  if type(built)=='number' and workspace:GetServerTimeNow()-built<1 then clunk() end
+  f:GetAttributeChangedSignal('Tier'):Connect(function()
+   local now=f:GetAttribute('Tier')
+   if type(now)=='number' and type(tier)=='number' and now>tier then local p=at();if p then play('ui_upgrade','impact',.4,1.1,p,.02);play('hit_blunt','impact',.25,1.3,p,.05) end end
+   tier=now
+  end)
+ end
+ local function hook(folder)
+  for _,f in folder:GetChildren() do watch(f) end
+  folder.ChildAdded:Connect(watch)
+ end
+ local existing=workspace:FindFirstChild('RogueliteTurrets')
+ if existing then hook(existing) end
+ workspace.ChildAdded:Connect(function(c) if c.Name=='RogueliteTurrets' and c:IsA('Folder') then hook(c) end end)
 end)

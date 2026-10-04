@@ -288,13 +288,14 @@ function M.new(player,h,refresh)
   local limit=Instance.new('UITextSizeConstraint');limit.MinTextSize=math.min(20,minText);limit.MaxTextSize=20;limit.Parent=caption
   return b
  end
- -- The complete price (text + crystal) is centered as one measured group.
- local function price(parent,value,prefix,size,color)
+ -- The complete price (text + crystal) is centered as one measured group. icon: another image in
+ -- place of the crystal (the crystal bag).
+ local function price(parent,value,prefix,size,color,icon)
   size=math.floor(math.max(9,math.min(size,(parent.Size.X.Offset-20)/(#((prefix or '')..tostring(value))*.65+1.2))))
   local group=Instance.new('Frame');group.Name='PriceGroup';group.BackgroundTransparency=1;group.AutomaticSize=Enum.AutomaticSize.X;group.Size=UDim2.fromOffset(0,size+4);group.AnchorPoint=Vector2.new(.5,.5);group.Position=UDim2.fromScale(.5,.5);group.Parent=parent
   local layout=Instance.new('UIListLayout');layout.FillDirection=Enum.FillDirection.Horizontal;layout.VerticalAlignment=Enum.VerticalAlignment.Center;layout.Padding=UDim.new(0,6);layout.Parent=group
   local amount=text(group,'Price',(prefix or '')..tostring(value),0,0,0,size+4,size,color);amount.Font=Enum.Font.FredokaOne;amount.UITextSizeConstraint:Destroy();amount.TextScaled=false;amount.TextWrapped=false;amount.AutomaticSize=Enum.AutomaticSize.None;amount.Size=UDim2.fromOffset(math.ceil(game:GetService('TextService'):GetTextSize(amount.Text,size,Enum.Font.FredokaOne,Vector2.new(10000,1000)).X)+4,size+8);amount.TextStrokeTransparency=.4;amount.LayoutOrder=1
-  local crystal=shard(group,0,0,size+2);crystal.LayoutOrder=2
+  local crystal=icon and T.icon(group,'BagIcon',0,0,size+2,icon) or shard(group,0,0,size+2);crystal.LayoutOrder=2
   return group
  end
  local function heading(p,n,t,x,y,w,ht,size,color)
@@ -346,6 +347,34 @@ function M.new(player,h,refresh)
    local l=text(p,'WeaponStat'..i,string.format('<font color="#EADDA7">%s:</font> <font color="#%02X%02X%02X">%s</font>',r[1],math.round(color.R*255),math.round(color.G*255),math.round(color.B*255),r[2]),x,y+(i-1)*24,w,24,19)
    l.RichText=true
   end
+  return #rows*24 -- the height used, so whatever comes next starts below it
+ end
+ -- The weapon's own traits in one line: 'Projectiles: 2 · Pierce: 1 · Ignites', '' when none. A
+ -- slow shows its real numbers, as CombatEffectsService applies them (the weapon's own slow,
+ -- WeaponCatalog.SlowById, or your slow stats, whichever is bigger): Medusa 'Slows 35% for 2 s'.
+ local function traitLine(base,tier)
+  local s=Stats.read(state);local d=Stats.weapon(base,s,state:GetAttribute('Class'),tier)
+  local traits={};if d.projectileCount>1 then table.insert(traits,'Projectiles: '..d.projectileCount) end;if d.nativePierce>0 then table.insert(traits,'Pierce: '..d.nativePierce) end;if d.nativeBounce>0 then table.insert(traits,'Bounce: '..d.nativeBounce) end
+  local slowText
+  if d.slow>0 then
+   local pct=math.min(70,math.max(s.SlowStrength,d.slowStrength or 0));local secs=math.max(s.SlowDuration,d.slowFor or 0)*Stats.mult(s.Duration)
+   slowText=string.format('Slows %d%% for %s s',math.round(pct),(string.format('%.1f',secs):gsub('%.0$','')))
+  end
+  if d.burn>0 then table.insert(traits,'Ignites') elseif d.poison>0 then table.insert(traits,'Poisons') elseif slowText then table.insert(traits,slowText) elseif d.lightning then table.insert(traits,'Lightning') end
+  return table.concat(traits,' · ')
+ end
+ -- "Works with" (user, 2026-10-03: which of my weapons does this item affect?) for items only some
+ -- weapons use, from the server's own rule (ShopCatalog.worksWith -> CharacterStats.usesStat).
+ -- Green 'Works with: Glock, Magic Staff', 'Works with all your weapons', or a red 'None of your
+ -- weapons use this' (after selling the last one). nil for items that help every build.
+ local function worksLine(entry,data)
+  local ids,unique,n={},{},0
+  for _,w in data.weapons do if w.id~='' then table.insert(ids,w.id);if not unique[w.id] then unique[w.id]=true;n+=1 end end end
+  local works=Catalog.worksWith(entry,ids,Stats.read(state));if not works then return nil end
+  if #works==0 then return 'None of your weapons use this',red end
+  if n>1 and #works==n then return 'Works with all your weapons',green end
+  local names={};for _,id in works do table.insert(names,Weapons.ById[id].name) end
+  return 'Works with: '..table.concat(names,', '),green
  end
  function self:debug(parent,width)
   local data=self:snapshot();if not data or not data.debug then return 0 end
@@ -392,6 +421,8 @@ function M.new(player,h,refresh)
   local inset=Instance.new('UIPadding');inset.PaddingLeft=UDim.new(0,6);inset.PaddingTop=UDim.new(0,6);inset.Parent=left
   -- Under the stats: LEAVE RUN (between waves; tap twice) above GO.
   local startH=th(62);local leaveH=th(40);local statsH=math.max(90,ht-startH-leaveH-18)
+  -- A Handyman's UPGRADE TURRET (data.turret, HANDYMAN_TURRET.md) takes a row above LEAVE RUN.
+  local turretH=data.turret and th(50) or 0;if turretH>0 then statsH=math.max(90,statsH-turretH-8) end
   local stats=surface(root,'StatsColumn',leftW+gap+12,0,side,statsH)
   local secondary=self.statTab=='Secondary'
   local statTitle=heading(stats,'Title','Stats',12,10,side-24,34,28);statTitle.TextXAlignment=Enum.TextXAlignment.Center
@@ -431,7 +462,6 @@ function M.new(player,h,refresh)
   -- Past the win (RogueliteRunState.Won), the shop is Endless's.
   local runState=RS:FindFirstChild('RogueliteRunState');local won=runState~=nil and runState:GetAttribute('Won')==true
   heading(left,'ShopTitle',won and ('Endless (Wave '..data.wave..')') or ('Shop (Wave '..data.wave..')'),0,0,leftW*(narrow and .62 or .39),46,30,won and T.Color.gold or nil)
-  local balance=Instance.new('Frame');balance.Name='Shards';balance.BackgroundTransparency=1;balance.Position=UDim2.fromOffset(leftW*(narrow and .65 or .40),0);balance.Size=UDim2.fromOffset(leftW*(narrow and .35 or .14),46);balance.Parent=left;price(balance,data.shards,'',leftW<500 and 23 or 32,white)
   -- Robux reroll sits beside the shard reroll (hidden where paid random items are restricted).
   local paid=not player:GetAttribute('PaidRandomRestricted')
   local robuxW=paid and 118 or 0
@@ -454,8 +484,40 @@ function M.new(player,h,refresh)
    local note=text(left,'RerollOdds',M.oddsLine('Reroll odds per offer',E.tierOdds(data.wave,luck)),leftW-nw,narrow and 58+rerollH or rerollH+5,nw,narrow and 18 or 20,narrow and 13 or 15,cream)
    note.RichText=true;note.TextXAlignment=narrow and Enum.TextXAlignment.Left or Enum.TextXAlignment.Right
   end
+  -- Crystals, and right beside them the crystal bag (Brotato's material bag, user 2026-10-03): what
+  -- was left on the ground when the last wave ended. Shown only while it holds some (an empty bag
+  -- hides), with one plain caption line. Example: '439 [crystal]  30 [bag]'. Between the title and
+  -- the reroll buttons; each amount sized by price()'s own fit rule, so both always fit.
+  local bag=data.baggedShards or 0
+  local bx0=leftW*(narrow and .65 or .40)
+  local function shardsBox(name,x,width,value,size,color,icon)
+   local f=Instance.new('Frame');f.Name=name;f.BackgroundTransparency=1;f.Position=UDim2.fromOffset(x,0);f.Size=UDim2.fromOffset(width,46);f.Parent=left
+   price(f,value,'',size,color,icon);return f
+  end
+  local bagRow=0 -- extra layout px a caption row adds above the cards
+  if bag<=0 then shardsBox('Shards',bx0,leftW*(narrow and .35 or .14),data.shards,narrow and 23 or 32,white)
+  else
+   local bx1=narrow and leftW or math.max(bx0+leftW*.14,leftW-rerollW-(paid and robuxW+8 or 0)-8)
+   local a,b=#tostring(data.shards)*.65+1.2,#tostring(bag)*.65+1.2
+   local ss=math.max(12,math.min(narrow and 23 or 32,math.floor((bx1-bx0-44)/(a+b))))
+   local sw,bw=20+ss*a,20+ss*b
+   local x0=narrow and bx0+math.max(0,(bx1-bx0-sw-bw-4)/2) or bx0
+   shardsBox('Shards',x0,sw,data.shards,ss,white)
+   shardsBox('Bag',x0+sw+4,bw,bag,ss,cream,T.Asset.shardBag)
+   -- The caption: under the title when one line fits there (wide), else its own row above the cards.
+   local caption="Missed crystals. Your next pickups pay double until it's empty."
+   local cw=narrow and leftW or (paid and leftW-math.min(leftW*.6,560)-12 or leftW)
+   local fs=math.max(14,minText)
+   local chH=math.ceil(TS:GetTextSize(caption,fs,T.Body,Vector2.new(math.max(40,cw-6),1000)).Y)+4
+   if not narrow and chH<=26 then text(left,'BagNote',caption,0,48,cw,26,fs,cream)
+   else
+    if not narrow then cw=leftW;chH=math.ceil(TS:GetTextSize(caption,fs,T.Body,Vector2.new(cw-6,1000)).Y)+4 end
+    text(left,'BagNote',caption,0,narrow and 78+rerollH or math.max(76,rerollH+30),cw,chH,fs,cream)
+    bagRow=chH+6
+   end
+  end
   -- Phones (tap>0) keep four columns only when each card is still 240 wide; else two rows of two.
-  local top=narrow and 78+rerollH or math.max(76,rerollH+30);local cols=leftW>=(tap>0 and 1000 or 660) and 4 or leftW>=420 and 2 or 1;local cardW=(leftW-(cols-1)*12)/cols
+  local top=(narrow and 78+rerollH or math.max(76,rerollH+30))+bagRow;local cols=leftW>=(tap>0 and 1000 or 660) and 4 or leftW>=420 and 2 or 1;local cardW=(leftW-(cols-1)*12)/cols
   local buyH,lockH=th(43),th(34) -- a taller Buy makes the card taller by the same amount
   local cardH=math.max(310+buyH-43,math.min(L.CardHeight,ht-top-inventoryH-lockH-38))
   if not inventoryOnly then
@@ -468,14 +530,15 @@ function M.new(player,h,refresh)
      heading(card,'Name',entry.name..(entry.weaponId and entry.tier>1 and (' '..({'I','II','III','IV'})[entry.tier]) or ''),86,12,cardW-98,43,22,tiers[entry.tier])
      if not entry.weaponId then text(card,'Kind',entry.kind..(#entry.tags>0 and ' · '..entry.tags[1] or ''),86,56,cardW-98,22,17,cream) end
      if entry.weaponId then
-      weaponStats(card,Weapons.ById[entry.weaponId],entry.tier,14,98,cardW-28)
-      classFitRow(card,Weapons.ById[entry.weaponId],86,56,cardW-98,26,14,197,cardW-28,24)
-      local d=Stats.weapon(Weapons.ById[entry.weaponId],Stats.read(state),state:GetAttribute('Class'),entry.tier)
-      local traits={};if d.projectileCount>1 then table.insert(traits,'Projectiles: '..d.projectileCount) end;if d.nativePierce>0 then table.insert(traits,'Pierce: '..d.nativePierce) end;if d.nativeBounce>0 then table.insert(traits,'Bounce: '..d.nativeBounce) end
-      if d.burn>0 then table.insert(traits,'Ignites') elseif d.poison>0 then table.insert(traits,'Poisons') elseif d.slow>0 then table.insert(traits,'Slows') elseif d.lightning then table.insert(traits,'Lightning') end
-      text(card,'Traits',table.concat(traits,' · '),14,225,cardW-28,30,16,tiers[entry.tier])
+      -- Stat lines, then the fit bar under them, then the traits (the bar follows the lines' height).
+      local barY=98+weaponStats(card,Weapons.ById[entry.weaponId],entry.tier,14,98,cardW-28)+3
+      classFitRow(card,Weapons.ById[entry.weaponId],86,56,cardW-98,26,14,barY,cardW-28,24)
+      text(card,'Traits',traitLine(Weapons.ById[entry.weaponId],entry.tier),14,barY+28,cardW-28,22,16,tiers[entry.tier])
      else
       local used=effects(card,entry,14,98,cardW-28)
+      -- Which of your weapons it works with, for items only some weapons use (worksLine).
+      local works,wc=worksLine(entry,data)
+      if works then text(card,'WorksWith',works,14,102+used,cardW-28,40,17,wc);used+=44 end
       text(card,'Description',entry.description,14,110+used,cardW-28,math.max(40,cardH-185-used-(buyH-43)),18)
      end
      local bw=math.min(136,cardW-32)
@@ -525,19 +588,33 @@ function M.new(player,h,refresh)
   end
   top+=math.max(inventoryH,40+math.ceil(shown/3)*(slotSize+8))
   -- LEAVE RUN ends the run for this player with what it has paid (RogueliteMeta), then the results.
-  -- The first tap arms it for 3 s and shows what they keep; the second leaves.
-  local armed=self.leaveArmed and os.clock()-self.leaveArmed<3
-  local keep=player:GetAttribute('RunEmeralds') or 0
-  local leave=btn(root,'LeaveRun',armed and ('LEAVE? KEEP '..keep..' EMERALDS') or 'LEAVE RUN',leftW+gap+12,statsH+10,side,leaveH,function()
-   if self.leaveArmed and os.clock()-self.leaveArmed<3 then self.leaveArmed=nil;combat.RunAction:FireServer('LeaveRun');return end
-   self.leaveArmed=os.clock();refresh()
-   task.delay(3.05,function() if self.leaveArmed and os.clock()-self.leaveArmed>=3 then self.leaveArmed=nil;refresh() end end)
+  -- One tap opens the confirm popup shared with the pause menu and the death screen ("Leave the run?
+  -- You keep 340 emeralds." STAY / LEAVE; UITheme.leaveConfirm, 2026-10-03). It sits on the HUD's
+  -- ScreenGui, so shop refreshes keep it, and it closes itself when the next wave starts.
+  local leave=btn(root,'LeaveRun','LEAVE RUN',leftW+gap+12,statsH+10,side,leaveH,function()
+   local screen=root:FindFirstAncestorOfClass('ScreenGui')
+   if self.leaveConfirm or not screen then return end
+   local runState=RS:FindFirstChild('RogueliteRunState')
+   self.leaveConfirm=T.leaveConfirm(screen,{keep=player:GetAttribute('RunEmeralds'),onClose=function() self.leaveConfirm=nil end,
+    closeOn={runState and runState:GetAttributeChangedSignal('Phase')},closeIf=function() return runState==nil or runState:GetAttribute('Phase')~='Shop' end})
   end,true)
   leave.Caption.TextColor3=red;leave.Caption.UITextSizeConstraint.MaxTextSize=18
   leave.Interactable=data.phase=='Shop'
   local start=btn(root,'StartWave',data.ready and 'READY · WAITING' or 'GO (Wave '..data.wave..')',leftW+gap+12,statsH+18+leaveH,side,startH,function() self:send('Start') end)
   start.Caption.UITextSizeConstraint.MaxTextSize=22
   if data.phase~='Shop' then start.Caption.Text='WAVE IN PROGRESS';start.Interactable=false end
+  -- READY 2/4 under GO in multiplayer (user, 2026-10-03): living run members who pressed GO, out of
+  -- all living ones (ShopService.publishReady: RogueliteRunState ShopReady / ShopPlayers). Kept live
+  -- by the timer loop below; hidden solo, where the caption keeps the whole button.
+  local readyLine=T.label(start,'ReadyCount','',8,0,0,0,16,cream);readyLine.Visible=false
+  readyLine.Position=UDim2.new(0,8,.55,0);readyLine.Size=UDim2.new(1,-16,.45,-4);readyLine.TextStrokeTransparency=.3
+  local function showReady()
+   local n,total=runState and runState:GetAttribute('ShopReady'),runState and runState:GetAttribute('ShopPlayers')
+   local on=data.phase=='Shop' and type(n)=='number' and type(total)=='number' and total>1
+   readyLine.Text=on and ('READY '..n..'/'..total) or '';readyLine.Visible=on
+   start.Caption.Size=on and UDim2.new(1,-16,.55,-4) or UDim2.new(1,-16,1,-8)
+  end
+  showReady()
   -- The shop timer: the next wave starts on its own when it runs out, even if not everyone is ready.
   if data.phase=='Shop' then
    local label=start.Caption.Text
@@ -545,9 +622,21 @@ function M.new(player,h,refresh)
     while start.Parent do
      local left=M.shopSecondsLeft()
      start.Caption.Text=left and (label..'  ·  '..M.clock(left)) or label
+     showReady()
      task.wait(.5)
     end
    end)
+  end
+  -- UPGRADE TURRET (Handyman only, HANDYMAN_TURRET.md): 'TURRET → II · 32' with the crystal, between
+  -- the stats and LEAVE RUN, which move down one row. It sends the tier it shows; ShopService checks
+  -- the class, the tier and the price again.
+  if turretH>0 then
+   leave.Position+=UDim2.fromOffset(0,turretH+8);start.Position+=UDim2.fromOffset(0,turretH+8)
+   local t=data.turret
+   local tb=btn(root,'UpgradeTurret','',leftW+gap+12,statsH+10,side,turretH,function() T.sound('ui_upgrade');self:send('UpgradeTurret',t.tier) end)
+   if t.next then price(tb,t.price,'TURRET → '..T.Roman[t.next]..' · ',20,data.shards>=t.price and white or red)
+   else tb.Caption.Text='TURRET · TIER IV' end
+   tb.Interactable=t.next~=nil and data.shards>=(t.price or math.huge) and data.phase=='Shop'
   end
   left.CanvasSize=UDim2.fromOffset(0,top+12)
   left.ScrollBarThickness=top+12>ht+1 and 3 or 0
@@ -558,30 +647,52 @@ function M.new(player,h,refresh)
     dim.Activated:Connect(function() self.selected=nil;refresh() end)
     -- Combine/Sell (34) and Cancel (32) grow to touch size on phones; the panel grows with them.
     local b1,b2=th(34),th(32)
-    local dw=math.min(324,w-20);local dh=392+(base and 2*(b1-34) or 0)+(b2-32);local visibleH=math.min(dh,ht-16)
-    local cancelY=dh-12-b2;local sellY=cancelY-7-b1;local combineY=sellY-7-b1
-    local dx=math.clamp(anchor.X+6+slotSize/2-dw/2,8,w-dw-8)
-    local ay=anchor.Y+6-(self[inventoryOnly and 'InventoryScroll' or 'ShopScroll'] or 0)
-    local dy=math.clamp(ay-visibleH-12,8,math.max(8,ht-visibleH-8))
-    local outer=surface(root,'Details',dx,dy,dw,visibleH,copy and copy.tier or entry.tier);outer.ZIndex=11;outer.Active=true
-    local detail=Instance.new('ScrollingFrame');detail.Name='Body';detail.BackgroundTransparency=1;detail.BorderSizePixel=0;detail.Size=UDim2.fromScale(1,1);detail.CanvasSize=UDim2.fromOffset(0,dh);detail.ScrollBarThickness=3;detail.Parent=outer
+    local dw=math.min(324,w-20);local tier=copy and copy.tier or entry.tier
+    -- Above the dimmed shop: a solid backing (sized below) under the panel, so nothing behind it
+    -- shows through, then the panel.
+    local backing=Instance.new('Frame');backing.Name='DetailsBacking';backing.BackgroundColor3=Color3.fromRGB(34,38,41);backing.BorderSizePixel=0;backing.ZIndex=11;backing.Parent=root
+    T.make('UICorner',backing,{CornerRadius=UDim.new(0,14)})
+    local outer=surface(root,'Details',0,0,dw,100,tier);outer.ZIndex=12;outer.Active=true
+    local detail=Instance.new('ScrollingFrame');detail.Name='Body';detail.BackgroundTransparency=1;detail.BorderSizePixel=0;detail.Size=UDim2.fromScale(1,1);detail.ScrollBarThickness=3;detail.Parent=outer
     local well=surface(detail,'IconWell',14,14,72,72,nil,'inset')
     if base then thumbnail(well,combat.WeaponTemplates:FindFirstChild(copy.id),4,4,64,64) else art(well,entry,4,4,64,64) end
-    heading(detail,'Title',(base or entry).name,98,14,dw-112,44,23,tiers[copy and copy.tier or entry.tier])
-    text(detail,'Tier',E.TIER_NAMES[copy and copy.tier or entry.tier],98,60,dw-112,24,tap>0 and 16 or 14)
+    heading(detail,'Title',(base or entry).name,98,14,dw-112,44,23,tiers[tier])
+    text(detail,'Tier',E.TIER_NAMES[tier],98,60,dw-112,24,tap>0 and 16 or 14)
+    -- The content stacks top-down and the buttons go under it, so stat lines, traits and the class
+    -- row never overlap, whatever a weapon shows (2026-10-03: Range was hidden behind the class row).
+    -- Example, Tier II Magic Staff: 4 stat lines end at 200, the class row sits at 208-232, the
+    -- buttons start at 266. The panel grows (and scrolls on short screens) when content needs it.
+    local y=104
     if base then
-     weaponStats(detail,base,copy.tier,16,104,dw-32)
+     y+=weaponStats(detail,base,copy.tier,16,y,dw-32)
+     local traits=traitLine(base,copy.tier)
+     if traits~='' then text(detail,'Traits',traits,16,y+2,dw-32,22,15,tiers[tier]);y+=26 end
+     y+=8
      local fw=math.min(150,math.floor((dw-40)*.48))
-     classFitRow(detail,base,16,193,dw-40-fw,24,dw-16-fw,193,fw,24)
+     classFitRow(detail,base,16,y,dw-40-fw,24,dw-16-fw,y,fw,24);y+=24+14
+    else
+     y+=effects(detail,entry,16,y,dw-32)
+     local works,wc=worksLine(entry,data)
+     if works then text(detail,'WorksWith',works,16,y+4,dw-32,40,15,wc);y+=46 end
+     y+=14
+    end
+    local below=base and 2*(b1+7)+b2+12 or b2+12+16 -- the buttons under the content
+    local dh=math.max(392+(base and 2*(b1-34) or 0)+(b2-32),y+below+(base and 0 or 40));local visibleH=math.min(dh,ht-16)
+    local cancelY=dh-12-b2;local sellY=cancelY-7-b1;local combineY=sellY-7-b1
+    if not base then text(detail,'Description',entry.description,16,y,dw-32,math.max(40,cancelY-16-y),15) end
+    if base then
      local combine=btn(detail,'Combine',copy.tier==4 and 'Maximum tier' or copy.canCombine and 'Combine → '..E.TIER_NAMES[copy.tier+1] or 'Need matching weapon + tier',14,combineY,dw-28,b1,function() T.sound('ui_upgrade');self:send('Combine',sel.slot,sel.copy);self.selected=nil end,true)
      combine.Interactable=data.phase=='Shop' and copy.canCombine==true;combine.Caption.TextColor3=combine.Interactable and white or Color3.fromRGB(135,146,150)
      local sell=btn(detail,'Sell','',14,sellY,dw-28,b1,function() self:send('Sell',sel.slot,sel.copy);self.selected=nil end,true)
      price(sell,copy.sell or 0,'Recycle +',19,white);sell.Interactable=data.phase=='Shop'
-    else
-     local used=effects(detail,entry,16,104,dw-32)
-     text(detail,'Description',entry.description,16,118+used,dw-32,math.max(32,dh-178-used-(b2-32)),15)
     end
     btn(detail,'Cancel','Cancel',14,cancelY,dw-28,b2,function() self.selected=nil;refresh() end,true)
+    local dx=math.clamp(anchor.X+6+slotSize/2-dw/2,8,w-dw-8)
+    local ay=anchor.Y+6-(self[inventoryOnly and 'InventoryScroll' or 'ShopScroll'] or 0)
+    local dy=math.clamp(ay-visibleH-12,8,math.max(8,ht-visibleH-8))
+    outer.Position=UDim2.fromOffset(dx,dy);outer.Size=UDim2.fromOffset(dw,visibleH);detail.CanvasSize=UDim2.fromOffset(0,dh)
+    -- 5 px in, with round corners, so the panel's cut corners still show.
+    backing.Position=UDim2.fromOffset(dx+5,dy+5);backing.Size=UDim2.fromOffset(dw-10,visibleH-10)
    else self.selected=nil end
   end
   local key=inventoryOnly and 'InventoryScroll' or 'ShopScroll'

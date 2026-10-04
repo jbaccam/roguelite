@@ -10,6 +10,17 @@ local C=T.Color
 local A=T.Asset
 UI.Assets=A
 local make,frame,panel,icon,label,button=T.make,T.frame,T.panel,T.icon,T.label,T.button
+-- The timer's wave pill shows the goal (2026-10-03: "better clarification on when to leave and when
+-- the game is done (round 20)"): WAVE 7 / 20 until the win (RunSetupRules.WinWave), then ENDLESS 21
+-- (RogueliteRunState.Won). The tutorial keeps plain WAVE 2.
+local winWave
+function UI.waveText(wave)
+ local state=RS:FindFirstChild("RogueliteRunState");local combat=RS:FindFirstChild("RogueliteCombat")
+ if state and state:GetAttribute("Won")==true then return "ENDLESS "..tostring(wave) end
+ if combat and combat:GetAttribute("TutorialRun")==true then return "WAVE "..tostring(wave) end
+ if winWave==nil then local ok,rules=pcall(require,RS:FindFirstChild("RunSetupRules"));winWave=ok and type(rules)=="table" and rules.WinWave or 20 end
+ return "WAVE "..tostring(wave).." / "..tostring(winWave)
+end
 function UI.mount(playerGui)
  local player=Players.LocalPlayer
  local gui=make("ScreenGui",playerGui,{Name="RogueliteHUD",ResetOnSpawn=false,DisplayOrder=20,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,ClipToDeviceSafeArea=true})
@@ -51,6 +62,25 @@ function UI.mount(playerGui)
  local shardRow=panel(health,'Shards',0,158,half,34,'inset')
  icon(shardRow,'ShardIcon',10,3,28,'shard')
  local shardText=label(shardRow,'ShardBalance','0',44,2,half-54,30,20,C.cyan);shardText.TextXAlignment=Enum.TextXAlignment.Left
+ -- Your crystal colour (2026-10-03): with 2+ players in the run, a diamond in it on the shard icon.
+ -- Your kills' crystals and the diamonds over your teammates' heads use the same colours
+ -- (ShardMotion.slotColor, ShardVisuals). Hidden solo, where every crystal stays blue.
+ local colorMark=make('Frame',shardRow,{Name='CrystalColor',AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(34,25),Size=UDim2.fromOffset(11,11),Rotation=45,BorderSizePixel=0,Visible=false,ZIndex=4})
+ make('UIStroke',colorMark,{Color=Color3.fromRGB(8,10,11),Thickness=2})
+ task.spawn(function()
+  local Motion=require(RS:WaitForChild('RogueliteCombat'):WaitForChild('ShardMotion'))
+  local function refresh()
+   local n=0;for _,p in Players:GetPlayers() do if p:GetAttribute('RunMember') then n+=1 end end
+   local slot=player:GetAttribute('CrystalSlot')
+   colorMark.Visible=n>=2 and type(slot)=='number' and player:GetAttribute('RunMember')==true
+   if colorMark.Visible then colorMark.BackgroundColor3=Motion.slotColor(slot).mark end
+  end
+  local function watch(p) p:GetAttributeChangedSignal('RunMember'):Connect(refresh);p:GetAttributeChangedSignal('CrystalSlot'):Connect(refresh) end
+  for _,p in Players:GetPlayers() do watch(p) end
+  Players.PlayerAdded:Connect(function(p) watch(p);refresh() end)
+  Players.PlayerRemoving:Connect(function() task.defer(refresh) end)
+  refresh()
+ end)
  local bagRow=panel(health,'Bag',half+8,158,half,34,'inset')
  icon(bagRow,'ShardBag',8,2,30,'shardBag')
  local bagText=label(bagRow,'BaggedShards','0',44,2,half-54,30,20,C.muted);bagText.TextXAlignment=Enum.TextXAlignment.Left
@@ -178,7 +208,7 @@ function UI.mount(playerGui)
  function controller:SetTimer(seconds,wave,phaseName,label)
   if label then timeText.Text=label
   elseif seconds then local s=math.max(0,math.ceil(seconds));timeText.Text=string.format("%02d:%02d",math.floor(s/60),s%60) else timeText.Text="--:--" end
-  phaseText.Text=wave and ("WAVE "..tostring(wave)) or string.upper(phaseName or "PRACTICE")
+  phaseText.Text=wave and UI.waveText(wave) or string.upper(phaseName or "PRACTICE")
  end
  function controller:SetTestRun(on)
   testTag.Visible=on==true;gui:SetAttribute("TestRunShown",on==true)
@@ -194,14 +224,9 @@ function UI.mount(playerGui)
   if wasOpen then
    -- Only drop the controller selection the menu owned (not the level-up or death screen's).
    pcall(function() game:GetService("GuiService").SelectedObject=nil end)
-   -- Always hand preview input back to the normal Roblox character camera.
-   -- No saved CameraSubject: it may belong to a character that has respawned.
-   local humanoid=player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-   local camera=workspace.CurrentCamera
-   if camera and humanoid then
-    camera.CameraSubject=humanoid
-    camera.CameraType=Enum.CameraType.Custom
-   end
+   -- Always hand preview input back to the regular character camera (Custom, your Humanoid, FOV 70),
+   -- unless a camera stage such as the boss intro holds it (UITheme.cameraHeal, 2026-10-03).
+   T.cameraHeal()
    Input.MouseBehavior=Enum.MouseBehavior.Default
    Input.MouseIconEnabled=true
   end

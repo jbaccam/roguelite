@@ -15,6 +15,13 @@ local XP=require(combat.RunXP)
 local Upgrades=require(combat.LevelUpCatalog)
 local StatSchema=require(combat.CharacterStats)
 local Maps=require(combat.MapConfig) -- sandboxed, like this module
+-- Handyman turret rules (HANDYMAN_TURRET.md): pure and sandboxed. Looked up, not waited on, so a
+-- place without it still loads the shop; the turret upgrade is just unavailable then.
+local Turret=(function()
+ local m=combat:FindFirstChild('HandymanTurret');if not m then return nil end
+ local ok,t=pcall(require,m);if ok then return t end
+ warn('ShopService: HandymanTurret failed to load:',t);return nil
+end)()
 local S={states={},wave=1,phase='Shop'}
 -- The first-join tutorial (plans/2026-10-03-tutorial-design.md): TutorialDirector sets S.tutorial
 -- while a tutorial run is on, nil otherwise. Plain data from TutorialConfig: startShards, waves
@@ -128,6 +135,8 @@ function S.publish(p,message)
  s.slotRows=slotRows(p) or s.slotRows -- every slot change publishes, so this copy stays current
  local data={pendingLevels=s.pendingLevels,upgradeOffers=s.upgradeOffers,upgradeToken=s.upgradeToken,upgradeRerolls=s.upgradeRerolls,upgradeRerollPrice=E.reroll(S.wave,s.upgradeRerolls),freeRerolls=s.freeRerolls,freeUpgradeRerolls=s.freeUpgradeRerolls,baggedShards=s.baggedShards,level=s.level,shards=s.shards,wave=S.wave,phase=S.phase,rerolls=s.rerolls,rerollPrice=E.reroll(S.wave,s.rerolls),offers=s.offers,items=s.items,weapons=owned(p),ready=s.ready,revision=s.revision,message=message or s.message or '',modifier=E.modifier(Characters.states[p].stats),debug=RunService:IsStudio() and E.DEBUG_CURRENCY_ENABLED}
  data.upgrades=s.upgradeBonuses -- plan L: the pause screen's level-up picks (id -> picks)
+ -- Handyman turret row {tier, next, price} (UPGRADE TURRET in ShopUI); nil for everyone else.
+ if Turret then data.turret=Turret.offer(Characters.states[p].class,s.turretTier,S.wave,data.modifier,Turret.templates(combat)~=nil) end
  s.message=data.message;S.publishProgress(p)
  slots(p):SetAttribute('ShopSnapshot',Http:JSONEncode(data))
 end
@@ -181,16 +190,29 @@ local function choose(pool,p,wantWeapon)
  end
  return pool[rng:NextInteger(1,#pool)]
 end
--- Weapons the run shop may offer this player: the ones they own (ProfileWeapons, "id:tier:have"
--- from ProfileService) plus whatever they carry now (the user, 2026-10-02; audit G6). New weapons
--- unlock from chests and the lobby's daily shop. Example: a new player owns the Glock, Frying Pan
--- and Magic Staff, so their shop offers those three (any tier) and items.
+-- Weapons the run shop may offer: every weapon except Godly ones (user, 2026-10-03: "we should offer
+-- all weapons in the shop besides god tier ones"). This replaces the 2026-10-02 rule (audit G6) that
+-- offered only owned weapons (ProfileWeapons) plus carried ones. Godly weapons (WeaponCatalog
+-- .godly) have no ShopCatalog entries, so they never show; owning a weapon still decides starters
+-- and the Armory. Example: a new player who owns only the Glock, Frying Pan and Magic Staff can be
+-- offered Medusa's Head or Crystal Ball, and Mjolnir (an achievement unlock) shows up too. The
+-- same-weapon and same-class weighting (choose) still favours what they carry.
 local function offerable(p)
  local set={}
- for id in string.gmatch(p:GetAttribute('ProfileWeapons') or '','([^,:]+):%d+:%d+') do set[id]=true end
+ for _,w in Weapons.List do if not w.godly then set[w.id]=true end end
  for i=1,6 do local id=slots(p)['Slot'..i]:GetAttribute('WeaponId');if id and id~='' then set[id]=true end end
  return set
 end
+S.offerableWeapons=offerable -- ShopTests
+-- Items only some weapons use (ShopCatalog.worksWith: Two Straws, Sharp Pencil, Support Ketchup,
+-- Hot Sauce, Tinfoil Antlers...) are offered only while the player carries one that uses it
+-- (2026-10-03: "some items ... are not usable at all"). Example: a Frying Pan + Boomerang build is
+-- never offered Two Straws; buying a Glock makes it possible again.
+local function usable(entry,carried,stats)
+ local works=Catalog.worksWith(entry,carried,stats)
+ return works==nil or #works>0
+end
+S.usableItem=usable -- ShopTests
 local function roll(p,slot,excluded)
  local s=S.states[p];local cs=Characters.states[p]
  -- The tutorial's guided offer (S.tutorial.offers), tagged forced=<wave>. Once this wave's is
@@ -207,6 +229,7 @@ local function roll(p,slot,excluded)
  local wantWeapon=E.weaponSlot(S.wave,slot,rng)
  local tier=E.rollTier(S.wave,cs.stats.Luck,rng)
  local owned=offerable(p)
+ local carried={};for i=1,6 do local id=slots(p)['Slot'..i]:GetAttribute('WeaponId');if id and id~='' then table.insert(carried,id) end end
  local function fill(weapons)
   local pool={}
   for try=tier,1,-1 do
@@ -214,7 +237,7 @@ local function roll(p,slot,excluded)
     if (entry.kind=='Weapon')==weapons and entry.tier==try and not excluded[entry.id] and (not weapons or owned[entry.weaponId]) then
      local count=0
      for _,it in s.items do if it.id==entry.id then count=it.count;break end end
-     if entry.kind=='Weapon' or count<entry.cap then table.insert(pool,entry) end
+     if entry.kind=='Weapon' or (count<entry.cap and usable(entry,carried,cs.stats)) then table.insert(pool,entry) end
     end
    end
    if #pool>0 then break end
@@ -486,9 +509,14 @@ function S.stopWave()
 end
 function S.finishWave()
  if S.phase~='Combat' then return false end
- -- Leftover crystals fly to the players and count as pickups (XP and shards) while it's still
- -- Combat; any that nobody alive can take are bagged as before (2026-10-03).
- if Shards.sweep then Shards.sweep() end
+ -- The crystal bag, like Brotato's (user, 2026-10-03). Crystals already flying to a player count as
+ -- their pickups (sweep, while it's still Combat). Every crystal still on the ground goes into its
+ -- owner's bag at full value (clear(true) -> creditShards(p,value,false)), and next wave each
+ -- pickup pays double out of it (creditShards). Until now sweep picked those up too, so nothing was
+ -- ever bagged and the bag stayed at 0. The tutorial keeps the old fly-in of every crystal
+ -- (tutorial design: it starts at 0 crystals and its guided shop buy needs them; a bag would leave a
+ -- new player who missed some unable to afford it).
+ if Shards.sweep then Shards.sweep(S.tutorial~=nil) end
  Shards.clear(true)
  local won=S.tutorial~=nil and S.tutorial.waves~=nil and S.wave>=#S.tutorial.waves -- the tutorial's last wave
  local phase=won and 'Victory' or 'Shop'
@@ -691,6 +719,15 @@ function S.request(p,action,revision,arg,extra)
   if f:GetAttribute('WeaponId')=='' or f:GetAttribute('CopyId')~=extra then return fail('Weapon changed; select it again') end
   s.shards=math.min(E.MAX_SHARDS,s.shards+sellValue(p,f))
   clearWeapon(f)
+ elseif action=='UpgradeTurret' then
+  -- Handyman turret (HANDYMAN_TURRET.md): the next tier, priced like a weapon tier step (HandymanTurret
+  -- .canUpgrade checks class, Tier IV, price; arg is the tier the button showed). The tier lives in
+  -- this run state, so a new run starts at Tier I and a rejoin keeps it.
+  if not Turret then return fail('Turret unavailable') end
+  local tier=Turret.tier(s.turretTier)
+  local ok,why,cost=Turret.canUpgrade(cs.class,tier,arg,s.shards,S.wave,E.modifier(cs.stats),Turret.templates(combat)~=nil)
+  if not ok then return fail(why) end
+  s.shards-=cost;s.turretTier=tier+1
  elseif action=='Start' then
   if s.pendingLevels>0 then return fail('Choose your earned level-up upgrades first') end
   s.ready=true
@@ -704,6 +741,7 @@ end
 remote.OnServerEvent:Connect(S.request)
 Characters.onStatsChanged=function(p) if S.states[p] then reprice(p);S.states[p].revision+=1;S.publish(p) end end
 -- Collected units consume stored units one-for-one. Leftovers grant nothing until picked up.
+-- Example: bag 30, a 5-crystal pickup pays 10 shards and 10 crystals' XP, and the bag drops to 25.
 function S.creditShards(p,amount,pickedUp)
  local s=S.states[p]
  if not s or not E.integer(amount,1,E.MAX_SHARDS) or (pickedUp and not living(p)) then return false end
@@ -740,6 +778,19 @@ local function bossHolding(now)
  if mobs then for _,npc in mobs:GetChildren() do if npc:GetAttribute('IsBoss') or npc:GetAttribute('IsHammerBoss') then bossSeenAt=now;return true end end end
  return run:GetAttribute('BossAlive')==true or now-bossSeenAt<BOSS_LOOT_GRACE
 end
+-- READY 2/4 by the shop's GO button (user, 2026-10-03: "how many people are ready waiting in the
+-- shop"): RogueliteRunState ShopReady / ShopPlayers count the living run members who pressed GO, out
+-- of the living run members, the same players beginWave waits for. nil outside the shop. Example:
+-- 4 alive, 2 pressed GO -> 2 / 4. ShopUI hides it when ShopPlayers is 1 (solo).
+function S.publishReady()
+ local ready,total
+ if S.phase=='Shop' then
+  ready,total=0,0
+  for p,s in S.states do if living(p) then total+=1;if s.ready then ready+=1 end end end
+ end
+ if run:GetAttribute('ShopReady')~=ready then run:SetAttribute('ShopReady',ready) end
+ if run:GetAttribute('ShopPlayers')~=total then run:SetAttribute('ShopPlayers',total) end
+end
 local elapsed=0
 RunService.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<.2 then return end;elapsed=0
@@ -754,6 +805,7 @@ RunService.Heartbeat:Connect(function(dt)
   end
  end
  if S.phase=='Shop' then beginWave() end
+ S.publishReady()
  local shopEnds=run:GetAttribute('ShopEndsAt')
  if S.phase=='Shop' and type(shopEnds)=='number' and now>=shopEnds then shopTimeUp() end
  local holding=S.phase=='Combat' and bossHolding(now)

@@ -5,6 +5,14 @@ local Motion=require(script.Parent.WeaponMotion)
 -- "i need more of a speed boost when im in the air" -> 1.6, then "just a little too fast"; was
 -- 1.12, then 1.3): a Brawler runs 22 and flies 31.9. MovementGuard scales its limit by this number.
 S.Movement={Gravity=150,JumpHeight=9.5,AirSpeedMultiplier=1.45}
+-- Dash (2026-10-03, play-test: "dash for melee based characters", so melee builds can close in):
+-- Distance studs in Seconds (20 in 0.18 s = 111 studs/s), on the ground or in the air, once every
+-- Cooldown s. No damage, no invulnerability. Allowance: the extra studs MovementGuard lets an
+-- approved dash cover (its 20, plus slack for the running speed it hands back to).
+S.Dash={Distance=20,Seconds=.18,Cooldown=3,Allowance=26}
+-- Who can dash: Brawlers (the hand-to-hand class), and any class whose starting weapon is melee,
+-- e.g. a Mage who starts with Excalibur. weapon: the starter's WeaponCatalog entry (nil = none).
+function S.dashes(class,weapon) return class=='Brawler' or (type(weapon)=='table' and weapon.kind=='Melee') end
 local function stat(id,label,base,min,max,step,unit,group,help)
  local d={id=id,label=label,base=base,min=min,max=max,step=step,unit=unit or '',group=group,help=help}
  table.insert(S.List,d);S.ById[id]=d
@@ -65,7 +73,7 @@ S.Classes={
  Gunner={description='Fast, piercing gunfire. Less health and weak melee damage.',buffs={RangedDamage=20,ProjectileSpeed=35,CritChance=5,MaxHP=-15,MeleeDamage=-15},rangedAttackSpeed=10,build={'00','07','09','08'},two={Pierce=1},four={ProjectileCount=1}},
  Thrower={description='Long-range throws that rebound. Thin armor and weak melee damage.',buffs={AttackRange=25,Bounce=1,RangedDamage=15,Armor=-2,MeleeDamage=-10},build={'12','13','14','18'},two={RangedDamage=15},four={ProjectileCount=1}},
  Juggler={description='Quick tricks with toys: fast attacks, big knockback, always moving. Lower damage per hit.',buffs={MoveSpeed=3,AttackSpeed=15,Knockback=12,Damage=-10},build={'17','21','22','23'},two={AttackRange=15,Knockback=5},four={Bounce=1,AttackSpeed=15}},
- Handyman={description='Handy with anything: no penalty with almost any weapon, bigger blasts and slow healing. A little less health.',buffs={Damage=5,UtilityPower=15,AreaSize=20,Regeneration=1,MaxHP=-10},build={'24','25','28','29'},two={CooldownReduction=10},four={UtilityPower=20}},
+ Handyman={description='Builds a nail turret you can upgrade. Handy with anything: no penalty with almost any weapon, bigger blasts and slow healing. A little less health.',buffs={Damage=5,UtilityPower=15,AreaSize=20,Regeneration=1,MaxHP=-10},build={'24','25','28','29'},two={CooldownReduction=10},four={UtilityPower=20}},
  Mage={description='Elemental damage, burn and chains. Fragile, with weak physical attacks.',buffs={ElementalDamage=25,Duration=30,BurnChance=15,ChainCount=1,MaxHP=-20,Armor=-2,MeleeDamage=-10},build={'30','31','34','35'},two={ElementalDamage=15},four={BurnSpread=1}},
 }
 -- Each class's starting weapon, also its icon on class cards and tags. RunSetupRules.Signature is
@@ -144,6 +152,43 @@ function S.read(instance)
 end
 function S.mult(value) return math.max(.05,1+value/100) end
 function S.incoming(amount,s) return amount*S.mult(-s.ContactReduction)*(s.Armor>=0 and 1/(1+s.Armor/15) or 1-s.Armor/15) end
+-- Weapon-only stats (2026-10-03): whether a weapon really uses one. The one answer for the
+-- server's launchers (they read shot stats through S.shotStat), S.weapon (explosion damage), the
+-- run shop's offers and the cards' "Works with" line, so none of them can disagree. It follows how
+-- each weapon attacks: bullets and the Deck of Cards use extra shots, pierce and bounce; thrown
+-- weapons that fly back (Boomerang, Mjolnir, Trident) get pierce and bounce but no extra copies;
+-- fire and gas throws (Molotov, Fart Gun) and explosives (Rocket Launcher, Pandora's Box) get extra
+-- copies only; the Storm Bow rains more arrows; swings, the Rubber Duck's spray and the Vacuum /
+-- Power Washer streams use none. Example: Two Straws gives a Glock 2 bullets, a Frying Pan nothing.
+-- AreaSize and the lightning stats also count the player's own sources: with Battery Pack
+-- (ChainCount 1) every weapon's hits chain lightning, so Tinfoil Antlers helps them all.
+-- Any other stat helps every weapon (true).
+local Thrown=require(script.Parent.SpecialMotion).profiles -- SpecialWeapons' throws
+S.WeaponStats={ProjectileCount=true,Pierce=true,Bounce=true,ExplosionDamage=true,AreaSize=true,ChainBonus=true,ChainDamage=true}
+local AREA_SPECIALS={'waveRadius','spread','hop','burstRadius'} -- Godly special sizes GodlyWeapons scales by AreaSize
+function S.usesStat(base,id,stats)
+ if not S.WeaponStats[id] then return true end
+ local w=base.id;local thrown=Thrown[w]
+ if id=='ExplosionDamage' then return base.kind=='Blast' end
+ if id=='ChainBonus' or id=='ChainDamage' then return base.lightning==true or (stats~=nil and (stats.ChainCount or 0)>0) end
+ if id=='AreaSize' then
+  if base.blastRadius or (thrown and thrown.zone) or base.lightning then return true end
+  if stats and ((stats.ChainCount or 0)>0 or (stats.BurnSpread or 0)>0) then return true end
+  for _,k in AREA_SPECIALS do if base.special and base.special[k] then return true end end
+  return false
+ end
+ -- Shot stats, by launcher (RogueliteCombat shoot): Storm Bow arrows, spray and streams, throws,
+ -- swings, rockets and blasts, then bullets and cards.
+ if w=='38' then return id=='ProjectileCount' end
+ if w=='17' or w=='28' or w=='29' then return false end
+ if thrown then if id=='ProjectileCount' then return not thrown.returns end;return not thrown.zone end
+ if base.kind=='Melee' then return false end
+ if w=='11' or base.kind=='Blast' then return id=='ProjectileCount' end
+ return true
+end
+-- A shot stat as an attack uses it: 0 when the weapon doesn't (d: S.weapon's result, d.stats set).
+-- Example: Two Straws on a Boomerang throw: S.shotStat(d,'ProjectileCount') is 0.
+function S.shotStat(d,id) return S.usesStat(d,id) and (d.stats[id] or 0) or 0 end
 function S.weapon(base,s,class,tier)
  tier=math.clamp(math.floor(tonumber(tier) or 1),1,4)
  local d=table.clone(base)
@@ -151,7 +196,7 @@ function S.weapon(base,s,class,tier)
  d.damage=(base.tierDamage and base.tierDamage[tier] or base.damage)*S.mult(s.Damage)*S.mult(base.kind=='Melee' and s.MeleeDamage or s.RangedDamage)
  if base.elemental then d.damage*=S.mult(s.ElementalDamage) end
  if base.utility then d.damage*=S.mult(s.UtilityPower) end
- if base.kind=='Blast' then d.damage*=S.mult(s.ExplosionDamage) end
+ if S.usesStat(base,'ExplosionDamage') then d.damage*=S.mult(s.ExplosionDamage) end
  d.classFit,d.classFitPercent=S.classFit(base,class)
  d.damage*=S.mult(d.classFitPercent)
  local cc=S.Classes[class]

@@ -218,7 +218,7 @@ local function shoot(d,origin,aim,character)
  if specials:handles(d.id) then specials:launch(d,origin,aim);return end
  d.muzzleShotId=workspace:GetServerTimeNow() -- One visual flash per trigger, not per pellet.
  if d.id=='18' or d.id=='33' then arcs:launch(d,origin,aim);return end
- local count=(d.projectileCount or (d.kind=='Spread' and 5 or 1))+d.stats.ProjectileCount
+ local count=(d.projectileCount or (d.kind=='Spread' and 5 or 1))+Stats.shotStat(d,'ProjectileCount') -- CharacterStats.usesStat
  if d.arcTarget then aim=Targets.predict(d.arcTarget,origin,function(distance) return distance/d.projectileSpeed end,0,d.range,rayParams,character) end
  local direction=(aim-origin).Unit
  d.muzzleDirection=direction -- All spread pellets leave the same barrel mouth.
@@ -261,15 +261,16 @@ local function fresh(e) return e.hum.Health>0 and e.npc.Parent~=nil and e.root.P
 -- Where an enemy is measured to from `origin`: a boss's nearest side, anyone else's root.
 local function measured(e,origin) return e.boss and reachPoint(e.npc,e.root,origin) or e.position end
 -- The nearest enemy `can` accepts in range with a clear line from origin, and its point.
-local function nearest(snap,origin,range,can,wallParams)
- return Grid.nearest(snap,origin,range,can,function(e) return measured(e,origin) end,function(point,e) return fresh(e) and clear(origin,point,wallParams) end)
+-- allowance: melee's vertical allowance (Grid.distance), nil for ranged.
+local function nearest(snap,origin,range,can,wallParams,allowance)
+ return Grid.nearest(snap,origin,range,can,function(e) return measured(e,origin) end,function(point,e) return fresh(e) and clear(origin,point,wallParams) end,allowance)
 end
 -- A cooling weapon keeps last tick's target while it is still alive, allowed and in range.
-local function kept(slot,snap,origin,range,can)
+local function kept(slot,snap,origin,range,can,allowance)
  local e=slot.aimNpc and snap.byNpc[slot.aimNpc]
  if not e or not can(e) or not fresh(e) then return end
  local point=measured(e,origin)
- local distance=(point-origin).Magnitude
+ local distance=Grid.distance(point-origin,allowance)
  if distance<range and distance>.01 then return e,point end
 end
 -- WeaponMotion.chooseStyle reads the crowd size for only some weapons. Asking it for no crowd and a
@@ -334,13 +335,25 @@ RunService.Heartbeat:Connect(function(dt)
   radius=s.folder:GetAttribute('RingRadius')
   local wallParams=rayParams(character,true)
   -- Melee from a jump (2026-10-03: "melee weapons need to do a better job at hitting mobs when im
-  -- jumping"): melee slots find and measure targets from where the player would stand, `lift` studs
-  -- below. From a jump's peak (~9.5 up) a zombie 4 studs away was 9+ studs off, past every melee
-  -- reach, so nothing swung until landing. The swing already strikes at its target's height
-  -- (WeaponMotion.attackRoot).
+  -- jumping"; round 2: "bhopping melee weapons won't hit at max height of jump"):
+  -- * Melee reach is flat within a full jump above or below (Grid.distance with `allowance`, this
+  --   player's jump height + Grid.ReachBody). Example: JumpHeight 9.5 at gravity 150 gives 13.5
+  --   studs, so from a jump's peak a zombie 5 studs out is 5 away (it was 10.7, past every reach).
+  -- * Melee swings from the body where the player's own screen has it (CharacterService.seen, as
+  --   enemy hits do). The server has a bunny-hopping player (~32 studs/s) ~7 studs behind, so
+  --   swings started late, behind them. The lead is capped at 1.5 studs + 0.3 s of the body's
+  --   speed here, so standing still can't stretch reach (7 studs at 32 studs/s is 0.22 s).
+  -- * Sight lines start where the player would stand, `lift` studs below that body. The swing
+  --   strikes at its target's height (WeaponMotion.attackRoot).
+  local allowance=Grid.jumpHeight(hum.UseJumpPower,hum.JumpPower,hum.JumpHeight,workspace.Gravity)+Grid.ReachBody
+  local body=Characters.seen and Characters.seen(player,root) or root.Position
+  local lead,velocity=body-root.Position,root.AssemblyLinearVelocity
+  local most=1.5+Vector3.new(velocity.X,0,velocity.Z).Magnitude*.3
+  if lead.Magnitude>most then body=root.Position+lead.Unit*most end
+  local bodyFrame=CFrame.new(body)*root.CFrame.Rotation
   local lift=0
-  local ground=workspace:Raycast(root.Position,Vector3.new(0,-20,0),wallParams)
-  if ground then lift=math.clamp(root.Position.Y-(ground.Position.Y+hum.HipHeight+root.Size.Y*.5),0,16) end
+  local ground=workspace:Raycast(body,Vector3.new(0,-20,0),wallParams)
+  if ground then lift=math.clamp(body.Y-(ground.Position.Y+hum.HipHeight+root.Size.Y*.5),0,16) end
   if lift<.5 then lift=0 end
   -- The tick's one snapshot (built for the first player who targets) serves every slot and the
   -- attack that fires (nothing can revive an enemy mid-tick). `living` is its list, nil when this
@@ -359,8 +372,9 @@ RunService.Heartbeat:Connect(function(dt)
    local id=slot.folder:GetAttribute('WeaponId');local base=Catalog.ById[id];if not base then continue end
    local cs=Characters.states[player];if not cs then continue end
    local d=definition(slot,base,cs,player,character,index)
-   local origin=Motion.combatOrigin(root.CFrame,radius,index,id,d.kind)
-   if d.kind=='Melee' then origin-=Vector3.yAxis*lift end
+   local melee=d.kind=='Melee';local reachAllowance=melee and allowance or nil
+   local origin=Motion.combatOrigin(melee and bodyFrame or root.CFrame,radius,index,id,d.kind)
+   if melee then origin-=Vector3.yAxis*lift end
    local searchRange=d.targetRange or d.range
    if d.kind=='Melee' and Motion.DownwardWeapons[id] then
     searchRange=math.max(searchRange,Motion.attackReach(id,'Downward',d.range))
@@ -368,8 +382,8 @@ RunService.Heartbeat:Connect(function(dt)
    local found,point
    if living then
     -- Cooling down (it can't attack this tick): keep the target, searching again at 10 Hz.
-    if now<slot.ready and now<(slot.nextSearch or 0) then found,point=kept(slot,snap,origin,searchRange,can) end
-    if not found then found,point=nearest(snap,origin,searchRange,can,wallParams);slot.nextSearch=now+.1 end
+    if now<slot.ready and now<(slot.nextSearch or 0) then found,point=kept(slot,snap,origin,searchRange,can,reachAllowance) end
+    if not found then found,point=nearest(snap,origin,searchRange,can,wallParams,reachAllowance);slot.nextSearch=now+.1 end
    end
    slot.aimNpc=found and found.npc
    if found then targetCount+=1 end
@@ -412,14 +426,14 @@ RunService.Heartbeat:Connect(function(dt)
     if id=='19' or crowdMatters(id,slot.serial,flat,d.range) then
      local crowd=Grid.around(snap,origin,d.range)
      if crowd~=living then table.sort(crowd,Grid.byOrder) end
-     for _,e in crowd do local h,r=alive(e.npc);if h and (r.Position-origin).Magnitude<=d.range and clear(origin,r.Position,wallParams) then nearby+=1;if r~=target and (r.Position-target.Position).Magnitude<8 then second=r end end end
+     for _,e in crowd do local h,r=alive(e.npc);if h and Grid.distance(r.Position-origin,d.kind=='Melee' and allowance or nil)<=d.range and clear(origin,r.Position,wallParams) then nearby+=1;if r~=target and (r.Position-target.Position).Magnitude<8 then second=r end end end
     end
     slot.style=Motion.chooseStyle(id,nearby,slot.serial,flat,d.range)
     slot.side=Motion.chooseSide(slot.serial)
     d.range=Motion.attackReach(id,slot.style,d.range)
     -- Resolve the hammer's melee/throw choice after selecting its stroke:
     -- overheads can advance farther, while other cuts retain normal reach.
-    if (id=='31' or d.throwable) and (reach-origin).Magnitude>d.range then
+    if (id=='31' or d.throwable) and Grid.distance(reach-origin,allowance)>d.range then
      d.kind='Ranged';d.damage=d.damage/Stats.mult(d.stats.MeleeDamage)*Stats.mult(d.stats.RangedDamage)
      d.range=d.targetRange
     end
@@ -429,7 +443,7 @@ RunService.Heartbeat:Connect(function(dt)
     _,_,duration=Motion.attackTiming(id,d.kind,slot.style)
     interval=math.max(interval,duration/d.motionRate)
     slot.hand=slot.serial%2==1 and -1 or 1;slot.secondAim=second and second.Position or nil
-    slot.attackRoot=Motion.attackRoot(root.CFrame,aim)
+    slot.attackRoot=Motion.attackRoot(d.kind=='Melee' and bodyFrame or root.CFrame,aim)
     slot.attackOrigin=Motion.combatOrigin(slot.attackRoot,radius,index,id,d.kind)
     slot.start=now;slot.ready=now+interval;slot.previous=0;slot.hit={};slot.aim=aim;slot.definition=d
     local delta=Vector3.new(aim.X-origin.X,0,aim.Z-origin.Z)
@@ -458,7 +472,7 @@ RunService.Heartbeat:Connect(function(dt)
       if health then
        local point=reachPoint(npc,npcRoot,attackOrigin);local offset=point-attackOrigin
        local fraction=Motion.reapFractionOf(slot.direction,offset,slot.side)
-       if fraction>from and fraction<=to and offset.Magnitude<=d.range and clear(attackOrigin,point,wallParams) then
+       if fraction>from and fraction<=to and Grid.distance(offset,allowance)<=d.range and clear(attackOrigin,point,wallParams) then
         slot.hit[npc]=true;damage(npc,d.damage,d);contact(slot,id,now)
        end
       end
@@ -473,7 +487,7 @@ RunService.Heartbeat:Connect(function(dt)
      -- Who this tick could still hit (`living` is the tick's snapshot; nil never happens here,
      -- and would only turn the early stop off).
      local open,remaining
-     if living then open,remaining=Grid.open(snap,attackOrigin,d.range,slot.hit) end
+     if living then open,remaining=Grid.open(snap,attackOrigin,d.range,slot.hit,allowance) end
      local steps=math.max(1,math.ceil((last-first)*120))
      local function sample(i)
       local sampleAge=first+(last-first)*i/steps
@@ -498,7 +512,7 @@ RunService.Heartbeat:Connect(function(dt)
       if not slot.hit[npc] and Tags:HasTag(npc,'RogueliteZombie') and (not npc:GetAttribute('LobbyDummy') or targetable(npc,s)) then
        local health,npcRoot=alive(npc)
        local point=health and reachPoint(npc,npcRoot,attackOrigin)
-       if health and (point-attackOrigin).Magnitude<=d.range and clear(attackOrigin,point,wallParams) then
+       if health and Grid.distance(point-attackOrigin,allowance)<=d.range and clear(attackOrigin,point,wallParams) then
         local first=next(slot.hit)==nil -- the swing's first contact (the Wrecking Ball's shockwave)
         slot.hit[npc]=true;damage(npc,d.damage,d);contact(slot,id,now)
         if first then legendary:contact(d,npc,point) end

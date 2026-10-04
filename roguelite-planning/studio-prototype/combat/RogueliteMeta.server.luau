@@ -126,7 +126,7 @@ Shop.onBuy=function(p) tally('buys',p,1) end
 if Effects.listenDamage then Effects.listenDamage(function(owner,_,actual) tally('damage',owner,actual) end) end -- plan J's hook; absent in older copies
 -- Minutes count per player, and only while they fight (launch audit C2): alive and not down, in a
 -- wave that isn't paused, with a hit of their own in the last 30 s. Idling in the shop or hovering
--- out of reach earns none. Example: 4 waves of 30 s, fighting the whole time -> 2 minutes.
+-- out of reach earns none. Example: 3 waves of 40 s, fighting the whole time -> 2 minutes.
 local fightSeconds={}
 task.spawn(function()
  while true do
@@ -232,7 +232,8 @@ Death.onDeath=function(npc)
  runKills[p]=(runKills[p] or 0)+1 -- plan L: the pause screen's kills this stint
  if Shop.members[p] then work(p).kills+=1 end -- contribution (C1); a pet's kill is its owner's
  local weapon=Weapons.ById[npc:GetAttribute('LastWeaponId')]
- if weapon and weapon.utility then questEvent(p,'utilityKills',1) end
+ -- The Handyman turret's nails (LastWeaponId 'Turret', HANDYMAN_TURRET.md) are Utility kills too.
+ if (weapon and weapon.utility) or npc:GetAttribute('LastWeaponId')=='Turret' then questEvent(p,'utilityKills',1) end
  if weapon then questEvent(p,weapon.kind=='Melee' and 'meleeKills' or 'rangedKills',1) end -- Ranged, Blast and Spread count as ranged
 end
 local function livingInRun()
@@ -279,7 +280,7 @@ local function phoenix(p,at)
  phoenixUsed[p]=true;p:SetAttribute('PhoenixUsed',true)
  p:SetAttribute('HoldRespawn',true) -- keep AvatarNormalizer's normal respawn away
  task.delay(.6,function()
-  if p.Parent~=Players or not Shop.states[p] or down[p] then return end
+  if p.Parent~=Players or not Shop.states[p] or not Shop.members[p] or down[p] then return end -- left meanwhile (Leave With Party)
   rise(p,at,Stats.ArmorPerks.PhoenixHealth,function(root)
    Effects.armorBlast(p,root.Position,Stats.ArmorPerks.PhoenixRadius,blast)
   end)
@@ -385,11 +386,16 @@ local function revive(p)
  Analytics.revived(p,revivesUsed[p])
  return true
 end
--- One player's run ends (LOBBY_AND_MATCH_SERVERS.md §5): Leave Run (between waves, or from the
--- death screen) or a Defeat when the last stand runs out. Settles the stint's emeralds up to the
+-- Plan L's pause bookkeeping, needed by finish (2026-10-03): whoever leaves stops counting as
+-- paused at once, so a run they froze unfreezes before it resets (it used to wait for the next
+-- clock tick, after the reset).
+local RunPause=require(SSS:WaitForChild('RunPause'))
+local forgetPause -- set with the pause code below
+-- One player's run ends (LOBBY_AND_MATCH_SERVERS.md §5): Leave Run (any time, 2026-10-03), Leave
+-- With Party, or a Defeat when the last stand runs out. Settles the stint's emeralds up to the
 -- wave reached (usually already paid at the last clear), shows the results and takes them out of
 -- the run, while anyone else plays on. They stay out of the arena (dead, or with no body after
--- leaving between waves, so nothing can reach it) until Back to Lobby (returnToLobby).
+-- leaving alive, so nothing can reach it) until Back to Lobby (returnToLobby).
 local function finish(p,outcome)
  local d=down[p];local m=Shop.members[p]
  local stint=d and d.stint or m and m.stint;if not stint then return false end
@@ -404,6 +410,7 @@ local function finish(p,outcome)
  Analytics.runEnded(p,outcome,map,difficulty(),wave,cleared,test)
  clearDown(p);revivesUsed[p]=0;phoenixUsed[p]=nil;p:SetAttribute('PhoenixUsed',nil);prompting[p]=nil
  Shop.leave(p)
+ if forgetPause then forgetPause(p) end -- not paused any more: a solo freeze ends here (2026-10-03)
  p:SetAttribute('HoldRespawn',true)
  local character=p.Character;local h=character and character:FindFirstChildOfClass('Humanoid')
  if h and h.Health>0 then p.Character=nil;character:Destroy() end
@@ -419,15 +426,46 @@ local function afterLeave()
   Shop.pause();setLastStand(workspace:GetServerTimeNow()+LAST_STAND)
  end
 end
--- Leave Run: from the death screen any time, or alive between waves (not mid-wave). A downed
--- player whose teammates still fight has Left; the last one standing (or solo) is a Defeat.
+-- Leave Run: any time, from the death screen, the shop or the pause menu (RunPause.canLeave). It used
+-- to be refused mid-wave without a word while the pause menu had already closed itself, so a paused
+-- solo player stayed frozen (2026-10-03). Leaving mid-wave pays what leaving between waves pays:
+-- emeralds are settled at each clear. A downed player whose teammates still fight has Left; the
+-- last one standing (or solo) is a Defeat. Returns true, or false and why (the menu shows it).
+local function alive(p) local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid');return h~=nil and h.Health>0 end
 local function leaveRun(p)
- if down[p] then finish(p,livingInRun()>0 and 'Left' or 'Defeat')
- elseif Shop.members[p] and Shop.phase=='Shop' then
-  local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid')
-  if not h or h.Health<=0 then return false end
-  finish(p,'Left')
- else return false end
+ local ok,why=RunPause.canLeave({member=Shop.members[p]~=nil,down=down[p]~=nil,alive=alive(p)})
+ if not ok then return false,why end
+ if not finish(p,down[p] and livingInRun()==0 and 'Defeat' or 'Left') then return false,"You can't leave right now" end
+ afterLeave()
+ return true
+end
+-- Leave With Party (user, 2026-10-03: "option to leave with party as a party leader for private
+-- parties, not matches with randoms"): the leader of a Private pad's party (MatchService.partyLeader)
+-- ends the run for every party member still in it. Each is settled like their own Leave Run, sees
+-- their results (the others with "<leader> ended the run for the party") and all go back to the
+-- lobby in one teleport, still a party (MatchService.toLobby, RogueliteLobbyPreview). Open pads have
+-- no leader, so nobody there can end anyone else's run.
+local partyTrip={} -- player -> {leader=userId,ids={userIds}}: left together, back to the lobby together
+local function leaveWithParty(p)
+ local leader=Match.partyLeader and Match.partyLeader()
+ local ok,why=RunPause.canLeave({member=Shop.members[p]~=nil,down=down[p]~=nil,alive=alive(p),withParty=true,leader=leader~=nil and leader==p.UserId})
+ if not ok then return false,why end
+ local list={}
+ for q in Shop.members do if q==p or Match.inParty(q.UserId) then table.insert(list,q) end end
+ local done,ids={},{}
+ for _,q in list do if finish(q,'Left') then table.insert(done,q);table.insert(ids,q.UserId) end end
+ if #done==0 then return false,"You can't leave right now" end
+ -- One clock for all of them, so they go back together (the Heartbeat sends them as one group).
+ local group={leader=p.UserId,ids=ids};local at=workspace:GetServerTimeNow()+RETURN_SECONDS
+ for _,q in done do
+  partyTrip[q]=group;returning[q]=at
+  local okInfo,info=pcall(Http.JSONDecode,Http,q:GetAttribute('RunResult') or '')
+  if okInfo and type(info)=='table' then
+   info.returnAt=at;info.party=true
+   if q~=p then info.notice=p.DisplayName..' ended the run for the party' end
+   q:SetAttribute('RunResult',Http:JSONEncode(info))
+  end
+ end
  afterLeave()
  return true
 end
@@ -438,7 +476,12 @@ local returnTries={} -- player -> failed Back to Lobby attempts on a live match 
 local function returnToLobby(list)
  for _,p in list do returning[p]=nil end
  if Role.get()=='Match' and not studio then
-  Match.toLobby(list)
+  -- A party that left together (leaveWithParty) goes in a teleport of its own, carrying the party,
+  -- so it lands in one lobby and is put back together there.
+  local groups,others={},{}
+  for _,p in list do local g=partyTrip[p];if g then groups[g]=groups[g] or {};table.insert(groups[g],p) else table.insert(others,p) end end
+  if #others>0 then Match.toLobby(others) end
+  for g,members in groups do Match.toLobby(members,nil,{leader=g.leader,ids=g.ids}) end
   -- Anyone whose save couldn't be handed over (or whose teleport couldn't start) is still loaded
   -- here: try again in 5 s, and after three tries play on in this match instead.
   local stay={}
@@ -451,7 +494,7 @@ local function returnToLobby(list)
   list=stay
  end
  for _,p in list do
-  returnTries[p]=nil
+  returnTries[p]=nil;partyTrip[p]=nil
   if p.Parent~=Players then continue end
   p:SetAttribute('RunResult',nil)
   if Role.get()~='Match' then p:SetAttribute('StudioArea','Lobby') end -- the lobby's spawn handler places them
@@ -524,7 +567,7 @@ local function checkAgain()
  startAgain()
 end
 local function playAgain(p,on)
- if not p:GetAttribute('RunResult') then return end
+ if not p:GetAttribute('RunResult') or partyTrip[p] then return end -- a party that left together goes home together
  if on then
   again[p]=true;returning[p]=nil -- waits here instead of going back on its own
   againStatus(p,'Starting...')
@@ -562,8 +605,7 @@ end
 -- member has paused (RunPause). A freeze holds the wave clock or the shop countdown, switches each
 -- member's weapons off (restored after) and sets RogueliteCombat.RunPaused, which the spawner,
 -- enemies, bosses, statuses, pets, hearts and CharacterService (hold, no damage) all check.
-local RunPause=require(SSS:WaitForChild('RunPause'))
-local pause=RunPause.new()
+local pause=RunPause.new() -- RunPause is required above finish
 local pausedWeapons={} -- player -> WeaponEnabled before the freeze
 local shopLeft -- seconds the shop countdown had left when the run froze in the shop
 local lastPauseAction,statStint={},{}
@@ -598,15 +640,45 @@ local function setPaused(p,on)
  if RunPause.set(pause,p,on) then p:SetAttribute('Paused',on or nil) end
  applyPause()
 end
+-- A player whose run just ended (finish): out of the pause count now, and the freeze re-checked.
+forgetPause=function(p) RunPause.forget(pause,p);p:SetAttribute('Paused',nil);applyPause() end
+-- Melee dash (2026-10-03, RunAction 'Dash'): the player's own client has already moved its body (it
+-- owns its physics); this approves the dash and stamps DashAt (server time), which MovementGuard
+-- allows for and other screens draw. Approved for a living, standing run member whose class or
+-- starter dashes (CharacterStats.dashes), mid-wave or in the sandbox, not paused, held by the shop
+-- or in a boss entrance, once per Dash.Cooldown less 0.3 s of network jitter: a dash 2.8 s after
+-- the last passes, 2 s after doesn't.
+local lastDash=setmetatable({},{__mode='k'})
+local function dash(p)
+ local s=Characters.states[p];local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid')
+ if not s or not Shop.members[p] or down[p] or not h or h.Health<=0 then return end
+ if p:GetAttribute('LobbyPreviewActive') or p:GetAttribute('Paused') then return end
+ if (Shop.phase~='Combat' and Shop.phase~='Practice') or Characters.frozen(p) or Characters.inShop(p) then return end
+ if not Stats.dashes(s.class,Weapons.ById[p:GetAttribute('RunWeapon')]) then return end
+ local now=os.clock();if now-(lastDash[p] or -math.huge)<Stats.Dash.Cooldown-.3 then return end
+ lastDash[p]=now;p:SetAttribute('DashAt',workspace:GetServerTimeNow())
+end
 local lastRunAction={}
 local useStored -- defined with the purchase code below
 runAction.OnServerEvent:Connect(function(p,action,arg)
- if action=='LeaveRun' or action=='GiveUp' then leaveRun(p)
- elseif action=='ReturnToLobby' then if returning[p] or again[p] then again[p]=nil;p:SetAttribute('PlayAgainStatus',nil);returnToLobby({p}) end
+ if action=='LeaveRun' or action=='GiveUp' or action=='LeaveParty' then
+  -- A refusal says why (2026-10-03): the menu that asked shows it and stays open. arg is the
+  -- client's request number, echoed so a late answer can't land on a newer request.
+  local ok,why
+  if action=='LeaveParty' then ok,why=leaveWithParty(p) else ok,why=leaveRun(p) end
+  if not ok then runAction:FireClient(p,'LeaveResult',false,why or "You can't leave right now",type(arg)=='number' and arg or nil) end
+ elseif action=='ReturnToLobby' then
+  if returning[p] or again[p] then
+   again[p]=nil;p:SetAttribute('PlayAgainStatus',nil)
+   -- A party that left together: everyone in it still on their results goes too.
+   local list={p}
+   local g=partyTrip[p];if g then for q,qg in partyTrip do if q~=p and qg==g and returning[q] and q.Parent==Players then table.insert(list,q) end end end
+   returnToLobby(list)
+  end
  elseif action=='PlayAgain' or action=='Restart' or action=='Rejoin' or action=='RejoinDismiss' then
   if os.clock()-(lastRunAction[p] or 0)<.5 then return end;lastRunAction[p]=os.clock()
   if action=='PlayAgain' then playAgain(p,arg~=false)
-  elseif action=='Restart' then restart(p)
+  elseif action=='Restart' then if not restart(p) then runAction:FireClient(p,'LeaveResult',false,'Restart is for solo runs') end
   elseif action=='RejoinDismiss' then p:SetAttribute('RejoinOffer',nil);if Match.dismissRejoin then Match.dismissRejoin(p) end
   elseif p:GetAttribute('RejoinOffer') and Match.rejoin then
    local ok,why=Match.rejoin(p)
@@ -616,8 +688,11 @@ runAction.OnServerEvent:Connect(function(p,action,arg)
    end
   end
  elseif action=='SetPaused' then -- plan L: the pause screen opening (true) or closing (false)
-  if os.clock()-(lastPauseAction[p] or 0)<.25 then return end;lastPauseAction[p]=os.clock()
+  -- At most one pause per 0.25 s; a resume always applies (RunPause.allow, 2026-10-03: a dropped
+  -- resume left a solo run frozen behind a closed menu).
+  if not RunPause.allow(pause,p,arg==true,os.clock()) then return end
   setPaused(p,arg==true)
+ elseif action=='Dash' then dash(p) -- the melee dash (above)
  elseif action=='UseReroll' or action=='UseBanish' then useStored(p,action,arg)
  -- The loading screen is gone (ReplicatedFirst.LoadingScreen). Only times wave 1 (MatchService,
  -- TutorialDirector), which never waits longer than its own cap for it.
@@ -691,7 +766,9 @@ end
 -- Purchases -----------------------------------------------------------------------
 local lastRequest={}
 local pendingArg={} -- e.g. which level-up card a bought Banish targets
-local function reply(p,key,ok,message) purchaseResult:FireClient(p,key,ok,message) end
+-- delivered: true when the product itself was granted (not emeralds instead), so the lobby can play
+-- its contents reveal (StoreUI.reveal, 2026-10-03).
+local function reply(p,key,ok,message,delivered) purchaseResult:FireClient(p,key,ok,message,delivered) end
 -- Returns true when the product can be bought right now (checked before prompting).
 local function eligible(p,key,arg)
  local product=Config.Products[key];local d=Profiles.get(p)
@@ -776,7 +853,7 @@ local function processReceipt(p,key,purchaseId,spent)
    local ok,granted=pcall(grantProduct,p,key,spent)
    if not ok or not granted then warn('RogueliteMeta: grant failed',key,granted);return Enum.ProductPurchaseDecision.NotProcessedYet end
    Profiles.addReceipt(p,purchaseId)
-   reply(p,key,true,product.name..' purchased')
+   reply(p,key,true,product.name..' purchased',true)
   end
  end
  -- Acknowledge only once the grant is saved. A failed save leaves the receipt unprocessed: Roblox
@@ -828,7 +905,7 @@ purchaseRequest.OnServerEvent:Connect(function(p,key,arg)
   local d=Profiles.get(p)
   if d and d[passField[key]] then return reply(p,key,false,'Already owned') end
   if pass.gamePassId>0 then Market:PromptGamePassPurchase(p,pass.gamePassId)
-  elseif studio then Profiles.grant(p,passGrant[key]);reply(p,key,true,'Studio test: '..pass.name..' granted (not saved)')
+  elseif studio then Profiles.grant(p,passGrant[key]);reply(p,key,true,'Studio test: '..pass.name..' granted (not saved)',true)
   else reply(p,key,false,'Not on sale yet') end
   return
  end
@@ -855,7 +932,7 @@ purchaseRequest.OnServerEvent:Connect(function(p,key,arg)
  if product.productId>0 then Market:PromptProductPurchase(p,product.productId)
  elseif studio then
   -- Studio only: simulate a successful receipt so flows can be tested. In-memory, never saved.
-  if grantProduct(p,key) then reply(p,key,true,'Studio test: '..product.name..' granted (not saved)') else reply(p,key,false,'Grant failed') end
+  if grantProduct(p,key) then reply(p,key,true,'Studio test: '..product.name..' granted (not saved)',true) else reply(p,key,false,'Grant failed') end
  else reply(p,key,false,'Not on sale yet') end
 end)
 Market.PromptProductPurchaseFinished:Connect(function(userId,productId)
@@ -868,7 +945,7 @@ Market.PromptGamePassPurchaseFinished:Connect(function(p,id,bought)
   if pass.gamePassId>0 and id==pass.gamePassId then
    -- Saved right away; if the profile isn't loaded, checkPasses grants it on the next join.
    if Profiles.grant(p,passGrant[key]) then task.spawn(Profiles.save,p) end
-   reply(p,key,true,pass.name..' unlocked')
+   reply(p,key,true,pass.name..' unlocked',true)
   end
  end
 end)
@@ -924,6 +1001,7 @@ profileAction.OnServerInvoke=function(p,action,a,b,c)
  elseif action=='ClaimUnlock' and Profiles.claimUnlock and type(a)=='string' and #a<=40 then ok,message=Profiles.claimUnlock(p,a)
  elseif action=='ClaimWeekly' and Profiles.claimWeekly and type(a)=='number' then ok,message=Profiles.claimWeekly(p,a) -- plan M
  elseif action=='ClaimFeat' and Profiles.claimFeat and type(a)=='string' and #a<=40 then ok,message=Profiles.claimFeat(p,a) -- plan M
+ elseif action=='ClaimAll' and Profiles.claimAll and (a=='Daily' or a=='Weekly' or a=='Achievements') then ok,message,results=Profiles.claimAll(p,a) -- one Quests tab's CLAIM ALL (2026-10-03)
  elseif action=='TutorialStep' and Profiles.tutorialStep and type(a)=='string' and #a<=20 then ok,message=Profiles.tutorialStep(p,a) -- the tutorial's lobby steps
  elseif action=='Refresh' then Profiles.publish(p);ok=true;message=''
  elseif action=='SaveSettings' and type(a)=='table' and Profiles.saveSettings then ok,message=Profiles.saveSettings(p,a) -- U1: settings follow the player
@@ -951,7 +1029,7 @@ Players.PlayerRemoving:Connect(function(p)
  if (revivesUsed[p] or 0)>0 or phoenixUsed[p] then reviveCarry[p.UserId]={run=Shop.runId,revives=revivesUsed[p] or 0,phoenix=phoenixUsed[p]} end
  down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil;requestWindow[p]=nil;lastPickSave[p]=nil
  teammateRevive.clear(p) -- their spot, and their holds on others' spots
- returning[p]=nil;prompting[p]=nil;runInfo[p]=nil;returnTries[p]=nil;again[p]=nil;lastRunAction[p]=nil
+ returning[p]=nil;prompting[p]=nil;runInfo[p]=nil;returnTries[p]=nil;again[p]=nil;lastRunAction[p]=nil;partyTrip[p]=nil
  RunPause.forget(pause,p);pausedWeapons[p]=nil;lastPauseAction[p]=nil;runKills[p]=nil;runDamage[p]=nil;statStint[p]=nil -- plan L
  wentDown[p]=nil;soloBroken[p]=nil -- plan M
  waveWork[p]=nil;ledgers[p]=nil;lastHit[p]=nil;fightSeconds[p]=nil -- contribution (C1, C2)

@@ -480,6 +480,64 @@ function T.hideTouchControls(key,hide)
  pcall(function() game:GetService('GuiService').TouchControlsEnabled=next(touchHiders)==nil end)
 end
 
+-- The regular camera (2026-10-03, "camera should always be regular"): Custom, following your own
+-- Humanoid, FOV 70. Camera stages (chest island, egg pedestal, Armory hall, map-select islands, boss
+-- intro, asset warm-up) take it by key like hideTouchControls, and the last one out always hands back
+-- this constant, never a value saved at open: a chest opened during the station walk-up's FOV punch
+-- saved 62, gave back 62, and the next visit went 62 -> 54 (the narrow "isometric" view players saw).
+-- Only the first take keeps the player's view, so overlapping stages (chests -> eggs) never stack.
+T.CAMERA_FOV=70
+local cameraHolders,cameraAlive={},{} -- keys oldest first (the newest drives); key -> still-shown check
+local cameraBack,cameraTween,cameraFollow
+local function stopCameraTween() if cameraTween then cameraTween:Cancel();cameraTween=nil end end
+local function dropHolder(key)
+ local at=table.find(cameraHolders,key);if at then table.remove(cameraHolders,at) end
+ cameraAlive[key]=nil
+end
+function T.cameraOwner() return cameraHolders[#cameraHolders] end
+-- `alive` (optional): the stage's IsShown, so a stage that broke without Hide can't block self-heal.
+-- Returns the player's own view from before the first stage (to fly back to).
+function T.cameraTake(key,alive)
+ local camera=workspace.CurrentCamera
+ stopCameraTween()
+ if #cameraHolders==0 then cameraBack=camera and camera.CFrame end
+ dropHolder(key);table.insert(cameraHolders,key);cameraAlive[key]=alive
+ return cameraBack
+end
+-- Back to the regular camera now. `look`: face that way again when a stage left it Scriptable.
+function T.cameraHome(look)
+ local camera=workspace.CurrentCamera;if not camera then return end
+ stopCameraTween()
+ local c=Players.LocalPlayer and Players.LocalPlayer.Character
+ local h=cameraFollow and cameraFollow.Parent and cameraFollow or c and c:FindFirstChildOfClass('Humanoid')
+ if h then camera.CameraSubject=h end
+ if look and camera.CameraType==Enum.CameraType.Scriptable then camera.CFrame=look end
+ camera.CameraType=Enum.CameraType.Custom
+ camera.FieldOfView=T.CAMERA_FOV
+end
+function T.cameraRelease(key)
+ dropHolder(key)
+ if #cameraHolders==0 then local back=cameraBack;cameraBack=nil;T.cameraHome(back) end
+end
+-- Self-heal (spawn, arrival, a window closing): the regular camera unless a shown stage holds it.
+function T.cameraHeal()
+ for i=#cameraHolders,1,-1 do
+  local key=cameraHolders[i];local alive=cameraAlive[key]
+  if alive and not alive() then dropHolder(key) end
+ end
+ if #cameraHolders==0 then T.cameraHome() end
+end
+-- Spectating (death screen) follows a teammate's Humanoid; nil goes back to your own.
+function T.cameraFollow(humanoid) cameraFollow=humanoid;T.cameraHeal() end
+-- An FOV tween on the regular camera (the station walk-up punch). One at a time; skipped while a
+-- stage holds the camera, and any take or home cancels it so a finishing tween can't undo them.
+function T.cameraFov(fov,info)
+ stopCameraTween()
+ local camera=workspace.CurrentCamera
+ if #cameraHolders>0 or not camera or camera.CameraType~=Enum.CameraType.Custom then return end
+ cameraTween=TweenService:Create(camera,info,{FieldOfView=fov});cameraTween:Play()
+end
+
 -- Modal window: dimmed backdrop, lime-cornered frame, title with stone caps, close button.
 -- `w`/`h` is the content layout size; the frame adds WINDOW_MARGIN of breathing room on every
 -- side. Scales to fit the viewport, up to WINDOW_MAX_SCALE on large screens.
@@ -652,6 +710,131 @@ function T.settingsWindow(screen,extras)
  end
  draw()
  win.Redraw=function() if win.Root.Parent then draw() end end
+ return win
+end
+
+-- Leaving a run (2026-10-03 friends play-test: LEAVE RUN in the pause menu froze a player).
+-- T.requestLeave sends RunAction LeaveRun (or LeaveParty) and calls done(true) once the run has
+-- ended for this player (RunResult / RunMember, both server-set), or done(false, why) on the
+-- server's refusal (RunAction 'LeaveResult', echoing this request's number) or after 6 s with no
+-- answer. Callers keep their screen up until then, so nobody is left behind a menu that closed.
+local leaveSerial=0
+function T.requestLeave(withParty,done)
+ local player=Players.LocalPlayer
+ local combat=game:GetService('ReplicatedStorage'):FindFirstChild('RogueliteCombat')
+ local remote=combat and combat:FindFirstChild('RunAction')
+ if not remote then done(false,'You are not in a run');return end
+ leaveSerial+=1
+ local id,over,conns=leaveSerial,false,{}
+ local function finish(ok,why)
+  if over then return end
+  over=true
+  for _,c in conns do c:Disconnect() end
+  done(ok,why)
+ end
+ pcall(function()
+  table.insert(conns,remote.OnClientEvent:Connect(function(kind,ok,why,token)
+   if kind=='LeaveResult' and token==id and ok~=true then finish(false,type(why)=='string' and why or "You can't leave right now") end
+  end))
+ end)
+ for _,a in {'RunResult','RunMember'} do
+  table.insert(conns,player:GetAttributeChangedSignal(a):Connect(function()
+   if player:GetAttribute('RunResult') or not player:GetAttribute('RunMember') then finish(true) end
+  end))
+ end
+ remote:FireServer(withParty and 'LeaveParty' or 'LeaveRun',id)
+ task.delay(6,function() finish(false,'No answer from the server. Try again') end)
+end
+-- The Leave Run popup: one confirm behind every LEAVE RUN button (pause menu, shop, death screen)
+-- and the wave-20 victory panel. "Leave the run? You keep 340 emeralds." with STAY / LEAVE. A
+-- private party's leader (RunLeader on RogueliteCombat, MatchService; the server checks it again)
+-- also gets LEAVE WITH PARTY: the run ends for the whole party, each keeping what they earned. A
+-- refusal shows its reason here and the buttons work again. It closes itself when the run ends for
+-- this player, or when a signal in opts.closeOn fires and opts.closeIf() (if given) says so.
+-- opts: keep (emeralds when RunEmeralds isn't set), closeOn, closeIf, onClose, and victory=true for
+-- the wave-20 panel (opts.sub under YOU WON!, LEAVE to collect, KEEP GOING into Endless).
+function T.leaveConfirm(screen,opts)
+ opts=opts or {}
+ local C=T.Color
+ local player=Players.LocalPlayer
+ local combat=game:GetService('ReplicatedStorage'):FindFirstChild('RogueliteCombat')
+ local others=0
+ for _,q in Players:GetPlayers() do if q~=player and q:GetAttribute('RunMember') then others+=1 end end
+ local leader=others>0 and combat~=nil and combat:GetAttribute('RunLeader')==player.UserId
+ local victory=opts.victory==true
+ -- Rows, top to bottom (design px, body 484 wide): question, the victory line, what you keep, a
+ -- note, the refusal line, the buttons (with notes on the victory panel), then LEAVE WITH PARTY.
+ local BW=484;local qH=victory and 64 or 48
+ local H=4+qH+(victory and 30 or 0)+32+26+26+6+70+(victory and 26 or 0)+(leader and 82 or 0)+4
+ local conns={}
+ local win
+ win=T.window(screen,victory and 'Victory' or 'LeaveConfirm',victory and 'Run Complete' or 'Leave Run',BW+36,H+58,function()
+  for _,c in conns do c:Disconnect() end
+  if opts.onClose then opts.onClose() end
+ end)
+ local body=win.Body
+ local function centre(l) l.TextXAlignment=Enum.TextXAlignment.Center;return l end
+ local y=4
+ centre(T.label(body,'Question',victory and 'YOU WON!' or 'Leave the run?',0,y,BW,qH,victory and 56 or 36,victory and C.gold or C.white));y+=qH
+ if victory then centre(T.label(body,'Sub',opts.sub or 'RUN COMPLETE',0,y,BW,28,20,C.muted));y+=30 end
+ local keep=centre(T.text(body,'Keep','',0,y,BW,30,22));y+=32
+ local function paintKeep()
+  local n=tonumber(player:GetAttribute('RunEmeralds')) or tonumber(opts.keep) or 0
+  local amount=('<font color="%s">%d emerald%s</font>'):format(T.hex(C.emerald),math.floor(n),n==1 and '' or 's')
+  keep.Text=victory and ('Your '..amount..(n==1 and ' is' or ' are')..' safe either way.') or ('You keep '..amount..'.')
+ end
+ paintKeep()
+ local note=leader and 'LEAVE WITH PARTY ends it for everyone; each keeps what they earned'
+  or others>0 and (victory and 'Each player chooses for themselves' or 'Your teammates keep playing')
+  or (victory and 'Endless goes on until you fall or leave' or 'You see your results, then go back to the lobby')
+ centre(T.text(body,'Note',note,0,y,BW,24,17,C.muted));y+=26
+ local why=centre(T.text(body,'Why','',0,y,BW,24,17,C.negative));y+=32
+ local half=(BW-16)/2
+ local buttons={}
+ local busy=false
+ local function go(withParty,b,caption)
+  if busy then return end
+  busy=true;why.Text='';b.Caption.Text='LEAVING...'
+  for _,x in buttons do x.Interactable=false end
+  T.requestLeave(withParty,function(ok,reason)
+   if ok then win.Close();return end
+   busy=false
+   if not b.Parent then return end
+   b.Caption.Text=caption;why.Text=reason or ''
+   for _,x in buttons do x.Interactable=true end
+   T.sound('ui_error')
+  end)
+ end
+ local leaveButton,stayButton
+ if victory then
+  leaveButton=T.button(body,'Leave','LEAVE',0,y,half,70,function() go(false,leaveButton,'LEAVE') end)
+  stayButton=T.button(body,'KeepGoing','KEEP GOING',half+16,y,half,70,function() win.Close() end,true)
+  centre(T.text(body,'LeaveNote','Collect your rewards',0,y+74,half,22,16,C.muted))
+  centre(T.text(body,'KeepGoingNote','Endless: harder waves, more emeralds',half+16,y+74,half,22,16,C.muted))
+  y+=70+26
+ else
+  stayButton=T.button(body,'Stay','STAY',0,y,half,70,function() win.Close() end)
+  leaveButton=T.button(body,'Leave','LEAVE',half+16,y,half,70,function() go(false,leaveButton,'LEAVE') end,true)
+  leaveButton.Caption.TextColor3=C.negative
+  y+=70
+ end
+ stayButton.Caption.TextSize=28;leaveButton.Caption.TextSize=28
+ buttons={stayButton,leaveButton}
+ if leader then
+  local party
+  party=T.button(body,'LeaveParty','LEAVE WITH PARTY',0,y+12,BW,70,function() go(true,party,'LEAVE WITH PARTY') end,true)
+  party.Caption.TextSize=26;party.Caption.TextColor3=C.negative
+  table.insert(buttons,party)
+ end
+ table.insert(conns,player:GetAttributeChangedSignal('RunEmeralds'):Connect(paintKeep))
+ table.insert(conns,player:GetAttributeChangedSignal('RunResult'):Connect(function() if player:GetAttribute('RunResult') then win.Close() end end))
+ for _,signal in opts.closeOn or {} do
+  table.insert(conns,signal:Connect(function() if not opts.closeIf or opts.closeIf() then win.Close() end end))
+ end
+ -- A controller starts on the choice that keeps playing (STAY, KEEP GOING), never on a leave.
+ task.delay(.05,function() pcall(function()
+  if stayButton.Parent and game:GetService('UserInputService'):GetLastInputType().Name:find('^Gamepad') then game:GetService('GuiService').SelectedObject=stayButton end
+ end) end)
  return win
 end
 
