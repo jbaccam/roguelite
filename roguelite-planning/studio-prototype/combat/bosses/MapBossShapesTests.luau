@@ -13,6 +13,10 @@ add(S.contains({kind='arc',pivot=Vector3.zero,forward=Vector3.new(0,0,1),from=ma
 add(not S.contains({kind='arc',pivot=Vector3.zero,forward=Vector3.new(0,0,1),from=math.rad(-100),to=math.rad(100),inner=4,outer=18},Vector3.new(0,0,-10)),'arc excludes the front')
 add(S.contains({kind='circle',center=Vector3.zero,radius=5},Vector3.new(0,3.9,0)),'height band inside')
 add(not S.contains({kind='circle',center=Vector3.zero,radius=5},Vector3.new(0,6,0)),'height band excludes a jumper above 5.5')
+-- A circle's own height (the Hammer's Slam: 6) raises the top of the band: a plain jump doesn't clear it.
+add(S.contains({kind='circle',center=Vector3.zero,radius=5,height=6},Vector3.new(0,5,0)) and S.contains({kind='circle',center=Vector3.zero,radius=5,height=6},Vector3.new(0,5.8,0)),'circle height 6 hits 5 and 5.8 above (the default band stops at 5.5)')
+add(not S.contains({kind='circle',center=Vector3.zero,radius=5,height=6},Vector3.new(0,7,0)),'circle height 6 misses 7 above')
+add(not S.contains({kind='circle',center=Vector3.zero,radius=5,height=6},Vector3.new(0,-2.5,0)),'circle height leaves the band below alone (2)')
 local segs=S.outline({kind='cone',origin=Vector3.zero,direction=F,halfAngle=math.rad(25),length=18},24)
 add(#segs>=24,'cone outline has segments')
 add(S.contains({kind='capsule',a=Vector3.zero,b=Vector3.new(10,0,0),radius=2},Vector3.new(5,3,1.5)),'capsule inside (height band uses a)')

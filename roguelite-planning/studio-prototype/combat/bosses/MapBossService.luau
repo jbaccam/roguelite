@@ -48,7 +48,8 @@ function X.duration(def,at)
  elseif def.shape=='targets' then d=math.max(d,at.impact+def.eruptDelay+.05) end
  return d
 end
-function X.circle(def,at,f) return {kind='circle',center=X.onGround(f,X.point(f,at,def.point,at.impact)),radius=def.radius} end
+-- def.height (the Hammer's Slam: 6) raises the circle's band top, so a plain jump doesn't clear it.
+function X.circle(def,at,f) return {kind='circle',center=X.onGround(f,X.point(f,at,def.point,at.impact)),radius=def.radius,height=def.height} end
 function X.wave(def,at,f,yaw)
  local d=at.directionAtImpactStudio and v3(at.directionAtImpactStudio);local dir=X.flatDir(f,d)
  if yaw and yaw~=0 then dir=CFrame.Angles(0,yaw,0):VectorToWorldSpace(dir) end
@@ -85,9 +86,16 @@ function X.laneFacing(pos,target,look)
  return CFrame.lookAt(pos,pos+side)
 end
 function X.lane(cf,target) local r=flat(cf.RightVector).Unit;return flat(target-cf.Position):Dot(r)>=0 and r or -r end
+-- The lane's direction; the root then faces along it. def.facing='forward' (the Hammer's charge)
+-- runs straight at the target, body and all; otherwise the crab's side-on lane through the target.
+function X.laneDir(def,pos,goal,look)
+ if def.facing=='forward' then local d=flat(goal-pos);return d.Magnitude>.1 and d.Unit or flat(look).Unit end
+ return X.lane(X.laneFacing(pos,goal,look),goal)
+end
 -- Mid-rush the crab's body is turned 90 degrees (RushStart): its claws face the left of the
 -- lane (+Y x dir). def.offset shifts the hit band that way, so it runs from shell to claw tips.
-function X.laneSide(dir,def) return Vector3.yAxis:Cross(dir)*(def.offset or 0) end
+-- A forward runner is centred on his path.
+function X.laneSide(dir,def) return def.facing=='forward' and Vector3.zero or Vector3.yAxis:Cross(dir)*(def.offset or 0) end
 -- Warning rectangle over the body's swept capsule (half a width past each end).
 function X.laneShape(f,dir,length,width,side) return {kind='line',origin=X.onGround(f,f.cf.Position)-dir*width/2+(side or Vector3.zero),direction=dir,length=length+width,width=width} end
 -- The rushing body's hit between two distances travelled along the lane.
@@ -99,6 +107,7 @@ function X.cone(def,at,f,t) return {kind='cone',origin=X.onGround(f,X.point(f,at
 -- A sweep hits from the moment its swing starts, not from its impact mark: the dragon's tail
 -- crosses behind him about 0.2 s before impact, so a player at his rear was never hit. The swing
 -- starts where the wind-up stops: walking back from impact while the tip keeps slowing down.
+-- A combo's later phase (hitAfter, X.phaseWindows) never starts before the phase before it ends.
 local hitFroms=setmetatable({},{__mode='k'})
 function X.hitFrom(def,at)
  if def.shape~='sweep' then return at.impact end
@@ -106,10 +115,10 @@ function X.hitFrom(def,at)
  local list=at.samples and at.samples[def.point];local from=at.impact
  if list and #list>2 then
   local function speed(i) local a,b=list[i-1],list[i];return Vector3.new(b[2]-a[2],b[3]-a[3],b[4]-a[4]).Magnitude/math.max(b[1]-a[1],1e-6) end
-  local i=#list
+  local i=#list;local floor=math.max(at.warnStart,at.hitAfter or at.warnStart)
   while i>2 and list[i][1]>at.impact do i-=1 end
-  while i>2 and list[i-1][1]>=at.warnStart and speed(i-1)<=speed(i) do i-=1 end
-  from=math.min(at.impact,list[i-1][1])
+  while i>2 and list[i-1][1]>=floor and speed(i-1)<=speed(i) do i-=1 end
+  from=math.min(at.impact,math.max(list[i-1][1],at.hitAfter or -math.huge))
  end
  hitFroms[at]=from;return from
 end
@@ -140,6 +149,9 @@ function X.sweepArc(def,at,f)
  -- Past each end, the tip's own thickness where it sits closest to the boss (the widest angle).
  local pad=math.asin(math.min(1,def.radius/math.max(nearTip,def.radius,1)));local half=(hi-lo)/2+pad
  local inner=def.baseRadius and 0 or math.max(0,near-def.radius)
+ -- A sweep reaching all the way round (the Hammer's Spin) warns a full ring, not an arc that runs
+ -- past its own start. It hits the same either way: every yaw is inside.
+ if half>=math.pi then return {kind='arc',pivot=pivot,forward=first,from=-math.pi,to=math.pi,inner=inner,outer=far+def.radius} end
  return {kind='arc',pivot=pivot,forward=CFrame.Angles(0,(lo+hi)/2,0):VectorToWorldSpace(first),from=-half,to=half,inner=inner,outer=far+def.radius}
 end
 -- Evenly spread projectile yaws (0 = world -Z) across +-spread/2 about a flat direction.
@@ -157,6 +169,118 @@ function X.volley(def,at,f,goal,mouthAimed,rage)
  local count=def.count+(rage and rage.extra or 0);local fan={count=count,spread=def.count>1 and def.spread*(count-1)/(def.count-1) or def.spread}
  return {origin={origin.X,origin.Y,origin.Z},yaws=X.yaws(fan,dir),height=f.groundY+math.clamp(origin.Y-f.groundY,1.5,3.5),speed=def.speed,life=def.life,radius=def.radius}
 end
+-- The attack def with a part's fields on top: one combo phase (def.phases[i]) or a lane's finish.
+function X.merged(def,part) local m=table.clone(def);m.phases=nil;m.finish=nil;for k,v in part do m[k]=v end;return m end
+-- A combo (def.phases, the Hammer's SwingSpin and SpinSlam) is one clip with several hits. Each
+-- phase's window is the clip's timing with that phase's own times (at.phases, in order, scaled by
+-- MapBossDefs). hitAfter: a later swing never starts hitting before the one before it ends.
+local phaseWindows=setmetatable({},{__mode='k'})
+function X.phaseWindows(def,at)
+ if not def.phases or not at or not at.phases or #at.phases<#def.phases then return nil end
+ if phaseWindows[at] then return phaseWindows[at] end
+ local list={}
+ for i=1,#def.phases do
+  local w=table.clone(at);w.phases=nil;for k,v in at.phases[i] do w[k]=v end
+  w.hitAfter=list[i-1] and list[i-1].activeEnd;list[i]=w
+ end
+ phaseWindows[at]=list;return list
+end
+-- A combo's hit units: per phase its def, window and hit memory, so a player is hit at most once
+-- per phase (and can be hit again by the next one).
+function X.phases(def,at)
+ local windows=X.phaseWindows(def,at);if not windows then return nil end
+ local list={}
+ for i,w in windows do list[i]={def=X.merged(def,def.phases[i]),at=w,hits={},ticks={},fired=false} end
+ return list
+end
+-- The warning shape of a circle, sweep, breath or wave hit: what a phase publishes at commit (sweeps
+-- also hold their hits inside it).
+function X.shapeOf(def,at,f)
+ if def.shape=='circle' then return X.circle(def,at,f)
+ elseif def.shape=='sweep' then return X.sweepArc(def,at,f)
+ elseif def.shape=='breath' then return X.cone(def,at,f,at.impact)
+ elseif def.shape=='wave' then return X.wave(def,at,f) end
+ return nil
+end
+-- One hit unit's circle, wave, breath or sweep hits between clip times t0 and age: the attack itself
+-- (P = A), a combo phase, or a lane's finish. strike(e,from,source) lands one hit (the server's line
+-- of sight and damage) and says whether it counted. True when a circle fired (its follow-up is due).
+function X.stepHits(P,f,age,t0,people,strike)
+ local def,at=P.def,P.at
+ if def.shape=='circle' and age>=at.impact and not P.fired then
+  P.fired=true;local c=X.circle(def,at,f)
+  for _,e in people do if Shapes.contains(c,e.at) and strike(e,c.center+Vector3.yAxis*2,c.center) then P.hits[e.player]=true end end
+  return true
+ elseif def.shape=='wave' and age>=at.impact then
+  for _,e in people do
+   for _,line in P.lines or {P.line} do
+    if not P.hits[e.player] and X.waveHit(def,at,line,e.at,t0,age) and strike(e,line.origin+Vector3.yAxis*2,line.origin) then P.hits[e.player]=true end
+   end
+  end
+ elseif (def.shape=='breath' or def.shape=='sweep') and age>=X.hitFrom(def,at) then
+  -- Bound catch-up to this unit's active window, never a stale whole turn. A sweep starts with
+  -- its swing (X.hitFrom), and hits only inside its warning arc.
+  local breath=def.shape=='breath';local begin,finish=math.max(t0,X.hitFrom(def,at)),math.min(age,at.activeEnd)
+  local origin=f.cf.Position
+  local function test(time)
+   local shape=breath and X.cone(def,at,f,time) or X.sweep(def,at,f,time)
+   for _,e in people do
+    local p=e.player;local ready
+    if breath then ready=not P.ticks[p] or time-P.ticks[p]>=def.tick-1e-6 else ready=not P.hits[p] and (not P.arc or Shapes.contains(P.arc,e.at)) end
+    if ready and Shapes.contains(shape,e.at) and strike(e,origin,origin) then P.ticks[p]=time;P.hits[p]=true end
+   end
+  end
+  -- A whipping tail tip covers ~4.6 studs per 1/60 s; at 1/120 its 4-stud hit leaves no gaps.
+  if begin<=finish then for time=begin,finish,breath and 1/30 or 1/120 do test(time) end;test(finish) end
+ end
+ return false
+end
+-- The forward charge keeps running while its target stays in the lane (def.contact, ported from
+-- BossService.stepCharge): it ends with his root `contact` studs short of them (the body hit is
+-- width/2 > contact, so it lands), wherever they now are along the lane. Backing away down the lane
+-- doesn't outrun him; stepping out of it (or 7 studs up or down) dodges: the length stays
+-- `previous`. Capped by def.length and the wall, and never below the distance already travelled.
+function X.contactLength(def,cf,dir,targetPos,wallLength,previous,travelled)
+ local d=flat(targetPos-cf.Position);local along=d:Dot(dir);local side=(d-dir*along).Magnitude
+ if side>def.width/2 or math.abs(targetPos.Y-cf.Y)>7 then return previous end
+ local cap=math.min(def.length,wallLength or def.length)
+ return math.max(travelled or 0,math.min(cap,along-math.sqrt(math.max(0,def.contact^2-side^2))))
+end
+-- A lane's finish (def.finish, the ChargeSlam): the end clip's own timing, measured from where the
+-- run ends (cf moved `length` along dir), starting at the lane window's activeEnd, RushStart +
+-- length/speed. Returns that timing, the frame and the start (attack seconds); nil without timing.
+function X.finishFrame(def,T,cf,dir,length,groundY)
+ local at=T.attacks and def.clips and T.attacks[def.clips[3]];local w=X.window(def,T,length)
+ if not at or not w then return nil end
+ return at,X.frame(cf+dir*length,T,groundY),w.activeEnd
+end
+-- def.lockout: an attack's own minimum gap between its starts (the charge: 5 s), on top of cooldowns.
+function X.lockedOut(s,kind,now)
+ local a=s.def.attacks[kind];local last=s.lastStart and s.lastStart[kind]
+ return a.lockout~=nil and last~=nil and now-last<a.lockout
+end
+-- The order walk, from the attack after the last one: the first in range, not locked out, that
+-- try(kind) starts (in sight; MapBossService.start). Returns its index.
+function X.walk(s,order,reach,now,try)
+ for i=1,#order do
+  local index=(s.index+i-1)%#order+1;local kind=order[index];local range=s.def.attacks[kind].range
+  if reach>=range[1] and reach<=range[2] and not X.lockedOut(s,kind,now) and try(kind) then return index end
+ end
+ return nil
+end
+-- The attack order: the tutorial boss's (def.tutorial.order), else the enraged one when the def has
+-- it (def.enrage.order), else def.order.
+function X.orderFor(s)
+ local def=s.def
+ if s.tutorial and def.tutorial and def.tutorial.order then return def.tutorial.order end
+ return s.enraged and def.enrage and def.enrage.order or def.order
+end
+-- The tutorial boss (TutorialBossHealth) teaches the moves, it doesn't punish: def.tutorial.enrage
+-- and .follow set to false turn those off. True when `key` stays on for this boss.
+function X.allows(s,key) return not (s.tutorial and s.def.tutorial and s.def.tutorial[key]==false) end
+-- The enrage roar (def.roar): once, after enraging, and only between attacks: one under way
+-- finishes first.
+function X.roarDue(s) return s.enraged==true and not s.roared and not s.attack and s.def.roar~=nil end
 
 -- Edit-mode test requires stop here: the services and the Heartbeat load on a running server only.
 if not (Run:IsServer() and Run:IsRunning()) then return M end
@@ -192,18 +316,36 @@ local function hit(npc,def,e,from,params,source)
 end
 local function publish(npc,A) npc:SetAttribute('MapBossAttackData',Http:JSONEncode(A.data)) end
 local function segmentDistance(a,b,p) local ab=b-a;local t=math.clamp((p-a):Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1);return (a+ab*t-p).Magnitude end
+-- A lane's window, duration and published length, warning and finish for its current length. The
+-- forward charge's contact run re-times it (stepAttack); the client re-times the end clip from it.
+local function laneTiming(s,A)
+ local def=A.def
+ A.at=X.window(def,s.T,A.length);A.duration=X.duration(def,A.at)
+ A.data.length=A.length;A.data.shape=Shapes.encode(X.laneShape(A.frame,A.dir,A.length,def.width,X.laneSide(A.dir,def)))
+ local F=A.finish
+ if F then
+  F.at,F.frame,F.start=X.finishFrame(def,s.T,A.cf,A.dir,A.length,A.ground)
+  if F.at then
+   A.duration=math.max(A.duration,F.start+F.at.impact+.05)
+   A.data.finish={shape=Shapes.encode(X.circle(F.def,F.at,F.frame)),impact=F.start+F.at.impact}
+  end
+ end
+end
 function M.start(npc,kind,target,force)
  local s=M.states[npc];local def=s and s.def.attacks[kind];local h=npc:FindFirstChildOfClass('Humanoid');local root=npc.PrimaryPart
  if not def or s.attack or not h or h.Health<=0 or not root or not X.window(def,s.T) then return false end
+ -- A combo needs its clip's phase timings (MapBossTiming phases).
+ if def.phases and not X.phaseWindows(def,X.window(def,s.T)) then return false end
  local goal=target and target.Parent and target.Position or root.Position+root.CFrame.LookVector*12
  local delta=goal-root.Position;local params=exclusions(npc)
  if not force and (not target or math.abs(delta.Y)>10 or workspace:Raycast(root.Position,delta,params)) then return false end
  local laneDir
  if def.shape=='lane' then
-  -- The lane is the side the target is on once the crab stands side-on to it, so it runs through
-  -- the target. The root then faces along the lane: RushStart turns the body so its right side
-  -- leads, and RushLoop travels along the model's forward.
-  laneDir=X.lane(X.laneFacing(root.Position,goal,root.CFrame.LookVector),goal);root.CFrame=CFrame.lookAt(root.Position,root.Position+laneDir)
+  -- The crab's lane is the side the target is on once it stands side-on to it, so it runs through
+  -- the target: RushStart turns the body so its right side leads, and RushLoop travels along the
+  -- model's forward. A forward runner (the Hammer) runs straight at them. Either way the root
+  -- faces along the lane (X.laneDir).
+  laneDir=X.laneDir(def,root.Position,goal,root.CFrame.LookVector);root.CFrame=CFrame.lookAt(root.Position,root.Position+laneDir)
  elseif flat(delta).Magnitude>.1 then root.CFrame=CFrame.lookAt(root.Position,root.Position+flat(delta)) end
  local ground=workspace:Raycast(root.Position+Vector3.yAxis*8,-Vector3.yAxis*(s.T.rootHeight+30),params)
  if not ground then return false end
@@ -211,13 +353,30 @@ function M.start(npc,kind,target,force)
  local A={kind=kind,def=def,start=now,cf=cf,ground=f.groundY,frame=f,hits={},ticks={},sampled=0,data={}}
  if def.shape=='lane' then
   -- Clamped short of a wall at body height; the body travels at `speed` after RushStart.
+  -- def.contact: the run ends with his root `contact` studs short of the target, and follows them
+  -- down the lane (stepAttack, X.contactLength). def.finish: the closing slam, its own hit memory,
+  -- so a player hit by the run can be hit by the slam too.
   A.dir=laneDir;local wall=workspace:Raycast(cf.Position,A.dir*def.length,params)
-  A.length=wall and math.max(0,wall.Distance-math.min(8,s.T.footprintRadius or 4)/2-1) or def.length;A.travelled=0
-  A.data={dir={A.dir.X,A.dir.Z},length=A.length,shape=Shapes.encode(X.laneShape(f,A.dir,A.length,def.width,X.laneSide(A.dir,def)))}
- end
- A.at=X.window(def,s.T,A.length);local at=A.at;A.duration=X.duration(def,at)
+  A.limit=wall and math.max(0,wall.Distance-math.min(8,s.T.footprintRadius or 4)/2-1) or def.length;A.travelled=0
+  A.length=def.contact and X.contactLength(def,cf,A.dir,Vector3.new(goal.X,cf.Y,goal.Z),A.limit,A.limit,0) or A.limit
+  A.target=def.contact and target or nil
+  if def.finish then A.finish={def=X.merged(def,def.finish),hits={},ticks={},fired=false} end
+  A.data={dir={A.dir.X,A.dir.Z}};laneTiming(s,A)
+ else A.at=X.window(def,s.T);A.duration=X.duration(def,A.at) end
+ local at=A.at
  local rage=s.enraged and s.def.enrage or {}
- if def.shape=='circle' then A.data.shape=Shapes.encode(X.circle(def,at,f))
+ if def.phases then
+  -- Every phase's warning goes out at commit (data.phases; the client fills a later one in as its
+  -- hit nears). data.shape (the first phase) is kept for older readers.
+  A.phases=X.phases(def,at);A.data.phases={}
+  for i,P in A.phases do
+   local shape=X.shapeOf(P.def,P.at,f)
+   if P.def.shape=='sweep' then P.arc=shape elseif P.def.shape=='wave' then P.line=shape end
+   A.duration=math.max(A.duration,X.duration(P.def,P.at))
+   A.data.phases[i]={shape=shape and Shapes.encode(shape),warnStart=P.at.warnStart,impact=P.at.impact,activeEnd=P.at.activeEnd}
+  end
+  A.data.shape=A.data.phases[1].shape
+ elseif def.shape=='circle' then A.data.shape=Shapes.encode(X.circle(def,at,f))
  elseif def.shape=='wave' then
   -- Enraged, the wave splits into a fan (rage.fan, degrees). Hits test every line; data.shape
   -- (the middle line) is kept for older readers, and the client warns and draws data.lines.
@@ -228,19 +387,32 @@ function M.start(npc,kind,target,force)
  elseif def.shape=='sweep' then A.arc=X.sweepArc(def,at,f);A.data.shape=Shapes.encode(A.arc)
  elseif def.shape=='projectiles' then A.data=X.volley(def,at,f,goal,MOUTH_AIMED[kind],rage) end
  A.data.rate=def.rate or 1
- s.attack=A
+ s.attack=A;s.lastStart[kind]=now -- def.lockout (X.lockedOut)
  npc:SetAttribute('BossAttack',kind);npc:SetAttribute('BossStart',now);npc:SetAttribute('BossFrame',cf);npc:SetAttribute('BossGroundY',f.groundY);npc:SetAttribute('BossDuration',A.duration)
  A.serial=(npc:GetAttribute('BossSerial') or 0)+1
  publish(npc,A);npc:SetAttribute('BossSerial',A.serial);npc:SetAttribute('Attacking',true)
  h:Move(Vector3.zero);h:MoveTo(root.Position);h.AutoRotate=false;root.Anchored=true
  return true
 end
-function M.spawn(id,cf,practice)
+function M.spawn(id,cf,practice,opts)
  assert(typeof(cf)=='CFrame','Server spawn requires CFrame')
  -- practice: an admin-panel boss (BossPractice: no loot). Callers check the developer first.
+ -- opts.intro (BossEncounter's wave bosses): the def.intro sky-drop entrance, when the def has one.
  local def,T=Defs.get(id),Defs.timing(id);if not def or not T then return nil end
  local template=game.ServerStorage.RogueliteNPCs:FindFirstChild(id..'_NPC');if not template then return nil end
  local folder=workspace:FindFirstChild('RogueliteEnemies');if not folder then return nil end
+ local intro=not practice and opts and opts.intro and def.intro or nil
+ if intro then
+  -- He lands facing the nearest run member: BossEncounter's spot has no facing, so he fell facing
+  -- world -Z, away from the map's spawn (BossService, user 2026-10-03).
+  local near,best=nil,math.huge
+  for _,p in Players:GetPlayers() do
+   local r=p:GetAttribute('RunMember') and p.Character and p.Character:FindFirstChild('HumanoidRootPart')
+   if r then local d=(r.Position-cf.Position).Magnitude;if d<best then near,best=r,d end end
+  end
+  local to=near and Vector3.new(near.Position.X,cf.Position.Y,near.Position.Z)
+  if to and (to-cf.Position).Magnitude>.5 then cf=CFrame.lookAt(cf.Position,to) end
+ end
  local npc=template:Clone();npc.Name=id
  -- The template is at authored size; def.scale grows it about its pivot (the HumanoidRootPart),
  -- which is then placed at cf. EnemyBaselineModelScale stays the template's, so the client scales
@@ -255,7 +427,10 @@ function M.spawn(id,cf,practice)
  -- Only run members count (ShopService RunMember): players in the lobby don't toughen the boss.
  local members=0;for _,p in Players:GetPlayers() do if p:GetAttribute('RunMember') then members+=1 end end
  local hpScale,damageScale=Rules.bossScale(combat:GetAttribute('RunDifficulty'),math.max(1,members))
- h.MaxHealth=math.ceil(def.health*hpScale);h.Health=h.MaxHealth;h.WalkSpeed=def.chaseSpeed
+ -- The tutorial's boss (TutorialDirector sets TutorialBossHealth): that fixed health, no scaling,
+ -- and the def.tutorial variant (s.tutorial: its order, no enrage or follow-ups).
+ local fixed=not practice and combat:GetAttribute('TutorialBossHealth');local tutorial=type(fixed)=='number'
+ h.MaxHealth=tutorial and fixed or math.ceil(def.health*hpScale);h.Health=h.MaxHealth;h.WalkSpeed=def.chaseSpeed
  npc:SetAttribute('BossDamageScale',damageScale)
  npc:SetAttribute('BossSpawnedAt',workspace:GetServerTimeNow())
  npc:SetAttribute('IsBoss',true);npc:SetAttribute('IsMapBoss',true);npc:SetAttribute('MapBossId',id);npc:SetAttribute('BossName',def.name);npc:SetAttribute('ZombieType',id)
@@ -263,7 +438,25 @@ function M.spawn(id,cf,practice)
  if not npc:GetAttribute('BossDeathSeconds') and T.clips and T.clips.Death then npc:SetAttribute('BossDeathSeconds',T.clips.Death+.6) end
  for _,p in npc:GetDescendants() do if p:IsA('BasePart') then p.Anchored=false end end
  npc.Parent=folder;root:SetNetworkOwner(nil);h.AutoRotate=true
- local s={id=id,def=def,T=T,next=workspace:GetServerTimeNow()+Defs.FIRST_ATTACK,index=0,lastHealth=h.Health,stop=def.stop or math.min(8*scale,T.footprintRadius or 4)+3,follows={},followSerial=0};M.states[npc]=s
+ local s={id=id,def=def,T=T,next=workspace:GetServerTimeNow()+Defs.FIRST_ATTACK,index=0,lastHealth=h.Health,stop=def.stop or math.min(8*scale,T.footprintRadius or 4)+3,follows={},followSerial=0,
+  lastStart={},tutorial=tutorial or nil};M.states[npc]=s
+ if intro then
+  -- The entrance (BossService's, from def.intro): rumble and a growing shadow for `drop`, the fall,
+  -- then the landing and camera orbit (BossIntro.client) for `after`. The intro clip is timed so
+  -- its impact meets the ground at BossIntroLand; it deals no damage (no s.attack). Until
+  -- BossIntroUntil he can't be hurt (CombatEffectsService) and stands anchored, and CinematicUntil
+  -- holds the players (CharacterService.frozen) and the enemies (RogueliteZombieChase).
+  local now=workspace:GetServerTimeNow();local land=now+intro.drop+intro.fall;local done=land+intro.after
+  local clip=T.attacks and T.attacks[intro.clip]
+  npc:SetAttribute('BossIntroStart',now);npc:SetAttribute('BossIntroLand',land);npc:SetAttribute('BossIntroUntil',done)
+  if def.introName then npc:SetAttribute('BossIntroName',def.introName) end
+  npc:SetAttribute('BossAttack',intro.clip);npc:SetAttribute('BossStart',land-(clip and clip.impact or 0));npc:SetAttribute('BossFrame',root.CFrame)
+  npc:SetAttribute('BossGroundY',root.Position.Y-T.rootHeight-.1)
+  npc:SetAttribute('BossSerial',(npc:GetAttribute('BossSerial') or 0)+1);npc:SetAttribute('Attacking',true)
+  root.Anchored=true;h.AutoRotate=false
+  s.intro=done;s.next=done+.6
+  combat:SetAttribute('CinematicUntil',done)
+ end
  -- One flinch per 2 s, as the Hammer boss (BossService): restarting it on every hit froze the
  -- boss in its first frame while it kept walking.
  h.HealthChanged:Connect(function(health)
@@ -359,11 +552,12 @@ local function spotsNear(root,people,maxTargets,range,extra,skip,params,groundY)
  return list
 end
 local function encodePoints(points) local list={};for i,v in points do list[i]={v.X,v.Y,v.Z} end;return list end
--- A circle attack's follow-up (def.follow): circles open under the players the main hit missed and
--- erupt def.follow.delay later. It runs on its own clock, so the boss is free to move meanwhile.
-local function queueFollow(npc,s,A,now,root,params,people)
- local F=A.def.follow;local rage=s.enraged and s.def.enrage or {}
- local points=spotsNear(root,people,F.maxTargets,F.range,rage.follow or 0,A.hits,params,A.ground)
+-- A circle hit's follow-up (def.follow): circles open under the players that hit missed and erupt
+-- def.follow.delay later. It runs on its own clock, so the boss is free to move meanwhile. P is the
+-- hit unit that fired: the attack itself, a combo phase or a lane's finish.
+local function queueFollow(npc,s,A,P,now,root,params,people)
+ local F=P.def.follow;local rage=s.enraged and s.def.enrage or {}
+ local points=spotsNear(root,people,F.maxTargets,F.range,rage.follow or 0,P.hits,params,A.ground)
  if #points==0 then return end
  s.followSerial+=1
  table.insert(s.follows,{def=F,points=points,at=now+F.delay,hits={}})
@@ -374,15 +568,41 @@ local function stepFollows(npc,s,now,params,people)
   local Q=s.follows[i]
   if now>=Q.at then
    for _,e in people do for _,c in Q.points do
-    if not Q.hits[e.player] and Shapes.contains({kind='circle',center=c,radius=Q.def.radius},e.at) and hit(npc,Q.def,e,c+Vector3.yAxis*2,params,c) then Q.hits[e.player]=true end
+    if not Q.hits[e.player] and Shapes.contains({kind='circle',center=c,radius=Q.def.radius,height=Q.def.height},e.at) and hit(npc,Q.def,e,c+Vector3.yAxis*2,params,c) then Q.hits[e.player]=true end
    end end
    table.remove(s.follows,i)
   end
  end
 end
+-- The enrage roar (def.roar): an attack with no hit, anchored for the clip's length and published
+-- like one (BossAttack = the clip), so the client plays it. Cooldowns run on meanwhile.
+local function startRoar(npc,s,now,h,root,params)
+ local duration=s.T.clips and s.T.clips[s.def.roar];if not duration then return false end
+ local ground=workspace:Raycast(root.Position+Vector3.yAxis*8,-Vector3.yAxis*(s.T.rootHeight+30),params)
+ local cf=root.CFrame;local A={kind=s.def.roar,roar=true,start=now,cf=cf,duration=duration,sampled=0,data={rate=1}}
+ s.attack=A
+ npc:SetAttribute('BossAttack',A.kind);npc:SetAttribute('BossStart',now);npc:SetAttribute('BossFrame',cf);npc:SetAttribute('BossGroundY',ground and ground.Position.Y or cf.Y-s.T.rootHeight);npc:SetAttribute('BossDuration',duration)
+ A.serial=(npc:GetAttribute('BossSerial') or 0)+1
+ publish(npc,A);npc:SetAttribute('BossSerial',A.serial);npc:SetAttribute('Attacking',true)
+ h:Move(Vector3.zero);h:MoveTo(root.Position);h.AutoRotate=false;root.Anchored=true
+ return true
+end
 local function stepAttack(npc,s,now,h,root,params,people)
- local A=s.attack;local def,at,f=A.def,A.at,A.frame;local age=now-A.start;local t0=A.sampled
- local rage=s.enraged and s.def.enrage or {}
+ local A=s.attack;local age=now-A.start;local t0=A.sampled
+ if A.roar then
+  root.CFrame=A.cf;A.sampled=age
+  if age>=A.duration then s.attack=nil;npc:SetAttribute('Attacking',false);root.Anchored=false;root:SetNetworkOwner(nil);h.AutoRotate=true end
+  return
+ end
+ local def=A.def;local rage=s.enraged and s.def.enrage or {}
+ if A.target and not A.stopped and A.target.Parent then
+  -- The forward charge (def.contact) runs on while its target stays in the lane; once he has
+  -- stopped, the run is fixed. A new length goes out (data.length, BossDuration) so the client
+  -- re-times the end clip, and the warning and the finish slam move with it.
+  local length=X.contactLength(def,A.cf,A.dir,A.target.Position,A.limit,A.length,A.travelled)
+  if math.abs(length-A.length)>.05 then A.length=length;laneTiming(s,A);publish(npc,A);npc:SetAttribute('BossDuration',A.duration) end
+ end
+ local at,f=A.at,A.frame
  if def.track and age>=at.impact-.1 and age<at.activeEnd then
   -- The breath turns toward the nearest player at up to def.track rad/s (x rage.track): side-steps
   -- still escape it, standing still does not. The client follows the replicated BossFrame.
@@ -396,6 +616,7 @@ local function stepAttack(npc,s,now,h,root,params,people)
  if def.shape=='lane' then
   local travel=math.clamp((age-at.impact)*def.speed,0,A.length)
   root.CFrame=A.cf+A.dir*travel
+  if travel>=A.length then A.stopped=true end
   if travel>A.travelled then
    local body=X.rushBody(def,A.cf,A.dir,f.groundY,A.travelled,travel)
    for _,e in people do
@@ -404,31 +625,17 @@ local function stepAttack(npc,s,now,h,root,params,people)
    A.travelled=travel
   end
  else root.CFrame=A.cf end
- if def.shape=='circle' and age>=at.impact and not A.fired then
-  A.fired=true;local c=X.circle(def,at,f)
-  for _,e in people do if Shapes.contains(c,e.at) and hit(npc,def,e,c.center+Vector3.yAxis*2,params,c.center) then A.hits[e.player]=true end end
-  if def.follow then queueFollow(npc,s,A,now,root,params,people) end
- elseif def.shape=='wave' and age>=at.impact then
-  for _,e in people do
-   for _,line in A.lines or {A.line} do
-    if not A.hits[e.player] and X.waveHit(def,at,line,e.at,t0,age) and hit(npc,def,e,line.origin+Vector3.yAxis*2,params,line.origin) then A.hits[e.player]=true end
-   end
-  end
- elseif (def.shape=='breath' or def.shape=='sweep') and age>=X.hitFrom(def,at) then
-  -- Bound catch-up to this attack's active window, never a stale whole turn. A sweep starts with
-  -- its swing (X.hitFrom), and hits only inside its warning arc.
-  local breath=def.shape=='breath';local begin,finish=math.max(t0,X.hitFrom(def,at)),math.min(age,at.activeEnd)
-  local function test(time)
-   local shape=breath and X.cone(def,at,f,time) or X.sweep(def,at,f,time)
-   for _,e in people do
-    local p=e.player;local ready
-    if breath then ready=not A.ticks[p] or time-A.ticks[p]>=def.tick-1e-6 else ready=not A.hits[p] and (not A.arc or Shapes.contains(A.arc,e.at)) end
-    if ready and Shapes.contains(shape,e.at) and hit(npc,def,e,A.cf.Position,params,A.cf.Position) then A.ticks[p]=time;A.hits[p]=true end
-   end
-  end
-  -- A whipping tail tip covers ~4.6 studs per 1/60 s; at 1/120 its 4-stud hit leaves no gaps.
-  if begin<=finish then for time=begin,finish,breath and 1/30 or 1/120 do test(time) end;test(finish) end
- elseif def.shape=='targets' then
+ -- Circle, wave, breath and sweep hits (X.stepHits): the attack itself, or each combo phase with
+ -- its own hit memory. A circle that fired brings its follow-up (none in the tutorial).
+ for _,P in A.phases or {A} do
+  if X.stepHits(P,f,age,t0,people,function(e,from,source) return hit(npc,P.def,e,from,params,source) end) and P.def.follow and X.allows(s,'follow') then queueFollow(npc,s,A,P,now,root,params,people) end
+ end
+ -- A lane's finish slam, on the end clip's clock (it starts where the run ends, F.start).
+ local F=A.finish
+ if F and F.at and X.stepHits(F,F.frame,age-F.start,t0-F.start,people,function(e,from,source) return hit(npc,F.def,e,from,params,source) end) and F.def.follow and X.allows(s,'follow') then
+  queueFollow(npc,s,A,F,now,root,params,people)
+ end
+ if def.shape=='targets' then
   if age>=math.max(at.warnStart,at.impact-(def.lead or 0)) and not A.points then
    -- Snapshot the nearest players in range as ground spots (plus def.extra round each, more when
    -- enraged); they erupt after eruptDelay.
@@ -447,15 +654,17 @@ local function stepAttack(npc,s,now,h,root,params,people)
   for i,yaw in d.yaws do s.shots.list[i]={yaw=yaw,pos=origin} end
   npc:SetAttribute('MapBossShotEnds',Http:JSONEncode({serial=A.serial,ends={}}))
  end
- if age>=at.impact and not A.impacted then A.impacted=true;npc:SetAttribute('BossImpactStart',now) end
+ local impact=at.impact or A.phases and A.phases[1].at.impact
+ if impact and age>=impact and not A.impacted then A.impacted=true;npc:SetAttribute('BossImpactStart',now) end
  A.sampled=age
  if age>=A.duration then
   s.attack=nil;s.next=now+def.cooldown*(rage.cooldown or 1);npc:SetAttribute('Attacking',false);root.Anchored=false;root:SetNetworkOwner(nil);h.AutoRotate=true
  end
 end
 -- Below ENRAGE_AT health: faster chase, shorter cooldowns and the def.enrage extras (see MapBossDefs).
+-- Never for the tutorial boss whose def says so (X.allows).
 local function checkEnrage(npc,s,h)
- if s.enraged or h.Health>h.MaxHealth*Defs.ENRAGE_AT then return end
+ if s.enraged or not X.allows(s,'enrage') or h.Health>h.MaxHealth*Defs.ENRAGE_AT then return end
  s.enraged=true;local speed=s.def.chaseSpeed+(s.def.enrage and s.def.enrage.chase or 0)
  h.WalkSpeed=speed;npc:SetAttribute('BaseMoveSpeed',speed);npc:SetAttribute('BossEnraged',workspace:GetServerTimeNow())
 end
@@ -463,6 +672,12 @@ function M.step(npc,s,now)
  if not npc.Parent then M.states[npc]=nil;return end
  local h=npc:FindFirstChildOfClass('Humanoid');local root=npc.PrimaryPart
  if not h or not root or h.Health<=0 then s.attack=nil;s.shots=nil;table.clear(s.follows);return end
+ -- The sky-drop entrance (def.intro, M.spawn): stand still until it's over, then fight.
+ if s.intro then
+  if now<s.intro then h:Move(Vector3.zero);return end
+  s.intro=nil;npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil)
+  root.Anchored=false;root:SetNetworkOwner(nil);h.AutoRotate=true
+ end
  if combat:GetAttribute('ZombiesEnabled')~=true then
   s.attack=nil;s.shots=nil;table.clear(s.follows);npc:SetAttribute('Attacking',false);npc:SetAttribute('BossStart',nil);root.Anchored=false;h.AutoRotate=true;h:Move(Vector3.zero);return
  end
@@ -480,16 +695,17 @@ function M.step(npc,s,now)
  if npc:GetAttribute('BossManual') and Run:IsStudio() then h:Move(Vector3.zero);return end
  -- Admin Freeze: no moving and no new attacks; an attack already under way finishes above.
  if combat:GetAttribute('AdminFreeze')==true then h:Move(Vector3.zero);h:MoveTo(root.Position);return end
+ -- Enraged: the roar first, once (an attack under way finished above).
+ if X.roarDue(s) then s.roared=true;if startRoar(npc,s,now,h,root,params) then return end end
  local target,dist=nil,math.huge
  for _,e in people do local d=(e.root.Position-root.Position).Magnitude;if d<dist then target,dist=e.root,d end end
  if not target then h:Move(Vector3.zero);return end
- local reach=flat(target.Position-root.Position).Magnitude;local order=s.def.order
+ local reach=flat(target.Position-root.Position).Magnitude
  if now>=s.next then
-  -- Walk the order from the last attack: the first one in range (and in sight) starts.
-  for i=1,#order do
-   local index=(s.index+i-1)%#order+1;local range=s.def.attacks[order[index]].range
-   if reach>=range[1] and reach<=range[2] and M.start(npc,order[index],target) then s.index=index;return end
-  end
+  -- Walk the order (the tutorial's or enraged one, X.orderFor) from the last attack: the first one
+  -- in range, not locked out and in sight starts.
+  local index=X.walk(s,X.orderFor(s),reach,now,function(kind) return M.start(npc,kind,target) end)
+  if index then s.index=index;return end
  end
  if reach>s.stop then h:MoveTo(target.Position) else h:Move(Vector3.zero);h:MoveTo(root.Position) end
 end

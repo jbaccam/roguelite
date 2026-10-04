@@ -7,9 +7,11 @@ local function flat(v) return Vector3.new(v.X,0,v.Z) end
 S.flat=flat
 -- Signed yaw from a to b about +Y; positive turns toward -X for a -Z forward (CFrame.Angles).
 function S.yaw(a,b) a,b=flat(a),flat(b);return math.atan2(a:Cross(b).Y,a:Dot(b)) end
+-- A shape's own height (the Hammer's Slam circle: 6) raises the top of its band, so a plain jump
+-- doesn't clear it; without one, HEIGHT_ABOVE.
 local function band(shape,point)
  local base=(shape.center or shape.origin or shape.pivot or shape.a).Y
- return point.Y>=base-S.HEIGHT_BELOW and point.Y<=base+S.HEIGHT_ABOVE
+ return point.Y>=base-S.HEIGHT_BELOW and point.Y<=base+(shape.height or S.HEIGHT_ABOVE)
 end
 local function inCapsule(a,b,radius,point)
  local ab=flat(b-a);local ap=flat(point-a);local t=math.clamp(ap:Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1)

@@ -1,11 +1,16 @@
--- MapBossServiceTests: pure shape-builder checks (plan F Task 7). Run with fresh(require) in Edit.
--- The timing table below is hand-made, so these run before the generated MapBossTiming exists;
+-- MapBossServiceTests: pure shape-builder checks (plan F Task 7). Run in Edit through
+-- tools/RepoRequire.luau (R.run('MapBossServiceTests')): fresh repo copies, nothing written to Studio.
+-- The timing tables below are hand-made, so these run before the generated MapBossTiming exists;
 -- an Edit-mode require of MapBossService loads only its pure builders (M._shapes).
 local service=script.Parent:FindFirstChild('MapBossService') or game:GetService('ServerScriptService'):FindFirstChild('MapBossService')
 assert(service,'MapBossService is not installed')
 local X=require(service)._shapes
 local S=require(game.ReplicatedStorage.RogueliteCombat.MapBossShapes)
+local defsModule=game.ReplicatedStorage.RogueliteCombat:FindFirstChild('MapBossDefs')
+local Defs;if defsModule then local ok,v=pcall(require,defsModule);assert(ok,v);Defs=v end
 local r={};local function add(ok,m) table.insert(r,(ok and 'PASS ' or 'FAIL ')..m) end
+-- Protected: a missing builder reads as one FAIL line instead of stopping the run.
+local function check(m,f) local ok,v=pcall(f);add(ok and v==true,m..(ok and '' or ' (error: '..tostring(v)..')')) end
 local T={rootHeight=4,clips={RushStart=.8,RushLoop=.5,RushEnd=.6},attacks={
  Stomp={duration=2,warnStart=.3,impact=1,activeEnd=1,recoveryEnd=1.8,directionAtImpactStudio={0,0,-1},samples={StompImpact={{.3,1,2,-3},{1,1,0,-4},{1.8,1,0,-4}}}},
  TailWhip={duration=2,warnStart=.2,impact=.9,activeEnd=1.3,recoveryEnd=1.9,samples={
@@ -56,11 +61,146 @@ add(math.abs(X.hitFrom(whip,wind)-.4)<1e-6 and math.abs(X.hitFrom(whip,wat)-wat.
 local ys=X.yaws({count=3,spread=math.rad(18)},Vector3.new(-1,0,0))
 add(#ys==3 and math.abs(ys[2]-math.pi/2)<1e-6 and math.abs(ys[3]-ys[1]-math.rad(18))<1e-6,'projectiles: yaws spread evenly about the aim')
 add(X.localPoint({points={P={rootAtImpactStudio={1,2,3}}}},'P',0)==Vector3.new(1,2,3),'point falls back to rootAtImpactStudio')
+-- 5. Hammer Brute runtime (rebuild R1-R3, 2026-10-03), hand-made timings again. HammerFace circles
+-- the boss 8 studs out and HammerGrip 4, 3 up, at yaw th(t) (0 = ahead, +pi/2 = his left): wound
+-- back and held 0.4-0.45, the Swing -90 -> +90 degrees in 0.5-0.7, a slow follow-through, then the
+-- Spin, 2pi + 0.3 in 0.8-1.25.
+local function th(t)
+ if t<.4 then return -math.pi/2-.3*t/.4 elseif t<.45 then return -math.pi/2-.3
+ elseif t<.5 then return -math.pi/2-.3+.3*(t-.45)/.05 elseif t<.7 then return -math.pi/2+math.pi*(t-.5)/.2
+ elseif t<.8 then return math.pi/2+.2*(t-.7)/.1 end
+ return math.pi/2+.2+(2*math.pi+.3)*math.min(1,(t-.8)/.45)
+end
+local function circling(radius) local list={};for k=0,96 do local t=k/60;local d=CFrame.Angles(0,th(t),0):VectorToWorldSpace(Vector3.new(0,0,-radius));list[k+1]={t,d.X,3,d.Z} end;return list end
+local HT={rootHeight=4,clips={ChargeStart=.5,ChargeRun=.53,ChargeSlam=1.2,Roar=1.2},attacks={
+ SwingSpin={duration=1.6,warnStart=0,impact=.5,activeEnd=1.25,recoveryEnd=1.6,phases={{warnStart=0,impact=.5,activeEnd=.7},{warnStart=0,impact=.8,activeEnd=1.25}},
+  samples={HammerFace=circling(8),HammerGrip=circling(4)}},
+ ChargeSlam={duration=1.2,warnStart=0,impact=.4,activeEnd=.45,recoveryEnd=1.2,samples={HammerFace={{0,0,6,-3},{.4,0,0,-5},{1.2,0,0,-5}}}},
+}}
+local function with(t,extra) local c=table.clone(t);for k,v in extra do c[k]=v end;return c end
+local hammerSweep={shape='sweep',point='HammerFace',mid='HammerGrip',radius=3.2,baseRadius=4}
+local swingSpin={clip='SwingSpin',range={0,14},cooldown=1,phases={with(hammerSweep,{damage=20}),with(hammerSweep,{damage=22})}}
+local hf=X.frame(CFrame.lookAt(Vector3.new(0,4,0),Vector3.new(0,4,-1)),HT,0) -- root 4 up at the origin, facing -Z; ground y=0
+-- R1. Combos: one clip, a window, def and hit memory per phase.
+check('phases: two windows with the phase times, all warned from the commit',function()
+ local w=X.phaseWindows(swingSpin,HT.attacks.SwingSpin)
+ return #w==2 and w[1].impact==.5 and w[1].activeEnd==.7 and w[2].impact==.8 and w[2].activeEnd==1.25 and w[1].warnStart==0 and w[2].warnStart==0
+  and w[2].samples==HT.attacks.SwingSpin.samples and w[2].hitAfter==.7 and w[1].phases==nil
+end)
+check('phases: each phase def is the attack def with the phase on top (damage 20, then 22)',function()
+ local units=X.phases(swingSpin,HT.attacks.SwingSpin)
+ return #units==2 and units[1].def.damage==20 and units[2].def.damage==22 and units[2].def.clip=='SwingSpin' and units[1].def.phases==nil and units[1].hits~=units[2].hits
+end)
+check('phases: the Swing phase warns an arc over its path (ahead, both sides), not behind him',function()
+ local units=X.phases(swingSpin,HT.attacks.SwingSpin);local arc=X.shapeOf(units[1].def,units[1].at,hf)
+ return arc.kind=='arc' and arc.to-arc.from<2*math.pi-.1 and S.contains(arc,Vector3.new(0,3,-7)) and S.contains(arc,Vector3.new(7,3,0)) and S.contains(arc,Vector3.new(-7,3,0)) and not S.contains(arc,Vector3.new(0,3,7))
+end)
+check('phases: the Spin phase warns a full ring (-pi to pi), behind him too',function()
+ local units=X.phases(swingSpin,HT.attacks.SwingSpin);local ring=X.shapeOf(units[2].def,units[2].at,hf)
+ return ring.kind=='arc' and ring.from==-math.pi and ring.to==math.pi and ring.inner==0 and S.contains(ring,Vector3.new(0,3,7))
+end)
+-- Three still players 7 studs out: ahead, behind, and on his left just past where the Swing ends
+-- (the Spin passes that one twice). Stepped at 60 Hz like the server's Heartbeat.
+check('phases: hit once per phase (the Spin passes "left" twice); the Swing misses behind him; no hit before a phase swings',function()
+ local left=CFrame.Angles(0,math.pi/2+.3,0):VectorToWorldSpace(Vector3.new(0,0,-7))+Vector3.yAxis*3
+ local people={{player='ahead',at=Vector3.new(0,3,-7)},{player='behind',at=Vector3.new(0,3,7)},{player='left',at=left}}
+ local units=X.phases(swingSpin,HT.attacks.SwingSpin);local count,early,t0={},{},0
+ for _,P in units do P.arc=X.shapeOf(P.def,P.at,hf) end
+ for k=1,100 do
+  local age=k/60
+  for i,P in units do
+   X.stepHits(P,hf,age,t0,people,function(e)
+    local key=e.player..i;count[key]=(count[key] or 0)+1
+    if age<X.hitFrom(P.def,P.at)-1e-6 or age<(P.at.hitAfter or 0)-1e-6 then table.insert(early,key) end
+    return true
+   end)
+  end
+  t0=age
+ end
+ local function n(key) return count[key] or 0 end
+ return n('ahead1')==1 and n('ahead2')==1 and n('behind1')==0 and n('behind2')==1 and n('left1')==1 and n('left2')==1 and #early==0
+end)
+check('phases: a missing phase timing refuses the combo (no windows)',function()
+ return X.phaseWindows(swingSpin,{duration=1,impact=.5,activeEnd=.7,phases={{impact=.5,activeEnd=.7}}})==nil and X.phaseWindows({clip='Slam'},HT.attacks.SwingSpin)==nil
+end)
+-- R2. The Hammer's charge: a forward lane that keeps running to its target, then slams.
+local charge={clips={'ChargeStart','ChargeRun','ChargeSlam'},facing='forward',range={22,70},lockout=5,cooldown=1,damage=24,shape='lane',length=75,width=9,speed=32,contact=4,offset=3.5,
+ finish={shape='circle',damage=26,point='HammerFace',radius=9.5,height=6,knockdown=.6}}
+check('charge: a forward lane runs straight at the target and he faces along it; no side-on offset',function()
+ local pos,goal=Vector3.new(0,4,0),Vector3.new(30,9,-40);local dir=X.laneDir(charge,pos,goal,Vector3.new(0,0,-1))
+ local want=Vector3.new(30,0,-40).Unit;local faced=CFrame.lookAt(pos,pos+dir)
+ return (dir-want).Magnitude<1e-6 and faced.LookVector:Dot(want)>.9999 and X.laneSide(dir,charge)==Vector3.zero and X.laneSide(dir,{offset=3.5}).Magnitude>3.49
+end)
+check('charge: the crab lane is unchanged (through the target, side-on offset kept)',function()
+ local pos,goal=Vector3.new(0,4,0),Vector3.new(30,9,-40);local look=Vector3.new(0,0,-1)
+ local crab={shape='lane',width=21,offset=3.5};local dir=X.laneDir(crab,pos,goal,look)
+ return (dir-X.lane(X.laneFacing(pos,goal,look),goal)).Magnitude<1e-9 and X.laneSide(dir,crab)==Vector3.yAxis:Cross(dir)*3.5
+end)
+local laneCf,laneDir=CFrame.lookAt(Vector3.new(0,4,0),Vector3.new(0,4,-1)),Vector3.new(0,0,-1)
+check('charge: contact run ends 4 short of a target 40 down the lane (36); 2 off-centre it still tracks; stepped out it keeps its length',function()
+ local centred=X.contactLength(charge,laneCf,laneDir,Vector3.new(0,4,-40),75,50,0)
+ local off=X.contactLength(charge,laneCf,laneDir,Vector3.new(2,4,-40),75,50,0)
+ local out=X.contactLength(charge,laneCf,laneDir,Vector3.new(5,4,-40),75,50,0)
+ return math.abs(centred-36)<1e-9 and math.abs(off-(40-math.sqrt(12)))<1e-9 and out==50
+end)
+check('charge: contact length capped by def.length and the wall, never below the distance travelled',function()
+ return X.contactLength(charge,laneCf,laneDir,Vector3.new(0,4,-120),75,50,0)==75 and X.contactLength(charge,laneCf,laneDir,Vector3.new(0,4,-120),60,50,0)==60
+  and X.contactLength(charge,laneCf,laneDir,Vector3.new(0,4,-30),75,50,30)==30
+end)
+check('charge: the body hit at the contact stop reaches a target 2 off-centre (contact < width/2)',function()
+ local goal=Vector3.new(2,3,-40);local length=X.contactLength(charge,laneCf,laneDir,goal,75,50,0)
+ return S.contains(X.rushBody(charge,laneCf,laneDir,0,length-1,length),goal)
+end)
+check('charge: the finish slam lands at HammerFace at the ChargeSlam impact, from where the run ends',function()
+ local cf=CFrame.lookAt(Vector3.new(0,4,0),Vector3.new(1,4,0));local at,ff,start=X.finishFrame(charge,HT,cf,Vector3.new(1,0,0),36,0)
+ local fdef=X.merged(charge,charge.finish);local c=X.circle(fdef,at,ff)
+ return fdef.damage==26 and fdef.finish==nil and c.kind=='circle' and (c.center-Vector3.new(41,0,0)).Magnitude<1e-6 and c.radius==9.5 and c.height==6
+  and math.abs(start+at.impact-(.5+36/32+.4))<1e-9
+end)
+check('lockout: the order walk skips the charge within 5 s of its last start',function()
+ local s={def={attacks={Slam={range={0,16}},Charge=charge},order={'Slam','Charge','Slam'}},index=1,lastStart={Charge=10}}
+ local any=function() return true end
+ return X.walk(s,s.def.order,30,13,any)==nil and X.walk(s,s.def.order,30,15.01,any)==2 and X.walk(s,s.def.order,10,13,any)==3 and X.walk({def=s.def,index=1},s.def.order,30,13,any)==2
+end)
+-- R3. Full-ring sweeps, circle height, the tutorial variant, the enrage order and the roar.
+check('sweep: a whole Spin (2pi + 0.5) warns a full ring from his centre (baseRadius) out past the tip',function()
+ local a=X.sweepArc(with(hammerSweep,{clip='Spin'}),{duration=1.6,warnStart=.7,impact=.8,activeEnd=1.25,samples=HT.attacks.SwingSpin.samples},hf)
+ return a.from==-math.pi and a.to==math.pi and a.inner==0 and math.abs(a.outer-11.2)<1e-6
+end)
+check('circle: def.height goes on the shape (6 reaches 5.8 above, not 7)',function()
+ local c=X.circle({point='HammerFace',radius=9.5,height=6},HT.attacks.ChargeSlam,hf)
+ return c.height==6 and S.contains(c,c.center+Vector3.yAxis*5.8) and not S.contains(c,c.center+Vector3.yAxis*7) and X.circle({point='HammerFace',radius=9.5},HT.attacks.ChargeSlam,hf).height==nil
+end)
+check('order: tutorial order when s.tutorial, enraged order when enraged and present, else def.order',function()
+ local def={order={'Slam'},enrage={order={'SwingSpin'}},tutorial={order={'Swing'},enrage=false,follow=false}}
+ return X.orderFor({def=def,tutorial=true,enraged=true})==def.tutorial.order and X.orderFor({def=def,enraged=true})==def.enrage.order and X.orderFor({def=def})==def.order
+  and X.orderFor({def={order=def.order,enrage={cooldown=.6}},enraged=true})==def.order
+end)
+check('tutorial: no enrage and no follow-ups; outside the tutorial both stay on',function()
+ local def={tutorial={enrage=false,follow=false}}
+ return not X.allows({def=def,tutorial=true},'enrage') and not X.allows({def=def,tutorial=true},'follow') and X.allows({def=def},'enrage') and X.allows({def=def},'follow') and X.allows({def={},tutorial=true},'follow')
+end)
+check('roar: due once after enrage, never mid-attack, only with def.roar',function()
+ local s={def={roar='Roar'}};local before=X.roarDue(s)
+ s.enraged=true;s.attack={};local mid=X.roarDue(s);s.attack=nil;local due=X.roarDue(s);s.roared=true
+ return before==false and mid==false and due==true and X.roarDue(s)==false and X.roarDue({def={},enraged=true})==false
+end)
 -- 4. Real defs: every projectile attack reaches a still player straight ahead (root 3 up) anywhere
 -- in its range and at the boss's hold-off distance, replaying the server's shot test.
-local defsModule=game.ReplicatedStorage.RogueliteCombat:FindFirstChild('MapBossDefs')
-if defsModule then
- local c=defsModule:Clone();c.Parent=defsModule.Parent;local ok,Defs=pcall(require,c);c:Destroy();assert(ok,Defs)
+if Defs then
+ check('phases: MapBossDefs divides phase times by rate (warned from the commit) and scales their points',function()
+  local n=Defs.scaleAttack({duration=2,impact=1,phases={{warnStart=.3,impact=.5,activeEnd=.75,samples={P={{.5,1,2,3}}}},{impact=1,activeEnd=1.5}}},2,1.25);local p=n.phases
+  return #p==2 and p[1].warnStart==0 and p[2].warnStart==0 and math.abs(p[1].impact-.4)<1e-9 and math.abs(p[1].activeEnd-.6)<1e-9 and math.abs(p[2].impact-.8)<1e-9
+   and math.abs(p[2].activeEnd-1.2)<1e-9 and math.abs(p[1].samples.P[1][1]-.4)<1e-9 and p[1].samples.P[1][4]==6 and math.abs(n.impact-.8)<1e-9
+ end)
+ -- The four bosses keep their numbers: no combos, charges or tutorial variants, and only the
+ -- Hammer (once it has a def) rewires anything here.
+ local plain=true
+ for _,id in {'KingCrab','Pharaoh','FrostCyclops','Dragon'} do
+  local def=Defs.get(id);if def.tutorial or def.intro or def.roar or (def.enrage and def.enrage.order) then plain=false end
+  for _,a in def.attacks do if a.phases or a.finish or a.contact or a.lockout or a.facing or a.height then plain=false end end
+ end
+ add(plain,'the four bosses use none of the Hammer fields (phases, finish, contact, lockout, facing, height, intro, roar, tutorial, enrage.order)')
  local function segd(a,b,p) local ab=b-a;local t=math.clamp((p-a):Dot(ab)/math.max(ab:Dot(ab),1e-6),0,1);return (a+ab*t-p).Magnitude end
  -- The Dragon's tail whip hits a player standing 8 studs behind him (under his rear), as the
  -- server's hit loop tests it (tail chain inside the warning arc), and never one 8 studs in front.

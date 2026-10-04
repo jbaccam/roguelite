@@ -14,7 +14,17 @@
 -- follow: a second hazard after impact. Circles open under up to maxTargets players within range
 --   that the main hit missed, and erupt `delay` seconds later.
 -- enrage (below ENRAGE_AT health): cooldowns x cooldown, chaseSpeed + chase, projectiles + extra,
---   follow circles + extra, breath turn rate x track, and the Stomp wave splits into `fan`.
+--   follow circles + extra, breath turn rate x track, the Stomp wave splits into `fan`, and
+--   `order` (optional) replaces the attack order. roar: a clip played once on enraging (no hit).
+-- Hammer Brute runtime (MapBossService, 2026-10-03):
+--   phases: a combo clip's hits in order, each the attack def with the phase's fields on top, timed
+--     by the clip's MapBossTiming phases. height: a circle's band top (default MapBossShapes 5.5).
+--   lanes: facing='forward' runs straight at the target; contact keeps running until the root is
+--     `contact` studs from a target still in the lane; finish is a circle hit at the end clip's
+--     impact. lockout: seconds between one attack's starts, on top of cooldowns.
+--   intro {drop,fall,after,clip} and introName: a wave boss's sky-drop entrance. tutorial
+--     {order,enrage,follow}: the TutorialBossHealth boss's attack order, and false turns enrage or
+--     follow-ups off.
 local Timing=require(script.Parent:WaitForChild('MapBossTiming'))
 local D={}
 D.Order={'KingCrab','Pharaoh','FrostCyclops','Dragon'}
@@ -80,6 +90,26 @@ local function track(list,s,rate)
  if not list then return nil end
  local out={};for i,p in list do out[i]={p[1]/rate,p[2]*s,p[3]*s,p[4]*s} end;return out
 end
+-- One attack's timing at scale s and playback rate: times / rate, warned from the commit
+-- (warnStart 0), sampled and authored points x s. A combo's phases get the same.
+function D.scaleAttack(at,s,rate)
+ local n=table.clone(at);n.rate=rate
+ for _,k in TIMES do if at[k] then n[k]=at[k]/rate end end
+ n.warnStart=0
+ if at.pumps then n.pumps={};for i,t in at.pumps do n.pumps[i]=t/rate end end
+ if at.samples then n.samples={};for p,list in at.samples do n.samples[p]=track(list,s,rate) end end
+ if at.dirs then n.dirs={};for p,list in at.dirs do n.dirs[p]=track(list,1,rate) end end
+ if at.points then
+  n.points={}
+  for p,pt in at.points do
+   local c=table.clone(pt)
+   for _,k in {'rootAtImpactStudio','groundPointAtImpactStudio'} do local v=pt[k];if type(v)=='table' then c[k]={v[1]*s,v[2]*s,v[3]*s} end end
+   n.points[p]=c
+  end
+ end
+ if at.phases then n.phases={};for i,ph in at.phases do n.phases[i]=D.scaleAttack(ph,s,rate) end end
+ return n
+end
 function D.timing(id)
  local def=D.get(id);if not def then return nil end
  if cache[id] then return cache[id] end
@@ -87,23 +117,7 @@ function D.timing(id)
  local s=def.scale or 1
  local T=table.clone(raw);T.scale=s;T.attacks={}
  for _,k in LENGTHS do if raw[k] then T[k]=raw[k]*s end end
- for name,at in raw.attacks or {} do
-  local rate=rateOf(def,name);local n=table.clone(at);n.rate=rate
-  for _,k in TIMES do if at[k] then n[k]=at[k]/rate end end
-  n.warnStart=0
-  if at.pumps then n.pumps={};for i,t in at.pumps do n.pumps[i]=t/rate end end
-  if at.samples then n.samples={};for p,list in at.samples do n.samples[p]=track(list,s,rate) end end
-  if at.dirs then n.dirs={};for p,list in at.dirs do n.dirs[p]=track(list,1,rate) end end
-  if at.points then
-   n.points={}
-   for p,pt in at.points do
-    local c=table.clone(pt)
-    for _,k in {'rootAtImpactStudio','groundPointAtImpactStudio'} do local v=pt[k];if type(v)=='table' then c[k]={v[1]*s,v[2]*s,v[3]*s} end end
-    n.points[p]=c
-   end
-  end
-  T.attacks[name]=n
- end
+ for name,at in raw.attacks or {} do T.attacks[name]=D.scaleAttack(at,s,rateOf(def,name)) end
  cache[id]=T
  return T
 end
