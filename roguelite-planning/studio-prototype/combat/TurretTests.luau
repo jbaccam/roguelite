@@ -6,7 +6,8 @@
 --     require(C.WeaponCatalog), require(C.CharacterStats), require(C.EconomyConfig)))
 -- Covers tier stats, the balance target against WeaponCatalog (Tier I-IV at 40-50% of an average
 -- class ranged weapon of the same tier, range no longer than theirs), Handyman scaling, upgrade
--- pricing and validation, who may BUILD, and targeting range through TargetGrid.
+-- pricing and validation, who may BUILD, and targeting range through TargetGrid. Since 2026-10-04
+-- also its health table, damage after armour, breaking, rebuild timing and mob target choice.
 -- Returns the number of checks.
 return function(H, G, Weapons, Stats, E)
 	local checks = 0
@@ -181,5 +182,86 @@ return function(H, G, Weapons, Stats, E)
 		check(H.Keys.Gamepad ~= taken, "BUILD pad button doesn't clash with " .. taken.Name)
 	end
 	check(H.BUILD_COOLDOWN == 8, "8 s BUILD cooldown")
+
+	-- Health (2026-10-04): 60 + 15 a wave, x1.5 a tier, x the owner's gear power health share.
+	local healthTable = {
+		[1] = { 60, 120, 195, 345 },
+		[2] = { 90, 180, 293, 518 },
+		[3] = { 135, 270, 439, 776 },
+		[4] = { 203, 405, 658, 1164 },
+	}
+	for tier, row in healthTable do
+		for i, wave in { 1, 5, 10, 20 } do
+			local hp = H.maxHealth(tier, wave, 1)
+			check(hp == row[i], string.format("Tier %d wave %d health %d (want %d)", tier, wave, hp, row[i]))
+		end
+	end
+	check(H.maxHealth(1, 0, nil) == 60 and H.maxHealth(1, nil, nil) == 60, "Wave 0 or missing counts as wave 1")
+	check(H.maxHealth(9, 1, 1) == 203, "Tier past IV is IV")
+	check(H.maxHealth(1, 1, 9) == math.floor(60 * Stats.powerHealth(9) + 0.5), "Gear power 9 adds its health share")
+	check(H.maxHealth(1, 1, 9) > 60, "Higher gear power, tougher turret")
+	-- About 11 regular-zombie hits of the same wave (5 + 1.5 a wave), every wave.
+	for _, wave in { 1, 5, 10, 20 } do
+		local hits = math.ceil(H.maxHealth(1, wave, 1) / (5 + 1.5 * (wave - 1)))
+		check(hits >= 10 and hits <= 12, string.format("Wave %d: %d zombie hits to break", wave, hits))
+	end
+
+	-- Damage after the owner's armour and contact resistance (CharacterStats.incoming), no dodge.
+	check(near(H.damageTaken(11, handy), Stats.incoming(11, handy)), "Same as the player takes")
+	local armoured = table.clone(neutral)
+	armoured.Armor = 15
+	check(near(H.damageTaken(10, armoured), 5), "15 armour halves it")
+	armoured.Armor = 5
+	check(near(H.damageTaken(11, armoured), 8.25), "Worked example: 11 with 5 armour is 8.25")
+	local dodgy = table.clone(neutral)
+	dodgy.Dodge = 60
+	check(near(H.damageTaken(11, dodgy), 11), "Dodge doesn't protect it")
+	check(near(H.damageTaken(11, nil), 11) and near(H.damageTaken(-3, neutral), 0), "No stats: raw; never negative")
+
+	-- Breaking.
+	local hp, broke = H.takeHit(10, 4, neutral)
+	check(near(hp, 6) and not broke, "A hit it survives")
+	hp, broke = H.takeHit(6, 6, neutral)
+	check(hp == 0 and broke, "The hit that breaks it")
+	hp, broke = H.takeHit(0, 50, neutral)
+	check(hp == 0 and not broke, "A broken one takes nothing and doesn't break twice")
+	hp, broke = H.takeHit(3, 50, neutral)
+	check(hp == 0 and broke, "Overkill stops at 0")
+
+	-- Rebuild timing: REBUILD_DELAY after the break, or its own cooldown if that ends sooner.
+	check(H.REBUILD_DELAY == 5, "5 s to rebuild")
+	check(H.rebuildAt(100, 107) == 105, "Moved 1 s before: 5 s, not 7")
+	check(H.rebuildAt(100, 104) == 104, "Its own cooldown ends sooner")
+	check(H.rebuildAt(100, 95) == 95, "Cooldown already over: right away")
+	check(H.canBuild(ctx({ now = 100, readyAt = H.rebuildAt(100, 108) })) == false, "Broken: not yet")
+	check(H.canBuild(ctx({ now = 105, readyAt = H.rebuildAt(100, 108) })), "Broken: BUILD at 105")
+
+	-- Mob targets: a standing turret nearer (to its edge) than every living player.
+	local from = Vector3.new(0, 3, 0)
+	local function post(x, z, hpLeft, pad)
+		local p = H.newPost(nil)
+		p.Position, p.hp, p.pad = Vector3.new(x, 1.2, z), hpLeft or 100, pad or 0.25
+		return p
+	end
+	local you = { root = "you" }
+	local near6, far12 = post(6, 0), post(0, 12)
+	local best, distance = H.nearer({ near6 }, from, you, 10)
+	check(best == near6 and best.root == near6 and near(distance, 5.75), "Turret at 6 beats you at 10")
+	best = H.nearer({ near6 }, from, you, 5)
+	check(best == you, "You at 5 beat the turret at 6")
+	best = H.nearer({ far12 }, from, you, 10)
+	check(best == you, "A farther turret is ignored")
+	best = H.nearer({ post(6, 0, 0) }, from, you, 10)
+	check(best == you, "A broken turret is no target")
+	best = H.nearer({ far12, near6 }, from, you, 20)
+	check(best == near6, "Nearest of several turrets")
+	best = H.nearer({ near6 }, from, nil, math.huge)
+	check(best == near6, "No living player: the turret")
+	best, distance = H.nearer({ post(7, 0, 100, 1) }, from, you, 6.5)
+	check(best ~= you and near(distance, 6), "Measured to its edge: centre 7, pad 1")
+	best, distance = H.nearer({}, from, you, 10)
+	check(best == you and distance == 10, "No turrets: unchanged")
+	check(near6.turret == true and near6.userId == 0 and near6.taken == 0, "Target table shape")
+	check(H.posts ~= nil and H.BODY == 0.75, "Shared list and body width")
 	return checks
 end

@@ -199,8 +199,10 @@ function M.new(player)
   button(c,'TurretGive','Give turret',0,y,170,function() send('Turret','Give') end,true)
   for t=1,4 do button(c,'TurretTier'..t,'Tier '..T.Roman[t],180+(t-1)*96,y,88,function() send('Turret','Tier',t) end) end
   button(c,'TurretClear','Clear turrets',566,y,180,function() send('Turret','Clear') end)
-  note(c,'TurretNote','Give: one at you now, any class, for this run. Tier: your turret this run. Clear: every turret, until the next wave or BUILD (B / pad R1).',y+48)
-  y+=84
+  -- Break (2026-10-04): yours to 0 HP now, as mobs would, to see the burst, BROKEN and the rebuild.
+  button(c,'TurretBreak','Break turret',0,y+48,170,function() send('Turret','Break') end)
+  note(c,'TurretNote','Give: one at you now, any class, this run. Tier: yours this run. Break: yours to 0 HP (BUILD within 5 s). Clear: all, until the next wave or BUILD (B / pad R1).',y+96)
+  y+=132
   -- Class, stat edits, heal and emeralds: the old STATS panel, without its mob controls (Mobs tab).
   local stats=T.frame(c,'StatsView',0,y,CW,1)
   local h=statsView:render(stats,CW,{skipMobs=true});stats.Size=UDim2.fromOffset(CW,h);y+=h+16

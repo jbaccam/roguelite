@@ -12,6 +12,10 @@
 --  * BUILD for a Handyman in a wave: B, gamepad R1, or the on-screen button (bottom right, left of
 --    the melee DASH; on touch screens just above the jump button). It shows the turret, the key and
 --    the 8 s cooldown (ReadyAt).
+--  * Health (2026-10-04, mobs can break it): a small bar over each turret from its Health and
+--    MaxHealth, lime, red under 30%; a hit flashes the bar and the model white. Broken (server time):
+--    the model goes with a flat burst (ring, sparks, dust; no debris) and the BUILD button turns
+--    charcoal, reads BROKEN and counts down to when it can be rebuilt (ReadyAt).
 -- Nothing shows until the turret models are installed.
 local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')
@@ -34,7 +38,17 @@ local shown={} -- server Folder -> v
 local byOwner={} -- owner UserId -> v
 
 local function template(tier) local f=H.templates(combat);return f and f:FindFirstChild('T'..tier) end
-local function clear(v) if v.model then v.model:Destroy();v.model=nil end end
+local function clear(v) if v.model then v.model:Destroy();v.model=nil end;v.hitGlow=nil;v.barFill=nil end
+-- A broken turret (Broken set) has no model until it is rebuilt.
+local function standing(v) return type(v.folder:GetAttribute('Broken'))~='number' end
+-- The bar's fill from Health / MaxHealth: lime, red under H.LOW_HEALTH.
+local function showHealth(v)
+ if not v.barFill then return end
+ local hp,most=v.folder:GetAttribute('Health'),v.folder:GetAttribute('MaxHealth')
+ local ratio=type(hp)=='number' and type(most)=='number' and most>0 and math.clamp(hp/most,0,1) or 1
+ T.setBar(v.barFill,ratio)
+ v.barFill.BackgroundColor3=ratio<H.LOW_HEALTH and T.Color.red or LIME
+end
 -- A local copy of the tier's model, and where its moving parts sit: the head pivot in the base's
 -- space, the head part from its pivot, the barrel pivot (its spin axis) from the head pivot, the
 -- barrel part from that, and the optional Glow from whichever it follows.
@@ -63,8 +77,39 @@ local function make(v)
  local centre=barrel:GetAttribute('MuzzleCentre')
  v.muzzleCentre=v.spins and typeof(centre)=='Vector3' and centre or nil
  v.model,v.head,v.barrel=m,head,barrel
+ -- Health bar: 58 x 10 px (the same on a phone), half a stud over the model's top, on an
+ -- attachment in the Base so it rides the build pop. Hit flash: one Highlight, on only for a flash.
+ local base=m:FindFirstChild('Base')
+ local box,size=m:GetBoundingBox()
+ local anchor=T.make('Attachment',base,{Name='HealthBarAnchor'})
+ anchor.Position=base.CFrame:PointToObjectSpace(Vector3.new(pivot.Position.X,box.Position.Y+size.Y/2+.5,pivot.Position.Z))
+ local bar=T.make('BillboardGui',m,{Name='HealthBar',Adornee=anchor,Size=UDim2.fromOffset(58,10),AlwaysOnTop=true,MaxDistance=150,LightInfluence=0})
+ v.barFill=T.bar(bar,'Bar',0,0,58,10,LIME)
+ v.hitGlow=T.make('Highlight',m,{Name='HitFlash',Adornee=m,FillColor=Color3.new(1,1,1),FillTransparency=.45,OutlineTransparency=1,DepthMode=Enum.HighlightDepthMode.Occluded,Enabled=false})
+ showHealth(v)
  if v.base then m:PivotTo(v.base) end
  m.Parent=holder
+end
+-- A hit: the model and the bar flash white for 0.1 s (a newer hit restarts it).
+local function hitFlash(v)
+ if not v.model or not v.base or not K.near(v.base.Position,160) then return end
+ v.hits=(v.hits or 0)+1;local n=v.hits
+ if v.hitGlow then v.hitGlow.Enabled=true end
+ if v.barFill then v.barFill.BackgroundColor3=Color3.new(1,1,1) end
+ task.delay(.1,function()
+  if v.hits~=n then return end
+  if v.hitGlow then v.hitGlow.Enabled=false end
+  showHealth(v)
+ end)
+end
+-- Break: a short flat burst where it stood (an orange ground ring, amber sparks, a dust puff), all
+-- gone in half a second, so nothing is left behind.
+local BREAK=Color3.fromRGB(255,128,64)
+local function breakBurst(position)
+ if not K.near(position,160) then return end
+ K.ring(holder,CFrame.new(position+Vector3.yAxis*.08),{radius0=.8,radius1=4,width=.6,color=BREAK,duration=.4,segments=18,bodyAlpha=.2})
+ K.shards(holder,position+Vector3.yAxis*1.2,K.Amber,10,14,.45,.18,Enum.Material.Neon,.6)
+ K.shards(holder,position+Vector3.yAxis*.5,K.Dust,8,7,.5,.22,Enum.Material.SmoothPlastic,.5)
 end
 local function pose(v,now,lift)
  local base=v.base
@@ -113,14 +158,34 @@ local function attach(f)
   local position=f:GetAttribute('Position');if typeof(position)~='Vector3' then return end
   v.baseYaw=f:GetAttribute('Yaw') or 0;v.yaw=v.baseYaw
   v.base=CFrame.new(position)*CFrame.Angles(0,v.baseYaw,0)
-  if not v.model then make(v) elseif not v.lifted then v.model:PivotTo(v.base) end
+  if not v.model then if standing(v) then make(v) end elseif not v.lifted then v.model:PivotTo(v.base) end
   if pop then v.popAt=os.clock();ring(position) end
  end
  f:GetAttributeChangedSignal('BuiltAt'):Connect(function() place(true) end)
  f:GetAttributeChangedSignal('Tier'):Connect(function()
   local tier=H.tier(f:GetAttribute('Tier'));if tier==v.tier then return end
-  v.tier=tier;make(v)
+  v.tier=tier;if not standing(v) then return end
+  make(v)
   if v.base then v.popAt=os.clock();ring(v.base.Position) end
+ end)
+ -- Health: the bar follows it, and a drop that leaves it standing flashes it.
+ v.hp=f:GetAttribute('Health')
+ local function health()
+  local hp=f:GetAttribute('Health')
+  if type(hp)=='number' and type(v.hp)=='number' and hp<v.hp and hp>0 then hitFlash(v) end
+  v.hp=hp;showHealth(v)
+ end
+ f:GetAttributeChangedSignal('Health'):Connect(health)
+ f:GetAttributeChangedSignal('MaxHealth'):Connect(health)
+ -- Broken: the model goes (with the burst if it just happened); rebuilt: it comes back, and the
+ -- BuiltAt pop that comes with a rebuild drops it in.
+ f:GetAttributeChangedSignal('Broken'):Connect(function()
+  local broken=f:GetAttribute('Broken')
+  if type(broken)=='number' then
+   local at=v.base and v.base.Position
+   clear(v)
+   if at and workspace:GetServerTimeNow()-broken<1 then breakBurst(at) end
+  elseif not v.model and v.base then make(v) end
  end)
  -- A new turret arrives with BuiltAt already set: drop it in if it was just built.
  local built=f:GetAttribute('BuiltAt')
@@ -340,20 +405,34 @@ Input.LastInputTypeChanged:Connect(layout)
 player:GetAttributeChangedSignal('Setting_HudScale'):Connect(layout)
 
 local wasReady=true
+local shownBroken=false
 local tick,layoutAt=0,0
 RunService.Heartbeat:Connect(function(dt)
  tick+=dt;if tick<.1 then return end;tick=0
  local on=eligible()
  if on~=slot.Visible then slot.Visible=on;if on then layout();pop(.7) end end
  -- Turrets whose model wasn't there to clone yet (installed while running in Studio).
- for _,v in shown do if not v.model and v.base and template(v.tier) then make(v) end end
+ for _,v in shown do if not v.model and v.base and standing(v) and template(v.tier) then make(v) end end
  if not on then return end
  local now=os.clock()
  if now-layoutAt>1 then layoutAt=now;layout() end -- the touch jump button arrives late
  local mine=own()
  setIcon(H.tier(mine and mine:GetAttribute('Tier') or 1))
  local left=remaining()
- shade.Size=UDim2.new(1,-12,math.clamp(left/H.BUILD_COOLDOWN,0,1),-12*math.clamp(left/H.BUILD_COOLDOWN,0,1))
+ -- Broken and not yet rebuildable: a charcoal button reading BROKEN with a grey turret and the
+ -- seconds left (up to H.REBUILD_DELAY); then lime BUILD again with the ready pop.
+ local broken=mine~=nil and type(mine:GetAttribute('Broken'))=='number'
+ local waiting=broken and left>0
+ if waiting~=shownBroken then
+  shownBroken=waiting
+  T.setPrimary(button,not waiting)
+  button.Caption.Text=waiting and 'BROKEN' or 'BUILD'
+  button.Caption.TextColor3=waiting and T.Color.negative or T.Color.white
+  local tint=waiting and Color3.fromRGB(110,110,110) or Color3.new(1,1,1)
+  image.ImageColor3=tint;view.ImageColor3=tint
+ end
+ local share=math.clamp(left/(broken and H.REBUILD_DELAY or H.BUILD_COOLDOWN),0,1)
+ shade.Size=UDim2.new(1,-12,share,-12*share)
  seconds.Text=left>0 and tostring(math.ceil(left)) or ''
  local readyNow=left<=0
  if readyNow and not wasReady then pop(1.15) end

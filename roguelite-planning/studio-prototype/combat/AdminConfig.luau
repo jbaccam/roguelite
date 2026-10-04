@@ -66,8 +66,9 @@ local rules={
  GiveItem=function(a,b) local e=type(a)=='string' and Items.ById[a];return e and e.kind~='Weapon' and b==nil end,
  Shards=function(a,b) return (a=='Add' and int(b,-E.MAX_SHARDS,E.MAX_SHARDS)) or (a=='Set' and int(b,0,E.MAX_SHARDS)) end,
  Level=function(a,b) return (a=='Add' and int(b,1,100)) or (a=='Set' and int(b,1,XP.MAX_LEVEL)) end,
- -- Handyman turret (HANDYMAN_TURRET.md): Give (one at you, any class) / Clear (all), or Tier 1-4.
- Turret=function(a,b) return ((a=='Give' or a=='Clear') and b==nil) or (a=='Tier' and int(b,1,4)) end,
+ -- Handyman turret (HANDYMAN_TURRET.md): Give (one at you, any class) / Break (yours to 0 HP,
+ -- 2026-10-04) / Clear (all), or Tier 1-4.
+ Turret=function(a,b) return ((a=='Give' or a=='Break' or a=='Clear') and b==nil) or (a=='Tier' and int(b,1,4)) end,
 }
 A.Actions={};for name in rules do table.insert(A.Actions,name) end;table.sort(A.Actions)
 -- true only for a known action with valid arguments.

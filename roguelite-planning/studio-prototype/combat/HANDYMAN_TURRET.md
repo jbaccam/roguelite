@@ -9,6 +9,8 @@ Added 2026-10-03. User: "make Handyman able to build a turret … that can be up
 - Icons uploaded: `H.Icons` holds `previews/icon_T1-4.png`.
 - Turrets turn on at the next server start (Play).
 
+**2026-10-04: mobs can break it** (user: "lets let mobs destroy it"). Done in the repo only. It is not synced to Studio, no Studio tests have run, and it has not been play-tested. See [Health and breaking](#health-and-breaking).
+
 ## How it plays
 
 - **Handyman only.** It is a class ability, not a weapon slot. The class description now says so.
@@ -24,10 +26,73 @@ Added 2026-10-03. User: "make Handyman able to build a turret … that can be up
   - kill credit and crystals
   - run contribution and the "damage by source" analytics (source `Turret`)
   - the `utilityKills` quest stat
-- **It can't be destroyed,** and it doesn't block enemies or players.
+- **Mobs can break it** (below). It doesn't block enemies or players.
 - **It holds fire** between waves, while the run is paused, during a boss entrance, while you are down, and when your weapons are switched off.
 - **It goes away** when you leave the run (lobby, results, disconnect), when the run resets, or if you end up 500+ studs from it (another arena). It never shows in the lobby.
 - **Multiplayer:** each Handyman has their own turret.
+
+## Health and breaking
+
+Added 2026-10-04. All the numbers are in `HandymanTurret.luau` (`HEALTH`, `HEALTH_PER_WAVE`, `HEALTH_TIER`, `REBUILD_DELAY`, `LOW_HEALTH`), so they are easy to retune once the turret's cost is decided.
+
+### Health
+
+- **Formula:** Tier I has 60 + 15 per wave after the first. Each tier above I multiplies that by 1.5.
+- **Gear power:** it also gets the owner's gear power health share (+6% per point above 1), like the owner's own max health. A later map's mobs hit harder by exactly that share (`RunSetupRules.enemyScale`), so the turret lasts as long there. A fresh account in Pine Valley gets the table below unchanged.
+- **Armour:** the owner's Armor and Contact resistance cut each hit, as they do for the player (`CharacterStats.incoming`). Example: 11 damage with 5 armour is 11 / (1 + 5/15) = 8.25.
+- **No player-only defences:** dodge, the first-hit block, the pet shield and the zombies' shared 0.3 s swing gap don't protect it.
+- **No regeneration** during a wave. Every wave starts it at full health for that wave, like players (`ShopService` refills them).
+
+| Tier | Wave 1 | Wave 5 | Wave 10 | Wave 20 |
+|---|---|---|---|---|
+| I | 60 | 120 | 195 | 345 |
+| II | 90 | 180 | 293 | 518 |
+| III | 135 | 270 | 439 | 776 |
+| IV | 203 | 405 | 658 | 1,164 |
+
+Tier I takes about 11 hits from a regular zombie of the same wave (5 + 1.5 damage per wave, one hit every 0.8 s):
+
+| Wave | Zombie hit | Hits to break | One zombie | Three | Ten |
+|---|---|---|---|---|---|
+| 1 | 5 | 12 | 9.0 s | 3.2 s | 1.0 s |
+| 5 | 11 | 11 | 8.2 s | 2.9 s | 0.9 s |
+| 10 | 18.5 | 11 | 8.2 s | 2.8 s | 0.8 s |
+| 20 | 33.5 | 11 | 8.2 s | 2.7 s | 0.8 s |
+
+So it holds a few seconds against a small group, and a swarm breaks it in about a second.
+
+### Who attacks it
+
+- **Wave mobs whose nearest target it is.** A mob picks the turret when the turret is closer than every living player. The distance is measured on the ground to the turret's edge, as to a body. A turret between you and a swarm soaks their hits and pulls them off you.
+  - Example: a zombie 10 studs from you and 6 from your turret goes for the turret. You step to 5 studs from it, and it comes back to you.
+  - Several turrets and several players work the same way: the mob picks the nearest of all of them.
+- **Melee mobs** walk to its edge and use their normal swing, with the same reach, arc and damage as against a player.
+- **Lunging mobs** (snake, scorpion) dash at it.
+- **Ranged mobs** (spitter, rock crab, bow skeleton…) stop at their range and shoot it. A shot aimed at the turret can still hit a player who steps in front of it.
+- **The Mutant's slam** hits every standing turret inside its ground circle, whoever it was aimed at.
+- **Bosses don't hit it yet.** Their attack code (`combat/bosses/`) was mid-remodel. Adding it later means one loop over `HandymanTurret.posts` in each boss hit test, like the Mutant's.
+- **Other attacks don't hit it:** a swing or shot aimed at a player, and body bumps.
+
+### Breaking and rebuilding
+
+- **At 0 HP it breaks:** the model goes with a short flat burst (an orange ground ring, amber sparks, a dust puff, all gone in half a second) and a crunch (the thud and blunt hit pitched down, with a shotgun crackle). Nothing is left behind. It stops firing and is no longer a target.
+- **BUILD again:** 5 s after the break, or sooner if its own 8 s cooldown ends first (`H.rebuildAt`). Building puts a fresh full-HP turret where you stand, and starts the usual 8 s cooldown.
+  - Examples: broken 1 s after a move → BUILD in 5 s, not 7. Broken 4 s after a move → BUILD in 4 s. Not moved recently → BUILD right away.
+- **The next wave** rebuilds a broken turret at your position, like the wave-start build.
+- **BUILD on a standing turret** still moves it, and it keeps its damage. Moving isn't a repair.
+
+### What you see
+
+- **Health bar:** a small bar (58 × 10 px, the same size on phones) over each turret. It is lime, and red under 30%.
+- **Hit flash:** each hit flashes the bar and the model white for 0.1 s.
+- **BUILD button:** while the turret is broken and can't be rebuilt yet, the button turns charcoal, reads **BROKEN** in red, greys the turret icon and counts down the seconds. When it can be rebuilt, it is lime **BUILD** again with the ready pop.
+
+### Balance effect
+
+- **Less damage in a swarm.** The turret used to add about +8% damage at best (see Balance). Now a swarm that reaches it breaks it in about a second. It then does nothing until you rebuild it (5–8 s) or the next wave starts. Placed in the open with a swarm on it, it loses most of that uptime.
+- **A decoy.** In exchange, each turret's life soaks about 11 hits that would have been aimed at the Handyman. At wave 10 a Tier I turret absorbs 195 damage, about twice a fresh Handyman's 90 HP, and pulls mobs off you while it lasts.
+- **Placement matters.** The best place is between you and the swarm, or where mobs reach it one or two at a time. Upgrades now also make it tougher (×1.5 health per tier).
+- **No trim to the class.** Check this in play-tests before changing the numbers. The usual levers are `HEALTH` and `REBUILD_DELAY`.
 
 ## Numbers
 
@@ -76,10 +141,11 @@ A Handyman on wave 5 with the class buffs and two home weapons (+5% Damage, +15%
 - **Price:** about one weapon copy per tier. Early on, that is worse value than buying a new weapon. It is never a must-buy, but it is always offered and never needs a slot.
 - **Compared with the other classes:** Gunner gets +20% ranged damage, +10% ranged attack speed and +1 projectile at four home weapons. Mage gets +25% elemental damage and +30% duration. Handyman's own buffs are the mildest offence (+5% damage, +15% to Handyman weapons only), and the turret's +8% doesn't make it clearly stronger.
 - **No Handyman buff was trimmed.** If play-tests show otherwise, the first thing to trim is the class's +5% Damage.
+- **Since 2026-10-04 mobs can break it,** so that +8% is now a best case, and the turret is also a decoy. See [Balance effect](#balance-effect).
 
 ## Server authority and performance
 
-- **The server decides everything:** placement, targeting, damage, tier, upgrades and cooldown.
+- **The server decides everything:** placement, targeting, damage, health, breaking, tier, upgrades and cooldown.
 - **BUILD** is `RunAction` `BuildTurret`. No new remote; RogueliteMeta's handler ignores the action.
   - It is checked by `HandymanTurret.canBuild`: installed, Handyman (or an admin turret), run member, not in the lobby, alive, not down, phase Combat or Practice, not paused or held, off cooldown.
   - It is limited to one request every 0.25 s.
@@ -90,11 +156,19 @@ A Handyman on wave 5 with the class buffs and two home weapons (+5% Damage, +15%
 - **Replication:** there are no server parts and no server CFrame writes. Each turret is a Folder in `workspace.RogueliteTurrets`:
   - `Position`, `Yaw`, `Tier`, `BuiltAt` and `ReadyAt`
   - `Aim`, written at most 5 times a second when the target moves 1.5+ studs
+  - `Health` (to 0.1, written when a hit changes it), `MaxHealth`, and `Broken` (server time it broke; nil while standing)
+- **Mob hits (2026-10-04):** no new remote or module, and no cross-sandbox calls. They work like this:
+  - The sandboxed service keeps one plain table per turret in `HandymanTurret.posts` (`H.newPost`). It holds `Position` (the turret's middle), `Parent` (its Folder), `hp`, `pad` (its half-width past a player's 0.75) and `taken`.
+  - `RogueliteZombieChase` (unsandboxed) passes that table to a mob as its target when `HandymanTurret.nearer` picks it. That is one extra line per mob per think, a loop over at most a few turrets, with no raycasts of its own.
+  - `EnemyAttacks` and `ZombieAttacks` attack the table as they would a player's root. A hit only adds to `taken`.
+  - Every frame the service takes `taken` off, with the owner's armour (`H.takeHit`). It drops hits between waves and while the run is held, like `CharacterService.contact`.
+  - Broken or removed turrets have `hp` 0, so mobs drop them on their next think.
 - **Clients** draw the models, turn the head, pitch the barrel, add recoil, spin and flashes. They skip turrets more than 250 studs from the camera, and freeze them while the run is paused.
 - **Sounds** come from `RogueliteSounds`, reusing the kit:
   - each nail: the pistol pop, higher and quieter
   - a build: a thud and a metal tick
   - a tier up: the upgrade chime
+  - a break: a crunch (the thud and blunt hit pitched down, a quiet shotgun crackle)
 
 ## Admin panel
 
@@ -102,6 +176,7 @@ The Player tab has a **Handyman turret** section, using the AdminService action 
 
 - **Give turret:** builds one at you now, whatever your class, for this run.
 - **Tier I–IV:** sets your turret's tier for this run.
+- **Break turret** (2026-10-04): your turret drops to 0 HP now, as if mobs broke it. Use it to see the burst, the BROKEN button and the rebuild.
 - **Clear turrets:** removes every turret. None comes back until the next wave or that player's BUILD.
 
 ## Files
@@ -123,6 +198,11 @@ The Player tab has a **Handyman turret** section, using the AdminService action 
   - `AdminConfig`, `AdminService`, `AdminPanelUI`
   - `CharacterStats` (the Handyman description)
   - `default.project.json`
+- Edited for mobs breaking it (2026-10-04):
+  - `RogueliteZombieChase.server.luau`: a look-up of `HandymanTurret` and one `Turret.nearer` line after the nearest-player pick
+  - `EnemyAttacks.luau`: a turret target can start an attack (reach + pad); swings, lunges and shots aimed at it can hit it (`hitTurret`)
+  - `ZombieAttacks.luau`: the Mutant slams a turret target, and a slam hits every turret in its circle
+  - `RogueliteSounds` (the crunch), `AdminConfig` and `AdminPanelUI` (Break turret)
 
 ## Studio steps (each needs the user's okay)
 
@@ -146,6 +226,16 @@ The Player tab has a **Handyman turret** section, using the AdminService action 
    - Another class gets no button.
    - Phone layout: BUILD above the jump button, clear of DASH.
 
+**For the 2026-10-04 breaking change**, sync `HandymanTurret`, `HandymanTurretService`, the `HandymanTurret` LocalScript, `TurretTests`, `EnemyAttacks`, `ZombieAttacks`, `RogueliteZombieChase`, `RogueliteSounds`, `AdminConfig` and `AdminPanelUI`. All of them already exist in Studio, so their Sandboxed settings stay as they are. `HandymanTurret` must load before the chase script uses it, but the chase only looks it up, so a missing one just means mobs ignore turrets. Then:
+- **Tests:** re-run `TurretTests` in Edit. `EnemyShotTests` should still pass, because the stubs have no turret.
+- **Play-test (the user):**
+  - Admin panel > Player > Give turret, and stand behind it with mobs coming. They should go for the turret, the bar should drop and flash, and it should turn red under 30%.
+  - Let it break: you should see the burst and hear the crunch, and the button should read BROKEN with a 5 s countdown. BUILD then puts a fresh full-HP turret at you.
+  - **Break turret** does the same without waiting for mobs.
+  - The next wave rebuilds a broken turret.
+  - A spitter shoots it, and a Mutant's slam hits it.
+  - Tier IV has 1.5³ ≈ 3.4× Tier I's health.
+
 ## Not done / judgment calls
 
 - **Gamepad R1, keyboard B.** Pad X went to the dash. R1 is otherwise only the death screen's spectate cycle, and BUILD is hidden while you are dead.
@@ -154,3 +244,12 @@ The Player tab has a **Handyman turret** section, using the AdminService action 
 - **No second turret at Tier IV.** The gatling fits the spinning barrel model and keeps one turret per player.
 - **Knockback** from items pushes enemies away from the owner, not from the turret (shared CombatEffectsService code). The turret has no knockback of its own.
 - **`AdminConfigTests` was already stale:** it expects 15 actions, and the place had 18 before `Turret`. It wasn't updated here.
+- **Breaking (2026-10-04):**
+  - **Gear power share added** to the requested formula, so a later map's mobs, which hit harder by that share, don't break it faster than Pine Valley's.
+  - **Not scaled by difficulty or Endless.** On Hard (×1.3 enemy damage) or past wave 20 (Endless damage, ×1.6 at wave 30), it breaks sooner, the same as players feel it.
+  - **The zombies' shared 0.3 s swing gap is a player-only defence,** so a ring of zombies hits the turret with every swing.
+  - **Only area attacks hit it collaterally** (the Mutant's slam). A swing or shot aimed at a player doesn't hit a turret beside them.
+  - **Bosses don't hit it yet,** because `combat/bosses/` was mid-remodel.
+  - **Admin God protects you, not your turret,** so you can watch it break while testing.
+  - **Moving keeps its damage,** and every new wave refills it. A broken one is rebuilt at full HP.
+  - **The health state lives on each turret,** not the player, and mob targeting takes any number of turrets. This is so a later "several turrets per player" (Turret Kit) carries over.

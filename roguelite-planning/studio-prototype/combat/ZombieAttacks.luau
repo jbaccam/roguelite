@@ -3,6 +3,10 @@ local Players=game:GetService('Players')
 local combat=game.ReplicatedStorage:WaitForChild('RogueliteCombat')
 local Types=require(combat:WaitForChild('ZombieTypes'))
 local Characters=require(script.Parent:WaitForChild('CharacterService'))
+-- Handyman turrets (HANDYMAN_TURRET.md, 2026-10-04): a slam hits any standing turret in its circle,
+-- and a Mutant whose nearest target is a turret slams at it. Looked up, never waited on.
+local turretOk,Turret=pcall(require,combat:FindFirstChild('HandymanTurret'))
+if not turretOk then Turret=nil end
 local A={}
 local states=setmetatable({},{__mode='k'})
 -- Slam hits, impacts and serials per Mutant, for Studio QA (RegularEnemyQA). A server table, not
@@ -92,6 +96,13 @@ function A.update(npc,target)
                     end
                 end
             end
+            -- Turrets in the circle take the same slam (plain data; HandymanTurretService applies it).
+            for _,post in Turret and Turret.posts or {} do
+                local origin=root.Position+Vector3.yAxis
+                if post.hp>0 and Types.inSlam(s.center,post.Position) and not workspace:Raycast(origin,post.Position-origin,p) then
+                    post.taken+=npc:GetAttribute('SlamDamage') or Types.Slam.damage
+                end
+            end
             tally(npc).lastImpact=now
         end
         if age>=Types.Slam.recovery then
@@ -101,10 +112,14 @@ function A.update(npc,target)
         return false -- the chase keeps steering through the slam
     end
     if now<s.nextAttack or not target or not target.Parent then return false end
-    local th=target.Parent:FindFirstChildOfClass('Humanoid')
-    if not th or th.Health<=0 then return false end
+    -- A turret target (HandymanTurret.newPost, a table; a player's root is a Part, where .turret
+    -- would throw) while it stands; its pad puts its edge where a body's would be.
+    local post=typeof(target)=='table' and target.turret and target or nil
+    local pad=post and post.pad or 0
+    if post then if not (post.hp>0) then return false end
+    else local th=target.Parent:FindFirstChildOfClass('Humanoid');if not th or th.Health<=0 then return false end end
     local delta=target.Position-root.Position;local flat=Vector3.new(delta.X,0,delta.Z)
-    if flat.Magnitude>Types.Slam.trigger or math.abs(delta.Y)>Types.Slam.maxHeight then return false end
+    if flat.Magnitude>Types.Slam.trigger+pad or math.abs(delta.Y)>Types.Slam.maxHeight then return false end
     local p=params(npc)
     if workspace:Raycast(root.Position,target.Position-root.Position,p) then return false end
     local look=root.CFrame.LookVector

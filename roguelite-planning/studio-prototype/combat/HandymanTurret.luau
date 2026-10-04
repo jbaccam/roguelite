@@ -1,7 +1,8 @@
 -- Handyman turret rules (HANDYMAN_TURRET.md, 2026-10-03). Shared and pure: HandymanTurretService
 -- (server) builds, aims and fires from these numbers, ShopService prices and checks the upgrade,
 -- HandymanTurret.client draws it and shows BUILD, TurretTests checks them. Touches no Instances
--- except templates(), which only looks.
+-- except templates(), which only looks. Since 2026-10-04 mobs can break it: health, break and
+-- rebuild rules below, and H.posts (server only) for the mob scripts.
 -- Studio: ReplicatedStorage.RogueliteCombat.HandymanTurret, Sandboxed = true with CharacterStats'
 -- Capabilities (ShopService, sandboxed, requires it).
 --
@@ -100,6 +101,75 @@ function H.canBuild(c)
 end
 -- Facing (a CFrame.Angles Y angle) for a flat direction: lookVector = (-sin a, 0, -cos a).
 function H.yaw(direction) return math.atan2(-direction.X,-direction.Z) end
+
+-- Health (2026-10-04, user: "lets let mobs destroy it"). Every number is here to retune once the
+-- turret's cost is decided. Tier I: 60 + 15 a wave after the first; x1.5 each tier above I; times the
+-- owner's gear power health share (CharacterStats.powerHealth, +6% a point above 1, like their own
+-- max health), because a later map's mobs hit harder by just that much (RunSetupRules.enemyScale).
+-- Waves 1 / 5 / 10 / 20 at power 1:
+--   Tier I 60 / 120 / 195 / 345, II 90 / 180 / 293 / 518, III 135 / 270 / 439 / 776, IV 203 / 405 / 658 / 1164.
+-- That is about 11 hits from a regular zombie of the same wave (5 + 1.5 a wave, a hit every 0.8 s).
+-- Example, wave 5 Tier I (120 HP) vs zombies hitting 11: one alone needs 11 hits, about 8 s;
+-- three, 2.9 s; a swarm of ten, under a second.
+H.HEALTH=60;H.HEALTH_PER_WAVE=15;H.HEALTH_TIER=1.5
+-- After it breaks, BUILD works again this many seconds later (sooner if its own cooldown ends first).
+H.REBUILD_DELAY=5
+-- Its health bar turns from lime to red under this share.
+H.LOW_HEALTH=.3
+function H.maxHealth(tier,wave,power)
+ wave=math.max(1,math.floor(tonumber(wave) or 1))
+ return math.floor((H.HEALTH+H.HEALTH_PER_WAVE*(wave-1))*H.HEALTH_TIER^(H.tier(tier)-1)*Stats.powerHealth(power)+.5)
+end
+-- What one hit takes off: the mob's damage against a player, after the owner's armour and contact
+-- resistance exactly as for the player (CharacterStats.incoming). None of the player-only defences
+-- (dodge, first-hit block, pet shield, the zombies' shared swing gap). Example: 11 with 5 armour ->
+-- 11 / (1 + 5 / 15) = 8.25; no stats -> 11.
+function H.damageTaken(amount,stats)
+ amount=math.max(0,tonumber(amount) or 0)
+ if type(stats)~='table' or type(stats.Armor)~='number' or type(stats.ContactReduction)~='number' then return amount end
+ return Stats.incoming(amount,stats)
+end
+-- A hit on a turret with `hp` left: the hp after it, and true when that hit broke it. A broken one
+-- (0) takes nothing. Example: 6 HP, a hit of 6 -> 0, true.
+function H.takeHit(hp,amount,stats)
+ if not (hp>0) then return 0,false end
+ local left=math.max(0,hp-H.damageTaken(amount,stats))
+ return left,left<=0
+end
+-- When BUILD works again after a break at `now`: REBUILD_DELAY later, or when its own cooldown
+-- (readyAt) ends if that is sooner. Examples, broken at 100: moved at 99 (ready 107) -> 105; moved
+-- at 96 (ready 104) -> 104; ready since 95 -> 95, so right away.
+function H.rebuildAt(now,readyAt) return math.min(readyAt or now,now+H.REBUILD_DELAY) end
+
+-- Mob targets (server only; empty on clients). HandymanTurretService keeps one table per turret in
+-- H.posts, built by H.newPost. RogueliteZombieChase makes it a mob's target when it is nearer than
+-- every living player (H.nearer); EnemyAttacks and ZombieAttacks then swing, shoot and slam at it as
+-- at a player's root: Position (its middle), Parent (its Folder), AssemblyLinearVelocity (still).
+-- A hit adds the mob's damage to `taken`; the service takes it off hp with the owner's armour.
+-- hp > 0 while it stands. pad: how far its edge sits past a player's half-body (BODY, the 0.75 in
+-- EnemyCatalog.Reach), added to reach and stop distances so mobs stop at its edge as at a body.
+-- Plain data, never functions: the service is sandboxed and those scripts are not.
+H.BODY=.75
+H.posts={}
+function H.newPost(folder)
+ local post={turret=true,Parent=folder,Position=Vector3.zero,AssemblyLinearVelocity=Vector3.zero,userId=0,hp=0,pad=.25,taken=0}
+ post.root=post -- the chase reads .root and .userId from the row it picks
+ return post
+end
+-- A mob's target: `best` (its nearest living player's row, `distance` studs away on the ground)
+-- unless a standing turret is nearer, measured on the ground to its edge as to a body. Works for any
+-- number of turrets and owners. Example: a zombie 10 studs from you and 6 from your turret goes for
+-- the turret; you step to 5 studs from it and it comes back to you.
+function H.nearer(posts,from,best,distance)
+ distance=distance or math.huge
+ for _,post in posts do
+  if post.hp>0 then
+   local d=Vector2.new(post.Position.X-from.X,post.Position.Z-from.Z).Magnitude-post.pad
+   if d<distance then best,distance=post,math.max(0,d) end
+  end
+ end
+ return best,distance
+end
 -- BUILD button and shop art per tier: the uploaded blender-handyman-turret/previews/icon_T<n>.png
 -- (512 px). Empty until they're uploaded in Studio; the button shows a live view of the model then.
 H.Icons={'rbxassetid://100505469530773','rbxassetid://110375220181503','rbxassetid://112292832566551','rbxassetid://78790900806318'} -- previews/icon_T1-4.png, uploaded 2026-10-04

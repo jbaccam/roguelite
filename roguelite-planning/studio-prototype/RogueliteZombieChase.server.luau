@@ -15,6 +15,10 @@ local EnemyCatalog = require(combat:WaitForChild('EnemyCatalog'))
 local RunSetupRules = require(game:GetService('ReplicatedStorage'):WaitForChild('RunSetupRules'))
 local EnemyAttacks = require(script.Parent:WaitForChild('EnemyAttacks'))
 local Attacks = require(script.Parent:WaitForChild('ZombieAttacks'))
+-- Handyman turrets mobs can break (HANDYMAN_TURRET.md, 2026-10-04): HandymanTurret.posts, filled by
+-- HandymanTurretService. Looked up, never waited on; without it mobs only chase players.
+local turretOk, Turret = pcall(require, combat:FindFirstChild('HandymanTurret'))
+if not turretOk then Turret = nil end
 -- The admin panel's Hammer boss spawns (AdminSpawn below). This script and BossService are unsandboxed.
 local Bosses = require(script.Parent:WaitForChild('BossService'))
 local BossMotion = require(combat:WaitForChild('BossMotion'))
@@ -620,6 +624,9 @@ record.step = function(dt, frame)
     local vacuumSlow=(npc:GetAttribute('VacuumSlowUntil') or 0)>workspace:GetServerTimeNow() and 35 or 0
     humanoid.WalkSpeed=config.speed*(1-math.max(statusSlow,vacuumSlow)/100)
     local nearest, distance = nearestTarget(frame.targets)
+    -- Handyman turret (2026-10-04): a standing turret nearer than every living player is the target
+    -- instead (its table stands in for a root; EnemyAttacks / ZombieAttacks hit it).
+    if Turret then nearest, distance = Turret.nearer(Turret.posts, root.Position, nearest, distance) end
     local target = nearest and nearest.root
     if target ~= previousTarget then
         previousTarget = target

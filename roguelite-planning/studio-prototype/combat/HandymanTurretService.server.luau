@@ -12,9 +12,17 @@
 --   nothing here writes a CFrame.
 -- Life: built next to a Handyman when a wave (or the sandbox) starts and they have none, moved by
 -- BUILD, gone when they leave the run (lobby, results, disconnect), the run resets, or they end up
--- 500+ studs away (another arena: the next wave builds one again). It can't be destroyed. It holds
--- fire between waves, while the run is paused, through a boss entrance, while its owner is down or
--- their weapons are off.
+-- 500+ studs away (another arena: the next wave builds one again). It holds fire between waves,
+-- while the run is paused, through a boss entrance, while its owner is down or their weapons are off.
+-- Health (2026-10-04, user: "lets let mobs destroy it"): each turret has its own hp (Health and
+-- MaxHealth on its Folder; HandymanTurret.maxHealth from the wave, its tier and the owner's gear
+-- power) and a target table in HandymanTurret.posts. A wave mob whose nearest target it is
+-- (RogueliteZombieChase -> HandymanTurret.nearer) walks to it and attacks it; the hit lands on the
+-- table's `taken` (EnemyAttacks, ZombieAttacks), which this script takes off every frame with the
+-- owner's armour. At 0 it breaks (Broken = server time): no shots, no longer a target, BUILD again
+-- after HandymanTurret.rebuildAt (5 s or its own cooldown, the sooner) puts a fresh one at you, and
+-- the next wave rebuilds it at you. BUILD on a standing one moves it with its damage; every wave
+-- starts it at full health, like players (ShopService refillHealth). No regeneration in a wave.
 -- Shots: a 10 Hz target pick through TargetGrid (nearest enemy in range with a clear line from the
 -- head), nails are StatProjectiles (their own instance; projectile keys from 2^30 so clients never
 -- mix them with weapon bullets) with id 'Turret'. Hits go through CombatEffectsService as the
@@ -105,7 +113,19 @@ local function geometry(tier)
    end
   end
   if #list>0 then g.muzzles=list end
+  -- For mobs (2026-10-04): its half-width from the Base part's footprint (T1 2.05 wide -> 1.03,
+  -- so its target pad is 0.28) and its middle, a little over half the head height, for their aim.
+  local base=m:FindFirstChild('Base')
+  if base and base:IsA('BasePart') then
+   -- World X and Z extents of the part, whichever way the import turned it.
+   local c,s=base.CFrame,base.Size
+   local x=math.abs(c.RightVector.X)*s.X+math.abs(c.UpVector.X)*s.Y+math.abs(c.LookVector.X)*s.Z
+   local z=math.abs(c.RightVector.Z)*s.X+math.abs(c.UpVector.Z)*s.Y+math.abs(c.LookVector.Z)*s.Z
+   g.radius=math.clamp(math.max(x,z)/2,.8,2)
+  end
+  g.middle=math.clamp(g.head.Y*.55,.8,2.2)
  end
+ g.radius=g.radius or 1;g.middle=g.middle or 1.2
  geometryCache[tier]=g
  return g
 end
@@ -143,7 +163,8 @@ local function fresh(e) return e.hum.Health>0 and e.npc.Parent~=nil and e.root.P
 
 -- Turrets --------------------------------------------------------------------------------------
 -- player -> {folder, tier, position, yaw, facing, head (world), readyAt, nextShot, shots, aimSent,
--- aimAt, seenTarget, runId, admin}
+-- aimAt, seenTarget, runId, admin, hp, maxHp, hpWave, broken, brokeWave, post}. Health and the
+-- break live on the turret, not the player (several turrets per player later stay possible).
 local turrets={}
 local adminGiven={} -- player -> runId: an ADMIN panel turret, kept whatever the class this run
 local suppressed={} -- player -> 'runId:wave': ADMIN Clear, no wave-start build until then or BUILD
@@ -158,7 +179,52 @@ end
 local function despawn(p)
  local t=turrets[p];if not t then return end
  turrets[p]=nil
+ -- No longer a mob target: out of the list, and a mob still holding its table sees it gone.
+ local i=table.find(H.posts,t.post);if i then table.remove(H.posts,i) end
+ t.post.hp=0;t.post.taken=0;t.post.Parent=nil
  if t.folder then t.folder:Destroy() end
+end
+-- The run, wave and phase its health belongs to: a new wave (or the sandbox turning into waves)
+-- refills it, and rebuilds a broken one.
+local function waveKey() return Shop.runId..':'..Shop.wave..':'..Shop.phase end
+local function powerOf(p) local cs=Characters.states[p];return cs and cs.stats and cs.stats.GearPower or 1 end
+-- Health on the turret and its target table, and Health/MaxHealth on its Folder for the bar
+-- (to 0.1, so even a small hit flashes it).
+local function setHealth(t,hp,maxHp)
+ t.hp,t.maxHp=hp,maxHp;t.post.hp=t.broken and 0 or hp
+ local f=t.folder
+ f:SetAttribute('MaxHealth',maxHp)
+ local shown=math.ceil(hp*10)/10;if f:GetAttribute('Health')~=shown then f:SetAttribute('Health',shown) end
+end
+local function fullHealth(p,t)
+ local maxHp=H.maxHealth(t.tier,Shop.wave,powerOf(p))
+ t.hpWave=waveKey();setHealth(t,maxHp,maxHp)
+end
+-- A new tier mid-life (the shop between waves, or ADMIN Tier): that tier's max, its damage kept.
+-- Example, wave 5: Tier I at 70 / 120 -> Tier II at 130 / 180.
+local function retier(p,t)
+ local maxHp=H.maxHealth(t.tier,Shop.wave,powerOf(p))
+ setHealth(t,t.broken and 0 or math.max(1,maxHp-(t.maxHp-t.hp)),maxHp)
+end
+-- 0 HP: it stops, is no target, and BUILD works again at H.rebuildAt (the button shows BROKEN and
+-- the seconds). Clients hide it with a flat burst and a crunch (Broken = server time).
+local function breakTurret(p,t)
+ local now=workspace:GetServerTimeNow()
+ t.broken=now;t.brokeWave=waveKey();t.post.taken=0
+ setHealth(t,0,t.maxHp)
+ t.readyAt=H.rebuildAt(now,t.readyAt);t.aimSent=nil;t.seenTarget=nil
+ local f=t.folder
+ f:SetAttribute('ReadyAt',t.readyAt);f:SetAttribute('Aim',nil);f:SetAttribute('Broken',now)
+end
+-- Mobs' hits queued on its target table come off here, through the owner's armour. Nothing lands
+-- between waves or while the run is held, as for players (CharacterService.contact).
+local function takeHits(p,t,held)
+ local post=t.post;local amount=post.taken;post.taken=0
+ if t.broken or held or amount<=0 then return end
+ local cs=Characters.states[p]
+ local left,broke=H.takeHit(t.hp,amount,cs and cs.stats)
+ setHealth(t,left,t.maxHp)
+ if broke then breakTurret(p,t) end
 end
 local function tierOf(p) local s=Shop.states[p];return H.tier(s and s.turretTier or 1) end
 local function bodyOf(p)
@@ -198,15 +264,25 @@ local function build(p,manual)
  local t=turrets[p];local new=t==nil
  if new then
   local f=Instance.new('Folder');f.Name=tostring(p.UserId);f:SetAttribute('OwnerUserId',p.UserId)
-  t={folder=f,shots=0,nextShot=0,readyAt=0};turrets[p]=t
+  t={folder=f,shots=0,nextShot=0,readyAt=0,hp=0,maxHp=0,post=H.newPost(f)};turrets[p]=t
+  table.insert(H.posts,t.post)
  end
  local now=workspace:GetServerTimeNow()
+ -- A new, broken or ADMIN-given turret is fresh at full health; BUILD moving a standing one keeps
+ -- its damage (moving isn't a repair).
+ local fresh=new or t.broken~=nil or not manual
+ local oldTier=t.tier
  t.tier=tier;t.position=position;t.yaw=H.yaw(look);t.facing=look;t.runId=Shop.runId;t.admin=isAdmin(p)
- t.head=CFrame.new(position)*CFrame.Angles(0,t.yaw,0)*geometry(tier).head
+ local g=geometry(tier)
+ t.head=CFrame.new(position)*CFrame.Angles(0,t.yaw,0)*g.head
+ t.post.Position=position+Vector3.yAxis*g.middle;t.post.pad=g.radius-H.BODY;t.post.taken=0
  t.readyAt=manual and now+H.BUILD_COOLDOWN or now
  t.nextShot=os.clock()+.35 -- the build pop, then it opens fire
  t.aimSent=nil;t.seenTarget=nil
  local f=t.folder
+ -- Broken goes before BuiltAt, so a client never pops in a turret it still thinks is broken.
+ t.broken=nil;f:SetAttribute('Broken',nil)
+ if fresh then fullHealth(p,t) elseif oldTier~=tier then retier(p,t) end
  f:SetAttribute('Tier',tier);f:SetAttribute('Position',position);f:SetAttribute('Yaw',t.yaw)
  f:SetAttribute('ReadyAt',t.readyAt);f:SetAttribute('Admin',t.admin or nil);f:SetAttribute('Aim',nil)
  f:SetAttribute('BuiltAt',now)
@@ -264,6 +340,17 @@ local TICK=.1
 local elapsed=0
 local pausedAt -- os.clock() when the run froze (RunPaused): BUILD's cooldown waits it out
 RunService.Heartbeat:Connect(function(dt)
+ -- Mobs' hits come off every frame, not at 10 Hz, so a break shows the moment it happens.
+ local held
+ for p,t in turrets do
+  if t.post.taken>0 then
+   if held==nil then
+    held=(Shop.phase~='Combat' and Shop.phase~='Practice') or combat:GetAttribute('RunPaused')==true
+     or (combat:GetAttribute('CinematicUntil') or 0)>workspace:GetServerTimeNow()
+   end
+   takeHits(p,t,held)
+  end
+ end
  elapsed+=dt;if elapsed<TICK then return end;elapsed=0
  if not ready() then for p in turrets do despawn(p) end;return end
  local clock=os.clock();local now=workspace:GetServerTimeNow()
@@ -292,9 +379,19 @@ RunService.Heartbeat:Connect(function(dt)
   end
   local tier=tierOf(p)
   if t.tier~=tier then
-   t.tier=tier;t.head=CFrame.new(t.position)*CFrame.Angles(0,t.yaw,0)*geometry(tier).head
-   t.folder:SetAttribute('Tier',tier)
+   local g=geometry(tier)
+   t.tier=tier;t.head=CFrame.new(t.position)*CFrame.Angles(0,t.yaw,0)*g.head
+   t.post.Position=t.position+Vector3.yAxis*g.middle;t.post.pad=g.radius-H.BODY
+   t.folder:SetAttribute('Tier',tier);retier(p,t)
   end
+  if t.broken then
+   -- Broken: no shots and no target. The next wave rebuilds it at its owner, as the wave-start
+   -- build does; before that, BUILD can (H.rebuildAt).
+   if wave and t.brokeWave~=waveKey() and character and p:GetAttribute('RunDown')==nil and not Characters.frozen(p) then build(p,false) end
+   continue
+  end
+  -- Every wave starts it at full health for that wave, like players.
+  if wave and t.hpWave~=waveKey() then fullHealth(p,t) end
   local cs=Characters.states[p]
   local enabled=cs and cs.folder and cs.folder:GetAttribute('WeaponEnabled')~=false
   if not (fighting and character and cs and enabled and p:GetAttribute('RunDown')==nil and not Characters.frozen(p)) then
@@ -343,6 +440,7 @@ end)
 -- developer and the arguments, and marked the run a test run.
 --   Give: build one at you now, whatever your class (kept for this run).
 --   Tier n: your turret's tier for this run (1-4).
+--   Break: your turret drops to 0 HP now, as if mobs broke it (2026-10-04, to test break/rebuild).
 --   Clear: every turret goes; none is rebuilt until the next wave or that player's BUILD.
 Shop.turretAdmin=function(p,mode,tier)
  if not ready() then return false,'Turret models are not installed (InstallHandymanTurret)' end
@@ -361,6 +459,11 @@ Shop.turretAdmin=function(p,mode,tier)
   adminGiven[p]=Shop.runId;suppressed[p]=nil
   local ok,why=build(p,false)
   return ok,ok and 'Turret built' or why
+ elseif mode=='Break' then
+  local t=turrets[p]
+  if not t or t.broken then return false,'You have no standing turret' end
+  breakTurret(p,t)
+  return true,'Turret broken: BUILD in '..math.ceil(math.max(0,t.readyAt-workspace:GetServerTimeNow()))..' s'
  end
  return false,'Unknown turret action'
 end
