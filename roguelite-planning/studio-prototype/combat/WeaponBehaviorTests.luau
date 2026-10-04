@@ -49,5 +49,16 @@ return function(combat)
  check(P.profiles['12'].returns and P.profiles['31'].returns,'Returning weapon definitions')
  check(P.profiles['14'].zone=='Fire' and P.profiles['08'].zone=='Poison','Lingering zones')
  check(P.profiles['15'].reserve and P.profiles['23'].reserve,'Three-model reserves')
+ -- Chain weapons pull in for a close target (2026-10-03, after melee reach grew): a target at full
+ -- reach swings exactly as before, and the Nunchucks' grip comes in for a zombie 3 studs off.
+ local Chains=require(combat.ChainWeaponMotion)
+ local rig=Chains.bind(combat.WeaponTemplates['02'],'02')
+ local base=CFrame.new(0,4,0);local middle=(M.SwingHitStart+M.SwingHitEnd)/2;local reach=C.ById['02'].range
+ local free=Chains.pose(rig,base,Vector3.new(0,0,-1),nil,middle,reach,'Horizontal',1)
+ local far=Chains.pose(rig,base,Vector3.new(0,0,-1),Vector3.new(0,4.25,-30),middle,reach,'Horizontal',1)
+ local close=Chains.pose(rig,base,Vector3.new(0,0,-1),Vector3.new(0,4.25,-3),middle,reach,'Horizontal',1)
+ check((far.Position-free.Position).Magnitude<1e-4,'Chain swing at full reach unchanged')
+ local pulledBy=math.max(.85,reach-rig.fullReach-.12)-math.max(.85,math.min(reach,3+rig.fullReach*.5)-rig.fullReach-.12)
+ check(math.abs((free.Position-close.Position).Magnitude-pulledBy)<1e-3,'Chain swing pulls in for a close target')
  return {checks=checks}
 end

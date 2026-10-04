@@ -40,15 +40,34 @@ function G.around(grid,origin,range)
  return out
 end
 function G.byOrder(a,b) return a.order<b.order end
+-- Melee reach (2026-10-03, round 2: "bhopping melee weapons won't hit at max height of jump"): flat
+-- (X/Z) distance for anything within `allowance` studs above or below; past that, the extra height
+-- counts too. No allowance: the plain distance, as before. Example: a zombie 4 studs out and 3
+-- across while the player is 9.5 up at a jump's peak is 5 studs away with a 13.5 allowance (10.7 plain).
+function G.distance(offset,allowance)
+ if not allowance then return offset.Magnitude end
+ local over=math.max(0,math.abs(offset.Y)-allowance)
+ return math.sqrt(offset.X*offset.X+offset.Z*offset.Z+over*over)
+end
+-- How high a jump goes: JumpHeight, or JumpPower^2 / (2 x gravity) when UseJumpPower is on.
+-- Example: JumpHeight 9.5 at gravity 150 is a 53.4 studs/s take-off, 9.5 up after 0.36 s, 0.71 s
+-- in the air. ReachBody, a body's height, is added on top: mob roots sit a few studs below a
+-- player's (a crab's is 1 up, a player's 3) or above it (an ogre's), so the allowance is 9.5 + 4 = 13.5.
+G.ReachBody=4
+function G.jumpHeight(useJumpPower,jumpPower,jumpHeight,gravity)
+ if useJumpPower then return (jumpPower or 0)^2/(2*math.max(gravity or 196.2,1)) end
+ return jumpHeight or 0
+end
 -- The nearest entry `can` accepts whose point (measure(e), where it is measured to) is more than
 -- .01 and less than `range` from origin and passes clear(point,e), and that point. Candidates are
 -- tried nearest first, ties to the earlier entry, so clear runs once per closer blocked enemy.
-function G.nearest(grid,origin,range,can,measure,clear)
+-- allowance: melee's vertical allowance (G.distance), nil for the plain distance.
+function G.nearest(grid,origin,range,can,measure,clear,allowance)
  local found={}
  for _,e in G.around(grid,origin,range) do
   if can(e) then
    local point=measure(e)
-   local distance=(point-origin).Magnitude
+   local distance=G.distance(point-origin,allowance)
    if distance<range and distance>.01 then table.insert(found,{e=e,point=point,distance=distance}) end
   end
  end
@@ -57,11 +76,11 @@ function G.nearest(grid,origin,range,can,measure,clear)
 end
 -- Melee sweeps (launch audit P6). The enemies a swing could still hit this tick: not in `hit`,
 -- and a boss (measured to its nearest side) or with its root within `range` of origin. Returns
--- them as a set and how many there are.
-function G.open(grid,origin,range,hit)
+-- them as a set and how many there are. allowance: as in G.nearest.
+function G.open(grid,origin,range,hit,allowance)
  local open,count={},0
  for _,e in grid.list do
-  if not hit[e.npc] and (e.boss or (e.position-origin).Magnitude<=range) then open[e.npc]=true;count+=1 end
+  if not hit[e.npc] and (e.boss or G.distance(e.position-origin,allowance)<=range) then open[e.npc]=true;count+=1 end
  end
  return open,count
 end

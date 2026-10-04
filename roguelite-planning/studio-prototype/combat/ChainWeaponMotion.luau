@@ -132,7 +132,13 @@ function C.pose(rig,root,direction,aim,age,reach,style,side,visual)
  local heading=CFrame.lookAt(center,center+delta.Unit)*CFrame.Angles(0,math.rad((-half+2*half*smooth(t))*side),0)
  local frames=C.sample(rig,age)
  local held=frames[rig.heldIndex]:PointToWorldSpace(rig.heldOffset)
- local distance=math.max(.85,reach-rig.fullReach-.12)
+ -- A close target pulls the swing in (2026-10-03: melee reach grew ~17-25%, which moved the grip
+ -- 1.5-2 studs farther out, so a mob hugging the player could sit inside it). The head still ends
+ -- half the chain past the target and never past reach; a target at full reach swings as before.
+ -- Example: Nunchucks (reach 7.5) at a zombie 3 studs off end at 3 + half the chain, not 7.5.
+ local want=reach
+ if aim then local o=aim-center;want=math.min(reach,Vector3.new(o.X,0,o.Z).Magnitude+rig.fullReach*.5) end
+ local distance=math.max(.85,want-rig.fullReach-.12)
  local rotation=heading.Rotation*rig.attackBasis
  local anchor=heading:PointToWorldSpace(Vector3.new(0,.12,-distance))
  if rig.id=='02' and (style=='FigureEight' or style=='Spin') then

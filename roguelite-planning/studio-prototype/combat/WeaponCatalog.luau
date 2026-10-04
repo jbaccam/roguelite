@@ -7,51 +7,63 @@ local ranged={[0]=true,[7]=true,[8]=true,[9]=true,[10]=true,[11]=true,[12]=true,
 -- {damage, cooldown, range, tierDamage, tierCooldown, trait}: damage and cooldown as authored, before
 -- rarity power (below). Tier tables are built from them; only Boxing Gloves author their own.
 -- The pre-2026-10-02 tier tables are kept in WEAPON_BALANCE.md (and WeaponBalanceTests' Tier IV check).
+-- Melee vs ranged pass (2026-10-03, user: "ranged weapons are dominating ... mobs never get close";
+-- "increase range on most melee weapons"). Ranged: range about -22% and cooldown x1.13 (-12% attack
+-- rate). Melee: reach about +20%, and the five weakest (Pan, Nunchucks, Kusarigama, Shovel, Roller)
+-- +10-20% damage. Godly keep their damage and cooldown (~24 DPS), only range moves. Not changed:
+-- Rubber Duck (12 studs is already melee distance) and Medusa's rate (it is the slow weapon). Nail
+-- Gun stays under .3 s (its shop price band) and loses more range instead. Old -> new in
+-- WEAPON_BALANCE.md. Example: Glock 45 studs / 0.72 s -> 35 studs / 0.82 s; Frying Pan 6 -> 7.5 studs, 16 -> 18 dmg.
 local profiles={
- {12,.72,45}, -- Glock
- {16,1.05,6}, -- Pan
- {6,.5,6}, -- Nunchucks
- {18,.95,11}, -- Katana
- {15,1.15,12}, -- Kusarigama
- {9,.55,6}, -- Spatula
- {20,1.25,8}, -- Bat
- {3,.17,42}, -- Draco
- {4,.8,28}, -- Fart Gun (poison)
- {3,1.1,24,nil,nil,'pellets'}, -- Shotgun
- {18,1.35,40,nil,nil,'pierce'}, -- T-shirt
- {32,2.4,70}, -- Rocket
- {7,.9,35,nil,nil,'bounce'}, -- Boomerang
- {6,.48,38,nil,nil,'pierce'}, -- Kunai
- {3,1.7,38}, -- Molotov (burn)
- {10,.85,32}, -- Egg
- {16,.85,6}, -- Steak
+ {12,.82,35}, -- Glock
+ {18,1.05,7.5}, -- Pan
+ {7,.5,7.5}, -- Nunchucks
+ {18,.95,13}, -- Katana
+ {17,1.15,14}, -- Kusarigama
+ {9,.55,7.5}, -- Spatula
+ {20,1.25,9.5}, -- Bat
+ {3,.19,33}, -- Draco
+ {4,.9,22}, -- Fart Gun (poison)
+ {3,1.25,19,nil,nil,'pellets'}, -- Shotgun
+ {18,1.55,31,nil,nil,'pierce'}, -- T-shirt
+ {32,2.7,55}, -- Rocket
+ {7,1.02,27,nil,nil,'bounce'}, -- Boomerang
+ {6,.55,30,nil,nil,'pierce'}, -- Kunai
+ {3,1.9,30}, -- Molotov (burn)
+ {10,.96,25}, -- Egg
+ {16,.85,7.5}, -- Steak
  {5,.32,12,nil,nil,'bounce'}, -- Duck
- {15,.95,42,nil,nil,'cards'}, -- Cards
- {8,.42,6.5,{8,15,28,48},{1,.94,.88,.76}}, -- Gloves: alternating quick jabs (T4 ~150 DPS: the close-range trade)
- {30,1.35,7}, -- Block
- {8,.7,28,nil,nil,'bounce'}, -- Yo-yo
- {24,1.6,35,nil,nil,'pierce'}, -- Ball
- {13,1.25,28}, -- Pin
- {4,.28,40,nil,nil,'pierce'}, -- Nails
- {28,1.6,12}, -- Wrecking ball
- {18,1.15,8}, -- Shovel
- {10,.8,9}, -- Roller
- {4,.32,20}, -- Vacuum
- {3,.24,30,nil,nil,'pierce'}, -- Washer
- {9,1.15,45}, -- Staff (arcane energy orb)
- {22,2,8}, -- Mjolnir (2.4 felt slow; 2026-10-01)
- {26,1.35,8.5}, -- Excalibur
- {25,2,50}, -- Pandora
- {5,1.2,38,nil,nil,'shots'}, -- Medusa (slow)
- {13,1.05,48,nil,nil,'bounce'}, -- Crystal (lightning)
+ {15,1.08,33,nil,nil,'cards'}, -- Cards
+ {8,.42,7.5,{8,15,28,48},{1,.94,.88,.76}}, -- Gloves: alternating quick jabs (T4 ~150 DPS: the close-range trade)
+ {30,1.35,8.5}, -- Block
+ {8,.8,22,nil,nil,'bounce'}, -- Yo-yo
+ {24,1.8,27,nil,nil,'pierce'}, -- Ball
+ {13,1.42,22}, -- Pin
+ {4,.295,30,nil,nil,'pierce'}, -- Nails
+ {28,1.6,14}, -- Wrecking ball
+ {20,1.15,9.5}, -- Shovel
+ {12,.8,10.5}, -- Roller
+ {4,.36,16}, -- Vacuum
+ {3,.27,23,nil,nil,'pierce'}, -- Washer
+ {9,1.3,35}, -- Staff (arcane energy orb)
+ {22,2,9.5}, -- Mjolnir (2.4 felt slow; 2026-10-01)
+ {26,1.35,10}, -- Excalibur
+ {25,2.25,39}, -- Pandora
+ {5,1.2,30,nil,nil,'shots'}, -- Medusa (slow: C.SlowById)
+ {13,1.19,37,nil,nil,'bounce'}, -- Crystal (lightning)
  -- Godly (plans/2026-10-01-G): ~24 single-target DPS at Tier I (power 160); specials add crowd power.
- {30,1.25,10}, -- Reaper's Scythe: 360 reap, raises wraiths
- {34,1.5,9}, -- Poseidon's Trident: stab, or throw + tidal wave
- {14,1.2,50}, -- Storm Bow: per storm arrow, 5 split arrows
- {16,1.3,10}, -- Shadow Daggers: per chained hit
- {32,1.3,9}, -- Vampire Blade: heals
- {22,.9,48}, -- Ray Gun: kills disintegrate in a burst
+ {30,1.25,12}, -- Reaper's Scythe: 360 reap, raises wraiths
+ {34,1.5,10.5}, -- Poseidon's Trident: stab, or throw + tidal wave
+ {14,1.2,39}, -- Storm Bow: per storm arrow, 5 split arrows
+ {16,1.3,12}, -- Shadow Daggers: per chained hit
+ {32,1.3,10.5}, -- Vampire Blade: heals
+ {22,.9,37}, -- Ray Gun: kills disintegrate in a burst
 }
+-- Native slows (2026-10-03: nobody noticed Medusa's). strength: % off the enemy's walk speed
+-- (bosses take half), seconds before the Duration stat. CombatEffectsService uses the bigger of these
+-- and the player's SlowStrength / SlowDuration stats (25% / 2 s by default). Example: a zombie
+-- walking 12 studs/s crawls at 7.8 for 2 s after each Medusa hit.
+C.SlowById={['34']={strength=35,seconds=2}}
 -- Rarity (RARITY_GODLY_ARMOR.md §4): one per weapon, forever. ChestConfig builds its chest pools from
 -- these lists, in this order, so chest odds, Armory tags and the run shop always agree.
 C.Rarities={'Common','Rare','Epic','Legendary','Godly'}
@@ -74,7 +86,7 @@ C.RarityPower={Common=1,Rare=1.05,Epic=1.1,Legendary=1.2,Godly=1}
 -- an upgrade hits harder AND faster. Six weapons step differently to keep Tier IV within 10% of its
 -- old damage per second: Shotgun, Boomerang, Deck of Cards and Nail Gun also gain pellets, bounces,
 -- cards or pierce each tier, so their damage steps gentler; Frying Pan and Molotov stepped steeper
--- before. Example Glock: 12 / 17 / 24 / 33 damage every .72 / .65 / .58 / .50 s.
+-- before. Example Glock: 12 / 17 / 24 / 33 damage every .82 / .74 / .66 / .57 s (.72 at Tier I before 2026-10-03).
 C.TierGrowth=1.4;C.TierCooldown={1,.9,.8,.7}
 C.TierGrowthById={['01']=1.45,['09']=1.25,['12']=1.35,['14']=1.5,['18']=1.3,['24']=1.35}
 -- Godly specials, per tier where a list (index = tier). Read by GodlyWeapons (server) and
@@ -168,13 +180,18 @@ function C.legendaryText(id)
 end
 -- One-line description: home class and traits (the same words as the Armory's).
 local TRAITS={pellets='Fires a spread of pellets.',pierce='Shots pierce through enemies.',bounce='Bounces between enemies.',cards='Throws a three-card volley.',shots='Fires a burst of shots.'}
+-- Its slow with numbers, e.g. 'Slows enemies 35% for 2 s.' (nil for a weapon that doesn't slow).
+function C.slowText(w)
+ if not w or (w.slow or 0)<=0 then return nil end
+ return 'Slows enemies '..num(w.slowStrength or 25)..'% for '..num(w.slowFor or 2)..' s.'
+end
 function C.describe(w)
  if w.godly then return 'Any class can start a run with it.' end
  local out={'Home weapon of the '..w.home..' class.'}
  if TRAITS[w.trait] then table.insert(out,TRAITS[w.trait]) end
  if w.burn>0 then table.insert(out,'Sets enemies on fire.') end
  if w.poison>0 then table.insert(out,'Poisons what it hits.') end
- if w.slow>0 then table.insert(out,'Slows enemies down.') end
+ if w.slow>0 then table.insert(out,C.slowText(w)) end
  if w.lightning then table.insert(out,'Lightning chains to nearby enemies.') end
  if w.blastRadius then table.insert(out,'Explodes on impact.') end
  return table.concat(out,' ')
@@ -222,7 +239,8 @@ for i,name in names do
  if thrownSpeed[n] then d.projectileSpeed=thrownSpeed[n] end
  d.elemental=d.home=='Mage' or n==8 or n==14 or n==17 or n==38 or n==41
  d.utility=d.home=='Handyman'
- d.burn=n==14 and 100 or 0;d.poison=n==8 and 100 or 0;d.slow=n==34 and 100 or 0;d.lightning=n==35 or n==31
+ d.burn=n==14 and 100 or 0;d.poison=n==8 and 100 or 0;d.slow=C.SlowById[d.id] and 100 or 0;d.lightning=n==35 or n==31
+ if C.SlowById[d.id] then d.slowStrength=C.SlowById[d.id].strength;d.slowFor=C.SlowById[d.id].seconds end
  d.tags={d.kind=='Melee' and 'Melee' or 'Projectile',d.home}
  if d.elemental then table.insert(d.tags,'Elemental') end
  if d.utility then table.insert(d.tags,'Utility') end

@@ -208,7 +208,8 @@ local function describe(w)
 		table.insert(out, "Poisons what it hits.")
 	end
 	if w.slow > 0 then
-		table.insert(out, "Slows enemies down.")
+		-- With its numbers (WeaponCatalog.slowText, 2026-10-03): "Slows enemies 35% for 2 s."
+		table.insert(out, Weapons.slowText and Weapons.slowText(w) or "Slows enemies down.")
 	end
 	if w.lightning then
 		table.insert(out, "Lightning chains to nearby enemies.")

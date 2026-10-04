@@ -2,7 +2,7 @@
 
 All 36 weapon identities have authored damage, cooldown, range and four damage values in `WeaponCatalog.luau`. `CharacterStats.weapon` is the shared effective-stat calculation used by combat and the shop. Bonuses remain percentage based, as in the existing game; Roblox ranges and movement remain in studs.
 
-Examples before character bonuses: Glock 12 damage / 0.72 s, Draco 3 / 0.17 s, Katana 18 / 0.95 s, Nunchucks 6 / 0.38 s, Rocket 32 / 2.4 s, Gloves 8 / 0.78 s. Most upgrades improve damage about 50% and reduce cooldown. Gloves follow the supplied Fist damage progression (8/16/32/64). Shotguns gain a pellet each tier; boomerang, duck, yo-yo and crystal gain rebounds; nails, kunai, bowling ball, shirt cannon and washer gain piercing. Medusa gains a second projectile at tier 2. Cards gain a fourth card at tier 3; listed damage is the three-card volley basis, each card deals one third.
+Examples before character bonuses (first pass; current numbers in [Melee vs ranged](#melee-vs-ranged-2026-10-03)): Glock 12 damage / 0.72 s, Draco 3 / 0.17 s, Katana 18 / 0.95 s, Nunchucks 6 / 0.38 s, Rocket 32 / 2.4 s, Gloves 8 / 0.78 s. Most upgrades improve damage about 50% and reduce cooldown. Gloves follow the supplied Fist damage progression (8/16/32/64). Shotguns gain a pellet each tier; boomerang, duck, yo-yo and crystal gain rebounds; nails, kunai, bowling ball, shirt cannon and washer gain piercing. Medusa gains a second projectile at tier 2. Cards gain a fourth card at tier 3; listed damage is the three-card volley basis, each card deals one third.
 
 Two identical weapon IDs of the same tier can combine during Shop only. Tier 4 is the cap. The server selects the partner from the requesting player's inventory, checks revision, selected copy token, living state and request rate, and replaces both copy identities. Manual combining frees one slot. Buying fills an empty slot first; with all six filled, only an exact matching tier below 4 permits an automatic merge. There is no recursive merge. Summed actual paid prices are retained for the normal 50% recycle refund; free practice copies add zero value.
 
@@ -115,3 +115,88 @@ Luck multiplies a weight by (1 + Luck/100), never past 1. Example, no Luck: a we
 **Words:** shop tiers are now "Tier I"–"Tier IV" (`EconomyConfig.TIER_NAMES`), so Common/Rare/Epic/Legendary only ever mean rarity.
 
 Tests: `WeaponBalanceTests` (tier rule, exact rarity power, Tier IV within 10%, pools, offer weights and the 10% → 16% example, no Godly in the shop), `ShopTests` (price bands × the rarity premium), `GodlyWeaponsTests` and `WeaponBehaviorTests` (Mjolnir about 2 s).
+
+## Melee vs ranged (2026-10-03)
+
+Play-test: "ranged weapons are dominating and there's no pressure when you have a ton of ranged weapons, mobs never get close"; "increase range on most melee weapons"; "bhopping melee weapons won't hit at max height of jump"; "add weapon with slowing effect".
+
+**Rules** (`WeaponCatalog` profiles; tier steps and rarity power are unchanged, so every tier moves by the same share):
+
+- **Ranged:** range about −22% and cooldown ×1.13 (about −12% attacks a second).
+  - Godly ranged (Storm Bow, Ray Gun) lose range only. Their ~24 DPS is their identity (`GodlyWeaponsTests`).
+  - Rubber Duck is unchanged: at 12 studs it already works at melee distance.
+  - Medusa keeps its rate: it is the slowing weapon (below).
+  - Nail Gun stays under 0.3 s, so `ShopCatalog` keeps its fast-weapon price band. It loses more range instead (−25%).
+- **Melee:** reach about +20% (+15–25%).
+  - The five weakest also hit 10–20% harder: Frying Pan, Nunchucks, Kusarigama, Shovel, Paint Roller. Before this they did 12.6–15.7 damage a second, under a Common Glock's 16.7.
+  - Godly melee gain reach only.
+
+Tier I numbers before character bonuses. The cooldown includes rarity power. DPS is single target, one copy.
+
+| Weapon | Kind | Range (studs) | Cooldown (s) | Damage | DPS |
+|---|---|---|---|---|---|
+| Glock | Ranged | 45 → **35** | 0.72 → **0.82** | 12 | 16.7 → 14.6 |
+| Frying Pan | Melee | 6 → **7.5** | 1.05 | 16 → **18** | 15.2 → 17.1 |
+| Nunchucks | Melee | 6 → **7.5** | 0.48 | 6 → **7** | 12.6 → 14.7 |
+| Katana | Melee | 11 → **13** | 0.92 | 21 | 22.7 |
+| Kusarigama | Melee | 12 → **14** | 1.115 → 1.107 | 16 → **18** | 14.3 → 16.3 |
+| Spatula | Melee | 6 → **7.5** | 0.55 | 9 | 16.4 |
+| Baseball Bat | Melee | 8 → **9.5** | 1.25 | 21 | 16.8 |
+| Draco | Ranged | 42 → **33** | 0.16 → **0.18** | 3 | 18.5 → 16.6 |
+| Fart Gun | Ranged | 28 → **22** | 0.80 → **0.90** | 4 + poison | 5.0 → 4.4 |
+| Shotgun | Ranged | 24 → **19** | 1.05 → **1.19** | 3 × 5 pellets | 14.3 → 12.6 |
+| T-Shirt Cannon | Ranged | 40 → **31** | 1.29 → **1.49** | 19 | 14.7 → 12.8 |
+| Rocket Launcher | Ranged | 70 → **55** | 2.38 → **2.67** | 38 | 16.0 → 14.2 |
+| Boomerang | Ranged | 35 → **27** | 0.90 → **1.02** | 7 | 7.8 → 6.9 |
+| Kunai | Ranged | 38 → **30** | 0.46 → **0.52** | 6 | 13.1 → 11.5 |
+| Molotov | Ranged | 38 → **30** | 1.54 → **1.73** | 3 + burn | 1.9 → 1.7 |
+| Egg | Ranged | 32 → **25** | 0.85 → **0.96** | 10 | 11.8 → 10.4 |
+| Steak | Melee | 6 → **7.5** | 0.81 | 16 | 19.8 |
+| Rubber Duck | Ranged | 12 | 0.32 | 5 | 15.6 |
+| Deck of Cards | Ranged | 42 → **33** | 0.95 → **1.08** | 18 | 18.9 → 16.7 |
+| Boxing Gloves | Melee | 6.5 → **7.5** | 0.42 | 8 | 19.0 |
+| Cinder Block | Melee | 7 → **8.5** | 1.35 | 33 | 24.4 |
+| Yo-Yo | Ranged | 28 → **22** | 0.67 → **0.76** | 8 | 12.0 → 10.5 |
+| Bowling Ball | Ranged | 35 → **27** | 1.56 → **1.75** | 28 | 18.0 → 16.0 |
+| Bowling Pin | Ranged | 28 → **22** | 1.19 → **1.35** | 13 | 10.9 → 9.6 |
+| Nail Gun | Ranged | 40 → **30** | 0.28 → **0.295** | 4 | 14.3 → 13.6 |
+| Wrecking Ball | Melee | 12 → **14** | 1.57 | 33 | 21.0 |
+| Shovel | Melee | 8 → **9.5** | 1.15 | 18 → **20** | 15.7 → 17.4 |
+| Paint Roller | Melee | 9 → **10.5** | 0.76 | 10 → **12** | 13.1 → 15.7 |
+| Vacuum Cleaner | Ranged | 20 → **16** | 0.29 → **0.33** | 4 | 13.7 → 12.2 |
+| Power Washer | Ranged | 30 → **23** | 0.23 → **0.26** | 3 | 13.1 → 11.7 |
+| Magic Staff | Ranged | 45 → **35** | 1.15 → **1.30** | 9 | 7.8 → 6.9 |
+| Mjolnir | Melee | 8 → **9.5** | 1.97 | 26 | 13.2 |
+| Excalibur | Melee | 8.5 → **10** | 1.34 | 31 | 23.1 |
+| Pandora's Box | Ranged | 50 → **39** | 1.98 → **2.23** | 26 | 13.1 → 11.7 |
+| Medusa's Head | Ranged | 38 → **30** | 1.14 | 5 + slow | 4.4 |
+| Crystal Ball | Ranged | 48 → **37** | 1.05 → **1.19** | 13 | 12.4 → 10.9 |
+| Reaper's Scythe | Melee | 10 → **12** | 1.25 | 30 | 24.0 |
+| Poseidon's Trident | Melee | 9 → **10.5** | 1.50 | 34 | 22.7 |
+| Storm Bow | Ranged | 50 → **39** | 1.20 | 14 × 2 on one enemy | 23.3 |
+| Shadow Daggers | Melee | 10 → **12** | 1.30 | 16 × 2 on one enemy | 24.6 |
+| Vampire Blade | Melee | 9 → **10.5** | 1.30 | 32 | 24.6 |
+| Ray Gun | Ranged | 48 → **37** | 0.90 | 22 | 24.4 |
+
+**Worked example.** A zombie walks at a Tier I Glock at 12 studs/s.
+- Before, it took 45 / 12 = 3.75 s to cross the Glock's range, taking 3.75 × 16.7 ≈ 63 damage on the way.
+- Now it takes 35 / 12 ≈ 2.9 s and takes 2.9 × 14.6 ≈ 43 damage: about a third less before it reaches you.
+- A Tier I Frying Pan now hits 18 (was 16) every 1.05 s out to 7.5 studs (was 6). That reach covers (7.5 / 6)² ≈ 1.56 times the ground.
+
+**Melee from a jump** (`RogueliteCombat.server`, `TargetGrid.distance`). Melee reach is now flat within a full jump above or below: the jump height plus 4 studs of body.
+- Example: JumpHeight 9.5 at gravity 150 gives a 13.5-stud allowance. From a jump's peak, a zombie 5 studs out counts as 5 (it was 10.7, past every reach).
+- Melee also swings from the body where the player's own screen has it (`CharacterService.seen`). A bunny-hopping player was ~7 studs behind on the server.
+- That lead is capped at 1.5 studs + 0.3 s of the body's speed, so standing still can't stretch reach.
+- Chain weapons (Nunchucks, Kusarigama, Wrecking Ball) now pull their swing in for a close target, so the longer reach leaves no gap beside the player.
+
+**Floating ring** (`WeaponMotion.SlotLayout`). The weapons float on a wider ring: 6.2 studs plus 0.36 per extra weapon (was 4.2 + 0.24), with neighbours 70° apart (was 60°). Slot order is the same.
+- Example: 4 weapons sit 7.28 studs out, 8.4 studs apart (was 4.92 and 4.9).
+- Melee reach is measured from the player's centre, not the slot, so the ring doesn't change it.
+
+**The slowing weapon: Medusa's Head** (Rare, Mage). It always had a 100% slow on hit, but nobody noticed it. The slow was the default 25% for 2 s, and nothing showed it.
+- It now slows 35% for 2 s (`WeaponCatalog.SlowById`; bosses take half), and its card says "Slows enemies 35% for 2 s."
+- Slowed enemies get an ice-blue tint, a flat frost patch at their feet, and a frost ring when the slow lands (`HitFeedbackVisuals`).
+- Example: a zombie walking 12 studs/s crawls at 7.8 for 2 s after each hit.
+- It drops from chests (Rare pool) and daily deals, and the run shop offers it once owned.
+
+Tests: `WeaponBalanceTests` (every weapon's range and rate against its old numbers, the Glock and Pan examples, Medusa's slow and card text; the Tier IV check scales the five buffed melee weapons' old Tier IV by their damage change), `MeleeSweepTests` (jump allowance), `WeaponFollowTests` (ring), `WeaponBehaviorTests` (chain pull-in). Not yet run in Studio.

@@ -124,6 +124,27 @@ return function(G)
 	check(samples == 0, "no samples when nobody can be hit")
 	samples = G.sweep(5, function() return {} end, nil, nil, nil, nil, nil)
 	check(samples == 6, "all samples without an open set")
+	-- Melee from a jump's peak (2026-10-03, round 2: "bhopping melee weapons won't hit at max height
+	-- of jump"): reach is flat within a full jump + a body (9.5 + 4 = 13.5), the extra height past it.
+	check(G.jumpHeight(false, 50, 9.5, 150) == 9.5, "JumpHeight is used as it is")
+	check(math.abs(G.jumpHeight(true, 53.385, 0, 150) - 9.5) < 0.01, "JumpPower 53.4 at gravity 150 goes 9.5 up")
+	local allowance = G.jumpHeight(false, 50, 9.5, 150) + G.ReachBody
+	check(allowance == 13.5, "allowance 13.5")
+	check(math.abs(G.distance(Vector3.new(4, -9.5, 3), allowance) - 5) < 1e-6, "a zombie 5 out from a jump's peak is 5 away")
+	check(math.abs(G.distance(Vector3.new(4, -9.5, 3)) - math.sqrt(115.25)) < 1e-6, "no allowance: the plain distance (10.7)")
+	check(math.abs(G.distance(Vector3.new(3, 15.5, 4), allowance) - math.sqrt(29)) < 1e-6, "past the allowance the extra height counts")
+	check(G.distance(Vector3.new(3, 13.5, 4), allowance) == 5, "exactly at the allowance is still flat")
+	local under = { npc = {}, position = Vector3.new(3, -11, 0) }
+	local far = { npc = {}, position = Vector3.new(9, -11, 0) }
+	open, n = G.open({ list = { under, far } }, Vector3.zero, 6, {}, allowance)
+	check(n == 1 and open[under.npc] and not open[far.npc], "open from a jump's peak")
+	local _, none = G.open({ list = { under } }, Vector3.zero, 6, {})
+	check(none == 0, "without the allowance the zombie under the jump is out of reach")
+	local peak = G.new({ { npc = {}, position = Vector3.new(4, -9.5, 3) } })
+	local yes = function() return true end
+	local at = function(e) return e.position end
+	check(G.nearest(peak, Vector3.zero, 6, yes, at, yes, allowance) ~= nil, "targeted from a jump's peak")
+	check(G.nearest(peak, Vector3.zero, 6, yes, at, yes) == nil, "not targeted without the allowance")
 	totals.passed = true
 	totals.checks = checks
 	return totals

@@ -7,7 +7,13 @@ return function(M)
   local pose=M.pose(root,2.6,slot,aim,-100,0,'Melee')
   return M.floatPose(pose,root,state,slot,attacking or false,2.6,aim~=nil)
  end
- check(M.radius(Vector3.new(2,2,1))==4.2,'Standard avatar spacing')
+ check(M.radius(Vector3.new(2,2,1))==6.2,'Standard avatar spacing') -- 4.2 before the wider ring (2026-10-03)
+ -- Wider ring: slot order kept (angles rise 1 -> 6), 4-5 weapons at least 70 degrees apart, and
+ -- with 4 equipped on a standard avatar neighbours sit 8+ studs apart (4.9 before).
+ for slot=2,6 do check(M.SlotLayout[slot].angle>M.SlotLayout[slot-1].angle,'slot order '..slot) end
+ for slot=2,5 do check(M.SlotLayout[slot].angle-M.SlotLayout[slot-1].angle>=70,'spread '..slot) end
+ local r4=M.radius(Vector3.new(2,2,1),4)
+ check(math.abs(r4-7.28)<1e-6 and (M.origin(CFrame.identity,r4,2)-M.origin(CFrame.identity,r4,1)).Magnitude>8,'4-weapon spacing')
  local samples={}
  for _,fps in {20,30,60,144} do
   local state=M.newFloat()

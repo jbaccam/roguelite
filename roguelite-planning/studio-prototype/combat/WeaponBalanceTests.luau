@@ -12,6 +12,16 @@ local OLD_T4={['00']=40,['01']=60,['02']=21,['03']=62,['04']=53,['05']=32,['06']
  ['10']=60,['11']=108,['12']=20,['13']=21,['14']=12,['15']=35,['16']=54,['17']=18,['18']=42,['20']=102,['21']=27,
  ['22']=81,['23']=45,['24']=12,['25']=95,['26']=64,['27']=35,['28']=14,['29']=9,['30']=32,['31']=75,['32']=89,
  ['33']=86,['34']=18,['35']=45,['36']=102,['37']=115,['38']=47,['39']=54,['40']=108,['41']=74}
+-- Melee vs ranged pass (2026-10-03, WEAPON_BALANCE.md). MELEE_PASS: authored damage before -> after
+-- for the five melee weapons that gained damage; their old Tier IV is scaled by the same ratio.
+-- BEFORE: each weapon's range and authored cooldown before the pass.
+local MELEE_PASS={['01']={16,18},['02']={6,7},['04']={15,17},['26']={18,20},['27']={10,12}}
+local BEFORE={['00']={45,.72},['01']={6,1.05},['02']={6,.5},['03']={11,.95},['04']={12,1.15},['05']={6,.55},['06']={8,1.25},
+ ['07']={42,.17},['08']={28,.8},['09']={24,1.1},['10']={40,1.35},['11']={70,2.4},['12']={35,.9},['13']={38,.48},['14']={38,1.7},
+ ['15']={32,.85},['16']={6,.85},['17']={12,.32},['18']={42,.95},['19']={6.5,.42},['20']={7,1.35},['21']={28,.7},['22']={35,1.6},
+ ['23']={28,1.25},['24']={40,.28},['25']={12,1.6},['26']={8,1.15},['27']={9,.8},['28']={20,.32},['29']={30,.24},['30']={45,1.15},
+ ['31']={8,2},['32']={8.5,1.35},['33']={50,2},['34']={38,1.2},['35']={48,1.05},['36']={10,1.25},['37']={9,1.5},['38']={50,1.2},
+ ['39']={10,1.3},['40']={9,1.3},['41']={48,.9}}
 local E=require(C.EconomyConfig)
 local Catalog=require(C.ShopCatalog)
 local ok,err=xpcall(function()
@@ -65,13 +75,39 @@ local ok,err=xpcall(function()
    end
    -- Tier IV damage per second within 10% of before, not counting rarity power.
    local new=w.tierDamage[4]/(w.cooldown*w.tierCooldown[4])/Weapons.RarityPower[w.rarity]
-   local old=OLD_T4[w.id]/(w.authoredCooldown*.84)
+   local pass=MELEE_PASS[w.id]
+   local old=OLD_T4[w.id]*(pass and pass[2]/pass[1] or 1)/(w.authoredCooldown*.84)
    check(math.abs(new/old-1)<=.10,string.format('tier IV within 10%% %s %.1f vs %.1f',w.id,new,old))
   end
  end
  check(counts.Common==12 and counts.Rare==12 and counts.Epic==5 and counts.Legendary==7 and counts.Godly==6,'rarity pools 12/12/5/7/6')
  check(Weapons.ById['03'].damage==21 and math.abs(Weapons.ById['03'].cooldown-.924)<.001,'katana example 21 / .924')
  check(Weapons.ById['00'].tierDamage[2]==17 and Weapons.ById['00'].tierDamage[4]==33,'glock example 12/17/24/33')
+ -- Melee vs ranged pass (2026-10-03): ranged ~22% shorter and ~12% slower, melee ~20% longer.
+ for _,w in Weapons.List do
+  local was=BEFORE[w.id];check(was~=nil,'before numbers '..w.id)
+  local reach,rate=w.range/was[1],w.authoredCooldown/was[2]
+  if w.kind=='Melee' then
+   check(reach>=1.15 and reach<=1.26,string.format('melee reach +15-25%% %s %.2f',w.id,reach))
+   check(math.abs(rate-1)<1e-9,'melee cadence unchanged '..w.id)
+  elseif w.id=='17' then check(reach==1 and rate==1,'Rubber Duck unchanged (12 studs is melee distance)')
+  else
+   check(reach>=.74 and reach<=.8+1e-9,string.format('ranged range -20-26%% %s %.2f',w.id,reach))
+   if w.godly or w.id=='34' then check(math.abs(rate-1)<1e-9,'cadence kept '..w.id)
+   else check(rate>=1.05 and rate<=1.15,string.format('ranged rate -5-13%% %s %.3f',w.id,rate)) end
+  end
+ end
+ check(Weapons.ById['24'].authoredCooldown<.3,'Nail Gun keeps its fast-weapon price band (ShopCatalog < .3 s)')
+ check(Weapons.ById['00'].range==35 and Weapons.ById['00'].authoredCooldown==.82,'glock example 35 studs / .82 s')
+ check(Weapons.ById['01'].range==7.5 and Weapons.ById['01'].damage==18,'frying pan example 7.5 studs / 18 dmg')
+ -- The slowing weapon: Medusa's Head slows 35% for 2 s on every hit, and its card says so.
+ local medusa=Weapons.ById['34']
+ check(medusa.slow==100 and medusa.slowStrength==35 and medusa.slowFor==2,'Medusa native slow 35% / 2 s')
+ check(Weapons.slowText(medusa)=='Slows enemies 35% for 2 s.' and string.find(Weapons.describe(medusa),'Slows enemies 35% for 2 s.',1,true)~=nil,'Medusa card text has the numbers')
+ check(Weapons.slowText(Weapons.ById['00'])==nil,'no slow text on a weapon that does not slow')
+ check(table.find(Weapons.RarityLists.Rare,'34')~=nil,'Medusa drops from chests (Rare pool)')
+ local medusaShop=false;for _,entry in Catalog.List do if entry.weaponId=='34' then medusaShop=true end end
+ check(medusaShop,'Medusa is in the run shop catalog')
  -- Run-shop rarity weights: rarer is rarer, grows with wave and Luck, never above a Common.
  check(E.rarityWeight('Common',1,0)==1 and E.rarityWeight('Common',20,100)==1,'common weight 1')
  check(math.abs(E.rarityWeight('Legendary',1,0)-.4)<1e-9 and math.abs(E.rarityWeight('Legendary',20,0)-.8)<1e-9,'legendary .4 -> .8')

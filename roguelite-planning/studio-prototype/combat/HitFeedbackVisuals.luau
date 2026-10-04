@@ -37,6 +37,8 @@ function V.pickFlash(flashes,cap,npc)
  return oldest
 end
 local QUAD,BACK,OUT=Enum.EasingStyle.Quad,Enum.EasingStyle.Back,Enum.EasingDirection.Out
+-- Slowed enemies (mount, below): ice tints for the 8 nearest, frost patches for the 24 nearest.
+V.FrostTints=8;V.FrostPatches=24;V.Ice=Color3.fromRGB(150,220,255);V.IceWhite=Color3.fromRGB(232,248,255)
 function V.mount(visuals)
  local anchor=Instance.new('Part');anchor.Name='DamageNumbers';anchor.Size=Vector3.one*.1;anchor.Transparency=1;anchor.Anchored=true
  anchor.CanCollide=false;anchor.CanTouch=false;anchor.CanQuery=false;anchor.CFrame=CFrame.identity;anchor.Parent=visuals
@@ -95,6 +97,89 @@ function V.mount(visuals)
     if t>=.15 or not f.npc.Parent then f.born=nil;f.npc=nil;f.highlight.Enabled=false;f.highlight.Adornee=nil
     elseif t>.045 then f.highlight.FillTransparency=TweenService:GetValue(math.min((t-.045)/.09,1),QUAD,OUT) end
    end
+  end
+ end)
+ -- Slowed enemies (2026-10-03: nobody noticed Medusa's slow). While an enemy's StatusSlowStrength
+ -- (CombatEffectsService, replicated) is above 0 it is tinted ice blue and stands on a flat frost
+ -- patch (a pale Neon disc and six frost spikes, turning slowly); a frost ring bursts out when the
+ -- slow lands. Only the nearest within 150 studs are drawn: V.FrostTints Highlights (flashes keep
+ -- their 10 of the 31 Roblox draws) and V.FrostPatches patches. A white hit flash takes over the
+ -- tint for its 0.15 s. Example: a Medusa hit on a zombie walking 12 studs/s shows ice for the
+ -- 2 s it crawls at 7.8.
+ local Tags=game:GetService('CollectionService')
+ local K=require(game:GetService('ReplicatedStorage'):WaitForChild('RogueliteCombat'):WaitForChild('VfxKit'))
+ local slowed,watched={},setmetatable({},{__mode='k'})
+ local function feet(npc,root)
+  local h=npc:FindFirstChildOfClass('Humanoid')
+  return root.Position-Vector3.yAxis*(root.Size.Y*.5+(h and h.HipHeight or 2))
+ end
+ local function patchRadius(root) return math.clamp(math.max(root.Size.X,root.Size.Z)*1.3,2.2,8) end
+ local function watch(npc)
+  if watched[npc] or not npc:IsA('Model') then return end
+  watched[npc]=true
+  local function changed()
+   local on=(npc:GetAttribute('StatusSlowStrength') or 0)>0
+   if on and not slowed[npc] then
+    slowed[npc]=os.clock()
+    local root=npc:FindFirstChild('HumanoidRootPart')
+    if root and K.near(root.Position,120) then
+     local r=patchRadius(root)
+     K.ring(visuals,CFrame.new(feet(npc,root)+Vector3.yAxis*.12),{radius0=r*.3,radius1=r*1.25,width=.45,duration=.38,color=V.Ice,rim=V.IceWhite,segments=16})
+    end
+   elseif not on then slowed[npc]=nil end
+  end
+  npc:GetAttributeChangedSignal('StatusSlowStrength'):Connect(changed);changed()
+ end
+ Tags:GetInstanceAddedSignal('RogueliteZombie'):Connect(watch)
+ Tags:GetInstanceRemovedSignal('RogueliteZombie'):Connect(function(npc) slowed[npc]=nil end)
+ for _,npc in Tags:GetTagged('RogueliteZombie') do watch(npc) end
+ local patches,tints={},{}
+ local function hidePatch(p) p.shown=false;p.disc.Transparency=1;for _,s in p.spikes do s.Transparency=1 end end
+ RunService.RenderStepped:Connect(function()
+  local list={}
+  if next(slowed) then
+   local camera=workspace.CurrentCamera;local eye=camera and camera.CFrame.Position or Vector3.zero
+   for npc in slowed do
+    local root=npc.Parent and npc:FindFirstChild('HumanoidRootPart');local h=npc:FindFirstChildOfClass('Humanoid')
+    if not root or not h or h.Health<=0 then slowed[npc]=nil;continue end -- gone or dying
+    local distance=(root.Position-eye).Magnitude
+    if distance<=150 then table.insert(list,{npc=npc,root=root,distance=distance}) end
+   end
+   table.sort(list,function(a,b) return a.distance<b.distance end)
+  end
+  local now=os.clock()
+  for i=1,math.max(V.FrostPatches,#patches) do
+   local e=i<=V.FrostPatches and list[i];local p=patches[i]
+   if e then
+    if not p then
+     p={disc=K.part(visuals,'FrostPatch',Vector3.new(.05,1,1),V.Ice,1,Enum.Material.Neon,Enum.PartType.Cylinder),spikes={}}
+     for k=1,6 do p.spikes[k]=K.part(visuals,'FrostSpike',Vector3.new(.22,.04,1),V.IceWhite,1,Enum.Material.Neon) end
+     patches[i]=p
+    end
+    p.shown=true
+    local r=patchRadius(e.root)*(.6+.4*math.min(1,(now-(slowed[e.npc] or now))/.15))
+    local at=feet(e.npc,e.root)+Vector3.yAxis*.06
+    p.disc.Size=Vector3.new(.05,r*2,r*2);p.disc.CFrame=CFrame.new(at)*CFrame.Angles(0,0,math.pi/2)
+    p.disc.Transparency=.62+.08*math.sin(now*5+i)
+    for k,s in p.spikes do
+     local length=r*(k%2==0 and .75 or 1.05)
+     s.Size=Vector3.new(.22,.04,length)
+     s.CFrame=CFrame.new(at+Vector3.yAxis*.02)*CFrame.Angles(0,now*.6+i+k*math.pi/3,0)*CFrame.new(0,0,-length*.5)
+     s.Transparency=.3
+    end
+   elseif p and p.shown then hidePatch(p) end
+  end
+  local flashing={}
+  for _,f in flashes do if f.born and f.npc then flashing[f.npc]=true end end
+  for i=1,math.max(V.FrostTints,#tints) do
+   local e=i<=V.FrostTints and list[i];local h=tints[i]
+   if e then
+    if not h then
+     h=Instance.new('Highlight');h.Name='FrostTint';h.FillColor=V.Ice;h.FillTransparency=.55;h.OutlineColor=V.IceWhite;h.OutlineTransparency=.55
+     h.DepthMode=Enum.HighlightDepthMode.Occluded;h.Parent=visuals;tints[i]=h
+    end
+    h.Adornee=e.npc;h.Enabled=not flashing[e.npc]
+   elseif h and h.Enabled then h.Enabled=false;h.Adornee=nil end
   end
  end)
  return api

@@ -142,7 +142,8 @@ function E.hit(npc,amount,d,secondary,dot)
  local elemental=Stats.mult(s.Damage)*Stats.mult(s.ElementalDamage)
  if math.random()<math.max(s.BurnChance,d.burn or 0)/100 then status(npc,d,'Burn',3*Stats.mult(s.Duration),6*elemental*Stats.mult(s.BurnDamage),true) end
  if math.random()<math.max(s.PoisonChance,d.poison or 0)/100 then status(npc,d,'Poison',4*Stats.mult(s.Duration),3*elemental*Stats.mult(s.PoisonDamage),false) end
- if math.random()<math.max(s.SlowChance,d.slow or 0)/100 then status(npc,d,'Slow',s.SlowDuration*Stats.mult(s.Duration),s.SlowStrength,false) end
+ -- A weapon's native slow (WeaponCatalog.SlowById, Medusa 35% for 2 s) or the player's stats, whichever is bigger.
+ if math.random()<math.max(s.SlowChance,d.slow or 0)/100 then status(npc,d,'Slow',math.max(s.SlowDuration,d.slowFor or 0)*Stats.mult(s.Duration),math.min(70,math.max(s.SlowStrength,d.slowStrength or 0)),false) end
  local state=Characters.states[d.owner]
  if state then
   state.hits+=1

@@ -27,11 +27,27 @@ function M.reapFractionOf(direction,offset,side)
  return (angle*(side or 1)+math.pi)/(2*math.pi)
 end
 -- Slot spacing is an avatar-scale measurement, never an animated body envelope.
-M.BaseRadius=4.2
+-- Wider ring (2026-10-03, user: "they get placed super close to the player ... more spread out"):
+-- radius x1.48 and neighbours 70 degrees apart (was 60), slot order kept. Example, 4 weapons on a
+-- standard avatar: ring 7.28 studs (was 4.92), 8.4 studs between neighbours (was 4.9). Melee reach
+-- is measured from the player's centre, not the slot, so the ring doesn't change it.
+M.BaseRadius=6.2;M.RingGrowth=.36 -- studs added per extra equipped weapon (was 4.2 and .24)
 function M.radius(rootSize,equippedCount)
  local count=math.clamp(equippedCount or 1,1,6)
- return (M.BaseRadius+(count-1)*.24)*math.clamp(rootSize.X/2,.5,2)
+ return (M.BaseRadius+(count-1)*M.RingGrowth)*math.clamp(rootSize.X/2,.5,2)
 end
+-- Where each slot floats, as data. angle: degrees round the player from its right, through the
+-- front (1 right, 2 just right of the front, 3 front-left, 4 behind-left, 5 behind, 6 behind-right).
+-- side/depth: the moving formation (floatPose), in ring radii to the right of / behind the player.
+-- Example, slot 2 with 4 weapons: 3.6 studs left and 4.8 behind while running (was 1.1 and 3.5).
+M.SlotLayout={
+ {angle=0,side=.66,depth=.36},
+ {angle=70,side=-.5,depth=.66},
+ {angle=140,side=.3,depth=.98},
+ {angle=210,side=-.78,depth=1.22},
+ {angle=280,side=.8,depth=1.42},
+ {angle=320,side=-.22,depth=1.66},
+}
 -- Draco barrel mouth in the normalized play-size model, above its magazine-centered pivot.
 M.DracoMuzzle=Vector3.new(0,.585,-1.385)
 M.MuzzleOffsets={
@@ -46,7 +62,8 @@ function M.frame(cf)
  return CFrame.lookAt(cf.Position,cf.Position+(forward.Magnitude>.001 and forward.Unit or -Vector3.zAxis))
 end
 function M.origin(root,radius,slot)
- local angle=(slot-1)*math.pi/3
+ local layout=M.SlotLayout[slot]
+ local angle=layout and math.rad(layout.angle) or (slot-1)*math.pi/3
  return M.frame(root):PointToWorldSpace(Vector3.new(math.cos(angle)*radius,.25,-math.sin(angle)*radius))
 end
 function M.attackTiming(id,kind,style)
@@ -321,15 +338,15 @@ local followRates={10.8,8.4,12.3,7.6,9.3,11.6}
 -- points on a rotating circumference. Each rank still has its own momentum.
 -- Stagger through the middle as well as both sides. Two outer-only lanes
 -- leave a conspicuous empty corridor, even with independent spring motion.
-local trailSides={.62,-.22,.14,-.66,.7,-.08}
-local trailDepths={1.6,3,4.4,5.9,6.4,8}
+-- The ranks are M.SlotLayout's side/depth (2026-10-03: slots 2 and 3 ran 2 studs apart).
 function M.floatPose(pose,root,state,slot,attacking,radius,aiming)
  local anchor=M.origin(root,radius,slot)
  local travel=state.travelDirection or M.frame(root).LookVector
  travel=travel.Magnitude>.01 and travel.Unit or M.frame(root).LookVector
  local right=travel:Cross(Vector3.yAxis)
  local phase=state.phase*(.7+slot*.071)+slot*1.91
- local trail=root.Position+right*((trailSides[slot] or 1)*radius)-travel*((trailDepths[slot] or 2)*radius/M.BaseRadius)+Vector3.yAxis*.25
+ local layout=M.SlotLayout[slot] or {side=1,depth=.5}
+ local trail=root.Position+right*(layout.side*radius)-travel*(layout.depth*radius)+Vector3.yAxis*.25
  local freeOffset=right*(math.sin(phase*.61)*.35)+travel*(math.cos(phase*.47)*.45)
  local goal=anchor:Lerp(trail+freeOffset,state.moving)
  local follow=state.slots[slot]
