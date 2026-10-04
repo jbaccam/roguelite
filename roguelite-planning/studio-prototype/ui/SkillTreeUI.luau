@@ -104,6 +104,7 @@ function U.new(player,opts)
  local pending -- node id sent to the server, celebrated when ProfileSkills confirms it
  local shownGems=0
  local gemsValue,gemsPill,gemsCounter
+ local buyChip,paintBuyChip -- "2 TO BUY" by the emeralds (drawHud) and its painter
  local info,bonusPanel,selection
  local conns={}
 
@@ -277,11 +278,16 @@ function U.new(player,opts)
   local q=T.label(tile,'Unknown','?',0,0,size,size,math.floor(size*.5),C.dim);q.Size=UDim2.fromScale(1,1);q.ZIndex=8
   local name=centred(T.label(holder,'Name',d.name,-60,size-4,size+120,26,d.kind=='node' and 18 or 21))
   name.TextWrapped=false;name.ZIndex=9
-  local cost=T.make('Frame',holder,{Name='Cost',BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,size+20),Size=UDim2.fromOffset(160,26),ZIndex=9})
+  -- The price; on a lime pill while you can afford it (2026-10-03), the same lime "TO BUY" pill as
+  -- the lobby's SKILLS button, so "2 TO BUY" there means these two here. Sized to its contents.
+  local cost=T.make('Frame',holder,{Name='Cost',BackgroundTransparency=1,BackgroundColor3=C.lime,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,size+19),Size=UDim2.fromOffset(0,28),AutomaticSize=Enum.AutomaticSize.X,ZIndex=9})
+  T.make('UICorner',cost,{CornerRadius=UDim.new(1,0)})
+  local costStroke=T.make('UIStroke',cost,{Color=C.ink,Thickness=2,Enabled=false})
+  T.make('UIPadding',cost,{PaddingLeft=UDim.new(0,9),PaddingRight=UDim.new(0,7)})
   T.make('UIListLayout',cost,{FillDirection=Enum.FillDirection.Horizontal,HorizontalAlignment=Enum.HorizontalAlignment.Center,VerticalAlignment=Enum.VerticalAlignment.Center,Padding=UDim.new(0,3),SortOrder=Enum.SortOrder.LayoutOrder})
   local amount=T.label(cost,'Amount',tostring(d.cost),0,0,textWidth(tostring(d.cost),20)+4,26,20,C.gold);amount.TextWrapped=false;amount.LayoutOrder=1;amount.ZIndex=9
   local keyIcon=T.icon(cost,'Key',0,0,26,'emerald');keyIcon.LayoutOrder=2;keyIcon.ZIndex=9
-  local n={d=d,holder=holder,scale=scale,glow=glow,tile=tile,accent=accent,icon=icon,q=q,name=name,cost=cost,amount=amount,home=UDim2.fromOffset(p.X,p.Y)}
+  local n={d=d,holder=holder,scale=scale,glow=glow,tile=tile,accent=accent,icon=icon,q=q,name=name,cost=cost,costStroke=costStroke,amount=amount,home=UDim2.fromOffset(p.X,p.Y)}
   nodes[d.id]=n
   tile.MouseEnter:Connect(function() if not n.busy then tween(scale,.12,{Scale=1.07},Enum.EasingStyle.Back) end end)
   tile.MouseLeave:Connect(function() if not n.busy then tween(scale,.12,{Scale=1}) end end)
@@ -318,7 +324,9 @@ function U.new(player,opts)
   n.name.Visible=st=='owned' or st=='available'
   n.name.TextColor3=C.white
   n.cost.Visible=st=='available'
-  n.amount.TextColor3=afford and C.emerald or C.negative
+  -- Affordable: dark price on the lime pill. Too expensive: red price, no pill.
+  n.cost.BackgroundTransparency=afford and 0 or 1;n.costStroke.Enabled=afford
+  n.amount.TextColor3=afford and C.ink or C.negative;n.amount.TextStrokeTransparency=afford and 1 or .12
   if n.accent then n.accent.Visible=st~='known';n.accent.ImageTransparency=0 end
   -- Soft glow: steady under owned skills, breathing under ones you can afford right now.
   if n.breathe then n.breathe:Cancel();n.breathe=nil end
@@ -430,6 +438,7 @@ function U.new(player,opts)
   end
   measure()
   setGems(animated)
+  if paintBuyChip then paintBuyChip() end
   if animated and P then easeToFit() end
   if drawInfo then drawInfo() end
   if drawBonuses then drawBonuses(animated) end
@@ -496,6 +505,9 @@ function U.new(player,opts)
    local n,total,spent=0,#Skills.List-1,0
    for id in owned do local x=Skills.ById[id];if x and x.kind~='root' then n+=1;spent+=x.cost end end
    sub=n..' / '..total..' skills  ·  '..fmt(spent)..' emeralds spent'
+   -- Says what the lime pills mean (2026-10-03). Example: '3 / 40 skills · 150 emeralds spent · 2 to buy now (lime prices)'.
+   local buyable=Skills.affordable(owned,gems)
+   if buyable>0 then sub=sub..'  ·  '..buyable..' to buy now (lime prices)' end
   elseif mystery then sub='Unlock '..Skills.ById[d.parent].name..' to reveal it'
   else
    local leads={}
@@ -558,6 +570,14 @@ function U.new(player,opts)
 
  local hint
  local function paintHint() if hint and hint.Parent then hint.Text=HINTS[inputKind()] end end
+ -- How many skills the emeralds buy right now, on the lime pill by the emeralds; hidden at 0.
+ paintBuyChip=function()
+  if not (buyChip and buyChip.Parent) then return end
+  local n=Skills.affordable(owned,gems)
+  local text=n..' TO BUY'
+  buyChip.Visible=n>0;buyChip.Text.Text=text
+  buyChip.Size=UDim2.fromOffset(math.ceil(textWidth(text,17)*1.15)+18,26)
+ end
  -- Builds the HUD for the current plan P; called again (replacing it) when the screen resizes.
  local function drawHud(profile,animate)
   for _,f in groups do f:Destroy() end
@@ -572,6 +592,12 @@ function U.new(player,opts)
   T.icon(gemsPill,'Icon',10,6,46,'emerald')
   gemsValue=left(T.label(gemsPill,'Value',fmt(gems),64,6,P.pillW-80,46,30,C.emerald));gemsValue.TextWrapped=false
   shownGems=gems
+  -- "2 TO BUY" on the pill's top-right corner: the lobby SKILLS button's pill, here too (2026-10-03).
+  local px,py=gemsPill.Position.X.Offset,gemsPill.Position.Y.Offset
+  buyChip=T.make('Frame',top,{Name='ToBuy',AnchorPoint=Vector2.new(1,1),Position=UDim2.fromOffset(px+P.pillW+8,py+10),Size=UDim2.fromOffset(90,26),BackgroundColor3=C.lime,BorderSizePixel=0,ZIndex=22})
+  T.make('UICorner',buyChip,{CornerRadius=UDim.new(1,0)});T.make('UIStroke',buyChip,{Color=C.ink,Thickness=2})
+  local bl=T.label(buyChip,'Text','',0,0,0,0,17,C.ink);bl.Size=UDim2.fromScale(1,1);bl.TextStrokeTransparency=1;bl.TextWrapped=false;bl.ZIndex=23
+  paintBuyChip()
   if not profile.connected or RunService:IsStudio() then
    local chip=T.chip(top,'PreviewChip',profile.connected and 'STUDIO TEST · NOT SAVED' or 'PROFILE LOADING',0,chipY,Color3.fromRGB(58,48,20),C.gold)
    chip.AnchorPoint=Vector2.new(.5,0);chip.Position=UDim2.fromOffset(P.topW/2,chipY)
@@ -804,7 +830,7 @@ function U.new(player,opts)
   local r=root;root=nil;r:Destroy()
   if blur then blur:Destroy();blur=nil end
   if gemsCounter then gemsCounter:Destroy();gemsCounter=nil end
-  board,fxLayer,info,bonusPanel,selection,gemsValue,gemsPill=nil,nil,nil,nil,nil,nil,nil
+  board,fxLayer,info,bonusPanel,selection,gemsValue,gemsPill,buyChip=nil,nil,nil,nil,nil,nil,nil,nil
   canvas,L,P,hint,dragging,pinching=nil,nil,nil,nil,nil,false
   table.clear(groups)
   pending=nil

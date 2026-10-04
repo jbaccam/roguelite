@@ -279,4 +279,48 @@ function S.claimUnlock(d,day,userId,id,ownsClass)
  if r.weapon then return true,r.weapon..' unlocked!',{weapon=r.weapon} end
  return true,r.armorSet..' armor set unlocked!',{armorSet=r.armorSet}
 end
+
+-- CLAIM ALL (user, 2026-10-03): every ready reward of one Quests tab in one request. Each goes
+-- through its own claim above, so each is checked again and nothing unready is paid. group: 'Daily'
+-- (quests + streak milestones), 'Weekly' or 'Achievements' (feats, unlocks, then every ready road
+-- level; Achiever counts the others' claims, so roads repeat until nothing more is ready).
+-- canUnlock(u) -> false skips an unlock that can't be paid yet (a weapon not in the game).
+-- Returns ok, message, grants (one per claim, as the single claims return them) and the total
+-- ({emeralds, chests, count}). Example: 3 daily quests of 40 + 60 + 100 -> count 3, emeralds 200.
+function S.claimAll(d,day,userId,group,ownsClass,canUnlock)
+ local C=S.config();local st=S.state(d,day,userId)
+ local grants={}
+ local function take(ok,_,g) if ok then table.insert(grants,g) end;return ok end
+ if group=='Daily' then
+  for i in st.list do take(S.claimQuest(d,day,userId,i)) end
+  for _,m in table.clone(st.streak.pending) do take(S.claimStreak(d,day,userId,m)) end
+ elseif group=='Weekly' then
+  for i in st.weekList do take(S.claimWeekly(d,day,userId,i)) end
+ elseif group=='Achievements' then
+  for _,f in C.Feats do take(S.claimFeat(d,day,userId,f.id)) end
+  for _,u in C.Unlocks do if not canUnlock or canUnlock(u) then take(S.claimUnlock(d,day,userId,u.id,ownsClass)) end end
+  for _=1,50 do
+   local more=false
+   for _,r in C.Roads do if take(S.claimRoad(d,day,userId,r.id)) then more=true end end
+   if not more then break end
+  end
+ else return false,'Unknown tab' end
+ if #grants==0 then return false,'Nothing to claim' end
+ local total=merge({});total.count=#grants
+ for _,g in grants do
+  total.emeralds+=g.emeralds or 0
+  for k,n in g.chests or {} do total.chests[k]=(total.chests[k] or 0)+n end
+ end
+ -- 'Claimed 3 rewards · +200 emeralds · 1 Gold Chest'
+ local parts={'Claimed '..#grants..(#grants==1 and ' reward' or ' rewards')}
+ if total.emeralds>0 then table.insert(parts,'+'..C.comma(total.emeralds)..' emeralds') end
+ for _,kind in {'Wooden','Silver','Gold','Magical','Legendary'} do
+  local n=total.chests[kind];if n and n>0 then table.insert(parts,n..' '..kind..(n==1 and ' Chest' or ' Chests')) end
+ end
+ for _,g in grants do
+  if g.class then table.insert(parts,g.class..' class') elseif g.weapon then table.insert(parts,g.weapon)
+  elseif g.armorSet then table.insert(parts,g.armorSet..' armor') end
+ end
+ return true,table.concat(parts,' · '),grants,total
+end
 return S

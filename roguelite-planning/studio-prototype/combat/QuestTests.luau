@@ -376,5 +376,88 @@ return function(S, C)
 	local before = S.claimable(d, 1, uid)
 	d.bestWaves.BeachCove = 50
 	check(S.claimable(d, 1, uid) == before + 1, "Badge counts a ready feat")
+
+	-- CLAIM ALL (2026-10-03): every ready reward of one tab in one request, each checked again.
+	d = profile()
+	local aday = 40000
+	st = S.state(d, aday, uid)
+	check(S.claimAll(d, aday, uid, "Daily") == false, "Claim all with nothing ready pays nothing")
+	check(S.claimAll(d, aday, uid, "Bogus") == false, "Claim all needs a real tab")
+	for i = 1, 2 do
+		local q = C.DailyById[st.list[i]]
+		S.event(d, aday, uid, q.stat, q.target)
+	end
+	-- What the single claims would pay now (two quests sharing a stat may finish a third).
+	local function ready()
+		local n, want = 0, 0
+		for _, id in st.list do
+			local q = C.DailyById[id]
+			if not st.claimed[id] and (st.progress[id] or 0) >= q.target then
+				n += 1
+				want += q.emeralds
+			end
+		end
+		for _, m in st.streak.pending do
+			n += 1
+			want += C.StreakByDay[m].emeralds or 0
+		end
+		return n, want
+	end
+	local n, want = ready()
+	local okAll, msg, grants, total = S.claimAll(d, aday, uid, "Daily")
+	check(okAll and total.count == n and #grants == n and total.emeralds == want and n >= 2, "Claim all pays every finished daily")
+	check(string.find(msg, "Claimed " .. n .. " rewards", 1, true) == 1, "Claim all says how many: " .. tostring(msg))
+	for _, id in st.list do
+		local q = C.DailyById[id]
+		check((st.claimed[id] == true) == ((st.progress[id] or 0) >= q.target), "Only finished dailies are claimed")
+	end
+	check(S.claimAll(d, aday, uid, "Daily") == false or #st.streak.pending == 0, "A claimed daily isn't paid twice")
+	finishDay(d, aday)
+	n, want = ready()
+	okAll, _, _, total = S.claimAll(d, aday, uid, "Daily")
+	check(okAll and total.count == n and total.emeralds == want, "Claim all takes the rest and the streak reward")
+	check(#st.streak.pending == 0 and st.stats.quests == 4, "Every daily claimed once, streak reward taken")
+	-- Achievements: feats and unlocks, then every ready road level; Achiever counts the others.
+	d = profile()
+	S.event(d, 1, uid, "kills", 2500) -- Slayer levels 1-3
+	d.bestWaves.PineValley = 10 -- Wave Rider: the Thrower class
+	d.mapWins.FrozenPass = true -- Frost Breaker: Mjolnir, skipped while it can't be paid
+	local noClass = function()
+		return false
+	end
+	local okA, _, gA, tA = S.claimAll(d, 1, uid, "Achievements", noClass, function(u)
+		return u.reward.weapon == nil
+	end)
+	st = d.quests
+	check(okA and st.roads.Slayer == 3 and st.roads.Achiever == 1, "Claim all takes every ready road level, Achiever too")
+	check(st.unlocks.WaveRider == true and not st.unlocks.FrostBreaker, "Claim all skips an unlock that can't be paid")
+	check(tA.count == 5 and tA.emeralds == 250 and tA.chests.Silver == 2, "Claim all adds the rewards up (3 + 1 levels, 1 unlock)")
+	local class
+	for _, g in gA do
+		class = class or g.class
+	end
+	check(class == "Thrower", "An unlocked class comes with the grants")
+	check(S.claimAll(d, 1, uid, "Achievements", noClass, function(u)
+		return u.reward.weapon == nil
+	end) == false, "Nothing ready is left")
+	okA, _, gA = S.claimAll(d, 1, uid, "Achievements", noClass)
+	check(okA and #gA == 1 and gA[1].weapon == "Mjolnir" and st.unlocks.FrostBreaker, "The weapon unlock pays once it can")
+	-- Weekly.
+	d = profile()
+	st = S.state(d, monday, uid)
+	for i = 1, 2 do
+		local q = C.WeeklyById[st.weekList[i]]
+		S.event(d, monday, uid, q.stat, q.target)
+	end
+	n, want = 0, 0
+	for _, id in st.weekList do
+		local q = C.WeeklyById[id]
+		if (st.weekProgress[id] or 0) >= q.target then
+			n += 1
+			want += q.emeralds
+		end
+	end
+	okAll, _, _, total = S.claimAll(d, monday, uid, "Weekly")
+	check(okAll and total.count == n and total.emeralds == want and st.stats.weeklies == n, "Claim all pays finished weeklies")
 	return checks
 end

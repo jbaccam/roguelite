@@ -2,8 +2,8 @@
 -- ACHIEVEMENTS (10-level roads, feats and unlocks), drawn as colour cards (StoreFX); plus the lobby's
 -- left-side tracker (Q.tracker). It shows the server's ProfileQuests view (QuestService) through
 -- QuestConfig; every CLAIM asks the server (ProfileAction ClaimQuest / ClaimStreak / ClaimWeekly /
--- ClaimRoad / ClaimFeat / ClaimUnlock), which checks it and grants the reward; once it says yes, a
--- short flat CLAIM effect plays (Q.claimFX, user 2026-10-03).
+-- ClaimRoad / ClaimFeat / ClaimUnlock, or ClaimAll for a whole tab), which checks it and grants the
+-- reward; once it says yes, a short flat CLAIM effect plays (Q.claimFX, user 2026-10-03).
 -- plans/2026-10-01-H-store-and-quests.md, plans/2026-10-02-K-quests-power-ui.md,
 -- plans/2026-10-02-M-feats-weekly-roads.md
 local RS=game:GetService('ReplicatedStorage')
@@ -80,6 +80,13 @@ end
 -- in it takes input, and the layer and everything in it is destroyed after 1.7 s. The Store's DAILY
 -- claims (free emeralds, the VIP chest, deals) play it too (StoreUI, user 2026-10-03).
 local RunService=game:GetService('RunService')
+local ChestFX=require(RS:WaitForChild('ChestFX')) -- the chest screen's sounds (ChestFX.play)
+-- Emeralds thrown per emerald reward, growing with the amount (user, 2026-10-03: "more emeralds
+-- exploding after claiming quests"): 12*(amount/50)^0.387, so 50 -> 12, 300 -> 24, 1,000 -> 38,
+-- 1,500+ -> 40 (the cap, for performance), and never fewer than 8.
+function Q.gemCount(amount)
+ return math.clamp(math.round(12*(math.max(tonumber(amount) or 0,1)/50)^.387),8,40)
+end
 local STAR='rbxassetid://119142062258395' -- ChestFX.Tex.star
 local RING='rbxassetid://112313196019616' -- ChestFX.Tex.ring
 local WHITE=Color3.new(1,1,1)
@@ -234,15 +241,18 @@ function Q.claimFX(screen,shots,target)
    end
    sparkles(layer,c,base,Vector2.new(s.size.X*.62,s.size.Y*.9),6,color)
   elseif s.kind=='emerald' then
-   -- Emeralds splatter out of the slot (more for bigger amounts: 6 at 50, 12 from 1,500), mostly
-   -- upwards, then each arcs into the counter; with no counter on screen they drop and fade.
+   -- Emeralds splatter out of the slot (more for bigger amounts, Q.gemCount: 12 at 50, 40 from
+   -- 1,500), mostly upwards, then each arcs into the counter; with no counter on screen they drop
+   -- and fade. Bigger bursts fly wider (40 gems reach 1.5x as far) and from at least 56 px, so a
+   -- small CLAIM button still throws a real burst.
    total+=s.amount or 0
-   for _=1,math.clamp(6+math.floor((s.amount or 0)/250),6,12) do
+   local count=Q.gemCount(s.amount);local reach=math.max(base,56)*(1+(count-12)/56)
+   for _=1,count do
     local a=-math.pi/2+(math.random()*2-1)*math.pi*.8;local dir=Vector2.new(math.cos(a),math.sin(a))
-    local size=math.clamp(base*(.3+math.random()*.14),12,36)
-    local p0=c+dir*base*.15;local p1=c+dir*base*((goal and .65 or .8)+math.random()*.7)
+    local size=math.clamp(base*(.3+math.random()*.14),14,36)
+    local p0=c+dir*base*.15;local p1=c+dir*reach*((goal and .65 or .8)+math.random()*.7)
     local gem=image('Emerald',T.Asset.emerald,p0,size*.4,WHITE,3);gem.Rotation=math.random(-30,30)
-    table.insert(gems,{img=gem,size=size,p0=p0,p1=p1,dir=dir,ctrl=p1+dir*base*.8,drop=base*1.6,drift=base*.5,
+    table.insert(gems,{img=gem,size=size,p0=p0,p1=p1,dir=dir,ctrl=p1+dir*reach*.8,drop=reach*1.6,drift=reach*.5,
      burst=.2+math.random()*.1,fly=.3+math.random()*.12,r0=gem.Rotation,spin=(math.random()<.5 and -1 or 1)*(90+math.random()*180)})
    end
    sparkles(layer,c,base,Vector2.new(base,base),4,color)
@@ -251,11 +261,17 @@ function Q.claimFX(screen,shots,target)
   end
  end
  if #gems==0 then return end
- for i,g in gems do g.wait=.04+(i-1)*.022 end
- -- First emerald in: a glow on the counter and "+50" rising off it; every one bumps the counter.
+ -- Arrivals spread over at most half a second, so 40 gems land as fast as 12 used to.
+ local step=math.min(.022,.5/#gems)
+ for i,g in gems do g.wait=.04+(i-1)*step end
+ -- A big pile also gets the chest screen's prize burst (the same sound kit).
+ if #gems>=24 then ChestFX.play(ChestFX.Sounds.Burst,.3,1.15) end
+ -- First emerald in: a glow on the counter and "+50" rising off it; every one bumps the counter,
+ -- and every 4th chimes a little higher (1.3 up to ~1.75 pitch).
  local cs=counter and math.min(counter.AbsoluteSize.X,counter.AbsoluteSize.Y)
  local function land(n)
   punch(counterNow() or counter,n==1 and 1.3 or 1.15)
+  if n%4==1 then ChestFX.play(ChestFX.Sounds.Chime,.12,1.3+math.min(n,40)*.011) end
   if n>1 then return end
   local glow=image('CounterGlow',FX.Asset.glow,goal,cs*1.2,FX.Rarity.Emerald.top,1);glow.ImageTransparency=.15
   tween(glow,.4,{Size=UDim2.fromOffset(cs*3,cs*3)},Enum.EasingStyle.Quart)
@@ -292,6 +308,28 @@ function Q.claimFX(screen,shots,target)
   end
   if not live then conn:Disconnect() end
  end)
+end
+
+-- One combined burst for many rewards at once (CLAIM ALL, 2026-10-03): all the emeralds from the
+-- button, and a chest slot per chest kind popping in a row under it. total: {emeralds, chests}
+-- (the server's sum); pos/size: the button's AbsolutePosition/AbsoluteSize; k: the window's scale.
+function Q.totalShots(total,pos,size,k)
+ local shots={}
+ if type(total)~='table' then return shots end
+ if (total.emeralds or 0)>0 then table.insert(shots,{kind='emerald',amount=total.emeralds,color=FX.Rarity.Emerald.top,pos=pos,size=size}) end
+ local kinds={}
+ for _,kind in {'Wooden','Silver','Gold','Magical','Legendary'} do
+  local n=total.chests and tonumber(total.chests[kind]);if n and n>0 and Chests.ById[kind] then table.insert(kinds,{kind,n}) end
+ end
+ local cx=pos.X+size.X/2;local cy=pos.Y+size.Y+52*k
+ for i,e in kinds do
+  local rarity=FX.ChestRarity[e[1]] or 'Common'
+  local tile=FX.tile(nil,'Chest'..e[1],0,0,80,Chests.ById[e[1]].icon,e[1],rarity,e[2]>1 and ('×'..e[2]) or nil)
+  local x=cx+(i-(#kinds+1)/2)*90*k
+  table.insert(shots,{kind='chest',amount=e[2],color=(FX.Rarity[rarity] or FX.Rarity.Common).top,
+   pos=Vector2.new(x-40*k,cy-43*k),size=Vector2.new(80*k,86*k),design=80,copy=tile})
+ end
+ return shots
 end
 
 -- Rotated rank diamond with an upright icon on it; rim = {colour, pulses} for the top levels.
@@ -422,6 +460,24 @@ function Q.open(screen,ctx,tab)
   local r=combat.ProfileAction:InvokeServer(action,a)
   if r.ok then T.sound('ui_purchase') end
   if r.ok and w.Root.Parent then Q.claimFX(screen,shots) else for _,s in shots do s.copy:Destroy() end end
+  T.toast(screen,r.message or '',r.ok and C.lime or C.negative)
+ end
+ -- CLAIM ALL (user, 2026-10-03): the open tab's ready rewards in one request (ProfileAction
+ -- ClaimAll; the server checks each one again). One burst from the button with everything it paid
+ -- (Q.totalShots) and one toast, not one per reward.
+ local claiming=false
+ local function claimAll(button)
+  if claiming then return end
+  claiming=true
+  local at,size=button.AbsolutePosition,button.AbsoluteSize
+  local k=size.Y/math.max(button.Size.Y.Offset,1)
+  local ok,r=pcall(function() return combat.ProfileAction:InvokeServer('ClaimAll',sel.questTab) end)
+  claiming=false
+  if not ok or type(r)~='table' then T.toast(screen,'Could not claim right now',C.negative);return end
+  if r.ok then
+   T.sound('ui_purchase')
+   if w.Root.Parent then Q.claimFX(screen,Q.totalShots(r.results,at,size,k)) end
+  end
   T.toast(screen,r.message or '',r.ok and C.lime or C.negative)
  end
 
@@ -741,7 +797,15 @@ function Q.open(screen,ctx,tab)
   local active=sel.questTab
   local dailyN,achN,weekN=0,0,0
   if view.daily and Config then dailyN,achN,weekN=Q.counts(Config,view) end
-  local tw=math.floor((W-16)/3)
+  -- With 2+ rewards ready on the open tab, the tabs make room on the right for a pulsing CLAIM ALL
+  -- with that count (250 px; the tabs stay 390 wide, room for ACHIEVEMENTS).
+  local ready=({Daily=dailyN,Weekly=weekN,Achievements=achN})[active] or 0
+  local allW=ready>=2 and 250 or 0
+  local tw=math.floor((W-16-(allW>0 and allW+8 or 0))/3)
+  if allW>0 then
+   local ab;ab=FX.button(b,'ClaimAll','CLAIM ALL',W-allW,0,allW,64,function() claimAll(ab) end)
+   ab.Caption.TextSize=26;FX.pulse(ab,.04);T.badge(ab,tostring(ready))
+  end
   local weeklyIcon=Config and Config.Icons.weekly or 'quests'
   for i,t in {{'Daily','quests','DAILY',dailyN},{'Weekly',weeklyIcon,'WEEKLY',weekN},{'Achievements','achievements','ACHIEVEMENTS',achN}} do
    local tb=FX.button(b,'Tab_'..t[1],'',(i-1)*(tw+8),0,tw,64,function() sel.questTab=t[1];draw() end,t[1]~=active)

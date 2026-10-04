@@ -426,4 +426,185 @@ function S.open(screen,ctx,focus)
  if ctx.setRedraw then ctx.setRedraw(draw) end
  return w
 end
+
+-- Purchase reveal (user, 2026-10-03: "not any cool animation when buying bundles like starter
+-- bundle") -----------------------------------------------------------------------------------------
+-- Once the server says a store product arrived as itself (PurchaseResult, LobbyUI), its contents pop
+-- out of its art one by one onto a row of reward slots: each lands with a flash and a chime that
+-- climbs (a Legendary sting for Legendary and Godly ones), and the emerald amount counts up from 0.
+-- COLLECT (or a tap anywhere once all are out, or 8 s later) plays the quests' CLAIM effect on the
+-- slots (QuestsUI.claimFX): the emeralds fly into the emerald counter, chests squash. Its own
+-- ScreenGui above the lobby's full screens (the chest screen and run setup sell things too).
+-- Presentation only: the server granted everything before saying so.
+local TweenService=game:GetService('TweenService')
+local ChestFX=require(RS:WaitForChild('ChestFX')) -- the chest screen's sounds
+local function tween(o,t,props,style,dir,delay)
+ local tw=TweenService:Create(o,TweenInfo.new(t,style or Enum.EasingStyle.Quad,dir or Enum.EasingDirection.Out,0,false,delay or 0),props);tw:Play();return tw
+end
+S.Rank={Common=1,Emerald=1,Rare=2,Epic=3,Legendary=4,Godly=5}
+-- The big art over the slots: the store card's art where the first slot isn't it.
+S.RevealArt={ArsenalBundle=WeaponIcons['00'],MegaBundle='chest',VIP='profile',QuickOpen='chest'}
+-- What a product or pass gives, as reward slots {asset, label, rarity, amount, kind, count} (the
+-- store cards' art; kind and count for the CLAIM effect). Empty for in-run products (revives,
+-- rerolls, banish), which show no reveal. opts: signature (class -> weapon id), pick (the Godly
+-- Starter's pick, an index into Money.GodlyWeapons).
+function S.contents(key,opts)
+ opts=opts or {}
+ local p=Money.Products[key];local out={}
+ if not p then
+  if key=='VIP' then return {{'emerald','+25%','Emerald'},{Chests.ById[Money.VIPDailyChest].icon,'Daily','Legendary'},{'chest','Open ×10','Epic'},{'profile','VIP Tag','Rare'}} end
+  if key=='QuickOpen' then return {{'chest','Open ×10','Common'}} end
+  return out
+ end
+ if p.revive or key=='ShopReroll' or key=='UpgradeReroll' or key=='Banish' then return out end
+ local pick=p.godlyPick and Money.GodlyWeapons[opts.pick or 1]
+ local godly=p.godly or pick and pick[1]
+ if godly then table.insert(out,{iconFor(weaponId(godly),godly),godlyShort(godly),'Godly'}) end
+ if p.armorSet then
+  local set=Armor.ById[p.armorSet]
+  for _,slot in Armor.Slots do table.insert(out,{Armor.Icons[Armor.pieceId(p.armorSet,slot)],slot,set and set.rarity or 'Epic'}) end
+ end
+ local sig=opts.signature or {}
+ if p.class then table.insert(out,{WeaponIcons[sig[p.class] or ''] or 'profile',p.class,'Rare'}) end
+ if p.signatureUpgrades then
+  for _,cl in Stats.ClassOrder do table.insert(out,{WeaponIcons[sig[cl] or ''] or 'armory','+'..p.signatureUpgrades,'Rare'}) end
+ end
+ if (p.emeralds or 0)>0 then table.insert(out,{'emerald',comma(p.emeralds),'Emerald',nil,'emerald',p.emeralds}) end
+ for _,kind in {'Wooden','Silver','Gold','Magical','Legendary'} do
+  local n=p.chests and p.chests[kind]
+  if n and n>0 then table.insert(out,{Chests.ById[kind].icon,kind,FX.ChestRarity[kind],'×'..n,'chest',n}) end
+ end
+ if (p.rerolls or 0)>0 then table.insert(out,{'quests','Rerolls','Rare','×'..p.rerolls}) end
+ if (p.banishes or 0)>0 then table.insert(out,{'armory','Banishes','Epic','×'..p.banishes}) end
+ return out
+end
+-- Where the emeralds fly: the Store window's pill while it is open, else the lobby HUD's counter.
+local function counterIn(hud)
+ return function()
+  if not (hud and hud.Parent and hud.Enabled) then return nil end
+  local win=hud:FindFirstChild('StoreWindow');local pill=win and win:FindFirstChild('EmeraldsPill',true)
+  local icon=pill and pill:FindFirstChild('Icon')
+  if icon and icon.AbsoluteSize.X>0 then return icon end
+  local h=hud:FindFirstChild('HUD');local side=h and h.Visible and h:FindFirstChild('Left');local row=side and side:FindFirstChild('Gems')
+  icon=row and row:FindFirstChild('Icon')
+  return icon and icon.AbsoluteSize.X>0 and icon or nil
+ end
+end
+-- opts: signature, pick (S.contents), hud (the lobby HUD's ScreenGui, for the emerald counter),
+-- note (a small line under the title, e.g. Studio's "not saved"). Returns the reveal's ScreenGui,
+-- or nil when the product has nothing to show.
+function S.reveal(playerGui,key,opts)
+ opts=opts or {}
+ local items=S.contents(key,opts)
+ if #items==0 or not playerGui then return nil end
+ local old=playerGui:FindFirstChild('PurchaseReveal');if old then old:Destroy() end
+ local product=Money.Products[key] or Money.Passes[key]
+ local gui=T.make('ScreenGui',playerGui,{Name='PurchaseReveal',ResetOnSpawn=false,DisplayOrder=88,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets})
+ -- Laid out at 960 x 600 and scaled to fit: 1920x1080 draws it at 1.25, an 844x390 phone at about .6.
+ local DW,DH=960,600
+ local back=T.make('TextButton',gui,{Name='Backdrop',Text='',AutoButtonColor=false,Active=true,Modal=true,Selectable=false,Position=UDim2.fromOffset(0,-120),Size=UDim2.new(1,0,1,120),BackgroundColor3=C.shade,BackgroundTransparency=1,BorderSizePixel=0})
+ back:SetAttribute('NoClickSound',true)
+ tween(back,.25,{BackgroundTransparency=.22})
+ local stage=T.frame(back,'Stage',0,0,DW,DH);stage.AnchorPoint=Vector2.new(.5,.5);stage.Position=UDim2.new(.5,0,.5,60)
+ local scale=T.make('UIScale',stage,{Scale=1})
+ local function fit() local v=gui.AbsoluteSize;if v.X>0 then scale.Scale=math.clamp(math.min((v.X-24)/DW,(v.Y-16)/DH),.3,1.25) end end
+ gui:GetPropertyChangedSignal('AbsoluteSize'):Connect(fit);fit()
+ -- Colours from the best thing in it: Godly red-black, Legendary gold, anything else emerald.
+ local best=1;for _,it in items do best=math.max(best,S.Rank[it[3]] or 1) end
+ local th=best>=5 and FX.Themes.shadow or best>=4 and FX.Themes.gold or FX.Themes.emerald
+ -- 1. YOU GOT and the product's name pop in.
+ local head=T.frame(stage,'Head',0,14,DW,136);head.ZIndex=3
+ local hs=T.make('UIScale',head,{Scale=.4});tween(hs,.4,{Scale=1},Enum.EasingStyle.Back)
+ center(T.label(head,'You','YOU GOT',0,0,DW,32,26,C.cream))
+ -- Emerald packs say the amount ('1,700 EMERALDS', not 'STACK'), classes 'THROWER CLASS'.
+ local name=product and product.name or tostring(key)
+ if #items==1 and items[1][5]=='emerald' then name=comma(items[1][6])..' emeralds' elseif product and product.class then name=product.class..' class' end
+ center(FX.title(head,'Title',string.upper(name),30,32,DW-60,76,62,th.tint))
+ if opts.note then center(T.text(head,'Note',opts.note,30,110,DW-60,22,16,C.muted)) end
+ -- 2. Its art bursts in over spinning rays, with a white flash.
+ local ax,ay=DW/2,266
+ local burst,rays=FX.burst(stage,ax,ay,60,th.rays,40);burst.ZIndex=1
+ burst.Glow.ImageColor3=th.glow;burst.Glow.ImageTransparency=.15;rays.ImageTransparency=.25
+ tween(burst,.55,{Size=UDim2.fromOffset(500,500)},Enum.EasingStyle.Back)
+ local godlyArt=items[1][3]=='Godly' and items[1][1]
+ local chestArt;for _,it in items do if it[5]=='chest' then chestArt=chestArt or it[1] end end
+ local art=T.icon(stage,'Art',ax-100,ay-100,200,S.RevealArt[key] or godlyArt or chestArt or items[1][1]);art.ZIndex=2
+ local as=T.make('UIScale',art,{Scale=0});tween(as,.45,{Scale=1},Enum.EasingStyle.Back,nil,.08)
+ local flash=T.make('ImageLabel',stage,{Name='Flash',BackgroundTransparency=1,Image=FX.Asset.glow,ImageColor3=Color3.new(1,1,1),AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(ax,ay),Size=UDim2.fromOffset(120,120),ZIndex=4})
+ tween(flash,.5,{Size=UDim2.fromOffset(560,560),ImageTransparency=1})
+ ChestFX.play(ChestFX.Sounds.Burst,.4,1)
+ -- 3. Each reward flies out of the art to its slot, one by one (0.32 s apart; 0.24 s past 5).
+ local n=#items;local gap=14
+ local size=math.min(112,math.floor((DW-48-(n-1)*gap)/n));local h=math.floor(size*1.08)
+ local x0=(DW-(n*size+(n-1)*gap))/2;local ty=404
+ local step=n>5 and .24 or .32
+ local slots={}
+ for i,it in items do
+  task.delay(.5+(i-1)*step,function()
+   if not stage.Parent then return end
+   local rank=S.Rank[it[3]] or 1
+   local color=(FX.Rarity[it[3]] or FX.Rarity.Common).top
+   local cx,cy=x0+(i-1)*(size+gap)+size/2,ty+h/2
+   local t=Quests.tagReward(FX.tile(stage,'Reward'..i,0,0,size,it[1],it[2],it[3],it[4]),it[5] or 'item',it[6],color)
+   t.AnchorPoint=Vector2.new(.5,.5);t.Position=UDim2.fromOffset(ax,ay);t.ZIndex=3
+   local ts=T.make('UIScale',t,{Scale=.2})
+   tween(t,.36,{Position=UDim2.fromOffset(cx,cy)},Enum.EasingStyle.Back)
+   tween(ts,.36,{Scale=1},Enum.EasingStyle.Back)
+   table.insert(slots,t)
+   task.delay(.3,function()
+    if not stage.Parent then return end
+    -- Lands: a flash under it and a chime that climbs with each slot.
+    local lb,lr=FX.burst(stage,cx,cy,size*.7,color,90);lb.ZIndex=1;lb.Glow.ImageTransparency=.1
+    tween(lb,.45,{Size=UDim2.fromOffset(size*2.6,size*2.6)},Enum.EasingStyle.Quart)
+    tween(lb.Glow,.6,{ImageTransparency=1},nil,Enum.EasingDirection.In)
+    tween(lr,.55,{ImageTransparency=1},nil,Enum.EasingDirection.In)
+    task.delay(.7,function() lb:Destroy() end)
+    if rank>=4 then ChestFX.play(ChestFX.Sounds.Legendary,.4,rank>=5 and .85 or 1)
+    else ChestFX.play(ChestFX.Sounds.Chime,.35,1.05+i*.07) end
+    if it[5]=='emerald' and it[6] then
+     -- The amount counts up from 0 while a few emeralds spray off the slot.
+     local strip=t:FindFirstChild('Strip');local label=strip and strip:FindFirstChild('Label')
+     if label then
+      label.Text='0'
+      local v=Instance.new('NumberValue');v.Value=0
+      v.Changed:Connect(function(x) if label.Parent then label.Text=comma(x) end end)
+      tween(v,.9,{Value=it[6]},Enum.EasingStyle.Quad)
+      task.delay(.95,function() v:Destroy();if label.Parent then label.Text=comma(it[6]) end end)
+     end
+     for _=1,10 do
+      local a=-math.pi/2+(math.random()*2-1)*1.1;local d=Vector2.new(math.cos(a),math.sin(a))
+      local to=Vector2.new(cx,cy)+d*size*(.8+math.random()*.6)
+      local g=T.icon(stage,'Gem',cx-10,cy-10,20,'emerald');g.ZIndex=4;g.Rotation=math.random(-40,40)
+      tween(g,.6,{Position=UDim2.fromOffset(to.X-10,to.Y+10),Rotation=g.Rotation+math.random(-120,120),ImageTransparency=1})
+      task.delay(.65,function() g:Destroy() end)
+     end
+    end
+   end)
+  end)
+ end
+ -- 4. COLLECT once everything is out; the CLAIM effect sends it to the counter.
+ local doneAt=.5+(n-1)*step+.7
+ local t0=os.clock()
+ local finished=false
+ local function finish()
+  if finished or not gui.Parent then return end
+  finished=true
+  local shots=Quests.snapshot(slots)
+  stage.Visible=false;back.Active=false
+  tween(back,.25,{BackgroundTransparency=1})
+  task.delay(.25,function() back.Visible=false end)
+  Quests.claimFX(gui,shots,counterIn(opts.hud))
+  task.delay(2,function() gui:Destroy() end)
+ end
+ back.Activated:Connect(function() if os.clock()-t0>=doneAt then finish() end end)
+ task.delay(doneAt,function()
+  if finished or not stage.Parent then return end
+  local cb=FX.button(stage,'Collect','COLLECT',DW/2-150,DH-72,300,66,finish);cb.Caption.TextSize=32;cb.ZIndex=5
+  local cs=T.make('UIScale',cb,{Scale=.5});tween(cs,.3,{Scale=1},Enum.EasingStyle.Back)
+  task.delay(.32,function() if cb.Parent then cs:Destroy();FX.pulse(cb,.05) end end)
+  T.gamepadSelect(stage)
+ end)
+ task.delay(doneAt+8,finish)
+ return gui
+end
 return S

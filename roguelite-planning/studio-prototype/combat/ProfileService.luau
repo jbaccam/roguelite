@@ -634,6 +634,24 @@ function P.claimFeat(player,id)
  local d=P.profiles[player];if not d then return false,'Profile loading' end
  return questGrant(player,quest('claimFeat',d,Money.day(),player.UserId,id))
 end
+-- CLAIM ALL on one Quests tab (2026-10-03): QuestService re-checks each reward with its own claim.
+-- The emeralds and chests go out as one grant (one publish); each unlocked class, weapon or armor
+-- set as its own. An unlock whose weapon isn't in the game yet waits, like P.claimUnlock. Returns
+-- ok, message, total ({emeralds, chests, count}) for the client's one combined burst.
+function P.claimAll(player,group)
+ local d=P.profiles[player];if not d then return false,'Profile loading' end
+ local ok,message,grants,total=quest('claimAll',d,Money.day(),player.UserId,group,
+  function(class) return d.classes[class]==true end,
+  function(u) return not (u.reward.weapon and not P.weaponIdByName(u.reward.weapon)) end)
+ if ok==nil then return false,'Quests are not available right now' end
+ if not ok then return false,message end
+ local sum={emeralds=total.emeralds,chests=total.chests}
+ for _,g in grants do
+  if g.class or g.weapon or g.armorSet then P.grant(player,{class=g.class,weapon=g.weapon and P.weaponIdByName(g.weapon),armorSet=g.armorSet}) end
+ end
+ P.grant(player,sum) -- publishes, ProfileQuests included
+ return true,message,total
+end
 
 -- Daily deals: same 5 deals for a player all day, new ones at UTC midnight. Never Godly.
 local function dealList(userId)
