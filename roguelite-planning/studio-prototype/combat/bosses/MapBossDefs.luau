@@ -31,11 +31,16 @@
 --   spawns the old BossService Hammer instead (rebuild R6, 2026-10-03).
 -- The server never waits for MapBossTiming (its ReplicatedStorage is complete at load): a place
 -- without it has no timings, so nothing is ready and wave 20 still gets the old Hammer. A client
--- waits for it to replicate.
+-- waits up to 60 s for it to replicate. Either way, one that turns up later is still picked up: every
+-- D.timing / D.rawTiming looks for it again until it is here (timings()).
 local Run=game:GetService('RunService')
 local timingModule=script.Parent:FindFirstChild('MapBossTiming') or (not Run:IsServer() and script.Parent:WaitForChild('MapBossTiming',60)) or nil
-if not timingModule then warn('MapBossDefs: no MapBossTiming here, so no map boss is ready') end
-local Timing=timingModule and require(timingModule) or {}
+if not timingModule then warn('MapBossDefs: no MapBossTiming here yet, so no map boss is ready') end
+local Timing=timingModule and require(timingModule) or nil
+local function timings()
+ if not Timing then local m=script.Parent:FindFirstChild('MapBossTiming');if m then Timing=require(m) end end
+ return Timing or {}
+end
 local D={}
 -- The installer's order (InstallMapBossTemplates). The Hammer is Pine Valley's, the first map.
 D.Order={'Hammer','KingCrab','Pharaoh','FrostCyclops','Dragon'}
@@ -113,7 +118,7 @@ D.ATTACK_CLIPS={['king-crab']={'ClawCrush','RushStart','RushLoop','RushEnd','Bub
 function D.get(id) return D[id] and type(D[id])=='table' and D[id].anim and D[id] or nil end
 function D.isBoss(id) return D.get(id)~=nil end
 -- The generated timing as authored (the template installer builds the unscaled template from it).
-function D.rawTiming(id) local d=D.get(id);return d and Timing[d.anim] end
+function D.rawTiming(id) local d=D.get(id);return d and timings()[d.anim] end
 
 -- Scaled, rate-adjusted timing (see the header). Built once per boss.
 local TIMES={'duration','warnStart','impact','activeEnd','recoveryEnd','chargeStart','channelStart','channelEnd'}
@@ -150,7 +155,7 @@ end
 function D.timing(id)
  local def=D.get(id);if not def then return nil end
  if cache[id] then return cache[id] end
- local raw=Timing[def.anim];if not raw then return nil end
+ local raw=timings()[def.anim];if not raw then return nil end
  local s=def.scale or 1
  local T=table.clone(raw);T.scale=s;T.attacks={}
  for _,k in LENGTHS do if raw[k] then T[k]=raw[k]*s end end

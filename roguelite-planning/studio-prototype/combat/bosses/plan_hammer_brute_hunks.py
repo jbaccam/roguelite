@@ -7,8 +7,9 @@ R7: the rebuilt Hammer is a map boss (IsMapBoss, tag MapBoss, MapBossId 'Hammer'
 HammerBrute_*). Every 'Hammer' spawn asks MapBossDefs.legacy('Hammer') and keeps the old BossService
 Hammer until his def, timing, clips, template and runtime are all in the place.
 HUNKS go from the scripts before R7 (what Studio has until R8) straight to the final text.
-FROM_20BFF04 moves the repo's 20bff04 text (the first R7 commit) to the same final text:
-    python plan_hammer_brute_hunks.py --from-20bff04 --stage   (once, for the R6-R7 review fixes)
+UPGRADE moves the repo's last committed text (now 0b9b6a8) to the same final text, for the commit that
+changes it (20bff04 -> 0b9b6a8 was the first such step; git keeps the history):
+    python plan_hammer_brute_hunks.py --upgrade --stage
 """
 import sys
 from pathlib import Path
@@ -30,7 +31,7 @@ GUIDE = "ui/TutorialGuide.client.luau"
 GUIDE_S = "StarterPlayer.StarterPlayerScripts.TutorialGuide"
 TESTS = "combat/bosses/MapBossServiceTests.luau"  # run from the repo (tools/RepoRequire), not synced
 
-# --- Final texts (R7 and the 2026-10-03 review fixes), shared by HUNKS and FROM_20BFF04 -----------
+# --- Final texts (R7 and the 2026-10-03 review fixes), shared by HUNKS and UPGRADE ----------------
 CHASE_GATE = (
     "-- MapBossService, or nil when this place lacks it or it fails to load. It never waits, so the old\n"
     "-- Hammer and the regular enemies never depend on the map-boss modules.\n"
@@ -51,12 +52,19 @@ CHASE_GATE = (
     "-- the gate BossEncounter asks too. A MapBossDefs without legacy() (older, or none) keeps the old one.\n"
     "local function oldHammer(id, defs)\n"
     "    if id ~= 'Hammer' then return false end\n"
-    "    if defs and defs.legacy then local ok, old = pcall(defs.legacy, id); return not ok or old end\n"
+    "    if defs and defs.legacy then local ok, old = pcall(defs.legacy, id); return not ok or old ~= false end\n"
     "    return true\n"
     "end")
 CHASE_ADMIN = (
     "            -- The old BossService Hammer until the rebuilt one is ready (oldHammer); then the map-boss path below.\n"
     "            if id == 'Hammer' and oldHammer(id, bossDefs()) then")
+CHASE_FALLBACK = (
+    "        -- The rebuilt Hammer failing to spawn brings the old one instead (as BossEncounter does). A\n"
+    "        -- half-built one (the spawn failed after he was parented) goes first, so there are never two.\n"
+    "        if not boss and p.id == 'Hammer' then\n"
+    "            for _, npc in folder:GetChildren() do if npc:GetAttribute('MapBossId') == 'Hammer' then npc:Destroy() end end\n"
+    "            boss = Bosses.spawn(cf + Vector3.yAxis * (BossMotion.RootHeight - T.rootHeight), false); old = boss ~= nil\n"
+    "        end")
 GUIDE_LIST = (
     "-- The bosses: the old Hammer (tag HammerBoss) and map bosses, the rebuilt Hammer Brute included\n"
     "-- (MapBoss). Kept up to date by the tag signals below, not looked up every frame.\n"
@@ -149,8 +157,7 @@ HUNKS = [
      "        local ok, made = pcall(function() return service and service.spawn(p.id, cf, false, {intro = true}) end)\n"
      "        if not ok then warn('Endless boss ' .. p.id .. ' failed to spawn: ' .. tostring(made)) end\n"
      "        boss = ok and made or nil\n"
-     "        -- The rebuilt Hammer failing to spawn brings the old one instead (as BossEncounter does).\n"
-     "        if not boss and p.id == 'Hammer' then boss = Bosses.spawn(cf + Vector3.yAxis * (BossMotion.RootHeight - T.rootHeight), false); old = boss ~= nil end\n"
+     + CHASE_FALLBACK + "\n"
      "    end"),
     (CHASE, CHASE_S,
      "            if id == 'Hammer' then", "replace",
@@ -213,29 +220,15 @@ HUNKS = [
      TESTS_CLIPS + "\n" + TESTS_LEGACY),
 ]
 
-# 20bff04 -> final (the 2026-10-03 review of R6-R7): run before HUNKS on files that have 20bff04's text.
-FROM_20BFF04 = [
+# 0b9b6a8 -> final (the second review, 2026-10-03): run before HUNKS on files that have 0b9b6a8's text.
+UPGRADE = [
+    (CHASE, CHASE_S, "    if defs and defs.legacy then local ok, old = pcall(defs.legacy, id); return not ok or old end", "replace",
+     "    if defs and defs.legacy then local ok, old = pcall(defs.legacy, id); return not ok or old ~= false end"),
     (CHASE, CHASE_S,
-     ("-- A map boss this place can run: MapBossDefs.ready (its def, timing, client clips and template).",
-      "local function oldHammer(id, defs) return id == 'Hammer' and not mapReady(id, defs) end"), "block",
-     CHASE_GATE),
-    (CHASE, CHASE_S,
-     ("            -- The old BossService Hammer until the rebuilt one is ready (oldHammer); then the map-boss path below.",
-      "            if oldHammer(id, bossDefs()) then"), "block",
-     CHASE_ADMIN),
-    (GUIDE, GUIDE_S,
-     ("-- The boss: the old Hammer (tag HammerBoss) or a map boss, the rebuilt Hammer Brute included (MapBoss).",
-      "local function fightContext() return {edges=true,avoid=bosses()} end"), "block",
-     GUIDE_LIST),
-    (GUIDE, GUIDE_S,
-     ("Tags:GetInstanceAddedSignal('MapBoss'):Connect(watchBoss)",
-      "for _,npc in Tags:GetTagged('MapBoss') do watchBoss(npc) end"), "block",
-     GUIDE_WATCH),
-    (TESTS, None,
-     (" -- MapBossDefs.ready (rebuild R6): true exactly when the def, timing, client clips and template are",
-      " add(okReady,('ready: only with def, timing, client clips and template all present (ready now: %s)'):format(tostring(readyNow)))"), "block",
-     TESTS_LEGACY),
+     ("        -- The rebuilt Hammer failing to spawn brings the old one instead (as BossEncounter does).",
+      "        if not boss and p.id == 'Hammer' then boss = Bosses.spawn(cf + Vector3.yAxis * (BossMotion.RootHeight - T.rootHeight), false); old = boss ~= nil end"), "block",
+     CHASE_FALLBACK),
 ]
 
 if __name__ == "__main__":
-    run(FROM_20BFF04 + HUNKS if "--from-20bff04" in sys.argv else HUNKS)
+    run(UPGRADE + HUNKS if "--upgrade" in sys.argv else HUNKS)

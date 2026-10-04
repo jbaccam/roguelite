@@ -18,6 +18,12 @@ end
 -- (MapBossDefs.legacy: his def, timing, clips, template and runtime all here). A missing, failing or
 -- older MapBossDefs keeps the old one.
 local function oldHammer(Defs) local ok,old=pcall(function() return Defs.legacy('Hammer') end);return not (ok and old==false) end
+-- A rebuilt Hammer whose spawn failed after he was parented is half built: he goes before the old
+-- Hammer comes in, so there are never two.
+local function dropRebuiltHammers()
+ local enemies=workspace:FindFirstChild('RogueliteEnemies')
+ if enemies then for _,npc in enemies:GetChildren() do if npc:GetAttribute('MapBossId')=='Hammer' then npc:Destroy() end end end
+end
 -- Encounter selection is server-owned; no client spawn or damage remote.
 local current,lastWave
 local function update()
@@ -41,7 +47,7 @@ local function update()
   end
  end
  -- The old Hammer: while the rebuilt one isn't ready here, or when he failed to spawn.
- if not current and map.boss=='Hammer' then current=B.spawn(CFrame.new(ground.Position+Vector3.yAxis*(Motion.RootHeight+.1)),false) end
+ if not current and map.boss=='Hammer' then dropRebuiltHammers();current=B.spawn(CFrame.new(ground.Position+Vector3.yAxis*(Motion.RootHeight+.1)),false) end
  if current then
   lastWave=wave;run:SetAttribute('BossAlive',true)
   current.Destroying:Connect(function() run:SetAttribute('BossAlive',false) end)

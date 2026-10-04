@@ -799,7 +799,7 @@ end
 -- the gate BossEncounter asks too. A MapBossDefs without legacy() (older, or none) keeps the old one.
 local function oldHammer(id, defs)
     if id ~= 'Hammer' then return false end
-    if defs and defs.legacy then local ok, old = pcall(defs.legacy, id); return not ok or old end
+    if defs and defs.legacy then local ok, old = pcall(defs.legacy, id); return not ok or old ~= false end
     return true
 end
 -- The bosses this place can spawn: a template in RogueliteNPCs, and a def, timing and client
@@ -866,8 +866,12 @@ local function endlessSpawn(p)
         local ok, made = pcall(function() return service and service.spawn(p.id, cf, false, {intro = true}) end)
         if not ok then warn('Endless boss ' .. p.id .. ' failed to spawn: ' .. tostring(made)) end
         boss = ok and made or nil
-        -- The rebuilt Hammer failing to spawn brings the old one instead (as BossEncounter does).
-        if not boss and p.id == 'Hammer' then boss = Bosses.spawn(cf + Vector3.yAxis * (BossMotion.RootHeight - T.rootHeight), false); old = boss ~= nil end
+        -- The rebuilt Hammer failing to spawn brings the old one instead (as BossEncounter does). A
+        -- half-built one (the spawn failed after he was parented) goes first, so there are never two.
+        if not boss and p.id == 'Hammer' then
+            for _, npc in folder:GetChildren() do if npc:GetAttribute('MapBossId') == 'Hammer' then npc:Destroy() end end
+            boss = Bosses.spawn(cf + Vector3.yAxis * (BossMotion.RootHeight - T.rootHeight), false); old = boss ~= nil
+        end
     end
     if not boss then return nil end
     -- Spawn already scaled it by difficulty, players and map power. Every Endless boss then gets the
