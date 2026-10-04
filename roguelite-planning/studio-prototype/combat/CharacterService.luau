@@ -74,7 +74,11 @@ function Service.seen(player,root)
  local r=reports[player];local here=root.Position
  if r and workspace:GetServerTimeNow()-r.at<REPORT_FRESH then
   local h=humanoid(player);local speed=math.max(h and h.WalkSpeed or 16,16)
-  if (r.position-here).Magnitude<=3+speed*.35 then return r.position end
+  -- For 0.6 s after an approved dash (DashAt, RogueliteMeta) their screen runs up to its length
+  -- ahead of the body here, so dashing out of a swing dodges it.
+  local dashAt=player:GetAttribute('DashAt')
+  local dash=type(dashAt)=='number' and workspace:GetServerTimeNow()-dashAt<.6 and Stats.Dash.Distance or 0
+  if (r.position-here).Magnitude<=3+speed*.35+dash then return r.position end
  end
  return here
 end

@@ -42,6 +42,22 @@ return function(M)
  -- A server move (reset) starts clean: no false teleport afterwards.
  s=M.new(Vector3.zero,0);run(s,0,Vector3.zero,1,10);M.reset(s,Vector3.new(500,0,0),1)
  check(run(s,1,Vector3.new(500,0,0),2,20)==nil,'after a server move all is well')
+ -- An approved dash (2026-10-03): 26 more studs pass for 1.5 s. 40 studs in the first 0.1 s is a
+ -- strike without it (limit 24 x 1.5 x 0.1 + 16 = 19.6) and fine with it (45.6).
+ s=M.new(Vector3.zero,0);M.allow(s,0,26);M.step(s,.1,Vector3.new(40,0,0),24,3,0,true)
+ check(s.strikes==0,'a dash within its allowance is no strike')
+ s=M.new(Vector3.zero,0);M.step(s,.1,Vector3.new(40,0,0),24,3,0,true)
+ check(s.strikes==1,'the same burst without a dash is a strike')
+ M.allow(s,0,26);M.allow(s,0,26);check(s.bonus==26,'allowances replace each other, never stack')
+ -- A dash (20 studs in 0.2 s) every 3 s while walking never trips it.
+ s=M.new(Vector3.zero,0);local at,p=0,Vector3.zero
+ for _=1,4 do
+  M.allow(s,at,26);w,at,p=run(s,at,p,.2,100,{speed=23.2});check(w==nil,'a dash passes')
+  w,at,p=run(s,at,p,2.8,16,{speed=23.2});check(w==nil,'walking after a dash passes')
+ end
+ -- A 100 studs/s speed hack that got one dash allowance is still caught, by 1.2 s.
+ s=M.new(Vector3.zero,0);M.allow(s,0,26);w,t=run(s,0,Vector3.zero,3,100)
+ check(w=='speed' and t<=1.2,'a speed hack with a dash allowance is caught: '..tostring(w)..' at '..tostring(t))
  -- Bounds: walls from -100..100 in X and Z, margin 20.
  local wall=function(x,z,sx,sz) return {CFrame=CFrame.new(x,5,z),Size=Vector3.new(sx,10,sz)} end
  local box=M.bounds({wall(-100,0,2,200),wall(100,0,2,200),wall(0,-100,200,2),wall(0,100,200,2)},20)

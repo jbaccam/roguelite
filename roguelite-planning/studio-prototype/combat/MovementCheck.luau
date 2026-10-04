@@ -16,12 +16,17 @@ local M={
  FALLING=-10, -- studs/s down: falling off a ledge never counts as flying
  OUTSIDE_SECONDS=1, -- outside the arena walls for this long
  SAFE_GAP=6, -- standing (ground within this) is a safe spot to go back to
+ DASH_SECONDS=1.5, -- an approved dash's extra studs count this long (the 1 s window plus lag)
 }
 function M.new(position,t) local s={snaps=0};M.reset(s,position,t);return s end
 -- A fresh start at `position`: a new body, or the server moved it (a revive, a respawn, a snap-back).
 function M.reset(s,position,t)
  s.samples={{t=t,position=position,ok=true}};s.strikes=0;s.airSince=nil;s.outSince=nil;s.safe=position
 end
+-- An approved dash (CharacterStats.Dash; RogueliteMeta stamps DashAt, MovementGuard calls this):
+-- `studs` more pass every speed test for the next DASH_SECONDS. A new dash replaces the old
+-- allowance, never adds to it. Example: air speed 31.9 allows 63.9 studs a window, 89.9 after a dash.
+function M.allow(s,t,studs) s.bonus=math.max(0,studs or 0);s.bonusUntil=t+M.DASH_SECONDS end
 local function flat(a,b) return Vector3.new(a.X-b.X,0,a.Z-b.Z).Magnitude end
 -- One sample. speed: the player's own top speed (studs/s); gap: studs down to the ground (math.huge
 -- over nothing); vy: vertical speed; inside: within the arena's walls. Returns nil, or why the
@@ -34,7 +39,8 @@ function M.step(s,t,position,speed,gap,vy,inside)
  while #samples>2 and t-samples[2].t>=M.WINDOW do table.remove(samples,1) end
  if previous and flat(position,previous.position)>M.TELEPORT then return 'teleport' end
  local first=samples[1];local dt=math.max(t-first.t,.05)
- if flat(position,first.position)>(speed or 16)*M.SPEED_SLACK*dt+M.EXTRA then s.strikes+=1 else s.strikes=0 end
+ local bonus=s.bonusUntil and t<=s.bonusUntil and s.bonus or 0
+ if flat(position,first.position)>(speed or 16)*M.SPEED_SLACK*dt+M.EXTRA+bonus then s.strikes+=1 else s.strikes=0 end
  if s.strikes>=M.STRIKES then return 'speed' end
  if gap>M.FLY_GAP and vy>M.FALLING then s.airSince=s.airSince or t else s.airSince=nil end
  if s.airSince and t-s.airSince>=M.FLY_SECONDS then return 'fly' end

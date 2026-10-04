@@ -3,8 +3,9 @@
 -- rules; this script samples each member 10 times a second.
 -- The server moving a body itself (a revive, a respawn, Play Again, admin travel, a snap-back) sets
 -- the root's CFrame from a script, which fires its CFrame signal and starts the check over there.
--- A client moving its own body never fires it on the server (physics replication doesn't), and no
--- client script in this game moves its own character.
+-- A client moving its own body never fires it on the server (physics replication doesn't). The one
+-- client script that moves its own character is the melee dash (RogueliteCombat.client); the server
+-- approves each one (DashAt) and this check allows its studs (MovementCheck.allow).
 local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')
 local SSS=game:GetService('ServerScriptService')
@@ -42,6 +43,7 @@ combat:GetAttributeChangedSignal('RunMap'):Connect(function() boxMap=nil end)
 
 local states={} -- player -> MovementCheck state, while guarded
 local watched={} -- player -> the root whose CFrame signal is hooked
+local dashSeen={} -- player -> the last DashAt allowed for
 local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.RespectCanCollide=true
 local function refreshFilter()
  local list={workspace:FindFirstChild('RogueliteEnemies')}
@@ -89,6 +91,13 @@ RunService.Heartbeat:Connect(function(dt)
   hook(p,root)
   local s=states[p]
   if not s then states[p]=Check.new(root.Position,now);continue end
+  -- An approved dash (RogueliteMeta RunAction 'Dash' stamps DashAt, server time): Dash.Allowance
+  -- more studs for a moment. Only a fresh stamp counts, once.
+  local dashAt=p:GetAttribute('DashAt')
+  if dashAt~=dashSeen[p] then
+   dashSeen[p]=dashAt
+   if type(dashAt)=='number' and workspace:GetServerTimeNow()-dashAt<1 then Check.allow(s,now,Stats.Dash.Allowance) end
+  end
   -- Their own top speed: the MoveSpeed stat with the air bonus (their own client applies that, so
   -- the server's WalkSpeed never shows it). Held players keep it: the window still holds the running.
   local speed=math.max(h.WalkSpeed,(character:GetAttribute('Stat_MoveSpeed') or 16)*Stats.Movement.AirSpeedMultiplier)
@@ -96,4 +105,4 @@ RunService.Heartbeat:Connect(function(dt)
   if why then snap(p,character,root,s,why) end
  end
 end)
-Players.PlayerRemoving:Connect(function(p) states[p]=nil;watched[p]=nil end)
+Players.PlayerRemoving:Connect(function(p) states[p]=nil;watched[p]=nil;dashSeen[p]=nil end)
