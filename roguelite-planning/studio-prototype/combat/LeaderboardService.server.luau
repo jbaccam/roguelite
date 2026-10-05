@@ -2,7 +2,7 @@
 -- Server authority only. Kills come from the enemy-death hook (credited to LastDamageUserId, real runs only);
 -- the wave counts once a player is alive in that wave's combat; time counts every second in the server.
 -- Saved stats live in their own DataStore so ProfileService is untouched. Studio uses in-memory stats
--- unless Workspace attribute EnableStudioDataStores=true, so Studio play never reaches the real boards;
+-- even if an old place carries EnableStudioDataStores=true, so practice never reaches real boards;
 -- the boards then list the players in the test server.
 -- Per map (plan J item 12, user 2026-10-02: "have the leaderboard cycle through all maps, and have one
 -- for total too. Same with top kills"): kills and the highest wave are also kept per map, each with its
@@ -30,7 +30,7 @@ local STATS={
 }
 local MAPS={};for _,m in Rules.Maps do table.insert(MAPS,{id=m.id,name=m.name}) end
 local TOP=10
-local useStore=not RunService:IsStudio() or workspace:GetAttribute('EnableStudioDataStores')==true
+local useStore=not RunService:IsStudio()
 local store=useStore and DataStores:GetDataStore('RogueliteLeaderboardStats_v1')
 -- Rankings: 'Kills', 'Wave', 'Time' (the totals, as before) and 'Kills/<map>', 'Wave/<map>'.
 local ordered={}

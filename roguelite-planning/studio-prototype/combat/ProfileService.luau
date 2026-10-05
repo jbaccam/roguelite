@@ -3,8 +3,8 @@
 -- Emeralds are the only currency: earned from runs/daily/codes and bought with Robux.
 -- `bought` counts Robux emeralds not yet spent; where paid random items are restricted,
 -- only the earned part (emeralds - bought) can open chests.
--- Studio uses an in-memory profile unless Workspace attribute EnableStudioDataStores=true,
--- so Studio play and simulated purchases never persist.
+-- Studio always uses an in-memory profile: practice and simulated purchases never touch
+-- production saves, even when an old place still carries EnableStudioDataStores=true.
 -- Saves hold a session lock (ProfileLock): only the server that loaded a profile writes it.
 local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')
@@ -19,6 +19,7 @@ local Armor=require(combat:WaitForChild('ArmorCatalog'))
 local Pets=require(combat:WaitForChild('PetConfig')) -- sandboxed data
 local Eggs=require(combat:WaitForChild('EggConfig')) -- pet eggs; unsandboxed data like ChestConfig
 local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed; this module is unsandboxed
+local Journal=require(combat:WaitForChild('WeaponJournal'))
 local Lock=require(game:GetService('ServerScriptService'):WaitForChild('ProfileLock')) -- unsandboxed, like this module
 -- Daily quests, streak and achievements (plans/2026-10-01-H-store-and-quests.md). Optional and
 -- protected: until QuestService is installed, or if it ever errors, quests do nothing and payouts,
@@ -40,7 +41,7 @@ local CODES={
 }
 local P={profiles={},loaded={}}
 local STORE_NAME='RogueliteProfile_v1'
-local useStore=not RunService:IsStudio() or workspace:GetAttribute('EnableStudioDataStores')==true
+local useStore=not RunService:IsStudio()
 local store=useStore and DataStores:GetDataStore(STORE_NAME)
 -- This server's lock id. Studio has no JobId.
 local JOB=game.JobId~='' and game.JobId or Http:GenerateGUID(false)
@@ -65,11 +66,13 @@ local function fresh()
   godlyPick='', -- the Godly weapon name chosen for a pending Godly Starter purchase
   tutorial={step='Run'}, -- first-join tutorial (TutorialConfig.Steps); old saves count as done (P.load)
   freeChestDay=0, -- Money.day() of the last free daily chest (the Wooden Chest)
+  journal=Journal.clean(nil), -- lifetime weapon damage/kills and passive purchases, bounded to known IDs
   quests={}} -- daily quests, streak, lifetime stats, achievements (QuestService.state fills it in)
  for class in d.classes do d.weapons[SIGNATURE[class]]={tier=1,have=0} end
  return d
 end
 local function csv(t,fmt) local out={};for k,v in t do table.insert(out,fmt(k,v)) end;table.sort(out);return table.concat(out,',') end
+local journalDirty={}
 local questDirty={} -- player -> true: quest progress changed since ProfileQuests was last written
 
 function P.publish(player)
@@ -101,6 +104,7 @@ function P.publish(player)
  player:SetAttribute('ProfileSkills',Skills.serialize(d.skills))
  player:SetAttribute('ProfileDaily',Http:JSONEncode(P.dailyView(player)))
  player:SetAttribute('ProfileQuests',Http:JSONEncode(P.questView(player)))
+ player:SetAttribute('ProfileJournal',Http:JSONEncode(Journal.view(d.journal)));journalDirty[player]=nil
  player:SetAttribute('ProfileLoaded',true)
 end
 
@@ -127,8 +131,13 @@ end
 -- live on one server. Saved by the autosave, a hand-off or leaving, like the settings.
 function P.setLoadout(player,class,weapon)
  local d=P.profiles[player]
- if not d or type(class)~='string' or type(weapon)~='string' then return end
+ if not d or not P.loaded[player] then return false,'Your save is still loading' end
+ local w=type(weapon)=='string' and Weapons.ById[weapon]
+ if type(class)~='string' or not d.classes[class] then return false,'Class locked' end
+ if not w or not d.weapons[weapon] then return false,'Weapon not owned' end
+ if not w.godly and not Weapons.inClass(w,class) then return false,'Choose a weapon for your class' end
  d.loadout={class=class,weapon=weapon}
+ return true
 end
 function P.loadout(player)
  local d=P.profiles[player];local l=d and d.loadout
@@ -192,6 +201,7 @@ function P.load(player)
  -- Every owned class owns its starting weapon. Juggler's changed from Boxing Gloves to Rubber Duck
  -- (2026-10-03), so Juggler owners get the duck; anything they already owned is kept.
  for class in data.classes do local id=SIGNATURE[class];if id and not data.weapons[id] then data.weapons[id]={tier=1,have=0} end end
+ data.journal=Journal.clean(data.journal)
  P.profiles[player]=data;P.loaded[player]=true
  applySettings(player,data) -- before ProfileLoaded, so music never starts at the wrong volume
  P.publish(player)
@@ -293,6 +303,7 @@ function P.addDrop(d,id) return P.addCopies(d,id,1) end
 -- Wear the owned piece of `setId` in `slot`, or take it off (setId nil). slot 'All' does every
 -- slot: all owned pieces of the set, or takes everything off.
 function P.wear(player,slot,setId)
+ if player:GetAttribute('LobbyLockedIn')==true then return false,'Unready before changing your armor' end
  local d=P.profiles[player];if not d then return false,'Profile still loading' end
  local set=setId~=nil and Armor.ById[setId]
  if setId~=nil and not set then return false,'Unknown armor' end
@@ -312,6 +323,7 @@ function P.wear(player,slot,setId)
 end
 -- Equip an owned pet (PetConfig id), or put the pet away (id nil). One pet slot.
 function P.equipPet(player,id)
+ if player:GetAttribute('LobbyLockedIn')==true then return false,'Unready before changing your pet' end
  local d=P.profiles[player];if not d then return false,'Profile still loading' end
  if id==nil then
   if d.pet==nil then return false,'No pet equipped' end
@@ -582,6 +594,26 @@ local function publishQuests(player)
  questDirty[player]=nil
  if P.profiles[player] then player:SetAttribute('ProfileQuests',Http:JSONEncode(P.questView(player))) end
 end
+-- Called by server-confirmed combat/shop hooks. Numeric changes only: safe inside their sandbox.
+function P.recordWeaponHit(player,id,damage,lethal)
+ local d=P.profiles[player]
+ if not d or not P.loaded[player] or Admin.isTestRun() or player:GetAttribute('RunMember')~=true then return false end
+ if Journal.hit(d.journal,id,damage,lethal) then journalDirty[player]=true;return true end
+ return false
+end
+function P.recordItemBuy(player,id)
+ local d=P.profiles[player]
+ if not d or not P.loaded[player] or Admin.isTestRun() or player:GetAttribute('RunMember')~=true then return false end
+ if Journal.bought(d.journal,id) then journalDirty[player]=true;return true end
+ return false
+end
+-- No per-hit replication. Wave settlement publishes; returning to the lobby catches up within 2s.
+task.spawn(function() while true do task.wait(2);for p in journalDirty do
+ if p:GetAttribute('RunMember')~=true then
+  local d=P.profiles[p];journalDirty[p]=nil
+  if d then p:SetAttribute('ProfileJournal',Http:JSONEncode(Journal.view(d.journal))) end
+ end
+end end end)
 function P.questEvent(player,stat,n)
  local d=P.profiles[player];if not d or Admin.isTestRun() then return end
  if quest('event',d,Money.day(),player.UserId,stat,n) then questDirty[player]=true end
@@ -739,7 +771,7 @@ local function release(p)
   task.wait(pause);ok=P.save(p,true)
  end
  if not ok and P.loaded[p] then warn('ProfileService: last save failed after 4 tries',p.UserId) end
- P.profiles[p]=nil;P.loaded[p]=nil;releasing[p]=nil;questDirty[p]=nil
+ P.profiles[p]=nil;P.loaded[p]=nil;releasing[p]=nil;questDirty[p]=nil;journalDirty[p]=nil
  releaseCount-=1
 end
 
