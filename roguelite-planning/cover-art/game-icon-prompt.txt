@@ -1,0 +1,29 @@
+# Game icon prompt
+
+Written 2026-10-03. Roblox needs a square game icon, at least 512x512. It shows in Home rows and search and shrinks to about 150x150, which is where it sits next to "Final Swarm" and "Survive The Swarm". Those competitors and most swarm icons are orange and fire coloured, so this one uses blue sky to stand out. It has no text: the title already shows under the icon, and words are unreadable at 150px.
+
+Use case: game icon. Create one square 1:1 Roblox game icon, 1024x1024. Premium stylized 3D game illustration matching the earlier covers: unmistakable blocky Roblox avatar, simple expressive face, chunky bevelled armor, tactile metal.
+
+Close-up: one Roblox samurai in red and black lacquered armor with a gold crescent helmet, framed from the chest up and filling most of the square. He looks STRAIGHT INTO THE CAMERA with a huge open-mouth excited grin, swinging a giant black cast-iron frying pan that comes toward the viewer in the foreground, caught mid-swing.
+
+Behind him: bright blue midday sky and a dense swarm of green blocky zombies in torn brown and muted purple clothes, a few reaching toward him, slightly softened by distance haze so he pops.
+
+Readability: at 150x150 pixels the face and the frying pan must read instantly. Only three things: face, pan, swarm. Strong rim light, high contrast, warm armor against cool blue sky. Fun, no gore, no blood. No text, no letters, no logos, no watermarks.
+
+## Phoenix version (2026-10-03)
+
+The user asked for a Phoenix option. Its tradeoffs:
+- It is all gold and fire, like the orange swarm icons it sits next to.
+- It is Robux-only (Legendary Chest or Blood Phoenix bundle).
+- The real model has a closed beaked mask with glowing eyes, so no grin.
+- On the plus side, it is the most aspirational look in the game.
+
+Roblox has no icon A/B test, so pick between the two using the Dragon vs Phoenix shop thumbnail results from the ads. The frying pan stays, because godly armor swinging a frying pan is the joke.
+
+Use case: game icon. Create one square 1:1 Roblox game icon, 1024x1024. Premium stylized 3D game illustration matching the earlier covers: unmistakable blocky Roblox avatar, chunky bevelled armor, tactile metal.
+
+Close-up: one Roblox avatar in Phoenix armor, framed from the chest up and filling most of the square: a gold bird-head helmet with a short beak and a closed visor with two glowing white eyes, a tall crest of real flames and flame-orange feathers, flaming feather wings rising from both shoulders, gold plates with orange feather trim, a glowing sun emblem on the chest. The glowing eyes stare STRAIGHT INTO THE CAMERA. He swings a giant black cast-iron frying pan that comes toward the viewer in the foreground, caught mid-swing. The plain black pan against the blazing godly armor is the joke.
+
+Behind him: deep clear blue midday sky filling the top half, so the gold and fire never touch other warm colours, and a dense swarm of green blocky zombies in torn brown and muted purple clothes below, slightly softened by distance haze.
+
+Readability: at 150x150 pixels the glowing eyes, the flame silhouette and the frying pan must read instantly. Only three things: hero, pan, swarm. High contrast, warm fire against cool blue sky. Fun, no gore, no blood. No text, no letters, no logos, no watermarks.

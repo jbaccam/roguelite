@@ -1,0 +1,42 @@
+# Shop / floating arsenal cover prompts
+
+Written 2026-10-02 for the ad lineup. Goal: show the core loop no other cover shows. Between waves you buy silly weapons, and each one floats beside you and fights on its own (FLOATING_WEAPON_PRESENTATION.md: the avatar holds nothing, weapons hover at waist-to-chest height in fixed slots). Promotional illustration, not a Studio screenshot.
+
+Armor choice: Dragon Scale is Legendary, drops from normal chests, and its black and red stand out against the gold card. Phoenix is Godly, comes only from the Robux Legendary Chest or the Blood Phoenix bundle, and needs blue sky behind it so its gold doesn't merge with the card. Both versions are generated so the ads can compare them.
+
+## shop-dragon-floating-arsenal-v1.png
+
+Use case: ads-marketing. Create one new polished 16:9 landscape Roblox survivor roguelite cover, 1536x864 or larger 16:9. Match the premium stylized 3D game illustration of the earlier covers: unmistakable blocky Roblox avatars, simple expressive faces, chunky bevelled armor, tactile metal, cinematic dynamic perspective. Bright clear midday sun, blue sky, sunlit pine forest and a ruined gray stone arena.
+
+The idea in one look: between waves you buy silly weapons, and every weapon you buy floats beside you and fights on its own.
+
+Hero: one large Roblox avatar in Dragon Scale armor: charcoal-black plate, dark red scaled chest and skirt, gold trim, curved gold horns and small dragon-head shoulder pads. Open face with a big excited grin, left of center. His hands hold NO weapon. One hand slaps a fistful of glowing blue crystal shards forward like money; the other points at the card he is buying.
+
+Floating arsenal: four weapons hover in a loose half-ring around him at waist-to-chest height, not held by anyone, each tilted as if mid-attack: a black cast-iron frying pan, a pair of red boxing gloves, a yellow rubber duck, and a gray pistol. There is one clear gap in the ring.
+
+Shop: four floating shop cards in front of him on the right, angled toward the camera, dark slate panels with bright lime-green corner accents. Three smaller cards glow by rarity: gray (katana), blue (green fart gun), purple (bowling ball). The fourth card is the biggest and glows gold: a chunky olive-green rocket launcher bursting OUT of the card toward the gap in his ring, trailing gold sparkles. That rocket launcher is the focus of the image.
+
+Background: the last wave was just cleared, with a few blue crystals scattered on the ground. At the far edge of the arena the next wave of green blocky zombies in torn brown and muted purple clothes is gathering. They are small but clearly a huge crowd.
+
+Thumbnail readability: the hero's face, the gold card with the rocket launcher, and the floating weapons must read at 200 pixels wide. Few big shapes, strong contrast, uncluttered middle. Fun, no gore, no blood. No text, no letters, no numbers, no logos, no watermarks.
+
+## shop-phoenix-floating-arsenal-v1.png
+
+Use case: ads-marketing. Create one new polished 16:9 landscape Roblox survivor roguelite cover, 1536x864 or larger 16:9. Match the premium stylized 3D game illustration of the earlier covers: unmistakable blocky Roblox avatars, simple expressive faces, chunky bevelled armor, tactile metal, cinematic dynamic perspective. Bright clear midday sun, blue sky, sunlit pine forest and a ruined gray stone arena.
+
+The idea in one look: between waves you buy silly weapons, and every weapon you buy floats beside you and fights on its own.
+
+Hero: one large Roblox avatar in Phoenix armor: gold and flame-orange feather-shaped plates, a tall crest of flame feathers on the helmet, feather wings at the shoulders, a glowing sun emblem on the chest, a soft fire glow. Open face with a big excited grin, left of center, with clear blue sky directly behind him. His hands hold NO weapon. One hand slaps a fistful of glowing blue crystal shards forward like money; the other points at the card he is buying.
+
+Floating arsenal: four weapons hover in a loose half-ring around him at waist-to-chest height, not held by anyone, each tilted as if mid-attack: a black cast-iron frying pan, a pair of red boxing gloves, a yellow rubber duck, and a gray pistol. There is one clear gap in the ring.
+
+Shop: four floating shop cards in front of him on the right, angled toward the camera, dark slate panels with bright lime-green corner accents. Three smaller cards glow by rarity: gray (katana), blue (green fart gun), purple (bowling ball). The fourth card is the biggest and glows gold: a chunky olive-green rocket launcher bursting OUT of the card toward the gap in his ring, trailing gold sparkles. That rocket launcher is the focus of the image. Keep clear open space between the hero and the gold card so the two golds never touch or merge.
+
+Background: the last wave was just cleared, with a few blue crystals scattered on the ground. At the far edge of the arena the next wave of green blocky zombies in torn brown and muted purple clothes is gathering. They are small but clearly a huge crowd.
+
+Thumbnail readability: the hero's face, the gold card with the rocket launcher, and the floating weapons must read at 200 pixels wide. Few big shapes, strong contrast, uncluttered middle. Fun, no gore, no blood. No text, no letters, no numbers, no logos, no watermarks.
+
+## If it comes out wrong
+- Weapons end up in his hands: add "his hands are empty; the weapons float on their own, nobody holds them".
+- Too busy at phone size: cut the floating weapons to three (frying pan, gloves, duck).
+- Cards unreadable: make the gold card twice the size of the others.

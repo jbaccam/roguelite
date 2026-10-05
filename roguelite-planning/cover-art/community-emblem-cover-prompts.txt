@@ -1,0 +1,23 @@
+# Mog Lab Studio community prompts (2026-10-03)
+
+The Roblox community (group) needs a square emblem and a cover photo of exactly 720x228 or 1440x456 (about 3.2:1). Image generators can't make that shape, so the cover is generated wide and then cropped to 1440x456. Keep everything important in the middle band.
+
+## Emblem (square)
+
+Use case: Roblox community emblem. Square 1:1, 1024x1024. A bold, simple mascot logo that still reads at 64x64 pixels. A chunky, rounded, Roblox-style glass lab flask (Erlenmeyer flask) with a smug, confident face: black sunglasses, one eyebrow raised above them, a sly smirk. Glowing lime-green liquid inside, with a few bubbles rising out of the top. Thick dark outline, clean polished 3D game-logo look. Centered on a solid dark navy circle with a soft lime glow behind the flask. One big shape, no small details. No text, no letters, no watermarks.
+
+## Cover photo v2 (wide banner, cropped to 1440x456 afterwards)
+
+Changed 2026-10-03: the community covers ALL of the studio's games, so the cover is about the name ("mog" + "lab") rather than Wavebreaker. The game shows up only as small easter eggs on the shelves. A lab-coat "mog scientist" mogging a shocked classic noob can become the studio mascot.
+
+Use case: Roblox community cover banner. Generate an extra-wide landscape image (21:9 if possible, otherwise 16:9). It will be cropped to 1440x456, so keep everything important inside the middle horizontal band; the top and bottom quarter will be cut off. Premium stylized 3D Roblox illustration: unmistakable blocky Roblox avatars, simple expressive faces, polished and bright, fun and playful.
+
+Scene: a brightly lit, clean, high-tech game lab in navy and lime: glowing lime-green tubes, bubbling flasks, a big computer screen and lab shelves.
+
+Left half: a big chunky white block-letter title "MOG LAB" with a thick dark outline, and a smaller "STUDIO" right under it.
+
+Right half, the joke: two Roblox characters standing side by side. One is a tall, super confident Roblox scientist in a crisp white lab coat, black sunglasses and slicked hair, arms crossed, chin up, a smug smirk, glowing with a lime-green aura and sparkles, lit like a hero. Next to him stands a much smaller classic Roblox noob (yellow head, blue torso, green legs) staring up at him, comically shocked, jaw dropped, one big sweat drop, holding a tiny test tube that fizzles and puffs a sad little cloud. Funny and friendly, not mean.
+
+Small easter eggs on the shelves: a rubber duck, a black frying pan and a few glowing potion bottles.
+
+Bright rim lighting, strong contrast, navy and lime with warm gold accents. Exactly the words "MOG LAB" and "STUDIO", spelled exactly, no other text, no logos, no watermarks.

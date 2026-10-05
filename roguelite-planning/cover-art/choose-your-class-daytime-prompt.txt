@@ -1,0 +1,40 @@
+# Choose Your Class, daytime remake prompt
+
+Written 2026-10-03 to replace choose-your-class-v2.png in the ad lineup. The user keeps the "CHOOSE YOUR CLASS" text, which beat "6 CLASSES" and "SELECT YOUR CLASS".
+
+What the old image gets wrong at phone size: it's dark purple at night, has six equal-sized heroes so there is no focal point, the faces end up about 25px wide, the silly weapons are small, and dark blurry silhouettes sit in the foreground.
+
+Competitors ("Survive The Swarm", "Final Swarm") show one avatar with one giant monster in orange and fire colours. This image competes on what they lack: a choice of class, silly signature weapons, and bright daylight.
+
+Thumbnail rules applied:
+1. Faces first: the center hero makes eye contact and has a big open-mouth grin.
+2. One focal point: the center hero is clearly biggest.
+3. Contrast: warm armor against a blue sky.
+4. Stand out in a row of orange icons: daylight.
+5. Surprise: serious armor with silly weapons.
+6. Frozen action: the frying pan is mid-swing.
+7. Arms and weapons point inward to the center.
+8. Clean foreground.
+9. Three huge words.
+
+Use case: ads-marketing. Create one new polished 16:9 landscape Roblox survivor roguelite cover, 1536x864 or larger 16:9. Match the premium stylized 3D game illustration of the earlier covers: unmistakable blocky Roblox avatars, simple expressive faces, chunky bevelled armor, tactile metal, cinematic dynamic perspective. Bright clear midday sun, blue sky, sunlit pine forest and a ruined gray stone arena.
+
+Title text at the top center: "CHOOSE YOUR CLASS" in huge chunky white block letters with a thick dark outline. Exactly those three words, spelled exactly, nothing else written anywhere.
+
+Six Roblox heroes in a V formation, camera close so they are framed from about the knees up and their faces are large. The middle hero is in front and clearly the biggest; the others step back and get smaller toward the sides, turned slightly toward the center so their weapons and arms point inward at him.
+- Center, biggest: samurai in red and black lacquered armor with a gold crescent helmet, looking STRAIGHT INTO THE CAMERA with a huge open-mouth excited grin, swinging a giant black cast-iron frying pan toward the viewer, caught mid-swing.
+- Left of center: Viking in blue tunic, fur collar and horned helmet, firing a bright green toy-like fart gun that puffs a big green cloud.
+- Right of center: Spartan in gold armor with a red crest, wearing two huge red boxing gloves, one fist punching.
+- Far left: ninja in navy with a red headband, mid-throw of a big wooden boomerang with a white stripe.
+- Far right: knight in steel plate pushing a big upright vacuum cleaner like a weapon.
+- Back left: mage in black and red Dragon Scale armor with gold horns, raising a magic staff topped with a glowing blue crystal.
+Every face is visible and grinning, with no full-face helmets. Every weapon is oversized, about as big as the hero's torso, so it reads at thumbnail size.
+
+Behind them, a huge swarm of green blocky zombies in torn brown and muted purple clothes pours into the arena from both sides and the back, slightly softened by distance haze so the heroes pop in front. Nothing dark or blurry sits in the foreground; the ground in front of the heroes is bright and clean.
+
+Thumbnail readability: at 200 pixels wide the center face, the frying pan and the title must read instantly, and the other five heroes and weapons should still be recognizable. Bright rim light separates the heroes from the swarm. Strong contrast. Fun comic peril, no gore, no blood. No other text, no logos, no watermarks.
+
+## If it comes out wrong
+- Text misspelled: regenerate, or ask for no text and add "CHOOSE YOUR CLASS" yourself in an image editor.
+- Too busy at phone size: drop the far-left and far-right heroes.
+- Center hero not dominant: add "the center samurai is twice the size of the others".
