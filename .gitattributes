@@ -25,3 +25,5 @@ character-assets/**/*.zip filter=lfs diff=lfs merge=lfs -text
 roguelite-planning/**/*.fbx filter=lfs diff=lfs merge=lfs -text
 roguelite-planning/**/*.glb filter=lfs diff=lfs merge=lfs -text
 roguelite-planning/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+roguelite-planning/**/*.webp filter=lfs diff=lfs merge=lfs -text
+output/dungeon-concepts/*.png filter=lfs diff=lfs merge=lfs -text

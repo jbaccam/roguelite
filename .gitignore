@@ -73,3 +73,7 @@ roguelite-planning/**/render/**/*.fbm/
 
 # Roblox Studio 3D Importer extracts embedded FBX textures next to the file (duplicates of textures/).
 *.fbm/
+
+# Local browser captures and private player-save recovery copies.
+.playwright-mcp/
+output/profile-backups/
