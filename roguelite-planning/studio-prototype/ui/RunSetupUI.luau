@@ -1,8 +1,8 @@
 -- Full-screen run setup: MAP (ladder, difficulty, wave track, rewards) then CLASS (class cards,
 -- starting weapon), over the chosen map's blurred mini island (MapSelectBackdrop). Opened by PLAY,
--- LOADOUT and stepping onto a portal pad. Presentation and requests only: the lobby server
+-- the Armory class picker and stepping onto a portal pad. Presentation and requests only: the lobby server
 -- validates map, difficulty, class and weapon (RunSetupRules) before starting.
--- Modes: Play -> START (server claims a free pad), Host -> START, Member -> READY, Loadout -> CONFIRM.
+-- Modes: Play/Host -> READY UP, Member -> READY UP / UNREADY, Loadout -> SAVE CLASS.
 local RS=game:GetService('ReplicatedStorage')
 local Lighting=game:GetService('Lighting')
 local Input=game:GetService('UserInputService')
@@ -39,26 +39,17 @@ function M.tileParts(S)
  local p=S>=110 and 7 or S>=90 and 5 or 3;local bar=S>=110 and 14 or S>=90 and 8 or 6
  return p,bar,S-2*p-bar-2
 end
--- The biggest owned tile S (at most maxS) that fits o owned and u NOT OWNED tiles in W x H page px
--- with gap g, never scrolling. NOT OWNED tiles first try their own smaller rows (3/4 of S, at least
--- lockedMin) under the owned ones, else every tile shares one grid. Rows are balanced: 17 in 3 rows
--- is 6, 6, 5. Returns {S, s (NOT OWNED size), cols, rows, colsL, rowsL, split, group, w, h}.
--- Example: desktop 600 x 338, gap 10, 8 owned + 3 not owned -> owned 113 (4 x 2), not owned 84 (3 x 1);
--- with 6 owned Godlies too (14 + 3) -> one grid of 91 (6, 6, 5).
+-- One balanced grid for the whole class. Ownership changes the tile's treatment, never its
+-- footprint: one owned pan should sit beside the other starters, not above a bank of tiny locks.
+-- Returns the old shape for callers, with split=false and identical owned/locked sizes.
 function M.weaponTiles(o,u,W,H,g,maxS,lockedMin)
  local function grid(n,S)
   if n<=0 then return 0,0,0,0 end
   local most=math.max(1,math.floor((W+g)/(S+g)));local rows=math.ceil(n/most);local cols=math.ceil(n/rows)
   return cols,rows,cols*S+(cols-1)*g,rows*S+(rows-1)*g
  end
- local group=g+6 -- between the owned rows and the NOT OWNED rows
  local S=math.floor(maxS)
  while S>24 do
-  local s=math.min(S-1,math.max(math.floor(S*.75),lockedMin or 0))
-  if o>0 and u>0 and s>=24 then
-   local cO,rO,wO,hO=grid(o,S);local cL,rL,wL,hL=grid(u,s)
-   if wO<=W and wL<=W and hO+group+hL<=H then return {S=S,s=s,cols=cO,rows=rO,colsL=cL,rowsL=rL,split=true,group=group,w=math.max(wO,wL),h=hO+group+hL} end
-  end
   local c,r,w,h=grid(o+u,S)
   if w<=W and h<=H then return {S=S,s=S,cols=c,rows=r,split=false,w=w,h=h} end
   S-=1
@@ -72,6 +63,7 @@ end
 function M.new(player,opts)
  local self={mode=nil,step=nil}
  local sel=opts.selection
+ local starters={} -- keep each browsed class's chosen starter; tapping the same class never clears it
  local setupRemote=workspace:WaitForChild('RogueliteLobby'):WaitForChild('RunSetup')
  local screen=T.make('ScreenGui',player:WaitForChild('PlayerGui'),{Name='RunSetup',ResetOnSpawn=false,DisplayOrder=60,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,Enabled=false,
   -- Content stays out of phone notches and rounded corners; the shade reaches under them.
@@ -113,12 +105,14 @@ function M.new(player,opts)
  end
  function self.Close()
   if not screen.Enabled then return end
+  local closedMode=self.mode
   screen.Enabled=false;self.mode=nil;self.step=nil;primary=nil
   if root then root:Destroy() end
   root,cv,cvScale,canvas,G=nil,nil,nil,nil,nil
   T.hideTouchControls('RunSetup',false)
   if blur then blur:Destroy();blur=nil end
   Backdrop.Hide()
+  if opts.onClose then opts.onClose(closedMode) end
  end
  -- The map's island behind the screen, with a lighter shade so it reads; a plain blur and the
  -- dark shade when the islands are not installed.
@@ -237,7 +231,7 @@ function M.new(player,opts)
  local function drawClass()
   local mode=self.mode
   local cp=G.compact;local hx=G.corner;local hw=CW-2*hx -- top rows clear of the top-bar corners
-  T.label(canvas,'Step','CHOOSE YOUR CLASS',hx,cp and 4 or 18,hw,cp and 36 or 42,cp and 30 or 38)
+  T.label(canvas,'Step',mode=='Loadout' and 'ARMORY · CHOOSE CLASS' or 'CONFIRM CLASS & STARTER',hx,cp and 4 or 18,hw,cp and 36 or 42,cp and 30 or 38)
   local mapText,mapIndex=nil,sel.map
   if mode=='Member' then
    local portal=myPortal();local id=opts.hostMap();mapIndex=id and Rules.MapIndex[id] or sel.map
@@ -253,7 +247,9 @@ function M.new(player,opts)
     task.spawn(function()
      while chip.Parent do
       local portal=myPortal();local at=portal and portal:GetAttribute('LaunchAt')
-      chip.Text=type(at)=='number' and base..'  ·  STARTING IN '..math.max(0,math.ceil(at-workspace:GetServerTimeNow())) or base
+      local picking=portal and portal:GetAttribute('Picking') or 0
+      local count=portal and portal:GetAttribute('QueueCount') or 0
+      chip.Text=type(at)=='number' and base..'  ·  STARTING IN '..math.max(0,math.ceil(at-workspace:GetServerTimeNow())) or base..(portal and portal:GetAttribute('MapId') and ('  ·  READY %d / %d'):format(count-picking,count) or '')
       task.wait(.25)
      end
     end)
@@ -277,8 +273,7 @@ function M.new(player,opts)
   -- the six class cards in one short row under the title, then details and weapons side by side;
   -- the weapons get the width their tiles need, the details at least 300.
   -- Example: 889x500 page (667x375 phone, 58 px top bar): cards 136 x 46, details 303, 17 weapons
-  -- 6 x 3 at 85 px (icons 53 screen px). The tightest, 1066x480 (800x360): owned 81 px (7 x 2) and
-  -- NOT OWNED 73 px (3 x 1), icons 50 and 49 screen px.
+  -- 6 x 3 at 85 px (icons 53 screen px). Owned and locked starters always share the same grid.
   local cw,ch,cgap,cardsAt,cardsIn -- class card size, gap, position of card n, its parent
   local infoX,infoY,infoW,infoH,wx,wy,ww,tiles,tgap,headH,gridY
   if not cp then
@@ -306,7 +301,11 @@ function M.new(player,opts)
   for k,c in order do
    local cOwned=profile.classes[c]==true;local selected=class==c
    local x,y=cardsAt(k)
-   local card=T.button(cardsIn,'Class_'..c,'',x,y,cw,ch,function() sel.class=c;sel.weapon=nil;draw() end,not selected)
+   local card=T.button(cardsIn,'Class_'..c,'',x,y,cw,ch,function()
+    if sel.class~=c then starters[sel.class]=sel.weapon;sel.class=c;sel.weapon=starters[c] end
+    draw()
+   end,not selected)
+   card.Interactable=not (mode=='Member' and player:GetAttribute('LobbyLockedIn')==true)
    card.Caption.Visible=false
    -- Weapon fit badge: damage with this class's weapons when you play the picked class
    -- (CharacterStats.ClassFit). DMG with the number (2026-10-03: a bare "-5%" read like a discount);
@@ -398,7 +397,7 @@ function M.new(player,opts)
   end
   -- Starting weapons (2026-10-04, no scrolling): every tile shows at once (M.weaponTiles), the block
   -- centred under its heading. Owned: icon, tier badge and upgrade bar; the pick is the lime tile.
-  -- NOT OWNED: a dim well with a padlock, in its own smaller rows when they fit. Names: the pick's
+  -- NOT OWNED: a dim well with a padlock, sharing the same rows and size. Names: the pick's
   -- beside the heading; hovering, gamepad-selecting or tapping a tile shows that one's instead.
   local bx=wx+math.floor((ww-tiles.w)/2)
   local gridIn=T.frame(canvas,'Weapons',bx,gridY,tiles.w,tiles.h)
@@ -406,6 +405,7 @@ function M.new(player,opts)
   local headW=math.ceil(TextService:GetTextSize(head,hs,T.Font,Vector2.new(1000,100)).X*1.12)+6
   T.label(canvas,'WeaponTitle',head,bx,wy,headW,headH,hs).TextXAlignment=Enum.TextXAlignment.Left
   local nameL=T.label(canvas,'WeaponName','',bx+headW+10,wy,math.max(80,wx+ww-(bx+headW+10)),headH,hs-4,C.lime);nameL.TextXAlignment=Enum.TextXAlignment.Left
+  nameL.TextWrapped=false;nameL.TextTruncate=Enum.TextTruncate.AtEnd
   -- The pick, if it is an owned starter for this class; else the class's signature weapon (a
   -- saved Handyman Nail Gun opened as a Mage shows the Magic Staff). The server checks it again.
   local pick=Rules.Signature[class];local pickW
@@ -418,17 +418,14 @@ function M.new(player,opts)
    nameL.TextColor3=locked and C.dim or w==pickW and C.lime or C.white
   end
   showName()
-  local S,s,g=tiles.S,tiles.s,tgap
+  local S,g=tiles.S,tgap
   for k,wpn in list do
    local rec=profile.weapons[wpn.id];local canPick=owned and rec~=nil;local selected=canPick and pick==wpn.id
    local size,x,y=S,((k-1)%tiles.cols)*(S+g),math.floor((k-1)/tiles.cols)*(S+g)
-   if tiles.split and not rec then
-    local j=k-nOwned;size=s
-    x=((j-1)%tiles.colsL)*(s+g);y=tiles.rows*(S+g)-g+tiles.group+math.floor((j-1)/tiles.colsL)*(s+g)
-   end
    local c
    if rec then
     c=T.button(gridIn,'Weapon_'..wpn.id,'',x,y,size,size,function() if canPick then sel.weapon=wpn.id;draw() end end,not selected)
+    c.Interactable=not (mode=='Member' and player:GetAttribute('LobbyLockedIn')==true)
     c.Caption.Visible=false
     if not selected then T.setTier(c,rec.tier) end
     local p,barH,is=M.tileParts(size)
@@ -443,7 +440,7 @@ function M.new(player,opts)
     T.panel(c,'Well',0,0,size,size,'inset')
     local p=size>=90 and 6 or 4
     local art=T.icon(c,'Icon',p,p,size-2*p,WeaponIcons[wpn.id]);art.ImageTransparency=.55;art.ImageColor3=Color3.fromRGB(150,150,150);art.ZIndex=2
-    local ls=math.clamp(math.floor(size*.26),16,26);M.lock(c,size-ls-3,3,ls)
+    local ls=math.clamp(math.floor(size*.26),16,26);M.lock(c,3,3,ls)
     c.Activated:Connect(function() showName(wpn) end) -- touch has no hover: a tap names it
    end
    c:SetAttribute('Owned',rec~=nil)
@@ -455,21 +452,22 @@ function M.new(player,opts)
   -- private"). sel.solo still carries it. Compact: bottom-left, with BACK / START right of it.
   local tabs=mode=='Host' or mode=='Play'
   if tabs then T.tabs(canvas,cp and 16 or 95,cp and CH-60 or 636,cp and 240 or 260,cp and 54 or 62,{'Open','Private'},sel.solo and 'Private' or 'Open',function(id) sel.solo=id=='Private';draw() end) end
-  -- LOCK IN, not READY: a member's button only confirms their class and weapon; there is no ready
-  -- check, the run starts when the host's countdown ends (2026-10-03: "are we readied up?").
-  local labels={Play='START',Host='START',Member='LOCK IN',Loadout='CONFIRM'}
+  local locked=mode=='Member' and player:GetAttribute('LobbyLockedIn')==true
+  local portal=mode=='Member' and myPortal()
+  local mapReady=mode~='Member' or (portal~=nil and portal:GetAttribute('MapId')~=nil)
+  local labels={Play='READY UP',Host='READY UP',Member=locked and 'UNREADY' or mapReady and 'READY UP' or 'WAIT FOR HOST',Loadout='SAVE CLASS'}
   local weaponOwned=profile.weapons[pick]~=nil
   local back=(mode=='Play' or mode=='Host') and function() self.step='Map';draw() end or self.Close
   local _,go=buttons((mode=='Play' or mode=='Host') and 'BACK' or 'CLOSE',back,owned and labels[mode] or 'LOCKED',function()
-   player:SetAttribute('LoadoutClass',class);player:SetAttribute('LoadoutWeapon',pick)
+   if locked then setupRemote:FireServer('Unready');return end
    if mode=='Play' or mode=='Host' then
     player:SetAttribute('LobbyMap',Rules.Maps[sel.map].id)
     -- LobbyUI won't reopen this screen when the server puts this player on the pad it just started.
     self.startedAt=os.clock()
     setupRemote:FireServer(mode=='Play' and 'Play' or 'Start',Rules.Maps[sel.map].id,class,pick,sel.solo==true,sel.difficulty)
    elseif mode=='Member' then setupRemote:FireServer('Ready',class,pick)
-   else setupRemote:FireServer('Loadout',class,pick);self.Close() end
-  end,owned and weaponOwned,cp and tabs and 272 or nil)
+   else setupRemote:FireServer('Loadout',class,pick) end
+  end,locked or (owned and weaponOwned and mapReady and player:GetAttribute('ProfileLoaded')==true),cp and tabs and 272 or nil)
  end
 
  draw=function()
@@ -497,6 +495,10 @@ function M.new(player,opts)
  end
  function self.Open(mode)
   profile=opts.profile()
+  -- Once already readied, always show the exact server-confirmed class and weapon.
+  if mode=='Member' and player:GetAttribute('LobbyLockedIn')==true then
+   sel.class=player:GetAttribute('RunClass') or sel.class;sel.weapon=player:GetAttribute('RunWeapon') or sel.weapon
+  end
   if not Rules.mapUnlocked(profile.wins,sel.map) then sel.map=1 end
   sel.difficulty=sel.difficulty or 'Normal'
   if not Rules.difficultyUnlocked(profile.wins,sel.map,sel.difficulty) then sel.difficulty='Normal' end
@@ -522,12 +524,23 @@ function M.new(player,opts)
   end
  end
  function self.Refresh() if screen.Enabled then profile=opts.profile();draw() end end
+ function self.FocusClass(class)
+  if not Stats.Classes[class] then return end
+  if sel.class~=class then
+   starters[sel.class]=sel.weapon;sel.class=class;sel.weapon=starters[class] or Rules.Signature[class]
+  end
+  self.Refresh()
+ end
  function self.IsOpen() return screen.Enabled end
- setupRemote.OnClientEvent:Connect(function(kind,ok,message)
+ setupRemote.OnClientEvent:Connect(function(kind,ok,message,action)
   if kind~='Result' then return end
   if type(message)=='string' then T.toast(screen.Enabled and screen or opts.toastScreen,message,ok and C.lime or C.negative) end
-  if ok and (self.mode=='Host' or self.mode=='Member' or self.mode=='Play') then self.Close() end
+  if ok then
+   if action=='Unready' then self.Refresh()
+   elseif self.mode=='Host' or self.mode=='Member' or self.mode=='Play' or self.mode=='Loadout' then self.Close() end
+  end
  end)
+ player:GetAttributeChangedSignal('LobbyLockedIn'):Connect(function() if self.mode=='Member' then self.Refresh() end end)
  Input.InputBegan:Connect(function(input,processed)
   if not screen.Enabled or Input:GetFocusedTextBox() or GuiService.MenuIsOpen then return end
   local key=input.KeyCode

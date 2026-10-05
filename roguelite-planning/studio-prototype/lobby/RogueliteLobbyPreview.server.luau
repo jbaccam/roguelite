@@ -131,9 +131,12 @@ local function publish()
   portal:SetAttribute('QueueCount',n);portal:SetAttribute('Capacity',cap);portal:SetAttribute('QueueState',phase)
   portal:SetAttribute('LaunchAt',q.launchAt);portal:SetAttribute('HostId',q.host);portal:SetAttribute('MapId',q.map);portal:SetAttribute('Solo',q.solo)
   portal:SetAttribute('Difficulty',q.difficulty)
-  -- How many on the pad still have to lock in a class (the banner says so; QueueState waits for them).
+  -- Readiness and membership are server-owned, so all clients draw the same named roster.
   portal:SetAttribute('Picking',n>0 and state:picking(index) or nil)
-  local text=phase=='Launching' and 'Entering...' or phase=='Counting' and string.format('Starting in %ds',math.max(0,math.ceil(q.launchAt-now())))
+  local members,ready={},{}
+  for _,id in q.members do table.insert(members,tostring(id));if q.picked[id] then table.insert(ready,tostring(id)) end end
+  portal:SetAttribute('Members',table.concat(members,','));portal:SetAttribute('ReadyMembers',table.concat(ready,','))
+  local text=phase=='Launching' and 'Entering...' or phase=='Counting' and (q.launchAt and string.format('Starting in %ds',math.max(0,math.ceil(q.launchAt-now()))) or ('Ready %d / %d'):format(n-state:picking(index),n))
    or phase=='Choosing' and nameOf(q.host)..' is choosing' or ''
   local mapIndex=q.map and Rules.MapIndex[q.map]
   local diffText=q.difficulty and q.difficulty~='Normal' and '  ·  '..string.upper(q.difficulty) or ''
@@ -197,6 +200,10 @@ local function pullParty(player,index,note)
   if not p or state.membership[id] or travelling[p] or p:GetAttribute('MapTravelPending') or stepOff[p]==index then continue end
   local char,hrp=alive(p)
   if not (hrp and inLobby(hrp)) then continue end
+  if q.map then
+   local ok,why=Rules.validMap(p,q.map,q.difficulty)
+   if not ok then partyRemote:FireClient(p,'Result',false,why);continue end
+  end
   if state:join(id,index,now()) then
    local a=math.random()*math.pi*2
    char:PivotTo(CFrame.new(pad.center+Vector3.new(math.cos(a)*3,3.5,math.sin(a)*3))*(hrp.CFrame-hrp.Position))
@@ -334,19 +341,50 @@ end)
 -- A class and starter that passed Rules.validLoadout: this server's run uses them, and the profile
 -- keeps them for the next lobby (ProfileService.setLoadout).
 local function pick(player,class,weapon)
+ local ok,why=Profiles.setLoadout(player,class,weapon)
+ if not ok then return false,why end
  player:SetAttribute('RunClass',class);player:SetAttribute('RunWeapon',weapon)
- Profiles.setLoadout(player,class,weapon)
+ player:SetAttribute('LoadoutClass',class);player:SetAttribute('LoadoutWeapon',weapon)
+ return true
 end
 setupRemote.OnServerEvent:Connect(function(player,action,a,b,c,d,e)
- if os.clock()-(last[player] or -math.huge)<.3 then return end
+ -- Withdrawing consent must work even immediately after a Ready click.
+ if action~='Unready' and os.clock()-(last[player] or -math.huge)<.3 then return end
  last[player]=os.clock()
  local index=state.membership[player.UserId]
- local function reply(ok,message) setupRemote:FireClient(player,'Result',ok,message) end
+ local function reply(ok,message) setupRemote:FireClient(player,'Result',ok,message,action) end
+ if index and state.queues[index].locked then return reply(false,'The portal is already leaving') end
+ if travelling[player] or player:GetAttribute('MapTravelPending') then return reply(false,'Travel is already in progress') end
  if action=='Start' or action=='Play' then
   -- Lobby servers send parties to match servers (MatchService); Studio can't teleport.
   if Role.get()=='Lobby' and RunService:IsStudio() then return reply(false,'Runs start in the published game. Use the combined Studio mode to play here') end
   local mapOk,mapWhy=Rules.validMap(player,a,e);if not mapOk then return reply(false,mapWhy) end
   local okL,why=Rules.validLoadout(player,b,c);if not okL then return reply(false,why) end
+  -- Refuse the whole selection if any queued or invited party member is ineligible; never
+  -- silently load only the progressed members and strand the rest in the lobby.
+  local check={};if index then for _,id in state.queues[index].members do check[id]=true end end
+  for _,id in parties:members(player.UserId) do check[id]=true end
+  local partyIds=parties:members(player.UserId)
+  for _,id in partyIds do
+   local member=Players:GetPlayerByUserId(id)
+   local hrp
+   if member then local _,rootPart=alive(member);hrp=rootPart end
+   if not member or not hrp or not inLobby(hrp) or travelling[member] or member:GetAttribute('MapTravelPending') then
+    return reply(false,(member and member.DisplayName or 'A party member')..' needs to return to the lobby first')
+   end
+   local other=state.membership[id]
+   if other and other~=index then return reply(false,member.DisplayName..' is already on another portal') end
+   if index and stepOff[member]==index then return reply(false,member.DisplayName..' needs to rejoin this portal or leave the party') end
+  end
+  local size=0;for _ in check do size+=1 end
+  if size>CAPACITY then return reply(false,'This portal does not have room for your whole party') end
+  for id in check do
+   local member=Players:GetPlayerByUserId(id)
+   if member then
+    local ok,reason=Rules.validMap(member,a,e)
+    if not ok then return reply(false,member.DisplayName..': '..reason) end
+   end
+  end
   -- PLAY away from the pads: take the first empty pad and stand the player on it as host.
   if not index and action=='Play' then
    local char,hrp=alive(player)
@@ -361,27 +399,36 @@ setupRemote.OnServerEvent:Connect(function(player,action,a,b,c,d,e)
   -- d: Private (only this player's party may join; just them when not in one), else Open.
   local allow={};for _,id in parties:members(player.UserId) do allow[id]=true end
   if not state:start(player.UserId,index,now(),a,d==true,e,allow) then return reply(false,d==true and 'Private needs a pad with only you and your party on it' or 'Only the host can start') end
-  pick(player,b,c);setQueue(player) -- START is the host's lock-in (QueueState.start)
+  local picked,pickWhy=pick(player,b,c)
+  if not picked then state:cancelLaunch(index,now());publish();return reply(false,pickWhy) end
+  for _,id in state.queues[index].members do local p=Players:GetPlayerByUserId(id);if p then setQueue(p) end end
   -- The party comes along (Open or Private; a Private pad holds exactly the party).
   pullParty(player,index)
   local q=state.queues[index]
-  publish();reply(true,('Starting in %ds'):format(math.max(1,math.ceil((q.launchAt or now())-now()))))
+  publish();reply(true,q.launchAt and ('Starting in %ds'):format(math.max(1,math.ceil(q.launchAt-now()))) or 'Map selected. Everyone must choose a loadout and ready up')
  elseif action=='Ready' then
   if not index then return reply(false,'Step onto a portal pad first') end
   local q=state.queues[index]
-  if q.map then local mapOk,mapWhy=Rules.validMap(player,q.map,q.difficulty);if not mapOk then return reply(false,mapWhy) end end
+  if not q.map or q.phase~='Counting' then return reply(false,'Wait for the host to choose a map first') end
+  local mapOk,mapWhy=Rules.validMap(player,q.map,q.difficulty);if not mapOk then return reply(false,mapWhy) end
   local okL,why=Rules.validLoadout(player,a,b);if not okL then return reply(false,why) end
-  pick(player,a,b)
+  local picked,pickWhy=pick(player,a,b);if not picked then return reply(false,pickWhy) end
   -- Locked in: the countdown stops waiting for this player (QueueState.lockIn), and the run uses
   -- this class and starter (launch reads RunClass / RunWeapon; the match server re-checks them).
-  state:lockIn(player.UserId,now());setQueue(player);publish()
+  if not state:lockIn(player.UserId,now()) then return reply(false,'The portal is already leaving') end
+  setQueue(player);publish()
   -- What happens next, not just "Ready" (2026-10-03: "are we readied up and is it gonna start").
-  reply(true,q.launchAt and ('Locked in as %s. Starting in %ds'):format(a,math.max(1,math.ceil(q.launchAt-now()))) or ('Locked in as %s. Waiting for the host to start'):format(a))
+  reply(true,q.launchAt and ('Ready as %s. Starting in %ds'):format(a,math.max(1,math.ceil(q.launchAt-now()))) or ('Ready as %s. Waiting for everyone to ready up'):format(a))
+ elseif action=='Unready' then
+  if not index or not state:unready(player.UserId,now()) then return reply(false,'The portal is already leaving') end
+  setQueue(player);publish();reply(true,'Not ready. Choose your loadout, then ready up')
  elseif action=='Loadout' then
   -- The ring shows the new starter at once (RogueliteCombat). Silent on success.
   if not player:GetAttribute('LobbyPreviewActive') then return reply(false,'Change your loadout in the lobby') end
   local okL,why=Rules.validLoadout(player,a,b);if not okL then return reply(false,why) end
-  pick(player,a,b)
+  local picked,pickWhy=pick(player,a,b);if not picked then return reply(false,pickWhy) end
+  if index then state:unready(player.UserId,now());setQueue(player);publish() end
+  reply(true,'Loadout saved')
  end
 end)
 local function launch(index)
@@ -390,13 +437,32 @@ local function launch(index)
  for _,s in pad.strokes do TweenService:Create(s,TweenInfo.new(.3,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,3,true),{Transparency=.5}):Play() end
  task.wait(1.2)
  local q=state.queues[index]
- local going={}
+ local going={};local failure
  for _,id in q.members do
   local p=Players:GetPlayerByUserId(id)
   -- Everyone on the pad needs this map and difficulty unlocked themselves.
   local ok,why=true,nil;if p then ok,why=Rules.validMap(p,q.map,q.difficulty) end
-  if p and alive(p) and ok then going[p]=true
-  elseif p and not ok then setupRemote:FireClient(p,'Result',false,why) end
+  local loadoutOk,loadoutWhy=false,nil
+  if p then loadoutOk,loadoutWhy=Rules.validLoadout(p,p:GetAttribute('RunClass'),p:GetAttribute('RunWeapon')) end
+  if p and alive(p) and ok and loadoutOk and q.picked[id] then going[p]=true
+  else failure=p and (p.DisplayName..': '..(why or loadoutWhy or 'Please ready up again')) or 'A player left the portal';break end
+  -- An invite accepted after START can grow a party. Do not strand the new member if they
+  -- could not join this map (or stepped off); the whole party must still be on this portal.
+  for _,partyId in parties:members(id) do
+   if state.membership[partyId]~=index then
+    failure=nameOf(partyId)..' must join this portal or leave the party before the run starts';break
+   end
+  end
+  if failure then break end
+ end
+ if failure then
+  state:cancelLaunch(index,now())
+  local members=table.clone(q.members)
+  for _,id in members do
+   local p=Players:GetPlayerByUserId(id)
+   if p then setQueue(p);setupRemote:FireClient(p,'Result',false,failure) else state:leave(id,now()) end
+  end
+  publish();return
  end
  -- Lobby servers: the group gets its own match server. Each member's loadout is checked again
  -- here and once more against their own save on the match server.
@@ -410,9 +476,7 @@ local function launch(index)
   local list,loadouts={},{}
   for p in going do
    local class,weapon=p:GetAttribute('RunClass'),p:GetAttribute('RunWeapon')
-   -- A weapon that changed class (2026-10-03) falls back to that class's starter first.
-   if not Rules.validLoadout(p,class,weapon) and Rules.validLoadout(p,class,Rules.Signature[class]) then weapon=Rules.Signature[class] end
-   if not Rules.validLoadout(p,class,weapon) then class='Brawler';weapon=Rules.Signature.Brawler end
+   -- Final validation above succeeded for every member. Use exactly what each locked in.
    loadouts[p.UserId]={class=class,weapon=weapon}
    table.insert(list,p);travelling[p]=true;setQueue(p)
   end
@@ -521,7 +585,10 @@ RunService.Heartbeat:Connect(function(dt)
   if index and not lobby then leave(p);index=nil
   elseif index and pads[index] and not nearPad(hrp,pads[index]) then char:PivotTo(CFrame.new(pads[index].center+Vector3.new(0,3.5,0))*(hrp.CFrame-hrp.Position)) end
   if under and not index and stepOff[p]~=under then
-   if state:join(p.UserId,under,now()) then setQueue(p);pullParty(p,under)
+   local q=state.queues[under]
+   local eligible,reason=true,nil;if q.map then eligible,reason=Rules.validMap(p,q.map,q.difficulty) end
+   if not eligible then stepOff[p]=under;setupRemote:FireClient(p,'Result',false,reason)
+   elseif state:join(p.UserId,under,now()) then setQueue(p);pullParty(p,under)
    elseif state.queues[under].solo then
     -- Someone else's Private pad: say so once (stepOff holds until they walk off).
     stepOff[p]=under;setupRemote:FireClient(p,'Result',false,'That portal is private')

@@ -33,7 +33,7 @@ local BLEND = 0.55
 local SHOWCASE_SIZE = 3.6 -- longest side of the showcased weapon, studs
 local SHOWCASE_HEIGHT = 3.7 -- above the dais top
 local SPIN = math.rad(38) -- degrees per second
-local FLOAT_OFFSET = Vector3.new(-2.3, 3.6, 0.2) -- starting weapon beside the avatar (screen right)
+local FLOAT_CLEARANCE = 0.45 -- visible gap between the avatar and its separate weapon display
 
 -- Real weapon models on the hall's holders, from blender-armory-backdrop/build_armory.py DISPLAY
 -- (armory-report.json weapon_slots_studio), relative to the dais top centre. `dir` is where the
@@ -67,6 +67,8 @@ local saved, dimTween
 local view, fromView, blendStart = "hero", "hero", 0
 local yaw = 0 -- avatar turntable (drag to spin)
 local spinStart = os.clock()
+local avatarBounds = Vector3.new(4, 5.5, 2)
+local avatarCentre = Vector3.new(0, 2.75, 0)
 
 local function source()
 	return RS:FindFirstChild("ArmoryBackdrop")
@@ -136,6 +138,9 @@ local function buildAvatar()
 		lift = 3
 	end
 	avatar:SetAttribute("Lift", lift)
+	local box, size = copy:GetBoundingBox()
+	avatarBounds = size
+	avatarCentre = root.CFrame:PointToObjectSpace(box.Position) + Vector3.new(0, lift, 0)
 	local animator = humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", humanoid)
 	local animate = character:FindFirstChild("Animate")
 	local idle = animate and animate:FindFirstChild("idle") and animate.idle:FindFirstChildOfClass("Animation")
@@ -191,12 +196,16 @@ local function display(weaponId, size)
 		box, extents = m:GetBoundingBox()
 		centre = pivot:PointToObjectSpace(box.Position)
 	end
+	-- A PrimaryPart overrides WorldPivot. Clear it before recentering, otherwise some guns rotate
+	-- and scale around their grip and sweep through the avatar even with an apparently safe offset.
+	m.PrimaryPart = nil
 	m.WorldPivot = pivot * CFrame.new(centre)
 	local longest = math.max(extents.X, extents.Y, extents.Z)
+	local scale = longest > 0 and size / longest or 1
 	if longest > 0 then
-		m:ScaleTo(m:GetScale() * size / longest)
+		m:ScaleTo(m:GetScale() * scale)
 	end
-	m:SetAttribute("DisplayExtents", extents)
+	m:SetAttribute("DisplayExtents", extents * scale)
 	m.Name = "Display_" .. weaponId
 	return m
 end
@@ -238,6 +247,30 @@ local function slotRotation(extents, slot)
 	return CFrame.fromMatrix(Vector3.zero, world.X, world.Y, world.Z)
 end
 S.SlotRotation = slotRotation -- exposed for layout tests
+
+-- Axis-aligned half extents after a rotation. The hero weapon stays beside the silhouette as
+-- the avatar turns, rather than orbiting behind/in front of its head. Pure helpers for tests.
+function S.ProjectedHalf(size, rotation)
+	local x, y, z = rotation.RightVector, rotation.UpVector, rotation.LookVector
+	return Vector3.new(
+		math.abs(x.X) * size.X + math.abs(y.X) * size.Y + math.abs(z.X) * size.Z,
+		math.abs(x.Y) * size.X + math.abs(y.Y) * size.Y + math.abs(z.Y) * size.Z,
+		math.abs(x.Z) * size.X + math.abs(y.Z) * size.Y + math.abs(z.Z) * size.Z
+	) * 0.5
+end
+
+function S.StarterPose(size, bodySize, bodyCentre, bodyYaw, now)
+	local turn = CFrame.Angles(0, bodyYaw, 0)
+	local longY = size.Y >= math.max(size.X, size.Z)
+	local rotation = slotRotation(size, { dir = longY and Vector3.new(-0.16, 1, 0) or Vector3.new(-1, 0.12, 0) })
+	rotation = CFrame.Angles(0, math.sin(now * 0.9) * 0.18, 0) * rotation
+	local half = S.ProjectedHalf(size, rotation)
+	local bodyHalf = S.ProjectedHalf(bodySize, turn)
+	local centre = turn:VectorToWorldSpace(bodyCentre)
+	local x = centre.X - bodyHalf.X - half.X - FLOAT_CLEARANCE
+	local y = math.max(half.Y + 0.35, bodyCentre.Y + 0.1) + math.sin(now * 2.2) * 0.12
+	return CFrame.new(x, y, 0) * rotation
+end
 
 -- Hang the real weapon models on the hall's holders.
 local function dress(hall)
@@ -321,15 +354,21 @@ local function render()
 	camera.CFrame = CFrame.lookAt(eye, look)
 
 	local base = stageCFrame()
+	local starterPose = floater and floater.Parent and S.StarterPose(floater:GetAttribute("DisplayExtents"), avatarBounds, avatarCentre, yaw, now)
+	local heroShift = 0
+	if starterPose then
+		local half = S.ProjectedHalf(floater:GetAttribute("DisplayExtents"), starterPose.Rotation)
+		local centre = CFrame.Angles(0, yaw, 0):VectorToWorldSpace(avatarCentre)
+		-- Centre the combined silhouette (body + separate weapon), keeping both clear of the slots.
+		heroShift = half.X + FLOAT_CLEARANCE / 2 - centre.X
+	end
 	if avatarRoot and avatar and avatar.Parent then
 		local lift = avatar:GetAttribute("Lift") or 3
 		-- An unrotated root looks down -Z, i.e. at the camera.
-		avatarRoot.CFrame = base * CFrame.new(0, lift, 0) * CFrame.Angles(0, yaw, 0)
+		avatarRoot.CFrame = base * CFrame.new(heroShift, lift, 0) * CFrame.Angles(0, yaw, 0)
 	end
 	if floater and floater.Parent then
-		local bob = math.sin(now * 2.2) * 0.18
-		local side = base * CFrame.Angles(0, yaw, 0) * CFrame.new(FLOAT_OFFSET + Vector3.new(0, bob, 0))
-		floater:PivotTo(side * CFrame.Angles(0, math.pi * 0.5 + math.sin(now * 0.9) * 0.3, math.rad(-20)))
+		floater:PivotTo(base * CFrame.new(heroShift, 0, 0) * starterPose)
 	end
 	if showcase and showcase.Parent then
 		local bob = math.sin(now * 1.8) * 0.15
@@ -442,7 +481,11 @@ function S.SetStarter(weaponId)
 	if not stage or not weaponId then
 		return
 	end
-	floater = display(weaponId, 2.4)
+	local sourceModel = template(weaponId)
+	local bounds = sourceModel and sourceModel:GetAttribute("BoundsSize")
+	-- Upright staffs can be long and slender; wide guns stay compact beside the body.
+	local size = typeof(bounds) == "Vector3" and bounds.Y > math.max(bounds.X, bounds.Z) * 2 and 2.9 or 1.7
+	floater = display(weaponId, size)
 	if floater then
 		floater:SetAttribute("WeaponId", weaponId)
 		floater.Parent = stage

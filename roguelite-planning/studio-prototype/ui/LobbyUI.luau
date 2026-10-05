@@ -252,7 +252,7 @@ function L.mount(player)
  paintAttacks()
  -- Bottom centre: main actions with PLAY in the middle.
  local bottom,bottomScale=scaled('Bottom',Vector2.new(.5,1),UDim2.new(.5,0,1,-8),Vector2.new(640,150))
- local order={{'Chests','chest','CHESTS',86},{'Armory','armory','ARMORY',86},{'Play','play','PLAY',122},{'Loadout','loadout','LOADOUT',86},{'Quests','quests','QUESTS',86}}
+ local order={{'Chests','chest','CHESTS',86},{'Armory','armory','ARMORY',86},{'Play','play','PLAY',122},{'Journal','loadout','JOURNAL',86},{'Quests','quests','QUESTS',86}}
  local x=0;local bottomButtons={}
  for _,o in order do
   local b=T.iconButton(bottom,o[1],o[2],o[3],o[4],function() open(o[1]) end)
@@ -268,6 +268,17 @@ function L.mount(player)
  local bannerTitle=T.label(banner,'Title','',30,6,260,34,24);bannerTitle.TextXAlignment=Enum.TextXAlignment.Left
  local bannerSub=T.text(banner,'Sub','',30,40,260,22,15,C.muted)
  local leave=T.button(banner,'Leave','LEAVE',300,14,96,46,function() local r=workspace:FindFirstChild('RogueliteLobby') and workspace.RogueliteLobby:FindFirstChild('LeaveQueue');if r then r:FireServer() end end,true)
+ local queueReady=T.button(banner,'Ready','READY UP',300,72,96,36,function()
+  local lobby=workspace:FindFirstChild('RogueliteLobby');local remote=lobby and lobby:FindFirstChild('RunSetup')
+  if player:GetAttribute('LobbyLockedIn')==true then if remote then remote:FireServer('Unready') end
+  else open('Play') end
+ end,true)
+ queueReady.Caption.TextSize=14
+ local queueRoster={}
+ for i=1,4 do
+  local label=T.text(banner,'Member'..i,'',18+((i-1)%2)*140,64+math.floor((i-1)/2)*22,136,20,13,C.muted)
+  label.TextWrapped=false;label.TextTruncate=Enum.TextTruncate.AtEnd;queueRoster[i]=label
+ end
  leave.Caption.TextSize=18;leave.Caption.TextColor3=C.negative
 
  -- SKILLS shows "2 TO BUY" on a lime pill (user, 2026-10-03: the bare red number read as an alert,
@@ -338,7 +349,9 @@ function L.mount(player)
   local portal=q and workspace:FindFirstChild('RogueliteLobby') and workspace.RogueliteLobby.Portals:FindFirstChild('Portal'..q)
   banner.Visible=q~=nil or self.guiding==true
   leave.Visible=q~=nil
-  banner.Size=UDim2.fromOffset(q and 420 or 330,74) -- No LEAVE button while only guiding.
+  queueReady.Visible=q~=nil
+  banner.Size=UDim2.fromOffset(q and 420 or 330,q and 116 or 74)
+  for _,label in queueRoster do label.Visible=false end
   -- Says what happens next in big text (2026-10-03: "its not really clear whats happening"):
   -- STARTING IN 8 (lime) once the host pressed START, ENTERING PORTAL... at launch, otherwise who
   -- is picking the map. Example: "STARTING IN 8" / "Pine Valley  ·  2 / 4 players  ·  Gunner".
@@ -350,6 +363,16 @@ function L.mount(player)
    local mapId=portal and portal:GetAttribute('MapId')
    local mapName=mapId and Rules.MapIndex[mapId] and L.Maps[Rules.MapIndex[mapId]].name
    local players=count..' / '..cap..(portal and portal:GetAttribute('Solo') and ' · private' or ' players')
+   local ready={};for id in string.gmatch(portal and portal:GetAttribute('ReadyMembers') or '','[^,]+') do ready[id]=true end
+   local position=0
+   for id in string.gmatch(portal and portal:GetAttribute('Members') or '','[^,]+') do
+    position+=1;local label=queueRoster[position];if not label then break end
+    local member=Players:GetPlayerByUserId(tonumber(id));local isReady=ready[id]==true
+    label.Visible=true;label.Text=(isReady and 'READY: ' or 'PICK: ')..(member and member.DisplayName or id)
+    label.TextColor3=isReady and C.lime or C.gold
+   end
+   queueReady.Caption.Text=player:GetAttribute('LobbyLockedIn')==true and 'UNREADY' or 'READY UP'
+   queueReady.Interactable=phase~='Launching'
    if phase=='Launching' then
     bannerTitle.Text='ENTERING PORTAL...';bannerTitle.TextColor3=C.lime
     bannerSub.Text=(mapName or '')..'  ·  '..players
@@ -361,10 +384,14 @@ function L.mount(player)
     local picking=portal and portal:GetAttribute('Picking') or 0
     if player:GetAttribute('LobbyLockedIn')==true then
      bannerSub.Text=(mapName or '')..'  ·  '..players..'  ·  '..(player:GetAttribute('RunClass') or self.selection.class)..(picking>0 and '  ·  '..picking..' picking' or '')
-    else bannerSub.Text='PLAY: pick your class and LOCK IN  ·  '..players end
+    else bannerSub.Text='Confirm class and starter · READY UP' end
+   elseif phase=='Counting' then
+    local picking=portal and portal:GetAttribute('Picking') or count
+    bannerTitle.Text=('READY %d / %d'):format(count-picking,count)
+    bannerSub.Text=player:GetAttribute('LobbyLockedIn')==true and 'Starts automatically when everyone is ready' or 'Confirm class and starter · READY UP'
    else
     bannerTitle.Text='PORTAL '..q..'  ·  '..count..' / '..cap
-    bannerSub.Text=portal and portal:GetAttribute('HostId')==player.UserId and 'Pick a map, then press START' or 'Waiting for the host to pick a map'
+    bannerSub.Text=portal and portal:GetAttribute('HostId')==player.UserId and 'Pick a map and loadout, then READY UP' or 'Waiting for the host to pick a map'
    end
   else
    bannerTitle.Text='FIND A PORTAL';bannerSub.Text='Follow the green beam to a queue pad'
@@ -493,7 +520,7 @@ function L.mount(player)
   return w
  end
 
- -- Run setup (full screen): PLAY and LOADOUT open it, and so does stepping onto a pad.
+ -- PLAY confirms class/starter for this queue. Armory owns saved class and starter selection.
  local function myPortal()
   local q=player:GetAttribute('LobbyQueue')
   return q and workspace:WaitForChild('RogueliteLobby'):WaitForChild('Portals'):FindFirstChild('Portal'..q)
@@ -509,17 +536,24 @@ function L.mount(player)
   need=L.need,cost=cost,selection=self.selection,toastScreen=screen,
   findPortal=function() guideToPortal();refreshQueue() end,
   hostMap=function() local portal=myPortal();return portal and portal:GetAttribute('MapId') end,
+  onClose=function(mode)
+   if mode=='Loadout' and screen.Enabled and player:GetAttribute('LobbyQueue')==nil then task.defer(open,'Armory','Classes') end
+  end,
  })
  self.Setup=setup
  -- The setup screen replaces the lobby HUD while it is open.
  setup.Screen:GetPropertyChangedSignal('Enabled'):Connect(function() hud.Visible=not setup.Screen.Enabled end)
  builders.Play=function() setup.Open(padMode() or 'Play') end
- builders.Loadout=function() setup.Open('Loadout') end
+ builders.ClassPicker=function(class)
+  setup.Open('Loadout')
+  if class then setup.FocusClass(class) end
+ end
  -- Full-screen Armory in the 3D armory hall (ArmoryUI + ArmoryStage); also replaces the lobby HUD.
  local armory=ArmoryUI.new(player,{
   profile=function() profile=L.profile(player);return profile end,
   need=L.need,selection=self.selection,
   openWindow=function(name,arg) task.defer(open,name,arg) end,
+  chooseClass=function(class) task.defer(open,'ClassPicker',class) end,
   onVisible=function(visible) hud.Visible=visible end,
  })
  self.Armory=armory
@@ -560,6 +594,15 @@ function L.mount(player)
  end
 
  builders.Armory=function(tab) return armory.Open(tab) end
+ -- Old stations, L shortcut, tutorial and test hooks still enter the saved-class route.
+ builders.Loadout=function() return armory.Open('Classes') end
+ builders.Journal=function(id)
+  local module=RS:FindFirstChild('WeaponJournalUI')
+  if not module then T.toast(screen,'Journal is loading',C.muted);return end
+  local ok,journal=pcall(require,module)
+  if not ok then T.toast(screen,'Journal is unavailable',C.negative);return end
+  return journal.open(player,'Weapon',id)
+ end
 
  -- Quests and Store windows: QuestsUI and StoreUI draw them from this profile.
  local windowCtx={
@@ -581,7 +624,7 @@ function L.mount(player)
  })
  -- Stepping onto a pad pops up the run setup: the host picks the map, others pick a class.
  local lastQueue
- player:GetAttributeChangedSignal('LobbyQueue'):Connect(function()
+ local function queueChanged()
   local q=player:GetAttribute('LobbyQueue')
   if q==lastQueue then return end
   lastQueue=q
@@ -596,20 +639,39 @@ function L.mount(player)
    task.delay(.25,function()
     if player:GetAttribute('LobbyQueue')~=q then return end
     local portal=myPortal();local phase=portal and portal:GetAttribute('QueueState')
-    if phase=='Launching' or player:GetAttribute('LobbyLockedIn')==true or (setup.startedAt and os.clock()-setup.startedAt<5) then return end
+    -- Only server-confirmed readiness suppresses the prompt. A recent but failed PLAY request
+    -- must not hide this screen when somebody else's party brings the player onto a pad.
+    if phase=='Launching' or player:GetAttribute('LobbyLockedIn')==true then return end
     local mode=padMode();if mode then setup.Open(mode) end
    end)
   elseif setup.mode=='Host' or setup.mode=='Member' then setup.Close() end
- end)
+ end
  local function portalChanged(portal)
   if portal~=myPortal() then return end
   local mode=padMode()
-  -- Host handed over (previous host stepped off) while choosing: this player picks the map now.
+  -- Selecting the map must open class selection for every unready member, including someone
+  -- who closed the earlier screen while waiting for the host.
   if mode=='Host' and setup.mode~='Host' then setup.Open('Host')
+  elseif mode=='Member' and portal:GetAttribute('MapId') and portal:GetAttribute('QueueState')~='Launching' and player:GetAttribute('LobbyLockedIn')~=true then
+   if win then win.Close() end
+   if setup.mode=='Member' then setup.Refresh() else setup.Open('Member') end
   elseif setup.mode=='Member' then setup.Refresh() end
  end
+ player:GetAttributeChangedSignal('LobbyLockedIn'):Connect(function()
+  refreshQueue()
+  local portal=myPortal()
+  if portal and player:GetAttribute('LobbyLockedIn')~=true then portalChanged(portal) end
+ end)
+ player:GetAttributeChangedSignal('LobbyQueue'):Connect(queueChanged)
+ -- A party can arrive while the HUD's dependencies are still loading. Consume that initial
+ -- replicated membership as well as subsequent changes.
+ task.defer(queueChanged)
  Input.InputBegan:Connect(function(input,processed)
   if not screen.Enabled or setup.IsOpen() then return end
+  -- Showcase owns its input and camera outside the ordinary window stack. A lobby shortcut
+  -- must not open another stage behind that fullscreen preview or toggle real lobby attacks.
+  local showcase=player.PlayerGui:FindFirstChild('WeaponShowcase')
+  if showcase and showcase:IsA('ScreenGui') and showcase.Enabled then return end
   -- Screens with their own back steps (Chests: odds panel -> results -> list) handle Escape/B themselves.
   if input.KeyCode==Enum.KeyCode.Escape or input.KeyCode==Enum.KeyCode.ButtonB then if win and not win.HandlesBack then win.Close() end;return end
   if processed or Input:GetFocusedTextBox() then return end
@@ -685,7 +747,13 @@ function L.mount(player)
  local function profileChanged()
   refreshHud()
   if pendingRedraw then return end;pendingRedraw=true
-  task.defer(function() pendingRedraw=false;if win and self.redraw then self.redraw() end end)
+  task.defer(function()
+   pendingRedraw=false
+   -- Read the completed attribute batch: a setup opened during profile loading must refresh
+   -- its owned choices and enable READY/CONFIRM when the server publishes ProfileLoaded.
+   if setup.IsOpen() then setup.Refresh() end
+   if win and self.redraw then self.redraw() end
+  end)
  end
  for _,attr in {'ProfileLoaded','ProfileGems','ProfileGemsEarned','ProfileClasses','ProfileWeapons','ProfilePity','ProfilePicks','ProfileChests','ProfileStarterPack','ProfileVIP','ProfileBundles','PaidRandomRestricted','ProfileSkills','ProfileQuests'} do player:GetAttributeChangedSignal(attr):Connect(profileChanged) end
  -- Gifts (2026-10-04): gift={to=name} on the buyer's "Gift sent to Ana!" (a toast: nothing arrived
@@ -753,8 +821,8 @@ function L.mount(player)
  player:GetAttributeChangedSignal('LobbyQueue'):Connect(refreshQueue)
  root:WaitForChild('Portals').DescendantAdded:Connect(function() task.defer(refreshQueue) end)
  for _,portal in root.Portals:GetChildren() do
-  for _,attr in {'QueueCount','QueueState','LaunchAt'} do portal:GetAttributeChangedSignal(attr):Connect(refreshQueue) end
-  for _,attr in {'HostId','MapId','QueueState'} do portal:GetAttributeChangedSignal(attr):Connect(function() portalChanged(portal) end) end
+  for _,attr in {'QueueCount','QueueState','LaunchAt','Picking','Members','ReadyMembers'} do portal:GetAttributeChangedSignal(attr):Connect(refreshQueue) end
+  for _,attr in {'HostId','MapId','QueueState','Difficulty'} do portal:GetAttributeChangedSignal(attr):Connect(function() portalChanged(portal) end) end
  end
  -- Countdown text ticks locally from the server's LaunchAt.
  task.spawn(function() while screen.Parent do task.wait(.25);if player:GetAttribute('LobbyQueue') then refreshQueue() end end end)

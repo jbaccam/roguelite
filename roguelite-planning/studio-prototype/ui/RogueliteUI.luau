@@ -217,6 +217,7 @@ function UI.mount(playerGui)
  local shopView
  local levelUpView
  local settingsWindow
+ local function unavailable() return player:GetAttribute('RunDown') or player:GetAttribute('RunReturning') or player:GetAttribute('RunResult')~=nil end
  local function close()
   local wasOpen=overlay.Visible
   overlay.Visible=false;hud.Visible=true;controller.Mode=nil;gui:SetAttribute("PreviewScreen",nil)
@@ -341,6 +342,7 @@ function UI.mount(playerGui)
  controller:SetPendingLevels(shopView.state:GetAttribute('PendingLevelUps'))
  render=function()
   if not controller.Mode then return end
+  if unavailable() then close();return end
   local settings=shopModule.getLayout()
   local isShop=controller.Mode=='Shop'
   local inset=game:GetService('GuiService'):GetGuiInset().Y
@@ -380,6 +382,7 @@ function UI.mount(playerGui)
   content.Size=UDim2.fromOffset(width,200);scroller.CanvasSize=UDim2.fromOffset(0,200)
  end
  function controller:ShowPreview(mode)
+  if unavailable() then close();return end
   if levelUpView and levelUpView:Show() then return end
   if settingsWindow then settingsWindow.Close() end
   controller.Mode=mode;title.Text=mode=='Shop' and 'SHOP' or 'LEVEL UP!'
@@ -534,7 +537,8 @@ function UI.mount(playerGui)
   return data.wave==1 and (RS:GetAttribute('ServerRole')=='Match' or RS.RogueliteCombat:GetAttribute('TutorialRun')==true)
  end
  local function phaseChanged()
-  local data=shopView:snapshot();if not data or ended() then return end
+  local data=shopView:snapshot();if not data then return end
+  if unavailable() then lastPhase=nil;controller:Close();return end
   if data.phase~=lastPhase then
    lastPhase=data.phase
    -- Sandbox (phase Practice) has no shop: close any open menu, as a wave start does.
@@ -543,6 +547,7 @@ function UI.mount(playerGui)
   end
  end
  shopView.state:GetAttributeChangedSignal('ShopSnapshot'):Connect(phaseChanged)
+ for _,attribute in {'RunDown','RunReturning','RunResult'} do player:GetAttributeChangedSignal(attribute):Connect(phaseChanged) end
  task.defer(phaseChanged)
  task.defer(drawBuild)
  task.defer(layout)

@@ -14,6 +14,7 @@ local Stage = require(RS:WaitForChild("ArmoryStage"))
 local Rules = require(RS:WaitForChild("RunSetupRules"))
 local RunSetup = require(RS:WaitForChild("RunSetupUI"))
 local StatPlates = require(RS:WaitForChild("StatPlates")) -- damage, health and Power under the dais (plan K)
+local Card = require(RS:WaitForChild("ItemCardUI"))
 local combat = RS:WaitForChild("RogueliteCombat")
 local Weapons = require(combat:WaitForChild("WeaponCatalog"))
 local Stats = require(combat:WaitForChild("CharacterStats"))
@@ -31,7 +32,7 @@ local A = {}
 -- the screen's shape changes.
 local MARGIN = 24
 local LEFT_H = 900 -- tallest the side panels get; shorter canvases shrink them and lists scroll
-local RIGHT_W, RIGHT_H = 500, 760
+local RIGHT_W, RIGHT_H = 500, 810
 local UPGRADE_H = 600 -- right panel height in the upgrade view
 local CARD, CARD_H, GAP = 164, 206, 14
 local function leftWidth(cols)
@@ -346,7 +347,8 @@ function A.new(player, opts)
 	local fallback -- blur + shade when the hall is not installed
 	local root, profile, draw
 	-- armorSlot: the Armor tab's slot filter (nil = every slot).
-	local state = { tab = "Weapons", mine = true, item = nil, kind = "weapon", mode = "main", armorSlot = nil }
+	local state = { tab = "Weapons", mine = false, item = nil, kind = "weapon", mode = "main", armorSlot = nil }
+	local itemCard
 	-- Panels slide in only when the screen opens or switches between main and upgrade views;
 	-- a plain redraw (selecting an item, a profile update) must not move anything.
 	local animate = false
@@ -403,7 +405,7 @@ function A.new(player, opts)
 	-- size. 844x390 phone: canvas 1688x780, 2-column list, slots about 70% size.
 	local L, canvas
 	local function plan(c)
-		local l = { w = c.w, h = c.h, s = c.s }
+		local l = table.clone(c)
 		-- Side panels sit under Roblox's top-bar buttons (the title plate pokes 34 px above them).
 		local bandTop = math.max(c.top, 14) + 34 + 10
 		local bandBottom = c.h - MARGIN
@@ -506,6 +508,36 @@ function A.new(player, opts)
 		draw()
 	end
 
+	local function closeInfo()
+		if itemCard then itemCard.Close(true); itemCard = nil end
+	end
+	local function showInfo(id)
+		closeInfo()
+		local entries = {}
+		for _, w in Weapons.List do
+			table.insert(entries, { id = w.id, rarity = Chests.RarityOf[w.id] or "Common" })
+		end
+		itemCard = Card.open(canvas, L, {
+			list = entries, id = id, source = "collection", profile = opts.profile,
+			onClose = function() itemCard = nil end,
+		})
+	end
+	self.ShowInfo = showInfo -- also used by the Studio interaction check
+
+	local function watchAttacks(id, tier)
+		local module = RS:FindFirstChild("WeaponShowcaseUI")
+		if not module then T.toast(screen, "Attack preview is loading", C.muted); return end
+		local ok, preview = pcall(require, module)
+		if not ok then T.toast(screen, "Attack preview is unavailable", C.negative); return end
+		local tab = state.tab
+		self.Close()
+		preview.open(player, id, tier, { onClose = function()
+			if player:GetAttribute("LobbyPreviewActive") == true and not player:GetAttribute("LobbyQueue") then
+				opts.openWindow("Armory", { tab = tab, kind = "weapon", id = id })
+			end
+		end })
+	end
+
 	-- A square collection card: tier corners, icon, name and have/need bar.
 	local function weaponCard(parent, w, x, y)
 		local rec = profile.weapons[w.id]
@@ -518,6 +550,7 @@ function A.new(player, opts)
 			T.setTier(card, rec.tier)
 		end
 		local art = T.icon(card, "Icon", (CARD - 104) / 2, 18, 104, WeaponIcons[w.id])
+		Card.infoButton(card, CARD - 42, 10, 32, function() showInfo(w.id) end)
 		art.ImageTransparency = rec and 0 or 0.62
 		local n = centred(T.label(card, "Name", w.name, 6, 122, CARD - 12, 30, 20, rec and C.white or C.dim))
 		n.TextWrapped = false
@@ -528,13 +561,13 @@ function A.new(player, opts)
 			T.upgradeBar(card, "Upgrade", 12, CARD_H - 40, CARD - 24, 22, rec.have, opts.need(rec))
 			local _, equipped = loadout()
 			if equipped == w.id then
-				tick(card, CARD - 38, 10, 28)
+				tick(card, CARD - 38, 82, 28)
 			end
 			if ready(w.id) then
-				upArrow(card, CARD - 44, 34, 34)
+				upArrow(card, CARD - 44, 46, 34)
 			end
 		else
-			RunSetup.lock(card, CARD - 40, 12, 26)
+			RunSetup.lock(card, 12, 12, 26)
 			local locked = centred(T.text(card, "Locked", "NOT OWNED", 12, CARD_H - 38, CARD - 24, 20, 15, C.dim))
 			if chosen then
 				-- Dark text on the lime "selected" fill; grey would disappear into it.
@@ -567,7 +600,7 @@ function A.new(player, opts)
 			tick(card, CARD - 38, 10, 28)
 		end
 		if not rec then
-			RunSetup.lock(card, CARD - 40, 12, 26)
+			RunSetup.lock(card, 12, 12, 26)
 		end
 		if chosen then
 			n.TextColor3, k.TextColor3 = C.ink, C.ink
@@ -629,7 +662,7 @@ function A.new(player, opts)
 				upArrow(card, CARD - 44, 34, 34)
 			end
 		else
-			RunSetup.lock(card, CARD - 40, 12, 26)
+			RunSetup.lock(card, 12, 12, 26)
 		end
 		if chosen then
 			n.TextColor3, k.TextColor3 = C.ink, C.ink
@@ -694,7 +727,7 @@ function A.new(player, opts)
 		local left = group("Left", MARGIN, L.leftY, lw, lh)
 		local panel = T.panel(left, "Panel", 0, 0, lw, lh, "panel")
 		plate(left, "ARMORY", 20, -34)
-		local tabs = T.tabs(panel, 22, 44, lw - 44, 52, { "Weapons", "Armor", "Pets" }, state.tab, function(id)
+		local tabs = T.tabs(panel, 22, 44, lw - 44, 52, { "Classes", "Weapons", "Armor", "Pets" }, state.tab, function(id)
 			if id == state.tab then
 				return
 			end
@@ -705,6 +738,7 @@ function A.new(player, opts)
 		end)
 		for id, b in tabs do
 			b.Caption.Text = string.upper(id)
+			b.Caption.TextSize = 18
 		end
 		local readyCount = 0
 		for _, w in Weapons.List do
@@ -723,13 +757,9 @@ function A.new(player, opts)
 			end)
 			local owned, total = 0, 0
 			for _, w in Weapons.List do
-				-- Godlies you don't own stay secret (RARITY_GODLY_ARMOR.md step 4).
-				if not w.godly or profile.weapons[w.id] then
-					total += 1
-					if profile.weapons[w.id] then
-						owned += 1
-					end
-				end
+				-- Every catalog weapon is browsable, including unowned Godlies.
+				total += 1
+				if profile.weapons[w.id] then owned += 1 end
 			end
 			local count =
 				T.label(panel, "Owned", owned .. " / " .. total .. " OWNED", 30 + cbW, y0, lw - 52 - cbW, 50, 18, C.muted)
@@ -772,7 +802,21 @@ function A.new(player, opts)
 			return ((i - 1) % cols) * (CARD + GAP), math.floor((i - 1) / cols) * (CARD_H + GAP)
 		end
 		local y = 0
-		if state.tab == "Weapons" then
+		if state.tab == "Classes" then
+			if not state.item then state.kind, state.item = "class", class end
+			for i, name in Stats.ClassOrder do
+				local x, dy = cell(i)
+				local owned = profile.classes[name] == true
+				local b = T.button(grid, "Class_" .. name, "", x, dy, CARD, CARD_H, function() select("class", name) end, state.item ~= name)
+				b.Caption.Visible = false
+				local icon = T.icon(b, "Icon", 26, 12, 112, WeaponIcons[Rules.Signature[name]])
+				icon.ImageTransparency = owned and 0 or 0.5
+				T.label(b, "Name", name, 6, 124, CARD - 12, 30, 22)
+				T.label(b, "Status", name == class and "EQUIPPED" or owned and "CHOOSE CLASS" or "LOCKED", 6, 164, CARD - 12, 24, 15, name == class and C.lime or C.muted)
+				if not owned then RunSetup.lock(b, 10, 10, 26) end
+			end
+			y = math.ceil(#Stats.ClassOrder / cols) * (CARD_H + GAP)
+		elseif state.tab == "Weapons" then
 			-- Current class first; owned weapons first inside each class.
 			local classes = { class }
 			if not state.mine then
@@ -782,10 +826,10 @@ function A.new(player, opts)
 					end
 				end
 			end
-			-- Owned Godlies sit above every class: any class can start with one.
+			-- Godlies sit above every class: owning one permits any class to start with it.
 			local godlies = {}
 			for _, w in Weapons.List do
-				if w.godly and profile.weapons[w.id] then
+				if w.godly then
 					table.insert(godlies, w)
 				end
 			end
@@ -1091,10 +1135,11 @@ function A.new(player, opts)
 			WeaponIcons[w.id],
 			rec and tier,
 			w.name,
-			rarityTag(w.id) .. "  ·  " .. classText .. "  ·  " .. string.upper(w.kind),
+			rarityTag(w.id) .. "  ·  " .. classText .. "  ·  ATTACK: " .. string.upper(w.kind == "Blast" and "Explosive" or w.kind),
 			rec and T.Tier[tier] or C.white
 		)
 		local desc = T.text(panel, "Description", describe(w), 24, 168, RIGHT_W - 48, 66, 19, C.muted)
+		Card.infoButton(panel.IconWell, 92, 8, 34, function() showInfo(w.id) end)
 		desc.TextYAlignment = Enum.TextYAlignment.Top
 		local st = weaponAt(w, tier)
 		T.label(panel, "StatsTitle", "STATS", 24, 240, 200, 34, 26).TextXAlignment = Enum.TextXAlignment.Left
@@ -1140,22 +1185,17 @@ function A.new(player, opts)
 				70,
 				function()
 					sel.class, sel.weapon = startClass, w.id
-					player:SetAttribute("LoadoutClass", startClass)
-					player:SetAttribute("LoadoutWeapon", w.id)
-					-- The lobby server validates it and swaps the weapon on the player's ring.
+					-- Only the server-confirmed attributes change the equipped marker and stage.
 					local lobby = workspace:FindFirstChild("RogueliteLobby")
 					local setup = lobby and lobby:FindFirstChild("RunSetup")
 					if setup then
 						setup:FireServer("Loadout", startClass, w.id)
 					end
-					T.sound("ui_equip")
-					T.toast(screen, w.name .. " is your " .. startClass .. " starter", C.lime)
-					draw()
 				end,
 				true
 			)
 			eq.Caption.TextSize = 28
-			eq.Interactable = equipped ~= w.id and homeOwned
+			eq.Interactable = equipped ~= w.id and homeOwned and player:GetAttribute("LobbyLockedIn") ~= true
 			local isReady = ready(w.id)
 			local up = T.button(
 				panel,
@@ -1224,6 +1264,10 @@ function A.new(player, opts)
 			end)
 			b.Caption.TextSize = 28
 		end
+		local preview = T.button(panel, "WatchAttacks", "WATCH ATTACKS", 24, 718, 244, 54, function() watchAttacks(w.id, tier) end, true)
+		preview.Caption.TextSize = 21
+		local journal = T.button(panel, "Journal", "JOURNAL", 280, 718, RIGHT_W - 304, 54, function() opts.openWindow("Journal", w.id) end, true)
+		journal.Caption.TextSize = 21
 	end
 
 	-- Empty armor/pet slot: what fills it and one thing the left panel doesn't already say.
@@ -1476,10 +1520,11 @@ function A.new(player, opts)
 			cols = sz.cols,
 		})
 		y += h + 12
-		local go = T.button(panel, "ChangeClass", "CHANGE CLASS", 24, math.max(y, 640), RIGHT_W - 48, 70, function()
-			opts.openWindow("Loadout")
+		local go = T.button(panel, "ChangeClass", profile.classes[class] and "CHOOSE CLASS & STARTER" or "VIEW CLASS UNLOCK", 24, math.max(y, 640), RIGHT_W - 48, 70, function()
+			if opts.chooseClass then opts.chooseClass(class) else opts.openWindow("ClassPicker", class) end
 		end, true)
-		go.Caption.TextSize = 28
+		go.Caption.TextSize = 25
+		go.Interactable = player:GetAttribute("LobbyLockedIn") ~= true
 		if panel:IsA("ScrollingFrame") then
 			panel.CanvasSize = UDim2.fromOffset(0, math.max(panel.CanvasSize.Y.Offset, math.max(y, 640) + 70 + 16))
 		end
@@ -1567,9 +1612,20 @@ function A.new(player, opts)
 				(done or now or nextUp) and T.Tier[t] or C.dim
 			)
 			title.TextXAlignment = Enum.TextXAlignment.Left
-			-- Mark the currently unlocked tier, matching NOW.
+			-- Attach the current-tier check to the measured title instead of a fixed card X.
+			-- This keeps the longer III/IV titles and the mark apart at every window scale.
 			if now then
-				tick(card, 190, 24, 26)
+				local row = T.frame(card, "TierHeading", 24, 14, LEFT_W - 250, 44)
+				T.make("UIListLayout", row, { FillDirection = Enum.FillDirection.Horizontal, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 12), SortOrder = Enum.SortOrder.LayoutOrder })
+				title.Parent = row
+				title.Position = UDim2.new()
+				title.TextScaled = false
+				title.TextWrapped = false
+				title.AutomaticSize = Enum.AutomaticSize.X
+				title.Size = UDim2.fromOffset(0, 44)
+				title.LayoutOrder = 1
+				local check = T.check(row, 0, 0, 26)
+				check.LayoutOrder = 2
 			end
 			local tag = now and "NOW" or nextUp and "NEXT" or nil
 			if tag then
@@ -1761,7 +1817,7 @@ function A.new(player, opts)
 		end)
 	end
 
-	draw = function()
+		draw = function()
 		if not root then
 			return
 		end
@@ -1769,6 +1825,8 @@ function A.new(player, opts)
 		if not (canvas and L) then
 			return
 		end
+		local showingInfo = itemCard and itemCard.Id()
+		closeInfo()
 		-- Every redraw rebuilds the buttons; a controller keeps its place (or lands on the first one).
 		local selected = T.selectionPath(canvas)
 		for _, c in canvas:GetChildren() do
@@ -1790,6 +1848,7 @@ function A.new(player, opts)
 			Stage.SetView("hero")
 		end
 		drawBottom()
+		if showingInfo then showInfo(showingInfo) end
 		animate = false
 		if justOpened then
 			justOpened = false
@@ -1801,13 +1860,14 @@ function A.new(player, opts)
 
 	local profileConn
 	local pendingDraw = false
-	-- tab: 'Weapons' | 'Armor' | 'Pets'. Returns {Root, Close} for the lobby's window stack.
+	-- tab: Classes | Weapons | Armor | Pets, or {tab, kind, id} when returning from an attack preview.
 	function self.Open(tab)
 		if root then
 			self.Close()
 		end
-		state.tab = tab or state.tab or "Weapons"
-		state.mode, state.kind, state.item = "main", nil, nil
+		local focus = type(tab) == "table" and tab or nil
+		state.tab = (focus and (focus.tab or "Weapons") or tab) or state.tab or "Weapons"
+		state.mode, state.kind, state.item = "main", focus and focus.kind, focus and focus.id
 		animate = true
 		table.clear(scroll)
 		profile = opts.profile()
@@ -1853,13 +1913,14 @@ function A.new(player, opts)
 			L = plan(c)
 			draw()
 		end)
-		return { Root = root, Close = self.Close }
+		return { Root = root, Close = self.Close, HandlesBack = true }
 	end
 
 	function self.Close()
 		if not root then
 			return
 		end
+		closeInfo()
 		if profileConn then
 			profileConn:Disconnect()
 			profileConn = nil
@@ -1879,6 +1940,18 @@ function A.new(player, opts)
 			opts.onVisible(true)
 		end
 	end
+
+	Input.InputBegan:Connect(function(input, processed)
+		if not root or Input:GetFocusedTextBox() or game:GetService("GuiService").MenuIsOpen then return end
+		local key = input.KeyCode
+		if processed and key ~= Enum.KeyCode.ButtonB then return end
+		if key == Enum.KeyCode.Escape or key == Enum.KeyCode.ButtonB then
+			if itemCard then closeInfo()
+			elseif state.mode == "upgrade" then state.mode = "main"; draw()
+			else self.Close() end
+		elseif itemCard and (key == Enum.KeyCode.Left or key == Enum.KeyCode.ButtonL1) then itemCard.Step(-1)
+		elseif itemCard and (key == Enum.KeyCode.Right or key == Enum.KeyCode.ButtonR1) then itemCard.Step(1) end
+	end)
 
 	-- Leaving the lobby or respawning closes the Armory and returns the camera.
 	player.CharacterRemoving:Connect(function()

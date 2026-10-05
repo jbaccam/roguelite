@@ -130,6 +130,15 @@ local function ring()
  return RING
 end
 
+-- Shared details affordance for collection weapons and chest odds: a lime i on a round dark well.
+function K.infoButton(parent,x,y,size,onOpen)
+ local b=T.make('TextButton',parent,{Name='Info',Text='',AutoButtonColor=false,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(size,size),BackgroundColor3=C.well,BorderSizePixel=0,ZIndex=6})
+ corner(b);stroke(b)
+ local label=T.label(b,'I','i',0,0,size,size,math.floor(size*.78),C.lime);label.ZIndex=7
+ b.Activated:Connect(onOpen)
+ return b
+end
+
 -- A tappable odds cell (ImageButton): rarity tint, icon, optional name, chance, an "i" corner badge
 -- that says "details", press feedback (smaller, brighter, white edge) and the lime gamepad ring.
 -- o: name, x, y, size, color, icon, iconSize, iconY, title?, titleY, titleH, titleSize, chance,
@@ -381,7 +390,7 @@ function K.open(canvas,L,args)
    -- class: 'THROWER · JUGGLER') and its type. The type tag drops when both don't fit the column.
    local th=subH-2
    local _,cw1=T.tag(p,'ClassTag',string.upper(Weapons.classNames(it.w,' · ')),pad,ky+1,{h=th,size=th-12,maxW=hw,icon=WeaponIcons[Stats.Signature[it.w.home]]})
-   local typeText=string.upper(it.w.kind=='Blast' and 'Explosive' or it.w.kind)
+   local typeText='ATTACK: '..string.upper(it.w.kind=='Blast' and 'Explosive' or it.w.kind)
    local tt,tw2=T.tag(p,'TypeTag',typeText,pad+cw1+8,ky+1,{h=th,size=th-12,color=Color3.fromRGB(27,33,37),textColor=C.muted})
    if cw1+8+tw2>hw then tt:Destroy() end
   else
@@ -402,8 +411,15 @@ function K.open(canvas,L,args)
    T.icon(pill,'Lock',14,(ph-40)/2,40,'lock')
    align(T.label(pill,'Text','NOT OWNED YET',64,0,hw-80,ph,compact and 24 or 28,C.muted),'Left')
   end
-  -- The chance from this chest or egg.
+  -- A collection card has no roll context: never invent a 0% chance or "1 in 0" chest odds.
   local cy=py+ph+8
+  if args.source=='collection' then
+   local source=T.panel(p,'CollectionSource',pad,cy,hw,chH,'inset')
+   local text=it.kind=='pet' and 'HATCHES FROM PET EGGS' or 'FOUND IN CHESTS'
+   T.label(source,'Title',text,12,8,hw-24,30,22,C.gold)
+   T.text(source,'Help','View every tier and special move here. Chest odds depend on the chest you open.',12,40,hw-24,chH-44,compact and 18 or 20,C.muted)
+  else
+  -- The chance from this chest or egg.
   local chance=T.panel(p,'Chance',pad,cy,hw,chH,'inset')
   local is=compact and 60 or 76
   T.icon(chance,'Icon',10,(chH-is)/2,is,egg and (Eggs.Icon or '') or (def and def.icon or ''))
@@ -418,6 +434,7 @@ function K.open(canvas,L,args)
   local oneIn=(compact and '1 in ' or 'about 1 in ')..comma(n)..(egg and ' eggs' or ' chests')..(only and ' · only here' or '')
    ..((egg and not compact) and (' · '..comma(Eggs.Emeralds)..' emeralds each') or '')
   T.text(chance,'OneIn',oneIn,cx,compact and 42 or 58,hw-cx-12,compact and 30 or 34,compact and 20 or 21,C.muted)
+  end
   -- Pity (PC): how many chests until this rarity is guaranteed (ChestConfig pity, the profile's count).
   if not compact and def and def.pity then
    local pity=profile and profile.pity or {}

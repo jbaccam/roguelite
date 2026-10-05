@@ -4,7 +4,7 @@
 -- profile, opens the class step (Loadout mode) and resizes its root through desktop, tablet and
 -- phone sizes (phone sizes as safe areas: an 844x390 iPhone 14 is 750x369). Nothing is sent to the
 -- server: CONFIRM is never pressed. Two profiles: 11 Thrower weapons (8 owned, 3 not) plus the 6
--- Godlies owned (17 tiles), then the same without Godlies (11 tiles, NOT OWNED in smaller rows).
+-- Godlies owned (17 tiles), then the same without Godlies (11 tiles, all entries sharing one size).
 -- Checks: no scrolling anywhere around the tiles, every tile inside the tile area and the screen,
 -- no tile overlaps another or the class cards, details, heading or CLOSE / CONFIRM, every icon at
 -- least 48 screen px, owned -> Godlies -> NOT OWNED order, the pick lime and named, text fits.
@@ -72,6 +72,7 @@ local ok,err=xpcall(function()
     return a.AbsolutePosition.X<b.AbsolutePosition.X
    end)
    for i,c in tiles do
+    assert((c.AbsoluteSize-tiles[1].AbsoluteSize).Magnitude<1,'owned and locked tiles use one size'..at)
     local id=c.Name:sub(8)
     assert(id==want[i],'reading order: tile '..i..' is '..id..', want '..tostring(want[i])..at)
     assert(c:GetAttribute('Owned')==(not UNOWNED[id]),'owned state '..id..at)
@@ -100,6 +101,28 @@ local ok,err=xpcall(function()
    for _,name in {'WeaponTitle','WeaponName'} do local l=root:FindFirstChild(name,true);assert(l.TextFits,'text overflow '..name..at) end
    for _,o in others do if o.Name:match('^Class_') then textFits(o,at) end end
    table.insert(results,tostring(size)..(withGodlies and ' x17' or ' x11'))
+  end
+ end
+ -- Sparse ownership is the reported regression: one pan must be in the same row as locked
+ -- Brawler weapons, and switching classes must not change the tile size for the same count.
+ for _,class in {'Brawler','Gunner','Mage','Handyman'} do
+  local id=Rules.Signature[class]
+  profile={classes={[class]=true,Brawler=true},weapons={[id]={id=id,tier=1,have=1}},wins={},best={},gems=0}
+  sel.class=class;sel.weapon=id;ui.Refresh()
+  for _,size in SIZES do
+   root.Size=UDim2.fromOffset(size.X,size.Y);task.wait(.15)
+   local at=' sparse '..class..' at '..tostring(size)
+   local grid=root:FindFirstChild('Weapons',true);local tiles={}
+   for _,c in grid:GetChildren() do if c:IsA('GuiButton') and c.Name:match('^Weapon_') then table.insert(tiles,c) end end
+   assert(#tiles==#Rules.classWeapons(class),'every class starter is shown'..at)
+   local ownedTile=grid:FindFirstChild('Weapon_'..id);local neighbour=false
+   for _,c in tiles do
+    assert((c.AbsoluteSize-ownedTile.AbsoluteSize).Magnitude<1,'uniform footprint'..at)
+    assert(inside(c,grid),'starter inside grid'..at)
+    if c~=ownedTile and math.abs(c.AbsolutePosition.Y-ownedTile.AbsolutePosition.Y)<1 then neighbour=true end
+   end
+   assert(neighbour,'owned starter shares its first row with locked starters'..at)
+   table.insert(results,tostring(size)..' sparse '..class)
   end
  end
 end,debug.traceback)
