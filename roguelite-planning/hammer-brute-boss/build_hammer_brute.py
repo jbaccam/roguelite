@@ -46,7 +46,7 @@ T0 = time.time()
 NAME = 'HammerBrute'
 SIDES = ('Right', 'Left')
 SECTIONS = ['Body', 'Head', 'Shirt', 'Gear', 'Trousers', 'Hammer', 'EyeGlow']
-SKIN_QUADS = int(os.environ.get('HB_SKIN_QUADS', '4000'))
+SKIN_QUADS = int(os.environ.get('HB_SKIN_QUADS', '3000'))
 HAND_TRIS = 3000
 BUDGET = {'Shirt': 6200, 'Trousers': 7600, 'Sash': 2600, 'SashTail': 700, 'Buckle': 360, 'Teeth': 520,
           'EyeGlow': 320, 'HammerHead': 2200, 'HammerIron': 260}
@@ -195,7 +195,7 @@ def build_skin(coll):
     cent = np.array([V[list(f)].mean(0) for f in F])
     own = WT.ownership(allp, cent)
     hmask = (own.get('head', 0) > 0.30) | ((np.linalg.norm(cent - D.HEAD_C, axis=1) < 1.45) & (cent[:, 2] > 10.9))
-    B.faces_subdivide(skin, hmask, cuts=2)
+    B.faces_subdivide(skin, hmask, cuts=3)
     V, F = B.mesh_arrays(skin)
     near = np.linalg.norm(V - D.HEAD_C, axis=1) < 2.3
     V[near] = project_to_surface(exact, V[near], iters=5)
@@ -640,16 +640,20 @@ def paint_context(sk):
         d = math.cos(a) * out_dir + math.sin(a) * fwd
         p, n = surf(o, d)
         wounds.append((p, n, M[:3, 1], size, drip, seed))
-    arm_wound('Left', 'UpperArm', 0.17, 40, 0.40, 1.1, 101)
-    arm_wound('Left', 'LowerArm', 0.85, 55, 0.27, 0.45, 103)
-    arm_wound('Right', 'UpperArm', 0.30, 15, 0.34, 0.8, 104)
-    arm_wound('Right', 'LowerArm', 0.95, 50, 0.22, 0.35, 105)
+    arm_wound('Left', 'UpperArm', 0.17, 40, 0.44, 0.9, 101)
+    arm_wound('Left', 'LowerArm', 0.85, 55, 0.26, 0.0, 103)
+    arm_wound('Right', 'UpperArm', 0.30, 15, 0.36, 0.0, 104)
+    arm_wound('Right', 'LowerArm', 0.95, 50, 0.20, 0.0, 105)
+    arm_wound('Right', 'LowerArm', 0.45, 80, 0.30, 0.0, 107)            # a smear (elongated below)
     down = np.array([0, 0, -1.0])
-    for (o, d, size, drip, seed) in (((-1.1, -1.2, 7.3), (0, -1, 0.05), 0.22, 0.75, 111),
-                                     ((1.55, -1.2, 6.7), (0.25, -1, 0), 0.19, 0.55, 112),
-                                     ((0.55, -1.2, 5.75), (0, -1, -0.2), 0.12, 0.3, 113)):
+    for (o, d, size, drip, seed) in (((-1.1, -1.2, 7.3), (0, -1, 0.05), 0.24, 0.7, 111),
+                                     ((1.55, -1.2, 6.7), (0.25, -1, 0), 0.18, 0.0, 112),
+                                     ((0.55, -1.2, 5.75), (0, -1, -0.2), 0.11, 0.0, 113),
+                                     ((2.3, -0.6, 6.2), (0.7, -1, 0), 0.26, 0.0, 115)):       # smear
         p, n = surf(o, d)
         wounds.append((p, n, down, size, drip, seed))
+    # the smears are long thin marks
+    wounds = [w + ((3.2,) if w[5] in (107, 115) else ()) for w in wounds]
     # forehead gash high on his left, bleeding down the left side of the face past the eye
     p, n = surf(D.Hd(0.45, -0.3, 0.95), (0.45, -1, 0.55))
     wounds.append((p, n, down, 0.22, 0.9, 121))
@@ -665,8 +669,8 @@ def paint_context(sk):
     # blood stains on the shirt and the hammer
     sh = FP.shirt_sdf_fn()
     stains = []
-    for (o, d, size, drip, seed) in (((1.35, -1.0, 9.55), (0.1, -1, 0), 0.20, 0.6, 131),
-                                     ((-1.0, -1.0, 9.15), (-0.1, -1, 0), 0.17, 0.5, 132),
+    for (o, d, size, drip, seed) in (((1.35, -1.0, 9.55), (0.1, -1, 0), 0.20, 0.5, 131),
+                                     ((-1.0, -1.0, 9.15), (-0.1, -1, 0), 0.17, 0.0, 132),
                                      ((-0.2, -1.0, 8.75), (0, -1, 0), 0.24, 0.0, 135),
                                      ((2.35, -0.5, 7.9), (0.6, -1, 0), 0.14, 0.4, 134)):
         dd = np.asarray(d, float) / np.linalg.norm(d)
@@ -676,7 +680,7 @@ def paint_context(sk):
         inside = np.nonzero(v < 0)[0]
         k = inside[-1] if len(inside) else 0
         stains.append((pts[k], gradient(sh, pts[k][None])[0], down, size, drip, seed))
-    _CTX['shirt_stains'] = stains
+    _CTX['shirt_stains'] = [s_ + ((2.6,) if s_[5] == 135 else ()) for s_ in stains]
     Hr = sk.rest['Hammer']
     hs = []
     c = np.array([0.0, D.S_RIGHT, D.EYE_OFFSET])

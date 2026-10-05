@@ -14,8 +14,8 @@
   "top_of_head_rest_pose": 13.653,
   "width_reference_pose_incl_hammer": 13.368,
   "depth_reference_pose_incl_hammer": 7.11,
-  "lowest_point_reference_pose": 0.0,
-  "world_scale_applied": 1.01588,
+  "lowest_point_reference_pose": -0.0,
+  "world_scale_applied": 1.01586,
   "shoulder_joint_span": 6.197,
   "arm_lengths_upper_fore": [
    3.657,
@@ -33,7 +33,7 @@
   "HammerFace": {
    "position": [
     0.0,
-    2.7937,
+    2.7936,
     2.2146
    ],
    "normal": [
@@ -46,7 +46,7 @@
   "HammerGrip": {
    "position": [
     0.0,
-    -3.3468,
+    -3.3467,
     0.0
    ],
    "note": "on the haft axis halfway between the two carry grips"
@@ -59,40 +59,40 @@
  },
  "grip": {
   "note": "Distances s are measured along the haft from the hammer-head centre toward the butt. Hammer bone space: origin = right carry grip on the haft axis, +Y toward the head, +Z = striking-face normal. Both thumbs point at the head (a sledgehammer grip), so the right hand can slide down to the left one for Slam/Swing/Spin without regripping.",
-  "units": "final studs (design units x world_scale 1.01588)",
+  "units": "final studs (design units x world_scale 1.01586)",
   "haft_radius": 0.3657,
   "carry_grips": {
    "right": {
-    "s": 2.7937,
+    "s": 2.7936,
     "hammer_bone_y": 0.0
    },
    "left": {
-    "s": 9.4873,
-    "hammer_bone_y": -6.6936
+    "s": 9.487,
+    "hammer_bone_y": -6.6934
    },
-   "distance_between": 6.6936
+   "distance_between": 6.6934
   },
   "butt_end": {
-   "s": 11.0619,
-   "hammer_bone_y": -8.2682
+   "s": 11.0616,
+   "hammer_bone_y": -8.268
   },
   "attack_grip_range_right_hand": {
    "s": [
-    2.7937,
-    7.4667
+    2.7936,
+    7.4666
    ],
    "hammer_bone_y": [
     0.0,
-    -4.6731
+    -4.673
    ],
    "how": "Slide the right hand toward the butt by translating the Hammer bone along its own +Y relative to RightHand: Hammer_in_RightHand(slide) = Hammer_in_RightHand(0) @ Translate(0, slide, 0), slide in [0, 4.673]."
   },
   "left_hand_stays_at": "the left carry grip (the butt end) in every attack; IK_Grip_L rides on the Hammer bone",
   "iron_bands": {
    "s": [
-    6.0953,
-    6.9893,
-    7.8426
+    6.0952,
+    6.9891,
+    7.8424
    ],
    "raise": 0.0305,
    "note": "Near-flush (raised 0.03) so a sliding fist stays inside the -0.03 contact window."
@@ -107,19 +107,19 @@
     0.04062,
     0.97815,
     0.20391,
-    -0.0
+    0.0
    ],
    [
     0.19109,
     -0.20791,
     0.9593,
-    0.9143
+    0.91427
    ],
    [
     0.98073,
     0.0,
     -0.19536,
-    -0.73144
+    -0.73142
    ],
    [
     0.0,
@@ -139,13 +139,13 @@
     0.97815,
     0.20791,
     0.0,
-    -6.88366
+    -6.88351
    ],
    [
     -0.15936,
     0.74971,
     -0.64229,
-    -1.15525
+    -1.15523
    ],
    [
     0.0,
@@ -218,7 +218,7 @@
     "Thumb": [
      0.0093,
      0.0037,
-     0.0391
+     0.039
     ]
    },
    "fingers_all_in_window": true,
@@ -232,7 +232,7 @@
   {
    "name": "Root",
    "parent": null,
-   "length": 1.2191,
+   "length": 1.219,
    "head_rest": [
     0.0,
     0.0,
@@ -246,27 +246,27 @@
    "head_rest": [
     0.0,
     0.1016,
-    4.7747
+    4.7745
    ]
   },
   {
    "name": "LowerTorso",
    "parent": "HumanoidRootPart",
-   "length": 2.4466,
+   "length": 2.4465,
    "head_rest": [
     0.0,
     0.1016,
-    4.7747
+    4.7745
    ]
   },
   {
    "name": "UpperTorso",
    "parent": "LowerTorso",
-   "length": 3.5052,
+   "length": 3.5051,
    "head_rest": [
     0.0,
     0.3048,
-    7.2128
+    7.2126
    ]
   },
   {
@@ -276,7 +276,7 @@
    "head_rest": [
     0.0,
     0.254,
-    11.1239
+    11.1237
    ]
   },
   {
@@ -286,7 +286,7 @@
    "head_rest": [
     0.0,
     -0.0203,
-    11.8554
+    11.8551
    ]
   },
   {
@@ -295,8 +295,8 @@
    "length": 0.4571,
    "head_rest": [
     0.0,
-    -1.2902,
-    12.8408
+    -1.2901,
+    12.8405
    ]
   },
   {
@@ -305,8 +305,8 @@
    "length": 0.4369,
    "head_rest": [
     0.0,
-    -1.2902,
-    12.4649
+    -1.2901,
+    12.4646
    ]
   },
   {
@@ -316,7 +316,7 @@
    "head_rest": [
     0.0,
     -2.3365,
-    9.3969
+    9.3967
    ]
   },
   {
@@ -325,28 +325,28 @@
    "length": 0.868,
    "head_rest": [
     0.0,
-    -2.7937,
-    8.6858
+    -2.7936,
+    8.6856
    ]
   },
   {
    "name": "Shirt_Back",
    "parent": "UpperTorso",
-   "length": 1.4948,
+   "length": 1.4947,
    "head_rest": [
     0.0,
-    2.0826,
-    8.6858
+    2.0825,
+    8.6856
    ]
   },
   {
    "name": "RightUpperArm",
    "parent": "UpperTorso",
-   "length": 3.6572,
+   "length": 3.6571,
    "head_rest": [
     -3.0984,
     0.254,
-    10.7684
+    10.7681
    ]
   },
   {
@@ -354,9 +354,9 @@
    "parent": "RightUpperArm",
    "length": 1.7778,
    "head_rest": [
-    -5.4264,
+    -5.4262,
     -0.255,
-    7.9941
+    7.9939
    ]
   },
   {
@@ -364,19 +364,19 @@
    "parent": "RightLowerArm",
    "length": 1.7778,
    "head_rest": [
-    -6.3847,
-    -1.2233,
-    6.8519
+    -6.3846,
+    -1.2232,
+    6.8518
    ]
   },
   {
    "name": "RightHand",
    "parent": "RightLowerArmTwist",
-   "length": 1.1175,
+   "length": 1.1174,
    "head_rest": [
-    -7.3431,
+    -7.343,
     -2.1915,
-    5.7097
+    5.7096
    ]
   },
   {
@@ -384,19 +384,19 @@
    "parent": "RightHand",
    "length": 0.6705,
    "head_rest": [
-    -8.0048,
-    -3.5714,
-    5.2526
+    -8.0046,
+    -3.5713,
+    5.2524
    ]
   },
   {
    "name": "RightIndex2",
    "parent": "RightIndex1",
-   "length": 0.5283,
+   "length": 0.5282,
    "head_rest": [
-    -8.2175,
-    -3.9604,
-    4.7496
+    -8.2173,
+    -3.9603,
+    4.7495
    ]
   },
   {
@@ -404,9 +404,9 @@
    "parent": "RightIndex2",
    "length": 0.447,
    "head_rest": [
-    -8.2225,
-    -4.2893,
-    4.3363
+    -8.2223,
+    -4.2892,
+    4.3362
    ]
   },
   {
@@ -414,9 +414,9 @@
    "parent": "RightHand",
    "length": 0.704,
    "head_rest": [
-    -7.9988,
+    -7.9986,
     -3.21,
-    4.9096
+    4.9095
    ]
   },
   {
@@ -424,9 +424,9 @@
    "parent": "RightMiddle1",
    "length": 0.5547,
    "head_rest": [
-    -8.2233,
-    -3.6374,
-    4.3972
+    -8.2231,
+    -3.6373,
+    4.3971
    ]
   },
   {
@@ -434,9 +434,9 @@
    "parent": "RightMiddle2",
    "length": 0.4693,
    "head_rest": [
-    -8.2291,
-    -3.9977,
-    3.9755
+    -8.229,
+    -3.9976,
+    3.9754
    ]
   },
   {
@@ -444,9 +444,9 @@
    "parent": "RightHand",
    "length": 0.6571,
    "head_rest": [
-    -7.9014,
-    -2.7939,
-    4.6333
+    -7.9013,
+    -2.7938,
+    4.6332
    ]
   },
   {
@@ -454,9 +454,9 @@
    "parent": "RightRing1",
    "length": 0.5177,
    "head_rest": [
-    -8.1119,
-    -3.2141,
-    4.1741
+    -8.1117,
+    -3.214,
+    4.174
    ]
   },
   {
@@ -464,9 +464,9 @@
    "parent": "RightRing2",
    "length": 0.438,
    "head_rest": [
-    -8.1181,
-    -3.5673,
-    3.7956
+    -8.118,
+    -3.5672,
+    3.7955
    ]
   },
   {
@@ -474,9 +474,9 @@
    "parent": "RightHand",
    "length": 0.5632,
    "head_rest": [
-    -7.7658,
-    -2.3785,
-    4.3887
+    -7.7656,
+    -2.3784,
+    4.3886
    ]
   },
   {
@@ -484,9 +484,9 @@
    "parent": "RightPinky1",
    "length": 0.4437,
    "head_rest": [
-    -7.9466,
+    -7.9464,
     -2.7563,
-    4.0122
+    4.0121
    ]
   },
   {
@@ -494,8 +494,8 @@
    "parent": "RightPinky2",
    "length": 0.3755,
    "head_rest": [
-    -7.9526,
-    -3.0729,
+    -7.9525,
+    -3.0728,
     3.7012
    ]
   },
@@ -504,9 +504,9 @@
    "parent": "RightHand",
    "length": 0.5587,
    "head_rest": [
-    -7.2731,
+    -7.2729,
     -3.0384,
-    5.7997
+    5.7996
    ]
   },
   {
@@ -514,9 +514,9 @@
    "parent": "RightThumb1",
    "length": 0.447,
    "head_rest": [
-    -7.3098,
-    -3.5348,
-    5.5458
+    -7.3096,
+    -3.5347,
+    5.5457
    ]
   },
   {
@@ -524,29 +524,29 @@
    "parent": "RightThumb2",
    "length": 0.386,
    "head_rest": [
-    -7.3219,
-    -3.8958,
-    5.2825
+    -7.3218,
+    -3.8957,
+    5.2823
    ]
   },
   {
    "name": "Hammer",
    "parent": "RightHand",
-   "length": 1.2191,
+   "length": 1.219,
    "head_rest": [
-    -7.2205,
-    -2.9668,
-    4.8409
+    -7.2203,
+    -2.9667,
+    4.8408
    ]
   },
   {
    "name": "LeftUpperArm",
    "parent": "UpperTorso",
-   "length": 3.6572,
+   "length": 3.6571,
    "head_rest": [
     3.0984,
     0.254,
-    10.7684
+    10.7681
    ]
   },
   {
@@ -554,9 +554,9 @@
    "parent": "LeftUpperArm",
    "length": 1.7778,
    "head_rest": [
-    5.4264,
+    5.4262,
     -0.255,
-    7.9941
+    7.9939
    ]
   },
   {
@@ -564,19 +564,19 @@
    "parent": "LeftLowerArm",
    "length": 1.7778,
    "head_rest": [
-    6.3847,
-    -1.2233,
-    6.8519
+    6.3846,
+    -1.2232,
+    6.8518
    ]
   },
   {
    "name": "LeftHand",
    "parent": "LeftLowerArmTwist",
-   "length": 1.1175,
+   "length": 1.1174,
    "head_rest": [
-    7.3431,
+    7.343,
     -2.1915,
-    5.7097
+    5.7096
    ]
   },
   {
@@ -584,19 +584,19 @@
    "parent": "LeftHand",
    "length": 0.6705,
    "head_rest": [
-    7.4577,
-    -3.1628,
-    4.4471
+    7.4575,
+    -3.1627,
+    4.447
    ]
   },
   {
    "name": "LeftIndex2",
    "parent": "LeftIndex1",
-   "length": 0.5283,
+   "length": 0.5282,
    "head_rest": [
-    7.8253,
+    7.8252,
     -3.3839,
-    3.9319
+    3.9318
    ]
   },
   {
@@ -604,8 +604,8 @@
    "parent": "LeftIndex2",
    "length": 0.447,
    "head_rest": [
-    8.069,
-    -3.4123,
+    8.0689,
+    -3.4122,
     3.464
    ]
   },
@@ -614,9 +614,9 @@
    "parent": "LeftHand",
    "length": 0.704,
    "head_rest": [
-    7.8862,
+    7.8861,
     -2.9676,
-    4.6097
+    4.6096
    ]
   },
   {
@@ -624,9 +624,9 @@
    "parent": "LeftMiddle1",
    "length": 0.5547,
    "head_rest": [
-    8.2521,
+    8.252,
     -3.2103,
-    4.0594
+    4.0593
    ]
   },
   {
@@ -634,9 +634,9 @@
    "parent": "LeftMiddle2",
    "length": 0.4693,
    "head_rest": [
-    8.4921,
-    -3.2482,
-    3.5607
+    8.4919,
+    -3.2481,
+    3.5606
    ]
   },
   {
@@ -644,9 +644,9 @@
    "parent": "LeftHand",
    "length": 0.6571,
    "head_rest": [
-    8.2469,
-    -2.6839,
-    4.8298
+    8.2467,
+    -2.6838,
+    4.8297
    ]
   },
   {
@@ -654,9 +654,9 @@
    "parent": "LeftRing1",
    "length": 0.5177,
    "head_rest": [
-    8.5643,
+    8.5641,
     -2.9222,
-    4.3062
+    4.3061
    ]
   },
   {
@@ -664,9 +664,9 @@
    "parent": "LeftRing2",
    "length": 0.438,
    "head_rest": [
-    8.7692,
-    -2.9669,
-    3.8329
+    8.769,
+    -2.9668,
+    3.8328
    ]
   },
   {
@@ -674,9 +674,9 @@
    "parent": "LeftHand",
    "length": 0.5632,
    "head_rest": [
-    8.567,
-    -2.3716,
-    5.0551
+    8.5668,
+    -2.3715,
+    5.055
    ]
   },
   {
@@ -684,9 +684,9 @@
    "parent": "LeftPinky1",
    "length": 0.4437,
    "head_rest": [
-    8.8179,
+    8.8177,
     -2.5856,
-    4.5986
+    4.5985
    ]
   },
   {
@@ -694,9 +694,9 @@
    "parent": "LeftPinky2",
    "length": 0.3755,
    "head_rest": [
-    8.9769,
-    -2.6319,
-    4.1869
+    8.9767,
+    -2.6318,
+    4.1868
    ]
   },
   {
@@ -704,9 +704,9 @@
    "parent": "LeftHand",
    "length": 0.5587,
    "head_rest": [
-    6.9352,
-    -2.425,
-    4.9961
+    6.935,
+    -2.4249,
+    4.996
    ]
   },
   {
@@ -714,9 +714,9 @@
    "parent": "LeftThumb1",
    "length": 0.447,
    "head_rest": [
-    6.9892,
-    -2.5705,
-    4.4593
+    6.9891,
+    -2.5704,
+    4.4592
    ]
   },
   {
@@ -724,9 +724,9 @@
    "parent": "LeftThumb2",
    "length": 0.386,
    "head_rest": [
-    7.0926,
-    -2.6468,
-    4.0312
+    7.0925,
+    -2.6467,
+    4.0311
    ]
   },
   {
@@ -735,8 +735,8 @@
    "length": 1.8398,
    "head_rest": [
     0.0,
-    -1.2699,
-    6.654
+    -1.2698,
+    6.6539
    ]
   },
   {
@@ -746,7 +746,7 @@
    "head_rest": [
     -1.5746,
     0.2032,
-    4.5207
+    4.5206
    ]
   },
   {
@@ -774,7 +774,7 @@
    "parent": "RightFoot",
    "length": 0.6306,
    "head_rest": [
-    -1.6779,
+    -1.6778,
     -0.282,
     0.4571
    ]
@@ -786,16 +786,16 @@
    "head_rest": [
     1.5746,
     0.2032,
-    4.5207
+    4.5206
    ]
   },
   {
    "name": "LeftLowerLeg",
    "parent": "LeftUpperLeg",
-   "length": 1.5672,
+   "length": 1.5671,
    "head_rest": [
     3.0984,
-    -1.1683,
+    -1.1682,
     2.4889
    ]
   },
@@ -804,7 +804,7 @@
    "parent": "LeftLowerLeg",
    "length": 1.1517,
    "head_rest": [
-    3.6775,
+    3.6774,
     -1.0667,
     1.0362
    ]
@@ -814,8 +814,8 @@
    "parent": "LeftFoot",
    "length": 0.6306,
    "head_rest": [
-    3.8161,
-    -2.0526,
+    3.816,
+    -2.0525,
     0.4571
    ]
   }
@@ -845,17 +845,17 @@
  "idle_start_pose": "ReferencePose action, frame 1 (= RigTest_ROM frame 1)",
  "sections": {
   "HammerBrute_Body": {
-   "triangles": 13074,
-   "vertices": 6569,
-   "faces": 10067,
+   "triangles": 12608,
+   "vertices": 6341,
+   "faces": 9864,
    "material": "HammerBrute_Body",
    "texture_master": "HammerBrute_Body_BaseColor_2048.png",
    "texture_delivery": "HammerBrute_Body_BaseColor.png"
   },
   "HammerBrute_Head": {
-   "triangles": 4998,
-   "vertices": 2554,
-   "faces": 3019,
+   "triangles": 5948,
+   "vertices": 3034,
+   "faces": 3494,
    "material": "HammerBrute_Head",
    "texture_master": "HammerBrute_Head_BaseColor_2048.png",
    "texture_delivery": "HammerBrute_Head_BaseColor.png"
@@ -870,7 +870,7 @@
   },
   "HammerBrute_Gear": {
    "triangles": 6923,
-   "vertices": 3499,
+   "vertices": 3505,
    "faces": 5463,
    "material": "HammerBrute_Gear",
    "texture_master": "HammerBrute_Gear_BaseColor_2048.png",
@@ -901,7 +901,7 @@
    "texture_delivery": "HammerBrute_EyeGlow_BaseColor.png"
   }
  },
- "triangles_total": 42881,
+ "triangles_total": 43365,
  "actions": {
   "ReferencePose": {
    "frame_range": [
@@ -1139,7 +1139,7 @@
   },
   "weights": {
    "HammerBrute_Body": {
-    "vertices": 6569,
+    "vertices": 6341,
     "max_influences": 4,
     "unweighted": 0,
     "max_sum_error": 0.0001,
@@ -1153,7 +1153,7 @@
     "non_deform_groups": []
    },
    "HammerBrute_Gear": {
-    "vertices": 3499,
+    "vertices": 3505,
     "max_influences": 3,
     "unweighted": 0,
     "max_sum_error": 0.0001,
@@ -1167,8 +1167,8 @@
     "non_deform_groups": []
    },
    "HammerBrute_Head": {
-    "vertices": 2554,
-    "max_influences": 3,
+    "vertices": 3034,
+    "max_influences": 4,
     "unweighted": 0,
     "max_sum_error": 0.0001,
     "non_deform_groups": []
@@ -1240,7 +1240,7 @@
     "Thumb": [
      0.0093,
      0.0037,
-     0.0391
+     0.039
     ]
    },
    "fingers_all_in_window": true,
@@ -1252,12 +1252,12 @@
  },
  "textures": {
   "HammerBrute_Body_BaseColor.png": {
-   "sha256": "ACFF4EE0482E210D74AAC6B4D97C73134A69B306E33CE0EDA4278A9E4AE947C9",
-   "bytes": 1102858
+   "sha256": "BE3E0B3A9B8668B0BF31841859503C6A14883447D563C0B00326AA561DEBE5C6",
+   "bytes": 1142694
   },
   "HammerBrute_Body_BaseColor_2048.png": {
-   "sha256": "753C56AD5B01780A403B7D3789D2A0B96969945CB1A7E7A51E9AC4F959827839",
-   "bytes": 2853943
+   "sha256": "53D97E83FC3ADE5F8237D005E7E3146B31E8E566A2393614C7EBB9E67BBBCEE4",
+   "bytes": 2971808
   },
   "HammerBrute_EyeGlow_BaseColor.png": {
    "sha256": "9C0E00306E692436EB466535E95DF85C40D5D442B524F108BA7B988ABA2149A6",
@@ -1268,44 +1268,44 @@
    "bytes": 4590
   },
   "HammerBrute_Gear_BaseColor.png": {
-   "sha256": "E4B0054A19042FBCE4E5A022599857D8E12FF3BF878561A438FFA7DA3C17AE1E",
-   "bytes": 570687
+   "sha256": "E91CAC426088FB16236F7056FEC84152DAAB00163396EA473B7BF7403AE9A6A9",
+   "bytes": 575865
   },
   "HammerBrute_Gear_BaseColor_2048.png": {
-   "sha256": "643699C9E10B5FD7C5096BD143275A0DEB8EC9F6E2DEEB48445ABF51B1817C45",
-   "bytes": 1278225
+   "sha256": "34ABE60FD7A4323FC21114E30EE1B464E4A314FBE9616DCACF9D2053DEEA8FA8",
+   "bytes": 1300449
   },
   "HammerBrute_Hammer_BaseColor.png": {
-   "sha256": "006F047ED1984143B2131F4B4A9A67D9F12010830B2BE76AD4126494B6BD6BCB",
-   "bytes": 619883
+   "sha256": "8E0B97BD1DD141A0D314314BD29A1F7239FF5B3AB81F571EB08A2E35ECB9A86C",
+   "bytes": 642801
   },
   "HammerBrute_Hammer_BaseColor_2048.png": {
-   "sha256": "E635816DA2DC942A3BCF72539DC3302DF0FAF52671B2E69AA13F61BEC81BAC9E",
-   "bytes": 1627963
+   "sha256": "2258F86BCEA8165CBA4EBD5743AFCC3BBC252A76B14B4AC7B917D7ECC7C584B5",
+   "bytes": 1716342
   },
   "HammerBrute_Head_BaseColor.png": {
-   "sha256": "E199EA6792B1B3ACB6A2FCAF2C3313F0731B69C844CBCBB9A86B856F7ECDA26B",
-   "bytes": 705089
+   "sha256": "DE5B0828E308219BC17F3CA4BCE7D6355A0F23D29D6DFD3F8D0C299B24372BAE",
+   "bytes": 700567
   },
   "HammerBrute_Head_BaseColor_2048.png": {
-   "sha256": "A1C91237BA6AE7BE08A181FDA3330952B954B262C751DCE65EE2B0613A8A54ED",
-   "bytes": 1772195
+   "sha256": "17B828C150D552FFB5BF48D0F961394CC8CEC4C8C678AFE874D60741BDD88AE9",
+   "bytes": 1768461
   },
   "HammerBrute_Shirt_BaseColor.png": {
-   "sha256": "B8AAFC8E794DB0DB597065D40074F8EAF6A84F1950B9C5FB154BACC69D0E2C05",
-   "bytes": 858680
+   "sha256": "945D99E00D9907AC86B1BAFAB80F057EB68CFB4444E1D404725089169621588B",
+   "bytes": 863103
   },
   "HammerBrute_Shirt_BaseColor_2048.png": {
-   "sha256": "C319839E5C68DD80CEFE34F438919BBDE6EB9C9400FF0A5F4C4273C1E2ACA1D4",
-   "bytes": 2424998
+   "sha256": "98A148BFA1EF03CE4C4E7E19FD42AFDE6DB1857172DB96D650A2F95798BDCA90",
+   "bytes": 2440057
   },
   "HammerBrute_Trousers_BaseColor.png": {
-   "sha256": "240FDB2FF39928AF7765AD59A21B8E41746F6BADBDB9DE8A2599599950E1371E",
-   "bytes": 723023
+   "sha256": "A4DBAC398C1FEA3D8A6D160B38B80E3BE5A93793B9A76F497FC5D2667C8FC98E",
+   "bytes": 725759
   },
   "HammerBrute_Trousers_BaseColor_2048.png": {
-   "sha256": "65B814FC4BB306DE056E32594B6EF39586F1D1C87184A6F3A379E2B0ACB3130B",
-   "bytes": 1911966
+   "sha256": "A7958FA7B89B53F2942D6ED44A02C47BA3C58C6BFD785D0F39FEA01B7964ECF8",
+   "bytes": 1917557
   }
  },
  "camera_solution": {

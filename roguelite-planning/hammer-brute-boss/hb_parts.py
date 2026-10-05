@@ -340,9 +340,10 @@ def suspender_parts():
         parts.append(Part('Suspender' + side, V, F, 'Gear', mat='strap', rule='skin'))
         # buckle location: the point at BUCKLE_AT of the path's length, on the chest
         front = np.nonzero(P[:, 1] < -0.6)[0]
-        i = int(front[np.argmin(np.abs(P[front, 2] - 10.25))])          # high on the chest
+        i = int(front[np.argmin(np.abs(P[front, 2] - 9.95))])           # high on the chest, below the slope
         tdir = _unit(P[min(i + 1, len(P) - 1)] - P[max(i - 1, 0)])
-        buckles[side] = (P[i], N[i], tdir)
+        nf = _unit(N[i] + np.array([0, -1.0, 0]) * 1.4)                   # plate turned to face forward
+        buckles[side] = (P[i] + nf * 0.04, nf, tdir)
     for side, (c, n, t) in buckles.items():
         parts.append(buckle_part(side, c, n, t))
     return parts
@@ -388,9 +389,9 @@ def buckle_part(side, c, n, t):
     w = np.cross(n, t)
     R = np.stack([w, t, n], 1)
     cc = c + n * 0.05
-    plate = box_planes(cc, R, (0.48, 0.48, 0.085), bevel=0.07, k=0.02, bone='UpperTorso')
-    sunk = box_planes(cc + n * 0.10, R, (0.27, 0.27, 0.10), bevel=0.035, k=0.015, bone='UpperTorso', op='sub')
-    bar = box_planes(cc + n * 0.02, R, (0.075, 0.36, 0.055), bevel=0.02, k=0.015, bone='UpperTorso')
+    plate = box_planes(cc, R, (0.50, 0.50, 0.10), bevel=0.08, k=0.02, bone='UpperTorso')
+    sunk = box_planes(cc + n * 0.12, R, (0.29, 0.29, 0.11), bevel=0.04, k=0.015, bone='UpperTorso', op='sub')
+    bar = box_planes(cc + n * 0.03, R, (0.08, 0.38, 0.06), bevel=0.02, k=0.015, bone='UpperTorso')
 
     class _B:
         op = 'union'

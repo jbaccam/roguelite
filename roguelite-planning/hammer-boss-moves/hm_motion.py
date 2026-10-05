@@ -376,18 +376,21 @@ def hammer_R(yaw=0.0, pitch=0.0, roll=0.0):
 
 
 # =============================================================== IK
-def leg_ik(rig, side, D_pelvis, D_foot, knee_out=0.0):
+def leg_ik(rig, side, D_pelvis, D_foot, knee_out=0.0, axis=None, aim=None, phi_min=0.0):
     """Thigh and shin D for a hip carried by the pelvis and an ankle carried by the foot. One knee
-    axis (the rest X axis in thigh space): returns (D_thigh, D_shin, knee_deg, reach_error)."""
+    axis (thigh space; default the rest X axis): returns (D_thigh, D_shin, knee_deg, reach_error).
+    aim: the knee axis direction in PELVIS rest space (default: X turned out by knee_out), so a
+    clip can pin its knees to a reference pose (the Idle pins the original carry)."""
     L = rig.leg[side]
     H = xf(D_pelvis, L['h0'])
     A = xf(D_foot, L['a0'])
     dist = np.linalg.norm(A - H)
-    a, b, ax = L['a'], L['b'], L['axis']
+    a, b = L['a'], L['b']
+    ax = L['axis'] if axis is None else unit(axis)
 
     def reach(phi):
         return np.linalg.norm(a + axis_angle(ax, phi) @ b)
-    lo, hi = 0.0, 160.0
+    lo, hi = float(phi_min), 160.0
     err = 0.0
     if dist >= reach(lo):
         phi = lo
@@ -404,11 +407,13 @@ def leg_ik(rig, side, D_pelvis, D_foot, knee_out=0.0):
                 hi = mid
         phi = (lo + hi) / 2
     v_rest = a + axis_angle(ax, phi) @ b
-    # the knee axis tracks the pelvis turned part-way toward the foot, plus a little splay
     Rp, Rf = D_pelvis[:3, :3], D_foot[:3, :3]
-    s = -1 if side == 'Right' else 1
-    want = unit(Rp @ ax + Rf @ ax)
-    want = rz(-s * knee_out) @ want
+    if aim is None:
+        s = -1 if side == 'Right' else 1
+        want = unit(Rp @ L['axis'] + Rf @ L['axis'])
+        want = rz(-s * knee_out) @ want
+    else:
+        want = Rp @ unit(aim)
     Rt = frame_map(v_rest, ax, A - H, want)
     Rs = Rt @ axis_angle(ax, phi)
     K = H + Rt @ a
@@ -628,14 +633,16 @@ class ArmPlan:
 
 
 # =============================================================== pose assembly
-def compose(rig, body, hammer, slides, arm_states, feet, knee_out=6.0):
+def compose(rig, body, hammer, slides, arm_states, feet, knee_out=6.0, knees=None):
     """Full pose from body parts (LowerTorso, UpperTorso, Head), the hammer D, slides and arm states
-    {side: (roll, swivel)} and feet D. Returns (pose dict, diagnostics)."""
+    {side: (roll, swivel)} and feet D. knees: optional {side: (axis, aim, phi_min)} for leg_ik.
+    Returns (pose dict, diagnostics)."""
     P = {ROOT: np.eye(4), 'Hammer': hammer}
     P.update(body)
     diag = {}
     for s in SIDES:
-        Dt, Ds, knee, err = leg_ik(rig, s, body['LowerTorso'], feet[s], knee_out)
+        kx = knees[s] if knees else (None, None, 0.0)
+        Dt, Ds, knee, err = leg_ik(rig, s, body['LowerTorso'], feet[s], knee_out, *kx)
         P[s + 'UpperLeg'], P[s + 'LowerLeg'], P[s + 'Foot'] = Dt, Ds, feet[s]
         diag['knee_' + s] = knee
         diag['legerr_' + s] = err

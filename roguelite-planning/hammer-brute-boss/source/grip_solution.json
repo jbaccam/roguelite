@@ -409,40 +409,40 @@
  },
  "summary": {
   "note": "Distances s are measured along the haft from the hammer-head centre toward the butt. Hammer bone space: origin = right carry grip on the haft axis, +Y toward the head, +Z = striking-face normal. Both thumbs point at the head (a sledgehammer grip), so the right hand can slide down to the left one for Slam/Swing/Spin without regripping.",
-  "units": "final studs (design units x world_scale 1.01588)",
+  "units": "final studs (design units x world_scale 1.01586)",
   "haft_radius": 0.3657,
   "carry_grips": {
    "right": {
-    "s": 2.7937,
+    "s": 2.7936,
     "hammer_bone_y": 0.0
    },
    "left": {
-    "s": 9.4873,
-    "hammer_bone_y": -6.6936
+    "s": 9.487,
+    "hammer_bone_y": -6.6934
    },
-   "distance_between": 6.6936
+   "distance_between": 6.6934
   },
   "butt_end": {
-   "s": 11.0619,
-   "hammer_bone_y": -8.2682
+   "s": 11.0616,
+   "hammer_bone_y": -8.268
   },
   "attack_grip_range_right_hand": {
    "s": [
-    2.7937,
-    7.4667
+    2.7936,
+    7.4666
    ],
    "hammer_bone_y": [
     0.0,
-    -4.6731
+    -4.673
    ],
    "how": "Slide the right hand toward the butt by translating the Hammer bone along its own +Y relative to RightHand: Hammer_in_RightHand(slide) = Hammer_in_RightHand(0) @ Translate(0, slide, 0), slide in [0, 4.673]."
   },
   "left_hand_stays_at": "the left carry grip (the butt end) in every attack; IK_Grip_L rides on the Hammer bone",
   "iron_bands": {
    "s": [
-    6.0953,
-    6.9893,
-    7.8426
+    6.0952,
+    6.9891,
+    7.8424
    ],
    "raise": 0.0305,
    "note": "Near-flush (raised 0.03) so a sliding fist stays inside the -0.03 contact window."
@@ -457,19 +457,19 @@
     0.04062,
     0.97815,
     0.20391,
-    -0.0
+    0.0
    ],
    [
     0.19109,
     -0.20791,
     0.9593,
-    0.9143
+    0.91427
    ],
    [
     0.98073,
     0.0,
     -0.19536,
-    -0.73144
+    -0.73142
    ],
    [
     0.0,
@@ -489,13 +489,13 @@
     0.97815,
     0.20791,
     0.0,
-    -6.88366
+    -6.88351
    ],
    [
     -0.15936,
     0.74971,
     -0.64229,
-    -1.15525
+    -1.15523
    ],
    [
     0.0,
@@ -568,7 +568,7 @@
     "Thumb": [
      0.0093,
      0.0037,
-     0.0391
+     0.039
     ]
    },
    "fingers_all_in_window": true,

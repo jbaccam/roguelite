@@ -1,14 +1,14 @@
 {
  "sections": {
-  "HammerBrute_Body": 13074,
-  "HammerBrute_Head": 4998,
+  "HammerBrute_Body": 12608,
+  "HammerBrute_Head": 5948,
   "HammerBrute_Shirt": 6200,
   "HammerBrute_Gear": 6923,
   "HammerBrute_Trousers": 7598,
   "HammerBrute_Hammer": 3768,
   "HammerBrute_EyeGlow": 320
  },
- "total_triangles": 42881,
+ "total_triangles": 43365,
  "limit_per_mesh": 20000,
  "all_under_limit": true,
  "weights": {

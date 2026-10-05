@@ -310,9 +310,9 @@ def arm_prims(side):
     P = []
     c, R = U(0.32, 0.62, 0.02)
     # segmented BLOCKS with plane changes: rounded boxes, small fillets between them
-    P.append(RoundBox(c, (1.26, 1.24, 1.26), R=R, round_=0.62, k=0.30, bone=ub, tag='deltoid'))
+    P.append(RoundBox(c, (1.28, 1.24, 1.28), R=R, round_=0.42, k=0.26, bone=ub, tag='deltoid'))
     c, R = U(0.18, 2.12, 0.08)
-    P.append(RoundBox(c, (1.24, 0.98, 1.16), R=R, round_=0.50, k=0.10, bone=ub, tag='upperarm'))
+    P.append(RoundBox(c, (1.24, 0.96, 1.16), R=R, round_=0.34, k=0.07, bone=ub, tag='upperarm'))
     c, R = U(-0.05, 2.0, 0.52)
     P.append(Ellipsoid(c, (0.96, 0.88, 0.82), R=R, k=0.12, bone=ub, tag='biceps'))
     c, R = U(0.10, 2.05, -0.47)
@@ -320,12 +320,12 @@ def arm_prims(side):
     P.append(RoundCone(S, E, 1.05, 0.95, k=0.3, bone=ub, tag='humerus'))
     # elbow / upper forearm block
     c, R = F(-0.02, 0.58, 0.02)
-    P.append(RoundBox(c, (1.40, 1.00, 1.20), R=R, round_=0.52, k=0.10, bone=lb, tag='elbow'))
+    P.append(RoundBox(c, (1.40, 0.98, 1.22), R=R, round_=0.36, k=0.07, bone=lb, tag='elbow'))
     # massive lower forearm (barely tapering), the last block owned by the twist bone
     c, R = F(0.06, 1.80, 0.04)
-    P.append(RoundBox(c, (1.18, 0.92, 1.08), R=R, round_=0.50, k=0.10, bone=lb, tag='forearm'))
+    P.append(RoundBox(c, (1.22, 0.90, 1.12), R=R, round_=0.34, k=0.07, bone=lb, tag='forearm'))
     c, R = F(0.0, 2.74, 0.0)
-    P.append(RoundBox(c, (1.02, 0.72, 0.94), R=R, round_=0.44, k=0.12, bone=tb, tag='forearm_low'))
+    P.append(RoundBox(c, (1.08, 0.74, 1.00), R=R, round_=0.32, k=0.08, bone=tb, tag='forearm_low'))
     P.append(RoundCone(E, Wr, 0.95, 0.80, k=0.3, bone=lb, tag='ulna'))
     return P
 

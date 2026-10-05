@@ -108,7 +108,7 @@ PALETTE = {
                  'dirt': (128, 104, 78), 'blood': (132, 30, 28), 'blood_dark': (70, 12, 14)},
     'strap':    {'base': (88, 60, 44), 'dark': (58, 38, 28), 'light': (110, 78, 58), 'edge': (138, 104, 80)},
     'buckle':   {'base': (150, 148, 152), 'dark': (96, 94, 100), 'light': (182, 180, 184), 'edge': (222, 220, 222)},
-    'iron':     {'base': (88, 82, 86), 'dark': (60, 56, 60), 'light': (110, 104, 106), 'edge': (172, 166, 162),
+    'iron':     {'base': (74, 70, 74), 'dark': (40, 38, 42), 'light': (100, 96, 98), 'edge': (164, 158, 154),
                  'blood': (122, 26, 26), 'blood_dark': (80, 14, 16)},
     'sash':     {'base': (100, 28, 38), 'dark': (66, 16, 26), 'light': (126, 44, 52), 'edge': (146, 64, 70)},
     'trousers': {'base': (62, 66, 80), 'dark': (42, 45, 56), 'light': (84, 89, 104), 'edge': (104, 108, 122),
@@ -224,9 +224,9 @@ def torn_mark(P, c, n, size, seed, aspect=1.4):
     r = np.hypot(a, b)
     th = np.arctan2(b, a)
     rim = np.zeros(len(P))
-    for k, amp in ((3, 0.22), (5, 0.18), (8, 0.14), (13, 0.10)):
-        rim += amp * np.abs(np.sin(k * th / 2 + rnd.uniform(0, 6.28))) ** 1.5
-    edge = size * (0.70 + rim)
+    for k, amp, pw in ((3, 0.30, 2.0), (5, 0.34, 3.0), (7, 0.26, 3.0), (13, 0.12, 1.5), (19, 0.06, 1.0)):
+        rim += amp * np.abs(np.sin(k * th / 2 + rnd.uniform(0, 6.28))) ** pw
+    edge = size * (0.48 + rim)
     return r - edge + np.where(off > size * 1.6, 9.0, 0.0)
 
 
@@ -244,12 +244,12 @@ def paint_wounds(out, P, gains, wounds, key='skin', strength=1.0):
             continue
         Pn = P[near]
         b = torn_mark(Pn, c, nrm, size, seed, aspect)
-        core = torn_mark(Pn, c, nrm, size * 0.42, seed + 1, aspect * 0.8)
-        cov = smoothstep(0.015, -0.015, b)
-        drp = drips(Pn, c, nrm, ddir, dl, size * 0.4, seed + 2, count=1 + seed % 3) if dl > 0 else 0
+        core = torn_mark(Pn, c, nrm, size * 0.55, seed + 1, aspect * 0.85)
+        cov = smoothstep(0.012, -0.012, b)
+        drp = drips(Pn, c, nrm, ddir, dl, size * 0.35, seed + 2, count=1 + seed % 2) if dl > 0 else 0
         o = out[near]
         o = mix(o, tile(red, len(Pn)), np.maximum(cov, drp * 0.85) * strength)
-        o = mix(o, tile(dred, len(Pn)), smoothstep(0.02, -0.03, core) * 0.9 * strength)
+        o = mix(o, tile(dred, len(Pn)), smoothstep(0.03, -0.04, core) * 0.95 * strength)
         out[near] = o
     return out
 
@@ -345,14 +345,14 @@ def paint_mouth(out, P, gains, mouth_prims, head_union):
 
 def paint_skin(P, N, ao, edge, facet, gains, ctx):
     n = len(P)
-    out = paint_generic('skin', P, ao, edge, facet, gains, 1, patch_scale=0.55, facet_amp=0.30, cavity=0.45,
+    out = paint_generic('skin', P, ao, edge, facet, gains, 1, patch_scale=0.55, facet_amp=0.40, cavity=0.45,
                         edge_amt=0.30, levels=3)
     # mottling: broad yellow-green and deep green patches (the reference's 3 value ranges)
     mot = posterize(fbm(P, 0.9, 3, 77), 3, soft=0.05)
     out = mix(out, tile(col('skin', 'light', gains), n), np.clip(mot - 0.55, 0, 1) * 0.9)
     out = mix(out, tile(col('skin', 'dark', gains), n), np.clip(0.45 - mot, 0, 1) * 0.9)
     # painted light: lighter top planes, darker side/under planes (the reference paints its light in)
-    out *= (1.0 + 0.16 * smoothstep(0.25, 0.85, N[:, 2]) - 0.12 * smoothstep(-0.05, -0.75, N[:, 2]))[:, None]
+    out *= (1.0 + 0.24 * smoothstep(0.20, 0.85, N[:, 2]) - 0.18 * smoothstep(-0.05, -0.75, N[:, 2]))[:, None]
     sp = speckles(P, 31, amount=ctx.get('speck', 1.15))
     out = mix(out, tile(col('skin', 'speck', gains), n), np.clip(sp * 0.95, 0, 1))
     if 'eyes' in ctx:
@@ -403,8 +403,9 @@ def paint_iron(P, ao, edge, facet, gains, ctx, hammer=False, N=None):
     if hammer:
         # worn surface: broad darker recesses and lighter rubbed patches (no grain noise)
         wear = posterize(fbm(P, 0.9, 3, 57), 3, soft=0.06)
-        out = mix(out, tile(col('iron', 'light', gains), n), np.clip(wear - 0.6, 0, 1) * 0.9)
-        out = mix(out, tile(col('iron', 'dark', gains), n), np.clip(0.45 - wear, 0, 1) * 1.2)
+        out = mix(out, tile(col('iron', 'light', gains), n), np.clip(wear - 0.55, 0, 1) * 1.3)
+        out = mix(out, tile(col('iron', 'dark', gains), n), np.clip(0.50 - wear, 0, 1) * 1.6)
+        out = mix(out, tile(col('iron', 'dark', gains), n), smoothstep(0.75, 0.35, ao) * 0.6)   # recesses
         out = paint_wounds(out, P, gains, ctx.get('stains', []), key='iron', strength=0.95)
         if 'face' in ctx:
             # blood coating the striking face and its rim, smeared and running off its edges
@@ -413,9 +414,9 @@ def paint_iron(P, ao, edge, facet, gains, ctx, hammer=False, N=None):
             band = smoothstep(-0.55, -0.05, h) * (1 - smoothstep(0.02, 0.06, np.abs(np.minimum(h, 0) * 0)))
             rag = fbm(P, 4.0, 2, 61)
             reach = 0.25 + 0.75 * smoothstep(0.35, 0.8, fbm(P, 2.5, 2, 63)) * smoothstep(0.55, 0.7, value_noise(P * np.array([1, 1, 1]), 6.0, 65))
-            smear = smoothstep(-(0.15 + reach * 0.9), -0.05, h + (rag - 0.5) * 0.25)
-            out = mix(out, tile(col('iron', 'blood', gains), n), smear * 0.85)
-            out = mix(out, tile(col('iron', 'blood_dark', gains), n), smoothstep(-0.12, -0.0, h) * 0.7)
+            smear = smoothstep(-(0.35 + reach * 1.1), -(0.15 + reach * 0.6), h + (rag - 0.5) * 0.45)
+            out = mix(out, tile(col('iron', 'blood', gains), n), smear * 0.88)
+            out = mix(out, tile(col('iron', 'blood_dark', gains), n), smoothstep(-0.30, -0.05, h + (rag - 0.5) * 0.2) * 0.75)
     return out
 
 
