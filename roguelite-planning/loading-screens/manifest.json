@@ -1,0 +1,62 @@
+{
+  "generator": "built-in imagegen",
+  "status": "Uploaded 2026-10-02 as two 836x941 halves per art (halves/); used by ReplicatedFirst.LoadingScreenUI.",
+  "defaultEntry": "06-lobby-v1.png",
+  "destinations": [
+    {
+      "destination": "Pine Valley",
+      "file": "01-pine-valley-v1.png",
+      "robloxAssetId": null,
+      "halves": {
+        "left": "rbxassetid://78752628753539",
+        "right": "rbxassetid://129262889451329"
+      }
+    },
+    {
+      "destination": "Beach Cove",
+      "file": "02-beach-cove-v1.png",
+      "robloxAssetId": null,
+      "halves": {
+        "left": "rbxassetid://71199992582794",
+        "right": "rbxassetid://128591835780790"
+      }
+    },
+    {
+      "destination": "Desert Basin",
+      "file": "03-desert-basin-v1.png",
+      "robloxAssetId": null,
+      "halves": {
+        "left": "rbxassetid://115565941214905",
+        "right": "rbxassetid://71017141780297"
+      }
+    },
+    {
+      "destination": "Frozen Pass",
+      "file": "04-frozen-pass-v1.png",
+      "robloxAssetId": null,
+      "halves": {
+        "left": "rbxassetid://108881145552072",
+        "right": "rbxassetid://133679558574054"
+      }
+    },
+    {
+      "destination": "Volcanic Crater",
+      "file": "05-volcanic-crater-v1.png",
+      "robloxAssetId": null,
+      "halves": {
+        "left": "rbxassetid://119385297015522",
+        "right": "rbxassetid://128024252521009"
+      }
+    },
+    {
+      "destination": "Lobby",
+      "file": "06-lobby-v1.png",
+      "robloxAssetId": null,
+      "halves": {
+        "left": "rbxassetid://76828943197546",
+        "right": "rbxassetid://136574378682114"
+      }
+    }
+  ],
+  "layout": "Full-bleed landscape artwork; add destination label and progress UI separately over bottom area. Map loads should select by validated destination, not random art. Game entry/lobby use lobby art; tutorial arena uses Pine Valley."
+}
