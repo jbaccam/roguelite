@@ -6,8 +6,8 @@
 --  * 38 Storm Bow: crackling limbs; the arrow climbs, splits, and lightning arrows strike down
 --  * 39 Shadow Daggers: the pair leaves its slot and zips the chain with afterimages and slashes
 --  * 40 Vampire Blade: blood drips and crescents; wisps that curve into the wielder and pulse
---  * 41 Ray Gun: green bolts with a muzzle ring; kills dissolve into green pixels and a burst
--- Server events arrive on GodlyFX (GodlyWeapons). Effects far from the camera are skipped.
+--  * 41 Ray Gun: green bolts, a broad impact blast, and lethal-hit pixel disintegration
+-- Server events arrive on GodlyFX (GodlyWeapons / StatProjectiles). Distant effects are skipped.
 -- Sandboxed like the combat client that requires it: no sounds here (RogueliteSounds plays them).
 local RunService=game:GetService('RunService')
 local Players=game:GetService('Players')
@@ -99,7 +99,12 @@ function V.decorateThrown(model,id)
  local light=Instance.new('PointLight');light.Color=aqua;light.Range=10;light.Brightness=3;light.Shadows=false;light.Parent=body
 end
 
-function V.mount(combat,folder,lookup)
+function V.mount(combat,folder,lookup,options)
+ options=options or {}
+ local stopPreview
+ local K=K
+ local task=task
+ if options.preview then K,stopPreview,task=require(script.Parent:WaitForChild('WeaponShowcaseScope')).new(K,folder) end
  local api={}
  local wraiths={};local bolts={};local afterimages=0
  -- Per rendered weapon --------------------------------------------------------------------------
@@ -499,7 +504,7 @@ function V.mount(combat,folder,lookup)
  -- Vampire Blade wisp (40) ------------------------------------------------------------------------------
  local function wisp(ownerId,position)
   local owner=Players:GetPlayerByUserId(ownerId)
-  local root=owner and owner.Character and owner.Character:FindFirstChild('HumanoidRootPart')
+  local root=options.preview and options.ownerRoot or owner and owner.Character and owner.Character:FindFirstChild('HumanoidRootPart')
   if not root or not K.near(position,150) then return end
   local red,hot=STYLE['40'].glow,STYLE['40'].hot
   local orb=K.ball(folder,'BloodWisp',.55,hot,0,Enum.Material.Neon)
@@ -612,7 +617,7 @@ function V.mount(combat,folder,lookup)
   end
  end
 
- combat:WaitForChild('GodlyFX').OnClientEvent:Connect(function(kind,...)
+ local function onFx(kind,...)
   local a={...}
   if kind=='Rise' then rise(a[1],a[3],a[4],a[5])
   elseif kind=='Chase' then local w=wraiths[a[1]];if w then w.target=a[2] end
@@ -622,12 +627,25 @@ function V.mount(combat,folder,lookup)
   elseif kind=='Rain' then rain(a[1],a[2],a[3],a[4],a[5],a[6],a[7],a[8])
   elseif kind=='Chain' then daggerChain(a[1],a[2],a[3],a[4],a[5],a[6],a[7])
   elseif kind=='Wisp' then wisp(a[1],a[2])
-  elseif kind=='Burst' then greenBurst(a[2],a[3]) end
- end)
- RunService.RenderStepped:Connect(function(dt)
+  elseif kind=='Burst' or kind=='RayImpact' then greenBurst(a[2],a[3]) end
+ end
+ local function stepEffects(dt)
   if next(wraiths) then stepWraiths(math.min(dt,.1)) end
   if next(bolts) then stepBolts() end
- end)
+ end
+ if options.preview then
+  local closed=false
+  function api.handle(...) if not closed and folder.Parent then onFx(...) end end
+  function api.stepEffects(dt) if not closed and folder.Parent then stepEffects(dt) end end
+  function api.destroy()
+   closed=true;stopPreview()
+   for _,w in wraiths do w.model:Destroy() end;table.clear(wraiths)
+   for _,b in bolts do b.core:Destroy();b.shell:Destroy() end;table.clear(bolts)
+  end
+ else
+  combat:WaitForChild('GodlyFX').OnClientEvent:Connect(onFx)
+  RunService.RenderStepped:Connect(stepEffects)
+ end
  return api
 end
 return V

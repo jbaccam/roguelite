@@ -16,6 +16,7 @@ local Debris = game:GetService("Debris")
 local TweenService = game:GetService("TweenService")
 local combat = RS:WaitForChild("RogueliteCombat")
 local Pets = require(combat:WaitForChild("PetConfig"))
+local Presentation = require(combat:WaitForChild("CombatPresentationPolicy"))
 
 local TELEPORT = 60
 local BEHIND, SIDE = 4, 2.5
@@ -620,6 +621,10 @@ local function reticle(entry, npc, untilTime)
 	if entry.reticle then
 		entry.reticle.gui:Destroy()
 		entry.reticle = nil
+	end
+	-- The owl's mark is this owner's aim cue. Pet animation and shared attack effects still draw.
+	if not Presentation.ownsCue(entry.ownerId, Players.LocalPlayer.UserId) then
+		return
 	end
 	local r = typeof(npc) == "Instance" and npc:FindFirstChild("HumanoidRootPart")
 	if not r then

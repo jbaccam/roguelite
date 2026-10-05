@@ -4,10 +4,14 @@ local Debris=game:GetService('Debris')
 local Motion=require(script.Parent.SpecialMotion)
 local WeaponMotion=require(script.Parent.WeaponMotion)
 local Thrown=require(script.Parent.ThrownVisuals)
+local Ground=require(script.Parent.GroundContact)
 local V={}
-function V.mount(combat,folder,lookup)
- require(script.Parent.UtilityVisuals).mount(combat,folder,lookup)
- local flights,zones,puffs={},{},{}
+function V.mount(combat,folder,lookup,options)
+ options=options or {}
+ local closed=false
+ local utility=require(script.Parent.UtilityVisuals).mount(combat,folder,lookup,options)
+ local flights,zones,puffs,sprays={},{},{},{}
+ local ground=Ground.new({folder})
  local function part(name,position,size,color,alpha)
   local p=Instance.new('Part');p.Name=name;p.Shape=Enum.PartType.Ball;p.Size=Vector3.one*size;p.Position=position
   p.Anchored=true;p.CanCollide=false;p.CanQuery=false;p.CanTouch=false;p.CastShadow=false;p.Material=Enum.Material.SmoothPlastic;p.Color=color;p.Transparency=alpha;p.Parent=folder;return p
@@ -32,12 +36,14 @@ function V.mount(combat,folder,lookup)
   release(r);flights[key]=nil
  end
  local function endZone(key) local z=zones[key];if z then z.model:Destroy();zones[key]=nil end end
- combat:WaitForChild('SpecialFX').OnClientEvent:Connect(function(action,key,...)
+ local function onFx(action,key,...)
+  if closed then return end
+  if utility then utility.handle(action,key,...) end
   local a={...}
   if action=='End' then endFlight(key);return end
   if action=='ZoneEnd' then endZone(key);return end
   if action=='Launch' then
-   flights[key]={id=a[1],owner=a[2],slot=a[3],reserve=a[4],origin=a[5],finish=a[6],launchDirection=a[6]-a[5],started=a[7],duration=a[8],height=a[9],created=workspace:GetServerTimeNow()}
+   flights[key]={id=a[1],owner=a[2],slot=a[3],reserve=a[4],origin=a[5],finish=a[6],launchDirection=a[6]-a[5],started=a[7],duration=a[8],height=a[9],rollRadius=a[10],created=workspace:GetServerTimeNow()}
   elseif action=='Segment' then
    local r=flights[key];if r then r.origin=a[1];r.finish=a[2];r.started=a[3];r.duration=a[4];r.height=a[5];r.returning=a[6];r.offset=Vector3.zero end
   elseif action=='Zone' then
@@ -67,15 +73,33 @@ function V.mount(combat,folder,lookup)
    zones[key]=z
   elseif action=='Spray' then
    local origin,direction,length=a[1],a[2],a[3]
-   local visual=lookup(a[4],a[5]);if visual then origin=visual.model:GetPivot():PointToWorldSpace(Vector3.new(0,.3,-1)) end
-   for i=1,10 do
-    local spread=Vector3.new(math.sin(i*9),math.cos(i*7)*.5,math.sin(i*5))*.35
-    task.delay((i-1)*.018,function() if folder.Parent then puff(origin+direction*.3,false,.35+i*.07,.28+i*.005,(direction+spread*.35)*length*3) end end)
+   local streamKey=a[4]..':'..a[5];local s=sprays[streamKey]
+   if not s then
+    local anchor=part('DuckFlameNozzle',origin,.1,Color3.new(1,1,1),1)
+    local flame=Instance.new('ParticleEmitter');flame.Name='ContinuousFlame';flame.Texture='rbxasset://textures/particles/fire_main.dds'
+    flame.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,241,157)),ColorSequenceKeypoint.new(.45,Color3.fromRGB(255,163,45)),ColorSequenceKeypoint.new(1,Color3.fromRGB(231,65,17))})
+    flame.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.15),NumberSequenceKeypoint.new(.6,.35),NumberSequenceKeypoint.new(1,1)})
+    flame.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,.35),NumberSequenceKeypoint.new(.6,1.8),NumberSequenceKeypoint.new(1,2.6)})
+    flame.Lifetime=NumberRange.new(.2,.28);flame.Rate=40;flame.SpreadAngle=Vector2.new(12,12)
+    flame.EmissionDirection=Enum.NormalId.Front;flame.LightEmission=.65;flame.LightInfluence=0;flame.Rotation=NumberRange.new(0,360);flame.RotSpeed=NumberRange.new(-45,45);flame.Parent=anchor
+    s={anchor=anchor,flame=flame,owner=a[4],slot=a[5],direction=direction};sprays[streamKey]=s
    end
+   s.origin=origin;s.aim=direction;s.length=length;s.expires=workspace:GetServerTimeNow()+(a[6] or .42)
+   s.flame.Speed=NumberRange.new(length/ .28,length/ .22);s.flame.Enabled=true
   end
- end)
- RunService.RenderStepped:Connect(function(dt)
+ end
+ local function step(dt)
+  if closed then return end
+  if utility then utility.step(dt) end
   local now=workspace:GetServerTimeNow()
+  for key,s in sprays do
+   if now>s.expires+.3 then s.anchor:Destroy();sprays[key]=nil;continue end
+   s.flame.Enabled=now<s.expires
+   local visual=lookup(s.owner,s.slot)
+   local origin=visual and visual.model.Parent and visual.model:GetPivot():PointToWorldSpace(Vector3.new(0,.3,-1)) or s.origin
+   s.direction=s.direction:Lerp(s.aim,1-math.exp(-20*dt))
+   if s.direction.Magnitude>.01 then s.anchor.CFrame=CFrame.lookAt(origin,origin+s.direction) end
+  end
   for key,r in flights do
    if now-r.created>9 then endFlight(key);continue end
    if now<r.started then continue end
@@ -83,13 +107,23 @@ function V.mount(combat,folder,lookup)
     local template=combat.WeaponTemplates:FindFirstChild(r.id);if not template then endFlight(key);continue end
     if r.id=='08' then
      r.model=Instance.new('Model');r.model.Name='FlyingPoison';local p=part('CloudCore',r.origin,.65,Color3.fromRGB(128,180,65),.6);p.Parent=r.model;r.model.PrimaryPart=p
-    else r.model=template:Clone();r.model.Name='FlyingWeapon_'..r.id;Thrown.decorate(r.model,r.id) end
+    else
+     r.model=template:Clone();r.model.Name='FlyingWeapon_'..r.id
+     if r.id=='22' then
+      local nativeRadius,center=Ground.ballGeometry(template)
+      r.rollRadius=r.rollRadius or nativeRadius;local scale=r.rollRadius/nativeRadius
+      r.model:ScaleTo(r.model:GetScale()*scale);r.ballCenter=center*scale
+     end
+     Thrown.decorate(r.model,r.id)
+    end
     for _,p in r.model:GetDescendants() do if p:IsA('BasePart') then p.Anchored=true;p.CanCollide=false;p.CanTouch=false;p.CanQuery=false;p.LocalTransparencyModifier=0 end end
     r.model.Parent=folder
     local visual=lookup(r.owner,r.slot)
     if visual and visual.id==r.id then
      local source=visual.reserves and visual.reserves[r.reserve] or visual.model
-     r.offset=source:GetPivot().Position-r.origin
+     -- Ordinary throws start on the server's fixed path. Catching up from a moving inventory
+     -- slot with an easing offset looked like steering in mid-air (especially Bowling Pins).
+     r.offset=Motion.profiles[r.id].returns and source:GetPivot().Position-r.origin or Vector3.zero
      if r.id~='08' then visual.flying=visual.flying or {};visual.flying[r.reserve]=(visual.flying[r.reserve] or 0)+1;r.visual=visual end
     else r.offset=Vector3.zero end
    end
@@ -100,9 +134,20 @@ function V.mount(combat,folder,lookup)
    end
    local t=math.clamp((now-r.started)/r.duration,0,1)
    local pos=Motion.position(r.origin,r.finish,t,r.height)+(r.offset or Vector3.zero)*math.max(0,1-(now-r.started)/.16)^2
+   if r.id=='22' then
+    -- Same probe, radius and center offset as the server: a dummy's head is never floor.
+    local previousFloor=r.lastGround or r.origin.Y-r.rollRadius-Ground.Clearance
+    local center=ground:center(pos,r.rollRadius,previousFloor)
+    if center then pos=center;r.lastGround=center.Y-r.rollRadius-Ground.Clearance;r.model.Parent=folder
+    else r.model.Parent=nil;continue end
+   end
    local tangent=r.finish-r.origin
    local rotation=Motion.rotation(r.id,now-r.created,r.id=='31' and r.launchDirection or tangent)
-   r.model:PivotTo(CFrame.new(pos)*rotation)
+   if r.id=='22' then
+    local distance=(Vector3.new(pos.X,0,pos.Z)-Vector3.new(r.origin.X,0,r.origin.Z)).Magnitude
+    rotation=CFrame.lookAt(Vector3.zero,Vector3.new(tangent.X,0,tangent.Z))*CFrame.Angles(-distance/r.rollRadius,0,0)
+   end
+   r.model:PivotTo(CFrame.new(pos)*rotation*CFrame.new(-(r.ballCenter or Vector3.zero)))
    Thrown.step(folder,r,pos)
    if r.id=='08' and (not r.lastPuff or (pos-r.lastPuff).Magnitude>.7) then puff(pos,true,.6,.4);r.lastPuff=pos end
   end
@@ -120,6 +165,18 @@ function V.mount(combat,folder,lookup)
    if t>=1 then p.part:Destroy();table.remove(puffs,i)
    else p.part.Position=p.position+p.velocity*age;p.part.Size=Vector3.one*p.size*(1+t*1.7);p.part.Transparency=(p.green and .5 or .8)+t*(p.green and .5 or .2) end
   end
- end)
+ end
+ if options.preview then
+  return {handle=onFx,step=step,destroy=function()
+   if closed then return end;closed=true
+   if utility then utility.destroy() end
+   for _,r in flights do release(r) end;table.clear(flights)
+   for key in zones do endZone(key) end
+   for _,p in puffs do p.part:Destroy() end;table.clear(puffs)
+   for _,s in sprays do s.anchor:Destroy() end;table.clear(sprays)
+  end}
+ end
+ combat:WaitForChild('SpecialFX').OnClientEvent:Connect(onFx)
+ RunService.RenderStepped:Connect(step)
 end
 return V

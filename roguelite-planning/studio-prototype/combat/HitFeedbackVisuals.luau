@@ -109,9 +109,23 @@ function V.mount(visuals)
  local Tags=game:GetService('CollectionService')
  local K=require(game:GetService('ReplicatedStorage'):WaitForChild('RogueliteCombat'):WaitForChild('VfxKit'))
  local slowed,watched={},setmetatable({},{__mode='k'})
+ local groundCache=setmetatable({},{__mode='k'})
+ local groundParams=RaycastParams.new();groundParams.FilterType=Enum.RaycastFilterType.Exclude
+ groundParams.IgnoreWater=true;groundParams.RespectCanCollide=true
  local function feet(npc,root)
-  local h=npc:FindFirstChildOfClass('Humanoid')
-  return root.Position-Vector3.yAxis*(root.Size.Y*.5+(h and h.HipHeight or 2))
+  -- Sandboxed effects cannot read Humanoid.HipHeight. Probe the actual floor and cache its
+  -- height briefly; the bounded frost pool follows the enemy horizontally every frame.
+  local now=os.clock();local cached=groundCache[npc]
+  if not cached or now>=cached.expires then
+   local exclude={npc,visuals};local enemies=workspace:FindFirstChild('RogueliteEnemies')
+   if enemies then table.insert(exclude,enemies) end
+   for _,player in game:GetService('Players'):GetPlayers() do if player.Character then table.insert(exclude,player.Character) end end
+   groundParams.FilterDescendantsInstances=exclude
+   local ground=workspace:Raycast(root.Position+Vector3.yAxis*2,-Vector3.yAxis*math.max(24,root.Size.Y*3+8),groundParams)
+   cached={y=ground and ground.Position.Y or npc:GetAttribute('BossGroundY') or root.Position.Y-root.Size.Y*.5-2,expires=now+.12}
+   groundCache[npc]=cached
+  end
+  return Vector3.new(root.Position.X,cached.y,root.Position.Z)
  end
  local function patchRadius(root) return math.clamp(math.max(root.Size.X,root.Size.Z)*1.3,2.2,8) end
  local function watch(npc)

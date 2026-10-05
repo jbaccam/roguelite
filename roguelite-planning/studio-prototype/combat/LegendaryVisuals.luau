@@ -21,6 +21,7 @@ local Players=game:GetService('Players')
 local TweenService=game:GetService('TweenService')
 local Catalog=require(script.Parent:WaitForChild('WeaponCatalog'))
 local K=require(script.Parent:WaitForChild('VfxKit'))
+local Presentation=require(script.Parent:WaitForChild('CombatPresentationPolicy'))
 local V={}
 local function rgb(r,g,b) return Color3.fromRGB(r,g,b) end
 -- Painted effect textures already in the game (GodlyVisuals, BossVfxAssets); white on clear, tinted here.
@@ -81,21 +82,31 @@ local function decal(folder,position,texture,color,size,fadeIn,hold,fadeOut,spin
  end,function() p:Destroy() end,'legendDecal',32)
  return p,d
 end
--- Floating headline over a point ("ROYAL FLUSH!", "STRIKE!"): slams in, holds, rises and fades.
+-- World headlines stay proportional at distance and within each viewer's viewport cap.
 local function headline(folder,position,text,face,stroke,size,follow)
  local anchor=K.part(folder,'LegendaryHeadline',Vector3.one*.1,K.White,1);anchor.Position=position
- local gui=Instance.new('BillboardGui');gui.Size=UDim2.fromOffset(420,120);gui.AlwaysOnTop=true;gui.MaxDistance=140;gui.LightInfluence=0;gui.Parent=anchor
+ local gui=Instance.new('BillboardGui');gui.Name='AttackHeadline';gui.AlwaysOnTop=true;gui.MaxDistance=Presentation.HeadlineDistance;gui.LightInfluence=0;gui.Enabled=false;gui.Parent=anchor
  local label=Instance.new('TextLabel');label.Size=UDim2.fromScale(1,1);label.BackgroundTransparency=1;label.Text=text
- label.Font=Enum.Font.FredokaOne;label.TextSize=size or 46;label.TextColor3=K.White;label.TextStrokeTransparency=1;label.Parent=gui
+ label.Font=Enum.Font.FredokaOne;label.TextScaled=true;label.TextColor3=K.White;label.TextStrokeTransparency=1;label.Parent=gui
+ local limit=Instance.new('UITextSizeConstraint');limit.MinTextSize=1;limit.Parent=label
  local grad=Instance.new('UIGradient');grad.Rotation=90;grad.Color=ColorSequence.new(face[1],face[2]);grad.Parent=label
- local outline=Instance.new('UIStroke');outline.Color=stroke;outline.Thickness=4;outline.LineJoinMode=Enum.LineJoinMode.Round;outline.Parent=label
- local scale=Instance.new('UIScale');scale.Scale=2.1;scale.Parent=label
+ local outline=Instance.new('UIStroke');outline.Color=stroke;outline.LineJoinMode=Enum.LineJoinMode.Round;outline.Parent=label
+ local function layout(age)
+  local camera=workspace.CurrentCamera
+  if not camera then gui.Enabled=false;return end
+  local depth=-camera.CFrame:PointToObjectSpace(anchor.Position).Z
+  local d=Presentation.headline(camera.ViewportSize,depth,camera.FieldOfView,size,age)
+  gui.Enabled=d.visible;gui.Size=UDim2.fromOffset(d.width,d.height)
+  limit.MaxTextSize=d.text;outline.Thickness=d.stroke
+ end
+ layout(0)
  label.Rotation=-9
- TweenService:Create(scale,TweenInfo.new(.28,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
  TweenService:Create(label,TweenInfo.new(.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Rotation=0}):Play()
  K.animate(1.25,function(_,age)
+  if not anchor.Parent then return true end
   local base=follow and follow() or position
   anchor.Position=base+Vector3.yAxis*(age>.75 and (age-.75)*4 or 0)
+  layout(age)
   local fade=smooth((age-.85)/.4)
   label.TextTransparency=fade;outline.Transparency=fade
  end,function() anchor:Destroy() end,'legendText',6)
@@ -127,7 +138,17 @@ local function kick(ownerId,strength,seconds)
  shake.start,shake.untilT,shake.strength=now,now+seconds,strength
 end
 
-function V.mount(combat,folder,lookup)
+function V.mount(combat,folder,lookup,options)
+ options=options or {}
+ local stopPreview
+ local K=K
+ local task=task
+ if options.preview then K,stopPreview,task=require(script.Parent:WaitForChild('WeaponShowcaseScope')).new(K,folder) end
+ local enemyRoots = options.preview and function()
+  local roots={}
+  for _,npc in options.targets or {} do local root=npcRoot(npc);if root then roots[#roots+1]={npc=npc,root=root} end end
+  return roots
+ end or enemyRoots
  local api={}
  -- The gold aura -------------------------------------------------------------------------------
  function api.attach(v,id,template,slot)
@@ -359,7 +380,10 @@ function V.mount(combat,folder,lookup)
  local function flush(ownerId,origin,list,speed,t0)
   if not K.near(origin,170) then return end
   local owner=Players:GetPlayerByUserId(ownerId)
-  local function over() local head=owner and owner.Character and owner.Character:FindFirstChild('Head');return head and head.Position+Vector3.yAxis*3.2 or origin+Vector3.yAxis*4 end
+  local function over()
+   if options.preview and options.ownerRoot and options.ownerRoot.Parent then return options.ownerRoot.Position+Vector3.yAxis*4.5 end
+   local head=owner and owner.Character and owner.Character:FindFirstChild('Head');return head and head.Position+Vector3.yAxis*3.2 or origin+Vector3.yAxis*4
+  end
   headline(folder,over(),'ROYAL FLUSH!',{rgb(255,248,200),rgb(255,170,30)},rgb(74,34,6),44,over)
   K.flash(folder,origin,GOLD,14,4,.35)
   burst(folder,origin,{texture=TEX.Star,color=K.White,color2=GOLD,size=seq(0,1.1,1,0),alpha=seq(0,0,1,1),life=.4,speed=6,speed1=12,spread=180,light=1},14)
@@ -562,7 +586,9 @@ function V.mount(combat,folder,lookup)
   local y=ground.Y
   local wait=math.max(0,strikeAt-workspace:GetServerTimeNow())
   -- A crackling target ring closes in where the bolt will fall.
+  if Presentation.ownsCue(ownerId,Players.LocalPlayer and Players.LocalPlayer.UserId,options.preview) then
   decal(folder,Vector3.new(ground.X,y+.05,ground.Z),TEX.Ring,SKY,radius*2.1,math.max(.05,wait*.6),wait*.4+.05,.25,3)
+  end
   burst(folder,ground+Vector3.yAxis*.5,{texture=TEX.Lightning,color=BOLT,color2=SKY,size=seq(0,.8,1,0),alpha=seq(0,0,1,1),life=.2,life1=.3,speed=4,speed1=8,spread=180,light=1},6)
   task.delay(wait,function()
    if not folder.Parent then return end
@@ -611,10 +637,16 @@ function V.mount(combat,folder,lookup)
   elseif kind=='Thunder' then thunder(a[1],a[2],a[3],a[4]) end
  end
  -- Spawned: mount() must return at once, or the combat client's render loop would wait on it.
- task.spawn(function()
-  local fx=combat:WaitForChild('LegendaryFX',60)
-  if fx then fx.OnClientEvent:Connect(onFx) end
- end)
+ if options.preview then
+  local closed=false
+  function api.handle(...) if not closed and folder.Parent then onFx(...) end end
+  function api.destroy() closed=true;stopPreview() end
+ else
+  task.spawn(function()
+   local fx=combat:WaitForChild('LegendaryFX',60)
+   if fx then fx.OnClientEvent:Connect(onFx) end
+  end)
+ end
  return api
 end
 return V

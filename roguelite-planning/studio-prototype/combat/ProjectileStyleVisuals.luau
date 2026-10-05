@@ -238,7 +238,9 @@ function V.mount(folder,lookup)
   local now=os.clock()
   for key,s in shots do
    local age=now-s.born
-   if age>8 or (not s.retracting and now-(s.last or s.born)>.6) then release(key);continue end
+   if age>8 then release(key);continue end
+   if not s.retracting and now-(s.last or s.born)>.6 then finish(key,s.head,false) end
+   if shots[key]~=s then continue end
    if not s.model then continue end
    if s.retracting then
     local t=math.clamp((now-s.retracting)/s.style.retract,0,1)

@@ -4,7 +4,9 @@ local V={}
 local atlas='rbxassetid://131707953627421'
 local rects={{35,75,150,170},{202,79,115,163},{725,83,106,157}}
 local sizes={['00']=.85,['07']=1.05,['09']=1.3}
-function V.mount(visuals)
+function V.mount(visuals,options)
+ options=options or {}
+ local renderKey=options.renderKey or 'RogueliteMuzzleFlashes'
  local active={}
  local pool={}
  local last=setmetatable({},{__mode='k'})
@@ -28,11 +30,11 @@ function V.mount(visuals)
   e.anchor.Name='MuzzleFlashReady';e.picture.ImageTransparency=1
   e.model=nil;table.insert(pool,e)
  end
- RunService:BindToRenderStep('RogueliteMuzzleFlashes',Enum.RenderPriority.Character.Value+2,function()
+ RunService:BindToRenderStep(renderKey,Enum.RenderPriority.Character.Value+2,function()
   if not visuals.Parent then
    for i=#active,1,-1 do remove(i) end
    for _,e in pool do e.anchor:Destroy() end
-   RunService:UnbindFromRenderStep('RogueliteMuzzleFlashes');return
+   RunService:UnbindFromRenderStep(renderKey);return
   end
   local camera=workspace.CurrentCamera
   local now=os.clock()

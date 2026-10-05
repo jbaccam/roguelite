@@ -28,12 +28,28 @@ local bolts=Batch.writer(combat:WaitForChild('Shot'))
 local function flush() bolts:flush();hits:flush() end
 RunService.PreSimulation:Connect(flush)
 local E={statuses={}}
+local weaponTotals={};local telemetryElapsed=0
+-- Aggregate rapid fire/card hits in server memory; replicate at most four times a second.
+-- ShopService flushes before snapshots and inventory mutations so sale/combine never loses a hit.
+function E.flushWeaponStats()
+ for slot,total in weaponTotals do
+  if slot.Parent and slot:GetAttribute('CopyId')==total.copyId and slot:GetAttribute('WeaponId')==total.id then
+   slot:SetAttribute('RunDamage',(slot:GetAttribute('RunDamage') or 0)+total.damage)
+   if total.kills>0 then slot:SetAttribute('RunKills',(slot:GetAttribute('RunKills') or 0)+total.kills) end
+  end
+ end
+ table.clear(weaponTotals)
+end
+RunService.Heartbeat:Connect(function(dt)
+ telemetryElapsed+=dt
+ if telemetryElapsed>=.25 then telemetryElapsed=0;E.flushWeaponStats() end
+end)
 -- When each enemy was last knocked back (os.clock()), kept on the server: as an attribute it
 -- replicated on every shove. Weapons and pets (PetService) share it: one shove per 0.12 s.
 E.knockedAt=setmetatable({},{__mode='k'})
 -- E.onHit(npc,d,actual,secondary) and E.onKill(npc,d,position,secondary): set by GodlyWeapons (the
 -- Vampire Blade's healing, the Scythe's wraiths, the Ray Gun's burst). Never on practice targets.
--- Damage listeners: E.listenDamage(fn) adds fn(owner,sourceId,actual,secondary) for every real
+-- Damage listeners: E.listenDamage(fn) adds fn(owner,sourceId,actual,secondary,lethal) for every real
 -- (non-practice) hit, status tick, chain and blast. sourceId is the weapon id, or e.g. 'Armor'.
 -- Several can listen (RunAnalytics' damage by weapon, the Deal Damage quest). They run inside
 -- this sandboxed module's thread, so they should only add up numbers.
@@ -117,7 +133,16 @@ function E.hit(npc,amount,d,secondary,dot,stream)
  if npc:GetAttribute('LastWeaponId')~=d.id then npc:SetAttribute('LastWeaponId',d.id) end
  local before=h.Health;h:TakeDamage(math.max(0,amount));local actual=before-math.max(0,h.Health)
  if actual<=0 then return 0 end
- for _,fn in damageListeners do local ok,err=pcall(fn,d.owner,d.id,actual,secondary==true);if not ok then warn('listenDamage failed:',err) end end
+ -- Run-only, server-authoritative per-copy counters. A delayed status cannot credit an unrelated
+ -- weapon now occupying this slot. ShopService carries counters with copies when combining.
+ local ownerState=Characters.states[d.owner]
+ local slot=ownerState and ownerState.folder and type(d.slotIndex)=='number' and d.slotIndex<=6 and ownerState.folder:FindFirstChild('Slot'..d.slotIndex)
+ if slot and slot:GetAttribute('WeaponId')==d.id and slot:GetAttribute('CopyId')==d.copyId then
+  local total=weaponTotals[slot]
+  if not total or total.copyId~=d.copyId then total={copyId=d.copyId,id=d.id,damage=0,kills=0};weaponTotals[slot]=total end
+  total.damage+=actual;if h.Health<=0 then total.kills+=1 end
+ end
+ for _,fn in damageListeners do local ok,err=pcall(fn,d.owner,d.id,actual,secondary==true,h.Health<=0);if not ok then warn('listenDamage failed:',err) end end
  if not d.structure then Characters.leech(d.owner,actual) end -- turrets don't life-steal (HandymanTurret)
  if E.onHit then local ok,err=pcall(E.onHit,npc,d,actual,secondary==true);if not ok then warn('onHit failed:',err) end end
  if STUDIO then combat:SetAttribute('ConfirmedHits',(combat:GetAttribute('ConfirmedHits') or 0)+1) end
