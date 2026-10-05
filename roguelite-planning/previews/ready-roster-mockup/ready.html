@@ -1,0 +1,74 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Shop Ready Roster</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Source+Sans+3:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--lime:#91ef14;--ink:#07090a;--white:#f8f9f5;--muted:#aeb7b9;--dim:#78807f;--cream:#eadda7;--well:#22272b;--red:#fa5a63}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0e1214;color:var(--white);font-family:'Fredoka One',system-ui,sans-serif;padding:18px}
+.note{font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:17px;color:#cfd6d8;max-width:980px;line-height:1.4;margin-bottom:16px}
+.note b{color:var(--lime)}
+.row{display:flex;gap:34px;flex-wrap:wrap}
+.case h3{font-size:18px;color:var(--lime);margin-bottom:8px}
+.col{position:relative;width:320px;height:470px;background:radial-gradient(ellipse at 30% 20%,#3d6b4b 0,#24412c 60%,#1b2e20 100%);border-radius:10px}
+.abs{position:absolute}
+.panel{border-style:solid;border-width:0;border-image:url(img/panel.png) 48 fill / 26px stretch}
+.btn{border-style:solid;border-width:0;border-image:url(img/button.png) 48 fill / 24px stretch;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.btn.neutral{border-image-source:url(img/panel.png)}
+.o2{text-shadow:2px 0 var(--ink),-2px 0 var(--ink),0 2px var(--ink),0 -2px var(--ink),1.5px 1.5px var(--ink),-1.5px 1.5px var(--ink),1.5px -1.5px var(--ink),-1.5px -1.5px var(--ink)}
+.stat{display:flex;justify-content:space-between;font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:18px;color:#c9d1d3;padding:0 22px;line-height:27px}
+.stat b{font-family:'Fredoka One';color:var(--lime);font-weight:400}
+.head{position:absolute;border-radius:50%;background:var(--well);overflow:visible}
+.face{position:absolute;inset:0;border-radius:50%;overflow:hidden;display:flex;align-items:flex-end;justify-content:center}
+.face i{display:block;width:62%;height:70%;margin-bottom:-6%;border-radius:38% 38% 30% 30%}
+.face i:after{content:"";display:block;width:100%;height:100%;border-radius:inherit;background:
+ radial-gradient(circle at 34% 42%,#111 0 7%,transparent 8%),radial-gradient(circle at 66% 42%,#111 0 7%,transparent 8%),
+ radial-gradient(ellipse at 50% 70%,transparent 0 14%,#111 15% 19%,transparent 20%) 0 -6px/100% 100% no-repeat}
+.dim .face{opacity:.45}
+.ring{position:absolute;inset:0;border-radius:50%}
+.check{position:absolute;border-radius:50%;background:var(--lime);border:2.5px solid var(--ink)}
+.check:before,.check:after{content:"";position:absolute;background:#fff;border-radius:4px;height:16%}
+.check:before{width:34%;left:22%;top:52%;transform:rotate(45deg)}
+.check:after{width:50%;left:38%;top:44%;transform:rotate(-50deg)}
+.label{font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:14px;color:var(--muted);margin-top:8px;max-width:320px}
+</style></head><body>
+<div class="note">Shop, right column (1920×1080 layout, side 320 px). <b>New:</b> the row of teammate headshots between LEAVE RUN and GO.
+Pressed GO = full colour, lime ring, check. Still shopping = dimmed, grey ring. READY x/y on the GO button stays.
+Solo shows no row (the stats get the space). The grey faces here only stand in for the real Roblox avatar headshots, which load in game.</div>
+<div class="row" id="cases"></div>
+<script>
+const SIDE=320,LEAVE=40,ROSTER=48,START=62,HT=470;
+const skins=['#f5c26b','#c98a5a','#e9d3b4','#8b5a3c'];
+function caseView(title,party){
+ const wrap=document.createElement('div');wrap.className='case';
+ const roster=party.length>1?ROSTER:0;
+ const statsH=HT-START-LEAVE-18-(roster?roster+8:0);
+ const ready=party.filter(p=>p.ready).length;
+ let h=`<h3>${title}</h3><div class="col">`;
+ h+=`<div class="abs panel" style="left:0;top:0;width:${SIDE}px;height:${statsH}px;padding-top:14px">
+  <div class="o2" style="text-align:center;font-size:28px;margin-bottom:8px">Stats</div>
+  ${['Max HP|120','Damage|+18%','Attack Speed|+12%','Armor|6','Dodge|10%','Speed|+5%','Luck|14'].slice(0,Math.max(1,Math.floor((statsH-70)/27))).map(r=>{const[a,b]=r.split('|');return `<div class="stat"><span>${a}</span><b>${b}</b></div>`}).join('')}</div>`;
+ h+=`<div class="abs btn neutral o2" style="left:0;top:${statsH+10}px;width:${SIDE}px;height:${LEAVE}px;font-size:18px;color:var(--red)">LEAVE RUN</div>`;
+ if(roster){
+  const n=party.length,d=Math.min(roster-6,Math.floor((SIDE-(n-1)*8)/n)),x0=(SIDE-(n*d+(n-1)*8))/2,top=statsH+18+LEAVE;
+  party.forEach((p,i)=>{
+   const s=Math.floor(d*.42);
+   h+=`<div class="head ${p.ready?'':'dim'}" style="left:${x0+i*(d+8)}px;top:${top+(roster-d)/2}px;width:${d}px;height:${d}px">
+    <div class="face"><i style="background:${skins[i%4]}"></i></div>
+    <div class="ring" style="box-shadow:inset 0 0 0 ${p.ready?3:2}px ${p.ready?'var(--lime)':'var(--dim)'}"></div>
+    ${p.ready?`<div class="check" style="left:${d-s+3}px;top:${d-s+3}px;width:${s}px;height:${s}px"></div>`:''}</div>`;
+  });
+ }
+ const goTop=statsH+18+LEAVE+(roster?roster+8:0);
+ h+=`<div class="abs btn o2" style="left:0;top:${goTop}px;width:${SIDE}px;height:${START}px">
+   <div style="font-size:22px;line-height:${party.length>1?'30px':'40px'}">${party[0].me&&party[0].ready?'READY · WAITING':'GO (Wave 6)'}  ·  0:24</div>
+   ${party.length>1?`<div style="font-size:16px;color:var(--cream)">READY ${ready}/${party.length}</div>`:''}</div>`;
+ h+=`</div><div class="label">${party.length>1?party.map(p=>(p.me?'You':'Teammate')+': '+(p.ready?'ready':'shopping')).join(' · '):'Solo: no row'}</div>`;
+ wrap.innerHTML=h;return wrap;
+}
+const cases=document.getElementById('cases');
+cases.append(caseView('Party of 4, two pressed GO',[{me:true,ready:true},{ready:true},{ready:false},{ready:false}]));
+cases.append(caseView('Party of 2, you still shopping',[{me:true,ready:false},{ready:true}]));
+cases.append(caseView('Solo (unchanged)',[{me:true,ready:false}]));
+</script>
+</body></html>

@@ -1,0 +1,129 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Loading Screens</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Source+Sans+3:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--lime:#91ef14;--limeSoft:#d2ffa1;--limeDark:#3a700c;--ink:#07090a;--white:#f8f9f5;--muted:#aeb7b9;--cream:#eadda7;--track:#161d20;--well:#22272b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0e1214;color:var(--white);font-family:'Fredoka One',system-ui,sans-serif;overflow-x:hidden}
+.top{display:flex;gap:8px;align-items:center;padding:12px 16px;flex-wrap:wrap}
+.top button{font:inherit;font-size:16px;color:var(--white);background:#232a2e;border:3px solid #3a4448;border-radius:10px;padding:7px 14px;cursor:pointer}
+.top button.on{background:var(--lime);color:#122;border-color:#c8ff7a}
+.top .gap{width:14px}
+.note{padding:0 18px 12px;font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:16px;color:#cfd6d8;max-width:1250px;line-height:1.35}
+.note b{color:var(--lime)}
+.viewport{position:relative;margin:0 16px 24px;overflow:hidden}
+.screen{position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;background:#11171a;outline:3px solid #2b3337}
+.canvas{position:absolute;left:0;top:0;transform-origin:0 0}
+.art{position:absolute;inset:0;background-size:cover;background-position:center;transition:opacity .35s}
+.fade{position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(180deg,rgba(5,9,10,0) 0%,rgba(5,9,10,.55) 55%,rgba(5,9,10,.86) 100%)}
+.abs{position:absolute}
+.panel{border-style:solid;border-width:0;border-image:url(img/panel.png) 48 fill / 26px stretch}
+.o2{text-shadow:2px 0 var(--ink),-2px 0 var(--ink),0 2px var(--ink),0 -2px var(--ink),1.5px 1.5px var(--ink),-1.5px 1.5px var(--ink),1.5px -1.5px var(--ink),-1.5px -1.5px var(--ink)}
+.o3{text-shadow:3px 0 var(--ink),-3px 0 var(--ink),0 3px var(--ink),0 -3px var(--ink),2.2px 2.2px var(--ink),-2.2px 2.2px var(--ink),2.2px -2.2px var(--ink),-2.2px -2.2px var(--ink),0 5px 0 rgba(0,0,0,.35)}
+.body{font-family:'Source Sans 3',sans-serif;font-weight:700}
+.stone{position:absolute;background:url(img/stone.png) center/contain no-repeat;transform:translate(-50%,-50%)}
+.chip{position:absolute;height:34px;padding:0 14px;border:3px solid #080a0b;border-radius:8px;display:flex;align-items:center;font-size:18px;white-space:nowrap}
+.track{position:absolute;background:var(--track);border:3px solid #080a0b;border-radius:8px;overflow:hidden}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:linear-gradient(180deg,#c6ff62 0%,#91ef14 45%,#5ea60c 100%);transition:width .25s ease-out;overflow:hidden}
+.fill:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.16) 0 14px,rgba(255,255,255,0) 14px 32px);background-size:69px 100%;animation:slide 1.1s linear infinite}
+.fill:after{content:"";position:absolute;left:6px;right:6px;top:3px;height:3px;border-radius:2px;background:rgba(255,255,255,.45)}
+.edge{position:absolute;top:-6px;bottom:-6px;width:26px;margin-left:-20px;background:radial-gradient(closest-side,rgba(226,255,170,.9),rgba(226,255,170,0));transition:left .25s ease-out;pointer-events:none}
+@keyframes slide{to{background-position:69px 0}}
+.tiptag{position:absolute;height:28px;padding:0 10px;border-radius:7px;background:var(--lime);color:#122;border:3px solid #080a0b;display:flex;align-items:center;font-size:16px}
+.callout{position:absolute;background:#fff8d6;color:#2a2410;border:3px solid var(--ink);border-radius:12px;padding:9px 13px;font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:19px;line-height:1.25;box-shadow:0 6px 0 rgba(0,0,0,.35);z-index:50;max-width:430px}
+.hidden{display:none}
+</style></head>
+<body>
+<div class="top" id="tabs"></div>
+<div class="note">Bottom plate uses the game's real <b>panel</b> nine-slice, <b>stone</b> end caps, FredokaOne and the lime from <code>UITheme</code>. The art fills the screen and is cropped to fit (phones lose a bit of top and bottom, tablets lose the sides). The bar follows real steps: load the game, load your save, load the area, then the screen fades out. <b>Replay</b> runs it again.</div>
+<div class="viewport" id="vp"><div class="screen" id="screen"><div class="canvas" id="canvas"></div></div></div>
+<script>
+const DEST=[
+ {id:'Lobby',name:'LOBBY',img:'06-lobby-v1.jpg',chip:null,steps:['Joining the game','Loading your save','Loading the lobby','Ready!']},
+ {id:'PineValley',name:'PINE VALLEY',img:'01-pine-valley-v1.jpg',chip:'NORMAL',steps:['Traveling to Pine Valley','Loading your save','Loading the arena','Ready!']},
+ {id:'BeachCove',name:'BEACH COVE',img:'02-beach-cove-v1.jpg',chip:'NORMAL',steps:['Traveling to Beach Cove','Loading your save','Loading the arena','Ready!']},
+ {id:'DesertBasin',name:'DESERT BASIN',img:'03-desert-basin-v1.jpg',chip:'HARD',steps:['Traveling to Desert Basin','Loading your save','Loading the arena','Ready!']},
+ {id:'FrozenPass',name:'FROZEN PASS',img:'04-frozen-pass-v1.jpg',chip:'NORMAL',steps:['Traveling to Frozen Pass','Loading your save','Loading the arena','Ready!']},
+ {id:'VolcanicCrater',name:'VOLCANIC CRATER',img:'05-volcanic-crater-v1.jpg',chip:'NIGHTMARE',steps:['Traveling to Volcanic Crater','Loading your save','Loading the arena','Ready!']},
+];
+const CHIP={NORMAL:['#22272b','#f8f9f5'],HARD:['#a8580c','#fff1d6'],NIGHTMARE:['#7a1d2a','#ffd9de']};
+const TIPS=['Your weapons attack on their own. Focus on moving.','Clear wave 20 to win, then keep going in Endless.','Downed? You come back when the wave ends.','Leave Run between waves and keep your emeralds.','The shop opens between waves. Spend your shards there.'];
+const DEVICES={Desktop:[1920,1080],Phone:[844,390],Tablet:[1024,768]};
+let dest=DEST[1],device='Desktop',timer=null,showNotes=true;
+function canvasScale(W,H){let s=Math.min(W/1920,H/1080);if(s<.5)s=Math.max(s,Math.min(.5,W/1280,H/640));return Math.max(.05,Math.min(2,s))}
+const $=h=>{const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstChild};
+function tabs(){
+ const el=document.getElementById('tabs');el.innerHTML='';
+ for(const d of DEST){const b=$(`<button>${d.name}</button>`);if(d===dest)b.className='on';b.onclick=()=>{dest=d;tabs();build()};el.appendChild(b)}
+ el.appendChild($('<span class="gap"></span>'));
+ for(const k in DEVICES){const b=$(`<button>${k}</button>`);if(k===device)b.className='on';b.onclick=()=>{device=k;tabs();build()};el.appendChild(b)}
+ el.appendChild($('<span class="gap"></span>'));
+ const r=$('<button>Replay</button>');r.onclick=build;el.appendChild(r);
+ const n=$(`<button>${showNotes?'Hide notes':'Show notes'}</button>`);if(showNotes)n.className='on';n.onclick=()=>{showNotes=!showNotes;tabs();build()};el.appendChild(n);
+}
+function build(){
+ clearInterval(timer);
+ const [W,H]=DEVICES[device];const s=canvasScale(W,H);const cw=W/s,ch=H/s;
+ const vp=document.getElementById('vp'),screen=document.getElementById('screen'),canvas=document.getElementById('canvas');
+ const Q=new URLSearchParams(location.search);
+ const fit=+Q.get('zoom')||Math.min((vp.parentElement.clientWidth-32)/W,(innerHeight-vp.offsetTop-12)/H,1.2);
+ screen.style.width=W+'px';screen.style.height=H+'px';screen.style.transform=`scale(${fit})`;
+ vp.style.height=H*fit+'px';vp.style.width=W*fit+'px';
+ canvas.style.width=cw+'px';canvas.style.height=ch+'px';canvas.style.transform=`scale(${s})`;
+ canvas.innerHTML='';
+ // Art: full bleed, cropped (Roblox ScaleType.Crop). Charcoal shows until the image arrives.
+ const art=$(`<div class="art" style="background-image:url(img/${dest.img});opacity:0"></div>`);canvas.appendChild(art);
+ const im=new Image();im.onload=()=>art.style.opacity=1;im.src='img/'+dest.img;
+ canvas.appendChild($('<div class="fade"></div>'));
+ // Plate
+ const phone=ch<900;
+ const pw=Math.min(1240,cw-96),ph=172,px=(cw-pw)/2,py=ch-ph-(phone?30:46);
+ canvas.appendChild($(`<div class="abs panel" style="left:${px}px;top:${py}px;width:${pw}px;height:${ph}px"></div>`));
+ // Title plate pokes out of the top-left like the windows' TitlePlate.
+ const meas=document.createElement('canvas').getContext('2d');meas.font='36px "Fredoka One"';
+ const tw=meas.measureText(dest.name).width+84;
+ const tp=$(`<div class="abs panel" style="left:${px+18}px;top:${py-32}px;width:${tw}px;height:62px"></div>`);canvas.appendChild(tp);
+ canvas.appendChild($(`<div class="stone" style="left:${px+22}px;top:${py-1}px;width:44px;height:44px"></div>`));
+ canvas.appendChild($(`<div class="stone" style="left:${px+18+tw-4}px;top:${py-1}px;width:44px;height:44px"></div>`));
+ canvas.appendChild($(`<div class="abs o3" style="left:${px+18}px;top:${py-32}px;width:${tw}px;height:62px;display:flex;align-items:center;justify-content:center;font-size:36px">${dest.name}</div>`));
+ if(dest.chip){const [bg,fg]=CHIP[dest.chip];canvas.appendChild($(`<div class="chip o2" style="left:${px+18+tw+26}px;top:${py-18}px;background:${bg};color:${fg}">${dest.chip}</div>`))}
+ // Status row
+ const ix=px+44,iw=pw-88;
+ const status=$(`<div class="abs body o2" style="left:${ix}px;top:${py+38}px;width:${iw-140}px;height:34px;font-size:25px;display:flex;align-items:center;color:var(--white)"></div>`);canvas.appendChild(status);
+ const pct=$(`<div class="abs o3" style="left:${ix+iw-140}px;top:${py+34}px;width:140px;height:40px;font-size:34px;text-align:right;color:var(--lime)">0%</div>`);canvas.appendChild(pct);
+ // Bar with stone caps
+ const by=py+82,bh=34;
+ const track=$(`<div class="track" style="left:${ix}px;top:${by}px;width:${iw}px;height:${bh}px"></div>`);canvas.appendChild(track);
+ const fill=$('<div class="fill" style="width:0%"></div>');track.appendChild(fill);
+ const edge=$(`<div class="edge" style="left:0%"></div>`);track.appendChild(edge);
+ canvas.appendChild($(`<div class="stone" style="left:${ix-2}px;top:${by+bh/2}px;width:52px;height:52px"></div>`));
+ canvas.appendChild($(`<div class="stone" style="left:${ix+iw+2}px;top:${by+bh/2}px;width:52px;height:52px"></div>`));
+ // Tip row
+ canvas.appendChild($(`<div class="tiptag" style="left:${ix}px;top:${py+130}px">TIP</div>`));
+ const tip=$(`<div class="abs body o2" style="left:${ix+62}px;top:${py+128}px;width:${iw-62}px;height:32px;font-size:22px;display:flex;align-items:center;color:var(--cream)"></div>`);canvas.appendChild(tip);
+ let ti=Math.floor(Math.random()*TIPS.length);tip.textContent=TIPS[ti];
+ if(showNotes){
+  canvas.appendChild($(`<div class="callout" style="left:${Math.max(20,px+pw-450)}px;top:${py-150}px">Title plate + stone caps match the window headers. Difficulty chip only on map trips.</div>`));
+  canvas.appendChild($(`<div class="callout" style="left:40px;top:${phone?90:120}px">Art: 2 image halves (836 px each) so it stays sharp on 1080p. Roblox shrinks one big image to 1024 px.</div>`));
+ }
+ // Fake load: steps with uneven speed, like real loading.
+ const marks=[0,.28,.62,1];let t=0,step=0,ratio=0;
+ const set=r=>{ratio=r;fill.style.width=(r*100)+'%';edge.style.left=(r*100)+'%';pct.textContent=Math.floor(r*100)+'%'};
+ status.textContent=dest.steps[0]+'…';set(0);
+ if(Q.get('freeze')){set(+Q.get('freeze'));status.textContent=dest.steps[2]+'…';art.style.opacity=1;return}
+ timer=setInterval(()=>{
+  t+=.05;
+  const target=Math.min(1,t/4.2);
+  const r=Math.min(target,marks[Math.min(step+1,3)]);
+  set(Math.max(ratio,r));
+  if(step<3&&ratio>=marks[step+1]-.001){step++;status.textContent=dest.steps[step]+(step<3?'…':'')}
+  if(Math.floor(t/2.6)%TIPS.length!==Math.floor((t-.05)/2.6)%TIPS.length){ti=(ti+1)%TIPS.length;tip.textContent=TIPS[ti]}
+  if(t>5.6){canvas.style.transition='opacity .5s';canvas.style.opacity=0}
+  if(t>6.6){clearInterval(timer);canvas.style.transition='';setTimeout(()=>{canvas.style.opacity=1;build()},400)}
+ },50);
+}
+addEventListener('resize',build);
+document.fonts.ready.then(()=>{tabs();build()});
+</script>
+</body></html>

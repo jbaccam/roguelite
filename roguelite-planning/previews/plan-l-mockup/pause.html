@@ -1,0 +1,89 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Pause Mockup</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Fredoka:wght@600&family=Source+Sans+3:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--lime:#91ef14;--limeSoft:#d2ffa1;--limeDark:#3a700c;--ink:#07090a;--white:#f8f9f5;--muted:#aeb7b9;--dim:#78807f;--gold:#ffcb40;--cream:#eadda7;--track:#161d20;--red:#ef232f;--negative:#ff6969}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0e1214;color:var(--white);font-family:'Fredoka One','Fredoka',system-ui,sans-serif;overflow-x:hidden}
+.top{display:flex;gap:10px;align-items:center;padding:14px 18px;flex-wrap:wrap}
+.top button{font:inherit;font-size:17px;color:var(--white);background:#232a2e;border:3px solid #3a4448;border-radius:10px;padding:8px 16px;cursor:pointer}
+.top button.on{background:var(--lime);color:#122;border-color:#c8ff7a}
+.note{padding:0 20px 12px;font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:17px;color:#cfd6d8;max-width:1300px;line-height:1.35}
+.note b{color:var(--lime)}
+.viewport{position:relative;width:100%;overflow:hidden;padding-bottom:16px}
+/* The screen: a phone gets a bezel; PC fills the width. */
+.frame{position:relative;overflow:hidden;margin:0 auto}
+.frame.phone{border:solid #15191b;border-radius:44px;box-shadow:0 0 0 2px #2c3438,0 18px 40px rgba(0,0,0,.5)}
+.stage{position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;
+ background:radial-gradient(ellipse at 30% 20%,#8ec5e8 0,#5f9cc4 30%,#3e7a52 58%,#2e5a2c 100%)}
+.world:before{content:"";position:absolute;inset:0;background:
+ radial-gradient(circle at 18% 70%,#6b4a2c 0 9%,transparent 9.2%),radial-gradient(circle at 70% 80%,#7a5634 0 12%,transparent 12.2%),
+ radial-gradient(circle at 85% 30%,#2f6b35 0 8%,transparent 8.2%),radial-gradient(circle at 10% 25%,#2c6232 0 7%,transparent 7.2%);filter:blur(6px)}
+.abs{position:absolute}
+/* theme */
+.panel{border-style:solid;border-width:0;border-image:url(img/panel.png) 48 fill / 26px stretch}
+.btn{border-style:solid;border-width:0;border-image:url(img/button.png) 48 fill / 24px stretch;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.btn.neutral{border-image-source:url(img/panel.png)}
+.btn.off{filter:grayscale(.3) brightness(.62)}
+.o2{text-shadow:2px 0 var(--ink),-2px 0 var(--ink),0 2px var(--ink),0 -2px var(--ink),1.5px 1.5px var(--ink),-1.5px 1.5px var(--ink),1.5px -1.5px var(--ink),-1.5px -1.5px var(--ink)}
+.o3{text-shadow:3px 0 var(--ink),-3px 0 var(--ink),0 3px var(--ink),0 -3px var(--ink),2.2px 2.2px var(--ink),-2.2px 2.2px var(--ink),2.2px -2.2px var(--ink),-2.2px -2.2px var(--ink),0 5px 0 rgba(0,0,0,.35)}
+.o1{text-shadow:1.5px 0 var(--ink),-1.5px 0 var(--ink),0 1.5px var(--ink),0 -1.5px var(--ink)}
+.body{font-family:'Source Sans 3',sans-serif;font-weight:700}
+.icon{background-size:contain;background-repeat:no-repeat;background-position:center}
+.tint{-webkit-mask-size:contain;-webkit-mask-repeat:no-repeat;-webkit-mask-position:center}
+.glow{position:absolute;-webkit-mask-image:url(img/glow.png);opacity:.7}
+/* tile */
+.tile{position:absolute;border-radius:12px;border:3px solid var(--ink);overflow:hidden}
+.tile .ic{position:absolute}
+.tile .amt{position:absolute;right:6px;top:2px}
+.check{position:absolute;border-radius:50%;background:var(--lime);border:2.5px solid var(--ink)}
+.check:after{content:"";position:absolute;left:30%;top:16%;width:28%;height:50%;border:solid #fff;border-width:0 var(--cw,4px) var(--cw,4px) 0;transform:rotate(45deg)}
+.rule{position:absolute;height:4px;border-radius:2px}
+.topbar{position:absolute;left:0;right:0;top:0;border-bottom:3px dashed rgba(255,255,255,.35);background:rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;font-family:'Source Sans 3',sans-serif;font-weight:700;color:rgba(255,255,255,.55)}
+.scrollbar{position:absolute;right:6px;width:8px;border-radius:4px;background:var(--lime);opacity:.8}
+</style></head>
+<body>
+<div class="top" id="tabs"></div>
+<div class="note" id="note"></div>
+<div class="viewport" id="vp"><div class="frame" id="frame"><div class="stage world" id="stage"></div></div></div>
+<script>
+const $=(h)=>{const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstChild};
+const rgb=(r,g,b)=>`rgb(${r},${g},${b})`;
+const RAR={Legendary:[rgb(255,216,99),rgb(194,116,16),rgb(255,250,220)],Epic:[rgb(207,149,255),rgb(101,38,176),rgb(245,225,255)],Rare:[rgb(118,204,255),rgb(28,102,176),rgb(225,245,255)],Common:[rgb(224,230,233),rgb(124,137,143),'#fff']};
+// Canvas scale of the view being drawn (1 on a 1920x1080 PC, .5 on a phone). Roblox sizes text in
+// screen pixels, so on a phone a label grows to fill its box: txt() does the same.
+let S=1;
+function tile(parent,x,y,w,src,label,rar,amt){
+ const h=Math.floor(w*1.08),r=RAR[rar]||RAR.Common;
+ const t=$(`<div class="tile" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:linear-gradient(${r[0]},${r[1]})">
+  <div class="glow tint" style="left:${w*.025}px;top:${h*.38-w*.475}px;width:${w*.95}px;height:${w*.95}px;background:${r[2]};opacity:.7"></div>
+  <div class="ic icon" style="left:${w*.16}px;top:${h*.05}px;width:${w*.68}px;height:${w*.68}px;background-image:url(${src})"></div>
+  ${amt?`<div class="amt o2" style="font-size:${Math.max(13,Math.min(19,Math.floor(w*.19)))}px">${amt}</div>`:''}</div>`);
+ parent.appendChild(t);return t;
+}
+// The caption sits centred in the middle 70% of the button (StoreFX.button) and is sized like txt().
+function btn(parent,x,y,w,h,text,opts={}){
+ const b=$(`<div class="btn abs ${opts.neutral?'neutral':''} ${opts.off?'off':''}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px"><span class="o2" style="white-space:pre;color:${opts.color||'#fff'};${opts.off?'opacity:.6':''}">${text}</span></div>`);
+ parent.appendChild(b);
+ const span=b.firstChild;let f=Math.min((opts.size||22)/S,h*.7);span.style.fontSize=f+'px';
+ while(f>9/S&&span.offsetWidth>w-16){f-=1;span.style.fontSize=f+'px'}
+ return b;
+}
+// Text in a w x h box: as big as the box allows up to `size` screen px, then smaller until it fits
+// the width (Roblox's TextScaled with a size cap). `extra` 'white-space:normal' lets it wrap instead.
+function txt(parent,x,y,w,h,text,size,color='#fff',align='left',cls='o2',extra=''){
+ const l=$(`<div class="abs ${cls}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;color:${color};display:flex;align-items:center;justify-content:${align=='center'?'center':align=='right'?'flex-end':'flex-start'};white-space:pre;line-height:1.05;${extra}"><span>${text}</span></div>`);
+ parent.appendChild(l);
+ let f=Math.min(size/S,h);l.style.fontSize=f+'px';
+ // Wrapped text may go 1 px under Roblox's 9 px floor: web Source Sans runs wider than Roblox's.
+ const span=l.firstChild,wraps=extra.includes('white-space:normal');
+ while(f>(wraps?8:9)/S&&(wraps?span.offsetHeight>h:span.offsetWidth>w)){f-=1;l.style.fontSize=f+'px'}
+ return l;
+}
+function check(parent,x,y,s){const c=$(`<div class="check" style="left:${x}px;top:${y}px;width:${s}px;height:${s}px;--cw:${Math.max(2,Math.round(s*.14))}px"></div>`);parent.appendChild(c);return c}
+const measure=document.createElement('canvas').getContext('2d');
+function textWidth(text,px,family){measure.font=`${px}px ${family}`;return measure.measureText(text).width}
+</script>
+<script src="pause_view.js"></script>
+</body></html>

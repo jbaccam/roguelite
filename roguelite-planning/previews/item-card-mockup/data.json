@@ -1,0 +1,4118 @@
+{
+ "armorSlots": [
+  "Helmet",
+  "Chest",
+  "Legs",
+  "Boots"
+ ],
+ "source": {
+  "how": "Roblox Studio Edit, execute_luau: repo modules fetched from the dev server (http://127.0.0.1:8934/studio-prototype/...) and run with loadstring and a private require shim; nothing in the place is required or changed.",
+  "extracted": "2026-10-02T23:40:33Z",
+  "modules": [
+   "combat/WeaponCatalog.luau",
+   "combat/ChestConfig.luau",
+   "combat/ArmorCatalog.luau",
+   "combat/CharacterStats.luau",
+   "combat/PetConfig.luau",
+   "combat/EggConfig.luau",
+   "ui/UITheme.luau",
+   "ui/WeaponInventoryUI.luau (icon ids, parsed from source)"
+  ]
+ },
+ "upgradeEmeralds": {
+  "Legendary": [
+   500,
+   1500,
+   4500
+  ],
+  "Common": [
+   60,
+   180,
+   540
+  ],
+  "Epic": [
+   250,
+   750,
+   2250
+  ],
+  "Godly": [
+   1000,
+   3000,
+   9000
+  ],
+  "Rare": [
+   120,
+   360,
+   1080
+  ]
+ },
+ "rarities": [
+  "Common",
+  "Rare",
+  "Epic",
+  "Legendary",
+  "Godly"
+ ],
+ "armor": {
+  "Phoenix": {
+   "rarity": "Godly",
+   "id": "Phoenix",
+   "text": {
+    "four": "Once per run, rise at half health and blast nearby zombies",
+    "two": "+2 HP/s Regeneration"
+   },
+   "icons": {
+    "Chest": "rbxassetid://93182390331732",
+    "Boots": "rbxassetid://90694826818994",
+    "Legs": "rbxassetid://123491029382483",
+    "Helmet": "rbxassetid://95410937063230"
+   },
+   "name": "Phoenix",
+   "two": {
+    "Regeneration": 2
+   },
+   "tiers": [
+    {
+     "four": {
+      "perks": {
+       "PhoenixBlast": 100
+      },
+      "stats": {
+       "Regeneration": 2
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Regeneration": 2
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": {
+       "PhoenixBlast": 110
+      },
+      "stats": {
+       "Regeneration": 2
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Regeneration": 2
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": {
+       "PhoenixBlast": 120
+      },
+      "stats": {
+       "Regeneration": 2
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Regeneration": 2
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": {
+       "PhoenixBlast": 130
+      },
+      "stats": {
+       "Regeneration": 3
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Regeneration": 3
+      }
+     }
+    }
+   ],
+   "four": {
+    "PhoenixBlast": 100
+   },
+   "chests": [
+    "Legendary"
+   ]
+  },
+  "Viking": {
+   "rarity": "Rare",
+   "id": "Viking",
+   "text": {
+    "four": "+25% Attack speed below half health",
+    "two": "+12% Melee damage"
+   },
+   "icons": {
+    "Chest": "rbxassetid://94896508153973",
+    "Boots": "rbxassetid://107105181804474",
+    "Legs": "rbxassetid://126170661340997",
+    "Helmet": "rbxassetid://103535004889613"
+   },
+   "name": "Viking",
+   "two": {
+    "MeleeDamage": 12
+   },
+   "tiers": [
+    {
+     "four": {
+      "perks": {
+       "RageAttackSpeed": 25
+      },
+      "stats": {
+       "MeleeDamage": 12
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "MeleeDamage": 12
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": {
+       "RageAttackSpeed": 28
+      },
+      "stats": {
+       "MeleeDamage": 13
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "MeleeDamage": 13
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": {
+       "RageAttackSpeed": 30
+      },
+      "stats": {
+       "MeleeDamage": 14
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "MeleeDamage": 14
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": {
+       "RageAttackSpeed": 33
+      },
+      "stats": {
+       "MeleeDamage": 16
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "MeleeDamage": 16
+      }
+     }
+    }
+   ],
+   "four": {
+    "RageAttackSpeed": 25
+   }
+  },
+  "Iron": {
+   "rarity": "Common",
+   "id": "Iron",
+   "text": {
+    "four": "+10% Contact resistance",
+    "two": "+2 Armor"
+   },
+   "icons": {
+    "Chest": "rbxassetid://87779254850761",
+    "Boots": "rbxassetid://136478333897120",
+    "Legs": "rbxassetid://92415099543295",
+    "Helmet": "rbxassetid://129145366804816"
+   },
+   "name": "Iron",
+   "two": {
+    "Armor": 2
+   },
+   "tiers": [
+    {
+     "four": {
+      "perks": [],
+      "stats": {
+       "Armor": 2,
+       "ContactReduction": 10
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Armor": 2
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": [],
+      "stats": {
+       "Armor": 2,
+       "ContactReduction": 11
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Armor": 2
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": [],
+      "stats": {
+       "Armor": 2,
+       "ContactReduction": 12
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Armor": 2
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": [],
+      "stats": {
+       "Armor": 3,
+       "ContactReduction": 13
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Armor": 3
+      }
+     }
+    }
+   ],
+   "four": {
+    "ContactReduction": 10
+   }
+  },
+  "Ninja": {
+   "rarity": "Rare",
+   "id": "Ninja",
+   "text": {
+    "four": "After you dodge, your next hit is a critical hit",
+    "two": "+8% Dodge"
+   },
+   "icons": {
+    "Chest": "rbxassetid://78801616313923",
+    "Boots": "rbxassetid://122686411592392",
+    "Legs": "rbxassetid://94605542017106",
+    "Helmet": "rbxassetid://122802619485422"
+   },
+   "name": "Ninja",
+   "two": {
+    "Dodge": 8
+   },
+   "tiers": [
+    {
+     "four": {
+      "perks": {
+       "DodgeCrit": true
+      },
+      "stats": {
+       "Dodge": 8
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Dodge": 8
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": {
+       "DodgeCrit": true
+      },
+      "stats": {
+       "Dodge": 9
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Dodge": 9
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": {
+       "DodgeCrit": true
+      },
+      "stats": {
+       "Dodge": 10
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Dodge": 10
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": {
+       "DodgeCrit": true
+      },
+      "stats": {
+       "Dodge": 10
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Dodge": 10
+      }
+     }
+    }
+   ],
+   "four": {
+    "DodgeCrit": true
+   }
+  },
+  "Samurai": {
+   "rarity": "Epic",
+   "id": "Samurai",
+   "text": {
+    "four": "+40% Critical damage",
+    "two": "+8% Critical chance"
+   },
+   "icons": {
+    "Chest": "rbxassetid://73415381523062",
+    "Boots": "rbxassetid://82101371139011",
+    "Legs": "rbxassetid://78615423814209",
+    "Helmet": "rbxassetid://106887858145836"
+   },
+   "name": "Samurai",
+   "two": {
+    "CritChance": 8
+   },
+   "tiers": [
+    {
+     "four": {
+      "perks": [],
+      "stats": {
+       "CritDamage": 40,
+       "CritChance": 8
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "CritChance": 8
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": [],
+      "stats": {
+       "CritDamage": 44,
+       "CritChance": 9
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "CritChance": 9
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": [],
+      "stats": {
+       "CritDamage": 48,
+       "CritChance": 10
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "CritChance": 10
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": [],
+      "stats": {
+       "CritDamage": 52,
+       "CritChance": 10
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "CritChance": 10
+      }
+     }
+    }
+   ],
+   "four": {
+    "CritDamage": 40
+   }
+  },
+  "Spartan": {
+   "rarity": "Epic",
+   "id": "Spartan",
+   "text": {
+    "four": "Blocks the first hit every wave",
+    "two": "+3 Armor"
+   },
+   "icons": {
+    "Chest": "rbxassetid://73918482671172",
+    "Boots": "rbxassetid://139187705472346",
+    "Legs": "rbxassetid://99913277149982",
+    "Helmet": "rbxassetid://87897893879420"
+   },
+   "name": "Spartan",
+   "two": {
+    "Armor": 3
+   },
+   "tiers": [
+    {
+     "four": {
+      "perks": [],
+      "stats": {
+       "Armor": 3,
+       "FirstHitBlock": 1
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Armor": 3
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": [],
+      "stats": {
+       "Armor": 3,
+       "FirstHitBlock": 1
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Armor": 3
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": [],
+      "stats": {
+       "Armor": 4,
+       "FirstHitBlock": 1
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Armor": 4
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": [],
+      "stats": {
+       "Armor": 4,
+       "FirstHitBlock": 1
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "Armor": 4
+      }
+     }
+    }
+   ],
+   "four": {
+    "FirstHitBlock": 1
+   }
+  },
+  "DragonScale": {
+   "rarity": "Legendary",
+   "id": "DragonScale",
+   "text": {
+    "four": "+20% Burn chance; zombies that hit you may catch fire (25%)",
+    "two": "+25 Max health"
+   },
+   "icons": {
+    "Chest": "rbxassetid://119736620076191",
+    "Boots": "rbxassetid://72705697021106",
+    "Legs": "rbxassetid://122778396125798",
+    "Helmet": "rbxassetid://117294820929917"
+   },
+   "name": "Dragon Scale",
+   "two": {
+    "MaxHP": 25
+   },
+   "tiers": [
+    {
+     "four": {
+      "perks": {
+       "FireThorns": 25
+      },
+      "stats": {
+       "BurnChance": 20,
+       "MaxHP": 25
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "MaxHP": 25
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": {
+       "FireThorns": 28
+      },
+      "stats": {
+       "BurnChance": 22,
+       "MaxHP": 28
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "MaxHP": 28
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": {
+       "FireThorns": 30
+      },
+      "stats": {
+       "BurnChance": 24,
+       "MaxHP": 30
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "MaxHP": 30
+      }
+     }
+    },
+    {
+     "four": {
+      "perks": {
+       "FireThorns": 33
+      },
+      "stats": {
+       "BurnChance": 26,
+       "MaxHP": 33
+      }
+     },
+     "two": {
+      "perks": [],
+      "stats": {
+       "MaxHP": 33
+      }
+     }
+    }
+   ],
+   "four": {
+    "BurnChance": 20,
+    "FireThorns": 25
+   }
+  }
+ },
+ "theme": {
+  "track": [
+   22,
+   29,
+   32
+  ],
+  "cyan": [
+   100,
+   220,
+   255
+  ],
+  "shade": [
+   5,
+   9,
+   10
+  ],
+  "ink": [
+   10,
+   14,
+   8
+  ],
+  "limeDark": [
+   58,
+   112,
+   12
+  ],
+  "limeSoft": [
+   210,
+   255,
+   161
+  ],
+  "lime": [
+   145,
+   239,
+   20
+  ],
+  "negative": [
+   255,
+   105,
+   105
+  ],
+  "TierFill": [
+   [
+    96,
+    104,
+    108
+   ],
+   [
+    34,
+    122,
+    190
+   ],
+   [
+    128,
+    62,
+    196
+   ],
+   [
+    196,
+    44,
+    56
+   ]
+  ],
+  "Tier": [
+   [
+    218,
+    224,
+    228
+   ],
+   [
+    79,
+    183,
+    245
+   ],
+   [
+    192,
+    116,
+    249
+   ],
+   [
+    248,
+    88,
+    99
+   ]
+  ],
+  "gold": [
+   255,
+   203,
+   64
+  ],
+  "well": [
+   34,
+   39,
+   43
+  ],
+  "muted": [
+   174,
+   183,
+   185
+  ],
+  "dim": [
+   120,
+   128,
+   131
+  ],
+  "cream": [
+   234,
+   221,
+   167
+  ],
+  "emerald": [
+   70,
+   226,
+   120
+  ],
+  "red": [
+   239,
+   35,
+   47
+  ],
+  "white": [
+   248,
+   249,
+   245
+  ]
+ },
+ "statLabels": {
+  "UtilityPower": {
+   "unit": "%",
+   "step": 10,
+   "label": "Utility power"
+  },
+  "MaxHP": {
+   "unit": " HP",
+   "step": 10,
+   "label": "Max health"
+  },
+  "PickupRadius": {
+   "unit": " studs",
+   "step": 2,
+   "label": "Pickup radius"
+  },
+  "Bounce": {
+   "unit": "",
+   "step": 1,
+   "label": "Bounces"
+  },
+  "ContactReduction": {
+   "unit": "%",
+   "step": 5,
+   "label": "Contact resistance"
+  },
+  "AreaSize": {
+   "unit": "%",
+   "step": 10,
+   "label": "Area radius"
+  },
+  "ElementalDamage": {
+   "unit": "%",
+   "step": 10,
+   "label": "Elemental damage"
+  },
+  "Damage": {
+   "unit": "%",
+   "step": 10,
+   "label": "Damage"
+  },
+  "LifeStealCap": {
+   "unit": " HP/s",
+   "step": 2,
+   "label": "Life steal cap"
+  },
+  "ProjectileSize": {
+   "unit": "%",
+   "step": 10,
+   "label": "Projectile size"
+  },
+  "ProjectileCount": {
+   "unit": "",
+   "step": 1,
+   "label": "Extra projectiles"
+  },
+  "BurnDamage": {
+   "unit": "%",
+   "step": 10,
+   "label": "Burn damage"
+  },
+  "PoisonChance": {
+   "unit": "%",
+   "step": 10,
+   "label": "Poison chance"
+  },
+  "GearPower": {
+   "unit": "",
+   "step": 1,
+   "label": "Gear power"
+  },
+  "FirstHitBlock": {
+   "unit": "",
+   "step": 1,
+   "label": "First-hit blocks"
+  },
+  "ChainCount": {
+   "unit": "",
+   "step": 1,
+   "label": "Lightning targets"
+  },
+  "ShopPricePercent": {
+   "unit": "%",
+   "step": 5,
+   "label": "Shop price modifier"
+  },
+  "CritChance": {
+   "unit": "%",
+   "step": 5,
+   "label": "Critical chance"
+  },
+  "AttackSpeed": {
+   "unit": "%",
+   "step": 10,
+   "label": "Attack speed"
+  },
+  "ShopDiscount": {
+   "unit": "%",
+   "step": 5,
+   "label": "Shop discount"
+  },
+  "LifeSteal": {
+   "unit": "%",
+   "step": 2,
+   "label": "Life steal"
+  },
+  "Duration": {
+   "unit": "%",
+   "step": 10,
+   "label": "Effect duration"
+  },
+  "SlowDuration": {
+   "unit": " s",
+   "step": 0.5,
+   "label": "Slow duration"
+  },
+  "ChainDamage": {
+   "unit": "%",
+   "step": 10,
+   "label": "Lightning damage"
+  },
+  "ChainEvery": {
+   "unit": " hits",
+   "step": 1,
+   "label": "Lightning frequency"
+  },
+  "BurnSpread": {
+   "unit": " targets",
+   "step": 1,
+   "label": "Burn spread"
+  },
+  "RangedDamage": {
+   "unit": "%",
+   "step": 10,
+   "label": "Ranged damage"
+  },
+  "Dodge": {
+   "unit": "%",
+   "step": 5,
+   "label": "Dodge"
+  },
+  "Armor": {
+   "unit": "",
+   "step": 2,
+   "label": "Armor"
+  },
+  "PoisonStacks": {
+   "unit": "",
+   "step": 1,
+   "label": "Poison stack cap"
+  },
+  "SlowStrength": {
+   "unit": "%",
+   "step": 5,
+   "label": "Slow strength"
+  },
+  "Regeneration": {
+   "unit": " HP/s",
+   "step": 1,
+   "label": "Regeneration"
+  },
+  "SlowChance": {
+   "unit": "%",
+   "step": 10,
+   "label": "Slow chance"
+  },
+  "Knockback": {
+   "unit": " studs/s",
+   "step": 5,
+   "label": "Knockback"
+  },
+  "ChainBonus": {
+   "unit": "",
+   "step": 1,
+   "label": "Extra lightning targets"
+  },
+  "BurnChance": {
+   "unit": "%",
+   "step": 10,
+   "label": "Burn chance"
+  },
+  "Pierce": {
+   "unit": "",
+   "step": 1,
+   "label": "Piercing"
+  },
+  "BossDamage": {
+   "unit": "%",
+   "step": 10,
+   "label": "Elite / boss damage"
+  },
+  "Luck": {
+   "unit": "",
+   "step": 10,
+   "label": "Luck"
+  },
+  "CritDamage": {
+   "unit": "%",
+   "step": 25,
+   "label": "Critical damage"
+  },
+  "CooldownReduction": {
+   "unit": "%",
+   "step": 5,
+   "label": "Cooldown reduction"
+  },
+  "ProjectileSpeed": {
+   "unit": "%",
+   "step": 10,
+   "label": "Projectile speed"
+  },
+  "PoisonDamage": {
+   "unit": "%",
+   "step": 10,
+   "label": "Poison damage"
+  },
+  "AttackRange": {
+   "unit": "%",
+   "step": 10,
+   "label": "Attack range"
+  },
+  "MeleeDamage": {
+   "unit": "%",
+   "step": 10,
+   "label": "Melee damage"
+  },
+  "Recovery": {
+   "unit": "%",
+   "step": 10,
+   "label": "Recovery"
+  },
+  "MoveSpeed": {
+   "unit": " studs/s",
+   "step": 2,
+   "label": "Movement speed"
+  },
+  "ExplosionDamage": {
+   "unit": "%",
+   "step": 10,
+   "label": "Explosion damage"
+  }
+ },
+ "rarityColor": {
+  "Legendary": [
+   255,
+   196,
+   60
+  ],
+  "Common": [
+   214,
+   222,
+   226
+  ],
+  "Epic": [
+   192,
+   116,
+   249
+  ],
+  "Godly": [
+   226,
+   34,
+   64
+  ],
+  "Rare": [
+   79,
+   183,
+   245
+  ]
+ },
+ "armorPerks": {
+  "PhoenixHealth": 0.5,
+  "PhoenixRadius": 12,
+  "RageBelow": 0.5
+ },
+ "ownedTierDemo": {
+  "profilePets": "BabyDragon:1:0",
+  "vampire": false,
+  "profileArmor": "Phoenix.Helmet:1:0",
+  "profileWeapons": "03:2:1,01:1:0",
+  "katana": 2,
+  "babyDragon": 1,
+  "phoenixTiers": {
+   "Phoenix.Helmet": 1
+  }
+ },
+ "items": {
+  "37": {
+   "kind": "weapon",
+   "name": "Poseidon's Trident",
+   "icon": "rbxassetid://115347871654580"
+  },
+  "Spartan.Chest": {
+   "kind": "armor",
+   "name": "Spartan Chest",
+   "icon": "rbxassetid://73918482671172"
+  },
+  "Viking.Helmet": {
+   "kind": "armor",
+   "name": "Viking Helmet",
+   "icon": "rbxassetid://103535004889613"
+  },
+  "Phoenix.Helmet": {
+   "kind": "armor",
+   "name": "Phoenix Helmet",
+   "icon": "rbxassetid://95410937063230"
+  },
+  "07": {
+   "kind": "weapon",
+   "name": "Draco",
+   "icon": "rbxassetid://84542339301153"
+  },
+  "27": {
+   "kind": "weapon",
+   "name": "Paint Roller",
+   "icon": "rbxassetid://113480577519275"
+  },
+  "17": {
+   "kind": "weapon",
+   "name": "Rubber Duck",
+   "icon": "rbxassetid://71258102069801"
+  },
+  "13": {
+   "kind": "weapon",
+   "name": "Kunai",
+   "icon": "rbxassetid://120683597299222"
+  },
+  "03": {
+   "kind": "weapon",
+   "name": "Katana",
+   "icon": "rbxassetid://73585837146439"
+  },
+  "33": {
+   "kind": "weapon",
+   "name": "Pandora's Box",
+   "icon": "rbxassetid://95730314118939"
+  },
+  "23": {
+   "kind": "weapon",
+   "name": "Bowling Pin",
+   "icon": "rbxassetid://73824260587783"
+  },
+  "Samurai.Legs": {
+   "kind": "armor",
+   "name": "Samurai Legs",
+   "icon": "rbxassetid://78615423814209"
+  },
+  "Phoenix.Legs": {
+   "kind": "armor",
+   "name": "Phoenix Legs",
+   "icon": "rbxassetid://123491029382483"
+  },
+  "36": {
+   "kind": "weapon",
+   "name": "Reaper's Scythe",
+   "icon": "rbxassetid://98038611477072"
+  },
+  "Iron.Chest": {
+   "kind": "armor",
+   "name": "Iron Chest",
+   "icon": "rbxassetid://87779254850761"
+  },
+  "DragonScale.Legs": {
+   "kind": "armor",
+   "name": "Dragon Scale Legs",
+   "icon": "rbxassetid://122778396125798"
+  },
+  "Spartan.Legs": {
+   "kind": "armor",
+   "name": "Spartan Legs",
+   "icon": "rbxassetid://99913277149982"
+  },
+  "Phoenix.Boots": {
+   "kind": "armor",
+   "name": "Phoenix Boots",
+   "icon": "rbxassetid://90694826818994"
+  },
+  "Viking.Chest": {
+   "kind": "armor",
+   "name": "Viking Chest",
+   "icon": "rbxassetid://94896508153973"
+  },
+  "Ninja.Legs": {
+   "kind": "armor",
+   "name": "Ninja Legs",
+   "icon": "rbxassetid://94605542017106"
+  },
+  "16": {
+   "kind": "weapon",
+   "name": "Steak",
+   "icon": "rbxassetid://71303617489138"
+  },
+  "26": {
+   "kind": "weapon",
+   "name": "Shovel",
+   "icon": "rbxassetid://130332437914726"
+  },
+  "02": {
+   "kind": "weapon",
+   "name": "Nunchucks",
+   "icon": "rbxassetid://76889402145049"
+  },
+  "12": {
+   "kind": "weapon",
+   "name": "Boomerang",
+   "icon": "rbxassetid://118992831327433"
+  },
+  "22": {
+   "kind": "weapon",
+   "name": "Bowling Ball",
+   "icon": "rbxassetid://129583469525829"
+  },
+  "32": {
+   "kind": "weapon",
+   "name": "Excalibur",
+   "icon": "rbxassetid://122594538852083"
+  },
+  "Iron.Legs": {
+   "kind": "armor",
+   "name": "Iron Legs",
+   "icon": "rbxassetid://92415099543295"
+  },
+  "41": {
+   "kind": "weapon",
+   "name": "Ray Gun",
+   "icon": "rbxassetid://110188341033662"
+  },
+  "Samurai.Chest": {
+   "kind": "armor",
+   "name": "Samurai Chest",
+   "icon": "rbxassetid://73415381523062"
+  },
+  "35": {
+   "kind": "weapon",
+   "name": "Crystal Ball",
+   "icon": "rbxassetid://115596756605971"
+  },
+  "39": {
+   "kind": "weapon",
+   "name": "Shadow Daggers",
+   "icon": "rbxassetid://115284484769679"
+  },
+  "29": {
+   "kind": "weapon",
+   "name": "Power Washer",
+   "icon": "rbxassetid://72612950703220"
+  },
+  "Viking.Boots": {
+   "kind": "armor",
+   "name": "Viking Boots",
+   "icon": "rbxassetid://107105181804474"
+  },
+  "19": {
+   "kind": "weapon",
+   "name": "Boxing Gloves",
+   "icon": "rbxassetid://79395868823763"
+  },
+  "09": {
+   "kind": "weapon",
+   "name": "Shotgun",
+   "icon": "rbxassetid://73440448199095"
+  },
+  "Iron.Helmet": {
+   "kind": "armor",
+   "name": "Iron Helmet",
+   "icon": "rbxassetid://129145366804816"
+  },
+  "25": {
+   "kind": "weapon",
+   "name": "Wrecking Ball",
+   "icon": "rbxassetid://127178962598755"
+  },
+  "15": {
+   "kind": "weapon",
+   "name": "Egg",
+   "icon": "rbxassetid://121569294705128"
+  },
+  "05": {
+   "kind": "weapon",
+   "name": "Spatula",
+   "icon": "rbxassetid://121554503484361"
+  },
+  "31": {
+   "kind": "weapon",
+   "name": "Mjolnir",
+   "icon": "rbxassetid://77232331953832"
+  },
+  "21": {
+   "kind": "weapon",
+   "name": "Yo-Yo",
+   "icon": "rbxassetid://109920978940018"
+  },
+  "11": {
+   "kind": "weapon",
+   "name": "Rocket Launcher",
+   "icon": "rbxassetid://103774125799202"
+  },
+  "01": {
+   "kind": "weapon",
+   "name": "Frying Pan",
+   "icon": "rbxassetid://74038074720581"
+  },
+  "DragonScale.Boots": {
+   "kind": "armor",
+   "name": "Dragon Scale Boots",
+   "icon": "rbxassetid://72705697021106"
+  },
+  "Ninja.Helmet": {
+   "kind": "armor",
+   "name": "Ninja Helmet",
+   "icon": "rbxassetid://122802619485422"
+  },
+  "40": {
+   "kind": "weapon",
+   "name": "Vampire Blade",
+   "icon": "rbxassetid://122685349145201"
+  },
+  "34": {
+   "kind": "weapon",
+   "name": "Medusa's Head",
+   "icon": "rbxassetid://137554573636900"
+  },
+  "Ninja.Boots": {
+   "kind": "armor",
+   "name": "Ninja Boots",
+   "icon": "rbxassetid://122686411592392"
+  },
+  "28": {
+   "kind": "weapon",
+   "name": "Vacuum Cleaner",
+   "icon": "rbxassetid://75288200196273"
+  },
+  "38": {
+   "kind": "weapon",
+   "name": "Storm Bow",
+   "icon": "rbxassetid://88739156797064"
+  },
+  "Phoenix.Chest": {
+   "kind": "armor",
+   "name": "Phoenix Chest",
+   "icon": "rbxassetid://93182390331732"
+  },
+  "DragonScale.Chest": {
+   "kind": "armor",
+   "name": "Dragon Scale Chest",
+   "icon": "rbxassetid://119736620076191"
+  },
+  "06": {
+   "kind": "weapon",
+   "name": "Baseball Bat",
+   "icon": "rbxassetid://134396865555784"
+  },
+  "Samurai.Helmet": {
+   "kind": "armor",
+   "name": "Samurai Helmet",
+   "icon": "rbxassetid://106887858145836"
+  },
+  "Ninja.Chest": {
+   "kind": "armor",
+   "name": "Ninja Chest",
+   "icon": "rbxassetid://78801616313923"
+  },
+  "Spartan.Helmet": {
+   "kind": "armor",
+   "name": "Spartan Helmet",
+   "icon": "rbxassetid://87897893879420"
+  },
+  "DragonScale.Helmet": {
+   "kind": "armor",
+   "name": "Dragon Scale Helmet",
+   "icon": "rbxassetid://117294820929917"
+  },
+  "Iron.Boots": {
+   "kind": "armor",
+   "name": "Iron Boots",
+   "icon": "rbxassetid://136478333897120"
+  },
+  "08": {
+   "kind": "weapon",
+   "name": "Fart Gun",
+   "icon": "rbxassetid://112649154217616"
+  },
+  "18": {
+   "kind": "weapon",
+   "name": "Deck of Cards",
+   "icon": "rbxassetid://129927573684272"
+  },
+  "Spartan.Boots": {
+   "kind": "armor",
+   "name": "Spartan Boots",
+   "icon": "rbxassetid://139187705472346"
+  },
+  "Viking.Legs": {
+   "kind": "armor",
+   "name": "Viking Legs",
+   "icon": "rbxassetid://126170661340997"
+  },
+  "14": {
+   "kind": "weapon",
+   "name": "Molotov",
+   "icon": "rbxassetid://109291367860600"
+  },
+  "24": {
+   "kind": "weapon",
+   "name": "Nail Gun",
+   "icon": "rbxassetid://91528182457764"
+  },
+  "Samurai.Boots": {
+   "kind": "armor",
+   "name": "Samurai Boots",
+   "icon": "rbxassetid://82101371139011"
+  },
+  "04": {
+   "kind": "weapon",
+   "name": "Kusarigama",
+   "icon": "rbxassetid://127806745831113"
+  },
+  "20": {
+   "kind": "weapon",
+   "name": "Cinder Block",
+   "icon": "rbxassetid://114400357979821"
+  },
+  "30": {
+   "kind": "weapon",
+   "name": "Magic Staff",
+   "icon": "rbxassetid://73425705945211"
+  },
+  "00": {
+   "kind": "weapon",
+   "name": "Glock",
+   "icon": "rbxassetid://71681559132362"
+  },
+  "10": {
+   "kind": "weapon",
+   "name": "T-Shirt Cannon",
+   "icon": "rbxassetid://115253509624247"
+  }
+ },
+ "petTierMult": [
+  1,
+  1.15,
+  1.3,
+  1.5
+ ],
+ "egg": {
+  "odds": [
+   {
+    "id": "GoldenRetriever",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "Bunny",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "Frog",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "Penguin",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "Fox",
+    "rarity": "Rare",
+    "chance": 7.5
+   },
+   {
+    "id": "Bee",
+    "rarity": "Rare",
+    "chance": 7.5
+   },
+   {
+    "id": "Turtle",
+    "rarity": "Rare",
+    "chance": 7.5
+   },
+   {
+    "id": "Monkey",
+    "rarity": "Rare",
+    "chance": 7.5
+   },
+   {
+    "id": "LuckyCat",
+    "rarity": "Epic",
+    "chance": 5
+   },
+   {
+    "id": "Owl",
+    "rarity": "Epic",
+    "chance": 5
+   },
+   {
+    "id": "CheetahCub",
+    "rarity": "Epic",
+    "chance": 5
+   },
+   {
+    "id": "BabyDragon",
+    "rarity": "Legendary",
+    "chance": 5
+   }
+  ],
+  "name": "Pet Egg",
+  "rarityOdds": {
+   "Epic": 15,
+   "Legendary": 5,
+   "Rare": 30,
+   "Common": 50
+  },
+  "icon": "rbxassetid://115158817562855",
+  "emeralds": 250
+ },
+ "overflow": {
+  "Legendary": 60,
+  "Common": 2,
+  "Epic": 20,
+  "Godly": 200,
+  "Rare": 5
+ },
+ "chest": {
+  "odds": [
+   {
+    "id": "01",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "05",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "00",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "08",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "12",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "15",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "19",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "17",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "24",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "26",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "30",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "35",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "Iron.Helmet",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "Iron.Chest",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "Iron.Legs",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "Iron.Boots",
+    "rarity": "Common",
+    "chance": 12.5
+   },
+   {
+    "id": "02",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "06",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "09",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "07",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "13",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "16",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "23",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "21",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "27",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "29",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "34",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "33",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "Ninja.Helmet",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "Ninja.Chest",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "Ninja.Legs",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "Ninja.Boots",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "Viking.Helmet",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "Viking.Chest",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "Viking.Legs",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "Viking.Boots",
+    "rarity": "Rare",
+    "chance": 10
+   },
+   {
+    "id": "04",
+    "rarity": "Epic",
+    "chance": 7.6923076923076925
+   },
+   {
+    "id": "10",
+    "rarity": "Epic",
+    "chance": 7.6923076923076925
+   },
+   {
+    "id": "14",
+    "rarity": "Epic",
+    "chance": 7.6923076923076925
+   },
+   {
+    "id": "20",
+    "rarity": "Epic",
+    "chance": 7.6923076923076925
+   },
+   {
+    "id": "28",
+    "rarity": "Epic",
+    "chance": 7.6923076923076925
+   },
+   {
+    "id": "Samurai.Helmet",
+    "rarity": "Epic",
+    "chance": 7.6923076923076925
+   },
+   {
+    "id": "Samurai.Chest",
+    "rarity": "Epic",
+    "chance": 7.6923076923076925
+   },
+   {
+    "id": "Samurai.Legs",
+    "rarity": "Epic",
+    "chance": 7.6923076923076925
+   },
+   {
+    "id": "Samurai.Boots",
+    "rarity": "Epic",
+    "chance": 7.6923076923076925
+   },
+   {
+    "id": "Spartan.Helmet",
+    "rarity": "Epic",
+    "chance": 7.6923076923076925
+   },
+   {
+    "id": "Spartan.Chest",
+    "rarity": "Epic",
+    "chance": 7.6923076923076925
+   },
+   {
+    "id": "Spartan.Legs",
+    "rarity": "Epic",
+    "chance": 7.6923076923076925
+   },
+   {
+    "id": "Spartan.Boots",
+    "rarity": "Epic",
+    "chance": 7.6923076923076925
+   },
+   {
+    "id": "03",
+    "rarity": "Legendary",
+    "chance": 9.090909090909092
+   },
+   {
+    "id": "11",
+    "rarity": "Legendary",
+    "chance": 9.090909090909092
+   },
+   {
+    "id": "18",
+    "rarity": "Legendary",
+    "chance": 9.090909090909092
+   },
+   {
+    "id": "22",
+    "rarity": "Legendary",
+    "chance": 9.090909090909092
+   },
+   {
+    "id": "25",
+    "rarity": "Legendary",
+    "chance": 9.090909090909092
+   },
+   {
+    "id": "32",
+    "rarity": "Legendary",
+    "chance": 9.090909090909092
+   },
+   {
+    "id": "31",
+    "rarity": "Legendary",
+    "chance": 9.090909090909092
+   },
+   {
+    "id": "DragonScale.Helmet",
+    "rarity": "Legendary",
+    "chance": 9.090909090909092
+   },
+   {
+    "id": "DragonScale.Chest",
+    "rarity": "Legendary",
+    "chance": 9.090909090909092
+   },
+   {
+    "id": "DragonScale.Legs",
+    "rarity": "Legendary",
+    "chance": 9.090909090909092
+   },
+   {
+    "id": "DragonScale.Boots",
+    "rarity": "Legendary",
+    "chance": 9.090909090909092
+   },
+   {
+    "id": "36",
+    "rarity": "Godly",
+    "chance": 0.2
+   },
+   {
+    "id": "37",
+    "rarity": "Godly",
+    "chance": 0.2
+   },
+   {
+    "id": "38",
+    "rarity": "Godly",
+    "chance": 0.2
+   },
+   {
+    "id": "39",
+    "rarity": "Godly",
+    "chance": 0.2
+   },
+   {
+    "id": "40",
+    "rarity": "Godly",
+    "chance": 0.2
+   },
+   {
+    "id": "41",
+    "rarity": "Godly",
+    "chance": 0.2
+   },
+   {
+    "id": "Phoenix.Helmet",
+    "rarity": "Godly",
+    "chance": 0.2
+   },
+   {
+    "id": "Phoenix.Chest",
+    "rarity": "Godly",
+    "chance": 0.2
+   },
+   {
+    "id": "Phoenix.Legs",
+    "rarity": "Godly",
+    "chance": 0.2
+   },
+   {
+    "id": "Phoenix.Boots",
+    "rarity": "Godly",
+    "chance": 0.2
+   }
+  ],
+  "godlyText": "2%",
+  "godly": 0.02,
+  "id": "Legendary",
+  "godlyPity": 150,
+  "legendaryPity": 50,
+  "rare": 3,
+  "summary": [
+   {
+    "rarity": "Common",
+    "text": "\u00d72\u20133"
+   },
+   {
+    "rarity": "Rare",
+    "text": "\u00d73"
+   },
+   {
+    "rarity": "Epic",
+    "text": "\u00d71"
+   },
+   {
+    "rarity": "Legendary",
+    "text": "\u00d71"
+   },
+   {
+    "rarity": "Godly",
+    "text": "2%"
+   }
+  ],
+  "copies": 8,
+  "name": "Legendary Chest",
+  "aura": [
+   255,
+   110,
+   40
+  ],
+  "epic": 1,
+  "pity": true,
+  "icon": "rbxassetid://97798658508261",
+  "legendary": 1
+ },
+ "weapons": {
+  "41": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Godly",
+   "slow": 0,
+   "icon": "rbxassetid://110188341033662",
+   "rarity": "Godly",
+   "godly": true,
+   "id": "41",
+   "burn": 0,
+   "trait": "",
+   "name": "Ray Gun",
+   "iconById": "rbxassetid://74294498569772",
+   "kind": "Ranged",
+   "special": {
+    "burstRadius": [
+     6,
+     6,
+     6,
+     9
+    ],
+    "burstFactor": [
+     0.5,
+     0.5,
+     0.5,
+     0.75
+    ]
+   },
+   "tiers": [
+    {
+     "range": 48,
+     "rate": 1.1111111111111112,
+     "cooldown": 0.9,
+     "damage": 22
+    },
+    {
+     "range": 48,
+     "rate": 1.2345679012345678,
+     "cooldown": 0.81,
+     "damage": 31
+    },
+    {
+     "range": 48,
+     "rate": 1.3888888888888886,
+     "cooldown": 0.7200000000000001,
+     "damage": 43
+    },
+    {
+     "range": 48,
+     "rate": 1.5873015873015872,
+     "cooldown": 0.63,
+     "damage": 60
+    }
+   ]
+  },
+  "37": {
+   "hybridRange": 36,
+   "poison": 0,
+   "lightning": false,
+   "home": "Godly",
+   "slow": 0,
+   "icon": "rbxassetid://115347871654580",
+   "rarity": "Godly",
+   "godly": true,
+   "id": "37",
+   "burn": 0,
+   "trait": "",
+   "name": "Poseidon's Trident",
+   "iconById": "rbxassetid://111945334431090",
+   "kind": "Melee",
+   "special": {
+    "waveRadius": [
+     10,
+     10,
+     10,
+     14
+    ],
+    "waveTime": 0.5,
+    "waveFactor": 0.6,
+    "wavePush": 32
+   },
+   "tiers": [
+    {
+     "range": 9,
+     "rate": 0.6666666666666666,
+     "cooldown": 1.5,
+     "damage": 34
+    },
+    {
+     "range": 9,
+     "rate": 0.7407407407407407,
+     "cooldown": 1.35,
+     "damage": 48
+    },
+    {
+     "range": 9,
+     "rate": 0.8333333333333333,
+     "cooldown": 1.2000000000000002,
+     "damage": 67
+    },
+    {
+     "range": 9,
+     "rate": 0.9523809523809526,
+     "cooldown": 1.0499999999999998,
+     "damage": 93
+    }
+   ]
+  },
+  "35": {
+   "poison": 0,
+   "lightning": true,
+   "home": "Mage",
+   "slow": 0,
+   "icon": "rbxassetid://115596756605971",
+   "rarity": "Common",
+   "godly": false,
+   "id": "35",
+   "burn": 0,
+   "trait": "bounce",
+   "name": "Crystal Ball",
+   "iconById": "rbxassetid://115596756605971",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 48,
+     "rate": 0.9523809523809523,
+     "cooldown": 1.05,
+     "damage": 13
+    },
+    {
+     "range": 48,
+     "rate": 1.0582010582010581,
+     "cooldown": 0.9450000000000001,
+     "damage": 18
+    },
+    {
+     "range": 48,
+     "rate": 1.1904761904761905,
+     "cooldown": 0.8400000000000001,
+     "damage": 25
+    },
+    {
+     "range": 48,
+     "rate": 1.3605442176870748,
+     "cooldown": 0.735,
+     "damage": 36
+    }
+   ]
+  },
+  "39": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Godly",
+   "slow": 0,
+   "icon": "rbxassetid://115284484769679",
+   "rarity": "Godly",
+   "godly": true,
+   "id": "39",
+   "burn": 0,
+   "trait": "",
+   "name": "Shadow Daggers",
+   "iconById": "rbxassetid://112261102861999",
+   "kind": "Melee",
+   "special": {
+    "hop": 12,
+    "chain": [
+     5,
+     5,
+     5,
+     7
+    ],
+    "loneHits": 2
+   },
+   "tiers": [
+    {
+     "range": 10,
+     "rate": 0.7692307692307692,
+     "cooldown": 1.3,
+     "damage": 16
+    },
+    {
+     "range": 10,
+     "rate": 0.8547008547008546,
+     "cooldown": 1.1700000000000002,
+     "damage": 22
+    },
+    {
+     "range": 10,
+     "rate": 0.9615384615384615,
+     "cooldown": 1.04,
+     "damage": 31
+    },
+    {
+     "range": 10,
+     "rate": 1.098901098901099,
+     "cooldown": 0.9099999999999999,
+     "damage": 44
+    }
+   ]
+  },
+  "29": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Handyman",
+   "slow": 0,
+   "icon": "rbxassetid://72612950703220",
+   "rarity": "Rare",
+   "godly": false,
+   "id": "29",
+   "burn": 0,
+   "trait": "pierce",
+   "name": "Power Washer",
+   "iconById": "rbxassetid://72612950703220",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 30,
+     "rate": 4.366812227074235,
+     "cooldown": 0.229,
+     "damage": 3
+    },
+    {
+     "range": 30,
+     "rate": 4.85201358563804,
+     "cooldown": 0.2061,
+     "damage": 4
+    },
+    {
+     "range": 30,
+     "rate": 5.458515283842794,
+     "cooldown": 0.18320000000000003,
+     "damage": 6
+    },
+    {
+     "range": 30,
+     "rate": 6.238303181534623,
+     "cooldown": 0.1603,
+     "damage": 8
+    }
+   ]
+  },
+  "19": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Juggler",
+   "slow": 0,
+   "icon": "rbxassetid://79395868823763",
+   "rarity": "Common",
+   "godly": false,
+   "id": "19",
+   "burn": 0,
+   "trait": "",
+   "name": "Boxing Gloves",
+   "iconById": "rbxassetid://79395868823763",
+   "kind": "Melee",
+   "tiers": [
+    {
+     "range": 6.5,
+     "rate": 2.380952380952381,
+     "cooldown": 0.42,
+     "damage": 8
+    },
+    {
+     "range": 6.5,
+     "rate": 2.5329280648429586,
+     "cooldown": 0.3948,
+     "damage": 15
+    },
+    {
+     "range": 6.5,
+     "rate": 2.705627705627706,
+     "cooldown": 0.3696,
+     "damage": 28
+    },
+    {
+     "range": 6.5,
+     "rate": 3.1328320802005014,
+     "cooldown": 0.3192,
+     "damage": 48
+    }
+   ]
+  },
+  "09": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Gunner",
+   "slow": 0,
+   "icon": "rbxassetid://73440448199095",
+   "rarity": "Rare",
+   "godly": false,
+   "id": "09",
+   "burn": 0,
+   "trait": "pellets",
+   "name": "Shotgun",
+   "iconById": "rbxassetid://73440448199095",
+   "kind": "Spread",
+   "tiers": [
+    {
+     "range": 24,
+     "rate": 0.9541984732824427,
+     "cooldown": 1.048,
+     "damage": 3
+    },
+    {
+     "range": 24,
+     "rate": 1.0602205258693809,
+     "cooldown": 0.9432,
+     "damage": 4
+    },
+    {
+     "range": 24,
+     "rate": 1.1927480916030533,
+     "cooldown": 0.8384,
+     "damage": 5
+    },
+    {
+     "range": 24,
+     "rate": 1.3631406761177753,
+     "cooldown": 0.7336,
+     "damage": 6
+    }
+   ]
+  },
+  "07": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Gunner",
+   "slow": 0,
+   "icon": "rbxassetid://84542339301153",
+   "rarity": "Rare",
+   "godly": false,
+   "id": "07",
+   "burn": 0,
+   "trait": "",
+   "name": "Draco",
+   "iconById": "rbxassetid://84542339301153",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 42,
+     "rate": 6.172839506172839,
+     "cooldown": 0.162,
+     "damage": 3
+    },
+    {
+     "range": 42,
+     "rate": 6.858710562414266,
+     "cooldown": 0.1458,
+     "damage": 4
+    },
+    {
+     "range": 42,
+     "rate": 7.716049382716048,
+     "cooldown": 0.12960000000000002,
+     "damage": 6
+    },
+    {
+     "range": 42,
+     "rate": 8.818342151675484,
+     "cooldown": 0.1134,
+     "damage": 8
+    }
+   ]
+  },
+  "15": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Thrower",
+   "slow": 0,
+   "icon": "rbxassetid://121569294705128",
+   "rarity": "Common",
+   "godly": false,
+   "id": "15",
+   "burn": 0,
+   "trait": "",
+   "name": "Egg",
+   "iconById": "rbxassetid://121569294705128",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 32,
+     "rate": 1.1764705882352942,
+     "cooldown": 0.85,
+     "damage": 10
+    },
+    {
+     "range": 32,
+     "rate": 1.3071895424836601,
+     "cooldown": 0.765,
+     "damage": 14
+    },
+    {
+     "range": 32,
+     "rate": 1.4705882352941175,
+     "cooldown": 0.68,
+     "damage": 20
+    },
+    {
+     "range": 32,
+     "rate": 1.680672268907563,
+     "cooldown": 0.595,
+     "damage": 27
+    }
+   ]
+  },
+  "05": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Brawler",
+   "slow": 0,
+   "icon": "rbxassetid://121554503484361",
+   "rarity": "Common",
+   "godly": false,
+   "id": "05",
+   "burn": 0,
+   "trait": "",
+   "name": "Spatula",
+   "iconById": "rbxassetid://121554503484361",
+   "kind": "Melee",
+   "tiers": [
+    {
+     "range": 6,
+     "rate": 1.8181818181818181,
+     "cooldown": 0.55,
+     "damage": 9
+    },
+    {
+     "range": 6,
+     "rate": 2.02020202020202,
+     "cooldown": 0.49500000000000005,
+     "damage": 13
+    },
+    {
+     "range": 6,
+     "rate": 2.2727272727272725,
+     "cooldown": 0.44000000000000006,
+     "damage": 18
+    },
+    {
+     "range": 6,
+     "rate": 2.5974025974025974,
+     "cooldown": 0.385,
+     "damage": 25
+    }
+   ]
+  },
+  "17": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Juggler",
+   "slow": 0,
+   "icon": "rbxassetid://71258102069801",
+   "rarity": "Common",
+   "godly": false,
+   "id": "17",
+   "burn": 0,
+   "trait": "bounce",
+   "name": "Rubber Duck",
+   "iconById": "rbxassetid://71258102069801",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 12,
+     "rate": 3.125,
+     "cooldown": 0.32,
+     "damage": 5
+    },
+    {
+     "range": 12,
+     "rate": 3.472222222222222,
+     "cooldown": 0.28800000000000003,
+     "damage": 7
+    },
+    {
+     "range": 12,
+     "rate": 3.90625,
+     "cooldown": 0.256,
+     "damage": 10
+    },
+    {
+     "range": 12,
+     "rate": 4.464285714285714,
+     "cooldown": 0.22399999999999998,
+     "damage": 14
+    }
+   ]
+  },
+  "13": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Thrower",
+   "slow": 0,
+   "icon": "rbxassetid://120683597299222",
+   "rarity": "Rare",
+   "godly": false,
+   "id": "13",
+   "burn": 0,
+   "trait": "pierce",
+   "name": "Kunai",
+   "iconById": "rbxassetid://120683597299222",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 38,
+     "rate": 2.1881838074398248,
+     "cooldown": 0.457,
+     "damage": 6
+    },
+    {
+     "range": 38,
+     "rate": 2.4313153415998054,
+     "cooldown": 0.4113,
+     "damage": 8
+    },
+    {
+     "range": 38,
+     "rate": 2.7352297592997807,
+     "cooldown": 0.36560000000000004,
+     "damage": 12
+    },
+    {
+     "range": 38,
+     "rate": 3.125976867771178,
+     "cooldown": 0.3199,
+     "damage": 16
+    }
+   ]
+  },
+  "03": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Brawler",
+   "slow": 0,
+   "icon": "rbxassetid://73585837146439",
+   "rarity": "Legendary",
+   "godly": false,
+   "id": "03",
+   "burn": 0,
+   "trait": "",
+   "legendary": {
+    "factor": 0.75,
+    "move": "Slash",
+    "every": 3,
+    "speed": 78,
+    "range": 30,
+    "width": 3.4
+   },
+   "name": "Katana",
+   "iconById": "rbxassetid://73585837146439",
+   "kind": "Melee",
+   "tiers": [
+    {
+     "range": 11,
+     "rate": 1.0822510822510822,
+     "cooldown": 0.924,
+     "damage": 21
+    },
+    {
+     "range": 11,
+     "rate": 1.2025012025012025,
+     "cooldown": 0.8316,
+     "damage": 29
+    },
+    {
+     "range": 11,
+     "rate": 1.3528138528138527,
+     "cooldown": 0.7392000000000001,
+     "damage": 41
+    },
+    {
+     "range": 11,
+     "rate": 1.546072974644403,
+     "cooldown": 0.6468,
+     "damage": 58
+    }
+   ]
+  },
+  "11": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Gunner",
+   "slow": 0,
+   "icon": "rbxassetid://103774125799202",
+   "rarity": "Legendary",
+   "godly": false,
+   "id": "11",
+   "burn": 0,
+   "trait": "",
+   "blast": 9,
+   "legendary": {
+    "spread": 18,
+    "factor": 0.45,
+    "move": "Split",
+    "speed": 58,
+    "every": 4,
+    "splitAfter": 0.28,
+    "minis": 3,
+    "radius": 5.5
+   },
+   "name": "Rocket Launcher",
+   "iconById": "rbxassetid://103774125799202",
+   "kind": "Blast",
+   "tiers": [
+    {
+     "range": 70,
+     "rate": 0.42105263157894735,
+     "cooldown": 2.375,
+     "damage": 38
+    },
+    {
+     "range": 70,
+     "rate": 0.4678362573099415,
+     "cooldown": 2.1375,
+     "damage": 53
+    },
+    {
+     "range": 70,
+     "rate": 0.5263157894736842,
+     "cooldown": 1.9000000000000001,
+     "damage": 74
+    },
+    {
+     "range": 70,
+     "rate": 0.6015037593984963,
+     "cooldown": 1.6624999999999999,
+     "damage": 104
+    }
+   ]
+  },
+  "01": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Brawler",
+   "slow": 0,
+   "icon": "rbxassetid://74038074720581",
+   "rarity": "Common",
+   "godly": false,
+   "id": "01",
+   "burn": 0,
+   "trait": "",
+   "name": "Frying Pan",
+   "iconById": "rbxassetid://74038074720581",
+   "kind": "Melee",
+   "tiers": [
+    {
+     "range": 6,
+     "rate": 0.9523809523809523,
+     "cooldown": 1.05,
+     "damage": 16
+    },
+    {
+     "range": 6,
+     "rate": 1.0582010582010581,
+     "cooldown": 0.9450000000000001,
+     "damage": 23
+    },
+    {
+     "range": 6,
+     "rate": 1.1904761904761905,
+     "cooldown": 0.8400000000000001,
+     "damage": 34
+    },
+    {
+     "range": 6,
+     "rate": 1.3605442176870748,
+     "cooldown": 0.735,
+     "damage": 49
+    }
+   ]
+  },
+  "40": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Godly",
+   "slow": 0,
+   "icon": "rbxassetid://122685349145201",
+   "rarity": "Godly",
+   "godly": true,
+   "id": "40",
+   "burn": 0,
+   "trait": "",
+   "name": "Vampire Blade",
+   "iconById": "rbxassetid://90868128996170",
+   "kind": "Melee",
+   "special": {
+    "capBonus": [
+     0,
+     0,
+     0,
+     5
+    ],
+    "wispHeal": 2,
+    "leech": [
+     0.08,
+     0.08,
+     0.08,
+     0.12
+    ]
+   },
+   "tiers": [
+    {
+     "range": 9,
+     "rate": 0.7692307692307692,
+     "cooldown": 1.3,
+     "damage": 32
+    },
+    {
+     "range": 9,
+     "rate": 0.8547008547008546,
+     "cooldown": 1.1700000000000002,
+     "damage": 45
+    },
+    {
+     "range": 9,
+     "rate": 0.9615384615384615,
+     "cooldown": 1.04,
+     "damage": 63
+    },
+    {
+     "range": 9,
+     "rate": 1.098901098901099,
+     "cooldown": 0.9099999999999999,
+     "damage": 88
+    }
+   ]
+  },
+  "36": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Godly",
+   "slow": 0,
+   "icon": "rbxassetid://98038611477072",
+   "rarity": "Godly",
+   "godly": true,
+   "id": "36",
+   "burn": 0,
+   "trait": "",
+   "name": "Reaper's Scythe",
+   "iconById": "rbxassetid://107381256092734",
+   "kind": "Melee",
+   "special": {
+    "ghostClawEvery": 1,
+    "ghostCap": [
+     4,
+     4,
+     4,
+     6
+    ],
+    "ghostSpeed": 26,
+    "ghostReach": 3,
+    "bigClaw": 2,
+    "ghostSight": 40,
+    "ghostChance": 0.3333333333333333,
+    "ghostLife": 6,
+    "ghostClaw": 0.25
+   },
+   "tiers": [
+    {
+     "range": 10,
+     "rate": 0.8,
+     "cooldown": 1.25,
+     "damage": 30
+    },
+    {
+     "range": 10,
+     "rate": 0.8888888888888888,
+     "cooldown": 1.125,
+     "damage": 42
+    },
+    {
+     "range": 10,
+     "rate": 1,
+     "cooldown": 1,
+     "damage": 59
+    },
+    {
+     "range": 10,
+     "rate": 1.1428571428571428,
+     "cooldown": 0.875,
+     "damage": 82
+    }
+   ]
+  },
+  "34": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Mage",
+   "slow": 100,
+   "icon": "rbxassetid://137554573636900",
+   "rarity": "Rare",
+   "godly": false,
+   "id": "34",
+   "burn": 0,
+   "trait": "shots",
+   "name": "Medusa's Head",
+   "iconById": "rbxassetid://137554573636900",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 38,
+     "rate": 0.8748906386701663,
+     "cooldown": 1.143,
+     "damage": 5
+    },
+    {
+     "range": 38,
+     "rate": 0.9721007096335181,
+     "cooldown": 1.0287,
+     "damage": 7
+    },
+    {
+     "range": 38,
+     "rate": 1.0936132983377076,
+     "cooldown": 0.9144000000000001,
+     "damage": 10
+    },
+    {
+     "range": 38,
+     "rate": 1.249843769528809,
+     "cooldown": 0.8000999999999999,
+     "damage": 14
+    }
+   ]
+  },
+  "32": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Mage",
+   "slow": 0,
+   "icon": "rbxassetid://122594538852083",
+   "rarity": "Legendary",
+   "godly": false,
+   "id": "32",
+   "burn": 0,
+   "trait": "",
+   "legendary": {
+    "factor": 0.45,
+    "move": "Beam",
+    "every": 1,
+    "speed": 56,
+    "range": 22,
+    "width": 4.4
+   },
+   "name": "Excalibur",
+   "iconById": "rbxassetid://122594538852083",
+   "kind": "Melee",
+   "tiers": [
+    {
+     "range": 8.5,
+     "rate": 0.7457121551081283,
+     "cooldown": 1.341,
+     "damage": 31
+    },
+    {
+     "range": 8.5,
+     "rate": 0.8285690612312535,
+     "cooldown": 1.2069,
+     "damage": 43
+    },
+    {
+     "range": 8.5,
+     "rate": 0.9321401938851603,
+     "cooldown": 1.0728,
+     "damage": 61
+    },
+    {
+     "range": 8.5,
+     "rate": 1.0653030787258977,
+     "cooldown": 0.9386999999999999,
+     "damage": 85
+    }
+   ]
+  },
+  "33": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Mage",
+   "slow": 0,
+   "icon": "rbxassetid://95730314118939",
+   "rarity": "Rare",
+   "godly": false,
+   "id": "33",
+   "burn": 0,
+   "trait": "",
+   "blast": 7,
+   "name": "Pandora's Box",
+   "iconById": "rbxassetid://95730314118939",
+   "kind": "Blast",
+   "tiers": [
+    {
+     "range": 50,
+     "rate": 0.5047955577990914,
+     "cooldown": 1.981,
+     "damage": 26
+    },
+    {
+     "range": 50,
+     "rate": 0.5608839531101014,
+     "cooldown": 1.7829000000000002,
+     "damage": 36
+    },
+    {
+     "range": 50,
+     "rate": 0.6309944472488641,
+     "cooldown": 1.5848000000000002,
+     "damage": 51
+    },
+    {
+     "range": 50,
+     "rate": 0.7211365111415591,
+     "cooldown": 1.3867,
+     "damage": 71
+    }
+   ]
+  },
+  "28": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Handyman",
+   "slow": 0,
+   "icon": "rbxassetid://75288200196273",
+   "rarity": "Epic",
+   "godly": false,
+   "id": "28",
+   "burn": 0,
+   "trait": "",
+   "name": "Vacuum Cleaner",
+   "iconById": "rbxassetid://75288200196273",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 20,
+     "rate": 3.436426116838488,
+     "cooldown": 0.291,
+     "damage": 4
+    },
+    {
+     "range": 20,
+     "rate": 3.818251240931654,
+     "cooldown": 0.26189999999999997,
+     "damage": 6
+    },
+    {
+     "range": 20,
+     "rate": 4.29553264604811,
+     "cooldown": 0.2328,
+     "damage": 8
+    },
+    {
+     "range": 20,
+     "rate": 4.909180166912127,
+     "cooldown": 0.20369999999999996,
+     "damage": 11
+    }
+   ]
+  },
+  "38": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Godly",
+   "slow": 0,
+   "icon": "rbxassetid://88739156797064",
+   "rarity": "Godly",
+   "godly": true,
+   "id": "38",
+   "burn": 0,
+   "trait": "",
+   "name": "Storm Bow",
+   "iconById": "rbxassetid://86787843399026",
+   "kind": "Ranged",
+   "special": {
+    "arrows": [
+     5,
+     5,
+     5,
+     7
+    ],
+    "spread": 10,
+    "loneMax": 2
+   },
+   "tiers": [
+    {
+     "range": 50,
+     "rate": 0.8333333333333334,
+     "cooldown": 1.2,
+     "damage": 14
+    },
+    {
+     "range": 50,
+     "rate": 0.9259259259259258,
+     "cooldown": 1.08,
+     "damage": 20
+    },
+    {
+     "range": 50,
+     "rate": 1.0416666666666667,
+     "cooldown": 0.96,
+     "damage": 27
+    },
+    {
+     "range": 50,
+     "rate": 1.1904761904761905,
+     "cooldown": 0.84,
+     "damage": 38
+    }
+   ]
+  },
+  "31": {
+   "hybridRange": 32,
+   "poison": 0,
+   "lightning": true,
+   "home": "Mage",
+   "slow": 0,
+   "icon": "rbxassetid://77232331953832",
+   "rarity": "Legendary",
+   "godly": false,
+   "id": "31",
+   "burn": 0,
+   "trait": "",
+   "legendary": {
+    "factor": 1.2,
+    "move": "Thunder",
+    "every": 4,
+    "delay": 0.2,
+    "radius": 8
+   },
+   "name": "Mjolnir",
+   "iconById": "rbxassetid://77232331953832",
+   "kind": "Melee",
+   "tiers": [
+    {
+     "range": 8,
+     "rate": 0.5076142131979695,
+     "cooldown": 1.97,
+     "damage": 26
+    },
+    {
+     "range": 8,
+     "rate": 0.5640157924421884,
+     "cooldown": 1.773,
+     "damage": 36
+    },
+    {
+     "range": 8,
+     "rate": 0.6345177664974619,
+     "cooldown": 1.576,
+     "damage": 51
+    },
+    {
+     "range": 8,
+     "rate": 0.7251631617113851,
+     "cooldown": 1.379,
+     "damage": 71
+    }
+   ]
+  },
+  "30": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Mage",
+   "slow": 0,
+   "icon": "rbxassetid://73425705945211",
+   "rarity": "Common",
+   "godly": false,
+   "id": "30",
+   "burn": 0,
+   "trait": "",
+   "name": "Magic Staff",
+   "iconById": "rbxassetid://73425705945211",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 45,
+     "rate": 0.8695652173913044,
+     "cooldown": 1.15,
+     "damage": 9
+    },
+    {
+     "range": 45,
+     "rate": 0.9661835748792271,
+     "cooldown": 1.035,
+     "damage": 13
+    },
+    {
+     "range": 45,
+     "rate": 1.0869565217391306,
+     "cooldown": 0.9199999999999999,
+     "damage": 18
+    },
+    {
+     "range": 45,
+     "rate": 1.2422360248447206,
+     "cooldown": 0.8049999999999999,
+     "damage": 25
+    }
+   ]
+  },
+  "20": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Juggler",
+   "slow": 0,
+   "icon": "rbxassetid://114400357979821",
+   "rarity": "Epic",
+   "godly": false,
+   "id": "20",
+   "burn": 0,
+   "trait": "",
+   "name": "Cinder Block",
+   "iconById": "rbxassetid://114400357979821",
+   "kind": "Melee",
+   "tiers": [
+    {
+     "range": 7,
+     "rate": 0.7407407407407407,
+     "cooldown": 1.35,
+     "damage": 33
+    },
+    {
+     "range": 7,
+     "rate": 0.8230452674897119,
+     "cooldown": 1.215,
+     "damage": 46
+    },
+    {
+     "range": 7,
+     "rate": 0.9259259259259258,
+     "cooldown": 1.08,
+     "damage": 65
+    },
+    {
+     "range": 7,
+     "rate": 1.0582010582010584,
+     "cooldown": 0.945,
+     "damage": 91
+    }
+   ]
+  },
+  "21": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Juggler",
+   "slow": 0,
+   "icon": "rbxassetid://109920978940018",
+   "rarity": "Rare",
+   "godly": false,
+   "id": "21",
+   "burn": 0,
+   "trait": "bounce",
+   "name": "Yo-Yo",
+   "iconById": "rbxassetid://109920978940018",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 28,
+     "rate": 1.4992503748125936,
+     "cooldown": 0.667,
+     "damage": 8
+    },
+    {
+     "range": 28,
+     "rate": 1.6658337497917706,
+     "cooldown": 0.6003000000000001,
+     "damage": 11
+    },
+    {
+     "range": 28,
+     "rate": 1.874062968515742,
+     "cooldown": 0.5336000000000001,
+     "damage": 16
+    },
+    {
+     "range": 28,
+     "rate": 2.141786249732277,
+     "cooldown": 0.4669,
+     "damage": 22
+    }
+   ]
+  },
+  "27": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Handyman",
+   "slow": 0,
+   "icon": "rbxassetid://113480577519275",
+   "rarity": "Rare",
+   "godly": false,
+   "id": "27",
+   "burn": 0,
+   "trait": "",
+   "name": "Paint Roller",
+   "iconById": "rbxassetid://113480577519275",
+   "kind": "Melee",
+   "tiers": [
+    {
+     "range": 9,
+     "rate": 1.3123359580052494,
+     "cooldown": 0.762,
+     "damage": 10
+    },
+    {
+     "range": 9,
+     "rate": 1.4581510644502769,
+     "cooldown": 0.6858000000000001,
+     "damage": 14
+    },
+    {
+     "range": 9,
+     "rate": 1.6404199475065615,
+     "cooldown": 0.6096,
+     "damage": 20
+    },
+    {
+     "range": 9,
+     "rate": 1.8747656542932134,
+     "cooldown": 0.5334,
+     "damage": 27
+    }
+   ]
+  },
+  "26": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Handyman",
+   "slow": 0,
+   "icon": "rbxassetid://130332437914726",
+   "rarity": "Common",
+   "godly": false,
+   "id": "26",
+   "burn": 0,
+   "trait": "",
+   "name": "Shovel",
+   "iconById": "rbxassetid://130332437914726",
+   "kind": "Melee",
+   "tiers": [
+    {
+     "range": 8,
+     "rate": 0.8695652173913044,
+     "cooldown": 1.15,
+     "damage": 18
+    },
+    {
+     "range": 8,
+     "rate": 0.9661835748792271,
+     "cooldown": 1.035,
+     "damage": 25
+    },
+    {
+     "range": 8,
+     "rate": 1.0869565217391306,
+     "cooldown": 0.9199999999999999,
+     "damage": 35
+    },
+    {
+     "range": 8,
+     "rate": 1.2422360248447206,
+     "cooldown": 0.8049999999999999,
+     "damage": 49
+    }
+   ]
+  },
+  "25": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Handyman",
+   "slow": 0,
+   "icon": "rbxassetid://127178962598755",
+   "rarity": "Legendary",
+   "godly": false,
+   "id": "25",
+   "burn": 0,
+   "trait": "",
+   "legendary": {
+    "factor": 0.4,
+    "move": "Shock",
+    "push": 26,
+    "time": 0.42,
+    "radius": 11
+   },
+   "name": "Wrecking Ball",
+   "iconById": "rbxassetid://127178962598755",
+   "kind": "Melee",
+   "tiers": [
+    {
+     "range": 12,
+     "rate": 0.6365372374283896,
+     "cooldown": 1.571,
+     "damage": 33
+    },
+    {
+     "range": 12,
+     "rate": 0.7072635971426551,
+     "cooldown": 1.4139,
+     "damage": 46
+    },
+    {
+     "range": 12,
+     "rate": 0.7956715467854869,
+     "cooldown": 1.2568000000000001,
+     "damage": 65
+    },
+    {
+     "range": 12,
+     "rate": 0.9093389106119851,
+     "cooldown": 1.0997,
+     "damage": 91
+    }
+   ]
+  },
+  "24": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Handyman",
+   "slow": 0,
+   "icon": "rbxassetid://91528182457764",
+   "rarity": "Common",
+   "godly": false,
+   "id": "24",
+   "burn": 0,
+   "trait": "pierce",
+   "name": "Nail Gun",
+   "iconById": "rbxassetid://91528182457764",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 40,
+     "rate": 3.571428571428571,
+     "cooldown": 0.28,
+     "damage": 4
+    },
+    {
+     "range": 40,
+     "rate": 3.9682539682539675,
+     "cooldown": 0.25200000000000006,
+     "damage": 5
+    },
+    {
+     "range": 40,
+     "rate": 4.4642857142857135,
+     "cooldown": 0.22400000000000003,
+     "damage": 7
+    },
+    {
+     "range": 40,
+     "rate": 5.1020408163265305,
+     "cooldown": 0.196,
+     "damage": 10
+    }
+   ]
+  },
+  "08": {
+   "poison": 100,
+   "lightning": false,
+   "home": "Gunner",
+   "slow": 0,
+   "icon": "rbxassetid://112649154217616",
+   "rarity": "Common",
+   "godly": false,
+   "id": "08",
+   "burn": 0,
+   "trait": "",
+   "name": "Fart Gun",
+   "iconById": "rbxassetid://112649154217616",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 28,
+     "rate": 1.25,
+     "cooldown": 0.8,
+     "damage": 4
+    },
+    {
+     "range": 28,
+     "rate": 1.3888888888888886,
+     "cooldown": 0.7200000000000001,
+     "damage": 6
+    },
+    {
+     "range": 28,
+     "rate": 1.5624999999999998,
+     "cooldown": 0.6400000000000001,
+     "damage": 8
+    },
+    {
+     "range": 28,
+     "rate": 1.7857142857142858,
+     "cooldown": 0.5599999999999999,
+     "damage": 11
+    }
+   ]
+  },
+  "18": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Thrower",
+   "slow": 0,
+   "icon": "rbxassetid://129927573684272",
+   "rarity": "Legendary",
+   "godly": false,
+   "id": "18",
+   "burn": 0,
+   "trait": "cards",
+   "legendary": {
+    "cards": 5,
+    "factor": 0.5,
+    "move": "Flush",
+    "every": 5,
+    "fan": 26,
+    "rangeScale": 1.25,
+    "width": 1.5
+   },
+   "name": "Deck of Cards",
+   "iconById": "rbxassetid://129927573684272",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 42,
+     "rate": 1.0526315789473684,
+     "cooldown": 0.95,
+     "damage": 18
+    },
+    {
+     "range": 42,
+     "rate": 1.1695906432748537,
+     "cooldown": 0.855,
+     "damage": 23
+    },
+    {
+     "range": 42,
+     "rate": 1.3157894736842106,
+     "cooldown": 0.76,
+     "damage": 30
+    },
+    {
+     "range": 42,
+     "rate": 1.5037593984962407,
+     "cooldown": 0.6649999999999999,
+     "damage": 40
+    }
+   ]
+  },
+  "23": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Juggler",
+   "slow": 0,
+   "icon": "rbxassetid://73824260587783",
+   "rarity": "Rare",
+   "godly": false,
+   "id": "23",
+   "burn": 0,
+   "trait": "",
+   "name": "Bowling Pin",
+   "iconById": "rbxassetid://73824260587783",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 28,
+     "rate": 0.8403361344537815,
+     "cooldown": 1.19,
+     "damage": 13
+    },
+    {
+     "range": 28,
+     "rate": 0.9337068160597572,
+     "cooldown": 1.071,
+     "damage": 18
+    },
+    {
+     "range": 28,
+     "rate": 1.050420168067227,
+     "cooldown": 0.952,
+     "damage": 25
+    },
+    {
+     "range": 28,
+     "rate": 1.2004801920768309,
+     "cooldown": 0.833,
+     "damage": 36
+    }
+   ]
+  },
+  "22": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Juggler",
+   "slow": 0,
+   "icon": "rbxassetid://129583469525829",
+   "rarity": "Legendary",
+   "godly": false,
+   "id": "22",
+   "burn": 0,
+   "trait": "pierce",
+   "legendary": {
+    "factor": 1,
+    "move": "Strike",
+    "push": 34,
+    "radius": 9,
+    "hits": 5
+   },
+   "name": "Bowling Ball",
+   "iconById": "rbxassetid://129583469525829",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 35,
+     "rate": 0.6426735218508998,
+     "cooldown": 1.556,
+     "damage": 28
+    },
+    {
+     "range": 35,
+     "rate": 0.7140816909454442,
+     "cooldown": 1.4004,
+     "damage": 39
+    },
+    {
+     "range": 35,
+     "rate": 0.8033419023136246,
+     "cooldown": 1.2448000000000001,
+     "damage": 55
+    },
+    {
+     "range": 35,
+     "rate": 0.9181050312155711,
+     "cooldown": 1.0892,
+     "damage": 77
+    }
+   ]
+  },
+  "14": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Thrower",
+   "slow": 0,
+   "icon": "rbxassetid://109291367860600",
+   "rarity": "Epic",
+   "godly": false,
+   "id": "14",
+   "burn": 100,
+   "trait": "",
+   "name": "Molotov",
+   "iconById": "rbxassetid://109291367860600",
+   "kind": "Blast",
+   "tiers": [
+    {
+     "range": 38,
+     "rate": 0.6472491909385114,
+     "cooldown": 1.545,
+     "damage": 3
+    },
+    {
+     "range": 38,
+     "rate": 0.719165767709457,
+     "cooldown": 1.3905,
+     "damage": 5
+    },
+    {
+     "range": 38,
+     "rate": 0.8090614886731392,
+     "cooldown": 1.236,
+     "damage": 7
+    },
+    {
+     "range": 38,
+     "rate": 0.9246417013407305,
+     "cooldown": 1.0815,
+     "damage": 10
+    }
+   ]
+  },
+  "06": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Brawler",
+   "slow": 0,
+   "icon": "rbxassetid://134396865555784",
+   "rarity": "Rare",
+   "godly": false,
+   "id": "06",
+   "burn": 0,
+   "trait": "",
+   "name": "Baseball Bat",
+   "iconById": "rbxassetid://134396865555784",
+   "kind": "Melee",
+   "tiers": [
+    {
+     "range": 8,
+     "rate": 0.8,
+     "cooldown": 1.25,
+     "damage": 21
+    },
+    {
+     "range": 8,
+     "rate": 0.8888888888888888,
+     "cooldown": 1.125,
+     "damage": 29
+    },
+    {
+     "range": 8,
+     "rate": 1,
+     "cooldown": 1,
+     "damage": 41
+    },
+    {
+     "range": 8,
+     "rate": 1.1428571428571428,
+     "cooldown": 0.875,
+     "damage": 58
+    }
+   ]
+  },
+  "16": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Thrower",
+   "slow": 0,
+   "icon": "rbxassetid://71303617489138",
+   "rarity": "Rare",
+   "godly": false,
+   "id": "16",
+   "burn": 0,
+   "trait": "",
+   "name": "Steak",
+   "iconById": "rbxassetid://71303617489138",
+   "kind": "Melee",
+   "tiers": [
+    {
+     "range": 6,
+     "rate": 1.2345679012345678,
+     "cooldown": 0.81,
+     "damage": 16
+    },
+    {
+     "range": 6,
+     "rate": 1.371742112482853,
+     "cooldown": 0.7290000000000001,
+     "damage": 22
+    },
+    {
+     "range": 6,
+     "rate": 1.5432098765432096,
+     "cooldown": 0.6480000000000001,
+     "damage": 31
+    },
+    {
+     "range": 6,
+     "rate": 1.7636684303350971,
+     "cooldown": 0.567,
+     "damage": 44
+    }
+   ]
+  },
+  "04": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Brawler",
+   "slow": 0,
+   "icon": "rbxassetid://127806745831113",
+   "rarity": "Epic",
+   "godly": false,
+   "id": "04",
+   "burn": 0,
+   "trait": "",
+   "name": "Kusarigama",
+   "iconById": "rbxassetid://127806745831113",
+   "kind": "Melee",
+   "tiers": [
+    {
+     "range": 12,
+     "rate": 0.8968609865470852,
+     "cooldown": 1.115,
+     "damage": 16
+    },
+    {
+     "range": 12,
+     "rate": 0.996512207274539,
+     "cooldown": 1.0035,
+     "damage": 22
+    },
+    {
+     "range": 12,
+     "rate": 1.1210762331838564,
+     "cooldown": 0.892,
+     "damage": 31
+    },
+    {
+     "range": 12,
+     "rate": 1.2812299807815504,
+     "cooldown": 0.7805,
+     "damage": 44
+    }
+   ]
+  },
+  "02": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Brawler",
+   "slow": 0,
+   "icon": "rbxassetid://76889402145049",
+   "rarity": "Rare",
+   "godly": false,
+   "id": "02",
+   "burn": 0,
+   "trait": "",
+   "name": "Nunchucks",
+   "iconById": "rbxassetid://76889402145049",
+   "kind": "Melee",
+   "tiers": [
+    {
+     "range": 6,
+     "rate": 2.100840336134454,
+     "cooldown": 0.476,
+     "damage": 6
+    },
+    {
+     "range": 6,
+     "rate": 2.3342670401493932,
+     "cooldown": 0.4284,
+     "damage": 8
+    },
+    {
+     "range": 6,
+     "rate": 2.6260504201680672,
+     "cooldown": 0.3808,
+     "damage": 12
+    },
+    {
+     "range": 6,
+     "rate": 3.0012004801920775,
+     "cooldown": 0.33319999999999994,
+     "damage": 16
+    }
+   ]
+  },
+  "12": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Thrower",
+   "slow": 0,
+   "icon": "rbxassetid://118992831327433",
+   "rarity": "Common",
+   "godly": false,
+   "id": "12",
+   "burn": 0,
+   "trait": "bounce",
+   "name": "Boomerang",
+   "iconById": "rbxassetid://118992831327433",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 35,
+     "rate": 1.1111111111111112,
+     "cooldown": 0.9,
+     "damage": 7
+    },
+    {
+     "range": 35,
+     "rate": 1.2345679012345678,
+     "cooldown": 0.81,
+     "damage": 9
+    },
+    {
+     "range": 35,
+     "rate": 1.3888888888888886,
+     "cooldown": 0.7200000000000001,
+     "damage": 13
+    },
+    {
+     "range": 35,
+     "rate": 1.5873015873015872,
+     "cooldown": 0.63,
+     "damage": 17
+    }
+   ]
+  },
+  "00": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Gunner",
+   "slow": 0,
+   "icon": "rbxassetid://71681559132362",
+   "rarity": "Common",
+   "godly": false,
+   "id": "00",
+   "burn": 0,
+   "trait": "",
+   "name": "Glock",
+   "iconById": "rbxassetid://71681559132362",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 45,
+     "rate": 1.3888888888888888,
+     "cooldown": 0.72,
+     "damage": 12
+    },
+    {
+     "range": 45,
+     "rate": 1.5432098765432098,
+     "cooldown": 0.648,
+     "damage": 17
+    },
+    {
+     "range": 45,
+     "rate": 1.7361111111111112,
+     "cooldown": 0.576,
+     "damage": 24
+    },
+    {
+     "range": 45,
+     "rate": 1.9841269841269842,
+     "cooldown": 0.504,
+     "damage": 33
+    }
+   ]
+  },
+  "10": {
+   "poison": 0,
+   "lightning": false,
+   "home": "Gunner",
+   "slow": 0,
+   "icon": "rbxassetid://115253509624247",
+   "rarity": "Epic",
+   "godly": false,
+   "id": "10",
+   "burn": 0,
+   "trait": "pierce",
+   "name": "T-Shirt Cannon",
+   "iconById": "rbxassetid://115253509624247",
+   "kind": "Ranged",
+   "tiers": [
+    {
+     "range": 40,
+     "rate": 0.7722007722007722,
+     "cooldown": 1.295,
+     "damage": 19
+    },
+    {
+     "range": 40,
+     "rate": 0.858000858000858,
+     "cooldown": 1.1655,
+     "damage": 27
+    },
+    {
+     "range": 40,
+     "rate": 0.9652509652509652,
+     "cooldown": 1.036,
+     "damage": 37
+    },
+    {
+     "range": 40,
+     "rate": 1.1031439602868176,
+     "cooldown": 0.9064999999999999,
+     "damage": 52
+    }
+   ]
+  }
+ },
+ "upgradeCopies": {
+  "Legendary": [
+   1,
+   2,
+   3
+  ],
+  "Common": [
+   2,
+   6,
+   15
+  ],
+  "Epic": [
+   1,
+   2,
+   4
+  ],
+  "Godly": [
+   1,
+   1,
+   2
+  ],
+  "Rare": [
+   2,
+   4,
+   8
+  ]
+ },
+ "pets": {
+  "Fox": {
+   "rarity": "Rare",
+   "effect": [
+    "Every 3 s, pounces on an enemy: 10 damage (+2.5 per wave), boosted by your Damage.",
+    "Every 3 s, pounces on an enemy: 11.5 damage (+2.9 per wave), boosted by your Damage.",
+    "Every 3 s, pounces on an enemy: 13 damage (+3.2 per wave), boosted by your Damage.",
+    "Every 3 s, pounces on an enemy: 15 damage (+3.8 per wave), boosted by your Damage."
+   ],
+   "id": "Fox",
+   "suit": "Damage",
+   "order": 5,
+   "damageWave1": [
+    10,
+    11.5,
+    13,
+    15
+   ],
+   "name": "Fox",
+   "perWave": 2.5,
+   "range": 22,
+   "every": 3,
+   "icon": "rbxassetid://104736061635962",
+   "description": "Pounces on nearby enemies."
+  },
+  "Monkey": {
+   "stats": {
+    "AttackSpeed": [
+     6,
+     7,
+     8,
+     10
+    ]
+   },
+   "rarity": "Rare",
+   "effect": [
+    "+6% attack speed.",
+    "+7% attack speed.",
+    "+8% attack speed.",
+    "+10% attack speed."
+   ],
+   "id": "Monkey",
+   "suit": "Attack speed",
+   "order": 8,
+   "damageWave1": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "name": "Monkey",
+   "icon": "rbxassetid://114598472980257",
+   "description": "Makes you attack faster."
+  },
+  "Owl": {
+   "rarity": "Epic",
+   "effect": [
+    "Every 4 s, marks the toughest enemy nearby: your hits on it do +20%.",
+    "Every 4 s, marks the toughest enemy nearby: your hits on it do +23%.",
+    "Every 4 s, marks the toughest enemy nearby: your hits on it do +26%.",
+    "Every 4 s, marks the toughest enemy nearby: your hits on it do +30%."
+   ],
+   "id": "Owl",
+   "suit": "Bosses",
+   "order": 10,
+   "damageWave1": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "name": "Owl",
+   "range": 50,
+   "every": 4,
+   "icon": "rbxassetid://93634935695834",
+   "description": "Marks the toughest enemy nearby so your hits do more."
+  },
+  "Bee": {
+   "stats": {
+    "PoisonChance": [
+     8,
+     10,
+     12,
+     15
+    ]
+   },
+   "rarity": "Rare",
+   "effect": [
+    "+8% poison chance. Every 4 s, stings an enemy with poison.",
+    "+10% poison chance. Every 4 s, stings an enemy with poison.",
+    "+12% poison chance. Every 4 s, stings an enemy with poison.",
+    "+15% poison chance. Every 4 s, stings an enemy with poison."
+   ],
+   "id": "Bee",
+   "suit": "Poison",
+   "order": 6,
+   "damageWave1": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "name": "Bee",
+   "range": 18,
+   "every": 4,
+   "icon": "rbxassetid://135259222397245",
+   "description": "Stings enemies and poisons them."
+  },
+  "LuckyCat": {
+   "stats": {
+    "Luck": [
+     8,
+     10,
+     12,
+     15
+    ]
+   },
+   "rarity": "Epic",
+   "effect": [
+    "+8 luck: the run shop rolls better tiers more often.",
+    "+10 luck: the run shop rolls better tiers more often.",
+    "+12 luck: the run shop rolls better tiers more often.",
+    "+15 luck: the run shop rolls better tiers more often."
+   ],
+   "id": "LuckyCat",
+   "suit": "Luck",
+   "order": 9,
+   "damageWave1": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "name": "Lucky Cat",
+   "icon": "rbxassetid://86306160093146",
+   "description": "Brings luck: the run shop rolls better tiers more often."
+  },
+  "Turtle": {
+   "rarity": "Rare",
+   "effect": [
+    "Every 15 s, gives the most hurt player nearby a shell that blocks one hit.",
+    "Every 13.5 s, gives the most hurt player nearby a shell that blocks one hit.",
+    "Every 12 s, gives the most hurt player nearby a shell that blocks one hit.",
+    "Every 10.5 s, gives the most hurt player nearby a shell that blocks one hit."
+   ],
+   "id": "Turtle",
+   "suit": "Team defense",
+   "order": 7,
+   "damageWave1": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "name": "Turtle",
+   "range": 40,
+   "every": [
+    15,
+    13.5,
+    12,
+    10.5
+   ],
+   "icon": "rbxthumb://type=Asset&id=88750159550350&w=420&h=420",
+   "description": "Gives a shell shield that blocks one hit."
+  },
+  "Penguin": {
+   "rarity": "Common",
+   "effect": [
+    "Every 7 s, slides through enemies: 4 damage (+1 per wave) and 30% slow for 2.5 s.",
+    "Every 7 s, slides through enemies: 4.6 damage (+1.1 per wave) and 34% slow for 2.5 s.",
+    "Every 7 s, slides through enemies: 5.2 damage (+1.3 per wave) and 38% slow for 2.5 s.",
+    "Every 7 s, slides through enemies: 6 damage (+1.5 per wave) and 42% slow for 2.5 s."
+   ],
+   "id": "Penguin",
+   "suit": "Slow",
+   "order": 4,
+   "damageWave1": [
+    4,
+    4.6,
+    5.2,
+    6
+   ],
+   "name": "Penguin",
+   "perWave": 1,
+   "range": 20,
+   "every": 7,
+   "icon": "rbxassetid://134561532767972",
+   "description": "Belly-slides through enemies and slows them."
+  },
+  "Frog": {
+   "rarity": "Common",
+   "effect": [
+    "Every 6 s, slams a crowd: 6 damage (+1.5 per wave) and knockback in a 8-stud circle.",
+    "Every 6 s, slams a crowd: 6.9 damage (+1.7 per wave) and knockback in a 9-stud circle.",
+    "Every 6 s, slams a crowd: 7.8 damage (+2 per wave) and knockback in a 10-stud circle.",
+    "Every 6 s, slams a crowd: 9 damage (+2.2 per wave) and knockback in a 11-stud circle."
+   ],
+   "id": "Frog",
+   "suit": "Space",
+   "order": 3,
+   "damageWave1": [
+    6,
+    6.8999999999999995,
+    7.800000000000001,
+    9
+   ],
+   "name": "Frog",
+   "perWave": 1.5,
+   "range": 20,
+   "every": 6,
+   "icon": "rbxassetid://72068688209203",
+   "description": "Hops into crowds and slams them away."
+  },
+  "CheetahCub": {
+   "stats": {
+    "MoveSpeed": [
+     1.5,
+     2,
+     2.5,
+     3
+    ]
+   },
+   "rarity": "Epic",
+   "effect": [
+    "+1.5 move speed. After you get hit: +6 speed for 2 s.",
+    "+2 move speed. After you get hit: +6 speed for 2 s.",
+    "+2.5 move speed. After you get hit: +6 speed for 2 s.",
+    "+3 move speed. After you get hit: +6 speed for 2 s."
+   ],
+   "id": "CheetahCub",
+   "suit": "Speed",
+   "order": 11,
+   "damageWave1": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "name": "Cheetah Cub",
+   "icon": "rbxassetid://91328976444641",
+   "description": "Makes you faster, with a speed burst after you get hit."
+  },
+  "BabyDragon": {
+   "stats": {
+    "BurnChance": [
+     5,
+     6,
+     7,
+     8
+    ]
+   },
+   "rarity": "Legendary",
+   "effect": [
+    "+5% burn chance. Every 5 s, breathes fire that burns enemies in front: 5 damage (+1 per wave).",
+    "+6% burn chance. Every 5 s, breathes fire that burns enemies in front: 5.8 damage (+1.1 per wave).",
+    "+7% burn chance. Every 5 s, breathes fire that burns enemies in front: 6.5 damage (+1.3 per wave).",
+    "+8% burn chance. Every 5 s, breathes fire that burns enemies in front: 7.5 damage (+1.5 per wave)."
+   ],
+   "id": "BabyDragon",
+   "suit": "Fire",
+   "order": 12,
+   "damageWave1": [
+    5,
+    5.75,
+    6.5,
+    7.5
+   ],
+   "name": "Baby Dragon",
+   "perWave": 1,
+   "range": 14,
+   "every": 5,
+   "icon": "rbxassetid://105864059105336",
+   "description": "Breathes small fire blasts that burn groups."
+  },
+  "Bunny": {
+   "rarity": "Common",
+   "effect": [
+    "Every 10 s, drops a carrot that heals the most hurt player nearby for 12 HP.",
+    "Every 10 s, drops a carrot that heals the most hurt player nearby for 14 HP.",
+    "Every 10 s, drops a carrot that heals the most hurt player nearby for 16 HP.",
+    "Every 10 s, drops a carrot that heals the most hurt player nearby for 18 HP."
+   ],
+   "id": "Bunny",
+   "suit": "Team healing",
+   "order": 2,
+   "damageWave1": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "name": "Bunny",
+   "range": 40,
+   "every": 10,
+   "icon": "rbxassetid://126035665768012",
+   "description": "Drops carrots that heal you or a hurt teammate."
+  },
+  "GoldenRetriever": {
+   "rarity": "Common",
+   "effect": [
+    "Every 3 s, fetches a crystal up to 45 studs away.",
+    "Every 2.6 s, fetches a crystal up to 45 studs away.",
+    "Every 2.2 s, fetches a crystal up to 45 studs away.",
+    "Every 1.8 s, fetches a crystal up to 45 studs away."
+   ],
+   "id": "GoldenRetriever",
+   "suit": "Loot",
+   "order": 1,
+   "damageWave1": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "name": "Golden Retriever",
+   "range": 45,
+   "every": [
+    3,
+    2.6,
+    2.2,
+    1.8
+   ],
+   "icon": "rbxassetid://139974074985172",
+   "description": "Runs out and fetches crystals for you."
+  }
+ }
+}

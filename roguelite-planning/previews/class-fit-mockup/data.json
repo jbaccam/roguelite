@@ -1,0 +1,574 @@
+{
+ "stats": {
+  "MaxHP": {
+   "label": "Max health",
+   "unit": " HP"
+  },
+  "Damage": {
+   "label": "Damage",
+   "unit": "%"
+  },
+  "AttackSpeed": {
+   "label": "Attack speed",
+   "unit": "%"
+  },
+  "CritChance": {
+   "label": "Critical chance",
+   "unit": "%"
+  },
+  "CritDamage": {
+   "label": "Critical damage",
+   "unit": "%"
+  },
+  "Armor": {
+   "label": "Armor",
+   "unit": ""
+  },
+  "Dodge": {
+   "label": "Dodge",
+   "unit": "%"
+  },
+  "Regeneration": {
+   "label": "Regeneration",
+   "unit": " HP/s"
+  },
+  "LifeSteal": {
+   "label": "Life steal",
+   "unit": "%"
+  },
+  "LifeStealCap": {
+   "label": "Life steal cap",
+   "unit": " HP/s"
+  },
+  "Recovery": {
+   "label": "Recovery",
+   "unit": "%"
+  },
+  "MoveSpeed": {
+   "label": "Movement speed",
+   "unit": " studs/s"
+  },
+  "PickupRadius": {
+   "label": "Pickup radius",
+   "unit": " studs"
+  },
+  "Luck": {
+   "label": "Luck",
+   "unit": ""
+  },
+  "MeleeDamage": {
+   "label": "Melee damage",
+   "unit": "%"
+  },
+  "RangedDamage": {
+   "label": "Ranged damage",
+   "unit": "%"
+  },
+  "ElementalDamage": {
+   "label": "Elemental damage",
+   "unit": "%"
+  },
+  "UtilityPower": {
+   "label": "Utility power",
+   "unit": "%"
+  },
+  "AttackRange": {
+   "label": "Attack range",
+   "unit": "%"
+  },
+  "ProjectileCount": {
+   "label": "Extra projectiles",
+   "unit": ""
+  },
+  "Pierce": {
+   "label": "Piercing",
+   "unit": ""
+  },
+  "Bounce": {
+   "label": "Bounces",
+   "unit": ""
+  },
+  "ProjectileSpeed": {
+   "label": "Projectile speed",
+   "unit": "%"
+  },
+  "ProjectileSize": {
+   "label": "Projectile size",
+   "unit": "%"
+  },
+  "AreaSize": {
+   "label": "Area radius",
+   "unit": "%"
+  },
+  "Knockback": {
+   "label": "Knockback",
+   "unit": " studs/s"
+  },
+  "Duration": {
+   "label": "Effect duration",
+   "unit": "%"
+  },
+  "CooldownReduction": {
+   "label": "Cooldown reduction",
+   "unit": "%"
+  },
+  "ExplosionDamage": {
+   "label": "Explosion damage",
+   "unit": "%"
+  },
+  "BossDamage": {
+   "label": "Elite / boss damage",
+   "unit": "%"
+  },
+  "BurnChance": {
+   "label": "Burn chance",
+   "unit": "%"
+  },
+  "BurnDamage": {
+   "label": "Burn damage",
+   "unit": "%"
+  },
+  "BurnSpread": {
+   "label": "Burn spread",
+   "unit": " targets"
+  },
+  "SlowChance": {
+   "label": "Slow chance",
+   "unit": "%"
+  },
+  "SlowStrength": {
+   "label": "Slow strength",
+   "unit": "%"
+  },
+  "SlowDuration": {
+   "label": "Slow duration",
+   "unit": " s"
+  },
+  "PoisonChance": {
+   "label": "Poison chance",
+   "unit": "%"
+  },
+  "PoisonDamage": {
+   "label": "Poison damage",
+   "unit": "%"
+  },
+  "PoisonStacks": {
+   "label": "Poison stack cap",
+   "unit": ""
+  },
+  "ChainCount": {
+   "label": "Lightning targets",
+   "unit": ""
+  },
+  "ChainBonus": {
+   "label": "Extra lightning targets",
+   "unit": ""
+  },
+  "ChainEvery": {
+   "label": "Lightning frequency",
+   "unit": " hits"
+  },
+  "ChainDamage": {
+   "label": "Lightning damage",
+   "unit": "%"
+  },
+  "FirstHitBlock": {
+   "label": "First-hit blocks",
+   "unit": ""
+  },
+  "ContactReduction": {
+   "label": "Contact resistance",
+   "unit": "%"
+  },
+  "ShopDiscount": {
+   "label": "Shop discount",
+   "unit": "%"
+  },
+  "ShopPricePercent": {
+   "label": "Shop price modifier",
+   "unit": "%"
+  },
+  "GearPower": {
+   "label": "Gear power",
+   "unit": ""
+  }
+ },
+ "statOrder": [
+  "MaxHP",
+  "Damage",
+  "AttackSpeed",
+  "CritChance",
+  "CritDamage",
+  "Armor",
+  "Dodge",
+  "Regeneration",
+  "LifeSteal",
+  "LifeStealCap",
+  "Recovery",
+  "MoveSpeed",
+  "PickupRadius",
+  "Luck",
+  "MeleeDamage",
+  "RangedDamage",
+  "ElementalDamage",
+  "UtilityPower",
+  "AttackRange",
+  "ProjectileCount",
+  "Pierce",
+  "Bounce",
+  "ProjectileSpeed",
+  "ProjectileSize",
+  "AreaSize",
+  "Knockback",
+  "Duration",
+  "CooldownReduction",
+  "ExplosionDamage",
+  "BossDamage",
+  "BurnChance",
+  "BurnDamage",
+  "BurnSpread",
+  "SlowChance",
+  "SlowStrength",
+  "SlowDuration",
+  "PoisonChance",
+  "PoisonDamage",
+  "PoisonStacks",
+  "ChainCount",
+  "ChainBonus",
+  "ChainEvery",
+  "ChainDamage",
+  "FirstHitBlock",
+  "ContactReduction",
+  "ShopDiscount",
+  "ShopPricePercent",
+  "GearPower"
+ ],
+ "classes": {
+  "Brawler": {
+   "description": "Hand-to-hand fighter: tough and hits hard up close. Slower, with weak ranged damage.",
+   "buffs": {
+    "MaxHP": 25.0,
+    "Armor": 3.0,
+    "MeleeDamage": 20.0,
+    "Knockback": 8.0,
+    "MoveSpeed": -2.0,
+    "RangedDamage": -15.0
+   },
+   "rangedAttackSpeed": null,
+   "two": {
+    "MeleeDamage": 15.0,
+    "Armor": 2.0
+   },
+   "four": {
+    "LifeSteal": 5.0
+   }
+  },
+  "Gunner": {
+   "description": "Fast, piercing gunfire. Less health and weak melee damage.",
+   "buffs": {
+    "RangedDamage": 20.0,
+    "ProjectileSpeed": 35.0,
+    "CritChance": 5.0,
+    "MaxHP": -15.0,
+    "MeleeDamage": -15.0
+   },
+   "rangedAttackSpeed": 10,
+   "two": {
+    "Pierce": 1.0
+   },
+   "four": {
+    "ProjectileCount": 1.0
+   }
+  },
+  "Thrower": {
+   "description": "Long-range throws that rebound. Thin armor and weak melee damage.",
+   "buffs": {
+    "AttackRange": 25.0,
+    "Bounce": 1.0,
+    "RangedDamage": 15.0,
+    "Armor": -2.0,
+    "MeleeDamage": -10.0
+   },
+   "rangedAttackSpeed": null,
+   "two": {
+    "RangedDamage": 15.0
+   },
+   "four": {
+    "ProjectileCount": 1.0
+   }
+  },
+  "Juggler": {
+   "description": "Quick tricks with toys: fast attacks, big knockback, always moving. Lower damage per hit.",
+   "buffs": {
+    "MoveSpeed": 3.0,
+    "AttackSpeed": 15.0,
+    "Knockback": 12.0,
+    "Damage": -10.0
+   },
+   "rangedAttackSpeed": null,
+   "two": {
+    "AttackRange": 15.0,
+    "Knockback": 5.0
+   },
+   "four": {
+    "Bounce": 1.0,
+    "AttackSpeed": 15.0
+   }
+  },
+  "Handyman": {
+   "description": "Handy with anything: no penalty with almost any weapon, bigger blasts and slow healing. A little less health.",
+   "buffs": {
+    "Damage": 5.0,
+    "UtilityPower": 15.0,
+    "AreaSize": 20.0,
+    "Regeneration": 1.0,
+    "MaxHP": -10.0
+   },
+   "rangedAttackSpeed": null,
+   "two": {
+    "CooldownReduction": 10.0
+   },
+   "four": {
+    "UtilityPower": 20.0
+   }
+  },
+  "Mage": {
+   "description": "Elemental damage, burn and chains. Fragile, with weak physical attacks.",
+   "buffs": {
+    "ElementalDamage": 25.0,
+    "Duration": 30.0,
+    "BurnChance": 15.0,
+    "ChainCount": 1.0,
+    "MaxHP": -20.0,
+    "Armor": -2.0,
+    "MeleeDamage": -10.0
+   },
+   "rangedAttackSpeed": null,
+   "two": {
+    "ElementalDamage": 15.0
+   },
+   "four": {
+    "BurnSpread": 1.0
+   }
+  }
+ },
+ "fit": {
+  "Brawler": {
+   "Gunner": -15.0,
+   "Thrower": -5.0,
+   "Juggler": -5.0,
+   "Handyman": 0.0,
+   "Mage": -10.0
+  },
+  "Gunner": {
+   "Brawler": -15.0,
+   "Thrower": 0.0,
+   "Juggler": -5.0,
+   "Handyman": 0.0,
+   "Mage": -5.0
+  },
+  "Thrower": {
+   "Brawler": -5.0,
+   "Gunner": 0.0,
+   "Juggler": 0.0,
+   "Handyman": 0.0,
+   "Mage": -5.0
+  },
+  "Juggler": {
+   "Brawler": -5.0,
+   "Gunner": -5.0,
+   "Thrower": 0.0,
+   "Handyman": 0.0,
+   "Mage": -5.0
+  },
+  "Handyman": {
+   "Brawler": 0.0,
+   "Gunner": 0.0,
+   "Thrower": 0.0,
+   "Juggler": 0.0,
+   "Mage": -5.0
+  },
+  "Mage": {
+   "Brawler": -10.0,
+   "Gunner": -5.0,
+   "Thrower": -5.0,
+   "Juggler": -5.0,
+   "Handyman": -5.0
+  }
+ },
+ "own": 15,
+ "order": [
+  "Brawler",
+  "Gunner",
+  "Thrower",
+  "Juggler",
+  "Handyman",
+  "Mage"
+ ],
+ "names": [
+  "Glock",
+  "Frying Pan",
+  "Nunchucks",
+  "Katana",
+  "Kusarigama",
+  "Spatula",
+  "Baseball Bat",
+  "Draco",
+  "Fart Gun",
+  "Shotgun",
+  "T-Shirt Cannon",
+  "Rocket Launcher",
+  "Boomerang",
+  "Kunai",
+  "Molotov",
+  "Egg",
+  "Steak",
+  "Rubber Duck",
+  "Deck of Cards",
+  "Boxing Gloves",
+  "Cinder Block",
+  "Yo-Yo",
+  "Bowling Ball",
+  "Bowling Pin",
+  "Nail Gun",
+  "Wrecking Ball",
+  "Shovel",
+  "Paint Roller",
+  "Vacuum Cleaner",
+  "Power Washer",
+  "Magic Staff",
+  "Mjolnir",
+  "Excalibur",
+  "Pandora's Box",
+  "Medusa's Head",
+  "Crystal Ball",
+  "Reaper's Scythe",
+  "Poseidon's Trident",
+  "Storm Bow",
+  "Shadow Daggers",
+  "Vampire Blade",
+  "Ray Gun"
+ ],
+ "signature": {
+  "Brawler": "01",
+  "Gunner": "00",
+  "Thrower": "12",
+  "Juggler": "17",
+  "Handyman": "24",
+  "Mage": "30"
+ },
+ "homes": {
+  "00": "Gunner",
+  "01": "Brawler",
+  "02": "Brawler",
+  "03": "Brawler",
+  "04": "Juggler",
+  "05": "Juggler",
+  "06": "Brawler",
+  "07": "Gunner",
+  "08": "Gunner",
+  "09": "Gunner",
+  "10": "Gunner",
+  "11": "Gunner",
+  "12": "Thrower",
+  "13": "Thrower",
+  "14": "Thrower",
+  "15": "Thrower",
+  "16": "Thrower",
+  "17": "Juggler",
+  "18": "Thrower",
+  "19": "Brawler",
+  "20": "Brawler",
+  "21": "Juggler",
+  "22": "Juggler",
+  "23": "Juggler",
+  "24": "Handyman",
+  "25": "Handyman",
+  "26": "Handyman",
+  "27": "Handyman",
+  "28": "Handyman",
+  "29": "Handyman",
+  "30": "Mage",
+  "31": "Mage",
+  "32": "Mage",
+  "33": "Mage",
+  "34": "Mage",
+  "35": "Mage"
+ },
+ "kinds": {
+  "00": "Ranged",
+  "01": "Melee",
+  "02": "Melee",
+  "03": "Melee",
+  "04": "Melee",
+  "05": "Melee",
+  "06": "Melee",
+  "07": "Ranged",
+  "08": "Ranged",
+  "09": "Spread",
+  "10": "Ranged",
+  "11": "Blast",
+  "12": "Ranged",
+  "13": "Ranged",
+  "14": "Blast",
+  "15": "Ranged",
+  "16": "Melee",
+  "17": "Ranged",
+  "18": "Ranged",
+  "19": "Melee",
+  "20": "Melee",
+  "21": "Ranged",
+  "22": "Ranged",
+  "23": "Ranged",
+  "24": "Ranged",
+  "25": "Melee",
+  "26": "Melee",
+  "27": "Melee",
+  "28": "Ranged",
+  "29": "Ranged",
+  "30": "Ranged",
+  "31": "Melee",
+  "32": "Melee",
+  "33": "Blast",
+  "34": "Ranged",
+  "35": "Ranged"
+ },
+ "rarity": {
+  "01": "Common",
+  "05": "Common",
+  "00": "Common",
+  "08": "Common",
+  "12": "Common",
+  "15": "Common",
+  "19": "Common",
+  "17": "Common",
+  "24": "Common",
+  "26": "Common",
+  "30": "Common",
+  "35": "Common",
+  "02": "Rare",
+  "06": "Rare",
+  "09": "Rare",
+  "07": "Rare",
+  "13": "Rare",
+  "16": "Rare",
+  "23": "Rare",
+  "21": "Rare",
+  "27": "Rare",
+  "29": "Rare",
+  "34": "Rare",
+  "33": "Rare",
+  "04": "Epic",
+  "10": "Epic",
+  "14": "Epic",
+  "20": "Epic",
+  "28": "Epic",
+  "03": "Legendary",
+  "11": "Legendary",
+  "18": "Legendary",
+  "22": "Legendary",
+  "25": "Legendary",
+  "32": "Legendary",
+  "31": "Legendary"
+ }
+}

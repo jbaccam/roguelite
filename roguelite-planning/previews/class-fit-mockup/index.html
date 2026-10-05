@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Class Fit Mockup</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Source+Sans+3:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--lime:#91ef14;--limeSoft:#d2ffa1;--limeDark:#3a700c;--ink:#0a0e08;--white:#f8f9f5;--muted:#aeb7b9;--dim:#787f83;--gold:#ffcb40;--cream:#eadda7;--track:#161d20;--neg:#ff6969;--negDeep:#ef232f;--page:#0e1214;--well:#22272b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--page);color:var(--white);font-family:'Fredoka One',system-ui,sans-serif;overflow-x:hidden}
+.pagehead{padding:22px 28px 6px;max-width:1500px}
+.pagehead h1{font-size:34px;font-weight:400}
+.pagehead p,.note{font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:17px;color:#cfd6d8;line-height:1.45}
+.pagehead p b,.note b{color:var(--lime)}
+section.frame{padding:18px 28px 18px;border-top:2px solid #1d2428;margin-top:14px}
+section.frame h2{font-size:26px;font-weight:400;margin-bottom:4px}
+section.frame h2 small{font-family:'Source Sans 3',sans-serif;font-size:16px;color:var(--muted);margin-left:10px}
+.note{max-width:1400px;margin:2px 0 12px}
+.note ol{margin:6px 0 0 22px}
+.devlabel{font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:14px;color:var(--muted);margin:10px 0 6px;letter-spacing:.04em}
+.row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+.screen{background:radial-gradient(ellipse at 30% 20%,#2c4a2a 0,#14201a 45%,#0a0f0d 100%);border:2px solid #222b2f;border-radius:10px;padding:18px;position:relative;overflow:hidden}
+.scaled{transform-origin:0 0}
+.nine{border-style:solid;border-width:0;border-image-slice:48 fill;border-image-width:26px;border-image-repeat:stretch}
+.k-panel{border-image-source:url(../item-card-mockup/img/panel.png)}
+.k-inset{border-image-source:url(../item-card-mockup/img/inset.png)}
+.k-plain{border-image-source:url(../item-card-mockup/img/panelplain.png)}
+.k-button{border-image-source:url(../item-card-mockup/img/button.png);border-image-width:24px}
+.abs{position:absolute}
+.t{font-family:'Source Sans 3',sans-serif;font-weight:700}
+.stroke{text-shadow:0 2px 0 #000,0 0 3px rgba(0,0,0,.6)}
+.picker{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+.picker button{font-family:'Fredoka One';font-size:16px;padding:6px 14px;border-radius:8px;border:2px solid #000;background:#242c30;color:#dfe5e6;cursor:pointer}
+.picker button.on{background:var(--lime);color:#10200a}
+/* --- shared class-fit pieces --- */
+.sect{font-size:19px;color:var(--cream);letter-spacing:.06em;display:flex;align-items:center;gap:10px}
+.sect::after{content:'';flex:1;height:2px;background:linear-gradient(90deg,rgba(234,221,167,.45),rgba(234,221,167,0))}
+.sect small{font-family:'Source Sans 3';font-weight:700;font-size:14px;color:var(--muted);letter-spacing:0}
+.cols{display:grid;grid-template-columns:1.1fr .9fr;gap:0}
+.col{padding:10px 10px 10px 12px;min-width:0}
+.col+.col{border-left:2px solid rgba(0,0,0,.45)}
+.cols.stack{grid-template-columns:1fr}.cols.stack .col+.col{border-left:0;border-top:2px solid rgba(0,0,0,.45)}
+.stackhome .home .what b{display:block;margin-bottom:1px}
+.colhead{font-size:15px;letter-spacing:.08em;margin-bottom:6px}
+.line{display:flex;align-items:baseline;gap:7px;font-family:'Source Sans 3';font-weight:700;font-size:17px;line-height:1.36;color:var(--white);white-space:nowrap}
+.line .v{min-width:46px;text-align:right;font-family:'Fredoka One';font-size:18px}
+.good{color:var(--lime)}.bad{color:var(--neg)}
+.home{display:flex;align-items:center;gap:12px;padding:8px 14px}
+.home+.home{border-top:2px solid rgba(0,0,0,.45)}
+.pips{display:grid;grid-template-columns:repeat(2,14px);gap:4px;flex:none}
+.pip{width:14px;height:14px;transform:rotate(45deg) scale(.82);border:2px solid #000;background:#3a4246}
+.pip.on{background:var(--lime);box-shadow:0 0 6px rgba(145,239,20,.6)}
+.home .what{font-family:'Source Sans 3';font-weight:700;font-size:17px;color:var(--white);line-height:1.25}
+.home .what{display:grid;grid-template-columns:128px 1fr;align-items:baseline;column-gap:8px}
+.home .what b{font-family:'Fredoka One';font-weight:400;color:var(--cream);font-size:15px}
+.stackhome .home .what{display:block}
+.tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.tile{position:relative;border-radius:10px;background:#1a2024;border:2px solid #000;box-shadow:inset 0 0 0 2px rgba(255,255,255,.05);display:flex;flex-direction:column;align-items:center;padding:6px 2px 6px}
+.tile img{width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 2px 0 #000)}
+.tile .cn{font-family:'Source Sans 3';font-weight:700;font-size:13px;color:var(--muted);margin-top:2px;white-space:nowrap}
+.tile .pc{font-size:21px;line-height:1.1}
+.tile.own{border-color:var(--lime);box-shadow:0 0 0 2px #000,0 0 12px rgba(145,239,20,.45);background:linear-gradient(#24361a,#16200f)}
+.tile.you::before{content:'YOU';position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--lime);color:#10200a;font-size:12px;padding:1px 7px;border-radius:6px;border:2px solid #000}
+.f15{color:var(--lime)}.f0{color:var(--cream)}.f5{color:#ffb0a8}.f10{color:var(--neg)}.f15n{color:#ff4a54}
+.foot{font-family:'Source Sans 3';font-weight:700;font-size:14px;color:var(--dim);margin-top:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px 0 6px;border-radius:8px;border:2px solid #000;background:#2a3236;font-size:15px;color:var(--white);white-space:nowrap}
+.chip img{width:22px;height:22px;object-fit:contain}
+.chip.kind{padding-left:10px;background:#1b2125;color:var(--muted)}
+.chip.rar{padding-left:10px;color:#10141a}
+.fitbadge{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:76px;height:50px;padding:0 8px;border-radius:10px;border:2px solid #000;line-height:1}
+.fitbadge .p{font-size:22px}
+.fitbadge .w{font-family:'Source Sans 3';font-weight:700;font-size:12px;letter-spacing:.04em;margin-top:3px}
+.fb-home{background:linear-gradient(#3f7d10,#244d08);color:#eaffd0}
+.fb-sim{background:linear-gradient(#4a4535,#2c2a20);color:var(--cream)}
+.fb-off{background:linear-gradient(#6d1e24,#431216);color:#ffd4d4}
+.btn{display:flex;align-items:center;justify-content:center;font-size:26px;color:#10200a;text-shadow:none}
+.tierdot{position:absolute;top:10px;right:10px;width:30px;height:24px;border-radius:6px;background:#4fb7f5;border:2px solid #000;color:#08131c;font-size:14px;display:flex;align-items:center;justify-content:center}
+</style></head>
+<body>
+<div class="pagehead">
+ <h1>Classes: show the buffs, drawbacks and weapon fit</h1>
+ <p>Mockup only, nothing is built yet. Every number comes from <b>CharacterStats.luau</b> (read into <code>data.json</code>), not typed by hand. Use the class buttons in each frame to switch classes.</p>
+ <p>The idea: one shared piece, <b>"Weapon damage by class"</b>, shows up in three places. <b>Class screens</b> show your class's row. <b>Item cards</b> show the weapon's column with your class circled. <b>Shop cards</b> show just your number as a badge. Same colours everywhere: <span style="color:#91ef14">lime = your class</span>, <span style="color:#eadda7">cream = similar, no change</span>, <span style="color:#ff6969">red = off-class</span>.</p>
+</div>
+
+<section class="frame" id="f0">
+ <h2>0 · New class groups and balance <small>already changed in the repo, not in Studio yet</small></h2>
+ <div class="note"><ol>
+  <li><b>Boxing Gloves → Brawler</b> and <b>Cinder Block → Brawler</b>: Brawler is now all hand-to-hand. In return <b>Spatula</b> (pancake flips) and <b>Kusarigama</b> (spinning chain) go to <b>Juggler</b>, now the tricks-and-toys class. Swaps are same-rarity, so every class still has 2 Common, 2 Rare, 1 Epic, 1 Legendary.</li>
+  <li>Juggler's starter is now the <b>Rubber Duck</b>. Saves that already own Juggler get the duck when they load, and keep their gloves (which are now Brawler weapons).</li>
+  <li><b>Handyman is handy with anything</b>: 0% with every class except Mage (−5%), +5% damage on everything, and only −10 HP as a drawback (no more −2 speed and −5 crit).</li>
+  <li>No drawback hurts a class's own weapons any more: Thrower's −10% attack speed became −10% melee, and Juggler's −15% damage became −10%.</li>
+  <li>Mage stays the strict one: its weapons are the strongest, so it pays −5% to −10% outside its own class.</li>
+ </ol></div>
+ <div class="row"><div class="screen" style="width:1180px;padding:14px 18px"><div id="groups"></div></div></div>
+</section>
+
+<section class="frame" id="f1">
+ <h2>1 · Armory: class details <small>right panel, 500 × 760 design px, drawn at 0.8</small></h2>
+ <div class="note"><ol>
+  <li><b>Always on</b> splits the class stats into two columns: buffs (lime) and drawbacks (red). Before, they were one mixed list.</li>
+  <li><b>Home weapon bonus</b> is new on this screen. It shows what 2 and 4 weapons of this class give (the diamonds fill like a counter), which used to be only a sentence.</li>
+  <li><b>Weapon damage by class</b>: one tile per class with its signature weapon as the icon. It replaces the long sentence I added earlier.</li>
+  <li>Gunner's hidden <b>+10% ranged attack speed</b> (it was only in the code) is now real class data and gets a line like every other buff.</li>
+ </ol></div>
+ <div class="picker" data-for="armory"></div>
+ <div class="row"><div class="screen" style="width:436px;height:644px"><div class="scaled" style="transform:scale(.8)"><div id="armory"></div></div></div></div>
+</section>
+
+<section class="frame" id="f2">
+ <h2>2 · Run setup: choosing a class <small>whole 1280 × 720 canvas, drawn at 0.66 · and the phone middle column</small></h2>
+ <div class="note"><ol>
+  <li>No room for a sixth row on this screen, so the <b>class cards themselves</b> carry the weapon fit. Each card already shows that class's signature weapon; after you pick a class, every card gets a corner badge: your class <span style="color:#91ef14">+15%</span>, similar <span style="color:#eadda7">0%</span>, others <span style="color:#ff6969">red</span>. The caption above the row says what the badges mean.</li>
+  <li>The details panel loses the two loose sentences (affinity, "armor: none yet") and gets <b>buffs | drawbacks</b> in two columns and the <b>home weapon bonus</b> rows. It's 470 wide (was 440); the weapon grid moves right 30 px with a 10 px gap, so its three 150 px cells still fit. The class cards are 10 px shorter (140) so the panel can be 380 tall; all six classes fit without scrolling. The Armory keeps a separate "home weapon bonus" header because it has the room.</li>
+  <li>A locked class adds its Earn it / buy buttons at the bottom, so that one case scrolls, like now.</li>
+  <li><b>Phone</b>: the same pieces in the scrolling middle column (320 wide), buffs above drawbacks.</li>
+ </ol></div>
+ <div class="picker" data-for="setup"></div>
+ <div class="row">
+  <div><div class="devlabel">PC · 1920 × 1080 → canvas 1280 × 720, drawn at 0.66</div><div class="screen" style="width:845px;height:475px;padding:0"><div class="scaled" style="transform:scale(.66)"><div id="setup" style="position:relative;width:1280px;height:720px"></div></div></div><div class="devlabel" id="fitcheck"></div></div>
+  <div><div class="devlabel">PHONE · middle column, real size</div><div class="screen" style="width:340px;height:390px;padding:8px"><div id="setupPhone" style="height:372px;overflow-y:auto;overflow-x:hidden"></div></div></div>
+ </div>
+</section>
+
+<section class="frame" id="f3">
+ <h2>3 · Item card: which class and type the weapon is <small>lobby chests and the Armory</small></h2>
+ <div class="note"><ol>
+  <li>The grey line "LEGENDARY · MELEE · BRAWLER" becomes three tags: rarity, type, and class with its icon.</li>
+  <li>New strip under the special: <b>Damage by class</b>. This is the weapon's column of the table. The class you have picked for your loadout gets the <b>YOU</b> tag, so you can see "Katana as a Gunner = −15%" before you choose.</li>
+  <li>Godly weapons show one line instead: "Any class · no class penalty".</li>
+  <li>Only the new parts are drawn here; the rest of the approved card (stats by tier, copies, buttons) doesn't change.</li>
+ </ol></div>
+ <div class="picker" data-for="card"></div>
+ <div class="row"><div class="screen" style="width:840px;height:330px"><div id="card"></div></div></div>
+</section>
+
+<section class="frame" id="f4">
+ <h2>4 · Run shop: the fit badge <small>offer cards and the owned-weapon popup</small></h2>
+ <div class="note"><ol>
+  <li>Each weapon offer gets a <b>badge</b> in the top-right corner with your number and one word: YOUR CLASS, SIMILAR or OFF-CLASS. The damage line under it already includes it.</li>
+  <li>The class and type become tags under the name, the same tags as the item card.</li>
+  <li>Example below: playing <b>Brawler</b>. Frying Pan (Brawler), Shovel (Handyman, anyone can swing a shovel) and Glock (Gunner).</li>
+ </ol></div>
+ <div class="row"><div class="screen" style="width:860px;height:390px"><div id="shop" style="display:flex;gap:18px"></div></div></div>
+</section>
+
+<script>
+const IMG='../item-card-mockup/img/';
+let D;
+const state={armory:'Brawler',setup:'Brawler',card:'Gunner'};
+const kindOf={'01':'Melee','03':'Melee','19':'Melee','00':'Ranged','12':'Thrown'};
+function fitOf(cls,home){return home===cls?D.own:(D.fit[cls][home]??0)}
+function fcls(p){return p>0?'f15':p===0?'f0':p===-5?'f5':p===-10?'f10':'f15n'}
+function pct(p){return (p>0?'+':p<0?'−':'')+Math.abs(p)+'%'}
+function statLine(id,v){const s=D.stats[id];const pctUnit=s.unit==='%';const hps=s.unit===' HP/s';
+ const val=(v>0?'+':'−')+Math.abs(v)+(pctUnit?'%':hps?' HP/s':'');
+ return {val,label:s.label,good:v>0}}
+function lines(cls){const c=D.classes[cls];const good=[],bad=[];
+ for(const id of D.statOrder){const v=c.buffs[id];if(v===undefined)continue;const l=statLine(id,v);(v>0?good:bad).push(l)}
+ if(c.rangedAttackSpeed)good.push({val:'+'+c.rangedAttackSpeed+'%',label:'Ranged attack speed',good:true});
+ return {good,bad}}
+function bonusText(t){return Object.entries(t).map(([id,v])=>{const l=statLine(id,v);return l.val+' '+l.label}).join(' · ')}
+function pips(n){return '<div class="pips">'+[0,1,2,3].map(i=>`<div class="pip ${i<n?'on':''}"></div>`).join('')+'</div>'}
+function alwaysOn(cls,compact){const {good,bad}=lines(cls);const row=l=>`<div class="line"><span class="v ${l.good?'good':'bad'}">${l.val}</span><span>${l.label}</span></div>`;
+ return `<div class="nine k-inset cols ${compact==='phone'?'stack':''}"><div class="col"><div class="colhead good">BUFFS</div>${good.map(row).join('')}</div><div class="col"><div class="colhead bad">DRAWBACKS</div>${bad.map(row).join('')}</div></div>`}
+function homeBonus(cls,stacked){const c=D.classes[cls];
+ return `<div class="nine k-inset ${stacked?'stackhome':''}"><div class="home">${pips(2)}<div class="what"><b>2 HOME WEAPONS</b><span>${bonusText(c.two)}</span></div></div><div class="home">${pips(4)}<div class="what"><b>4 HOME WEAPONS</b><span>also ${bonusText(c.four)}</span></div></div></div>`}
+function tiles(row,youCls,opts={}){
+ return `<div class="tiles" style="${opts.gap?'gap:'+opts.gap+'px':''}">`+D.order.map(o=>{const p=row(o);const own=opts.ownCls===o;
+  return `<div class="tile ${own?'own':''} ${youCls===o?'you':''}" style="${opts.h?'padding:4px 1px':''}"><img src="${IMG}w/${D.signature[o]}.png" style="${opts.icon?`width:${opts.icon}px;height:${opts.icon}px`:''}"><div class="cn" style="${opts.cn?'font-size:'+opts.cn+'px':''}">${o}</div><div class="pc ${fcls(p)}" style="${opts.pc?'font-size:'+opts.pc+'px':''}">${pct(p)}</div></div>`}).join('')+'</div>'}
+function classRow(cls,opts){return tiles(o=>fitOf(cls,o),null,Object.assign({ownCls:cls},opts))}
+function picker(key,render){const el=document.querySelector(`.picker[data-for=${key}]`);el.innerHTML=D.order.map(o=>`<button class="${state[key]===o?'on':''}">${o}</button>`).join('');
+ el.querySelectorAll('button').forEach((b,i)=>b.onclick=()=>{state[key]=D.order[i];picker(key,render);render()})}
+
+function renderGroups(){
+ const sum=c=>D.order.filter(o=>o!==c).reduce((a,o)=>a+fitOf(c,o),0);
+ document.getElementById('groups').innerHTML=D.order.map(cls=>{const {good,bad}=lines(cls);
+  const ids=Object.keys(D.homes).filter(i=>D.homes[i]===cls).sort((a,b)=>(b===D.signature[cls])-(a===D.signature[cls]));
+  const RC={Common:'#dae0e4',Rare:'#4fb7f5',Epic:'#c074f9',Legendary:'#f85863'};
+  return `<div style="display:grid;grid-template-columns:110px 470px 1fr;gap:14px;align-items:center;padding:8px 0;border-bottom:2px solid rgba(255,255,255,.05)">
+   <div style="font-size:22px">${cls}<div class="t" style="font-size:13px;color:var(--muted)">off-class total ${sum(cls)}%</div></div>
+   <div style="display:flex;gap:6px">${ids.map(i=>`<div title="${D.names[parseInt(i)]}" style="width:72px;text-align:center"><div class="nine k-inset" style="height:58px;display:flex;align-items:center;justify-content:center;${i===D.signature[cls]?'box-shadow:0 0 0 2px #91ef14;border-radius:8px':''}"><img src="${IMG}w/${i}.png" style="width:44px;height:44px;object-fit:contain"></div><div class="t" style="font-size:11px;line-height:1.1;margin-top:3px;color:${RC[D.rarity[i]]}">${D.names[parseInt(i)]}</div></div>`).join('')}</div>
+   <div class="t" style="font-size:14px;line-height:1.45">${good.map(l=>`<span class="good">${l.val}</span> ${l.label}`).join(' · ')}<br>${bad.map(l=>`<span class="bad">${l.val}</span> ${l.label}`).join(' · ')}</div></div>`}).join('')+
+  '<div class="t" style="font-size:13px;color:var(--dim);margin-top:8px">Lime ring = starting weapon. Name colour = rarity. "Off-class total" adds up that class\'s five off-class numbers: lower means stricter.</div>'}
+
+function renderArmory(){const cls=state.armory;const c=D.classes[cls];const sig=D.signature[cls];
+ document.getElementById('armory').innerHTML=`<div class="nine k-panel" style="position:relative;width:500px;height:760px;padding:22px 24px">
+  <div style="display:flex;gap:16px;align-items:center">
+   <div class="nine k-inset" style="width:88px;height:88px;display:flex;align-items:center;justify-content:center"><img src="${IMG}w/${sig}.png" style="width:70px;height:70px;object-fit:contain"></div>
+   <div><div class="stroke" style="font-size:40px;line-height:1">${cls.toUpperCase()}</div><div style="font-size:17px;color:var(--lime);margin-top:6px">CLASS · STARTER ${D.names[parseInt(sig)].toUpperCase()}</div></div>
+  </div>
+  <div class="t" style="font-size:18px;color:var(--muted);margin:8px 0 10px;line-height:1.25">${c.description}</div>
+  <div class="sect" style="margin-bottom:8px">ALWAYS ON</div>
+  ${alwaysOn(cls)}
+  <div class="sect" style="margin:12px 0 8px">HOME WEAPON BONUS</div>
+  ${homeBonus(cls)}
+  <div class="sect" style="margin:12px 0 8px">WEAPON DAMAGE BY CLASS <small>Godly: no change</small></div>
+  ${classRow(cls)}
+  <div class="nine k-button btn" style="position:absolute;left:24px;right:24px;bottom:20px;height:62px">CHANGE CLASS</div>
+ </div>`}
+
+function setupPanel(cls,compact){const c=D.classes[cls];
+ return `<div class="nine k-panel" style="width:${compact?320:470}px;${compact?'':'height:380px;'}padding:${compact?'12px 12px':'16px 18px'}">
+  <div class="stroke" style="font-size:${compact?26:30}px;line-height:1.05">${cls}</div>
+  <div class="t" style="font-size:${compact?15:16}px;color:var(--muted);margin:3px 0 10px;line-height:1.25">${c.description}</div>
+  ${alwaysOn(cls,compact?'phone':false)}
+  <div style="height:${compact?10:8}px"></div>
+  ${homeBonus(cls,!!compact)}
+  ${compact?`<div class="sect" style="margin:10px 0 14px;font-size:15px">DAMAGE BY CLASS</div>${classRow(cls,{icon:30,cn:10,pc:15,gap:4})}`:''}
+ </div>`}
+function fitCorner(p){const k=p>0?'home':p===0?'sim':'off';return `<div class="fitbadge fb-${k}" style="position:absolute;top:-10px;right:-10px;min-width:58px;height:30px;border-radius:8px;flex-direction:row"><span class="p" style="font-size:18px">${pct(p)}</span></div>`}
+function renderSetup(){const cls=state.setup;
+ const x0=(1280-(6*170+5*14))/2;
+ const cards=D.order.map((o,i)=>{const sel=o===cls;return `<div class="nine ${sel?'k-plain':'k-button'}" style="position:absolute;left:${x0+i*184}px;top:96px;width:170px;height:140px;${sel?'':''}">
+   ${sel?'':''}<img src="${IMG}w/${D.signature[o]}.png" style="position:absolute;left:49px;top:12px;width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 2px 0 #000)">
+   <div class="stroke" style="position:absolute;left:0;right:0;top:88px;text-align:center;font-size:24px;color:${sel?'#f8f9f5':'#10200a'};${sel?'':'text-shadow:none'}">${o}</div>${fitCorner(fitOf(cls,o))}</div>`}).join('');
+ const homeIds=Object.keys(D.homes).filter(i=>D.homes[i]===cls).sort((a,b)=>(b===D.signature[cls])-(a===D.signature[cls]));
+ const cells=homeIds.map((w,i)=>`<div class="nine ${i===0?'k-plain':'k-button'}" style="position:absolute;left:${(470-470)/2+(i%3)*160}px;top:${44+Math.floor(i/3)*160}px;width:150px;height:150px"><img src="${IMG}w/${w}.png" style="position:absolute;left:40px;top:12px;width:70px;height:70px;object-fit:contain"><div class="t" style="position:absolute;left:0;right:0;top:86px;text-align:center;font-size:17px;color:${i===0?'#f8f9f5':'#10200a'}">${D.names[parseInt(w)]}</div></div>`).join('');
+ document.getElementById('setup').innerHTML=`
+  <div class="stroke" style="position:absolute;left:0;right:0;top:16px;text-align:center;font-size:40px">CHOOSE YOUR CLASS</div>
+  <div class="t" style="position:absolute;left:0;right:0;top:68px;text-align:center;font-size:17px;color:var(--cream)">Badges: damage with that class's weapons when you play <span style="color:var(--lime)">${cls}</span></div>
+  ${cards}
+  <div style="position:absolute;left:${x0}px;top:252px">${setupPanel(cls,false)}</div>
+  <div style="position:absolute;left:${x0+490}px;top:252px;width:470px;height:380px">
+   <div class="stroke" style="font-size:24px">STARTING WEAPON</div>${cells}</div>
+  <div class="nine k-button btn" style="position:absolute;left:${1280-x0-420}px;top:642px;width:200px;height:58px;font-size:24px">BACK</div>
+  <div class="nine k-button btn" style="position:absolute;left:${1280-x0-200}px;top:642px;width:200px;height:58px;font-size:24px">CONFIRM</div>`;
+ const pc=document.querySelector('#setup .k-panel');
+ pc.querySelectorAll('.line').forEach(e=>{e.style.fontSize='16px';e.style.lineHeight='1.3'});pc.querySelectorAll('.line .v').forEach(e=>{e.style.fontSize='17px'});
+ pc.querySelectorAll('.col').forEach(e=>e.style.padding='8px 10px 8px 12px');pc.querySelectorAll('.colhead').forEach(e=>{e.style.fontSize='13px';e.style.marginBottom='3px'});
+ pc.querySelectorAll('.home').forEach(e=>e.style.padding='7px 12px');pc.querySelectorAll('.home .what').forEach(e=>e.style.fontSize='16px');
+ const ph=document.getElementById('setupPhone');ph.innerHTML=setupPanel(cls,true);
+ ph.querySelectorAll('.line').forEach(e=>{e.style.fontSize='15px'});ph.querySelectorAll('.line .v').forEach(e=>{e.style.fontSize='15px';e.style.minWidth='42px'});
+ ph.querySelectorAll('.col').forEach(e=>e.style.padding='8px 10px');ph.querySelectorAll('.colhead').forEach(e=>e.style.fontSize='12px');
+ ph.querySelectorAll('.home .what').forEach(e=>e.style.fontSize='14px');ph.querySelectorAll('.home .what b').forEach(e=>e.style.fontSize='12px');ph.querySelectorAll('.home').forEach(e=>e.style.padding='6px 10px')}
+
+function renderCard(){const you=state.card;const w='03',home='Brawler';
+ const col=o=>fitOf(o,home);
+ document.getElementById('card').innerHTML=`<div class="nine k-panel" style="position:relative;width:800px;height:292px;padding:18px 22px;display:flex;gap:20px">
+  <div style="width:250px;flex:none">
+   <div class="nine k-inset" style="position:relative;height:170px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#5a4a1e 0,#2a2412 70%)"><img src="${IMG}w/${w}.png" style="width:150px;height:150px;object-fit:contain"><div class="tierdot">II</div></div>
+   <div style="display:flex;gap:6px;margin-top:12px;justify-content:center;flex-wrap:wrap">
+    <span class="chip rar" style="background:#f85863">LEGENDARY</span><span class="chip kind">MELEE</span><span class="chip"><img src="${IMG}w/${D.signature[home]}.png">BRAWLER</span>
+   </div>
+   <div class="t" style="font-size:13px;color:var(--dim);text-align:center;margin-top:8px">before: "LEGENDARY · MELEE · BRAWLER"</div>
+  </div>
+  <div style="flex:1">
+   <div style="font-size:20px;color:var(--lime)">TIER IV MOVE · FLYING SLASH</div>
+   <div class="t" style="font-size:16px;color:var(--white);margin:2px 0 4px">Every 3rd swing throws a flying slash through a line of enemies for 75% damage.</div>
+   <div class="t" style="font-size:14px;color:var(--muted)">Starts runs only as a Brawler; any class can buy it in the run shop.</div>
+   <div class="sect" style="margin:12px 0 12px;font-size:16px">DAMAGE BY CLASS <small>you picked ${you} for your loadout</small></div>
+   ${tiles(col,you,{ownCls:home,icon:36,cn:12,pc:18,gap:6})}
+   <div class="t" style="font-size:13px;color:var(--dim);margin-top:8px">(stats by tier, copies and the buttons stay as approved, below this strip)</div>
+  </div>
+ </div>`}
+
+function shopCard(id,name,home,kind,cls,tier,dmg){const p=fitOf(cls,home);const k=p>0?'home':p===0?'sim':'off';const word={home:'YOUR CLASS',sim:'SIMILAR',off:'OFF-CLASS'}[k];
+ return `<div class="nine k-panel" style="position:relative;width:260px;height:350px;padding:14px">
+  <div style="display:flex;gap:10px;align-items:flex-start">
+   <div class="nine k-inset" style="width:72px;height:72px;flex:none;display:flex;align-items:center;justify-content:center"><img src="${IMG}w/${id}.png" style="width:58px;height:58px;object-fit:contain"></div>
+   <div style="flex:1;min-width:0"><div style="font-size:21px;line-height:1.05;color:#dae0e4">${name}</div><div class="t" style="font-size:14px;color:var(--muted)">Tier I</div></div>
+  </div>
+  <div style="display:flex;gap:6px;margin:12px 0 10px;align-items:center"><div style="display:flex;flex-direction:column;gap:6px;flex:1"><span class="chip" style="align-self:flex-start"><img src="${IMG}w/${D.signature[home]}.png">${home.toUpperCase()}</span><span class="chip kind" style="align-self:flex-start">${kind.toUpperCase()}</span></div><div class="fitbadge fb-${k}" style="height:62px;min-width:96px"><span class="p" style="font-size:26px">${pct(p)}</span><span class="w">${word}</span></div></div>
+  <div class="t" style="font-size:18px;line-height:1.5"><span style="color:var(--cream)">Damage:</span> <span class="${p>0?'good':p<0?'bad':''}">${dmg}</span><br><span style="color:var(--cream)">Cooldown:</span> 0.62 s<br><span style="color:var(--cream)">Critical:</span> x1.5 (5%)<br><span style="color:var(--cream)">Range:</span> 9.0</div>
+  <div class="nine k-button btn" style="position:absolute;left:62px;right:62px;bottom:14px;height:48px;font-size:22px">◆ 23</div>
+ </div>`}
+function renderShop(){document.getElementById('shop').innerHTML=
+ shopCard('01','Frying Pan','Brawler','Melee','Brawler',1,'13.8')+shopCard('26','Shovel','Handyman','Melee','Brawler',1,'12.0')+shopCard('00','Glock','Gunner','Ranged','Brawler',1,'5.8')}
+
+fetch('data.json').then(r=>r.json()).then(d=>{D=d;
+ picker('armory',renderArmory);picker('setup',renderSetup);picker('card',renderCard);
+ renderGroups();renderArmory();renderSetup();renderCard();renderShop()});
+</script>
+</body></html>

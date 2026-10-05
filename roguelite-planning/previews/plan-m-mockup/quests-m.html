@@ -1,0 +1,316 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Feats and Weekly</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Fredoka:wght@600&family=Source+Sans+3:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--lime:#91ef14;--limeSoft:#d2ffa1;--limeDark:#3a700c;--ink:#07090a;--white:#f8f9f5;--muted:#aeb7b9;--dim:#78807f;--gold:#ffcb40;--cream:#eadda7;--track:#161d20;--red:#ef232f}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0e1214;color:var(--white);font-family:'Fredoka One','Fredoka',system-ui,sans-serif;overflow-x:hidden}
+.top{display:flex;gap:10px;align-items:center;padding:14px 18px;flex-wrap:wrap}
+.top button{font:inherit;font-size:17px;color:var(--white);background:#232a2e;border:3px solid #3a4448;border-radius:10px;padding:8px 16px;cursor:pointer}
+.top button.on{background:var(--lime);color:#122;border-color:#c8ff7a}
+.note{padding:0 20px 12px;font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:17px;color:#cfd6d8;max-width:1300px;line-height:1.35}
+.note b{color:var(--lime)}
+.viewport{position:relative;width:100%;overflow:hidden}
+.stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;
+ background:radial-gradient(ellipse at 30% 20%,#8ec5e8 0,#5f9cc4 30%,#3e7a52 58%,#2e5a2c 100%)}
+.world:before{content:"";position:absolute;inset:0;background:
+ radial-gradient(circle at 18% 70%,#6b4a2c 0 9%,transparent 9.2%),radial-gradient(circle at 70% 80%,#7a5634 0 12%,transparent 12.2%),
+ radial-gradient(circle at 85% 30%,#2f6b35 0 8%,transparent 8.2%),radial-gradient(circle at 10% 25%,#2c6232 0 7%,transparent 7.2%);filter:blur(6px)}
+.view{display:none}.view.on{display:block}
+.abs{position:absolute}
+/* theme */
+.panel{border-style:solid;border-width:0;border-image:url(img/panel.png) 48 fill / 26px stretch}
+.inset{border-style:solid;border-width:0;border-image:url(img/inset.png) 48 fill / 26px stretch}
+.btn{border-style:solid;border-width:0;border-image:url(img/button.png) 48 fill / 24px stretch;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.btn.neutral{border-image-source:url(img/panel.png)}
+.btn.off{filter:grayscale(.3) brightness(.62)}
+.o2{text-shadow:2px 0 var(--ink),-2px 0 var(--ink),0 2px var(--ink),0 -2px var(--ink),1.5px 1.5px var(--ink),-1.5px 1.5px var(--ink),1.5px -1.5px var(--ink),-1.5px -1.5px var(--ink)}
+.o3{text-shadow:3px 0 var(--ink),-3px 0 var(--ink),0 3px var(--ink),0 -3px var(--ink),2.2px 2.2px var(--ink),-2.2px 2.2px var(--ink),2.2px -2.2px var(--ink),-2.2px -2.2px var(--ink),0 5px 0 rgba(0,0,0,.35)}
+.o1{text-shadow:1.5px 0 var(--ink),-1.5px 0 var(--ink),0 1.5px var(--ink),0 -1.5px var(--ink)}
+.body{font-family:'Source Sans 3',sans-serif;font-weight:700}
+.icon{background-size:contain;background-repeat:no-repeat;background-position:center}
+.tint{-webkit-mask-size:contain;-webkit-mask-repeat:no-repeat;-webkit-mask-position:center}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{transform:scale(1.05)}}
+@keyframes rim{50%{opacity:.35}}
+@keyframes shine{0%{left:-30%}40%,100%{left:130%}}
+.pulse{animation:pulse 1.8s ease-in-out infinite}
+/* card */
+.card{position:absolute}
+.card .shadow{position:absolute;inset:7px 0 -7px 0;background:rgba(7,9,10,.8);border-radius:16px}
+.card .face{position:absolute;inset:0;border-radius:16px;border:4px solid var(--ink);overflow:visible}
+.card .face .lit{position:absolute;left:16px;right:16px;top:4px;height:3px;border-radius:3px;background:rgba(255,255,255,.3)}
+.card .face .corners{position:absolute;inset:2px;-webkit-mask-box-image:url(img/corners.png) 48 / 22px stretch;pointer-events:none}
+.rayclip{position:absolute;inset:6px;overflow:hidden;border-radius:12px;pointer-events:none}
+.rays{position:absolute;-webkit-mask-image:url(img/sunburst.png);animation:spin 30s linear infinite;opacity:.45}
+.glow{position:absolute;-webkit-mask-image:url(img/glow.png);opacity:.7}
+.shineclip{position:absolute;inset:12px;overflow:hidden;border-radius:10px;pointer-events:none}
+.shineclip i{position:absolute;top:-50%;height:200%;width:70px;transform:rotate(20deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);animation:shine 4.4s ease-in-out infinite}
+/* tile */
+.tile{position:absolute;border-radius:12px;border:3px solid var(--ink);overflow:hidden}
+.tile .ic{position:absolute}
+.tile .strip{position:absolute;left:4px;right:4px;bottom:4px;border-radius:8px;background:rgba(7,9,10,.55);display:flex;align-items:center;justify-content:center;white-space:nowrap}
+.tile .amt{position:absolute;right:6px;top:2px}
+/* bar */
+.bar{position:absolute;background:var(--track);border:3px solid #080a0b;border-radius:6px;overflow:hidden}
+.bar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.bar .txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;white-space:nowrap}
+.tag{position:absolute;height:30px;border:3px solid var(--ink);border-radius:8px;display:flex;align-items:center;padding:0 12px 0 28px;font-size:16px;white-space:nowrap}
+.tag:before{content:"";position:absolute;left:9px;top:8px;width:9px;height:9px;transform:rotate(45deg);background:currentColor;border:1.5px solid var(--ink)}
+.check{position:absolute;border-radius:50%;background:var(--lime);border:2.5px solid var(--ink)}
+.check:after{content:"";position:absolute;left:30%;top:18%;width:28%;height:48%;border:solid #fff;border-width:0 4px 4px 0;transform:rotate(45deg)}
+.badge{position:absolute;min-width:30px;height:30px;padding:0 8px;border-radius:15px;background:#d6262e;border:2.5px solid #140a0a;display:flex;align-items:center;justify-content:center;font-size:18px}
+.diamond{position:absolute;transform:rotate(45deg);border:3px solid var(--ink)}
+.rule{position:absolute;height:4px;border-radius:2px}
+.need{position:absolute;border:3px dashed rgba(255,255,255,.75);border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:13px;line-height:1.05;color:#fff;background:rgba(0,0,0,.25)}
+.callout{position:absolute;background:#fff8d6;color:#2a2410;border:3px solid var(--ink);border-radius:12px;padding:10px 14px;font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:20px;line-height:1.25;box-shadow:0 6px 0 rgba(0,0,0,.35);z-index:50}
+.callout b{color:#5a3a00}
+</style></head>
+<body>
+<div class="top" id="tabs"></div>
+<div class="note" id="note"></div>
+<div class="viewport" id="vp"><div class="stage world" id="stage"></div></div>
+<script>
+const $=(h)=>{const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstChild};
+const rgb=(r,g,b)=>`rgb(${r},${g},${b})`;
+const TH={
+ gold:{top:rgb(255,217,104),mid:rgb(240,161,36),bottom:rgb(165,86,11),accent:rgb(255,226,96),glow:rgb(255,246,200),rays:rgb(255,243,176),tag:rgb(150,78,6),tint:rgb(255,224,138)},
+ night:{top:rgb(62,73,80),mid:rgb(40,48,53),bottom:rgb(24,29,32),accent:'#91ef14',glow:rgb(200,220,210),rays:rgb(200,220,210),tag:rgb(30,36,40),tint:rgb(235,240,236)},
+ steel:{top:rgb(160,174,182),mid:rgb(88,100,108),bottom:rgb(36,42,46),accent:rgb(222,230,234),glow:rgb(230,236,240),rays:rgb(230,236,240),tag:rgb(60,68,74),tint:rgb(232,238,242)},
+ ember:{top:rgb(150,52,22),mid:rgb(78,22,14),bottom:rgb(30,10,8),accent:rgb(255,166,70),glow:rgb(255,150,60),rays:rgb(255,170,90),tag:rgb(110,34,10),tint:rgb(255,206,140)},
+};
+const RAR={Legendary:[rgb(255,216,99),rgb(194,116,16),rgb(255,250,220)],Epic:[rgb(207,149,255),rgb(101,38,176),rgb(245,225,255)],Rare:[rgb(118,204,255),rgb(28,102,176),rgb(225,245,255)],Common:[rgb(224,230,233),rgb(124,137,143),'#fff'],Emerald:[rgb(90,245,154),rgb(13,127,66),rgb(225,255,235)],Title:[rgb(255,236,170),rgb(170,120,40),'#fff']};
+function card(parent,x,y,w,h,th){
+ const c=$(`<div class="card" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px"><div class="shadow"></div><div class="face" style="background:linear-gradient(${th.top},${th.mid} 55%,${th.bottom})"><div class="lit"></div><div class="corners" style="background:${th.accent}"></div></div></div>`);
+ parent.appendChild(c);return c.querySelector('.face');
+}
+function art(face,src,cx,cy,size,th,ray){
+ let clip=face.querySelector('.rayclip');if(!clip){clip=$(`<div class="rayclip"></div>`);face.appendChild(clip)}
+ ray=ray||size*1.9;
+ clip.appendChild($(`<div class="glow tint" style="left:${cx-6-ray*.45}px;top:${cy-6-ray*.45}px;width:${ray*.9}px;height:${ray*.9}px;background:${th.glow}"></div>`));
+ clip.appendChild($(`<div class="rays tint" style="left:${cx-6-ray/2}px;top:${cy-6-ray/2}px;width:${ray}px;height:${ray}px;background:${th.rays}"></div>`));
+ face.appendChild($(`<div class="abs icon" style="left:${cx-size/2}px;top:${cy-size/2}px;width:${size}px;height:${size}px;background-image:url(${src})"></div>`));
+}
+function tile(parent,x,y,w,src,label,rar,amt,need){
+ const h=Math.floor(w*1.08),r=RAR[rar]||RAR.Common,strip=Math.max(18,Math.floor(h*.26));
+ const fs=Math.max(11,Math.min(16,Math.floor(strip*.62)));
+ const t=$(`<div class="tile" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:linear-gradient(${r[0]},${r[1]})">
+  <div class="glow tint" style="left:${w*.025}px;top:${h*.38-w*.475}px;width:${w*.95}px;height:${w*.95}px;background:${r[2]};opacity:.7"></div>
+  ${need?`<div class="need" style="left:${w*.16}px;top:${h*.05}px;width:${w*.68}px;height:${w*.68}px;font-size:11px">${need}</div>`:`<div class="ic icon" style="left:${w*.16}px;top:${h*.05}px;width:${w*.68}px;height:${w*.68}px;background-image:url(${src})"></div>`}
+  ${label?`<div class="strip o1" style="height:${strip}px;font-size:${fs}px">${label}</div>`:''}
+  ${amt?`<div class="amt o2" style="font-size:${Math.max(13,Math.min(19,Math.floor(w*.19)))}px">${amt}</div>`:''}</div>`);
+ parent.appendChild(t);return t;
+}
+function bar(parent,x,y,w,h,ratio,text,color){
+ const b=$(`<div class="bar" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px"><div class="fill" style="width:${Math.min(1,ratio)*100}%;background:linear-gradient(${color},color-mix(in srgb,${color} 65%,#000))"></div>${text!=null?`<div class="txt o2" style="font-size:${Math.min(18,h-8)}px">${text}</div>`:''}</div>`);
+ parent.appendChild(b);return b;
+}
+function btn(parent,x,y,w,h,text,opts={}){
+ const b=$(`<div class="btn abs ${opts.neutral?'neutral':''} ${opts.off?'off':''} ${opts.pulse?'pulse':''}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px"><span class="o2" style="font-size:${opts.size||22}px;color:${opts.color||'#fff'};${opts.off?'opacity:.6':''}">${text}</span></div>`);
+ parent.appendChild(b);return b;
+}
+function txt(parent,x,y,w,h,text,size,color='#fff',align='left',cls='o2',extra=''){
+ const l=$(`<div class="abs ${cls}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;font-size:${size}px;color:${color};display:flex;align-items:center;justify-content:${align=='center'?'center':align=='right'?'flex-end':'flex-start'};white-space:nowrap;${extra}">${text}</div>`);
+ parent.appendChild(l);return l;
+}
+function header(parent,title,sub,y,w){
+ const cx=w/2,tw=title.length*19;
+ txt(parent,0,y,w,40,title,32,'#fff','center','o3');
+ parent.appendChild($(`<div class="rule" style="left:8px;top:${y+18}px;width:${cx-tw/2-50}px;background:linear-gradient(90deg,transparent,var(--lime))"></div>`));
+ parent.appendChild($(`<div class="rule" style="left:${cx+tw/2+42}px;top:${y+18}px;width:${cx-tw/2-50}px;background:linear-gradient(90deg,var(--lime),transparent)"></div>`));
+ for(const dx of [-tw/2-28,tw/2+28]) parent.appendChild($(`<div class="diamond" style="left:${cx+dx-6}px;top:${y+14}px;width:12px;height:12px;background:var(--lime);border-width:2px"></div>`));
+ if(sub) txt(parent,60,y+42,w-120,24,sub,18,'var(--cream)','center','o1 body');
+}
+function check(parent,x,y,s){parent.appendChild($(`<div class="check" style="left:${x}px;top:${y}px;width:${s}px;height:${s}px"></div>`))}
+function tag(face,text,fill,color,x=24,y=-15){face.appendChild($(`<div class="tag o1" style="left:${x}px;top:${y}px;background:${fill};color:${color}">${text}</div>`))}
+function shine(face){face.appendChild($(`<div class="shineclip"><i></i></div>`))}
+function diamond(parent,cx,cy,size,color,icon,need){
+ parent.appendChild($(`<div class="diamond" style="left:${cx-size/2}px;top:${cy-size/2}px;width:${size}px;height:${size}px;border-radius:${size*.18}px;background:linear-gradient(135deg,color-mix(in srgb,${color} 65%,#fff),color-mix(in srgb,${color} 55%,#000))"></div>`));
+ if(need) parent.appendChild($(`<div class="need" style="left:${cx-size*.36}px;top:${cy-size*.36}px;width:${size*.72}px;height:${size*.72}px;font-size:12px">${need}</div>`));
+ else if(icon) parent.appendChild($(`<div class="abs icon" style="left:${cx-size*.42}px;top:${cy-size*.42}px;width:${size*.84}px;height:${size*.84}px;background-image:url(${icon})"></div>`));
+}
+function windowChrome(stage,title,w,h){
+ const x=(1920-w)/2,y=(1080-h)/2+16;
+ const dim=$(`<div class="abs" style="inset:0;background:rgba(5,9,10,.55)"></div>`);stage.appendChild(dim);
+ const win=$(`<div class="abs panel" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;opacity:.97"></div>`);stage.appendChild(win);
+ const tw=title.length*19+76;
+ const plate=$(`<div class="abs panel" style="left:${x+18}px;top:${y-30}px;width:${tw}px;height:56px"></div>`);stage.appendChild(plate);
+ for(const sx of [4,tw-4]) plate.appendChild($(`<div class="abs icon" style="left:${sx-20}px;top:8px;width:40px;height:40px;background-image:url(img/stone.png)"></div>`));
+ txt(plate,0,0,tw,56,title,32,'#fff','center','o3');
+ const close=$(`<div class="btn neutral abs" style="left:${x+w-62}px;top:${y-22}px;width:58px;height:58px"><span class="o2" style="font-size:34px;color:#ff6969">X</span></div>`);stage.appendChild(close);
+ const body=$(`<div class="abs" style="left:${x+30}px;top:${y+40}px;width:${w-60}px;height:${h-70}px"></div>`);stage.appendChild(body);
+ return body;
+}
+const I={emerald:'img/emerald.png',silver:'img/chest-silver.png',gold:'img/chest-gold.png',magical:'img/chest-magical.png',legendary:'img/chest-legendary.png',wooden:'img/chest-wooden.png'};
+const TIERS=['Rookie','Beginner','Intermediate','Skilled','Advanced','Expert','Elite','Master','Grandmaster','Legend'];
+const TCOL=['#96a0a6','#d6843a','#c8d2da','#ffc83c','#46e278','#3c96ff','#b064ff','#ff4060','#2b2133','#5a0c1e'];
+I.teeth='img/boss-teeth.png';
+const STAR=['#d6843a','#c8d2da','#ffc83c']; // diamond colour by stars: bronze, silver, gold
+// Three stars inline after a name: the outer span carries the outline (a filter on the clipped
+// element itself would be clipped away), the inner one the star shape.
+function starSpans(n,size){
+ let h='';
+ for(let k=0;k<3;k++) h+=`<span style="display:inline-block;filter:drop-shadow(0 0 1.2px #07090a) drop-shadow(0 0 1.2px #07090a) drop-shadow(0 2px 0 rgba(0,0,0,.4))"><span style="display:block;width:${size}px;height:${size}px;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);background:${k<n?'linear-gradient(#fff2b0,#f0b028 60%,#c07810)':'#3a4448'}"></span></span>`;
+ return `<span style="display:inline-flex;gap:3px;margin-left:16px;text-shadow:none;transform:translateY(-1px)">${h}</span>`;
+}
+function tabs3(b,active,W){
+ const tw=(W-16)/3;
+ [['DAILY','img/quest-scroll.png',0],['WEEKLY','img/calendar.png',1],['ACHIEVEMENTS','img/achievements.png',3]].forEach((t,i)=>{
+  const on=t[0]==active;
+  const bt=btn(b,i*(tw+8),0,tw,64,'',{neutral:!on});
+  const lw=t[0].length*15+56;
+  bt.appendChild($(`<div class="abs icon" style="left:${tw/2-lw/2}px;top:9px;width:46px;height:46px;background-image:url(${t[1]})"></div>`));
+  txt(bt,tw/2-lw/2+56,0,240,64,t[0],24,'#fff');
+  if(t[2]) bt.appendChild($(`<div class="badge o1" style="left:${tw-24}px;top:-8px">${t[2]}</div>`));
+ });
+}
+
+/* ---------------- VIEW 1: weekly ---------------- */
+function viewWeekly(s){
+ const W=1540,H=900;const b=windowChrome(s,'Quests',W,H);const BW=W-60;
+ tabs3(b,'WEEKLY',BW);
+ header(b,'WEEKLY QUESTS','New quests in 3d 04h · every Monday',96,BW);
+ const cy=196,gap=24,cw=(BW-2*gap)/3,ch=520;
+ const Q=[
+  {t:'Win 3 Maps',band:'#4096f0',ic:'img/up-CritChance.png',p:1,n:3,rw:[[I.emerald,'300','Emerald']]},
+  {t:'Play 10 Runs',band:'#9c60ec',ic:'img/play-portal.png',p:10,n:10,rw:[[I.emerald,'300','Emerald']],done:1},
+  {t:'Win 3 Maps on Hard',band:'#c8401c',ic:'img/up-CritChance.png',p:1,n:3,rw:[[I.emerald,'600','Emerald'],[I.gold,'Gold','Legendary']],hard:1},
+ ];
+ Q.forEach((q,i)=>{
+  const th=q.done?TH.gold:q.hard?TH.ember:TH.night;
+  const f=card(b,i*(cw+gap),cy,cw,ch,th);
+  const band=$(`<div class="abs" style="left:12px;top:22px;width:${cw-32}px;height:58px;border-radius:12px;background:linear-gradient(${q.band},color-mix(in srgb,${q.band} 66%,#000));border:3px solid var(--ink)"></div>`);f.appendChild(band);
+  txt(band,0,0,cw-38,52,q.t,27,'#fff','center','o3');
+  art(f,q.ic,cw/2-4,178,124,th,q.done?330:240);
+  bar(f,24,268,cw-56,36,q.p/q.n,`${q.p} / ${q.n}`,q.done?'#ffcb40':'#91ef14');
+  txt(f,12,318,cw-32,22,'REWARDS',17,'var(--cream)','center','o1');
+  const size=88,twd=q.rw.length*size+(q.rw.length-1)*12;
+  q.rw.forEach((r,k)=>tile(f,(cw-8-twd)/2+k*(size+12),346,size,r[0],r[1],r[2]));
+  btn(f,18,ch-76,cw-44,58,q.done?'CLAIM':'IN PROGRESS',{neutral:!q.done,off:!q.done,pulse:q.done,size:25});
+  if(q.done){tag(f,'COMPLETE!',th.tag,th.accent);shine(f)}
+  if(q.hard){tag(f,'HARD',th.tag,th.accent);f.appendChild($(`<div class="abs o1 body" style="right:22px;top:92px;font-size:15px;color:#ffce8c">harder · bigger reward</div>`))}
+ });
+ const sy=cy+ch+26;
+ const st=$(`<div class="abs" style="left:2px;top:${sy}px;width:${BW-4}px;height:52px;border-radius:12px;background:linear-gradient(90deg,rgba(10,14,12,.8),rgba(10,14,12,.5));border:2px solid rgba(0,0,0,.6)"></div>`);b.appendChild(st);
+ st.appendChild($(`<div class="abs icon" style="left:10px;top:4px;width:44px;height:44px;background-image:url(img/calendar.png)"></div>`));
+ txt(st,64,0,500,52,'THIS WEEK: 0 / 3 CLAIMED',21,'#fff');
+ txt(st,560,0,BW-590,52,'All 3 pay <span style="color:#46e278;margin:0 6px">1,200 emeralds</span> + a <span style="color:#ffd968;margin-left:6px">Gold Chest</span>',19,'#fff','right','o1 body');
+}
+
+/* ---------------- VIEW 2/3: achievements (roads, then feats) ---------------- */
+function nextLine(f,x,y,em,chest){
+ txt(f,x,y,70,24,'NEXT:',15,'var(--cream)','left','o1');
+ f.appendChild($(`<div class="abs icon" style="left:${x+50}px;top:${y+1}px;width:22px;height:22px;background-image:url(${I.emerald})"></div>`));
+ txt(f,x+74,y,60,24,em,16,'#46e278','left','o1');
+ if(chest){
+  const cx=x+74+em.length*10+8;
+  f.appendChild($(`<div class="abs icon" style="left:${cx}px;top:${y-1}px;width:26px;height:26px;background-image:url(${I[chest.toLowerCase()]})"></div>`));
+  txt(f,cx+28,y,90,24,chest,15,'#fff','left','o1');
+ }
+}
+function achList(s,scroll){
+ const W=1540,H=900;const b=windowChrome(s,'Quests',W,H);const BW=W-60;
+ tabs3(b,'ACHIEVEMENTS',BW);
+ const vis=H-170;
+ const list=$(`<div class="abs" style="left:0;top:84px;width:${BW}px;height:${vis}px;overflow:hidden"></div>`);b.appendChild(list);
+ const LW=BW-20,inner=$(`<div class="abs" style="left:0;top:${-scroll}px;width:${LW}px;height:2400px"></div>`);list.appendChild(inner);
+ list.appendChild($(`<div class="abs" style="right:0;top:${6+scroll*.36}px;width:7px;height:180px;border-radius:4px;background:var(--lime)"></div>`));
+ header(inner,'ACHIEVEMENTS','Claim one and it levels up to a harder goal with a bigger reward.',6,LW);
+ bar(inner,LW/2-260,84,520,32,41/207,'41 / 207 complete','#91ef14');
+ const RH=124;let y=140;
+ const roads=[
+  {name:'Slayer',lvl:4,goal:'Defeat 10,000 enemies',have:10000,need:10000,ic:'img/up-Damage.png',rw:[[I.emerald,'200','Emerald'],[I.gold,'Gold','Legendary']],next:['300','Gold']},
+  {name:'Bruiser',lvl:2,goal:'Defeat 250 enemies with melee',have:180,need:250,ic:'img/up-MeleeDamage.png',rw:[[I.emerald,'50','Emerald'],[I.silver,'Silver','Rare']],next:['100','Silver'],isNew:1},
+  {name:'Boss Hunter',lvl:1,goal:'Defeat 1 map boss',have:0,need:1,ic:I.teeth,rw:[[I.emerald,'50','Emerald']],next:['50','Silver']},
+  {name:'Weekly Warrior',lvl:1,goal:'Finish 1 weekly quest',have:0,need:1,ic:'img/calendar.png',rw:[[I.emerald,'50','Emerald']],next:['50','Silver'],isNew:1},
+ ];
+ roads.forEach(r=>{
+  const ready=r.have>=r.need,th=ready?TH.gold:TH.night;
+  const f=card(inner,2,y,LW-4,RH,th);const col=TCOL[r.lvl-1];
+  diamond(f,72,RH/2-4,80,col,r.ic);
+  txt(f,138,10,560,40,`${r.name} <span style="color:${ready?'#fff3c0':'#d8ff9a'};margin-left:10px">(${r.lvl}/10)</span>`,30,'#fff','left','o3');
+  const nm=TIERS[r.lvl-1].toUpperCase(),cx=138+r.name.length*17+110;
+  f.appendChild($(`<div class="abs o1" style="left:${cx}px;top:16px;height:28px;padding:0 12px;border-radius:8px;background:${col};border:2.5px solid var(--ink);display:flex;align-items:center;font-size:15px;color:#fff">${nm}</div>`));
+  if(r.isNew) f.appendChild($(`<div class="abs o1" style="left:${cx+nm.length*11+40}px;top:16px;height:28px;padding:0 10px;border-radius:8px;background:#1b5fae;border:2.5px solid var(--ink);display:flex;align-items:center;font-size:14px">NEW ROAD</div>`));
+  txt(f,140,48,520,22,r.goal,18,'#fff','left','o1 body');
+  bar(f,140,78,560,30,r.have/r.need,`${r.have.toLocaleString()} / ${r.need.toLocaleString()}`,ready?'#ffcb40':'#91ef14');
+  const size=70;r.rw.forEach((w,k)=>tile(f,740+k*(size+8),8,size,w[0],w[1],w[2]));
+  nextLine(f,740,92,r.next[0],r.next[1]);
+  const tp=$(`<div class="abs" style="left:1010px;top:20px;width:170px;height:76px;border-radius:12px;border:3px solid var(--ink);background:linear-gradient(#3b3424,#1d1a12)"></div>`);f.appendChild(tp);
+  tp.appendChild($(`<div class="abs icon" style="left:4px;top:16px;width:42px;height:42px;background-image:url(img/title-ribbon.png)"></div>`));
+  txt(tp,52,4,112,22,'TITLE',14,'var(--cream)','left','o1');
+  txt(tp,52,24,112,44,r.name+' '+TIERS[r.lvl-1],15,'#fff','left','o1','white-space:normal;line-height:1.05');
+  btn(f,LW-210,30,176,58,ready?'CLAIM':Math.floor(Math.min(1,r.have/r.need)*100)+'%',{neutral:!ready,off:!ready,pulse:ready,size:ready?28:22});
+  if(ready){tag(f,'READY!',th.tag,th.accent);shine(f)}
+  for(let k=0;k<10;k++) f.appendChild($(`<div class="abs" style="left:${140+k*16}px;top:112px;width:10px;height:10px;transform:rotate(45deg);border:1.5px solid var(--ink);background:${k<r.lvl-1?TCOL[k]:'#283034'}"></div>`));
+  y+=RH+22;
+ });
+ txt(inner,0,y,LW,30,'· · ·  15 more roads  · · ·',18,'var(--muted)','center','o1 body');y+=56;
+ header(inner,'FEATS','One-time challenges. More stars = harder = bigger reward.',y,LW);y+=84;
+ const RW={1:[[I.emerald,'300','Emerald'],[I.silver,'Silver','Rare']],2:[[I.emerald,'750','Emerald'],[I.gold,'Gold','Legendary']],3:[[I.emerald,'1,500','Emerald'],[I.magical,'Magical','Epic']]};
+ const feats=[
+  {name:'Lone Wolf',st:1,goal:'Win a map solo',have:1,need:1,ic:'img/profile.png',need_ic:'NEW<br>wolf'},
+  {name:'Deep Diver',st:2,goal:'Reach wave 40 on any map',have:34,need:40,fmt:'Best wave 34 / 40',ic:'img/up-Armor.png'},
+  {name:'Untouchable',st:2,goal:'Win a map without going down',have:0,need:1,ic:'img/heart.png',need_ic:'NEW<br>shield'},
+  {name:'Master of All',st:3,goal:'Win with all 6 classes',have:2,need:6,fmt:'2 / 6 classes',ic:'img/achievements.png',need_ic:'NEW<br>masks'},
+  {name:'Dragon Slayer',st:3,goal:'Win Volcanic Crater on Nightmare',have:0,need:1,ic:I.teeth,need_ic:'NEW<br>skull'},
+  {name:'Step It Up',st:1,goal:'Win any map on Hard',have:1,need:1,ic:'img/up-CritChance.png',claimed:1},
+ ];
+ feats.forEach(r=>{
+  const ready=!r.claimed&&r.have>=r.need,th=r.claimed?TH.steel:ready?TH.gold:TH.night;
+  const f=card(inner,2,y,LW-4,RH,th);
+  diamond(f,72,RH/2-4,80,STAR[r.st-1],r.ic,r.need_ic);
+  txt(f,138,10,640,40,r.name+starSpans(r.st,30),30,'#fff','left','o3');
+  txt(f,140,48,520,22,r.goal,18,'#fff','left','o1 body');
+  bar(f,140,78,560,30,r.have/r.need,r.fmt||`${r.have} / ${r.need}`,r.claimed?'#a0aeb6':ready?'#ffcb40':'#91ef14');
+  const size=74;RW[r.st].forEach((w,k)=>tile(f,740+k*(size+8),20,size,w[0],w[1],w[2]));
+  if(r.claimed){btn(f,LW-210,30,176,58,'CLAIMED',{neutral:1,off:1,size:22});check(f,LW-50,-12,32)}
+  else btn(f,LW-210,30,176,58,ready?'CLAIM':Math.floor(Math.min(1,r.have/r.need)*100)+'%',{neutral:!ready,off:!ready,pulse:ready,size:ready?28:22});
+  if(ready){tag(f,'READY!',th.tag,th.accent);shine(f)}
+  y+=RH+22;
+ });
+ header(inner,'UNLOCKS','Classes, Mjolnir and the Samurai set, as now.',y,LW);
+}
+const viewAch=s=>achList(s,0),viewFeats=s=>achList(s,760);
+
+/* ---------------- VIEW 4: how roads scale ---------------- */
+function viewScale(s){
+ s.appendChild($(`<div class="abs" style="inset:0;background:radial-gradient(ellipse at 50% 40%,#2d3a40,#0f1416 70%)"></div>`));
+ txt(s,90,50,1700,50,'Every road, level 1 → 10 (same rewards on all 19 roads)',34,'#fff','left','o3');
+ const R=[['50',''],['50','Silver'],['100','Silver'],['200','Gold'],['300','Gold'],['500','Magical'],['700','Magical'],['1,000','Legendary'],['1,500','Legendary'],['2,500','Legendary']];
+ const goals=['10','25','100','300','600','1,000','2,000','3,000','5,000','10,000'];
+ const RAR_OF={Silver:'Rare',Gold:'Legendary',Magical:'Epic',Legendary:'Legendary'};
+ R.forEach((r,i)=>{
+  const x=90+i*174,f=card(s,x,140,160,330,i>=8?TH.ember:i>=5?TH.gold:TH.night);
+  diamond(f,76,62,70,TCOL[i],'img/up-Armor.png');
+  txt(f,0,108,152,30,TIERS[i],19,'#fff','center','o2');
+  txt(f,0,136,152,24,(i+1)+'/10',16,'var(--cream)','center','o1');
+  tile(f,r[1]?14:46,170,60,I.emerald,r[0],'Emerald');
+  if(r[1]) tile(f,80,170,60,I[r[1].toLowerCase()],r[1],RAR_OF[r[1]],i==9?'×2':null);
+  txt(f,0,250,152,22,'Survivor goal',14,'var(--muted)','center','o1 body');
+  txt(f,0,272,152,30,goals[i]+' waves',19,'#fff','center','o2');
+ });
+ s.appendChild($(`<div class="abs o1 body" style="left:90px;top:520px;width:1700px;font-size:24px;color:#dfe6e8;line-height:1.6;white-space:normal">• Level 1 now pays <b style="color:#46e278">50</b> (was 25). Everything else stays.<br>• Goals grow about <b>1,000×</b> from level 1 to 10; rewards grow 50×. Early levels are quick, late ones are a long grind.<br>• Each row now shows <b style="color:var(--cream)">NEXT:</b> so you can see the bigger prizes coming.<br>• The big one-time payouts live in <b style="color:var(--gold)">FEATS</b> (300 / 750 / 1,500 + a chest) and <b style="color:#ff9a5a">WEEKLY</b> quests (300 each, the hard one 600 + a Gold Chest).</div>`));
+}
+
+const VIEWS=[
+ ['Weekly',viewWeekly,'<b>Weekly tab.</b> 3 quests a week, new every Monday. Two normal ones pay 300; the <b>HARD</b> one (dark red) pays 600 + a Gold Chest. Hard quests only roll if you can do them (no "win on Nightmare" for a new player).'],
+ ['Achievements',viewAch,'<b>Achievements (top).</b> Same rows as now, plus a <b>NEXT:</b> line under the rewards showing what the following level pays. 4 new roads (Bruiser, Sharpshooter, Shard Hoarder, Weekly Warrior). Boss Hunter uses your new teeth icon.'],
+ ['Feats',viewFeats,'<b>Feats (scrolled down).</b> One-time challenges with 1–3 stars: ★ 300 + Silver, ★★ 750 + Gold, ★★★ 1,500 + Magical. No level pips or titles, just the goal, the reward and CLAIM. Dashed circles = icons I need from you (wolf, shield, masks, skull, and a star).'],
+ ['How roads scale',viewScale,'<b>The level ladder</b>, for reference only. Not a screen in the game.'],
+];
+let cur=0;
+function render(){
+ const st=document.getElementById('stage');st.innerHTML='';VIEWS[cur][1](st);
+ document.getElementById('note').innerHTML=VIEWS[cur][2];
+ document.querySelectorAll('.top button').forEach((b,i)=>b.classList.toggle('on',i==cur));
+ fit();
+}
+function fit(){const vp=document.getElementById('vp'),st=document.getElementById('stage');const s=vp.clientWidth/1920;st.style.transform=`scale(${s})`;vp.style.height=(1080*s)+'px'}
+const tb=document.getElementById('tabs');VIEWS.forEach((v,i)=>{const b=document.createElement('button');b.textContent=v[0];b.onclick=()=>{cur=i;render()};tb.appendChild(b)});
+addEventListener('resize',fit);addEventListener('hashchange',()=>{cur=+location.hash.slice(1)||0;render()});
+if(location.hash) cur=+location.hash.slice(1)||0;
+render();
+</script>
+</body></html>
