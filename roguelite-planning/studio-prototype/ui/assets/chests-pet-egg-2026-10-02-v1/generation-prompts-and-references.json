@@ -1,0 +1,74 @@
+[
+  {
+    "id": "chest-wooden",
+    "ref": "blender-chest-kit/previews/wooden-closed.png",
+    "desc": "Closed Wooden chest, front and LEFT side visible exactly as first reference: orange wooden planks, segmented barrel lid, two dark iron straps, charcoal perimeter bands and block corner feet, silver rivets, central layered hexagonal dark lock plate with warm amber keyhole and very thin amber seam. No gems.",
+    "source": "C:/Users/Jeremiah/.codex/generated_images/01a0fd99-7493-7232-b661-8aeb07decbbd/exec-e3c991d3-6c9b-43f0-a322-10eae16b3b2a.png",
+    "prompt": "Use case: stylized-concept. Create ONE production game inventory icon, square 512x512 PNG, genuine transparent background. First input is the authoritative physical item model render: faithfully preserve its design, proportions, silhouette, materials, colors, trim, lock, gems and identifying decorations. Remaining inputs are STYLE ONLY: match these upgrade/supplemental icons with polished stylized low-poly 3D illustration, chunky proportions, broad visible facets, softly beveled edges, clean dark navy contours, bright controlled colors, rich object shadows, upper-left highlights. Simplify tiny surface noise for readability at 32–64 pixels without removing identifying ornaments. Center entire object, longest dimension 83% of canvas, even padding. No text, prices, badges, UI frame, watermark, scenery, ground plane, cast floor shadow, extra props, characters, glow clouds or sparkles. Closed Wooden chest, front and LEFT side visible exactly as first reference: orange wooden planks, segmented barrel lid, two dark iron straps, charcoal perimeter bands and block corner feet, silver rivets, central layered hexagonal dark lock plate with warm amber keyhole and very thin amber seam. No gems.",
+    "reference": "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/blender-chest-kit/previews/wooden-closed.png",
+    "styleReferences": [
+      "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/studio-prototype/ui/assets/upgrades/Armor.png",
+      "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/studio-prototype/ui/assets/supplemental-v1/Calendar.png"
+    ]
+  },
+  {
+    "id": "chest-silver",
+    "ref": "blender-chest-kit/previews/silver-closed.png",
+    "desc": "Closed Silver chest, front and LEFT side visible exactly as model: cobalt-blue planks and barrel lid, polished silver steel arches and ribbed twin straps, rivets, armored corners bearing sapphire gems in diamond settings, navy shield-shaped front lock with silver border, central blue sapphire above cyan keyhole, thin cyan lid seam, lid ridge rail. Keep geometry.",
+    "source": "C:/Users/Jeremiah/.codex/generated_images/01a0fd99-7493-7232-b661-8aeb07decbbd/exec-cdcea414-bf7b-47d6-becf-a5e80d4e78e0.png",
+    "prompt": "Use case: stylized-concept. Create ONE production game inventory icon, square 512x512 PNG, genuine transparent background. First input is the authoritative physical item model render: faithfully preserve its design, proportions, silhouette, materials, colors, trim, lock, gems and identifying decorations. Remaining inputs are STYLE ONLY: match these upgrade/supplemental icons with polished stylized low-poly 3D illustration, chunky proportions, broad visible facets, softly beveled edges, clean dark navy contours, bright controlled colors, rich object shadows, upper-left highlights. Simplify tiny surface noise for readability at 32–64 pixels without removing identifying ornaments. Center entire object, longest dimension 83% of canvas, even padding. No text, prices, badges, UI frame, watermark, scenery, ground plane, cast floor shadow, extra props, characters, glow clouds or sparkles. Closed Silver chest, front and LEFT side visible exactly as model: cobalt-blue planks and barrel lid, polished silver steel arches and ribbed twin straps, rivets, armored corners bearing sapphire gems in diamond settings, navy shield-shaped front lock with silver border, central blue sapphire above cyan keyhole, thin cyan lid seam, lid ridge rail. Keep geometry.",
+    "reference": "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/blender-chest-kit/previews/silver-closed.png",
+    "styleReferences": [
+      "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/studio-prototype/ui/assets/upgrades/Armor.png",
+      "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/studio-prototype/ui/assets/supplemental-v1/Calendar.png"
+    ]
+  },
+  {
+    "id": "chest-gold",
+    "ref": "blender-chest-kit/previews/gold-closed.png",
+    "desc": "Closed Gold chest, front and LEFT side visible: dark reddish walnut planks and barrel lid, heavy rich gold arches and double-trim straps studded with ruby-red gems, curled scroll corner details, lion-paw gold feet, front shield lock with a large red gem and gold keyhole, separate small crown-and-ruby medallion centered high on lid, a few attached gold coin edges tucked in the closed lid seam as reference. No loose coins or extra props.",
+    "source": "C:/Users/Jeremiah/.codex/generated_images/01a0fd99-7493-7232-b661-8aeb07decbbd/exec-4ac09a1e-5b4b-4db8-82e4-b5a37553ee0c.png",
+    "prompt": "Use case: stylized-concept. Create ONE production game inventory icon, square 512x512 PNG, genuine transparent background. First input is the authoritative physical item model render: faithfully preserve its design, proportions, silhouette, materials, colors, trim, lock, gems and identifying decorations. Remaining inputs are STYLE ONLY: match these upgrade/supplemental icons with polished stylized low-poly 3D illustration, chunky proportions, broad visible facets, softly beveled edges, clean dark navy contours, bright controlled colors, rich object shadows, upper-left highlights. Simplify tiny surface noise for readability at 32–64 pixels without removing identifying ornaments. Center entire object, longest dimension 83% of canvas, even padding. No text, prices, badges, UI frame, watermark, scenery, ground plane, cast floor shadow, extra props, characters, glow clouds or sparkles. Closed Gold chest, front and LEFT side visible: dark reddish walnut planks and barrel lid, heavy rich gold arches and double-trim straps studded with ruby-red gems, curled scroll corner details, lion-paw gold feet, front shield lock with a large red gem and gold keyhole, separate small crown-and-ruby medallion centered high on lid, a few attached gold coin edges tucked in the closed lid seam as reference. No loose coins or extra props.",
+    "reference": "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/blender-chest-kit/previews/gold-closed.png",
+    "styleReferences": [
+      "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/studio-prototype/ui/assets/upgrades/Armor.png",
+      "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/studio-prototype/ui/assets/supplemental-v1/Calendar.png"
+    ]
+  },
+  {
+    "id": "chest-magical",
+    "ref": "blender-chest-kit/previews/magical-closed.png",
+    "desc": "Closed Magical chest, front and LEFT side visible exactly as model. Purple plank barrel lid/body with narrow cyan luminous seams, TWO thick gold end arches atop stacked gold block legs, gold base rail on little dark ball feet. Paired ivory horns sweeping outward then upward with dark steel caps, an olive-green skull perched at front top with purple stitched cranial seam and purple fanglike teeth, dark eye sockets, small attached chain. Silver pointed wing/star-shaped central lock with circular glowing cyan gem; round cyan side fitting. Preserve skull, horn placement and bespoke lock; no generic padlock, no redesign.",
+    "source": "C:/Users/Jeremiah/.codex/generated_images/01a0fd99-7493-7232-b661-8aeb07decbbd/exec-94975d89-8fc1-4eb2-a857-02a0b44ad1ed.png",
+    "prompt": "Use case: stylized-concept. Create ONE production game inventory icon, square 512x512 PNG, genuine transparent background. First input is the authoritative physical item model render: faithfully preserve its design, proportions, silhouette, materials, colors, trim, lock, gems and identifying decorations. Remaining inputs are STYLE ONLY: match these upgrade/supplemental icons with polished stylized low-poly 3D illustration, chunky proportions, broad visible facets, softly beveled edges, clean dark navy contours, bright controlled colors, rich object shadows, upper-left highlights. Simplify tiny surface noise for readability at 32–64 pixels without removing identifying ornaments. Center entire object, longest dimension 83% of canvas, even padding. No text, prices, badges, UI frame, watermark, scenery, ground plane, cast floor shadow, extra props, characters, glow clouds or sparkles. Closed Magical chest, front and LEFT side visible exactly as model. Purple plank barrel lid/body with narrow cyan luminous seams, TWO thick gold end arches atop stacked gold block legs, gold base rail on little dark ball feet. Paired ivory horns sweeping outward then upward with dark steel caps, an olive-green skull perched at front top with purple stitched cranial seam and purple fanglike teeth, dark eye sockets, small attached chain. Silver pointed wing/star-shaped central lock with circular glowing cyan gem; round cyan side fitting. Preserve skull, horn placement and bespoke lock; no generic padlock, no redesign.",
+    "reference": "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/blender-chest-kit/previews/magical-closed.png",
+    "styleReferences": [
+      "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/studio-prototype/ui/assets/upgrades/Armor.png",
+      "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/studio-prototype/ui/assets/supplemental-v1/Calendar.png"
+    ]
+  },
+  {
+    "id": "chest-legendary",
+    "ref": "blender-chest-kit/previews/legendary-closed.png",
+    "desc": "Closed Legendary chest, front and LEFT side visible as model: orange-red lacquer planks and barrel lid enclosed in abundant thick gold arches and straps; solid gold crown-like crenellated rim around seam, outward flaring rectangular gold battlements, turquoise stud gems, octagonal layered golden lock with prominent turquoise gem above little gold keyhole. Separate turquoise medallion high on lid. Tall gold corner pillars and scroll feet. Keep crown rim architecture, turquoise gems, orange lacquer, no red gems.",
+    "source": "C:/Users/Jeremiah/.codex/generated_images/01a0fd99-7493-7232-b661-8aeb07decbbd/exec-686c5db7-611f-4742-9fbc-c2ffb8c5a636.png",
+    "prompt": "Use case: stylized-concept. Create ONE production game inventory icon, square 512x512 PNG, genuine transparent background. First input is the authoritative physical item model render: faithfully preserve its design, proportions, silhouette, materials, colors, trim, lock, gems and identifying decorations. Remaining inputs are STYLE ONLY: match these upgrade/supplemental icons with polished stylized low-poly 3D illustration, chunky proportions, broad visible facets, softly beveled edges, clean dark navy contours, bright controlled colors, rich object shadows, upper-left highlights. Simplify tiny surface noise for readability at 32–64 pixels without removing identifying ornaments. Center entire object, longest dimension 83% of canvas, even padding. No text, prices, badges, UI frame, watermark, scenery, ground plane, cast floor shadow, extra props, characters, glow clouds or sparkles. Closed Legendary chest, front and LEFT side visible as model: orange-red lacquer planks and barrel lid enclosed in abundant thick gold arches and straps; solid gold crown-like crenellated rim around seam, outward flaring rectangular gold battlements, turquoise stud gems, octagonal layered golden lock with prominent turquoise gem above little gold keyhole. Separate turquoise medallion high on lid. Tall gold corner pillars and scroll feet. Keep crown rim architecture, turquoise gems, orange lacquer, no red gems.",
+    "reference": "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/blender-chest-kit/previews/legendary-closed.png",
+    "styleReferences": [
+      "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/studio-prototype/ui/assets/upgrades/Armor.png",
+      "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/studio-prototype/ui/assets/supplemental-v1/Calendar.png"
+    ]
+  },
+  {
+    "id": "pet-egg",
+    "ref": "blender-egg-merchant-kit/previews/icon-egg.png",
+    "desc": "The current Pet Egg intact and upright, fully visible, as first reference: tall cream/ivory faceted egg tapering at top with large irregular teal polygonal spots in the same arrangement, sitting in its shallow golden straw nest. Keep egg and attached nest ONLY, consistent with current approved icon. NO merchant, NO wooden pedestal, no cracks, no hatching pet. Preserve broad cream shell facets and teal markings. Three-quarter view.",
+    "source": "C:/Users/Jeremiah/.codex/generated_images/01a0fd99-7493-7232-b661-8aeb07decbbd/exec-5ce5a9f9-73c0-4837-a253-82dcc766e863.png",
+    "prompt": "Use case: stylized-concept. Create ONE production game inventory icon, square 512x512 PNG, genuine transparent background. First input is the authoritative physical item model render: faithfully preserve its design, proportions, silhouette, materials, colors, trim, lock, gems and identifying decorations. Remaining inputs are STYLE ONLY: match these upgrade/supplemental icons with polished stylized low-poly 3D illustration, chunky proportions, broad visible facets, softly beveled edges, clean dark navy contours, bright controlled colors, rich object shadows, upper-left highlights. Simplify tiny surface noise for readability at 32–64 pixels without removing identifying ornaments. Center entire object, longest dimension 83% of canvas, even padding. No text, prices, badges, UI frame, watermark, scenery, ground plane, cast floor shadow, extra props, characters, glow clouds or sparkles. The current Pet Egg intact and upright, fully visible, as first reference: tall cream/ivory faceted egg tapering at top with large irregular teal polygonal spots in the same arrangement, sitting in its shallow golden straw nest. Keep egg and attached nest ONLY, consistent with current approved icon. NO merchant, NO wooden pedestal, no cracks, no hatching pet. Preserve broad cream shell facets and teal markings. Three-quarter view.",
+    "reference": "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/blender-egg-merchant-kit/previews/icon-egg.png",
+    "styleReferences": [
+      "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/studio-prototype/ui/assets/upgrades/Armor.png",
+      "C:/Users/Jeremiah/Documents/ChatGPT/Roblox/roguelite-planning/studio-prototype/ui/assets/supplemental-v1/Calendar.png"
+    ]
+  }
+]

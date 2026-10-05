@@ -1,0 +1,41 @@
+{
+  "generator": "built-in image_gen",
+  "date": "2026-10-04",
+  "items": {
+    "soup": {
+      "file": "soup.png",
+      "asset": "rbxassetid://134653604976810",
+      "prompt": "Use case: stylized-concept. Asset type: square transparent PNG inventory icon for Wavebreaker Roblox survivor game. Subject: A chunky cream ceramic bowl with warm golden chicken soup, big visible noodle curls, carrot cubes and chicken chunks, two simple steam curls. Established art: polished stylized low-poly 3D, chunky readable silhouette, soft bevels and facets, broad painterly low-noise textures, bright controlled palette, 2-4 value ranges, strong dark outline. Three-quarter view centered single object or tight pair, generous transparent padding on every side, fills about 75% canvas, recognizable at 64px. Soft warm overhead light, clean game-ready finish. No background, no floor, no card frame, no words, no watermark, no rarity color border, no photorealism. Output a genuinely transparent background."
+    },
+    "cushion": {
+      "file": "cushion.png",
+      "asset": "rbxassetid://134119315378177",
+      "prompt": "Use case: stylized-concept. Asset type: square transparent PNG inventory icon for Wavebreaker Roblox survivor game. Subject: One plump teal couch cushion with piping around its softly beveled square edges and a slight central dent, clearly upholstered fabric, no shield. Established art: polished stylized low-poly 3D, chunky readable silhouette, soft bevels and facets, broad painterly low-noise textures, bright controlled palette, 2-4 value ranges, strong dark outline. Three-quarter view centered single object or tight pair, generous transparent padding on every side, fills about 75% canvas, recognizable at 64px. Soft warm overhead light, clean game-ready finish. No background, no floor, no card frame, no words, no watermark, no rarity color border, no photorealism. Output a genuinely transparent background."
+    },
+    "banana": {
+      "file": "banana.png",
+      "asset": "rbxassetid://91220324140044",
+      "prompt": "Use case: stylized-concept. Asset type: square transparent PNG inventory icon for Wavebreaker Roblox survivor game. Subject: One comical yellow banana peel, three chunky curling peel flaps, no fruit. Established art: polished stylized low-poly 3D, chunky readable silhouette, soft bevels and facets, broad painterly low-noise textures, bright controlled palette, 2-4 value ranges, strong dark outline. Three-quarter view centered single object or tight pair, generous transparent padding on every side, fills about 75% canvas, recognizable at 64px. Soft warm overhead light, clean game-ready finish. No background, no floor, no card frame, no words, no watermark, no rarity color border, no photorealism. Output a genuinely transparent background."
+    },
+    "penny": {
+      "file": "penny.png",
+      "asset": "rbxassetid://84866645691857",
+      "prompt": "Use case: stylized-concept. Asset type: square transparent PNG inventory icon for Wavebreaker Roblox survivor game. Subject: One bent copper lucky penny tilted in three quarter view with a raised four-leaf clover symbol, no letters or numbers. Established art: polished stylized low-poly 3D, chunky readable silhouette, soft bevels and facets, broad painterly low-noise textures, bright controlled palette, 2-4 value ranges, strong dark outline. Three-quarter view centered single object or tight pair, generous transparent padding on every side, fills about 75% canvas, recognizable at 64px. Soft warm overhead light, clean game-ready finish. No background, no floor, no card frame, no words, no watermark, no rarity color border, no photorealism. Output a genuinely transparent background."
+    },
+    "skates": {
+      "file": "skates.png",
+      "asset": "rbxassetid://84335919314680",
+      "prompt": "Use case: stylized-concept. Asset type: square transparent PNG inventory icon for Wavebreaker Roblox survivor game. Subject: A pair of chunky retro roller skates with blue boots, cream laces and four bright orange wheels each. Established art: polished stylized low-poly 3D, chunky readable silhouette, soft bevels and facets, broad painterly low-noise textures, bright controlled palette, 2-4 value ranges, strong dark outline. Three-quarter view centered single object or tight pair, generous transparent padding on every side, fills about 75% canvas, recognizable at 64px. Soft warm overhead light, clean game-ready finish. No background, no floor, no card frame, no words, no watermark, no rarity color border, no photorealism. Output a genuinely transparent background."
+    },
+    "detector": {
+      "file": "detector.png",
+      "asset": "rbxassetid://135461885570276",
+      "prompt": "Use case: stylized-concept. Asset type: square transparent PNG inventory icon for Wavebreaker Roblox survivor game. Subject: One handheld metal detector with chunky blue handle and dark circular search coil, tilted diagonally. Established art: polished stylized low-poly 3D, chunky readable silhouette, soft bevels and facets, broad painterly low-noise textures, bright controlled palette, 2-4 value ranges, strong dark outline. Three-quarter view centered single object or tight pair, generous transparent padding on every side, fills about 75% canvas, recognizable at 64px. Soft warm overhead light, clean game-ready finish. No background, no floor, no card frame, no words, no watermark, no rarity color border, no photorealism. Output a genuinely transparent background."
+    },
+    "gummies": {
+      "file": "gummies.png",
+      "asset": "rbxassetid://96244325205305",
+      "prompt": "Use case: stylized-concept. Asset type: square transparent PNG inventory icon for Wavebreaker Roblox survivor game. Subject: An open small clear snack pouch containing colorful bear-shaped fruit gummy candies, no pills and no medical symbols, no text. Established art: polished stylized low-poly 3D, chunky readable silhouette, soft bevels and facets, broad painterly low-noise textures, bright controlled palette, 2-4 value ranges, strong dark outline. Three-quarter view centered single object or tight pair, generous transparent padding on every side, fills about 75% canvas, recognizable at 64px. Soft warm overhead light, clean game-ready finish. No background, no floor, no card frame, no words, no watermark, no rarity color border, no photorealism. Output a genuinely transparent background."
+    }
+  }
+}

@@ -1,0 +1,110 @@
+[
+  {
+    "file": "chest-wooden.png",
+    "width": 512,
+    "height": 512,
+    "sourceWidth": 1254,
+    "sourceHeight": 1254,
+    "alpha": {
+      "left": 43,
+      "top": 50,
+      "width": 425,
+      "height": 411,
+      "transparentPixels": 125912,
+      "partialAlphaPixels": 134851,
+      "opaquePixels": 1381
+    },
+    "longestDimensionCoverage": 0.830078125,
+    "sha256": "CC51A3EA473DDDD50E18C359B4495BE353744D7EF20F63BE74C568AC3B762212"
+  },
+  {
+    "file": "chest-silver.png",
+    "width": 512,
+    "height": 512,
+    "sourceWidth": 1254,
+    "sourceHeight": 1254,
+    "alpha": {
+      "left": 43,
+      "top": 60,
+      "width": 425,
+      "height": 391,
+      "transparentPixels": 131258,
+      "partialAlphaPixels": 129519,
+      "opaquePixels": 1367
+    },
+    "longestDimensionCoverage": 0.830078125,
+    "sha256": "4AAB3B62EE91C728E41C1607DB19E3CC0663F5D378B4B9E4C71205B2431385A7"
+  },
+  {
+    "file": "chest-gold.png",
+    "width": 512,
+    "height": 512,
+    "sourceWidth": 1254,
+    "sourceHeight": 1254,
+    "alpha": {
+      "left": 43,
+      "top": 54,
+      "width": 425,
+      "height": 403,
+      "transparentPixels": 135903,
+      "partialAlphaPixels": 124826,
+      "opaquePixels": 1415
+    },
+    "longestDimensionCoverage": 0.830078125,
+    "sha256": "D56B2440CAF7F3B4B24C17739B8D6A5868C642F3EB35FC4E7BCD8758584EFBD5"
+  },
+  {
+    "file": "chest-magical.png",
+    "width": 512,
+    "height": 512,
+    "sourceWidth": 1254,
+    "sourceHeight": 1254,
+    "alpha": {
+      "left": 43,
+      "top": 43,
+      "width": 425,
+      "height": 425,
+      "transparentPixels": 138923,
+      "partialAlphaPixels": 121623,
+      "opaquePixels": 1598
+    },
+    "longestDimensionCoverage": 0.830078125,
+    "sha256": "765305A136BCDD7E85DBF2371E908E6FC31E6C5F4F3C8F9DF593ED2CC66059B0"
+  },
+  {
+    "file": "chest-legendary.png",
+    "width": 512,
+    "height": 512,
+    "sourceWidth": 1254,
+    "sourceHeight": 1254,
+    "alpha": {
+      "left": 43,
+      "top": 68,
+      "width": 425,
+      "height": 376,
+      "transparentPixels": 149164,
+      "partialAlphaPixels": 111555,
+      "opaquePixels": 1425
+    },
+    "longestDimensionCoverage": 0.830078125,
+    "sha256": "FB539A6F1CBA07981DB14BB866DB6AC05CD6A48E91C97421505FAE870361BFA2"
+  },
+  {
+    "file": "pet-egg.png",
+    "width": 512,
+    "height": 512,
+    "sourceWidth": 1254,
+    "sourceHeight": 1254,
+    "alpha": {
+      "left": 43,
+      "top": 49,
+      "width": 425,
+      "height": 413,
+      "transparentPixels": 154429,
+      "partialAlphaPixels": 106181,
+      "opaquePixels": 1534
+    },
+    "longestDimensionCoverage": 0.830078125,
+    "sha256": "72F422AE9E345147E212631111F2AF3A1B43858027C58D240E79F0A68A6F6974"
+  }
+]
