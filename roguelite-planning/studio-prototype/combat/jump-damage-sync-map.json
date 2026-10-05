@@ -1,0 +1,12 @@
+{
+ "ReplicatedStorage.RogueliteCombat.CharacterStats": "combat/CharacterStats.luau",
+ "ReplicatedStorage.RogueliteCombat.ZombieTypes": "combat/ZombieTypes.luau",
+ "ReplicatedStorage.RogueliteCombat.EnemyCatalog": "combat/EnemyCatalog.luau",
+ "ServerScriptService.CharacterService": "combat/CharacterService.luau",
+ "ServerScriptService.EnemyAttacks": "combat/EnemyAttacks.luau",
+ "ServerScriptService.MovementCheck": "combat/MovementCheck.luau",
+ "ServerScriptService.MovementGuard": "combat/MovementGuard.server.luau",
+ "ServerScriptService.RogueliteCombat": "combat/RogueliteCombat.server.luau",
+ "StarterPlayer.StarterPlayerScripts.RogueliteCombat": "combat/RogueliteCombat.client.luau",
+ "StarterPlayer.StarterPlayerScripts.RogueliteZombieAnimation": "RogueliteZombieAnimation.client.luau"
+}

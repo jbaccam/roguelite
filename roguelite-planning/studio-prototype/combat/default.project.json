@@ -112,6 +112,9 @@
         "CharacterStats": {
           "$path": "CharacterStats.luau"
         },
+        "RayImpact": {
+          "$path": "RayImpact.luau"
+        },
         "EditPractice": {
           "$className": "RemoteEvent"
         },
@@ -171,6 +174,9 @@
         },
         "LegendaryVisuals": {
           "$path": "LegendaryVisuals.luau"
+        },
+        "GodlyVisuals": {
+          "$path": "GodlyVisuals.luau"
         },
         "ProjectileStyleVisuals": {
           "$path": "ProjectileStyleVisuals.luau"
@@ -321,6 +327,24 @@
         },
         "ProfileAction": {
           "$className": "RemoteFunction"
+        },
+        "GroundContact": {
+          "$path": "GroundContact.luau"
+        },
+        "VacuumVisuals": {
+          "$path": "VacuumVisuals.luau"
+        },
+        "WeaponJournal": {
+          "$path": "WeaponJournal.luau"
+        },
+        "WeaponShowcaseScope": {
+          "$path": "WeaponShowcaseScope.luau"
+        },
+        "CombatPresentationPolicy": {
+          "$path": "CombatPresentationPolicy.luau"
+        },
+        "ChickenTemplate": {
+          "$path": "ChickenTemplate.luau"
         }
       },
       "UITheme": {
@@ -423,6 +447,30 @@
       },
       "TutorialGuideUI": {
         "$path": "../ui/TutorialGuideUI.luau"
+      },
+      "ArmoryUI": {
+        "$path": "../ui/ArmoryUI.luau"
+      },
+      "WeaponJournalUI": {
+        "$path": "../ui/WeaponJournalUI.luau"
+      },
+      "WeaponShowcaseCatalog": {
+        "$path": "../ui/WeaponShowcaseCatalog.luau"
+      },
+      "WeaponShowcaseStage": {
+        "$path": "../ui/WeaponShowcaseStage.luau"
+      },
+      "WeaponShowcaseUI": {
+        "$path": "../ui/WeaponShowcaseUI.luau"
+      },
+      "ArmoryStage": {
+        "$path": "../ui/ArmoryStage.luau"
+      },
+      "WeaponShowcaseScene": {
+        "$path": "../ui/WeaponShowcaseScene.luau"
+      },
+      "WeaponJournalPresentation": {
+        "$path": "../ui/WeaponJournalPresentation.luau"
       }
     },
     "ReplicatedFirst": {
@@ -521,6 +569,9 @@
       "LegendaryMoves": {
         "$path": "LegendaryMoves.luau"
       },
+      "GodlyWeapons": {
+        "$path": "GodlyWeapons.luau"
+      },
       "UtilityWeapons": {
         "$path": "UtilityWeapons.luau"
       },
@@ -586,6 +637,12 @@
       },
       "TutorialDirector": {
         "$path": "TutorialDirector.server.luau"
+      },
+      "MatchService": {
+        "$path": "../lobby/MatchService.luau"
+      },
+      "ChickenTemplate": {
+        "$path": "ChickenTemplate.luau"
       }
     },
     "StarterPlayer": {

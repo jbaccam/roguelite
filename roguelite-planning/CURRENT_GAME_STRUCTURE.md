@@ -1,7 +1,7 @@
 # Current Game Structure
 
 **Status:** Consolidated pre-production plan  
-**Updated:** 2026-10-03 (play-test round: repo only, not yet in Studio, not play-tested)  
+**Updated:** 2026-10-04 (squad fixes, Armory/showcase and Journal synced; single-client Studio tests recorded in [bugfix report](studio-prototype/combat/BUGFIX_REPORT_2026-10-04.md))
 **Scope:** What the game currently is, what content belongs to it, and what still needs design work.
 
 This is the fastest document to read for the complete current plan. [PROGRESSION_AND_SESSION_FLOW.md](PROGRESSION_AND_SESSION_FLOW.md) is authoritative for progression, maps, keys, chests, armor and achievements. The master design and specialist documents contain the deeper reasoning. **Confirmed** items came directly from project direction. **Proposed** items are the strongest current recommendation and can still change.
@@ -38,6 +38,8 @@ See [Tutorial design](plans/2026-10-03-tutorial-design.md) and [Lobby and first-
 
 ### Before entering
 
+Armory is the main class/loadout entry. Its weapon info cards, automated attack showcase and Journal let players inspect their collection. Every queue member reconfirms their class and starter before the all-ready countdown.
+
 The player selects:
 
 1. A class.
@@ -48,13 +50,13 @@ The player selects:
 ### During a run
 
 - The avatar moves freely in an open arena while up to six equipped weapons attack automatically.
-- Every mob death drops a blue crystal worth shards and run XP. See [Crystal shard currency](SHARD_CURRENCY.md).
+- Every mob death drops a crystal worth shards and run XP, in one of four player ownership colors. See [Crystal shard currency](SHARD_CURRENCY.md).
 - Waves last 40 s (2026-10-03; were 30). The HUD shows the goal: WAVE 7 / 20, then ENDLESS 21. Wave size grows with the wave and with the number of players up, and enemies come in swarms from one side. See [Crystal shard currency](SHARD_CURRENCY.md).
 - Level-ups are banked during combat and never interrupt it.
 - At the end of each wave, crystals still on the ground go into the crystal bag at full value (Brotato's rule, 2026-10-03). Next wave each pickup pays double out of the bag. Example: bag 30, a 5-crystal pickup pays 10, bag 25. Only the tutorial pulls every crystal in.
-- Banked level-ups resolve as four stat cards (reroll costs shards).
+- Banked level-ups resolve as four stat cards; paid/token rerolls clearly confirm consumption before submission.
 - A four-offer shop sells weapons and passive items. The player can buy, reroll, lock, recycle and combine.
-- The map boss on wave 20. (Elite and horde waves were planned for 5, 10 and 15 but not built; their run-setup labels were removed for launch, 2026-10-02.)
+- A midboss on wave 10 (35% of full boss HP, 75% damage), then the full map boss on wave 20. Elite/horde waves on 5 and 15 remain unbuilt. See the October 4 bugfix report for actual test coverage.
 - **Win:** The wave 20 boss dies. A YOU WON! panel offers LEAVE (collect) or KEEP GOING into Endless (2026-10-03).
 - **Leaving:** any time, mid-wave included (2026-10-03), through one confirm popup. The player keeps what was settled at their last cleared wave. See [LOBBY_AND_MATCH_SERVERS.md](LOBBY_AND_MATCH_SERVERS.md).
 - **Loss:** The player keeps the keys earned for waves already passed.
@@ -65,7 +67,7 @@ Run level and XP, stat choices, extra weapons, in-run weapon tiers, passive item
 
 ### What saves permanently
 
-Owned weapons and armor with their copy counts / starting tiers, unlocked classes, map wins and best wave per map, keys and unopened chests, achievement and quest progress, unlocked passives, cosmetics and settings.
+Owned weapons and armor with their copy counts / starting tiers, unlocked classes, map wins and best wave per map, keys and unopened chests, achievement and quest progress, unlocked passives, cosmetics and settings. The Journal also saves lifetime weapon damage/kills and passive-item purchases from the October 4 implementation onward; practice, previews and admin test runs are excluded.
 
 ## 4. Classes and complete weapon roster
 

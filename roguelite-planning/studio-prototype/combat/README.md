@@ -1,4 +1,8 @@
+October 4 squad feedback: [applied fixes and actual Studio test results](BUGFIX_REPORT_2026-10-04.md). Source and Studio are synchronized; multiplayer limits are recorded there.
+
 # Six-slot weapon practice
+
+October 4 squad feedback corrections: [combat fixes and exact verification](PLAYTEST_COMBAT_FIXES_2026-10-04.md). This supersedes older tuning/placement notes below for rockets, bowling, thrown accuracy, vacuum, duck fire, cards, turret grounding, wave-10 bosses and multiplayer density. Verification includes Studio Edit regressions and the later 55-second single-client bowling/vacuum/chicken Play fixture; four-player balance remains unmeasured.
 
 October 3 play-test round (commits c9e5cde..a1a1f7a; syntax-checked, synced to Studio 2026-10-03 without ee48545, see `../ui/README.md`; not play-tested):
 - [Melee vs ranged](WEAPON_BALANCE.md#melee-vs-ranged-2026-10-03): ranged range about −20–25% and cooldown about +12%, melee reach +15–25%, Medusa's Head slows 35% for 2 s, a wider weapon ring.
