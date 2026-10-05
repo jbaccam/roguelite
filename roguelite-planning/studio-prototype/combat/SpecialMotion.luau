@@ -2,10 +2,10 @@ local M={}
 M.profiles={
  ['12']={height=.7,spin='flat',returns=true},
  ['13']={height=0,spin='point'},
- ['14']={height=5,spin='tumble',zone='Fire'},
+ ['14']={height=3,spin='tumble',zone='Fire'},
  ['15']={height=3,spin='tumble',reserve=true},
  ['22']={height=0,spin='roll'},
- ['23']={height=5,spin='tumble',reserve=true},
+ ['23']={height=2,spin='tumble',reserve=true},
  ['31']={height=0,spin='rock',returns=true},
  ['08']={height=.4,spin='cloud',zone='Poison'},
  -- Poseidon's Trident: thrown point-first and spinning, flies back; its landing raises the tidal wave.

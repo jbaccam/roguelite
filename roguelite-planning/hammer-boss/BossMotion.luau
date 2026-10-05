@@ -59,7 +59,7 @@ function M.constrainArms(poses)
  return poses
 end
 M.Attacks={
- Slam={anticipation=5/30,active=23/30,finish=24/30,duration=50/30,cooldown=2.65,damage=24,radius=9.5},
+ Slam={anticipation=5/30,active=23/30,finish=24/30,duration=50/30,cooldown=2.65,damage=24,radius=12.5},
  Swing={anticipation=6/30,active=19/30,finish=25/30,duration=54/30,cooldown=2.95,damage=18},
  Spin={anticipation=6/36,active=21/36,finish=37/36,duration=66/36,cooldown=4.15,damage=22},
 }

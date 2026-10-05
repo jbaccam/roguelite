@@ -29,7 +29,8 @@ local current,lastWave
 local function update()
  local wave=run:GetAttribute('Wave');local active=combat:GetAttribute('ZombiesEnabled')==true
  if not active then current=nil;lastWave=nil;run:SetAttribute('BossAlive',false);return end
- if wave~=(combat:GetAttribute('HammerBossWave') or 20) or lastWave==wave then return end
+ local midboss=wave==10 and combat:GetAttribute('TutorialRun')~=true
+ if (not midboss and wave~=(combat:GetAttribute('HammerBossWave') or 20)) or lastWave==wave then return end
  -- The map's boss (MapConfig): a MapBossDefs id; a map without one is won by clearing wave 20.
  local map=Maps.get(Role.activeMap());if not map or not map.boss then return end
  local marker=Role.marker();if not marker then return end
@@ -49,6 +50,12 @@ local function update()
  -- The old Hammer: while the rebuilt one isn't ready here, or when he failed to spawn.
  if not current and map.boss=='Hammer' then dropRebuiltHammers();current=B.spawn(CFrame.new(ground.Position+Vector3.yAxis*(Motion.RootHeight+.1)),false) end
  if current then
+  if midboss then
+   local h=current:FindFirstChildOfClass('Humanoid')
+   if h then h.MaxHealth=math.ceil(h.MaxHealth*.35);h.Health=h.MaxHealth end
+   current:SetAttribute('BossDamageScale',(current:GetAttribute('BossDamageScale') or 1)*.75)
+   current:SetAttribute('Midboss',true)
+  end
   lastWave=wave;run:SetAttribute('BossAlive',true)
   current.Destroying:Connect(function() run:SetAttribute('BossAlive',false) end)
  end

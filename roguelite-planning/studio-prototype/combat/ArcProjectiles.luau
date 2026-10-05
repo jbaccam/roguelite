@@ -3,6 +3,7 @@ local Tags=game:GetService('CollectionService')
 local Motion=require(game.ReplicatedStorage.RogueliteCombat.ArcMotion)
 local Targets=require(game.ReplicatedStorage.RogueliteCombat.ProjectileTarget)
 local Stats=require(game.ReplicatedStorage.RogueliteCombat.CharacterStats) -- shot stats via usesStat (2026-10-03)
+local Batch=require(game.ReplicatedStorage.RogueliteCombat.ShotBatch)
 local A={}
 function A.new(combat,damage,rayParams)
  local event=combat:WaitForChild('ArcShot');local active={};local serial=0;local random=Random.new()
@@ -28,19 +29,18 @@ function A.new(combat,damage,rayParams)
    local state=combat.PlayerStates:FindFirstChild(tostring(d.owner.UserId));local slot=state and state:FindFirstChild('Slot'..d.slotIndex)
    if not slot or slot:GetAttribute('WeaponId')~=d.id or not state:GetAttribute('WeaponEnabled') then finish(r,nil,false);continue end
    if now>r.expires or r.remaining<=.05 then finish(r,nil,false);continue end
-   if r.target and not Targets.alive(r.target) then
+   -- Only magical cards follow/retarget enemies. Pandora commits its predicted landing point
+   -- at release and keeps that ordinary mortar path even if the enemy moves or dies.
+   if d.id=='18' and r.target and not Targets.alive(r.target) then
     local replacement=Targets.replacement(r.position,d,r.hit,r.remaining,r.launchOrigin,rayParams)
-    if not replacement or r.redirects>=8 then finish(r,nil,false);continue end
-    r.target=replacement;r.redirects+=1;r.origin=r.position;r.finish=Targets.predict(replacement,r.origin,function(distance) return Motion.duration(d.id,distance,d.projectileSpeed) end,math.max(0,r.started-now),r.remaining,rayParams,d.character,d.id=='33')
-    if d.id=='33' then
-     local ground=workspace:Raycast(r.finish+Vector3.yAxis*2,-Vector3.yAxis*30,rayParams(d.character,true))
-     if ground then r.finish=ground.Position+Vector3.yAxis*.1 end
-    end
+    if r.redirects>=8 then replacement=nil end
+    if not replacement then finish(r,nil,false);continue end
+    r.target=replacement;r.redirects+=1;r.origin=r.position;r.finish=Targets.predict(replacement,r.origin,function(distance) return Motion.duration(d.id,distance,d.projectileSpeed) end,math.max(0,r.started-now),r.remaining,rayParams,d.character,false)
     r.started=math.max(now,r.started);r.t=0
     local distance=(r.finish-r.origin).Magnitude
     r.duration=Motion.duration(d.id,distance,d.projectileSpeed)
     r.side,r.height,r.bend=Motion.shape(d.id,distance,r.index,random)
-    event:FireAllClients('Redirect',r.serial,r.origin,r.finish,r.started,r.duration,r.side,r.height,replacement,r.bend)
+    Batch.fire(event,r.origin,d.owner,'Redirect',r.serial,r.origin,r.finish,r.started,r.duration,r.side,r.height,replacement,r.bend)
    end
    local untilT=math.clamp((now-r.started)/r.duration,0,1)
    if d.id=='18' and r.target and r.target.Parent then r.finish=r.target.Position end
@@ -103,8 +103,8 @@ function A.new(combat,damage,rayParams)
    -- Arc-length allowance preserves normal curved shots at maximum target range.
    r.remaining=d.range*2;r.launchOrigin=from;r.expires=workspace:GetServerTimeNow()+10;r.redirects=0
    r.bend=bend
-   r.target=d.arcTarget
-   event:FireAllClients('Launch',serial,d.id,d.owner.UserId,d.slotIndex,i,from,target,r.started,r.duration,side,height,d.arcTarget,bend)
+   r.target=d.id=='18' and d.arcTarget or nil
+   Batch.fire(event,from,d.owner,'Launch',serial,d.id,d.owner.UserId,d.slotIndex,i,from,target,r.started,r.duration,side,height,r.target,bend)
   end
  end
  return self

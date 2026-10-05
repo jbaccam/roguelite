@@ -198,15 +198,17 @@ local function prober(root)
  local m=Role.marker()
  local center=m and m:GetAttribute('SpawnAreaCenter');if m and typeof(center)~='Vector3' then center=m.Position end
  local radius=m and (m:GetAttribute('SpawnAreaRadius') or 60)
- local from=root.Position;local foot=footOf(root).Y
+ local anchor=H.anchor(footOf(root),center,radius)
+ local floorY=center and center.Y or anchor.Y
+ local from=Vector3.new(anchor.X,floorY+4,anchor.Z)
  return function(point)
-  if center and Vector2.new(point.X-center.X,point.Z-center.Z).Magnitude>radius then return nil end
+  if center and Vector2.new(point.X-center.X,point.Z-center.Z).Magnitude>math.max(0,radius-8) then return nil end
   local at=Vector3.new(point.X,from.Y,point.Z)
   if (at-from).Magnitude>.05 and workspace:Raycast(from,at-from,params) then return nil end
-  local hit=workspace:Raycast(at+Vector3.yAxis*2,-Vector3.yAxis*12,params)
-  if not hit or hit.Normal.Y<.7 or math.abs(hit.Position.Y-foot)>4 then return nil end
+  local hit=workspace:Raycast(at+Vector3.yAxis*24,-Vector3.yAxis*64,params)
+  if not hit or hit.Normal.Y<.7 or math.abs(hit.Position.Y-floorY)>8 then return nil end
   return hit.Position
- end
+ end,anchor
 end
 local function newTurret(p,index,temp)
  local f=Instance.new('Folder');f.Name=p.UserId..'_'..index;f:SetAttribute('OwnerUserId',p.UserId);f:SetAttribute('Index',index)
@@ -236,11 +238,13 @@ local function place(p,allowed)
  for _,t in list do if t.temp or t.index>#tiers or not root then t.folder:Destroy() else byIndex[t.index]=t end end
  table.clear(list)
  if not root or #tiers==0 then return end
- local look=lookOf(root);local probe=prober(root);local foot=footOf(root)
+ local look=lookOf(root);local probe,foot=prober(root)
  local spots=H.ring(#tiers,H.band(cs and cs.class),rng,H.angle(look))
  for i,tier in tiers do
-  local t=byIndex[i] or newTurret(p,i,false);list[i]=t
-  stand(t,(H.spot(foot,spots[i].angle,spots[i].radius,probe)),look,tier)
+  local at=H.spot(foot,spots[i].angle,spots[i].radius,probe)
+  if at then
+   local t=byIndex[i] or newTurret(p,i,false);table.insert(list,t);stand(t,at,look,tier)
+  elseif byIndex[i] then byIndex[i].folder:Destroy() end
  end
 end
 -- Mid-wave additions (admin Give, Scrap Magnet): new turrets of these tiers at free spots, at least
@@ -249,7 +253,7 @@ end
 local function add(p,root,tiers,temp)
  local list=turrets[p] or {};turrets[p]=list
  local cs=Characters.states[p]
- local look=lookOf(root);local probe=prober(root);local foot=footOf(root)
+ local look=lookOf(root);local probe,foot=prober(root)
  local spots=H.ring(#list+#tiers,H.band(cs and cs.class),rng,H.angle(look))
  local taken={};for _,t in list do table.insert(taken,t.position) end
  local index=temp and H.MAX_OWNED or 0
@@ -259,6 +263,7 @@ local function add(p,root,tiers,temp)
   for _,spot in spots do
    if k>#tiers then break end
    local at=H.spot(foot,spot.angle,spot.radius,probe)
+   if not at then continue end
    local clear=pass==2
    if not clear then clear=true;for _,q in taken do if Vector2.new(at.X-q.X,at.Z-q.Z).Magnitude<H.SPACING then clear=false;break end end end
    if clear then

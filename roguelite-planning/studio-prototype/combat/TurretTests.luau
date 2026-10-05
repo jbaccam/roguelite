@@ -190,7 +190,9 @@ return function(H, G, Weapons, Stats, E, Catalog)
 	at, r = H.spot(center, 0, 12, function()
 		return nil
 	end)
-	check(r == 0 and at == center, "No ground found at all: the given centre")
+ check(r == 0 and at == nil, "No ground found: defer placement instead of creating an airborne turret")
+ local safe=H.anchor(Vector3.new(100,30,100),Vector3.new(0,2,0),100)
+ check(safe.Y==2 and Vector2.new(safe.X,safe.Z).Magnitude<=74.0001,"Jumping at a corner uses the ground-level interior")
 
 	-- Caps: 10 per player, 30 on the server shared fairly.
 	check(H.MAX_OWNED == 10 and H.MAX_SERVER == 30, "10 / 30")

@@ -113,7 +113,7 @@ end
 -- reserved (2026-10-03): cap slots something else takes, an Endless boss's bossSlots (below):
 -- 4 players at wave 25 keep 90 enemies while it is up, 100 again once it falls.
 S.SWARM = 1.2
-S.PLAYER_SCALE = { 1, 1.6, 2.1, 2.5 }
+S.PLAYER_SCALE = { 1, 1.9, 2.7, 3.4 }
 S.MAX_POPULATION = 100
 function S.playerScale(players)
 	local n = math.max(1, math.floor(tonumber(players) or 1))

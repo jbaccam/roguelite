@@ -239,10 +239,11 @@ end
 -- (CharacterService replaces the stats table on every change). Never changed in place: an attack
 -- works on a clone, which its swing and projectiles keep.
 local function definition(slot,base,cs,player,character,index)
- local tier=slot.folder:GetAttribute('Tier');local c=slot.cached
- if not c or c.base~=base or c.tier~=tier or c.stats~=cs.stats or c.class~=cs.class or c.character~=character then
+ local tier=slot.folder:GetAttribute('Tier');local copyId=slot.folder:GetAttribute('CopyId');local c=slot.cached
+ if not c or c.base~=base or c.tier~=tier or c.copyId~=copyId or c.stats~=cs.stats or c.class~=cs.class or c.character~=character then
   local d=Stats.weapon(base,cs.stats,cs.class,tier);d.stats=cs.stats;d.owner=player;d.character=character;d.slotIndex=index
-  c={base=base,tier=tier,stats=cs.stats,class=cs.class,character=character,d=d};slot.cached=c
+  d.copyId=copyId
+  c={base=base,tier=tier,copyId=copyId,stats=cs.stats,class=cs.class,character=character,d=d};slot.cached=c
  end
  return c.d
 end

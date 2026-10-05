@@ -189,7 +189,7 @@ local MIN_PLAYER_DISTANCE = 22
 local SPAWN_BAND = {28, 70}
 local STAND_RADIUS = 5
 local RELOCATE_BAND = {14, 30}
-local RESPAWN_DELAY = 1 -- was 2; a killed enemy's slot now also gathers into a swarm (SWARM_GATHER)
+local RESPAWN_DELAY = .35 -- telegraphed replacements keep pressure up when a squad clears fast
 -- Swarms (user, 2026-10-03: "there should be larger swarms of mobs"): groups of GROUP_SIZE, and a
 -- batch's groups come together from one side: up to SWARM_SIZE enemies per swarm, every group within
 -- SWARM_ARC of one heading around one player, SWARM_GAP after the swarm before; the next swarm comes
@@ -198,8 +198,8 @@ local RESPAWN_DELAY = 1 -- was 2; a killed enemy's slot now also gathers into a 
 -- 1 + 0-2.5 + 1 s (telegraph), about the old 2 + 0.3 + 1, so arrivals per second stay the same.
 -- Example: 7 kills in 3 s -> one 7-strong swarm from the north-east instead of 7 singles.
 local GROUP_SIZE = {4, 6} -- was 2-4
-local SWARM_SIZE, SWARM_ARC, SWARM_GAP = 18, math.rad(40), 0.8
-local SWARM_GATHER, SWARM_MIN = 2.5, 6
+local SWARM_SIZE, SWARM_ARC, SWARM_GAP = 12, math.rad(40), 0.2
+local SWARM_GATHER, SWARM_MIN = .65, 4
 local MIN_MASS = 4 -- enemy bodies below this get a denser root (see spawnZombie)
 local WARNING_COLOR = Color3.fromRGB(214, 58, 52)
 local warnings = Instance.new("Folder")
@@ -215,11 +215,13 @@ local function arena()
 end
 local function livingRoots()
     local roots = {}
+    local run = combat.Parent:FindFirstChild('RogueliteRunState')
+    local practice = not run or run:GetAttribute('Phase')=='Practice'
     for _, player in Players:GetPlayers() do
         local character = player.Character
         local root = character and character:FindFirstChild("HumanoidRootPart")
         local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-        if root and humanoid and humanoid.Health > 0 then table.insert(roots, root) end
+        if root and humanoid and humanoid.Health > 0 and not player:GetAttribute('RunDown') and (player:GetAttribute('RunMember') or practice) then table.insert(roots, root) end
     end
     return roots
 end
@@ -382,6 +384,7 @@ end
 -- telegraph still starts GROUP_STAGGER after the previous one, timed from the flush.
 local PICKS_PER_FRAME = 4
 local heading = math.random() * math.pi * 2 -- the side the last swarm came from
+local swarmPlayer = 0 -- round-robin pressure, not repeated random rolls on one teammate
 local function flushQueue()
     local generation, batch, chosen, delay = waveGeneration, queued, {}, 0
     queued = {}
@@ -403,7 +406,8 @@ local function flushQueue()
                 if swarm then delay += SWARM_GAP end
                 local roots = livingRoots()
                 heading = (heading + math.pi * 2 / 3 + (math.random() - 0.5) * 0.8) % (math.pi * 2)
-                swarm = #roots > 0 and {origin = roots[math.random(#roots)].Position, angle = heading} or nil
+                if #roots>0 then swarmPlayer=swarmPlayer%#roots+1 end
+                swarm = #roots > 0 and {origin = roots[swarmPlayer].Position, angle = heading} or nil
                 swarmLeft = SWARM_SIZE
             end
             swarmLeft -= size

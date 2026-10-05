@@ -7,6 +7,8 @@ local RunService=game:GetService('RunService')
 local Tags=game:GetService('CollectionService')
 local PhysicsService=game:GetService('PhysicsService')
 local ServerStorage=game:GetService('ServerStorage')
+local Ground=require(game.ReplicatedStorage.RogueliteCombat.GroundContact)
+local Template=require(script.Parent.ChickenTemplate)
 local C={
  Chance=1/8,Lifetime=8,PerPlayer=3,Max=24,
  PeckDamage=.4,PeckEvery=.7,PeckImpact=.12,PeckReach=2.2,
@@ -15,12 +17,13 @@ local C={
 function C.new(combat,damage,rayParams)
  local folder=workspace:FindFirstChild('RogueliteChickens') or Instance.new('Folder')
  folder.Name='RogueliteChickens';folder.Parent=workspace
- local chickens={};local warned=false
+ local chickens={};local fallback
+ local groundProbe=Ground.new({folder})
  local function flat(v) return Vector3.new(v.X,0,v.Z) end
  local function valid(d)
-  local h=d.owner.Character==d.character and d.character:FindFirstChildOfClass('Humanoid')
+  local h=d.character and d.owner.Character==d.character and d.character:FindFirstChildOfClass('Humanoid')
   local state=combat.PlayerStates:FindFirstChild(tostring(d.owner.UserId))
-  return h and h.Health>0 and state and state:GetAttribute('WeaponEnabled') and (combat:GetAttribute('ZombiesEnabled') or d.practiceTarget)
+  return h and h.Health>0 and not d.owner:GetAttribute('RunDown') and state and state:GetAttribute('WeaponEnabled') and (combat:GetAttribute('ZombiesEnabled') or d.practiceTarget)
  end
  -- Same rule as the egg itself: a practice throw only ever hits practice targets.
  local function usable(npc,d)
@@ -50,24 +53,26 @@ function C.new(combat,damage,rayParams)
   return list
  end
  local function hatch(d,position,template)
-  local params=rayParams(d.character,true)
-  local filter=params.FilterDescendantsInstances;table.insert(filter,folder);params.FilterDescendantsInstances=filter
-  local ground=workspace:Raycast(position+Vector3.yAxis*3,-Vector3.yAxis*30,params)
-  if not ground or ground.Normal.Y<.6 then return end
+  local ground=groundProbe:floor(position)
+  if not ground then return false,'No floor' end
   -- A fourth chicken makes the owner's oldest one pop early.
   local own=mine(d.owner);if #own>=C.PerPlayer then pop(own[1]) end
   local model=template:Clone();model.Name='EggChicken'
   local root=model:FindFirstChild('HumanoidRootPart');local humanoid=model:FindFirstChildOfClass('Humanoid')
-  if not root or not humanoid then return end
+  if not root or not humanoid then model:Destroy();return false,'Invalid chicken template' end
   local now=workspace:GetServerTimeNow()
   model:SetAttribute('OwnerUserId',d.owner.UserId);model:SetAttribute('HatchedAt',now)
   local yaw=math.random()*math.pi*2
-  model:PivotTo(CFrame.new(ground.Position+Vector3.yAxis*(humanoid.HipHeight+root.Size.Y/2+.05))*CFrame.Angles(0,yaw,0))
+  -- HipHeight is privileged in sandboxed code. The fallback supplies its authored foot offset;
+  -- imported rigs derive it from their real bounds instead of reading avatar appearance.
+  local groundOffset=model:GetAttribute('GroundOffset')
+  if type(groundOffset)~='number' then local cf,size=model:GetBoundingBox();groundOffset=root.Position.Y-cf.Position.Y+size.Y*.5 end
+  model:PivotTo(CFrame.new(ground+Vector3.yAxis*(groundOffset+.05))*CFrame.Angles(0,yaw,0))
   -- Enemy collision group: walls and floors are solid, players and enemies are not. Nothing
   -- may query it, so a chicken never blocks a shot, an enemy swing or a line-of-sight check.
   local group=PhysicsService:IsCollisionGroupRegistered('RogueliteZombies') and 'RogueliteZombies' or nil
   for _,p in model:GetDescendants() do if p:IsA('BasePart') then
-   p.Anchored=false;p.CanQuery=false;p.CanTouch=false;if group then p.CollisionGroup=group end
+   p.Anchored=false;p.CanCollide=p==root;p.CanQuery=false;p.CanTouch=false;if group then p.CollisionGroup=group end
   end end
   -- A body this light can't be steered by its Humanoid (see RogueliteZombieChase MIN_MASS).
   if root.AssemblyMass<C.MinMass then
@@ -85,10 +90,11 @@ function C.new(combat,damage,rayParams)
   root:SetNetworkOwner(nil)
   Tags:AddTag(model,'RogueliteChicken')
   chickens[model]={model=model,root=root,humanoid=humanoid,align=align,d=d,born=now,ends=now+C.Lifetime,nextPeck=now+.25}
+  return true,model
  end
  local elapsed=0
  RunService.Heartbeat:Connect(function(dt)
-  elapsed+=dt;if elapsed<.1 then return end;elapsed=0
+  elapsed+=dt;if elapsed<.1 then return end;local step=elapsed;elapsed=0
   local now=workspace:GetServerTimeNow()
   for model,c in chickens do
    if c.popAt then
@@ -96,6 +102,9 @@ function C.new(combat,damage,rayParams)
     continue
    end
    if not model.Parent or c.humanoid.Health<=0 then chickens[model]=nil;model:Destroy();continue end
+   if combat:GetAttribute('RunPaused') then
+    c.ends+=step;c.nextPeck+=step;c.humanoid:MoveTo(c.root.Position);c.align.Enabled=false;continue
+   end
    if now>=c.ends or not valid(c.d) then pop(c);continue end
    local root,humanoid=c.root,c.humanoid
    local targetRoot=usable(c.target,c.d)
@@ -114,8 +123,8 @@ function C.new(combat,damage,rayParams)
       c.nextPeck=now+C.PeckEvery;model:SetAttribute('PeckStart',now)
       local target,d=c.target,c.d
       task.delay(C.PeckImpact,function()
-       local r=chickens[model] and not c.popAt and usable(target,d)
-       if r and flat(r.Position-root.Position).Magnitude<=reach*1.3 then damage(target,d.damage*C.PeckDamage,d,true) end
+       local r=chickens[model] and not c.popAt and valid(d) and not combat:GetAttribute('RunPaused') and usable(target,d)
+       if r and flat(r.Position-root.Position).Magnitude<=reach*1.3 and not workspace:Raycast(root.Position,r.Position-root.Position,rayParams(d.character,true)) then damage(target,d.damage*C.PeckDamage,d,true) end
       end)
      end
     end
@@ -142,13 +151,19 @@ function C.new(combat,damage,rayParams)
  -- Called once per egg flight that lands (hit or ground), never for cancelled flights.
  function self:landed(d,position)
   -- Studio tests can raise the odds with the TestChickenChance attribute (0-1).
-  local chance=RunService:IsStudio() and combat:GetAttribute('TestChickenChance') or C.Chance
-  if d.id~='15' or math.random()>=chance or not valid(d) then return end
+  local override=RunService:IsStudio() and combat:GetAttribute('TestChickenChance')
+  local chance=type(override)=='number' and override==override and math.clamp(override,0,1) or C.Chance
+  if d.id~='15' or not valid(d) or combat:GetAttribute('RunPaused') then return false,'Invalid egg owner' end
+  if math.random()>=chance then return false,'No hatch roll' end
   local total=0;for _ in chickens do total+=1 end
-  if total>=C.Max then return end
+  if total>=C.Max then return false,'Chicken cap' end
   local allies=ServerStorage:FindFirstChild('RogueliteAllies');local template=allies and allies:FindFirstChild('EggChicken')
-  if not template then if not warned then warned=true;warn('EggChickens: ServerStorage.RogueliteAllies.EggChicken is missing') end;return end
-  hatch(d,position,template)
+  if not template or not template:FindFirstChild('HumanoidRootPart') or not template:FindFirstChildOfClass('Humanoid') then
+   -- Keep the cached template outside the world: only landed eggs create visible/collidable rigs.
+   if not fallback then fallback=Template.build();fallback.Name='EggChickenFallback' end
+   template=fallback
+  end
+  return hatch(d,position,template)
  end
  return self
 end

@@ -4,7 +4,7 @@
 --   38 Storm Bow: the arrow splits into storm arrows that rain on different enemies
 --   39 Shadow Daggers: the pair zips through a chain of enemies
 --   40 Vampire Blade: hits heal, kills send a healing wisp (shares the life-steal cap)
---   41 Ray Gun: a kill disintegrates the enemy in a burst that hits the ones nearby
+--   41 Ray Gun: StatProjectiles splashes on contact; lethal Hit events disintegrate the victim
 -- Numbers live in WeaponCatalog.Godly. Every special is capped, and nothing it does can start
 -- another special: wraith claws, wave hits, bursts and wisps are secondary hits, and kills by
 -- secondary hits never raise wraiths, burst or send wisps. Clients draw from GodlyFX.
@@ -208,9 +208,10 @@ function G.new(damage,canTarget)
     if ownerAlive(d) then Characters.leechFlat(d.owner,spec.wispHeal,G.tierValue(spec.capBonus,d.tier)) end
    end)
   elseif d.id=='41' then
-   local radius=math.clamp(G.tierValue(spec.burstRadius,d.tier)*area(d),2,16)
-   send(position,d.owner,'Burst',d.owner.UserId,position,radius)
-   for _,other in around(d,position,radius,{[npc]=true}) do damage(other,d.damage*G.tierValue(spec.burstFactor,d.tier),d,true) end
+   -- StatProjectiles now owns the Ray's splash on every confirmed impact, lethal or not.
+   -- The normal Hit event still drives disintegration. A kill must not add a second blast
+   -- over the same neighbors (or recursively explode a splash kill).
+   return
   end
  end
 

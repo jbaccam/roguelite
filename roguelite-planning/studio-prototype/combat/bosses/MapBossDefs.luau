@@ -66,16 +66,16 @@ D.FIRST_ATTACK=1.2 -- seconds after spawn before the first attack
 --   aim: every hit's frame turns toward its target at up to 150 deg/s until 0.3 s before that hit
 --     (MapBossService X.aimOpen; a combo re-aims in each phase's wind-up).
 --   home (the Charge): the run's heading turns toward the target at up to 40 deg/s.
-local CRACKS={radius=5.5,delay=.85,maxTargets=3,range=40,damage=16}
-local function sweep(damage) return {shape='sweep',damage=damage,point='HammerFace',mid='HammerGrip',radius=3.2,baseRadius=4} end
-local SLAM={shape='circle',damage=26,point='HammerFace',radius=9.5,height=6,knockdown=.6,follow=CRACKS}
+local CRACKS={radius=6.5,delay=.95,maxTargets=4,range=40,damage=16}
+local function sweep(damage) return {shape='sweep',damage=damage,point='HammerFace',mid='HammerGrip',radius=4.3,baseRadius=5.2} end
+local SLAM={shape='circle',damage=26,point='HammerFace',radius=12.5,height=6,knockdown=.6,follow=CRACKS}
 D.Hammer={anim='hammer-brute',name='Hammer Brute',introName='HAMMER ZOMBIE BOSS',health=18000,scale=1.15,chaseSpeed=20,glowColor=Color3.fromRGB(255,255,255),
  intro={drop=1.2,fall=.65,after=3.6,clip='Slam'},roar=nil,aim={rate=math.rad(150),lock=.3},
  enrage={cooldown=.6,chase=3,follow=2,order={'SwingSpin','SpinSlam','Slam','SwingSpin','Charge','SpinSlam','Spin'}},
  tutorial={order={'Slam','Swing','Charge','Slam','Spin'},enrage=false,follow=false},
  attacks={
-  Slam={clip='Slam',range={0,16},cooldown=.8,damage=26,shape='circle',point='HammerFace',radius=9.5,height=6,knockdown=.6,follow=CRACKS},
-  Swing={clip='Swing',range={0,14},cooldown=.8,damage=20,shape='sweep',point='HammerFace',mid='HammerGrip',radius=3.2,baseRadius=4},
+  Slam={clip='Slam',range={0,19},cooldown=.8,damage=26,shape='circle',point='HammerFace',radius=12.5,height=6,knockdown=.6,follow=CRACKS},
+  Swing={clip='Swing',range={0,16},cooldown=.8,damage=20,shape='sweep',point='HammerFace',mid='HammerGrip',radius=4.3,baseRadius=5.2},
   Spin={clip='Spin',range={0,14},cooldown=1,phases={sweep(22),sweep(22)}},
   SwingSpin={clip='SwingSpin',range={0,14},cooldown=1,phases={sweep(20),sweep(22),sweep(22)}},
   SpinSlam={clip='SpinSlam',range={0,14},cooldown=1.1,phases={sweep(22),sweep(22),SLAM}},

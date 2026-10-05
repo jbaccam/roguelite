@@ -6,17 +6,14 @@ local Motion=require(RS.RogueliteCombat.SpecialMotion)
 local WeaponMotion=require(RS.RogueliteCombat.WeaponMotion)
 local Stats=require(RS.RogueliteCombat.CharacterStats)
 local Targets=require(RS.RogueliteCombat.ProjectileTarget)
+local Ground=require(RS.RogueliteCombat.GroundContact)
 local S={}
 function S.new(combat,damage,rayParams)
  local utility=require(script.Parent.UtilityWeapons).new(combat,damage,rayParams)
- -- rayParams hands out shared, read-only params; EggChickens adds its folder to the filter, so it
- -- gets a private copy (hatching is rare).
- local function ownParams(character,ignoreEnemies)
-  local p=RaycastParams.new();p.FilterType=Enum.RaycastFilterType.Exclude
-  p.FilterDescendantsInstances=rayParams(character,ignoreEnemies).FilterDescendantsInstances;return p
- end
- local chickens=require(script.Parent.EggChickens).new(combat,damage,ownParams)
+ local chickens=require(script.Parent.EggChickens).new(combat,damage,rayParams)
  local event=combat:WaitForChild('SpecialFX');local flights={};local zones={};local serial=0
+ local ground=Ground.new()
+ local ballRadius=Ground.ballGeometry(combat.WeaponTemplates:FindFirstChild('22'))
  -- hooks.landed(d,position,struck): a 'wave' throw (the Trident) landed; set by GodlyWeapons.
  -- hooks.impact(d,position,hit): any throw stopped, once (where it hit, or where it came down),
  -- with the enemies it hit; set by LegendaryMoves (Mjolnir's lightning, the bowling STRIKE).
@@ -54,6 +51,8 @@ function S.new(combat,damage,rayParams)
   event:FireAllClients('Zone',key,kind,position,radius,duration)
  end
  local function endFlight(r)
+  if r.ended then return end
+  r.ended=true
   flights[r.key]=nil;event:FireAllClients('End',r.key)
  end
  local function segment(r,finish,returning)
@@ -63,6 +62,7 @@ function S.new(combat,damage,rayParams)
   event:FireAllClients('Segment',r.key,r.origin,finish,r.started,r.duration,r.height,returning)
  end
  local function returnOrEnd(r)
+  if r.ended then return end
   if Motion.profiles[r.d.id].returns and not r.returning then
    local root=r.d.character:FindFirstChild('HumanoidRootPart')
    if root then
@@ -70,15 +70,20 @@ function S.new(combat,damage,rayParams)
     segment(r,WeaponMotion.origin(root.CFrame,state and state:GetAttribute('RingRadius') or WeaponMotion.BaseRadius,r.d.slotIndex),true);return
    end
   end
-  chickens:landed(r.d,r.position) -- a landing egg may hatch a chicken
   endFlight(r)
+  -- Complete the flight before invoking optional landing behavior. If an asset or capability
+  -- fails while hatching, that finished egg must not retry the same hatch every Heartbeat.
+  chickens:landed(r.d,r.position)
  end
  local function impact(r,result)
   local d=r.d;local profile=Motion.profiles[d.id]
   local npc=result and result.Instance:FindFirstAncestorOfClass('Model')
   if npc and Tags:HasTag(npc,'RogueliteZombie') and allowed(npc,d) and not r.hit[npc] then
-   r.hit[npc]=true;damage(npc,d.damage*r.factor,d)
-   if d.id=='22' and r.pierces>0 then r.pierces-=1;r.factor*=.7;return end
+   r.hit[npc]=true
+   if d.id~='22' or (r.contacts or 0)<24 then damage(npc,d.damage*r.factor,d) end
+   -- A bowling ball stays on its lane after contact. Keep a bounded damage budget, but never
+   -- destroy the rolling visual merely because its original pierce charges ran out.
+   if d.id=='22' then r.contacts=(r.contacts or 0)+1;r.factor=math.max(.2,r.factor*.7);return end
    if not profile.zone and r.bounces>0 then
     local target=Targets.replacement(r.position,d,r.hit,r.remaining,r.launchOrigin,rayParams)
     if target then
@@ -109,12 +114,19 @@ function S.new(combat,damage,rayParams)
    while flights[r.key] and r.t<untilT do
     local t=math.min(untilT,r.t+.02)
     local pos=Motion.position(r.origin,r.finish,t,r.height)
+    if r.d.id=='22' then
+     local floorCenter=ground:center(pos,r.radius,r.position.Y-r.radius-Ground.Clearance)
+     if not floorCenter then landed(r,r.position);endFlight(r);break end
+     pos=floorCenter
+    end
     local delta=pos-r.position
     local hit
     if not r.returning and delta.Magnitude>.001 then
      hit=workspace:Spherecast(r.position,r.radius,delta,Targets.sweepParams(r,rayParams(r.d.character,false)))
     end
-    r.position=hit and hit.Position or pos;r.t=t;r.remaining-=delta.Magnitude
+    -- Spherecast.Position is the contact surface, not the sphere centre. Snapping a rolling ball
+    -- onto an enemy's ankle used to drop its next sweep into the floor and make it pop.
+    r.position=r.d.id=='22' and pos or hit and hit.Position or pos;r.t=t;r.remaining-=delta.Magnitude
     if hit then impact(r,hit);if r.started~=oldStart then break end end
     if not r.returning and r.remaining<=0 then returnOrEnd(r);break end
    end
@@ -152,7 +164,7 @@ function S.new(combat,damage,rayParams)
   if d.id=='17' then
    local direction=(aim-origin).Magnitude>.01 and (aim-origin).Unit or -Vector3.zAxis
    local length=math.min(d.range,14*Stats.mult(d.stats.AttackRange))
-   event:FireAllClients('Spray',nextId(),origin,direction,length,d.owner.UserId,d.slotIndex)
+   event:FireAllClients('Spray',nextId(),origin,direction,length,d.owner.UserId,d.slotIndex,math.min(.65,d.cooldown+.08))
    local wall=rayParams(d.character,true)
    for _,npc in Tags:GetTagged('RogueliteZombie') do
     local h=npc:FindFirstChildOfClass('Humanoid');local root=npc:FindFirstChild('HumanoidRootPart')
@@ -172,16 +184,27 @@ function S.new(combat,damage,rayParams)
   local reserve=profile.reserve and ((slot and slot:GetAttribute('ThrowIndex') or 0)%3+1) or 1
   if slot then slot:SetAttribute('ThrowIndex',reserve) end
   for i=1,count do
-   local def=table.clone(d);local target=aim
+   local def=table.clone(d);local target=aim;local from=origin
    local delay=(i-1)*.06
+   -- Predict once, then commit. This flight does not keep a live target reference: ordinary
+   -- pins, eggs, molotovs and kunai never steer after release. Only a contact bounce or the
+   -- authored return phase creates a new segment.
    if d.arcTarget then target=Targets.predict(d.arcTarget,origin,function(distance) return Motion.duration(Vector3.zero,Vector3.xAxis*distance,d.projectileSpeed) end,delay,d.range,rayParams,d.character,d.id=='14') end
    if i>1 then target+=Vector3.new((i%2==0 and 1 or -1)*i*.65,0,0) end
    -- A rolling ball continues through the first target down the entire lane.
-   if d.id=='22' and (target-origin).Magnitude>.01 then target=origin+(target-origin).Unit*d.range end
+   local radius=math.clamp(d.id=='22' and .8 or d.id=='08' and .45 or d.id=='23' and math.max(.55,d.projectileRadius) or d.projectileRadius,.12,1.2)
+   if d.id=='22' then
+    radius=ballRadius*math.clamp(d.projectileRadius/.12,1,2.5)
+    from=ground:center(origin,radius)
+    if not from then continue end
+    local lane=Vector3.new(target.X-origin.X,0,target.Z-origin.Z)
+    if lane.Magnitude<.01 then continue end
+    target=from+lane.Unit*d.range
+   end
    local key=nextId();local height=math.min(profile.height,(target-origin).Magnitude*.2)
-   local r={key=key,d=def,origin=origin,finish=target,position=origin,launchOrigin=origin,started=workspace:GetServerTimeNow()+delay,height=height,duration=Motion.duration(origin,target,d.projectileSpeed),t=0,hit={},factor=1,bounces=math.min(4,d.nativeBounce+Stats.shotStat(d,'Bounce')),pierces=math.min(4,d.nativePierce+Stats.shotStat(d,'Pierce')),remaining=d.range*1.8,expires=workspace:GetServerTimeNow()+8,radius=math.clamp(d.id=='22' and .65 or d.id=='08' and .45 or d.projectileRadius,.12,1.2)}
+   local r={key=key,d=def,origin=from,finish=target,position=from,launchOrigin=from,started=workspace:GetServerTimeNow()+delay,height=height,duration=Motion.duration(from,target,d.projectileSpeed),t=0,hit={},factor=1,bounces=math.min(4,d.nativeBounce+Stats.shotStat(d,'Bounce')),pierces=math.min(4,d.nativePierce+Stats.shotStat(d,'Pierce')),remaining=d.range*1.8,expires=workspace:GetServerTimeNow()+8,radius=radius}
    flights[key]=r
-   event:FireAllClients('Launch',key,d.id,d.owner.UserId,d.slotIndex,reserve,origin,target,r.started,r.duration,height)
+   event:FireAllClients('Launch',key,d.id,d.owner.UserId,d.slotIndex,reserve,from,target,r.started,r.duration,height,d.id=='22' and radius or nil)
   end
  end
  return self

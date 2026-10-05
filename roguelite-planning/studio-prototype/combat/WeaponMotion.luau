@@ -6,6 +6,12 @@ M.SwingDuration=.9
 -- Rendered horizontal cuts sweep wider than the hit path (+/-105 deg). Both stay
 -- centred on the target, so the visible blade crosses it when the hit lands.
 M.VisualSweepHalfAngle=120
+M.DiagonalHitHalfAngle=100
+M.DiagonalVisualHalfAngle=108
+function M.visualSweepHalfAngle(id,style)
+ if style=='Diagonal' then return M.DiagonalVisualHalfAngle end
+ return id=='03' and 110 or M.VisualSweepHalfAngle
+end
 -- Shared by rendered motion and authoritative hit sampling. Unlisted weapons
 -- retain their horizontal cut. Thrust also works with normalized +Y sword tips.
 M.MeleeStyles={['03']='Diagonal',['19']='Thrust',['16']='Slap',['20']='Downward',['26']='Downward',['36']='Reap',['37']='Thrust',['39']='Chain'}
@@ -136,9 +142,9 @@ function M.pose(root,radius,slot,aim,start,now,kind,id,attackDirection,attackRan
   local side=attackSide or 1
   local sweep=t*t*(3-2*t)
   local style=attackStyle or M.meleeStyle(id)
-  local wide=visual and style=='Horizontal'
+  local wide=visual and (style=='Horizontal' or style=='Diagonal')
   local reap=style=='Reap'
-  local half=reap and 180 or wide and M.VisualSweepHalfAngle or 105
+  local half=reap and 180 or wide and M.visualSweepHalfAngle(id,style) or 105
   local heading=CFrame.lookAt(center,center+cutDirection.Unit)*CFrame.Angles(0,math.rad((-half+2*half*sweep)*side),0)
   local sign=headSign(id)
   local reach=attackRange or (id=='32' and 8.5 or 6)
@@ -161,12 +167,15 @@ function M.pose(root,radius,slot,aim,start,now,kind,id,attackDirection,attackRan
   local cut=heading*CFrame.new(0,.12,-extension)*CFrame.Angles(-math.pi/2*sign,0,0)*CFrame.Angles(0,bladeTwist(id)*side,0)
   local targetFrame=CFrame.lookAt(center,center+cutDirection.Unit)
   if style=='Diagonal' then
-   -- Descend from target-relative upper right to lower left. Limit vertical
-   -- travel independently of range so range bonuses cannot drive it underground.
-   local yaw=math.rad((-55+88*sweep)*side)
+   -- Sweep from one side through the target and out the other side. The former fixed
+   -- translation/88-degree yaw made long slash weapons look like short front chops.
+   -- Keep horizontal's bounded radius, with a restrained downward follow-through;
+   -- the server samples this same arc rather than authorizing a separate hit shape.
+   local diagonalHalf=visual and M.DiagonalVisualHalfAngle or M.DiagonalHitHalfAngle
+   local yaw=math.rad((-diagonalHalf+2*diagonalHalf*sweep)*side)
    local pitch=math.rad(24-32*sweep)
-   local position=Vector3.new((2.8-7*sweep)*math.min(1,extension/3)*side,1.7-2.05*sweep,-extension*(.75+.25*math.sin(t*math.pi)))
-   cut=targetFrame*CFrame.new(position)*CFrame.Angles(0,yaw,0)*CFrame.Angles(pitch-math.pi/2,0,0)*CFrame.Angles(0,bladeTwist(id)*side,0)
+   cut=targetFrame*CFrame.Angles(0,yaw,0)*CFrame.new(0,1.7-2.05*sweep,-extension)
+    *CFrame.Angles(pitch-math.pi/2,0,0)*CFrame.Angles(0,bladeTwist(id)*side,0)
   elseif style=='Thrust' then
    -- Brief pullback and fast straight extension before returning to idle.
    -- Aim is locked by the server for this attack; no sideways sweep.

@@ -1,5 +1,7 @@
 # Turrets (turret items and the Engineer Handyman)
 
+**Later October 4 correction:** placement now projects edge/corner players toward useful interior ground, uses arena height instead of jump height, and rejects spots with no verified floor. The ring/count/item rules below remain; references to an airborne fallback or a ring centered exactly on a rim player are superseded. See [combat feedback corrections](PLAYTEST_COMBAT_FIXES_2026-10-04.md).
+
 **2026-10-03:** the Handyman got a nail turret: one per Handyman, moved with BUILD, upgraded in the shop.
 
 **2026-10-04: turret items.** It is now Brotato's turrets. Design: [plans/2026-10-04-turret-items-engineer-design.md](../../plans/2026-10-04-turret-items-engineer-design.md); plan: [plans/2026-10-04-turret-items-engineer-plan.md](../../plans/2026-10-04-turret-items-engineer-plan.md). The user asked:

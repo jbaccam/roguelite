@@ -144,6 +144,15 @@ end
 function H.offset(spot) return Vector3.new(math.cos(spot.angle)*spot.radius,0,math.sin(spot.angle)*spot.radius) end
 -- The ring angle of a facing direction (the same convention as H.offset).
 function H.angle(direction) return math.atan2(direction.Z,direction.X) end
+-- Keep automatic structures inside useful fighting space even when a player starts at a rim.
+-- Height comes from the arena, never the player's current jump position.
+function H.anchor(position,center,radius)
+ if typeof(center)~='Vector3' then return position end
+ local delta=Vector3.new(position.X-center.X,0,position.Z-center.Z)
+ local inner=math.max(0,(radius or 60)-26)
+ if delta.Magnitude>inner then delta=delta.Magnitude>.01 and delta.Unit*inner or Vector3.zero end
+ return center+delta
+end
 -- Where one turret stands: probe(point) gives the ground under a point (nil: no ground there, out
 -- of the arena or behind a wall). The ring spot, else half as far out, else the player's own spot.
 -- Returns the ground point and the radius used (0 at the player). Example: a ring spot over a
@@ -153,7 +162,8 @@ function H.spot(center,angle,radius,probe)
  for _,r in {radius,radius*.5} do
   if r>.01 then local g=probe(center+dir*r);if g then return g,r end end
  end
- return probe(center) or center,0
+ -- Never invent a floor at the player's feet: they may be jumping or over a cliff.
+ return probe(center),0
 end
 -- True when every two points are at least `min` studs apart on the ground.
 function H.spaced(points,min)

@@ -19,14 +19,14 @@ local profiles={
  {18,1.05,7.5}, -- Pan
  {7,.5,7.5}, -- Nunchucks
  {18,.95,13}, -- Katana
- {17,1.15,14}, -- Kusarigama
+ {16,1.22,14}, -- Kusarigama: keep reach; reduce its crowd DPS ~11%
  {9,.55,7.5}, -- Spatula
  {20,1.25,9.5}, -- Bat
  {3,.19,33}, -- Draco
  {4,.9,22}, -- Fart Gun (poison)
  {3,1.25,19,nil,nil,'pellets'}, -- Shotgun
  {18,1.55,31,nil,nil,'pierce'}, -- T-shirt
- {32,2.7,55}, -- Rocket
+ {32,2.7,34}, -- Rocket: a local crowd weapon, not map-wide cleanup
  {7,1.02,27,nil,nil,'bounce'}, -- Boomerang
  {6,.55,30,nil,nil,'pierce'}, -- Kunai
  {3,1.9,30}, -- Molotov (burn)
@@ -37,7 +37,7 @@ local profiles={
  {8,.42,7.5,{8,15,28,48},{1,.94,.88,.76}}, -- Gloves: alternating quick jabs (T4 ~150 DPS: the close-range trade)
  {30,1.35,8.5}, -- Block
  {8,.8,22,nil,nil,'bounce'}, -- Yo-yo
- {24,1.8,27,nil,nil,'pierce'}, -- Ball
+ {24,1.8,36,nil,nil,'pierce'}, -- Ball: a longer ground lane
  {13,1.42,22}, -- Pin
  {4,.295,30,nil,nil,'pierce'}, -- Nails
  {28,1.6,14}, -- Wrecking ball
@@ -57,13 +57,13 @@ local profiles={
  {14,1.2,39}, -- Storm Bow: per storm arrow, 5 split arrows
  {16,1.3,12}, -- Shadow Daggers: per chained hit
  {32,1.3,10.5}, -- Vampire Blade: heals
- {22,.9,37}, -- Ray Gun: kills disintegrate in a burst
+ {22,.9,37}, -- Ray Gun: every bolt splashes; kills disintegrate
 }
 -- Native slows (2026-10-03: nobody noticed Medusa's). strength: % off the enemy's walk speed
 -- (bosses take half), seconds before the Duration stat. CombatEffectsService uses the bigger of these
 -- and the player's SlowStrength / SlowDuration stats (25% / 2 s by default). Example: a zombie
 -- walking 12 studs/s crawls at 7.8 for 2 s after each Medusa hit.
-C.SlowById={['34']={strength=35,seconds=2}}
+C.SlowById={['34']={strength=35,seconds=2},['27']={strength=30,seconds=2}}
 -- Rarity (RARITY_GODLY_ARMOR.md §4): one per weapon, forever. ChestConfig builds its chest pools from
 -- these lists, in this order, so chest odds, Armory tags and the run shop always agree.
 C.Rarities={'Common','Rare','Epic','Legendary','Godly'}
@@ -97,7 +97,7 @@ C.Godly={
  ['38']={arrows={5,5,5,7},spread=10,loneMax=2},
  ['39']={chain={5,5,5,7},hop=12,loneHits=2},
  ['40']={leech={.08,.08,.08,.12},wispHeal=2,capBonus={0,0,0,5}},
- ['41']={burstRadius={6,6,6,9},burstFactor={.5,.5,.5,.75}},
+ ['41']={burstRadius={6,6,7,9},burstFactor={.6,.6,.65,.75},splashEdge=.25,splashTargets=12},
 }
 function C.isGodly(id) return C.Godly[id]~=nil end
 -- Legendary extra moves (RARITY_GODLY_ARMOR.md §8; user 2026-10-02: only at Tier IV). Read by
@@ -113,7 +113,7 @@ function C.isGodly(id) return C.Godly[id]~=nil end
 --   31 Mjolnir: every 4th throw calls down a lightning strike where it lands
 C.Legendary={
  ['03']={move='Slash',every=3,factor=.75,range=30,speed=78,width=3.4},
- ['11']={move='Split',every=4,minis=3,factor=.45,radius=5.5,splitAfter=.28,speed=58,spread=18},
+ ['11']={move='Split',every=4,minis=3,factor=.4,radius=4,splitAfter=.28,speed=42,spread=18},
  ['18']={move='Flush',every=5,cards=5,factor=.5,fan=26,rangeScale=1.25,width=1.5},
  ['22']={move='Strike',hits=5,factor=1,radius=9,push=34},
  ['25']={move='Shock',factor=.4,radius=11,time=.42,push=26},
@@ -139,7 +139,7 @@ function C.godlyText(id,tier)
  elseif id=='38' then return 'Each arrow splits in the sky and rains storm arrows on '..v('arrows')..' enemies.'
  elseif id=='39' then return 'The twin daggers zip from enemy to enemy, hitting up to '..v('chain')..' in a chain.'
  elseif id=='40' then return 'Every hit heals you for '..pct(v('leech'))..' of its damage. Every kill sends a blood wisp back to you that heals '..num(s.wispHeal)..' HP.'
- elseif id=='41' then return 'Kills disintegrate in a '..num(v('burstRadius'))..'-stud burst that hits nearby enemies for '..pct(v('burstFactor'))..' damage.' end
+ elseif id=='41' then return 'Every bolt splashes within '..num(v('burstRadius'))..' studs for up to '..pct(v('burstFactor'))..' damage, falling to '..pct(v('burstFactor')*s.splashEdge)..' at the edge. Kills disintegrate.' end
  return nil
 end
 -- What Tier IV adds to the special (nil when nothing changes).
@@ -151,7 +151,7 @@ function C.godlyUpgradeText(id)
  elseif id=='38' and v('arrows',4)~=v('arrows',1) then return 'Tier IV rains '..v('arrows',4)..' storm arrows.'
  elseif id=='39' and v('chain',4)~=v('chain',1) then return 'Tier IV chains up to '..v('chain',4)..' enemies.'
  elseif id=='40' and v('leech',4)~=v('leech',1) then return 'Tier IV heals '..pct(v('leech',4))..(v('capBonus',4)>0 and ' and raises your healing cap by '..num(v('capBonus',4))..' HP/s.' or '.')
- elseif id=='41' and v('burstRadius',4)~=v('burstRadius',1) then return 'Tier IV makes the burst '..num(v('burstRadius',4))..' studs wide and hit for '..pct(v('burstFactor',4))..'.' end
+ elseif id=='41' and v('burstRadius',4)~=v('burstRadius',1) then return 'Tier IV gives every impact a '..num(v('burstRadius',4))..'-stud splash for up to '..pct(v('burstFactor',4))..' damage.' end
  return nil
 end
 -- The special's numbers that change with tier, one table row each: label, field and how to show it.
@@ -161,7 +161,7 @@ C.GodlyRows={
  ['38']={{label='Storm arrows',field='arrows'}},
  ['39']={{label='Enemies chained',field='chain'}},
  ['40']={{label='Heal per hit',field='leech',percent=true}},
- ['41']={{label='Burst size (studs)',field='burstRadius'},{label='Burst damage',field='burstFactor',percent=true}},
+ ['41']={{label='Impact radius (studs)',field='burstRadius'},{label='Splash damage (max)',field='burstFactor',percent=true}},
 }
 function C.godlyRowValue(id,row,tier) local v=at(C.Godly[id][row.field],tier);return row.percent and pct(v) or num(v),v end
 -- Legendary Tier IV moves: a short name and one sentence.
@@ -237,9 +237,9 @@ for i,name in names do
  end
  d.trait=profile[6] or ''
  if n==10 then d.projectileSpeed=48 end
- if n==11 then d.projectileSpeed=80;d.blastRadius=9 end
+ if n==11 then d.projectileSpeed=46;d.blastRadius=6 end
  if n==18 then d.projectileSpeed=90 end
- if n==33 then d.projectileSpeed=45;d.blastRadius=7 end
+ if n==33 then d.projectileSpeed=58;d.blastRadius=7 end
  d.home=n>=30 and 'Mage' or (n>=24 and 'Handyman' or (n>=17 and n~=18 and 'Juggler' or (n>=12 and 'Thrower' or (n==0 or n>=7) and 'Gunner' or 'Brawler')))
  -- 2026-10-03: Brawler is the hand-to-hand class, Juggler the tricks and toys. Swapped in equal-rarity
  -- pairs so every class keeps 2 Common, 2 Rare, 1 Epic, 1 Legendary: Boxing Gloves <-> Spatula (Common),
@@ -257,7 +257,7 @@ for i,name in names do
  d.nativeKnockback=(n==5 and 14 or n==26 and 20 or n==20 and 16 or 0)
  if n==31 then d.hybridRange=32;d.projectileSpeed=42 end
  if n==8 then d.projectileSpeed=150 end
- local thrownSpeed={[12]=40,[13]=65,[14]=28,[15]=35,[22]=32,[23]=24}
+ local thrownSpeed={[12]=40,[13]=65,[14]=38,[15]=40,[22]=28,[23]=40}
  if thrownSpeed[n] then d.projectileSpeed=thrownSpeed[n] end
  -- Any listed class counts (2026-10-04): Spatula, Rocket Launcher and Cinder Block (Handyman second)
  -- now take Utility Power and count for the utilityKills quest.

@@ -11,7 +11,7 @@ function W.new(combat,damage,rayParams)
   local state=combat.PlayerStates:FindFirstChild(tostring(d.owner.UserId))
   local slot=state and state:FindFirstChild('Slot'..d.slotIndex)
   local h=d.character and d.character:FindFirstChildOfClass('Humanoid')
-  return d.owner.Character==d.character and h and h.Health>0 and state and state:GetAttribute('WeaponEnabled') and slot and slot:GetAttribute('WeaponId')==d.id and (combat:GetAttribute('ZombiesEnabled') or d.practiceTarget),state
+  return d.owner.Character==d.character and h and h.Health>0 and not combat:GetAttribute('RunPaused') and not d.owner:GetAttribute('RunDown') and state and state:GetAttribute('WeaponEnabled') and slot and slot:GetAttribute('WeaponId')==d.id and (combat:GetAttribute('ZombiesEnabled') or d.practiceTarget),state
  end
  RunService.Heartbeat:Connect(function(dt)
   budget+=dt;if budget<.05 then return end;local step=math.min(budget,.1);budget=0
@@ -52,12 +52,15 @@ function W.new(combat,damage,rayParams)
     local hold=npc:GetAttribute('VacuumHoldUntil') or 0
     local immune=npc:GetAttribute('VacuumImmuneUntil') or 0
     if hold>0 and now>=hold then
-     npc:SetAttribute('VacuumHoldUntil',0);npc:SetAttribute('VacuumImmuneUntil',math.max(immune,hold+U.EscapeDuration));hold=0;immune=npc:GetAttribute('VacuumImmuneUntil')
+     npc:SetAttribute('VacuumHoldUntil',0);npc:SetAttribute('VacuumHolder',nil);npc:SetAttribute('VacuumImmuneUntil',math.max(immune,hold+U.EscapeDuration));hold=0;immune=npc:GetAttribute('VacuumImmuneUntil')
     end
     local safe=math.max(U.SafeDistance,(npc:GetAttribute('ContactRange') or 4.5)+2)
     local distance=(Vector3.new(root.Position.X,0,root.Position.Z)-Vector3.new(pr.Position.X,0,pr.Position.Z)).Magnitude
     if now<immune or distance<=safe or npc:GetAttribute('IsBoss') then continue end
-    if hold==0 then hold=now+U.HoldDuration;npc:SetAttribute('VacuumHoldUntil',hold) end
+    if hold==0 then hold=now+U.HoldDuration;npc:SetAttribute('VacuumHoldUntil',hold);npc:SetAttribute('VacuumHolder',key) end
+    -- Several vacuums can damage a mob, but one owns this bounded pull. Different players used
+    -- to overwrite its velocity toward opposite points every tick, causing jitter and launches.
+    if npc:GetAttribute('VacuumHolder')~=key then continue end
     npc:SetAttribute('VacuumSlowUntil',math.min(hold,now+.15))
     if not root.Anchored then
      local desired=U.pull(root.Position,pr.Position,direction,safe)

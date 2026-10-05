@@ -7,10 +7,10 @@ function M.position(origin,finish,t,side,height,bend)
  return origin:Lerp(finish,t)+right*(math.sin(math.pi*t)*(side or 0)+math.sin(2*math.pi*t)*(bend or 0))+Vector3.yAxis*(4*t*(1-t)*(height or 0))
 end
 function M.duration(id,distance,speed)
- return math.clamp(distance/math.max(1,speed)*(id=='33' and 2.1 or 1.5),id=='33' and .85 or .54,id=='33' and 2.1 or 1.4)
+ return math.clamp(distance/math.max(1,speed)*(id=='33' and 1.35 or 1.5),id=='33' and .5 or .54,id=='33' and 1.2 or 1.4)
 end
 function M.shape(id,distance,index,random)
- if id=='33' then return 0,math.clamp(distance*.55,8,23) end
+ if id=='33' then return 0,math.clamp(distance*.32,4,13) end
  local width=math.clamp(distance*.34,2,9)
  if random then
   -- Server chooses one stable curve per flight; clients receive its parameters.

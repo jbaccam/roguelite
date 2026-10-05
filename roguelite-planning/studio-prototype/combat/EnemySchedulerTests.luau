@@ -155,11 +155,11 @@ return function(S)
 	check(#list == 3, "compact twice changes nothing")
 
 	-- Wave population: base x1.2, then x1.6 / 2.1 / 2.5 for 2 / 3 / 4 players up, at most 100.
-	check(S.playerScale(1) == 1 and S.playerScale(2) == 1.6 and S.playerScale(3) == 2.1 and S.playerScale(4) == 2.5, "player scale 1 / 1.6 / 2.1 / 2.5")
-	check(S.playerScale(0) == 1 and S.playerScale(nil) == 1 and S.playerScale(6) == 2.5, "nobody up counts as one; past 4 stays x2.5")
+ check(S.playerScale(1) == 1 and S.playerScale(2) == 1.9 and S.playerScale(3) == 2.7 and S.playerScale(4) == 3.4, "player scale 1 / 1.9 / 2.7 / 3.4")
+ check(S.playerScale(0) == 1 and S.playerScale(nil) == 1 and S.playerScale(6) == 3.4, "nobody up counts as one; past 4 stays x3.4")
 	check(S.population(8, 1) == 10 and S.population(20, 1) == 24 and S.population(35, 1) == 42 and S.population(65, 1) == 78, "solo waves 1 / 5 / 10 / 20: 10, 24, 42, 78")
-	check(S.population(8, 4) == 24 and S.population(20, 4) == 60 and S.population(35, 4) == 100 and S.population(65, 4) == 100, "4 players: 24, 60, 100, 100 (capped)")
-	check(S.population(35, 2) == 67 and S.population(35, 3) == 88, "wave 10 with 2 and 3 players: 67, 88")
+ check(S.population(8, 4) == 33 and S.population(20, 4) == 82 and S.population(35, 4) == 100 and S.population(65, 4) == 100, "4 players: 33, 82, 100, 100 (capped)")
+ check(S.population(35, 2) == 80 and S.population(35, 3) == 100, "wave 10 with 2 and 3 players: 80, 100")
 	check(S.population(0, 4) == 0, "an empty wave stays empty (practice, QA)")
 	check(S.MAX_POPULATION == 100, "the cap is unchanged")
 	local last = 0

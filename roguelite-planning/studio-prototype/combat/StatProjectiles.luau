@@ -1,6 +1,6 @@
 -- Bounded server-simulated swept projectiles. Pierce and bounce never revisit a target.
 -- Clients hear about a bullet only where its path changes: a 'Fly' row for each straight leg
--- (the launch, the leg after a pierce or bounce, a retarget), a 'Land' row where a leg stops
+-- (the launch or a leg after a contact pierce/bounce), a 'Land' row where a leg stops
 -- (wall, enemy, range end; terminal once the bullet is done) and 'Drop' when it is cancelled.
 -- RogueliteCombat.client flies each leg itself and draws it step by step as before. It used to
 -- be a row every Heartbeat: a 40-stud shot at 110 studs/s was ~22 rows, now 2. The server's
@@ -11,6 +11,7 @@ local Motion=require(game.ReplicatedStorage.RogueliteCombat.WeaponMotion)
 local Targets=require(game.ReplicatedStorage.RogueliteCombat.ProjectileTarget)
 local ShotBatch=require(game.ReplicatedStorage.RogueliteCombat.ShotBatch)
 local Stats=require(game.ReplicatedStorage.RogueliteCombat.CharacterStats)
+local RayImpact=require(game.ReplicatedStorage.RogueliteCombat.RayImpact)
 local P={}
 -- firstKey (2026-10-03): where this instance's projectile keys start. Clients key flights by them
 -- (BulletFlights), so a second instance (HandymanTurretService, 2^30) never reuses RogueliteCombat's 1, 2, 3...
@@ -41,21 +42,26 @@ function P.new(combat,damage,rayParams,firstKey)
   -- The projectile's own params (its hit enemies excluded), rebuilt only when it hits another.
   return workspace:Spherecast(r.position,r.d.projectileRadius,delta,Targets.sweepParams(r,rayParams(r.d.character,false)))
  end
+ local function raySplash(r,point,normal,direct)
+  if r.d.id~='41' then return end
+  local wall=rayParams(r.d.character,true)
+  local origin=point+(normal or -r.direction)*.12
+  local radius=RayImpact.radius(r.d)
+  -- The impact is a server-confirmed contact, including world walls; a range-end miss
+  -- never explodes. Send once per contact, independently of whether the victim dies.
+  ShotBatch.fire(combat:WaitForChild('GodlyFX'),point,r.d.owner,'RayImpact',r.d.owner.UserId,point,radius)
+  RayImpact.apply(r.d,point,direct,r.hit,Tags:GetTagged('RogueliteZombie'),function(_,target)
+   local delta=target-origin
+   return delta.Magnitude<.001 or workspace:Raycast(origin,delta,wall)==nil
+  end,damage,r.factor)
+ end
  RunService.Heartbeat:Connect(function(dt)
   for i=#active,1,-1 do
    local r=active[i];local d=r.d;local h=d.character:FindFirstChildOfClass('Humanoid')
    if (not combat:GetAttribute('ZombiesEnabled') and not d.practiceTarget) or d.owner.Character~=d.character or not h or h.Health<=0 or os.clock()>r.expires then stop(i);continue end
-   local turned=false
-   if r.target and not Targets.alive(r.target) then
-    local replacement=Targets.replacement(r.position,d,r.hit,r.remaining,r.launchOrigin,rayParams)
-    if not replacement then stop(i);continue end
-    r.target=replacement
-    local point=Targets.predict(replacement,r.position,function(distance) return distance/d.projectileSpeed end,0,r.remaining,rayParams,d.character)
-    r.direction=(point-r.position).Magnitude>.01 and (point-r.position).Unit or r.direction
-    turned=true
-   end
-   -- The launch row on its first step, as the old first row was; a new leg after a retarget.
-   if not r.open or turned then fly(r,r.position) end
+   -- A straight projectile commits its launch heading. A moving/dead target never redirects
+   -- or deletes it mid-air; only an actual contact bounce below chooses another heading.
+   if not r.open then fly(r,r.position) end
    local distance=math.min(d.projectileSpeed*math.min(dt,.1),r.remaining)
    local delta=r.direction*distance;local result=cast(r,delta)
    local finish=result and result.Position or r.position+delta
@@ -78,8 +84,10 @@ function P.new(combat,damage,rayParams,firstKey)
      stop(i);continue
     end
     local npc=result.Instance:FindFirstAncestorOfClass('Model')
-    if not npc or not Tags:HasTag(npc,'RogueliteZombie') then stop(i);continue end
-    r.hit[npc]=true;damage(npc,d.damage*r.factor,d)
+    if not npc or not Tags:HasTag(npc,'RogueliteZombie') then raySplash(r,finish,result.Normal,nil);stop(i);continue end
+    r.hit[npc]=true
+    if d.id~='41' or RayImpact.allowed(npc,d) then damage(npc,d.damage*r.factor,d) end
+    raySplash(r,finish,result.Normal,npc)
     if r.pierce>0 then r.pierce-=1;r.factor*=.7
     elseif r.bounce>0 then
      local best,range=nil,math.min(18,r.remaining);local wall=rayParams(d.character,true)
@@ -93,7 +101,6 @@ function P.new(combat,damage,rayParams,firstKey)
      if not best then stop(i);continue end
      local point=Targets.predict(best,finish,function(distance) return distance/d.projectileSpeed end,0,r.remaining,rayParams,d.character)
      r.direction=(point-finish).Magnitude>.01 and (point-finish).Unit or r.direction;r.bounce-=1;r.factor*=.6
-     r.target=best
     else stop(i);continue end
     r.position+=r.direction*.05;r.remaining-=.05
     if r.remaining>.01 then fly(r,r.position) end -- on through the enemy, or off to the next
@@ -119,7 +126,7 @@ function P.new(combat,damage,rayParams,firstKey)
   if (aim-origin).Magnitude<.01 then return end
   serial+=1
   -- Item pierce and bounce only where the weapon uses them (CharacterStats.usesStat, 2026-10-03).
-  table.insert(active,{visualId=serial,d=d,target=d.arcTarget,launchOrigin=origin,position=origin,direction=(aim-origin).Unit,remaining=d.range,hit={},pierce=math.min(4,Stats.shotStat(d,'Pierce')+(d.nativePierce or 0)),bounce=math.min(4,Stats.shotStat(d,'Bounce')+(d.nativeBounce or 0)),factor=1,first=first,shotId=d.muzzleShotId,expires=os.clock()+10})
+  table.insert(active,{visualId=serial,d=d,launchOrigin=origin,position=origin,direction=(aim-origin).Unit,remaining=d.range,hit={},pierce=math.min(4,Stats.shotStat(d,'Pierce')+(d.nativePierce or 0)),bounce=math.min(4,Stats.shotStat(d,'Bounce')+(d.nativeBounce or 0)),factor=1,first=first,shotId=d.muzzleShotId,expires=os.clock()+10})
  end
  return self
 end

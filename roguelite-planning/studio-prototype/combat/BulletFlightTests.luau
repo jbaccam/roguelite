@@ -49,19 +49,19 @@ return function(F)
  check(#drawn==2 and near(drawn[2][1],O+FORWARD*2) and near(drawn[2][2],turn) and drawn[2][16]==false,'retarget joins the path')
  f.step(.01+1/60);check(near(drawn[3][2],turn+Vector3.xAxis*2),'then flies the new heading')
 
- -- Drop: cancelled, nothing more drawn.
+ -- Drop: cancellation sends a terminal row so returning visuals retract.
  local before=#drawn;f.row(.05,turn,nil,'Drop',nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,4)
- f.step(.1);check(#drawn==before and f.bullets[4]==nil,'Drop draws nothing and forgets it')
+ f.step(.1);check(#drawn==before+1 and drawn[#drawn][16]==true and drawn[#drawn][7]==false and f.bullets[4]==nil,'Drop retracts without an impact and forgets it')
 
  -- Range end: it waits at the end of its leg for the Land row; a lost one is forgotten after 1 s.
  drawn={};f=F.new(draw)
  fly(f,0,5,O,O+FORWARD*3,false);f.launched(0);f.step(1/60);f.step(2/60)
  check(#drawn==2 and near(drawn[2][2],O+FORWARD*3),'stops at the end of its range')
  f.step(.5);check(#drawn==2 and f.bullets[5]~=nil,'waits there for its Land row')
- f.step(1.2);check(f.bullets[5]==nil,'forgotten when nothing comes')
+ f.step(1.2);check(f.bullets[5]==nil and #drawn==3 and drawn[3][16]==true,'lost terminal also retracts and forgets the flight')
 
  -- Other rows are not bullet rows.
  check(f.row(0,O,O+FORWARD,'Lightning','35')==false and f.row(0,O,O,'Blast','11')==false,'other Shot rows pass through')
- check(f.row(0,O,O,'Land',nil,nil,nil,true,nil,nil,nil,nil,nil,nil,77,nil,true)==true and #drawn==2,'a Land for an unknown bullet is ignored')
+ check(f.row(0,O,O,'Land',nil,nil,nil,true,nil,nil,nil,nil,nil,nil,77,nil,true)==true and #drawn==3,'a Land for an unknown bullet is ignored')
  return {passed=true,checks=checks}
 end

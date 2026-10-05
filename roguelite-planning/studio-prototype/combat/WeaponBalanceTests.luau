@@ -15,7 +15,7 @@ local OLD_T4={['00']=40,['01']=60,['02']=21,['03']=62,['04']=53,['05']=32,['06']
 -- Melee vs ranged pass (2026-10-03, WEAPON_BALANCE.md). MELEE_PASS: authored damage before -> after
 -- for the five melee weapons that gained damage; their old Tier IV is scaled by the same ratio.
 -- BEFORE: each weapon's range and authored cooldown before the pass.
-local MELEE_PASS={['01']={16,18},['02']={6,7},['04']={15,17},['26']={18,20},['27']={10,12}}
+local MELEE_PASS={['01']={16,18},['02']={6,7},['04']={15,16},['26']={18,20},['27']={10,12}}
 local BEFORE={['00']={45,.72},['01']={6,1.05},['02']={6,.5},['03']={11,.95},['04']={12,1.15},['05']={6,.55},['06']={8,1.25},
  ['07']={42,.17},['08']={28,.8},['09']={24,1.1},['10']={40,1.35},['11']={70,2.4},['12']={35,.9},['13']={38,.48},['14']={38,1.7},
  ['15']={32,.85},['16']={6,.85},['17']={12,.32},['18']={42,.95},['19']={6.5,.42},['20']={7,1.35},['21']={28,.7},['22']={35,1.6},
@@ -89,8 +89,12 @@ local ok,err=xpcall(function()
   local reach,rate=w.range/was[1],w.authoredCooldown/was[2]
   if w.kind=='Melee' then
    check(reach>=1.15 and reach<=1.26,string.format('melee reach +15-25%% %s %.2f',w.id,reach))
-   check(math.abs(rate-1)<1e-9,'melee cadence unchanged '..w.id)
+   check(w.id=='04' and math.abs(w.authoredCooldown-1.22)<1e-9 or math.abs(rate-1)<1e-9,'melee cadence (Kusarigama crowd nerf) '..w.id)
   elseif w.id=='17' then check(reach==1 and rate==1,'Rubber Duck unchanged (12 studs is melee distance)')
+  elseif w.id=='11' then
+   check(w.range==34 and w.projectileSpeed==46 and w.blastRadius==6,'rocket local crowd tuning')
+  elseif w.id=='22' then
+   check(w.range==36 and w.projectileSpeed==28,'bowling deliberate lane speed and distance')
   else
    check(reach>=.74 and reach<=.8+1e-9,string.format('ranged range -20-26%% %s %.2f',w.id,reach))
    if w.godly or w.id=='34' then check(math.abs(rate-1)<1e-9,'cadence kept '..w.id)

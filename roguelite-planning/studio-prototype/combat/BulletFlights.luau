@@ -43,6 +43,11 @@ function F.new(draw)
     draw(b.at,origin,'Ranged',b.id,b.thickness,nil,contact,normal,b.ownerId,b.slotIndex,b.first,mobContact,b.shotId,key,b.speed,terminal)
     b.first=false;b.at=origin;b.to=origin;b.parked=true;b.heard=now
    end
+   if kind=='Drop' then
+    -- Cancellation is still an end-of-flight for a returning visual (the yo-yo). Previously
+    -- it lost the server flight without sending the disc its retract transition.
+    draw(b.at,origin,'Ranged',b.id,b.thickness,nil,false,nil,b.ownerId,b.slotIndex,false,false,b.shotId,key,b.speed,true)
+   end
    if kind=='Drop' or terminal then bullets[key]=nil;fresh[key]=nil end
   end
   return true
@@ -59,7 +64,9 @@ function F.new(draw)
  -- is forgotten.
  function flights.step(now)
   for key,b in bullets do
-   if now-b.heard>1 or now-b.born>10 then bullets[key]=nil
+   if now-b.heard>1 or now-b.born>10 then
+    draw(b.at,b.at,'Ranged',b.id,b.thickness,nil,false,nil,b.ownerId,b.slotIndex,false,false,b.shotId,key,b.speed,true)
+    bullets[key]=nil;fresh[key]=nil
    elseif now-b.stepped>=1/(F.StepRate+1) then advance(key,b,math.min(now-b.stepped,.1),now) end
   end
  end
