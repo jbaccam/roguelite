@@ -103,7 +103,8 @@ local function tagReward(o,kind,amount,color)
 end
 Q.tagReward=tagReward -- the Store's free daily claims use the same effect (user, 2026-10-03)
 local function rewardTile(parent,name,x,y,size,it)
- return tagReward(FX.tile(parent,name,x,y,size,it[1],it[2],it[3],it[4]),it[5] or 'item',it[6],(FX.Rarity[it[3]] or FX.Rarity.Common).top)
+ local tile=tagReward(FX.tile(parent,name,x,y,size,it[1],it[2],it[3],it[4]),it[5] or 'item',it[6],(FX.Rarity[it[3]] or FX.Rarity.Common).top)
+ tile:SetAttribute('ClaimName',it[2]);return tile
 end
 local function rewardsOf(face)
  local out={}
@@ -123,7 +124,7 @@ function Q.snapshot(parts)
     for _,s in copy:GetChildren() do if s:IsA('UIScale') then s:Destroy() end end
     copy.Name='Icon';copy.AnchorPoint=Vector2.zero;copy.Position=UDim2.new();copy.Parent=box;copy=box
    end
-   table.insert(out,{kind=o:GetAttribute('ClaimKind'),amount=o:GetAttribute('ClaimAmount'),color=o:GetAttribute('ClaimColor'),
+   table.insert(out,{kind=o:GetAttribute('ClaimKind'),amount=o:GetAttribute('ClaimAmount'),color=o:GetAttribute('ClaimColor'),name=o:GetAttribute('ClaimName'),
     pos=o.AbsolutePosition,size=o.AbsoluteSize,design=o.Size.X.Offset,copy=copy})
   end
  end
@@ -216,8 +217,24 @@ function Q.claimFX(screen,shots,target)
    later(.48,g,function() fadeOut(g,.22);tween(g,.22,{Position=UDim2.fromOffset(c.X,c.Y-base*.15)}) end)
   end
   if s.kind=='chest' then
-   -- Squash and stretch on the chest art, from its base, inside a sparkle ring.
+   -- Count the actual chests visibly: two awarded chests throw two icons. Large CLAIM ALLs cap
+   -- particles at eight and keep the exact amount in the receipt underneath.
    local icon=g and g:FindFirstChild('Icon')
+   local amount=math.max(1,math.floor(tonumber(s.amount) or 1))
+   if icon and icon:IsA('ImageLabel') then
+    local count=math.min(amount,8)
+    for i=1,count do
+     local cp=image('ChestCopy'..i,icon.Image,c,base*.65,WHITE,5)
+     local endAt=c+Vector2.new((i-(count+1)/2)*base*.6,-base*(.9+(i%2)*.22))
+     tween(cp,.25,{Position=UDim2.fromOffset(endAt.X,endAt.Y),Size=UDim2.fromOffset(base*.9,base*.9),Rotation=(i-(count+1)/2)*12},Enum.EasingStyle.Back)
+     later(.95,cp,function() tween(cp,.3,{ImageTransparency=1,Position=UDim2.fromOffset(endAt.X,endAt.Y-base*.3)}) end)
+    end
+   end
+   local receipt='+'..commas(amount)..' '..(s.name and (s.name..' ') or '')..(amount==1 and 'CHEST' or 'CHESTS')
+   local receiptW=math.max(base*2.6,170)
+   local received=FX.title(layer,'ChestReceipt',string.upper(receipt),c.X-receiptW/2,c.Y+base*.52,receiptW,32,20,C.gold);received.ZIndex=6;received.TextXAlignment=Enum.TextXAlignment.Center
+   later(1.15,received,function() fadeOut(received,.3) end)
+   -- Squash and stretch on the original reward tile, inside a sparkle ring.
    if icon and icon:IsA('ImageLabel') then
     local p,z=icon.Position,icon.Size
     icon.ScaleType=Enum.ScaleType.Stretch;icon.AnchorPoint=Vector2.new(.5,1)
@@ -246,6 +263,9 @@ function Q.claimFX(screen,shots,target)
    -- and fade. Bigger bursts fly wider (40 gems reach 1.5x as far) and from at least 56 px, so a
    -- small CLAIM button still throws a real burst.
    total+=s.amount or 0
+   local receiptW=math.max(base*3,190)
+   local received=FX.title(layer,'EmeraldReceipt','+'..commas(s.amount or 0)..' EMERALDS',c.X-receiptW/2,c.Y+base*.52,receiptW,32,20,C.emerald);received.ZIndex=6;received.TextXAlignment=Enum.TextXAlignment.Center
+   later(1.15,received,function() fadeOut(received,.3) end)
    local count=Q.gemCount(s.amount);local reach=math.max(base,56)*(1+(count-12)/56)
    for _=1,count do
     local a=-math.pi/2+(math.random()*2-1)*math.pi*.8;local dir=Vector2.new(math.cos(a),math.sin(a))
@@ -326,7 +346,7 @@ function Q.totalShots(total,pos,size,k)
   local rarity=FX.ChestRarity[e[1]] or 'Common'
   local tile=FX.tile(nil,'Chest'..e[1],0,0,80,Chests.ById[e[1]].icon,e[1],rarity,e[2]>1 and ('×'..e[2]) or nil)
   local x=cx+(i-(#kinds+1)/2)*90*k
-  table.insert(shots,{kind='chest',amount=e[2],color=(FX.Rarity[rarity] or FX.Rarity.Common).top,
+  table.insert(shots,{kind='chest',amount=e[2],name=e[1],color=(FX.Rarity[rarity] or FX.Rarity.Common).top,
    pos=Vector2.new(x-40*k,cy-43*k),size=Vector2.new(80*k,86*k),design=80,copy=tile})
  end
  return shots
@@ -392,25 +412,27 @@ function Q.tracker(parent,x,y,ctx)
   rows[i]={Row=row,Mark=mark,Icon=icon,Name=name,Track=track,Fill=fill,Count=count,Gem=gem,Amount=amount,Chest=chest,Claim=claim,Check=check}
  end
  -- Footer: the streak.
- T.make('Frame',panel,{Name='FootRule',Position=UDim2.fromOffset(12,footY),Size=UDim2.fromOffset(TW-24,2),BackgroundColor3=Color3.fromRGB(255,140,60),BackgroundTransparency=.5,BorderSizePixel=0})
+ local footRule=T.make('Frame',panel,{Name='FootRule',Position=UDim2.fromOffset(12,footY),Size=UDim2.fromOffset(TW-24,2),BackgroundColor3=Color3.fromRGB(255,140,60),BackgroundTransparency=.5,BorderSizePixel=0})
  local flame=T.icon(panel,'Flame',12,footY+7,34,'quests')
  local streakText=left(FX.title(panel,'Streak','0 DAY STREAK',52,footY+10,190,28,19,Color3.fromRGB(255,206,140)))
  local today=T.text(panel,'Today','',TW-150,footY+13,138,22,16,C.muted);today.TextXAlignment=Enum.TextXAlignment.Right
  local openButton=FX.button(root,'OpenQuests','OPEN QUESTS',0,footY+58,TW,Q.TRACKER_H-footY-58,ctx.open,true)
  openButton.Caption.TextSize=21
+ local compact=T.text(panel,'CompletedSummary','',14,56,TW-28,44,19,C.lime);compact.TextXAlignment=Enum.TextXAlignment.Left;compact.Visible=false
  task.spawn(function() while root.Parent do timer.Text=hoursLeft();task.wait(20) end end)
  local self={Root=root,OpenButton=openButton}
  function self.update(view)
   view=view or {}
   local Config=ctx.config
   local daily=view.daily or {}
-  local doneToday=0
+  local doneToday,unclaimed=0,0
   for i,r in rows do
    local d=daily[i];local q=d and Config and Config.DailyById[d.id]
    r.Row.Visible=q~=nil or i==1
    if q then
     local done=d.progress>=q.target;local ready=done and not d.claimed
     if done then doneToday+=1 end
+    if ready then unclaimed+=1 end
     r.Icon.Image=Config.Icons[q.stat] or Config.Icons.quests;r.Icon.Visible=true;r.Icon.ImageTransparency=d.claimed and .45 or 0
     r.Name.Text=q.short or q.title;r.Name.TextColor3=d.claimed and C.muted or ready and C.gold or C.white
     r.Track.Visible=true;T.setBar(r.Fill,d.progress/q.target);r.Fill.BackgroundColor3=d.claimed and C.dim or done and C.gold or C.lime
@@ -424,7 +446,8 @@ function Q.tracker(parent,x,y,ctx)
     if p and (p.id~=d.id or os.clock()-p.t>8) then r.Pending=nil;p=nil end
     if p and d.claimed then
      r.Pending=nil
-     Q.claimFX(root:FindFirstAncestorOfClass('ScreenGui'),{{kind='emerald',amount=q.emeralds,color=FX.Rarity.Emerald.top,pos=p.pos,size=p.size}})
+     local k=p.size.Y/math.max(r.Claim.Size.Y.Offset,1)
+     Q.claimFX(root:FindFirstAncestorOfClass('ScreenGui'),Q.totalShots({emeralds=q.emeralds,chests=q.chests},p.pos,p.size,k))
      punch(r.Check,1.3,.3)
     end
     r.Id=d.id
@@ -438,6 +461,20 @@ function Q.tracker(parent,x,y,ctx)
   local sk=view.streak
   streakText.Text=(sk and sk.count or 0)..' DAY STREAK'
   today.Text=sk and sk.today and 'today counted' or (doneToday..' / '..math.max(#daily,1)..' today')
+  -- Completion collapses the tracker even before claiming. The compact panel still opens all
+  -- rewards, so a finished quest is never hidden behind a non-interactive summary. A new day's
+  -- incomplete quests expand it again automatically.
+  local collapsed=#daily>0 and doneToday==#daily
+  root:SetAttribute('Collapsed',collapsed)
+  compact.Visible=collapsed
+  compact.Text=unclaimed>0 and ('ALL '..#daily..' COMPLETE · '..unclaimed..' TO CLAIM') or ('ALL '..#daily..' COMPLETE · '..(sk and sk.count or 0)..' DAY STREAK')
+  if collapsed then for _,r in rows do r.Row.Visible=false end end
+  for _,o in {footRule,flame,streakText,today} do o.Visible=not collapsed end
+  panel.Size=UDim2.fromOffset(TW,collapsed and 108 or footY+48)
+  root.Size=UDim2.fromOffset(TW,collapsed and 162 or Q.TRACKER_H)
+  openButton.Position=UDim2.fromOffset(0,collapsed and 118 or footY+58)
+  openButton.Size=UDim2.fromOffset(TW,collapsed and 44 or Q.TRACKER_H-footY-58)
+  openButton.Caption.Text=collapsed and (unclaimed>0 and 'CLAIM DAILY REWARDS' or 'VIEW QUESTS') or 'OPEN QUESTS'
  end
  self.update(nil)
  return self
@@ -701,7 +738,26 @@ function Q.open(screen,ctx,tab)
    if o.state=='done' then FX.check(f,CW-212,22,30) end
   end
   local order={ready=1,open=2,done=3}
-  -- Feats first (plan M), kept short: everything ready to claim plus the easiest open ones, at
+  -- Unlocks: one-time rewards (classes, Mjolnir, the Samurai set).
+  y+=12
+  FX.header(list,'UNLOCKS',nil,y,SW);y+=46+16
+  local unlocks={}
+  for i,u in Config.Unlocks do
+   local s=view.unlocks[u.id] or {have=0,need=1}
+   local state=s.claimed and 'done' or s.have>=s.need and 'ready' or 'open'
+   table.insert(unlocks,{u=u,s=s,state=state,i=i})
+  end
+  table.sort(unlocks,function(a,b) if order[a.state]~=order[b.state] then return order[a.state]<order[b.state] end;return a.i<b.i end)
+  for _,e in unlocks do
+   local u,s=e.u,e.s
+   row('Unlock_'..u.id,y,{
+    name=u.name,goal=u.desc,ratio=s.have/math.max(s.need,1),text=Config.comma(math.min(s.have,s.need))..' / '..Config.comma(s.need),
+    state=e.state,color=e.state=='open' and Q.Locked or C.lime,icon=Config.Icons[u.icon],
+    rewards=Q.rewardTiles(Config,u.reward,ctx.signature),onClaim=function(parts) act('ClaimUnlock',u.id,parts) end,
+   })
+   y+=RH+18
+  end
+  -- Feats after unlocks, kept short: everything ready to claim plus the easiest open ones, at
   -- least 3 rows, and SHOW ALL for the rest. Ready first, then by stars, so the next to chase leads.
   FX.header(list,'FEATS','One-time challenges. More stars = harder = bigger reward.',y,SW);y+=72+8
   local feats,ready={},0
@@ -764,25 +820,6 @@ function Q.open(screen,ctx,tab)
     title=not finished and (r.name..' '..Config.TierNames[e.nextL]) or nil,
     levels=#r.targets,level=e.level,
     onClaim=function(parts) act('ClaimRoad',r.id,parts) end,
-   })
-   y+=RH+18
-  end
-  -- Unlocks: one-time rewards (classes, Mjolnir, the Samurai set).
-  y+=12
-  FX.header(list,'UNLOCKS',nil,y,SW);y+=46+16
-  local unlocks={}
-  for i,u in Config.Unlocks do
-   local s=view.unlocks[u.id] or {have=0,need=1}
-   local state=s.claimed and 'done' or s.have>=s.need and 'ready' or 'open'
-   table.insert(unlocks,{u=u,s=s,state=state,i=i})
-  end
-  table.sort(unlocks,function(a,b) if order[a.state]~=order[b.state] then return order[a.state]<order[b.state] end;return a.i<b.i end)
-  for _,e in unlocks do
-   local u,s=e.u,e.s
-   row('Unlock_'..u.id,y,{
-    name=u.name,goal=u.desc,ratio=s.have/math.max(s.need,1),text=Config.comma(math.min(s.have,s.need))..' / '..Config.comma(s.need),
-    state=e.state,color=e.state=='open' and Q.Locked or C.lime,icon=Config.Icons[u.icon],
-    rewards=Q.rewardTiles(Config,u.reward,ctx.signature),onClaim=function(parts) act('ClaimUnlock',u.id,parts) end,
    })
    y+=RH+18
   end

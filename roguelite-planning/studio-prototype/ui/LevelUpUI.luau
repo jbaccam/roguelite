@@ -42,14 +42,15 @@ function M.mount(player,onOpen,onDone)
  local shade=box(gui,'Backdrop',-100,-100,0,0,T.Color.shade);shade.Size=UDim2.new(1,200,1,200);shade.BackgroundTransparency=.1;shade.Active=true
  -- Root of the layout: the safe area. Everything is placed from its AbsoluteSize.
  local content=box(gui,'Content',0,0,0,0);content.BackgroundTransparency=1;content.Size=UDim2.fromScale(1,1)
- local self={};local data;local token;local busy=false;local tab='Primary';local smallStats=false;local render
+ local self={};local data;local token;local busy=false;local tab='Primary';local smallStats=false;local render;local rerollConfirm
+ local function unavailable() return player:GetAttribute('RunDown') or player:GetAttribute('RunReturning') or player:GetAttribute('RunResult')~=nil end
  local banishMode=false -- after BANISH: the next card clicked is banished
  local function snapshot()
   local raw=state:GetAttribute('ShopSnapshot');if not raw then return end
   local ok,d=pcall(Http.JSONDecode,Http,raw);return ok and d or nil
  end
  local function send(action,index)
-  if busy or not data then return end
+  if busy or not data or unavailable() then return end
   busy=true
   C.ShopAction:FireServer(action,data.revision,index,data.upgradeToken)
   local sent=token
@@ -154,7 +155,20 @@ function M.mount(player,onOpen,onDone)
     if (player:GetAttribute('ProfileBanishes') or 0)>0 then banishMode=true;render() else C.PurchaseRequest:FireServer('Banish') end
    end)
    reroll=bigButton('Reroll','REROLL',rerolls>0 and (rerolls..' SAVED') or ('R$ '..Money.price('UpgradeReroll')),bx+bw+24,false,function()
-    if (player:GetAttribute('ProfileRerolls') or 0)>0 then C.RunAction:FireServer('UseReroll','Upgrade') else C.PurchaseRequest:FireServer('UpgradeReroll') end
+    if rerollConfirm or unavailable() then return end
+    local using=(player:GetAttribute('ProfileRerolls') or 0)>0
+    local offeredToken=data.upgradeToken
+    local win;win=T.window(gui,'RerollConfirm','Upgrade Reroll',500,286,function() rerollConfirm=nil end);rerollConfirm=win
+    T.label(win.Body,'Question',using and 'Use 1 reroll token?' or 'Buy 1 upgrade reroll?',0,0,464,42,28)
+    T.text(win.Body,'Details','Replaces these four upgrade choices now. Your earned level-up is kept. Use before choosing a card.',8,52,448,72,21,T.Color.cream)
+    T.button(win.Body,'Cancel','CANCEL',0,152,224,58,function() win.Close() end,true)
+    T.button(win.Body,'Confirm',using and 'USE 1 TOKEN' or ('BUY · R$ '..Money.price('UpgradeReroll')),240,152,224,58,function()
+     local latest=snapshot();win.Close()
+     if unavailable() or not latest or latest.phase~='Shop' or latest.upgradeToken~=offeredToken or (latest.pendingLevels or 0)<=0 then return end
+     if using then
+      if (player:GetAttribute('ProfileRerolls') or 0)>0 then C.RunAction:FireServer('UseReroll','Upgrade') end
+     else C.PurchaseRequest:FireServer('UpgradeReroll') end
+    end)
    end)
   end
   if #data.upgradeOffers==0 then
@@ -202,8 +216,9 @@ function M.mount(player,onOpen,onDone)
    else GS.SelectedObject=first and first:FindFirstChild('Choose') or reroll end
   end)
  end
- function self:Close() gui.Enabled=false;token=nil;busy=false;T.hideTouchControls('LevelUp',false) end
+ function self:Close() gui.Enabled=false;token=nil;busy=false;if rerollConfirm then rerollConfirm.Close() end;T.hideTouchControls('LevelUp',false) end
  function self:Show()
+  if unavailable() then self:Close();return false end
   data=snapshot();if not data or data.phase~='Shop' or (data.pendingLevels or 0)<=0 then return false end
   if not gui.Enabled then onOpen();gui.Enabled=true;token=nil;T.hideTouchControls('LevelUp',true) end
   if token~=data.upgradeToken then token=data.upgradeToken;busy=false;banishMode=false;render() end
@@ -213,13 +228,15 @@ function M.mount(player,onOpen,onDone)
  local function changed()
   if queued then return end;queued=true
   task.defer(function()
-   queued=false;data=snapshot();if not data then return end
+   queued=false;if unavailable() then self:Close();return end
+   data=snapshot();if not data then return end
    if data.phase=='Shop' and (data.pendingLevels or 0)>0 then
     if token~=data.upgradeToken or not gui.Enabled then self:Show() else busy=false;render() end
    elseif gui.Enabled then self:Close();onDone(data.phase) end
   end)
  end
  state:GetAttributeChangedSignal('ShopSnapshot'):Connect(changed)
+ for _,attribute in {'RunDown','RunReturning','RunResult'} do player:GetAttributeChangedSignal(attribute):Connect(changed) end
  player:GetAttributeChangedSignal('ProfileBanishes'):Connect(function() if gui.Enabled then render() end end)
  player:GetAttributeChangedSignal('ProfileRerolls'):Connect(function() if gui.Enabled then render() end end)
  content:GetPropertyChangedSignal('AbsoluteSize'):Connect(function() if gui.Enabled then render() end end)

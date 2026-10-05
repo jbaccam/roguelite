@@ -50,6 +50,17 @@ local make=T.make
 function T.frame(parent,name,x,y,w,h)
  return make('Frame',parent,{Name=name,BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(w,h)})
 end
+-- Shared, sandbox-safe check. ShopUI cannot require the unsandboxed lobby StoreFX module.
+function T.check(parent,x,y,size)
+ local c=make('Frame',parent,{Name='Check',Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(size,size),BackgroundColor3=T.Color.lime,BorderSizePixel=0})
+ make('UICorner',c,{CornerRadius=UDim.new(1,0)})
+ make('UIStroke',c,{Color=T.Color.ink,Thickness=math.max(1,size*.08)})
+ for _,b in {{.375,.5625,.333,45},{.604,.479,.5,-50}} do
+  local line=make('Frame',c,{Name='Mark',AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(b[1],b[2]),Size=UDim2.fromScale(b[3],.146),Rotation=b[4],BackgroundColor3=T.Color.white,BorderSizePixel=0})
+  make('UICorner',line,{CornerRadius=UDim.new(1,0)})
+ end
+ return c
+end
 -- kind: 'panel' (lime corners), 'inset' (plain dark well) or 'button' (lime face).
 function T.panel(parent,name,x,y,w,h,kind)
  return make('ImageLabel',parent,{Name=name,BackgroundTransparency=1,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(w,h),Image=T.Asset[kind or 'panel'],ScaleType=Enum.ScaleType.Slice,SliceCenter=SLICE,SliceScale=.55})

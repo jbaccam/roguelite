@@ -7,12 +7,8 @@ QueueState.__index=QueueState
 QueueState.COUNTDOWN=10 -- seconds after the host presses START
 QueueState.FULL_COUNTDOWN=3 -- a full pad (or a solo run) launches sooner
 QueueState.CHOOSING_LIMIT=60 -- a host who never presses START gives the pad up
--- Class picks (2026-10-03: party members pulled onto a pad after START got no class screen and a 3 s
--- launch). Someone on a counting pad who hasn't locked in a class holds the launch until
--- PICK_SECONDS after they got on, never past PICK_LIMIT after START. Not locking in = the class and
--- starter they had (RunClass, their saved loadout).
-QueueState.PICK_SECONDS=20
-QueueState.PICK_LIMIT=30
+-- Readiness is explicit: an unready member holds the pad indefinitely. A timeout must never
+-- launch someone who is still picking a class or has not agreed to this map and difficulty.
 -- solo = a Private pad (user, 2026-10-03: "what if were in a group with 2 people that wanted it to
 -- be private"): only the ids in q.allow (the host's party, the host included) may join, and it holds
 -- that many. Without allow it is the old solo pad: the host alone. Example: Ana and Ben in a party,
@@ -25,28 +21,18 @@ function QueueState.new(count,capacity)
  return self
 end
 function QueueState:capacityOf(q) return q.solo and math.min(self.capacity,q.allowCount or 1) or self.capacity end
--- A counting pad's launch time, worked out again whenever someone gets on, off or locks in.
--- COUNTDOWN after START, or FULL_COUNTDOWN once the pad is full and everyone on it has locked in.
--- Anyone still choosing holds it to PICK_SECONDS after they got on (at most PICK_LIMIT after START);
--- the last pick still leaves FULL_COUNTDOWN to see it start. Example: Ana presses PLAY on Private
--- and Ben is pulled along at 0 s -> launch at 20 s. Ben locks in at 6 s -> 2 / 2, all picked ->
--- 9 s. Had he locked in at 15 s -> 18 s.
+-- Joining or unreadying cancels the countdown. Once everybody explicitly readies, leave a
+-- visible three-second countdown on full/private pads, ten seconds on an open partial pad.
 local function retime(self,q,now)
  if q.phase~='Counting' or not q.startedAt then return end
- local at=q.startedAt+QueueState.COUNTDOWN
- local all=true
  for _,m in q.members do
   if not q.picked[m] then
-   all=false
-   at=math.max(at,math.min((q.joined[m] or now)+QueueState.PICK_SECONDS,q.startedAt+QueueState.PICK_LIMIT))
+   q.launchAt=nil;q.readyAt=nil;q.fullAt=nil
+   return
   end
  end
- if all then
-  q.readyAt=q.readyAt or now
-  at=math.max(at,q.readyAt+QueueState.FULL_COUNTDOWN)
-  if #q.members>=self:capacityOf(q) then q.fullAt=q.fullAt or now;at=math.min(at,q.fullAt+QueueState.FULL_COUNTDOWN) else q.fullAt=nil end
- else q.readyAt=nil;q.fullAt=nil end
- q.launchAt=at
+ q.readyAt=q.readyAt or now
+ q.launchAt=q.readyAt+(#q.members>=self:capacityOf(q) and QueueState.FULL_COUNTDOWN or QueueState.COUNTDOWN)
 end
 function QueueState:leave(id,now)
  local index=self.membership[id]
@@ -75,9 +61,20 @@ end
 -- countdown stops waiting for them. False when they aren't on a pad or it is already leaving.
 function QueueState:lockIn(id,now)
  local index=self.membership[id];local q=index and self.queues[index]
- if not q or q.locked then return false end
+ if not q or q.locked or q.phase~='Counting' or not q.map then return false end
  q.picked[id]=true;retime(self,q,now)
  return true
+end
+function QueueState:unready(id,now)
+ local index=self.membership[id];local q=index and self.queues[index]
+ if not q or q.locked then return false end
+ q.picked[id]=nil;retime(self,q,now)
+ return true
+end
+-- A final server validation failed: keep the group together and require fresh confirmation.
+function QueueState:cancelLaunch(index,now)
+ local q=self.queues[index];if not q then return end
+ q.locked=false;q.picked={};retime(self,q,now)
 end
 -- How many on pad `index` haven't locked in a class yet.
 function QueueState:picking(index)
@@ -109,8 +106,9 @@ function QueueState:start(id,index,now,map,solo,difficulty,allow)
   local n=0;for _ in q.allow do n+=1 end;q.allowCount=n
  end
  q.phase='Counting';q.map=map;q.solo=solo==true;q.difficulty=difficulty or 'Normal'
- -- The host's own pick comes with START. Members who locked in while the host chose stay picked.
- q.startedAt=now;q.picked[id]=true;q.readyAt=nil;q.fullAt=nil
+ -- START includes the host's class confirmation. Earlier picks cannot consent to a map that
+ -- had not been selected yet; all other members must confirm after the map is published.
+ q.startedAt=now;q.picked={[id]=true};q.readyAt=nil;q.fullAt=nil
  retime(self,q,now)
  return true
 end
@@ -125,7 +123,7 @@ end
 function QueueState:due(now)
  local out={}
  for index,q in self.queues do
-  if not q.locked and q.phase=='Counting' and now>=q.launchAt and #q.members>0 then q.locked=true;table.insert(out,index) end
+  if not q.locked and q.phase=='Counting' and q.launchAt and now>=q.launchAt and #q.members>0 and self:picking(index)==0 then q.locked=true;table.insert(out,index) end
  end
  return out
 end

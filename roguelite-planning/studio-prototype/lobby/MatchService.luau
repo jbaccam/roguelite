@@ -107,6 +107,13 @@ function M.launch(players,map,difficulty,loadouts,extra)
  -- A match server can't start without a map: refuse here rather than send the party on a trip
  -- that bounces them straight back (pad launches went out with map=nil, 2026-10-03).
  if not Rules.MapIndex[map] then log(players,'refused','no valid map');return false,'Pick a map first' end
+ for _,p in players do
+  local okMap,whyMap=Rules.validMap(p,map,difficulty)
+  if not okMap then return false,p.DisplayName..': '..whyMap end
+  local want=type(loadouts)=='table' and loadouts[p.UserId]
+  local okLoadout,whyLoadout=Rules.validLoadout(p,type(want)=='table' and want.class,type(want)=='table' and want.weapon)
+  if not okLoadout then return false,p.DisplayName..': '..whyLoadout end
+ end
  local ok,code,serverId=retry(2,Teleport.ReserveServer,Teleport,game.PlaceId)
  if not ok then log(players,'reserve failed',code);return false,"Couldn't start the run, try again" end
  local members={}
@@ -237,20 +244,20 @@ function M.partyLeader() return runParty.leader end
 function M.inParty(userId) return runParty.leader~=nil and runParty.ids[userId]==true end
 
 -- Match side -------------------------------------------------------------------------------
--- The member's loadout from the entry, checked against their own save once it loads; a locked
--- class or weapon falls back to the class's signature weapon (Brawler if the class is locked).
+-- The confirmed loadout from the server-owned entry, checked after the actual save loads.
+-- Refuse a missing/invalid save instead of silently replacing someone's starter with the pan.
 local function applyLoadout(p,want)
  local started=os.clock()
  -- A DataStore outage is retried for about a minute (ProfileLock.ERROR_SECONDS) before the player
  -- is asked to rejoin, so wait that long too rather than hand out a default loadout at 30 s.
  while p.Parent==Players and p:GetAttribute('ProfileLoaded')~=true and not p:GetAttribute('ProfileLoadFailed') and os.clock()-started<75 do task.wait(.2) end
+ if p.Parent~=Players then return false,'Player left' end
+ if p:GetAttribute('ProfileLoaded')~=true then return false,'Your save could not load in time' end
  local class=type(want)=='table' and want.class or nil
  local weapon=type(want)=='table' and want.weapon or nil
- if not Rules.validLoadout(p,class,weapon) then
-  if type(class)~='string' or not Rules.progress(p).classes[class] or not Rules.Signature[class] then class='Brawler' end
-  weapon=Rules.Signature[class]
- end
+ local valid,why=Rules.validLoadout(p,class,weapon);if not valid then return false,why end
  p:SetAttribute('RunClass',class);p:SetAttribute('RunWeapon',weapon)
+ return true
 end
 
 local started=false
@@ -277,7 +284,14 @@ function M.start()
   log({p},'arrived',('map=%s server=%s'):format(tostring(entry.map),string.sub(game.PrivateServerId,1,8)))
   firstArrival=firstArrival or os.clock()
   if offered[p.UserId] then clearRejoin(p.UserId) end -- back in: the way back isn't needed now
-  applyLoadout(p,want);ready[p]=true
+  local applied,why=applyLoadout(p,want)
+  if applied then applied,why=Rules.validMap(p,entry.map,entry.difficulty) end
+  if not applied then
+   log({p},'sent back',why)
+   if p.Parent==Players and not M.toLobby({p},why) then p:Kick(why..'. Please rejoin.') end
+   return
+  end
+  ready[p]=true
  end
  task.spawn(function()
   if not studio then

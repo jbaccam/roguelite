@@ -9,6 +9,7 @@ local E=require(combat.EconomyConfig)
 local Catalog=require(combat.ShopCatalog)
 local Weapons=require(combat.WeaponCatalog)
 local Characters=require(script.Parent.CharacterService)
+local Effects=require(script.Parent.CombatEffectsService)
 local Shards=require(script.Parent.ShardDropService)
 local Hearts=require(script.Parent.HeartDropService)
 local XP=require(combat.RunXP)
@@ -82,9 +83,10 @@ local function sellValue(p,f)
  return E.sellValue(entry and entry.basePrice or E.TIER_PRICE_BANDS[tier][2],S.wave,E.modifier(cs and cs.stats or {}))
 end
 local function owned(p)
+ Effects.flushWeaponStats()
  local result={}
  for i=1,6 do local f=slots(p)['Slot'..i]
-  result[i]={slot=i,id=f:GetAttribute('WeaponId') or '',copy=f:GetAttribute('CopyId') or '',tier=f:GetAttribute('Tier') or 1,paid=f:GetAttribute('FinalPurchasePrice') or 0,basePrice=f:GetAttribute('BasePrice') or 0,wave=f:GetAttribute('WavePurchased') or 0,sell=f:GetAttribute('WeaponId')~='' and sellValue(p,f) or 0}
+  result[i]={slot=i,id=f:GetAttribute('WeaponId') or '',copy=f:GetAttribute('CopyId') or '',tier=f:GetAttribute('Tier') or 1,damage=f:GetAttribute('RunDamage') or 0,kills=f:GetAttribute('RunKills') or 0,paid=f:GetAttribute('FinalPurchasePrice') or 0,basePrice=f:GetAttribute('BasePrice') or 0,wave=f:GetAttribute('WavePurchased') or 0,sell=f:GetAttribute('WeaponId')~='' and sellValue(p,f) or 0}
  end
  for _,weapon in result do
   for _,other in result do
@@ -94,9 +96,11 @@ local function owned(p)
  return result
 end
 local function clearWeapon(f)
- f:SetAttribute('WeaponId','');f:SetAttribute('CopyId',token());f:SetAttribute('FinalPurchasePrice',0);f:SetAttribute('PurchasePrice',0);f:SetAttribute('BasePrice',0);f:SetAttribute('Tier',1);f:SetAttribute('WavePurchased',0)
+ Effects.flushWeaponStats()
+ f:SetAttribute('RunDamage',0);f:SetAttribute('RunKills',0);f:SetAttribute('WeaponId','');f:SetAttribute('CopyId',token());f:SetAttribute('FinalPurchasePrice',0);f:SetAttribute('PurchasePrice',0);f:SetAttribute('BasePrice',0);f:SetAttribute('Tier',1);f:SetAttribute('WavePurchased',0)
 end
 local function upgradeWeapon(f,paid)
+ Effects.flushWeaponStats()
  local tier=(f:GetAttribute('Tier') or 1)+1
  f:SetAttribute('FinalPurchasePrice',(f:GetAttribute('FinalPurchasePrice') or 0)+paid)
  f:SetAttribute('PurchasePrice',f:GetAttribute('FinalPurchasePrice'))
@@ -121,7 +125,7 @@ function S.publishProgress(p)
  state:SetAttribute('PendingLevelUps',s.pendingLevels)
 end
 -- A weapon slot's attributes, as a rejoin keeps them (stash, below); nil when the slots are gone.
-local SLOT_KEYS={'WeaponId','Tier','CopyId','BasePrice','FinalPurchasePrice','PurchasePrice','WavePurchased'}
+local SLOT_KEYS={'WeaponId','Tier','CopyId','BasePrice','FinalPurchasePrice','PurchasePrice','WavePurchased','RunDamage','RunKills'}
 local function slotRows(p)
  local cs=Characters.states[p];local folder=cs and cs.folder;if not folder or not folder.Parent then return nil end
  local rows={}
@@ -497,8 +501,14 @@ local function startWave()
  combat:SetAttribute('ZombieCount',combat:GetAttribute('TestZombieCountOverride') or tutorialWave and tutorialWave.count or S.waveEnemyCount());combat:SetAttribute('ZombiesEnabled',true)
  for p in S.states do local cs=Characters.states[p];cs.blocks=1;cs.folder:SetAttribute('BlocksRemaining',cs.stats.FirstHitBlock);S.publish(p,'Wave started') end
 end
+local function membersReadyForShop()
+ for p in S.members do
+  if S.states[p] and (not alive(p) or p:GetAttribute('RunDown') or p:GetAttribute('RunReturning')) then return false end
+ end
+ return true
+end
 local function beginWave()
- if S.phase~='Shop' then return end
+ if S.phase~='Shop' or not membersReadyForShop() then return end
  local count=0
  for p,s in S.states do if living(p) then count+=1;if not s.ready or s.pendingLevels>0 then return end end end
  if count==0 then return end
@@ -521,7 +531,7 @@ local function autoPick(p,s)
  S.prepareUpgrades(p);S.publishProgress(p)
 end
 local function shopTimeUp()
- if S.phase~='Shop' or run:GetAttribute('AdminPaused') then return end
+ if S.phase~='Shop' or run:GetAttribute('AdminPaused') or not membersReadyForShop() then return end
  run:SetAttribute('ShopEndsAt',nil)
  local any=false
  for p,s in S.states do
@@ -668,7 +678,18 @@ function S.request(p,action,revision,arg,extra)
  if not s or not cs or not living(p) or type(action)~='string' then return false end
  -- UPGRADE TURRET went with turret items (2026-10-04): an old client's click does nothing, quietly.
  if action=='UpgradeTurret' then return false end
- if os.clock()-s.lastRequest<.12 then return false end;s.lastRequest=os.clock()
+ local now=os.clock()
+ if action=='Unready' then
+  -- Withdrawing readiness changes no inventory, so a stale UI revision must not trap someone
+  -- ready. The first withdrawal can follow GO immediately; repeated/no-op requests do no work.
+  if S.phase~='Shop' or p:GetAttribute('RunDown') or p:GetAttribute('RunReturning') or not s.ready then return false end
+  if now-(s.lastUnready or -1e6)<.12 then return false end
+  s.lastUnready=now;s.lastRequest=now;s.ready=false;s.revision+=1
+  S.publish(p,'Not ready · keep shopping');S.publishReady()
+  return true
+ end
+ if now-s.lastRequest<.12 then return false end;s.lastRequest=now
+ Effects.flushWeaponStats()
  local function fail(msg) S.publish(p,msg);return false end
  if revision~=s.revision then return fail('Shop changed. Please try again.') end
  if action=='Shards' then
@@ -678,6 +699,7 @@ function S.request(p,action,revision,arg,extra)
   if not E.integer(value,0,E.MAX_SHARDS) then return fail('Shards must be between 0 and '..E.MAX_SHARDS) end
   s.shards=value
  elseif S.phase~='Shop' then return fail('Shop actions are available between waves')
+ elseif p:GetAttribute('RunDown') or p:GetAttribute('RunReturning') then return fail('Returning to the shop')
  elseif action=='Upgrade' or action=='UpgradeReroll'  or action=='UpgradeSkip' then
   if s.pendingLevels<=0 then return fail('No earned upgrades available') end
   if extra~=s.upgradeToken then return fail('Upgrade offers changed') end
@@ -720,7 +742,7 @@ function S.request(p,action,revision,arg,extra)
     end
     if not free and not merge then return fail('Six weapons equipped. Combine a matching pair or recycle one first.') end
     if merge then upgradeWeapon(merge,o.price) else
-    free:SetAttribute('BasePrice',entry.basePrice);free:SetAttribute('FinalPurchasePrice',o.price);free:SetAttribute('PurchasePrice',o.price)
+    free:SetAttribute('RunDamage',0);free:SetAttribute('RunKills',0);free:SetAttribute('BasePrice',entry.basePrice);free:SetAttribute('FinalPurchasePrice',o.price);free:SetAttribute('PurchasePrice',o.price)
     free:SetAttribute('Tier',entry.tier);free:SetAttribute('WavePurchased',S.wave);free:SetAttribute('CopyId',token());free:SetAttribute('WeaponId',entry.weaponId)
     end
    else
@@ -763,6 +785,7 @@ function S.request(p,action,revision,arg,extra)
   end
   if not partner then return fail('Combine needs two identical weapons of the same tier') end
   upgradeWeapon(f,partner:GetAttribute('FinalPurchasePrice') or 0)
+  for _,key in {'RunDamage','RunKills'} do f:SetAttribute(key,(f:GetAttribute(key) or 0)+(partner:GetAttribute(key) or 0)) end
   clearWeapon(partner);S.bonuses(p)
  elseif action=='Sell' then
   if not E.integer(arg,1,6) then return fail('Invalid weapon slot') end
@@ -771,12 +794,14 @@ function S.request(p,action,revision,arg,extra)
   s.shards=math.min(E.MAX_SHARDS,s.shards+sellValue(p,f))
   clearWeapon(f)
  elseif action=='Start' then
+  if not living(p) or p:GetAttribute('RunDown') or p:GetAttribute('RunReturning') then return fail('Returning to the shop') end
   if s.pendingLevels>0 then return fail('Choose your earned level-up upgrades first') end
   s.ready=true
  else return fail('Unknown shop action') end
  if action~='Start' then s.ready=false end
  local count=0;for i=1,6 do if slots(p)['Slot'..i]:GetAttribute('WeaponId')~='' then count+=1 end end;slots(p):SetAttribute('EquippedCount',count)
- s.revision+=1;reprice(p);S.publish(p,action=='Start' and 'Ready · waiting for other living players' or '')
+ s.revision+=1;reprice(p);S.publish(p,action=='Start' and 'Ready · waiting for your team' or '')
+ S.publishReady()
  if action=='Start' then beginWave() end
  return true
 end

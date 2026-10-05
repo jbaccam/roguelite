@@ -1,3 +1,5 @@
+October 4 squad feedback: [applied fixes and actual Studio test results](BUGFIX_REPORT_2026-10-04.md). Source and Studio are synchronized; multiplayer limits are recorded there.
+
 # Shop gameplay readiness
 
 Updated 2026-09-23; the 2026-10-03 play-test round is marked below (repo only, syntax-checked, not yet in Studio, not play-tested). The [Brotato shop reference](https://brotato.wiki.spellsandguns.com/Shop) informed the pacing and offer rules; this game keeps its own characters, weapons, items, shards, and combat values.

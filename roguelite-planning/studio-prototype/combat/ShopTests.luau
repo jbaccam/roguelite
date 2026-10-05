@@ -1,4 +1,5 @@
 -- Run as a temporary normal server Script in Studio Play, never ship this test.
+-- Fixture prerequisite: the player is alive in the arena and Shop.join(player) has completed.
 local RS=game.ReplicatedStorage
 local C=RS.RogueliteCombat
 local E=require(C.EconomyConfig)
@@ -214,6 +215,34 @@ local ok,err=xpcall(function()
  check(p:GetAttribute('ShopReady')==false,'counted and not ready: the player shows false')
  Shop.states[p].ready=true;Shop.publishReady();near(RS.RogueliteRunState:GetAttribute('ShopReady'),1,'one ready')
  check(p:GetAttribute('ShopReady')==true,'counted and ready: the player shows true')
+ -- Withdrawing ready is safe even when GO just ran or an unrelated snapshot made the UI stale.
+ -- Replays must not republish, change revisions or renew the normal action cooldown.
+ local readiness=Shop.states[p]
+ readiness.lastRequest=os.clock();readiness.lastUnready=nil
+ local readyRevision=readiness.revision
+ check(Shop.request(p,'Unready',readyRevision),'immediate withdrawal bypasses the GO cooldown')
+ check(not readiness.ready and p:GetAttribute('ShopReady')==false,'withdrawal updates player and roster')
+ near(readiness.revision,readyRevision+1,'withdrawal increments revision once')
+ local withdrawnRevision=readiness.revision
+ local withdrawnSnapshot=cs.folder:GetAttribute('ShopSnapshot')
+ local withdrawnMessage=readiness.message
+ local withdrawnRequest,withdrawnAt=readiness.lastRequest,readiness.lastUnready
+ for _=1,20 do check(not Shop.request(p,'Unready',readyRevision),'stale no-op withdrawal rejected quietly') end
+ near(readiness.revision,withdrawnRevision,'no-op withdrawal keeps revision')
+ check(cs.folder:GetAttribute('ShopSnapshot')==withdrawnSnapshot and readiness.message==withdrawnMessage,'no-op withdrawal does not republish')
+ check(readiness.lastRequest==withdrawnRequest and readiness.lastUnready==withdrawnAt,'no-op withdrawal does not renew cooldowns')
+ readiness.ready=true;readiness.lastUnready=-1e6;readiness.lastRequest=os.clock()
+ local staleRevision=readiness.revision
+ check(Shop.request(p,'Unready',staleRevision-10),'stale revision can safely withdraw readiness')
+ near(readiness.revision,staleRevision+1,'stale withdrawal advances current server revision')
+ -- A second distinct withdrawal still has its own throttle, independent of stale revision checks.
+ readiness.ready=true;readiness.lastUnready=os.clock()
+ local repeatedRevision=readiness.revision;local repeatedSnapshot=cs.folder:GetAttribute('ShopSnapshot')
+ check(not Shop.request(p,'Unready',repeatedRevision-10),'repeated stale withdrawal uses separate throttle')
+ check(readiness.ready and readiness.revision==repeatedRevision and cs.folder:GetAttribute('ShopSnapshot')==repeatedSnapshot,'throttled withdrawal does not mutate')
+ Shop.phase='Combat';readiness.lastUnready=-1e6
+ check(not Shop.request(p,'Unready',readiness.revision),'cannot withdraw outside shop phase')
+ check(readiness.ready and readiness.revision==repeatedRevision and cs.folder:GetAttribute('ShopSnapshot')==repeatedSnapshot,'combat withdrawal does not mutate')
  Shop.phase='Combat';Shop.publishReady();check(RS.RogueliteRunState:GetAttribute('ShopReady')==nil,'no ready count outside the shop')
  check(p:GetAttribute('ShopReady')==nil,'no player ready mark outside the shop')
  Shop.phase='Shop';Shop.states[p].ready=false

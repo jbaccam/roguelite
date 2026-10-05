@@ -71,13 +71,13 @@ item('crown','Bone Crown',2,44,'rbxassetid://121286333601812',{Damage=5,BossDama
 -- Player buffs (user, 2026-10-03: "more items that give buffs instead of directly contributing to
 -- buffs that your weapons give you"). Icons are the stat's level-up art (LevelUpCatalog.IconIds:
 -- Dodge, Armor, MaxHP, MoveSpeed, PickupRadius, Regeneration, Luck).
-item('banana','Banana Peel',1,18,'rbxassetid://99124374960499',{Dodge=5},'5% of enemy hits miss you completely.')
-item('cushion','Couch Cushion',1,17,'rbxassetid://80556274645944',{Armor=1,MaxHP=6},'+1 armor and +6 max health.')
-item('penny','Lucky Penny',1,17,'rbxassetid://136231704380505',{Luck=6,Dodge=3},'+6 luck (better shop offers, more heart drops), and 3% of enemy hits miss you.')
-item('soup','Chicken Soup',2,34,'rbxassetid://87748663271804',{MaxHP=6,Recovery=15},'+6 max health, and all your healing heals 15% more.')
-item('skates','Roller Skates',2,38,'rbxassetid://117216104224040',{Dodge=3},'You move 10% faster, and 3% of enemy hits miss you.',5,'Utility',{MoveSpeed=10})
-item('detector','Metal Detector',2,36,'rbxassetid://133081616364253',{Luck=8},'+8 luck, and you grab crystals from 20% farther away.',5,'Utility',{PickupRadius=20})
-item('gummies','Vitamin Gummies',3,66,'rbxassetid://86810106921196',{Regeneration=2,MaxHP=10},'Heal 2 HP every second, and +10 max health.')
+item('banana','Banana Peel',1,18,'rbxassetid://91220324140044',{Dodge=5},'5% of enemy hits miss you completely.')
+item('cushion','Couch Cushion',1,17,'rbxassetid://134119315378177',{Armor=1,MaxHP=6},'+1 armor and +6 max health.')
+item('penny','Lucky Penny',1,17,'rbxassetid://84866645691857',{Luck=6,Dodge=3},'+6 luck (better shop offers, more heart drops), and 3% of enemy hits miss you.')
+item('soup','Chicken Soup',2,34,'rbxassetid://134653604976810',{MaxHP=6,Recovery=15},'+6 max health, and all your healing heals 15% more.')
+item('skates','Roller Skates',2,38,'rbxassetid://84335919314680',{Dodge=3},'You move 10% faster, and 3% of enemy hits miss you.',5,'Utility',{MoveSpeed=10})
+item('detector','Metal Detector',2,36,'rbxassetid://135461885570276',{Luck=8},'+8 luck, and you grab crystals from 20% farther away.',5,'Utility',{PickupRadius=20})
+item('gummies','Vitamin Gummies',3,66,'rbxassetid://96244325205305',{Regeneration=2,MaxHP=10},'Heal 2 HP every second, and +10 max health.')
 -- Turret items (2026-10-04, Brotato's structures; HANDYMAN_TURRET.md): every copy owned is one more
 -- turret, placed near you at each wave start, at most 10 (cap). Any class can buy them. structure:
 -- the Handyman (Engineer) gets 20% off them and sees them more often (ShopService). Their numbers

@@ -122,7 +122,10 @@ local questTally={levels={},shards={},buys={},damage={}}
 local function tally(stat,p,n) if Shop.members[p] then local t=questTally[stat];t[p]=(t[p] or 0)+n end end
 Shop.onLevelUp=function(p,n) tally('levels',p,n) end
 Shop.onShards=function(p,n) tally('shards',p,n) end
-Shop.onBuy=function(p) tally('buys',p,1) end
+Shop.onBuy=function(p,id) tally('buys',p,1);if Shop.members[p] then Profiles.recordItemBuy(p,id) end end
+Effects.listenDamage(function(owner,id,actual,_,lethal)
+ if Shop.members[owner] then Profiles.recordWeaponHit(owner,id,actual,lethal) end
+end)
 if Effects.listenDamage then Effects.listenDamage(function(owner,_,actual) tally('damage',owner,actual) end) end -- plan J's hook; absent in older copies
 -- Minutes count per player, and only while they fight (launch audit C2): alive and not down, in a
 -- wave that isn't paused, with a hit of their own in the last 30 s. Idling in the shop or hovering
@@ -207,11 +210,6 @@ Shop.onWaveCleared=function(wavesPassed)
  end
  -- The run is won from here on (the shop's victory banner); Endless keeps the same loop.
  if wavesPassed>=RunSetupRules.WinWave then runState:SetAttribute('Won',true) end
- -- Downed teammates come back for the shop with their build, at the map's spawn and full health
- -- (LOBBY_AND_MATCH_SERVERS.md §4). Spawned: respawning yields, and this runs inside finishWave.
- local spawn=Role.playerSpawn();local list={}
- for p in Shop.members do if down[p] then table.insert(list,p) end end
- for _,p in list do task.spawn(rise,p,spawn and spawn.Position or down[p].position,1) end
 end
 -- Quest kills (QuestService), counted like the leaderboard's: real runs in Combat, credited to the
 -- last player to hit (LastDamageUserId), never practice targets. A boss counts for every member
@@ -249,7 +247,7 @@ end
 local TeammateRevive=require(SSS:WaitForChild('TeammateRevive')) -- unsandboxed, like this script
 local teammateRevive=TeammateRevive.new({
  canHelp=function(q) local h=q.Character and q.Character:FindFirstChildOfClass('Humanoid');return q.Parent==Players and Shop.members[q]~=nil and not down[q] and h~=nil and h.Health>0 end,
- isDown=function(q) return down[q]~=nil end,
+ isDown=function(q) return down[q]~=nil and not q:GetAttribute('RunReturning') end,
  frozen=function() return combat:GetAttribute('RunPaused')==true end, -- plan L: no reviving while frozen
  onRevive=function(q)
   local d=down[q];if not d then return end
@@ -335,29 +333,32 @@ local function watch(p)
 end
 local respawn=SSS:WaitForChild('AvatarNormalizer'):WaitForChild('RespawnPlayer')
 -- No limit per run; each revive costs more (Config.reviveKey).
-local function canRevive(p) return down[p]~=nil end
+local rising={}
+local function canRevive(p) return down[p]~=nil and not rising[p] and not p:GetAttribute('RunReturning') end
 -- Respawn at `at` with `health` (fraction of max), a short shield and nearby zombies pushed back.
 -- beforePush(root) runs once the body is placed (the Phoenix blast), before the push.
 rise=function(p,at,health,beforePush)
- local d=down[p]
- local character=respawn:Invoke(p)
- -- Their run ended while the body loaded (Leave Run, or the last stand ran out): they're on the
- -- results screen, so the new body goes again and the respawn hold stays.
- if d and down[p]~=d then
-  if character and p.Character==character then p.Character=nil;character:Destroy() end
-  return
- end
- clearDown(p);p:SetAttribute('HoldRespawn',false)
- task.spawn(function()
-  if not character then return end
+ if rising[p] then return false end
+ rising[p]=true;p:SetAttribute('RunReturning',true)
+ local d=down[p];local member=Shop.members[p];local succeeded=false
+ local ok,err=pcall(function()
+  local character=respawn:Invoke(p)
+  local function stale()
+   if p.Parent==Players and Shop.members[p]==member and (not d or down[p]==d) then return false end
+   if character and p.Character==character then p.Character=nil;character:Destroy() end
+   return true
+  end
+  if stale() then return end
+  assert(character,'Respawn did not produce a character')
   local h=character:WaitForChild('Humanoid',10);local root=character:WaitForChild('HumanoidRootPart',10)
-  if not h or not root then return end
+  assert(h and root,'Respawn body is incomplete')
   -- CharacterService sets full health when its spawn setup finishes (it tags CombatClass);
   -- apply the revive only after that, or it would be overwritten.
   local t0=os.clock()
   while character.Parent and not character:GetAttribute('CombatClass') and os.clock()-t0<5 do task.wait(.05) end
   task.wait(.15)
-  if not character.Parent or h.Health<=0 then return end
+  assert(character.Parent and h.Health>0,'Respawned character is not alive')
+  if stale() then return end
   character:PivotTo(CFrame.new(at+Vector3.new(0,3,0)))
   h.Health=math.max(1,h.MaxHealth*health)
   -- Named, so the SpawnLocation's own spawn shield timer cannot remove it early.
@@ -375,12 +376,44 @@ rise=function(p,at,health,beforePush)
     end
    end
   end
+  clearDown(p);p:SetAttribute('HoldRespawn',false);succeeded=true
+  local state=Shop.states[p]
+  if state then state.ready=false;state.revision+=1;Shop.prepareUpgrades(p);Shop.publish(p,'Back on your feet · choose upgrades and shop') end
  end)
+ rising[p]=nil;p:SetAttribute('RunReturning',nil)
+ if not ok then warn('Revive failed for '..p.Name..': '..tostring(err)) end
+ return ok and succeeded
 end
+-- Hooks run on ShopService's sandboxed thread: record work only. The owning server script's
+-- Heartbeat drains it so avatar loading never inherits a restricted callback's capabilities.
+local shopRevives={}
+Shop.onWaveCleared=function()
+ if Shop.phase~='Shop' then return end
+ for p in Shop.members do if down[p] then shopRevives[p]=down[p];p:SetAttribute('RunReturning',true) end end
+end
+RunService.Heartbeat:Connect(function()
+ if next(shopRevives) and Shop.phase=='Shop' then setLastStand(nil);Shop.resume() end
+ for p,d in shopRevives do
+  shopRevives[p]=nil
+  if p.Parent==Players and Shop.members[p] and down[p]==d and Shop.phase=='Shop' then
+   task.spawn(function()
+    local spawn=Role.playerSpawn()
+    for attempt=1,3 do
+     if p.Parent~=Players or down[p]~=d or not Shop.members[p] then break end
+     if rise(p,spawn and spawn.Position or d.position,1) then break end
+     task.wait(attempt)
+    end
+   end)
+  elseif not rising[p] then
+   p:SetAttribute('RunReturning',nil)
+  end
+ end
+end)
 local function revive(p)
  if not canRevive(p) then return false end
- local at=down[p].position;revivesUsed[p]=(revivesUsed[p] or 0)+1
- rise(p,at,Config.ReviveHealth)
+ local at=down[p].position
+ if not rise(p,at,Config.ReviveHealth) then return false end
+ revivesUsed[p]=(revivesUsed[p] or 0)+1
  Shop.resume()
  if lastStandEnds then setLastStand(nil) end
  Analytics.revived(p,revivesUsed[p])
@@ -854,12 +887,12 @@ local receiptBusy={}
 --     (a second Starter Pack pays emeralds, as receipts do), recorded as receipt 'gift:<PurchaseId>'
 --     and saved BEFORE it leaves the inbox: a crash in between delivers again, and the record stops a
 --     second grant. (Taking the inbox first and granting after would lose gifts in that crash.)
--- Studio keeps intents and inboxes in memory unless EnableStudioDataStores (ProfileService's rule),
+-- Studio keeps intents and inboxes in memory (the same rule as ProfileService),
 -- so simulated purchases never persist. MessagingService is pcalled and never blocks a purchase.
 -- Example: Ben (lobby A) gifts Ana (lobby B, his friend) a Starter Pack: Ben pays 49 R$ and sees
 -- "Gift sent to Ana!"; Ana's server gets the message and she sees GIFT FROM BEN with its contents.
 local Gift={due={},busy={},retryAt={},subs={},intents={},friendCache={},last={},window={},
- useStore=not studio or workspace:GetAttribute('EnableStudioDataStores')==true, -- the same rule as ProfileService
+ useStore=not studio, -- Studio never reaches production gift stores
  INTENT='RogueliteGiftIntent_v1',INBOX='RogueliteGiftInbox_v1',memory={}}
 Gift.memory[Gift.INTENT]={};Gift.memory[Gift.INBOX]={}
 function Gift.copy(v) if type(v)~='table' then return v end;local c={};for k,x in v do c[k]=Gift.copy(x) end;return c end

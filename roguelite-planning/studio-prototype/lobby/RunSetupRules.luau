@@ -39,9 +39,9 @@ local function mapOf(mapId)
 end
 -- Bosses: health x the difficulty's hp x (1 + BossPlayerHp per extra player) x the map's power
 -- health / its bossBase; damage x the difficulty's damage x the map's power damage. Normal solo
--- in Pine Valley is the authored number (a 2-player Normal Hammer: 18,000 x 1.75 = 31,500). A
+-- in Pine Valley is the authored number (a 2-player Normal Hammer: 18,000 x 2.35 = 42,300). A
 -- Normal solo Dragon: 31,500 x 2.92 / 1.75 = 52,560 = the Hammer's 18,000 x 2.92.
-R.BossPlayerHp=.75
+R.BossPlayerHp=1.35
 function R.bossScale(id,players,mapId)
  local d=R.difficulty(id);local m=mapOf(mapId)
  return d.hp*(1+R.BossPlayerHp*math.max(0,(players or 1)-1))*Stats.powerDamage(m.power)/(m.bossBase or 1),d.damage*Stats.powerHealth(m.power)
@@ -117,6 +117,7 @@ function R.ownedGodlies(weapons) local out={};for _,w in Weapons.List do if w.go
 
 -- Server checks for a run request. Returns true or false plus a short reason.
 function R.validMap(player,mapId,diff)
+ if player:GetAttribute('ProfileLoaded')~=true then return false,'Your save is still loading. Try again in a moment' end
  local index=type(mapId)=='string' and R.MapIndex[mapId]
  if not index then return false,'Unknown map' end
  -- Only maps with match folders can be played (MapConfig); the rest show as coming soon.
@@ -129,6 +130,7 @@ function R.validMap(player,mapId,diff)
  return true
 end
 function R.validLoadout(player,class,weapon)
+ if player:GetAttribute('ProfileLoaded')~=true then return false,'Your save is still loading. Try again in a moment' end
  if type(class)~='string' or not Stats.Classes[class] then return false,'Unknown class' end
  local p=R.progress(player)
  if not p.classes[class] then return false,'Class locked' end

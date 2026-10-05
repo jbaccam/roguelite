@@ -135,8 +135,8 @@ D.BOSS_FLY_DELAY=1.4;D.BOSS_FLY_STAGGER=.02
 -- 5 until 2026-10-03; crystals are worth 1 everywhere).
 D.killValue=nil
 -- At most this many crystals lie on the ground at once (D.spawn merges past it). Clients draw the
--- nearest 128, so all of them show.
-D.MAX_GROUND=50
+-- nearest 128; 96 ground markers leave headroom for pickups in flight.
+D.MAX_GROUND=96
 local function dropAt(at,owner,value,bonus)
  local model=Instance.new('Model');model.Name='CrystalShard'
  local root=Instance.new('Part');root.Name='ShardMarker';root.Size=Vector3.one*.1;root.Transparency=1
@@ -175,7 +175,7 @@ function D.spawn(npc,position)
  local exclude={folder,npc}
  local mobs=workspace:FindFirstChild('RogueliteEnemies');if mobs then table.insert(exclude,mobs) end
  for _,p in Players:GetPlayers() do if p.Character then table.insert(exclude,p.Character) end end
- local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances=exclude
+ local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances=exclude;params.RespectCanCollide=true
  if npc:GetAttribute('IsHammerBoss') or npc:GetAttribute('IsMapBoss') then
   -- The run's living players share them out evenly (EconomyConfig.shareIndex: 50 across 3 players
   -- is 17 / 17 / 16). Each crystal bursts out to its spot, then flies to its player on its own,
@@ -203,8 +203,8 @@ function D.spawn(npc,position)
  local base=D.killValue or E.KILL_SHARDS
  local value=base+(npc:GetAttribute('DesignerShirt')==true and E.DESIGNER_BONUS_SHARDS or 0)
  -- Ground cap (user, 2026-10-03): past D.MAX_GROUND crystals on the ground, this kill's value joins
- -- the nearest ground crystal with the same owner (same colour), so nothing is lost: 60 kills leave
- -- 50 crystals worth 60 in all. With none of that owner's down it drops as usual. Crystals already
+ -- the nearest ground crystal with the same owner (same colour), reused at the new death so nothing
+ -- is lost and fresh kills remain visible: 140 kills leave 96 crystals worth 140 in all. With none of that owner's down it drops as usual. Crystals already
  -- flying to a player don't count.
  local n,into,best=0,nil,math.huge
  for _,d in D.drops do
@@ -213,7 +213,15 @@ function D.spawn(npc,position)
    if d.owner==owner then local distance=(d.origin-at).Magnitude;if distance<best then into,best=d,distance end end
   end
  end
- if n>=D.MAX_GROUND and into then into.value+=value;into.model:SetAttribute('ShardValue',into.value);return into end
+ if n>=D.MAX_GROUND and into then
+  -- Reuse a marker at the NEW death, not an old off-screen pile. Its value and owner stay intact.
+  -- Publish movement and re-index together so collectors never query its old spatial bucket.
+  unindex(into);into.origin=at;into.position=at -- keep its original pickup eligibility during rapid kills
+  into.value+=value;index(into)
+  into.model:PivotTo(CFrame.new(at));into.model:SetAttribute('Origin',at);into.model:SetAttribute('BornAt',workspace:GetServerTimeNow())
+  into.model:SetAttribute('ShardValue',into.value)
+  return into
+ end
  return dropAt(at,owner,value,value-base)
 end
 -- Wave end (ShopService.finishWave, while still in Combat): a crystal already flying to a player

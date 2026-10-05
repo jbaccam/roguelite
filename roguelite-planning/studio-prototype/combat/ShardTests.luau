@@ -58,7 +58,17 @@ local ok,err=xpcall(function()
  Death.finish(npc(at,true,true));before=Shop.states[p].shards;Drops.clear(false);check(Shop.states[p].shards==before,'test abort grants no pending reward')
  for _=1,140 do Death.finish(npc(at,true,true)) end
  -- Ground cap (2026-10-03): past Drops.MAX_GROUND (50) new value merges into a crystal with the same owner.
- check(#Drops.drops==Drops.MAX_GROUND,'ground cap merges past 50');local total=0;for _,drop in Drops.drops do total+=drop.value end;check(total==140*E.KILL_SHARDS,'all death values retained');Drops.clear(false)
+ check(#Drops.drops==Drops.MAX_GROUND,'ground cap merges past 50');local total=0;for _,drop in Drops.drops do total+=drop.value end;check(total==140*E.KILL_SHARDS,'all death values retained')
+ -- A capped crystal follows the newest death into view and remains collectable under rapid kills.
+ local moved=at+Vector3.new(12,0,0)
+ for _,drop in Drops.drops do drop.born-=1 end
+ Death.finish(npc(moved,true,true))
+ local reused=Drops.nearest(p,moved,5)
+ check(reused~=nil and reused.value>=2,'merged pile relocates and spatial index follows')
+ check(workspace:GetServerTimeNow()-reused.born>=Motion.REST_SECONDS,'rapid merge does not restart pickup immunity')
+ root.CFrame=CFrame.new(reused.position+Vector3.new(0,2,0))
+ check(Drops.collect(p,reused),'merged value can still be collected')
+ Drops.clear(false)
  Death.finish(npc(at,true,true));d=Drops.drops[1];root.CFrame=CFrame.new(d.position+Vector3.new(0,2,0))
  d.born-=1;local old=Shop.states[p].shards;Shop.states[p].shards=E.MAX_SHARDS-1;check(Drops.collect(p,d),'collect at cap');Drops.step(d.started+Motion.PULL_SECONDS+.01);check(Shop.states[p].shards==E.MAX_SHARDS,'balance capped');Shop.states[p].shards=old;Drops.clear(false)
  Death.finish(npc(at,true,true));d=Drops.drops[1];d.born-=1;root.CFrame=CFrame.new(d.position+Vector3.new(0,2,0));check(Drops.collect(p,d),'start cancellable pull')

@@ -270,7 +270,7 @@ RunService.RenderStepped:Connect(function(dt)
   pass+=1
   local n=0
   for _,m in drops:GetChildren() do
-   -- A drop's Origin never changes once it exists, so it is read once.
+   -- Capped drops can be reused at a new death. Refresh their origin before ranking them.
    local e=entries[m]
    if not e then
     local origin=m:GetAttribute('Origin')
@@ -278,6 +278,7 @@ RunService.RenderStepped:Connect(function(dt)
     if typeof(origin)=='Vector3' then e={model=m,origin=origin,owner=m:GetAttribute('OwnerUserId') or 0};entries[m]=e end
    end
    if e then
+    local origin=m:GetAttribute('Origin');if typeof(origin)=='Vector3' then e.origin=origin end
     e.seen=pass;e.distance=(e.origin-position).Magnitude;e.active=m:GetAttribute('MagnetUserId')~=nil
     n+=1;list[n]=e
    end

@@ -219,6 +219,7 @@ function M.new(player,h,refresh)
   return data
  end
  function self:send(action,arg,extra)
+  if player:GetAttribute('RunDown') or player:GetAttribute('RunReturning') or player:GetAttribute('RunResult')~=nil then return end
   local data=self:snapshot();if data then combat.ShopAction:FireServer(action,data.revision,arg,extra) end
  end
  -- BUY effect: what each Buy click saw (offer token -> the card copied, where its icon was), kept
@@ -270,10 +271,21 @@ function M.new(player,h,refresh)
   task.defer(function() refreshQueued=false;refresh() end)
  end
  state:GetAttributeChangedSignal('ShopSnapshot'):Connect(queueRefresh)
+ local readyState=RS:FindFirstChild('RogueliteRunState')
+ if readyState then readyState:GetAttributeChangedSignal('ShopPlayers'):Connect(queueRefresh) end
  for _,attribute in {'Shards','BaggedShards','RunLevel','PendingLevelUps'} do
   state:GetAttributeChangedSignal(attribute):Connect(queueRefresh)
  end
  player:GetAttributeChangedSignal('ProfileRerolls'):Connect(function() task.defer(refresh) end)
+ for _,attribute in {'RunDown','RunReturning','RunResult'} do
+  player:GetAttributeChangedSignal(attribute):Connect(function()
+   if player:GetAttribute('RunDown') or player:GetAttribute('RunReturning') or player:GetAttribute('RunResult')~=nil then
+    self.selected=nil
+    if self.rerollConfirm then self.rerollConfirm.Close() end
+    if self.leaveConfirm then self.leaveConfirm.Close() end
+   end
+  end)
+ end
  script.AttributeChanged:Connect(function() task.defer(refresh) end)
  -- Fitted text never shrinks below this many layout px; render() raises it on small layout scales
  -- so text stays 9 px on screen (at scale .65 it is 14).
@@ -317,7 +329,7 @@ function M.new(player,h,refresh)
   return row*26
  end
  -- Class weapon fit (CharacterStats.classFit) for this player's class: the class tag
- -- 'GUNNER · RANGED' (with the class's starter icon) under the name, and the fit bar
+ -- 'GUNNER' (with the class's starter icon) under the name, and the fit bar
  -- '-15%  ·  OFF-CLASS'. Narrow phone cards step down so text stays readable (minText): the class
  -- alone, then an icon-only tag with the class moved into the bar ('-15%  ·  GUNNER').
  local FIT_WORD={home='YOUR CLASS',similar='SIMILAR',off='OFF-CLASS'}
@@ -326,16 +338,15 @@ function M.new(player,h,refresh)
  local function classFitRow(p,base,tagX,tagY,tagMaxW,tagH,barX,barY,barW,barH)
   local fit,pct,via=Stats.classFit(base,state:GetAttribute('Class'))
   local word=fit and FIT_WORD[fit] or 'ANY CLASS'
-  local kind=string.upper(base.kind=='Blast' and 'Explosive' or base.kind)
-  -- Every class (2026-10-04): 'THROWER · JUGGLER · RANGED', with the starter icon of the class that
+  -- Every class (2026-10-04): 'THROWER · JUGGLER', with the starter icon of the class that
   -- gives the fit (yours when it's listed). Narrow cards step down to every class, then that one
   -- class, then the icon alone with that class in the bar.
   local best=base.godly and 'GODLY' or string.upper(via or base.home)
   local name=base.godly and 'GODLY' or string.upper(table.concat(base.classes or {base.home},' · '))
   local icon=not base.godly and WeaponIcons[Signature[via or base.home]] or nil
   local size=math.max(tagH-10,minText)
-  local text=name..' · '..kind
-  if width(text,size,icon)>tagMaxW then text=name end
+  -- Class tags contain classes only. Melee/ranged/explosive describe attacks, not classes.
+  local text=name
   if width(text,size,icon)>tagMaxW then text=best end
   if width(text,size,icon)>tagMaxW then text=nil;word=best end
   if text then T.tag(p,'ClassTag',text,tagX,tagY,{h=tagH,size=tagH-10,maxW=tagMaxW,icon=icon})
@@ -428,7 +439,7 @@ function M.new(player,h,refresh)
   local startH=th(62);local leaveH=th(40);local statsH=math.max(90,ht-startH-leaveH-18)
   -- A party's headshots between LEAVE RUN and GO (ReadyRoster below), only while 2+ are counted.
   local partyState=RS:FindFirstChild('RogueliteRunState')
-  local rosterH=data.phase=='Shop' and (partyState and partyState:GetAttribute('ShopPlayers') or 0)>1 and th(48) or 0
+  local rosterH=data.phase=='Shop' and (partyState and partyState:GetAttribute('ShopPlayers') or 0)>1 and th(76) or 0
   if rosterH>0 then statsH=math.max(90,statsH-rosterH-8) end
   local stats=surface(root,'StatsColumn',leftW+gap+12,0,side,statsH)
   local secondary=self.statTab=='Secondary'
@@ -480,8 +491,27 @@ function M.new(player,h,refresh)
   reroll.Interactable=(free>0 or data.shards>=data.rerollPrice) and data.phase=='Shop'
   if paid then
    local stored=player:GetAttribute('ProfileRerolls') or 0
-   local rb=btn(left,'RobuxReroll',stored>0 and ('USE ×'..stored) or ('R$ '..Money.price('ShopReroll')),narrow and leftW-robuxW or leftW-rerollW-8-robuxW,narrow and 56 or 0,robuxW,rerollH,function()
-    if (player:GetAttribute('ProfileRerolls') or 0)>0 then combat.RunAction:FireServer('UseReroll','Shop') else combat.PurchaseRequest:FireServer('ShopReroll') end
+   local rb=btn(left,'RobuxReroll',stored>0 and ('TOKEN ×'..stored) or ('R$ '..Money.price('ShopReroll')),narrow and leftW-robuxW or leftW-rerollW-8-robuxW,narrow and 56 or 0,robuxW,rerollH,function()
+    local screen=root:FindFirstAncestorOfClass('ScreenGui')
+    if self.rerollConfirm or not screen then return end
+    local using=(player:GetAttribute('ProfileRerolls') or 0)>0
+    local win;local phaseConnection
+    win=T.window(screen,'RerollConfirm','Shop Reroll',500,286,function()
+     self.rerollConfirm=nil;if phaseConnection then phaseConnection:Disconnect() end
+    end)
+    self.rerollConfirm=win
+    T.label(win.Body,'Question',using and 'Use 1 reroll token?' or 'Buy 1 shop reroll?',0,0,464,42,28)
+    T.text(win.Body,'Details','Replaces every unlocked shop offer now. Locked offers stay. Use between waves while shopping.',8,52,448,72,21,cream)
+    T.button(win.Body,'Cancel','CANCEL',0,152,224,58,function() win.Close() end,true)
+    T.button(win.Body,'Confirm',using and 'USE 1 TOKEN' or ('BUY · R$ '..Money.price('ShopReroll')),240,152,224,58,function()
+     local latest=self:snapshot();win.Close()
+     if not latest or latest.phase~='Shop' or player:GetAttribute('RunDown') or player:GetAttribute('RunReturning') or player:GetAttribute('RunResult')~=nil then return end
+     -- Never turn a token confirmation into a purchase if its balance changed while open.
+     if using then
+      if (player:GetAttribute('ProfileRerolls') or 0)>0 then combat.RunAction:FireServer('UseReroll','Shop') end
+     else combat.PurchaseRequest:FireServer('ShopReroll') end
+    end)
+    if runState then phaseConnection=runState:GetAttributeChangedSignal('Phase'):Connect(function() if runState:GetAttribute('Phase')~='Shop' then win.Close() end end) end
    end)
    rb.Interactable=data.phase=='Shop'
    -- Odds note under the reroll buttons (in the gap above the cards): each new offer's tier chance at
@@ -607,7 +637,9 @@ function M.new(player,h,refresh)
   end,true)
   leave.Caption.TextColor3=red;leave.Caption.UITextSizeConstraint.MaxTextSize=18
   leave.Interactable=data.phase=='Shop'
-  local start=btn(root,'StartWave',data.ready and 'READY · WAITING' or 'GO (Wave '..data.wave..')',leftW+gap+12,statsH+18+leaveH+(rosterH>0 and rosterH+8 or 0),side,startH,function() self:send('Start') end)
+  local start=btn(root,'StartWave',data.ready and 'UNREADY' or 'GO (Wave '..data.wave..')',leftW+gap+12,statsH+18+leaveH+(rosterH>0 and rosterH+8 or 0),side,startH,function()
+   local latest=self:snapshot();if latest then self:send(latest.ready and 'Unready' or 'Start') end
+  end)
   start.Caption.UITextSizeConstraint.MaxTextSize=22
   if data.phase~='Shop' then start.Caption.Text='WAVE IN PROGRESS';start.Interactable=false end
   -- READY 2/4 under GO in multiplayer (user, 2026-10-03): living run members who pressed GO, out of
@@ -630,18 +662,21 @@ function M.new(player,h,refresh)
    for _,p in game:GetService('Players'):GetPlayers() do local r=p:GetAttribute('ShopReady');if r~=nil then table.insert(list,{p=p,ready=r==true}) end end
    table.sort(list,function(a,b) return a.p.UserId<b.p.UserId end)
    local key='';for _,e in list do key..=e.p.UserId..(e.ready and '+' or '-') end
-   if key==shown then return end;shown=key -- redraw only when someone joins, leaves or readies
+   if key==shown then return end -- redraw only when someone joins, leaves or readies
    roster:ClearAllChildren()
    local n=#list;if n==0 then return end
-   local d=math.min(rosterH-6,math.floor((side-(n-1)*8)/n));local x=(side-(n*d+(n-1)*8))/2
+   local d=math.min(rosterH-28,math.floor((side-(n-1)*8)/n));local x=(side-(n*d+(n-1)*8))/2
    for i,e in list do
     local head=Instance.new('ImageLabel');head.Name='Head_'..e.p.UserId;head.BackgroundColor3=T.Color.well;head.BorderSizePixel=0
-    head.Position=UDim2.fromOffset(x+(i-1)*(d+8),(rosterH-d)/2);head.Size=UDim2.fromOffset(d,d);head.ImageTransparency=e.ready and 0 or .55;head.Parent=roster
+    head.Position=UDim2.fromOffset(x+(i-1)*(d+8),2);head.Size=UDim2.fromOffset(d,d);head.ImageTransparency=e.ready and 0 or .55;head.Parent=roster
     T.headshot(head,e.p.UserId)
     T.make('UICorner',head,{CornerRadius=UDim.new(1,0)})
     T.make('UIStroke',head,{Color=e.ready and T.Color.lime or T.Color.dim,Thickness=e.ready and 3 or 2})
-    if e.ready then local s=math.floor(d*.42);require(RS:WaitForChild('StoreFX')).check(head,d-s+3,d-s+3,s) end
+    if e.ready then local s=math.floor(d*.42);T.check(head,d-s,d-s,s) end
+    local name=text(roster,'Name_'..e.p.UserId,e.p==player and 'YOU' or e.p.DisplayName,x+(i-1)*(d+8)-3,d+4,d+6,20,12,e.ready and green or cream)
+    name.TextXAlignment=Enum.TextXAlignment.Center;name.TextTruncate=Enum.TextTruncate.AtEnd
    end
+   shown=key
   end
   local function showReady()
    local n,total=runState and runState:GetAttribute('ShopReady'),runState and runState:GetAttribute('ShopPlayers')
@@ -695,6 +730,8 @@ function M.new(player,h,refresh)
      y+=8
      local fw=math.min(150,math.floor((dw-40)*.48))
      classFitRow(detail,base,16,y,dw-40-fw,24,dw-16-fw,y,fw,24);y+=24+14
+     local damage=math.max(0,math.floor(tonumber(copy.damage) or 0));local kills=math.max(0,math.floor(tonumber(copy.kills) or 0))
+     text(detail,'RunPerformance',string.format('THIS RUN · %s damage · %s kills',damage,kills),16,y,dw-32,26,16,cream);y+=32
     else
      y+=effects(detail,entry,16,y,dw-32)
      local works,wc=worksLine(entry,data)
