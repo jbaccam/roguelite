@@ -81,7 +81,7 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
    local template=d and templates:FindFirstChild(id)
    if template and not v then
     local model=template:Clone();model.Name='Weapon_'..state.Name..'_'..slot.Name;model.Parent=visuals
-    v={model=model,id=id,parts={},chain=Chains.bind(model,id),cards=Cards.bind(model,id)};tracked[slot]=v
+    v={model=model,id=id,parts={},reserveIndex={},chain=Chains.bind(model,id),cards=Cards.bind(model,id)};tracked[slot]=v
     if id=='19' then
      v.gloves={}
      for _,part in model:GetDescendants() do if part:IsA('BasePart') then
@@ -96,6 +96,7 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
     for _,part in model:GetDescendants() do if part:IsA('BasePart') then
      part.Anchored=true;part.CanCollide=false;part.CanTouch=false;part.CanQuery=false
      table.insert(v.parts,part)
+     v.reserveIndex[part]=part:FindFirstAncestor('Reserve2') and 2 or part:FindFirstAncestor('Reserve3') and 3 or 1
     end end
     -- Cosmetic extras: swing ribbons, Pandora glow and a contact capsule.
     Swing.attach(v,id,template);godlyFX.attach(v,id,template);legendaryFX.attach(v,id,template,slot)
@@ -198,16 +199,16 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
      if float then float.slots[slot:GetAttribute('Index')]=nil end
     end
     for _,part in v.parts do
-     local reserve=part:FindFirstAncestor('Reserve2') and 2 or part:FindFirstAncestor('Reserve3') and 3 or 1
+     local reserve=v.reserveIndex[part]
      local flying=v.flying and v.flying[reserve] and v.flying[reserve]>0
      local hidden=v.hide and (v.hide[part] or 0)>0
      part.LocalTransparencyModifier=visible and not flying and not hidden and 0 or 1
     end
     if v.cards then
      for _,entry in v.cards.cards do
-      for _,gui in entry.model:GetDescendants() do if gui:IsA('SurfaceGui') then gui.Enabled=visible and now>=(entry.flyingUntil or 0) end end
+      for _,gui in entry.guis do gui.Enabled=visible and now>=(entry.flyingUntil or 0) end
       if now<(entry.flyingUntil or 0) then
-       for _,part in entry.model:GetDescendants() do if part:IsA('BasePart') then part.LocalTransparencyModifier=1 end end
+       for _,part in entry.parts do part.LocalTransparencyModifier=1 end
       end
      end
     end
@@ -243,7 +244,8 @@ local function showShot(origin,finish,kind,id,thickness,blastRadius,contact,norm
   local slot=state and state:FindFirstChild('Slot'..slotIndex)
   local v=slot and tracked[slot]
   if v and v.id==id then
-   origin=v.model:GetPivot():PointToWorldSpace(Motion.MuzzleOffsets[id])
+   -- The moving client muzzle is only a flash anchor. Replacing the first segment's
+   -- server origin creates an elbow where it meets the rest of the straight flight.
    if shotId and id~='10' then muzzleFlash(v.model,id,Motion.MuzzleOffsets[id],shotId) end
   end
  end
@@ -283,13 +285,13 @@ local function damageNumber(position,damage,color,name,mine)
  hitFeedback.number(position,damage,color,taken,mine)
 end
 -- mine: your own hit (teammates' numbers give way first). dot: a burn, poison or zone tick, which
--- shows its number but no splat or flash.
+-- shows its number and white flash without an extra splat.
 local function onHit(position,damage,npc,impactPosition,lethal,secondary,weaponId,mine,dot)
  if typeof(position)~='Vector3' or type(damage)~='number' then return end
  if not lethal and not dot then mobImpact.hit(impactPosition or position-Vector3.yAxis*2,npc,secondary) end
  godlyFX.hit(npc,lethal,secondary,weaponId,impactPosition or position)
  damageNumber(position,damage,Color3.fromRGB(255,246,218),'DamageNumber',mine)
- if npc and npc.Parent and not dot then hitFeedback.flash(npc) end
+ if npc and npc.Parent then hitFeedback.flash(npc) end
 end
 -- Kills, one at a time and reliable (CombatEffectsService); they carry their owner and dot flag.
 combat:WaitForChild('Hit').OnClientEvent:Connect(function(position,damage,npc,impactPosition,lethal,secondary,weaponId,ownerId,dot)
@@ -691,7 +693,7 @@ task.spawn(function()
   local run=RS:FindFirstChild('RogueliteRunState');local phase=run and run:GetAttribute('Phase')
   if phase~='Combat' and phase~='Practice' then return false end
   local own=states:FindFirstChild(tostring(player.UserId))
-  return Stats.dashes(own and own:GetAttribute('Class') or player:GetAttribute('RunClass'),Catalog.ById[player:GetAttribute('RunWeapon')])
+  return Stats.dashes(own and own:GetAttribute('Class') or player:GetAttribute('RunClass'))
  end
  -- Usable this moment: alive, not held (a pause or a boss entrance: GroundSpeed 0), not on the pause screen.
  local function body()

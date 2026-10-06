@@ -13,6 +13,8 @@ local player=game.Players.LocalPlayer
 assert(workspace:FindFirstChild('RogueliteLobby') and workspace.RogueliteLobby:FindFirstChild('RunSetup'),'run this in the lobby')
 local RunSetup=require(RS:WaitForChild('RunSetupUI'))
 local Rules=require(RS:WaitForChild('RunSetupRules'))
+local Stats=require(RS.RogueliteCombat.CharacterStats)
+local Weapons=require(RS.RogueliteCombat.WeaponCatalog)
 local CLASS='Thrower'
 local UNOWNED={['04']=true,['15']=true,['18']=true} -- Kusarigama, Egg, Deck of Cards: catalog order puts one first
 local PICK='31' -- Mjolnir (Mage, Thrower), the last owned class weapon
@@ -90,6 +92,15 @@ local ok,err=xpcall(function()
    for _,d in root:GetDescendants() do if d:IsA('GuiButton') and d.Name:match('^Class_') then table.insert(others,d) end end
    for _,o in others do assert(disjoint(grid,o),'tile area overlaps '..o.Name..at) end
    local info=root:FindFirstChild('ClassInfo',true)
+   local dash=info:FindFirstChild('DashInfo',true)
+   assert(dash and dash:GetAttribute('Available')==Stats.dashes(CLASS,Weapons.ById[PICK]),'selected starter dash status'..at)
+   assert(dash:GetAttribute('StarterId')==PICK and dash.TextFits,'dash text names actual selected starter and fits'..at)
+   for _,other in Stats.ClassOrder do
+    local row=info:FindFirstChild('Fit_'..other,true)
+    local _,pct=Stats.classFit({home=other},CLASS)
+    assert(row and row.Effect.Text==RunSetup.classDamageText(pct,other),'class effect names damage and weapon class'..at)
+    assert(row.Effect.TextFits,'class effect text fits'..at)
+   end
    for _,name in {'WeaponTitle','WeaponName'} do
     local l=root:FindFirstChild(name,true);assert(l and disjoint(l,info),name..' clear of the details'..at)
     for _,o in others do if o:IsA('GuiButton') then assert(disjoint(l,o),name..' overlaps '..o.Name..at) end end
@@ -123,6 +134,16 @@ local ok,err=xpcall(function()
    end
    assert(neighbour,'owned starter shares its first row with locked starters'..at)
    table.insert(results,tostring(size)..' sparse '..class)
+  end
+ end
+ -- The explanation follows the gameplay eligibility helper for every class/weapon combination.
+ for _,class in Stats.ClassOrder do
+  for _,weapon in Weapons.List do
+   local enabled,description=RunSetup.dashDescription(class,weapon)
+   assert(enabled==(class=='Brawler'),'class-only dash eligibility '..class..' '..weapon.id)
+   assert(not string.find(description,'nil',1,true),'dash explanation contains no missing settings')
+   if enabled then assert(string.find(description,'Q / controller X / DASH button',1,true),'enabled dash shows all input hints')
+   else assert(string.find(description,'NO DASH - Brawler class ability only',1,true),'unavailable dash is explicit') end
   end
  end
 end,debug.traceback)

@@ -15,9 +15,9 @@ S.Movement={Gravity=150,JumpHeight=9.5,AirSpeedMultiplier=1.45}
 -- long after the server approves the dash (DashAt). 0.35 s covers the 0.3 s burst plus the request's
 -- trip to the server; one dash every 3 s makes that about 12% of the time at most.
 S.Dash={Peak=280,Ease=3,Seconds=.3,Cooldown=3,Distance=28,Allowance=30,IFrames=.35}
--- Who can dash: Brawlers (the hand-to-hand class), and any class whose starting weapon is melee,
--- e.g. a Mage who starts with Excalibur. weapon: the starter's WeaponCatalog entry (nil = none).
-function S.dashes(class,weapon) return class=='Brawler' or (type(weapon)=='table' and weapon.kind=='Melee') end
+-- Dash is a class ability, never granted by selecting/equipping a melee weapon.
+-- Brawler is the current melee-focused class; mixed/ranged classes do not gain it.
+function S.dashes(class) return class=='Brawler' end
 local function stat(id,label,base,min,max,step,unit,group,help)
  local d={id=id,label=label,base=base,min=min,max=max,step=step,unit=unit or '',group=group,help=help}
  table.insert(S.List,d);S.ById[id]=d
@@ -43,7 +43,7 @@ stat('UtilityPower','Utility power',0,-80,300,10,'%','Offense','Bonus to Constru
 stat('AttackRange','Attack range',0,-50,150,10,'%','Weapon','Scales targeting and melee reach or projectile travel distance.')
 stat('ProjectileCount','Extra projectiles',0,0,4,1,'','Weapon','Extra shots for projectile weapons only; maximum nine shotgun pellets.')
 stat('Pierce','Piercing',0,0,4,1,'','Weapon','Extra enemies per non-explosive projectile; 70% damage per added hit.')
-stat('Bounce','Bounces',0,0,4,1,'','Weapon','Extra unique targets for non-explosive projectiles; 60% per bounce.')
+stat('Bounce','Bounces',0,0,4,1,'','Weapon','Extra unique targets for bouncing throws and magic; guns never bounce. 60% per bounce.')
 stat('ProjectileSpeed','Projectile speed',0,-50,200,10,'%','Weapon','Scales physical projectile travel speed.')
 stat('ProjectileSize','Projectile size',0,0,150,10,'%','Weapon','Scales projectile collision radius and visible shot thickness.')
 stat('AreaSize','Area radius',0,-50,150,10,'%','Weapon','Scales blast and chain-search radius.')
@@ -187,7 +187,7 @@ function S.incoming(amount,s) return amount*S.mult(-s.ContactReduction)*(s.Armor
 -- Weapon-only stats (2026-10-03): whether a weapon really uses one. The one answer for the
 -- server's launchers (they read shot stats through S.shotStat), S.weapon (explosion damage), the
 -- run shop's offers and the cards' "Works with" line, so none of them can disagree. It follows how
--- each weapon attacks: bullets and the Deck of Cards use extra shots, pierce and bounce; thrown
+-- each weapon attacks: gun bullets use extra shots and pierce, never bounce; cards also bounce; thrown
 -- weapons that fly back (Boomerang, Mjolnir, Trident) get pierce and bounce but no extra copies;
 -- fire and gas throws (Molotov, Fart Gun) and explosives (Rocket Launcher, Pandora's Box) get extra
 -- copies only; the Storm Bow rains more arrows; swings, the Rubber Duck's spray and the Vacuum /
@@ -196,10 +196,13 @@ function S.incoming(amount,s) return amount*S.mult(-s.ContactReduction)*(s.Armor
 -- (ChainCount 1) every weapon's hits chain lightning, so Tinfoil Antlers helps them all.
 -- Any other stat helps every weapon (true).
 local Thrown=require(script.Parent.SpecialMotion).profiles -- SpecialWeapons' throws
+-- A gun commits its firing line for its entire flight, including piercing contacts.
+S.StraightGuns={['00']=true,['07']=true,['08']=true,['09']=true,['10']=true,['11']=true,['24']=true,['41']=true,Turret=true}
 S.WeaponStats={ProjectileCount=true,Pierce=true,Bounce=true,ExplosionDamage=true,AreaSize=true,ChainBonus=true,ChainDamage=true}
 local AREA_SPECIALS={'waveRadius','spread','hop','burstRadius'} -- Godly special sizes GodlyWeapons scales by AreaSize
 function S.usesStat(base,id,stats)
  if not S.WeaponStats[id] then return true end
+ if id=='Bounce' and S.StraightGuns[base.id] then return false end
  local w=base.id;local thrown=Thrown[w]
  if id=='ExplosionDamage' then return base.kind=='Blast' end
  if id=='ChainBonus' or id=='ChainDamage' then return base.lightning==true or (stats~=nil and (stats.ChainCount or 0)>0) end

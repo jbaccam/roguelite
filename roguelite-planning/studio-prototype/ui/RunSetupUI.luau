@@ -18,6 +18,16 @@ local Money=require(combat:WaitForChild('MonetizationConfig'))
 local WeaponIcons=require(RS:WaitForChild('WeaponInventoryUI')).Icons
 local C=T.Color
 local M={}
+function M.dashDescription(class,weapon)
+ local enabled=Stats.dashes(class)
+ if enabled then
+  return true,'DASH AVAILABLE - Brawler class ability. Q / controller X / DASH button. '..tostring(Stats.Dash.Cooldown)..'s cooldown.'
+ end
+ return false,'NO DASH - Brawler class ability only. Choosing or equipping a melee weapon does not grant dash.'
+end
+function M.classDamageText(pct,class)
+ return (pct>0 and '+' or '')..tostring(pct)..'% damage with '..class..' weapons'
+end
 -- Layout units: page px, U canvas px each (T.canvas, 1920x1080 design). The desktop layout is
 -- DWxDH page px, so at 1080p it fills the screen at 1.5x as before. Pages smaller than that
 -- (phones) use the compact layout, at least MIN_H tall; shorter pages scroll.
@@ -75,6 +85,7 @@ function M.new(player,opts)
  -- px; every piece is drawn straight onto it (canvas), or onto a scroll in it on very short pages.
  -- G: the current layout (plan); CW x CH the content size.
  local root,cv,cvScale,canvas,G
+ local openingTween
  local CW,CH=DW,DH
  local blur,profile,draw
  local primary -- {button, action} of the current step's primary button (Enter / Start)
@@ -104,6 +115,7 @@ function M.new(player,opts)
   return sc
  end
  function self.Close()
+  if openingTween then openingTween:Cancel();openingTween=nil end
   if not screen.Enabled then return end
   local closedMode=self.mode
   screen.Enabled=false;self.mode=nil;self.step=nil;primary=nil
@@ -333,6 +345,9 @@ function M.new(player,opts)
   -- drawbacks, then the 2 / 4 home weapon bonuses. Drawn into a holder; if it is taller than the
   -- panel (phones, or a locked class with its buy buttons) the holder moves into a scroll.
   local c=Stats.Classes[class]
+  local pick=Rules.Signature[class];local pickW
+  for _,w in list do if w.id==sel.weapon and profile.weapons[w.id] then pick=w.id end end
+  for _,w in list do if w.id==pick then pickW=w end end
   local pad=cp and 14 or 18;local tw=infoW-2*pad
   local info=T.panel(canvas,'ClassInfo',infoX,infoY,infoW,infoH,'panel')
   local box=T.frame(info,'Content',0,0,infoW,0)
@@ -344,11 +359,15 @@ function M.new(player,opts)
   local descH=math.ceil(TextService:GetTextSize(c.description,cp and 16 or 16,T.Body,Vector2.new(tw,1000)).Y)+2
   T.text(box,'Description',c.description,pad,y,tw,descH,16,C.muted).TextYAlignment=Enum.TextYAlignment.Top
   y+=descH+6
+  local dash,dashText=M.dashDescription(class,pickW)
+  local dashH=math.ceil(TextService:GetTextSize(dashText,15,T.Body,Vector2.new(tw,1000)).Y)+6
+  local dashLabel=T.text(box,'DashInfo',dashText,pad,y,tw,dashH,15,dash and C.lime or C.muted)
+  dashLabel.TextYAlignment=Enum.TextYAlignment.Top;dashLabel:SetAttribute('Available',dash);dashLabel:SetAttribute('StarterId',pick)
+  y+=dashH+6
   -- The card badges spelled out (2026-10-03: the legend sentence didn't explain the +/-): your damage
   -- with each class's weapons as this class, one chip per class (its card's icon), best first,
   -- coloured like the badges. Gunner: Gunner +15%, Thrower 0%, Handyman 0%, Juggler -5%, Mage -5%,
-  -- Brawler -15%. Desktop: 3 x 2 with 'Godly: no change' on the heading line (66 px in all);
-  -- phones: 2 across and the Godly line under them.
+  -- Brawler -15%. Desktop uses two columns of explicit sentences; phones use one.
   local fits={}
   for i,other in Stats.ClassOrder do local _,pct=Stats.classFit({home=other},class);table.insert(fits,{c=other,pct=pct,i=i}) end
   table.sort(fits,function(a,b) if a.pct~=b.pct then return a.pct>b.pct end return a.i<b.i end)
@@ -359,18 +378,19 @@ function M.new(player,opts)
   local headH=T.section(box,'FitTitle',head,pad,y,inline and tw-noteW-8 or tw,14)
   if inline then T.text(box,'FitGodly',godly,pad+tw-noteW,y,noteW,headH,14,C.muted).TextXAlignment=Enum.TextXAlignment.Right end
   y+=headH+3
-  local cols=tw>=400 and 3 or 2;local fw,fh=math.floor((tw-(cols-1)*6)/cols),20
+  local cols=cp and 1 or 2;local gap=8;local fw=(tw-gap*(cols-1))/cols;local rowY=y;local rowH=0
   for k,f in fits do
    local own=f.c==class
-   local chip=T.make('Frame',box,{Name='Fit_'..f.c,Position=UDim2.fromOffset(pad+((k-1)%cols)*(fw+6),y+math.floor((k-1)/cols)*(fh+3)),Size=UDim2.fromOffset(fw,fh),BackgroundColor3=own and Color3.fromRGB(32,48,24) or Color3.fromRGB(26,32,36),BorderSizePixel=0})
+   local sentence=M.classDamageText(f.pct,f.c)
+   local fh=math.max(22,math.ceil(TextService:GetTextSize(sentence,14,T.Body,Vector2.new(fw-12,1000)).Y)+4)
+   local chip=T.make('Frame',box,{Name='Fit_'..f.c,Position=UDim2.fromOffset(pad+((k-1)%cols)*(fw+gap),rowY),Size=UDim2.fromOffset(fw,fh),BackgroundColor3=own and Color3.fromRGB(32,48,24) or Color3.fromRGB(26,32,36),BorderSizePixel=0})
    T.make('UICorner',chip,{CornerRadius=UDim.new(0,6)})
    T.make('UIStroke',chip,{Color=own and C.lime or Color3.fromRGB(8,10,11),Thickness=own and 2 or 1.5})
-   T.icon(chip,'Icon',3,1,fh-2,WeaponIcons[Rules.Signature[f.c]])
-   T.text(chip,'Name',f.c,fh+4,0,fw-fh-52,fh,14,own and C.white or C.muted)
-   T.label(chip,'Pct',T.fitText(f.pct),fw-46,0,42,fh,15,T.fitColor(f.pct)).TextXAlignment=Enum.TextXAlignment.Right
+   T.text(chip,'Effect',sentence,6,0,fw-12,fh,14,T.fitColor(f.pct))
+   rowH=math.max(rowH,fh)
+   if k%cols==0 or k==#fits then rowY+=rowH+3;rowH=0 end
   end
-  local rows=math.ceil(#fits/cols)
-  y+=rows*fh+(rows-1)*3
+  y=rowY
   if not inline then T.text(box,'FitGodly','Godly weapons: no change',pad,y+3,tw,18,14,C.muted);y+=21 end
   y+=6
   local good,bad=Stats.classLines(class)
@@ -408,9 +428,6 @@ function M.new(player,opts)
   nameL.TextWrapped=false;nameL.TextTruncate=Enum.TextTruncate.AtEnd
   -- The pick, if it is an owned starter for this class; else the class's signature weapon (a
   -- saved Handyman Nail Gun opened as a Mage shows the Magic Staff). The server checks it again.
-  local pick=Rules.Signature[class];local pickW
-  for _,w in list do if w.id==sel.weapon and profile.weapons[w.id] then pick=w.id end end
-  for _,w in list do if w.id==pick then pickW=w end end
   local function showName(w)
    if not nameL.Parent then return end
    w=w or pickW;local locked=w~=nil and not profile.weapons[w.id]
@@ -513,6 +530,7 @@ function M.new(player,opts)
   -- The canvas is kept in page px (U canvas px each) and centred, so the open pop grows from
   -- the middle.
   T.canvas(root,function(L,frame)
+   if openingTween then openingTween:Cancel();openingTween=nil end
    cv=frame;cvScale=frame:FindFirstChildOfClass('UIScale')
    G=plan(L)
    cv.AnchorPoint=Vector2.new(.5,.5);cv.Position=UDim2.fromScale(.5,.5);cv.Size=UDim2.fromOffset(G.w,G.h);cvScale.Scale=L.s*U
@@ -520,7 +538,7 @@ function M.new(player,opts)
   end)
   if cvScale then
    local s=cvScale.Scale;cvScale.Scale=s*.94
-   TweenService:Create(cvScale,TweenInfo.new(.16,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=s}):Play()
+   openingTween=TweenService:Create(cvScale,TweenInfo.new(.16,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=s});openingTween:Play()
   end
  end
  function self.Refresh() if screen.Enabled then profile=opts.profile();draw() end end

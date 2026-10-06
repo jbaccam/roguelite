@@ -94,6 +94,11 @@ local runInfo={} -- player -> {stint,prevBest,firstWin}
 local wentDown,soloBroken={},{}
 local RETURN_SECONDS=20 -- Back to Lobby happens on its own after this
 local returning={} -- player -> server time of their automatic Back to Lobby
+local resultSaves={} -- player -> receipt; keep results visible until this receipt is durable
+local function rewardsReady(p)
+ local receipt=resultSaves[p]
+ return receipt~=nil and receipt.saved and workspace:GetServerTimeNow()>=receipt.reviewAt
+end
 local function setResult(p,outcome,map,stint,cleared,test)
  local key=RunSetupRules.runKey(map,difficulty())
  local info=runInfo[p];if info and info.stint~=stint then info=nil end
@@ -104,12 +109,38 @@ local function setResult(p,outcome,map,stint,cleared,test)
   if id~='' then table.insert(weapons,{id=id,tier=f:GetAttribute('Tier') or 1}) end end end
  for _,it in s and s.items or {} do table.insert(items,{id=it.id,count=it.count}) end
  local at=workspace:GetServerTimeNow()+RETURN_SECONDS;returning[p]=at
+ p:SetAttribute('RunRewardReturnAt',at)
+ local firstWin=not test and info and info.firstWin or 0
+ local tutorialReward=tutorialRun() and outcome=='Victory' and Tutorial.Reward or nil
+ local total=test and 0 or (Profiles.stintPaid(p,stint)+firstWin)
+ if tutorialReward and not test then total=tutorialReward.emeralds or 0 end
+ local profile=Profiles.get(p)
+ local receipt={stint=stint,saved=false,reviewAt=workspace:GetServerTimeNow()+1.5}
+ resultSaves[p]=receipt
+ p:SetAttribute('RunRewardStatus','Saving')
  p:SetAttribute('RunResult',Http:JSONEncode({run=Shop.runId,outcome=outcome,map=map,
   mapName=RunSetupRules.Maps[RunSetupRules.MapIndex[map] or 1].name,difficulty=difficulty(),waves=cleared,
-  level=s and s.level or 1,emeralds=test and 0 or Profiles.stintPaid(p,stint),firstWin=not test and info and info.firstWin or 0,
+  level=s and s.level or 1,emeralds=total,firstWin=firstWin,balance=profile and profile.emeralds or 0,reviewAt=receipt.reviewAt,
   newBest=not test and info~=nil and cleared>info.prevBest,best=best,winWave=RunSetupRules.WinWave,
   weapons=weapons,items=items,test=test==true,returnAt=at,
-  tutorial=tutorialRun() and outcome=='Victory' and Tutorial.Reward or nil})) -- the tutorial's results (RunResultsUI)
+  tutorial=tutorialReward})) -- the tutorial's results (RunResultsUI)
+ -- Settlement has already credited the profile, once. Retry only the durable write; never
+ -- re-grant rewards on a save retry or a repeated Play Again request.
+ task.spawn(function()
+  while p.Parent==Players and resultSaves[p]==receipt and p:GetAttribute('RunResult') do
+   local ok,saved=pcall(Profiles.save,p)
+   if p.Parent~=Players or resultSaves[p]~=receipt or not p:GetAttribute('RunResult') then return end
+   if ok and saved then
+    receipt.saved=true
+    p:SetAttribute('RunRewardStatus',test and 'NoRewards' or studio and 'Studio' or 'Saved')
+    returning[p]=math.max(returning[p] or 0,workspace:GetServerTimeNow()+RETURN_SECONDS)
+    p:SetAttribute('RunRewardReturnAt',returning[p])
+    return
+   end
+   p:SetAttribute('RunRewardStatus','Retrying')
+   task.wait(5)
+  end
+ end)
 end
 -- Quest progress (ProfileService). Guarded so this script still runs beside an older ProfileService.
 local function questEvent(p,stat,n) if Profiles.questEvent then Profiles.questEvent(p,stat,n) end end
@@ -507,6 +538,9 @@ end
 -- A Studio Match, or a teleport that can't start, puts them back in the arena instead.
 local returnTries={} -- player -> failed Back to Lobby attempts on a live match server
 local function returnToLobby(list)
+ local blockedGroups={}
+ for q,group in partyTrip do if q.Parent==Players and q:GetAttribute('RunResult') and not rewardsReady(q) then blockedGroups[group]=true end end
+ local ready={};for _,p in list do if rewardsReady(p) and not blockedGroups[partyTrip[p]] then table.insert(ready,p) end end;list=ready
  for _,p in list do returning[p]=nil end
  if Role.get()=='Match' and not studio then
   -- A party that left together (leaveWithParty) goes in a teleport of its own, carrying the party,
@@ -529,6 +563,7 @@ local function returnToLobby(list)
  for _,p in list do
   returnTries[p]=nil;partyTrip[p]=nil
   if p.Parent~=Players then continue end
+  resultSaves[p]=nil;p:SetAttribute('RunRewardStatus',nil);p:SetAttribute('RunRewardReturnAt',nil)
   p:SetAttribute('RunResult',nil)
   if Role.get()~='Match' then p:SetAttribute('StudioArea','Lobby') end -- the lobby's spawn handler places them
   p:SetAttribute('HoldRespawn',false) -- a body that fell respawns through AvatarNormalizer
@@ -560,6 +595,7 @@ local function startAgain()
  for q in phoenixUsed do phoenixUsed[q]=nil;q:SetAttribute('PhoenixUsed',nil) end
  for _,p in list do
   returning[p]=nil;returnTries[p]=nil
+  resultSaves[p]=nil;p:SetAttribute('RunRewardStatus',nil);p:SetAttribute('RunRewardReturnAt',nil)
   p:SetAttribute('PlayAgainStatus',nil);p:SetAttribute('RunResult',nil)
   if Role.get()~='Match' then p:SetAttribute('StudioArea','Arena') end
   p:SetAttribute('HoldRespawn',false)
@@ -601,6 +637,7 @@ local function checkAgain()
 end
 local function playAgain(p,on)
  if not p:GetAttribute('RunResult') or partyTrip[p] then return end -- a party that left together goes home together
+ if on and not rewardsReady(p) then return end
  if on then
   again[p]=true;returning[p]=nil -- waits here instead of going back on its own
   againStatus(p,'Starting...')
@@ -608,21 +645,20 @@ local function playAgain(p,on)
   again[p]=nil;p:SetAttribute('PlayAgainStatus',nil)
   -- Cancelled: back to the lobby in 10 s, and the results screen's countdown says so.
   local at=workspace:GetServerTimeNow()+10;returning[p]=at
+  p:SetAttribute('RunRewardReturnAt',at)
   local ok,info=pcall(Http.JSONDecode,Http,p:GetAttribute('RunResult') or '')
   if ok and type(info)=='table' then info.returnAt=at;p:SetAttribute('RunResult',Http:JSONEncode(info)) end
  end
  checkAgain()
 end
 -- Restart (the pause screen's RESTART, plan L; solo only): this run ends as Left (rewards so far
--- kept, as with Leave Run) and the player goes straight into Play Again, with no results screen.
+-- kept, as with Leave Run). Show the rewards receipt before the player confirms PLAY AGAIN.
 local function restart(p)
  if not Shop.members[p] or Shop.memberCount()~=1 then return false end
  local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid')
  if not down[p] and (not h or h.Health<=0) then return false end
  if not finish(p,'Left') then return false end
  afterLeave()
- again[p]=true;returning[p]=nil
- checkAgain()
  return true
 end
 -- Rejoin, lobby side (plan J item 9): a run this player dropped out of that is still going shows
@@ -687,7 +723,7 @@ local function dash(p)
  if not s or not Shop.members[p] or down[p] or not h or h.Health<=0 then return end
  if p:GetAttribute('LobbyPreviewActive') or p:GetAttribute('Paused') then return end
  if (Shop.phase~='Combat' and Shop.phase~='Practice') or Characters.frozen(p) or Characters.inShop(p) then return end
- if not Stats.dashes(s.class,Weapons.ById[p:GetAttribute('RunWeapon')]) then return end
+ if not Stats.dashes(s.class) then return end
  local now=os.clock();if now-(lastDash[p] or -math.huge)<Stats.Dash.Cooldown-.3 then return end
  lastDash[p]=now;p:SetAttribute('DashAt',workspace:GetServerTimeNow())
 end
@@ -1337,7 +1373,7 @@ Players.PlayerRemoving:Connect(function(p)
  if (revivesUsed[p] or 0)>0 or phoenixUsed[p] then reviveCarry[p.UserId]={run=Shop.runId,revives=revivesUsed[p] or 0,phoenix=phoenixUsed[p]} end
  down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil;requestWindow[p]=nil;lastPickSave[p]=nil
  teammateRevive.clear(p) -- their spot, and their holds on others' spots
- returning[p]=nil;prompting[p]=nil;runInfo[p]=nil;returnTries[p]=nil;again[p]=nil;lastRunAction[p]=nil;partyTrip[p]=nil
+ returning[p]=nil;resultSaves[p]=nil;prompting[p]=nil;runInfo[p]=nil;returnTries[p]=nil;again[p]=nil;lastRunAction[p]=nil;partyTrip[p]=nil
  RunPause.forget(pause,p);pausedWeapons[p]=nil;lastPauseAction[p]=nil;runKills[p]=nil;runDamage[p]=nil;statStint[p]=nil -- plan L
  wentDown[p]=nil;soloBroken[p]=nil -- plan M
  waveWork[p]=nil;ledgers[p]=nil;lastHit[p]=nil;fightSeconds[p]=nil -- contribution (C1, C2)
