@@ -1,5 +1,7 @@
 # Map Mob Roster
 
+**October 5 direction:** Hammer Brute is the universal display name. Every round 10 event and every boss requires a unique themed intro. Encounter rules, art feedback and implementation status: [Round 10 events and boss intros](plans/2026-10-05-wave-10-events-and-boss-intros.md).
+
 Updated: 2026-09-24
 
 This is the current planning roster and supersedes earlier map/mob assignments in CURRENT_GAME_STRUCTURE.md, MASTER_GAME_DESIGN.md, and BRAINSTORM_MOBS_BOSSES.md. It records future content, not a claim that every enemy is implemented.
@@ -8,7 +10,7 @@ The user approved the themed rosters, requested ranged enemies for Frozen Pass a
 
 | Map | Regular mobs | Dedicated ranged mob | Boss |
 | --- | --- | --- | --- |
-| Pine Valley | Regular Zombie, Baby Zombie, Tank Zombie | Spitter Zombie (later addition) | Hammer Zombie Boss |
+| Pine Valley | Regular Zombie, Baby Zombie, Tank Zombie | Spitter Zombie (later addition) | Hammer Brute |
 | Beach Cove | Crab, Snake, Hermit Crab, Rock-Throwing Crab | Rock-Throwing Crab | Giant King Crab |
 | Desert Badlands / Desert Basin | Skeleton, Bow Skeleton, Mummy, Scorpion | Bow Skeleton | Pharaoh |
 | Frozen Pass | Frost Ghost, Werewolf, Frozen Knight, Ice Elf | Ice Elf | Frost Cyclops |
@@ -40,7 +42,7 @@ The user approved the themed rosters, requested ranged enemies for Frozen Pass a
 
 ## Boss direction
 
-- **Hammer Zombie Boss:** Pine Valley's existing user-created boss direction replaces Ogre Warlord.
+- **Hammer Brute:** Pine Valley's existing user-created boss direction replaces Ogre Warlord.
 - **Giant King Crab:** an enormous king crab, dramatically larger than players and regular crabs, with a broad body, long legs, and massive claws. It should dominate the arena visually while leaving navigable dodge space and readable attacks. Exact scale and attack kit still need testing.
 - **Pharaoh:** Desert boss; full attack kit remains to be designed.
 - **Frost Cyclops:** Frozen Pass boss. It never swings its club at players. Both attacks strike the ground, and the visual effects carry the attack. This keeps the animation count low. User direction, 2026-09-29:

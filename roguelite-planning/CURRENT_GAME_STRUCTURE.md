@@ -1,5 +1,7 @@
 # Current Game Structure
 
+**October 5 direction:** Hammer Brute is the universal display name. Every round 10 event and every boss requires a unique themed intro. Encounter rules, art feedback and implementation status: [Round 10 events and boss intros](plans/2026-10-05-wave-10-events-and-boss-intros.md).
+
 **Status:** Consolidated pre-production plan  
 **Updated:** 2026-10-04 (squad fixes, Armory/showcase and Journal synced; single-client Studio tests recorded in [bugfix report](studio-prototype/combat/BUGFIX_REPORT_2026-10-04.md))
 **Scope:** What the game currently is, what content belongs to it, and what still needs design work.
@@ -25,7 +27,7 @@ First join as Roblox avatar
   -> short guided tutorial in Pine Valley with the Frying Pan (3 waves, easy boss on wave 3)
   -> result screen grants 3 Silver Chests + 100 emeralds
   -> lobby: guided chest opening, first upgrade and equip in the Armory, then Play
-  -> Pine Valley: survive to wave 20 and beat the Hammer Zombie Boss
+  -> Pine Valley: survive to wave 20 and beat the Hammer Brute
   -> Cash Out, or Keep Going into Endless for more keys
   -> keys open chests; duplicate copies raise starting tiers
   -> winning a map on Hard unlocks the next, harder map (Normal / Hard / Nightmare per map)
@@ -161,7 +163,7 @@ The five maps form the difficulty ladder. Each map is harder and pays more keys 
 
 | # | Map | Regular mobs | Dedicated ranged mob | Boss |
 | ---: | --- | --- | --- | --- |
-| 1 | Pine Valley | Regular Zombie, Baby Zombie, Tank Zombie | Spitter Zombie (later addition) | Hammer Zombie Boss |
+| 1 | Pine Valley | Regular Zombie, Baby Zombie, Tank Zombie | Spitter Zombie (later addition) | Hammer Brute |
 | 2 | Beach Cove | Crab, Snake, Hermit Crab, Rock-Throwing Crab | Rock-Throwing Crab | Giant King Crab |
 | 3 | Desert Basin | Skeleton, Bow Skeleton, Mummy, Scorpion | Bow Skeleton | Pharaoh |
 | 4 | Frozen Pass | Frost Ghost, Werewolf, Frozen Knight, Ice Elf | Ice Elf | Frost Cyclops |
@@ -240,7 +242,7 @@ When a solo player dies, the run pauses and the death screen shows **REVIVE** an
 
 ## 13. Launch-scope recommendation
 
-**Prototype:** Pine Valley, three classes, six signature weapons, its three zombie types, the Hammer Zombie Boss, the 20-wave loop, banked level-ups and the shop/combine flow.
+**Prototype:** Pine Valley, three classes, six signature weapons, its three zombie types, the Hammer Brute, the 20-wave loop, banked level-ups and the shop/combine flow.
 
 **Vertical slice:** Two maps, all six classes, 12 weapons (two per class), about 15 passives, 2–3 armor sets, keys and chests, starting tiers, a first batch of achievements, saving, and the lobby loop.
 
@@ -251,7 +253,7 @@ When a solo player dies, the run pauses and the death screen shows **REVIVE** an
 ### Must be decided before the prototype
 
 1. Tier I–IV chains for the six prototype weapons.
-2. Pine Valley's 20-wave spawn script and Hammer Zombie Boss kit (elite and horde waves not built).
+2. Pine Valley's 20-wave spawn script and Hammer Brute kit (elite and horde waves not built).
 3. Shop tier-unlock waves and prices retuned for 20 waves.
 4. ~~Tutorial weapon and base-class behavior.~~ Decided 2026-10-03: Brawler with the Frying Pan ([tutorial design](plans/2026-10-03-tutorial-design.md)).
 5. Final revive price, timeout and co-op behavior.
