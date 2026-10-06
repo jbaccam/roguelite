@@ -196,7 +196,7 @@ function Q.claimFX(screen,shots,target)
  local function image(name,asset,p,size,color,z)
   return T.make('ImageLabel',layer,{Name=name,BackgroundTransparency=1,Image=asset,ImageColor3=color,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(p.X,p.Y),Size=UDim2.fromOffset(size,size),ZIndex=z})
  end
- local gems,total={},0
+ local gems,items,total={},{},0
  for _,s in shots do
   local c=s.pos+s.size/2-origin;local base=math.min(s.size.X,s.size.Y);local color=s.color or C.gold
   -- Soft flash under the slot: glow and fast rays (StoreFX.burst) that grow as they fade.
@@ -207,7 +207,7 @@ function Q.claimFX(screen,shots,target)
   tween(rays,.5,{ImageTransparency=1},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
   -- The slot pops: punch up 22%, settle with a small bounce, then lift away and fade (0.7 s).
   local g=s.copy
-  if g then
+  if g and s.kind~='dealItem' then
    local k=s.size.X/math.max(s.design,1) -- the window's scale, so the copy matches on phones too
    g.AnchorPoint=Vector2.new(.5,.5);g.Position=UDim2.fromOffset(c.X,c.Y);g.ZIndex=2
    local sc=g:FindFirstChildOfClass('UIScale') or T.make('UIScale',g,{})
@@ -216,7 +216,28 @@ function Q.claimFX(screen,shots,target)
    later(.08,g,function() tween(sc,.26,{Scale=k},Enum.EasingStyle.Back) end)
    later(.48,g,function() fadeOut(g,.22);tween(g,.22,{Position=UDim2.fromOffset(c.X,c.Y-base*.15)}) end)
   end
-  if s.kind=='chest' then
+  if s.kind=='dealItem' then
+   -- Daily deals: each server-awarded copy gets its own actual weapon icon. The source art
+   -- stays uncovered; these fan out, briefly hang, then drift/fade like the emerald burst.
+   local icon=g and g:FindFirstChild('Icon')
+   local amount=math.clamp(math.floor(tonumber(s.amount) or 0),0,24-#items)
+   if icon and icon:IsA('ImageLabel') and amount>0 then
+    for i=1,amount do
+     local spread=amount==1 and 0 or (i-1)/(amount-1)*2-1
+     local size=math.clamp(base*.58,28,68)
+     local reach=math.max(base,70)
+     local finish=c+Vector2.new(spread*reach*1.12,-reach*(1.05+.22*(1-math.abs(spread))))
+     local cp=image('DealItemCopy'..i,icon.Image,c,size*.35,WHITE,5)
+     cp.ScaleType=Enum.ScaleType.Fit;cp.Rotation=spread*12
+     table.insert(items,{img=cp,size=size,from=c,to=finish,delay=(i-1)*.055,rotation=spread*12})
+    end
+    local receiptW=math.max(base*3,210)
+    local received=FX.title(layer,'ItemReceipt','+'..commas(amount)..' '..string.upper(s.name or 'ITEM'),c.X-receiptW/2,c.Y+base*.52,receiptW,32,20,color)
+    received.ZIndex=6;received.TextXAlignment=Enum.TextXAlignment.Center
+    later(1.15,received,function() fadeOut(received,.3) end)
+   end
+   if g then g:Destroy() end
+  elseif s.kind=='chest' then
    -- Count the actual chests visibly: two awarded chests throw two icons. Large CLAIM ALLs cap
    -- particles at eight and keep the exact amount in the receipt underneath.
    local icon=g and g:FindFirstChild('Icon')
@@ -280,9 +301,9 @@ function Q.claimFX(screen,shots,target)
    sparkles(layer,c,base,Vector2.new(base,base),6,color)
   end
  end
- if #gems==0 then return end
+ if #gems==0 and #items==0 then return end
  -- Arrivals spread over at most half a second, so 40 gems land as fast as 12 used to.
- local step=math.min(.022,.5/#gems)
+ local step=math.min(.022,.5/math.max(1,#gems))
  for i,g in gems do g.wait=.04+(i-1)*step end
  -- A big pile also gets the chest screen's prize burst (the same sound kit).
  if #gems>=24 then ChestFX.play(ChestFX.Sounds.Burst,.3,1.15) end
@@ -306,6 +327,19 @@ function Q.claimFX(screen,shots,target)
  conn=RunService.Heartbeat:Connect(function()
   if not layer.Parent then conn:Disconnect();return end
   local t=os.clock()-t0;local live=false
+  for _,item in items do
+   local age=t-item.delay
+   if not item.img.Parent then continue end
+   live=true
+   local pop=math.clamp(age/.3,0,1);local eased=1-(1-pop)^3
+   local drift=math.clamp((age-.65)/.5,0,1)
+   local pos=item.from:Lerp(item.to,eased)+Vector2.new(0,drift*drift*item.size)
+   item.img.Visible=age>=0
+   item.img.Position=UDim2.fromOffset(pos.X,pos.Y)
+   item.img.Size=UDim2.fromOffset(item.size*(.35+.65*eased),item.size*(.35+.65*eased))
+   item.img.ImageTransparency=drift;item.img.Rotation=item.rotation+age*12
+   if drift>=1 then item.img:Destroy() end
+  end
   for _,g in gems do
    if g.img.Parent then
     live=true

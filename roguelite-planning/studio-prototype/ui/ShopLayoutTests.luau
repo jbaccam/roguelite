@@ -46,7 +46,10 @@ local ok,err=xpcall(function()
     -- Weapon cards: no stat line under the fit bar, traits clear of Buy. Item cards: the "Works
     -- with" line clear of the description and Buy.
     if card:FindFirstChild('Fit') then
-     for _,c in card:GetChildren() do if c.Name:match('^WeaponStat') then assert(disjoint(c,card.Fit),'stat line under fit bar') end end
+     for _,c in card:GetChildren() do if c.Name:match('^WeaponStat') then
+      assert(disjoint(c,card.Fit),'stat line under fit bar')
+      if card:FindFirstChild('ClassTag') then assert(disjoint(c,card.ClassTag),'stat line under class list') end
+     end end
      if card:FindFirstChild('Traits') and card.Traits.Text~='' then assert(disjoint(card.Traits,card.Buy),'traits overlap Buy') end
     end
     if card:FindFirstChild('WorksWith') then assert(disjoint(card.WorksWith,card.Description) and disjoint(card.WorksWith,card.Buy),'works-with overlap') end
@@ -66,10 +69,23 @@ local ok,err=xpcall(function()
    assert(layout:FindFirstChild('DetailsBacking'),'detail popup has a solid backing')
   end
   for _,label in layout:GetDescendants() do
+   if label.Name=='ClassTag' and label:GetAttribute('WeaponId') then
+    local weapons=require(game.ReplicatedStorage.RogueliteCombat.WeaponCatalog)
+    local w=weapons.ById[label:GetAttribute('WeaponId')]
+    local expected=w.godly and 'GODLY · ANY CLASS' or string.upper(weapons.classNames(w,' · '))
+    assert(label.Text.Text==expected,'class tag omitted a weapon class: '..w.name)
+   end
    if label.Name=='PriceGroup' then
     local center=label.AbsolutePosition.X+label.AbsoluteSize.X/2;local parentCenter=label.Parent.AbsolutePosition.X+label.Parent.AbsoluteSize.X/2
     assert(math.abs(center-parentCenter)<1.5,'price not centered')
     assert(label.AbsoluteSize.X<=label.Parent.AbsoluteSize.X-4,'price outside button')
+   end
+   if label.Name=='ClassDamageEffect' then
+    assert(string.find(string.lower(label.Text),'damage',1,true),'shop affinity must explicitly name damage')
+    local parent=label.Parent
+    if parent:FindFirstChild('Fit') then assert(disjoint(label,parent.Fit),'explanation overlaps affinity badge') end
+    if parent:FindFirstChild('Traits') then assert(disjoint(label,parent.Traits),'explanation overlaps weapon traits') end
+    if parent:FindFirstChild('Buy') then assert(disjoint(label,parent.Buy),'explanation overlaps buy button') end
    end
    if label:IsA('TextLabel') and label.Text~='' then assert(label.TextFits,'text overflow '..label:GetFullName()..' at '..tostring(size)) end
   end

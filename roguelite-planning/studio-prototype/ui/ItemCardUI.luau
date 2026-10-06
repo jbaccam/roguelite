@@ -647,11 +647,13 @@ function K.open(canvas,L,args)
   local arrX=compact and pad or rx
   local prev=T.button(p,'Prev','<',arrX,bottomY,ab,ab,function() self.Step(-1) end,true);prev.Caption.TextSize=40
   local nextB=T.button(p,'Next','>',arrX+ab+12,bottomY,ab,ab,function() self.Step(1) end,true);nextB.Caption.TextSize=40
-  local same,pos=0,0
-  for i,o in list do if o.rarity==entry.rarity then same+=1;if i==index then pos=same end end end
-  local cntX=arrX+2*ab+24
-  local cntW=compact and (pad+hw-cntX) or 240
-  T.label(p,'Count',compact and (pos..' / '..same) or (pos..' / '..same..'  '..string.upper(entry.rarity)),cntX,bottomY,cntW,ab,compact and 24 or 22,C.muted)
+  if args.source~='collection' then
+   local same,pos=0,0
+   for i,o in list do if o.rarity==entry.rarity then same+=1;if i==index then pos=same end end end
+   local cntX=arrX+2*ab+24
+   local cntW=compact and (pad+hw-cntX) or 240
+   T.label(p,'Count',compact and (pos..' / '..same) or (pos..' / '..same..'  '..string.upper(entry.rarity)),cntX,bottomY,cntW,ab,compact and 24 or 22,C.muted)
+  end
   local back=T.button(p,'Back','BACK',bx,bottomY,bw,ab,close,true);back.Caption.TextSize=30
   if K.gamepad() then
    -- Controller glyphs: LB / RB on the arrows, B on BACK (Roblox's art for the connected pad).

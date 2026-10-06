@@ -162,7 +162,9 @@ local function template(weaponId)
 	return templates and weaponId and templates:FindFirstChild(weaponId)
 end
 
--- Clone a weapon template as an anchored, scaled display model centred on its bounding box.
+-- Clone a weapon template as an anchored display centred on its bounding box.
+-- Omit size for the equipped preview: combat uses the template's authored scale unchanged.
+-- Explicit sizes are only for decorative rack models and the isolated upgrade showcase.
 local function display(weaponId, size)
 	local t = template(weaponId)
 	if not t then
@@ -201,8 +203,8 @@ local function display(weaponId, size)
 	m.PrimaryPart = nil
 	m.WorldPivot = pivot * CFrame.new(centre)
 	local longest = math.max(extents.X, extents.Y, extents.Z)
-	local scale = longest > 0 and size / longest or 1
-	if longest > 0 then
+	local scale = size and longest > 0 and size / longest or 1
+	if scale ~= 1 then
 		m:ScaleTo(m:GetScale() * scale)
 	end
 	m:SetAttribute("DisplayExtents", extents * scale)
@@ -481,11 +483,9 @@ function S.SetStarter(weaponId)
 	if not stage or not weaponId then
 		return
 	end
-	local sourceModel = template(weaponId)
-	local bounds = sourceModel and sourceModel:GetAttribute("BoundsSize")
-	-- Upright staffs can be long and slender; wide guns stay compact beside the body.
-	local size = typeof(bounds) == "Vector3" and bounds.Y > math.max(bounds.X, bounds.Z) * 2 and 2.9 or 1.7
-	floater = display(weaponId, size)
+	-- Match the real equipped combat model; never normalize different weapons to one size.
+	-- StarterPose already uses the real extents to keep the weapon clear of the avatar.
+	floater = display(weaponId)
 	if floater then
 		floater:SetAttribute("WeaponId", weaponId)
 		floater.Parent = stage

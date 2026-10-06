@@ -328,32 +328,38 @@ function M.new(player,h,refresh)
   end
   return row*26
  end
- -- Class weapon fit (CharacterStats.classFit) for this player's class: the class tag
- -- 'GUNNER' (with the class's starter icon) under the name, and the fit bar
- -- '-15%  ·  OFF-CLASS'. Narrow phone cards step down so text stays readable (minText): the class
- -- alone, then an icon-only tag with the class moved into the bar ('-15%  ·  GUNNER').
+ -- Membership always lists every class, home first. Fit is a separate player-specific badge.
+ -- Give narrow cards another line instead of silently replacing membership with the best fit.
  local FIT_WORD={home='YOUR CLASS',similar='SIMILAR',off='OFF-CLASS'}
  local TS=game:GetService('TextService')
  local function width(text,size,icon) return TS:GetTextSize(text,size,T.Font,Vector2.new(1000,100)).X*1.12+(icon and size+20 or 20) end
+ local function classTagLayout(base,w,h)
+  local name=base.godly and 'GODLY · ANY CLASS' or string.upper(Weapons.classNames(base,' · '))
+  local size=math.max(h-10,minText)
+  local measured=TS:GetTextSize(name,size,T.Font,Vector2.new(math.max(20,(w-16)/1.12),1000))
+  return name,size,math.max(h,math.ceil(measured.Y)+10)
+ end
  local function classFitRow(p,base,tagX,tagY,tagMaxW,tagH,barX,barY,barW,barH)
   local fit,pct,via=Stats.classFit(base,state:GetAttribute('Class'))
   local word=fit and FIT_WORD[fit] or 'ANY CLASS'
-  -- Every class (2026-10-04): 'THROWER · JUGGLER', with the starter icon of the class that
-  -- gives the fit (yours when it's listed). Narrow cards step down to every class, then that one
-  -- class, then the icon alone with that class in the bar.
-  local best=base.godly and 'GODLY' or string.upper(via or base.home)
-  local name=base.godly and 'GODLY' or string.upper(table.concat(base.classes or {base.home},' · '))
-  local icon=not base.godly and WeaponIcons[Signature[via or base.home]] or nil
-  local size=math.max(tagH-10,minText)
-  -- Class tags contain classes only. Melee/ranged/explosive describe attacks, not classes.
-  local text=name
-  if width(text,size,icon)>tagMaxW then text=best end
-  if width(text,size,icon)>tagMaxW then text=nil;word=best end
-  if text then T.tag(p,'ClassTag',text,tagX,tagY,{h=tagH,size=tagH-10,maxW=tagMaxW,icon=icon})
-  elseif icon then T.tag(p,'ClassTag','',tagX,tagY,{h=tagH,size=tagH-10,icon=icon}) end
-  -- A bar too narrow for its word keeps just the number (the colour still says which).
-  if width(T.fitText(pct)..'  ·  '..word,math.max(math.floor(barH*.62),minText),false)-8>barW then word=nil end
+  local name,size,used=classTagLayout(base,tagMaxW,tagH)
+  local tag=T.tag(p,'ClassTag',name,tagX,tagY,{h=used,size=size,maxW=tagMaxW})
+  tag.Size=UDim2.fromOffset(tagMaxW,used)
+  tag.Text.Position=UDim2.fromOffset(8,0);tag.Text.Size=UDim2.new(1,-16,1,0)
+  tag.Text.TextScaled=false;tag.Text.TextSize=size;tag.Text.TextWrapped=true
+  tag:SetAttribute('WeaponId',base.id)
+  if width(T.fitText(pct)..' DAMAGE  ·  '..word,math.max(math.floor(barH*.62),minText),false)-8>barW then word=nil end
   T.fitBadge(p,'Fit',barX,barY,barW,barH,pct,word,true)
+ end
+ local function readableHeight(sentence,size,w,minimum)
+  local visibleScale=math.min(1,9/minText)
+  return math.max(minimum or 0,math.ceil(TS:GetTextSize(sentence,size,T.Body,Vector2.new(math.max(20,w*visibleScale*.9),1000)).Y/visibleScale)+8)
+ end
+ local function fitExplanation(base,w)
+  local _,pct,via=Stats.classFit(base,state:GetAttribute('Class'))
+  local sentence=base.godly and 'Godly weapon: no class damage modifier.' or ((pct>0 and '+' or '')..tostring(pct)..'% damage with '..(via or base.home)..' weapons.')
+  if not base.godly and #(base.classes or {})>1 then sentence..=' Best matching class applies.' end
+  return sentence,readableHeight(sentence,16,w)
  end
  local function weaponStats(p,base,tier,x,y,w)
   local s=Stats.read(state);local d=Stats.weapon(base,s,state:GetAttribute('Class'),tier)
@@ -424,7 +430,7 @@ function M.new(player,h,refresh)
    -- Short screens (phones, under 450 px): taps grow to 40 px on screen, and the scale is picked so
    -- one whole card (310 + Buy growth) plus its Lock row fits the view: 277+80/scale <= (height-16)/scale,
    -- so scale <= (height-96)/277. Example: a 275 px tall shop gets .65 (text 16 -> 10.4 px).
-   if height<450 then scale=math.max(.55,math.min(scale,(height-96)/277));tap=40/scale end
+   if height<450 then scale=math.max(.55,math.min(scale,(height-96)/277));tap=math.ceil(40/scale) end
   end
   minText=math.max(9,9/scale)
   local function th(v) return math.max(v,tap) end
@@ -482,6 +488,7 @@ function M.new(player,h,refresh)
   heading(left,'ShopTitle',won and ('Endless (Wave '..data.wave..')') or ('Shop (Wave '..data.wave..')'),0,0,leftW*(narrow and .62 or .39),46,30,won and T.Color.gold or nil)
   -- Robux reroll sits beside the shard reroll (hidden where paid random items are restricted).
   local paid=not player:GetAttribute('PaidRandomRestricted')
+  local oddsExtra=0
   local robuxW=paid and 118 or 0
   local rerollW=narrow and leftW-(paid and robuxW+8 or 0) or math.min(232,leftW*.30)
   local rerollH=th(46)
@@ -518,8 +525,16 @@ function M.new(player,h,refresh)
    -- this wave and Luck. Wide: right-aligned in the 30 px under the buttons; narrow: the 22 px row.
    local luck=Stats.read(state).Luck
    local nw=narrow and leftW or math.min(leftW*.6,560)
-   local note=text(left,'RerollOdds',M.oddsLine('Reroll odds per offer',E.tierOdds(data.wave,luck)),leftW-nw,narrow and 58+rerollH or rerollH+5,nw,narrow and 18 or 20,narrow and 13 or 15,cream)
-   note.RichText=true;note.TextXAlignment=narrow and Enum.TextXAlignment.Left or Enum.TextXAlignment.Right
+   local oddsText=M.oddsLine('Reroll odds per offer',E.tierOdds(data.wave,luck))
+   local oddsSize=math.max(narrow and 13 or 15,minText)
+   local oldHeight=narrow and 18 or 20
+   -- Font-size constraints apply at rendered size. Measure the available screen width,
+   -- then convert height back into layout pixels; reserve slack for rich-text rounding.
+   local oddsHeight=math.max(oldHeight,math.ceil(TS:GetTextSize(oddsText:gsub('<[^>]->',''),oddsSize,T.Body,Vector2.new(math.max(20,(nw-8)*math.min(1,scale)*.9),1000)).Y/math.min(1,scale))+6)
+   oddsExtra=oddsHeight-oldHeight
+   local note=text(left,'RerollOdds',oddsText,leftW-nw,narrow and 58+rerollH or rerollH+5,nw,oddsHeight,oddsSize,cream)
+   note.RichText=true;note.TextScaled=false;note.TextSize=oddsSize;note.TextWrapped=true
+   note.TextXAlignment=narrow and Enum.TextXAlignment.Left or Enum.TextXAlignment.Right
   end
   -- Crystals, and right beside them the crystal bag (Brotato's material bag, user 2026-10-03): what
   -- was left on the ground when the last wave ended. Shown only while it holds some (an empty bag
@@ -549,14 +564,20 @@ function M.new(player,h,refresh)
    if not narrow and chH<=26 then text(left,'BagNote',caption,0,48,cw,26,fs,cream)
    else
     if not narrow then cw=leftW;chH=math.ceil(TS:GetTextSize(caption,fs,T.Body,Vector2.new(cw-6,1000)).Y)+4 end
-    text(left,'BagNote',caption,0,narrow and 78+rerollH or math.max(76,rerollH+30),cw,chH,fs,cream)
+    text(left,'BagNote',caption,0,(narrow and 78+rerollH or math.max(76,rerollH+30))+oddsExtra,cw,chH,fs,cream)
     bagRow=chH+6
    end
   end
   -- Phones (tap>0) keep four columns only when each card is still 240 wide; else two rows of two.
-  local top=(narrow and 78+rerollH or math.max(76,rerollH+30))+bagRow;local cols=leftW>=(tap>0 and 1000 or 660) and 4 or leftW>=420 and 2 or 1;local cardW=(leftW-(cols-1)*12)/cols
+  local top=(narrow and 78+rerollH or math.max(76,rerollH+30))+bagRow+oddsExtra;local cols=leftW>=(tap>0 and 1000 or 660) and 4 or leftW>=420 and 2 or 1;local cardW=(leftW-(cols-1)*12)/cols
   local buyH,lockH=th(43),th(34) -- a taller Buy makes the card taller by the same amount
-  local cardH=math.max(310+buyH-43,math.min(L.CardHeight,ht-top-inventoryH-lockH-38))
+  local classH,fitH,traitsH=26,0,22
+  for _,offer in data.offers do
+   local entry=Catalog.ById[offer.id];local base=entry and entry.weaponId and Weapons.ById[entry.weaponId]
+   if base then local _,_,h=classTagLayout(base,cardW-28,26);classH=math.max(classH,h);local _,fh=fitExplanation(base,cardW-28);fitH=math.max(fitH,fh);traitsH=math.max(traitsH,readableHeight(traitLine(base,entry.tier),16,cardW-28,22)) end
+  end
+  local statsY=82+classH+8
+  local cardH=math.max(310+buyH-43+(statsY-98)+fitH+4+traitsH-22,math.min(L.CardHeight,ht-top-inventoryH-lockH-38))
   if not inventoryOnly then
    for i,o in data.offers do
     local entry=Catalog.ById[o.id];local x=((i-1)%cols)*(cardW+12);local y=top+math.floor((i-1)/cols)*(cardH+lockH+24)
@@ -565,12 +586,14 @@ function M.new(player,h,refresh)
      local well=surface(card,'IconWell',12,12,64,64,nil,'inset')
      art(well,entry,4,4,56,56)
      heading(card,'Name',entry.name..(entry.weaponId and entry.tier>1 and (' '..({'I','II','III','IV'})[entry.tier]) or ''),86,12,cardW-98,43,22,tiers[entry.tier])
-     if not entry.weaponId then text(card,'Kind',entry.kind..(#entry.tags>0 and ' · '..entry.tags[1] or ''),86,56,cardW-98,22,17,cream) end
+     if not entry.weaponId then text(card,'Kind',entry.kind..(#entry.tags>0 and ' · '..entry.tags[1] or ''),86,56,cardW-98,26,17,cream) end
      if entry.weaponId then
       -- Stat lines, then the fit bar under them, then the traits (the bar follows the lines' height).
-      local barY=98+weaponStats(card,Weapons.ById[entry.weaponId],entry.tier,14,98,cardW-28)+3
-      classFitRow(card,Weapons.ById[entry.weaponId],86,56,cardW-98,26,14,barY,cardW-28,24)
-      text(card,'Traits',traitLine(Weapons.ById[entry.weaponId],entry.tier),14,barY+28,cardW-28,22,16,tiers[entry.tier])
+      local barY=statsY+weaponStats(card,Weapons.ById[entry.weaponId],entry.tier,14,statsY,cardW-28)+3
+      classFitRow(card,Weapons.ById[entry.weaponId],14,82,cardW-28,26,14,barY,cardW-28,24)
+      local explanation,eh=fitExplanation(Weapons.ById[entry.weaponId],cardW-28)
+      text(card,'ClassDamageEffect',explanation,14,barY+28,cardW-28,eh,16,cream)
+      text(card,'Traits',traitLine(Weapons.ById[entry.weaponId],entry.tier),14,barY+32+eh,cardW-28,traitsH,16,tiers[entry.tier])
      else
       local used=effects(card,entry,14,98,cardW-28)
       -- Which of your weapons it works with, for items only some weapons use (worksLine).
@@ -726,10 +749,12 @@ function M.new(player,h,refresh)
     if base then
      y+=weaponStats(detail,base,copy.tier,16,y,dw-32)
      local traits=traitLine(base,copy.tier)
-     if traits~='' then text(detail,'Traits',traits,16,y+2,dw-32,22,15,tiers[tier]);y+=26 end
+     if traits~='' then local th=readableHeight(traits,15,dw-32,22);text(detail,'Traits',traits,16,y+2,dw-32,th,15,tiers[tier]);y+=th+4 end
      y+=8
-     local fw=math.min(150,math.floor((dw-40)*.48))
-     classFitRow(detail,base,16,y,dw-40-fw,24,dw-16-fw,y,fw,24);y+=24+14
+     local _,_,classHeight=classTagLayout(base,dw-32,24)
+     classFitRow(detail,base,16,y,dw-32,24,16,y+classHeight+6,dw-32,24);y+=classHeight+6+24+14
+     local explanation,eh=fitExplanation(base,dw-32)
+     text(detail,'ClassDamageEffect',explanation,16,y,dw-32,eh,16,cream);y+=eh+8
      local damage=math.max(0,math.floor(tonumber(copy.damage) or 0));local kills=math.max(0,math.floor(tonumber(copy.kills) or 0))
      text(detail,'RunPerformance',string.format('THIS RUN · %s damage · %s kills',damage,kills),16,y,dw-32,26,16,cream);y+=32
     else

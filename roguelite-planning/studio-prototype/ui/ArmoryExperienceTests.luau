@@ -43,6 +43,26 @@ local ok,err=xpcall(function()
    count+=1
   end
   check(count==#Weapons.List,'whole catalog shown')
+  -- Read the actual rendered grid, not a second copy of the class ordering algorithm.
+  local tiles={}
+  for _,tile in grid:GetChildren() do if tile.Name:match('^W_') then table.insert(tiles,tile) end end
+  table.sort(tiles,function(a,b)
+   if a.Position.Y.Offset~=b.Position.Y.Offset then return a.Position.Y.Offset<b.Position.Y.Offset end
+   return a.Position.X.Offset<b.Position.X.Offset
+  end)
+  local browser=ui.ShowInfo(tiles[1].Name:sub(3))
+  for i,tile in tiles do
+   check(browser.Id()==tile.Name:sub(3),'info arrow follows rendered grid at '..i)
+   -- The footer is Card.Count. Copies.Count inside the upgrade-progress bar is legitimate.
+   local panel=browser.Root:FindFirstChild('Card')
+   check(panel~=nil and panel:FindFirstChild('Count')==nil,'collection omits rarity-relative footer count')
+   check(browser.Root:FindFirstChild('Rarity',true)~=nil,'rarity badge stays visible')
+   browser.Step(1)
+  end
+  check(browser.Id()==tiles[1].Name:sub(3),'forward wraps to first visible tile')
+  browser.Step(-1)
+  check(browser.Id()==tiles[#tiles].Name:sub(3),'backward wraps to last visible tile')
+  browser.Close(true)
   check(win.Root:FindFirstChild('WatchAttacks',true)~=nil,'attack preview entry')
   check(win.Root:FindFirstChild('Journal',true)~=nil,'journal entry')
   ui.ShowInfo('18');task.wait(.1)

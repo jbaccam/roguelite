@@ -21,6 +21,20 @@ local Quests=require(RS:WaitForChild('QuestsUI'))
 local function iconFor(id,name) return (id and WeaponIcons[id]) or (WeaponArt.IconsByName and WeaponArt.IconsByName[name]) or 'armory' end
 local C=T.Color
 local S={}
+-- One server result per awarded copy; never animate the displayed offer's guessed quantity.
+-- The daily catalog bounds the effect (currently at most five copies per purchase).
+function S.dailyReward(result)
+ if type(result)~='table' or result.ok~=true or type(result.results)~='table' then return nil end
+ local amount=#result.results;local maximum=0
+ for _,range in Chests.DealAmount do maximum=math.max(maximum,range[2]) end
+ if amount<1 or amount>maximum then return nil end
+ local id
+ for _,entry in result.results do
+  if type(entry)~='table' or not Weapons.ById[entry.id] or id and id~=entry.id then return nil end
+  id=entry.id
+ end
+ return {id=id,amount=amount}
+end
 
 S.Tabs={{'Daily','quests','DAILY'},{'Bundles','store','BUNDLES'},{'Chests','chest','CHESTS'},{'Emeralds','emerald','EMERALDS'}}
 -- Class cards: class, signature weapon, Robux product, card colour.
@@ -59,7 +73,20 @@ function S.open(screen,ctx,focus)
  -- result replaces them (user, 2026-10-03).
  local function act(action,a,parts)
   local shots=Quests.snapshot(parts or {})
-  local r=combat.ProfileAction:InvokeServer(action,a)
+  local completed,r=pcall(function() return combat.ProfileAction:InvokeServer(action,a) end)
+  if not completed or type(r)~='table' then r={ok=false,message='Purchase could not be confirmed. Please try again.'} end
+  if action=='BuyDeal' then
+   local reward=S.dailyReward(r)
+   for _,shot in shots do
+    if shot.kind=='item' then
+     -- A daily reset can replace the offer while the request is in flight: use the awarded ID.
+     shot.kind='dealItem';shot.amount=reward and reward.amount or 0
+     shot.name=reward and Weapons.ById[reward.id].name or nil
+     local icon=shot.copy and shot.copy:FindFirstChild('Icon')
+     if reward and icon then icon.Image=WeaponIcons[reward.id] or '' end
+    end
+   end
+  end
   if r.ok then T.sound('ui_purchase') end
   if r.ok and w.Root.Parent then Quests.claimFX(screen,shots,gemIcon) else for _,s in shots do s.copy:Destroy() end end
   T.toast(screen,r.message or '',r.ok and C.lime or C.negative)

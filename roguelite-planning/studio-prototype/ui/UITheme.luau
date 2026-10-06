@@ -328,7 +328,7 @@ function T.statColumns(parent,name,x,y,w,good,bad,o)
  box.Size=UDim2.fromOffset(w,h)
  return box,h
 end
--- Home weapon bonus rows: {{n=2,text='+15% Melee damage · +2 Armor'},{n=4,text='also +5% Life steal'}}.
+-- Home weapon bonus rows: {{n=2,text='+15% Melee damage ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· +2 Armor'},{n=4,text='also +5% Life steal'}}.
 -- Diamond pips count the weapons. The label sits in its own column (o.labelW) so wrapped text
 -- lines up, or above the text with o.stack. Returns the inset and its height.
 function T.homeRows(parent,name,x,y,w,rows,o)
@@ -385,7 +385,7 @@ function T.fitTiles(parent,name,x,y,w,entries,o)
  return row,total
 end
 -- The shop's fit badge: the number big, one word under it (YOUR CLASS / SIMILAR / OFF-CLASS), or
--- both on one line with inline=true ('+15%  ·  YOUR CLASS').
+-- both on one line with inline=true ('+15%  ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·  YOUR CLASS').
 function T.fitBadge(parent,name,x,y,w,h,pct,word,inline)
  local top,bottom,textColor
  if pct>0 then top,bottom,textColor=Color3.fromRGB(63,125,16),Color3.fromRGB(36,77,8),Color3.fromRGB(234,255,208)
@@ -396,11 +396,12 @@ function T.fitBadge(parent,name,x,y,w,h,pct,word,inline)
  make('UIStroke',b,{Color=Color3.fromRGB(8,10,11),Thickness=2})
  make('UIGradient',b,{Rotation=90,Color=ColorSequence.new(top,bottom)})
  if inline then
-  T.label(b,'Pct',T.fitText(pct)..(word and '  ·  '..word or ''),6,0,w-12,h,math.floor(h*.62),textColor).FitText.MinTextSize=9
+  local text=T.fitText(pct)..(word=='DMG' and ' DMG' or ' DAMAGE'..(word and ' · '..word or ''))
+  T.label(b,'Pct',text,6,0,w-12,h,math.floor(h*.62),textColor).FitText.MinTextSize=9
   return b
  end
  local pctH=word and math.floor(h*.58) or h
- T.label(b,'Pct',T.fitText(pct),2,word and 3 or 0,w-4,pctH,math.floor(pctH*.82),textColor)
+ T.label(b,'Pct',T.fitText(pct)..(word=='DMG' and '' or ' DAMAGE'),2,word and 3 or 0,w-4,pctH,math.floor(pctH*.82),textColor)
  if word then
   local l=T.label(b,'Word',word,2,pctH,w-4,h-pctH-3,math.max(10,math.floor(h*.22)),textColor);l.TextStrokeTransparency=.6
  end
@@ -443,7 +444,7 @@ function T.canvas(root,onLayout,opts)
   local inset=0
   pcall(function() inset=game:GetService('GuiService'):GetGuiInset().Y end)
   local L={s=s,w=size.X/s,h=size.Y/s,top=math.max(inset,36)/s}
-  local key=string.format('%.2f %.2f %.3f',L.w,L.h,L.top)
+  local key=string.format('%.2f %.2f %.3f %.5f',L.w,L.h,L.top,L.s)
   if key==last then return end
   last=key
   canvas.Size=UDim2.fromOffset(L.w,L.h);scale.Scale=s
@@ -540,6 +541,52 @@ function T.cameraHeal()
 end
 -- Spectating (death screen) follows a teammate's Humanoid; nil goes back to your own.
 function T.cameraFollow(humanoid) cameraFollow=humanoid;T.cameraHeal() end
+
+-- Full-screen results own a free cursor while shown. A one-time Default assignment loses
+-- to the standard first-person/shift-lock camera on its next render. Release ownership when
+-- hidden/destroyed; gameplay and other camera stages retain their normal controls afterward.
+local cursorSerial=0
+function T.freeMenuCursor(screen)
+ cursorSerial+=1
+ local Run=game:GetService('RunService')
+ local Input=game:GetService('UserInputService')
+ local Gui=game:GetService('GuiService')
+ local key='RogueliteMenuCursor_'..cursorSerial
+ local bound,disposed=false,false
+ local links={}
+ local modal=T.make('TextButton',screen,{Name='MenuCursor',Text='',BackgroundTransparency=1,Size=UDim2.fromOffset(1,1),Modal=true,Selectable=false,Active=false,AutoButtonColor=false})
+ local function free()
+  Input.MouseBehavior=Enum.MouseBehavior.Default
+  Input.MouseIconEnabled=true
+ end
+ local function release()
+  if not bound then return end
+  bound=false;Run:UnbindFromRenderStep(key)
+  local selected=Gui.SelectedObject
+  if selected and selected:IsDescendantOf(screen) then Gui.SelectedObject=nil end
+  free();T.cameraHeal()
+ end
+ local function refresh()
+  local visible=not disposed and screen.Parent~=nil and screen.Enabled
+  modal.Modal=visible
+  if visible and not bound then
+   bound=true;free()
+   Run:BindToRenderStep(key,Enum.RenderPriority.Camera.Value+1,function()
+    if screen.Parent and screen.Enabled then free() else release() end
+   end)
+  elseif not visible then release() end
+ end
+ local function dispose()
+  if disposed then return end
+  disposed=true;modal.Modal=false;release()
+  for _,link in links do link:Disconnect() end
+ end
+ table.insert(links,screen:GetPropertyChangedSignal('Enabled'):Connect(refresh))
+ table.insert(links,screen.AncestryChanged:Connect(refresh))
+ table.insert(links,screen.Destroying:Connect(dispose))
+ refresh()
+ return dispose
+end
 -- An FOV tween on the regular camera (the station walk-up punch). One at a time; skipped while a
 -- stage holds the camera, and any take or home cancels it so a finishing tween can't undo them.
 function T.cameraFov(fov,info)
@@ -555,7 +602,7 @@ end
 -- Returns an object with Body (content frame, w-36 wide) and Close().
 -- opts.large: content-heavy windows (Store) centre on screen and use nearly the full height
 -- instead of leaving room for the lobby HUD, which the backdrop dims anyway.
-T.WINDOW_MARGIN=22;T.WINDOW_MAX_SCALE=1.15;T.LARGE_WINDOW_MAX_SCALE=1.3
+T.WINDOW_MARGIN=22;T.WINDOW_MAX_SCALE=1.35;T.LARGE_WINDOW_MAX_SCALE=1.45
 function T.window(screen,name,title,w,h,onClose,opts)
  local large=opts and opts.large
  local m=T.WINDOW_MARGIN;w+=m*2;h+=m*2
@@ -580,16 +627,18 @@ function T.window(screen,name,title,w,h,onClose,opts)
  -- A window that would have to shrink below READABLE_SCALE+.05 to fit (phones) stays at that scale
  -- instead: it gets as tall as the screen allows and its body scrolls. Example: Settings on an
  -- 844x390 phone was scale .22 (22 px titles drawn 5 px tall); now .55 with a scrolling body.
- local scroller
+ local scroller,openingTween
  local function fit()
   local v=screen.AbsoluteSize
   if v.X<=0 then return end
-  -- Big screens leave room around the window for the lobby HUD; short screens don't need to.
-  local reserve=large and 40 or math.clamp(v.Y*.17,24,184)
+  -- Desktop menus use more of the available screen. Preserve compact-screen spacing.
+  local desktop=v.X>=1000 and v.Y>=650
+  local reserve=large and 40 or desktop and math.clamp(v.Y*.08,40,88) or math.clamp(v.Y*.17,24,184)
   local s=math.min(large and T.LARGE_WINDOW_MAX_SCALE or T.WINDOW_MAX_SCALE,(v.X-(large and 32 or 24))/w,(v.Y-reserve)/(h+34))
-  local readable=math.min(T.READABLE_SCALE+.05,(v.X-24)/w)
+  local readable=math.min(opts and opts.minScale or T.READABLE_SCALE+.05,(v.X-24)/w)
   local vh=h
   if s<readable then s=readable;vh=math.clamp(math.floor((v.Y-16)/s-34),math.min(h,240),h) end
+  if openingTween then openingTween:Cancel();openingTween=nil end
   scale.Scale=s
   holder.Size=UDim2.fromOffset(w,vh)
   if vh<h then
@@ -607,13 +656,14 @@ function T.window(screen,name,title,w,h,onClose,opts)
  local conn=screen:GetPropertyChangedSignal('AbsoluteSize'):Connect(fit);fit()
  function self.Close()
   if not backdrop.Parent then return end
+  if openingTween then openingTween:Cancel();openingTween=nil end
   conn:Disconnect();backdrop:Destroy()
   if onClose then onClose() end
  end
  close.Activated:Connect(self.Close)
  backdrop.Activated:Connect(self.Close)
  T.gamepadSelect(body)
- scale.Scale*=.92;TweenService:Create(scale,TweenInfo.new(.14,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=scale.Scale/.92}):Play()
+ scale.Scale*=.92;openingTween=TweenService:Create(scale,TweenInfo.new(.14,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=scale.Scale/.92});openingTween:Play()
  return self
 end
 
@@ -650,7 +700,7 @@ end
 -- with the profile, and ProfileService sets them again when the next server loads it.
 -- Combat presentation reads Setting_ScreenShake and Setting_DamageNumbers; RogueliteSounds and
 -- RogueliteMusic apply Setting_SfxVolume and Setting_MusicVolume (0-1) to their SoundGroups.
-T.SettingDefaults={HudScale=1,ScreenShake=true,DamageNumbers=true,MusicVolume=1,SfxVolume=1}
+T.SettingDefaults={VisualQuality='Auto',HudScale=1,ScreenShake=true,DamageNumbers=true,MusicVolume=1,SfxVolume=1}
 function T.setting(key)
  local v=Players.LocalPlayer:GetAttribute('Setting_'..key)
  if v==nil then return T.SettingDefaults[key] end
@@ -688,36 +738,48 @@ end
 -- The caller calls win.Redraw() when its value changes (e.g. after a server reply).
 function T.settingsWindow(screen,extras)
  extras=extras or {}
- local win=T.window(screen,'SettingsWindow','Settings',520,498+#extras*84)
- local body=win.Body;local w=520-36
- local function row(y,title,help)
-  T.label(body,title..'Title',title,14,y,w*.5,30,22).TextXAlignment=Enum.TextXAlignment.Left
-  -- Two lines of room so longer help wraps instead of shrinking to an unreadable size.
-  local l=T.text(body,title..'Help',help,14,y+30,w*.5,40,15,T.Color.muted);l.TextYAlignment=Enum.TextYAlignment.Top
+ local viewport=screen.AbsoluteSize
+ local narrow=math.min(viewport.X,viewport.Y)<500
+ local width=narrow and 320 or 520
+ local stride=narrow and 130 or 84
+ local win=T.window(screen,'SettingsWindow','Settings',width,100+(6+#extras)*stride,nil,{minScale=.9})
+ local body=win.Body;local w=width-36
+ local controlX=narrow and 14 or w*.5
+ local controlW=narrow and w-28 or w*.5-6
+ local function row(i,title,help)
+  local y=16+i*stride
+  local textW=narrow and w-28 or w*.5-10
+  T.label(body,title..'Title',title,14,y,textW,30,22).TextXAlignment=Enum.TextXAlignment.Left
+  local l=T.text(body,title..'Help',help,14,y+30,textW,40,15,T.Color.muted);l.TextYAlignment=Enum.TextYAlignment.Top
   l.UITextSizeConstraint.MinTextSize=12
+  return y+(narrow and 70 or 2)
  end
  local function draw()
   for _,c in body:GetChildren() do c:Destroy() end
-  row(16,'HUD size','Scales the in-run HUD.')
+  local y=row(0,'HUD size','Scales the in-run HUD.')
   local current=T.setting('HudScale')
   for i,opt in {{'Small',.85},{'Normal',1},{'Large',1.15}} do
-   T.button(body,'Scale'..opt[1],opt[1],w*.5+(i-1)*(w*.5/3),18,w*.5/3-6,44,function() T.setSetting('HudScale',opt[2]);draw() end,math.abs(current-opt[2])>.01).Caption.TextSize=18
+   T.button(body,'Scale'..opt[1],opt[1],controlX+(i-1)*controlW/3,y,controlW/3-6,52,function() T.setSetting('HudScale',opt[2]);draw() end,math.abs(current-opt[2])>.01).Caption.TextSize=18
   end
   for i,opt in {{'ScreenShake','Screen shake','Camera shake when you take damage.'},{'DamageNumbers','Damage numbers','Numbers above enemies you hit.'}} do
-   local y=16+i*84;row(y,opt[2],opt[3])
+   y=row(i,opt[2],opt[3])
    local on=T.setting(opt[1])
-   T.button(body,opt[1],on and 'ON' or 'OFF',w*.5+w*.25,y+2,w*.25-6,44,function() T.setSetting(opt[1],not T.setting(opt[1]));draw() end,not on).Caption.TextSize=20
+   T.button(body,opt[1],on and 'ON' or 'OFF',controlX+controlW/2,y,controlW/2-6,52,function() T.setSetting(opt[1],not T.setting(opt[1]));draw() end,not on).Caption.TextSize=20
   end
   for i,opt in {{'MusicVolume','Music','Background music in runs.'},{'SfxVolume','Sound effects','Weapons, hits, pickups and menus.'}} do
-   local y=16+(2+i)*84;row(y,opt[2],opt[3])
-   T.slider(body,opt[1],w*.5,y,w*.5-6,T.setting(opt[1]),function(v) T.setSetting(opt[1],v) end)
+   y=row(2+i,opt[2],opt[3])
+   T.slider(body,opt[1],controlX,y,controlW,T.setting(opt[1]),function(v) T.setSetting(opt[1],v) end)
+  end
+  y=row(5,'Visual quality','Auto adapts effects. Low also removes shadows.')
+  for i,mode in {'Auto','Low','Full'} do
+   T.button(body,'Quality'..mode,mode,controlX+(i-1)*controlW/3,y,controlW/3-6,52,function() T.setSetting('VisualQuality',mode);draw() end,T.setting('VisualQuality')~=mode).Caption.TextSize=18
   end
   for i,extra in extras do
-   local y=16+(4+i)*84;row(y,extra.title,extra.help)
+   y=row(5+i,extra.title,extra.help)
    local on=extra.get()
-   T.button(body,extra.key,on and 'ON' or 'OFF',w*.5+w*.25,y+2,w*.25-6,44,extra.toggle,not on).Caption.TextSize=20
+   T.button(body,extra.key,on and 'ON' or 'OFF',controlX+controlW/2,y,controlW/2-6,52,extra.toggle,not on).Caption.TextSize=20
   end
-  T.text(body,'Note','Settings are saved with your profile.',14,422+#extras*84,w-28,20,14,T.Color.dim)
+  T.text(body,'Note','Settings are saved with your profile.',14,20+(6+#extras)*stride,w-28,20,14,T.Color.dim)
  end
  draw()
  win.Redraw=function() if win.Root.Parent then draw() end end

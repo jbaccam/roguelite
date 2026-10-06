@@ -349,6 +349,7 @@ function A.new(player, opts)
 	-- armorSlot: the Armor tab's slot filter (nil = every slot).
 	local state = { tab = "Weapons", mine = false, item = nil, kind = "weapon", mode = "main", armorSlot = nil }
 	local itemCard
+	local weaponInfoEntries = {} -- exact rendered grid order, including class/filter/ownership ordering
 	-- Panels slide in only when the screen opens or switches between main and upgrade views;
 	-- a plain redraw (selecting an item, a profile update) must not move anything.
 	local animate = false
@@ -513,14 +514,17 @@ function A.new(player, opts)
 	end
 	local function showInfo(id)
 		closeInfo()
-		local entries = {}
-		for _, w in Weapons.List do
-			table.insert(entries, { id = w.id, rarity = Chests.RarityOf[w.id] or "Common" })
-		end
+		local entries = state.tab == "Weapons" and table.clone(weaponInfoEntries) or {}
+		local visible = false
+		for _, entry in entries do if entry.id == id then visible = true;break end end
+		-- A details/upgrade entry outside the visible filter is a single-item view, not a jump
+		-- into hidden classes or an unrelated raw catalog ordering.
+		if not visible then entries = { { id = id, rarity = Chests.RarityOf[id] or "Common" } } end
 		itemCard = Card.open(canvas, L, {
 			list = entries, id = id, source = "collection", profile = opts.profile,
 			onClose = function() itemCard = nil end,
 		})
+		return itemCard
 	end
 	self.ShowInfo = showInfo -- also used by the Studio interaction check
 
@@ -540,6 +544,7 @@ function A.new(player, opts)
 
 	-- A square collection card: tier corners, icon, name and have/need bar.
 	local function weaponCard(parent, w, x, y)
+		table.insert(weaponInfoEntries, { id = w.id, rarity = Chests.RarityOf[w.id] or "Common" })
 		local rec = profile.weapons[w.id]
 		local chosen = state.kind == "weapon" and state.item == w.id
 		local card = T.button(parent, "W_" .. w.id, "", x, y, CARD, CARD_H, function()
@@ -817,6 +822,7 @@ function A.new(player, opts)
 			end
 			y = math.ceil(#Stats.ClassOrder / cols) * (CARD_H + GAP)
 		elseif state.tab == "Weapons" then
+			weaponInfoEntries = {}
 			-- Current class first; owned weapons first inside each class.
 			local classes = { class }
 			if not state.mine then
@@ -1495,6 +1501,13 @@ function A.new(player, opts)
 		local sz = big and { sect = 26, stat = 24, home = 22, labelW = 196, icon = 44, name = 20, pct = 26, cols = 3 }
 			or { sect = 20, stat = 19, home = 18, labelW = 150, icon = 38, name = 16, pct = 21 }
 		local y = 220
+		local equippedClass, equippedWeapon = loadout()
+		local starter = Weapons.ById[equippedClass == class and equippedWeapon or Rules.Signature[class]]
+		local canDash, dashText = RunSetup.dashDescription(class, starter)
+		dashText = "Starter: " .. starter.name .. ". " .. dashText
+		local dashH = math.ceil(game:GetService("TextService"):GetTextSize(dashText, sz.stat, T.Body, Vector2.new(RIGHT_W - 48, 1000)).Y) + 8
+		T.text(panel, "DashInfo", dashText, 24, y, RIGHT_W - 48, dashH, sz.stat, canDash and C.lime or C.muted)
+		y += dashH + 10
 		y += T.section(panel, "AlwaysOnTitle", "ALWAYS ON", 24, y, RIGHT_W - 48, sz.sect) + 6
 		local good, bad = Stats.classLines(class)
 		local _, h = T.statColumns(panel, "AlwaysOn", 24, y, RIGHT_W - 48, good, bad, { size = sz.stat, stack = big })
@@ -1507,19 +1520,14 @@ function A.new(player, opts)
 		y += h + 10
 		y += T.section(panel, "FitTitle", "WEAPON DAMAGE BY CLASS", 24, y, RIGHT_W - 48, sz.sect, not big and "Godly: no change" or nil)
 			+ 8
-		local entries = {}
 		for _, other in Stats.ClassOrder do
 			local _, pct = Stats.classFit({ home = other }, class)
-			table.insert(entries, { name = other, image = WeaponIcons[Rules.Signature[other]], pct = pct, own = other == class })
+			local sentence = RunSetup.classDamageText(pct, other)
+			local rowH = math.ceil(game:GetService("TextService"):GetTextSize(sentence, sz.stat, T.Body, Vector2.new(RIGHT_W - 48, 1000)).Y) + 8
+			T.text(panel, "Fit_" .. other, sentence, 24, y, RIGHT_W - 48, rowH, sz.stat, T.fitColor(pct))
+			y += rowH
 		end
-		_, h = T.fitTiles(panel, "WeaponFit", 24, y, RIGHT_W - 48, entries, {
-			icon = sz.icon,
-			nameSize = sz.name,
-			pctSize = sz.pct,
-			gap = 6,
-			cols = sz.cols,
-		})
-		y += h + 12
+		y += 12
 		local go = T.button(panel, "ChangeClass", profile.classes[class] and "CHOOSE CLASS & STARTER" or "VIEW CLASS UNLOCK", 24, math.max(y, 640), RIGHT_W - 48, 70, function()
 			if opts.chooseClass then opts.chooseClass(class) else opts.openWindow("ClassPicker", class) end
 		end, true)
