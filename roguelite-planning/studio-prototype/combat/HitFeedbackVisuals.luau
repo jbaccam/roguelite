@@ -4,13 +4,14 @@
 --  * Hit numbers share 28. When all are showing, a teammate's oldest gives way first, then your
 --    own oldest; a teammate's new number is dropped while only yours are showing.
 --  * Your own damage taken has 6 of its own and always shows.
---  * Flashes reuse 10 Highlights (Roblox draws at most 31 at once, and other effects need some).
---    A hit on an enemy that is still flashing restarts its flash; past 10, the oldest moves.
+--  * Flashes reuse up to 128 Highlights: enough for a 100-mob swarm plus dying enemies.
+--    Roblox supports 255; reserve the rest for status, loot and player effects.
+--    Each hit restarts an opaque white pulse; no descendant scans or per-hit tweens.
 -- The motion is the old tweens' (same times and easing, through TweenService:GetValue) in one
 -- RenderStepped pass. The pick rules are pure (V.pick, V.pickFlash) for HitFeedbackTests.
 local RunService=game:GetService('RunService')
 local TweenService=game:GetService('TweenService')
-local V={HitNumbers=28,TakenNumbers=6,Flashes=10}
+local V={HitNumbers=28,TakenNumbers=6,Flashes=128,FlashHold=.08,FlashDuration=.18}
 -- Which pooled entry shows a new number: a free one, else 'new' while under `cap`, else a
 -- teammate's oldest, else (for your own) your oldest. nil drops it.
 function V.pick(pool,cap,mine)
@@ -35,6 +36,10 @@ function V.pickFlash(flashes,cap,npc)
  if free then return free end
  if #flashes<cap then return 'new' end
  return oldest
+end
+-- Linear fade keeps the white silhouette legible longer than the old fast ease-out.
+function V.flashAlpha(age)
+ return math.clamp((age-V.FlashHold)/(V.FlashDuration-V.FlashHold),0,1)
 end
 local QUAD,BACK,OUT=Enum.EasingStyle.Quad,Enum.EasingStyle.Back,Enum.EasingDirection.Out
 -- Slowed enemies (mount, below): ice tints for the 8 nearest, frost patches for the 24 nearest.
@@ -65,6 +70,7 @@ function V.mount(visuals)
   e.scale.Scale=.65;e.attachment.Position=e.start;e.gui.Enabled=true
  end
  function api.flash(npc)
+  if not npc or not npc.Parent then return end
   local f=V.pickFlash(flashes,V.Flashes,npc)
   if f=='new' then
    local h=Instance.new('Highlight');h.Name='WeaponHitFlash';h.FillColor=Color3.new(1,1,1);h.OutlineTransparency=1;h.DepthMode=Enum.HighlightDepthMode.Occluded;h.Enabled=false;h.Parent=visuals
@@ -94,8 +100,8 @@ function V.mount(visuals)
   for _,f in flashes do
    if f.born then
     local t=now-f.born
-    if t>=.15 or not f.npc.Parent then f.born=nil;f.npc=nil;f.highlight.Enabled=false;f.highlight.Adornee=nil
-    elseif t>.045 then f.highlight.FillTransparency=TweenService:GetValue(math.min((t-.045)/.09,1),QUAD,OUT) end
+    if t>=V.FlashDuration or not f.npc.Parent then f.born=nil;f.npc=nil;f.highlight.Enabled=false;f.highlight.Adornee=nil
+    else f.highlight.FillTransparency=V.flashAlpha(t) end
    end
   end
  end)
@@ -103,8 +109,8 @@ function V.mount(visuals)
  -- (CombatEffectsService, replicated) is above 0 it is tinted ice blue and stands on a flat frost
  -- patch (a pale Neon disc and six frost spikes, turning slowly); a frost ring bursts out when the
  -- slow lands. Only the nearest within 150 studs are drawn: V.FrostTints Highlights (flashes keep
- -- their 10 of the 31 Roblox draws) and V.FrostPatches patches. A white hit flash takes over the
- -- tint for its 0.15 s. Example: a Medusa hit on a zombie walking 12 studs/s shows ice for the
+ -- their separate bounded pool) and V.FrostPatches patches. A white hit flash takes over the
+ -- tint for its 0.18 s. Example: a Medusa hit on a zombie walking 12 studs/s shows ice for the
  -- 2 s it crawls at 7.8.
  local Tags=game:GetService('CollectionService')
  local K=require(game:GetService('ReplicatedStorage'):WaitForChild('RogueliteCombat'):WaitForChild('VfxKit'))

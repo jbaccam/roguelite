@@ -21,7 +21,7 @@ H.Burst={1,1,1,3}
 H.GATLING_SPREAD=3 -- degrees of random yaw on each gatling nail
 -- The weapon-like entry H.weapon turns into a turret's numbers. Id 'Turret' is the damage source:
 -- kill credit, run analytics and the utilityKills quest count it as the owner's. A Ranged bullet
--- weapon, so CharacterStats.usesStat gives it Two Straws, Pierce and Bounce. trait 'pierce': it
+-- weapon, so CharacterStats.usesStat gives it Two Straws and Pierce, never Bounce. trait 'pierce': it
 -- pierces floor(tier/2) enemies (0 / 1 / 1 / 2).
 H.Base={id=H.Id,name='Turret',kind='Ranged',home=H.Class,utility=true,rarity='Common',damage=H.DAMAGE,
  cooldown=H.COOLDOWN,range=H.RANGE,projectileSpeed=H.SPEED,trait='pierce',nativeKnockback=0,burn=0,poison=0,slow=0,tags={'Projectile','Handyman','Utility'}}
@@ -64,7 +64,7 @@ function H.offerable(entry,owned) return not (type(entry)=='table' and entry.tur
 -- Numbers (Brotato's structure rule, 2026-10-04) -------------------------------------------------
 -- Damage = base x (1 + Utility Power). Damage, Ranged damage, Attack speed, Cooldown reduction, Crit
 -- and Life steal don't count, nor the class-fit +15%. Knockback doesn't either (its push starts at
--- the owner's body), and range and nail speed are fixed. Extra projectiles, Pierce, Bounce, burn,
+-- the owner's body), and range and nail speed are fixed. Extra projectiles, Pierce, burn,
 -- slow, poison, lightning and Boss damage do count, and so does gear power (its damage share,
 -- CombatEffectsService), because later maps' enemies are tougher by just that share.
 -- Example: +30% Utility Power -> a Nail Turret's nail is 4 x 1.3 = 5.2.

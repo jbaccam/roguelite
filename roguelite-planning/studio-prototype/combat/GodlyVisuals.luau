@@ -591,7 +591,9 @@ function V.mount(combat,folder,lookup,options)
    local shell=K.part(folder,'RayBoltShell',Vector3.new(.5,.5,1.6),green,.45,Enum.Material.Neon)
    K.trail(core,.45,.16,hot,green,.05,true)
    local light=Instance.new('PointLight');light.Color=green;light.Range=7;light.Brightness=3;light.Shadows=false;light.Parent=core
-   b={core=core,shell=shell,from=muzzle,to=finish,t0=os.clock(),speed=math.max(20,projectileSpeed or 150)}
+   -- Muzzle glow follows the weapon, but the bolt stays on the server's firing line.
+   core.CFrame=CFrame.new(origin);shell.CFrame=core.CFrame
+   b={core=core,shell=shell,from=origin,to=finish,t0=os.clock(),speed=math.max(20,projectileSpeed or 150)}
    if projectileId then bolts[projectileId]=b end
   else
    b.from=b.core.Position;b.to=finish;b.t0=os.clock()

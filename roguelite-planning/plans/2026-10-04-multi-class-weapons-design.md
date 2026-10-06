@@ -12,8 +12,8 @@ Each non-Godly weapon gets `classes`, a list whose first entry is today's `home`
 | Frying Pan | Brawler |
 | Nunchucks | Brawler |
 | Katana | Brawler |
-| Kusarigama | Brawler, Thrower |
-| Spatula | Brawler, Handyman |
+| Kusarigama | Juggler, Thrower |
+| Spatula | Juggler, Handyman |
 | Baseball Bat | Brawler |
 | Draco | Gunner |
 | Fart Gun | Gunner, Mage |
@@ -27,8 +27,8 @@ Each non-Godly weapon gets `classes`, a list whose first entry is today's `home`
 | Steak | Thrower |
 | Rubber Duck | Juggler, Thrower |
 | Deck of Cards | Thrower, Juggler |
-| Boxing Gloves | Juggler, Brawler |
-| Cinder Block | Juggler, Handyman |
+| Boxing Gloves | Brawler, Juggler |
+| Cinder Block | Brawler, Handyman |
 | Yo-Yo | Juggler |
 | Bowling Ball | Juggler, Thrower |
 | Bowling Pin | Juggler, Brawler |

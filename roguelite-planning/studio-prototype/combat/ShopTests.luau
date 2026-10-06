@@ -162,7 +162,8 @@ local ok,err=xpcall(function()
  check(unowned,'an unowned weapon was offered in 30 rerolls');p:SetAttribute('ProfileWeapons',savedProfile)
  -- Works with (CharacterStats.usesStat, the rule the server's launchers use too).
  local function W(id) return Weapons.ById[id] end
- check(Stats.usesStat(W('00'),'ProjectileCount') and Stats.usesStat(W('00'),'Pierce') and Stats.usesStat(W('00'),'Bounce'),'Glock bullets use shot stats')
+ check(Stats.usesStat(W('00'),'ProjectileCount') and Stats.usesStat(W('00'),'Pierce') and not Stats.usesStat(W('00'),'Bounce'),'Glock bullets use extra shots and pierce, never bounce')
+ for id in Stats.StraightGuns do check(not Stats.usesStat({id=id},'Bounce'),'guns never advertise bounce: '..id) end
  check(not Stats.usesStat(W('01'),'ProjectileCount') and not Stats.usesStat(W('01'),'Pierce'),'Frying Pan swings use none')
  check(not Stats.usesStat(W('12'),'ProjectileCount') and Stats.usesStat(W('12'),'Bounce'),'Boomerang returns: bounce, no extra copies')
  check(Stats.usesStat(W('14'),'ProjectileCount') and not Stats.usesStat(W('14'),'Pierce'),'Molotov: extra throws, no pierce')

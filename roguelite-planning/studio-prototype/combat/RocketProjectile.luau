@@ -2,7 +2,6 @@
 local RunService=game:GetService('RunService')
 local Tags=game:GetService('CollectionService')
 local Motion=require(script.Parent.RocketMotion)
-local Targets=require(script.Parent.ProjectileTarget)
 local Rocket={}
 function Rocket.new(combat,damage,rayParams)
  local active={};local nextId=0
@@ -29,18 +28,10 @@ function Rocket.new(combat,damage,rayParams)
   for id,r in active do
    if (not combat:GetAttribute('ZombiesEnabled') and not r.definition.practiceTarget) or not r.character.Parent or r.definition.owner.Character~=r.character or not r.character:FindFirstChildOfClass('Humanoid') or r.character:FindFirstChildOfClass('Humanoid').Health<=0 then finish(id,r,nil);continue end
    if workspace:GetServerTimeNow()>r.expires then finish(id,r,nil);continue end
-   if r.target and not Targets.alive(r.target) then
-    local remaining=r.range-r.traveled
-    local replacement=Targets.replacement(r.position,r.definition,nil,remaining,r.launchOrigin,rayParams)
-    if not replacement or r.redirects>=8 then finish(id,r,nil);continue end
-    r.target=replacement;r.redirects+=1;r.range=remaining;r.traveled=0;r.origin=r.position
-    local predicted=Targets.predict(replacement,r.position,function(distance) return distance/r.definition.projectileSpeed end,0,remaining,rayParams,r.character)
-    local delta=predicted-r.position;r.direction=delta.Magnitude>.01 and delta.Unit or r.direction;r.targetDistance=delta.Magnitude;r.started=workspace:GetServerTimeNow()
-    event:FireAllClients('Redirect',id,r.origin,r.direction*r.definition.projectileSpeed,r.started,r.range,r.definition.projectileRadius/.12,r.targetDistance)
-   end
+   -- A dead/moving target does not change the rocket's launch heading or cancel its flight.
    local distance=math.min(math.max(0,workspace:GetServerTimeNow()-r.started)*r.definition.projectileSpeed,r.range)
    local params=rayParams(r.character,false)
-   -- Sweep short chords along the curve, including on delayed frames.
+   -- Sweep short segments on the firing line, including on delayed frames.
    while active[id] and r.traveled<distance do
     local nextDistance=math.min(distance,r.traveled+.65)
     local position=Motion.position(r.origin,r.direction,nextDistance,r.targetDistance,id)
@@ -66,7 +57,7 @@ function Rocket.new(combat,damage,rayParams)
   local targetDistance=math.clamp((definition.rocketTargetDistance or (aim-slotOrigin).Magnitude)-1.8,0,definition.range)
   local r={character=character,definition=definition,position=origin,origin=origin,direction=direction,traveled=0,targetDistance=targetDistance,started=workspace:GetServerTimeNow()}
   active[nextId]=r
-  r.target=definition.arcTarget;r.launchOrigin=origin;r.range=definition.range;r.expires=workspace:GetServerTimeNow()+10;r.redirects=0
+  r.range=definition.range;r.expires=workspace:GetServerTimeNow()+10
   event:FireAllClients('Launch',nextId,origin,direction*definition.projectileSpeed,r.started,definition.range,definition.projectileRadius/.12,targetDistance)
   local obstruction=workspace:Raycast(slotOrigin,origin-slotOrigin,rayParams(character,false))
   if obstruction then finish(nextId,r,obstruction) end

@@ -39,7 +39,7 @@ assert(math.abs(ha.Health-(1000-baseDamage))<.02,'first projectile damage: actua
 clear()
 a,ha=target('BounceA',origin+Vector3.new(0,0,-10));b,hb=target('BounceB',origin+Vector3.new(8,0,-12))
 local beforeHits=hits;P:launch(definition({Bounce=4}),origin,origin+Vector3.new(0,0,-45));task.wait(.6)
-assert(math.abs(hb.Health-(1000-baseDamage*.6))<.02,'bounce 60% falloff');assert(hits-beforeHits==2,'no repeat targets')
+assert(hb.Health==1000,'gun Bounce stat must never redirect to an off-axis enemy');assert(hits-beforeHits==1,'gun ends on contact without pierce')
 clear()
 -- Tier traits must reach the actual collision executor even with no item/character bonuses.
 a,ha=target('NativePierceA',origin+Vector3.new(0,0,-10));b,hb=target('NativePierceB',origin+Vector3.new(0,0,-20))
@@ -80,8 +80,13 @@ W:launch(definition({Pierce=1}),origin,origin+Vector3.new(0,0,-45));task.wait(.6
 assert(kinds()=='Fly,Land,Fly,Land','pierce rows: '..kinds())
 assert(rows[2][7]==true and rows[2][12]==true and rows[2][16]==false,'first enemy: contact row, not terminal')
 assert(rows[4][16]==true and math.abs(hb.Health-(1000-baseDamage*.7))<.02,'second enemy ends it, damage unchanged')
+local firingOrigin=rows[1][1];local firingDirection=(rows[1][2]-firingOrigin).Unit
+for _,row in rows do
+ assert((row[1]-firingOrigin):Cross(firingDirection).Magnitude<.001,'pierce contact remains on original firing line')
+ if row[3]=='Fly' then assert((row[2]-firingOrigin):Cross(firingDirection).Magnitude<.001,'pierce continuation remains on original firing line') end
+end
 clear();table.clear(rows)
 W:launch(definition(),origin,origin+Vector3.new(0,0,-45));task.wait(1)
 assert(kinds()=='Fly,Land' and rows[2][16]==true and rows[2][7]==false,'a miss lands at its range end: '..kinds())
 folder:Destroy();combat:SetAttribute('ZombiesEnabled',false)
-return {passed=true,groups={'native tier piercing','native tier rebound','piercing falloff','bounce falloff and unique targets','wall occlusion','projectile size','physical travel speed','rocket splash','fly and land rows'},hits=hits}
+return {passed=true,groups={'native tier piercing','native tier rebound','piercing falloff','gun bounce disabled','wall occlusion','projectile size','physical travel speed','rocket splash','fly and land rows'},hits=hits}

@@ -36,6 +36,18 @@ return function(V)
  check(pickFlash(flashes,V.Flashes,c)==flashes[1],'full: the oldest flash moves')
  flashes[4].born=nil
  check(pickFlash(flashes,V.Flashes,c)==flashes[4],'a finished flash is reused first')
- check(V.Flashes<=12,'well under the 31 Highlight limit')
+ check(V.Flashes>=100 and V.Flashes+V.FrostTints<200,'100-mob swarm with headroom under 255 Highlights')
+ -- A same-frame area hit must not steal any of the first hundred silhouettes before rendering.
+ local swarm={};local targets={}
+ for i=1,100 do
+  targets[i]={};local f=pickFlash(swarm,V.Flashes,targets[i])
+  check(f=='new','swarm hit retains independent flash '..i)
+  swarm[i]={born=1,npc=targets[i]}
+ end
+ for i=1,100 do check(pickFlash(swarm,V.Flashes,targets[i])==swarm[i],'repeat hit retains target '..i) end
+ check(V.flashAlpha(0)==0 and V.flashAlpha(V.FlashHold)==0,'solid white hold includes first render frames')
+ check(V.flashAlpha((V.FlashHold+V.FlashDuration)/2)>.49,'fade restores underlying status tint')
+ check(V.flashAlpha(V.FlashDuration)==1,'pulse finishes cleanly')
+ check(V.flashAlpha(.12)>0 and V.flashAlpha(0)==0,'repeat hit resets partially faded pulse to white')
  return {passed=true,checks=checks}
 end

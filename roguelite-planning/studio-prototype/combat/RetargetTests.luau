@@ -49,7 +49,12 @@ for _,id in {'18','33','00','11'} do
  else bullets:launch(d,origin,ar.Position) end
  task.wait(.08);a.Humanoid.Health=0;Tags:RemoveTag(a,'RogueliteZombie');a:Destroy()
  task.wait(2.7)
- check((hits.B or 0)>0,'external kill retarget '..id);check(not hits.A,'no corpse hits '..id)
+ if id=='00' or id=='11' then
+  check((hits.B or 0)==0,'gun keeps launch heading after target dies '..id)
+ else
+  check((hits.B or 0)>0,'external kill retarget '..id)
+ end
+ check(not hits.A,'no corpse hits '..id)
  clear()
 end
 -- Removed/detagged, zero-health, prior hits, range and LOS cannot be reacquired.

@@ -119,13 +119,13 @@ return function(H, G, Weapons, Stats, E, Catalog)
 	local ds = H.weapon(1, loaded).stats
 	check(ds.CritChance == 0 and ds.LifeSteal == 0 and ds.Damage == 0 and ds.RangedDamage == 0 and ds.Knockback == 0 and ds.AttackSpeed == 0, "No crit, life steal, damage, knockback in its hit stats")
 	check(loaded.CritChance == 100 and loaded.Damage == 50, "The owner's own stats are untouched")
-	-- And these still count: extra nails, Pierce, Bounce, burn, slow, poison, lightning, boss damage.
+	-- Extra nails, Pierce and status procs still count; gun nails never bounce.
 	local kept = with({ ProjectileCount = 1, Pierce = 2, Bounce = 1, BurnChance = 15, SlowChance = 15, PoisonChance = 15, ChainCount = 1, BossDamage = 20, GearPower = 3, UtilityPower = 20 })
 	local d = H.weapon(1, kept) -- (the service adds owner and character; shotStat needs only stats)
-	check(Stats.shotStat(d, "ProjectileCount") == 1 and Stats.shotStat(d, "Pierce") == 2 and Stats.shotStat(d, "Bounce") == 1, "Two Straws, Pierce and Bounce apply")
+	check(Stats.shotStat(d, "ProjectileCount") == 1 and Stats.shotStat(d, "Pierce") == 2 and Stats.shotStat(d, "Bounce") == 0, "Extra nails and Pierce apply; Bounce never redirects nails")
 	check(d.stats.BurnChance == 15 and d.stats.SlowChance == 15 and d.stats.PoisonChance == 15 and d.stats.ChainCount == 1, "Status procs apply")
 	check(d.stats.BossDamage == 20 and d.stats.GearPower == 3, "Boss damage and gear power apply")
-	check(Stats.usesStat(H.Base, "ProjectileCount") and Stats.usesStat(H.Base, "Pierce") and Stats.usesStat(H.Base, "Bounce"), "A bullet weapon for the shot stats")
+	check(Stats.usesStat(H.Base, "ProjectileCount") and Stats.usesStat(H.Base, "Pierce") and not Stats.usesStat(H.Base, "Bounce"), "Turret shop eligibility matches straight gunfire")
 	check(d.classFit == nil and d.classFitPercent == nil, "No class-fit bonus")
 
 	-- Ring placement: n spots, all 5+ studs apart, the first ring inside the band.

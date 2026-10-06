@@ -6,7 +6,7 @@
 -- - the runner: everyone is stepped once per frame in order, an error or a yield in one enemy's
 --   step never stops or repeats the others, and enemies added mid-frame wait a frame;
 -- - compact: finished enemies drop out, the order of the rest is kept;
--- - wave population (2026-10-03): 20% bigger swarms, each extra player adds less, the 100 cap holds.
+-- - wave population (2026-10-03): twice the previous requested occupancy, each extra player adds less, the 100 cap holds.
 -- - Endless (2026-10-03): waves 1-20 untouched, every later wave harder, capped speed, tough slots,
 --   and the seeded boss schedule (never back to back, at most 3 waves without, no repeat picks).
 -- Returns {passed, checks, oldPeak, newPeak, ...}.
@@ -154,17 +154,17 @@ return function(S)
 	S.compact(list)
 	check(#list == 3, "compact twice changes nothing")
 
-	-- Wave population: base x1.2, then x1.6 / 2.1 / 2.5 for 2 / 3 / 4 players up, at most 100.
+	-- Wave population: base x2.4, then x1.9 / 2.7 / 3.4 for 2 / 3 / 4 players up, at most 100.
  check(S.playerScale(1) == 1 and S.playerScale(2) == 1.9 and S.playerScale(3) == 2.7 and S.playerScale(4) == 3.4, "player scale 1 / 1.9 / 2.7 / 3.4")
  check(S.playerScale(0) == 1 and S.playerScale(nil) == 1 and S.playerScale(6) == 3.4, "nobody up counts as one; past 4 stays x3.4")
-	check(S.population(8, 1) == 10 and S.population(20, 1) == 24 and S.population(35, 1) == 42 and S.population(65, 1) == 78, "solo waves 1 / 5 / 10 / 20: 10, 24, 42, 78")
- check(S.population(8, 4) == 33 and S.population(20, 4) == 82 and S.population(35, 4) == 100 and S.population(65, 4) == 100, "4 players: 33, 82, 100, 100 (capped)")
- check(S.population(35, 2) == 80 and S.population(35, 3) == 100, "wave 10 with 2 and 3 players: 80, 100")
+	check(S.population(8, 1) == 19 and S.population(20, 1) == 48 and S.population(35, 1) == 84 and S.population(65, 1) == 100, "solo waves 1 / 5 / 10 / 20: 19, 48, 84, 100")
+ check(S.population(8, 4) == 65 and S.population(20, 4) == 100 and S.population(35, 4) == 100 and S.population(65, 4) == 100, "4 players: 65, 100, 100, 100 (capped)")
+ check(S.population(35, 2) == 100 and S.population(35, 3) == 100, "wave 10 with 2 and 3 players: 100, 100")
 	check(S.population(0, 4) == 0, "an empty wave stays empty (practice, QA)")
 	check(S.MAX_POPULATION == 100, "the cap is unchanged")
 	local last = 0
 	for n = 1, 4 do
-		local p = S.population(30, n)
+		local p = S.population(8, n)
 		check(p > last, "more players, more enemies: " .. p)
 		last = p
 	end
@@ -172,7 +172,7 @@ return function(S)
 		check(S.playerScale(n) - S.playerScale(n - 1) < S.playerScale(n - 1) - (n > 2 and S.playerScale(n - 2) or 0), "each extra player adds less")
 	end
 	-- Reserved cap slots (an Endless boss): 4 players keep 90 while it is up; a smaller wave is untouched.
-	check(S.population(80, 4, 10) == 90 and S.population(80, 4) == 100 and S.population(68, 1, 10) == 82, "a boss's 10 slots: 90 for 4 players, solo wave 21's 82 untouched")
+	check(S.population(80, 4, 10) == 90 and S.population(80, 4) == 100 and S.population(20, 1, 10) == 48, "a boss's 10 slots: 90 for 4 players, solo wave 5's 48 untouched")
 
 	-- Endless (2026-10-03): waves 1-20 unchanged, then every wave harder than the last.
 	local E = S.Endless

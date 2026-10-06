@@ -64,7 +64,9 @@ function P.new(combat,damage,rayParams,firstKey)
    if not r.open then fly(r,r.position) end
    local distance=math.min(d.projectileSpeed*math.min(dt,.1),r.remaining)
    local delta=r.direction*distance;local result=cast(r,delta)
-   local finish=result and result.Position or r.position+delta
+   -- Spherecast.Position is the surface contact, not the swept sphere's center. Advancing
+   -- to it bent grazing/piercing bullets sideways. Distance keeps every leg on its firing line.
+   local finish=result and r.position+r.direction*result.Distance or r.position+delta
    local hitModel=result and result.Instance:FindFirstAncestorOfClass('Model')
    local mobContact=hitModel~=nil and Tags:HasTag(hitModel,'RogueliteZombie')
    local terminal=result~=nil and (not mobContact or (r.pierce<=0 and r.bounce<=0)) or r.remaining<=distance
@@ -126,7 +128,8 @@ function P.new(combat,damage,rayParams,firstKey)
   if (aim-origin).Magnitude<.01 then return end
   serial+=1
   -- Item pierce and bounce only where the weapon uses them (CharacterStats.usesStat, 2026-10-03).
-  table.insert(active,{visualId=serial,d=d,launchOrigin=origin,position=origin,direction=(aim-origin).Unit,remaining=d.range,hit={},pierce=math.min(4,Stats.shotStat(d,'Pierce')+(d.nativePierce or 0)),bounce=math.min(4,Stats.shotStat(d,'Bounce')+(d.nativeBounce or 0)),factor=1,first=first,shotId=d.muzzleShotId,expires=os.clock()+10})
+  local bounce=Stats.StraightGuns[d.id] and 0 or math.min(4,Stats.shotStat(d,'Bounce')+(d.nativeBounce or 0))
+  table.insert(active,{visualId=serial,d=d,launchOrigin=origin,position=origin,direction=(aim-origin).Unit,remaining=d.range,hit={},pierce=math.min(4,Stats.shotStat(d,'Pierce')+(d.nativePierce or 0)),bounce=bounce,factor=1,first=first,shotId=d.muzzleShotId,expires=os.clock()+10})
  end
  return self
 end

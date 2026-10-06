@@ -28,17 +28,27 @@ local ProvisionalSpeeds = {
 }
 local C =
 	{ List = {}, ById = {}, ByLegacy = { Regular = "regular-zombie", Baby = "baby-zombie", Mutant = "tank-zombie" } }
+-- Per-role linear growth for six-slot builds. Map gear-power and difficulty multipliers
+-- still apply once in the server spawner; no player-loadout adaptive scaling.
+local RoleGrowth = {
+	Melee = { health = 2, damage = 0.9 },
+	Ranged = { health = 1, damage = 0.9 },
+	Lunge = { health = 2.5, damage = 1.1 },
+	Heavy = { health = 11, damage = 1.5 },
+	Splitter = { health = 3, damage = 0.9 },
+}
 local function add(id, name, map, behavior, health, speed, damage, options)
+	local growth = assert(RoleGrowth[behavior], behavior)
 	local d = {
 		id = id,
 		name = name,
 		map = map,
 		behavior = behavior,
 		health = health,
-		healthPerWave = 2,
+		healthPerWave = growth.health,
 		speed = speed,
 		damage = damage,
-		damagePerWave = 1.5, -- 2.5x Brotato's 0.6, with damage 5x its numbers (see ZombieTypes)
+		damagePerWave = growth.damage,
 		radius = 1.6,
 		height = 6,
 		stopRange = 3.2,
@@ -127,7 +137,7 @@ add("snake", "Snake", "Beach Cove", "Lunge", 3, 12, 7.5, {
 add("hermit-crab", "Hermit Crab", "Beach Cove", "Heavy", 12, 7, 10, {
 	height = 4,
 	radius = 2,
-	healthPerWave = 5,
+		healthPerWave = 11,
 	attackImpact = 0.55,
 	attackRecovery = 1.25,
 	attackCooldown = 1.8,
@@ -164,7 +174,7 @@ add(
 	10,
 	8,
 	10,
-	{ healthPerWave = 4, attackImpact = 0.48, attackRecovery = 1.15, attackCooldown = 1.6 }
+	{ healthPerWave = 11, attackImpact = 0.48, attackRecovery = 1.15, attackCooldown = 1.6 }
 )
 add("scorpion", "Scorpion", "Desert Badlands", "Lunge", 6, 10, 9, {
 	height = 4,
@@ -187,7 +197,7 @@ add(
 	8,
 	16,
 	9,
-	{ healthPerWave = 3, attackImpact = 0.24, attackRecovery = 0.65, attackCooldown = 1, strideLength = 7 }
+	{ healthPerWave = 4, attackImpact = 0.24, attackRecovery = 0.65, attackCooldown = 1, strideLength = 7 }
 )
 add(
 	"frozen-knight",
@@ -197,7 +207,7 @@ add(
 	14,
 	7.5,
 	11,
-	{ healthPerWave = 5, attackImpact = 0.58, attackRecovery = 1.3, attackCooldown = 1.9 }
+	{ healthPerWave = 12, attackImpact = 0.58, attackRecovery = 1.3, attackCooldown = 1.9 }
 )
 add("ice-elf", "Ice Elf", "Frozen Pass", "Ranged", 5, 11, 9, {
 	projectile = "Icicle",
@@ -217,7 +227,7 @@ add(
 	2,
 	17,
 	5,
-	{ height = 3, radius = 1.3, attackImpact = 0.2, attackRecovery = 0.52, attackCooldown = 0.9, strideLength = 3.8 }
+	{ healthPerWave = 1, damagePerWave = 0.6, height = 3, radius = 1.3, attackImpact = 0.2, attackRecovery = 0.52, attackCooldown = 0.9, strideLength = 3.8 }
 )
 add(
 	"lava-slime",
@@ -238,7 +248,7 @@ add(
 	}
 )
 add("obsidian-ogre", "Obsidian Ogre", "Volcanic Crater", "Heavy", 20, 7, 15, {
-	healthPerWave = 7,
+		healthPerWave = 14,
 	height = 8,
 	radius = 2.4,
 	attackRange = 6,
@@ -275,6 +285,7 @@ for _, d in C.List do
 			d[key] = native[key]
 		end
 		d.damage = d.legacy == "Mutant" and Types.Slam.damage or native.damage
+		if d.legacy == "Mutant" then d.damagePerWave = Types.Slam.damagePerWave end
 		d.attackRange = d.legacy == "Mutant" and Types.Slam.trigger or native.contactRange
 		d.balanceStatus = "Existing authoritative Pine Valley tuning"
 	end
