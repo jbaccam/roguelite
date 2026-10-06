@@ -1,4 +1,10 @@
-October 4 squad feedback: [applied fixes and actual Studio test results](BUGFIX_REPORT_2026-10-04.md). Source and Studio are synchronized; multiplayer limits are recorded there.
+October 6: [Admin difficulty tabs](ADMIN_DIFFICULTY_2026-10-06.md) are available in both Mobs and Waves, synchronized and verified with actual Hard/Nightmare spawns. [Multiplayer pressure and results cursor](COOP_AND_CURSOR_2026-10-06.md) are also applied to Studio. Linear party arrivals/boss HP, scaled arrival throughput and scoped results input; automated and single-client checks passed, real multi-client balance unmeasured.
+
+Mobile/low-spec pass: [adaptive quality, phone settings and exact test coverage](MOBILE_PERFORMANCE_2026-10-05.md). Nine runtime sources synchronized; overlay built. Real-device frame time remains unverified.
+
+October 5 combat feedback: [straight gunfire, reward receipts, swarm density, enemy scaling and white hit flashes](COMBAT_FEEDBACK_2026-10-05.md). Latest follow-up: [approachable Normal, actual crowd steering and Hammer pursuit](NORMAL_CROWD_INTEGRATION_2026-10-05.md). Source is synchronized to Studio; targeted combat Play checks and the required overlay build passed. Full-run balance remains unverified.
+
+October 4 squad feedback: [applied fixes and actual Studio test results](BUGFIX_REPORT_2026-10-04.md). That report records synchronization of the October 4 version; multiplayer limits are recorded there.
 
 # Six-slot weapon practice
 

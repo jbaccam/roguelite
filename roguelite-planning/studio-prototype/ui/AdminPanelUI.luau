@@ -226,7 +226,18 @@ function M.new(player)
   T.tabs(win.Body,0,0,W-36,46,TABS,self.tab,function(id) self.tab=id;list=nil;draw() end)
   list=T.scroll(win.Body,'Content',0,56,W-36,H-58-56)
   local canvas=T.frame(list,'Canvas',0,0,CW,0)
-  local height=tabs[self.tab](canvas)
+  local body=canvas
+  local offset=0
+  if self.tab=='Mobs' or self.tab=='Waves' then
+   heading(canvas,'DifficultyTitle','Difficulty',0)
+   local choices={};for _,d in Rules.Difficulties do table.insert(choices,d.id) end
+   T.tabs(canvas,0,36,CW,40,choices,Rules.difficulty(combat:GetAttribute('RunDifficulty')).id,function(id) send('Difficulty',id) end)
+   note(canvas,'DifficultyNote','Shared test difficulty. New mobs and waves use it; existing enemies keep their stats.',84)
+   offset=124;body=T.frame(canvas,'DifficultyContent',0,offset,CW,0)
+  end
+  local bodyHeight=tabs[self.tab](body)
+  if body~=canvas then body.Size=UDim2.fromOffset(CW,bodyHeight) end
+  local height=bodyHeight+offset
   canvas.Size=UDim2.fromOffset(CW,height);list.CanvasSize=UDim2.fromOffset(0,height)
   if keep then list.CanvasPosition=keep end
   screen:SetAttribute('Tab',self.tab)
@@ -243,7 +254,7 @@ function M.new(player)
  -- only after its own requests: rebuilding the stat editor on every shard pickup would fight typing.
  local function changed() if win and self.tab~='Player' then draw() end end
  for _,a in {'Phase','Wave','AdminPaused'} do run:GetAttributeChangedSignal(a):Connect(changed) end
- for _,a in {'AdminFreeze','TestZombieCountOverride','RunMap'} do combat:GetAttributeChangedSignal(a):Connect(changed) end
+ for _,a in {'AdminFreeze','TestZombieCountOverride','RunMap','RunDifficulty'} do combat:GetAttributeChangedSignal(a):Connect(changed) end
  player:GetAttributeChangedSignal('StudioArea'):Connect(changed)
  combat:GetAttributeChangedSignal('TutorialRun'):Connect(changed)
  player:GetAttributeChangedSignal('ProfileTutorial'):Connect(changed)

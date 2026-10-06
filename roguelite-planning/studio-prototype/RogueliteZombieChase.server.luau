@@ -31,25 +31,49 @@ end
 
 combat:SetAttribute('ZombieCount',combat:GetAttribute('ZombieCount') or 5)
 -- ZombieCount is the wave's base size (ShopService.waveEnemyCount); the wave keeps
--- EnemyScheduler.population of it filled: 20% bigger swarms, and more for each player up in the run
--- (2026-10-03). Up = a run member alive and not downed, so a teammate going down or leaving lowers
+-- EnemyScheduler.population of it filled: twice the previous requested occupancy (2026-10-05),
+-- and more for each player up. Up = a run member alive and not downed, so a teammate leaving lowers
 -- it (slots past the new count stop refilling) and a revive or rejoin raises it (watched below).
 -- The tutorial and the admin panel's Keep N alive keep their exact count.
 local Population = require(script.Parent:WaitForChild("EnemyScheduler"))
--- Endless (Population.Endless): the boss of an Endless wave while it is up (set below). It takes
--- bossSlots of the 100 cap: 4 players at wave 25 keep 90 enemies beside it, 100 once it falls.
+local Timeline = require(script.Parent:WaitForChild('WaveTimeline'))
+local timelineState, timelineOrders, plannedIds = nil, {}, {}
+local timelineDispatchAt = 0
+local function timelineMode()
+    local run=combat.Parent:FindFirstChild('RogueliteRunState')
+    return run and run:GetAttribute('Phase')=='Combat' and combat:GetAttribute('TutorialRun')~=true
+        and combat:GetAttribute('WaveNoRespawn')~=true and combat:GetAttribute('TestZombieCountOverride')==nil
+end
+local function spawnHeld()
+    return adminPaused() or combat:GetAttribute('AdminFreeze')==true
+        or (combat:GetAttribute('CinematicUntil') or 0)>workspace:GetServerTimeNow()
+end
+-- Endless retains its encounter handle; all live bosses now apply the smaller BossPressure cap.
 local endlessBoss = nil
+local liveBosses = {}
+local function bossPressure()
+    if combat:GetAttribute('TutorialRun') == true or combat:GetAttribute('WaveNoRespawn') == true or combat:GetAttribute('TestZombieCountOverride') ~= nil then return false end
+    for boss in liveBosses do
+        local h = boss.Parent and boss:FindFirstChildOfClass('Humanoid')
+        if h and h.Health > 0 and not boss:GetAttribute('DeathPopped') then return true end
+    end
+    return false
+end
 local function playersUp()
     local n = 0
     for _, player in Players:GetPlayers() do
-        local humanoid = player:GetAttribute('RunMember') == true and not player:GetAttribute('RunDown') and player.Character and player.Character:FindFirstChildOfClass('Humanoid')
-        if humanoid and humanoid.Health > 0 then n += 1 end
+        local character=player.Character
+        local humanoid=character and character:FindFirstChildOfClass('Humanoid')
+        local root=character and character:FindFirstChild('HumanoidRootPart')
+        if Timeline.participating(player:GetAttribute('RunMember'),player:GetAttribute('RunDown'),player:GetAttribute('RunReturning'),humanoid and humanoid.Health,root~=nil,false) then n+=1 end
     end
     return n
 end
 local function spawnCount()
     local base = math.clamp(combat:GetAttribute('ZombieCount') or 5,0,100)
     if combat:GetAttribute('TutorialRun') == true or combat:GetAttribute('WaveNoRespawn') == true or combat:GetAttribute('TestZombieCountOverride') ~= nil then return base end
+    if bossPressure() then return Population.bossPopulation(base, playersUp()) end
+    if timelineMode() then return Timeline.MaxAlive end
     return Population.population(base, playersUp(), endlessBoss and endlessBoss.Parent and Population.Endless.bossSlots or 0)
 end
 local COLLISION_GROUP = "RogueliteZombies"
@@ -63,6 +87,25 @@ local template = templates:WaitForChild("Zombie_NPC")
 local folder = Instance.new("Folder")
 folder.Name = "RogueliteEnemies"
 folder.Parent = workspace
+
+local function trimBossPopulation()
+    if not bossPressure() then return end
+    local count = spawnCount()
+    local regular={}
+    for _,npc in folder:GetChildren() do
+        local h=npc:FindFirstChildOfClass('Humanoid')
+        if h and h.Health>0 and not npc:GetAttribute('IsBoss') and not npc:GetAttribute('IsElite') and not npc:GetAttribute('AdminSpawn') and not npc:GetAttribute('DeathPopped') then table.insert(regular,npc) end
+    end
+    table.sort(regular,function(a,b) return (a:GetAttribute('SpawnBorn') or 0)<(b:GetAttribute('SpawnBorn') or 0) end)
+    for i=1,math.max(0,#regular-count) do regular[i]:Destroy() end -- removal, never a kill/reward
+end
+folder.ChildAdded:Connect(function(npc)
+    if npc:GetAttribute('IsBoss') or npc:GetAttribute('IsHammerBoss') or npc:GetAttribute('IsMapBoss') then
+        liveBosses[npc] = true
+        task.defer(trimBossPopulation)
+    end
+end)
+folder.ChildRemoved:Connect(function(npc) liveBosses[npc] = nil end)
 
 local SpatialGrid = require(script.Parent:WaitForChild("EnemySpatialGrid"))
 local neighborGrid = SpatialGrid.new(folder, 4.5)
@@ -176,36 +219,64 @@ RunService.Heartbeat:Connect(function(dt)
     measure(os.clock() - started, n)
 end)
 local spawnZombie
+-- One synchronous death listener survives immediate corpse removal. Weak keys and clearing
+-- before dispatch prevent lifetime listener growth and duplicate split children.
+local splitterDeaths=setmetatable({},{__mode='k'})
+Death.onDeath=function(npc,position)
+    local split=splitterDeaths[npc]
+    if split then splitterDeaths[npc]=nil;split(position) end
+end
 
 -- Spawn director: Brotato-style telegraphed groups spread around the players.
 -- A red X marks each incoming enemy for TELEGRAPH_TIME; a player standing on a
 -- group's marks pushes that group to a nearby open spot instead of cancelling it.
 -- The marker's SpawnAreaCenter/SpawnAreaRadius bound the walkable arena floor.
 local TELEGRAPH_TIME = 1
-local GROUP_STAGGER = 0.2
+local GROUP_STAGGER = 0.22
 local GROUP_RADIUS = 3.5
 local GROUP_SPACING = 10
 local MIN_PLAYER_DISTANCE = 22
-local SPAWN_BAND = {28, 70}
+local SPAWN_BAND = {28, 52} -- keep new swarms close enough to join the fight promptly
 local STAND_RADIUS = 5
-local RELOCATE_BAND = {14, 30}
-local RESPAWN_DELAY = .35 -- telegraphed replacements keep pressure up when a squad clears fast
--- Swarms (user, 2026-10-03: "there should be larger swarms of mobs"): groups of GROUP_SIZE, and a
--- batch's groups come together from one side: up to SWARM_SIZE enemies per swarm, every group within
--- SWARM_ARC of one heading around one player, SWARM_GAP after the swarm before; the next swarm comes
--- about a third of a turn further round. Killed enemies' slots gather up to SWARM_GATHER s (sooner
--- once SWARM_MIN wait) and come back as one swarm, not a trickle of singles. A slot stays empty
--- 1 + 0-2.5 + 1 s (telegraph), about the old 2 + 0.3 + 1, so arrivals per second stay the same.
--- Example: 7 kills in 3 s -> one 7-strong swarm from the north-east instead of 7 singles.
-local GROUP_SIZE = {4, 6} -- was 2-4
-local SWARM_SIZE, SWARM_ARC, SWARM_GAP = 12, math.rad(40), 0.2
-local SWARM_GATHER, SWARM_MIN = .65, 4
+local RESPAWN_DELAY = .15
+-- Small packets arrive continuously from different sectors. One shared director serializes
+-- starts across all refill batches, so simultaneous kills cannot restart a burst at time zero.
+local GROUP_SIZE = {2, 4}
+local SWARM_ARC = math.rad(15)
+local SWARM_GATHER, SWARM_MIN = .35, 3
+local pendingGroups, recentCenters = {}, {}
+local directorRunning = false
+local queueSpawn
 local MIN_MASS = 4 -- enemy bodies below this get a denser root (see spawnZombie)
 local WARNING_COLOR = Color3.fromRGB(214, 58, 52)
 local warnings = Instance.new("Folder")
 warnings.Name = "RogueliteSpawnWarnings"
 warnings.Parent = workspace
 local queued, queuedSet = {}, {}
+local respawnReadyAt = {}
+local function populationSnapshot()
+    local total,regular,entries=0,0,{}
+    for _,npc in folder:GetChildren() do
+        local h=npc:FindFirstChildOfClass('Humanoid')
+        if h and h.Health>0 and not npc:GetAttribute('DeathPopped') then
+            total+=1
+            local protected=npc:GetAttribute('IsBoss') or npc:GetAttribute('IsElite') or npc:GetAttribute('AdminSpawn')
+            if not protected then regular+=1 end
+            table.insert(entries,{npc=npc,protected=protected,born=npc:GetAttribute('SpawnBorn') or 0,index=npc:GetAttribute('SpawnIndex') or 0})
+        end
+    end
+    return total,regular,entries
+end
+local function makeArrivalRoom(pending)
+    if pending>=math.min(Timeline.MaxAlive,spawnCount()) then return false end
+    local total,regular,entries=populationSnapshot()
+    while not Timeline.capacity(total,regular,pending,spawnCount()) do
+        local retire=Timeline.retireCandidate(entries)
+        if not retire then return false end -- protected boss/elite/admin rigs are never removed
+        retire.npc:Destroy();retire.protected=true;total-=1;regular-=1
+    end
+    return true
+end
 
 local function arena()
     local m = marker()
@@ -221,7 +292,7 @@ local function livingRoots()
         local character = player.Character
         local root = character and character:FindFirstChild("HumanoidRootPart")
         local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-        if root and humanoid and humanoid.Health > 0 and not player:GetAttribute('RunDown') and (player:GetAttribute('RunMember') or practice) then table.insert(roots, root) end
+        if Timeline.participating(player:GetAttribute('RunMember'),player:GetAttribute('RunDown'),player:GetAttribute('RunReturning'),humanoid and humanoid.Health,root~=nil,practice) then table.insert(roots,root) end
     end
     return roots
 end
@@ -284,6 +355,7 @@ local function spawnContext()
 end
 local function groundAt(point, context)
     local center = context.center
+    if flatDistance(point, center) > context.radius then return nil end
     local hit = workspace:Raycast(Vector3.new(point.X, center.Y + 200, point.Z), Vector3.new(0, -260, 0), context.params)
     -- Floor level only: never on cliffs, terraces, canopies or boulder tops.
     if not hit or hit.Normal.Y < 0.75 or math.abs(hit.Position.Y - center.Y) > 5 or insideBlocker(hit.Position, context.blockers) then return nil end
@@ -324,7 +396,8 @@ local function memberSpots(point, count)
         local angle = (n / count + math.random() * 0.15) * math.pi * 2
         -- Groups over 4 get a wider ring (6 -> x1.22), so their bodies don't spawn inside each other.
         local offset = count > 1 and GROUP_RADIUS * math.max(1, math.sqrt(count / 4)) * (0.55 + math.random() * 0.45) or 0
-        spots[n] = groundAt(point + Vector3.new(math.cos(angle) * offset, 0, math.sin(angle) * offset), context) or point
+        local candidate = point + Vector3.new(math.cos(angle) * offset, 0, math.sin(angle) * offset)
+        spots[n] = clearOfPlayers(candidate, MIN_PLAYER_DISTANCE, context.roots) and groundAt(candidate, context) or point
     end
     return spots
 end
@@ -352,74 +425,114 @@ local function releaseQueued(members, generation)
         if queuedSet[index] == generation then queuedSet[index] = nil end
     end
 end
-local function telegraphBody(members, point, generation)
-    if generation ~= waveGeneration then releaseQueued(members, generation) return end
-    local spots = point and memberSpots(point, #members) or {}
-    local marks = {}
-    for n in members do if spots[n] then marks[n] = makeWarning(spots[n]) end end
-    task.wait(TELEGRAPH_TIME)
-    for _, mark in marks do mark:Destroy() end
+local function retryGroup(members, generation)
     releaseQueued(members, generation)
-    if generation ~= waveGeneration or combat:GetAttribute('ZombiesEnabled') ~= true or adminPaused() then return end
+    task.delay(.35, function()
+        if generation ~= waveGeneration or combat:GetAttribute('ZombiesEnabled') ~= true then return end
+        -- Fixed-count tutorial waves have no periodic missing-slot repair. Preserve their
+        -- interrupted warning across a long pause instead of dropping it in queueSpawn.
+        if adminPaused() then retryGroup(members, generation) return end
+        for _, index in members do queueSpawn(index, true) end
+    end)
+end
+local heading = math.random() * math.pi * 2
+local swarmPlayer = 0
+local function telegraphBody(members, generation, tutorial)
+    if generation ~= waveGeneration then return end
+    if spawnHeld() or combat:GetAttribute('ZombiesEnabled') ~= true then retryGroup(members, generation) return end
+    -- Resolve the current player location here, never while waiting in the arrival queue.
     local roots = livingRoots()
-    local blocked = false
-    for _, spot in spots do
-        if not clearOfPlayers(spot, STAND_RADIUS, roots) then blocked = true end
+    if #roots == 0 then retryGroup(members, generation) return end
+    swarmPlayer = Timeline.nextRoot(swarmPlayer,#roots)
+    heading = (heading + math.pi * (3 - math.sqrt(5))) % (math.pi * 2)
+    local direction = not tutorial and {origin = roots[swarmPlayer].Position, angle = heading} or nil
+    local avoid, now = {}, os.clock()
+    for i = #recentCenters, 1, -1 do
+        local entry = recentCenters[i]
+        if entry.generation ~= generation or now - entry.time > 1.5 then
+            table.remove(recentCenters, i)
+        else
+            table.insert(avoid, entry.point)
+        end
     end
-    if blocked then
-        local moved = pickSpawnPoint({}, point, RELOCATE_BAND, RELOCATE_BAND[1]) or pickSpawnPoint({}, nil, SPAWN_BAND, MIN_PLAYER_DISTANCE)
-        spots = moved and memberSpots(moved, #members) or {}
+    local point = pickSpawnPoint(avoid, timelineMode() and roots[swarmPlayer].Position or nil, tutorial and {28, 70} or SPAWN_BAND, MIN_PLAYER_DISTANCE, direction)
+    if not point then retryGroup(members, generation) return end
+    table.insert(recentCenters, {point = point, time = now, generation = generation})
+    local spots
+    if timelineMode() then
+        -- Each arrival has its own spaced location around the players, not a shared tight blob.
+        spots={point};table.insert(avoid,point)
+        for n=2,#members do
+            swarmPlayer=Timeline.nextRoot(swarmPlayer,#roots)
+            -- Every individual mark takes a turn around a living run member, including the
+            -- second/third/fourth member of a compact warning group.
+            local spot=pickSpawnPoint(avoid,roots[swarmPlayer].Position,SPAWN_BAND,MIN_PLAYER_DISTANCE,nil)
+            if not spot then retryGroup(members,generation) return end
+            spots[n]=spot;table.insert(avoid,spot)
+            table.insert(recentCenters,{point=spot,time=now,generation=generation})
+        end
+    else spots=memberSpots(point,#members) end
+    local marks = {}
+    for n in members do marks[n] = makeWarning(spots[n]) end
+    local warned=0
+    while warned<TELEGRAPH_TIME and generation==waveGeneration do
+        local dt=task.wait(.05)
+        warned=Timeline.advanceWarning(warned,dt,spawnHeld())
     end
-    for n, index in members do spawnZombie(index, nil, spots[n]) end
-end
--- The group's queue slots are always released, even if the body errors part-way (a missing
--- marker, say); otherwise those slots never refill until the next resetWave. After a normal
--- run the body has already released them and this release does nothing.
-local function telegraphGroup(members, point, generation)
-    local ok, err = pcall(telegraphBody, members, point, generation)
+    for _, mark in marks do mark:Destroy() end
+    if generation ~= waveGeneration then return end
+    if combat:GetAttribute('ZombiesEnabled') ~= true or spawnHeld() then retryGroup(members, generation) return end
+    roots = livingRoots()
+    -- A player entering any mark restarts this group's full warning at fresh safe locations.
+    if not Timeline.safeSpots(spots,roots,STAND_RADIUS,function(spot,root) return flatDistance(spot,root.Position) end) then retryGroup(members,generation) return end
     releaseQueued(members, generation)
-    if not ok then warn('Spawn telegraph failed: ' .. tostring(err)) end
+    for n,index in members do
+        if timelineMode() and not makeArrivalRoom(0) then retryGroup({index},generation)
+        else spawnZombie(index,plannedIds[index],spots[n]);plannedIds[index]=nil end
+    end
 end
--- A big refill picks PICKS_PER_FRAME groups a frame instead of all at once; each group's
--- telegraph still starts GROUP_STAGGER after the previous one, timed from the flush.
-local PICKS_PER_FRAME = 4
-local heading = math.random() * math.pi * 2 -- the side the last swarm came from
-local swarmPlayer = 0 -- round-robin pressure, not repeated random rolls on one teammate
+local function telegraphGroup(members, generation, tutorial)
+    local ok, err = pcall(telegraphBody, members, generation, tutorial)
+    if not ok then
+        warn('Spawn telegraph failed: ' .. tostring(err))
+        retryGroup(members, generation)
+    end
+end
+local function drainGroups()
+    if directorRunning then return end
+    directorRunning = true
+    task.spawn(function()
+        while #pendingGroups > 0 do
+            local group = table.remove(pendingGroups, 1)
+            if group.generation == waveGeneration then
+                local count, eligible = spawnCount(), {}
+                for _, index in group.members do
+                    if timelineMode() or index <= count then table.insert(eligible, index) else releaseQueued({index}, group.generation) end
+                end
+                group.members = eligible
+                if #eligible == 0 then continue end
+                task.spawn(telegraphGroup, group.members, group.generation, group.tutorial)
+                -- Relative wait (not overdue task.delay reservations): a frame hitch never dumps
+                -- every overdue group at once. Concurrent flushes append to this same stream.
+                local spacing=group.tutorial and .2 or bossPressure() and Population.BossPressure.groupInterval or GROUP_STAGGER
+                task.wait(timelineMode() and Timeline.groupInterval(spacing,playersUp()) or spacing)
+            end
+        end
+        directorRunning = false
+    end)
+end
 local function flushQueue()
-    local generation, batch, chosen, delay = waveGeneration, queued, {}, 0
+    local generation, batch = waveGeneration, queued
     queued = {}
-    local started, picks = os.clock(), 0
-    local i, swarmLeft, swarm = 1, 0, nil
-    -- The tutorial keeps its old spawns: groups of 2-4 from every side.
     local tutorial = combat:GetAttribute('TutorialRun') == true or combat:GetAttribute('WaveNoRespawn') == true
+    local i = 1
     while i <= #batch do
-        local size = math.min(#batch - i + 1, tutorial and math.random(2, 4) or math.random(GROUP_SIZE[1], GROUP_SIZE[2]))
+        local size = math.min(#batch - i + 1, math.random(GROUP_SIZE[1], GROUP_SIZE[2]))
         local members = table.move(batch, i, i + size - 1, 1, {})
         i += size
-        if picks >= PICKS_PER_FRAME then picks = 0; task.wait() end
-        -- An error here would strand the rest of the batch in queuedSet; with no point the group
-        -- still goes to telegraphGroup, which releases it (and so does a wave reset mid-flush).
-        local point
-        if generation == waveGeneration then
-            -- A new swarm: a third of a turn (+-23 degrees) on from the last, around one player.
-            if swarmLeft <= 0 and not tutorial then
-                if swarm then delay += SWARM_GAP end
-                local roots = livingRoots()
-                heading = (heading + math.pi * 2 / 3 + (math.random() - 0.5) * 0.8) % (math.pi * 2)
-                if #roots>0 then swarmPlayer=swarmPlayer%#roots+1 end
-                swarm = #roots > 0 and {origin = roots[swarmPlayer].Position, angle = heading} or nil
-                swarmLeft = SWARM_SIZE
-            end
-            swarmLeft -= size
-            picks += 1
-            local picked
-            picked, point = pcall(pickSpawnPoint, chosen, nil, SPAWN_BAND, MIN_PLAYER_DISTANCE, swarm)
-            if not picked then warn('Spawn point failed: ' .. tostring(point)); point = nil end
-            if point then table.insert(chosen, point) end
-        end
-        task.delay(math.max(0, started + delay - os.clock()), telegraphGroup, members, point, generation)
-        delay += GROUP_STAGGER
+        table.insert(pendingGroups, {members = members, generation = generation, tutorial = tutorial})
     end
+    drainGroups()
 end
 -- One flush timer at a time; a sooner flush replaces a later one (a swarm that filled up early goes now).
 local flushAt, flushToken = nil, 0
@@ -436,11 +549,13 @@ local function scheduleFlush(delay)
 end
 -- respawn: a killed enemy's slot, which waits for company (SWARM_GATHER, SWARM_MIN); a wave's first
 -- fill and refills go at once. Slots past the wave's count (fewer players up) stay empty.
-local function queueSpawn(index, respawn)
-    if adminPaused() or queuedSet[index] or index > spawnCount() or folder:FindFirstChild(string.format('Zombie_%02d', index)) then return end
+queueSpawn = function(index, respawn)
+    if adminPaused() or queuedSet[index] or (not timelineMode() and index > spawnCount()) or folder:FindFirstChild(string.format('Zombie_%02d', index)) then return end
+    if (respawnReadyAt[index] or 0) > os.clock() then return end
     queuedSet[index] = waveGeneration
     table.insert(queued, index)
-    scheduleFlush(respawn and #queued < SWARM_MIN and SWARM_GATHER or 0.3)
+    local tutorial = combat:GetAttribute('TutorialRun') == true or combat:GetAttribute('WaveNoRespawn') == true
+    scheduleFlush(tutorial and 0.3 or respawn and #queued < SWARM_MIN and SWARM_GATHER or 0.12)
 end
 
 -- Endless: the map's toughest type (Population.toughest), for a growing share of wave slots.
@@ -455,7 +570,10 @@ end
 -- admin: an extra enemy from the admin panel (AdminSpawn): named Admin_nn, outside the wave's
 -- slots, never respawned. index is then its serial number.
 spawnZombie = function(index,overrideId,spawnPosition,splitChild,admin)
-if combat:GetAttribute('ZombiesEnabled') ~= true or (not admin and index>spawnCount()) then return end
+if combat:GetAttribute('ZombiesEnabled') ~= true or (not admin and not timelineMode() and index>spawnCount()) then return end
+-- Bosses/admin rigs also occupy the global ceiling; split children may not bypass it.
+local totalAlive=populationSnapshot()
+if totalAlive>=Timeline.MaxAlive then return end
 local instanceName=string.format(admin and 'Admin_%02d' or 'Zombie_%02d',index)..(splitChild and '_Split'..splitChild or '')
 if folder:FindFirstChild(instanceName) then return end
 local thisWave = waveGeneration
@@ -472,6 +590,7 @@ local config=EnemyCatalog.scaled(id,wave)
 local extraWaves,hpScale,damageScale=RunSetupRules.enemyScale(combat:GetAttribute('RunMap'),combat:GetAttribute('RunDifficulty'))
 if extraWaves>0 then config.health=EnemyCatalog.scaled(id,wave+extraWaves).health end
 config.health=math.max(1,math.ceil(config.health*hpScale*hard.health));config.damage*=damageScale*hard.damage
+config.speed*=RunSetupRules.enemyMoveScale(combat:GetAttribute('RunDifficulty'))
 config.speed=Population.endlessSpeed(config.speed,hard)
 local kind=config.legacy or id
 local selected=templates:FindFirstChild(config.template)
@@ -482,9 +601,12 @@ local npc = selected:Clone()
 npc.Name = instanceName
 if splitChild then npc:ScaleTo(npc:GetScale()*config.childScale);config.health=math.max(1,math.ceil(config.health*.45));config.damage*=.6 end
 npc:SetAttribute("SpawnIndex", index)
+npc:SetAttribute('SpawnBorn',workspace:GetServerTimeNow())
+npc:SetAttribute('SpawnTimeline',timelineMode()==true and not admin)
 npc:SetAttribute('ZombieType',kind)
 npc:SetAttribute('EnemyId',id)
 npc:SetAttribute('EnemyBalanceStatus',config.balanceStatus)
+npc:SetAttribute('CrowdRadius',math.clamp(config.radius or 1.5,1.2,3.5)*(splitChild and config.childScale or 1))
 npc:SetAttribute('SplitChild',splitChild~=nil)
 if admin then npc:SetAttribute('AdminSpawn',true) end
 npc:SetAttribute('ContactDamage',0) -- Timestamped attacks own damage; never double-hit through proximity.
@@ -507,19 +629,22 @@ local humanoid = npc:WaitForChild("Humanoid")
 humanoid.MaxHealth = config.health
 humanoid.Health = humanoid.MaxHealth
 humanoid.BreakJointsOnDeath = false
-humanoid.Died:Connect(function()
-    -- Admin extras outlive a population change (resetWave keeps them), so they split in any wave.
-    if config.behavior=='Splitter' and not splitChild and (admin or thisWave==waveGeneration) and combat:GetAttribute('ZombiesEnabled') then
-        local position=root.Position
+if config.behavior=='Splitter' and not splitChild then splitterDeaths[npc]=function(position)
+    local currentRun=combat.Parent:FindFirstChild('RogueliteRunState')
+    local sameWave=npc:GetAttribute('SpawnTimeline') and currentRun and currentRun:GetAttribute('Wave')==wave or thisWave==waveGeneration
+    if (admin or sameWave) and combat:GetAttribute('ZombiesEnabled') then
         for child=1,config.splitCount do spawnZombie(index,id,position+Vector3.new(child==1 and -1.5 or 1.5,0,0),child,admin) end
     end
-    Death.finish(npc)
-end)
+end end
+humanoid.Died:Connect(function() Death.finish(npc) end)
 -- Schedule replacements in this script's lifecycle, independently of the damage caller.
 npc.Destroying:Connect(function()
+    splitterDeaths[npc]=nil
     -- WaveNoRespawn (the tutorial): a wave is a fixed number of enemies that ends when they're dead.
-    if splitChild or admin or not npc:GetAttribute('DeathPopped') or combat:GetAttribute('WaveNoRespawn') == true then return end
-    task.delay(RESPAWN_DELAY, function()
+    if splitChild or admin or npc:GetAttribute('SpawnTimeline') or not npc:GetAttribute('DeathPopped') or combat:GetAttribute('WaveNoRespawn') == true then return end
+    local delay = bossPressure() and Population.BossPressure.respawnDelay or RESPAWN_DELAY
+    respawnReadyAt[index] = os.clock() + delay
+    task.delay(delay, function()
         if thisWave == waveGeneration and combat:GetAttribute('ZombiesEnabled') then queueSpawn(index, true) end
     end)
 end)
@@ -637,13 +762,6 @@ record.step = function(dt, frame)
         humanoid:MoveTo(root.Position)
         return
     end
-    -- Gentle separation keeps the five bodies readable without pushing physics piles.
-    local separation = neighborGrid:separation(npc, root.Position)
-    if distance < config.stopRange and separation.Magnitude < 0.15 then
-        humanoid:Move(Vector3.zero)
-        humanoid:MoveTo(root.Position)
-        return
-    end
     -- Markers are CanQuery=false now; the marker entry (last, so nil is safe) is only for older places.
     local m = frame.marker
     if target.Parent ~= sightTarget or m ~= sightMarker then
@@ -657,13 +775,8 @@ record.step = function(dt, frame)
         record.interval = Scheduler.interval(distance)
         local delta = target.Position - root.Position
         local flat = Vector3.new(delta.X, 0, delta.Z)
-        local direction = (distance >= config.stopRange and flat.Magnitude > 0.01) and flat.Unit or Vector3.zero
-        direction += separation * 1.8
-        if direction.Magnitude > 0.05 then
-            humanoid:MoveTo(root.Position + direction.Unit * math.min(8, math.max(distance - config.stopRange + 1, 1)))
-        else
-            humanoid:MoveTo(root.Position)
-        end
+        local direction = neighborGrid:steer(npc, root.Position, target.Position, config.stopRange)
+        humanoid:Move(direction)
         -- A step taller than the hips stops a walker dead (babies at the 1-stud spawn pad).
         -- The line of sight is clear, so no path gives a jump waypoint: hop when 0.3 s of
         -- chasing covered under 15% of the walk. Close in, arriving at the MoveTo point isn't a stall,
@@ -720,7 +833,7 @@ record.step = function(dt, frame)
         end
         if point then
             if point.Action == Enum.PathWaypointAction.Jump then humanoid.Jump = true end
-            humanoid:MoveTo(point.Position)
+            humanoid:Move(neighborGrid:steer(npc, root.Position, point.Position, .5))
         end
     else
         humanoid:Move(Vector3.zero) -- Do not keep pushing through an unreachable obstacle.
@@ -732,6 +845,9 @@ end
 local function resetWave()
     waveGeneration += 1
     queued, queuedSet = {}, {}
+    respawnReadyAt = {}
+    pendingGroups, recentCenters = {}, {}
+    timelineState,timelineOrders,plannedIds=nil,{},{}
     warnings:ClearAllChildren()
     for _,npc in folder:GetChildren() do
         -- Bosses and admin-panel extras outlive a population change; everything goes when enemies turn off.
@@ -743,7 +859,7 @@ local function resetWave()
             warn('No RogueliteZombieSpawn in the active map ' .. tostring(Role.activeMap()) .. '; no enemies this wave')
             return
         end
-        for index = 1, spawnCount() do queueSpawn(index) end
+        if not timelineMode() then for index = 1, spawnCount() do queueSpawn(index) end end
     end
 end
 combat:GetAttributeChangedSignal('ZombiesEnabled'):Connect(resetWave)
@@ -752,16 +868,66 @@ combat:GetAttributeChangedSignal('EnemyRoster'):Connect(resetWave)
 resetWave()
 -- More players up mid-wave (a revive, a rejoin, a late arrival) fill the new slots at once; fewer
 -- need nothing here (queueSpawn leaves slots past the count empty). Checked once a second.
--- Example: 2 players at wave 10 keep 67 enemies; one goes down -> 42 as they die; revived -> 67.
+-- Also repair empty slots after an interrupted/failed spawn, so a wave cannot permanently thin out.
+-- Fixed-count tutorial waves deliberately never refill defeated slots.
 task.spawn(function()
     local population = 0
     while true do
         task.wait(1)
+        if timelineMode() then population=0;continue end
         local count = combat:GetAttribute('ZombiesEnabled') == true and Role.marker() and not adminPaused() and spawnCount() or 0
+        if count > 0 then trimBossPopulation() end
         if count > population then
             for index = population + 1, count do queueSpawn(index) end
         end
+        if combat:GetAttribute('WaveNoRespawn') ~= true and combat:GetAttribute('TutorialRun') ~= true then
+            for index = 1, count do queueSpawn(index, true) end
+        end
         population = count
+    end
+end)
+
+-- Ordinary combat waves consume authored timed arrivals. Deaths, revives and Resume do not
+-- refill vacancies. A small dispatcher reserves only the next three warnings, never a mass batch.
+RunService.Heartbeat:Connect(function(dt)
+    if not timelineMode() or combat:GetAttribute('ZombiesEnabled')~=true or not Role.marker() then return end
+    local run=combat.Parent:FindFirstChild('RogueliteRunState')
+    local wave=run:GetAttribute('Wave') or 1
+    if not timelineState or timelineState.wave~=wave then timelineState=Timeline.new(wave);timelineOrders={} end
+    local boss=bossPressure()
+    if timelineState.boss~=nil and timelineState.boss~=boss then
+        -- A boss arriving mid-wave cancels ordinary queued arrivals before switching to small adds.
+        timelineOrders={};queued,queuedSet={},{};pendingGroups={};plannedIds={}
+        waveGeneration+=1;warnings:ClearAllChildren();trimBossPopulation()
+    end
+    local activePlayers=playersUp()
+    if timelineState.players~=activePlayers then timelineState.players=activePlayers;trimBossPopulation() end
+    local reserved=0;for _ in queuedSet do reserved+=1 end
+    Timeline.enqueue(timelineOrders,{},reserved,Timeline.queueLimit(activePlayers,boss))
+    local event=Timeline.step(timelineState,dt,spawnHeld(),boss,activePlayers)
+    if event then
+        local incoming={}
+        for n,role in event.roles do
+            local id=Timeline.pickId(role,event.serial*100+n,combat:GetAttribute('EnemyRoster'),EnemyCatalog.ById,EnemyCatalog.ByLegacy,wave)
+            if wave>20 and Population.toughSlot(event.serial*100+n,Population.endless(wave).tough) then id=toughestId() end
+            if id then table.insert(incoming,id) end
+        end
+        Timeline.enqueue(timelineOrders,incoming,reserved,Timeline.queueLimit(activePlayers,boss))
+        script:SetAttribute('TimelinePulse',event.serial)
+        script:SetAttribute('TimelineElapsed',event.at)
+    end
+    if spawnHeld() or activePlayers==0 or os.clock()<timelineDispatchAt then return end
+    timelineDispatchAt=os.clock()+Timeline.dispatchInterval(activePlayers)
+    for _=1,3 do
+        if #timelineOrders==0 then break end
+        local pending=0;for _ in queuedSet do pending+=1 end
+        if not makeArrivalRoom(pending) then break end
+        local free
+        for index=1,Timeline.MaxAlive do
+            if not queuedSet[index] and not folder:FindFirstChild(string.format('Zombie_%02d',index)) then free=index;break end
+        end
+        if not free then break end
+        plannedIds[free]=table.remove(timelineOrders,1);queueSpawn(free)
     end
 end)
 
@@ -1024,10 +1190,12 @@ task.spawn(function()
     local run = game:GetService('ReplicatedStorage'):WaitForChild('RogueliteRunState')
     -- Plan L: unpausing the run refills the wave's empty slots the same way.
     combat:GetAttributeChangedSignal('RunPaused'):Connect(function()
+        if timelineMode() then return end
         if adminPaused() or combat:GetAttribute('ZombiesEnabled') ~= true or not Role.marker() then return end
         for index = 1, spawnCount() do queueSpawn(index) end
     end)
     run:GetAttributeChangedSignal('AdminPaused'):Connect(function()
+        if timelineMode() then return end
         if adminPaused() or combat:GetAttribute('ZombiesEnabled') ~= true or not Role.marker() then return end
         for index = 1, spawnCount() do queueSpawn(index) end
     end)

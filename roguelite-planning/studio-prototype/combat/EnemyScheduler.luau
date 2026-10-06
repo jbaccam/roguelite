@@ -103,16 +103,13 @@ function S.run(records, n, step, onError, a, b)
 	return finished
 end
 
--- Wave population: how many enemy slots a wave keeps filled, from its base size (ZombieCount,
--- ShopService.waveEnemyCount) and the players up in the run (2026-10-03, user: "scale spawn rate for
--- multiplayer depending on how many people", then "up the mob count a little bit, there should be
--- larger swarms"). SWARM makes every wave 20% bigger; PLAYER_SCALE adds less for each extra player,
--- because a team also kills faster: 1 x1.0, 2 x1.6, 3 x2.1, 4 x2.5 (more than 4 only in Studio).
--- Never above MAX_POPULATION, the cap the waves always had (unmeasured past it, launch audit P5).
--- Example: wave 10's base is 35 -> 42 solo, 67 for 2 players, 88 for 3, 100 (105 capped) for 4.
--- reserved (2026-10-03): cap slots something else takes, an Endless boss's bossSlots (below):
--- 4 players at wave 25 keep 90 enemies while it is up, 100 again once it falls.
-S.SWARM = 1.2
+-- Sustained swarm occupancy (2026-10-05): twice the previous requested population, bounded by
+-- the existing 100-rig ceiling. Solo waves 1/5/10/20 now target 19/48/84/100 (was 10/24/42/78).
+-- Extra players keep diminishing contributions (1/1.9/2.7/3.4); count alone cannot scale combat
+-- past the cap, so health/damage progression and the spawn director also maintain pressure.
+-- Tutorial and explicit practice overrides bypass this function. Reserved boss slots reduce
+-- capacity rather than exceeding it: an Endless boss leaves room for 90 regular mobs.
+S.SWARM = 2.4
 S.PLAYER_SCALE = { 1, 1.9, 2.7, 3.4 }
 S.MAX_POPULATION = 100
 function S.playerScale(players)
@@ -125,9 +122,16 @@ function S.population(base, players, reserved)
 	return math.max(0, math.min(cap, math.floor(base * S.SWARM * S.playerScale(players) + 0.5)))
 end
 
+-- Boss encounters leave room to reach the boss with melee instead of sustaining a 100-mob wall.
+S.BossPressure = { solo = 20, perPlayer = 20, groupInterval = .65, respawnDelay = 1.5 }
+function S.bossPopulation(base, players)
+    local n = math.clamp(math.floor(tonumber(players) or 1), 1, 4)
+    return math.min(S.MAX_POPULATION,math.floor(math.max(0,base)*S.SWARM*n+.5),S.BossPressure.solo*n)
+end
+
 -- Endless (2026-10-03, user: "start spawning bosses randomly in endless mode", "make sure the rounds
 -- get harder in endless mode"). The 100 cap means count alone can't carry it (solo reaches 100 at
--- wave 26), so mobs get stronger: n = waves past FROM (RunSetupRules.WinWave), on top of each type's
+-- wave 13), so mobs get stronger: n = waves past FROM (RunSetupRules.WinWave), on top of each type's
 -- own wave growth (EnemyCatalog.scaled). Waves 1-20 and the tutorial have n = 0: every multiplier 1.
 --   health  x(1 + health)^n, compounding so each wave is ~15% tougher: 25 x1.76, 30 x3.11, 40 x9.65
 --   damage  x(1 + damage x n), linear so hits grow slower than health: 25 x1.3, 30 x1.6, 40 x2.2
@@ -139,8 +143,8 @@ end
 --           average. It lands bossDelay s into the wave. Health: the map's own wave-20 boss
 --           x(1 + bossHealth x n), so wave 30 is x2.5; damage x(1 + bossDamage x n). While it is up
 --           it takes bossSlots of the 100 cap (a boss costs far more than one mob).
--- Example, a solo Pine Valley zombie (HP / damage a hit): wave 20 41 / 33.5, 25 90 / 53,
--- 30 190 / 78, 40 782 / 140. Its Hammer boss: 18,000 HP at 20, 31,500 at 25, 45,000 at 30.
+-- Example after the October 5 linear-growth tuning: a solo Pine Valley regular has
+-- 41 HP / 22.1 damage at wave 20, 190 rounded HP / 49.76 damage at wave 30.
 S.Endless = {
 	FROM = 20,
 	health = 0.12,

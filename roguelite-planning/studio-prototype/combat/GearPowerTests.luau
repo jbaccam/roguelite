@@ -48,35 +48,50 @@ return function(Stats, Rules, BossDefs)
 	-- Maps: recommended power climbs; enemies match the curve at it; each Normal stays under the
 	-- previous map's Hard; the run's first value (extra waves) is 0.
 	local hard = Rules.difficulty("Hard")
+	local normal = Rules.difficulty("Normal")
 	local previous
 	for i, m in Rules.Maps do
 		check(type(m.power) == "number", m.id .. " has a recommended power")
 		local waves, hp, damage = Rules.enemyScale(m.id, "Normal")
 		check(waves == 0, m.id .. " has no head start")
-		near(hp, Stats.powerDamage(m.power), m.id .. " enemy health = damage at its power")
-		near(damage, Stats.powerHealth(m.power), m.id .. " enemy damage = health at its power")
+		near(hp, Stats.powerDamage(m.power) * normal.hp, m.id .. " enemy health = damage at its power")
+		near(damage, Stats.powerHealth(m.power) * normal.damage, m.id .. " enemy damage = health at its power")
 		-- Same fight at the recommended power: enemy health / player damage, enemy damage / player health.
-		near(hp / Stats.powerDamage(m.power), 1, m.id .. " time to kill matches Pine Valley")
-		near(damage / Stats.powerHealth(m.power), 1, m.id .. " hits to die match Pine Valley")
+		near(hp / Stats.powerDamage(m.power), normal.hp, m.id .. " time to kill matches Pine Valley")
+		near(damage / Stats.powerHealth(m.power), normal.damage, m.id .. " hits to die match Pine Valley")
 		local _, hpHard, damageHard = Rules.enemyScale(m.id, "Hard")
-		near(hpHard, hp * hard.hp, m.id .. " Hard multiplies health")
-		near(damageHard, damage * hard.damage, m.id .. " Hard multiplies damage")
+		near(hpHard, hp * hard.hp / normal.hp, m.id .. " Hard multiplies health")
+		near(damageHard, damage * hard.damage / normal.damage, m.id .. " Hard multiplies damage")
 		if previous then
 			check(m.power > previous.power, m.id .. " recommends more power than " .. previous.id)
 			local _, prevHard = Rules.enemyScale(previous.id, "Hard")
 			check(hp < prevHard, m.id .. " Normal stays under " .. previous.id .. " Hard")
 		end
-		-- Bosses: solo Normal health = the Hammer's 18,000 x the map's damage curve.
+		-- Bosses: solo Normal health = the Hammer's 18,000 x Normal HP x the map's damage curve.
 		local hpScale, damageScale = Rules.bossScale("Normal", 1, m.id)
-		near(damageScale, Stats.powerHealth(m.power), m.id .. " boss damage follows the curve")
+		near(damageScale, Stats.powerHealth(m.power) * normal.damage, m.id .. " boss damage follows the curve")
 		local bossId = ({ BeachCove = "KingCrab", DesertBasin = "Pharaoh", FrozenPass = "FrostCyclops", VolcanicCrater = "Dragon" })[m.id]
 		local authored = bossId and BossDefs and BossDefs[bossId] and BossDefs[bossId].health or (i == 1 and 18000 or nil)
 		if authored then
-			near(authored * hpScale, 18000 * Stats.powerDamage(m.power), m.id .. " boss health = Hammer x the curve")
+			near(authored * hpScale, 18000 * Stats.powerDamage(m.power) * normal.hp, m.id .. " boss health = Hammer x the curve")
 		end
 		local hp2 = Rules.bossScale("Normal", 2, m.id)
 		near(hp2, hpScale * (1 + Rules.BossPlayerHp), m.id .. " a second player adds BossPlayerHp")
+		for _, difficulty in Rules.Difficulties do
+			local soloHp, soloDamage = Rules.bossScale(difficulty.id, 1, m.id)
+			for players = 1, 4 do
+				local partyHp, partyDamage = Rules.bossScale(difficulty.id, players, m.id)
+				near(partyHp, soloHp * players, m.id .. " linear HP for six weapons per additional player")
+				near(partyHp / players, soloHp, m.id .. " ideal aggregate DPS preserves boss kill time")
+				near(partyDamage, soloDamage, m.id .. " multiplayer never increases damage per hit")
+			end
+		end
 		previous = m
 	end
+	for _, case in {{0,1},{-9,1},{2.9,2},{8,4},{math.huge,4},{-math.huge,1},{0/0,1},{'3',3},{'bad',1}} do
+		check(Rules.partySize(case[1]) == case[2], "bounded server party count")
+	end
+	check(Rules.partySize(nil) == 1, "missing party count preserves solo")
+	check(Rules.BossPlayerHp == 1, "one full six-slot build per additional participant")
 	return checks
 end

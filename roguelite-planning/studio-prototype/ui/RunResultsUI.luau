@@ -21,6 +21,7 @@ function M.mount(player)
  -- Full screen minus phone notches; the shade reaches under them.
  local screen=T.make('ScreenGui',player:WaitForChild('PlayerGui'),{Name='RunResults',ResetOnSpawn=false,DisplayOrder=85,Enabled=false,
   ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ScreenInsets=Enum.ScreenInsets.DeviceSafeInsets,ClipToDeviceSafeArea=false})
+ T.freeMenuCursor(screen)
  local shade=T.make('Frame',screen,{Name='Shade',Position=UDim2.fromOffset(-100,-100),Size=UDim2.new(1,200,1,200),BackgroundColor3=C.shade,BackgroundTransparency=.12,BorderSizePixel=0,Active=true})
  shade:SetAttribute('AuditIgnore',true)
  local tint=T.make('Frame',screen,{Name='Tint',Position=UDim2.fromOffset(-100,-100),Size=UDim2.new(1,200,1,200),BackgroundTransparency=.82,BorderSizePixel=0})
@@ -28,7 +29,7 @@ function M.mount(player)
  T.make('UIGradient',tint,{Rotation=90,Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(.45,1),NumberSequenceKeypoint.new(1,1)})})
  local root=T.frame(screen,'Root',0,0,0,0);root.Size=UDim2.fromScale(1,1)
  local result -- the decoded RunResult
- local L,canvas,content,note,back,again
+ local L,canvas,content,note,back,again,rewardCaption
  local token=0
 
  local function centred(l) l.TextXAlignment=Enum.TextXAlignment.Center;return l end
@@ -36,10 +37,17 @@ function M.mount(player)
  local function paintAgain()
   if not again or not again.Parent then return end
   local waiting=player:GetAttribute('PlayAgainStatus')
-  again.Caption.Text=waiting and 'CANCEL' or 'PLAY AGAIN'
+  local status=player:GetAttribute('RunRewardStatus')
+  local ready=status=='Saved' or status=='Studio' or status=='NoRewards'
+  local reviewed=workspace:GetServerTimeNow()>=(result and result.reviewAt or 0)
+  again.Interactable=ready and reviewed
+  if back then back.Interactable=ready and reviewed end
+  again.Caption.Text=waiting and 'CANCEL' or not ready and 'SAVING REWARDS...' or not reviewed and 'YOUR REWARDS' or 'PLAY AGAIN'
+  if rewardCaption then rewardCaption.Text=status=='Saved' and 'SAVED TO YOUR ACCOUNT' or status=='Studio' and 'STUDIO ONLY · NOT SAVED' or status=='NoRewards' and 'TEST RUN · NO REWARDS' or status=='Retrying' and 'SAVE RETRYING...' or 'SAVING TO YOUR ACCOUNT...' end
   if note and waiting then note.Text=waiting;note.TextColor3=C.lime elseif note then note.TextColor3=C.muted end
  end
  player:GetAttributeChangedSignal('PlayAgainStatus'):Connect(paintAgain)
+ player:GetAttributeChangedSignal('RunRewardStatus'):Connect(paintAgain)
  local function draw()
   if content then content:Destroy();content=nil;note=nil;back=nil end
   if not result or not L then return end
@@ -68,11 +76,13 @@ function M.mount(player)
   local es=RA-40
   T.icon(reward,'Emerald',16,20,es,'emerald')
   local value=T.label(reward,'Value','+'..(r.emeralds or 0),es+28,8,RW-es-40,RA*.5,64,C.emerald);value.TextXAlignment=Enum.TextXAlignment.Left
-  local cap=T.label(reward,'Caption','EMERALDS EARNED',es+28,RA*.5+6,RW-es-40,26,20,C.muted);cap.TextXAlignment=Enum.TextXAlignment.Left
-  -- The tutorial (r.tutorial = TutorialConfig.Reward): its emeralds count up from 0.
-  if r.tutorial then
-   local target=r.tutorial.emeralds or 0;value.Text='+0'
+  rewardCaption=T.label(reward,'Caption','EMERALDS EARNED',es+28,RA*.5+6,RW-es-40,26,16,C.muted);rewardCaption.TextXAlignment=Enum.TextXAlignment.Left
+  -- Every result celebrates the actual credited total, including the first-win bonus.
+  do
+   local target=r.emeralds or 0;value.Text='+0'
    task.spawn(function() for i=1,24 do task.wait(.035);if not value.Parent then return end;value.Text='+'..math.floor(target*i/24+.5) end end)
+   local rewardPop=T.make('UIScale',reward,{Scale=.94})
+   TweenService:Create(rewardPop,TweenInfo.new(.5,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
   end
   local chips={}
   if (r.firstWin or 0)>0 then table.insert(chips,{'FIRST WIN +'..r.firstWin,Color3.fromRGB(120,88,10),C.gold}) end
@@ -96,7 +106,8 @@ function M.mount(player)
   end
   -- Build: the weapons the run ended with, then its items (scrolling when there are many).
   local by=ay+RA+18;local BH=PH-by-110
-  local head=T.label(board,'BuildTitle','YOUR BUILD',28,by,300,30,26,C.cream);head.TextXAlignment=Enum.TextXAlignment.Left
+  local summary=r.test and 'Practice rewards do not save.' or ('BALANCE: '..tostring(r.balance or 0)..' emeralds  ·  Play Again keeps emeralds + collection. Run build resets.')
+  local head=T.label(board,'BuildTitle',summary,28,by,PW-56,30,18,C.cream);head.TextXAlignment=Enum.TextXAlignment.Left
   local cell=math.min(80,BH-40)
   for i,w in r.weapons or {} do
    local slot=T.panel(board,'Weapon'..i,28+(i-1)*(cell+8),by+38,cell,cell,'inset');T.setTier(slot,w.tier)
@@ -162,9 +173,12 @@ function M.mount(player)
   -- The countdown follows the server's clock (returnAt), so a slow client never shows it wrong.
   task.spawn(function()
    while token==mine and screen.Enabled do
+    paintAgain()
     if note and player:GetAttribute('PlayAgainStatus') then paintAgain()
+    elseif note and (player:GetAttribute('RunRewardStatus')=='Saving' or player:GetAttribute('RunRewardStatus')=='Retrying') then
+     note.Text='Your rewards are credited. Waiting for the save to finish before continuing.'
     elseif note and result.returnAt then
-     local left=math.max(0,math.ceil(result.returnAt-workspace:GetServerTimeNow()))
+     local left=math.max(0,math.ceil((player:GetAttribute('RunRewardReturnAt') or result.returnAt)-workspace:GetServerTimeNow()))
      note.Text=left>0 and ('Back to the lobby in '..left..'s') or 'Returning to the lobby...'
      -- A party that left together: who ended it, and that you all go back together.
      if result.party then
@@ -180,8 +194,9 @@ function M.mount(player)
   token+=1;result=nil;screen.Enabled=false;T.hideTouchControls('RunResults',false)
   if content then content:Destroy();content=nil end
  end
- local function changed() if player:GetAttribute('RunResult') then show() else hide() end end
+ local function changed() if player:GetAttribute('RunResult') and player:GetAttribute('LobbyPreviewActive')~=true then show() else hide() end end
  player:GetAttributeChangedSignal('RunResult'):Connect(changed)
+ player:GetAttributeChangedSignal('LobbyPreviewActive'):Connect(changed)
  changed()
 
  -- Rejoin (plan J item 9): in a lobby, a run this player dropped out of that is still going (the

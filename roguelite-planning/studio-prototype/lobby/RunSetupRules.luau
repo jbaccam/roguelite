@@ -27,24 +27,37 @@ R.Maps={
 }
 -- Difficulty multiplies enemy health and damage and the emeralds a run pays (reward).
 R.Difficulties={
- {id='Normal',hp=1,damage=1,reward=1},
- {id='Hard',hp=1.6,damage=1.3,reward=1.5},
- {id='Nightmare',hp=2.5,damage=1.6,reward=2},
+ -- Normal is the approachable baseline across the whole weapon roster. Keep optional
+ -- challenge modes and reward multipliers unchanged (NORMAL_BALANCE.md).
+ {id='Normal',hp=.6,damage=.75,enemyMove=.85,reward=1},
+ {id='Hard',hp=1.6,damage=1.3,enemyMove=1,reward=1.5},
+ {id='Nightmare',hp=2.5,damage=1.6,enemyMove=1,reward=2},
 }
 R.DifficultyIndex={};for i,d in R.Difficulties do R.DifficultyIndex[d.id]=d end
 function R.difficulty(id) return R.DifficultyIndex[id] or R.Difficulties[1] end
+-- Regular enemy chase only: applied once at spawn, before the existing Endless
+-- adjustment. Independent of map power and wave number; bosses never use it.
+function R.enemyMoveScale(id) return R.difficulty(id).enemyMove end
 -- The map a run is on (MapConfig ids; Pine Valley when unset or unknown).
 local function mapOf(mapId)
  return R.Maps[R.MapIndex[mapId or combat:GetAttribute('RunMap')] or 1]
 end
 -- Bosses: health x the difficulty's hp x (1 + BossPlayerHp per extra player) x the map's power
 -- health / its bossBase; damage x the difficulty's damage x the map's power damage. Normal solo
--- in Pine Valley is the authored number (a 2-player Normal Hammer: 18,000 x 2.35 = 42,300). A
--- Normal solo Dragon: 31,500 x 2.92 / 1.75 = 52,560 = the Hammer's 18,000 x 2.92.
-R.BossPlayerHp=1.35
+-- in Pine Valley is 60% of authored HP (a 2-player Normal Hammer: 18,000 x .6 x 2 = 21,600).
+-- Normal solo Dragon: 31,500 x .6 x 2.92 / 1.75 = 31,536.
+-- Each additional run participant can bring another six weapons: linear boss HP
+-- preserves ideal aggregate kill time. Ordinary mobs retain solo HP; authored
+-- arrival amounts already grow linearly with players (never apply both as N^2).
+R.BossPlayerHp=1
+function R.partySize(players)
+ local n=tonumber(players) or 1
+ if n~=n then n=1 end
+ return math.clamp(math.floor(n),1,4)
+end
 function R.bossScale(id,players,mapId)
  local d=R.difficulty(id);local m=mapOf(mapId)
- return d.hp*(1+R.BossPlayerHp*math.max(0,(players or 1)-1))*Stats.powerDamage(m.power)/(m.bossBase or 1),d.damage*Stats.powerHealth(m.power)
+ return d.hp*(1+R.BossPlayerHp*(R.partySize(players)-1))*Stats.powerDamage(m.power)/(m.bossBase or 1),d.damage*Stats.powerHealth(m.power)
 end
 -- Regular enemies on a map and difficulty: (extra waves of health growth, health multiplier,
 -- damage multiplier). The first is always 0 now (the spawner still reads it). Example, a Frozen

@@ -63,6 +63,14 @@ local function keepAlive(n,ids)
 end
 
 local actions={}
+-- One shared test difficulty for manual mobs, Keep N alive and scheduled waves.
+-- Existing rigs retain their spawn stats; changing this never heals a live enemy.
+function actions.Difficulty(p,id)
+ if not spawner() then return false,NO_ARENA end
+ if combat:GetAttribute('TutorialRun')==true then return false,'End the tutorial before changing difficulty' end
+ combat:SetAttribute('RunDifficulty',id)
+ return true,id..' difficulty · applies to new enemies and waves'
+end
 -- Travel: instant in Studio's combined server. Published servers need plan C's teleports.
 function actions.Travel(p,where)
  if not (RunService:IsStudio() and Role.get()=='Combined') then return false,'Needs lobby/match teleports (plan C)' end

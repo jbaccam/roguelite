@@ -217,7 +217,7 @@ function UI.mount(playerGui)
  local shopView
  local levelUpView
  local settingsWindow
- local function unavailable() return player:GetAttribute('RunDown') or player:GetAttribute('RunReturning') or player:GetAttribute('RunResult')~=nil end
+ local function unavailable() return player:GetAttribute('RunDown') or player:GetAttribute('RunReturning') or player:GetAttribute('RunResult')~=nil or player:GetAttribute('RunMember')==false or player:GetAttribute('LobbyPreviewActive')==true end
  local function close()
   local wasOpen=overlay.Visible
   overlay.Visible=false;hud.Visible=true;controller.Mode=nil;gui:SetAttribute("PreviewScreen",nil)
@@ -537,8 +537,8 @@ function UI.mount(playerGui)
   return data.wave==1 and (RS:GetAttribute('ServerRole')=='Match' or RS.RogueliteCombat:GetAttribute('TutorialRun')==true)
  end
  local function phaseChanged()
-  local data=shopView:snapshot();if not data then return end
   if unavailable() then lastPhase=nil;controller:Close();return end
+  local data=shopView:snapshot();if not data then return end
   if data.phase~=lastPhase then
    lastPhase=data.phase
    -- Sandbox (phase Practice) has no shop: close any open menu, as a wave start does.
@@ -547,7 +547,7 @@ function UI.mount(playerGui)
   end
  end
  shopView.state:GetAttributeChangedSignal('ShopSnapshot'):Connect(phaseChanged)
- for _,attribute in {'RunDown','RunReturning','RunResult'} do player:GetAttributeChangedSignal(attribute):Connect(phaseChanged) end
+ for _,attribute in {'RunDown','RunReturning','RunResult','RunMember','LobbyPreviewActive'} do player:GetAttributeChangedSignal(attribute):Connect(phaseChanged) end
  task.defer(phaseChanged)
  task.defer(drawBuild)
  task.defer(layout)

@@ -64,6 +64,7 @@ return function(Admin, Enemies, Items)
 	-- 2026-10-04: GiftTest (Simulate gift to me) makes 21.
 	local expectedActions = {
 		"ClearMobs",
+		"Difficulty",
 		"EndWave",
 		"EndlessBoss",
 		"Freeze",
@@ -85,7 +86,7 @@ return function(Admin, Enemies, Items)
 		"Waves",
 		"Weapons",
 	}
-	check(#Admin.Actions == 21, "21 admin actions, found " .. #Admin.Actions)
+	check(#Admin.Actions == 22, "22 admin actions, found " .. #Admin.Actions)
 	check(
 		table.concat(Admin.Actions, ",") == table.concat(expectedActions, ","),
 		"action names: " .. table.concat(Admin.Actions, ",")
@@ -100,6 +101,9 @@ return function(Admin, Enemies, Items)
 		end
 	end
 	local valid = {
+		{ "Difficulty", "Normal" },
+		{ "Difficulty", "Hard" },
+		{ "Difficulty", "Nightmare" },
 		{ "Travel", "Lobby" },
 		{ "Travel", "PineValley" },
 		{ "Travel", "BeachCove" },
@@ -143,6 +147,11 @@ return function(Admin, Enemies, Items)
 		check(Admin.check(call[1], call[2], call[3]), "should pass: " .. show(call))
 	end
 	local invalid = {
+		{ "Difficulty", "Easy" },
+		{ "Difficulty", "hard" },
+		{ "Difficulty", 2 },
+		{ "Difficulty" },
+		{ "Difficulty", "Hard", true },
 		-- Action names
 		{ nil },
 		{ 5 },

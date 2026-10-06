@@ -50,6 +50,8 @@ local function enemyList(v)
  return true
 end
 local rules={
+ -- Keep this sandboxed validator independent of the unsandboxed RunSetupRules module.
+ Difficulty=function(a,b) return (a=='Normal' or a=='Hard' or a=='Nightmare') and b==nil end,
  Travel=function(a,b) return b==nil and (a=='Lobby' or Maps.valid(a)) end,
  -- Bosses are capped at 5: one mistyped count could otherwise stall the server with 50 bosses.
  Spawn=function(a,b)
