@@ -8,13 +8,15 @@ Studio-only testing: the character panel's Zombies section has a typed count box
 
 ## Tuning
 
-The native values retain existing balance. All other HP, damage and movement values are explicitly marked **provisional QA baselines**, not approved final balance.
+Latest Normal movement: all ordinary enemies run at 0.85 of the catalog speeds below; Hard/Nightmare retain the listed speed. See the [full before/after table](NORMAL_BALANCE.md#normal-movement-across-all-maps). Bosses are excluded.
+
+October 5 HP/damage growth and verification: [Enemy scaling](ENEMY_SCALING.md). Base HP below is unchanged; per-wave health and damage have been retuned for upgraded six-slot builds and larger swarms. All other HP, damage and movement values are explicitly marked **provisional QA baselines**, not approved final balance.
 
 | Enemy | Base HP | Speed (studs/s) | Behavior |
 |---|---:|---:|---|
-| Regular Zombie | 3 | 16 | Melee |
-| Baby Zombie | 1 | 20 | Melee |
-| Tank Zombie | 20 | 12.5 | Existing warned slam |
+| Regular Zombie | 3 | 14 | Melee |
+| Baby Zombie | 1 | 17 | Melee |
+| Tank Zombie | 20 | 11 | Existing warned slam |
 | Spitter Zombie | 5 | 13 | Ranged spit |
 | Crab | 4 | 16 | Melee |
 | Snake | 3 | 15 | Warned fast lunge |

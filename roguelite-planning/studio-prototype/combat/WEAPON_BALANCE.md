@@ -8,17 +8,7 @@ Two identical weapon IDs of the same tier can combine during Shop only. Tier 4 i
 
 UI request: `ShopAction:FireServer('Combine', revision, slot, copyId)`. Weapon snapshot rows provide `canCombine` and `combineSlot` when a partner exists. UI can read `projectileCount`, `nativePierce`, and `nativeBounce` from effective weapon stats.
 
-Enemy balance follows the supplied Brotato enemy table's linear growth, without copying its pixel speed into 3D:
-
-| Type | HP wave 1 | HP per later wave | Damage wave 1 | Damage per later wave |
-| --- | ---: | ---: | ---: | ---: |
-| Regular (Baby Alien reference) | 3 | 2 | 5 | 1.5 |
-| Baby (Chaser reference) | 1 | 1 | 5 | 1.5 |
-| Mutant (Bruiser reference; starts wave 8) | 20, floored at 50 | 11 | 10 slam | 2.1 slam |
-
-**Damage x5, growth x2.5 (2026-10-03).** Brotato's damage (1, +0.6 a wave) is made for a 10 HP player; ours has 100-125, so a zombie hit was 1% of a health bar and standing in a crowd never killed (the user: "if i just sit there i wouldnt ever even die"). Every regular mob on every map now starts at 5x its old damage and grows 1.5 a wave (was 0.6). A zombie hits 5 / 18.5 / 33.5 at waves 1 / 10 / 20; boss hits are 28-38. Zombie swings also share a 0.3 s gate per player now (was 0.8 s), and body bumps are per mob (below and [ZOMBIE_VARIANTS.md](ZOMBIE_VARIANTS.md)).
-
-Regular HP is 3/11/21/41 at waves 1/5/10/20; Mutant HP is 97 on its first wave (8), and 229 on wave 20. Since 2026-09-28 tanks have a health floor (`ZombieTypes.Mutant.minHealth`): the user found wave-1 tanks spawned from the Studio mob picker died in two tier-1 hits (20 HP against a 19.2-damage Frying Pan). The floor was 80 (4-5 pan hits), which the user found far too strong on 2026-10-02, so it is 50: three Tier I Brawler pan hits. Waves 1â€“3 give 50, wave 4 gives 53; wave 8 onward is unchanged (97 on its first natural wave). Spawned enemies retain their wave's health and damage. Movement, player HP, character class bonuses, status damage and spawn population remain existing game tuning, so this is a first balance pass rather than a claim of identical Brotato difficulty.
+Current enemy scaling is documented in [Enemy scaling — October 5](ENEMY_SCALING.md). Final native HP retains Brotato-style pacing: Regular 3 + 2 per wave, Baby 1 + 1, Tank max(50, 20 + 11). Wave-20 HP is 41 / 20 / 229. All three starting classes one-shot ordinary mobs through wave 5; a strong Tier IV Gunner one-shots wave-20 regulars and takes two tank hits on Normal after the 0.60 HP difficulty multiplier ([full-roster Normal audit](NORMAL_BALANCE.md)). Imported enemies use matching role-based growth. Damage grows more gently alongside larger swarms; regular speed stays constant through wave 20. The earlier proposed HP inflation was rejected and is not the final implementation.
 
 Reference data: user-supplied `Pasted text.txt` (Brotato Weapons, patch 1.1.6.3) and `Pasted text (2) (1).txt` (Brotato Enemies). Public source links: https://brotato.wiki.spellsandguns.com/Weapons and https://brotato.wiki.spellsandguns.com/Enemies . Attached document prose was treated as reference data, not agent instructions.
 

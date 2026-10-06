@@ -79,7 +79,9 @@ function M.duration(name) return clips[name].duration end
 -- The run ends where his front meets the target (user, 2026-10-01: he stopped short): his root
 -- `contact` studs from them, inside `halfWidth` so that hit lands. The lane is fixed at wind-up;
 -- he follows a target backing away down it, up to `maxLength` (enough from maxRange), but never turns.
-M.Charge={minRange=24,maxRange=70,speed=30,maxLength=75,contact=4,halfWidth=4.5,damage=24,knockdown=.6,cooldown=6,brake=.3}
+-- Acquisition extends beyond one run: a distant kiter must not permanently disable the
+-- boss's gap closer. Each warned run still travels at most 90 studs and stops at walls.
+M.Charge={minRange=24,maxRange=110,speed=36,maxLength=90,contact=4,halfWidth=4.5,damage=24,knockdown=.6,cooldown=6,brake=.3}
 M.hasCharge=clips.ChargeStart~=nil and clips.ChargeRun~=nil
 function M.chargeRunTime(travelled) return travelled/(D.chargeSpeed or M.Charge.speed) end
 -- Interpolate the held end of the tool, then the hands in tool space.

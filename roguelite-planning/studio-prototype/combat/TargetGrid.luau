@@ -62,7 +62,9 @@ end
 -- .01 and less than `range` from origin and passes clear(point,e), and that point. Candidates are
 -- tried nearest first, ties to the earlier entry, so clear runs once per closer blocked enemy.
 -- allowance: melee's vertical allowance (G.distance), nil for the plain distance.
-function G.nearest(grid,origin,range,can,measure,clear,allowance)
+-- preferBoss is used only when a melee weapon is ready to commit a swing. It changes ranking,
+-- never eligibility: out-of-range, blocked, dead or disallowed bosses cannot steal the attack.
+function G.nearest(grid,origin,range,can,measure,clear,allowance,preferBoss)
  local found={}
  for _,e in G.around(grid,origin,range) do
   if can(e) then
@@ -71,7 +73,10 @@ function G.nearest(grid,origin,range,can,measure,clear,allowance)
    if distance<range and distance>.01 then table.insert(found,{e=e,point=point,distance=distance}) end
   end
  end
- table.sort(found,function(a,b) if a.distance~=b.distance then return a.distance<b.distance end;return a.e.order<b.e.order end)
+ table.sort(found,function(a,b)
+  if preferBoss and (a.e.boss==true)~=(b.e.boss==true) then return a.e.boss==true end
+  if a.distance~=b.distance then return a.distance<b.distance end;return a.e.order<b.e.order
+ end)
  for _,f in found do if clear(f.point,f.e) then return f.e,f.point end end
 end
 -- Melee sweeps (launch audit P6). The enemies a swing could still hit this tick: not in `hit`,

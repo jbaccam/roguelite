@@ -20,9 +20,11 @@ local function warning(npc,kind)
  local folder=Instance.new('Folder');folder.Name='BossWarning';folder.Parent=workspace
  local cf=npc:GetAttribute('BossFrame');local y=(npc:GetAttribute('BossGroundY') or cf.Y-Motion.RootHeight)+.065
  if kind=='Charge' then
-  -- The lane the body will run down: as wide as the body hit, from the boss to where he stops.
-  local length=npc:GetAttribute('BossChargeLength') or 0;local width=Motion.Charge.halfWidth*2
-  local look=Vector3.new(cf.LookVector.X,0,cf.LookVector.Z).Unit;local mid=Vector3.new(cf.X,y,cf.Z)+look*length/2
+  -- Show the full committed corridor at wind-up, including the swept body's end caps.
+  -- Actual travel can stop sooner; it never extends into previously unmarked ground.
+  local travel=npc:GetAttribute('BossChargeWarningLength') or npc:GetAttribute('BossChargeLength') or 0
+  local width=Motion.Charge.halfWidth*2;local length=travel+width
+  local look=Vector3.new(cf.LookVector.X,0,cf.LookVector.Z).Unit;local mid=Vector3.new(cf.X,y,cf.Z)+look*travel/2
   part(folder,'ChargeLane',Vector3.new(width,.045,length),CFrame.lookAt(mid,mid+look),.72)
   for _,side in {-1,1} do local p=mid+look:Cross(Vector3.yAxis)*side*width/2;part(folder,'WarningEdge',Vector3.new(.09,.04,length),CFrame.lookAt(p,p+look),.2) end
   return folder
@@ -114,8 +116,7 @@ Run.PreSimulation:Connect(function(dt)
   Motion.apply(npc,poses);state.lastPose=poses;state.lastClip=clip
   local warn=not death and npc:GetAttribute('Attacking') and (a and age and age>=a.anticipation and age<a.active or charging and age<runEnd)
   local serial=npc:GetAttribute('BossSerial') or 0
-  -- The charge lane is redrawn as its end moves (he follows a target down it).
-  local lane=charging and npc:GetAttribute('BossChargeLength') or 0
+  local lane=charging and (npc:GetAttribute('BossChargeWarningLength') or npc:GetAttribute('BossChargeLength')) or 0
   if state.warning and (not warn or state.warningSerial~=serial or math.abs(lane-state.warningLane)>.25) then state.warning:Destroy();state.warning=nil end
   if warn and not state.warning then state.warning=warning(npc,kind);state.warningSerial=serial;state.warningLane=lane end
   if not death and age and a and age>=a.active and age<a.duration and serial~=state.lastSerial then state.lastSerial=serial;impact(npc,kind) end

@@ -57,6 +57,27 @@ return function(G)
  local function at(e) return e.position end
  check(G.nearest(grid,Vector3.zero,10,yes,at,yes)==list[2],'range is exclusive; too-near ignored')
  check(G.nearest(grid,Vector3.zero,9.98,yes,at,yes)==nil,'nothing in range')
+ -- Ready melee gets a reachable boss; ranged/cooling calls keep nearest-enemy behavior.
+ local mob={position=Vector3.new(2,0,0)}
+ local boss={position=Vector3.new(18,0,0),boss=true,shell=Vector3.new(6,0,0)}
+ local farther={position=Vector3.new(22,0,0),boss=true,shell=Vector3.new(7,0,0)}
+ grid=G.new({mob,farther,boss})
+ local function shell(e) return e.shell or e.position end
+ local function allowed(e) return not e.disallowed end
+ local function visible(_,e) return not e.blocked and not e.dead end
+ local function pick(priority,allowance) return G.nearest(grid,Vector3.zero,7.5,allowed,shell,visible,allowance,priority) end
+ local chosen,point=pick(true)
+ check(chosen==boss and point==boss.shell,'ready melee chooses nearest boss shell over closer add and farther boss')
+ check(pick(false)==mob and pick(nil)==mob,'ranged/cooling retain ordinary nearest target')
+ boss.blocked=true;farther.blocked=true;check(pick(true)==mob,'walls still prevent boss targeting')
+ boss.blocked=nil;farther.blocked=nil;boss.dead=true;farther.disallowed=true
+ check(pick(true)==mob,'dead/disallowed bosses do not steal swing')
+ boss.dead=nil;boss.shell=Vector3.new(7.5,0,0)
+ check(pick(true)==mob,'boss at exact range limit stays out')
+ boss.shell=Vector3.new(6,20,0)
+ check(pick(true,4)==mob,'boss too high remains out with melee allowance')
+ boss.shell=Vector3.new(6,3,0)
+ check(pick(true,4)==boss,'same existing melee height allowance applies to priority boss')
  check(oldClears>0 and newClears<oldClears,'fewer line checks than the old scan')
  return {passed=true,checks=checks,scenarios=scenarios,oldClears=oldClears,newClears=newClears}
 end

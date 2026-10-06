@@ -268,8 +268,8 @@ local function fresh(e) return e.hum.Health>0 and e.npc.Parent~=nil and e.root.P
 local function measured(e,origin) return e.boss and reachPoint(e.npc,e.root,origin) or e.position end
 -- The nearest enemy `can` accepts in range with a clear line from origin, and its point.
 -- allowance: melee's vertical allowance (Grid.distance), nil for ranged.
-local function nearest(snap,origin,range,can,wallParams,allowance)
- return Grid.nearest(snap,origin,range,can,function(e) return measured(e,origin) end,function(point,e) return fresh(e) and clear(origin,point,wallParams) end,allowance)
+local function nearest(snap,origin,range,can,wallParams,allowance,preferBoss)
+ return Grid.nearest(snap,origin,range,can,function(e) return measured(e,origin) end,function(point,e) return fresh(e) and clear(origin,point,wallParams) end,allowance,preferBoss)
 end
 -- A cooling weapon keeps last tick's target while it is still alive, allowed and in range.
 local function kept(slot,snap,origin,range,can,allowance)
@@ -391,7 +391,9 @@ RunService.Heartbeat:Connect(function(dt)
    if living then
     -- Cooling down (it can't attack this tick): keep the target, searching again at 10 Hz.
     if now<slot.ready and now<(slot.nextSearch or 0) then found,point=kept(slot,snap,origin,searchRange,can,reachAllowance) end
-    if not found then found,point=nearest(snap,origin,searchRange,can,wallParams,reachAllowance);slot.nextSearch=now+.1 end
+    -- Commit nearby melee swings toward a reachable boss rather than letting closer adds
+    -- monopolize them. The shell distance, height and wall rules still decide eligibility.
+    if not found then found,point=nearest(snap,origin,searchRange,can,wallParams,reachAllowance,melee and now>=slot.ready);slot.nextSearch=now+.1 end
    end
    slot.aimNpc=found and found.npc
    if found then targetCount+=1 end

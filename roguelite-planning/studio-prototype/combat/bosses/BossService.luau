@@ -12,8 +12,8 @@ local B={states={}}
 -- Shared with MapBossService (find-or-create); MapBossPresentation throws the player on the client.
 local knock=combat:FindFirstChild('MapBossKnockdown') or Instance.new('RemoteEvent')
 knock.Name='MapBossKnockdown';knock.Parent=combat
--- Wave chase speed: under the 24 studs/s player base but closing; the charge catches kiters.
-local CHASE_SPEED=18
+-- Latest feedback: modestly faster walking chase; ordinary zombies are slower separately.
+local CHASE_SPEED=24
 -- Normal, one player; RunSetupRules.bossScale adds difficulty and player count.
 local HEALTH=18000 -- 24000 until 2026-10-01: a balanced wave-20 build took 60-115 s; now ~45-90 s
 -- Seconds between hit flinches (BossPresentation plays one only while he stands).
@@ -151,6 +151,7 @@ function B.charge(npc,s,target,now)
  s.nextCharge=now+C.cooldown
  npc:SetAttribute('BossAttack','Charge');npc:SetAttribute('BossStart',now);npc:SetAttribute('BossFrame',cf);npc:SetAttribute('BossGroundY',ground.Position.Y)
  npc:SetAttribute('BossChargeLength',length);npc:SetAttribute('BossChargeSpeed',C.speed)
+ npc:SetAttribute('BossChargeWarningLength',limit) -- warn every point this run can reach before wind-up ends
  npc:SetAttribute('BossSerial',(npc:GetAttribute('BossSerial') or 0)+1);npc:SetAttribute('Attacking',true)
  h:Move(Vector3.zero);h:MoveTo(root.Position);h.AutoRotate=false;root.Anchored=true
  return true
@@ -201,7 +202,11 @@ local function stepCharge(npc,s,now,root)
    local pr=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
    if pr then local d=(pr.Position-root.Position).Magnitude;if d<dist then target,dist=pr,d end end
   end
-  if not B.start(npc,'Slam',target,true) then root.Anchored=false;npc.Humanoid.AutoRotate=true end
+  -- A missed run already paid its warning and brake. Slamming empty ground forced another
+  -- 1.67 seconds of standing still and let a fleeing player erase the entire gap closure.
+  if not target or not B.start(npc,'Slam',target,true) then
+   root.Anchored=false;npc.Humanoid.AutoRotate=true;npc:SetAttribute('BossStart',nil)
+  end
  end
 end
 function B.spawn(cf,practice)
@@ -327,12 +332,13 @@ function B.step(npc,s,now)
   if Motion.hasCharge and now>=s.next and now>=(s.nextCharge or 0) and B.charge(npc,s,target,now) then return end
   local order={'Slam','Swing','Slam','Spin'};local nextIndex=s.index%#order+1
   local preferred=Motion.reach(order[nextIndex])
-  if dist<preferred-1.8 then
-   local away=Vector3.new(root.Position.X-target.Position.X,0,root.Position.Z-target.Position.Z)
-   if away.Magnitude>.1 then h:MoveTo(root.Position+away.Unit*4) end
-  elseif dist<=preferred+1.2 and now>=s.next then
-   if B.start(npc,order[nextIndex],target) then s.index=nextIndex end
-  elseif dist>preferred+1.2 then h:MoveTo(target.Position) else h:Move(Vector3.zero);h:MoveTo(root.Position) end
+  if dist<=preferred+1.2 then
+   -- A melee player who closes has earned a damage window. Hold ground instead
+   -- of backing away faster than their walk; attacks keep their normal wind-up,
+   -- cooldown, wall/height validation and authored damage volumes.
+   h:Move(Vector3.zero);h:MoveTo(root.Position)
+   if now>=s.next and B.start(npc,order[nextIndex],target) then s.index=nextIndex end
+  else h:MoveTo(target.Position) end
  else h:Move(Vector3.zero) end
 end
 Run.Heartbeat:Connect(function() local now=workspace:GetServerTimeNow();for npc,s in B.states do B.step(npc,s,now) end end)

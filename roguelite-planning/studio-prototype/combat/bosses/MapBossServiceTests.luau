@@ -304,6 +304,8 @@ if Defs then
  -- The Hammer's chained moves (2026-10-04): Spin two sweeps, SwingSpin a swing and two spins, SpinSlam two
  -- spins and a slam; the Charge homes and ends in the Slam's clip and circle; every hit aims; no roar.
  local H=Defs.get('Hammer');local a=H and H.attacks
+ add(H and H.chaseSpeed==24 and H.chaseSpeed+H.enrage.chase==26 and a.Charge.range[2]==110 and a.Charge.length==75 and a.Charge.speed==32,
+  'Hammer closes distant kites while keeping capped, warned charge travel and bounded walking speed')
  local function kinds(x) local list={};for i,p in x.phases or {} do list[i]=p.shape end;return table.concat(list,',') end
  add(H~=nil and kinds(a.Spin)=='sweep,sweep' and kinds(a.SwingSpin)=='sweep,sweep,sweep' and kinds(a.SpinSlam)=='sweep,sweep,circle' and a.SpinSlam.phases[3].follow~=nil
   and a.Charge.clips[3]=='Slam' and a.Charge.home and a.Charge.finish.shape=='circle' and a.Charge.finish.follow~=nil and H.roar==nil and H.intro.clip=='Slam'

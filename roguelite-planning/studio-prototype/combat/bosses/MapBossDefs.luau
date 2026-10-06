@@ -50,8 +50,8 @@ D.Order={'Hammer','KingCrab','Pharaoh','FrostCyclops','Dragon'}
 D.ENRAGE_AT=.5
 D.FIRST_ATTACK=1.2 -- seconds after spawn before the first attack
 -- Pine Valley's wave-20 boss (and the tutorial's, at TutorialBossHealth), on this runtime
--- (plans/2026-10-03-hammer-brute-rebuild-design.md section 4). He chases at 20 (23 enraged), under the
--- players' 24. Charge starts at 22 studs, so the order walk picks it only when nobody is in melee
+-- (plans/2026-10-03-hammer-brute-rebuild-design.md section 4). He chases at 24 (26 enraged), matching the
+-- player's 24 base before enrage. Charge starts at 22 studs, so the order walk picks it only when nobody is in melee
 -- reach, and never within 5 s of the last one (lockout). Every slam (Slam, SpinSlam's last hit, the
 -- Charge's closing Slam) opens CRACKS under up to 3 players it missed, 0.85 s later. The eyes glow white
 -- (glowColor, the installer's Neon HammerBrute_EyeGlow plates) until the enrage turns them red
@@ -69,9 +69,9 @@ D.FIRST_ATTACK=1.2 -- seconds after spawn before the first attack
 local CRACKS={radius=6.5,delay=.95,maxTargets=4,range=40,damage=16}
 local function sweep(damage) return {shape='sweep',damage=damage,point='HammerFace',mid='HammerGrip',radius=4.3,baseRadius=5.2} end
 local SLAM={shape='circle',damage=26,point='HammerFace',radius=12.5,height=6,knockdown=.6,follow=CRACKS}
-D.Hammer={anim='hammer-brute',name='Hammer Brute',introName='HAMMER ZOMBIE BOSS',health=18000,scale=1.15,chaseSpeed=20,glowColor=Color3.fromRGB(255,255,255),
+D.Hammer={anim='hammer-brute',name='Hammer Brute',introName='HAMMER ZOMBIE BOSS',health=18000,scale=1.15,chaseSpeed=24,glowColor=Color3.fromRGB(255,255,255),
  intro={drop=1.2,fall=.65,after=3.6,clip='Slam'},roar=nil,aim={rate=math.rad(150),lock=.3},
- enrage={cooldown=.6,chase=3,follow=2,order={'SwingSpin','SpinSlam','Slam','SwingSpin','Charge','SpinSlam','Spin'}},
+ enrage={cooldown=.6,chase=2,follow=2,order={'SwingSpin','SpinSlam','Slam','SwingSpin','Charge','SpinSlam','Spin'}},
  tutorial={order={'Slam','Swing','Charge','Slam','Spin'},enrage=false,follow=false},
  attacks={
   Slam={clip='Slam',range={0,19},cooldown=.8,damage=26,shape='circle',point='HammerFace',radius=12.5,height=6,knockdown=.6,follow=CRACKS},
@@ -79,7 +79,7 @@ D.Hammer={anim='hammer-brute',name='Hammer Brute',introName='HAMMER ZOMBIE BOSS'
   Spin={clip='Spin',range={0,14},cooldown=1,phases={sweep(22),sweep(22)}},
   SwingSpin={clip='SwingSpin',range={0,14},cooldown=1,phases={sweep(20),sweep(22),sweep(22)}},
   SpinSlam={clip='SpinSlam',range={0,14},cooldown=1.1,phases={sweep(22),sweep(22),SLAM}},
-  Charge={clips={'ChargeStart','ChargeRun','Slam'},facing='forward',home=math.rad(40),range={22,70},lockout=5,cooldown=1,damage=24,
+  Charge={clips={'ChargeStart','ChargeRun','Slam'},facing='forward',home=math.rad(40),range={22,110},lockout=5,cooldown=1,damage=24,
    shape='lane',length=75,width=9,speed=32,contact=4,knockdown=.6,finish=SLAM},
  },order={'Slam','Swing','Charge','Spin','SwingSpin','Slam','SpinSlam'}}
 D.KingCrab={anim='king-crab',name='Giant King Crab',health=21000,scale=1.4,chaseSpeed=22,glowColor=nil,deathSeconds=nil,

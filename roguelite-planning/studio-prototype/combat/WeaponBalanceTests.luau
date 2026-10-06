@@ -46,13 +46,22 @@ local ok,err=xpcall(function()
  check(Stats.weapon(Weapons.ById['12'],neutral,'Brawler',4).nativeBounce==4,'boomerang gains rebounds')
  check(Stats.weapon(Weapons.ById['24'],neutral,'Brawler',4).nativePierce==2,'nails gain piercing')
  check(Stats.weapon(Weapons.ById['34'],neutral,'Brawler',2).projectileCount==2,'Medusa gains projectile')
+ -- Draco late-fodder correction: actual reported loadout was Brawler (no Gunner affinity),
+ -- Damage32, RangedDamage-15, GP1, with six Tier IV Dracos and +1 projectile.
+ local dracoStats=Stats.resolve('Brawler',0,{Damage=32,RangedDamage=-15,GearPower=1,ProjectileCount=1,AttackSpeed=0})
+ local draco=Stats.weapon(Weapons.ById['07'],dracoStats,'Brawler',4)
+ check(math.abs(draco.damage-10.4907)<.0001,'Draco reported off-class damage')
+ check(math.ceil(Types.scaled('Regular',20).health/draco.damage)==4,'Draco wave20 regular four-hit breakpoint')
+ check(math.ceil(Types.scaled('Baby',20).health/draco.damage)==2,'Draco wave20 baby two-hit breakpoint')
+ check(draco.nativePierce==0 and draco.nativeBounce==0 and draco.projectileCount==1,'Draco improves damage without adding projectile work or ricochet')
+ check(math.abs(draco.cooldown-.1267)<.0001 and Weapons.ById['07'].damage==3,'Draco original cadence and Tier I unchanged')
  for _,wave in {1,5,10,20} do
   check(Types.scaled('Regular',wave).health==3+2*(wave-1),'regular wave HP')
-  check(Types.scaled('Baby',wave).health==wave,'baby wave HP')
+  check(Types.scaled('Baby',wave).health==1+1*(wave-1),'baby wave HP')
   check(Types.scaled('Mutant',wave).health==math.max(50,20+11*(wave-1)),'mutant wave HP')
   check(Types.scaled('Mutant',wave).damage==0,'mutant never adds contact damage')
-  check(math.abs(Types.scaled('Mutant',wave).slamDamage-(10+2.1*(wave-1)))<.001,'mutant slam wave damage')
-  check(math.abs(Types.scaled('Regular',wave).damage-(5+1.5*(wave-1)))<.001,'contact growth') -- ee48545: x5 / growth x2.5 (18.5 at wave 10)
+  check(math.abs(Types.scaled('Mutant',wave).slamDamage-(10+1.5*(wave-1)))<.001,'mutant slam wave damage')
+  check(math.abs(Types.scaled('Regular',wave).damage-(5+.9*(wave-1)))<.001,'contact growth')
  end
  check(Types.forSlot(5,1)=='Regular' and Types.forSlot(5,8)=='Mutant','mutant wave gate')
  check(Types.Regular.health==3,'scaling does not mutate shared base')
@@ -77,7 +86,11 @@ local ok,err=xpcall(function()
    local new=w.tierDamage[4]/(w.cooldown*w.tierCooldown[4])/Weapons.RarityPower[w.rarity]
    local pass=MELEE_PASS[w.id]
    local old=OLD_T4[w.id]*(pass and pass[2]/pass[1] or 1)/(w.authoredCooldown*.84)
-   check(math.abs(new/old-1)<=.10,string.format('tier IV within 10%% %s %.1f vs %.1f',w.id,new,old))
+   if w.id=='07' then
+    check(w.tierDamage[4]==11 and math.abs(w.cooldown-.181)<.0001,'Draco explicit late-fodder tuning supersedes old DPS cap')
+   else
+    check(math.abs(new/old-1)<=.10,string.format('tier IV within 10%% %s %.1f vs %.1f',w.id,new,old))
+   end
   end
  end
  check(counts.Common==12 and counts.Rare==12 and counts.Epic==5 and counts.Legendary==7 and counts.Godly==6,'rarity pools 12/12/5/7/6')

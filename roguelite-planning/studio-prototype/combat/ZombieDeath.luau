@@ -1,4 +1,4 @@
--- Server-only, idempotent death lifecycle. Effects never keep a corpse alive.
+-- Server-only, idempotent death lifecycle. Ordinary deaths never wait for hit flashes.
 local combat=script.Parent
 local Death={}
 -- onDeath(npc, position) listeners: `Death.onDeath=fn` adds one (ShopService's drops, the
@@ -32,6 +32,8 @@ function Death.finish(npc)
   task.delay(npc:GetAttribute('BossDeathSeconds') or 2.9,function() if npc.Parent then npc:Destroy() end end)
   return
  end
+ -- The position-only death burst and damage number outlive the model on the client.
+ -- Do not freeze a corpse to keep a Highlight alive: lethal feedback must never delay removal.
  npc:Destroy()
 end
 return Death

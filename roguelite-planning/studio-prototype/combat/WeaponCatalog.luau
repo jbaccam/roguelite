@@ -88,7 +88,9 @@ C.RarityPower={Common=1,Rare=1.05,Epic=1.1,Legendary=1.2,Godly=1}
 -- cards or pierce each tier, so their damage steps gentler; Frying Pan and Molotov stepped steeper
 -- before. Example Glock: 12 / 17 / 24 / 33 damage every .82 / .74 / .66 / .57 s (.72 at Tier I before 2026-10-03).
 C.TierGrowth=1.4;C.TierCooldown={1,.9,.8,.7}
-C.TierGrowthById={['01']=1.45,['09']=1.25,['12']=1.35,['14']=1.5,['18']=1.3,['24']=1.35}
+-- Draco's upgraded bullets need to cross late-fodder hit breakpoints, including off-class use.
+-- Keep Tier I, cadence, range and projectile count: damage now 3 / 5 / 7 / 11 (was 3 / 4 / 6 / 8).
+C.TierGrowthById={['01']=1.45,['07']=1.55,['09']=1.25,['12']=1.35,['14']=1.5,['18']=1.3,['24']=1.35}
 -- Godly specials, per tier where a list (index = tier). Read by GodlyWeapons (server) and
 -- GodlyVisuals (client). Every special is capped and never triggers another special.
 C.Godly={
