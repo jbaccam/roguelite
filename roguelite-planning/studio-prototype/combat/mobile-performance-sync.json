@@ -1,0 +1,58 @@
+{
+  "scripts": [
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.ClientQuality",
+      "repo": "studio-prototype/combat/ClientQuality.luau",
+      "class": "ModuleScript",
+      "inherit": "ReplicatedStorage.RogueliteCombat.VfxKit"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.VfxKit",
+      "repo": "studio-prototype/combat/VfxKit.luau",
+      "class": "ModuleScript",
+      "inherit": "ReplicatedStorage.RogueliteCombat.VfxKit"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.CardPresentation",
+      "repo": "studio-prototype/combat/CardPresentation.luau",
+      "class": "ModuleScript",
+      "inherit": "ReplicatedStorage.RogueliteCombat.VfxKit"
+    },
+    {
+      "studio": "ReplicatedStorage.UITheme",
+      "repo": "studio-prototype/ui/UITheme.luau",
+      "class": "ModuleScript",
+      "inherit": "ReplicatedStorage.RogueliteCombat.VfxKit"
+    },
+    {
+      "studio": "ServerScriptService.ProfileService",
+      "repo": "studio-prototype/combat/ProfileService.luau",
+      "class": "ModuleScript",
+      "inherit": "ReplicatedStorage.RogueliteCombat.VfxKit"
+    },
+    {
+      "studio": "StarterPlayer.StarterPlayerScripts.RogueliteCombat",
+      "repo": "studio-prototype/combat/RogueliteCombat.client.luau",
+      "class": "LocalScript",
+      "inherit": "ReplicatedStorage.RogueliteCombat.VfxKit"
+    },
+    {
+      "studio": "StarterPlayer.StarterPlayerScripts.ShardVisuals",
+      "repo": "studio-prototype/combat/ShardVisuals.client.luau",
+      "class": "LocalScript",
+      "inherit": "ReplicatedStorage.RogueliteCombat.VfxKit"
+    },
+    {
+      "studio": "StarterPlayer.StarterPlayerScripts.SettingsSync",
+      "repo": "studio-prototype/ui/SettingsSync.client.luau",
+      "class": "LocalScript",
+      "inherit": "ReplicatedStorage.RogueliteCombat.VfxKit"
+    },
+    {
+      "studio": "StarterPlayer.StarterPlayerScripts.MapEnvironment",
+      "repo": "studio-prototype/lobby/MapEnvironment.client.luau",
+      "class": "LocalScript",
+      "inherit": "ReplicatedStorage.RogueliteCombat.VfxKit"
+    }
+  ]
+}

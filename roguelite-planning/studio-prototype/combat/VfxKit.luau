@@ -2,6 +2,7 @@
 -- non-colliding, non-queryable and removed by its own animation. No effect
 -- here can influence server combat.
 local RunService=game:GetService('RunService')
+local Q=require(script.Parent:WaitForChild('ClientQuality'))
 local K={}
 K.White=Color3.fromRGB(255,251,242)
 K.Amber=Color3.fromRGB(255,178,64)
@@ -22,11 +23,13 @@ local function step()
    if e.cleanup then e.cleanup() end
   end
  end
+ if #effects==0 and connection then connection:Disconnect();connection=nil end
 end
 -- Runs update(t,age) every frame until t reaches 1 or update returns true.
 -- Categories are budgeted; the oldest effect in a full category is retired.
 function K.animate(duration,update,cleanup,category,budget)
  if not connection then connection=RunService.RenderStepped:Connect(step) end
+ if budget then budget=math.max(1,math.floor(budget*Q.get().effects)) end
  if category then
   counts[category]=(counts[category] or 0)+1
   if budget and counts[category]>budget then
@@ -55,9 +58,10 @@ local function smooth(t) t=math.clamp(t,0,1);return t*t*(3-2*t) end
 K.smooth=smooth
 -- Soft three-lobe cloud, the same language as the rocket smoke trail.
 function K.cloud(parent,position,color,size,duration,drift,opacity)
+ if not K.near(position,100) then return end
  local lobes={}
  local seed=math.random()*6.28
- for i=1,3 do
+ for i=1,(Q.get().effects<.5 and 1 or 3) do
   local angle=seed+i*2.1
   local offset=Vector3.new(math.cos(angle)*size*.28,(i==2 and .12 or -.05)*size,math.sin(angle)*size*.28)
   lobes[i]={part=K.ball(parent,'CloudLobe',size*(i==2 and .78 or .62),color,1),offset=offset,scale=i==2 and .78 or .62}
@@ -75,6 +79,8 @@ function K.cloud(parent,position,color,size,duration,drift,opacity)
 end
 -- Small pieces flung outward from a point, falling slightly.
 function K.shards(parent,position,color,count,speed,duration,size,material,up)
+ if not K.near(position,100) then return end
+ count=math.max(1,math.floor(count*Q.get().effects))
  local list={}
  for i=1,count do
   local angle=(i/count)*math.pi*2+math.random()*.6
@@ -95,7 +101,7 @@ end
 -- Arc or full ring made from flat segments lying in the frame's XZ plane.
 -- A crescent reveals from `from` to `to` (radians), then widens and fades.
 function K.ring(parent,frame,options)
- local segments=options.segments or 14
+ local segments=math.max(6,math.floor((options.segments or 14)*Q.get().effects))
  local from,to=options.from or 0,options.to or math.pi*2
  local radius0,radius1=options.radius0 or 1,options.radius1 or options.radius0 or 1
  local width=options.width or .6
@@ -134,6 +140,7 @@ function K.ring(parent,frame,options)
 end
 -- Short-lived light for magic launches and impacts. Kept small and brief.
 function K.flash(parent,position,color,range,brightness,duration)
+ if Q.get().lights==0 or not K.near(position,90) then return end
  local p=K.part(parent,'FlashLight',Vector3.one*.1,color,1)
  p.Position=position
  local light=Instance.new('PointLight');light.Color=color;light.Range=range;light.Brightness=0;light.Shadows=false;light.Parent=p
@@ -215,6 +222,7 @@ end
 -- One-shot particle burst (soft smoke, splash droplets) from a point.
 -- o: {texture,colors={a,b},count,size0,size1,lifetime,speed,spread,drag,accel,alpha0,light,direction}
 function K.burst(parent,position,o)
+ if not K.near(position,120) then return end
  local holder=K.part(parent,'BurstSource',Vector3.one*.05,K.White,1)
  holder.CFrame=CFrame.lookAt(position,position+(o.direction or Vector3.yAxis))
  local e=Instance.new('ParticleEmitter');e.Name='Burst';e.Enabled=false
@@ -229,7 +237,7 @@ function K.burst(parent,position,o)
  e.Rotation=NumberRange.new(0,360);e.RotSpeed=NumberRange.new(-60,60)
  e.LightEmission=o.light or .2;e.LightInfluence=.4
  e.Parent=holder
- e:Emit(o.count or 10)
+ e:Emit(math.max(1,math.floor((o.count or 10)*Q.get().effects)))
  K.animate(life+.1,function() end,function() holder:Destroy() end,'burst',48)
 end
 -- Standard projectile ribbon: FaceCamera trail between two attachments.

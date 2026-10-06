@@ -62,7 +62,11 @@ function C.bind(model,id)
   local mesh=card:WaitForChild('W18_Deck_of_Cards__'..d.suffix)
   if d.name~='Deck' then
    card.PrimaryPart=mesh
-   table.insert(rig.cards,{model=card,rest=pivot:ToObjectSpace(card:GetPivot()),height=mesh.Size.Y})
+   local parts,guis={},{}
+   for _,d in card:GetDescendants() do
+    if d:IsA('BasePart') then table.insert(parts,d) elseif d:IsA('SurfaceGui') then table.insert(guis,d) end
+   end
+   table.insert(rig.cards,{model=card,parts=parts,guis=guis,rest=pivot:ToObjectSpace(card:GetPivot()),height=mesh.Size.Y})
   end
  end
  return rig

@@ -2,6 +2,7 @@
 local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')
 local combat=game.ReplicatedStorage:WaitForChild('RogueliteCombat')
+local Q=require(combat:WaitForChild('ClientQuality'))
 local Motion=require(combat:WaitForChild('ShardMotion'))
 local Visual=require(combat:WaitForChild('CrystalShardVisual'))
 local drops=workspace:WaitForChild('RogueliteShardDrops')
@@ -243,6 +244,7 @@ recount()
 local visuals={}
 local shownKey={} -- drop model -> the colour key its visual was built with
 local refresh=0
+local animationElapsed=0
 -- Drops being pulled first, then nearest. Only the best 128 are drawn and only the first 32 need
 -- their rank (glow and aura), so the rest are never sorted.
 local entries,list,pass={},{},0 -- entries: drop model -> {model,origin,distance,active,seen}
@@ -262,9 +264,15 @@ local function select(n,k)
 end
 RunService.RenderStepped:Connect(function(dt)
  local now=workspace:GetServerTimeNow();refresh-=dt
+ local quality=Q.get()
+ animationElapsed+=dt
+ local animateIdle=animationElapsed>=1/quality.shardHz
+ if animateIdle then animationElapsed%=1/quality.shardHz end
  if refresh<=0 then
+  animateIdle=true -- Newly selected crystals must receive their world pose immediately.
   refresh=.15
-  local position=workspace.CurrentCamera.CFrame.Position
+  local camera=workspace.CurrentCamera
+  local position=camera and camera.CFrame.Position or Vector3.zero
   local root=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild('HumanoidRootPart')
   if root then position=root.Position end
   pass+=1
@@ -302,13 +310,14 @@ RunService.RenderStepped:Connect(function(dt)
    if not visuals[m] then local v=templateFor(key):Clone();v.Parent=folder;visuals[m]=v;shownKey[m]=key end
    -- Bound translucent overdraw and dynamic lights in dense drop piles.
    local v=visuals[m]
-   v.PrimaryPart.ShardGlow.Enabled=i<=12 and list[i].distance<45
-   v.PrimaryPart.AuraOrigin.BlueAura.Enabled=i<=32 and list[i].distance<70
+   v.PrimaryPart.ShardGlow.Enabled=i<=quality.lights and list[i].distance<45
+   v.PrimaryPart.AuraOrigin.BlueAura.Enabled=i<=quality.auras and list[i].distance<70
   end
   for m,v in visuals do if not wanted[m] then v:Destroy();visuals[m]=nil;shownKey[m]=nil end end
  end
  for m,v in visuals do
   if not m.Parent then v:Destroy();visuals[m]=nil;shownKey[m]=nil;continue end
+  if not animateIdle and not m:GetAttribute('MagnetUserId') and not m:GetAttribute('BurstFrom') then continue end
   local origin=m:GetAttribute('Origin');local born=m:GetAttribute('BornAt') or now
   local pos=Motion.idle(origin,born,now)
   local spin=Motion.rotation(born,now)

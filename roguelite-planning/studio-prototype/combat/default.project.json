@@ -163,6 +163,7 @@
         "ArcVisuals": {
           "$path": "ArcVisuals.luau"
         },
+        "ClientQuality": {"$path": "ClientQuality.luau"},
         "VfxKit": {
           "$path": "VfxKit.luau"
         },
@@ -554,6 +555,12 @@
       "EnemyScheduler": {
         "$path": "EnemyScheduler.luau"
       },
+      "WaveTimeline": {
+        "$path": "WaveTimeline.luau"
+      },
+      "EnemySpatialGrid": {
+        "$path": "EnemySpatialGrid.luau"
+      },
       "BossService": {
         "$path": "bosses/BossService.luau"
       },
@@ -651,6 +658,7 @@
         "CharacterJumpHeight": 9.5
       },
       "StarterPlayerScripts": {
+        "MapEnvironment": {"$path": "../lobby/MapEnvironment.client.luau"},
         "RoguelitePrices": {
           "$path": "../ui/RoguelitePrices.client.luau"
         },

@@ -112,8 +112,9 @@ end
 -- with the profile so they follow the player lobby -> match -> lobby. They're set once at load as
 -- the Setting_* attributes the client already reads (never by later publishes, which would undo a
 -- change still on its way here). P.saveSettings keeps what the client sends, checked and clamped.
-local SETTINGS={HudScale='scale',ScreenShake='bool',DamageNumbers='bool',MusicVolume='volume',SfxVolume='volume'}
+local SETTINGS={VisualQuality='quality',HudScale='scale',ScreenShake='bool',DamageNumbers='bool',MusicVolume='volume',SfxVolume='volume'}
 local function cleanSetting(kind,v)
+ if kind=='quality' then return (v=='Auto' or v=='Low' or v=='Full') and v or nil end
  if kind=='bool' then if type(v)=='boolean' then return v end;return nil end -- (not `and v or nil`: false must survive)
  if type(v)~='number' or v~=v then return nil end
  if kind=='volume' then return math.round(math.clamp(v,0,1)*20)/20 end -- the slider's 5% steps

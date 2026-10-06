@@ -6,7 +6,7 @@
 local Players=game:GetService('Players')
 local player=Players.LocalPlayer
 local combat=game.ReplicatedStorage:WaitForChild('RogueliteCombat')
-local KEYS={'HudScale','ScreenShake','DamageNumbers','MusicVolume','SfxVolume'}
+local KEYS={'VisualQuality','HudScale','ScreenShake','DamageNumbers','MusicVolume','SfxVolume'}
 local sent={} -- what the server holds, per key: the values it loaded with, then what was saved
 local function snapshot() local t={};for _,k in KEYS do t[k]=player:GetAttribute('Setting_'..k) end;return t end
 local queued=false

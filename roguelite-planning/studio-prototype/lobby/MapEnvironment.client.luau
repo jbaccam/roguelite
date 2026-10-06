@@ -9,8 +9,17 @@ local RunService = game:GetService('RunService')
 local player = Players.LocalPlayer
 local profiles = RS:WaitForChild('MapEnvironments')
 local combat = RS:WaitForChild('RogueliteCombat')
+local Q=require(combat:WaitForChild('ClientQuality'))
 local current
+local authoredShadows=Lighting.GlobalShadows
 local authored = {}
+local enabled = {}
+local function quality()
+ local profile=Q.get()
+ Lighting.GlobalShadows=authoredShadows and profile.shadows
+ for v,on in enabled do v.Enabled=on and profile.shadows end
+end
+player:GetAttributeChangedSignal('LocalVisualQuality'):Connect(quality)
 local parked = Instance.new('Folder') -- Client-owned, never replicated or rendered.
 parked.Name = 'OriginalEnvironmentParking'
 local function isLook(v) return v:IsA('Sky') or v:IsA('Atmosphere') or v:IsA('PostEffect') end
@@ -28,17 +37,21 @@ local function apply(id)
  local profile = profiles:FindFirstChild(id) or profiles.Default
  for _, v in authored do v:Destroy() end
  table.clear(authored)
+ table.clear(enabled)
  for property, value in profile:GetAttributes() do
   -- Renderer choice is Studio-only; all arenas share Realistic with authored local grades.
   if property ~= 'Center' and property ~= 'LightingStyle' and property ~= 'PrioritizeLightingQuality' then
    Lighting[property] = value
+   if property=='GlobalShadows' then authoredShadows=value end
   end
  end
  for _, v in profile:GetChildren() do
   local copy = v:Clone()
+  if copy:IsA('DepthOfFieldEffect') or copy:IsA('SunRaysEffect') or copy:IsA('BloomEffect') then enabled[copy]=copy.Enabled end
   table.insert(authored, copy)
   copy.Parent = Lighting
  end
+ quality()
  current = id
  player:SetAttribute('LocalEnvironment', id)
 end
