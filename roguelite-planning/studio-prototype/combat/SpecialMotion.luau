@@ -1,4 +1,11 @@
 local M={}
+-- Three distinct fuel pulses, then a mandatory quiet interval even at high attack speed.
+-- Concentrate the old sustained DPS into the burst rather than silently nerfing the weapon.
+function M.duckTiming(cooldown)
+ local cd=math.max(.03,cooldown)
+ local cycle=math.max(.78,cd*3)
+ return {pulses=3,spacing=.12,emission=.11,cycle=cycle,damageScale=cycle/(3*cd)}
+end
 M.profiles={
  ['12']={height=.7,spin='flat',returns=true},
  ['13']={height=0,spin='point'},
@@ -7,7 +14,7 @@ M.profiles={
  ['22']={height=0,spin='roll'},
  ['23']={height=2,spin='tumble',reserve=true},
  ['31']={height=0,spin='rock',returns=true},
- ['08']={height=.4,spin='cloud',zone='Poison'},
+ ['08']={height=0,spin='cloud',zone='Poison'},
  -- Poseidon's Trident: thrown point-first and spinning, flies back; its landing raises the tidal wave.
  ['37']={height=.6,spin='spear',returns=true,wave=true},
 }

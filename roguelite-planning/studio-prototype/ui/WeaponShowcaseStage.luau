@@ -995,30 +995,25 @@ function Stage:zone(at, kind)
 	end)
 end
 function Stage:stream(mode)
-	self:beginAttack("Ranged")
-	if not self.streamMode then
-		self.pullEpoch = self.clock
-		self.nextStreamVisual = self.clock
-		self.nextStreamHit = self.clock
-	end
-	self.streamMode = mode
-	self.streamUntil = self.clock
-		+ (mode == "fire" and math.min(0.65, self.weapon.cooldown + 0.08) or math.min(1.5, self.weapon.cooldown + 0.12))
-	if mode == "fire" then
-		local origin = self:origin()
-		local direction = (self.aim - origin).Unit
-		self.specialFX.handle(
-			"Spray",
-			"preview",
-			origin,
-			direction,
-			math.min(self.weapon.range, 14),
-			OWNER,
-			1,
-			math.min(0.65, self.weapon.cooldown + 0.08)
-		)
-		self:impact(2, K.Amber)
-	end
+ self:beginAttack("Ranged")
+ if mode == "fire" then
+  local timing=Special.duckTiming(self.weapon.cooldown)
+  local direction=(self.aim-self:origin()).Unit
+  for pulse=1,timing.pulses do
+   self:later((pulse-1)*timing.spacing,function()
+    self.specialFX.handle("Spray","preview",self:origin(),direction,math.min(self.weapon.range,14),OWNER,1,timing.emission)
+    self:impact(2,K.Amber)
+   end)
+  end
+  return
+ end
+ if not self.streamMode then
+  self.pullEpoch=self.clock
+  self.nextStreamVisual=self.clock
+  self.nextStreamHit=self.clock
+ end
+ self.streamMode=mode
+ self.streamUntil=self.clock+math.min(1.5,self.weapon.cooldown+.12)
 end
 function Stage:stepStream()
 	local mode = self.streamMode
@@ -1056,10 +1051,11 @@ function Stage:stepStream()
 			finish,
 			mode == "vacuum" and self.weapon.range * 0.48 or 0.6,
 			workspace:GetServerTimeNow() + 0.3,
-			Utility.SafeDistance
+			Utility.SafeDistance,
+			workspace:GetServerTimeNow() - (self.clock - self.pullEpoch)
 		)
 	end
-	if self.clock >= self.nextStreamHit then
+	if self.clock >= self.nextStreamHit and (mode ~= "water" or Utility.washPressure(self.clock - self.pullEpoch) > 0) then
 		self.nextStreamHit = self.clock + 0.12
 		self:impact(2, mode == "water" and Color3.fromRGB(119, 219, 249) or GREEN)
 	end
@@ -1338,6 +1334,7 @@ function Stage:legendaryMove()
 	end
 end
 function Stage:cadence()
+ if self.id == "17" then return Special.duckTiming(self.weapon.cooldown).cycle end
 	local _, _, duration = Motion.attackTiming(self.id, self.attackKind or self.weapon.kind, self.style)
 	return math.max(self.weapon.cooldown, duration / self.weapon.motionRate)
 end

@@ -76,16 +76,19 @@ function V.mount(combat,folder,lookup,options)
    local streamKey=a[4]..':'..a[5];local s=sprays[streamKey]
    if not s then
     local anchor=part('DuckFlameNozzle',origin,.1,Color3.new(1,1,1),1)
-    local flame=Instance.new('ParticleEmitter');flame.Name='ContinuousFlame';flame.Texture='rbxasset://textures/particles/fire_main.dds'
+    local flame=Instance.new('ParticleEmitter');flame.Name='BurstFlame';flame.Texture='rbxasset://textures/particles/fire_main.dds'
     flame.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,241,157)),ColorSequenceKeypoint.new(.45,Color3.fromRGB(255,163,45)),ColorSequenceKeypoint.new(1,Color3.fromRGB(231,65,17))})
     flame.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.15),NumberSequenceKeypoint.new(.6,.35),NumberSequenceKeypoint.new(1,1)})
     flame.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,.35),NumberSequenceKeypoint.new(.6,1.8),NumberSequenceKeypoint.new(1,2.6)})
-    flame.Lifetime=NumberRange.new(.2,.28);flame.Rate=40;flame.SpreadAngle=Vector2.new(12,12)
+    -- Fixed lifetime gives oldest-first extinction. Existing particles are never cleared
+    -- or dragged by a turning nozzle after emission stops.
+    flame.Lifetime=NumberRange.new(.24);flame.Rate=65;flame.SpreadAngle=Vector2.new(12,12)
+    flame.LockedToPart=false;flame.VelocityInheritance=0;flame.Acceleration=Vector3.new(0,-12,0)
     flame.EmissionDirection=Enum.NormalId.Front;flame.LightEmission=.65;flame.LightInfluence=0;flame.Rotation=NumberRange.new(0,360);flame.RotSpeed=NumberRange.new(-45,45);flame.Parent=anchor
     s={anchor=anchor,flame=flame,owner=a[4],slot=a[5],direction=direction};sprays[streamKey]=s
    end
-   s.origin=origin;s.aim=direction;s.length=length;s.expires=workspace:GetServerTimeNow()+(a[6] or .42)
-   s.flame.Speed=NumberRange.new(length/ .28,length/ .22);s.flame.Enabled=true
+   s.origin=origin;s.aim=direction;s.length=length;s.expires=workspace:GetServerTimeNow()+math.min(.13,a[6] or .11)
+   s.flame.Speed=NumberRange.new(length/.24);s.flame.Enabled=true
   end
  end
  local function step(dt)
@@ -93,11 +96,11 @@ function V.mount(combat,folder,lookup,options)
   if utility then utility.step(dt) end
   local now=workspace:GetServerTimeNow()
   for key,s in sprays do
-   if now>s.expires+.3 then s.anchor:Destroy();sprays[key]=nil;continue end
+   if now>s.expires+.26 then s.anchor:Destroy();sprays[key]=nil;continue end
    s.flame.Enabled=now<s.expires
    local visual=lookup(s.owner,s.slot)
    local origin=visual and visual.model.Parent and visual.model:GetPivot():PointToWorldSpace(Vector3.new(0,.3,-1)) or s.origin
-   s.direction=s.direction:Lerp(s.aim,1-math.exp(-20*dt))
+   s.direction=s.aim -- only new emissions use the burst heading; old particles keep flying
    if s.direction.Magnitude>.01 then s.anchor.CFrame=CFrame.lookAt(origin,origin+s.direction) end
   end
   for key,r in flights do

@@ -13,6 +13,7 @@ function S.new(combat,damage,rayParams)
  local chickens=require(script.Parent.EggChickens).new(combat,damage,rayParams)
  local event=combat:WaitForChild('SpecialFX');local flights={};local zones={};local serial=0
  local ground=Ground.new()
+ local duckBursts={}
  local ballRadius=Ground.ballGeometry(combat.WeaponTemplates:FindFirstChild('22'))
  -- hooks.landed(d,position,struck): a 'wave' throw (the Trident) landed; set by GodlyWeapons.
  -- hooks.impact(d,position,hit): any throw stopped, once (where it hit, or where it came down),
@@ -32,10 +33,28 @@ function S.new(combat,damage,rayParams)
   local h=d.character and d.character:FindFirstChildOfClass('Humanoid')
   local state=combat.PlayerStates:FindFirstChild(tostring(d.owner.UserId))
   local slot=state and state:FindFirstChild('Slot'..d.slotIndex)
-  return d.owner.Character==d.character and h and h.Health>0 and state and state:GetAttribute('WeaponEnabled') and slot and slot:GetAttribute('WeaponId')==d.id and (combat:GetAttribute('ZombiesEnabled') or d.practiceTarget)
+  return d.owner.Character==d.character and h and h.Health>0 and not combat:GetAttribute('RunPaused') and not d.owner:GetAttribute('RunDown') and state and state:GetAttribute('WeaponEnabled') and slot and slot:GetAttribute('WeaponId')==d.id and (not d.copyId or slot:GetAttribute('CopyId')==d.copyId) and (combat:GetAttribute('ZombiesEnabled') or d.practiceTarget)
  end
  local function allowed(npc,d)
   return not d.practiceTarget or npc:GetAttribute('PracticeTarget')==true
+ end
+ local function duckPulse(r)
+  local d=r.d
+  local root=d.character:FindFirstChild('HumanoidRootPart')
+  local state=combat.PlayerStates:FindFirstChild(tostring(d.owner.UserId))
+  if not root then return end
+  local origin=WeaponMotion.combatOrigin(root.CFrame,state and state:GetAttribute('RingRadius') or WeaponMotion.BaseRadius,d.slotIndex,d.id,d.kind)
+  event:FireAllClients('Spray',nextId(),origin,r.direction,r.length,d.owner.UserId,d.slotIndex,r.timing.emission)
+  local wall=rayParams(d.character,true)
+  for _,npc in Tags:GetTagged('RogueliteZombie') do
+   local h=npc:FindFirstChildOfClass('Humanoid');local target=npc:FindFirstChild('HumanoidRootPart')
+   if h and h.Health>0 and target and allowed(npc,d) then
+    local delta=target.Position-origin
+    if delta.Magnitude<=r.length and delta.Magnitude>.01 and delta.Unit:Dot(r.direction)>.84 and not workspace:Raycast(origin,delta,wall) then
+     damage(npc,d.damage*r.timing.damageScale,d)
+    end
+   end
+  end
  end
  local function zone(d,position,kind)
   local own={};local total=0
@@ -100,6 +119,13 @@ function S.new(combat,damage,rayParams)
  end
  RunService.Heartbeat:Connect(function()
   local now=workspace:GetServerTimeNow()
+  for key,r in duckBursts do
+   if not valid(r.d) or now>=r.ends then duckBursts[key]=nil
+   elseif r.pulses<r.timing.pulses and now>=r.nextPulse then
+    -- No catch-up packet storm after a stall; retain a visible pulse spacing.
+    duckPulse(r);r.pulses+=1;r.nextPulse=now+r.timing.spacing
+   end
+  end
   for _,r in flights do
    if not valid(r.d) or now>r.expires then endFlight(r);continue end
    if now<r.started then continue end
@@ -155,6 +181,8 @@ function S.new(combat,damage,rayParams)
  local self={hooks=hooks}
  function self:handles(id) return Motion.profiles[id]~=nil or id=='17' or id=='28' or id=='29' end
  function self:busy(player,index)
+  local r=duckBursts[tostring(player.UserId)..':'..index]
+  if r and valid(r.d) and workspace:GetServerTimeNow()<r.ends then return true end
   for _,r in flights do if r.d.owner==player and r.d.slotIndex==index and Motion.profiles[r.d.id].returns then return true end end
   return false
  end
@@ -162,17 +190,16 @@ function S.new(combat,damage,rayParams)
   if not valid(d) then return end
   if d.id=='28' or d.id=='29' then utility:launch(d,origin,aim);return end
   if d.id=='17' then
-   local direction=(aim-origin).Magnitude>.01 and (aim-origin).Unit or -Vector3.zAxis
-   local length=math.min(d.range,14*Stats.mult(d.stats.AttackRange))
-   event:FireAllClients('Spray',nextId(),origin,direction,length,d.owner.UserId,d.slotIndex,math.min(.65,d.cooldown+.08))
-   local wall=rayParams(d.character,true)
-   for _,npc in Tags:GetTagged('RogueliteZombie') do
-    local h=npc:FindFirstChildOfClass('Humanoid');local root=npc:FindFirstChild('HumanoidRootPart')
-    if h and h.Health>0 and root and allowed(npc,d) then
-     local delta=root.Position-origin
-     if delta.Magnitude<=length and delta.Magnitude>.01 and delta.Unit:Dot(direction)>.84 and not workspace:Raycast(origin,delta,wall) then damage(npc,d.damage,d) end
-    end
-   end
+   local key=tostring(d.owner.UserId)..':'..d.slotIndex
+   local previous=duckBursts[key]
+   local now=workspace:GetServerTimeNow()
+   if previous and valid(previous.d) and now<previous.ends then return end
+   local timing=Motion.duckTiming(d.cooldown)
+   local r={d=d,direction=(aim-origin).Magnitude>.01 and (aim-origin).Unit or -Vector3.zAxis,
+    length=math.min(d.range,14*Stats.mult(d.stats.AttackRange)),timing=timing,
+    ends=now+timing.cycle,pulses=1,nextPulse=now+timing.spacing}
+   -- Direction is committed for this burst; new targets are acquired on the next burst.
+   duckBursts[key]=r;duckPulse(r)
    return
   end
   local profile=Motion.profiles[d.id];if not profile then return end

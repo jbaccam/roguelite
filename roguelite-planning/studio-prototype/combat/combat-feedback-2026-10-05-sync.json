@@ -1,0 +1,222 @@
+{
+  "placeId": 107877054949326,
+  "status": "43 destinations synchronized; duck and washer burst sources built; live Play validation pending Studio response",
+  "scripts": [
+    {
+      "studio": "ReplicatedStorage.RunSetupUI",
+      "repo": "studio-prototype/ui/RunSetupUI.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.ArmoryUI",
+      "repo": "studio-prototype/ui/ArmoryUI.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.ItemCardUI",
+      "repo": "studio-prototype/ui/ItemCardUI.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.StoreUI",
+      "repo": "studio-prototype/ui/StoreUI.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.QuestsUI",
+      "repo": "studio-prototype/ui/QuestsUI.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.AdminPanelUI",
+      "repo": "studio-prototype/ui/AdminPanelUI.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.AdminConfig",
+      "repo": "studio-prototype/combat/AdminConfig.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ServerScriptService.AdminService",
+      "repo": "studio-prototype/combat/AdminService.server.luau",
+      "class": "Script"
+    },
+    {
+      "studio": "ReplicatedStorage.UITheme",
+      "repo": "studio-prototype/ui/UITheme.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteUI",
+      "repo": "studio-prototype/ui/RogueliteUI.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ServerScriptService.WaveTimeline",
+      "repo": "studio-prototype/combat/WaveTimeline.luau",
+      "class": "ModuleScript",
+      "inherit": "ServerScriptService.EnemyScheduler"
+    },
+    {
+      "studio": "ServerScriptService.TargetGrid",
+      "repo": "studio-prototype/combat/TargetGrid.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ServerScriptService.RogueliteCombat",
+      "repo": "studio-prototype/combat/RogueliteCombat.server.luau",
+      "class": "Script"
+    },
+    {
+      "studio": "StarterPlayer.StarterPlayerScripts.BossPresentation",
+      "repo": "hammer-boss/BossPresentation.client.luau",
+      "class": "LocalScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.BossMotion",
+      "repo": "hammer-boss/BossMotion.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RunSetupRules",
+      "repo": "studio-prototype/lobby/RunSetupRules.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ServerScriptService.EnemySpatialGrid",
+      "repo": "studio-prototype/combat/EnemySpatialGrid.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ServerScriptService.BossService",
+      "repo": "studio-prototype/combat/bosses/BossService.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.MapBossDefs",
+      "repo": "studio-prototype/combat/bosses/MapBossDefs.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.HitFeedbackVisuals",
+      "repo": "studio-prototype/combat/HitFeedbackVisuals.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.ZombieDeath",
+      "repo": "studio-prototype/combat/ZombieDeath.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.RocketProjectile",
+      "repo": "studio-prototype/combat/RocketProjectile.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.RocketMotion",
+      "repo": "studio-prototype/combat/RocketMotion.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.CharacterStats",
+      "repo": "studio-prototype/combat/CharacterStats.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.GodlyVisuals",
+      "repo": "studio-prototype/combat/GodlyVisuals.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.ZombieTypes",
+      "repo": "studio-prototype/combat/ZombieTypes.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.EnemyCatalog",
+      "repo": "studio-prototype/combat/EnemyCatalog.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.SpecialMotion",
+      "repo": "studio-prototype/combat/SpecialMotion.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.HandymanTurret",
+      "repo": "studio-prototype/combat/HandymanTurret.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.ShopUI",
+      "repo": "studio-prototype/ui/ShopUI.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RunResultsUI",
+      "repo": "studio-prototype/ui/RunResultsUI.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ServerScriptService.RogueliteZombieChase",
+      "repo": "studio-prototype/RogueliteZombieChase.server.luau",
+      "class": "Script"
+    },
+    {
+      "studio": "ServerScriptService.StatProjectiles",
+      "repo": "studio-prototype/combat/StatProjectiles.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ServerScriptService.EnemyScheduler",
+      "repo": "studio-prototype/combat/EnemyScheduler.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ServerScriptService.RogueliteMeta",
+      "repo": "studio-prototype/combat/RogueliteMeta.server.luau",
+      "class": "Script"
+    },
+    {
+      "studio": "StarterPlayer.StarterPlayerScripts.RogueliteCombat",
+      "repo": "studio-prototype/combat/RogueliteCombat.client.luau",
+      "class": "LocalScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.WeaponCatalog",
+      "repo": "studio-prototype/combat/WeaponCatalog.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ServerScriptService.SpecialWeapons",
+      "repo": "studio-prototype/combat/SpecialWeapons.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.SpecialWeaponVisuals",
+      "repo": "studio-prototype/combat/SpecialWeaponVisuals.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ServerScriptService.UtilityWeapons",
+      "repo": "studio-prototype/combat/UtilityWeapons.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.UtilityVisuals",
+      "repo": "studio-prototype/combat/UtilityVisuals.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.RogueliteCombat.UtilityMotion",
+      "repo": "studio-prototype/combat/UtilityMotion.luau",
+      "class": "ModuleScript"
+    },
+    {
+      "studio": "ReplicatedStorage.WeaponShowcaseStage",
+      "repo": "studio-prototype/ui/WeaponShowcaseStage.luau",
+      "class": "ModuleScript"
+    }
+  ]
+}

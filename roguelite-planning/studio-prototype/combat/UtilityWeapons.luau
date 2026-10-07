@@ -32,10 +32,11 @@ function W.new(combat,damage,rayParams)
    local wall=workspace:Raycast(origin,direction*length,wallParams)
    if wall then length=math.max(.1,(wall.Position-origin).Magnitude) end
    local vacuum=d.id=='28';local width=vacuum and length*.48 or .6
+   local pressure=vacuum and 1 or U.washPressure(now-r.started)
    if now>=r.nextVisual then
     r.nextVisual=now+.1
     -- Nearby players and the owner only (10 Hz); StreamEnd still goes to everyone.
-    Batch.fire(combat.SpecialFX,origin,d.owner,'Stream',key,d.id,d.owner.UserId,d.slotIndex,origin,origin+direction*length,width,now+.3,U.SafeDistance)
+    Batch.fire(combat.SpecialFX,origin,d.owner,'Stream',key,d.id,d.owner.UserId,d.slotIndex,origin,origin+direction*length,width,now+.3,U.SafeDistance,r.started)
    end
    local tickDamage=now>=r.nextDamage
    if tickDamage then r.nextDamage=now+.12 end
@@ -46,7 +47,7 @@ function W.new(combat,damage,rayParams)
     if workspace:Raycast(origin,root.Position-origin,wallParams) then continue end
     -- A tick is .12 s of the weapon's damage per second, and its own hit: it crits and procs items
     -- at that share of an attack (CombatEffectsService.hit's stream, 2026-10-03).
-    if tickDamage then local share=.12/d.cooldown;damage(npc,d.damage*share,d,true,nil,math.min(1,share)) end
+    if tickDamage and pressure>0 then local share=.12/d.cooldown*(vacuum and 1 or pressure*U.WashDamageScale);damage(npc,d.damage*share,d,true,nil,math.min(1,share)) end
     if not vacuum or h.Health<=0 or not root.Parent then continue end
     -- Shared per enemy: overlapping vacuums cannot refresh a hold forever.
     local hold=npc:GetAttribute('VacuumHoldUntil') or 0
@@ -80,7 +81,7 @@ function W.new(combat,damage,rayParams)
   local now=workspace:GetServerTimeNow();local r=streams[key]
   if not r then
    local count=0;for _ in streams do count+=1 end;if count>=96 then return end
-   r={nextDamage=now,nextVisual=now};streams[key]=r
+   r={nextDamage=now,nextVisual=now,started=now};streams[key]=r
   end
   r.d=d;r.aim=aim;r.ends=now+math.min(1.5,d.cooldown+.12)
  end
