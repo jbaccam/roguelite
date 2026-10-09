@@ -1,5 +1,26 @@
 -- Client fixture: require(ReplicatedStorage.WasherBurstTests).run(); never grants equipment/rewards.
+-- Pure Area Size checks (2026-10-09): require(<this module>).area(UtilityWeapons) from a server or
+-- Edit context, or combat/run_shop_tests.py (luau.exe). Returns the number of checks.
 local T={}
+function T.area(W)
+ local n=0
+ local function check(ok,msg) assert(ok,msg);n+=1 end
+ local function near(a,b,msg) check(math.abs(a-b)<1e-6,msg..': '..a..' / '..b) end
+ near(W.streamWidth('29',23,0),.6,'Washer: the old .6 width')
+ near(W.streamWidth('28',16,0),16*.48,'Vacuum: the old .48 x length')
+ near(W.streamWidth('29',23,50),.9,'Washer +50% Area: .9')
+ near(W.streamWidth('28',16,50),16*.72,'Vacuum +50% Area: .72 x length')
+ near(W.streamWidth('29',23,15),.69,'Washer, one Hot Sauce: .69')
+ near(W.streamWidth('29',23,150),.9,'Washer capped at x1.5')
+ near(W.streamWidth('28',16,150),16*.72,'Vacuum capped at x1.5')
+ near(W.streamWidth('29',23,-50),.3,'Washer floored at x0.5')
+ near(W.streamWidth('29',40,20),W.streamWidth('29',10,20),'Washer width does not follow length')
+ near(W.streamWidth('28',20,20)/W.streamWidth('28',10,20),2,'Vacuum width follows length')
+ near(W.areaScale(20),1.2,'Handyman +20: x1.2')
+ local last=0
+ for a=-60,160,10 do local w=W.streamWidth('29',23,a);check(w>=last-1e-12,'wider Area never narrows: '..a);last=w end
+ return n
+end
 function T.run()
  local RS=game:GetService('ReplicatedStorage')
  local U=require(RS.RogueliteCombat.UtilityMotion)

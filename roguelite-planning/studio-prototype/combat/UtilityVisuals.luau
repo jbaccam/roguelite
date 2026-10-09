@@ -81,11 +81,13 @@ function V.mount(combat,folder,lookup,options)
     if not drop.born and s.credit>=1 then
      s.credit-=1;s.serial+=1
      local lane=math.sin(s.serial*2.399)
-     drop.born=now;drop.origin=origin+right*lane*.06
+     -- Area Size widens the Washer on the server (width .6 x scale, 2026-10-09); the spray fans out to match.
+     local spread=math.clamp((s.width or .6)/.6,.5,1.5)
+     drop.born=now;drop.origin=origin+right*lane*.06*spread
      -- Low-pressure droplets lose reach and sag, while the full jet arcs gently to its target.
      local speed=math.max(18,delta.Magnitude/.4)*(.25+.75*pressure)
      drop.life=wallDistance and math.min(U.WashLife,wallDistance/speed) or U.WashLife
-     drop.velocity=direction*speed+Vector3.yAxis*(U.WashGravity*.2*pressure)+right*lane*.65
+     drop.velocity=direction*speed+Vector3.yAxis*(U.WashGravity*.2*pressure)+right*lane*.65*spread
      drop.part.Position=drop.origin;drop.part.Transparency=.25
      local size=.11+.13*pressure
      drop.part.Size=Vector3.new(size,size,size*(1+3*pressure))

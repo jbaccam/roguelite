@@ -155,60 +155,35 @@ local function reprice(p)
  local s=S.states[p]
  for _,o in s.offers do if not o.locked and not o.sold then o.price=offerPrice(p,Catalog.ById[o.id]) end end
 end
-local wanted={
- Brawler={Health=true,Armor=true,Melee=true},Gunner={Projectile=true,Pierce=true,Crit=true,AttackSpeed=true},
- Thrower={Projectile=true,Bounce=true,Pierce=true},Juggler={Mobility=true,Bounce=true,Crit=true},
- Handyman={Explosion=true,Economy=true,Armor=true},Mage={Burn=true,Slow=true,Poison=true,Lightning=true},
-}
--- Weapon offers that share any class with a carried weapon (2026-10-04: weapons list several
--- classes). Example: carrying a Kusarigama (Juggler, Thrower), a Kunai (Thrower) and a Yo-Yo
--- (Juggler) match, a Magic Staff (Mage) doesn't. ids: the carried weapon ids.
-local function sameClassPool(pool,ids)
- local classes={}
- for _,id in ids do local w=Weapons.ById[id];if w and not w.godly then for _,c in w.classes or {w.home} do classes[c]=true end end end
- local out={}
- for _,entry in pool do
-  local w=Weapons.ById[entry.weaponId]
-  if w and not w.godly then for _,c in w.classes or {w.home} do if classes[c] then table.insert(out,entry);break end end end
- end
- return out
-end
-S.sameClassPool=sameClassPool -- ShopTests
-local function choose(pool,p,wantWeapon)
+-- Build preference (2026-10-09, plans/2026-10-09-chef-roster-weapon-types-design.md "Items"): the
+-- per-class wanted lists and the same-class weapon pool are gone. ShopCatalog has the rules and the
+-- rates. Weapons: 10% an equipped weapon (a copy merges a tier up), else 15% (+ classBonus on waves
+-- 1-5) a weapon sharing a type with an equipped copy, weighted by those copies (preferredWeapons).
+-- Items: roll() below gives 15% of item rolls to the items that suit the equipped copies.
+-- carried: the equipped weapon ids, one per filled slot.
+local function choose(pool,p,wantWeapon,carried)
  local cs=Characters.states[p]
+ local copies
  if wantWeapon then
-  local ownedIds,carried={},{}
-  for i=1,6 do
-   local id=slots(p)['Slot'..i]:GetAttribute('WeaponId')
-   if Weapons.ById[id] then ownedIds[id]=true;table.insert(carried,id) end
-  end
   local n=rng:NextNumber()
   local same={}
-  for _,entry in pool do if ownedIds[entry.weaponId] then table.insert(same,entry) end end
-  local sameClass=sameClassPool(pool,carried)
-  -- 10% an owned weapon (duplicates merge up a tier), 15% one from an owned weapon's class.
-  if n<.10 and #same>0 then pool=same
-  elseif n<.25+E.classBonus(S.wave) and #sameClass>0 then pool=sameClass end
- elseif rng:NextNumber()<.05 then
-  local tags=wanted[cs.class] or {}
-  local matched={}
-  for _,entry in pool do
-   for _,tag in entry.tags or {} do if tags[tag] then table.insert(matched,entry);break end end
+  for _,entry in pool do if table.find(carried,entry.weaponId) then table.insert(same,entry) end end
+  if n<Catalog.PREFER_SAME_WEAPON and #same>0 then pool=same
+  elseif n<Catalog.PREFER_SAME_WEAPON+Catalog.PREFER_TYPE+E.classBonus(S.wave) then
+   local typed,weights=Catalog.preferredWeapons(pool,carried)
+   if #typed>0 then pool,copies=typed,weights end
   end
-  if #matched>0 then pool=matched end
  end
  -- Weapons are picked by rarity weight (EconomyConfig.rarityWeight): rarer ones show up less,
- -- less so as waves go on and with Luck. Items stay equally likely.
+ -- less so as waves go on and with Luck; a shared-type pick also weighs by copies. Items stay
+ -- equally likely.
  if pool[1] and pool[1].kind=='Weapon' and E.rarityWeight then
-  local total,weights=0,{}
+  local weights={}
   for i,entry in pool do
-   local w=Weapons.ById[entry.weaponId];weights[i]=E.rarityWeight(w and w.rarity or 'Common',S.wave,cs.stats.Luck);total+=weights[i]
+   local w=Weapons.ById[entry.weaponId];weights[i]=E.rarityWeight(w and w.rarity or 'Common',S.wave,cs.stats.Luck)*(copies and copies[i] or 1)
   end
-  if total>0 then
-   local x=rng:NextNumber()*total
-   for i,w in weights do x-=w;if x<=0 then return pool[i] end end
-   return pool[#pool]
-  end
+  local picked=Catalog.pickWeighted(pool,weights,rng:NextNumber())
+  if picked then return picked end
  end
  return pool[rng:NextInteger(1,#pool)]
 end
@@ -218,7 +193,7 @@ end
 -- .godly) have no ShopCatalog entries, so they never show; owning a weapon still decides starters
 -- and the Armory. Example: a new player who owns only the Glock, Frying Pan and Magic Staff can be
 -- offered Medusa's Head or Crystal Ball, and Mjolnir (an achievement unlock) shows up too. The
--- same-weapon and same-class weighting (choose) still favours what they carry.
+-- same-weapon and shared-type weighting (choose) still favours what they carry.
 local function offerable(p)
  local set={}
  for _,w in Weapons.List do if not w.godly then set[w.id]=true end end
@@ -227,13 +202,11 @@ local function offerable(p)
 end
 S.offerableWeapons=offerable -- ShopTests
 -- Items only some weapons use (ShopCatalog.worksWith: Two Straws, Sharp Pencil, Support Ketchup,
--- Hot Sauce, Tinfoil Antlers...) are offered only while the player carries one that uses it
--- (2026-10-03: "some items ... are not usable at all"). Example: a Frying Pan + Boomerang build is
--- never offered Two Straws; buying a Glock makes it possible again.
-local function usable(entry,carried,stats)
- local works=Catalog.worksWith(entry,carried,stats)
- return works==nil or #works>0
-end
+-- Hot Sauce, Tinfoil Antlers, and since 2026-10-09 the melee / ranged / elemental family items)
+-- are offered only while the player carries one that uses it (2026-10-03: "some items ... are not
+-- usable at all"); Toolbelt needs a utility weapon or a turret item (ShopCatalog.usable). Example: a
+-- Frying Pan + Boomerang build is never offered Two Straws; buying a Glock makes it possible again.
+local function usable(entry,carried,stats,turrets) return Catalog.usable(entry,carried,stats,turrets) end
 S.usableItem=usable -- ShopTests
 local function roll(p,slot,excluded)
  local s=S.states[p];local cs=Characters.states[p]
@@ -254,15 +227,21 @@ local function roll(p,slot,excluded)
  local carried={};for i=1,6 do local id=slots(p)['Slot'..i]:GetAttribute('WeaponId');if id and id~='' then table.insert(carried,id) end end
  -- Turret items stop at 10 owned (HandymanTurret.offerable, 2026-10-04).
  local turrets=Turret and Turret.owned(s.items) or 0
+ -- Whether entry may be offered now: a weapon the player may see, or an item under its cap that
+ -- works with the build; never one already on show.
+ local function candidate(entry,weapons)
+  if (entry.kind=='Weapon')~=weapons or excluded[entry.id] then return false end
+  if weapons then return owned[entry.weaponId]==true end
+  local count=0
+  for _,it in s.items do if it.id==entry.id then count=it.count;break end end
+  return count<entry.cap and usable(entry,carried,cs.stats,turrets) and (not Turret or Turret.offerable(entry,turrets))
+ end
+ -- The rolled tier, else the next lower one that has any.
  local function fill(weapons)
   local pool={}
   for try=tier,1,-1 do
    for _,entry in Catalog.List do
-    if (entry.kind=='Weapon')==weapons and entry.tier==try and not excluded[entry.id] and (not weapons or owned[entry.weaponId]) then
-     local count=0
-     for _,it in s.items do if it.id==entry.id then count=it.count;break end end
-     if entry.kind=='Weapon' or (count<entry.cap and usable(entry,carried,cs.stats) and (not Turret or Turret.offerable(entry,turrets))) then table.insert(pool,entry) end
-    end
+    if entry.tier==try and candidate(entry,weapons) then table.insert(pool,entry) end
    end
    if #pool>0 then break end
   end
@@ -278,11 +257,18 @@ local function roll(p,slot,excluded)
  if #pool==0 then
   for _,entry in Catalog.List do if entry.kind=='Weapon' and not excluded[entry.id] then table.insert(pool,entry) end end
  end
- -- Structure items (the turrets, Scrap Magnet, Toolbelt) get the Handyman class weighting, as Handyman
- -- weapons do (HandymanTurret.weightPool, 2026-10-04): a Handyman, or anyone carrying a Handyman
- -- weapon, gets 15% (+ the early-wave class bonus) of item offers from them.
- if Turret and #pool>0 and pool[1].kind~='Weapon' then pool=Turret.weightPool(pool,Turret.favoured(cs.class,carried),rng:NextNumber(),E.classBonus(S.wave)) end
- local entry=choose(pool,p,wantWeapon and #pool>0 and pool[1].kind=='Weapon')
+ -- Item preference (2026-10-09, ShopCatalog.preferredItems): 15% of item rolls pick among the items
+ -- that suit the equipped copies (attack family and weapon types; turret items owned count like a
+ -- Tool copy), from the rolled tier or any lower one, weighted by copies. It replaces the 5% class
+ -- list and the Handyman structure weighting (HandymanTurret.weightPool). Example: 4 Katanas + a
+ -- Glock on a Tier II roll: Knee of Justice (weight 4), Broken Glasses (4), Finger Cannon (1)...
+ local entry
+ if #pool>0 and pool[1].kind~='Weapon' and rng:NextNumber()<Catalog.PREFER_ITEMS then
+  local items={};for _,x in Catalog.List do if x.tier<=tier and candidate(x,false) then table.insert(items,x) end end
+  local preferred,weights=Catalog.preferredItems(items,carried,turrets,tier)
+  entry=Catalog.pickWeighted(preferred,weights,rng:NextNumber())
+ end
+ entry=entry or choose(pool,p,wantWeapon and #pool>0 and pool[1].kind=='Weapon',carried)
  excluded[entry.id]=true
  return {id=entry.id,token=token(),price=offerPrice(p,entry),locked=false,sold=false}
 end

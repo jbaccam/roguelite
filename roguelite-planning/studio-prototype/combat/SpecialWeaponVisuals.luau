@@ -89,6 +89,8 @@ function V.mount(combat,folder,lookup,options)
    end
    s.origin=origin;s.aim=direction;s.length=length;s.expires=workspace:GetServerTimeNow()+math.min(.13,a[6] or .11)
    s.flame.Speed=NumberRange.new(length/.24);s.flame.Enabled=true
+   -- Area Size widens the Duck's cone on the server (2026-10-09); a[7] is that scale, so the flame spreads to match.
+   local spread=12*math.clamp(tonumber(a[7]) or 1,.5,1.5);s.flame.SpreadAngle=Vector2.new(spread,spread)
   end
  end
  local function step(dt)

@@ -1,5 +1,7 @@
 -- Run as a temporary normal server Script in Studio Play, never ship this test.
 -- Fixture prerequisite: the player is alive in the arena and Shop.join(player) has completed.
+-- The shop's pure rules (family items, Toolbelt, tier moves, texts, preference pools) are checked
+-- without Play by ShopPreferenceTests (combat/run_shop_tests.py); this one rolls the real shop.
 local RS=game.ReplicatedStorage
 local C=RS.RogueliteCombat
 local E=require(C.EconomyConfig)
@@ -7,6 +9,7 @@ local Catalog=require(C.ShopCatalog)
 local Stats=require(C.CharacterStats)
 local Weapons=require(C.WeaponCatalog)
 local Shop=require(game.ServerScriptService.ShopService)
+local Turret=require(C.HandymanTurret)
 local Characters=require(game.ServerScriptService.CharacterService)
 local p=game.Players:GetPlayers()[1] or game.Players.PlayerAdded:Wait()
 while not (Characters.states[p] and Shop.states[p]) do task.wait() end
@@ -183,15 +186,35 @@ local ok,err=xpcall(function()
   end
  end
  -- Offers skip items none of the carried weapons use: a lone Frying Pan never sees Two Straws.
+ -- 2026-10-09: nor Finger Cannon (no ranged weapon) or Toolbelt (no utility weapon; a Handyman's free
+ -- turret makes Toolbelt usable), but it does see Knee of Justice.
  reset();for i=1,6 do cs.folder['Slot'..i]:SetAttribute('WeaponId',i==1 and '01' or '') end
+ local turrets=Turret.owned(Shop.states[p].items)
  check(not Shop.usableItem(Catalog.ById.straws,{'01'},cs.stats) and not Shop.usableItem(Catalog.ById.ketchup,{'01'},cs.stats),'pan: no shot or explosion items')
  check(Shop.usableItem(Catalog.ById.straws,{'00'},cs.stats) and Shop.usableItem(Catalog.ById.protein,{'01'},cs.stats),'glock: straws; pan: protein')
+ check(Shop.usableItem(Catalog.ById.knee,{'01'},cs.stats) and not Shop.usableItem(Catalog.ById.fingercannon,{'01'},cs.stats),'pan: Knee of Justice, no Finger Cannon')
+ check(not Shop.usableItem(Catalog.ById.toolbelt,{'01'},cs.stats,0) and Shop.usableItem(Catalog.ById.toolbelt,{'01'},cs.stats,1),'pan: Toolbelt only with a turret')
  check(request('Shards','Set',100000),'fund gated rolls');Shop.wave=20
  for _=1,40 do
   check(request('Reroll'),'gated roll')
-  for _,o in Shop.states[p].offers do local entry=Catalog.ById[o.id];if not entry.weaponId then check(Shop.usableItem(entry,{'01'},cs.stats),'offered item works with the pan: '..o.id) end end
+  for _,o in Shop.states[p].offers do
+   local entry=Catalog.ById[o.id]
+   if not entry.weaponId then check(Shop.usableItem(entry,{'01'},cs.stats,turrets),'offered item works with the pan: '..o.id) end
+  end
  end
  Shop.wave=1
+ -- Build preference (2026-10-09): 15% of item rolls come from the items that suit the equipped
+ -- copies, from the rolled tier or lower. Wave 1 rolls only Tier I, so a Frying Pan (melee, Blunt,
+ -- Culinary) sees Knee of Justice, Pot Lid and the health items no less often than before.
+ local suits=0;local items=0
+ for _=1,60 do
+  check(request('Reroll'),'preference roll')
+  for _,o in Shop.states[p].offers do
+   local entry=Catalog.ById[o.id]
+   if not entry.weaponId then items+=1;if Catalog.preferenceWeight(entry,{'01'},turrets)>0 then suits+=1 end end
+  end
+ end
+ check(items>0 and suits>0,'a Frying Pan build was offered items that suit it ('..suits..' of '..items..')')
  -- Reworked and new items (2026-10-03).
  reset();check(request('Shards','Set',100000),'fund new items')
  local before=table.clone(cs.stats)
@@ -200,16 +223,18 @@ local ok,err=xpcall(function()
  check(buy('banana',18),'buy banana peel');near(cs.stats.Dodge,before.Dodge+5,'banana dodge')
  check(buy('soup',34),'buy chicken soup');near(cs.stats.Recovery,before.Recovery+15,'soup recovery')
  check(buy('gummies',66),'buy gummies');near(cs.stats.Regeneration,before.Regeneration+2,'gummies regeneration')
- -- Same-class weighting (2026-10-04): a weapon offer joins choose()'s "same class" pool when it shares
- -- any class with a carried weapon. Carrying a Kusarigama (Juggler, Thrower): Kunai (Thrower), Yo-Yo
- -- (Juggler) and Boomerang (Thrower, Juggler) match; Magic Staff (Mage) and Glock (Gunner) don't.
+ -- Shared-type weighting (2026-10-09, replaced the same-class pool): a weapon offer joins choose()'s
+ -- preferred pool when it shares a weapon type with an equipped copy. Carrying a Kunai (Thrown):
+ -- Boomerang (Thrown, Trick) matches; Yo-Yo (Trick), Magic Staff (Elemental) and Glock (Gun) don't.
  local function has(list,wid) for _,e in list do if e.weaponId==wid then return true end end;return false end
  local pool={Catalog.ById.weapon_13_1,Catalog.ById.weapon_21_1,Catalog.ById.weapon_12_1,Catalog.ById.weapon_30_1,Catalog.ById.weapon_00_1}
- local sc=Shop.sameClassPool(pool,{'04'})
- check(has(sc,'13') and has(sc,'21') and has(sc,'12') and not has(sc,'30') and not has(sc,'00'),'same class by any shared class')
- -- A second class counts too: a Nail Gun (Handyman, Gunner) pulls in the Glock, not the Staff.
- sc=Shop.sameClassPool(pool,{'24'});check(has(sc,'00') and not has(sc,'30') and not has(sc,'13'),'Nail Gun shares Gunner')
- check(#Shop.sameClassPool(pool,{'36'})==0 and #Shop.sameClassPool(pool,{})==0,'a Godly or nothing carried shares no class')
+ local sc=Catalog.preferredWeapons(pool,{'13'})
+ check(has(sc,'13') and has(sc,'12') and not has(sc,'21') and not has(sc,'30') and not has(sc,'00'),'shared type: Kunai pulls in Kunai and Boomerang')
+ -- A second type counts too: a Nail Gun (Gun, Tool) pulls in the Glock, not the Staff.
+ sc=Catalog.preferredWeapons(pool,{'24'});check(has(sc,'00') and not has(sc,'30') and not has(sc,'13'),'Nail Gun shares Gun')
+ -- Godlies have types: Storm Bow (Elemental) pulls in the Magic Staff. Nothing carried, nothing shared.
+ sc=Catalog.preferredWeapons(pool,{'38'});check(has(sc,'30') and #sc==1,'a Godly shares its type')
+ check(#Catalog.preferredWeapons(pool,{})==0,'nothing carried shares no type')
  -- READY x/y (RogueliteRunState ShopReady / ShopPlayers): living run members who pressed GO.
  reset();Shop.join(p);Shop.states[p].ready=false;Shop.publishReady()
  near(RS.RogueliteRunState:GetAttribute('ShopPlayers'),1,'ready total');near(RS.RogueliteRunState:GetAttribute('ShopReady'),0,'none ready')
@@ -249,7 +274,6 @@ local ok,err=xpcall(function()
  Shop.phase='Shop';Shop.states[p].ready=false
  -- Turret items (2026-10-04, HANDYMAN_TURRET.md): the free Nail Turret follows the class until the
  -- run starts; offered, priced, 20% off for a Handyman, capped at 10; UPGRADE TURRET ignored.
- local Turret=require(C.HandymanTurret)
  local nail,twin,quad=Catalog.ById.turret_nail,Catalog.ById.turret_twin,Catalog.ById.turret_quad
  check(nail and twin and quad and nail.turret==1 and nail.structure,'turret items in the catalog')
  reset();cs.class='Gunner';Characters.refresh(p)
@@ -268,7 +292,7 @@ local ok,err=xpcall(function()
  -- Prices: EconomyConfig.price, and 20% off structure items for a Handyman only.
  Shop.wave=5
  near(Shop.offerPrice(p,nail),32,'Handyman: a wave-5 Nail Turret is 32 (41 less 20%)')
- near(Shop.offerPrice(p,Catalog.ById.toolbelt),E.price(18,5,.8),'Handyman: Toolbelt 20% off')
+ near(Shop.offerPrice(p,Catalog.ById.toolbelt),E.price(16,5,.8),'Handyman: Toolbelt 20% off (base 16 since 2026-10-09)')
  near(Shop.offerPrice(p,Catalog.ById.protein),E.price(14,5,1),'Handyman: other items full price')
  cs.class='Gunner';Characters.refresh(p)
  near(Shop.offerPrice(p,nail),41,'Gunner: a wave-5 Nail Turret is 41')

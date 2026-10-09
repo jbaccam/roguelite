@@ -9,7 +9,8 @@ local Targets=require(RS.RogueliteCombat.ProjectileTarget)
 local Ground=require(RS.RogueliteCombat.GroundContact)
 local S={}
 function S.new(combat,damage,rayParams)
- local utility=require(script.Parent.UtilityWeapons).new(combat,damage,rayParams)
+ local Area=require(script.Parent.UtilityWeapons) -- also the spray / stream Area Size rule (2026-10-09)
+ local utility=Area.new(combat,damage,rayParams)
  local chickens=require(script.Parent.EggChickens).new(combat,damage,rayParams)
  local event=combat:WaitForChild('SpecialFX');local flights={};local zones={};local serial=0
  local ground=Ground.new()
@@ -44,13 +45,14 @@ function S.new(combat,damage,rayParams)
   local state=combat.PlayerStates:FindFirstChild(tostring(d.owner.UserId))
   if not root then return end
   local origin=WeaponMotion.combatOrigin(root.CFrame,state and state:GetAttribute('RingRadius') or WeaponMotion.BaseRadius,d.slotIndex,d.id,d.kind)
-  event:FireAllClients('Spray',nextId(),origin,r.direction,r.length,d.owner.UserId,d.slotIndex,r.timing.emission)
+  -- r.spread: the Area Size scale, so the flames fan as wide as the cone hits (2026-10-09).
+  event:FireAllClients('Spray',nextId(),origin,r.direction,r.length,d.owner.UserId,d.slotIndex,r.timing.emission,r.spread)
   local wall=rayParams(d.character,true)
   for _,npc in Tags:GetTagged('RogueliteZombie') do
    local h=npc:FindFirstChildOfClass('Humanoid');local target=npc:FindFirstChild('HumanoidRootPart')
    if h and h.Health>0 and target and allowed(npc,d) then
     local delta=target.Position-origin
-    if delta.Magnitude<=r.length and delta.Magnitude>.01 and delta.Unit:Dot(r.direction)>.84 and not workspace:Raycast(origin,delta,wall) then
+    if delta.Magnitude<=r.length and delta.Magnitude>.01 and delta.Unit:Dot(r.direction)>r.coneDot and not workspace:Raycast(origin,delta,wall) then
      damage(npc,d.damage*r.timing.damageScale,d)
     end
    end
@@ -197,7 +199,9 @@ function S.new(combat,damage,rayParams)
    local timing=Motion.duckTiming(d.cooldown)
    local r={d=d,direction=(aim-origin).Magnitude>.01 and (aim-origin).Unit or -Vector3.zAxis,
     length=math.min(d.range,14*Stats.mult(d.stats.AttackRange)),timing=timing,
-    ends=now+timing.cycle,pulses=1,nextPulse=now+timing.spacing}
+    ends=now+timing.cycle,pulses=1,nextPulse=now+timing.spacing,
+    -- Area Size widens the cone (UtilityWeapons.duckConeDot): +50% Area -> 49.3 deg instead of 32.9.
+    coneDot=Area.duckConeDot(d.stats.AreaSize),spread=Area.areaScale(d.stats.AreaSize)}
    -- Direction is committed for this burst; new targets are acquired on the next burst.
    duckBursts[key]=r;duckPulse(r)
    return

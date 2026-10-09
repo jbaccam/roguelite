@@ -5,6 +5,28 @@ local Motion=require(game.ReplicatedStorage.RogueliteCombat.WeaponMotion)
 local U=require(game.ReplicatedStorage.RogueliteCombat.UtilityMotion)
 local Batch=require(game.ReplicatedStorage.RogueliteCombat.ShotBatch)
 local W={}
+-- Area Size widens sprays and streams (2026-10-09, items audit 6.6), so Hot Sauce, the Handyman's
+-- +20 and any other Area source help the Rubber Duck, Power Washer and Vacuum as they help blasts.
+-- One bounded scale for all three: scale = 1 + AreaSize / 100, kept to 0.5-1.5 so stacked Area
+-- can't turn a stream into a wall.
+--   Duck: cone half-angle acos(.84) = 32.9 deg, times scale (the hit test is dot > cos of that).
+--   Washer: width .6 x scale.   Vacuum: width .48 x length x scale.
+-- Example: +50% Area (Handyman 20 + 2 Hot Sauce) -> scale 1.5: Duck 49.3 deg (dot .652), Washer .9,
+-- Vacuum .72 x length. One Hot Sauce (+15) -> 1.15: Duck 37.8 deg, Washer .69. +100% stays at 1.5.
+-- The server sends these numbers to the clients (Spray's spread, Stream's width), so the visuals
+-- draw what the damage uses.
+W.AREA_MIN=.5;W.AREA_MAX=1.5;W.DUCK_DOT=.84;W.WASHER_WIDTH=.6;W.VACUUM_WIDTH=.48
+function W.areaScale(areaSize)
+ local a=tonumber(areaSize) or 0;if a~=a then a=0 end
+ return math.clamp(1+a/100,W.AREA_MIN,W.AREA_MAX)
+end
+function W.duckConeDot(areaSize) return math.cos(math.acos(W.DUCK_DOT)*W.areaScale(areaSize)) end
+-- The far-end width a stream's cone test uses (UtilityMotion.inCone): '28' Vacuum, else Washer.
+function W.streamWidth(id,length,areaSize)
+ local scale=W.areaScale(areaSize)
+ if id=='28' then return length*W.VACUUM_WIDTH*scale end
+ return W.WASHER_WIDTH*scale
+end
 function W.new(combat,damage,rayParams)
  local streams={};local budget=0
  local function valid(d)
@@ -31,7 +53,7 @@ function W.new(combat,damage,rayParams)
    local length=d.range
    local wall=workspace:Raycast(origin,direction*length,wallParams)
    if wall then length=math.max(.1,(wall.Position-origin).Magnitude) end
-   local vacuum=d.id=='28';local width=vacuum and length*.48 or .6
+   local vacuum=d.id=='28';local width=W.streamWidth(d.id,length,d.stats and d.stats.AreaSize) -- Area Size (2026-10-09)
    local pressure=vacuum and 1 or U.washPressure(now-r.started)
    if now>=r.nextVisual then
     r.nextVisual=now+.1
