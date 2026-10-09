@@ -1,0 +1,15 @@
+{
+  "generator": "Built-in image_gen",
+  "purpose": "Modeling reference concepts only; not meshes or implemented game assets",
+  "pizzaCutter": {
+    "file": "pizza-cutter-concept.png",
+    "reference": "../../Weapon_Review_01.jpg",
+    "prompt": "Create a production concept sheet for ONE new Roblox Wavebreaker weapon: an oversized PIZZA CUTTER. Use the attached existing weapon review as the strict art-style reference, especially its Frying Pan and Spatula: chunky low-poly geometry, clear facets, warm brown wooden handle, muted gray steel, flat simple colors, restrained soft shading, clean neutral gray studio backdrop. This must look made by the SAME asset artist, not a different game. Design a cool but recognizable manual pizza wheel cutter, large broad circular beveled steel wheel, simple charcoal axle bracket, two steel rivets on a short wooden grip and a hanging hole. No engine, no sci-fi, no ornate fantasy flourishes, no neon, no teeth/chainsaw, no face, no cheese or VFX obscuring geometry. Show one large three-quarter hero render left and smaller clean side and front views of EXACTLY the same design right, full silhouette and no cropping. The wheel is a separate rotating component with axle clearly understandable to a modeler. Maintain the reference's low-poly resolution and material simplicity. Minimal labels only: 'PIZZA CUTTER', 'SIDE', 'FRONT'. These are 2D model reference concepts, not a screenshot of game UI. Wide sheet."
+  },
+  "optionalChefPickup": {
+    "file": "optional-chef-pickup-concept.png",
+    "reference": "../../Weapon_Overview.jpg",
+    "status": "Optional; Chef healing pickup ability not approved",
+    "prompt": "Create a 3D low-poly game prop concept sheet for ONE OPTIONAL Chef healing pickup: a small triangular pepperoni pizza slice. Use attached Wavebreaker existing weapons overview as exact style reference, especially the Steak and Egg: simple chunky geometry, flat faceted colors, no photoreal textures, no black outlines, muted warm food colors. This should look built by the same artist as those existing assets. Chunky tan polygonal crust, thick golden cheese wedge, 3 simple dark red pepperoni discs, readable silhouette when tiny in a top-down Roblox game. No plate, no face, no packaging, no decorative herbs or dense details. Gray studio ground/background and soft neutral lighting matching reference. One larger three-quarter view and two small top/side views of the exact same single slice. Minimal title 'OPTIONAL CHEF PICKUP' and subtitle 'PIZZA SLICE'. This is an optional mechanic exploration, not an approved extra weapon. Clean modeler reference sheet. No characters, no unrelated props."
+  }
+}
