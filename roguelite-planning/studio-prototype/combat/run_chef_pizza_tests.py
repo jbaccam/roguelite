@@ -23,10 +23,15 @@ def module(name, filename, substitutions=()):
 
 
 source = module("Pizza", "ChefPizza.luau")
+# CharacterStats reads WeaponCatalog since 2026-10-09 (starter classes and weapon types).
+weapons = module("Weapons", "WeaponCatalog.luau")
 stats = module("Stats", "CharacterStats.luau", [
     ("local Motion=require(script.Parent.WeaponMotion)", "local Motion={}"),
+    ("local Weapons=require(script.Parent.WeaponCatalog)", "local Weapons=Weapons"),
     ("local Thrown=require(script.Parent.SpecialMotion).profiles", "local Thrown={}"),
 ])
+if stats is not None and weapons is not None:
+    stats = weapons + stats
 if stats is None:
     print("CharacterStats anchors moved: Recovery checked with CharacterService.heal's formula")
     source += "local Stats=nil\n"
