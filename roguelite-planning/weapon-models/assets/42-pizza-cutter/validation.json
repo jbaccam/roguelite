@@ -1,0 +1,337 @@
+{
+  "index": 42,
+  "name": "Pizza Cutter",
+  "family": "Chef kitchen (Frying Pan, Spatula)",
+  "generator": "roguelite-planning/weapon-models/batches/chef/build_pizza_cutter.py",
+  "objects": {
+    "Handle": {
+      "vertices": 304,
+      "faces": 359,
+      "triangles": 572,
+      "max_face_sides": 4,
+      "nonmanifold_edges": 0,
+      "boundary_edges": 0,
+      "loose_vertices": 0,
+      "loose_edges": 0,
+      "zero_area_faces": 0,
+      "inconsistent_winding_edges": 0,
+      "closed_shells": 10,
+      "inward_facing_shells": 0,
+      "flat_shaded": true,
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pivot": "Handhold center (wood grip midpoint) at world origin",
+      "parts": [
+        "Wood grip + lanyard hole",
+        "Guard collar",
+        "Arm",
+        "Axle",
+        "Axle nut (arm side)",
+        "Axle nut (far side)",
+        "2 rivets x 2 faces"
+      ],
+      "vertex_groups": [
+        "Wood grip",
+        "Guard collar",
+        "Arm",
+        "Axle",
+        "Axle nut (arm side)",
+        "Axle nut (far side)",
+        "Rivet front 0.83",
+        "Rivet back 0.83",
+        "Rivet front 1.59",
+        "Rivet back 1.59"
+      ]
+    },
+    "Wheel": {
+      "vertices": 192,
+      "faces": 192,
+      "triangles": 384,
+      "max_face_sides": 4,
+      "nonmanifold_edges": 0,
+      "boundary_edges": 0,
+      "loose_vertices": 0,
+      "loose_edges": 0,
+      "zero_area_faces": 0,
+      "inconsistent_winding_edges": 0,
+      "closed_shells": 1,
+      "inward_facing_shells": 0,
+      "flat_shaded": true,
+      "origin": [
+        0.0,
+        0.132,
+        2.21
+      ],
+      "pivot": "Axle center"
+    }
+  },
+  "triangles_total": 956,
+  "materials": 1,
+  "material_name": "PizzaCutter | portable baked base color (shared by both meshes)",
+  "uv": "one UV layer per mesh, both packed into one shared 0-1 layout (smart project, 0.012 margin)",
+  "texture": "BaseColor.png 1024x1024 sRGB, packed in Model.blend, embedded in FBX and GLB",
+  "bounds": {
+    "assembly_size": [
+      2.08,
+      0.679,
+      4.21
+    ],
+    "assembly_min": [
+      -1.04,
+      -0.29,
+      -0.96
+    ],
+    "assembly_max": [
+      1.04,
+      0.389,
+      3.25
+    ],
+    "handle_size": [
+      0.8,
+      0.679,
+      3.35
+    ],
+    "wheel_size": [
+      2.08,
+      0.23,
+      2.08
+    ]
+  },
+  "total_length": 4.21,
+  "wheel_diameter_fraction_of_length": 0.4941,
+  "wheel": {
+    "facets_N": 24,
+    "profile_rings": 8,
+    "all_rings_have_N_vertices": true,
+    "max_angular_step_error_deg": 1.2613596140909067e-06,
+    "max_ring_radius_spread": 7.766784482221567e-08,
+    "local_vertex_centroid": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "local_bounds_center": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "principal_axis_local": [
+      -0.0,
+      1.0,
+      0.0
+    ],
+    "principal_axis_is_local_Y": true,
+    "outer_radius": 1.0400000395208722,
+    "diameter": 2.0800000790417443,
+    "hub_thickness": 0.23000000417232513,
+    "spin_axis_blender": "Wheel local +Y (identity rotation); world +Y",
+    "spin_axis_roblox_expected": "MeshPart local Z axis: Blender +Y maps to Roblox -Z with axis_forward=-Z, axis_up=Y. Spin with CFrame.Angles(0, 0, angle).",
+    "bounds_center_equals_axle": "yes (rotationally symmetric 24-gon, mirror-symmetric profile)",
+    "axle_world_after_37deg_spin": [
+      0.0,
+      0.132,
+      2.21
+    ]
+  },
+  "clearance": [
+    {
+      "wheel_rotation_deg": 0.0,
+      "intersecting_face_pairs": 0,
+      "min_vertex_to_surface_gap": 0.012
+    },
+    {
+      "wheel_rotation_deg": 37.0,
+      "intersecting_face_pairs": 0,
+      "min_vertex_to_surface_gap": 0.012
+    }
+  ],
+  "spin_check_pixels": {
+    "changed_fraction_outside_wheel_disk": 0.0,
+    "changed_fraction_inside_wheel_disk": 0.0583,
+    "threshold": "6/255 per channel"
+  },
+  "roblox_import_expectation": {
+    "axis_mapping": "Blender (x, y, z) -> Roblox (x, z, -y); long axis Blender +Z -> Roblox +Y, wheel face in Roblox XY, thin axis Roblox Z",
+    "raw_fbx_scale": "same export settings as the Pan/Spatula: raw import = 100 x Blender units (Pan MeshSize 454.6 for 4.546 BU); templates rescale per item",
+    "handle_bbox_size_blender": [
+      0.8,
+      0.679,
+      3.35
+    ],
+    "grip_offset_from_handle_bbox_center_roblox_axes_BU": [
+      -0.0,
+      -0.715,
+      0.0495
+    ],
+    "grip_offset_fraction_of_handle_bbox_roblox_axes": [
+      -0.0,
+      -0.2134,
+      0.0729
+    ],
+    "axle_offset_from_handle_bbox_center_roblox_axes_BU": [
+      0.0,
+      1.495,
+      -0.0825
+    ],
+    "note": "Roblox centres each imported MeshPart on its bounding box; the Wheel box centre IS the axle. Add a Grip attachment at the listed offset on Handle (as the Godly templates do)."
+  },
+  "fbx_reimport": {
+    "mesh_objects": 2,
+    "mesh_names": [
+      "Handle",
+      "Wheel"
+    ],
+    "non_mesh_objects": [],
+    "objects": {
+      "Handle": {
+        "vertices": 304,
+        "triangles": 572,
+        "uv_layers": 1,
+        "materials": 1,
+        "image_texture": true,
+        "image_size": [
+          1024,
+          1024
+        ],
+        "world_bounds_min": [
+          -0.4,
+          -0.29,
+          -0.96
+        ],
+        "world_bounds_max": [
+          0.4,
+          0.389,
+          2.39
+        ],
+        "origin_world": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "Wheel": {
+        "vertices": 192,
+        "triangles": 384,
+        "uv_layers": 1,
+        "materials": 1,
+        "image_texture": true,
+        "image_size": [
+          1024,
+          1024
+        ],
+        "world_bounds_min": [
+          -1.04,
+          0.017,
+          1.17
+        ],
+        "world_bounds_max": [
+          1.04,
+          0.247,
+          3.25
+        ],
+        "origin_world": [
+          0.0,
+          0.132,
+          2.21
+        ]
+      }
+    },
+    "unit_scale_vs_source": 1.0,
+    "wheel_origin_error_vs_axle": 0.0,
+    "wheel_centroid_error_vs_axle": 0.0,
+    "wheel_world_axis": [
+      -0.0,
+      1.0,
+      -0.0
+    ],
+    "wheel_axis_is_blender_Y": true,
+    "handle_origin_at_grip": true,
+    "all_have_uv": true,
+    "all_have_image": true
+  },
+  "glb_reimport": {
+    "mesh_objects": 2,
+    "mesh_names": [
+      "Handle",
+      "Wheel"
+    ],
+    "non_mesh_objects": [],
+    "objects": {
+      "Handle": {
+        "vertices": 1058,
+        "triangles": 572,
+        "uv_layers": 1,
+        "materials": 1,
+        "image_texture": true,
+        "image_size": [
+          1024,
+          1024
+        ],
+        "world_bounds_min": [
+          -0.4,
+          -0.29,
+          -0.96
+        ],
+        "world_bounds_max": [
+          0.4,
+          0.389,
+          2.39
+        ],
+        "origin_world": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "Wheel": {
+        "vertices": 768,
+        "triangles": 384,
+        "uv_layers": 1,
+        "materials": 1,
+        "image_texture": true,
+        "image_size": [
+          1024,
+          1024
+        ],
+        "world_bounds_min": [
+          -1.04,
+          0.017,
+          1.17
+        ],
+        "world_bounds_max": [
+          1.04,
+          0.247,
+          3.25
+        ],
+        "origin_world": [
+          0.0,
+          0.132,
+          2.21
+        ]
+      }
+    },
+    "unit_scale_vs_source": 1.0,
+    "wheel_origin_error_vs_axle": 0.0,
+    "wheel_centroid_error_vs_axle": 0.0,
+    "wheel_world_axis": [
+      0.0,
+      -1.0,
+      0.0
+    ],
+    "wheel_axis_is_blender_Y": true,
+    "handle_origin_at_grip": true,
+    "all_have_uv": true,
+    "all_have_image": true
+  },
+  "stray_files_created_by_reimport": [],
+  "studio_status": "Blender-verified, Studio untested",
+  "notes": [
+    "Single gunmetal arm on the -Y side, as drawn in the concept SIDE and 3/4 views (not a two-sided fork).",
+    "Handle parts intentionally intersect where assembled (closed shells); nothing intersects the Wheel.",
+    "Wood back face and far nut are inferred from the side view; rivets are through-rivets with heads on both faces.",
+    "Review renders use a temporary -38 deg lean (Preview) and a temporary 37 deg wheel turn (Spin_Check); Model.blend is saved at rest."
+  ]
+}
