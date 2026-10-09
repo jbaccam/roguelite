@@ -1,0 +1,370 @@
+{
+ "fbx": {
+  "objects": {
+   "EyeGlow": {
+    "triangles": 96,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "Head": {
+    "triangles": 1324,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "LeftFoot": {
+    "triangles": 132,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "LeftHand": {
+    "triangles": 302,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "LeftLowerArm": {
+    "triangles": 156,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "LeftLowerLeg": {
+    "triangles": 156,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "LeftUpperArm": {
+    "triangles": 412,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "LeftUpperLeg": {
+    "triangles": 320,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "LowerTorso": {
+    "triangles": 180,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "RightFoot": {
+    "triangles": 132,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "RightHand": {
+    "triangles": 302,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "RightLowerArm": {
+    "triangles": 156,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "RightLowerLeg": {
+    "triangles": 156,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "RightUpperArm": {
+    "triangles": 412,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "RightUpperLeg": {
+    "triangles": 320,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   },
+   "UpperTorso": {
+    "triangles": 2984,
+    "materials": 1,
+    "uv_layer": "PaintedAtlas",
+    "uv_in_0_1": true,
+    "open_edges": 0,
+    "degenerate_faces": 0,
+    "texture_1024_loaded": true,
+    "origin_vs_joint_error": 0.0
+   }
+  },
+  "total_triangles": 7540,
+  "height": 6.0,
+  "ground": -0.0,
+  "belly_width_at_equator": 4.555,
+  "belly_depth_at_equator": 4.285,
+  "upper_torso_bbox_width_incl_shoulders": 5.247,
+  "import_data_part_bounds_max_error": 1e-06
+ },
+ "belly_clearance": {
+  "rest:LeftHand": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.6626
+  },
+  "rest:RightHand": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.6626
+  },
+  "rest:LeftLowerArm": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.3591
+  },
+  "rest:RightLowerArm": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.3591
+  },
+  "rest:EyeGlow": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.7499
+  },
+  "rest:Head(excluding hidden neck seat)": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.1092
+  },
+  "rest:LeftUpperArm(below shoulder seat, axial>0.3)": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.106
+  },
+  "rest:LeftUpperArm(clearance by tenth of arm, 0=shoulder joint)": {
+   "0.1": -0.115,
+   "0.2": -0.123,
+   "0.4": 0.113,
+   "0.5": 0.106,
+   "0.8": 0.417,
+   "0.9": 0.406,
+   "1.0": 0.469
+  },
+  "rest:LeftUpperArm(shoulder seat, info)": {
+   "pairs": 231,
+   "inside": 49,
+   "min": -0.3898,
+   "deepest_contact_along_arm": 0.264
+  },
+  "rest:RightUpperArm(below shoulder seat, axial>0.3)": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.1049
+  },
+  "rest:RightUpperArm(clearance by tenth of arm, 0=shoulder joint)": {
+   "0.1": -0.115,
+   "0.2": -0.122,
+   "0.4": 0.169,
+   "0.5": 0.105,
+   "0.6": 0.237,
+   "0.8": 0.417,
+   "0.9": 0.406,
+   "1.0": 0.469
+  },
+  "rest:RightUpperArm(shoulder seat, info)": {
+   "pairs": 184,
+   "inside": 47,
+   "min": -0.3898,
+   "deepest_contact_along_arm": 0.279
+  },
+  "rest:LeftUpperLeg(info)": {
+   "pairs": 128,
+   "inside": 80,
+   "min": -0.629
+  },
+  "rest:RightUpperLeg(info)": {
+   "pairs": 128,
+   "inside": 80,
+   "min": -0.629
+  },
+  "rest:LowerTorso(info)": {
+   "pairs": 91,
+   "inside": 49,
+   "min": -0.6524
+  },
+  "inflated:LeftHand": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.7071
+  },
+  "inflated:RightHand": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.7071
+  },
+  "inflated:LeftLowerArm": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.2919
+  },
+  "inflated:RightLowerArm": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.2919
+  },
+  "inflated:EyeGlow": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.7574
+  },
+  "inflated:Head(excluding hidden neck seat)": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.0909
+  },
+  "inflated:LeftUpperArm(below shoulder seat, axial>0.3)": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.0376
+  },
+  "inflated:LeftUpperArm(clearance by tenth of arm, 0=shoulder joint)": {
+   "0.1": -0.185,
+   "0.2": -0.193,
+   "0.4": 0.038,
+   "0.5": 0.038,
+   "0.8": 0.35,
+   "0.9": 0.376,
+   "1.0": 0.468
+  },
+  "inflated:LeftUpperArm(shoulder seat, info)": {
+   "pairs": 213,
+   "inside": 58,
+   "min": -0.4594,
+   "deepest_contact_along_arm": 0.264
+  },
+  "inflated:RightUpperArm(below shoulder seat, axial>0.3)": {
+   "pairs": 0,
+   "inside": 0,
+   "min": 0.0306
+  },
+  "inflated:RightUpperArm(clearance by tenth of arm, 0=shoulder joint)": {
+   "0.1": -0.185,
+   "0.2": -0.192,
+   "0.4": 0.094,
+   "0.5": 0.031,
+   "0.6": 0.155,
+   "0.8": 0.35,
+   "0.9": 0.376,
+   "1.0": 0.468
+  },
+  "inflated:RightUpperArm(shoulder seat, info)": {
+   "pairs": 170,
+   "inside": 60,
+   "min": -0.4594,
+   "deepest_contact_along_arm": 0.281
+  },
+  "inflated:LeftUpperLeg(info)": {
+   "pairs": 46,
+   "inside": 150,
+   "min": -1.1448
+  },
+  "inflated:RightUpperLeg(info)": {
+   "pairs": 28,
+   "inside": 155,
+   "min": -1.1459
+  },
+  "inflated:LowerTorso(info)": {
+   "pairs": 0,
+   "inside": 92,
+   "min": -1.1671
+  }
+ },
+ "arm_pose_sweep": {
+  "poses": 288,
+  "colliding": 0,
+  "min_clearance": 0.1539,
+  "worst": "inflated Left shoulder 92 elbow 40 roll 7"
+ },
+ "eyes_visible_from_front": 0.7,
+ "model_blend": {
+  "rigs": 1,
+  "bones": 16,
+  "packed_textures": [
+   "BaseColor.png"
+  ]
+ },
+ "files": {
+  "BaseColor.png_sha256": "30a6d32d10cedba6a38dc69f8105e65c68e8e70ef533e3944321d4f00ec1f765",
+  "fbm_copy_matches": true,
+  "BloaterZombie_Import.fbx_sha256": "028adde86616a5dd7e011079aa8ee37d8593b12ceb23e2d9eb0162d34f5fe6bd"
+ },
+ "status": "PASS",
+ "failures": [],
+ "known_issues": [],
+ "studio": "Blender-verified, Studio untested"
+}

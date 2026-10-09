@@ -1,0 +1,1498 @@
+{
+  "blender": "5.2.1 LTS",
+  "files": {
+    "Sarcophagus.fbx": {
+      "meshes": {
+        "Sarcophagus_Body": {
+          "tris": 550,
+          "openEdges": 0,
+          "shells": 1,
+          "uvRange": [
+            0.0251,
+            0.4,
+            0.1501,
+            0.9632
+          ],
+          "zeroAreaFaces": 0,
+          "boundsMin": [
+            -3.6201,
+            -2.25,
+            -0.0
+          ],
+          "boundsMax": [
+            3.6201,
+            2.95,
+            11.0
+          ],
+          "size": [
+            7.2401,
+            5.2,
+            11.0
+          ],
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "Sarcophagus_Lid": {
+          "tris": 2278,
+          "openEdges": 0,
+          "shells": 1,
+          "uvRange": [
+            0.002,
+            0.8735,
+            0.007,
+            0.9632
+          ],
+          "zeroAreaFaces": 0,
+          "boundsMin": [
+            -3.6201,
+            -3.4638,
+            -0.0
+          ],
+          "boundsMax": [
+            3.6201,
+            -2.25,
+            11.0
+          ],
+          "size": [
+            7.2401,
+            1.2139,
+            11.0
+          ],
+          "location": [
+            0.0,
+            -3.46385,
+            0.0
+          ]
+        }
+      },
+      "totalTris": 2828,
+      "importedImages": [
+        [
+          "Sarcophagus_atlas.png",
+          [
+            1024,
+            1024
+          ]
+        ],
+        [
+          "Sarcophagus_atlas.png.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ]
+    },
+    "SarcophagusBroken.fbx": {
+      "meshes": {
+        "SarcophagusBroken_Base": {
+          "tris": 436,
+          "openEdges": 0,
+          "shells": 1,
+          "uvRange": [
+            0.0251,
+            0.7779,
+            0.1314,
+            0.7896
+          ],
+          "zeroAreaFaces": 0,
+          "boundsMin": [
+            -2.6493,
+            -2.25,
+            -0.0
+          ],
+          "boundsMax": [
+            2.6245,
+            2.95,
+            3.4706
+          ],
+          "size": [
+            5.2738,
+            5.2,
+            3.4706
+          ],
+          "location": [
+            -0.0124,
+            0.35,
+            1.73531
+          ],
+          "fractureTileFaces": 116
+        },
+        "SarcophagusBroken_LeftWall": {
+          "tris": 514,
+          "openEdges": 0,
+          "shells": 1,
+          "uvRange": [
+            0.0251,
+            0.7239,
+            0.1501,
+            0.9646
+          ],
+          "zeroAreaFaces": 0,
+          "boundsMin": [
+            -3.6201,
+            -2.2504,
+            3.8089
+          ],
+          "boundsMax": [
+            -0.644,
+            2.95,
+            11.0
+          ],
+          "size": [
+            2.9761,
+            5.2004,
+            7.1911
+          ],
+          "location": [
+            -2.13202,
+            0.34978,
+            7.40443
+          ],
+          "fractureTileFaces": 99
+        },
+        "SarcophagusBroken_RightWall": {
+          "tris": 544,
+          "openEdges": 0,
+          "shells": 1,
+          "uvRange": [
+            0.0251,
+            0.8071,
+            0.1814,
+            0.9284
+          ],
+          "zeroAreaFaces": 0,
+          "boundsMin": [
+            1.6031,
+            -2.25,
+            4.0577
+          ],
+          "boundsMax": [
+            3.6201,
+            2.95,
+            10.1693
+          ],
+          "size": [
+            2.017,
+            5.2,
+            6.1116
+          ],
+          "location": [
+            2.61158,
+            0.35,
+            7.11348
+          ],
+          "fractureTileFaces": 291
+        },
+        "SarcophagusBroken_LidFragment": {
+          "tris": 1396,
+          "openEdges": 0,
+          "shells": 1,
+          "uvRange": [
+            0.002,
+            0.8487,
+            0.007,
+            0.9632
+          ],
+          "zeroAreaFaces": 0,
+          "boundsMin": [
+            -3.6201,
+            -3.4638,
+            6.1749
+          ],
+          "boundsMax": [
+            2.8747,
+            -2.25,
+            11.0
+          ],
+          "size": [
+            6.4948,
+            1.2138,
+            4.8251
+          ],
+          "location": [
+            -0.37268,
+            -2.85692,
+            8.58747
+          ],
+          "fractureTileFaces": 231
+        }
+      },
+      "totalTris": 2890,
+      "importedImages": [
+        [
+          "Sarcophagus_atlas.png",
+          [
+            1024,
+            1024
+          ]
+        ],
+        [
+          "Sarcophagus_atlas.png.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ]
+    },
+    "VolcanicVent.fbx": {
+      "meshes": {
+        "Vent_Rock": {
+          "tris": 1252,
+          "openEdges": 0,
+          "shells": 33,
+          "uvRange": [
+            0.0804,
+            0.6551,
+            0.0039,
+            0.9051
+          ],
+          "zeroAreaFaces": 0,
+          "boundsMin": [
+            -4.7135,
+            -4.4593,
+            -0.12
+          ],
+          "boundsMax": [
+            4.2075,
+            4.4819,
+            1.7686
+          ],
+          "size": [
+            8.921,
+            8.9412,
+            1.8886
+          ],
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "Vent_Glow": {
+          "tris": 260,
+          "openEdges": 0,
+          "shells": 1,
+          "uvRange": [
+            0.7868,
+            0.9669,
+            0.7904,
+            0.9651
+          ],
+          "zeroAreaFaces": 0,
+          "boundsMin": [
+            -3.5296,
+            -3.3859,
+            -0.06
+          ],
+          "boundsMax": [
+            3.6766,
+            3.603,
+            0.4145
+          ],
+          "size": [
+            7.2062,
+            6.9888,
+            0.4745
+          ],
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "totalTris": 1512,
+      "importedImages": [
+        [
+          "Volcanic_atlas.png",
+          [
+            512,
+            512
+          ]
+        ],
+        [
+          "Volcanic_atlas.png.001",
+          [
+            512,
+            512
+          ]
+        ]
+      ]
+    },
+    "VolcanicDebris.fbx": {
+      "meshes": {
+        "Debris_1": {
+          "tris": 64,
+          "openEdges": 0,
+          "shells": 1,
+          "uvRange": [
+            0.3104,
+            0.9188,
+            0.5455,
+            0.6935
+          ],
+          "zeroAreaFaces": 0,
+          "boundsMin": [
+            -1.9888,
+            -0.1662,
+            -0.2164
+          ],
+          "boundsMax": [
+            -1.6112,
+            0.1662,
+            0.2164
+          ],
+          "size": [
+            0.3777,
+            0.3323,
+            0.4329
+          ],
+          "location": [
+            -1.8,
+            0.0,
+            0.0
+          ]
+        },
+        "Debris_2": {
+          "tris": 80,
+          "openEdges": 0,
+          "shells": 1,
+          "uvRange": [
+            0.2681,
+            0.9022,
+            0.4491,
+            0.6479
+          ],
+          "zeroAreaFaces": 0,
+          "boundsMin": [
+            -1.1026,
+            -0.148,
+            -0.1526
+          ],
+          "boundsMax": [
+            -0.6974,
+            0.148,
+            0.1526
+          ],
+          "size": [
+            0.4053,
+            0.2961,
+            0.3053
+          ],
+          "location": [
+            -0.9,
+            0.0,
+            0.0
+          ]
+        },
+        "Debris_3": {
+          "tris": 80,
+          "openEdges": 0,
+          "shells": 1,
+          "uvRange": [
+            0.1924,
+            0.9198,
+            0.4855,
+            0.6262
+          ],
+          "zeroAreaFaces": 0,
+          "boundsMin": [
+            -0.1913,
+            -0.1773,
+            -0.1859
+          ],
+          "boundsMax": [
+            0.1913,
+            0.1773,
+            0.1859
+          ],
+          "size": [
+            0.3826,
+            0.3546,
+            0.3719
+          ],
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "Debris_4": {
+          "tris": 44,
+          "openEdges": 0,
+          "shells": 1,
+          "uvRange": [
+            0.2468,
+            0.8888,
+            0.5719,
+            0.641
+          ],
+          "zeroAreaFaces": 0,
+          "boundsMin": [
+            0.6684,
+            -0.0984,
+            -0.0974
+          ],
+          "boundsMax": [
+            1.1316,
+            0.0984,
+            0.0974
+          ],
+          "size": [
+            0.4632,
+            0.1967,
+            0.1949
+          ],
+          "location": [
+            0.9,
+            0.0,
+            0.0
+          ]
+        },
+        "Debris_5": {
+          "tris": 68,
+          "openEdges": 0,
+          "shells": 1,
+          "uvRange": [
+            0.1692,
+            0.9142,
+            0.6101,
+            0.7388
+          ],
+          "zeroAreaFaces": 0,
+          "boundsMin": [
+            1.581,
+            -0.1762,
+            -0.0636
+          ],
+          "boundsMax": [
+            2.019,
+            0.1762,
+            0.0636
+          ],
+          "size": [
+            0.4381,
+            0.3524,
+            0.1272
+          ],
+          "location": [
+            1.8,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "totalTris": 336,
+      "importedImages": [
+        [
+          "Volcanic_atlas.png",
+          [
+            512,
+            512
+          ]
+        ],
+        [
+          "Volcanic_atlas.png.001",
+          [
+            512,
+            512
+          ]
+        ]
+      ]
+    }
+  },
+  "checks": [
+    {
+      "name": "Sarcophagus.fbx: mesh names exact",
+      "ok": true,
+      "detail": [
+        "Sarcophagus_Body",
+        "Sarcophagus_Lid"
+      ]
+    },
+    {
+      "name": "Sarcophagus.fbx: no armature / animation",
+      "ok": true,
+      "detail": {
+        "nonMesh": [],
+        "actions": 0
+      }
+    },
+    {
+      "name": "Sarcophagus.fbx:Sarcophagus_Body: closed shells (0 open/non-manifold edges)",
+      "ok": true,
+      "detail": {
+        "openEdges": 0,
+        "shells": 1
+      }
+    },
+    {
+      "name": "Sarcophagus.fbx:Sarcophagus_Body: UVs inside 0-1",
+      "ok": true,
+      "detail": [
+        0.0251,
+        0.4,
+        0.1501,
+        0.9632
+      ]
+    },
+    {
+      "name": "Sarcophagus.fbx:Sarcophagus_Body: no zero-area / sliver faces",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "Sarcophagus.fbx:Sarcophagus_Lid: closed shells (0 open/non-manifold edges)",
+      "ok": true,
+      "detail": {
+        "openEdges": 0,
+        "shells": 1
+      }
+    },
+    {
+      "name": "Sarcophagus.fbx:Sarcophagus_Lid: UVs inside 0-1",
+      "ok": true,
+      "detail": [
+        0.002,
+        0.8735,
+        0.007,
+        0.9632
+      ]
+    },
+    {
+      "name": "Sarcophagus.fbx:Sarcophagus_Lid: no zero-area / sliver faces",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "Sarcophagus.fbx: total triangle budget <= 3000",
+      "ok": true,
+      "detail": 2828
+    },
+    {
+      "name": "Sarcophagus.fbx: atlas Sarcophagus_atlas.png loads at 1024px",
+      "ok": true,
+      "detail": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "Sarcophagus.fbx: embedded texture came back with the FBX",
+      "ok": true,
+      "detail": [
+        [
+          "Sarcophagus_atlas.png",
+          [
+            1024,
+            1024
+          ]
+        ],
+        [
+          "Sarcophagus_atlas.png.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Body origin at ground / cavity floor centre (location 0,0,0; bottom z=0)",
+      "ok": true,
+      "detail": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "minZ": -4.6452194624180265e-07
+      }
+    },
+    {
+      "name": "Body outer: ~11 tall, ~7.2 wide at the shoulders, 5.2 deep",
+      "ok": true,
+      "detail": [
+        7.24,
+        5.2,
+        11.0
+      ]
+    },
+    {
+      "name": "Body foot width ~5.0",
+      "ok": true,
+      "detail": 4.942
+    },
+    {
+      "name": "Anthropoid silhouette: widest at 60-78% height, head <= 0.62 and foot <= 0.74 of the shoulder width",
+      "ok": true,
+      "detail": {
+        "widestAtZ": 7.3,
+        "widestAtFractionOfHeight": 0.664,
+        "shoulderWidth": 7.24,
+        "headWidth": 4.1,
+        "footWidth": 5.0,
+        "headOverShoulder": 0.566,
+        "footOverShoulder": 0.691
+      }
+    },
+    {
+      "name": "Lid closed fit: gap |<= 0.05| and no overlap",
+      "ok": true,
+      "detail": {
+        "gap": -0.0,
+        "bodyFrontY": -2.25,
+        "lidBackY": -2.25
+      }
+    },
+    {
+      "name": "Lid underside outline lies on the body front rim edges (worst vertex <= 0.05, the brief's gap limit)",
+      "ok": true,
+      "detail": 0.04039
+    },
+    {
+      "name": "Lid XZ extents equal the body's",
+      "ok": true,
+      "detail": {
+        "lid": [
+          -3.62,
+          3.62,
+          -0.0,
+          11.0
+        ],
+        "body": [
+          -3.62,
+          3.62,
+          -0.0,
+          11.0
+        ]
+      }
+    },
+    {
+      "name": "Lid origin on its bottom front hinge line (x=0, y=front-most, z=0)",
+      "ok": true,
+      "detail": {
+        "lidLocation": [
+          0.0,
+          -3.4638,
+          0.0
+        ],
+        "frontMostY": -3.4638
+      }
+    },
+    {
+      "name": "Lid underside is one flat plane",
+      "ok": true,
+      "detail": 12
+    },
+    {
+      "name": "Cavity extents >= 9.4 tall x 6.2 wide x 4.2 deep",
+      "ok": true,
+      "detail": {
+        "height": 9.4,
+        "maxWidth": 6.248,
+        "depth": 4.5,
+        "floorZ": 0.8,
+        "ceilingZ": 10.2
+      }
+    },
+    {
+      "name": "Back is solid and flat (no relief): all back-plane faces coplanar",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "SarcophagusBroken.fbx: mesh names exact",
+      "ok": true,
+      "detail": [
+        "SarcophagusBroken_Base",
+        "SarcophagusBroken_LeftWall",
+        "SarcophagusBroken_LidFragment",
+        "SarcophagusBroken_RightWall"
+      ]
+    },
+    {
+      "name": "SarcophagusBroken.fbx: no armature / animation",
+      "ok": true,
+      "detail": {
+        "nonMesh": [],
+        "actions": 0
+      }
+    },
+    {
+      "name": "SarcophagusBroken.fbx:SarcophagusBroken_Base: closed shells (0 open/non-manifold edges)",
+      "ok": true,
+      "detail": {
+        "openEdges": 0,
+        "shells": 1
+      }
+    },
+    {
+      "name": "SarcophagusBroken.fbx:SarcophagusBroken_Base: UVs inside 0-1",
+      "ok": true,
+      "detail": [
+        0.0251,
+        0.7779,
+        0.1314,
+        0.7896
+      ]
+    },
+    {
+      "name": "SarcophagusBroken.fbx:SarcophagusBroken_Base: no zero-area / sliver faces",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "SarcophagusBroken.fbx:SarcophagusBroken_LeftWall: closed shells (0 open/non-manifold edges)",
+      "ok": true,
+      "detail": {
+        "openEdges": 0,
+        "shells": 1
+      }
+    },
+    {
+      "name": "SarcophagusBroken.fbx:SarcophagusBroken_LeftWall: UVs inside 0-1",
+      "ok": true,
+      "detail": [
+        0.0251,
+        0.7239,
+        0.1501,
+        0.9646
+      ]
+    },
+    {
+      "name": "SarcophagusBroken.fbx:SarcophagusBroken_LeftWall: no zero-area / sliver faces",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "SarcophagusBroken.fbx:SarcophagusBroken_RightWall: closed shells (0 open/non-manifold edges)",
+      "ok": true,
+      "detail": {
+        "openEdges": 0,
+        "shells": 1
+      }
+    },
+    {
+      "name": "SarcophagusBroken.fbx:SarcophagusBroken_RightWall: UVs inside 0-1",
+      "ok": true,
+      "detail": [
+        0.0251,
+        0.8071,
+        0.1814,
+        0.9284
+      ]
+    },
+    {
+      "name": "SarcophagusBroken.fbx:SarcophagusBroken_RightWall: no zero-area / sliver faces",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "SarcophagusBroken.fbx:SarcophagusBroken_LidFragment: closed shells (0 open/non-manifold edges)",
+      "ok": true,
+      "detail": {
+        "openEdges": 0,
+        "shells": 1
+      }
+    },
+    {
+      "name": "SarcophagusBroken.fbx:SarcophagusBroken_LidFragment: UVs inside 0-1",
+      "ok": true,
+      "detail": [
+        0.002,
+        0.8487,
+        0.007,
+        0.9632
+      ]
+    },
+    {
+      "name": "SarcophagusBroken.fbx:SarcophagusBroken_LidFragment: no zero-area / sliver faces",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "SarcophagusBroken.fbx: total triangle budget <= 3000",
+      "ok": true,
+      "detail": 2890
+    },
+    {
+      "name": "SarcophagusBroken.fbx: atlas Sarcophagus_atlas.png loads at 1024px",
+      "ok": true,
+      "detail": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "SarcophagusBroken.fbx: embedded texture came back with the FBX",
+      "ok": true,
+      "detail": [
+        [
+          "Sarcophagus_atlas.png",
+          [
+            1024,
+            1024
+          ]
+        ],
+        [
+          "Sarcophagus_atlas.png.001",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Broken kit: exactly four chunks",
+      "ok": true,
+      "detail": 4
+    },
+    {
+      "name": "SarcophagusBroken_Base: origin at its bounding-box centre and location == JSON offset",
+      "ok": true,
+      "detail": {
+        "meshCentreOffset": 0.0,
+        "location": [
+          -0.0124,
+          0.35,
+          1.7353
+        ],
+        "json": [
+          -0.012400000356137753,
+          0.3499999940395355,
+          1.7353099584579468
+        ]
+      }
+    },
+    {
+      "name": "SarcophagusBroken_Base: placed with identity transform it sits inside/on the intact body",
+      "ok": true,
+      "detail": {
+        "verticesOutside": 0,
+        "of": 220
+      }
+    },
+    {
+      "name": "SarcophagusBroken_Base: has fracture-tile (darker interior) faces",
+      "ok": true,
+      "detail": 116
+    },
+    {
+      "name": "SarcophagusBroken_LeftWall: origin at its bounding-box centre and location == JSON offset",
+      "ok": true,
+      "detail": {
+        "meshCentreOffset": 0.0,
+        "location": [
+          -2.132,
+          0.3498,
+          7.4044
+        ],
+        "json": [
+          -2.1320199966430664,
+          0.34977999329566956,
+          7.404429912567139
+        ]
+      }
+    },
+    {
+      "name": "SarcophagusBroken_LeftWall: placed with identity transform it sits inside/on the intact body",
+      "ok": true,
+      "detail": {
+        "verticesOutside": 0,
+        "of": 259
+      }
+    },
+    {
+      "name": "SarcophagusBroken_LeftWall: has fracture-tile (darker interior) faces",
+      "ok": true,
+      "detail": 99
+    },
+    {
+      "name": "SarcophagusBroken_RightWall: origin at its bounding-box centre and location == JSON offset",
+      "ok": true,
+      "detail": {
+        "meshCentreOffset": 0.0,
+        "location": [
+          2.6116,
+          0.35,
+          7.1135
+        ],
+        "json": [
+          2.6115798950195312,
+          0.3499999940395355,
+          7.113480091094971
+        ]
+      }
+    },
+    {
+      "name": "SarcophagusBroken_RightWall: placed with identity transform it sits inside/on the intact body",
+      "ok": true,
+      "detail": {
+        "verticesOutside": 0,
+        "of": 274
+      }
+    },
+    {
+      "name": "SarcophagusBroken_RightWall: has fracture-tile (darker interior) faces",
+      "ok": true,
+      "detail": 291
+    },
+    {
+      "name": "SarcophagusBroken_LidFragment: origin at its bounding-box centre and location == JSON offset",
+      "ok": true,
+      "detail": {
+        "meshCentreOffset": 0.0,
+        "location": [
+          -0.3727,
+          -2.8569,
+          8.5875
+        ],
+        "json": [
+          -0.37268000841140747,
+          -2.856920003890991,
+          8.587470054626465
+        ]
+      }
+    },
+    {
+      "name": "SarcophagusBroken_LidFragment: placed with identity transform it sits inside/on the intact lid",
+      "ok": true,
+      "detail": {
+        "verticesOutside": 0,
+        "of": 700
+      }
+    },
+    {
+      "name": "SarcophagusBroken_LidFragment: has fracture-tile (darker interior) faces",
+      "ok": true,
+      "detail": 231
+    },
+    {
+      "name": "VolcanicVent.fbx: mesh names exact",
+      "ok": true,
+      "detail": [
+        "Vent_Glow",
+        "Vent_Rock"
+      ]
+    },
+    {
+      "name": "VolcanicVent.fbx: no armature / animation",
+      "ok": true,
+      "detail": {
+        "nonMesh": [],
+        "actions": 0
+      }
+    },
+    {
+      "name": "VolcanicVent.fbx:Vent_Rock: closed shells (0 open/non-manifold edges)",
+      "ok": true,
+      "detail": {
+        "openEdges": 0,
+        "shells": 33
+      }
+    },
+    {
+      "name": "VolcanicVent.fbx:Vent_Rock: UVs inside 0-1",
+      "ok": true,
+      "detail": [
+        0.0804,
+        0.6551,
+        0.0039,
+        0.9051
+      ]
+    },
+    {
+      "name": "VolcanicVent.fbx:Vent_Rock: no zero-area / sliver faces",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "VolcanicVent.fbx:Vent_Glow: closed shells (0 open/non-manifold edges)",
+      "ok": true,
+      "detail": {
+        "openEdges": 0,
+        "shells": 1
+      }
+    },
+    {
+      "name": "VolcanicVent.fbx:Vent_Glow: UVs inside 0-1",
+      "ok": true,
+      "detail": [
+        0.7868,
+        0.9669,
+        0.7904,
+        0.9651
+      ]
+    },
+    {
+      "name": "VolcanicVent.fbx:Vent_Glow: no zero-area / sliver faces",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "VolcanicVent.fbx: total triangle budget <= 2000",
+      "ok": true,
+      "detail": 1512
+    },
+    {
+      "name": "VolcanicVent.fbx: atlas Volcanic_atlas.png loads at 512px",
+      "ok": true,
+      "detail": [
+        512,
+        512
+      ]
+    },
+    {
+      "name": "VolcanicVent.fbx: embedded texture came back with the FBX",
+      "ok": true,
+      "detail": [
+        [
+          "Volcanic_atlas.png",
+          [
+            512,
+            512
+          ]
+        ],
+        [
+          "Volcanic_atlas.png.001",
+          [
+            512,
+            512
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Vent height <= 1.8",
+      "ok": true,
+      "detail": 1.7686
+    },
+    {
+      "name": "Vent about 9 across",
+      "ok": true,
+      "detail": [
+        8.921,
+        8.941
+      ]
+    },
+    {
+      "name": "Vent opening about 3.5 across (min/mean diameter at z=0.7)",
+      "ok": true,
+      "detail": [
+        3.643,
+        4.334
+      ]
+    },
+    {
+      "name": "Vent origin at ground centre of the opening",
+      "ok": true,
+      "detail": {
+        "rockMinZ": -0.12
+      }
+    },
+    {
+      "name": "Vent_Glow is a separate mesh from Vent_Rock",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "VolcanicDebris.fbx: mesh names exact",
+      "ok": true,
+      "detail": [
+        "Debris_1",
+        "Debris_2",
+        "Debris_3",
+        "Debris_4",
+        "Debris_5"
+      ]
+    },
+    {
+      "name": "VolcanicDebris.fbx: no armature / animation",
+      "ok": true,
+      "detail": {
+        "nonMesh": [],
+        "actions": 0
+      }
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_1: closed shells (0 open/non-manifold edges)",
+      "ok": true,
+      "detail": {
+        "openEdges": 0,
+        "shells": 1
+      }
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_1: UVs inside 0-1",
+      "ok": true,
+      "detail": [
+        0.3104,
+        0.9188,
+        0.5455,
+        0.6935
+      ]
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_1: no zero-area / sliver faces",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_1: triangle budget (30, 150)",
+      "ok": true,
+      "detail": 64
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_2: closed shells (0 open/non-manifold edges)",
+      "ok": true,
+      "detail": {
+        "openEdges": 0,
+        "shells": 1
+      }
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_2: UVs inside 0-1",
+      "ok": true,
+      "detail": [
+        0.2681,
+        0.9022,
+        0.4491,
+        0.6479
+      ]
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_2: no zero-area / sliver faces",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_2: triangle budget (30, 150)",
+      "ok": true,
+      "detail": 80
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_3: closed shells (0 open/non-manifold edges)",
+      "ok": true,
+      "detail": {
+        "openEdges": 0,
+        "shells": 1
+      }
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_3: UVs inside 0-1",
+      "ok": true,
+      "detail": [
+        0.1924,
+        0.9198,
+        0.4855,
+        0.6262
+      ]
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_3: no zero-area / sliver faces",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_3: triangle budget (30, 150)",
+      "ok": true,
+      "detail": 80
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_4: closed shells (0 open/non-manifold edges)",
+      "ok": true,
+      "detail": {
+        "openEdges": 0,
+        "shells": 1
+      }
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_4: UVs inside 0-1",
+      "ok": true,
+      "detail": [
+        0.2468,
+        0.8888,
+        0.5719,
+        0.641
+      ]
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_4: no zero-area / sliver faces",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_4: triangle budget (30, 150)",
+      "ok": true,
+      "detail": 44
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_5: closed shells (0 open/non-manifold edges)",
+      "ok": true,
+      "detail": {
+        "openEdges": 0,
+        "shells": 1
+      }
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_5: UVs inside 0-1",
+      "ok": true,
+      "detail": [
+        0.1692,
+        0.9142,
+        0.6101,
+        0.7388
+      ]
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_5: no zero-area / sliver faces",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "VolcanicDebris.fbx:Debris_5: triangle budget (30, 150)",
+      "ok": true,
+      "detail": 68
+    },
+    {
+      "name": "VolcanicDebris.fbx: atlas Volcanic_atlas.png loads at 512px",
+      "ok": true,
+      "detail": [
+        512,
+        512
+      ]
+    },
+    {
+      "name": "VolcanicDebris.fbx: embedded texture came back with the FBX",
+      "ok": true,
+      "detail": [
+        [
+          "Volcanic_atlas.png",
+          [
+            512,
+            512
+          ]
+        ],
+        [
+          "Volcanic_atlas.png.001",
+          [
+            512,
+            512
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Debris_1: 0.15-0.5 across, not a matchstick (min dim >= 0.1, aspect <= 4)",
+      "ok": true,
+      "detail": [
+        0.433,
+        0.378,
+        0.332
+      ]
+    },
+    {
+      "name": "Debris_1: origin at the fragment centre",
+      "ok": true,
+      "detail": 0.0
+    },
+    {
+      "name": "Debris_2: 0.15-0.5 across, not a matchstick (min dim >= 0.1, aspect <= 4)",
+      "ok": true,
+      "detail": [
+        0.405,
+        0.305,
+        0.296
+      ]
+    },
+    {
+      "name": "Debris_2: origin at the fragment centre",
+      "ok": true,
+      "detail": 0.0
+    },
+    {
+      "name": "Debris_3: 0.15-0.5 across, not a matchstick (min dim >= 0.1, aspect <= 4)",
+      "ok": true,
+      "detail": [
+        0.383,
+        0.372,
+        0.355
+      ]
+    },
+    {
+      "name": "Debris_3: origin at the fragment centre",
+      "ok": true,
+      "detail": 0.0
+    },
+    {
+      "name": "Debris_4: 0.15-0.5 across, not a matchstick (min dim >= 0.1, aspect <= 4)",
+      "ok": true,
+      "detail": [
+        0.463,
+        0.197,
+        0.195
+      ]
+    },
+    {
+      "name": "Debris_4: origin at the fragment centre",
+      "ok": true,
+      "detail": 0.0
+    },
+    {
+      "name": "Debris_5: 0.15-0.5 across, not a matchstick (min dim >= 0.1, aspect <= 4)",
+      "ok": true,
+      "detail": [
+        0.438,
+        0.352,
+        0.127
+      ]
+    },
+    {
+      "name": "Debris_5: origin at the fragment centre",
+      "ok": true,
+      "detail": 0.0
+    }
+  ],
+  "ok": true,
+  "silhouette": {
+    "widestAtZ": 7.3,
+    "widestAtFractionOfHeight": 0.664,
+    "shoulderWidth": 7.24,
+    "headWidth": 4.1,
+    "footWidth": 5.0,
+    "headOverShoulder": 0.566,
+    "footOverShoulder": 0.691
+  },
+  "cavityProfile": {
+    "widthByHeight": [
+      [
+        0.9,
+        3.457
+      ],
+      [
+        1.385,
+        3.657
+      ],
+      [
+        1.871,
+        3.857
+      ],
+      [
+        2.356,
+        4.057
+      ],
+      [
+        2.842,
+        4.257
+      ],
+      [
+        3.327,
+        4.457
+      ],
+      [
+        3.813,
+        4.657
+      ],
+      [
+        4.298,
+        4.857
+      ],
+      [
+        4.784,
+        5.057
+      ],
+      [
+        5.269,
+        5.257
+      ],
+      [
+        5.755,
+        5.457
+      ],
+      [
+        6.24,
+        5.657
+      ],
+      [
+        6.726,
+        5.858
+      ],
+      [
+        7.211,
+        6.058
+      ],
+      [
+        7.697,
+        6.205
+      ],
+      [
+        8.182,
+        5.323
+      ],
+      [
+        8.668,
+        4.44
+      ],
+      [
+        9.153,
+        3.558
+      ],
+      [
+        9.639,
+        3.1
+      ]
+    ],
+    "heightAvailableAtMinWidth": {
+      "3.4": 8.33,
+      "4.4": 5.46,
+      "5.2": 3.08,
+      "6.2": 0.12
+    },
+    "note": "The coffin is anthropoid, so the 9.4 x 6.2 x 4.2 box is the cavity's bounding extents (tall at the head, 6.2 wide only at the shoulders), not a rectangular void."
+  },
+  "wallThickness": {
+    "sideAtZ": [
+      [
+        2.0,
+        0.511
+      ],
+      [
+        5.0,
+        0.511
+      ],
+      [
+        7.0,
+        0.511
+      ]
+    ],
+    "back": 0.7,
+    "floor": 0.8,
+    "ceiling": 0.8
+  },
+  "sarcophagusFrame": {
+    "hingeBodySpaceBlender": [
+      0,
+      -3.4638,
+      0
+    ],
+    "bodyFrontY": -2.25
+  },
+  "vent": {
+    "heightMax": 1.7686,
+    "across": [
+      8.921,
+      8.941
+    ],
+    "openingDiameterMinMean": [
+      3.643,
+      4.334
+    ]
+  }
+}

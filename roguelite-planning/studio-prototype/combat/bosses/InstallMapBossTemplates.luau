@@ -242,7 +242,8 @@ local function imported(id, def, T)
 				flattenSurface(part)
 				part.RenderFidelity = Enum.RenderFidelity.Precise
 				-- Glow sections may be split into pieces (Dragon_LavaGlow_Front / _Rear).
-				if part.Name:match("_EyeGlow$") or part.Name:match("_EyeGlow_") or part.Name:match("_LavaGlow$") or part.Name:match("_LavaGlow_") then
+				-- (Round 10: the DJ Crab's LEDs and button are one DJCrab_Glow section.)
+				if part.Name:match("_EyeGlow$") or part.Name:match("_EyeGlow_") or part.Name:match("_LavaGlow$") or part.Name:match("_LavaGlow_") or part.Name:match("_Glow$") then
 					part.Material = Enum.Material.Neon
 					part.TextureID = ""
 					part.Color = def.glowColor or Color3.fromRGB(255, 200, 120)

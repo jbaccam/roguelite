@@ -1,0 +1,515 @@
+{
+  "generator": "round10-props/build_round10_props.py",
+  "blender": "5.2.1 LTS",
+  "units": "studs, template scale 1, import 1:1",
+  "axes": {
+    "blender": "+Z up, coffin open face toward -Y",
+    "fbx": "axis_forward -Z, axis_up Y",
+    "roblox": "Blender (x, y, z) -> Roblox (x, z, -y); Blender -Y front == Roblox -Z front"
+  },
+  "referenceSheetsSha256": {
+    "03-sarcophagus-assembly.png": "e81d2885a853a85e68bae8d673f9744f5f7a2cbd4a252115c7d76bd5f6c9e32e",
+    "06-volcanic-vent.png": "22e7fa4b0a8ac0121d25ea12e2a04014ec294d78a99508540eca05fd0196691c",
+    "07-small-volcanic-debris.png": "49e280fd8395afe74066153a31fbe926a3d9907eaf39c55e1228d10b921ab7cc",
+    "08-sarcophagus-body.png": "9770b403b9673a8211d88afb26aefdddb86ffe946091527d95fcd2a869de5e45",
+    "09-sarcophagus-lid.png": "5d9371f86e186281b4454feab1807de463ed8f29736e6fb48042d9f3cdcd7fd3",
+    "10-broken-tomb-pieces.png": "1646c2eb35d19fb6770147edd18eaa9359afefe485ac58ef44fddbdd1cdc19fd"
+  },
+  "atlases": {
+    "Sarcophagus_atlas.png": 1024,
+    "Volcanic_atlas.png": 512
+  },
+  "assets": {
+    "Sarcophagus.fbx": {
+      "meshes": {
+        "Sarcophagus_Body": {
+          "tris": 550,
+          "verts": 277,
+          "boundsMinBlender": [
+            -3.62006,
+            -2.25,
+            0.0
+          ],
+          "boundsMaxBlender": [
+            3.62006,
+            2.95,
+            11.0
+          ],
+          "sizeBlender": [
+            7.24013,
+            5.2,
+            11.0
+          ],
+          "originBlender": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "originRoblox": [
+            0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Sarcophagus_Lid": {
+          "tris": 2278,
+          "verts": 1141,
+          "boundsMinBlender": [
+            -3.62006,
+            0.0,
+            0.0
+          ],
+          "boundsMaxBlender": [
+            3.62006,
+            1.21385,
+            11.0
+          ],
+          "sizeBlender": [
+            7.24013,
+            1.21385,
+            11.0
+          ],
+          "originBlender": [
+            0.0,
+            -3.46385,
+            0.0
+          ],
+          "originRoblox": [
+            0.0,
+            0.0,
+            3.46385
+          ]
+        }
+      },
+      "revision": "2026-10-09 fix pass: taller anthropoid silhouette (11 tall), soft painterly texture, rounded bandage relief",
+      "frame": "Body origin = floor centre of the cavity footprint at ground level; both meshes are placed closed (identity transform of the FBX = assembled coffin).",
+      "cavity": {
+        "frontPlaneY": -2.25,
+        "backInnerY": 2.25,
+        "floorZ": 0.8,
+        "ceilingZ": 10.2,
+        "depth": 4.5,
+        "maxWidth": 6.24792040019543,
+        "height": 9.399999999999999,
+        "box9_4x6_2x4_2": "extents check, see validation-report.json"
+      },
+      "lid": {
+        "hingeLineBodySpaceBlender": [
+          0.0,
+          -3.46385,
+          0.0
+        ],
+        "hingeLineBodySpaceRoblox": [
+          0.0,
+          0.0,
+          3.46385
+        ],
+        "hingeAxis": "X (through the bottom front edge of the lid, z = 0)",
+        "fallsForward": "rotate about +X by +90 deg in Blender (top moves toward -Y); relief face ends face-down, underside up, lid resting on the ground",
+        "closedFit": "underside plane y = -2.250 == body front rim plane (gap 0, overlap 0)",
+        "slabThickness": 0.85,
+        "reliefDepthMax": 0.364
+      }
+    },
+    "SarcophagusBroken.fbx": {
+      "meshes": {
+        "SarcophagusBroken_Base": {
+          "tris": 436,
+          "verts": 220,
+          "boundsMinBlender": [
+            -2.63689,
+            -2.6,
+            -1.73531
+          ],
+          "boundsMaxBlender": [
+            2.63689,
+            2.6,
+            1.73531
+          ],
+          "sizeBlender": [
+            5.27377,
+            5.2,
+            3.47062
+          ],
+          "originBlender": [
+            -0.0124,
+            0.35,
+            1.73531
+          ],
+          "originRoblox": [
+            -0.0124,
+            1.73531,
+            -0.35
+          ],
+          "offsetBodySpaceBlender": [
+            -0.0124,
+            0.35,
+            1.73531
+          ],
+          "offsetBodySpaceRoblox": [
+            -0.0124,
+            1.73531,
+            -0.35
+          ]
+        },
+        "SarcophagusBroken_LeftWall": {
+          "tris": 514,
+          "verts": 259,
+          "boundsMinBlender": [
+            -1.48804,
+            -2.60022,
+            -3.59557
+          ],
+          "boundsMaxBlender": [
+            1.48804,
+            2.60022,
+            3.59557
+          ],
+          "sizeBlender": [
+            2.97608,
+            5.20044,
+            7.19115
+          ],
+          "originBlender": [
+            -2.13202,
+            0.34978,
+            7.40443
+          ],
+          "originRoblox": [
+            -2.13202,
+            7.40443,
+            -0.34978
+          ],
+          "offsetBodySpaceBlender": [
+            -2.13202,
+            0.34978,
+            7.40443
+          ],
+          "offsetBodySpaceRoblox": [
+            -2.13202,
+            7.40443,
+            -0.34978
+          ]
+        },
+        "SarcophagusBroken_RightWall": {
+          "tris": 544,
+          "verts": 274,
+          "boundsMinBlender": [
+            -1.00849,
+            -2.6,
+            -3.05578
+          ],
+          "boundsMaxBlender": [
+            1.00849,
+            2.6,
+            3.05578
+          ],
+          "sizeBlender": [
+            2.01698,
+            5.2,
+            6.11156
+          ],
+          "originBlender": [
+            2.61158,
+            0.35,
+            7.11348
+          ],
+          "originRoblox": [
+            2.61158,
+            7.11348,
+            -0.35
+          ],
+          "offsetBodySpaceBlender": [
+            2.61158,
+            0.35,
+            7.11348
+          ],
+          "offsetBodySpaceRoblox": [
+            2.61158,
+            7.11348,
+            -0.35
+          ]
+        },
+        "SarcophagusBroken_LidFragment": {
+          "tris": 1396,
+          "verts": 700,
+          "boundsMinBlender": [
+            -3.24739,
+            -0.60692,
+            -2.41252
+          ],
+          "boundsMaxBlender": [
+            3.24739,
+            0.60692,
+            2.41253
+          ],
+          "sizeBlender": [
+            6.49478,
+            1.21385,
+            4.82506
+          ],
+          "originBlender": [
+            -0.37268,
+            -2.85692,
+            8.58747
+          ],
+          "originRoblox": [
+            -0.37268,
+            8.58747,
+            2.85692
+          ],
+          "offsetBodySpaceBlender": [
+            -0.37268,
+            -2.85692,
+            8.58747
+          ],
+          "offsetBodySpaceRoblox": [
+            -0.37268,
+            8.58747,
+            2.85692
+          ]
+        }
+      },
+      "frame": "Each mesh origin = its bounding-box centre; the object location in the FBX is that centre expressed in the intact coffin's body-origin frame, so importing the FBX with an identity transform at the coffin body origin reproduces the intact positions (the missing centre-back is the dust that was removed).",
+      "fractureLog": {
+        "SarcophagusBroken_Base": {
+          "dropped_islands": 0,
+          "areas": []
+        },
+        "SarcophagusBroken_LeftWall": {
+          "dropped_islands": 0,
+          "areas": []
+        },
+        "SarcophagusBroken_RightWall": {
+          "dropped_islands": 0,
+          "areas": []
+        },
+        "SarcophagusBroken_LidFragment": {
+          "dropped_islands": 0,
+          "areas": []
+        }
+      }
+    },
+    "VolcanicVent.fbx": {
+      "meshes": {
+        "Vent_Rock": {
+          "tris": 1252,
+          "verts": 692,
+          "boundsMinBlender": [
+            -4.71346,
+            -4.45925,
+            -0.12
+          ],
+          "boundsMaxBlender": [
+            4.20753,
+            4.48194,
+            1.76863
+          ],
+          "sizeBlender": [
+            8.92099,
+            8.94119,
+            1.88863
+          ],
+          "originBlender": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "originRoblox": [
+            0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Vent_Glow": {
+          "tris": 260,
+          "verts": 132,
+          "boundsMinBlender": [
+            -3.52964,
+            -3.38587,
+            -0.06
+          ],
+          "boundsMaxBlender": [
+            3.67656,
+            3.60297,
+            0.41452
+          ],
+          "sizeBlender": [
+            7.2062,
+            6.98884,
+            0.47452
+          ],
+          "originBlender": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "originRoblox": [
+            0.0,
+            0.0,
+            -0.0
+          ]
+        }
+      },
+      "frame": "Origin = ground centre of the opening (0,0,0). Vent_Glow is the lava (Neon in Studio), Vent_Rock the basalt.",
+      "heightMax": 1.7686,
+      "acrossX": 8.921,
+      "acrossY": 8.941,
+      "openingDiameterDesign": 3.5,
+      "uvFaceSplit": {
+        "0": 642,
+        "1": 338
+      }
+    },
+    "VolcanicDebris.fbx": {
+      "meshes": {
+        "Debris_1": {
+          "tris": 64,
+          "verts": 34,
+          "boundsMinBlender": [
+            -1.98884,
+            -0.16616,
+            -0.21643
+          ],
+          "boundsMaxBlender": [
+            -1.61116,
+            0.16616,
+            0.21643
+          ],
+          "sizeBlender": [
+            0.37769,
+            0.33233,
+            0.43286
+          ],
+          "originBlender": [
+            -1.8,
+            0.0,
+            0.0
+          ],
+          "originRoblox": [
+            -1.8,
+            0.0,
+            -0.0
+          ]
+        },
+        "Debris_2": {
+          "tris": 80,
+          "verts": 42,
+          "boundsMinBlender": [
+            -1.10264,
+            -0.14803,
+            -0.15263
+          ],
+          "boundsMaxBlender": [
+            -0.69736,
+            0.14803,
+            0.15263
+          ],
+          "sizeBlender": [
+            0.40528,
+            0.29605,
+            0.30525
+          ],
+          "originBlender": [
+            -0.9,
+            0.0,
+            0.0
+          ],
+          "originRoblox": [
+            -0.9,
+            0.0,
+            -0.0
+          ]
+        },
+        "Debris_3": {
+          "tris": 80,
+          "verts": 42,
+          "boundsMinBlender": [
+            -0.1913,
+            -0.17728,
+            -0.18595
+          ],
+          "boundsMaxBlender": [
+            0.1913,
+            0.17728,
+            0.18595
+          ],
+          "sizeBlender": [
+            0.3826,
+            0.35456,
+            0.3719
+          ],
+          "originBlender": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "originRoblox": [
+            0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Debris_4": {
+          "tris": 44,
+          "verts": 24,
+          "boundsMinBlender": [
+            0.66842,
+            -0.09836,
+            -0.09745
+          ],
+          "boundsMaxBlender": [
+            1.13158,
+            0.09836,
+            0.09745
+          ],
+          "sizeBlender": [
+            0.46315,
+            0.19671,
+            0.19489
+          ],
+          "originBlender": [
+            0.9,
+            0.0,
+            0.0
+          ],
+          "originRoblox": [
+            0.9,
+            0.0,
+            -0.0
+          ]
+        },
+        "Debris_5": {
+          "tris": 68,
+          "verts": 36,
+          "boundsMinBlender": [
+            -0.21904,
+            -0.17619,
+            -0.06362
+          ],
+          "boundsMaxBlender": [
+            0.21904,
+            0.17619,
+            0.06362
+          ],
+          "sizeBlender": [
+            0.43809,
+            0.35238,
+            0.12723
+          ],
+          "originBlender": [
+            1.8,
+            0.0,
+            0.0
+          ],
+          "originRoblox": [
+            1.8,
+            0.0,
+            -0.0
+          ]
+        }
+      },
+      "frame": "Five separate fragments, origin = each fragment's bounding-box centre; object locations are only a layout row."
+    }
+  }
+}
