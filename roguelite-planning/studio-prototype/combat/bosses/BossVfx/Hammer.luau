@@ -7,8 +7,10 @@
 --   each of the unit's lines (one, or the enraged fan of 3). Each burst heaves up out of the ground at
 --   unit.impact + d/travel (the instant the server hit-tests that distance), knee-high by the hammer
 --   (~1.9 studs) up to tall rocky heaps at the far end (~7.7 studs at 83), pops with an overshoot,
---   holds, cracks and sinks back with a dust puff. RW below holds the pure helpers
---   (BossVfxHammerTests); H.rubbleWave(ctx, lines, travel, startAge, key) is the same effect by hand.
+--   holds, cracks and sinks back with a dust puff. Each wave keeps its own server clock (unit.startTime,
+--   else the attack's start + unit.impact), so it runs on after his attack ends, as the server's front
+--   does; only his death or removal, a pause or a reset (RW.stops) end it early. RW below holds the pure
+--   helpers (BossVfxHammerTests); H.rubbleWave(ctx, lines, travel, startAge, key) is the same by hand.
 -- Slams (the Slam, a combo's circle phase, the charge's finish): dust gathers on the raised head and
 --   a whoosh on the downswing; then a white snap ring out to the hit edge, a slower dust ring, an
 --   impact star, dust and dirt thrown up, EarthCracks for ~2.5 s, and a shake that fades with distance.
@@ -36,6 +38,9 @@ RW.NEAR,RW.FAR,RW.CURVE=1.7,8.1,1.15 -- peak height by the hammer and at the far
 RW.FIRST,RW.LAST=3,2 -- the first burst 3 studs out, the last 2 short of the end
 RW.SPACING,RW.FAN_SPACING=5,5.6 -- studs between bursts: one line 17 bursts at 85, a fan line 15
 RW.RISE,RW.SETTLE,RW.CRACK=.13,.24,.07 -- pop (to a 10% overshoot), settle, crack jolt (seconds)
+RW.YAW=8 -- degrees a heap turns off its line at most
+-- Workspace containers the ground ray never lands on (a heap must not sit on a zombie, pet or drop).
+RW.EXCLUDE={'RogueliteEnemies','RoguelitePets','RogueliteTurrets','RogueliteChickens','RogueliteHeartDrops','RogueliteShardDrops'}
 RW.DIRT={Color3.fromRGB(124,92,60),Color3.fromRGB(104,76,52),Color3.fromRGB(146,110,74)}
 RW.ROCK={Color3.fromRGB(128,126,120),Color3.fromRGB(104,103,100),Color3.fromRGB(152,148,140)}
 RW.DARK=Color3.fromRGB(86,62,42)
@@ -59,7 +64,7 @@ function RW.schedule(length,travel,startAge,fan,seed)
   local d=n>1 and RW.FIRST+step*(i-1) or length*.5
   if i>1 and i<n then d+=(rng:NextNumber()*2-1)*jitter end
   list[i]={index=i,d=d,at=startAge+d/travel,h=RW.height(d,length)*(.95+.1*rng:NextNumber()),f=math.clamp(d/length,0,1),
-   seed=rng:NextInteger(1,2^30),sign=i%2==0 and 1 or -1,yaw=math.rad(rng:NextNumber(-14,14)),slack=rng:NextNumber()}
+   seed=rng:NextInteger(1,2^30),sign=i%2==0 and 1 or -1,yaw=math.rad(rng:NextNumber(-RW.YAW,RW.YAW)),slack=rng:NextNumber()}
  end
  return list
 end
@@ -93,10 +98,19 @@ function RW.bits(h,fan,main,quality)
  if fan and not main then peak=0 end
  return peak,crack
 end
+-- Most debris bits in the air at once for a wave (Low 10, else 24).
+function RW.maxBits(quality) return quality<.5 and 10 or 24 end
+-- Whether a wave stops early: its boss gone (removed, dying, at 0 health) or the run paused or reset
+-- (ZombiesEnabled off). s: {parented, dying, health (nil without a Humanoid), paused, zombies}. The
+-- attack ending is not a reason: the server's front runs on to the end of its line.
+function RW.stops(s)
+ return not s.parented or s.dying==true or (type(s.health)=='number' and s.health<=0) or s.paused==true or s.zombies~=true
+end
 -- One heap at peak height h, in the burst's frame (ground point, Y up, -Z the way the wave travels):
--- a list of {name, color, size, rot, pos, crack, top, bottom}. A rock slab leaning forward makes the
--- peak, on a wide dirt mound; side slabs lean out, and bigger heaps add a dirt lip in front and a clod
--- behind. Each chunk reaches its `top` and is sunk past its foot, so none floats; none leaves halfW.
+-- a list of {name, color, size, rot, pos, crack, top, bottom, hx, hz (half-extents across, along)}. A
+-- rock slab leaning forward makes the peak, on a wide dirt mound; side slabs lean out, and bigger heaps
+-- add a dirt lip in front and a clod behind. Each chunk reaches its `top` and is sunk past its foot, so
+-- none floats; none leaves halfW (RW.heap also fits the heap's turn off its line).
 function RW.layout(h,halfW,cap,rng)
  local r=RW.radius(h,halfW);local list={}
  local function roll(a,b) return a+(b-a)*rng:NextNumber() end
@@ -106,11 +120,12 @@ function RW.layout(h,halfW,cap,rng)
   -- overshoot never lifts a foot out), then stand it on its top. A chunk turned wider than the lane
   -- is narrowed; one off to the side is moved in.
   local R,U,L=rot.RightVector,rot.UpVector,rot.LookVector
-  local bury=.2+.2*top+.1*h;local sy,v,hx
+  local bury=.2+.2*top+.1*h;local sy,v,hx,hz
   local function measure()
    sy=math.max(.3,(top+bury-math.abs(R.Y)*sx-math.abs(L.Y)*sz)/math.max(.25,math.abs(U.Y)))
    v=math.abs(R.Y)*sx+math.abs(U.Y)*sy+math.abs(L.Y)*sz
    hx=(math.abs(R.X)*sx+math.abs(U.X)*sy+math.abs(L.X)*sz)/2
+   hz=(math.abs(R.Z)*sx+math.abs(U.Z)*sy+math.abs(L.Z)*sz)/2
   end
   measure()
   for _=1,4 do
@@ -119,7 +134,7 @@ function RW.layout(h,halfW,cap,rng)
   end
   if math.abs(x)+hx>halfW then x=math.sign(x)*math.max(0,halfW-hx) end
   table.insert(list,{name=name,color=color,size=Vector3.new(sx,sy,sz),rot=rot,pos=Vector3.new(x,top-v/2,z),
-   crack=Vector2.new(math.rad(roll(-7,7)),math.rad(roll(-7,7))),top=top,bottom=top-v,hx=hx})
+   crack=Vector2.new(math.rad(roll(-7,7)),math.rad(roll(-7,7))),top=top,bottom=top-v,hx=hx,hz=hz})
  end
  local lean=math.rad(roll(10,20))
  -- The peak: a rock slab leaning forward, set a little back so its top is over the middle.
@@ -146,6 +161,25 @@ function RW.layout(h,halfW,cap,rng)
  end
  return list
 end
+-- How far a heap reaches across its line: its chunks turned `yaw` off the line and set `side` across
+-- it (an upper bound from each chunk's half-extents).
+function RW.reach(specs,yaw,side)
+ local c,s=math.abs(math.cos(yaw)),math.abs(math.sin(yaw));local m=0
+ for _,sp in specs do m=math.max(m,math.abs(side)+(math.abs(sp.pos.X)+sp.hx)*c+(math.abs(sp.pos.Z)+sp.hz)*s) end
+ return m
+end
+-- A burst's heap (b from RW.schedule, b.side its offset): RW.layout narrowed until, turned b.yaw and
+-- set b.side across, no chunk reaches past halfW from the line, so it stays inside the warned lane.
+function RW.heap(b,halfW,cap)
+ local hw=halfW-math.abs(b.side);local specs
+ for _=1,5 do
+  specs=RW.layout(b.h,hw,cap,Random.new(b.seed))
+  local over=RW.reach(specs,b.yaw,b.side)-halfW
+  if over<=0 then break end
+  hw=math.max(.5,hw-over-.02)
+ end
+ return specs
+end
 -- A chunk's frame: `base` is the burst frame (moved down while it is buried), scale its pop, k its crack.
 function RW.frameOf(spec,base,scale,k)
  k=k or 0;return base*CFrame.new(spec.pos*(scale or 1))*CFrame.Angles(spec.crack.X*k,0,spec.crack.Y*k)*spec.rot
@@ -153,8 +187,8 @@ end
 -- A new chunk (unparented): the kit rock `name` from templates (BossVfxAssets) with its texture and
 -- children cleared, matte; a plain block when the template is missing.
 function RW.chunk(templates,name)
- local t=templates and templates:FindFirstChild(name);local p
- if t and t:IsA('MeshPart') then p=t:Clone();p:ClearAllChildren();p.TextureID=''
+ local t=templates and templates:FindFirstChild(name);local p=t and t:IsA('MeshPart') and t:Clone() or nil -- nil: not Archivable
+ if p then p:ClearAllChildren();p.TextureID=''
  else p=Instance.new('Part');p.TopSurface=Enum.SurfaceType.Smooth;p.BottomSurface=Enum.SurfaceType.Smooth end
  p.Name='BossVfxRubble';p.Anchored=true;p.CanCollide=false;p.CanQuery=false;p.CanTouch=false;p.CastShadow=false
  p.Material=Enum.Material.Plastic;p.Reflectance=0;p.Transparency=0
@@ -379,54 +413,61 @@ local function give(p,name)
  if p.Parent==C.folder() and pooled<POOL_MAX then p.Parent=nil;pool[name]=pool[name] or {};table.insert(pool[name],p);pooled+=1
  else p:Destroy() end
 end
--- Dust and thrown dirt for 4 heap sizes: one host per size, moved to each burst before it emits
--- (particles stay where they were born), not a host per burst.
-local function dustHost(W,band)
- local e=W.hosts[band];if e then return e end
+-- Dust and thrown dirt for 4 heap sizes on each line: one host per size and line (at most 12), moved
+-- to each burst before it emits (particles stay where they were born), not a host per burst. Per line,
+-- so the fan's three same-frame bursts don't all emit from the last one's spot.
+local function dustHost(W,b)
+ local band=math.clamp(math.floor(b.f*4)+1,1,4);local key=(b.line-1)*4+band
+ local e=W.hosts[key];if e then return e end
  local r=RW.radius(RW.height((band-.5)/4*W.length,W.length),W.halfW);local s=.7+.15*band
  local host=C.part('Host',Vector3.new(r*1.5,.2,r*1.5),CFrame.new(W.mid),K.White,1)
  e={host=host,
   dust=C.fx(host,'DustPuff',{Rate=0,Shape=Enum.ParticleEmitterShape.Box,EmissionDirection=Enum.NormalId.Top,Speed={3,7},SpreadAngle=75,Lifetime={.6,.95},Drag=2.5,Size=ns({0,r*.5},{1,r*1.15}),Color=DUST,Transparency=ns({0,.25},{.6,.5},{1,1}),Acceleration=Vector3.new(0,1.5,0),LightInfluence=.8,Rotation={0,360},RotSpeed={-40,40}}),
   dirt=C.fx(host,'SandSpray',{Rate=0,Shape=Enum.ParticleEmitterShape.Box,EmissionDirection=Enum.NormalId.Top,Speed={8+band*2,14+band*3},SpreadAngle=35,Lifetime={.4,.65},Size=ns({0,s},{1,s*2.2}),Color=DIRT,Transparency=ns({0,0},{.7,.2},{1,1}),Acceleration=Vector3.new(0,-50,0),Drag=.8,Rotation={-40,40},LightInfluence=.8})}
- W.hosts[band]=e;return e
+ W.hosts[key]=e;return e
 end
 local function puff(W,b,dust,dirt)
- local e=dustHost(W,math.clamp(math.floor(b.f*4)+1,1,4))
+ local e=dustHost(W,b)
  e.host.CFrame=CFrame.new(b.ground+up*.3)*CFrame.Angles(0,b.yaw,0)
  if e.dust and dust>0 then e.dust:Emit(dust) end;if e.dirt and dirt>0 then e.dirt:Emit(dirt) end
 end
 -- Small bits knocked off the top of a heap: they arc out sideways and ahead, bounce once and shrink.
-local function shed(W,b,n,age)
+-- t: the wave's clock.
+local function shed(W,b,n,t)
  for _=1,n do
   if #W.bits>=W.maxBits then return end
-  local name=RW.MESHES.bit[math.random(#RW.MESHES.bit)];local t=C.template(name)
-  local base=t and t.Size or Vector3.new(1,.8,.6);local a=.55+.55*math.random()+.4*b.f
+  local name=RW.MESHES.bit[math.random(#RW.MESHES.bit)];local tpl=C.template(name)
+  local base=tpl and tpl.Size or Vector3.new(1,.8,.6);local a=.55+.55*math.random()+.4*b.f
   local size=base/math.max(base.X,base.Y,base.Z)*a
   local s=math.random()<.5 and -1 or 1;local cf=b.frame
   local out=cf.RightVector*s*(.6+.6*math.random())+cf.LookVector*(.3+.5*math.random())
   local pos=cf*Vector3.new(s*b.r*.3,b.h*(.65+.2*math.random()),0)
   local rot=CFrame.Angles(math.random()*6.28,math.random()*6.28,math.random()*6.28)
   local p=take(name);p.Color=math.random()<.5 and RW.ROCK[math.random(#RW.ROCK)] or RW.DIRT[math.random(#RW.DIRT)];p.Size=size;p.CFrame=CFrame.new(pos)*rot;p.Parent=C.folder()
-  table.insert(W.bits,{part=p,name=name,pos=pos,v=out.Unit*(5+4*math.random())+up*(7+5*math.random()),rot=rot,size=size,half=a*.3,g=b.ground.Y,born=age,
+  table.insert(W.bits,{part=p,name=name,pos=pos,v=out.Unit*(5+4*math.random())+up*(7+5*math.random()),rot=rot,size=size,half=a*.3,g=b.ground.Y,born=t,
    spin=Vector3.new(math.random()-.5,math.random()-.5,math.random()-.5)*14})
  end
 end
--- A burst heaves up: its ground (a short ray, so slopes don't float or bury it), its heap from the
--- pool at the pose for `since`, a torn-earth plate, and when fresh its dust, dirt, shake and crunch.
+-- A burst heaves up: its ground (a short ray from 4 above the line's ground to 6 below, past enemies,
+-- pets, drops and players), its heap from the pool at the pose for `since`, a torn-earth plate, and
+-- when fresh its dust, dirt, shake and crunch. Where the ground drops away more than 6 studs it is
+-- skipped rather than left floating (a miss before any burst found ground means the floor can't be
+-- hit at all: then the line's own height).
 local function spawn(W,b,since)
  local p=b.origin+b.dir*b.d+b.dir:Cross(up)*b.side
  if not C.near(p,b.h+6) then b.done=true;return end
  local hit=workspace:Raycast(Vector3.new(p.X,b.origin.Y+4,p.Z),Vector3.new(0,-10,0),W.params)
+ if not hit and W.groundSeen then b.done=true;return end
+ W.groundSeen=W.groundSeen or hit~=nil
  local g=Vector3.new(p.X,hit and hit.Position.Y or b.origin.Y,p.Z)
  b.ground=g;b.frame=CFrame.lookAt(g,g+b.dir)*CFrame.Angles(0,b.yaw,0)
- local halfW=b.halfW-math.abs(b.side);b.r=RW.radius(b.h,halfW)
- b.specs=RW.layout(b.h,halfW,W.cap,Random.new(b.seed))
+ b.specs=RW.heap(b,b.halfW,W.cap);b.r=RW.radius(b.h,b.halfW-math.abs(b.side))
  local top=0;for _,s in b.specs do top=math.max(top,s.top) end;b.depth=top*1.12+.3
  local lift,scale,crack=RW.pose(since,b.f);local base=b.frame*CFrame.new(0,-(1-lift)*b.depth,0)
  b.parts,b.scale={},scale
  for i,s in b.specs do local part=RW.place(take(s.name),s,base,scale,crack);part.Parent=C.folder();b.parts[i]=part end
  if not W.low or (b.index%2==1 and (b.main or not W.fan)) then
-  local plate,set=C.plate(g+up*.03,'ScorchMark',b.r*2.5,RW.DARK,nil,false);if plate then b.plate,b.setPlate=plate,set;set(1) end
+  local plate,set=C.plate(g+up*.03,'ScorchMark',b.r*2.5,RW.DARK,nil,false);if plate then b.plate,b.setPlate,b.plateA=plate,set,1;set(1) end
  end
  if since<.15 then
   puff(W,b,2+math.floor(b.f*2.5+.5),3+math.floor(b.f*4));C.shake(g,.16+.45*b.f,.15)
@@ -435,15 +476,20 @@ local function spawn(W,b,since)
   if b.main and b.f>=.8 then C.cue('hammer_thud',g,.4,.6) end
  end
 end
+local function release(b)
+ if not b.parts then return end
+ for i,s in b.specs do if b.parts[i] then give(b.parts[i],s.name) end end
+ b.parts=nil
+end
 -- One frame of a standing burst: its pose (or, stopped, a 0.3 s sink), moved in one BulkMoveTo; the
--- debris, crack and sink puff as it passes them. A holding heap isn't touched.
-local function stepBurst(W,b,age,since,parts,cfs)
+-- debris, crack and sink puff as it passes them. A holding heap isn't touched. t: the wave's clock.
+local function stepBurst(W,b,t,since,parts,cfs)
  local lift,scale,crack,phase
  if W.stopAt then
   b.stopLift=b.stopLift or b.lift or 0
-  local k=math.clamp((age-W.stopAt)/.3,0,1);lift,scale,crack,phase=b.stopLift*(1-k*k),b.scale,b.crack or 0,k>=1 and 'gone' or 'stop'
+  local k=math.clamp((t-W.stopAt)/.3,0,1);lift,scale,crack,phase=b.stopLift*(1-k*k),b.scale,b.crack or 0,k>=1 and 'gone' or 'stop'
  else lift,scale,crack,phase=RW.pose(since,b.f) end
- if phase=='gone' then for i,s in b.specs do give(b.parts[i],s.name) end;b.parts=nil;b.released=true;return end
+ if phase=='gone' then release(b);b.released=true;return end
  b.lift,b.crack=lift,crack
  if phase=='hold' and b.still then return end
  b.still=phase=='hold'
@@ -453,37 +499,43 @@ local function stepBurst(W,b,age,since,parts,cfs)
  if W.stopAt then return end
  -- Each moment once, and only near when it happens (a late catch-up skips what it missed).
  local hold=RW.times(b.f)
- if not b.peaked and since>=RW.RISE then b.peaked=true;if since<RW.RISE+.2 then shed(W,b,b.peakBits,age) end end
+ if not b.peaked and since>=RW.RISE then b.peaked=true;if since<RW.RISE+.2 then shed(W,b,b.peakBits,t) end end
  if not b.cracked and (phase=='crack' or phase=='sink') then
   b.cracked=true
   if since<hold+.2 then
-   shed(W,b,b.crackBits,age)
+   shed(W,b,b.crackBits,t)
    if b.main and b.last then C.cue('ice_wave',b.ground,.45,1.1) end -- the far heaps come down
   end
  end
  if not b.sinking and phase=='sink' then b.sinking=true;if since<hold+RW.CRACK+.25 then puff(W,b,2+math.floor(b.f*2+.5),0) end end
 end
-local function ended(ctx,W,age)
- local npc=ctx.npc
- if not npc.Parent or npc:GetAttribute('BossDeathStart') or combat:GetAttribute('RunPaused')==true then return true end
- local h=npc:FindFirstChildOfClass('Humanoid');if h and h.Health<=0 then return true end
- return age<W.frontEnd and not C.live(ctx)
+-- RW.stops for this boss now: only his own state and the run's pause or reset, never the attack
+-- window (a wave runs on after his attack ends, as the server's front does).
+local function ended(ctx)
+ local npc=ctx.npc;local h=npc:FindFirstChildOfClass('Humanoid')
+ return RW.stops({parented=npc.Parent~=nil,dying=npc:GetAttribute('BossDeathStart')~=nil,health=h and h.Health or nil,
+  paused=combat:GetAttribute('RunPaused')==true,zombies=combat:GetAttribute('ZombiesEnabled')==true})
 end
 -- The controller. lines: the wave's line shapes ({kind='line', origin (on the ground), direction, length,
 -- width}, decoded or as MapBossAttackData encodes them), in the frame the boss has now; one, or the
 -- enraged fan (the middle one carries the sounds). travel: studs/s (nil: 55). startAge: the attack-clock
--- time the front leaves each origin (the wave's impact). key: once per attack and key.
-local function rubbleWave(ctx,lines,travel,startAge,key)
+-- time the front leaves each origin (the wave's impact). key: once per attack and key. t0 (optional):
+-- that moment as a server time (workspace:GetServerTimeNow()); without it, ctx.start + startAge. The
+-- wave keeps its own clock from there, so it outlives the attack.
+local function rubbleWave(ctx,lines,travel,startAge,key,t0)
  key=key or 'wave';ctx.hammerRubble=ctx.hammerRubble or {}
- if ctx.hammerRubble[key] or type(lines)~='table' or #lines==0 or type(startAge)~='number' then return end
+ if type(t0)~='number' then t0=type(startAge)=='number' and type(ctx.start)=='number' and ctx.start+startAge or nil end
+ if ctx.hammerRubble[key] or type(lines)~='table' or #lines==0 or not t0 then return end
  ctx.hammerRubble[key]=true
  travel=type(travel)=='number' and travel>0 and travel or RW.TRAVEL
  local q=Q.get().effects;local fan=#lines>1;local main=math.ceil(#lines/2)
- local W={bursts={},bits={},hosts={},travel=travel,start=startAge,fan=fan,low=q<.5,
-  cap=RW.chunkCap(fan,q),maxBits=q<.5 and 10 or 24,length=0,halfW=RW.WIDTH/2,frontEnd=startAge}
- local exclude={C.folder(),ctx.npc};for _,pl in Players:GetPlayers() do if pl.Character then table.insert(exclude,pl.Character) end end
+ local W={bursts={},bits={},hosts={},travel=travel,t0=t0,fan=fan,low=q<.5,cap=RW.chunkCap(fan,q),maxBits=RW.maxBits(q),length=0,halfW=RW.WIDTH/2,frontEnd=0}
+ -- The ground ray's exclusions, once per wave.
+ local exclude={C.folder(),ctx.npc}
+ for _,name in RW.EXCLUDE do local f=workspace:FindFirstChild(name);if f then table.insert(exclude,f) end end
+ for _,pl in Players:GetPlayers() do if pl.Character then table.insert(exclude,pl.Character) end end
  W.params=RaycastParams.new();W.params.FilterType=Enum.RaycastFilterType.Exclude;W.params.IgnoreWater=true;W.params.FilterDescendantsInstances=exclude
- local seed=math.random(1,2^24);local lastGone=startAge
+ local seed=math.random(1,2^24);local lastGone=0
  for li,line in lines do
   if typeof(line.origin)~='Vector3' then line=C.Shapes.decode(line) end
   local dir=typeof(line.direction)=='Vector3' and C.flat(line.direction) or Vector3.zero;local length=line.length or RW.LENGTH
@@ -492,11 +544,11 @@ local function rubbleWave(ctx,lines,travel,startAge,key)
   -- On the ground the server measured it from (a charge's finish can be off his start's height).
   local origin=line.origin;local halfW=(line.width or RW.WIDTH)/2
   if li==main or W.length==0 then W.length,W.halfW,W.mid,W.mainOrigin,W.mainDir=length,halfW,origin+dir*length/2,origin,dir end
-  W.frontEnd=math.max(W.frontEnd,startAge+length/travel)
+  W.frontEnd=math.max(W.frontEnd,length/travel)
   if C.near(origin+dir*length/2,length/2+10) then
-   local list=RW.schedule(length,travel,startAge,fan,seed+li*7919)
+   local list=RW.schedule(length,travel,0,fan,seed+li*7919)
    for _,b in list do
-    b.origin,b.dir,b.halfW,b.main,b.last=origin,dir,halfW,li==main,b.index==#list
+    b.line,b.origin,b.dir,b.halfW,b.main,b.last=li,origin,dir,halfW,li==main,b.index==#list
     b.side=RW.offset(b,halfW);local _,gone=RW.times(b.f);b.gone=gone
     b.peakBits,b.crackBits=RW.bits(b.h,fan,b.main,q)
     lastGone=math.max(lastGone,b.at+gone)
@@ -506,32 +558,33 @@ local function rubbleWave(ctx,lines,travel,startAge,key)
  end
  if #W.bursts==0 then return end
  W.lingerUntil=lastGone+1.1 -- the last sink puff's dust
- local age0=C.age(ctx)
+ local t1=workspace:GetServerTimeNow()-W.t0
  -- A rumble that rides the middle line's front until it reaches the end.
- if age0<W.frontEnd-.2 then W.rumble,W.rumbleHost=C.cue('stone_rumble',W.mainOrigin+up*2,.5,1.2,true) end
- K.animate(math.max(.5,W.lingerUntil-age0)+1,function()
-  local age=C.age(ctx);local dt=math.clamp(age-(W.lastAge or age),0,.05);W.lastAge=age
-  if not W.stopAt and ended(ctx,W,age) then W.stopAt=age end
+ if t1<W.frontEnd-.2 then W.rumble,W.rumbleHost=C.cue('stone_rumble',W.mainOrigin+up*2,.5,1.2,true) end
+ K.animate(math.max(.5,W.lingerUntil-t1)+1,function()
+  local t=workspace:GetServerTimeNow()-W.t0;local dt=math.clamp(t-(W.lastT or t),0,.05);W.lastT=t
+  if not W.stopAt and ended(ctx) then W.stopAt=t end
   local parts,cfs,busy={},{},false
   for _,b in W.bursts do
    if b.done then continue end
-   local since=age-b.at
+   local since=t-b.at
    if b.parts==nil and not b.released then
     if W.stopAt or since>=b.gone then b.done=true;continue end
     if since<0 then busy=true;continue end
     spawn(W,b,since);if b.done then continue end
    end
-   if b.parts then stepBurst(W,b,age,since,parts,cfs) end
+   if b.parts then stepBurst(W,b,t,since,parts,cfs) end
    if b.plate then
     local a=since<.12 and 1-.6*math.max(0,since)/.12 or since<b.gone-.15 and .4 or .4+.6*smooth((since-b.gone+.15)/.75)
-    if W.stopAt then a=math.max(a,smooth((age-W.stopAt)/.4)) end
-    if a>=.999 and since>.12 then b.plate:Destroy();b.plate=nil else b.setPlate(a) end
+    if W.stopAt then a=math.max(a,smooth((t-W.stopAt)/.4)) end
+    if a>=.999 and since>.12 then b.plate:Destroy();b.plate=nil
+    elseif a~=b.plateA then b.plateA=a;b.setPlate(a) end
    end
    if b.released and not b.plate then b.done=true else busy=true end
   end
   for i=#W.bits,1,-1 do
-   local c=W.bits[i];local t=age-c.born
-   if t>=1.1 then give(c.part,c.name);table.remove(W.bits,i)
+   local c=W.bits[i];local age=t-c.born
+   if age>=1.1 then give(c.part,c.name);table.remove(W.bits,i)
    else
     if not c.rest then
      c.v-=up*70*dt;c.pos+=c.v*dt;c.rot*=CFrame.Angles(c.spin.X*dt,c.spin.Y*dt,c.spin.Z*dt)
@@ -540,33 +593,33 @@ local function rubbleWave(ctx,lines,travel,startAge,key)
       c.pos=Vector3.new(c.pos.X,c.g+c.half,c.pos.Z)
      end
     end
-    if t>.8 then c.part.Size=c.size*math.max(.05,1-smooth((t-.8)/.3)) end
+    if age>.8 then c.part.Size=c.size*math.max(.05,1-smooth((age-.8)/.3)) end
     table.insert(parts,c.part);table.insert(cfs,CFrame.new(c.pos)*c.rot)
    end
   end
   if #parts>0 then workspace:BulkMoveTo(parts,cfs,Enum.BulkMoveMode.FireCFrameChanged) end
   if W.rumble then
-   if W.stopAt or age>=W.frontEnd+.15 then C.stopSound(W.rumble,W.rumbleHost,.35);W.rumble=nil
-   else W.rumbleHost.CFrame=CFrame.new(W.mainOrigin+W.mainDir*math.clamp((age-W.start)*W.travel,0,W.length)+up*2) end
+   if W.stopAt or t>=W.frontEnd+.15 then C.stopSound(W.rumble,W.rumbleHost,.35);W.rumble=nil
+   elseif W.rumbleHost.Parent then W.rumbleHost.CFrame=CFrame.new(W.mainOrigin+W.mainDir*math.clamp(t*W.travel,0,W.length)+up*2) end
   end
-  return not busy and #W.bits==0 and age>=(W.stopAt and math.min(W.lingerUntil,W.stopAt+1) or W.lingerUntil)
+  return not busy and #W.bits==0 and t>=(W.stopAt and math.min(W.lingerUntil,W.stopAt+1) or W.lingerUntil)
  end,function()
   for _,b in W.bursts do
-   if b.parts then for i,s in b.specs do give(b.parts[i],s.name) end;b.parts=nil end
+   release(b)
    if b.plate then b.plate:Destroy();b.plate=nil end
   end
-  for _,c in W.bits do give(c.part,c.name) end;table.clear(W.bits)
+  for _,c in W.bits do if c.part then give(c.part,c.name) end end;table.clear(W.bits)
   for _,e in W.hosts do e.host:Destroy() end
   if W.rumble then C.stopSound(W.rumble,W.rumbleHost,.2);W.rumble=nil end
- end,'bossRubble',4)
+ end,'bossRubble',6) -- 6: Low quality (x.35) still keeps 2 waves at once
 end
 -- The wave hook (MapBossPresentation stepWaves): once per wave as its front leaves the impact point.
 -- unit = {key, def (length, width, travel), impact (attack clock), lines (decoded, turned to his frame
--- now / moved to where the charge ends), finish}: the Slam's and SpinSlam's wave phases and the charge's
--- finish waves alike.
+-- now / moved to where the charge ends), finish, startTime (optional: the server time the front left)}:
+-- the Slam's and SpinSlam's wave phases and the charge's finish waves alike.
 function H.wave(ctx,unit)
  if type(unit)~='table' then return end
- rubbleWave(ctx,unit.lines,unit.def and unit.def.travel,unit.impact,unit.key)
+ rubbleWave(ctx,unit.lines,unit.def and unit.def.travel,unit.impact,unit.key,unit.startTime)
 end
 H.rubble=RW
 H.rubbleWave=rubbleWave

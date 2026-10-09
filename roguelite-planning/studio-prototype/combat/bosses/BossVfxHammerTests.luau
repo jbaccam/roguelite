@@ -2,8 +2,10 @@
 -- through tools/RepoRequire.luau only: R.run('BossVfxHammerTests'). In Edit the effects module returns
 -- just its pure helpers ({rubble=RW}) before Common loads, so nothing is built or written to Studio.
 -- The timing checks use the server's own wave test (MapBossService X.waveHit): a burst rises exactly
--- when the server's front reaches its distance. The last two read the real Hammer def and the client's
--- line decoding (MapBossPresentation P.lines, which the `wave` hook's unit.lines come from).
+-- when the server's front reaches its distance. Others read the real Hammer def, the client's line
+-- decoding (MapBossPresentation P.lines, which the `wave` hook's unit.lines come from) and the
+-- BossVfxAssets mesh templates in this place. The chunk check builds a few unparented parts and
+-- destroys them; nothing is parented into the place.
 local RW=require({Name='BossVfxHammer'}).rubble
 local X=require({Name='MapBossService'})._shapes
 local S=require({Name='MapBossShapes'})
@@ -18,6 +20,17 @@ end
 local function near(a,b,eps) return math.abs(a-b)<(eps or 1e-9) end
 local F=Vector3.new(0,0,-1)
 local LINE={kind='line',origin=Vector3.new(10,4,20),direction=F,length=85,width=9}
+-- The server's front test between times t0 and t1 for a player standing at pos: X.waveCross (the
+-- front crossing a player between samples) and X.waveHit, whichever MapBossService has. Returns
+-- whether every one says hit, and whether any does.
+local function serverFront(line,pos,impact,t0,t1)
+ local def,at={travel=55},{impact=impact};local all,any,n=true,false,0
+ for _,f in {X.waveHit and function() return X.waveHit(def,at,line,pos,t0,t1) end,X.waveCross and function() return (X.waveCross(def,at,line,pos,nil,t0,t1)) end} do
+  if f then n+=1;local hit=f()==true;all=all and hit;any=any or hit end
+ end
+ assert(n>0,'MapBossService has neither waveHit nor waveCross')
+ return all,any
+end
 
 check('one 85-stud line: 15-20 bursts, 4-6 studs apart, from near the hammer to the far end',function()
  local list=RW.schedule(85,55,0,false,7)
@@ -49,14 +62,14 @@ check('a shorter line still builds from knee-high to tall at its own end',functi
  local list=RW.schedule(40,55,0,false,3)
  return list[1].h<2.1 and list[#list].h>7 and #list>=6 or (list[1].h..' .. '..list[#list].h)
 end)
-check('each burst rises exactly when the server\'s front reaches it (impact + d/travel, X.waveHit)',function()
+check('each burst rises exactly when the server\'s front reaches it (impact + d/travel, X.waveHit / X.waveCross)',function()
  local impact=1.7;local side=F:Cross(Vector3.yAxis)
  for _,fan in {false,true} do
   for _,b in RW.schedule(85,55,impact,fan,11) do
    if not near(b.at,impact+b.d/55) then return 'at '..b.at..' for d '..b.d end
    local p=LINE.origin+F*b.d+side*RW.offset(b,LINE.width/2)
-   if not X.waveHit({travel=55},{impact=impact},LINE,p,b.at-1e-6,b.at+1e-6) then return 'server front misses d '..b.d end
-   if X.waveHit({travel=55},{impact=impact},LINE,p,b.at+1e-6,b.at+5) then return 'server front reaches d '..b.d..' late' end
+   if not serverFront(LINE,p,impact,b.at-1e-6,b.at+1e-6) then return 'server front misses d '..b.d end
+   local _,late=serverFront(LINE,p,impact,b.at+1e-6,b.at+5);if late then return 'server front reaches d '..b.d..' late' end
   end
  end
  return true
@@ -82,28 +95,33 @@ check('pose is continuous through each change of phase (no pops)',function()
  end
  return true
 end)
--- Every chunk of a heap: its foot below the ground, its sideways reach (with the burst's offset)
--- inside the lane; the tallest reaching the burst height.
-local function heapOk(h,halfW,cap,seed,side)
- local list=RW.layout(h,halfW-math.abs(side),cap,Random.new(seed))
+-- Every chunk of a burst's heap as the game builds it (RW.heap): its foot below the ground through the
+-- pop's overshoot, the tallest at the burst height, and, turned b.yaw and set b.side across its line as
+-- in the game, no chunk past the lane's half-width (exact, from each chunk's turned box).
+local function heapOk(b,halfW,cap)
+ local list=RW.heap(b,halfW,cap)
  if #list<3 or #list>cap then return #list..' chunks (cap '..cap..')' end
+ if math.abs(b.yaw)>math.rad(RW.YAW)+1e-9 or RW.YAW>8 then return 'heap turned '..math.deg(b.yaw) end
  local top=0;for _,c in list do top=math.max(top,c.top) end
  local lift=.1*(top*1.12+.3) -- the pop's overshoot raises the heap by 10% of its depth (Hammer spawn)
+ local frame=CFrame.new(b.side,0,0)*CFrame.Angles(0,b.yaw,0) -- the heap in its line's frame, X across
  for _,c in list do
-  if c.bottom+lift>-.05 then return string.format('h %.1f: a chunk floats at the overshoot (bottom %.2f)',h,c.bottom) end
-  if math.abs(side)+math.abs(c.pos.X)+c.hx>halfW+1e-6 then return string.format('h %.1f: a chunk leaves the lane (%.2f)',h,math.abs(side)+math.abs(c.pos.X)+c.hx) end
-  if c.top>h*1.1 then return 'too tall '..c.top end
+  if c.bottom+lift>-.05 then return string.format('h %.1f: a chunk floats at the overshoot (bottom %.2f)',b.h,c.bottom) end
+  local cf=frame*CFrame.new(c.pos)*c.rot
+  local reach=math.abs(cf.Position.X)+(math.abs(cf.RightVector.X)*c.size.X+math.abs(cf.UpVector.X)*c.size.Y+math.abs(cf.LookVector.X)*c.size.Z)/2
+  if reach>halfW+1e-6 then return string.format('h %.1f: a chunk reaches %.3f across (lane %.1f)',b.h,reach,halfW) end
+  if c.top>b.h*1.1 then return 'too tall '..c.top end
  end
- if top<h*.97 then return string.format('h %.1f: tallest only %.2f',h,top) end
+ if top<b.h*.97 then return string.format('h %.1f: tallest only %.2f',b.h,top) end
  return true
 end
-check('heaps: every chunk sunk at its foot (through the pop\'s overshoot), inside the 9-stud lane, the tallest at the burst height',function()
+check('heaps: sunk at the foot through the pop\'s overshoot, the burst\'s height, and inside the 9-stud warned lane as turned and offset in game',function()
  for _,fan in {false,true} do
   for _,q in {.35,.65,1} do
    local cap=RW.chunkCap(fan,q)
-   for seed=1,12 do
+   for seed=1,16 do
     for _,b in RW.schedule(85,55,0,fan,seed) do
-     local ok=heapOk(b.h,4.5,cap,b.seed,RW.offset(b,4.5));if ok~=true then return ok end
+     b.side=RW.offset(b,4.5);local ok=heapOk(b,4.5,cap);if ok~=true then return ok end
     end
    end
   end
@@ -119,29 +137,77 @@ check('heaps: the same seed builds the same heap; bigger heaps get more chunks, 
  if #RW.layout(1.8,4.5,6,Random.new(1))~=3 or #RW.layout(8,4.5,6,Random.new(1))~=6 or #RW.layout(8,4.5,3,Random.new(1))~=3 then return 'counts at the ends' end
  return true
 end)
-check('heaps: kit rock meshes only, in flat dirt-brown and rock-grey tones',function()
- local names={};for _,list in RW.MESHES do for _,n in list do names[n]=true end end
+-- The mesh templates BossVfxAssets holds in this place (its MeshPart children, what RW.chunk clones).
+local function registered()
+ local combat=game:GetService('ReplicatedStorage'):FindFirstChild('RogueliteCombat')
+ local assets=combat and combat:FindFirstChild('BossVfxAssets')
+ local names={};if assets then for _,c in assets:GetChildren() do if c:IsA('MeshPart') then names[c.Name]=true end end end
+ return assets,names
+end
+check('heaps: only meshes BossVfxAssets holds as MeshPart templates, in flat dirt-brown and rock-grey tones',function()
+ local assets,names=registered();if not assets then return 'no ReplicatedStorage.RogueliteCombat.BossVfxAssets' end
+ for role,list in RW.MESHES do for _,n in list do if not names[n] then return role..' mesh '..n..' is not a BossVfxAssets template' end end end
  local tones={[RW.DARK]=true};for _,c in RW.DIRT do tones[c]=true end;for _,c in RW.ROCK do tones[c]=true end
  for seed=1,30 do
   for _,c in RW.layout(2+seed%7,4.5,6,Random.new(seed)) do
-   if not names[c.name] or not (c.name:match('^MoltenRock_') or c.name:match('^SandstoneRubble_') or c.name:match('^ShellChip_')) then return 'mesh '..c.name end
+   if not names[c.name] then return 'mesh '..c.name..' is not a BossVfxAssets template' end
    if not tones[c.color] then return 'colour '..tostring(c.color) end
   end
  end
  return true
 end)
-check('phone budget: the enraged fan stays under 200 chunks a wave at Full and 140 at Low, debris capped',function()
- for _,q in {.35,1} do
-  local total,bits=0,0
-  for li=1,3 do
-   for _,b in RW.schedule(85,55,0,true,li) do
-    total+=#RW.layout(b.h,4.5,RW.chunkCap(true,q),Random.new(b.seed))
-    local p,c=RW.bits(b.h,true,li==2,q);bits+=p+c
-   end
-  end
-  if total>(q<.5 and 140 or 200) then return q..': '..total..' chunks' end
-  if bits>(q<.5 and 12 or 30) then return q..': '..bits..' bits' end
+check('chunks: kit clones and every fallback come out anchored, non-colliding, unqueryable, untextured and childless; the template is untouched',function()
+ local made,fail={},nil
+ local function chunk(templates,name,label,mesh)
+  local p=RW.chunk(templates,name);table.insert(made,p)
+  if fail then return end
+  if p.Parent~=nil then fail=label..': parented'
+  elseif not p.Anchored or p.CanCollide or p.CanQuery or p.CanTouch or p.CastShadow then fail=label..': physics flags'
+  elseif #p:GetChildren()>0 then fail=label..': children left'
+  elseif p:IsA('MeshPart')~=mesh then fail=label..': '..p.ClassName
+  elseif p:IsA('MeshPart') and p.TextureID~='' then fail=label..': still textured'
+  elseif p.Material~=Enum.Material.Plastic or p.Name~='BossVfxRubble' then fail=label..': material or name' end
  end
+ local empty=Instance.new('Folder');local folder=Instance.new('Folder')
+ local mesh=Instance.new('MeshPart');mesh.Name='X';mesh.TextureID='rbxassetid://1';Instance.new('Decal').Parent=mesh;Instance.new('Attachment').Parent=mesh;mesh.Parent=folder
+ local plain=Instance.new('Part');plain.Name='Y';plain.Parent=folder
+ chunk(nil,'X','no templates',false);chunk(empty,'X','an empty folder',false);chunk(folder,'Y','not a MeshPart',false)
+ chunk(folder,'Z','a missing name',false);chunk(folder,'X','a MeshPart',true)
+ if not fail and (mesh.TextureID~='rbxassetid://1' or #mesh:GetChildren()~=2) then fail='the MeshPart template was changed' end
+ local assets=registered()
+ local kit=assets and assets:FindFirstChild('MoltenRock_C')
+ if kit then
+  local tex=kit:IsA('MeshPart') and kit.TextureID
+  chunk(assets,'MoltenRock_C','the kit MoltenRock_C',true)
+  if not fail and kit:IsA('MeshPart') and kit.TextureID~=tex then fail='the kit template was changed' end
+ end
+ for _,p in made do p:Destroy() end;empty:Destroy();folder:Destroy()
+ return fail or true
+end)
+check('a wave stops only for its boss (removed, dying, at 0 health) or the run (paused, zombies off); his attack ending is no input',function()
+ local function state(k,v) local s={parented=true,dying=false,health=100,paused=false,zombies=true};if k then s[k]=v end;return s end
+ if RW.stops(state()) then return 'stops while all is well' end
+ if RW.stops(state('health',nil)) then return 'stops without a Humanoid' end
+ for k,v in {parented=false,dying=true,health=0,paused=true,zombies=false} do if not RW.stops(state(k,v)) then return 'runs on with '..k..' = '..tostring(v) end end
+ if not RW.stops(state('zombies',nil)) then return 'runs on with ZombiesEnabled unset' end
+ return true
+end)
+-- The most rock chunks standing at once over one wave (each burst from its rise until it is gone),
+-- with RW.heap as the game builds them.
+local function peak(lines,fan,q)
+ local bursts={}
+ for li=1,lines do
+  for _,b in RW.schedule(85,55,0,fan,li*13) do
+   b.side=RW.offset(b,4.5);b.n=#RW.heap(b,4.5,RW.chunkCap(fan,q));local _,gone=RW.times(b.f);b.gone=gone;table.insert(bursts,b)
+  end
+ end
+ local most=0
+ for t=0,3,1/120 do local n=0;for _,b in bursts do if t>=b.at and t<b.at+b.gone then n+=b.n end end;most=math.max(most,n) end
+ return most
+end
+check('phone budget: parts standing at once (rocks + the debris cap) stay under 95 for one line, 160 for the enraged fan at Full, 115 at Low',function()
+ local one,full,low=peak(1,false,1)+RW.maxBits(1),peak(3,true,1)+RW.maxBits(1),peak(3,true,.35)+RW.maxBits(.35)
+ if one>95 or full>160 or low>115 then return string.format('one line %d, fan Full %d, fan Low %d',one,full,low) end
  return true
 end)
 check('the Hammer\'s real waves (MapBossDefs: Slam, SpinSlam, the Charge finish) are the 85 x 9 at 55 studs/s these are built for',function()
@@ -169,7 +235,7 @@ check('a wave unit\'s fan as the presentation decodes it (P.lines): every burst 
   local side=line.direction:Cross(Vector3.yAxis) -- as the controller offsets a burst
   for _,b in RW.schedule(line.length,55,2,true,li) do
    local pos=line.origin+line.direction*b.d+side*RW.offset(b,line.width/2)
-   if not X.waveHit({travel=55},{impact=2},line,pos,b.at-1e-6,b.at+1e-6) then return 'line '..li..' misses d '..b.d end
+   if not serverFront(line,pos,2,b.at-1e-6,b.at+1e-6) then return 'line '..li..' misses d '..b.d end
   end
  end
  return true
