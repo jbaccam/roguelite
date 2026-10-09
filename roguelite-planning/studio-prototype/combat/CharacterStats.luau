@@ -1,6 +1,7 @@
 -- Shared schema and pure calculations. Only the server writes effective attributes.
-local S={List={},ById={},Classes={},ClassOrder={'Brawler','Gunner','Thrower','Juggler','Handyman','Mage'}}
+local S={List={},ById={},Classes={},ClassOrder={'Brawler','Gunner','Chef','Juggler','Handyman','Mage'}}
 local Motion=require(script.Parent.WeaponMotion)
+local Weapons=require(script.Parent.WeaponCatalog) -- starter classes and weapon types (2026-10-09)
 -- Air speed x1.45 (user 2026-10-03: "jumping should be like the optimal way to move around", then
 -- "i need more of a speed boost when im in the air" -> 1.6, then "just a little too fast"; was
 -- 1.12, then 1.3): a Brawler runs 22 and flies 31.9. MovementGuard scales its limit by this number.
@@ -72,65 +73,158 @@ stat('ShopPricePercent','Shop price modifier',0,-80,200,5,'%','Economy','Positiv
 stat('GearPower','Gear power',0,0,40,1,'','Gear','Tiers of the gear you brought: starting weapon, worn armor and pet. Each point above 1 adds 12% damage and 6% max health.')
 -- Classes (rebalanced 2026-10-03 so none is plainly worse): each has 3-4 buffs and 1-3 drawbacks,
 -- and a drawback never weakens the class's own weapons. rangedAttackSpeed: % faster attacks with
--- non-melee weapons only (Gunner); the UI shows it with the buffs (S.classLines).
+-- non-melee weapons only (Gunner); the UI shows it with the buffs (S.classLines). build: the admin
+-- panel's Build preset (Practice only), its own class's weapons, signature first. The class two /
+-- four home-weapon bonuses went on 2026-10-09: per-weapon specialty and weapon type sets replace them.
 S.Classes={
- Brawler={description='Hand-to-hand fighter: tough and hits hard up close. Slower, with weak ranged damage.',buffs={MaxHP=25,Armor=3,MeleeDamage=20,Knockback=8,MoveSpeed=-2,RangedDamage=-15},build={'01','03','06','19'},two={MeleeDamage=15,Armor=2},four={LifeSteal=5}},
- Gunner={description='Fast, piercing gunfire. Less health and weak melee damage.',buffs={RangedDamage=20,ProjectileSpeed=35,CritChance=5,MaxHP=-15,MeleeDamage=-15},rangedAttackSpeed=10,build={'00','07','09','08'},two={Pierce=1},four={ProjectileCount=1}},
- Thrower={description='Long-range throws that rebound. Thin armor and weak melee damage.',buffs={AttackRange=25,Bounce=1,RangedDamage=15,Armor=-2,MeleeDamage=-10},build={'12','13','14','18'},two={RangedDamage=15},four={ProjectileCount=1}},
- Juggler={description='Quick tricks with toys: fast attacks, big knockback, always moving. Lower damage per hit.',buffs={MoveSpeed=3,AttackSpeed=15,Knockback=12,Damage=-10},build={'17','21','22','23'},two={AttackRange=15,Knockback=5},four={Bounce=1,AttackSpeed=15}},
+ Brawler={description='Hand-to-hand fighter: tough and hits hard up close. Slower, with weak ranged damage.',buffs={MaxHP=25,Armor=3,MeleeDamage=20,Knockback=8,MoveSpeed=-2,RangedDamage=-15},build={'19','03','06','02'}},
+ Gunner={description='Fast, accurate gunfire. Less health and weak melee damage.',buffs={RangedDamage=20,ProjectileSpeed=35,CritChance=5,MaxHP=-15,MeleeDamage=-15},rangedAttackSpeed=10,build={'00','07','09','08'}},
+ -- Chef (2026-10-09) takes Thrower's slot: Thrower owners own Chef. Recovery covers pizza, regen and
+ -- life steal healing. Pizza drops are ChefPizza's (server); no dash (S.dashes stays Brawler-only).
+ Chef={description='Kitchen fighter: sturdy, heals well, and kills with Chef weapons sometimes drop pizza. Thin armor.',buffs={MaxHP=15,MeleeDamage=10,Recovery=25,Armor=-3},build={'01','05','16','15'}},
+ Juggler={description='Quick tricks with toys: fast attacks, big knockback, always moving. Lower damage per hit.',buffs={MoveSpeed=3,AttackSpeed=15,Knockback=12,Damage=-10},build={'17','21','22','23'}},
  -- Handyman = Brotato's Engineer (2026-10-04, HANDYMAN_TURRET.md): a free Nail Turret each run and a
  -- tighter turret ring (HandymanTurret.Engineer); gain: Utility Power gains x1.25, Damage gains x0.5
  -- (S.gained). His +5% Damage buff went.
- Handyman={description='Engineer: starts with a Nail Turret. Turrets spawn close to you. Utility Power gains +25%. Damage gains halved.',buffs={UtilityPower=15,AreaSize=20,Regeneration=1,MaxHP=-10},build={'24','25','28','29'},two={CooldownReduction=10},four={UtilityPower=20},gain={UtilityPower=1.25,Damage=.5}},
- Mage={description='Elemental damage, burn and chains. Fragile, with weak physical attacks.',buffs={ElementalDamage=25,Duration=30,BurnChance=15,ChainCount=1,MaxHP=-20,Armor=-2,MeleeDamage=-10},build={'30','31','34','35'},two={ElementalDamage=15},four={BurnSpread=1}},
+ Handyman={description='Engineer: starts with a Nail Turret. Turrets spawn close to you. Utility Power gains +25%. Damage gains halved.',buffs={UtilityPower=15,AreaSize=20,Regeneration=1,MaxHP=-10},build={'24','25','28','29'},gain={UtilityPower=1.25,Damage=.5}},
+ Mage={description='Elemental damage, burn and chains. Fragile, with weak physical attacks.',buffs={ElementalDamage=25,Duration=30,BurnChance=15,ChainCount=1,MaxHP=-20,Armor=-2,MeleeDamage=-10},build={'30','31','34','35'}},
 }
 -- Each class's starting weapon, also its icon on class cards and tags. RunSetupRules.Signature is
 -- this table; ProfileService keeps a copy (it doesn't load this module). Juggler: Rubber Duck since
--- 2026-10-03 (was Boxing Gloves).
-S.Signature={Brawler='01',Gunner='00',Thrower='12',Juggler='17',Handyman='24',Mage='30'}
--- Class weapon fit (2026-10-03, Brotato-style but gentler): each equipped weapon's damage changes by
--- how close its class (the closest of its classes since 2026-10-04) is to yours. Own class +15%. Each pair of classes has one number, the same
--- both ways: 0 = close enough, -5 a bit off, -10 different, -15 opposite (fists vs guns). Handyman is
--- handy with anything: 0 with every class but Mage. Godly weapons belong to no class: no change.
--- Stacks with the class stats above, so a Brawler's Glock takes -15% and the Brawler's -15% ranged:
--- 0.85 x 0.85 = about -28%.
-S.ClassFit={Own=15,
- Brawler={Gunner=-15,Thrower=-5,Juggler=-5,Handyman=0,Mage=-10},
- Gunner={Brawler=-15,Thrower=0,Juggler=-5,Handyman=0,Mage=-5},
- Thrower={Brawler=-5,Gunner=0,Juggler=0,Handyman=0,Mage=-5},
- Juggler={Brawler=-5,Gunner=-5,Thrower=0,Handyman=0,Mage=-5},
- Handyman={Brawler=0,Gunner=0,Thrower=0,Juggler=0,Mage=-5},
- Mage={Brawler=-10,Gunner=-5,Thrower=-5,Juggler=-5,Handyman=-5},
-}
--- 'home' (+15), 'similar' (0) or 'off' (negative), the percent, and the weapon's class that gave it;
--- nil,0 for Godly or no class. A weapon in several classes (WeaponCatalog.classes, 2026-10-04) uses
--- the best of them: a Gunner with the Nail Gun (Handyman, Gunner) gets +15% (was 0 from Handyman).
--- base may be a bare {home=class} (the class screens' per-class chips).
+-- 2026-10-03 (was Boxing Gloves). 2026-10-09: Brawler starts with Boxing Gloves (the Frying Pan is
+-- Chef's now) and Chef replaces Thrower.
+S.Signature={Brawler='19',Gunner='00',Chef='01',Juggler='17',Handyman='24',Mage='30'}
+-- Specialty (2026-10-09, plans/2026-10-09-chef-roster-weapon-types-design.md; user: "per weapon,
+-- never the whole build"). It replaces the 2026-10-03 class weapon fit and the class two / four
+-- bonuses: each equipped weapon whose starter class is yours deals +Specialty% damage. Off-class
+-- weapons get no class penalty of their own; only your class's own drawback touches them. Godlies
+-- never get it. Example: a Brawler's Katana x1.10 on top of his +20% melee; his Glock takes only
+-- his -15% ranged (it took another x0.85 from class fit before).
+S.Specialty=10
+-- The specialty percent `base` gets with `class`: S.Specialty or 0.
+function S.specialty(base,class)
+ if type(base)~='table' or base.godly or not S.Classes[class] then return 0 end
+ return Weapons.inClass(base,class) and S.Specialty or 0
+end
+-- The class screen's line: '+10% damage with Chef weapons' ('' for an unknown class).
+function S.specialtyText(class) return S.Classes[class] and '+'..S.Specialty..'% damage with '..class..' weapons' or '' end
+-- The weapon card's line, only when it applies: 'Chef specialty: +10% damage' (else nil).
+function S.specialtyCardText(base,class) return S.specialty(base,class)>0 and class..' specialty: +'..S.Specialty..'% damage' or nil end
+-- The old class-fit call shape, for screens not yet moved to S.specialty: ('home', 10, class) for a
+-- weapon of your class, ('similar', 0) otherwise, (nil, 0) for a Godly or unknown class. There is no
+-- fit matrix any more. Remove with its last caller.
 function S.classFit(base,class)
- local row=S.ClassFit[class]
- if base.godly or not S.Classes[class] or not row then return nil,0 end
- local best,via=nil,nil
- for _,c in base.classes or {base.home} do
-  local pct=c==class and S.ClassFit.Own or row[c]
-  if pct and (best==nil or pct>best) then best,via=pct,c end
+ if type(base)~='table' or base.godly or not S.Classes[class] then return nil,0 end
+ if S.specialty(base,class)>0 then return 'home',S.Specialty,class end
+ return 'similar',0
+end
+-- Whether `class` is the weapon's starter class (WeaponCatalog.inClass). Godly: never.
+function S.inClass(base,class) return Weapons.inClass(base,class) end
+-- Weapon type sets (2026-10-09, Brotato-style; WeaponCatalog.TypesById). A set counts equipped COPIES
+-- (six Katanas = Blade 6), so merging or selling changes it at once (CharacterService.refresh runs on
+-- every slot change). Values are running totals at 2 / 3 / 4 / 5 / 6 copies, not add-ons per step.
+-- Reworked the same day (parent, after the first balance run had melee rosters -13% and guns +10%):
+-- every set gives its weapons the same damage curve, S.SetDamage, and a weapon with two types takes
+-- only the higher of its two (never both). Each type adds one flavor bonus on top: scope 'weapon'
+-- goes to that type's weapons only (S.weapon, S.weaponStats); 'you' goes to the player's stat
+-- (S.resolve, where a class gain such as Handyman's Utility Power x1.25 applies). Gun's flavor is
+-- +1 projectile on Gun weapons from 4 copies (it replaces Gunner's old four-weapon projectile).
+-- Explosive adds to Area Size for those weapons (+10 = +10% blast radius when nothing else adds area).
+-- Example: 3 Katanas + 1 Pizza Cutter = Blade 4: +10% damage and +6% crit chance on those four only;
+-- the Pizza Cutter (Blade 4, Culinary 1) takes Blade's +10%.
+S.SetDamage={4,7,10,13,15}
+S.TypeSets={
+ Blade={stat='CritChance',scope='weapon',values={2,4,6,8,10}},
+ Blunt={stat='Armor',scope='you',values={1,1,2,2,3}},
+ Gun={stat='ProjectileCount',scope='weapon',values={0,0,1,1,1}},
+ Thrown={stat='ProjectileSpeed',scope='weapon',values={5,10,15,20,25}},
+ Explosive={stat='AreaSize',scope='weapon',values={10,20,30,40,50}},
+ Elemental={stat='BurnChance',scope='weapon',values={3,6,9,12,15}},
+ Tool={stat='UtilityPower',scope='you',values={4,8,12,16,20}},
+ Culinary={stat='LifeSteal',scope='weapon',values={2,3,4,5,6}},
+ Trick={stat='Dodge',scope='you',values={2,4,6,8,10}},
+}
+-- Equipped ids (a list or slot map; '' and unknown ids add nothing) -> {Blade=n, ...} with every type
+-- present. Copies count: typeCounts({'03','03','42'}).Blade == 3.
+function S.typeCounts(ids)
+ local counts={};for _,t in Weapons.Types do counts[t]=0 end
+ for _,id in ids or {} do
+  if type(id)=='table' then id=id.id end
+  for _,t in Weapons.typesOf(id) do counts[t]+=1 end
  end
- if best==nil then return 'similar',0 end
- if via==class then return 'home',best,via end
- return best<0 and 'off' or 'similar',best,via
+ return counts
 end
--- Whether `class` is one of the weapon's classes (set bonuses count every listed class). Godly: never.
-function S.inClass(base,class)
- if type(base)~='table' or base.godly then return false end
- return table.find(base.classes or {base.home},class)~=nil
+local function step(count) count=math.floor(tonumber(count) or 0);return count>=2 and math.min(count,6)-1 or nil end
+-- The damage % a set gives its weapons at `count` copies (0 under 2). setDamage(4) == 10.
+function S.setDamage(count) local i=step(count);return i and S.SetDamage[i] or 0 end
+-- A set's flavor total at `count` copies (0 under 2). setBonus('Blade', 3) == 4; Gun gives the
+-- projectile: setBonus('Gun', 4) == 1.
+function S.setBonus(t,count)
+ local set=S.TypeSets[t];local i=step(count)
+ return set and i and set.values[i] or 0
 end
--- One line for class screens: 'Brawler +15% · Juggler 0% · Handyman -5% · Thrower, Mage -10% · Gunner -15%'.
-function S.classFitText(class)
- local row=S.ClassFit[class];if not row then return '' end
- local byPct={}
- for _,other in S.ClassOrder do local v=row[other];if v then byPct[v]=byPct[v] or {};table.insert(byPct[v],other) end end
- local out={class..' +'..S.ClassFit.Own..'%'}
- for _,v in {0,-5,-10,-15} do if byPct[v] then table.insert(out,table.concat(byPct[v],', ')..' '..v..'%') end end
- return table.concat(out,' · ')
+-- What the sets give one weapon, by stat: Damage (the higher of its types' curves) plus its types'
+-- weapon-scope flavors: CritChance, ProjectileCount, ProjectileSpeed, AreaSize, BurnChance,
+-- LifeSteal (missing = 0). counts: S.typeCounts, or nil for none.
+function S.weaponSetBonus(base,counts)
+ local out={}
+ if type(counts)~='table' or type(base)~='table' then return out end
+ for _,t in base.types or Weapons.typesOf(base.id) do
+  local set=S.TypeSets[t]
+  if set then
+   local damage=S.setDamage(counts[t])
+   if damage>(out.Damage or 0) then out.Damage=damage end
+   local v=set.scope=='weapon' and S.setBonus(t,counts[t]) or 0
+   if v>0 then out[set.stat]=(out[set.stat] or 0)+v end
+  end
+ end
+ return out
+end
+-- What the 'you' sets give the player, by stat: {Armor=, UtilityPower=, Dodge=}.
+function S.playerSetBonus(counts)
+ local out={}
+ if type(counts)~='table' then return out end
+ for t,set in S.TypeSets do
+  local v=set.scope=='you' and S.setBonus(t,counts[t]) or 0
+  if v>0 then out[set.stat]=(out[set.stat] or 0)+v end
+ end
+ return out
+end
+-- Each flavor in words; %s is its value.
+local FLAVOR={Blade='+%s%% crit chance',Blunt='+%s armor',Thrown='+%s%% projectile speed',Explosive='+%s%% blast radius',
+ Elemental='+%s%% burn chance',Tool='+%s%% utility power',Trick='+%s%% dodge'}
+-- The set at `count` copies in plain words, nil under 2. Examples:
+--   setBonusText('Blade', 3) = 'Blade 3: +7% damage and +4% crit chance on Blade weapons'
+--   setBonusText('Blunt', 2) = 'Blunt 2: +4% damage on Blunt weapons and +1 armor for you'
+--   setBonusText('Gun', 4) = 'Gun 4: +10% damage and +1 projectile on Gun weapons'
+--   setBonusText('Culinary', 2) = 'Culinary 2: +4% damage on Culinary weapons, and their hits heal 2% of their damage'
+function S.setBonusText(t,count)
+ local set=S.TypeSets[t];local damage=S.setDamage(count)
+ if not set or damage<=0 then return nil end
+ local n=math.min(math.floor(tonumber(count) or 0),6);local v=S.setBonus(t,count)
+ local head=t..' '..n..': +'..damage..'% damage'
+ if t=='Culinary' then return head..' on Culinary weapons, and their hits heal '..v..'% of their damage' end
+ if t=='Gun' then return head..(v>0 and ' and +'..v..' projectile' or '')..' on Gun weapons' end
+ local flavor=string.format(FLAVOR[t],tostring(v))
+ if set.scope=='you' then return head..' on '..t..' weapons and '..flavor..' for you' end
+ return head..' and '..flavor..' on '..t..' weapons'
+end
+-- The in-run Sets list and shop hints: one row per type with at least one equipped copy, in
+-- WeaponCatalog.Types order: {type=, count=, damage= (% now, 0 under 2), current= (flavor now),
+-- next= (copies for the next step, nil at 6), nextDamage=, nextValue= (flavor then), scope= 'weapon'
+-- or 'you' (the flavor's), text= (now, nil under 2), nextText=}.
+-- Example, {'03','03'}: Blade, count 2, damage 4, current 2, next 3, nextDamage 7, nextValue 4.
+function S.typeLines(ids)
+ local counts=S.typeCounts(ids);local out={}
+ for _,t in Weapons.Types do
+  local n=counts[t]
+  if n>0 then
+   local nxt=n<6 and math.max(2,n+1) or nil
+   table.insert(out,{type=t,count=n,damage=S.setDamage(n),current=S.setBonus(t,n),next=nxt,nextDamage=nxt and S.setDamage(nxt) or nil,
+    nextValue=nxt and S.setBonus(t,nxt) or nil,scope=S.TypeSets[t].scope,text=S.setBonusText(t,n),nextText=nxt and S.setBonusText(t,nxt) or nil})
+  end
+ end
+ return out
 end
 -- A class's always-on stats for the UI: good and bad lists of {value=, unit=, label=} in stat order,
 -- plus Gunner's ranged attack speed. unit is '%' or ''. Example Brawler good[1]: 25, '', 'Max health'.
@@ -146,9 +240,10 @@ function S.classLines(class)
  if c.rangedAttackSpeed then table.insert(good,{value=c.rangedAttackSpeed,unit='%',label='Ranged attack speed'}) end
  return good,bad
 end
--- '+15% Melee damage · +2 Armor' for a home-weapon bonus table (two / four).
+-- '+15% Melee damage · +2 Armor' for a {stat=value} table (nil gives ''; the class two / four
+-- tables it formatted are gone, 2026-10-09).
 function S.bonusText(t)
- local out={}
+ local out={};t=t or {}
  for _,d in S.List do local v=t[d.id];if v then table.insert(out,(v>0 and '+' or '')..v..S.statUnit(d)..' '..d.label) end end
  return table.concat(out,' · ')
 end
@@ -158,8 +253,8 @@ function S.valid(id,value)
  return d~=nil and type(value)=='number' and value==value and value>=d.min and value<=d.max and (not count or value%1==0)
 end
 -- Stat gains (2026-10-04, the Handyman as Brotato's Engineer): a class's `gain` multiplies what its
--- set bonuses (two / four), items, level-up cards, skills, armour and pets add to a stat, when that
--- adds up to more than 0. The stat's base and the class's own buffs aren't gains. Examples for the
+-- weapon type sets (the 'you' ones, 2026-10-09), items, level-up cards, skills, armour and pets add
+-- to a stat, when that adds up to more than 0. The stat's base and the class's own buffs aren't gains. Examples for the
 -- Handyman (gain UtilityPower 1.25, Damage 0.5): a +12 Utility Power card gives +15; an item with
 -- +10% Damage gives +5%; a -3 never changes.
 function S.gained(c,id,amount)
@@ -167,11 +262,14 @@ function S.gained(c,id,amount)
  if g and amount>0 then return amount*g end
  return amount
 end
-function S.resolve(class,count,overrides,bonuses,percent)
+-- sets: S.typeCounts of the equipped copies, for the 'you' type sets (Blunt armor, Tool utility
+-- power, Trick dodge; 2026-10-09). It was the number of home-class weapons for the class two / four
+-- bonuses, which are gone; a number is ignored, so older callers (resolve(class, 0)) still line up.
+function S.resolve(class,sets,overrides,bonuses,percent)
  local result={};local c=S.Classes[class] or S.Classes.Brawler
+ local typed=S.playerSetBonus(sets)
  for _,d in S.List do
-  local sets=(count>=2 and (c.two[d.id] or 0) or 0)+(count>=4 and (c.four[d.id] or 0) or 0)
-  local value=d.base+(c.buffs[d.id] or 0)+S.gained(c,d.id,sets+((bonuses or {})[d.id] or 0))
+  local value=d.base+(c.buffs[d.id] or 0)+S.gained(c,d.id,(typed[d.id] or 0)+((bonuses or {})[d.id] or 0))
   value=value*(1+((percent or {})[d.id] or 0)/100)
   if table.find({'ProjectileCount','Pierce','Bounce','PoisonStacks','ChainCount','ChainBonus','ChainEvery','BurnSpread','FirstHitBlock'},d.id) then value=math.round(value) end
   if overrides and overrides[d.id]~=nil then value=overrides[d.id] end
@@ -194,28 +292,46 @@ function S.incoming(amount,s) return amount*S.mult(-s.ContactReduction)*(s.Armor
 -- Power Washer streams use none. Example: Two Straws gives a Glock 2 bullets, a Frying Pan nothing.
 -- AreaSize and the lightning stats also count the player's own sources: with Battery Pack
 -- (ChainCount 1) every weapon's hits chain lightning, so Tinfoil Antlers helps them all.
+-- Attack families (2026-10-09, the family items): Melee damage helps swings; Ranged damage helps
+-- everything else and the throwing hybrids (Mjolnir, Trident: a throw swaps the multiplier,
+-- RogueliteCombat); Elemental damage helps elemental weapons, native burn / poison, and any weapon
+-- once the player has burn or poison chance (status ticks use it). Turrets ignore all three.
+-- AreaSize (2026-10-09) also counts the Duck's cone, the Vacuum / Washer streams and the Legendary
+-- Tier IV moves that grow with it (at Tier IV, or any tier when the tier isn't known). The Bowling
+-- Ball's roll never reads Pierce or Bounce.
 -- Any other stat helps every weapon (true).
 local Thrown=require(script.Parent.SpecialMotion).profiles -- SpecialWeapons' throws
 -- A gun commits its firing line for its entire flight, including piercing contacts.
 S.StraightGuns={['00']=true,['07']=true,['08']=true,['09']=true,['10']=true,['11']=true,['24']=true,['41']=true,Turret=true}
-S.WeaponStats={ProjectileCount=true,Pierce=true,Bounce=true,ExplosionDamage=true,AreaSize=true,ChainBonus=true,ChainDamage=true}
+S.WeaponStats={ProjectileCount=true,Pierce=true,Bounce=true,ExplosionDamage=true,AreaSize=true,ChainBonus=true,ChainDamage=true,MeleeDamage=true,RangedDamage=true,ElementalDamage=true}
 local AREA_SPECIALS={'waveRadius','spread','hop','burstRadius'} -- Godly special sizes GodlyWeapons scales by AreaSize
+local AREA_MOVES={Slash=true,Beam=true,Shock=true,Split=true,Thunder=true,Strike=true,Roll=true} -- LegendaryMoves sizes (not the Royal Flush)
 function S.usesStat(base,id,stats)
  if not S.WeaponStats[id] then return true end
- if id=='Bounce' and S.StraightGuns[base.id] then return false end
  local w=base.id;local thrown=Thrown[w]
+ if id=='MeleeDamage' or id=='RangedDamage' or id=='ElementalDamage' then
+  if w=='Turret' then return false end
+  if id=='MeleeDamage' then return base.kind=='Melee' end
+  if id=='RangedDamage' then return base.kind~='Melee' or base.hybridRange~=nil end
+  return base.elemental==true or (base.burn or 0)>0 or (base.poison or 0)>0 or (stats~=nil and ((stats.BurnChance or 0)>0 or (stats.PoisonChance or 0)>0))
+ end
+ if id=='Bounce' and S.StraightGuns[w] then return false end
  if id=='ExplosionDamage' then return base.kind=='Blast' end
  if id=='ChainBonus' or id=='ChainDamage' then return base.lightning==true or (stats~=nil and (stats.ChainCount or 0)>0) end
  if id=='AreaSize' then
   if base.blastRadius or (thrown and thrown.zone) or base.lightning then return true end
+  if w=='17' or w=='28' or w=='29' then return true end
+  local move=Weapons.Legendary[w]
+  if move and AREA_MOVES[move.move] and (base.tier==nil or base.tier>=4) then return true end
   if stats and ((stats.ChainCount or 0)>0 or (stats.BurnSpread or 0)>0) then return true end
   for _,k in AREA_SPECIALS do if base.special and base.special[k] then return true end end
   return false
  end
- -- Shot stats, by launcher (RogueliteCombat shoot): Storm Bow arrows, spray and streams, throws,
- -- swings, rockets and blasts, then bullets and cards.
+ -- Shot stats, by launcher (RogueliteCombat shoot): Storm Bow arrows, spray and streams, the
+ -- bowling roll, throws, swings, rockets and blasts, then bullets and cards.
  if w=='38' then return id=='ProjectileCount' end
  if w=='17' or w=='28' or w=='29' then return false end
+ if w=='22' then return id=='ProjectileCount' end
  if thrown then if id=='ProjectileCount' then return not thrown.returns end;return not thrown.zone end
  if base.kind=='Melee' then return false end
  if w=='11' or base.kind=='Blast' then return id=='ProjectileCount' end
@@ -224,16 +340,23 @@ end
 -- A shot stat as an attack uses it: 0 when the weapon doesn't (d: S.weapon's result, d.stats set).
 -- Example: Two Straws on a Boomerang throw: S.shotStat(d,'ProjectileCount') is 0.
 function S.shotStat(d,id) return S.usesStat(d,id) and (d.stats[id] or 0) or 0 end
-function S.weapon(base,s,class,tier)
+-- sets (2026-10-09): S.typeCounts of the equipped copies; nil (previews, tests) means no type sets.
+-- d.specialty: the specialty percent it got; d.typeBonus: S.weaponSetBonus (the server hands it to
+-- S.weaponStats for d.stats).
+function S.weapon(base,s,class,tier,sets)
  tier=math.clamp(math.floor(tonumber(tier) or 1),1,4)
  local d=table.clone(base)
  d.tier=tier
+ local bonus=S.weaponSetBonus(base,sets);d.typeBonus=bonus
  d.damage=(base.tierDamage and base.tierDamage[tier] or base.damage)*S.mult(s.Damage)*S.mult(base.kind=='Melee' and s.MeleeDamage or s.RangedDamage)
  if base.elemental then d.damage*=S.mult(s.ElementalDamage) end
  if base.utility then d.damage*=S.mult(s.UtilityPower) end
  if S.usesStat(base,'ExplosionDamage') then d.damage*=S.mult(s.ExplosionDamage) end
- d.classFit,d.classFitPercent=S.classFit(base,class)
- d.damage*=S.mult(d.classFitPercent)
+ -- Specialty (2026-10-09; it replaced the class weapon fit here): +10% on a weapon of your class.
+ d.specialty=S.specialty(base,class)
+ d.damage*=S.mult(d.specialty)
+ -- Type sets: the higher damage curve of its types.
+ d.damage*=S.mult(bonus.Damage or 0)
  local cc=S.Classes[class]
  local speed=S.mult(s.AttackSpeed)*(cc and cc.rangedAttackSpeed and base.kind~='Melee' and 1+cc.rangedAttackSpeed/100 or 1)
  d.cooldown=math.max(base.kind=='Melee' and .18 or .08,base.cooldown*(base.tierCooldown and base.tierCooldown[tier] or 1)/speed*(1-s.CooldownReduction/100))
@@ -242,15 +365,44 @@ function S.weapon(base,s,class,tier)
  d.motionRate=base.kind=='Melee' and (base.id=='02' and 1.35 or base.id=='19' and 2.7 or 1.8)*speed/(1-s.CooldownReduction/100) or base.cooldown/d.cooldown
  d.range=base.range*S.mult(s.AttackRange)
  d.targetRange=(base.hybridRange or base.range)*S.mult(s.AttackRange)
- d.projectileSpeed=(base.projectileSpeed or 110)*S.mult(s.ProjectileSpeed)
+ d.projectileSpeed=(base.projectileSpeed or 110)*S.mult(s.ProjectileSpeed+(bonus.ProjectileSpeed or 0)) -- Thrown set: faster throws
  d.projectileCount=base.kind=='Spread' and (4+tier) or base.id=='18' and (tier>=3 and 4 or 3) or (base.trait=='shots' and tier>=2 and 2 or 1)
  d.nativePierce=base.trait=='pierce' and math.floor(tier/2) or 0
  if base.id=='22' then d.nativePierce=math.min(4,3+math.floor(tier/3)) end
  d.nativeBounce=base.id=='12' and math.min(4,tier+1) or base.trait=='bounce' and (tier-1) or 0
  d.projectileRadius=.12*S.mult(s.ProjectileSize)
- d.blastRadius=(base.blastRadius or 7)*S.mult(s.AreaSize)
+ -- Explosive set: Area Size for those weapons (+10 at 2 copies = +10% blast radius with no other area).
+ d.blastRadius=(base.blastRadius or 7)*S.mult(math.clamp(s.AreaSize+(bonus.AreaSize or 0),S.ById.AreaSize.min,S.ById.AreaSize.max))
  return d
 end
+-- The stats one weapon's hits use (2026-10-09): the player's, plus its weapon-scope sets that are
+-- stats (Blade crit chance, Explosive Area Size, Gun's 4-copy projectile, Elemental burn chance,
+-- Culinary life steal; Thrown's projectile speed is already in d.projectileSpeed), each
+-- kept inside the stat's bounds. The server gives each slot's definition this as d.stats, so every
+-- launcher, crit roll and life-steal heal reads that weapon's numbers. Returns `stats` itself when no
+-- such set applies. d: S.weapon's result. Example: Blade 2 and CritChance 5 -> 8 for a Katana only.
+local WEAPON_SET_STATS={'CritChance','AreaSize','ProjectileCount','BurnChance','LifeSteal'}
+function S.weaponStats(stats,d)
+ local bonus=d and d.typeBonus;local out=stats
+ for _,id in WEAPON_SET_STATS do
+  local v=bonus and bonus[id]
+  if v and v~=0 then
+   if out==stats then out=table.clone(stats) end
+   local def=S.ById[id];out[id]=math.clamp((out[id] or def.base)+v,def.min,def.max)
+  end
+ end
+ return out
+end
+-- Lightning targets for one weapon's chain (CombatEffectsService): the player's Lightning targets plus
+-- 1 for a lightning weapon, then Extra lightning targets, at most 6; 0 = no chain. Battery Pack fix
+-- (2026-10-09, items audit 6.4): it was the bigger of the two, so a lightning weapon's first Battery
+-- Pack added nothing. Example: Crystal Ball + one Battery Pack (ChainCount 1) = 2 targets (was 1).
+function S.chainTargets(s,w)
+ local source=(s.ChainCount or 0)+((w and w.lightning) and 1 or 0)
+ if source<=0 then return 0 end
+ return math.min(6,source+(s.ChainBonus or 0))
+end
+
 function S.format(d,value) return string.format(value%1==0 and '%d' or '%.1f',value)..d.unit end
 -- Gear power (GEAR_POWER.md): one point per tier of what a player brings into a run, the starting
 -- weapon, each worn armor piece and the pet. A fresh account has 1 (a Tier I starter). Each point

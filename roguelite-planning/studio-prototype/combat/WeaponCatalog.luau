@@ -1,6 +1,6 @@
 -- Studio practice tuning. IDs match the reviewed, user-sized showcase models.
 local C={Slots=6, List={}, ById={}}
-local names={'Glock','Frying Pan','Nunchucks','Katana','Kusarigama','Spatula','Baseball Bat','Draco','Fart Gun','Shotgun','T-Shirt Cannon','Rocket Launcher','Boomerang','Kunai','Molotov','Egg','Steak','Rubber Duck','Deck of Cards','Boxing Gloves','Cinder Block','Yo-Yo','Bowling Ball','Bowling Pin','Nail Gun','Wrecking Ball','Shovel','Paint Roller','Vacuum Cleaner','Power Washer','Magic Staff','Mjolnir','Excalibur',"Pandora's Box","Medusa's Head",'Crystal Ball',"Reaper's Scythe","Poseidon's Trident",'Storm Bow','Shadow Daggers','Vampire Blade','Ray Gun'}
+local names={'Glock','Frying Pan','Nunchucks','Katana','Kusarigama','Spatula','Baseball Bat','Draco','Fart Gun','Shotgun','T-Shirt Cannon','Rocket Launcher','Boomerang','Kunai','Molotov','Egg','Steak','Rubber Duck','Deck of Cards','Boxing Gloves','Cinder Block','Yo-Yo','Bowling Ball','Bowling Pin','Nail Gun','Wrecking Ball','Shovel','Paint Roller','Vacuum Cleaner','Power Washer','Magic Staff','Mjolnir','Excalibur',"Pandora's Box","Medusa's Head",'Crystal Ball',"Reaper's Scythe","Poseidon's Trident",'Storm Bow','Shadow Daggers','Vampire Blade','Ray Gun','Pizza Cutter'}
 local ranged={[0]=true,[7]=true,[8]=true,[9]=true,[10]=true,[11]=true,[12]=true,[13]=true,[14]=true,[15]=true,[18]=true,[22]=true,[24]=true,[28]=true,[29]=true,[30]=true,[33]=true,[34]=true,[35]=true,[38]=true,[41]=true}
 -- Tiers trade two copies for one stronger copy; some weapons improve crowd handling.
 -- Range is in Roblox studs. Damage is per hit (Deck of Cards: total three-card volley).
@@ -32,7 +32,7 @@ local profiles={
  {3,1.9,30}, -- Molotov (burn)
  {10,.96,25}, -- Egg
  {16,.85,7.5}, -- Steak
- {5,.32,12,nil,nil,'bounce'}, -- Duck
+ {5,.32,12,nil,nil,'spray'}, -- Duck (2026-10-09: 'spray', was 'bounce', which the spray never read)
  {15,1.08,33,nil,nil,'cards'}, -- Cards
  {8,.42,7.5,{8,15,28,48},{1,.94,.88,.76}}, -- Gloves: alternating quick jabs (T4 ~150 DPS: the close-range trade)
  {30,1.35,8.5}, -- Block
@@ -44,7 +44,7 @@ local profiles={
  {20,1.15,9.5}, -- Shovel
  {12,.8,10.5}, -- Roller
  {4,.36,16}, -- Vacuum
- {3,.27,23,nil,nil,'pierce'}, -- Washer
+ {3,.27,23,nil,nil,'stream'}, -- Washer (2026-10-09: 'stream', was 'pierce', which the stream never read)
  {9,1.3,35}, -- Staff (arcane energy orb)
  {22,2,9.5}, -- Mjolnir (2.4 felt slow; 2026-10-01)
  {26,1.35,10}, -- Excalibur
@@ -58,6 +58,8 @@ local profiles={
  {16,1.3,12}, -- Shadow Daggers: per chained hit
  {32,1.3,10.5}, -- Vampire Blade: heals
  {22,.9,37}, -- Ray Gun: every bolt splashes; kills disintegrate
+ -- Appended 2026-10-09 (Chef roster): ids are never reused or renumbered.
+ {13,.70,10}, -- Pizza Cutter: Chef's Legendary; about Katana's and Steak's DPS, shorter reach, faster hits
 }
 -- Native slows (2026-10-03: nobody noticed Medusa's). strength: % off the enemy's walk speed
 -- (bosses take half), seconds before the Duration stat. CombatEffectsService uses the bigger of these
@@ -71,7 +73,7 @@ C.RarityLists={
  Common={'01','05','00','08','12','15','19','17','24','26','30','35'},
  Rare={'02','06','09','07','13','16','23','21','27','29','34','33'},
  Epic={'04','10','14','20','28'},
- Legendary={'03','11','18','22','25','32','31'},
+ Legendary={'03','11','18','22','25','32','31','42'}, -- '42' appended last so older seeded rolls keep their order
  Godly={'36','37','38','39','40','41'},
 }
 C.RarityOf={}
@@ -113,6 +115,7 @@ function C.isGodly(id) return C.Godly[id]~=nil end
 --   25 Wrecking Ball: each swing that connects sends out a ground shockwave ring
 --   32 Excalibur: every swing also shoots a golden beam slash
 --   31 Mjolnir: every 4th throw calls down a lightning strike where it lands
+--   42 Pizza Cutter: every 4th swing rolls a ghost wheel 20 studs along the ground, 60% to each enemy in its lane (2026-10-09).
 C.Legendary={
  ['03']={move='Slash',every=3,factor=.75,range=30,speed=78,width=3.4},
  ['11']={move='Split',every=4,minis=3,factor=.4,radius=4,splitAfter=.28,speed=42,spread=18},
@@ -121,6 +124,7 @@ C.Legendary={
  ['25']={move='Shock',factor=.4,radius=11,time=.42,push=26},
  ['32']={move='Beam',every=1,factor=.45,range=22,speed=56,width=4.4},
  ['31']={move='Thunder',every=4,factor=1.2,radius=8,delay=.2},
+ ['42']={move='Roll',every=4,factor=.6,range=20,speed=34,width=3},
 }
 -- A weapon's Legendary move is live at Tier IV only.
 function C.legendaryMove(id,tier) return (tonumber(tier) or 1)>=4 and C.Legendary[id] or nil end
@@ -167,7 +171,7 @@ C.GodlyRows={
 }
 function C.godlyRowValue(id,row,tier) local v=at(C.Godly[id][row.field],tier);return row.percent and pct(v) or num(v),v end
 -- Legendary Tier IV moves: a short name and one sentence.
-C.LegendaryNames={Slash='Flying slash',Split='Mini rockets',Flush='Royal Flush',Strike='STRIKE!',Shock='Shockwave',Beam='Beam slash',Thunder='Lightning strike'}
+C.LegendaryNames={Slash='Flying slash',Split='Mini rockets',Flush='Royal Flush',Strike='STRIKE!',Shock='Shockwave',Beam='Beam slash',Thunder='Lightning strike',Roll='Rolling Slice'}
 function C.legendaryText(id)
  local m=C.Legendary[id];if not m then return nil end
  local every=m.every and (m.every==1 and 'Every' or 'Every '..ord(m.every))
@@ -177,40 +181,74 @@ function C.legendaryText(id)
  elseif m.move=='Strike' then return 'A roll that hits '..m.hits..'+ enemies is a STRIKE! with a pin explosion.'
  elseif m.move=='Shock' then return 'Each swing that connects sends out a ground shockwave ('..pct(m.factor)..' damage).'
  elseif m.move=='Beam' then return every..' swing also shoots a golden beam slash ('..pct(m.factor)..' damage).'
- elseif m.move=='Thunder' then return every..' throw calls down a lightning strike ('..pct(m.factor)..' damage).' end
+ elseif m.move=='Thunder' then return every..' throw calls down a lightning strike ('..pct(m.factor)..' damage).'
+ elseif m.move=='Roll' then return every..' swing rolls a ghost wheel '..num(m.range)..' studs along the ground, hitting everything in its lane for '..pct(m.factor)..' damage.' end
  return nil
 end
--- One-line description: home class and traits (the same words as the Armory's).
-local TRAITS={pellets='Fires a spread of pellets.',pierce='Shots pierce through enemies.',bounce='Bounces between enemies.',cards='Throws a three-card volley.',shots='Fires a burst of shots.'}
+-- One-line description: starter class, weapon types and traits (the same words as the Armory's).
+-- spray / stream (2026-10-09): the Duck's and Washer's attacks hit everything in their cone, so
+-- their cards stop claiming bounce / pierce (they had those traits, and neither attack read them).
+local TRAITS={pellets='Fires a spread of pellets.',pierce='Shots pierce through enemies.',bounce='Bounces between enemies.',cards='Throws a three-card volley.',shots='Fires a burst of shots.',
+ spray='Sprays short bursts that hit everything in a cone.',stream='A steady stream that hits everything in its path.'}
 -- Its slow with numbers, e.g. 'Slows enemies 35% for 2 s.' (nil for a weapon that doesn't slow).
 function C.slowText(w)
  if not w or (w.slow or 0)<=0 then return nil end
  return 'Slows enemies '..num(w.slowStrength or 25)..'% for '..num(w.slowFor or 2)..' s.'
 end
--- Weapons in more than one class (2026-10-04, plans/2026-10-04-multi-class-weapons-design.md; user:
--- "weapons can belong to many classes if it makes sense, just like Brotato"). d.classes is the home
--- class, then these; d.home stays classes[1] for older code. Class fit takes the best match, set
--- bonuses and the Elemental / Utility flags count every listed class, and any listed class can
--- start with it. Example: Nail Gun = Handyman, Gunner: a Gunner gets +15% with it (was 0) and can
--- start with it. Kusarigama, Spatula, Boxing Gloves and Cinder Block follow the 2026-10-03 Brawler <->
--- Juggler swap (the design's table was written from the older homes), so their home stays first.
-C.AlsoClasses={['04']={'Thrower'},['05']={'Handyman'},['08']={'Mage'},['10']={'Thrower'},['11']={'Handyman'},
- ['12']={'Juggler'},['14']={'Mage'},['15']={'Juggler'},['17']={'Thrower'},['18']={'Juggler'},['19']={'Juggler'},
- ['20']={'Handyman'},['22']={'Thrower'},['23']={'Brawler'},['24']={'Gunner'},['26']={'Brawler'},['31']={'Thrower'},['32']={'Brawler'}}
--- Whether `class` is one of w's classes (a Godly has none). A bare {home=} table counts its home.
+-- Starter class (2026-10-09, plans/2026-10-09-chef-roster-weapon-types-design.md; user: every
+-- ordinary weapon has exactly ONE starter class, and weapon types are a separate system). It
+-- replaces the id-range homes, HOME_MOVED and the 2026-10-04 AlsoClasses. Thrower is gone and Chef
+-- takes its slot; Kusarigama moves to Brawler. d.class is the one class; d.home stays d.class for
+-- older code ('Godly' for a Godly) and d.classes is {d.class} ({} for a Godly).
+-- Example: Frying Pan d.class = 'Chef'.
+C.StarterClass={
+ Brawler={'02','03','04','06','19','20'},
+ Gunner={'00','07','08','09','10','11'},
+ Chef={'01','05','14','15','16','42'},
+ Juggler={'12','13','17','18','21','22','23'},
+ Handyman={'24','25','26','27','28','29'},
+ Mage={'30','31','32','33','34','35'},
+}
+C.ClassOf={};for class,ids in C.StarterClass do for _,id in ids do C.ClassOf[id]=class end end
+-- Elemental / Utility flags, authored (2026-10-09). They were worked out from Mage / Handyman
+-- membership; moving weapons between classes must not change their damage, so these equal the old
+-- values. Spatula, Rocket Launcher and Cinder Block keep Utility. Pizza Cutter has neither.
+C.ElementalIds={['08']=true,['14']=true,['17']=true,['30']=true,['31']=true,['32']=true,['33']=true,['34']=true,['35']=true,['38']=true,['41']=true}
+C.UtilityIds={['05']=true,['11']=true,['20']=true,['24']=true,['25']=true,['26']=true,['27']=true,['28']=true,['29']=true}
+-- Weapon types (2026-10-09, Brotato-style sets; CharacterStats.TypeSets has the bonuses). They follow
+-- what each attack really does, not what the object looks like: Kunai is Thrown, not Blade.
+-- Godlies have types too and count toward sets. Every Elemental member has the elemental flag and
+-- every Tool member the utility flag.
+C.Types={'Blade','Blunt','Gun','Thrown','Explosive','Elemental','Tool','Culinary','Trick'}
+C.TypesById={
+ ['00']={'Gun'},['01']={'Blunt','Culinary'},['02']={'Blunt'},['03']={'Blade'},['04']={'Blade'},['05']={'Blunt','Culinary'},
+ ['06']={'Blunt'},['07']={'Gun'},['08']={'Gun','Elemental'},['09']={'Gun'},['10']={'Gun'},['11']={'Gun','Explosive'},
+ ['12']={'Thrown','Trick'},['13']={'Thrown'},['14']={'Thrown','Explosive'},['15']={'Thrown','Culinary'},['16']={'Blunt','Culinary'},
+ ['17']={'Trick','Elemental'},['18']={'Thrown','Trick'},['19']={'Blunt'},['20']={'Blunt','Tool'},['21']={'Trick'},
+ ['22']={'Thrown','Trick'},['23']={'Thrown','Trick'},['24']={'Gun','Tool'},['25']={'Blunt','Tool'},['26']={'Blunt','Tool'},
+ ['27']={'Tool'},['28']={'Tool'},['29']={'Tool'},['30']={'Elemental'},['31']={'Blunt','Elemental'},['32']={'Blade','Elemental'},
+ ['33']={'Elemental','Explosive'},['34']={'Elemental'},['35']={'Elemental'},['36']={'Blade'},['37']={'Blade','Thrown'},
+ ['38']={'Elemental'},['39']={'Blade'},['40']={'Blade'},['41']={'Gun','Elemental'},['42']={'Blade','Culinary'},
+}
+-- A weapon id's types, e.g. typesOf('42') = {'Blade','Culinary'} ({} for an unknown id).
+function C.typesOf(id) return C.TypesById[id] or {} end
+-- Whether w starts runs as `class`. A Godly never does (an owned Godly starts with any class, which
+-- RunSetupRules allows separately). A bare {home=} table counts its home (the class screens' chips).
 function C.inClass(w,class)
  if type(w)~='table' or w.godly then return false end
- return table.find(w.classes or {w.home},class)~=nil
+ return (w.class or w.home)==class
 end
--- 'Thrower and Juggler'; with sep, joined by it instead ('THROWER · JUGGLER' with ' · ').
+-- The starter class's name ('' for a Godly). sep is kept for older callers; there is one class now.
 function C.classNames(w,sep)
- local list=w.classes or {w.home}
- if sep or #list<2 then return table.concat(list,sep or '') end
- return table.concat(list,', ',1,#list-1)..' and '..list[#list]
+ if type(w)~='table' or w.godly then return '' end
+ return w.class or w.home or ''
 end
+-- 'Chef starter weapon. Blade, Culinary.' then its traits.
 function C.describe(w)
- if w.godly then return 'Any class can start a run with it.' end
- local out={'Home weapon of the '..C.classNames(w)..((w.classes and #w.classes>1) and ' classes.' or ' class.')}
+ local types=#(w.types or {})>0 and table.concat(w.types,', ')..'.' or nil
+ if w.godly then return 'Any class can start a run with it.'..(types and ' '..types or '') end
+ local out={C.classNames(w)..' starter weapon.'}
+ if types then table.insert(out,types) end
  if TRAITS[w.trait] then table.insert(out,TRAITS[w.trait]) end
  if w.burn>0 then table.insert(out,'Sets enemies on fire.') end
  if w.poison>0 then table.insert(out,'Poisons what it hits.') end
@@ -219,7 +257,6 @@ function C.describe(w)
  if w.blastRadius then table.insert(out,'Explodes on impact.') end
  return table.concat(out,' ')
 end
-local HOME_MOVED={['19']='Brawler',['20']='Brawler',['05']='Juggler',['04']='Juggler'}
 for i,name in names do
  local n=i-1
  local kind=ranged[n] and 'Ranged' or 'Melee'
@@ -242,16 +279,12 @@ for i,name in names do
  if n==11 then d.projectileSpeed=46;d.blastRadius=6 end
  if n==18 then d.projectileSpeed=90 end
  if n==33 then d.projectileSpeed=58;d.blastRadius=7 end
- d.home=n>=30 and 'Mage' or (n>=24 and 'Handyman' or (n>=17 and n~=18 and 'Juggler' or (n>=12 and 'Thrower' or (n==0 or n>=7) and 'Gunner' or 'Brawler')))
- -- 2026-10-03: Brawler is the hand-to-hand class, Juggler the tricks and toys. Swapped in equal-rarity
- -- pairs so every class keeps 2 Common, 2 Rare, 1 Epic, 1 Legendary: Boxing Gloves <-> Spatula (Common),
- -- Cinder Block <-> Kusarigama (Epic).
- d.home=HOME_MOVED[d.id] or d.home
- d.classes={d.home};for _,c in C.AlsoClasses[d.id] or {} do table.insert(d.classes,c) end
-
+ d.class=C.ClassOf[d.id];d.home=d.class;d.classes={d.class}
+ d.types=table.clone(C.typesOf(d.id))
  if n==17 or n==21 or n==23 then d.kind='Ranged' end
- -- Godly weapons belong to no class; any class may start with an owned one.
- if n>=36 then d.home='Godly';d.classes={};d.godly=true;d.special=C.Godly[d.id] end
+ -- Godly weapons belong to no class; any class may start with an owned one. The explicit Godly set
+ -- (C.Godly), never an id range: Pizza Cutter '42' came after them.
+ if C.isGodly(d.id) then d.class=nil;d.home='Godly';d.classes={};d.godly=true;d.special=C.Godly[d.id] end
  if n==37 then d.hybridRange=36;d.projectileSpeed=60;d.throwable=true end
  if n==38 then d.projectileSpeed=95 end
  if n==39 then d.scripted=true end -- the daggers' chain is the hit; no swing box
@@ -261,15 +294,14 @@ for i,name in names do
  if n==8 then d.projectileSpeed=150 end
  local thrownSpeed={[12]=40,[13]=65,[14]=38,[15]=40,[22]=28,[23]=40}
  if thrownSpeed[n] then d.projectileSpeed=thrownSpeed[n] end
- -- Any listed class counts (2026-10-04): Spatula, Rocket Launcher and Cinder Block (Handyman second)
- -- now take Utility Power and count for the utilityKills quest.
- d.elemental=C.inClass(d,'Mage') or n==8 or n==14 or n==17 or n==38 or n==41
- d.utility=C.inClass(d,'Handyman')
+ d.elemental=C.ElementalIds[d.id]==true
+ d.utility=C.UtilityIds[d.id]==true
  d.burn=n==14 and 100 or 0;d.poison=n==8 and 100 or 0;d.slow=C.SlowById[d.id] and 100 or 0;d.lightning=n==35 or n==31
  if C.SlowById[d.id] then d.slowStrength=C.SlowById[d.id].strength;d.slowFor=C.SlowById[d.id].seconds end
- d.tags={d.kind=='Melee' and 'Melee' or 'Projectile',d.home}
- for i=2,#d.classes do table.insert(d.tags,d.classes[i]) end
- if d.elemental then table.insert(d.tags,'Elemental') end
+ -- Tags: attack family, starter class, weapon types, then the Elemental / Utility flags (no repeats).
+ d.tags={d.kind=='Melee' and 'Melee' or 'Projectile'}
+ for _,tag in {d.class or 'Godly',table.unpack(d.types)} do if not table.find(d.tags,tag) then table.insert(d.tags,tag) end end
+ if d.elemental and not table.find(d.tags,'Elemental') then table.insert(d.tags,'Elemental') end
  if d.utility then table.insert(d.tags,'Utility') end
  table.insert(C.List,d);C.ById[d.id]=d
 end

@@ -18,11 +18,10 @@ local function equal(a,b,message) check(math.abs(a-b)<.02,(message or 'differenc
 local function edit(action,key,value) state.lastRequest=-1e6;return Service.request(player,action,key,value) end
 combat:SetAttribute('ZombiesEnabled',false);state.folder:SetAttribute('WeaponEnabled',false)
 local force=player.Character:FindFirstChildOfClass('ForceField');if force then force:Destroy() end
--- Weapons per class, counting every class in each weapon's list (2026-10-04 multi-class design; the
--- design's table with the 2026-10-03 Brawler <-> Juggler swap applied): 54 memberships over 36 weapons.
+-- Weapons per class (2026-10-09: one starter class per weapon, Chef replaces Thrower): 37 weapons.
 local counts={}
 for _,w in C.List do for _,c in w.classes do counts[c]=(counts[c] or 0)+1 end end
-local WANT={Brawler=9,Gunner=7,Thrower=11,Juggler=10,Handyman=9,Mage=8}
+local WANT={Brawler=6,Gunner=6,Chef=6,Juggler=7,Handyman=6,Mage=6}
 for _,class in S.ClassOrder do
  check(counts[class]==WANT[class],'weapons in '..class..': '..tostring(counts[class]))
  -- 2026-10-03 class rework: the starter is one of the class's own weapons, the class panels have
@@ -34,46 +33,40 @@ for _,class in S.ClassOrder do
   for _,d in S.List do check(s[d.id]>=d.min and s[d.id]<=d.max,'bounded '..d.id) end
   for _,w in C.List do local d=S.weapon(w,s,class);check(d.damage>0 and d.cooldown>=.08 and d.range>0,'weapon math '..w.name) end
  end
- -- Class weapon fit: own class x1.15, other classes by the pair table, godly unchanged (no class = x1).
- -- A weapon in several classes takes the best of them (2026-10-04).
+ -- Specialty (2026-10-09): x1.10 on a weapon of your class, nothing otherwise, never a Godly.
  local s=S.resolve(class,0)
  for _,w in C.List do
-  local best=nil
-  for _,c in w.classes do
-   local pct=c==class and S.ClassFit.Own or S.ClassFit[class][c]
-   if c~=class then check(S.ClassFit[class][c]==S.ClassFit[c][class],'class fit symmetric '..class..' '..c) end
-   best=math.max(best or pct,pct)
-  end
-  local want=w.godly and 1 or 1+best/100
-  equal(S.weapon(w,s,class).damage/S.weapon(w,s,nil).damage,want,'class fit '..class..' '..w.name)
+  local want=(not w.godly and w.class==class) and 1+S.Specialty/100 or 1
+  equal(S.weapon(w,s,class).damage/S.weapon(w,s,nil).damage,want,'specialty '..class..' '..w.name)
  end
  check(edit('Class',class),'class request');check(edit('Build'),'build request')
- check(state.folder:GetAttribute('AffinityCount')>=3,'build affinity')
+ local preset=S.typeCounts(S.Classes[class].build)
+ for t,n in preset do check(state.typeCounts[t]==n,'build type count '..class..' '..t) end
  equal(humanoid.MaxHealth,state.stats.MaxHP,'avatar health');equal(humanoid.WalkSpeed,state.stats.MoveSpeed,'avatar speed')
  for _,d in S.List do equal(player.Character:GetAttribute('Stat_'..d.id),state.stats[d.id],'avatar '..d.id) end
 end
 do local s=S.resolve('Gunner',0);check(S.weapon(C.ById['00'],s,'Gunner').cooldown<S.weapon(C.ById['00'],s,'Brawler').cooldown,'Gunner ranged attack speed') end
--- Multi-class weapons (2026-10-04). Best fit: the Nail Gun (Handyman, Gunner) is +15% for a Gunner
--- (0 from Handyman alone); a Mage takes the better of Mage-Handyman and Mage-Gunner (both -5).
+-- One starter class per weapon (2026-10-09): the Nail Gun is Handyman's only, so a Gunner gets no
+-- specialty with it; a Godly gets none with any class.
 do
- local nail=C.ById['24']
- local fit,pct,via=S.classFit(nail,'Gunner');check(fit=='home' and pct==S.ClassFit.Own and via=='Gunner','Nail Gun fits a Gunner +15%')
- local _,mage=S.classFit(nail,'Mage');check(mage==math.max(S.ClassFit.Mage.Handyman,S.ClassFit.Mage.Gunner),'best of two classes')
- local _,brawler=S.classFit(C.ById['04'],'Brawler');check(brawler==math.max(S.ClassFit.Brawler.Juggler,S.ClassFit.Brawler.Thrower),'Kusarigama best fit for a Brawler')
- local _,bare=S.classFit({home='Thrower'},'Gunner');check(bare==S.ClassFit.Gunner.Thrower,'a bare {home=} still works (class chips)')
- check(select(2,S.classFit(C.ById['36'],'Gunner'))==0 and not S.inClass(C.ById['36'],'Gunner'),'Godly stays class-neutral')
- -- Set counting: two Kusarigamas (Juggler, Thrower) count 2 for a Juggler and for a Thrower, 0 for a Brawler.
+ check(S.specialty(C.ById['24'],'Gunner')==0 and S.specialty(C.ById['24'],'Handyman')==S.Specialty,'Nail Gun: Handyman specialty only')
+ check(S.specialty(C.ById['36'],'Gunner')==0 and not S.inClass(C.ById['36'],'Gunner'),'Godly stays class-neutral')
+ -- Type sets count copies, live: two Kusarigamas = Blade 2 for any class, +2 crit on them only.
  local saved={};for i=1,6 do saved[i]=state.folder['Slot'..i]:GetAttribute('WeaponId') end
  for i=1,6 do state.folder['Slot'..i]:SetAttribute('WeaponId',i<=2 and '04' or '') end
- for class,want in {Juggler=2,Thrower=2,Brawler=0} do
-  check(edit('Class',class),'class '..class);check(state.folder:GetAttribute('AffinityCount')==want,'multi-class set count '..class..': '..tostring(state.folder:GetAttribute('AffinityCount')))
+ for _,class in {'Juggler','Chef','Brawler'} do
+  check(edit('Class',class),'class '..class);check(state.typeCounts.Blade==2,'Blade 2 with two copies as '..class)
+  local d=S.weapon(C.ById['04'],state.stats,class,1,state.typeCounts)
+  check(S.weaponStats(state.stats,d).CritChance==math.min(100,state.stats.CritChance+2),'Blade 2 crit on the Kusarigama as '..class)
  end
- -- Utility Power follows the list: Spatula and Cinder Block list Handyman second.
- check(C.ById['05'].utility and C.ById['20'].utility and C.ById['11'].utility and not C.ById['00'].utility,'utility flag from any listed Handyman')
+ -- Merging or selling (a slot emptied) recounts at once.
+ state.folder.Slot2:SetAttribute('WeaponId','');Service.refresh(player);check(state.typeCounts.Blade==1,'emptied slot recounts')
+ -- Utility Power follows the authored list: Spatula, Cinder Block and Rocket Launcher keep it.
+ check(C.ById['05'].utility and C.ById['20'].utility and C.ById['11'].utility and not C.ById['00'].utility,'authored utility flags')
  for i=1,6 do state.folder['Slot'..i]:SetAttribute('WeaponId',saved[i] or '') end
  Service.refresh(player)
 end
-table.insert(results,'six classes, 36 weapons in 54 class lists, best class fit, multi-class set counts, avatar attributes and affinity calculations')
+table.insert(results,'six classes, 43 weapons with one starter class each, specialty, live type set counts, avatar attributes')
 for _,bad in {0/0,math.huge,-math.huge,'100',{},100000} do check(not edit('Stat','Damage',bad),'reject malformed/out of range') end
 check(not edit('Stat','DoesNotExist',10),'reject unknown stat')
 check(not edit('Stat','Pierce',.5),'reject fractional count')
@@ -97,6 +90,10 @@ state.overrides.FirstHitBlock=0;state.overrides.Regeneration=2;state.overrides.R
 humanoid.Health=50;task.wait(1.2);check(humanoid.Health>53 and humanoid.Health<55,'regeneration and recovery')
 state.overrides.Regeneration=0;state.overrides.LifeSteal=30;state.overrides.LifeStealCap=5;Service.refresh(player)
 state.leech=0;humanoid.Health=40;Service.leech(player,100);Service.leech(player,100);equal(humanoid.Health,45,'life steal per-second cap')
+-- A Culinary weapon's own life steal (its d.stats.LifeSteal, 2026-10-09), with Recovery (+50%) and the cap.
+state.overrides.LifeSteal=0;Service.refresh(player);state.leech=0;humanoid.Health=40
+Service.leech(player,100);equal(humanoid.Health,40,'no life steal of your own')
+Service.leech(player,10,20);equal(humanoid.Health,43,'the hitting weapon heals its own 20% x Recovery')
 table.insert(results,'armor, dodge, first-hit block, regeneration, recovery and capped life steal')
 local folder=Instance.new('Folder');folder.Name='CharacterStatsTestTargets';folder.Parent=workspace.RogueliteEnemies
 local function target(name,position)
@@ -144,6 +141,12 @@ local nb=hn.Health;E.hit(stream,1,wd,true,nil,.5);equal(hn.Health,nb,'half a hit
 E.hit(stream,1,wd,true,nil,.5);check(hn.Health<nb,'two half-hit ticks chain lightning once')
 neutral.ChainCount=0
 table.insert(results,'Vacuum / Power Washer stream ticks crit and proc at their share of an attack')
+-- Blade set crit (2026-10-09): a weapon's own stats carry it, and only that weapon's hits roll it.
+neutral.SlowChance=0;neutral.CritChance=98;neutral.CritDamage=200;neutral.Knockback=0
+local kd=S.weapon(C.ById['03'],neutral,'Gunner',1,S.typeCounts({'03','03'}));kd.stats=S.weaponStats(neutral,kd);kd.owner=player;kd.character=player.Character
+check(kd.stats.CritChance==100 and neutral.CritChance==98,'Blade 2: +2 crit on the Katana only')
+equal(E.hit(stream,10,kd),20,'the Blade set crit lands')
+table.insert(results,'per-weapon Blade crit and Culinary life steal')
 folder:Destroy()
 check(edit('Reset'),'reset');check(edit('Heal'),'heal')
 table.insert(results,'reset and heal requests')

@@ -48,6 +48,7 @@ local Icons={
  ["39"]="rbxassetid://112261102861999",
  ["40"]="rbxassetid://90868128996170",
  ["41"]="rbxassetid://74294498569772",
+ ["42"]="rbxassetid://139846764441734", -- Pizza Cutter: the user's icon (2026-10-09), weapon-models/assets/42-pizza-cutter/Icon.png
 }
 -- Godly art exists before the weapons become playable. Match names instead of guessing IDs.
 I.IconsByName={

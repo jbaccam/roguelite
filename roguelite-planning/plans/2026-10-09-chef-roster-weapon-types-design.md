@@ -83,21 +83,25 @@ Members per type: Blade 8 (4 Godly), Blunt 10, Gun 8, Thrown 8, Explosive 3, Ele
 
 ### Set bonuses (running totals at 2 / 3 / 4 / 5 / 6 equipped)
 
-| Type | Bonus | Scope | Why every member can use it |
-|---|---|---|---|
-| Blade | +3 / 6 / 9 / 12 / 15 crit chance | Blade weapons | Crit rolls on every direct hit |
-| Blunt | +1 / 2 / 3 / 4 / 5 armor | You | Defensive, so the weapon doesn't matter |
-| Gun | +5 / 10 / 10 / 15 / 15% attack speed, plus +1 projectile from 4 copies | Gun weapons | Every Gun member supports extra projectiles (items audit). This keeps Gunner's old 4-weapon projectile, which was worth up to x2 single-target, now open to any class running 4 guns |
-| Thrown | +4 / 7 / 10 / 13 / 15% damage | Thrown weapons | Plain damage |
-| Explosive | +10 / 20 / 30 / 40 / 50% blast radius | Explosive weapons | All three are blast or zone weapons |
-| Elemental | +4 / 7 / 10 / 13 / 15% damage | Elemental weapons | Plain damage |
-| Tool | +4 / 8 / 12 / 16 / 20% utility power | You | All Tool weapons have the utility flag; also boosts turrets |
-| Culinary | Hits heal 2 / 3 / 4 / 5 / 6% of their damage | Culinary weapons | Life steal under the existing per-second cap |
-| Trick | +2 / 4 / 6 / 8 / 10% dodge | You | Defensive, so the weapon doesn't matter |
+Every set gives its weapons the same damage curve: **+4 / 7 / 10 / 13 / 15% damage**. A weapon with two types gets only the higher of its two curves, never both. On top, each type has one flavor bonus:
 
-Damage curves follow the items audit's budget (section 5d): specialty x1.10 times a +15% six-copy set is about today's x1.25-1.28 own-class package for Brawler and Mage, so focused builds don't inflate. No weapon is in two damage-percent sets.
+| Type | Flavor bonus | Scope |
+|---|---|---|
+| Blade | +2 / 4 / 6 / 8 / 10 crit chance | Blade weapons |
+| Blunt | +1 / 1 / 2 / 2 / 3 armor | You |
+| Gun | +1 projectile from 4 copies | Gun weapons (every Gun member supports extra projectiles) |
+| Thrown | +5 / 10 / 15 / 20 / 25% projectile speed | Thrown weapons |
+| Explosive | +10 / 20 / 30 / 40 / 50% blast radius | Explosive weapons |
+| Elemental | +3 / 6 / 9 / 12 / 15 burn chance | Elemental weapons |
+| Tool | +4 / 8 / 12 / 16 / 20 utility power | You (also boosts turrets) |
+| Culinary | Hits heal 2 / 3 / 4 / 5 / 6% of their damage | Culinary weapons (existing life-steal cap) |
+| Trick | +2 / 4 / 6 / 8 / 10 dodge | You |
 
-Only the Gun set grants a projectile, because only its members all support one. No set gives pierce, bounce or range. Those would do nothing for streams and melee, and range buffs fed the earlier "ranged weapons dominate" problem.
+Example: Brawler with Katana, Kusarigama, Bat, Gloves, Nunchucks, Cinder Block is Blade 2 and Blunt 4. The Katana gets +10% specialty and +4% damage and +4 crit chance from Blade 2. The Bat gets +10% specialty and +10% damage from Blunt 4. You get +2 armor.
+
+Why one shared curve: the first version gave Blade, Blunt and Tool only crit, armor or utility power, so full Brawler and Handyman rosters came out 13-14% weaker than before while guns gained 5-10%. That pushed balance toward ranged, the opposite of the earlier "ranged weapons dominate" feedback. The curve follows the items audit budget (section 5d): x1.10 specialty times about +15% is today's x1.25-1.28 own-class package.
+
+Only the Gun set grants a projectile, because only its members all support one. No set gives pierce, bounce or range.
 
 Class identity that isn't class fit stays: Handyman's Utility Power gain x1.25 and free turret, Juggler's +15% attack speed buff, Gunner's +10% ranged attack speed, Brawler's dash.
 

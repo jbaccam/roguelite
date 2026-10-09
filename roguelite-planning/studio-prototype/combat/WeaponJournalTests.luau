@@ -16,7 +16,7 @@ function Tests.run(J)
  d.weapons['00']={damage=J.MAX,kills=J.MAX};J.hit(d,'00',100,true)
  check(d.weapons['00'].damage==J.MAX and d.weapons['00'].kills==J.MAX,'counters saturate')
  local view=J.view(d);view.weapons['00'].damage=0;check(d.weapons['00'].damage==J.MAX,'view cannot mutate save')
- check(#J.WeaponIds==42,'all 42 weapons indexed')
+ check(#J.WeaponIds==43,'all 43 weapons indexed (Pizza Cutter 2026-10-09)')
  for _,item in J.Items do
   local ids=J.compatibility(item);local seen={}
   for _,id in ids do check(table.find(J.WeaponIds,id)~=nil and not seen[id],'valid unique compatibility '..item.id);seen[id]=true end

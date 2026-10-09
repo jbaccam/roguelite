@@ -99,6 +99,8 @@ function E.hit(npc,amount,d,secondary,dot,stream)
  if (npc:GetAttribute('BossIntroUntil') or 0)>workspace:GetServerTimeNow() then return 0 end
  -- Tag before damage: the Died handler can run immediately on a lethal shot.
  if d.id=='10' and not secondary and amount>0 and not npc:GetAttribute('LobbyDummy') and not npc:GetAttribute('DesignerShirt') then npc:SetAttribute('DesignerShirt',true) end
+ -- d.stats is the hitting weapon's own view of the player's stats (CharacterStats.weaponStats,
+ -- 2026-10-09): a Blade set's crit chance and a Culinary set's life steal are only on those weapons.
  local s=d.stats;local position=r.Position
  if own then
   -- Ninja 4-piece: after a dodge (CharacterService.contact) the next direct hit always crits. Not a
@@ -143,7 +145,7 @@ function E.hit(npc,amount,d,secondary,dot,stream)
   total.damage+=actual;if h.Health<=0 then total.kills+=1 end
  end
  for _,fn in damageListeners do local ok,err=pcall(fn,d.owner,d.id,actual,secondary==true,h.Health<=0);if not ok then warn('listenDamage failed:',err) end end
- if not d.structure then Characters.leech(d.owner,actual) end -- turrets don't life-steal (HandymanTurret)
+ if not d.structure then Characters.leech(d.owner,actual,s.LifeSteal) end -- turrets don't life-steal (HandymanTurret)
  if E.onHit then local ok,err=pcall(E.onHit,npc,d,actual,secondary==true);if not ok then warn('onHit failed:',err) end end
  if STUDIO then combat:SetAttribute('ConfirmedHits',(combat:GetAttribute('ConfirmedHits') or 0)+1) end
  -- A lethal hit is represented by the death burst, not a second hit burst.
@@ -182,9 +184,10 @@ function E.hit(npc,amount,d,secondary,dot,stream)
  if state then
   -- A stream tick counts as its share of a hit: with ChainEvery 5, about every 13 ticks at .375.
   local before=state.hits;state.hits+=share
-  local sourceCount=math.max(s.ChainCount,d.lightning and 1 or 0)
-  local count=math.min(6,sourceCount+s.ChainBonus)
-  if sourceCount>0 and math.floor(state.hits/s.ChainEvery)>math.floor(before/s.ChainEvery) then
+  -- CharacterStats.chainTargets: a lightning weapon adds 1 to the player's Lightning targets (the
+  -- Battery Pack fix, 2026-10-09: it took the bigger of the two before).
+  local count=Stats.chainTargets(s,d)
+  if count>0 and math.floor(state.hits/s.ChainEvery)>math.floor(before/s.ChainEvery) then
    for i,target in near(position,12*Stats.mult(s.AreaSize),{[npc]=true},d.character) do
     if i>count then break end
     bolts:push(d.owner,position,target.HumanoidRootPart.Position,'Lightning',d.id)

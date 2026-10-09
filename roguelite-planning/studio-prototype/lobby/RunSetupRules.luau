@@ -83,7 +83,8 @@ R.WinWave=20
 -- gone (the user, 2026-10-02; audit G5).
 R.Milestones={{5},{10},{15},{20,'BOSS'}}
 R.Signature=Stats.Signature -- each class's starting weapon (CharacterStats)
-R.ClassUnlock={Thrower='Reach wave 10 on Pine Valley',Juggler='Win Pine Valley',Handyman='Defeat 1,000 enemies with Utility weapons'}
+-- Chef takes Thrower's quest (2026-10-09; Thrower owners own Chef).
+R.ClassUnlock={Chef='Reach wave 10 on Pine Valley',Juggler='Win Pine Valley',Handyman='Defeat 1,000 enemies with Utility weapons'}
 -- Emeralds a run pays: one payout per 5 waves reached (wave 12 on Pine Valley Normal = 2 x 20 = 40).
 function R.runEmeralds(index,diff,wave)
  local m=R.Maps[index] or R.Maps[1]
@@ -121,12 +122,20 @@ function R.classOrder(classes)
  for pass=1,2 do for _,c in Stats.ClassOrder do if (classes[c]==true)==(pass==1) then table.insert(out,c) end end end
  return out
 end
--- Every weapon with `class` anywhere in its list (2026-10-04: no cap of six, e.g. 11 for Thrower),
--- in catalog order. These are the weapons the class may start with when owned.
+-- The class's own weapons (its starter class, 2026-10-09: 6 or 7 each), in catalog order. These are
+-- the weapons the class may start with when owned.
 function R.classWeapons(class) local out={};for _,w in Weapons.List do if Weapons.inClass(w,class) then table.insert(out,w) end end;return out end
 R.homeWeapons=R.classWeapons -- the old name
 -- Godlies this profile owns (any class can start with one); unowned Godlies are never listed.
 function R.ownedGodlies(weapons) local out={};for _,w in Weapons.List do if w.godly and weapons[w.id] then table.insert(out,w) end end;return out end
+-- The starter picker's list (2026-10-09): the class's owned weapons, then owned Godlies. weapons: the
+-- owned set (R.progress(player).weapons). Example, a fresh Brawler: {Boxing Gloves}.
+function R.starters(class,weapons)
+ local out={}
+ for _,w in R.classWeapons(class) do if weapons[w.id] then table.insert(out,w) end end
+ for _,w in R.ownedGodlies(weapons) do table.insert(out,w) end
+ return out
+end
 
 -- Server checks for a run request. Returns true or false plus a short reason.
 function R.validMap(player,mapId,diff)
@@ -149,11 +158,11 @@ function R.validLoadout(player,class,weapon)
  if not p.classes[class] then return false,'Class locked' end
  local w=type(weapon)=='string' and Weapons.ById[weapon]
  -- An owned Godly starts a run with any class (it is the run's one Godly: the shop never sells one).
- -- Any owned weapon with the class in its list starts (2026-10-04): a Gunner may start with the Nail
- -- Gun (Handyman, Gunner). Every lobby and match fallback calls this, so a saved starter that no
- -- longer fits drops to the class's signature weapon.
+ -- Otherwise the weapon's one starter class must be this class (2026-10-09; it was any listed class):
+ -- a Brawler can't start with the Frying Pan, a Chef can. Every lobby and match fallback calls this,
+ -- so a saved starter that no longer fits drops to the class's signature weapon.
  if not w or not p.weapons[weapon] then return false,'Weapon not owned' end
- if not Weapons.inClass(w,class) and not w.godly then return false,w.name..' is not a '..class..' weapon' end
+ if w.class~=class and not w.godly then return false,w.name..' is not a '..class..' weapon' end
  return true
 end
 return R

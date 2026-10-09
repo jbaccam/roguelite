@@ -22,6 +22,8 @@ local BEFORE={['00']={45,.72},['01']={6,1.05},['02']={6,.5},['03']={11,.95},['04
  ['23']={28,1.25},['24']={40,.28},['25']={12,1.6},['26']={8,1.15},['27']={9,.8},['28']={20,.32},['29']={30,.24},['30']={45,1.15},
  ['31']={8,2},['32']={8.5,1.35},['33']={50,2},['34']={38,1.2},['35']={48,1.05},['36']={10,1.25},['37']={9,1.5},['38']={50,1.2},
  ['39']={10,1.3},['40']={9,1.3},['41']={48,.9}}
+-- Weapons added after those passes have no old numbers (Pizza Cutter, 2026-10-09); their own checks are below.
+local NEW={['42']=true}
 local E=require(C.EconomyConfig)
 local Catalog=require(C.ShopCatalog)
 local ok,err=xpcall(function()
@@ -47,10 +49,11 @@ local ok,err=xpcall(function()
  check(Stats.weapon(Weapons.ById['24'],neutral,'Brawler',4).nativePierce==2,'nails gain piercing')
  check(Stats.weapon(Weapons.ById['34'],neutral,'Brawler',2).projectileCount==2,'Medusa gains projectile')
  -- Draco late-fodder correction: actual reported loadout was Brawler (no Gunner affinity),
- -- Damage32, RangedDamage-15, GP1, with six Tier IV Dracos and +1 projectile.
+ -- Damage32, RangedDamage-15, GP1, with six Tier IV Dracos and +1 projectile. 2026-10-09: no class fit
+ -- any more, so off-class it is 11 x 1.32 x .85 = 12.342 (was x.85 more, 10.4907); same breakpoints.
  local dracoStats=Stats.resolve('Brawler',0,{Damage=32,RangedDamage=-15,GearPower=1,ProjectileCount=1,AttackSpeed=0})
  local draco=Stats.weapon(Weapons.ById['07'],dracoStats,'Brawler',4)
- check(math.abs(draco.damage-10.4907)<.0001,'Draco reported off-class damage')
+ check(math.abs(draco.damage-12.342)<.0001,'Draco reported off-class damage')
  check(math.ceil(Types.scaled('Regular',20).health/draco.damage)==4,'Draco wave20 regular four-hit breakpoint')
  check(math.ceil(Types.scaled('Baby',20).health/draco.damage)==2,'Draco wave20 baby two-hit breakpoint')
  check(draco.nativePierce==0 and draco.nativeBounce==0 and draco.projectileCount==1,'Draco improves damage without adding projectile work or ricochet')
@@ -83,6 +86,7 @@ local ok,err=xpcall(function()
     check(w.tierCooldown[tier]==({1,.9,.8,.7})[tier],'tier cooldown rule '..w.id..' '..tier)
    end
    -- Tier IV damage per second within 10% of before, not counting rarity power.
+   if NEW[w.id] then continue end
    local new=w.tierDamage[4]/(w.cooldown*w.tierCooldown[4])/Weapons.RarityPower[w.rarity]
    local pass=MELEE_PASS[w.id]
    local old=OLD_T4[w.id]*(pass and pass[2]/pass[1] or 1)/(w.authoredCooldown*.84)
@@ -93,11 +97,12 @@ local ok,err=xpcall(function()
    end
   end
  end
- check(counts.Common==12 and counts.Rare==12 and counts.Epic==5 and counts.Legendary==7 and counts.Godly==6,'rarity pools 12/12/5/7/6')
+ check(counts.Common==12 and counts.Rare==12 and counts.Epic==5 and counts.Legendary==8 and counts.Godly==6,'rarity pools 12/12/5/8/6 (Pizza Cutter is Legendary)')
  check(Weapons.ById['03'].damage==21 and math.abs(Weapons.ById['03'].cooldown-.924)<.001,'katana example 21 / .924')
  check(Weapons.ById['00'].tierDamage[2]==17 and Weapons.ById['00'].tierDamage[4]==33,'glock example 12/17/24/33')
  -- Melee vs ranged pass (2026-10-03): ranged ~22% shorter and ~12% slower, melee ~20% longer.
  for _,w in Weapons.List do
+  if NEW[w.id] then continue end
   local was=BEFORE[w.id];check(was~=nil,'before numbers '..w.id)
   local reach,rate=w.range/was[1],w.authoredCooldown/was[2]
   if w.kind=='Melee' then
@@ -138,7 +143,8 @@ local ok,err=xpcall(function()
   for _,w in Weapons.List do if not w.godly then local x=E.rarityWeight(w.rarity,wave,0);total+=x;if w.rarity=='Legendary' then leg+=x end end end
   return leg/total
  end
- check(math.abs(legendaryShare(1)-.102)<.005 and math.abs(legendaryShare(20)-.164)<.005,'documented legendary offer share 10% -> 16%')
+ -- 2026-10-09: the Pizza Cutter is an eighth Legendary, so the share went from 10% -> 16% to 11.5% -> 18.3%.
+ check(math.abs(legendaryShare(1)-.115)<.005 and math.abs(legendaryShare(20)-.183)<.005,'documented legendary offer share 11.5% -> 18.3%')
  -- Rarer weapons cost more: a Legendary's catalog price is x1.5 the same band's Common price.
  for _,entry in Catalog.List do
   if entry.kind=='Weapon' then
@@ -147,26 +153,29 @@ local ok,err=xpcall(function()
   end
  end
  check(E.TIER_NAMES[4]=='Tier IV','tier words are not rarity words')
- -- Multi-class weapons (2026-10-04): every non-Godly weapon lists 1-3 distinct known classes, the first
- -- is its home from before the change (the 2026-10-03 homes below), Godly weapons list none, and the
- -- Utility / Elemental flags follow the whole list.
- local OLD_HOME={Brawler={'01','02','03','06','19','20'},Gunner={'00','07','08','09','10','11'},Thrower={'12','13','14','15','16','18'},
-  Juggler={'04','05','17','21','22','23'},Handyman={'24','25','26','27','28','29'},Mage={'30','31','32','33','34','35'}}
- local homeOf={};for class,ids in OLD_HOME do for _,id in ids do homeOf[id]=class end end
+ -- One starter class per ordinary weapon (2026-10-09, plans/2026-10-09-chef-roster-weapon-types-design.md):
+ -- the class is in CharacterStats, Godly weapons have none, and the Elemental / Utility flags are the
+ -- authored lists (the values they had when they came from Mage / Handyman membership).
+ local ELEMENTAL={['08']=true,['14']=true,['17']=true,['30']=true,['31']=true,['32']=true,['33']=true,['34']=true,['35']=true,['38']=true,['41']=true}
+ local UTILITY={['05']=true,['11']=true,['20']=true,['24']=true,['25']=true,['26']=true,['27']=true,['28']=true,['29']=true}
  for _,w in Weapons.List do
-  if w.godly then check(#w.classes==0 and w.home=='Godly' and not Weapons.inClass(w,'Brawler'),'godly has no class '..w.id)
-  else
-   check(#w.classes>=1 and #w.classes<=3,'1-3 classes '..w.id)
-   check(w.classes[1]==homeOf[w.id] and w.home==w.classes[1],'first class is the old home '..w.id)
-   local seen={}
-   for _,c in w.classes do check(Stats.Classes[c]~=nil and not seen[c] and Weapons.inClass(w,c),'known, distinct class '..w.id..' '..c);seen[c]=true end
-   check(w.utility==(seen.Handyman==true),'utility follows a listed Handyman '..w.id)
-   if seen.Mage then check(w.elemental,'listed Mage is elemental '..w.id) end
-  end
+  if w.godly then check(#w.classes==0 and w.home=='Godly' and w.class==nil and not Weapons.inClass(w,'Brawler'),'godly has no class '..w.id)
+  else check(Stats.Classes[w.class]~=nil and #w.classes==1 and w.home==w.class and Weapons.inClass(w,w.class),'one known class '..w.id) end
+  check(w.elemental==(ELEMENTAL[w.id]==true) and w.utility==(UTILITY[w.id]==true),'authored elemental / utility '..w.id)
  end
- local nail=Weapons.ById['24'];check(#nail.classes==2 and nail.classes[2]=='Gunner','Nail Gun: Handyman, Gunner')
- check(Weapons.ById['05'].utility and Weapons.ById['20'].utility,'Spatula and Cinder Block take Utility Power')
- check(Weapons.classNames(Weapons.ById['12'])=='Thrower and Juggler' and Weapons.classNames(Weapons.ById['12'],' · ')=='Thrower · Juggler' and Weapons.classNames(Weapons.ById['13'])=='Thrower','class names')
- check(string.find(Weapons.describe(Weapons.ById['12']),'Thrower and Juggler classes.',1,true)~=nil,'card text lists every class')
+ check(Weapons.ById['05'].utility and Weapons.ById['11'].utility and Weapons.ById['20'].utility,'Spatula, Rocket Launcher and Cinder Block keep Utility Power')
+ check(Weapons.classNames(Weapons.ById['13'])=='Juggler' and Weapons.classNames(Weapons.ById['36'])=='','class names')
+ check(string.find(Weapons.describe(Weapons.ById['12']),'Juggler starter weapon. Thrown, Trick.',1,true)==1,'card text: starter class and types')
+ -- Pizza Cutter (2026-10-09): Legendary melee about Katana's and Steak's damage per second, shorter reach
+ -- than Katana and faster hits; its Tier IV move is data until LegendaryMoves runs the Rolling Slice.
+ local function dps(id,tier) local d=Stats.weapon(Weapons.ById[id],neutral,nil,tier);return d.damage/d.cooldown end
+ local pc,katana,steak=Weapons.ById['42'],Weapons.ById['03'],Weapons.ById['16']
+ check(pc.kind=='Melee' and pc.rarity=='Legendary' and pc.class=='Chef' and pc.damage==15 and math.abs(pc.cooldown-.673)<.001,'Pizza Cutter 15 / .673 (13 / .70 authored)')
+ for tier=1,4 do
+  check(math.abs(dps('42',tier)/dps('03',tier)-1)<=.10,string.format('Pizza Cutter T%d DPS within 10%% of Katana (%.1f vs %.1f)',tier,dps('42',tier),dps('03',tier)))
+  check(dps('42',tier)>dps('16',tier),'Pizza Cutter above Steak (Rare) at T'..tier)
+ end
+ check(pc.range<katana.range and pc.range>steak.range and pc.cooldown<katana.cooldown,'Pizza Cutter reach between Steak and Katana, faster than Katana')
+ check(Weapons.Legendary['42'] and Weapons.Legendary['42'].move=='Roll' and Weapons.legendaryText('42')~=nil,'Rolling Slice data and card line')
 end,debug.traceback)
 script:SetAttribute('Result',game.HttpService:JSONEncode({passed=ok,assertions=checked,error=ok and '' or err}))

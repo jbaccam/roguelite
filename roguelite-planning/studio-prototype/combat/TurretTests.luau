@@ -232,8 +232,10 @@ return function(H, G, Weapons, Stats, E, Catalog)
 	check(near(Stats.resolve("Handyman", 0, nil, { UtilityPower = 12 }).UtilityPower, 30), "A +12 card gives him +15")
 	check(near(Stats.resolve("Handyman", 0, nil, { Damage = 10 }).Damage, 5), "+10% Damage gives him +5%")
 	check(near(Stats.resolve("Handyman", 0, nil, { Damage = -3 }).Damage, -3), "A loss isn't halved")
-	check(near(Stats.resolve("Handyman", 4).UtilityPower, 15 + 25), "Four home weapons: +20 counts +25")
-	check(near(Stats.resolve("Handyman", 2).CooldownReduction, 10), "Other set bonuses unchanged")
+	-- 2026-10-09: the class two / four bonuses are gone; the Tool type set is a gain like they were.
+	local tools = Stats.typeCounts({ "24", "25", "26", "27" })
+	check(near(Stats.resolve("Handyman", tools).UtilityPower, 15 + 12 * 1.25), "Tool 4 set: +12 counts +15 for him")
+	check(near(Stats.resolve("Handyman", 4).UtilityPower, 15) and near(Stats.resolve("Handyman", 2).CooldownReduction, 0), "No class home-weapon bonuses")
 	check(near(Stats.resolve("Gunner", 0, nil, { Damage = 10, UtilityPower = 12 }).Damage, 10) and near(Stats.resolve("Gunner", 0, nil, { UtilityPower = 12 }).UtilityPower, 12), "Other classes unchanged")
 	check(string.find(Stats.Classes.Handyman.description, "Engineer", 1, true) ~= nil, "Engineer description")
 	-- His turret rules: the 4-8 ring, 20% off structure items, a free Nail Turret.
@@ -280,7 +282,7 @@ return function(H, G, Weapons, Stats, E, Catalog)
 		end
 		local magnet, belt = Catalog.ById[H.SCRAP_MAGNET], Catalog.ById[H.TOOLBELT]
 		check(magnet and magnet.tier == 2 and magnet.basePrice == 40 and magnet.structure and next(magnet.modifiers) == nil, "Scrap Magnet: tier 2, 40")
-		check(belt and belt.tier == 1 and belt.basePrice == 18 and belt.structure and belt.modifiers.UtilityPower == 6, "Toolbelt: tier 1, 18, +6 Utility Power")
+		check(belt and belt.tier == 1 and belt.basePrice == 16 and belt.structure and belt.modifiers.UtilityPower == 10, "Toolbelt: tier 1, 16, +10 Utility Power (2026-10-09 items)")
 		check(Catalog.ById.spare_parts == nil and Catalog.ById.duct_tape == nil, "No Spare Parts or Duct Tape (turrets can't break)")
 	end
 

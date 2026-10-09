@@ -28,6 +28,7 @@ source += module("Catalog", "EnemyCatalog.luau", [
 source += module("Weapons", "WeaponCatalog.luau")
 source += module("Stats", "CharacterStats.luau", [
     ("local Motion=require(script.Parent.WeaponMotion)", "local Motion={}"),
+    ("local Weapons=require(script.Parent.WeaponCatalog)", "local Weapons=Weapons"),
     ("local Thrown=require(script.Parent.SpecialMotion).profiles", "local Thrown={}"),
 ])
 source += module("Playable", "MapConfig.luau")

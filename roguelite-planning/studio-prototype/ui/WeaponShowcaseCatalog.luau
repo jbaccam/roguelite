@@ -43,6 +43,7 @@ local recipes = {
 	["39"] = { "chain", "Twin-dagger chain" },
 	["40"] = { "melee", "Vampire blade cuts", { "Diagonal", "Horizontal" } },
 	["41"] = { "ray", "Ray bolt with impact splash" },
+	["42"] = { "melee", "Pizza cutter slices", { "Diagonal", "Thrust" } },
 }
 local extras = {
 	["15"] = {

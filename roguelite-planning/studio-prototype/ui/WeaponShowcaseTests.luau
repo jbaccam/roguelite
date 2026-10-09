@@ -8,7 +8,7 @@ function Tests.run(Catalog, Data)
 		n += 1
 	end
 	local recipes = Data.build(Catalog)
-	check(#recipes.List == 42, "Exactly 42 reviewed weapons")
+	check(#recipes.List == 43, "Exactly 43 reviewed weapons (Pizza Cutter 2026-10-09)")
 	local modes = {
 		melee = true,
 		bullet = true,

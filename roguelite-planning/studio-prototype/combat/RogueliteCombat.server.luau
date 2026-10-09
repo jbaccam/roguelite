@@ -18,11 +18,12 @@ local Shop=require(script.Parent:WaitForChild('ShopService'))
 local Role=require(script.Parent:WaitForChild('ServerRole'))
 local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed, like this script
 local Wire=require(combat:WaitForChild('ShotBatch')) -- packs each attack into one attribute
--- Slot 1 holds the loadout starter the lobby validated (RunWeapon); Brawler's signature until one is picked.
--- Each class build opens with its signature weapon. RunSetupRules isn't sandboxed, so this script can't require it.
+-- Slot 1 holds the loadout starter the lobby validated (RunWeapon); until one is picked, the run
+-- class's signature weapon (Brawler's Boxing Gloves when there is no class; 2026-10-09, the Pan is
+-- Chef's now). RunSetupRules isn't sandboxed, so this script can't require it.
 local function starter(player)
  local id=player:GetAttribute('RunWeapon')
- return type(id)=='string' and Catalog.ById[id] and templates:FindFirstChild(id) and id or Stats.Classes.Brawler.build[1]
+ return type(id)=='string' and Catalog.ById[id] and templates:FindFirstChild(id) and id or Stats.Signature[player:GetAttribute('RunClass')] or Stats.Signature.Brawler
 end
 -- What clients draw a weapon from (P3). Each attack is one packed 'Attack' attribute (Wire.packAttack;
 -- it was 12 attributes), cleared on reset. AimPosition only turns an idle gun toward its target, so
@@ -241,7 +242,9 @@ end
 local function definition(slot,base,cs,player,character,index)
  local tier=slot.folder:GetAttribute('Tier');local copyId=slot.folder:GetAttribute('CopyId');local c=slot.cached
  if not c or c.base~=base or c.tier~=tier or c.copyId~=copyId or c.stats~=cs.stats or c.class~=cs.class or c.character~=character then
-  local d=Stats.weapon(base,cs.stats,cs.class,tier);d.stats=cs.stats;d.owner=player;d.character=character;d.slotIndex=index
+  -- Type sets (2026-10-09): cs.typeCounts changes only with cs.stats (CharacterService.refresh), so
+  -- the cache above still sees it; d.stats is this weapon's own view (CharacterStats.weaponStats).
+  local d=Stats.weapon(base,cs.stats,cs.class,tier,cs.typeCounts);d.stats=Stats.weaponStats(cs.stats,d);d.owner=player;d.character=character;d.slotIndex=index
   d.copyId=copyId
   c={base=base,tier=tier,copyId=copyId,stats=cs.stats,class=cs.class,character=character,d=d};slot.cached=c
  end

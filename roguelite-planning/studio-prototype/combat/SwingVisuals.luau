@@ -25,6 +25,7 @@ local Profiles={
  ['27']={mode='blob',width=.95,at=.35,color=Color3.fromRGB(92,158,226)},
  ['31']={mode='blade',inner=.1,heavy=true},
  ['32']={mode='blade',inner=.45,heavy=true,color=Color3.fromRGB(255,240,190)},
+ ['42']={mode='blade',inner=.4}, -- Pizza Cutter: the swoosh follows the wheel end (2026-10-09)
 }
 V.Profiles=Profiles
 local HEAVY_RIM=K.Amber

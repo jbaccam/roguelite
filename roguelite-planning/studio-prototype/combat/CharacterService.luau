@@ -116,10 +116,11 @@ local function applyMoveSpeed(h,s,character)
 end
 function Service.refresh(player)
  local s=Service.states[player];if not s then return end
- local count=0
- -- 2 / 4 class weapons: a weapon counts for every class in its list (2026-10-04), so a Kusarigama
- -- (Juggler, Thrower) counts for a Juggler and for a Thrower.
- for _,slot in s.folder:GetChildren() do local d=Catalog.ById[slot:GetAttribute('WeaponId')];if d and Stats.inClass(d,s.class) then count+=1 end end
+ -- Weapon type sets (2026-10-09; they replaced the class two / four bonuses): equipped copies by
+ -- type. Every slot's WeaponId change refreshes (attach), so buying, merging and selling recount.
+ local ids={}
+ for _,slot in s.folder:GetChildren() do local id=slot:GetAttribute('WeaponId');if type(id)=='string' and Catalog.ById[id] then table.insert(ids,id) end end
+ s.typeCounts=Stats.typeCounts(ids)
  -- Permanent skill-tree bonuses join the run's item bonuses as flat terms. ProfileSkills is
  -- written only by ProfileService on the server, so clients cannot change it.
  local flat=s.itemBonuses
@@ -146,12 +147,12 @@ function Service.refresh(player)
  -- stat, its damage share in CombatEffectsService.hit and its health share as a max-health percent,
  -- so it multiplies every other health bonus. An admin override of GearPower counts too.
  local weapon=player:GetAttribute('RunWeapon')
- flat.GearPower=Stats.gearPower(function(name) return player:GetAttribute(name) end,type(weapon)=='string' and weapon or Stats.Classes.Brawler.build[1])
+ flat.GearPower=Stats.gearPower(function(name) return player:GetAttribute(name) end,type(weapon)=='string' and weapon or Stats.Signature[s.class] or Stats.Signature.Brawler)
  local power=s.overrides.GearPower or flat.GearPower
  local percent=table.clone(s.itemPercent or {})
  percent.MaxHP=(percent.MaxHP or 0)+(Stats.powerHealth(power)-1)*100
- s.stats=Stats.resolve(s.class,count,s.overrides,flat,percent)
- s.folder:SetAttribute('Class',s.class);s.folder:SetAttribute('AffinityCount',count)
+ s.stats=Stats.resolve(s.class,s.typeCounts,s.overrides,flat,percent)
+ s.folder:SetAttribute('Class',s.class)
  for _,d in Stats.List do
   local value=s.stats[d.id];s.folder:SetAttribute('Stat_'..d.id,value)
   s.folder:SetAttribute('Override_'..d.id,s.overrides[d.id]~=nil)
@@ -236,10 +237,12 @@ function Service.heal(player,amount)
  local s=Service.states[player];local h=humanoid(player)
  if s and h and h.Health>0 then h.Health=math.min(h.MaxHealth,h.Health+math.max(0,amount)*Stats.mult(s.stats.Recovery)) end
 end
-function Service.leech(player,damage)
+-- lifeSteal: the hitting weapon's life steal % (its d.stats.LifeSteal, which adds a Culinary set,
+-- 2026-10-09); nil uses the player's. Recovery and the per-second cap apply either way.
+function Service.leech(player,damage,lifeSteal)
  local s=Service.states[player];if not s then return end
  local h=humanoid(player);if not h or h.Health<=0 then return end
- local heal=math.min(damage*s.stats.LifeSteal/100*Stats.mult(s.stats.Recovery),math.max(0,s.stats.LifeStealCap-s.leech))
+ local heal=math.min(damage*(tonumber(lifeSteal) or s.stats.LifeSteal)/100*Stats.mult(s.stats.Recovery),math.max(0,s.stats.LifeStealCap-s.leech))
  s.leech+=heal;h.Health=math.min(h.MaxHealth,h.Health+heal)
 end
 -- Flat healing that shares the life-steal cap (Vampire Blade hits and wisps, GodlyWeapons).

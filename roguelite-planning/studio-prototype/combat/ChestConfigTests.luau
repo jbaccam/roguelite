@@ -19,8 +19,9 @@ return function(Chests, rolls)
 	Chests.Pool.Godly = {}
 
 	-- Pools, rarities, colours
-	local sizes = { Common = 16, Rare = 20, Epic = 13, Legendary = 11, Godly = 0 }
-	local weapons = { Common = 12, Rare = 12, Epic = 5, Legendary = 7, Godly = 0 }
+	-- 2026-10-09: Pizza Cutter '42' joins the Legendary pool (8 Legendary weapons).
+	local sizes = { Common = 16, Rare = 20, Epic = 13, Legendary = 12, Godly = 0 }
+	local weapons = { Common = 12, Rare = 12, Epic = 5, Legendary = 8, Godly = 0 }
 	for r, n in sizes do
 		check(#Chests.Pool[r] == n, r .. " pool has " .. n .. " items, found " .. #Chests.Pool[r])
 		check(#Chests.WeaponPool[r] == weapons[r], r .. " has " .. weapons[r] .. " weapons")

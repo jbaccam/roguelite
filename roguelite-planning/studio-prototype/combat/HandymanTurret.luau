@@ -42,7 +42,7 @@ H.Items={
  {id='turret_gatling',name='Gatling Rig',tier=4,price=150},
 }
 H.ItemTier={};for _,it in H.Items do H.ItemTier[it.id]=it.tier end
--- Support items (ShopCatalog). Toolbelt is a plain +6 Utility Power item.
+-- Support items (ShopCatalog). Toolbelt is a plain +10 Utility Power item.
 H.SCRAP_MAGNET='scrap_magnet';H.TOOLBELT='toolbelt'
 -- At most 10 turrets per player (the shop stops offering turret items at 10) and 30 standing on the
 -- server, Scrap Magnet's temporary ones included. Example: 4 players with 10 each get 8, 8, 7, 7.

@@ -14,7 +14,7 @@ return function(Catalog, Weapons, Stats, Rules)
  check(hp('regular-zombie',20,'PineValley','Normal')==25,'late Normal fodder HP')
  check(hp('tank-zombie',20,'PineValley','Normal')==138,'late Normal tank HP')
  local rows={}
- local oneShotT4,atMostTwoT4=0,0
+ local oneShotT4,atMostTwoT4,ordinary=0,0,0
  for _,w in Weapons.List do
   local classes=w.godly and Stats.ClassOrder or {w.home}
   for _,class in classes do
@@ -34,6 +34,7 @@ return function(Catalog, Weapons, Stats, Rules)
     check(hp('tank-zombie',20,map.id,'Hard')>hp('tank-zombie',20,map.id,'Normal'),'optional challenge stays harder')
    end
    if not w.godly then
+    ordinary+=1
     if hit20==1 then oneShotT4+=1 end
     if hit20<=2 then atMostTwoT4+=1 end
    end
@@ -47,6 +48,7 @@ return function(Catalog, Weapons, Stats, Rules)
  print('|---|---|---:|---:|---:|---:|')
  for _,row in rows do print(row) end
  print('NORMAL_ROSTER_END')
- print(string.format('NormalBalanceTests: %d assertions; class weapons T4 one-hit %d/36, at-most-two %d/36; all42 weapons audited (Godly across all6 classes).',count,oneShotT4,atMostTwoT4))
+ -- 2026-10-09: {w.home} is each weapon's one starter class (Pizza Cutter makes 37 class weapons).
+ print(string.format('NormalBalanceTests: %d assertions; class weapons T4 one-hit %d/%d, at-most-two %d/%d; all %d weapons audited (Godly across all %d classes).',count,oneShotT4,ordinary,atMostTwoT4,ordinary,#Weapons.List,#Stats.ClassOrder))
  return count
 end

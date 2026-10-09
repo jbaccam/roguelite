@@ -14,7 +14,7 @@ function M.visualSweepHalfAngle(id,style)
 end
 -- Shared by rendered motion and authoritative hit sampling. Unlisted weapons
 -- retain their horizontal cut. Thrust also works with normalized +Y sword tips.
-M.MeleeStyles={['03']='Diagonal',['19']='Thrust',['16']='Slap',['20']='Downward',['26']='Downward',['36']='Reap',['37']='Thrust',['39']='Chain'}
+M.MeleeStyles={['03']='Diagonal',['19']='Thrust',['16']='Slap',['20']='Downward',['26']='Downward',['36']='Reap',['37']='Thrust',['39']='Chain',['42']='Diagonal'}
 M.DownwardWeapons={['01']=true,['05']=true,['06']=true,['20']=true,['26']=true,['27']=true,['31']=true}
 function M.meleeStyle(id) return M.MeleeStyles[id] or 'Horizontal' end
 -- Reaper's Scythe 'Reap': one full turn around the wielder at full reach. The server hits every
@@ -240,6 +240,9 @@ function M.chooseStyle(id,count,serial,distance,baseRange)
   return serial%3==0 and 'Thrust' or 'Diagonal'
  end
  if id=='16' then return serial%2==1 and 'Slap' or 'Diagonal' end
+ -- Pizza Cutter (2026-10-09): Katana's Diagonal and Thrust, no new poses. Three-step cycle so the
+ -- Diagonals criss-cross (chooseSide flips every swing: serials 1,2 cut opposite ways), then a push.
+ if id=='42' then return serial%3==0 and 'Thrust' or 'Diagonal' end
  if id=='20' then return ({'Diagonal','Horizontal','Diagonal','Downward'})[(serial-1)%4+1] end
  if id=='26' then return serial%3==0 and 'Diagonal' or 'Downward' end
  if M.DownwardWeapons[id] then
