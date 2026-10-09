@@ -42,3 +42,7 @@ Rebuild: `& "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" --back
 - The pepperoni overlap the cheese as separate shells rather than being welded to it.
 - The cheese-top fan facets converge on the tip as long thin triangles (worst aspect about 38.8:1); flat shading hides it, but it is not an even triangulation.
 - The 512 px atlas is about 47.9% used (unwrap packing); fine for a pickup this small, shrinkable to 256 px if memory ever matters.
+
+## Roblox asset ids (uploaded 2026-10-09)
+
+- BaseColor atlas for the TextureID: `rbxassetid://136977119080245`.

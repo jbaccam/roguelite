@@ -42,3 +42,8 @@ so it imports at the same raw scale as the Pan (100 x Blender units); at the Pan
 - Handle parts are closed shells that intentionally intersect where assembled; named vertex groups identify them.
 - Known Roblox multi-mesh FBX behaviour (one TextureID applied to every mesh) is why both meshes share one atlas.
 - Not imported into Studio; MeshPart sizes, the Grip attachment and the spin script are integration work.
+
+## Roblox asset ids (uploaded 2026-10-09)
+
+- Icon (supplied by the user, cropped to 384 px like the other weapon icons): `Icon.png`, source `Icon_source.webp`, `rbxassetid://139846764441734`.
+- BaseColor atlas for both meshes' TextureID: `rbxassetid://92867308963249`.
