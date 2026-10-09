@@ -230,6 +230,54 @@ check('homing: the client\'s lane from the last heading sent is the server\'s (b
  return (body-g).Magnitude<1e-3 and (dir-A.dir).Magnitude<1e-3 and ((body-dir*homing.width/2)-lane.origin).Magnitude<1e-3
   and math.abs((stop-body).Magnitude+homing.width-lane.length)<1e-3 and (center-fin.center).Magnitude<1e-3 and (nothing-(start+laneDir*10)).Magnitude<1e-6
 end)
+-- Rubble waves (2026-10-09): a wave phase's lines and the charge's finish wave, as the client gets them.
+local WT={rootHeight=4,clips={ChargeStart=.5,ChargeRun=.53,Slam=1.45},attacks={
+ Slam={duration=1.45,warnStart=0,impact=.7,activeEnd=.7,recoveryEnd=1.3,phases={{warnStart=0,impact=.7,activeEnd=.7},{warnStart=0,impact=.7,activeEnd=.7}},
+  samples={HammerFace={{0,0,9,-4},{.7,0,0,-10},{1.45,0,0,-10}}}},
+}}
+local WAVE={shape='wave',damage=22,point='HammerFace',facing='forward',length=85,width=9,travel=55,knockdown=false}
+local SLAM12={shape='circle',damage=26,point='HammerFace',radius=12,height=6,knockdown=.6}
+local slamDef={clip='Slam',range={0,45},cooldown=.8,phases={SLAM12,WAVE}}
+local chargeW={clips={'ChargeStart','ChargeRun','Slam'},facing='forward',range={22,110},lockout=5,cooldown=1,damage=24,shape='lane',length=75,width=9,speed=32,contact=4,knockdown=.6,finish={SLAM12,WAVE}}
+local function finishAttack(length,fan)
+ local units={};for i,part in S.finishParts(chargeW) do units[i]={def=X.merged(chargeW,part),hits={},ticks={},fired=false} end
+ return {def=chargeW,cf=laneCf,frame=X.frame(laneCf,WT,0),ground=0,dir=laneDir,length=length,data={},finish=units[1],finishes=units,fan=fan}
+end
+local function sameLine(a,b) return a.kind=='line' and (a.origin-b.origin).Magnitude<1e-4 and (a.direction-b.direction).Magnitude<1e-4 and math.abs(a.length-b.length)<1e-6 and a.width==b.width end
+check('wave phase: P.phases carries the decoded lines (the enraged fan) and the middle line as its shape; the circle phase has none',function()
+ local units=X.phases(slamDef,WT.attacks.Slam);local data={phases={}}
+ for i,U in units do local shape=X.place(U,hf,{-25,0,25});local d=X.unitData(U,shape);d.warnStart,d.impact,d.activeEnd=U.at.warnStart,U.at.impact,U.at.activeEnd;data.phases[i]=d end
+ local list=P.phases(slamDef,wire(data),WT)
+ return #list==2 and list[1].lines==nil and list[1].shape.kind=='circle' and #list[2].lines==3 and sameLine(list[2].shape,list[2].lines[2])
+  and sameLine(list[2].lines[1],units[2].lines[1]) and sameLine(list[2].lines[3],units[2].lines[3]) and list[2].def.travel==55 and list[2].impact==.7
+end)
+check('finish waves: the published lines at 30, moved 10 down the lane, are what the server publishes at 40; nothing for a single circle',function()
+ local A=finishAttack(30);X.laneTiming(WT,A);local d30=wire(A.data)
+ A.length=40;X.laneTiming(WT,A);local d40=wire(A.data)
+ local w30,w40=P.finishWaves(chargeW,d30),P.finishWaves(chargeW,d40)
+ local moved=P.moved(w30[1].lines[1],laneDir,10)
+ local single=X.merged(chargeW,{});single.finish=SLAM12
+ return #w30==1 and w30[1].index==2 and w30[1].def.damage==22 and math.abs(w30[1].after-.7)<1e-9 and sameLine(moved,w40[1].lines[1])
+  and P.finishWaves(single,d30)==nil and P.finishWaves(chargeW,{})==nil
+  and (P.moved({kind='circle',center=Vector3.zero,radius=1},laneDir,4).center-laneDir*4).Magnitude<1e-9
+end)
+check('finish waves homing: carried from the published end to where the run now ends (heading turned) they are the server\'s lines',function()
+ local commit=finishAttack(40);commit.pos,commit.travelled=laneCf.Position,0;X.laneTiming(WT,commit);local d0=wire(commit.data)
+ local A=finishAttack(40);A.pos,A.travelled=laneCf.Position,0
+ for k=1,30 do X.homeStep(A,with(chargeW,{home=math.rad(40)}),Vector3.new(12,3,-25),1/60,k/60*32) end
+ X.laneTiming(WT,A);local server=S.decode(wire(A.data).finish.parts[2].lines[1])
+ local start=Vector3.new(laneCf.X,0,laneCf.Z);local e=start+laneDir*d0.length
+ local stop=Vector3.new(A.pos.X,0,A.pos.Z)+A.dir*(40-A.travelled)
+ local base=P.finishWaves(chargeW,d0)[1].lines[1]
+ return sameLine(P.carried(base,CFrame.lookAt(e,e+laneDir),CFrame.lookAt(stop,stop+A.dir)),server)
+end)
+check('finish waves: the client\'s charge duration covers the wave\'s travel exactly as the server\'s',function()
+ for _,len in {20,36.5,75} do
+  local A=finishAttack(len);X.laneTiming(WT,A);local t=P.laneTimes(chargeW,WT,len)
+  if not (near(t.duration,A.duration) and near(t.finishImpact,A.data.finish.impact)) then return false end
+ end
+ return true
+end)
 local passed=0;for _,line in r do if line:sub(1,4)=='PASS' then passed+=1 end end
 table.insert(r,('%d PASS, %d FAIL'):format(passed,#r-passed))
 return table.concat(r,'\n')

@@ -112,19 +112,48 @@ function S.window(def,T,length)
  end
  return T.attacks and T.attacks[def.clip]
 end
--- The attack def with a part's fields on top: one combo phase (def.phases[i]) or a lane's finish.
+-- The attack def with a part's fields on top: one combo phase (def.phases[i]) or a lane's finish part.
 function S.merged(def,part) local m=table.clone(def);m.phases=nil;m.finish=nil;for k,v in part do m[k]=v end;return m end
 -- The Hammer-style charge (a forward lane or a contact run): its length can change as he runs.
 function S.isCharge(def) return def.shape=='lane' and (def.facing=='forward' or def.contact~=nil) end
+-- A lane's finish hits (def.finish): one part (the old single circle) or a list of parts (the Hammer's
+-- slam circle and rubble wave, 2026-10-09). Always a list; nil without a finish.
+function S.finishParts(def)
+ local f=def.finish;if type(f)~='table' then return nil end
+ return f[1]~=nil and f or {f}
+end
+-- An end clip's timing for finish part i: the clip's phase i on top of its own times (MapBossTiming
+-- phases: the Slam's {circle, wave}), else the clip's own times (a clip without phases, the old circle).
+function S.partWindow(fa,i)
+ local ph=fa.phases and fa.phases[i];if not ph then return fa end
+ local w=table.clone(fa);w.phases=nil;for k,v in ph do w[k]=v end
+ return w
+end
+-- A clip's first hit: its impact, else its first phase's (a combo clip may carry only phase times).
+function S.impactOf(at) return at.impact or (at.phases and at.phases[1] and at.phases[1].impact) end
+-- When one hit is over on its clip's clock: its impact, or for a wave (def.travel) the front reaching
+-- its far end, impact + length / travel (MapBossService X.waveHit).
+function S.hitEnd(def,at)
+ local impact=S.impactOf(at) or 0
+ if def.shape=='wave' and def.travel then return impact+def.length/def.travel end
+ return impact
+end
 -- A lane's times for `length`: {at (S.window), duration (its recovery; with a finish, until just past
--- the finish slam's impact), finishAt (the end clip's timing), finishStart (where the run ends) and
--- finishImpact (both on the attack clock)}. The finish fields only with def.finish and its timing.
--- nil without the window.
+-- the finish slam's impact, and past a finish wave's far end), finishAt (the end clip's timing),
+-- finishStart (where the run ends) and finishImpact (both on the attack clock)}. The finish fields only
+-- with def.finish and its timing. nil without the window.
 function S.laneTimes(def,T,length)
  local at=S.window(def,T,length);if not at then return nil end
  local t={at=at,duration=at.recoveryEnd or at.duration}
  local fa=def.finish and def.clips and T.attacks and T.attacks[def.clips[3]]
- if fa then t.finishAt,t.finishStart=fa,at.activeEnd;t.finishImpact=t.finishStart+fa.impact;t.duration=math.max(t.duration,t.finishImpact+.05) end
+ if fa then
+  -- finishImpact: the first part's (the slam circle's) impact, from its phase when the clip has phases.
+  t.finishAt,t.finishStart=fa,at.activeEnd;t.finishImpact=t.finishStart+S.impactOf(S.partWindow(fa,1));t.duration=math.max(t.duration,t.finishImpact+.05)
+  -- A finish list (the Hammer's slam and rubble wave): every part's hit is over before the attack ends.
+  if def.finish[1]~=nil then
+   for i,part in def.finish do t.duration=math.max(t.duration,t.finishStart+S.hitEnd(S.merged(def,part),S.partWindow(fa,i))+.05) end
+  end
+ end
  return t
 end
 -- JSON-safe copies for the MapBossAttackData attribute (Vector3 <-> {x,y,z}).

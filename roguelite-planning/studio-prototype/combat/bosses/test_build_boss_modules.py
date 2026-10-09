@@ -109,6 +109,22 @@ def test_phase_entries():
     assert 'WARN synthetic Combo phase 2 HammerGrip' in printed, printed
 
 
+def test_wave_phase_contract():
+    # Rubble waves (2026-10-09): the baker writes the Slam's wave as its own phase with the circle's times,
+    # [circle, wave] (SpinSlam: [rev1, rev2, circle, wave]). Both pass through with those times and the
+    # clip's HammerFace track (no samples of their own), which MapBossService X.phaseWindows reads by index.
+    slam = {'duration': 1.0, 'warnStart': .25, 'impact': .5, 'activeEnd': .5, 'recoveryEnd': 1.0, 'points': {'HammerFace': dict(FACE)},
+            'phases': [{'warnStart': .25, 'impact': .5, 'activeEnd': .5, 'points': {'HammerFace': dict(FACE)}},
+                       {'warnStart': .25, 'impact': .5, 'activeEnd': .5, 'points': {'HammerFace': dict(FACE)}}]}
+    entry, printed = run_timing(slam)
+    circle, wave = entry['attacks']['Combo']['phases']
+    assert circle == wave and {k: circle[k] for k in ('warnStart', 'impact', 'activeEnd')} == {'warnStart': .25, 'impact': .5, 'activeEnd': .5}
+    assert 'samples' not in wave and wave['points']['HammerFace']['rootAtImpactStudio'] == [-13, .5, 0]
+    assert 'WARN' not in printed, printed
+    # The clip list the runtime plays (MapBossDefs.ATTACK_CLIPS): no IntroLand, Roar or ChargeSlam.
+    assert B.BASIC + B.ATTACKS['hammer-brute'] == ['Idle', 'Walk', 'Hit', 'Death', 'Slam', 'Swing', 'Spin', 'SwingSpin', 'SpinSlam', 'ChargeStart', 'ChargeRun']
+
+
 if __name__ == '__main__':
     failed = 0
     for name, fn in list(globals().items()):

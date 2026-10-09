@@ -18,6 +18,15 @@
 --   the intro hook fires at BossIntroLand; with a roar, the enrage hook fires as the roar starts.
 --   new hook `followup` when follow-up circles appear (their eruption is still `aftershock`), and
 --     `roar` as each roar starts (its peak; a roar a pause cancelled is played again with it).
+-- Rubble waves (2026-10-09): a wave phase (the Hammer's Slam and SpinSlam) and a charge's finish wave
+--   (data.finish.parts) warn their lines (one, or the enraged fan) like the Stomp. VFX contract:
+--     ctx.phases[i].lines  a wave phase's lines as published (decoded; C.phaseShape(ctx,i) is the middle one,
+--                          turned to the current frame)
+--     ctx.waves()          every wave of this attack now: {key, def (length, width, travel, damage),
+--                          impact (attack clock; a finish's nil until the stop is known), lines (turned
+--                          to the boss's current frame / moved with the run), finish (true for the charge's)}
+--     hook wave(ctx,unit)  once per wave as its front leaves the impact point (unit as in ctx.waves()):
+--                          the front reaches `d` studs down each line at unit.impact + d / unit.def.travel.
 local Tags=game:GetService('CollectionService')
 local Run=game:GetService('RunService')
 local Players=game:GetService('Players')
@@ -86,9 +95,16 @@ function P.chargePhase(impact,stop,age,rate)
  if not stop or age<stop then return 2 end
  return 3,(age-stop)*(rate or 1)
 end
+-- A wave's lines from its data (lines: a list of encoded lines, the enraged fan), decoded; nil without.
+function P.lines(d)
+ if type(d)~='table' or type(d.lines)~='table' then return nil end
+ local list={};for _,l in d.lines do if type(l)=='table' then local s=Shapes.decode(l);if s.kind=='line' then table.insert(list,s) end end end
+ return #list>0 and list or nil
+end
 -- A combo's phases from MapBossAttackData.phases (the server's times and shapes), falling back to
--- the clip's own phase timing: {index, def (merged), warnStart, impact, activeEnd, shape (decoded)}.
--- nil unless the def has phases and every phase has an impact (then the old single-shape path).
+-- the clip's own phase timing: {index, def (merged), warnStart, impact, activeEnd, shape (decoded),
+-- lines (a wave phase's, decoded)}. nil unless the def has phases and every phase has an impact (then
+-- the old single-shape path).
 function P.phases(a,data,T)
  if type(a.phases)~='table' or type(data.phases)~='table' then return nil end
  local at=T.attacks and T.attacks[a.clip];local list={}
@@ -96,9 +112,30 @@ function P.phases(a,data,T)
   local d=type(data.phases[i])=='table' and data.phases[i] or {};local w=at and at.phases and at.phases[i] or {}
   local impact=d.impact or w.impact;if type(impact)~='number' then return nil end
   list[i]={index=i,def=P.merged(a,part),warnStart=d.warnStart or w.warnStart or 0,impact=impact,activeEnd=d.activeEnd or w.activeEnd or impact,
-   shape=type(d.shape)=='table' and Shapes.decode(d.shape) or nil}
+   shape=type(d.shape)=='table' and Shapes.decode(d.shape) or nil,lines=P.lines(d)}
  end
  return list
+end
+-- A charge's finish waves from data.finish.parts (MapBossService X.laneTiming): {index, def (merged),
+-- after (seconds from the run's end to its hit), lines (decoded, where the server put them for the
+-- published length)}, for each part with lines; nil without any.
+function P.finishWaves(a,data)
+ local f=type(data.finish)=='table' and data.finish;local parts=f and type(f.parts)=='table' and f.parts
+ if not parts or type(a.finish)~='table' or a.finish[1]==nil then return nil end
+ local list={}
+ for i,d in parts do
+  local lines=P.lines(d)
+  if lines and type(d.after)=='number' and type(a.finish[i])=='table' then table.insert(list,{index=i,def=P.merged(a,a.finish[i]),after=d.after,lines=lines}) end
+ end
+ return #list>0 and list or nil
+end
+-- A shape carried from one ground frame to another (a homing run's finish follows where the run now
+-- ends): its points and directions, frame-relative, placed in `to`.
+function P.carried(shape,from,to)
+ local s=table.clone(shape)
+ for _,k in {'center','origin'} do if typeof(shape[k])=='Vector3' then s[k]=to:PointToWorldSpace(from:PointToObjectSpace(shape[k])) end end
+ if typeof(shape.direction)=='Vector3' then s.direction=to:VectorToWorldSpace(from:VectorToObjectSpace(shape.direction)) end
+ return s
 end
 -- A combo clip's own window may lack impact or activeEnd (MapBossService reads phase 1's impact):
 -- fill them from the phases, so the attack hooks run from the first hit to the last.
@@ -127,8 +164,13 @@ function P.edgeLoops(shape,n)
 end
 -- The charge lane (a line published for baseLength) at its current length: same start and width.
 function P.laneAt(base,baseLength,length) local s=table.clone(base);s.length=base.length+(length-baseLength);return s end
--- A shape moved `by` studs along dir (the finish circle follows the end of the run).
-function P.moved(shape,dir,by) local s=table.clone(shape);s.center=shape.center+dir*by;return s end
+-- A shape moved `by` studs along dir (the finish circle, and a finish wave's lines, follow the end of
+-- the run).
+function P.moved(shape,dir,by)
+ local s=table.clone(shape)
+ if shape.center then s.center=shape.center+dir*by end;if shape.origin then s.origin=shape.origin+dir*by end
+ return s
+end
 if not Run:IsRunning() then return P end -- Edit (the tests): helpers only
 
 local EnemyMotion=require(combat:WaitForChild('EnemyMotion'))
@@ -196,8 +238,11 @@ local window=P.window
 --   ch.finishShow  the finish circle's impact for its warning (runEnd + the slam clip's impact)
 --   ch.finishImpact  the finish slam's impact, once the stop is known (nil before)
 --   ch.duration  the attacking window: the stop (or the hold past the prediction) plus the slam clip
+--                (and a finish wave's travel)
+--   ch.waves     a finish list's waves (P.finishWaves): {index, def, after, lines}, the lines where the run
+--                now ends; each hits at stopAge + after
 -- A homing run (ch.home, def.home): the lane goes from the body on along the heading the server sent
--- (P.homeRun), and the finish circle sits where that ends, turned with it (ch.heading, ch.endPos).
+-- (P.homeRun), and the finish circle and waves sit where that ends, turned with it (ch.heading, ch.endPos).
 local function chargeStep(npc,ctx,age)
  local ch=ctx.charge;local length=npc:GetAttribute('BossChargeLength')
  if type(length)~='number' then length=ctx.data.length or ctx.def.length end
@@ -215,6 +260,14 @@ local function chargeStep(npc,ctx,age)
   if ch.home and ch.finish and not ch.confirmed and not ch.finishLocal then
    local e=ch.start+ch.dir*published;ch.finishLocal=CFrame.lookAt(e,e+ch.dir):PointToObjectSpace(f.center)
   end
+  -- Finish waves (the Hammer's rubble, data.finish.parts): their lines move down the lane with the run's
+  -- end like the circle (wv.base and wv.from: as published, for a homing run to carry them).
+  ch.waves=ch.finish and P.finishWaves(ctx.def,d) or nil
+  local e=ch.start+ch.dir*published
+  for _,wv in ch.waves or {} do
+   wv.base,wv.from=wv.lines,CFrame.lookAt(e,e+ch.dir)
+   local moved={};for j,l in wv.lines do moved[j]=P.moved(l,ch.dir,length-published) end;wv.lines=moved
+  end
  end
  if ch.home then
   local travelled=math.clamp(((age or 0)-ctx.attack.impact)*ctx.def.speed,0,length)
@@ -223,6 +276,11 @@ local function chargeStep(npc,ctx,age)
   ch.lane={kind='line',origin=body-dir*w/2,direction=dir,length=Shapes.flat(finish-body).Magnitude+w,width=w}
   if ch.finish and ch.finishLocal and not ch.confirmed then
    ch.finish=table.clone(ch.finish);ch.finish.center=CFrame.lookAt(finish,finish+dir):PointToWorldSpace(ch.finishLocal)
+  end
+  -- The finish waves go on from where the run now ends, along its heading (until the stop's data).
+  if ch.waves and not ch.confirmed then
+   local to=CFrame.lookAt(finish,finish+dir)
+   for _,wv in ch.waves do local list={};for j,l in wv.base do list[j]=P.carried(l,wv.from,to) end;wv.lines=list end
   end
  end
  -- The end only moves on this attack's own clock (age nil: no BossStart, or another attack's).
@@ -242,6 +300,7 @@ local function context(npc,state,kind,a,start,serial)
  if a.pseudo then ctx.pseudo=a.pseudo
  elseif a.phases then
   ctx.phases=P.phases(a,data,T);if ctx.phases then ctx.attack=P.comboWindow(at,ctx.phases) end
+  for _,ph in ctx.phases or {} do if ph.lines then ctx.phaseWaves=true end end
  elseif P.isCharge(a) then
   local d=type(data.dir)=='table' and Vector3.new(data.dir[1],0,data.dir[2]) or Shapes.flat(cf.LookVector)
   ctx.charge={dir=d.Magnitude>1e-3 and d.Unit or Vector3.new(0,0,-1),home=a.home~=nil and a.facing=='forward',start=Vector3.new(cf.X,ctx.groundY,cf.Z)}
@@ -256,6 +315,25 @@ local function context(npc,state,kind,a,start,serial)
  function ctx.dirAt(name,t)
   local at=ctx.attack;local d=Shapes.sample(at.dirs and at.dirs[name],t) or (at.directionAtImpactStudio and Vector3.new(table.unpack(at.directionAtImpactStudio)))
   return d and d.Magnitude>1e-3 and ctx.ground:VectorToWorldSpace(d).Unit or ctx.cf.LookVector
+ end
+ -- Every wave of this attack as it stands now (the VFX contract in the header): a wave phase's lines
+ -- turned to the frame the boss has now (aim, as C.phaseShape), or a charge's finish waves where the run
+ -- ends. A new list each call.
+ function ctx.waves()
+  local list={}
+  if ctx.phases then
+   local y=ctx.data.yaw;local turn=type(y)=='number' and Shapes.wrap(Shapes.yawOf(ctx.cf)-y) or 0
+   for i,ph in ctx.phases do
+    if ph.lines then
+     local lines={};for j,l in ph.lines do lines[j]=math.abs(turn)>1e-6 and Shapes.rotated(l,ctx.cf.Position,turn) or l end
+     table.insert(list,{key=i,def=ph.def,impact=ph.impact,lines=lines,finish=false})
+    end
+   end
+  elseif ctx.charge and ctx.charge.waves then
+   local ch=ctx.charge
+   for _,wv in ch.waves do table.insert(list,{key='finish'..wv.index,def=wv.def,impact=ch.stopAge and ch.stopAge+wv.after or nil,lines=wv.lines,finish=true}) end
+  end
+  return list
  end
  return ctx
 end
@@ -414,12 +492,24 @@ end
 local function plannedWarning(ctx)
  local w=newWarning(ctx.serial,ctx.raw);local tint=ctx.tint or Color3.fromRGB(224,45,49);local y=ctx.groundY+.07;w.subs={}
  if ctx.phases then
-  for i,ph in ctx.phases do local s=subWarning(w);if ph.shape then drawShape(s,ph.shape,y,tint) end;w.subs[i]=s end
+  -- A wave phase warns every line it sends (one, or the enraged fan), as the Stomp does.
+  for i,ph in ctx.phases do
+   local s=subWarning(w)
+   if ph.lines then for _,l in ph.lines do drawShape(s,l,y,tint) end elseif ph.shape then drawShape(s,ph.shape,y,tint) end
+   w.subs[i]=s
+  end
  else
   local ch=ctx.charge
   if ch.lane then w.lane=subWarning(w);w.lane.length=ch.lane.length;drawShape(w.lane,ch.lane,y,tint) end
   -- The finish slam's circle, on the floor where the server measured it; it moves with the run.
   if ch.finish then w.finish=subWarning(w);w.finish.center=ch.finish.center;drawShape(w.finish,ch.finish,ch.finish.center.Y+.07,tint) end
+  -- A finish wave: one layer per line, so each is placed again (placeLane) as the run's end moves.
+  if ch.waves then
+   w.waves={}
+   for i,wv in ch.waves do
+    for j,l in wv.lines do local s=subWarning(w);s.wave,s.line,s.placed=i,j,l;drawShape(s,l,l.origin.Y+.07,tint);table.insert(w.waves,s) end
+   end
+  end
  end
  return w
 end
@@ -450,6 +540,7 @@ local function turnWarning(w,pivot,angle)
   s.e=nil
  end
  regrow(w);for _,s in w.subs or {} do regrow(s) end;if w.lane then regrow(w.lane) end;if w.finish then regrow(w.finish) end
+ for _,s in w.waves or {} do regrow(s) end
 end
 -- Every part of a sub-warning moved by `by` (the finish circle down the lane).
 local function moveWarning(s,by)
@@ -462,7 +553,10 @@ end
 local function stepPlanned(state,ctx,age,now,live)
  local at=ctx.attack;local last
  if ctx.phases then last=0;for _,ph in ctx.phases do last=math.max(last,ph.impact) end
- else last=math.max(ctx.charge.runEnd,ctx.charge.finishShow or 0) end
+ else
+  last=math.max(ctx.charge.runEnd,ctx.charge.finishShow or 0)
+  for _,wv in ctx.charge.waves or {} do last=math.max(last,ctx.charge.runEnd+wv.after) end
+ end
  local w=state.warning
  if not live or age<at.warnStart or age>=last then if w then release(w);state.warning=nil end;return end
  if not w or w.serial~=ctx.serial or not w.subs then if w then release(w) end;w=profiled('Boss:BuildWarning',plannedWarning,ctx);state.warning=w end
@@ -483,6 +577,15 @@ local function stepPlanned(state,ctx,age,now,live)
   local by=ch.finish.center-w.finish.center
   if by.Magnitude>1e-3 then moveWarning(w.finish,by);w.finish.center=ch.finish.center end
   paintHit(w.finish,age,at.warnStart,ch.finishShow,now,P.phaseAlpha(true,age,at.warnStart,ch.finishShow))
+ end
+ -- Finish waves: each line follows the run's end, and fills as a later hit until its own impact.
+ for _,s in w.waves or {} do
+  local wv=ch.waves and ch.waves[s.wave];local line=wv and wv.lines[s.line]
+  if line then
+   if (line.origin-s.placed.origin).Magnitude>1e-3 or (line.direction-s.placed.direction).Magnitude>1e-4 then placeLane(s,line,line.origin.Y+.07);s.placed=line end
+   local show=ch.runEnd+wv.after
+   paintHit(s,age,at.warnStart,show,now,P.phaseAlpha(true,age,at.warnStart,show))
+  else hideWarning(s) end
  end
 end
 
@@ -661,6 +764,26 @@ task.spawn(function()
  endless()
 end)
 
+-- The `wave` hook: once per wave (ctx.waves()) as its front leaves the impact point, and only while it
+-- is still travelling (a client that arrives later skips it). Nothing is built until one is due.
+local function stepWaves(state,ctx,age)
+ local fired=ctx.waveFired or {};local due=false
+ if ctx.phases then
+  if not ctx.phaseWaves then return end
+  for _,ph in ctx.phases do if ph.lines and age>=ph.impact and not fired[ph.index] then due=true end end
+ else
+  local ch=ctx.charge;if not (ch and ch.waves and ch.stopAge) then return end
+  for _,wv in ch.waves do if age>=ch.stopAge+wv.after and not fired['finish'..wv.index] then due=true end end
+ end
+ if not due then return end
+ ctx.waveFired=fired
+ for _,u in ctx.waves() do
+  if u.impact and age>=u.impact and not fired[u.key] then
+   fired[u.key]=true
+   if age<u.impact+u.def.length/math.max(u.def.travel or 1,1e-3) then call(state,'wave',ctx,u) end
+  end
+ end
+end
 -- BossAttack's def: an attack, else the intro clip or the roar (P.pseudo, cached per boss).
 -- During the intro (inIntro) its clip is the intro even when it is also an attack's.
 local function attackDef(state,kind,inIntro)
@@ -750,6 +873,7 @@ local function frame(npc,state,now,dt)
    if ctx.def.shape=='projectiles' then launch(state,ctx) end
   end
   if age>=at.impact and age<at.activeEnd then call(state,'active',ctx,age) end
+  if ctx.phases or ctx.charge then stepWaves(state,ctx,age) end
  end
  stepShots(npc,state,now,dt)
 end

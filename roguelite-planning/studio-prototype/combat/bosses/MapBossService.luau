@@ -45,8 +45,11 @@ function X.duration(def,at)
 end
 -- def.height (the Hammer's Slam: 6) raises the circle's band top, so a plain jump doesn't clear it.
 function X.circle(def,at,f) return {kind='circle',center=X.onGround(f,X.point(f,at,def.point,at.impact)),radius=def.radius,height=def.height} end
+-- A wave line from def.point at impact: along the clip's authored direction (the Stomp), or with
+-- def.facing='forward' (the Hammer's rubble wave, 2026-10-09) along the frame's own facing, which aim
+-- turns (and a charge's finish frame faces down the run). yaw turns it (an enraged fan).
 function X.wave(def,at,f,yaw)
- local d=at.directionAtImpactStudio and v3(at.directionAtImpactStudio);local dir=X.flatDir(f,d)
+ local d=def.facing~='forward' and at.directionAtImpactStudio and v3(at.directionAtImpactStudio) or nil;local dir=X.flatDir(f,d)
  if yaw and yaw~=0 then dir=CFrame.Angles(0,yaw,0):VectorToWorldSpace(dir) end
  return {kind='line',origin=X.onGround(f,X.point(f,at,def.point,at.impact)),direction=dir,length=def.length,width=def.width}
 end
@@ -244,12 +247,32 @@ function X.shapeOf(def,at,f)
  elseif def.shape=='wave' then return X.wave(def,at,f) end
  return nil
 end
+-- One hit unit's held shapes in frame f (a combo phase or a lane's finish part): a sweep's arc
+-- (P.arc), a wave's lines (P.lines: one, or enraged one per `fan` degree, as the Stomp; P.line the
+-- middle one). Returns its warning shape: the shape, or a wave's middle line.
+function X.place(P,f,fan)
+ local def,at=P.def,P.at
+ if def.shape=='wave' then
+  P.lines={};for _,deg in fan or {0} do table.insert(P.lines,X.wave(def,at,f,math.rad(deg))) end
+  P.line=P.lines[math.ceil(#P.lines/2)];return P.line
+ end
+ local shape=X.shapeOf(def,at,f);if def.shape=='sweep' then P.arc=shape end
+ return shape
+end
+-- What clients get for one hit unit (MapBossAttackData phases[i], finish.parts[i]): its warning shape
+-- and a wave's lines (encoded); the caller adds its times.
+function X.unitData(P,shape)
+ local d={shape=shape and Shapes.encode(shape)}
+ if P.lines then d.lines={};for i,l in P.lines do d.lines[i]=Shapes.encode(l) end end
+ return d
+end
 -- After an aim turn: the shapes an attack holds, rebuilt from its new frame (a sweep's arc, a wave's
--- lines, each combo phase's arc or line). Circles are built from the frame when they hit anyway.
+-- lines, each combo phase's arc or lines: an enraged phase wave keeps its fan). Circles are built from
+-- the frame when they hit anyway.
 function X.reshape(A,f,rage)
  local def,at=A.def,A.at
  if A.phases then
-  for _,P in A.phases do local shape=X.shapeOf(P.def,P.at,f);if P.def.shape=='sweep' then P.arc=shape elseif P.def.shape=='wave' then P.line=shape end end
+  for _,P in A.phases do X.place(P,f,rage and rage.fan) end
  elseif def.shape=='sweep' then A.arc=X.sweepArc(def,at,f)
  elseif def.shape=='wave' then
   A.lines={};for _,deg in rage and rage.fan or {0} do table.insert(A.lines,X.wave(def,at,f,math.rad(deg))) end;A.line=A.lines[math.ceil(#A.lines/2)]
@@ -299,9 +322,10 @@ function X.contactLength(def,cf,dir,targetPos,wallLength,previous,travelled)
  local cap=math.min(def.length,wallLength or def.length)
  return math.max(travelled or 0,math.min(cap,along-math.sqrt(math.max(0,def.contact^2-side^2))))
 end
--- A lane's finish (def.finish, the ChargeSlam): the end clip's own timing, measured from where the
--- run ends (cf moved `length` along dir) on the floor at groundY. Its clip starts at the lane
--- window's activeEnd (X.laneTiming). Returns that timing and the frame; nil without timing.
+-- A lane's finish (def.finish: one circle, or the Hammer's list {slam circle, rubble wave}): the end
+-- clip's own timing, measured from where the run ends (cf moved `length` along dir) on the floor at
+-- groundY. Its clip starts at the lane window's activeEnd (X.laneTiming); part i is timed by the clip's
+-- phase i (MapBossShapes.partWindow). Returns the clip's timing and the frame; nil without timing.
 function X.finishFrame(def,T,cf,dir,length,groundY)
  local at=T.attacks and def.clips and T.attacks[def.clips[3]];if not at then return nil end
  return at,X.frame(cf+dir*length,T,groundY)
@@ -320,10 +344,28 @@ function X.laneTiming(T,A)
  local cf,f,rest=A.cf,A.frame,A.length
  if A.pos then cf=CFrame.lookAt(A.pos,A.pos+A.dir);f=X.frame(cf,T,A.ground);rest=A.length-A.travelled end
  A.data.length=A.length;A.data.shape=Shapes.encode(X.laneShape(f,A.dir,rest,def.width,X.laneSide(A.dir,def)))
- local F=A.finish
- if F then
-  F.at,F.frame=X.finishFrame(def,T,cf,A.dir,rest,A.endGround or A.ground);F.start=A.at.activeEnd
-  if F.at then A.data.finish={shape=Shapes.encode(X.circle(F.def,F.at,F.frame)),impact=t.finishImpact} end
+ -- The finish hits: A.finish (the one circle, or a list's first part) and, for a list, A.finishes.
+ local list=A.finishes or (A.finish and {A.finish})
+ if not list then return end
+ local fa,frame=X.finishFrame(def,T,cf,A.dir,rest,A.endGround or A.ground)
+ for i,F in list do
+  F.at,F.frame,F.start=fa and Shapes.partWindow(fa,i),frame,A.at.activeEnd
+  -- A wave part's lines (A.fan: the enraged fan) start where the run ends and head down it.
+  if F.at and F.def.shape=='wave' then X.place(F,frame,A.fan) end
+ end
+ local F=list[1]
+ if F.at then
+  -- data.finish.shape/impact: the first part (the slam circle) as before. A list also sends every part
+  -- in order (finish.parts): its shape, a wave's lines, `after` (seconds from the run's end to its hit,
+  -- the client's clock from the stop) and impact (attack clock, for this length).
+  A.data.finish={shape=Shapes.encode(X.shapeOf(F.def,F.at,F.frame)),impact=t.finishImpact}
+  if A.finishes then
+   A.data.finish.parts={}
+   for i,P in list do
+    local d=X.unitData(P,P.lines and P.line or X.shapeOf(P.def,P.at,P.frame));d.after=P.at.impact;d.impact=P.start+P.at.impact
+    A.data.finish.parts[i]=d
+   end
+  end
  end
 end
 -- A charge that has stopped: the finish slam lands on the floor where he ended (A.endGround), and the
@@ -419,6 +461,7 @@ function M.start(npc,kind,target,force)
  if not ground then return false end
  local now=workspace:GetServerTimeNow();local cf=root.CFrame;local f=X.frame(cf,s.T,ground.Position.Y)
  local A={kind=kind,def=def,start=now,cf=cf,ground=f.groundY,frame=f,hits={},ticks={},sampled=0,data={}}
+ local rage=s.enraged and s.def.enrage or {}
  if def.shape=='lane' then
   -- Clamped short of a wall at body height; the body travels at `speed` after RushStart.
   -- def.contact: the run ends with his root `contact` studs short of the target, and follows them
@@ -428,22 +471,28 @@ function M.start(npc,kind,target,force)
   A.limit=wall and math.max(0,wall.Distance-math.min(8,s.T.footprintRadius or 4)/2-1) or def.length;A.travelled=0
   A.length=def.contact and X.contactLength(def,cf,A.dir,Vector3.new(goal.X,cf.Y,goal.Z),A.limit,A.limit,0) or A.limit
   A.target=def.contact and target or nil
-  if def.finish then A.finish={def=X.merged(def,def.finish),hits={},ticks={},fired=false} end
+  -- A finish list (the Hammer's slam circle and rubble wave): one hit unit per part, each timed by the
+  -- end clip's phase (X.laneTiming); A.finish stays the first. A.fan: an enraged wave part's fan.
+  if def.finish then
+   local units={};for i,part in Shapes.finishParts(def) do units[i]={def=X.merged(def,part),hits={},ticks={},fired=false} end
+   A.finish=units[1];if def.finish[1]~=nil then A.finishes,A.fan=units,rage.fan end
+  end
   -- def.home (the Hammer): a homing run. The body and its heading live in A.pos / A.dir (stepAttack).
   if def.home and def.facing=='forward' then A.pos,A.sentDir,A.homeTarget=cf.Position,A.dir,target end
   A.data={dir={A.dir.X,A.dir.Z}};X.laneTiming(s.T,A)
  else A.at=X.window(def,s.T);A.duration=X.duration(def,A.at) end
  local at=A.at
- local rage=s.enraged and s.def.enrage or {}
  if def.phases then
   -- Every phase's warning goes out at commit (data.phases; the client fills a later one in as its
-  -- hit nears). data.shape (the first phase) is kept for older readers.
+  -- hit nears). data.shape (the first phase) is kept for older readers. A wave phase (the Hammer's
+  -- rubble) also sends its lines (enraged: rage.fan, like the Stomp), and the attack lasts until its
+  -- front reaches the far end (X.duration).
   A.phases=X.phases(def,at);A.data.phases={}
   for i,P in A.phases do
-   local shape=X.shapeOf(P.def,P.at,f)
-   if P.def.shape=='sweep' then P.arc=shape elseif P.def.shape=='wave' then P.line=shape end
+   local shape=X.place(P,f,rage.fan)
    A.duration=math.max(A.duration,X.duration(P.def,P.at))
-   A.data.phases[i]={shape=shape and Shapes.encode(shape),warnStart=P.at.warnStart,impact=P.at.impact,activeEnd=P.at.activeEnd}
+   local d=X.unitData(P,shape);d.warnStart,d.impact,d.activeEnd=P.at.warnStart,P.at.impact,P.at.activeEnd
+   A.data.phases[i]=d
   end
   A.data.shape=A.data.phases[1].shape
  elseif def.shape=='circle' then A.data.shape=Shapes.encode(X.circle(def,at,f))
@@ -530,7 +579,7 @@ function M.spawn(id,cf,practice,opts)
   local clip=T.attacks and T.attacks[intro.clip]
   npc:SetAttribute('BossIntroStart',now);npc:SetAttribute('BossIntroLand',land);npc:SetAttribute('BossIntroUntil',done)
   if def.introName then npc:SetAttribute('BossIntroName',def.introName) end
-  npc:SetAttribute('BossAttack',intro.clip);npc:SetAttribute('BossStart',land-(clip and clip.impact or 0));npc:SetAttribute('BossFrame',root.CFrame)
+  npc:SetAttribute('BossAttack',intro.clip);npc:SetAttribute('BossStart',land-(clip and Shapes.impactOf(clip) or 0));npc:SetAttribute('BossFrame',root.CFrame)
   npc:SetAttribute('BossGroundY',root.Position.Y-T.rootHeight-.1)
   npc:SetAttribute('BossSerial',(npc:GetAttribute('BossSerial') or 0)+1);commit(npc,h,root)
   s.intro=done;s.next=done+.6
@@ -769,10 +818,12 @@ local function stepAttack(npc,s,now,h,root,params,people)
  for _,P in A.phases or {A} do
   if X.stepHits(P,f,age,t0,people,function(e,from,source) return hit(npc,P.def,e,from,params,source) end) and P.def.follow and X.allows(s,'follow') then queueFollow(npc,s,A,P,now,root,params,people) end
  end
- -- A lane's finish slam, on the end clip's clock (it starts where the run ends, F.start).
- local F=A.finish
- if F and F.at and X.stepHits(F,F.frame,age-F.start,t0-F.start,people,function(e,from,source) return hit(npc,F.def,e,from,params,source) end) and F.def.follow and X.allows(s,'follow') then
-  queueFollow(npc,s,A,F,now,root,params,people)
+ -- A lane's finish slam (and a list's rubble wave), on the end clip's clock (it starts where the run
+ -- ends, F.start). Each part has its own hit memory.
+ for _,F in A.finishes or {A.finish} do
+  if F.at and X.stepHits(F,F.frame,age-F.start,t0-F.start,people,function(e,from,source) return hit(npc,F.def,e,from,params,source) end) and F.def.follow and X.allows(s,'follow') then
+   queueFollow(npc,s,A,F,now,root,params,people)
+  end
  end
  if def.shape=='targets' then
   if age>=math.max(at.warnStart,at.impact-(def.lead or 0)) and not A.points then
