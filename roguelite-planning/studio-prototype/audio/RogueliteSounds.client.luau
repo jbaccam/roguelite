@@ -372,6 +372,15 @@ task.spawn(function()
  for _,m in drops:GetChildren() do watch(m) end
  drops.ChildAdded:Connect(watch)
 end)
+-- Chef pizza slices (ChefPizzaService; Kind 'Pizza' in the heart folder): a bite when one you
+-- picked up is eaten (the server sets Healed, even 0, then removes it). Kit sounds only: the punch
+-- up high for a chomp, and a low plop under it.
+task.spawn(function()
+ workspace:WaitForChild('RogueliteHeartDrops').ChildRemoved:Connect(function(m)
+  if m:GetAttribute('Kind')~='Pizza' or m:GetAttribute('MagnetUserId')~=player.UserId or m:GetAttribute('Healed')==nil then return end
+  play('hit_punch','pickup',.22,1.5,nil,.04);play('crystal_pickup','pickup',.18,.8,nil,0,PLOPS[4])
+ end)
+end)
 
 combat:WaitForChild('PlayerDamaged').OnClientEvent:Connect(function(damage)
  if type(damage)=='number' and damage>0 then play('player_damage','player',.6,1,nil,.04) end

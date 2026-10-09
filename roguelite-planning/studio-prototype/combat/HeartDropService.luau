@@ -2,6 +2,9 @@
 -- inside their PickupRadius pulls it in and heals on arrival (a full-health player just
 -- uses it up). Unclaimed hearts expire after LIFETIME. No remote, no client-supplied
 -- amounts. Hearts clear whenever the run leaves Combat.
+-- Variants (spawnAt's second argument) share all of this with their own kind, lifetime, heal
+-- and pickup check: Chef pizza slices (ChefPizzaService, attached at the bottom). Their Kind
+-- attribute tells the clients apart; the heart cap counts hearts only.
 local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')
 local Tags=game:GetService('CollectionService')
@@ -35,25 +38,31 @@ function H.chance(luck)
  if type(test)=='number' then return math.clamp(test,0,1) end
  return math.clamp(H.BASE_CHANCE+math.max(0,tonumber(luck) or 0)*H.LUCK_CHANCE,0,H.MAX_CHANCE)
 end
-function H.spawnAt(position)
- if not inCombat() or #H.drops>=H.MAX_ACTIVE then return nil end
+-- variant (optional): {kind, owner, lifetime, heal=function(humanoid) base HP, allow=function(d,now,distance,radius) bool}.
+function H.spawnAt(position,variant)
+ if not inCombat() then return nil end
+ if not variant then local hearts=0;for _,d in H.drops do if not d.kind then hearts+=1 end end;if hearts>=H.MAX_ACTIVE then return nil end end
  local exclude={folder}
  local mobs=workspace:FindFirstChild('RogueliteEnemies');if mobs then table.insert(exclude,mobs) end
  for _,p in Players:GetPlayers() do if p.Character then table.insert(exclude,p.Character) end end
  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances=exclude
  local ground=workspace:Raycast(position+Vector3.new(0,2,0),Vector3.new(0,-100,0),params)
  local at=ground and ground.Position+Vector3.new(0,1.6,0) or position
- local model=Instance.new('Model');model.Name='HeartPickup'
+ local model=Instance.new('Model');model.Name=variant and variant.kind..'Pickup' or 'HeartPickup'
  local root=Instance.new('Part');root.Name='HeartMarker';root.Size=Vector3.one*.1;root.Transparency=1
  root.Anchored=true;root.CanCollide=false;root.CanTouch=false;root.CanQuery=false;root.CastShadow=false
  root.CFrame=CFrame.new(at);root.Parent=model;model.PrimaryPart=root
  local born=workspace:GetServerTimeNow()
- model:SetAttribute('Origin',at);model:SetAttribute('BornAt',born);model:SetAttribute('HealAmount',H.HEAL)
- model:SetAttribute('ExpiresAt',born+H.LIFETIME)
+ local lifetime=variant and variant.lifetime or H.LIFETIME
+ model:SetAttribute('Origin',at);model:SetAttribute('BornAt',born)
+ if variant then model:SetAttribute('Kind',variant.kind);model:SetAttribute('OwnerUserId',variant.owner and variant.owner.UserId) else model:SetAttribute('HealAmount',H.HEAL) end
+ model:SetAttribute('ExpiresAt',born+lifetime)
  model.Parent=folder
- local d={model=model,origin=at,position=at,born=born}
+ local d={model=model,origin=at,position=at,born=born,lifetime=lifetime}
+ if variant then d.kind=variant.kind;d.owner=variant.owner;d.heal=variant.heal;d.allow=variant.allow end
  table.insert(H.drops,d);return d
 end
+function H.removeDrop(d) local i=table.find(H.drops,d);if i then remove(i) end end
 -- Called once per real death (never practice bosses/targets, never split children).
 function H.roll(npc,position)
  if not inCombat() or not characters or npc:GetAttribute('PracticeTarget') or npc:GetAttribute('IsBoss') or npc:GetAttribute('SplitChild') then return nil end
@@ -73,7 +82,9 @@ function H.collect(p,d)
  -- Full-health players still grab it (it's wasted), so hearts can't be banked for later.
  if not r or not s then return false end
  local radius=math.max(H.MIN_PICKUP_RADIUS,math.clamp(s.stats.PickupRadius or 0,0,100))
- if (r.Position-d.origin).Magnitude>radius then return false end
+ local distance=(r.Position-d.origin).Magnitude
+ if distance>radius then return false end
+ if d.allow and not d.allow(d,now,distance,radius) then return false end -- a variant's own rules (ChefPizza.canCollect)
  d.target=p;d.started=now;d.startPosition=Motion.idle(d.origin,d.born,now)
  d.model:SetAttribute('MagnetOrigin',d.startPosition);d.model:SetAttribute('MagnetStart',now);d.model:SetAttribute('MagnetUserId',p.UserId)
  return true
@@ -83,13 +94,13 @@ function H.step(now)
  for i=#H.drops,1,-1 do
   local d=H.drops[i]
   if not d.model.Parent then remove(i)
-  elseif not d.target and now>=d.born+H.LIFETIME then remove(i)
+  elseif not d.target and now>=d.born+d.lifetime then remove(i)
   elseif d.target then
    local r=living(d.target)
    if not r or (r.Position-d.origin).Magnitude>100 then cancel(d)
    elseif now-d.started>=Motion.PULL_SECONDS then
     local _,h=living(d.target);local before=h.Health
-    characters.heal(d.target,H.HEAL)
+    characters.heal(d.target,d.heal and d.heal(h) or H.HEAL) -- Recovery applies inside heal
     d.model:SetAttribute('Healed',h.Health-before)
     remove(i)
    end
@@ -110,9 +121,15 @@ RunService.Heartbeat:Connect(function(dt)
   local by=now-pausedAt;pausedAt=nil
   for _,d in H.drops do
    d.born+=by
-   if d.model.Parent then d.model:SetAttribute('BornAt',d.born);d.model:SetAttribute('ExpiresAt',d.born+H.LIFETIME) end
+   if d.model.Parent then d.model:SetAttribute('BornAt',d.born);d.model:SetAttribute('ExpiresAt',d.born+d.lifetime) end
   end
  end
  H.step(now)
 end)
+-- Chef pizza slices. Looked up, not waited on: a place without the module still has hearts.
+local pizza=script.Parent:FindFirstChild('ChefPizzaService')
+if pizza then
+ local ok,err=pcall(function() require(pizza).attach(H) end)
+ if not ok then warn('HeartDropService: ChefPizzaService failed to load:',err) end
+end
 return H

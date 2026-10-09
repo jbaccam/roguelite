@@ -30,7 +30,7 @@ local function healPop(amount)
  task.delay(.85,function() gui:Destroy() end)
 end
 local function track(m)
- if visuals[m] or not m:IsA('Model') then return end
+ if visuals[m] or not m:IsA('Model') or m:GetAttribute('Kind')=='Pizza' then return end -- ChefPizzaVisuals draws those
  local v=template:Clone();v.Parent=folder;visuals[m]=v
 end
 drops.ChildAdded:Connect(track)
