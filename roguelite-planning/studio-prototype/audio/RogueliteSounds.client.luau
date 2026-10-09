@@ -331,6 +331,8 @@ task.spawn(function()
    play('swing_heaviest','impact',.5,.55,a[2],.05);play('hit_thud','impact',.4,.6,a[2],.05)
   elseif kind=='Thunder' then -- Mjolnir: the crack lands with the bolt
    at(a[4],function() play('thunder_crack','impact',.6,1,a[2],.05);play('zap','impact',.25,.7,a[2],.06) end)
+  elseif kind=='Roll' then -- Pizza Cutter: a bright, quick slice as the ghost wheel leaves (2026-10-09)
+   play('swing_blade','impact',.4,1.3,a[4],.06);play('zap','impact',.1,2.1,a[4],.08)
   end
  end)
 end)

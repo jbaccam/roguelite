@@ -10,6 +10,7 @@
 --   Strike Bowling Ball: "STRIKE!", ten pins burst out of a dust ring
 --   Shock  Wrecking Ball: a dust shockwave with an amber dashed rim rolls over cracked ground
 --   Thunder Mjolnir: a target ring charges, then a forked lightning bolt drops on it
+--   Roll   Pizza Cutter: a ghost wheel rolls down its lane on its rim, cutting a thin slice line into the ground
 -- Drawn in the game's own flat effect language (user, 2026-10-02: no "3d and model heavy" effects):
 -- crescents are flat Neon segments with the white/amber dashed rim (VfxKit.ring, like every swing),
 -- rings are the painted ShockwaveRing texture on the ground, dust is VfxKit.cloud and the painted
@@ -356,6 +357,97 @@ function V.mount(combat,folder,lookup,options)
   end,'legendSlash',10)
  end
 
+ -- Rolling Slice (Pizza Cutter, 2026-10-09) -------------------------------------------------------
+ -- A ghost pizza-cutter wheel stands on its rim and rolls down the lane. All flat Neon pieces: a translucent
+ -- pale-steel disc, a rim of dashes (steel white / tomato red) and three spokes that turn with it so the roll reads,
+ -- a hub, and behind it three fading rear arcs of the rim (the crescent motion trail). A thin slice line is cut
+ -- into the ground behind it and fades. Its size follows the lane: a 3-stud lane gives a 2.5-stud wheel.
+ local TOMATO=rgb(232,74,52)
+ local DASHES,ARCS,ARC_SEGMENTS=16,3,4
+ local function roll(ownerId,start,direction,reach,speed,width,t0)
+  if not K.near(start,170) then return end
+  local radius=math.clamp(width*.42,1.1,3.4)
+  local duration=math.max(.12,reach/math.max(speed,1))
+  local floor0,floor1=groundY(start),groundY(start+direction*reach)
+  local disc=K.part(folder,'RollingWheelDisc',Vector3.new(.06,1,1),STEEL,1,Enum.Material.Neon,Enum.PartType.Cylinder)
+  local hub=K.part(folder,'RollingWheelHub',Vector3.new(.1,1,1),rgb(158,170,186),1,Enum.Material.Neon,Enum.PartType.Cylinder)
+  local spokes,dashes,arcs={},{},{}
+  for i=1,3 do spokes[i]=K.part(folder,'RollingWheelSpoke',Vector3.new(.08,1,.09),K.White,1,Enum.Material.Neon) end
+  for i=1,DASHES do dashes[i]=K.part(folder,'RollingWheelRim',Vector3.new(.1,.1,.1),i%2==0 and TOMATO or K.White,1,Enum.Material.Neon) end
+  for k=1,ARCS do
+   arcs[k]={}
+   for m=1,ARC_SEGMENTS do arcs[k][m]=K.part(folder,'RollingWheelTrail',Vector3.new(.06,.1,.1),k==1 and K.White or STEEL,1,Enum.Material.Neon) end
+  end
+  local core=K.part(folder,'RollingSlice',Vector3.new(.12,.04,.1),K.White,1,Enum.Material.Neon)
+  local glow=K.part(folder,'RollingSliceGlow',Vector3.new(.34,.03,.1),TOMATO,1,Enum.Material.Neon)
+  -- Sparks shed where the rim meets the ground.
+  local contact=K.part(folder,'RollingWheelContact',Vector3.new(.3,.1,.3),K.White,1)
+  local sparks=emitter(contact,{name='RollSparks',texture=TEX.Star,color=K.White,color2=TOMATO,size=seq(0,.28,1,0),alpha=seq(0,0,.7,.3,1,1),
+   life=.2,life1=.35,speed=2,speed1=6,spread=40,rate=40,direction=Enum.NormalId.Back,light=1,enabled=true})
+  local from=Vector3.new(start.X,floor0,start.Z)
+  K.flash(folder,from+Vector3.yAxis*radius,STEEL,8,2,.25)
+  burst(folder,from+Vector3.yAxis*radius,{texture=TEX.Slash,color=K.White,color2=TOMATO,size=seq(0,radius*1.2,.4,radius*1.9,1,radius*2.1),alpha=seq(0,0,.6,.3,1,1),
+   life=.14,speed=0,spread=0,light=1,spin=0,facing=Vector3.yAxis:Cross(direction).Unit},1)
+  dust(from+Vector3.yAxis*.3,1.1,2)
+  local seen,limit={},{n=10}
+  local last=from
+  local hold=.3 -- the slice line lingers after the wheel is gone
+  local span=2*math.pi/DASHES
+  K.animate(duration+hold,function(_,age)
+   local f=math.min(1,age/duration)
+   local traveled=reach*f
+   local floor=floor0+(floor1-floor0)*f
+   local ground=Vector3.new(start.X,floor,start.Z)+direction*traveled
+   local grow=.55+.45*smooth(f/.12) -- it pops up as it leaves
+   local r=radius*grow
+   local fade=math.clamp(smooth((f-.82)/.18)+(age>duration and 1 or 0),0,1)
+   local frame=CFrame.lookAt(ground+Vector3.yAxis*(r+.05),ground+Vector3.yAxis*(r+.05)+direction)
+   local spin=frame*CFrame.Angles(-traveled/radius,0,0) -- rolls forward: its top moves the way it travels
+   disc.Size=Vector3.new(.06,r*2,r*2);disc.CFrame=spin;disc.Transparency=.68+.32*fade
+   hub.Size=Vector3.new(.1,r*.45,r*.45);hub.CFrame=spin;hub.Transparency=.3+.7*fade
+   for i,s in spokes do
+    s.Size=Vector3.new(.08,r*1.75,.09);s.CFrame=spin*CFrame.Angles(i*math.pi/3,0,0);s.Transparency=.45+.55*fade
+   end
+   local rim=math.max(.1,r*.16);local chord=2*r*math.sin(span/2)*1.08
+   for i,s in dashes do
+    s.Size=Vector3.new(.1,rim,chord);s.CFrame=spin*CFrame.Angles(span*(i-.5),0,0)*CFrame.new(0,r-rim*.5,0);s.Transparency=.08+.92*fade
+   end
+   -- The trail: rear arcs of the rim (local +Z is behind), falling back and thinning.
+   for k,arc in arcs do
+    for m,s in arc do
+     local a=math.rad(30+120*(m-.5)/ARC_SEGMENTS)
+     s.Size=Vector3.new(.06,math.max(.06,rim*(1-.25*k)),2*r*math.sin(math.rad(60/ARC_SEGMENTS))*1.1)
+     s.CFrame=frame*CFrame.new(0,0,k*r*.38)*CFrame.Angles(a,0,0)*CFrame.new(0,r*.98,0)
+     local base=.4+.15*k
+     s.Transparency=age<duration and base+(1-base)*fade or 1
+    end
+   end
+   contact.CFrame=CFrame.lookAt(ground+Vector3.yAxis*.1,ground+Vector3.yAxis*.1+direction);sparks.Enabled=age<duration
+   -- The slice line runs from the start to under the wheel, following a slope between the two ends.
+   local a,b=from+Vector3.yAxis*.06,ground+Vector3.yAxis*.06
+   local length=math.max(.1,(b-a).Magnitude)
+   core.Size=Vector3.new(.12,.04,length);glow.Size=Vector3.new(.34,.03,length)
+   core.CFrame=(b-a).Magnitude>.05 and CFrame.lookAt((a+b)/2,b) or CFrame.lookAt(a,a+direction);glow.CFrame=core.CFrame-Vector3.yAxis*.01
+   local line=age<duration and 0 or smooth((age-duration)/hold)
+   core.Transparency=.15+.85*line;glow.Transparency=.55+.45*line
+   if age<duration then
+    passing(last,ground,r,seen,limit,function(p) cutFlash(p,direction,TOMATO) end)
+    last=ground
+   end
+  end,function()
+   local endAt=Vector3.new(start.X,floor1,start.Z)+direction*reach
+   if K.near(endAt,150) then
+    K.shards(folder,endAt+Vector3.yAxis*.4,STEEL,5,9,.32,.13)
+    burst(folder,endAt+Vector3.yAxis*radius,{texture=TEX.Star,color=K.White,color2=TOMATO,size=seq(0,.6,1,0),alpha=seq(0,0,1,1),life=.28,speed=4,speed1=8,spread=180,light=1},7)
+    dust(endAt+Vector3.yAxis*.3,1,2)
+   end
+   disc:Destroy();hub:Destroy();contact:Destroy();core:Destroy();glow:Destroy()
+   for _,s in spokes do s:Destroy() end
+   for _,s in dashes do s:Destroy() end
+   for _,arc in arcs do for _,s in arc do s:Destroy() end end
+  end,'legendRoll',8)
+ end
+
  -- Royal Flush (Deck of Cards) --------------------------------------------------------------------
  local RANKS={'10','J','Q','K','A'}
  local function goldCard(rank)
@@ -630,6 +722,7 @@ function V.mount(combat,folder,lookup,options)
  local function onFx(kind,...)
   local a={...}
   if kind=='Slash' or kind=='Beam' then slash(kind,a[2],a[4],a[5],a[6],a[7],a[8],a[9])
+  elseif kind=='Roll' then roll(a[2],a[4],a[5],a[6],a[7],a[8],a[9]) -- the slash's layout (LegendaryMoves api:swing)
   elseif kind=='Flush' then flush(a[1],a[3],a[4],a[5],a[6])
   elseif kind=='Split' then split(a[1],a[3],a[4],a[5],a[6],a[7],a[8],a[9])
   elseif kind=='Strike' then strike(a[1],a[2],a[3],a[4])

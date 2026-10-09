@@ -6,6 +6,8 @@
 --   25 Wrecking Ball: each swing that connects sends a ground shockwave ring out from the hit
 --   32 Excalibur: every swing also shoots a golden beam slash
 --   31 Mjolnir: every 4th throw calls down a lightning strike where it lands
+--   42 Pizza Cutter: every 4th swing rolls a ghost wheel 20 studs along the ground, hitting each enemy in its lane
+--      once (2026-10-09 "Rolling Slice"; a mover like the Katana's slash)
 -- Numbers live in WeaponCatalog.Legendary. Every move hit is a secondary hit (no crits, chains,
 -- knockback or other specials, and it can never start another move), and everything is capped.
 -- Clients draw from LegendaryFX (LegendaryVisuals); each attack's count shows on the slot as the
@@ -58,6 +60,13 @@ end
 function L.falloff(distance,radius) return 1-.65*math.clamp(distance/math.max(radius,.01),0,1) end
 -- When an expanding ring (radius over duration) reaches something `distance` away.
 function L.ringDelay(distance,radius,duration) return math.clamp(distance/math.max(radius,.01),0,1)*duration end
+-- How far a swing's mover travels. Slashes and beams grow with Attack Range; the Rolling Slice keeps the card's
+-- exact distance (2026-10-09). Example: +50% range gives a 45-stud Katana slash, the wheel still rolls 20.
+function L.moverRange(spec,rangeMult) return spec.move=='Roll' and spec.range or spec.range*rangeMult end
+-- A mover's lane width grows with Area Size, kept between 2 and 9 studs. Example: the 3-stud wheel lane at x2 is 6.
+function L.laneWidth(spec,areaMult) return math.clamp(spec.width*areaMult,2,9) end
+-- Where a swing's mover leaves from: the slash at the cut (2.2 studs out), the wheel at the feet (1.5 studs out).
+L.MoverLead={Slash=2.2,Beam=2.2,Roll=1.5}
 
 function L.new(damage,canTarget,rayParams)
  -- Looked up when needed, never waited on: a place without the remote still runs (no visuals).
@@ -141,19 +150,20 @@ function L.new(damage,canTarget,rayParams)
 
  local api={}
  -- A melee attack began (RogueliteCombat): Katana's every 3rd swing and every Excalibur swing
- -- throw a slash. It leaves on the cut, not the wind-up.
+ -- throw a slash; the Pizza Cutter's every 4th rolls its ghost wheel (same mover and event layout,
+ -- kind 'Roll'). It leaves on the cut, not the wind-up.
  function api:swing(d,origin,target,direction)
   local spec=Catalog.legendaryMove(d.id,d.tier)
-  if not spec or (spec.move~='Slash' and spec.move~='Beam') or not ownerAlive(d) or not count(d,spec) then return end
+  if not spec or not L.MoverLead[spec.move] or not ownerAlive(d) or not count(d,spec) then return end
   local delay=Motion.SwingHitStart/math.max(d.motionRate or 1.8,.1)
   later(workspace:GetServerTimeNow()+delay,function()
    if not ownerAlive(d) then return end
    local root=d.character:FindFirstChild('HumanoidRootPart');if not root then return end
    local flat=Vector3.new(direction.X,0,direction.Z)
    flat=flat.Magnitude>.01 and flat.Unit or Vector3.new(root.CFrame.LookVector.X,0,root.CFrame.LookVector.Z).Unit
-   local start=root.Position+flat*2.2-Vector3.yAxis*.4
-   local range=spec.range*Stats.mult(d.stats.AttackRange)
-   local width=math.clamp(spec.width*area(d),2,9)
+   local start=root.Position+flat*L.MoverLead[spec.move]-Vector3.yAxis*.4
+   local range=L.moverRange(spec,Stats.mult(d.stats.AttackRange))
+   local width=L.laneWidth(spec,area(d))
    local key,reach=mover(d,start,flat,range,spec.speed,width,spec.factor)
    if key then send(start,d.owner,spec.move,key,d.owner.UserId,d.slotIndex,start,flat,reach,spec.speed,width,workspace:GetServerTimeNow()) end
   end)

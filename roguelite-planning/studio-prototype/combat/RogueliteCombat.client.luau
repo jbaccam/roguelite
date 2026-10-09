@@ -93,6 +93,11 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
      for i=2,3 do local copy=template:Clone();copy.Name='Reserve'..i;copy.Parent=model;v.reserves[i]=copy end
     end
     if id=='33' then v.lid=model:FindFirstChild('W33_Lid_Hinge',true) end
+    -- Pizza Cutter wheel (2026-10-09): it spins about its own local Z (studio-install-pizza-cutter), rolling on the rim
+    -- point at the striking end. tip/tangent are in the model frame: spin = tip speed along the rim / radius.
+    local wheel=id=='42' and model:FindFirstChild('Wheel',true)
+    if wheel then local rest=model:GetPivot():ToObjectSpace(wheel.CFrame);local axle=rest:VectorToWorldSpace(Vector3.zAxis);local out=(Vector3.yAxis-axle*axle.Y).Unit;local r=wheel:GetAttribute('WheelRadius') or math.max(wheel.Size.X,wheel.Size.Y)/2
+     v.wheel={part=wheel,rest=rest,tip=rest.Position+out*r,tangent=out:Cross(axle),out=out,r=r,speed=0,angle=0} end
     for _,part in model:GetDescendants() do if part:IsA('BasePart') then
      part.Anchored=true;part.CanCollide=false;part.CanTouch=false;part.CanQuery=false
      table.insert(v.parts,part)
@@ -182,6 +187,17 @@ RunService:BindToRenderStep('RogueliteWeapons',Enum.RenderPriority.Character.Val
      Chains.apply(v.chain,age)
      Cards.step(v.cards,now)
      if v.lid then v.lid.Transform=CFrame.Angles(0,-math.pi/2*ArcMotion.lid(now-start),0) end
+     if v.wheel then
+      -- Drive = (rim speed + half the push along the blade, so a thrust spins it too) / radius, capped at 30 rad/s
+      -- (5 turns a second). The cut grabs the wheel when it drives faster, either way; afterwards (the return, at rest)
+      -- it is a free wheel: 15% drift, and it only speeds up the way it already turns, else coasts (0.6 s time constant).
+      -- Example: the tip moving 26 studs/s along the rim on the 0.865-stud wheel drives 26/0.865 = 30 rad/s.
+      local s=v.wheel;local tip=pose:PointToWorldSpace(s.tip);local step=s.last and dt>0 and now-s.at<.1 and tip-s.last;s.last,s.at=tip,now
+      local cut=age>=0 and age<=activeEnd
+      local drive=step and step.Magnitude<12 and math.clamp((step:Dot(pose:VectorToWorldSpace(s.tangent))+.5*step:Dot(pose:VectorToWorldSpace(s.out)))/(dt*s.r)*(cut and 1 or .15),-30,30) or 0
+      s.speed+=(drive-s.speed)*(1-math.exp(-((math.abs(drive)>math.abs(s.speed) and (cut or drive*s.speed>=0)) and 18 or 1/.6)*dt))
+      s.angle=(s.angle+s.speed*dt)%(2*math.pi);s.part.CFrame=pose*s.rest*CFrame.Angles(0,0,s.angle)
+     end
      if v.pandora then
       local opening=now-start
       if opening>=0 and opening<.3 and v.openedAt~=start then

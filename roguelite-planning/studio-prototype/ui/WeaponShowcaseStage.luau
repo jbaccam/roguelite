@@ -351,6 +351,15 @@ function Stage:select(id, tier, key)
 		v.lid = model:FindFirstChild("W33_Lid_Hinge", true)
 		v.pandora = Pandora.idle(model)
 	end
+	-- Pizza Cutter wheel (2026-10-09), the same roll as RogueliteCombat.client: it spins about its own local Z.
+	local wheel = id == "42" and model:FindFirstChild("Wheel", true)
+	if wheel then
+		local rest = model:GetPivot():ToObjectSpace(wheel.CFrame)
+		local axle = rest:VectorToWorldSpace(Vector3.zAxis)
+		local out = (Vector3.yAxis - axle * axle.Y).Unit
+		local r = wheel:GetAttribute("WheelRadius") or math.max(wheel.Size.X, wheel.Size.Y) / 2
+		v.wheel = { part = wheel, rest = rest, tip = rest.Position + out * r, tangent = out:Cross(axle), out = out, r = r, speed = 0, angle = 0 }
+	end
 	local function lookup(owner, slot)
 		if owner == OWNER and slot == 1 then
 			return self.visual
@@ -570,6 +579,30 @@ function Stage:pose(dt)
 	Cards.step(v.cards, self.clock)
 	if v.lid then
 		v.lid.Transform = CFrame.Angles(0, -math.pi / 2 * Arc.lid(self.clock - self.attackStart), 0)
+	end
+	if v.wheel then
+		-- Spin = (rim speed + half the push along the blade) / radius, capped at 30 rad/s. The cut grabs the wheel;
+		-- afterwards it is a free wheel that coasts down with a 0.6 s time constant (see RogueliteCombat.client).
+		local s = v.wheel
+		local tip = pose:PointToWorldSpace(s.tip)
+		if dt > 0 and s.last then
+			local step = tip - s.last
+			local cut = age >= 0 and age <= activeEnd
+			local drive = step.Magnitude < 12
+					and math.clamp(
+						(step:Dot(pose:VectorToWorldSpace(s.tangent)) + 0.5 * step:Dot(pose:VectorToWorldSpace(s.out)))
+							/ (dt * s.r)
+							* (cut and 1 or 0.15),
+						-30,
+						30
+					)
+				or 0
+			local grab = (math.abs(drive) > math.abs(s.speed) and (cut or drive * s.speed >= 0)) and 18 or 1 / 0.6
+			s.speed += (drive - s.speed) * (1 - math.exp(-grab * dt))
+			s.angle = (s.angle + s.speed * dt) % (2 * math.pi)
+		end
+		s.last = tip
+		s.part.CFrame = pose * s.rest * CFrame.Angles(0, 0, s.angle)
 	end
 	if v.pandora then
 		Pandora.stepIdle(v.pandora, pose, true, Arc.lid(self.clock - self.attackStart))
@@ -1257,7 +1290,7 @@ function Stage:legendaryMove()
 	local target = self.dummies[2].root.Position
 	local dir = (target - origin).Unit
 	self.slot:SetAttribute("LegendaryCharge", 0)
-	if move == "Slash" or move == "Beam" then
+	if move == "Slash" or move == "Beam" or move == "Roll" then -- Roll: the Pizza Cutter's ghost wheel (2026-10-09)
 		self:melee()
 		self.legend.handle(move, self.serial, OWNER, 1, origin, dir, spec.range, spec.speed, spec.width, now)
 	elseif move == "Flush" then

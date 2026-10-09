@@ -47,7 +47,29 @@ return function(L, Catalog)
 	near(L.ringDelay(5, 10, 0.4), 0.2, "halfway out at half time")
 	near(L.ringDelay(30, 10, 0.4), 0.4, "past the edge is the end")
 
-	-- Catalog: exactly the seven Legendaries have a move, live only at Tier IV.
+	-- Swing movers (2026-10-09). The Rolling Slice keeps the card's 20 studs; slashes grow with Attack Range.
+	local wheel, katana = Catalog.Legendary["42"], Catalog.Legendary["03"]
+	near(L.moverRange(wheel, 1), 20, "wheel rolls 20 studs")
+	near(L.moverRange(wheel, 1.5), 20, "Attack Range never changes the wheel's distance")
+	near(L.moverRange(katana, 1.5), katana.range * 1.5, "Attack Range grows the Katana slash")
+	-- The lane grows with Area Size, between 2 and 9 studs.
+	near(L.laneWidth(wheel, 1), 3, "3-stud wheel lane")
+	near(L.laneWidth(wheel, 2), 6, "Area Size x2 doubles the lane")
+	near(L.laneWidth(wheel, 5), 9, "lane capped at 9")
+	near(L.laneWidth(wheel, 0.5), 2, "lane never below 2")
+	-- Only melee weapons' moves leave from the swing; the wheel starts at the feet, the slash at the cut.
+	for id, spec in Catalog.Legendary do
+		if L.MoverLead[spec.move] then check(Catalog.ById[id].kind == "Melee", id .. " " .. spec.move .. " comes from a melee swing") end
+	end
+	check(L.MoverLead.Roll and L.MoverLead.Slash and L.MoverLead.Beam, "slash, beam and wheel are swing movers")
+	check(L.MoverLead.Roll < L.MoverLead.Slash, "the wheel starts closer than the slash")
+	-- The lane check the mover uses: cut inside half the lane plus 1 stud of slack, missed beyond, measured flat.
+	local a0, b0 = Vector3.zero, Vector3.new(0, 0, -20)
+	check(L.segmentDistance(Vector3.new(2.4, 3, -10), a0, b0) <= L.laneWidth(wheel, 1) * 0.5 + 1, "enemy 2.4 studs off the lane is cut")
+	check(L.segmentDistance(Vector3.new(2.6, 3, -10), a0, b0) > L.laneWidth(wheel, 1) * 0.5 + 1, "enemy 2.6 studs off the lane is missed")
+	check(L.due(4, wheel.every) and not L.due(3, wheel.every) and L.due(8, wheel.every), "every 4th swing rolls")
+
+	-- Catalog: exactly the eight Legendaries have a move, live only at Tier IV (Pizza Cutter 2026-10-09).
 	local legendaryIds = {}
 	for _, w in Catalog.List do
 		if w.rarity == "Legendary" then legendaryIds[w.id] = true end
@@ -61,7 +83,7 @@ return function(L, Catalog)
 		check(Catalog.legendaryMove(id, 4) == spec, id .. " move at Tier IV")
 	end
 	for id in legendaryIds do check(Catalog.Legendary[id] ~= nil, id .. " Legendary has a move") end
-	check(count == 7, "seven moves")
+	check(count == 8, "eight moves")
 	check(Catalog.legendaryMove("01", 4) == nil, "a Common weapon has none")
 	-- The user's counts (plan J).
 	check(Catalog.Legendary["03"].move == "Slash" and Catalog.Legendary["03"].every == 3, "Katana every 3rd swing")
@@ -71,5 +93,9 @@ return function(L, Catalog)
 	check(Catalog.Legendary["25"].move == "Shock", "Wrecking Ball shockwave")
 	check(Catalog.Legendary["32"].move == "Beam" and Catalog.Legendary["32"].every == 1, "Excalibur every swing")
 	check(Catalog.Legendary["31"].move == "Thunder" and Catalog.Legendary["31"].every == 4, "Mjolnir every 4th throw")
+	-- Rolling Slice (2026-10-09 design): every 4th swing, 60%, a 20-stud lane; it has its card line.
+	local roll = Catalog.Legendary["42"]
+	check(roll.move == "Roll" and roll.every == 4 and roll.factor == 0.6 and roll.range == 20, "Pizza Cutter every 4th swing, 60%, 20 studs")
+	check(Catalog.LegendaryNames.Roll == "Rolling Slice" and type(Catalog.legendaryText("42")) == "string", "Rolling Slice name and text")
 	return checks
 end
