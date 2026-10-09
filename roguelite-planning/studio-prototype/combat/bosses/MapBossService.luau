@@ -19,6 +19,7 @@ M.hooks=setmetatable({},{__mode='k'})
 -- are ground-frame studs (plan F Coordinates). Shapes lie on the attack's ground height.
 local X={}
 M._shapes=X
+local NONE=table.freeze({}) -- an empty list to loop over without making one each Heartbeat
 local function v3(t) return Vector3.new(t[1],t[2],t[3]) end
 function X.frame(cf,T,groundY) local g=cf*CFrame.new(0,-T.rootHeight,0);return {cf=cf,ground=g,groundY=groundY or g.Y} end
 -- A named point at clip time t: its sampled track, else the authored impact point.
@@ -127,6 +128,23 @@ function X.waveHit(def,at,line,pos,t0,t1)
  if not Shapes.contains(line,pos) then return false end
  local t=at.impact+flat(pos-line.origin):Dot(line.direction)/def.travel;return t>t0 and t<=t1
 end
+-- The front crossing a moving player (def.facing='forward', the Hammer's rubble; the Stomp keeps
+-- X.waveHit): the front is (t - impact) x travel down the line. A player ahead of it at t0 (along
+-- `prev`, their last sample; nil: where they are now) and level with or behind it at t1 was crossed
+-- in between, so walking or dashing toward the boss can't slip through the gap between two 60 Hz
+-- samples (X.waveHit tests only where they are now: about 1 crossing in 3 got through). They must be
+-- inside the line's width and height band now, and the crossing on the line (0..length). For a still
+-- player it is exactly X.waveHit. Returns the hit and their along-distance now (the next prev).
+function X.waveCross(def,at,line,pos,prev,t0,t1)
+ local d=flat(pos-line.origin);local along=d:Dot(line.direction)
+ local f0,f1=(t0-at.impact)*def.travel,(t1-at.impact)*def.travel
+ local r0,r1=(prev or along)-f0,along-f1
+ if r0<=0 or r1>0 or f1<0 then return false,along end
+ local x=f0+(f1-f0)*r0/(r0-r1)
+ if x<-1e-6 or x>line.length+1e-6 or (d-line.direction*along).Magnitude>line.width/2 then return false,along end
+ local y=pos.Y-line.origin.Y
+ return y>=-Shapes.HEIGHT_BELOW and y<=(line.height or Shapes.HEIGHT_ABOVE),along
+end
 -- Side-on facing, with the target on its +X or -X (whichever is the smaller turn); X.lane of
 -- that facing is then the lane through the target.
 function X.laneFacing(pos,target,look)
@@ -223,23 +241,35 @@ X.merged=Shapes.merged
 -- A combo (def.phases, the Hammer's SwingSpin and SpinSlam) is one clip with several hits. Each
 -- phase's window is the clip's timing with that phase's own times (at.phases, in order, scaled by
 -- MapBossDefs). hitAfter: a later swing never starts hitting before the one before it ends.
+-- A def phase past the clip's timed phases (MapBossShapes.partWindow) borrows the last timed phase's
+-- window, or the clip's own times when it has none (2026-10-09: the rubble wave is timed like the slam
+-- circle, so a clip baked without the wave phase still slams instead of the attack being dropped);
+-- `borrowed` marks it. Cached per timing and phase count.
 local phaseWindows=setmetatable({},{__mode='k'})
 function X.phaseWindows(def,at)
- if not def.phases or not at or not at.phases or #at.phases<#def.phases then return nil end
- if phaseWindows[at] then return phaseWindows[at] end
+ if not def.phases or not at then return nil end
+ local byCount=phaseWindows[at];local n=#def.phases
+ if byCount and byCount[n] then return byCount[n] end
  local list={}
- for i=1,#def.phases do
-  local w=table.clone(at);w.phases=nil;for k,v in at.phases[i] do w[k]=v end
+ for i=1,n do
+  local w=table.clone(Shapes.partWindow(at,i));w.borrowed=not (at.phases and at.phases[i]) or nil
   w.hitAfter=list[i-1] and list[i-1].activeEnd;list[i]=w
  end
- phaseWindows[at]=list;return list
+ byCount=byCount or {};byCount[n]=list;phaseWindows[at]=byCount
+ return list
 end
 -- A combo's hit units: per phase its def, window and hit memory, so a player is hit at most once
--- per phase (and can be hit again by the next one).
+-- per phase (and can be hit again by the next one). A borrowed window of the same shape as the phase
+-- before it (a second sweep on one timed swing) shares that phase's hit memory, so the one swing
+-- never hits a player twice.
 function X.phases(def,at)
  local windows=X.phaseWindows(def,at);if not windows then return nil end
  local list={}
- for i,w in windows do list[i]={def=X.merged(def,def.phases[i]),at=w,hits={},ticks={},fired=false} end
+ for i,w in windows do
+  local P={def=X.merged(def,def.phases[i]),at=w,hits={},ticks={},fired=false};local prev=list[i-1]
+  if w.borrowed and prev and prev.def.shape==P.def.shape then P.hits,P.ticks=prev.hits,prev.ticks end
+  list[i]=P
+ end
  return list
 end
 -- The warning shape of a circle, sweep, breath or wave hit: what a phase publishes at commit (sweeps
@@ -271,15 +301,16 @@ function X.unitData(P,shape)
  return d
 end
 -- After an aim turn: the shapes an attack holds, rebuilt from its new frame (a sweep's arc, a wave's
--- lines, each combo phase's arc or lines: an enraged phase wave keeps its fan). Circles are built from
--- the frame when they hit anyway.
-function X.reshape(A,f,rage)
+-- lines, each combo phase's arc or lines). A wave keeps the fan it committed with (A.fan, M.start): an
+-- enrage mid-attack never adds lines the clients weren't warned about. Circles are built from the
+-- frame when they hit anyway, so nothing is built for them here.
+function X.reshape(A,f)
  local def,at=A.def,A.at
  if A.phases then
-  for _,P in A.phases do X.place(P,f,rage and rage.fan) end
+  for _,P in A.phases do if P.def.shape=='sweep' or P.def.shape=='wave' then X.place(P,f,A.fan) end end
  elseif def.shape=='sweep' then A.arc=X.sweepArc(def,at,f)
  elseif def.shape=='wave' then
-  A.lines={};for _,deg in rage and rage.fan or {0} do table.insert(A.lines,X.wave(def,at,f,math.rad(deg))) end;A.line=A.lines[math.ceil(#A.lines/2)]
+  A.lines={};for _,deg in A.fan or {0} do table.insert(A.lines,X.wave(def,at,f,math.rad(deg))) end;A.line=A.lines[math.ceil(#A.lines/2)]
  end
 end
 -- One hit unit's circle, wave, breath or sweep hits between clip times t0 and age: the attack itself
@@ -291,6 +322,17 @@ function X.stepHits(P,f,age,t0,people,strike)
   P.fired=true;local c=X.circle(def,at,f)
   for _,e in people do if Shapes.contains(c,e.at) and strike(e,c.center+Vector3.yAxis*2,c.center) then P.hits[e.player]=true end end
   return true
+ elseif def.shape=='wave' and age>=at.impact and def.facing=='forward' then
+  -- The Hammer's rubble: the front crossing each player between samples (X.waveCross), per line,
+  -- from their along-distance last step (P.prev[line index][player]).
+  local prev=P.prev;if not prev then prev={};P.prev=prev end
+  for _,e in people do
+   for li,line in P.lines do
+    local seen=prev[li];if not seen then seen={};prev[li]=seen end
+    local crossed,along=X.waveCross(def,at,line,e.at,seen[e.player],t0,age);seen[e.player]=along
+    if crossed and not P.hits[e.player] and strike(e,line.origin+Vector3.yAxis*2,line.origin) then P.hits[e.player]=true end
+   end
+  end
  elseif def.shape=='wave' and age>=at.impact then
   for _,e in people do
    for _,line in P.lines or {P.line} do
@@ -348,35 +390,74 @@ function X.laneTiming(T,A)
  local cf,f,rest=A.cf,A.frame,A.length
  if A.pos then cf=CFrame.lookAt(A.pos,A.pos+A.dir);f=X.frame(cf,T,A.ground);rest=A.length-A.travelled end
  A.data.length=A.length;A.data.shape=Shapes.encode(X.laneShape(f,A.dir,rest,def.width,X.laneSide(A.dir,def)))
- -- The finish hits: A.finish (the one circle, or a list's first part) and, for a list, A.finishes.
+ -- The finish hits: A.finishes (X.finishUnits), or an older caller's single A.finish.
  local list=A.finishes or (A.finish and {A.finish})
  if not list then return end
  local fa,frame=X.finishFrame(def,T,cf,A.dir,rest,A.endGround or A.ground)
- for i,F in list do
-  F.at,F.frame,F.start=fa and Shapes.partWindow(fa,i),frame,A.at.activeEnd
-  -- A wave part's lines (A.fan: the enraged fan) start where the run ends and head down it.
-  if F.at and F.def.shape=='wave' then X.place(F,frame,A.fan) end
- end
+ for i,F in list do F.at,F.frame,F.start=fa and Shapes.partWindow(fa,i),frame,A.at.activeEnd end
  local F=list[1]
  if F.at then
-  -- data.finish.shape/impact: the first part (the slam circle) as before. A list also sends every part
-  -- in order (finish.parts): its shape, a wave's lines, `after` (seconds from the run's end to its hit,
-  -- the client's clock from the stop) and impact (attack clock, for this length).
-  A.data.finish={shape=Shapes.encode(X.shapeOf(F.def,F.at,F.frame)),impact=t.finishImpact}
-  if A.finishes then
-   A.data.finish.parts={}
-   for i,P in list do
-    local d=X.unitData(P,P.lines and P.line or X.shapeOf(P.def,P.at,P.frame));d.after=P.at.impact;d.impact=P.start+P.at.impact
-    A.data.finish.parts[i]=d
-   end
+  -- data.finish.shape/impact: the first part (the slam circle) as before. A list's parts
+  -- (X.publishParts) are only rebuilt when the data goes out: at the commit and the stop.
+  local parts=A.data.finish and A.data.finish.parts;local shape=X.shapeOf(F.def,F.at,F.frame)
+  A.data.finish={shape=shape and Shapes.encode(shape),impact=t.finishImpact,parts=parts}
+ end
+end
+-- A lane's finish hit units (M.start): one per part (MapBossShapes.finishParts), each with its own hit
+-- memory; A.finish the first, A.finishes all of them, A.listed when def.finish is a list. A wave part
+-- is `detached`: its front runs on its own clock (X.stepWave), not the attack's.
+function X.finishUnits(A)
+ local def=A.def;local units={}
+ for i,part in Shapes.finishParts(def) do local U={def=X.merged(def,part),hits={},ticks={},fired=false};U.detached=U.def.shape=='wave' or nil;units[i]=U end
+ A.finish,A.finishes,A.listed=units[1],units,def.finish[1]~=nil
+ return units
+end
+-- A finish list's parts for clients (data.finish.parts), built only when the data goes out (M.start and
+-- X.stopCharge): each part's shape, a wave's lines (A.fan, where the run ends: also the lines its hits
+-- use, final at the stop), `after` (seconds from the run's end to its hit) and impact (attack clock).
+function X.publishParts(A)
+ if not (A.listed and A.data.finish) then return end
+ local parts={}
+ for i,P in A.finishes do
+  if P.at then
+   local shape=P.def.shape=='wave' and X.place(P,P.frame,A.fan) or X.shapeOf(P.def,P.at,P.frame)
+   local d=X.unitData(P,shape);d.after=P.at.impact;d.impact=P.start+P.at.impact;parts[i]=d
   end
  end
+ A.data.finish.parts=parts
 end
 -- A charge that has stopped: the finish slam lands on the floor where he ended (A.endGround), and the
 -- data says when the run ended on the server clock (stoppedAt = start + the final window's activeEnd,
 -- which is also the finish's clock). Clients start ChargeSlam from it, not from their own prediction,
 -- which runs on a BossChargeLength that arrives late and in 0.5-stud steps.
-function X.stopCharge(T,A) A.endGround=A.floorY;X.laneTiming(T,A);A.data.stoppedAt=A.start+A.at.activeEnd end
+function X.stopCharge(T,A) A.endGround=A.floorY;X.laneTiming(T,A);X.publishParts(A);A.data.stoppedAt=A.start+A.at.activeEnd end
+-- A combo at commit (M.start): its hit units placed in frame f (a wave with the commit's fan, A.fan),
+-- their warnings (data.phases; data.shape the first, for older readers), and the attack's duration:
+-- its recovery, stretched for a phase that hits later (X.duration), but never for a wave phase, whose
+-- front runs on its own clock after he is released (X.stepWave). The cyclops's Stomp (no phases)
+-- keeps its own stretch. Returns the units.
+function X.commitPhases(A,f)
+ A.phases=X.phases(A.def,A.at);A.data.phases={}
+ for i,P in A.phases do
+  local shape=X.place(P,f,A.fan)
+  if P.def.shape=='wave' then P.detached=true else A.duration=math.max(A.duration,X.duration(P.def,P.at)) end
+  local d=X.unitData(P,shape);d.warnStart,d.impact,d.activeEnd=P.at.warnStart,P.at.impact,P.at.activeEnd
+  A.data.phases[i]=d
+ end
+ A.data.shape=A.data.phases[1].shape
+ return A.phases
+end
+-- One detached wave (s.waves: a wave phase or finish part, handed over at the commit): its hits on its
+-- own clock, the attack's start (W.start) plus a finish's run end (P.start), whether the attack is
+-- still under way or not. True once its front is past the far end. M.step drops every wave on the
+-- boss's death, a pause or the zombies switched off; a new attack never ends one.
+function X.stepWave(W,now,people,strike)
+ local P=W.P;local age=now-W.start-(P.start or 0)
+ if not P.at then return now-W.start>30 end
+ local t0=W.t0 or age;W.t0=age
+ X.stepHits(P,nil,age,t0,people,strike)
+ return age>=Shapes.hitEnd(P.def,P.at)+.05
+end
 -- def.lockout: an attack's own minimum gap between its starts (the charge: 5 s), on top of cooldowns.
 function X.lockedOut(s,kind,now)
  local a=s.def.attacks[kind];local last=s.lastStart and s.lastStart[kind]
@@ -481,6 +562,9 @@ function M.start(npc,kind,target,force)
  local now=workspace:GetServerTimeNow();local cf=root.CFrame;local f=X.frame(cf,s.T,ground.Position.Y)
  local A={kind=kind,def=def,start=now,cf=cf,ground=f.groundY,frame=f,hits={},ticks={},sampled=0,data={}}
  local rage=s.enraged and s.def.enrage or {}
+ -- The wave fan this attack commits with (enraged: rage.fan): its aim turns (X.reshape) keep it, so an
+ -- enrage mid-attack never adds lines the clients weren't warned about.
+ A.fan=rage.fan
  if def.shape=='lane' then
   -- Clamped short of a wall at body height; the body travels at `speed` after RushStart.
   -- def.contact: the run ends with his root `contact` studs short of the target, and follows them
@@ -490,30 +574,19 @@ function M.start(npc,kind,target,force)
   A.limit=wall and math.max(0,wall.Distance-math.min(8,s.T.footprintRadius or 4)/2-1) or def.length;A.travelled=0
   A.length=def.contact and X.contactLength(def,cf,A.dir,Vector3.new(goal.X,cf.Y,goal.Z),A.limit,A.limit,0) or A.limit
   A.target=def.contact and target or nil
-  -- A finish list (the Hammer's slam circle and rubble wave): one hit unit per part, each timed by the
-  -- end clip's phase (X.laneTiming); A.finish stays the first. A.fan: an enraged wave part's fan.
-  if def.finish then
-   local units={};for i,part in Shapes.finishParts(def) do units[i]={def=X.merged(def,part),hits={},ticks={},fired=false} end
-   A.finish=units[1];if def.finish[1]~=nil then A.finishes,A.fan=units,rage.fan end
-  end
+  -- A finish (the Hammer's slam circle and rubble wave): one hit unit per part, each timed by the end
+  -- clip's phase (X.laneTiming, X.finishUnits).
+  if def.finish then X.finishUnits(A) end
   -- def.home (the Hammer): a homing run. The body and its heading live in A.pos / A.dir (stepAttack).
   if def.home and def.facing=='forward' then A.pos,A.sentDir,A.homeTarget=cf.Position,A.dir,target end
-  A.data={dir={A.dir.X,A.dir.Z}};X.laneTiming(s.T,A)
+  A.data={dir={A.dir.X,A.dir.Z}};X.laneTiming(s.T,A);X.publishParts(A)
  else A.at=X.window(def,s.T);A.duration=X.duration(def,A.at) end
  local at=A.at
  if def.phases then
   -- Every phase's warning goes out at commit (data.phases; the client fills a later one in as its
-  -- hit nears). data.shape (the first phase) is kept for older readers. A wave phase (the Hammer's
-  -- rubble) also sends its lines (enraged: rage.fan, like the Stomp), and the attack lasts until its
-  -- front reaches the far end (X.duration).
-  A.phases=X.phases(def,at);A.data.phases={}
-  for i,P in A.phases do
-   local shape=X.place(P,f,rage.fan)
-   A.duration=math.max(A.duration,X.duration(P.def,P.at))
-   local d=X.unitData(P,shape);d.warnStart,d.impact,d.activeEnd=P.at.warnStart,P.at.impact,P.at.activeEnd
-   A.data.phases[i]=d
-  end
-  A.data.shape=A.data.phases[1].shape
+  -- hit nears). A wave phase (the Hammer's rubble) also sends its lines (A.fan, like the Stomp) and
+  -- runs on its own clock (X.commitPhases, s.waves), so he is released at the clip's recovery.
+  X.commitPhases(A,f)
  elseif def.shape=='circle' then A.data.shape=Shapes.encode(X.circle(def,at,f))
  elseif def.shape=='wave' then
   -- Enraged, the wave splits into a fan (rage.fan, degrees). Hits test every line; data.shape
@@ -532,6 +605,9 @@ function M.start(npc,kind,target,force)
  local aim=(def.phases or def.shape=='circle' or def.shape=='sweep' or def.shape=='wave') and (def.aim or s.def.aim) or nil
  if aim then A.aim,A.aimTarget,A.sentYaw=aim,target,Shapes.yawOf(cf);A.data.yaw=A.sentYaw end
  s.attack=A;s.lastStart[kind]=now -- def.lockout (X.lockedOut)
+ -- Detached waves (a wave phase, a finish wave) go on their own clock now: stepWaves runs them every
+ -- Heartbeat, through and after this attack.
+ for _,list in {A.phases or NONE,A.finishes or NONE} do for _,P in list do if P.detached then table.insert(s.waves,{P=P,start=now}) end end end
  npc:SetAttribute('BossAttack',kind);npc:SetAttribute('BossStart',now);npc:SetAttribute('BossFrame',cf);npc:SetAttribute('BossGroundY',f.groundY);npc:SetAttribute('BossDuration',A.duration)
  -- A charge's length (X.isCharge) changes as he runs. Client contract: re-time the end clip from
  -- BossChargeLength, falling back to data.length. It is set before BossSerial, so no client reads
@@ -587,7 +663,7 @@ function M.spawn(id,cf,practice,opts)
  if not npc:GetAttribute('BossDeathSeconds') and T.clips and T.clips.Death then npc:SetAttribute('BossDeathSeconds',T.clips.Death+.6) end
  for _,p in npc:GetDescendants() do if p:IsA('BasePart') then p.Anchored=false end end
  npc.Parent=folder;root:SetNetworkOwner(nil);h.AutoRotate=true
- local s={id=id,def=def,T=T,next=workspace:GetServerTimeNow()+Defs.FIRST_ATTACK,index=0,lastHealth=h.Health,stop=def.stop or math.min(8*scale,T.footprintRadius or 4)+3,follows={},followSerial=0,
+ local s={id=id,def=def,T=T,next=workspace:GetServerTimeNow()+Defs.FIRST_ATTACK,index=0,lastHealth=h.Health,stop=def.stop or math.min(8*scale,T.footprintRadius or 4)+3,follows={},waves={},followSerial=0,
   lastStart={},tutorial=tutorial or nil};M.states[npc]=s
  if intro then
   -- The entrance (BossService's, from def.intro): rumble and a growing shadow for `drop`, the fall,
@@ -717,6 +793,20 @@ local function queueFollow(npc,s,A,P,now,root,params,people)
  table.insert(s.follows,{def=F,points=points,at=now+F.delay,hits={}})
  npc:SetAttribute('MapBossFollow',Http:JSONEncode({serial=s.followSerial,kind=A.kind,at=now+F.delay,radius=F.radius,points=encodePoints(points)}))
 end
+-- One hit unit's hits this step (X.stepHits): the attack itself, a combo phase or a finish part. A
+-- circle that fired brings its follow-up (none in the tutorial).
+local function stepUnit(npc,s,A,P,f,age,t0,now,root,params,people)
+ if X.stepHits(P,f,age,t0,people,function(e,from,source) return hit(npc,P.def,e,from,params,source) end) and P.def.follow and X.allows(s,'follow') then
+  queueFollow(npc,s,A,P,now,root,params,people)
+ end
+end
+-- Detached waves (X.stepWave): every Heartbeat, during an attack or not, until each front is out.
+local function stepWaves(npc,s,now,params,people)
+ for i=#s.waves,1,-1 do
+  local W=s.waves[i]
+  if X.stepWave(W,now,people,function(e,from,source) return hit(npc,W.P.def,e,from,params,source) end) then table.remove(s.waves,i) end
+ end
+end
 local function stepFollows(npc,s,now,params,people)
  for i=#s.follows,1,-1 do
   local Q=s.follows[i]
@@ -781,7 +871,7 @@ local function stepAttack(npc,s,now,h,root,params,people)
   -- next hit's lock. Clients get BossFrame once it has turned 1 degree, and exactly at the lock.
   local target=A.aimTarget and A.aimTarget.Parent and A.aimTarget or nil
   if not target then local best=math.huge;for _,e in people do local d=(e.root.Position-A.cf.Position).Magnitude;if d<best then target,best=e.root,d end end end
-  if X.aimStep(A,age,age-t0,target and target.Position,aim) then A.frame=X.frame(A.cf,s.T,A.ground);f=A.frame;X.reshape(A,f,rage) end
+  if X.aimStep(A,age,age-t0,target and target.Position,aim) then A.frame=X.frame(A.cf,s.T,A.ground);f=A.frame;X.reshape(A,f) end
   local yaw=Shapes.yawOf(A.cf)
   if X.frameDue(A.sentYaw,yaw,not X.aimOpen(A,age,aim.lock)) then A.sentYaw=yaw;npc:SetAttribute('BossFrame',A.cf) end
  end
@@ -841,15 +931,14 @@ local function stepAttack(npc,s,now,h,root,params,people)
  else root.CFrame=A.cf end
  -- Circle, wave, breath and sweep hits (X.stepHits): the attack itself, or each combo phase with
  -- its own hit memory. A circle that fired brings its follow-up (none in the tutorial).
- for _,P in A.phases or {A} do
-  if X.stepHits(P,f,age,t0,people,function(e,from,source) return hit(npc,P.def,e,from,params,source) end) and P.def.follow and X.allows(s,'follow') then queueFollow(npc,s,A,P,now,root,params,people) end
- end
- -- A lane's finish slam (and a list's rubble wave), on the end clip's clock (it starts where the run
- -- ends, F.start). Each part has its own hit memory.
- for _,F in A.finishes or {A.finish} do
-  if F.at and X.stepHits(F,F.frame,age-F.start,t0-F.start,people,function(e,from,source) return hit(npc,F.def,e,from,params,source) end) and F.def.follow and X.allows(s,'follow') then
-   queueFollow(npc,s,A,F,now,root,params,people)
-  end
+ -- A detached wave phase runs in stepWaves instead.
+ if A.phases then
+  for _,P in A.phases do if not P.detached then stepUnit(npc,s,A,P,f,age,t0,now,root,params,people) end end
+ else stepUnit(npc,s,A,A,f,age,t0,now,root,params,people) end
+ -- A lane's finish slam, on the end clip's clock (it starts where the run ends, F.start). Each part has
+ -- its own hit memory; a finish wave runs in stepWaves.
+ for _,F in A.finishes or NONE do
+  if F.at and not F.detached then stepUnit(npc,s,A,F,F.frame,age-F.start,t0-F.start,now,root,params,people) end
  end
  if def.shape=='targets' then
   if age>=math.max(at.warnStart,at.impact-(def.lead or 0)) and not A.points then
@@ -886,25 +975,26 @@ end
 function M.step(npc,s,now)
  if not npc.Parent then M.states[npc]=nil;return end
  local h=npc:FindFirstChildOfClass('Humanoid');local root=npc.PrimaryPart
- if not h or not root or h.Health<=0 then s.attack=nil;s.shots=nil;table.clear(s.follows);return end
+ if not h or not root or h.Health<=0 then s.attack=nil;s.shots=nil;table.clear(s.follows);table.clear(s.waves);return end
  -- The sky-drop entrance (def.intro, M.spawn): stand still until it's over, then fight.
  if s.intro then
   if now<s.intro then h:Move(Vector3.zero);return end
   s.intro=nil;npc:SetAttribute('BossStart',nil);release(npc,h,root)
  end
  if combat:GetAttribute('ZombiesEnabled')~=true then
-  s.attack=nil;s.shots=nil;table.clear(s.follows);npc:SetAttribute('BossStart',nil);release(npc,h,root);h:Move(Vector3.zero);return
+  s.attack=nil;s.shots=nil;table.clear(s.follows);table.clear(s.waves);npc:SetAttribute('BossStart',nil);release(npc,h,root);h:Move(Vector3.zero);return
  end
  -- Pause (plan L): a paused run cancels the attack under way, its shots and follow-ups, and
  -- holds still. Attacks start fresh (with their wind-up) once the run unfreezes.
  if combat:GetAttribute('RunPaused')==true then
   if s.attack then s.attack=nil;npc:SetAttribute('BossStart',nil);release(npc,h,root) end
-  s.shots=nil;table.clear(s.follows);h:Move(Vector3.zero);h:MoveTo(root.Position);return
+  s.shots=nil;table.clear(s.follows);table.clear(s.waves);h:Move(Vector3.zero);h:MoveTo(root.Position);return
  end
  checkEnrage(npc,s,h)
  local params,people=exclusions(npc),living()
  stepShots(npc,s,now,params,people)
  stepFollows(npc,s,now,params,people)
+ stepWaves(npc,s,now,params,people)
  if s.attack then stepAttack(npc,s,now,h,root,params,people);return end
  if npc:GetAttribute('BossManual') and Run:IsStudio() then h:Move(Vector3.zero);return end
  -- Admin Freeze: no moving and no new attacks; an attack already under way finishes above.

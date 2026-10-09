@@ -240,8 +240,7 @@ local SLAM12={shape='circle',damage=26,point='HammerFace',radius=12,height=6,kno
 local slamDef={clip='Slam',range={0,45},cooldown=.8,phases={SLAM12,WAVE}}
 local chargeW={clips={'ChargeStart','ChargeRun','Slam'},facing='forward',range={22,110},lockout=5,cooldown=1,damage=24,shape='lane',length=75,width=9,speed=32,contact=4,knockdown=.6,finish={SLAM12,WAVE}}
 local function finishAttack(length,fan)
- local units={};for i,part in S.finishParts(chargeW) do units[i]={def=X.merged(chargeW,part),hits={},ticks={},fired=false} end
- return {def=chargeW,cf=laneCf,frame=X.frame(laneCf,WT,0),ground=0,dir=laneDir,length=length,data={},finish=units[1],finishes=units,fan=fan}
+ local A={def=chargeW,cf=laneCf,frame=X.frame(laneCf,WT,0),ground=0,dir=laneDir,length=length,data={},fan=fan};X.finishUnits(A);return A
 end
 local function sameLine(a,b) return a.kind=='line' and (a.origin-b.origin).Magnitude<1e-4 and (a.direction-b.direction).Magnitude<1e-4 and math.abs(a.length-b.length)<1e-6 and a.width==b.width end
 check('wave phase: P.phases carries the decoded lines (the enraged fan) and the middle line as its shape; the circle phase has none',function()
@@ -252,8 +251,8 @@ check('wave phase: P.phases carries the decoded lines (the enraged fan) and the 
   and sameLine(list[2].lines[1],units[2].lines[1]) and sameLine(list[2].lines[3],units[2].lines[3]) and list[2].def.travel==55 and list[2].impact==.7
 end)
 check('finish waves: the published lines at 30, moved 10 down the lane, are what the server publishes at 40; nothing for a single circle',function()
- local A=finishAttack(30);X.laneTiming(WT,A);local d30=wire(A.data)
- A.length=40;X.laneTiming(WT,A);local d40=wire(A.data)
+ local A=finishAttack(30);X.laneTiming(WT,A);X.publishParts(A);local d30=wire(A.data)
+ A.length=40;X.laneTiming(WT,A);X.publishParts(A);local d40=wire(A.data)
  local w30,w40=P.finishWaves(chargeW,d30),P.finishWaves(chargeW,d40)
  local moved=P.moved(w30[1].lines[1],laneDir,10)
  local single=X.merged(chargeW,{});single.finish=SLAM12
@@ -262,10 +261,10 @@ check('finish waves: the published lines at 30, moved 10 down the lane, are what
   and (P.moved({kind='circle',center=Vector3.zero,radius=1},laneDir,4).center-laneDir*4).Magnitude<1e-9
 end)
 check('finish waves homing: carried from the published end to where the run now ends (heading turned) they are the server\'s lines',function()
- local commit=finishAttack(40);commit.pos,commit.travelled=laneCf.Position,0;X.laneTiming(WT,commit);local d0=wire(commit.data)
+ local commit=finishAttack(40);commit.pos,commit.travelled=laneCf.Position,0;X.laneTiming(WT,commit);X.publishParts(commit);local d0=wire(commit.data)
  local A=finishAttack(40);A.pos,A.travelled=laneCf.Position,0
  for k=1,30 do X.homeStep(A,with(chargeW,{home=math.rad(40)}),Vector3.new(12,3,-25),1/60,k/60*32) end
- X.laneTiming(WT,A);local server=S.decode(wire(A.data).finish.parts[2].lines[1])
+ X.laneTiming(WT,A);X.publishParts(A);local server=S.decode(wire(A.data).finish.parts[2].lines[1])
  local start=Vector3.new(laneCf.X,0,laneCf.Z);local e=start+laneDir*d0.length
  local stop=Vector3.new(A.pos.X,0,A.pos.Z)+A.dir*(40-A.travelled)
  local base=P.finishWaves(chargeW,d0)[1].lines[1]
@@ -277,6 +276,41 @@ check('finish waves: the client\'s charge duration covers the wave\'s travel exa
   if not (near(t.duration,A.duration) and near(t.finishImpact,A.data.finish.impact)) then return false end
  end
  return true
+end)
+-- The `wave` hook outlives its attack (2026-10-09 review): P.stepWaves on a ctx as the client keeps it.
+local function waveCtx(fan)
+ local units=X.phases(slamDef,WT.attacks.Slam);local data={phases={}};local cf=CFrame.lookAt(Vector3.new(0,4,0),Vector3.new(0,4,-1))
+ for i,U in units do local shape=X.place(U,hf,fan);local d=X.unitData(U,shape);d.warnStart,d.impact,d.activeEnd=U.at.warnStart,U.at.impact,U.at.activeEnd;data.phases[i]=d end
+ data.yaw=S.yawOf(cf)
+ return {start=500,serial=7,cf=cf,data=wire(data),phases=P.phases(slamDef,wire(data),WT),waveFired={}}
+end
+check('wave hook: fires once at the wave\'s impact, again never, and keeps going after the attack (1.3 s) until fired; unit carries its own clock (startTime, travel, endTime)',function()
+ local ctx=waveCtx();local fired={};local doneAt
+ for k=0,180 do local age=k/60;if P.stepWaves(ctx,age,function(u) table.insert(fired,{age=age,u=u}) end) and not doneAt then doneAt=age end end
+ local f=fired[1];local u=f and f.u
+ return #fired==1 and f.age>=.7-1e-9 and f.age<.7+1/60+1e-9 and doneAt==f.age and u.key==2 and u.finish==false and #u.lines==1 and u.lines[1].kind=='line'
+  and u.impact==.7 and u.start==500 and u.serial==7 and near(u.startTime,500.7) and u.travel==55 and u.length==85 and u.width==9 and near(u.endTime,500.7+85/55) and u.def.damage==22
+end)
+check('wave hook: a client that only sees the attack after the front is out skips it (nothing fired, done); the enraged fan comes as 3 lines in one unit',function()
+ local late=waveCtx();local n=0;local done=P.stepWaves(late,.7+85/55+.01,function() n+=1 end)
+ local fan=waveCtx({-25,0,25});local got;P.stepWaves(fan,.75,function(u) got=u end)
+ return n==0 and done==true and got~=nil and #got.lines==3
+end)
+check('wave hook: aimed, the unit\'s lines are turned to the frame the boss has now (as C.phaseShape)',function()
+ local ctx=waveCtx();local turn=.4;ctx.cf=CFrame.new(ctx.cf.Position)*CFrame.Angles(0,turn,0)*ctx.cf.Rotation
+ local u=P.waves(ctx)[1];local want=S.rotated(ctx.phases[2].lines[1],ctx.cf.Position,turn)
+ return sameLine(u.lines[1],want)
+end)
+check('wave hook: a charge\'s finish wave waits for the stop, then fires at stopAge + after; P.carried moves a shape in place without a new table',function()
+ local ch={waves={{index=2,def=X.merged(chargeW,WAVE),after=.7,lines={{kind='line',origin=Vector3.zero,direction=Vector3.new(0,0,-1),length=85,width=9}}}}}
+ local ctx={start=10,serial=3,charge=ch,data={},waveFired={}};local got
+ local waiting=P.stepWaves(ctx,5,function(u) got=u end)
+ ch.stopAge=1.6;P.stepWaves(ctx,2.2,function(u) got=u end);local early=got
+ local done=P.stepWaves(ctx,2.31,function(u) got=u end)
+ local into={kind='circle',center=Vector3.zero,radius=12};local from,to=CFrame.new(0,0,-40),CFrame.new(5,0,-40)*CFrame.Angles(0,.5,0)
+ local same=P.carried({kind='circle',center=Vector3.new(0,0,-50),radius=12},from,to,into)
+ return waiting==false and early==nil and done==true and got.key=='finish2' and got.finish==true and near(got.impact,2.3) and near(got.startTime,12.3) and same==into
+  and (into.center-to:PointToWorldSpace(Vector3.new(0,0,-10))).Magnitude<1e-5
 end)
 local passed=0;for _,line in r do if line:sub(1,4)=='PASS' then passed+=1 end end
 table.insert(r,('%d PASS, %d FAIL'):format(passed,#r-passed))

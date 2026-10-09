@@ -122,12 +122,17 @@ function S.finishParts(def)
  local f=def.finish;if type(f)~='table' then return nil end
  return f[1]~=nil and f or {f}
 end
--- An end clip's timing for finish part i: the clip's phase i on top of its own times (MapBossTiming
--- phases: the Slam's {circle, wave}), else the clip's own times (a clip without phases, the old circle).
+-- A clip's timing for its hit i (a combo phase, a finish part): the clip's phase i on top of its own
+-- times (MapBossTiming phases: the Slam's {circle, wave}). Past the clip's last timed phase, that last
+-- phase's times ("the same timing as the slam circle": a clip baked without the wave phase still
+-- slams); a clip without phases, its own times (the old circle). Cached per clip timing; read only.
+local partWindows=setmetatable({},{__mode='k'})
 function S.partWindow(fa,i)
- local ph=fa.phases and fa.phases[i];if not ph then return fa end
+ local list=fa.phases;local ph=list and (list[i] or list[#list]);if not ph then return fa end
+ local cache=partWindows[fa];if not cache then cache={};partWindows[fa]=cache end
+ if cache[ph] then return cache[ph] end
  local w=table.clone(fa);w.phases=nil;for k,v in ph do w[k]=v end
- return w
+ cache[ph]=w;return w
 end
 -- A clip's first hit: its impact, else its first phase's (a combo clip may carry only phase times).
 function S.impactOf(at) return at.impact or (at.phases and at.phases[1] and at.phases[1].impact) end
@@ -139,9 +144,10 @@ function S.hitEnd(def,at)
  return impact
 end
 -- A lane's times for `length`: {at (S.window), duration (its recovery; with a finish, until just past
--- the finish slam's impact, and past a finish wave's far end), finishAt (the end clip's timing),
--- finishStart (where the run ends) and finishImpact (both on the attack clock)}. The finish fields only
--- with def.finish and its timing. nil without the window.
+-- the finish's impact), finishAt (the end clip's timing), finishStart (where the run ends) and
+-- finishImpact (both on the attack clock)}. The finish fields only with def.finish and its timing.
+-- nil without the window. A finish wave's front runs on after the attack on its own clock
+-- (MapBossService s.waves), so it doesn't hold the attack open.
 function S.laneTimes(def,T,length)
  local at=S.window(def,T,length);if not at then return nil end
  local t={at=at,duration=at.recoveryEnd or at.duration}
@@ -149,9 +155,9 @@ function S.laneTimes(def,T,length)
  if fa then
   -- finishImpact: the first part's (the slam circle's) impact, from its phase when the clip has phases.
   t.finishAt,t.finishStart=fa,at.activeEnd;t.finishImpact=t.finishStart+S.impactOf(S.partWindow(fa,1));t.duration=math.max(t.duration,t.finishImpact+.05)
-  -- A finish list (the Hammer's slam and rubble wave): every part's hit is over before the attack ends.
+  -- A finish list: every part lands before the attack ends (each part's own phase impact).
   if def.finish[1]~=nil then
-   for i,part in def.finish do t.duration=math.max(t.duration,t.finishStart+S.hitEnd(S.merged(def,part),S.partWindow(fa,i))+.05) end
+   for i in def.finish do t.duration=math.max(t.duration,t.finishStart+S.impactOf(S.partWindow(fa,i))+.05) end
   end
  end
  return t

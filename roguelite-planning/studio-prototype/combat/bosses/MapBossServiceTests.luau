@@ -120,8 +120,11 @@ check('phases: hit once per phase (the Spin passes "left" twice); the Swing miss
  local function n(key) return count[key] or 0 end
  return n('ahead1')==1 and n('ahead2')==1 and n('behind1')==0 and n('behind2')==1 and n('left1')==1 and n('left2')==1 and #early==0
 end)
-check('phases: a missing phase timing refuses the combo (no windows)',function()
- return X.phaseWindows(swingSpin,{duration=1,impact=.5,activeEnd=.7,phases={{impact=.5,activeEnd=.7}}})==nil and X.phaseWindows({clip='Slam'},HT.attacks.SwingSpin)==nil
+-- 2026-10-09 review: a clip with fewer timed phases than the def no longer refuses the combo (that
+-- dropped the Slam); the later phase borrows the last timed window. No timing at all still refuses.
+check('phases: no clip timing refuses the combo; fewer timed phases than the def: the later one borrows the last timed window',function()
+ local w=X.phaseWindows(swingSpin,{duration=1,impact=.5,activeEnd=.7,phases={{impact=.5,activeEnd=.7}}})
+ return X.phaseWindows(swingSpin,nil)==nil and X.phaseWindows({clip='Slam'},HT.attacks.SwingSpin)==nil and #w==2 and w[2].borrowed==true and w[2].impact==.5 and w[1].borrowed==nil
 end)
 -- R2. The Hammer's charge: a forward lane that keeps running to its target, then slams.
 local charge={clips={'ChargeStart','ChargeRun','ChargeSlam'},facing='forward',range={22,70},lockout=5,cooldown=1,damage=24,shape='lane',length=75,width=9,speed=32,contact=4,offset=3.5,
@@ -327,9 +330,21 @@ check('rubble wave: players 5, 30 and 80 down the line are hit at impact + d/55 
  return at(5,'d5@2') and at(30,'d30@2') and at(80,'d80@2') and first['side@2']==nil and first['far@2']==nil
   and count['d5@1']==1 and math.abs(first['d5@1']-.7)<1/60+1e-9 and first['d30@1']==nil and first['side@1']==nil
 end)
-check('rubble wave: the attack lasts until the front reaches the far end (impact + 85/55 + 0.05), past the recovery',function()
- local units=X.phases(slamDef,WT.attacks.Slam)
- return math.abs(X.duration(units[2].def,units[2].at)-(.7+85/55+.05))<1e-9 and X.duration(units[1].def,units[1].at)==1.3
+check('rubble wave detached: at the commit the attack lasts the clip\'s recovery (1.3), not the wave\'s travel; the wave phase runs on its own clock (detached), the circle with the attack; the Stomp\'s own stretch is unchanged',function()
+ local A={def=slamDef,at=WT.attacks.Slam,duration=1.3,data={}};local units=X.commitPhases(A,hf)
+ return A.duration==1.3 and units[2].detached==true and not units[1].detached and #A.data.phases==2 and #A.data.phases[2].lines==1 and A.data.shape.kind=='circle'
+  and math.abs(X.duration(units[2].def,units[2].at)-(.7+85/55+.05))<1e-9
+end)
+check('rubble wave detached: X.stepWave hits a player 80 out at 0.7 + 80/55 (after the 1.3 s release), once, on its own clock, and ends once the front is out',function()
+ local A={def=slamDef,at=WT.attacks.Slam,duration=1.3,data={}};local units=X.commitPhases(A,hf)
+ local W={P=units[2],start=100};local first,count,doneAt=nil,0,nil
+ for k=0,240 do
+  local now=100+k/60
+  local done=X.stepWave(W,now,{{player='far',at=Vector3.new(0,3,-90)}},function() count+=1;first=first or now-100;return true end)
+  if done and not doneAt then doneAt=now-100 end
+ end
+ local due,out=.7+80/55,.7+85/55+.05
+ return count==1 and first>=due-1e-9 and first<due+1/60+1e-9 and first>A.duration and doneAt~=nil and doneAt>=out-1e-9 and doneAt<out+1/60+1e-9
 end)
 check('rubble wave enraged: a fan of 3 lines (-25, 0, +25 deg) from one origin, the middle one P.line; a player on the +25 line is hit once (not per line), one between the lines 60 out never',function()
  local units=X.phases(slamDef,WT.attacks.Slam);local P=units[2];X.place(P,hf,FAN)
@@ -340,53 +355,111 @@ check('rubble wave enraged: a fan of 3 lines (-25, 0, +25 deg) from one origin, 
  local due=.7+40/55
  return #P.lines==3 and P.line==P.lines[2] and angles and count['plus@1']==1 and first['plus@1']>=due-1e-9 and first['plus@1']<due+1/60+1e-9 and first['between@1']==nil
 end)
-check('rubble wave aim: a 0.6 rad turn rebuilds the phase\'s lines (the enraged fan kept) turned about the root, as the client turns the published ones; it sends its lines',function()
- local units=X.phases(slamDef,WT.attacks.Slam);local A={def=slamDef,at=WT.attacks.Slam,phases=units}
- X.reshape(A,X.frame(facing(),WT,0),{fan=FAN});local before={};for i,l in units[2].lines do before[i]=l end
+check('rubble wave: an enrage mid-attack keeps the lines the clients were warned about (the commit\'s fan, A.fan): 1 stays 1 through an aim turn; an enraged commit keeps its 3',function()
+ local turned=X.frame(CFrame.new(0,4,0)*CFrame.Angles(0,.3,0)*facing().Rotation,WT,0)
+ local calm={def=slamDef,at=WT.attacks.Slam,duration=1.3,data={}};X.commitPhases(calm,hf)
+ X.reshape(calm,turned,{fan=FAN}) -- the boss's rage now, as the old call passed it: ignored
+ local rage={def=slamDef,at=WT.attacks.Slam,duration=1.3,data={},fan=FAN};X.commitPhases(rage,hf);X.reshape(rage,turned)
+ return #calm.phases[2].lines==1 and #calm.data.phases[2].lines==1 and #rage.phases[2].lines==3 and #rage.data.phases[2].lines==3
+end)
+check('rubble wave aim: a 0.6 rad turn rebuilds the phase\'s lines (the enraged fan kept) turned about the root, as the client turns the published ones; nothing is built for the circle',function()
+ local units=X.phases(slamDef,WT.attacks.Slam);local A={def=slamDef,at=WT.attacks.Slam,phases=units,fan=FAN}
+ X.reshape(A,X.frame(facing(),WT,0));local before={};for i,l in units[2].lines do before[i]=l end
  local data=X.unitData(units[2],units[2].line)
- local cf=CFrame.new(0,4,0)*CFrame.Angles(0,.6,0)*facing().Rotation;X.reshape(A,X.frame(cf,WT,0),{fan=FAN})
+ local cf=CFrame.new(0,4,0)*CFrame.Angles(0,.6,0)*facing().Rotation;X.reshape(A,X.frame(cf,WT,0))
  for i,l in units[2].lines do
   local want=S.rotated(before[i],Vector3.zero,.6)
   if (l.origin-want.origin).Magnitude>1e-6 or (l.direction-want.direction).Magnitude>1e-6 then return false end
  end
- return #units[2].lines==3 and #data.lines==3 and data.shape.kind=='line' and units[1].arc==nil
+ return #units[2].lines==3 and #data.lines==3 and data.shape.kind=='line' and units[1].arc==nil and units[1].lines==nil
 end)
 check('rubble wave aim: the wave phase (same impact as the circle) never re-aims after the slam: the frame holds from impact - lock through the travel',function()
  local A={cf=facing(),phases={{at={impact=.7,activeEnd=.7}},{at={impact=.7,activeEnd=.7}}}}
  return X.aimOpen(A,.39,AIM.lock) and not X.aimOpen(A,.4,AIM.lock) and not X.aimOpen(A,.7,AIM.lock) and not X.aimOpen(A,1.5,AIM.lock)
 end)
+-- Partial timing: a Slam baked with only the circle's phase, or none, still slams (the wave borrows).
+local slam1={duration=1.45,warnStart=0,impact=.7,activeEnd=.7,recoveryEnd=1.3,phases={{warnStart=0,impact=.7,activeEnd=.7}},samples=WT.attacks.Slam.samples}
+local slam0={duration=1.45,warnStart=0,impact=.7,activeEnd=.7,recoveryEnd=1.3,samples=WT.attacks.Slam.samples}
+check('partial timing: a 1-phase Slam (and one with no phases) still slams: the wave borrows the circle\'s window and hits at 0.7 + d/55; finish parts (partWindow) borrow the same, cached',function()
+ for _,at in {slam1,slam0} do
+  local units=X.phases(slamDef,at);if not units or #units~=2 then return false end
+  X.place(units[2],hf)
+  local first=struckBy(units,hf,{{player='p',at=Vector3.new(0,3,-40)}},3);local due=.7+30/55
+  if not (units[2].at.borrowed==true and units[2].at.impact==.7 and units[1].at.borrowed==(at==slam0 or nil) and first['p@2'] and first['p@2']>=due-1e-9 and first['p@2']<due+1/60+1e-9) then return false end
+  if not (S.partWindow(at,2).impact==.7 and S.partWindow(at,2)==S.partWindow(at,1)) then return false end
+ end
+ return S.partWindow(WT.attacks.Slam,2)==S.partWindow(WT.attacks.Slam,2) and S.partWindow(slam0,1)==slam0 and S.partWindow(WT.attacks.Slam,1)~=S.partWindow(WT.attacks.Slam,2)
+end)
+check('partial timing: a third sweep on a 2-phase SwingSpin timing borrows the second\'s window and its hit memory, so that one swing never hits a player twice',function()
+ local three={clip='SwingSpin',phases={with(hammerSweep,{damage=20}),with(hammerSweep,{damage=22}),with(hammerSweep,{damage=22})}}
+ local units=X.phases(three,HT.attacks.SwingSpin);for _,P in units do P.arc=X.shapeOf(P.def,P.at,hf) end
+ local _,count=struckBy(units,hf,{{player='behind',at=Vector3.new(0,3,7)}},100/60)
+ return #units==3 and units[3].at.borrowed==true and units[2].at.borrowed==nil and units[3].hits==units[2].hits and (count['behind@2'] or 0)+(count['behind@3'] or 0)==1
+end)
+-- Front crossing (facing='forward' waves): a player running at the boss through the front at 30
+-- studs/s, from 41 starting distances stepped at 60 Hz.
+do
+ local ok,pass,msg=pcall(function()
+  local units=X.phases(slamDef,WT.attacks.Slam);local P=units[2];X.place(P,hf);local line=P.line
+  local runs,crossBad,staticMiss=0,0,0
+  for s0=40,55,.37 do
+   runs+=1
+   local U={def=P.def,at=P.at,lines=P.lines,line=line,hits={},ticks={},fired=false};local count,staticHit,t0=0,false,0
+   for k=1,240 do
+    local age=k/60;local pos=line.origin+line.direction*(s0-30*math.max(0,age-.2))+Vector3.yAxis*3
+    X.stepHits(U,hf,age,t0,{{player='p',at=pos}},function() count+=1;return true end)
+    if age>=P.at.impact and X.waveHit(P.def,P.at,line,pos,t0,age) then staticHit=true end
+    t0=age
+   end
+   if count~=1 then crossBad+=1 end;if not staticHit then staticMiss+=1 end
+  end
+  local same=true
+  for _,d in {.3,5,30,84.9} do
+   for k=1,200 do
+    local t0,t1=(k-1)/60,k/60;local pos=line.origin+line.direction*d+Vector3.yAxis*3
+    if X.waveHit(P.def,P.at,line,pos,t0,t1)~=(X.waveCross(P.def,P.at,line,pos,nil,t0,t1)) then same=false end
+   end
+  end
+  local side=X.waveCross(P.def,P.at,line,line.origin+line.direction*30+line.direction:Cross(Vector3.yAxis)*4.6+Vector3.yAxis*3,40,1.2,1.3)
+  return crossBad==0 and staticMiss>0 and same and not side,('%d runs: crossing missed or doubled %d, the standing-position test missed %d'):format(runs,crossBad,staticMiss)
+ end)
+ add(ok and pass==true,'front crossing (facing waves): a player running at the boss through the front is hit exactly once; the standing-position test lets some through; a still player is X.waveHit exactly; 4.6 to the side never ('..tostring(ok and msg or pass)..')')
+end
 -- The Charge ends in the Slam: its finish is the list {circle, wave}, timed by the Slam clip's phases.
 local chargeW={clips={'ChargeStart','ChargeRun','Slam'},facing='forward',range={22,110},lockout=5,cooldown=1,damage=24,shape='lane',length=75,width=9,speed=32,contact=4,knockdown=.6,finish={SLAM12,WAVE}}
 local function finishAttack(length,fan)
- local units={};for i,part in S.finishParts(chargeW) do units[i]={def=X.merged(chargeW,part),hits={},ticks={},fired=false} end
- return {def=chargeW,cf=laneCf,frame=X.frame(laneCf,WT,0),ground=0,dir=laneDir,length=length,data={},finish=units[1],finishes=units,fan=fan}
+ local A={def=chargeW,cf=laneCf,frame=X.frame(laneCf,WT,0),ground=0,dir=laneDir,length=length,data={},fan=fan};X.finishUnits(A);return A
 end
-check('finish list: parts in order (a single finish is a list of one); the wave part is the wave, not the run (damage 22, no knockdown)',function()
+check('finish list: parts in order (a single finish is a list of one); the wave part is the wave, not the run (damage 22, no knockdown), and detached',function()
  local single={finish=SLAM12};local list=S.finishParts(chargeW);local A=finishAttack(36)
- return #S.finishParts(single)==1 and S.finishParts(single)[1]==SLAM12 and S.finishParts({})==nil and list==chargeW.finish
+ return #S.finishParts(single)==1 and S.finishParts(single)[1]==SLAM12 and S.finishParts({})==nil and list==chargeW.finish and A.listed==true and A.finish==A.finishes[1]
   and A.finishes[2].def.shape=='wave' and A.finishes[2].def.damage==22 and A.finishes[2].def.knockdown==false and A.finishes[1].def.knockdown==.6 and A.finishes[2].def.facing=='forward'
+  and A.finishes[2].detached==true and not A.finishes[1].detached
 end)
 check('finish list: from where a 36-stud run ends, the circle (r 12) and the wave start at the HammerFace impact 10 on; the wave heads on down the run; both at the Slam\'s phase impact',function()
- local A=finishAttack(36);X.laneTiming(WT,A);local C,W=A.finishes[1],A.finishes[2];local start=.5+36/32
+ local A=finishAttack(36);X.laneTiming(WT,A);X.publishParts(A);local C,W=A.finishes[1],A.finishes[2];local start=.5+36/32
  local c=X.circle(C.def,C.at,C.frame)
  return A.finish==C and (c.center-Vector3.new(0,0,-46)).Magnitude<1e-6 and c.radius==12 and #W.lines==1 and (W.line.origin-Vector3.new(0,0,-46)).Magnitude<1e-6
   and (W.line.direction-laneDir).Magnitude<1e-6 and math.abs(C.start-start)<1e-9 and math.abs(W.start-start)<1e-9 and C.at.impact==.7 and W.at.impact==.7 and C.at.phases==nil
 end)
-check('finish list: the attack lasts past the wave\'s far end (run end + 0.7 + 85/55 + 0.05); the client\'s laneTimes agree; the old single circle only past its impact',function()
+check('finish list: the attack lasts to the clip\'s recovery past the run (the wave is detached, so not its travel); the client\'s laneTimes agree; the old single circle the same',function()
  local A=finishAttack(36);X.laneTiming(WT,A);local start=.5+36/32
  local single=X.merged(chargeW,{});single.finish=SLAM12;local t1=S.laneTimes(single,WT,36)
- return math.abs(A.duration-(start+.7+85/55+.05))<1e-9 and math.abs(S.laneTimes(chargeW,WT,36).duration-A.duration)<1e-9
-  and math.abs(t1.duration-math.max(start+1.45,start+.7+.05))<1e-9 and math.abs(t1.finishImpact-(start+.7))<1e-9
+ return math.abs(A.duration-(start+1.45))<1e-9 and math.abs(S.laneTimes(chargeW,WT,36).duration-A.duration)<1e-9
+  and math.abs(t1.duration-(start+1.45))<1e-9 and math.abs(t1.finishImpact-(start+.7))<1e-9
 end)
-check('finish list data: finish.shape/impact stay the circle (older readers); finish.parts has both in order, the wave\'s lines and after = 0.7; enraged (A.fan) the wave sends 3 lines',function()
- local A=finishAttack(36);X.laneTiming(WT,A);local wire=game:GetService('HttpService'):JSONDecode(game:GetService('HttpService'):JSONEncode(A.data));local p=wire.finish.parts
+check('finish list data: finish.shape/impact stay the circle (older readers); finish.parts (built at commit and stop only) has both in order, the wave\'s lines and after = 0.7; enraged (A.fan) 3 lines',function()
+ local Http=game:GetService('HttpService')
+ local A=finishAttack(36);X.laneTiming(WT,A);local before=A.data.finish.parts;X.publishParts(A)
+ local wire=Http:JSONDecode(Http:JSONEncode(A.data));local p=wire.finish.parts
  local c=S.decode(wire.finish.shape);local start=.5+36/32
- local R=finishAttack(36,FAN);X.laneTiming(WT,R)
- return c.kind=='circle' and c.radius==12 and math.abs(wire.finish.impact-(start+.7))<1e-6 and #p==2 and p[1].shape.kind=='circle' and p[1].lines==nil and #p[2].lines==1
+ local kept=(function() local parts=A.data.finish.parts;A.length=40;X.laneTiming(WT,A);return A.data.finish.parts==parts end)()
+ local R=finishAttack(36,FAN);X.laneTiming(WT,R);X.publishParts(R)
+ return before==nil and kept and c.kind=='circle' and c.radius==12 and math.abs(wire.finish.impact-(start+.7))<1e-6 and #p==2 and p[1].shape.kind=='circle' and p[1].lines==nil and #p[2].lines==1
   and p[2].shape.kind=='line' and math.abs(p[2].after-.7)<1e-9 and math.abs(p[2].impact-(start+.7))<1e-6 and #R.finishes[2].lines==3 and #R.data.finish.parts[2].lines==3
 end)
 check('finish list hits from the end of the run: the circle within 12 at the slam; the wave a player 40 past the run\'s end at end + 0.7 + 30/55, once; nobody before the run ends',function()
- local A=finishAttack(36);X.laneTiming(WT,A);local start=A.finishes[1].start
+ local A=finishAttack(36);X.laneTiming(WT,A);X.publishParts(A);local start=A.finishes[1].start
  local people={{player='near',at=Vector3.new(3,3,-44)},{player='down',at=Vector3.new(0,3,-76)},{player='aside',at=Vector3.new(14,3,-76)}}
  local first,count=struckBy(A.finishes,nil,people,start+3,start)
  local due=.7+30/55
@@ -394,9 +467,15 @@ check('finish list hits from the end of the run: the circle within 12 at the sla
   and first['aside@2']==nil and first['aside@1']==nil
 end)
 check('finish list homing: the parts run on from the body along its heading (the wave down the new heading)',function()
- local A=finishAttack(40);A.pos,A.travelled=Vector3.new(6,4,-14),15;A.dir=CFrame.Angles(0,-.4,0):VectorToWorldSpace(laneDir);X.laneTiming(WT,A)
+ local A=finishAttack(40);A.pos,A.travelled=Vector3.new(6,4,-14),15;A.dir=CFrame.Angles(0,-.4,0):VectorToWorldSpace(laneDir);X.laneTiming(WT,A);X.publishParts(A)
  local endCf=CFrame.lookAt(A.pos,A.pos+A.dir)+A.dir*25;local want=X.wave(A.finishes[2].def,A.finishes[2].at,X.frame(endCf,WT,0))
  return (A.finishes[2].line.origin-want.origin).Magnitude<1e-6 and (A.finishes[2].line.direction-A.dir).Magnitude<1e-6
+end)
+check('finish: a first part with no shape builder (here a targets part) publishes no shape instead of erroring',function()
+ local odd=with(chargeW,{finish={{shape='targets',radius=5},WAVE}})
+ local A={def=odd,cf=laneCf,frame=X.frame(laneCf,WT,0),ground=0,dir=laneDir,length=30,data={}};X.finishUnits(A);X.laneTiming(WT,A);X.publishParts(A)
+ local wire=game:GetService('HttpService'):JSONEncode(A.data)
+ return A.data.finish.shape==nil and A.data.finish.parts[1].shape==nil and #A.data.finish.parts[2].lines==1 and type(wire)=='string'
 end)
 check('intro: a clip with only phase times still lands on its first impact (MapBossShapes.impactOf)',function()
  return S.impactOf({impact=.7})==.7 and S.impactOf({phases={{impact=.6},{impact=.6}}})==.6 and S.impactOf({})==nil
