@@ -85,6 +85,18 @@
         "MapBossShapes": {
           "$path": "bosses/MapBossShapes.luau"
         },
+        "Round10Defs": {
+          "$path": "events/Round10Defs.luau"
+        },
+        "Round10Intro": {
+          "$path": "events/Round10Intro.luau"
+        },
+        "Round10Hud": {
+          "$path": "events/Round10Hud.luau"
+        },
+        "Round10World": {
+          "$path": "events/Round10World.luau"
+        },
         "BossVfxAssets": {
           "$path": "bosses/BossVfxAssets.luau"
         },
@@ -144,6 +156,9 @@
         },
         "HeartPickupVisual": {
           "$path": "HeartPickupVisual.luau"
+        },
+        "ChefPizza": {
+          "$path": "ChefPizza.luau"
         },
         "ShopCatalog": {
           "$path": "ShopCatalog.luau"
@@ -534,6 +549,9 @@
       "HeartDropService": {
         "$path": "HeartDropService.luau"
       },
+      "ChefPizzaService": {
+        "$path": "ChefPizzaService.luau"
+      },
       "ShopService": {
         "$path": "ShopService.luau"
       },
@@ -569,6 +587,12 @@
       },
       "MapBossService": {
         "$path": "bosses/MapBossService.luau"
+      },
+      "Round10Service": {
+        "$path": "events/Round10Service.luau"
+      },
+      "ExploderService": {
+        "$path": "events/ExploderService.luau"
       },
       "SpecialWeapons": {
         "$path": "SpecialWeapons.luau"
@@ -674,6 +698,9 @@
         "HeartVisuals": {
           "$path": "HeartVisuals.client.luau"
         },
+        "ChefPizzaVisuals": {
+          "$path": "ChefPizzaVisuals.client.luau"
+        },
         "RogueliteZombieAnimation": {
           "$path": "../RogueliteZombieAnimation.client.luau"
         },
@@ -724,6 +751,12 @@
         },
         "BossIntro": {
           "$path": "BossIntro.client.luau"
+        },
+        "Round10Events": {
+          "$path": "events/Round10Events.client.luau"
+        },
+        "EnemyHealthBars": {
+          "$path": "events/EnemyHealthBars.client.luau"
         }
       },
       "StarterCharacterScripts": {

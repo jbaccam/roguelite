@@ -62,6 +62,7 @@ local rules={
  ClearMobs=none,Freeze=flag,
  Sandbox=none,Waves=none,EndWave=none,Pause=flag,
  EndlessBoss=none, -- a random Endless boss now (in a wave) or with the next wave (in the shop)
+ Round10Start=none,Round10Skip=none,Round10Clear=none, -- round 10 events (Round10Service): wave 10 now, skip its intro, clear it
  JumpWave=function(a,b) return int(a,1,20) and b==nil end,
  God=flag,Weapons=flag,
  TutorialStart=none,TutorialLobby=none,TutorialEnd=none, -- Studio's combined server only (AdminService)

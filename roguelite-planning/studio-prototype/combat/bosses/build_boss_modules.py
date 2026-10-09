@@ -45,7 +45,9 @@ PLANNING = HERE.parents[2]
 OUT = HERE / 'BossAnimations'
 LIMIT = 190000
 FOLDERS = {'king-crab': 'king-crab-boss', 'frost-cyclops': 'frost-cyclops-boss', 'pharaoh': 'pharaoh-boss', 'dragon': 'dragon-boss',
-           'hammer-brute': 'hammer-boss-moves'}
+           'hammer-brute': 'hammer-boss-moves',
+           # Round 10 leaders (Round10Defs / MapBossDefs.Leaders), 2026-10-09.
+           'dj-crab': 'dj-crab-boss', 'tomb-warden': 'tomb-warden-boss', 'alpha-werewolf': 'alpha-werewolf-boss'}
 # Bosses whose clips arrive as part poses on a Motor6D template: id -> that template's receipt (R9).
 PART_POSES = {'hammer-brute': HERE / 'receipts' / 'hammer-old-receipt.json'}
 # Mirrors MapBossDefs.ATTACK_CLIPS.
@@ -55,10 +57,13 @@ ATTACKS = {
     'pharaoh': ['CursedBolts', 'TombEruption'],
     'dragon': ['FireBreath', 'TailWhip', 'FrontStomp'],
     'hammer-brute': ['Slam', 'Swing', 'Spin', 'SwingSpin', 'SpinSlam', 'ChargeStart', 'ChargeRun'],
+    'dj-crab': ['BeatCommand', 'ClawSlam', 'Bombard', 'Intro'],
+    'tomb-warden': ['FistSlam', 'FistHook', 'Emerge', 'Roar'],
+    'alpha-werewolf': ['Howl', 'ChargeStart', 'ChargeRun', 'ClawRake'],
 }
 BASIC = ['Idle', 'Walk', 'Hit', 'Death']
 # Clips the runtime needs only the durations of (MapBossTiming clips): their attack timing isn't required.
-DURATION_ONLY = {'RushStart', 'RushLoop', 'RushEnd', 'ChargeStart', 'ChargeRun'}
+DURATION_ONLY = {'RushStart', 'RushLoop', 'RushEnd', 'ChargeStart', 'ChargeRun', 'Roar'}  # Roar: the Tomb Warden's enrage (no hit)
 PACKAGE = ['StudioAnimationData.json', 'AnimationData.json', 'BossGameData.json']
 # Points whose forward direction is stored per sample (bolts, breath, bubbles).
 DIRECTED = {('pharaoh', 'CursedBolts'): 'BoltOrigin', ('dragon', 'FireBreath'): 'FireOrigin', ('king-crab', 'BubbleBarrage'): 'BubbleOrigin'}

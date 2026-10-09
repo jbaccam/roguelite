@@ -76,7 +76,11 @@ local intenseUntil=0
 local function alive(m) local h=m:FindFirstChildOfClass('Humanoid');return h and h.Health>0 end
 local function wanted()
  if player:GetAttribute('LobbyPreviewActive')==true then return nil end -- in the lobby
+ -- A round 10 event playing its own track (Round10Events.client: EventMusic on this group) ducks the
+ -- playlist until it ends; any round 10 event otherwise gets the intense (boss) playlist.
+ if group:GetAttribute('EventMusic')==true then return nil end
  local run=RS:FindFirstChild('RogueliteRunState');if not run then return nil end
+ if type(run:GetAttribute('EventId'))=='string' and run:GetAttribute('Phase')=='Combat' then return 'boss' end
  local mobs,boss=0,false
  for _,m in CollectionService:GetTagged('RogueliteZombie') do
   if m:IsDescendantOf(workspace) and not m:GetAttribute('LobbyDummy') and not m:GetAttribute('PracticeTarget') and alive(m) then

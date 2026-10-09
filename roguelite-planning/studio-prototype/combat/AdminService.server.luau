@@ -149,6 +149,30 @@ function actions.EndlessBoss(p)
  local ok,message=sp:Invoke('EndlessBoss')
  return ok==true,type(message)=='string' and message or 'No Endless boss'
 end
+-- Round 10 events (Round10Service, ROUND_10_MASTER_SPEC.md): wave 10 now (this map's event, or the
+-- midboss when the event's assets aren't installed: the reason is in the reply), skip its intro, or
+-- clear it now (the clear's normal crystals; admin runs pay nothing persistent).
+local function round10()
+ local m=game:GetService('ServerScriptService'):FindFirstChild('Round10Service')
+ local ok,R=pcall(function() return m and require(m) end)
+ return ok and R or nil
+end
+function actions.Round10Start(p)
+ if not spawner() then return false,NO_ARENA end
+ local R=round10();local map=combat:GetAttribute('RunMap')
+ local ready,why=false,'Round10Service not installed'
+ if R then ready,why=R.ready(map) end
+ Shop.jumpToWave(10)
+ return true,ready and 'Wave 10: round 10 event' or ('Wave 10: midboss (event not ready: '..tostring(why)..')')
+end
+function actions.Round10Skip(p)
+ local R=round10();if not (R and R.skipIntro and R.skipIntro()) then return false,'No event intro playing' end
+ return true,'Event intro skipped'
+end
+function actions.Round10Clear(p)
+ local R=round10();if not (R and R.forceClear and R.forceClear()) then return false,'No round 10 event running' end
+ return true,'Event cleared'
+end
 function actions.Pause(p,on)
  if not Shop.adminPause(on) then return false,on and 'No wave running' or 'Not paused' end
  return true,on and 'Paused' or 'Resumed'

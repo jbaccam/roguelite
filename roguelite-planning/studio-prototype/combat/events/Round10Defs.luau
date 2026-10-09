@@ -57,6 +57,17 @@ D.Events={
    playerDamage=12,enemyShare=.35,cues={'CHARGING','ERUPTING','COOLING'}},
  },
 }
+-- Event music (Round10Events.client), played through the RogueliteMusic group (the Settings music
+-- slider) while the event's playlist is ducked. soundId nil: the normal boss playlist plays instead.
+-- CrabRave: the user's pick, Syn Cole - Feel Good (NCS). audio/music/round10/feelgood_segment.ogg is
+-- the source from 40.87 s to 77.60 s (bar 21 to bar 40 at 124.15 BPM, measured from the supplied MP3):
+-- the build-up, then the 16-bar drop that loops. accent: the drop's first beat in that file, which
+-- lands on the DJ's claw snap 2.0 s into the intro (accentAtIntro). Never a gameplay dependency: a
+-- missing, muted or late track changes no timing.
+D.Music={
+ CrabRave={soundId=nil,accent=5.80,accentAtIntro=2.0,loopStart=5.80,loopEnd=36.73,volume=.5,
+  credit='Syn Cole - Feel Good [NCS Release]'},
+}
 -- The event for a map id, or nil.
 function D.forMap(map) return type(map)=='string' and D.Events[map] or nil end
 function D.byId(id) for map,e in D.Events do if e.id==id then return e,map end end;return nil end

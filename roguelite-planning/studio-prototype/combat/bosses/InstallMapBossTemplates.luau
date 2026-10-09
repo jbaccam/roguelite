@@ -34,6 +34,11 @@ local SOURCE = {
 	FrostCyclops = "frost-cyclops-boss/exports/game/FrostCyclops_Studio.fbx",
 	Pharaoh = "pharaoh-boss/exports/game/Pharaoh_Studio.fbx",
 	Dragon = "dragon-boss/exports/game/Dragon_Studio.fbx",
+	-- Round 10 leaders (MapBossDefs.Leaders): installed only by name (ONLY={'DJCrab'} ...), never by
+	-- a plain run, which walks Defs.Order.
+	DJCrab = "dj-crab-boss/exports/game/DJCrab_Studio.fbx",
+	TombWarden = "tomb-warden-boss/exports/game/TombWarden_Studio.fbx",
+	BloodAlpha = "alpha-werewolf-boss/exports/game/AlphaWolf_Studio.fbx",
 }
 -- One new backup folder per run, named by the date and time (and _2, _3... after another run in the
 -- same second), so a second run on one day never puts a second <Id>_NPC beside the first.

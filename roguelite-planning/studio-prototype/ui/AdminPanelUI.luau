@@ -151,8 +151,16 @@ function M.new(player)
   heading(c,'EndlessTitle','Endless',272)
   local eb=button(c,'EndlessBoss','Spawn Endless boss',0,308,260,function() send('EndlessBoss') end,true);eb.Interactable=fighting or phase=='Shop'
   note(c,'EndlessNote','In a wave it lands now; in the shop it comes with the next wave. Wave 21: Jump to 20, End this wave, GO.',356)
-  -- Tutorial (plans/2026-10-03-tutorial-design.md), Studio's combined server only.
+  -- Round 10 events (Round10Service): start this map's event, skip its intro, clear it.
   local y=392
+  heading(c,'Round10Title','Round 10 event',y);y+=36
+  local eventId=run:GetAttribute('EventId');local eventPhase=run:GetAttribute('EventPhase')
+  button(c,'Round10Start','Start round 10 event',0,y,260,function() send('Round10Start') end,true)
+  local skip=button(c,'Round10Skip','Skip intro',270,y,170,function() send('Round10Skip') end);skip.Interactable=eventPhase=='Intro'
+  local clear=button(c,'Round10Clear','Clear event',450,y,190,function() send('Round10Clear') end);clear.Interactable=eventPhase=='Intro' or eventPhase=='Active'
+  note(c,'Round10Note',eventId and ('Running: '..tostring(eventId)..' · '..tostring(eventPhase)) or 'Jumps to wave 10 on this map. Without its models installed the midboss comes instead (the reply says why).',y+48)
+  y+=84
+  -- Tutorial (plans/2026-10-03-tutorial-design.md), Studio's combined server only.
   heading(c,'TutorialTitle','Tutorial',y);y+=36
   local here=RunService:IsStudio() and RS:GetAttribute('ServerRole')=='Combined'
   local on=combat:GetAttribute('TutorialRun')==true
@@ -253,7 +261,7 @@ function M.new(player)
  -- Redraw live state (phase, wave, pause, freeze, map, area) while open. The Player tab redraws
  -- only after its own requests: rebuilding the stat editor on every shard pickup would fight typing.
  local function changed() if win and self.tab~='Player' then draw() end end
- for _,a in {'Phase','Wave','AdminPaused'} do run:GetAttributeChangedSignal(a):Connect(changed) end
+ for _,a in {'Phase','Wave','AdminPaused','EventId','EventPhase'} do run:GetAttributeChangedSignal(a):Connect(changed) end
  for _,a in {'AdminFreeze','TestZombieCountOverride','RunMap','RunDifficulty'} do combat:GetAttributeChangedSignal(a):Connect(changed) end
  player:GetAttributeChangedSignal('StudioArea'):Connect(changed)
  combat:GetAttributeChangedSignal('TutorialRun'):Connect(changed)

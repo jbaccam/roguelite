@@ -37,8 +37,34 @@ end
 -- 92 deg offsets the 9 deg forward torso lean so the arms read level in world.
 local REACH_SHOULDER,REACH_ELBOW=92,8
 local function mix(a,b,t) return a+(b-a)*t end
+-- The Bloater (round 10): a heavy side-to-side waddle on short legs, arms held out clear of its belly
+-- with a small swing against the same-side leg. Armed (attackAge: from EnemyAttackStart, the fuse
+-- ExploderService bursts), it braces over 0.35 s: knees bent wide, arms flung out and up, chest and
+-- head thrown back while the belly swells (Round10World scales it locally). Roll sign: +z turns a
+-- hanging arm toward +X, so outward is -z on the left (s=1) and +z on the right (s=-1).
+function M.bloater(phase,stride,clock,armedAge,out)
+    local step=math.sin(phase);local bounce=math.cos(phase*2);local idle=math.sin(clock*1.7)
+    local brace=armedAge and armedAge>=0 and smooth(math.clamp(armedAge/.35,0,1)) or 0
+    local tremble=brace>0 and math.sin(clock*41)*1.6*brace or 0
+    local poses=out or {};table.clear(poses)
+    for _,side in SIDES do
+        local s=side=='Left' and 1 or -1;local wave=step*s
+        poses[side..'Shoulder']=cf(mix(10-wave*16*stride+idle*2,28,brace),0,s*mix(-24-math.max(0,wave)*4*stride,-74,brace)+tremble*s)
+        poses[side..'Elbow']=cf(mix(16+math.max(0,wave)*10*stride,8,brace))
+        poses[side..'Wrist']=cf(mix(-4,10,brace))
+        poses[side..'Hip']=cf(mix(4+wave*22*stride,10,brace),0,s*mix(1,-7,brace))
+        poses[side..'Knee']=cf(mix(-8-math.max(0,-wave)*28*stride,-24,brace))
+        poses[side..'Ankle']=cf(mix(4-wave*7*stride,13,brace),0,s*mix(0,7,brace))
+    end
+    poses.Root=cf(0,0,0,mix(-.04+bounce*.05*stride,-.32,brace))
+    -- The waddle rolls the whole body over each planted foot (z), with a little twist (y).
+    poses.Waist=cf(mix(-3+bounce*1.2*stride,9,brace),mix(math.cos(phase)*3*stride,0,brace),mix(step*8*stride,0,brace)+tremble*.6,idle*.03)
+    poses.Neck=cf(mix(2+idle*1.5-bounce*1.2*stride,16,brace),0,mix(-step*4*stride,0,brace))
+    return poses
+end
 function M.pose(kind,phase,stride,reach,clock,attackAge,attackImpact,attackRecovery,out)
     if kind=='Mutant' and attackAge and attackAge>=0 and attackAge<=1 then return M.slam(attackAge,out) end
+    if kind=='Bloater' then return M.bloater(phase,stride,clock,attackAge,out) end
     local step=math.sin(phase);local bounce=math.cos(phase*2);local idle=math.sin(clock*2.1)*.012
     local poses=out or {};table.clear(poses);local mutant=kind=='Mutant';local baby=kind=='Baby'
     reach=mutant and 0 or math.clamp(reach or 0,0,1)
