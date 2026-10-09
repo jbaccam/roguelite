@@ -160,4 +160,44 @@ end
 local VEC={center=true,origin=true,pivot=true,direction=true,forward=true,a=true,b=true}
 function S.encode(shape) local t={};for k,v in shape do t[k]=typeof(v)=='Vector3' and {v.X,v.Y,v.Z} or v end;return t end
 function S.decode(t) local s={};for k,v in t do s[k]=VEC[k] and type(v)=='table' and Vector3.new(v[1],v[2],v[3]) or v end;return s end
+-- An expanding ground ring (round 10: the DJ Crab's Claw Slam). Its front leaves `center` at the
+-- attack's impact at radius `inner` and runs out at `travel` studs/s to `outer`; it is `width` thick
+-- and hits players its front passes, except inside the `gaps` (yaws, CFrame.Angles convention, 0 =
+-- -Z) `gap` radians either side, which never hit: the way through. Only the front hits, never the
+-- filled inside (a player it already passed is safe). Example: inner 3, outer 34, travel 26 -> the
+-- front reaches a player 16 studs out 0.5 s after impact, and is gone 1.19 s after it.
+function S.ringRadius(ring,t) return ring.inner+ring.travel*math.max(0,t) end
+function S.ringEnd(ring) return (ring.outer-ring.inner)/ring.travel end
+function S.inGap(ring,point)
+ local d=flat(point-ring.center);if d.Magnitude<1e-3 then return false end
+ local yaw=S.yaw(Vector3.new(0,0,-1),d)
+ for _,g in ring.gaps or {} do if math.abs(S.wrap(yaw-g))<=ring.gap then return true end end
+ return false
+end
+-- True when the front crossed `point` between t0 and t1 seconds after impact (clamped to its travel),
+-- inside the height band, outside every gap.
+function S.ringHit(ring,point,t0,t1)
+ local stop=S.ringEnd(ring);t0,t1=math.max(0,t0),math.min(t1,stop);if t1<t0 then return false end
+ if point.Y<ring.center.Y-S.HEIGHT_BELOW or point.Y>ring.center.Y+(ring.height or S.HEIGHT_ABOVE) then return false end
+ local d=flat(point-ring.center).Magnitude;local half=ring.width/2
+ if d<S.ringRadius(ring,t0)-half or d>S.ringRadius(ring,t1)+half then return false end
+ return not S.inGap(ring,point)
+end
+-- The ring's warning as arcs (Shapes.contains 'arc'), one per solid stretch between the gaps.
+function S.ringArcs(ring)
+ local gaps=table.clone(ring.gaps or {});table.sort(gaps,function(a,b) return S.wrap(a)<S.wrap(b) end)
+ local forward=Vector3.new(0,0,-1);local arcs={}
+ if #gaps==0 then return {{kind='arc',pivot=ring.center,forward=forward,from=-math.pi,to=math.pi,inner=ring.inner,outer=ring.outer}} end
+ for i,g in gaps do
+  local a=S.wrap(g)+ring.gap;local b=S.wrap(gaps[i%#gaps+1])-ring.gap
+  if i==#gaps then b+=2*math.pi end
+  if b>a then
+   local mid=(a+b)/2;local half=(b-a)/2
+   table.insert(arcs,{kind='arc',pivot=ring.center,forward=CFrame.Angles(0,mid,0):VectorToWorldSpace(forward),from=-half,to=half,inner=ring.inner,outer=ring.outer})
+  end
+ end
+ return arcs
+end
+function S.encodeRing(ring) local t=table.clone(ring);t.center={ring.center.X,ring.center.Y,ring.center.Z};return t end
+function S.decodeRing(t) if type(t)~='table' or type(t.center)~='table' then return nil end;local r=table.clone(t);r.center=Vector3.new(t.center[1],t.center[2],t.center[3]);return r end
 return S

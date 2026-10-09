@@ -43,6 +43,7 @@ local function timelineMode()
     local run=combat.Parent:FindFirstChild('RogueliteRunState')
     return run and run:GetAttribute('Phase')=='Combat' and combat:GetAttribute('TutorialRun')~=true
         and combat:GetAttribute('WaveNoRespawn')~=true and combat:GetAttribute('TestZombieCountOverride')==nil
+        and combat:GetAttribute('EventSpawnHold')~=true
 end
 local function spawnHeld()
     return adminPaused() or combat:GetAttribute('AdminFreeze')==true
@@ -52,6 +53,8 @@ end
 local endlessBoss = nil
 local liveBosses = {}
 local function bossPressure()
+    -- A round 10 event (EventSpawnHold, Round10Service) budgets its own arrivals and leader.
+    if combat:GetAttribute('EventSpawnHold') == true then return false end
     if combat:GetAttribute('TutorialRun') == true or combat:GetAttribute('WaveNoRespawn') == true or combat:GetAttribute('TestZombieCountOverride') ~= nil then return false end
     for boss in liveBosses do
         local h = boss.Parent and boss:FindFirstChildOfClass('Humanoid')
@@ -550,6 +553,7 @@ end
 -- respawn: a killed enemy's slot, which waits for company (SWARM_GATHER, SWARM_MIN); a wave's first
 -- fill and refills go at once. Slots past the wave's count (fewer players up) stay empty.
 queueSpawn = function(index, respawn)
+    if combat:GetAttribute('EventSpawnHold') == true then return end -- the event director spawns (Round10Spawn)
     if adminPaused() or queuedSet[index] or (not timelineMode() and index > spawnCount()) or folder:FindFirstChild(string.format('Zombie_%02d', index)) then return end
     if (respawnReadyAt[index] or 0) > os.clock() then return end
     queuedSet[index] = waveGeneration
@@ -574,7 +578,9 @@ if combat:GetAttribute('ZombiesEnabled') ~= true or (not admin and not timelineM
 -- Bosses/admin rigs also occupy the global ceiling; split children may not bypass it.
 local totalAlive=populationSnapshot()
 if totalAlive>=Timeline.MaxAlive then return end
-local instanceName=string.format(admin and 'Admin_%02d' or 'Zombie_%02d',index)..(splitChild and '_Split'..splitChild or '')
+-- admin: true (an admin-panel extra) or a table (a round 10 event arrival, Round10Spawn): Event_nnn.
+local event=type(admin)=='table' and admin or nil
+local instanceName=string.format(event and 'Event_%03d' or admin and 'Admin_%02d' or 'Zombie_%02d',index)..(splitChild and '_Split'..splitChild or '')
 if folder:FindFirstChild(instanceName) then return end
 local thisWave = waveGeneration
 local run=game:GetService('ReplicatedStorage'):FindFirstChild('RogueliteRunState')
@@ -608,7 +614,12 @@ npc:SetAttribute('EnemyId',id)
 npc:SetAttribute('EnemyBalanceStatus',config.balanceStatus)
 npc:SetAttribute('CrowdRadius',math.clamp(config.radius or 1.5,1.2,3.5)*(splitChild and config.childScale or 1))
 npc:SetAttribute('SplitChild',splitChild~=nil)
-if admin then npc:SetAttribute('AdminSpawn',true) end
+if event then
+    npc:SetAttribute('EventSpawn',true);npc:SetAttribute('EventGen',event.gen)
+    for key,value in event.attrs or {} do npc:SetAttribute(key,value) end
+elseif admin then npc:SetAttribute('AdminSpawn',true) end
+-- Bloaters (behavior Exploder) arm and burst through ExploderService.
+if config.behavior=='Exploder' then npc:SetAttribute('Exploder',true) end
 npc:SetAttribute('ContactDamage',0) -- Timestamped attacks own damage; never double-hit through proximity.
 npc:SetAttribute('AttackDamage',config.damage)
 npc:SetAttribute('SlamDamage',config.damage)
@@ -737,6 +748,8 @@ record.step = function(dt, frame)
         return
     end
     frozen = false
+    -- Round 10: an event move (Round10Service: the DJ crab's rushers) drives this body itself.
+    if npc:GetAttribute('EventControlled') then stall = nil return end
     -- Standing still to attack isn't a stall (see the hop below). An attack in progress updates
     -- every frame, so its wind-up, hit and recovery keep their exact timing; the check for a new
     -- one waits for the 0.1 s think (100 enemies: 1,000 checks a second instead of 6,000).
@@ -747,7 +760,8 @@ record.step = function(dt, frame)
     if not attacks.busy(npc) and attacks.update(npc,previousTarget,dt) then stall = nil return end
     local statusSlow=npc:GetAttribute('StatusSlowStrength') or 0
     local vacuumSlow=(npc:GetAttribute('VacuumSlowUntil') or 0)>workspace:GetServerTimeNow() and 35 or 0
-    humanoid.WalkSpeed=config.speed*(1-math.max(statusSlow,vacuumSlow)/100)
+    -- SpeedBuff: a round 10 pack buff (the Blood Moon Alpha's howl), set and cleared by Round10Service.
+    humanoid.WalkSpeed=config.speed*(1-math.max(statusSlow,vacuumSlow)/100)*(npc:GetAttribute('SpeedBuff') or 1)
     local nearest, distance = nearestTarget(frame.targets)
     local target = nearest and nearest.root
     if target ~= previousTarget then
@@ -866,6 +880,84 @@ combat:GetAttributeChangedSignal('ZombiesEnabled'):Connect(resetWave)
 combat:GetAttributeChangedSignal('ZombieCount'):Connect(resetWave)
 combat:GetAttributeChangedSignal('EnemyRoster'):Connect(resetWave)
 resetWave()
+
+-- Round 10 events (Round10Service, ROUND_10_MASTER_SPEC.md). While EventSpawnHold is on the event
+-- director owns the wave: ordinary arrivals stop (timelineMode, queueSpawn, bossPressure above) and
+-- whatever the wave had queued or had just landed goes (removal, never a kill or reward).
+combat:GetAttributeChangedSignal('EventSpawnHold'):Connect(function()
+    if combat:GetAttribute('EventSpawnHold') ~= true then return end
+    waveGeneration += 1
+    queued, queuedSet = {}, {}
+    pendingGroups, recentCenters = {}, {}
+    timelineState, timelineOrders, plannedIds = nil, {}, {}
+    warnings:ClearAllChildren()
+    for _, npc in folder:GetChildren() do
+        if not npc:GetAttribute('IsBoss') and not npc:GetAttribute('AdminSpawn') and not npc:GetAttribute('EventSpawn') and not npc:GetAttribute('EventObjective') then npc:Destroy() end
+    end
+end)
+-- The director's spawner (unsandboxed callers only):
+--   ('Arena')                 -> the arena centre and radius
+--   ('Point', {anchor, band, minimum, avoid}) -> an open floor point (pickSpawnPoint), or nil
+--   ('Ground', position)      -> that spot's open floor point, or nil
+--   ('Spawn', {id, position, gen, telegraph, source, attrs}) -> the enemy, or nil. With telegraph
+--     (seconds) it marks the spot with the usual red X first and yields; it is cancelled when the
+--     event (RogueliteRunState EventGen ~= gen) or the wave changes, or `source` (a coffin) is gone.
+local eventSpawn = ServerStorage:FindFirstChild('Round10Spawn') or Instance.new('BindableFunction')
+eventSpawn.Name = 'Round10Spawn'
+local eventSerial = 0
+local function eventCurrent(request, generation)
+    local run = combat.Parent:FindFirstChild('RogueliteRunState')
+    if generation ~= waveGeneration or combat:GetAttribute('ZombiesEnabled') ~= true then return false end
+    if not run or run:GetAttribute('EventGen') ~= request.gen then return false end
+    local source = request.source
+    if typeof(source) == 'Instance' then
+        local h = source:FindFirstChildOfClass('Humanoid')
+        if not source.Parent or (h and h.Health <= 0) or source:GetAttribute('DeathPopped') then return false end
+    end
+    return true
+end
+eventSpawn.OnInvoke = function(action, request)
+    if action == 'Arena' then
+        local ok, center, radius = pcall(arena)
+        if ok then return center, radius end
+        return nil
+    elseif action == 'Point' then
+        request = type(request) == 'table' and request or {}
+        local ok, point = pcall(pickSpawnPoint, request.avoid or {}, request.anchor, request.band or SPAWN_BAND, request.minimum or MIN_PLAYER_DISTANCE, nil)
+        return ok and point or nil
+    elseif action == 'Ground' then
+        if typeof(request) ~= 'Vector3' then return nil end
+        local ok, point = pcall(function() return groundAt(request, spawnContext()) end)
+        return ok and point or nil
+    end
+    if action ~= 'Spawn' or type(request) ~= 'table' or not EnemyCatalog.get(request.id) or typeof(request.position) ~= 'Vector3' then return nil end
+    local generation = waveGeneration
+    if not eventCurrent(request, generation) then return nil end
+    local telegraph = tonumber(request.telegraph) or 0
+    if telegraph > 0 then
+        local mark = makeWarning(request.position)
+        local warned = 0
+        while warned < telegraph and eventCurrent(request, generation) do
+            local dt = task.wait(.05)
+            warned = Timeline.advanceWarning(warned, dt, spawnHeld())
+        end
+        mark:Destroy()
+        if not eventCurrent(request, generation) then return nil end
+    end
+    eventSerial += 1
+    local serial = eventSerial
+    spawnZombie(serial, EnemyCatalog.get(request.id).id, request.position, nil, {gen = request.gen, attrs = type(request.attrs) == 'table' and request.attrs or nil})
+    return folder:FindFirstChild(string.format('Event_%03d', serial))
+end
+eventSpawn.Parent = ServerStorage
+-- Bloater fuses and bursts (ExploderService). Optional: a place without it still runs every wave.
+do
+    local module = script.Parent:FindFirstChild('ExploderService')
+    if module then
+        local ok, err = pcall(require, module)
+        if not ok then warn('ExploderService failed to load: ' .. tostring(err)) end
+    end
+end
 -- More players up mid-wave (a revive, a rejoin, a late arrival) fill the new slots at once; fewer
 -- need nothing here (queueSpawn leaves slots past the count empty). Checked once a second.
 -- Also repair empty slots after an interrupted/failed spawn, so a wave cannot permanently thin out.

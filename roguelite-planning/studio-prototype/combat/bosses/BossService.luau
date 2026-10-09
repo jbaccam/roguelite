@@ -234,6 +234,8 @@ function B.spawn(cf,practice)
  local fixed=not practice and combat:GetAttribute('TutorialBossHealth')
  h.MaxHealth=type(fixed)=='number' and fixed or math.ceil(HEALTH*hpScale);h.Health=h.MaxHealth;npc:SetAttribute('BossDamageScale',damageScale)
  npc:SetAttribute('IsBoss',true);npc:SetAttribute('IsHammerBoss',true);npc:SetAttribute('ZombieType','HammerBoss')
+ -- The player-facing name (intro card, boss bar): Hammer Brute everywhere (user, 2026-10-05).
+ npc:SetAttribute('BossName','Hammer Brute')
  npc:SetAttribute('ContactDamage',0);npc:SetAttribute('ContactRange',0);npc:SetAttribute('BaseMoveSpeed',h.WalkSpeed)
  for name in Motion.Data.parts do
   local part=npc:FindFirstChild(name)

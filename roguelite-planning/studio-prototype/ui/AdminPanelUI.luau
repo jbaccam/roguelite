@@ -89,8 +89,8 @@ function M.new(player)
  -- picked type; Keep N alive uses the picked regular types.
  local options={}
  for _,d in Enemies.List do table.insert(options,{id=d.id,name=d.name}) end
- table.insert(options,{id=Admin.BossId,name='Hammer boss'})
- for _,o in {{id='KingCrab',name='King Crab boss'},{id='Pharaoh',name='Pharaoh boss'},{id='FrostCyclops',name='Frost Cyclops boss'},{id='Dragon',name='Dragon boss'}} do table.insert(options,o) end
+ table.insert(options,{id=Admin.BossId,name='Hammer Brute'})
+ for _,o in {{id='KingCrab',name='Giant King Crab'},{id='Pharaoh',name='The Pharaoh'},{id='FrostCyclops',name='Frost Cyclops'},{id='Dragon',name='Inferno Dragon'}} do table.insert(options,o) end
  local function picked(regularOnly)
   local out={}
   for _,o in options do if self.mobs[o.id] and not (regularOnly and table.find(Admin.BossIds,o.id)) then table.insert(out,o.id) end end

@@ -6,7 +6,7 @@ return function(Catalog, Motion, NativeMotion, animationFolder)
 		assert(condition, message)
 		checks += 1
 	end
-	check(#Catalog.List == 21, "Roster must contain exactly 21 regular enemies")
+	check(#Catalog.List == 22, "Roster must contain exactly 22 regular enemies (21 + the round 10 Bloater)")
 	-- The old Hammer's ZombieType is HammerBoss; the rebuilt one's, a map boss, is its MapBossDefs id.
 	check(
 		Catalog.get("HammerBoss") == nil and Catalog.get("Hammer") == nil and Catalog.get("pharaoh") == nil,

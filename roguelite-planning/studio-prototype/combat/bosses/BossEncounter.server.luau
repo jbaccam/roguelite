@@ -26,13 +26,28 @@ local function dropRebuiltHammers()
 end
 -- Encounter selection is server-owned; no client spawn or damage remote.
 local current,lastWave
+-- Round 10 events (Round10Service, ROUND_10_MASTER_SPEC.md) replace the wave-10 midboss on every map
+-- whose event this place can run; one that can't (assets not installed yet) keeps the midboss.
+local function round10() return module(script.Parent,'Round10Service') end
 local function update()
  local wave=run:GetAttribute('Wave');local active=combat:GetAttribute('ZombiesEnabled')==true
- if not active then current=nil;lastWave=nil;run:SetAttribute('BossAlive',false);return end
+ if not active then
+  current=nil;lastWave=nil;run:SetAttribute('BossAlive',false)
+  local R10=round10();if R10 and R10.abort then pcall(R10.abort,'enemies off') end
+  return
+ end
  local midboss=wave==10 and combat:GetAttribute('TutorialRun')~=true
  if (not midboss and wave~=(combat:GetAttribute('HammerBossWave') or 20)) or lastWave==wave then return end
  -- The map's boss (MapConfig): a MapBossDefs id; a map without one is won by clearing wave 20.
  local map=Maps.get(Role.activeMap());if not map or not map.boss then return end
+ if midboss then
+  local R10=round10()
+  if R10 and R10.start then
+   local ok,started=pcall(R10.start,Role.activeMap(),wave)
+   if not ok then warn('BossEncounter: round 10 event failed to start: '..tostring(started)) end
+   if ok and started then lastWave=wave;return end
+  end
+ end
  local marker=Role.marker();if not marker then return end
  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances={workspace:FindFirstChild('RogueliteEnemies'),marker}
  local p=marker.Position+Vector3.new(0,0,-15);local ground=workspace:Raycast(p+Vector3.yAxis*35,-Vector3.yAxis*100,params)

@@ -136,6 +136,10 @@ RunService.Heartbeat:Connect(function(dt)
   -- and no clock until the results screen. No VICTORY text (user, 2026-10-03).
   if phase=='Victory' and validWave then wave-=1;bossLabel='' end
  end
+ -- Round 10 events (Round10Service): the event's own label in the clock (BOSS, TOMBS, CLEAR, or a
+ -- survival event's 01:00 during its intro); survival events then count down on WaveEndsAt.
+ local eventLabel=state and state:GetAttribute('EventTimerLabel')
+ if type(eventLabel)=='string' and phase=='Combat' then bossLabel=eventLabel end
  view:SetTimer(not practice and remaining or nil,not practice and validWave and math.floor(wave) or nil,phase,practice and "SANDBOX" or bossLabel)
  -- A run where the admin panel was used pays no rewards (ADMIN_PANEL.md).
  view:SetTestRun(state~=nil and state:GetAttribute("AdminTestRun")==true)

@@ -11,6 +11,9 @@ local Shapes=require(combat:WaitForChild('MapBossShapes'))
 local Rules=require(game.ReplicatedStorage:WaitForChild('RunSetupRules'))
 local flat=Shapes.flat
 local M={states={}}
+-- Round 10 event moves (Round10Service): npc -> fn(kind, attack, now), called once at each attack's
+-- impact (the DJ Crab's Beat Command, the Blood Moon Alpha's howl). Weak: a removed boss drops out.
+M.hooks=setmetatable({},{__mode='k'})
 
 -- Pure shape builders (M._shapes). Attack timing `at` is a MapBossTiming attack entry; points
 -- are ground-frame studs (plan F Coordinates). Shapes lie on the attack's ground height.
@@ -41,6 +44,7 @@ function X.duration(def,at)
  local d=at.recoveryEnd or at.duration
  if def.shape=='wave' then d=math.max(d,at.impact+def.length/def.travel+.05)
  elseif def.shape=='targets' then d=math.max(d,at.impact+def.eruptDelay+.05) end
+ if def.shape=='ring' then d=math.max(d,at.impact+(def.outer-def.inner)/def.travel+.05) end -- round 10: until the front is out
  return d
 end
 -- def.height (the Hammer's Slam: 6) raises the circle's band top, so a plain jump doesn't clear it.
@@ -400,6 +404,21 @@ function X.allows(s,key) return not (s.tutorial and s.def.tutorial and s.def.tut
 -- The enrage roar (def.roar): once, after enraging, and only between attacks: one under way
 -- finishes first.
 function X.roarDue(s) return s.enraged==true and not s.roared and not s.attack and s.def.roar~=nil end
+-- Round 10 ring (def.shape 'ring', MapBossShapes.ringHit): from def.point on the ground at impact, with
+-- def.gaps openings def.gapWidth radians wide (each side) at evenly spaced yaws turned by `spin`
+-- (random per slam, so the way through moves). Pure.
+function X.ring(def,at,f,spin)
+ local gaps={}
+ for i=1,def.gaps or 0 do gaps[i]=Shapes.wrap((spin or 0)+(i-1)*2*math.pi/def.gaps) end
+ return {center=X.onGround(f,X.point(f,at,def.point,at.impact)),inner=def.inner,outer=def.outer,travel=def.travel,width=def.width,height=def.height,gaps=gaps,gap=def.gapWidth or math.rad(14)}
+end
+-- One ring step: players the front crossed between clip times t0 and age, once each.
+function X.stepRing(A,age,t0,people,strike)
+ local ring,impact=A.ring,A.at.impact;if not ring or age<impact then return end
+ for _,e in people do
+  if not A.hits[e.player] and Shapes.ringHit(ring,e.at,t0-impact,age-impact) and strike(e,ring.center+Vector3.yAxis*2) then A.hits[e.player]=true end
+ end
+end
 
 -- Edit-mode test requires stop here: the services and the Heartbeat load on a running server only.
 if not (Run:IsServer() and Run:IsRunning()) then return M end
@@ -505,6 +524,7 @@ function M.start(npc,kind,target,force)
  elseif def.shape=='breath' then A.data.shape=Shapes.encode(X.cone(def,at,f,at.impact))
  elseif def.shape=='sweep' then A.arc=X.sweepArc(def,at,f);A.data.shape=Shapes.encode(A.arc)
  elseif def.shape=='projectiles' then A.data=X.volley(def,at,f,goal,MOUTH_AIMED[kind],rage) end
+ if def.shape=='ring' then A.ring=X.ring(def,at,f,math.random()*2*math.pi);A.data.ring=Shapes.encodeRing(A.ring) end -- round 10
  A.data.rate=def.rate or 1
  -- def.aim (the boss def's, or the attack's own): the frame turns toward the target until each hit's
  -- lock (stepAttack). data.yaw is the frame's heading the shapes were built in: clients turn them by
@@ -575,7 +595,13 @@ function M.spawn(id,cf,practice,opts)
   -- its impact meets the ground at BossIntroLand; it deals no damage (no s.attack). Until
   -- BossIntroUntil he can't be hurt (CombatEffectsService) and stands anchored, and CinematicUntil
   -- holds the players (CharacterService.frozen) and the enemies (RogueliteZombieChase).
-  local now=workspace:GetServerTimeNow();local land=now+intro.drop+intro.fall;local done=land+intro.after
+  -- Round 10 / unique intros: intro.lead (seconds to the key moment) for styles other than the sky
+  -- drop, and opts.eventIntro {land, done} when a round 10 event times the leader inside its own
+  -- cinematic. BossIntroStyle tells BossIntro.client which entrance to film (nil: the sky drop).
+  local now=workspace:GetServerTimeNow()
+  local land=opts.eventIntro and opts.eventIntro.land or now+(intro.lead or (intro.drop or 0)+(intro.fall or 0))
+  local done=opts.eventIntro and opts.eventIntro.done or land+intro.after
+  npc:SetAttribute('BossIntroStyle',intro.style)
   local clip=T.attacks and T.attacks[intro.clip]
   npc:SetAttribute('BossIntroStart',now);npc:SetAttribute('BossIntroLand',land);npc:SetAttribute('BossIntroUntil',done)
   if def.introName then npc:SetAttribute('BossIntroName',def.introName) end
@@ -844,8 +870,9 @@ local function stepAttack(npc,s,now,h,root,params,people)
   for i,yaw in d.yaws do s.shots.list[i]={yaw=yaw,pos=origin} end
   npc:SetAttribute('MapBossShotEnds',Http:JSONEncode({serial=A.serial,ends={}}))
  end
+ if def.shape=='ring' then X.stepRing(A,age,t0,people,function(e,from) return hit(npc,def,e,from,params,from) end) end -- round 10
  local impact=at.impact or A.phases and A.phases[1].at.impact
- if impact and age>=impact and not A.impacted then A.impacted=true;npc:SetAttribute('BossImpactStart',now) end
+ if impact and age>=impact and not A.impacted then A.impacted=true;npc:SetAttribute('BossImpactStart',now);local hook=M.hooks[npc];if hook then task.spawn(hook,A.kind,A,now) end end
  A.sampled=age
  if age>=A.duration then s.attack=nil;s.next=now+def.cooldown*(rage.cooldown or 1);release(npc,h,root) end
 end

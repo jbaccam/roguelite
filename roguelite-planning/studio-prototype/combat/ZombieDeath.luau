@@ -23,6 +23,21 @@ function Death.finish(npc)
   for _,fn in deathListeners do local ok,err=pcall(fn,npc,position);if not ok then warn('ZombieDeath.onDeath listener failed:',err) end end
  end
  game:GetService('CollectionService'):RemoveTag(npc,'RogueliteZombie')
+ -- A Bloater (Exploder) always bursts, even when killed first (round 10 spec): no longer a target
+ -- (untagged above; its reward is already paid), it stays where it died for a short fuse, never
+ -- longer than one it already had, then ExploderService bursts and removes it. Once only.
+ if npc:GetAttribute('Exploder') and not npc:GetAttribute('Detonated') then
+  local now=workspace:GetServerTimeNow();local fuse=npc:GetAttribute('FuseUntil')
+  npc:SetAttribute('FuseUntil',math.min(type(fuse)=='number' and fuse or math.huge,now+(npc:GetAttribute('LethalFuse') or .8)))
+  if typeof(npc:GetAttribute('FuseCenter'))~='Vector3' then npc:SetAttribute('FuseCenter',position) end
+  npc:SetAttribute('EnemyAttackStart',npc:GetAttribute('EnemyAttackStart') or now)
+  if root then root.Anchored=true end
+  humanoid.AutoRotate=false
+  for _,p in npc:GetDescendants() do if p:IsA('BasePart') then p.CanCollide=false;p.CanQuery=false;p.CanTouch=false end end
+  -- A place without ExploderService (part-synced) never keeps the body.
+  task.delay(4,function() if npc.Parent then npc:Destroy() end end)
+  return
+ end
  if npc:GetAttribute('IsHammerBoss') or npc:GetAttribute('IsMapBoss') then
   npc:SetAttribute('Attacking',false)
   npc:SetAttribute('BossDeathStart',workspace:GetServerTimeNow())

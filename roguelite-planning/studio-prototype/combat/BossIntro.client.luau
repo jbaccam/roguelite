@@ -19,7 +19,7 @@ local T=require(RS:WaitForChild('UITheme'))
 local player=Players.LocalPlayer
 local FALL=.65 -- BossService.INTRO.fall
 local HEIGHT=110 -- studs he falls from
-local NAMES={HammerBoss='HAMMER ZOMBIE BOSS'}
+local NAMES={HammerBoss='HAMMER BRUTE'}
 local DUST=Color3.fromRGB(255,236,206)
 local playing=false
 

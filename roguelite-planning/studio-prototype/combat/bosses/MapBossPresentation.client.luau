@@ -183,6 +183,7 @@ local player=Players.LocalPlayer
 local MAX_GAIT_RATE=2.6 -- Walk clip seconds per real second (chase speeds outrun the authored walk)
 local FILL,EDGE=.78,.2
 local TINT={KingCrab=Color3.fromRGB(255,120,90),Pharaoh=Color3.fromRGB(255,200,80),FrostCyclops=Color3.fromRGB(140,220,255),Dragon=Color3.fromRGB(255,110,40)}
+TINT.DJCrab,TINT.TombWarden,TINT.BloodAlpha=Color3.fromRGB(255,96,140),Color3.fromRGB(255,170,70),Color3.fromRGB(255,70,70) -- round 10 leaders
 local tracked,compiled,modules={},{},{}
 local function decode(raw) local ok,t=pcall(Http.JSONDecode,Http,raw or '');return ok and type(t)=='table' and t or {} end
 local function clipDuration(motion,name) local c=motion.clips[name];return c and c.duration or 1 end
@@ -445,6 +446,10 @@ local function buildWarning(ctx)
    local o=Vector3.new(d.origin[1],ctx.groundY,d.origin[3]);local len=math.min((d.speed or 20)*(d.life or 2),38);local width=(d.radius or 1)*2
    for _,yaw in d.yaws do fillShape(w,{kind='line',origin=o,direction=CFrame.Angles(0,yaw,0).LookVector,length=len,width=width},ctx.groundY+.07,tint,.8,w.fills) end
   end
+ elseif ctx.def.shape=='ring' then
+  -- Round 10 ring (MapBossShapes.ringArcs): the solid stretches only; the gaps stay clear (the way through).
+  local ring=Shapes.decodeRing(d.ring)
+  if ring then for _,arc in Shapes.ringArcs(ring) do drawShape(w,arc,ring.center.Y+.07,tint) end end
  elseif d.lines then
   for _,line in d.lines do drawShape(w,Shapes.decode(line),ctx.groundY+.07,tint) end
  elseif d.shape then drawShape(w,Shapes.decode(d.shape),ctx.groundY+.07,tint) end
@@ -848,10 +853,13 @@ local function frame(npc,state,now,dt)
  elseif ctx and ctx.pseudo then if state.warning then release(state.warning);state.warning=nil end
  else
   local warnEnd=at and (ctx.def.shape=='targets' and at.impact+ctx.def.eruptDelay or at.impact)
+  -- A ring stays up while its front runs out (it fills by the impact, then holds).
+  local ring=at and ctx.def.shape=='ring' and type(ctx.data.ring)=='table' and ctx.data.ring
+  if ring then warnEnd=at.impact+Shapes.ringEnd(ring) end
   if not death and attacking and age>=at.warnStart and age<warnEnd then
    local w=state.warning
    if not w or w.serial~=ctx.serial or w.raw~=ctx.raw then if w then release(w) end;w=profiled('Boss:BuildWarning',buildWarning,ctx);state.warning=w end
-   paintWarning(w,(age-at.warnStart)/math.max(.05,warnEnd-at.warnStart),warnEnd-age,now)
+   paintWarning(w,(age-at.warnStart)/math.max(.05,(ring and at.impact or warnEnd)-at.warnStart),warnEnd-age,now)
   elseif state.warning then release(state.warning);state.warning=nil end
  end
  -- An aimed attack (data.yaw, MapBossService def.aim): its shapes were published in the frame it

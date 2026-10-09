@@ -142,7 +142,56 @@ D.Dragon={anim='dragon',name='Inferno Dragon',health=31500,scale=1.25,chaseSpeed
  },order={'FireBreath','Fireball','FrontStomp','TailWhip','Fireball','FireBreath','TailWhip','FrontStomp'}}
 D.ATTACK_CLIPS={['king-crab']={'ClawCrush','RushStart','RushLoop','RushEnd','BubbleBarrage'},['frost-cyclops']={'GroundSlam','Stomp'},['pharaoh']={'CursedBolts','TombEruption'},['dragon']={'FireBreath','TailWhip','FrontStomp'},
  ['hammer-brute']={'Slam','Swing','Spin','SwingSpin','SpinSlam','ChargeStart','ChargeRun'}}
+-- Unique entrances (round 10 spec: every boss gets its own intro; Hammer Brute keeps his sky drop).
+-- style names the entrance BossIntro.client films; lead is the seconds from spawn to the key moment
+-- (BossIntroLand), when the intro clip's impact lands; after is the hold that follows (camera orbit,
+-- name card, then back to the player). The boss can't be hurt and stands still until BossIntroUntil;
+-- its health bar slides in after it (RogueliteHUD).
+D.KingCrab.intro={style='surface',clip='ClawCrush',lead=2.2,after=2.6}    -- claws break the sand first, then the slam
+D.Pharaoh.intro={style='sandrise',clip='TombEruption',lead=2.5,after=2.4} -- a sand spiral; he rises and drives his staff down
+D.FrostCyclops.intro={style='footsteps',clip='GroundSlam',lead=2.4,after=2.4} -- three thuds, the club, then the ground strike
+D.Dragon.intro={style='descent',clip='FrontStomp',lead=2.7,after=2.6}     -- his shadow crosses the arena, he glides down and lands
+-- Round 10 leaders (Round10Defs, Round10Service): mini-bosses on this runtime, spawned only by their
+-- event, never by BossEncounter's wave 20, Endless or the admin boss list (AdminConfig.BossIds).
+-- intro style 'event': the event's own cinematic films them (no sky-drop camera); the event times
+-- their intro clip (opts.eventIntro). 'signal' attacks hit nothing themselves: MapBossService calls
+-- the event's hook at their impact (the DJ's Beat Command sends rushers; the alpha's howl buffs).
+-- 'ring': an expanding ring with gaps (MapBossShapes.ringHit). Numbers are starting values.
+D.Leaders={'DJCrab','TombWarden','BloodAlpha'}
+D.DJCrab={anim='dj-crab',name='DJ Crab',leader=true,health=7000,scale=1,chaseSpeed=14,glowColor=Color3.fromRGB(70,230,215),stop=12,
+ intro={style='event',clip='Intro',lead=2.0,after=2.8},
+ enrage={cooldown=.7,chase=2,extra=1},
+ attacks={
+  BeatCommand={clip='BeatCommand',range={0,70},cooldown=1.1,damage=0,shape='signal',lockout=7},
+  -- Rock bombardment: landing circles under players, rocks arrive eruptDelay later (BossVfx DJCrab).
+  Bombard={clip='Bombard',range={6,70},cooldown=1.3,damage=16,shape='targets',radius=5,maxTargets=4,lead=.2,eruptDelay=1.15,extra=1},
+  -- Double claw bass slam: the ring runs out from between the claws; three gaps are the way through.
+  ClawSlam={clip='ClawSlam',range={0,24},cooldown=1.9,damage=22,shape='ring',point='SlamCenter',inner=3,outer=32,travel=22,width=3,height=4,gaps=3,gapWidth=math.rad(17),knockdown=.5},
+ },order={'BeatCommand','ClawSlam','Bombard','BeatCommand','Bombard','ClawSlam'}}
+D.TombWarden={anim='tomb-warden',name='Tomb Warden',leader=true,health=6000,scale=1,chaseSpeed=17,glowColor=Color3.fromRGB(255,176,64),
+ intro={style='event',clip='Emerge',lead=3.7,after=1.3},
+ roar='Roar',enrage={cooldown=.7,chase=3,follow=1},
+ attacks={
+  FistSlam={clip='FistSlam',range={0,15},cooldown=1.2,damage=26,shape='circle',point='SlamCenter',radius=9,knockdown=.6,
+   follow={radius=5,delay=.9,maxTargets=3,range=40,damage=16}},
+  FistHook={clip='FistHook',range={0,10},cooldown=.9,damage=20,shape='sweep',point='HookFist',mid='HookMid',radius=2.6,baseRadius=3},
+ },order={'FistHook','FistSlam','FistHook','FistHook','FistSlam'}}
+D.BloodAlpha={anim='alpha-werewolf',name='Blood Moon Alpha',leader=true,health=6500,scale=1,chaseSpeed=21,glowColor=Color3.fromRGB(255,170,60),stop=5,
+ intro={style='event',clip='Howl',lead=2.0,after=2.4},
+ enrage={cooldown=.65,chase=3},
+ attacks={
+  Howl={clip='Howl',range={0,90},cooldown=1,damage=0,shape='signal',lockout=12},
+  -- A warned, direction-locked charge (the Hammer's lane: forward, a little homing, ends at contact)
+  -- into a claw rake; the miss leaves a punish window (cooldown).
+  Charge={clips={'ChargeStart','ChargeRun','ClawRake'},facing='forward',home=math.rad(25),range={14,70},lockout=6,cooldown=1.4,damage=22,
+   shape='lane',length=56,width=6,speed=38,contact=3.5,knockdown=.5,finish={shape='circle',point='RightClaw',radius=6.5,damage=18}},
+  ClawRake={clip='ClawRake',range={0,8},cooldown=.8,damage=18,shape='circle',point='RightClaw',radius=6.5},
+ },order={'Howl','Charge','ClawRake','ClawRake','Charge','ClawRake'}}
+D.ATTACK_CLIPS['dj-crab']={'BeatCommand','ClawSlam','Bombard','Intro'}
+D.ATTACK_CLIPS['tomb-warden']={'FistSlam','FistHook','Emerge','Roar'}
+D.ATTACK_CLIPS['alpha-werewolf']={'Howl','ChargeStart','ChargeRun','ClawRake'}
 function D.get(id) return D[id] and type(D[id])=='table' and D[id].anim and D[id] or nil end
+function D.isLeader(id) local d=D.get(id);return d~=nil and d.leader==true end
 function D.isBoss(id) return D.get(id)~=nil end
 -- The generated timing as authored (the template installer builds the unscaled template from it).
 function D.rawTiming(id) local d=D.get(id);return d and timings()[d.anim] end

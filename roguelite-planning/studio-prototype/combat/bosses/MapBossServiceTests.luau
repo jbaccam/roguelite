@@ -414,10 +414,11 @@ if Defs then
  -- Hammer (once it has a def) rewires anything here.
  local plain=true
  for _,id in {'KingCrab','Pharaoh','FrostCyclops','Dragon'} do
-  local def=Defs.get(id);if def.tutorial or def.intro or def.roar or def.aim or (def.enrage and def.enrage.order) then plain=false end
+  -- Their unique entrances (intro.style, 2026-10-09) are allowed; nothing else of the Hammer's.
+  local def=Defs.get(id);if def.tutorial or (def.intro and not def.intro.style) or def.roar or def.aim or (def.enrage and def.enrage.order) then plain=false end
   for _,a in def.attacks do if a.phases or a.finish or a.contact or a.lockout or a.facing or a.height or a.aim or a.home then plain=false end end
  end
- add(plain,'the four bosses use none of the Hammer fields (phases, finish, contact, lockout, facing, height, aim, home, intro, roar, tutorial, enrage.order)')
+ add(plain,'the four bosses use none of the Hammer fields (phases, finish, contact, lockout, facing, height, aim, home, sky-drop intro, roar, tutorial, enrage.order)')
  -- The Hammer's chained moves (2026-10-04): Spin two sweeps, SwingSpin a swing and two spins, SpinSlam two
  -- spins and a slam; the Charge homes and ends in the Slam's clip and circle; every hit aims; no roar.
  local H=Defs.get('Hammer');local a=H and H.attacks

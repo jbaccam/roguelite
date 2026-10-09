@@ -27,7 +27,7 @@ local ProvisionalSpeeds = {
 	snake = 15,
 }
 local C =
-	{ List = {}, ById = {}, ByLegacy = { Regular = "regular-zombie", Baby = "baby-zombie", Mutant = "tank-zombie" } }
+	{ List = {}, ById = {}, ByLegacy = { Regular = "regular-zombie", Baby = "baby-zombie", Mutant = "tank-zombie", Bloater = "bloater" } }
 -- Per-role linear growth for six-slot builds. Map gear-power and difficulty multipliers
 -- still apply once in the server spawner; no player-loadout adaptive scaling.
 local RoleGrowth = {
@@ -36,6 +36,7 @@ local RoleGrowth = {
 	Lunge = { health = 2.5, damage = 1.1 },
 	Heavy = { health = 11, damage = 1.5 },
 	Splitter = { health = 3, damage = 0.9 },
+	Exploder = { health = 4, damage = 1.2 }, -- the Bloater (native: ZombieTypes.Bloater wins)
 }
 local function add(id, name, map, behavior, health, speed, damage, options)
 	local growth = assert(RoleGrowth[behavior], behavior)
@@ -94,6 +95,15 @@ add("tank-zombie", "Tank Zombie", "Pine Valley", "Heavy", 20, 9.5, 10, {
 	attackImpact = Types.Slam.impact,
 	attackRecovery = Types.Slam.recovery,
 	attackCooldown = Types.Slam.cooldown,
+})
+-- Round 10 only (Round10Defs PineValley): never in a roster or a wave slot. attackImpact is its fuse
+-- (ZombieTypes.Blast.fuse): EnemyAttacks arms it in range, ExploderService bursts it.
+add("bloater", "Bloater", "Pine Valley", "Exploder", 10, 11, 14, {
+	legacy = "Bloater",
+	template = "BloaterZombie_NPC",
+	attackImpact = Types.Blast.fuse,
+	attackRecovery = Types.Blast.fuse + 0.1,
+	attackCooldown = 99,
 })
 add("spitter-zombie", "Spitter Zombie", "Pine Valley", "Ranged", 5, 10, 7.5, {
 	projectile = "Spit",

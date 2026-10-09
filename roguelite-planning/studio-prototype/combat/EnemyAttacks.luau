@@ -230,7 +230,8 @@ local function melee(npc, root, config, s)
 				and not workspace:Raycast(root.Position, pr.Position - root.Position, s.params)
 			then
 				s.hitPlayers[player] = true
-				damage(npc, player, npc:GetAttribute("AttackDamage") or config.damage)
+				-- DamageBuff: a round 10 pack buff (the Blood Moon Alpha's howl, Round10Service).
+				damage(npc, player, (npc:GetAttribute("AttackDamage") or config.damage) * (npc:GetAttribute("DamageBuff") or 1))
 			end
 		end
 	end
@@ -345,6 +346,39 @@ RunService.Heartbeat:Connect(function(dt)
 		end
 	end
 end)
+-- The Bloater (behavior Exploder): once a player it can see is within its arming range it stops,
+-- arms (FuseUntil, FuseCenter: the burst's fixed centre) and stands swelling until ExploderService
+-- bursts it. Armed, it never moves or re-arms. Not during a cinematic (CinematicUntil).
+local function exploder(npc, config, target, h, root, s, now)
+	if npc:GetAttribute("FuseUntil") then
+		h:Move(Vector3.zero)
+		h:MoveTo(root.Position)
+		return true
+	end
+	if (combat:GetAttribute("CinematicUntil") or 0) > now or not target or not target.Parent then
+		return false
+	end
+	local player = Players:GetPlayerFromCharacter(target.Parent)
+	if not (player and validPlayer(player)) then
+		return false
+	end
+	local delta = seenOf(target) - root.Position
+	local flat = Vector3.new(delta.X, 0, delta.Z)
+	if flat.Magnitude > config.attackRange or math.abs(delta.Y) > config.maxHeight then
+		return false
+	end
+	if workspace:Raycast(root.Position, delta, params(npc)) then
+		return false
+	end
+	s.start = now
+	npc:SetAttribute("FuseCenter", root.Position)
+	npc:SetAttribute("FuseUntil", now + config.attackImpact)
+	npc:SetAttribute("EnemyAttackStart", now)
+	npc:SetAttribute("Attacking", true)
+	h:Move(Vector3.zero)
+	h:MoveTo(root.Position)
+	return true
+end
 function A.update(npc, target, dt)
 	local config = Catalog.fromModel(npc)
 	if not config or config.legacy == "Mutant" or npc:GetAttribute("IsBoss") then
@@ -361,6 +395,9 @@ function A.update(npc, target, dt)
 		states[npc] = s
 	end
 	local now = workspace:GetServerTimeNow()
+	if config.behavior == "Exploder" then
+		return exploder(npc, config, target, h, root, s, now)
+	end
 	if s.start then
 		local age = now - s.start
 		h.AutoRotate = false

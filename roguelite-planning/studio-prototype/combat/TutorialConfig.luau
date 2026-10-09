@@ -62,7 +62,7 @@ T.Lines={
  Survive="Survive wave 3 and beat the boss!",
  LevelUp2="Two level-ups! Pick your upgrades.",
  Shop2="Your turn. Buy what you like, then press GO.",
- Boss="Here he comes! Beat the Hammer Zombie Boss!",
+ Boss="Here he comes! Beat the Hammer Brute!",
  RedCircle="Red circle = move!",
  Loot="Let's go spend that loot.",
  Chests="Welcome to the lobby! Let's open what you earned.",
