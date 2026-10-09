@@ -22,7 +22,7 @@ ART = {
     "legendary": UI / "chests-pet-egg-2026-10-02-v1/chest-legendary.png",
     "gold": UI / "chests-pet-egg-2026-10-02-v1/chest-gold.png",
     "w00": UI / "weapons/00.png",
-    "w12": UI / "weapons/12.png",
+    "w01": UI / "weapons/01.png",
     "w19": UI / "weapons/19.png",
     "w24": UI / "weapons/24.png",
     "w36": UI / "weapons/36.png",
@@ -154,7 +154,7 @@ PRODUCTS = [
     ("BloodPhoenixBundle", lambda: pair("crimson", "w40", "phoenix")),
     ("ShadowDragonBundle", lambda: pair("shadow", "w39", "dragonscale")),
     ("GodlyStarter", lambda: pair("obsidian", "w36", "legendary")),
-    ("ClassThrower", lambda: single("red", "w12", "THROWER")),
+    ("ClassThrower", lambda: single("red", "w01", "CHEF")),  # Thrower became Chef (2026-10-09); same product
     ("ClassJuggler", lambda: single("purple", "w19", "JUGGLER")),
     ("ClassHandyman", lambda: single("blue", "w24", "HANDYMAN")),
     # Game passes

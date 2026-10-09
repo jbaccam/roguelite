@@ -171,11 +171,11 @@ local function runStep()
    if not pickedAt and (st and st:GetAttribute('Shards') or 0)>Config.START_SHARDS then pickedAt=os.clock() end
    if pickedAt then
     if os.clock()-pickedAt<7 then return {line='CrystalsUse',target=find(screen('RogueliteHUD'),'Shards'),ctx=fight} end
-    return {line='Pan',ctx=fight}
+    return {line='Gloves',ctx=fight}
    end
    local c=nearestCrystal()
    if c then return {line='Crystals',target=c,ctx=fight} end
-   return {line='Pan',ctx=fight}
+   return {line='Gloves',ctx=fight}
   end
   if wave<Config.BOSS_WAVE then return {line='Survive',ctx=fight} end
   return {line=os.clock()<redUntil and 'RedCircle' or 'Boss',ctx=fight}
@@ -275,8 +275,9 @@ local function lobbyLine()
   return {line='Chests',target=lobbyButton('Chests'),dim='Chests'}
  elseif step=='Armory' then
   base.Armory=base.Armory or tierMap()
-  -- Done once anything is a tier up (the arrow suggests the pan, which the seeded chest made
-  -- ready), or when nothing can be upgraded any more (copies or emeralds went elsewhere).
+  -- Done once anything is a tier up (the arrow suggests the tutorial weapon, Boxing Gloves since
+  -- 2026-10-09, which the seeded chest made ready), or when nothing can be upgraded any more
+  -- (copies or emeralds went elsewhere).
   if upgradedSince(base.Armory) or weaponTier(Config.Weapon)>=2 or not canUpgrade() then report('Equip') end
   if chests then return {line='Armory',target=find(chests,'Exit',true)} end
   if armory then
@@ -299,7 +300,7 @@ local function lobbyLine()
    local set=Armor.ById[Config.SeedArmorSet]
    if eq and set and titled(eq.Parent,string.upper(set.name)) then return {line='Equip',target=eq} end
    local card=find(armory,'A_'..Config.SeedArmor,true)
-   -- Still on the pan's upgrade view (no cards there): its BACK button (named Close) first.
+   -- Still on the gloves' upgrade view (no cards there): its BACK button (named Close) first.
    return {line='Equip',target=card or find(armory,'Tab_Armor',true) or find(armory,'Close',true)}
   end
   if chests then return {line='Equip',target=find(chests,'Exit',true)} end

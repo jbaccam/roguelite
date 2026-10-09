@@ -5,6 +5,9 @@ Images: `make_product_images.py` (512×512, game icons on store-coloured tiles).
 Roblox changes the price per region and runs price tests, so buttons and checkout would disagree).
 After saving, copy the Product / Pass ID into `combat/MonetizationConfig.luau` (`productId=` / `gamePassId=`).
 
+Thrower became Chef (2026-10-09): product 29 keeps its config key `ClassThrower` and its product ID (3716086758), so
+old receipts still map. Only rename it on the dashboard: name, description and image from row 29 below.
+
 Folder: `C:\Users\Jeremiah\Documents\ChatGPT\Roblox\roguelite-planning\studio-prototype\ui\assets\store-products`
 
 ## Developer products (Monetization → Developer Products → Create)
@@ -39,7 +42,7 @@ Folder: `C:\Users\Jeremiah\Documents\ChatGPT\Roblox\roguelite-planning\studio-pr
 | 26 | BloodPhoenixBundle | 26-BloodPhoenixBundle.png | Blood Phoenix Bundle | One time only: the Vampire Blade, the full Phoenix armor set and 3,000 emeralds. | 1799 |
 | 27 | ShadowDragonBundle | 27-ShadowDragonBundle.png | Shadow Dragon Bundle | One time only: the Shadow Daggers, the full Dragon Scale armor set and 1,500 emeralds. | 1199 |
 | 28 | GodlyStarter | 28-GodlyStarter.png | Godly Starter | One time only: pick one Godly weapon, plus 3 Legendary Chests. Chest items are random; the odds are shown in the game. | 799 |
-| 29 | ClassThrower | 29-ClassThrower.png | Thrower Class | Unlock the Thrower class now. It can also be unlocked by playing or with 400 emeralds. | 49 |
+| 29 | ClassThrower | 29-ClassThrower.png | Chef Class | Unlock the Chef class now. It can also be unlocked by playing or with 400 emeralds. | 49 |
 | 30 | ClassJuggler | 30-ClassJuggler.png | Juggler Class | Unlock the Juggler class now. It can also be unlocked by playing or with 400 emeralds. | 49 |
 | 31 | ClassHandyman | 31-ClassHandyman.png | Handyman Class | Unlock the Handyman class now. It can also be unlocked by playing or with 400 emeralds. | 49 |
 

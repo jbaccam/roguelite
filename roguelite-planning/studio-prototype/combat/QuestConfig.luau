@@ -198,7 +198,7 @@ Q.RoadsVersion=2
 -- One-time unlocks. goal: best = reach `wave` on that map (any difficulty, '*' = any map),
 -- win = win that map (any difficulty), stat = a lifetime stat reaching `target`.
 Q.Unlocks={
- {id='WaveRider',name='Wave Rider',desc='Reach wave 10 on Pine Valley',icon='speed',goal={best='PineValley',wave=10},reward={class='Thrower'}},
+ {id='WaveRider',name='Wave Rider',desc='Reach wave 10 on Pine Valley',icon='speed',goal={best='PineValley',wave=10},reward={class='Chef'}}, -- was Thrower (2026-10-09)
  {id='ValleyVictor',name='Valley Victor',desc='Win Pine Valley',icon='wins',goal={win='PineValley'},reward={class='Juggler'}},
  {id='HandyWork',name='Handy Work',desc='Defeat 1,000 enemies with Utility weapons',icon='utilityKills',goal={stat='utilityKills',target=1000},reward={class='Handyman'}},
  {id='FrostBreaker',name='Frost Breaker',desc='Win Frozen Pass',icon='frost',goal={win='FrozenPass'},reward={weapon='Mjolnir'}},

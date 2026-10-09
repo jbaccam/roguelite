@@ -713,8 +713,8 @@ end
 forgetPause=function(p) RunPause.forget(pause,p);p:SetAttribute('Paused',nil);applyPause() end
 -- Melee dash (2026-10-03, RunAction 'Dash'): the player's own client has already moved its body (it
 -- owns its physics); this approves the dash and stamps DashAt (server time), which MovementGuard
--- allows for and other screens draw. Approved for a living, standing run member whose class or
--- starter dashes (CharacterStats.dashes), mid-wave or in the sandbox, not paused, held by the shop
+-- allows for and other screens draw. Approved for a living, standing run member whose class
+-- dashes (CharacterStats.dashes: Brawler only), mid-wave or in the sandbox, not paused, held by the shop
 -- or in a boss entrance, once per Dash.Cooldown less 0.3 s of network jitter: a dash 2.8 s after
 -- the last passes, 2 s after doesn't.
 local lastDash=setmetatable({},{__mode='k'})
@@ -1147,7 +1147,7 @@ end
 -- PurchaseRequest('GiftRequest', productKey, recipientUserId, pick): the store's GIFT confirm.
 -- Everything is checked here (the client only asks), then the intent is saved and the buyer's
 -- normal prompt opens. At most one per 2 s and 8 a minute: each can cost a friends check and a
--- DataStore write. Example: Ben gifts Thrower to Ana, who has it: "Ana already unlocked it".
+-- DataStore write. Example: Ben gifts Chef to Ana, who has it: "Ana already unlocked it".
 function Gift.request(p,key,to,pick)
  if type(key)~='string' then return end
  local product=Config.Products[key]

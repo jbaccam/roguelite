@@ -52,7 +52,10 @@ local function tutorialConfig()
  local ok,T=pcall(function() return module and require(module) end)
  return ok and T or nil
 end
-local SIGNATURE={Brawler='01',Gunner='00',Thrower='12',Juggler='17',Handyman='24',Mage='30'} -- a copy of CharacterStats.Signature
+local SIGNATURE={Brawler='19',Gunner='00',Chef='01',Juggler='17',Handyman='24',Mage='30'} -- a copy of CharacterStats.Signature
+-- Classes that were renamed: an old save, receipt or grant naming the left one means the right one.
+-- Thrower became Chef 1:1 (2026-10-09, plans/2026-10-09-chef-roster-weapon-types-design.md).
+local RENAMED={Thrower='Chef'}
 local MAX_RECEIPTS=200
 
 local function fresh()
@@ -128,15 +131,17 @@ function P.saveSettings(player,t)
 end
 -- The class and starter weapon last picked in a lobby (RogueliteLobbyPreview saves them once
 -- RunSetupRules.validLoadout accepts them), so the next lobby, after a run or a rejoin, starts
--- with them instead of Brawler and the Frying Pan (user, 2026-10-03). RunClass/RunWeapon only
+-- with them instead of Brawler and its default starter (user, 2026-10-03). RunClass/RunWeapon only
 -- live on one server. Saved by the autosave, a hand-off or leaving, like the settings.
+-- The same rule as validLoadout (2026-10-09): an owned weapon whose starter class is this class,
+-- or an owned Godly with any class. Example: Brawler + Boxing Gloves yes, Brawler + Frying Pan no.
 function P.setLoadout(player,class,weapon)
  local d=P.profiles[player]
  if not d or not P.loaded[player] then return false,'Your save is still loading' end
  local w=type(weapon)=='string' and Weapons.ById[weapon]
  if type(class)~='string' or not d.classes[class] then return false,'Class locked' end
  if not w or not d.weapons[weapon] then return false,'Weapon not owned' end
- if not w.godly and not Weapons.inClass(w,class) then return false,'Choose a weapon for your class' end
+ if not w.godly and w.class~=class then return false,'Choose a weapon for your class' end
  d.loadout={class=class,weapon=weapon}
  return true
 end
@@ -148,6 +153,48 @@ end
 local function applySettings(player,d)
  if type(d.settings)~='table' then return end
  for name,kind in SETTINGS do local v=cleanSetting(kind,d.settings[name]);if v~=nil then player:SetAttribute('Setting_'..name,v) end end
+end
+-- Saves have no version number: every load runs these fix-ups, in place, and returns data. Each
+-- one changes an old save once and leaves a fixed one alone (running it twice = once). Tables
+-- only, no Instances or attributes, so ProfileMigrationTests runs it on old-save fixtures.
+function P.migrate(data)
+ local base=fresh();for k,v in base do if data[k]==nil then data[k]=v end end
+ -- Chest tiers replaced class chests and the Royal Chest (2026-09-28): convert unopened ones,
+ -- and the old every-10th-chest picks became the Legendary pity counter.
+ local chests={}
+ for kind,n in data.chests do local k=Chests.Legacy[kind] or kind;if Chests.ById[k] then chests[k]=(chests[k] or 0)+n end end
+ data.chests=chests
+ if data.pity.Legendary==nil then data.pity={Legendary=0} end
+ if data.pity.Godly==nil then data.pity.Godly=0 end -- Godly pity (2026-09-28); old saves start at 0
+ data.picks={}
+ for id in data.pets do if not Pets.valid(id) then data.pets[id]=nil end end
+ if data.pet~=nil and not data.pets[data.pet] then data.pet=nil end
+ -- Keys were dropped: old saves convert them to earned emeralds once.
+ if type(data.keys)=='number' then data.emeralds+=math.max(0,data.keys)*Money.EmeraldsPerOldKey;data.keys=nil end
+ -- Renamed classes (2026-10-09): an owned Thrower is an owned Chef, a saved Thrower pick is a Chef
+ -- pick, and a map won as a Thrower counts as won as a Chef. Claimed unlocks stay claimed (Wave
+ -- Rider's reward is now Chef).
+ for old,new in RENAMED do
+  if data.classes[old]~=nil then if data.classes[old] then data.classes[new]=true end;data.classes[old]=nil end
+  if type(data.loadout)=='table' and data.loadout.class==old then data.loadout.class=new end
+  local wins=type(data.quests)=='table' and type(data.quests.classWins)=='table' and data.quests.classWins
+  if wins and wins[old]~=nil then if wins[old]==true then wins[new]=true end;wins[old]=nil end
+ end
+ -- One starter class per weapon (2026-10-09): a saved starter that no longer fits its class goes
+ -- back to that class's default. Example: Brawler + Frying Pan (Chef's now) -> Brawler + Boxing
+ -- Gloves. An owned Godly still fits any class. A pick for a class that isn't owned is dropped.
+ local l=data.loadout
+ if type(l)~='table' or (l.class~=nil and not (type(l.class)=='string' and SIGNATURE[l.class] and data.classes[l.class])) then data.loadout={}
+ elseif l.class~=nil then
+  local w=type(l.weapon)=='string' and Weapons.ById[l.weapon]
+  if not (w and data.weapons[l.weapon] and (w.godly or w.class==l.class)) then l.weapon=SIGNATURE[l.class] end
+ end
+ -- Every owned class owns its starting weapon. Juggler's changed from Boxing Gloves to Rubber Duck
+ -- (2026-10-03), so Juggler owners get the duck; on 2026-10-09 Brawler's became Boxing Gloves and
+ -- Chef's the Frying Pan. Nothing owned is ever taken away: no weapon, copy or tier.
+ for class in data.classes do local id=SIGNATURE[class];if id and not data.weapons[id] then data.weapons[id]={tier=1,have=0} end end
+ data.journal=Journal.clean(data.journal)
+ return data
 end
 function P.load(player)
  local data
@@ -178,16 +225,8 @@ function P.load(player)
  -- Tutorial: a save from before it existed has no `tutorial` and counts as done. Studio profiles
  -- (in memory) play it only with Workspace.StudioTutorial=true, so normal Studio play skips it.
  if type(data.tutorial)~='table' or (not store and workspace:GetAttribute('StudioTutorial')~=true) then data.tutorial={step='Done'} end
- local base=fresh();for k,v in base do if data[k]==nil then data[k]=v end end
- -- Chest tiers replaced class chests and the Royal Chest (2026-09-28): convert unopened ones,
- -- and the old every-10th-chest picks became the Legendary pity counter.
- local chests={}
- for kind,n in data.chests do local k=Chests.Legacy[kind] or kind;if Chests.ById[k] then chests[k]=(chests[k] or 0)+n end end
- data.chests=chests
- if data.pity.Legendary==nil then data.pity={Legendary=0} end
- if data.pity.Godly==nil then data.pity.Godly=0 end -- Godly pity (2026-09-28); old saves start at 0
- data.picks={}
- -- Armor has no chests yet: Studio test profiles (in memory, never saved) own the sample sets.
+ -- Armor has no chests yet: Studio test profiles (in memory, never saved, always fresh() here)
+ -- own the sample sets.
  if not store then
   for _,setId in Armor.StudioGrant do
    for _,slot in Armor.Slots do local id=Armor.pieceId(setId,slot);data.armor[id]=data.armor[id] or {tier=1,have=0} end
@@ -195,14 +234,7 @@ function P.load(player)
   -- No Pet Chest yet either: Studio test profiles own every pet at Tier I.
   for _,id in Pets.StudioGrant do data.pets[id]=data.pets[id] or {tier=1,have=0} end
  end
- for id in data.pets do if not Pets.valid(id) then data.pets[id]=nil end end
- if data.pet~=nil and not data.pets[data.pet] then data.pet=nil end
- -- Keys were dropped: old saves convert them to earned emeralds once.
- if type(data.keys)=='number' then data.emeralds+=math.max(0,data.keys)*Money.EmeraldsPerOldKey;data.keys=nil end
- -- Every owned class owns its starting weapon. Juggler's changed from Boxing Gloves to Rubber Duck
- -- (2026-10-03), so Juggler owners get the duck; anything they already owned is kept.
- for class in data.classes do local id=SIGNATURE[class];if id and not data.weapons[id] then data.weapons[id]={tier=1,have=0} end end
- data.journal=Journal.clean(data.journal)
+ P.migrate(data)
  P.profiles[player]=data;P.loaded[player]=true
  applySettings(player,data) -- before ProfileLoaded, so music never starts at the wrong volume
  P.publish(player)
@@ -268,7 +300,9 @@ function P.grant(player,g)
  local d=P.profiles[player];if not d then return false end
  d.emeralds+=g.emeralds or 0
  if g.paid then d.bought+=g.emeralds or 0 end
- if g.class then d.classes[g.class]=true;if SIGNATURE[g.class] and not d.weapons[SIGNATURE[g.class]] then d.weapons[SIGNATURE[g.class]]={tier=1,have=0} end end
+ -- A class and its starting weapon. One still named Thrower (a server on older code) gives Chef.
+ local class=g.class and (RENAMED[g.class] or g.class)
+ if class then d.classes[class]=true;if SIGNATURE[class] and not d.weapons[SIGNATURE[class]] then d.weapons[SIGNATURE[class]]={tier=1,have=0} end end
  for kind,n in g.chests or {} do kind=Chests.Legacy[kind] or kind;if Chests.ById[kind] then d.chests[kind]=(d.chests[kind] or 0)+n end end
  if g.starterPack then d.starterPack=true end
  if g.vip then d.vip=true end
@@ -404,9 +438,10 @@ function P.openChest(player,kind,count)
 end
 -- First-join tutorial (plans/2026-10-03-tutorial-design.md; numbers in TutorialConfig). Its run
 -- pays once, when the boss wave is cleared: 3 Silver Chests and 100 emeralds. The next Silver
--- Chest opened is 2 Frying Pan copies and an Iron helmet instead of a roll (openChest), so the
--- lobby steps can upgrade the pan and equip the helmet. The lobby steps then only move forward:
--- Chests -> Armory -> Equip -> Offer -> Play -> Done (TutorialConfig.canStep).
+-- Chest opened is 2 copies of the tutorial weapon (Boxing Gloves since 2026-10-09) and an Iron
+-- helmet instead of a roll (openChest), so the lobby steps can upgrade it and equip the helmet.
+-- The lobby steps then only move forward: Chests -> Armory -> Equip -> Offer -> Play -> Done
+-- (TutorialConfig.canStep).
 function P.tutorialReward(player)
  local d=P.profiles[player];local T=tutorialConfig()
  if not d or not T or type(d.tutorial)~='table' or d.tutorial.rewarded then return false end

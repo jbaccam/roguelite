@@ -50,9 +50,16 @@ return function(M)
 	check(not M.giftRecipientOk({ buyer = 1, inServer = true, friends = true, studio = true }), "no id")
 
 	-- What a player here can't receive as itself.
-	local ana = { starterPack = true, classes = { Brawler = true, Thrower = true }, bundles = { GodlyStarter = true } }
+	-- Thrower became Chef (2026-10-09): ClassThrower keeps its key and product id and grants Chef.
+	local ana = { starterPack = true, classes = { Brawler = true, Chef = true }, bundles = { GodlyStarter = true } }
 	check(M.giftBlocked("StarterPack", ana) == "already has it", "owned Starter Pack")
-	check(M.giftBlocked("ClassThrower", ana) == "already unlocked it", "owned class")
+	check(M.giftBlocked("ClassThrower", ana) == "already unlocked it", "owned class (Chef, through the old Thrower product)")
+	check(M.Products.ClassThrower.class == "Chef" and M.Products.ClassThrower.name == "Chef", "the ClassThrower product is Chef now")
+	check(M.byProductId(3716086758) == "ClassThrower", "the old Thrower product id still maps, so retried receipts are found")
+	check(M.giftBlocked("ClassThrower", { classes = { Brawler = true } }) == nil, "Chef can be gifted to someone without it")
+	for key, p in M.Products do
+		check(p.class ~= "Thrower", "no product grants the old Thrower class: " .. key)
+	end
 	check(M.giftBlocked("ClassJuggler", ana) == nil, "a class they don't have")
 	check(M.giftBlocked("GodlyStarter", ana) == "already has it", "owned Godly Starter")
 	check(M.giftBlocked("ShadowDragonBundle", ana) == nil, "a Godly bundle they don't have")

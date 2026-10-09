@@ -54,7 +54,9 @@ M.Products={
  -- Chests, one time. The pick is saved to the profile before the prompt (ProfileService godlyPick).
  GodlyStarter={productId=3716086636,robux=799,chests={Legendary=3},godlyPick=true,name='Godly Starter',random=true},
  -- Class unlocks (400 emeralds is ~39 R$ of emeralds, so Robux stays close to that).
- ClassThrower={productId=3716086758,robux=49,class='Thrower',name='Thrower'},
+ -- Thrower became Chef (2026-10-09): the old key and product id stay, so late and retried
+ -- Thrower receipts still find a product (and grant Chef). Renamed on the Creator Dashboard.
+ ClassThrower={productId=3716086758,robux=49,class='Chef',name='Chef'},
  ClassJuggler={productId=3716086815,robux=49,class='Juggler',name='Juggler'},
  ClassHandyman={productId=3716086840,robux=49,class='Handyman',name='Handyman'},
 }
@@ -147,7 +149,7 @@ function M.giftRecipientOk(o)
  return true
 end
 -- Why a player can't receive `key` as itself (nil: they can), from what they own: a profile, or the
--- same fields read from their Profile* attributes: {starterPack=bool, classes={Thrower=true},
+-- same fields read from their Profile* attributes: {starterPack=bool, classes={Chef=true},
 -- bundles={GodlyStarter=true}}. Example: Ana owns the Starter Pack -> 'already has it'.
 function M.giftBlocked(key,owned)
  local p=M.Products[key];if not p or type(owned)~='table' then return nil end

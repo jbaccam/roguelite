@@ -1,7 +1,8 @@
 -- Pure checks for TutorialConfig and the shared-crystal split (EconomyConfig.shareIndex). Run in
 -- Studio Edit on fresh repo copies (plans/2026-10-03-tutorial-build-steps.md "Running Luau checks"):
--- `TutorialTests(TutorialConfig, EconomyConfig, RunXP, glockBase, itemBase)` returns the number of checks.
-return function(T,E,XP,glockBase,itemBase)
+-- `TutorialTests(TutorialConfig, EconomyConfig, RunXP, glockBase, itemBase, WeaponCatalog)` returns the
+-- number of checks. WeaponCatalog is optional: with it, the tutorial pair is checked against the roster.
+return function(T,E,XP,glockBase,itemBase,Weapons)
  local checks=0
  local function check(condition,message) assert(condition,message);checks+=1 end
  glockBase=glockBase or 19;itemBase=itemBase or 14
@@ -43,13 +44,22 @@ return function(T,E,XP,glockBase,itemBase)
  -- Reward and seed: what the chest code and the Armory steps expect.
  check(T.Reward.chests[T.SeedChest]==3 and T.Reward.emeralds==100,'3 Silver Chests and 100 emeralds')
  check(T.SeedCopies[T.Weapon]==2,'the seeded chest has two copies of the tutorial weapon (its Tier II upgrade)')
+ -- Brawler + Boxing Gloves (2026-10-09): the Frying Pan is Chef's now, and a run only starts with a
+ -- weapon of its class (RunSetupRules.validLoadout), so the tutorial launch would be refused.
+ check(T.Class=='Brawler' and T.Weapon=='19','the tutorial is Brawler with the Boxing Gloves')
+ check(T.SeedCopies['01']==nil,'no Frying Pan copies are seeded any more')
+ if Weapons then
+  local w=Weapons.ById[T.Weapon]
+  check(w~=nil and not w.godly and w.class==T.Class,'the tutorial weapon is a starter of the tutorial class')
+ end
  check(T.SeedCopies[T.SeedArmor]==1 and T.SeedArmor==T.SeedArmorSet..'.'..T.SeedArmorSlot,'the seeded armor piece id matches its set and slot')
 
  -- Every line the guide can show exists.
- for _,id in {'Welcome','Pan','Crystals','CrystalsUse','LevelUp','Shop','ShopGo','Survive','LevelUp2','Shop2','Boss','RedCircle','Loot','Chests','ChestOpen','ChestTap','ChestMore','Armory','Upgrade','Equip','Equipped','Offer','Play'} do
+ for _,id in {'Welcome','Gloves','Crystals','CrystalsUse','LevelUp','Shop','ShopGo','Survive','LevelUp2','Shop2','Boss','RedCircle','Loot','Chests','ChestOpen','ChestTap','ChestMore','Armory','Upgrade','Equip','Equipped','Offer','Play'} do
   check(type(T.Lines[id])=='string' and #T.Lines[id]>0,'line '..id)
  end
  check(type(T.GuideName)=='string' and #T.GuideName>0 and #T.GuideName<=14,'the guide has a short name for his tag')
  check(string.find(T.Lines.Welcome,T.GuideName,1,true)~=nil,'the welcome line says his name')
+ for id,line in T.Lines do check(not string.find(string.lower(line),'%f[%a]pans?%f[%A]'),'no line still talks about the pan: '..id) end
  return checks
 end

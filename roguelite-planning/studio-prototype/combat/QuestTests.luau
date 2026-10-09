@@ -222,7 +222,11 @@ return function(S, C)
 	local okU, msgU, g = S.claimUnlock(d, 1, uid, "WaveRider", function()
 		return false
 	end)
-	check(okU and g.class == "Thrower", "Hard Pine Valley wave 12 unlocks Thrower: " .. tostring(msgU))
+	check(okU and g.class == "Chef", "Hard Pine Valley wave 12 unlocks Chef (was Thrower): " .. tostring(msgU))
+	check(C.UnlockById.WaveRider.desc == "Reach wave 10 on Pine Valley", "Chef's unlock is Thrower's old quest")
+	for _, u in C.Unlocks do
+		check(u.reward.class ~= "Thrower", "No unlock gives the old Thrower class: " .. u.id)
+	end
 	check(S.claimUnlock(d, 1, uid, "WaveRider") == false, "Unlock pays once")
 	d.bestWaves.BeachCove = 30
 	okU, _, g = S.claimUnlock(d, 1, uid, "EndlessLegend")
@@ -420,7 +424,7 @@ return function(S, C)
 	-- Achievements: feats and unlocks, then every ready road level; Achiever counts the others.
 	d = profile()
 	S.event(d, 1, uid, "kills", 2500) -- Slayer levels 1-3
-	d.bestWaves.PineValley = 10 -- Wave Rider: the Thrower class
+	d.bestWaves.PineValley = 10 -- Wave Rider: the Chef class (was Thrower, 2026-10-09)
 	d.mapWins.FrozenPass = true -- Frost Breaker: Mjolnir, skipped while it can't be paid
 	local noClass = function()
 		return false
@@ -436,7 +440,7 @@ return function(S, C)
 	for _, g in gA do
 		class = class or g.class
 	end
-	check(class == "Thrower", "An unlocked class comes with the grants")
+	check(class == "Chef", "An unlocked class comes with the grants")
 	check(S.claimAll(d, 1, uid, "Achievements", noClass, function(u)
 		return u.reward.weapon == nil
 	end) == false, "Nothing ready is left")
