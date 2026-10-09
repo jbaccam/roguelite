@@ -1,0 +1,146 @@
+{
+  "name": "PizzaSlice",
+  "vertices": 626,
+  "triangles": 1236,
+  "mesh_objects": 1,
+  "materials": 1,
+  "uv_layers": 1,
+  "uv_range": [
+    0.0,
+    1.0
+  ],
+  "uv_overlap_pixels": 0,
+  "uv_coverage_pct": 47.9,
+  "texel_density_px_per_unit": {
+    "min": 59.0,
+    "median": 75.9,
+    "max": 78.3
+  },
+  "texture": "512x512 base color, packed in Model.blend, embedded in FBX/GLB",
+  "nonmanifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_vertices": 0,
+  "zero_area_faces": 0,
+  "smallest_face_area": 0.002329,
+  "worst_triangle_aspect": 38.8,
+  "inconsistent_winding_edges": 0,
+  "closed_shells": [
+    {
+      "faces": 1056,
+      "signed_volume": 3.42961
+    },
+    {
+      "faces": 60,
+      "signed_volume": 0.07032
+    },
+    {
+      "faces": 60,
+      "signed_volume": 0.06982
+    },
+    {
+      "faces": 60,
+      "signed_volume": 0.03986
+    }
+  ],
+  "min_vertex_distance": 0.019886,
+  "bounds_min": [
+    -1.6022,
+    -1.6522,
+    0.0
+  ],
+  "bounds_max": [
+    1.6008,
+    2.3875,
+    0.7517
+  ],
+  "dimensions_xyz": [
+    3.203,
+    4.0397,
+    0.7517
+  ],
+  "pivot": {
+    "origin": [
+      0,
+      0,
+      0
+    ],
+    "bottom_face_centroid_xy": [
+      -0.0,
+      -0.0
+    ],
+    "lowest_z": 0.0,
+    "note": "origin is the area centroid of the flat bottom face on Z=0"
+  },
+  "orientation": "Blender Z up, tip +Y, crust -Y. Exports: Y up, tip toward -Z (Roblox front).",
+  "design_scale": 1.9,
+  "heights": {
+    "bread_plus_cheese_top_min": 0.4449,
+    "bread_plus_cheese_top_max": 0.5102,
+    "bread_plus_cheese_lip": 0.4218,
+    "crust_crest_max": 0.7517,
+    "crust_to_cheese_ratio": 1.574,
+    "pepperoni_top_max": 0.5797
+  },
+  "main_surface_triangles": 1056,
+  "pepperoni_triangles": 180,
+  "pepperoni": [
+    {
+      "center_xy": [
+        0.286,
+        -0.326
+      ],
+      "radius": 0.3895,
+      "top_z": 0.5781
+    },
+    {
+      "center_xy": [
+        -0.265,
+        0.51
+      ],
+      "radius": 0.3705,
+      "top_z": 0.5797
+    },
+    {
+      "center_xy": [
+        0.077,
+        1.308
+      ],
+      "radius": 0.285,
+      "top_z": 0.5767
+    }
+  ],
+  "reference_sha256_matches": true,
+  "blend_packed_texture": true,
+  "glb_reimport": {
+    "mesh_objects": 1,
+    "triangles": 1236,
+    "has_uv": true,
+    "has_image_texture": true,
+    "texture_pixels_loaded": true,
+    "unexpected_stage_objects": 0,
+    "dimensions_xyz": [
+      3.203,
+      4.0397,
+      0.7517
+    ],
+    "all_faces_triangular": true,
+    "triangle_count_matches": true,
+    "dimensions_match_source": true
+  },
+  "fbx_reimport": {
+    "mesh_objects": 1,
+    "triangles": 1236,
+    "has_uv": true,
+    "has_image_texture": true,
+    "texture_pixels_loaded": true,
+    "unexpected_stage_objects": 0,
+    "dimensions_xyz": [
+      3.203,
+      4.0397,
+      0.7517
+    ],
+    "all_faces_triangular": true,
+    "triangle_count_matches": true,
+    "dimensions_match_source": true
+  }
+}
