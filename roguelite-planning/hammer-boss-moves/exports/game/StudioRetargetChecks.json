@@ -1,0 +1,17 @@
+{
+  "id": "hammer-brute",
+  "rigType": "Motor6D",
+  "jointCount": 16,
+  "clipCount": 11,
+  "frameCount": 1105,
+  "maxCentreError": 1.0417545750485147e-06,
+  "maxCornerError": 1.3873955994286246e-06,
+  "worstAt": "Walk frame 14 RightHand",
+  "limit": 0.0001,
+  "poseTolerance": 2e-06,
+  "passed": true,
+  "rootHeight": 4.45,
+  "sourceAnimationHash": "49ab5611621129ac124d7c4f02fdf9de48f5a224e2aa3a042012bbe39774bc15",
+  "importReceiptHash": "070f349af1287d8750c2cef05834c78defa78aa3cd1dc9a3300e26b3abc8b8dc",
+  "outputHash": "7aadb6019765a0261f04e7e759f91d8e831f53a9905dcd281e75ede4cebaff94"
+}
