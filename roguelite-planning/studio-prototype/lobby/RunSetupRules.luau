@@ -19,11 +19,11 @@ local R={}
 -- bossBase: how much tougher than the Hammer (18,000) the map's boss is authored (MapBossDefs),
 -- which the power scaling replaces rather than stacks on (R.bossScale).
 R.Maps={
- {id='PineValley',name='Pine Valley',boss='Hammer Zombie Boss',emeralds=20,unlock='Available after the tutorial',power=1,bossBase=1},
+ {id='PineValley',name='Pine Valley',boss='Hammer Brute',emeralds=20,unlock='Available after the tutorial',power=1,bossBase=1},
  {id='BeachCove',name='Beach Cove',boss='Giant King Crab',emeralds=40,unlock='Win Pine Valley on Hard',power=5,bossBase=21000/18000},
- {id='DesertBasin',name='Desert Basin',boss='Pharaoh',emeralds=60,unlock='Win Beach Cove on Hard',power=9,bossBase=24000/18000},
+ {id='DesertBasin',name='Desert Basin',boss='The Pharaoh',emeralds=60,unlock='Win Beach Cove on Hard',power=9,bossBase=24000/18000},
  {id='FrozenPass',name='Frozen Pass',boss='Frost Cyclops',emeralds=80,unlock='Win Desert Basin on Hard',power=13,bossBase=27000/18000},
- {id='VolcanicCrater',name='Volcanic Crater',boss='Dragon',emeralds=100,unlock='Win Frozen Pass on Hard',power=17,bossBase=31500/18000},
+ {id='VolcanicCrater',name='Volcanic Crater',boss='Inferno Dragon',emeralds=100,unlock='Win Frozen Pass on Hard',power=17,bossBase=31500/18000},
 }
 -- Difficulty multiplies enemy health and damage and the emeralds a run pays (reward).
 R.Difficulties={
