@@ -2,30 +2,25 @@
  "attacks": {
   "Slam": {
    "clip": "Slam",
-   "fps": 30,
-   "duration": 1.466667,
-   "warnStart": 0.17,
-   "impact": 0.7,
-   "activeEnd": 0.7,
-   "recoveryEnd": 1.29,
+   "fps": 60,
+   "duration": 1.666667,
+   "warnStart": 0.0,
+   "impact": 0.766667,
+   "activeEnd": 0.766667,
+   "recoveryEnd": 1.666667,
    "points": {
     "HammerFace": {
      "bone": "Hammer",
      "part": "Hammer",
      "offset": [
-      2.71819,
-      -2.15336,
-      -0.00025
-     ],
-     "rootAtImpact": [
-      -0.9435,
-      -10.8,
-      -0.0
+      3.21533,
+      0.0,
+      0.05625
      ],
      "rootAtImpactStudio": [
-      0.9435,
-      -0.0,
-      -10.8
+      -0.75789,
+      2.215,
+      -11.40521
      ]
     },
     "HammerGrip": {
@@ -36,27 +31,572 @@
       1.21136,
       0.05625
      ],
-     "rootAtImpact": [
-      -1.0,
-      -5.415,
-      2.21
-     ],
      "rootAtImpactStudio": [
-      1.0,
-      2.21,
-      -5.415
+      -0.75789,
+      2.215,
+      -6.02021
      ]
     }
    },
-   "strikeFaceNormalAtImpact": [
-    0.0,
-    -0.0,
-    -1.0
-   ],
-   "strikeFaceNormalAtImpactStudio": [
-    -0.0,
-    -1.0,
-    -0.0
+   "phases": [
+    {
+     "label": "slam circle",
+     "warnStart": 0.0,
+     "impact": 0.766667,
+     "activeEnd": 0.766667,
+     "points": {
+      "HammerFace": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        3.21533,
+        0.0,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        -0.75789,
+        2.215,
+        -11.40521
+       ]
+      },
+      "HammerGrip": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        -2.03165,
+        1.21136,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        -0.75789,
+        2.215,
+        -6.02021
+       ]
+      }
+     }
+    },
+    {
+     "label": "rubble wave",
+     "warnStart": 0.0,
+     "impact": 0.766667,
+     "activeEnd": 0.766667,
+     "points": {
+      "HammerFace": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        3.21533,
+        0.0,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        -0.75789,
+        2.215,
+        -11.40521
+       ]
+      },
+      "HammerGrip": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        -2.03165,
+        1.21136,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        -0.75789,
+        2.215,
+        -6.02021
+       ]
+      }
+     }
+    }
+   ]
+  },
+  "Swing": {
+   "clip": "Swing",
+   "fps": 60,
+   "duration": 1.8,
+   "warnStart": 0.0,
+   "impact": 0.633333,
+   "activeEnd": 0.833333,
+   "recoveryEnd": 1.8,
+   "points": {
+    "HammerFace": {
+     "bone": "Hammer",
+     "part": "Hammer",
+     "offset": [
+      3.21533,
+      0.0,
+      0.05625
+     ],
+     "rootAtImpactStudio": [
+      8.47539,
+      4.6,
+      -6.40737
+     ]
+    },
+    "HammerGrip": {
+     "bone": "Hammer",
+     "part": "Hammer",
+     "offset": [
+      -2.03165,
+      1.21136,
+      0.05625
+     ],
+     "rootAtImpactStudio": [
+      3.81184,
+      4.6,
+      -3.71488
+     ]
+    }
+   }
+  },
+  "Spin": {
+   "clip": "Spin",
+   "fps": 60,
+   "duration": 2.283333,
+   "warnStart": 0.0,
+   "impact": 0.583333,
+   "activeEnd": 1.472222,
+   "recoveryEnd": 2.283333,
+   "points": {
+    "HammerFace": {
+     "bone": "Hammer",
+     "part": "Hammer",
+     "offset": [
+      3.21533,
+      0.0,
+      0.05625
+     ],
+     "rootAtImpactStudio": [
+      8.47539,
+      4.6,
+      -6.40737
+     ]
+    },
+    "HammerGrip": {
+     "bone": "Hammer",
+     "part": "Hammer",
+     "offset": [
+      -2.03165,
+      1.21136,
+      0.05625
+     ],
+     "rootAtImpactStudio": [
+      3.81184,
+      4.6,
+      -3.71488
+     ]
+    }
+   },
+   "phases": [
+    {
+     "label": "spin 1",
+     "warnStart": 0.0,
+     "impact": 0.583333,
+     "activeEnd": 1.027778,
+     "points": {
+      "HammerFace": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        3.21533,
+        0.0,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        8.47539,
+        4.6,
+        -6.40737
+       ]
+      },
+      "HammerGrip": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        -2.03165,
+        1.21136,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        3.81184,
+        4.6,
+        -3.71488
+       ]
+      }
+     }
+    },
+    {
+     "label": "spin 2",
+     "warnStart": 0.0,
+     "impact": 1.027778,
+     "activeEnd": 1.472222,
+     "points": {
+      "HammerFace": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        3.21533,
+        0.0,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        8.48246,
+        4.6,
+        -6.4003
+       ]
+      },
+      "HammerGrip": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        -2.03165,
+        1.21136,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        3.81891,
+        4.6,
+        -3.7078
+       ]
+      }
+     }
+    }
+   ]
+  },
+  "SwingSpin": {
+   "clip": "SwingSpin",
+   "fps": 60,
+   "duration": 3.333333,
+   "warnStart": 0.0,
+   "impact": 0.633333,
+   "activeEnd": 2.522222,
+   "recoveryEnd": 3.333333,
+   "points": {
+    "HammerFace": {
+     "bone": "Hammer",
+     "part": "Hammer",
+     "offset": [
+      3.21533,
+      0.0,
+      0.05625
+     ],
+     "rootAtImpactStudio": [
+      8.47539,
+      4.6,
+      -6.40737
+     ]
+    },
+    "HammerGrip": {
+     "bone": "Hammer",
+     "part": "Hammer",
+     "offset": [
+      -2.03165,
+      1.21136,
+      0.05625
+     ],
+     "rootAtImpactStudio": [
+      3.81184,
+      4.6,
+      -3.71488
+     ]
+    }
+   },
+   "phases": [
+    {
+     "label": "swing",
+     "warnStart": 0.0,
+     "impact": 0.633333,
+     "activeEnd": 0.833333,
+     "points": {
+      "HammerFace": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        3.21533,
+        0.0,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        8.47539,
+        4.6,
+        -6.40737
+       ]
+      },
+      "HammerGrip": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        -2.03165,
+        1.21136,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        3.81184,
+        4.6,
+        -3.71488
+       ]
+      }
+     }
+    },
+    {
+     "label": "spin 1",
+     "warnStart": 0.0,
+     "impact": 1.633333,
+     "activeEnd": 2.077778,
+     "points": {
+      "HammerFace": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        3.21533,
+        0.0,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        8.47539,
+        4.6,
+        -6.40737
+       ]
+      },
+      "HammerGrip": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        -2.03165,
+        1.21136,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        3.81184,
+        4.6,
+        -3.71488
+       ]
+      }
+     }
+    },
+    {
+     "label": "spin 2",
+     "warnStart": 0.0,
+     "impact": 2.077778,
+     "activeEnd": 2.522222,
+     "points": {
+      "HammerFace": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        3.21533,
+        0.0,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        8.48246,
+        4.6,
+        -6.4003
+       ]
+      },
+      "HammerGrip": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        -2.03165,
+        1.21136,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        3.81891,
+        4.6,
+        -3.7078
+       ]
+      }
+     }
+    }
+   ]
+  },
+  "SpinSlam": {
+   "clip": "SpinSlam",
+   "fps": 60,
+   "duration": 3.15,
+   "warnStart": 0.0,
+   "impact": 0.583333,
+   "activeEnd": 2.25,
+   "recoveryEnd": 3.15,
+   "points": {
+    "HammerFace": {
+     "bone": "Hammer",
+     "part": "Hammer",
+     "offset": [
+      3.21533,
+      0.0,
+      0.05625
+     ],
+     "rootAtImpactStudio": [
+      8.47539,
+      4.6,
+      -6.40737
+     ]
+    },
+    "HammerGrip": {
+     "bone": "Hammer",
+     "part": "Hammer",
+     "offset": [
+      -2.03165,
+      1.21136,
+      0.05625
+     ],
+     "rootAtImpactStudio": [
+      3.81184,
+      4.6,
+      -3.71488
+     ]
+    }
+   },
+   "phases": [
+    {
+     "label": "spin 1",
+     "warnStart": 0.0,
+     "impact": 0.583333,
+     "activeEnd": 1.027778,
+     "points": {
+      "HammerFace": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        3.21533,
+        0.0,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        8.47539,
+        4.6,
+        -6.40737
+       ]
+      },
+      "HammerGrip": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        -2.03165,
+        1.21136,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        3.81184,
+        4.6,
+        -3.71488
+       ]
+      }
+     }
+    },
+    {
+     "label": "spin 2",
+     "warnStart": 0.0,
+     "impact": 1.027778,
+     "activeEnd": 1.472222,
+     "points": {
+      "HammerFace": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        3.21533,
+        0.0,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        8.48246,
+        4.6,
+        -6.4003
+       ]
+      },
+      "HammerGrip": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        -2.03165,
+        1.21136,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        3.81891,
+        4.6,
+        -3.7078
+       ]
+      }
+     }
+    },
+    {
+     "label": "slam circle",
+     "warnStart": 0.0,
+     "impact": 2.25,
+     "activeEnd": 2.25,
+     "points": {
+      "HammerFace": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        3.21533,
+        0.0,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        -0.75789,
+        2.215,
+        -11.40521
+       ]
+      },
+      "HammerGrip": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        -2.03165,
+        1.21136,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        -0.75789,
+        2.215,
+        -6.02021
+       ]
+      }
+     }
+    },
+    {
+     "label": "rubble wave",
+     "warnStart": 0.0,
+     "impact": 2.25,
+     "activeEnd": 2.25,
+     "points": {
+      "HammerFace": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        3.21533,
+        0.0,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        -0.75789,
+        2.215,
+        -11.40521
+       ]
+      },
+      "HammerGrip": {
+       "bone": "Hammer",
+       "part": "Hammer",
+       "offset": [
+        -2.03165,
+        1.21136,
+        0.05625
+       ],
+       "rootAtImpactStudio": [
+        -0.75789,
+        2.215,
+        -6.02021
+       ]
+      }
+     }
+    }
    ]
   }
  },
@@ -65,9 +605,11 @@
  "height": 11.922,
  "footprintRadius": 5.184,
  "groundOffset": 0.0,
+ "authoredScale": 1.0,
  "motion": {
   "strideLength": 11.5942,
-  "nominalSpeed": 17.3913
+  "nominalSpeed": 17.3913,
+  "chargeStrideLength": 8.5333
  },
- "notes": "Template scale 1.0 (the map-boss def scales the model 1.15). Times in seconds from clip start; Slam is a 30 fps clip (impact on frame 21 = 0.700 s). Point offsets are in the Hammer PART's own Studio space (bone \"Hammer\" in the part-pose AnimationData). rootAtImpact: Blender axes, origin on the ground under the HumanoidRootPart (z up from the soles); rootAtImpactStudio: the same point in Studio axes (-X, Z, Y), y up from the soles. HammerGrip is on the haft axis midway between the carry grips (2.72 / 8.05 along the haft). footprintRadius: body sections only (the hammer is not part of the body shell). groundOffset 0: the soles rest on z = 0."
+ "notes": "Authored at template scale 1.0; the game scales the model by 1.5 (MapBossDefs). Times in seconds from clip start; every clip is 60 fps except Idle and Walk (24). Every warning starts at commit (warnStart 0). phases: the hits in order (Slam: slam circle, rubble wave; Spin: one per revolution; SwingSpin: swing, spin 1, spin 2; SpinSlam: spin 1, spin 2, slam circle, rubble wave); the top-level impact is the first phase's, activeEnd the last phase's. A rubble wave phase has its slam circle's times. Points: HammerFace is the legacy head point (BossMotion.head: hammerHeadRest, the head centre), HammerGrip the haft axis midway between the carry grips (2.72 / 8.05 along the haft), both as offsets in the Hammer part's own Studio space; rootAtImpactStudio is that point at the (phase) impact, Studio axes, y up from the soles. footprintRadius: body sections only. The intro sky-drop and the Charge finish play the Slam (no IntroLand, Roar or ChargeSlam clips)."
 }

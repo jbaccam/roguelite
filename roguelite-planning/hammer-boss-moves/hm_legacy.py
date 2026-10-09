@@ -211,37 +211,54 @@ def _grip_drift(rig, D):
 
 
 class Baker:
-    """Legacy runtime poses as this folder's D poses, with one repair: between two authored frames,
-    BossMotion.blend lerps each fist's pose in hammer space as a root-space delta, so where a fist
-    rolls far about the haft between two authored frames its hole cuts a chord off the haft (up to
-    0.48 studs for ~1/36 s in the original Spin). When a non-authored sample's fist is more than
-    REPAIR studs off the haft, the bake interpolates that fist's slide along and roll about the haft
-    instead (screw_hands), then solves the arms as BossMotion does. Authored frames never change."""
-    REPAIR = 0.01
+    """The legacy runtime's poses (BossMotion.sample, constrainArms included) as this folder's D
+    poses, at any time, with one repair.
+
+    Between two authored frames BossMotion.blend lerps each fist's pose in hammer space as a
+    root-space delta. Where a fist rolls far about the haft between two authored frames, its hole
+    cuts a chord off the haft. The original data does this in two places by more than REPAIR
+    (0.15 studs, the gap the user accepts on the originals): Swing frames 3-4 (0.40) and Spin frames
+    4-5 (0.48), both the right fist rolling ~68 deg in one source frame at the start of the wind-up.
+    For every sample inside such an interval (the whole interval, so the fist's path stays smooth)
+    the bake interpolates that fist's slide along and roll about the haft instead (screw_hands),
+    then solves the arms with constrainArms. Smaller gaps are the original as the user played it and
+    are kept (measured in MotionChecks.json). Authored frames never change. Death is never repaired:
+    he lets go of the hammer from its first frame."""
+    REPAIR = 0.15
+    PROBES = 24                              # samples per source interval to find its worst gap
 
     def __init__(self, rig, legacy=None):
         self.rig = rig
         self.L = legacy or Legacy()
-        self.repaired = []
+        self.gaps = {}
+        self.repaired = {}
 
     def raw(self, name, t):
         return self.L.to_D(self.L.sample(name, t))
 
+    def interval_gaps(self, name):
+        """Worst fist-off-haft gap of the legacy in-betweens, per source interval [i, i+1]."""
+        if name not in self.gaps:
+            c = self.L.clips[name]
+            self.gaps[name] = [max(_grip_drift(self.rig, self.raw(name, (i + a) / c['fps']))
+                                   for a in np.arange(1, self.PROBES) / self.PROBES) for i in range(c['last'])]
+        return self.gaps[name]
+
     def pose(self, name, t, label=None):
         c = self.L.clips[name]
-        D = self.raw(name, t)
         f = min(max(t * c['fps'], 0.0), c['last'])
-        if abs(f - round(f)) < 1e-6:
-            return D
-        g = _grip_drift(self.rig, D)
+        if abs(f - round(f)) < 1e-6 or name == 'Death':
+            return self.raw(name, t)
+        i = min(int(math.floor(f)), c['last'] - 1)
+        g = self.interval_gaps(name)[i]
         if g <= self.REPAIR:
-            return D
-        alt = self.screw_hands(name, t)
-        g2 = _grip_drift(self.rig, alt)
-        if g2 < g:
-            self.repaired.append({'clip': label or name, 'sourceTime': round(t, 4), 'gripBefore': round(g, 4),
-                                  'gripAfter': round(g2, 6)})
-            return alt
+            return self.raw(name, t)
+        D = self.screw_hands(name, t)
+        key = (name, i)
+        rec = self.repaired.setdefault(key, {'clip': name, 'sourceFrames': [i, i + 1],
+                                             'time': [round(i / c['fps'], 4), round((i + 1) / c['fps'], 4)],
+                                             'gripBefore': round(g, 4), 'gripAfter': 0.0})
+        rec['gripAfter'] = max(rec['gripAfter'], round(_grip_drift(self.rig, D), 6))
         return D
 
     def screw_params(self, side, D):
@@ -271,22 +288,33 @@ class Baker:
         return self.L.to_D(self.L.constrain(self.L.from_D(D)))
 
     # ---------------------------------------------------------------- crossfade (combos, seams)
+    LEGS = [s + p for s in HM.SIDES for p in ('UpperLeg', 'LowerLeg', 'Foot')]
+
     def crossfade(self, DA, DB, w):
-        """A -> B at weight w: every joint's local Transform lerped (so no joint opens), the hammer
-        lerped in chest space about the held grip and the fists in hammer space (as BossMotion.blend
-        does), then both arms re-solved with BossMotion.constrainArms."""
-        rig = self.rig
+        """A -> B at weight w (0..1). The torso, head and arms lerp each joint's local Transform
+        (slerp rotation, lerp position), so the spine never opens. The legs lerp each part in root
+        space, as BossMotion.blend does, so planted feet stay on the ground. The hammer is lerped in
+        chest space about the held grip (BossMotion.blend). Each fist's slide along and roll about
+        the haft are interpolated (shortest roll), so the fists stay on the haft; the hammer and fists
+        move together into the arms' reach, then both arms are re-solved with
+        BossMotion.constrainArms, the lerped forearms giving the elbow swivel."""
+        rig, L = self.rig, self.L
         LA, LB = HM.joint_locals(rig, DA), HM.joint_locals(rig, DB)
-        D = HM.from_locals(rig, {k: HM.cf_lerp(LA[k], LB[k], w) for k in LA})
-        P = self.L.from_D(D)
-        PA, PB = self.L.from_D(DA), self.L.from_D(DB)
-        gp = self.L.grip_pivot
+        P = L.from_D(HM.from_locals(rig, {k: HM.cf_lerp(LA[k], LB[k], w) for k in LA}))
+        PA, PB = L.from_D(DA), L.from_D(DB)
+        for p in self.LEGS:
+            P[p] = HM.cf_lerp(PA[p], PB[p], w)
+        gp = L.grip_pivot
         ha = HM.rinv(PA['UpperTorso']) @ PA['Hammer'] @ gp
         hb = HM.rinv(PB['UpperTorso']) @ PB['Hammer'] @ gp
         P['Hammer'] = P['UpperTorso'] @ HM.cf_lerp(ha, hb, w) @ HM.rinv(gp)
-        for n in ('RightHand', 'LeftHand'):
-            P[n] = P['Hammer'] @ HM.cf_lerp(HM.rinv(PA['Hammer']) @ PA[n], HM.rinv(PB['Hammer']) @ PB[n], w)
-        return self.L.to_D(self.L.constrain(P))
+        D = L.to_D(P)
+        for s in HM.SIDES:
+            ga, ra = self.screw_params(s, DA)
+            gb, rb = self.screw_params(s, DB)
+            r = ra + ((rb - ra + 180) % 360 - 180) * w
+            D[s + 'Hand'] = D['Hammer'] @ rig.screw(s, ga + (gb - ga) * w, r)
+        return L.to_D(L.constrain(L.reach_project(L.from_D(D))))
 
 
 # ==================================================================== the double Spin
@@ -297,45 +325,43 @@ SEAM_FADE = 0.1                                       # residual fade at the sta
 
 class DoubleSpin:
     """Spin with two full revolutions: the original wind-up, the original active revolution, the
-    same revolution again, then the original recovery (everything after it shifted by REV).
-    The original pose after 360 deg is 0.105 studs from the pose it started from, so revolution 2
-    starts on revolution 1's last pose and fades that residual out over SEAM_FADE seconds."""
+    same revolution again, then the original recovery (everything after the first revolution shifted
+    by REV). The original revolution turns the hammer at a constant 810 deg/s, so revolution 2 starts
+    at the speed revolution 1 ends with. Its pose after 360 deg is 0.17 studs (mesh points) from the
+    pose it started from, so revolution 2 starts exactly on revolution 1's last pose: each joint's
+    local residual (L_start^-1 L_end) rides on top of revolution 2 and fades out over SEAM_FADE."""
 
-    def __init__(self, baker):
-        self.b = baker
+    def __init__(self, baker, fade=SEAM_FADE):
+        self.b, self.fade = baker, fade
         self.duration = SPIN['duration'] + REV
-        A37 = baker.pose('Spin', SPIN['finish'])
-        B21 = baker.pose('Spin', SPIN['active'])
-        L = baker.L
-        PA, PB = L.from_D(A37), L.from_D(B21)
-        self.res = {p: PA[p] @ HM.rinv(PB[p]) for p in PA}
-        self.hand_rel = {n: HM.rinv(PA['Hammer']) @ PA[n] for n in ('RightHand', 'LeftHand')}
-        self.phases = [
-            {'warnStart': SPIN['anticipation'], 'impact': SPIN['active'], 'activeEnd': SPIN['finish']},
-            {'warnStart': SPIN['active'], 'impact': SPIN['finish'], 'activeEnd': SPIN['finish'] + REV},
-        ]
+        self.seam = SPIN['finish']
+        A = baker.pose('Spin', SPIN['finish'])
+        B = baker.pose('Spin', SPIN['active'])
+        LA, LB = HM.joint_locals(baker.rig, A), HM.joint_locals(baker.rig, B)
+        self.res = {k: HM.rinv(LB[k]) @ LA[k] for k in LA}
+        # times in the double clip (seconds): one phase per revolution
+        self.revs = [(SPIN['active'], SPIN['finish']), (SPIN['finish'], SPIN['finish'] + REV)]
 
     def pose(self, t):
-        b, L = self.b, self.b.L
+        b = self.b
         if t <= SPIN['finish']:
-            return b.pose('Spin', t, 'Spin')
+            return b.pose('Spin', t)
         if t <= SPIN['finish'] + REV:
             s = t - SPIN['finish']
-            B = b.pose('Spin', SPIN['active'] + s, 'Spin')
-            if s >= SEAM_FADE:
+            B = b.pose('Spin', SPIN['active'] + s)
+            if s >= self.fade:
                 return B
-            PB = L.from_D(B)
-            E = {p: self.res[p] @ m for p, m in PB.items()}
-            for n, rel in self.hand_rel.items():
-                E[n] = E['Hammer'] @ rel
-            return b.crossfade(L.to_D(L.constrain(E)), B, HM.smoother(s / SEAM_FADE))
-        return b.pose('Spin', t - REV, 'Spin')
+            LB = HM.joint_locals(b.rig, B)
+            E = HM.from_locals(b.rig, {k: LB[k] @ self.res[k] for k in LB})
+            return b.crossfade(E, B, HM.smoother(s / self.fade))
+        return b.pose('Spin', t - REV)
 
 
 # ==================================================================== combos
 class Combo:
     """A then B with a crossfade: A plays to cutA, then over `fade` seconds the pose fades from A
-    (still playing) to B (starting at cutB), then B plays on. Times in B shift by cutA - cutB."""
+    (still playing) to B (starting at cutB), then B plays on. A's recovery after cutA + fade and B's
+    wind-up before cutB are trimmed. Times in B shift by cutA - cutB."""
 
     def __init__(self, baker, A, B, cutA, cutB, fade):
         self.b, self.A, self.B = baker, A, B
@@ -359,8 +385,6 @@ class Single:
     def __init__(self, baker, name):
         self.b, self.name = baker, name
         self.duration = baker.L.clips[name]['duration']
-        a = ATTACKS.get(name)
-        self.phases = [{'warnStart': a['anticipation'], 'impact': a['active'], 'activeEnd': a['finish']}] if a else []
 
     def pose(self, t):
         return self.b.pose(self.name, t)

@@ -31,82 +31,80 @@
    "frames": 73,
    "fps": 24,
    "worst": {
-    "grip": 3.6392894408876824e-15,
+    "grip": 2.2612592458674733e-06,
     "hingeOffAxis": 1.4787793334710982e-06,
-    "wristBend": 1.32320062361756,
-    "wristTwist": 1.003791403866046,
-    "swivel": 0.5000000000000165,
-    "jointGap": 3.66205343881779e-15,
-    "kneeOffAxis": 1.7075472925031877e-06,
-    "solidDepth": 0.10164699769487595,
+    "wristBend": 43.82574487797647,
+    "wristTwist": 81.53275713210085,
+    "swivel": 81.80549752331663,
+    "jointGap": 1.1083494933336085e-06,
+    "kneeOffAxis": 2.8310940936362843,
+    "solidDepth": 0.11638520780764439,
     "footDrift": 0.0,
-    "swivelStep": 0.5000000000000293,
+    "swivelStep": 2.0119468603877095,
     "spineStep": 0.5208348790524139,
-    "ankle": 20.007193586399513,
-    "elbowMin": 54.55600756833179,
-    "elbowMax": 65.38233444540414,
-    "kneeMin": 0.0,
-    "kneeMax": 30.329869250204098,
-    "shaftCore": 3.8046775912368256,
+    "ankle": 18.40726381244598,
+    "elbowMin": 12.021721773950746,
+    "elbowMax": 42.265954332243815,
+    "kneeMin": 7.119823330142651,
+    "kneeMax": 30.3568699582095,
+    "shaftCore": 6.31105063184432,
     "ground": 0.0,
-    "slideMin": 2.7199999999999993,
-    "slideMax": 8.050000000000004
+    "slideMin": 2.719999230864782,
+    "slideMax": 8.049999932266111
    },
    "where": {
-    "grip": 48,
-    "slideMin": 22,
-    "slideMax": 13,
-    "elbowMin": 7,
-    "elbowMax": 34,
-    "swivel": 17,
+    "grip": 37,
+    "slideMin": 0,
+    "slideMax": 11,
+    "elbowMin": 45,
+    "elbowMax": 31,
+    "wristBend": 71,
+    "wristTwist": 10,
+    "swivel": 10,
+    "jointGap": 0,
     "kneeMin": 0,
-    "shaftCore": 0,
-    "solidDepth": 32,
-    "ground": 0,
-    "wristBend": 34,
-    "wristTwist": 31,
-    "jointGap": 67,
     "kneeMax": 43,
+    "kneeOffAxis": 46,
     "ankle": 45,
-    "kneeOffAxis": 42,
-    "swivelStep": 32,
+    "shaftCore": 9,
+    "solidDepth": 29,
+    "ground": 0,
+    "swivelStep": 40,
     "spineStep": 43,
-    "hingeOffAxis": 30
+    "hingeOffAxis": 8
    },
    "overlaps": [],
    "overlapFrames": 0,
    "loopClose": 0.0,
-   "hammerOverlap": {
-    "badFrames": [],
-    "badFrameCount": 0,
-    "rightCuffDepth": 0.10164699769487595,
-    "rightCuffDepthAtRest": 0.09483667793370043
+   "hammerOverlap120Hz": {
+    "badSamples": 0,
+    "first": []
    }
   },
   "Walk": {
    "frames": 17,
    "fps": 24,
    "worst": {
-    "grip": 7.112362866677808e-15,
-    "hingeOffAxis": 1.2074182697257333e-06,
-    "wristBend": 12.811362768111753,
-    "wristTwist": 6.249892316580116,
-    "swivel": 13.000000000000039,
-    "jointGap": 3.552822097363439e-15,
+    "grip": 2.261259244960664e-06,
+    "hingeOffAxis": 1.4787793334710982e-06,
+    "wristBend": 48.3089979817816,
+    "wristTwist": 55.033915347922985,
+    "swivel": 58.746326225283724,
+    "jointGap": 3.6687789788066426e-15,
     "kneeOffAxis": 1.7075472925031877e-06,
-    "solidDepth": 0.0,
-    "footDrift": 4.440892098500626e-16,
-    "swivelStep": 1.0000000000000018,
+    "solidDepth": 0.03209451459667134,
+    "footDrift": 8.95090418262362e-16,
+    "swivelStep": 5.8676860872074075,
     "spineStep": 3.550519610667452,
     "ankle": 53.24565158062022,
-    "elbowMin": 64.52987895168403,
-    "elbowMax": 82.65479713312143,
+    "elbowMin": 65.84688653065355,
+    "elbowMax": 84.63489818939057,
     "kneeMin": 18.311271259238254,
     "kneeMax": 126.64452521468934,
-    "shaftCore": 5.779125071248393,
-    "ground": -0.01654224107517227,
-    "slideMin": 2.719999999999999,
-    "slideMax": 8.050000000000008
+    "shaftCore": 5.671619244256389,
+    "ground": -0.016542241075171826,
+    "slideMin": 2.7199997871110804,
+    "slideMax": 8.049999932266115
    },
    "where": {
     "grip": 9,
@@ -114,97 +112,814 @@
     "slideMax": 9,
     "elbowMin": 12,
     "elbowMax": 9,
-    "wristBend": 9,
-    "wristTwist": 12,
-    "swivel": 5,
-    "jointGap": 8,
+    "hingeOffAxis": 8,
+    "wristBend": 5,
+    "wristTwist": 4,
+    "swivel": 4,
+    "jointGap": 12,
     "kneeMin": 8,
     "kneeMax": 1,
     "ankle": 4,
     "kneeOffAxis": 14,
     "shaftCore": 9,
     "ground": 2,
-    "hingeOffAxis": 1,
-    "swivelStep": 7,
+    "swivelStep": 15,
     "spineStep": 4,
-    "footDrift": 5
+    "footDrift": 5,
+    "solidDepth": 12
    },
    "overlaps": [],
    "overlapFrames": 0,
    "loopClose": 0.0,
-   "hammerOverlap": {
-    "badFrames": [],
-    "badFrameCount": 0,
-    "rightCuffDepth": 0.0,
-    "rightCuffDepthAtRest": 0.09483667793370043
+   "hammerOverlap120Hz": {
+    "badSamples": 0,
+    "first": []
    }
   },
   "Slam": {
-   "frames": 45,
-   "fps": 30,
+   "frames": 101,
+   "fps": 60,
    "worst": {
-    "grip": 5.41555664600817e-15,
-    "hingeOffAxis": 1.2074182697257333e-06,
-    "wristBend": 27.54765114301625,
-    "wristTwist": 13.80231669990988,
-    "swivel": 68.00000000000004,
-    "jointGap": 4.2826412465193164e-15,
-    "kneeOffAxis": 1.7075472925031877e-06,
-    "solidDepth": 0.13763735701754398,
+    "grip": 0.07882489010660879,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "wristBend": 82.36393881132082,
+    "wristTwist": 179.6983983846108,
+    "swivel": 108.80246433712983,
+    "jointGap": 0.024603942084912067,
+    "kneeOffAxis": 10.285008549354913,
+    "solidDepth": 0.10998261880746929,
     "footDrift": 0.0,
-    "swivelStep": 14.500000000000025,
-    "spineStep": 16.500002157867492,
-    "ankle": 35.2071161925099,
-    "elbowMin": 30.859588963045045,
-    "elbowMax": 126.5275198052884,
-    "kneeMin": 0.0,
-    "kneeMax": 80.49987595442082,
-    "shaftCore": 2.488393372218154,
-    "ground": -0.024703599206531257,
-    "slideMin": 2.7199999999999993,
-    "slideMax": 8.050000000000004
+    "swivelStep": 95.69234493614492,
+    "spineStep": 9.657469267037834,
+    "ankle": 39.53735204204887,
+    "elbowMin": 12.057328233308384,
+    "elbowMax": 44.32004446827335,
+    "kneeMin": 7.119823330142651,
+    "kneeMax": 65.45155383934912,
+    "shaftCore": 4.579251491760086,
+    "ground": -0.0584962961789805,
+    "slideMin": 2.719999230864782,
+    "slideMax": 8.050001412322912
    },
    "where": {
-    "grip": 43,
-    "slideMin": 41,
-    "slideMax": 7,
-    "elbowMin": 36,
-    "elbowMax": 15,
-    "swivel": 30,
+    "grip": 7,
+    "slideMin": 0,
+    "slideMax": 76,
+    "elbowMin": 94,
+    "elbowMax": 41,
+    "hingeOffAxis": 37,
+    "wristBend": 26,
+    "wristTwist": 67,
+    "swivel": 36,
+    "jointGap": 43,
     "kneeMin": 0,
-    "shaftCore": 6,
-    "solidDepth": 41,
-    "ground": 15,
-    "wristBend": 15,
-    "wristTwist": 26,
-    "jointGap": 15,
-    "kneeMax": 23,
-    "ankle": 15,
-    "hingeOffAxis": 1,
-    "swivelStep": 4,
-    "spineStep": 21,
-    "kneeOffAxis": 2
+    "kneeMax": 52,
+    "kneeOffAxis": 52,
+    "ankle": 52,
+    "shaftCore": 74,
+    "solidDepth": 0,
+    "ground": 62,
+    "swivelStep": 40,
+    "spineStep": 43
    },
    "overlaps": [],
    "overlapFrames": 0,
-   "impactFaceZ": [
-    0.0,
-    0.0,
-    -4.440892098500626e-16,
-    -4.440892098500626e-16
-   ],
-   "impactFaceNormal": [
-    1.024076342698361e-18,
-    -1.1102230246251565e-16,
-    -1.0000000000000002
-   ],
-   "startVsIdle0": 0.0,
-   "endVsIdle0": 0.0,
-   "hammerOverlap": {
-    "badFrames": [],
-    "badFrameCount": 0,
-    "rightCuffDepth": 0.13763735701754398,
-    "rightCuffDepthAtRest": 0.09483667793370043
+   "hammerOverlap120Hz": {
+    "badSamples": 0,
+    "first": []
+   }
+  },
+  "Swing": {
+   "frames": 109,
+   "fps": 60,
+   "worst": {
+    "grip": 0.11357468376264498,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "wristBend": 62.122770287923366,
+    "wristTwist": 179.9487100224211,
+    "swivel": 103.92027383009382,
+    "jointGap": 0.2949525214464756,
+    "kneeOffAxis": 12.238088825917785,
+    "solidDepth": 0.27533101978885766,
+    "footDrift": 0.0,
+    "swivelStep": 12.51826108052196,
+    "spineStep": 13.750009910562513,
+    "ankle": 62.149754751486036,
+    "elbowMin": 12.000000000000048,
+    "elbowMax": 84.0458507395601,
+    "kneeMin": 4.018118373155204,
+    "kneeMax": 45.389305170010175,
+    "shaftCore": 2.363806113420681,
+    "ground": 0.0,
+    "slideMin": 2.719996895319867,
+    "slideMax": 8.050001286411947
+   },
+   "where": {
+    "grip": 23,
+    "slideMin": 12,
+    "slideMax": 30,
+    "elbowMin": 73,
+    "elbowMax": 7,
+    "hingeOffAxis": 17,
+    "wristBend": 22,
+    "wristTwist": 36,
+    "swivel": 49,
+    "jointGap": 82,
+    "kneeMin": 56,
+    "kneeMax": 22,
+    "kneeOffAxis": 24,
+    "ankle": 56,
+    "shaftCore": 50,
+    "solidDepth": 6,
+    "ground": 0,
+    "swivelStep": 8,
+    "spineStep": 43
+   },
+   "overlaps": [],
+   "overlapFrames": 0,
+   "hammerOverlap120Hz": {
+    "badSamples": 9,
+    "first": [
+     {
+      "at": "t=0.0417",
+      "pairs": {
+       "RightLowerArm": 208
+      }
+     },
+     {
+      "at": "t=0.0500",
+      "pairs": {
+       "RightLowerArm": 242
+      }
+     },
+     {
+      "at": "t=0.0583",
+      "pairs": {
+       "RightLowerArm": 252
+      }
+     },
+     {
+      "at": "t=0.0667",
+      "pairs": {
+       "RightLowerArm": 263
+      }
+     },
+     {
+      "at": "t=0.0750",
+      "pairs": {
+       "RightLowerArm": 305
+      }
+     },
+     {
+      "at": "t=0.0833",
+      "pairs": {
+       "RightLowerArm": 316
+      }
+     },
+     {
+      "at": "t=0.0917",
+      "pairs": {
+       "RightLowerArm": 346
+      }
+     },
+     {
+      "at": "t=0.1000",
+      "pairs": {
+       "RightLowerArm": 364
+      }
+     },
+     {
+      "at": "t=0.1083",
+      "pairs": {
+       "RightLowerArm": 382
+      }
+     }
+    ]
+   }
+  },
+  "Spin": {
+   "frames": 138,
+   "fps": 60,
+   "worst": {
+    "grip": 0.06414843645899364,
+    "hingeOffAxis": 1.9090959104164224e-06,
+    "wristBend": 60.68506964580472,
+    "wristTwist": 179.7976999953886,
+    "swivel": 103.9231813628788,
+    "jointGap": 0.038684135763279164,
+    "kneeOffAxis": 29.21348558512621,
+    "solidDepth": 0.326550778151788,
+    "footDrift": 0.0,
+    "swivelStep": 11.427529733161691,
+    "spineStep": 14.114682769516138,
+    "ankle": 176.55409737368763,
+    "elbowMin": 12.000000000000048,
+    "elbowMax": 86.54261463241166,
+    "kneeMin": -6.205053046616342,
+    "kneeMax": 54.296156072027145,
+    "shaftCore": 2.3712650701802755,
+    "ground": -0.027891819206564694,
+    "slideMin": 2.7199977499061205,
+    "slideMax": 8.050524439878684
+   },
+   "where": {
+    "grip": 28,
+    "slideMin": 22,
+    "slideMax": 65,
+    "elbowMin": 103,
+    "elbowMax": 7,
+    "hingeOffAxis": 68,
+    "wristBend": 18,
+    "wristTwist": 62,
+    "swivel": 77,
+    "jointGap": 69,
+    "kneeMin": 52,
+    "kneeMax": 21,
+    "kneeOffAxis": 22,
+    "ankle": 77,
+    "shaftCore": 63,
+    "solidDepth": 6,
+    "ground": 21,
+    "swivelStep": 26,
+    "spineStep": 65
+   },
+   "overlaps": [],
+   "overlapFrames": 0,
+   "hammerOverlap120Hz": {
+    "badSamples": 10,
+    "first": [
+     {
+      "at": "t=0.0417",
+      "pairs": {
+       "RightLowerArm": 208
+      }
+     },
+     {
+      "at": "t=0.0500",
+      "pairs": {
+       "RightLowerArm": 240
+      }
+     },
+     {
+      "at": "t=0.0583",
+      "pairs": {
+       "RightLowerArm": 260
+      }
+     },
+     {
+      "at": "t=0.0667",
+      "pairs": {
+       "RightLowerArm": 284
+      }
+     },
+     {
+      "at": "t=0.0750",
+      "pairs": {
+       "RightLowerArm": 308
+      }
+     },
+     {
+      "at": "t=0.0833",
+      "pairs": {
+       "RightLowerArm": 333
+      }
+     },
+     {
+      "at": "t=0.0917",
+      "pairs": {
+       "RightLowerArm": 389
+      }
+     },
+     {
+      "at": "t=0.1000",
+      "pairs": {
+       "RightLowerArm": 399
+      }
+     },
+     {
+      "at": "t=0.1083",
+      "pairs": {
+       "RightLowerArm": 403
+      }
+     },
+     {
+      "at": "t=0.1167",
+      "pairs": {
+       "RightLowerArm": 398
+      }
+     }
+    ]
+   }
+  },
+  "SwingSpin": {
+   "frames": 201,
+   "fps": 60,
+   "worst": {
+    "grip": 0.11357468376264498,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "wristBend": 62.122770287923366,
+    "wristTwist": 179.9487100224211,
+    "swivel": 103.9231813628788,
+    "jointGap": 0.41419851006577557,
+    "kneeOffAxis": 22.85199350886937,
+    "solidDepth": 0.27533101978885766,
+    "footDrift": 0.0,
+    "swivelStep": 12.51826108052196,
+    "spineStep": 14.114682769516138,
+    "ankle": 176.55409737368763,
+    "elbowMin": 12.000000000000048,
+    "elbowMax": 85.33488093083555,
+    "kneeMin": -6.205053046616342,
+    "kneeMax": 45.389305170010175,
+    "shaftCore": 2.363806113420681,
+    "ground": -0.0816491439772204,
+    "slideMin": 2.719996895319867,
+    "slideMax": 8.050524439878684
+   },
+   "where": {
+    "grip": 23,
+    "slideMin": 12,
+    "slideMax": 128,
+    "elbowMin": 73,
+    "elbowMax": 86,
+    "hingeOffAxis": 17,
+    "wristBend": 22,
+    "wristTwist": 36,
+    "swivel": 140,
+    "jointGap": 83,
+    "kneeMin": 115,
+    "kneeMax": 22,
+    "kneeOffAxis": 87,
+    "ankle": 140,
+    "shaftCore": 50,
+    "solidDepth": 6,
+    "ground": 85,
+    "swivelStep": 8,
+    "spineStep": 128
+   },
+   "overlaps": [],
+   "overlapFrames": 0,
+   "hammerOverlap120Hz": {
+    "badSamples": 9,
+    "first": [
+     {
+      "at": "t=0.0417",
+      "pairs": {
+       "RightLowerArm": 208
+      }
+     },
+     {
+      "at": "t=0.0500",
+      "pairs": {
+       "RightLowerArm": 242
+      }
+     },
+     {
+      "at": "t=0.0583",
+      "pairs": {
+       "RightLowerArm": 252
+      }
+     },
+     {
+      "at": "t=0.0667",
+      "pairs": {
+       "RightLowerArm": 263
+      }
+     },
+     {
+      "at": "t=0.0750",
+      "pairs": {
+       "RightLowerArm": 305
+      }
+     },
+     {
+      "at": "t=0.0833",
+      "pairs": {
+       "RightLowerArm": 316
+      }
+     },
+     {
+      "at": "t=0.0917",
+      "pairs": {
+       "RightLowerArm": 346
+      }
+     },
+     {
+      "at": "t=0.1000",
+      "pairs": {
+       "RightLowerArm": 364
+      }
+     },
+     {
+      "at": "t=0.1083",
+      "pairs": {
+       "RightLowerArm": 382
+      }
+     }
+    ]
+   }
+  },
+  "SpinSlam": {
+   "frames": 190,
+   "fps": 60,
+   "worst": {
+    "grip": 0.07341817703105952,
+    "hingeOffAxis": 1.9090959104164224e-06,
+    "wristBend": 82.36393881132082,
+    "wristTwist": 179.7976999953886,
+    "swivel": 108.80246433712928,
+    "jointGap": 0.038684135763279164,
+    "kneeOffAxis": 29.21348558512621,
+    "solidDepth": 0.326550778151788,
+    "footDrift": 0.0,
+    "swivelStep": 95.69234493614405,
+    "spineStep": 14.114682769516138,
+    "ankle": 176.55409737368763,
+    "elbowMin": 12.018754577335834,
+    "elbowMax": 86.54261463241166,
+    "kneeMin": -6.205053046616342,
+    "kneeMax": 65.45155383934912,
+    "shaftCore": 2.3712650701802755,
+    "ground": -0.058496296178980445,
+    "slideMin": 2.7199977499061205,
+    "slideMax": 8.050524439878684
+   },
+   "where": {
+    "grip": 130,
+    "slideMin": 22,
+    "slideMax": 65,
+    "elbowMin": 99,
+    "elbowMax": 7,
+    "hingeOffAxis": 68,
+    "wristBend": 115,
+    "wristTwist": 62,
+    "swivel": 125,
+    "jointGap": 69,
+    "kneeMin": 52,
+    "kneeMax": 141,
+    "kneeOffAxis": 22,
+    "ankle": 77,
+    "shaftCore": 63,
+    "solidDepth": 6,
+    "ground": 141,
+    "swivelStep": 129,
+    "spineStep": 65
+   },
+   "overlaps": [],
+   "overlapFrames": 0,
+   "hammerOverlap120Hz": {
+    "badSamples": 10,
+    "first": [
+     {
+      "at": "t=0.0417",
+      "pairs": {
+       "RightLowerArm": 208
+      }
+     },
+     {
+      "at": "t=0.0500",
+      "pairs": {
+       "RightLowerArm": 240
+      }
+     },
+     {
+      "at": "t=0.0583",
+      "pairs": {
+       "RightLowerArm": 260
+      }
+     },
+     {
+      "at": "t=0.0667",
+      "pairs": {
+       "RightLowerArm": 284
+      }
+     },
+     {
+      "at": "t=0.0750",
+      "pairs": {
+       "RightLowerArm": 308
+      }
+     },
+     {
+      "at": "t=0.0833",
+      "pairs": {
+       "RightLowerArm": 333
+      }
+     },
+     {
+      "at": "t=0.0917",
+      "pairs": {
+       "RightLowerArm": 389
+      }
+     },
+     {
+      "at": "t=0.1000",
+      "pairs": {
+       "RightLowerArm": 399
+      }
+     },
+     {
+      "at": "t=0.1083",
+      "pairs": {
+       "RightLowerArm": 403
+      }
+     },
+     {
+      "at": "t=0.1167",
+      "pairs": {
+       "RightLowerArm": 398
+      }
+     }
+    ]
+   }
+  },
+  "Hit": {
+   "frames": 37,
+   "fps": 60,
+   "worst": {
+    "grip": 0.004435323757313064,
+    "hingeOffAxis": 1.4787793334710982e-06,
+    "wristBend": 48.959803825990505,
+    "wristTwist": 80.89292748230216,
+    "swivel": 85.14797282843705,
+    "jointGap": 5.781703078345323e-05,
+    "kneeOffAxis": 2.8310940936356404,
+    "solidDepth": 0.10998223322062728,
+    "footDrift": 0.0,
+    "swivelStep": 1.6822868077725701,
+    "spineStep": 0.5062584304796388,
+    "ankle": 4.542312225120749,
+    "elbowMin": 12.057143331829257,
+    "elbowMax": 35.99240866073178,
+    "kneeMin": 7.119823330142651,
+    "kneeMax": 7.119823330142651,
+    "shaftCore": 6.434414374976156,
+    "ground": 0.0,
+    "slideMin": 2.7199981315841866,
+    "slideMax": 8.049999813650743
+   },
+   "where": {
+    "grip": 1,
+    "slideMin": 32,
+    "slideMax": 26,
+    "elbowMin": 26,
+    "elbowMax": 0,
+    "wristBend": 14,
+    "wristTwist": 0,
+    "swivel": 14,
+    "jointGap": 1,
+    "kneeMin": 0,
+    "kneeMax": 0,
+    "kneeOffAxis": 0,
+    "ankle": 0,
+    "shaftCore": 28,
+    "solidDepth": 0,
+    "ground": 0,
+    "swivelStep": 9,
+    "spineStep": 1,
+    "hingeOffAxis": 10
+   },
+   "overlaps": [],
+   "overlapFrames": 0,
+   "hammerOverlap120Hz": {
+    "badSamples": 0,
+    "first": []
+   }
+  },
+  "Death": {
+   "frames": 169,
+   "fps": 60,
+   "worst": {
+    "grip": 5.316553167549386,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "wristBend": 43.82481130163956,
+    "wristTwist": 80.89297715437972,
+    "swivel": 83.4756295523962,
+    "jointGap": 0.009888778666239792,
+    "kneeOffAxis": 29.203819988811674,
+    "solidDepth": 1.2114517247011494,
+    "footDrift": 0.0,
+    "swivelStep": 66.98821442979681,
+    "spineStep": 0.5873326384005734,
+    "ankle": 95.08908109954098,
+    "elbowMin": 12.057351444200055,
+    "elbowMax": 60.65388728226887,
+    "kneeMin": 7.119823330142651,
+    "kneeMax": 146.60231844176172,
+    "shaftCore": 0.5389416452094106,
+    "ground": -1.4346405285616877,
+    "slideMin": 1.8475946401711671,
+    "slideMax": 8.050000570036461
+   },
+   "where": {
+    "grip": 168,
+    "slideMin": 135,
+    "slideMax": 0,
+    "elbowMin": 0,
+    "elbowMax": 115,
+    "hingeOffAxis": 54,
+    "wristBend": 0,
+    "wristTwist": 0,
+    "swivel": 1,
+    "jointGap": 1,
+    "kneeMin": 0,
+    "kneeMax": 120,
+    "kneeOffAxis": 120,
+    "ankle": 120,
+    "shaftCore": 152,
+    "solidDepth": 160,
+    "ground": 136,
+    "swivelStep": 2,
+    "spineStep": 131
+   },
+   "overlaps": [],
+   "overlapFrames": 0,
+   "hammerOverlap120Hz": {
+    "badSamples": 328,
+    "first": [
+     {
+      "at": "t=0.0083",
+      "pairs": {
+       "RightLowerArm": 239
+      }
+     },
+     {
+      "at": "t=0.0167",
+      "pairs": {
+       "RightLowerArm": 276
+      }
+     },
+     {
+      "at": "t=0.0250",
+      "pairs": {
+       "RightLowerArm": 291
+      }
+     },
+     {
+      "at": "t=0.1000",
+      "pairs": {
+       "RightFoot": 13
+      }
+     },
+     {
+      "at": "t=0.1083",
+      "pairs": {
+       "RightFoot": 13
+      }
+     },
+     {
+      "at": "t=0.1167",
+      "pairs": {
+       "RightFoot": 19
+      }
+     },
+     {
+      "at": "t=0.1250",
+      "pairs": {
+       "RightFoot": 25
+      }
+     },
+     {
+      "at": "t=0.1333",
+      "pairs": {
+       "RightFoot": 26
+      }
+     },
+     {
+      "at": "t=0.1417",
+      "pairs": {
+       "RightLowerArm": 224,
+       "RightFoot": 39
+      }
+     },
+     {
+      "at": "t=0.1500",
+      "pairs": {
+       "RightLowerArm": 226,
+       "RightFoot": 43
+      }
+     },
+     {
+      "at": "t=0.1583",
+      "pairs": {
+       "RightLowerArm": 225,
+       "RightFoot": 49
+      }
+     },
+     {
+      "at": "t=0.1667",
+      "pairs": {
+       "RightLowerArm": 230,
+       "RightFoot": 72
+      }
+     }
+    ]
+   }
+  },
+  "ChargeStart": {
+   "frames": 37,
+   "fps": 60,
+   "worst": {
+    "grip": 0.028541455238767038,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "wristBend": 63.078638243277325,
+    "wristTwist": 80.89292748230216,
+    "swivel": 80.9479836762024,
+    "jointGap": 0.07515947725762975,
+    "kneeOffAxis": 47.2447302372637,
+    "solidDepth": 0.12564413911614136,
+    "footDrift": 0.0,
+    "swivelStep": 15.797982612773701,
+    "spineStep": 2.437965838604906,
+    "ankle": 72.10461925305705,
+    "elbowMin": 12.057414347791562,
+    "elbowMax": 129.99386034265413,
+    "kneeMin": 7.119823330142651,
+    "kneeMax": 115.07326676494051,
+    "shaftCore": 3.179345277552184,
+    "ground": -0.2276715623614144,
+    "slideMin": 2.7199977343104544,
+    "slideMax": 8.050001152401327
+   },
+   "where": {
+    "grip": 19,
+    "slideMin": 14,
+    "slideMax": 22,
+    "elbowMin": 0,
+    "elbowMax": 15,
+    "wristBend": 18,
+    "wristTwist": 0,
+    "swivel": 0,
+    "jointGap": 25,
+    "kneeMin": 0,
+    "kneeMax": 24,
+    "kneeOffAxis": 28,
+    "ankle": 18,
+    "shaftCore": 36,
+    "solidDepth": 3,
+    "ground": 18,
+    "hingeOffAxis": 18,
+    "swivelStep": 2,
+    "spineStep": 23
+   },
+   "overlaps": [],
+   "overlapFrames": 0,
+   "hammerOverlap120Hz": {
+    "badSamples": 0,
+    "first": []
+   }
+  },
+  "ChargeRun": {
+   "frames": 33,
+   "fps": 60,
+   "worst": {
+    "grip": 0.00029417408016227105,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "wristBend": 61.103087739079506,
+    "wristTwist": 50.99194233490209,
+    "swivel": 32.764829404628216,
+    "jointGap": 0.0655248209105635,
+    "kneeOffAxis": 22.810405043855514,
+    "solidDepth": 0.0,
+    "footDrift": 0.0,
+    "swivelStep": 3.1016985145584535,
+    "spineStep": 2.398683845685947,
+    "ankle": 65.10806755168566,
+    "elbowMin": 15.761099796190699,
+    "elbowMax": 129.5203218981831,
+    "kneeMin": 43.58326204367444,
+    "kneeMax": 129.73881851494616,
+    "shaftCore": 2.891940856932065,
+    "ground": -0.2103461211006059,
+    "slideMin": 2.7199992153510353,
+    "slideMax": 8.049999504489925
+   },
+   "where": {
+    "grip": 5,
+    "slideMin": 28,
+    "slideMax": 4,
+    "elbowMin": 14,
+    "elbowMax": 17,
+    "wristBend": 18,
+    "wristTwist": 10,
+    "swivel": 22,
+    "jointGap": 13,
+    "kneeMin": 16,
+    "kneeMax": 4,
+    "kneeOffAxis": 8,
+    "ankle": 8,
+    "shaftCore": 18,
+    "ground": 8,
+    "swivelStep": 15,
+    "spineStep": 11,
+    "hingeOffAxis": 3
+   },
+   "overlaps": [],
+   "overlapFrames": 0,
+   "loopClose": 1.3877787807814457e-17,
+   "hammerOverlap120Hz": {
+    "badSamples": 0,
+    "first": []
    }
   }
  },
@@ -212,364 +927,2175 @@
   "Idle": {
    "samples": 361,
    "worst": {
-    "grip": 5.2948789295744996e-05,
+    "grip": 0.0011939699670576738,
     "hingeOffAxis": 1.7075472925031877e-06,
-    "kneeOffAxis": 1.7075472925031877e-06,
-    "wristBend": 1.32320062361756,
-    "wristTwist": 1.003791403866046,
-    "solidDepth": 0.10164699769487573,
-    "elbowMin": 54.55600756833175,
-    "elbowMax": 65.38233444540414,
-    "shaftCore": 3.8046775912368256,
-    "jointGap": 5.773159728050814e-15,
-    "kneeMin": 0.0,
-    "slideMin": 2.719988356524967,
-    "slideMax": 8.050003029107977
+    "kneeOffAxis": 2.8310940936360267,
+    "wristBend": 43.82574151293583,
+    "wristTwist": 81.5327571321009,
+    "solidDepth": 0.1166711093469961,
+    "elbowMin": 12.021721773950684,
+    "elbowMax": 42.26595433224386,
+    "shaftCore": 6.3110506318443225,
+    "jointGap": 1.1083494933222657e-06,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.719999406866365,
+    "slideMax": 8.050005201214725
    },
    "where": {
-    "grip": "t=0.5167",
-    "slideMin": "t=1.5667",
-    "slideMax": "t=0.1500",
-    "elbowMin": "t=0.2917",
-    "elbowMax": "t=1.4167",
+    "grip": "t=1.6500",
+    "slideMin": "t=0.0000",
+    "slideMax": "t=2.9833",
+    "kneeOffAxis": "t=0.5083",
+    "wristBend": "t=2.9583",
+    "wristTwist": "t=0.4167",
+    "elbowMin": "t=2.3750",
+    "elbowMax": "t=1.2917",
     "kneeMin": "t=0.0000",
-    "shaftCore": "t=0.0000",
-    "solidDepth": "t=1.3333",
-    "kneeOffAxis": "t=0.2917",
-    "wristBend": "t=1.4167",
-    "wristTwist": "t=1.2917",
-    "jointGap": "t=1.2500",
-    "hingeOffAxis": "t=0.1500"
+    "jointGap": "t=0.0000",
+    "shaftCore": "t=0.3750",
+    "solidDepth": "t=1.2333",
+    "hingeOffAxis": "t=1.8167"
    },
    "overlaps": [],
-   "overlapSamples": 0,
-   "hammerOverlapBad": [],
-   "hammerOverlapBadCount": 0
+   "overlapSamples": 0
   },
   "Walk": {
    "samples": 81,
    "worst": {
-    "grip": 0.004136383761672427,
+    "grip": 0.003918413759986082,
     "hingeOffAxis": 1.4787793334710982e-06,
     "kneeOffAxis": 1.4787793334710982e-06,
-    "wristBend": 12.811362768111781,
-    "wristTwist": 6.249892316580116,
-    "solidDepth": 0.00258764042652615,
-    "elbowMin": 64.52987895168397,
-    "elbowMax": 82.65479713312149,
-    "shaftCore": 5.776184748212565,
-    "jointGap": 6.605593752270663e-15,
+    "wristBend": 48.308994744315534,
+    "wristTwist": 55.03391534792301,
+    "solidDepth": 0.032094514596676005,
+    "elbowMin": 65.84688653065355,
+    "elbowMax": 84.63489818939054,
+    "shaftCore": 5.6695617218979475,
+    "jointGap": 6.466036496704424e-15,
     "kneeMin": 18.311271259238254,
-    "slideMin": 2.718988179906606,
-    "slideMax": 8.050878123577586
+    "slideMin": 2.719084078860224,
+    "slideMax": 8.050080441816647
    },
    "where": {
     "grip": "t=0.6083",
-    "slideMin": "t=0.6000",
-    "slideMax": "t=0.2667",
+    "slideMin": "t=0.1500",
+    "slideMax": "t=0.0167",
     "kneeOffAxis": "t=0.3250",
-    "wristBend": "t=0.3750",
-    "wristTwist": "t=0.5000",
+    "wristBend": "t=0.2083",
+    "wristTwist": "t=0.1667",
     "elbowMin": "t=0.5000",
     "elbowMax": "t=0.3750",
     "kneeMin": "t=0.3333",
-    "jointGap": "t=0.1250",
+    "jointGap": "t=0.5833",
     "shaftCore": "t=0.3917",
-    "hingeOffAxis": "t=0.4750",
-    "solidDepth": "t=0.4917"
+    "hingeOffAxis": "t=0.2250",
+    "solidDepth": "t=0.5000"
    },
    "overlaps": [],
-   "overlapSamples": 0,
-   "hammerOverlapBad": [],
-   "hammerOverlapBadCount": 0
+   "overlapSamples": 0
   },
   "Slam": {
-   "samples": 177,
+   "samples": 201,
    "worst": {
-    "grip": 0.0530130084747178,
-    "hingeOffAxis": 2.091309789151873e-06,
-    "kneeOffAxis": 1.7075472925031877e-06,
-    "wristBend": 27.547651143016235,
-    "wristTwist": 13.80231669990988,
-    "solidDepth": 0.14145388111805257,
-    "elbowMin": 30.85958896304507,
-    "elbowMax": 126.5275198052885,
-    "shaftCore": 2.398681757345165,
-    "jointGap": 6.936895214610187e-15,
-    "kneeMin": 0.0,
-    "slideMin": 2.7159634276695552,
-    "slideMax": 8.050000000000008
+    "grip": 0.21524692159313863,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 10.28500854935488,
+    "wristBend": 82.36393511887998,
+    "wristTwist": 179.92668777726828,
+    "solidDepth": 0.11878961440666091,
+    "elbowMin": 12.057328233308445,
+    "elbowMax": 44.32004446827342,
+    "shaftCore": 4.579250426509115,
+    "jointGap": 0.004575313933972145,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.6684191297986346,
+    "slideMax": 8.050199086371594
    },
    "where": {
-    "grip": "t=0.1833",
-    "slideMin": "t=1.3500",
-    "slideMax": "t=0.3667",
-    "elbowMin": "t=1.2000",
-    "elbowMax": "t=0.5000",
+    "grip": "t=0.6917",
+    "slideMin": "t=0.1750",
+    "slideMax": "t=0.5750",
+    "hingeOffAxis": "t=0.0083",
+    "kneeOffAxis": "t=0.8667",
+    "wristBend": "t=0.4333",
+    "wristTwist": "t=0.9750",
+    "elbowMin": "t=1.5667",
+    "elbowMax": "t=0.6833",
     "kneeMin": "t=0.0000",
-    "shaftCore": "t=0.2167",
-    "solidDepth": "t=1.3833",
-    "kneeOffAxis": "t=0.1167",
-    "wristBend": "t=0.5000",
-    "wristTwist": "t=0.8667",
-    "jointGap": "t=0.5000",
-    "hingeOffAxis": "t=1.0000"
+    "jointGap": "t=0.2167",
+    "shaftCore": "t=1.2333",
+    "solidDepth": "t=0.0083"
    },
    "overlaps": [],
-   "overlapSamples": 0,
-   "hammerOverlapBad": [],
-   "hammerOverlapBadCount": 0
+   "overlapSamples": 0
   },
-  "Idle->Slam (0.12 s)": {
+  "Swing": {
+   "samples": 217,
+   "worst": {
+    "grip": 0.11357463997046723,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 12.238088825917785,
+    "wristBend": 62.1227714613697,
+    "wristTwist": 179.9487100224211,
+    "solidDepth": 0.27871554115962294,
+    "elbowMin": 12.000000000000048,
+    "elbowMax": 84.04585073956017,
+    "shaftCore": 2.182818418928755,
+    "jointGap": 0.29495252144647593,
+    "kneeMin": 4.018118373155204,
+    "slideMin": 2.69029936571995,
+    "slideMax": 8.051133368932849
+   },
+   "where": {
+    "grip": "t=0.3833",
+    "slideMin": "t=0.1083",
+    "slideMax": "t=0.1417",
+    "hingeOffAxis": "t=0.6417",
+    "kneeOffAxis": "t=0.4000",
+    "wristBend": "t=0.3667",
+    "wristTwist": "t=0.6000",
+    "elbowMin": "t=1.1167",
+    "elbowMax": "t=0.1167",
+    "kneeMin": "t=0.9333",
+    "jointGap": "t=1.3667",
+    "shaftCore": "t=0.7583",
+    "solidDepth": "t=0.1083"
+   },
+   "overlaps": [],
+   "overlapSamples": 0
+  },
+  "Spin": {
+   "samples": 275,
+   "worst": {
+    "grip": 0.12281208156096396,
+    "hingeOffAxis": 1.4787793334710982e-06,
+    "kneeOffAxis": 29.21348558512621,
+    "wristBend": 60.685070991295994,
+    "wristTwist": 179.91314439897872,
+    "solidDepth": 0.36488823943817583,
+    "elbowMin": 12.000000000000048,
+    "elbowMax": 86.54261463241168,
+    "shaftCore": 2.2728927925014335,
+    "jointGap": 0.03868413576327927,
+    "kneeMin": -6.205053046616342,
+    "slideMin": 2.684183751510595,
+    "slideMax": 8.05052503905763
+   },
+   "where": {
+    "grip": "t=0.1250",
+    "slideMin": "t=0.1250",
+    "slideMax": "t=1.0833",
+    "hingeOffAxis": "t=0.1083",
+    "kneeOffAxis": "t=0.3667",
+    "wristBend": "t=0.3000",
+    "wristTwist": "t=1.0417",
+    "elbowMin": "t=1.7917",
+    "elbowMax": "t=0.1167",
+    "kneeMin": "t=0.8667",
+    "jointGap": "t=1.1500",
+    "shaftCore": "t=1.0583",
+    "solidDepth": "t=0.1083"
+   },
+   "overlaps": [],
+   "overlapSamples": 0
+  },
+  "SwingSpin": {
+   "samples": 401,
+   "worst": {
+    "grip": 0.11357463997046723,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 22.851993508869384,
+    "wristBend": 62.1227714613697,
+    "wristTwist": 179.9487100224211,
+    "solidDepth": 0.27871554115962294,
+    "elbowMin": 12.000000000000048,
+    "elbowMax": 85.33488093083547,
+    "shaftCore": 2.182818418928755,
+    "jointGap": 0.41419851006577585,
+    "kneeMin": -6.205053046616342,
+    "slideMin": 2.69029936571995,
+    "slideMax": 8.051133368932849
+   },
+   "where": {
+    "grip": "t=0.3833",
+    "slideMin": "t=0.1083",
+    "slideMax": "t=0.1417",
+    "hingeOffAxis": "t=0.6417",
+    "kneeOffAxis": "t=1.4500",
+    "wristBend": "t=0.3667",
+    "wristTwist": "t=0.6000",
+    "elbowMin": "t=1.1167",
+    "elbowMax": "t=1.4333",
+    "kneeMin": "t=1.9167",
+    "jointGap": "t=1.3833",
+    "shaftCore": "t=0.7583",
+    "solidDepth": "t=0.1083"
+   },
+   "overlaps": [],
+   "overlapSamples": 0
+  },
+  "SpinSlam": {
+   "samples": 379,
+   "worst": {
+    "grip": 0.21524692159314146,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 29.21348558512621,
+    "wristBend": 82.36393511887998,
+    "wristTwist": 179.92668777726817,
+    "solidDepth": 0.36488823943817583,
+    "elbowMin": 12.018754577335741,
+    "elbowMax": 86.54261463241168,
+    "shaftCore": 2.2728927925014335,
+    "jointGap": 0.03868413576327927,
+    "kneeMin": -6.205053046616342,
+    "slideMin": 2.684183751510595,
+    "slideMax": 8.05052503905763
+   },
+   "where": {
+    "grip": "t=2.1750",
+    "slideMin": "t=0.1250",
+    "slideMax": "t=1.0833",
+    "hingeOffAxis": "t=1.7750",
+    "kneeOffAxis": "t=0.3667",
+    "wristBend": "t=1.9167",
+    "wristTwist": "t=2.4583",
+    "elbowMin": "t=1.6583",
+    "elbowMax": "t=0.1167",
+    "kneeMin": "t=0.8667",
+    "jointGap": "t=1.1500",
+    "shaftCore": "t=1.0583",
+    "solidDepth": "t=0.1083"
+   },
+   "overlaps": [],
+   "overlapSamples": 0
+  },
+  "Hit": {
+   "samples": 73,
+   "worst": {
+    "grip": 0.00443531914906354,
+    "hingeOffAxis": 1.4787793334710982e-06,
+    "kneeOffAxis": 2.8310940936356404,
+    "wristBend": 48.9598029321892,
+    "wristTwist": 80.89292748230216,
+    "solidDepth": 0.10998153907729646,
+    "elbowMin": 12.057143331829318,
+    "elbowMax": 35.99240866073176,
+    "shaftCore": 6.434414375539478,
+    "jointGap": 1.1083494933222657e-06,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.7199035048804827,
+    "slideMax": 8.05000110473916
+   },
+   "where": {
+    "grip": "t=0.0167",
+    "slideMin": "t=0.0250",
+    "slideMax": "t=0.5250",
+    "kneeOffAxis": "t=0.0000",
+    "wristBend": "t=0.2333",
+    "wristTwist": "t=0.0000",
+    "elbowMin": "t=0.4333",
+    "elbowMax": "t=0.0000",
+    "kneeMin": "t=0.0000",
+    "jointGap": "t=0.0000",
+    "shaftCore": "t=0.4667",
+    "solidDepth": "t=0.0000",
+    "hingeOffAxis": "t=0.1417"
+   },
+   "overlaps": [],
+   "overlapSamples": 0
+  },
+  "Death": {
+   "samples": 337,
+   "worst": {
+    "grip": 5.316553167549381,
+    "hingeOffAxis": 1.4787793334710982e-06,
+    "kneeOffAxis": 29.20381998881166,
+    "wristBend": 43.82481130163954,
+    "wristTwist": 80.89297715437975,
+    "solidDepth": 1.2114517247011485,
+    "elbowMin": 12.057351444199965,
+    "elbowMax": 60.65388728226893,
+    "shaftCore": 0.5389416452094082,
+    "jointGap": 0.009888778666239923,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 1.8475876080220348,
+    "slideMax": 8.078655652702837
+   },
+   "where": {
+    "grip": "t=2.8000",
+    "slideMin": "t=2.2583",
+    "slideMax": "t=0.0250",
+    "kneeOffAxis": "t=2.0000",
+    "wristBend": "t=0.0000",
+    "wristTwist": "t=0.0000",
+    "elbowMin": "t=0.0000",
+    "elbowMax": "t=1.0833",
+    "kneeMin": "t=0.0000",
+    "jointGap": "t=0.0167",
+    "shaftCore": "t=2.5333",
+    "solidDepth": "t=2.6667",
+    "hingeOffAxis": "t=1.9333"
+   },
+   "overlaps": [],
+   "overlapSamples": 0
+  },
+  "ChargeStart": {
+   "samples": 73,
+   "worst": {
+    "grip": 0.028541444407361012,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 47.24473023726371,
+    "wristBend": 63.078636625311105,
+    "wristTwist": 80.89292748230216,
+    "solidDepth": 0.12564458568429004,
+    "elbowMin": 12.057414347791532,
+    "elbowMax": 129.99386034265407,
+    "shaftCore": 3.1793452264649793,
+    "jointGap": 0.07515947725762978,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.7151945720166952,
+    "slideMax": 8.054393784513236
+   },
+   "where": {
+    "grip": "t=0.3167",
+    "slideMin": "t=0.2083",
+    "slideMax": "t=0.3250",
+    "kneeOffAxis": "t=0.4667",
+    "wristBend": "t=0.3000",
+    "wristTwist": "t=0.0000",
+    "elbowMin": "t=0.0000",
+    "elbowMax": "t=0.2500",
+    "kneeMin": "t=0.0000",
+    "jointGap": "t=0.4167",
+    "shaftCore": "t=0.6000",
+    "solidDepth": "t=0.0500",
+    "hingeOffAxis": "t=0.4000"
+   },
+   "overlaps": [],
+   "overlapSamples": 0
+  },
+  "ChargeRun": {
+   "samples": 65,
+   "worst": {
+    "grip": 0.0013673800530168516,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 22.81040504385548,
+    "wristBend": 61.10308883966822,
+    "wristTwist": 50.99194233490209,
+    "solidDepth": 0.0,
+    "elbowMin": 15.761099796190605,
+    "elbowMax": 129.52032189818314,
+    "shaftCore": 2.8919408096579198,
+    "jointGap": 0.0655248209105635,
+    "kneeMin": 43.58326204367444,
+    "slideMin": 2.719558731652468,
+    "slideMax": 8.05023531055196
+   },
+   "where": {
+    "grip": "t=0.2250",
+    "slideMin": "t=0.5250",
+    "slideMax": "t=0.4583",
+    "kneeOffAxis": "t=0.1333",
+    "wristBend": "t=0.3000",
+    "wristTwist": "t=0.1667",
+    "elbowMin": "t=0.2333",
+    "elbowMax": "t=0.2833",
+    "kneeMin": "t=0.2667",
+    "jointGap": "t=0.2167",
+    "shaftCore": "t=0.3000",
+    "hingeOffAxis": "t=0.4833"
+   },
+   "overlaps": [],
+   "overlapSamples": 0
+  },
+  "Idle->Slam (0.12 s, Idle held)": {
    "samples": 180,
    "worst": {
-    "grip": 0.053116596517143615,
-    "hingeOffAxis": 1.4787793334710982e-06,
-    "kneeOffAxis": 1.4787793334710982e-06,
-    "wristBend": 11.850495870889405,
-    "wristTwist": 10.717590312887438,
-    "solidDepth": 0.10541506959168445,
-    "elbowMin": 54.70186555228907,
-    "elbowMax": 78.45807863280892,
-    "shaftCore": 3.4562789239214267,
-    "jointGap": 5.773159728050814e-15,
-    "kneeMin": 0.0,
-    "slideMin": 2.7199999999999953,
-    "slideMax": 8.055898864350471
+    "grip": 0.08148040655599471,
+    "hingeOffAxis": 2.091309789151873e-06,
+    "kneeOffAxis": 2.831094093635898,
+    "wristBend": 47.06594437466057,
+    "wristTwist": 83.59545090276086,
+    "solidDepth": 0.1193523148955189,
+    "elbowMin": 12.021721773950777,
+    "elbowMax": 42.23274356402552,
+    "shaftCore": 6.347978402287152,
+    "jointGap": 1.1083494933222657e-06,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.719841263493001,
+    "slideMax": 8.05016325480368
    },
    "where": {
-    "grip": "src@1.250+0.1083",
-    "slideMin": "src@2.000+0.0000",
-    "slideMax": "src@1.250+0.0667",
-    "elbowMin": "src@0.250+0.0000",
+    "grip": "src@0.500+0.1167",
+    "slideMin": "src@0.000+0.0333",
+    "slideMax": "src@0.500+0.0250",
+    "kneeOffAxis": "src@0.250+0.1083",
+    "wristBend": "src@0.000+0.1167",
+    "wristTwist": "src@0.250+0.1167",
+    "elbowMin": "src@0.500+0.0000",
+    "elbowMax": "src@1.250+0.0000",
+    "kneeMin": "src@0.000+0.0000",
+    "jointGap": "src@0.000+0.0000",
+    "shaftCore": "src@0.500+0.0000",
+    "solidDepth": "src@1.250+0.0167",
+    "hingeOffAxis": "src@2.250+0.0000"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [],
+   "hammerOverlapBadCount": 0
+  },
+  "Walk->Slam (0.12 s, Walk held)": {
+   "samples": 240,
+   "worst": {
+    "grip": 0.37359643050056407,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 2.7821007952789536,
+    "wristBend": 48.30899474431551,
+    "wristTwist": 82.86636292523008,
+    "solidDepth": 0.08310767714741574,
+    "elbowMin": 28.53418464877327,
+    "elbowMax": 84.63489818939054,
+    "shaftCore": 5.671619244256393,
+    "jointGap": 1.0775620074505622e-06,
+    "kneeMin": 7.430818131552144,
+    "slideMin": 2.7054270982203867,
+    "slideMax": 8.049999994212689
+   },
+   "where": {
+    "grip": "src@0.333+0.0667",
+    "slideMin": "src@0.500+0.1083",
+    "slideMax": "src@0.167+0.0000",
+    "wristBend": "src@0.208+0.0000",
+    "wristTwist": "src@0.167+0.1167",
+    "elbowMin": "src@0.500+0.1167",
+    "elbowMax": "src@0.375+0.0000",
+    "kneeMin": "src@0.333+0.1167",
+    "jointGap": "src@0.083+0.1167",
+    "kneeOffAxis": "src@0.042+0.1167",
+    "shaftCore": "src@0.375+0.0000",
+    "hingeOffAxis": "src@0.125+0.1083",
+    "solidDepth": "src@0.500+0.0333"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [],
+   "hammerOverlapBadCount": 0
+  },
+  "Idle->Swing (0.12 s, Idle held)": {
+   "samples": 180,
+   "worst": {
+    "grip": 0.12367261199113411,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 2.831094093635898,
+    "wristBend": 53.08234092519811,
+    "wristTwist": 83.0221304801301,
+    "solidDepth": 0.30132751680048764,
+    "elbowMin": 12.021721773950777,
+    "elbowMax": 82.88437554023974,
+    "shaftCore": 5.985099218675919,
+    "jointGap": 1.1083494933222657e-06,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.6796120285901988,
+    "slideMax": 8.060496566452057
+   },
+   "where": {
+    "grip": "src@0.000+0.1083",
+    "slideMin": "src@0.000+0.1083",
+    "slideMax": "src@1.250+0.1000",
+    "kneeOffAxis": "src@0.250+0.1083",
+    "wristBend": "src@0.000+0.1167",
+    "wristTwist": "src@0.250+0.1167",
+    "elbowMin": "src@0.500+0.0000",
     "elbowMax": "src@1.250+0.1167",
     "kneeMin": "src@0.000+0.0000",
-    "shaftCore": "src@1.500+0.1167",
-    "solidDepth": "src@1.000+0.0083",
-    "wristBend": "src@1.250+0.1167",
-    "wristTwist": "src@1.000+0.1167",
-    "jointGap": "src@1.250+0.0000",
-    "hingeOffAxis": "src@0.500+0.0250",
-    "kneeOffAxis": "src@0.000+0.0583"
-   },
-   "overlaps": [],
-   "overlapSamples": 0,
-   "hammerOverlapBad": [],
-   "hammerOverlapBadCount": 0
-  },
-  "Slam->Idle (0.12 s, Slam held)": {
-   "samples": 15,
-   "worst": {
-    "grip": 8.915164628863889e-05,
-    "hingeOffAxis": 1.2074182697257333e-06,
-    "kneeOffAxis": 1.4787793334710982e-06,
-    "wristBend": 0.3598028199440938,
-    "wristTwist": 0.25901266866998185,
-    "solidDepth": 0.09483667793370043,
-    "elbowMin": 55.543586661017116,
-    "elbowMax": 60.65388728226878,
-    "shaftCore": 3.8046775912368256,
-    "jointGap": 3.5803885686941694e-15,
-    "kneeMin": 0.0,
-    "slideMin": 2.719998983358591,
-    "slideMax": 8.04999988100047
-   },
-   "where": {
-    "grip": "src@1.467+0.0917",
-    "slideMin": "src@1.467+0.0417",
-    "slideMax": "src@1.467+0.0000",
-    "elbowMin": "src@1.467+0.1167",
-    "elbowMax": "src@1.467+0.0000",
-    "kneeMin": "src@1.467+0.0000",
-    "shaftCore": "src@1.467+0.0000",
-    "solidDepth": "src@1.467+0.0000",
-    "kneeOffAxis": "src@1.467+0.1000",
-    "wristBend": "src@1.467+0.1167",
-    "wristTwist": "src@1.467+0.1167",
-    "jointGap": "src@1.467+0.1167",
-    "hingeOffAxis": "src@1.467+0.0500"
-   },
-   "overlaps": [],
-   "overlapSamples": 0,
-   "hammerOverlapBad": [],
-   "hammerOverlapBadCount": 0
-  },
-  "Slam->Idle (0.12 s, Slam playing)": {
-   "samples": 15,
-   "worst": {
-    "grip": 0.004886178053102626,
-    "hingeOffAxis": 1.4787793334710982e-06,
-    "kneeOffAxis": 1.2074182697257333e-06,
-    "wristBend": 3.57200881504083,
-    "wristTwist": 1.3363109706867249,
-    "solidDepth": 0.1369935735552077,
-    "elbowMin": 55.545326930520496,
-    "elbowMax": 66.27577564502108,
-    "shaftCore": 3.8116968436246355,
-    "jointGap": 3.5803885686941694e-15,
-    "kneeMin": 7.971979721378148,
-    "slideMin": 2.712163783608503,
-    "slideMax": 8.049990120808122
-   },
-   "where": {
-    "grip": "src@1.347+0.0333",
-    "slideMin": "src@1.347+0.0333",
-    "slideMax": "src@1.347+0.1167",
-    "wristBend": "src@1.347+0.0000",
-    "wristTwist": "src@1.347+0.0000",
-    "elbowMin": "src@1.347+0.1167",
-    "elbowMax": "src@1.347+0.0000",
-    "kneeMin": "src@1.347+0.1083",
-    "jointGap": "src@1.347+0.1167",
-    "shaftCore": "src@1.347+0.1167",
-    "solidDepth": "src@1.347+0.0250",
-    "kneeOffAxis": "src@1.347+0.0333",
-    "hingeOffAxis": "src@1.347+0.0583"
-   },
-   "overlaps": [],
-   "overlapSamples": 0,
-   "hammerOverlapBad": [],
-   "hammerOverlapBadCount": 0
-  },
-  "Walk->Slam (0.12 s, information)": {
-   "samples": 120,
-   "worst": {
-    "grip": 0.1236856083343278,
-    "hingeOffAxis": 1.7075472925031877e-06,
-    "kneeOffAxis": 1.9090959104164224e-06,
-    "wristBend": 12.797039983057019,
-    "wristTwist": 10.67572299998227,
-    "solidDepth": 0.07406041199092961,
-    "elbowMin": 58.965292064090484,
-    "elbowMax": 81.95615539465874,
-    "shaftCore": 3.480834246568036,
-    "jointGap": 4.970030894746323e-15,
-    "kneeMin": 18.311271259238225,
-    "slideMin": 2.6866066248569345,
-    "slideMax": 8.057979138531376
-   },
-   "where": {
-    "grip": "src@0.083+0.0500",
-    "slideMin": "src@0.583+0.0167",
-    "slideMax": "src@0.000+0.1000",
-    "wristBend": "src@0.417+0.0000",
-    "wristTwist": "src@0.583+0.1167",
-    "elbowMin": "src@0.000+0.1167",
-    "elbowMax": "src@0.333+0.0000",
-    "kneeMin": "src@0.333+0.0000",
-    "jointGap": "src@0.083+0.0333",
-    "kneeOffAxis": "src@0.500+0.1083",
-    "shaftCore": "src@0.250+0.1167",
-    "hingeOffAxis": "src@0.417+0.0417",
-    "solidDepth": "src@0.500+0.0250"
+    "jointGap": "src@0.000+0.0000",
+    "shaftCore": "src@0.250+0.1000",
+    "solidDepth": "src@0.000+0.1083",
+    "hingeOffAxis": "src@0.750+0.0833"
    },
    "overlaps": [],
    "overlapSamples": 0,
    "hammerOverlapBad": [
     {
-     "at": "src@0.500+0.0083",
+     "at": "src@0.000+0.0667",
      "pairs": {
-      "RightFoot": 32
+      "RightLowerArm": 231
      }
     },
     {
-     "at": "src@0.500+0.0167",
+     "at": "src@0.000+0.0750",
      "pairs": {
-      "RightFoot": 40
+      "RightLowerArm": 266
      }
     },
     {
-     "at": "src@0.500+0.0250",
+     "at": "src@0.000+0.0833",
      "pairs": {
-      "RightFoot": 36
+      "RightLowerArm": 306
      }
     },
     {
-     "at": "src@0.500+0.0333",
+     "at": "src@0.000+0.0917",
      "pairs": {
-      "RightFoot": 28
+      "RightLowerArm": 336
+     }
+    },
+    {
+     "at": "src@0.000+0.1000",
+     "pairs": {
+      "RightLowerArm": 353
+     }
+    },
+    {
+     "at": "src@0.000+0.1083",
+     "pairs": {
+      "RightLowerArm": 400
+     }
+    },
+    {
+     "at": "src@0.250+0.0583",
+     "pairs": {
+      "RightLowerArm": 193
+     }
+    },
+    {
+     "at": "src@0.250+0.0667",
+     "pairs": {
+      "RightLowerArm": 218
+     }
+    },
+    {
+     "at": "src@0.250+0.0750",
+     "pairs": {
+      "RightLowerArm": 260
+     }
+    },
+    {
+     "at": "src@0.250+0.0833",
+     "pairs": {
+      "RightLowerArm": 303
+     }
+    },
+    {
+     "at": "src@0.250+0.0917",
+     "pairs": {
+      "RightLowerArm": 334
+     }
+    },
+    {
+     "at": "src@0.250+0.1000",
+     "pairs": {
+      "RightLowerArm": 351
      }
     }
    ],
-   "hammerOverlapBadCount": 4
+   "hammerOverlapBadCount": 74
+  },
+  "Walk->Swing (0.12 s, Walk held)": {
+   "samples": 240,
+   "worst": {
+    "grip": 0.2875270787494815,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 2.7821007952789536,
+    "wristBend": 53.35750717918669,
+    "wristTwist": 82.27564607371156,
+    "solidDepth": 0.27672814249505584,
+    "elbowMin": 47.4319840907099,
+    "elbowMax": 84.63489818939057,
+    "shaftCore": 5.671619244256393,
+    "jointGap": 1.0775620074505622e-06,
+    "kneeMin": 7.430818131552144,
+    "slideMin": 2.695182441260496,
+    "slideMax": 8.054640171957278
+   },
+   "where": {
+    "grip": "src@0.333+0.0417",
+    "slideMin": "src@0.458+0.1083",
+    "slideMax": "src@0.083+0.1167",
+    "wristBend": "src@0.208+0.1167",
+    "wristTwist": "src@0.167+0.1167",
+    "elbowMin": "src@0.500+0.1000",
+    "elbowMax": "src@0.375+0.0000",
+    "kneeMin": "src@0.333+0.1167",
+    "jointGap": "src@0.083+0.1167",
+    "kneeOffAxis": "src@0.042+0.1167",
+    "shaftCore": "src@0.375+0.0000",
+    "hingeOffAxis": "src@0.208+0.0333",
+    "solidDepth": "src@0.500+0.1000"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [
+    {
+     "at": "src@0.000+0.0833",
+     "pairs": {
+      "RightLowerArm": 213
+     }
+    },
+    {
+     "at": "src@0.000+0.0917",
+     "pairs": {
+      "RightLowerArm": 270
+     }
+    },
+    {
+     "at": "src@0.000+0.1000",
+     "pairs": {
+      "RightLowerArm": 304
+     }
+    },
+    {
+     "at": "src@0.000+0.1083",
+     "pairs": {
+      "RightLowerArm": 347
+     }
+    },
+    {
+     "at": "src@0.042+0.0917",
+     "pairs": {
+      "RightLowerArm": 256
+     }
+    },
+    {
+     "at": "src@0.042+0.1000",
+     "pairs": {
+      "RightLowerArm": 293
+     }
+    },
+    {
+     "at": "src@0.042+0.1083",
+     "pairs": {
+      "RightLowerArm": 343
+     }
+    },
+    {
+     "at": "src@0.083+0.0917",
+     "pairs": {
+      "RightLowerArm": 252
+     }
+    },
+    {
+     "at": "src@0.083+0.1000",
+     "pairs": {
+      "RightLowerArm": 301
+     }
+    },
+    {
+     "at": "src@0.083+0.1083",
+     "pairs": {
+      "RightLowerArm": 338
+     }
+    },
+    {
+     "at": "src@0.125+0.0833",
+     "pairs": {
+      "RightLowerArm": 210
+     }
+    },
+    {
+     "at": "src@0.125+0.0917",
+     "pairs": {
+      "RightLowerArm": 255
+     }
+    }
+   ],
+   "hammerOverlapBadCount": 77
+  },
+  "Idle->Spin (0.12 s, Idle held)": {
+   "samples": 180,
+   "worst": {
+    "grip": 0.0846773956147203,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 2.831094093635898,
+    "wristBend": 48.69608259686029,
+    "wristTwist": 81.3953278745571,
+    "solidDepth": 0.37523527603646945,
+    "elbowMin": 12.021721773950777,
+    "elbowMax": 85.31178488051206,
+    "shaftCore": 5.891423051107113,
+    "jointGap": 1.1083494933222657e-06,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.6656003512167556,
+    "slideMax": 8.066023056180333
+   },
+   "where": {
+    "grip": "src@1.000+0.0750",
+    "slideMin": "src@0.000+0.0917",
+    "slideMax": "src@1.250+0.0833",
+    "kneeOffAxis": "src@0.250+0.1083",
+    "wristBend": "src@0.000+0.0833",
+    "wristTwist": "src@0.250+0.0000",
+    "elbowMin": "src@0.500+0.0000",
+    "elbowMax": "src@1.250+0.1167",
+    "kneeMin": "src@0.000+0.0000",
+    "jointGap": "src@0.000+0.0000",
+    "shaftCore": "src@0.250+0.1000",
+    "solidDepth": "src@0.000+0.1083",
+    "hingeOffAxis": "src@0.000+0.0167"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [
+    {
+     "at": "src@0.000+0.0583",
+     "pairs": {
+      "RightLowerArm": 212
+     }
+    },
+    {
+     "at": "src@0.000+0.0667",
+     "pairs": {
+      "RightLowerArm": 248
+     }
+    },
+    {
+     "at": "src@0.000+0.0750",
+     "pairs": {
+      "RightLowerArm": 270
+     }
+    },
+    {
+     "at": "src@0.000+0.0833",
+     "pairs": {
+      "RightLowerArm": 304
+     }
+    },
+    {
+     "at": "src@0.000+0.0917",
+     "pairs": {
+      "RightLowerArm": 388
+     }
+    },
+    {
+     "at": "src@0.000+0.1000",
+     "pairs": {
+      "RightLowerArm": 402
+     }
+    },
+    {
+     "at": "src@0.000+0.1083",
+     "pairs": {
+      "RightLowerArm": 422
+     }
+    },
+    {
+     "at": "src@0.000+0.1167",
+     "pairs": {
+      "RightLowerArm": 401
+     }
+    },
+    {
+     "at": "src@0.250+0.0583",
+     "pairs": {
+      "RightLowerArm": 207
+     }
+    },
+    {
+     "at": "src@0.250+0.0667",
+     "pairs": {
+      "RightLowerArm": 241
+     }
+    },
+    {
+     "at": "src@0.250+0.0750",
+     "pairs": {
+      "RightLowerArm": 273
+     }
+    },
+    {
+     "at": "src@0.250+0.0833",
+     "pairs": {
+      "RightLowerArm": 299
+     }
+    }
+   ],
+   "hammerOverlapBadCount": 92
+  },
+  "Walk->Spin (0.12 s, Walk held)": {
+   "samples": 240,
+   "worst": {
+    "grip": 0.27361198044727875,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 2.7821007952789536,
+    "wristBend": 49.74321934725855,
+    "wristTwist": 73.52585348720413,
+    "solidDepth": 0.3408217886133371,
+    "elbowMin": 42.65151378309554,
+    "elbowMax": 86.48962250899442,
+    "shaftCore": 5.671619244256393,
+    "jointGap": 1.0775620074505622e-06,
+    "kneeMin": 7.430818131552144,
+    "slideMin": 2.7199997876602735,
+    "slideMax": 8.050449119810352
+   },
+   "where": {
+    "grip": "src@0.333+0.0417",
+    "slideMin": "src@0.500+0.0000",
+    "slideMax": "src@0.125+0.1167",
+    "wristBend": "src@0.208+0.0833",
+    "wristTwist": "src@0.167+0.1167",
+    "elbowMin": "src@0.500+0.1167",
+    "elbowMax": "src@0.375+0.1167",
+    "kneeMin": "src@0.333+0.1167",
+    "jointGap": "src@0.083+0.1167",
+    "kneeOffAxis": "src@0.042+0.1167",
+    "shaftCore": "src@0.375+0.0000",
+    "hingeOffAxis": "src@0.083+0.0083",
+    "solidDepth": "src@0.500+0.1083"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [
+    {
+     "at": "src@0.000+0.0833",
+     "pairs": {
+      "RightLowerArm": 237
+     }
+    },
+    {
+     "at": "src@0.000+0.0917",
+     "pairs": {
+      "RightLowerArm": 293
+     }
+    },
+    {
+     "at": "src@0.000+0.1000",
+     "pairs": {
+      "RightLowerArm": 347
+     }
+    },
+    {
+     "at": "src@0.000+0.1083",
+     "pairs": {
+      "RightLowerArm": 379
+     }
+    },
+    {
+     "at": "src@0.000+0.1167",
+     "pairs": {
+      "RightLowerArm": 393
+     }
+    },
+    {
+     "at": "src@0.042+0.0833",
+     "pairs": {
+      "RightLowerArm": 221
+     }
+    },
+    {
+     "at": "src@0.042+0.0917",
+     "pairs": {
+      "RightLowerArm": 285
+     }
+    },
+    {
+     "at": "src@0.042+0.1000",
+     "pairs": {
+      "RightLowerArm": 343
+     }
+    },
+    {
+     "at": "src@0.042+0.1083",
+     "pairs": {
+      "RightLowerArm": 369
+     }
+    },
+    {
+     "at": "src@0.042+0.1167",
+     "pairs": {
+      "RightLowerArm": 390
+     }
+    },
+    {
+     "at": "src@0.083+0.0833",
+     "pairs": {
+      "RightLowerArm": 215
+     }
+    },
+    {
+     "at": "src@0.083+0.0917",
+     "pairs": {
+      "RightLowerArm": 280
+     }
+    }
+   ],
+   "hammerOverlapBadCount": 96
+  },
+  "Idle->SwingSpin (0.12 s, Idle held)": {
+   "samples": 180,
+   "worst": {
+    "grip": 0.12367261199113411,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 2.831094093635898,
+    "wristBend": 53.08234092519811,
+    "wristTwist": 83.0221304801301,
+    "solidDepth": 0.30132751680048764,
+    "elbowMin": 12.021721773950777,
+    "elbowMax": 82.88437554023974,
+    "shaftCore": 5.985099218675919,
+    "jointGap": 1.1083494933222657e-06,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.6796120285901988,
+    "slideMax": 8.060496566452057
+   },
+   "where": {
+    "grip": "src@0.000+0.1083",
+    "slideMin": "src@0.000+0.1083",
+    "slideMax": "src@1.250+0.1000",
+    "kneeOffAxis": "src@0.250+0.1083",
+    "wristBend": "src@0.000+0.1167",
+    "wristTwist": "src@0.250+0.1167",
+    "elbowMin": "src@0.500+0.0000",
+    "elbowMax": "src@1.250+0.1167",
+    "kneeMin": "src@0.000+0.0000",
+    "jointGap": "src@0.000+0.0000",
+    "shaftCore": "src@0.250+0.1000",
+    "solidDepth": "src@0.000+0.1083",
+    "hingeOffAxis": "src@0.750+0.0833"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [
+    {
+     "at": "src@0.000+0.0667",
+     "pairs": {
+      "RightLowerArm": 231
+     }
+    },
+    {
+     "at": "src@0.000+0.0750",
+     "pairs": {
+      "RightLowerArm": 266
+     }
+    },
+    {
+     "at": "src@0.000+0.0833",
+     "pairs": {
+      "RightLowerArm": 306
+     }
+    },
+    {
+     "at": "src@0.000+0.0917",
+     "pairs": {
+      "RightLowerArm": 336
+     }
+    },
+    {
+     "at": "src@0.000+0.1000",
+     "pairs": {
+      "RightLowerArm": 353
+     }
+    },
+    {
+     "at": "src@0.000+0.1083",
+     "pairs": {
+      "RightLowerArm": 400
+     }
+    },
+    {
+     "at": "src@0.250+0.0583",
+     "pairs": {
+      "RightLowerArm": 193
+     }
+    },
+    {
+     "at": "src@0.250+0.0667",
+     "pairs": {
+      "RightLowerArm": 218
+     }
+    },
+    {
+     "at": "src@0.250+0.0750",
+     "pairs": {
+      "RightLowerArm": 260
+     }
+    },
+    {
+     "at": "src@0.250+0.0833",
+     "pairs": {
+      "RightLowerArm": 303
+     }
+    },
+    {
+     "at": "src@0.250+0.0917",
+     "pairs": {
+      "RightLowerArm": 334
+     }
+    },
+    {
+     "at": "src@0.250+0.1000",
+     "pairs": {
+      "RightLowerArm": 351
+     }
+    }
+   ],
+   "hammerOverlapBadCount": 74
+  },
+  "Walk->SwingSpin (0.12 s, Walk held)": {
+   "samples": 240,
+   "worst": {
+    "grip": 0.2875270787494815,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 2.7821007952789536,
+    "wristBend": 53.35750717918669,
+    "wristTwist": 82.27564607371156,
+    "solidDepth": 0.27672814249505584,
+    "elbowMin": 47.4319840907099,
+    "elbowMax": 84.63489818939057,
+    "shaftCore": 5.671619244256393,
+    "jointGap": 1.0775620074505622e-06,
+    "kneeMin": 7.430818131552144,
+    "slideMin": 2.695182441260496,
+    "slideMax": 8.054640171957278
+   },
+   "where": {
+    "grip": "src@0.333+0.0417",
+    "slideMin": "src@0.458+0.1083",
+    "slideMax": "src@0.083+0.1167",
+    "wristBend": "src@0.208+0.1167",
+    "wristTwist": "src@0.167+0.1167",
+    "elbowMin": "src@0.500+0.1000",
+    "elbowMax": "src@0.375+0.0000",
+    "kneeMin": "src@0.333+0.1167",
+    "jointGap": "src@0.083+0.1167",
+    "kneeOffAxis": "src@0.042+0.1167",
+    "shaftCore": "src@0.375+0.0000",
+    "hingeOffAxis": "src@0.208+0.0333",
+    "solidDepth": "src@0.500+0.1000"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [
+    {
+     "at": "src@0.000+0.0833",
+     "pairs": {
+      "RightLowerArm": 213
+     }
+    },
+    {
+     "at": "src@0.000+0.0917",
+     "pairs": {
+      "RightLowerArm": 270
+     }
+    },
+    {
+     "at": "src@0.000+0.1000",
+     "pairs": {
+      "RightLowerArm": 304
+     }
+    },
+    {
+     "at": "src@0.000+0.1083",
+     "pairs": {
+      "RightLowerArm": 347
+     }
+    },
+    {
+     "at": "src@0.042+0.0917",
+     "pairs": {
+      "RightLowerArm": 256
+     }
+    },
+    {
+     "at": "src@0.042+0.1000",
+     "pairs": {
+      "RightLowerArm": 293
+     }
+    },
+    {
+     "at": "src@0.042+0.1083",
+     "pairs": {
+      "RightLowerArm": 343
+     }
+    },
+    {
+     "at": "src@0.083+0.0917",
+     "pairs": {
+      "RightLowerArm": 252
+     }
+    },
+    {
+     "at": "src@0.083+0.1000",
+     "pairs": {
+      "RightLowerArm": 301
+     }
+    },
+    {
+     "at": "src@0.083+0.1083",
+     "pairs": {
+      "RightLowerArm": 338
+     }
+    },
+    {
+     "at": "src@0.125+0.0833",
+     "pairs": {
+      "RightLowerArm": 210
+     }
+    },
+    {
+     "at": "src@0.125+0.0917",
+     "pairs": {
+      "RightLowerArm": 255
+     }
+    }
+   ],
+   "hammerOverlapBadCount": 77
+  },
+  "Idle->SpinSlam (0.12 s, Idle held)": {
+   "samples": 180,
+   "worst": {
+    "grip": 0.0846773956147203,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 2.831094093635898,
+    "wristBend": 48.69608259686029,
+    "wristTwist": 81.3953278745571,
+    "solidDepth": 0.37523527603646945,
+    "elbowMin": 12.021721773950777,
+    "elbowMax": 85.31178488051206,
+    "shaftCore": 5.891423051107113,
+    "jointGap": 1.1083494933222657e-06,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.6656003512167556,
+    "slideMax": 8.066023056180333
+   },
+   "where": {
+    "grip": "src@1.000+0.0750",
+    "slideMin": "src@0.000+0.0917",
+    "slideMax": "src@1.250+0.0833",
+    "kneeOffAxis": "src@0.250+0.1083",
+    "wristBend": "src@0.000+0.0833",
+    "wristTwist": "src@0.250+0.0000",
+    "elbowMin": "src@0.500+0.0000",
+    "elbowMax": "src@1.250+0.1167",
+    "kneeMin": "src@0.000+0.0000",
+    "jointGap": "src@0.000+0.0000",
+    "shaftCore": "src@0.250+0.1000",
+    "solidDepth": "src@0.000+0.1083",
+    "hingeOffAxis": "src@0.000+0.0167"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [
+    {
+     "at": "src@0.000+0.0583",
+     "pairs": {
+      "RightLowerArm": 212
+     }
+    },
+    {
+     "at": "src@0.000+0.0667",
+     "pairs": {
+      "RightLowerArm": 248
+     }
+    },
+    {
+     "at": "src@0.000+0.0750",
+     "pairs": {
+      "RightLowerArm": 270
+     }
+    },
+    {
+     "at": "src@0.000+0.0833",
+     "pairs": {
+      "RightLowerArm": 304
+     }
+    },
+    {
+     "at": "src@0.000+0.0917",
+     "pairs": {
+      "RightLowerArm": 388
+     }
+    },
+    {
+     "at": "src@0.000+0.1000",
+     "pairs": {
+      "RightLowerArm": 402
+     }
+    },
+    {
+     "at": "src@0.000+0.1083",
+     "pairs": {
+      "RightLowerArm": 422
+     }
+    },
+    {
+     "at": "src@0.000+0.1167",
+     "pairs": {
+      "RightLowerArm": 401
+     }
+    },
+    {
+     "at": "src@0.250+0.0583",
+     "pairs": {
+      "RightLowerArm": 207
+     }
+    },
+    {
+     "at": "src@0.250+0.0667",
+     "pairs": {
+      "RightLowerArm": 241
+     }
+    },
+    {
+     "at": "src@0.250+0.0750",
+     "pairs": {
+      "RightLowerArm": 273
+     }
+    },
+    {
+     "at": "src@0.250+0.0833",
+     "pairs": {
+      "RightLowerArm": 299
+     }
+    }
+   ],
+   "hammerOverlapBadCount": 92
+  },
+  "Walk->SpinSlam (0.12 s, Walk held)": {
+   "samples": 240,
+   "worst": {
+    "grip": 0.27361198044727875,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 2.7821007952789536,
+    "wristBend": 49.74321934725855,
+    "wristTwist": 73.52585348720413,
+    "solidDepth": 0.3408217886133371,
+    "elbowMin": 42.65151378309554,
+    "elbowMax": 86.48962250899442,
+    "shaftCore": 5.671619244256393,
+    "jointGap": 1.0775620074505622e-06,
+    "kneeMin": 7.430818131552144,
+    "slideMin": 2.7199997876602735,
+    "slideMax": 8.050449119810352
+   },
+   "where": {
+    "grip": "src@0.333+0.0417",
+    "slideMin": "src@0.500+0.0000",
+    "slideMax": "src@0.125+0.1167",
+    "wristBend": "src@0.208+0.0833",
+    "wristTwist": "src@0.167+0.1167",
+    "elbowMin": "src@0.500+0.1167",
+    "elbowMax": "src@0.375+0.1167",
+    "kneeMin": "src@0.333+0.1167",
+    "jointGap": "src@0.083+0.1167",
+    "kneeOffAxis": "src@0.042+0.1167",
+    "shaftCore": "src@0.375+0.0000",
+    "hingeOffAxis": "src@0.083+0.0083",
+    "solidDepth": "src@0.500+0.1083"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [
+    {
+     "at": "src@0.000+0.0833",
+     "pairs": {
+      "RightLowerArm": 237
+     }
+    },
+    {
+     "at": "src@0.000+0.0917",
+     "pairs": {
+      "RightLowerArm": 293
+     }
+    },
+    {
+     "at": "src@0.000+0.1000",
+     "pairs": {
+      "RightLowerArm": 347
+     }
+    },
+    {
+     "at": "src@0.000+0.1083",
+     "pairs": {
+      "RightLowerArm": 379
+     }
+    },
+    {
+     "at": "src@0.000+0.1167",
+     "pairs": {
+      "RightLowerArm": 393
+     }
+    },
+    {
+     "at": "src@0.042+0.0833",
+     "pairs": {
+      "RightLowerArm": 221
+     }
+    },
+    {
+     "at": "src@0.042+0.0917",
+     "pairs": {
+      "RightLowerArm": 285
+     }
+    },
+    {
+     "at": "src@0.042+0.1000",
+     "pairs": {
+      "RightLowerArm": 343
+     }
+    },
+    {
+     "at": "src@0.042+0.1083",
+     "pairs": {
+      "RightLowerArm": 369
+     }
+    },
+    {
+     "at": "src@0.042+0.1167",
+     "pairs": {
+      "RightLowerArm": 390
+     }
+    },
+    {
+     "at": "src@0.083+0.0833",
+     "pairs": {
+      "RightLowerArm": 215
+     }
+    },
+    {
+     "at": "src@0.083+0.0917",
+     "pairs": {
+      "RightLowerArm": 280
+     }
+    }
+   ],
+   "hammerOverlapBadCount": 96
+  },
+  "Idle->ChargeStart (0.12 s, Idle held)": {
+   "samples": 180,
+   "worst": {
+    "grip": 0.2504185025976815,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 6.674096354446691,
+    "wristBend": 56.74462785013321,
+    "wristTwist": 81.3953278745571,
+    "solidDepth": 0.1845795023090282,
+    "elbowMin": 12.021721773950777,
+    "elbowMax": 86.93109819970778,
+    "shaftCore": 4.737770205359348,
+    "jointGap": 0.036484877950688666,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.7082949622994503,
+    "slideMax": 8.051291868605613
+   },
+   "where": {
+    "grip": "src@0.000+0.0917",
+    "slideMin": "src@0.000+0.0583",
+    "slideMax": "src@1.750+0.0333",
+    "kneeOffAxis": "src@1.750+0.1167",
+    "wristBend": "src@0.000+0.1083",
+    "wristTwist": "src@0.250+0.0000",
+    "elbowMin": "src@0.500+0.0000",
+    "elbowMax": "src@1.250+0.1167",
+    "kneeMin": "src@0.000+0.0000",
+    "jointGap": "src@0.000+0.0833",
+    "shaftCore": "src@0.500+0.1167",
+    "solidDepth": "src@1.000+0.0750",
+    "hingeOffAxis": "src@0.000+0.0583"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [
+    {
+     "at": "src@0.000+0.0667",
+     "pairs": {
+      "RightLowerArm": 218
+     }
+    },
+    {
+     "at": "src@0.000+0.0750",
+     "pairs": {
+      "RightLowerArm": 249
+     }
+    },
+    {
+     "at": "src@0.000+0.0833",
+     "pairs": {
+      "RightLowerArm": 283
+     }
+    },
+    {
+     "at": "src@0.250+0.0750",
+     "pairs": {
+      "RightLowerArm": 247
+     }
+    },
+    {
+     "at": "src@0.250+0.0833",
+     "pairs": {
+      "RightLowerArm": 280
+     }
+    },
+    {
+     "at": "src@0.500+0.0583",
+     "pairs": {
+      "RightLowerArm": 207
+     }
+    },
+    {
+     "at": "src@0.500+0.0750",
+     "pairs": {
+      "RightLowerArm": 247
+     }
+    },
+    {
+     "at": "src@0.500+0.0833",
+     "pairs": {
+      "RightLowerArm": 286
+     }
+    },
+    {
+     "at": "src@0.750+0.0500",
+     "pairs": {
+      "RightLowerArm": 194
+     }
+    },
+    {
+     "at": "src@0.750+0.0583",
+     "pairs": {
+      "RightLowerArm": 215
+     }
+    },
+    {
+     "at": "src@0.750+0.0667",
+     "pairs": {
+      "RightLowerArm": 219
+     }
+    },
+    {
+     "at": "src@0.750+0.0750",
+     "pairs": {
+      "RightLowerArm": 251
+     }
+    }
+   ],
+   "hammerOverlapBadCount": 35
+  },
+  "Walk->ChargeStart (0.12 s, Walk held)": {
+   "samples": 240,
+   "worst": {
+    "grip": 0.19174848555990212,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 6.658589103300362,
+    "wristBend": 56.163628779980925,
+    "wristTwist": 58.23644759076532,
+    "solidDepth": 0.09516067022936148,
+    "elbowMin": 47.47823420503262,
+    "elbowMax": 88.10893582819008,
+    "shaftCore": 4.73218260203525,
+    "jointGap": 0.036484816085474873,
+    "kneeMin": 17.92852907993094,
+    "slideMin": 2.6850098247667904,
+    "slideMax": 8.049999994212687
+   },
+   "where": {
+    "grip": "src@0.333+0.0250",
+    "slideMin": "src@0.500+0.0833",
+    "slideMax": "src@0.167+0.0000",
+    "wristBend": "src@0.208+0.1167",
+    "wristTwist": "src@0.167+0.0167",
+    "elbowMin": "src@0.500+0.0667",
+    "elbowMax": "src@0.375+0.1167",
+    "kneeMin": "src@0.333+0.0083",
+    "jointGap": "src@0.042+0.0833",
+    "kneeOffAxis": "src@0.375+0.1167",
+    "shaftCore": "src@0.375+0.1167",
+    "hingeOffAxis": "src@0.208+0.0000",
+    "solidDepth": "src@0.500+0.0750"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [],
+   "hammerOverlapBadCount": 0
+  },
+  "Slam->Idle (0.16 s, end held)": {
+   "samples": 20,
+   "worst": {
+    "grip": 8.37487354225071e-05,
+    "hingeOffAxis": 1.4787793334710982e-06,
+    "kneeOffAxis": 2.831094093635898,
+    "wristBend": 43.82481385451878,
+    "wristTwist": 81.22762176750186,
+    "solidDepth": 0.10998192466416823,
+    "elbowMin": 12.022094678022762,
+    "elbowMax": 36.890538460554694,
+    "shaftCore": 6.419861305002717,
+    "jointGap": 1.1083494933222657e-06,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.7199994068663855,
+    "slideMax": 8.050000039503345
+   },
+   "where": {
+    "grip": "src@1.667+0.1167",
+    "slideMin": "src@1.667+0.0000",
+    "slideMax": "src@1.667+0.0000",
+    "hingeOffAxis": "src@1.667+0.0417",
+    "kneeOffAxis": "src@1.667+0.0167",
+    "wristBend": "src@1.667+0.0000",
+    "wristTwist": "src@1.667+0.1583",
+    "elbowMin": "src@1.667+0.1583",
+    "elbowMax": "src@1.667+0.1583",
+    "kneeMin": "src@1.667+0.0000",
+    "jointGap": "src@1.667+0.0000",
+    "shaftCore": "src@1.667+0.1583",
+    "solidDepth": "src@1.667+0.0000"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [],
+   "hammerOverlapBadCount": 0
+  },
+  "Swing->Idle (0.16 s, end held)": {
+   "samples": 20,
+   "worst": {
+    "grip": 8.402186326795506e-05,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 2.831094093635898,
+    "wristBend": 43.82479884145201,
+    "wristTwist": 81.2276210871204,
+    "solidDepth": 0.10998151364967645,
+    "elbowMin": 12.022093571589265,
+    "elbowMax": 36.89053824809632,
+    "shaftCore": 6.419861302995585,
+    "jointGap": 1.1083494933222657e-06,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.7199994068663647,
+    "slideMax": 8.050000039503296
+   },
+   "where": {
+    "grip": "src@1.800+0.1167",
+    "slideMin": "src@1.800+0.0000",
+    "slideMax": "src@1.800+0.0000",
+    "hingeOffAxis": "src@1.800+0.1500",
+    "kneeOffAxis": "src@1.800+0.0167",
+    "wristBend": "src@1.800+0.0000",
+    "wristTwist": "src@1.800+0.1583",
+    "elbowMin": "src@1.800+0.1583",
+    "elbowMax": "src@1.800+0.1583",
+    "kneeMin": "src@1.800+0.0000",
+    "jointGap": "src@1.800+0.0000",
+    "shaftCore": "src@1.800+0.1583",
+    "solidDepth": "src@1.800+0.0000"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [],
+   "hammerOverlapBadCount": 0
+  },
+  "Spin->Idle (0.16 s, end held)": {
+   "samples": 20,
+   "worst": {
+    "grip": 8.402186326795506e-05,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 2.831094093635898,
+    "wristBend": 43.82479884145201,
+    "wristTwist": 81.2276210871204,
+    "solidDepth": 0.10998151364967645,
+    "elbowMin": 12.022093571589265,
+    "elbowMax": 36.89053824809632,
+    "shaftCore": 6.419861302995585,
+    "jointGap": 1.1083494933222657e-06,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.7199994068663647,
+    "slideMax": 8.050000039503296
+   },
+   "where": {
+    "grip": "src@2.283+0.1167",
+    "slideMin": "src@2.283+0.0000",
+    "slideMax": "src@2.283+0.0000",
+    "hingeOffAxis": "src@2.283+0.1500",
+    "kneeOffAxis": "src@2.283+0.0167",
+    "wristBend": "src@2.283+0.0000",
+    "wristTwist": "src@2.283+0.1583",
+    "elbowMin": "src@2.283+0.1583",
+    "elbowMax": "src@2.283+0.1583",
+    "kneeMin": "src@2.283+0.0000",
+    "jointGap": "src@2.283+0.0000",
+    "shaftCore": "src@2.283+0.1583",
+    "solidDepth": "src@2.283+0.0000"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [],
+   "hammerOverlapBadCount": 0
+  },
+  "SwingSpin->Idle (0.16 s, end held)": {
+   "samples": 20,
+   "worst": {
+    "grip": 8.402186326795506e-05,
+    "hingeOffAxis": 1.7075472925031877e-06,
+    "kneeOffAxis": 2.831094093635898,
+    "wristBend": 43.82479884145201,
+    "wristTwist": 81.2276210871204,
+    "solidDepth": 0.10998151364967645,
+    "elbowMin": 12.022093571589265,
+    "elbowMax": 36.89053824809632,
+    "shaftCore": 6.419861302995585,
+    "jointGap": 1.1083494933222657e-06,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.7199994068663647,
+    "slideMax": 8.050000039503296
+   },
+   "where": {
+    "grip": "src@3.333+0.1167",
+    "slideMin": "src@3.333+0.0000",
+    "slideMax": "src@3.333+0.0000",
+    "hingeOffAxis": "src@3.333+0.1500",
+    "kneeOffAxis": "src@3.333+0.0167",
+    "wristBend": "src@3.333+0.0000",
+    "wristTwist": "src@3.333+0.1583",
+    "elbowMin": "src@3.333+0.1583",
+    "elbowMax": "src@3.333+0.1583",
+    "kneeMin": "src@3.333+0.0000",
+    "jointGap": "src@3.333+0.0000",
+    "shaftCore": "src@3.333+0.1583",
+    "solidDepth": "src@3.333+0.0000"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [],
+   "hammerOverlapBadCount": 0
+  },
+  "SpinSlam->Idle (0.16 s, end held)": {
+   "samples": 20,
+   "worst": {
+    "grip": 8.374873542123503e-05,
+    "hingeOffAxis": 1.4787793334710982e-06,
+    "kneeOffAxis": 2.831094093635898,
+    "wristBend": 43.824813854518766,
+    "wristTwist": 81.22762176750186,
+    "solidDepth": 0.10998192466416823,
+    "elbowMin": 12.022094678022762,
+    "elbowMax": 36.890538460554694,
+    "shaftCore": 6.419861305002718,
+    "jointGap": 1.1083494925249754e-06,
+    "kneeMin": 7.119823330142708,
+    "slideMin": 2.7199994068663855,
+    "slideMax": 8.050000039503349
+   },
+   "where": {
+    "grip": "src@3.150+0.1167",
+    "slideMin": "src@3.150+0.0000",
+    "slideMax": "src@3.150+0.0000",
+    "kneeOffAxis": "src@3.150+0.0167",
+    "wristBend": "src@3.150+0.0000",
+    "wristTwist": "src@3.150+0.1583",
+    "elbowMin": "src@3.150+0.1583",
+    "elbowMax": "src@3.150+0.1583",
+    "kneeMin": "src@3.150+0.0000",
+    "jointGap": "src@3.150+0.0000",
+    "shaftCore": "src@3.150+0.1583",
+    "solidDepth": "src@3.150+0.0000",
+    "hingeOffAxis": "src@3.150+0.0083"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [],
+   "hammerOverlapBadCount": 0
+  },
+  "Slam->Walk (0.16 s, end held), information": {
+   "samples": 20,
+   "worst": {
+    "grip": 0.3359297496957735,
+    "hingeOffAxis": 1.4787793334710982e-06,
+    "kneeOffAxis": 2.8310940936356404,
+    "wristBend": 47.33485893186869,
+    "wristTwist": 80.89299300625866,
+    "solidDepth": 0.11191799905580524,
+    "elbowMin": 12.057520565412956,
+    "elbowMax": 73.58894620832338,
+    "shaftCore": 6.009919401748122,
+    "jointGap": 1.1083494933222657e-06,
+    "kneeMin": 7.119823330142651,
+    "slideMin": 2.7199994068663864,
+    "slideMax": 8.050000039503345
+   },
+   "where": {
+    "grip": "src@1.667+0.0667",
+    "slideMin": "src@1.667+0.0000",
+    "slideMax": "src@1.667+0.0000",
+    "hingeOffAxis": "src@1.667+0.0417",
+    "kneeOffAxis": "src@1.667+0.0000",
+    "wristBend": "src@1.667+0.1583",
+    "wristTwist": "src@1.667+0.0000",
+    "elbowMin": "src@1.667+0.0000",
+    "elbowMax": "src@1.667+0.1583",
+    "kneeMin": "src@1.667+0.0000",
+    "jointGap": "src@1.667+0.0000",
+    "shaftCore": "src@1.667+0.1583",
+    "solidDepth": "src@1.667+0.0083"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [],
+   "hammerOverlapBadCount": 0
+  },
+  "ChargeRun->Slam (0.12 s, run held), information": {
+   "samples": 120,
+   "worst": {
+    "grip": 1.6465474507829125,
+    "hingeOffAxis": 1.9090959104164224e-06,
+    "kneeOffAxis": 22.810405043855496,
+    "wristBend": 60.87310956036305,
+    "wristTwist": 80.58226440714866,
+    "solidDepth": 1.0574916885651087,
+    "elbowMin": 15.655983549184587,
+    "elbowMax": 129.51535934204136,
+    "shaftCore": 2.912877241642276,
+    "jointGap": 4.507629864739211e-06,
+    "kneeMin": 8.131027180286935,
+    "slideMin": 0.8687886097805045,
+    "slideMax": 8.050000101945617
+   },
+   "where": {
+    "grip": "src@0.333+0.0750",
+    "slideMin": "src@0.000+0.0583",
+    "slideMax": "src@0.067+0.0000",
+    "hingeOffAxis": "src@0.400+0.0750",
+    "kneeOffAxis": "src@0.133+0.0000",
+    "wristBend": "src@0.267+0.0000",
+    "wristTwist": "src@0.333+0.1167",
+    "elbowMin": "src@0.333+0.0083",
+    "elbowMax": "src@0.267+0.0000",
+    "kneeMin": "src@0.267+0.1167",
+    "jointGap": "src@0.267+0.0000",
+    "shaftCore": "src@0.000+0.0250",
+    "solidDepth": "src@0.067+0.0417"
+   },
+   "overlaps": [],
+   "overlapSamples": 0,
+   "hammerOverlapBad": [
+    {
+     "at": "src@0.000+0.0083",
+     "pairs": {
+      "RightLowerArm": 289
+     }
+    },
+    {
+     "at": "src@0.000+0.0167",
+     "pairs": {
+      "RightLowerArm": 738
+     }
+    },
+    {
+     "at": "src@0.000+0.0250",
+     "pairs": {
+      "RightLowerArm": 853
+     }
+    },
+    {
+     "at": "src@0.000+0.0333",
+     "pairs": {
+      "RightLowerArm": 936
+     }
+    },
+    {
+     "at": "src@0.000+0.0417",
+     "pairs": {
+      "RightLowerArm": 981
+     }
+    },
+    {
+     "at": "src@0.000+0.0500",
+     "pairs": {
+      "RightLowerArm": 933
+     }
+    },
+    {
+     "at": "src@0.000+0.0583",
+     "pairs": {
+      "RightLowerArm": 706
+     }
+    },
+    {
+     "at": "src@0.000+0.0667",
+     "pairs": {
+      "RightLowerArm": 635
+     }
+    },
+    {
+     "at": "src@0.000+0.0750",
+     "pairs": {
+      "RightLowerArm": 642
+     }
+    },
+    {
+     "at": "src@0.000+0.0833",
+     "pairs": {
+      "RightLowerArm": 678
+     }
+    },
+    {
+     "at": "src@0.000+0.0917",
+     "pairs": {
+      "RightLowerArm": 680
+     }
+    },
+    {
+     "at": "src@0.000+0.1000",
+     "pairs": {
+      "RightLowerArm": 617
+     }
+    }
+   ],
+   "hammerOverlapBadCount": 98
+  }
+ },
+ "seams": {
+  "Idle<->attack junction (mesh points, studs)": {
+   "Slam": {
+    "start": 3.923856987337608e-06,
+    "end": 3.923856987337608e-06
+   },
+   "Swing": {
+    "start": 3.923856987337608e-06,
+    "end": 6.440101453826353e-08
+   },
+   "Spin": {
+    "start": 3.923856987337608e-06,
+    "end": 6.440101453826353e-08
+   },
+   "SwingSpin": {
+    "start": 3.923856987337608e-06,
+    "end": 6.440101453826353e-08
+   },
+   "SpinSlam": {
+    "start": 3.923856987337608e-06,
+    "end": 3.923856987338613e-06
+   },
+   "ChargeStart": {
+    "start": 8.886119947416683e-16
+   },
+   "Hit": {
+    "start": 0.0
+   }
+  },
+  "Spin: revolution 1 -> 2": {
+   "seamTime": 1.027778,
+   "residualAfter360 (mesh points)": 0.1696,
+   "fade": 0.1,
+   "maxStepPerFrameAtSeam": 2.97,
+   "maxStepPerFrameInRevolution1": 2.9708,
+   "maxAccelPerFrame2AtSeam": 0.7058,
+   "maxAccelPerFrame2InRevolution1": 0.7034
+  },
+  "SwingSpin crossfade": {
+   "A": "Swing",
+   "B": "Spin",
+   "cutA": 1.3,
+   "cutB": 0.25,
+   "fade": 0.2,
+   "shift": 1.05,
+   "maxStepPerFrameInFade": 2.7115,
+   "maxStepPerFrameA": 1.13,
+   "maxStepPerFrameB": 2.9676,
+   "maxAccelInFade": 1.022,
+   "gripInFade": 0.064148,
+   "bvhBadFramesInFade": 0,
+   "hammerHeadMinDistanceFromCarry": 7.728
+  },
+  "SpinSlam crossfade": {
+   "A": "Spin",
+   "B": "Slam",
+   "cutA": 1.6,
+   "cutB": 0.116667,
+   "fade": 0.2,
+   "shift": 1.483333,
+   "maxStepPerFrameInFade": 3.1286,
+   "maxStepPerFrameA": 2.9676,
+   "maxStepPerFrameB": 2.9895,
+   "maxAccelInFade": 0.9542,
+   "gripInFade": 0.004436,
+   "bvhBadFramesInFade": 0,
+   "hammerHeadMinDistanceFromCarry": 5.306
+  },
+  "Walk carry vs carry pose (chest space, hammer + fists)": {
+   "min": 2.973,
+   "max": 3.349
+  }
+ },
+ "legacyReference": {
+  "Slam": {
+   "grip": 0.0788,
+   "hingeOffAxis": 0.0,
+   "wristBend": 82.3639,
+   "wristTwist": 179.6984,
+   "swivel": 108.8025,
+   "jointGap": 0.0246,
+   "kneeOffAxis": 10.285,
+   "solidDepth": 0.11,
+   "footDrift": 0.0,
+   "swivelStep": 95.6923,
+   "spineStep": 9.6575,
+   "ankle": 39.5374,
+   "elbowMin": 12.0573,
+   "elbowMax": 44.32,
+   "kneeMin": 7.1198,
+   "kneeMax": 65.4516,
+   "shaftCore": 4.5793,
+   "ground": -0.0585,
+   "slideMin": 2.72,
+   "slideMax": 8.05,
+   "bvhFrames": 0.0,
+   "cuffDepth": 0.11,
+   "gripBetween": 0.0788
+  },
+  "Swing": {
+   "grip": 0.3999,
+   "hingeOffAxis": 0.0,
+   "wristBend": 62.1228,
+   "wristTwist": 179.9487,
+   "swivel": 103.9203,
+   "jointGap": 0.295,
+   "kneeOffAxis": 12.2381,
+   "solidDepth": 0.2753,
+   "footDrift": 0.0,
+   "swivelStep": 12.5641,
+   "spineStep": 13.75,
+   "ankle": 62.1498,
+   "elbowMin": 12.0,
+   "elbowMax": 82.6585,
+   "kneeMin": 4.0181,
+   "kneeMax": 45.3893,
+   "shaftCore": 2.3638,
+   "ground": 0.0,
+   "slideMin": 2.72,
+   "slideMax": 8.05,
+   "bvhFrames": 5.0,
+   "cuffDepth": 0.2753,
+   "gripBetween": 0.3999
+  },
+  "Spin": {
+   "grip": 0.3056,
+   "hingeOffAxis": 0.0,
+   "wristBend": 60.6851,
+   "wristTwist": 179.7693,
+   "swivel": 103.9047,
+   "jointGap": 0.0386,
+   "kneeOffAxis": 29.2135,
+   "solidDepth": 0.4001,
+   "footDrift": 0.0,
+   "swivelStep": 11.4275,
+   "spineStep": 13.8,
+   "ankle": 176.1516,
+   "elbowMin": 12.0,
+   "elbowMax": 82.9843,
+   "kneeMin": -6.2051,
+   "kneeMax": 54.2962,
+   "shaftCore": 2.3734,
+   "ground": -0.0279,
+   "slideMin": 2.72,
+   "slideMax": 8.05,
+   "bvhFrames": 5.0,
+   "cuffDepth": 0.4001,
+   "gripBetween": 0.4793
+  },
+  "Hit": {
+   "grip": 0.0044,
+   "hingeOffAxis": 0.0,
+   "wristBend": 48.9598,
+   "wristTwist": 80.8929,
+   "swivel": 85.148,
+   "jointGap": 0.0001,
+   "kneeOffAxis": 2.8311,
+   "solidDepth": 0.11,
+   "footDrift": 0.0,
+   "swivelStep": 1.6823,
+   "spineStep": 0.5063,
+   "ankle": 4.5423,
+   "elbowMin": 12.0571,
+   "elbowMax": 35.9924,
+   "kneeMin": 7.1198,
+   "kneeMax": 7.1198,
+   "shaftCore": 6.4344,
+   "ground": 0.0,
+   "slideMin": 2.72,
+   "slideMax": 8.05,
+   "bvhFrames": 0.0,
+   "cuffDepth": 0.11,
+   "gripBetween": 0.0044
+  },
+  "Death": {
+   "grip": 5.3166,
+   "hingeOffAxis": 0.0,
+   "wristBend": 43.8248,
+   "wristTwist": 80.893,
+   "swivel": 83.4756,
+   "jointGap": 0.0099,
+   "kneeOffAxis": 29.2038,
+   "solidDepth": 1.2115,
+   "footDrift": 0.0,
+   "swivelStep": 66.9882,
+   "spineStep": 0.5873,
+   "ankle": 95.0891,
+   "elbowMin": 12.0574,
+   "elbowMax": 60.6539,
+   "kneeMin": 7.1198,
+   "kneeMax": 146.6023,
+   "shaftCore": 0.5389,
+   "ground": -1.4346,
+   "slideMin": 1.8476,
+   "slideMax": 8.05,
+   "bvhFrames": 164.0,
+   "cuffDepth": 0.7487,
+   "gripBetween": 5.3152
+  },
+  "ChargeStart": {
+   "grip": 0.0285,
+   "hingeOffAxis": 0.0,
+   "wristBend": 63.0786,
+   "wristTwist": 80.8929,
+   "swivel": 80.948,
+   "jointGap": 0.0752,
+   "kneeOffAxis": 47.2447,
+   "solidDepth": 0.1256,
+   "footDrift": 0.0,
+   "swivelStep": 15.798,
+   "spineStep": 2.438,
+   "ankle": 72.1046,
+   "elbowMin": 12.0574,
+   "elbowMax": 129.9939,
+   "kneeMin": 7.1198,
+   "kneeMax": 115.0733,
+   "shaftCore": 3.1793,
+   "ground": -0.2277,
+   "slideMin": 2.72,
+   "slideMax": 8.05,
+   "bvhFrames": 0.0,
+   "cuffDepth": 0.1256,
+   "gripBetween": 0.0285
+  },
+  "ChargeRun": {
+   "grip": 0.0003,
+   "hingeOffAxis": 0.0,
+   "wristBend": 61.1031,
+   "wristTwist": 50.9919,
+   "swivel": 32.7648,
+   "jointGap": 0.0655,
+   "kneeOffAxis": 22.8104,
+   "solidDepth": 0.0,
+   "footDrift": 0.0,
+   "swivelStep": 3.1017,
+   "spineStep": 2.3987,
+   "ankle": 65.1081,
+   "elbowMin": 15.7611,
+   "elbowMax": 129.5203,
+   "kneeMin": 43.5833,
+   "kneeMax": 129.7388,
+   "shaftCore": 2.8919,
+   "ground": -0.2103,
+   "slideMin": 2.72,
+   "slideMax": 8.05,
+   "bvhFrames": 0.0,
+   "cuffDepth": 0.0,
+   "gripBetween": 0.0003
+  },
+  "carry": {
+   "grip": 0.0,
+   "hingeOffAxis": 0.0,
+   "wristBend": 43.8248,
+   "wristTwist": 80.8929,
+   "swivel": 80.948,
+   "jointGap": 0.0,
+   "kneeOffAxis": 2.8311,
+   "solidDepth": 0.11,
+   "footDrift": 0.0,
+   "swivelStep": 0.0,
+   "spineStep": 0.0,
+   "ankle": 4.5423,
+   "elbowMin": 12.0574,
+   "elbowMax": 35.9924,
+   "kneeMin": 7.1198,
+   "kneeMax": 7.1198,
+   "shaftCore": 6.5538,
+   "ground": 0.0,
+   "slideMin": 2.72,
+   "slideMax": 8.05,
+   "bvhFrames": 0.0
   }
  },
  "summary": [
   {
    "check": "elbow flex min (deg)",
    "clip": "Idle",
-   "value": 54.556,
+   "value": 12.0217,
    "limit": 12.0,
    "pass": true,
-   "at": 7
+   "at": 45
   },
   {
    "check": "elbow flex max (deg)",
    "clip": "Idle",
-   "value": 65.3823,
+   "value": 42.266,
    "limit": 130.0,
    "pass": true,
-   "at": 34
+   "at": 31
   },
   {
-   "check": "elbow off-axis (deg)",
+   "check": "elbow off-axis, frames + 120 Hz (deg)",
    "clip": "Idle",
    "value": 0.0,
    "limit": 2.0,
    "pass": true
   },
   {
-   "check": "knee off-axis (deg)",
+   "check": "knee off-axis, frames + 120 Hz (deg)",
    "clip": "Idle",
-   "value": 0.0,
+   "value": 2.8311,
    "limit": 2.0,
-   "pass": true
+   "pass": false,
+   "exception": "the original carry pose: 2.831 (carry)"
   },
   {
    "check": "knee bends forward only: min hinge (deg)",
    "clip": "Idle",
-   "value": 0.0,
+   "value": 7.1198,
    "limit": 0.0,
-   "pass": true
+   "pass": true,
+   "at": 0
   },
   {
    "check": "knee max (deg)",
    "clip": "Idle",
-   "value": 30.3299,
+   "value": 30.3569,
    "limit": 150.0,
    "pass": true
   },
   {
    "check": "wrist bend (deg)",
    "clip": "Idle",
-   "value": 1.3232,
+   "value": 43.8257,
    "limit": 35.0,
-   "pass": true,
-   "at": 34
+   "pass": false,
+   "at": 71,
+   "exception": "the original carry pose: 43.825 (carry)"
   },
   {
    "check": "wrist twist (deg)",
    "clip": "Idle",
-   "value": 1.0038,
+   "value": 81.5328,
    "limit": 35.0,
-   "pass": true,
-   "at": 31
+   "pass": false,
+   "at": 10,
+   "exception": "the original carry pose: 80.893 (carry)"
   },
   {
    "check": "shoulder swivel (deg)",
    "clip": "Idle",
-   "value": 0.5,
+   "value": 81.8055,
    "limit": 75.0,
-   "pass": true,
-   "at": 17
+   "pass": false,
+   "at": 10,
+   "exception": "the original carry pose: 80.948 (carry)"
   },
   {
    "check": "swivel step per frame (deg)",
    "clip": "Idle",
-   "value": 0.5,
+   "value": 2.0119,
    "limit": 20.0,
    "pass": true,
-   "at": 32
+   "at": 40
   },
   {
    "check": "spine step per frame (deg)",
@@ -580,11 +3106,20 @@
    "at": 43
   },
   {
-   "check": "grip: haft through both fist holes (studs)",
+   "check": "grip: haft through both fist holes, frames (studs)",
    "clip": "Idle",
    "value": 0.0,
    "limit": 0.05,
-   "pass": true
+   "pass": true,
+   "at": 37
+  },
+  {
+   "check": "grip: 120 Hz in-betweens (studs)",
+   "clip": "Idle",
+   "value": 0.0012,
+   "limit": 0.08,
+   "pass": true,
+   "at": "t=1.6500"
   },
   {
    "check": "grip slide stays on the haft",
@@ -601,10 +3136,11 @@
    "clip": "Idle",
    "value": 0.0,
    "limit": 0.0001,
-   "pass": true
+   "pass": true,
+   "at": 0
   },
   {
-   "check": "hammer vs body: BVH overlap frames",
+   "check": "hammer vs body: BVH overlap samples (120 Hz)",
    "clip": "Idle",
    "value": 0.0,
    "limit": 0,
@@ -613,7 +3149,7 @@
   {
    "check": "shaft outside torso core (min)",
    "clip": "Idle",
-   "value": 3.8047,
+   "value": 6.3111,
    "limit": 1.0,
    "pass": true
   },
@@ -642,7 +3178,7 @@
   {
    "check": "elbow flex min (deg)",
    "clip": "Walk",
-   "value": 64.5299,
+   "value": 65.8469,
    "limit": 12.0,
    "pass": true,
    "at": 12
@@ -650,20 +3186,20 @@
   {
    "check": "elbow flex max (deg)",
    "clip": "Walk",
-   "value": 82.6548,
+   "value": 84.6349,
    "limit": 130.0,
    "pass": true,
    "at": 9
   },
   {
-   "check": "elbow off-axis (deg)",
+   "check": "elbow off-axis, frames + 120 Hz (deg)",
    "clip": "Walk",
    "value": 0.0,
    "limit": 2.0,
    "pass": true
   },
   {
-   "check": "knee off-axis (deg)",
+   "check": "knee off-axis, frames + 120 Hz (deg)",
    "clip": "Walk",
    "value": 0.0,
    "limit": 2.0,
@@ -674,7 +3210,8 @@
    "clip": "Walk",
    "value": 18.3113,
    "limit": 0.0,
-   "pass": true
+   "pass": true,
+   "at": 8
   },
   {
    "check": "knee max (deg)",
@@ -686,34 +3223,36 @@
   {
    "check": "wrist bend (deg)",
    "clip": "Walk",
-   "value": 12.8114,
+   "value": 48.309,
    "limit": 35.0,
-   "pass": true,
-   "at": 9
+   "pass": false,
+   "at": 5,
+   "exception": "the run holds the fists in the carry grip (the carry pose itself: 43.8); chosen over rolling the fists so the Walk -> attack blend keeps the grip"
   },
   {
    "check": "wrist twist (deg)",
    "clip": "Walk",
-   "value": 6.2499,
+   "value": 55.0339,
    "limit": 35.0,
-   "pass": true,
-   "at": 12
+   "pass": false,
+   "at": 4,
+   "exception": "the original carry pose: 80.893 (carry)"
   },
   {
    "check": "shoulder swivel (deg)",
    "clip": "Walk",
-   "value": 13.0,
+   "value": 58.7463,
    "limit": 75.0,
    "pass": true,
-   "at": 5
+   "at": 4
   },
   {
    "check": "swivel step per frame (deg)",
    "clip": "Walk",
-   "value": 1.0,
+   "value": 5.8677,
    "limit": 20.0,
    "pass": true,
-   "at": 7
+   "at": 15
   },
   {
    "check": "spine step per frame (deg)",
@@ -724,11 +3263,20 @@
    "at": 4
   },
   {
-   "check": "grip: haft through both fist holes (studs)",
+   "check": "grip: haft through both fist holes, frames (studs)",
    "clip": "Walk",
    "value": 0.0,
    "limit": 0.05,
-   "pass": true
+   "pass": true,
+   "at": 9
+  },
+  {
+   "check": "grip: 120 Hz in-betweens (studs)",
+   "clip": "Walk",
+   "value": 0.0039,
+   "limit": 0.08,
+   "pass": true,
+   "at": "t=0.6083"
   },
   {
    "check": "grip slide stays on the haft",
@@ -745,10 +3293,11 @@
    "clip": "Walk",
    "value": 0.0,
    "limit": 0.0001,
-   "pass": true
+   "pass": true,
+   "at": 12
   },
   {
-   "check": "hammer vs body: BVH overlap frames",
+   "check": "hammer vs body: BVH overlap samples (120 Hz)",
    "clip": "Walk",
    "value": 0.0,
    "limit": 0,
@@ -757,7 +3306,7 @@
   {
    "check": "shaft outside torso core (min)",
    "clip": "Walk",
-   "value": 5.7791,
+   "value": 5.6696,
    "limit": 1.0,
    "pass": true
   },
@@ -787,93 +3336,111 @@
   {
    "check": "elbow flex min (deg)",
    "clip": "Slam",
-   "value": 30.8596,
+   "value": 12.0573,
    "limit": 12.0,
    "pass": true,
-   "at": 36
+   "at": 94
   },
   {
    "check": "elbow flex max (deg)",
    "clip": "Slam",
-   "value": 126.5275,
+   "value": 44.32,
    "limit": 130.0,
    "pass": true,
-   "at": 15
+   "at": 41
   },
   {
-   "check": "elbow off-axis (deg)",
+   "check": "elbow off-axis, frames + 120 Hz (deg)",
    "clip": "Slam",
    "value": 0.0,
    "limit": 2.0,
    "pass": true
   },
   {
-   "check": "knee off-axis (deg)",
+   "check": "knee off-axis, frames + 120 Hz (deg)",
    "clip": "Slam",
-   "value": 0.0,
+   "value": 10.285,
    "limit": 2.0,
-   "pass": true
+   "pass": false,
+   "exception": "as the legacy client showed it: 10.285 (Slam)"
   },
   {
    "check": "knee bends forward only: min hinge (deg)",
    "clip": "Slam",
-   "value": 0.0,
+   "value": 7.1198,
    "limit": 0.0,
-   "pass": true
+   "pass": true,
+   "at": 0
   },
   {
    "check": "knee max (deg)",
    "clip": "Slam",
-   "value": 80.4999,
+   "value": 65.4516,
    "limit": 150.0,
    "pass": true
   },
   {
    "check": "wrist bend (deg)",
    "clip": "Slam",
-   "value": 27.5477,
+   "value": 82.3639,
    "limit": 35.0,
-   "pass": true,
-   "at": 15
+   "pass": false,
+   "at": 26,
+   "exception": "as the legacy client showed it: 82.364 (Slam)"
   },
   {
    "check": "wrist twist (deg)",
    "clip": "Slam",
-   "value": 13.8023,
+   "value": 179.6984,
    "limit": 35.0,
-   "pass": true,
-   "at": 26
+   "pass": false,
+   "at": 67,
+   "exception": "as the legacy client showed it: 179.698 (Slam)"
   },
   {
    "check": "shoulder swivel (deg)",
    "clip": "Slam",
-   "value": 68.0,
+   "value": 108.8025,
    "limit": 75.0,
-   "pass": true,
-   "at": 30
+   "pass": false,
+   "at": 36,
+   "exception": "as the legacy client showed it: 108.802 (Slam)"
   },
   {
    "check": "swivel step per frame (deg)",
    "clip": "Slam",
-   "value": 14.5,
-   "limit": 20.0,
-   "pass": true,
-   "at": 4
+   "value": 95.6923,
+   "limit": 8.0,
+   "pass": false,
+   "at": 40,
+   "exception": "as the legacy client showed it: 95.692 (Slam)"
   },
   {
    "check": "spine step per frame (deg)",
    "clip": "Slam",
-   "value": 16.5,
-   "limit": 20.0,
-   "pass": true,
-   "at": 21
+   "value": 9.6575,
+   "limit": 8.0,
+   "pass": false,
+   "at": 43,
+   "exception": "as the legacy client showed it: 9.657 (Slam)"
   },
   {
-   "check": "grip: haft through both fist holes (studs)",
+   "check": "grip: haft through both fist holes, frames (studs)",
    "clip": "Slam",
-   "value": 0.0,
+   "value": 0.0788,
    "limit": 0.05,
-   "pass": true
+   "pass": false,
+   "at": 7,
+   "exception": "a legacy in-between frame (the original's own gap, kept: up to 0.079; accepted up to 0.15)"
+  },
+  {
+   "check": "grip: 120 Hz in-betweens (studs)",
+   "clip": "Slam",
+   "value": 0.2152,
+   "limit": 0.08,
+   "pass": false,
+   "at": "t=0.6917",
+   "exception": "NOT within the 0.15 rule: the game's per-joint lerp halfway between two exact 60 fps frames of the original slam drop (the hammer turns ~75 deg in 1/60 s), for 1/120 s at full swing speed"
   },
   {
    "check": "grip slide stays on the haft",
@@ -888,12 +3455,14 @@
   {
    "check": "joint gap (studs)",
    "clip": "Slam",
-   "value": 0.0,
+   "value": 0.0246,
    "limit": 0.0001,
-   "pass": true
+   "pass": false,
+   "at": 43,
+   "exception": "as the legacy client showed it: 0.025 (Slam)"
   },
   {
-   "check": "hammer vs body: BVH overlap frames",
+   "check": "hammer vs body: BVH overlap samples (120 Hz)",
    "clip": "Slam",
    "value": 0.0,
    "limit": 0,
@@ -902,349 +3471,1858 @@
   {
    "check": "shaft outside torso core (min)",
    "clip": "Slam",
-   "value": 2.4884,
+   "value": 4.5793,
    "limit": 1.0,
-   "pass": true
-  },
-  {
-   "check": "planted foot drift per frame (studs)",
-   "clip": "Slam",
-   "value": 0.0,
-   "limit": 0.01,
    "pass": true
   },
   {
    "check": "lowest point above ground (studs)",
    "clip": "Slam",
-   "value": -0.0247,
+   "value": -0.0585,
    "limit": -0.05,
+   "pass": false,
+   "at": 62,
+   "exception": "as the legacy client showed it: -0.058 (Slam)"
+  },
+  {
+   "check": "elbow flex min (deg)",
+   "clip": "Swing",
+   "value": 12.0,
+   "limit": 12.0,
+   "pass": true,
+   "at": 73
+  },
+  {
+   "check": "elbow flex max (deg)",
+   "clip": "Swing",
+   "value": 84.0459,
+   "limit": 130.0,
+   "pass": true,
+   "at": 7
+  },
+  {
+   "check": "elbow off-axis, frames + 120 Hz (deg)",
+   "clip": "Swing",
+   "value": 0.0,
+   "limit": 2.0,
+   "pass": true
+  },
+  {
+   "check": "knee off-axis, frames + 120 Hz (deg)",
+   "clip": "Swing",
+   "value": 12.2381,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 12.238 (Swing)"
+  },
+  {
+   "check": "knee bends forward only: min hinge (deg)",
+   "clip": "Swing",
+   "value": 4.0181,
+   "limit": 0.0,
+   "pass": true,
+   "at": 56
+  },
+  {
+   "check": "knee max (deg)",
+   "clip": "Swing",
+   "value": 45.3893,
+   "limit": 150.0,
+   "pass": true
+  },
+  {
+   "check": "wrist bend (deg)",
+   "clip": "Swing",
+   "value": 62.1228,
+   "limit": 35.0,
+   "pass": false,
+   "at": 22,
+   "exception": "as the legacy client showed it: 62.123 (Swing)"
+  },
+  {
+   "check": "wrist twist (deg)",
+   "clip": "Swing",
+   "value": 179.9487,
+   "limit": 35.0,
+   "pass": false,
+   "at": 36,
+   "exception": "as the legacy client showed it: 179.949 (Swing)"
+  },
+  {
+   "check": "shoulder swivel (deg)",
+   "clip": "Swing",
+   "value": 103.9203,
+   "limit": 75.0,
+   "pass": false,
+   "at": 49,
+   "exception": "as the legacy client showed it: 103.920 (Swing)"
+  },
+  {
+   "check": "swivel step per frame (deg)",
+   "clip": "Swing",
+   "value": 12.5183,
+   "limit": 8.0,
+   "pass": false,
+   "at": 8,
+   "exception": "as the legacy client showed it: 12.564 (Swing)"
+  },
+  {
+   "check": "spine step per frame (deg)",
+   "clip": "Swing",
+   "value": 13.75,
+   "limit": 8.0,
+   "pass": false,
+   "at": 43,
+   "exception": "as the legacy client showed it: 13.750 (Swing)"
+  },
+  {
+   "check": "grip: haft through both fist holes, frames (studs)",
+   "clip": "Swing",
+   "value": 0.1136,
+   "limit": 0.05,
+   "pass": false,
+   "at": 23,
+   "exception": "a legacy in-between frame (the original's own gap, kept: up to 0.114; accepted up to 0.15)"
+  },
+  {
+   "check": "grip: 120 Hz in-betweens (studs)",
+   "clip": "Swing",
+   "value": 0.1136,
+   "limit": 0.08,
+   "pass": false,
+   "at": "t=0.3833",
+   "exception": "the original's own in-between gap (kept up to 0.114; accepted up to 0.15)"
+  },
+  {
+   "check": "grip slide stays on the haft",
+   "clip": "Swing",
+   "value": null,
+   "limit": [
+    2.45,
+    8.1
+   ],
+   "pass": true
+  },
+  {
+   "check": "joint gap (studs)",
+   "clip": "Swing",
+   "value": 0.295,
+   "limit": 0.0001,
+   "pass": false,
+   "at": 82,
+   "exception": "as the legacy client showed it: 0.295 (Swing)"
+  },
+  {
+   "check": "hammer vs body: BVH overlap samples (120 Hz)",
+   "clip": "Swing",
+   "value": 9.0,
+   "limit": 0,
+   "pass": false,
+   "at": "t=0.0417",
+   "exception": "as the legacy client showed it: 5.000 (Swing)"
+  },
+  {
+   "check": "shaft outside torso core (min)",
+   "clip": "Swing",
+   "value": 2.1828,
+   "limit": 1.0,
+   "pass": true
+  },
+  {
+   "check": "lowest point above ground (studs)",
+   "clip": "Swing",
+   "value": 0.0,
+   "limit": -0.05,
+   "pass": true,
+   "at": 0
+  },
+  {
+   "check": "elbow flex min (deg)",
+   "clip": "Spin",
+   "value": 12.0,
+   "limit": 12.0,
+   "pass": true,
+   "at": 103
+  },
+  {
+   "check": "elbow flex max (deg)",
+   "clip": "Spin",
+   "value": 86.5426,
+   "limit": 130.0,
+   "pass": true,
+   "at": 7
+  },
+  {
+   "check": "elbow off-axis, frames + 120 Hz (deg)",
+   "clip": "Spin",
+   "value": 0.0,
+   "limit": 2.0,
+   "pass": true
+  },
+  {
+   "check": "knee off-axis, frames + 120 Hz (deg)",
+   "clip": "Spin",
+   "value": 29.2135,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 29.213 (Spin)"
+  },
+  {
+   "check": "knee bends forward only: min hinge (deg)",
+   "clip": "Spin",
+   "value": -6.2051,
+   "limit": 0.0,
+   "pass": false,
+   "at": 52,
+   "exception": "as the legacy client showed it: -6.205 (Spin)"
+  },
+  {
+   "check": "knee max (deg)",
+   "clip": "Spin",
+   "value": 54.2962,
+   "limit": 150.0,
+   "pass": true
+  },
+  {
+   "check": "wrist bend (deg)",
+   "clip": "Spin",
+   "value": 60.6851,
+   "limit": 35.0,
+   "pass": false,
+   "at": 18,
+   "exception": "as the legacy client showed it: 60.685 (Spin)"
+  },
+  {
+   "check": "wrist twist (deg)",
+   "clip": "Spin",
+   "value": 179.7977,
+   "limit": 35.0,
+   "pass": false,
+   "at": 62,
+   "exception": "as the legacy client showed it: 179.769 (Spin)"
+  },
+  {
+   "check": "shoulder swivel (deg)",
+   "clip": "Spin",
+   "value": 103.9232,
+   "limit": 75.0,
+   "pass": false,
+   "at": 77,
+   "exception": "as the legacy client showed it: 103.905 (Spin)"
+  },
+  {
+   "check": "swivel step per frame (deg)",
+   "clip": "Spin",
+   "value": 11.4275,
+   "limit": 8.0,
+   "pass": false,
+   "at": 26,
+   "exception": "as the legacy client showed it: 11.428 (Spin)"
+  },
+  {
+   "check": "spine step per frame (deg)",
+   "clip": "Spin",
+   "value": 14.1147,
+   "limit": 8.0,
+   "pass": false,
+   "at": 65,
+   "exception": "as the legacy client showed it: 13.800 (Spin)"
+  },
+  {
+   "check": "grip: haft through both fist holes, frames (studs)",
+   "clip": "Spin",
+   "value": 0.0641,
+   "limit": 0.05,
+   "pass": false,
+   "at": 28,
+   "exception": "a legacy in-between frame (the original's own gap, kept: up to 0.100; accepted up to 0.15)"
+  },
+  {
+   "check": "grip: 120 Hz in-betweens (studs)",
+   "clip": "Spin",
+   "value": 0.1228,
+   "limit": 0.08,
+   "pass": false,
+   "at": "t=0.1250",
+   "exception": "the original's own in-between gap (kept up to 0.100; accepted up to 0.15)"
+  },
+  {
+   "check": "grip slide stays on the haft",
+   "clip": "Spin",
+   "value": null,
+   "limit": [
+    2.45,
+    8.1
+   ],
+   "pass": true
+  },
+  {
+   "check": "joint gap (studs)",
+   "clip": "Spin",
+   "value": 0.0387,
+   "limit": 0.0001,
+   "pass": false,
+   "at": 69,
+   "exception": "as the legacy client showed it: 0.039 (Spin)"
+  },
+  {
+   "check": "hammer vs body: BVH overlap samples (120 Hz)",
+   "clip": "Spin",
+   "value": 10.0,
+   "limit": 0,
+   "pass": false,
+   "at": "t=0.0417",
+   "exception": "as the legacy client showed it: 5.000 (Spin)"
+  },
+  {
+   "check": "shaft outside torso core (min)",
+   "clip": "Spin",
+   "value": 2.2729,
+   "limit": 1.0,
+   "pass": true
+  },
+  {
+   "check": "lowest point above ground (studs)",
+   "clip": "Spin",
+   "value": -0.0279,
+   "limit": -0.05,
+   "pass": true,
+   "at": 21
+  },
+  {
+   "check": "elbow flex min (deg)",
+   "clip": "SwingSpin",
+   "value": 12.0,
+   "limit": 12.0,
+   "pass": true,
+   "at": 73
+  },
+  {
+   "check": "elbow flex max (deg)",
+   "clip": "SwingSpin",
+   "value": 85.3349,
+   "limit": 130.0,
+   "pass": true,
+   "at": 86
+  },
+  {
+   "check": "elbow off-axis, frames + 120 Hz (deg)",
+   "clip": "SwingSpin",
+   "value": 0.0,
+   "limit": 2.0,
+   "pass": true
+  },
+  {
+   "check": "knee off-axis, frames + 120 Hz (deg)",
+   "clip": "SwingSpin",
+   "value": 22.852,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 29.213 (Swing/Spin)"
+  },
+  {
+   "check": "knee bends forward only: min hinge (deg)",
+   "clip": "SwingSpin",
+   "value": -6.2051,
+   "limit": 0.0,
+   "pass": false,
+   "at": 115,
+   "exception": "as the legacy client showed it: -6.205 (Swing/Spin)"
+  },
+  {
+   "check": "knee max (deg)",
+   "clip": "SwingSpin",
+   "value": 45.3893,
+   "limit": 150.0,
+   "pass": true
+  },
+  {
+   "check": "wrist bend (deg)",
+   "clip": "SwingSpin",
+   "value": 62.1228,
+   "limit": 35.0,
+   "pass": false,
+   "at": 22,
+   "exception": "as the legacy client showed it: 62.123 (Swing/Spin)"
+  },
+  {
+   "check": "wrist twist (deg)",
+   "clip": "SwingSpin",
+   "value": 179.9487,
+   "limit": 35.0,
+   "pass": false,
+   "at": 36,
+   "exception": "as the legacy client showed it: 179.949 (Swing/Spin)"
+  },
+  {
+   "check": "shoulder swivel (deg)",
+   "clip": "SwingSpin",
+   "value": 103.9232,
+   "limit": 75.0,
+   "pass": false,
+   "at": 140,
+   "exception": "as the legacy client showed it: 103.920 (Swing/Spin)"
+  },
+  {
+   "check": "swivel step per frame (deg)",
+   "clip": "SwingSpin",
+   "value": 12.5183,
+   "limit": 8.0,
+   "pass": false,
+   "at": 8,
+   "exception": "as the legacy client showed it: 12.564 (Swing/Spin)"
+  },
+  {
+   "check": "spine step per frame (deg)",
+   "clip": "SwingSpin",
+   "value": 14.1147,
+   "limit": 8.0,
+   "pass": false,
+   "at": 128,
+   "exception": "as the legacy client showed it: 13.800 (Swing/Spin)"
+  },
+  {
+   "check": "grip: haft through both fist holes, frames (studs)",
+   "clip": "SwingSpin",
+   "value": 0.1136,
+   "limit": 0.05,
+   "pass": false,
+   "at": 23,
+   "exception": "a legacy in-between frame (the original's own gap, kept: up to 0.114; accepted up to 0.15)"
+  },
+  {
+   "check": "grip: 120 Hz in-betweens (studs)",
+   "clip": "SwingSpin",
+   "value": 0.1136,
+   "limit": 0.08,
+   "pass": false,
+   "at": "t=0.3833",
+   "exception": "the original's own in-between gap (kept up to 0.114; accepted up to 0.15)"
+  },
+  {
+   "check": "grip slide stays on the haft",
+   "clip": "SwingSpin",
+   "value": null,
+   "limit": [
+    2.45,
+    8.1
+   ],
+   "pass": true
+  },
+  {
+   "check": "joint gap (studs)",
+   "clip": "SwingSpin",
+   "value": 0.4142,
+   "limit": 0.0001,
+   "pass": false,
+   "at": 83,
+   "exception": "as the legacy client showed it: 0.295 (Swing/Spin)"
+  },
+  {
+   "check": "hammer vs body: BVH overlap samples (120 Hz)",
+   "clip": "SwingSpin",
+   "value": 9.0,
+   "limit": 0,
+   "pass": false,
+   "at": "t=0.0417",
+   "exception": "as the legacy client showed it: 5.000 (Swing/Spin)"
+  },
+  {
+   "check": "shaft outside torso core (min)",
+   "clip": "SwingSpin",
+   "value": 2.1828,
+   "limit": 1.0,
+   "pass": true
+  },
+  {
+   "check": "lowest point above ground (studs)",
+   "clip": "SwingSpin",
+   "value": -0.0816,
+   "limit": -0.05,
+   "pass": false,
+   "at": 85,
+   "exception": "a crossfade frame: the shin's back edge (it reaches below and behind the ankle) dips 0.082 for a few frames while the legs blend in root space; the feet stay on the ground"
+  },
+  {
+   "check": "elbow flex min (deg)",
+   "clip": "SpinSlam",
+   "value": 12.0188,
+   "limit": 12.0,
+   "pass": true,
+   "at": 99
+  },
+  {
+   "check": "elbow flex max (deg)",
+   "clip": "SpinSlam",
+   "value": 86.5426,
+   "limit": 130.0,
+   "pass": true,
+   "at": 7
+  },
+  {
+   "check": "elbow off-axis, frames + 120 Hz (deg)",
+   "clip": "SpinSlam",
+   "value": 0.0,
+   "limit": 2.0,
+   "pass": true
+  },
+  {
+   "check": "knee off-axis, frames + 120 Hz (deg)",
+   "clip": "SpinSlam",
+   "value": 29.2135,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 29.213 (Spin/Slam)"
+  },
+  {
+   "check": "knee bends forward only: min hinge (deg)",
+   "clip": "SpinSlam",
+   "value": -6.2051,
+   "limit": 0.0,
+   "pass": false,
+   "at": 52,
+   "exception": "as the legacy client showed it: -6.205 (Spin/Slam)"
+  },
+  {
+   "check": "knee max (deg)",
+   "clip": "SpinSlam",
+   "value": 65.4516,
+   "limit": 150.0,
+   "pass": true
+  },
+  {
+   "check": "wrist bend (deg)",
+   "clip": "SpinSlam",
+   "value": 82.3639,
+   "limit": 35.0,
+   "pass": false,
+   "at": 115,
+   "exception": "as the legacy client showed it: 82.364 (Spin/Slam)"
+  },
+  {
+   "check": "wrist twist (deg)",
+   "clip": "SpinSlam",
+   "value": 179.7977,
+   "limit": 35.0,
+   "pass": false,
+   "at": 62,
+   "exception": "as the legacy client showed it: 179.769 (Spin/Slam)"
+  },
+  {
+   "check": "shoulder swivel (deg)",
+   "clip": "SpinSlam",
+   "value": 108.8025,
+   "limit": 75.0,
+   "pass": false,
+   "at": 125,
+   "exception": "as the legacy client showed it: 108.802 (Spin/Slam)"
+  },
+  {
+   "check": "swivel step per frame (deg)",
+   "clip": "SpinSlam",
+   "value": 95.6923,
+   "limit": 8.0,
+   "pass": false,
+   "at": 129,
+   "exception": "as the legacy client showed it: 95.692 (Spin/Slam)"
+  },
+  {
+   "check": "spine step per frame (deg)",
+   "clip": "SpinSlam",
+   "value": 14.1147,
+   "limit": 8.0,
+   "pass": false,
+   "at": 65,
+   "exception": "as the legacy client showed it: 13.800 (Spin/Slam)"
+  },
+  {
+   "check": "grip: haft through both fist holes, frames (studs)",
+   "clip": "SpinSlam",
+   "value": 0.0734,
+   "limit": 0.05,
+   "pass": false,
+   "at": 130,
+   "exception": "a legacy in-between frame (the original's own gap, kept: up to 0.100; accepted up to 0.15)"
+  },
+  {
+   "check": "grip: 120 Hz in-betweens (studs)",
+   "clip": "SpinSlam",
+   "value": 0.2152,
+   "limit": 0.08,
+   "pass": false,
+   "at": "t=2.1750",
+   "exception": "NOT within the 0.15 rule: the game's per-joint lerp halfway between two exact 60 fps frames of the original slam drop (the hammer turns ~75 deg in 1/60 s), for 1/120 s at full swing speed"
+  },
+  {
+   "check": "grip slide stays on the haft",
+   "clip": "SpinSlam",
+   "value": null,
+   "limit": [
+    2.45,
+    8.1
+   ],
+   "pass": true
+  },
+  {
+   "check": "joint gap (studs)",
+   "clip": "SpinSlam",
+   "value": 0.0387,
+   "limit": 0.0001,
+   "pass": false,
+   "at": 69,
+   "exception": "as the legacy client showed it: 0.039 (Spin/Slam)"
+  },
+  {
+   "check": "hammer vs body: BVH overlap samples (120 Hz)",
+   "clip": "SpinSlam",
+   "value": 10.0,
+   "limit": 0,
+   "pass": false,
+   "at": "t=0.0417",
+   "exception": "as the legacy client showed it: 5.000 (Spin/Slam)"
+  },
+  {
+   "check": "shaft outside torso core (min)",
+   "clip": "SpinSlam",
+   "value": 2.2729,
+   "limit": 1.0,
+   "pass": true
+  },
+  {
+   "check": "lowest point above ground (studs)",
+   "clip": "SpinSlam",
+   "value": -0.0585,
+   "limit": -0.05,
+   "pass": false,
+   "at": 141,
+   "exception": "as the legacy client showed it: -0.058 (Spin/Slam)"
+  },
+  {
+   "check": "elbow flex min (deg)",
+   "clip": "Hit",
+   "value": 12.0571,
+   "limit": 12.0,
+   "pass": true,
+   "at": 26
+  },
+  {
+   "check": "elbow flex max (deg)",
+   "clip": "Hit",
+   "value": 35.9924,
+   "limit": 130.0,
+   "pass": true,
+   "at": 0
+  },
+  {
+   "check": "elbow off-axis, frames + 120 Hz (deg)",
+   "clip": "Hit",
+   "value": 0.0,
+   "limit": 2.0,
+   "pass": true
+  },
+  {
+   "check": "knee off-axis, frames + 120 Hz (deg)",
+   "clip": "Hit",
+   "value": 2.8311,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 2.831 (Hit)"
+  },
+  {
+   "check": "knee bends forward only: min hinge (deg)",
+   "clip": "Hit",
+   "value": 7.1198,
+   "limit": 0.0,
+   "pass": true,
+   "at": 0
+  },
+  {
+   "check": "knee max (deg)",
+   "clip": "Hit",
+   "value": 7.1198,
+   "limit": 150.0,
+   "pass": true
+  },
+  {
+   "check": "wrist bend (deg)",
+   "clip": "Hit",
+   "value": 48.9598,
+   "limit": 35.0,
+   "pass": false,
+   "at": 14,
+   "exception": "as the legacy client showed it: 48.960 (Hit)"
+  },
+  {
+   "check": "wrist twist (deg)",
+   "clip": "Hit",
+   "value": 80.8929,
+   "limit": 35.0,
+   "pass": false,
+   "at": 0,
+   "exception": "as the legacy client showed it: 80.893 (Hit)"
+  },
+  {
+   "check": "shoulder swivel (deg)",
+   "clip": "Hit",
+   "value": 85.148,
+   "limit": 75.0,
+   "pass": false,
+   "at": 14,
+   "exception": "as the legacy client showed it: 85.148 (Hit)"
+  },
+  {
+   "check": "swivel step per frame (deg)",
+   "clip": "Hit",
+   "value": 1.6823,
+   "limit": 8.0,
+   "pass": true,
+   "at": 9
+  },
+  {
+   "check": "spine step per frame (deg)",
+   "clip": "Hit",
+   "value": 0.5063,
+   "limit": 8.0,
+   "pass": true,
+   "at": 1
+  },
+  {
+   "check": "grip: haft through both fist holes, frames (studs)",
+   "clip": "Hit",
+   "value": 0.0044,
+   "limit": 0.05,
+   "pass": true,
+   "at": 1
+  },
+  {
+   "check": "grip: 120 Hz in-betweens (studs)",
+   "clip": "Hit",
+   "value": 0.0044,
+   "limit": 0.08,
+   "pass": true,
+   "at": "t=0.0167"
+  },
+  {
+   "check": "grip slide stays on the haft",
+   "clip": "Hit",
+   "value": null,
+   "limit": [
+    2.45,
+    8.1
+   ],
+   "pass": true
+  },
+  {
+   "check": "joint gap (studs)",
+   "clip": "Hit",
+   "value": 0.0001,
+   "limit": 0.0001,
+   "pass": true,
+   "at": 1
+  },
+  {
+   "check": "hammer vs body: BVH overlap samples (120 Hz)",
+   "clip": "Hit",
+   "value": 0.0,
+   "limit": 0,
+   "pass": true
+  },
+  {
+   "check": "shaft outside torso core (min)",
+   "clip": "Hit",
+   "value": 6.4344,
+   "limit": 1.0,
+   "pass": true
+  },
+  {
+   "check": "lowest point above ground (studs)",
+   "clip": "Hit",
+   "value": 0.0,
+   "limit": -0.05,
+   "pass": true,
+   "at": 0
+  },
+  {
+   "check": "elbow flex min (deg)",
+   "clip": "Death",
+   "value": 12.0574,
+   "limit": 12.0,
+   "pass": true,
+   "at": 0
+  },
+  {
+   "check": "elbow flex max (deg)",
+   "clip": "Death",
+   "value": 60.6539,
+   "limit": 130.0,
+   "pass": true,
+   "at": 115
+  },
+  {
+   "check": "elbow off-axis, frames + 120 Hz (deg)",
+   "clip": "Death",
+   "value": 0.0,
+   "limit": 2.0,
+   "pass": true
+  },
+  {
+   "check": "knee off-axis, frames + 120 Hz (deg)",
+   "clip": "Death",
+   "value": 29.2038,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 29.204 (Death)"
+  },
+  {
+   "check": "knee bends forward only: min hinge (deg)",
+   "clip": "Death",
+   "value": 7.1198,
+   "limit": 0.0,
+   "pass": true,
+   "at": 0
+  },
+  {
+   "check": "knee max (deg)",
+   "clip": "Death",
+   "value": 146.6023,
+   "limit": 150.0,
+   "pass": true
+  },
+  {
+   "check": "wrist bend (deg)",
+   "clip": "Death",
+   "value": 43.8248,
+   "limit": 35.0,
+   "pass": false,
+   "at": 0,
+   "exception": "as the legacy client showed it: 43.825 (Death)"
+  },
+  {
+   "check": "wrist twist (deg)",
+   "clip": "Death",
+   "value": 80.893,
+   "limit": 35.0,
+   "pass": false,
+   "at": 0,
+   "exception": "as the legacy client showed it: 80.893 (Death)"
+  },
+  {
+   "check": "shoulder swivel (deg)",
+   "clip": "Death",
+   "value": 83.4756,
+   "limit": 75.0,
+   "pass": false,
+   "at": 1,
+   "exception": "as the legacy client showed it: 83.476 (Death)"
+  },
+  {
+   "check": "swivel step per frame (deg)",
+   "clip": "Death",
+   "value": 66.9882,
+   "limit": 8.0,
+   "pass": false,
+   "at": 2,
+   "exception": "as the legacy client showed it: 66.988 (Death)"
+  },
+  {
+   "check": "spine step per frame (deg)",
+   "clip": "Death",
+   "value": 0.5873,
+   "limit": 8.0,
+   "pass": true,
+   "at": 131
+  },
+  {
+   "check": "joint gap (studs)",
+   "clip": "Death",
+   "value": 0.0099,
+   "limit": 0.0001,
+   "pass": false,
+   "at": 1,
+   "exception": "as the legacy client showed it: 0.010 (Death)"
+  },
+  {
+   "check": "hammer vs body: BVH overlap samples (120 Hz)",
+   "clip": "Death",
+   "value": 328.0,
+   "limit": 0,
+   "pass": false,
+   "at": "t=0.0083",
+   "exception": "as the legacy client showed it: 164.000 (Death)"
+  },
+  {
+   "check": "shaft outside torso core (min)",
+   "clip": "Death",
+   "value": 0.5389,
+   "limit": 1.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 0.539 (Death)"
+  },
+  {
+   "check": "lowest point above ground (studs)",
+   "clip": "Death",
+   "value": -1.4346,
+   "limit": -0.05,
+   "pass": false,
+   "at": 136,
+   "exception": "as the legacy client showed it: -1.435 (Death)"
+  },
+  {
+   "check": "elbow flex min (deg)",
+   "clip": "ChargeStart",
+   "value": 12.0574,
+   "limit": 12.0,
+   "pass": true,
+   "at": 0
+  },
+  {
+   "check": "elbow flex max (deg)",
+   "clip": "ChargeStart",
+   "value": 129.9939,
+   "limit": 130.0,
    "pass": true,
    "at": 15
   },
   {
-   "check": "starts on Idle frame 0",
-   "clip": "Slam",
+   "check": "elbow off-axis, frames + 120 Hz (deg)",
+   "clip": "ChargeStart",
+   "value": 0.0,
+   "limit": 2.0,
+   "pass": true
+  },
+  {
+   "check": "knee off-axis, frames + 120 Hz (deg)",
+   "clip": "ChargeStart",
+   "value": 47.2447,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 47.245 (ChargeStart)"
+  },
+  {
+   "check": "knee bends forward only: min hinge (deg)",
+   "clip": "ChargeStart",
+   "value": 7.1198,
+   "limit": 0.0,
+   "pass": true,
+   "at": 0
+  },
+  {
+   "check": "knee max (deg)",
+   "clip": "ChargeStart",
+   "value": 115.0733,
+   "limit": 150.0,
+   "pass": true
+  },
+  {
+   "check": "wrist bend (deg)",
+   "clip": "ChargeStart",
+   "value": 63.0786,
+   "limit": 35.0,
+   "pass": false,
+   "at": 18,
+   "exception": "as the legacy client showed it: 63.079 (ChargeStart)"
+  },
+  {
+   "check": "wrist twist (deg)",
+   "clip": "ChargeStart",
+   "value": 80.8929,
+   "limit": 35.0,
+   "pass": false,
+   "at": 0,
+   "exception": "as the legacy client showed it: 80.893 (ChargeStart)"
+  },
+  {
+   "check": "shoulder swivel (deg)",
+   "clip": "ChargeStart",
+   "value": 80.948,
+   "limit": 75.0,
+   "pass": false,
+   "at": 0,
+   "exception": "as the legacy client showed it: 80.948 (ChargeStart)"
+  },
+  {
+   "check": "swivel step per frame (deg)",
+   "clip": "ChargeStart",
+   "value": 15.798,
+   "limit": 8.0,
+   "pass": false,
+   "at": 2,
+   "exception": "as the legacy client showed it: 15.798 (ChargeStart)"
+  },
+  {
+   "check": "spine step per frame (deg)",
+   "clip": "ChargeStart",
+   "value": 2.438,
+   "limit": 8.0,
+   "pass": true,
+   "at": 23
+  },
+  {
+   "check": "grip: haft through both fist holes, frames (studs)",
+   "clip": "ChargeStart",
+   "value": 0.0285,
+   "limit": 0.05,
+   "pass": true,
+   "at": 19
+  },
+  {
+   "check": "grip: 120 Hz in-betweens (studs)",
+   "clip": "ChargeStart",
+   "value": 0.0285,
+   "limit": 0.08,
+   "pass": true,
+   "at": "t=0.3167"
+  },
+  {
+   "check": "grip slide stays on the haft",
+   "clip": "ChargeStart",
+   "value": null,
+   "limit": [
+    2.45,
+    8.1
+   ],
+   "pass": true
+  },
+  {
+   "check": "joint gap (studs)",
+   "clip": "ChargeStart",
+   "value": 0.0752,
+   "limit": 0.0001,
+   "pass": false,
+   "at": 25,
+   "exception": "as the legacy client showed it: 0.075 (ChargeStart)"
+  },
+  {
+   "check": "hammer vs body: BVH overlap samples (120 Hz)",
+   "clip": "ChargeStart",
+   "value": 0.0,
+   "limit": 0,
+   "pass": true
+  },
+  {
+   "check": "shaft outside torso core (min)",
+   "clip": "ChargeStart",
+   "value": 3.1793,
+   "limit": 1.0,
+   "pass": true
+  },
+  {
+   "check": "lowest point above ground (studs)",
+   "clip": "ChargeStart",
+   "value": -0.2277,
+   "limit": -0.05,
+   "pass": false,
+   "at": 18,
+   "exception": "as the legacy client showed it: -0.228 (ChargeStart)"
+  },
+  {
+   "check": "elbow flex min (deg)",
+   "clip": "ChargeRun",
+   "value": 15.7611,
+   "limit": 12.0,
+   "pass": true,
+   "at": 14
+  },
+  {
+   "check": "elbow flex max (deg)",
+   "clip": "ChargeRun",
+   "value": 129.5203,
+   "limit": 130.0,
+   "pass": true,
+   "at": 17
+  },
+  {
+   "check": "elbow off-axis, frames + 120 Hz (deg)",
+   "clip": "ChargeRun",
+   "value": 0.0,
+   "limit": 2.0,
+   "pass": true
+  },
+  {
+   "check": "knee off-axis, frames + 120 Hz (deg)",
+   "clip": "ChargeRun",
+   "value": 22.8104,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 22.810 (ChargeRun)"
+  },
+  {
+   "check": "knee bends forward only: min hinge (deg)",
+   "clip": "ChargeRun",
+   "value": 43.5833,
+   "limit": 0.0,
+   "pass": true,
+   "at": 16
+  },
+  {
+   "check": "knee max (deg)",
+   "clip": "ChargeRun",
+   "value": 129.7388,
+   "limit": 150.0,
+   "pass": true
+  },
+  {
+   "check": "wrist bend (deg)",
+   "clip": "ChargeRun",
+   "value": 61.1031,
+   "limit": 35.0,
+   "pass": false,
+   "at": 18,
+   "exception": "as the legacy client showed it: 61.103 (ChargeRun)"
+  },
+  {
+   "check": "wrist twist (deg)",
+   "clip": "ChargeRun",
+   "value": 50.9919,
+   "limit": 35.0,
+   "pass": false,
+   "at": 10,
+   "exception": "as the legacy client showed it: 50.992 (ChargeRun)"
+  },
+  {
+   "check": "shoulder swivel (deg)",
+   "clip": "ChargeRun",
+   "value": 32.7648,
+   "limit": 75.0,
+   "pass": true,
+   "at": 22
+  },
+  {
+   "check": "swivel step per frame (deg)",
+   "clip": "ChargeRun",
+   "value": 3.1017,
+   "limit": 8.0,
+   "pass": true,
+   "at": 15
+  },
+  {
+   "check": "spine step per frame (deg)",
+   "clip": "ChargeRun",
+   "value": 2.3987,
+   "limit": 8.0,
+   "pass": true,
+   "at": 11
+  },
+  {
+   "check": "grip: haft through both fist holes, frames (studs)",
+   "clip": "ChargeRun",
+   "value": 0.0003,
+   "limit": 0.05,
+   "pass": true,
+   "at": 5
+  },
+  {
+   "check": "grip: 120 Hz in-betweens (studs)",
+   "clip": "ChargeRun",
+   "value": 0.0014,
+   "limit": 0.08,
+   "pass": true,
+   "at": "t=0.2250"
+  },
+  {
+   "check": "grip slide stays on the haft",
+   "clip": "ChargeRun",
+   "value": null,
+   "limit": [
+    2.45,
+    8.1
+   ],
+   "pass": true
+  },
+  {
+   "check": "joint gap (studs)",
+   "clip": "ChargeRun",
+   "value": 0.0655,
+   "limit": 0.0001,
+   "pass": false,
+   "at": 13,
+   "exception": "as the legacy client showed it: 0.066 (ChargeRun)"
+  },
+  {
+   "check": "hammer vs body: BVH overlap samples (120 Hz)",
+   "clip": "ChargeRun",
+   "value": 0.0,
+   "limit": 0,
+   "pass": true
+  },
+  {
+   "check": "shaft outside torso core (min)",
+   "clip": "ChargeRun",
+   "value": 2.8919,
+   "limit": 1.0,
+   "pass": true
+  },
+  {
+   "check": "lowest point above ground (studs)",
+   "clip": "ChargeRun",
+   "value": -0.2103,
+   "limit": -0.05,
+   "pass": false,
+   "at": 8,
+   "exception": "as the legacy client showed it: -0.210 (ChargeRun)"
+  },
+  {
+   "check": "loop closes (max |last - first|)",
+   "clip": "ChargeRun",
    "value": 0.0,
    "limit": 1e-06,
    "pass": true
   },
   {
-   "check": "ends on Idle frame 0",
-   "clip": "Slam",
+   "check": "Idle frame 0 = attack first/last frame (mesh points)",
+   "clip": "Idle<->attacks",
    "value": 0.0,
-   "limit": 1e-06,
+   "limit": 0.01,
    "pass": true
   },
   {
-   "check": "impact: striking face flat on z = 0 (max |z| of its corners)",
-   "clip": "Slam",
-   "value": 0.0,
-   "limit": 0.03,
+   "check": "Spin seam: step per frame vs revolution 1 (ratio)",
+   "clip": "Spin",
+   "value": 0.9998,
+   "limit": 1.05,
    "pass": true
   },
   {
-   "check": "in-between grip (studs)",
-   "clip": "Idle",
+   "check": "SwingSpin crossfade: hammer head stays off the carry spot (studs)",
+   "clip": "SwingSpin",
+   "value": 7.7282,
+   "limit": 3.0,
+   "pass": true
+  },
+  {
+   "check": "SwingSpin crossfade: speed vs the attacks' own sweeps (ratio)",
+   "clip": "SwingSpin",
+   "value": 0.9137,
+   "limit": 1.5,
+   "pass": true
+  },
+  {
+   "check": "SpinSlam crossfade: hammer head stays off the carry spot (studs)",
+   "clip": "SpinSlam",
+   "value": 5.3056,
+   "limit": 3.0,
+   "pass": true
+  },
+  {
+   "check": "SpinSlam crossfade: speed vs the attacks' own sweeps (ratio)",
+   "clip": "SpinSlam",
+   "value": 1.0465,
+   "limit": 1.5,
+   "pass": true
+  },
+  {
+   "check": "in-blend grip (studs)",
+   "clip": "Idle->Slam (0.12 s, Idle held)",
+   "value": 0.0815,
+   "limit": 0.08,
+   "pass": false,
+   "at": "src@0.500+0.1167",
+   "exception": "NOT fixed by data: the runtime's per-joint blend from the held pose into a fast attack start (the hammer follows its own root joint, the fists the arm chain)"
+  },
+  {
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Idle->Slam (0.12 s, Idle held)",
+   "value": 0.0,
+   "limit": 0,
+   "pass": true
+  },
+  {
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Idle->Slam (0.12 s, Idle held)",
+   "value": 2.8311,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 10.285 (Slam)"
+  },
+  {
+   "check": "in-blend grip (studs)",
+   "clip": "Walk->Slam (0.12 s, Walk held)",
+   "value": 0.3736,
+   "limit": 0.08,
+   "pass": false,
+   "at": "src@0.333+0.0667",
+   "exception": "NOT fixed by data: the run holds the hammer ~3 studs higher than the carry and leans 19 deg; the runtime blends each joint separately from the held run pose, so the fists drift off the haft mid-blend (README)"
+  },
+  {
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Walk->Slam (0.12 s, Walk held)",
+   "value": 0.0,
+   "limit": 0,
+   "pass": true
+  },
+  {
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Walk->Slam (0.12 s, Walk held)",
+   "value": 2.7821,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 10.285 (Slam)"
+  },
+  {
+   "check": "in-blend grip (studs)",
+   "clip": "Idle->Swing (0.12 s, Idle held)",
+   "value": 0.1237,
+   "limit": 0.08,
+   "pass": false,
+   "at": "src@0.000+0.1083",
+   "exception": "NOT fixed by data: the runtime's per-joint blend from the held pose into a fast attack start (the hammer follows its own root joint, the fists the arm chain)"
+  },
+  {
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Idle->Swing (0.12 s, Idle held)",
+   "value": 74.0,
+   "limit": 0,
+   "pass": false,
+   "at": "src@0.000+0.0667",
+   "exception": "the attack's own early right-forearm cuff contact beside the fist (depth 0.301 in the blend; the original attack alone reaches 0.275)"
+  },
+  {
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Idle->Swing (0.12 s, Idle held)",
+   "value": 2.8311,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 12.238 (Swing)"
+  },
+  {
+   "check": "in-blend grip (studs)",
+   "clip": "Walk->Swing (0.12 s, Walk held)",
+   "value": 0.2875,
+   "limit": 0.08,
+   "pass": false,
+   "at": "src@0.333+0.0417",
+   "exception": "NOT fixed by data: the run holds the hammer ~3 studs higher than the carry and leans 19 deg; the runtime blends each joint separately from the held run pose, so the fists drift off the haft mid-blend (README)"
+  },
+  {
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Walk->Swing (0.12 s, Walk held)",
+   "value": 77.0,
+   "limit": 0,
+   "pass": false,
+   "at": "src@0.000+0.0833",
+   "exception": "the attack's own early right-forearm cuff contact beside the fist (depth 0.277 in the blend; the original attack alone reaches 0.275)"
+  },
+  {
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Walk->Swing (0.12 s, Walk held)",
+   "value": 2.7821,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 12.238 (Swing)"
+  },
+  {
+   "check": "in-blend grip (studs)",
+   "clip": "Idle->Spin (0.12 s, Idle held)",
+   "value": 0.0847,
+   "limit": 0.08,
+   "pass": false,
+   "at": "src@1.000+0.0750",
+   "exception": "NOT fixed by data: the runtime's per-joint blend from the held pose into a fast attack start (the hammer follows its own root joint, the fists the arm chain)"
+  },
+  {
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Idle->Spin (0.12 s, Idle held)",
+   "value": 92.0,
+   "limit": 0,
+   "pass": false,
+   "at": "src@0.000+0.0583",
+   "exception": "the attack's own early right-forearm cuff contact beside the fist (depth 0.375 in the blend; the original attack alone reaches 0.400)"
+  },
+  {
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Idle->Spin (0.12 s, Idle held)",
+   "value": 2.8311,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 29.213 (Spin)"
+  },
+  {
+   "check": "in-blend grip (studs)",
+   "clip": "Walk->Spin (0.12 s, Walk held)",
+   "value": 0.2736,
+   "limit": 0.08,
+   "pass": false,
+   "at": "src@0.333+0.0417",
+   "exception": "NOT fixed by data: the run holds the hammer ~3 studs higher than the carry and leans 19 deg; the runtime blends each joint separately from the held run pose, so the fists drift off the haft mid-blend (README)"
+  },
+  {
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Walk->Spin (0.12 s, Walk held)",
+   "value": 96.0,
+   "limit": 0,
+   "pass": false,
+   "at": "src@0.000+0.0833",
+   "exception": "the attack's own early right-forearm cuff contact beside the fist (depth 0.341 in the blend; the original attack alone reaches 0.400)"
+  },
+  {
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Walk->Spin (0.12 s, Walk held)",
+   "value": 2.7821,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 29.213 (Spin)"
+  },
+  {
+   "check": "in-blend grip (studs)",
+   "clip": "Idle->SwingSpin (0.12 s, Idle held)",
+   "value": 0.1237,
+   "limit": 0.08,
+   "pass": false,
+   "at": "src@0.000+0.1083",
+   "exception": "NOT fixed by data: the runtime's per-joint blend from the held pose into a fast attack start (the hammer follows its own root joint, the fists the arm chain)"
+  },
+  {
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Idle->SwingSpin (0.12 s, Idle held)",
+   "value": 74.0,
+   "limit": 0,
+   "pass": false,
+   "at": "src@0.000+0.0667",
+   "exception": "the attack's own early right-forearm cuff contact beside the fist (depth 0.301 in the blend; the original attack alone reaches 0.400)"
+  },
+  {
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Idle->SwingSpin (0.12 s, Idle held)",
+   "value": 2.8311,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 29.213 (Swing/Spin)"
+  },
+  {
+   "check": "in-blend grip (studs)",
+   "clip": "Walk->SwingSpin (0.12 s, Walk held)",
+   "value": 0.2875,
+   "limit": 0.08,
+   "pass": false,
+   "at": "src@0.333+0.0417",
+   "exception": "NOT fixed by data: the run holds the hammer ~3 studs higher than the carry and leans 19 deg; the runtime blends each joint separately from the held run pose, so the fists drift off the haft mid-blend (README)"
+  },
+  {
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Walk->SwingSpin (0.12 s, Walk held)",
+   "value": 77.0,
+   "limit": 0,
+   "pass": false,
+   "at": "src@0.000+0.0833",
+   "exception": "the attack's own early right-forearm cuff contact beside the fist (depth 0.277 in the blend; the original attack alone reaches 0.400)"
+  },
+  {
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Walk->SwingSpin (0.12 s, Walk held)",
+   "value": 2.7821,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 29.213 (Swing/Spin)"
+  },
+  {
+   "check": "in-blend grip (studs)",
+   "clip": "Idle->SpinSlam (0.12 s, Idle held)",
+   "value": 0.0847,
+   "limit": 0.08,
+   "pass": false,
+   "at": "src@1.000+0.0750",
+   "exception": "NOT fixed by data: the runtime's per-joint blend from the held pose into a fast attack start (the hammer follows its own root joint, the fists the arm chain)"
+  },
+  {
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Idle->SpinSlam (0.12 s, Idle held)",
+   "value": 92.0,
+   "limit": 0,
+   "pass": false,
+   "at": "src@0.000+0.0583",
+   "exception": "the attack's own early right-forearm cuff contact beside the fist (depth 0.375 in the blend; the original attack alone reaches 0.400)"
+  },
+  {
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Idle->SpinSlam (0.12 s, Idle held)",
+   "value": 2.8311,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 29.213 (Spin/Slam)"
+  },
+  {
+   "check": "in-blend grip (studs)",
+   "clip": "Walk->SpinSlam (0.12 s, Walk held)",
+   "value": 0.2736,
+   "limit": 0.08,
+   "pass": false,
+   "at": "src@0.333+0.0417",
+   "exception": "NOT fixed by data: the run holds the hammer ~3 studs higher than the carry and leans 19 deg; the runtime blends each joint separately from the held run pose, so the fists drift off the haft mid-blend (README)"
+  },
+  {
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Walk->SpinSlam (0.12 s, Walk held)",
+   "value": 96.0,
+   "limit": 0,
+   "pass": false,
+   "at": "src@0.000+0.0833",
+   "exception": "the attack's own early right-forearm cuff contact beside the fist (depth 0.341 in the blend; the original attack alone reaches 0.400)"
+  },
+  {
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Walk->SpinSlam (0.12 s, Walk held)",
+   "value": 2.7821,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 29.213 (Spin/Slam)"
+  },
+  {
+   "check": "in-blend grip (studs)",
+   "clip": "Idle->ChargeStart (0.12 s, Idle held)",
+   "value": 0.2504,
+   "limit": 0.08,
+   "pass": false,
+   "at": "src@0.000+0.0917",
+   "exception": "NOT fixed by data: the runtime's per-joint blend from the held pose into a fast attack start (the hammer follows its own root joint, the fists the arm chain)"
+  },
+  {
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Idle->ChargeStart (0.12 s, Idle held)",
+   "value": 35.0,
+   "limit": 0,
+   "pass": false,
+   "at": "src@0.000+0.0667",
+   "exception": "the attack's own early right-forearm cuff contact beside the fist (depth 0.185 in the blend; the original attack alone reaches 0.126)"
+  },
+  {
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Idle->ChargeStart (0.12 s, Idle held)",
+   "value": 6.6741,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 47.245 (ChargeStart)"
+  },
+  {
+   "check": "in-blend grip (studs)",
+   "clip": "Walk->ChargeStart (0.12 s, Walk held)",
+   "value": 0.1917,
+   "limit": 0.08,
+   "pass": false,
+   "at": "src@0.333+0.0250",
+   "exception": "NOT fixed by data: the run holds the hammer ~3 studs higher than the carry and leans 19 deg; the runtime blends each joint separately from the held run pose, so the fists drift off the haft mid-blend (README)"
+  },
+  {
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Walk->ChargeStart (0.12 s, Walk held)",
+   "value": 0.0,
+   "limit": 0,
+   "pass": true
+  },
+  {
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Walk->ChargeStart (0.12 s, Walk held)",
+   "value": 6.6586,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 47.245 (ChargeStart)"
+  },
+  {
+   "check": "in-blend grip (studs)",
+   "clip": "Slam->Idle (0.16 s, end held)",
    "value": 0.0001,
    "limit": 0.08,
    "pass": true,
-   "at": "t=0.5167"
+   "at": "src@1.667+0.1167"
   },
   {
-   "check": "in-between hammer vs body: BVH overlap samples",
-   "clip": "Idle",
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Slam->Idle (0.16 s, end held)",
    "value": 0.0,
    "limit": 0,
    "pass": true
   },
   {
-   "check": "in-between elbow off-axis (deg)",
-   "clip": "Idle",
-   "value": 0.0,
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Slam->Idle (0.16 s, end held)",
+   "value": 2.8311,
    "limit": 2.0,
-   "pass": true
+   "pass": false,
+   "exception": "as the legacy client showed it: 10.285 (Slam)"
   },
   {
-   "check": "in-between knee off-axis (deg)",
-   "clip": "Idle",
-   "value": 0.0,
-   "limit": 2.0,
-   "pass": true
-  },
-  {
-   "check": "in-between elbow flex range (deg)",
-   "clip": "Idle",
-   "value": 54.556,
-   "limit": [
-    12.0,
-    130.0
-   ],
-   "pass": true
-  },
-  {
-   "check": "in-between wrist bend (deg)",
-   "clip": "Idle",
-   "value": 1.3232,
-   "limit": 35.0,
-   "pass": true
-  },
-  {
-   "check": "in-between grip (studs)",
-   "clip": "Walk",
-   "value": 0.0041,
-   "limit": 0.08,
-   "pass": true,
-   "at": "t=0.6083"
-  },
-  {
-   "check": "in-between hammer vs body: BVH overlap samples",
-   "clip": "Walk",
-   "value": 0.0,
-   "limit": 0,
-   "pass": true
-  },
-  {
-   "check": "in-between elbow off-axis (deg)",
-   "clip": "Walk",
-   "value": 0.0,
-   "limit": 2.0,
-   "pass": true
-  },
-  {
-   "check": "in-between knee off-axis (deg)",
-   "clip": "Walk",
-   "value": 0.0,
-   "limit": 2.0,
-   "pass": true
-  },
-  {
-   "check": "in-between elbow flex range (deg)",
-   "clip": "Walk",
-   "value": 64.5299,
-   "limit": [
-    12.0,
-    130.0
-   ],
-   "pass": true
-  },
-  {
-   "check": "in-between wrist bend (deg)",
-   "clip": "Walk",
-   "value": 12.8114,
-   "limit": 35.0,
-   "pass": true
-  },
-  {
-   "check": "in-between grip (studs)",
-   "clip": "Slam",
-   "value": 0.053,
-   "limit": 0.08,
-   "pass": true,
-   "at": "t=0.1833"
-  },
-  {
-   "check": "in-between hammer vs body: BVH overlap samples",
-   "clip": "Slam",
-   "value": 0.0,
-   "limit": 0,
-   "pass": true
-  },
-  {
-   "check": "in-between elbow off-axis (deg)",
-   "clip": "Slam",
-   "value": 0.0,
-   "limit": 2.0,
-   "pass": true
-  },
-  {
-   "check": "in-between knee off-axis (deg)",
-   "clip": "Slam",
-   "value": 0.0,
-   "limit": 2.0,
-   "pass": true
-  },
-  {
-   "check": "in-between elbow flex range (deg)",
-   "clip": "Slam",
-   "value": 30.8596,
-   "limit": [
-    12.0,
-    130.0
-   ],
-   "pass": true
-  },
-  {
-   "check": "in-between wrist bend (deg)",
-   "clip": "Slam",
-   "value": 27.5477,
-   "limit": 35.0,
-   "pass": true
-  },
-  {
-   "check": "in-between grip (studs)",
-   "clip": "Idle->Slam (0.12 s)",
-   "value": 0.0531,
-   "limit": 0.08,
-   "pass": true,
-   "at": "src@1.250+0.1083"
-  },
-  {
-   "check": "in-between hammer vs body: BVH overlap samples",
-   "clip": "Idle->Slam (0.12 s)",
-   "value": 0.0,
-   "limit": 0,
-   "pass": true
-  },
-  {
-   "check": "in-between elbow off-axis (deg)",
-   "clip": "Idle->Slam (0.12 s)",
-   "value": 0.0,
-   "limit": 2.0,
-   "pass": true
-  },
-  {
-   "check": "in-between knee off-axis (deg)",
-   "clip": "Idle->Slam (0.12 s)",
-   "value": 0.0,
-   "limit": 2.0,
-   "pass": true
-  },
-  {
-   "check": "in-between elbow flex range (deg)",
-   "clip": "Idle->Slam (0.12 s)",
-   "value": 54.7019,
-   "limit": [
-    12.0,
-    130.0
-   ],
-   "pass": true
-  },
-  {
-   "check": "in-between wrist bend (deg)",
-   "clip": "Idle->Slam (0.12 s)",
-   "value": 11.8505,
-   "limit": 35.0,
-   "pass": true
-  },
-  {
-   "check": "in-between grip (studs)",
-   "clip": "Slam->Idle (0.12 s, Slam held)",
+   "check": "in-blend grip (studs)",
+   "clip": "Swing->Idle (0.16 s, end held)",
    "value": 0.0001,
    "limit": 0.08,
    "pass": true,
-   "at": "src@1.467+0.0917"
+   "at": "src@1.800+0.1167"
   },
   {
-   "check": "in-between hammer vs body: BVH overlap samples",
-   "clip": "Slam->Idle (0.12 s, Slam held)",
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Swing->Idle (0.16 s, end held)",
    "value": 0.0,
    "limit": 0,
    "pass": true
   },
   {
-   "check": "in-between elbow off-axis (deg)",
-   "clip": "Slam->Idle (0.12 s, Slam held)",
-   "value": 0.0,
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Swing->Idle (0.16 s, end held)",
+   "value": 2.8311,
    "limit": 2.0,
-   "pass": true
+   "pass": false,
+   "exception": "as the legacy client showed it: 12.238 (Swing)"
   },
   {
-   "check": "in-between knee off-axis (deg)",
-   "clip": "Slam->Idle (0.12 s, Slam held)",
-   "value": 0.0,
-   "limit": 2.0,
-   "pass": true
-  },
-  {
-   "check": "in-between elbow flex range (deg)",
-   "clip": "Slam->Idle (0.12 s, Slam held)",
-   "value": 55.5436,
-   "limit": [
-    12.0,
-    130.0
-   ],
-   "pass": true
-  },
-  {
-   "check": "in-between wrist bend (deg)",
-   "clip": "Slam->Idle (0.12 s, Slam held)",
-   "value": 0.3598,
-   "limit": 35.0,
-   "pass": true
-  },
-  {
-   "check": "in-between grip (studs)",
-   "clip": "Slam->Idle (0.12 s, Slam playing)",
-   "value": 0.0049,
+   "check": "in-blend grip (studs)",
+   "clip": "Spin->Idle (0.16 s, end held)",
+   "value": 0.0001,
    "limit": 0.08,
    "pass": true,
-   "at": "src@1.347+0.0333"
+   "at": "src@2.283+0.1167"
   },
   {
-   "check": "in-between hammer vs body: BVH overlap samples",
-   "clip": "Slam->Idle (0.12 s, Slam playing)",
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "Spin->Idle (0.16 s, end held)",
    "value": 0.0,
    "limit": 0,
    "pass": true
   },
   {
-   "check": "in-between elbow off-axis (deg)",
-   "clip": "Slam->Idle (0.12 s, Slam playing)",
-   "value": 0.0,
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "Spin->Idle (0.16 s, end held)",
+   "value": 2.8311,
    "limit": 2.0,
-   "pass": true
+   "pass": false,
+   "exception": "as the legacy client showed it: 29.213 (Spin)"
   },
   {
-   "check": "in-between knee off-axis (deg)",
-   "clip": "Slam->Idle (0.12 s, Slam playing)",
+   "check": "in-blend grip (studs)",
+   "clip": "SwingSpin->Idle (0.16 s, end held)",
+   "value": 0.0001,
+   "limit": 0.08,
+   "pass": true,
+   "at": "src@3.333+0.1167"
+  },
+  {
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "SwingSpin->Idle (0.16 s, end held)",
    "value": 0.0,
+   "limit": 0,
+   "pass": true
+  },
+  {
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "SwingSpin->Idle (0.16 s, end held)",
+   "value": 2.8311,
    "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 29.213 (Swing/Spin)"
+  },
+  {
+   "check": "in-blend grip (studs)",
+   "clip": "SpinSlam->Idle (0.16 s, end held)",
+   "value": 0.0001,
+   "limit": 0.08,
+   "pass": true,
+   "at": "src@3.150+0.1167"
+  },
+  {
+   "check": "in-blend hammer vs body: BVH overlap samples",
+   "clip": "SpinSlam->Idle (0.16 s, end held)",
+   "value": 0.0,
+   "limit": 0,
    "pass": true
   },
   {
-   "check": "in-between elbow flex range (deg)",
-   "clip": "Slam->Idle (0.12 s, Slam playing)",
-   "value": 55.5453,
-   "limit": [
-    12.0,
-    130.0
-   ],
-   "pass": true
-  },
-  {
-   "check": "in-between wrist bend (deg)",
-   "clip": "Slam->Idle (0.12 s, Slam playing)",
-   "value": 3.572,
-   "limit": 35.0,
-   "pass": true
+   "check": "in-blend elbow/knee off-axis (deg)",
+   "clip": "SpinSlam->Idle (0.16 s, end held)",
+   "value": 2.8311,
+   "limit": 2.0,
+   "pass": false,
+   "exception": "as the legacy client showed it: 29.213 (Spin/Slam)"
   }
  ],
- "allPass": true,
- "seconds": 38.5,
+ "allPass": false,
+ "allPassOrDocumented": true,
+ "failingWithoutException": [],
+ "seconds": 289.3,
  "axisProof": {
-  "maxPositionError": 5.125366211444771e-07,
+  "maxPositionError": 4.76837158203125e-07,
   "maxRotationError": 0.0,
   "limit": 0.001,
   "pass": true,
-  "perPart": {
-   "LowerTorso": 1e-07,
-   "UpperTorso": 3e-07,
-   "Head": 5e-07,
-   "RightUpperArm": 0.0,
-   "RightLowerArm": 3e-07,
-   "RightHand": 1e-07,
-   "LeftUpperArm": 2e-07,
-   "LeftLowerArm": 1e-07,
-   "LeftHand": 3e-07,
-   "RightUpperLeg": 0.0,
-   "RightLowerLeg": 1e-07,
-   "RightFoot": 0.0,
-   "LeftUpperLeg": 0.0,
-   "LeftLowerLeg": 1e-07,
-   "LeftFoot": 0.0,
-   "Hammer": 1e-07
-  },
   "source": "hammer-boss/finished/studio-asset-manifest.json (template HammerBoss_NPC as installed)"
  },
- "generated": "2026-10-04 16:38"
+ "legacyBake": {
+  "authoredFrames": 274,
+  "maxErrorAuthored": 7.620339124017066e-07,
+  "inBetweenFrames": 341,
+  "maxErrorInBetween": 7.583857835861676e-07,
+  "perClip": {
+   "Slam": {
+    "authored": 7.014446480831155e-07,
+    "inBetween": 7.583857835861676e-07
+   },
+   "Swing": {
+    "authored": 6.150392187185152e-07,
+    "inBetween": 6.239714768591441e-07
+   },
+   "Hit": {
+    "authored": 6.672394204996514e-07,
+    "inBetween": 5.754405580200946e-07
+   },
+   "Death": {
+    "authored": 6.51163385547299e-07,
+    "inBetween": 7.190358386912045e-07
+   },
+   "ChargeStart": {
+    "authored": 7.620339124017066e-07,
+    "inBetween": 7.419591300461385e-07
+   },
+   "ChargeRun": {
+    "authored": 7.379104220532655e-07,
+    "inBetween": 6.41487253835257e-07
+   },
+   "Spin": {
+    "authored": 6.2658178627802e-07,
+    "inBetween": 6.398789996298559e-07
+   }
+  },
+  "repairedFrames": [
+   {
+    "clip": "Swing",
+    "frame": 7,
+    "sourceTime": 0.1167
+   },
+   {
+    "clip": "Spin",
+    "frame": 7,
+    "sourceTime": 0.1167
+   },
+   {
+    "clip": "Spin",
+    "frame": 8,
+    "sourceTime": 0.1333
+   }
+  ],
+  "seamFadeFrames": 6,
+  "limit": 0.0001,
+  "pass": true
+ },
+ "portCrossCheck": {
+  "samples": 803,
+  "maxDifferenceFrameBlend": 0.0002739764635655284,
+  "maxDifferenceAfterConstrainArms": 0.001908858783652878,
+  "worstAt": "Hit t=0.2833",
+  "pass": true,
+  "limits": [
+   0.001,
+   0.005
+  ],
+  "reference": "hammer-boss/charge_runtime.py rblend / rsample (mathutils, float32)"
+ },
+ "studioConvert": {
+  "jointCount": 16,
+  "clipCount": 11,
+  "frameCount": 1105,
+  "maxCentreError": 1.0417545750485147e-06,
+  "maxCornerError": 1.3873955994226102e-06,
+  "worstAt": "Walk frame 14 RightHand",
+  "limit": 0.0001,
+  "passed": true,
+  "rootHeight": 4.45,
+  "clips": {
+   "Idle": {
+    "frames": 73,
+    "fps": 24,
+    "loop": true,
+    "duration": 3.0
+   },
+   "Walk": {
+    "frames": 17,
+    "fps": 24,
+    "loop": true,
+    "duration": 0.666667
+   },
+   "Slam": {
+    "frames": 101,
+    "fps": 60,
+    "loop": false,
+    "duration": 1.666667
+   },
+   "Swing": {
+    "frames": 109,
+    "fps": 60,
+    "loop": false,
+    "duration": 1.8
+   },
+   "Spin": {
+    "frames": 138,
+    "fps": 60,
+    "loop": false,
+    "duration": 2.283333
+   },
+   "SwingSpin": {
+    "frames": 201,
+    "fps": 60,
+    "loop": false,
+    "duration": 3.333333
+   },
+   "SpinSlam": {
+    "frames": 190,
+    "fps": 60,
+    "loop": false,
+    "duration": 3.15
+   },
+   "Hit": {
+    "frames": 37,
+    "fps": 60,
+    "loop": false,
+    "duration": 0.6
+   },
+   "Death": {
+    "frames": 169,
+    "fps": 60,
+    "loop": false,
+    "duration": 2.8
+   },
+   "ChargeStart": {
+    "frames": 37,
+    "fps": 60,
+    "loop": false,
+    "duration": 0.6
+   },
+   "ChargeRun": {
+    "frames": 33,
+    "fps": 60,
+    "loop": true,
+    "duration": 0.533333
+   }
+  },
+  "receipt": "studio-prototype/combat/bosses/receipts/hammer-old-receipt.json",
+  "wroteFiles": false
+ },
+ "repairedIntervals": [
+  {
+   "clip": "Swing",
+   "sourceFrames": [
+    3,
+    4
+   ],
+   "time": [
+    0.1,
+    0.1333
+   ],
+   "gripBefore": 0.3999,
+   "gripAfter": 1e-06
+  },
+  {
+   "clip": "Spin",
+   "sourceFrames": [
+    4,
+    5
+   ],
+   "time": [
+    0.1111,
+    0.1389
+   ],
+   "gripBefore": 0.4793,
+   "gripAfter": 1e-06
+  }
+ ],
+ "idleFrame0VsCarry": [
+  9.236129870693333e-06,
+  9.236129870693333e-06
+ ],
+ "generated": "2026-10-09 17:43"
 }
