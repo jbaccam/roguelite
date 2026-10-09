@@ -14,6 +14,7 @@
 --   local R=loadstring(HS:GetAsync(base..'studio-prototype/tools/RepoRequire.luau?t='..os.clock(),true))()(base)
 --   print(R.run('MapBossServiceTests'))                -- a test module's PASS/FAIL lines
 --   print(R.run('MapBossPresentationTests'))           -- the client's pure helpers (R4)
+--   print(R.run('BossVfxHammerTests'))                 -- the Hammer's rubble wave helpers
 --   print(R.compiles('combat/bosses/MapBossService.luau')) -- true, or false and the error
 --   local X=R.require('MapBossService')._shapes          -- Edit: the pure builders only
 return function(base, rev)
@@ -30,6 +31,9 @@ return function(base, rev)
 		-- client-side); a plain require can't load a LocalScript, so only this loader runs it.
 		MapBossPresentation = "combat/bosses/MapBossPresentation.client.luau",
 		MapBossPresentationTests = "combat/bosses/MapBossPresentationTests.luau",
+		-- BossVfx/Hammer returns only its rubble-wave helpers in Edit (it stops before Common).
+		BossVfxHammer = "combat/bosses/BossVfx/Hammer.luau",
+		BossVfxHammerTests = "combat/bosses/BossVfxHammerTests.luau",
 	}
 	-- Where each module lives in Studio (SyncMapBossRuntime): its `script`, or the stand-in's Parent.
 	local STUDIO = {
@@ -41,6 +45,8 @@ return function(base, rev)
 		MapBossShapesTests = { "ServerScriptService" },
 		MapBossPresentation = { "StarterPlayer", "StarterPlayerScripts" },
 		MapBossPresentationTests = { "ServerScriptService" },
+		BossVfxHammer = { "ReplicatedStorage", "RogueliteCombat", "BossVfx" },
+		BossVfxHammerTests = { "ServerScriptService" },
 	}
 	local function folder(name)
 		local parts = STUDIO[name]
