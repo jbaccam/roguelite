@@ -648,6 +648,12 @@ function M.spawn(id,cf,practice,opts)
  local root=npc.PrimaryPart;local h=npc:FindFirstChildOfClass('Humanoid')
  if not root or not h then npc:Destroy();return nil end
  h.HipHeight=math.max(0,T.rootHeight-root.Size.Y*.5)
+ -- A map boss never trips (2026-10-10: the Warden fell over stepping out of his coffin): a push from
+ -- scenery or players would otherwise knock the giant into FallingDown, as the chase's zombies avoid.
+ for _,state in {Enum.HumanoidStateType.FallingDown,Enum.HumanoidStateType.Ragdoll,Enum.HumanoidStateType.GettingUp} do h:SetStateEnabled(state,false) end
+ -- def.rootDepth: a shallower collision box front to back (the Warden's 4.77 cube reached 0.4 into
+ -- his coffin's rim from where he steps out, so the release shoved him out of the stone).
+ if def.rootDepth then root.Size=Vector3.new(root.Size.X,root.Size.Y,def.rootDepth*scale) end
  -- Difficulty and the run's player count scale health; difficulty scales every hit (see hit).
  -- Only run members count (ShopService RunMember): players in the lobby don't toughen the boss.
  local members=0;for _,p in Players:GetPlayers() do if p:GetAttribute('RunMember') then members+=1 end end
