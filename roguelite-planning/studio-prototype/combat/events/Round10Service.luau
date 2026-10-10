@@ -422,7 +422,9 @@ local function buildTomb(E,index,cf,health)
  local model=source:Clone();model.Name='Tomb_'..LETTERS[index]
  -- The prop's pivot is its cavity floor centre, open face along -Z (its LookVector). cf stays the
  -- centre's ground (the Warden's emerge and the exits); the stone sits at bodyFloor (2026-10-10).
- local ground0=cf.Y;cf=cf-Vector3.yAxis*(cf.Y-bodyFloor(cf))
+ -- Tomb A keeps its stone at ground0: the Warden spawns at ground0 + rootHeight and his Emerge clip starts
+ -- with his soles on the cavity floor, so a dropped stone left him hovering up to .35 for ~1 s (2026-10-10).
+ local ground0=cf.Y;if index~=1 then cf=cf-Vector3.yAxis*(cf.Y-bodyFloor(cf)) end
  model:PivotTo(cf)
  local size=model:GetExtentsSize()
  local root=Instance.new('Part');root.Name='HumanoidRootPart';root.Transparency=1;root.Anchored=true
