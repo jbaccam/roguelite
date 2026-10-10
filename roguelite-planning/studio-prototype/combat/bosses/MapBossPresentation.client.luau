@@ -923,6 +923,13 @@ local function frame(npc,state,now,dt)
   -- Ground distance, not elapsed time, advances the planted-foot gait; cadence capped.
   state.phase+=moving and math.min(distance/(T.strideLength or 4)*clipDuration(motion,'Walk'),dt*MAX_GAIT_RATE) or dt
   time=state.phase%clipDuration(motion,clip)
+  -- On the event music's beat (Round10Service BeatAnchor/BeatPeriod): the authored Idle spans
+  -- def.idleBeats beats, so its loop is stretched to the song's tempo and phased to its grid.
+  -- Example, the DJ Crab: 8 beats authored over 3.871 s (124 BPM) play over 4.397 s at 109.2 BPM.
+  local anchor,period=npc:GetAttribute('BeatAnchor'),npc:GetAttribute('BeatPeriod')
+  if clip=='Idle' and state.def.idleBeats and type(anchor)=='number' and type(period)=='number' and period>0 then
+   time=(((workspace:GetServerTimeNow()-anchor)/period)%state.def.idleBeats)/state.def.idleBeats*clipDuration(motion,'Idle')
+  end
  end
  local poses=EnemyMotion.sample(motion,clip,time)
  if state.lastClip~=clip and state.lastPose and clip~='Death' then state.blendFrom=state.lastPose;state.blendStart=now end

@@ -82,18 +82,19 @@ D.Events={
 }
 -- Event music (Round10Events.client), played through the RogueliteMusic group (the Settings music
 -- slider) while the event's playlist is ducked. soundId nil: the normal boss playlist plays instead.
--- CrabRave: the user's pick, Syn Cole - Feel Good (NCS). audio/music/round10/feelgood_segment.ogg is
--- the source from 40.87 s to 77.60 s (bar 21 to bar 40 at 124.15 BPM, measured from the supplied MP3):
--- the build-up, then the 16-bar drop that loops. accent: the drop's first beat in that file, which
--- lands accentAtIntro s into the intro. 2026-10-10 user: start further in so a fast kill still gets
--- the rave: the drop now starts as the intro opens (.067 = 2.0 s minus one bar, 4 x 0.4833 s), so the
--- DJ's claw snap at 2.0 s still lands on a downbeat (bar 2). Never a gameplay dependency: a
--- missing, muted or late track changes no timing.
+-- CrabRave: the user's pick (2026-10-10), Max Brhon - The Future (NCS), uploaded whole (215 s). Measured
+-- from the supplied MP3: 109.165 BPM, beat grid at 0.163 + k x 0.5496 s, first drop 52.93 s (bar 24),
+-- 16 bars to 88.10 s; second drop 160.65 s. accent: the drop's first beat, which lands accentAtIntro s
+-- into the intro: the drop slams as the intro opens (.351 = 2.0 s minus three beats), so the DJ's claw
+-- snap at 2.0 s lands on a beat. The 16-bar drop then loops (its last bar's fill leads back into it),
+-- so a fast kill still gets the rave (user: "start a little further in the song"). bpm: the DJ's idle
+-- dance follows the beat (Round10Service BeatAnchor/BeatPeriod, MapBossPresentation). Never a gameplay
+-- dependency: a missing, muted or late track changes no timing.
 D.Music={
--- soundId: the user's upload (2026-10-10). fullOffset: where the segment starts in the full song (40.87 s);
--- the client adds it when the loaded track is longer than a minute, so either upload lines up.
- CrabRave={soundId=108638974460070,fullOffset=40.87,accent=5.80,accentAtIntro=.067,loopStart=5.80,loopEnd=36.73,volume=.5,
-  credit='Syn Cole - Feel Good [NCS Release]'},
+-- soundId: the user's upload. fullOffset: added to every time when the loaded track is longer than a
+-- minute (a whole-song upload; 0 here, the times above are whole-song times).
+ CrabRave={soundId=140595353846240,fullOffset=0,accent=52.93,accentAtIntro=.351,loopStart=52.93,loopEnd=88.10,bpm=109.165,volume=.5,
+  credit='Max Brhon - The Future [NCS Release]'},
 }
 -- The event for a map id, or nil.
 function D.forMap(map) return type(map)=='string' and D.Events[map] or nil end

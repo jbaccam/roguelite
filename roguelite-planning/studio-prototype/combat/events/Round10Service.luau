@@ -172,6 +172,10 @@ local function spawnLeader(E,cf,land)
  local d=BossDefs.get(E.def.leader)
  E.leader,E.leaderAlive,E.leaderName=npc,true,d and d.name or E.def.leader
  npc:SetAttribute('EventLeader',true);npc:SetAttribute('EventGen',E.gen)
+ -- A leader with event music dances on its beat (MapBossPresentation, def.idleBeats): the grid's
+ -- anchor is the drop's first beat in server time.
+ local music=E.def.music and Defs.Music and Defs.Music[E.def.music]
+ if music and music.bpm then npc:SetAttribute('BeatAnchor',E.introStart+music.accentAtIntro);npc:SetAttribute('BeatPeriod',60/music.bpm) end
  local h=npc:FindFirstChildOfClass('Humanoid')
  if h then h.Died:Connect(function() if E.gen==generation then E.leaderAlive=false;status(E) end end) end
  npc.Destroying:Connect(function() if E.gen==generation then E.leaderAlive=false end end)
