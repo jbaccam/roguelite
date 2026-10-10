@@ -98,6 +98,8 @@ D.Hammer={anim='hammer-brute',name='Hammer Brute',introName='HAMMER BRUTE',healt
   Charge={clips={'ChargeStart','ChargeRun','Slam'},facing='forward',home=math.rad(40),range={22,110},lockout=5,cooldown=1,damage=24,
    shape='lane',length=75,width=9,speed=32,contact=4,knockdown=.6,finish={SLAM,WAVE}},
  },order={'Slam','Swing','Charge','Spin','SwingSpin','Slam','SpinSlam'}}
+-- Clip blends carry the hammer with both fists (MapBossPresentation P.toolBlend, 2026-10-09).
+D.Hammer.toolBlend={tool='Hammer',hands={'RightHand','LeftHand'}}
 D.KingCrab={anim='king-crab',name='Giant King Crab',health=21000,scale=1.4,chaseSpeed=22,glowColor=nil,deathSeconds=nil,
  enrage={cooldown=.6,chase=3,extra=4,follow=2},
  attacks={

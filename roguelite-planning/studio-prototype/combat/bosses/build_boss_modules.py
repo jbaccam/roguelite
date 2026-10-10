@@ -8,6 +8,11 @@ chunking into Frames sub-modules). For each boss it reads
 and writes MapBossTiming.luau. Gameplay points are re-sampled every 1/24 s from warnStart to
 recoveryEnd by forward kinematics over the ORIGINAL bones, in the boss's ground frame, Studio axes
 (a clip authored at another rate, AnimationData clip "fps", is read at its own frames).
+A clip with its own "fps" (the Hammer's 60 fps clips, 2026-10-09) is sampled at that rate (at most
+MAX_HZ) instead, plus an exact sample at every warnStart, impact and activeEnd of the attack and its
+phases; between two clip frames that sample poses the bones half way (lerped translations,
+re-orthonormalised lerped rotations), as the client plays the clip. At 24 Hz his slam point sat up to 1.74 studs
+off the hammer head. Clips without their own fps (the four bosses, Round 10) come out byte-identical.
 
 Hammer Brute rebuild (R6, 2026-10-03). All of it is optional, so the other four come out byte-identical:
   phases: a combo's hits in order (BossGameData attacks.<Clip>.phases), each with its own times and
@@ -44,6 +49,10 @@ HERE = Path(__file__).resolve().parent
 PLANNING = HERE.parents[2]
 OUT = HERE / 'BossAnimations'
 LIMIT = 190000
+# Highest gameplay sample rate for a clip with its own fps (see the header). 60 keeps MapBossTiming
+# near 100k characters with the Hammer; drop to 30 if it nears LIMIT (the key times stay exact).
+MAX_HZ = 60
+KEY_TIMES = ('warnStart', 'impact', 'activeEnd')
 FOLDERS = {'king-crab': 'king-crab-boss', 'frost-cyclops': 'frost-cyclops-boss', 'pharaoh': 'pharaoh-boss', 'dragon': 'dragon-boss',
            'hammer-brute': 'hammer-boss-moves',
            # Round 10 leaders (Round10Defs / MapBossDefs.Leaders), 2026-10-09.
@@ -94,17 +103,58 @@ def fps_of(data, clip): return data['clips'][clip].get('fps') or data.get('fps')
 def frame_index(frames, t, fps=24): return min(int(round(t * fps)), len(frames) - 1)
 
 
-def last_sample(frames, fps, t):
-    """The last 1/24 s sample at or before both t (rounded up) and the clip's last frame."""
-    end = len(frames) - 1 if fps == 24 else int(math.floor((len(frames) - 1) * 24 / fps + 1e-6))
-    return min(end, int(math.ceil(t * 24 - 1e-6)))
+def last_sample(frames, fps, t, rate=24):
+    """The last 1/rate s sample at or before both t (rounded up) and the clip's last frame."""
+    end = len(frames) - 1 if fps == rate else int(math.floor((len(frames) - 1) * rate / fps + 1e-6))
+    return min(end, int(math.ceil(t * rate - 1e-6)))
+
+
+def sample_times(data, clip, attack):
+    """Gameplay sample times over warnStart..recoveryEnd: every 1/24 s, or for a clip with its own fps
+    every 1/min(fps, MAX_HZ) s plus the attack's and its phases' KEY_TIMES inside that window."""
+    own = data['clips'][clip].get('fps')
+    rate = min(own, MAX_HZ) if own else 24
+    first = max(0, int(math.floor(attack['warnStart'] * rate + 1e-6)))
+    last = last_sample(data['clips'][clip]['frames'], fps_of(data, clip), attack['recoveryEnd'], rate)
+    times = [i / rate for i in range(first, last + 1)]
+    if own and times:
+        seen, lo, hi = {round(t, 5) for t in times}, times[0] - 1e-9, times[-1] + 1e-9
+        for src in [attack] + list(attack.get('phases') or []):
+            for k in KEY_TIMES:
+                t = src.get(k)
+                if t is not None and lo <= t <= hi and round(t, 5) not in seen:
+                    seen.add(round(t, 5)); times.append(float(t))
+        times.sort()
+    return times
+
+
+def blend(a, b, f):
+    """A bone transform (12 floats) f of the way from a to b: lerped translation, and the nearest
+    rotation to the lerped matrix (two frames apart, that is the slerp to well under 0.001 studs)."""
+    a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
+    u, _, vt = np.linalg.svd((a[3:] + (b[3:] - a[3:]) * f).reshape(3, 3))
+    r = u @ vt
+    return [*(a[:3] + (b[:3] - a[:3]) * f), *r.reshape(9)]
+
+
+def pose(data, clip, t, cache):
+    """Every bone's world matrix at clip time t: the nearest frame, or for a time between two frames
+    of a clip with its own fps (a key time, see sample_times) the bones blended between them."""
+    frames = data['clips'][clip]['frames']; fps = fps_of(data, clip)
+    x = t * fps; lo = int(math.floor(x + 1e-6))
+    if data['clips'][clip].get('fps') and x - lo > 1e-6 and lo + 1 < len(frames):
+        key = ('at', round(t, 9))
+        if key not in cache:
+            a, b = frames[lo]['transforms'], frames[lo + 1]['transforms']
+            cache[key] = worlds(data['bones'], {n: blend(a[n], b[n], x - lo) for n in a})
+        return cache[key]
+    i = frame_index(frames, t, fps)
+    if i not in cache: cache[i] = worlds(data['bones'], frames[i]['transforms'])
+    return cache[i]
 
 
 def sample_point(data, clip, bone, offset, t, cache=None):
-    frames = data['clips'][clip]['frames']; i = frame_index(frames, t, fps_of(data, clip))
-    w = (cache[i] if cache is not None and i in cache else worlds(data['bones'], frames[i]['transforms']))
-    if cache is not None: cache[i] = w
-    w = w[bone]
+    w = pose(data, clip, t, {} if cache is None else cache)[bone]
     # offset is Blender bone-local (x,y,z); the basis swap makes it (x,z,y) in this space
     p = w @ np.array([offset[0], offset[2], offset[1], 1.0])
     return [-p[0], p[1], p[2]]          # Studio ground frame (-X, Z, Y) after the swap
@@ -112,9 +162,7 @@ def sample_point(data, clip, bone, offset, t, cache=None):
 
 def bone_axis(data, clip, bone, t, cache):
     """World rotation of `bone` at clip time t, in the swapped basis."""
-    frames = data['clips'][clip]['frames']; i = frame_index(frames, t, fps_of(data, clip))
-    if i not in cache: cache[i] = worlds(data['bones'], frames[i]['transforms'])
-    return cache[i][bone][:3, :3]
+    return pose(data, clip, t, cache)[bone][:3, :3]
 
 
 def swap(v): return np.array([v[0], v[2], v[1]], dtype=float)
@@ -130,12 +178,9 @@ def sample_attack(id, clip, data, attack, ground_offset=0.0):
     ground_offset lifts every point so y is measured from the soles, not the armature's z=0."""
     points = {n: (p['bone'], p['offset']) for n, p in (attack.get('points') or {}).items()}
     points.update(EXTRA_POINTS.get((id, clip), {}))
-    frames = data['clips'][clip]['frames']
-    first = max(0, int(math.floor(attack['warnStart'] * 24 + 1e-6)))
-    last = last_sample(frames, fps_of(data, clip), attack['recoveryEnd'])
+    times = sample_times(data, clip, attack)
     cache = {}; samples = {n: [] for n in points}
-    for i in range(first, last + 1):
-        t = i / 24
+    for t in times:
         for n, (bone, offset) in points.items():
             x, y, z = sample_point(data, clip, bone, offset, t, cache)
             samples[n].append([round(t, 5), *r6([x, y + ground_offset, z])])
@@ -153,9 +198,9 @@ def sample_attack(id, clip, data, attack, ground_offset=0.0):
         else:
             local = swap([0.0, -1.0, 0.0])
         dirs = []
-        for i in range(first, last + 1):
-            d = bone_axis(data, clip, bone, i / 24, cache) @ local; d /= np.linalg.norm(d)
-            dirs.append([round(i / 24, 5), *r6([-d[0], d[1], d[2]])])
+        for t in times:
+            d = bone_axis(data, clip, bone, t, cache) @ local; d /= np.linalg.norm(d)
+            dirs.append([round(t, 5), *r6([-d[0], d[1], d[2]])])
         attack['dirs'] = {name: dirs}
     return attack
 
@@ -192,15 +237,13 @@ def phase_entries(id, clip, data, attack, a, ground_offset):
             def same(n, q): c = clip_points.get(n) or {}; return c.get('bone') == q.get('bone') and c.get('offset') == q.get('offset')
             mine = {n: q for n, q in ph['points'].items() if not same(n, q)}
             if mine:
-                # Over the clip's own sample window, as sample_attack does.
-                first = max(0, int(math.floor(a['warnStart'] * 24 + 1e-6)))
-                last = last_sample(data['clips'][clip]['frames'], fps_of(data, clip), a['recoveryEnd'])
+                # At the clip's own sample times, as sample_attack does.
                 cache, own = {}, {}
                 for n, q in mine.items():
                     own[n] = []
-                    for k in range(first, last + 1):
-                        x, y, z = sample_point(data, clip, q['bone'], q['offset'], k / 24, cache)
-                        own[n].append([round(k / 24, 5), *r6([x, y + ground_offset, z])])
+                    for t in sample_times(data, clip, a):
+                        x, y, z = sample_point(data, clip, q['bone'], q['offset'], t, cache)
+                        own[n].append([round(t, 5), *r6([x, y + ground_offset, z])])
                 p['samples'] = {**a['samples'], **own}
             check_impact(f'{id} {clip} phase {i}', p['points'], p.get('samples') or a['samples'], p.get('impact', a['impact']))
         out.append(p)

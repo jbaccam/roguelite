@@ -242,6 +242,43 @@ function P.moved(shape,dir,by)
  if shape.center then s.center=shape.center+dir*by end;if shape.origin then s.origin=shape.origin+dir*by end
  return s
 end
+-- A held tool rides with the fists through a clip blend (def.toolBlend, the Hammer, 2026-10-09). Every
+-- joint blends on its own, so the hammer (a joint on the root) and the fists (the arm chains) parted by
+-- up to 0.37 studs for about 0.05 s, Walk to Slam. Here the tool goes where each fist carries it (its
+-- offset from that fist lerped between the two poses), averaged over the fists: 0.14 studs Walk to
+-- Slam, and no blend gets worse (hammer-boss-moves hm_checks: every 0.12/0.16 s blend, 120 Hz).
+-- chain: {[part name]={alias,parent,c0,c1}} from the tool and the hands up to the root (P.toolChain).
+function P.chainCF(chain,part,pose)
+ local link=chain[part];if not link then return CFrame.identity end
+ return P.chainCF(chain,link.parent,pose)*link.c0*(pose[link.alias] or CFrame.identity)*link.c1:Inverse()
+end
+function P.toolBlend(chain,spec,from,to,blended,w)
+ local tool=chain[spec.tool];if not tool then return blended end
+ local at,n=nil,0
+ for _,hand in spec.hands do
+  if chain[hand] then
+   local grip=(P.chainCF(chain,hand,from):Inverse()*P.chainCF(chain,spec.tool,from)):Lerp(P.chainCF(chain,hand,to):Inverse()*P.chainCF(chain,spec.tool,to),w)
+   local here=P.chainCF(chain,hand,blended)*grip;n+=1;at=at and at:Lerp(here,1/n) or here
+  end
+ end
+ if at then blended[tool.alias]=(P.chainCF(chain,tool.parent,blended)*tool.c0):Inverse()*at*tool.c1 end
+ return blended
+end
+-- The chain for P.toolBlend from the model's motors (aliases as EnemyMotion.bind), C0/C1 at the poses'
+-- own scale: ratio = GetScale()/EnemyBaselineModelScale, the factor EnemyMotion.scalePose applies.
+function P.toolChain(npc,spec,ratio)
+ local byPart,named={},{}
+ for _,v in npc:GetDescendants() do if v:IsA('Motor6D') and v.Part0 and v.Part1 then byPart[v.Part1]=v;named[v.Part1.Name]=named[v.Part1.Name] or v.Part1 end end
+ local chain={}
+ local function unscale(c) return c-c.Position+c.Position/ratio end
+ local function add(part)
+  local m=part and byPart[part];if not m or chain[part.Name] then return end
+  chain[part.Name]={alias=m:GetAttribute('EnemyBone') or (m.Name:gsub('Motor6D$','')),parent=m.Part0.Name,c0=unscale(m.C0),c1=unscale(m.C1)}
+  add(m.Part0)
+ end
+ add(named[spec.tool]);for _,h in spec.hands do add(named[h]) end
+ return chain
+end
 if not Run:IsRunning() then return P end -- Edit (the tests): helpers only
 
 local EnemyMotion=require(combat:WaitForChild('EnemyMotion'))
@@ -854,7 +891,7 @@ local function attackDef(state,kind,inIntro)
 end
 local function frame(npc,state,now,dt)
  local h=npc:FindFirstChildOfClass('Humanoid');local root=npc.PrimaryPart;if not h or not root then return end
- if state.bindingsDirty or not next(state.joints) then state.bindingsDirty=false;state.joints=EnemyMotion.bind(npc) end
+ if state.bindingsDirty or not next(state.joints) then state.bindingsDirty=false;state.joints=EnemyMotion.bind(npc);state.toolChain=nil end
  local motion,T=state.motion,state.T
  local displacement=state.previousPosition and root.Position-state.previousPosition or Vector3.zero
  state.previousPosition=root.Position
@@ -891,7 +928,13 @@ local function frame(npc,state,now,dt)
  if state.lastClip~=clip and state.lastPose and clip~='Death' then state.blendFrom=state.lastPose;state.blendStart=now end
  if state.blendFrom then
   local weight=math.clamp((now-state.blendStart)/((clip=='Walk' or clip=='Idle') and .16 or .12),0,1)
-  poses=EnemyMotion.blend(state.blendFrom,poses,weight)
+  local to=poses;poses=EnemyMotion.blend(state.blendFrom,poses,weight)
+  local spec=state.def.toolBlend
+  if spec and weight<1 then
+   local base=npc:GetAttribute('EnemyBaselineModelScale')
+   state.toolChain=state.toolChain or P.toolChain(npc,spec,base and npc:GetScale()/base or 1)
+   P.toolBlend(state.toolChain,spec,state.blendFrom,to,poses,weight)
+  end
   if weight==1 then state.blendFrom=nil end
  end
  state.lastPose=poses;state.lastClip=clip

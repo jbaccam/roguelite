@@ -272,11 +272,16 @@ def test_main_builds_a_part_pose_boss():
         assert all((game / n).exists() for n in C.OUTPUTS) and json.loads((game / 'StudioRetargetChecks.json').read_text())['passed']
         # The Slam's sampled head at impact is where the old runtime put it (+ the root height).
         boss = legacy()
-        # Every 1/24 s sample is the old runtime's head on the 30 fps frame the build reads.
+        # The clips carry their own fps (30 here), so the build samples every 30 fps frame (plus any key
+        # time between frames, 2026-10-09): each on-frame sample is the old runtime's head on that frame.
+        on_frame = 0
         for got in entry['attacks']['Slam']['samples']['HammerFace']:
-            k = int(round(round(got[0] * 24) / 24 * 30)); frame = boss['clips']['Slam']['frames'][k]  # as frame_index reads i / 24
+            k = int(round(got[0] * 30))
+            if abs(got[0] * 30 - k) > 1e-3: continue
+            frame = boss['clips']['Slam']['frames'][k]; on_frame += 1
             want = (C.mat(frame['Hammer']) @ C.mat(boss['hammerHeadRest']))[:3, 3] + [0, 4.45, 0]
             assert np.abs(np.array(got[1:]) - want).max() < 1e-4, (got, want)
+        assert on_frame > 10, on_frame
 
 
 def test_main_missing_receipt():

@@ -312,6 +312,36 @@ check('wave hook: a charge\'s finish wave waits for the stop, then fires at stop
  return waiting==false and early==nil and done==true and got.key=='finish2' and got.finish==true and near(got.impact,2.3) and near(got.startTime,12.3) and same==into
   and (into.center-to:PointToWorldSpace(Vector3.new(0,0,-10))).Magnitude<1e-5
 end)
+-- Tool blend (2026-10-09): the Hammer's clip blends carry the hammer with the fists. A two-link arm
+-- holds a tool rigidly (grip G) in both poses; a per-joint blend parts them, P.toolBlend doesn't.
+local function toolRig()
+ local chain={Upper={alias='U',parent='Root',c0=CFrame.new(0,2,0),c1=CFrame.identity},
+  RightHand={alias='H',parent='Upper',c0=CFrame.new(0,-2,0),c1=CFrame.new(0,.3,0)},
+  Hammer={alias='T',parent='Root',c0=CFrame.new(1,0,0),c1=CFrame.new(0,0,.5)}}
+ local G=CFrame.new(0,-1,0)*CFrame.Angles(.3,0,0)
+ local function held(u,h) local pose={U=u,H=h};local want=P.chainCF(chain,'RightHand',pose)*G
+  pose.T=(P.chainCF(chain,'Root',pose)*chain.Hammer.c0):Inverse()*want*chain.Hammer.c1;return pose end
+ return chain,G,held(CFrame.identity,CFrame.identity),held(CFrame.Angles(0,0,1.2),CFrame.Angles(0,0,-.8))
+end
+local function lerped(a,b,w) local o={};for k,v in b do o[k]=a[k]:Lerp(v,w) end;return o end
+local function off(a,b) return (a.Position-b.Position).Magnitude+(a.LookVector-b.LookVector).Magnitude+(a.UpVector-b.UpVector).Magnitude end
+check('tool blend: mid-blend the hammer stays in the fist grip (a plain per-joint blend parts them); w=0 and 1 give the two poses',function()
+ local chain,G,A,B=toolRig();local spec={tool='Hammer',hands={'RightHand'}}
+ local plain=lerped(A,B,.5);local fixed=P.toolBlend(chain,spec,A,B,lerped(A,B,.5),.5)
+ local function slip(pose) return off(P.chainCF(chain,'Hammer',pose),P.chainCF(chain,'RightHand',pose)*G) end
+ local ends=off(P.toolBlend(chain,spec,A,B,lerped(A,B,0),0).T,A.T)<1e-4 and off(P.toolBlend(chain,spec,A,B,lerped(A,B,1),1).T,B.T)<1e-4
+ return slip(plain)>.1 and slip(fixed)<1e-4 and fixed.U==plain.U and fixed.H==plain.H and ends
+end)
+check('tool blend: a hand or tool the chain lacks is skipped; only the Hammer has toolBlend',function()
+ local chain,G,A,B=toolRig()
+ local one=P.toolBlend(chain,{tool='Hammer',hands={'RightHand'}},A,B,lerped(A,B,.4),.4)
+ local two=P.toolBlend(chain,{tool='Hammer',hands={'LeftHand','RightHand'}},A,B,lerped(A,B,.4),.4)
+ local same=lerped(A,B,.4);local none=P.toolBlend(chain,{tool='Sword',hands={'RightHand'}},A,B,same,.4)
+ local lone=P.toolBlend(chain,{tool='Hammer',hands={'LeftHand'}},A,B,lerped(A,B,.4),.4)
+ local defs=Defs.get('Hammer').toolBlend
+ for _,id in OLD do if Defs.get(id).toolBlend~=nil then return false end end
+ return off(one.T,two.T)<1e-6 and none==same and lone.T==lerped(A,B,.4).T and defs.tool=='Hammer' and #defs.hands==2
+end)
 local passed=0;for _,line in r do if line:sub(1,4)=='PASS' then passed+=1 end end
 table.insert(r,('%d PASS, %d FAIL'):format(passed,#r-passed))
 return table.concat(r,'\n')

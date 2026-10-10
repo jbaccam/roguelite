@@ -2,7 +2,7 @@
 nothing outside a temporary folder.
     python test_build_boss_modules.py      (or: python -m pytest test_build_boss_modules.py)
 """
-import contextlib, io, json, re, sys, tempfile
+import contextlib, io, json, math, re, sys, tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -124,6 +124,64 @@ def test_wave_phase_contract():
     # The clip list the runtime plays (MapBossDefs.ATTACK_CLIPS): no IntroLand, Roar or ChargeSlam.
     assert B.BASIC + B.ATTACKS['hammer-brute'] == ['Idle', 'Walk', 'Hit', 'Death', 'Slam', 'Swing', 'Spin', 'SwingSpin', 'SpinSlam', 'ChargeStart', 'ChargeRun']
 
+
+
+def test_four_bosses_rebuild_byte_identical():
+    # Clips without their own fps keep the 1/24 s grid and no key-time samples (2026-10-09): the four
+    # bosses' entries rebuilt from their packages equal today's MapBossTiming, byte for byte.
+    table = B.existing()
+    for id in ('king-crab', 'frost-cyclops', 'pharaoh', 'dragon'):
+        game_dir = B.PLANNING / B.FOLDERS[id] / 'exports' / 'game'
+        data = json.loads((game_dir / 'AnimationData.json').read_text(encoding='utf-8'))
+        game = json.loads((game_dir / 'BossGameData.json').read_text(encoding='utf-8'))
+        with contextlib.redirect_stdout(io.StringIO()):
+            entry = B.timing(id, data, game)
+        assert json.dumps(entry, separators=(',', ':')) == json.dumps(table[id], separators=(',', ':')), id
+
+
+# A Hammer bone turning a quarter turn every 60 fps frame in the Studio X-Y plane (k*90 degrees on frame
+# k, so off-frame times need the blended pose): a point 1 stud out along bone X stays 1 stud from the
+# pivot, at (-cos, sin, 0) of t*60*90 degrees.
+def spinning(fps=60, n=13):
+    ident = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]
+    def rz(k):  # about the swapped basis' z (Blender z = Studio up)
+        c, s = math.cos(k * math.pi / 2), math.sin(k * math.pi / 2)
+        return [0, 0, 0, c, -s, 0, s, c, 0, 0, 0, 1]
+    frames = [{'time': k / fps, 'transforms': {'Hammer': rz(k)}} for k in range(n)]
+    clip = {'duration': (n - 1) / fps, 'loop': False, 'fps': fps, 'frames': frames}
+    return {'id': 'synthetic', 'fps': 24, 'bones': {'Root': {'parent': None, 'rest': ident}, 'Hammer': {'parent': 'Root', 'rest': ident}},
+            'clips': {'Combo': clip}}
+
+
+def test_own_fps_sample_times():
+    # A 60 fps clip: every 1/60 s from warnStart to recoveryEnd, plus each key time of the attack and its
+    # phases that falls between two frames (.105, .1375); on-frame ones (.05) and ones outside (.5) add nothing.
+    data = spinning()
+    attack = {'warnStart': .05, 'impact': .105, 'activeEnd': .15, 'recoveryEnd': .2,
+              'phases': [{'warnStart': .05, 'impact': .1375, 'activeEnd': .5}]}
+    times = B.sample_times(data, 'Combo', attack)
+    assert [round(t, 5) for t in times] == sorted([round(k / 60, 5) for k in range(3, 13)] + [.105, .1375]), times
+    # Capped at MAX_HZ: a 120 fps clip samples every 1/60 s (plus its key times).
+    data120 = spinning(120, 25)
+    assert [round(t, 5) for t in B.sample_times(data120, 'Combo', {'warnStart': 0, 'impact': .1, 'activeEnd': .1, 'recoveryEnd': .2})] == [round(k / 60, 5) for k in range(13)]
+    # No own fps: the 1/24 s grid only, key times ignored.
+    del data['clips']['Combo']['fps']
+    assert B.sample_times(data, 'Combo', dict(attack, warnStart=0, recoveryEnd=.5)) == [k / 24 for k in range(0, 13)]
+
+
+def test_own_fps_key_sample_is_exact():
+    # The key-time sample poses the bone between its frames: at t = 1.5/60 the point is at 135 degrees on
+    # the unit circle (the chord's lerp would sit 0.29 studs inside it), and the impact track reads it exactly.
+    data = spinning()
+    attack = {'warnStart': 0, 'impact': 1.5 / 60, 'activeEnd': 2 / 60, 'recoveryEnd': .2, 'points': {'HammerFace': {'bone': 'Hammer', 'offset': [1, 0, 0]}}}
+    B.sample_attack('synthetic', 'Combo', data, attack)
+    track = attack['samples']['HammerFace']
+    assert len(track) == 14 and [s[0] for s in track] == sorted(s[0] for s in track)
+    at = next(s for s in track if s[0] == round(1.5 / 60, 5))
+    a = math.radians(135)
+    assert max(abs(u - v) for u, v in zip(at[1:], [-math.cos(a), math.sin(a), 0])) < 1e-4, at
+    # On-frame samples are the frames themselves: frame 1 is a quarter turn.
+    assert next(s for s in track if s[0] == round(1 / 60, 5))[1:] == B.r6([-0.0, 1, 0])
 
 if __name__ == '__main__':
     failed = 0
