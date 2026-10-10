@@ -160,7 +160,7 @@ D.Dragon.intro={style='descent',clip='FrontStomp',lead=2.7,after=2.6}     -- his
 -- the event's hook at their impact (the DJ's Beat Command sends rushers; the alpha's howl buffs).
 -- 'ring': an expanding ring with gaps (MapBossShapes.ringHit). Numbers are starting values.
 D.Leaders={'DJCrab','TombWarden','BloodAlpha'}
-D.DJCrab={anim='dj-crab',name='DJ Crab',leader=true,health=7000,scale=1,chaseSpeed=8,glowColor=Color3.fromRGB(70,230,215),stop=12,
+D.DJCrab={anim='dj-crab',name='DJ Crab',leader=true,health=7000,scale=1,chaseSpeed=7,glowColor=Color3.fromRGB(70,230,215),stop=12,
  intro={style='event',clip='Intro',lead=2.0,after=2.8},
  enrage={cooldown=.7,chase=2,extra=1},
  attacks={
