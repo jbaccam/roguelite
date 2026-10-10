@@ -31,20 +31,22 @@ return function(sources, Visuals, Catalog, Types)
 	local o0, w0 = Visuals.aimLook(10, 10.55, 10)
 	local o1, w1 = Visuals.aimLook(10, 10.55, 10.1)
 	local o2, w2 = Visuals.aimLook(10, 10.55, 10.5)
-	check(math.abs(o0 - 0.3) < 1e-9 and math.abs(w0 - 0.15) < 1e-9, "Aim line starts faint and thin")
-	check(math.abs(o1 - 0.41) < 0.01 and o2 == 0.95 and w2 > w1 and w2 <= 0.25, "Aim line brightens, widens, flashes")
+	check(math.abs(o0 - 0.5) < 1e-9 and math.abs(w0 - 0.3) < 1e-9, "Aim line starts half opaque, 0.3 wide")
+	check(math.abs(o1 - 0.59) < 0.01 and o2 == 0.95 and w2 > w1 and w2 <= 0.5, "Aim line brightens, widens, flashes")
+	check(near(Visuals.flightStart(Vector3.zero, Vector3.new(0, 0, -35), 10, 10.5, nil, 2), Vector3.new(0, 0, -17.5)), "Flight line starts at the shot")
+	check(near(Visuals.flightStart(Vector3.zero, Vector3.new(0, 0, -35), 10, 13, nil, 2), Vector3.new(0, 0, -70)), "Flight line start stops at the shot's end")
 	check(math.abs(Visuals.aimFade(20, 71) - 20 / 71) < 1e-9 and Visuals.aimFade(90, 71) == 0.98, "Solid to the aimed point")
 	local picks = {}
-	for i = 1, 30 do
+	for i = 1, Visuals.AIM_CAP + 10 do
 		picks[i] = { origin = Vector3.new(i, 0, 0) }
 	end
 	local keep = Visuals.nearest(picks, Vector3.zero, Visuals.AIM_CAP)
 	local kept = 0
 	for i in keep do
 		kept += 1
-		check(i <= 20, "Only the nearest lines draw")
+		check(i <= Visuals.AIM_CAP, "Only the nearest lines draw")
 	end
-	check(kept == 20, "Capped at 20 lines")
+	check(kept == Visuals.AIM_CAP, "Capped at AIM_CAP lines")
 
 	-- World stubs shared by both modules.
 	local world = { clock = 100, attrs = { ZombiesEnabled = true }, events = {}, wallZ = nil }
@@ -83,7 +85,13 @@ return function(sources, Visuals, Catalog, Types)
 		end,
 	}
 	targetRoot.Parent = character
-	local player = { Character = character, UserId = 1 }
+	local player = {
+		Character = character,
+		UserId = 1,
+		GetAttribute = function(_, name)
+			return name == "RunMember" or nil
+		end,
+	}
 	local Players = {
 		GetPlayers = function()
 			return { player }
@@ -159,8 +167,8 @@ return function(sources, Visuals, Catalog, Types)
 			return name == "Players" and Players or name == "RunService" and RunService or error("No stub for " .. name)
 		end,
 		ReplicatedStorage = {
-			WaitForChild = function()
-				return combat
+			WaitForChild = function(_, name)
+				return name == "RunSetupRules" and name or combat
 			end,
 		},
 	}
@@ -177,6 +185,12 @@ return function(sources, Visuals, Catalog, Types)
 		},
 		CharacterService = Characters,
 		ZombieTypes = Types,
+		-- Normal's ranged spacing (2026-10-10) is RunSetupRules' to test; the shots here keep x1.
+		RunSetupRules = {
+			rangedCooldownScale = function()
+				return 1
+			end,
+		},
 	}
 	local function load(name)
 		local fn = assert(loadstring(sources[name], "=" .. name))

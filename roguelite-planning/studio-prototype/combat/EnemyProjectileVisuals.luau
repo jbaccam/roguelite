@@ -152,23 +152,34 @@ end
 -- short red-orange trail and is drawn a little bigger. Flat Beams/Trails, no effect meshes.
 V.AIM_COLOR = Color3.fromRGB(255, 60, 50)
 V.TRAIL_COLOR = Color3.fromRGB(255, 96, 50)
-V.AIM_CAP = 20 -- lines drawn at once, nearest first
+V.AIM_CAP = 30 -- lines drawn at once (draws and flights), nearest first
 V.FLASH = 0.1 -- the last tenth of a second before release the line flashes full
 -- Bigger in flight so they read from the high camera; held copies keep their size.
 V.FLIGHT_SCALE = { Arrow = 1.35, Rock = 1.3, Spit = 1.15, Icicle = 1.15, Fireball = 1.1 }
 
 -- The aim line's look at server time `now`: opacity and width grow from the draw to the release,
--- pulsing faster as it nears, then a flash. Example: a 0.55 s draw, 0.1 s in: ~0.41 opaque, 0.17
--- wide; 0.5 s in (in the flash): 0.95 opaque, 0.24 wide.
+-- pulsing faster as it nears, then a flash. Example: a 0.55 s draw, 0.1 s in: ~0.59 opaque, 0.34
+-- wide; 0.5 s in (in the flash): 0.95 opaque, 0.48 wide. (2026-10-10 user: the first lines were
+-- "a little too hard to see": twice as wide, half again as opaque.)
 function V.aimLook(startedAt, releaseAt, now)
 	local span = math.max(releaseAt - startedAt, 1e-3)
 	local p = math.clamp((now - startedAt) / span, 0, 1)
-	local width = 0.15 + 0.1 * p
+	local width = 0.3 + 0.2 * p
 	if releaseAt - now <= V.FLASH then
 		return 0.95, width
 	end
 	local elapsed = math.max(now - startedAt, 0)
-	return math.clamp(0.3 + 0.45 * p + 0.15 * p * math.sin(elapsed * (10 + 24 * p)), 0, 0.95), width
+	return math.clamp(0.5 + 0.35 * p + 0.15 * p * math.sin(elapsed * (10 + 24 * p)), 0, 0.95), width
+end
+-- In flight the path stays drawn ahead of the shot to where it ends (user 2026-10-10: "it should
+-- show the path they're traveling so players can avoid it"): this opaque and wide at the shot,
+-- tapering to FLIGHT_TIP's width and fading out at the far end.
+V.FLIGHT_LINE = { opacity = 0.75, width = 0.42 }
+V.FLIGHT_TIP = 0.55 -- end width as a share of the start
+-- Where the in-flight line starts: the shot's position (held while the run is paused). Example: launched
+-- at the origin at 35 studs/s, 0.5 s later: 17.5 studs out.
+function V.flightStart(origin, velocity, started, now, held, stopAt)
+	return origin + velocity * math.min(V.flown(started, now, held), stopAt)
 end
 
 -- Where along the drawn line (0-1) the aimed point sits: solid up to it, fading past it to where
@@ -211,14 +222,14 @@ function V.readable(shot, kind, frame)
 	local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
 	a0.Name, a1.Name = "TrailTop", "TrailBottom"
 	a0.Parent, a1.Parent = base, base
-	a0.WorldPosition = frame * Vector3.new(0, 0.12, 0)
-	a1.WorldPosition = frame * Vector3.new(0, -0.12, 0)
+	a0.WorldPosition = frame * Vector3.new(0, 0.2, 0)
+	a1.WorldPosition = frame * Vector3.new(0, -0.2, 0)
 	local trail = Instance.new("Trail")
 	trail.Attachment0, trail.Attachment1 = a0, a1
 	trail.Color = ColorSequence.new(V.TRAIL_COLOR)
 	trail.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.15), NumberSequenceKeypoint.new(1, 1) })
 	trail.WidthScale = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0.2) })
-	trail.Lifetime = 0.18
+	trail.Lifetime = 0.3
 	trail.MinLength = 0.05
 	trail.FaceCamera = true
 	trail.LightEmission = 1
