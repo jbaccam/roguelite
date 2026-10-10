@@ -393,10 +393,11 @@ EVENTS.TombOpens={
    end
   end
   if #E.tombs<spec.count then return false end
-  -- The Warden steps out of tomb A (Emerge: from inside the cavity to 3.5 studs in front).
+  -- The Warden steps out of tomb A (Emerge: from the cavity centre to emergeOut studs in front).
   local A=E.tombs[1]
   local BossDefs=module(combat,'MapBossDefs');local T=BossDefs and BossDefs.timing(E.def.leader)
-  local out=A.cf*CFrame.new(0,0,-3.5)
+  local leaderDef=BossDefs and BossDefs.get(E.def.leader)
+  local out=A.cf*CFrame.new(0,0,-((leaderDef and leaderDef.emergeOut) or 3.5))
   local cf=CFrame.lookAt(out.Position+Vector3.yAxis*((T and T.rootHeight or 3)+.1),out.Position+Vector3.yAxis*((T and T.rootHeight or 3)+.1)+A.cf.LookVector)
   -- Emerge: coffins rise (0-1.5 s), lid A falls (1.6 s), the Warden plants his fists at 3.7 s.
   local npc=spawnLeader(E,cf,E.introStart+3.7);if not npc then return false end

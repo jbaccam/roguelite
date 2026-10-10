@@ -170,7 +170,9 @@ D.DJCrab={anim='dj-crab',name='DJ Crab',leader=true,health=7000,scale=1,chaseSpe
   -- Double claw bass slam: the ring runs out from between the claws; three gaps are the way through.
   ClawSlam={clip='ClawSlam',range={0,24},cooldown=1.9,damage=22,shape='ring',point='SlamCenter',inner=3,outer=32,travel=22,width=3,height=4,gaps=3,gapWidth=math.rad(17),knockdown=.5},
  },order={'BeatCommand','ClawSlam','Bombard','BeatCommand','Bombard','ClawSlam'}}
-D.TombWarden={anim='tomb-warden',name='Tomb Warden',leader=true,health=6000,scale=1,chaseSpeed=17,glowColor=Color3.fromRGB(255,176,64),
+D.TombWarden={anim='tomb-warden',name='Tomb Warden',leader=true,health=6000,scale=1,chaseSpeed=12,glowColor=Color3.fromRGB(255,176,64),
+ -- emergeOut: studs from the coffin's cavity centre to where Emerge ends (its root travel; Round10Service).
+ emergeOut=3.5,
  intro={style='event',clip='Emerge',lead=3.7,after=1.3},
  roar='Roar',enrage={cooldown=.7,chase=3,follow=1},
  attacks={
