@@ -1,0 +1,231 @@
+{
+  "attacks": {
+    "BeatCommand": {
+      "duration": 1.3333,
+      "warnStart": 0.1,
+      "impact": 0.75,
+      "activeEnd": 0.75,
+      "recoveryEnd": 1.2,
+      "points": {
+        "CommandClaw": {
+          "bone": "Claw_R_Propodus",
+          "offset": [
+            0.0674,
+            2.29,
+            0.0188
+          ],
+          "rootAtImpact": [
+            -1.0358,
+            -4.9209,
+            2.1866
+          ],
+          "rootAtImpactStudio": [
+            1.0358,
+            2.1866,
+            -4.9209
+          ]
+        }
+      },
+      "note": "right pincer raised like a conductor, held a beat, swept forward and snapped shut pointing ahead at impact; no damage, orders the crab reinforcements to rush",
+      "directionAtImpact": [
+        0.0141,
+        -0.9999,
+        0.0
+      ],
+      "directionAtImpactStudio": [
+        -0.0141,
+        0.0,
+        -0.9999
+      ],
+      "handDirectionAtImpact3D": [
+        0.0141,
+        -0.9999,
+        -0.0099
+      ]
+    },
+    "ClawSlam": {
+      "duration": 1.625,
+      "warnStart": 0.15,
+      "impact": 0.8333,
+      "activeEnd": 0.8333,
+      "recoveryEnd": 1.4,
+      "points": {
+        "LeftClaw": {
+          "bone": "Claw_L_Propodus",
+          "offset": [
+            -0.0674,
+            2.29,
+            0.0188
+          ],
+          "rootAtImpact": [
+            0.9834,
+            -5.2328,
+            0.2652
+          ],
+          "rootAtImpactStudio": [
+            -0.9834,
+            0.2652,
+            -5.2328
+          ]
+        },
+        "RightClaw": {
+          "bone": "Claw_R_Propodus",
+          "offset": [
+            0.0674,
+            2.29,
+            0.0188
+          ],
+          "rootAtImpact": [
+            -0.9822,
+            -5.2327,
+            0.2652
+          ],
+          "rootAtImpactStudio": [
+            0.9822,
+            0.2652,
+            -5.2327
+          ]
+        },
+        "SlamCenter": {
+          "bone": "Root",
+          "offset": [
+            0.0006,
+            0.0,
+            5.2327
+          ],
+          "rootAtImpact": [
+            0.0006,
+            -5.2327,
+            0.0
+          ],
+          "rootAtImpactStudio": [
+            -0.0006,
+            0.0,
+            -5.2327
+          ],
+          "note": "ground point midway between the claw tips"
+        }
+      },
+      "note": "rears up, both claws high and back (windup 0.15-0.625 s), slams both down in front at impact, body bounces; spawn the expanding ground ring at SlamCenter on impact"
+    },
+    "Bombard": {
+      "duration": 1.2083,
+      "warnStart": 0.1,
+      "impact": 0.5833,
+      "activeEnd": 0.5833,
+      "recoveryEnd": 1.0,
+      "points": {
+        "SpeakerTop": {
+          "bone": "Body",
+          "offset": [
+            0.0,
+            2.0199,
+            -0.5407
+          ],
+          "rootAtImpact": [
+            0.0,
+            0.6608,
+            3.9239
+          ],
+          "rootAtImpactStudio": [
+            -0.0,
+            3.9239,
+            0.6608
+          ]
+        }
+      },
+      "note": "both claws pump overhead twice (crowd hype); the bombardment signal is the second pump",
+      "pumps": [
+        0.25,
+        0.5833
+      ]
+    },
+    "Intro": {
+      "duration": 3.0,
+      "warnStart": 0.0,
+      "impact": 2.0,
+      "activeEnd": 2.0,
+      "recoveryEnd": 3.0,
+      "points": {
+        "SpeakerTop": {
+          "bone": "Body",
+          "offset": [
+            0.0,
+            2.0199,
+            -0.5407
+          ],
+          "rootAtImpact": [
+            0.0,
+            0.4595,
+            3.848
+          ],
+          "rootAtImpactStudio": [
+            -0.0,
+            3.848,
+            0.4595
+          ]
+        }
+      },
+      "note": "cinematic power-up: crouched and still, speakers thump (body pulses) from 0.4 s, eyestalks pop up at 1.0 s, both claws snap shut on the accent at exactly 2.0 s (impact), claws thrown wide at 2.4 s, settles to the Idle start pose at 3.0 s",
+      "pulses": [
+        0.4,
+        0.8839,
+        1.3677,
+        1.8516
+      ],
+      "eyestalkPop": 1.0,
+      "victoryPose": 2.4
+    }
+  },
+  "rootHeight": 0.0,
+  "height": 3.8199,
+  "footprintRadius": 4.8516,
+  "bodyCentreHeight": 1.8,
+  "walk": {
+    "strideLength": 1.4,
+    "nominalSpeed": 2.8,
+    "gait": "alternating tetrapod groups",
+    "groupA": [
+      "L1",
+      "L3",
+      "R2",
+      "R4"
+    ],
+    "duty": 0.5,
+    "groupBPhaseOffset": 0.5
+  },
+  "music": {
+    "bpm": 124.0,
+    "beatSeconds": 0.483871,
+    "track": "Syn Cole - Feel Good (beat grid TBD in Studio)"
+  },
+  "idle": {
+    "loopSeconds": 3.8709677,
+    "beats": 8,
+    "beatTimes": [
+      0.0,
+      0.4839,
+      0.9677,
+      1.4516,
+      1.9355,
+      2.4194,
+      2.9032,
+      3.3871
+    ],
+    "bodyDownOnEveryBeat": true,
+    "rightClawStrikesOnBeats": [
+      1,
+      3,
+      5,
+      7
+    ],
+    "leftClawStrikesOnBeats": [
+      2,
+      4,
+      6,
+      8
+    ],
+    "note": "start the Idle loop on a beat; frame 0 is a downbeat"
+  },
+  "notes": "Times in seconds from clip start at 24 fps. Root bone sits on the ground under the body centre (rootHeight 0). Blender axes: +X crab left, -Y forward, +Z up; Studio = (-X, Z, Y). Headphones, speakers, straps and saddle are rigid on Body (not separate damage targets). Glow pieces: DJCrab_Glow."
+}

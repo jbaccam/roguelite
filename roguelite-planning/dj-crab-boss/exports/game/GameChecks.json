@@ -1,0 +1,1321 @@
+{
+  "source": "animate_game.py on DJCrab.blend (source rig)",
+  "clips": {
+    "Idle": {
+      "frames": 94,
+      "duration": 3.871,
+      "max_ik_tip_error_studs": 0.0,
+      "max_claw_ik_palm_error_studs": 0.0067,
+      "loop_error_before_snap": 0.06468,
+      "start_error_before_snap": 0.0,
+      "joint_range_deg": {
+        "Claw_L_Carpus": [
+          27.9,
+          96.5
+        ],
+        "Claw_L_Propodus": [
+          -37.6,
+          9.9
+        ],
+        "Claw_L_Dactyl": [
+          20.0,
+          34.0
+        ],
+        "Claw_R_Carpus": [
+          28.0,
+          95.6
+        ],
+        "Claw_R_Propodus": [
+          -34.3,
+          9.9
+        ],
+        "Claw_R_Dactyl": [
+          20.0,
+          34.0
+        ],
+        "Leg_L1_Merus": [
+          -59.6,
+          -49.5
+        ],
+        "Leg_L1_Carpus": [
+          90.4,
+          92.2
+        ],
+        "Leg_L1_Dactyl": [
+          24.6,
+          29.8
+        ],
+        "Leg_L2_Merus": [
+          -58.0,
+          -47.4
+        ],
+        "Leg_L2_Carpus": [
+          86.5,
+          88.7
+        ],
+        "Leg_L2_Dactyl": [
+          25.7,
+          30.8
+        ],
+        "Leg_L3_Merus": [
+          -58.8,
+          -48.7
+        ],
+        "Leg_L3_Carpus": [
+          85.8,
+          88.7
+        ],
+        "Leg_L3_Dactyl": [
+          26.2,
+          32.1
+        ],
+        "Leg_L4_Merus": [
+          -61.8,
+          -53.6
+        ],
+        "Leg_L4_Carpus": [
+          91.5,
+          93.4
+        ],
+        "Leg_L4_Dactyl": [
+          25.7,
+          29.9
+        ],
+        "Leg_R1_Merus": [
+          -59.1,
+          -49.5
+        ],
+        "Leg_R1_Carpus": [
+          90.3,
+          92.2
+        ],
+        "Leg_R1_Dactyl": [
+          24.6,
+          29.8
+        ],
+        "Leg_R2_Merus": [
+          -57.3,
+          -47.5
+        ],
+        "Leg_R2_Carpus": [
+          86.3,
+          88.7
+        ],
+        "Leg_R2_Dactyl": [
+          25.6,
+          31.8
+        ],
+        "Leg_R3_Merus": [
+          -58.4,
+          -48.8
+        ],
+        "Leg_R3_Carpus": [
+          85.1,
+          88.7
+        ],
+        "Leg_R3_Dactyl": [
+          26.1,
+          33.2
+        ],
+        "Leg_R4_Merus": [
+          -61.5,
+          -53.5
+        ],
+        "Leg_R4_Carpus": [
+          91.5,
+          93.4
+        ],
+        "Leg_R4_Dactyl": [
+          25.6,
+          29.8
+        ]
+      },
+      "hinge_violations": [],
+      "hinge_violation_count": 0,
+      "max_twist_deg": [
+        0.0,
+        55,
+        "Claw_R_Propodus"
+      ],
+      "max_bone_rotation_per_frame_deg": [
+        33.76,
+        58,
+        "Claw_R_Dactyl"
+      ],
+      "lowest_point": [
+        -0.0,
+        74
+      ],
+      "max_planted_tip_drift": [
+        0.0,
+        "R1"
+      ],
+      "overlaps": {}
+    },
+    "Walk": {
+      "frames": 13,
+      "duration": 0.5,
+      "max_ik_tip_error_studs": 0.0,
+      "max_claw_ik_palm_error_studs": 0.0058,
+      "loop_error_before_snap": 0.03845,
+      "joint_range_deg": {
+        "Claw_L_Carpus": [
+          59.9,
+          96.5
+        ],
+        "Claw_L_Propodus": [
+          -30.2,
+          24.1
+        ],
+        "Claw_L_Dactyl": [
+          16.0,
+          16.0
+        ],
+        "Claw_R_Carpus": [
+          59.8,
+          96.5
+        ],
+        "Claw_R_Propodus": [
+          -30.1,
+          23.7
+        ],
+        "Claw_R_Dactyl": [
+          16.0,
+          16.0
+        ],
+        "Leg_L1_Merus": [
+          -74.9,
+          -61.1
+        ],
+        "Leg_L1_Carpus": [
+          82.3,
+          93.1
+        ],
+        "Leg_L1_Dactyl": [
+          27.0,
+          49.1
+        ],
+        "Leg_L2_Merus": [
+          -83.5,
+          -55.4
+        ],
+        "Leg_L2_Carpus": [
+          80.0,
+          88.1
+        ],
+        "Leg_L2_Dactyl": [
+          33.7,
+          53.6
+        ],
+        "Leg_L3_Merus": [
+          -66.0,
+          -58.9
+        ],
+        "Leg_L3_Carpus": [
+          80.8,
+          85.9
+        ],
+        "Leg_L3_Dactyl": [
+          32.2,
+          47.5
+        ],
+        "Leg_L4_Merus": [
+          -82.4,
+          -56.3
+        ],
+        "Leg_L4_Carpus": [
+          77.4,
+          84.5
+        ],
+        "Leg_L4_Dactyl": [
+          29.7,
+          63.9
+        ],
+        "Leg_R1_Merus": [
+          -74.3,
+          -60.6
+        ],
+        "Leg_R1_Carpus": [
+          81.6,
+          91.8
+        ],
+        "Leg_R1_Dactyl": [
+          27.8,
+          49.9
+        ],
+        "Leg_R2_Merus": [
+          -83.8,
+          -56.2
+        ],
+        "Leg_R2_Carpus": [
+          81.3,
+          88.2
+        ],
+        "Leg_R2_Dactyl": [
+          32.9,
+          53.2
+        ],
+        "Leg_R3_Merus": [
+          -66.5,
+          -59.0
+        ],
+        "Leg_R3_Carpus": [
+          81.8,
+          84.7
+        ],
+        "Leg_R3_Dactyl": [
+          32.3,
+          46.8
+        ],
+        "Leg_R4_Merus": [
+          -83.0,
+          -57.0
+        ],
+        "Leg_R4_Carpus": [
+          78.2,
+          87.4
+        ],
+        "Leg_R4_Dactyl": [
+          27.3,
+          63.2
+        ]
+      },
+      "hinge_violations": [],
+      "hinge_violation_count": 0,
+      "max_twist_deg": [
+        0.0,
+        7,
+        "Claw_R_Propodus"
+      ],
+      "max_bone_rotation_per_frame_deg": [
+        40.42,
+        12,
+        "Claw_L_Carpus"
+      ],
+      "lowest_point": [
+        -0.0,
+        7
+      ],
+      "max_planted_tip_drift": [
+        0.0,
+        "L2"
+      ],
+      "overlaps": {
+        "leg_R4|shell": {
+          "frames": 1,
+          "worst": [
+            10,
+            8,
+            [
+              -1.56,
+              1.34,
+              1.37
+            ],
+            [
+              -1.35,
+              1.3,
+              1.32
+            ]
+          ]
+        }
+      }
+    },
+    "Hit": {
+      "frames": 12,
+      "duration": 0.4583,
+      "max_ik_tip_error_studs": 0.0,
+      "max_claw_ik_palm_error_studs": 0.0057,
+      "start_error_before_snap": 0.0,
+      "end_error_before_snap": 0.09501,
+      "joint_range_deg": {
+        "Claw_L_Carpus": [
+          84.5,
+          111.9
+        ],
+        "Claw_L_Propodus": [
+          -61.2,
+          -12.8
+        ],
+        "Claw_L_Dactyl": [
+          20.0,
+          36.6
+        ],
+        "Claw_R_Carpus": [
+          84.5,
+          118.3
+        ],
+        "Claw_R_Propodus": [
+          -74.5,
+          -12.8
+        ],
+        "Claw_R_Dactyl": [
+          20.0,
+          36.6
+        ],
+        "Leg_L1_Merus": [
+          -59.1,
+          -47.6
+        ],
+        "Leg_L1_Carpus": [
+          82.4,
+          92.2
+        ],
+        "Leg_L1_Dactyl": [
+          19.3,
+          29.8
+        ],
+        "Leg_L2_Merus": [
+          -56.8,
+          -52.4
+        ],
+        "Leg_L2_Carpus": [
+          83.3,
+          88.7
+        ],
+        "Leg_L2_Dactyl": [
+          25.6,
+          30.5
+        ],
+        "Leg_L3_Merus": [
+          -61.5,
+          -56.8
+        ],
+        "Leg_L3_Carpus": [
+          86.9,
+          88.7
+        ],
+        "Leg_L3_Dactyl": [
+          30.5,
+          32.9
+        ],
+        "Leg_L4_Merus": [
+          -73.3,
+          -59.9
+        ],
+        "Leg_L4_Carpus": [
+          86.4,
+          93.5
+        ],
+        "Leg_L4_Dactyl": [
+          29.5,
+          47.3
+        ],
+        "Leg_R1_Merus": [
+          -59.1,
+          -39.4
+        ],
+        "Leg_R1_Carpus": [
+          81.6,
+          92.2
+        ],
+        "Leg_R1_Dactyl": [
+          15.8,
+          29.8
+        ],
+        "Leg_R2_Merus": [
+          -56.8,
+          -41.8
+        ],
+        "Leg_R2_Carpus": [
+          82.9,
+          88.7
+        ],
+        "Leg_R2_Dactyl": [
+          21.4,
+          30.5
+        ],
+        "Leg_R3_Merus": [
+          -56.8,
+          -48.7
+        ],
+        "Leg_R3_Carpus": [
+          88.1,
+          88.8
+        ],
+        "Leg_R3_Dactyl": [
+          27.0,
+          30.5
+        ],
+        "Leg_R4_Merus": [
+          -60.1,
+          -58.8
+        ],
+        "Leg_R4_Carpus": [
+          93.4,
+          96.7
+        ],
+        "Leg_R4_Dactyl": [
+          29.4,
+          32.0
+        ]
+      },
+      "hinge_violations": [],
+      "hinge_violation_count": 0,
+      "max_twist_deg": [
+        0.0,
+        5,
+        "Claw_R_Propodus"
+      ],
+      "max_bone_rotation_per_frame_deg": [
+        28.35,
+        1,
+        "Claw_R_Carpus"
+      ],
+      "lowest_point": [
+        -0.0,
+        10
+      ],
+      "max_planted_tip_drift": [
+        0.0,
+        "R1"
+      ],
+      "overlaps": {}
+    },
+    "Death": {
+      "frames": 49,
+      "duration": 2.0,
+      "max_ik_tip_error_studs": 0.0,
+      "max_claw_ik_palm_error_studs": 0.0098,
+      "start_error_before_snap": 0.0,
+      "joint_range_deg": {
+        "Claw_L_Carpus": [
+          80.1,
+          107.4
+        ],
+        "Claw_L_Propodus": [
+          -68.9,
+          12.1
+        ],
+        "Claw_L_Dactyl": [
+          6.4,
+          35.0
+        ],
+        "Claw_R_Carpus": [
+          80.3,
+          103.4
+        ],
+        "Claw_R_Propodus": [
+          -63.2,
+          11.4
+        ],
+        "Claw_R_Dactyl": [
+          6.4,
+          35.0
+        ],
+        "Leg_L1_Merus": [
+          -59.1,
+          -4.9
+        ],
+        "Leg_L1_Carpus": [
+          2.5,
+          92.2
+        ],
+        "Leg_L1_Dactyl": [
+          1.5,
+          30.5
+        ],
+        "Leg_L2_Merus": [
+          -56.8,
+          -4.8
+        ],
+        "Leg_L2_Carpus": [
+          2.6,
+          88.7
+        ],
+        "Leg_L2_Dactyl": [
+          1.8,
+          30.5
+        ],
+        "Leg_L3_Merus": [
+          -56.8,
+          -9.4
+        ],
+        "Leg_L3_Carpus": [
+          10.4,
+          88.7
+        ],
+        "Leg_L3_Dactyl": [
+          10.1,
+          30.5
+        ],
+        "Leg_L4_Merus": [
+          -64.2,
+          -19.8
+        ],
+        "Leg_L4_Carpus": [
+          21.8,
+          94.1
+        ],
+        "Leg_L4_Dactyl": [
+          17.9,
+          35.8
+        ],
+        "Leg_R1_Merus": [
+          -59.1,
+          -3.1
+        ],
+        "Leg_R1_Carpus": [
+          1.0,
+          92.2
+        ],
+        "Leg_R1_Dactyl": [
+          0.9,
+          30.2
+        ],
+        "Leg_R2_Merus": [
+          -56.8,
+          -1.4
+        ],
+        "Leg_R2_Carpus": [
+          1.5,
+          88.7
+        ],
+        "Leg_R2_Dactyl": [
+          0.8,
+          30.5
+        ],
+        "Leg_R3_Merus": [
+          -56.8,
+          -4.3
+        ],
+        "Leg_R3_Carpus": [
+          2.4,
+          88.8
+        ],
+        "Leg_R3_Dactyl": [
+          2.1,
+          30.5
+        ],
+        "Leg_R4_Merus": [
+          -64.2,
+          -18.0
+        ],
+        "Leg_R4_Carpus": [
+          16.3,
+          94.0
+        ],
+        "Leg_R4_Dactyl": [
+          16.8,
+          35.8
+        ]
+      },
+      "hinge_violations": [],
+      "hinge_violation_count": 0,
+      "max_twist_deg": [
+        0.0,
+        28,
+        "Claw_R_Propodus"
+      ],
+      "max_bone_rotation_per_frame_deg": [
+        38.92,
+        12,
+        "Claw_R_Carpus"
+      ],
+      "lowest_point": [
+        -0.0,
+        2
+      ],
+      "max_planted_tip_drift": [
+        0.0,
+        null
+      ],
+      "overlaps": {}
+    },
+    "BeatCommand": {
+      "frames": 33,
+      "duration": 1.3333,
+      "max_ik_tip_error_studs": 0.0,
+      "max_claw_ik_palm_error_studs": 0.0059,
+      "start_error_before_snap": 0.0,
+      "end_error_before_snap": 0.04625,
+      "joint_range_deg": {
+        "Claw_L_Carpus": [
+          84.5,
+          100.2
+        ],
+        "Claw_L_Propodus": [
+          -22.5,
+          -12.8
+        ],
+        "Claw_L_Dactyl": [
+          14.0,
+          20.0
+        ],
+        "Claw_R_Carpus": [
+          8.0,
+          85.3
+        ],
+        "Claw_R_Propodus": [
+          -30.6,
+          28.1
+        ],
+        "Claw_R_Dactyl": [
+          0.0,
+          42.0
+        ],
+        "Leg_L1_Merus": [
+          -71.3,
+          -58.9
+        ],
+        "Leg_L1_Carpus": [
+          86.9,
+          92.4
+        ],
+        "Leg_L1_Dactyl": [
+          29.6,
+          44.3
+        ],
+        "Leg_L2_Merus": [
+          -65.5,
+          -56.8
+        ],
+        "Leg_L2_Carpus": [
+          83.4,
+          88.7
+        ],
+        "Leg_L2_Dactyl": [
+          30.5,
+          40.9
+        ],
+        "Leg_L3_Merus": [
+          -64.1,
+          -56.8
+        ],
+        "Leg_L3_Carpus": [
+          82.5,
+          88.7
+        ],
+        "Leg_L3_Dactyl": [
+          30.5,
+          39.1
+        ],
+        "Leg_L4_Merus": [
+          -69.9,
+          -59.6
+        ],
+        "Leg_L4_Carpus": [
+          84.7,
+          93.4
+        ],
+        "Leg_L4_Dactyl": [
+          29.5,
+          41.5
+        ],
+        "Leg_R1_Merus": [
+          -59.7,
+          -50.2
+        ],
+        "Leg_R1_Carpus": [
+          92.0,
+          94.7
+        ],
+        "Leg_R1_Dactyl": [
+          26.2,
+          32.3
+        ],
+        "Leg_R2_Merus": [
+          -56.8,
+          -50.2
+        ],
+        "Leg_R2_Carpus": [
+          88.7,
+          90.0
+        ],
+        "Leg_R2_Dactyl": [
+          27.9,
+          30.5
+        ],
+        "Leg_R3_Merus": [
+          -56.8,
+          -51.1
+        ],
+        "Leg_R3_Carpus": [
+          88.0,
+          88.7
+        ],
+        "Leg_R3_Dactyl": [
+          27.8,
+          30.5
+        ],
+        "Leg_R4_Merus": [
+          -60.4,
+          -52.6
+        ],
+        "Leg_R4_Carpus": [
+          90.7,
+          93.4
+        ],
+        "Leg_R4_Dactyl": [
+          25.1,
+          29.6
+        ]
+      },
+      "hinge_violations": [],
+      "hinge_violation_count": 0,
+      "max_twist_deg": [
+        0.0,
+        23,
+        "Claw_R_Propodus"
+      ],
+      "max_bone_rotation_per_frame_deg": [
+        36.67,
+        2,
+        "Claw_R_Carpus"
+      ],
+      "lowest_point": [
+        -0.0,
+        27
+      ],
+      "max_planted_tip_drift": [
+        0.0,
+        "L4"
+      ],
+      "overlaps": {}
+    },
+    "ClawSlam": {
+      "frames": 40,
+      "duration": 1.625,
+      "max_ik_tip_error_studs": 0.0,
+      "max_claw_ik_palm_error_studs": 0.0096,
+      "start_error_before_snap": 0.0,
+      "end_error_before_snap": 0.07991,
+      "joint_range_deg": {
+        "Claw_L_Carpus": [
+          46.1,
+          84.7
+        ],
+        "Claw_L_Propodus": [
+          -76.1,
+          -11.8
+        ],
+        "Claw_L_Dactyl": [
+          4.0,
+          35.0
+        ],
+        "Claw_R_Carpus": [
+          45.9,
+          85.4
+        ],
+        "Claw_R_Propodus": [
+          -71.4,
+          -11.7
+        ],
+        "Claw_R_Dactyl": [
+          4.0,
+          35.0
+        ],
+        "Leg_L1_Merus": [
+          -65.7,
+          -30.7
+        ],
+        "Leg_L1_Carpus": [
+          75.8,
+          92.2
+        ],
+        "Leg_L1_Dactyl": [
+          12.5,
+          56.8
+        ],
+        "Leg_L2_Merus": [
+          -61.5,
+          -39.0
+        ],
+        "Leg_L2_Carpus": [
+          79.7,
+          88.7
+        ],
+        "Leg_L2_Dactyl": [
+          18.5,
+          45.5
+        ],
+        "Leg_L3_Merus": [
+          -57.2,
+          -49.1
+        ],
+        "Leg_L3_Carpus": [
+          83.3,
+          88.7
+        ],
+        "Leg_L3_Dactyl": [
+          23.4,
+          31.2
+        ],
+        "Leg_L4_Merus": [
+          -61.8,
+          -56.7
+        ],
+        "Leg_L4_Carpus": [
+          89.3,
+          93.4
+        ],
+        "Leg_L4_Dactyl": [
+          26.1,
+          30.0
+        ],
+        "Leg_R1_Merus": [
+          -69.2,
+          -31.2
+        ],
+        "Leg_R1_Carpus": [
+          80.1,
+          92.2
+        ],
+        "Leg_R1_Dactyl": [
+          12.4,
+          50.3
+        ],
+        "Leg_R2_Merus": [
+          -61.1,
+          -38.7
+        ],
+        "Leg_R2_Carpus": [
+          78.4,
+          88.7
+        ],
+        "Leg_R2_Dactyl": [
+          18.4,
+          46.6
+        ],
+        "Leg_R3_Merus": [
+          -57.2,
+          -49.0
+        ],
+        "Leg_R3_Carpus": [
+          83.3,
+          88.7
+        ],
+        "Leg_R3_Dactyl": [
+          23.4,
+          31.3
+        ],
+        "Leg_R4_Merus": [
+          -61.8,
+          -56.8
+        ],
+        "Leg_R4_Carpus": [
+          89.2,
+          93.4
+        ],
+        "Leg_R4_Dactyl": [
+          26.2,
+          29.9
+        ]
+      },
+      "hinge_violations": [],
+      "hinge_violation_count": 0,
+      "max_twist_deg": [
+        0.0,
+        12,
+        "Claw_R_Propodus"
+      ],
+      "max_bone_rotation_per_frame_deg": [
+        22.0,
+        8,
+        "Claw_L_Dactyl"
+      ],
+      "lowest_point": [
+        -0.0,
+        20
+      ],
+      "max_planted_tip_drift": [
+        0.0,
+        "L1"
+      ],
+      "overlaps": {}
+    },
+    "Bombard": {
+      "frames": 30,
+      "duration": 1.2083,
+      "max_ik_tip_error_studs": 0.0,
+      "max_claw_ik_palm_error_studs": 0.0092,
+      "start_error_before_snap": 0.0,
+      "end_error_before_snap": 0.00553,
+      "joint_range_deg": {
+        "Claw_L_Carpus": [
+          15.4,
+          84.5
+        ],
+        "Claw_L_Propodus": [
+          -18.3,
+          -1.3
+        ],
+        "Claw_L_Dactyl": [
+          18.0,
+          40.0
+        ],
+        "Claw_R_Carpus": [
+          25.7,
+          84.5
+        ],
+        "Claw_R_Propodus": [
+          -21.7,
+          -0.9
+        ],
+        "Claw_R_Dactyl": [
+          18.0,
+          40.0
+        ],
+        "Leg_L1_Merus": [
+          -59.1,
+          -50.6
+        ],
+        "Leg_L1_Carpus": [
+          89.7,
+          92.2
+        ],
+        "Leg_L1_Dactyl": [
+          24.5,
+          29.8
+        ],
+        "Leg_L2_Merus": [
+          -56.8,
+          -50.7
+        ],
+        "Leg_L2_Carpus": [
+          86.4,
+          88.7
+        ],
+        "Leg_L2_Dactyl": [
+          26.3,
+          30.5
+        ],
+        "Leg_L3_Merus": [
+          -56.8,
+          -53.2
+        ],
+        "Leg_L3_Carpus": [
+          86.4,
+          88.7
+        ],
+        "Leg_L3_Dactyl": [
+          27.3,
+          30.5
+        ],
+        "Leg_L4_Merus": [
+          -59.9,
+          -58.5
+        ],
+        "Leg_L4_Carpus": [
+          91.1,
+          93.4
+        ],
+        "Leg_L4_Dactyl": [
+          26.8,
+          29.5
+        ],
+        "Leg_R1_Merus": [
+          -59.1,
+          -50.7
+        ],
+        "Leg_R1_Carpus": [
+          89.8,
+          92.2
+        ],
+        "Leg_R1_Dactyl": [
+          24.4,
+          29.8
+        ],
+        "Leg_R2_Merus": [
+          -56.8,
+          -50.7
+        ],
+        "Leg_R2_Carpus": [
+          86.4,
+          88.7
+        ],
+        "Leg_R2_Dactyl": [
+          26.4,
+          30.5
+        ],
+        "Leg_R3_Merus": [
+          -56.8,
+          -53.4
+        ],
+        "Leg_R3_Carpus": [
+          86.5,
+          88.7
+        ],
+        "Leg_R3_Dactyl": [
+          27.3,
+          30.5
+        ],
+        "Leg_R4_Merus": [
+          -59.9,
+          -58.5
+        ],
+        "Leg_R4_Carpus": [
+          91.2,
+          93.4
+        ],
+        "Leg_R4_Dactyl": [
+          26.7,
+          29.5
+        ]
+      },
+      "hinge_violations": [],
+      "hinge_violation_count": 0,
+      "max_twist_deg": [
+        0.0,
+        14,
+        "Claw_L_Merus"
+      ],
+      "max_bone_rotation_per_frame_deg": [
+        33.85,
+        2,
+        "Claw_R_Carpus"
+      ],
+      "lowest_point": [
+        -0.0,
+        6
+      ],
+      "max_planted_tip_drift": [
+        0.0,
+        "R1"
+      ],
+      "overlaps": {}
+    },
+    "Intro": {
+      "frames": 73,
+      "duration": 3.0,
+      "max_ik_tip_error_studs": 0.0,
+      "max_claw_ik_palm_error_studs": 0.0371,
+      "end_error_before_snap": 0.02307,
+      "joint_range_deg": {
+        "Claw_L_Carpus": [
+          21.0,
+          139.2
+        ],
+        "Claw_L_Propodus": [
+          -46.5,
+          -1.3
+        ],
+        "Claw_L_Dactyl": [
+          0.0,
+          45.0
+        ],
+        "Claw_R_Carpus": [
+          19.9,
+          139.2
+        ],
+        "Claw_R_Propodus": [
+          -47.3,
+          -1.1
+        ],
+        "Claw_R_Dactyl": [
+          0.0,
+          45.0
+        ],
+        "Leg_L1_Merus": [
+          -76.6,
+          -49.6
+        ],
+        "Leg_L1_Carpus": [
+          86.4,
+          92.2
+        ],
+        "Leg_L1_Dactyl": [
+          25.0,
+          45.6
+        ],
+        "Leg_L2_Merus": [
+          -70.3,
+          -50.8
+        ],
+        "Leg_L2_Carpus": [
+          85.1,
+          88.7
+        ],
+        "Leg_L2_Dactyl": [
+          27.2,
+          43.0
+        ],
+        "Leg_L3_Merus": [
+          -64.8,
+          -54.4
+        ],
+        "Leg_L3_Carpus": [
+          84.8,
+          88.8
+        ],
+        "Leg_L3_Dactyl": [
+          28.2,
+          42.3
+        ],
+        "Leg_L4_Merus": [
+          -65.2,
+          -56.8
+        ],
+        "Leg_L4_Carpus": [
+          91.7,
+          95.0
+        ],
+        "Leg_L4_Dactyl": [
+          27.4,
+          37.6
+        ],
+        "Leg_R1_Merus": [
+          -77.0,
+          -49.6
+        ],
+        "Leg_R1_Carpus": [
+          87.3,
+          92.2
+        ],
+        "Leg_R1_Dactyl": [
+          25.0,
+          44.8
+        ],
+        "Leg_R2_Merus": [
+          -69.7,
+          -50.7
+        ],
+        "Leg_R2_Carpus": [
+          84.1,
+          88.7
+        ],
+        "Leg_R2_Dactyl": [
+          27.1,
+          44.0
+        ],
+        "Leg_R3_Merus": [
+          -64.7,
+          -54.3
+        ],
+        "Leg_R3_Carpus": [
+          84.3,
+          88.8
+        ],
+        "Leg_R3_Dactyl": [
+          28.3,
+          42.7
+        ],
+        "Leg_R4_Merus": [
+          -65.5,
+          -56.7
+        ],
+        "Leg_R4_Carpus": [
+          91.7,
+          95.1
+        ],
+        "Leg_R4_Dactyl": [
+          27.5,
+          37.2
+        ]
+      },
+      "hinge_violations": [],
+      "hinge_violation_count": 0,
+      "max_twist_deg": [
+        0.0,
+        31,
+        "Claw_L_Propodus"
+      ],
+      "max_bone_rotation_per_frame_deg": [
+        24.52,
+        69,
+        "Claw_R_Carpus"
+      ],
+      "lowest_point": [
+        -0.0,
+        36
+      ],
+      "max_planted_tip_drift": [
+        0.0,
+        "R2"
+      ],
+      "overlaps": {}
+    }
+  },
+  "rest_contacts": {},
+  "joint_range_by_kind_deg": {
+    "elbow": [
+      8.0,
+      139.2
+    ],
+    "wrist": [
+      -76.1,
+      28.1
+    ],
+    "pincer_gape": [
+      0.0,
+      45.0
+    ],
+    "leg_lift": [
+      -83.8,
+      -1.4
+    ],
+    "knee": [
+      1.0,
+      96.7
+    ],
+    "ankle": [
+      0.8,
+      63.9
+    ]
+  },
+  "joint_limits_deg": {
+    "elbow": [
+      -5.0,
+      150.0
+    ],
+    "wrist": [
+      -87.8,
+      62.2
+    ],
+    "pincer_gape": [
+      -2.0,
+      55.0
+    ],
+    "leg_lift": [
+      -119.1,
+      0.9
+    ],
+    "knee": [
+      -5.0,
+      150.0
+    ],
+    "ankle": [
+      -5.0,
+      150.0
+    ]
+  },
+  "worst": {
+    "hinge_violations": 0,
+    "twist_deg": 0.0,
+    "bone_rotation_per_frame_deg": 40.42,
+    "lowest_point": -0.0,
+    "planted_tip_drift": 0.0,
+    "overlap_frames": 1
+  },
+  "intentional_snaps": {
+    "BeatCommand": {
+      "Claw_R_Dactyl": [
+        17,
+        18
+      ]
+    },
+    "Intro": {
+      "Claw_R_Dactyl": [
+        47,
+        48
+      ],
+      "Claw_L_Dactyl": [
+        47,
+        48
+      ]
+    }
+  },
+  "slam_reach_at_impact": {
+    "R": 0.932,
+    "L": 0.932
+  },
+  "beatcommand_reach_at_impact": 0.872,
+  "death_final": {
+    "drop": 0.5042,
+    "claw_palm_z": 0.5547
+  },
+  "slam_palm_z": 0.6669,
+  "motion": {
+    "strideLength": 1.4,
+    "nominalSpeed": 2.8
+  }
+}
