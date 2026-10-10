@@ -20,8 +20,13 @@ D.CLEAR_SHARDS=60
 
 D.Events={
  PineValley={
-  id='PopGoesTheZombie',title='POP GOES THE ZOMBIE',objective='SURVIVE',kind='survive',duration=60,intro=4.2,
+  -- intro 5.4 (2026-10-10, was 4.2): a harmless intro Bloater waddles in, arms and pops on camera
+  -- (Round10Intro, Round10Service introBloater) before the title card.
+  id='PopGoesTheZombie',title='POP GOES THE ZOMBIE',objective='SURVIVE',kind='survive',duration=60,intro=5.4,
   arming='ABOUT TO BURST',
+  -- The intro Bloater (2026-10-10): starts walkFrom studs behind Focus, waddles onto it by armAt (s
+  -- into the intro), arms with the real warning and pops at burstAt (armAt + Blast.fuse 1.5).
+  introPop={walkFrom=9,armAt=1.7,burstAt=3.2},
   needs={templates={'BloaterZombie_NPC'}},
   -- Waves of the map's zombies plus Bloaters, from the arena edge (EventSpawn telegraphs each).
   -- interval: seconds between pulses, early -> late (the last 15 s push harder).
@@ -33,13 +38,23 @@ D.Events={
   needs={leader='DJCrab'},
   spawn={interval={4.2,3.4},perPlayer=3,base=3,cap={20,10},fodder={'crab','crab','hermit-crab','rock-throwing-crab','crab'}},
   -- Beat Command: up to count + perPlayer x players crab adds rush along warned lanes.
-  rush={count=3,perPlayer=2,warn=.9,speed=40,length=34,width=4.5,damage=14,range=55},
+  -- 2026-10-10 user: "larger attacks": length 34 -> 50, width 4.5 -> 6.4 (the lane drawn is the lane tested).
+  rush={count=3,perPlayer=2,warn=.9,speed=40,length=50,width=6.4,damage=14,range=55},
  },
  DesertBasin={
   id='TombOpens',title='THE TOMB OPENS',objective='DESTROY THE TOMBS AND DEFEAT THE WARDEN',kind='tombs',leader='TombWarden',intro=5.0,
   needs={leader='TombWarden',props={'Sarcophagus'}},
-  tombs={count=3,health=1500,radius=27,letters={'A','B','C'},pulse={6.5,5.0},stagger=2.2,perPulse=1,perPlayer=1,telegraph=1.1,
-   fodder={'skeleton','mummy','skeleton','bow-skeleton'},cap={24,10}},
+  -- 2026-10-10 user: "they need to be spread apart", "multiple wardens come out" in multiplayer, and the
+  -- tombs' spawning "feels like just another normal round". ring: the tombs' ring as a share of the
+  -- arena radius, clamped to ringClamp studs; minGap: studs between any two tombs (was 16 on a 27 ring).
+  -- wardens: Tomb Wardens by party size 1-4 (A from tomb A's cavity, the rest burst out in front of
+  -- B / C when the fight starts); the party's boss health is split between them (Defs.wardenHealth).
+  -- burst: each standing tomb glows and shakes for `warn` s, then pours size skeletons out of its
+  -- mouth `pour` s apart; bursts come faster and bigger the longer the tomb stands (Defs.burstSize,
+  -- Defs.burstInterval). Destroying a tomb stops its stream and cancels its pour mid-way.
+  tombs={count=3,health=1500,ring=.62,ringClamp={30,42},minGap=34,letters={'A','B','C'},wardens={1,2,2,3},
+   burst={warn=.9,interval={4.2,2.6},step=.3,base=2,perPlayer=1,grow=3,growEvery=3,pour=.14,stagger=1.4},
+   fodder={'skeleton','mummy','skeleton','bow-skeleton'},cap={30,10}},
  },
  FrozenPass={
   id='BloodMoonHunt',title='BLOOD MOON HUNT',objective='DEFEAT THE ALPHA',kind='leader',leader='BloodAlpha',intro=4.4,
@@ -52,9 +67,17 @@ D.Events={
   id='Eruption',title='ERUPTION',objective='SURVIVE',kind='survive',duration=60,intro=4.0,
   needs={props={'VolcanicVent'}},
   spawn={interval={3.2,2.4},perPlayer=4,base=3,cap={30,12},fodder={'lava-slime','lava-slime','fire-goblin','lava-slime','ember-spider'}},
-  -- Fixed vents in groups that take turns: warn (orange), erupt (damage ticks), cool.
-  vents={count=6,radius={20,30},groups=3,warn=1.5,erupt=2.0,gap=2.3,blast=9,tick=.5,
-   playerDamage=12,enemyShare=.35,cues={'CHARGING','ERUPTING','COOLING'}},
+  -- Vents in groups that take turns: charge (warn s), erupt (damage ticks), cool. 2026-10-10 user:
+  -- remove the big CHARGING / ERUPTING / COOLING tags (the vent's glow, light and ground ring say it
+  -- now), "spread out more and larger aoe", and "they should change locations ... or just have more".
+  -- rings: vents alternate between two rings (shares of the arena radius, clamped to radius studs).
+  -- blast: the vent's own disc; splash: lava splashes thrown out each eruption (count discs of
+  -- radius at distance studs from the vent, picked when it starts charging and drawn while it
+  -- charges). relocate: every `every` eruptions a vent moves (the new spot is marked for warn s);
+  -- minGap from other vents, clear from players.
+  vents={count=8,rings={.3,.62},radius={18,44},groups=4,warn=1.5,erupt=1.8,cool=.9,gap=1.9,blast=12,tick=.5,
+   splash={count=3,radius=6,distance={13,19}},relocate={every=2,warn=1.6,minGap=22,clear=8},
+   playerDamage=12,enemyShare=.35},
  },
 }
 -- Event music (Round10Events.client), played through the RogueliteMusic group (the Settings music
@@ -79,6 +102,29 @@ function D.interval(spawn,k) k=math.clamp(k or 0,0,1);return spawn.interval[1]+(
 function D.cap(spawn,players) return math.min(90,spawn.cap[1]+spawn.cap[2]*math.max(0,(players or 1)-1)) end
 -- How many arrive in one pulse: base + perPlayer x players.
 function D.pulseSize(spawn,players) return spawn.base+spawn.perPlayer*math.max(1,players or 1) end
+-- Tomb event (2026-10-10). Wardens for `players` up: 1 solo, 2 for 2-3, 3 for 4.
+function D.wardens(tombs,players) local w=tombs.wardens or {1};return w[math.clamp(math.floor(players or 1),1,#w)] end
+-- Each Warden's share of the party-scaled boss health (MapBossService already multiplies by the party):
+-- the pool is split evenly, so the total stays what one Warden had. Example, 4 players: one Warden
+-- would have 4 x solo; three Wardens get 4/3 x solo each. 3 players: two at 1.5 x solo.
+function D.wardenHealth(partyHealth,count) return math.ceil(partyHealth/math.max(1,count or 1)) end
+-- Skeletons in a tomb's burst after `bursts` earlier ones: base + perPlayer x players, +1 every
+-- growEvery bursts up to +grow. Example, solo: 3, 3, 3, 4, 4, 4, 5 ... 6; 4 players: 6 ... 9.
+function D.burstSize(burst,players,bursts)
+ return burst.base+burst.perPlayer*math.max(1,players or 1)+math.min(burst.grow,(bursts or 0)//burst.growEvery)
+end
+-- Seconds to a tomb's next burst after `bursts` bursts: interval[1] less `step` each, down to interval[2].
+-- Example: 4.2, 3.9, 3.6 ... 2.6 (from the 6th burst on).
+function D.burstInterval(burst,bursts) return math.max(burst.interval[2],burst.interval[1]-burst.step*(bursts or 0)) end
+-- Vent cycle state at `c` seconds into its period: 'Charging', 'Erupting', 'Cooling', 'Moving' (only on
+-- a relocating cycle) or 'Idle', and the seconds that state has left.
+function D.ventState(vents,c,relocating)
+ local w,e,o=vents.warn,vents.warn+vents.erupt,vents.warn+vents.erupt+vents.cool
+ if c<w then return 'Charging',w-c elseif c<e then return 'Erupting',e-c elseif c<o then return 'Cooling',o-c end
+ local m=o+(vents.relocate and vents.relocate.warn or 0)
+ if relocating and c<m then return 'Moving',m-c end
+ return 'Idle',nil
+end
 -- MM:SS for a countdown (the HUD timer reads WaveEndsAt the same way).
 function D.clock(seconds) local s=math.max(0,math.ceil(seconds or 0));return string.format('%02d:%02d',s//60,s%60) end
 return D

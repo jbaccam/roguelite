@@ -155,16 +155,22 @@ function H.show(def,folder)
     end
    end
    m.goal.Text=('DESTROY THE TOMBS  %d / %d'):format(down,#(st.tombs or {}))
-   m.warden.Text=st.leaderAlive and 'WARDEN ALIVE' or 'WARDEN DEFEATED'
+   -- 2026-10-10: a party can face 2-3 Wardens (Round10Service); the chip counts them.
+   local total=tonumber(st.wardenTotal) or 1;local left=tonumber(st.wardens) or (st.leaderAlive and 1 or 0)
+   if total>1 then m.warden.Text=left>0 and ('WARDENS ALIVE  %d / %d'):format(left,total) or 'WARDENS DEFEATED'
+   else m.warden.Text=st.leaderAlive and 'WARDEN ALIVE' or 'WARDEN DEFEATED' end
    m.warden.TextColor3=st.leaderAlive and C.negative or C.lime
   end
   -- Pointers: the leader and the standing tombs, off screen only.
   local seen={}
   if folder and folder.Parent then
-   local leader=folder:FindFirstChild('Leader');leader=leader and leader.Value
-   local lh=leader and leader.Parent and leader:FindFirstChildOfClass('Humanoid')
-   if lh and lh.Health>0 and (leader:GetAttribute('BossIntroUntil') or 0)<=workspace:GetServerTimeNow() then
-    seen.leader=true;local r=leader.PrimaryPart;updatePointer(pointer('leader','BOSS',C.negative),r and r.Position)
+   -- Leader, plus Leader2 / Leader3 (a party's extra Tomb Wardens, 2026-10-10).
+   for _,key in {'Leader','Leader2','Leader3'} do
+    local leader=folder:FindFirstChild(key);leader=leader and leader.Value
+    local lh=leader and leader.Parent and leader:FindFirstChildOfClass('Humanoid')
+    if lh and lh.Health>0 and (leader:GetAttribute('BossIntroUntil') or 0)<=workspace:GetServerTimeNow() then
+     local id=key:lower();seen[id]=true;local r=leader.PrimaryPart;updatePointer(pointer(id,'BOSS',C.negative),r and r.Position)
+    end
    end
    for _,l in {'A','B','C'} do
     local v=folder:FindFirstChild('Tomb'..l);local tomb=v and v.Value

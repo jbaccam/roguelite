@@ -531,6 +531,40 @@ if Defs then
    and (c.center-Vector3.new(0,0,-15)).Magnitude<1e-6 and c.radius==12 and (units[2].line.origin-c.center).Magnitude<1e-6 and units[2].line.length==85
    and math.abs(X.duration(units[2].def,units[2].at)-(.7+85/55+.05))<1e-9
  end)
+ -- Openings (user, 2026-10-10: "theres not any openings in his attacks which is fine on the latter
+ -- difficulties but not on normal"): Defs.recovery with D.Hammer.pace, as MapBossService ends an attack.
+ check('Hammer openings 2026-10-10: every attack\'s wait is Normal > Hard > Nightmare (Nightmare = the old cooldown x enrage), calm and enraged; combos wait 1.5-2.6 s on Normal',function()
+  if not (Defs.recovery and Defs.pace) then return false end
+  local N,Hd,NM=Defs.pace('Hammer','Normal'),Defs.pace('Hammer','Hard'),Defs.pace('Hammer','Nightmare')
+  if not (N and Hd and NM) or Defs.pace('KingCrab','Normal')~=nil then return false end
+  for kind,x in a do
+   for _,rage in {1,H.enrage.cooldown} do
+    local n,nr=Defs.recovery(x,N,rage);local h,hr=Defs.recovery(x,Hd,rage);local m,mr=Defs.recovery(x,NM,rage)
+    if not (n>h and h>m and nr>hr and hr>=mr and mr==0 and math.abs(m-x.cooldown*rage)<1e-9) then error(kind..' rage '..rage..': '..n..'/'..h..'/'..m) end
+    if rage==1 and Defs.isCombo(x) and (n<1.5 or n>2.6) then error(kind..' Normal combo gap '..n) end
+   end
+  end
+  local plain,rest=Defs.recovery({cooldown=1},nil,.6)
+  return Defs.isCombo(a.SwingSpin) and Defs.isCombo(a.SpinSlam) and Defs.isCombo(a.Spin) and Defs.isCombo(a.Charge) and not Defs.isCombo(a.Slam) and not Defs.isCombo(a.Swing)
+   and math.abs(plain-.6)<1e-9 and rest==0
+ end)
+ check('Hammer openings 2026-10-10: on Normal, walking his order (and the enraged one), no wind-up starts under 1.2 s after the last attack ends, and he stands still >= 1 s of it',function()
+  local N=Defs.pace('Hammer','Normal')
+  for _,list in {H.order,H.enrage.order} do
+   for i,kind in list do
+    for _,rage in {1,H.enrage.cooldown} do
+     local gap,rest=Defs.recovery(a[kind],N,rage)
+     if gap<1.2 or rest<1 or rest>gap then error(('%s -> %s: gap %.2f, still %.2f'):format(kind,list[i%#list+1],gap,rest)) end
+    end
+   end
+  end
+  return true
+ end)
+ check('admin spawn 2026-10-10: a practice boss is on Normal unless the panel picked the run\'s difficulty; wave and tutorial bosses keep the run\'s',function()
+  local d=Defs.spawnDifficulty
+  return d(true,'Hard',nil)=='Normal' and d(true,nil,nil)=='Normal' and d(true,'Nightmare','Hard')=='Normal' and d(true,'Hard','Hard')=='Hard'
+   and d(true,'Normal','Normal')=='Normal' and d(false,'Hard',nil)=='Hard' and d(false,nil,nil)==nil
+ end)
  -- Every attack an order names exists: X.walk would throw on every Heartbeat otherwise.
  local missing,defs={},0
  for id in Defs do

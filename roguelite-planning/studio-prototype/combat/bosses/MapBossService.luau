@@ -651,7 +651,12 @@ function M.spawn(id,cf,practice,opts)
  -- Difficulty and the run's player count scale health; difficulty scales every hit (see hit).
  -- Only run members count (ShopService RunMember): players in the lobby don't toughen the boss.
  local members=0;for _,p in Players:GetPlayers() do if p:GetAttribute('RunMember') then members+=1 end end
- local hpScale,damageScale=Rules.bossScale(combat:GetAttribute('RunDifficulty'),math.max(1,members))
+ -- 2026-10-10: an admin-panel boss is on Normal unless the panel's Difficulty was picked (Defs.spawnDifficulty);
+ -- the difficulty also picks his openings (Defs.pace: the wait and stand-still after each attack, stepAttack).
+ local run=combat:GetAttribute('RunDifficulty')
+ local difficulty=Rules.difficulty(Defs.spawnDifficulty and Defs.spawnDifficulty(practice==true,run,combat:GetAttribute('AdminDifficulty')) or run).id
+ local hpScale,damageScale=Rules.bossScale(difficulty,math.max(1,members))
+ npc:SetAttribute('BossDifficulty',difficulty)
  -- The tutorial's boss (TutorialDirector sets TutorialBossHealth): that fixed health, no scaling,
  -- and the def.tutorial variant (s.tutorial: its order, no enrage or follow-ups).
  local fixed=not practice and combat:GetAttribute('TutorialBossHealth');local tutorial=type(fixed)=='number'
@@ -664,7 +669,7 @@ function M.spawn(id,cf,practice,opts)
  for _,p in npc:GetDescendants() do if p:IsA('BasePart') then p.Anchored=false end end
  npc.Parent=folder;root:SetNetworkOwner(nil);h.AutoRotate=true
  local s={id=id,def=def,T=T,next=workspace:GetServerTimeNow()+Defs.FIRST_ATTACK,index=0,lastHealth=h.Health,stop=def.stop or math.min(8*scale,T.footprintRadius or 4)+3,follows={},waves={},followSerial=0,
-  lastStart={},tutorial=tutorial or nil};M.states[npc]=s
+  lastStart={},tutorial=tutorial or nil,pace=Defs.pace and Defs.pace(id,difficulty) or nil};M.states[npc]=s
  if intro then
   -- The entrance (BossService's, from def.intro): rumble and a growing shadow for `drop`, the fall,
   -- then the landing and camera orbit (BossIntro.client) for `after`. The intro clip is timed so
@@ -963,7 +968,13 @@ local function stepAttack(npc,s,now,h,root,params,people)
  local impact=at.impact or A.phases and A.phases[1].at.impact
  if impact and age>=impact and not A.impacted then A.impacted=true;npc:SetAttribute('BossImpactStart',now);local hook=M.hooks[npc];if hook then task.spawn(hook,A.kind,A,now) end end
  A.sampled=age
- if age>=A.duration then s.attack=nil;s.next=now+def.cooldown*(rage.cooldown or 1);release(npc,h,root) end
+ if age>=A.duration then
+  -- 2026-10-10 openings: the gap to the next attack and its stand-still breather by difficulty (Defs.recovery,
+  -- D.Hammer.pace); a def without pace waits cooldown x enrage as before.
+  local gap,rest=def.cooldown*(rage.cooldown or 1),0
+  if Defs.recovery then gap,rest=Defs.recovery(def,s.pace,rage.cooldown) end
+  s.attack=nil;s.next=now+gap;s.rest=now+rest;release(npc,h,root)
+ end
 end
 -- Below ENRAGE_AT health: faster chase, shorter cooldowns and the def.enrage extras (see MapBossDefs).
 -- Never for the tutorial boss whose def says so (X.allows).
@@ -1001,6 +1012,8 @@ function M.step(npc,s,now)
  if combat:GetAttribute('AdminFreeze')==true then h:Move(Vector3.zero);h:MoveTo(root.Position);return end
  -- Enraged: the roar first, once (an attack under way finished above); without its clip, never.
  if X.roarDue(s) then if startRoar(npc,s,now,h,root,params) then return end;s.roared=true end
+ -- The breather after an attack (Defs.recovery, 2026-10-10): he stands in his Idle, no chase, no wind-up.
+ if s.rest and now<s.rest then h:Move(Vector3.zero);h:MoveTo(root.Position);return end
  local target,dist=nil,math.huge
  for _,e in people do local d=(e.root.Position-root.Position).Magnitude;if d<dist then target,dist=e.root,d end end
  if not target then h:Move(Vector3.zero);return end

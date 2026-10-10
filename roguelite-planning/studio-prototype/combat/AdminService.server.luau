@@ -69,6 +69,9 @@ function actions.Difficulty(p,id)
  if not spawner() then return false,NO_ARENA end
  if combat:GetAttribute('TutorialRun')==true then return false,'End the tutorial before changing difficulty' end
  combat:SetAttribute('RunDifficulty',id)
+ -- 2026-10-10: the explicit pick. Admin-spawned map bosses use Normal unless this still matches
+ -- RunDifficulty (MapBossDefs.spawnDifficulty), so a lobby queue's Hard doesn't leak into a test spawn.
+ combat:SetAttribute('AdminDifficulty',id)
  return true,id..' difficulty · applies to new enemies and waves'
 end
 -- Travel: instant in Studio's combined server. Published servers need plan C's teleports.

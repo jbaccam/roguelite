@@ -100,6 +100,43 @@ D.Hammer={anim='hammer-brute',name='Hammer Brute',introName='HAMMER BRUTE',healt
  },order={'Slam','Swing','Charge','Spin','SwingSpin','Slam','SpinSlam'}}
 -- Clip blends carry the hammer with both fists (MapBossPresentation P.toolBlend, 2026-10-09).
 D.Hammer.toolBlend={tool='Hammer',hands={'RightHand','LeftHand'}}
+-- Openings by difficulty (user, 2026-10-10: "the hammer brute needs just some more pauses in between in
+-- combos ... hes way too active for a low level player to fight ... theres not any openings in his
+-- attacks which is fine on the latter difficulties but not on normal"). His moves, damage and model are
+-- unchanged; only the wait after each attack grows (D.recovery, MapBossService as an attack ends):
+--   gap = cooldown x enrage .6 x pace.cooldown (x pace.combo for a combo: two or more non-wave hits, or
+--   the Charge), never under pace.min. For the first `breather` s of the gap he stands still (his Idle
+--   clip) instead of chasing, so the player can walk in and hit him; then he chases until the gap ends.
+-- Nightmare keeps the old pace. A def without `pace` (every other boss) waits plain cooldown x enrage.
+-- Example, Normal: Swing .8 -> 1.6 s (1 s standing), SwingSpin 1 x 2 x 1.15 = 2.3 s, SpinSlam 2.53 s;
+-- enraged Swing .96 -> 1.2 (min), SwingSpin 1.38. Hard: Swing 1.12, SwingSpin 1.54. Nightmare: .8 / 1.
+D.Hammer.pace={
+ Normal={cooldown=2,combo=1.15,min=1.2,breather=1},
+ Hard={cooldown=1.4,combo=1.1,min=.7,breather=.45},
+ Nightmare={cooldown=1,combo=1,min=0,breather=0},
+}
+-- The pace row for boss `id` on `difficulty` (a RunSetupRules id), nil when it has none.
+function D.pace(id,difficulty) local d=D[id];return type(d)=='table' and d.pace and d.pace[difficulty] or nil end
+-- Two or more hits that aren't a rubble wave (Spin, SwingSpin, SpinSlam), or a lane with a finish (the Charge).
+function D.isCombo(a)
+ if a.finish then return true end
+ local n=0;for _,ph in a.phases or {} do if ph.shape~='wave' then n+=1 end end
+ return n>=2
+end
+-- Seconds until his next attack may start, and how many of them he stands still (see D.Hammer.pace).
+function D.recovery(a,pace,rage)
+ local p=pace or {}
+ local gap=math.max(a.cooldown*(rage or 1)*(p.cooldown or 1)*(D.isCombo(a) and p.combo or 1),p.min or 0)
+ return gap,math.min(p.breather or 0,gap)
+end
+-- The difficulty a boss spawns on (2026-10-10, user: "i just spawned him in which he should be spawned
+-- in on normal difficulty"). An admin-panel boss (practice) fights on Normal unless the panel's
+-- Difficulty was picked (AdminService sets AdminDifficulty) and is still the run's; a lobby queue's
+-- Hard left in RunDifficulty doesn't carry into a test spawn. Every other spawn: the run's.
+function D.spawnDifficulty(practice,run,chosen)
+ if not practice or (chosen~=nil and chosen==run) then return run end
+ return 'Normal'
+end
 D.KingCrab={anim='king-crab',name='Giant King Crab',health=21000,scale=1.4,chaseSpeed=22,glowColor=nil,deathSeconds=nil,
  enrage={cooldown=.6,chase=3,extra=4,follow=2},
  attacks={
@@ -166,7 +203,8 @@ D.DJCrab={anim='dj-crab',name='DJ Crab',leader=true,health=7000,scale=1,chaseSpe
  attacks={
   BeatCommand={clip='BeatCommand',range={0,70},cooldown=1.1,damage=0,shape='signal',lockout=7},
   -- Rock bombardment: landing circles under players, rocks arrive eruptDelay later (BossVfx DJCrab).
-  Bombard={clip='Bombard',range={6,70},cooldown=1.3,damage=16,shape='targets',radius=5,maxTargets=4,lead=.2,eruptDelay=1.15,extra=1},
+  -- 2026-10-10 user: "needs to have larger attacks": radius 5 -> 7.5 (warning, hit and rock burst all read it).
+  Bombard={clip='Bombard',range={6,70},cooldown=1.3,damage=16,shape='targets',radius=7.5,maxTargets=4,lead=.2,eruptDelay=1.15,extra=1},
   -- Double claw bass slam: the ring runs out from between the claws; three gaps are the way through.
   ClawSlam={clip='ClawSlam',range={0,24},cooldown=1.9,damage=22,shape='ring',point='SlamCenter',inner=3,outer=32,travel=22,width=3,height=4,gaps=3,gapWidth=math.rad(17),knockdown=.5},
  },order={'BeatCommand','ClawSlam','Bombard','BeatCommand','Bombard','ClawSlam'}}

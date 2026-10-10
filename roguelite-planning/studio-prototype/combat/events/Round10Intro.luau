@@ -83,30 +83,71 @@ end
 local BUILD={}
 local BLEND=.35
 
+-- 2026-10-10 user: "the cinematic for pop goes the zombie [shows] nothing. spawn a popping zombie or
+-- something and make it blow up so players can see". The server's harmless prop Bloater
+-- (Round10Service introBloater: anchored, untagged, no collisions, gone after the pop) is walked from
+-- PopFrom to PopTo, posed with the Bloater waddle (ZombieMotion), armed with the real warning
+-- (Round10World previewBloater: disc, ABOUT TO BURST, swell) and popped with the real burst
+-- (Round10World blast), all locally on the intro's own timeline. Nothing here touches gameplay.
 BUILD.PopGoesTheZombie=function(a,def)
+ local pop=def.introPop or {walkFrom=9,armAt=1.7,burstAt=3.2}
+ local Motion=require(combat:WaitForChild('EnemyMotion'));local ZM=require(combat:WaitForChild('ZombieMotion'))
+ local Blast=require(combat:WaitForChild('ZombieTypes')).Blast;local World=require(combat:WaitForChild('Round10World'))
  local focus=a.focus or a.center;local dir=unit(focus-(a.players or focus+Vector3.new(0,0,10)))
  local side=up:Cross(dir)
- local hero=a.hero;local chest=focus+up*3.2
- local function heroPos() local r=rootOf(hero);return r and r.Position or chest end
- local swell -- the hero's harmless intro swell (its UpperTorso, locally)
- return {title=def.title,objective=def.objective..' '..Defs().clock(def.duration),card=2.6,
+ local prop,joints,fromCf,toCf,lastPos,armed,popped
+ local phase,poseBuf=0,{}
+ local function find()
+  if prop then return prop.Parent and prop or nil end
+  local m=a.folder:FindFirstChild('IntroBloater')
+  if m and m:IsA('Model') and m.PrimaryPart and typeof(m:GetAttribute('PopFrom'))=='CFrame' and typeof(m:GetAttribute('PopTo'))=='CFrame' then
+   prop,fromCf,toCf,joints=m,m:GetAttribute('PopFrom'),m:GetAttribute('PopTo'),Motion.bind(m)
+  end
+  return prop
+ end
+ -- Where the camera aims: the Bloater's middle (on its walk even before it replicates), or the spot.
+ local function body(t)
+  local r=prop and prop.Parent and prop.PrimaryPart;if r then return r.Position end
+  return focus+dir*pop.walkFrom*(1-math.clamp((t or 0)/pop.armAt,0,1))+up*3
+ end
+ local function radius(m) return Blast.radius*(m and m:GetScale()/(m:GetAttribute('EnemyBaselineModelScale') or 1) or 1) end
+ return {title=def.title,objective=def.objective..' '..Defs().clock(def.duration),card=3.45,
   shots={
-   {to=1.7,cf=function(k) local from=focus-dir*13+side*3+up*1.8;local to=focus-dir*8.5+side*2+up*2.4;return look(from:Lerp(to,smooth(k)),heroPos()+up*1.2) end},
-   {to=2.8,cf=function(k) local p=heroPos();return look(p-dir*5.6+side*1.6+up*(2.6+k*.4),p+up*1.7) end},
-   {to=3.55,cf=function(k) local p=heroPos();local from=p-dir*5.6+side*1.6+up*3;local to=p-dir*24+side*6+up*15;return look(from:Lerp(to,smooth(k)),p+up*.5) end},
+   -- It waddles out of the crowd toward the party; the camera eases in, low and to the side.
+   {to=pop.armAt,cf=function(k,t) local from=focus-dir*12+side*4.5+up*2.4;local to=focus-dir*10+side*3.4+up*2.8;return look(from:Lerp(to,smooth(k)),body(t)+up*.4) end},
+   -- Armed: held on it while it swells and the burst disc fills.
+   {to=pop.burstAt+.35,cf=function(k,t) local b=body(t);return look(focus-dir*(10+k*1.2)+side*(3.4-k*.6)+up*(2.8+k*.5),b+up*.6) end},
+   -- The pop, then up and back over the held crowd behind it.
+   {to=pop.burstAt+1.55,cf=function(k) local from=focus-dir*11.2+side*2.8+up*3.3;local to=focus-dir*26+side*7+up*15;return look(from:Lerp(to,smooth(k)),focus+dir*(4+8*smooth(k))+up) end},
   },
+  tick=function(t)
+   local m=find();if not m or popped then return end
+   local root=m.PrimaryPart;if not root then return end
+   local k=math.clamp(t/pop.armAt,0,1)
+   local cf=fromCf:Lerp(toCf,k);root.CFrame=cf
+   local d=lastPos and (cf.Position-lastPos).Magnitude or 0;lastPos=cf.Position
+   phase=(phase+d*.9)%(2*math.pi)
+   local stride=1-smooth((t-pop.armAt+.2)/.3)
+   if joints then Motion.apply(joints,ZM.bloater(phase,stride,t,t>=pop.armAt and t-pop.armAt or nil,poseBuf)) end
+   if not armed and t>=pop.armAt then
+    -- The real warning, on this local prop only: the server never sees these attributes.
+    armed=true;local start=a.start or workspace:GetServerTimeNow()-t
+    m:SetAttribute('FuseCenter',root.Position);m:SetAttribute('EnemyAttackStart',start+pop.armAt);m:SetAttribute('FuseUntil',start+pop.burstAt)
+    pcall(World.previewBloater,m)
+   end
+  end,
   moments={
-   {at=1.9,fn=function() Common.cue('zombie_roar',heroPos(),.55,.7) end},
-   {at=2.0,fn=function()
-    -- Belly swells and cheeks tense: a local pulse on the hero's UpperTorso/Head (no blast).
-    local m=hero;local torso=m and m:FindFirstChild('UpperTorso');local head=m and m:FindFirstChild('Head')
-    if not torso then return end
-    local t0,h0=torso.Size,head and head.Size
-    swell=function(k) torso.Size=t0*(1+.22*k);if head then head.Size=h0*(1+.06*k) end end
-    K.animate(1.4,function(t) if not torso.Parent then return true end;local k=math.sin(math.clamp(t/.55,0,1)*math.pi/2)*(1-smooth((t-.7)/.3));swell(k) end,function() if torso.Parent then torso.Size=t0;if head then head.Size=h0 end end end,'r10Swell',4)
-    Common.light(heroPos()+up*3,Color3.fromRGB(255,214,60),14,3,1.2)
+   {at=.5,fn=function() Common.cue('zombie_roar',body(.5),.55,.7) end},
+   {at=pop.burstAt,fn=function()
+    -- The pop: the real burst effect and sound where the disc was; the prop hides now and the server
+    -- removes it a moment later. With no prop (not replicated) it still pops on the spot.
+    popped=true;local m=find()
+    local center=m and m:GetAttribute('FuseCenter') or focus+up*3
+    if m then m:SetAttribute('Detonated',workspace:GetServerTimeNow());hideModel(m,true) end
+    World.blast(center,radius(m))
    end},
   },
+  cleanup=function() if prop and prop.Parent then hideModel(prop,true) end end,
  }
 end
 
@@ -114,18 +155,22 @@ BUILD.CrabRave=function(a,def)
  local cf=a.frame or CFrame.lookAt(a.focus or a.center,a.players or a.center)
  local function at(x,y,z) return (cf*CFrame.new(x,y,z)).Position end
  return {title=def.title,objective=def.objective,card=2.3,
+  -- 2026-10-10 user: "the cinematic isnt focused on the dj crab at the start". `cf` is his root (1.8
+  -- studs up; he stands ~3.9 tall to the speaker tops, MapBossTiming dj-crab), -Z his front. The old
+  -- first shot sat behind him aiming 3.6 studs over his root (above the speakers), so he was low in
+  -- frame or out of it. Every shot now aims at his body, and the first opens on him from the front.
   shots={
-   -- Close on the rear speakers powering up (behind the DJ, low, looking forward into them).
-   {to=1.3,cf=function(k) return look(at(1.4,3.4,7.5-k*1.6),at(0,3.6,.8)) end},
-   -- Arc round to the eyes and pincers; the claws snap at 2.0 on the music's accent.
-   {to=2.3,cf=function(k) local ang=math.rad(180-160*smooth(k));local r=8.5-1.2*k;return look(at(math.sin(ang)*r,2.6+.8*k,math.cos(ang)*r*-1),at(0,2.4,-1.2)) end},
+   -- On the DJ from the front three-quarter, his speakers behind him powering up: a slow push in.
+   {to=1.3,cf=function(k) local from=at(5.5,2.6,-10.5);local to=at(4.2,2.1,-8.2);return look(from:Lerp(to,smooth(k)),at(0,.7,0)) end},
+   -- Low across his front to the eyes and pincers; the claws snap at 2.0 on the music's accent.
+   {to=2.3,cf=function(k) local ang=math.rad(28-46*smooth(k));local r=7.2-1.2*k;return look(at(math.sin(ang)*r,1.2+.4*k,-math.cos(ang)*r),at(0,.9,-1.4)) end},
    -- Pull back and up: the crab reinforcements gathered round it.
-   {to=4.15,cf=function(k) local from=at(4,4,-9);local to=at(6,12,-26);return look(from:Lerp(to,smooth(k)),at(0,1.6,0)) end},
+   {to=4.15,cf=function(k) local from=at(-2.4,2.2,-7.5);local to=at(-5,9,-22);return look(from:Lerp(to,smooth(k)),at(0,.4,0)) end},
   },
   moments={
-   {at=.35,fn=function() Common.cue('crab_windup',at(0,3,1),.5,.8) end},
+   {at=.35,fn=function() Common.cue('crab_windup',at(0,1.5,.8),.5,.8) end},
    {at=2.0,fn=function()
-    Common.light(at(0,3,-1),Color3.fromRGB(80,255,230),22,4,.6);Common.star(at(1.6,2.6,-2.6),Color3.fromRGB(120,255,235),5,.25);Common.star(at(-1.6,2.6,-2.6),Color3.fromRGB(255,120,180),5,.25)
+    Common.light(at(0,1.5,-1),Color3.fromRGB(80,255,230),22,4,.6);Common.star(at(1.6,1,-2.8),Color3.fromRGB(120,255,235),5,.25);Common.star(at(-1.6,1,-2.8),Color3.fromRGB(255,120,180),5,.25)
     Common.shake(at(0,0,0),.6,.35);Common.cue('crab_slam',at(0,0,0),.8,1.15)
    end},
   },
@@ -142,7 +187,7 @@ BUILD.TombOpens=function(a,def)
   -- Each lid swings about its hinge (HingeFrame, Round10Service) from closed to lying open.
   local lid=m:FindFirstChild('Sarcophagus_Lid',true)
   local closed,hinge=lid and lid:GetAttribute('ClosedFrame'),lid and lid:GetAttribute('HingeFrame')
-  if typeof(closed)=='CFrame' and typeof(hinge)=='CFrame' then lids[i]={part=lid,hinge=hinge,rel=hinge:ToObjectSpace(closed),sink=lid:GetAttribute('SinkDepth') or 0} end
+  if typeof(closed)=='CFrame' and typeof(hinge)=='CFrame' then lids[i]={part=lid,hinge=hinge,rel=hinge:ToObjectSpace(closed),sink=lid:GetAttribute('SinkDepth') or 0,open=lid:GetAttribute('OpenFrame')} end
  end
  local height=(A and A:GetExtentsSize().Y or 10)+1
  local wk=math.clamp((a.leader and a.leader:GetExtentsSize().Y or 8.6)/8.6,1,1.6)
@@ -167,8 +212,11 @@ BUILD.TombOpens=function(a,def)
       if p.Parent then
        if L and p==L.part then
         local swing=math.clamp((t-LID[i])/.42,0,1);swing=swing*swing -- falls, speeding up
-        local settle=smooth((t-LID[i]-.45)/.35)*L.sink -- then beds into the sand, flush (Round10Service)
-        p.CFrame=CFrame.new(0,drop-settle,0)*L.hinge*CFrame.Angles(-math.rad(90)*swing,0,0)*L.rel
+        local sk=smooth((t-LID[i]-.45)/.35) -- then beds into the sand (Round10Service)
+        local swung=CFrame.new(0,drop,0)*L.hinge*CFrame.Angles(-math.rad(90)*swing,0,0)*L.rel
+        -- 2026-10-10: onto the server's resting frame (OpenFrame: tilted to the sand, just proud of it).
+        if typeof(L.open)=='CFrame' then p.CFrame=sk>0 and swung:Lerp(L.open,sk) or swung
+        else p.CFrame=CFrame.new(0,-sk*L.sink,0)*swung end
        else p.CFrame=CFrame.new(0,drop,0)*cf end
       end
      end

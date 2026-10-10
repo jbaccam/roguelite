@@ -93,8 +93,18 @@ local function status(E)
   local h=t.model and t.model:FindFirstChildOfClass('Humanoid')
   list[i]={letter=t.letter,health=h and math.max(0,math.ceil(h.Health)) or 0,max=h and h.MaxHealth or 1,alive=t.alive}
  end
- local leader=E.leader and E.leader.Parent and E.leader:FindFirstChildOfClass('Humanoid')
- publish(E,'EventStatus',Http:JSONEncode({tombs=list,leaderAlive=E.leaderAlive==true,leaderName=E.leaderName}))
+ -- Wardens (2026-10-10: more than one in a party): alive counts the living plus any still to come.
+ local alive,total=0,E.wardenCount or 1
+ if E.wardens then for _,npc in E.wardens do local h=npc.Parent and npc:FindFirstChildOfClass('Humanoid');if h and h.Health>0 then alive+=1 end end;alive+=E.wardensPending or 0
+ else alive=E.leaderAlive and 1 or 0 end
+ publish(E,'EventStatus',Http:JSONEncode({tombs=list,leaderAlive=alive>0,leaderName=E.leaderName,wardens=alive,wardenTotal=total}))
+end
+-- Living (or still arriving) Tomb Wardens.
+local function wardensAlive(E)
+ if not E.wardens then return E.leaderAlive and 1 or 0 end
+ local n=E.wardensPending or 0
+ for _,npc in E.wardens do local h=npc.Parent and npc:FindFirstChildOfClass('Humanoid');if h and h.Health>0 and not npc:GetAttribute('DeathPopped') then n+=1 end end
+ return n
 end
 
 -- Arrivals: the event's own pulses through Round10Spawn (red X telegraph, cancelled with the event).
@@ -192,22 +202,55 @@ end
 local EVENTS={}
 
 -- Pine Valley: POP GOES THE ZOMBIE. The map's zombies plus Bloaters; survive 60 s.
+-- The intro's Bloater (2026-10-10 user: "the cinematic for pop goes the zombie [shows] nothing. spawn a
+-- popping zombie or something and make it blow up"): a prop copy of the Bloater template for the
+-- cinematic to film, never an enemy: anchored, no collisions or queries, untagged, no scripts, not
+-- in RogueliteEnemies, so nothing targets, hurts or pays for it, and its burst deals no damage.
+-- It stands walkFrom studs behind `spot` facing the players (PopFrom, PopTo: its start and end
+-- pivots); every client walks, arms and pops it locally (Round10Intro). It goes just after the
+-- burst, or with the anchor folder (cleanup) on an abort, whichever comes first.
+local function introBloater(E,spot,players)
+ local pop=E.def.introPop;local entry=Catalog.get(E.def.spawn.exploder)
+ local npcs=ServerStorage:FindFirstChild('RogueliteNPCs');local source=npcs and npcs:FindFirstChild(entry and entry.template or 'BloaterZombie_NPC')
+ if not pop or not source then return nil end
+ local m=source:Clone();m.Name='IntroBloater'
+ local all=m:GetDescendants();table.insert(all,m)
+ for _,d in all do
+  for _,tag in Tags:GetTags(d) do Tags:RemoveTag(d,tag) end
+  if d:IsA('BaseScript') or d:IsA('ModuleScript') then d:Destroy()
+  elseif d:IsA('BasePart') then d.Anchored=false;d.CanCollide=false;d.CanQuery=false;d.CanTouch=false end
+ end
+ local root=m:FindFirstChild('HumanoidRootPart') or m.PrimaryPart;if not root then m:Destroy();return nil end
+ root.Anchored=true;m.PrimaryPart=root
+ local h=m:FindFirstChildOfClass('Humanoid')
+ if h then h.DisplayDistanceType=Enum.HumanoidDisplayDistanceType.None;h.HealthDisplayType=Enum.HumanoidHealthDisplayType.AlwaysOff;h.BreakJointsOnDeath=false end
+ local back=flat(spot-players);back=back.Magnitude>.5 and back.Unit or Vector3.new(0,0,1)
+ local function stand(at)
+  -- Feet on the floor at `at`, facing the players.
+  m:PivotTo(CFrame.lookAt(at,at-back))
+  local box,size=m:GetBoundingBox();return m:GetPivot()+Vector3.yAxis*(at.Y-(box.Position.Y-size.Y/2))
+ end
+ local to=stand(spot);local start=ground(spot+back*pop.walkFrom) or spot+back*pop.walkFrom;local fromCf=stand(start)
+ m:PivotTo(fromCf);m:SetAttribute('IntroProp',true);m:SetAttribute('PopFrom',fromCf);m:SetAttribute('PopTo',to)
+ m.Parent=E.anchor
+ for _,p in m:GetDescendants() do if p:IsA('BasePart') and p.AssemblyRootPart~=root then p.Anchored=true end end -- loose pieces never fall
+ task.delay(math.max(0,E.introStart+pop.burstAt+.6-now()),function() if m.Parent then m:Destroy() end end)
+ return m,back
+end
 EVENTS.PopGoesTheZombie={
  setup=function(E,list,center)
-  -- The intro's crowd: one Bloater pushing through a few zombies, 30 studs off the players toward the
-  -- arena centre, held by the cinematic like everything else.
+  -- The intro: the prop Bloater (introBloater) waddles out of a held crowd 30 studs off the players
+  -- toward the arena centre and pops on camera; the crowd stands behind it, out of the burst.
   local from=centroid(list)
   local dir=flat(center-from);dir=dir.Magnitude>1 and dir.Unit or Vector3.new(0,0,-1)
   local spot=ground(from+dir*30) or point({anchor=from,band={28,34},minimum=22})
   if not spot then return false end
   E.anchor:SetAttribute('Focus',spot)
-  task.spawn(function()
-   local hero=spawnOne(E,E.def.spawn.exploder,spot,0,{IntroHero=true})
-   if hero then local v=Instance.new('ObjectValue');v.Name='Hero';v.Value=hero;v.Parent=E.anchor end
-  end)
+  local _,back=introBloater(E,spot,from);back=back or dir
+  local crowd=spot+back*((E.def.introPop and E.def.introPop.walkFrom or 9)+7)
   for i=1,7 do
    local a=i*.9;local r=4+i*.6
-   local p=ground(spot+Vector3.new(math.cos(a)*r,0,math.sin(a)*r))
+   local p=ground(crowd+Vector3.new(math.cos(a)*r,0,math.sin(a)*r))
    if p then task.spawn(spawnOne,E,E.def.spawn.fodder[(i%3)+1],p,0) end
   end
   return true
@@ -272,13 +315,30 @@ EVENTS.CrabRave={
    local dir=target and flat(target.root.Position-r.Position) or flat(r.CFrame.LookVector)
    dir=dir.Magnitude>.1 and dir.Unit or Vector3.new(0,0,-1)
    local from=Vector3.new(r.Position.X,r.Position.Y,r.Position.Z)
-   local wall=workspace:Raycast(from,dir*spec.length,(function() local p=RaycastParams.new();p.FilterType=Enum.RaycastFilterType.Exclude;p.FilterDescendantsInstances={enemies(),Players:GetPlayers()[1] and Players:GetPlayers()[1].Character};return p end)())
+   local skip={enemies()};for _,p in Players:GetPlayers() do if p.Character then table.insert(skip,p.Character) end end
+   local wall=workspace:Raycast(from,dir*spec.length,(function() local p=RaycastParams.new();p.FilterType=Enum.RaycastFilterType.Exclude;p.FilterDescendantsInstances=skip;return p end)())
    local length=wall and math.max(0,wall.Distance-2) or spec.length
-   npc:SetAttribute('EventControlled',true);npc:SetAttribute('RushFrom',from);npc:SetAttribute('RushDir',dir)
+   npc:SetAttribute('EventControlled',true);npc:SetAttribute('RushFrom',from);npc:SetAttribute('RushDir',dir);npc:SetAttribute('RushSpeed',spec.speed)
    npc:SetAttribute('RushLength',length);npc:SetAttribute('RushWidth',spec.width);npc:SetAttribute('RushAt',t+spec.warn)
    local h=npc:FindFirstChildOfClass('Humanoid');if h then h:Move(Vector3.zero);h:MoveTo(r.Position) end
-   r.CFrame=CFrame.lookAt(from,from+dir)
+   -- Held still on its lane start from the order on (2026-10-10), so the lane drawn starts under it.
+   r.Anchored=true;r.CFrame=CFrame.lookAt(from,from+dir)
    table.insert(E.rushes,{npc=npc,from=from,dir=dir,length=length,at=t+spec.warn,hits={}})
+  end
+ end,
+ -- 2026-10-10 user: "the crabs that he makes dash outwards are like laggy and not smooth". Cause: the
+ -- dash was CFrame steps on an anchored root from the 10 Hz director step (4 studs a step at speed
+ -- 40), and an anchored part's CFrame replicates as a plain property set with no interpolation, so
+ -- every client saw the crab jump ten times a second. Now the dash is a timeline on the server clock
+ -- (RushFrom, RushDir, RushLength, RushSpeed, RushAt): each client draws the crab on it every frame
+ -- (Round10World stepRush), the server puts its body on the same timeline every Heartbeat
+ -- (moveRushes, so player hits on it agree) and the hit test sweeps the stretch covered since the
+ -- last check, against where each player's screen has them (Characters.seen).
+ moveRushes=function(E,t)
+  local speed=E.def.rush.speed
+  for _,R in E.rushes or {} do
+   local r=R.npc.Parent and R.npc:FindFirstChild('HumanoidRootPart')
+   if r and t>=R.at then local p=R.from+R.dir*math.min(R.length,(t-R.at)*speed);r.CFrame=CFrame.lookAt(p,p+R.dir) end
   end
  end,
  stepRushes=function(E,t,list)
@@ -289,18 +349,22 @@ EVENTS.CrabRave={
    local over=not r or not h or h.Health<=0
    if not over and t>=R.at then
     local travel=math.min(R.length,(t-R.at)*spec.speed)
-    r.Anchored=true;r.CFrame=CFrame.lookAt(R.from+R.dir*travel,R.from+R.dir*(travel+1))
+    -- The crab's body since the last check: 1.5 studs behind its root to 1.2 ahead.
+    local lo,hi=(R.swept or 0)-1.5,travel+1.2;R.swept=travel
     for _,e in list do
      local at=Characters.seen(e.player,e.root) or e.root.Position
-     local rel=flat(at-R.from);local along=math.clamp(rel:Dot(R.dir),0,travel)
-     if not R.hits[e.player] and (rel-R.dir*along).Magnitude<=spec.width/2+.8 and along<=travel and math.abs(at.Y-R.from.Y)<=5 then
+     local rel=flat(at-R.from);local along=rel:Dot(R.dir)
+     if not R.hits[e.player] and along>=lo and along<=hi and (rel-R.dir*along).Magnitude<=spec.width/2+.8 and math.abs(at.Y-R.from.Y)<=5 then
       R.hits[e.player]=true;Characters.contact(e.player,spec.damage*(E.damageScale or 1),nil,npc)
      end
     end
     over=travel>=R.length
    end
    if over then
-    if r then r.Anchored=false;r:SetNetworkOwner(nil) end
+    if r then
+     if h and h.Health>0 then local p=R.from+R.dir*R.length;r.CFrame=CFrame.lookAt(p,p+R.dir) end -- the lane's end, where clients drew it
+     r.Anchored=false;pcall(r.SetNetworkOwner,r,nil)
+    end
     if npc.Parent then npc:SetAttribute('EventControlled',nil);npc:SetAttribute('RushAt',nil) end
     table.remove(E.rushes,i)
    end
@@ -315,11 +379,50 @@ EVENTS.CrabRave={
 -- Desert Basin: THE TOMB OPENS. Three coffins are the only spawn sources; one releases the Tomb
 -- Warden once. Destroy all three AND defeat the Warden.
 local LETTERS={'A','B','C','D'}
+-- 2026-10-10: the fallen lid's resting frame on the sand under it. open: its swung frame; half: its
+-- vertical half-height there; floorY: the coffin's ground height (the fallback). 3 x 3 ground samples
+-- across the lid's footprint fit a plane (slope clamped to MAX_TILT); its flat back rises LID_PROUD
+-- above the highest sample (at most LID_SPIKE, so one bump never floats it).
+local LID_PROUD,MAX_TILT,LID_SPIKE=.1,.25,.6
+local function lidBed(open,size,half,floorY)
+ local axes={{open.RightVector,size.X},{open.UpVector,size.Y},{open.LookVector,size.Z}}
+ table.sort(axes,function(a,b) return math.abs(a[1].Y)<math.abs(b[1].Y) end)
+ local U,hu=flat(axes[1][1]),axes[1][2]*.45;local V,hv=flat(axes[2][1]),axes[2][2]*.45
+ U=U.Magnitude>.1 and U.Unit or Vector3.xAxis;V=V.Magnitude>.1 and V.Unit or Vector3.zAxis
+ local c=Vector3.new(open.X,floorY,open.Z)
+ local samples={}
+ for _,a in {-1,0,1} do for _,b in {-1,0,1} do
+  local p=ground(c+U*a*hu+V*b*hv);if p then table.insert(samples,{u=a*hu,v=b*hv,y=p.Y}) end
+ end end
+ local my,mu,mv,gu,gv=floorY,0,0,0,0
+ if #samples>=4 then
+  my=0;for _,s in samples do my+=s.y;mu+=s.u;mv+=s.v end;my/=#samples;mu/=#samples;mv/=#samples
+  local su,sv,uu,vv=0,0,0,0
+  for _,s in samples do su+=(s.u-mu)*(s.y-my);sv+=(s.v-mv)*(s.y-my);uu+=(s.u-mu)^2;vv+=(s.v-mv)^2 end
+  gu=uu>0 and math.clamp(su/uu,-MAX_TILT,MAX_TILT) or 0;gv=vv>0 and math.clamp(sv/vv,-MAX_TILT,MAX_TILT) or 0
+ end
+ local function plane(u,v) return my+gu*(u-mu)+gv*(v-mv) end
+ local over=0;for _,s in samples do over=math.max(over,s.y-plane(s.u,s.v)) end
+ local top=plane(0,0)+math.min(over,LID_SPIKE)+LID_PROUD
+ local n=(Vector3.yAxis-U*gu-V*gv).Unit;local axis=Vector3.yAxis:Cross(n)
+ local tilt=axis.Magnitude>1e-4 and CFrame.fromAxisAngle(axis.Unit,math.asin(math.min(1,axis.Magnitude))) or CFrame.identity
+ return CFrame.new(open.X,top-half,open.Z)*tilt*open.Rotation
+end
+-- 2026-10-10: the coffin's floor height on uneven sand: the lowest of its centre and footprint corners
+-- (at most BODY_SINK below the centre), so no corner hangs over a dip; a little sand covers the base.
+local BODY_SINK=.35
+local function bodyFloor(cf)
+ local y=cf.Y
+ for _,o in {{-3.8,-3},{3.8,-3},{-3.8,3},{3.8,3}} do local p=ground((cf*CFrame.new(o[1],0,o[2])).Position);if p then y=math.min(y,p.Y) end end
+ return math.max(y,cf.Y-BODY_SINK)-.05
+end
 local function buildTomb(E,index,cf,health)
  local props=ServerStorage:FindFirstChild('Round10Props');local source=props and props:FindFirstChild('Sarcophagus')
  if not source then return nil end
  local model=source:Clone();model.Name='Tomb_'..LETTERS[index]
- -- The prop's pivot is its cavity floor centre, open face along -Z (its LookVector).
+ -- The prop's pivot is its cavity floor centre, open face along -Z (its LookVector). cf stays the
+ -- centre's ground (the Warden's emerge and the exits); the stone sits at bodyFloor (2026-10-10).
+ local ground0=cf.Y;cf=cf-Vector3.yAxis*(cf.Y-bodyFloor(cf))
  model:PivotTo(cf)
  local size=model:GetExtentsSize()
  local root=Instance.new('Part');root.Name='HumanoidRootPart';root.Transparency=1;root.Anchored=true
@@ -339,11 +442,17 @@ local function buildTomb(E,index,cf,health)
   local hingeCf=typeof(hinge)=='CFrame' and cf*hinge or lid.CFrame
   local open=hingeCf*CFrame.Angles(-math.rad(90),0,0)*hingeCf:ToObjectSpace(lid.CFrame)
   lid:SetAttribute('ClosedFrame',lid.CFrame);lid:SetAttribute('HingeFrame',hingeCf)
-  -- The fallen lid sinks flush with the sand (relief face up), so the Warden steps out over tomb A's
-  -- and players cross it without a ledge. SinkDepth: how far below the swung frame (Round10Intro).
+  -- The fallen lid (relief face down, flat back up) sinks into the sand, so the Warden steps out over
+  -- tomb A's and players cross it without a ledge. SinkDepth: how far below the swung frame.
+  -- 2026-10-10 user: the openings were "glitching in the floor after they open". Its flat back sat
+  -- exactly at the coffin centre's ground height: coplanar with the sand (z-fighting), and on the
+  -- dunes' slope part of it was buried and part stood out. Now the ground under the whole lid is
+  -- sampled (lidBed): the lid tilts to the sand's slope and its back sits LID_PROUD above the highest
+  -- sample, so the sand never pokes through and never shares its plane. OpenFrame: that final frame
+  -- (Round10Intro settles the swung lid onto it).
   local half=(math.abs(open.RightVector.Y)*lid.Size.X+math.abs(open.UpVector.Y)*lid.Size.Y+math.abs(open.LookVector.Y)*lid.Size.Z)/2
-  local sink=math.max(0,open.Y+half-cf.Y)
-  lid:SetAttribute('SinkDepth',sink);lid.CFrame=open-Vector3.yAxis*sink
+  local bed=lidBed(open,lid.Size,half,ground0)
+  lid:SetAttribute('SinkDepth',math.max(0,open.Y-bed.Y));lid:SetAttribute('OpenFrame',bed);lid.CFrame=bed
  end
  local h=Instance.new('Humanoid');h.EvaluateStateMachine=false;h.RequiresNeck=false;h.BreakJointsOnDeath=false
  h.DisplayDistanceType=Enum.HumanoidDisplayDistanceType.None;h.MaxHealth=health;h.Health=health;h.Parent=model
@@ -363,35 +472,73 @@ local function breakTomb(E,t,position,cf)
  for _,p in pieces:GetDescendants() do if p:IsA('BasePart') then p.Anchored=true;p.CanCollide=false;p.CanQuery=false;p.CanTouch=false end end
  pieces.Parent=E.anchor
 end
+-- 2026-10-10 user: in multiplayer "multiple wardens come out". Wardens after the first (Defs.wardens)
+-- burst out in front of tombs B / C as the fight starts: never from inside (only tomb A's cavity
+-- is staged for his Emerge clip), so no intro clip; a sand burst at the mouth covers the arrival.
+-- They count for the clear and the HUD like the first. BossPractice: the extra Wardens pay no boss
+-- crystal shower or "defeat a boss" quest credit (ZombieDeath skips their death listeners), so a
+-- party's wave 10 pays exactly what one Warden did.
+local function wardenSpot(E,T)
+ local BossDefs=module(combat,'MapBossDefs');local d=BossDefs and BossDefs.get(E.def.leader)
+ local out=T.cf*CFrame.new(0,0,-(((d and d.emergeOut) or 3.5)+1.2))
+ return ground(out.Position) or out.Position
+end
+local function extraWarden(E,T,health)
+ local MB=module(script.Parent,'MapBossService');local BossDefs=module(combat,'MapBossDefs')
+ local timing=BossDefs and BossDefs.timing(E.def.leader)
+ if not MB or not BossDefs then return nil end
+ local floor=wardenSpot(E,T)
+ local y=floor.Y+((timing and timing.rootHeight) or 3)+.1
+ local face=flat(E.center-floor).Magnitude>1 and Vector3.new(E.center.X,y,E.center.Z) or Vector3.new(floor.X,y,floor.Z)+T.cf.LookVector
+ local ok,npc=pcall(MB.spawn,E.def.leader,CFrame.lookAt(Vector3.new(floor.X,y,floor.Z),face),false,nil)
+ if not ok or not npc then warn('Round10Service: extra Warden failed to spawn: '..tostring(npc));return nil end
+ npc:SetAttribute('BossPractice',true);npc:SetAttribute('EventLeader',true);npc:SetAttribute('EventGen',E.gen);npc:SetAttribute('FromTomb',T.letter)
+ local h=npc:FindFirstChildOfClass('Humanoid')
+ -- (The health cut reads as a hit to MapBossService; clear its flinch.)
+ if h then h.MaxHealth=health;h.Health=health;npc:SetAttribute('BossHitStart',nil);h.Died:Connect(function() if E.gen==generation then status(E) end end) end
+ return npc
+end
 EVENTS.TombOpens={
  setup=function(E,list,center)
   local spec=E.def.tombs;local from=centroid(list)
   local away=flat(center-from);away=away.Magnitude>1 and away.Unit or Vector3.new(0,0,-1)
-  local radius=math.min(spec.radius,(E.arenaRadius or 60)*.6)
+  -- 2026-10-10 user: "they need to be spread apart". A ring at spec.ring of the arena radius (clamped,
+  -- and 9 studs inside the edge for the coffin's back), every pair at least minGap apart: with three
+  -- tombs on a 36-stud ring they stand 62 studs apart (was 47 on 27, with only 16 enforced).
+  local arenaR=E.arenaRadius or 60
+  local radius=math.min(math.clamp(arenaR*spec.ring,spec.ringClamp[1],spec.ringClamp[2]),arenaR-9)
   local hpScale,damageScale=Rules.bossScale(combat:GetAttribute('RunDifficulty'),math.max(1,#list),combat:GetAttribute('RunMap'))
   E.tombs={};E.damageScale=damageScale
   local placed={}
-  -- Three spots spread round the arena centre, the first on the far side from the players.
+  -- Three spots spread round the arena centre, the first on the far side from the players. Each spot
+  -- also wants open floor behind the coffin and where its lid falls; a crowded arena relaxes minGap.
+  local function pick(base,gap,strict)
+   for _,dr in {0,-4,4,-8,-12} do
+    for _,jitter in {0,.2,-.2,.4,-.4} do
+     local a=base+jitter;local dir=Vector3.new(math.cos(a),0,math.sin(a))
+     local spot=ground(center+dir*(radius+dr))
+     if spot then for _,o in placed do if flat(o-spot).Magnitude<gap then spot=nil;break end end end
+     if spot and strict and not (ground(spot+dir*3.5) and ground(spot-dir*12)) then spot=nil end
+     if spot then return spot end
+    end
+   end
+   return nil
+  end
   for i=1,spec.count do
    local base=math.atan2(away.Z,away.X)+(i-1)*math.pi*2/spec.count
-   local spot
-   for _,jitter in {0,.25,-.25,.5,-.5} do
-    local a=base+jitter;spot=ground(center+Vector3.new(math.cos(a),0,math.sin(a))*radius)
-    if spot then for _,o in placed do if flat(o-spot).Magnitude<16 then spot=nil;break end end end
-    if spot then break end
-   end
+   local spot=pick(base,spec.minGap,true) or pick(base,spec.minGap,false) or pick(base,spec.minGap*.6,false) or pick(base,16,false)
    if spot then
     table.insert(placed,spot)
     local cf=CFrame.lookAt(spot,Vector3.new(center.X,spot.Y,center.Z))
     local model=buildTomb(E,i,cf,math.ceil(spec.health*hpScale))
     if model then
-     local T={model=model,letter=LETTERS[i],alive=true,cf=cf,exit=cf*CFrame.new(0,0,-4.2),index=i,nextPulse=0}
+     local T={model=model,letter=LETTERS[i],alive=true,cf=cf,exit=cf*CFrame.new(0,0,-4.2),index=i,nextPulse=0,bursts=0}
      table.insert(E.tombs,T)
      local v=Instance.new('ObjectValue');v.Name='Tomb'..LETTERS[i];v.Value=model;v.Parent=E.anchor
      local h=model:FindFirstChildOfClass('Humanoid')
      h.Died:Connect(function()
       if E.gen~=generation or not T.alive then return end
-      T.alive=false;breakTomb(E,now(),cf.Position,cf);status(E)
+      T.alive=false;model:SetAttribute('BurstAt',nil);breakTomb(E,now(),cf.Position,cf);status(E)
      end)
      h.HealthChanged:Connect(function() if E.gen==generation then E.statusDirty=true end end)
     end
@@ -407,26 +554,73 @@ EVENTS.TombOpens={
   -- Emerge: coffins rise (0-1.5 s), lid A falls (1.6 s), the Warden plants his fists at 3.7 s.
   local npc=spawnLeader(E,cf,E.introStart+3.7);if not npc then return false end
   local v=Instance.new('ObjectValue');v.Name='Leader';v.Value=npc;v.Parent=E.anchor
+  -- More Wardens for a party (Defs.wardens): the party's boss health split between them.
+  E.wardenCount=math.min(Defs.wardens(spec,#list),#E.tombs);E.wardens={npc}
+  local h=npc:FindFirstChildOfClass('Humanoid')
+  E.wardenHealth=h and Defs.wardenHealth(h.MaxHealth,E.wardenCount) or nil
+  if h and E.wardenCount>1 then h.MaxHealth=E.wardenHealth;h.Health=E.wardenHealth;npc:SetAttribute('BossHitStart',nil) end
+  E.wardensPending=E.wardenCount-1
   E.anchor:SetAttribute('Focus',A.cf.Position);E.anchor:SetAttribute('FocusFrame',A.cf)
   status(E)
   return true
  end,
  step=function(E,t,list)
-  local spec=E.def.tombs
+  local spec=E.def.tombs;local burst=spec.burst
+  -- The extra Wardens arrive as the fight starts: the spot bursts (TombWardenBurst), then he is out.
+  if (E.wardensPending or 0)>0 and not E.wardensCalled then
+   E.wardensCalled=true
+   for i=2,E.wardenCount do
+    local T=E.tombs[i]
+    fx:FireAllClients('TombWardenBurst',wardenSpot(E,T),T.cf.LookVector)
+    task.delay(.45,function()
+     if E.gen~=generation or E.phase~='Active' then return end
+     local npc=extraWarden(E,T,E.wardenHealth or 6000)
+     E.wardensPending=math.max(0,(E.wardensPending or 1)-1)
+     if npc then
+      table.insert(E.wardens,npc)
+      local v=Instance.new('ObjectValue');v.Name='Leader'..i;v.Value=npc;v.Parent=E.anchor
+     end
+     status(E)
+    end)
+   end
+  end
   if E.statusDirty then E.statusDirty=false;status(E) end
+  -- 2026-10-10 user: tomb spawning "feels like just another normal round ... it needs to feel more
+  -- intense ... something that the tombs do where you wanna destroy them". Each standing tomb now
+  -- bursts: BurstAt (its glow, shake and dust on every client, Round10World) `warn` s ahead, then a
+  -- stream of skeletons pours out of its mouth `pour` s apart, no red X (the tomb's own pulse is the
+  -- warning). Bursts grow and quicken while it stands (Defs.burstSize, Defs.burstInterval); its death
+  -- cancels the rest of the pour. Example, solo: every tomb throws 3 every 4.2 s at first, then up to
+  -- 6 every 2.6 s; the event's cap (30 solo, +10 a player) holds the crowd.
   local alive=eventAlive(E)+E.pending;local cap=Defs.cap(spec,#list)
-  local k=math.clamp((t-E.activeAt)/60,0,1);local interval=spec.pulse[1]+(spec.pulse[2]-spec.pulse[1])*k
   for _,T in E.tombs do
-   if T.alive and t>=T.nextPulse then
-    if T.nextPulse==0 then T.nextPulse=E.activeAt+.8+(T.index-1)*spec.stagger
-    else
-     T.nextPulse=t+interval
-     local n=math.min(spec.perPulse+spec.perPlayer*#list,cap-alive)
+   if T.alive then
+    if T.nextPulse==0 then T.nextPulse=E.activeAt+.8+(T.index-1)*burst.stagger end
+    -- A pause moved the burst (the Heartbeat shifts nextPulse): the clients' warning follows it.
+    if T.warned and T.model:GetAttribute('BurstAt')~=T.nextPulse then T.model:SetAttribute('BurstAt',T.nextPulse) end
+    if not T.warned and t>=T.nextPulse-burst.warn then
+     if cap-alive<=0 then T.nextPulse=t+burst.warn+1 -- full: try again a second later, no pulse
+     else T.warned=true;T.model:SetAttribute('BurstCount',T.bursts+1);T.model:SetAttribute('BurstAt',T.nextPulse) end
+    elseif T.warned and t>=T.nextPulse then
+     T.warned=false
+     local n=math.max(0,math.min(Defs.burstSize(burst,#list,T.bursts),cap-alive))
+     T.bursts+=1;T.nextPulse=t+Defs.burstInterval(burst,T.bursts)
+     E.pending+=n;alive+=n
+     local lanes={}
      for i=1,n do
       local id=spec.fodder[(E.serial%#spec.fodder)+1];E.serial+=1
-      local at=ground((T.exit*CFrame.new((i-(n+1)/2)*2.4,0,-(i%2)*1.6)).Position) or T.exit.Position
-      task.spawn(spawnOne,E,id,at,spec.telegraph,{FromTomb=T.letter},T.model)
-      alive+=1
+      -- Out of the mouth in a fan of three, rows further out; never on top of a player.
+      local row=(i-1)//3;local col=((i-1)%3)-1
+      local at=(T.exit*CFrame.new(col*2.2,0,-row*1.9)).Position
+      for _,e in list do if flat(e.root.Position-at).Magnitude<3 then at=(T.exit*CFrame.new(col*2.2+3.5,0,-row*1.9-3)).Position;break end end
+      lanes[i]={id=id,at=ground(at) or Vector3.new(at.X,T.cf.Y,at.Z)}
+     end
+     for i,L in lanes do
+      task.delay((i-1)*burst.pour,function()
+       E.pending-=1
+       if E.gen~=generation or E.phase~='Active' or not T.alive then return end
+       spawnOne(E,L.id,L.at,0,{FromTomb=T.letter},T.model)
+      end)
      end
     end
    end
@@ -498,7 +692,50 @@ EVENTS.BloodMoonHunt={
  end,
 }
 
--- Volcanic Crater: ERUPTION. Fixed vents in groups take turns; survive 60 s.
+-- Volcanic Crater: ERUPTION. Vents in groups take turns; survive 60 s. 2026-10-10 user: "spread out more
+-- and larger aoe", "they should change locations ... or just have more of them": 8 vents on two rings
+-- (was 6 on one), a 12-stud blast (was 9) plus lava splashes thrown out each eruption, and every
+-- second eruption a vent moves to a new spot (marked on the ground before it gets there).
+-- The splashes and the move target are picked here and published as attributes BEFORE the state
+-- that shows them (Splash1..n + SplashRadius before Charging, MoveTo before Moving), so every client
+-- draws exactly the discs this tests.
+local function ventSplashes(E,V)
+ local S=E.def.vents.splash;local out={}
+ if not S then return out end
+ local base=math.random()*math.pi*2
+ for i=1,S.count do
+  local a=base+(i-1)/S.count*math.pi*2+(math.random()-.5)*.6
+  local d=S.distance[1]+math.random()*(S.distance[2]-S.distance[1])
+  local p=ground(V.center+Vector3.new(math.cos(a),0,math.sin(a))*d)
+  if p then table.insert(out,p) end
+ end
+ return out
+end
+-- A new open spot for V: in the arena's middle band, at least minGap from every other vent (and its
+-- own move target), clear of the players; the farthest from other vents of a few tries, or nil.
+local function ventMove(E,V,list)
+ local R=E.def.vents.relocate;local arenaR=E.arenaRadius or 60
+ local best,score
+ for _=1,14 do
+  local a=math.random()*math.pi*2;local d=arenaR*(.18+math.random()*.6)
+  local p=ground(E.center+Vector3.new(math.cos(a),0,math.sin(a))*d)
+  if p then
+   local near=math.huge
+   for _,o in E.vents do if o~=V then near=math.min(near,flat((o.moveTo or o.center)-p).Magnitude) end end
+   local ok=near>=R.minGap and flat(p-V.center).Magnitude>=R.minGap*.75
+   if ok then for _,e in list do if flat(e.root.Position-p).Magnitude<R.clear then ok=false;break end end end
+   if ok then local s=near+math.random()*6;if not best or s>score then best,score=p,s end end
+  end
+ end
+ return best
+end
+-- Inside V's blast disc or one of its splash discs (the shapes the clients draw).
+local function inEruption(V,spec,at)
+ if math.abs(at.Y-V.center.Y)<=6 and flat(at-V.center).Magnitude<=spec.blast then return true end
+ local r=spec.splash and spec.splash.radius or 0
+ for _,s in V.splashes do if math.abs(at.Y-s.Y)<=6 and flat(at-s).Magnitude<=r then return true end end
+ return false
+end
 EVENTS.Eruption={
  setup=function(E,list,center)
   local spec=E.def.vents;local props=ServerStorage:FindFirstChild('Round10Props');local source=props and props:FindFirstChild('VolcanicVent')
@@ -506,13 +743,18 @@ EVENTS.Eruption={
   local from=centroid(list)
   local folder=Instance.new('Folder');folder.Name='Vents';folder.Parent=E.anchor
   E.vents={}
-  local radius=math.clamp((E.arenaRadius or 60)*.42,spec.radius[1],spec.radius[2])
+  -- Two rings (spec.rings of the arena radius, clamped to spec.radius): odd vents inner, even outer.
+  local arenaR=E.arenaRadius or 60
   local start=math.atan2((from-center).Z,(from-center).X)+math.pi/spec.count
   for i=1,spec.count do
    local a=start+(i-1)/spec.count*math.pi*2;local spot
-   for _,r in {radius,radius-4,radius+4,radius-8} do
-    spot=ground(center+Vector3.new(math.cos(a),0,math.sin(a))*r)
-    if spot then for _,e in list do if flat(e.root.Position-spot).Magnitude<spec.blast+3 then spot=nil;break end end end
+   local radius=math.clamp(arenaR*spec.rings[(i-1)%#spec.rings+1],spec.radius[1],spec.radius[2])
+   for _,clear in {spec.blast+3,6} do
+    for _,r in {radius,radius-4,radius+4,radius-8} do
+     spot=ground(center+Vector3.new(math.cos(a),0,math.sin(a))*r)
+     if spot then for _,e in list do if flat(e.root.Position-spot).Magnitude<clear then spot=nil;break end end end
+     if spot then break end
+    end
     if spot then break end
    end
    if spot then
@@ -520,9 +762,10 @@ EVENTS.Eruption={
     for _,p in model:GetDescendants() do if p:IsA('BasePart') then p.Anchored=true;p.CanTouch=false;p.CanQuery=false;p.CanCollide=false end end
     -- Groups take opposite vents together (i and i + count/2), so an eruption never closes a side.
     local groupIndex=((i-1)%spec.groups)+1
-    model:SetAttribute('Group',groupIndex);model:SetAttribute('Radius',spec.blast);model:SetAttribute('State','Idle');model:SetAttribute('Center',spot)
+    model:SetAttribute('Group',groupIndex);model:SetAttribute('Radius',spec.blast);model:SetAttribute('SplashRadius',spec.splash and spec.splash.radius or 0)
+    model:SetAttribute('State','Idle');model:SetAttribute('Center',spot)
     model.Parent=folder
-    table.insert(E.vents,{model=model,center=spot,group=groupIndex,hits={}})
+    table.insert(E.vents,{model=model,center=spot,group=groupIndex,hits={},splashes={},cycle=-1})
    end
   end
   if #E.vents<3 then return false end
@@ -538,39 +781,57 @@ EVENTS.Eruption={
  end,
  step=function(E,t,list)
   pulse(E,t,E.def.spawn,list)
-  local spec=E.def.vents
-  -- Group g's cycle starts at activeAt + (g-1) x gap, every groups x gap seconds: warn, erupt, cool.
+  local spec=E.def.vents;local every=spec.relocate and spec.relocate.every or 0
+  -- Group g's cycle starts at activeAt + (g-1) x gap, every groups x gap seconds: charge, erupt, cool,
+  -- and on every `every`-th cycle a move (Defs.ventState).
   local period=spec.groups*spec.gap
+  local mobs
   for _,V in E.vents do
    local phaseTime=(t-E.activeAt-(V.group-1)*spec.gap)
-   local state,untilAt='Idle',nil
+   local state,untilAt,n='Idle',nil,-1
    if phaseTime>=0 then
-    local c=phaseTime%period
-    if c<spec.warn then state,untilAt='Charging',t+(spec.warn-c)
-    elseif c<spec.warn+spec.erupt then state,untilAt='Erupting',t+(spec.warn+spec.erupt-c)
-    elseif c<spec.warn+spec.erupt+.8 then state,untilAt='Cooling',t+(spec.warn+spec.erupt+.8-c) end
+    n=phaseTime//period
+    local left;state,left=Defs.ventState(spec,phaseTime%period,every>0 and (n+1)%every==0 and V.stuck~=n)
+    untilAt=left and t+left or nil
    end
-   if V.model:GetAttribute('State')~=state then V.model:SetAttribute('State',state);V.model:SetAttribute('StateUntil',untilAt);table.clear(V.hits) end
+   local was=V.model:GetAttribute('State')
+   if was~=state then
+    -- Leaving a move: the vent is now at its new spot.
+    if was=='Moving' and V.moveTo then
+     V.center=V.moveTo;V.moveTo=nil
+     V.model:PivotTo(CFrame.new(V.center)*CFrame.Angles(0,math.random()*math.pi*2,0))
+     V.model:SetAttribute('Center',V.center);V.model:SetAttribute('MoveTo',nil)
+    end
+    if state=='Charging' then
+     V.splashes=ventSplashes(E,V)
+     for i=1,(spec.splash and spec.splash.count or 0) do V.model:SetAttribute('Splash'..i,V.splashes[i]) end
+    elseif state=='Moving' then
+     V.moveTo=ventMove(E,V,list)
+     if not V.moveTo then state,untilAt,V.stuck='Idle',nil,n end -- nowhere open: it stays this cycle
+     V.model:SetAttribute('MoveTo',V.moveTo)
+    end
+    V.model:SetAttribute('State',state);V.model:SetAttribute('StateUntil',untilAt);table.clear(V.hits)
+   end
    if state=='Erupting' then
-    -- Damage equals the shown circle: every tick s per target, players and enemies alike.
+    -- Damage equals the shown discs (the blast and its splashes): every tick s per target, players
+    -- (where they see themselves, CharacterService.seen) and enemies alike.
     for _,e in list do
      local at=Characters.seen(e.player,e.root) or e.root.Position
-     if math.abs(at.Y-V.center.Y)<=6 and flat(at-V.center).Magnitude<=spec.blast and t>=(V.hits[e.player] or 0) then
+     if t>=(V.hits[e.player] or 0) and inEruption(V,spec,at) then
       V.hits[e.player]=t+spec.tick;Characters.contact(e.player,spec.playerDamage*(E.damageScale or 1))
      end
     end
-    local folder=enemies()
-    for _,npc in folder and folder:GetChildren() or {} do
-     local r=npc:FindFirstChild('HumanoidRootPart');local h=npc:FindFirstChildOfClass('Humanoid')
-     if r and h and h.Health>0 and not npc:GetAttribute('IsBoss') and not npc:GetAttribute('EventObjective') and Tags:HasTag(npc,'RogueliteZombie')
-      and math.abs(r.Position.Y-V.center.Y)<=6 and flat(r.Position-V.center).Magnitude<=spec.blast and t>=(V.hits[npc] or 0) then
+    if not mobs then local folder=enemies();mobs=folder and folder:GetChildren() or {} end
+    for _,npc in mobs do
+     local r=npc.Parent and npc:FindFirstChild('HumanoidRootPart');local h=r and npc:FindFirstChildOfClass('Humanoid')
+     if h and h.Health>0 and t>=(V.hits[npc] or 0) and not npc:GetAttribute('IsBoss') and not npc:GetAttribute('EventObjective') and Tags:HasTag(npc,'RogueliteZombie') and inEruption(V,spec,r.Position) then
       V.hits[npc]=t+spec.tick;h:TakeDamage(h.MaxHealth*spec.enemyShare)
      end
     end
    end
   end
  end,
- cleanup=function(E) for _,V in E.vents or {} do if V.model.Parent then V.model:SetAttribute('State','Idle') end end end,
+ cleanup=function(E) for _,V in E.vents or {} do if V.model.Parent then V.model:SetAttribute('State','Idle');V.model:SetAttribute('MoveTo',nil) end end end,
 }
 
 -- ── Lifecycle ───────────────────────────────────────────────────────────────────────────────────
@@ -664,12 +925,16 @@ function S.forceClear()
  if E.phase=='Intro' then S.skipIntro();E.phase='Active' end
  for _,T in E.tombs or {} do local h=T.model.Parent and T.model:FindFirstChildOfClass('Humanoid');if h then h.Health=0 end end
  local h=E.leader and E.leader.Parent and E.leader:FindFirstChildOfClass('Humanoid');if h then h.Health=0 end
+ for _,npc in E.wardens or {} do local wh=npc.Parent and npc:FindFirstChildOfClass('Humanoid');if wh then wh.Health=0 end end;E.wardensPending=0
  complete(E,now());return true
 end
 
 -- One step a tenth of a second.
 local acc=0
 Run.Heartbeat:Connect(function(dt)
+ -- Every frame: the DJ's rushers ride their timeline (EVENTS.CrabRave.moveRushes, 2026-10-10).
+ local live=current
+ if live and live.rushes and live.phase=='Active' and not live.pausedAt and EVENTS[live.def.id].moveRushes then pcall(EVENTS[live.def.id].moveRushes,live,now()) end
  acc+=dt;if acc<.1 then return end;acc=0
  local E=current;if not E then return end
  local run=runState();local t=now()
@@ -685,7 +950,7 @@ Run.Heartbeat:Connect(function(dt)
   local gap=t-E.pausedAt;E.pausedAt=nil
   E.nextPulse+=gap;E.activeAt=(E.activeAt or t)+gap
   for _,T in E.tombs or {} do if T.nextPulse>0 then T.nextPulse+=gap end end
-  for _,R in E.rushes or {} do R.at+=gap end
+  for _,R in E.rushes or {} do R.at+=gap;if R.npc.Parent then R.npc:SetAttribute('RushAt',R.at) end end -- clients draw the dash from RushAt
  end
  if E.phase=='Intro' then
   if t<E.introUntil then return end
@@ -707,7 +972,7 @@ Run.Heartbeat:Connect(function(dt)
   if not E.leaderAlive then complete(E,t) end
  elseif kind=='tombs' then
   local standing=0;for _,T in E.tombs do if T.alive then standing+=1 end end
-  if standing==0 and not E.leaderAlive then complete(E,t) end
+  if standing==0 and wardensAlive(E)==0 then complete(E,t) end
  end
 end)
 return S

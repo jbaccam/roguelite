@@ -133,9 +133,10 @@ end
 local function rock(ctx,p,land,i)
  local from=ctx.cf.Position;local back=C.flat(from-p);back=back.Magnitude>1 and back.Unit or Vector3.zAxis
  local start=p+back*10+up*34;local fall=.7
- local r=(ctx.def.radius or 5)
- local m=C.mesh(ROCKS[(i-1)%#ROCKS+1],CFrame.new(start),2)
- if not m then m=C.part('Rock',Vector3.new(2.4,2,2.2),CFrame.new(start),STONE[1],0);m.Material=STONE[2] end
+ -- k5: the circle against its old 5 studs (2026-10-10: radius 7.5), so the rock and its burst fill it.
+ local r=(ctx.def.radius or 5);local k5=r/5
+ local m=C.mesh(ROCKS[(i-1)%#ROCKS+1],CFrame.new(start),2*k5)
+ if not m then m=C.part('Rock',Vector3.new(2.4,2,2.2)*k5,CFrame.new(start),STONE[1],0);m.Material=STONE[2] end
  K.trail(m,1.1,.25,IVORY,SAND,.35)
  local shadow,set=C.plate(p+up*.05,'ScorchMark',r*.9,Color3.fromRGB(40,34,30),0,false)
  local spin=CFrame.Angles(math.random()*6,math.random()*6,math.random()*6);local axis=Vector3.new(math.random()-.5,math.random()-.5,math.random()-.5).Unit
@@ -151,9 +152,9 @@ local function rock(ctx,p,land,i)
     if C.near(p,r) then
      C.cue('crab_slam',p,i<=2 and .7 or .35,1.1);C.shake(p,.6,.25)
      C.star(p+up*1.5,IVORY,r*1.2,.18);C.ring(p+up*.07,'ShockwaveRing',1,r*2.2,.32,SAND,0,true)
-     C.emit(p+up*.3,up,'SandBurst',{emit=24,Speed={16,26},SpreadAngle=30,Lifetime={.6,.9},Size=ns({0,1.4},{1,3.2}),Color=SAND,Transparency=ns({0,0},{.7,.2},{1,1}),Acceleration=Vector3.new(0,-50,0),Rotation={-20,20},LightInfluence=.8})
-     dust(p+up*.4,8,3.5)
-     C.chunks(p+up*1,p.Y,ROCKS,{count=4,speed={8,14},up={10,16},scale={.6,.9},life=1.2,fallback=STONE})
+     C.emit(p+up*.3,up,'SandBurst',{emit=24,Speed={16*k5,26*k5},SpreadAngle=30,Lifetime={.6,.9},Size=ns({0,1.4*k5},{1,3.2*k5}),Color=SAND,Transparency=ns({0,0},{.7,.2},{1,1}),Acceleration=Vector3.new(0,-50,0),Rotation={-20,20},LightInfluence=.8})
+     dust(p+up*.4,8,3.5*k5);C.dustRing(p,r*.8,10,SAND,{14,20},2.5*k5)
+     C.chunks(p+up*1,p.Y,ROCKS,{count=4,speed={8,14},up={10,16},scale={.6*k5,.9*k5},life=1.2,fallback=STONE})
     end
    end
    return true
