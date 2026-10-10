@@ -69,9 +69,11 @@ C.SlowById={['34']={strength=35,seconds=2},['27']={strength=30,seconds=2}}
 -- Rarity (RARITY_GODLY_ARMOR.md §4): one per weapon, forever. ChestConfig builds its chest pools from
 -- these lists, in this order, so chest odds, Armory tags and the run shop always agree.
 C.Rarities={'Common','Rare','Epic','Legendary','Godly'}
+-- 2026-10-10: Baseball Bat '06' and Boxing Gloves '19' swapped places (user: the Gloves aren't a good
+-- starter; every class starts with its Common weapon). Each takes the other's slot in its new list.
 C.RarityLists={
- Common={'01','05','00','08','12','15','19','17','24','26','30','35'},
- Rare={'02','06','09','07','13','16','23','21','27','29','34','33'},
+ Common={'01','05','00','08','12','15','06','17','24','26','30','35'},
+ Rare={'02','19','09','07','13','16','23','21','27','29','34','33'},
  Epic={'04','10','14','20','28'},
  Legendary={'03','11','18','22','25','32','31','42'}, -- '42' appended last so older seeded rolls keep their order
  Godly={'36','37','38','39','40','41'},

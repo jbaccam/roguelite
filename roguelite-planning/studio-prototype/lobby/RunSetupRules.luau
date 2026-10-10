@@ -129,7 +129,7 @@ R.homeWeapons=R.classWeapons -- the old name
 -- Godlies this profile owns (any class can start with one); unowned Godlies are never listed.
 function R.ownedGodlies(weapons) local out={};for _,w in Weapons.List do if w.godly and weapons[w.id] then table.insert(out,w) end end;return out end
 -- The starter picker's list (2026-10-09): the class's owned weapons, then owned Godlies. weapons: the
--- owned set (R.progress(player).weapons). Example, a fresh Brawler: {Boxing Gloves}.
+-- owned set (R.progress(player).weapons). Example, a fresh Brawler: {Baseball Bat}.
 function R.starters(class,weapons)
  local out={}
  for _,w in R.classWeapons(class) do if weapons[w.id] then table.insert(out,w) end end

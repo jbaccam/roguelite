@@ -59,6 +59,6 @@ The Pizza Cutter is 2% under the Katana at every tier. The test allows 10%.
 ## Other numbers that moved
 
 - **Legendary shop offers:** with the Pizza Cutter as an eighth Legendary, they go from 10.2% to 11.5% at wave 1, and from 16.4% to 18.3% at wave 20.
-- **Brawler starter:** the new starter, Boxing Gloves, does 10.6 per jab at Tier I. That is under a wave-5 regular zombie's 11 HP; the Pan did 21.6. `EnemyScalingTests` now checks jab weapons on time to kill instead. Example: 2 jabs x 0.42 s = 0.84 s, against the old Pan's one hit every 1.05 s.
+- **Brawler starter (updated Oct 10):** Brawler now starts with the Baseball Bat, made Common (the Boxing Gloves became Rare). It does 26.4 per hit at Tier I, so it one-shots a wave-5 regular zombie (11 HP), and `EnemyScalingTests` holds it to the same one-shot rule as the other starters. The Gloves did 10.6 per jab and needed two. With the swap the Brawler roster still lands at 0.942 / 0.941.
 - **Strong Tier IV Glock:** with no sets it does 81.7 per hit, down from 85.4, so a Nightmare tank takes 8 hits instead of 7. With six Glocks (Gun 6) it does 93.9 per hit, so a Hard tank takes 4 hits instead of 5. `EnemyScalingTests` now expects both. Its only remaining failure is the other session's bloater speed check.
 - **Battery Pack fix:** a lightning weapon now adds 1 to Lightning targets. Example: a Mage's Crystal Ball chains 2 enemies, where it chained 1.

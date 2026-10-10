@@ -3,9 +3,10 @@
 -- Plain data and pure functions only: tests load it with loadstring in Studio Edit.
 local T={}
 
--- The run: Pine Valley as a Brawler with the Boxing Gloves, three waves, the boss on wave 3. It was the
+-- The run: Pine Valley as a Brawler with the Baseball Bat, three waves, the boss on wave 3. It was the
 -- Frying Pan until the Pan became Chef's (2026-10-09): a run only starts with a weapon of its class.
-T.Map='PineValley';T.MapName='Pine Valley';T.Class='Brawler';T.Weapon='19'
+-- The Boxing Gloves had it for a day; the Bat is Brawler's starter since 2026-10-10.
+T.Map='PineValley';T.MapName='Pine Valley';T.Class='Brawler';T.Weapon='06'
 T.START_SHARDS=0 -- no starting crystals: the money clearly comes from crystals
 -- Crystals are normal ones: one per kill, worth 1 (EconomyConfig.KILL_SHARDS). They were worth 5,
 -- which levelled players up on the 4th kill (user, 2026-10-03: "1 crystal should BE ONE CRYSTAL").
@@ -30,10 +31,10 @@ T.Waves={
 T.Offers={[2]={[1]='weapon_00_1'}} -- slot 1: the Glock, Tier I
 -- Paid once, when the boss wave is cleared.
 T.Reward={chests={Silver=3},emeralds=100}
--- The first Silver Chest opened after the reward is these copies instead of a roll: two Boxing
--- Gloves (enough for the Tier II upgrade) and an Iron helmet to equip.
+-- The first Silver Chest opened after the reward is these copies instead of a roll: two Baseball
+-- Bats (enough for the Tier II upgrade) and an Iron helmet to equip.
 T.SeedChest='Silver'
-T.SeedCopies={['19']=2,['Iron.Helmet']=1}
+T.SeedCopies={['06']=2,['Iron.Helmet']=1}
 T.SeedArmor='Iron.Helmet'
 T.SeedArmorSet='Iron';T.SeedArmorSlot='Helmet'
 -- Saved progress (ProfileService tutorial.step). 'Run' until the boss wave is won, then the lobby
@@ -54,7 +55,7 @@ T.GuideName='Eggbert'
 -- particular pick, and every step moves on whatever the player picks (user, 2026-10-03).
 T.Lines={
  Welcome="Welcome to Wavebreaker! I'm Eggbert. Let's get you ready.",
- Gloves="Your gloves punch by themselves. Just move!",
+ Bat="Your bat swings by itself. Just move!",
  Crystals="Crystals! Walk over them to grab them.",
  CrystalsUse="Crystals are your XP and your money for the shop.",
  LevelUp="You leveled up! Pick any upgrade.",

@@ -171,11 +171,11 @@ local function runStep()
    if not pickedAt and (st and st:GetAttribute('Shards') or 0)>Config.START_SHARDS then pickedAt=os.clock() end
    if pickedAt then
     if os.clock()-pickedAt<7 then return {line='CrystalsUse',target=find(screen('RogueliteHUD'),'Shards'),ctx=fight} end
-    return {line='Gloves',ctx=fight}
+    return {line='Bat',ctx=fight}
    end
    local c=nearestCrystal()
    if c then return {line='Crystals',target=c,ctx=fight} end
-   return {line='Gloves',ctx=fight}
+   return {line='Bat',ctx=fight}
   end
   if wave<Config.BOSS_WAVE then return {line='Survive',ctx=fight} end
   return {line=os.clock()<redUntil and 'RedCircle' or 'Boss',ctx=fight}
@@ -275,8 +275,8 @@ local function lobbyLine()
   return {line='Chests',target=lobbyButton('Chests'),dim='Chests'}
  elseif step=='Armory' then
   base.Armory=base.Armory or tierMap()
-  -- Done once anything is a tier up (the arrow suggests the tutorial weapon, Boxing Gloves since
-  -- 2026-10-09, which the seeded chest made ready), or when nothing can be upgraded any more
+  -- Done once anything is a tier up (the arrow suggests the tutorial weapon, the Baseball Bat
+  -- since 2026-10-10, which the seeded chest made ready), or when nothing can be upgraded any more
   -- (copies or emeralds went elsewhere).
   if upgradedSince(base.Armory) or weaponTier(Config.Weapon)>=2 or not canUpgrade() then report('Equip') end
   if chests then return {line='Armory',target=find(chests,'Exit',true)} end

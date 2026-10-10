@@ -77,7 +77,7 @@ stat('GearPower','Gear power',0,0,40,1,'','Gear','Tiers of the gear you brought:
 -- panel's Build preset (Practice only), its own class's weapons, signature first. The class two /
 -- four home-weapon bonuses went on 2026-10-09: per-weapon specialty and weapon type sets replace them.
 S.Classes={
- Brawler={description='Hand-to-hand fighter: tough and hits hard up close. Slower, with weak ranged damage.',buffs={MaxHP=25,Armor=3,MeleeDamage=20,Knockback=8,MoveSpeed=-2,RangedDamage=-15},build={'19','03','06','02'}},
+ Brawler={description='Hand-to-hand fighter: tough and hits hard up close. Slower, with weak ranged damage.',buffs={MaxHP=25,Armor=3,MeleeDamage=20,Knockback=8,MoveSpeed=-2,RangedDamage=-15},build={'06','03','19','02'}},
  Gunner={description='Fast, accurate gunfire. Less health and weak melee damage.',buffs={RangedDamage=20,ProjectileSpeed=35,CritChance=5,MaxHP=-15,MeleeDamage=-15},rangedAttackSpeed=10,build={'00','07','09','08'}},
  -- Chef (2026-10-09) takes Thrower's slot: Thrower owners own Chef. Recovery covers pizza, regen and
  -- life steal healing. Pizza drops are ChefPizza's (server); no dash (S.dashes stays Brawler-only).
@@ -92,8 +92,9 @@ S.Classes={
 -- Each class's starting weapon, also its icon on class cards and tags. RunSetupRules.Signature is
 -- this table; ProfileService keeps a copy (it doesn't load this module). Juggler: Rubber Duck since
 -- 2026-10-03 (was Boxing Gloves). 2026-10-09: Brawler starts with Boxing Gloves (the Frying Pan is
--- Chef's now) and Chef replaces Thrower.
-S.Signature={Brawler='19',Gunner='00',Chef='01',Juggler='17',Handyman='24',Mage='30'}
+-- Chef's now) and Chef replaces Thrower. 2026-10-10: Brawler starts with the Baseball Bat instead
+-- (user: the Gloves aren't a good starter); the Gloves stay a Brawler weapon, now Rare.
+S.Signature={Brawler='06',Gunner='00',Chef='01',Juggler='17',Handyman='24',Mage='30'}
 -- Specialty (2026-10-09, plans/2026-10-09-chef-roster-weapon-types-design.md; user: "per weapon,
 -- never the whole build"). It replaces the 2026-10-03 class weapon fit and the class two / four
 -- bonuses: each equipped weapon whose starter class is yours deals +Specialty% damage. Off-class

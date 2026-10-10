@@ -59,9 +59,11 @@ return function(source,modules)
  local P=load(true)
  check(type(P.migrate)=='function','ProfileService has P.migrate')
 
- -- The roster this migration follows (the core change): Pan is Chef's, Gloves are Brawler's.
+ -- The roster this migration follows (the core change): Pan is Chef's, Bat, Gloves and Katana are
+ -- Brawler's. 2026-10-10: Brawler's default is the Baseball Bat (Common); the Gloves are Rare.
  check(W.ById['01'].class=='Chef' and W.ById['14'].class=='Chef' and W.ById['05'].class=='Chef','Frying Pan, Molotov and Spatula are Chef weapons')
- check(W.ById['19'].class=='Brawler' and W.ById['03'].class=='Brawler','Boxing Gloves and Katana are Brawler weapons')
+ check(W.ById['06'].class=='Brawler' and W.ById['19'].class=='Brawler' and W.ById['03'].class=='Brawler','Baseball Bat, Boxing Gloves and Katana are Brawler weapons')
+ check(W.ById['06'].rarity=='Common' and W.ById['19'].rarity=='Rare','Baseball Bat is Common, Boxing Gloves Rare')
  check(W.ById['12'].class=='Juggler' and W.ById['17'].class=='Juggler','Boomerang and Rubber Duck are Juggler weapons')
  check(W.ById['36'].godly and W.ById['36'].class==nil,"Reaper's Scythe is Godly, no class")
 
@@ -89,14 +91,14 @@ return function(source,modules)
   return after
  end
 
- -- 1. Thrower only: Thrower is Chef, Brawler's Pan pick goes to the Gloves, wins and chests carry over.
+ -- 1. Thrower only: Thrower is Chef, Brawler's Pan pick goes to the Bat, wins and chests carry over.
  local d=migrate(old({classes={Brawler=true,Gunner=true,Mage=true,Thrower=true},
   weapons=with(OLD_WEAPONS,{['12']={tier=3,have=1},['14']={tier=1,have=2}}),
   quests={classWins={Brawler=true,Thrower=true},unlocks={WaveRider=true}},chests={Thrower=2,Gold=1}}),'Thrower only')
  check(set(d.classes)=='Brawler,Chef,Gunner,Mage','Thrower only: owns Chef instead, got '..set(d.classes))
- check(same(d.weapons['19'],{tier=1,have=0}),'Thrower only: Brawler gets the Boxing Gloves')
+ check(same(d.weapons['06'],{tier=1,have=0}) and d.weapons['19']==nil,'Thrower only: Brawler gets the Baseball Bat')
  check(same(d.weapons['01'],{tier=2,have=1}),'Thrower only: the Pan (Chef default) stays at Tier II')
- check(d.loadout.class=='Brawler' and d.loadout.weapon=='19','Thrower only: Brawler + Pan becomes Brawler + Gloves')
+ check(d.loadout.class=='Brawler' and d.loadout.weapon=='06','Thrower only: Brawler + Pan becomes Brawler + Bat')
  check(d.quests.classWins.Chef==true and d.quests.classWins.Thrower==nil and d.quests.classWins.Brawler==true,'Thrower only: a Thrower map win counts for Chef')
  check(d.quests.unlocks.WaveRider==true,'Thrower only: Wave Rider stays claimed')
  check(same(d.chests,{Wooden=2,Gold=1}),'Thrower only: old Thrower chests are still Wooden')
@@ -105,12 +107,13 @@ return function(source,modules)
  check(set(d.classes)=='Chef' and same(d.weapons['01'],{tier=1,have=0}),'Thrower alone: Chef with the Frying Pan')
  check(next(d.loadout)==nil,'Thrower alone: no pick stays no pick')
 
- -- 2. Juggler only: nothing renamed; the old Juggler default (Gloves, Brawler's now) goes to the Duck.
+ -- 2. Juggler only: nothing renamed; the old Juggler default (Gloves, a Brawler weapon now) goes to the Duck.
  d=migrate(old({classes={Brawler=true,Gunner=true,Mage=true,Juggler=true},
   weapons=with(OLD_WEAPONS,{['17']={tier=1,have=0},['19']={tier=2,have=0}}),loadout={class='Juggler',weapon='19'}}),'Juggler only')
  check(set(d.classes)=='Brawler,Gunner,Juggler,Mage','Juggler only: same classes, no Chef')
  check(d.loadout.class=='Juggler' and d.loadout.weapon=='17','Juggler only: Juggler + Gloves becomes Juggler + Rubber Duck')
- check(same(d.weapons['19'],{tier=2,have=0}),'Juggler only: the Gloves keep Tier II (and are Brawler\'s default now)')
+ check(same(d.weapons['19'],{tier=2,have=0}),'Juggler only: the Gloves keep Tier II (a Rare Brawler weapon now)')
+ check(same(d.weapons['06'],{tier=1,have=0}),'Juggler only: Brawler gets the Baseball Bat')
 
  -- 3. Thrower and Juggler: both kept; a Boomerang pick (Juggler's now) still fits Juggler.
  d=migrate(old({classes={Brawler=true,Gunner=true,Mage=true,Thrower=true,Juggler=true},
@@ -129,15 +132,20 @@ return function(source,modules)
 
  -- 5. Brawler + Pan and other Brawler picks.
  d=migrate(old(),'Brawler + Pan')
- check(d.loadout.class=='Brawler' and d.loadout.weapon=='19','Brawler + Pan becomes Brawler + Boxing Gloves')
- check(same(d.weapons['01'],{tier=2,have=1}) and same(d.weapons['19'],{tier=1,have=0}),'Brawler + Pan: keeps the Pan, gains the Gloves')
+ check(d.loadout.class=='Brawler' and d.loadout.weapon=='06','Brawler + Pan becomes Brawler + Baseball Bat')
+ check(same(d.weapons['01'],{tier=2,have=1}) and same(d.weapons['06'],{tier=1,have=0}),'Brawler + Pan: keeps the Pan, gains the Bat')
  check(set(d.classes)=='Brawler,Gunner,Mage','Brawler + Pan: no class added')
  d=migrate(old({weapons=with(OLD_WEAPONS,{['36']={tier=1,have=0}}),loadout={class='Brawler',weapon='36'}}),'Brawler + Godly')
  check(d.loadout.weapon=='36','Brawler + an owned Godly stays')
  d=migrate(old({loadout={class='Brawler',weapon='36'}}),'Brawler + unowned Godly')
- check(d.loadout.weapon=='19','Brawler + a Godly not owned goes to the Gloves')
+ check(d.loadout.weapon=='06','Brawler + a Godly not owned goes to the Bat')
  d=migrate(old({weapons=with(OLD_WEAPONS,{['03']={tier=4,have=0}}),loadout={class='Brawler',weapon='03'}}),'Brawler + Katana')
  check(d.loadout.weapon=='03','Brawler + an owned Katana stays')
+ -- 2026-10-10: a save from the day Brawler started with the Gloves (fresh profile then, Brawler +
+ -- Gloves picked). The Gloves are still a Brawler weapon, so the pick stays; the Bat is added.
+ d=migrate(old({weapons={['19']={tier=2,have=1},['00']={tier=1,have=0},['30']={tier=1,have=0}},loadout={class='Brawler',weapon='19'}}),'Brawler + Gloves')
+ check(d.loadout.class=='Brawler' and d.loadout.weapon=='19','Brawler + Gloves stays (still a Brawler weapon)')
+ check(same(d.weapons['19'],{tier=2,have=1}) and same(d.weapons['06'],{tier=1,have=0}),'Brawler + Gloves: keeps the Gloves at Tier II, gains the Bat')
  d=migrate(old({loadout={class='Gunner',weapon='01'}}),'Gunner + Pan')
  check(d.loadout.class=='Gunner' and d.loadout.weapon=='00','Gunner + Pan goes to the Glock')
  d=migrate(old({loadout={class='Handyman',weapon='24'}}),'Handyman not owned')
@@ -147,17 +155,17 @@ return function(source,modules)
  d=migrate(old({loadout='junk'}),'junk pick')
  check(type(d.loadout)=='table' and next(d.loadout)==nil,'a malformed pick becomes no pick')
 
- -- 6. Fresh profile: Brawler, Gunner and Mage with Boxing Gloves, Glock and Magic Staff.
+ -- 6. Fresh profile: Brawler, Gunner and Mage with Baseball Bat, Glock and Magic Staff (2026-10-10).
  d=P.migrate({})
  check(set(d.classes)=='Brawler,Gunner,Mage','fresh: Brawler, Gunner, Mage')
  local ids={};for id,r in d.weapons do table.insert(ids,id);check(same(r,{tier=1,have=0}),'fresh: '..id..' at Tier I') end
- table.sort(ids);check(table.concat(ids,',')=='00,19,30','fresh: Glock, Boxing Gloves, Magic Staff, got '..table.concat(ids,','))
+ table.sort(ids);check(table.concat(ids,',')=='00,06,30','fresh: Glock, Baseball Bat, Magic Staff, got '..table.concat(ids,','))
  check(next(d.loadout)==nil and d.emeralds==0,'fresh: no pick, no emeralds')
  check(same(P.migrate(copy(d)),d),'fresh: running it again changes nothing')
 
  -- 7. Already migrated: a Chef save is left exactly as it is.
  local done=old({classes={Brawler=true,Gunner=true,Mage=true,Chef=true},
-  weapons=with(OLD_WEAPONS,{['19']={tier=1,have=0},['05']={tier=2,have=1}}),loadout={class='Chef',weapon='05'},
+  weapons=with(OLD_WEAPONS,{['06']={tier=1,have=0},['19']={tier=1,have=0},['05']={tier=2,have=1}}),loadout={class='Chef',weapon='05'},
   quests={classWins={Chef=true},unlocks={WaveRider=true}},picks={},journal={}})
  local once=P.migrate(copy(done))
  check(same(once.classes,done.classes) and same(once.weapons,done.weapons) and same(once.loadout,done.loadout) and same(once.quests,done.quests),'already migrated: classes, weapons, pick and quests unchanged')
@@ -183,14 +191,16 @@ return function(source,modules)
  -- Starters after the receipt (the server rule, same as validLoadout).
  check(P.setLoadout(ana,'Chef','01'),'Chef + Frying Pan can be picked')
  local ok,why=P.setLoadout(ana,'Brawler','01');check(not ok and why=='Choose a weapon for your class','Brawler + Frying Pan is refused')
- check(P.setLoadout(ana,'Brawler','19') and P.profiles[ana].loadout.weapon=='19','Brawler + Boxing Gloves can be picked')
+ check(P.setLoadout(ana,'Brawler','06') and P.profiles[ana].loadout.weapon=='06','Brawler + Baseball Bat can be picked')
+ ok,why=P.setLoadout(ana,'Brawler','19');check(not ok and why=='Weapon not owned','Brawler + Boxing Gloves not owned is refused')
+ P.addCopies(P.profiles[ana],'19',1);check(P.setLoadout(ana,'Brawler','19') and P.profiles[ana].loadout.weapon=='19','Brawler + owned Boxing Gloves can be picked')
  ok,why=P.setLoadout(ana,'Thrower','01');check(not ok and why=='Class locked','the Thrower class is gone')
  P.addCopies(P.profiles[ana],'36',1);check(P.setLoadout(ana,'Mage','36'),'an owned Godly fits any class')
  ok,why=P.buyClass(ana,'Thrower',400);check(not ok and why=='Unknown class','Thrower cannot be bought with emeralds')
 
  -- 9. Load paths. Studio: always the in-memory fresh profile, migrated, never a DataStore.
  local tom=player(4);P.load(tom)
- check(set(P.profiles[tom].classes)=='Brawler,Gunner,Mage' and P.profiles[tom].weapons['19']~=nil and P.profiles[tom].weapons['01']==nil,'Studio load: fresh profile with the Gloves, no Pan')
+ check(set(P.profiles[tom].classes)=='Brawler,Gunner,Mage' and P.profiles[tom].weapons['06']~=nil and P.profiles[tom].weapons['01']==nil,'Studio load: fresh profile with the Bat, no Pan')
  -- Live: a Thrower save from the (stand-in) lock comes out as Chef; loading writes nothing.
  local writes=0
  local saved=old({classes={Brawler=true,Gunner=true,Mage=true,Thrower=true},weapons=with(OLD_WEAPONS,{['12']={tier=1,have=0}}),loadout={class='Thrower',weapon='12'}})

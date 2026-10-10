@@ -56,21 +56,17 @@ return function(Catalog, Types, Weapons, Stats, Rules, Scheduler)
  check(tank>2*glock.damage and tank<=3*glock.damage,'strong tier IV Glock takes three heavy hits')
  check(6*glock.damage/glock.cooldown>tank,'six guns can focus a tank inside one second of ideal DPS')
  check(glock6.damage>=regular and tank>2*glock6.damage and tank<=3*glock6.damage,'six Glocks: one-shot fodder, three tank hits')
- -- 2026-10-09: Brawler starts with Boxing Gloves (the Pan is Chef's); Chef + Pan joins. A jab weapon
- -- (Gloves) is judged on time to kill instead of one hit: hits x its cooldown must be no slower than the
- -- old Brawler + Pan, one hit every Pan cooldown. Example: wave-5 regular (11 HP), Gloves 10.56 a jab:
- -- 2 jabs x .42 s = .84 s, Pan 1 x 1.05 s.
- local JAB={['19']=true}
- local panTime=Stats.weapon(Weapons.ById['01'],Stats.resolve('Brawler',1),'Brawler',1).cooldown
- local starters={{'Brawler','19'},{'Gunner','00'},{'Chef','01'},{'Mage','30'}}
+ -- 2026-10-09: the Pan is Chef's; Chef + Pan joins. 2026-10-10: Brawler starts with the Baseball Bat
+ -- (the Boxing Gloves' two-jab time-to-kill rule went with them), so every starter one-shots early
+ -- fodder. Example: wave-5 regular (11 HP), Brawler Tier I Bat 26.4 a swing (20 x 1.2 melee x 1.1 specialty).
+ local starters={{'Brawler','06'},{'Gunner','00'},{'Chef','01'},{'Mage','30'}}
  for _,starter in starters do
   local class,id=starter[1],starter[2]
   local early=Stats.weapon(Weapons.ById[id],Stats.resolve(class,1),class,1)
   for wave=1,5 do
    for _,kind in {'regular','baby'} do
     local health=Catalog.scaled(kind..'-zombie',wave).health
-    if JAB[id] then check(math.ceil(health/early.damage)*early.cooldown<=panTime+1e-9,'jab starter kills early '..kind..' as fast as the old Pan '..class..' wave '..wave)
-    else check(early.damage>=health,'starter one-shots early '..kind..' '..class..' wave '..wave) end
+    check(early.damage>=health,'starter one-shots early '..kind..' '..class..' wave '..wave)
    end
   end
   local middle=Stats.weapon(Weapons.ById[id],Stats.resolve(class,4,nil,{Damage=20,AttackSpeed=15}),class,2)

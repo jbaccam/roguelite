@@ -52,7 +52,7 @@ local function tutorialConfig()
  local ok,T=pcall(function() return module and require(module) end)
  return ok and T or nil
 end
-local SIGNATURE={Brawler='19',Gunner='00',Chef='01',Juggler='17',Handyman='24',Mage='30'} -- a copy of CharacterStats.Signature
+local SIGNATURE={Brawler='06',Gunner='00',Chef='01',Juggler='17',Handyman='24',Mage='30'} -- a copy of CharacterStats.Signature
 -- Classes that were renamed: an old save, receipt or grant naming the left one means the right one.
 -- Thrower became Chef 1:1 (2026-10-09, plans/2026-10-09-chef-roster-weapon-types-design.md).
 local RENAMED={Thrower='Chef'}
@@ -134,7 +134,7 @@ end
 -- with them instead of Brawler and its default starter (user, 2026-10-03). RunClass/RunWeapon only
 -- live on one server. Saved by the autosave, a hand-off or leaving, like the settings.
 -- The same rule as validLoadout (2026-10-09): an owned weapon whose starter class is this class,
--- or an owned Godly with any class. Example: Brawler + Boxing Gloves yes, Brawler + Frying Pan no.
+-- or an owned Godly with any class. Example: Brawler + Baseball Bat yes, Brawler + Frying Pan no.
 function P.setLoadout(player,class,weapon)
  local d=P.profiles[player]
  if not d or not P.loaded[player] then return false,'Your save is still loading' end
@@ -181,8 +181,10 @@ function P.migrate(data)
   if wins and wins[old]~=nil then if wins[old]==true then wins[new]=true end;wins[old]=nil end
  end
  -- One starter class per weapon (2026-10-09): a saved starter that no longer fits its class goes
- -- back to that class's default. Example: Brawler + Frying Pan (Chef's now) -> Brawler + Boxing
- -- Gloves. An owned Godly still fits any class. A pick for a class that isn't owned is dropped.
+ -- back to that class's default. Example: Brawler + Frying Pan (Chef's now) -> Brawler + Baseball
+ -- Bat (2026-10-10; it was the Gloves for a day). A saved Brawler + Boxing Gloves still fits (they
+ -- are a Brawler weapon) and stays. An owned Godly still fits any class. A pick for a class that
+ -- isn't owned is dropped.
  local l=data.loadout
  if type(l)~='table' or (l.class~=nil and not (type(l.class)=='string' and SIGNATURE[l.class] and data.classes[l.class])) then data.loadout={}
  elseif l.class~=nil then
@@ -191,7 +193,8 @@ function P.migrate(data)
  end
  -- Every owned class owns its starting weapon. Juggler's changed from Boxing Gloves to Rubber Duck
  -- (2026-10-03), so Juggler owners get the duck; on 2026-10-09 Brawler's became Boxing Gloves and
- -- Chef's the Frying Pan. Nothing owned is ever taken away: no weapon, copy or tier.
+ -- Chef's the Frying Pan; on 2026-10-10 Brawler's became the Baseball Bat, so Brawler owners get the
+ -- Bat. Nothing owned is ever taken away: no weapon, copy or tier.
  for class in data.classes do local id=SIGNATURE[class];if id and not data.weapons[id] then data.weapons[id]={tier=1,have=0} end end
  data.journal=Journal.clean(data.journal)
  return data
@@ -438,7 +441,7 @@ function P.openChest(player,kind,count)
 end
 -- First-join tutorial (plans/2026-10-03-tutorial-design.md; numbers in TutorialConfig). Its run
 -- pays once, when the boss wave is cleared: 3 Silver Chests and 100 emeralds. The next Silver
--- Chest opened is 2 copies of the tutorial weapon (Boxing Gloves since 2026-10-09) and an Iron
+-- Chest opened is 2 copies of the tutorial weapon (Baseball Bat since 2026-10-10) and an Iron
 -- helmet instead of a roll (openChest), so the lobby steps can upgrade it and equip the helmet.
 -- The lobby steps then only move forward: Chests -> Armory -> Equip -> Offer -> Play -> Done
 -- (TutorialConfig.canStep).

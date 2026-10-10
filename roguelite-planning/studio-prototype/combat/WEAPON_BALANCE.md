@@ -41,6 +41,7 @@ User: "Do Brotato-style tiers ... rarer weapons rarer in the shop, but don't mak
 - Gentler, because they also gain pellets, cards, bounces or pierce each tier: Shotgun ×1.25, Deck of Cards ×1.3, Boomerang ×1.35, Nail Gun ×1.35.
 - Steeper, because they stepped steeper before: Frying Pan ×1.45, Molotov ×1.5.
 - Boxing Gloves keep their own 8 / 15 / 28 / 48 and cooldowns.
+- 2026-10-10 (the table below is older): Baseball Bat and Boxing Gloves swapped rarities, so Brawler starts with a Common. Bat, now Common: 20 · 1.25 s, 20 / 28 / 39 / 55. Gloves, now Rare: 8 · 0.4 s (Rare power takes the cooldown from 0.42), still 8 / 15 / 28 / 48.
 
 Mjolnir now attacks every 1.97 s (26 damage), so the user's "every 2 s" holds to the eye. The Tier IV bumps (RARITY_GODLY_ARMOR.md §7) are not built yet (user: later).
 

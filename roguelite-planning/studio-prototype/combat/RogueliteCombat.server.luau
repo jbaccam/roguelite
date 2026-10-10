@@ -19,8 +19,8 @@ local Role=require(script.Parent:WaitForChild('ServerRole'))
 local Admin=require(combat:WaitForChild('AdminConfig')) -- sandboxed, like this script
 local Wire=require(combat:WaitForChild('ShotBatch')) -- packs each attack into one attribute
 -- Slot 1 holds the loadout starter the lobby validated (RunWeapon); until one is picked, the run
--- class's signature weapon (Brawler's Boxing Gloves when there is no class; 2026-10-09, the Pan is
--- Chef's now). RunSetupRules isn't sandboxed, so this script can't require it.
+-- class's signature weapon (Brawler's Baseball Bat when there is no class; 2026-10-10, the Pan is
+-- Chef's). RunSetupRules isn't sandboxed, so this script can't require it.
 local function starter(player)
  local id=player:GetAttribute('RunWeapon')
  return type(id)=='string' and Catalog.ById[id] and templates:FindFirstChild(id) and id or Stats.Signature[player:GetAttribute('RunClass')] or Stats.Signature.Brawler

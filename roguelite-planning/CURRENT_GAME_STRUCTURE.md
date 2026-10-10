@@ -36,7 +36,7 @@ The comedy comes from using serious and ridiculous equipment together: a Katana 
 
 ```text
 First join as Roblox avatar
-  -> short guided tutorial in Pine Valley with the Frying Pan (3 waves, easy boss on wave 3)
+  -> short guided tutorial in Pine Valley as Brawler with the Baseball Bat (3 waves, easy boss on wave 3)
   -> result screen grants 3 Silver Chests + 100 emeralds
   -> lobby: guided chest opening, first upgrade and equip in the Armory, then Play
   -> Pine Valley: survive to wave 20 and beat the Hammer Brute
@@ -93,7 +93,7 @@ New accounts own **Brawler, Gunner, and Mage**. **Thrower, Juggler, and Handyman
 
 | Class | Play style | Signature starter | Other home weapons | Also in this class (2026-10-04) |
 | --- | --- | --- | --- | --- |
-| **Brawler** | Hand-to-hand: close-range arcs, heavy hits, durability | **Frying Pan** | Boxing Gloves, Nunchucks, Baseball Bat, Cinder Block, Katana | Bowling Pin, Shovel, Excalibur |
+| **Brawler** | Hand-to-hand: close-range arcs, heavy hits, durability | **Baseball Bat** (since 2026-10-10) | Boxing Gloves, Nunchucks, Kusarigama, Cinder Block, Katana | (one starter class per weapon since 2026-10-09; see the Chef roster record) |
 | **Gunner** | Fast projectiles, magazines, piercing and spread | **Glock** | Draco, Fart Gun, Shotgun, T-Shirt Cannon, Rocket Launcher | Nail Gun |
 | **Thrower** | Returning projectiles, volleys, area denial | **Boomerang** | Kunais, Molotovs, Eggs, Steak, Deck of Cards | Kusarigama, T-Shirt Cannon, Rubber Duck, Bowling Ball, Mjolnir |
 | **Juggler** | Tricks and toys: rebounds, spins, repeated contact and knockback | **Rubber Duck** | Spatula, Yo-Yo, Bowling Pins, Kusarigama, Bowling Ball | Boomerang, Eggs, Deck of Cards, Boxing Gloves |
@@ -267,7 +267,7 @@ When a solo player dies, the run pauses and the death screen shows **REVIVE** an
 1. Tier I–IV chains for the six prototype weapons.
 2. Pine Valley's 20-wave spawn script and Hammer Brute kit (elite and horde waves not built).
 3. Shop tier-unlock waves and prices retuned for 20 waves.
-4. ~~Tutorial weapon and base-class behavior.~~ Decided 2026-10-03: Brawler with the Frying Pan ([tutorial design](plans/2026-10-03-tutorial-design.md)).
+4. ~~Tutorial weapon and base-class behavior.~~ Decided 2026-10-03: Brawler with the Frying Pan ([tutorial design](plans/2026-10-03-tutorial-design.md)); since 2026-10-10 Brawler with the Baseball Bat (the Pan is Chef's).
 5. Final revive price, timeout and co-op behavior.
 6. Performance budgets for enemies, projectiles, drops, VFX and audio voices.
 

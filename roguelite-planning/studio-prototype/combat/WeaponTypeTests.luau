@@ -29,7 +29,9 @@ return function(Weapons,Stats,Rules)
   check(Stats.Classes[class].two==nil and Stats.Classes[class].four==nil,'no two / four bonuses '..class)
   check(Stats.dashes(class)==(class=='Brawler'),'dash stays Brawler-only '..class)
  end
- check(Stats.Signature.Brawler=='19' and Stats.Signature.Chef=='01','Brawler starts with Gloves, Chef with the Pan')
+ -- 2026-10-10: Brawler starts with the Baseball Bat (Common); the Boxing Gloves are a Rare Brawler weapon.
+ check(Stats.Signature.Brawler=='06' and Stats.Signature.Chef=='01','Brawler starts with the Bat, Chef with the Pan')
+ check(Weapons.ById['19'].class=='Brawler' and Weapons.ById['19'].rarity=='Rare','Boxing Gloves: a Rare Brawler weapon')
  local chef=Stats.Classes.Chef.buffs
  check(chef.MaxHP==15 and chef.MeleeDamage==10 and chef.Recovery==25 and chef.Armor==-3,'Chef buffs and drawback')
  local n=0;for _ in chef do n+=1 end;check(n==4,'Chef has exactly those four stats')
@@ -193,9 +195,10 @@ return function(Weapons,Stats,Rules)
    local a={ProfileLoaded=true,ProfileClasses=classes,ProfileWeapons=weapons,ProfileMapWins=''}
    return {GetAttribute=function(_,key) return a[key] end}
   end
-  local p=player('Brawler,Gunner,Chef,Juggler,Handyman,Mage','19:1:0,01:1:0,36:1:0,41:1:0')
+  local p=player('Brawler,Gunner,Chef,Juggler,Handyman,Mage','06:1:0,19:1:0,01:1:0,36:1:0,41:1:0')
   check(not Rules.validLoadout(p,'Brawler','01'),'Brawler + Pan rejected')
-  check(Rules.validLoadout(p,'Brawler','19'),'Brawler + Gloves accepted')
+  check(Rules.validLoadout(p,'Brawler','06'),'Brawler + Bat accepted')
+  check(Rules.validLoadout(p,'Brawler','19'),'Brawler + owned Gloves accepted')
   check(Rules.validLoadout(p,'Chef','01'),'Chef + Pan accepted')
   for _,class in Stats.ClassOrder do check(Rules.validLoadout(p,class,'36') and Rules.validLoadout(p,class,'41'),'owned Godly with '..class) end
   check(Rules.Signature==Stats.Signature and Rules.ClassUnlock.Chef~=nil,'run setup tables follow the classes')

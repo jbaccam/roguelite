@@ -3,9 +3,9 @@ local T={}
 function T.run(R)
  local checks=0
  local function check(ok,message) checks+=1;assert(ok,message) end
- -- A fresh profile owns Brawler, Gunner and Mage with Boxing Gloves, Glock and Magic Staff (2026-10-09).
+ -- A fresh profile owns Brawler, Gunner and Mage with Baseball Bat, Glock and Magic Staff (2026-10-10).
  local function player(wins,loaded,classes,weapons)
-  local a={ProfileLoaded=loaded~=false,ProfileClasses=classes or 'Brawler,Gunner,Mage',ProfileWeapons=weapons or '19:1:0,00:1:0,30:1:0',ProfileMapWins=wins or ''}
+  local a={ProfileLoaded=loaded~=false,ProfileClasses=classes or 'Brawler,Gunner,Mage',ProfileWeapons=weapons or '06:1:0,00:1:0,30:1:0',ProfileMapWins=wins or ''}
   return {GetAttribute=function(_,key) return a[key] end}
  end
  local fresh=player()
@@ -20,17 +20,18 @@ function T.run(R)
  check(not R.validMap(fresh,'NotAMap','Normal'),'Unknown map refused')
  check(not R.validMap(fresh,'PineValley','Impossible'),'Unknown difficulty refused')
  check(not R.validMap(player('',false),'PineValley','Normal'),'A loading save cannot enter even default map')
- check(R.validLoadout(fresh,'Brawler','19'),'Owned matching starter accepted (Brawler + Boxing Gloves)')
+ check(R.validLoadout(fresh,'Brawler','06'),'Owned matching starter accepted (Brawler + Baseball Bat)')
  check(R.validLoadout(fresh,'Gunner','00'),'Gunner + Glock accepted')
- check(not R.validLoadout(fresh,'Gunner','19'),'Wrong-class weapon refused')
+ check(not R.validLoadout(fresh,'Gunner','06'),'Wrong-class weapon refused')
  check(not R.validLoadout(fresh,'Chef','01'),'Locked class refused')
  check(not R.validLoadout(fresh,'Brawler','03'),'Unowned starter refused')
- check(not R.validLoadout(player('',false),'Brawler','19'),'A loading profile cannot lose a pick into temporary defaults')
- check(not R.validLoadout(fresh,{},'19'),'Malformed class refused')
+ check(not R.validLoadout(fresh,'Brawler','19'),'Unowned Boxing Gloves refused (a Rare, not the default)')
+ check(not R.validLoadout(player('',false),'Brawler','06'),'A loading profile cannot lose a pick into temporary defaults')
+ check(not R.validLoadout(fresh,{},'06'),'Malformed class refused')
  check(not R.validLoadout(fresh,'Brawler',{}),'Malformed weapon refused')
  -- One starter class per weapon (2026-10-09): the Pan is Chef's, Kusarigama Brawler's, the Nail Gun
  -- only Handyman's; an owned Godly starts with any owned class; Thrower is no class at all.
- local chef=player('',true,'Brawler,Gunner,Chef,Handyman,Mage','19:1:0,00:1:0,01:2:0,04:1:0,24:1:0,30:1:0,36:1:0')
+ local chef=player('',true,'Brawler,Gunner,Chef,Handyman,Mage','06:1:0,00:1:0,01:2:0,04:1:0,24:1:0,30:1:0,36:1:0')
  check(not R.validLoadout(chef,'Brawler','01'),'Brawler + owned Frying Pan refused')
  check(R.validLoadout(chef,'Chef','01'),'Chef + Frying Pan accepted')
  check(R.validLoadout(chef,'Brawler','04'),'Kusarigama starts a Brawler run')
@@ -40,7 +41,8 @@ function T.run(R)
  check(not R.validLoadout(chef,'Thrower','12'),'Thrower is an unknown class')
  local starters=R.starters('Chef',R.progress(chef).weapons)
  check(#starters==2 and starters[1].id=='01' and starters[2].id=='36','Chef starters: owned Chef weapons, then owned Godlies')
- check(#R.starters('Brawler',R.progress(fresh).weapons)==1,'Fresh Brawler starts with only the Gloves')
+ local brawler=R.starters('Brawler',R.progress(fresh).weapons)
+ check(#brawler==1 and brawler[1].id=='06','Fresh Brawler starts with only the Bat')
  check(R.ClassUnlock.Chef=='Reach wave 10 on Pine Valley' and R.ClassUnlock.Thrower==nil,'Chef takes the Thrower unlock quest')
  return {passed=checks,failed=0}
 end

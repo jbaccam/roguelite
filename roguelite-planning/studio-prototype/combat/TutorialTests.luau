@@ -44,10 +44,12 @@ return function(T,E,XP,glockBase,itemBase,Weapons)
  -- Reward and seed: what the chest code and the Armory steps expect.
  check(T.Reward.chests[T.SeedChest]==3 and T.Reward.emeralds==100,'3 Silver Chests and 100 emeralds')
  check(T.SeedCopies[T.Weapon]==2,'the seeded chest has two copies of the tutorial weapon (its Tier II upgrade)')
- -- Brawler + Boxing Gloves (2026-10-09): the Frying Pan is Chef's now, and a run only starts with a
- -- weapon of its class (RunSetupRules.validLoadout), so the tutorial launch would be refused.
- check(T.Class=='Brawler' and T.Weapon=='19','the tutorial is Brawler with the Boxing Gloves')
- check(T.SeedCopies['01']==nil,'no Frying Pan copies are seeded any more')
+ -- Brawler (2026-10-09): the Frying Pan is Chef's now, and a run only starts with a weapon of its
+ -- class (RunSetupRules.validLoadout), so the tutorial launch would be refused. 2026-10-10: the
+ -- Baseball Bat, Brawler's starter, replaces the Boxing Gloves.
+ check(T.Class=='Brawler' and T.Weapon=='06','the tutorial is Brawler with the Baseball Bat')
+ check(T.SeedCopies['01']==nil and T.SeedCopies['19']==nil,'no Frying Pan or Boxing Gloves copies are seeded any more')
+ check(T.Lines.Gloves==nil,'the old Gloves line is gone')
  if Weapons then
   local w=Weapons.ById[T.Weapon]
   check(w~=nil and not w.godly and w.class==T.Class,'the tutorial weapon is a starter of the tutorial class')
@@ -55,7 +57,7 @@ return function(T,E,XP,glockBase,itemBase,Weapons)
  check(T.SeedCopies[T.SeedArmor]==1 and T.SeedArmor==T.SeedArmorSet..'.'..T.SeedArmorSlot,'the seeded armor piece id matches its set and slot')
 
  -- Every line the guide can show exists.
- for _,id in {'Welcome','Gloves','Crystals','CrystalsUse','LevelUp','Shop','ShopGo','Survive','LevelUp2','Shop2','Boss','RedCircle','Loot','Chests','ChestOpen','ChestTap','ChestMore','Armory','Upgrade','Equip','Equipped','Offer','Play'} do
+ for _,id in {'Welcome','Bat','Crystals','CrystalsUse','LevelUp','Shop','ShopGo','Survive','LevelUp2','Shop2','Boss','RedCircle','Loot','Chests','ChestOpen','ChestTap','ChestMore','Armory','Upgrade','Equip','Equipped','Offer','Play'} do
   check(type(T.Lines[id])=='string' and #T.Lines[id]>0,'line '..id)
  end
  check(type(T.GuideName)=='string' and #T.GuideName>0 and #T.GuideName<=14,'the guide has a short name for his tag')

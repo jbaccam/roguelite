@@ -6,7 +6,7 @@
 --     WELCOME_SECONDS for Eggbert's welcome.
 --   Studio's Combined role: only with Workspace.StudioTutorial=true (otherwise ProfileService
 --     counts every Studio profile as done); the player is put in the Pine Valley arena as a
---     Brawler with the Boxing Gloves (TutorialConfig) and wave 1 starts the same way.
+--     Brawler with the Baseball Bat (TutorialConfig) and wave 1 starts the same way.
 -- The tutorial is the normal run with ShopService.tutorial (waves, the Glock offer, no starting
 -- shards, no shop timer), normal worth-1 crystals, the boss on wave 3 with a fixed health, no respawns,
 -- and each wave ending once its enemies are dead. RogueliteMeta pays the reward and ends the run
@@ -124,7 +124,7 @@ end)
 -- Workspace.StudioTutorial=true, or from the admin panel (ServerStorage.TutorialControl below).
 if studio and Role.get()=='Combined' then
  local Profiles=require(SSS:WaitForChild('ProfileService'))
- -- Into the Pine Valley arena as a Brawler with the Boxing Gloves; wave 1 once they're in the run.
+ -- Into the Pine Valley arena as a Brawler with the Baseball Bat; wave 1 once they're in the run.
  local function startHere(p)
   for q in Shop.members do if q~=p then return false,'Another run is going here' end end
   local char=p.Character;local h=char and char:FindFirstChildOfClass('Humanoid')

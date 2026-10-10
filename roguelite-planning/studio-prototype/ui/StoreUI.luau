@@ -40,7 +40,7 @@ S.Tabs={{'Daily','quests','DAILY'},{'Bundles','store','BUNDLES'},{'Chests','ches
 -- Class cards: class, signature weapon, Robux product, card colour.
 -- Chef sells through the old ClassThrower product (2026-10-09: Thrower became Chef, same product id).
 -- Each card shows the class's starting weapon: Chef the Frying Pan, Juggler the Rubber Duck (was the
--- Boxing Gloves, Brawler's starter since 2026-10-09).
+-- Boxing Gloves, a Rare Brawler weapon since 2026-10-10). Brawler is free, so it has no card.
 S.Classes={{'Chef','01','ClassThrower','red'},{'Juggler','17','ClassJuggler','purple'},{'Handyman','24','ClassHandyman','blue'}}
 S.GemSizes={104,116,126,136,146,158}
 S.ChestSashes={nil,'POPULAR','BEST VALUE'}

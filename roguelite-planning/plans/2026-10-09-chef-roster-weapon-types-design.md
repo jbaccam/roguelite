@@ -19,7 +19,7 @@ October 9, 2026. Implements [ROSTER_WEAPONS_CLASSES_MASTER_GUIDE.md](../ROSTER_W
 
 | Class | Weapons (id) | Default starter |
 |---|---|---|
-| Brawler | Nunchucks 02, Katana 03, Kusarigama 04, Baseball Bat 06, Boxing Gloves 19, Cinder Block 20 | Boxing Gloves 19 (was Frying Pan) |
+| Brawler | Nunchucks 02, Katana 03, Kusarigama 04, Baseball Bat 06, Boxing Gloves 19, Cinder Block 20 | Baseball Bat 06 (was Frying Pan; Boxing Gloves for one day) |
 | Gunner | Glock 00, Draco 07, Fart Gun 08, Shotgun 09, T-Shirt Cannon 10, Rocket Launcher 11 | Glock 00 |
 | Chef | Frying Pan 01, Spatula 05, Steak 16, Egg 15, Molotov 14, Pizza Cutter 42 | Frying Pan 01 |
 | Juggler | Boomerang 12, Kunai 13, Rubber Duck 17, Deck of Cards 18, Yo-Yo 21, Bowling Ball 22, Bowling Pin 23 | Rubber Duck 17 |
@@ -27,6 +27,8 @@ October 9, 2026. Implements [ROSTER_WEAPONS_CLASSES_MASTER_GUIDE.md](../ROSTER_W
 | Mage | Magic Staff 30, Mjolnir 31, Excalibur 32, Pandora's Box 33, Medusa's Head 34, Crystal Ball 35 | Magic Staff 30 |
 
 Class order everywhere (menus, Armory groups, arrows): Brawler, Gunner, Chef, Juggler, Handyman, Mage. Chef takes Thrower's slot.
+
+Oct 10 change (user: the Gloves aren't a good starter): Brawler starts with the Baseball Bat. Every class starts with its Common weapon, so the Bat and the Gloves swapped rarities: Bat Common (20 damage), Gloves Rare. The Gloves are still a Brawler weapon. Example: a Brawler's Tier I Bat hits for 26.4 (20 x 1.2 melee x 1.1 specialty), so it one-shots a wave-5 zombie (11 HP).
 
 Pizza Cutter is appended as id `42`. No existing id is reused or renumbered. Any code that treats "id >= 36" as Godly must use the explicit Godly list instead.
 
@@ -154,16 +156,16 @@ Saves have no version number. Changes are idempotent fix-ups in `ProfileService.
 1. `data.classes.Thrower` → `data.classes.Chef = true`, then remove `Thrower`.
 2. `data.loadout.class == 'Thrower'` → `'Chef'`.
 3. Quest records: `classWins.Thrower` → `classWins.Chef`. `unlocks.WaveRider` stays claimed (its reward is now Chef).
-4. If the saved starter is no longer valid for the saved class, reset it to that class's default. Example: Brawler + Frying Pan → Brawler + Boxing Gloves.
-5. The existing "every owned class owns its default starter" backfill then grants Frying Pan to Chef owners and Boxing Gloves to Brawler owners. No weapon, copy or tier is ever removed.
+4. If the saved starter is no longer valid for the saved class, reset it to that class's default. Example: Brawler + Frying Pan → Brawler + Baseball Bat. A saved Brawler + Boxing Gloves is still valid and stays.
+5. The existing "every owned class owns its default starter" backfill then grants Frying Pan to Chef owners and the Baseball Bat to Brawler owners. No weapon, copy or tier is ever removed.
 
-Fresh profiles own Brawler, Gunner and Mage with Boxing Gloves, Glock and Magic Staff.
+Fresh profiles own Brawler, Gunner and Mage with Baseball Bat, Glock and Magic Staff.
 
 Products: the `ClassThrower` entry keeps its key and product id (deleting it would leave retried receipts stuck as NotProcessedYet forever) and now grants `class='Chef'`. Store text and product images say Chef. The user renames the product on the Creator dashboard.
 
 Quest: WaveRider (wave 10 on Pine Valley) rewards Chef.
 
-Tutorial: Brawler + Boxing Gloves. The seeded upgrade copies and the guide step move from Pan to Gloves. TutorialConfig is shared with the Round 10 session, so that edit goes in as a coordinated hunk.
+Tutorial: Brawler + Baseball Bat (Boxing Gloves on Oct 9). The seeded upgrade copies and the guide step move from Pan to Bat. TutorialConfig is shared with the Round 10 session, so that edit goes in as a coordinated hunk.
 
 Fixture tests cover: Thrower only, Juggler only, both, Thrower selected, Brawler + Pan saved, fresh profile, receipts for ClassThrower.
 
