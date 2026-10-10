@@ -25,6 +25,15 @@ return function(V)
  local taken={};for i=1,V.TakenNumbers do table.insert(taken,{born=i,mine=true}) end
  check(pick(taken,V.TakenNumbers,true)==taken[1],'damage taken always shows, replacing its oldest')
  check(V.TakenNumbers<V.HitNumbers and V.HitNumbers>=25 and V.HitNumbers<=30,'pool sizes as planned')
+ -- Merging (2026-10-10): a burst's hits on one enemy add into one number; others stay separate.
+ local function at(x,y,z) return {X=x,Y=y,Z=z} end
+ local nums={{born=10,mine=true,at=at(0,0,0)},{born=10,mine=nil,at=at(0,0,0)},{born=10,mine=true,at=at(5,0,0)}}
+ check(V.merge(nums,at(.5,3,.5),10.1,true)==nums[1],'your hit beside your fresh number adds into it (height ignored)')
+ check(V.merge(nums,at(0,0,0),10.1,false)==nums[2],'a teammate hit merges only with teammate numbers')
+ check(V.merge(nums,at(2.5,0,0),10.1,true)==nil,'a hit between two enemies starts its own number')
+ check(V.merge(nums,at(0,0,0),10+V.Merge+.01,true)==nil,'an older number is left to rise; a new one shows')
+ nums[1].born=nil;check(V.merge(nums,at(0,0,0),10.1,true)==nil,'a finished number never merges')
+ check(V.Life<=.75 and V.Merge<V.Life,'numbers are short-lived and merge only while fresh')
  -- Flashes: an enemy already flashing restarts its own; free before new; new under the cap; else oldest.
  local a,b,c={},{},{}
  local flashes={}

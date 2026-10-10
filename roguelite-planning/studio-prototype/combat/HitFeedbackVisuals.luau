@@ -7,11 +7,27 @@
 --  * Flashes reuse up to 128 Highlights: enough for a 100-mob swarm plus dying enemies.
 --    Roblox supports 255; reserve the rest for status, loot and player effects.
 --    Each hit restarts an opaque white pulse; no descendant scans or per-hit tweens.
--- The motion is the old tweens' (same times and easing, through TweenService:GetValue) in one
--- RenderStepped pass. The pick rules are pure (V.pick, V.pickFlash) for HitFeedbackTests.
+--  * 2026-10-10 (a Bloater burst stacked a tower of big numbers over the crowd): numbers are
+--    smaller (22 px FredokaOne, the UI's font; damage taken 32), live V.Life s instead of .85, and
+--    hits landing within V.Merge s and V.MergeRadius studs of a showing number add into it (one
+--    number per enemy per burst, with a small punch) instead of stacking.
+-- The motion is the old tweens' easing (through TweenService:GetValue) in one RenderStepped
+-- pass. The pick and merge rules are pure (V.pick, V.merge, V.pickFlash) for HitFeedbackTests.
 local RunService=game:GetService('RunService')
 local TweenService=game:GetService('TweenService')
-local V={HitNumbers=28,TakenNumbers=6,Flashes=128,FlashHold=.08,FlashDuration=.18}
+local V={HitNumbers=28,TakenNumbers=6,Flashes=128,FlashHold=.08,FlashDuration=.18,Life=.7,Rise=1.6,Merge=.2,MergeRadius=1.4}
+-- A showing hit number a new hit should add into: born under V.Merge s ago, from the same side
+-- (yours or a teammate's), within V.MergeRadius studs across (height ignored). nil: show a new one.
+function V.merge(pool,position,now,mine)
+ local best,bestD
+ for _,e in pool do
+  if e.born and e.at and now-e.born<=V.Merge and (e.mine or false)==(mine or false) then
+   local dx,dz=e.at.X-position.X,e.at.Z-position.Z;local d=math.sqrt(dx*dx+dz*dz)
+   if d<=V.MergeRadius and (not bestD or d<bestD) then best,bestD=e,d end
+  end
+ end
+ return best
+end
 -- Which pooled entry shows a new number: a free one, else 'new' while under `cap`, else a
 -- teammate's oldest, else (for your own) your oldest. nil drops it.
 function V.pick(pool,cap,mine)
@@ -50,10 +66,10 @@ function V.mount(visuals)
  local hitNumbers,takenNumbers,flashes={},{},{}
  local function newNumber(taken)
   local a=Instance.new('Attachment');a.Name=taken and 'PlayerDamageNumber' or 'DamageNumber';a.Parent=anchor
-  local gui=Instance.new('BillboardGui');gui.Size=UDim2.fromOffset(taken and 160 or 100,taken and 90 or 60);gui.AlwaysOnTop=true;gui.MaxDistance=100;gui.Enabled=false;gui.Parent=a
-  local text=Instance.new('TextLabel');text.Size=UDim2.fromScale(1,1);text.BackgroundTransparency=1;text.Font=taken and Enum.Font.GothamBlack or Enum.Font.GothamBold;text.TextSize=taken and 44 or 30;text.TextStrokeColor3=Color3.fromRGB(28,22,20);text.Parent=gui
+  local gui=Instance.new('BillboardGui');gui.Size=UDim2.fromOffset(taken and 120 or 80,taken and 64 or 40);gui.AlwaysOnTop=true;gui.MaxDistance=100;gui.Enabled=false;gui.Parent=a
+  local text=Instance.new('TextLabel');text.Size=UDim2.fromScale(1,1);text.BackgroundTransparency=1;text.Font=Enum.Font.FredokaOne;text.TextSize=taken and 32 or 22;text.TextStrokeColor3=Color3.fromRGB(28,22,20);text.Parent=gui
   local outline
-  if taken then outline=Instance.new('UIStroke');outline.Thickness=2;outline.Color=Color3.fromRGB(46,10,17);outline.Parent=text end
+  if taken then outline=Instance.new('UIStroke');outline.Thickness=1.5;outline.Color=Color3.fromRGB(46,10,17);outline.Parent=text end
   local scale=Instance.new('UIScale');scale.Parent=text
   return {attachment=a,gui=gui,text=text,outline=outline,scale=scale,stroke=taken and 1 or .12}
  end
@@ -61,10 +77,14 @@ function V.mount(visuals)
  -- taken: your own damage taken ('-' and red, bigger, always shown). mine: your own hit.
  function api.number(position,damage,color,taken,mine)
   local pool=taken and takenNumbers or hitNumbers
+  if not taken then
+   local m=V.merge(pool,position,os.clock(),mine)
+   if m then m.value+=damage;m.text.Text=tostring(math.round(m.value));m.punch=os.clock();return end
+  end
   local e=V.pick(pool,taken and V.TakenNumbers or V.HitNumbers,mine or taken)
   if e=='new' then e=newNumber(taken);table.insert(pool,e) end
   if not e then return end
-  e.born=os.clock();e.mine=mine or taken;e.start=position+Vector3.new((math.random()-.5)*.8,0,0)
+  e.born=os.clock();e.punch=nil;e.mine=mine or taken;e.at=position;e.value=damage;e.start=position+Vector3.new((math.random()-.5)*.8,0,0)
   e.text.Text=(taken and '-' or '')..tostring(math.round(damage));e.text.TextColor3=color
   e.text.TextTransparency=0;e.text.TextStrokeTransparency=e.stroke;if e.outline then e.outline.Transparency=0 end
   e.scale.Scale=.65;e.attachment.Position=e.start;e.gui.Enabled=true
@@ -82,12 +102,13 @@ function V.mount(visuals)
   for _,e in pool do
    if e.born then
     local t=now-e.born
-    if t>=.85 then e.born=nil;e.gui.Enabled=false
+    if t>=V.Life then e.born=nil;e.gui.Enabled=false
     else
-     e.attachment.Position=e.start+Vector3.yAxis*2*TweenService:GetValue(math.min(t/.8,1),QUAD,OUT)
-     e.scale.Scale=.65+.35*TweenService:GetValue(math.min(t/.13,1),BACK,OUT)
-     if t>.42 then
-      local f=TweenService:GetValue(math.min((t-.42)/.3,1),QUAD,OUT)
+     e.attachment.Position=e.start+Vector3.yAxis*V.Rise*TweenService:GetValue(math.min(t/(V.Life-.05),1),QUAD,OUT)
+     local punch=e.punch and 1+.18*(1-math.min((now-e.punch)/.15,1)) or 1
+     e.scale.Scale=(.65+.35*TweenService:GetValue(math.min(t/.13,1),BACK,OUT))*punch
+     if t>V.Life*.5 then
+      local f=TweenService:GetValue(math.min((t-V.Life*.5)/(V.Life*.4),1),QUAD,OUT)
       e.text.TextTransparency=f;e.text.TextStrokeTransparency=e.stroke+(1-e.stroke)*f;if e.outline then e.outline.Transparency=f end
      end
     end
