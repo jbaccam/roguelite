@@ -1,0 +1,10 @@
+{
+  "id": "alpha-werewolf",
+  "boneCount": 39,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 6.939640743997e-07,
+  "passed": true,
+  "sourceAnimationHash": "0a6f92269e0b1ee42c47b324c5ea755942f6aff1d64a316a8f35f6c13573a85b",
+  "importReceiptHash": "5de0825807ed5bf33a0518c65018c2962ca89a7069f6104d47baf4163791cbab",
+  "outputHash": "2d634b282e3610970060b100600b8c458e8f06e64292a75234a8d0bec402fd9b"
+}

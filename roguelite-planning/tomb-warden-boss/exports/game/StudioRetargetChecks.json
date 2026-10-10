@@ -1,0 +1,10 @@
+{
+  "id": "tomb-warden",
+  "boneCount": 32,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 6.957873566193484e-07,
+  "passed": true,
+  "sourceAnimationHash": "091e036dc595c900735fcb8502fe4c9b446fe4437a7a54863e657f2897a7bbf9",
+  "importReceiptHash": "b70d77ba12d07b7f3bf58836771bf859cbfc2b0d8f73a3b3ad7998f47e75a0c6",
+  "outputHash": "4e6f157856e0c9c888f7bbce8faab7ac44b4bc2fdee669be8d229d3de9e9822e"
+}

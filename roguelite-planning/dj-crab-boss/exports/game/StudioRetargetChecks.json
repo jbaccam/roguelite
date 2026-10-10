@@ -1,0 +1,10 @@
+{
+  "id": "dj-crab",
+  "boneCount": 46,
+  "rigType": "Bone",
+  "maxWorldMatrixReconstructionError": 3.7627432503128944e-07,
+  "passed": true,
+  "sourceAnimationHash": "7f08c526c759469496effdde379458f4f59d99ca31148b6f7ebdad94dbe4800c",
+  "importReceiptHash": "fa12ab2dc419acc8935cc4f4d33dbb47d83b28bcb3bec788afcd432107b01a78",
+  "outputHash": "f93aa74d6347c23e4c886f387c2a90cde0e8c4c76b38f1cc40d08c014eafd1c1"
+}
