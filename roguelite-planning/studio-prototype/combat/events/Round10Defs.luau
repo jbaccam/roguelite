@@ -30,7 +30,7 @@ D.Events={
   needs={templates={'BloaterZombie_NPC'}},
   -- Waves of the map's zombies plus Bloaters, from the arena edge (EventSpawn telegraphs each).
   -- interval: seconds between pulses, early -> late (the last 15 s push harder).
-  spawn={interval={3.0,2.2},perPlayer=6,base=4,cap={34,14},fodder={'regular-zombie','regular-zombie','baby-zombie','regular-zombie','tank-zombie'},
+  spawn={interval={3.0,2.2},perPlayer=6,base=4,cap={34,14},fodder={'regular-zombie','regular-zombie','baby-zombie','regular-zombie','regular-zombie','baby-zombie','regular-zombie','tank-zombie'}, -- 1 tank in 8 (was 1 in 5, 2026-10-10)
    exploder='bloater',exploderEvery=2,exploderPerPlayer=1,exploderCap={3,2},firstExploder=1.2},
  },
  BeachCove={

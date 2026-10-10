@@ -29,7 +29,9 @@ function T.scaled(kind,wave)
 end
 function T.forSlot(index,wave)
     if wave and wave<8 then return index%4==2 and 'Baby' or 'Regular' end
-    if index%8==5 then return 'Mutant' end
+    -- 1 tank in 12 slots (was 1 in 8; user 2026-10-10: "it almost feels like theres more tank zombies than
+    -- regular" -- tanks outlive regulars, so the crowd on screen skews tank-heavy). Slot 5 stays the first.
+    if index%12==5 then return 'Mutant' end
     if index%4==2 then return 'Baby' end
     return 'Regular'
 end
