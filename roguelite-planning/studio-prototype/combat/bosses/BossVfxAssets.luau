@@ -72,5 +72,6 @@ return {
 		hammer_thud = "rbxassetid://100368763538547", -- hit_thud
 		hammer_boom = "rbxasset://sounds/impact_explosion_03.mp3", -- Roblox bundled (old Hammer slam, BossIntro)
 		zombie_roar = "rbxassetid://137815495955079", -- mob_zombie
+		wolf_howl = "rbxassetid://9120790529", -- Wolf Howl Two Versions 1 (ProSoundEffects), the Blood Moon Alpha
 	},
 }
