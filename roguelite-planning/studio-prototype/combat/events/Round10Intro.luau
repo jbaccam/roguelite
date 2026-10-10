@@ -145,13 +145,15 @@ BUILD.TombOpens=function(a,def)
   if typeof(closed)=='CFrame' and typeof(hinge)=='CFrame' then lids[i]={part=lid,hinge=hinge,rel=hinge:ToObjectSpace(closed)} end
  end
  local height=(A and A:GetExtentsSize().Y or 10)+1
+ local wk=math.clamp((a.leader and a.leader:GetExtentsSize().Y or 8.6)/8.6,1,1.6)
  local function riseK(i,t) return smooth((t-.12*(i-1))/1.4) end
  local LID={1.6,2.05,2.35}
  local dirA=unit(cfA.Position-players)
  return {title=def.title,objective=def.objective,card=3.9,
   shots={
    {to=1.6,cf=function(k) local from=players+dirA*4+up*2.2;local to=players+dirA*14+up*3.4;return look(from:Lerp(to,smooth(k)),cfA.Position+up*3) end},
-   {to=3.9,cf=function(k) return look((cfA*CFrame.new(5.5-k,4.6,-12+k*1.5)).Position,(cfA*CFrame.new(0,3.6,-3)).Position) end},
+   -- Framed on the Warden as he steps out: offsets scale with his height (8.6 at authoring).
+   {to=3.9,cf=function(k) return look((cfA*CFrame.new((5.5-k)*wk,4.6*wk,(-12+k*1.5)*wk)).Position,(cfA*CFrame.new(0,3.6*wk,-3)).Position) end},
    {to=4.4,cf=function(k) local back=unit(players-center);return look(center+back*(34+4*k)+up*(24+2*k),center+up*2) end},
   },
   tick=function(t)
