@@ -62,20 +62,24 @@ local function startMusic(spec,introStart)
  stopMusic(.1)
  local s=Instance.new('Sound');s.Name='Round10Music';s.SoundId=type(spec.soundId)=='number' and 'rbxassetid://'..spec.soundId or spec.soundId
  s.Volume=spec.volume or .5;s.SoundGroup=musicGroup();s.Looped=true
- pcall(function() s.PlaybackRegionsEnabled=true;s.LoopRegion=NumberRange.new(spec.loopStart,spec.loopEnd) end)
+ -- off: 0 for the 36.7 s segment, fullOffset when the upload is the whole song (decided once it loads).
+ local off=0
+ local function region() pcall(function() s.PlaybackRegionsEnabled=true;s.LoopRegion=NumberRange.new(spec.loopStart+off,spec.loopEnd+off) end) end
+ region()
  s.Parent=SoundService
  music=s;musicGroup():SetAttribute('EventMusic',true)
  -- The shared timeline: the drop's first beat on the DJ's claw snap, whenever this client joined.
  local function position()
   local p=spec.accent-spec.accentAtIntro+(workspace:GetServerTimeNow()-introStart)
   if p>spec.loopEnd then p=spec.loopStart+(p-spec.loopStart)%(spec.loopEnd-spec.loopStart) end
-  return math.max(0,p)
+  return math.max(0,p)+off
  end
  task.spawn(function()
   local waited=0
   while music==s and not s.IsLoaded and waited<6 do waited+=task.wait(.1) end
   if music~=s then return end
   if not s.IsLoaded then stopMusic(.1);return end -- unavailable or still in moderation: the playlist plays
+  if s.TimeLength>60 then off=spec.fullOffset or 0;region() end
   s.TimePosition=position();s:Play()
  end)
 end

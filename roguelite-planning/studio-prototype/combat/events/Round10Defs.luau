@@ -88,7 +88,9 @@ D.Events={
 -- lands on the DJ's claw snap 2.0 s into the intro (accentAtIntro). Never a gameplay dependency: a
 -- missing, muted or late track changes no timing.
 D.Music={
- CrabRave={soundId=nil,accent=5.80,accentAtIntro=2.0,loopStart=5.80,loopEnd=36.73,volume=.5,
+-- soundId: the user's upload (2026-10-10). fullOffset: where the segment starts in the full song (40.87 s);
+-- the client adds it when the loaded track is longer than a minute, so either upload lines up.
+ CrabRave={soundId=108638974460070,fullOffset=40.87,accent=5.80,accentAtIntro=2.0,loopStart=5.80,loopEnd=36.73,volume=.5,
   credit='Syn Cole - Feel Good [NCS Release]'},
 }
 -- The event for a map id, or nil.
