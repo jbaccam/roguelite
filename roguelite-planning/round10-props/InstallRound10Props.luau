@@ -26,9 +26,18 @@ return function(server)
 	local assets = manifest.assets
 	local function v3(t) return Vector3.new(t[1], t[2], t[3]) end
 	local function pivotSpace(b) return Vector3.new(-b.X, b.Z, b.Y) end -- Blender body space -> pivot space
-	local function findMesh(name)
+	-- A fresh import in Workspace wins. The vent and debris (stored = true) may instead come from an
+	-- earlier import kept in ServerStorage.Round10RawImports, so a coffin-only re-import still rebuilds
+	-- every template; the coffin family always needs a fresh import.
+	local function findMesh(name, stored)
 		for _, d in workspace:GetDescendants() do
 			if d:IsA("MeshPart") and d.Name == name and not d:FindFirstAncestor("Round10Event") then return d end
+		end
+		local raw = stored and game.ServerStorage:FindFirstChild("Round10RawImports")
+		if raw then
+			for _, d in raw:GetDescendants() do
+				if d:IsA("MeshPart") and d.Name == name then return d end
+			end
 		end
 	end
 	local function flatten(p)
@@ -120,7 +129,7 @@ return function(server)
 	end
 	-- Vent: rock and glow about the opening's ground centre.
 	do
-		local rock, glow = findMesh("Vent_Rock"), findMesh("Vent_Glow")
+		local rock, glow = findMesh("Vent_Rock", true), findMesh("Vent_Glow", true)
 		assert(rock and glow, "Import VolcanicVent.fbx (Vent_Rock, Vent_Glow)")
 		local m = template("VolcanicVent", store)
 		for _, pair in { { rock, "Vent_Rock" }, { glow, "Vent_Glow" } } do
@@ -141,7 +150,7 @@ return function(server)
 		m = Instance.new("Model"); m.Name = "VolcanicDebris"
 		local n = 0
 		for i = 1, 5 do
-			local src = findMesh("Debris_" .. i)
+			local src = findMesh("Debris_" .. i, true)
 			if src then
 				local p = src:Clone(); flatten(p); p.Size = src.Size * s; p.CFrame = CFrame.new(i * 0.6, 0, 0) * partRot
 				p.CanCollide = false; p.CanQuery = false; p.CastShadow = false; p.Parent = m; n += 1
