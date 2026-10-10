@@ -1,0 +1,851 @@
+{
+ "failures": [],
+ "checks": {
+  "TombWarden_Studio.fbx": {
+   "meshes": {
+    "TombWarden_Body": {
+     "triangles": 7600,
+     "materials": [
+      "TombWarden_Body"
+     ],
+     "texture": [
+      1024,
+      1024
+     ],
+     "uv_layers": 1,
+     "unweighted": 0,
+     "over4": 0,
+     "notNormalised": 0,
+     "bonesUsed": [
+      "Head",
+      "HeadHalf",
+      "LeftFoot",
+      "LeftLowerArm",
+      "LeftLowerArmHalf",
+      "LeftLowerLeg",
+      "LeftLowerLegHalf",
+      "LeftShoulder",
+      "LeftToes",
+      "LeftUpperArm",
+      "LeftUpperArmHalf",
+      "LeftUpperLeg",
+      "LowerTorso",
+      "RightFoot",
+      "RightLowerArm",
+      "RightLowerArmHalf",
+      "RightLowerLeg",
+      "RightLowerLegHalf",
+      "RightShoulder",
+      "RightToes",
+      "RightUpperArm",
+      "RightUpperArmHalf",
+      "RightUpperLeg",
+      "UpperTorso"
+     ],
+     "rigidSingleBone": null,
+     "flatCornerFraction": 1.0
+    },
+    "TombWarden_Cloth": {
+     "triangles": 1032,
+     "materials": [
+      "TombWarden_Cloth"
+     ],
+     "texture": [
+      1024,
+      1024
+     ],
+     "uv_layers": 1,
+     "unweighted": 0,
+     "over4": 0,
+     "notNormalised": 0,
+     "bonesUsed": [
+      "LowerTorso",
+      "SashBack1",
+      "SashBack2",
+      "SashFront1",
+      "SashFront2"
+     ],
+     "rigidSingleBone": null,
+     "flatCornerFraction": 1.0
+    },
+    "TombWarden_EyeGlow": {
+     "triangles": 200,
+     "materials": [
+      "TombWarden_EyeGlow"
+     ],
+     "texture": [
+      1024,
+      1024
+     ],
+     "uv_layers": 1,
+     "unweighted": 0,
+     "over4": 0,
+     "notNormalised": 0,
+     "bonesUsed": [
+      "Head"
+     ],
+     "rigidSingleBone": true,
+     "flatCornerFraction": 1.0
+    },
+    "TombWarden_LeftFist": {
+     "triangles": 1798,
+     "materials": [
+      "TombWarden_LeftFist"
+     ],
+     "texture": [
+      1024,
+      1024
+     ],
+     "uv_layers": 1,
+     "unweighted": 0,
+     "over4": 0,
+     "notNormalised": 0,
+     "bonesUsed": [
+      "LeftHand"
+     ],
+     "rigidSingleBone": true,
+     "flatCornerFraction": 1.0
+    },
+    "TombWarden_Mask": {
+     "triangles": 1300,
+     "materials": [
+      "TombWarden_Mask"
+     ],
+     "texture": [
+      1024,
+      1024
+     ],
+     "uv_layers": 1,
+     "unweighted": 0,
+     "over4": 0,
+     "notNormalised": 0,
+     "bonesUsed": [
+      "Head"
+     ],
+     "rigidSingleBone": true,
+     "flatCornerFraction": 1.0
+    },
+    "TombWarden_RightFist": {
+     "triangles": 1798,
+     "materials": [
+      "TombWarden_RightFist"
+     ],
+     "texture": [
+      1024,
+      1024
+     ],
+     "uv_layers": 1,
+     "unweighted": 0,
+     "over4": 0,
+     "notNormalised": 0,
+     "bonesUsed": [
+      "RightHand"
+     ],
+     "rigidSingleBone": true,
+     "flatCornerFraction": 1.0
+    }
+   },
+   "actions_in_file": [],
+   "bones": 32,
+   "restMatrixMaxErrorVsAnimationData": 7e-06,
+   "totalTriangles": 13728,
+   "restHeight": 10.1963,
+   "fbm": [
+    "TombWarden_BaseColor.png"
+   ]
+  },
+  "AnimationData.json": {
+   "Idle": {
+    "frames": 73,
+    "expected": 73,
+    "duration": 3.0,
+    "loop": true,
+    "loopError": 0.0
+   },
+   "Walk": {
+    "frames": 29,
+    "expected": 29,
+    "duration": 1.1666667,
+    "loop": true,
+    "loopError": 0.0
+   },
+   "Hit": {
+    "frames": 12,
+    "expected": 12,
+    "duration": 0.4583333,
+    "loop": false,
+    "startVsIdleStart": 0.0,
+    "endVsIdleStart": 0.0
+   },
+   "Death": {
+    "frames": 54,
+    "expected": 54,
+    "duration": 2.2083333,
+    "loop": false,
+    "startVsIdleStart": 0.0
+   },
+   "Emerge": {
+    "frames": 63,
+    "expected": 63,
+    "duration": 2.5833333,
+    "loop": false,
+    "endVsIdleStart": 0.0
+   },
+   "FistSlam": {
+    "frames": 47,
+    "expected": 47,
+    "duration": 1.9166667,
+    "loop": false,
+    "startVsIdleStart": 0.0,
+    "endVsIdleStart": 0.0
+   },
+   "FistHook": {
+    "frames": 32,
+    "expected": 32,
+    "duration": 1.2916667,
+    "loop": false,
+    "startVsIdleStart": 0.0,
+    "endVsIdleStart": 0.0
+   },
+   "Roar": {
+    "frames": 39,
+    "expected": 39,
+    "duration": 1.5833333,
+    "loop": false,
+    "startVsIdleStart": 0.0,
+    "endVsIdleStart": 0.0
+   },
+   "EmergeRootStart": [
+    0.0,
+    4.9,
+    0.8
+   ],
+   "EmergeRootEnd": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "idleStartIsRest": 0.0
+  },
+  "replayOnReimportedRig": {
+   "FistSlam": {
+    "frame": 26,
+    "pointErrorStuds": {
+     "SlamCenter": 0.0,
+     "LeftFist": 3e-05,
+     "RightFist": 5e-05
+    }
+   },
+   "FistHook": {
+    "frame": 14,
+    "pointErrorStuds": {
+     "HookFist": 5e-05,
+     "HookMid": 5e-05
+    }
+   },
+   "Emerge": {
+    "frame": 46,
+    "pointErrorStuds": {
+     "EmergeCenter": 0.0,
+     "LeftFist": 3e-05,
+     "RightFist": 7e-05
+    }
+   },
+   "FistSlamImpactLowestZ": {
+    "TombWarden_Body": -0.046,
+    "TombWarden_Cloth": 2.0614,
+    "TombWarden_EyeGlow": 5.6197,
+    "TombWarden_LeftFist": 0.02,
+    "TombWarden_Mask": 4.6263,
+    "TombWarden_RightFist": 0.02
+   }
+  },
+  "BossGameData.json": {
+   "FistSlam": {
+    "timings": [
+     0.1667,
+     1.0833,
+     1.0833,
+     1.875
+    ],
+    "duration": 1.9166667,
+    "points": [
+     "LeftFist",
+     "RightFist",
+     "SlamCenter"
+    ]
+   },
+   "FistHook": {
+    "timings": [
+     0.125,
+     0.5833,
+     0.7083,
+     1.2083
+    ],
+    "duration": 1.2916667,
+    "points": [
+     "HookFist",
+     "HookMid"
+    ]
+   },
+   "Emerge": {
+    "timings": [
+     1.5833,
+     1.9167,
+     1.9167,
+     2.5833333
+    ],
+    "duration": 2.5833333,
+    "points": [
+     "EmergeCenter",
+     "LeftFist",
+     "RightFist"
+    ]
+   },
+   "rootHeight": 3.835,
+   "height": 10.1963,
+   "footprintRadius": 4.7736,
+   "bodyCentreHeight": 5.2463
+  },
+  "motionChecksWorst": {
+   "groundMinZ": [
+    -0.0465,
+    "FistSlam"
+   ],
+   "fistPenetration": [
+    0.0,
+    "Walk"
+   ],
+   "armArmPenetration": [
+    0.0232,
+    "Emerge"
+   ],
+   "forearmPenetration": [
+    0.0328,
+    "Death"
+   ],
+   "hingeMin": [
+    1.19,
+    "FistSlam"
+   ],
+   "hingeMax": [
+    130.75,
+    "FistSlam"
+   ],
+   "twistMax": [
+    50.0,
+    "Emerge"
+   ],
+   "boneStepMax": [
+    44.73,
+    "FistHook",
+    "RightUpperArm"
+   ],
+   "footDriftMax": [
+    1e-05,
+    "Walk"
+   ],
+   "jointRetentionMin": [
+    0.8532,
+    "Emerge"
+   ],
+   "bodyVolumeRatio": [
+    0.8799,
+    1.0391
+   ]
+  },
+  "motionChecksPassed": true,
+  "motionCheckFailures": [],
+  "coffinFit": {
+   "cavity": "round10-props Sarcophagus fourth pass (exports/Sarcophagus.fbx): cavity floor z 0.8, front rim plane y -2.90, back +2.90, ceiling 12.7, up to 7.0 wide (coffin space); coffin origin at the boss final spot + (0, 4.9, 0); lid fallen open flat in front (hinge y -4.157 coffin space, top 1.257 high)",
+   "rootStart": [
+    0.0,
+    4.9,
+    0.8
+   ],
+   "poseMin": [
+    -3.1394,
+    2.3756,
+    0.7899
+   ],
+   "poseMax": [
+    3.1991,
+    7.4244,
+    10.9691
+   ],
+   "poseSize": [
+    6.3385,
+    5.0489,
+    10.1792
+   ],
+   "startMinClearanceProfile": -0.0101,
+   "startMinClearanceAt": [
+    "Body",
+    [
+     -1.4484,
+     6.2621,
+     0.7899
+    ]
+   ],
+   "startMinSideWallClearance": 0.3009,
+   "startMinClearanceRealMesh": -0.0101,
+   "clipMinClearanceRealMesh": {
+    "value": -0.0292,
+    "frame": 31,
+    "section": "Body",
+    "at": [
+     -1.4447,
+     2.3833,
+     0.7708
+    ]
+   },
+   "clipMinClearancePerFrame": [
+    -0.0101,
+    -0.0101,
+    -0.0101,
+    -0.0101,
+    -0.0101,
+    -0.0101,
+    -0.0101,
+    -0.0101,
+    -0.0101,
+    -0.0101,
+    -0.0101,
+    -0.0101,
+    -0.0101,
+    -0.009,
+    -0.0092,
+    -0.0111,
+    -0.015,
+    -0.0185,
+    -0.0214,
+    -0.0233,
+    -0.0212,
+    -0.0197,
+    -0.0189,
+    -0.0177,
+    0.131,
+    -0.0137,
+    -0.0089,
+    -0.0139,
+    -0.0199,
+    -0.0247,
+    -0.0278,
+    -0.0292,
+    -0.017,
+    0.0058,
+    0.0289,
+    0.0403,
+    0.185,
+    0.2343,
+    0.1618,
+    0.1499,
+    0.3661,
+    0.7401,
+    0.9486,
+    0.9244,
+    0.9667,
+    0.9708,
+    0.9761,
+    0.9766,
+    0.9768,
+    0.9769,
+    0.9735,
+    0.9658,
+    0.9578,
+    0.9519,
+    0.9407,
+    0.9356,
+    0.9347,
+    0.9098,
+    0.8442,
+    0.7602,
+    0.6905,
+    0.6521,
+    0.6415
+   ],
+   "clipMinWallRimClearance": {
+    "value": 0.0495,
+    "frame": 30,
+    "section": "Body",
+    "at": [
+     -3.4136,
+     2.0744,
+     7.9586
+    ],
+    "note": "points more than 0.2 above the cavity floor: walls, rim and ceiling only (the overall minimum is the soles standing on the floor)"
+   },
+   "lidMinClearance": {
+    "value": -0.5998,
+    "frame": 36,
+    "section": "Body",
+    "at": [
+     0.6079,
+     -1.4923,
+     0.6572
+    ]
+   },
+   "lidClearancePerFrame": [
+    3.4035,
+    3.4035,
+    3.4035,
+    3.4035,
+    3.4035,
+    3.4035,
+    3.4035,
+    3.4035,
+    3.3918,
+    3.3744,
+    3.3562,
+    3.3376,
+    3.3188,
+    3.2452,
+    3.0207,
+    2.8339,
+    2.7109,
+    2.4149,
+    2.2365,
+    2.0548,
+    1.898,
+    1.7671,
+    1.3113,
+    0.9201,
+    0.6535,
+    0.5552,
+    0.5557,
+    0.5566,
+    0.5575,
+    0.5589,
+    0.5607,
+    -0.0196,
+    -0.2204,
+    -0.322,
+    -0.4223,
+    -0.5529,
+    -0.5998,
+    -0.4486,
+    -0.4404,
+    -0.4314,
+    -0.4239,
+    -0.4304,
+    -0.5053,
+    -0.5607,
+    -0.5342,
+    -0.5871,
+    -0.5869,
+    -0.5922,
+    -0.5951,
+    -0.5958,
+    -0.5963,
+    -0.5242,
+    -0.5429,
+    -0.488,
+    -0.4366,
+    -0.4225,
+    -0.4285,
+    -0.4278,
+    -0.4238,
+    -0.4253,
+    -0.4269,
+    -0.4285,
+    -0.4291
+   ],
+   "fits": true,
+   "startPenetration": {
+    "fist_Left_vs_RightHand": 0.0,
+    "forearm_Left_vs_LowerTorso": 0.0,
+    "fist_Right_vs_LeftUpperArm": 0.0197,
+    "forearm_Right_vs_LowerTorso": 0.0
+   },
+   "requiredCavity": {
+    "clearance": 0.12,
+    "height": 10.289,
+    "maxHalfWidth": 3.319,
+    "frontY": -2.644,
+    "backY": 2.644,
+    "depth": 5.289,
+    "byHeight": [
+     {
+      "zFrom": 0.0,
+      "zTo": 0.5,
+      "halfWidth": 1.859,
+      "minX": -1.825,
+      "maxX": 1.859,
+      "frontY": -0.874,
+      "backY": 1.984,
+      "depth": 2.858
+     },
+     {
+      "zFrom": 0.5,
+      "zTo": 1.0,
+      "halfWidth": 1.883,
+      "minX": -1.88,
+      "maxX": 1.883,
+      "frontY": -0.488,
+      "backY": 1.981,
+      "depth": 2.469
+     },
+     {
+      "zFrom": 1.0,
+      "zTo": 1.5,
+      "halfWidth": 1.983,
+      "minX": -1.983,
+      "maxX": 1.966,
+      "frontY": -0.34,
+      "backY": 1.891,
+      "depth": 2.231
+     },
+     {
+      "zFrom": 1.5,
+      "zTo": 2.0,
+      "halfWidth": 2.151,
+      "minX": -2.133,
+      "maxX": 2.151,
+      "frontY": -1.14,
+      "backY": 1.884,
+      "depth": 3.024
+     },
+     {
+      "zFrom": 2.0,
+      "zTo": 2.5,
+      "halfWidth": 2.157,
+      "minX": -2.157,
+      "maxX": 2.146,
+      "frontY": -1.1,
+      "backY": 2.642,
+      "depth": 3.742
+     },
+     {
+      "zFrom": 2.5,
+      "zTo": 3.0,
+      "halfWidth": 2.339,
+      "minX": -2.339,
+      "maxX": 2.3,
+      "frontY": -1.059,
+      "backY": 2.606,
+      "depth": 3.665
+     },
+     {
+      "zFrom": 3.0,
+      "zTo": 3.5,
+      "halfWidth": 2.433,
+      "minX": -2.417,
+      "maxX": 2.433,
+      "frontY": -0.978,
+      "backY": 2.533,
+      "depth": 3.511
+     },
+     {
+      "zFrom": 3.5,
+      "zTo": 4.0,
+      "halfWidth": 2.444,
+      "minX": -2.413,
+      "maxX": 2.444,
+      "frontY": -0.897,
+      "backY": 2.463,
+      "depth": 3.36
+     },
+     {
+      "zFrom": 4.0,
+      "zTo": 4.5,
+      "halfWidth": 2.287,
+      "minX": -2.287,
+      "maxX": 2.222,
+      "frontY": -0.857,
+      "backY": 2.395,
+      "depth": 3.253
+     },
+     {
+      "zFrom": 4.5,
+      "zTo": 5.0,
+      "halfWidth": 2.794,
+      "minX": -2.213,
+      "maxX": 2.794,
+      "frontY": -2.026,
+      "backY": 2.328,
+      "depth": 4.354
+     },
+     {
+      "zFrom": 5.0,
+      "zTo": 5.5,
+      "halfWidth": 3.112,
+      "minX": -2.446,
+      "maxX": 3.112,
+      "frontY": -2.38,
+      "backY": 2.308,
+      "depth": 4.687
+     },
+     {
+      "zFrom": 5.5,
+      "zTo": 6.0,
+      "halfWidth": 3.137,
+      "minX": -2.352,
+      "maxX": 3.137,
+      "frontY": -2.414,
+      "backY": 2.437,
+      "depth": 4.85
+     },
+     {
+      "zFrom": 6.0,
+      "zTo": 6.5,
+      "halfWidth": 3.202,
+      "minX": -2.312,
+      "maxX": 3.202,
+      "frontY": -2.457,
+      "backY": 2.493,
+      "depth": 4.95
+     },
+     {
+      "zFrom": 6.5,
+      "zTo": 7.0,
+      "halfWidth": 3.319,
+      "minX": -2.242,
+      "maxX": 3.319,
+      "frontY": -2.505,
+      "backY": 2.571,
+      "depth": 5.076
+     },
+     {
+      "zFrom": 7.0,
+      "zTo": 7.5,
+      "halfWidth": 3.253,
+      "minX": -2.957,
+      "maxX": 3.253,
+      "frontY": -2.542,
+      "backY": 2.644,
+      "depth": 5.186
+     },
+     {
+      "zFrom": 7.5,
+      "zTo": 8.0,
+      "halfWidth": 3.319,
+      "minX": -3.214,
+      "maxX": 3.319,
+      "frontY": -2.644,
+      "backY": 2.625,
+      "depth": 5.269
+     },
+     {
+      "zFrom": 8.0,
+      "zTo": 8.5,
+      "halfWidth": 3.275,
+      "minX": -3.259,
+      "maxX": 3.275,
+      "frontY": -2.632,
+      "backY": 2.581,
+      "depth": 5.213
+     },
+     {
+      "zFrom": 8.5,
+      "zTo": 9.0,
+      "halfWidth": 3.204,
+      "minX": -3.204,
+      "maxX": 3.032,
+      "frontY": -2.578,
+      "backY": 2.375,
+      "depth": 4.953
+     },
+     {
+      "zFrom": 9.0,
+      "zTo": 9.5,
+      "halfWidth": 2.991,
+      "minX": -2.991,
+      "maxX": 2.142,
+      "frontY": -2.511,
+      "backY": 1.925,
+      "depth": 4.436
+     },
+     {
+      "zFrom": 9.5,
+      "zTo": 10.0,
+      "halfWidth": 2.726,
+      "minX": -2.726,
+      "maxX": 1.612,
+      "frontY": -2.447,
+      "backY": 1.654,
+      "depth": 4.101
+     },
+     {
+      "zFrom": 10.0,
+      "zTo": 10.5,
+      "halfWidth": 1.053,
+      "minX": -1.053,
+      "maxX": 0.371,
+      "frontY": -1.46,
+      "backY": 1.222,
+      "depth": 2.682
+     }
+    ],
+    "frame": "cavity space: origin = Emerge rootStart (cavity floor centre, 0.8 above ground, emergeOut behind the final spot); +X his left, -Y the open front he steps out of, Z up from the cavity floor. Blender axes, studs; Studio = (-x, z, y).",
+    "note": "Emerge frame 0 start pose (evaluated meshes) + 0.12 clearance each side, 0.5-stud height bands.",
+    "idleBackYFromFinalSpot": 1.677,
+    "idleNote": "Idle pose back extent (final-spot space). The coffin front face must stay behind it plus clearance, i.e. coffin front face y >= this + 0.12. Fourth-pass coffin at emergeOut 4.9: front rim face at +2.00."
+   },
+   "note": "Clearance is signed distance to the coffin stone (negative = inside the stone). Feet standing on the cavity floor read ~0 (contact).",
+   "gate": "body (walls, rim, floor): gated at -0.03 every frame. Lid: reported, see lidNote.",
+   "lidNote": "The open lid lies flat in front of the coffin, its top 1.257 above the ground, covering final-spot y 0.74 to -12.76. The final spot (emergeOut 4.9) is on it, and Emerge ends in the Idle pose standing on the ground (root at the origin), so the last footfalls and the fist plant are inside the lid slab by up to its thickness. No root travel that ends on the ground can avoid that; the lid needs to lie flush with the ground (its open frame lowered 1.257) or out of the exit path."
+  },
+  "strikes": {
+   "FistSlam": {
+    "Left": {
+     "reach": 0.9595,
+     "wristBendDeg": 0.0,
+     "elbowDeg": 34.08,
+     "elbowPoleChest": {
+      "back": -0.294,
+      "down": 0.92,
+      "out": 0.26
+     }
+    },
+    "Right": {
+     "reach": 0.9595,
+     "wristBendDeg": 0.0,
+     "elbowDeg": 34.08,
+     "elbowPoleChest": {
+      "back": -0.294,
+      "down": 0.92,
+      "out": 0.26
+     }
+    },
+    "fistSpeedPeakFrame": 22
+   },
+   "FistHook": {
+    "Right": {
+     "reach": 0.9602,
+     "wristBendDeg": 0.0,
+     "elbowDeg": 33.01,
+     "elbowPoleChest": {
+      "back": 0.259,
+      "down": 0.854,
+      "out": -0.451
+     }
+    },
+    "fistSpeedPeakFrame": 14
+   },
+   "Emerge": {
+    "Left": {
+     "reach": 0.8063,
+     "wristBendDeg": 0.0,
+     "elbowDeg": 75.94,
+     "elbowPoleChest": {
+      "back": 0.438,
+      "down": 0.841,
+      "out": 0.318
+     }
+    },
+    "Right": {
+     "reach": 0.8063,
+     "wristBendDeg": 0.0,
+     "elbowDeg": 75.94,
+     "elbowPoleChest": {
+      "back": 0.438,
+      "down": 0.841,
+      "out": 0.318
+     }
+    }
+   }
+  }
+ },
+ "passed": true,
+ "note": "Blender-verified, Studio untested. The motion checks run per frame on the Blender-evaluated meshes in the generator (GameChecks.json); this file adds the fresh re-import of the Studio FBX."
+}

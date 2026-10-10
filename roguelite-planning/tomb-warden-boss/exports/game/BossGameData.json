@@ -1,0 +1,417 @@
+{
+ "attacks": {
+  "FistSlam": {
+   "duration": 1.9166667,
+   "warnStart": 0.1667,
+   "impact": 1.0833,
+   "activeEnd": 1.0833,
+   "recoveryEnd": 1.875,
+   "points": {
+    "SlamCenter": {
+     "bone": "Root",
+     "offset": [
+      -0.0001,
+      0.0,
+      6.5801
+     ],
+     "rootAtImpact": [
+      -0.0001,
+      -6.5801,
+      0.0
+     ],
+     "rootAtImpactStudio": [
+      0.0001,
+      0.0,
+      -6.5801
+     ]
+    },
+    "LeftFist": {
+     "bone": "LeftHand",
+     "offset": [
+      -0.0366,
+      1.8415,
+      -1.1193
+     ],
+     "rootAtImpact": [
+      1.5167,
+      -6.5802,
+      0.02
+     ],
+     "rootAtImpactStudio": [
+      -1.5167,
+      0.02,
+      -6.5802
+     ]
+    },
+    "RightFist": {
+     "bone": "RightHand",
+     "offset": [
+      0.0367,
+      1.8413,
+      -1.1194
+     ],
+     "rootAtImpact": [
+      -1.5169,
+      -6.58,
+      0.02
+     ],
+     "rootAtImpactStudio": [
+      1.5169,
+      0.02,
+      -6.58
+     ]
+    }
+   },
+   "directionAtImpact": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "directionAtImpactStudio": [
+    -0.0,
+    -1.0,
+    0.0
+   ],
+   "impactRadiusHint": 3.117
+  },
+  "FistHook": {
+   "duration": 1.2916667,
+   "warnStart": 0.125,
+   "impact": 0.5833,
+   "activeEnd": 0.7083,
+   "recoveryEnd": 1.2083,
+   "points": {
+    "HookFist": {
+     "bone": "RightHand",
+     "offset": [
+      -0.0044,
+      1.2579,
+      0.0811
+     ],
+     "rootAtImpact": [
+      -0.3872,
+      -6.393,
+      4.0747
+     ],
+     "rootAtImpactStudio": [
+      0.3872,
+      4.0747,
+      -6.393
+     ]
+    },
+    "HookMid": {
+     "bone": "RightLowerArm",
+     "offset": [
+      -0.0,
+      0.9797,
+      0.0
+     ],
+     "rootAtImpact": [
+      -0.7927,
+      -4.3454,
+      4.8849
+     ],
+     "rootAtImpactStudio": [
+      0.7927,
+      4.8849,
+      -4.3454
+     ]
+    }
+   },
+   "capsuleRadius": 1.003,
+   "directionAtImpact": [
+    0.9571,
+    -0.2856,
+    -0.0495
+   ],
+   "directionAtImpactStudio": [
+    -0.9571,
+    -0.0495,
+    -0.2856
+   ],
+   "sweep": [
+    {
+     "time": 0.5,
+     "HookFist": [
+      -5.41,
+      -2.9457,
+      4.3009
+     ],
+     "HookMid": [
+      -4.2531,
+      -1.0849,
+      4.762
+     ],
+     "HookFistStudio": [
+      5.41,
+      4.3009,
+      -2.9457
+     ],
+     "HookMidStudio": [
+      4.2531,
+      4.762,
+      -1.0849
+     ]
+    },
+    {
+     "time": 0.5417,
+     "HookFist": [
+      -3.6856,
+      -5.2664,
+      4.2003
+     ],
+     "HookMid": [
+      -3.1443,
+      -3.188,
+      4.8332
+     ],
+     "HookFistStudio": [
+      3.6856,
+      4.2003,
+      -5.2664
+     ],
+     "HookMidStudio": [
+      3.1443,
+      4.8332,
+      -3.188
+     ]
+    },
+    {
+     "time": 0.5833,
+     "HookFist": [
+      -0.3872,
+      -6.393,
+      4.0747
+     ],
+     "HookMid": [
+      -0.7927,
+      -4.3454,
+      4.8849
+     ],
+     "HookFistStudio": [
+      0.3872,
+      4.0747,
+      -6.393
+     ],
+     "HookMidStudio": [
+      0.7927,
+      4.8849,
+      -4.3454
+     ]
+    },
+    {
+     "time": 0.625,
+     "HookFist": [
+      0.0895,
+      -6.3929,
+      4.005
+     ],
+     "HookMid": [
+      -0.1969,
+      -4.3156,
+      4.79
+     ],
+     "HookFistStudio": [
+      -0.0895,
+      4.005,
+      -6.3929
+     ],
+     "HookMidStudio": [
+      0.1969,
+      4.79,
+      -4.3156
+     ]
+    },
+    {
+     "time": 0.6667,
+     "HookFist": [
+      0.4619,
+      -6.3698,
+      3.9521
+     ],
+     "HookMid": [
+      0.2933,
+      -4.31,
+      4.8136
+     ],
+     "HookFistStudio": [
+      -0.4619,
+      3.9521,
+      -6.3698
+     ],
+     "HookMidStudio": [
+      -0.2933,
+      4.8136,
+      -4.31
+     ]
+    },
+    {
+     "time": 0.7083,
+     "HookFist": [
+      0.7276,
+      -6.3401,
+      3.9144
+     ],
+     "HookMid": [
+      0.6373,
+      -4.3164,
+      4.8683
+     ],
+     "HookFistStudio": [
+      -0.7276,
+      3.9144,
+      -6.3401
+     ],
+     "HookMidStudio": [
+      -0.6373,
+      4.8683,
+      -4.3164
+     ]
+    }
+   ]
+  },
+  "Emerge": {
+   "duration": 2.5833333,
+   "warnStart": 1.5833,
+   "impact": 1.9167,
+   "activeEnd": 1.9167,
+   "recoveryEnd": 2.5833333,
+   "points": {
+    "EmergeCenter": {
+     "bone": "Root",
+     "offset": [
+      -0.0001,
+      0.0,
+      2.7125
+     ],
+     "rootAtImpact": [
+      -0.0001,
+      -2.7125,
+      0.0
+     ],
+     "rootAtImpactStudio": [
+      0.0001,
+      0.0,
+      -2.7125
+     ]
+    },
+    "LeftFist": {
+     "bone": "LeftHand",
+     "offset": [
+      0.0004,
+      1.9252,
+      -1.048
+     ],
+     "rootAtImpact": [
+      3.1542,
+      -2.7126,
+      0.0197
+     ],
+     "rootAtImpactStudio": [
+      -3.1542,
+      0.0197,
+      -2.7126
+     ]
+    },
+    "RightFist": {
+     "bone": "RightHand",
+     "offset": [
+      -0.0004,
+      1.9253,
+      -1.0484
+     ],
+     "rootAtImpact": [
+      -3.1544,
+      -2.7124,
+      0.0194
+     ],
+     "rootAtImpactStudio": [
+      3.1544,
+      0.0194,
+      -2.7124
+     ]
+    }
+   },
+   "eyesWake": 0.5,
+   "rootStart": [
+    0.0,
+    4.9,
+    0.8
+   ],
+   "rootStartStudio": [
+    -0.0,
+    0.8,
+    4.9
+   ],
+   "rootEnd": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "coffinOrigin": [
+    0.0,
+    4.9,
+    0.0
+   ],
+   "coffinOriginStudio": [
+    -0.0,
+    0.0,
+    4.9
+   ],
+   "emergeOut": 4.9,
+   "coffinCavity": {
+    "floorZ": 0.8,
+    "frontY": -2.9,
+    "backY": 2.9,
+    "ceilingZ": 12.7,
+    "maxWidth": 7.0,
+    "lidHingeY": -4.15729,
+    "lidTopZ": 1.257,
+    "source": "round10-props exports/Sarcophagus.fbx + props-manifest.json (fourth pass 2026-10-10)",
+    "frame": "coffin space, origin = cavity floor centre at ground level"
+   },
+   "steps": [
+    {
+     "foot": "Right",
+     "start": 0.6667,
+     "land": 1.0417
+    },
+    {
+     "foot": "Left",
+     "start": 0.9583,
+     "land": 1.5417
+    },
+    {
+     "foot": "Right",
+     "start": 1.4583,
+     "land": 1.8333
+    }
+   ],
+   "stepsNote": "Right foot forward to the front edge of the cavity floor, left foot over the rim down to the ground, right foot down beside it at the final spot, then the fist plant."
+  }
+ },
+ "actions": {
+  "Roar": {
+   "duration": 1.5833333,
+   "chestHits": [
+    0.5417,
+    0.7917
+   ],
+   "enrage": true,
+   "hits": false
+  }
+ },
+ "rootHeight": 3.835,
+ "designScale": 1.18,
+ "height": 10.1963,
+ "footprintRadius": 4.7736,
+ "bodyCentreHeight": 5.2463,
+ "groundOffset": 0.0,
+ "walk": {
+  "strideLength": 5.4,
+  "nominalSpeed": 4.6286,
+  "cycle": 1.1667,
+  "note": "feet stay planted up to playback 2.6x -> 2.6 * nominalSpeed"
+ },
+ "notes": "Times in seconds from clip start (whole 24 fps frames of AnimationData.json). Offsets are in the named bone's local space (Blender axes, studs); root positions are model root space (Blender axes, the boss's final spot at the origin); *Studio vectors use the (-X, Z, Y) mapping. FistHook: sweep a capsule of capsuleRadius between HookFist and HookMid over impact..activeEnd (sampled per frame in 'sweep'). Emerge starts with the root emergeOut (4.9) studs behind (+Y Blender / +Z Studio) and 0.8 up, standing on the coffin's cavity floor, steps down out of the open front and ends exactly at the origin; eyesWake is when the EyeGlow Neon should fade in."
+}

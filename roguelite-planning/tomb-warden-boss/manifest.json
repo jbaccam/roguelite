@@ -1,0 +1,389 @@
+{
+ "asset": "TombWarden",
+ "bossId": "tomb-warden",
+ "units": "1 Blender unit = 1 stud; faces -Y, +Z up, his left = +X",
+ "reference": {
+  "path": "art-references/round-10-modeling-pack-2026-10-09/04-tomb-warden.png",
+  "sha256": "BBF190E20574356C4495B4B1017185374EC1118342FF1F8C0A1993007952D86C"
+ },
+ "sections": {
+  "Body": {
+   "object": "TombWarden_Body",
+   "triangles": 7600,
+   "material": "TombWarden_Body"
+  },
+  "Cloth": {
+   "object": "TombWarden_Cloth",
+   "triangles": 1032,
+   "material": "TombWarden_Cloth"
+  },
+  "Mask": {
+   "object": "TombWarden_Mask",
+   "triangles": 1300,
+   "material": "TombWarden_Mask"
+  },
+  "LeftFist": {
+   "object": "TombWarden_LeftFist",
+   "triangles": 1798,
+   "material": "TombWarden_LeftFist"
+  },
+  "RightFist": {
+   "object": "TombWarden_RightFist",
+   "triangles": 1798,
+   "material": "TombWarden_RightFist"
+  },
+  "EyeGlow": {
+   "object": "TombWarden_EyeGlow",
+   "triangles": 200,
+   "material": "TombWarden_EyeGlow"
+  }
+ },
+ "triangles_total": 13728,
+ "bones": [
+  {
+   "name": "Root",
+   "parent": null,
+   "head": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "length": 1.416
+  },
+  {
+   "name": "HumanoidRootPart",
+   "parent": "Root",
+   "head": [
+    0.0,
+    0.118,
+    3.835
+   ],
+   "length": 1.062
+  },
+  {
+   "name": "LowerTorso",
+   "parent": "HumanoidRootPart",
+   "head": [
+    0.0,
+    0.118,
+    3.835
+   ],
+   "length": 1.2993
+  },
+  {
+   "name": "UpperTorso",
+   "parent": "LowerTorso",
+   "head": [
+    0.0,
+    0.059,
+    5.133
+   ],
+   "length": 2.8236
+  },
+  {
+   "name": "Head",
+   "parent": "UpperTorso",
+   "head": [
+    0.0,
+    -0.3304,
+    7.9296
+   ],
+   "length": 2.1828
+  },
+  {
+   "name": "LeftShoulder",
+   "parent": "UpperTorso",
+   "head": [
+    1.3216,
+    0.2124,
+    7.611
+   ],
+   "length": 1.3119
+  },
+  {
+   "name": "LeftUpperArm",
+   "parent": "LeftShoulder",
+   "head": [
+    2.6196,
+    0.1416,
+    7.434
+   ],
+   "length": 2.3091
+  },
+  {
+   "name": "LeftLowerArm",
+   "parent": "LeftUpperArm",
+   "head": [
+    3.363,
+    0.2596,
+    5.251
+   ],
+   "length": 1.9594
+  },
+  {
+   "name": "LeftHand",
+   "parent": "LeftLowerArm",
+   "head": [
+    3.6344,
+    -0.1888,
+    3.363
+   ],
+   "length": 1.652
+  },
+  {
+   "name": "RightShoulder",
+   "parent": "UpperTorso",
+   "head": [
+    -1.3216,
+    0.2124,
+    7.611
+   ],
+   "length": 1.3119
+  },
+  {
+   "name": "RightUpperArm",
+   "parent": "RightShoulder",
+   "head": [
+    -2.6196,
+    0.1416,
+    7.434
+   ],
+   "length": 2.3091
+  },
+  {
+   "name": "RightLowerArm",
+   "parent": "RightUpperArm",
+   "head": [
+    -3.363,
+    0.2596,
+    5.251
+   ],
+   "length": 1.9594
+  },
+  {
+   "name": "RightHand",
+   "parent": "RightLowerArm",
+   "head": [
+    -3.6344,
+    -0.1888,
+    3.363
+   ],
+   "length": 1.652
+  },
+  {
+   "name": "LeftUpperLeg",
+   "parent": "LowerTorso",
+   "head": [
+    1.1564,
+    0.118,
+    3.481
+   ],
+   "length": 1.6708
+  },
+  {
+   "name": "LeftLowerLeg",
+   "parent": "LeftUpperLeg",
+   "head": [
+    1.239,
+    -0.118,
+    1.829
+   ],
+   "length": 1.2521
+  },
+  {
+   "name": "LeftFoot",
+   "parent": "LeftLowerLeg",
+   "head": [
+    1.298,
+    0.177,
+    0.6136
+   ],
+   "length": 0.9754
+  },
+  {
+   "name": "LeftToes",
+   "parent": "LeftFoot",
+   "head": [
+    1.3216,
+    -0.7316,
+    0.2596
+   ],
+   "length": 0.7441
+  },
+  {
+   "name": "RightUpperLeg",
+   "parent": "LowerTorso",
+   "head": [
+    -1.1564,
+    0.118,
+    3.481
+   ],
+   "length": 1.6708
+  },
+  {
+   "name": "RightLowerLeg",
+   "parent": "RightUpperLeg",
+   "head": [
+    -1.239,
+    -0.118,
+    1.829
+   ],
+   "length": 1.2521
+  },
+  {
+   "name": "RightFoot",
+   "parent": "RightLowerLeg",
+   "head": [
+    -1.298,
+    0.177,
+    0.6136
+   ],
+   "length": 0.9754
+  },
+  {
+   "name": "RightToes",
+   "parent": "RightFoot",
+   "head": [
+    -1.3216,
+    -0.7316,
+    0.2596
+   ],
+   "length": 0.7441
+  },
+  {
+   "name": "LeftUpperArmHalf",
+   "parent": "LeftShoulder",
+   "head": [
+    2.6196,
+    0.1416,
+    7.434
+   ],
+   "length": 0.413
+  },
+  {
+   "name": "LeftLowerArmHalf",
+   "parent": "LeftUpperArm",
+   "head": [
+    3.363,
+    0.2596,
+    5.251
+   ],
+   "length": 0.413
+  },
+  {
+   "name": "LeftLowerLegHalf",
+   "parent": "LeftUpperLeg",
+   "head": [
+    1.239,
+    -0.118,
+    1.829
+   ],
+   "length": 0.413
+  },
+  {
+   "name": "RightUpperArmHalf",
+   "parent": "RightShoulder",
+   "head": [
+    -2.6196,
+    0.1416,
+    7.434
+   ],
+   "length": 0.413
+  },
+  {
+   "name": "RightLowerArmHalf",
+   "parent": "RightUpperArm",
+   "head": [
+    -3.363,
+    0.2596,
+    5.251
+   ],
+   "length": 0.413
+  },
+  {
+   "name": "RightLowerLegHalf",
+   "parent": "RightUpperLeg",
+   "head": [
+    -1.239,
+    -0.118,
+    1.829
+   ],
+   "length": 0.413
+  },
+  {
+   "name": "HeadHalf",
+   "parent": "UpperTorso",
+   "head": [
+    0.0,
+    -0.3304,
+    7.9296
+   ],
+   "length": 0.413
+  },
+  {
+   "name": "SashFront1",
+   "parent": "LowerTorso",
+   "head": [
+    0.0,
+    -1.4632,
+    4.661
+   ],
+   "length": 1.4231
+  },
+  {
+   "name": "SashFront2",
+   "parent": "SashFront1",
+   "head": [
+    0.0,
+    -1.6048,
+    3.245
+   ],
+   "length": 1.4256
+  },
+  {
+   "name": "SashBack1",
+   "parent": "LowerTorso",
+   "head": [
+    0.0,
+    1.3688,
+    4.661
+   ],
+   "length": 1.1885
+  },
+  {
+   "name": "SashBack2",
+   "parent": "SashBack1",
+   "head": [
+    0.0,
+    1.5104,
+    3.481
+   ],
+   "length": 1.1885
+  }
+ ],
+ "rigid": {
+  "Mask": "Head",
+  "EyeGlow": "Head",
+  "LeftFist": "LeftHand",
+  "RightFist": "RightHand"
+ },
+ "textures": {
+  "master": "TombWarden_BaseColor_2048.png",
+  "delivery": "TombWarden_BaseColor.png",
+  "coverage": 0.3619
+ },
+ "height": 10.1963,
+ "footprintRadius": 4.7736,
+ "exports": {
+  "AnimationData.json": "091E036DC595C900735FCB8502FE4C9B446FE4437A7A54863E657F2897A7BBF9",
+  "BossGameData.json": "F635A88FD1223E7575187EADD027E48CEC7BA95DF076F28844CE5ABA17EB9E65",
+  "GameChecks.json": "4DB719E042803563EAD054B02D9E5E59F0B36AAE9F3C8634455F5D26135D4C6D",
+  "TombWarden_Studio.fbx": "B4C88AFD9DFDAC1300240CB4D21B15C9E1F16C9DFFABF6F3DA65B537A58E0F00"
+ },
+ "fist": {
+  "bottomAlongHand": 2.103,
+  "centreAlongHand": 1.3814
+ },
+ "designScale": 1.18,
+ "checksPassed": true
+}
