@@ -383,6 +383,11 @@ R8 is replaced: no FBX import. The Hammer keeps the 16-part Motor6D template `Ha
 - **Checks:** MapBossServiceTests 80, MapBossShapesTests 28, MapBossPresentationTests 27 and BossVfxHammerTests 15 PASS, 0 FAIL. Everything written compiles.
 - **Play:** no Play test has run. Save the place in Studio to keep this install.
 
+**Studio record, impact samples and hammer blend (2026-10-09, Edit only; 662aede):**
+- **Fixes:** the 60 fps clips are sampled at 60 Hz plus exact key times (Hammer impact offsets: worst 1.74 -> 0.04 studs; MapBossTiming 85,197 characters), and `D.Hammer.toolBlend` makes clip blends carry the hammer with both fists (Walk to Slam slip 0.37 -> 0.14 studs; a 0.2 s blend measured worse, 0.44).
+- **Push:** one guarded write. MapBossTiming, MapBossDefs and MapBossPresentation each equalled base 7394bf2 exactly, were written as 662aede and re-read equal. The four other bosses' and Round 10's timing entries are byte-identical.
+- **Checks:** `ready('Hammer')==true` (all five bosses ready); MapBossServiceTests 80, MapBossShapesTests 28, MapBossPresentationTests 29 and BossVfxHammerTests 15 PASS, 0 FAIL; both Python test files 0 failed. No Play test has run. Save the place in Studio.
+
 ---
 
 # Final
