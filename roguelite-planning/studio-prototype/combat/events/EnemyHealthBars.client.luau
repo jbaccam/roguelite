@@ -1,5 +1,6 @@
--- StarterPlayerScripts.EnemyHealthBars: compact world health bars over ordinary enemies (round 10
--- spec: every damageable thing shows truthful health). A bar shows for an enemy that is damaged
+-- StarterPlayerScripts.EnemyHealthBars: compact world health bars over round 10 event mobs (EventSpawn)
+-- and elites only. User 2026-10-10: "regular mobs shouldnt have health bars, only the round 10 mobs,
+-- pharaoh tomb stones, spawners, and bosses" (tombs, objectives and bosses keep their own bars). A bar shows for an enemy that is damaged
 -- (within FAR studs) or close enough to threaten (NEAR), and fades HOLD seconds after its last
 -- change, so a full-health crowd far away never becomes a wall of UI. Bosses and leaders use the
 -- HUD boss bar; coffins have their own bars (Round10Hud); a Bloater's arming tag is separate.
@@ -27,6 +28,7 @@ end
 local function take() return table.remove(pool) or make() end
 local function give(b) b.gui.Adornee=nil;b.gui.Parent=nil;b.ratio=nil;table.insert(pool,b) end
 local function eligible(npc)
+ if not (npc:GetAttribute('EventSpawn') or npc:GetAttribute('IsElite')) then return false end -- regular mobs: no bar
  return not npc:GetAttribute('IsBoss') and not npc:GetAttribute('EventObjective') and not npc:GetAttribute('PracticeTarget') and not npc:GetAttribute('DeathPopped')
 end
 local acc=0
