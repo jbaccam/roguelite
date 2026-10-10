@@ -538,11 +538,17 @@ EVENTS.TombOpens={
      table.insert(E.tombs,T)
      local v=Instance.new('ObjectValue');v.Name='Tomb'..LETTERS[i];v.Value=model;v.Parent=E.anchor
      local h=model:FindFirstChildOfClass('Humanoid')
-     h.Died:Connect(function()
+     -- Down once, however it goes (2026-10-10: the wave never ended after the tombs fell). The
+     -- tomb's Humanoid runs no state machine, so Died need not fire, and a lethal hit has
+     -- ZombieDeath destroy the model at once: health 0, the model leaving, or the step's check
+     -- (tombGone) each count, and the ruins still go down where it stood.
+     T.down=function()
       if E.gen~=generation or not T.alive then return end
-      T.alive=false;model:SetAttribute('BurstAt',nil);breakTomb(E,now(),cf.Position,cf);status(E)
-     end)
-     h.HealthChanged:Connect(function() if E.gen==generation then E.statusDirty=true end end)
+      T.alive=false;if model.Parent then model:SetAttribute('BurstAt',nil) end;breakTomb(E,now(),cf.Position,cf);status(E)
+     end
+     h.Died:Connect(T.down)
+     h.HealthChanged:Connect(function(hp) if E.gen==generation then E.statusDirty=true;if hp<=0 then T.down() end end end)
+     model.Destroying:Connect(T.down)
     end
    end
   end
@@ -575,9 +581,12 @@ EVENTS.TombOpens={
     local T=E.tombs[i]
     fx:FireAllClients('TombWardenBurst',wardenSpot(E,T),T.cf.LookVector)
     task.delay(.45,function()
-     if E.gen~=generation or E.phase~='Active' then return end
-     local npc=extraWarden(E,T,E.wardenHealth or 6000)
+     -- The pending slot is released whatever happens, so a failed or cancelled arrival can't
+     -- hold the clear (wardensAlive counts pending Wardens).
      E.wardensPending=math.max(0,(E.wardensPending or 1)-1)
+     if E.gen~=generation or E.phase~='Active' then return end
+     local ok,npc=pcall(extraWarden,E,T,E.wardenHealth or 6000)
+     if not ok then warn('Round10Service: extra Warden failed: '..tostring(npc));npc=nil end
      if npc then
       table.insert(E.wardens,npc)
       local v=Instance.new('ObjectValue');v.Name='Leader'..i;v.Value=npc;v.Parent=E.anchor
@@ -973,7 +982,13 @@ Run.Heartbeat:Connect(function(dt)
  elseif kind=='leader' then
   if not E.leaderAlive then complete(E,t) end
  elseif kind=='tombs' then
-  local standing=0;for _,T in E.tombs do if T.alive then standing+=1 end end
+  local standing=0
+  for _,T in E.tombs do
+   if T.alive then
+    local h=T.model.Parent and T.model:FindFirstChildOfClass('Humanoid')
+    if not h or h.Health<=0 then T.down() else standing+=1 end
+   end
+  end
   if standing==0 and wardensAlive(E)==0 then complete(E,t) end
  end
 end)
