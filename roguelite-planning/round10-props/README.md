@@ -27,33 +27,39 @@ warm sun (1.0, 0.93, 0.80), so they predict the in-game colour; vent and debris 
 
 | FBX | Mesh | Tris | Budget |
 |---|---|---|---|
-| Sarcophagus | `Sarcophagus_Body` / `Sarcophagus_Lid` | 328 / 1,722 (2,050 total) | <= 3,000 |
-| SarcophagusBroken | `_Base` / `_LeftWall` / `_RightWall` / `_LidFragment` | 374 / 374 / 372 / 1,200 (2,320 total) | <= 3,000 |
+| Sarcophagus | `Sarcophagus_Body` / `Sarcophagus_Lid` | 368 / 1,886 (2,254 total) | <= 3,000 |
+| SarcophagusBroken | `_Base` / `_LeftWall` / `_RightWall` / `_LidFragment` | 372 / 408 / 364 / 1,226 (2,370 total) | <= 3,000 |
 | VolcanicVent | `Vent_Rock` / `Vent_Glow` | 1,252 / 260 (1,512 total) | <= 2,000 |
 | VolcanicDebris | `Debris_1..5` | 64 / 80 / 80 / 44 / 68 | 30-150 each |
 
-## Sarcophagus (third pass 2026-10-09: reference proportions, chunky stone rim)
+## Sarcophagus (fourth pass 2026-10-10: sized around the Tomb Warden)
 
-The user rejected the 11-tall coffin as a squat box, then the 15-tall one as thin-walled ("cardboard"). The width is set by the Warden's cavity,
-so the coffin grew taller and the walls thicker, matching the silhouette on 03/08/09.
+The cavity is built around the Warden's real emergence pose, not a box: `../tomb-warden-boss/exports/game/GameChecks.json` ->
+`coffinFit.requiredCavity` (per 0.5-stud band: half-width with left/right extents, front and back y, 0.12 clearance included; he is 10.29
+tall above the floor, 5.29 deep, 6.64 wide at 6.5-8.5 above the floor). Within that, the shape stays as close to 03/08/09 as the fit allows.
 
-- Outer 15.0 tall, 7.58 wide at the shoulders (widest at z 11.0, 73% of the height, 27% down from the top), 5.2 deep, about 1:2 width to height.
-  - Head end: a 5.7-wide band (0.75 of the shoulders) from z 12.6 to 14.3, standing 0.15 proud of the angled shoulder line, then chamfered
-    corners up to a 4.3-wide top.
-  - Below the shoulders: a long straight taper down to the foot band, 4.8 wide (0.63 of the shoulders), 1.4 tall, 0.15 proud of the taper.
-  - Carved step notches low on the taper (z 3.3) and high on the head band (z 13.45). The base is flat.
-- Chunky rim: side walls 0.65 (front rim face 0.66 wide), 0.55 on the shoulder diagonals, 0.7 back, 0.8 floor and ceiling. Every convex edge,
+- Outer 13.5 tall, 8.30 wide at the shoulders, 6.6 deep (about 1:1.6 width to height; the sheets are about 1:2.6, so it is stockier).
+  - Head end: a 6.2-wide band (0.75 of the shoulders) from z 11.8 to 12.9, standing 0.15 proud of the angled shoulder line, then
+    chamfered corners up to a 4.7-wide top.
+  - Shoulders: widest at z 9.45 (70% of the height). Below them the sides run near-parallel down to z 6.6 (8.16 wide there), then
+    taper to the foot band: 5.62 wide (0.68 of the shoulders), 1.4 tall, 0.15 proud.
+  - Why the bend instead of one straight taper: his folded arms need 6.2+ of cavity width from 5.0 above the floor upward, and a single
+    taper with a 0.65-0.68 foot would need a coffin about 9 wide.
+  - Carved step notches low on the taper (z 3.1) and high on the head band (z 12.35). The base is flat.
+- Chunky rim: side walls 0.65 (front rim face 0.66 wide), 0.55 on the shoulder diagonals, 0.8 back, 0.8 floor and ceiling. Every convex edge,
   outer and inner (rim to cavity), the proud bands included, has a one-segment 0.24 chamfer. Chamfer faces use the lighter worn-edge tile.
 - Body origin: floor centre of the cavity footprint at ground level. Open face toward -Y, solid flat back (no relief).
-- Cavity (measured by ray casts on the re-imported FBX): 13.4 tall (floor z 0.8 to ceiling z 14.2), 6.27 wide at the shoulders, 4.5 deep.
-  The Warden's 9.4 x 6.2 x 4.2 box fits inside the bounding extents. The cavity narrows toward the foot with the outer taper.
-  Height available at width >= 3.4 / 4.4 / 5.2 / 6.2: 12.0 / 7.1 / 4.1 / 0.28.
+- Cavity (measured by ray casts on the re-imported FBX): 11.9 tall (floor z 0.8 to ceiling z 12.7), 7.0 wide at most, 5.8 deep.
+  The open front rim plane is 2.90 from the origin along -Y (Blender), the inner back face +2.90.
+  `validate_props.py` tests every band of `requiredCavity` against ray casts (both sides at his front / middle / back y, the back wall,
+  the front rim plane, the ceiling). Minimum margin 0.076, on the +x side at 5.0 above the floor, where his arm reaches 3.11. The other
+  margins are front 0.256, back 0.256, and ceiling 1.61.
 - Lid: same outline as the body (bands, chamfers and notches included), slab 0.85 thick plus relief up to 0.407 (1.257 total), flat underside.
   Closed, its underside plane is the body's front rim plane (gap 0.000, no overlap). Origin on its bottom front hinge line, body space
-  (0, -3.507, 0). This was -3.464 before the 2026-10-09 passes; the manifest `lid.hingeLineBodySpaceBlender` has the exact value and the installer reads it from there. The FBX location
+  (0, -4.157, 0) (the deeper coffin moved the front rim to y -2.90). This was -3.464 before the 2026-10-09 passes; the manifest `lid.hingeLineBodySpaceBlender` has the exact value and the installer reads it from there. The FBX location
   places the lid closed. It falls forward by rotating +90 degrees about X (relief face down, underside up).
 - Lid front (matches 03/09): a raised mummy figure standing proud of a flat sandstone border frame. Rounded core: the torso is 3.2 wide at the feet
-  and 5.9 at the shoulders (2.7 at the feet since the third pass), with sloped shoulders into a 3.5-wide domed head; core relief 0.24. It is wrapped in 15 broad strips:
+  and 6.6 at the shoulders since the fourth pass, with sloped shoulders into a 3.5-wide domed head; core relief 0.24. It is wrapped in 15 broad strips:
   - Body: 8 strips form 4 crossing X pairs (1.2-1.25 wide, +/-22-28 degrees), the top strip of each pair alternating.
   - Shoulders: 2 wraps.
   - Head: 4 near-horizontal bands with a warm-brown eye gap holding two round flat-topped eye studs.
@@ -76,7 +82,7 @@ reference's chipped stone, and the lid read as a lattice with gaps.
 - Tiles: outer stone; inner cavity darker and warmer (198, 138, 86); fracture faces a fresher lighter sandstone (238, 196, 142) with dark grain
   lines so breaks read; worn-edge tile (lighter sand, every bevel face) and seam tile (dark (164, 106, 66), the carved groove faces) mapped per face;
   linen tile for the lid figure; warm-brown face recess; eye studs.
-- Tile densities were lowered so the 15-tall coffin fits without clamping: outer and linen 32.8 px/stud, cavity and fracture 26 px/stud.
+- Tile densities were lowered so the taller coffin (13.5 tall, 6.6 deep) fits without clamping: outer and linen 32.8 px/stud, cavity and fracture 26 px/stud.
 - Linen (234, 202, 152; deliberately sandy-ivory, pure white went blue in game): the strip layout is painted in exactly (same planar x/z mapping
   as the geometry), so each strip has a pillow shade, dark seam lines along both edges and a cast shade beside any strip lying over it. Areas
   under no strip get tight horizontal under-wraps, the figure darkens toward its outline (painted form shade), plus light chip grain.
@@ -87,8 +93,9 @@ reference's chipped stone, and the lid read as a lattice with gaps.
 
 Exactly four chunks cut by exact boolean (jagged cutters, fracture edges bevelled 0.07) from the final intact body and lid meshes:
 low base with the foot recess, left shoulder wall, right shoulder wall, cracked lid fragment with the head and shoulders of the figure. Cutter
-outlines are the earlier ones scaled by 15/11 in height (lid cutter's lower edge raised 0.4 first, for the tri budget). After the fracture bevel,
-any vertex less than 0.03 outside the intact surface is snapped back onto it (2 vertices on the base chunk in this build), so every chunk stays inside the intact volume. Fracture faces use the fresh-break atlas tile (lighter sandstone,
+outlines are the original ones scaled to the 13.5 height (lid cutter's lower edge raised 0.4 first, for the tri budget); the jagged cutter
+rings span the 6.6 depth. After the fracture bevel, any vertex less than 0.05 outside the intact surface (ray-parity test, the same as the
+validator) is snapped back onto it (2 vertices on the base chunk in this build), so every chunk stays inside the intact volume. Fracture faces use the fresh-break atlas tile (lighter sandstone,
 dark grain lines); all other faces inherit the intact tile at that spot. Each mesh origin is its bounding-box centre; the FBX object location is that centre in the coffin body-origin frame, so an
 identity placement at the coffin body origin reproduces the intact position (offsets in `exports/SarcophagusBroken-offsets.json`).
 The validator confirms every chunk vertex lies on or inside the intact body or lid. The centre-back of the coffin is intentionally absent (dust).
@@ -99,14 +106,14 @@ Unchanged in this pass (reviewed good). Vent: ring of 9 basalt rocks plus second
 opening about 3.6 across at ground level, lava pool and seams in the cracks as the separate `Vent_Glow` mesh (set Neon in Studio).
 Debris: five faceted basalt fragments 0.19-0.46 across with an ember patch on one face, origins at their centres.
 
-## Checks (`validation-report.json`, 102 checks, all pass)
+## Checks (`validation-report.json`, 103 checks, all pass)
 
 Names exact, no armature or animation, triangle budgets, every mesh a closed shell (0 open edges), no zero-area or sliver faces, UVs in 0-1,
-atlases load at 1024 / 512, lid fit, cavity extents, silhouette proportions, chunk offsets, vent height <= 1.8, debris sizes 0.15-0.5.
+atlases load at 1024 / 512, lid fit, cavity extents, Tomb Warden requiredCavity containment, silhouette proportions, chunk offsets, vent height <= 1.8, debris sizes 0.15-0.5.
 
 ## Provenance
 
-Generated atlases (SHA256): `Sarcophagus_atlas.png` `60ce916b5be80cc517010b05c2bd255cd81defb45adefc489e2fd7a85a17cd60` (2026-10-09 repaint, third pass),
+Generated atlases (SHA256): `Sarcophagus_atlas.png` `9cd97029541fe9bc2257e44deeba5c2372619499f0327b533972d7ddb5c4c635` (2026-10-10 fourth pass; the linen tile follows the strip layout),
 `Volcanic_atlas.png` `698a2fd960e619c7435b443d717559c635a0c76b3e45e2077a531392a035bc07` (unchanged).
 
 Reference sheets in `../art-references/round-10-modeling-pack-2026-10-09/` (SHA256):
@@ -125,10 +132,12 @@ Reference sheets in `../art-references/round-10-modeling-pack-2026-10-09/` (SHA2
 - Studio untested: pivot handling of the lid hinge and chunk offsets after the Roblox importer is unverified.
 - Preview colours are Blender renders (Standard view transform) under a game-like blue-sky + warm-sun rig; no ColorCorrection is simulated, so
   in game the +0.3 saturation will push them warmer and more orange still. Studio colour after the 2026-10-09 repaint is unverified.
-- Lid relief sticks out 0.357 from the slab, so a lid fallen face-down rests on the strips, not flat.
-- At 15 x 7.58 the coffin is about 1:2 against the sheets' 1:2.6. The shoulders can't narrow because the chunky walls still have to leave a
-  6.2-wide cavity. The art brief's
-  section 5 still says "outer ~10.4 tall"; this pass deliberately departs from it on the coordinator's instruction.
+- Lid relief sticks out 0.407 from the slab, so a lid fallen face-down rests on the strips, not flat.
+- At 13.5 x 8.3 the coffin is about 1:1.6 against the sheets' 1:2.6: the Warden (10.2 tall, 6.64 wide with the 0.12 clearance) plus a
+  0.65 rim sets the width, and the art brief's section 5 numbers (10.4 tall, 7.4 wide) are superseded on the coordinator's instruction.
+  The bend at z 6.6 makes the silhouette read slightly barrel-like compared with the sheets' single straight taper.
+- Tightest Warden margin is 0.076 (his right arm at 5.0 above the floor), on top of his own 0.12 clearance. Any change to his start pose
+  needs `validate_props.py` re-run.
 - The figure has hard (unbevelled) strip edges to fit the triangle budget.
-- The validator's checks were updated to the reference shape: outer ~15 tall and 7.4-7.7 wide, foot band ~4.8, widest at 65-78% of the
-  height, head end 0.70-0.80 and foot 0.58-0.68 of the shoulder width, height >= 1.9x width, cavity >= 13.4 tall.
+- Validator limits (fourth pass): outer ~13.5 tall, 8.1-8.4 wide, 6.6 deep, foot band ~5.6, widest at 65-75% of the height, head end
+  0.70-0.80 and foot 0.62-0.70 of the shoulder width, height >= 1.55x width, and full containment of the Warden's requiredCavity table.

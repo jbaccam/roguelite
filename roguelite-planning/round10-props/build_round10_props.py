@@ -37,39 +37,44 @@ ONLY = [a for a in ARGS if a in ("sarcophagus", "broken", "vent", "debris", "com
 # ---------------------------------------------------------------------------------------------
 # Dimensions (brief section 5). Coffin frame: x = width, y = depth (front/open face at -Y), z = up.
 # ---------------------------------------------------------------------------------------------
-Y_F = -2.25          # front rim plane of the body (the opening); cavity floor centre is (0, 0, 0.5)
-Y_B = 2.95           # back face of the body (solid flat back)
-Y_CB = 2.25          # inner face of the back wall (cavity depth 4.5)
+# Fourth pass 2026-10-10: the cavity is sized around the Tomb Warden's emergence pose
+# (tomb-warden-boss/exports/game/GameChecks.json -> coffinFit.requiredCavity, 0.12 clearance included).
+Y_F = -2.90          # front rim plane of the body (the opening); cavity floor centre is (0, 0, FLOOR). He reaches y -2.644
+Y_B = 3.70           # back face of the body (solid flat back): outer depth 6.6
+Y_CB = 2.90          # inner face of the back wall (cavity depth 5.8; he reaches y +2.644)
 T_SLAB = 0.85        # lid slab thickness (front plane of the slab is Y_F - T_SLAB)
 Y_S = Y_F - T_SLAB
-OUT_H = 15.0         # outer height (2026-10-09 second pass: tall slender reference proportions, ~1:2.1 w:h, cavity 13.4)
-SHOULDER_X, SHOULDER_Z = 3.80, 11.0     # widest point (half-width; 27% down from the top, angled shoulders)
-HEAD_X = 2.85        # head-end band half-width (5.7 wide, ~0.75 of the shoulders), proud of the shoulder line by 0.15
-HEAD_IN = 2.70       # where the shoulder diagonal meets the head end (the band steps out 0.15 from here)
-HEAD_Z0, HEAD_Z1, TOP_X = 12.6, 14.3, 2.15   # head-end band from z0 to z1, then a chamfer to the top (4.3 wide)
-FOOT_X, FOOT_Z, STEP_X = 2.40, 1.40, 2.25    # foot band: 4.8 wide (~0.63 of the shoulders), 1.4 tall, proud 0.15 of the taper
+OUT_H = 13.5         # outer height (cavity 11.9 tall; he needs 10.29 above the floor)
+SHOULDER_X, SHOULDER_Z = 4.15, 9.45     # widest point (8.3 wide at 70% of the height): covers his 6.5-8.5 band
+HIP_X, HIP_Z = 4.08, 6.60               # the taper flares from the foot band to here, then runs near-parallel to the
+                                        # shoulders: his folded arms need the cavity 6.2+ wide from 5.0 above the floor up
+HEAD_X = 3.10        # head-end band half-width (6.2 wide, ~0.75 of the shoulders), proud of the shoulder line by 0.15
+HEAD_IN = 2.95       # where the shoulder diagonal meets the head end (the band steps out 0.15 from here)
+HEAD_Z0, HEAD_Z1, TOP_X = 11.8, 12.9, 2.35   # head-end band from z0 to z1, then a chamfer to the top (4.7 wide)
+FOOT_X, FOOT_Z, STEP_X = 2.81, 1.40, 2.66    # foot band: 5.62 wide (~0.68 of the shoulders), 1.4 tall, proud 0.15
 WALL = 0.65          # side wall thickness: chunky stone rim (third pass 2026-10-09)
 WALL_DIAG = 0.55     # shoulder-diagonal wall (cavity stays 6.2+ wide at the shoulders)
 FLOOR = 0.80         # floor thickness
-CEIL = 0.80          # head-top thickness: cavity height = OUT_H - FLOOR - CEIL = 13.4
+CEIL = 0.80          # head-top thickness: cavity height = OUT_H - FLOOR - CEIL = 11.9
 BEVEL = 0.24         # one-segment chamfer on every convex edge; the chamfer faces get the worn-edge tile
-NOTCH_Z = (3.3, 13.45)      # carved step notches: low on the taper, high on the head-end wall
+NOTCH_Z = (3.1, 12.35)      # carved step notches: low on the taper, high on the head-end band
 
 # Lid front: a raised mummy figure (rounded core) wrapped in wide overlapping linen strips (2026-10-09 rebuild,
 # matches 03-sarcophagus-assembly.png / 09-sarcophagus-lid.png). Torso rows: (z, half-width, core relief height).
-_TL = lambda z: 1.55 + (2.95 - 1.55) * (z - 1.70) / (10.6 - 1.70)
-FIG_TORSO = [(1.55, 1.35, 0.18), (1.70, 1.55, 0.22), (4.0, _TL(4.0), 0.24), (6.3, _TL(6.3), 0.24), (8.6, _TL(8.6), 0.24),
-             (10.6, 2.95, 0.24), (11.0, 2.92, 0.24), (11.4, 2.70, 0.22), (11.75, 2.25, 0.19), (12.0, 1.55, 0.15)]
-FIG_HEAD = (13.15, 1.75, 1.25, 0.22)          # centre z, half-width, half-height, core relief height (rounded dome)
-EYE_Z, EYE_X, EYE_R = 13.33, 0.55, 0.26
-EYE_GAP = (13.06, 13.64)                        # the gap in the face wrap (darker recess) the eye studs sit in
+_TL = lambda z: 1.95 + (3.25 - 1.95) * (z - 1.70) / (6.6 - 1.70)
+FIG_TORSO = [(1.55, 1.70, 0.18), (1.70, 1.95, 0.22), (3.3, _TL(3.3), 0.24), (4.6, _TL(4.6), 0.24), (5.6, _TL(5.6), 0.24),
+             (6.6, 3.25, 0.24), (9.2, 3.32, 0.24), (9.7, 3.20, 0.23), (10.15, 2.80, 0.21), (10.55, 2.10, 0.18),
+             (10.95, 1.30, 0.15)]
+FIG_HEAD = (12.00, 1.75, 1.10, 0.22)          # centre z, half-width, half-height, core relief height (rounded dome)
+EYE_Z, EYE_X, EYE_R = 12.18, 0.55, 0.26
+EYE_GAP = (11.91, 12.49)                        # the gap in the face wrap (darker recess) the eye studs sit in
 # strips: (centre x, centre z on x=0, angle deg, width, thickness above the core). Thicker strips lie on top.
 LID_BANDS = [   # fewer, wider, thicker wraps in an X lattice. Overlapping strips never share a thickness (equal fronts are coplanar
     # and broke the boolean); the thicker strip of each crossing lies on top.
-    (0, 14.04, 8, 0.62, 0.10), (0, 13.84, 0, 0.40, 0.15), (0, 12.88, 3, 0.44, 0.15), (0, 12.42, -8, 0.56, 0.10),
-    (0, 11.10, -22, 1.00, 0.12), (0, 10.75, 24, 1.00, 0.15),
-    (0, 9.50, -28, 1.25, 0.10), (0.13, 9.57, 28, 1.25, 0.16), (0, 7.30, 28, 1.25, 0.08), (-0.13, 7.37, -28, 1.25, 0.14),
-    (0, 5.04, -26, 1.25, 0.11), (0.13, 5.13, 26, 1.25, 0.17), (0, 2.95, 22, 1.20, 0.08), (-0.13, 3.02, -22, 1.20, 0.14),
+    (0, 12.89, 8, 0.62, 0.10), (0, 12.69, 0, 0.40, 0.15), (0, 11.73, 3, 0.44, 0.15), (0, 11.27, -8, 0.56, 0.10),
+    (0, 9.95, -22, 1.00, 0.12), (0, 9.60, 24, 1.00, 0.15),
+    (0, 8.30, -28, 1.25, 0.10), (0.13, 8.37, 28, 1.25, 0.16), (0, 6.40, 28, 1.25, 0.08), (-0.13, 6.47, -28, 1.25, 0.14),
+    (0, 4.50, -26, 1.25, 0.11), (0.13, 4.59, 26, 1.25, 0.17), (0, 2.65, 22, 1.20, 0.08), (-0.13, 2.72, -22, 1.20, 0.14),
     (0, 1.86, 0, 0.66, 0.10),
 ]
 
@@ -102,12 +107,12 @@ CO_TILES = {
 }
 # per tile, per axis class (0 = X-dominant normal, 1 = Y, 2 = Z): (a0, b0) world offsets of the planar mapping
 CO_ORIGIN = {
-    TILE_OUTER: {1: (-6.0, -0.15), 0: (-4.0, -0.15), 2: (-6.0, -4.0)},
-    TILE_BAND: {1: (-6.0, -0.15), 0: (-4.0, -0.15), 2: (-6.0, -4.0)},
-    TILE_CAVITY: {1: (-6.0, -0.15), 0: (-3.0, -0.15), 2: (-6.0, -3.0)},
-    TILE_FRACT: {1: (-6.0, -0.1), 0: (-4.0, -0.1), 2: (-6.0, -4.0)},
-    TILE_FACE: {1: (-2.0, 12.6), 0: (-3.6, 12.6), 2: (-2.0, -3.6)},
-    TILE_EYE: {1: (-1.0, 12.95), 0: (-3.6, 12.95), 2: (-1.0, -3.6)},
+    TILE_OUTER: {1: (-6.0, -0.15), 0: (-4.6, -0.15), 2: (-6.0, -4.6)},
+    TILE_BAND: {1: (-6.0, -0.15), 0: (-4.6, -0.15), 2: (-6.0, -4.6)},
+    TILE_CAVITY: {1: (-6.0, -0.15), 0: (-3.4, -0.15), 2: (-6.0, -3.4)},
+    TILE_FRACT: {1: (-6.0, -0.1), 0: (-4.6, -0.1), 2: (-6.0, -4.6)},
+    TILE_FACE: {1: (-2.0, 11.45), 0: (-4.4, 11.45), 2: (-2.0, -4.4)},
+    TILE_EYE: {1: (-1.0, 11.8), 0: (-4.4, 11.8), 2: (-1.0, -4.4)},
 }
 
 VENT_ATLAS = 512
@@ -886,18 +891,19 @@ def finish_mesh(ob, mat):
 def outline_polys():
     """Anthropoid coffin silhouette (x half-width, z up): narrow head, widest at the shoulders (~70% of the height),
     clear taper down to a stepped foot block. Returns outer (with grooves), base (no grooves), inner (cavity), panel."""
-    R = [(FOOT_X, 0.0), (FOOT_X, FOOT_Z), (STEP_X, FOOT_Z), (SHOULDER_X, SHOULDER_Z), (HEAD_IN, HEAD_Z0), (HEAD_X, HEAD_Z0),
-         (HEAD_X, HEAD_Z1), (TOP_X, OUT_H)]
+    R = [(FOOT_X, 0.0), (FOOT_X, FOOT_Z), (STEP_X, FOOT_Z), (HIP_X, HIP_Z), (SHOULDER_X, SHOULDER_Z), (HEAD_IN, HEAD_Z0),
+         (HEAD_X, HEAD_Z0), (HEAD_X, HEAD_Z1), (TOP_X, OUT_H)]
 
     pts = list(R)
     outer = pts + [(-x, z) for x, z in reversed(pts)]
-    x0 = STEP_X + (SHOULDER_X - STEP_X) / (SHOULDER_Z - FOOT_Z) * (0.0 - FOOT_Z)
-    half = [(x0, 0.0), (SHOULDER_X, SHOULDER_Z), (HEAD_IN, HEAD_Z0), (HEAD_IN, HEAD_Z1), (TOP_X, OUT_H)]
+    half = [(STEP_X, 0.0), (STEP_X, FOOT_Z), (HIP_X, HIP_Z), (SHOULDER_X, SHOULDER_Z), (HEAD_IN, HEAD_Z0), (HEAD_IN, HEAD_Z1),
+            (TOP_X, OUT_H)]
     base = half + [(-x, z) for x, z in reversed(half)]
-    # edge order: taper, shoulder diagonal, head wall, top chamfer, top, then the mirror, then the floor
-    dists = [WALL, WALL_DIAG, WALL, WALL, CEIL, WALL, WALL, WALL_DIAG, WALL, FLOOR]
+    # edge order: foot (vertical inside the band), lower taper, upper side, shoulder diagonal, head wall, top chamfer, top,
+    # then the mirror, then the floor
+    dists = [WALL, WALL, WALL, WALL_DIAG, WALL, WALL, CEIL, WALL, WALL, WALL_DIAG, WALL, WALL, WALL, FLOOR]
     inner = offset_poly(base, dists)
-    panel = offset_poly(base, [0.62] * 10)
+    panel = offset_poly(base, [0.62] * len(base))
     return outer, base, inner, panel
 
 
@@ -915,7 +921,7 @@ def silhouette_weight_fn(inner_poly=None, lo_angle=math.radians(22)):
 
 def groove_cutter_bm(w=0.10, d=0.09):
     """Four V prisms (two per side) running through the depth: the stone-block grooves on the taper and the head wall."""
-    R2, R3 = (STEP_X, FOOT_Z), (SHOULDER_X, SHOULDER_Z)
+    R2, R3 = (STEP_X, FOOT_Z), (HIP_X, HIP_Z)
     R4, R5 = (HEAD_X, HEAD_Z0), (HEAD_X, HEAD_Z1)
     bms = []
     for (p, q, z0) in ((R2, R3, NOTCH_Z[0]), (R4, R5, NOTCH_Z[1])):
@@ -1254,10 +1260,10 @@ def build_lid(outer, inner, panel):
 # ---------------------------------------------------------------------------------------------
 # Broken kit
 # ---------------------------------------------------------------------------------------------
-CUT_BASE = [(-7.0, -1.364), (7.0, -1.364), (7.0, 4.091), (5.6, 3.545), (4.1, 4.636), (2.8, 3.341), (1.5, 4.773), (0.2, 3.682), (-1.1, 4.705), (-2.4, 3.409), (-3.7, 4.5), (-5.2, 3.614), (-7.0, 4.227)]
-CUT_LEFT = [(-7.0, 5.386), (-5.0, 6.205), (-3.6, 5.318), (-2.2, 6.0), (-1.2, 5.455), (-1.6, 7.364), (-0.8, 8.864), (-1.7, 10.5), (-0.9, 12.0), (-1.6, 13.636), (-0.9, 15.682), (-7.0, 16.636)]
-CUT_RIGHT = [(7.0, 6.273), (5.2, 5.727), (3.8, 6.682), (2.7, 6.0), (1.8, 7.227), (2.6, 8.591), (1.7, 10.091), (2.4, 11.591), (1.9, 13.5), (3.3, 13.091), (4.7, 14.045), (6.0, 13.227), (7.0, 13.909)]
-CUT_LID = [(-7.0, 9.273), (-5.4, 9.955), (-4.2, 8.727), (-2.9, 10.227), (-1.6, 9.136), (-0.2, 10.364), (1.2, 9.409), (2.3, 10.773), (3.1, 12.136), (3.9, 13.227), (7.0, 13.5), (7.0, 17.045), (-7.0, 17.045)]     # 2026-10-09: lower edge +0.4 (tri budget)
+CUT_BASE = [(-7.0, -1.228), (7.0, -1.228), (7.0, 3.682), (5.6, 3.191), (4.1, 4.172), (2.8, 3.007), (1.5, 4.296), (0.2, 3.314), (-1.1, 4.234), (-2.4, 3.068), (-3.7, 4.05), (-5.2, 3.253), (-7.0, 3.804)]
+CUT_LEFT = [(-7.0, 4.847), (-5.0, 5.585), (-3.6, 4.786), (-2.2, 5.4), (-1.2, 4.909), (-1.6, 6.628), (-0.8, 7.978), (-1.7, 9.45), (-0.9, 10.8), (-1.6, 12.272), (-0.9, 14.114), (-7.0, 14.972)]
+CUT_RIGHT = [(7.0, 5.646), (5.2, 5.154), (3.8, 6.014), (2.7, 5.4), (1.8, 6.504), (2.6, 7.732), (1.7, 9.082), (2.4, 10.432), (1.9, 12.15), (3.3, 11.782), (4.7, 12.64), (6.0, 11.904), (7.0, 12.518)]
+CUT_LID = [(-7.0, 8.346), (-5.4, 8.96), (-4.2, 7.854), (-2.9, 9.204), (-1.6, 8.222), (-0.2, 9.328), (1.2, 8.468), (2.3, 9.696), (3.1, 10.922), (3.9, 11.904), (7.0, 12.15), (7.0, 15.341), (-7.0, 15.341)]     # 2026-10-09: lower edge +0.4 (tri budget)
 
 
 def make_chunk(name, src_bm, cutter_poly, y_rings, seed, ref_index, dropped_log):
@@ -1299,10 +1305,21 @@ def make_chunk(name, src_bm, cutter_poly, y_rings, seed, ref_index, dropped_log)
     # vertex that is outside the intact mesh by < 0.03 back onto it (keeps the chunk inside the intact volume)
     src_tree = BVHTree.FromBMesh(src_bm)
     nsnap = 0
+    ray_d = Vector((0.2923, 0.5731, 0.7641)).normalized()
+
+    def outside(p):                     # ray parity (same test as validate_props.py; normals mislead in the V grooves)
+        cnt, o = 0, p.copy()
+        for _ in range(64):
+            h = src_tree.ray_cast(o + ray_d * 1e-5, ray_d)
+            if h[0] is None:
+                break
+            cnt += 1
+            o = h[0] + ray_d * 1e-4
+        return cnt % 2 == 0
     for v in bm.verts:
         hit = src_tree.find_nearest(v.co)
-        if hit[0] is not None and 1e-4 < hit[3] < 0.03 and (v.co - hit[0]).dot(hit[1]) > 0:
-            v.co = hit[0] - hit[1] * 2e-4
+        if hit[0] is not None and 1e-3 < hit[3] < 0.05 and outside(v.co):
+            v.co = hit[0] - hit[1] * 1e-4
             nsnap += 1
     bm.normal_update()
     log("  snapped to intact surface", nsnap)
@@ -1770,8 +1787,8 @@ def build():
     lid = finalize_object("Sarcophagus_Lid", lid_bm.copy(), mat_sar, recenter=(0.0, y_hinge, 0.0))
     manifest["assets"]["Sarcophagus.fbx"] = {
         "meshes": {"Sarcophagus_Body": mesh_entry(body), "Sarcophagus_Lid": mesh_entry(lid)},
-        "revision": "2026-10-09 third pass: chunky chamfered rim (walls 0.65, 0.2 chamfers), proud head/foot bands, shoulders 7.6, "
-                    "head end 5.7, foot 4.8; X-lattice bandage wraps; warm chipped sandstone atlas",
+        "revision": "2026-10-10 fourth pass: cavity sized around the Tomb Warden's emergence pose (requiredCavity); 13.5 tall, "
+                    "8.3 wide, 6.6 deep, chunky chamfered rim, proud head/foot bands, X-lattice bandage lid, chipped sandstone",
         "frame": "Body origin = floor centre of the cavity footprint at ground level; both meshes are placed closed "
                  "(identity transform of the FBX = assembled coffin).",
         "cavity": {"frontPlaneY": Y_F, "backInnerY": Y_CB, "floorZ": FLOOR, "ceilingZ": OUT_H - CEIL,
@@ -1789,10 +1806,10 @@ def build():
     dropped = {}
     chunks = {}
     for nm, cutter, src, rings, seed in (
-        ("SarcophagusBroken_Base", CUT_BASE, body_bm2, [-3.8, -2.0, 0.0, 1.8, 3.8], 301),
-        ("SarcophagusBroken_LeftWall", CUT_LEFT, body_bm2, [-3.8, -2.0, 0.0, 1.8, 3.8], 302),
-        ("SarcophagusBroken_RightWall", CUT_RIGHT, body_bm2, [-3.8, -2.0, 0.0, 1.8, 3.8], 303),
-        ("SarcophagusBroken_LidFragment", CUT_LID, lid_bm2, [-4.2, -3.3, -2.7, -1.8], 304),
+        ("SarcophagusBroken_Base", CUT_BASE, body_bm2, [-4.4, -2.4, 0.0, 2.0, 4.4], 301),
+        ("SarcophagusBroken_LeftWall", CUT_LEFT, body_bm2, [-4.4, -2.4, 0.0, 2.0, 4.4], 302),
+        ("SarcophagusBroken_RightWall", CUT_RIGHT, body_bm2, [-4.4, -2.4, 0.0, 2.0, 4.4], 303),
+        ("SarcophagusBroken_LidFragment", CUT_LID, lid_bm2, [-4.8, -3.9, -3.3, -2.4], 304),
     ):
         cbm, ctiles = make_chunk(nm, src, cutter, rings, seed, ref_index, dropped)
         assign_uv_coffin(cbm, ctiles)
@@ -1987,7 +2004,7 @@ def render_all():
     if want("sarcophagus"):          # front 3/4, side, back (lid closed) + lid fallen forward
         sc, cam = fresh_render_scene(game_light=True)
         o = import_props("Sarcophagus.fbx", "Sarcophagus_atlas.png")
-        T = (0, -0.7, 7.6)
+        T = (0, -0.9, 6.8)
         p1 = shoot(sc, cam, tmp, (512, 512), T, 34, 13, 9.4)
         p2 = shoot(sc, cam, tmp, (512, 512), T, 90, 6, 9.4)
         p3 = shoot(sc, cam, tmp, (512, 512), T, 180, 12, 9.4)
@@ -1997,23 +2014,23 @@ def render_all():
     if want("broken"):               # pieces in place (identity transform) and exploded
         sc, cam = fresh_render_scene(game_light=True)
         o = import_props("SarcophagusBroken.fbx", "Sarcophagus_atlas.png")
-        q1 = shoot(sc, cam, tmp, (512, 512), (0, -0.4, 7.6), 30, 14, 9.4)
+        q1 = shoot(sc, cam, tmp, (512, 512), (0, -0.6, 6.8), 30, 14, 9.4)
         push = {"SarcophagusBroken_Base": (0, -0.6, -0.3), "SarcophagusBroken_LeftWall": (-4.0, 0.0, 0.0),
                 "SarcophagusBroken_RightWall": (4.2, 0.0, 0.5), "SarcophagusBroken_LidFragment": (0.0, -0.8, 3.0)}
         for n, d in push.items():
             o[n].location = o[n].location + Vector(d)
-        q2 = shoot(sc, cam, tmp, (512, 512), (0, -0.8, 8.2), 20, 15, 12.0)
+        q2 = shoot(sc, cam, tmp, (512, 512), (0, -1.0, 7.4), 20, 15, 12.0)
         sheet(PREVIEWS / "Broken.png", [[q1, q2]])
     if want("compare"):              # reference 03 left panel beside the same framing (open body, lid standing right)
         sc, cam = fresh_render_scene(world=(0.62, 0.62, 0.64), floor=(0.55, 0.55, 0.56), game_light=False)
         o = import_props("Sarcophagus.fbx", "Sarcophagus_atlas.png")
-        o["Sarcophagus_Lid"].location = Vector((7.5, -1.6, 0.0))
-        c1 = shoot(sc, cam, tmp, (512, 1024), (3.6, -0.6, 7.6), -24, 9, 6.5)
+        o["Sarcophagus_Lid"].location = Vector((8.6, -1.9, 0.0))
+        c1 = shoot(sc, cam, tmp, (512, 1024), (4.2, -0.8, 6.8), -24, 9, 7.2)
         ref = read_png_rgb(REFS / "03-sarcophagus-assembly.png")[:, :512, :]
         sc2, cam2 = fresh_render_scene(game_light=True)
         o = import_props("Sarcophagus.fbx", "Sarcophagus_atlas.png")
-        o["Sarcophagus_Lid"].location = Vector((7.5, -1.6, 0.0))
-        c2 = shoot(sc2, cam2, tmp, (512, 1024), (3.6, -0.6, 7.6), -24, 9, 6.5)
+        o["Sarcophagus_Lid"].location = Vector((8.6, -1.9, 0.0))
+        c2 = shoot(sc2, cam2, tmp, (512, 1024), (4.2, -0.8, 6.8), -24, 9, 7.2)
         sheet(PREVIEWS / "Compare_Assembly.png", [[ref, c1, c2]])
     if want("vent"):
         sc, cam = fresh_render_scene(floor=(0.30, 0.29, 0.28))

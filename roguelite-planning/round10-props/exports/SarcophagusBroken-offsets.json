@@ -3,50 +3,50 @@
   "chunks": {
     "SarcophagusBroken_Base": {
       "offsetBodySpaceBlender": [
-        -0.00992,
-        0.35,
-        2.37127
+        -0.0275,
+        0.4,
+        2.13309
       ],
       "offsetBodySpaceRoblox": [
-        -0.00992,
-        2.37127,
-        -0.35
+        -0.0275,
+        2.13309,
+        -0.4
       ]
     },
     "SarcophagusBroken_LeftWall": {
       "offsetBodySpaceBlender": [
-        -2.22766,
-        0.35,
-        10.14863
+        -2.42149,
+        0.4,
+        8.97895
       ],
       "offsetBodySpaceRoblox": [
-        -2.22766,
-        10.14863,
-        -0.35
+        -2.42149,
+        8.97895,
+        -0.4
       ]
     },
     "SarcophagusBroken_RightWall": {
       "offsetBodySpaceBlender": [
-        2.72754,
-        0.35,
-        9.65171
+        2.90929,
+        0.4,
+        8.71417
       ],
       "offsetBodySpaceRoblox": [
-        2.72754,
-        9.65171,
-        -0.35
+        2.90929,
+        8.71417,
+        -0.4
       ]
     },
     "SarcophagusBroken_LidFragment": {
       "offsetBodySpaceBlender": [
-        -0.40188,
-        -2.87327,
-        12.04231
+        -0.4521,
+        -3.52242,
+        10.60817
       ],
       "offsetBodySpaceRoblox": [
-        -0.40188,
-        12.04231,
-        2.87327
+        -0.4521,
+        10.60817,
+        3.52242
       ]
     }
   }

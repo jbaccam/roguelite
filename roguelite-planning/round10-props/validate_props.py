@@ -23,6 +23,7 @@ EXPORTS = ROOT / "exports"
 TEXTURES = ROOT / "textures"
 
 REPORT = {"blender": bpy.app.version_string, "files": {}, "checks": [], "ok": True}
+REQ = json.loads((ROOT.parent / "tomb-warden-boss" / "exports" / "game" / "GameChecks.json").read_text())["coffinFit"]["requiredCavity"]
 
 
 def check(name, ok, detail=None):
@@ -187,12 +188,12 @@ llo, lhi = bounds(lid)
 check("Body origin at ground / cavity floor centre (location 0,0,0; bottom z=0)", body.location.length < 1e-4 and abs(blo.z) < 1e-3,
       {"location": list(body.location), "minZ": blo.z})
 size = bhi - blo
-check("Body outer: ~15 tall, ~7.6 wide at the shoulders, 5.2 deep", abs(size.z - 15.0) < 0.05 and 7.4 <= size.x <= 7.7 and abs(size.y - 5.2) < 0.05,
+check("Body outer: ~13.5 tall, ~8.3 wide at the shoulders, 6.6 deep", abs(size.z - 13.5) < 0.05 and 8.1 <= size.x <= 8.4 and abs(size.y - 6.6) < 0.05,
       [round(v, 3) for v in size])
 # foot width: widest x at z < 1.0
 body_bm = world_bm(body)
 foot = [v.co.x for v in body_bm.verts if v.co.z <= 1.4 + 1e-3]         # the foot band (incl. its chamfer verts)
-check("Body foot band width ~4.8", abs((max(foot) - min(foot)) - 4.8) < 0.1, round(max(foot) - min(foot), 3))
+check("Body foot band width ~5.6", abs((max(foot) - min(foot)) - 5.62) < 0.1, round(max(foot) - min(foot), 3))
 # anthropoid silhouette: narrow head, widest at the shoulders (~70% of the height), clear taper to the foot
 def width_at(bm_, z0, z1):
     xs = [v.co.x for v in bm_.verts if z0 <= v.co.z < z1]
@@ -205,8 +206,8 @@ w_head = max(w for z, w in bands_w if z >= 0.9 * H - 0.4)
 w_foot = max(w for z, w in bands_w if z < 0.12 * H)
 REPORT["silhouette"] = {"widestAtZ": z_widest, "widestAtFractionOfHeight": round(z_widest / H, 3), "shoulderWidth": w_max, "headWidth": w_head, "footWidth": w_foot,
                         "headOverShoulder": round(w_head / w_max, 3), "footOverShoulder": round(w_foot / w_max, 3)}
-check("Reference silhouette (2026-10-09): widest at 65-78% height, head end 0.70-0.80 and foot 0.58-0.68 of the shoulder width, height >= 1.9x width",
-      0.65 <= z_widest / H <= 0.78 and 0.70 <= w_head / w_max <= 0.80 and 0.58 <= w_foot / w_max <= 0.68 and H >= 1.9 * w_max, REPORT["silhouette"])
+check("Reference silhouette (2026-10-10 Warden fit): widest at 65-75% height, head end 0.70-0.80 and foot 0.62-0.70 of the shoulder width, height >= 1.55x width",
+      0.65 <= z_widest / H <= 0.75 and 0.70 <= w_head / w_max <= 0.80 and 0.62 <= w_foot / w_max <= 0.70 and H >= 1.55 * w_max, REPORT["silhouette"])
 # lid fit
 body_front_y = blo.y
 lid_back_y = lhi.y
@@ -254,8 +255,42 @@ for k in range(0, NS):
     if r and l:
         widths.append((round(z, 3), round(r.x - l.x, 3)))
 max_w = max(w for _, w in widths)
-check("Cavity extents >= 13.4 tall x 6.2 wide x 4.2 deep (Warden box 9.4 x 6.2 x 4.2 fits)", cav_h >= 13.4 - 1e-3 and max_w >= 6.2 and cav_d >= 4.2,
+check("Cavity extents cover the Warden's requiredCavity (height, width, depth)", cav_h >= REQ["height"] and max_w >= 2 * REQ["maxHalfWidth"] and cav_d >= REQ["depth"],
       {"height": round(cav_h, 3), "maxWidth": round(max_w, 3), "depth": round(cav_d, 3), "floorZ": round(floor_hit.z, 3), "ceilingZ": round(ceil_hit.z, 3)})
+# Tomb Warden emergence pose: per 0.5-stud band, the cavity must reach his half-width (both sides, using his left/right
+# extents), his front (the open face's rim plane, which the closed lid's flat underside seals) and his back, and the
+# ceiling must clear his height. Cavity space = origin at the cavity floor centre, z above the floor, -Y the open front.
+fz = floor_hit.z
+margins = []
+worst = (9.0, None)
+for b in REQ["byHeight"]:
+    for zc in (b["zFrom"] + 1e-3, (b["zFrom"] + b["zTo"]) / 2, min(b["zTo"], REQ["height"]) - 1e-3):
+        z = fz + zc
+        for y in (b["frontY"], 0.5 * (b["frontY"] + b["backY"]), b["backY"]):
+            y = max(min(y, back_hit.y - 0.01), blo.y + 0.01)
+            r_, l_ = ray((0, y, z), (1, 0, 0)), ray((0, y, z), (-1, 0, 0))
+            mr = (r_.x - b["maxX"]) if r_ else -9.0
+            ml = (-l_.x + b["minX"]) if l_ else -9.0
+            for m, what in ((mr, "+x side"), (ml, "-x side")):
+                margins.append(m)
+                if m < worst[0]:
+                    worst = (m, {"zAboveFloor": round(zc, 3), "y": round(y, 3), "where": what})
+        bk = ray((0, 0, z), (0, 1, 0))
+        mb = (bk.y - b["backY"]) if bk else -9.0
+        mf = b["frontY"] - blo.y                       # open front: rim plane at the body's min y
+        for m, what in ((mb, "back"), (mf, "front rim plane")):
+            margins.append(m)
+            if m < worst[0]:
+                worst = (m, {"zAboveFloor": round(zc, 3), "where": what})
+mt = (ceil_hit.z - fz) - REQ["height"]
+margins.append(mt)
+if mt < worst[0]:
+    worst = (mt, {"where": "ceiling"})
+REPORT["wardenFit"] = {"source": "tomb-warden-boss/exports/game/GameChecks.json coffinFit.requiredCavity (0.12 clearance included)",
+                       "minMargin": round(worst[0], 4), "at": worst[1], "ceilingMargin": round(mt, 3),
+                       "frontRimDistanceFromOrigin": round(-blo.y, 4), "floorZ": round(fz, 3)}
+check("Cavity contains the Tomb Warden's requiredCavity profile at every height (sides, back, front rim, ceiling)", worst[0] >= 0.0,
+      REPORT["wardenFit"])
 prof = {}
 for W in (3.4, 4.4, 5.2, 6.2):
     zs = [z for z, w in widths if w >= W]
