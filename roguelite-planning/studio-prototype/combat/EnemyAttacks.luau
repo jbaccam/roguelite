@@ -21,6 +21,19 @@ local shotSerial = 0
 -- Hits, impacts and attack serials per enemy, for Studio QA (RegularEnemyQA). A server table, not
 -- attributes: those replicated to every client on every hit and no client read them.
 A.tally = setmetatable({}, { __mode = "k" })
+-- Normal spaces ranged shots out a little (RunSetupRules.rangedCooldownScale: run difficulty and
+-- run members). Required on first use: RunSetupRules pulls the lobby catalogs.
+local Rules
+local function rangedScale()
+	Rules = Rules or require(game.ReplicatedStorage:WaitForChild("RunSetupRules"))
+	local members = 0
+	for _, p in Players:GetPlayers() do
+		if p:GetAttribute("RunMember") then
+			members += 1
+		end
+	end
+	return Rules.rangedCooldownScale(combat:GetAttribute("RunDifficulty"), math.max(1, members))
+end
 local function tally(npc)
 	local t = A.tally[npc]
 	if not t then
@@ -542,7 +555,7 @@ function A.update(npc, target, dt)
 	s.start = now
 	s.hit = false
 	s.hitPlayers = {}
-	s.nextAttack = now + config.attackCooldown
+	s.nextAttack = now + config.attackCooldown * (config.behavior == "Ranged" and rangedScale() or 1)
 	s.lungeLimit = nil
 	s.faced = nil -- release() let the Humanoid turn it, so the first facing always writes
 	if config.behavior == "Ranged" then

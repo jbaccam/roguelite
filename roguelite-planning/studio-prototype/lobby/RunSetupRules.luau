@@ -29,7 +29,7 @@ R.Maps={
 R.Difficulties={
  -- Normal is the approachable baseline across the whole weapon roster. Keep optional
  -- challenge modes and reward multipliers unchanged (NORMAL_BALANCE.md).
- {id='Normal',hp=.6,damage=.75,enemyMove=.85,reward=1},
+ {id='Normal',hp=.6,damage=.75,enemyMove=.85,reward=1,rangedCooldown={1.3,1.15}},
  {id='Hard',hp=1.6,damage=1.3,enemyMove=1,reward=1.5},
  {id='Nightmare',hp=2.5,damage=1.6,enemyMove=1,reward=2},
 }
@@ -38,6 +38,13 @@ function R.difficulty(id) return R.DifficultyIndex[id] or R.Difficulties[1] end
 -- Regular enemy chase only: applied once at spawn, before the existing Endless
 -- adjustment. Independent of map power and wave number; bosses never use it.
 function R.enemyMoveScale(id) return R.difficulty(id).enemyMove end
+-- Ranged enemies' wait between shots (EnemyAttacks): Normal stretches it, x1.3 solo and x1.15 for a
+-- party, so a crowd of shooters fires a little less (user 2026-10-10: Normal solo had a bit too much
+-- ranged volume). Example: a Bow Skeleton's 2.3 s becomes 3.0 s solo. Hard and Nightmare stay x1.
+function R.rangedCooldownScale(id,players)
+ local r=R.difficulty(id).rangedCooldown;if not r then return 1 end
+ return R.partySize(players)<=1 and r[1] or r[2]
+end
 -- The map a run is on (MapConfig ids; Pine Valley when unset or unknown).
 local function mapOf(mapId)
  return R.Maps[R.MapIndex[mapId or combat:GetAttribute('RunMap')] or 1]
