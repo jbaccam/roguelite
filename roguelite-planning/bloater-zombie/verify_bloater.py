@@ -77,11 +77,11 @@ for name in SECTIONS:
     part_err = max(part_err, ((lo + hi) / 2 - Vector(DATA['parts'][name]['center'])).length, ((hi - lo) - Vector(DATA['parts'][name]['size'])).length)
 check(part_err < 2e-3, f'import data part bounds differ by {part_err}')
 ut = world['UpperTorso']
-band = [v for v in ut if 2.6 <= v.z <= 3.4]
+band = [v for v in ut if 2.0 <= v.z <= 2.6]
 belly_width = max(v.x for v in band) - min(v.x for v in band)
 belly_depth = max(v.y for v in band) - min(v.y for v in band)
 report['fbx'] = {'objects': per, 'total_triangles': total, 'height': round(height, 4), 'ground': round(ground, 6),
-                 'belly_width_at_equator': round(belly_width, 3), 'belly_depth_at_equator': round(belly_depth, 3),
+                 'belly_width_widest_band_z2.0_2.6': round(belly_width, 3), 'belly_depth_widest_band_z2.0_2.6': round(belly_depth, 3),
                  'upper_torso_bbox_width_incl_shoulders': round(max(v.x for v in ut) - min(v.x for v in ut), 3),
                  'import_data_part_bounds_max_error': round(part_err, 6)}
 
@@ -91,20 +91,13 @@ def tris_of(name):
     return [tuple(t.vertices) for t in me.loop_triangles]
 TRIS = {n: tris_of(n) for n in objs}
 
-def neck_island():
-    """The Head's hidden neck seat: the shell holding Head's lowest vertex."""
-    me = objs['Head'].data; vs = world['Head']
-    adj = {i: set() for i in range(len(vs))}
-    for e in me.edges:
-        a, b = e.vertices; adj[a].add(b); adj[b].add(a)
-    start = min(range(len(vs)), key=lambda i: vs[i].z)
-    seen, stack = {start}, [start]
-    while stack:
-        for w in adj[stack.pop()]:
-            if w not in seen:
-                seen.add(w); stack.append(w)
-    return seen
-NECK = neck_island()
+# 2026-10-09 remodel: no neck. The head sits straight down in the shoulders: its lowest 0.30
+# (underside and cheek bottoms) is the seat, meant to be buried in / resting on the UpperTorso.
+# Everything above the seat (face, eyes, teeth, cheek sides) must stay clear of the body.
+HEAD_SEAT = 0.30
+head_floor = min(v.z for v in world['Head'])
+SEAT = {i for i, v in enumerate(world['Head']) if v.z < head_floor + HEAD_SEAT}
+ARM_SEAT = 0.45   # upper-arm fraction (from the shoulder joint) covered by the round deltoid mass
 
 RAYS = (Vector((0, 0, 1)), Vector((0.3, 0.2, 1)).normalized(), Vector((-0.2, 0.4, 1)).normalized())
 def is_inside(bvh, p):
@@ -160,17 +153,23 @@ for state in ('rest', 'inflated'):
     for n in ('LeftHand', 'RightHand', 'LeftLowerArm', 'RightLowerArm', 'EyeGlow'):
         r = clearance(transform(n, state), TRIS[n], vb, tb); overlap[f'{state}:{n}'] = r
         check(r['pairs'] == 0 and r['inside'] == 0, f'{state}: {n} touches the belly {r}')
-    face = [t for t in TRIS['Head'] if not all(i in NECK for i in t)]
-    r = clearance(transform('Head', state), face, vb, tb); overlap[f'{state}:Head(excluding hidden neck seat)'] = r
-    check(r['pairs'] == 0 and r['inside'] == 0 and r['min'] >= 0.05, f'{state}: head not clear of the belly by 0.05 {r}')
+    face = [t for t in TRIS['Head'] if not any(i in SEAT for i in t)]
+    need = 0.05 if state == 'rest' else 0.0
+    r = clearance(transform('Head', state), face, vb, tb); overlap[f'{state}:Head(above the {HEAD_SEAT} seat)'] = r
+    check(r['pairs'] == 0 and r['inside'] == 0 and r['min'] >= need, f'{state}: head above the seat not clear of the body by {need} {r}')
+    # Seated: no neck gap. Some of the head's underside must be inside the body, rest and 1.3x.
+    hv = transform('Head', state); bvh_s = BVHTree.FromPolygons(vb, tb, all_triangles=True)
+    seated = sum(is_inside(bvh_s, hv[i]) for i in SEAT)
+    overlap[f'{state}:Head seat vertices inside the body'] = f'{seated}/{len(SEAT)}'
+    check(seated > 0.2 * len(SEAT), f'{state}: head is not seated in the shoulders ({seated}/{len(SEAT)})')
     for side in ('Left', 'Right'):
         n = side + 'UpperArm'; vs = transform(n, state)
         off = (jhead(n) - c_ut) * (INFLATE - 1) if state == 'inflated' else Vector()
         S = jhead(n) + off; E = jhead(side + 'LowerArm') + off; L = (E - S).length; W = (E - S) / L
         axial = [(v - S).dot(W) / L for v in vs]   # 0 at the shoulder joint, 1 at the elbow
-        # Below the fused shoulder seat (axial > 0.3) the arm must hang clear: >=0.05 at rest, >=0 at 1.3x.
-        free = [t for t in TRIS[n] if min(axial[i] for i in t) > 0.3]
-        r = clearance(vs, free, vb, tb); overlap[f'{state}:{n}(below shoulder seat, axial>0.3)'] = r
+        # Below the deltoid seat (axial > ARM_SEAT) the arm must hang clear: >=0.05 at rest, >=0 at 1.3x.
+        free = [t for t in TRIS[n] if min(axial[i] for i in t) > ARM_SEAT]
+        r = clearance(vs, free, vb, tb); overlap[f'{state}:{n}(below deltoid seat, axial>{ARM_SEAT})'] = r
         need = 0.05 if state == 'rest' else 0.0
         check(r['pairs'] == 0 and r['inside'] == 0 and r['min'] >= need, f'{state}: {n} below the seat is not clear by {need}: {r}')
         bvh_p = BVHTree.FromPolygons(vb, tb, all_triangles=True); prof = {}
@@ -212,10 +211,186 @@ for state in ('rest', 'inflated'):
                     hit = len(bvh_a.overlap(bvh_b)) > 0
                     dmin = min(bvh_b.find_nearest(v)[3] for v in moved[::3])
                     sweep['poses'] += 1; sweep['colliding'] += hit
+                    if hit:
+                        sweep.setdefault('colliding_poses', []).append(f'{state} {side} shoulder {a} elbow {b} roll {g}')
                     if dmin < sweep['min_clearance']:
                         sweep['min_clearance'] = round(dmin, 4); sweep['worst'] = f'{state} {side} shoulder {a} elbow {b} roll {g}'
 check(sweep['colliding'] == 0, f'arm pose sweep: {sweep["colliding"]} colliding poses')
 report['arm_pose_sweep'] = sweep
+
+# ------------------------------------------------------------- game pose sweep (ZombieMotion.bloater)
+# The poses the game actually plays: Motor6D.Transform = CFrame.Angles(x, y, z) (Studio XYZ degrees)
+# in each motor's axis-aligned frame, so a child turns about its joint in its parent's frame.
+# The swell is applied the way Round10World does it: UpperTorso Size *= s with the Waist C1 and the
+# Shoulder/Neck C0 positions scaled, which is a scale about the WAIST joint; Head x1.08 about its centre.
+# Checks: arms vs belly skin and vest, head vs shoulders, thighs/shorts/shins vs the belly underside.
+def rot_studio(x=0.0, y=0.0, z=0.0):
+    r = Matrix.Rotation(math.radians(x), 3, 'X') @ Matrix.Rotation(math.radians(y), 3, 'Y') @ Matrix.Rotation(math.radians(z), 3, 'Z')
+    return C @ r @ C   # same rotation expressed in Blender axes
+
+def components(name):
+    me = objs[name].data; n = len(me.vertices); parent = list(range(n))
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]; i = parent[i]
+        return i
+    for e in me.edges:
+        a, b = find(e.vertices[0]), find(e.vertices[1])
+        if a != b:
+            parent[a] = b
+    roots = [find(i) for i in range(n)]
+    return roots
+
+ut_roots = components('UpperTorso')
+skin_root = max(set(ut_roots), key=ut_roots.count)
+SKIN_T = [t for t in TRIS['UpperTorso'] if ut_roots[t[0]] == skin_root]
+VEST_T = [t for t in TRIS['UpperTorso'] if ut_roots[t[0]] != skin_root]
+WAIST = jhead('UpperTorso')
+
+def torso_verts(state, waist_rot=None):
+    s = INFLATE if state == 'inflated' else 1.0
+    R = waist_rot or Matrix.Identity(3)
+    return [WAIST + R @ ((v - WAIST) * s) for v in world['UpperTorso']]
+
+def moved(name, fn):
+    return [fn(v) for v in world[name]]
+
+def pair_count(va, ta, bvh_b):
+    if not ta:
+        return 0
+    return len(BVHTree.FromPolygons(va, ta, all_triangles=True).overlap(bvh_b))
+
+def min_gap(va, idx, bvh_b):
+    best = 9.0
+    for i in idx:
+        d = bvh_b.find_nearest(va[i])[3]
+        if is_inside(bvh_b, va[i]):
+            d = -d
+        best = min(best, d)
+    return best
+
+game = {'arms': {'poses': 0, 'skin_pairs': 0, 'vest_pairs': 0, 'min_skin_gap': 9.0, 'min_vest_gap': 9.0, 'worst_skin': None, 'worst_vest': None, 'vest_hits': []},
+        'head': {'poses': 0, 'pairs': 0, 'min_gap': 9.0, 'worst': None, 'min_seated': 999},
+        'legs': {'poses': 0, 'poke_through': 0, 'shin_or_hem_inside': 0, 'exposed_tops': 0, 'min_hem_gap': 9.0, 'worst': None, 'hits': []}}
+SH_X = (-6, 10, 28); SH_Z = (22.4, 29.6, 72.4, 75.6); EL_X = (8, 17, 26); WR_X = (-4, 10)
+for state in ('rest', 'inflated'):
+    s = INFLATE if state == 'inflated' else 1.0
+    tv = torso_verts(state)
+    bvh_skin = BVHTree.FromPolygons(tv, SKIN_T, all_triangles=True)
+    bvh_vest = BVHTree.FromPolygons(tv, VEST_T, all_triangles=True)
+    bvh_body = BVHTree.FromPolygons(tv, TRIS['UpperTorso'], all_triangles=True)
+    # --- arms (they ride on the UpperTorso, so the waist pose does not change arm-vs-torso geometry)
+    for side, sg in (('Left', 1), ('Right', -1)):
+        S0, E0, W0 = jhead(side + 'UpperArm'), jhead(side + 'LowerArm'), jhead(side + 'Hand')
+        S = WAIST + (S0 - WAIST) * s; off = S - S0
+        ua = world[side + 'UpperArm']
+        axial = [(v - S0).dot((E0 - S0).normalized()) / (E0 - S0).length for v in ua]
+        ua_roots = components(side + 'UpperArm'); ua_main = ua_roots[max(range(len(ua)), key=lambda i: axial[i])]   # the block reaching the elbow
+        arm_skin = [t for t in TRIS[side + 'UpperArm'] if ua_roots[t[0]] == ua_main]
+        cap = [t for t in TRIS[side + 'UpperArm'] if ua_roots[t[0]] != ua_main]
+        free = [t for t in arm_skin if min(axial[i] for i in t) > ARM_SEAT]
+        for sx in SH_X:
+            for sz in SH_Z:
+                R1 = rot_studio(sx, 0, sg * -sz)
+                for ex in EL_X:
+                    R2 = rot_studio(ex)
+                    for wx in WR_X:
+                        R3 = rot_studio(wx)
+                        up = lambda v: S + R1 @ (v + off - S)
+                        fo = lambda v: up(E0 + R2 @ (v - E0))
+                        ha = lambda v: fo(W0 + R3 @ (v - W0))
+                        uav = moved(side + 'UpperArm', up)
+                        cp = pair_count(uav, cap, bvh_vest)
+                        game['arms']['cap_vs_vest_pairs_info'] = game['arms'].get('cap_vs_vest_pairs_info', 0) + cp
+                        parts = [(uav, arm_skin, free),
+                                 (moved(side + 'LowerArm', fo), TRIS[side + 'LowerArm'], TRIS[side + 'LowerArm']),
+                                 (moved(side + 'Hand', ha), TRIS[side + 'Hand'], TRIS[side + 'Hand'])]
+                        tag = f'{state} {side} shoulder X{sx} Z{sg * -sz:+.1f} elbow {ex} wrist {wx}'
+                        game['arms']['poses'] += 1
+                        sp = vp = 0; sg_gap = vg_gap = 9.0
+                        for va, all_t, chk_t in parts:
+                            sp += pair_count(va, chk_t, bvh_skin); vp += pair_count(va, all_t, bvh_vest)
+                            idx = {i for t in chk_t for i in t}
+                            sg_gap = min(sg_gap, min(bvh_skin.find_nearest(va[i])[3] for i in idx))
+                            vg_gap = min(vg_gap, min(bvh_vest.find_nearest(va[i])[3] for i in {i for t in all_t for i in t}))
+                        A = game['arms']; A['skin_pairs'] += sp; A['vest_pairs'] += vp
+                        if vp and len(A['vest_hits']) < 12:
+                            A['vest_hits'].append(f'{tag}: {vp} pairs')
+                        if sp:
+                            A.setdefault('skin_hits', []).append(f'{tag}: {sp} pairs')
+                        if sg_gap < A['min_skin_gap']:
+                            A['min_skin_gap'] = round(sg_gap, 4); A['worst_skin'] = tag
+                        if vg_gap < A['min_vest_gap']:
+                            A['min_vest_gap'] = round(vg_gap, 4); A['worst_vest'] = tag
+    # --- head on the neck (rides on the UpperTorso)
+    N0 = jhead('Head'); N = WAIST + (N0 - WAIST) * s; off = N - N0; hc = c_head + off
+    hs = HEAD_INFLATE if state == 'inflated' else 1.0
+    face = [t for t in TRIS['Head'] if not any(i in SEAT for i in t)]
+    fidx = {i for t in face for i in t}
+    for nx in (0, 8, 16):
+        for nz in (-4, 0, 4):
+            Rn = rot_studio(nx, 0, nz)
+            hv = [N + Rn @ (hc + (v + off - hc) * hs - N) for v in world['Head']]
+            pairs = pair_count(hv, face, bvh_body)
+            gap = min(bvh_body.find_nearest(hv[i])[3] * (-1 if is_inside(bvh_body, hv[i]) else 1) for i in fidx)
+            seated = sum(is_inside(bvh_skin, hv[i]) for i in SEAT)
+            H = game['head']; H['poses'] += 1; H['pairs'] += pairs
+            H['min_seated'] = min(H['min_seated'], seated)
+            if gap < H['min_gap']:
+                H['min_gap'] = round(gap, 4); H['worst'] = f'{state} neck X{nx} Z{nz}'
+    # --- legs under the belly (LowerTorso is the parent; the belly moves on the waist)
+    for wx, wy, wz in ((0, 0, 0), (9, 3, 8), (9, -3, -8), (-4, 3, -8), (-4, -3, 8)):
+        Rw = rot_studio(wx, wy, wz)
+        bv = torso_verts(state, Rw)
+        bvh_b = BVHTree.FromPolygons(bv, SKIN_T, all_triangles=True)
+        lt = world['LowerTorso']; lt_top = max(v.z for v in lt)
+        for side, sg in (('Left', 1), ('Right', -1)):
+            H0, K0 = jhead(side + 'UpperLeg'), jhead(side + 'LowerLeg')
+            ul = world[side + 'UpperLeg']; top_z = max(v.z for v in ul); hem_z = min(v.z for v in ul)
+            for hx in (-18, 4, 26):
+                for hz in (1, -7):
+                    Rh = rot_studio(hx, 0, sg * hz)
+                    for kx in (0, -36):
+                        Rk = rot_studio(kx)
+                        th = lambda v: H0 + Rh @ (v - H0)
+                        sh = lambda v: th(K0 + Rk @ (v - K0))
+                        thv = moved(side + 'UpperLeg', th); shv = moved(side + 'LowerLeg', sh)
+                        tag = f'{state} waist ({wx},{wy},{wz}) {side} hip X{hx} Z{sg * hz} knee {kx}'
+                        L = game['legs']; L['poses'] += 1
+                        poke = exposed = inside_low = 0; hem_gap = 9.0
+                        for i, v in enumerate(thv):
+                            ins = is_inside(bvh_b, v)
+                            if not ins and bvh_b.ray_cast(v + Vector((0, 0, -1e-4)), Vector((0, 0, -1)))[0] is not None:
+                                poke += 1   # outside the belly yet above belly surface: shows through
+                            if ul[i].z > top_z - 0.02 and not ins:
+                                exposed += 1   # the shorts' top rim must stay tucked under the belly
+                            if ul[i].z < hem_z + 0.25:
+                                d = bvh_b.find_nearest(v)[3]
+                                if ins:
+                                    inside_low += 1; d = -d
+                                hem_gap = min(hem_gap, d)
+                        where = None
+                        bvh_th = BVHTree.FromPolygons(thv, TRIS[side + 'UpperLeg'], all_triangles=True)
+                        for v in shv:   # shin points tucked inside the shorts tube are hidden
+                            if is_inside(bvh_b, v) and not is_inside(bvh_th, v):
+                                inside_low += 1; where = where or tuple(round(c, 2) for c in v)
+                        L['poke_through'] += poke; L['exposed_tops'] += exposed; L['shin_or_hem_inside'] += inside_low
+                        if (poke or exposed or inside_low) and len(L['hits']) < 12:
+                            L['hits'].append(f'{tag}: poke {poke} exposed {exposed} low-inside {inside_low}' + (f' shin at {where}' if where else ''))
+                        if hem_gap < L['min_hem_gap']:
+                            L['min_hem_gap'] = round(hem_gap, 4); L['worst'] = tag
+        # LowerTorso top must stay under the belly too
+        exp_lt = sum(1 for v in lt if v.z > lt_top - 0.02 and not is_inside(bvh_b, v))
+        game['legs']['exposed_tops'] += exp_lt
+        if exp_lt:
+            game['legs']['hits'].append(f'{state} waist ({wx},{wy},{wz}): LowerTorso top exposed {exp_lt}')
+report['game_pose_sweep'] = game
+A, Hd, L = game['arms'], game['head'], game['legs']
+check(A['skin_pairs'] == 0, f'game sweep: arms cut the belly skin ({A["skin_pairs"]} pairs) {A.get("skin_hits", [])[:4]}')
+check(A['vest_pairs'] == 0, f'game sweep: arms cut the vest ({A["vest_pairs"]} pairs) {A["vest_hits"][:4]}')
+check(Hd['pairs'] == 0 and Hd['min_gap'] >= 0, f'game sweep: head above the seat touches the shoulders {Hd}')
+check(Hd['min_seated'] > 0, f'game sweep: head lifts off its seat {Hd}')
+check(L['poke_through'] == 0 and L['exposed_tops'] == 0 and L['shin_or_hem_inside'] == 0, f'game sweep: legs vs belly {L["hits"][:4]}')
 
 # Eyes read from the front: rays straight in hit EyeGlow before Head.
 bh = BVHTree.FromPolygons(world['Head'], TRIS['Head'], all_triangles=True)
@@ -231,7 +406,7 @@ for s in (1, -1):
             if he[0] is not None and (hh[0] is None or he[3] <= hh[3] + 1e-6):
                 visible += 1
 report['eyes_visible_from_front'] = round(visible / total_rays, 3)
-check(visible / total_rays >= 0.3, f'eyes mostly hidden ({visible}/{total_rays})')
+check(visible / total_rays >= 0.6, f'eyes mostly hidden ({visible}/{total_rays})')
 
 # ------------------------------------------------------------------------ Model.blend
 fbx_counts = {n: len(o.data.vertices) for n, o in objs.items()}
@@ -269,5 +444,5 @@ report['failures'] = fails
 report['known_issues'] = known
 report['studio'] = 'Blender-verified, Studio untested'
 (OUT / 'verification.json').write_text(json.dumps(report, indent=1))
-print('VERIFY', report['status'], json.dumps({k: report[k] for k in ('failures', 'known_issues', 'arm_pose_sweep', 'eyes_visible_from_front')}))
+print('VERIFY', report['status'], json.dumps({k: report[k] for k in ('failures', 'known_issues', 'arm_pose_sweep', 'game_pose_sweep', 'eyes_visible_from_front')}))
 assert not fails, fails

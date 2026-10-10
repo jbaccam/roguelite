@@ -32,7 +32,7 @@ PREVIEWS = ROOT / "previews"
 REFS = ROOT.parent / "art-references" / "round-10-modeling-pack-2026-10-09"
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 MODE = "render" if "render" in ARGS else "build"
-ONLY = [a for a in ARGS if a in ("sarcophagus", "broken", "vent", "debris")]     # render only these sheets (default: all)
+ONLY = [a for a in ARGS if a in ("sarcophagus", "broken", "vent", "debris", "compare")]     # render only these sheets (default: all)
 
 # ---------------------------------------------------------------------------------------------
 # Dimensions (brief section 5). Coffin frame: x = width, y = depth (front/open face at -Y), z = up.
@@ -42,26 +42,63 @@ Y_B = 2.95           # back face of the body (solid flat back)
 Y_CB = 2.25          # inner face of the back wall (cavity depth 4.5)
 T_SLAB = 0.85        # lid slab thickness (front plane of the slab is Y_F - T_SLAB)
 Y_S = Y_F - T_SLAB
-OUT_H = 11.0         # outer height (coordinator fix pass: taller, clearer anthropoid silhouette)
-SHOULDER_X, SHOULDER_Z = 3.64, 7.70     # widest point (half-width, height ~70% of OUT_H)
-HEAD_X = 2.05        # head half-width (head section is clearly narrower than the shoulders)
-WALL = 0.50          # side wall thickness (outside tapers more than the cavity does)
-WALL_DIAG = 0.40     # shoulder-diagonal wall (keeps the cavity 6.2+ wide at the shoulders)
+OUT_H = 15.0         # outer height (2026-10-09 second pass: tall slender reference proportions, ~1:2.1 w:h, cavity 13.4)
+SHOULDER_X, SHOULDER_Z = 3.80, 11.0     # widest point (half-width; 27% down from the top, angled shoulders)
+HEAD_X = 2.85        # head-end band half-width (5.7 wide, ~0.75 of the shoulders), proud of the shoulder line by 0.15
+HEAD_IN = 2.70       # where the shoulder diagonal meets the head end (the band steps out 0.15 from here)
+HEAD_Z0, HEAD_Z1, TOP_X = 12.6, 14.3, 2.15   # head-end band from z0 to z1, then a chamfer to the top (4.3 wide)
+FOOT_X, FOOT_Z, STEP_X = 2.40, 1.40, 2.25    # foot band: 4.8 wide (~0.63 of the shoulders), 1.4 tall, proud 0.15 of the taper
+WALL = 0.65          # side wall thickness: chunky stone rim (third pass 2026-10-09)
+WALL_DIAG = 0.55     # shoulder-diagonal wall (cavity stays 6.2+ wide at the shoulders)
 FLOOR = 0.80         # floor thickness
-CEIL = 0.80          # head-top thickness: cavity height = OUT_H - FLOOR - CEIL = 9.4
-BEVEL = 0.14
-NOTCH_Z = (4.9, 9.88)
+CEIL = 0.80          # head-top thickness: cavity height = OUT_H - FLOOR - CEIL = 13.4
+BEVEL = 0.24         # one-segment chamfer on every convex edge; the chamfer faces get the worn-edge tile
+NOTCH_Z = (3.3, 13.45)      # carved step notches: low on the taper, high on the head-end wall
+
+# Lid front: a raised mummy figure (rounded core) wrapped in wide overlapping linen strips (2026-10-09 rebuild,
+# matches 03-sarcophagus-assembly.png / 09-sarcophagus-lid.png). Torso rows: (z, half-width, core relief height).
+_TL = lambda z: 1.55 + (2.95 - 1.55) * (z - 1.70) / (10.6 - 1.70)
+FIG_TORSO = [(1.55, 1.35, 0.18), (1.70, 1.55, 0.22), (4.0, _TL(4.0), 0.24), (6.3, _TL(6.3), 0.24), (8.6, _TL(8.6), 0.24),
+             (10.6, 2.95, 0.24), (11.0, 2.92, 0.24), (11.4, 2.70, 0.22), (11.75, 2.25, 0.19), (12.0, 1.55, 0.15)]
+FIG_HEAD = (13.15, 1.75, 1.25, 0.22)          # centre z, half-width, half-height, core relief height (rounded dome)
+EYE_Z, EYE_X, EYE_R = 13.33, 0.55, 0.26
+EYE_GAP = (13.06, 13.64)                        # the gap in the face wrap (darker recess) the eye studs sit in
+# strips: (centre x, centre z on x=0, angle deg, width, thickness above the core). Thicker strips lie on top.
+LID_BANDS = [   # fewer, wider, thicker wraps in an X lattice. Overlapping strips never share a thickness (equal fronts are coplanar
+    # and broke the boolean); the thicker strip of each crossing lies on top.
+    (0, 14.04, 8, 0.62, 0.10), (0, 13.84, 0, 0.40, 0.15), (0, 12.88, 3, 0.44, 0.15), (0, 12.42, -8, 0.56, 0.10),
+    (0, 11.10, -22, 1.00, 0.12), (0, 10.75, 24, 1.00, 0.15),
+    (0, 9.50, -28, 1.25, 0.10), (0.13, 9.57, 28, 1.25, 0.16), (0, 7.30, 28, 1.25, 0.08), (-0.13, 7.37, -28, 1.25, 0.14),
+    (0, 5.04, -26, 1.25, 0.11), (0.13, 5.13, 26, 1.25, 0.17), (0, 2.95, 22, 1.20, 0.08), (-0.13, 3.02, -22, 1.20, 0.14),
+    (0, 1.86, 0, 0.66, 0.10),
+]
+
+
+def fig_halfwidth(z):
+    """Half-width of the figure silhouette (torso rows piecewise linear, head ellipse)."""
+    hw = 0.0
+    for (z0, w0, _), (z1, w1, _) in zip(FIG_TORSO, FIG_TORSO[1:]):
+        if z0 <= z <= z1:
+            hw = w0 + (w1 - w0) * (z - z0) / (z1 - z0)
+    zc, a, c, _ = FIG_HEAD
+    if abs(z - zc) < c:
+        hw = max(hw, a * math.sqrt(1 - ((z - zc) / c) ** 2))
+    return hw
 
 # Atlas tiles for the coffin family (image px, top-left origin): rect x0,y0,x1,y1 and px-per-unit.
 TILE_OUTER, TILE_CAVITY, TILE_FRACT, TILE_BAND, TILE_FACE, TILE_EYE = 0, 1, 2, 3, 4, 5
+TILE_EDGE, TILE_SEAM = 6, 7          # worn bevel highlights, dark carved grooves (per-face local mapping)
+TILE_CORE = 8                        # build-time only: lid figure core, remapped to TILE_BAND / TILE_FACE
 CO_ATLAS = 1024
 CO_TILES = {
-    TILE_OUTER: ((0, 0, 512, 512), 512 / 12.0),
-    TILE_BAND: ((512, 0, 1024, 512), 512 / 12.0),
-    TILE_CAVITY: ((0, 512, 512, 896), 33.0),
-    TILE_FRACT: ((512, 512, 1024, 896), 33.0),
+    TILE_OUTER: ((0, 0, 512, 512), 512 / 15.6),       # tiles cover the 15-tall coffin without clamping
+    TILE_BAND: ((512, 0, 1024, 512), 512 / 15.6),
+    TILE_CAVITY: ((0, 512, 512, 896), 26.0),
+    TILE_FRACT: ((512, 512, 1024, 896), 26.0),
     TILE_FACE: ((0, 896, 256, 1024), 40.0),
     TILE_EYE: ((256, 896, 384, 1024), 60.0),
+    TILE_EDGE: ((384, 896, 704, 1024), 40.0),
+    TILE_SEAM: ((704, 896, 1024, 1024), 40.0),
 }
 # per tile, per axis class (0 = X-dominant normal, 1 = Y, 2 = Z): (a0, b0) world offsets of the planar mapping
 CO_ORIGIN = {
@@ -69,8 +106,8 @@ CO_ORIGIN = {
     TILE_BAND: {1: (-6.0, -0.15), 0: (-4.0, -0.15), 2: (-6.0, -4.0)},
     TILE_CAVITY: {1: (-6.0, -0.15), 0: (-3.0, -0.15), 2: (-6.0, -3.0)},
     TILE_FRACT: {1: (-6.0, -0.1), 0: (-4.0, -0.1), 2: (-6.0, -4.0)},
-    TILE_FACE: {1: (-1.7, 8.0), 0: (-3.4, 8.0), 2: (-1.7, -3.4)},
-    TILE_EYE: {1: (-1.0, 8.4), 0: (-3.5, 8.4), 2: (-1.0, -3.5)},
+    TILE_FACE: {1: (-2.0, 12.6), 0: (-3.6, 12.6), 2: (-2.0, -3.6)},
+    TILE_EYE: {1: (-1.0, 12.95), 0: (-3.6, 12.95), 2: (-1.0, -3.6)},
 }
 
 VENT_ATLAS = 512
@@ -153,6 +190,66 @@ def voronoi(X, Y, seed, jitter=0.85):
     return best, sec, val
 
 
+def voronoi_c(X, Y, seed, jitter=0.9):
+    """Voronoi returning distance to nearest / second centre and the nearest cell's integer id and centre."""
+    ix = np.floor(X).astype(np.int64)
+    iy = np.floor(Y).astype(np.int64)
+    best = np.full(X.shape, 9.0)
+    sec = np.full(X.shape, 9.0)
+    cx_ = np.zeros(X.shape, np.int64)
+    cy_ = np.zeros(X.shape, np.int64)
+    px_ = np.zeros(X.shape)
+    py_ = np.zeros(X.shape)
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            cx, cy = ix + dx, iy + dy
+            px = cx + 0.5 + (hash2(cx, cy, seed) - 0.5) * jitter
+            py = cy + 0.5 + (hash2(cx, cy, seed + 7) - 0.5) * jitter
+            d = np.hypot(X - px, Y - py)
+            closer = d < best
+            sec = np.where(closer, best, np.minimum(sec, d))
+            cx_, cy_ = np.where(closer, cx, cx_), np.where(closer, cy, cy_)
+            px_, py_ = np.where(closer, px, px_), np.where(closer, py, py_)
+            best = np.where(closer, d, best)
+    return best, sec, cx_, cy_, px_, py_
+
+
+def paint_chipped(w, h, ppu, seed, pal, terra_cov=0.32, light_cov=0.22, patch_wave=3.2, cell=0.19, grain=0.035,
+                  tilt=0.06, line=0.06, rag=0.05, drift=0.06, deep_off=0.09):
+    """Stylized chipped sandstone (2026-10-09 repaint): a fine mosaic of painted facets (each chip one flat value with a
+    slight tilt shade and a light chipped outline), terracotta weathering patches decided per chip so their borders are
+    crisp and chip-ragged (no soft blobs), a few lighter worn patches, gentle large-scale value drift. ppu = px per unit."""
+    ys, xs = np.mgrid[0:h, 0:w].astype(np.float64)
+    ux, uy = xs / ppu, ys / ppu
+    best, sec, cix, ciy, pcx, pcy = voronoi_c(ux / cell, uy / cell, seed + 5)
+    wx, wy = pcx * cell, pcy * cell                                    # chip centres in world units
+    v1 = hash2(cix, ciy, seed + 21)
+    v2 = hash2(cix, ciy, seed + 22)
+    v3 = hash2(cix, ciy, seed + 23)
+    n = fbm(wx / patch_wave, wy / patch_wave, seed + 3, octs=2) + rag * (v1 - 0.5)
+    thr = np.quantile(n, 1 - terra_cov) if terra_cov > 0 else 9.0
+    m = (n > thr).astype(float)
+    deep = (n > thr + deep_off).astype(float)
+    n2 = fbm(wx / (patch_wave * 0.6) + 9, wy / (patch_wave * 0.6) + 5, seed + 4, octs=2) + rag * (v2 - 0.5)
+    q2 = np.quantile(n2, 1 - light_cov) if light_cov > 0 else 9.0
+    l = (n2 > q2).astype(float) * (1 - m)
+    base, light = np.array(pal["base"], float), np.array(pal["light"], float)
+    terra, tdark = np.array(pal["terra"], float), np.array(pal["terra_dark"], float)
+    col = base[None, None, :] * np.ones((h, w, 1))
+    col = col * (1 - l[..., None]) + light * l[..., None]
+    col = col * (1 - m[..., None]) + terra * m[..., None]
+    col = col * (1 - 0.6 * deep[..., None]) + tdark * (0.6 * deep[..., None])
+    lev = np.floor(v3 * 3.0)                                           # 3 facet values per material
+    col *= (1 + grain * (lev - 1))[..., None]
+    ang = v2 * 2 * math.pi                                             # facet tilt: a soft one-sided shade per chip
+    t = ((ux / cell - pcx) * np.cos(ang) + (uy / cell - pcy) * np.sin(ang))
+    col *= (1 + tilt * np.clip(t, -0.6, 0.6))[..., None]
+    edge = 1 - ss(sec - best, 0.0, 0.07)                               # light chipped outline between facets
+    col *= (1 + line * edge)[..., None]
+    col *= (1 + (fbm(ux / 5.0 + 3, uy / 5.0 + 8, seed + 6, octs=2) - 0.5) * 2 * drift)[..., None]
+    return np.clip(col, 0, 255)
+
+
 def paint_stone(w, h, ppu, seed, pal, terra_cov=0.34, light_cov=0.3, patch_wave=2.4, chip_cell=0.34,
                 chip_amp=0.035, edge_amp=0.025, soft=0.028, rag=0.11):
     """Painterly mottled stone: broad patches with chip-ragged edges, 2-4 value ranges, faint chip facets.
@@ -219,26 +316,99 @@ def paint_soft(w, h, ppu, seed, pal, terra_cov=0.28, light_cov=0.30, patch_wave=
     return np.clip(col, 0, 255)
 
 
+# 2026-10-09 repaint palette: warmer, more saturated sandstone so it survives the blue sky ambient in game
+SAND = dict(base=(222, 170, 112), light=(234, 188, 134), terra=(202, 116, 74), terra_dark=(190, 102, 64))
+SAND_CAVITY = dict(base=(198, 138, 86), light=(208, 150, 96), terra=(186, 116, 74), terra_dark=(180, 110, 70))
+SAND_FRACT = dict(base=(238, 196, 142), light=(246, 212, 162), terra=(216, 150, 100), terra_dark=(198, 130, 84))
+SAND_EDGE = dict(base=(238, 196, 142), light=(242, 204, 152), terra=(214, 150, 100), terra_dark=(200, 132, 86))
+SAND_SEAM = dict(base=(164, 106, 66), light=(172, 114, 72), terra=(150, 94, 58), terra_dark=(144, 90, 56))
+LINEN = dict(base=(234, 202, 152), light=(240, 212, 166), terra=(214, 160, 112), terra_dark=(204, 146, 100))
+FACE_RECESS = dict(base=(156, 102, 64), light=(166, 110, 70), terra=(146, 92, 58), terra_dark=(136, 86, 54))
+
+
+def paint_band_tile():
+    """Lid-front linen tile. Front faces of the figure map planar (x, z) into this tile, so the strip layout is painted
+    in exactly: the top-most strip at each texel gets a soft pillow shade, dark seam lines along both edges and a cast
+    shade beside any strip lying over it. Texels under no strip (and the figure's side faces) get tight horizontal
+    under-wraps. Light chipped-stone grain on top (it is carved stone, like the reference)."""
+    (x0, y0, x1, y1), s = CO_TILES[TILE_BAND]
+    a0, b0 = CO_ORIGIN[TILE_BAND][1]
+    w, h = x1 - x0, y1 - y0
+    rr, cc = np.mgrid[0:h, 0:w].astype(np.float64)
+    X = a0 + (cc + 0.5) / s
+    Z = b0 + (h - rr - 0.5) / s
+    hw = np.vectorize(fig_halfwidth)(Z[:, 0])[:, None] * np.ones((1, w))
+    inside = np.abs(X) <= hw + 0.02
+    top_t = np.full((h, w), -1.0)
+    top_s = np.zeros((h, w))
+    top_w = np.ones((h, w))
+    dists = []
+    for (cx, cz, ang, bw, bt) in LID_BANDS:
+        aa = math.radians(ang)
+        sn = -(X - cx) * math.sin(aa) + (Z - cz) * math.cos(aa)        # across-strip coordinate (+ = upper edge)
+        dists.append((sn, bw, bt))
+        cov = inside & (np.abs(sn) <= bw / 2) & (bt >= top_t)
+        top_t = np.where(cov, bt, top_t)
+        top_s = np.where(cov, sn, top_s)
+        top_w = np.where(cov, bw, top_w)
+    base = np.array(LINEN["base"], float)
+    covered = top_t > 0
+    # strips: pillow shade + edge seams
+    u = np.clip(top_s / (top_w / 2), -1, 1)
+    f_strip = (1.02 + 0.08 * (1 - u * u)) * (1 - 0.34 * ss(np.abs(u), 0.86, 1.0)) * (1 - 0.06 * (u < 0))
+    # under-wraps: tight horizontal turns, slightly in shade
+    vv = Z / 0.62 + 0.10 * np.sin(X * 1.3)
+    fr = vv - np.floor(vv)
+    f_under = 0.92 * (1 - 0.18 * (1 - ss(fr, 0.0, 0.10))) * (0.96 + 0.06 * fr)
+    f = np.where(covered, f_strip, f_under)
+    # cast shade on whatever lies just beside a higher strip
+    shade = np.zeros((h, w))
+    for sn, bw, bt in dists:
+        out = np.abs(sn) - bw / 2
+        sh = (1 - ss(out, 0.0, 0.09)) * (out > 0) * (bt > top_t) * inside
+        shade = np.maximum(shade, sh)
+    f = f * (1 - 0.26 * shade)
+    rad = np.clip(np.abs(X) / np.maximum(hw, 1e-3), 0, 1.5)
+    f = f * np.where(inside, 1 - 0.16 * ss(rad, 0.55, 1.0), 0.88)
+    col = base[None, None, :] * f[..., None]
+    grain = paint_chipped(w, h, s, 41, dict(base=(128, 128, 128), light=(128, 128, 128), terra=(128, 128, 128),
+                                            terra_dark=(128, 128, 128)), terra_cov=0, light_cov=0, grain=0.035,
+                          tilt=0.04, line=0.04, drift=0.03) / 128.0
+    col = col * grain
+    # a little warm weathering on the linen (crisp chip-edged, sparse)
+    weather = paint_chipped(w, h, s, 43, LINEN, terra_cov=0.07, light_cov=0, patch_wave=1.6, grain=0, tilt=0, line=0,
+                            drift=0)
+    wm = (np.abs(weather - base[None, None, :]).sum(-1) > 20).astype(float)[..., None]
+    col = col * (1 - 0.55 * wm) + col * (np.array(LINEN["terra"], float) / base)[None, None, :] * 0.55 * wm
+    return np.clip(col, 0, 255)
+
+
 def paint_coffin_atlas():
     atlas = np.zeros((CO_ATLAS, CO_ATLAS, 3), float)
-    atlas[:] = (226, 184, 140)
-    (r0, s0), (r3, s3) = CO_TILES[TILE_OUTER], CO_TILES[TILE_BAND]
-    paste(atlas, r0, paint_soft(512, 512, s0, 11, STONE_OUTER, terra_cov=0.30, light_cov=0.30))
-    paste(atlas, r3, paint_soft(512, 512, s3, 23, STONE_BAND, terra_cov=0.12, light_cov=0.35))
+    atlas[:] = SAND["base"]
+    r0, s0 = CO_TILES[TILE_OUTER]
+    paste(atlas, r0, paint_chipped(512, 512, s0, 11, SAND, terra_cov=0.33, light_cov=0.20))
+    r3, _ = CO_TILES[TILE_BAND]
+    paste(atlas, r3, paint_band_tile())
     r1, s1 = CO_TILES[TILE_CAVITY]
-    paste(atlas, r1, paint_soft(512, 384, s1, 37, STONE_CAVITY, terra_cov=0.20))
-    r2, s2 = CO_TILES[TILE_FRACT]
-    paste(atlas, r2, paint_soft(512, 384, s2, 53, STONE_FRACT, terra_cov=0.24))
-    # face plate: dark terracotta-brown, softly mottled; eyes: warm ochre with a soft top-left highlight
+    paste(atlas, r1, paint_chipped(512, 384, s1, 37, SAND_CAVITY, terra_cov=0.10, light_cov=0.12, grain=0.04, rag=0.16,
+                                   patch_wave=2.0))
+    r2, s2 = CO_TILES[TILE_FRACT]       # fresh break: lighter sandstone, darker grain lines so the breaks read
+    paste(atlas, r2, paint_chipped(512, 384, s2, 53, SAND_FRACT, terra_cov=0.08, light_cov=0.15, cell=0.16,
+                                   grain=0.08, tilt=0.10, line=-0.16))
     rf, sf = CO_TILES[TILE_FACE]
-    face = paint_soft(256, 128, sf, 61, dict(base=(158, 94, 58), light=(170, 104, 64), terra=(144, 82, 52),
-                                             terra_dark=(128, 72, 46)), terra_cov=0.4, patch_wave=2.0)
-    paste(atlas, rf, face)
+    paste(atlas, rf, paint_chipped(256, 128, sf, 61, FACE_RECESS, terra_cov=0.25, light_cov=0.1, grain=0.05))
     re_, se = CO_TILES[TILE_EYE]
     yy, xx = np.mgrid[0:128, 0:128].astype(float)
-    hl = np.clip(1 - np.hypot(xx - 50, yy - 44) / 90.0, 0, 1)[..., None]
-    eye = np.array((226, 176, 112))[None, None, :] * (0.92 + 0.14 * hl) + 0 * xx[..., None]
+    hl = np.clip(1 - np.hypot(xx - 50, yy - 44) / 80.0, 0, 1)[..., None]
+    eye = np.array((226, 194, 142), float)[None, None, :] * (0.94 + 0.12 * hl) * np.ones((128, 128, 1))
     paste(atlas, re_, eye)
+    rE, sE = CO_TILES[TILE_EDGE]
+    paste(atlas, rE, paint_chipped(320, 128, sE, 67, SAND_EDGE, terra_cov=0.0, light_cov=0.3, grain=0.03,
+                                   tilt=0.03, line=0.03, drift=0.02))
+    rS, sS = CO_TILES[TILE_SEAM]
+    paste(atlas, rS, paint_chipped(320, 128, sS, 71, SAND_SEAM, terra_cov=0.2, light_cov=0.0, grain=0.04,
+                                   tilt=0.03, line=0.0, drift=0.02))
     return np.clip(atlas, 0, 255).astype(np.uint8)
 
 
@@ -432,12 +602,13 @@ def keep_largest_island(bm):
     comps = islands(bm)
     comps.sort(key=lambda c: -sum(f.calc_area() for f in c))
     dropped = comps[1:]
+    areas = [round(sum(f.calc_area() for f in c), 3) for c in dropped]
     if dropped:
         bmesh.ops.delete(bm, geom=[f for c in dropped for f in c], context="FACES")
         loose = [v for v in bm.verts if not v.link_faces]
         bmesh.ops.delete(bm, geom=loose, context="VERTS")
     bm.normal_update()
-    return len(dropped), [round(sum(f.calc_area() for f in c), 3) for c in dropped]
+    return len(dropped), areas
 
 
 def volume_centroid_bbox(bm):
@@ -521,6 +692,21 @@ def poly_interp_halfwidth(poly, z):
 # ---------------------------------------------------------------------------------------------
 # Surface index: tile classification by nearest source surface
 # ---------------------------------------------------------------------------------------------
+def face_point(f):
+    """A point that lies ON the face: the centre of its largest tessellation triangle (the median of a ring-shaped
+    ngon, e.g. the coffin's front rim, falls in the hole and broke the tile lookup)."""
+    if len(f.verts) == 3:
+        return f.calc_center_median()
+    from mathutils.geometry import tessellate_polygon
+    cos = [v.co.copy() for v in f.verts]
+    best, pt = -1.0, f.calc_center_median()
+    for a, b, c in tessellate_polygon([cos]):
+        ar = (cos[b] - cos[a]).cross(cos[c] - cos[a]).length
+        if ar > best:
+            best, pt = ar, (cos[a] + cos[b] + cos[c]) / 3
+    return pt
+
+
 class SurfaceIndex:
     def __init__(self, sources):
         """sources: list of (bm, tiles list-per-face | int, sign). sign=-1 flips normals (cutter volumes)."""
@@ -548,7 +734,7 @@ class SurfaceIndex:
         bm.normal_update()
         out = []
         for f in bm.faces:
-            c = f.calc_center_median()
+            c = face_point(f)
             best = None
             for loc, nrm, idx, dist in self.tree.find_nearest_range(c, tol):
                 if f.normal.dot(self.norms[idx]) < dotmin:
@@ -588,14 +774,68 @@ def atlas_uv(tile, a, b, tiles_def, atlas_px, origins, axis):
     return px / atlas_px, py_up / atlas_px
 
 
+def local_tile_uv(f, uv, tile):
+    """Small strip tiles (worn edges, seams): each face mapped planar about its own centre, long side along u, with a
+    deterministic shift so neighbouring faces don't repeat the same texels."""
+    (x0, y0, x1, y1), s = CO_TILES[tile]
+    ax = dominant_axis(f.normal)
+    pts = [planar_ab(l.vert.co, ax) for l in f.loops]
+    ca = sum(p[0] for p in pts) / len(pts)
+    cb = sum(p[1] for p in pts) / len(pts)
+    ea = max(p[0] for p in pts) - min(p[0] for p in pts)
+    eb = max(p[1] for p in pts) - min(p[1] for p in pts)
+    swap = eb > ea
+    span_u = (x1 - x0 - 6) / 2 - max(ea, eb) * s / 2
+    span_v = (y1 - y0 - 6) / 2 - min(ea, eb) * s / 2
+    h = (math.sin(ca * 12.9898 + cb * 78.233) * 43758.5453) % 1.0
+    k = (math.sin(ca * 39.346 + cb * 11.135) * 24634.6345) % 1.0
+    mu = (x0 + x1) / 2 + (2 * h - 1) * max(span_u, 0)
+    mv = CO_ATLAS - (y0 + y1) / 2 + (2 * k - 1) * max(span_v, 0)
+    for l, (a, b) in zip(f.loops, pts):
+        da, db = (b - cb, a - ca) if swap else (a - ca, b - cb)
+        px = min(max(mu + da * s, x0 + 2), x1 - 2)
+        py_up = min(max(mv + db * s, CO_ATLAS - y1 + 2), CO_ATLAS - y0 - 2)
+        l[uv].uv = (px / CO_ATLAS, py_up / CO_ATLAS)
+
+
 def assign_uv_coffin(bm, tiles):
     uv = bm.loops.layers.uv.verify()
     bm.normal_update()
     for f, t in zip(bm.faces, tiles):
+        if t in (TILE_EDGE, TILE_SEAM):
+            local_tile_uv(f, uv, t)
+            continue
         ax = dominant_axis(f.normal)
         for l in f.loops:
             a, b = planar_ab(l.vert.co, ax)
             l[uv].uv = atlas_uv(t, a, b, CO_TILES, CO_ATLAS, CO_ORIGIN, ax)
+
+
+def mark_edges_seams(bm, tiles, flat_index, groove_index, eligible=(TILE_OUTER, TILE_CAVITY), dot_min=0.995):
+    """Faces of the plain stone that lie on a groove cutter become dark seams; faces whose normal departs from every
+    nearby unbevelled source face (the bevels) become lighter worn edges."""
+    bm.normal_update()
+    out, n_e, n_s = [], 0, 0
+    for f, t in zip(bm.faces, tiles):
+        if t not in eligible:
+            out.append(t)
+            continue
+        c = face_point(f)
+        g = groove_index.tree.find_nearest(c)
+        if g is not None and g[3] < 2e-3:
+            out.append(TILE_SEAM)
+            n_s += 1
+            continue
+        best = -1.0
+        for loc, nrm, idx, dist in flat_index.tree.find_nearest_range(c, 0.25):
+            best = max(best, f.normal.dot(flat_index.norms[idx]))
+        if best < dot_min:
+            out.append(TILE_EDGE)
+            n_e += 1
+        else:
+            out.append(t)
+    log("  worn-edge faces", n_e, "seam faces", n_s)
+    return out
 
 
 # ---------------------------------------------------------------------------------------------
@@ -646,12 +886,13 @@ def finish_mesh(ob, mat):
 def outline_polys():
     """Anthropoid coffin silhouette (x half-width, z up): narrow head, widest at the shoulders (~70% of the height),
     clear taper down to a stepped foot block. Returns outer (with grooves), base (no grooves), inner (cavity), panel."""
-    R = [(2.50, 0.0), (2.50, 1.10), (2.28, 1.10), (SHOULDER_X, SHOULDER_Z), (HEAD_X, 9.45), (HEAD_X, 10.30), (1.45, OUT_H)]
+    R = [(FOOT_X, 0.0), (FOOT_X, FOOT_Z), (STEP_X, FOOT_Z), (SHOULDER_X, SHOULDER_Z), (HEAD_IN, HEAD_Z0), (HEAD_X, HEAD_Z0),
+         (HEAD_X, HEAD_Z1), (TOP_X, OUT_H)]
 
     pts = list(R)
     outer = pts + [(-x, z) for x, z in reversed(pts)]
-    x0 = 2.28 + (SHOULDER_X - 2.28) / (SHOULDER_Z - 1.10) * (0.0 - 1.10)
-    half = [(x0, 0.0), (SHOULDER_X, SHOULDER_Z), (HEAD_X, 9.45), (HEAD_X, 10.30), (1.45, OUT_H)]
+    x0 = STEP_X + (SHOULDER_X - STEP_X) / (SHOULDER_Z - FOOT_Z) * (0.0 - FOOT_Z)
+    half = [(x0, 0.0), (SHOULDER_X, SHOULDER_Z), (HEAD_IN, HEAD_Z0), (HEAD_IN, HEAD_Z1), (TOP_X, OUT_H)]
     base = half + [(-x, z) for x, z in reversed(half)]
     # edge order: taper, shoulder diagonal, head wall, top chamfer, top, then the mirror, then the floor
     dists = [WALL, WALL_DIAG, WALL, WALL, CEIL, WALL, WALL, WALL_DIAG, WALL, FLOOR]
@@ -674,8 +915,8 @@ def silhouette_weight_fn(inner_poly=None, lo_angle=math.radians(22)):
 
 def groove_cutter_bm(w=0.10, d=0.09):
     """Four V prisms (two per side) running through the depth: the stone-block grooves on the taper and the head wall."""
-    R2, R3 = (2.28, 1.10), (SHOULDER_X, SHOULDER_Z)
-    R4, R5 = (HEAD_X, 9.45), (HEAD_X, 10.30)
+    R2, R3 = (STEP_X, FOOT_Z), (SHOULDER_X, SHOULDER_Z)
+    R4, R5 = (HEAD_X, HEAD_Z0), (HEAD_X, HEAD_Z1)
     bms = []
     for (p, q, z0) in ((R2, R3, NOTCH_Z[0]), (R4, R5, NOTCH_Z[1])):
         dx, dz = q[0] - p[0], q[1] - p[1]
@@ -723,13 +964,16 @@ def build_body(outer, inner):
     bm.free()
     n = set_weights(body, silhouette_weight_fn(inner))
     log("body: bevel edges", n)
-    bevel(body, BEVEL, 2)
+    bevel(body, BEVEL, 1)
     cut_grooves(body)
     bm = bm_from_obj(body)
     clean(bm, dissolve=False)
     # classify cavity vs outer by nearest source volume
     idx = SurfaceIndex([(outer_bm, TILE_OUTER, 1), (cav_bm, TILE_CAVITY, -1)])
     tiles = idx.classify(bm, tol=0.2, dotmin=0.25, default=TILE_OUTER, prefer_high=False)
+    gbm = groove_cutter_bm()
+    tiles = mark_edges_seams(bm, tiles, idx, SurfaceIndex([(gbm, TILE_SEAM, 1)]))
+    gbm.free()
     bm.to_mesh(body.data)
     outer_bm.free()
     cav_bm.free()
@@ -806,9 +1050,108 @@ def open_edges_of(ob, label):
     return n
 
 
+RELIEF_BEVEL = False        # a 0.025 relief bevel costs ~800 tris; the lid + broken kit budgets (3,000) can't carry it
+
+
+def figure_core_bms():
+    """Rounded core of the mummy figure: a torso hull (rows from FIG_TORSO, domed across) and a head dome hull.
+    Backs sit 0.02 inside the slab so the union with the slab is clean."""
+    yb = Y_S + 0.02
+    us = (-1.0, -0.62, 0.0, 0.62, 1.0)
+    pts = []
+    for z, hw, H in FIG_TORSO:
+        for u in us:
+            pts.append(Vector((u * hw, Y_S - H * (0.25 + 0.75 * math.sqrt(max(0.0, 1 - u * u))), z)))
+        pts += [Vector((-hw, yb, z)), Vector((hw, yb, z))]
+    torso = hull_bm(pts)
+    zc, a, c, H = FIG_HEAD
+    pts = [Vector((0, Y_S - H, zc))]
+    n = 12
+    for k in range(n):
+        th = 2 * math.pi * k / n + math.pi / n
+        for r in (1.0, 0.6):
+            pts.append(Vector((a * r * math.cos(th), Y_S - H * (0.25 + 0.75 * math.sqrt(1 - r * r)), zc + c * r * math.sin(th))))
+        pts.append(Vector((a * math.cos(th), yb + 0.007, zc + c * math.sin(th))))    # not coplanar with the torso back
+    head = hull_bm(pts)
+    return torso, head
+
+
+def figure_outline_bms():
+    """Silhouette prisms of the figure (torso polygon + head polygon), used to clip the strips."""
+    right = [(hw, z) for i, (z, hw, _) in enumerate(FIG_TORSO) if i not in (2, 3, 4)]   # drop collinear rows (offset_poly)
+    torso_poly = [(-x, z) for x, z in reversed(right)] + right
+    zc, a, c, _ = FIG_HEAD
+    n = 12
+    head_poly = [(a * math.cos(2 * math.pi * k / n + math.pi / n), zc + c * math.sin(2 * math.pi * k / n + math.pi / n))
+                 for k in range(n)]
+    # inset 0.012 so the clipped strip ends sit just inside the core sides (no coplanar faces for the booleans)
+    torso_poly = offset_poly(torso_poly, [0.012] * len(torso_poly))
+    head_poly = offset_poly(head_poly, [0.012] * len(head_poly))
+    return prism_bm(torso_poly, Y_S - 1.0, Y_S + 0.03), prism_bm(head_poly, Y_S - 1.07, Y_S + 0.037)
+
+
+def core_height_fn(core_bms):
+    """Front surface of the core by ray cast (exact, so strips hug the hulls)."""
+    verts, tris = [], []
+    for b in core_bms:
+        b2 = b.copy()
+        bmesh.ops.triangulate(b2, faces=b2.faces[:])
+        b2.verts.ensure_lookup_table()
+        base = len(verts)
+        verts += [v.co.copy() for v in b2.verts]
+        tris += [tuple(base + v.index for v in f.verts) for f in b2.faces]
+        b2.free()
+    tree = BVHTree.FromPolygons(verts, tris, all_triangles=True)
+
+    def front_y(x, z):
+        hit = tree.ray_cast(Vector((x, Y_S - 3.0, z)), Vector((0, 1, 0)))
+        return hit[0].y if hit[0] is not None else Y_S - 0.05
+    return front_y
+
+
+def band_strip_bm(cx, cz, ang, w, t, front_y, step=0.7):
+    """One linen strip: a flat-backed solid whose front hugs the core at thickness t. Long enough to cross the whole
+    figure; clipped to the silhouette afterwards."""
+    a = math.radians(ang)
+    d = Vector((math.cos(a), math.sin(a)))
+    nv = Vector((-math.sin(a), math.cos(a)))
+    L = 2 * (max(fig_halfwidth(cz), 1.2) + 0.9) / max(math.cos(a), 0.5)
+    n = max(4, int(math.ceil(L / step)) + 1)
+    bm = bmesh.new()
+    fr, bk = [], []
+    for k in range(n):
+        s_ = -L / 2 + L * k / (n - 1)
+        rowf, rowb = [], []
+        for e in (-w / 2, w / 2):
+            p = Vector((cx, cz)) + d * s_ + nv * e
+            rowf.append(bm.verts.new((p.x, front_y(p.x, p.y) - t, p.y)))
+            rowb.append(bm.verts.new((p.x, Y_S + 0.02, p.y)))
+        fr.append(rowf)
+        bk.append(rowb)
+    for k in range(n - 1):
+        bm.faces.new((fr[k][0], fr[k + 1][0], fr[k + 1][1], fr[k][1]))
+        bm.faces.new((bk[k][0], bk[k][1], bk[k + 1][1], bk[k + 1][0]))
+        for e in (0, 1):
+            bm.faces.new((fr[k][e], bk[k][e], bk[k + 1][e], fr[k + 1][e]))
+    for k in (0, n - 1):
+        bm.faces.new((fr[k][0], fr[k][1], bk[k][1], bk[k][0]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    return bm
+
+
+def eye_stud(cx, cz, r=EYE_R, n=8):
+    """Round flat-topped eye stud with a chamfered rim, base inside the slab."""
+    pts = []
+    for rr, y in ((r, Y_S + 0.013), (r, Y_S - 0.27), (r * 0.8, Y_S - 0.31)):
+        for k in range(n):
+            a = 2 * math.pi * k / n + 0.3
+            pts.append(Vector((cx + rr * math.cos(a), y, cz + rr * math.sin(a))))
+    return hull_bm(pts)
+
+
 def build_lid(outer, inner, panel):
     log("lid: slab")
-    rng = random.Random(5)
     slab_raw = prism_bm(outer, Y_S, Y_F)
     slab = obj_from_bm("lid_slab", slab_raw.copy())
     bm = bm_from_obj(slab)
@@ -816,102 +1159,105 @@ def build_lid(outer, inner, panel):
     bm.to_mesh(slab.data)
     bm.free()
     set_weights(slab, silhouette_weight_fn(inner))
-    bevel(slab, BEVEL, 2)
+    bevel(slab, BEVEL, 1)
     cut_grooves(slab)
 
-    # relief components (raw prisms: also the sources for tile classification)
-    emb = 0.10                                          # embed depth inside the slab
-    comps = []                                          # (bm, tile)
-    plate_t, eye_t = 0.12, 0.24
-    comps.append((prism_bm(octagon_poly(0, 9.62, 1.30, 0.52, 0.24), Y_S + emb, Y_S - plate_t), TILE_FACE))
-    for sx in (-0.60, 0.60):
-        comps.append((eye_dome(sx, 9.62), TILE_EYE))
-    # wrapped-mummy bands (rounded, pillow-profile): forehead pair, chin pair, a diamond lattice down the torso, ankle wrap
-    bands = [(0, 10.22, 12, 0.46), (0, 10.22, -12, 0.46), (0, 8.55, 16, 0.62), (0, 8.55, -16, 0.62)]
-    for zc in (7.05, 5.60, 4.15, 2.70):
-        j = rng.uniform(-0.08, 0.08)
-        bands.append((rng.uniform(-0.15, 0.15), zc + j, 33 + rng.uniform(-2, 2), rng.uniform(0.92, 1.0)))
-        bands.append((rng.uniform(-0.15, 0.15), zc + j + rng.uniform(-0.05, 0.05), -33 + rng.uniform(-2, 2), rng.uniform(0.92, 1.0)))
-    bands.append((0, 1.30, 0, 0.55))
-    for cx, cz, ang, w in bands:
-        t = 0.30 if ang >= 0 else 0.38
-        comps.append((band_round(cx, cz, ang, w, Y_S - 0.05, Y_S + emb, t - 0.05), TILE_BAND if ang >= 0 else TILE_OUTER))
-    # recessed panel floor: a thin plate over the inner panel so the gaps between bands read as darker stone
-    floor_raw = prism_bm(panel, Y_S + emb, Y_S - 0.05)
-    floor_ob = obj_from_bm("lid_floor", floor_raw.copy())
+    # mummy figure: rounded core + wide overlapping linen strips + eye studs in the face-wrap gap
+    torso_bm, head_bm = figure_core_bms()
+    front_y = core_height_fn([torso_bm, head_bm])
+    band_bms = [band_strip_bm(cx, cz, ang, w, t, front_y) for cx, cz, ang, w, t in LID_BANDS]
+    eye_bms = [eye_stud(sx, EYE_Z) for sx in (-EYE_X, EYE_X)]
 
-    def relief_weight(e, bm_=None):
-        if not e.is_convex:
-            return 0.0
-        try:
-            if e.calc_face_angle() < math.radians(30):
-                return 0.0
-        except ValueError:
-            return 0.0
-        return 1.0 if any(f.normal.y < -0.5 for f in e.link_faces) else 0.0
-    set_weights(floor_ob, relief_weight)
-    bevel(floor_ob, 0.03, 1)
-    boolean(slab, floor_ob, "UNION")
-    remove_obj(floor_ob)
-    # union all relief components
-    cmat = bpy.data.collections.new("_relief_ops")
-    bpy.context.scene.collection.children.link(cmat)
-    objs = []
-    for i, (bmc, tile) in enumerate(comps):
-        objs.append(obj_from_bm(f"rel_{i}", bmc.copy(), coll=cmat))
-    head = objs[0]
-    # the target must not be inside the operand collection
-    cmat.objects.unlink(head)
-    scratch().objects.link(head)
-    boolean(head, None, "UNION", collection_operand=cmat, use_self=True)
-    open_edges_of(head, "relief union")
-    # clip to the panel
-    panel_bm = prism_bm(panel, Y_S - 1.0, Y_S + 1.0)
-    pan = obj_from_bm("panel_clip", panel_bm)
-    boolean(head, pan, "INTERSECT")
-    open_edges_of(head, "relief clipped")
+    cb = bpy.data.collections.new("_band_ops")
+    bpy.context.scene.collection.children.link(cb)
+    bobjs = [obj_from_bm(f"band_{i}", b.copy(), coll=(scratch() if i == 0 else cb)) for i, b in enumerate(band_bms)]
+    head = bobjs[0]
+    boolean(head, None, "UNION", collection_operand=cb, use_self=True)
+    open_edges_of(head, "strips union")
+    so_t, so_h = figure_outline_bms()
+    sil = obj_from_bm("fig_sil", so_t)
+    sil_h = obj_from_bm("fig_sil_h", so_h)
+    boolean(sil, sil_h, "UNION")
+    lo_, hi_ = volume_centroid_bbox(bm_from_obj(sil))
+    log("  silhouette bbox", r5(lo_), r5(hi_), "faces", len(sil.data.polygons))
+    boolean(head, sil, "INTERSECT")
+    open_edges_of(head, "strips clipped")
+    lo_, hi_ = volume_centroid_bbox(bm_from_obj(head))
+    log("  strips bbox", r5(lo_), r5(hi_))
+    cc = bpy.data.collections.new("_core_ops")
+    bpy.context.scene.collection.children.link(cc)
+    cobjs = [obj_from_bm(f"core_{i}", b.copy(), coll=cc) for i, b in enumerate([torso_bm, head_bm] + eye_bms)]
+    boolean(head, None, "UNION", collection_operand=cc, use_self=True)
+    open_edges_of(head, "figure union")
+    lo_, hi_ = volume_centroid_bbox(bm_from_obj(head))
+    log("  figure bbox", r5(lo_), r5(hi_))
     bm = bm_from_obj(head)
     clean(bm)
     bm.to_mesh(head.data)
     bm.free()
 
+    def relief_weight(e, bm_=None):
+        if not e.is_convex:
+            return 0.0
+        try:
+            if e.calc_face_angle() < math.radians(55):
+                return 0.0
+        except ValueError:
+            return 0.0
+        return 1.0 if any(f.normal.y < -0.5 for f in e.link_faces) else 0.0
+    # soften strip and figure edges; keep the bevel only if the shell stays closed
+    keep = head.data.copy()
     nrel = set_weights(head, relief_weight)
+    if RELIEF_BEVEL:
+        bevel(head, 0.025, 1)
+    if open_edges_of(head, "figure bevelled"):
+        log("lid: relief bevel opened the shell, reverting")
+        old = head.data
+        head.data = keep
+        bpy.data.meshes.remove(old)
+    else:
+        bpy.data.meshes.remove(keep)
     log("lid: relief bevel edges", nrel)
-    bevel(head, 0.06, 1)
-    open_edges_of(head, "relief bevelled")
-    open_edges_of(slab, "slab+floor before relief")
-    # union with slab
     boolean(slab, head, "UNION")
-    open_edges_of(slab, "slab+relief")
+    open_edges_of(slab, "slab+figure")
     bm = bm_from_obj(slab)
     clean(bm)
-    ref_sources = [(slab_raw, TILE_OUTER, 1), (floor_raw, TILE_CAVITY, 1)] + [(c[0], c[1], 1) for c in comps]
+    ref_sources = ([(slab_raw, TILE_OUTER, 1), (torso_bm, TILE_CORE, 1), (head_bm, TILE_CORE, 1)]
+                   + [(b, TILE_BAND, 1) for b in band_bms] + [(b, TILE_EYE, 1) for b in eye_bms])
     idx = SurfaceIndex(ref_sources)
     tiles = idx.classify(bm, tol=0.12, dotmin=0.3, default=TILE_OUTER, prefer_high=True)
+    bm.normal_update()
+    nf = 0
+    for i, f in enumerate(bm.faces):
+        if tiles[i] == TILE_CORE:
+            c = f.calc_center_median()
+            gap = EYE_GAP[0] <= c.z <= EYE_GAP[1] and abs(c.x) < FIG_HEAD[1] + 0.05
+            tiles[i] = TILE_FACE if gap else TILE_BAND
+            nf += gap
+    log("lid: face-gap faces", nf)
+    gbm = groove_cutter_bm()
+    tiles = mark_edges_seams(bm, tiles, SurfaceIndex([(slab_raw, TILE_OUTER, 1)]), SurfaceIndex([(gbm, TILE_SEAM, 1)]),
+                             eligible=(TILE_OUTER,))
+    gbm.free()
     bm.to_mesh(slab.data)
-    for c in comps:
-        c[0].free()
+    for b in [torso_bm, head_bm] + band_bms + eye_bms:
+        b.free()
     slab_raw.free()
-    floor_raw.free()
-    for o in objs[1:]:
+    for o in bobjs[1:] + cobjs + [sil, sil_h]:
         remove_obj(o)
-    bpy.data.collections.remove(cmat)
+    bpy.data.collections.remove(cb)
+    bpy.data.collections.remove(cc)
     remove_obj(head)
-    remove_obj(pan)
     return slab, bm, tiles
 
 
 # ---------------------------------------------------------------------------------------------
 # Broken kit
 # ---------------------------------------------------------------------------------------------
-CUT_BASE = [(-7.0, -1.0), (7.0, -1.0), (7.0, 3.0), (5.6, 2.6), (4.1, 3.4), (2.8, 2.45), (1.5, 3.5), (0.2, 2.7),
-            (-1.1, 3.45), (-2.4, 2.5), (-3.7, 3.3), (-5.2, 2.65), (-7.0, 3.1)]
-CUT_LEFT = [(-7.0, 3.95), (-5.0, 4.55), (-3.6, 3.9), (-2.2, 4.4), (-1.2, 4.0), (-1.6, 5.4), (-0.8, 6.5),
-            (-1.7, 7.7), (-0.9, 8.8), (-1.6, 10.0), (-0.9, 11.5), (-7.0, 12.2)]
-CUT_RIGHT = [(7.0, 4.6), (5.2, 4.2), (3.8, 4.9), (2.7, 4.4), (1.8, 5.3), (2.6, 6.3), (1.7, 7.4), (2.4, 8.5),
-             (1.9, 9.9), (3.3, 9.6), (4.7, 10.3), (6.0, 9.7), (7.0, 10.2)]
-CUT_LID = [(-7.0, 6.4), (-5.4, 6.9), (-4.2, 6.0), (-2.9, 7.1), (-1.6, 6.3), (-0.2, 7.2), (1.2, 6.5), (2.3, 7.6),
-           (3.1, 8.7), (3.9, 9.6), (7.0, 9.8), (7.0, 12.5), (-7.0, 12.5)]
+CUT_BASE = [(-7.0, -1.364), (7.0, -1.364), (7.0, 4.091), (5.6, 3.545), (4.1, 4.636), (2.8, 3.341), (1.5, 4.773), (0.2, 3.682), (-1.1, 4.705), (-2.4, 3.409), (-3.7, 4.5), (-5.2, 3.614), (-7.0, 4.227)]
+CUT_LEFT = [(-7.0, 5.386), (-5.0, 6.205), (-3.6, 5.318), (-2.2, 6.0), (-1.2, 5.455), (-1.6, 7.364), (-0.8, 8.864), (-1.7, 10.5), (-0.9, 12.0), (-1.6, 13.636), (-0.9, 15.682), (-7.0, 16.636)]
+CUT_RIGHT = [(7.0, 6.273), (5.2, 5.727), (3.8, 6.682), (2.7, 6.0), (1.8, 7.227), (2.6, 8.591), (1.7, 10.091), (2.4, 11.591), (1.9, 13.5), (3.3, 13.091), (4.7, 14.045), (6.0, 13.227), (7.0, 13.909)]
+CUT_LID = [(-7.0, 9.273), (-5.4, 9.955), (-4.2, 8.727), (-2.9, 10.227), (-1.6, 9.136), (-0.2, 10.364), (1.2, 9.409), (2.3, 10.773), (3.1, 12.136), (3.9, 13.227), (7.0, 13.5), (7.0, 17.045), (-7.0, 17.045)]     # 2026-10-09: lower edge +0.4 (tri budget)
 
 
 def make_chunk(name, src_bm, cutter_poly, y_rings, seed, ref_index, dropped_log):
@@ -924,6 +1270,7 @@ def make_chunk(name, src_bm, cutter_poly, y_rings, seed, ref_index, dropped_log)
     clean(bm)
     ndrop, areas = keep_largest_island(bm)
     dropped_log[name] = {"dropped_islands": ndrop, "areas": areas}
+    log("  dropped islands", ndrop, areas)
     tiles = ref_index.classify(bm, tol=1e-3, dotmin=0.5, default=TILE_FRACT, prefer_high=False)
     lay = bm.faces.layers.int.new("tile")
     for f, t in zip(bm.faces, tiles):
@@ -947,7 +1294,20 @@ def make_chunk(name, src_bm, cutter_poly, y_rings, seed, ref_index, dropped_log)
     bm = bm_from_obj(src)
     clean(bm, dissolve=False)
     ndrop2, _ = keep_largest_island(bm)
+    bm = tri_clean(bm, name + " (pre-snap)")
+    # the 0.07 fracture bevel can push a vertex a hair past the intact surface where it meets the rim bevel: snap any
+    # vertex that is outside the intact mesh by < 0.03 back onto it (keeps the chunk inside the intact volume)
+    src_tree = BVHTree.FromBMesh(src_bm)
+    nsnap = 0
+    for v in bm.verts:
+        hit = src_tree.find_nearest(v.co)
+        if hit[0] is not None and 1e-4 < hit[3] < 0.03 and (v.co - hit[0]).dot(hit[1]) > 0:
+            v.co = hit[0] - hit[1] * 2e-4
+            nsnap += 1
+    bm.normal_update()
+    log("  snapped to intact surface", nsnap)
     tiles = ref_index.classify(bm, tol=1e-3, dotmin=0.5, default=TILE_FRACT, prefer_high=False)
+    log("  tiles", {t: tiles.count(t) for t in sorted(set(tiles))})
     remove_obj(src)
     return bm, tiles
 
@@ -1410,7 +1770,8 @@ def build():
     lid = finalize_object("Sarcophagus_Lid", lid_bm.copy(), mat_sar, recenter=(0.0, y_hinge, 0.0))
     manifest["assets"]["Sarcophagus.fbx"] = {
         "meshes": {"Sarcophagus_Body": mesh_entry(body), "Sarcophagus_Lid": mesh_entry(lid)},
-        "revision": "2026-10-09 fix pass: taller anthropoid silhouette (11 tall), soft painterly texture, rounded bandage relief",
+        "revision": "2026-10-09 third pass: chunky chamfered rim (walls 0.65, 0.2 chamfers), proud head/foot bands, shoulders 7.6, "
+                    "head end 5.7, foot 4.8; X-lattice bandage wraps; warm chipped sandstone atlas",
         "frame": "Body origin = floor centre of the cavity footprint at ground level; both meshes are placed closed "
                  "(identity transform of the FBX = assembled coffin).",
         "cavity": {"frontPlaneY": Y_F, "backInnerY": Y_CB, "floorZ": FLOOR, "ceilingZ": OUT_H - CEIL,
@@ -1524,7 +1885,9 @@ def read_png_rgb(path):
     return (np.clip(arr, 0, 1) * 255 + 0.5).astype(np.uint8)
 
 
-def fresh_render_scene(world=(0.70, 0.80, 0.95), floor=(0.30, 0.31, 0.32), floor_size=80):
+def fresh_render_scene(world=(0.70, 0.80, 0.95), floor=(0.30, 0.31, 0.32), floor_size=80, game_light=False):
+    """game_light=True (coffin sheets, 2026-10-09): light-blue world fill (0.55, 0.70, 0.95) at moderate strength plus a
+    warm sun, so previews predict the in-game look (warm sun + strong blue sky ambient)."""
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene = bpy.context.scene
     for eng in ("BLENDER_EEVEE", "BLENDER_EEVEE_NEXT"):
@@ -1546,17 +1909,17 @@ def fresh_render_scene(world=(0.70, 0.80, 0.95), floor=(0.30, 0.31, 0.32), floor
     except Exception:
         pass
     bg = w.node_tree.nodes["Background"]
-    bg.inputs["Color"].default_value = (*world, 1)
-    bg.inputs["Strength"].default_value = 0.40
+    bg.inputs["Color"].default_value = (*((0.55, 0.70, 0.95) if game_light else world), 1)
+    bg.inputs["Strength"].default_value = 0.85 if game_light else 0.40
     sun = bpy.data.lights.new("sun", "SUN")
-    sun.energy = 2.1
+    sun.energy = 2.6 if game_light else 2.1
     sun.angle = math.radians(14)
-    sun.color = (1.0, 0.96, 0.88)
+    sun.color = (1.0, 0.93, 0.80) if game_light else (1.0, 0.96, 0.88)
     so = bpy.data.objects.new("sun", sun)
     scene.collection.objects.link(so)
     so.rotation_euler = (math.radians(50), 0, math.radians(-36))
     fill = bpy.data.lights.new("fill", "SUN")
-    fill.energy = 0.55
+    fill.energy = 0.2 if game_light else 0.55
     fill.color = (0.85, 0.9, 1.0)
     fo = bpy.data.objects.new("fill", fill)
     scene.collection.objects.link(fo)
@@ -1622,25 +1985,36 @@ def render_all():
     tmp = PREVIEWS / "_tmp.png"
     want = lambda n: not ONLY or n in ONLY
     if want("sarcophagus"):          # front 3/4, side, back (lid closed) + lid fallen forward
-        sc, cam = fresh_render_scene()
+        sc, cam = fresh_render_scene(game_light=True)
         o = import_props("Sarcophagus.fbx", "Sarcophagus_atlas.png")
-        T = (0, -0.7, 5.6)
-        p1 = shoot(sc, cam, tmp, (512, 512), T, 34, 13, 7.5)
-        p2 = shoot(sc, cam, tmp, (512, 512), T, 90, 6, 7.5)
-        p3 = shoot(sc, cam, tmp, (512, 512), T, 180, 12, 7.5)
+        T = (0, -0.7, 7.6)
+        p1 = shoot(sc, cam, tmp, (512, 512), T, 34, 13, 9.4)
+        p2 = shoot(sc, cam, tmp, (512, 512), T, 90, 6, 9.4)
+        p3 = shoot(sc, cam, tmp, (512, 512), T, 180, 12, 9.4)
         o["Sarcophagus_Lid"].rotation_euler = (math.radians(90), 0, 0)
-        p4 = shoot(sc, cam, tmp, (512, 512), (0, -5.0, 4.0), 24, 30, 11.2)
+        p4 = shoot(sc, cam, tmp, (512, 512), (0, -7.0, 4.0), 24, 30, 13.5)
         sheet(PREVIEWS / "Sarcophagus.png", [[p1, p2], [p3, p4]])
     if want("broken"):               # pieces in place (identity transform) and exploded
-        sc, cam = fresh_render_scene()
+        sc, cam = fresh_render_scene(game_light=True)
         o = import_props("SarcophagusBroken.fbx", "Sarcophagus_atlas.png")
-        q1 = shoot(sc, cam, tmp, (512, 512), (0, -0.4, 5.6), 30, 14, 7.5)
+        q1 = shoot(sc, cam, tmp, (512, 512), (0, -0.4, 7.6), 30, 14, 9.4)
         push = {"SarcophagusBroken_Base": (0, -0.6, -0.3), "SarcophagusBroken_LeftWall": (-4.0, 0.0, 0.0),
-                "SarcophagusBroken_RightWall": (4.2, 0.0, 0.5), "SarcophagusBroken_LidFragment": (0.0, -0.8, 2.3)}
+                "SarcophagusBroken_RightWall": (4.2, 0.0, 0.5), "SarcophagusBroken_LidFragment": (0.0, -0.8, 3.0)}
         for n, d in push.items():
             o[n].location = o[n].location + Vector(d)
-        q2 = shoot(sc, cam, tmp, (512, 512), (0, -0.8, 5.9), 20, 15, 9.8)
+        q2 = shoot(sc, cam, tmp, (512, 512), (0, -0.8, 8.2), 20, 15, 12.0)
         sheet(PREVIEWS / "Broken.png", [[q1, q2]])
+    if want("compare"):              # reference 03 left panel beside the same framing (open body, lid standing right)
+        sc, cam = fresh_render_scene(world=(0.62, 0.62, 0.64), floor=(0.55, 0.55, 0.56), game_light=False)
+        o = import_props("Sarcophagus.fbx", "Sarcophagus_atlas.png")
+        o["Sarcophagus_Lid"].location = Vector((7.5, -1.6, 0.0))
+        c1 = shoot(sc, cam, tmp, (512, 1024), (3.6, -0.6, 7.6), -24, 9, 6.5)
+        ref = read_png_rgb(REFS / "03-sarcophagus-assembly.png")[:, :512, :]
+        sc2, cam2 = fresh_render_scene(game_light=True)
+        o = import_props("Sarcophagus.fbx", "Sarcophagus_atlas.png")
+        o["Sarcophagus_Lid"].location = Vector((7.5, -1.6, 0.0))
+        c2 = shoot(sc2, cam2, tmp, (512, 1024), (3.6, -0.6, 7.6), -24, 9, 6.5)
+        sheet(PREVIEWS / "Compare_Assembly.png", [[ref, c1, c2]])
     if want("vent"):
         sc, cam = fresh_render_scene(floor=(0.30, 0.29, 0.28))
         o = import_props("VolcanicVent.fbx", "Volcanic_atlas.png")

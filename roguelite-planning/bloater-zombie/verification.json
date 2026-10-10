@@ -12,7 +12,7 @@
     "origin_vs_joint_error": 0.0
    },
    "Head": {
-    "triangles": 1324,
+    "triangles": 1084,
     "materials": 1,
     "uv_layer": "PaintedAtlas",
     "uv_in_0_1": true,
@@ -22,7 +22,7 @@
     "origin_vs_joint_error": 0.0
    },
    "LeftFoot": {
-    "triangles": 132,
+    "triangles": 160,
     "materials": 1,
     "uv_layer": "PaintedAtlas",
     "uv_in_0_1": true,
@@ -42,7 +42,7 @@
     "origin_vs_joint_error": 0.0
    },
    "LeftLowerArm": {
-    "triangles": 156,
+    "triangles": 188,
     "materials": 1,
     "uv_layer": "PaintedAtlas",
     "uv_in_0_1": true,
@@ -62,7 +62,7 @@
     "origin_vs_joint_error": 0.0
    },
    "LeftUpperArm": {
-    "triangles": 412,
+    "triangles": 704,
     "materials": 1,
     "uv_layer": "PaintedAtlas",
     "uv_in_0_1": true,
@@ -72,7 +72,7 @@
     "origin_vs_joint_error": 0.0
    },
    "LeftUpperLeg": {
-    "triangles": 320,
+    "triangles": 256,
     "materials": 1,
     "uv_layer": "PaintedAtlas",
     "uv_in_0_1": true,
@@ -92,7 +92,7 @@
     "origin_vs_joint_error": 0.0
    },
    "RightFoot": {
-    "triangles": 132,
+    "triangles": 160,
     "materials": 1,
     "uv_layer": "PaintedAtlas",
     "uv_in_0_1": true,
@@ -112,7 +112,7 @@
     "origin_vs_joint_error": 0.0
    },
    "RightLowerArm": {
-    "triangles": 156,
+    "triangles": 188,
     "materials": 1,
     "uv_layer": "PaintedAtlas",
     "uv_in_0_1": true,
@@ -132,7 +132,7 @@
     "origin_vs_joint_error": 0.0
    },
    "RightUpperArm": {
-    "triangles": 412,
+    "triangles": 704,
     "materials": 1,
     "uv_layer": "PaintedAtlas",
     "uv_in_0_1": true,
@@ -142,7 +142,7 @@
     "origin_vs_joint_error": 0.0
    },
    "RightUpperLeg": {
-    "triangles": 320,
+    "triangles": 256,
     "materials": 1,
     "uv_layer": "PaintedAtlas",
     "uv_in_0_1": true,
@@ -152,7 +152,7 @@
     "origin_vs_joint_error": 0.0
    },
    "UpperTorso": {
-    "triangles": 2984,
+    "triangles": 2972,
     "materials": 1,
     "uv_layer": "PaintedAtlas",
     "uv_in_0_1": true,
@@ -162,195 +162,224 @@
     "origin_vs_joint_error": 0.0
    }
   },
-  "total_triangles": 7540,
+  "total_triangles": 7864,
   "height": 6.0,
   "ground": -0.0,
-  "belly_width_at_equator": 4.555,
-  "belly_depth_at_equator": 4.285,
-  "upper_torso_bbox_width_incl_shoulders": 5.247,
+  "belly_width_widest_band_z2.0_2.6": 3.96,
+  "belly_depth_widest_band_z2.0_2.6": 3.594,
+  "upper_torso_bbox_width_incl_shoulders": 4.525,
   "import_data_part_bounds_max_error": 1e-06
  },
  "belly_clearance": {
   "rest:LeftHand": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.6626
+   "min": 0.4454
   },
   "rest:RightHand": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.6626
+   "min": 0.4454
   },
   "rest:LeftLowerArm": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.3591
+   "min": 0.1831
   },
   "rest:RightLowerArm": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.3591
+   "min": 0.1852
   },
   "rest:EyeGlow": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.7499
+   "min": 0.6249
   },
-  "rest:Head(excluding hidden neck seat)": {
+  "rest:Head(above the 0.3 seat)": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.1092
+   "min": 0.1367
   },
-  "rest:LeftUpperArm(below shoulder seat, axial>0.3)": {
+  "rest:Head seat vertices inside the body": "69/114",
+  "rest:LeftUpperArm(below deltoid seat, axial>0.45)": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.106
+   "min": 0.1052
   },
   "rest:LeftUpperArm(clearance by tenth of arm, 0=shoulder joint)": {
-   "0.1": -0.115,
-   "0.2": -0.123,
-   "0.4": 0.113,
-   "0.5": 0.106,
-   "0.8": 0.417,
-   "0.9": 0.406,
-   "1.0": 0.469
+   "0.0": -0.282,
+   "0.1": -0.081,
+   "0.2": 0.055,
+   "0.3": -0.032,
+   "0.6": 0.105,
+   "0.9": 0.145,
+   "1.0": 0.213
   },
   "rest:LeftUpperArm(shoulder seat, info)": {
-   "pairs": 231,
-   "inside": 49,
-   "min": -0.3898,
-   "deepest_contact_along_arm": 0.264
+   "pairs": 361,
+   "inside": 182,
+   "min": -0.4139,
+   "deepest_contact_along_arm": 0.35
   },
-  "rest:RightUpperArm(below shoulder seat, axial>0.3)": {
+  "rest:RightUpperArm(below deltoid seat, axial>0.45)": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.1049
+   "min": 0.12
   },
   "rest:RightUpperArm(clearance by tenth of arm, 0=shoulder joint)": {
-   "0.1": -0.115,
-   "0.2": -0.122,
-   "0.4": 0.169,
-   "0.5": 0.105,
-   "0.6": 0.237,
-   "0.8": 0.417,
-   "0.9": 0.406,
-   "1.0": 0.469
+   "0.0": -0.266,
+   "0.1": -0.077,
+   "0.2": 0.066,
+   "0.3": -0.034,
+   "0.6": 0.12,
+   "0.9": 0.144,
+   "1.0": 0.218
   },
   "rest:RightUpperArm(shoulder seat, info)": {
-   "pairs": 184,
-   "inside": 47,
-   "min": -0.3898,
-   "deepest_contact_along_arm": 0.279
+   "pairs": 356,
+   "inside": 182,
+   "min": -0.4176,
+   "deepest_contact_along_arm": 0.35
   },
   "rest:LeftUpperLeg(info)": {
-   "pairs": 128,
-   "inside": 80,
-   "min": -0.629
+   "pairs": 123,
+   "inside": 64,
+   "min": -0.5642
   },
   "rest:RightUpperLeg(info)": {
-   "pairs": 128,
-   "inside": 80,
-   "min": -0.629
+   "pairs": 124,
+   "inside": 64,
+   "min": -0.5646
   },
   "rest:LowerTorso(info)": {
-   "pairs": 91,
-   "inside": 49,
-   "min": -0.6524
+   "pairs": 82,
+   "inside": 46,
+   "min": -0.3939
   },
   "inflated:LeftHand": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.7071
+   "min": 0.4514
   },
   "inflated:RightHand": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.7071
+   "min": 0.4539
   },
   "inflated:LeftLowerArm": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.2919
+   "min": 0.2381
   },
   "inflated:RightLowerArm": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.2919
+   "min": 0.24
   },
   "inflated:EyeGlow": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.7574
+   "min": 0.5932
   },
-  "inflated:Head(excluding hidden neck seat)": {
+  "inflated:Head(above the 0.3 seat)": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.0909
+   "min": 0.0648
   },
-  "inflated:LeftUpperArm(below shoulder seat, axial>0.3)": {
+  "inflated:Head seat vertices inside the body": "83/114",
+  "inflated:LeftUpperArm(below deltoid seat, axial>0.45)": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.0376
+   "min": 0.1018
   },
   "inflated:LeftUpperArm(clearance by tenth of arm, 0=shoulder joint)": {
-   "0.1": -0.185,
-   "0.2": -0.193,
-   "0.4": 0.038,
-   "0.5": 0.038,
-   "0.8": 0.35,
-   "0.9": 0.376,
-   "1.0": 0.468
+   "0.0": -0.402,
+   "0.1": -0.225,
+   "0.2": -0.078,
+   "0.3": -0.169,
+   "0.6": 0.102,
+   "0.9": 0.269,
+   "1.0": 0.322
   },
   "inflated:LeftUpperArm(shoulder seat, info)": {
-   "pairs": 213,
-   "inside": 58,
-   "min": -0.4594,
-   "deepest_contact_along_arm": 0.264
+   "pairs": 52,
+   "inside": 297,
+   "min": -0.5529,
+   "deepest_contact_along_arm": 0.37
   },
-  "inflated:RightUpperArm(below shoulder seat, axial>0.3)": {
+  "inflated:RightUpperArm(below deltoid seat, axial>0.45)": {
    "pairs": 0,
    "inside": 0,
-   "min": 0.0306
+   "min": 0.0978
   },
   "inflated:RightUpperArm(clearance by tenth of arm, 0=shoulder joint)": {
-   "0.1": -0.185,
-   "0.2": -0.192,
-   "0.4": 0.094,
-   "0.5": 0.031,
-   "0.6": 0.155,
-   "0.8": 0.35,
-   "0.9": 0.376,
-   "1.0": 0.468
+   "0.0": -0.402,
+   "0.1": -0.208,
+   "0.2": -0.06,
+   "0.3": -0.174,
+   "0.6": 0.098,
+   "0.9": 0.261,
+   "1.0": 0.319
   },
   "inflated:RightUpperArm(shoulder seat, info)": {
-   "pairs": 170,
-   "inside": 60,
-   "min": -0.4594,
-   "deepest_contact_along_arm": 0.281
+   "pairs": 52,
+   "inside": 297,
+   "min": -0.5606,
+   "deepest_contact_along_arm": 0.37
   },
   "inflated:LeftUpperLeg(info)": {
-   "pairs": 46,
-   "inside": 150,
-   "min": -1.1448
+   "pairs": 117,
+   "inside": 96,
+   "min": -0.9882
   },
   "inflated:RightUpperLeg(info)": {
-   "pairs": 28,
-   "inside": 155,
-   "min": -1.1459
+   "pairs": 117,
+   "inside": 96,
+   "min": -0.9869
   },
   "inflated:LowerTorso(info)": {
    "pairs": 0,
    "inside": 92,
-   "min": -1.1671
+   "min": -0.8818
   }
  },
  "arm_pose_sweep": {
   "poses": 288,
   "colliding": 0,
-  "min_clearance": 0.1539,
-  "worst": "inflated Left shoulder 92 elbow 40 roll 7"
+  "min_clearance": 0.0185,
+  "worst": "rest Left shoulder 15 elbow 40 roll 7"
  },
- "eyes_visible_from_front": 0.7,
+ "game_pose_sweep": {
+  "arms": {
+   "poses": 288,
+   "skin_pairs": 0,
+   "vest_pairs": 0,
+   "min_skin_gap": 0.1118,
+   "min_vest_gap": 0.055,
+   "worst_skin": "inflated Left shoulder X-6 Z-75.6 elbow 26 wrist 10",
+   "worst_vest": "rest Left shoulder X28 Z-72.4 elbow 8 wrist -4",
+   "vest_hits": [],
+   "cap_vs_vest_pairs_info": 6126
+  },
+  "head": {
+   "poses": 18,
+   "pairs": 0,
+   "min_gap": 0.0119,
+   "worst": "inflated neck X0 Z4",
+   "min_seated": 52
+  },
+  "legs": {
+   "poses": 240,
+   "poke_through": 0,
+   "shin_or_hem_inside": 0,
+   "exposed_tops": 0,
+   "min_hem_gap": 0.0915,
+   "worst": "inflated waist (9,3,8) Left hip X-18 Z-7 knee 0",
+   "hits": []
+  }
+ },
+ "eyes_visible_from_front": 0.9,
  "model_blend": {
   "rigs": 1,
   "bones": 16,
@@ -359,9 +388,9 @@
   ]
  },
  "files": {
-  "BaseColor.png_sha256": "30a6d32d10cedba6a38dc69f8105e65c68e8e70ef533e3944321d4f00ec1f765",
+  "BaseColor.png_sha256": "7bfd0eaebc6185d64226543d7a6c95c8398727c9d3fe4ecd28ab7f9a78b26a17",
   "fbm_copy_matches": true,
-  "BloaterZombie_Import.fbx_sha256": "028adde86616a5dd7e011079aa8ee37d8593b12ceb23e2d9eb0162d34f5fe6bd"
+  "BloaterZombie_Import.fbx_sha256": "362b7055cad165dd5df50886ac82961e0865541a7d125b4ba42eb380aab56866"
  },
  "status": "PASS",
  "failures": [],

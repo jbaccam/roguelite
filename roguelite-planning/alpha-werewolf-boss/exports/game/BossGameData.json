@@ -1,0 +1,528 @@
+{
+  "attacks": {
+    "ClawRake": {
+      "duration": 1.0833,
+      "warnStart": 0.0833,
+      "impact": 0.5,
+      "activeEnd": 0.6667,
+      "recoveryEnd": 0.9583,
+      "points": {
+        "LeftClaw": {
+          "bone": "LeftFingers",
+          "offset": [
+            -0.413,
+            0.8693,
+            0.0347
+          ],
+          "rootAtImpact": [
+            0.5835,
+            -6.4741,
+            3.5023
+          ],
+          "rootAtImpactStudio": [
+            -0.5835,
+            3.5023,
+            -6.4741
+          ]
+        },
+        "LeftForearm": {
+          "bone": "LeftForearm",
+          "offset": [
+            0,
+            0.832,
+            0
+          ],
+          "rootAtImpact": [
+            1.6394,
+            -4.673,
+            3.9186
+          ],
+          "rootAtImpactStudio": [
+            -1.6394,
+            3.9186,
+            -4.673
+          ]
+        },
+        "RightClaw": {
+          "bone": "RightFingers",
+          "offset": [
+            0.413,
+            0.8693,
+            0.0347
+          ],
+          "rootAtImpact": [
+            -0.5835,
+            -6.4741,
+            3.5023
+          ],
+          "rootAtImpactStudio": [
+            0.5835,
+            3.5023,
+            -6.4741
+          ]
+        },
+        "RightForearm": {
+          "bone": "RightForearm",
+          "offset": [
+            0,
+            0.832,
+            0
+          ],
+          "rootAtImpact": [
+            -1.6394,
+            -4.673,
+            3.9186
+          ],
+          "rootAtImpactStudio": [
+            1.6394,
+            3.9186,
+            -4.673
+          ]
+        }
+      },
+      "directionAtImpact": [
+        0.0,
+        -1.0,
+        0.0
+      ],
+      "directionAtImpactStudio": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "sweep": [
+        {
+          "time": 0.375,
+          "LeftClaw": [
+            3.6954,
+            -3.9591,
+            7.5776
+          ],
+          "LeftClawStudio": [
+            -3.6954,
+            7.5776,
+            -3.9591
+          ],
+          "LeftForearm": [
+            3.5552,
+            -1.7264,
+            7.0594
+          ],
+          "LeftForearmStudio": [
+            -3.5552,
+            7.0594,
+            -1.7264
+          ],
+          "RightClaw": [
+            -3.6954,
+            -3.9591,
+            7.5776
+          ],
+          "RightClawStudio": [
+            3.6954,
+            7.5776,
+            -3.9591
+          ],
+          "RightForearm": [
+            -3.5552,
+            -1.7264,
+            7.0594
+          ],
+          "RightForearmStudio": [
+            3.5552,
+            7.0594,
+            -1.7264
+          ]
+        },
+        {
+          "time": 0.4167,
+          "LeftClaw": [
+            2.14,
+            -5.9401,
+            7.0591
+          ],
+          "LeftClawStudio": [
+            -2.14,
+            7.0591,
+            -5.9401
+          ],
+          "LeftForearm": [
+            2.7848,
+            -3.8222,
+            6.5871
+          ],
+          "LeftForearmStudio": [
+            -2.7848,
+            6.5871,
+            -3.8222
+          ],
+          "RightClaw": [
+            -2.14,
+            -5.9401,
+            7.0591
+          ],
+          "RightClawStudio": [
+            2.14,
+            7.0591,
+            -5.9401
+          ],
+          "RightForearm": [
+            -2.7848,
+            -3.8222,
+            6.5871
+          ],
+          "RightForearmStudio": [
+            2.7848,
+            6.5871,
+            -3.8222
+          ]
+        },
+        {
+          "time": 0.4583,
+          "LeftClaw": [
+            1.1275,
+            -6.8548,
+            5.8152
+          ],
+          "LeftClawStudio": [
+            -1.1275,
+            5.8152,
+            -6.8548
+          ],
+          "LeftForearm": [
+            2.0279,
+            -4.8811,
+            5.4088
+          ],
+          "LeftForearmStudio": [
+            -2.0279,
+            5.4088,
+            -4.8811
+          ],
+          "RightClaw": [
+            -1.1275,
+            -6.8548,
+            5.8152
+          ],
+          "RightClawStudio": [
+            1.1275,
+            5.8152,
+            -6.8548
+          ],
+          "RightForearm": [
+            -2.0279,
+            -4.8811,
+            5.4088
+          ],
+          "RightForearmStudio": [
+            2.0279,
+            5.4088,
+            -4.8811
+          ]
+        },
+        {
+          "time": 0.5,
+          "LeftClaw": [
+            0.5836,
+            -6.4741,
+            3.5023
+          ],
+          "LeftClawStudio": [
+            -0.5836,
+            3.5023,
+            -6.4741
+          ],
+          "LeftForearm": [
+            1.6394,
+            -4.673,
+            3.9186
+          ],
+          "LeftForearmStudio": [
+            -1.6394,
+            3.9186,
+            -4.673
+          ],
+          "RightClaw": [
+            -0.5836,
+            -6.4741,
+            3.5023
+          ],
+          "RightClawStudio": [
+            0.5836,
+            3.5023,
+            -6.4741
+          ],
+          "RightForearm": [
+            -1.6394,
+            -4.673,
+            3.9186
+          ],
+          "RightForearmStudio": [
+            1.6394,
+            3.9186,
+            -4.673
+          ]
+        },
+        {
+          "time": 0.5417,
+          "LeftClaw": [
+            0.7142,
+            -5.4472,
+            2.1403
+          ],
+          "LeftClawStudio": [
+            -0.7142,
+            2.1403,
+            -5.4472
+          ],
+          "LeftForearm": [
+            1.7557,
+            -3.9282,
+            3.1072
+          ],
+          "LeftForearmStudio": [
+            -1.7557,
+            3.1072,
+            -3.9282
+          ],
+          "RightClaw": [
+            -0.7142,
+            -5.4472,
+            2.1403
+          ],
+          "RightClawStudio": [
+            0.7142,
+            2.1403,
+            -5.4472
+          ],
+          "RightForearm": [
+            -1.7557,
+            -3.9282,
+            3.1072
+          ],
+          "RightForearmStudio": [
+            1.7557,
+            3.1072,
+            -3.9282
+          ]
+        },
+        {
+          "time": 0.5833,
+          "LeftClaw": [
+            0.8941,
+            -4.2786,
+            1.3808
+          ],
+          "LeftClawStudio": [
+            -0.8941,
+            1.3808,
+            -4.2786
+          ],
+          "LeftForearm": [
+            1.8751,
+            -3.1558,
+            2.7742
+          ],
+          "LeftForearmStudio": [
+            -1.8751,
+            2.7742,
+            -3.1558
+          ],
+          "RightClaw": [
+            -0.8941,
+            -4.2786,
+            1.3808
+          ],
+          "RightClawStudio": [
+            0.8941,
+            1.3808,
+            -4.2786
+          ],
+          "RightForearm": [
+            -1.8751,
+            -3.1558,
+            2.7742
+          ],
+          "RightForearmStudio": [
+            1.8751,
+            2.7742,
+            -3.1558
+          ]
+        },
+        {
+          "time": 0.625,
+          "LeftClaw": [
+            1.4705,
+            -3.0162,
+            1.0872
+          ],
+          "LeftClawStudio": [
+            -1.4705,
+            1.0872,
+            -3.0162
+          ],
+          "LeftForearm": [
+            2.2147,
+            -2.2865,
+            2.7946
+          ],
+          "LeftForearmStudio": [
+            -2.2147,
+            2.7946,
+            -2.2865
+          ],
+          "RightClaw": [
+            -1.4705,
+            -3.0162,
+            1.0872
+          ],
+          "RightClawStudio": [
+            1.4705,
+            1.0872,
+            -3.0162
+          ],
+          "RightForearm": [
+            -2.2147,
+            -2.2865,
+            2.7946
+          ],
+          "RightForearmStudio": [
+            2.2147,
+            2.7946,
+            -2.2865
+          ]
+        },
+        {
+          "time": 0.6667,
+          "LeftClaw": [
+            1.9853,
+            -2.0935,
+            1.2057
+          ],
+          "LeftClawStudio": [
+            -1.9853,
+            1.2057,
+            -2.0935
+          ],
+          "LeftForearm": [
+            2.4691,
+            -1.6327,
+            3.0732
+          ],
+          "LeftForearmStudio": [
+            -2.4691,
+            3.0732,
+            -1.6327
+          ],
+          "RightClaw": [
+            -1.9853,
+            -2.0935,
+            1.2057
+          ],
+          "RightClawStudio": [
+            1.9853,
+            1.2057,
+            -2.0935
+          ],
+          "RightForearm": [
+            -2.4691,
+            -1.6327,
+            3.0732
+          ],
+          "RightForearmStudio": [
+            2.4691,
+            3.0732,
+            -1.6327
+          ]
+        }
+      ],
+      "reachAtImpact": {
+        "Left": 0.9833,
+        "Right": 0.9833
+      },
+      "note": "pouncing double rake: claws rise high and wide (0.08-0.30 s), lunge with a right-foot step, both claws rake down through the front at impact and on past the hips (activeEnd). Sweep a capsule between each Claw and Forearm point over the sweep samples. Also the charge finisher: crossfade ~0.1 s from ChargeRun."
+    },
+    "Howl": {
+      "duration": 2.2083,
+      "warnStart": 0.0,
+      "impact": 1.0,
+      "activeEnd": 1.7917,
+      "recoveryEnd": 2.0833,
+      "points": {
+        "Mouth": {
+          "bone": "Head",
+          "offset": [
+            0.0,
+            -0.2122,
+            1.6881
+          ],
+          "rootAtImpact": [
+            0.0,
+            0.0658,
+            8.3662
+          ],
+          "rootAtImpactStudio": [
+            -0.0,
+            8.3662,
+            0.0658
+          ]
+        }
+      },
+      "directionAtImpact": [
+        0.0,
+        -0.6691,
+        0.7431
+      ],
+      "directionAtImpactStudio": [
+        -0.0,
+        0.7431,
+        -0.6691
+      ],
+      "note": "crouch 0-0.35 s, rears up; peak (buff moment) at impact, jaw open 38 deg, held with a tremor to activeEnd, recovers to the Idle pose. Also the rim intro howl."
+    },
+    "ChargeStart": {
+      "duration": 0.7083,
+      "warnStart": 0.0,
+      "impact": 0.7083,
+      "activeEnd": 0.7083,
+      "recoveryEnd": 0.7083,
+      "directionAtImpact": [
+        0.0,
+        -1.0,
+        0.0
+      ],
+      "directionAtImpactStudio": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "note": "drops into a coiled sprinter crouch (0.33 s), right claws brushing the ground, eyes level; the last frame equals ChargeRun frame 0, so chain straight into ChargeRun."
+    },
+    "ChargeRun": {
+      "duration": 0.5,
+      "loop": true,
+      "chargeStrideLength": 16.0,
+      "chargeSpeed": 32.0,
+      "directionAtImpact": [
+        0.0,
+        -1.0,
+        0.0
+      ],
+      "directionAtImpactStudio": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "note": "in place; the server moves the model along its forward at chargeSpeed (play rate = speed / chargeSpeed). Low bounding biped sprint, feet planted in contact."
+    }
+  },
+  "rootHeight": 0.0,
+  "height": 9.2544,
+  "footprintRadius": 3.6488,
+  "bodyCentreHeight": 5.1435,
+  "walk": {
+    "strideLength": 16.5,
+    "nominalSpeed": 22.0
+  },
+  "notes": "Times in seconds from clip start at 24 fps. Root bone sits on the ground under the pelvis (rootHeight 0). Blender axes: +X the alpha's left, -Y forward, +Z up; Studio = (-X, Z, Y)."
+}

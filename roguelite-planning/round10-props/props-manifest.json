@@ -23,22 +23,22 @@
     "Sarcophagus.fbx": {
       "meshes": {
         "Sarcophagus_Body": {
-          "tris": 550,
-          "verts": 277,
+          "tris": 328,
+          "verts": 166,
           "boundsMinBlender": [
-            -3.62006,
+            -3.79176,
             -2.25,
             0.0
           ],
           "boundsMaxBlender": [
-            3.62006,
+            3.79176,
             2.95,
-            11.0
+            15.0
           ],
           "sizeBlender": [
-            7.24013,
+            7.58352,
             5.2,
-            11.0
+            15.0
           ],
           "originBlender": [
             0.0,
@@ -52,221 +52,221 @@
           ]
         },
         "Sarcophagus_Lid": {
-          "tris": 2278,
-          "verts": 1141,
+          "tris": 1722,
+          "verts": 863,
           "boundsMinBlender": [
-            -3.62006,
+            -3.79176,
             0.0,
             0.0
           ],
           "boundsMaxBlender": [
-            3.62006,
-            1.21385,
-            11.0
+            3.79176,
+            1.25695,
+            15.0
           ],
           "sizeBlender": [
-            7.24013,
-            1.21385,
-            11.0
+            7.58352,
+            1.25695,
+            15.0
           ],
           "originBlender": [
             0.0,
-            -3.46385,
+            -3.50695,
             0.0
           ],
           "originRoblox": [
             0.0,
             0.0,
-            3.46385
+            3.50695
           ]
         }
       },
-      "revision": "2026-10-09 fix pass: taller anthropoid silhouette (11 tall), soft painterly texture, rounded bandage relief",
+      "revision": "2026-10-09 third pass: chunky chamfered rim (walls 0.65, 0.2 chamfers), proud head/foot bands, shoulders 7.6, head end 5.7, foot 4.8; X-lattice bandage wraps; warm chipped sandstone atlas",
       "frame": "Body origin = floor centre of the cavity footprint at ground level; both meshes are placed closed (identity transform of the FBX = assembled coffin).",
       "cavity": {
         "frontPlaneY": -2.25,
         "backInnerY": 2.25,
         "floorZ": 0.8,
-        "ceilingZ": 10.2,
+        "ceilingZ": 14.2,
         "depth": 4.5,
-        "maxWidth": 6.24792040019543,
-        "height": 9.399999999999999,
+        "maxWidth": 6.279731888898318,
+        "height": 13.399999999999999,
         "box9_4x6_2x4_2": "extents check, see validation-report.json"
       },
       "lid": {
         "hingeLineBodySpaceBlender": [
           0.0,
-          -3.46385,
+          -3.50695,
           0.0
         ],
         "hingeLineBodySpaceRoblox": [
           0.0,
           0.0,
-          3.46385
+          3.50695
         ],
         "hingeAxis": "X (through the bottom front edge of the lid, z = 0)",
         "fallsForward": "rotate about +X by +90 deg in Blender (top moves toward -Y); relief face ends face-down, underside up, lid resting on the ground",
         "closedFit": "underside plane y = -2.250 == body front rim plane (gap 0, overlap 0)",
         "slabThickness": 0.85,
-        "reliefDepthMax": 0.364
+        "reliefDepthMax": 0.407
       }
     },
     "SarcophagusBroken.fbx": {
       "meshes": {
         "SarcophagusBroken_Base": {
-          "tris": 436,
-          "verts": 220,
+          "tris": 374,
+          "verts": 189,
           "boundsMinBlender": [
-            -2.63689,
+            -2.62976,
             -2.6,
-            -1.73531
+            -2.37127
           ],
           "boundsMaxBlender": [
-            2.63689,
+            2.62976,
             2.6,
-            1.73531
+            2.37127
           ],
           "sizeBlender": [
-            5.27377,
+            5.25952,
             5.2,
-            3.47062
+            4.74253
           ],
           "originBlender": [
-            -0.0124,
+            -0.00992,
             0.35,
-            1.73531
+            2.37127
           ],
           "originRoblox": [
-            -0.0124,
-            1.73531,
+            -0.00992,
+            2.37127,
             -0.35
           ],
           "offsetBodySpaceBlender": [
-            -0.0124,
+            -0.00992,
             0.35,
-            1.73531
+            2.37127
           ],
           "offsetBodySpaceRoblox": [
-            -0.0124,
-            1.73531,
+            -0.00992,
+            2.37127,
             -0.35
           ]
         },
         "SarcophagusBroken_LeftWall": {
-          "tris": 514,
-          "verts": 259,
+          "tris": 374,
+          "verts": 189,
           "boundsMinBlender": [
-            -1.48804,
-            -2.60022,
-            -3.59557
-          ],
-          "boundsMaxBlender": [
-            1.48804,
-            2.60022,
-            3.59557
-          ],
-          "sizeBlender": [
-            2.97608,
-            5.20044,
-            7.19115
-          ],
-          "originBlender": [
-            -2.13202,
-            0.34978,
-            7.40443
-          ],
-          "originRoblox": [
-            -2.13202,
-            7.40443,
-            -0.34978
-          ],
-          "offsetBodySpaceBlender": [
-            -2.13202,
-            0.34978,
-            7.40443
-          ],
-          "offsetBodySpaceRoblox": [
-            -2.13202,
-            7.40443,
-            -0.34978
-          ]
-        },
-        "SarcophagusBroken_RightWall": {
-          "tris": 544,
-          "verts": 274,
-          "boundsMinBlender": [
-            -1.00849,
+            -1.56409,
             -2.6,
-            -3.05578
+            -4.85137
           ],
           "boundsMaxBlender": [
-            1.00849,
+            1.56409,
             2.6,
-            3.05578
+            4.85137
           ],
           "sizeBlender": [
-            2.01698,
+            3.12819,
             5.2,
-            6.11156
+            9.70275
           ],
           "originBlender": [
-            2.61158,
+            -2.22766,
             0.35,
-            7.11348
+            10.14863
           ],
           "originRoblox": [
-            2.61158,
-            7.11348,
+            -2.22766,
+            10.14863,
             -0.35
           ],
           "offsetBodySpaceBlender": [
-            2.61158,
+            -2.22766,
             0.35,
-            7.11348
+            10.14863
           ],
           "offsetBodySpaceRoblox": [
-            2.61158,
-            7.11348,
+            -2.22766,
+            10.14863,
+            -0.35
+          ]
+        },
+        "SarcophagusBroken_RightWall": {
+          "tris": 372,
+          "verts": 188,
+          "boundsMinBlender": [
+            -1.06422,
+            -2.6,
+            -3.97595
+          ],
+          "boundsMaxBlender": [
+            1.06422,
+            2.6,
+            3.97595
+          ],
+          "sizeBlender": [
+            2.12844,
+            5.2,
+            7.9519
+          ],
+          "originBlender": [
+            2.72754,
+            0.35,
+            9.65171
+          ],
+          "originRoblox": [
+            2.72754,
+            9.65171,
+            -0.35
+          ],
+          "offsetBodySpaceBlender": [
+            2.72754,
+            0.35,
+            9.65171
+          ],
+          "offsetBodySpaceRoblox": [
+            2.72754,
+            9.65171,
             -0.35
           ]
         },
         "SarcophagusBroken_LidFragment": {
-          "tris": 1396,
-          "verts": 700,
+          "tris": 1200,
+          "verts": 602,
           "boundsMinBlender": [
-            -3.24739,
-            -0.60692,
-            -2.41252
+            -3.38988,
+            -0.62327,
+            -2.95769
           ],
           "boundsMaxBlender": [
-            3.24739,
-            0.60692,
-            2.41253
+            3.38988,
+            0.62327,
+            2.95769
           ],
           "sizeBlender": [
-            6.49478,
-            1.21385,
-            4.82506
+            6.77976,
+            1.24654,
+            5.91537
           ],
           "originBlender": [
-            -0.37268,
-            -2.85692,
-            8.58747
+            -0.40188,
+            -2.87327,
+            12.04231
           ],
           "originRoblox": [
-            -0.37268,
-            8.58747,
-            2.85692
+            -0.40188,
+            12.04231,
+            2.87327
           ],
           "offsetBodySpaceBlender": [
-            -0.37268,
-            -2.85692,
-            8.58747
+            -0.40188,
+            -2.87327,
+            12.04231
           ],
           "offsetBodySpaceRoblox": [
-            -0.37268,
-            8.58747,
-            2.85692
+            -0.40188,
+            12.04231,
+            2.87327
           ]
         }
       },

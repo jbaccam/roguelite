@@ -77,6 +77,13 @@ def sd_round_cyl_z(p, cxy, rad, z0, z1, rr):
     dz = np.abs(p[:, 2] - (z0 + z1) / 2) - (z1 - z0) / 2 + rr
     return np.minimum(np.maximum(dxy, dz), 0) + np.sqrt(np.maximum(dxy, 0) ** 2 + np.maximum(dz, 0) ** 2) - rr
 
+def sd_round_cone(p, a, b, ra, rb):
+    """Tapered capsule (radius lerps along the axis); a bound, fine for marching."""
+    a = np.asarray(a, float); b = np.asarray(b, float)
+    pa = p - a; ba = b - a
+    h = np.clip((pa @ ba) / (ba @ ba), 0, 1)
+    return _len(pa - h[:, None] * ba) - (ra + (rb - ra) * h)
+
 def rot_axis(axis, deg):
     return np.asarray(Matrix.Rotation(math.radians(deg), 3, Vector(axis)))
 
@@ -146,6 +153,67 @@ def grad(field, p, e=1e-3):
         d = np.zeros(3); d[i] = e
         g[:, i] = field(p + d) - field(p - d)
     return g / np.maximum(_len(g)[:, None], 1e-12)
+
+def surface_nets(field, lo, hi, h, project=4):
+    """Naive surface nets on a cube grid: one vertex per sign-changing cell, one quad per
+    sign-changing grid edge. Handles overhangs (deltoids over the armpits) that a star-shaped
+    ray lattice cannot. Vertices are then projected onto the zero set (Newton steps)."""
+    lo = np.asarray(lo, float); hi = np.asarray(hi, float)
+    n = np.ceil((hi - lo) / h).astype(int) + 1
+    axes = [lo[i] + np.arange(n[i]) * h for i in range(3)]
+    G = np.stack(np.meshgrid(*axes, indexing='ij'), -1)
+    F = field(G.reshape(-1, 3)).reshape(n)
+    F = np.where(np.abs(F) < 1e-7, 1e-7, F)
+    assert (F[0] > 0).all() and (F[-1] > 0).all() and (F[:, 0] > 0).all() and (F[:, -1] > 0).all() \
+        and (F[:, :, 0] > 0).all() and (F[:, :, -1] > 0).all(), 'surface touches the grid boundary'
+    inside = F < 0
+    nc = n - 1
+    corners = [(i, j, k) for i in (0, 1) for j in (0, 1) for k in (0, 1)]
+    cin = np.stack([inside[i:i + nc[0], j:j + nc[1], k:k + nc[2]] for i, j, k in corners], -1)
+    active = cin.any(-1) & ~cin.all(-1)
+    cid = np.full(nc, -1, np.int64); cid[active] = np.arange(active.sum())
+    # vertex = mean of edge crossings in the cell
+    acc_p = np.zeros(tuple(nc) + (3,)); cnt = np.zeros(tuple(nc))
+    for ax in range(3):
+        for a in (0, 1):
+            for b in (0, 1):
+                o = [0, 0, 0]; oo = [a, b]; m = 0
+                for t in range(3):
+                    if t != ax:
+                        o[t] = oo[m]; m += 1
+                o1 = list(o); o1[ax] = 1
+                sl0 = tuple(slice(o[t], o[t] + nc[t]) for t in range(3))
+                sl1 = tuple(slice(o1[t], o1[t] + nc[t]) for t in range(3))
+                f0, f1 = F[sl0], F[sl1]
+                ch = (f0 < 0) != (f1 < 0)
+                tt = np.where(ch, f0 / np.where(ch, f0 - f1, 1), 0)
+                p = G[sl0] + (G[sl1] - G[sl0]) * tt[..., None]
+                acc_p += p * ch[..., None]; cnt += ch
+    verts = acc_p[active] / cnt[active][:, None]
+    faces = []
+    for ax in range(3):
+        u, v = (ax + 1) % 3, (ax + 2) % 3
+        sl0 = [slice(None)] * 3; sl1 = [slice(None)] * 3
+        sl0[ax] = slice(0, n[ax] - 1); sl1[ax] = slice(1, n[ax])
+        ch = inside[tuple(sl0)] != inside[tuple(sl1)]
+        idx = np.argwhere(ch)
+        idx = idx[(idx[:, u] > 0) & (idx[:, v] > 0) & (idx[:, u] < n[u] - 1) & (idx[:, v] < n[v] - 1)]
+        for i in idx:
+            cs = []
+            for du, dv in ((-1, -1), (0, -1), (0, 0), (-1, 0)):
+                c = list(i); c[u] += du; c[v] += dv
+                cs.append(cid[tuple(c)])
+            if inside[tuple(i)]:
+                faces.append(cs)
+            else:
+                faces.append(cs[::-1])
+    for _ in range(project):
+        g = np.zeros_like(verts); e = 1e-3
+        for t in range(3):
+            d = np.zeros(3); d[t] = e
+            g[:, t] = (field(verts + d) - field(verts - d)) / (2 * e)
+        verts = verts - (field(verts) / np.maximum((g * g).sum(1), 1e-9))[:, None] * g
+    return verts, faces, grad(field, verts)
 
 def implicit_piece(field, centre, half, params, rot=None, tmax=None):
     rot = np.eye(3) if rot is None else np.asarray(rot, float)
@@ -271,176 +339,215 @@ def joint(name, parent, head, tail):
     JOINTS[name] = dict(parent=parent, head=[round(float(x), 4) for x in head], tail=[round(float(x), 4) for x in tail])
 
 # ----------------------------------------------------------------------------- joints
-ROOT, WAIST, NECK = (0, 0.05, 1.55), (0, 0.0, 1.98), (0, -0.06, 4.78)
+ROOT, WAIST, NECK = (0, 0.12, 1.62), (0, 0.05, 2.05), (0, 0.20, 4.88)
 joint('LowerTorso', 'HumanoidRootPart', ROOT, WAIST)
 joint('UpperTorso', 'LowerTorso', WAIST, NECK)
 joint('Head', 'UpperTorso', NECK, (0, -0.10, 6.0))
 ARM = {}
 for side, s in (('Left', 1), ('Right', -1)):
-    S = np.array((s * 2.47, 0.02, 4.12)); E = np.array((s * 2.98, -0.02, 3.40)); Wr = np.array((s * 3.10, -0.10, 2.80))
+    # Shoulder = centre of the round deltoid mass; short thick arms hang beside the pear belly.
+    S = np.array((s * 1.80, 0.02, 3.88)); E = np.array((s * 2.33, -0.02, 3.09)); Wr = np.array((s * 2.58, -0.12, 2.58))
     D = unit(unit(Wr - E) + np.array((0, 0, -0.25)))
     ARM[side] = (S, E, Wr, D)
     joint(side + 'UpperArm', 'UpperTorso', S, E)
     joint(side + 'LowerArm', side + 'UpperArm', E, Wr)
-    joint(side + 'Hand', side + 'LowerArm', Wr, Wr + D * 0.66)
-    joint(side + 'UpperLeg', 'LowerTorso', (s * 0.63, 0.05, 1.55), (s * 0.64, 0.0, 0.90))
-    joint(side + 'LowerLeg', side + 'UpperLeg', (s * 0.64, 0.0, 0.90), (s * 0.645, -0.02, 0.36))
-    joint(side + 'Foot', side + 'LowerLeg', (s * 0.645, -0.02, 0.36), (s * 0.65, -0.62, 0.10))
+    joint(side + 'Hand', side + 'LowerArm', Wr, Wr + D * 0.80)
+    joint(side + 'UpperLeg', 'LowerTorso', (s * 0.66, 0.12, 1.62), (s * 0.66, 0.10, 1.00))
+    joint(side + 'LowerLeg', side + 'UpperLeg', (s * 0.66, 0.10, 1.00), (s * 0.66, 0.06, 0.40))
+    joint(side + 'Foot', side + 'LowerLeg', (s * 0.66, 0.06, 0.40), (s * 0.66, -0.66, 0.10))
 
 # ------------------------------------------------------------------- belly (UpperTorso)
-CB = np.array((0, -0.05, 2.98))
+# Fat human torso, not a ball: a pear-shaped belly (widest in its lower third, sagging forward
+# over the shorts), a narrower upper chest, a hidden seat plug the head sinks into (no neck),
+# sloping trapezius rolls and round deltoid masses the arms hang from. All smooth-unioned.
+CB = np.array((0, -0.30, 3.0))
+DELT = [np.array((s * 1.80, 0.02, 3.88)) for s in (1, -1)]
 def body_base(p):
-    d = sd_superellipsoid6(p, CB, (2.28, 1.72, 1.57), (2.28, 1.95, 1.55), 2.4)
-    d = smin(d, sd_ellipsoid6(p, (0, -0.42, 2.62), (2.0, 1.3, 1.1), (2.0, 1.95, 1.27)), 0.35)
-    for s in (1, -1):  # shoulder masses the arms hang from
-        d = smin(d, sd_sphere(p, (s * 2.13, 0.02, 4.05), 0.48), 0.35)
-    return smin(d, sd_round_cyl_z(p, (0, -0.08), 0.48, 4.0, 4.74, 0.12), 0.22)  # neck/trapezius mound
+    d = sd_ellipsoid6(p, (0, -0.30, 2.32), (1.98, 1.45, 1.70), (1.98, 1.75, 0.56))   # belly (underside clears the thigh swing)
+    d = smin(d, sd_ellipsoid6(p, (0, -1.25, 2.20), (1.45, 0.55, 0.95), (1.45, 1.05, 0.65)), 0.35)   # forward sag, ahead of the thighs
+    d = smin(d, sd_ellipsoid6(p, (0, 0.40, 2.05), (1.45, 0.78, 0.60), (1.45, 0.50, 0.40)), 0.35)   # full lower back over the shorts
+    d = smin(d, sd_ellipsoid6(p, (0, 0.0, 3.80), (1.28, 1.15, 1.0), (1.28, 1.10, 1.0)), 0.5)   # upper chest
+    d = smin(d, sd_round_box(p - np.array((0, -0.06, 4.45)), np.array((0.62, 0.50, 0.30)), 0.25), 0.25)   # head seat
+    for s, dc in zip((1, -1), DELT):
+        d = smin(d, sd_round_cone(p, (s * 0.45, 0.10, 4.45), (s * 1.72, 0.02, 3.90), 0.36, 0.33), 0.30)   # trapezius
+        d = smin(d, sd_sphere(p, dc, 0.46), 0.28)   # deltoid
+    return d
 
 BLISTERS = []  # (apex, normal, footprint radius, sphere centre, sphere radius)
-CBL = np.array((0, -0.2, 2.9))
-for direction, a, h in (((-0.42, -0.90, -0.24), 0.78, 0.30),   # big, lower front, character right
-                        ((0.80, -0.60, 0.02), 0.64, 0.26),     # side front, character left
-                        ((0.08, -0.90, 0.46), 0.56, 0.24)):    # upper front
-    apex_base = march(body_base, CBL, unit(direction)[None], 4.0)
+CBL = np.array((0, -0.3, 2.7))
+for target, a, h in (((-0.80, -1.95, 2.45), 0.60, 0.15),   # big, lower front, character right
+                     ((1.25, -1.55, 2.62), 0.50, 0.13),    # side front, character left
+                     ((0.38, -1.05, 3.90), 0.44, 0.12)):   # upper chest, character left
+    apex_base = march(body_base, CBL, unit(np.asarray(target) - CBL)[None], 4.0)
     nb = grad(body_base, apex_base)[0]
     Rs = (a * a + h * h) / (2 * h)
-    BLISTERS.append((apex_base[0] + nb * h, nb, a, apex_base[0] - nb * (Rs - h), Rs))
+    BLISTERS.append((apex_base[0] + nb * h, nb, a, apex_base[0] - nb * (Rs - h), Rs, apex_base[0]))
 
 def body_field(p):
     d = body_base(p)
-    for _, _, _, c, Rs in BLISTERS:
-        d = smin(d, sd_sphere(p, c, Rs), 0.10)
+    for _, _, a, c, Rs, base in BLISTERS:   # cap clipped to its footprint so it only swells locally
+        d = smin(d, np.maximum(sd_sphere(p, c, Rs), sd_sphere(p, base, a * 1.15)), 0.16)
     return d
 
-pos, faces, nrm = implicit_piece(body_field, CB, (2.3, 2.1, 1.7), [warp_params(13)] * 3, tmax=3.8)
+pos, faces, nrm = surface_nets(body_field, (-2.55, -2.75, 1.15), (2.55, 1.65, 5.25), 0.26)
 add('UpperTorso', pos, faces, SKIN, nrm)
 
-# Torn vest: an open shell draped on the shoulders/upper back, front open between the flaps.
-A0, NA = 0.50, 60
+# Torn vest/shawl draped on the shoulders and upper back, hugging the skin (0.045 proud), front
+# open over the chest, rounded hanging tongues on the chest sides, deltoid tops and back.
+A0, NA = 0.75, 36
 a_cols = np.linspace(A0, 2 * math.pi - A0, NA)
-keys_a = np.array([0.50, 0.72, 1.05, 1.40, 1.75, 2.20, 2.70, math.pi])
-keys_t = np.array([0.62, 0.98, 0.95, 1.00, 1.02, 1.28, 1.42, 1.45])
+keys_a = np.array([0.75, 1.05, 1.35, math.pi / 2, 1.90, 2.30, 2.75, math.pi])
+keys_t = np.array([1.22, 1.30, 1.25, 1.24, 1.30, 1.56, 1.76, 1.84])
 def hem_curve(a):
     a = np.where(a > math.pi, 2 * math.pi - a, a)
     i = np.clip(np.searchsorted(keys_a, a) - 1, 0, len(keys_a) - 2)
     t = (a - keys_a[i]) / (keys_a[i + 1] - keys_a[i]); t = t * t * (3 - 2 * t)
     return keys_t[i] + (keys_t[i + 1] - keys_t[i]) * t
 vr = np.random.default_rng(1007)
-n_tongue = 13
-centres = A0 + 0.18 + (np.arange(n_tongue) + vr.uniform(-0.22, 0.22, n_tongue)) * (2 * math.pi - 2 * A0 - 0.36) / (n_tongue - 1)
-amps = vr.uniform(0.05, 0.15, n_tongue)
-edge_fade = np.clip((np.minimum(a_cols - A0, 2 * math.pi - A0 - a_cols)) / 0.25, 0, 1)
-th_hem = hem_curve(a_cols) + tongues(a_cols, centres, amps, 0.22) * edge_fade
-th_col = 0.40 + 0.015 * np.sin(3 * a_cols)
-rows_t = np.array([0.0, 0.36, 0.72, 1.0])
+n_tongue = 19
+centres = A0 + 0.12 + (np.arange(n_tongue) + vr.uniform(-0.25, 0.25, n_tongue)) * (2 * math.pi - 2 * A0 - 0.24) / (n_tongue - 1)
+amps = vr.uniform(0.07, 0.20, n_tongue)
+edge_fade = np.clip((np.minimum(a_cols - A0, 2 * math.pi - A0 - a_cols)) / 0.18, 0, 1)
+shoulder_w = np.clip(1 - np.minimum(np.abs(a_cols - math.pi / 2), np.abs(a_cols - 3 * math.pi / 2)) / 0.5, 0, 1)
+th_hem = hem_curve(a_cols) + tongues(a_cols, centres, amps, 0.15) * (0.4 + 0.6 * edge_fade) * (1 - 0.8 * shoulder_w)
+th_col = 0.42 + 0.01 * np.sin(3 * a_cols)
+rows_t = np.array([0.0, 0.2, 0.4, 0.58, 0.74, 0.88, 1.0])
 outer, inner, vest_hem = [], [], []
-CV = np.array((0, -0.05, 2.98))
+CV = np.array((0, 0.05, 3.85))
 for t in rows_t:
     th = th_col + (th_hem - th_col) * t
     dirs = np.stack([np.sin(th) * np.sin(a_cols), -np.sin(th) * np.cos(a_cols), np.cos(th)], 1)
-    P = march(body_base, CV, dirs, 3.8); N = grad(body_base, P)
-    outer.append(P + N * 0.075); inner.append(P - N * 0.02)
+    P = march(body_field, CV, dirs, 3.8); N = grad(body_field, P)
+    outer.append(P + N * 0.06); inner.append(P - N * 0.035)
     vest_hem.append(np.maximum(t, 1 - edge_fade * 1.0) * np.ones(NA))
 vverts, vfaces = shell_grid(np.array(outer), np.array(inner), False)
 vhem = np.concatenate([np.concatenate(vest_hem)] * 2)
 add('UpperTorso', vverts, vfaces, RAG, None, vhem)
 
 # ------------------------------------------------------------------------------- head
-HC = np.array((0, -0.10, 5.425)); HH = np.array((0.68, 0.61, 0.575))
-CHEEKS = [np.array((s * 0.64, -0.42, 5.17)) for s in (1, -1)]   # round puffed lobes at the lower head sides
-BROWS = [(np.array((s * 0.50, -0.68, 5.71)), np.array((s * 0.07, -0.70, 5.61))) for s in (1, -1)]
+# Big chunky block head sitting straight down in the shoulders (no neck): its underside is buried
+# about 0.15-0.2 in the head seat, and the puffed cheek lobes rest on the shoulder tops.
+HB = 4.62                                   # head underside (buried)
+HC = np.array((0, -0.10, 5.31)); HH = np.array((0.75, 0.62, 0.69))
+CHEEKS = [np.array((s * 0.60, -0.42, 4.98)) for s in (1, -1)]   # round puffed lobes at the lower head sides
+BROWS = [(np.array((s * 0.54, -0.70, 5.65)), np.array((s * 0.08, -0.72, 5.55))) for s in (1, -1)]
 def head_field(p):
-    d = sd_round_box(p - HC, HH, 0.17)
+    d = sd_round_box(p - HC, HH, 0.20)
     for c in CHEEKS:
-        d = smin(d, sd_sphere(p, c, 0.39), 0.07)
+        d = smin(d, sd_sphere(p, c, 0.36), 0.08)
     for a, b in BROWS:
-        d = smin(d, sd_capsule(p, a, b, 0.105), 0.07)
+        d = smin(d, sd_capsule(p, a, b, 0.11), 0.07)
     return d
-params = [bevel_params(0.68, 0.17, 8), bevel_params(0.61, 0.17, 6), bevel_params(0.575, 0.17, 7)]
-pos, faces, nrm = implicit_piece(head_field, HC, HH, params, tmax=1.8)
+params = [bevel_params(0.75, 0.20, 7), bevel_params(0.62, 0.20, 5), bevel_params(0.69, 0.20, 6)]
+pos, faces, nrm = implicit_piece(head_field, HC, HH, params, tmax=1.9)
 add('Head', pos, faces, SKIN, nrm)
-pos, faces, nrm = tube([(0, -0.08, 4.45), (0, -0.08, 4.98)], [0.40, 0.40], 10, np.array((1.0, 0, 0)), tip=False)
-NECK_RANGE = (acc['Head']['count'], acc['Head']['count'] + len(pos))
-add('Head', pos, faces, SKIN, nrm)   # neck seat, hidden inside the trapezius mound
 tr = np.random.default_rng(31)
-for row, zc, hz, xs in (('upper', 5.235, 0.060, [-0.255, -0.128, 0.0, 0.128, 0.255]),
-                        ('lower', 5.112, 0.052, [-0.225, -0.098, 0.030, 0.158, 0.272])):
+for row, zc, hz, xs in (('upper', 5.172, 0.064, [-0.276, -0.138, 0.0, 0.138, 0.276]),
+                        ('lower', 5.044, 0.056, [-0.243, -0.106, 0.032, 0.171, 0.294])):
     for x in xs:
-        half = np.array((0.057, 0.06, hz + tr.uniform(-0.008, 0.01)))
-        c = np.array((x + tr.uniform(-0.01, 0.01), -0.685, zc + tr.uniform(-0.012, 0.012)))
+        half = np.array((0.062, 0.06, hz + tr.uniform(-0.008, 0.01)))
+        c = np.array((x + tr.uniform(-0.01, 0.01), -0.70, zc + tr.uniform(-0.012, 0.012)))
         R = rot_axis((0, 1, 0), tr.uniform(-7, 7)) @ rot_axis((0, 0, 1), tr.uniform(-5, 5))
         f = box_field(c, R, half[:2], half[:2], half[2], 0.026)
         pos, faces, nrm = implicit_piece(f, c, half, [[-1, 0, 1], [-1, 1], [-1, 0, 1]], R)
         add('Head', pos, faces, TEETH, nrm)
 EYES = []
 for s in (1, -1):
-    c = np.array((s * 0.28, -0.695, 5.53)); R = rot_axis((0, 1, 0), -s * 14)   # proud of the face so Neon reads
-    radii = np.array((0.14, 0.06, 0.095))
+    c = np.array((s * 0.30, -0.715, 5.47)); R = rot_axis((0, 1, 0), -s * 14)   # proud of the face so Neon reads
+    radii = np.array((0.15, 0.065, 0.10))
     f = (lambda c, R, radii: (lambda p: sd_ellipsoid6((p - c) @ R, (0, 0, 0), radii, radii)))(c, R, radii)
     pos, faces, nrm = implicit_piece(f, c, radii, [warp_params(2)] * 3, R)
     add('EyeGlow', pos, faces, GLOW, nrm); EYES.append((c, R, radii))
 
 # ------------------------------------------------------------------------- lower torso
-pos, faces, nrm = block((0, 0.10, 1.60), np.eye(3), (0.98, 0.62), (0.98, 0.62), 0.36, 0.15, (4, 1, 1))
+pos, faces, nrm = block((0, 0.12, 1.78), np.eye(3), (0.95, 0.55), (0.95, 0.55), 0.26, 0.13, (4, 1, 1))
 add('LowerTorso', pos, faces, RAG, nrm, np.zeros(len(pos)))
 
 # ------------------------------------------------------------------------- arms, hands
+# Thick blocky Roblox arms (upper ~0.8, forearm ~0.7). The upper arm's top sits inside the round
+# deltoid mass of the UpperTorso (its centre is the shoulder joint), so it stays fused when it swings.
 for side, s in (('Left', 1), ('Right', -1)):
     S, E, Wr, D = ARM[side]
-    rng = np.random.default_rng(71 if s > 0 else 72)
-    # Upper arm: thick deltoid tapering to the elbow; top seated inside the shoulder mass.
     W1 = unit(E - S); R1 = frame(W1, (s, 0, 0.3))
-    top, bot = S - W1 * 0.32, E + W1 * 0.10
-    pos, faces, nrm = block((top + bot) / 2, R1, (0.40, 0.42), (0.31, 0.33), np.linalg.norm(bot - top) / 2, 0.14)
+    top, bot = S - W1 * 0.12, E + W1 * 0.12
+    arm_c, arm_c_len = (top + bot) / 2, np.linalg.norm(bot - top) / 2
+    pos, faces, nrm = block(arm_c, R1, (0.32, 0.34), (0.38, 0.40), arm_c_len, 0.16, (2, 2, 3))
     add(side + 'UpperArm', pos, faces, SKIN, nrm)
-    # Torn short sleeve on the upper arm (moves with the arm, tucks under the vest).
-    rr = rng.uniform(0, 2 * math.pi); ca = rr + np.arange(5) * 2 * math.pi / 5 + rng.uniform(-0.25, 0.25, 5)
-    am = rng.uniform(0.05, 0.12, 5)
-    drop = lambda th, ca=ca, am=am: np.maximum.reduce([tongues((th - c + math.pi) % (2 * math.pi) - math.pi, [0], [a], 0.55) for c, a in zip(ca, am)])
-    ring_d = [-0.30, -0.04, 0.22, 0.42]
-    sizes = [(0.88, 0.92), (0.85, 0.89), (0.81, 0.85), (0.79, 0.83)]   # fitted: ~0.04 proud of the arm
-    pos, faces, hem = rag_tube([S + W1 * d for d in ring_d], sizes, R1, 16, drop, 0.045)
-    add(side + 'UpperArm', pos, faces, RAG, None, hem)
-    # Forearm.
+    arm_f = box_field(arm_c, R1, np.array((0.32, 0.34)), np.array((0.38, 0.40)), arm_c_len, 0.16)
+    outw = np.array((s, 0.0, 0.0)); pole = unit(np.array((0, 0, 1.0)) - 0.55 * outw)   # pole buried in the trapezius
+    e1 = unit(outw - pole * (outw @ pole)); e2 = np.cross(pole, e1)
+    NPC = 24; psi = np.linspace(0, 2 * math.pi, NPC, endpoint=False)
+    rngc = np.random.default_rng(131 if s > 0 else 132)
+    wrap = lambda x: (x + math.pi) % (2 * math.pi) - math.pi
+    tc = np.array((-0.55, 0.0, 0.52)) + rngc.uniform(-0.06, 0.06, 3)
+    design = 1.45 + np.maximum.reduce([tongues(wrap(psi - c), [0], [a], 0.30) for c, a in zip(tc, (0.36, 0.45, 0.34))])
+    design += tongues(wrap(psi - math.pi * 0.62), [0], [0.12], 0.3) + tongues(wrap(psi + math.pi * 0.62), [0], [0.12], 0.3)
+    RC_IN, RC_OUT, TH0 = 0.47, 0.545, 0.16
+    th_end = design.copy()
+    for k in range(NPC):   # stop short of where the arm block leaves the deltoid (same rigid part)
+        for th in np.linspace(TH0, design[k], 40):
+            dv = math.cos(th) * pole + math.sin(th) * (math.cos(psi[k]) * e1 + math.sin(psi[k]) * e2)
+            if arm_f((S + dv * RC_IN)[None])[0] < 0.06:
+                th_end[k] = th - 0.05; break
+    rows_c = [0.0, 0.3, 0.58, 0.82, 1.0]
+    outer_c, inner_c = [], []
+    for t in rows_c:
+        th = TH0 + (th_end - TH0) * t
+        dv = np.cos(th)[:, None] * pole + np.sin(th)[:, None] * (np.cos(psi)[:, None] * e1 + np.sin(psi)[:, None] * e2)
+        outer_c.append(S + dv * (RC_OUT - (RC_OUT - RC_IN - 0.03) * t ** 2)); inner_c.append(S + dv * RC_IN)   # feathered hem
+    cv, cf = shell_grid(np.array(outer_c), np.array(inner_c), True)
+    ch = np.concatenate([np.concatenate([np.full(NPC, t) for t in rows_c])] * 2)
+    add(side + 'UpperArm', cv, cf, RAG, None, ch)
+    # Forearm: its top tucks into the upper arm's end (segmented elbow).
     W2 = unit(Wr - E); R2 = frame(W2, (s, 0, 0))
-    top, bot = E - W2 * 0.14, Wr + W2 * 0.06
-    pos, faces, nrm = block((top + bot) / 2, R2, (0.31, 0.33), (0.26, 0.28), np.linalg.norm(bot - top) / 2, 0.12)
+    top, bot = E - W2 * 0.10, Wr + W2 * 0.06
+    pos, faces, nrm = block((top + bot) / 2, R2, (0.35, 0.37), (0.31, 0.33), np.linalg.norm(bot - top) / 2, 0.13, (1, 2, 3))
     add(side + 'LowerArm', pos, faces, SKIN, nrm)
-    # Hand: palm block, four fat curled fingers, tucked thumb. Palm faces the belly.
+    # Hand: chunky palm block, four fat curled fingers, tucked thumb. Palm faces the belly.
     out = unit(np.array((s, 0.0, 0.0)) - D * (D @ np.array((s, 0.0, 0.0))))
     F = np.cross(D, out) if s > 0 else -np.cross(D, out)
     F = unit(F - D * (F @ D)); F = F if F[1] < 0 else -F
+    pc = Wr + D * 0.30
     RH = np.stack([out, F, D], 1)
-    pc = Wr + D * 0.25
-    pos, faces, nrm = block(pc, RH, (0.19, 0.30), (0.19, 0.30), 0.25, 0.09, (1, 2, 1))
+    pos, faces, nrm = block(pc, RH, (0.23, 0.36), (0.23, 0.36), 0.28, 0.11, (1, 2, 1))
     add(side + 'Hand', pos, faces, SKIN, nrm)
-    for off, r, l1, l2 in ((0.205, 0.088, 0.20, 0.14), (0.07, 0.092, 0.22, 0.15),
-                           (-0.065, 0.087, 0.20, 0.14), (-0.195, 0.078, 0.16, 0.12)):
-        base = pc + D * 0.19 + F * off + out * 0.02
-        d1 = unit(D - out * 0.22 + F * off * 0.15); d2 = unit(D * 0.55 - out * 0.85)
+    for off, r, l1, l2 in ((0.265, 0.115, 0.24, 0.18), (0.090, 0.122, 0.27, 0.19),
+                           (-0.085, 0.115, 0.25, 0.18), (-0.255, 0.104, 0.20, 0.16)):
+        base = pc + D * 0.23 + F * off + out * 0.02
+        d1 = unit(D - out * 0.12 + F * off * 0.15); d2 = unit(D * 0.80 - out * 0.60)
         p1 = base + d1 * l1; p2 = p1 + d2 * l2
         pos, faces, nrm = tube([base - d1 * 0.10, p1, p2 - d2 * 0.4 * r], [r * 0.95, r, r * 0.88], 6, F, roll=math.pi / 6)
         add(side + 'Hand', pos, faces, SKIN, nrm)
-    base = pc + F * 0.27 - out * 0.06 - D * 0.02
+    base = pc + F * 0.34 - out * 0.06 - D * 0.02
     d1 = unit(F * 0.55 + D * 0.65 - out * 0.30); d2 = unit(D * 0.75 - out * 0.50 + F * 0.15)
-    p1 = base + d1 * 0.17; p2 = p1 + d2 * 0.13
-    pos, faces, nrm = tube([base - d1 * 0.10, p1, p2 - d2 * 0.04], [0.09, 0.095, 0.085], 6, out, roll=math.pi / 6)
+    p1 = base + d1 * 0.21; p2 = p1 + d2 * 0.17
+    pos, faces, nrm = tube([base - d1 * 0.10, p1, p2 - d2 * 0.04], [0.115, 0.124, 0.11], 6, out, roll=math.pi / 6)
     add(side + 'Hand', pos, faces, SKIN, nrm)
 
 # ------------------------------------------------------------------------------- legs
+def foot_field(fc):
+    fc = np.asarray(fc, float)
+    def f(p):
+        body = sd_round_box(p - (fc + (0, 0, 0.28)), np.array((0.43, 0.62, 0.16)), 0.10)
+        sole = sd_round_box(p - (fc + (0, 0, 0.075)), np.array((0.47, 0.66, 0.075)), 0.035)   # sole lip
+        return smin(body, sole, 0.03)
+    return f
 for side, s in (('Left', 1), ('Right', -1)):
     rng = np.random.default_rng(91 if s > 0 else 92)
-    x = s * 0.63
-    ca = rng.uniform(0, 2 * math.pi) + np.arange(6) * 2 * math.pi / 6 + rng.uniform(-0.3, 0.3, 6)
-    am = rng.uniform(0.05, 0.15, 6)
-    drop = lambda th, ca=ca, am=am: np.maximum.reduce([tongues((th - c + math.pi) % (2 * math.pi) - math.pi, [0], [a], 0.5) for c, a in zip(ca, am)])
+    x = s * 0.66
+    ca = rng.uniform(0, 2 * math.pi) + np.arange(7) * 2 * math.pi / 7 + rng.uniform(-0.25, 0.25, 7)
+    am = rng.uniform(0.07, 0.18, 7)
+    drop = lambda th, ca=ca, am=am: np.maximum.reduce([tongues((th - c + math.pi) % (2 * math.pi) - math.pi, [0], [a], 0.42) for c, a in zip(ca, am)])
     R = np.stack([np.array((1.0, 0, 0)), np.array((0, 1.0, 0)) * -1, np.array((0, 0, -1.0))], 1)
-    pos, faces, hem = rag_tube([(x, 0.05, 1.95), (x, 0.05, 1.60), (x, 0.04, 1.27), (x, 0.03, 1.00)],
-                               [(0.84, 0.88), (0.88, 0.92), (0.90, 0.94), (0.94, 0.98)], R, 20, drop, 0.05)
+    pos, faces, hem = rag_tube([(x, 0.12, 2.22), (x, 0.12, 1.95), (x, 0.11, 1.45), (x, 0.10, 1.06)],
+                               [(0.48, 0.48), (1.00, 1.04), (1.06, 1.10), (1.08, 1.12)], R, 16, drop, 0.05)
     add(side + 'UpperLeg', pos, faces, RAG, None, hem)
-    pos, faces, nrm = block((s * 0.64, 0.0, 0.67), np.diag((1.0, -1.0, -1.0)), (0.31, 0.33), (0.34, 0.36), 0.37, 0.11)
+    pos, faces, nrm = block((x, 0.08, 0.71), np.diag((1.0, -1.0, -1.0)), (0.40, 0.42), (0.43, 0.45), 0.37, 0.16)
     add(side + 'LowerLeg', pos, faces, SKIN, nrm)
-    pos, faces, nrm = block((s * 0.65, -0.12, 0.20), np.diag((1.0, -1.0, -1.0)), (0.39, 0.60), (0.40, 0.61), 0.20, 0.10, (1, 2, 1))
+    fc = np.array((x, -0.14, 0.0)); fcen = fc + (0, 0, 0.22)
+    zp = [-1.0, -0.6, -0.3, 0.3, 1.0]
+    pos, faces, nrm = implicit_piece(foot_field(fc), fcen, (0.47, 0.66, 0.22),
+                                     [bevel_params(0.47, 0.10, 1), bevel_params(0.66, 0.10, 2), zp], tmax=1.6)
     add(side + 'Foot', pos, faces, SKIN, nrm)
 
 # ------------------------------------------------------------------- build the objects
@@ -542,11 +649,13 @@ def mix(a, b, t):
 def col(rgb):
     return np.array([c / 255 for c in rgb], float)
 
-SKIN_C, SKIN_D, SKIN_L, SKIN_O = col((222, 185, 46)), col((176, 136, 30)), col((240, 213, 86)), col((182, 168, 52))
-RAG_C, RAG_D, RAG_L, HOLE = col((121, 82, 44)), col((84, 54, 28)), col((150, 107, 62)), col((50, 30, 16))
-AMBER_C, AMBER_D, AMBER_L, SHINE = col((246, 176, 42)), col((214, 128, 26)), col((255, 212, 98)), col((255, 247, 214))
-SOCKET, MOUTH, LIP, CREASE = col((86, 62, 14)), col((54, 20, 14)), col((140, 86, 26)), col((150, 112, 22))
-TEETH_C, TEETH_S, GLOW_C, GLOW_E = col((244, 238, 214)), col((196, 186, 156)), col((255, 246, 168)), col((255, 206, 64))
+# Warm orange-yellow so it still reads yellow (not lime) under Studio's blue sky ambient and
+# +0.3 saturation; blotches lean ochre, the olive is faint. Teeth are bone, not white (white reads blue).
+SKIN_C, SKIN_D, SKIN_L, SKIN_O = col((240, 182, 50)), col((194, 132, 34)), col((250, 212, 98)), col((196, 164, 58))
+RAG_C, RAG_D, RAG_L, HOLE = col((130, 84, 44)), col((90, 56, 28)), col((162, 110, 64)), col((56, 32, 16))
+AMBER_C, AMBER_D, AMBER_L, SHINE = col((248, 200, 92)), col((228, 164, 60)), col((252, 222, 136)), col((255, 242, 206))
+SOCKET, MOUTH, LIP, CREASE = col((92, 58, 14)), col((58, 22, 14)), col((146, 84, 26)), col((160, 108, 24))
+TEETH_C, TEETH_S, GLOW_C, GLOW_E = col((228, 212, 170)), col((184, 164, 120)), col((255, 246, 168)), col((255, 206, 64))
 
 # ------------------------------------------------------------------ rasterise the atlas
 H = W = ATLAS
@@ -600,37 +709,36 @@ grain = 0.97 + 0.06 * fbm(P * 7.0, 9)
 # Skin: mustard yellow, broad darker ochre blotches, lighter warm patches, faint olive.
 m = R == SKIN
 p = P[m]
-blot = np.maximum(sstep(0.56, 0.62, warped(p, 11, 0.95)), 0.8 * sstep(0.62, 0.67, warped(p, 23, 2.1)))
+blot = np.maximum(0.7 * sstep(0.60, 0.65, warped(p, 11, 1.3)), sstep(0.585, 0.63, warped(p, 23, 2.6)))
 lite = sstep(0.55, 0.63, warped(p, 37, 0.7))
 olive = sstep(0.58, 0.66, fbm(p * 0.5, 41))
 c = np.tile(SKIN_C, (len(p), 1))
-c = mix(c, SKIN_L, lite * 0.55); c = mix(c, SKIN_O, olive * 0.35); c = mix(c, SKIN_D, blot * 0.85)
+c = mix(c, SKIN_L, lite * 0.5); c = mix(c, SKIN_O, olive * 0.2); c = mix(c, SKIN_D, blot * 0.8)
 oname = np.array(OBJECTS)[OBJ[m]]
-low = (oname == 'UpperTorso') & (p[:, 2] < 2.2)
-c[low] = mix(c[low], SKIN_D, sstep(2.2, 1.45, p[low, 2]) * 0.35)
+low = (oname == 'UpperTorso') & (p[:, 2] < 2.0)
+c[low] = mix(c[low], SKIN_D, sstep(2.0, 1.45, p[low, 2]) * 0.3)
 feet = np.char.endswith(oname.astype(str), 'Foot')
-c[feet] = mix(c[feet], SKIN_D, sstep(0.09, 0.02, p[feet, 2]) * 0.7)   # sole band
-# Blisters on the belly: amber domes with a fused orange fillet, painted gloss.
+c[feet] = mix(c[feet], SKIN_D, sstep(0.17, 0.12, p[feet, 2]) * 0.6)   # sole lip band
+# Blisters on the belly: pale amber swellings only a little lighter/warmer than the skin, soft gloss.
 belly = oname == 'UpperTorso'
 Ldir = unit((-0.45, -0.55, 0.70))
-for apex, nb, a, _, _ in BLISTERS:
+for apex, nb, a, _, _, _ in BLISTERS:
     rel = p[belly] - apex
     along = rel @ nb
     tang = rel - along[:, None] * nb
     t = _len(tang) / a + sstep(-0.45, -0.75, along) * 10
     cb = c[belly]
-    inner = sstep(1.08, 0.86, t)
-    amber = mix(np.tile(AMBER_D, (len(t), 1)), AMBER_C, sstep(0.95, 0.55, t))
-    amber = mix(amber, AMBER_L, sstep(0.55, 0.0, t) * 0.8)
-    ring = sstep(1.25, 1.02, t) * (1 - inner)
-    cb = mix(cb, AMBER_D * 0.92, ring * 0.55)
-    cb = mix(cb, amber, inner)
+    inner = sstep(1.10, 0.80, t)
+    amber = mix(np.tile(AMBER_D, (len(t), 1)), AMBER_C, sstep(1.0, 0.6, t))
+    amber = mix(amber, AMBER_L, sstep(0.6, 0.0, t) * 0.6)
+    ring = sstep(1.22, 1.0, t) * (1 - inner)
+    cb = mix(cb, AMBER_D, ring * 0.25)
+    cb = mix(cb, amber, inner * 0.85)
     hl_dir = Ldir - (Ldir @ nb) * nb; hl_dir = hl_dir / np.linalg.norm(hl_dir)
-    hl = _len(tang / a - hl_dir * 0.42)
-    cb = mix(cb, SHINE, sstep(0.26, 0.10, hl) * 0.95)
-    cb = mix(cb, SHINE, sstep(0.10, 0.04, _len(tang / a - hl_dir * 0.12 + np.cross(nb, hl_dir) * 0.18)) * 0.8)
+    hl = _len(tang / a - hl_dir * 0.40)
+    cb = mix(cb, SHINE, sstep(0.22, 0.08, hl) * 0.45)
     rim = _len(tang / a + hl_dir * 0.55)
-    cb = mix(cb, AMBER_L, sstep(0.22, 0.05, rim) * inner * 0.45)
+    cb = mix(cb, AMBER_L, sstep(0.22, 0.05, rim) * inner * 0.3)
     c[belly] = cb
 out[m] = c
 
@@ -643,27 +751,27 @@ def seg(px, pz, ax, az, bx, bz):
 def line(dist, width):
     return sstep(width, width * 0.35, dist)
 for s in (1, -1):
-    ex, ez, ang = s * 0.28, 5.53, math.radians(14) * s
+    ex, ez, ang = s * 0.30, 5.47, math.radians(14) * s
     dx, dz = x - ex, z - ez
     u_ = dx * math.cos(ang) + dz * math.sin(ang); v_ = -dx * math.sin(ang) + dz * math.cos(ang)
-    e = np.hypot(u_ / 0.21, v_ / 0.15)
+    e = np.hypot(u_ / 0.225, v_ / 0.16)
     cf = mix(cf, SOCKET, sstep(1.05, 0.55, e) * 0.92)
     cf = mix(cf, CREASE * 0.8, line(np.abs(np.hypot(u_ / 0.2, (v_ + 0.03) / 0.17) - 1.25), 0.07) * (v_ < -0.05) * 0.6)
-    bx0, bz0, bx1, bz1 = s * 0.50, 5.71, s * 0.07, 5.61
+    bx0, bz0, bx1, bz1 = s * 0.54, 5.65, s * 0.08, 5.55
     cf = mix(cf, CREASE * 0.75, line(seg(x, z, bx0, bz0 - 0.115, bx1, bz1 - 0.115), 0.035) * 0.7)
-    cf = mix(cf, CREASE * 0.8, line(seg(x, z, s * 0.05, 5.60, s * 0.09, 5.74), 0.018) * 0.8)
-    cf = mix(cf, CREASE * 0.85, line(seg(x, z, s * 0.13, 5.37, s * 0.37, 5.10), 0.022) * 0.7)
-    cf = mix(cf, SOCKET, sstep(0.04, 0.018, np.hypot(x - s * 0.065, (z - 5.37) * 1.3)))
-for zz in (5.82, 5.90):
+    cf = mix(cf, CREASE * 0.8, line(seg(x, z, s * 0.055, 5.54, s * 0.10, 5.68), 0.018) * 0.8)
+    cf = mix(cf, CREASE * 0.85, line(seg(x, z, s * 0.14, 5.31, s * 0.40, 5.04), 0.022) * 0.7)
+    cf = mix(cf, SOCKET, sstep(0.04, 0.018, np.hypot(x - s * 0.07, (z - 5.31) * 1.3)))
+for zz in (5.76, 5.84):
     wav = zz + 0.015 * np.sin(x * 9)
     cf = mix(cf, CREASE * 0.85, line(np.abs(z - wav), 0.016) * sstep(0.36, 0.22, np.abs(x)) * 0.75)
-mx, mz = np.abs(x), z - 5.185
-mouth = sd_round_box(np.stack([x, np.zeros_like(x), mz], 1), np.array((0.335, 1.0, 0.135)), 0.06)
+mx, mz = np.abs(x), z - 5.12
+mouth = sd_round_box(np.stack([x, np.zeros_like(x), mz], 1), np.array((0.36, 1.0, 0.14)), 0.06)
 cf = mix(cf, LIP, sstep(0.04, 0.0, mouth) * 0.85)
 cf = mix(cf, MOUTH, sstep(0.006, -0.012, mouth))
-cf = mix(cf, CREASE * 0.85, line(seg(x, z, -0.12, 4.98, 0.12, 4.98), 0.02) * 0.7)
+cf = mix(cf, CREASE * 0.85, line(seg(x, z, -0.12, 4.92, 0.12, 4.92), 0.02) * 0.7)
 for s in (1, -1):  # warm puff on the cheeks
-    cf = mix(cf, col((236, 170, 60)), sstep(0.30, 0.05, np.hypot(x - s * 0.64, z - 5.25)) * 0.25)
+    cf = mix(cf, col((242, 168, 62)), sstep(0.30, 0.05, np.hypot(x - s * 0.62, z - 5.02)) * 0.25)
 out[fm] = cf
 
 # Rags: brown cloth, darker patches, vertical fibre streaks, darker frayed hems, a few holes.
@@ -771,7 +879,9 @@ def inflated(name):
         hc = Vector(rnd(C @ bounds('Head')[0])) + off
         return lambda v, off=off, hc=hc: hc + (v + off - hc) * HEAD_INFLATE
     return None
-neck_seat = lambda t, vs: not all(NECK_RANGE[0] <= i < NECK_RANGE[1] for i in t.vertices)
+HEAD_SEAT = 0.30   # the head's lowest 0.30 (underside + cheek bottoms) is meant to sit in the shoulders
+_hz = [(objects['Head'].matrix_world @ v.co).z for v in objects['Head'].data.vertices]
+neck_seat = lambda t, vs: min(_hz[i] for i in t.vertices) >= min(_hz) + HEAD_SEAT
 report = {}
 for state in ('rest', 'inflated'):
     tf = (lambda n: None) if state == 'rest' else inflated
@@ -810,13 +920,15 @@ fmat = bpy.data.materials.new('Neutral studio floor'); fmat.use_nodes = True
 fmat.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value = (0.36, 0.36, 0.35, 1)
 fmat.node_tree.nodes['Principled BSDF'].inputs['Roughness'].default_value = 0.95
 fl.materials.append(fmat)
-for nm, loc, power, size, color in (('Key', (-6, -8, 10), 1500, 6, (1.0, 0.96, 0.9)), ('Fill', (8, -5, 5), 520, 6, (0.88, 0.93, 1.0)),
-                                    ('Rim', (3, 8, 9), 1100, 5, (1.0, 0.97, 0.92))):
-    ld = bpy.data.lights.new(nm, 'AREA'); ld.energy = power; ld.size = size; ld.color = color
-    lo = bpy.data.objects.new(nm + ' light', ld); stage.objects.link(lo); lo.location = loc; aim(lo, (0, 0, 3))
-scene.world = bpy.data.worlds.new('Neutral grey studio'); scene.world.use_nodes = True
-scene.world.node_tree.nodes['Background'].inputs[0].default_value = (0.50, 0.52, 0.55, 1)
-scene.world.node_tree.nodes['Background'].inputs[1].default_value = 0.8
+# Game-like light: a warm sun plus a strong light-blue sky fill (Roblox's sky ambient with
+# EnvironmentDiffuseScale 1), so the previews predict the in-game hue (yellow must not go lime).
+sun = bpy.data.lights.new('Sun', 'SUN'); sun.energy = 3.2; sun.color = (1.0, 0.93, 0.80); sun.angle = math.radians(3)
+so = bpy.data.objects.new('Sun light', sun); stage.objects.link(so); so.location = (-6, -8, 10); aim(so, (0, 0, 0))
+ld = bpy.data.lights.new('Rim', 'AREA'); ld.energy = 500; ld.size = 5; ld.color = (1.0, 0.97, 0.92)
+lo = bpy.data.objects.new('Rim light', ld); stage.objects.link(lo); lo.location = (3, 8, 9); aim(lo, (0, 0, 3))
+scene.world = bpy.data.worlds.new('Blue sky fill'); scene.world.use_nodes = True
+scene.world.node_tree.nodes['Background'].inputs[0].default_value = (0.55, 0.70, 0.95, 1)
+scene.world.node_tree.nodes['Background'].inputs[1].default_value = 0.85
 camd = bpy.data.cameras.new('Preview camera'); cam = bpy.data.objects.new('Preview camera', camd)
 stage.objects.link(cam); scene.camera = cam
 scene.render.engine = 'BLENDER_EEVEE'
@@ -850,7 +962,7 @@ def shot(path, loc, target, ortho=None, lens=50, res=(1024, 1024)):
 shot(PREV / 'Front.png', (0, -30, 3.1), (0, 0, 3.1), 7.4)
 shot(PREV / 'Back.png', (0, 30, 3.1), (0, 0, 3.1), 7.4)
 shot(PREV / 'Side.png', (30, 0, 3.1), (0, 0, 3.1), 7.4)
-shot(PREV / 'ThreeQuarter.png', (30 * math.sin(math.radians(35)), -30 * math.cos(math.radians(35)), 7.5), (0, 0, 3.05), lens=140)
+shot(PREV / 'ThreeQuarter.png', (-30 * math.sin(math.radians(35)), -30 * math.cos(math.radians(35)), 7.5), (0, 0, 3.05), lens=140)
 shot(PREV / 'Hero.png', (-5.2, -8.2, 1.5), (0, -0.3, 3.4), lens=36)
 
 # Rest vs 1.3x inflation (runtime contract: UpperTorso scaled about its centre, shoulders and

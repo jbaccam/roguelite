@@ -1,0 +1,516 @@
+{
+  "files": {
+    "studioFbx": {
+      "path": "exports\\game\\AlphaWolf_Studio.fbx",
+      "armatures": 1,
+      "meshes": {
+        "AlphaWolf_Body": {
+          "triangles": 11000,
+          "vertices": 5502,
+          "materials": [
+            "AlphaWolf_Body"
+          ],
+          "uv": true,
+          "texture1024Loaded": true,
+          "armatureModifier": true,
+          "unweighted": 0,
+          "over4": 0,
+          "notNormalized": 0,
+          "nonBoneGroups": 0
+        },
+        "AlphaWolf_EyeGlow": {
+          "triangles": 108,
+          "vertices": 58,
+          "materials": [
+            "AlphaWolf_EyeGlow"
+          ],
+          "uv": true,
+          "texture1024Loaded": true,
+          "armatureModifier": true,
+          "unweighted": 0,
+          "over4": 0,
+          "notNormalized": 0,
+          "nonBoneGroups": 0
+        },
+        "AlphaWolf_Feet": {
+          "triangles": 1576,
+          "vertices": 808,
+          "materials": [
+            "AlphaWolf_Feet"
+          ],
+          "uv": true,
+          "texture1024Loaded": true,
+          "armatureModifier": true,
+          "unweighted": 0,
+          "over4": 0,
+          "notNormalized": 0,
+          "nonBoneGroups": 0
+        },
+        "AlphaWolf_Hands": {
+          "triangles": 2240,
+          "vertices": 1144,
+          "materials": [
+            "AlphaWolf_Hands"
+          ],
+          "uv": true,
+          "texture1024Loaded": true,
+          "armatureModifier": true,
+          "unweighted": 0,
+          "over4": 0,
+          "notNormalized": 0,
+          "nonBoneGroups": 0
+        },
+        "AlphaWolf_Head": {
+          "triangles": 3520,
+          "vertices": 1790,
+          "materials": [
+            "AlphaWolf_Head"
+          ],
+          "uv": true,
+          "texture1024Loaded": true,
+          "armatureModifier": true,
+          "unweighted": 0,
+          "over4": 0,
+          "notNormalized": 0,
+          "nonBoneGroups": 0
+        },
+        "AlphaWolf_Shorts": {
+          "triangles": 1984,
+          "vertices": 989,
+          "materials": [
+            "AlphaWolf_Shorts"
+          ],
+          "uv": true,
+          "texture1024Loaded": true,
+          "armatureModifier": true,
+          "unweighted": 0,
+          "over4": 0,
+          "notNormalized": 0,
+          "nonBoneGroups": 0
+        },
+        "AlphaWolf_Tail": {
+          "triangles": 1600,
+          "vertices": 802,
+          "materials": [
+            "AlphaWolf_Tail"
+          ],
+          "uv": true,
+          "texture1024Loaded": true,
+          "armatureModifier": true,
+          "unweighted": 0,
+          "over4": 0,
+          "notNormalized": 0,
+          "nonBoneGroups": 0
+        }
+      },
+      "bones": 39,
+      "restMatrixMaxError": 3e-06,
+      "totalTriangles": 22028,
+      "restBounds": {
+        "min": [
+          -3.605,
+          -2.657,
+          -0.006
+        ],
+        "max": [
+          3.607,
+          2.502,
+          9.254
+        ]
+      },
+      "boundsVsManifestMaxError": 0.0,
+      "hasAnimation": false,
+      "fbm": [
+        "AlphaWolf_Body_BaseColor_1024.png",
+        "AlphaWolf_EyeGlow_BaseColor_1024.png",
+        "AlphaWolf_Feet_BaseColor_1024.png",
+        "AlphaWolf_Hands_BaseColor_1024.png",
+        "AlphaWolf_Head_BaseColor_1024.png",
+        "AlphaWolf_Shorts_BaseColor_1024.png",
+        "AlphaWolf_Tail_BaseColor_1024.png"
+      ]
+    }
+  },
+  "clips": {
+    "Idle": {
+      "frames": 73,
+      "expected": 73,
+      "duration": 3.0,
+      "loop": true,
+      "nan": false,
+      "firstLastMaxDiff": 0.0,
+      "startVsIdleStart": 0.0,
+      "endVsIdleStart": 0.0
+    },
+    "Walk": {
+      "frames": 19,
+      "expected": 19,
+      "duration": 0.75,
+      "loop": true,
+      "nan": false,
+      "firstLastMaxDiff": 0.0,
+      "startVsIdleStart": 0.9464004,
+      "endVsIdleStart": 0.9464004
+    },
+    "Hit": {
+      "frames": 12,
+      "expected": 12,
+      "duration": 0.4583333,
+      "loop": false,
+      "nan": false,
+      "firstLastMaxDiff": 0.0,
+      "startVsIdleStart": 0.0,
+      "endVsIdleStart": 0.0
+    },
+    "Death": {
+      "frames": 54,
+      "expected": 54,
+      "duration": 2.2083333,
+      "loop": false,
+      "nan": false,
+      "firstLastMaxDiff": 2.25,
+      "startVsIdleStart": 0.0,
+      "endVsIdleStart": 2.25
+    },
+    "Howl": {
+      "frames": 54,
+      "expected": 54,
+      "duration": 2.2083333,
+      "loop": false,
+      "nan": false,
+      "firstLastMaxDiff": 0.0,
+      "startVsIdleStart": 0.0,
+      "endVsIdleStart": 0.0
+    },
+    "ChargeStart": {
+      "frames": 18,
+      "expected": 18,
+      "duration": 0.7083333,
+      "loop": false,
+      "nan": false,
+      "firstLastMaxDiff": 1.104357,
+      "startVsIdleStart": 0.0,
+      "endVsIdleStart": 1.104357,
+      "endVsChargeRunFrame0": 0.0
+    },
+    "ChargeRun": {
+      "frames": 13,
+      "expected": 13,
+      "duration": 0.5,
+      "loop": true,
+      "nan": false,
+      "firstLastMaxDiff": 0.0,
+      "startVsIdleStart": 1.104357,
+      "endVsIdleStart": 1.104357
+    },
+    "ClawRake": {
+      "frames": 27,
+      "expected": 27,
+      "duration": 1.0833333,
+      "loop": false,
+      "nan": false,
+      "firstLastMaxDiff": 0.0,
+      "startVsIdleStart": 0.0,
+      "endVsIdleStart": 0.0
+    }
+  },
+  "replay": {
+    "clawRakePointsMaxError": 7e-05,
+    "howlMouthError": 6e-05,
+    "IdleLowestZ": [
+      -0.0056,
+      -0.0056,
+      -0.0056,
+      -0.0056,
+      -0.0056
+    ],
+    "WalkLowestZ": [
+      -0.004,
+      -0.0035,
+      -0.0056,
+      0.2089,
+      -0.004
+    ],
+    "HitLowestZ": [
+      -0.0056,
+      -0.0056,
+      -0.0056,
+      -0.0056,
+      -0.0056
+    ],
+    "DeathLowestZ": [
+      -0.0056,
+      -0.0,
+      0.0,
+      -0.0016,
+      -0.0
+    ],
+    "HowlLowestZ": [
+      -0.0056,
+      -0.0056,
+      -0.0056,
+      -0.0056,
+      -0.0056
+    ],
+    "ChargeStartLowestZ": [
+      -0.0056,
+      -0.0056,
+      -0.0056,
+      -0.004,
+      -0.0085
+    ],
+    "ChargeRunLowestZ": [
+      -0.0085,
+      0.0294,
+      -0.0085,
+      0.0273,
+      -0.0085
+    ],
+    "ClawRakeLowestZ": [
+      -0.0056,
+      -0.0056,
+      -0.0056,
+      -0.0056,
+      -0.0056
+    ],
+    "deathFinalLowestZ": -0.0,
+    "idleStartLowestZ": -0.0056,
+    "midClipBoneMotion": {
+      "Idle": 0.6725,
+      "Walk": 3.4508,
+      "Hit": 0.8591,
+      "Death": 5.0458,
+      "Howl": 2.3383,
+      "ChargeStart": 3.1329,
+      "ChargeRun": 3.2876,
+      "ClawRake": 4.8134
+    }
+  },
+  "gates": {
+    "hinge_LeftKnee": {
+      "min": 3.62,
+      "max": 128.21,
+      "limit": [
+        -5,
+        150
+      ],
+      "ok": true
+    },
+    "hinge_LeftElbow": {
+      "min": 3.62,
+      "max": 95.78,
+      "limit": [
+        -5,
+        150
+      ],
+      "ok": true
+    },
+    "hinge_LeftFingers": {
+      "min": -0.0,
+      "max": 39.41,
+      "limit": [
+        -5,
+        100
+      ],
+      "ok": true
+    },
+    "hinge_LeftToes": {
+      "min": -0.0,
+      "max": 59.84,
+      "limit": [
+        -20,
+        75
+      ],
+      "ok": true
+    },
+    "hinge_RightKnee": {
+      "min": 3.62,
+      "max": 128.21,
+      "limit": [
+        -5,
+        150
+      ],
+      "ok": true
+    },
+    "hinge_RightElbow": {
+      "min": 3.62,
+      "max": 97.16,
+      "limit": [
+        -5,
+        150
+      ],
+      "ok": true
+    },
+    "hinge_RightFingers": {
+      "min": 0.0,
+      "max": 39.41,
+      "limit": [
+        -5,
+        100
+      ],
+      "ok": true
+    },
+    "hinge_RightToes": {
+      "min": -0.0,
+      "max": 59.84,
+      "limit": [
+        -20,
+        75
+      ],
+      "ok": true
+    },
+    "hinge_Jaw": {
+      "min": -0.0,
+      "max": 41.0,
+      "limit": [
+        -2,
+        45
+      ],
+      "ok": true
+    },
+    "hingeOffAxisMaxDeg": {
+      "value": 0,
+      "limit": 5,
+      "ok": true
+    },
+    "forearmShinTwistMaxDeg": {
+      "value": 0,
+      "limit": 70,
+      "ok": true
+    },
+    "anyBoneTwistMaxDeg": {
+      "value": [
+        95.18,
+        "ClawRake:LeftUpperArm"
+      ],
+      "note": "reported; distributed through the chain"
+    },
+    "perFrameRotationMaxDeg": {
+      "value": [
+        42.5,
+        "ChargeRun:RightFoot@1"
+      ],
+      "worstExcludingNamedSnaps": [
+        42.5,
+        "ChargeRun"
+      ],
+      "namedSnaps": {
+        "Death": "released leg flops as the body lands (1.25-1.40 s)"
+      },
+      "limit": 45,
+      "ok": true
+    },
+    "groundLowest": {
+      "value": [
+        -0.0085,
+        "ChargeRun@0"
+      ],
+      "limit": -0.05,
+      "ok": true
+    },
+    "plantedFootDriftMax": {
+      "value": [
+        0.00558,
+        "Death"
+      ],
+      "limit": 0.05,
+      "ok": true
+    },
+    "penetrationMaxBeyondRest": {
+      "value": [
+        0,
+        ""
+      ],
+      "limit": 0.05,
+      "ok": true
+    },
+    "jointVolumeMinRatio": {
+      "value": [
+        0.596,
+        "ChargeRun:LeftKnee@1"
+      ],
+      "perClipMin": {
+        "Idle": 0.9518,
+        "Walk": 0.6432,
+        "Hit": 0.8395,
+        "Death": 0.6824,
+        "Howl": 0.7591,
+        "ChargeRun": 0.596,
+        "ChargeStart": 0.6529,
+        "ClawRake": 0.6693
+      },
+      "limit": 0.85,
+      "met": false,
+      "note": "brief target, NOT met at extreme flexion: linear-blend skinning (Roblox) loses volume at the sprint knee (~131 deg), elbows (~95 deg), raised shoulders (ClawRake windup, Howl) and the thrown-back neck. Reported, not an export blocker. Unreliable at the shoulders (open patch around the joint: a small Hit flinch already reads 0.82); see jointSectionMinRatio."
+    },
+    "jointSectionMinRatio": {
+      "value": [
+        0.8249,
+        "ChargeRun:RightHip@9"
+      ],
+      "perClipMin": {
+        "Idle": 0.9978,
+        "Walk": 0.8645,
+        "Hit": 0.9866,
+        "Death": 0.881,
+        "Howl": 0.9406,
+        "ChargeRun": 0.8249,
+        "ChargeStart": 0.843,
+        "ClawRake": 0.9269
+      },
+      "target": 0.75,
+      "met": true,
+      "note": "band radius retention: mean squared distance of the blend-band skin to the joint centre, posed / rest; rigid-invariant, 1 = no pinch"
+    },
+    "clawRakeReachAtImpact": {
+      "value": {
+        "Left": 0.9833,
+        "Right": 0.9833
+      },
+      "limit": 0.95,
+      "ok": true
+    },
+    "preSnapErrors": {
+      "Idle": {
+        "loopErrorBeforeSnap": 0.0,
+        "startVsIdleStart": 4e-06
+      },
+      "Walk": {
+        "loopErrorBeforeSnap": 0.0,
+        "startVsIdleStart": 0.9464
+      },
+      "Hit": {
+        "startErrorBeforeSnap": 4e-06,
+        "endErrorBeforeSnap": 4e-06
+      },
+      "Death": {
+        "startErrorBeforeSnap": 4e-06
+      },
+      "Howl": {
+        "startErrorBeforeSnap": 4e-06,
+        "endErrorBeforeSnap": 4e-06
+      },
+      "ChargeRun": {
+        "loopErrorBeforeSnap": 0.0,
+        "startVsIdleStart": 1.104357
+      },
+      "ChargeStart": {
+        "startErrorBeforeSnap": 4e-06,
+        "endVsChargeRunFrame0BeforeSnap": 0.0
+      },
+      "ClawRake": {
+        "startErrorBeforeSnap": 4e-06,
+        "endErrorBeforeSnap": 4e-06
+      }
+    },
+    "loopsClosed": {
+      "ok": true
+    }
+  },
+  "failures": [],
+  "briefTargetsMissed": [
+    "jointVolumeMinRatio"
+  ],
+  "passed": true,
+  "status": "Blender-verified (fresh reimport + clip replay); Studio untested"
+}

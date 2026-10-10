@@ -1,0 +1,672 @@
+{
+  "id": "alpha-werewolf",
+  "name": "Blood Moon Alpha",
+  "units": "studs (1 Blender unit = 1 stud)",
+  "scaleFromBaseUnits": 1.27,
+  "axes": "faces -Y, +Z up, anatomical Left at +X; Studio = (-X, Z, Y)",
+  "reference": {
+    "path": "source/05-alpha-werewolf.png",
+    "sha256": "5b496e5a22b990b0128d17317480c078da023a4b51bdd57e4d1d71a198115b53"
+  },
+  "dimensions": {
+    "min": [
+      -3.6053,
+      -2.6575,
+      -0.0056
+    ],
+    "max": [
+      3.6074,
+      2.502,
+      9.2544
+    ],
+    "height": 9.2544
+  },
+  "triangles": {
+    "AlphaWolf_Body": 11000,
+    "AlphaWolf_Head": 3520,
+    "AlphaWolf_EyeGlow": 108,
+    "AlphaWolf_Hands": 2240,
+    "AlphaWolf_Feet": 1576,
+    "AlphaWolf_Tail": 1600,
+    "AlphaWolf_Shorts": 1984
+  },
+  "totalTriangles": 22028,
+  "bones": [
+    {
+      "name": "Root",
+      "parent": null,
+      "head": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "tail": [
+        0.0,
+        0.0,
+        0.4
+      ],
+      "deform": true
+    },
+    {
+      "name": "Pelvis",
+      "parent": "Root",
+      "head": [
+        0.0,
+        0.0762,
+        3.7084
+      ],
+      "tail": [
+        0.0,
+        0.0508,
+        4.3815
+      ],
+      "deform": true
+    },
+    {
+      "name": "Spine",
+      "parent": "Pelvis",
+      "head": [
+        0.0,
+        0.0508,
+        4.3815
+      ],
+      "tail": [
+        0.0,
+        0.0,
+        5.207
+      ],
+      "deform": true
+    },
+    {
+      "name": "Chest",
+      "parent": "Spine",
+      "head": [
+        0.0,
+        0.0,
+        5.207
+      ],
+      "tail": [
+        0.0,
+        -0.1778,
+        6.5786
+      ],
+      "deform": true
+    },
+    {
+      "name": "Neck",
+      "parent": "Chest",
+      "head": [
+        0.0,
+        -0.1778,
+        6.5786
+      ],
+      "tail": [
+        0.0,
+        -0.6096,
+        7.4422
+      ],
+      "deform": true
+    },
+    {
+      "name": "Head",
+      "parent": "Neck",
+      "head": [
+        0.0,
+        -0.6096,
+        7.4422
+      ],
+      "tail": [
+        0.0,
+        -0.9652,
+        8.4328
+      ],
+      "deform": true
+    },
+    {
+      "name": "Jaw",
+      "parent": "Head",
+      "head": [
+        0.0,
+        -1.069,
+        7.0329
+      ],
+      "tail": [
+        0.0,
+        -2.2104,
+        6.9106
+      ],
+      "deform": true
+    },
+    {
+      "name": "Mane",
+      "parent": "Chest",
+      "head": [
+        0.0,
+        0.381,
+        6.6675
+      ],
+      "tail": [
+        0.0,
+        1.016,
+        5.842
+      ],
+      "deform": true
+    },
+    {
+      "name": "LeftShoulder",
+      "parent": "Chest",
+      "head": [
+        0.4064,
+        -0.0762,
+        6.3754
+      ],
+      "tail": [
+        1.9558,
+        0.0,
+        6.4135
+      ],
+      "deform": true
+    },
+    {
+      "name": "LeftUpperArm",
+      "parent": "LeftShoulder",
+      "head": [
+        1.9558,
+        0.0,
+        6.4135
+      ],
+      "tail": [
+        2.4511,
+        0.127,
+        4.8006
+      ],
+      "deform": true
+    },
+    {
+      "name": "LeftForearm",
+      "parent": "LeftUpperArm",
+      "head": [
+        2.4511,
+        0.127,
+        4.8006
+      ],
+      "tail": [
+        2.7432,
+        -0.0762,
+        3.175
+      ],
+      "deform": true
+    },
+    {
+      "name": "LeftHand",
+      "parent": "LeftForearm",
+      "head": [
+        2.7432,
+        -0.0762,
+        3.175
+      ],
+      "tail": [
+        2.7813,
+        -0.127,
+        2.54
+      ],
+      "deform": true
+    },
+    {
+      "name": "LeftFingers",
+      "parent": "LeftHand",
+      "head": [
+        2.7813,
+        -0.127,
+        2.54
+      ],
+      "tail": [
+        2.7305,
+        -0.2032,
+        1.905
+      ],
+      "deform": true
+    },
+    {
+      "name": "LeftElbowHelper",
+      "parent": "LeftUpperArm",
+      "head": [
+        2.4511,
+        0.127,
+        4.8006
+      ],
+      "tail": [
+        2.518,
+        0.0805,
+        4.4284
+      ],
+      "deform": true
+    },
+    {
+      "name": "LeftShoulderHelper",
+      "parent": "LeftShoulder",
+      "head": [
+        1.9558,
+        0.0,
+        6.4135
+      ],
+      "tail": [
+        2.0673,
+        0.0286,
+        6.0503
+      ],
+      "deform": true
+    },
+    {
+      "name": "RightShoulder",
+      "parent": "Chest",
+      "head": [
+        -0.4064,
+        -0.0762,
+        6.3754
+      ],
+      "tail": [
+        -1.9558,
+        0.0,
+        6.4135
+      ],
+      "deform": true
+    },
+    {
+      "name": "RightUpperArm",
+      "parent": "RightShoulder",
+      "head": [
+        -1.9558,
+        0.0,
+        6.4135
+      ],
+      "tail": [
+        -2.4511,
+        0.127,
+        4.8006
+      ],
+      "deform": true
+    },
+    {
+      "name": "RightForearm",
+      "parent": "RightUpperArm",
+      "head": [
+        -2.4511,
+        0.127,
+        4.8006
+      ],
+      "tail": [
+        -2.7432,
+        -0.0762,
+        3.175
+      ],
+      "deform": true
+    },
+    {
+      "name": "RightHand",
+      "parent": "RightForearm",
+      "head": [
+        -2.7432,
+        -0.0762,
+        3.175
+      ],
+      "tail": [
+        -2.7813,
+        -0.127,
+        2.54
+      ],
+      "deform": true
+    },
+    {
+      "name": "RightFingers",
+      "parent": "RightHand",
+      "head": [
+        -2.7813,
+        -0.127,
+        2.54
+      ],
+      "tail": [
+        -2.7305,
+        -0.2032,
+        1.905
+      ],
+      "deform": true
+    },
+    {
+      "name": "RightElbowHelper",
+      "parent": "RightUpperArm",
+      "head": [
+        -2.4511,
+        0.127,
+        4.8006
+      ],
+      "tail": [
+        -2.518,
+        0.0805,
+        4.4284
+      ],
+      "deform": true
+    },
+    {
+      "name": "RightShoulderHelper",
+      "parent": "RightShoulder",
+      "head": [
+        -1.9558,
+        0.0,
+        6.4135
+      ],
+      "tail": [
+        -2.0673,
+        0.0286,
+        6.0503
+      ],
+      "deform": true
+    },
+    {
+      "name": "Tail1",
+      "parent": "Pelvis",
+      "head": [
+        0.0,
+        0.8128,
+        3.937
+      ],
+      "tail": [
+        0.0,
+        1.397,
+        3.4544
+      ],
+      "deform": true
+    },
+    {
+      "name": "Tail2",
+      "parent": "Tail1",
+      "head": [
+        0.0,
+        1.397,
+        3.4544
+      ],
+      "tail": [
+        0.0,
+        1.7272,
+        2.8194
+      ],
+      "deform": true
+    },
+    {
+      "name": "Tail3",
+      "parent": "Tail2",
+      "head": [
+        0.0,
+        1.7272,
+        2.8194
+      ],
+      "tail": [
+        0.0,
+        1.8796,
+        2.0574
+      ],
+      "deform": true
+    },
+    {
+      "name": "LeftThigh",
+      "parent": "Pelvis",
+      "head": [
+        0.762,
+        0.0762,
+        3.7084
+      ],
+      "tail": [
+        1.0668,
+        -0.127,
+        2.1844
+      ],
+      "deform": true
+    },
+    {
+      "name": "LeftShin",
+      "parent": "LeftThigh",
+      "head": [
+        1.0668,
+        -0.127,
+        2.1844
+      ],
+      "tail": [
+        1.1176,
+        0.2032,
+        0.635
+      ],
+      "deform": true
+    },
+    {
+      "name": "LeftFoot",
+      "parent": "LeftShin",
+      "head": [
+        1.1176,
+        0.2032,
+        0.635
+      ],
+      "tail": [
+        1.274,
+        -0.5443,
+        0.254
+      ],
+      "deform": true
+    },
+    {
+      "name": "LeftToes",
+      "parent": "LeftFoot",
+      "head": [
+        1.274,
+        -0.5443,
+        0.254
+      ],
+      "tail": [
+        1.3893,
+        -1.1822,
+        0.1778
+      ],
+      "deform": true
+    },
+    {
+      "name": "LeftKneeHelper",
+      "parent": "LeftThigh",
+      "head": [
+        1.0668,
+        -0.127,
+        2.1844
+      ],
+      "tail": [
+        1.079,
+        -0.0476,
+        1.812
+      ],
+      "deform": true
+    },
+    {
+      "name": "LeftKneeHelperA",
+      "parent": "LeftThigh",
+      "head": [
+        1.0668,
+        -0.127,
+        2.1844
+      ],
+      "tail": [
+        1.079,
+        -0.0476,
+        1.812
+      ],
+      "deform": true
+    },
+    {
+      "name": "LeftKneeHelperB",
+      "parent": "LeftThigh",
+      "head": [
+        1.0668,
+        -0.127,
+        2.1844
+      ],
+      "tail": [
+        1.079,
+        -0.0476,
+        1.812
+      ],
+      "deform": true
+    },
+    {
+      "name": "RightThigh",
+      "parent": "Pelvis",
+      "head": [
+        -0.762,
+        0.0762,
+        3.7084
+      ],
+      "tail": [
+        -1.0668,
+        -0.127,
+        2.1844
+      ],
+      "deform": true
+    },
+    {
+      "name": "RightShin",
+      "parent": "RightThigh",
+      "head": [
+        -1.0668,
+        -0.127,
+        2.1844
+      ],
+      "tail": [
+        -1.1176,
+        0.2032,
+        0.635
+      ],
+      "deform": true
+    },
+    {
+      "name": "RightFoot",
+      "parent": "RightShin",
+      "head": [
+        -1.1176,
+        0.2032,
+        0.635
+      ],
+      "tail": [
+        -1.274,
+        -0.5443,
+        0.254
+      ],
+      "deform": true
+    },
+    {
+      "name": "RightToes",
+      "parent": "RightFoot",
+      "head": [
+        -1.274,
+        -0.5443,
+        0.254
+      ],
+      "tail": [
+        -1.3893,
+        -1.1822,
+        0.1778
+      ],
+      "deform": true
+    },
+    {
+      "name": "RightKneeHelper",
+      "parent": "RightThigh",
+      "head": [
+        -1.0668,
+        -0.127,
+        2.1844
+      ],
+      "tail": [
+        -1.079,
+        -0.0476,
+        1.812
+      ],
+      "deform": true
+    },
+    {
+      "name": "RightKneeHelperA",
+      "parent": "RightThigh",
+      "head": [
+        -1.0668,
+        -0.127,
+        2.1844
+      ],
+      "tail": [
+        -1.079,
+        -0.0476,
+        1.812
+      ],
+      "deform": true
+    },
+    {
+      "name": "RightKneeHelperB",
+      "parent": "RightThigh",
+      "head": [
+        -1.0668,
+        -0.127,
+        2.1844
+      ],
+      "tail": [
+        -1.079,
+        -0.0476,
+        1.812
+      ],
+      "deform": true
+    }
+  ],
+  "sections": {
+    "Body": {
+      "object": "AlphaWolf_Body",
+      "material": "AlphaWolf_Body",
+      "texture": "textures/AlphaWolf_Body_BaseColor_1024.png"
+    },
+    "Head": {
+      "object": "AlphaWolf_Head",
+      "material": "AlphaWolf_Head",
+      "texture": "textures/AlphaWolf_Head_BaseColor_1024.png"
+    },
+    "EyeGlow": {
+      "object": "AlphaWolf_EyeGlow",
+      "material": "AlphaWolf_EyeGlow",
+      "texture": "textures/AlphaWolf_EyeGlow_BaseColor_1024.png"
+    },
+    "Hands": {
+      "object": "AlphaWolf_Hands",
+      "material": "AlphaWolf_Hands",
+      "texture": "textures/AlphaWolf_Hands_BaseColor_1024.png"
+    },
+    "Feet": {
+      "object": "AlphaWolf_Feet",
+      "material": "AlphaWolf_Feet",
+      "texture": "textures/AlphaWolf_Feet_BaseColor_1024.png"
+    },
+    "Tail": {
+      "object": "AlphaWolf_Tail",
+      "material": "AlphaWolf_Tail",
+      "texture": "textures/AlphaWolf_Tail_BaseColor_1024.png"
+    },
+    "Shorts": {
+      "object": "AlphaWolf_Shorts",
+      "material": "AlphaWolf_Shorts",
+      "texture": "textures/AlphaWolf_Shorts_BaseColor_1024.png"
+    }
+  },
+  "textures": {
+    "AlphaWolf_Body_BaseColor_1024.png": "754d783c70b9029dfab98b3117e8a4c4a317a51a7e1d968deac45a9f5a056323",
+    "AlphaWolf_EyeGlow_BaseColor_1024.png": "d36ec4b70a9f5ee893a3445d4317cfdf2ef25c0c1520cb4f616ea711f3f76e34",
+    "AlphaWolf_Feet_BaseColor_1024.png": "e76b1f5a59b7be6712e14b516ecbf7f3770228cc4d2dfa733bda51b7440d1f9b",
+    "AlphaWolf_Hands_BaseColor_1024.png": "4cb40ef3aa88e09224110aa38a485dd3e6d56863133e92901a6317df34e02b1e",
+    "AlphaWolf_Head_BaseColor_1024.png": "5812a8dad558193bee3eedbd84213e23f50dad423c82914a7f62aecc8c7a1c36",
+    "AlphaWolf_Shorts_BaseColor_1024.png": "c772322ba7692cde013be7c7b6b369ca49acaab2cd7a09ecf8c1906dff61591e",
+    "AlphaWolf_Tail_BaseColor_1024.png": "74672426b8e2cdad78159fd4311c2e45040c2da920c4bfec625d163ede3d7981"
+  },
+  "scaleCheck": {
+    "regularWerewolfHeight": 6.9787,
+    "alphaHeight": 9.2544,
+    "ratio": 1.3261
+  }
+}

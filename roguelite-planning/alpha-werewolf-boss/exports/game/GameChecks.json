@@ -1,0 +1,1626 @@
+{
+  "clips": {
+    "Idle": {
+      "frames": 73,
+      "duration": 3.0,
+      "loop": true,
+      "loopErrorBeforeSnap": 0.0,
+      "startVsIdleStart": 4e-06,
+      "hingeDeg": {
+        "LeftKnee": [
+          21.41,
+          28.36
+        ],
+        "LeftElbow": [
+          13.19,
+          14.75
+        ],
+        "LeftFingers": [
+          -0.0,
+          13.87
+        ],
+        "LeftToes": [
+          -0.0,
+          0.0
+        ],
+        "RightKnee": [
+          21.41,
+          28.36
+        ],
+        "RightElbow": [
+          13.19,
+          14.75
+        ],
+        "RightFingers": [
+          0.0,
+          11.89
+        ],
+        "RightToes": [
+          -0.0,
+          0.0
+        ],
+        "Jaw": [
+          -0.0,
+          3.0
+        ]
+      },
+      "hingeOK": true,
+      "hingeOffAxisMaxDeg": 0.0,
+      "twistMaxDeg": {
+        "Pelvis": 0.85,
+        "Spine": 0.55,
+        "Chest": 0.46,
+        "Neck": 0.27,
+        "Head": 4.81,
+        "Mane": 1.26,
+        "LeftShoulder": 0.1,
+        "LeftUpperArm": 0.17,
+        "LeftFingers": 1.67,
+        "LeftShoulderHelper": 0.09,
+        "RightShoulder": 0.1,
+        "RightUpperArm": 0.17,
+        "RightFingers": 1.43,
+        "RightShoulderHelper": 0.09,
+        "Tail1": 7.05,
+        "Tail2": 14.21,
+        "Tail3": 17.74,
+        "LeftThigh": 0.36,
+        "LeftFoot": 1.42,
+        "RightThigh": 0.36,
+        "RightFoot": 1.42
+      },
+      "forearmShinTwistMaxDeg": 0.0,
+      "perFrameRotationMaxDeg": {
+        "deg": 1.55,
+        "bone": "RightFingers",
+        "frame": 42
+      },
+      "groundLowest": {
+        "z": -0.0056,
+        "frame": 10,
+        "section": "Feet",
+        "ok": true
+      },
+      "plantedFootDrift": {
+        "Left": 0.0,
+        "Right": 0.0
+      },
+      "penetration": {
+        "armsThroughTorso": {
+          "depth": 0.0,
+          "frame": 72
+        },
+        "handsThroughLegs": {
+          "depth": 0.0,
+          "frame": 72
+        },
+        "snoutThroughTorso": {
+          "depth": 0.0,
+          "frame": 72
+        },
+        "maneThroughHead": {
+          "depth": 0.0,
+          "frame": 72
+        }
+      },
+      "jointVolumeMinRatio": {
+        "Neck": {
+          "ratio": 0.9821,
+          "frame": 45
+        },
+        "LeftShoulder": {
+          "ratio": 0.9518,
+          "frame": 19
+        },
+        "LeftElbow": {
+          "ratio": 0.9987,
+          "frame": 53
+        },
+        "LeftHip": {
+          "ratio": 0.9935,
+          "frame": 17
+        },
+        "LeftKnee": {
+          "ratio": 0.9911,
+          "frame": 54
+        },
+        "RightShoulder": {
+          "ratio": 0.9713,
+          "frame": 55
+        },
+        "RightElbow": {
+          "ratio": 0.9991,
+          "frame": 17
+        },
+        "RightHip": {
+          "ratio": 0.9883,
+          "frame": 53
+        },
+        "RightKnee": {
+          "ratio": 0.9969,
+          "frame": 18
+        }
+      },
+      "jointSectionMinRatio": {
+        "LeftShoulder": {
+          "ratio": 0.9998,
+          "frame": 71
+        },
+        "LeftElbow": {
+          "ratio": 0.9999,
+          "frame": 52
+        },
+        "LeftKnee": {
+          "ratio": 0.9994,
+          "frame": 54
+        },
+        "LeftHip": {
+          "ratio": 0.9986,
+          "frame": 53
+        },
+        "RightShoulder": {
+          "ratio": 0.9979,
+          "frame": 34
+        },
+        "RightElbow": {
+          "ratio": 0.9999,
+          "frame": 16
+        },
+        "RightKnee": {
+          "ratio": 0.9995,
+          "frame": 18
+        },
+        "RightHip": {
+          "ratio": 0.9978,
+          "frame": 17
+        },
+        "Neck": {
+          "ratio": 0.9999,
+          "frame": 9
+        }
+      },
+      "ikClamp": {
+        "armMax": 0.0,
+        "legMaxWhilePlanted": 0.0
+      },
+      "clawSpeedPeak": {
+        "studsPerSec": 0.78,
+        "betweenFrames": [
+          5,
+          6
+        ]
+      }
+    },
+    "Walk": {
+      "frames": 19,
+      "duration": 0.75,
+      "loop": true,
+      "loopErrorBeforeSnap": 0.0,
+      "startVsIdleStart": 0.9464,
+      "hingeDeg": {
+        "LeftKnee": [
+          43.42,
+          119.64
+        ],
+        "LeftElbow": [
+          49.37,
+          85.4
+        ],
+        "LeftFingers": [
+          25.77,
+          25.77
+        ],
+        "LeftToes": [
+          0.0,
+          54.09
+        ],
+        "RightKnee": [
+          43.42,
+          119.64
+        ],
+        "RightElbow": [
+          49.37,
+          85.4
+        ],
+        "RightFingers": [
+          25.77,
+          25.77
+        ],
+        "RightToes": [
+          0.0,
+          54.09
+        ],
+        "Jaw": [
+          4.12,
+          8.0
+        ]
+      },
+      "hingeOK": true,
+      "hingeOffAxisMaxDeg": 0.0,
+      "twistMaxDeg": {
+        "Pelvis": 7.63,
+        "Spine": 5.44,
+        "Chest": 6.19,
+        "Neck": 1.95,
+        "Head": 2.02,
+        "Mane": 2.48,
+        "LeftShoulder": 0.15,
+        "LeftUpperArm": 10.66,
+        "LeftHand": 0.48,
+        "LeftFingers": 3.14,
+        "LeftShoulderHelper": 5.28,
+        "RightShoulder": 0.15,
+        "RightUpperArm": 10.66,
+        "RightHand": 0.48,
+        "RightFingers": 3.14,
+        "RightShoulderHelper": 5.28,
+        "Tail1": 3.03,
+        "Tail2": 8.31,
+        "Tail3": 11.49,
+        "LeftThigh": 22.41,
+        "LeftFoot": 17.78,
+        "RightThigh": 22.41,
+        "RightFoot": 17.78
+      },
+      "forearmShinTwistMaxDeg": 0.0,
+      "perFrameRotationMaxDeg": {
+        "deg": 30.15,
+        "bone": "RightFoot",
+        "frame": 1
+      },
+      "groundLowest": {
+        "z": -0.0056,
+        "frame": 13,
+        "section": "Feet",
+        "ok": true
+      },
+      "plantedFootDrift": {
+        "Left": 0.0,
+        "Right": 0.0
+      },
+      "penetration": {
+        "armsThroughTorso": {
+          "depth": 0.0,
+          "frame": 18
+        },
+        "handsThroughLegs": {
+          "depth": 0.0,
+          "frame": 18
+        },
+        "snoutThroughTorso": {
+          "depth": 0.0,
+          "frame": 18
+        },
+        "maneThroughHead": {
+          "depth": 0.0,
+          "frame": 18
+        }
+      },
+      "jointVolumeMinRatio": {
+        "Neck": {
+          "ratio": 1.1473,
+          "frame": 10
+        },
+        "LeftShoulder": {
+          "ratio": 0.9465,
+          "frame": 10
+        },
+        "LeftElbow": {
+          "ratio": 0.8347,
+          "frame": 14
+        },
+        "LeftHip": {
+          "ratio": 0.8426,
+          "frame": 3
+        },
+        "LeftKnee": {
+          "ratio": 0.6432,
+          "frame": 2
+        },
+        "RightShoulder": {
+          "ratio": 0.8806,
+          "frame": 2
+        },
+        "RightElbow": {
+          "ratio": 0.8429,
+          "frame": 5
+        },
+        "RightHip": {
+          "ratio": 0.8245,
+          "frame": 13
+        },
+        "RightKnee": {
+          "ratio": 0.6868,
+          "frame": 11
+        }
+      },
+      "jointSectionMinRatio": {
+        "LeftShoulder": {
+          "ratio": 0.9449,
+          "frame": 11
+        },
+        "LeftElbow": {
+          "ratio": 0.9326,
+          "frame": 14
+        },
+        "LeftKnee": {
+          "ratio": 0.8948,
+          "frame": 2
+        },
+        "LeftHip": {
+          "ratio": 0.867,
+          "frame": 4
+        },
+        "RightShoulder": {
+          "ratio": 0.9426,
+          "frame": 2
+        },
+        "RightElbow": {
+          "ratio": 0.9326,
+          "frame": 5
+        },
+        "RightKnee": {
+          "ratio": 0.9026,
+          "frame": 11
+        },
+        "RightHip": {
+          "ratio": 0.8645,
+          "frame": 13
+        },
+        "Neck": {
+          "ratio": 0.9982,
+          "frame": 0
+        }
+      },
+      "ikClamp": {
+        "armMax": 0.0,
+        "legMaxWhilePlanted": 0.0
+      },
+      "clawSpeedPeak": {
+        "studsPerSec": 14.76,
+        "betweenFrames": [
+          4,
+          5
+        ]
+      }
+    },
+    "Hit": {
+      "frames": 12,
+      "duration": 0.4583,
+      "loop": false,
+      "startErrorBeforeSnap": 4e-06,
+      "endErrorBeforeSnap": 4e-06,
+      "hingeDeg": {
+        "LeftKnee": [
+          21.61,
+          36.23
+        ],
+        "LeftElbow": [
+          13.24,
+          44.72
+        ],
+        "LeftFingers": [
+          0.0,
+          29.74
+        ],
+        "LeftToes": [
+          0.0,
+          0.0
+        ],
+        "RightKnee": [
+          21.61,
+          36.4
+        ],
+        "RightElbow": [
+          13.24,
+          34.37
+        ],
+        "RightFingers": [
+          0.0,
+          29.74
+        ],
+        "RightToes": [
+          0.0,
+          0.0
+        ],
+        "Jaw": [
+          0.0,
+          16.0
+        ]
+      },
+      "hingeOK": true,
+      "hingeOffAxisMaxDeg": 0.0,
+      "twistMaxDeg": {
+        "Pelvis": 3.0,
+        "Spine": 2.0,
+        "Chest": 3.91,
+        "Head": 8.78,
+        "Mane": 2.47,
+        "LeftShoulder": 0.57,
+        "LeftUpperArm": 4.89,
+        "LeftFingers": 3.65,
+        "LeftShoulderHelper": 2.43,
+        "RightShoulder": 0.57,
+        "RightUpperArm": 4.99,
+        "RightFingers": 3.65,
+        "RightShoulderHelper": 2.49,
+        "Tail1": 8.06,
+        "Tail2": 8.95,
+        "Tail3": 7.8,
+        "LeftThigh": 3.27,
+        "LeftFoot": 2.26,
+        "RightThigh": 2.2,
+        "RightFoot": 2.08
+      },
+      "forearmShinTwistMaxDeg": 0.0,
+      "perFrameRotationMaxDeg": {
+        "deg": 26.86,
+        "bone": "LeftForearm",
+        "frame": 1
+      },
+      "groundLowest": {
+        "z": -0.0056,
+        "frame": 5,
+        "section": "Feet",
+        "ok": true
+      },
+      "plantedFootDrift": {
+        "Left": 0.0,
+        "Right": 0.0
+      },
+      "penetration": {
+        "armsThroughTorso": {
+          "depth": 0.0,
+          "frame": 11
+        },
+        "handsThroughLegs": {
+          "depth": 0.0,
+          "frame": 11
+        },
+        "snoutThroughTorso": {
+          "depth": 0.0,
+          "frame": 11
+        },
+        "maneThroughHead": {
+          "depth": 0.0,
+          "frame": 11
+        }
+      },
+      "jointVolumeMinRatio": {
+        "Neck": {
+          "ratio": 1.0,
+          "frame": 0
+        },
+        "LeftShoulder": {
+          "ratio": 0.879,
+          "frame": 2
+        },
+        "LeftElbow": {
+          "ratio": 0.9538,
+          "frame": 2
+        },
+        "LeftHip": {
+          "ratio": 0.9927,
+          "frame": 2
+        },
+        "LeftKnee": {
+          "ratio": 0.9773,
+          "frame": 2
+        },
+        "RightShoulder": {
+          "ratio": 0.8395,
+          "frame": 3
+        },
+        "RightElbow": {
+          "ratio": 0.9783,
+          "frame": 2
+        },
+        "RightHip": {
+          "ratio": 0.9902,
+          "frame": 2
+        },
+        "RightKnee": {
+          "ratio": 0.9893,
+          "frame": 2
+        }
+      },
+      "jointSectionMinRatio": {
+        "LeftShoulder": {
+          "ratio": 1.0,
+          "frame": 0
+        },
+        "LeftElbow": {
+          "ratio": 0.9866,
+          "frame": 2
+        },
+        "LeftKnee": {
+          "ratio": 0.9974,
+          "frame": 2
+        },
+        "LeftHip": {
+          "ratio": 0.9999,
+          "frame": 2
+        },
+        "RightShoulder": {
+          "ratio": 0.9979,
+          "frame": 7
+        },
+        "RightElbow": {
+          "ratio": 0.9937,
+          "frame": 2
+        },
+        "RightKnee": {
+          "ratio": 0.9975,
+          "frame": 2
+        },
+        "RightHip": {
+          "ratio": 0.9969,
+          "frame": 2
+        },
+        "Neck": {
+          "ratio": 0.9984,
+          "frame": 2
+        }
+      },
+      "ikClamp": {
+        "armMax": 0.0,
+        "legMaxWhilePlanted": 0.0
+      },
+      "clawSpeedPeak": {
+        "studsPerSec": 20.33,
+        "betweenFrames": [
+          0,
+          1
+        ]
+      }
+    },
+    "Death": {
+      "frames": 54,
+      "duration": 2.2083,
+      "loop": false,
+      "startErrorBeforeSnap": 4e-06,
+      "hingeDeg": {
+        "LeftKnee": [
+          3.62,
+          112.35
+        ],
+        "LeftElbow": [
+          13.24,
+          72.07
+        ],
+        "LeftFingers": [
+          0.0,
+          29.73
+        ],
+        "LeftToes": [
+          -0.0,
+          0.0
+        ],
+        "RightKnee": [
+          3.62,
+          72.07
+        ],
+        "RightElbow": [
+          13.24,
+          72.86
+        ],
+        "RightFingers": [
+          0.0,
+          29.73
+        ],
+        "RightToes": [
+          -0.0,
+          8.0
+        ],
+        "Jaw": [
+          0.0,
+          21.96
+        ]
+      },
+      "hingeOK": true,
+      "hingeOffAxisMaxDeg": 0.0,
+      "twistMaxDeg": {
+        "Pelvis": 8.96,
+        "Spine": 4.55,
+        "Chest": 6.44,
+        "Neck": 7.23,
+        "Head": 10.69,
+        "Mane": 4.55,
+        "LeftShoulder": 0.91,
+        "LeftUpperArm": 7.91,
+        "LeftFingers": 3.64,
+        "LeftShoulderHelper": 3.91,
+        "RightShoulder": 0.91,
+        "RightUpperArm": 6.3,
+        "RightFingers": 3.64,
+        "RightShoulderHelper": 3.12,
+        "Tail1": 20.35,
+        "Tail2": 21.68,
+        "Tail3": 17.73,
+        "LeftThigh": 10.8,
+        "LeftFoot": 43.67,
+        "RightThigh": 2.95,
+        "RightFoot": 44.85
+      },
+      "forearmShinTwistMaxDeg": 0.0,
+      "perFrameRotationMaxDeg": {
+        "deg": 28.4,
+        "bone": "LeftForearm",
+        "frame": 1
+      },
+      "groundLowest": {
+        "z": -0.0056,
+        "frame": 0,
+        "section": "Feet",
+        "ok": true
+      },
+      "plantedFootDrift": {
+        "Left": 0.00558,
+        "Right": 0.00558
+      },
+      "penetration": {
+        "armsThroughTorso": {
+          "depth": 0.0,
+          "frame": 53
+        },
+        "handsThroughLegs": {
+          "depth": 0.0,
+          "frame": 53
+        },
+        "snoutThroughTorso": {
+          "depth": 0.0,
+          "frame": 53
+        },
+        "maneThroughHead": {
+          "depth": 0.0,
+          "frame": 53
+        }
+      },
+      "jointVolumeMinRatio": {
+        "Neck": {
+          "ratio": 0.7404,
+          "frame": 18
+        },
+        "LeftShoulder": {
+          "ratio": 0.8319,
+          "frame": 34
+        },
+        "LeftElbow": {
+          "ratio": 0.8782,
+          "frame": 3
+        },
+        "LeftHip": {
+          "ratio": 0.8162,
+          "frame": 21
+        },
+        "LeftKnee": {
+          "ratio": 0.6824,
+          "frame": 21
+        },
+        "RightShoulder": {
+          "ratio": 0.7974,
+          "frame": 3
+        },
+        "RightElbow": {
+          "ratio": 0.8847,
+          "frame": 29
+        },
+        "RightHip": {
+          "ratio": 0.8648,
+          "frame": 50
+        },
+        "RightKnee": {
+          "ratio": 0.9057,
+          "frame": 6
+        }
+      },
+      "jointSectionMinRatio": {
+        "LeftShoulder": {
+          "ratio": 0.9989,
+          "frame": 33
+        },
+        "LeftElbow": {
+          "ratio": 0.9545,
+          "frame": 3
+        },
+        "LeftKnee": {
+          "ratio": 0.9083,
+          "frame": 21
+        },
+        "LeftHip": {
+          "ratio": 0.881,
+          "frame": 21
+        },
+        "RightShoulder": {
+          "ratio": 0.9711,
+          "frame": 47
+        },
+        "RightElbow": {
+          "ratio": 0.9525,
+          "frame": 29
+        },
+        "RightKnee": {
+          "ratio": 0.9718,
+          "frame": 6
+        },
+        "RightHip": {
+          "ratio": 0.9656,
+          "frame": 53
+        },
+        "Neck": {
+          "ratio": 0.9936,
+          "frame": 18
+        }
+      },
+      "ikClamp": {
+        "armMax": 0.0,
+        "legMaxWhilePlanted": 0.0
+      },
+      "clawSpeedPeak": {
+        "studsPerSec": 19.69,
+        "betweenFrames": [
+          1,
+          2
+        ]
+      }
+    },
+    "Howl": {
+      "frames": 54,
+      "duration": 2.2083,
+      "loop": false,
+      "startErrorBeforeSnap": 4e-06,
+      "endErrorBeforeSnap": 4e-06,
+      "hingeDeg": {
+        "LeftKnee": [
+          21.61,
+          63.55
+        ],
+        "LeftElbow": [
+          3.62,
+          63.63
+        ],
+        "LeftFingers": [
+          -0.0,
+          39.41
+        ],
+        "LeftToes": [
+          0.0,
+          0.0
+        ],
+        "RightKnee": [
+          21.61,
+          63.55
+        ],
+        "RightElbow": [
+          3.62,
+          63.63
+        ],
+        "RightFingers": [
+          -0.0,
+          39.41
+        ],
+        "RightToes": [
+          0.0,
+          0.0
+        ],
+        "Jaw": [
+          -0.0,
+          41.0
+        ]
+      },
+      "hingeOK": true,
+      "hingeOffAxisMaxDeg": 0.0,
+      "twistMaxDeg": {
+        "LeftShoulder": 1.38,
+        "LeftUpperArm": 62.12,
+        "LeftHand": 0.9,
+        "LeftFingers": 4.92,
+        "LeftShoulderHelper": 30.36,
+        "RightShoulder": 1.38,
+        "RightUpperArm": 62.12,
+        "RightHand": 0.9,
+        "RightFingers": 4.92,
+        "RightShoulderHelper": 30.36,
+        "LeftThigh": 2.75,
+        "LeftFoot": 4.95,
+        "RightThigh": 2.75,
+        "RightFoot": 4.95
+      },
+      "forearmShinTwistMaxDeg": 0.0,
+      "perFrameRotationMaxDeg": {
+        "deg": 17.39,
+        "bone": "LeftUpperArm",
+        "frame": 47
+      },
+      "groundLowest": {
+        "z": -0.0056,
+        "frame": 7,
+        "section": "Feet",
+        "ok": true
+      },
+      "plantedFootDrift": {
+        "Left": 0.0,
+        "Right": 0.0
+      },
+      "penetration": {
+        "armsThroughTorso": {
+          "depth": 0.0,
+          "frame": 53
+        },
+        "handsThroughLegs": {
+          "depth": 0.0,
+          "frame": 53
+        },
+        "snoutThroughTorso": {
+          "depth": 0.0,
+          "frame": 53
+        },
+        "maneThroughHead": {
+          "depth": 0.0,
+          "frame": 53
+        }
+      },
+      "jointVolumeMinRatio": {
+        "Neck": {
+          "ratio": 0.7986,
+          "frame": 8
+        },
+        "LeftShoulder": {
+          "ratio": 0.7914,
+          "frame": 42
+        },
+        "LeftElbow": {
+          "ratio": 0.9058,
+          "frame": 9
+        },
+        "LeftHip": {
+          "ratio": 0.966,
+          "frame": 8
+        },
+        "LeftKnee": {
+          "ratio": 0.9025,
+          "frame": 8
+        },
+        "RightShoulder": {
+          "ratio": 0.7591,
+          "frame": 42
+        },
+        "RightElbow": {
+          "ratio": 0.9125,
+          "frame": 9
+        },
+        "RightHip": {
+          "ratio": 0.9658,
+          "frame": 8
+        },
+        "RightKnee": {
+          "ratio": 0.9329,
+          "frame": 8
+        }
+      },
+      "jointSectionMinRatio": {
+        "LeftShoulder": {
+          "ratio": 0.9516,
+          "frame": 43
+        },
+        "LeftElbow": {
+          "ratio": 0.9657,
+          "frame": 9
+        },
+        "LeftKnee": {
+          "ratio": 0.9787,
+          "frame": 8
+        },
+        "LeftHip": {
+          "ratio": 0.9795,
+          "frame": 8
+        },
+        "RightShoulder": {
+          "ratio": 0.9406,
+          "frame": 43
+        },
+        "RightElbow": {
+          "ratio": 0.9655,
+          "frame": 9
+        },
+        "RightKnee": {
+          "ratio": 0.9803,
+          "frame": 8
+        },
+        "RightHip": {
+          "ratio": 0.977,
+          "frame": 8
+        },
+        "Neck": {
+          "ratio": 0.9964,
+          "frame": 30
+        }
+      },
+      "ikClamp": {
+        "armMax": 0.23814,
+        "legMaxWhilePlanted": 0.0
+      },
+      "clawSpeedPeak": {
+        "studsPerSec": 21.42,
+        "betweenFrames": [
+          47,
+          48
+        ]
+      }
+    },
+    "ChargeRun": {
+      "frames": 13,
+      "duration": 0.5,
+      "loop": true,
+      "loopErrorBeforeSnap": 0.0,
+      "startVsIdleStart": 1.104357,
+      "hingeDeg": {
+        "LeftKnee": [
+          74.89,
+          128.21
+        ],
+        "LeftElbow": [
+          69.9,
+          95.13
+        ],
+        "LeftFingers": [
+          7.93,
+          7.93
+        ],
+        "LeftToes": [
+          0.0,
+          59.84
+        ],
+        "RightKnee": [
+          74.89,
+          128.21
+        ],
+        "RightElbow": [
+          69.9,
+          95.13
+        ],
+        "RightFingers": [
+          7.93,
+          7.93
+        ],
+        "RightToes": [
+          0.0,
+          59.84
+        ],
+        "Jaw": [
+          10.0,
+          14.0
+        ]
+      },
+      "hingeOK": true,
+      "hingeOffAxisMaxDeg": 0.0,
+      "twistMaxDeg": {
+        "Pelvis": 5.48,
+        "Spine": 4.01,
+        "Chest": 4.58,
+        "Neck": 1.5,
+        "Head": 1.55,
+        "Mane": 1.84,
+        "LeftShoulder": 0.3,
+        "LeftUpperArm": 12.88,
+        "LeftHand": 0.72,
+        "LeftFingers": 0.95,
+        "LeftShoulderHelper": 6.14,
+        "RightShoulder": 0.3,
+        "RightUpperArm": 12.88,
+        "RightHand": 0.72,
+        "RightFingers": 0.95,
+        "RightShoulderHelper": 6.14,
+        "Tail1": 2.3,
+        "Tail2": 9.58,
+        "Tail3": 13.7,
+        "LeftThigh": 31.31,
+        "LeftFoot": 24.39,
+        "RightThigh": 31.31,
+        "RightFoot": 24.39
+      },
+      "forearmShinTwistMaxDeg": 0.0,
+      "perFrameRotationMaxDeg": {
+        "deg": 42.5,
+        "bone": "RightFoot",
+        "frame": 1
+      },
+      "groundLowest": {
+        "z": -0.0085,
+        "frame": 0,
+        "section": "Feet",
+        "ok": true
+      },
+      "plantedFootDrift": {
+        "Left": 0.0,
+        "Right": 0.0
+      },
+      "penetration": {
+        "armsThroughTorso": {
+          "depth": 0.0,
+          "frame": 12
+        },
+        "handsThroughLegs": {
+          "depth": 0.0,
+          "frame": 12
+        },
+        "snoutThroughTorso": {
+          "depth": 0.0,
+          "frame": 12
+        },
+        "maneThroughHead": {
+          "depth": 0.0,
+          "frame": 12
+        }
+      },
+      "jointVolumeMinRatio": {
+        "Neck": {
+          "ratio": 1.3364,
+          "frame": 7
+        },
+        "LeftShoulder": {
+          "ratio": 0.9302,
+          "frame": 6
+        },
+        "LeftElbow": {
+          "ratio": 0.7988,
+          "frame": 9
+        },
+        "LeftHip": {
+          "ratio": 0.7937,
+          "frame": 3
+        },
+        "LeftKnee": {
+          "ratio": 0.596,
+          "frame": 1
+        },
+        "RightShoulder": {
+          "ratio": 0.8475,
+          "frame": 1
+        },
+        "RightElbow": {
+          "ratio": 0.8073,
+          "frame": 3
+        },
+        "RightHip": {
+          "ratio": 0.7736,
+          "frame": 9
+        },
+        "RightKnee": {
+          "ratio": 0.6387,
+          "frame": 7
+        }
+      },
+      "jointSectionMinRatio": {
+        "LeftShoulder": {
+          "ratio": 0.9284,
+          "frame": 6
+        },
+        "LeftElbow": {
+          "ratio": 0.9145,
+          "frame": 9
+        },
+        "LeftKnee": {
+          "ratio": 0.8783,
+          "frame": 1
+        },
+        "LeftHip": {
+          "ratio": 0.8267,
+          "frame": 3
+        },
+        "RightShoulder": {
+          "ratio": 0.9234,
+          "frame": 0
+        },
+        "RightElbow": {
+          "ratio": 0.9147,
+          "frame": 3
+        },
+        "RightKnee": {
+          "ratio": 0.8873,
+          "frame": 7
+        },
+        "RightHip": {
+          "ratio": 0.8249,
+          "frame": 9
+        },
+        "Neck": {
+          "ratio": 0.9905,
+          "frame": 0
+        }
+      },
+      "ikClamp": {
+        "armMax": 0.0,
+        "legMaxWhilePlanted": 0.0
+      },
+      "clawSpeedPeak": {
+        "studsPerSec": 26.04,
+        "betweenFrames": [
+          3,
+          4
+        ]
+      }
+    },
+    "ChargeStart": {
+      "frames": 18,
+      "duration": 0.7083,
+      "loop": false,
+      "startErrorBeforeSnap": 4e-06,
+      "endVsChargeRunFrame0BeforeSnap": 0.0,
+      "hingeDeg": {
+        "LeftKnee": [
+          21.61,
+          117.85
+        ],
+        "LeftElbow": [
+          13.24,
+          95.78
+        ],
+        "LeftFingers": [
+          0.0,
+          29.74
+        ],
+        "LeftToes": [
+          0.0,
+          38.0
+        ],
+        "RightKnee": [
+          21.61,
+          79.16
+        ],
+        "RightElbow": [
+          3.62,
+          97.16
+        ],
+        "RightFingers": [
+          0.0,
+          9.75
+        ],
+        "RightToes": [
+          -0.0,
+          9.14
+        ],
+        "Jaw": [
+          0.0,
+          18.0
+        ]
+      },
+      "hingeOK": true,
+      "hingeOffAxisMaxDeg": 0.0,
+      "twistMaxDeg": {
+        "Pelvis": 5.95,
+        "Spine": 4.01,
+        "Chest": 4.58,
+        "Neck": 1.5,
+        "Head": 1.55,
+        "Mane": 1.04,
+        "LeftShoulder": 0.52,
+        "LeftUpperArm": 12.17,
+        "LeftHand": 0.72,
+        "LeftFingers": 3.65,
+        "LeftShoulderHelper": 6.06,
+        "RightShoulder": 0.58,
+        "RightUpperArm": 31.65,
+        "RightHand": 0.72,
+        "RightFingers": 1.17,
+        "RightShoulderHelper": 15.51,
+        "Tail1": 6.14,
+        "Tail2": 7.9,
+        "Tail3": 6.87,
+        "LeftThigh": 12.37,
+        "LeftFoot": 25.09,
+        "RightThigh": 30.03,
+        "RightFoot": 16.88
+      },
+      "forearmShinTwistMaxDeg": 0.0,
+      "perFrameRotationMaxDeg": {
+        "deg": 36.38,
+        "bone": "RightForearm",
+        "frame": 7
+      },
+      "groundLowest": {
+        "z": -0.0085,
+        "frame": 17,
+        "section": "Feet",
+        "ok": true
+      },
+      "plantedFootDrift": {
+        "Left": 0.0,
+        "Right": 0.0
+      },
+      "penetration": {
+        "armsThroughTorso": {
+          "depth": 0.0,
+          "frame": 17
+        },
+        "handsThroughLegs": {
+          "depth": 0.0,
+          "frame": 17
+        },
+        "snoutThroughTorso": {
+          "depth": 0.0,
+          "frame": 17
+        },
+        "maneThroughHead": {
+          "depth": 0.0,
+          "frame": 17
+        }
+      },
+      "jointVolumeMinRatio": {
+        "Neck": {
+          "ratio": 1.0,
+          "frame": 0
+        },
+        "LeftShoulder": {
+          "ratio": 0.9224,
+          "frame": 8
+        },
+        "LeftElbow": {
+          "ratio": 0.797,
+          "frame": 15
+        },
+        "LeftHip": {
+          "ratio": 0.9203,
+          "frame": 15
+        },
+        "LeftKnee": {
+          "ratio": 0.6529,
+          "frame": 16
+        },
+        "RightShoulder": {
+          "ratio": 0.8484,
+          "frame": 17
+        },
+        "RightElbow": {
+          "ratio": 0.8023,
+          "frame": 14
+        },
+        "RightHip": {
+          "ratio": 0.7682,
+          "frame": 12
+        },
+        "RightKnee": {
+          "ratio": 0.8799,
+          "frame": 17
+        }
+      },
+      "jointSectionMinRatio": {
+        "LeftShoulder": {
+          "ratio": 0.9686,
+          "frame": 13
+        },
+        "LeftElbow": {
+          "ratio": 0.9132,
+          "frame": 15
+        },
+        "LeftKnee": {
+          "ratio": 0.8981,
+          "frame": 16
+        },
+        "LeftHip": {
+          "ratio": 0.956,
+          "frame": 17
+        },
+        "RightShoulder": {
+          "ratio": 0.9234,
+          "frame": 17
+        },
+        "RightElbow": {
+          "ratio": 0.9114,
+          "frame": 14
+        },
+        "RightKnee": {
+          "ratio": 0.9637,
+          "frame": 17
+        },
+        "RightHip": {
+          "ratio": 0.843,
+          "frame": 12
+        },
+        "Neck": {
+          "ratio": 0.9847,
+          "frame": 12
+        }
+      },
+      "ikClamp": {
+        "armMax": 0.02038,
+        "legMaxWhilePlanted": 0.0
+      },
+      "clawSpeedPeak": {
+        "studsPerSec": 42.14,
+        "betweenFrames": [
+          14,
+          15
+        ]
+      }
+    },
+    "ClawRake": {
+      "frames": 27,
+      "duration": 1.0833,
+      "loop": false,
+      "startErrorBeforeSnap": 4e-06,
+      "endErrorBeforeSnap": 4e-06,
+      "hingeDeg": {
+        "LeftKnee": [
+          21.61,
+          76.6
+        ],
+        "LeftElbow": [
+          13.24,
+          80.6
+        ],
+        "LeftFingers": [
+          -0.0,
+          34.67
+        ],
+        "LeftToes": [
+          0.0,
+          22.0
+        ],
+        "RightKnee": [
+          21.61,
+          89.01
+        ],
+        "RightElbow": [
+          13.24,
+          80.6
+        ],
+        "RightFingers": [
+          -0.0,
+          34.67
+        ],
+        "RightToes": [
+          0.0,
+          11.94
+        ],
+        "Jaw": [
+          0.0,
+          30.0
+        ]
+      },
+      "hingeOK": true,
+      "hingeOffAxisMaxDeg": 0.0,
+      "twistMaxDeg": {
+        "LeftShoulder": 4.06,
+        "LeftUpperArm": 95.18,
+        "LeftHand": 0.59,
+        "LeftFingers": 4.28,
+        "LeftShoulderHelper": 46.09,
+        "RightShoulder": 4.06,
+        "RightUpperArm": 95.18,
+        "RightHand": 0.59,
+        "RightFingers": 4.28,
+        "RightShoulderHelper": 46.09,
+        "Tail1": 5.18,
+        "Tail2": 7.82,
+        "Tail3": 6.7,
+        "LeftThigh": 1.41,
+        "LeftFoot": 6.23,
+        "RightThigh": 5.96,
+        "RightFoot": 8.02
+      },
+      "forearmShinTwistMaxDeg": 0.0,
+      "perFrameRotationMaxDeg": {
+        "deg": 34.39,
+        "bone": "LeftUpperArm",
+        "frame": 3
+      },
+      "groundLowest": {
+        "z": -0.0056,
+        "frame": 11,
+        "section": "Feet",
+        "ok": true
+      },
+      "plantedFootDrift": {
+        "Left": 0.0,
+        "Right": 0.0
+      },
+      "penetration": {
+        "armsThroughTorso": {
+          "depth": 0.0,
+          "frame": 26
+        },
+        "handsThroughLegs": {
+          "depth": 0.0,
+          "frame": 26
+        },
+        "snoutThroughTorso": {
+          "depth": 0.0,
+          "frame": 26
+        },
+        "maneThroughHead": {
+          "depth": 0.0,
+          "frame": 26
+        }
+      },
+      "jointVolumeMinRatio": {
+        "Neck": {
+          "ratio": 0.9023,
+          "frame": 6
+        },
+        "LeftShoulder": {
+          "ratio": 0.6776,
+          "frame": 11
+        },
+        "LeftElbow": {
+          "ratio": 0.8638,
+          "frame": 6
+        },
+        "LeftHip": {
+          "ratio": 0.9687,
+          "frame": 14
+        },
+        "LeftKnee": {
+          "ratio": 0.8531,
+          "frame": 14
+        },
+        "RightShoulder": {
+          "ratio": 0.6693,
+          "frame": 5
+        },
+        "RightElbow": {
+          "ratio": 0.869,
+          "frame": 6
+        },
+        "RightHip": {
+          "ratio": 0.8945,
+          "frame": 10
+        },
+        "RightKnee": {
+          "ratio": 0.8396,
+          "frame": 9
+        }
+      },
+      "jointSectionMinRatio": {
+        "LeftShoulder": {
+          "ratio": 0.9376,
+          "frame": 4
+        },
+        "LeftElbow": {
+          "ratio": 0.9422,
+          "frame": 6
+        },
+        "LeftKnee": {
+          "ratio": 0.964,
+          "frame": 14
+        },
+        "LeftHip": {
+          "ratio": 0.9932,
+          "frame": 17
+        },
+        "RightShoulder": {
+          "ratio": 0.9269,
+          "frame": 4
+        },
+        "RightElbow": {
+          "ratio": 0.9422,
+          "frame": 6
+        },
+        "RightKnee": {
+          "ratio": 0.9509,
+          "frame": 9
+        },
+        "RightHip": {
+          "ratio": 0.9274,
+          "frame": 10
+        },
+        "Neck": {
+          "ratio": 0.9942,
+          "frame": 14
+        }
+      },
+      "ikClamp": {
+        "armMax": 0.0,
+        "legMaxWhilePlanted": 0.0
+      },
+      "clawSpeedPeak": {
+        "studsPerSec": 72.04,
+        "betweenFrames": [
+          7,
+          8
+        ]
+      }
+    }
+  },
+  "clawRakeReachAtImpact": {
+    "Left": 0.9833,
+    "Right": 0.9833
+  },
+  "worst": {
+    "hingeMin": {
+      "LeftKnee": 3.62,
+      "LeftElbow": 3.62,
+      "LeftFingers": -0.0,
+      "LeftToes": -0.0,
+      "RightKnee": 3.62,
+      "RightElbow": 3.62,
+      "RightFingers": 0.0,
+      "RightToes": -0.0,
+      "Jaw": -0.0
+    },
+    "hingeMax": {
+      "LeftKnee": 128.21,
+      "LeftElbow": 95.78,
+      "LeftFingers": 39.41,
+      "LeftToes": 59.84,
+      "RightKnee": 128.21,
+      "RightElbow": 97.16,
+      "RightFingers": 39.41,
+      "RightToes": 59.84,
+      "Jaw": 41.0
+    },
+    "offAxisMaxDeg": 0,
+    "forearmShinTwistMaxDeg": 0,
+    "anyBoneTwistMaxDeg": [
+      95.18,
+      "ClawRake:LeftUpperArm"
+    ],
+    "perFrameRotMaxDeg": [
+      42.5,
+      "ChargeRun:RightFoot@1"
+    ],
+    "groundMin": [
+      -0.0085,
+      "ChargeRun@0"
+    ],
+    "footDriftMax": [
+      0.00558,
+      "Death"
+    ],
+    "penetrationMax": [
+      0,
+      ""
+    ],
+    "volumeMinRatio": [
+      0.596,
+      "ChargeRun:LeftKnee@1"
+    ],
+    "sectionMinRatio": [
+      0.8249,
+      "ChargeRun:RightHip@9"
+    ]
+  },
+  "restLowestZ": -0.0056,
+  "restPenetration": {
+    "armsThroughTorso": 0.0,
+    "handsThroughLegs": 0.0,
+    "snoutThroughTorso": 0.0,
+    "maneThroughHead": 0.0
+  },
+  "limits": {
+    "kneeElbowDeg": [
+      -5,
+      150
+    ],
+    "fingersRelDeg": [
+      -5,
+      100
+    ],
+    "toesRelDeg": [
+      -20,
+      75
+    ],
+    "jawRelDeg": [
+      -2,
+      45
+    ],
+    "forearmShinTwistDeg": 70,
+    "perFrameRotationDeg": 45,
+    "groundTolerance": 0.05,
+    "footDrift": 0.05,
+    "penetration": 0.05,
+    "jointVolumeRatio": 0.85
+  },
+  "notes": [
+    "Checks run on the exported matrix_basis samples (forward kinematics), skinned meshes evaluated per frame.",
+    "Penetration = depth of hand/forearm skin points inside posed torso cores (ellipsoids per Pelvis/Spine/Chest) and leg capsules (Thigh/Shin), snout points inside the torso cores, and mane points inside the head core. Cores sit slightly inside the real surfaces, so 0 = no pass-through. restPenetration lists the rest-pose values.",
+    "Joint volume = cone volume of the skin patch around the joint centre, posed / rest.",
+    "Walk and ChargeRun drift adds the in-place travel (studs/s x t) back before measuring."
+  ],
+  "motion": {
+    "strideLength": 16.5,
+    "nominalSpeed": 22.0,
+    "chargeStrideLength": 16.0,
+    "chargeSpeed": 32.0
+  }
+}

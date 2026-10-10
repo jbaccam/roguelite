@@ -4,30 +4,30 @@
     "Sarcophagus.fbx": {
       "meshes": {
         "Sarcophagus_Body": {
-          "tris": 550,
+          "tris": 328,
           "openEdges": 0,
           "shells": 1,
           "uvRange": [
-            0.0251,
-            0.4,
-            0.1501,
-            0.9632
+            0.0204,
+            0.998,
+            0.0031,
+            0.9844
           ],
           "zeroAreaFaces": 0,
           "boundsMin": [
-            -3.6201,
+            -3.7918,
             -2.25,
             -0.0
           ],
           "boundsMax": [
-            3.6201,
+            3.7918,
             2.95,
-            11.0
+            15.0
           ],
           "size": [
-            7.2401,
+            7.5835,
             5.2,
-            11.0
+            15.0
           ],
           "location": [
             0.0,
@@ -36,39 +36,39 @@
           ]
         },
         "Sarcophagus_Lid": {
-          "tris": 2278,
+          "tris": 1722,
           "openEdges": 0,
           "shells": 1,
           "uvRange": [
-            0.002,
-            0.8735,
-            0.007,
-            0.9632
+            0.0174,
+            0.9816,
+            0.0026,
+            0.9844
           ],
           "zeroAreaFaces": 0,
           "boundsMin": [
-            -3.6201,
-            -3.4638,
+            -3.7918,
+            -3.5069,
             -0.0
           ],
           "boundsMax": [
-            3.6201,
+            3.7918,
             -2.25,
-            11.0
+            15.0
           ],
           "size": [
-            7.2401,
-            1.2139,
-            11.0
+            7.5835,
+            1.2569,
+            15.0
           ],
           "location": [
             0.0,
-            -3.46385,
+            -3.50695,
             0.0
           ]
         }
       },
-      "totalTris": 2828,
+      "totalTris": 2050,
       "importedImages": [
         [
           "Sarcophagus_atlas.png",
@@ -89,139 +89,139 @@
     "SarcophagusBroken.fbx": {
       "meshes": {
         "SarcophagusBroken_Base": {
-          "tris": 436,
+          "tris": 374,
           "openEdges": 0,
           "shells": 1,
           "uvRange": [
-            0.0251,
-            0.7779,
-            0.1314,
-            0.7896
+            0.0204,
+            0.998,
+            0.0035,
+            0.7211
           ],
           "zeroAreaFaces": 0,
           "boundsMin": [
-            -2.6493,
+            -2.6397,
             -2.25,
             -0.0
           ],
           "boundsMax": [
-            2.6245,
+            2.6198,
             2.95,
-            3.4706
+            4.7425
           ],
           "size": [
-            5.2738,
+            5.2595,
             5.2,
-            3.4706
+            4.7425
           ],
           "location": [
-            -0.0124,
+            -0.00992,
             0.35,
-            1.73531
+            2.37127
           ],
-          "fractureTileFaces": 116
+          "fractureTileFaces": 158
         },
         "SarcophagusBroken_LeftWall": {
-          "tris": 514,
+          "tris": 374,
           "openEdges": 0,
           "shells": 1,
           "uvRange": [
-            0.0251,
-            0.7239,
-            0.1501,
-            0.9646
+            0.0204,
+            0.9967,
+            0.002,
+            0.9844
           ],
           "zeroAreaFaces": 0,
           "boundsMin": [
-            -3.6201,
-            -2.2504,
-            3.8089
+            -3.7918,
+            -2.25,
+            5.2973
           ],
           "boundsMax": [
-            -0.644,
+            -0.6636,
             2.95,
-            11.0
+            15.0
           ],
           "size": [
-            2.9761,
-            5.2004,
-            7.1911
+            3.1282,
+            5.2,
+            9.7027
           ],
           "location": [
-            -2.13202,
-            0.34978,
-            7.40443
+            -2.22766,
+            0.35,
+            10.14863
           ],
-          "fractureTileFaces": 99
+          "fractureTileFaces": 208
         },
         "SarcophagusBroken_RightWall": {
-          "tris": 544,
+          "tris": 372,
           "openEdges": 0,
           "shells": 1,
           "uvRange": [
-            0.0251,
-            0.8071,
-            0.1814,
-            0.9284
+            0.0204,
+            0.9798,
+            0.0031,
+            0.9392
           ],
           "zeroAreaFaces": 0,
           "boundsMin": [
-            1.6031,
+            1.6633,
             -2.25,
-            4.0577
+            5.6758
           ],
           "boundsMax": [
-            3.6201,
+            3.7918,
             2.95,
-            10.1693
+            13.6277
           ],
           "size": [
-            2.017,
+            2.1284,
             5.2,
-            6.1116
+            7.9519
           ],
           "location": [
-            2.61158,
+            2.72754,
             0.35,
-            7.11348
+            9.65171
           ],
-          "fractureTileFaces": 291
+          "fractureTileFaces": 240
         },
         "SarcophagusBroken_LidFragment": {
-          "tris": 1396,
+          "tris": 1200,
           "openEdges": 0,
           "shells": 1,
           "uvRange": [
-            0.002,
-            0.8487,
-            0.007,
-            0.9632
+            0.0174,
+            0.9816,
+            0.0026,
+            0.9844
           ],
           "zeroAreaFaces": 0,
           "boundsMin": [
-            -3.6201,
-            -3.4638,
-            6.1749
+            -3.7918,
+            -3.4965,
+            9.0846
           ],
           "boundsMax": [
-            2.8747,
+            2.988,
             -2.25,
-            11.0
+            15.0
           ],
           "size": [
-            6.4948,
-            1.2138,
-            4.8251
+            6.7798,
+            1.2465,
+            5.9154
           ],
           "location": [
-            -0.37268,
-            -2.85692,
-            8.58747
+            -0.40188,
+            -2.87327,
+            12.04231
           ],
-          "fractureTileFaces": 231
+          "fractureTileFaces": 123
         }
       },
-      "totalTris": 2890,
+      "totalTris": 2320,
       "importedImages": [
         [
           "Sarcophagus_atlas.png",
@@ -535,10 +535,10 @@
       "name": "Sarcophagus.fbx:Sarcophagus_Body: UVs inside 0-1",
       "ok": true,
       "detail": [
-        0.0251,
-        0.4,
-        0.1501,
-        0.9632
+        0.0204,
+        0.998,
+        0.0031,
+        0.9844
       ]
     },
     {
@@ -558,10 +558,10 @@
       "name": "Sarcophagus.fbx:Sarcophagus_Lid: UVs inside 0-1",
       "ok": true,
       "detail": [
-        0.002,
-        0.8735,
-        0.007,
-        0.9632
+        0.0174,
+        0.9816,
+        0.0026,
+        0.9844
       ]
     },
     {
@@ -572,7 +572,7 @@
     {
       "name": "Sarcophagus.fbx: total triangle budget <= 3000",
       "ok": true,
-      "detail": 2828
+      "detail": 2050
     },
     {
       "name": "Sarcophagus.fbx: atlas Sarcophagus_atlas.png loads at 1024px",
@@ -611,34 +611,34 @@
           0.0,
           0.0
         ],
-        "minZ": -4.6452194624180265e-07
+        "minZ": -4.721920277006575e-07
       }
     },
     {
-      "name": "Body outer: ~11 tall, ~7.2 wide at the shoulders, 5.2 deep",
+      "name": "Body outer: ~15 tall, ~7.6 wide at the shoulders, 5.2 deep",
       "ok": true,
       "detail": [
-        7.24,
+        7.584,
         5.2,
-        11.0
+        15.0
       ]
     },
     {
-      "name": "Body foot width ~5.0",
+      "name": "Body foot band width ~4.8",
       "ok": true,
-      "detail": 4.942
+      "detail": 4.8
     },
     {
-      "name": "Anthropoid silhouette: widest at 60-78% height, head <= 0.62 and foot <= 0.74 of the shoulder width",
+      "name": "Reference silhouette (2026-10-09): widest at 65-78% height, head end 0.70-0.80 and foot 0.58-0.68 of the shoulder width, height >= 1.9x width",
       "ok": true,
       "detail": {
-        "widestAtZ": 7.3,
-        "widestAtFractionOfHeight": 0.664,
-        "shoulderWidth": 7.24,
-        "headWidth": 4.1,
-        "footWidth": 5.0,
-        "headOverShoulder": 0.566,
-        "footOverShoulder": 0.691
+        "widestAtZ": 10.9,
+        "widestAtFractionOfHeight": 0.727,
+        "shoulderWidth": 7.584,
+        "headWidth": 5.7,
+        "footWidth": 4.8,
+        "headOverShoulder": 0.752,
+        "footOverShoulder": 0.633
       }
     },
     {
@@ -653,23 +653,23 @@
     {
       "name": "Lid underside outline lies on the body front rim edges (worst vertex <= 0.05, the brief's gap limit)",
       "ok": true,
-      "detail": 0.04039
+      "detail": 0.0
     },
     {
       "name": "Lid XZ extents equal the body's",
       "ok": true,
       "detail": {
         "lid": [
-          -3.62,
-          3.62,
+          -3.792,
+          3.792,
           -0.0,
-          11.0
+          15.0
         ],
         "body": [
-          -3.62,
-          3.62,
+          -3.792,
+          3.792,
           -0.0,
-          11.0
+          15.0
         ]
       }
     },
@@ -679,26 +679,26 @@
       "detail": {
         "lidLocation": [
           0.0,
-          -3.4638,
+          -3.5069,
           0.0
         ],
-        "frontMostY": -3.4638
+        "frontMostY": -3.5069
       }
     },
     {
       "name": "Lid underside is one flat plane",
       "ok": true,
-      "detail": 12
+      "detail": 26
     },
     {
-      "name": "Cavity extents >= 9.4 tall x 6.2 wide x 4.2 deep",
+      "name": "Cavity extents >= 13.4 tall x 6.2 wide x 4.2 deep (Warden box 9.4 x 6.2 x 4.2 fits)",
       "ok": true,
       "detail": {
-        "height": 9.4,
-        "maxWidth": 6.248,
+        "height": 13.4,
+        "maxWidth": 6.272,
         "depth": 4.5,
         "floorZ": 0.8,
-        "ceilingZ": 10.2
+        "ceilingZ": 14.2
       }
     },
     {
@@ -736,10 +736,10 @@
       "name": "SarcophagusBroken.fbx:SarcophagusBroken_Base: UVs inside 0-1",
       "ok": true,
       "detail": [
-        0.0251,
-        0.7779,
-        0.1314,
-        0.7896
+        0.0204,
+        0.998,
+        0.0035,
+        0.7211
       ]
     },
     {
@@ -759,10 +759,10 @@
       "name": "SarcophagusBroken.fbx:SarcophagusBroken_LeftWall: UVs inside 0-1",
       "ok": true,
       "detail": [
-        0.0251,
-        0.7239,
-        0.1501,
-        0.9646
+        0.0204,
+        0.9967,
+        0.002,
+        0.9844
       ]
     },
     {
@@ -782,10 +782,10 @@
       "name": "SarcophagusBroken.fbx:SarcophagusBroken_RightWall: UVs inside 0-1",
       "ok": true,
       "detail": [
-        0.0251,
-        0.8071,
-        0.1814,
-        0.9284
+        0.0204,
+        0.9798,
+        0.0031,
+        0.9392
       ]
     },
     {
@@ -805,10 +805,10 @@
       "name": "SarcophagusBroken.fbx:SarcophagusBroken_LidFragment: UVs inside 0-1",
       "ok": true,
       "detail": [
-        0.002,
-        0.8487,
-        0.007,
-        0.9632
+        0.0174,
+        0.9816,
+        0.0026,
+        0.9844
       ]
     },
     {
@@ -819,7 +819,7 @@
     {
       "name": "SarcophagusBroken.fbx: total triangle budget <= 3000",
       "ok": true,
-      "detail": 2890
+      "detail": 2320
     },
     {
       "name": "SarcophagusBroken.fbx: atlas Sarcophagus_atlas.png loads at 1024px",
@@ -860,14 +860,14 @@
       "detail": {
         "meshCentreOffset": 0.0,
         "location": [
-          -0.0124,
+          -0.0099,
           0.35,
-          1.7353
+          2.3713
         ],
         "json": [
-          -0.012400000356137753,
+          -0.009920000098645687,
           0.3499999940395355,
-          1.7353099584579468
+          2.371269941329956
         ]
       }
     },
@@ -876,13 +876,13 @@
       "ok": true,
       "detail": {
         "verticesOutside": 0,
-        "of": 220
+        "of": 189
       }
     },
     {
       "name": "SarcophagusBroken_Base: has fracture-tile (darker interior) faces",
       "ok": true,
-      "detail": 116
+      "detail": 158
     },
     {
       "name": "SarcophagusBroken_LeftWall: origin at its bounding-box centre and location == JSON offset",
@@ -890,14 +890,14 @@
       "detail": {
         "meshCentreOffset": 0.0,
         "location": [
-          -2.132,
-          0.3498,
-          7.4044
+          -2.2277,
+          0.35,
+          10.1486
         ],
         "json": [
-          -2.1320199966430664,
-          0.34977999329566956,
-          7.404429912567139
+          -2.2276599407196045,
+          0.3499999940395355,
+          10.148630142211914
         ]
       }
     },
@@ -906,13 +906,13 @@
       "ok": true,
       "detail": {
         "verticesOutside": 0,
-        "of": 259
+        "of": 189
       }
     },
     {
       "name": "SarcophagusBroken_LeftWall: has fracture-tile (darker interior) faces",
       "ok": true,
-      "detail": 99
+      "detail": 208
     },
     {
       "name": "SarcophagusBroken_RightWall: origin at its bounding-box centre and location == JSON offset",
@@ -920,14 +920,14 @@
       "detail": {
         "meshCentreOffset": 0.0,
         "location": [
-          2.6116,
+          2.7275,
           0.35,
-          7.1135
+          9.6517
         ],
         "json": [
-          2.6115798950195312,
+          2.7275400161743164,
           0.3499999940395355,
-          7.113480091094971
+          9.65170955657959
         ]
       }
     },
@@ -936,13 +936,13 @@
       "ok": true,
       "detail": {
         "verticesOutside": 0,
-        "of": 274
+        "of": 188
       }
     },
     {
       "name": "SarcophagusBroken_RightWall: has fracture-tile (darker interior) faces",
       "ok": true,
-      "detail": 291
+      "detail": 240
     },
     {
       "name": "SarcophagusBroken_LidFragment: origin at its bounding-box centre and location == JSON offset",
@@ -950,14 +950,14 @@
       "detail": {
         "meshCentreOffset": 0.0,
         "location": [
-          -0.3727,
-          -2.8569,
-          8.5875
+          -0.4019,
+          -2.8733,
+          12.0423
         ],
         "json": [
-          -0.37268000841140747,
-          -2.856920003890991,
-          8.587470054626465
+          -0.4018799960613251,
+          -2.873270034790039,
+          12.042309761047363
         ]
       }
     },
@@ -966,13 +966,13 @@
       "ok": true,
       "detail": {
         "verticesOutside": 0,
-        "of": 700
+        "of": 602
       }
     },
     {
       "name": "SarcophagusBroken_LidFragment: has fracture-tile (darker interior) faces",
       "ok": true,
-      "detail": 231
+      "detail": 123
     },
     {
       "name": "VolcanicVent.fbx: mesh names exact",
@@ -1362,98 +1362,98 @@
   ],
   "ok": true,
   "silhouette": {
-    "widestAtZ": 7.3,
-    "widestAtFractionOfHeight": 0.664,
-    "shoulderWidth": 7.24,
-    "headWidth": 4.1,
-    "footWidth": 5.0,
-    "headOverShoulder": 0.566,
-    "footOverShoulder": 0.691
+    "widestAtZ": 10.9,
+    "widestAtFractionOfHeight": 0.727,
+    "shoulderWidth": 7.584,
+    "headWidth": 5.7,
+    "footWidth": 4.8,
+    "headOverShoulder": 0.752,
+    "footOverShoulder": 0.633
   },
   "cavityProfile": {
     "widthByHeight": [
       [
         0.9,
-        3.457
+        3.022
       ],
       [
-        1.385,
-        3.657
+        1.597,
+        3.247
       ],
       [
-        1.871,
-        3.857
+        2.293,
+        3.472
       ],
       [
-        2.356,
-        4.057
+        2.99,
+        3.697
       ],
       [
-        2.842,
-        4.257
+        3.686,
+        3.921
       ],
       [
-        3.327,
-        4.457
+        4.383,
+        4.146
       ],
       [
-        3.813,
-        4.657
+        5.079,
+        4.371
       ],
       [
-        4.298,
-        4.857
+        5.776,
+        4.596
       ],
       [
-        4.784,
-        5.057
+        6.473,
+        4.821
       ],
       [
-        5.269,
-        5.257
+        7.169,
+        5.046
       ],
       [
-        5.755,
-        5.457
+        7.866,
+        5.271
       ],
       [
-        6.24,
-        5.657
+        8.562,
+        5.496
       ],
       [
-        6.726,
-        5.858
+        9.259,
+        5.721
       ],
       [
-        7.211,
-        6.058
+        9.955,
+        5.946
       ],
       [
-        7.697,
-        6.205
+        10.652,
+        6.171
       ],
       [
-        8.182,
-        5.323
+        11.349,
+        5.786
       ],
       [
-        8.668,
-        4.44
+        12.045,
+        4.828
       ],
       [
-        9.153,
-        3.558
+        12.742,
+        4.1
       ],
       [
-        9.639,
-        3.1
+        13.438,
+        4.1
       ]
     ],
     "heightAvailableAtMinWidth": {
-      "3.4": 8.33,
-      "4.4": 5.46,
-      "5.2": 3.08,
-      "6.2": 0.12
+      "3.4": 12.02,
+      "4.4": 7.14,
+      "5.2": 4.11,
+      "6.2": 0.28
     },
     "note": "The coffin is anthropoid, so the 9.4 x 6.2 x 4.2 box is the cavity's bounding extents (tall at the head, 6.2 wide only at the shoulders), not a rectangular void."
   },
@@ -1461,15 +1461,15 @@
     "sideAtZ": [
       [
         2.0,
-        0.511
+        0.658
       ],
       [
         5.0,
-        0.511
+        0.658
       ],
       [
         7.0,
-        0.511
+        0.658
       ]
     ],
     "back": 0.7,
@@ -1479,7 +1479,7 @@
   "sarcophagusFrame": {
     "hingeBodySpaceBlender": [
       0,
-      -3.4638,
+      -3.5069,
       0
     ],
     "bodyFrontY": -2.25
