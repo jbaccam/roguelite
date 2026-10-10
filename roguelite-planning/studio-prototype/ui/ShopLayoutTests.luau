@@ -1,5 +1,10 @@
 -- Client Studio layout checks. Uses actual rendered geometry and TextFits.
+-- 2026-10-09 roster: weapon offers show the specialty bar (SpecBar), one row per type (TypeChip_ /
+-- TypeStep_ / TypeLine_) and the stat lines; the stats column has SETS (pinned or a Sets tab).
 local gui=game.Players.LocalPlayer.PlayerGui.RogueliteHUD
+local Weapons=require(game.ReplicatedStorage.RogueliteCombat.WeaponCatalog)
+local Stats=require(game.ReplicatedStorage.RogueliteCombat.CharacterStats)
+local state=game.ReplicatedStorage.RogueliteCombat.PlayerStates:FindFirstChild(tostring(game.Players.LocalPlayer.UserId))
 local root=gui.SafeArea
 local original=root.Size
 local results={}
@@ -43,14 +48,18 @@ local ok,err=xpcall(function()
     assert(bottom(card.Buy)<=bottom(card)-8,'price overlaps card border')
     assert(disjoint(card,left['Lock'..i]),'lock overlaps card border')
     for j=i+1,4 do local other=left:FindFirstChild('Offer'..j);if other then assert(disjoint(card,other),'offer overlap') end end
-    -- Weapon cards: no stat line under the fit bar, traits clear of Buy. Item cards: the "Works
-    -- with" line clear of the description and Buy.
-    if card:FindFirstChild('Fit') then
-     for _,c in card:GetChildren() do if c.Name:match('^WeaponStat') then
-      assert(disjoint(c,card.Fit),'stat line under fit bar')
-      if card:FindFirstChild('ClassTag') then assert(disjoint(c,card.ClassTag),'stat line under class list') end
-     end end
-     if card:FindFirstChild('Traits') and card.Traits.Text~='' then assert(disjoint(card.Traits,card.Buy),'traits overlap Buy') end
+    -- Weapon cards: the specialty bar, type rows, stat lines and traits never overlap each other or
+    -- Buy. Item cards: the "Works with" line clear of the description and Buy.
+    if card:FindFirstChild('SpecBar') then
+     local pieces={card.SpecBar,card.Attack}
+     for _,c in card:GetChildren() do if c.Name:match('^WeaponStat') or c.Name:match('^TypeLine_') or c.Name:match('^TypeChip_') then table.insert(pieces,c) end end
+     if card:FindFirstChild('Traits') and card.Traits.Text~='' then table.insert(pieces,card.Traits) end
+     for i,a in pieces do
+      assert(disjoint(a,card.Buy),'weapon card piece over Buy: '..a.Name)
+      for j=i+1,#pieces do local b=pieces[j];if not (a.Name:match('^TypeChip_') and b.Name:match('^TypeChip_')) then assert(disjoint(a,b),'weapon card pieces overlap: '..a.Name..' / '..b.Name) end end
+     end
+     local w=Weapons.ById[card.SpecBar:GetAttribute('WeaponId')]
+     for _,t in w.types do assert(card:FindFirstChild('TypeChip_'..t) and card:FindFirstChild('TypeLine_'..t),'type row for '..t..' on '..w.name) end
     end
     if card:FindFirstChild('WorksWith') then assert(disjoint(card.WorksWith,card.Description) and disjoint(card.WorksWith,card.Buy),'works-with overlap') end
    end
@@ -58,36 +67,37 @@ local ok,err=xpcall(function()
   -- An open weapon detail (select a weapon before running): stat lines and traits never under the
   -- class row, the buttons below it (2026-10-03: Range was hidden behind MAGE · RANGED).
   local details=layout:FindFirstChild('Details')
-  if details and details.Body:FindFirstChild('Fit') then
+  if details and details.Body:FindFirstChild('SpecBar') then
    local body=details.Body
    for _,c in body:GetChildren() do
-    if c.Name:match('^WeaponStat') or c.Name=='Traits' then
-     assert(disjoint(c,body.Fit),'detail stat under fit bar');if body:FindFirstChild('ClassTag') then assert(disjoint(c,body.ClassTag),'detail stat under class tag') end
-    end
+    if c.Name:match('^WeaponStat') or c.Name=='Traits' or c.Name:match('^TypeLine_') then assert(disjoint(c,body.SpecBar),'detail line under the specialty bar') end
+    if c.Name:match('^TypeLine_') then assert(body.Combine.AbsolutePosition.Y>=bottom(c),'detail buttons over a type row') end
    end
-   assert(body.Combine.AbsolutePosition.Y>=bottom(body.Fit),'detail buttons over the class row')
+   assert(body.Combine.AbsolutePosition.Y>=bottom(body.SpecBar),'detail buttons over the specialty bar')
    assert(layout:FindFirstChild('DetailsBacking'),'detail popup has a solid backing')
   end
   for _,label in layout:GetDescendants() do
-   if label.Name=='ClassTag' and label:GetAttribute('WeaponId') then
-    local weapons=require(game.ReplicatedStorage.RogueliteCombat.WeaponCatalog)
-    local w=weapons.ById[label:GetAttribute('WeaponId')]
-    local expected=w.godly and 'GODLY · ANY CLASS' or string.upper(weapons.classNames(w,' · '))
-    assert(label.Text.Text==expected,'class tag omitted a weapon class: '..w.name)
+   -- The specialty bar says which rule applies: your class's weapon, your class's drawback, or none.
+   if label.Name=='SpecBar' and label:GetAttribute('WeaponId') and state then
+    local w=Weapons.ById[label:GetAttribute('WeaponId')];local class=state:GetAttribute('Class')
+    local kind=label:GetAttribute('Kind')
+    if w.godly then assert(kind=='godly','Godly spec bar')
+    elseif Stats.specialty(w,class)>0 then assert(kind=='specialty','specialty bar on '..w.name)
+    else assert(kind=='drawback' or kind=='neutral','off-class bar on '..w.name) end
    end
    if label.Name=='PriceGroup' then
     local center=label.AbsolutePosition.X+label.AbsoluteSize.X/2;local parentCenter=label.Parent.AbsolutePosition.X+label.Parent.AbsoluteSize.X/2
     assert(math.abs(center-parentCenter)<1.5,'price not centered')
     assert(label.AbsoluteSize.X<=label.Parent.AbsoluteSize.X-4,'price outside button')
    end
-   if label.Name=='ClassDamageEffect' then
-    assert(string.find(string.lower(label.Text),'damage',1,true),'shop affinity must explicitly name damage')
-    local parent=label.Parent
-    if parent:FindFirstChild('Fit') then assert(disjoint(label,parent.Fit),'explanation overlaps affinity badge') end
-    if parent:FindFirstChild('Traits') then assert(disjoint(label,parent.Traits),'explanation overlaps weapon traits') end
-    if parent:FindFirstChild('Buy') then assert(disjoint(label,parent.Buy),'explanation overlaps buy button') end
-   end
    if label:IsA('TextLabel') and label.Text~='' then assert(label.TextFits,'text overflow '..label:GetFullName()..' at '..tostring(size)) end
+  end
+  -- SETS: pinned rows (desktop) or the Sets tab's rows sit inside the stats column, clear of the tabs.
+  for _,r in stats:GetDescendants() do
+   if r.Name:match('^Set_') and r:IsA('Frame') then
+    assert(r:FindFirstAncestor('SetRows')~=nil or (r.AbsolutePosition.Y>=stats.AbsolutePosition.Y and bottom(r)<=bottom(stats)+1),'set row inside the stats column')
+    local tab=stats:FindFirstChild('PrimaryTab');if tab and not r:FindFirstAncestor('SetRows') then assert(disjoint(r,tab),'set row over the tabs') end
+   end
   end
   -- Phone-height views (the HUD root of a 844x390 iPhone is 750x311): every button is a 40 px tap.
   if size.Y<450 then

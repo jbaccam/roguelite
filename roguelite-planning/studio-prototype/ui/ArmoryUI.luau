@@ -196,11 +196,10 @@ local GODLY_TEXT = {
 }
 local function describe(w)
 	if w.godly then
-		return (GODLY_TEXT[w.id] or "") .. " Any class can start a run with it."
+		return (GODLY_TEXT[w.id] or "") .. " One Godly per run; it's never sold in the run shop."
 	end
-	-- Every class it belongs to (2026-10-04): "Home weapon of the Thrower and Juggler classes."
-	local many = w.classes ~= nil and #w.classes > 1
-	local out = { "Home weapon of the " .. Weapons.classNames(w) .. (many and " classes." or " class.") }
+	-- The starter class, types and attack have their own rows now (2026-10-09); this is what it does.
+	local out = {}
 	if TRAITS[w.trait] then
 		table.insert(out, TRAITS[w.trait])
 	end
@@ -219,6 +218,10 @@ local function describe(w)
 	end
 	if w.blastRadius then
 		table.insert(out, "Explodes on impact.")
+	end
+	local move = Weapons.legendaryText and Weapons.legendaryText(w.id)
+	if move then
+		table.insert(out, "Tier IV: " .. move)
 	end
 	return table.concat(out, " ")
 end
@@ -849,20 +852,10 @@ function A.new(player, opts)
 				end
 				y += math.ceil(#godlies / cols) * (CARD_H + GAP) + 8
 			end
-			-- Each weapon once (2026-10-04: weapons list several classes). Your class shows every weapon
-			-- with it anywhere in the list (MY CLASS as a Thrower: 11); the other classes show the rest
-			-- under their first (home) class, e.g. the Kunai under THROWER for a Brawler.
-			local shown = {}
+			-- Each weapon once, under its one starter class (2026-10-09): your class first, then the
+			-- others in class order (Brawler, Gunner, Chef, Juggler, Handyman, Mage).
 			for _, c in classes do
-				local list = {}
-				for _, w in Rules.classWeapons(c) do
-					if not shown[w.id] and (c == class or w.home == c) then
-						table.insert(list, w)
-					end
-				end
-				for _, w in list do
-					shown[w.id] = true
-				end
+				local list = table.clone(Rules.classWeapons(c))
 				if #list == 0 then
 					continue
 				end
@@ -873,19 +866,16 @@ function A.new(player, opts)
 					end
 					return a.id < b.id
 				end)
-				if not state.mine then
-					local h = T.label(
-						grid,
-						"Header_" .. c,
-						string.upper(c) .. (profile.classes[c] and "" or "  ·  LOCKED"),
-						4,
-						y,
-						lw - 60,
-						32,
-						22,
-						profile.classes[c] and C.lime or C.dim
-					)
+				if not state.mine or c == class then
+					-- Your class says what it gets: "CHEF  your class · +10% damage with these".
+					local head = string.upper(c) .. (profile.classes[c] and "" or "  ·  LOCKED")
+					local note = c == class and ("your class · +" .. Stats.Specialty .. (L.s < 0.75 and "% dmg" or "% damage with these")) or nil
+					local hw = note and math.ceil(game:GetService("TextService"):GetTextSize(head, 22, T.Font, Vector2.new(1000, 100)).X * 1.12) + 8 or lw - 60
+					local h = T.label(grid, "Header_" .. c, head, 4, y, hw, 32, 22, profile.classes[c] and C.lime or C.dim)
 					h.TextXAlignment = Enum.TextXAlignment.Left
+					if note then
+						T.text(grid, "Header_" .. c .. "Note", note, 4 + hw + 6, y + 4, lw - 60 - hw - 6, 26, L.s < 0.75 and 18 or 16, C.cream)
+					end
 					y += 38
 				end
 				for i, w in list do
@@ -1131,149 +1121,141 @@ function A.new(player, opts)
 		end
 	end
 
+	-- Weapon details (2026-10-09 roster mockup): the header (icon, name, rarity and attack, type chips
+	-- with literal icons), then rows for STARTER CLASS, ATTACK (what its damage scales with) and
+	-- SPECIALTY (what the +10% means for your class), then what it does, its stats, copies and
+	-- buttons. Drawn top-down into `panel`; returns the height used (drawDetail scrolls taller ones).
 	local function drawWeaponDetail(panel, w)
 		local rec = profile.weapons[w.id]
 		local tier = rec and rec.tier or 1
-		-- Every class (2026-10-04): "RARE  ·  THROWER · JUGGLER  ·  RANGED".
-		local classText = string.upper(w.godly and w.home or Weapons.classNames(w, " · "))
-		header(
-			panel,
-			WeaponIcons[w.id],
-			rec and tier,
-			w.name,
-			rarityTag(w.id) .. "  ·  " .. classText .. "  ·  ATTACK: " .. string.upper(w.kind == "Blast" and "Explosive" or w.kind),
-			rec and T.Tier[tier] or C.white
-		)
-		local desc = T.text(panel, "Description", describe(w), 24, 168, RIGHT_W - 48, 66, 19, C.muted)
+		local class, equipped = loadout()
+		local TS = game:GetService("TextService")
+		-- Phone canvases (scale .5) get bigger chips and row text: text can't draw under 9 screen px.
+		local big, ph = L.s < 0.62, L.s < 0.75
+		local F = big and { chipH = 40, chip = 21, lab = 21, row = 23, youH = 34, labW = 190 }
+			or { chipH = ph and 36 or 32, chip = ph and 18 or 16, lab = ph and 18 or 16, row = ph and 19 or 17, youH = ph and 30 or 24, labW = ph and 170 or 150 }
+		local PW = RIGHT_W - 48
+		local BH = big and 70 or 58 -- big buttons: a 35 px tap at scale .5
+		local word, list = Card.attack(w)
+		local name, kind = header(panel, WeaponIcons[w.id], rec and tier, w.name, rarityTag(w.id) .. "  ·  " .. string.upper(word) .. " WEAPON", rec and T.Tier[tier] or C.white)
+		name.Position, name.Size = UDim2.fromOffset(170, 24), UDim2.fromOffset(RIGHT_W - 190, 52)
+		kind.Position = UDim2.fromOffset(172, 78)
 		Card.infoButton(panel.IconWell, 92, 8, 34, function() showInfo(w.id) end)
-		desc.TextYAlignment = Enum.TextYAlignment.Top
+		local _, chipsH = Card.typeChips(panel, "Types", 170, 110, RIGHT_W - 190, w.types or {}, { h = F.chipH, size = F.chip })
+		local y = math.max(166, 110 + chipsH + 12)
+		-- Rows: a cream label column, then the content.
+		local rowsBox = T.panel(panel, "WeaponInfo", 24, y, PW, 0, "inset")
+		local cy = 6
+		local cw = PW - F.labW - 12
+		local function row(key, label, h, fill)
+			if cy > 6 then
+				T.make("Frame", rowsBox, { Name = key .. "Divider", Position = UDim2.fromOffset(10, cy - 1), Size = UDim2.fromOffset(PW - 20, 2), BackgroundColor3 = Color3.new(0, 0, 0), BackgroundTransparency = 0.45, BorderSizePixel = 0 })
+			end
+			local l = T.label(rowsBox, key .. "Label", label, 14, cy + (h - F.lab - 6) / 2, F.labW - 14, F.lab + 6, F.lab, C.cream)
+			l.TextXAlignment = Enum.TextXAlignment.Left
+			l.TextStrokeTransparency = 0.5
+			fill(F.labW, cy, h)
+			cy += h
+		end
+		local function textRow(key, label, text)
+			local th = math.ceil(TS:GetTextSize((text:gsub("<[^>]->", "")), F.row, T.Body, Vector2.new(cw * 0.94, 1000)).Y) + 2
+			local h = math.max(44, th + 14)
+			row(key, label, h, function(x, ry)
+				local t = T.text(rowsBox, key .. "Text", text, x, ry + (h - th) / 2, cw, th, F.row, C.white)
+				t.TextYAlignment = Enum.TextYAlignment.Top
+			end)
+		end
+		row("Starter", "STARTER CLASS", math.max(44, F.youH + 16), function(x, ry, h)
+			local chipH = F.youH + 4
+			local chip, chipW = Card.classChip(rowsBox, "ClassChip", w, x, ry + (h - chipH) / 2, { h = chipH, size = F.chip, maxW = cw })
+			chip:SetAttribute("WeaponId", w.id)
+			if not w.godly and w.class == class then
+				local you = T.tag(rowsBox, "YourClass", "YOUR CLASS", x + chipW + 8, ry + (h - F.youH) / 2, { h = F.youH, size = F.youH - 10, color = C.lime, textColor = C.ink, maxW = cw - chipW - 8 })
+				you.Text.TextStrokeTransparency = 1
+			end
+		end)
+		textRow("Attack", "ATTACK", '<font color="' .. T.hex(C.cream) .. '">' .. word .. "</font> · scales with " .. list)
+		textRow("Specialty", "SPECIALTY", Card.specialtyLine(w, class))
+		rowsBox.Size = UDim2.fromOffset(PW, cy + 6)
+		y += cy + 6 + 10
+		local about = describe(w)
+		if about ~= "" then
+			local dh = math.ceil(TS:GetTextSize(about, 18, T.Body, Vector2.new(PW * 0.88, 1000)).Y) + 6
+			local desc = T.text(panel, "Description", about, 24, y, PW, dh, 18, C.muted)
+			desc.TextYAlignment = Enum.TextYAlignment.Top
+			y += dh + 8
+		end
 		local st = weaponAt(w, tier)
-		T.label(panel, "StatsTitle", "STATS", 24, 240, 200, 34, 26).TextXAlignment = Enum.TextXAlignment.Left
-		statRow(panel, 278, "Damage", tostring(st.damage))
-		statRow(panel, 318, "Attacks / sec", fmtRate(st.rate))
-		statRow(panel, 358, "Range", tostring(st.range))
-		local class = loadout()
-		local _, equipped = loadout()
+		T.label(panel, "StatsTitle", "STATS", 24, y, 200, 32, 26).TextXAlignment = Enum.TextXAlignment.Left
+		y += 34
+		statRow(panel, y, "Damage", tostring(st.damage))
+		statRow(panel, y + 34, "Attacks / sec", fmtRate(st.rate))
+		statRow(panel, y + 68, "Range", tostring(st.range))
+		y += 110
 		if rec then
 			local need = opts.need(rec)
-			local ct = T.label(panel, "CopiesTitle", "COPIES", 24, 410, 200, 30, 22, C.muted)
+			local ct = T.label(panel, "CopiesTitle", "COPIES", 24, y, 200, 30, 22, C.muted)
 			ct.TextXAlignment = Enum.TextXAlignment.Left
-			local nt = T.label(
-				panel,
-				"TierText",
-				need and ("TIER " .. T.Roman[tier] .. "  →  " .. T.Roman[tier + 1]) or "MAX TIER",
-				220,
-				410,
-				RIGHT_W - 244,
-				30,
-				20,
-				T.Tier[math.min(4, tier + 1)]
-			)
+			local nt = T.label(panel, "TierText", need and ("TIER " .. T.Roman[tier] .. "  →  " .. T.Roman[tier + 1]) or "MAX TIER", 220, y, RIGHT_W - 244, 30, 20, T.Tier[math.min(4, tier + 1)])
 			nt.TextXAlignment = Enum.TextXAlignment.Right
-			T.upgradeBar(panel, "Copies", 24, 446, RIGHT_W - 48, 30, rec.have, need)
-			-- EQUIP keeps your class when the weapon is in its list (2026-10-04: a Gunner's Nail Gun
-			-- starts as a Gunner); otherwise the first class in the list you own, else its home (locked).
-			local startClass = (w.godly or Weapons.inClass(w, class)) and class or nil
-			for _, c in w.classes or { w.home } do
-				if not startClass and profile.classes[c] then
-					startClass = c
+			T.upgradeBar(panel, "Copies", 24, y + 36, PW, 30, rec.have, need)
+			y += 80
+			-- EQUIP (2026-10-09): your class keeps it when it is one of your class's weapons or a Godly;
+			-- any other weapon switches you to its starter class, if you own that class.
+			local startClass = (w.godly or w.class == class) and class or (profile.classes[w.class] and w.class) or nil
+			local label = equipped == w.id and "EQUIPPED"
+				or startClass == class and "EQUIP AS STARTER"
+				or startClass and ("EQUIP AS " .. string.upper(startClass))
+				or (string.upper(w.class or "") .. " LOCKED")
+			local eq = T.button(panel, "Equip", label, 24, y, PW, BH, function()
+				if not startClass then
+					return
 				end
-			end
-			local homeOwned = startClass ~= nil
-			startClass = startClass or w.home
-			local eq = T.button(
-				panel,
-				"Equip",
-				equipped == w.id and "EQUIPPED" or (homeOwned and "EQUIP AS STARTER" or "CLASS LOCKED"),
-				24,
-				500,
-				RIGHT_W - 48,
-				70,
-				function()
-					sel.class, sel.weapon = startClass, w.id
-					-- Only the server-confirmed attributes change the equipped marker and stage.
-					local lobby = workspace:FindFirstChild("RogueliteLobby")
-					local setup = lobby and lobby:FindFirstChild("RunSetup")
-					if setup then
-						setup:FireServer("Loadout", startClass, w.id)
-					end
-				end,
-				true
-			)
+				sel.class, sel.weapon = startClass, w.id
+				-- Only the server-confirmed attributes change the equipped marker and stage.
+				local lobby = workspace:FindFirstChild("RogueliteLobby")
+				local setup = lobby and lobby:FindFirstChild("RunSetup")
+				if setup then
+					setup:FireServer("Loadout", startClass, w.id)
+				end
+			end, true)
 			eq.Caption.TextSize = 28
-			eq.Interactable = equipped ~= w.id and homeOwned and player:GetAttribute("LobbyLockedIn") ~= true
+			eq.Interactable = equipped ~= w.id and startClass ~= nil and player:GetAttribute("LobbyLockedIn") ~= true
+			y += BH + 8
 			local isReady = ready(w.id)
-			local up = T.button(
-				panel,
-				"Upgrades",
-				isReady and "UPGRADE READY" or "VIEW UPGRADES",
-				24,
-				584,
-				RIGHT_W - 48,
-				70,
-				function()
-					state.mode = "upgrade"
-					animate = true
-					draw()
-				end,
-				not isReady
-			)
+			local up = T.button(panel, "Upgrades", isReady and "UPGRADE READY" or "VIEW UPGRADES", 24, y, PW, BH, function()
+				state.mode = "upgrade"
+				animate = true
+				draw()
+			end, not isReady)
 			up.Caption.TextSize = 28
 			if isReady then
 				up.Caption.TextColor3 = C.ink
 				up.Caption.TextStrokeTransparency = 1
 				local sc = T.make("UIScale", up, { Scale = 1 })
-				TweenService:Create(
-					sc,
-					TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-					{ Scale = 1.03 }
-				):Play()
+				TweenService:Create(sc, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Scale = 1.03 }):Play()
 			end
-			if w.godly or not Weapons.inClass(w, class) then
-				-- "Starts runs as a Thrower or Juggler." (every class in its list)
-				local list = w.classes or { w.home }
-				local who = #list > 1 and table.concat(list, ", ", 1, #list - 1) .. " or " .. list[#list] or list[1]
-				T.text(
-					panel,
-					"Note",
-					w.godly and "One Godly per run. It's never sold in the run shop."
-						or "Starts runs as a " .. who .. ". Any class can buy it in the run shop.",
-					24,
-					668,
-					RIGHT_W - 48,
-					44,
-					16,
-					C.dim
-				)
-			end
+			y += BH + 12
 		else
-			local lk = T.label(panel, "NotOwned", "NOT OWNED", 24, 410, 300, 34, 28, C.dim)
+			local lk = T.label(panel, "NotOwned", "NOT OWNED", 24, y, 300, 34, 28, C.dim)
 			lk.TextXAlignment = Enum.TextXAlignment.Left
 			local rarity = Chests.RarityOf[w.id] or "Common"
-			T.text(
-				panel,
-				"How",
-				"One copy from a chest unlocks it. "
-					.. (
-						rarity == "Common" and "Every chest has Common weapons."
-						or ("Better chests find " .. rarity .. " weapons more often.")
-					),
-				24,
-				448,
-				RIGHT_W - 48,
-				50,
-				18,
-				C.muted
-			)
-			local b = T.button(panel, "GoChests", "OPEN CHESTS", 24, 530, RIGHT_W - 48, 70, function()
+			local how = "One copy from a chest unlocks it. "
+				.. (rarity == "Common" and "Every chest has Common weapons." or ("Better chests find " .. rarity .. " weapons more often."))
+			local hh = math.ceil(TS:GetTextSize(how, 18, T.Body, Vector2.new(PW * 0.94, 1000)).Y) + 4
+			T.text(panel, "How", how, 24, y + 40, PW, hh, 18, C.muted)
+			y += 40 + hh + 10
+			local b = T.button(panel, "GoChests", "OPEN CHESTS", 24, y, PW, BH, function()
 				opts.openWindow("Chests")
 			end)
 			b.Caption.TextSize = 28
+			y += BH + 12
 		end
-		local preview = T.button(panel, "WatchAttacks", "WATCH ATTACKS", 24, 718, 244, 54, function() watchAttacks(w.id, tier) end, true)
+		local preview = T.button(panel, "WatchAttacks", "WATCH ATTACKS", 24, y, 244, 54, function() watchAttacks(w.id, tier) end, true)
 		preview.Caption.TextSize = 21
-		local journal = T.button(panel, "Journal", "JOURNAL", 280, 718, RIGHT_W - 304, 54, function() opts.openWindow("Journal", w.id) end, true)
+		local journal = T.button(panel, "Journal", "JOURNAL", 280, y, RIGHT_W - 304, 54, function() opts.openWindow("Journal", w.id) end, true)
 		journal.Caption.TextSize = 21
+		return y + 54 + 10
 	end
 
 	-- Empty armor/pet slot: what fills it and one thing the left panel doesn't already say.
@@ -1493,40 +1475,20 @@ function A.new(player, opts)
 		)
 		local d = T.text(panel, "Description", c.description, 24, 166, RIGHT_W - 48, 48, 18, C.muted)
 		d.TextYAlignment = Enum.TextYAlignment.Top
-		-- Always on (buffs | drawbacks), the 2 / 4 home weapon bonuses, then the class's row of the
-		-- weapon fit table (CharacterStats.ClassFit), one tile per class with its starter's icon.
-		-- Phones (canvas scale under .62) get bigger text and a 3 x 2 grid of tiles, and the panel
-		-- scrolls: text can't draw smaller than 9-12 screen px, so at scale .5 it needs ~24 design px.
+		-- Always on (buffs | drawbacks), then the specialty and ability rows (2026-10-09, shared with
+		-- the class screen: RunSetupUI.perkRows). Phones (canvas scale under .62) get bigger text and
+		-- the panel scrolls: text can't draw smaller than 9-12 screen px, so at scale .5 it needs ~24
+		-- design px.
 		local big = L.s ~= nil and L.s < 0.62
-		local sz = big and { sect = 26, stat = 24, home = 22, labelW = 196, icon = 44, name = 20, pct = 26, cols = 3 }
-			or { sect = 20, stat = 19, home = 18, labelW = 150, icon = 38, name = 16, pct = 21 }
+		local sz = big and { sect = 26, stat = 24, perk = 22 } or { sect = 20, stat = 19, perk = 18 }
 		local y = 220
-		local equippedClass, equippedWeapon = loadout()
-		local starter = Weapons.ById[equippedClass == class and equippedWeapon or Rules.Signature[class]]
-		local canDash, dashText = RunSetup.dashDescription(class, starter)
-		dashText = "Starter: " .. starter.name .. ". " .. dashText
-		local dashH = math.ceil(game:GetService("TextService"):GetTextSize(dashText, sz.stat, T.Body, Vector2.new(RIGHT_W - 48, 1000)).Y) + 8
-		T.text(panel, "DashInfo", dashText, 24, y, RIGHT_W - 48, dashH, sz.stat, canDash and C.lime or C.muted)
-		y += dashH + 10
 		y += T.section(panel, "AlwaysOnTitle", "ALWAYS ON", 24, y, RIGHT_W - 48, sz.sect) + 6
 		local good, bad = Stats.classLines(class)
 		local _, h = T.statColumns(panel, "AlwaysOn", 24, y, RIGHT_W - 48, good, bad, { size = sz.stat, stack = big })
 		y += h + 10
-		y += T.section(panel, "HomeTitle", "HOME WEAPON BONUS", 24, y, RIGHT_W - 48, sz.sect) + 6
-		_, h = T.homeRows(panel, "HomeBonus", 24, y, RIGHT_W - 48, {
-			{ n = 2, text = Stats.bonusText(c.two) },
-			{ n = 4, text = "also " .. Stats.bonusText(c.four) },
-		}, { size = sz.home, labelW = sz.labelW, stack = big })
+		y += T.section(panel, "PerksTitle", "SPECIALTY & ABILITY", 24, y, RIGHT_W - 48, sz.sect) + 6
+		_, h = RunSetup.perkRows(panel, "Perks", 24, y, RIGHT_W - 48, class, { size = sz.perk, labelW = big and 170 or 140, stack = big })
 		y += h + 10
-		y += T.section(panel, "FitTitle", "WEAPON DAMAGE BY CLASS", 24, y, RIGHT_W - 48, sz.sect, not big and "Godly: no change" or nil)
-			+ 8
-		for _, other in Stats.ClassOrder do
-			local _, pct = Stats.classFit({ home = other }, class)
-			local sentence = RunSetup.classDamageText(pct, other)
-			local rowH = math.ceil(game:GetService("TextService"):GetTextSize(sentence, sz.stat, T.Body, Vector2.new(RIGHT_W - 48, 1000)).Y) + 8
-			T.text(panel, "Fit_" .. other, sentence, 24, y, RIGHT_W - 48, rowH, sz.stat, T.fitColor(pct))
-			y += rowH
-		end
 		y += 12
 		local go = T.button(panel, "ChangeClass", profile.classes[class] and "CHOOSE CLASS & STARTER" or "VIEW CLASS UNLOCK", 24, math.max(y, 640), RIGHT_W - 48, 70, function()
 			if opts.chooseClass then opts.chooseClass(class) else opts.openWindow("ClassPicker", class) end
@@ -1541,14 +1503,24 @@ function A.new(player, opts)
 	local function drawDetail()
 		local right = group("Right", L.w - MARGIN - RIGHT_W, L.rightY, RIGHT_W, L.rightH)
 		local frame = T.panel(right, "Panel", 0, 0, RIGHT_W, L.rightH, "panel")
-		local panel = body(frame, RIGHT_H - 24)
-		if state.kind == "weapon" and Weapons.ById[state.item or ""] then
+		local isWeapon = state.kind == "weapon" and Weapons.ById[state.item or ""] ~= nil
+		local panel = not isWeapon and body(frame, RIGHT_H - 24) or nil
+		if isWeapon then
 			local w = Weapons.ById[state.item]
 			local rec = profile.weapons[w.id]
 			if rec and rec.tier > 1 then
 				T.setTier(frame, rec.tier)
 			end
-			drawWeaponDetail(panel, w)
+			-- Drawn into a holder first; taller than the panel (phones, long rows) moves it into a scroll.
+			local content = T.frame(frame, "Content", 0, 0, RIGHT_W, 0)
+			local h = drawWeaponDetail(content, w)
+			content.Size = UDim2.fromOffset(RIGHT_W, h)
+			if h > L.rightH then
+				local sc = T.scroll(frame, "Body", 0, 8, 0, 0)
+				sc.Size = UDim2.new(1, -8, 1, -16)
+				sc.CanvasSize = UDim2.fromOffset(0, h)
+				content.Parent = sc
+			end
 		elseif state.kind == "class" then
 			drawClassDetail(panel, state.item or loadout())
 		elseif state.kind == "pet" and Pets.ById[state.item or ""] then

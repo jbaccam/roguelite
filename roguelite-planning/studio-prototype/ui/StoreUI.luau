@@ -38,7 +38,10 @@ end
 
 S.Tabs={{'Daily','quests','DAILY'},{'Bundles','store','BUNDLES'},{'Chests','chest','CHESTS'},{'Emeralds','emerald','EMERALDS'}}
 -- Class cards: class, signature weapon, Robux product, card colour.
-S.Classes={{'Thrower','12','ClassThrower','red'},{'Juggler','19','ClassJuggler','purple'},{'Handyman','24','ClassHandyman','blue'}}
+-- Chef sells through the old ClassThrower product (2026-10-09: Thrower became Chef, same product id).
+-- Each card shows the class's starting weapon: Chef the Frying Pan, Juggler the Rubber Duck (was the
+-- Boxing Gloves, Brawler's starter since 2026-10-09).
+S.Classes={{'Chef','01','ClassThrower','red'},{'Juggler','17','ClassJuggler','purple'},{'Handyman','24','ClassHandyman','blue'}}
 S.GemSizes={104,116,126,136,146,158}
 S.ChestSashes={nil,'POPULAR','BEST VALUE'}
 S.GemSashes={nil,'POPULAR',nil,nil,nil,'BEST VALUE'}
@@ -561,7 +564,7 @@ function S.reveal(playerGui,key,opts)
  local head=T.frame(stage,'Head',0,14,DW,136);head.ZIndex=3
  local hs=T.make('UIScale',head,{Scale=.4});tween(hs,.4,{Scale=1},Enum.EasingStyle.Back)
  center(T.label(head,'You',opts.from and ('GIFT FROM '..string.upper(opts.from)) or 'YOU GOT',0,0,DW,32,26,opts.from and C.gold or C.cream))
- -- Emerald packs say the amount ('1,700 EMERALDS', not 'STACK'), classes 'THROWER CLASS'.
+ -- Emerald packs say the amount ('1,700 EMERALDS', not 'STACK'), classes 'CHEF CLASS'.
  local name=product and product.name or tostring(key)
  if #items==1 and items[1][5]=='emerald' then name=comma(items[1][6])..' emeralds' elseif product and product.class then name=product.class..' class' end
  center(FX.title(head,'Title',string.upper(name),30,32,DW-60,76,62,th.tint))

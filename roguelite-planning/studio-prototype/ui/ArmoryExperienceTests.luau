@@ -1,6 +1,9 @@
 -- Temporary lobby Play CLIENT module. No remotes, purchases, inventory or persistent writes.
 -- Close existing lobby windows first; require a fresh copy. Exercises actual Armory layouts and
 -- ItemCardUI at desktop/phone sizes, plus geometric starter clearance at every turntable angle.
+-- 2026-10-09 roster: class groups (your class, then class order), the weapon card's type chips and
+-- STARTER CLASS / ATTACK / SPECIALTY rows, the class details' specialty and ability rows, and the
+-- item card's TYPES section (no class fit anywhere).
 local RS=game:GetService('ReplicatedStorage')
 local player=game.Players.LocalPlayer
 local Armory=require(RS.ArmoryUI)
@@ -8,6 +11,7 @@ local Stage=require(RS.ArmoryStage)
 local Lobby=require(RS.LobbyUI)
 local Rules=require(RS.RunSetupRules)
 local Weapons=require(RS.RogueliteCombat.WeaponCatalog)
+local Stats=require(RS.RogueliteCombat.CharacterStats)
 local profile=Lobby.profile(player)
 local ui=Armory.new(player,{profile=function() return profile end,need=Lobby.need,
  selection={class=player:GetAttribute('LoadoutClass') or 'Brawler',weapon=player:GetAttribute('LoadoutWeapon') or '01'},
@@ -63,6 +67,23 @@ local ok,err=xpcall(function()
   browser.Step(-1)
   check(browser.Id()==tiles[#tiles].Name:sub(3),'backward wraps to last visible tile')
   browser.Close(true)
+  -- Class groups: your class first, then the rest in class order; each weapon under its one class.
+  local class=player:GetAttribute('LoadoutClass') or 'Brawler'
+  if not profile.classes[class] then class='Brawler' end
+  local want={class};for _,c in Stats.ClassOrder do if c~=class then table.insert(want,c) end end
+  local lastY=-1
+  for _,c in want do
+   local h=grid:FindFirstChild('Header_'..c);check(h~=nil,'class group header '..c)
+   check(h.Position.Y.Offset>lastY,'class groups follow class order: '..c);lastY=h.Position.Y.Offset
+  end
+  check(grid:FindFirstChild('Header_'..class..'Note')~=nil,'your class says what the specialty gives')
+  -- The weapon card: type chips (literal icons) and the three rows.
+  local info=win.Root:FindFirstChild('WeaponInfo',true);check(info~=nil,'weapon info rows')
+  for _,name in {'StarterLabel','AttackText','SpecialtyText','ClassChip'} do check(info:FindFirstChild(name)~=nil,'weapon row '..name) end
+  local shown=Weapons.ById[info.ClassChip:GetAttribute('WeaponId')]
+  local types=win.Root:FindFirstChild('Types',true)
+  for _,t in shown.types do check(types:FindFirstChild('Type_'..t)~=nil and types['Type_'..t]:FindFirstChild('Icon')~=nil,'type chip with icon '..t) end
+  check(info.SpecialtyText.TextFits and info.AttackText.TextFits,'weapon rows fit')
   check(win.Root:FindFirstChild('WatchAttacks',true)~=nil,'attack preview entry')
   check(win.Root:FindFirstChild('Journal',true)~=nil,'journal entry')
   ui.ShowInfo('18');task.wait(.1)
@@ -70,12 +91,14 @@ local ok,err=xpcall(function()
   check(card~=nil,'shared weapon card opens')
   check(card:FindFirstChild('CollectionSource',true)~=nil and card:FindFirstChild('Chance',true)==nil,'collection has no invented chest odds')
   check(hasText(card,Weapons.legendaryText('18')),'Tier IV move uses catalog description')
+  check(card:FindFirstChild('TypesTitle',true)~=nil and card:FindFirstChild('WeaponFit',true)==nil,'item card shows types, not class fit')
   ui.Close()
   win=ui.Open('Classes');win.Root.Size=UDim2.fromOffset(size.X,size.Y);task.wait(.2)
   for _,class in Rules.classOrder(profile.classes) do
    check(win.Root:FindFirstChild('Class_'..class,true)~=nil,'class browsable: '..class)
   end
   check(win.Root:FindFirstChild('ChangeClass',true)~=nil,'saved class chooser reachable')
+  check(win.Root:FindFirstChild('Perks',true)~=nil and win.Root:FindFirstChild('HomeBonus',true)==nil and win.Root:FindFirstChild('FitTitle',true)==nil,'class details: specialty and ability rows')
   ui.Close()
  end
 end,debug.traceback)

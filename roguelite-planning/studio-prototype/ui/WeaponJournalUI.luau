@@ -332,7 +332,9 @@ function J.open(player, kind, id)
 			local nameX = vertical and 16 or imageSize + 24
 			local nameW = vertical and w - 32 or w - nameX - 12
 			local nameH = measure(entry.name, 24, nameW, T.Font)
-			local class = mode == "Weapon" and (entry.godly and "GODLY · ANY CLASS" or Weapons.classNames(entry, " / "))
+			-- Starter class and weapon types (2026-10-09): "CHEF STARTER · BLADE · CULINARY".
+			local types = mode == "Weapon" and #(entry.types or {}) > 0 and ("  ·  " .. string.upper(table.concat(entry.types, " · "))) or ""
+			local class = mode == "Weapon" and ((entry.godly and "GODLY · ANY CLASS" or (string.upper(entry.class or "") .. " STARTER")) .. types)
 				or (entry.kind == "Turret" and "STRUCTURE" or "PASSIVE ITEM") .. " · MAX " .. entry.cap
 			local classH = measure(class, 16, nameW)
 			local nameY = vertical and imageSize + 24 or 12

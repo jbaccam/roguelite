@@ -28,6 +28,80 @@ end
 function M.classDamageText(pct,class)
  return (pct>0 and '+' or '')..tostring(pct)..'% damage with '..class..' weapons'
 end
+local function num(x) return (string.format('%.1f',x):gsub('%.0$','')) end
+local function rich(color,s) return '<font color="'..T.hex(color)..'">'..s..'</font>' end
+-- Specialty and ability (2026-10-09, plans/2026-10-09-chef-roster-weapon-types-design.md; they
+-- replaced the class fit chips and the 2 / 4 home weapon rows). The specialty line, as rich text:
+-- '+10% damage with Chef weapons. Other weapons: no penalty.' A class whose own drawback lowers
+-- some weapons says so: Brawler '... Other weapons: no penalty, apart from your -15% ranged damage.'
+function M.specialtyText(class)
+ local c=Stats.Classes[class];if not c then return '' end
+ local hits={}
+ for _,id in {'MeleeDamage','RangedDamage','Damage'} do
+  local v=c.buffs[id];if v and v<0 then table.insert(hits,v..'% '..string.lower(Stats.ById[id].label)) end
+ end
+ return rich(C.lime,Stats.specialtyText(class))..'. Other weapons: no penalty'..(#hits>0 and ', apart from your '..table.concat(hits,' and ') or '')..'.'
+end
+-- Chef's pizza numbers come from ChefPizza (ReplicatedStorage.RogueliteCombat.ChefPizza), read when
+-- drawn: Studio may not have the module yet, and then the line has no numbers. M.Pizza (previews and
+-- tests) stands in for the module.
+local function pizza()
+ if M.Pizza then return M.Pizza end
+ local m=combat:FindFirstChild('ChefPizza');if not m then return nil end
+ local ok,P=pcall(require,m);return ok and type(P)=='table' and P or nil
+end
+-- The class ability row: {icon=, title=, text=, dash=bool} or nil (no ability). Chef: pizza drops,
+-- e.g. '8% chance (about 1 in 12) on a kill with a Chef weapon; heals 10% of max health'.
+-- Brawler: dash (CharacterStats.dashes). Handyman: the free Nail Turret.
+function M.ability(class)
+ if Stats.dashes(class) then
+  return {icon=WeaponIcons[Rules.Signature[class]],title='DASH',dash=true,text=class..' only. Q / controller X / DASH button. '..num(Stats.Dash.Cooldown)..'s cooldown.'}
+ end
+ local P=pizza()
+ if class=='Chef' or (P and P.CLASS==class) then
+  local text='Kills with Chef weapons sometimes drop a pizza slice that heals whoever grabs it.'
+  if P and type(P.CHANCE)=='number' and P.CHANCE>0 and type(P.HEAL_FRACTION)=='number' then
+   text=string.format('%s%% chance (about 1 in %d) on a kill with a Chef weapon; heals %s%% of max health',num(P.CHANCE*100),math.floor(1/P.CHANCE+1e-6),num(P.HEAL_FRACTION*100))
+  end
+  -- No pizza slice icon yet: the Pizza Cutter's render stands in.
+  return {icon=WeaponIcons['42'],title='PIZZA DROPS',text=text}
+ end
+ if class=='Handyman' then
+  return {icon=WeaponIcons[Rules.Signature[class]],title='NAIL TURRET',text='Starts every run with a free Nail Turret that spawns close to you.'}
+ end
+ return nil
+end
+-- The class's SPECIALTY and ability rows in an inset: icon, cream label, then the text (the label
+-- above the text with o.stack, for narrow phone columns). Shared with the Armory's class details.
+-- o: size (15), labelW (118), stack. Returns the inset and its height.
+function M.perkRows(parent,name,x,y,w,class,o)
+ o=o or {}
+ local size=o.size or 15;local labelW=o.stack and 0 or (o.labelW or 118)
+ local ab=M.ability(class)
+ local dashers={};for _,c in Stats.ClassOrder do if Stats.dashes(c) then table.insert(dashers,c) end end
+ local rows={{key='Specialty',icon=WeaponIcons[Rules.Signature[class]],label='SPECIALTY',text=M.specialtyText(class)},
+  ab and {key='Ability',icon=ab.icon,label=ab.title,text=ab.text,dash=ab.dash==true}
+   or {key='Ability',label='ABILITY',text=rich(C.dim,'None. Dash is '..table.concat(dashers,', ')..' only.'),dash=false}}
+ local box=T.panel(parent,name,x,y,w,0,'inset')
+ local cy=4;local is=math.floor(size*2.1)
+ for i,r in rows do
+  local tx=12+is+8+labelW;local tw=w-tx-12
+  -- Measured a little narrower than drawn, so rounding never adds a line.
+  local th=math.ceil(TextService:GetTextSize(r.text:gsub('<[^>]->',''),size,T.Body,Vector2.new(tw*.94,1000)).Y)+2
+  local labelH=size+2
+  local rh=o.stack and labelH+th+14 or math.max(is+12,th+16)
+  if i>1 then T.make('Frame',box,{Name='Divider'..i,Position=UDim2.fromOffset(10,cy-1),Size=UDim2.fromOffset(w-20,2),BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=.45,BorderSizePixel=0}) end
+  if r.icon then T.icon(box,r.key..'Icon',12,cy+math.floor((rh-is)/2),is,r.icon) end
+  local l=T.label(box,r.key..'Label',r.label,12+is+8,o.stack and cy+6 or cy+math.floor((rh-labelH)/2),o.stack and tw or labelW-8,labelH,size-2,C.cream)
+  l.TextXAlignment=Enum.TextXAlignment.Left;l.TextStrokeTransparency=.5
+  local t=T.text(box,r.key..'Text',r.text,o.stack and 12+is+8 or tx,o.stack and cy+6+labelH or cy+math.floor((rh-th)/2),tw,th,size,C.white)
+  t.TextYAlignment=Enum.TextYAlignment.Top
+  if r.key=='Ability' then t:SetAttribute('Dash',r.dash) end
+  cy+=rh
+ end
+ box.Size=UDim2.fromOffset(w,cy+4)
+ return box,cy+4
+end
 -- Layout units: page px, U canvas px each (T.canvas, 1920x1080 design). The desktop layout is
 -- DWxDH page px, so at 1080p it fills the screen at 1.5x as before. Pages smaller than that
 -- (phones) use the compact layout, at least MIN_H tall; shorter pages scroll.
@@ -268,15 +342,16 @@ function M.new(player,opts)
    end
   end
   stage(mapIndex,false)
-  local order=Rules.classOrder(profile.classes)
+  -- Class order everywhere (2026-10-09): Brawler, Gunner, Chef, Juggler, Handyman, Mage; locked
+  -- classes stay in place with a padlock.
+  local order=Stats.ClassOrder
   local class=sel.class;local owned=profile.classes[class]==true
-  -- Starters (2026-10-04): every weapon with this class anywhere in its list, owned first, then owned
-  -- Godlies (any class can start with one), then NOT OWNED. Up to 17 (Thrower 11 + 6 Godlies).
-  local list,unowned={},{}
-  for _,w in Rules.classWeapons(class) do table.insert(profile.weapons[w.id] and list or unowned,w) end
-  for _,w in Rules.ownedGodlies(profile.weapons) do table.insert(list,w) end
+  -- Starters (2026-10-09): RunSetupRules.starters, the class's owned weapons (one starter class per
+  -- weapon) then owned Godlies (any class can start with one); after them the class's weapons you
+  -- don't own yet, dimmed and locked. Up to 13 (Juggler 7 + 6 Godlies).
+  local list=table.clone(Rules.starters(class,profile.weapons))
   local nOwned=#list
-  table.move(unowned,1,#unowned,#list+1,list)
+  for _,w in Rules.classWeapons(class) do if not profile.weapons[w.id] then table.insert(list,w) end end
   -- Starter tiles never scroll (2026-10-04): M.weaponTiles sizes them to the room. Icons stay at
   -- least 48 screen px (65 page px on a .75x phone page); NOT OWNED tiles are never under that either.
   local iconMin=math.ceil(48/G.px)+1;local lockedMin=iconMin+8
@@ -288,28 +363,29 @@ function M.new(player,opts)
   -- 6 x 3 at 85 px (icons 53 screen px). Owned and locked starters always share the same grid.
   local cw,ch,cgap,cardsAt,cardsIn -- class card size, gap, position of card n, its parent
   local infoX,infoY,infoW,infoH,wx,wy,ww,tiles,tgap,headH,gridY
+  local NOTE_H=cp and 24 or 26 -- the Godly note under the tiles
   if not cp then
    -- Cards 140 tall (were 150) so the details panel is 380 tall and fits every class unscrolled.
    cw,ch,cgap=170,140,14;local x0=(CW-(#order*cw+(#order-1)*cgap))/2
    cardsIn=canvas;cardsAt=function(n) return x0+(n-1)*(cw+cgap),100 end
    infoX,infoY,infoW,infoH=95,252,470,380
    wx,wy,ww,tgap,headH=585,252,600,10,30;gridY=wy+headH+6
-   tiles=M.weaponTiles(nOwned,#list-nOwned,ww,626-gridY,tgap,150,lockedMin)
+   tiles=M.weaponTiles(nOwned,#list-nOwned,ww,626-gridY-NOTE_H,tgap,150,lockedMin)
   else
    -- The map chip (Play, Host, Member) sits at 40-64; without it the cards move up to the top bar.
    local M0,gap=16,14;local midY=math.max(mapText and 70 or 48,G.top+6)
-   cw,ch,cgap=math.min(190,math.floor((CW-2*M0-5*8)/#order)),46,8
+   cw,ch,cgap=math.min(190,math.floor((CW-2*M0-5*8)/#order)),48,8 -- 48: a 36 px tap at the .75x phone page
    local x0=(CW-(#order*cw+(#order-1)*cgap))/2
    cardsIn=canvas;cardsAt=function(n) return x0+(n-1)*(cw+cgap),midY end
    local top=midY+ch+8;local h=CH-64-top -- the buttons start at CH-60
    tgap,headH=6,20;gridY=top+headH+4
-   tiles=M.weaponTiles(nOwned,#list-nOwned,CW-2*M0-gap-300,CH-64-gridY,tgap,112,lockedMin)
+   tiles=M.weaponTiles(nOwned,#list-nOwned,CW-2*M0-gap-300,CH-64-gridY-NOTE_H,tgap,112,lockedMin)
    ww=math.max(tiles.w,250) -- the heading row needs about 250
    infoW=math.min(440,CW-2*M0-gap-ww);infoH=h;infoY=top;wy=top
    infoX=(CW-(infoW+gap+ww))/2;wx=infoX+infoW+gap
   end
-  -- Class cards: owned first, then locked; locked cards dimmed with a padlock. Desktop: icon over
-  -- the name, the fit badge over the corner. Phones: icon left, then the name over an inline badge.
+  -- Class cards in class order; locked cards dimmed with a padlock. Desktop: icon over the name.
+  -- Phones: icon left, then the name. No damage badges (2026-10-09: no class-vs-class number).
   for k,c in order do
    local cOwned=profile.classes[c]==true;local selected=class==c
    local x,y=cardsAt(k)
@@ -319,84 +395,46 @@ function M.new(player,opts)
    end,not selected)
    card.Interactable=not (mode=='Member' and player:GetAttribute('LobbyLockedIn')==true)
    card.Caption.Visible=false
-   -- Weapon fit badge: damage with this class's weapons when you play the picked class
-   -- (CharacterStats.ClassFit). DMG with the number (2026-10-03: a bare "-5%" read like a discount);
-   -- the details panel says what it means.
-   local _,pct=Stats.classFit({home=c},class)
    if cp then
-    local art=T.icon(card,'Icon',6,7,32,WeaponIcons[Rules.Signature[c]]);art.ImageTransparency=cOwned and 0 or .6
-    local n=T.label(card,'Name',c,44,2,cw-50,21,17,cOwned and C.white or C.dim);n.TextXAlignment=Enum.TextXAlignment.Left;n.TextWrapped=false
-    T.fitBadge(card,'Fit',44,24,math.min(cw-50,88),19,pct,'DMG',true)
+    local art=T.icon(card,'Icon',6,8,32,WeaponIcons[Rules.Signature[c]]);art.ImageTransparency=cOwned and 0 or .6
+    local n=T.label(card,'Name',c,44,13,cw-50,22,17,cOwned and C.white or C.dim);n.TextXAlignment=Enum.TextXAlignment.Left;n.TextWrapped=false
     if not cOwned then M.lock(card,2,2,18) end
    else
     local is=72
     local art=T.icon(card,'Icon',(cw-is)/2,12,is,WeaponIcons[Rules.Signature[c]]);art.ImageTransparency=cOwned and 0 or .6
     local n=T.label(card,'Name',c,0,86,cw,32,24,cOwned and C.white or C.dim);n.Size=UDim2.new(1,0,0,32);n.TextWrapped=false
-    local bw,bh=58,44
-    local badge=T.fitBadge(card,'Fit',cw-bw+8,-8,bw,bh,pct,'DMG');badge.ZIndex=5;badge.Word.TextSize=13
-    for _,d in badge:GetDescendants() do if d:IsA('GuiObject') then d.ZIndex=6 end end
     if not cOwned then
      M.lock(card,8,8,28)
      local l=T.label(card,'Locked','LOCKED',0,120,cw,22,16,C.gold);l.Size=UDim2.new(1,0,0,22)
     end
    end
   end
-  -- Class details, top to bottom: name, description, weapon damage (the card badges), always-on buffs |
-  -- drawbacks, then the 2 / 4 home weapon bonuses. Drawn into a holder; if it is taller than the
-  -- panel (phones, or a locked class with its buy buttons) the holder moves into a scroll.
+  -- Class details, top to bottom: name, description, always-on buffs | drawbacks, then the
+  -- specialty and ability rows (2026-10-09; they replaced the weapon damage chips and the 2 / 4 home
+  -- weapon rows). Drawn into a holder; if it is taller than the panel (phones, or a locked class
+  -- with its buy buttons) the holder moves into a scroll.
   local c=Stats.Classes[class]
-  local pick=Rules.Signature[class];local pickW
-  for _,w in list do if w.id==sel.weapon and profile.weapons[w.id] then pick=w.id end end
-  for _,w in list do if w.id==pick then pickW=w end end
+  local pick
+  for i=1,nOwned do if list[i].id==sel.weapon then pick=sel.weapon end end
+  -- Not a starter for this class: its signature weapon if owned, else the first owned starter.
+  if not pick then
+   local sig=Rules.Signature[class]
+   pick=(profile.weapons[sig] or nOwned==0) and sig or list[1].id
+  end
+  local pickW;for _,w in list do if w.id==pick then pickW=w end end
   local pad=cp and 14 or 18;local tw=infoW-2*pad
   local info=T.panel(canvas,'ClassInfo',infoX,infoY,infoW,infoH,'panel')
   local box=T.frame(info,'Content',0,0,infoW,0)
-  -- Spacing 2 px tighter (2026-10-03) so the weapon damage chips fit on desktop: a class with 4 buff
-  -- rows ends about 364 px down the 380 px panel, unscrolled.
   local y=cp and 10 or 12
   local n=T.label(box,'Name',class,pad,y,tw,cp and 34 or 36,cp and 28 or 30);n.TextXAlignment=Enum.TextXAlignment.Left
   y+=36
-  local descH=math.ceil(TextService:GetTextSize(c.description,cp and 16 or 16,T.Body,Vector2.new(tw,1000)).Y)+2
+  local descH=math.ceil(TextService:GetTextSize(c.description,16,T.Body,Vector2.new(tw*.96,1000)).Y)+2
   T.text(box,'Description',c.description,pad,y,tw,descH,16,C.muted).TextYAlignment=Enum.TextYAlignment.Top
   y+=descH+6
-  local dash,dashText=M.dashDescription(class,pickW)
-  local dashH=math.ceil(TextService:GetTextSize(dashText,15,T.Body,Vector2.new(tw,1000)).Y)+6
-  local dashLabel=T.text(box,'DashInfo',dashText,pad,y,tw,dashH,15,dash and C.lime or C.muted)
-  dashLabel.TextYAlignment=Enum.TextYAlignment.Top;dashLabel:SetAttribute('Available',dash);dashLabel:SetAttribute('StarterId',pick)
-  y+=dashH+6
-  -- The card badges spelled out (2026-10-03: the legend sentence didn't explain the +/-): your damage
-  -- with each class's weapons as this class, one chip per class (its card's icon), best first,
-  -- coloured like the badges. Gunner: Gunner +15%, Thrower 0%, Handyman 0%, Juggler -5%, Mage -5%,
-  -- Brawler -15%. Desktop uses two columns of explicit sentences; phones use one.
-  local fits={}
-  for i,other in Stats.ClassOrder do local _,pct=Stats.classFit({home=other},class);table.insert(fits,{c=other,pct=pct,i=i}) end
-  table.sort(fits,function(a,b) if a.pct~=b.pct then return a.pct>b.pct end return a.i<b.i end)
-  local head,godly='WEAPON DAMAGE AS A '..string.upper(class),'Godly: no change'
-  local headW=math.ceil(TextService:GetTextSize(head,14,T.Font,Vector2.new(1000,100)).X*1.12)
-  local noteW=math.ceil(TextService:GetTextSize(godly,14,T.Body,Vector2.new(1000,100)).X*1.12)
-  local inline=headW+12+noteW<=tw
-  local headH=T.section(box,'FitTitle',head,pad,y,inline and tw-noteW-8 or tw,14)
-  if inline then T.text(box,'FitGodly',godly,pad+tw-noteW,y,noteW,headH,14,C.muted).TextXAlignment=Enum.TextXAlignment.Right end
-  y+=headH+3
-  local cols=cp and 1 or 2;local gap=8;local fw=(tw-gap*(cols-1))/cols;local rowY=y;local rowH=0
-  for k,f in fits do
-   local own=f.c==class
-   local sentence=M.classDamageText(f.pct,f.c)
-   local fh=math.max(22,math.ceil(TextService:GetTextSize(sentence,14,T.Body,Vector2.new(fw-12,1000)).Y)+4)
-   local chip=T.make('Frame',box,{Name='Fit_'..f.c,Position=UDim2.fromOffset(pad+((k-1)%cols)*(fw+gap),rowY),Size=UDim2.fromOffset(fw,fh),BackgroundColor3=own and Color3.fromRGB(32,48,24) or Color3.fromRGB(26,32,36),BorderSizePixel=0})
-   T.make('UICorner',chip,{CornerRadius=UDim.new(0,6)})
-   T.make('UIStroke',chip,{Color=own and C.lime or Color3.fromRGB(8,10,11),Thickness=own and 2 or 1.5})
-   T.text(chip,'Effect',sentence,6,0,fw-12,fh,14,T.fitColor(f.pct))
-   rowH=math.max(rowH,fh)
-   if k%cols==0 or k==#fits then rowY+=rowH+3;rowH=0 end
-  end
-  y=rowY
-  if not inline then T.text(box,'FitGodly','Godly weapons: no change',pad,y+3,tw,18,14,C.muted);y+=21 end
-  y+=6
   local good,bad=Stats.classLines(class)
   local _,h=T.statColumns(box,'AlwaysOn',pad,y,tw,good,bad,{size=cp and 15 or 16,stack=cp})
-  y+=h+6
-  _,h=T.homeRows(box,'HomeBonus',pad,y,tw,{{n=2,text=Stats.bonusText(c.two)},{n=4,text='also '..Stats.bonusText(c.four)}},{size=cp and 14 or 15,stack=cp,labelW=126})
+  y+=h+8
+  _,h=M.perkRows(box,'Perks',pad,y,tw,class,{size=cp and 14 or 15,stack=cp})
   y+=h+8
   if not owned then
    T.text(box,'Earn','Earn it: '..(Rules.ClassUnlock[class] or 'an achievement'),pad,y,tw,cp and 40 or 24,16,C.gold)
@@ -448,6 +486,12 @@ function M.new(player,opts)
     local p,barH,is=M.tileParts(size)
     T.icon(c,'Icon',(size-is)/2,p,is,WeaponIcons[wpn.id])
     T.tierBadge(c,rec.tier,3,3)
+    -- Godlies start with any class (2026-10-09): a gold ANY CLASS tag where the tile has room for it.
+    if wpn.godly then
+     local ts=cp and 13 or 12
+     local tag,tagW=T.tag(c,'AnyClass','ANY CLASS',0,3,{h=ts+8,size=ts,color=Color3.fromRGB(90,70,16),textColor=C.gold})
+     if tagW>size-34 then tag:Destroy() else tag.Position=UDim2.fromOffset(size-tagW-3,3);tag.ZIndex=5;tag.Text.ZIndex=6 end
+    end
     -- Copies toward the next tier: "2 / 5" in the bar on big tiles, the bar alone on small ones.
     local need=opts.need(rec)
     if barH>=14 then T.upgradeBar(c,'Upgrade',p+2,size-p-barH,size-2*p-4,barH,rec.have,need)
@@ -464,6 +508,11 @@ function M.new(player,opts)
    c.MouseEnter:Connect(function() showName(wpn) end);c.MouseLeave:Connect(function() showName() end)
    c.SelectionGained:Connect(function() showName(wpn) end);c.SelectionLost:Connect(function() showName() end)
   end
+  -- Under the tiles: Godlies are the one exception to "starters are your class's weapons".
+  local noteW=math.max(tiles.w,ww-(bx-wx));local ns=cp and 16 or 15
+  local note=rich(C.gold,'Godly')..' weapons have no class: any class can start with one you own.'
+  if cp or TextService:GetTextSize(note:gsub('<[^>]->',''),ns,T.Body,Vector2.new(4000,100)).X*1.2>noteW then note=rich(C.gold,'Godly')..': any class can start one you own.' end
+  local nl=T.text(canvas,'GodlyNote',note,bx,gridY+tiles.h+4,noteW,NOTE_H-4,ns,C.muted);nl.TextWrapped=false
   -- Host: Open pad (anyone, up to 4) or Private (only you and your party; just you when you're not
   -- in one). Private was Solo (user, 2026-10-03: "what if were in a group ... that wanted it to be
   -- private"). sel.solo still carries it. Compact: bottom-left, with BACK / START right of it.

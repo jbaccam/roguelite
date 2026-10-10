@@ -85,6 +85,41 @@ for _,id in {'MaxHP','Damage','MeleeDamage','RangedDamage','ElementalDamage','Ut
 local function thumbnail(parent,template,x,y,w,h)
  require(RS.WeaponInventoryUI).preview(parent,template,x,y,w,h)
 end
+-- Weapon types' literal icons (2026-10-09): Blade = Katana, Blunt = Baseball Bat, Gun = Glock,
+-- Thrown = Kunai, Explosive = Rocket Launcher, Elemental = Crystal Ball, Tool = Shovel, Culinary =
+-- Frying Pan, Trick = Deck of Cards. The same table as ItemCardUI.TypeIcon (this module is sandboxed
+-- and can't require that lobby one).
+local TYPE_ICON={Blade='03',Blunt='06',Gun='00',Thrown='13',Explosive='11',Elemental='35',Tool='26',Culinary='01',Trick='18'}
+M.TypeIcon=TYPE_ICON
+-- Your class's own drawback on a weapon (no class-vs-class penalty since 2026-10-09): the first
+-- negative of its family's damage (MeleeDamage / RangedDamage) or Damage in the class's buffs, as
+-- the value and stat id, or nil. Brawler + Glock: -15, 'RangedDamage'.
+local function drawback(class,w)
+ local c=Stats.Classes[class];if not c or type(w)~='table' then return nil end
+ for _,id in {w.kind=='Melee' and 'MeleeDamage' or 'RangedDamage','Damage'} do local v=c.buffs[id];if v and v<0 then return v,id end end
+ return nil
+end
+-- The attack and what its damage scales with (ItemCardUI.attack's rules): 'Melee · scales with Melee Damage'.
+function M.attackLine(w)
+ local word=w.kind=='Melee' and 'Melee' or w.kind=='Blast' and 'Explosive' or table.find(w.types or {},'Thrown') and 'Thrown' or 'Ranged'
+ local parts={w.kind=='Melee' and 'Melee Damage' or 'Ranged Damage'}
+ if w.elemental then table.insert(parts,'Elemental Damage') end
+ if w.utility then table.insert(parts,'Utility Power') end
+ if w.kind=='Blast' then table.insert(parts,'Explosion Damage') end
+ return word..' · scales with '..(#parts==1 and parts[1] or table.concat(parts,', ',1,#parts-1)..' + '..parts[#parts])
+end
+-- A set's step in a few words, from CharacterStats (no numbers here): setShort('Blade', 3) =
+-- '+7% dmg · +4% critical chance'; 'you' flavors end '(you)': '+4% dmg · +1 armor (you)'.
+function M.setShort(t,n)
+ local set=Stats.TypeSets[t];if not set then return '' end
+ local v=Stats.setBonus(t,n);local d=Stats.ById[set.stat]
+ local out='+'..Stats.setDamage(n)..'% dmg'
+ if v>0 then
+  local label=string.lower(d.label);if d.unit~='%' and v==1 then label=label:gsub('s$','') end
+  out..=' · +'..v..(d.unit=='%' and '%' or '')..' '..label..(set.scope=='you' and ' (you)' or '')
+ end
+ return out
+end
 function M.statColor(id,value,base)
  local delta=value-base;if id=='ShopPricePercent' or id=='ChainEvery' then delta=-delta end
  return delta>0 and green or delta<0 and red or white
@@ -328,42 +363,99 @@ function M.new(player,h,refresh)
   end
   return row*26
  end
- -- Membership always lists every class, home first. Fit is a separate player-specific badge.
- -- Give narrow cards another line instead of silently replacing membership with the best fit.
- local FIT_WORD={home='YOUR CLASS',similar='SIMILAR',off='OFF-CLASS'}
+ -- Specialty, types and sets (2026-10-09, plans/2026-10-09-chef-roster-weapon-types-design.md;
+ -- they replaced the class tag, the class-fit badge and its sentence). Every number comes from
+ -- CharacterStats: S.specialty, S.setBonusText / S.setDamage / S.setBonus and S.typeLines.
  local TS=game:GetService('TextService')
- local function width(text,size,icon) return TS:GetTextSize(text,size,T.Font,Vector2.new(1000,100)).X*1.12+(icon and size+20 or 20) end
- local function classTagLayout(base,w,h)
-  local name=base.godly and 'GODLY · ANY CLASS' or string.upper(Weapons.classNames(base,' · '))
-  local size=math.max(h-10,minText)
-  local measured=TS:GetTextSize(name,size,T.Font,Vector2.new(math.max(20,(w-16)/1.12),1000))
-  return name,size,math.max(h,math.ceil(measured.Y)+10)
- end
- local function classFitRow(p,base,tagX,tagY,tagMaxW,tagH,barX,barY,barW,barH)
-  local fit,pct,via=Stats.classFit(base,state:GetAttribute('Class'))
-  local word=fit and FIT_WORD[fit] or 'ANY CLASS'
-  local name,size,used=classTagLayout(base,tagMaxW,tagH)
-  local tag=T.tag(p,'ClassTag',name,tagX,tagY,{h=used,size=size,maxW=tagMaxW})
-  tag.Size=UDim2.fromOffset(tagMaxW,used)
-  tag.Text.Position=UDim2.fromOffset(8,0);tag.Text.Size=UDim2.new(1,-16,1,0)
-  tag.Text.TextScaled=false;tag.Text.TextSize=size;tag.Text.TextWrapped=true
-  tag:SetAttribute('WeaponId',base.id)
-  if width(T.fitText(pct)..' DAMAGE  ·  '..word,math.max(math.floor(barH*.62),minText),false)-8>barW then word=nil end
-  T.fitBadge(p,'Fit',barX,barY,barW,barH,pct,word,true)
- end
  local function readableHeight(sentence,size,w,minimum)
   local visibleScale=math.min(1,9/minText)
   return math.max(minimum or 0,math.ceil(TS:GetTextSize(sentence,size,T.Body,Vector2.new(math.max(20,w*visibleScale*.9),1000)).Y/visibleScale)+8)
  end
- local function fitExplanation(base,w)
-  local _,pct,via=Stats.classFit(base,state:GetAttribute('Class'))
-  local sentence=base.godly and 'Godly weapon: no class damage modifier.' or ((pct>0 and '+' or '')..tostring(pct)..'% damage with '..(via or base.home)..' weapons.')
-  if not base.godly and #(base.classes or {})>1 then sentence..=' Best matching class applies.' end
-  return sentence,readableHeight(sentence,16,w)
+ local function rich(color,s) return string.format('<font color="#%02X%02X%02X">%s</font>',math.round(color.R*255),math.round(color.G*255),math.round(color.B*255),s) end
+ local function plain(s) return (s:gsub('<[^>]->','')) end
+ -- Equipped copies by type now: S.typeCounts of the snapshot's weapon slots.
+ local function equippedIds(data) local ids={};for _,w in data.weapons do if w.id~='' then table.insert(ids,w.id) end end;return ids end
+ -- One bar under a weapon's name: lime '+10% DAMAGE · CHEF SPECIALTY' on your class's weapons, red
+ -- '-15% RANGED DMG · BRAWLER DRAWBACK' when your class's own drawback hits it, else cream
+ -- 'GUNNER WEAPON · NO PENALTY'. Named SpecBar, attribute Kind = specialty / drawback / neutral / godly.
+ local function specBar(p,base,x,y,w,h)
+  local class=state:GetAttribute('Class')
+  local kind,text,icon,short -- short: the words for narrow cards
+  if base.godly then kind,text='godly','GODLY · ANY CLASS'
+  elseif Stats.specialty(base,class)>0 then kind,text,short,icon='specialty','+'..Stats.Specialty..'% DAMAGE · '..string.upper(class)..' SPECIALTY','+'..Stats.Specialty..'% DMG · SPECIALTY',WeaponIcons[Signature[class]]
+  else
+   local v,id=drawback(class,base)
+   local what=v and string.upper(Stats.ById[id].label):gsub(' DAMAGE$',' DMG')
+   if v then kind,text,short='drawback',v..'% '..what..' · '..string.upper(class)..' DRAWBACK',v..'% '..what..' · DRAWBACK'
+   else kind,text,short,icon='neutral',string.upper(base.class)..' WEAPON · NO PENALTY',string.upper(base.class)..' · NO PENALTY',WeaponIcons[Signature[base.class]] end
+  end
+  local top,bottom,ink
+  if kind=='specialty' then top,bottom,ink=Color3.fromRGB(63,125,16),Color3.fromRGB(36,77,8),Color3.fromRGB(234,255,208)
+  elseif kind=='drawback' then top,bottom,ink=Color3.fromRGB(109,30,36),Color3.fromRGB(67,18,22),Color3.fromRGB(255,212,212)
+  else top,bottom,ink=Color3.fromRGB(74,69,53),Color3.fromRGB(44,42,32),cream end
+  local b=Instance.new('Frame');b.Name='SpecBar';b.Position=UDim2.fromOffset(x,y);b.Size=UDim2.fromOffset(w,h);b.BackgroundColor3=Color3.new(1,1,1);b.BorderSizePixel=0;b.Parent=p
+  b:SetAttribute('Kind',kind);b:SetAttribute('WeaponId',base.id)
+  T.make('UICorner',b,{CornerRadius=UDim.new(0,8)});T.make('UIStroke',b,{Color=Color3.fromRGB(8,10,11),Thickness=2})
+  T.make('UIGradient',b,{Rotation=90,Color=ColorSequence.new(top,bottom)})
+  local is=icon and h-6 or 0
+  local size=math.max(math.floor(h*.6),minText)
+  -- 25% slack: small shop scales draw the 9 px floor wider than the design-size measure.
+  local tw=TS:GetTextSize(text,size,T.Font,Vector2.new(4000,100)).X*1.25
+  if short and tw+(icon and is+6 or 0)>w-12 then text=short;tw=TS:GetTextSize(text,size,T.Font,Vector2.new(4000,100)).X*1.25 end
+  local x0=math.max(6,(w-(tw+(icon and is+6 or 0)))/2)
+  if icon and x0+is+6+tw<=w-4 then T.icon(b,'Icon',x0,3,is,icon) else is=0 end
+  local l=T.label(b,'Text',text,is>0 and x0+is+6 or 6,0,is>0 and w-(x0+is+6)-4 or w-12,h,size,ink);l.TextStrokeTransparency=.5;l.TextWrapped=false
+  if is==0 then l.TextXAlignment=Enum.TextXAlignment.Center end
+  l.FitText.MinTextSize=math.min(size,9)
+  return b
  end
- local function weaponStats(p,base,tier,x,y,w)
-  local s=Stats.read(state);local d=Stats.weapon(base,s,state:GetAttribute('Class'),tier)
-  local rows={{'Damage',string.format('%.1f',d.damage),d.damage-base.damage},{'Cooldown',string.format('%.2f s',d.cooldown),base.cooldown-d.cooldown},{'Critical',string.format('x%.1f (%s)',s.CritDamage/100,Stats.format(Stats.ById.CritChance,s.CritChance)),s.CritChance-Stats.ById.CritChance.base},{'Range',string.format('%.1f',d.range),d.range-base.range}}
+ -- A type's line. after=true (offers): what you'd have after buying one more copy, with the old
+ -- step muted: 'Blade 2 -> 3' and '+7% damage and +4% crit chance on Blade weapons (now +4% damage)'.
+ -- after=false (the inventory popup): what you have now.
+ local function typeLine(t,n,after)
+  local strip=function(s) return (s:gsub('^'..t..' %d+: ','')) end
+  if not after then
+   return n>=2 and rich(green,strip(Stats.setBonusText(t,n))) or rich(cream,'No bonus yet. Sets start at 2.')
+  end
+  local a=n+1
+  if n>=6 then return rich(T.Color.gold,'Set is full (6)') end
+  if a<2 then return rich(cream,'1 more '..t..' weapon for: '..strip(Stats.setBonusText(t,2))) end
+  return rich(green,strip(Stats.setBonusText(t,a)))..rich(T.Color.muted,n>=2 and ' (now +'..Stats.setDamage(n)..'% damage)' or ' (new)')
+ end
+ local function typeLineHeight(t,n,after,w) return readableHeight(plain(typeLine(t,n,after)),math.max(15,minText),w) end
+ -- Six diamonds: filled for copies held, the outlined one is the copy this buy adds.
+ local function pips(p,name,x,y,n,nextOne)
+  for k=1,6 do
+   local on=k<=n;local nx=nextOne==k
+   local d=Instance.new('Frame');d.Name=name..k;d.AnchorPoint=Vector2.new(.5,.5);d.Position=UDim2.fromOffset(x+(k-1)*13+5,y);d.Size=UDim2.fromOffset(8,8);d.Rotation=45;d.BorderSizePixel=0
+   d.BackgroundColor3=on and green or nx and Color3.fromRGB(26,32,36) or Color3.fromRGB(58,66,70);d.Parent=p
+   T.make('UIStroke',d,{Color=nx and green or Color3.fromRGB(8,10,11),Thickness=nx and 2 or 1.5})
+  end
+ end
+ -- One row per type of `base`: chip (literal icon), diamonds, 'n -> n+1' (or the count), then its
+ -- line. Returns the height used.
+ local function typeRows(p,base,x,y,w,counts,after)
+  local y0=y;local ts=math.max(15,minText)
+  for _,t in base.types or {} do
+   local n=counts[t] or 0
+   local _,cw=T.tag(p,'TypeChip_'..t,string.upper(t),x,y,{h=28,size=15,icon=WeaponIcons[TYPE_ICON[t]],maxW=w-90})
+   local stepText=after and (n..' → '..math.min(n+1,6)) or tostring(n)
+   local step=heading(p,'TypeStep_'..t,stepText,x+w-84,y,84,28,20,after and n<6 and green or white);step.TextXAlignment=Enum.TextXAlignment.Right
+   if cw+8<=w-84-86 then pips(p,'TypePip_'..t..'_',x+w-84-86,y+14,n,after and n<6 and n+1 or nil) end
+   local line=typeLine(t,n,after);local lh=typeLineHeight(t,n,after,w)
+   local l=text(p,'TypeLine_'..t,line,x+2,y+31,w-2,lh,ts,white);l.RichText=true;l.TextYAlignment=Enum.TextYAlignment.Top
+   y+=31+lh+4
+  end
+  return y-y0
+ end
+ local function typeRowsHeight(base,w,counts,after)
+  local h=0;for _,t in base.types or {} do h+=31+typeLineHeight(t,counts[t] or 0,after,w)+4 end;return h
+ end
+ -- sets: S.typeCounts to show the stats with (an offer counts itself; nil = no type sets). The
+ -- damage includes the specialty and the set damage; Critical includes the Blade set.
+ local function weaponStats(p,base,tier,x,y,w,sets)
+  local s=Stats.read(state);local d=Stats.weapon(base,s,state:GetAttribute('Class'),tier,sets);local ws=Stats.weaponStats(s,d)
+  local rows={{'Damage',string.format('%.1f',d.damage),d.damage-base.damage},{'Cooldown',string.format('%.2f s',d.cooldown),base.cooldown-d.cooldown},{'Critical',string.format('x%.1f (%s)',s.CritDamage/100,Stats.format(Stats.ById.CritChance,ws.CritChance)),ws.CritChance-Stats.ById.CritChance.base},{'Range',string.format('%.1f',d.range),d.range-base.range}}
   for i,r in rows do
    local color=r[3]>0 and green or r[3]<0 and red or white
    local l=text(p,'WeaponStat'..i,string.format('<font color="#EADDA7">%s:</font> <font color="#%02X%02X%02X">%s</font>',r[1],math.round(color.R*255),math.round(color.G*255),math.round(color.B*255),r[2]),x,y+(i-1)*24,w,24,19)
@@ -374,9 +466,13 @@ function M.new(player,h,refresh)
  -- The weapon's own traits in one line: 'Projectiles: 2 · Pierce: 1 · Ignites', '' when none. A
  -- slow shows its real numbers, as CombatEffectsService applies them (the weapon's own slow,
  -- WeaponCatalog.SlowById, or your slow stats, whichever is bigger): Medusa 'Slows 35% for 2 s'.
- local function traitLine(base,tier)
-  local s=Stats.read(state);local d=Stats.weapon(base,s,state:GetAttribute('Class'),tier)
-  local traits={};if d.projectileCount>1 then table.insert(traits,'Projectiles: '..d.projectileCount) end;if d.nativePierce>0 then table.insert(traits,'Pierce: '..d.nativePierce) end;if d.nativeBounce>0 then table.insert(traits,'Bounce: '..d.nativeBounce) end
+ local function traitLine(base,tier,sets)
+  local s=Stats.read(state);local d=Stats.weapon(base,s,state:GetAttribute('Class'),tier,sets)
+  d.projectileCount+=(d.typeBonus and d.typeBonus.ProjectileCount or 0) -- the Gun set's projectile
+  -- The Duck's spray and the Washer's stream hit everything in their cone, so they never show
+  -- Pierce or Bounce (2026-10-09; their old bounce / pierce traits did nothing).
+  local cone=base.id=='17' or base.id=='29' or base.trait=='spray' or base.trait=='stream'
+  local traits={};if d.projectileCount>1 then table.insert(traits,'Projectiles: '..d.projectileCount) end;if d.nativePierce>0 and not cone then table.insert(traits,'Pierce: '..d.nativePierce) end;if d.nativeBounce>0 and not cone then table.insert(traits,'Bounce: '..d.nativeBounce) end
   local slowText
   if d.slow>0 then
    local pct=math.min(70,math.max(s.SlowStrength,d.slowStrength or 0));local secs=math.max(s.SlowDuration,d.slowFor or 0)*Stats.mult(s.Duration)
@@ -451,20 +547,66 @@ function M.new(player,h,refresh)
   local secondary=self.statTab=='Secondary'
   local statTitle=heading(stats,'Title','Stats',12,10,side-24,34,28);statTitle.TextXAlignment=Enum.TextXAlignment.Center
   local tabH=th(32)
-  for i,tab in {'Primary','Secondary'} do
-   local b=btn(stats,tab..'Tab',side<180 and (tab=='Primary' and 'Main' or 'Extra') or tab,9+(i-1)*(side-18)/2,52,(side-22)/2,tabH,function() self.statTab=tab;self.statPage=1;refresh() end,tab~=(self.statTab or 'Primary'))
+  -- SETS (2026-10-09): each equipped weapon type with its copies, current bonus and next step, most
+  -- copies first. Pinned above the stats when it takes at most half the column (desktop); else a
+  -- third tab, Sets, with one line per type (phones).
+  local lines=Stats.typeLines(equippedIds(data))
+  table.sort(lines,function(a,b) if a.count~=b.count then return a.count>b.count end return table.find(Weapons.Types,a.type)<table.find(Weapons.Types,b.type) end)
+  local setsH=30+#lines*64+4
+  local pinned=#lines>0 and tap==0 and setsH<=(statsH-52)*.5
+  local function setRows(parent,y,w,compact)
+   local y0=y
+   for _,r in lines do
+    local rh=compact and 78 or 64;local on=r.count>=2
+    local f=Instance.new('Frame');f.Name='Set_'..r.type;f.Position=UDim2.fromOffset(0,y);f.Size=UDim2.fromOffset(w,rh-4);f.BorderSizePixel=0
+    f.BackgroundColor3=on and Color3.fromRGB(26,32,36) or Color3.fromRGB(21,25,28);f.Parent=parent
+    T.make('UICorner',f,{CornerRadius=UDim.new(0,8)});T.make('UIStroke',f,{Color=Color3.fromRGB(8,10,11),Thickness=2})
+    f:SetAttribute('Count',r.count)
+    local is=compact and 24 or 34;local nx=compact and 36 or 48
+    T.icon(f,'Icon',6,compact and 4 or 6,is,WeaponIcons[TYPE_ICON[r.type]])
+    heading(f,'Type',string.upper(r.type),nx,compact and 2 or 4,w-nx-50,24,compact and 16 or 18,on and white or T.Color.muted)
+    local c=heading(f,'Count',tostring(r.count),w-46,2,38,28,compact and 20 or 24,on and green or T.Color.muted);c.TextXAlignment=Enum.TextXAlignment.Right
+    local now=on and M.setShort(r.type,r.count) or (compact and ('1 more: '..M.setShort(r.type,2)) or 'No bonus yet. Sets start at 2.')
+    text(f,'Bonus',now,compact and 8 or nx,compact and 25 or 29,w-(compact and 16 or nx+8),compact and 48 or 17,compact and math.max(13,minText) or 14,on and green or cream)
+    if not compact and r.next then
+     text(f,'Next',(on and 'Next at ' or 'At ')..r.next..': '..M.setShort(r.type,r.next),nx,45,w-nx-8,15,13,T.Color.muted)
+    elseif not compact then text(f,'Next','Full set',nx,45,w-nx-8,15,13,T.Color.gold) end
+    y+=rh
+   end
+   return y-y0
+  end
+  local tabsY=52
+  if pinned then
+   heading(stats,'SetsTitle','SETS',12,tabsY,60,26,18,green)
+   text(stats,'SetsNote','equipped copies',72,tabsY+5,side-84,18,13,T.Color.muted)
+   local box=T.frame(stats,'Sets',9,tabsY+30,side-18,#lines*64)
+   setRows(box,0,side-18,false)
+   tabsY+=setsH
+  end
+  local tabList=(pinned or #lines==0) and {'Primary','Secondary'} or {'Primary','Secondary','Sets'}
+  local showSets=self.statTab=='Sets' and #tabList==3 -- kept when a resize pins the sets again
+  local current=showSets and 'Sets' or secondary and 'Secondary' or 'Primary'
+  local n=#tabList;local tw=(side-18-(n-1)*4)/n
+  for i,tab in tabList do
+   local short=side<180 or n==3
+   local b=btn(stats,tab..'Tab',short and (tab=='Primary' and 'Main' or tab=='Secondary' and 'Extra' or 'Sets') or tab,9+(i-1)*(tw+4),tabsY,tw,tabH,function() self.statTab=tab;self.statPage=1;refresh() end,tab~=current)
    b.Caption.UITextSizeConstraint.MaxTextSize=side<180 and 12 or 18
   end
-  local definitions={};for _,d in Stats.List do if (primary[d.id]==true)~=secondary then table.insert(definitions,d) end end
+  local definitions={};if not showSets then for _,d in Stats.List do if (primary[d.id]==true)~=secondary then table.insert(definitions,d) end end end
+  if showSets then
+   local list=Instance.new('ScrollingFrame');list.Name='SetRows';list.Position=UDim2.fromOffset(9,tabsY+tabH+6);list.Size=UDim2.fromOffset(side-18,math.max(0,statsH-(tabsY+tabH+6)-8))
+   list.BackgroundTransparency=1;list.BorderSizePixel=0;list.ScrollBarThickness=3;list.ScrollBarImageColor3=green;list.VerticalScrollBarInset=Enum.ScrollBarInset.None;list.Parent=stats
+   list.CanvasSize=UDim2.fromOffset(0,setRows(list,0,side-24,true))
+  end
   -- Rows fill the space between the tabs and the pager (never past the panel); each row at least
   -- 18 layout px and 13 px on screen.
-  local rowsTop=52+tabH+6;local rowMin=math.max(18,13/scale);local pagerH,pagerW=th(25),th(32)
+  local rowsTop=tabsY+tabH+6;local rowMin=math.max(18,13/scale);local pagerH,pagerW=th(25),th(32)
   local available=statsH-rowsTop-8
   local perPage=math.max(1,math.floor(available/rowMin))
   local paged=#definitions>perPage
   if paged then available-=pagerH+5;perPage=math.max(1,math.floor(available/rowMin)) end
   if available<rowMin then perPage=math.max(1,#definitions);paged=false end -- too short for any row
-  local pages=math.ceil(#definitions/perPage);local page=math.clamp(self.statPage or 1,1,pages)
+  local pages=math.max(1,math.ceil(#definitions/perPage));local page=math.clamp(self.statPage or 1,1,pages)
   local shown=available<rowMin and 0 or math.min(perPage,#definitions-(page-1)*perPage);local rowH=shown>0 and available/shown or 0
   local scroll=Instance.new('Frame');scroll.Name='StatRows';scroll.Position=UDim2.fromOffset(9,rowsTop);scroll.Size=UDim2.fromOffset(side-18,math.max(0,available));scroll.BackgroundTransparency=1;scroll.ClipsDescendants=true;scroll.Parent=stats
   local values=Stats.read(state)
@@ -571,13 +713,23 @@ function M.new(player,h,refresh)
   -- Phones (tap>0) keep four columns only when each card is still 240 wide; else two rows of two.
   local top=(narrow and 78+rerollH or math.max(76,rerollH+30))+bagRow+oddsExtra;local cols=leftW>=(tap>0 and 1000 or 660) and 4 or leftW>=420 and 2 or 1;local cardW=(leftW-(cols-1)*12)/cols
   local buyH,lockH=th(43),th(34) -- a taller Buy makes the card taller by the same amount
-  local classH,fitH,traitsH=26,0,22
+  -- Weapon offers (2026-10-09): name, the attack line, the specialty bar, one row per type (the set
+  -- step this buy reaches), then stat lines (with the specialty and those sets) and traits. Every
+  -- card is as tall as the tallest one needs.
+  local now=Stats.typeCounts(equippedIds(data))
+  local function after(base) local c=table.clone(now);for _,t in base.types or {} do c[t]=(c[t] or 0)+1 end;return c end
+  local ts=math.max(15,minText)
+  local attackH,typesH,traitsH=38,0,22
   for _,offer in data.offers do
    local entry=Catalog.ById[offer.id];local base=entry and entry.weaponId and Weapons.ById[entry.weaponId]
-   if base then local _,_,h=classTagLayout(base,cardW-28,26);classH=math.max(classH,h);local _,fh=fitExplanation(base,cardW-28);fitH=math.max(fitH,fh);traitsH=math.max(traitsH,readableHeight(traitLine(base,entry.tier),16,cardW-28,22)) end
+   if base then
+    attackH=math.max(attackH,readableHeight(M.attackLine(base),ts,cardW-98,38)-8)
+    typesH=math.max(typesH,typeRowsHeight(base,cardW-28,now,true))
+    traitsH=math.max(traitsH,readableHeight(traitLine(base,entry.tier,after(base)),16,cardW-28,22))
+   end
   end
-  local statsY=82+classH+8
-  local cardH=math.max(310+buyH-43+(statsY-98)+fitH+4+traitsH-22,math.min(L.CardHeight,ht-top-inventoryH-lockH-38))
+  local specY=44+attackH+4;local typesY=specY+26+8;local statsY=typesY+typesH+2
+  local cardH=math.max(statsY+4*24+4+traitsH+12+buyH+16,math.min(L.CardHeight,ht-top-inventoryH-lockH-38))
   if not inventoryOnly then
    for i,o in data.offers do
     local entry=Catalog.ById[o.id];local x=((i-1)%cols)*(cardW+12);local y=top+math.floor((i-1)/cols)*(cardH+lockH+24)
@@ -585,15 +737,15 @@ function M.new(player,h,refresh)
      local card=surface(left,'Offer'..i,x,y,cardW,cardH,entry.tier)
      local well=surface(card,'IconWell',12,12,64,64,nil,'inset')
      art(well,entry,4,4,56,56)
-     heading(card,'Name',entry.name..(entry.weaponId and entry.tier>1 and (' '..({'I','II','III','IV'})[entry.tier]) or ''),86,12,cardW-98,43,22,tiers[entry.tier])
+     heading(card,'Name',entry.name..(entry.weaponId and entry.tier>1 and (' '..({'I','II','III','IV'})[entry.tier]) or ''),86,12,cardW-98,entry.weaponId and 30 or 43,22,tiers[entry.tier])
      if not entry.weaponId then text(card,'Kind',entry.kind..(#entry.tags>0 and ' · '..entry.tags[1] or ''),86,56,cardW-98,26,17,cream) end
      if entry.weaponId then
-      -- Stat lines, then the fit bar under them, then the traits (the bar follows the lines' height).
-      local barY=statsY+weaponStats(card,Weapons.ById[entry.weaponId],entry.tier,14,statsY,cardW-28)+3
-      classFitRow(card,Weapons.ById[entry.weaponId],14,82,cardW-28,26,14,barY,cardW-28,24)
-      local explanation,eh=fitExplanation(Weapons.ById[entry.weaponId],cardW-28)
-      text(card,'ClassDamageEffect',explanation,14,barY+28,cardW-28,eh,16,cream)
-      text(card,'Traits',traitLine(Weapons.ById[entry.weaponId],entry.tier),14,barY+32+eh,cardW-28,traitsH,16,tiers[entry.tier])
+      local base=Weapons.ById[entry.weaponId]
+      local al=text(card,'Attack',M.attackLine(base),86,44,cardW-98,attackH,ts,cream);al.TextYAlignment=Enum.TextYAlignment.Top
+      specBar(card,base,14,specY,cardW-28,26)
+      typeRows(card,base,14,typesY,cardW-28,now,true)
+      local used=weaponStats(card,base,entry.tier,14,statsY,cardW-28,after(base))
+      text(card,'Traits',traitLine(base,entry.tier,after(base)),14,statsY+used+4,cardW-28,traitsH,16,tiers[entry.tier])
      else
       local used=effects(card,entry,14,98,cardW-28)
       -- Which of your weapons it works with, for items only some weapons use (worksLine).
@@ -747,14 +899,14 @@ function M.new(player,h,refresh)
     -- buttons start at 266. The panel grows (and scrolls on short screens) when content needs it.
     local y=104
     if base then
-     y+=weaponStats(detail,base,copy.tier,16,y,dw-32)
-     local traits=traitLine(base,copy.tier)
+     local sets=Stats.typeCounts(equippedIds(data))
+     y+=weaponStats(detail,base,copy.tier,16,y,dw-32,sets)
+     local traits=traitLine(base,copy.tier,sets)
      if traits~='' then local th=readableHeight(traits,15,dw-32,22);text(detail,'Traits',traits,16,y+2,dw-32,th,15,tiers[tier]);y+=th+4 end
      y+=8
-     local _,_,classHeight=classTagLayout(base,dw-32,24)
-     classFitRow(detail,base,16,y,dw-32,24,16,y+classHeight+6,dw-32,24);y+=classHeight+6+24+14
-     local explanation,eh=fitExplanation(base,dw-32)
-     text(detail,'ClassDamageEffect',explanation,16,y,dw-32,eh,16,cream);y+=eh+8
+     -- Specialty bar and this weapon's sets now (2026-10-09; they replaced the class row).
+     specBar(detail,base,16,y,dw-32,26);y+=34
+     y+=typeRows(detail,base,16,y,dw-32,sets,false)+6
      local damage=math.max(0,math.floor(tonumber(copy.damage) or 0));local kills=math.max(0,math.floor(tonumber(copy.kills) or 0))
      text(detail,'RunPerformance',string.format('THIS RUN · %s damage · %s kills',damage,kills),16,y,dw-32,26,16,cream);y+=32
     else

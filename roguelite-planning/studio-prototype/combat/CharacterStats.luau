@@ -110,14 +110,6 @@ end
 function S.specialtyText(class) return S.Classes[class] and '+'..S.Specialty..'% damage with '..class..' weapons' or '' end
 -- The weapon card's line, only when it applies: 'Chef specialty: +10% damage' (else nil).
 function S.specialtyCardText(base,class) return S.specialty(base,class)>0 and class..' specialty: +'..S.Specialty..'% damage' or nil end
--- The old class-fit call shape, for screens not yet moved to S.specialty: ('home', 10, class) for a
--- weapon of your class, ('similar', 0) otherwise, (nil, 0) for a Godly or unknown class. There is no
--- fit matrix any more. Remove with its last caller.
-function S.classFit(base,class)
- if type(base)~='table' or base.godly or not S.Classes[class] then return nil,0 end
- if S.specialty(base,class)>0 then return 'home',S.Specialty,class end
- return 'similar',0
-end
 -- Whether `class` is the weapon's starter class (WeaponCatalog.inClass). Godly: never.
 function S.inClass(base,class) return Weapons.inClass(base,class) end
 -- Weapon type sets (2026-10-09, Brotato-style; WeaponCatalog.TypesById). A set counts equipped COPIES

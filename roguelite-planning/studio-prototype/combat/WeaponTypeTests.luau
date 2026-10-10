@@ -132,7 +132,7 @@ return function(Weapons,Stats,Rules)
   end
   check(Stats.specialtyText(class)=='+10% damage with '..class..' weapons','class screen line '..class)
  end
- check(Stats.specialty({home='Chef'},'Chef')==10 and select(2,Stats.classFit({home='Chef'},'Chef'))==10 and select(2,Stats.classFit(Weapons.ById['36'],'Chef'))==0,'bare {home=} and the old classFit shape')
+ check(Stats.specialty({home='Chef'},'Chef')==10 and Stats.specialty(Weapons.ById['36'],'Chef')==0 and Stats.classFit==nil,'bare {home=} works; the old classFit shape is gone')
 
  -- Per-weapon numbers from the sets (S.weapon and S.weaponStats).
  local glock=Weapons.ById['00']

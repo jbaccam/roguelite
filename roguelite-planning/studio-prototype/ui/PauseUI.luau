@@ -20,6 +20,8 @@ local WeaponIcons=require(RS:WaitForChild('WeaponInventoryUI')).Icons
 local C=T.Color
 local INK=FX.INK
 local M={}
+-- Weapon types' literal icons (2026-10-09): the same table as ItemCardUI.TypeIcon / ShopUI.TypeIcon.
+local TYPE_ICON={Blade='03',Blunt='06',Gun='00',Thrown='13',Explosive='11',Elemental='35',Tool='26',Culinary='01',Trick='18'}
 M.PAUSE_ICON='rbxassetid://109142479841413' -- ui/assets/hud/pause.png
 -- Solo RESTART: plan J's RunAction 'Restart' (ab93d9a) ends the run as Left (rewards so far kept)
 -- and starts the same map and difficulty again. Set false to hide the button.
@@ -199,6 +201,25 @@ function M.new(player,opts)
   local L1=glass(canvas,'Stats',lx,top,side,panelH)
   local ls=T.scroll(L1,'List',0,0,side,panelH);ls.ScrollBarThickness=4
   local sy=section(ls,14,side,'STATS')
+  -- SETS first (2026-10-09, plans/2026-10-09-chef-roster-weapon-types-design.md): each equipped weapon
+  -- type, its copies and the bonus it gives now. Numbers come from CharacterStats.typeLines.
+  local setIds={}
+  for i=1,6 do local slot=state:FindFirstChild('Slot'..i);local id=slot and slot:GetAttribute('WeaponId') or '';if id~='' then table.insert(setIds,id) end end
+  local setLines=Stats.typeLines(setIds)
+  if #setLines>0 then
+   left(T.label(ls,'Group_SETS','SETS',24,sy,side-48,22,15,C.lime));sy+=26
+   for _,r in setLines do
+    local on=r.count>=2
+    local row=T.make('Frame',ls,{Name='Set_'..r.type,Position=UDim2.fromOffset(24,sy),Size=UDim2.fromOffset(side-48,60),BackgroundColor3=INK,BackgroundTransparency=on and .35 or .6,BorderSizePixel=0})
+    T.make('UICorner',row,{CornerRadius=UDim.new(0,10)})
+    T.icon(row,'Icon',8,10,40,WeaponIcons[TYPE_ICON[r.type]])
+    left(T.label(row,'Type',string.upper(r.type)..'  ·  '..r.count,56,4,side-48-64,26,20,on and C.white or C.muted))
+    local now=on and (r.text:gsub('^'..r.type..' %d+: ','')) or 'No bonus yet. Sets start at 2.'
+    left(T.text(row,'Bonus',now,56,30,side-48-64,26,15,on and C.lime or C.cream))
+    sy+=66
+   end
+   sy+=8
+  end
   local values=Stats.read(state)
   for _,g in M.Groups do
    left(T.label(ls,'Group_'..g[1],g[1],24,sy,side-48,22,15,C.lime));sy+=26

@@ -1,13 +1,14 @@
--- Client Studio layout check for the run setup's STARTING WEAPON tiles (2026-10-04: multi-class
--- weapons, then the user's "I don't like scrolling, it should be just smaller boxes"). Run on the
--- lobby client in Play, like ShopLayoutTests. It builds its own RunSetupUI with a fake Thrower
+-- Client Studio layout check for the run setup's class step (2026-10-09 roster: one starter class
+-- per weapon, Chef, specialty and ability rows; tiles from RunSetupRules.starters). Run on the
+-- lobby client in Play, like ShopLayoutTests. It builds its own RunSetupUI with a fake Chef
 -- profile, opens the class step (Loadout mode) and resizes its root through desktop, tablet and
 -- phone sizes (phone sizes as safe areas: an 844x390 iPhone 14 is 750x369). Nothing is sent to the
--- server: CONFIRM is never pressed. Two profiles: 11 Thrower weapons (8 owned, 3 not) plus the 6
--- Godlies owned (17 tiles), then the same without Godlies (11 tiles, all entries sharing one size).
+-- server: CONFIRM is never pressed. Two profiles: 6 Chef weapons (4 owned, 2 not) plus the 6
+-- Godlies owned (12 tiles), then the same without Godlies (6 tiles, all entries sharing one size).
 -- Checks: no scrolling anywhere around the tiles, every tile inside the tile area and the screen,
--- no tile overlaps another or the class cards, details, heading or CLOSE / CONFIRM, every icon at
--- least 48 screen px, owned -> Godlies -> NOT OWNED order, the pick lime and named, text fits.
+-- no tile overlaps another or the class cards, details, heading, Godly note or CLOSE / CONFIRM,
+-- every icon at least 48 screen px, starters -> NOT OWNED order, the pick lime and named, class
+-- cards in class order with no damage badges, the specialty and ability rows, text fits.
 local RS=game.ReplicatedStorage
 local player=game.Players.LocalPlayer
 assert(workspace:FindFirstChild('RogueliteLobby') and workspace.RogueliteLobby:FindFirstChild('RunSetup'),'run this in the lobby')
@@ -15,22 +16,22 @@ local RunSetup=require(RS:WaitForChild('RunSetupUI'))
 local Rules=require(RS:WaitForChild('RunSetupRules'))
 local Stats=require(RS.RogueliteCombat.CharacterStats)
 local Weapons=require(RS.RogueliteCombat.WeaponCatalog)
-local CLASS='Thrower'
-local UNOWNED={['04']=true,['15']=true,['18']=true} -- Kusarigama, Egg, Deck of Cards: catalog order puts one first
-local PICK='31' -- Mjolnir (Mage, Thrower), the last owned class weapon
+local CLASS='Chef'
+local UNOWNED={['01']=true,['14']=true} -- Frying Pan (the signature, so the pick falls back) and Molotov
+local PICK='15' -- Egg
 local GODLIES={'36','37','38','39','40','41'}
 local classList=Rules.classWeapons(CLASS)
 local function makeProfile(withGodlies)
  local weapons={}
  for _,w in classList do if not UNOWNED[w.id] then weapons[w.id]={id=w.id,tier=w.id=='13' and 3 or 1,have=1} end end
  if withGodlies then for _,id in GODLIES do weapons[id]={id=id,tier=1,have=0} end end
- return {classes={Brawler=true,Gunner=true,Mage=true,Thrower=true},weapons=weapons,wins={},best={},gems=0}
+ return {classes={Brawler=true,Gunner=true,Mage=true,Chef=true},weapons=weapons,wins={},best={},gems=0}
 end
--- The order the tiles must read in: owned class weapons, owned Godlies, NOT OWNED (catalog order each).
+-- The order the tiles must read in: RunSetupRules.starters (owned class weapons, owned Godlies),
+-- then the class's NOT OWNED weapons (catalog order each).
 local function expected(withGodlies)
  local out={}
- for _,w in classList do if not UNOWNED[w.id] then table.insert(out,w.id) end end
- if withGodlies then for _,id in GODLIES do table.insert(out,id) end end
+ for _,w in Rules.starters(CLASS,makeProfile(withGodlies).weapons) do table.insert(out,w.id) end
  for _,w in classList do if UNOWNED[w.id] then table.insert(out,w.id) end end
  return out
 end
@@ -52,7 +53,9 @@ local function textFits(parent,at)
 end
 local SIZES={Vector2.new(2560,1440),Vector2.new(1920,1080),Vector2.new(1366,768),Vector2.new(1280,720),Vector2.new(1024,768),Vector2.new(1180,820),Vector2.new(844,390),Vector2.new(750,369),Vector2.new(667,375),Vector2.new(800,360)}
 local ok,err=xpcall(function()
- assert(#classList==11,'Thrower lists 11 weapons: '..#classList)
+ assert(#classList==6,'Chef lists 6 weapons: '..#classList)
+ local pizza=RS.RogueliteCombat:FindFirstChild('ChefPizza')
+ if pizza then RunSetup.Pizza=require(pizza) end
  ui.Open('Loadout')
  local root=ui.Screen:WaitForChild('Root')
  for _,withGodlies in {true,false} do
@@ -60,7 +63,7 @@ local ok,err=xpcall(function()
   local want=expected(withGodlies)
   for _,size in SIZES do
    root.Size=UDim2.fromOffset(size.X,size.Y);task.wait(.2)
-   local at=' at '..tostring(size)..(withGodlies and ' (17 tiles)' or ' (11 tiles)')
+   local at=' at '..tostring(size)..(withGodlies and ' (12 tiles)' or ' (6 tiles)')
    local grid=root:FindFirstChild('Weapons',true);assert(grid,'no weapon tiles'..at)
    -- Never scrolls: the tile area is a plain frame, with no scroll inside it or around it.
    assert(not grid:IsA('ScrollingFrame') and grid:FindFirstAncestorWhichIsA('ScrollingFrame')==nil,'tiles must not scroll'..at)
@@ -88,19 +91,25 @@ local ok,err=xpcall(function()
    end
    -- Clear of everything else on the class step.
    local others={}
-   for _,name in {'ClassInfo','Back','Primary','WeaponTitle','WeaponName','Step'} do local o=root:FindFirstChild(name,true);if o then table.insert(others,o) end end
+   for _,name in {'ClassInfo','Back','Primary','WeaponTitle','WeaponName','Step','GodlyNote'} do local o=root:FindFirstChild(name,true);if o then table.insert(others,o) end end
    for _,d in root:GetDescendants() do if d:IsA('GuiButton') and d.Name:match('^Class_') then table.insert(others,d) end end
    for _,o in others do assert(disjoint(grid,o),'tile area overlaps '..o.Name..at) end
    local info=root:FindFirstChild('ClassInfo',true)
-   local dash=info:FindFirstChild('DashInfo',true)
-   assert(dash and dash:GetAttribute('Available')==Stats.dashes(CLASS,Weapons.ById[PICK]),'selected starter dash status'..at)
-   assert(dash:GetAttribute('StarterId')==PICK and dash.TextFits,'dash text names actual selected starter and fits'..at)
-   for _,other in Stats.ClassOrder do
-    local row=info:FindFirstChild('Fit_'..other,true)
-    local _,pct=Stats.classFit({home=other},CLASS)
-    assert(row and row.Effect.Text==RunSetup.classDamageText(pct,other),'class effect names damage and weapon class'..at)
-    assert(row.Effect.TextFits,'class effect text fits'..at)
+   -- Specialty and ability rows (they replaced the class fit chips and the 2 / 4 home rows).
+   assert(info:FindFirstChild('Fit_Brawler',true)==nil and info:FindFirstChild('HomeBonus',true)==nil,'no class fit or home rows'..at)
+   local spec=info:FindFirstChild('SpecialtyText',true)
+   assert(spec and spec.ContentText:find(Stats.specialtyText(CLASS),1,true) and spec.TextFits,'specialty line from CharacterStats fits'..at)
+   local ability=info:FindFirstChild('AbilityText',true)
+   assert(ability and ability:GetAttribute('Dash')==Stats.dashes(CLASS) and ability.TextFits,'ability row fits'..at)
+   assert(ability.ContentText==RunSetup.ability(CLASS).text,'Chef ability is pizza drops'..at)
+   -- Class cards: class order, no damage badges.
+   local cx=-1
+   for _,c in Stats.ClassOrder do
+    local card=root:FindFirstChild('Class_'..c,true);assert(card,'class card '..c..at)
+    assert(card.AbsolutePosition.X>cx,'class cards follow class order '..c..at);cx=card.AbsolutePosition.X
+    assert(card:FindFirstChild('Fit')==nil,'no damage badge on '..c..at)
    end
+   local note=root:FindFirstChild('GodlyNote',true);assert(note and note.TextFits and inside(note,root),'Godly note fits'..at)
    for _,name in {'WeaponTitle','WeaponName'} do
     local l=root:FindFirstChild(name,true);assert(l and disjoint(l,info),name..' clear of the details'..at)
     for _,o in others do if o:IsA('GuiButton') then assert(disjoint(l,o),name..' overlaps '..o.Name..at) end end
@@ -135,6 +144,14 @@ local ok,err=xpcall(function()
    assert(neighbour,'owned starter shares its first row with locked starters'..at)
    table.insert(results,tostring(size)..' sparse '..class)
   end
+ end
+ -- Chef's pizza line reads ChefPizza's numbers: '8% chance (about 1 in 12) on a kill with a Chef
+ -- weapon; heals 10% of max health'.
+ if RunSetup.Pizza then
+  local P=RunSetup.Pizza
+  local function num(x) return (string.format('%.1f',x):gsub('%.0$','')) end
+  local want=string.format('%s%% chance (about 1 in %d) on a kill with a Chef weapon; heals %s%% of max health',num(P.CHANCE*100),math.floor(1/P.CHANCE+1e-6),num(P.HEAL_FRACTION*100))
+  assert(RunSetup.ability('Chef').text==want,'pizza line uses ChefPizza numbers: '..RunSetup.ability('Chef').text)
  end
  -- The explanation follows the gameplay eligibility helper for every class/weapon combination.
  for _,class in Stats.ClassOrder do

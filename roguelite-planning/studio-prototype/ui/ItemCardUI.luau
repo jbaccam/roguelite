@@ -113,6 +113,67 @@ local function tick(parent,x,y,size,z)
  T.make('Frame',g,{BackgroundColor3=C.ink,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.58,.46),Size=UDim2.fromOffset(w,size*.56),Rotation=40,ZIndex=z+1})
  return g
 end
+
+-- Weapon types and starter class (2026-10-09, plans/2026-10-09-chef-roster-weapon-types-design.md),
+-- shared with the Armory. Each type's chip uses a literal weapon render: Blade = Katana, Blunt =
+-- Baseball Bat, Gun = Glock, Thrown = Kunai, Explosive = Rocket Launcher, Elemental = Crystal Ball,
+-- Tool = Shovel, Culinary = Frying Pan, Trick = Deck of Cards. ShopUI keeps the same table (it is
+-- sandboxed and can't require this lobby module).
+K.TypeIcon={Blade='03',Blunt='06',Gun='00',Thrown='13',Explosive='11',Elemental='35',Tool='26',Culinary='01',Trick='18'}
+-- The attack and the stats its damage grows with, by CharacterStats.weapon's own rules (melee or
+-- ranged damage by kind, then the elemental, utility and blast flags). Examples: Katana 'Melee',
+-- 'Melee Damage'; Molotov 'Explosive', 'Ranged Damage, Elemental Damage + Explosion Damage'.
+function K.attack(w)
+ local word=w.kind=='Melee' and 'Melee' or w.kind=='Blast' and 'Explosive' or table.find(w.types or {},'Thrown') and 'Thrown' or 'Ranged'
+ local parts={w.kind=='Melee' and 'Melee Damage' or 'Ranged Damage'}
+ if w.elemental then table.insert(parts,'Elemental Damage') end
+ if w.utility then table.insert(parts,'Utility Power') end
+ if w.kind=='Blast' then table.insert(parts,'Explosion Damage') end
+ return word,#parts==1 and parts[1] or table.concat(parts,', ',1,#parts-1)..' + '..parts[#parts]
+end
+function K.attackLine(w) local a,l=K.attack(w);return a..' · scales with '..l end
+-- Your class's own drawback on this weapon (there is no class-vs-class penalty any more): the first
+-- negative of its attack family's damage (Melee damage / Ranged damage) or Damage in the class's
+-- buffs, as pct and words, or nil. Brawler + Glock: -15, '-15% ranged damage'.
+function K.drawback(class,w)
+ local c=Stats.Classes[class];if not c or type(w)~='table' then return nil end
+ for _,id in {w.kind=='Melee' and 'MeleeDamage' or 'RangedDamage','Damage'} do
+  local v=c.buffs[id];if v and v<0 then return v,v..'% '..string.lower(Stats.ById[id].label) end
+ end
+ return nil
+end
+function K.plural(class) return class=='Handyman' and 'Handymen' or class..'s' end
+-- What the specialty means for this weapon while you play `class`, as rich text (the Armory's
+-- SPECIALTY row and this card). Katana as a Brawler: '+10% damage with this weapon while you play
+-- Brawler.'; Glock as a Brawler: 'Gunners get +10% with it. Your Brawler drawback: -15% ranged damage.'
+function K.specialtyLine(w,class)
+ local function c(color,s) return '<font color="'..T.hex(color)..'">'..s..'</font>' end
+ if w.godly then return c(C.muted,'None. Godly weapons have no class.') end
+ if Stats.specialty(w,class)>0 then return c(C.lime,'+'..Stats.Specialty..'% damage with this weapon')..' while you play '..class..'.' end
+ local _,text=K.drawback(class,w)
+ return K.plural(w.class)..' get +'..Stats.Specialty..'% with it. '..(text and c(C.negative,'Your '..class..' drawback: '..text..'.') or 'As a '..class..': '..c(C.cream,'no penalty')..'.')
+end
+-- A row of type chips (literal icon + TYPE), wrapping onto more rows when narrow. o: h (32), size
+-- (16), gap (8). Returns the frame and its height.
+function K.typeChips(parent,name,x,y,w,types,o)
+ o=o or {};local h=o.h or 32;local size=o.size or 16;local gap=o.gap or 8
+ local row=T.frame(parent,name,x,y,w,h)
+ local cx,cy=0,0
+ for _,t in types do
+  local tag,tw=T.tag(row,'Type_'..t,string.upper(t),cx,cy,{h=h,size=size,icon=WeaponIcons[K.TypeIcon[t]],maxW=w})
+  if cx>0 and cx+tw>w then cx=0;cy+=h+6;tag.Position=UDim2.fromOffset(0,cy) end
+  cx+=tw+gap
+ end
+ row.Size=UDim2.fromOffset(w,cy+h)
+ return row,cy+h
+end
+-- The starter class as a chip with its signature weapon's icon ('GODLY · ANY CLASS' for a Godly).
+function K.classChip(parent,name,w,x,y,o)
+ o=o or {}
+ if w.godly then return T.tag(parent,name,'GODLY · ANY CLASS',x,y,{h=o.h,size=o.size,textColor=C.gold,maxW=o.maxW}) end
+ return T.tag(parent,name,string.upper(w.class),x,y,{h=o.h,size=o.size,icon=WeaponIcons[Stats.Signature[w.class]],maxW=o.maxW})
+end
+
 local function wash(parent,color,strength)
  local f=T.make('Frame',parent,{Name='Wash',BackgroundColor3=color,BackgroundTransparency=1-strength,BorderSizePixel=0,Position=UDim2.fromOffset(8,8),Size=UDim2.new(1,-16,1,-16),ZIndex=0})
  corner(f,10)
@@ -386,10 +447,10 @@ function K.open(canvas,L,args)
    or it.kind=='armor' and ('armor · '..it.slot) or ('pet · '..it.pet.suit)
   local ky=wy+wh+6
   if it.kind=='weapon' and not it.w.godly then
-   -- A class weapon: two tags, its classes (with the first class's starter icon; 2026-10-04 every
-   -- class: 'THROWER · JUGGLER') and its type. The type tag drops when both don't fit the column.
+   -- A class weapon: two tags, its one starter class (with that class's starter icon, 2026-10-09)
+   -- and its attack. The attack tag drops when both don't fit the column.
    local th=subH-2
-   local _,cw1=T.tag(p,'ClassTag',string.upper(Weapons.classNames(it.w,' · ')),pad,ky+1,{h=th,size=th-12,maxW=hw,icon=WeaponIcons[Stats.Signature[it.w.home]]})
+   local _,cw1=K.classChip(p,'ClassTag',it.w,pad,ky+1,{h=th,size=th-12,maxW=hw})
    local typeText='ATTACK: '..string.upper(it.w.kind=='Blast' and 'Explosive' or it.w.kind)
    local tt,tw2=T.tag(p,'TypeTag',typeText,pad+cw1+8,ky+1,{h=th,size=th-12,color=Color3.fromRGB(27,33,37),textColor=C.muted})
    if cw1+8+tw2>hw then tt:Destroy() end
@@ -462,7 +523,7 @@ function K.open(canvas,L,args)
   local function para(name,text,size,color)
    if not text or text=='' then return end
    -- Measured a little narrower than drawn, so rounding on small screens never adds a line.
-   local h=textHeight(text,size,rw-16)+6
+   local h=textHeight(text:gsub('<[^>]->',''),size,rw-16)+6
    local l=T.text(body,name,text,0,y,rw,h,size,color);l.TextYAlignment=Enum.TextYAlignment.Top
    y+=h+4
   end
@@ -478,24 +539,20 @@ function K.open(canvas,L,args)
     local m=Weapons.Legendary[it.id]
     head('TIER IV MOVE  ·  '..string.upper((Weapons.LegendaryNames and Weapons.LegendaryNames[m.move]) or m.move))
     para('Text',Weapons.legendaryText(it.id),24,WHITE)
-    para('More',Weapons.describe(w)..(compact and '' or ' Starts runs as a '..Weapons.classNames(w):gsub(' and ',' or ')..'; any class can buy it in the run shop.'),20,C.muted)
+    para('More',Weapons.describe(w)..(compact and '' or ' Any class can buy it in the run shop.'),20,C.muted)
    else
     head('ABOUT')
     para('Text',Weapons.describe(w),24,WHITE)
    end
-   -- Damage by class: this weapon's column of CharacterStats.ClassFit, the loadout's class tagged YOU.
-   if not w.godly then
-    local lp=Players.LocalPlayer;local mine=lp and lp:GetAttribute('LoadoutClass') or 'Brawler'
-    y+=4
-    y+=T.section(body,'FitTitle','DAMAGE BY CLASS',0,y,rw,compact and 24 or 20,'you play '..mine)+(compact and 18 or 14)
-    local entries={}
-    for _,c in Stats.ClassOrder do
-     local _,pct=Stats.classFit(w,c)
-     table.insert(entries,{name=c,image=WeaponIcons[Stats.Signature[c]],pct=pct,own=Weapons.inClass(w,c),you=c==mine}) -- own: every listed class (2026-10-04)
-    end
-    local _,fh=T.fitTiles(body,'WeaponFit',0,y,rw,entries,{icon=compact and 44 or 34,nameSize=compact and 19 or 14,pctSize=compact and 26 or 20,youSize=compact and 17 or 13,gap=compact and 8 or 8})
-    y+=fh+6
-   end
+   -- Types and specialty (2026-10-09; they replaced DAMAGE BY CLASS, the old class fit table):
+   -- the type chips (equipped copies count toward sets), then what the +10% specialty means for
+   -- the loadout's class. Godlies have types too.
+   local lp=Players.LocalPlayer;local mine=lp and lp:GetAttribute('LoadoutClass') or 'Brawler'
+   y+=4
+   y+=T.section(body,'TypesTitle','TYPES',0,y,rw,compact and 24 or 20,'copies count toward sets')+(compact and 10 or 8)
+   local _,chipsH=K.typeChips(body,'Types',0,y,rw,w.types or {},{h=compact and 40 or 34,size=compact and 20 or 17})
+   y+=chipsH+10
+   para('Specialty',K.specialtyLine(w,mine),compact and 21 or 20,WHITE)
    rows=weaponRows(it)
   elseif it.kind=='armor' then
    local set=it.set;local bonus=Stats.ArmorSets and Stats.ArmorSets[set.id]
