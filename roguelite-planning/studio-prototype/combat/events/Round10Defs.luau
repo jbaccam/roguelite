@@ -85,12 +85,14 @@ D.Events={
 -- CrabRave: the user's pick, Syn Cole - Feel Good (NCS). audio/music/round10/feelgood_segment.ogg is
 -- the source from 40.87 s to 77.60 s (bar 21 to bar 40 at 124.15 BPM, measured from the supplied MP3):
 -- the build-up, then the 16-bar drop that loops. accent: the drop's first beat in that file, which
--- lands on the DJ's claw snap 2.0 s into the intro (accentAtIntro). Never a gameplay dependency: a
+-- lands accentAtIntro s into the intro. 2026-10-10 user: start further in so a fast kill still gets
+-- the rave: the drop now starts as the intro opens (.067 = 2.0 s minus one bar, 4 x 0.4833 s), so the
+-- DJ's claw snap at 2.0 s still lands on a downbeat (bar 2). Never a gameplay dependency: a
 -- missing, muted or late track changes no timing.
 D.Music={
 -- soundId: the user's upload (2026-10-10). fullOffset: where the segment starts in the full song (40.87 s);
 -- the client adds it when the loaded track is longer than a minute, so either upload lines up.
- CrabRave={soundId=108638974460070,fullOffset=40.87,accent=5.80,accentAtIntro=2.0,loopStart=5.80,loopEnd=36.73,volume=.5,
+ CrabRave={soundId=108638974460070,fullOffset=40.87,accent=5.80,accentAtIntro=.067,loopStart=5.80,loopEnd=36.73,volume=.5,
   credit='Syn Cole - Feel Good [NCS Release]'},
 }
 -- The event for a map id, or nil.
