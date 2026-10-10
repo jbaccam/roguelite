@@ -27,6 +27,24 @@ return function(sources, Visuals, Catalog, Types)
 	check(Visuals.flown(19.5 + 15, 35.5) == 1, "Frozen 15 s: counts on from where it hung")
 	local f = Visuals.shotFrame(Vector3.zero, Vector3.new(0, 0, -35), 0.5)
 	check(near(f.Position, Vector3.new(0, 0, -17.5)) and near(f.LookVector, Vector3.new(0, 0, -1)), "Shot frame")
+	-- Aim line look (2026-10-10): faint at the draw, brighter and wider toward release, flash at the end.
+	local o0, w0 = Visuals.aimLook(10, 10.55, 10)
+	local o1, w1 = Visuals.aimLook(10, 10.55, 10.1)
+	local o2, w2 = Visuals.aimLook(10, 10.55, 10.5)
+	check(math.abs(o0 - 0.3) < 1e-9 and math.abs(w0 - 0.15) < 1e-9, "Aim line starts faint and thin")
+	check(math.abs(o1 - 0.41) < 0.01 and o2 == 0.95 and w2 > w1 and w2 <= 0.25, "Aim line brightens, widens, flashes")
+	check(math.abs(Visuals.aimFade(20, 71) - 20 / 71) < 1e-9 and Visuals.aimFade(90, 71) == 0.98, "Solid to the aimed point")
+	local picks = {}
+	for i = 1, 30 do
+		picks[i] = { origin = Vector3.new(i, 0, 0) }
+	end
+	local keep = Visuals.nearest(picks, Vector3.zero, Visuals.AIM_CAP)
+	local kept = 0
+	for i in keep do
+		kept += 1
+		check(i <= 20, "Only the nearest lines draw")
+	end
+	check(kept == 20, "Capped at 20 lines")
 
 	-- World stubs shared by both modules.
 	local world = { clock = 100, attrs = { ZombiesEnabled = true }, events = {}, wallZ = nil }
@@ -80,6 +98,13 @@ return function(sources, Visuals, Catalog, Types)
 		contact = function(p, amount, _, npc)
 			table.insert(contacts, { player = p, amount = amount, npc = npc, at = world.clock })
 			return amount
+		end,
+		-- The player's own report (HIT_FAIRNESS.md); the stub player has no lag.
+		seen = function(_, root)
+			return root.Position
+		end,
+		seenEnemy = function(_, root)
+			return root.Position
 		end,
 	}
 	local workspaceStub = {
@@ -316,8 +341,14 @@ return function(sources, Visuals, Catalog, Types)
 			end
 		end
 		check(launched and launched[3] == "Arrow", "Arrow launched")
-		check(math.abs(launched[5].Magnitude - 35) < 1e-3 and launched[5].Unit.Z < -0.99, "Arrow flies at its speed toward the player")
+		-- 2026-10-10 aim lines: the draw sent an Aim first, with the Launch's exact id, origin and path.
+		local aim = eventsSince(first, "Aim")[1]
 		local start = npc.attrs.EnemyAttackStart
+		check(aim and aim[2] == launched[2] and aim[3] == "Arrow", "Aim line sent for the shot")
+		check(near(aim[4], launched[4]) and near(aim[5], launched[5]), "Aim line is the shot's exact path")
+		check(math.abs(aim[7] - aim[6] - bow.attackImpact) < 1e-9 and aim[10] == npc, "Aim line runs from the draw to the release")
+		check(math.abs(aim[9] - 20 + 0.4 + bow.radius) < 0.1, "Aim line solid to the standing player")
+		check(math.abs(launched[5].Magnitude - 35) < 1e-3 and launched[5].Unit.Z < -0.99, "Arrow flies at its speed toward the player")
 		check(released - start >= bow.attackImpact and released - start < bow.attackImpact + 1 / 29, "Released at impact time")
 		-- Pause: no frame moves the shot, the client holds it, then both carry on.
 		world.attrs.RunPaused = true
@@ -400,12 +431,78 @@ return function(sources, Visuals, Catalog, Types)
 	end
 	check(compared > 1000, "Compared client and server shots on many frames")
 
+	-- 3b. 2026-10-10 aim lock ("the lines would help players avoid them"): the shot flies the line
+	-- locked at the draw. A player strafing straight at 10 studs/s is met (led through the wind-up);
+	-- one who reverses mid-draw sees the line stay put, steps out of it and is missed.
+	check(near(A.turnedAbout(Vector3.new(0, 1, -1), Vector3.zero, Vector3.new(0, 0, -1), Vector3.xAxis), Vector3.new(1, 1, 0)), "Hand turned with the body")
+	check(near(A.intercept(Vector3.zero, Vector3.new(0, 0, -20), Vector3.zero, 35, 0.55), Vector3.new(0, 0, -20)), "Standing target: aimed at them")
+	local lead = A.intercept(Vector3.zero, Vector3.new(0, 0, -20), Vector3.new(10, 0, 0), 35, 0.55)
+	check(math.abs((lead - Vector3.zero).Magnitude / 35 - (lead.X / 10 - 0.55)) < 1e-4, "Led through the wind-up and the flight")
+	for _, reverse in { false, true } do
+		local bow = Catalog.get("bow-skeleton")
+		local x = reverse and 360 or 300
+		local npc = makeNpc(bow, Vector3.new(x, 3, 0), { AttackDamage = bow.damage })
+		targetRoot.Position = Vector3.new(x, 3, -20)
+		local strafe = Vector3.new(10, 0, 0)
+		targetRoot.AssemblyLinearVelocity = strafe
+		table.clear(contacts)
+		local first = #world.events + 1
+		local flipped = false
+		for _ = 1, 240 do
+			local dt = step(npc, false)
+			local start = npc.attrs.EnemyAttackStart
+			if reverse and start and not flipped and world.clock - start > bow.attackImpact / 2 then
+				flipped, strafe = true, -strafe
+				targetRoot.AssemblyLinearVelocity = strafe
+			end
+			targetRoot.Position += strafe * dt
+			if #contacts > 0 or (#eventsSince(first, "Launch") > 0 and #A.shots == 0) then
+				break
+			end
+		end
+		local aim, launched = eventsSince(first, "Aim")[1], eventsSince(first, "Launch")[1]
+		check(aim and launched and aim[2] == launched[2] and near(aim[5], launched[5]), "Strafing: the shot flies the locked line")
+		check(launched[5].X > 1, "Led ahead of the strafing player")
+		if reverse then
+			check(#contacts == 0, "Reversing mid-draw dodges the locked shot")
+		else
+			check(#contacts == 1, "A straight strafe is still met")
+		end
+		targetRoot.AssemblyLinearVelocity = Vector3.zero
+		for _ = 1, 200 do
+			step(npc, false, true)
+		end
+		table.clear(A.shots)
+	end
+	-- A draw cancelled (admin Freeze) drops its line at once and never flies.
+	do
+		local bow = Catalog.get("bow-skeleton")
+		local npc = makeNpc(bow, Vector3.new(420, 3, 0), { AttackDamage = bow.damage })
+		targetRoot.Position = Vector3.new(420, 3, -20)
+		local first = #world.events + 1
+		for _ = 1, 30 do
+			step(npc, false)
+			if A.busy(npc) then
+				break
+			end
+		end
+		local aim = eventsSince(first, "Aim")[1]
+		A.cancel(npc)
+		local unaimed = eventsSince(first, "Unaim")[1]
+		check(aim and unaimed and unaimed[2] == aim[2], "Cancelled draw: Unaim for its line")
+		for _ = 1, 60 do
+			step(npc, false, true)
+		end
+		check(#eventsSince(first, "Launch") == 0, "Cancelled draw never shoots")
+	end
+
 	-- 4. Facing: a skeleton swings at a still player, then at one strafing past at 8 studs/s.
 	local facing = {}
 	for _, strafe in { 0, 8 } do
 		local skeleton = Catalog.get("skeleton")
 		local npc, root = makeNpc(skeleton, Vector3.new(0, 3, 300), { AttackDamage = skeleton.damage })
-		targetRoot.Position = Vector3.new(0, 3, 296)
+		-- 2 studs: inside the measured skeleton reach (3.7, EnemyCatalog.Reach) even strafing 2.8 studs aside.
+		targetRoot.Position = Vector3.new(0, 3, 298)
 		table.clear(contacts)
 		local start, frames, impact = nil, 0, nil
 		for _ = 1, 200 do

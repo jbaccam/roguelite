@@ -109,3 +109,14 @@ The same "judge it from the player's screen" idea, now for the player's own mele
 - **Tests added:** `MeleeSweepTests` (jump allowance), `MovementCheckTests` (a dash passes, the same burst without one is a strike, a speed hack with a dash allowance is still caught by 1.2 s).
 
 **Status:** repo only, syntax-checked. Tests not run in Studio, not synced, not play-tested.
+
+## Enemy aim lines (2026-10-10)
+
+User: "enemy projectiles like skeletons with bows and crabs with rocks should have a red beam or projectile line showing where theyre gonna throw or shoot so players can see."
+
+- **Aim locked at the draw.** Ranged mobs (Spitter Zombie, Rock-Throwing Crab, Bow Skeleton, Ice Elf, Ash Shaman) used to re-aim at release, 0.5-0.6 s after the draw started. Now `EnemyAttacks` `lockAim` fixes the hand position and the path when the draw starts, from the player's seen position, and holds the body on it until release. The lead now includes the wind-up (`A.intercept(..., delay)`). Example: a player standing still has the line end on them. A player strafing straight at 24 studs/s sees it cross their path ahead of them. Turning or stopping dodges it. Hits are unchanged: tested against `CharacterService.seen` every frame of the flight.
+- **Aim event.** `EnemyShot` sends `("Aim", id, kind, origin, velocity, startedAt, releaseAt, lifetime, aimDistance, npc)` at the draw, plus `("Unaim", id)` if the draw is cancelled or the mob dies. The Launch that follows uses the same id, origin and velocity, so the line is the real path.
+- **Client** (`EnemyVisuals`, `EnemyProjectileVisuals`): a thin flat red Beam (255,60,50, 0.15 to 0.25 studs wide) runs from the hand to the shot's range or the first wall. It is solid up to the aimed point and fades past it. It gets brighter and pulses faster toward release, flashes for the last 0.1 s, and disappears at release. Beams are pooled, and only the nearest 20 are drawn. Shots in flight are drawn 1.1-1.35x bigger and carry a short red-orange Trail.
+- **Tests:** `run_enemy_shot_tests.py` runs `EnemyShotTests` (the real attack sources) under plain Luau. It checks that the Aim matches the Launch, that a straight strafe is still hit, that reversing mid-draw dodges, and that a cancelled draw sends Unaim. It also covers the line's look and the 20-line cap.
+
+**Status:** repo only. Compiled and tests run under Luau. Not synced, not play-tested.

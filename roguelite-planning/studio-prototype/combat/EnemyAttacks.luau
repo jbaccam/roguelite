@@ -168,9 +168,12 @@ end
 -- (flat): the earliest t with |position + velocity*t - from| = speed*t. Example: a player 20
 -- studs away running sideways at 24 studs/s, an arrow at 35: it meets them 0.79 s later, 19
 -- studs to the side. No meeting within MAX_LEAD (outrunning the shot): aim at them as they are.
-function A.intercept(from, position, velocity, speed)
+-- `delay`: seconds until the shot leaves (the wind-up, when the aim is locked at its start). The
+-- target keeps running meanwhile: with a 0.55 s draw, the same player is met 0.55 s further on.
+function A.intercept(from, position, velocity, speed, delay)
+	delay = delay or 0
 	local v = Vector3.new(velocity.X, 0, velocity.Z)
-	local d = position - from
+	local d = position + v * delay - from
 	local a, b, c = v:Dot(v) - speed * speed, 2 * d:Dot(v), d:Dot(d)
 	local t
 	if math.abs(a) < 1e-6 then
@@ -183,10 +186,18 @@ function A.intercept(from, position, velocity, speed)
 			t = math.min(t1 > 0 and t1 or math.huge, t2 > 0 and t2 or math.huge)
 		end
 	end
-	if not t or t > MAX_LEAD then
+	if not t or t + delay > MAX_LEAD then
 		return position
 	end
-	return position + v * t
+	return position + v * (delay + t)
+end
+-- `point` turned about `pivot`'s vertical axis by the flat angle from facing `from` to `to`: the
+-- hand a shot leaves from, as it will be once the body has turned to the locked aim. Example: a
+-- hand 1 stud ahead of a body facing -Z is 1 stud to +X once it faces +X.
+function A.turnedAbout(point, pivot, from, to)
+	local c, s = from.X * to.X + from.Z * to.Z, from.X * to.Z - from.Z * to.X
+	local r = point - pivot
+	return pivot + Vector3.new(r.X * c - r.Z * s, r.Y, r.X * s + r.Z * c)
 end
 -- Zombie swings share one gate per player: at most one lands every ZOMBIE_SWING_GAP seconds,
 -- whoever swings. It was 0.8 s, so a full ring of zombies hit like one zombie and standing still
@@ -236,32 +247,71 @@ local function melee(npc, root, config, s)
 		end
 	end
 end
-local function projectile(npc, root, config, s, target)
-	local start = root.Position + Vector3.yAxis * 0.6 + s.direction * (config.radius + 0.4)
+-- Where the shot will leave from with the body facing `facing` (flat unit): the hand/bow at the
+-- release frame of the clip, turned from the body's current facing to that one.
+local function shotStart(npc, root, config, facing)
+	local start = root.Position + Vector3.yAxis * 0.6 + facing * (config.radius + 0.4)
 	if config.projectile then
 		local data = Motion.load(config.id)
 		if data and data.projectile then
 			local origin = Motion.projectileOrigin(npc, data, Motion.sample(data, "Attack", data.motion.attackImpact))
-			if origin then
-				start = origin
+			local look = root.CFrame.LookVector
+			local now = Vector3.new(look.X, 0, look.Z)
+			if origin and now.Magnitude > 0.05 then
+				start = A.turnedAbout(origin, root.Position, now.Unit, facing)
 			end
 		end
 	end
-	if workspace:Raycast(root.Position, start - root.Position, s.params) then
-		return
+	return start
+end
+-- 2026-10-10, user: "enemy projectiles like skeletons with bows and crabs with rocks should have a
+-- red beam or projectile line showing where theyre gonna throw or shoot so players can see".
+-- The aim is locked when the draw starts, so the red line the clients draw (EnemyVisuals, from the
+-- "Aim" event) is exactly the path the shot takes; it used to re-aim at release, 0.5-0.6 s later.
+-- Still led: aimed where a player running straight will be when the shot arrives, wind-up
+-- included (A.intercept delay). Example: a bow skeleton 20 studs off, player standing: the line
+-- ends on them; strafing at 24 studs/s, it crosses their path ahead. Changing direction dodges.
+local function lockAim(npc, root, config, s, at, velocity, now)
+	local facing = s.direction
+	local start = shotStart(npc, root, config, facing)
+	local aim = A.intercept(start, at, velocity, config.projectileSpeed, config.attackImpact)
+	local turn = Vector3.new(aim.X - root.Position.X, 0, aim.Z - root.Position.Z)
+	if turn.Magnitude > 0.05 then
+		facing = turn.Unit
+		start = shotStart(npc, root, config, facing)
 	end
-	-- Released at where the target will be (A.intercept); the shot still travels, so it can be dodged.
-	if target and target.Parent then
-		s.aim = A.intercept(start, seenOf(target), target.AssemblyLinearVelocity, config.projectileSpeed)
-	end
-	local direction = s.aim - start
-	if direction.Magnitude < 0.01 then
+	s.direction, s.shotStart, s.aim = facing, start, aim
+	if (aim - start).Magnitude < 0.01 then
+		s.shotId = nil
 		return
 	end
 	shotSerial += 1
+	s.shotId = shotSerial
+	local lifetime = config.attackRange / config.projectileSpeed + 1
+	-- ("Aim", id, kind, origin, velocity, startedAt, releaseAt, lifetime, aimDistance, npc): the
+	-- Launch that follows carries the same id, origin and velocity.
+	shotEvent:FireAllClients("Aim", s.shotId, config.projectile, start,
+		(aim - start).Unit * config.projectileSpeed, now, now + config.attackImpact, lifetime, (aim - start).Magnitude, npc)
+end
+-- A drawn shot that won't fly (cancelled, enemy died): the clients drop its line now.
+local function unaim(s)
+	if s and s.shotId and not s.hit then
+		shotEvent:FireAllClients("Unaim", s.shotId)
+	end
+	if s then
+		s.shotId = nil
+	end
+end
+local function projectile(npc, root, config, s)
+	local start = s.shotStart
+	if not start or not s.shotId or workspace:Raycast(root.Position, start - root.Position, s.params) then
+		return
+	end
+	-- Released along the line locked at the draw (lockAim); the shot still travels, so it can be dodged.
+	local direction = s.aim - start
 	local lifetime = config.attackRange / config.projectileSpeed + 1
 	table.insert(projectiles, {
-		id = shotSerial,
+		id = s.shotId,
 		kind = config.projectile,
 		source = npc,
 		origin = start,
@@ -387,6 +437,7 @@ function A.update(npc, target, dt)
 	local ok, h, root = alive(npc)
 	local s = states[npc]
 	if not ok then
+		unaim(s)
 		states[npc] = nil
 		return false
 	end
@@ -413,7 +464,9 @@ function A.update(npc, target, dt)
 		if lunging then
 			root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
 		end
-		if not lunging then
+		if config.behavior == "Ranged" and not s.hit then
+			face(root, s) -- drawing: held on the locked aim, the line the clients show
+		elseif not lunging then
 			track(root, target, s, dt)
 		end
 		if lunging and not s.lungeLimit then
@@ -429,7 +482,7 @@ function A.update(npc, target, dt)
 		if age >= config.attackImpact and not s.hit then
 			s.hit = true
 			if config.behavior == "Ranged" then
-				projectile(npc, root, config, s, target)
+				projectile(npc, root, config, s)
 			elseif config.behavior ~= "Lunge" then
 				melee(npc, root, config, s)
 			end
@@ -492,6 +545,9 @@ function A.update(npc, target, dt)
 	s.nextAttack = now + config.attackCooldown
 	s.lungeLimit = nil
 	s.faced = nil -- release() let the Humanoid turn it, so the first facing always writes
+	if config.behavior == "Ranged" then
+		lockAim(npc, root, config, s, at, target.AssemblyLinearVelocity, now)
+	end
 	-- Square to the target: the bow skeleton's shot now leaves straight ahead (its chest turns
 	-- in the clip), so nobody faces off to one side any more.
 	h.AutoRotate = false
@@ -521,6 +577,7 @@ function A.cancel(npc)
 	if not s or not s.start then
 		return
 	end
+	unaim(s)
 	s.start = nil
 	release(npc, npc:FindFirstChildOfClass("Humanoid"))
 	npc:SetAttribute("Attacking", false)
