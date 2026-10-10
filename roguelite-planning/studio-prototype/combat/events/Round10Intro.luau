@@ -142,7 +142,7 @@ BUILD.TombOpens=function(a,def)
   -- Each lid swings about its hinge (HingeFrame, Round10Service) from closed to lying open.
   local lid=m:FindFirstChild('Sarcophagus_Lid',true)
   local closed,hinge=lid and lid:GetAttribute('ClosedFrame'),lid and lid:GetAttribute('HingeFrame')
-  if typeof(closed)=='CFrame' and typeof(hinge)=='CFrame' then lids[i]={part=lid,hinge=hinge,rel=hinge:ToObjectSpace(closed)} end
+  if typeof(closed)=='CFrame' and typeof(hinge)=='CFrame' then lids[i]={part=lid,hinge=hinge,rel=hinge:ToObjectSpace(closed),sink=lid:GetAttribute('SinkDepth') or 0} end
  end
  local height=(A and A:GetExtentsSize().Y or 10)+1
  local wk=math.clamp((a.leader and a.leader:GetExtentsSize().Y or 8.6)/8.6,1,1.6)
@@ -167,7 +167,8 @@ BUILD.TombOpens=function(a,def)
       if p.Parent then
        if L and p==L.part then
         local swing=math.clamp((t-LID[i])/.42,0,1);swing=swing*swing -- falls, speeding up
-        p.CFrame=CFrame.new(0,drop,0)*L.hinge*CFrame.Angles(-math.rad(90)*swing,0,0)*L.rel
+        local settle=smooth((t-LID[i]-.45)/.35)*L.sink -- then beds into the sand, flush (Round10Service)
+        p.CFrame=CFrame.new(0,drop-settle,0)*L.hinge*CFrame.Angles(-math.rad(90)*swing,0,0)*L.rel
        else p.CFrame=CFrame.new(0,drop,0)*cf end
       end
      end
@@ -177,8 +178,17 @@ BUILD.TombOpens=function(a,def)
   moments={
    {at=0,fn=function() Common.cue('stone_rumble',center,.7,.9);for _,m in tombs do local r=rootOf(m);if r then Common.emit(Vector3.new(r.Position.X,cfA.Y+.4,r.Position.Z),up,'SandBurst',{emit=10,Speed={6,12},SpreadAngle=55,Lifetime={.8,1.3},Size=Common.ns({0,2},{1,5}),Color=Color3.fromRGB(226,196,150),Transparency=Common.ns({0,.15},{1,1}),Drag=2,LightInfluence=.8,Rotation={0,360}}) end end end},
    {at=.2,fn=function() Common.shake(center,.35,1.4) end},
-   {at=1.95,fn=function() Common.cue('sand_burst',cfA.Position,.8,1);Common.dustRing((cfA*CFrame.new(0,0,-3.5)).Position,1.5,10,Color3.fromRGB(226,200,160),12,3) end},
-   {at=3.7,fn=function() local p=(cfA*CFrame.new(0,0,-5)).Position;Common.shake(p,.8,.4);Common.cue('ice_slam',p,.7,.75);Common.dustRing(p,2,12,Color3.fromRGB(226,200,160),16,3.5) end},
+   -- Lid A slams down: dust along its whole length (it reaches lidLength in front of the rim).
+   {at=1.95,fn=function()
+    local L=lids[1];local len=L and math.max(L.part.Size.X,L.part.Size.Y,L.part.Size.Z) or 11
+    Common.cue('sand_burst',cfA.Position,.8,1);Common.shake(cfA.Position,.5,.3)
+    for d=.25,1,.25 do Common.dustRing((cfA*CFrame.new(0,0,-3-len*d+len*.12)).Position,1.5,8,Color3.fromRGB(226,200,160),12,3) end
+   end},
+   -- The Warden plants his fists (Emerge impact), in front of where he stands.
+   {at=3.7,fn=function()
+    local r=rootOf(a.leader);local p=r and Vector3.new(r.Position.X,cfA.Y,r.Position.Z)+Common.flat(r.CFrame.LookVector)*2.7 or (cfA*CFrame.new(0,0,-7.6)).Position
+    Common.shake(p,.8,.4);Common.cue('ice_slam',p,.7,.75);Common.dustRing(p,2,12,Color3.fromRGB(226,200,160),16,3.5)
+   end},
   },
   cleanup=function() for _,list in held do placeModel(list,CFrame.new()) end end,
  }

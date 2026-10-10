@@ -338,7 +338,12 @@ local function buildTomb(E,index,cf,health)
   local hinge=lid:GetAttribute('Hinge')
   local hingeCf=typeof(hinge)=='CFrame' and cf*hinge or lid.CFrame
   local open=hingeCf*CFrame.Angles(-math.rad(90),0,0)*hingeCf:ToObjectSpace(lid.CFrame)
-  lid:SetAttribute('ClosedFrame',lid.CFrame);lid:SetAttribute('HingeFrame',hingeCf);lid.CFrame=open
+  lid:SetAttribute('ClosedFrame',lid.CFrame);lid:SetAttribute('HingeFrame',hingeCf)
+  -- The fallen lid sinks flush with the sand (relief face up), so the Warden steps out over tomb A's
+  -- and players cross it without a ledge. SinkDepth: how far below the swung frame (Round10Intro).
+  local half=(math.abs(open.RightVector.Y)*lid.Size.X+math.abs(open.UpVector.Y)*lid.Size.Y+math.abs(open.LookVector.Y)*lid.Size.Z)/2
+  local sink=math.max(0,open.Y+half-cf.Y)
+  lid:SetAttribute('SinkDepth',sink);lid.CFrame=open-Vector3.yAxis*sink
  end
  local h=Instance.new('Humanoid');h.EvaluateStateMachine=false;h.RequiresNeck=false;h.BreakJointsOnDeath=false
  h.DisplayDistanceType=Enum.HumanoidDisplayDistanceType.None;h.MaxHealth=health;h.Health=health;h.Parent=model
