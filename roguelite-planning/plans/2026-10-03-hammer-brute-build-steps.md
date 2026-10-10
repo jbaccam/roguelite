@@ -370,6 +370,19 @@ R8 is replaced: no FBX import. The Hammer keeps the 16-part Motor6D template `Ha
 5. **Checks:** the three boss suites, then a plain capture of `Hammer_NPC`.
 6. **Play-test:** the user play-tests: the wave-20 sky drop, the tutorial, the Spawn boss button, and enrage turning the eyes red.
 
+**Studio record, final install (2026-10-09, Edit only; record: `combat/bosses/hammer-brute-final-install-2026-10-09.json`):**
+- **Build (04993a1):** `python build_boss_modules.py hammer-brute` from the 60 fps clips (e0c9f03). MapBossTiming gained `hammer-brute`; the four bosses' entries and folders are unchanged. `BossAnimations/hammer-brute` has 61 modules. Both Python test files pass.
+  - The build warns that the 24 Hz impact samples sit up to 1.74 studs from `rootAtImpactStudio` (Slam HammerFace). The runtime uses the samples, so a slam circle can land about 1.7 studs off the head.
+- **One guarded push.** Studio had Round 10's hunks in MapBossService, MapBossShapes and MapBossPresentation (base 710ed88) and in MapBossDefs (base 5386c5a, plus `introName='HAMMER BRUTE'`).
+  - Three merged cleanly to HEAD. MapBossDefs had one overlap on the `D.Hammer` line; HEAD already carries Studio's only change there (the introName), so it was written as HEAD with no Round 10 line dropped.
+  - BossVfx.Hammer, BossVfx.Common and MapBossTiming went to HEAD. BossVfxAssets already equalled HEAD.
+  - `BossAnimations/hammer-brute` was created like the other bosses' modules (plain ModuleScripts, Sandboxed false).
+  - Every write was re-read equal and is byte-equal to HEAD.
+- **Template:** `InstallMapBossTemplates` with `ONLY={'Hammer'}` built `Hammer_NPC` (16 motors, 2 eye plates, lowest mesh on the ground). `HammerBoss_NPC` stays.
+- **Gate:** Studio's own MapBossDefs gives `ready('Hammer')==true` and `legacy('Hammer')==false`; the four other bosses are still ready.
+- **Checks:** MapBossServiceTests 80, MapBossShapesTests 28, MapBossPresentationTests 27 and BossVfxHammerTests 15 PASS, 0 FAIL. Everything written compiles.
+- **Play:** no Play test has run. Save the place in Studio to keep this install.
+
 ---
 
 # Final

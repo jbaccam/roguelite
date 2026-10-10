@@ -1,0 +1,37 @@
+{
+ "what": "Hammer Brute final install (place 107877054949326, Edit): the reworked Hammer (60 fps clips, e0c9f03; rubble waves, tracking and chained moves) on the map-boss runtime. MapBossTiming hammer-brute, BossAnimations/hammer-brute and the Hammer runtime pushed in one guarded execute_luau write, then InstallMapBossTemplates ONLY={'Hammer'} built Hammer_NPC. The gate is open: MapBossDefs.ready('Hammer') == true, legacy('Hammer') == false.",
+ "date": "2026-10-09",
+ "head": "04993a1 (build of MapBossTiming hammer-brute and BossAnimations/hammer-brute)",
+ "build": {
+  "command": "python build_boss_modules.py hammer-brute",
+  "source": "hammer-boss-moves/exports/game PartPoses.json + BossGameData.json (e0c9f03) through receipts/hammer-old-receipt.json",
+  "result": "MapBossTiming gains hammer-brute (king-crab, frost-cyclops, pharaoh, dragon entries equal); BossAnimations/hammer-brute 61 modules, 2304858 bytes, largest 154627 characters; the other four bosses' folders unchanged",
+  "warnings": "check_impact: the 24 Hz point samples at impact sit 0.26 to 1.74 studs from rootAtImpactStudio (worst: Slam HammerFace 1.74, Spin phase 2 HammerFace 1.00). The runtime reads the samples, so the slam circles land up to ~1.7 studs from the hammer head's exact 60 fps position.",
+  "python": {"test_build_boss_modules.py": "0 failed", "test_partposes_to_motor6d.py": "0 failed"}
+ },
+ "method": "Read-only dump of every target's Source by name (one instance each) to the dev server (/dump/hb-final-studio). Each text matched to a commit or 3-way merged offline (git merge-file -p studio base HEAD). Guard in the write: every target equal to its dumped text, BossVfxAssets equal to the dump and HEAD, BossAnimations.hammer-brute absent, ClientQuality present, every new text compiling; then ScriptEditorService:UpdateSourceAsync (Source fallback) with rollback; every script re-read equal. get_studio_state was Edit before the dump, the write and the template run.",
+ "written": [
+  {"studio": "ReplicatedStorage.RogueliteCombat.MapBossShapes", "base": "710ed88 + Round 10 hunks (3add9c7)", "merge": "clean, = HEAD", "result": "written HEAD, re-read equal"},
+  {"studio": "ServerScriptService.MapBossService", "base": "710ed88 + Round 10 hunks (3add9c7)", "merge": "clean, = HEAD", "result": "written HEAD, re-read equal"},
+  {"studio": "StarterPlayer.StarterPlayerScripts.MapBossPresentation", "base": "710ed88 + Round 10 hunks (3add9c7)", "merge": "clean, = HEAD", "result": "written HEAD, re-read equal"},
+  {"studio": "ReplicatedStorage.RogueliteCombat.MapBossDefs", "base": "5386c5a + Round 10 hunks (3add9c7) + introName='HAMMER BRUTE'", "merge": "one overlap conflict on the D.Hammer line: Studio changed only introName ('HAMMER ZOMBIE BOSS' -> 'HAMMER BRUTE'), HEAD's line (3c28997) has the same introName plus scale 1.5, and the neighbouring CRACKS/sweep/SLAM/WAVE lines are ours. Checked line by line: every line Studio added is in HEAD except that D.Hammer line, whose only Studio change HEAD carries; Studio removed nothing HEAD keeps. Studio == 3add9c7 minus 3c28997 plus the introName. Resolved as HEAD, none of the Round 10 lines dropped.", "result": "written HEAD, re-read equal"},
+  {"studio": "ReplicatedStorage.RogueliteCombat.BossVfx.Hammer", "base": "710ed88", "to": "HEAD (17ab301, e2e1168, 9939135: all Hammer)", "result": "written, re-read equal"},
+  {"studio": "ReplicatedStorage.RogueliteCombat.BossVfx.Common", "base": "a1a9034", "to": "HEAD (17ab301: Hammer)", "result": "written, re-read equal"},
+  {"studio": "ReplicatedStorage.RogueliteCombat.MapBossTiming", "base": "e34e460", "to": "HEAD 04993a1 (adds hammer-brute)", "result": "written, re-read equal"}
+ ],
+ "created": [
+  {"studio": "ReplicatedStorage.RogueliteCombat.BossAnimations.hammer-brute", "from": "HEAD 04993a1", "modules": 61, "like": "the other bosses' BossAnimations: plain ModuleScripts, Sandboxed false (read in Studio, all four bosses), default Capabilities", "result": "61 re-read equal, Sandboxed false, all compile"}
+ ],
+ "unchanged": ["BossVfxAssets (Studio == HEAD 34896b2)", "BossAnimations king-crab, pharaoh, frost-cyclops, dragon", "HammerBoss_NPC (copied, not edited; stays for the legacy path)"],
+ "template": {
+  "run": "InstallMapBossTemplates.luau at 04993a1 with ONLY={'Hammer'}, Edit. Its fresh() was patched in memory to require a MapBossDefs clone beside a fresh MapBossTiming clone in an unparented Folder, because the plugin VM's cached MapBossTiming (no hammer-brute) made the first run stop at its assert before writing anything.",
+  "result": "INSTALLED Hammer copy of HammerBoss_NPC motors=16 sections=16 eyes=2 hrpHeight=2.600 hipHeight=3.150 lowestMeshAboveGround=0.000; VFX_MESHES 19 (checked first: all 19 kit meshes already equal in BossVfxAssets, so a same-content refresh)",
+  "backup": "none needed (no Hammer_NPC before)"
+ },
+ "verified": {
+  "MapBossDefs (Studio's own Source, fresh clones)": "Hammer ready=true legacy=false scale=1.5 introName=HAMMER BRUTE; KingCrab, Pharaoh, FrostCyclops, Dragon ready=true legacy=false",
+  "compile": "8 runtime scripts and 61 hammer-brute modules compile from their Studio Source; all 8 byte-equal HEAD 04993a1",
+  "suites (RepoRequire at 04993a1 = Studio's text)": {"MapBossServiceTests": "80 PASS, 0 FAIL", "MapBossShapesTests": "28 PASS, 0 FAIL", "MapBossPresentationTests": "27 PASS, 0 FAIL", "BossVfxHammerTests": "15 PASS, 0 FAIL"}
+ },
+ "playTests": "none run (the user does the play-testing; no Play session was started). The place must be saved in Studio to keep this install."
+}
