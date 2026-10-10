@@ -1,4 +1,16 @@
+**Mobile/low-spec presentation:** [Adaptive visual quality, phone settings and measured Studio checks](studio-prototype/combat/MOBILE_PERFORMANCE_2026-10-05.md). Source synchronized; real-device and full-run performance remain unverified.
+
 # Current Game Structure
+
+**October 9 roster redesign, implemented:** Chef replaces Thrower, one starter class per weapon, +10% specialty, weapon-type sets, Pizza Cutter, pizza drops and the new family items are synced to Studio; see [CHEF_ROSTER_2026-10-09.md](studio-prototype/combat/CHEF_ROSTER_2026-10-09.md). Play tests are the user's.
+
+**October 9 roster redesign:** [Roster, weapons, classes, and asset master guide](ROSTER_WEAPONS_CLASSES_MASTER_GUIDE.md) records the Chef/Pizza Cutter direction, strict direct-class starters, proposed universal weapon sets, balance audit, asset references, and pending migration decisions. This specification is not a claim of runtime implementation.
+
+**October 9 round 10 specification:** [Complete encounter specification](ROUND_10_MASTER_SPEC.md) consolidates the five events, health bars/UI, animations, unique cinematics, model sources, requested Crab Rave music and acceptance tests. This is design documentation, not a runtime completion claim.
+
+**October 6 follow-up:** [Multiplayer pressure and results cursor](studio-prototype/combat/COOP_AND_CURSOR_2026-10-06.md). Linear arrivals and boss HP for one-to-four players, scaled warning throughput and boss-add caps, shared all-map fixes, and results cursor ownership are applied in Studio. Exact automated and single-client Play checks are recorded; real multi-client balance remains unmeasured.
+
+**October 5 combat feedback:** [Straight gunfire, reward receipts, denser swarms, revised enemy scaling and white hit flashes](studio-prototype/combat/COMBAT_FEEDBACK_2026-10-05.md) are implemented and synchronized to Studio. Latest follow-up: [approachable Normal, body-aware crowd steering and Hammer pursuit](studio-prototype/combat/NORMAL_CROWD_INTEGRATION_2026-10-05.md). The combat overlay builds; targeted Studio combat checks passed. Full-run balance remains unverified.
 
 **October 5 direction:** Hammer Brute is the universal display name. Every round 10 event and every boss requires a unique themed intro. Encounter rules, art feedback and implementation status: [Round 10 events and boss intros](plans/2026-10-05-wave-10-events-and-boss-intros.md).
 

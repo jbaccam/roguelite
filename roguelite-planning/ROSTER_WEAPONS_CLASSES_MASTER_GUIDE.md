@@ -29,6 +29,8 @@ This guide consolidates the user's requested redesign and the source audit. It i
 
 ## 2. What exists now versus what is pending
 
+**Update, October 9 night:** implemented and synced to Studio. See [CHEF_ROSTER_2026-10-09.md](studio-prototype/combat/CHEF_ROSTER_2026-10-09.md) for what was built, which tests ran and the play-test list, and [the design decisions](plans/2026-10-09-chef-roster-weapon-types-design.md). The table below is the pre-implementation snapshot.
+
 Source checked October 9 still lists **Brawler, Gunner, Thrower, Juggler, Handyman, Mage**. Chef and Pizza Cutter are not in the runtime catalog.
 
 | Work | Current status |
