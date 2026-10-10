@@ -172,7 +172,7 @@ D.DJCrab={anim='dj-crab',name='DJ Crab',leader=true,health=7000,scale=1,chaseSpe
  },order={'BeatCommand','ClawSlam','Bombard','BeatCommand','Bombard','ClawSlam'}}
 D.TombWarden={anim='tomb-warden',name='Tomb Warden',leader=true,health=6000,scale=1,chaseSpeed=12,glowColor=Color3.fromRGB(255,176,64),
  -- emergeOut: studs from the coffin's cavity centre to where Emerge ends (its root travel; Round10Service).
- emergeOut=3.5,
+ emergeOut=4.9,
  intro={style='event',clip='Emerge',lead=3.7,after=1.3},
  roar='Roar',enrage={cooldown=.7,chase=3,follow=1},
  attacks={
