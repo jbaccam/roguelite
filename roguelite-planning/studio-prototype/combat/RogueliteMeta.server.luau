@@ -270,13 +270,15 @@ local function livingInRun()
  for p in Shop.members do local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid');if h and h.Health>0 and not down[p] then n+=1 end end
  return n
 end
--- Teammate revive (TeammateRevive.luau): a living teammate holding a downed member's spot for 5 s
--- revives them there for free, any number of times. It never touches revivesUsed, so the Robux
--- price ladder only counts paid revives. Example: Ben holds Ana's spot for 5 s; Ana stands up there
--- with 50% health and a 3 s shield, and her next REVIVE still costs 65 R$. Made before clearDown,
--- which clears the spot; the service checks holds on its own 10 Hz clock.
+-- Teammate revive (TeammateRevive.luau): a living teammate holding a downed member's spot (2.5 s
+-- alone, faster with more; 2026-10-10) revives them there for free, any number of times. It never
+-- touches revivesUsed, so the Robux price ladder only counts paid revives. Example: Ben holds Ana's
+-- spot for 2.5 s; Ana stands up there with 50% health and a 3 s shield, and her next REVIVE still
+-- costs 65 R$. Made before clearDown, which clears the spot; the service checks holds on its own 10 Hz
+-- clock. Reach is measured where the reviver's own screen has them (CharacterService.seen).
 local TeammateRevive=require(SSS:WaitForChild('TeammateRevive')) -- unsandboxed, like this script
 local teammateRevive=TeammateRevive.new({
+ positionOf=function(q) return Characters.seen and Characters.seen(q) or nil end,
  canHelp=function(q) local h=q.Character and q.Character:FindFirstChildOfClass('Humanoid');return q.Parent==Players and Shop.members[q]~=nil and not down[q] and h~=nil and h.Health>0 end,
  isDown=function(q) return down[q]~=nil and not q:GetAttribute('RunReturning') end,
  frozen=function() return combat:GetAttribute('RunPaused')==true end, -- plan L: no reviving while frozen

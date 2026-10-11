@@ -1,7 +1,8 @@
 """Run BossArrivalTests and TeammateReviveTests (with the revive shove) in the Luau CLI.
 
 Usage: python run_survival_tests.py path/to/luau.exe
-2026-10-10: added with the boss arrival i-frames and the revive shove. CharacterStats is the real
+2026-10-10: added with the boss arrival i-frames and the revive shove; later that day the easier
+teammate revive (2.5 s, faster with helpers, slow drain, 20-stud reach, the reviver guard). CharacterStats is the real
 source with its motion requires stubbed (as run_chef_pizza_tests.py does); TeammateRevive is the real
 source with a Vector3 shim and stand-in services (its tests inject the clock, view and positions).
 """

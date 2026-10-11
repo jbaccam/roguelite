@@ -1,10 +1,12 @@
 -- Teammate revive spots (combat/TeammateRevive.luau) on this screen: a glowing ring on the floor where
 -- a run member fell, their name over it, the hold filling the ring, and the revive prompt in the
 -- green theme (a custom ProximityPrompt style: E, a held tap on phones, Y on a controller). The fill
--- reads the spot's HoldStartedAt (server time), so every screen shows the same progress, the downed
+-- reads the spot's Progress, ProgressAt (server time) and ProgressRate (it fills faster with more
+-- revivers and drains slowly when nobody holds), so every screen shows the same progress, the downed
 -- player's death screen included. The prompt shows only to living run members who aren't down: never
--- to the downed player, people outside the run, or anyone while the run is paused. Presentation
--- only: the server times each hold itself and decides the revive.
+-- to the downed player, people outside the run, or anyone while the run is paused. Each reviver whose
+-- hold counts (ReviveGuard) wears a lime bubble: they take 40% damage and enemy shots stop at it.
+-- Presentation only: the server times each hold itself, guards the revivers and decides the revive.
 -- Unsandboxed LocalScript in StarterPlayerScripts, like PetVisuals.
 local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')
@@ -18,9 +20,10 @@ local combat=RS:WaitForChild('RogueliteCombat')
 local player=Players.LocalPlayer
 local gui=player:WaitForChild('PlayerGui')
 local FOLDER='RogueliteReviveSpots'
-local SEGMENTS=32 -- ring pieces lighting up one by one: 32 in 5 s is one every 0.16 s
+local SEGMENTS=32 -- ring pieces lighting up one by one: 32 in 2.5 s is one every 0.08 s
 local SLICE=Rect.new(48,48,208,208) -- UITheme's nine-slice centre
 local views={} -- spot model -> {ring,stroke,segments,plus,tag,down,prompt,shown,pressing,progress,reviver}
+local bubbles={} -- guarded reviver (Player) -> their bubble Part (local to this screen)
 
 -- May this player revive anyone right now? The server checks again; this only hides the prompt.
 local function canHelp()
@@ -146,9 +149,10 @@ RunService.RenderStepped:Connect(function()
   v.prompt=v.prompt or spot:FindFirstChild('RevivePrompt',true)
   local want=helper and not mine
   if v.prompt and v.prompt.Enabled~=want then v.prompt.Enabled=want end
-  local began=spot:GetAttribute('HoldStartedAt')
-  local held=type(began)=='number'
-  local progress=held and math.clamp((now-began)/(spot:GetAttribute('HoldSeconds') or 5),0,1) or 0
+  local revivers=spot:GetAttribute('Revivers') or 0
+  local held=revivers>0
+  local p0,at=spot:GetAttribute('Progress'),spot:GetAttribute('ProgressAt')
+  local progress=type(p0)=='number' and type(at)=='number' and math.clamp(p0+(spot:GetAttribute('ProgressRate') or 0)*(now-at),0,1) or 0
   v.progress=progress;v.reviver=held and spot:GetAttribute('ReviverUserId') or nil
   -- Each piece fades in from white to lime as the hold passes it.
   local lit=progress*SEGMENTS
@@ -161,12 +165,26 @@ RunService.RenderStepped:Connect(function()
   local t=v.tag
   t.gui.Enabled=member or mine
   if t.scale.Scale~=s then t.scale.Scale=s;t.gui.Size=UDim2.fromOffset(260*s,130*s) end
-  local who=string.upper(spot:GetAttribute('ReviverName') or 'A teammate')
-  t.status.Text=not held and 'DOWN' or v.reviver==player.UserId and 'REVIVING' or mine and who..' IS REVIVING YOU' or who..' IS REVIVING'
+  -- More than one holding: "BEN +1 ARE REVIVING" (the ring fills x1.5 with two, x2 with three).
+  local who=string.upper(spot:GetAttribute('ReviverName') or 'A teammate')..(revivers>1 and ' +'..(revivers-1)..' ARE' or ' IS')
+  t.status.Text=not held and 'DOWN' or v.reviver==player.UserId and (revivers>1 and 'REVIVING x'..revivers or 'REVIVING') or mine and who..' REVIVING YOU' or who..' REVIVING'
   t.status.TextColor3=held and C.lime or C.negative
-  t.track.Visible=held
-  if held then T.setBar(t.fill,progress) end
+  t.track.Visible=held or progress>0 -- a let-go ring drains slowly, so its bar stays up
+  if t.track.Visible then T.setBar(t.fill,progress) end
   t.row.Visible=v.shown~=nil and want
+ end
+ -- The reviver bubbles: one per player the server guards (ReviveGuard), on their body.
+ for q,b in bubbles do
+  local r=q.Parent and q:GetAttribute('ReviveGuard') and q.Character and q.Character:FindFirstChild('HumanoidRootPart')
+  if r then b.CFrame=r.CFrame else bubbles[q]=nil;b:Destroy() end
+ end
+ for _,q in Players:GetPlayers() do
+  local r=not bubbles[q] and q:GetAttribute('ReviveGuard') and q.Character and q.Character:FindFirstChild('HumanoidRootPart')
+  if r then
+   local b=Instance.new('Part');b.Name='ReviveBubble';b.Shape=Enum.PartType.Ball;b.Size=Vector3.one*7
+   b.Material=Enum.Material.ForceField;b.Color=C.lime;b.Anchored=true;b.CanCollide=false;b.CanQuery=false;b.CanTouch=false;b.CastShadow=false
+   b.CFrame=r.CFrame;b.Parent=workspace;bubbles[q]=b
+  end
  end
 end)
 task.spawn(function()

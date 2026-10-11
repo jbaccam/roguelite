@@ -385,7 +385,10 @@ RunService.Heartbeat:Connect(function(dt)
 				end
 			end
 			if closest then
-				damage(p.source, closest, p.damage)
+				-- Reviving a teammate (ReviveGuard, TeammateRevive): the shot stops at their bubble, no damage.
+				if closest:GetAttribute("ReviveGuard") == nil then
+					damage(p.source, closest, p.damage)
+				end
 				stop = true
 			elseif wall then
 				stop = true

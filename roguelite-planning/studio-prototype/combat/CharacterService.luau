@@ -300,6 +300,9 @@ function Service.contact(player,amount,roll,attacker)
   return 0
  end
  local before=h.Health;local incoming=Stats.incoming(amount,s.stats)
+ -- Reviving a teammate (ReviveGuard, set by TeammateRevive only while their hold counts): 40% damage.
+ local guard=player:GetAttribute('ReviveGuard')
+ if type(guard)=='number' then incoming*=math.clamp(guard,0,1) end
  -- The tutorial (TutorialRun): hits still land and show, but health never goes below 1.
  if combat:GetAttribute('TutorialRun')==true then incoming=math.min(incoming,math.max(0,h.Health-1)) end
  h:TakeDamage(incoming);local actual=before-h.Health
