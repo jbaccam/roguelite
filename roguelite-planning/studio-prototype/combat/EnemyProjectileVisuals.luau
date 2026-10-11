@@ -147,39 +147,35 @@ function V.shotFrame(origin, velocity, flown)
 end
 
 -- 2026-10-10, user: "its too hard to see the little rocks or arrows and the lines would help
--- players avoid them and actually see them". While a shooter draws, EnemyVisuals shows a thin red
--- line along the exact path the server locked (EnemyAttacks "Aim"); in flight each shot gets a
--- short red-orange trail and is drawn a little bigger. Flat Beams/Trails, no effect meshes.
+-- players avoid them and actually see them". While a shooter draws, EnemyVisuals shows a red line
+-- along the exact path the server locked (EnemyAttacks "Aim"), faded out by release; in flight each
+-- shot gets a short red-orange trail behind it and is drawn a little bigger. Flat Beams/Trails, no
+-- effect meshes.
 V.AIM_COLOR = Color3.fromRGB(255, 60, 50)
 V.TRAIL_COLOR = Color3.fromRGB(255, 96, 50)
-V.AIM_CAP = 30 -- lines drawn at once (draws and flights), nearest first
-V.FLASH = 0.1 -- the last tenth of a second before release the line flashes full
+V.AIM_CAP = 20 -- lines drawn at once, nearest first
+V.FADE = 0.3 -- the line fades out over the draw's last 0.3 s (at most half the draw), gone at release
 -- Bigger in flight so they read from the high camera; held copies keep their size.
 V.FLIGHT_SCALE = { Arrow = 1.35, Rock = 1.3, Spit = 1.15, Icicle = 1.15, Fireball = 1.1 }
 
--- The aim line's look at server time `now`: opacity and width grow from the draw to the release,
--- pulsing faster as it nears, then a flash. Example: a 0.55 s draw, 0.1 s in: ~0.59 opaque, 0.34
--- wide; 0.5 s in (in the flash): 0.95 opaque, 0.48 wide. (2026-10-10 user: the first lines were
--- "a little too hard to see": twice as wide, half again as opaque.)
+-- The aim line's look at server time `now`: a telegraph, not a guide. It shows the locked path,
+-- brightening, then fades out to nothing at release; the shot flies that path with no line ahead
+-- of it. (2026-10-10 testers: the line kept drawn in flight made shots "too easy to avoid... show
+-- the path... have it fade away, and then have the item actually go on that path".) Width grows
+-- 0.3 -> 0.5 over the draw (the "a little too hard to see" fix). Example: a 0.55 s draw fades over
+-- its last 0.275 s: 0 s in: 0.6 opaque, 0.3 wide; 0.275 s in: 0.95; 0.4 s in: ~0.52; 0.55 s in: 0.
 function V.aimLook(startedAt, releaseAt, now)
 	local span = math.max(releaseAt - startedAt, 1e-3)
 	local p = math.clamp((now - startedAt) / span, 0, 1)
 	local width = 0.3 + 0.2 * p
-	if releaseAt - now <= V.FLASH then
-		return 0.95, width
+	local fade = math.min(V.FADE, span * 0.5)
+	local left = releaseAt - now
+	if left <= 0 then
+		return 0, width
+	elseif left < fade then
+		return 0.95 * left / fade, width
 	end
-	local elapsed = math.max(now - startedAt, 0)
-	return math.clamp(0.5 + 0.35 * p + 0.15 * p * math.sin(elapsed * (10 + 24 * p)), 0, 0.95), width
-end
--- In flight the path stays drawn ahead of the shot to where it ends (user 2026-10-10: "it should
--- show the path they're traveling so players can avoid it"): this opaque and wide at the shot,
--- tapering to FLIGHT_TIP's width and fading out at the far end.
-V.FLIGHT_LINE = { opacity = 0.75, width = 0.42 }
-V.FLIGHT_TIP = 0.55 -- end width as a share of the start
--- Where the in-flight line starts: the shot's position (held while the run is paused). Example: launched
--- at the origin at 35 studs/s, 0.5 s later: 17.5 studs out.
-function V.flightStart(origin, velocity, started, now, held, stopAt)
-	return origin + velocity * math.min(V.flown(started, now, held), stopAt)
+	return 0.6 + 0.35 * math.clamp((now - startedAt) / (span - fade), 0, 1), width
 end
 
 -- Where along the drawn line (0-1) the aimed point sits: solid up to it, fading past it to where

@@ -17,9 +17,10 @@ end
 -- 2026-10-10, user: "enemy projectiles like skeletons with bows and crabs with rocks should have a
 -- red beam or projectile line showing where theyre gonna throw or shoot". Aim lines: EnemyAttacks
 -- locks each shot at the start of the draw and sends ('Aim',id,kind,origin,velocity,startedAt,
--- releaseAt,lifetime,aimDistance,npc); this draws that exact path as a thin red Beam until release
--- (or the Launch/End/'Unaim' of the same id, or the shooter dying). Beams are pooled; only the
--- nearest V.AIM_CAP are drawn.
+-- releaseAt,lifetime,aimDistance,npc); this draws that exact path as a red Beam that fades out by
+-- release (Visuals.aimLook; dropped then, or on the Launch/End/'Unaim' of the same id, or the
+-- shooter dying). Nothing is drawn ahead of a shot in flight. Beams are pooled; only the nearest
+-- V.AIM_CAP are drawn.
 local aims={}
 local pool={} -- idle {a0,a1,beam}
 local function takeBeam()
@@ -50,15 +51,12 @@ end
 -- ('Aim',id,kind,origin,velocity,startedAt,releaseAt,lifetime,aimDistance,npc), ('Unaim',id).
 local function onShot(action,a,kind,origin,velocity,started,lifetime,...)
  if action=='Launch' then
-  if typeof(origin)~='Vector3' or typeof(velocity)~='Vector3' or velocity.Magnitude<.01 or type(started)~='number' then unaim(a);return end
+  -- No line ahead of it in flight: the draw's line has faded out by release (testers 2026-10-10:
+  -- a path drawn all the way made shots too easy to sidestep). Only its short trail follows it.
+  unaim(a)
+  if typeof(origin)~='Vector3' or typeof(velocity)~='Vector3' or velocity.Magnitude<.01 or type(started)~='number' then return end
   remove(a)
-  local stopAt=wallTime(origin,velocity,lifetime)
-  shots[a]={kind=kind,origin=origin,velocity=velocity,started=started,stopAt=stopAt}
-  -- Its path stays drawn while it flies, ahead of it to where it ends (user 2026-10-10: "show the
-  -- path they're traveling so players can avoid it"). The draw's beam carries on; a shot whose
-  -- draw wasn't seen gets one now.
-  local prev=aims[a]
-  aims[a]={origin=origin,finish=origin+velocity*stopAt,started=started,releaseAt=started,flight={velocity=velocity,stopAt=stopAt},b=prev and prev.b}
+  shots[a]={kind=kind,origin=origin,velocity=velocity,started=started,stopAt=wallTime(origin,velocity,lifetime)}
  elseif action=='Aim' then
   local releaseAt,flight,aimDistance,npc=lifetime,...
   if typeof(origin)~='Vector3' or typeof(velocity)~='Vector3' or velocity.Magnitude<.01 or type(started)~='number' or type(releaseAt)~='number' or type(flight)~='number' then return end
@@ -83,10 +81,7 @@ local function drawAims(now,camera)
  local paused=combat:GetAttribute('RunPaused')==true
  for id,a in aims do
   local npc=a.npc;local h=npc and npc:FindFirstChildOfClass('Humanoid')
-  if a.flight then
-   if Visuals.flown(a.started,now,held)>=a.flight.stopAt then unaim(id) end
-  -- A draw holds its flash a moment past release, until the Launch turns it into the flight line.
-  elseif now>=a.releaseAt+.3 or (npc and (not npc:IsDescendantOf(workspace) or (h and h.Health<=0))) then unaim(id) end
+  if now>=a.releaseAt or (npc and (not npc:IsDescendantOf(workspace) or (h and h.Health<=0))) then unaim(id) end
  end
  if not next(aims) then return end
  local character=Players.LocalPlayer.Character;local body=character and character:FindFirstChild('HumanoidRootPart')
@@ -95,13 +90,6 @@ local function drawAims(now,camera)
  for id,a in aims do
   if paused or not keep[id] or (a.origin-from).Magnitude>CULL then dropBeam(a);continue end
   if not a.b then a.b=takeBeam();a.b.a0.WorldPosition=a.origin;a.b.a1.WorldPosition=a.finish end
-  if a.flight then
-   local L=Visuals.FLIGHT_LINE;local beam=a.b.beam
-   a.b.a0.WorldPosition=Visuals.flightStart(a.origin,a.flight.velocity,a.started,now,held,a.flight.stopAt);a.b.a1.WorldPosition=a.finish
-   beam.Width0,beam.Width1=L.width,L.width*Visuals.FLIGHT_TIP
-   beam.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1-L.opacity),NumberSequenceKeypoint.new(.7,1-L.opacity*.8),NumberSequenceKeypoint.new(1,1)})
-   continue
-  end
   local opacity,width=Visuals.aimLook(a.started,a.releaseAt,now)
   local t=1-opacity
   local beam=a.b.beam;beam.Width0,beam.Width1=width,width

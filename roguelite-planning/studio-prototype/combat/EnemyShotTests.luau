@@ -27,14 +27,26 @@ return function(sources, Visuals, Catalog, Types)
 	check(Visuals.flown(19.5 + 15, 35.5) == 1, "Frozen 15 s: counts on from where it hung")
 	local f = Visuals.shotFrame(Vector3.zero, Vector3.new(0, 0, -35), 0.5)
 	check(near(f.Position, Vector3.new(0, 0, -17.5)) and near(f.LookVector, Vector3.new(0, 0, -1)), "Shot frame")
-	-- Aim line look (2026-10-10): faint at the draw, brighter and wider toward release, flash at the end.
+	-- Aim line look (2026-10-10, testers' telegraph pass): shows and brightens, then fades out to
+	-- nothing by release; nothing is drawn ahead of the shot in flight.
 	local o0, w0 = Visuals.aimLook(10, 10.55, 10)
 	local o1, w1 = Visuals.aimLook(10, 10.55, 10.1)
-	local o2, w2 = Visuals.aimLook(10, 10.55, 10.5)
-	check(math.abs(o0 - 0.5) < 1e-9 and math.abs(w0 - 0.3) < 1e-9, "Aim line starts half opaque, 0.3 wide")
-	check(math.abs(o1 - 0.59) < 0.01 and o2 == 0.95 and w2 > w1 and w2 <= 0.5, "Aim line brightens, widens, flashes")
-	check(near(Visuals.flightStart(Vector3.zero, Vector3.new(0, 0, -35), 10, 10.5, nil, 2), Vector3.new(0, 0, -17.5)), "Flight line starts at the shot")
-	check(near(Visuals.flightStart(Vector3.zero, Vector3.new(0, 0, -35), 10, 13, nil, 2), Vector3.new(0, 0, -70)), "Flight line start stops at the shot's end")
+	local o2 = Visuals.aimLook(10, 10.55, 10.275)
+	local o3, w3 = Visuals.aimLook(10, 10.55, 10.4)
+	check(math.abs(o0 - 0.6) < 1e-9 and math.abs(w0 - 0.3) < 1e-9, "Aim line starts 0.6 opaque, 0.3 wide")
+	check(o1 > o0 and math.abs(o2 - 0.95) < 1e-6 and math.abs(o3 - 0.95 * 0.15 / 0.275) < 1e-6, "Aim line brightens, then fades")
+	check(w3 > w1 and w1 > w0 and w3 <= 0.5, "Aim line widens toward release")
+	check(Visuals.aimLook(10, 10.55, 10.55) == 0 and Visuals.aimLook(10, 10.55, 11) == 0, "Aim line gone at release and in flight")
+	-- Every shooter in the catalog: readable for its first half, a 0.25-0.3 s fade, gone at release.
+	for _, d in Catalog.List do
+		if d.projectile then
+			local s, r = 10, 10 + d.attackImpact
+			local fade = math.min(Visuals.FADE, d.attackImpact / 2)
+			check(fade >= 0.25 and fade <= 0.35, "Fade 0.25-0.35 s: " .. d.id)
+			check(Visuals.aimLook(s, r, s) >= 0.6 and Visuals.aimLook(s, r, r - fade) > 0.9, "Readable telegraph: " .. d.id)
+			check(Visuals.aimLook(s, r, r - 0.05) < 0.2 and Visuals.aimLook(s, r, r) == 0, "Faded by release: " .. d.id)
+		end
+	end
 	check(math.abs(Visuals.aimFade(20, 71) - 20 / 71) < 1e-9 and Visuals.aimFade(90, 71) == 0.98, "Solid to the aimed point")
 	local picks = {}
 	for i = 1, Visuals.AIM_CAP + 10 do
@@ -362,6 +374,9 @@ return function(sources, Visuals, Catalog, Types)
 		check(near(aim[4], launched[4]) and near(aim[5], launched[5]), "Aim line is the shot's exact path")
 		check(math.abs(aim[7] - aim[6] - bow.attackImpact) < 1e-9 and aim[10] == npc, "Aim line runs from the draw to the release")
 		check(math.abs(aim[9] - 20 + 0.4 + bow.radius) < 0.1, "Aim line solid to the standing player")
+		-- The Launch's start is back-dated to its first step, at most a frame before the line's release
+		-- (here 12.5 ms): the line is under 0.1 opaque by then, and the client drops it on the Launch.
+		check(launched[6] >= aim[7] - 1 / 30 and Visuals.aimLook(aim[6], aim[7], launched[6]) < 0.1, "Line faded out as the arrow flies")
 		check(math.abs(launched[5].Magnitude - 35) < 1e-3 and launched[5].Unit.Z < -0.99, "Arrow flies at its speed toward the player")
 		check(released - start >= bow.attackImpact and released - start < bow.attackImpact + 1 / 29, "Released at impact time")
 		-- Pause: no frame moves the shot, the client holds it, then both carry on.
