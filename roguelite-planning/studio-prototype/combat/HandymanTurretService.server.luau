@@ -453,7 +453,7 @@ RunService.Heartbeat:Connect(function(dt)
   end
   if root and not paused and placedAt[p]==key and suppressed[p]~=key then sync(p,root);magnet(p,root) end
   list=turrets[p];if not list or #list==0 then continue end
-  if root and not paused and placedAt[p]==key then follow(p,root,list,cs,character,clock) end
+  if root and not paused and placedAt[p]==key and H.follows(cs and cs.class) then follow(p,root,list,cs,character,clock) end
   local enabled=cs.folder and cs.folder:GetAttribute('WeaponEnabled')~=false
   local active=fighting and character~=nil and enabled and p:GetAttribute('RunDown')==nil and not Characters.frozen(p)
   for _,t in list do

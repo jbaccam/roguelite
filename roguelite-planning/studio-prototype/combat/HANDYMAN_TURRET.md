@@ -283,3 +283,5 @@ The generic **Give item** grid lists the turret items, Scrap Magnet and Toolbelt
 - **Clear turrets also removes your turret items.** Otherwise they would come straight back at the next wave.
 - **No sell for turret items:** the game has no item selling, so "they sell like any item" means not at all.
 - **Studio may lag the repo.** Diff Studio against the repo before debugging a play-test report.
+
+**Handyman only (2026-10-10, user: "sell turrets to everyone but the turrets should be catered towards handyman").** Turret items stay in every class's shop. Only a Handyman's turrets follow him (`H.follows`); anyone else's stay where the wave placed them. His other turret perks are unchanged: a free Nail Turret every run, 20% off structure items, 15% (+ early class bonus) of his item offers from structures, Utility Power gains x1.25 and the tight 4-8 stud ring.

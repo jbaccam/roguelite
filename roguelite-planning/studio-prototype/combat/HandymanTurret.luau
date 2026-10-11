@@ -259,6 +259,9 @@ end
 H.Engineer={class=H.Class,ring={4,8},discount=.2,free='turret_nail'}
 function H.band(class) return class==H.Engineer.class and H.Engineer.ring or H.RING end
 function H.startsWithTurret(class) return class==H.Engineer.class end
+-- Only a Handyman's turrets follow him (2026-10-10, user: "sell turrets to everyone but the turrets
+-- should be catered towards handyman"); anyone else's stay where the wave placed them.
+function H.follows(class) return class==H.Engineer.class end
 -- A price multiplier on top of the player's own (EconomyConfig.modifier). Example: a wave-5 Nail
 -- Turret, 41 for anyone, is floor(41 x 0.8) = 32 for him.
 function H.priceFactor(class,entry) return (class==H.Engineer.class and type(entry)=='table' and entry.structure) and 1-H.Engineer.discount or 1 end

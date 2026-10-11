@@ -244,6 +244,7 @@ return function(H, G, Weapons, Stats, E, Catalog)
 	check(H.band("Handyman") == H.Engineer.ring and H.band("Gunner") == H.RING and H.RING[1] == 8 and H.RING[2] == 14, "Rings: Handyman 4-8, others 8-14")
 	check(H.Engineer.ring[1] == 4 and H.Engineer.ring[2] == 8 and H.Engineer.free == "turret_nail", "Engineer rules")
 	check(H.startsWithTurret("Handyman") and not H.startsWithTurret("Gunner"), "Only the Handyman starts with one")
+	check(H.follows("Handyman") and not H.follows("Gunner") and not H.follows(nil), "Only the Handyman's turrets follow him")
 	check(near(H.priceFactor("Handyman", plain), 0.8) and H.priceFactor("Gunner", plain) == 1 and H.priceFactor("Handyman", {}) == 1, "20% off structure items, for him only")
 	check(E.price(24, 5, H.priceFactor("Handyman", plain)) == 32, "His wave-5 Nail Turret: 32, not 41")
 	-- Shop weighting: a Handyman, or a carried Handyman weapon, favours structure items.
