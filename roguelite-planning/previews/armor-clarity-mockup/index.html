@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Armor Clarity Mockup</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Source+Sans+3:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--lime:#91ef14;--white:#f8f9f5;--muted:#aeb7b9;--dim:#787f83;--cream:#eadda7;--neg:#ff6969}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0e1214;color:var(--white);font-family:'Fredoka One',system-ui,sans-serif;overflow-x:hidden}
+.pagehead{padding:22px 28px 6px;max-width:1500px}
+.pagehead h1{font-size:34px;font-weight:400}
+.pagehead p,.note{font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:17px;color:#cfd6d8;line-height:1.45;margin-top:6px}
+b{color:var(--lime)}
+section{padding:18px 28px;border-top:2px solid #1d2428;margin-top:14px}
+section h2{font-size:26px;font-weight:400;margin-bottom:4px}
+.note{max-width:1400px;margin:2px 0 12px}
+.note ul{margin:6px 0 0 22px}
+.row{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.frame{display:flex;flex-direction:column;gap:6px}
+.dev{font-family:'Source Sans 3';font-weight:700;font-size:14px;color:var(--muted)}
+.dev a{color:var(--lime)}
+.box{position:relative;overflow:hidden;border:2px solid #222b2f;border-radius:8px;background:#000}
+.box iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0}
+.res{font-family:'Source Sans 3';font-weight:700;font-size:13px;color:var(--dim);max-width:900px}
+.res.ok{color:#8fd16a}.res.bad{color:var(--neg)}
+</style></head>
+<body>
+<div class="pagehead">
+ <h1>Armor clarity: what armor does and where to see it</h1>
+ <p>Play-test: "I'm a little confused what armor does and where to see it." Mockup only. Dashed lime outlines mark what is new; everything else is today's screen. Shown at <b>1920 × 1080</b> and on an <b>844 × 390 phone</b>.</p>
+ <p>Two things are called armor. The <b>Armor stat</b> cuts the damage of every hit, and players never do the sum: every screen shows it as a percent, "Armor 8 · <b>you take 35% less damage</b>" (negative: "Armor -3 · you take 20% more damage"). Each point does a bit less than the one before: 5 Armor = 25% less, 10 = 40%, 15 = 50%, 30 = 67%. Anything that adds Armor shows the change from your Armor now: "+2 Armor (<b>25% → 32% less damage</b>)". <b>Armor pieces</b> (from chests) do nothing alone except add their tier to Gear Power; <b>2 of one set</b> give its bonus and <b>all 4</b> add its perk.</p>
+</div>
+<section>
+ <h2>Pause screen (P in a run): ARMOR group + Armor in plain words</h2>
+ <div class="note">Example: Brawler (+3 Armor), Pot Lid (+2), Iron helmet IV + chest II + legs I (2-piece on), one Ninja boot. Armor 7 = <b>you take 32% less damage</b>; the Iron 2-piece line shows its +2 as 25% → 32%. Each worn set says ON or how many more pieces; the numbers are the real tier-scaled ones. Contact resistance and First-hit blocks show under DEFENSE only when you have them. The shop and level-up stat lists get the same Armor label ("Armor · you take 32% less damage"); shop item cards (Pot Lid etc.) and the Armor level-up card add "(25% → 32% less damage)".</div>
+ <div class="row" data-shots="../armor-clarity-mockup/pause.html|../armor-clarity-mockup/pause.html"></div>
+</section>
+<section>
+ <h2>Armory, Armor tab: explainer, WEARING line, bonus status</h2>
+ <div class="note">Two short lines over the slot filter (how sets work; your Armor as a percent with a 5 / 15 / 30 reference), then what you wear now. The detail panel's 2 / 4 PIECES rows show ON or WEAR n MORE, and one line says what a single piece does (Gear Power). The rest of the panel moves down 84; it still fits 810 tall and scrolls on phones as before.</div>
+ <div class="row" data-shots="../armor-clarity-mockup/armory.html|../armor-clarity-mockup/armory.html"></div>
+</section>
+<script>
+const SIZES=[[1920,1080,.5,'PC · 1920 × 1080'],[844,390,1,'PHONE · 844 × 390']];
+document.querySelectorAll('[data-shots]').forEach(row=>{
+ row.dataset.shots.split('|').forEach((page,i)=>{
+  const [w,h,s,label]=SIZES[i];
+  const f=document.createElement('div');f.className='frame';
+  f.innerHTML=`<div class="dev">${label} · <a href="${page.replace('../armor-clarity-mockup/','')}" target="_blank">${page.split('/').pop()}</a></div><div class="box" style="width:${w*s}px;height:${h*s}px"><iframe src="${page.replace('../armor-clarity-mockup/','')}" width="${w}" height="${h}" style="transform:scale(${s})" loading="eager"></iframe></div><div class="res">checking…</div>`;
+  row.appendChild(f);
+  const ifr=f.querySelector('iframe'),res=f.querySelector('.res');
+  ifr.addEventListener('load',async()=>{
+   try{const cw=ifr.contentWindow;await cw.document.fonts.ready;await new Promise(r=>setTimeout(r,400));cw.redraw&&cw.redraw();
+    const a=cw.audit(false);const real=a.filter(x=>x.kind!=='tiny');const tiny=a.filter(x=>x.kind==='tiny');
+    res.className='res '+(real.length?'bad':'ok');
+    res.textContent=(real.length?`${real.length} problem(s): `+real.slice(0,4).map(x=>x.kind+' '+(x.text||x.a+'/'+x.b||x.what)).join('; '):'Audit: all text fits its box, no overlaps.')+(tiny.length?` · ${tiny.length} label(s) under 9 px on screen`:'');
+   }catch(e){res.textContent='audit unavailable: '+e.message}
+  });
+ });
+});
+</script>
+</body></html>

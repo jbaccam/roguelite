@@ -352,13 +352,18 @@ function M.new(player,h,refresh)
   if entry.weaponId then thumbnail(p,combat.WeaponTemplates:FindFirstChild(entry.weaponId),x,y,w,ht)
   else h.icon(p,'Icon',x+(w-ht)/2,y,ht,entry.icon) end
  end
- local function effects(p,entry,x,y,w)
+ -- owned: the item is already in your build (the inventory detail), so its Armor is in your stat.
+ local function effects(p,entry,x,y,w,owned)
   local row=0
   for _,d in Stats.List do
    local v=entry.modifiers[d.id];local percent=(entry.percent or {})[d.id]
    if v or percent then
     local value=v or percent
-    text(p,'Effect_'..d.id,d.label..': '..(value>0 and '+' or '')..value..(percent and '%' or d.unit),x,y+row*26,w,26,18,M.statColor(d.id,value,0));row+=1
+    -- Flat Armor also says what it does from your live Armor (2026-10-10): 'Armor: +2 (25% → 32%
+    -- less damage)'; an owned copy goes from your Armor without it to your Armor now.
+    local change=''
+    if d.id=='Armor' and v and not percent then local now=Stats.read(state).Armor;change=' ('..Stats.armorChange(owned and now-v or now,v)..')' end
+    text(p,'Effect_'..d.id,d.label..': '..(value>0 and '+' or '')..value..(percent and '%' or d.unit)..change,x,y+row*26,w,26,18,M.statColor(d.id,value,0));row+=1
    end
   end
   return row*26
@@ -614,7 +619,7 @@ function M.new(player,h,refresh)
    local d=definitions[(page-1)*perPage+i]
    local row=Instance.new('Frame');row.Name=d.id;row.Size=UDim2.new(1,-4,0,rowH-1);row.Position=UDim2.fromOffset(0,(i-1)*rowH);row.BorderSizePixel=0;row.BackgroundColor3=Color3.fromRGB(18,22,23);row.BackgroundTransparency=1;row.Parent=scroll
    local font=side<180 and 10 or math.clamp(rowH*.86,11,19)
-   text(row,'Name',d.label,4,0,side*.58-9,rowH-1,font)
+   text(row,'Name',Stats.statLabel(d,values[d.id]),4,0,side*.58-9,rowH-1,font) -- 'Armor · you take 35% less damage' (2026-10-10)
    local value=d.id=='ShopPricePercent' and string.format('×%.2f',data.modifier) or Stats.format(d,values[d.id])
    local v=text(row,'Value',value,side*.58-5,0,side*.42-23,rowH-1,font,M.statColor(d.id,d.id=='ShopPricePercent' and (data.modifier-1)*100 or values[d.id],d.base));v.TextXAlignment=Enum.TextXAlignment.Right
   end
@@ -924,7 +929,7 @@ function M.new(player,h,refresh)
      local damage=math.max(0,math.floor(tonumber(copy.damage) or 0));local kills=math.max(0,math.floor(tonumber(copy.kills) or 0))
      text(detail,'RunPerformance',string.format('THIS RUN · %s damage · %s kills',damage,kills),16,y,dw-32,26,16,cream);y+=32
     else
-     y+=effects(detail,entry,16,y,dw-32)
+     y+=effects(detail,entry,16,y,dw-32,true)
      local works,wc=worksLine(entry,data)
      if works then text(detail,'WorksWith',works,16,y+4,dw-32,40,15,wc);y+=46 end
      y+=14

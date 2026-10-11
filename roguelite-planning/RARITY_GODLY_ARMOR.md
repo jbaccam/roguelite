@@ -665,6 +665,31 @@ which equals the whole Brawler class buff.
   Common costs about 5 early runs of emeralds plus its copies.
 - **Still open:** a second Common set (Iron is the only Common).
 
+#### Armor clarity (2026-10-10)
+
+Play-test: "I'm a little confused what armor does and where to see it." Full write-up and the
+percent table: [CHARACTER_STATS.md](studio-prototype/combat/CHARACTER_STATS.md#armor-in-plain-words-2026-10-10).
+Mockup: `previews/armor-clarity-mockup/` (pause screen and Armory, PC and phone).
+
+- **What a piece does:** nothing by itself except add its tier to Gear Power (+12% damage, +6%
+  health per point). 2 worn pieces of the SAME set give the 2-piece bonus, all 4 add the perk.
+  Example: Iron helmet IV, chest II, legs I = 3 Iron, so the 2-piece bonus is on (+2 Armor at
+  tier II: 2 × 1.1 = 2.2, rounds to 2) and the 4-piece needs 1 more piece.
+- **What the Armor stat does:** every hit does Armor ÷ (Armor + 15) less, shown everywhere as a
+  percent. Example: a Brawler (+3) with Pot Lid (+2) and the Iron 2-piece (+2) has 7 Armor and
+  takes 32% less damage; the Iron line reads "+2 Armor (25% → 32% less damage)".
+- **What was missing:** in a run nothing showed your armor or set bonuses; the Armory's 2 / 4
+  PIECES lines never said whether they were on, showed Tier I numbers on upgraded pieces, and the
+  Armor stat was a bare number everywhere.
+- **What changed:** `CharacterStats.armorSetLines` (worn sets, on / need, real tier numbers, Armor
+  as a before → after percent) feeds a new ARMOR group on the pause screen and the Armory's
+  piece detail (ON / WEAR n MORE). The Armory's Armor tab gets a two-line explainer with your Armor
+  as a percent and a WEARING line. The detail panel's pieces, upgrade and equip buttons moved down
+  84 (still inside its 810 height; phones scroll as before).
+- **Analysis:** the set rules were already sound and server-side; the confusion was presentation.
+  Bonuses that only switch on at 2 and 4 pieces need an on / off state wherever they show, and a
+  stat with diminishing returns needs its effect as a percent, never the raw formula.
+
 ### Step 6: Pets and the Pet Chest (section 11)
 - Its own design pass first:
   - Pet Chest price and odds.

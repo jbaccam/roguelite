@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Pause Armor Mockup</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Reuses the roster mockup's theme files (real ui/assets nine-slices) and the item-card armor icons. -->
+<base href="../roster-types-mockup/">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Source+Sans+3:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="mock.css">
+<style>
+.glass{position:absolute;background:rgba(7,9,10,.5);border:2px solid rgba(7,9,10,.65);border-radius:16px;overflow:hidden}
+.sec{position:absolute;display:flex;align-items:center;gap:12px;font-family:'Fredoka One';color:var(--white);white-space:nowrap}
+.sec::before,.sec::after{content:'';flex:1;height:3px;border-radius:2px;background:linear-gradient(90deg,rgba(145,239,20,0),rgba(145,239,20,.7))}
+.sec::after{background:linear-gradient(90deg,rgba(145,239,20,.7),rgba(145,239,20,0))}
+.setline{position:absolute;border-radius:10px;background:rgba(7,9,10,.65);border:2px solid rgba(7,9,10,.5)}
+.setline.off{background:rgba(7,9,10,.4)}
+.new{outline:3px dashed rgba(145,239,20,.85);outline-offset:3px;border-radius:10px}
+</style>
+</head><body>
+<script src="mock.js"></script>
+<script>
+// PauseUI (P in a run), STATS column. NEW: an ARMOR group (worn sets, 2 / 4 piece bonuses, on or
+// how many more pieces) and a plain-words line under Armor. Example build: Brawler (+3 Armor),
+// Pot Lid (+2), Iron helmet IV + chest II + legs I (2-piece on: +2 Armor) and a Ninja boot.
+const A='../item-card-mockup/img/a/';
+const ARMOR=7, PCT=Math.round((1-1/(1+ARMOR/15))*100); // CharacterStats.armorPercent: 32
+const SETS=[
+ {name:'IRON',icon:'Iron.Chest',n:3,two:['+2 Armor (25% → 32% less damage)',0],four:['+10% Contact resistance',1]},
+ {name:'NINJA',icon:'Ninja.Boots',n:1,two:['+8% Dodge',1],four:['After you dodge, your next hit is a critical hit',3]},
+];
+const GROUPS=[['OFFENSE',[['Damage','+16%',1],['Attack speed','+5%',1],['Critical chance','5%',0],['Critical damage','150%',0],['Melee damage','+20%',1],['Ranged damage','-15%',-1]]],
+ ['DEFENSE',[['Max health','125',1],['Armor',String(ARMOR),1,`you take ${PCT}% less damage from every hit`],['Dodge','0%',0]]],['RECOVERY',[['Regeneration','0 HP/s',0],['Life steal','0%',0]]],
+ ['UTILITY',[['Movement speed','22',-1],['Pickup radius','8',0],['Luck','0',0]]]];
+let MC;function measure(t,size=15){MC=MC||document.createElement('canvas').getContext('2d');MC.font=`700 ${size}px "Source Sans 3"`;return MC.measureText(t).width*1.06}
+function sec(t,y,side){return `<div class="sec" style="${B(24,y,side-48,30)}font-size:22px">${t}</div>`}
+function draw(L){
+ const w=L.w,h=L.h,tight=h-L.top<800;let o='',y=L.top+(tight?4:12);
+ const px=tight?w/2-400:w/2-150;
+ o+=nine('panel',px,y,300,66,img(IMG+'stone.png',-22,11,44)+img(IMG+'stone.png',278,11,44)+img(IMG+'pause.png',40,11,44)+lbl('PAUSED',92,8,180,50,40,'var(--white)','l'));
+ if(!tight)y+=74;
+ o+=`<div class="lbl" style="${B(tight?px+332:0,tight?y+18:y,tight?460:w,30)}font-size:22px">Pine Valley&nbsp; · &nbsp;<span style="color:var(--lime)">Normal</span>&nbsp; · &nbsp;Wave 7 / 20</div>`;
+ y+=tight?74:40;
+ o+=`<div class="abs" style="${B(w/2-180,y,360,46)}border-radius:23px;background:#2f5f0e;border:3px solid var(--ink);display:flex;align-items:center;justify-content:center"><span class="lbl" style="position:relative;font-size:22px;color:var(--limeSoft)">GAME FROZEN</span></div>`;
+ y+=56;
+ const top=y+(tight?0:10),panelH=h-top-(tight?12:24);
+ const side=Math.min(Math.max(Math.floor((w-400-160)/2),300),520),gap=Math.floor((w-2*side-400)/4);
+ const lx=gap,mx=gap*2+side,rx=gap*3+side+400;
+ let s=sec('STATS',14,side);let sy=62;
+ // ---- NEW: ARMOR group
+ const rw=side-48;
+ s+=`<div class="abs new" style="${B(18,sy-6,side-36,0)}" data-noaudit></div>`;
+ const startY=sy;
+ s+=lbl('ARMOR',24,sy,80,22,15,'var(--lime)','l')+txt('2 of one set: bonus · all 4: perk',100,sy,rw-76,22,15,'var(--muted)','nw','text-align:right');sy+=26;
+ for(const st of SETS){
+  const on=st.two[1]===0;let r='';
+  r+=img(A+st.icon+'.png',8,10,40,'drop');
+  r+=lbl(`${st.name}  ·  ${st.n} / 4`,56,4,rw-64,26,20,on?'var(--white)':'var(--muted)','l');
+  // A bonus line is one 22-tall line, or 40 (two lines) when it is too long at 15 px or on a phone.
+  const tw=rw-64-96,ph=L.s<.75;let yy=30;
+  [[2,st.two],[4,st.four]].forEach(([p,[t,need]])=>{
+   const c=need===0?'var(--lime)':'var(--muted)',two=ph||fitSize(`${p} PIECES  ${t}`,15,tw-4,15,'"Source Sans 3"')<15||measure(`${p} PIECES  ${t}`)>tw-4,lh=two?40:22;
+   r+=txt(`<span style="color:${c}">${p} PIECES</span>&nbsp; <span style="color:${need===0?'var(--white)':'var(--muted)'}">${t}</span>`,56,yy,tw,lh,ph?Math.min(15,Math.floor(lh*.42)):15,'var(--white)');
+   r+=lbl(need===0?'ON':`${need} MORE`,rw-8-88,yy,88,lh,16,need===0?'var(--lime)':'var(--cream)','r');
+   yy+=lh;
+  });
+  s+=`<div class="setline ${on?'':'off'}" style="${B(24,sy,rw,yy+6)}" data-in="armor-${st.name}">${r}</div>`;sy+=yy+12;
+ }
+ s=s.replace(`${B(18,startY-6,side-36,0)}`,`${B(18,startY-6,side-36,sy-startY+4)}`);
+ sy+=8;
+ for(const [g,rows] of GROUPS){
+  s+=lbl(g,24,sy,side-48,22,15,'var(--lime)','l');sy+=26;
+  rows.forEach(([a,v,c,note])=>{
+   s+=txt(a,36,sy,side*.6-36,26,18,'#c9d1d3','nw')+lbl(v,side*.55,sy,side*.45-24,26,20,c>0?'var(--lime)':c<0?'var(--neg)':'var(--white)','r');sy+=27;
+   if(note){s+=`<div class="abs new" style="${B(30,sy-1,side-60,22)}" data-noaudit></div>`+txt(note,36,sy,side-72,20,15,'var(--muted)','nw');sy+=24;}
+  });
+  sy+=8;
+ }
+ o+=`<div class="glass" style="${B(lx,top,side,panelH)}" data-box="Stats"><div class="abs" style="${B(0,0,side,panelH)}overflow-y:${sy+16>panelH?'scroll':'hidden'};overflow-x:hidden"><div class="abs" style="${B(0,0,side-(sy+16>panelH?6:0),sy+16)}">${s}</div></div></div>`;
+ const bh=tight?72:70;let by=top+(tight?0:44);
+ o+=btn('RESUME',mx,by,400,tight?80:86,{size:34});by+=tight?118:132;
+ o+=btn('SETTINGS',mx,by,400,bh,{neutral:true,size:26});by+=bh+(tight?12:20);
+ o+=btn('RESTART',mx,by,400,bh,{neutral:true,size:26});by+=bh+(tight?12:40);
+ o+=btn('LEAVE RUN',mx,by,400,bh,{neutral:true,size:26,color:'var(--neg)'});
+ o+=`<div class="glass" style="${B(rx,top,side,panelH)}" data-box="Build">${sec('WEAPONS',14,side)}${txt('(build column unchanged)',24,70,side-48,24,16,'var(--muted)')}</div>`;
+ return `<div class="abs" style="left:0;top:0;width:${w}px;height:${h}px;background:radial-gradient(ellipse at 40% 60%,#4d6b3a 0,#2b3d25 40%,#121a14 100%)"></div><div class="abs" style="left:0;top:0;width:${w}px;height:${h}px;background:rgba(5,9,10,.55)"></div>`+o;
+}
+mount(draw,'#0b1012');
+</script>
+</body></html>

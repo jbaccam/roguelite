@@ -729,6 +729,22 @@ function A.new(player, opts)
 		return b
 	end
 
+	-- The avatar's live Armor stat (CharacterService sets Stat_Armor on the character, lobby too), or
+	-- nil before it arrives. Armor shows as a percent everywhere, never the sum (2026-10-10).
+	local function liveArmor()
+		local ch = player.Character
+		local v = ch and ch:GetAttribute("Stat_Armor")
+		return type(v) == "number" and v or nil
+	end
+	-- Owned armor tiers ({pieceId = tier}) for CharacterStats.armorSetLines.
+	local function armorTiers()
+		local t = {}
+		for id, rec in profile.armor do
+			t[id] = rec.tier
+		end
+		return t
+	end
+
 	-- Left: the collection -------------------------------------------------------
 	local function drawCollection()
 		local lw, lh = L.leftW, L.leftH
@@ -788,6 +804,70 @@ function A.new(player, opts)
 			end
 		end
 		table.move(unowned, 1, #unowned, #armorSets + 1, armorSets)
+		-- What armor does, over the list (2026-10-10, play-test: "I'm a little confused what armor
+		-- does and where to see it"; previews/armor-clarity-mockup): how sets work, your Armor as a
+		-- percent with a short reference, then the sets you wear and whether their bonus is on.
+		-- Phones (canvas scale .5) give both boxes room for more lines and skip the 5 / 15 / 30
+		-- reference (about 4 lines at 9-10 px in the 2-column panel).
+		if state.tab == "Armor" then
+			local phone = L.s < 0.75
+			local eh, wh = phone and 86 or 66, phone and 44 or 24
+			local armor = liveArmor()
+			local lime = T.hex(C.lime)
+			local pct = armor and Stats.armorPercent(armor)
+			local yours = armor
+					and string.format(
+						"Your Armor: %s, so you take %d%% %s damage.",
+						Stats.format(Stats.ById.Armor, armor),
+						math.abs(pct),
+						pct >= 0 and "less" or "more"
+					)
+				or "Armor cuts the damage you take."
+			local ex = T.text(
+				panel,
+				"ArmorHelp",
+				string.format(
+					'<font color="%s">2 pieces</font> of one set give its bonus. <font color="%s">All 4</font> add its perk.\n%s%s',
+					lime,
+					lime,
+					yours,
+					phone and ""
+						or string.format(' <font color="%s">(5 Armor = 25%% less, 15 = 50%%, 30 = 67%%)</font>', T.hex(C.muted))
+				),
+				22,
+				y0,
+				lw - 44,
+				eh,
+				phone and 15 or 17,
+				C.cream
+			)
+			ex.TextYAlignment = Enum.TextYAlignment.Top
+			local parts = {}
+			for _, r in Stats.armorSetLines(profile.wearing, armorTiers()) do
+				local set = Armor.ById[r.id]
+				table.insert(
+					parts,
+					(set and set.name or r.id)
+						.. " "
+						.. r.count
+						.. "/4"
+						.. (r.four.on and string.format(' <font color="%s">(4-piece on)</font>', lime) or r.two.on and string.format(' <font color="%s">(2-piece on)</font>', lime) or "")
+				)
+			end
+			T.text(
+				panel,
+				"ArmorWearing",
+				string.format('<font color="%s">WEARING</font>  ', lime)
+					.. (#parts > 0 and table.concat(parts, "  ·  ") or "nothing yet. Pick a piece below, then EQUIP."),
+				22,
+				y0 + eh + 2,
+				lw - 44,
+				wh,
+				phone and 15 or 17,
+				C.white
+			)
+			y0 += eh + wh + 10
+		end
 		if state.tab == "Armor" and #armorSets > 0 then
 			local filters = { "All" }
 			for _, sl in Armor.Slots do
@@ -1304,21 +1384,50 @@ function A.new(player, opts)
 			rec and T.Tier[rec.tier] or C.white
 		)
 		armorView(panel.IconWell, setId, slot, 6, 6, 120)
-		local two, four = setText(setId)
-		local d = T.text(
+		-- 2 / 4 PIECES (2026-10-10, previews/armor-clarity-mockup): ON or WEAR n MORE, with the real
+		-- tier numbers when you wear the set (CharacterStats.armorSetLines, the server's rules), and
+		-- Armor as a percent from your live Armor: '+2 Armor (25% → 32% less damage)'. A set you
+		-- don't wear shows its Tier I lines. Then the one thing a single piece does by itself.
+		local line
+		for _, r in Stats.armorSetLines(profile.wearing, armorTiers(), liveArmor()) do
+			if r.id == setId then
+				line = r
+			end
+		end
+		if not line then
+			local probe = Stats.armorSetLines({ [slot] = setId }, nil, liveArmor())[1]
+			local two, four = setText(setId)
+			line = {
+				two = { on = false, need = 2, text = probe and probe.two.text or two },
+				four = { on = false, need = 4, text = probe and probe.four.text or four },
+			}
+		end
+		for i, part in { { 2, line.two }, { 4, line.four } } do
+			local y = 166 + (i - 1) * 50
+			local p = part[2]
+			T.label(panel, "Pieces" .. part[1], part[1] .. " PIECES", 24, y, 110, 24, 20, p.on and C.lime or C.muted).TextXAlignment =
+				Enum.TextXAlignment.Left
+			T.label(panel, "Status" .. part[1], p.on and "ON" or ("WEAR " .. p.need .. " MORE"), 24, y + 24, 110, 20, 14, p.on and C.lime or C.cream).TextXAlignment =
+				Enum.TextXAlignment.Left
+			T.text(panel, "Bonus" .. part[1], p.text, 140, y, RIGHT_W - 164, 44, 19, p.on and C.white or C.muted)
+		end
+		local gp = T.text(
 			panel,
-			"Bonuses",
-			'<font color="#91EF14">2 PIECES</font>  ' .. two .. '\n<font color="#91EF14">4 PIECES</font>  ' .. four,
+			"GearPowerNote",
+			"Each piece also adds its tier to Gear Power: +"
+				.. math.round(Stats.PowerDamagePerPoint * 100)
+				.. "% damage and +"
+				.. math.round(Stats.PowerHealthPerPoint * 100)
+				.. "% health per point.",
 			24,
-			166,
+			266,
 			RIGHT_W - 48,
-			56,
-			19,
-			C.cream
+			44,
+			15,
+			C.muted
 		)
-		d.RichText = true
-		d.TextYAlignment = Enum.TextYAlignment.Top
-		T.label(panel, "PiecesTitle", "SET PIECES", 24, 228, 300, 32, 24).TextXAlignment = Enum.TextXAlignment.Left
+		gp.TextYAlignment = Enum.TextYAlignment.Top
+		T.label(panel, "PiecesTitle", "SET PIECES", 24, 312, 300, 32, 24).TextXAlignment = Enum.TextXAlignment.Left
 		local owned, wornAll = 0, true
 		for i, sl in Armor.Slots do
 			local r = profile.armor[Armor.pieceId(setId, sl)]
@@ -1327,7 +1436,7 @@ function A.new(player, opts)
 			wornAll = wornAll and (on or not r)
 			statRow(
 				panel,
-				262 + (i - 1) * 34,
+				346 + (i - 1) * 34,
 				sl,
 				r and ((on and "WORN" or "OWNED") .. "  " .. T.Roman[r.tier]) or "NOT OWNED"
 			)
@@ -1336,14 +1445,14 @@ function A.new(player, opts)
 		if rec then
 			local need = rec.tier < 4 and Chests.upgradeCost(id, rec.tier) or nil
 			local gems = need and Chests.upgradeEmeralds(id, rec.tier)
-			T.upgradeBar(panel, "Copies", 24, 408, RIGHT_W - 48, 26, rec.have, need)
+			T.upgradeBar(panel, "Copies", 24, 492, RIGHT_W - 48, 26, rec.have, need)
 			local ok = need ~= nil and rec.have >= need and profile.gems >= gems
 			local up = T.button(
 				panel,
 				"Upgrade",
 				need and ("UPGRADE  ·  " .. gems .. " EMERALDS") or "MAX TIER",
 				24,
-				444,
+				528,
 				RIGHT_W - 48,
 				62,
 				function()
@@ -1354,9 +1463,9 @@ function A.new(player, opts)
 			up.Caption.TextSize = 24
 			up.Interactable = ok
 			if need and rec.have < need then
-				centred(T.text(panel, "Need", "Need " .. (need - rec.have) .. " more copies", 24, 506, RIGHT_W - 48, 20, 16, C.muted))
+				centred(T.text(panel, "Need", "Need " .. (need - rec.have) .. " more copies", 24, 590, RIGHT_W - 48, 20, 16, C.muted))
 			elseif need and profile.gems < gems then
-				centred(T.text(panel, "Need", "Need " .. (gems - profile.gems) .. " more emeralds", 24, 506, RIGHT_W - 48, 20, 16, C.negative))
+				centred(T.text(panel, "Need", "Need " .. (gems - profile.gems) .. " more emeralds", 24, 590, RIGHT_W - 48, 20, 16, C.negative))
 			end
 		end
 		local eq = T.button(
@@ -1364,7 +1473,7 @@ function A.new(player, opts)
 			"Equip",
 			worn and "TAKE OFF" or (rec and "EQUIP" or "NOT OWNED"),
 			24,
-			530,
+			614,
 			RIGHT_W - 48,
 			62,
 			function()
@@ -1379,7 +1488,7 @@ function A.new(player, opts)
 			"EquipSet",
 			wornAll and "TAKE OFF SET" or "EQUIP FULL SET",
 			24,
-			604,
+			688,
 			RIGHT_W - 48,
 			62,
 			function()
@@ -1838,7 +1947,7 @@ function A.new(player, opts)
 		end
 	end
 
-	local profileConn
+	local profileConn, armorConn
 	local pendingDraw = false
 	-- tab: Classes | Weapons | Armor | Pets, or {tab, kind, id} when returning from an attack preview.
 	function self.Open(tab)
@@ -1885,6 +1994,19 @@ function A.new(player, opts)
 				end)
 			end
 		end)
+		-- The live Armor percent (Armor tab, armor details) follows the server's Stat_Armor, which
+		-- lands just after a WearArmor changes ProfileWearing (2026-10-10).
+		local ch = player.Character
+		armorConn = ch
+			and ch:GetAttributeChangedSignal("Stat_Armor"):Connect(function()
+				if (state.tab == "Armor" or state.kind == "armor") and not pendingDraw then
+					pendingDraw = true
+					task.defer(function()
+						pendingDraw = false
+						draw()
+					end)
+				end
+			end)
 		-- Draws now, and again whenever the screen changes size (window resize, phone rotation).
 		canvas, L = nil, nil
 		justOpened = true
@@ -1904,6 +2026,10 @@ function A.new(player, opts)
 		if profileConn then
 			profileConn:Disconnect()
 			profileConn = nil
+		end
+		if armorConn then
+			armorConn:Disconnect()
+			armorConn = nil
 		end
 		local r = root
 		root = nil

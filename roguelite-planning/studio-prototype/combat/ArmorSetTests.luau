@@ -173,5 +173,80 @@ return function(S)
 		end
 	end
 
+	-- Armor in plain words (2026-10-10): the percent matches S.incoming, and the notes the stat lists show.
+	eq(S.armorPercent(0), 0, "armorPercent 0")
+	eq(S.armorPercent(3), 17, "armorPercent 3 (Brawler)")
+	eq(S.armorPercent(8), 35, "armorPercent 8")
+	eq(S.armorPercent(10), 40, "armorPercent 10")
+	eq(S.armorPercent(15), 50, "15 Armor halves a hit")
+	eq(S.armorPercent(-2), -13, "armorPercent -2 (Mage)")
+	eq(math.round(S.incoming(20, { ContactReduction = 0, Armor = 10 })), 12, "a 20-damage hit at Armor 10 does 12")
+	eq(S.armorPercent(5), 25, "armorPercent 5")
+	eq(S.armorPercent(30), 67, "armorPercent 30")
+	eq(S.armorPercent(-3), -20, "armorPercent -3")
+	eq(S.statNote("Armor", 8), "you take 35% less damage", "statNote Armor 8")
+	eq(S.statNote("Armor", -3), "you take 20% more damage", "statNote Armor -3")
+	eq(S.statNote("Armor", 0), nil, "statNote Armor 0")
+	eq(S.statNote("Dodge", 10), nil, "statNote other stats")
+	eq(S.statLabel(S.ById.Armor, 7), "Armor · you take 32% less damage", "statLabel Armor 7")
+	eq(S.statLabel(S.ById.Dodge, 7), "Dodge", "statLabel other stats")
+	eq(S.armorChange(5, 2), "25% → 32% less damage", "armorChange 5 + 2")
+	eq(S.armorChange(0, 3), "0% → 17% less damage", "armorChange 0 + 3")
+	eq(S.armorChange(-3, 3), "20% more → 0% less damage", "armorChange -3 + 3")
+	eq(S.armorChange(-3, 1), "20% more → 13% more damage", "armorChange -3 + 1")
+
+	-- armorSetLines: worn sets, on / need, real tier numbers.
+	local rows = S.armorSetLines(
+		{ Helmet = "Iron", Chest = "Iron", Legs = "Iron", Boots = "Ninja" },
+		{ ["Iron.Helmet"] = 4, ["Iron.Chest"] = 2, ["Iron.Legs"] = 1, ["Ninja.Boots"] = 1 }
+	)
+	eq(#rows, 2, "lines: two sets worn")
+	eq(rows[1].id, "Iron", "lines: most pieces first")
+	eq(rows[1].count, 3, "lines: Iron count")
+	check(rows[1].two.on and rows[1].two.need == 0, "lines: Iron 2-piece on")
+	eq(rows[1].two.text, "+2 Armor", "lines: Iron 2-piece at II rounds to +2")
+	check(not rows[1].four.on and rows[1].four.need == 1, "lines: Iron 4-piece needs 1 more")
+	eq(rows[1].four.text, "+10% Contact resistance", "lines: Iron 4-piece text")
+	eq(rows[2].id, "Ninja", "lines: Ninja second")
+	check(not rows[2].two.on and rows[2].two.need == 1 and rows[2].four.need == 3, "lines: Ninja 1 of 4")
+	-- With the live Armor stat, a line that adds Armor says what it does from there.
+	rows = S.armorSetLines({ Helmet = "Iron", Chest = "Iron" }, { ["Iron.Helmet"] = 1, ["Iron.Chest"] = 1 }, 7)
+	eq(rows[1].two.text, "+2 Armor (25% → 32% less damage)", "lines: worn Iron 2-piece at Armor 7")
+	eq(rows[1].four.text, "+10% Contact resistance", "lines: no Armor, no change note")
+	rows = S.armorSetLines({ Helmet = "Spartan" }, { ["Spartan.Helmet"] = 1 }, 5)
+	eq(rows[1].two.text, "+3 Armor (25% → 35% less damage)", "lines: Spartan 2-piece not on yet, from Armor 5")
+	rows = S.armorSetLines(full("DragonScale", 4))
+	eq(rows[1].two.text, "+33 Max health", "lines: Dragon Scale IV 2-piece")
+	eq(
+		rows[1].four.text,
+		"+26% Burn chance; zombies that hit you may catch fire (33%)",
+		"lines: Dragon Scale IV 4-piece"
+	)
+	check(rows[1].four.on and rows[1].four.need == 0, "lines: Dragon Scale 4-piece on")
+	rows = S.armorSetLines(full("Spartan", 4))
+	eq(rows[1].two.text, "+4 Armor", "lines: Spartan IV armor")
+	eq(rows[1].four.text, "Blocks the first hit every wave", "lines: Spartan block never scales")
+	rows = S.armorSetLines(full("Viking", 3))
+	eq(rows[1].four.text, "+30% Attack speed below half health", "lines: Viking III rage")
+	rows = S.armorSetLines(full("Iron", 1))
+	eq(rows[1].two.text, S.ArmorSets.Iron.text.two, "lines: tier I keeps the table's text")
+	eq(#S.armorSetLines({ Helmet = "Iron", Chest = "Iron" }, {}), 0, "lines: unowned worn pieces don't count")
+	eq(#S.armorSetLines("Chest:DragonScale,Helmet:DragonScale", "DragonScale.Helmet:2:0,DragonScale.Chest:3:1"), 1, "lines: strings")
+	-- Every set's lines agree with armorBonus at every tier (the stat part of each line's numbers).
+	for setId in S.ArmorSets do
+		for t = 1, 4 do
+			local w, tt = full(setId, t)
+			local s = S.armorBonus(w, tt)
+			local r = S.armorSetLines(w, tt)[1]
+			for id, v in s do
+				local inTwo = S.ArmorSets[setId].two[id] ~= nil
+				local text = inTwo and r.two.text or r.four.text
+				if S.ArmorSets[setId].text and string.find(text, "%d") and not S.ArmorFixed[id] then
+					check(string.find(text, tostring(math.abs(v)), 1, true) ~= nil, setId .. " " .. t .. " " .. id .. " number in line")
+				end
+			end
+		end
+	end
+
 	return { passed = checks }
 end

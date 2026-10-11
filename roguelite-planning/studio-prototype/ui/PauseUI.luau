@@ -13,6 +13,7 @@ local T=require(RS:WaitForChild('UITheme'))
 local FX=require(RS:WaitForChild('StoreFX'))
 local combat=RS:WaitForChild('RogueliteCombat')
 local Stats=require(combat:WaitForChild('CharacterStats'))
+local Armor=require(combat:WaitForChild('ArmorCatalog')) -- worn sets' names and icons (ARMOR group)
 local Catalog=require(combat:WaitForChild('ShopCatalog'))
 local LevelUps=require(combat:WaitForChild('LevelUpCatalog'))
 local Rules=require(RS:WaitForChild('RunSetupRules'))
@@ -29,10 +30,12 @@ M.RESTART=true
 -- Stats shown, by group; every value already includes items and level-ups.
 M.Groups={
  {'OFFENSE',{'Damage','AttackSpeed','CritChance','CritDamage','MeleeDamage','RangedDamage'}},
- {'DEFENSE',{'MaxHP','Armor','Dodge'}},
+ {'DEFENSE',{'MaxHP','Armor','Dodge','ContactReduction','FirstHitBlock'}},
  {'RECOVERY',{'Regeneration','LifeSteal'}},
  {'UTILITY',{'MoveSpeed','PickupRadius','Luck'}},
 }
+-- Shown only when you have some (Iron and Spartan 4-piece, a few items), 2026-10-10.
+M.OnlyWhenSet={ContactReduction=true,FirstHitBlock=true}
 local SIDE_W,MID_W=520,400 -- design widths of the side panels and the button column
 local function center(l) l.TextXAlignment=Enum.TextXAlignment.Center;return l end
 local function left(l) l.TextXAlignment=Enum.TextXAlignment.Left;return l end
@@ -220,16 +223,53 @@ function M.new(player,opts)
    end
    sy+=8
   end
+  -- ARMOR (2026-10-10, play-test: "I'm a little confused what armor does and where to see it";
+  -- previews/armor-clarity-mockup): each worn set, its 2 / 4 piece lines with the real tier numbers,
+  -- and ON or how many more pieces. From the server-set ProfileWearing / ProfileArmor through
+  -- CharacterStats.armorSetLines, the same rules the server's armorBonus uses. A line is two lines
+  -- tall when it's too long at 15 px, and always on phones (canvas scale .5). Lines that add Armor
+  -- also say what they do at your live Armor: '+2 Armor (25% → 32% less damage)'.
   local values=Stats.read(state)
+  local armorRows=Stats.armorSetLines(player:GetAttribute('ProfileWearing'),player:GetAttribute('ProfileArmor') or '',values.Armor)
+  left(T.label(ls,'Group_ARMOR','ARMOR',24,sy,80,22,15,C.lime))
+  right(T.text(ls,'Note_ARMOR','2 of one set: bonus  ·  all 4: perk',100,sy,side-124,22,15,C.muted));sy+=26
+  if #armorRows==0 then
+   left(T.text(ls,'NoArmor','No armor worn. Wear pieces in the Armory: 2 of one set give a bonus.',36,sy,side-72,44,15,C.muted));sy+=50
+  end
+  local rw=side-48;local tw=rw-64-96
+  local worn=Stats.parseWearing(player:GetAttribute('ProfileWearing'))
+  for _,r in armorRows do
+   local set=Armor.ById[r.id];local on=r.two.on
+   local row=T.make('Frame',ls,{Name='Armor_'..r.id,Position=UDim2.fromOffset(24,sy),Size=UDim2.fromOffset(rw,80),BackgroundColor3=INK,BackgroundTransparency=on and .35 or .6,BorderSizePixel=0})
+   T.make('UICorner',row,{CornerRadius=UDim.new(0,10)})
+   local slot='Chest';for _,sl in Armor.Slots do if worn[sl]==r.id then slot=sl;break end end -- a worn piece's icon
+   T.icon(row,'Icon',8,10,40,Armor.Icons[r.id..'.'..slot] or '')
+   left(T.label(row,'Set',string.upper(set and set.name or r.id)..'  ·  '..r.count..' / 4',56,4,rw-64,26,20,on and C.white or C.muted))
+   local ly=30
+   for _,p in {{2,r.two},{4,r.four}} do
+    local plain=p[1]..' PIECES  '..p[2].text
+    local lh=(L.s<.75 or TextService:GetTextSize(plain,15,T.Body,Vector2.new(1e4,100)).X>tw-4) and 40 or 22
+    local l=left(T.text(row,'Bonus'..p[1],string.format('<font color="%s">%d PIECES</font>  <font color="%s">%s</font>',T.hex(p[2].on and C.lime or C.muted),p[1],T.hex(p[2].on and C.white or C.muted),p[2].text),56,ly,tw,lh,15))
+    l.TextYAlignment=Enum.TextYAlignment.Center
+    right(T.label(row,'Status'..p[1],p[2].on and 'ON' or (p[2].need..' MORE'),rw-96,ly,88,lh,16,p[2].on and C.lime or C.cream))
+    ly+=lh
+   end
+   row.Size=UDim2.fromOffset(rw,ly+6)
+   sy+=ly+12
+  end
+  sy+=8
   for _,g in M.Groups do
    left(T.label(ls,'Group_'..g[1],g[1],24,sy,side-48,22,15,C.lime));sy+=26
    for _,id in g[2] do
     local d=Stats.ById[id]
-    if d then
+    local v=d and (values[id] or d.base) -- lime above the base value, red below (like the shop's stats)
+    if d and not (M.OnlyWhenSet[id] and v==d.base) then
      left(T.text(ls,'Name_'..id,d.label,36,sy,side*.6-36,26,18,Color3.fromRGB(201,209,211)))
-     local v=values[id] or d.base -- lime above the base value, red below (like the shop's stats)
      right(T.label(ls,'Value_'..id,Stats.format(d,v),side*.55,sy,side*.45-24,26,20,v>d.base and C.lime or v<d.base and C.negative or C.white))
      sy+=27
+     -- What the number does, in plain words (Armor 8: 'you take 35% less damage from every hit').
+     local note=Stats.statNote(id,v)
+     if note then left(T.text(ls,'Note_'..id,note..' from every hit',36,sy,side-72,20,15,C.muted));sy+=24 end
     end
    end
    sy+=8

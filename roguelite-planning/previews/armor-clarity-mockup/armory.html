@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Armory Armor Mockup</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<base href="../roster-types-mockup/">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Source+Sans+3:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="mock.css">
+<style>.new{outline:3px dashed rgba(145,239,20,.85);outline-offset:3px;border-radius:8px;position:absolute;pointer-events:none}</style>
+</head><body>
+<script src="mock.js"></script>
+<script>
+// ArmoryUI, Armor tab. NEW (dashed): a two-line explainer and a WEARING line over the slot filter;
+// the detail panel's 2 / 4 PIECES rows say ON or how many more pieces, with the real tier numbers,
+// and a Gear Power line (the one thing a single piece does by itself).
+const A='../item-card-mockup/img/a/';
+const MARGIN=24,RIGHT_W=500,RIGHT_H=810,LEFT_H=900,CARD=164,CARD_H=206,GAP=14;
+const leftWidth=c=>22+c*CARD+(c-1)*GAP+14+22;
+const SETS=[['Iron','IRON','Common','var(--t1)'],['Ninja','NINJA','Rare','var(--t2)'],['Viking','VIKING','Rare','var(--t2)']];
+const owned={'Iron.Helmet':4,'Iron.Chest':2,'Iron.Legs':1,'Ninja.Boots':1};
+const wearing={Helmet:'Iron',Chest:'Iron',Legs:'Iron',Boots:'Ninja'};
+const pick='Iron.Chest';
+function plan(c){
+ const l=Object.assign({},c);const bandTop=Math.max(c.top,14)+44,bandBottom=c.h-MARGIN;
+ l.cols=c.w>=1800?3:2;l.leftW=leftWidth(l.cols);const band=bandBottom-bandTop;
+ l.leftH=Math.min(LEFT_H,band);l.leftY=bandTop+(band-l.leftH)/2;l.rightH=Math.min(RIGHT_H,band);l.rightY=bandTop+(band-l.rightH)/2;
+ return l;
+}
+function card(setId,slot,x,y){
+ const id=setId+'.'+slot,rec=owned[id],chosen=id===pick,worn=wearing[slot]===setId;
+ let inner=img(A+id+'.png',(CARD-124)/2,6,124,'',rec?'':'opacity:.38');
+ inner+=lbl(setId,6,132,CARD-12,30,20,chosen?'var(--ink)':rec?'var(--white)':'var(--dim)',chosen?'ink':'');
+ inner+=txt(slot.toUpperCase(),6,164,CARD-12,22,16,chosen?'var(--ink)':'var(--t1)','nw','text-align:center');
+ if(worn&&rec) inner+=`<div class="tick" style="${B(CARD-38,10,28,28)}"></div>`;
+ if(!rec) inner+=lockIcon(12,12,26);
+ return chosen?nine('button',x,y,CARD,CARD_H,inner):nine('btnpanel',x,y,CARD,CARD_H,inner);
+}
+function leftPanel(L){
+ const lw=L.leftW,lh=L.leftH;let o='';
+ o+=nine('panel',20,-34,226,64,img(IMG+'stone.png',-18,10,44)+img(IMG+'stone.png',200,10,44)+lbl('ARMORY',0,0,226,64,38));
+ ['CLASSES','WEAPONS','ARMOR','PETS'].forEach((t,i)=>{const bw=(lw-44-24)/4;o+=btn(t,22+i*(bw+8),44,bw,52,{neutral:t!=='ARMOR',size:18})});
+ let y0=110;
+ // NEW: explainer + what you wear now. Phones (canvas scale .5) give both boxes room for 2-3 lines.
+ const ph=L.s<.75,eh=ph?86:66,wh=ph?44:24;
+ o+=`<div class="new" style="${B(18,y0-4,lw-36,eh+wh+10)}"></div>`;
+ const ex='<span style="color:var(--lime)">2 pieces</span> of one set give its bonus. <span style="color:var(--lime)">All 4</span> add its perk.<br>Your Armor: 7, so you take 32% less damage.'+(ph?'':' <span style="color:var(--muted)">(5 Armor = 25% less, 15 = 50%, 30 = 67%)</span>');
+ o+=txt(ex,22,y0,lw-44,eh,ph?15:17,'var(--cream)');
+ const wear='<span style="color:var(--lime)">WEARING</span>&nbsp; Iron 3/4 <span style="color:var(--lime)">(2-piece on)</span>&nbsp; · &nbsp;Ninja 1/4';
+ o+=txt(wear,22,y0+eh+2,lw-44,wh,ph?15:17,'var(--white)');
+ y0+=eh+wh+10;
+ ['All','Helmet','Chest','Legs','Boots'].forEach((t,i)=>{const bw=(lw-44-32)/5;o+=btn(t.toUpperCase(),22+i*(bw+8),y0,bw,44,{neutral:t!=='All',size:16})});
+ y0+=58;
+ let g='',y=0;
+ for(const [id,name,rar,col] of SETS){
+  g+=lbl(`${name}  ·  ${rar.toUpperCase()}`,4,y,lw-60,32,22,col,'l');y+=38;
+  ['Helmet','Chest','Legs','Boots'].forEach((sl,i)=>{g+=card(id,sl,(i%L.cols)*(CARD+GAP),y+Math.floor(i/L.cols)*(CARD_H+GAP))});
+  y+=Math.ceil(4/L.cols)*(CARD_H+GAP)+8;
+ }
+ o+=`<div class="abs" style="${B(22,y0,lw-36,lh-y0-22)}overflow-y:scroll;overflow-x:hidden"><div class="abs" style="${B(0,0,lw-50,y)}">${g}</div></div>`;
+ return nine('panel',MARGIN,L.leftY,lw,lh,o,'','data-box="Left"');
+}
+function statRow(y,label,value){return lbl(label,24,y,RIGHT_W-292,40,24,'var(--muted)','l')+lbl(value,RIGHT_W-260,y,130,40,fitSize(value,28,126,16),'var(--white)','r')}
+function detail(L){
+ let p='';
+ p+=nine('inset',22,22,132,132,img(A+pick+'.png',6,6,120)+tierBadge(2,6,6));
+ p+=lbl('IRON',170,30,RIGHT_W-190,60,36,'var(--t2)','l');
+ p+=txt('<span style="color:var(--t1)">COMMON</span>  ·  ARMOR  ·  CHEST',172,94,RIGHT_W-194,26,18,'var(--cream)','nw');
+ // NEW: bonus rows with status + real numbers, and the Gear Power line
+ p+=`<div class="new" style="${B(18,162,RIGHT_W-36,150)}"></div>`;
+ const rows=[[2,'+2 Armor (25% → 32% less damage)',0],[4,'+10% Contact resistance',1]];
+ rows.forEach(([n,t,need],i)=>{
+  const yy=166+i*50,on=need===0;
+  p+=lbl(`${n} PIECES`,24,yy,110,24,20,on?'var(--lime)':'var(--muted)','l');
+  p+=lbl(on?'ON':`WEAR ${need} MORE`,24,yy+24,110,20,14,on?'var(--lime)':'var(--cream)','l');
+  p+=txt(t,140,yy,RIGHT_W-164,44,19,on?'var(--white)':'var(--muted)','','display:flex;align-items:center');
+ });
+ p+=txt('Each piece also adds its tier to Gear Power: +12% damage and +6% health per point.',24,266,RIGHT_W-48,44,15,'var(--muted)');
+ p+=lbl('SET PIECES',24,312,300,32,24,'var(--white)','l');
+ [['Helmet','WORN  IV'],['Chest','WORN  II'],['Legs','WORN  I'],['Boots','NOT OWNED']].forEach(([s,v],i)=>p+=statRow(346+i*34,s,v));
+ p+=bar(24,492,RIGHT_W-48,26,.4,'4 / 10');
+ p+=btn('UPGRADE  ·  120 EMERALDS',24,528,RIGHT_W-48,62,{neutral:true,size:24,dim:true});
+ p+=txt('Need 6 more copies',24,590,RIGHT_W-48,20,16,'var(--muted)','nw','text-align:center');
+ p+=btn('TAKE OFF',24,614,RIGHT_W-48,62,{neutral:true,size:26});
+ p+=btn('EQUIP FULL SET',24,688,RIGHT_W-48,62,{size:26});
+ const sc=L.rightH<RIGHT_H;
+ const inner=`<div class="abs" style="${B(0,0,RIGHT_W,L.rightH)}overflow-y:${sc?'scroll':'hidden'};overflow-x:hidden"><div class="abs" style="${B(0,0,RIGHT_W-(sc?8:0),RIGHT_H-24)}">${p}</div></div>`;
+ return nine('panel',L.w-MARGIN-RIGHT_W,L.rightY,RIGHT_W,L.rightH,inner,'','data-box="Right"');
+}
+function draw(c){
+ const L=plan(c);
+ return `<div class="abs" style="left:0;top:0;width:${L.w}px;height:${L.h}px;background:radial-gradient(ellipse at 50% 55%,#3e4a3a 0,#1e2620 45%,#0c1110 100%)"></div>`
+  +txt('(avatar and loadout slots unchanged)',L.w/2-160,L.h/2,320,24,16,'var(--muted)','nw','text-align:center')+leftPanel(L)+detail(L);
+}
+mount(draw,'#0b1012');
+</script>
+</body></html>

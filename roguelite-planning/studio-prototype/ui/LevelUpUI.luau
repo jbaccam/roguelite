@@ -113,7 +113,9 @@ function M.mount(player,onOpen,onDone)
    if not short then text(card,'Kind','Upgrade',size+23,12+size*.60,cw-size-32,size*.40,19,Color3.fromRGB(220,217,166)) end
    -- The effect ends 6 px above Choose (Choose at cardH-12-chooseH).
    local chooseY=cardH-12-chooseH;local effectY=short and size+18 or size+30
-   local effect=text(card,'Effect','<font color="#91EF14">+'..Stats.format(Stats.ById[o.id],o.amount)..'</font> '..Stats.ById[o.id].label,12,effectY,cw-24,math.min(math.max(40,cardH-size-100),chooseY-6-effectY),25);effect.RichText=true;effect.TextYAlignment=Enum.TextYAlignment.Top
+   -- Armor also says what it does from your live Armor (2026-10-10): '+2 Armor (25% → 32% less damage)'.
+   local change=o.id=='Armor' and (' ('..Stats.armorChange(Stats.read(state).Armor,o.amount)..')') or ''
+   local effect=text(card,'Effect','<font color="#91EF14">+'..Stats.format(Stats.ById[o.id],o.amount)..'</font> '..Stats.ById[o.id].label..change,12,effectY,cw-24,math.min(math.max(40,cardH-size-100),chooseY-6-effectY),25);effect.RichText=true;effect.TextYAlignment=Enum.TextYAlignment.Top
    local choose=button(card,'Choose','Choose',12,chooseY,cw-24,chooseH,function() send('Upgrade',i) end)
    choose.Selectable=not banishMode -- in banish mode a controller moves between the BANISH overlays
    if banishMode then
@@ -199,7 +201,7 @@ function M.mount(player,onOpen,onDone)
    for i,d in defs do
     local y=(i-1)*rowH;local color=ShopUI.statColor(d.id,values[d.id],d.base)
     if Catalog.icon(d.id)~='' then make('ImageLabel',scroll,{Name=d.id..'Icon',Image=Catalog.icon(d.id),BackgroundTransparency=1,Position=UDim2.fromOffset(0,y+2),Size=UDim2.fromOffset(20,20)}) end
-    text(scroll,d.id,d.label,24,y,(sw-24)*.64-24,rowH,20,color)
+    text(scroll,d.id,Stats.statLabel(d,values[d.id]),24,y,(sw-24)*.64-24,rowH,20,color) -- 'Armor · you take 35% less damage' (2026-10-10)
     local v=text(scroll,d.id..'Value',Stats.format(d,values[d.id]),(sw-24)*.64,y,(sw-24)*.36-6,rowH,19,color);v.TextXAlignment=Enum.TextXAlignment.Right
    end
    scroll.CanvasSize=UDim2.fromOffset(0,#defs*rowH)
