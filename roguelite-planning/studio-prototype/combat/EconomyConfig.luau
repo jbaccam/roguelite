@@ -42,8 +42,13 @@ end
 function E.sellValue(base,wave,modifier) return math.max(1,math.floor(E.price(base,wave,modifier)*E.WEAPON_SELL_REFUND)) end
 function E.modifier(stats) return math.clamp(1+(stats.ShopPricePercent or 0)/100-(stats.ShopDiscount or 0)/100,.2,3) end
 -- Ordered rarity thresholds. Luck is earned within the run and never changed by Robux.
+-- Luck multiplies the chance AFTER the cap (fix 2026-10-10, play-test: "40 luck and 100 luck have
+-- the same reroll odds"). It used to multiply before the cap, so from wave ~15 every Luck hit the
+-- same .60 / .20 caps and 40 and 100 both showed I 40% · II 40% · III 19%. ceiling keeps some Tier
+-- I. Luck 0 is unchanged. Example, wave 20: Luck 0 I 40% · II 40% · III 18.6% · IV 1.35%; Luck 40
+-- I 16% · II 56% · III 26.1% · IV 1.89%; Luck 100 I 10% · II 50% · III 37.3% · IV 2.7%.
 local rarity={
- [2]={minWave=2,perWave=.06,cap=.60},
+ [2]={minWave=2,perWave=.06,cap=.60,ceiling=.90},
  [3]={minWave=6,perWave=.015,cap=.20},
  [4]={minWave=12,perWave=.0015,cap=.05},
 }
@@ -51,8 +56,8 @@ function E.rarityChance(tier,wave,luck)
  local rule=rarity[tier]
  if not rule then return tier==1 and 1 or 0 end
  if wave<rule.minWave then return 0 end
- local boost=1+math.clamp(luck or 0,0,100)/100
- return math.min(rule.cap,(wave-rule.minWave+1)*rule.perWave*boost)
+ local boost=1+math.clamp(tonumber(luck) or 0,0,100)/100
+ return math.min(rule.ceiling or 1,math.min(rule.cap,(wave-rule.minWave+1)*rule.perWave)*boost)
 end
 function E.rollTier(wave,luck,rng)
  local draw=rng:NextNumber()

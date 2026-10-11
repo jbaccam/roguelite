@@ -31,9 +31,13 @@ end
 -- A card's tier: one draw n in [0,1) against these growing limits for Tier IV, III and II (Luck
 -- 0-100 scales them). tierOdds turns them into {I,II,III,IV} for the REROLL odds note (LevelUpUI).
 -- Example, level 10 with no Luck: limits .05 / .25 / .43, so IV 5%, III 20%, II 18%, I 57%.
+-- Luck raises the caps too (fix 2026-10-10, play-test: 40 and 100 Luck showed the same odds; from
+-- level ~15 every Luck sat on the old .08 / .28 / .65 caps). Tier II stops at .90, so some Tier I
+-- stays. Luck 0 is unchanged. Example, level 20: Luck 0 I 35% · II 37% · III 20% · IV 8%; Luck 40
+-- I 12% · II 48.8% · III 28% · IV 11.2%; Luck 100 I 10% · II 34% · III 40% · IV 16%.
 function C.thresholds(level,luck)
- local l=1+math.clamp(luck or 0,0,100)/100
- return math.min(.08,.005*level*l),math.min(.28,.025*level*l),math.min(.65,.18+.025*level*l)
+ local l=1+math.clamp(tonumber(luck) or 0,0,100)/100
+ return math.min(.08*l,.005*level*l),math.min(.28*l,.025*level*l),math.min(.90,.65*l,.18+.025*level*l)
 end
 function C.tierOdds(level,luck) local a,b,c=C.thresholds(level,luck);return {1-c,c-b,b-a,a} end
 function C.roll(stats,banished,level,rng)

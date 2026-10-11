@@ -140,5 +140,62 @@ return function(Weapons,Stats,E,Catalog,Upgrades)
  check(Catalog.pickWeighted({a,b},{1,3},.2)==a and Catalog.pickWeighted({a,b},{1,3},.3)==b and Catalog.pickWeighted({a,b},{1,3},.999)==b,'weighted pick')
  check(Catalog.pickWeighted({a,b},{0,0},.5)==nil and Catalog.pickWeighted({},{},.5)==nil,'no weight: nil')
  check(Catalog.pickWeighted({a,b},{0,2},0)==b,'a zero weight is never picked')
+
+ -- Luck and tier odds (play-test 2026-10-10: Luck 40 and Luck 100 showed the same reroll odds).
+ -- Each player's odds come from their own Luck (ShopService reads cs.stats.Luck per player); here two
+ -- players, Mason at 40 and Jack at 100, must see different odds late in a run, and the note must
+ -- match what the server draws.
+ local function odds(t) local out={};for i=1,4 do out[i]=t[i] end;return out end
+ local function same(x,y,msg) for i=1,4 do near(x[i],y[i],msg..' tier '..i) end end
+ -- Luck 0 is unchanged by the fix.
+ same(E.tierOdds(10,0),{.46,.465,.075,0},'shop wave 10, no Luck')
+ same(E.tierOdds(20,0),{.40,.40,.1865,.0135},'shop wave 20, no Luck')
+ same(Upgrades.tierOdds(10,0),{.57,.18,.20,.05},'level 10, no Luck')
+ same(Upgrades.tierOdds(20,0),{.35,.37,.20,.08},'level 20, no Luck')
+ -- Late in a run 40 and 100 differ (they were both I 40% · II 40% · III ~19%).
+ same(E.tierOdds(20,40),{.16,.56,.2611,.0189},'shop wave 20, Luck 40')
+ same(E.tierOdds(20,100),{.10,.50,.373,.027},'shop wave 20, Luck 100')
+ same(Upgrades.tierOdds(20,40),{.12,.488,.28,.112},'level 20, Luck 40')
+ same(Upgrades.tierOdds(20,100),{.10,.34,.40,.16},'level 20, Luck 100')
+ -- Clearly better: at least 5 points less Tier I, or 5 points more Tier III+.
+ local function better(lo,hi) return hi[1]+.05<=lo[1] or lo[3]+lo[4]+.05<=hi[3]+hi[4] end
+ for _,wave in {10,15,20,25} do
+  check(better(E.tierOdds(wave,40),E.tierOdds(wave,100)),'shop wave '..wave..': Luck 100 clearly beats Luck 40')
+ end
+ for _,level in {10,15,20,25} do
+  check(better(Upgrades.tierOdds(level,40),Upgrades.tierOdds(level,100)),'level '..level..': Luck 100 clearly beats Luck 40')
+ end
+ -- More Luck never lowers Tier III+ or raises Tier I, at any wave or level; Tier I never drops
+ -- below 10%; the odds always sum to 1.
+ for n=1,40 do
+  local lastShop,lastCard
+  for luck=0,100,5 do
+   for kind,o in {shop=odds(E.tierOdds(n,luck)),card=odds(Upgrades.tierOdds(n,luck))} do
+    near(o[1]+o[2]+o[3]+o[4],1,kind..' '..n..' Luck '..luck..' sums to 1')
+    check(o[1]>=.10-1e-9 and o[2]>=-1e-9 and o[3]>=-1e-9 and o[4]>=-1e-9,kind..' '..n..' Luck '..luck..': valid odds')
+    local last;if kind=='shop' then last=lastShop else last=lastCard end
+    if last then check(o[1]<=last[1]+1e-9 and o[3]+o[4]>=last[3]+last[4]-1e-9,kind..' '..n..' Luck '..luck..': more Luck is never worse') end
+    if kind=='shop' then lastShop=o else lastCard=o end
+   end
+  end
+ end
+ -- The note's odds are what the server draws: sweep one draw over [0,1) through E.rollTier and
+ -- LevelUpCatalog.roll (one card; every card uses the same draw rule).
+ local function sweep(roll)
+  local counts={0,0,0,0};local N=4000
+  for i=1,N do local t=roll((i-.5)/N);counts[t]+=1/N end
+  return counts
+ end
+ for _,case in {{15,40},{15,100},{20,40},{20,100},{8,0}} do
+  local n,luck=case[1],case[2]
+  local shop=sweep(function(u) return E.rollTier(n,luck,{NextNumber=function() return u end}) end)
+  local card=sweep(function(u)
+   return Upgrades.roll(with({Luck=luck}),nil,n,{NextNumber=function() return u end,NextInteger=function(_,lo) return lo end})[1].tier
+  end)
+  for i=1,4 do
+   check(math.abs(shop[i]-E.tierOdds(n,luck)[i])<.001,'shop draws match the note: wave '..n..' Luck '..luck..' tier '..i)
+   check(math.abs(card[i]-Upgrades.tierOdds(n,luck)[i])<.001,'level-up draws match the note: level '..n..' Luck '..luck..' tier '..i)
+  end
+ end
  return checks
 end
