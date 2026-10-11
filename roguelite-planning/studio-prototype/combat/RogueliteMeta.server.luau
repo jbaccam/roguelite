@@ -868,7 +868,35 @@ end
 
 -- Purchases -----------------------------------------------------------------------
 local lastRequest={}
-local pendingArg={} -- e.g. which level-up card a bought Banish targets
+local pendingArg={} -- e.g. which level-up card or shop offer a bought Banish targets
+-- What a Banish is for (2026-10-10: shop offers too), from a client: {kind='Upgrade', index, token}
+-- for a level-up card (a bare number is the old form: that card, any token) or {kind='Shop', index,
+-- token} for a shop offer. nil when malformed. ShopService checks the rest (phase, token, locks).
+local function banishTarget(arg)
+ if type(arg)=='number' then return arg%1==0 and arg>=1 and arg<=8 and {kind='Upgrade',index=arg} or nil end
+ if type(arg)~='table' then return nil end
+ local kind,index,tok=arg.kind,arg.index,arg.token
+ if (kind~='Upgrade' and kind~='Shop') or type(index)~='number' or index%1~=0 or index<1 or index>8 then return nil end
+ if tok~=nil and (type(tok)~='string' or #tok>40) then return nil end
+ if kind=='Shop' and tok==nil then return nil end -- a shop offer is always named by its token
+ return {kind=kind,index=index,token=tok}
+end
+local function canBanishTarget(p,t)
+ if t.kind=='Shop' then return Shop.canBanishOffer(p,t.index,t.token) end
+ return Shop.canBanish(p,t.index,t.token)
+end
+-- Spend one saved banish on target t: spend, then apply; a banish that could not apply is given
+-- back, so none is ever lost. Returns the result message, or nil when nothing was spent.
+local function spendBanish(p,t)
+ local d=Profiles.get(p)
+ if not t or not d or d.banishes<=0 or not canBanishTarget(p,t) then return nil end
+ if not Profiles.spend(p,'banishes') then return nil end
+ local ok=if t.kind=='Shop' then Shop.banishOffer(p,t.index,t.token) else Shop.banish(p,t.index,t.token)
+ if not ok then Profiles.grant(p,{banishes=1});return nil end
+ local s=Shop.states[p]
+ return s and s.message or 'Banished'
+end
+local grantNote={} -- a grant's own result line for its purchase reply (a bought Banish's "Banished X")
 -- delivered: true when the product itself was granted (not emeralds instead), so the lobby can play
 -- its contents reveal (StoreUI.reveal, 2026-10-03). gift (2026-10-04): {to=name} on the buyer's
 -- "Gift sent" (a toast), {from=name, pick?, emeralds?} on a gift arriving (the reveal says GIFT FROM).
@@ -909,8 +937,17 @@ end
 for i=1,Config.ReviveSteps do local key=Config.reviveKey(i);grants[key]=function(p,spent) return grantRevive(p,key,spent) end end
 function grants.ShopReroll(p) return Shop.paidReroll(p,'Shop') or Profiles.grant(p,{rerolls=1}) end
 function grants.UpgradeReroll(p) return Shop.paidReroll(p,'Upgrade') or Profiles.grant(p,{rerolls=1}) end
--- A bought banish is saved; the player then clicks the card to remove (RunAction UseBanish).
-function grants.Banish(p) return Profiles.grant(p,{banishes=1}) end
+-- A bought banish is saved, then spent at once on the level-up card or shop offer it was bought for
+-- (pendingArg, set by PurchaseRequest after the player confirmed "Banish X for R$19?"). When that
+-- target is gone by the time the receipt lands (rerolled, sold, locked, the wave started), it stays
+-- saved and the BANISH button shows it.
+function grants.Banish(p)
+ if not Profiles.grant(p,{banishes=1}) then return false end
+ local t=pendingArg[p] and pendingArg[p].Banish
+ if pendingArg[p] then pendingArg[p].Banish=nil end
+ grantNote[p]=spendBanish(p,t) or 'Banish saved: use it from the BANISH button'
+ return true
+end
 local function grantProduct(p,key,spent)
  local product=Config.Products[key]
  if grants[key] then return grants[key](p,spent) end
@@ -1114,10 +1151,12 @@ local function processReceipt(p,key,purchaseId,spent)
    Profiles.addReceipt(p,purchaseId)
    reply(p,key,true,problem..' · '..n..' emeralds added instead')
   else
+   grantNote[p]=nil
    local ok,granted=pcall(grantProduct,p,key,spent)
    if not ok or not granted then warn('RogueliteMeta: grant failed',key,granted);return Enum.ProductPurchaseDecision.NotProcessedYet end
    Profiles.addReceipt(p,purchaseId)
-   reply(p,key,true,product.name..' purchased',true)
+   local note=grantNote[p];grantNote[p]=nil
+   reply(p,key,true,note or product.name..' purchased',true)
   end
  end
  -- Acknowledge only once the grant is saved. A failed save leaves the receipt unprocessed: Roblox
@@ -1282,7 +1321,11 @@ purchaseRequest.OnServerEvent:Connect(function(p,key,arg,to,pick)
   else reply(p,key,false,'Not on sale yet') end
   return
  end
- if type(arg)~='number' then arg=nil end
+ -- A Banish names its target (banishTarget); everything else takes a number or nothing.
+ if key=='Banish' then
+  arg=banishTarget(arg)
+  if arg and not canBanishTarget(p,arg) then return reply(p,key,false,'That offer changed. Pick it again') end
+ elseif type(arg)~='number' then arg=nil end
  -- Revive: the client asks for 'Revive' and the server picks this run's price step, so nobody
  -- can ask for a cheaper one.
  if key=='Revive' or Config.isRevive(key) then key=Config.reviveKey((revivesUsed[p] or 0)+1) end
@@ -1308,7 +1351,8 @@ purchaseRequest.OnServerEvent:Connect(function(p,key,arg,to,pick)
  if product.productId>0 then Market:PromptProductPurchase(p,product.productId)
  elseif studio then
   -- Studio only: simulate a successful receipt so flows can be tested. In-memory, never saved.
-  if grantProduct(p,key) then reply(p,key,true,'Studio test: '..product.name..' granted (not saved)',true) else reply(p,key,false,'Grant failed') end
+  grantNote[p]=nil
+  if grantProduct(p,key) then local note=grantNote[p];grantNote[p]=nil;reply(p,key,true,'Studio test: '..(note or product.name..' granted')..' (not saved)',true) else reply(p,key,false,'Grant failed') end
  else reply(p,key,false,'Not on sale yet') end
 end)
 Market.PromptProductPurchaseFinished:Connect(function(userId,productId,isPurchased)
@@ -1341,15 +1385,17 @@ local function checkPasses(p)
  if granted then Profiles.save(p) end
 end
 
--- Stored rerolls / banishes used during a run (no Robux prompt).
+-- Stored rerolls / banishes used during a run (no Robux prompt). The client sends these only from
+-- its confirm popup ("Use 1 saved reroll?"), every time. Spend, then apply; one that could not
+-- apply is given back. UseBanish takes a level-up card or a shop offer (banishTarget).
 local lastUse={}
 useStored=function(p,action,arg)
  if os.clock()-(lastUse[p] or 0)<.3 then return end;lastUse[p]=os.clock()
  local d=Profiles.get(p);if not d or restricted[p]~=false then return end
- if action=='UseReroll' and (arg=='Shop' or arg=='Upgrade') and Shop.states[p] then
-  if d.rerolls>0 and Profiles.spend(p,'rerolls') then Shop.paidReroll(p,arg) end
- elseif action=='UseBanish' and Shop.canBanish(p,arg) then
-  if d.banishes>0 and Profiles.spend(p,'banishes') then Shop.banish(p,arg) end
+ if action=='UseReroll' and (arg=='Shop' or arg=='Upgrade') and Shop.canPaidReroll(p,arg) then
+  if d.rerolls>0 and Profiles.spend(p,'rerolls') and not Shop.paidReroll(p,arg) then Profiles.grant(p,{rerolls=1}) end
+ elseif action=='UseBanish' then
+  spendBanish(p,banishTarget(arg))
  end
 end
 
@@ -1405,7 +1451,7 @@ Players.PlayerAdded:Connect(added)
 for _,p in Players:GetPlayers() do added(p);if p.Character then local h=p.Character:FindFirstChildOfClass('Humanoid');if h then h.Died:Connect(function() onDied(p,p.Character) end) end end end
 Players.PlayerRemoving:Connect(function(p)
  if (revivesUsed[p] or 0)>0 or phoenixUsed[p] then reviveCarry[p.UserId]={run=Shop.runId,revives=revivesUsed[p] or 0,phoenix=phoenixUsed[p]} end
- down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil;requestWindow[p]=nil;lastPickSave[p]=nil
+ down[p]=nil;revivesUsed[p]=nil;phoenixUsed[p]=nil;restricted[p]=nil;lastRequest[p]=nil;lastAction[p]=nil;pendingArg[p]=nil;grantNote[p]=nil;lastUse[p]=nil;receiptBusy[p]=nil;requestWindow[p]=nil;lastPickSave[p]=nil
  teammateRevive.clear(p) -- their spot, and their holds on others' spots
  returning[p]=nil;resultSaves[p]=nil;prompting[p]=nil;runInfo[p]=nil;returnTries[p]=nil;again[p]=nil;lastRunAction[p]=nil;partyTrip[p]=nil
  RunPause.forget(pause,p);pausedWeapons[p]=nil;lastPauseAction[p]=nil;runKills[p]=nil;runDamage[p]=nil;statStint[p]=nil -- plan L

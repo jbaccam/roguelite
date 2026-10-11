@@ -42,12 +42,38 @@ function M.mount(player,onOpen,onDone)
  local shade=box(gui,'Backdrop',-100,-100,0,0,T.Color.shade);shade.Size=UDim2.new(1,200,1,200);shade.BackgroundTransparency=.1;shade.Active=true
  -- Root of the layout: the safe area. Everything is placed from its AbsoluteSize.
  local content=box(gui,'Content',0,0,0,0);content.BackgroundTransparency=1;content.Size=UDim2.fromScale(1,1)
- local self={};local data;local token;local busy=false;local tab='Primary';local smallStats=false;local render;local rerollConfirm
+ local self={};local data;local token;local busy=false;local tab='Primary';local smallStats=false;local render;local confirmWin;local askBanish
  local function unavailable() return player:GetAttribute('RunDown') or player:GetAttribute('RunReturning') or player:GetAttribute('RunResult')~=nil end
  local banishMode=false -- after BANISH: the next card clicked is banished
  local function snapshot()
   local raw=state:GetAttribute('ShopSnapshot');if not raw then return end
   local ok,d=pcall(Http.JSONDecode,Http,raw);return ok and d or nil
+ end
+ -- Every Banish and paid reroll asks first (2026-10-10, T.confirm), saved ones too, whatever the
+ -- count. The answer is checked against the latest snapshot: a card rerolled meanwhile is not
+ -- banished, and a saved banish or reroll that ran out meanwhile never turns into a purchase.
+ local function stillOffered(i,o)
+  local latest=snapshot()
+  local now=latest and latest.phase=='Shop' and (latest.pendingLevels or 0)>0 and latest.upgradeOffers and latest.upgradeOffers[i]
+  return not unavailable() and now and now.token==o.token
+ end
+ askBanish=function(i,o)
+  if confirmWin or unavailable() then return end
+  local saved=player:GetAttribute('ProfileBanishes') or 0;local using=saved>0
+  local name=(Catalog.ById[o.id] or {name=o.id}).name..roman[o.tier or 1]
+  confirmWin=T.confirm(gui,{name='BanishConfirm',title='Banish',danger=true,
+   question=using and ('Banish '..name..' for the rest of this run?') or ('Banish '..name..' for R$ '..Money.price('Banish')..'?'),
+   detail=using and ('Uses 1 saved Banish. You have '..saved..', '..(saved-1)..' left after.') or 'It never shows again this run, and a new card takes its place.',
+   confirm=using and 'USE 1 BANISH' or ('BUY · R$ '..Money.price('Banish')),
+   onClose=function() confirmWin=nil end,
+   onConfirm=function()
+    banishMode=false;render()
+    if not stillOffered(i,o) then return end
+    local target={kind='Upgrade',index=i,token=o.token}
+    if using then
+     if (player:GetAttribute('ProfileBanishes') or 0)>0 then C.RunAction:FireServer('UseBanish',target) end
+    else C.PurchaseRequest:FireServer('Banish',target) end
+   end})
  end
  local function send(action,index)
   if busy or not data or unavailable() then return end
@@ -124,7 +150,7 @@ function M.mount(player,onOpen,onDone)
     local pickB=make('TextButton',card,{Name='BanishPick',Text='',AutoButtonColor=false,BackgroundColor3=Color3.fromRGB(120,10,20),BackgroundTransparency=.72,Size=UDim2.fromScale(1,1),ZIndex=5})
     make('UICorner',pickB,{CornerRadius=UDim.new(0,10)})
     local tag=text(pickB,'Tag','BANISH',0,0,cw,cardH,34,T.Color.white);tag.TextXAlignment=Enum.TextXAlignment.Center;tag.Font=T.Font;tag.ZIndex=6;tag.TextStrokeTransparency=0
-    pickB.Activated:Connect(function() banishMode=false;C.RunAction:FireServer('UseBanish',i);render() end)
+    pickB.Activated:Connect(function() askBanish(i,o) end)
    end
   end
   -- Bottom bar: BANISH | REROLL, both Robux (or saved ones). No shard rerolls on level-ups.
@@ -153,24 +179,28 @@ function M.mount(player,onOpen,onDone)
   elseif paid and #data.upgradeOffers>0 then
    local banishes=player:GetAttribute('ProfileBanishes') or 0
    local rerolls=player:GetAttribute('ProfileRerolls') or 0
+   -- BANISH picks the card first (saved or not); the card's confirm says what it costs (askBanish).
    bigButton('Banish','BANISH',banishes>0 and (banishes..' SAVED') or ('R$ '..Money.price('Banish')),bx,true,function()
-    if (player:GetAttribute('ProfileBanishes') or 0)>0 then banishMode=true;render() else C.PurchaseRequest:FireServer('Banish') end
+    if unavailable() then return end
+    banishMode=true;render()
    end)
    reroll=bigButton('Reroll','REROLL',rerolls>0 and (rerolls..' SAVED') or ('R$ '..Money.price('UpgradeReroll')),bx+bw+24,false,function()
-    if rerollConfirm or unavailable() then return end
-    local using=(player:GetAttribute('ProfileRerolls') or 0)>0
+    if confirmWin or unavailable() then return end
+    local saved=player:GetAttribute('ProfileRerolls') or 0;local using=saved>0
     local offeredToken=data.upgradeToken
-    local win;win=T.window(gui,'RerollConfirm','Upgrade Reroll',500,286,function() rerollConfirm=nil end);rerollConfirm=win
-    T.label(win.Body,'Question',using and 'Use 1 reroll token?' or 'Buy 1 upgrade reroll?',0,0,464,42,28)
-    T.text(win.Body,'Details','Replaces these four upgrade choices now. Your earned level-up is kept. Use before choosing a card.',8,52,448,72,21,T.Color.cream)
-    T.button(win.Body,'Cancel','CANCEL',0,152,224,58,function() win.Close() end,true)
-    T.button(win.Body,'Confirm',using and 'USE 1 TOKEN' or ('BUY · R$ '..Money.price('UpgradeReroll')),240,152,224,58,function()
-     local latest=snapshot();win.Close()
-     if unavailable() or not latest or latest.phase~='Shop' or latest.upgradeToken~=offeredToken or (latest.pendingLevels or 0)<=0 then return end
-     if using then
-      if (player:GetAttribute('ProfileRerolls') or 0)>0 then C.RunAction:FireServer('UseReroll','Upgrade') end
-     else C.PurchaseRequest:FireServer('UpgradeReroll') end
-    end)
+    confirmWin=T.confirm(gui,{name='RerollConfirm',title='Upgrade Reroll',
+     question=using and 'Use 1 saved reroll?' or ('Reroll for R$ '..Money.price('UpgradeReroll')..'?'),
+     detail=(using and ('You have '..saved..' saved, '..(saved-1)..' left after. ') or '')..'Replaces these four cards now. Your level-up is kept.',
+     confirm=using and 'USE 1 REROLL' or ('BUY · R$ '..Money.price('UpgradeReroll')),
+     onClose=function() confirmWin=nil end,
+     onConfirm=function()
+      local latest=snapshot()
+      if unavailable() or not latest or latest.phase~='Shop' or latest.upgradeToken~=offeredToken or (latest.pendingLevels or 0)<=0 then return end
+      -- Never turn a saved-reroll confirmation into a purchase if the count changed while open.
+      if using then
+       if (player:GetAttribute('ProfileRerolls') or 0)>0 then C.RunAction:FireServer('UseReroll','Upgrade') end
+      else C.PurchaseRequest:FireServer('UpgradeReroll') end
+     end})
    end)
   end
   if #data.upgradeOffers==0 then
@@ -218,7 +248,7 @@ function M.mount(player,onOpen,onDone)
    else GS.SelectedObject=first and first:FindFirstChild('Choose') or reroll end
   end)
  end
- function self:Close() gui.Enabled=false;token=nil;busy=false;if rerollConfirm then rerollConfirm.Close() end;T.hideTouchControls('LevelUp',false) end
+ function self:Close() gui.Enabled=false;token=nil;busy=false;banishMode=false;if confirmWin then confirmWin.Close() end;T.hideTouchControls('LevelUp',false) end
  function self:Show()
   if unavailable() then self:Close();return false end
   data=snapshot();if not data or data.phase~='Shop' or (data.pendingLevels or 0)<=0 then return false end
@@ -242,10 +272,8 @@ function M.mount(player,onOpen,onDone)
  player:GetAttributeChangedSignal('ProfileBanishes'):Connect(function() if gui.Enabled then render() end end)
  player:GetAttributeChangedSignal('ProfileRerolls'):Connect(function() if gui.Enabled then render() end end)
  content:GetPropertyChangedSignal('AbsoluteSize'):Connect(function() if gui.Enabled then render() end end)
- -- A bought banish arrives as a saved banish; go straight to picking the card.
- C:WaitForChild('PurchaseResult').OnClientEvent:Connect(function(key,ok)
-  if ok and key=='Banish' and gui.Enabled then banishMode=true;render() end
- end)
+ -- A bought banish is spent on the card it was bought for by the server (RogueliteMeta
+ -- grants.Banish); if that card was gone, it stays saved and BANISH shows "1 SAVED".
  task.defer(changed);return self
 end
 return M

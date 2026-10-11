@@ -1,6 +1,8 @@
 -- Client Studio layout checks. Uses actual rendered geometry and TextFits.
 -- 2026-10-09 roster: weapon offers show the specialty bar (SpecBar), one row per type (TypeChip_ /
 -- TypeStep_ / TypeLine_) and the stat lines; the stats column has SETS (pinned or a Sets tab).
+-- 2026-10-10: BANISH in the header (run it once normally and once in banish mode; it isn't shown
+-- where PaidRandomRestricted is set or in the tutorial).
 local gui=game.Players.LocalPlayer.PlayerGui.RogueliteHUD
 local Weapons=require(game.ReplicatedStorage.RogueliteCombat.WeaponCatalog)
 local Stats=require(game.ReplicatedStorage.RogueliteCombat.CharacterStats)
@@ -23,6 +25,17 @@ local ok,err=xpcall(function()
   assert(bottom(stats)<layout.StartWave.AbsolutePosition.Y,'stats/start gutter')
   assert(disjoint(left.Items,left.Weapons),'items/weapons overlap')
   assert(disjoint(left.Reroll,left.Shards) and disjoint(left.Shards,left.ShopTitle),'header overlaps')
+  -- 2026-10-10 Shop Banish: BANISH (CANCEL in banish mode) beside the R$ reroll, or on its own row
+  -- under the rerolls when the header is too narrow; never over another header piece or an offer.
+  local banish=left:FindFirstChild('Banish') or left:FindFirstChild('CancelBanish')
+  if banish then
+   for _,name in {'ShopTitle','Shards','Reroll','RobuxReroll','RerollOdds','BanishHint','Bag','BagNote'} do
+    local other=left:FindFirstChild(name);if other then assert(disjoint(banish,other),'BANISH overlaps '..name..' at '..tostring(size)) end
+   end
+   for i=1,4 do local card=left:FindFirstChild('Offer'..i);if card then assert(disjoint(banish,card),'BANISH overlaps an offer') end end
+   assert(right(banish)<=right(left)+1,'BANISH past the shop edge')
+  end
+  if left:FindFirstChild('RobuxReroll') then assert(disjoint(left.RobuxReroll,left.Reroll),'R$ reroll overlaps REROLL') end
   -- The crystal bag beside the crystals (2026-10-03), when it holds some.
   local bag=left:FindFirstChild('Bag')
   if bag then

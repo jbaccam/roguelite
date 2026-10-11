@@ -68,6 +68,13 @@ Commits c9e5cde..a1a1f7a. The combat side is listed in `../combat/README.md`.
   - Item cards that only some weapons use say "Works with: Glock, Magic Staff", or in red "None of your weapons use this".
   - A bag icon and amount sit beside the crystal count while the crystal bag holds any.
   - In multiplayer, GO shows READY 2/4 in its lower half.
+- **Shop BANISH and paid confirms (2026-10-10, rules in `../../MONETIZATION_AND_REWARDS.md` "Banish"):**
+  - `ShopUI` header: BANISH (red, "3 SAVED" or "R$ 19") beside the R$ REROLL. Wide screens fit BANISH | REROLL (R$) | REROLL (crystals) right of the crystals, narrowing the paid two to 96 when needed; when that still doesn't fit (1024x768, phones, narrow layouts) BANISH gets its own row under the rerolls and the odds line and cards move down by that row.
+  - Banish mode: BANISH turns into CANCEL, the odds line reads "Click the offer you want to banish", every unlocked offer gets the level-up screen's red BANISH overlay (`BanishPick`), and a locked one reads LOCKED · UNLOCK TO BANISH (`BanishLocked`; Lock still works under it). A controller starts on the first BANISH.
+  - The R$ reroll button is two lines like the level-up one: REROLL over "4 SAVED" or "R$ 15". The crystal REROLL never asks.
+  - `UITheme.confirm(screen, opts)`: the one yes/no popup for anything paid. Every Banish (shop and level-up), R$ reroll and saved reroll goes through it every time, whatever the count. CANCEL left, the spending button right; Esc, B, X or a click outside cancels; a controller starts on CANCEL. It closes when the shop ends.
+  - `LevelUpUI`: BANISH always enters pick mode (saved or not); the picked card's confirm says "Banish Melee Damage for R$ 19?" or "... for the rest of this run? Uses 1 saved Banish". A bought Banish is spent on that card by the server; it no longer drops you back into pick mode.
+  - `ShopLayoutTests` checks BANISH / CANCEL against every header piece and the offers at all ten sizes (run once normally and once in banish mode).
   - A Handyman gets UPGRADE TURRET above LEAVE RUN.
   - Rules: `../combat/SHOP_GAMEPLAY_READINESS.md`.
 - **Status:** repo only, syntax-checked. Not yet in Studio and not play-tested.

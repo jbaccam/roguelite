@@ -667,6 +667,52 @@ function T.window(screen,name,title,w,h,onClose,opts)
  return self
 end
 
+-- Yes/no popup in front of anything that spends Robux or a saved reroll / banish (2026-10-10, user:
+-- "make sure there's a confirmation"; "If someone has 8 rerolls it should still prompt them"). It
+-- asks every time: no "don't ask again", whatever the count. A T.window (scales to every screen,
+-- body scrolls on phones), the question, an optional detail line, CANCEL (left, neutral) and the
+-- confirm button (right). Esc, a controller's B, the X and a click outside cancel; a controller
+-- starts on CANCEL. Only the confirm button calls opts.onConfirm, after the popup has closed.
+-- opts: title, question, detail, confirm (caption), cancel (caption), danger (red confirm text),
+-- onConfirm(), onClose() (any close), closeOn (signals) with closeIf() (both like leaveConfirm).
+-- Example: T.confirm(gui,{title='Banish',question='Banish Two Straws for R$19?',confirm='BUY · R$ 19',
+-- danger=true,onConfirm=buy}).
+function T.confirm(screen,opts)
+ local C=T.Color
+ local conns={}
+ local win
+ local BW=464
+ win=T.window(screen,opts.name or 'ConfirmPopup',opts.title or 'Are you sure?',BW+36,262,function()
+  for _,c in conns do c:Disconnect() end
+  if opts.onClose then opts.onClose() end
+ end)
+ local body=win.Body
+ local q=T.label(body,'Question',opts.question or '',0,0,BW,76,28);q.TextXAlignment=Enum.TextXAlignment.Center
+ local detail=T.text(body,'Details',opts.detail or '',8,80,BW-16,54,20,C.cream);detail.TextXAlignment=Enum.TextXAlignment.Center
+ local half=(BW-16)/2
+ local cancel=T.button(body,'Cancel',opts.cancel or 'CANCEL',0,146,half,58,function() win.Close() end,true)
+ local confirm=T.button(body,'Confirm',opts.confirm or 'CONFIRM',half+16,146,half,58,function()
+  if not win.Root.Parent then return end
+  win.Close()
+  if opts.onConfirm then opts.onConfirm() end
+ end)
+ if opts.danger then confirm.Caption.TextColor3=C.negative;T.setPrimary(confirm,false) end
+ for _,signal in opts.closeOn or {} do
+  table.insert(conns,signal:Connect(function() if not opts.closeIf or opts.closeIf() then win.Close() end end))
+ end
+ pcall(function()
+  table.insert(conns,game:GetService('UserInputService').InputBegan:Connect(function(input)
+   if input.KeyCode==Enum.KeyCode.Escape or input.KeyCode==Enum.KeyCode.ButtonB then win.Close() end
+  end))
+ end)
+ -- A controller starts on CANCEL, never on the button that spends.
+ task.delay(.05,function() pcall(function()
+  if cancel.Parent and game:GetService('UserInputService'):GetLastInputType().Name:find('^Gamepad') then game:GetService('GuiService').SelectedObject=cancel end
+ end) end)
+ win.Cancel,win.ConfirmButton=cancel,confirm
+ return win
+end
+
 -- Named sound cue (ui_equip, ui_purchase, ui_upgrade, ui_error). Sandboxed modules can't play
 -- audio, so StarterPlayerScripts.RogueliteSounds plays it. The cue is a sandboxed BindableEvent
 -- saved in ReplicatedStorage (audio/InstallSoundCue.luau). Protected: a sound problem must never

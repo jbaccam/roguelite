@@ -21,11 +21,11 @@ Folder: `C:\Users\Jeremiah\Documents\ChatGPT\Roblox\roguelite-planning\studio-pr
 | 5 | Revive5 | 05-Revive5.png | Revive (5th+) | Get back up where you fell with half health and a 3 second shield. Every revive after the 4th in a run costs this. | 1040 |
 | 6 | ShopReroll | 06-ShopReroll.png | Shop Reroll | New random offers in the run shop. If you're not in a shop, it's saved for later. | 15 |
 | 7 | UpgradeReroll | 07-UpgradeReroll.png | Level-Up Reroll | New random level-up cards. If you're not choosing one, it's saved for later. | 15 |
-| 8 | Banish | 08-Banish.png | Banish | Removes one level-up card for the rest of the run and replaces it with a random one. Saved until you use it. | 19 |
+| 8 | Banish | 08-Banish.png | Banish | Removes one level-up card or run shop offer for the rest of the run and replaces it with a random one. Saved until you use it. | 19 |
 | 9 | Rerolls5 | 09-Rerolls5.png | 5 Rerolls | 5 rerolls saved to your account. Use them on run shop offers or level-up cards. Results are random. | 59 |
 | 10 | Rerolls15 | 10-Rerolls15.png | 15 Rerolls | 15 rerolls saved to your account. Use them on run shop offers or level-up cards. Results are random. | 149 |
-| 11 | Banishes5 | 11-Banishes5.png | 5 Banishes | 5 banishes saved to your account. Each removes one level-up card for the run. | 79 |
-| 12 | Banishes15 | 12-Banishes15.png | 15 Banishes | 15 banishes saved to your account. Each removes one level-up card for the run. | 199 |
+| 11 | Banishes5 | 11-Banishes5.png | 5 Banishes | 5 banishes saved to your account. Each removes one level-up card or shop offer for the run. | 79 |
+| 12 | Banishes15 | 12-Banishes15.png | 15 Banishes | 15 banishes saved to your account. Each removes one level-up card or shop offer for the run. | 199 |
 | 13 | Emeralds1 | 13-Emeralds1.png | Pouch of Emeralds | 400 emeralds for chests, eggs, upgrades and classes. | 39 |
 | 14 | Emeralds2 | 14-Emeralds2.png | Stack of Emeralds | 1,700 emeralds for chests, eggs, upgrades and classes. | 149 |
 | 15 | Emeralds3 | 15-Emeralds3.png | Crate of Emeralds | 4,200 emeralds for chests, eggs, upgrades and classes. | 339 |

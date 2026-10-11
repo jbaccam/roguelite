@@ -315,7 +315,7 @@ function S.open(screen,ctx,focus)
   -- Saved rerolls and banishes, with a quantity picker. Hidden where paid random items are restricted.
   if not profile.restricted then
    local ph=320
-   for i,spec in {{'Rerolls','Reroll level-up and shop choices.',Money.RerollPacks,'quests',profile.rerolls,'blue'},{'Banishes','Remove unwanted level-ups for the run.',Money.BanishPacks,'armory',profile.banishes,'red'}} do
+   for i,spec in {{'Rerolls','Reroll level-up and shop choices.',Money.RerollPacks,'quests',profile.rerolls,'blue'},{'Banishes','Remove level-ups or shop offers for the run.',Money.BanishPacks,'armory',profile.banishes,'red'}} do
     local x=(i-1)*(HW+18)
     local f,th=FX.card(list,spec[1],x,y,HW,ph,spec[6])
     FX.art(f,spec[4],96,60,150,th,280)

@@ -228,35 +228,18 @@ local function roll(p,slot,excluded)
  -- Turret items stop at 10 owned (HandymanTurret.offerable, 2026-10-04).
  local turrets=Turret and Turret.owned(s.items) or 0
  -- Whether entry may be offered now: a weapon the player may see, or an item under its cap that
- -- works with the build; never one already on show.
+ -- works with the build; never one already on show or banished this run (Shop Banish).
  local function candidate(entry,weapons)
-  if (entry.kind=='Weapon')~=weapons or excluded[entry.id] then return false end
+  if (entry.kind=='Weapon')~=weapons or excluded[entry.id] or Catalog.isBanned(s.shopBanned,entry) then return false end
   if weapons then return owned[entry.weaponId]==true end
   local count=0
   for _,it in s.items do if it.id==entry.id then count=it.count;break end end
   return count<entry.cap and usable(entry,carried,cs.stats,turrets) and (not Turret or Turret.offerable(entry,turrets))
  end
- -- The rolled tier, else the next lower one that has any.
- local function fill(weapons)
-  local pool={}
-  for try=tier,1,-1 do
-   for _,entry in Catalog.List do
-    if entry.tier==try and candidate(entry,weapons) then table.insert(pool,entry) end
-   end
-   if #pool>0 then break end
-  end
-  return pool
- end
- -- An owned weapon, else an item; with the item pool exhausted too, any owned weapon of any tier.
- local pool=fill(wantWeapon)
- if #pool==0 and wantWeapon then pool=fill(false) end
- if #pool==0 then
-  for _,entry in Catalog.List do if entry.kind=='Weapon' and owned[entry.weaponId] and not excluded[entry.id] then table.insert(pool,entry) end end
- end
- -- Last resort (nothing owned is known yet): any weapon, rather than a dead offer.
- if #pool==0 then
-  for _,entry in Catalog.List do if entry.kind=='Weapon' and not excluded[entry.id] then table.insert(pool,entry) end end
- end
+ -- The rolled tier (else the next lower one that has any) of the wanted kind, then items, then any
+ -- owned weapon of any tier, then any weapon rather than a dead offer (ShopCatalog.offerPool, pure
+ -- and tested; it leaves banished entries out of every step).
+ local pool=Catalog.offerPool(Catalog.List,tier,wantWeapon,candidate,owned,excluded,s.shopBanned)
  -- Item preference (2026-10-09, ShopCatalog.preferredItems): 15% of item rolls pick among the items
  -- that suit the equipped copies (attack family and weapon types; turret items owned count like a
  -- Tool copy), from the rolled tier or any lower one, weighted by copies. It replaces the 5% class
@@ -314,7 +297,7 @@ local function freeTurret(p,fresh)
 end
 local function newState(p)
  -- A tutorial run starts with no crystals (S.tutorial.startShards).
- local s={shards=S.tutorial and S.tutorial.startShards or E.STARTING_SHARDS,level=1,xp=0,pendingLevels=0,upgradeOffers={},upgradeBonuses={},banished={},baggedShards=0,upgradeRerolls=0,upgradeToken=token(),rerolls=0,offers={},items={},ready=false,revision=1,lastRequest=-1e6,freeRerolls=0,freeUpgradeRerolls=0}
+ local s={shards=S.tutorial and S.tutorial.startShards or E.STARTING_SHARDS,level=1,xp=0,pendingLevels=0,upgradeOffers={},upgradeBonuses={},banished={},shopBanned={},baggedShards=0,upgradeRerolls=0,upgradeToken=token(),rerolls=0,offers={},items={},ready=false,revision=1,lastRequest=-1e6,freeRerolls=0,freeUpgradeRerolls=0}
  S.states[p]=s
  freeTurret(p,true)
  for i=1,6 do local f=slots(p)['Slot'..i];f:SetAttribute('Tier',1);f:SetAttribute('FinalPurchasePrice',0);f:SetAttribute('BasePrice',0);f:SetAttribute('WavePurchased',0);f:SetAttribute('CopyId',token()) end
@@ -426,13 +409,16 @@ function S.resume()
  S.paused=nil;run:SetAttribute('Paused',nil)
 end
 -- Banish (stored or bought): remove one offered stat for the rest of the run and replace
--- only that card. Validated here: shop phase, pending level-up, valid card index.
-function S.canBanish(p,index)
+-- only that card. Validated here: shop phase, pending level-up, valid card index and, when given,
+-- that card's token (a bought Banish names the card it was bought for: a reroll since then means
+-- the card is gone, and the banish stays saved).
+function S.canBanish(p,index,tok)
  local s=S.states[p]
- return s~=nil and S.phase=='Shop' and s.pendingLevels>0 and type(index)=='number' and s.upgradeOffers[index]~=nil
+ local o=s~=nil and S.phase=='Shop' and s.pendingLevels>0 and type(index)=='number' and s.upgradeOffers[index] or nil
+ return o~=nil and (tok==nil or o.token==tok)
 end
-function S.banish(p,index)
- if not S.canBanish(p,index) then return false end
+function S.banish(p,index,tok)
+ if not S.canBanish(p,index,tok) then return false end
  local s=S.states[p];local cs=Characters.states[p]
  local offer=s.upgradeOffers[index]
  s.banished[offer.id]=true
@@ -443,6 +429,31 @@ function S.banish(p,index)
  else table.remove(s.upgradeOffers,index) end
  s.upgradeToken=token();s.revision+=1
  S.publish(p,'Banished '..Upgrades.ById[offer.id].name..' for this run')
+ return true
+end
+-- Shop Banish (2026-10-10, user: "add bans for shop items and weapons too. Paywall it."): the same
+-- stored or bought Banish takes one shop offer out for the rest of the run (s.shopBanned, keyed by
+-- ShopCatalog.banKey: a weapon goes in every tier) and rolls that slot again at once, without
+-- using a reroll or changing the reroll price. Validated here: a living run member between waves,
+-- not in the tutorial (its guided offers), an offer index with its current token, not sold and not
+-- locked (unlock it first). Example: banishing a Glock II offer in slot 2 puts a new offer in slot
+-- 2; no Glock of any tier shows again this run, and the other three offers stay.
+function S.canBanishOffer(p,index,tok)
+ local s=S.states[p]
+ if not s or S.phase~='Shop' or S.tutorial or not living(p) or p:GetAttribute('RunDown') or p:GetAttribute('RunReturning') then return false end
+ if not E.integer(index,1,E.OFFER_COUNT) or type(tok)~='string' then return false end
+ local o=s.offers[index]
+ return o~=nil and o.token==tok and not o.sold and not o.locked and Catalog.ById[o.id]~=nil
+end
+function S.banishOffer(p,index,tok)
+ if not S.canBanishOffer(p,index,tok) then return false end
+ local s=S.states[p];local o=s.offers[index];local entry=Catalog.ById[o.id]
+ s.shopBanned=s.shopBanned or {} -- a build kept from before Shop Banish (rejoin stash)
+ s.shopBanned[Catalog.banKey(entry)]=true
+ local excluded={};for _,x in s.offers do excluded[x.id]=true end
+ s.offers[index]=roll(p,index,excluded)
+ s.ready=false;s.revision+=1
+ S.publish(p,'Banished '..entry.name..' for this run');S.publishReady()
  return true
 end
 local function rerollOffers(p)
@@ -456,16 +467,24 @@ local function rerollUpgrades(p)
  s.upgradeToken=token()
  for _,o in s.upgradeOffers do o.token=token();o.new=(s.upgradeBonuses[o.id] or 0)==0 end
 end
--- Robux reroll (validated receipt). Applies now during the shop; otherwise banks a free
--- reroll that the next Reroll uses before shards.
+-- Robux or saved reroll (a validated receipt, or RogueliteMeta's UseReroll after it spent one).
+-- Applies only now, during the shop (a level-up reroll also needs a level-up to choose); otherwise
+-- it returns false and the caller keeps it as a saved profile reroll. (2026-10-10: it used to bank a
+-- run-only "FREE REROLL" here, which the crystal REROLL button then spent on a single click with no
+-- question, and which a run's end threw away.)
+function S.canPaidReroll(p,kind)
+ local s=S.states[p];if not s or S.phase~='Shop' then return false end
+ if kind=='Upgrade' then return s.pendingLevels>0 end
+ if kind~='Shop' then return false end
+ for _,o in s.offers do if not o.locked or o.sold then return true end end
+ return false -- every offer locked: nothing would change
+end
 function S.paidReroll(p,kind)
- local s=S.states[p];if not s then return false end
- local now=S.phase=='Shop' and (kind=='Shop' or s.pendingLevels>0)
- if now and kind=='Shop' then rerollOffers(p);s.ready=false
- elseif now then rerollUpgrades(p)
- elseif kind=='Shop' then s.freeRerolls+=1 else s.freeUpgradeRerolls+=1 end
- if now then fire('onReroll',p,kind,'Bought',0) end
- s.revision+=1;reprice(p);S.publish(p,now and 'Rerolled' or 'Free reroll saved for the next shop')
+ if not S.canPaidReroll(p,kind) then return false end
+ local s=S.states[p]
+ if kind=='Shop' then rerollOffers(p);s.ready=false else rerollUpgrades(p) end
+ fire('onReroll',p,kind,'Bought',0)
+ s.revision+=1;reprice(p);S.publish(p,'Rerolled')
  return true
 end
 -- The wave's normal enemy count (Keep N alive overrides it through TestZombieCountOverride).

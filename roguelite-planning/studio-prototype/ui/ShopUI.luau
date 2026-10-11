@@ -257,6 +257,61 @@ function M.new(player,h,refresh)
   if player:GetAttribute('RunDown') or player:GetAttribute('RunReturning') or player:GetAttribute('RunResult')~=nil then return end
   local data=self:snapshot();if data then combat.ShopAction:FireServer(action,data.revision,arg,extra) end
  end
+ -- One confirm popup at a time (UITheme.confirm, 2026-10-10): every Robux reroll, saved reroll and
+ -- Banish asks first, every time, whatever the count. It sits on the HUD's ScreenGui, so shop
+ -- refreshes keep it, and it closes when the shop ends.
+ local function blocked() return player:GetAttribute('RunDown') or player:GetAttribute('RunReturning') or player:GetAttribute('RunResult')~=nil end
+ function self:ask(screen,opts)
+  if self.confirmWin or not screen or blocked() then return end
+  local runState=RS:FindFirstChild('RogueliteRunState')
+  opts.onClose=function() self.confirmWin=nil end
+  opts.closeOn={runState and runState:GetAttributeChangedSignal('Phase')}
+  opts.closeIf=function() return runState==nil or runState:GetAttribute('Phase')~='Shop' end
+  self.confirmWin=T.confirm(screen,opts)
+ end
+ -- Shop Banish (2026-10-10): BANISH, then a click on an offer, opens this. A saved Banish is used
+ -- (RunAction UseBanish); with none saved, the 19 R$ Banish is bought for that offer (the server
+ -- spends it on the offer when the receipt lands, or keeps it saved if the offer is gone).
+ local function askBanish(screen,i,o)
+  local entry=Catalog.ById[o.id];if not entry then return end
+  local saved=player:GetAttribute('ProfileBanishes') or 0;local using=saved>0
+  local name=entry.name..(entry.weaponId and entry.tier>1 and (' '..T.Roman[entry.tier]) or '')
+  local robux=Money.price('Banish')
+  self:ask(screen,{name='BanishConfirm',title='Banish',danger=true,
+   question=using and ('Banish '..name..' for the rest of this run?') or ('Banish '..name..' for R$ '..robux..'?'),
+   detail=(using and ('Uses 1 saved Banish (you have '..saved..', '..(saved-1)..' after). ') or '')..(entry.weaponId and 'No tier of it shows again this run.' or 'It never shows again this run.')..' A new offer takes its place.',
+   confirm=using and 'USE 1 BANISH' or ('BUY · R$ '..robux),
+   onConfirm=function()
+    self.banishMode=false;refresh()
+    local latest=self:snapshot();local now=latest and latest.offers and latest.offers[i]
+    if blocked() or not latest or latest.phase~='Shop' or not now or now.token~=o.token or now.sold or now.locked then return end
+    local target={kind='Shop',index=i,token=o.token}
+    -- Never turn a saved-Banish confirmation into a purchase if the count changed while open.
+    if using then
+     if (player:GetAttribute('ProfileBanishes') or 0)>0 then self.banishing={t=os.clock(),revision=latest.revision};combat.RunAction:FireServer('UseBanish',target) end
+    else combat.PurchaseRequest:FireServer('Banish',target) end
+   end})
+ end
+ -- Shop rerolls that cost Robux or a saved one. kind: 'robux' (the R$ button: a saved reroll when
+ -- there is one, else buy one) or 'bought' (one bought earlier in this run, from before 2026-10-10).
+ local function askReroll(screen,kind)
+  local saved=player:GetAttribute('ProfileRerolls') or 0;local using=kind=='robux' and saved>0
+  local bought=kind=='bought' and ((self:snapshot() or {}).freeRerolls or 0) or 0
+  local robux=Money.price('ShopReroll')
+  self:ask(screen,{name='RerollConfirm',title='Shop Reroll',
+   question=kind=='bought' and 'Use 1 bought reroll?' or using and 'Use 1 saved reroll?' or ('Reroll for R$ '..robux..'?'),
+   detail=(kind=='bought' and ('You have '..bought..' from this run, '..(bought-1)..' after. ') or using and ('You have '..saved..' saved, '..(saved-1)..' after. ') or '')..'Replaces every unlocked offer now. Locked offers stay.',
+   confirm=(kind=='bought' or using) and 'USE 1 REROLL' or ('BUY · R$ '..robux),
+   onConfirm=function()
+    local latest=self:snapshot()
+    if blocked() or not latest or latest.phase~='Shop' then return end
+    if kind=='bought' then
+     if (latest.freeRerolls or 0)>0 then self:send('Reroll') end
+    elseif using then
+     if (player:GetAttribute('ProfileRerolls') or 0)>0 then combat.RunAction:FireServer('UseReroll','Shop') end
+    else combat.PurchaseRequest:FireServer('ShopReroll') end
+   end})
+ end
  -- BUY effect: what each Buy click saw (offer token -> the card copied, where its icon was), kept
  -- until a snapshot shows that offer sold; render() plays it then. A refused buy is dropped once
  -- its offer is gone (rerolled, next wave) or after 4 s.
@@ -312,11 +367,12 @@ function M.new(player,h,refresh)
   state:GetAttributeChangedSignal(attribute):Connect(queueRefresh)
  end
  player:GetAttributeChangedSignal('ProfileRerolls'):Connect(function() task.defer(refresh) end)
+ player:GetAttributeChangedSignal('ProfileBanishes'):Connect(function() task.defer(refresh) end)
  for _,attribute in {'RunDown','RunReturning','RunResult'} do
   player:GetAttributeChangedSignal(attribute):Connect(function()
    if player:GetAttribute('RunDown') or player:GetAttribute('RunReturning') or player:GetAttribute('RunResult')~=nil then
-    self.selected=nil
-    if self.rerollConfirm then self.rerollConfirm.Close() end
+    self.selected=nil;self.banishMode=false
+    if self.confirmWin then self.confirmWin.Close() end
     if self.leaveConfirm then self.leaveConfirm.Close() end
    end
   end)
@@ -633,41 +689,72 @@ function M.new(player,h,refresh)
   -- Past the win (RogueliteRunState.Won), the shop is Endless's.
   local runState=RS:FindFirstChild('RogueliteRunState');local won=runState~=nil and runState:GetAttribute('Won')==true
   heading(left,'ShopTitle',won and ('Endless (Wave '..data.wave..')') or ('Shop (Wave '..data.wave..')'),0,0,leftW*(narrow and .62 or .39),46,30,won and T.Color.gold or nil)
-  -- Robux reroll sits beside the shard reroll (hidden where paid random items are restricted).
+  -- The paid buttons sit beside the crystal reroll (hidden where paid random items are restricted):
+  -- R$ REROLL, and BANISH (2026-10-10; not in the tutorial, whose offers are guided). Each button
+  -- says what its next click uses: REROLL - 12 [crystal] (crystals, no question); REROLL with
+  -- '4 SAVED' or 'R$ 15'; BANISH with '3 SAVED' or 'R$ 19'. The paid ones always ask first.
   local paid=not player:GetAttribute('PaidRandomRestricted')
+  local banishOn=paid and combat:GetAttribute('TutorialRun')~=true
+  if not banishOn or data.phase~='Shop' then self.banishMode=false end
+  local banishing=self.banishMode==true
+  local screenGui=function() return root:FindFirstAncestorOfClass('ScreenGui') end
   local oddsExtra=0
   local robuxW=paid and 118 or 0
+  local banishW=banishOn and 118 or 0
   local rerollW=narrow and leftW-(paid and robuxW+8 or 0) or math.min(232,leftW*.30)
   local rerollH=th(46)
-  local reroll=btn(left,'Reroll','',narrow and 0 or leftW-rerollW,narrow and 56 or 0,rerollW,rerollH,function() self:send('Reroll') end,true)
+  -- Wide: BANISH | R$ REROLL | REROLL in the title row, right of the crystals (they end at 54% of
+  -- the width). When the three don't fit there, the paid two narrow to 96 and REROLL to no less than
+  -- 150; when even that doesn't fit (and on narrow layouts), BANISH takes its own row under the
+  -- reroll buttons, at the right, and everything below moves down by that row (banishDrop).
+  -- Example: 1920x1080 fits all three at full size, 1280x720 narrowed, 1024x768 drops BANISH a row.
+  local banishDrop=0
+  if banishOn then
+   local room=leftW*.46
+   if not narrow and rerollW+robuxW+banishW+16>room then
+    local tight=math.max(150,math.min(rerollW,room-2*(96+8)))
+    if tight+2*(96+8)<=room then rerollW,robuxW,banishW=tight,96,96 end
+   end
+   if narrow or rerollW+robuxW+banishW+16>room then banishDrop=rerollH+8 end
+  end
+  -- Caption on top, what the click uses under it (the level-up screen's BANISH / REROLL look).
+  local function twoLine(b,sub,color)
+   local bw,bh=b.Size.X.Offset,b.Size.Y.Offset;local capH=math.floor(bh*.58)
+   b.Caption.Size=UDim2.new(1,-12,0,capH);b.Caption.Position=UDim2.fromOffset(6,3)
+   local sl=text(b,'Price',sub,6,capH,bw-12,bh-capH-3,15,color or white);sl.TextXAlignment=Enum.TextXAlignment.Center;sl.Font=T.Font
+   return sl
+  end
+  -- The crystal reroll asks nothing. A reroll bought earlier in this run (only servers from before
+  -- 2026-10-10 bank them) is a paid one: it says so and asks first.
   local free=data.freeRerolls or 0
-  if free>0 then reroll.Caption.Text='FREE REROLL ×'..free else price(reroll,data.rerollPrice,'REROLL - ',20,white) end
+  local reroll=btn(left,'Reroll','',narrow and 0 or leftW-rerollW,narrow and 56 or 0,rerollW,rerollH,function()
+   local latest=self:snapshot()
+   if latest and (latest.freeRerolls or 0)>0 then askReroll(screenGui(),'bought') else self:send('Reroll') end
+  end,true)
+  if free>0 then reroll.Caption.Text='BOUGHT REROLL ×'..free else price(reroll,data.rerollPrice,'REROLL - ',20,white) end
   reroll.Interactable=(free>0 or data.shards>=data.rerollPrice) and data.phase=='Shop'
   if paid then
    local stored=player:GetAttribute('ProfileRerolls') or 0
-   local rb=btn(left,'RobuxReroll',stored>0 and ('TOKEN ×'..stored) or ('R$ '..Money.price('ShopReroll')),narrow and leftW-robuxW or leftW-rerollW-8-robuxW,narrow and 56 or 0,robuxW,rerollH,function()
-    local screen=root:FindFirstAncestorOfClass('ScreenGui')
-    if self.rerollConfirm or not screen then return end
-    local using=(player:GetAttribute('ProfileRerolls') or 0)>0
-    local win;local phaseConnection
-    win=T.window(screen,'RerollConfirm','Shop Reroll',500,286,function()
-     self.rerollConfirm=nil;if phaseConnection then phaseConnection:Disconnect() end
-    end)
-    self.rerollConfirm=win
-    T.label(win.Body,'Question',using and 'Use 1 reroll token?' or 'Buy 1 shop reroll?',0,0,464,42,28)
-    T.text(win.Body,'Details','Replaces every unlocked shop offer now. Locked offers stay. Use between waves while shopping.',8,52,448,72,21,cream)
-    T.button(win.Body,'Cancel','CANCEL',0,152,224,58,function() win.Close() end,true)
-    T.button(win.Body,'Confirm',using and 'USE 1 TOKEN' or ('BUY · R$ '..Money.price('ShopReroll')),240,152,224,58,function()
-     local latest=self:snapshot();win.Close()
-     if not latest or latest.phase~='Shop' or player:GetAttribute('RunDown') or player:GetAttribute('RunReturning') or player:GetAttribute('RunResult')~=nil then return end
-     -- Never turn a token confirmation into a purchase if its balance changed while open.
-     if using then
-      if (player:GetAttribute('ProfileRerolls') or 0)>0 then combat.RunAction:FireServer('UseReroll','Shop') end
-     else combat.PurchaseRequest:FireServer('ShopReroll') end
-    end)
-    if runState then phaseConnection=runState:GetAttributeChangedSignal('Phase'):Connect(function() if runState:GetAttribute('Phase')~='Shop' then win.Close() end end) end
-   end)
+   local rb=btn(left,'RobuxReroll','REROLL',narrow and leftW-robuxW or leftW-rerollW-8-robuxW,narrow and 56 or 0,robuxW,rerollH,function() askReroll(screenGui(),'robux') end)
+   twoLine(rb,stored>0 and (stored..' SAVED') or ('R$ '..Money.price('ShopReroll')),white)
    rb.Interactable=data.phase=='Shop'
+   if banishOn then
+    local saved=player:GetAttribute('ProfileBanishes') or 0
+    local bx=banishDrop>0 and leftW-banishW or leftW-rerollW-8-robuxW-8-banishW
+    local by=banishDrop>0 and (narrow and 56 or 0)+rerollH+8 or 0
+    if banishing then
+     local cancel=btn(left,'CancelBanish','CANCEL',bx,by,banishW,rerollH,function() self.banishMode=false;refresh() end,true)
+     cancel.Caption.TextColor3=red
+    else
+     local bb=btn(left,'Banish','BANISH',bx,by,banishW,rerollH,function()
+      if blocked() then return end
+      self.banishMode=true;self.selected=nil;refresh()
+     end,true)
+     T.setTier(bb,4);bb.Caption.TextColor3=T.Color.negative
+     twoLine(bb,saved>0 and (saved..' SAVED') or ('R$ '..Money.price('Banish')),Color3.fromRGB(255,190,190))
+     bb.Interactable=data.phase=='Shop'
+    end
+   end
    -- Odds note under the reroll buttons (in the gap above the cards): each new offer's tier chance at
    -- this wave and Luck. Wide: right-aligned in the 30 px under the buttons; narrow: the 22 px row.
    local luck=Stats.read(state).Luck
@@ -679,9 +766,11 @@ function M.new(player,h,refresh)
    -- then convert height back into layout pixels; reserve slack for rich-text rounding.
    local oddsHeight=math.max(oldHeight,math.ceil(TS:GetTextSize(oddsText:gsub('<[^>]->',''),oddsSize,T.Body,Vector2.new(math.max(20,(nw-8)*math.min(1,scale)*.9),1000)).Y/math.min(1,scale))+6)
    oddsExtra=oddsHeight-oldHeight
-   local note=text(left,'RerollOdds',oddsText,leftW-nw,narrow and 58+rerollH or rerollH+5,nw,oddsHeight,oddsSize,cream)
+   local note=text(left,'RerollOdds',oddsText,leftW-nw,(narrow and 58+rerollH or rerollH+5)+banishDrop,nw,oddsHeight,oddsSize,cream)
    note.RichText=true;note.TextScaled=false;note.TextSize=oddsSize;note.TextWrapped=true
    note.TextXAlignment=narrow and Enum.TextXAlignment.Left or Enum.TextXAlignment.Right
+   -- Banish mode: the hint takes the odds line's place.
+   if banishing then note.Name='BanishHint';note.RichText=false;note.Text='Click the offer you want to banish';note.TextColor3=red;note.Font=T.Font end
   end
   -- Crystals, and right beside them the crystal bag (Brotato's material bag, user 2026-10-03): what
   -- was left on the ground when the last wave ended. Shown only while it holds some (an empty bag
@@ -703,7 +792,7 @@ function M.new(player,h,refresh)
   local fs=math.max(16,minText)
   local inline=false
   if bag>0 and not narrow then
-   local bx1=math.max(bx0+leftW*.14,leftW-rerollW-(paid and robuxW+8 or 0)-8)
+   local bx1=math.max(bx0+leftW*.14,leftW-rerollW-(paid and robuxW+8 or 0)-(banishW>0 and banishDrop==0 and banishW+8 or 0)-8)
    local a,b=#tostring(data.shards)*.65+1.2,#tostring(bag)*.65+1.2
    local ss=math.max(12,math.min(32,math.floor((bx1-bx0-44)/(a+b))))
    local sw,bw=20+ss*a,20+ss*b
@@ -722,7 +811,7 @@ function M.new(player,h,refresh)
     local bs=narrow and 22 or 26
     local bw=20+bs*(#tostring(bag)*.65+1.2);local cw=leftW-bw-4
     local rh=math.max(bs+12,math.ceil(TS:GetTextSize(caption,fs,T.Body,Vector2.new(cw-6,1000)).Y)+4)
-    local y=(narrow and 78+rerollH or math.max(76,rerollH+30))+oddsExtra
+    local y=(narrow and 78+rerollH or math.max(76,rerollH+30))+oddsExtra+banishDrop
     local f=Instance.new('Frame');f.Name='Bag';f.BackgroundTransparency=1;f.Position=UDim2.fromOffset(0,y);f.Size=UDim2.fromOffset(bw,rh);f.Parent=left
     price(f,bag,'',bs,cream,T.Asset.shardBag)
     text(left,'BagNote',caption,bw+4,y,cw,rh,fs,cream)
@@ -730,7 +819,7 @@ function M.new(player,h,refresh)
    end
   end
   -- Phones (tap>0) keep four columns only when each card is still 240 wide; else two rows of two.
-  local top=(narrow and 78+rerollH or math.max(76,rerollH+30))+bagRow+oddsExtra;local cols=leftW>=(tap>0 and 1000 or 660) and 4 or leftW>=420 and 2 or 1;local cardW=(leftW-(cols-1)*12)/cols
+  local top=(narrow and 78+rerollH or math.max(76,rerollH+30))+bagRow+oddsExtra+banishDrop;local cols=leftW>=(tap>0 and 1000 or 660) and 4 or leftW>=420 and 2 or 1;local cardW=(leftW-(cols-1)*12)/cols
   local buyH,lockH=th(43),th(34) -- a taller Buy makes the card taller by the same amount
   -- Weapon offers (2026-10-09): name, the attack line, the specialty bar, one row per type (the set
   -- step this buy reaches), then stat lines (with the specialty and those sets) and traits. Every
@@ -776,6 +865,18 @@ function M.new(player,h,refresh)
      local buy=btn(card,'Buy','', (cardW-bw)/2,cardH-16-buyH,bw,buyH,function() T.sound('ui_purchase');remember(card,well,i,o,data);self:send('Buy',i,o.token) end)
      price(buy,o.price,'',30,data.shards>=o.price and white or red);buy.Interactable=data.shards>=o.price and data.phase=='Shop'
      btn(left,'Lock'..i,o.locked and 'Locked' or 'Lock',x+8,y+cardH+10,cardW-16,lockH,function() self:send('Lock',i,o.token) end,not o.locked)
+     if banishing then
+      -- Banish mode (the level-up screen's look): red corners and a full-card BANISH on each offer
+      -- that can go. A locked offer can't: it says so, and its Lock button below still unlocks it.
+      local can=not o.locked
+      if can then T.setTier(card,4) end
+      buy.Selectable=false
+      local pick=T.make('TextButton',card,{Name=can and 'BanishPick' or 'BanishLocked',Text='',AutoButtonColor=false,Selectable=can,BackgroundColor3=can and Color3.fromRGB(120,10,20) or Color3.fromRGB(8,10,12),BackgroundTransparency=can and .72 or .4,Size=UDim2.fromScale(1,1),ZIndex=5})
+      T.make('UICorner',pick,{CornerRadius=UDim.new(0,10)})
+      local tag=heading(pick,'Tag',can and 'BANISH' or 'LOCKED · UNLOCK TO BANISH',12,0,cardW-24,cardH,can and 34 or 22,can and white or cream)
+      tag.TextXAlignment=Enum.TextXAlignment.Center;tag.ZIndex=6;tag.TextStrokeTransparency=0
+      if can then pick.Activated:Connect(function() askBanish(screenGui(),i,o) end) end
+     end
     end
    end
    top+=math.ceil(4/cols)*(cardH+lockH+24)
@@ -964,6 +1065,21 @@ function M.new(player,h,refresh)
    elseif (o and o.token==token and o.sold) or (b.last and gone and arrived(b,data)) then self.bought[token]=nil;task.defer(playBuy,b,data,parent)
    elseif gone then self.bought[token]=nil;b.card:Destroy() end
   end
+  -- A saved Banish's result as a short toast, "Banished Two Straws for this run", once the server's
+  -- answer is in (a newer revision). A bought one's comes as the purchase reply's toast (RogueliteUI).
+  local sent=self.banishing
+  if sent and (data.revision or 0)>sent.revision and type(data.message)=='string' and data.message:find('^Banished ') then
+   self.banishing=nil
+   local screen=screenGui();if screen then T.toast(screen,data.message,T.Color.lime) end
+  elseif sent and os.clock()-sent.t>5 then self.banishing=nil end
+  -- A controller in banish mode starts on the first offer's BANISH (after the HUD's own selection
+  -- restore, which is deferred).
+  if banishing then task.delay(.05,function() pcall(function()
+   if not left.Parent or not game:GetService('UserInputService'):GetLastInputType().Name:find('^Gamepad') then return end
+   local GS=game:GetService('GuiService');local sel=GS.SelectedObject
+   if sel and sel.Name=='BanishPick' and sel:IsDescendantOf(left) then return end
+   for i=1,4 do local c=left:FindFirstChild('Offer'..i);local pick=c and c:FindFirstChild('BanishPick');if pick then GS.SelectedObject=pick;return end end
+  end) end) end
   return data
  end
  return self

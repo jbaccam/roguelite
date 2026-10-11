@@ -274,4 +274,39 @@ function C.pickWeighted(list,weights,n)
  for i,entry in list do x-=weights[i] or 0;if x<0 then return entry end end
  return list[#list]
 end
+-- Shop Banish (2026-10-10, MONETIZATION_AND_REWARDS.md "Banish"): a banished shop entry never shows
+-- again this run. Items ban by their id; weapons ban by weapon id, so every tier goes. Example:
+-- banishing a Tier II Glock offer stores 'weapon:00', and Glock I-IV never show again.
+function C.banKey(entry) return entry.weaponId and ('weapon:'..entry.weaponId) or entry.id end
+function C.isBanned(banned,entry) return banned~=nil and banned[C.banKey(entry)]==true end
+-- The pool one shop slot rolls from (ShopService's roll). candidate(entry,weapons): may this entry
+-- be offered now (weapon or item roll, cap, build, not on show); owned: weapon id -> true for weapons
+-- the player may see; excluded: entry ids already on show; banned: the run's Banish set. In order:
+-- the rolled tier (else the next lower one with any) of the wanted kind, then of items, then any
+-- owned weapon, then any weapon; banned entries are left out of each. Only when even that is empty
+-- (everything banned) does it take any weapon not on show, so a slot is never empty.
+function C.offerPool(list,tier,wantWeapon,candidate,owned,excluded,banned)
+ local function fill(weapons)
+  local pool={}
+  for try=tier,1,-1 do
+   for _,entry in list do
+    if entry.tier==try and candidate(entry,weapons) and not C.isBanned(banned,entry) then table.insert(pool,entry) end
+   end
+   if #pool>0 then break end
+  end
+  return pool
+ end
+ local pool=fill(wantWeapon)
+ if #pool==0 and wantWeapon then pool=fill(false) end
+ if #pool==0 then
+  for _,entry in list do if entry.kind=='Weapon' and owned[entry.weaponId] and not excluded[entry.id] and not C.isBanned(banned,entry) then table.insert(pool,entry) end end
+ end
+ if #pool==0 then
+  for _,entry in list do if entry.kind=='Weapon' and not excluded[entry.id] and not C.isBanned(banned,entry) then table.insert(pool,entry) end end
+ end
+ if #pool==0 then
+  for _,entry in list do if entry.kind=='Weapon' and not excluded[entry.id] then table.insert(pool,entry) end end
+ end
+ return pool
+end
 return C
