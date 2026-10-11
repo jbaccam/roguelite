@@ -63,14 +63,18 @@ Fill says who or how; an element adds a coloured outline (`UIStroke`, 2 px, made
 | Style | Fill | Outline | Size |
 |---|---|---|---|
 | Plain hit | cream 255,246,218 | dark text stroke 28,22,20 | 1x |
-| Crit | gold 255,196,40, ends in `!` | solid dark text stroke | 1.3x |
+| Crit | hot red 255,64,48, ends in `!` | white 255,255,255 | 1.3x |
 | Handyman turret | steel 176,190,204 | dark text stroke | 0.85x |
-| Burn tick (fire) | 255,232,200 | orange 226,78,14 | 1x |
+| Burn tick (fire) | orange 255,140,40 | ember 150,40,10 | 1x |
 | Frost (the hit that lands a slow) | 228,246,255 | blue 30,120,235 | 1x |
 | Poison tick | 226,255,196 | deep green 36,120,24 | 1x |
-| Lightning (chain, Mjolnir strike) | 255,250,205 | violet 140,80,240 | 1x |
+| Lightning (chain, Mjolnir strike) | pale yellow 255,250,170 | electric cyan 0,190,220 | 1x |
 | Damage taken | red 235,72,72 (unchanged) | unchanged | unchanged |
 
 Crit or turret with an element keeps the crit/turret fill and size and adds the element outline. Turrets never crit; if both arrived, the turret look wins. Only numbers of the same style merge (0.2 s window), so a crit or a burn never folds into a plain number.
 
 Tests: `python roguelite-planning/studio-prototype/combat/run_hit_feedback_tests.py build/luau-validation/luau.exe` (HitFeedbackTests 362 checks, CombatWireTests 2449 checks, with engine stubs). No Studio sync and no Play test was run for this change.
+
+**Revision, same day (user: "gold on crits and peach on fire is kinda odd"; ice, poison and turret kept).** The table above is the current look: crits went from gold to hot red with a white outline, fire from peach on orange to a real orange on an ember outline, lightning from violet to an electric cyan outline. A crit is close in hue to damage taken (235,72,72), but damage taken shows only over your own character, with a `-`, a bigger size and a dark red outline, so they don't meet.
+
+**Impact streaks take the colour too.** `MobImpactVisuals` tints the white streak atlas (`ImageColor3`, no new art) with `HitFeedbackVisuals.sparkColor`: the element's hue wins (fire 255,140,40, frost 120,200,255, poison 120,220,70, lightning 255,245,140), else turret steel, else crit red; a plain hit stays white. Burn and poison ticks, which drew no streaks before, now draw a small 3-ray puff in their colour (still throttled to one impact per enemy per 0.07 s). Example: a Medusa hit shows a blue-outlined number and pale blue shards; a crit with a plain Katana shows a red `42!` with red shards. Tests: HitFeedbackTests 369 checks (sparkColor order and every element), CombatWireTests 2449.

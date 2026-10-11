@@ -17,7 +17,8 @@ local bulletImpact=require(combat:WaitForChild('BulletImpactVisuals')).mount(vis
 local muzzleFlash=require(combat:WaitForChild('MuzzleFlashVisuals')).mount(visuals)
 local mobImpact=require(combat:WaitForChild('MobImpactVisuals')).mount(visuals)
 -- Damage numbers and hit flashes, pooled and capped.
-local hitFeedback=require(combat:WaitForChild('HitFeedbackVisuals')).mount(visuals)
+local HitStyle=require(combat:WaitForChild('HitFeedbackVisuals'))
+local hitFeedback=HitStyle.mount(visuals)
 local shirtShot=require(combat:WaitForChild('ShirtVisuals')).mount(visuals)
 local Swing=require(combat:WaitForChild('SwingVisuals')).mount(visuals)
 local Spacing=require(combat:WaitForChild('WeaponSpacing'))
@@ -305,7 +306,10 @@ end
 -- roll and source, for the number's colour (HitFeedbackVisuals.style).
 local function onHit(position,damage,npc,impactPosition,lethal,secondary,weaponId,mine,dot,crit,element,turret)
  if typeof(position)~='Vector3' or type(damage)~='number' then return end
- if not lethal and not dot then mobImpact.hit(impactPosition or position-Vector3.yAxis*2,npc,secondary) end
+ -- The impact streaks take the hit's colour (HitStyle.sparkColor). A burn/poison tick, which had
+ -- no streaks, now shows a small 3-ray puff in its element's colour.
+ local tint=HitStyle.sparkColor(crit,element,turret)
+ if not lethal and (not dot or tint) then mobImpact.hit(impactPosition or position-Vector3.yAxis*2,npc,secondary or dot,tint) end
  godlyFX.hit(npc,lethal,secondary,weaponId,impactPosition or position)
  damageNumber(position,damage,Color3.fromRGB(255,246,218),'DamageNumber',mine,crit,element,turret)
  if npc and npc.Parent then hitFeedback.flash(npc) end

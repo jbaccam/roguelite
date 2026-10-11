@@ -30,13 +30,22 @@ local V={HitNumbers=28,TakenNumbers=6,Flashes=128,FlashHold=.08,FlashDuration=.1
 -- Number colours. Plain hits keep the caller's cream (255,246,218) and dark text stroke; damage
 -- taken stays red. Element outlines are saturated and mid-dark so they hold an edge on snow and
 -- sand; the tinted fills stay light so they read on grass (poison's outline is a deep green there).
+-- 2026-10-10 (user: "gold on crits and peach on fire is kinda odd"): fire is a real orange on an
+-- ember outline, lightning a pale yellow on an electric cyan one, and a crit hot red on white.
 V.Colors={ -- element outline
- Burn=Color3.fromRGB(226,78,14),Frost=Color3.fromRGB(30,120,235),
- Poison=Color3.fromRGB(36,120,24),Lightning=Color3.fromRGB(140,80,240)}
+ Burn=Color3.fromRGB(150,40,10),Frost=Color3.fromRGB(30,120,235),
+ Poison=Color3.fromRGB(36,120,24),Lightning=Color3.fromRGB(0,190,220)}
 V.Fills={ -- element fill on a plain hit
- Burn=Color3.fromRGB(255,232,200),Frost=Color3.fromRGB(228,246,255),
- Poison=Color3.fromRGB(226,255,196),Lightning=Color3.fromRGB(255,250,205)}
-V.CritColor=Color3.fromRGB(255,196,40);V.CritScale=1.3
+ Burn=Color3.fromRGB(255,140,40),Frost=Color3.fromRGB(228,246,255),
+ Poison=Color3.fromRGB(226,255,196),Lightning=Color3.fromRGB(255,250,170)}
+V.CritColor=Color3.fromRGB(255,64,48);V.CritOutline=Color3.new(1,1,1);V.CritScale=1.3
+-- The impact's white shards and sparks (MobImpactVisuals) take the hit's colour too: an element's
+-- own hue (it wins over crit/turret), else crit red or turret steel; nil keeps them white.
+V.Sparks={Burn=Color3.fromRGB(255,140,40),Frost=Color3.fromRGB(120,200,255),
+ Poison=Color3.fromRGB(120,220,70),Lightning=Color3.fromRGB(255,245,140)}
+function V.sparkColor(crit,element,turret)
+ return V.Sparks[element] or (turret and V.TurretColor) or (crit and V.CritColor) or nil
+end
 V.TurretColor=Color3.fromRGB(176,190,204);V.TurretScale=.85
 V.OutlineThickness=2
 -- One frozen style per kind ('Crit', 'Burn', 'CritBurn', 'TurretPoison', ...), built once: no
@@ -48,10 +57,10 @@ for _,element in {false,'Burn','Frost','Poison','Lightning'} do
    local kind=source..(element or '')
    V.Styles[kind]=table.freeze({kind=kind,
     color=source=='Crit' and V.CritColor or source=='Turret' and V.TurretColor or V.Fills[element],
-    outline=element and V.Colors[element] or nil,
+    outline=element and V.Colors[element] or source=='Crit' and V.CritOutline or nil,
     scale=source=='Crit' and V.CritScale or source=='Turret' and V.TurretScale or 1,
     suffix=source=='Crit' and '!' or '',
-    stroke=element and 1 or source=='Crit' and 0 or .12})
+    stroke=(element or source=='Crit') and 1 or .12})
   end
  end
 end

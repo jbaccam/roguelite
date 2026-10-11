@@ -77,7 +77,7 @@ function V.mount(visuals)
   picture.Image=white and WHITE or RED;picture.ImageTransparency=0
   picture.ImageRectOffset=Vector2.new(math.round(rect[1]*atlasScale),math.round(rect[2]*atlasScale))
   picture.ImageRectSize=Vector2.new(math.round(rect[3]*atlasScale),math.round(rect[4]*atlasScale))
-  picture.ImageColor3=white and Color3.new(1,1,1) or Color3.fromRGB(205,210,210)
+  picture.ImageColor3=white and (e.tint or Color3.new(1,1,1)) or Color3.fromRGB(205,210,210)
   picture.ZIndex=white and 2 or 1;picture.Visible=false;picture.Parent=e.gui
   local p={picture=picture,white=white,dir=Vector2.new(math.cos(angle),math.sin(angle)),
    r0=r0,r1=r1,length=length,delay=delay,lifetime=lifetime,
@@ -161,13 +161,16 @@ function V.mount(visuals)
   end
  end)
  local effect={}
- function effect.hit(position,npc,secondary)
+ -- tint (2026-10-10, HitFeedbackVisuals.sparkColor): the hit's crit/element/turret colour for the
+ -- streaks; nil keeps them white. A tinted burn/poison tick comes in as `secondary` (3 rays).
+ function effect.hit(position,npc,secondary,tint)
   local now=os.clock()
   if npc then
    if now-(lastHit[npc] or -1e6)<.07 then return end
    lastHit[npc]=now
   end
   local e=create(position,false,npc);if not e then return end
+  e.tint=tint
   -- A dedicated white impact for surviving damage. Red rings belong to death;
   -- damage-over-time gets a smaller guaranteed impact, not a random no-op.
   rays(e,secondary and 3 or rng:NextInteger(6,8),false)

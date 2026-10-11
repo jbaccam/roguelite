@@ -38,7 +38,14 @@ return function(V,B)
  -- Colours (2026-10-10): the fill says who/how (plain, crit, turret); an element adds its outline.
  check(V.style(false,nil,false)==nil,'a plain hit keeps the caller colour and text stroke')
  local crit=V.style(true,nil)
- check(crit and crit.color==V.CritColor and crit.scale>1 and crit.suffix=='!' and crit.stroke==0 and crit.outline==nil,'a crit is gold, bigger, outlined dark, with !')
+ check(crit and crit.color==V.CritColor and crit.scale>1 and crit.suffix=='!' and crit.stroke==1 and crit.outline==V.CritOutline,'a crit is hot red, bigger, outlined white, with !')
+ -- Impact streaks (MobImpactVisuals): the element's hue wins, then turret steel, then crit red.
+ check(V.sparkColor(false,nil,false)==nil,'a plain hit keeps white streaks')
+ check(V.sparkColor(true,nil,false)==V.CritColor and V.sparkColor(false,nil,true)==V.TurretColor,'crit streaks are red, turret streaks steel')
+ for _,name in {'Burn','Frost','Poison','Lightning'} do
+  check(V.sparkColor(true,name,false)==V.Sparks[name] and V.sparkColor(false,name,true)==V.Sparks[name],name..' streaks take the element colour')
+ end
+ check(V.sparkColor(false,'Ice',false)==nil,'an unknown element keeps white streaks')
  local turret=V.style(false,nil,true)
  check(turret and turret.color==V.TurretColor and turret.scale<1 and turret.suffix=='' and turret.outline==nil,'a turret hit is steel and smaller')
  check(turret.color~=V.CritColor and turret.kind~=crit.kind,'turret and crit numbers look and merge apart')
@@ -50,7 +57,7 @@ return function(V,B)
   check(s.stroke==1,'element '..name..': its outline replaces the dark text stroke')
   check(not seen[s.outline],'element '..name..' outline differs from the others');seen[s.outline]=true
   local both=V.style(true,name)
-  check(both and both.color==V.CritColor and both.outline==V.Colors[name] and both.scale==crit.scale and both.suffix=='!','crit '..name..': gold fill, element outline, crit size and !')
+  check(both and both.color==V.CritColor and both.outline==V.Colors[name] and both.scale==crit.scale and both.suffix=='!','crit '..name..': red fill, element outline, crit size and !')
   local t=V.style(false,name,true)
   check(t and t.color==V.TurretColor and t.outline==V.Colors[name] and t.scale==turret.scale,'turret '..name..': steel fill, element outline, turret size')
   check(both.kind~=s.kind and t.kind~=s.kind and both.kind~=t.kind and both.kind~=crit.kind,name..' styles are separate merge kinds')
