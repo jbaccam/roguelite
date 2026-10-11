@@ -28,10 +28,14 @@ return function(B)
  -- Stand-in enemies: two existing Instances, alternating (nothing is created).
  local npcs={};for i=1,40 do npcs[i]=i%2==0 and workspace or game:GetService('Lighting') end
  local items={}
+ -- Each hit's crit, element and turret source (2026-10-10 hit colours) ride in the flags byte's
+ -- spare bits. Turrets never crit, so no row asks for both.
+ local styles={}
  for i=1,40 do
   local id=({'07','12','Armor','',string.rep('x',30)})[i%5+1]
   local position=Vector3.new(rng:NextNumber(-3000,3000),rng:NextNumber(-50,300),rng:NextNumber(-3000,3000))
-  table.insert(items,B.hitItem(i%3==0 and me or them,position,rng:NextNumber(0,250000),npcs[i],i%7==0,i%2==0,i%4==0,id))
+  styles[i]={crit=i%5==0 and i%3~=1,element=({false,'Burn','Frost','Poison','Lightning'})[i%5+1] or nil,turret=i%3==1}
+  table.insert(items,B.hitItem(i%3==0 and me or them,position,rng:NextNumber(0,250000),npcs[i],i%7==0,i%2==0,i%4==0,id,styles[i].crit,styles[i].element,styles[i].turret))
  end
  local parts=B.splitHits(items);local nextFirst=1;local worst=0
  for _,part in parts do
@@ -53,6 +57,7 @@ return function(B)
    check(h.lethal==bit32.btest(item.flags,1) and h.secondary==bit32.btest(item.flags,2) and h.dot==bit32.btest(item.flags,4),'hit flags')
    check(h.mine==(item.owner==me),'mine is per player')
    check(h.weaponId==(item.id~='' and item.id or nil),'weapon id')
+   local style=styles[part[1]+k-1];check(h.crit==style.crit and h.element==style.element and h.turret==style.turret,'crit, element and turret')
    check(h.npc==(k~=2 and item.npc or nil),'each hit keeps its own enemy, and a missing one stays missing')
   end
  end

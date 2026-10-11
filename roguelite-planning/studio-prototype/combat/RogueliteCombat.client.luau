@@ -294,30 +294,33 @@ combat:WaitForChild('Shot').OnClientEvent:Connect(function(origin,finish,...)
  end
  flights.launched(os.clock())
 end)
-local function damageNumber(position,damage,color,name,mine)
+local function damageNumber(position,damage,color,name,mine,crit,element,turret)
  -- Settings menu (UITheme) can hide hit numbers; your own damage taken always shows.
  local taken=name=='PlayerDamageNumber'
  if not taken and player:GetAttribute('Setting_DamageNumbers')==false then return end
- hitFeedback.number(position,damage,color,taken,mine)
+ hitFeedback.number(position,damage,color,taken,mine,crit,element,turret)
 end
 -- mine: your own hit (teammates' numbers give way first). dot: a burn, poison or zone tick, which
--- shows its number and white flash without an extra splat.
-local function onHit(position,damage,npc,impactPosition,lethal,secondary,weaponId,mine,dot)
+-- shows its number and white flash without an extra splat. crit, element, turret: the server's
+-- roll and source, for the number's colour (HitFeedbackVisuals.style).
+local function onHit(position,damage,npc,impactPosition,lethal,secondary,weaponId,mine,dot,crit,element,turret)
  if typeof(position)~='Vector3' or type(damage)~='number' then return end
  if not lethal and not dot then mobImpact.hit(impactPosition or position-Vector3.yAxis*2,npc,secondary) end
  godlyFX.hit(npc,lethal,secondary,weaponId,impactPosition or position)
- damageNumber(position,damage,Color3.fromRGB(255,246,218),'DamageNumber',mine)
+ damageNumber(position,damage,Color3.fromRGB(255,246,218),'DamageNumber',mine,crit,element,turret)
  if npc and npc.Parent then hitFeedback.flash(npc) end
 end
--- Kills, one at a time and reliable (CombatEffectsService); they carry their owner and dot flag.
-combat:WaitForChild('Hit').OnClientEvent:Connect(function(position,damage,npc,impactPosition,lethal,secondary,weaponId,ownerId,dot)
- onHit(position,damage,npc,impactPosition,lethal,secondary,weaponId,ownerId==player.UserId,dot==true)
+-- Kills, one at a time and reliable (CombatEffectsService); they carry their owner, dot flag and
+-- crit/element/turret style (ShotBatch.style).
+combat:WaitForChild('Hit').OnClientEvent:Connect(function(position,damage,npc,impactPosition,lethal,secondary,weaponId,ownerId,dot,style)
+ local crit,element,turret=Wire.unstyle(style)
+ onHit(position,damage,npc,impactPosition,lethal,secondary,weaponId,ownerId==player.UserId,dot==true,crit,element,turret)
 end)
 -- Every other hit, a frame's worth per message (ShotBatch.hitWriter).
 task.spawn(function()
  combat:WaitForChild('HitFX').OnClientEvent:Connect(function(buf,...)
   for _,h in Wire.readHits(buf,table.pack(...)) do
-   onHit(h.position+Vector3.yAxis*2,h.damage,h.npc,h.position,h.lethal,h.secondary,h.weaponId,h.mine,h.dot)
+   onHit(h.position+Vector3.yAxis*2,h.damage,h.npc,h.position,h.lethal,h.secondary,h.weaponId,h.mine,h.dot,h.crit,h.element,h.turret)
   end
  end)
 end)

@@ -256,7 +256,7 @@ function L.new(damage,canTarget,rayParams)
    send(ground,d.owner,'Thunder',d.owner.UserId,ground,radius,now+spec.delay)
    later(now+spec.delay,function()
     if not ownerAlive(d) then return end
-    for _,npc in around(d,ground,radius) do damage(npc,d.damage*spec.factor,d,true) end
+    for _,npc in around(d,ground,radius) do damage(npc,d.damage*spec.factor,d,true,nil,nil,'Lightning') end
    end)
   elseif spec.move=='Strike' then
    local n=0;for _ in hit or {} do n+=1 end

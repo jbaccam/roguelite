@@ -116,9 +116,32 @@ end
 -- Kills stay on the reliable Hit remote (CombatEffectsService).
 B.HitBytes = 760
 local LETHAL, SECONDARY, DOT, MINE = 1, 2, 4, 8
+-- Hit colours (2026-10-10, play-testers: "different colour hit markers for elemental damage, and
+-- for crits", "showing turret damage diff could be cool"). The server's damage roll decides them
+-- and they ride in the flags byte's spare high nibble, so a hit is no bigger: code = source * 5 +
+-- element, source 0 = a player's hit, 1 = a crit, 2 = a Handyman turret's (turrets never crit),
+-- element 0 = none or its index in Elements. 15 codes of 16. Kills on the reliable Hit remote carry
+-- the same number, B.style(crit, element, turret), as their 10th argument.
+-- Frost: the hit that lands a slow (CombatEffectsService); a slow's own ticks deal no damage.
+B.Elements = { 'Burn', 'Frost', 'Poison', 'Lightning' }
+local elementCode = { Burn = 1, Frost = 2, Poison = 3, Lightning = 4 }
+-- 0..224 in steps of 16 (0 = a plain hit). An unknown element is sent as none.
+function B.style(crit, element, turret)
+ return ((turret and 2 or crit and 1 or 0) * 5 + (elementCode[element] or 0)) * 16
+end
+-- crit, element (nil for none), turret from B.style's number or a whole flags byte; anything else
+-- (an old server's missing argument, a malformed one) reads as a plain hit.
+function B.unstyle(style)
+ if type(style) ~= 'number' or style ~= style or style < 0 or style > 255 then return false, nil, false end
+ local code = bit32.extract(math.floor(style), 4, 4)
+ if code >= 15 then return false, nil, false end
+ local source = code // 5
+ return source == 1, B.Elements[code % 5], source == 2
+end
 -- One hit, ready to encode. dot: a burn/poison/zone tick (clients skip its splat and flash).
-function B.hitItem(owner, position, damage, npc, lethal, secondary, dot, weaponId)
- local flags = (lethal and LETHAL or 0) + (secondary and SECONDARY or 0) + (dot and DOT or 0)
+-- crit, element, turret: what the server's roll made it (B.style).
+function B.hitItem(owner, position, damage, npc, lethal, secondary, dot, weaponId, crit, element, turret)
+ local flags = (lethal and LETHAL or 0) + (secondary and SECONDARY or 0) + (dot and DOT or 0) + B.style(crit, element, turret)
  local id = type(weaponId) == 'string' and string.sub(weaponId, 1, 255) or ''
  return { owner = owner, position = position, damage = damage, npc = npc, flags = flags, id = id }
 end
@@ -186,7 +209,7 @@ function B.hitWriter(remote)
  return writer
 end
 -- A HitFX message as hit records: position (the enemy's root when hit), damage (rounded), npc
--- (nil when this client can't see it), lethal, secondary, dot, mine, weaponId.
+-- (nil when this client can't see it), lethal, secondary, dot, mine, weaponId, crit, element, turret.
 function B.readHits(buf, npcs)
  local out = {}
  if typeof(buf) ~= 'buffer' or type(npcs) ~= 'table' then return out end
@@ -197,7 +220,9 @@ function B.readHits(buf, npcs)
   local flags = buffer.readu8(buf, at + 16)
   local id = buffer.readstring(buf, at + 18, n)
   local npc = npcs[#out + 1]
+  local crit, element, turret = B.unstyle(flags)
   out[#out + 1] = {
+   crit = crit, element = element, turret = turret,
    position = Vector3.new(buffer.readf32(buf, at), buffer.readf32(buf, at + 4), buffer.readf32(buf, at + 8)),
    damage = buffer.readu32(buf, at + 12),
    npc = typeof(npc) == 'Instance' and npc or nil,

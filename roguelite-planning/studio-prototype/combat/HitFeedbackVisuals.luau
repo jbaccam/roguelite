@@ -11,17 +11,62 @@
 --    smaller (22 px FredokaOne, the UI's font; damage taken 32), live V.Life s instead of .85, and
 --    hits landing within V.Merge s and V.MergeRadius studs of a showing number add into it (one
 --    number per enemy per burst, with a small punch) instead of stacking.
+--  * 2026-10-10 (play-testers: "different colour hit markers for elemental damage, and for crits",
+--    "showing turret damage diff could be cool"): the server's roll says whether a hit crit, which
+--    element it was and whether a Handyman turret dealt it (ShotBatch.style, on HitFX and Hit).
+--    Two channels: the FILL says who/how (cream plain, gold crit, steel turret) and an element
+--    paints a coloured OUTLINE (a UIStroke) around a lightly tinted fill: orange fire (burn ticks),
+--    blue frost (the hit that lands a slow), green poison (poison ticks), violet lightning (chains,
+--    Mjolnir). A crit is also 1.3x the size with a '!'; a turret's number is 0.85x. So a crit with an
+--    element is gold with the element's outline, and a turret's burn is steel with an orange one.
+--    Only numbers of the same style merge, so a crit or a burn never folds into a plain number.
+--    Each pooled hit number makes its outline once, on its first elemental hit (28 at most).
 -- The motion is the old tweens' easing (through TweenService:GetValue) in one RenderStepped
--- pass. The pick and merge rules are pure (V.pick, V.merge, V.pickFlash) for HitFeedbackTests.
+-- pass. The pick, merge and style rules are pure (V.pick, V.merge, V.pickFlash, V.style) for
+-- HitFeedbackTests.
 local RunService=game:GetService('RunService')
 local TweenService=game:GetService('TweenService')
 local V={HitNumbers=28,TakenNumbers=6,Flashes=128,FlashHold=.08,FlashDuration=.18,Life=.7,Rise=1.6,Merge=.2,MergeRadius=1.4}
+-- Number colours. Plain hits keep the caller's cream (255,246,218) and dark text stroke; damage
+-- taken stays red. Element outlines are saturated and mid-dark so they hold an edge on snow and
+-- sand; the tinted fills stay light so they read on grass (poison's outline is a deep green there).
+V.Colors={ -- element outline
+ Burn=Color3.fromRGB(226,78,14),Frost=Color3.fromRGB(30,120,235),
+ Poison=Color3.fromRGB(36,120,24),Lightning=Color3.fromRGB(140,80,240)}
+V.Fills={ -- element fill on a plain hit
+ Burn=Color3.fromRGB(255,232,200),Frost=Color3.fromRGB(228,246,255),
+ Poison=Color3.fromRGB(226,255,196),Lightning=Color3.fromRGB(255,250,205)}
+V.CritColor=Color3.fromRGB(255,196,40);V.CritScale=1.3
+V.TurretColor=Color3.fromRGB(176,190,204);V.TurretScale=.85
+V.OutlineThickness=2
+-- One frozen style per kind ('Crit', 'Burn', 'CritBurn', 'TurretPoison', ...), built once: no
+-- per-hit tables. stroke: the text stroke's transparency (1 where the element outline replaces it).
+V.Styles={}
+for _,element in {false,'Burn','Frost','Poison','Lightning'} do
+ for _,source in {'','Crit','Turret'} do
+  if element or source~='' then
+   local kind=source..(element or '')
+   V.Styles[kind]=table.freeze({kind=kind,
+    color=source=='Crit' and V.CritColor or source=='Turret' and V.TurretColor or V.Fills[element],
+    outline=element and V.Colors[element] or nil,
+    scale=source=='Crit' and V.CritScale or source=='Turret' and V.TurretScale or 1,
+    suffix=source=='Crit' and '!' or '',
+    stroke=element and 1 or source=='Crit' and 0 or .12})
+  end
+ end
+end
+-- The style for a hit (nil: plain). An element the table doesn't know shows without an outline.
+-- A turret's hit is never a crit (HandymanTurret); if both came, the turret look wins.
+function V.style(crit,element,turret)
+ return V.Styles[(turret and 'Turret' or crit and 'Crit' or '')..(V.Colors[element] and element or '')]
+end
 -- A showing hit number a new hit should add into: born under V.Merge s ago, from the same side
--- (yours or a teammate's), within V.MergeRadius studs across (height ignored). nil: show a new one.
-function V.merge(pool,position,now,mine)
+-- (yours or a teammate's), of the same style kind (nil = plain), within V.MergeRadius studs across
+-- (height ignored). nil: show a new one.
+function V.merge(pool,position,now,mine,kind)
  local best,bestD
  for _,e in pool do
-  if e.born and e.at and now-e.born<=V.Merge and (e.mine or false)==(mine or false) then
+  if e.born and e.at and now-e.born<=V.Merge and (e.mine or false)==(mine or false) and e.kind==kind then
    local dx,dz=e.at.X-position.X,e.at.Z-position.Z;local d=math.sqrt(dx*dx+dz*dz)
    if d<=V.MergeRadius and (not bestD or d<bestD) then best,bestD=e,d end
   end
@@ -66,7 +111,7 @@ function V.mount(visuals)
  local hitNumbers,takenNumbers,flashes={},{},{}
  local function newNumber(taken)
   local a=Instance.new('Attachment');a.Name=taken and 'PlayerDamageNumber' or 'DamageNumber';a.Parent=anchor
-  local gui=Instance.new('BillboardGui');gui.Size=UDim2.fromOffset(taken and 120 or 80,taken and 64 or 40);gui.AlwaysOnTop=true;gui.MaxDistance=100;gui.Enabled=false;gui.Parent=a
+  local gui=Instance.new('BillboardGui');gui.Size=UDim2.fromOffset(taken and 120 or 100,taken and 64 or 40);gui.AlwaysOnTop=true;gui.MaxDistance=100;gui.Enabled=false;gui.Parent=a
   local text=Instance.new('TextLabel');text.Size=UDim2.fromScale(1,1);text.BackgroundTransparency=1;text.Font=Enum.Font.FredokaOne;text.TextSize=taken and 32 or 22;text.TextStrokeColor3=Color3.fromRGB(28,22,20);text.Parent=gui
   local outline
   if taken then outline=Instance.new('UIStroke');outline.Thickness=1.5;outline.Color=Color3.fromRGB(46,10,17);outline.Parent=text end
@@ -75,19 +120,29 @@ function V.mount(visuals)
  end
  local api={}
  -- taken: your own damage taken ('-' and red, bigger, always shown). mine: your own hit.
- function api.number(position,damage,color,taken,mine)
+ -- crit, element, turret: the server's roll and source (V.style); they restyle hit numbers only.
+ function api.number(position,damage,color,taken,mine,crit,element,turret)
   local pool=taken and takenNumbers or hitNumbers
+  local style=not taken and V.style(crit,element,turret) or nil
+  local kind=style and style.kind
   if not taken then
-   local m=V.merge(pool,position,os.clock(),mine)
-   if m then m.value+=damage;m.text.Text=tostring(math.round(m.value));m.punch=os.clock();return end
+   local m=V.merge(pool,position,os.clock(),mine,kind)
+   if m then m.value+=damage;m.text.Text=tostring(math.round(m.value))..m.suffix;m.punch=os.clock();return end
   end
   local e=V.pick(pool,taken and V.TakenNumbers or V.HitNumbers,mine or taken)
   if e=='new' then e=newNumber(taken);table.insert(pool,e) end
   if not e then return end
   e.born=os.clock();e.punch=nil;e.mine=mine or taken;e.at=position;e.value=damage;e.start=position+Vector3.new((math.random()-.5)*.8,0,0)
-  e.text.Text=(taken and '-' or '')..tostring(math.round(damage));e.text.TextColor3=color
+  e.kind=kind;e.big=style and style.scale or 1;e.suffix=style and style.suffix or ''
+  if not taken then e.stroke=style and style.stroke or .12 end
+  -- The element's coloured outline: made once per pooled number, then only toggled.
+  if style and style.outline then
+   if not e.ring then e.ring=Instance.new('UIStroke');e.ring.Name='ElementOutline';e.ring.Thickness=V.OutlineThickness;e.ring.Parent=e.text end
+   e.ring.Color=style.outline;e.ring.Transparency=0;e.ring.Enabled=true
+  elseif e.ring then e.ring.Enabled=false end
+  e.text.Text=(taken and '-' or '')..tostring(math.round(damage))..e.suffix;e.text.TextColor3=style and style.color or color
   e.text.TextTransparency=0;e.text.TextStrokeTransparency=e.stroke;if e.outline then e.outline.Transparency=0 end
-  e.scale.Scale=.65;e.attachment.Position=e.start;e.gui.Enabled=true
+  e.scale.Scale=.65*e.big;e.attachment.Position=e.start;e.gui.Enabled=true
  end
  function api.flash(npc)
   if not npc or not npc.Parent then return end
@@ -106,10 +161,10 @@ function V.mount(visuals)
     else
      e.attachment.Position=e.start+Vector3.yAxis*V.Rise*TweenService:GetValue(math.min(t/(V.Life-.05),1),QUAD,OUT)
      local punch=e.punch and 1+.18*(1-math.min((now-e.punch)/.15,1)) or 1
-     e.scale.Scale=(.65+.35*TweenService:GetValue(math.min(t/.13,1),BACK,OUT))*punch
+     e.scale.Scale=(.65+.35*TweenService:GetValue(math.min(t/.13,1),BACK,OUT))*punch*(e.big or 1)
      if t>V.Life*.5 then
       local f=TweenService:GetValue(math.min((t-V.Life*.5)/(V.Life*.4),1),QUAD,OUT)
-      e.text.TextTransparency=f;e.text.TextStrokeTransparency=e.stroke+(1-e.stroke)*f;if e.outline then e.outline.Transparency=f end
+      e.text.TextTransparency=f;e.text.TextStrokeTransparency=e.stroke+(1-e.stroke)*f;if e.outline then e.outline.Transparency=f end;if e.ring then e.ring.Transparency=f end
      end
     end
    end

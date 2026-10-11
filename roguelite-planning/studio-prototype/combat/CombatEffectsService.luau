@@ -21,8 +21,8 @@ if not hitFX then
  end)
  if ok then hitFX=made else warn('HitFX could not be made; hits go one by one:',made) end
 end
-local hits=hitFX and Batch.hitWriter(hitFX) or {flush=function() end,push=function(_,owner,position,actual,npc,lethal,secondary,dot,id)
- Batch.fire(combat.Hit,position,owner,position+Vector3.yAxis*2,actual,npc,position,lethal,secondary,id,owner.UserId,dot)
+local hits=hitFX and Batch.hitWriter(hitFX) or {flush=function() end,push=function(_,owner,position,actual,npc,lethal,secondary,dot,id,crit,element,turret)
+ Batch.fire(combat.Hit,position,owner,position+Vector3.yAxis*2,actual,npc,position,lethal,secondary,id,owner.UserId,dot,Batch.style(crit,element,turret))
 end}
 local bolts=Batch.writer(combat:WaitForChild('Shot'))
 local function flush() bolts:flush();hits:flush() end
@@ -90,7 +90,10 @@ end
 -- its chance, so a stream procs as often a second as a weapon attacking at its cooldown. Example:
 -- Ice Cube 15% -> 5.6% a tick. Clients still draw it as a light tick (secondary on the wire), and it
 -- never knocks back (the Vacuum pulls). What it sets off (chains, burn ticks) stays secondary.
-function E.hit(npc,amount,d,secondary,dot,stream)
+-- element (2026-10-10 hit colours): 'Burn' or 'Poison' for a status tick, 'Lightning' for a chain
+-- or Mjolnir strike; a direct hit that lands a slow is 'Frost'. It, whether the crit roll landed and
+-- whether a Handyman turret (d.structure) dealt it go to clients for the number (ShotBatch.style).
+function E.hit(npc,amount,d,secondary,dot,stream,element)
  local own=not secondary or type(stream)=='number' -- the weapon's own hit: crits and procs
  local share=type(stream)=='number' and math.clamp(stream,0,1) or 1
  local h,r=alive(npc);if not h or not d or not valid(d) then return 0 end
@@ -102,12 +105,13 @@ function E.hit(npc,amount,d,secondary,dot,stream)
  -- d.stats is the hitting weapon's own view of the player's stats (CharacterStats.weaponStats,
  -- 2026-10-09): a Blade set's crit chance and a Culinary set's life steal are only on those weapons.
  local s=d.stats;local position=r.Position
+ local crit=false
  if own then
   -- Ninja 4-piece: after a dodge (CharacterService.contact) the next direct hit always crits. Not a
   -- turret's nail (d.structure, HandymanTurret 2026-10-04: turrets never crit), so it keeps it.
   local owner=Characters.states[d.owner];local sure=owner and owner.dodgeCrit and not d.structure
   if sure then owner.dodgeCrit=nil end
-  if sure or math.random()<s.CritChance/100 then amount*=s.CritDamage/100 end
+  if sure or math.random()<s.CritChance/100 then amount*=s.CritDamage/100;crit=true end
  end
  -- Gear power (CharacterStats.powerDamage): every hit, status tick, pet and armor blast passes here.
  amount*=Stats.powerDamage(s.GearPower)
@@ -125,7 +129,7 @@ function E.hit(npc,amount,d,secondary,dot,stream)
    npc:SetAttribute('PracticeDamage',(npc:GetAttribute('PracticeDamage') or 0)+actual)
    npc:SetAttribute('LastWeaponId',d.id)
   end
-  hits:push(d.owner,position,actual,npc,false,secondary==true,dot==true,d.id)
+  hits:push(d.owner,position,actual,npc,false,secondary==true,dot==true,d.id,crit,element,d.structure==true)
   return actual -- no death, rewards, lifesteal farming or damage to the tester
  end
  -- Kill credit, read when the enemy dies (quests count Utility kills; leaderboard, shard and
@@ -151,10 +155,14 @@ function E.hit(npc,amount,d,secondary,dot,stream)
  -- A lethal hit is represented by the death burst, not a second hit burst.
  -- The weapon id lets clients add that weapon's impact sound (RogueliteSounds). A kill also
  -- carries its owner and dot flag (HitFX packs those).
+ -- Frost (hit colours): the slow is rolled here, before the hit goes out, so the hit that lands it
+ -- shows as frost; it is applied with the other procs below (same chance as before).
+ local slowProc=own and h.Health>0 and math.random()<share*math.max(s.SlowChance,d.slow or 0)/100
+ if slowProc and not element then element='Frost' end
  if h.Health<=0 then
   flush()
-  Batch.fire(combat.Hit,position,d.owner,position+Vector3.new(0,2,0),actual,npc,position,true,secondary==true,d.id,d.owner.UserId,dot==true)
- else hits:push(d.owner,position,actual,npc,false,secondary==true,dot==true,d.id) end
+  Batch.fire(combat.Hit,position,d.owner,position+Vector3.new(0,2,0),actual,npc,position,true,secondary==true,d.id,d.owner.UserId,dot==true,Batch.style(crit,element,d.structure==true))
+ else hits:push(d.owner,position,actual,npc,false,secondary==true,dot==true,d.id,crit,element,d.structure==true) end
  if h.Health<=0 then
   local entries=E.statuses[npc]
   if entries then
@@ -179,7 +187,7 @@ function E.hit(npc,amount,d,secondary,dot,stream)
  if math.random()<share*math.max(s.BurnChance,d.burn or 0)/100 then status(npc,d,'Burn',3*Stats.mult(s.Duration),6*elemental*Stats.mult(s.BurnDamage),true) end
  if math.random()<share*math.max(s.PoisonChance,d.poison or 0)/100 then status(npc,d,'Poison',4*Stats.mult(s.Duration),3*elemental*Stats.mult(s.PoisonDamage),false) end
  -- A weapon's native slow (WeaponCatalog.SlowById, Medusa 35% for 2 s) or the player's stats, whichever is bigger.
- if math.random()<share*math.max(s.SlowChance,d.slow or 0)/100 then status(npc,d,'Slow',math.max(s.SlowDuration,d.slowFor or 0)*Stats.mult(s.Duration),math.min(70,math.max(s.SlowStrength,d.slowStrength or 0)),false) end
+ if slowProc then status(npc,d,'Slow',math.max(s.SlowDuration,d.slowFor or 0)*Stats.mult(s.Duration),math.min(70,math.max(s.SlowStrength,d.slowStrength or 0)),false) end
  local state=Characters.states[d.owner]
  if state then
   -- A stream tick counts as its share of a hit: with ChainEvery 5, about every 13 ticks at .375.
@@ -191,7 +199,7 @@ function E.hit(npc,amount,d,secondary,dot,stream)
    for i,target in near(position,12*Stats.mult(s.AreaSize),{[npc]=true},d.character) do
     if i>count then break end
     bolts:push(d.owner,position,target.HumanoidRootPart.Position,'Lightning',d.id)
-    E.hit(target,d.damage*.4*Stats.mult(s.ChainDamage),d,true)
+    E.hit(target,d.damage*.4*Stats.mult(s.ChainDamage),d,true,nil,nil,'Lightning')
    end
   end
  end
@@ -248,7 +256,7 @@ RunService.Heartbeat:Connect(function(dt)
   for key,e in entries do
    if now>=e.ends or not valid(e.d) then entries[key]=nil
    elseif e.name=='Slow' then slow=math.max(slow,e.amount)
-   elseif now>=e.nextTick then e.nextTick=now+1;E.hit(npc,e.amount*e.stacks,e.d,true,true) end
+   elseif now>=e.nextTick then e.nextTick=now+1;E.hit(npc,e.amount*e.stacks,e.d,true,true,nil,e.name) end
   end
   if h.Parent and h.Health>0 then
    slow*=npc:GetAttribute('IsBoss') and .5 or 1

@@ -53,3 +53,24 @@ Follow-up Play coverage: one client started in the lobby; the server confirmed r
 On the explicit request to apply everything, regenerated the sync manifest from every changed production Luau file mapped by the combat Rojo project: **17 destinations** (including the pending ShopUI update). Source-only FeatureSync applied one remaining difference, created no instances, and verified all 17 destinations byte-equal after newline normalization. Existing maps, templates, capabilities and unrelated instances were preserved. Combat overlay build passed.
 
 Ran a fresh single-client Studio Play startup: server assertions confirmed 3/41 regular HP on waves 1/20, 84 solo enemies requested on wave 10, and disabled Glock bounce; client assertions confirmed the 128-flash pool, 80ms hold, and presence of results/shop UI modules. Console output was empty. Stopped Play afterward and left Studio in Edit mode. These are startup/configuration checks, not full combat/rewards/persistence playthroughs. No production DataStores, persistent rewards, or publishing were used.
+
+## Hit colours (2026-10-10)
+
+Play-testers asked for coloured hit markers per element, a crit colour, and turret damage told apart. The server decides all three in `CombatEffectsService.hit` and sends them in the hit flags byte's spare high nibble (`ShotBatch.style` / `unstyle`), so a HitFX record stays 18 bytes plus its id. Kills on the reliable `Hit` remote carry the same number as a 10th argument; a missing or malformed one reads as a plain hit.
+
+Fill says who or how; an element adds a coloured outline (`UIStroke`, 2 px, made once per pooled number):
+
+| Style | Fill | Outline | Size |
+|---|---|---|---|
+| Plain hit | cream 255,246,218 | dark text stroke 28,22,20 | 1x |
+| Crit | gold 255,196,40, ends in `!` | solid dark text stroke | 1.3x |
+| Handyman turret | steel 176,190,204 | dark text stroke | 0.85x |
+| Burn tick (fire) | 255,232,200 | orange 226,78,14 | 1x |
+| Frost (the hit that lands a slow) | 228,246,255 | blue 30,120,235 | 1x |
+| Poison tick | 226,255,196 | deep green 36,120,24 | 1x |
+| Lightning (chain, Mjolnir strike) | 255,250,205 | violet 140,80,240 | 1x |
+| Damage taken | red 235,72,72 (unchanged) | unchanged | unchanged |
+
+Crit or turret with an element keeps the crit/turret fill and size and adds the element outline. Turrets never crit; if both arrived, the turret look wins. Only numbers of the same style merge (0.2 s window), so a crit or a burn never folds into a plain number.
+
+Tests: `python roguelite-planning/studio-prototype/combat/run_hit_feedback_tests.py build/luau-validation/luau.exe` (HitFeedbackTests 362 checks, CombatWireTests 2449 checks, with engine stubs). No Studio sync and no Play test was run for this change.

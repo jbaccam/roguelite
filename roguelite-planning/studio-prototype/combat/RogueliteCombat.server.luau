@@ -198,7 +198,8 @@ local function reachPoint(npc,root,from)
 end
 -- dot: a zone tick (SpecialWeapons); clients skip its splat and flash (CombatEffectsService).
 -- stream: a Vacuum / Power Washer tick's share of an attack (UtilityWeapons; CombatEffectsService.hit).
-local function damage(npc,amount,d,secondary,dot,stream) return Effects.hit(npc,amount,d,secondary,dot,stream) end
+-- element: 'Lightning' for Mjolnir's strike (LegendaryMoves), for its number's colour.
+local function damage(npc,amount,d,secondary,dot,stream,element) return Effects.hit(npc,amount,d,secondary,dot,stream,element) end
 local rockets=require(combat:WaitForChild('RocketProjectile')).new(combat,damage,rayParams)
 local projectiles=require(script.Parent:WaitForChild('StatProjectiles')).new(combat,damage,rayParams)
 local arcs=require(script.Parent:WaitForChild('ArcProjectiles')).new(combat,damage,rayParams)
