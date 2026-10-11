@@ -41,7 +41,7 @@
   - The turrets are at even angles with a little jitter, and at least 5 studs apart.
   - Each one faces where you face.
   - The first spot is straight ahead of you.
-- **During a wave they never move.**
+- **During a wave they follow you** (2026-10-10, see [Follow](#follow-2026-10-10)): a turret you leave out of its range packs into the ground and rebuilds ahead of you.
   - Turrets added mid-wave (the admin panel, Scrap Magnet) go to free spots on a ring around where you are then.
   - Items you buy in the shop show up at the next wave start.
 - **Ground:**
@@ -60,6 +60,42 @@
 - **They can't be destroyed,** and they block nothing: mobs and players walk through them. Mobs ignore them.
 - **They hold fire** between waves, while the run is paused, during a boss entrance, while you are down, and when your weapons are switched off.
 - **They go away** when you leave the run (lobby, results, disconnect) or the run resets. If you end up 500+ studs from them (another arena), they are placed around you again. They never show in the lobby.
+
+## Follow (2026-10-10)
+
+The user asked: "There should be disassemble and reassemble animations for turrets going down and rebuilding as they follow the Handyman around. They should rebuild when he moves outside of their attack range. Make grey smoke animations and make it come out of the ground or something, like it's being assembled." Before this, turrets never moved mid-wave. Design: [plan §1.5](../../plans/2026-10-10-playtest-abilities-sniper-items-plan.md#15-handyman-turrets-handyman-only-and-they-follow-him).
+
+**Status:** built in the repo only. Pure rules tested outside Studio (`run_turret_tests.py`). Not synced to Studio, no Play test.
+
+**Rules** (server, `HandymanTurretService`; numbers in `HandymanTurret`):
+- **Left behind:** mid-wave, a turret whose owner is farther than its range (25 studs, measured flat) packs up. Range is the turret's real range from `HandymanTurret.weapon`; Attack range doesn't stretch it.
+- **Pack:** 0.35 s (`PACK_TIME`), no fire. Then it **rebuilds**: 0.5 s (`BUILD_TIME`), no fire. Each move is 0.85 s offline.
+- **Where it lands:** a free spot on the band's outer edge (8 studs for a Handyman, 14 for others), 5+ studs from the turrets standing. The ring is centred on you, led along your run by 0.25 s of your speed (at most 6 studs), and the spot nearest your heading is tried first. Standing still, it uses your facing. Same ground and sight checks as every placement. With no ground found it stands back up where it was.
+- **Limits:** at most 2 of a player's turrets moving (packing or rebuilding) at once (`FOLLOW_AT_ONCE`), the farthest first. Each waits 1.5 s after it lands before it can move again (`FOLLOW_COOLDOWN`). Scrap Magnet's temporary turrets follow the same rule.
+- **Not moving:** between waves, while the run is paused, and before the wave's placement. A turret caught packing when the wave ends stands up near you. The 30-turret server cap, the 10-per-player cap and the 500-stud re-place are unchanged.
+- It keeps its Folder and Index, so clients re-pose the same turret.
+
+**Example:** you run straight at 24 studs/s with 5 turrets. A turret 25+ studs behind packs, and 0.35 s later lands about 8 + 6 = **14 studs ahead** of where the server sees you (the server sees players ~0.2 s late, so about 9 ahead of you). It is offline 0.85 s. Only 2 move at once, so **at least 3 of 5 fire** while you run, and all 5 once you stop.
+
+**Replication** (no new remotes): `PackAt` (server time it started packing) is set on the turret's Folder. The rebuild clears it and writes the usual `Position`, `Yaw` and `BuiltAt`.
+
+**What you see** (`HandymanTurret.client`; flat painted effects through `VfxKit`, counts × ClientQuality):
+- **Pack (0.35 s):** the barrel folds down, the head drops onto the base, then the head and the base shrink and sink into the ground. Grey smoke puffs (the `SmokePuff` flipbook) burst out at the base, with a grey dust ring (`ShockwaveRing` decal) spreading on the ground and a second small dust puff as the base goes under. Then it is hidden until the rebuild.
+- **Rebuild (0.5 s):** a grey smoke column billows out of the ground with a low dust skirt and a dust ring. Then the base rises out of the ground, then the head, then the barrel snaps up, each with a small overshoot. A warm star spark (`ImpactStar`) and a few Neon sparks show as the head locks and again as the barrel locks. The head spins one turn into its aim.
+- **Sound** (`RogueliteSounds`, the same kit): a quick high metal ratchet as it packs. The rebuild's clunk is delayed 0.36 s to the head lock, a little lighter and higher than a wave-start clunk.
+- The wave-start placement keeps its lime ring pop.
+
+**Files and Studio sync** (all four already exist in Studio, so their Sandboxed settings stay; no new requires in the sandboxed server script, no new remotes):
+- `RS.RogueliteCombat.HandymanTurret` (ModuleScript): `PACK_TIME`, `BUILD_TIME`, `FOLLOW_AT_ONCE`, `FOLLOW_COOLDOWN`, `FOLLOW_LEAD`, `moving`, `leftBehind`, `followRing`, `followCenter`. Sync it first: both scripts below read these.
+- `SSS.HandymanTurretService` (Script): `free()` (split out of `add()`), `pack`, `rebuild`, `follow`, the fire-loop skip, and `stand()` clearing `PackAt`.
+- `StarterPlayerScripts.HandymanTurret` (LocalScript): the animations; it now also requires `ClientQuality`.
+- `RogueliteSounds` (LocalScript): the pack ratchet and the delayed rebuild clunk.
+- Tests: `TurretTests` (no Play), also `python run_turret_tests.py <luau.exe>` outside Studio.
+
+**Not done / judgment calls:**
+- The plan's 20-stud threshold became the real range (25), as the user said "outside of their attack range".
+- The rebuild is 0.5 s, not the old 0.35 s pop, so the build animation can read. Wave-start placements keep 0.35 s.
+- "Handyman only" for turret items (plan §1.5, first half) is not part of this change.
 
 ## Numbers
 
@@ -142,7 +178,7 @@ A Gunner with 2 Nail Turrets and no Utility Power gets 10 DPS.
   - Clients send nothing for turrets. RunAction `BuildTurret` has no listener any more.
   - ShopService ignores ShopAction `UpgradeTurret` quietly: no message and no revision change.
 - **Placement:**
-  - Ground and sight rays run only when turrets are placed: at a wave start, or for a mid-wave addition.
+  - Ground and sight rays run only when turrets are placed: at a wave start, for a mid-wave addition, or for a follow move (at most 2 a player at once).
   - Each spot tries at most 3 points with 2 rays each.
 - **Targeting:**
   - Runs at 10 Hz from one TargetGrid snapshot per tick, built only while a turret is firing.
@@ -158,6 +194,7 @@ A Gunner with 2 Nail Turrets and no Utility Power gets 10 DPS.
   - `Tier`, `Position`, `Yaw` and `Temp`
   - `BuiltAt`, the server time it was placed. The client pops it in.
   - `Aim`, written at most 5 times a second when the target moves 1.5+ studs
+  - `PackAt`, the server time it started packing up to follow you; cleared when it stands again
   - Folders are reused by Index from wave to wave.
 - **Clients:**
   - They draw the models, turn the heads, pitch the barrels, and add recoil, spin and flashes.

@@ -6,17 +6,21 @@
 -- ShopService items: Nail Turret, Twin Nailer, Quad Nailer, Gatling Rig) is one turret, at most 10
 -- each and 30 on the server, shared out fairly (HandymanTurret.share). At each wave start (and when
 -- the sandbox starts) they are placed for the player on a ring around them, facing where they face
--- (HandymanTurret.ring / spot); the ground and sight rays run only then. During a wave they never
--- move. Turrets added mid-wave (admin Give, Scrap Magnet's temporary ones) go to free spots on the
--- ring around the player then. Temporary ones go when the wave ends. Turrets can't be destroyed and
+-- (HandymanTurret.ring / spot); the ground and sight rays run only then. Turrets added mid-wave
+-- (admin Give, Scrap Magnet's temporary ones) go to free spots on the ring around the player then.
+-- Temporary ones go when the wave ends. Follow (2026-10-10): mid-wave, a turret whose owner is
+-- past its range packs up (PackAt, no fire, PACK_TIME) and rises again (BuiltAt, no fire,
+-- BUILD_TIME) at a free spot ahead of him, 2 of a player's moving at once, 1.5 s apart
+-- (HandymanTurret.leftBehind / followRing); between waves nothing moves. Turrets can't be destroyed and
 -- block nothing (user, 2026-10-04: "let's not let mobs destroy the turrets"): mobs ignore them.
 -- Server authority: who has turrets, where they stand, what they shoot and when are decided here.
 -- Clients send nothing for turrets (BUILD and its RunAction 'BuildTurret' are gone; nothing listens
 -- for it, so an old client's request is ignored) and draw:
 --   workspace.RogueliteTurrets holds one Folder per turret, named UserId_n, with OwnerUserId, Index
 --   (n: 1-10 from items, 11 up for Scrap Magnet's), Tier, Position (the ground point under it), Yaw
---   (its facing), BuiltAt (server time it was placed), Temp (Scrap Magnet's) and Aim (where its head
---   points; nil when idle). HandymanTurret.client draws them. No server parts, no CFrame writes.
+--   (its facing), BuiltAt (server time it was placed), Temp (Scrap Magnet's), Aim (where its head
+--   points; nil when idle) and PackAt (server time it started packing up to follow; nil once it
+--   stands again). HandymanTurret.client draws them. No server parts, no CFrame writes.
 -- Life: gone when the owner leaves the run (lobby, results, disconnect) or the run resets. If the
 -- owner ends up 500+ studs away (another arena) they are placed around them again. They hold fire
 -- between waves, while the run is paused, through a boss entrance, while their owner is down and
@@ -151,8 +155,9 @@ local function fresh(e) return e.hum.Health>0 and e.npc.Parent~=nil and e.root.P
 
 -- Turrets --------------------------------------------------------------------------------------
 -- player -> list of turrets {folder, index, tier, temp, position, yaw, facing, head, nextShot,
--- pickedAt, shots, aimSent, aimAt, seenTarget}.
+-- pickedAt, shots, aimSent, aimAt, seenTarget, packAt, readyAt, movedAt, range}.
 local turrets={}
+local motion={} -- player -> {at, clock, velocity}: their flat run, for follow spots
 local placedAt={} -- player -> the wave key their turrets were last placed for
 local suppressed={} -- player -> wave key: ADMIN Clear, nothing comes back until the next wave
 local scrap={} -- player -> {key, crystals, built}: Scrap Magnet's count this wave
@@ -220,9 +225,10 @@ local function stand(t,position,look,tier)
  t.head=CFrame.new(position)*CFrame.Angles(0,t.yaw,0)*geometry(tier).head
  t.nextShot=os.clock()+.35 -- the build pop, then it opens fire
  t.aimSent=nil;t.seenTarget=nil;t.pickedAt=nil
+ t.packAt=nil;t.readyAt=nil;t.movedAt=os.clock() -- every placement starts the follow cooldown
  local f=t.folder
  f:SetAttribute('Tier',tier);f:SetAttribute('Position',position);f:SetAttribute('Yaw',t.yaw)
- f:SetAttribute('Temp',t.temp);f:SetAttribute('Aim',nil)
+ f:SetAttribute('Temp',t.temp);f:SetAttribute('Aim',nil);f:SetAttribute('PackAt',nil)
  f:SetAttribute('BuiltAt',workspace:GetServerTimeNow())
  if not f.Parent then f.Parent=folder() end -- parented last, so clients get it whole
 end
@@ -247,33 +253,65 @@ local function place(p,allowed)
   elseif byIndex[i] then byIndex[i].folder:Destroy() end
  end
 end
--- Mid-wave additions (admin Give, Scrap Magnet): new turrets of these tiers at free spots, at least
--- SPACING from the ones standing, on a ring around where the player is now. With no free spot left
--- they take the ring's spots anyway.
-local function add(p,root,tiers,temp)
- local list=turrets[p] or {};turrets[p]=list
+-- Free ground spots for n turrets on a ring around where the player is now, at least SPACING from
+-- the turrets standing; with no free spot left they take the ring's spots anyway (a second pass).
+-- Returns the points and the facing. A follow move (mover: the turret moving, heading/speed: his
+-- run) uses HandymanTurret.followRing around HandymanTurret.followCenter, so it lands ahead of him,
+-- and ignores its own old spot and turrets packing up. One move: usually 1 spot, 3 points, 2 rays.
+local function free(p,root,n,mover,heading,speed)
+ local list=turrets[p] or {}
  local cs=Characters.states[p]
- local look=lookOf(root);local probe,foot=prober(root)
- local spots=H.ring(#list+#tiers,H.band(cs and cs.class),rng,H.angle(look))
- local taken={};for _,t in list do table.insert(taken,t.position) end
- local index=temp and H.MAX_OWNED or 0
- for _,t in list do if (t.temp==true)==(temp==true) then index=math.max(index,t.index) end end
- local placed,k,pass=0,1,1
- while k<=#tiers and pass<=2 do
+ local look=heading or lookOf(root);local probe,foot=prober(root)
+ local band=H.band(cs and cs.class)
+ local spots,centre
+ if mover then spots=H.followRing(#list,band,rng,H.angle(look));centre=H.followCenter(foot,look,speed)
+ else spots=H.ring(#list+n,band,rng,H.angle(look));centre=foot end
+ local taken={};for _,t in list do if t~=mover and not t.packAt then table.insert(taken,t.position) end end
+ local points,pass={},1
+ while #points<n and pass<=2 do
   for _,spot in spots do
-   if k>#tiers then break end
-   local at=H.spot(foot,spot.angle,spot.radius,probe)
+   if #points>=n then break end
+   local at=H.spot(centre,spot.angle,spot.radius,probe)
    if not at then continue end
    local clear=pass==2
    if not clear then clear=true;for _,q in taken do if Vector2.new(at.X-q.X,at.Z-q.Z).Magnitude<H.SPACING then clear=false;break end end end
-   if clear then
-    index+=1;local t=newTurret(p,index,temp);table.insert(list,t)
-    stand(t,at,look,tiers[k]);table.insert(taken,at);k+=1;placed+=1
-   end
+   if clear then table.insert(points,at);table.insert(taken,at) end
   end
   pass+=1
  end
- return placed
+ return points,look
+end
+-- Mid-wave additions (admin Give, Scrap Magnet): new turrets of these tiers at free spots.
+local function add(p,root,tiers,temp)
+ local list=turrets[p] or {};turrets[p]=list
+ local points,look=free(p,root,#tiers)
+ local index=temp and H.MAX_OWNED or 0
+ for _,t in list do if (t.temp==true)==(temp==true) then index=math.max(index,t.index) end end
+ for k,at in points do
+  index+=1;local t=newTurret(p,index,temp);table.insert(list,t)
+  stand(t,at,look,tiers[k])
+ end
+ return #points
+end
+-- Follow: start packing (no fire, the head idles; clients fold it into the ground).
+local function pack(t,clock)
+ t.packAt=clock;t.readyAt=nil;t.nextShot=math.max(t.nextShot,clock)
+ t.aimSent=nil;t.folder:SetAttribute('Aim',nil)
+ t.folder:SetAttribute('PackAt',workspace:GetServerTimeNow())
+end
+-- Follow: stand again at a free spot ahead of the player (root nil, or no ground found: where it
+-- was), same Folder and Index, then BUILD_TIME before it fires.
+local function rebuild(p,root,t,clock)
+ t.packAt=nil
+ local at,look=nil,t.facing
+ if root then
+  local m=motion[p];local v=m and m.velocity or Vector3.zero
+  local heading=v.Magnitude>3 and v.Unit or lookOf(root)
+  local points;points,look=free(p,root,1,t,heading,v.Magnitude)
+  at=points[1]
+ end
+ stand(t,at or t.position,look or t.facing,t.tier)
+ t.nextShot=clock+H.BUILD_TIME;t.readyAt=clock+H.BUILD_TIME;t.movedAt=clock
 end
 -- Mid-wave item changes (ADMIN Give or Clear): turrets for new items now, extra ones gone. Nothing
 -- while the server is at its 30. Cheap when nothing changed (the usual case).
@@ -353,6 +391,18 @@ local function fire(t,d,e,point,character)
  end
  return interval
 end
+-- Follow, once a tick in a wave (not paused): track his flat run, stand finished packs, and pack
+-- the ones left behind past their range (HandymanTurret.leftBehind: 2 moving at once, 1.5 s apart).
+local function follow(p,root,list,cs,character,clock)
+ local m=motion[p];local at=root.Position
+ if m and clock-m.clock<.5 and clock>m.clock then
+  local v=Vector3.new(at.X-m.at.X,0,at.Z-m.at.Z)/(clock-m.clock)
+  m.velocity=m.velocity:Lerp(v,.5);m.at=at;m.clock=clock
+ else motion[p]={at=at,clock=clock,velocity=Vector3.zero} end
+ for _,t in list do if t.packAt and clock-t.packAt>=H.PACK_TIME then rebuild(p,root,t,clock) end end
+ for _,t in list do t.range=definition(p,t.tier,cs,character).range end
+ for _,t in H.leftBehind(list,at,clock) do pack(t,clock) end
+end
 
 -- The 10 Hz loop -------------------------------------------------------------------------------
 local TICK=.1
@@ -393,17 +443,21 @@ RunService.Heartbeat:Connect(function(dt)
   if list and root and list[1] and (root.Position-list[1].position).Magnitude>500 then despawn(p);list=nil end
   if not wave then
    -- Between waves: Scrap Magnet's turrets go, the rest hold fire (the head idles; a pause keeps it).
+   -- Nothing follows; one caught packing as the wave ended stands up near him (or where it was).
    if list then
     for i=#list,1,-1 do if list[i].temp then remove(list,i) end end
+    for _,t in list do if t.packAt then rebuild(p,root,t,clock) end end
     for _,t in list do t.nextShot=math.max(t.nextShot,clock);if not paused and clock-(t.seenTarget or -1e6)>H.AIM_IDLE then aimAt(t,nil,clock) end end
    end
    continue
   end
   if root and not paused and placedAt[p]==key and suppressed[p]~=key then sync(p,root);magnet(p,root) end
   list=turrets[p];if not list or #list==0 then continue end
+  if root and not paused and placedAt[p]==key then follow(p,root,list,cs,character,clock) end
   local enabled=cs.folder and cs.folder:GetAttribute('WeaponEnabled')~=false
   local active=fighting and character~=nil and enabled and p:GetAttribute('RunDown')==nil and not Characters.frozen(p)
   for _,t in list do
+   if t.packAt then t.nextShot=math.max(t.nextShot,clock);continue end -- folding up to follow: no fire
    if not active then
     t.nextShot=math.max(t.nextShot,clock) -- no banked shots after a hold
     if not paused and clock-(t.seenTarget or -1e6)>H.AIM_IDLE then aimAt(t,nil,clock) end
@@ -463,5 +517,5 @@ Shop.turretAdmin=function(p,mode,n)
 end
 
 Players.PlayerRemoving:Connect(function(p)
- despawn(p);placedAt[p]=nil;suppressed[p]=nil;scrap[p]=nil;defs[p]=nil
+ despawn(p);placedAt[p]=nil;suppressed[p]=nil;scrap[p]=nil;defs[p]=nil;motion[p]=nil
 end)

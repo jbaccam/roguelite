@@ -186,6 +186,62 @@ function H.share(wants,budget)
  return out
 end
 
+-- Follow (2026-10-10, user: "disassemble and reassemble ... as they follow the Handyman around.
+-- They should rebuild when he moves outside of their attack range"). Mid-wave, a turret whose
+-- owner is farther than its range (flat) is left behind: it folds into the ground for PACK_TIME
+-- (no fire), then rises again for BUILD_TIME (no fire) at a free spot on the band's outer edge
+-- around a point led along his run, the spot nearest his heading first. At most FOLLOW_AT_ONCE of
+-- a player's turrets are moving (packing or rising) at once, and each waits FOLLOW_COOLDOWN after
+-- it lands before it may move again. Scrap Magnet's temporary ones follow the same rule. Between
+-- waves nothing moves. Example: he runs 24 studs/s; a turret 25+ studs behind packs, lands about
+-- 8 + 6 = 14 studs ahead of where the server sees him and is offline 0.35 + 0.5 = 0.85 s; with 5
+-- turrets at most 2 are offline, so at least 3 fire while he runs, all 5 when he stands.
+H.PACK_TIME=.35;H.BUILD_TIME=.5
+H.FOLLOW_AT_ONCE=2;H.FOLLOW_COOLDOWN=1.5
+-- The ring centre leads him by FOLLOW_LEAD seconds of his speed, at most FOLLOW_LEAD_MAX studs (the
+-- server sees players ~0.2 s late). Example: 24 studs/s -> 6 studs ahead; standing -> 0.
+H.FOLLOW_LEAD=.25;H.FOLLOW_LEAD_MAX=6
+-- t: {position, packAt (packing since), readyAt (rising until), movedAt (landed at)}.
+function H.moving(t,now) return t.packAt~=nil or (t.readyAt~=nil and now<t.readyAt) end
+-- The turrets that should start packing now, farthest first: past their range (t.range, else
+-- `range`, else RANGE) from owner on the ground, not moving, off cooldown, and only as many as
+-- leave FOLLOW_AT_ONCE moving. Example: 5 turrets 30 studs behind, none moving -> the 2 farthest.
+function H.leftBehind(list,owner,now,range)
+ local busy=0
+ for _,t in list do if H.moving(t,now) then busy+=1 end end
+ local room=H.FOLLOW_AT_ONCE-busy
+ local far={}
+ if room<=0 then return far end
+ for _,t in list do
+  if not H.moving(t,now) and (t.movedAt==nil or now-t.movedAt>=H.FOLLOW_COOLDOWN-1e-9) then
+   local dx,dz=t.position.X-owner.X,t.position.Z-owner.Z
+   local d=math.sqrt(dx*dx+dz*dz)
+   if d>(t.range or range or H.RANGE) then table.insert(far,{t=t,d=d,i=#far}) end
+  end
+ end
+ table.sort(far,function(a,b) if a.d~=b.d then return a.d>b.d end;return a.i<b.i end)
+ local out={}
+ for i=1,math.min(room,#far) do out[i]=far[i].t end
+ return out
+end
+-- Where a moved turret may land: n spots (one per turret the player has) on the band's outer edge
+-- (a Handyman's 8 studs, others' 14; a second ring SPACING further out when they don't fit),
+-- sorted so the spot nearest `heading` (a ring angle, H.angle) comes first, then its neighbours.
+function H.followRing(n,band,rng,heading)
+ local edge=band[2]
+ local spots=H.ring(math.max(1,n),{edge,edge},rng,heading)
+ local function off(s) return math.abs((s.angle-heading+math.pi)%(2*math.pi)-math.pi) end
+ for i,s in spots do s.order=i;s.off=off(s) end
+ table.sort(spots,function(a,b) if math.abs(a.off-b.off)>1e-9 then return a.off<b.off end;return a.order<b.order end)
+ return spots
+end
+-- The ring centre for a move: his feet led along his flat heading by his speed.
+function H.followCenter(foot,heading,speed)
+ local flat=Vector3.new(heading.X,0,heading.Z)
+ if flat.Magnitude<1e-6 then return foot end
+ return foot+flat.Unit*math.min(math.max(0,speed or 0)*H.FOLLOW_LEAD,H.FOLLOW_LEAD_MAX)
+end
+
 -- Scrap Magnet (2026-10-04): every SCRAP_EVERY crystals picked up in a wave builds a temporary Nail
 -- Turret on the player's ring, up to SCRAP_PER_COPY a wave per copy. Temporary turrets last until
 -- the wave ends, don't count toward the player's 10, and do count toward the server's 30. How many

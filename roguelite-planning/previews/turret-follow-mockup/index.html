@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turret Follow Preview</title>
+<style>
+ :root{--bg:#1e1e2e;--panel:#262637;--text:#cdd6f4;--muted:#9399b2;--lime:#a6e35a;--line:#45475a}
+ body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,sans-serif;padding:16px}
+ h1{font-size:18px;margin:0 0 4px}
+ p{margin:0 0 12px;color:var(--muted);max-width:900px}
+ .row{display:flex;flex-wrap:wrap;gap:16px}
+ .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;flex:1 1 420px;max-width:100%;box-sizing:border-box}
+ .card h2{font-size:14px;margin:0 0 8px}
+ canvas{width:100%;height:auto;display:block;border-radius:6px;background:#2f3a2c}
+ .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;color:var(--muted);font-size:12px}
+ .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+ button{background:#313244;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer;margin-top:8px}
+</style>
+</head>
+<body>
+<h1>Turrets follow the Handyman</h1>
+<p>Same numbers as the game code (HandymanTurret.luau): left behind past 25 studs, pack 0.35 s, rebuild 0.5 s, 2 moving at once, 1.5 s between moves, land on the 8-stud ring led up to 6 studs along his run. Left: a top-down run with 5 turrets. Right: one turret folding into the ground and building back up (side view, timing from HandymanTurret.client).</p>
+<div class="row">
+ <div class="card"><h2>Top-down: he runs 24 studs/s, stops, turns</h2><canvas id="top" width="640" height="360"></canvas>
+  <div class="legend"><span><i class="dot" style="background:#f9d342"></i>standing, can fire</span><span><i class="dot" style="background:#9a948c"></i>packing / rebuilding</span><span><i class="dot" style="background:#a6e35a"></i>the Handyman</span><span id="firing"></span></div></div>
+ <div class="card"><h2>Side view: pack, then rebuild</h2><canvas id="side" width="640" height="360"></canvas>
+  <div class="legend"><span id="phase"></span></div><button id="slow">Slow motion: off</button></div>
+</div>
+<script>
+const RANGE=25,PACK=.35,BUILD=.5,AT_ONCE=2,COOLDOWN=1.5,LEAD=.25,LEAD_MAX=6,RING=8,SPACING=5,TICK=.1;
+const smooth=t=>{t=Math.min(1,Math.max(0,t));return t*t*(3-2*t)};
+const span=(u,a,b)=>Math.min(1,Math.max(0,(u-a)/(b-a)));
+const backOut=x=>{x=Math.min(1,Math.max(0,x))-1;return 1+x*x*(2.7*x+1.7)};
+
+// Top-down simulation of the server rules ------------------------------------------------------
+const topC=document.getElementById('top'),tc=topC.getContext('2d');
+const S=4; // px per stud
+let player={x:30,z:45,vx:24,vz:0,heading:[1,0],stopUntil:0};
+let turrets=[],clock=0,acc=0;
+for(let i=0;i<5;i++){const a=i/5*Math.PI*2;turrets.push({x:player.x+Math.cos(a)*RING,z:player.z+Math.sin(a)*RING,movedAt:-9,packAt:null,readyAt:null})}
+const moving=(t,now)=>t.packAt!==null||(t.readyAt!==null&&now<t.readyAt);
+function spotFor(t){
+ const speed=Math.hypot(player.vx,player.vz),h=speed>3?[player.vx/speed,player.vz/speed]:player.heading;
+ const lead=Math.min(speed*LEAD,LEAD_MAX),cx=player.x+h[0]*lead,cz=player.z+h[1]*lead;
+ const n=turrets.length,heading=Math.atan2(h[1],h[0]),spots=[];
+ for(let i=0;i<n;i++)spots.push(heading+i/n*Math.PI*2);
+ // follow ring sorted: nearest the heading first (wrap-safe distance)
+ const off=a=>Math.abs(((a-heading)%(2*Math.PI)+3*Math.PI)%(2*Math.PI)-Math.PI);
+ spots.sort((a,b)=>off(a)-off(b));
+ for(const pass of [1,2])for(const a of spots){
+  const x=cx+Math.cos(a)*RING,z=cz+Math.sin(a)*RING;
+  if(pass===2||turrets.every(o=>o===t||o.packAt!==null||Math.hypot(o.x-x,o.z-z)>=SPACING))return [x,z];
+ }
+ return [t.x,t.z];
+}
+function tick(){
+ clock+=TICK;
+ // player: run across, stop 2 s at each end, turn back
+ if(clock<player.stopUntil){player.vx=0}else{
+  if(player.vx===0)player.vx=player.heading[0]*24;
+  player.x+=player.vx*TICK;
+  if(player.x>130||player.x<30){player.x=Math.min(130,Math.max(30,player.x));player.heading=[-player.heading[0],0];player.vx=0;player.stopUntil=clock+2}
+ }
+ for(const t of turrets)if(t.packAt!==null&&clock-t.packAt>=PACK-1e-9){const [x,z]=spotFor(t);t.x=x;t.z=z;t.packAt=null;t.readyAt=clock+BUILD;t.movedAt=clock}
+ let room=AT_ONCE-turrets.filter(t=>moving(t,clock)).length;
+ const far=turrets.filter(t=>!moving(t,clock)&&clock-t.movedAt>=COOLDOWN&&Math.hypot(t.x-player.x,t.z-player.z)>RANGE)
+  .sort((a,b)=>Math.hypot(b.x-player.x,b.z-player.z)-Math.hypot(a.x-player.x,a.z-player.z));
+ for(const t of far){if(room<=0)break;t.packAt=clock;room--}
+}
+function drawTop(){
+ tc.fillStyle='#2f3a2c';tc.fillRect(0,0,topC.width,topC.height);
+ tc.strokeStyle='rgba(255,255,255,.06)';for(let x=0;x<topC.width;x+=40){tc.beginPath();tc.moveTo(x,0);tc.lineTo(x,topC.height);tc.stroke()}
+ tc.strokeStyle='rgba(166,227,90,.35)';tc.setLineDash([6,6]);tc.beginPath();tc.arc(player.x*S,player.z*S,RANGE*S,0,Math.PI*2);tc.stroke();tc.setLineDash([]);
+ let firing=0;
+ for(const t of turrets){
+  const m=moving(t,clock);if(!m)firing++;
+  let r=9;
+  if(t.packAt!==null)r=9*(1-.6*(clock-t.packAt)/PACK);
+  else if(t.readyAt!==null&&clock<t.readyAt)r=9*(.4+.6*(1-(t.readyAt-clock)/BUILD));
+  if(m){tc.fillStyle='rgba(180,174,166,.35)';tc.beginPath();tc.arc(t.x*S,t.z*S,16,0,Math.PI*2);tc.fill()}
+  tc.fillStyle=m?'#9a948c':'#f9d342';tc.beginPath();tc.arc(t.x*S,t.z*S,r,0,Math.PI*2);tc.fill();
+  if(!m&&Math.hypot(t.x-player.x,t.z-player.z)<=RANGE){tc.strokeStyle='rgba(249,211,66,.5)';tc.beginPath();tc.moveTo(t.x*S,t.z*S);tc.lineTo(t.x*S+player.heading[0]*14,t.z*S-8);tc.stroke()}
+ }
+ tc.fillStyle='#a6e35a';tc.beginPath();tc.arc(player.x*S,player.z*S,8,0,Math.PI*2);tc.fill();
+ tc.fillStyle='#1e1e2e';tc.beginPath();tc.arc(player.x*S+player.heading[0]*4,player.z*S,3,0,Math.PI*2);tc.fill();
+ document.getElementById('firing').textContent=`standing: ${firing} of 5`;
+}
+
+// Side view of one turret --------------------------------------------------------------------
+const side=document.getElementById('side'),sc=side.getContext('2d');
+const GY=270,PX=24,CX=320; // ground y, px per stud, centre x
+let slow=false;document.getElementById('slow').onclick=e=>{slow=!slow;e.target.textContent='Slow motion: '+(slow?'on (x0.25)':'off')};
+const LOOP=[['stand',1.0],['pack',PACK],['hidden',.12],['build',BUILD],['stand',1.0]];
+const loopLen=LOOP.reduce((s,p)=>s+p[1],0);
+let sideT=0,puffs=[],rings=[],sparks=[],cues={};
+const H=4.4; // model height in studs
+function pose(phase,u){
+ if(phase==='pack'){const fold=smooth(span(u,0,.45)),head=span(u,.2,1)**2,body=span(u,.4,1)**2;
+  return{fold:fold*1.1,droop:fold*.35,drop:fold*.5,headSink:head*H,headScale:1-.45*head,baseSink:body*H,baseScale:1-.4*body,spin:0}}
+ if(phase==='build'){const body=backOut(span(u,.12,.5)),head=backOut(span(u,.36,.72)),gun=backOut(span(u,.6,.84));
+  return{fold:(1-gun)*1.1,droop:0,drop:0,headSink:(1-head)*H,headScale:.55+.45*head,baseSink:(1-body)*H,baseScale:.6+.4*body,spin:(1-smooth(span(u,.55,1)))*Math.PI*2}}
+ return{fold:0,droop:0,drop:0,headSink:0,headScale:1,baseSink:0,baseScale:1,spin:0}
+}
+function puff(x,y,o){for(let i=0;i<o.n;i++){const a=-Math.PI/2+(Math.random()*2-1)*o.spread*Math.PI/180,sp=o.speed[0]+Math.random()*(o.speed[1]-o.speed[0]);
+ puffs.push({x,y,vx:Math.cos(a)*sp*PX,vy:Math.sin(a)*sp*PX,age:0,life:o.life*(.7+.3*Math.random()),s0:o.s0,s1:o.s1,rise:o.rise,light:Math.random()})}}
+function spark(x,y){sparks.push({x,y,age:0,rot:Math.random()*.8});for(let i=0;i<4;i++){const a=Math.random()*Math.PI*2;sparks.push({x,y,vx:Math.cos(a)*7*PX,vy:-Math.abs(Math.sin(a))*7*PX,age:0,bit:true})}}
+function poly(pts,fill){sc.fillStyle=fill;sc.beginPath();pts.forEach((p,i)=>i?sc.lineTo(p[0],p[1]):sc.moveTo(p[0],p[1]));sc.closePath();sc.fill()}
+function drawTurret(a){
+ sc.save();sc.beginPath();sc.rect(0,0,side.width,GY);sc.clip();
+ // base: tripod legs, orange feet, charcoal body (sinks and shrinks about the ground centre)
+ const bs=a.baseScale,by=GY+a.baseSink*PX,k=PX*bs;
+ poly([[CX-1.6*k,by],[CX-1.1*k,by],[CX-.25*k,by-1.9*k],[CX-.55*k,by-1.9*k]],'#3b3f46');
+ poly([[CX+1.6*k,by],[CX+1.1*k,by],[CX+.25*k,by-1.9*k],[CX+.55*k,by-1.9*k]],'#3b3f46');
+ poly([[CX-1.75*k,by],[CX-1.0*k,by],[CX-1.05*k,by-.25*k],[CX-1.7*k,by-.25*k]],'#f08a24');
+ poly([[CX+1.75*k,by],[CX+1.0*k,by],[CX+1.05*k,by-.25*k],[CX+1.7*k,by-.25*k]],'#f08a24');
+ poly([[CX-.7*k,by-1.7*k],[CX+.7*k,by-1.7*k],[CX+.55*k,by-2.2*k],[CX-.55*k,by-2.2*k]],'#2b2e33');
+ // head + barrel (their own track: drop, droop, sink, shrink; the spin squashes the side view)
+ const hs=a.headScale,hk=PX*hs,hy=GY+(a.headSink+a.drop)*PX-2.6*hk,w=Math.cos(a.spin),aw=.35+.65*Math.abs(w);
+ sc.save();sc.translate(CX,hy);sc.rotate(-a.droop*0.6);
+ poly([[-1.0*hk*aw-.25*hk,.4*hk],[1.0*hk*aw+.25*hk,.4*hk],[.9*hk*aw+.2*hk,-.9*hk],[-.9*hk*aw-.2*hk,-.9*hk]],'#f6c933');
+ poly([[-.8*hk*aw,-.9*hk],[.8*hk*aw,-.9*hk],[.6*hk*aw,-1.1*hk],[-.6*hk*aw,-1.1*hk]],'#2b2e33');
+ sc.save();sc.translate(-.6*hk*w,-.2*hk);sc.rotate(-a.fold);
+ sc.fillStyle='#8b9099';sc.fillRect(-1.9*hk*w,-.18*hk,1.9*hk*w,.36*hk);sc.fillStyle='#5c616b';sc.fillRect(-2.1*hk*w,-.22*hk,.25*hk*w,.44*hk);
+ sc.restore();sc.restore();sc.restore();
+ return {head:[CX,hy-.3*hk],muzzle:[CX-2.4*hk*w,hy-.2*hk]};
+}
+function stepSide(dt){
+ sideT=(sideT+dt)%loopLen;let t=sideT,phase='stand',u=0;
+ for(const [name,len] of LOOP){if(t<len){phase=name;u=t/len;break}t-=len}
+ if(phase==='pack'&&!cues.pack){cues={pack:true};rings.push({age:0,r0:.8,r1:4.2,life:.45});puff(CX,GY-6,{n:7,s0:1.2,s1:3.2,life:.7,speed:[4,8],spread:75,rise:2.5})}
+ if(phase==='pack'&&u>=.55&&!cues.under){cues.under=true;puff(CX,GY-4,{n:4,s0:1,s1:2.4,life:.55,speed:[2,5],spread:50,rise:3})}
+ if(phase==='build'&&!cues.build){cues.build=true;rings.push({age:0,r0:.8,r1:3.8,life:.5});puff(CX,GY-4,{n:9,s0:1.4,s1:3.8,life:.9,speed:[6,13],spread:18,rise:3});puff(CX,GY-6,{n:5,s0:1,s1:2.6,life:.6,speed:[3,6],spread:85,rise:1.5})}
+ const a=pose(phase,u);
+ sc.fillStyle='#8fb8de';sc.fillRect(0,0,side.width,GY);
+ sc.fillStyle='#5f8a3f';sc.fillRect(0,GY,side.width,side.height-GY);sc.fillStyle='#4e7434';sc.fillRect(0,GY,side.width,6);
+ for(const r of rings){r.age+=dt;const e=1-(1-Math.min(1,r.age/r.life))**3,rr=(r.r0+(r.r1-r.r0)*e)*PX;sc.strokeStyle=`rgba(214,206,194,${.7*(1-smooth((r.age/r.life-.25)/.75))})`;sc.lineWidth=5;sc.beginPath();sc.ellipse(CX,GY+3,rr,rr*.22,0,0,Math.PI*2);sc.stroke()}
+ rings=rings.filter(r=>r.age<r.life);
+ const pts=phase==='hidden'?null:drawTurret(a);
+ if(phase==='build'&&u>=.72&&!cues.head&&pts){cues.head=true;spark(pts.head[0],pts.head[1])}
+ if(phase==='build'&&u>=.84&&!cues.gun&&pts){cues.gun=true;spark(pts.muzzle[0],pts.muzzle[1])}
+ for(const p of puffs){p.age+=dt;p.vx*=Math.exp(-3*dt);p.vy=p.vy*Math.exp(-3*dt)-p.rise*PX*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
+  const f=p.age/p.life,s=(p.s0+(p.s1-p.s0)*f)*PX*.5,al=f<.55?.88-.4*f:.66*(1-(f-.55)/.45);
+  const g=sc.createRadialGradient(p.x,p.y,s*.2,p.x,p.y,s);const c=p.light>.5?'214,206,194':'150,144,136';
+  g.addColorStop(0,`rgba(${c},${al})`);g.addColorStop(1,`rgba(${c},0)`);sc.fillStyle=g;sc.beginPath();sc.arc(p.x,p.y,s,0,Math.PI*2);sc.fill()}
+ puffs=puffs.filter(p=>p.age<p.life);
+ for(const s of sparks){s.age+=dt;if(s.bit){s.vy+=9*PX*dt;s.x+=s.vx*dt;s.y+=s.vy*dt;sc.fillStyle=`rgba(255,214,120,${1-s.age/.25})`;sc.fillRect(s.x-2,s.y-2,4,4)}
+  else{const f=s.age/.18,r=(.25+.7*(1-(1-Math.min(1,f))**3))*PX;sc.save();sc.translate(s.x,s.y);sc.rotate(s.rot);sc.fillStyle=`rgba(255,214,120,${1-smooth((f-.3)/.7)})`;
+   sc.beginPath();for(let i=0;i<16;i++){const rr=i%2?r*.35:r,an=i/16*Math.PI*2;sc.lineTo(Math.cos(an)*rr,Math.sin(an)*rr)}sc.closePath();sc.fill();sc.restore()}}
+ sparks=sparks.filter(s=>s.age<(s.bit?.25:.18));
+ document.getElementById('phase').textContent=phase==='hidden'?'packed away (server rebuilds on its next 10 Hz tick)':phase==='stand'?'standing, firing':phase==='pack'?`pack ${(u*PACK).toFixed(2)} / ${PACK} s`:`rebuild ${(u*BUILD).toFixed(2)} / ${BUILD} s`;
+}
+let last=performance.now();
+function frame(now){const real=Math.min(.05,(now-last)/1000);last=now;
+ acc+=real;while(acc>=TICK){acc-=TICK;tick()}drawTop();stepSide(slow?real*.25:real);requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

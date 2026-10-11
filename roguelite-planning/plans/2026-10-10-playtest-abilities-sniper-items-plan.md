@@ -17,7 +17,7 @@ Decisions already made in the chat:
 |---|---|---|---|---|
 | Brawler | Dash: 28 studs, 3 s cooldown, 0.35 s of no damage | Active | Q / gamepad X / button | Exists, no change |
 | Mage | Blink: 18 studs, 8 s cooldown, no damage, no invulnerability | Active | Q / gamepad X / button | New (1.4) |
-| Handyman | Turrets follow him (pack up and rebuild near him) | Passive | none | New (1.5) |
+| Handyman | Turrets follow him (pack up and rebuild near him) | Passive | none | Built 2026-10-10, repo only (1.5) |
 | Chef | Pizza drops (8% per kill with a Chef weapon, heals 10% max HP x Recovery) | Passive | none | Done (1.6) |
 | Gunner | None for now. Later idea: Combat Roll, 12 studs, 5 s | - | - | Later |
 | Juggler | None for now. Later idea: Double Jump | - | - | Later |
@@ -70,7 +70,7 @@ The dash already has a key, a button, a server check and a cooldown. Turn it int
 - `HandymanTurret.offerable(entry, owned, class)` checks class; `H.favoured` becomes class-only; `ShopService` passes class in and refuses the buy for others.
 - Turret items last one run, so no save migration.
 
-**Follow (friend's idea, on today's placement code).**
+**Follow (friend's idea, on today's placement code). BUILT 2026-10-10 (repo only, not synced or play-tested):** see [HANDYMAN_TURRET.md, Follow](../studio-prototype/combat/HANDYMAN_TURRET.md#follow-2026-10-10). Built numbers differ from the sketch below: left behind past the turret's real range (**25**, the user said "outside of their attack range"), pack **0.35 s**, rebuild **0.5 s** with a smoke-and-rise build animation (0.85 s offline), lands on the band's outer edge (8 studs for him) around a point led up to 6 studs along his run. Applies to every owner's turrets. The "Handyman only" shop change above is not built yet.
 - Unchanged: wave-start ring 4-8 studs, 5 studs apart; 30-turret server cap; 500-stud re-place.
 - New mid-wave: a turret more than **20 studs** (flat) from the Handyman is left behind (range 25, so it still covers 5 studs past him). It packs up for **0.3 s** (no fire), then rebuilds at a free ring spot, first spot along his move direction. The existing 0.35 s build pop runs, so a move costs about 0.65 s offline.
 - Limits: at most **2** turrets moving at once; each waits **1.5 s** between moves; Scrap Magnet temporaries follow the same rule.

@@ -507,7 +507,21 @@ task.spawn(function()
    local p=at();if not p then return end
    play('hit_thud','impact',.45,1.2,p,.05);play('hit_blunt','impact',.25,1.6,p,.05)
   end
-  f:GetAttributeChangedSignal('BuiltAt'):Connect(clunk)
+  -- Follow (2026-10-10, PackAt then BuiltAt): a quick high metal ratchet as it folds away, and the
+  -- rebuild's clunk lands as its pieces lock in (HandymanTurret.client's head lock, ~0.36 s), lighter.
+  local packed=false
+  f:GetAttributeChangedSignal('PackAt'):Connect(function()
+   if type(f:GetAttribute('PackAt'))~='number' then return end
+   packed=true
+   local p=at();if p then play('hit_blunt','impact',.18,2.1,p,.08);play('ui_click','impact',.25,.7,p,.06) end
+  end)
+  f:GetAttributeChangedSignal('BuiltAt'):Connect(function()
+   if not packed then clunk();return end
+   packed=false
+   task.delay(.36,function()
+    local p=at();if p then play('hit_thud','impact',.3,1.35,p,.05);play('hit_blunt','impact',.22,1.85,p,.05) end
+   end)
+  end)
   -- A new turret arrives with BuiltAt already set.
   local built=f:GetAttribute('BuiltAt')
   if type(built)=='number' and workspace:GetServerTimeNow()-built<1 then clunk() end

@@ -10,7 +10,9 @@
 -- Pierce, extra nails and procs kept), the ring placement maths (bands, 5-stud spacing, the
 -- fallback), the 10 / 30 caps, Scrap Magnet counting, the Handyman as Engineer (x1.25 Utility
 -- Power gains, x0.5 Damage gains, 20% off structure items, the 4-8 ring, shop weighting), the shop
--- entries (ShopCatalog, optional) and targeting through TargetGrid. Returns the number of checks.
+-- entries (ShopCatalog, optional), targeting through TargetGrid and following the owner (2026-10-10:
+-- left behind past range, 2 moving at once, 1.5 s cooldown, spots led along his run). Returns the
+-- number of checks. Outside Studio: python run_turret_tests.py <luau.exe>.
 return function(H, G, Weapons, Stats, E, Catalog)
 	local checks = 0
 	local function check(ok, message)
@@ -313,6 +315,71 @@ return function(H, G, Weapons, Stats, E, Catalog)
 	check(pick({ enemyAt(8, "close"), enemyAt(20, "far") }, range, { close = true }) == "far", "A blocked line is skipped")
 	check(pick({ enemyAt(5, "dummy", { dummy = true }), enemyAt(12, "zombie") }, range) == "zombie", "Lobby dummies are never targets")
 	check(pick({ enemyAt(27, "x") }, H.weapon(1, loaded).range) == nil, "Attack range doesn't stretch it")
+
+	-- Follow (2026-10-10): left behind past range, at most 2 moving, 1.5 s between moves, spots ahead.
+	check(H.PACK_TIME == 0.35 and H.BUILD_TIME == 0.5 and near(H.PACK_TIME + H.BUILD_TIME, 0.85), "Offline 0.35 + 0.5 = 0.85 s a move")
+	check(H.FOLLOW_AT_ONCE == 2 and H.FOLLOW_COOLDOWN == 1.5, "2 at once, 1.5 s apart")
+	local owner = Vector3.new(0, 3, 0)
+	local function turretAt(x, z, extra)
+		local t = { position = Vector3.new(x, 0, z) }
+		for k, v in extra or {} do
+			t[k] = v
+		end
+		return t
+	end
+	local followRange = H.weapon(1, loaded).range
+	check(near(followRange, 25), "Follow uses the turret's real range (25, Attack range doesn't stretch it)")
+	check(#H.leftBehind({ turretAt(25, 0) }, owner, 10, followRange) == 0, "Exactly 25 studs: still in range")
+	check(#H.leftBehind({ turretAt(25.1, 0) }, owner, 10, followRange) == 1, "25.1 studs: left behind")
+	check(#H.leftBehind({ turretAt(0, 20, { position = Vector3.new(0, 40, 20) }) }, owner, 10, followRange) == 0, "Height doesn't count, only ground distance")
+	check(#H.leftBehind({ turretAt(30, 0, { range = 40 }) }, owner, 10, followRange) == 0, "A turret's own range wins")
+	check(#H.leftBehind({ turretAt(30, 0) }, owner, 10) == 1, "Default range is RANGE")
+	local five = { turretAt(30, 0), turretAt(-40, 0), turretAt(0, 35), turretAt(0, -27), turretAt(4, 4) }
+	local go = H.leftBehind(five, owner, 10, followRange)
+	check(#go == 2 and go[1] == five[2] and go[2] == five[3], "5 left behind: the 2 farthest move")
+	five[2].packAt = 10
+	go = H.leftBehind(five, owner, 10.1, followRange)
+	check(#go == 1 and go[1] == five[3], "One packing: one more may go")
+	five[3].readyAt = 11
+	check(#H.leftBehind(five, owner, 10.2, followRange) == 0, "One packing, one rising: none")
+	check(H.moving(five[3], 10.9) and not H.moving(five[3], 11), "Rising until readyAt")
+	five[2].packAt, five[3].readyAt = nil, nil
+	five[2].movedAt, five[3].movedAt = 10, 10
+	go = H.leftBehind(five, owner, 11.4, followRange)
+	check(#go == 2 and go[1] == five[1] and go[2] == five[4], "Just moved: skipped until the cooldown ends")
+	go = H.leftBehind(five, owner, 11.5, followRange)
+	check(#go == 2 and go[1] == five[2] and go[2] == five[3], "1.5 s after landing: may move again")
+	check(#H.leftBehind({}, owner, 0, followRange) == 0 and #H.leftBehind({ turretAt(4, 4) }, owner, 0, followRange) == 0, "Nothing to move")
+	-- Spots lead toward his move direction: the first is straight ahead on the band's outer edge.
+	for _, band in { H.Engineer.ring, H.RING } do
+		for n = 1, H.MAX_OWNED do
+			for seed = 1, 6 do
+				local heading = seed * 0.9 - 2
+				local spots = H.followRing(n, band, Random.new(seed), heading)
+				check(#spots == n, "Follow ring has a spot per turret")
+				local function off(s)
+					return math.abs((s.angle - heading + math.pi) % (2 * math.pi) - math.pi)
+				end
+				local step = 2 * math.pi / math.min(n, H.capacity(band[2]))
+				check(off(spots[1]) <= H.JITTER * step + 1e-9, string.format("First follow spot is ahead (n=%d, off %.3f)", n, off(spots[1])))
+				check(near(spots[1].radius, band[2]), "On the band's outer edge")
+				for i = 2, n do
+					check(off(spots[i]) >= off(spots[i - 1]) - 1e-9, "Spots sorted from the heading outward")
+				end
+				check(H.spaced(points(spots), H.SPACING), "Follow spots 5+ apart")
+			end
+		end
+	end
+	local ahead = H.followRing(1, H.Engineer.ring, nil, H.angle(Vector3.new(1, 0, 0)))[1]
+	check((H.offset(ahead) - Vector3.new(8, 0, 0)).Magnitude < 1e-4, "Running +X, a Handyman's turret lands 8 studs ahead")
+	local foot = Vector3.new(10, 1, 10)
+	check((H.followCenter(foot, Vector3.new(1, 0, 0), 24) - Vector3.new(16, 1, 10)).Magnitude < 1e-6, "At 24 studs/s the ring leads by 6")
+	check((H.followCenter(foot, Vector3.new(0, 0, 1), 100) - Vector3.new(10, 1, 16)).Magnitude < 1e-6, "Lead capped at 6 studs")
+	check(H.followCenter(foot, Vector3.new(1, 0, 0), 0) == foot and H.followCenter(foot, Vector3.zero, 24) == foot, "Standing or no heading: no lead")
+	-- The worked example: at 24 studs/s a Handyman's turret lands 8 + 6 = 14 studs ahead of where the
+	-- server sees him; with 5 turrets at most 2 are offline, so at least 3 fire.
+	check(near((H.offset(ahead) + H.followCenter(Vector3.zero, Vector3.new(1, 0, 0), 24)).X, 14, 1e-4), "Lands 14 studs ahead at a run")
+	check(5 - H.FOLLOW_AT_ONCE == 3, "5 turrets running: at least 3 firing")
 
 	-- Facing.
 	check(near(H.yaw(Vector3.new(0, 0, -1)), 0), "-Z is yaw 0")
