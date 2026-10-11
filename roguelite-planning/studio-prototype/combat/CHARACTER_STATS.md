@@ -22,7 +22,8 @@ All 36 weapons consume general damage, compatible melee/ranged/elemental/utility
 - Extra shots: guns, staffs, cards, throws that don't come back, rockets, Pandora's Box and the Storm Bow.
 - Pierce and bounce: bullets, cards, and throws that aren't fire or gas (Boomerang, Mjolnir and the Trident included).
 - None of them: melee swings, the Rubber Duck's spray, the Vacuum and the Power Washer.
-- Example: Two Straws gives a Glock 2 bullets and a Frying Pan nothing.
+- Extra swings (`ExtraSwings`, added 2026-10-10, 0 to 2): melee swings only, the Mjolnir and Trident swings included but not their throws, and not the Shadow Daggers. After a swing stops hitting, the weapon swings again, back the other way, for 60% damage (`CharacterStats.ExtraSwing`, `extraSwings`, `extraSwingTimes`). The server sweeps it like any swing. Source: Windshield Wiper ([shop notes](SHOP_GAMEPLAY_READINESS.md#windshield-wiper-and-stronger-coupons-2026-10-10)).
+- Example: Two Straws gives a Glock 2 bullets and a Frying Pan nothing; Windshield Wiper gives the Frying Pan a second swing and the Glock nothing.
 - Lightning and area stats also count your own sources: with Battery Pack, every weapon chains lightning, so Tinfoil Antlers helps them all.
 
 Attack range moves melee reach without rescaling the equipped mesh. Authored model sizes, including the katana scale 0.013698526658117772, are preserved. Projectile Size changes projectile collision/visuals, not the equipped weapon model.
@@ -101,6 +102,35 @@ Two classes got an ability from the play-test round. Repo only, syntax-checked: 
 - **Server checks:** the client moves its own body and sends `RunAction 'Dash'`. `RogueliteMeta` approves it (class or starter, cooldown, mid-wave or sandbox, not paused, not held) and stamps `DashAt`. `MovementGuard` then allows 26 extra studs for 1.5 s. For 0.6 s after a dash, enemy hits use the player's seen position up to 20 studs ahead ([HIT_FAIRNESS.md](HIT_FAIRNESS.md#round-4-melee-from-a-jump-and-the-dash-2026-10-03)).
 
 **Turrets (turret items since 2026-10-04).** Turrets are run-shop items any class can buy (Nail Turret, Twin Nailer, Quad Nailer, Gatling Rig; up to 10 each, 30 on the server). They are placed for you on a ring at every wave start; there is no BUILD button or turret upgrade any more. The Handyman is Brotato's Engineer: a free Nail Turret each run, a tighter ring (4–8 studs), turret items 20% off, Utility Power gains ×1.25 and Damage gains ×0.5 (`CharacterStats.gained`). Turrets can't be destroyed. Rules and numbers: [HANDYMAN_TURRET.md](HANDYMAN_TURRET.md). Art: `roguelite-planning/blender-handyman-turret/`. The class description reads "Engineer: starts with a Nail Turret. Turrets spawn close to you. Utility Power gains +25%. Damage gains halved."
+
+## Armor in plain words (2026-10-10)
+
+Play-test: "I'm a little confused what armor does and where to see it." Two things share the name:
+
+- **The Armor stat** cuts the damage of every hit you take (zombie contact, enemy swings and shots, slams, bosses): damage ÷ (1 + Armor ÷ 15), so the cut is Armor ÷ (Armor + 15). Each point does a bit less than the one before. Negative Armor (Chef −3, Mage −2) makes hits bigger: × (1 + |Armor| ÷ 15). Example: Armor 10, a 20-damage hit does 12 (40% less).
+- **Armor pieces** (helmet, chest, legs, boots from chests) have no stat by themselves. Each worn piece adds its tier to Gear Power (+12% damage, +6% health per point). 2 pieces of one set give the set's bonus, all 4 add its perk ([RARITY_GODLY_ARMOR.md](../RARITY_GODLY_ARMOR.md#armor-clarity-2026-10-10)).
+
+| Armor | −5 | −3 | −2 | 0 | 1 | 2 | 3 | 5 | 8 | 10 | 15 | 20 | 30 | 45 | 100 (cap) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Damage you take | 33% more | 20% more | 13% more | full | 6% less | 12% less | 17% less | 25% less | 35% less | 40% less | 50% less | 57% less | 67% less | 75% less | 87% less |
+| A 20-damage hit | 26.7 | 24 | 22.7 | 20 | 18.8 | 17.6 | 16.7 | 15 | 13 | 12 | 10 | 8.6 | 6.7 | 5 | 2.6 |
+
+**What was confusing.** Every screen showed Armor as a bare number ("Armor 3") with no unit, and the only explanation was the formula in the Studio stat editor. Contact resistance and First-hit blocks (Iron and Spartan 4-piece, Burial Mask) were never shown in a run. In a run nothing said which armor you wore or whether its set bonus was on. The Armory showed a set's "2 PIECES / 4 PIECES" lines at Tier I numbers, never whether they were on, and nothing said a single piece does nothing alone.
+
+**The rule now: players never do the sum.** Armor always shows as a percent. Helpers in CharacterStats (pure, tested in ArmorSetTests):
+- `armorPercent(a)`: 8 → 35, −3 → −20 (the same sum as `incoming`).
+- `statNote` / `statLabel`: "Armor · you take 35% less damage", "you take 20% more damage"; nil for every other stat and for 0.
+- `armorChange(a, d)`: "25% → 32% less damage" (from a to a + d).
+- `armorSetLines(wearing, tiers, armor)`: one row per worn set, {count, two, four} with on, need (pieces still to put on) and the line at its real tier numbers. With the live Armor, a line that adds Armor says what it does from there: "+2 Armor (25% → 32% less damage)".
+
+Where it shows (UI reads the server's Stat_ attributes and ProfileWearing / ProfileArmor only; mockup: `previews/armor-clarity-mockup/`):
+- **Pause screen (P):** a new ARMOR group in STATS, each worn set with its 2 / 4 piece lines, ON or "n MORE"; a muted line under Armor ("you take 32% less damage from every hit"); Contact resistance and First-hit blocks under DEFENSE when you have them.
+- **Run shop and level-up stat lists:** the Armor label reads "Armor · you take 35% less damage". Item cards and the inventory detail add the change to Armor lines ("Armor: +2 (25% → 32% less damage)"; an owned copy shows from your Armor without it). The Armor level-up card does the same.
+- **Armory, Armor tab:** two lines over the slot filter (how sets work; "Your Armor: 7, so you take 32% less damage" plus a 5 / 15 / 30 reference on PC), then a WEARING line ("Iron 3/4 (2-piece on) · Ninja 1/4"). The piece detail's 2 / 4 PIECES rows say ON or WEAR n MORE with the real numbers, and one line says what a piece does alone (Gear Power).
+
+Analysis: the formula is fine for balance (diminishing, no cap problems), but a number with no unit reads like nothing. One point is worth about 6% at 0 Armor and about 1% at 30, so showing the before → after percent on anything that adds Armor answers "is this worth it" directly. Not changed: the Studio stat editor (CharacterStatsUI) keeps its formula help; the chest / item card (ItemCardUI) keeps plain "+2 Armor" (no live value in its tier table).
+
+Checks: ArmorSetTests 209 checks (Luau CLI on the real CharacterStats, incl. every set × tier agreeing with `armorBonus`), roster / shop / Armory navigation runners pass, every changed module compiles. Repo only: not synced to Studio, no Studio Play test, and the screens were checked in the HTML mockup (PC 1920 × 1080 and phone 844 × 390), not in Studio.
 
 ## Verification
 

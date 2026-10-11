@@ -4,6 +4,8 @@ Updated: 2026-09-23. Current working roster: **37 temporary shop passives**, sep
 
 **2026-10-03 (implemented shop, repo only):** the run shop (`ShopCatalog`) now has **44 items**: these 37 plus seven player buffs (Banana Peel, Couch Cushion, Lucky Penny, Chicken Soup, Roller Skates, Metal Detector, Vitamin Gummies). Marshmallow, Peas, Stinky Sock, Oven Mitt and Ice Cube now cause their own status, and Bone Crown also adds 5% damage, so the numbers below for those rows are out of date. Current numbers: [Shop gameplay readiness](studio-prototype/combat/SHOP_GAMEPLAY_READINESS.md).
 
+**2026-10-10 (repo only, not in Studio, not play-tested):** two play-test changes. **Windshield Wiper** (new, row 38) is the melee answer to Two Straws: every melee swing swings again, back the other way, for 60% damage. **Grandma's Coupons** now take 10% off per copy, up to 3 copies (was 5% per copy, up to 5). Details and numbers: [Shop gameplay readiness](studio-prototype/combat/SHOP_GAMEPLAY_READINESS.md#windshield-wiper-and-stronger-coupons-2026-10-10).
+
 The user approved the simpler direction and requested a few spooky/science additions, including Tooth Fairy's Teeth Collection. The five additions selected here are working selections; all numeric values are starting proposals awaiting balance tests, not implemented mechanics. Existing healing/status concepts retain their intended behavior with unresolved numbers explicitly marked TBD.
 
 ## Rules
@@ -30,7 +32,7 @@ The user approved the simpler direction and requested a few spooky/science addit
 | 7 | Pot Lid | +2 Armor | Hat |
 | 8 | Lucky Sock | +10 Luck | Belt accessory |
 | 9 | Fridge Magnet | +25% Pickup Radius | — |
-| 10 | Grandma's Coupon Stash | −5% Shop Purchase Prices | — |
+| 10 | Grandma's Coupon Stash | −10% new shop offer prices per copy, up to 3 copies (30% at most). Was −5% per copy, 5 copies (2026-10-10) | — |
 | 11 | Emotional Support Ketchup | +15% Explosion Damage | — |
 | 12 | Hot Sauce | +15% Explosion and Status-Area Radius | — |
 | 13 | Microwaved Marshmallow | +20% Burn Damage | — |
@@ -57,6 +59,7 @@ The user approved the simpler direction and requested a few spooky/science addit
 | 24 | Tinfoil Antlers | Lightning chains hit +1 enemy | 2 copies; head accessory |
 | 25 | Grandma's Oven Mitt | When a burning enemy dies, its burn spreads to +1 nearby enemy | 1 copy; belt accessory; propagation rules TBD |
 | 26 | Bubble Wrap Vest | Block the first damaging hit each wave | 1 copy; Tier 4; torso accessory |
+| 38 | Windshield Wiper (2026-10-10) | Every melee swing swings again, back the other way, for 60% damage; a 2nd copy adds a 2nd extra swing (1 on very fast weapons) | 2 copies; Tier 3, base 80; melee builds only; inventory only; needs its own icon |
 
 Bounce/pierce reductions affect the added hit, not all player damage. Interactions with weapons' existing bounce/pierce falloff require a single defined calculation before implementation; do not silently apply two falloff penalties.
 

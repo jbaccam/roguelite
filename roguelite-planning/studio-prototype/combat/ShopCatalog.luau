@@ -43,7 +43,10 @@ item('glasses','Large Glasses',1,16,'rbxassetid://96052817991093',{AttackRange=1
 item('potlid','Pot Lid',1,14,'rbxassetid://95875975195945',{Armor=2},'+2 armor: every hit you take does a bit less damage.')
 item('sock','Lucky Sock',1,18,'rbxassetid://107984529281974',{Luck=10},'+10 luck: better shop offers and level-up cards, and more heart drops.')
 item('magnet','Fridge Magnet',1,12,'rbxassetid://79860440384816',{},'Grab crystals from 25% farther away.',5,'Item',{PickupRadius=25})
-item('coupons',"Grandma's Coupons",2,35,'rbxassetid://88520618235310',{ShopDiscount=5},'New shop offers cost 5% less. Locked prices stay the same.')
+-- Coupons 10% a copy, at most 3 (2026-10-10, play-test: "should be better"; was 5% with 5 copies).
+-- The Shop discount stat stops at 30% and EconomyConfig.price at x0.2, so stacking never makes
+-- anything free. Example, a base-90 Tier III item at wave 15: 240 -> 216 (one) -> 168 (three).
+item('coupons',"Grandma's Coupons",2,35,'rbxassetid://88520618235310',{ShopDiscount=10},'New shop offers cost 10% less (up to 3 copies: 30% off). Locked prices stay the same.',3)
 item('ketchup','Support Ketchup',1,22,'rbxassetid://131244011688920',{ExplosionDamage=15},"Rocket Launcher, Pandora's Box and Molotov deal 15% more damage.")
 -- Area Size also widens the Rubber Duck's spray and the Power Washer / Vacuum streams (2026-10-09,
 -- UtilityWeapons.areaScale), so Hot Sauce names them too.
@@ -65,6 +68,13 @@ item('backpack','Backpack of Rocks',2,36,'rbxassetid://72326129404039',{MaxHP=12
 -- All stay 1 copy. Texts name what really uses them (CharacterStats.usesStat): guns never bounce,
 -- and thrown bounces deal 65%.
 item('straws','Two Straws',3,90,'rbxassetid://103855013199609',{ProjectileCount=1},'+1 shot or throw every attack: guns, rockets, staffs, cards, throws and turrets. Not melee, returning throws (Boomerang, Mjolnir) or sprays.',1)
+-- Windshield Wiper (2026-10-10, play-test: "an item that gives you multiple swings, like one of the
+-- ranged items gives you more projectiles"): Two Straws for melee. Each melee swing swings again,
+-- back the other way, for 60% damage (CharacterStats.ExtraSwing); 2 copies, 2 extra swings, except
+-- on very fast weapons where a second would push back a full swing (CharacterStats.extraSwingTimes). Offered
+-- only to a build carrying a melee weapon (C.usable). Placeholder icon: the Attack Speed level-up
+-- art (LevelUpCatalog.IconIds.AttackSpeed) until it has its own.
+item('wiper','Windshield Wiper',3,80,'rbxassetid://118215254503921',{ExtraSwings=1},'Your melee weapons swing again after every swing, back the other way, for 60% damage. 2 copies: 2 extra swings (1 on very fast weapons).',2)
 item('bouncy','Bouncy Ball',3,80,'rbxassetid://72472678515992',{Bounce=1},'Throws, cards, yo-yos and magic bolts bounce to 1 more enemy (60-65% damage). Not guns, melee, explosives, fire or gas throws, bowling balls or sprays.',1)
 item('pencil','Sharp Pencil',2,42,'rbxassetid://108647088361466',{Pierce=1},'Bullets, throws, cards and magic bolts go through 1 more enemy (70% damage). Not melee, explosives, gas clouds, bowling balls or sprays.',1)
 item('antlers','Tinfoil Antlers',3,68,'rbxassetid://90516946916091',{ChainBonus=1},'Your lightning chains jump to 1 more enemy. Needs lightning: a lightning weapon, Battery Pack or Mage.',2)
@@ -129,6 +139,7 @@ local itemTags={
  -- 2026-10-09: the family items, and Toolbelt reads "Item · Utility". Ball and Chain lost Melee (it
  -- is general damage), so melee preference goes to Knee of Justice.
  knee={'Melee','Damage'},fingercannon={'Ranged','Projectile'},pocketweather={'Elemental','Burn','Poison'},toolbelt={'Utility','Structure'},
+ wiper={'Melee'}, -- 2026-10-10: melee builds prefer it, as Gun and Thrown builds prefer Two Straws
 }
 for _,entry in C.List do
  if entry.kind~='Weapon' then entry.tags=itemTags[entry.id] or (entry.structure and {'Structure'}) or {} end

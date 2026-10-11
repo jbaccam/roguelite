@@ -44,7 +44,7 @@ local function aimAt(slot,aim,now,firing)
 end
 local function reset(slot,now)
  slot.start=-1e6;slot.ready=now;slot.previous=0;slot.hit={};slot.definition=nil
- slot.lastTarget=nil;slot.aimNpc=nil;slot.nextSearch=nil
+ slot.lastTarget=nil;slot.aimNpc=nil;slot.nextSearch=nil;slot.extra=nil
  slot.folder:SetAttribute('Attack',nil);slot.aimSent=nil;slot.folder:SetAttribute('AimPosition',nil)
 end
 local function add(player)
@@ -470,6 +470,20 @@ RunService.Heartbeat:Connect(function(dt)
     if d.kind=='Melee' then legendary:swing(d,slot.attackOrigin or origin,target,slot.direction) end
     if d.kind~='Melee' then shoot(d,origin,target.Position,character)
     elseif d.scripted then godly:attack(d,origin,target) end -- the daggers' chain is the hit
+    -- Extra swings (Windshield Wiper, 2026-10-10; CharacterStats.extraSwingTimes): queue them and hold
+    -- the next attack until the last one stops hitting. A throw (the hammer's, the Trident's) and the
+    -- Shadow Daggers' chain queue none (CharacterStats.usesStat).
+    slot.extra=nil
+    local extraCount=Stats.extraSwings(d)
+    if extraCount>0 then
+     local _,hitTo=Motion.attackTiming(id,d.kind,slot.style)
+     local hitEnd=hitTo/d.motionRate
+     local starts,wait=Stats.extraSwingTimes(extraCount,hitEnd,interval)
+     if #starts>0 then
+      slot.extra={left=#starts,at=now+starts[1],hitEnd=hitEnd,damage=d.damage*Stats.ExtraSwing.Damage,from=d}
+      slot.ready=now+wait
+     end
+    end
    end
    d=slot.definition or d
    local age=(now-slot.start)*d.motionRate
@@ -529,7 +543,7 @@ RunService.Heartbeat:Connect(function(dt)
        if health and Grid.distance(point-attackOrigin,allowance)<=d.range and clear(attackOrigin,point,wallParams) then
         local first=next(slot.hit)==nil -- the swing's first contact (the Wrecking Ball's shockwave)
         slot.hit[npc]=true;damage(npc,d.damage,d);contact(slot,id,now)
-        if first then legendary:contact(d,npc,point) end
+        if first and not d.extraSwing then legendary:contact(d,npc,point) end
        end
       end
      end
@@ -537,6 +551,37 @@ RunService.Heartbeat:Connect(function(dt)
     end
    end
    slot.previous=age
+   -- An extra swing (queued above), started after this tick's sweep so the swing before it is swept
+   -- to the end of its hit window. The same weapon swings again, back the other way (the other glove), at
+   -- the nearest enemy still in reach or else the same spot, from where this player's own screen has
+   -- them (bodyFrame, CharacterService.seen). It is a new attack for the sweep below, so it hits by
+   -- the same rules as any swing; clients draw it from the Attack attribute like any swing. It skips
+   -- Legendary moves. Dropped when the player stops attacking (held, weapons off) or it is late.
+   local extra=slot.extra
+   if extra and now>=extra.at then
+    if not living or not slot.aim or now>extra.at+.25 then slot.extra=nil
+    else
+     extra.left-=1;extra.at=now+extra.hitEnd
+     if extra.left<=0 then slot.extra=nil end
+     local x=table.clone(extra.from);x.damage=extra.damage;x.extraSwing=true
+     local aim=slot.aim
+     if target then
+      local reach=entry.point or target.Position
+      if Grid.distance(reach-origin,allowance)<=x.range then
+       aim=heldBy(target.Parent)~=nil and (reach-origin).Magnitude>.1 and reach or target.Position
+       x.practiceTarget=Death.isPractice(target.Parent)
+      end
+     end
+     slot.side=-(slot.side or 1);slot.hand=-(slot.hand or 1);slot.secondAim=nil
+     slot.attackRoot=Motion.attackRoot(bodyFrame,aim)
+     slot.attackOrigin=Motion.combatOrigin(slot.attackRoot,radius,index,id,x.kind)
+     slot.start=now;slot.previous=0;slot.hit={};slot.aim=aim;slot.definition=x
+     slot.ready=math.max(slot.ready,now+extra.hitEnd+Stats.ExtraSwing.Tick) -- its hit window is swept to the end
+     local delta=Vector3.new(aim.X-origin.X,0,aim.Z-origin.Z)
+     if delta.Magnitude>.01 then slot.direction=delta.Unit end
+     slot.folder:SetAttribute('Attack',Wire.packAttack({start=now,rate=x.motionRate,kind=x.kind,style=slot.style,side=slot.side,hand=slot.hand,range=x.range,root=slot.attackRoot,aim=slot.aim,direction=slot.direction}))
+    end
+   end
   end
  end
 end)

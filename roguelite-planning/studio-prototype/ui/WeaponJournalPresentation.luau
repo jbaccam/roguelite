@@ -26,6 +26,7 @@ local REASONS = {
 	ProjectileCount = "Adds projectiles to these weapons' attacks.",
 	Pierce = "These projectiles can continue through extra enemies.",
 	Bounce = "These projectiles can rebound to extra enemies.",
+	ExtraSwings = "These weapons swing, so they can swing again.",
 	ExplosionDamage = "These weapons deal explosive damage.",
 	AreaSize = "These weapons have an area, puddle, lightning radius or area special to enlarge.",
 	ChainBonus = "These weapons already create lightning chains.",

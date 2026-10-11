@@ -141,6 +141,96 @@ return function(Weapons,Stats,E,Catalog,Upgrades)
  check(Catalog.pickWeighted({a,b},{0,0},.5)==nil and Catalog.pickWeighted({},{},.5)==nil,'no weight: nil')
  check(Catalog.pickWeighted({a,b},{0,2},0)==b,'a zero weight is never picked')
 
+ -- Windshield Wiper (2026-10-10, play-test: a melee item like Two Straws): Tier III, 80, 2 copies,
+ -- +1 Extra swings a copy, only for builds that swing a melee weapon.
+ local wiper=item('wiper')
+ check(wiper.kind=='Item' and wiper.tier==3 and wiper.basePrice==80 and wiper.cap==2,'Wiper: Tier III, 80, 2 copies')
+ local wn=0;for _ in wiper.modifiers do wn+=1 end
+ check(wn==1 and wiper.modifiers.ExtraSwings==1 and next(wiper.percent)==nil,'Wiper: exactly +1 Extra swings')
+ check(#wiper.tags==1 and wiper.tags[1]=='Melee','Wiper: reads Item · Melee')
+ check(wiper.description=='Your melee weapons swing again after every swing, back the other way, for 60% damage. 2 copies: 2 extra swings (1 on very fast weapons).','Wiper text')
+ check(Stats.WeaponStats.ExtraSwings and Stats.ById.ExtraSwings.max==2 and Stats.ById.ExtraSwings.min==0,'Extra swings: weapon-only, 0..2')
+ near(Stats.ExtraSwing.Damage,.6,'extra swing damage share')
+ -- Who is offered it: melee swings, the throwing hybrids' swings and Godly blades; never guns,
+ -- throws, the 12-stud Duck, streams, the Shadow Daggers (their chain is the hit) or turrets.
+ for _,id in {'01','02','03','04','06','19','25','31','32','36','37','40','42'} do check(usable('wiper',{id}),'Wiper offered with '..Weapons.ById[id].name) end
+ for _,id in {'00','09','12','13','17','22','29','30','38','39'} do check(not usable('wiper',{id}),'Wiper not offered with '..Weapons.ById[id].name) end
+ check(not usable('wiper',{}) and not usable('wiper',{'00'},nil,3),'Wiper: nothing to swing (turrets do not count)')
+ check(not Stats.usesStat({id='Turret',kind='Melee'},'ExtraSwings'),'turrets never swing again')
+ local ww=Catalog.worksWith(wiper,{'00','01','39','03','01'},neutral)
+ check(#ww==2 and ww[1]=='01' and ww[2]=='03','Wiper works with Frying Pan and Katana, not Glock or Shadow Daggers')
+ -- Selling the last melee weapon makes it dead (the card turns red), buying one makes it live again.
+ check(#Catalog.worksWith(wiper,{'00','13'},neutral)==0 and #Catalog.worksWith(wiper,{'00','13','06'},neutral)==1,'Wiper follows the carried weapons')
+ near(weight('wiper',katanas),3,'Wiper suits the 3 Katana copies, not the Glock')
+ near(weight('wiper',{'00','13'}),0,'Wiper: no preference for a gun and throw build')
+ -- Stacking: copies add (ShopService sums modifiers x count), the stat stops at 2, and it is whole.
+ local function resolved(bonuses) return Stats.resolve('Brawler',nil,nil,bonuses) end
+ near(resolved({ExtraSwings=1}).ExtraSwings,1,'one Wiper')
+ near(resolved({ExtraSwings=2}).ExtraSwings,2,'two Wipers')
+ near(resolved({ExtraSwings=5}).ExtraSwings,2,'more never passes the cap')
+ near(resolved({}).ExtraSwings,0,'none by default')
+ check(Stats.valid('ExtraSwings',1) and not Stats.valid('ExtraSwings',1.5) and not Stats.valid('ExtraSwings',3),'editor: whole numbers 0..2')
+ -- What one attack does with it (the server reads this): melee swings only, at most 2.
+ local function weaponWith(id,swings)
+  local s=with({ExtraSwings=swings});local d=Stats.weapon(Weapons.ById[id],s,'Brawler',1);d.stats=s;return d
+ end
+ near(Stats.extraSwings(weaponWith('03',1)),1,'Katana, one Wiper: 1 extra swing')
+ near(Stats.extraSwings(weaponWith('03',2)),2,'Katana, two Wipers: 2')
+ near(Stats.extraSwings(weaponWith('03',9)),2,'Katana: never more than 2')
+ near(Stats.extraSwings(weaponWith('00',2)),0,'Glock: none')
+ near(Stats.extraSwings(weaponWith('39',2)),0,'Shadow Daggers: none')
+ near(Stats.extraSwings(weaponWith('03',0)),0,'no Wiper: none')
+ local hammer=weaponWith('31',1);hammer.kind='Ranged' -- the hammer's throw (RogueliteCombat swaps kind)
+ near(Stats.extraSwings(hammer),0,'a thrown hammer: no extra swing')
+ -- Timing: each extra swing starts as the one before stops hitting; no cut is cut short.
+ local tick=Stats.ExtraSwing.Tick
+ local katana=weaponWith('03',2);local hitEnd=.46/katana.motionRate
+ local starts,wait=Stats.extraSwingTimes(2,hitEnd,katana.cooldown)
+ check(#starts==2,'Katana: both extra swings fit')
+ near(starts[1],hitEnd,'first extra swing starts as the first swing stops hitting')
+ near(starts[2],2*hitEnd,'second one after that')
+ near(wait,katana.cooldown,'a Katana keeps its cadence with 2 extra swings')
+ -- Nunchucks (hitEnd .34, motion-limited .667): one fits with a small push; a second would lower DPS.
+ starts,wait=Stats.extraSwingTimes(2,.34,.667)
+ check(#starts==1,'Nunchucks: one extra swing, not two')
+ near(wait,.68+tick,'the next attack waits for the extra swing to stop hitting')
+ -- Spatula (.256, .55): the second copy adds nothing rather than costing damage.
+ starts,wait=Stats.extraSwingTimes(2,.46/1.8,.55);check(#starts==1 and math.abs(wait-.55)<1e-9,'Spatula: one extra swing, cadence kept')
+ -- Never less damage a second with more copies, for any hit end and interval a melee weapon has.
+ for _,h in {.12,.17,.2,.256,.34,.4} do
+  for _,interval in {2*h/.46*.9,.4,.55,.7,.95,1.25,1.6} do
+   if interval<h/.46*.9-1e-9 then continue end -- an attack never waits less than its whole motion
+   local last=1/interval
+   for count=0,2 do
+    local s,w=Stats.extraSwingTimes(count,h,interval)
+    local rate=(1+Stats.ExtraSwing.Damage*#s)/w
+    check(#s<=count and w>=interval and (#s==0 or w>=(#s+1)*h),'extra swings fit: '..h..' '..interval..' '..count)
+    check(rate>=last-1e-9,'more copies never lower DPS: '..h..' '..interval..' '..count)
+    if count>=1 then check(#s>=1,'the first copy always swings again: '..h..' '..interval) end
+    last=rate
+   end
+  end
+ end
+ check(#(Stats.extraSwingTimes(0,hitEnd,1))==0 and select(2,Stats.extraSwingTimes(0,hitEnd,1))==1,'no extra swings: no change')
+
+ -- Grandma's Coupons (2026-10-10, play-test: "should be better"): 10% a copy, 3 copies, 30% at most.
+ local coupons=item('coupons')
+ check(coupons.tier==2 and coupons.basePrice==35 and coupons.cap==3 and coupons.modifiers.ShopDiscount==10,'Coupons: Tier II, 35, 10% a copy, 3 copies')
+ check(coupons.description=='New shop offers cost 10% less (up to 3 copies: 30% off). Locked prices stay the same.','Coupons text')
+ near(E.modifier(resolved({ShopDiscount=10})),.9,'one coupon: x0.9')
+ near(E.modifier(resolved({ShopDiscount=30})),.7,'three coupons: x0.7')
+ near(E.modifier(resolved({ShopDiscount=50})),.7,'the stat stops at 30%')
+ near(E.modifier({ShopDiscount=500,ShopPricePercent=-500}),.2,'even past every cap the price keeps x0.2')
+ -- A base-90 Tier III item at waves 5 / 15 / 25: old one coupon (5%), one, two and three coupons.
+ for i,wave in {5,15,25} do
+  near(E.price(90,wave,1),({140,240,340})[i],'base 90, wave '..wave..', no coupon')
+  near(E.price(90,wave,.95),({133,228,323})[i],'base 90, wave '..wave..', old coupon')
+  near(E.price(90,wave,.9),({126,216,306})[i],'base 90, wave '..wave..', one coupon')
+  near(E.price(90,wave,.8),({112,192,272})[i],'base 90, wave '..wave..', two coupons')
+  near(E.price(90,wave,.7),({98,168,238})[i],'base 90, wave '..wave..', three coupons')
+ end
+ check(E.price(1,1,0)>=1 and E.price(16,25,.7)>=1,'nothing is ever free')
+
  -- Luck and tier odds (play-test 2026-10-10: Luck 40 and Luck 100 showed the same reroll odds).
  -- Each player's odds come from their own Luck (ShopService reads cs.stats.Luck per player); here two
  -- players, Mason at 40 and Jack at 100, must see different odds late in a run, and the note must

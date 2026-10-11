@@ -57,6 +57,7 @@ stat('AttackRange','Attack range',0,-50,150,10,'%','Weapon','Scales targeting an
 stat('ProjectileCount','Extra projectiles',0,0,4,1,'','Weapon','Extra shots for projectile weapons only; maximum nine shotgun pellets.')
 stat('Pierce','Piercing',0,0,4,1,'','Weapon','Extra enemies per non-explosive projectile; 70% damage per added hit.')
 stat('Bounce','Bounces',0,0,4,1,'','Weapon','Extra unique targets for bouncing throws and magic; guns never bounce. 60% per bounce.')
+stat('ExtraSwings','Extra swings',0,0,2,1,'','Weapon','Melee weapons swing again, back the other way, after each swing; 60% damage per extra swing.')
 stat('ProjectileSpeed','Projectile speed',0,-50,200,10,'%','Weapon','Scales physical projectile travel speed.')
 stat('ProjectileSize','Projectile size',0,0,150,10,'%','Weapon','Scales projectile collision radius and visible shot thickness.')
 stat('AreaSize','Area radius',0,-50,150,10,'%','Weapon','Scales blast and chain-search radius.')
@@ -254,7 +255,7 @@ function S.bonusText(t)
 end
 function S.valid(id,value)
  local d=S.ById[id]
- local count=table.find({'ProjectileCount','Pierce','Bounce','PoisonStacks','ChainCount','ChainBonus','ChainEvery','BurnSpread','FirstHitBlock'},id)
+ local count=table.find({'ProjectileCount','Pierce','Bounce','ExtraSwings','PoisonStacks','ChainCount','ChainBonus','ChainEvery','BurnSpread','FirstHitBlock'},id)
  return d~=nil and type(value)=='number' and value==value and value>=d.min and value<=d.max and (not count or value%1==0)
 end
 -- Stat gains (2026-10-04, the Handyman as Brotato's Engineer): a class's `gain` multiplies what its
@@ -276,7 +277,7 @@ function S.resolve(class,sets,overrides,bonuses,percent)
  for _,d in S.List do
   local value=d.base+(c.buffs[d.id] or 0)+S.gained(c,d.id,(typed[d.id] or 0)+((bonuses or {})[d.id] or 0))
   value=value*(1+((percent or {})[d.id] or 0)/100)
-  if table.find({'ProjectileCount','Pierce','Bounce','PoisonStacks','ChainCount','ChainBonus','ChainEvery','BurnSpread','FirstHitBlock'},d.id) then value=math.round(value) end
+  if table.find({'ProjectileCount','Pierce','Bounce','ExtraSwings','PoisonStacks','ChainCount','ChainBonus','ChainEvery','BurnSpread','FirstHitBlock'},d.id) then value=math.round(value) end
   if overrides and overrides[d.id]~=nil then value=overrides[d.id] end
   result[d.id]=math.clamp(value,d.min,d.max)
  end
@@ -308,7 +309,7 @@ function S.incoming(amount,s) return amount*S.mult(-s.ContactReduction)*(s.Armor
 local Thrown=require(script.Parent.SpecialMotion).profiles -- SpecialWeapons' throws
 -- A gun commits its firing line for its entire flight, including piercing contacts.
 S.StraightGuns={['00']=true,['07']=true,['08']=true,['09']=true,['10']=true,['11']=true,['24']=true,['41']=true,Turret=true}
-S.WeaponStats={ProjectileCount=true,Pierce=true,Bounce=true,ExplosionDamage=true,AreaSize=true,ChainBonus=true,ChainDamage=true,MeleeDamage=true,RangedDamage=true,ElementalDamage=true}
+S.WeaponStats={ProjectileCount=true,Pierce=true,Bounce=true,ExtraSwings=true,ExplosionDamage=true,AreaSize=true,ChainBonus=true,ChainDamage=true,MeleeDamage=true,RangedDamage=true,ElementalDamage=true}
 local AREA_SPECIALS={'waveRadius','spread','hop','burstRadius'} -- Godly special sizes GodlyWeapons scales by AreaSize
 local AREA_MOVES={Slash=true,Beam=true,Shock=true,Split=true,Thunder=true,Strike=true,Roll=true} -- LegendaryMoves sizes (not the Royal Flush)
 function S.usesStat(base,id,stats)
@@ -320,6 +321,9 @@ function S.usesStat(base,id,stats)
   if id=='RangedDamage' then return base.kind~='Melee' or base.hybridRange~=nil end
   return base.elemental==true or (base.burn or 0)>0 or (base.poison or 0)>0 or (stats~=nil and ((stats.BurnChance or 0)>0 or (stats.PoisonChance or 0)>0))
  end
+ -- Extra swings (2026-10-10): every melee swing, the throwing hybrids' swings included (their throws
+ -- turn Ranged and skip it). Not the Shadow Daggers (scripted: their chain is the hit) or turrets.
+ if id=='ExtraSwings' then return w~='Turret' and base.kind=='Melee' and not base.scripted end
  if id=='Bounce' and S.StraightGuns[w] then return false end
  if id=='ExplosionDamage' then return base.kind=='Blast' end
  if id=='ChainBonus' or id=='ChainDamage' then return base.lightning==true or (stats~=nil and (stats.ChainCount or 0)>0) end
@@ -345,6 +349,36 @@ end
 -- A shot stat as an attack uses it: 0 when the weapon doesn't (d: S.weapon's result, d.stats set).
 -- Example: Two Straws on a Boomerang throw: S.shotStat(d,'ProjectileCount') is 0.
 function S.shotStat(d,id) return S.usesStat(d,id) and (d.stats[id] or 0) or 0 end
+-- Extra swings (2026-10-10, play-test: "an item that gives you multiple swings, like one of the
+-- ranged items gives you more projectiles"; Windshield Wiper in ShopCatalog). After a melee swing
+-- stops hitting, the same weapon swings again, back the other way, for Damage x its damage; one
+-- more per point of ExtraSwings (at most 2). The server sweeps it like any swing (RogueliteCombat).
+S.ExtraSwing={Damage=.6,Tick=1/30} -- Tick: the server's melee tick, so every hit window is swept to its end
+-- The extra swings one melee attack makes: 0 for a weapon that doesn't swing (S.usesStat).
+-- d: S.weapon's result with d.stats. Example: a Katana with one Windshield Wiper -> 1; a Glock -> 0.
+function S.extraSwings(d)
+ return math.clamp(math.floor(S.shotStat(d,'ExtraSwings')),0,S.ById.ExtraSwings.max)
+end
+-- When an attack's extra swings start and when the weapon may attack again. Each extra swing starts
+-- when the swing before it stops hitting (hitEnd: seconds from a swing's start to the end of its hit
+-- window, WeaponMotion.SwingHitEnd / motion rate), so no cut is ever cut short, and the next attack
+-- waits for the last one (plus a tick). interval: the attack's normal wait. Of up to `count` extra
+-- swings it uses as many as deal the most damage a second: on a very fast weapon a second 60% swing
+-- would push back a full one, so it isn't made. Returns the start times (one per swing made) and
+-- the wait. Examples: Katana (hitEnd 0.256 s, interval 0.924 s), 2: starts 0.256 and 0.511 s, wait
+-- still 0.924 s. Spatula (0.256 s, 0.55 s), 2: one swing at 0.256 s, wait 0.55 s (two would need
+-- 0.8 s: 2.2 hits / 0.8 s < 1.6 / 0.55 s).
+function S.extraSwingTimes(count,hitEnd,interval)
+ local best,bestRate,bestWait=0,1/interval,interval
+ for k=1,math.max(0,math.floor(count or 0)) do
+  local wait=math.max(interval,(k+1)*hitEnd+S.ExtraSwing.Tick)
+  local rate=(1+S.ExtraSwing.Damage*k)/wait
+  if rate>=bestRate then best,bestRate,bestWait=k,rate,wait end
+ end
+ local starts={}
+ for i=1,best do starts[i]=i*hitEnd end
+ return starts,bestWait
+end
 -- sets (2026-10-09): S.typeCounts of the equipped copies; nil (previews, tests) means no type sets.
 -- d.specialty: the specialty percent it got; d.typeBonus: S.weaponSetBonus (the server hands it to
 -- S.weaponStats for d.stats).
@@ -508,5 +542,98 @@ function S.armorBonus(wearing,tiers)
   end
  end
  return stats,perks,sets
+end
+-- Armor in plain words (2026-10-10, play-test: "I'm a little confused what armor does and where to
+-- see it"). Players never do the sum: every screen shows Armor as a percent. armorPercent: how much
+-- less damage every hit does at this Armor, in whole percent, from the same sum as S.incoming
+-- (Armor / (Armor + 15); negative Armor: more damage, Armor / 15). Each point does a bit less than
+-- the one before. Examples: 3 -> 17, 5 -> 25, 8 -> 35, 10 -> 40 (a 20-damage hit does 12),
+-- 15 -> 50, 30 -> 67, -2 -> -13, -3 -> -20.
+function S.armorPercent(armor)
+ return math.round((1-S.incoming(1,{ContactReduction=0,Armor=tonumber(armor) or 0}))*100)
+end
+-- An Armor change in damage taken, from `armor` to armor + delta: armorChange(5, 2) =
+-- '25% → 32% less damage'; armorChange(-3, 3) = '20% more → 0% less damage'.
+function S.armorChange(armor,delta)
+ local a=tonumber(armor) or 0
+ local p,q=S.armorPercent(a),S.armorPercent(a+(tonumber(delta) or 0))
+ if p>=0 and q>=0 then return p..'% → '..q..'% less damage' end
+ local function say(x) return x>=0 and (x..'% less') or ((-x)..'% more') end
+ return say(p)..' → '..say(q)..' damage'
+end
+-- What a stat value does, for stat lists, when the number alone doesn't say it; nil otherwise.
+-- Only Armor needs it: statNote('Armor', 8) = 'you take 35% less damage'; -3: '... 20% more damage'.
+function S.statNote(id,value)
+ if id~='Armor' then return nil end
+ local p=S.armorPercent(value)
+ if p>0 then return 'you take '..p..'% less damage' elseif p<0 then return 'you take '..(-p)..'% more damage' end
+ return nil
+end
+-- A stat list's label with its note: 'Armor · you take 35% less damage' (shop and level-up lists).
+function S.statLabel(d,value)
+ local note=S.statNote(d.id,value)
+ return note and (d.label..' · '..note) or d.label
+end
+-- The armor sets a player wears, for the Armory and the pause screen: one row per set with a worn,
+-- owned piece (same rules as armorBonus), most pieces first. Row: {id, count, two, four}; two / four
+-- = {on, need (pieces still to put on, 0 when on), text}. text is the set's line with its numbers at
+-- the tier that counts (armorBonus's scaling; a bonus not on yet uses the lowest worn piece's tier).
+-- Example: Iron helmet IV, chest II, legs I -> {id='Iron', count=3, two={on=true, need=0,
+-- text='+2 Armor'}, four={on=false, need=1, text='+10% Contact resistance'}}; four Dragon Scale
+-- pieces at IV -> two '+33 Max health', four '+26% Burn chance; ... catch fire (33%)'.
+-- armor (optional): the player's live Armor stat. A line that adds Armor then also says what it does
+-- from there: worn Iron 2-piece at Armor 7 -> '+2 Armor (25% → 32% less damage)' (on: from 7 - 2);
+-- not on yet -> from 7 to 9.
+function S.armorSetLines(wearing,tiers,armor)
+ if type(wearing)~='table' then wearing=S.parseWearing(wearing) end
+ if tiers~=nil and type(tiers)~='table' then tiers=S.parseArmorTiers(tiers) end
+ local by={}
+ for _,slot in S.ArmorSlots do
+  local setId=wearing[slot];local tier=S.ArmorSets[setId] and (tiers==nil and 1 or tiers[setId..'.'..slot])
+  if tier then local l=by[setId] or {};by[setId]=l;table.insert(l,math.clamp(math.floor(tonumber(tier) or 1),1,4)) end
+ end
+ -- The bonus's numbers at `tier`, from armorBonus on `pieces` pieces of the set (minus the 2-piece
+ -- part for the 4-piece line), put in place of the tier I numbers in its text.
+ local function line(setId,key,pieces,tier)
+  local set=S.ArmorSets[setId];local bonus=set[key];local text=set.text and set.text[key] or ''
+  local function at(n)
+   local w,t={},{}
+   for i=1,n do local slot=S.ArmorSlots[i];w[slot]=setId;t[setId..'.'..slot]=tier end
+   local s,p=S.armorBonus(w,t);return s,p
+  end
+  local s,p=at(pieces);local s2,p2
+  if pieces==4 then s2,p2=at(2) end
+  local keys={};for id in bonus do table.insert(keys,id) end;table.sort(keys)
+  local armorAdds
+  for _,id in keys do
+   local base=bonus[id]
+   if type(base)=='number' then
+    local v=s[id] or p[id]
+    if type(v)=='number' and s2 then v-=(s2[id] or (type(p2[id])=='number' and p2[id]) or 0) end
+    if id=='Armor' and type(v)=='number' then armorAdds=v end
+    if type(v)=='number' and v~=base then
+     local shown=v%1==0 and string.format('%d',v) or tostring(v)
+     text=string.gsub(text,'%f[%d]'..(string.gsub(tostring(base),'%.','%%.'))..'%f[%D]',shown,1)
+    end
+   end
+  end
+  return text,armorAdds
+ end
+ local rows={}
+ for setId,list in by do
+  table.sort(list,function(a,b) return a>b end)
+  local n=#list
+  local function part(key,pieces)
+   local on=n>=pieces
+   local text,adds=line(setId,key,pieces,list[math.min(pieces,n)])
+   if adds and type(armor)=='number' then
+    text..=' ('..S.armorChange(on and armor-adds or armor,adds)..')'
+   end
+   return {on=on,need=math.max(0,pieces-n),text=text}
+  end
+  table.insert(rows,{id=setId,count=n,two=part('two',2),four=part('four',4)})
+ end
+ table.sort(rows,function(a,b) if a.count~=b.count then return a.count>b.count end;return a.id<b.id end)
+ return rows
 end
 return S
