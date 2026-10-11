@@ -30,12 +30,21 @@ return function(K)
  check(#rows==4 and rows[4].userId==4,'already shown: no swap')
  check(#K.rows(K.rank({six[1],six[2]},1),4)==2,'two players, two rows')
 
- -- Visible only with 2+ run members, while you are one and your run has not ended.
- check(not K.visible(1,true,false),'solo: hidden')
+ -- Visible in every run (solo too) while you are in it and it has not ended, unless Settings >
+ -- Kill board is OFF or it is the tutorial run (the guide box needs the free edge spots).
+ check(K.visible(1,true,false),'solo: shown')
+ check(K.visible(1,true,false,nil,nil),'solo, setting never touched (nil = default ON): shown')
+ check(K.visible(1,true,false,true,false),'solo, setting ON: shown')
  check(K.visible(2,true,false),'two players: shown')
  check(K.visible(4,true,false),'four players: shown')
+ check(not K.visible(0,true,false),'no run members listed yet: hidden')
  check(not K.visible(3,false,false),'not in the run (lobby): hidden')
  check(not K.visible(3,true,true),'your run ended (results screen): hidden')
+ check(not K.visible(1,true,false,false),'solo, setting OFF: hidden')
+ check(not K.visible(4,true,false,false),'party, setting OFF: hidden')
+ check(not K.visible(1,true,false,true,true),'tutorial run: hidden')
+ local solo=K.rows(K.rank({{userId=7,name='Me',kills=42}},7),4)
+ check(#solo==1 and solo[1].mine and solo[1].rank==1 and solo[1].kills==42,'solo: one row, yours, 1st')
 
  -- Numbers.
  for _,c in {{0,'0'},{7,'7'},{999,'999'},{1000,'1,000'},{1234,'1,234'},{9999,'9,999'},{10000,'10K'},{12345,'12.3K'},{999949,'999.9K'},{1290000,'1.2M'},{999999,'999.9K'},{-5,'0'}} do
@@ -43,7 +52,7 @@ return function(K)
  end
  check(K.signature(K.rank({{userId=1,name='A',kills=1}},1))~=K.signature(K.rank({{userId=1,name='A',kills=2}},1)),'a kill changes the signature')
  check(K.signature(K.rank({{userId=1,name='A',kills=1}},1))==K.signature(K.rank({{userId=1,name='A',kills=1}},1)),'same board, same signature')
- near(K.height(2),108,'2 rows: 108 design px');near(K.height(4),176,'4 rows: 176 design px')
+ near(K.height(1),74,'1 row (solo): 74 design px');near(K.height(2),108,'2 rows: 108 design px');near(K.height(4),176,'4 rows: 176 design px')
 
  -- Placement against the HUD, RogueliteUI layout() for a w x h HUD frame (CoreUISafeInsets), plus
  -- the DASH button (RogueliteCombat.client layout) and, on keyboard screens, the chat window that
@@ -105,6 +114,10 @@ return function(K)
  -- The documented examples. Desktops: the left edge under the health block (12 + 234 + 10).
  local b,sc=placeOn(1920,1022,false,4)
  near(b[1],12,'1080p desktop: left edge');near(b[2],256,'1080p desktop: under the health block');near(sc,1,'desktop scale 1')
+ b=placeOn(1920,1022,false,1,false,true)
+ near(b[1],12,'1080p solo, chat: left');near(b[2],256,'solo: under the health block');near(b[4],256+74,'solo: one row tall')
+ b,sc=placeOn(750,311,true,1)
+ near(b[2],137.5,'750x311 phone solo: under the weapon strip');near(b[4]-b[2],74*sc,'phone solo: one row')
  b=placeOn(1920,1022,false,2,false,true)
  near(b[1],12,'1080p, 2 players, chat: left');near(b[2],256,'2 players fit between the health block and the chat')
  b=placeOn(1920,1022,false,4,false,true)
@@ -118,7 +131,7 @@ return function(K)
  near(b[3]-b[1],K.WC*.55,'phone: compact, no names')
  b=placeOn(750,311,true,4)
  near(b[3],750-133-28-8,'750x311 phone, 4 players: left of DASH')
- -- Every screen size, 2-4 players, with and without the boss bar and the chat window: on screen and
+ -- Every screen size, solo to 4 players, with and without the boss bar and the chat window: on screen and
  -- clear of every HUD element; prints where nothing fits (the board hides there).
  local sizes={
   {568,270,true},{640,300,true},{667,311,true},{750,311,true},{812,340,true},{844,350,true},{926,390,true},{1024,712,true},{1180,770,true},{1366,980,true},
@@ -126,7 +139,7 @@ return function(K)
  }
  for _,size in sizes do
   local w,h,touch=size[1],size[2],size[3]
-  for n=2,4 do for _,withBoss in {false,true} do for _,withChat in {false,true} do
+  for n=1,4 do for _,withBoss in {false,true} do for _,withChat in {false,true} do
    local rect,_,clear,rects=placeOn(w,h,touch,n,withBoss,withChat)
    local where=w..'x'..h..(touch and ' touch' or '')..' n='..n..(withBoss and ' boss' or '')..(withChat and not touch and ' chat' or '')
    if not clear then print('  no clear spot (hidden): '..where) end

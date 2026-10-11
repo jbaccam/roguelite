@@ -5,7 +5,11 @@
 --   blow's owner, set by CombatEffectsService), so pets and the Handyman's turret count for their
 --   owner and a Bloater chain for whoever hit the Bloater. Combat only, and none in a run where the
 --   admin panel was used (TEST RUN); it resets each stint (a new join starts at 0). No new remotes.
---   Shown only with 2+ run members; hidden solo, in the lobby and once this player's run has ended.
+--   Shown in every run, solo too (one row: you; user, 2026-10-10: "show for single players too").
+--   Hidden in the lobby, once this player's run has ended, in the tutorial run (Eggbert's guide
+--   box takes a free edge spot there, and the guide and the HUD must never cover each other), and
+--   while Settings > Kill board is OFF (Setting_KillBoard=false; default ON, saved with the
+--   profile like the other settings; the board hides and returns at once when it is toggled).
 --   Rows: rank, headshot, display name, kills; you are the lime row. Ties share a rank (5, 5, 3 kills
 --   -> 1, 1, 3). At most MAX rows: with more members, the last row is yours if you are lower.
 --   Updates twice a second, and only redraws when a row changed.
@@ -59,8 +63,9 @@ function K.format(n)
  local s=tostring(n):reverse():gsub('(%d%d%d)','%1,'):reverse()
  return (s:gsub('^,',''))
 end
-function K.visible(members,isMember,ended)
- return isMember==true and ended~=true and members>=2
+-- enabled: Setting_KillBoard (nil = the default, ON); tutorial: RogueliteCombat.TutorialRun.
+function K.visible(members,isMember,ended,enabled,tutorial)
+ return isMember==true and ended~=true and members>=1 and enabled~=false and tutorial~=true
 end
 -- What a row's look depends on, so an unchanged board is not redrawn.
 function K.signature(rows)
@@ -86,7 +91,8 @@ K.overlaps=overlaps
 --      their left side below the health block is the thumbstick.
 -- Returns x0, y0, scale, clear (false: nowhere clear, e.g. a 667 px phone while the boss bar sits
 -- bottom centre; the board hides).
--- Examples: 1920 x 1022 desktop -> x 12..272 under the health block (2 players y 256..364) or under
+-- Examples: 1920 x 1022 desktop -> x 12..272 under the health block (solo y 256..330, 2 players
+-- y 256..364) or under
 -- the chat window when the health spot would touch it; 750 x 311 phone, compact at .55 -> x 537..607,
 -- y 137.5..197 (2 players), left of PAUSE/SETTINGS and above DASH.
 K.WC=128
@@ -261,7 +267,9 @@ function K.mount(player)
   end
   local list=members()
   local preview=studio and playerGui:GetAttribute('KillBoardPreview')==true
-  local show=K.visible(#list,preview or player:GetAttribute('RunMember')==true,player:GetAttribute('RunResult')~=nil or player:GetAttribute('LobbyPreviewActive')==true)
+  local combat=RS:FindFirstChild('RogueliteCombat')
+  local show=K.visible(#list,preview or player:GetAttribute('RunMember')==true,player:GetAttribute('RunResult')~=nil or player:GetAttribute('LobbyPreviewActive')==true,
+   player:GetAttribute('Setting_KillBoard'),combat~=nil and combat:GetAttribute('TutorialRun')==true)
   view.root.Visible=show
   if not show then return end
   local rows=K.rows(K.rank(list,player.UserId),K.MAX)
@@ -282,6 +290,10 @@ function K.mount(player)
    for _,r in view.rows do r.rank.TextSize=readable(17,sc);r.name.TextSize=readable(17,sc);r.kills.TextSize=readable(19,sc) end
   end
  end
+ -- Settings > Kill board: hide or show at once, not on the next half-second tick.
+ player:GetAttributeChangedSignal('Setting_KillBoard'):Connect(function()
+  local ok,err=pcall(update);if not ok then warn('KillBoard: update failed',err) end
+ end)
  task.spawn(function()
   while true do
    local ok,err=pcall(update);if not ok then warn('KillBoard: update failed',err) end

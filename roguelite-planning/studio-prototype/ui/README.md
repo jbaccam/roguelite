@@ -337,7 +337,7 @@ All roguelite UI now builds through `UITheme.luau` (→ `ReplicatedStorage.UIThe
 
 Upper left: heart/health, potion XP bar, shard and shard-bag counters, and a `LEVEL UP ×n` pill bound to the server's `PendingLevelUps`. Top centre: stone-capped timer and wave. Upper right: the six equipped weapon slots (server `SlotN.WeaponId/Tier`, tier numeral in rarity colour) and up to 16 collected items from the shop snapshot. Right edge: SHOP [B], Studio-only GEAR [I] and STATS [P], and SETTINGS. Bottom centre, while a boss is alive within 600 studs: the boss bar. It uses the player health bar's red fill and orange damage trail (shared `healthTrack` helper) in a wide inset frame with stone caps. The boss name sits on a lime-cornered pill over its top edge (the model's `BossName` attribute, default HAMMER BRUTE). It rises in when the fight starts and sits higher on touch screens. Narrow screens (<720 px) move the weapon strip under the health block.
 
-Settings (session-only LocalPlayer attributes): HUD size (`Setting_HudScale`), screen shake (`Setting_ScreenShake`, read by the combat client) and damage numbers (`Setting_DamageNumbers`; your own damage taken always shows).
+Settings (session-only LocalPlayer attributes): HUD size (`Setting_HudScale`), screen shake (`Setting_ScreenShake`, read by the combat client) and damage numbers (`Setting_DamageNumbers`; your own damage taken always shows). Kill board (`Setting_KillBoard`, default ON, 2026-10-10): OFF hides the in-run kill board (`KillBoard.luau`) at once. Saved with the profile like the others (SettingsSync -> ProfileAction SaveSettings).
 
 ## Studio lobby ⇄ arena testing and queue pads — September 27, 2026
 

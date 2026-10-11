@@ -699,8 +699,9 @@ end
 -- Local presentation settings, stored as LocalPlayer attributes. SettingsSync.client saves changes
 -- with the profile, and ProfileService sets them again when the next server loads it.
 -- Combat presentation reads Setting_ScreenShake and Setting_DamageNumbers; RogueliteSounds and
--- RogueliteMusic apply Setting_SfxVolume and Setting_MusicVolume (0-1) to their SoundGroups.
-T.SettingDefaults={VisualQuality='Auto',HudScale=1,ScreenShake=true,DamageNumbers=true,MusicVolume=1,SfxVolume=1}
+-- RogueliteMusic apply Setting_SfxVolume and Setting_MusicVolume (0-1) to their SoundGroups;
+-- KillBoard hides the in-run kill board while Setting_KillBoard is false.
+T.SettingDefaults={VisualQuality='Auto',HudScale=1,ScreenShake=true,DamageNumbers=true,KillBoard=true,MusicVolume=1,SfxVolume=1}
 function T.setting(key)
  local v=Players.LocalPlayer:GetAttribute('Setting_'..key)
  if v==nil then return T.SettingDefaults[key] end
@@ -742,7 +743,7 @@ function T.settingsWindow(screen,extras)
  local narrow=math.min(viewport.X,viewport.Y)<500
  local width=narrow and 320 or 520
  local stride=narrow and 130 or 84
- local win=T.window(screen,'SettingsWindow','Settings',width,100+(6+#extras)*stride,nil,{minScale=.9})
+ local win=T.window(screen,'SettingsWindow','Settings',width,100+(7+#extras)*stride,nil,{minScale=.9})
  local body=win.Body;local w=width-36
  local controlX=narrow and 14 or w*.5
  local controlW=narrow and w-28 or w*.5-6
@@ -761,25 +762,25 @@ function T.settingsWindow(screen,extras)
   for i,opt in {{'Small',.85},{'Normal',1},{'Large',1.15}} do
    T.button(body,'Scale'..opt[1],opt[1],controlX+(i-1)*controlW/3,y,controlW/3-6,52,function() T.setSetting('HudScale',opt[2]);draw() end,math.abs(current-opt[2])>.01).Caption.TextSize=18
   end
-  for i,opt in {{'ScreenShake','Screen shake','Camera shake when you take damage.'},{'DamageNumbers','Damage numbers','Numbers above enemies you hit.'}} do
+  for i,opt in {{'ScreenShake','Screen shake','Camera shake when you take damage.'},{'DamageNumbers','Damage numbers','Numbers above enemies you hit.'},{'KillBoard','Kill board',"Kills this run: yours and your party's."}} do
    y=row(i,opt[2],opt[3])
    local on=T.setting(opt[1])
    T.button(body,opt[1],on and 'ON' or 'OFF',controlX+controlW/2,y,controlW/2-6,52,function() T.setSetting(opt[1],not T.setting(opt[1]));draw() end,not on).Caption.TextSize=20
   end
   for i,opt in {{'MusicVolume','Music','Background music in runs.'},{'SfxVolume','Sound effects','Weapons, hits, pickups and menus.'}} do
-   y=row(2+i,opt[2],opt[3])
+   y=row(3+i,opt[2],opt[3])
    T.slider(body,opt[1],controlX,y,controlW,T.setting(opt[1]),function(v) T.setSetting(opt[1],v) end)
   end
-  y=row(5,'Visual quality','Auto adapts effects. Low also removes shadows.')
+  y=row(6,'Visual quality','Auto adapts effects. Low also removes shadows.')
   for i,mode in {'Auto','Low','Full'} do
    T.button(body,'Quality'..mode,mode,controlX+(i-1)*controlW/3,y,controlW/3-6,52,function() T.setSetting('VisualQuality',mode);draw() end,T.setting('VisualQuality')~=mode).Caption.TextSize=18
   end
   for i,extra in extras do
-   y=row(5+i,extra.title,extra.help)
+   y=row(6+i,extra.title,extra.help)
    local on=extra.get()
    T.button(body,extra.key,on and 'ON' or 'OFF',controlX+controlW/2,y,controlW/2-6,52,extra.toggle,not on).Caption.TextSize=20
   end
-  T.text(body,'Note','Settings are saved with your profile.',14,20+(6+#extras)*stride,w-28,20,14,T.Color.dim)
+  T.text(body,'Note','Settings are saved with your profile.',14,20+(7+#extras)*stride,w-28,20,14,T.Color.dim)
  end
  draw()
  win.Redraw=function() if win.Root.Parent then draw() end end

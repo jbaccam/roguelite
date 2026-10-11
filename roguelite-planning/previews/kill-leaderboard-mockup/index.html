@@ -45,8 +45,8 @@ p.note{font-family:'Source Sans 3',sans-serif;font-weight:700;color:var(--muted)
 </style>
 </head>
 <body>
-<h1>Kill board: in-run, 2+ players</h1>
-<p class="note">Rank, headshot, display name and kills for everyone in the run; your row is lime. PC and tablets: the left edge, under the health and XP block. When the chat window (keyboard screens move it to the centre left in a run) is in the way, it drops under the chat, else to the bottom-left corner. Phones: their lower left is the thumbstick, so a compact board (no names) sits on the right under the weapon strip, left of PAUSE / SETTINGS and above DASH. Toasts and the round 10 panel keep the top centre. Hidden solo, in the lobby and on the results screen; on phones up to ~670 px wide it also hides while the boss bar or a round 10 panel leaves no room. Pink outline = the board's rect.</p>
+<h1>Kill board: in-run, solo and party</h1>
+<p class="note">Rank, headshot, display name and kills for everyone in the run; your row is lime. PC and tablets: the left edge, under the health and XP block. When the chat window (keyboard screens move it to the centre left in a run) is in the way, it drops under the chat, else to the bottom-left corner. Phones: their lower left is the thumbstick, so a compact board (no names) sits on the right under the weapon strip, left of PAUSE / SETTINGS and above DASH. Toasts and the round 10 panel keep the top centre. Solo runs show one row (you). Hidden in the lobby, on the results screen, in the tutorial run (Eggbert's guide box needs the free edge spots) and when Settings &gt; Kill board is OFF; on phones up to ~670 px wide it also hides while the boss bar or a round 10 panel leaves no room. Pink outline = the board's rect.</p>
 <div class="controls" id="players"></div>
 <div class="controls" id="toggles"></div>
 <div class="screens" id="screens"></div>
@@ -102,7 +102,7 @@ function place(w,h,s,hud,n,compact){
 const PLAYERS=[{id:1,name:'xXSwarmSlayerXx',kills:214,col:'#e9a64b'},{id:2,name:'Jeremiah',kills:187,col:'#7fd0ff'},{id:3,name:'BaconHairBen',kills:187,col:'#f07aa0'},{id:4,name:'NoobMaster69',kills:96,col:'#b7e36b'}];
 const ME=2;
 function fmt(n){if(n>=1e6)return (Math.floor(n/1e5)/10+'M').replace('.0M','M');if(n>=1e4)return (Math.floor(n/100)/10+'K').replace('.0K','K');return n.toLocaleString('en-US')}
-function ranked(n){const list=PLAYERS.slice(0,n).map(p=>({...p}));
+function ranked(n){const list=(n===1?PLAYERS.filter(p=>p.id===ME):PLAYERS.slice(0,n)).map(p=>({...p}));
  list.sort((a,b)=>b.kills-a.kills||a.name.localeCompare(b.name));list.forEach((e,i)=>e.rank=i>0&&list[i-1].kills===e.kills?list[i-1].rank:i+1);return list}
 const el=(parent,cls,style,html)=>{const d=document.createElement('div');if(cls)d.className=cls;Object.assign(d.style,style||{});if(html!=null)d.innerHTML=html;parent.appendChild(d);return d};
 const px=v=>v+'px';
@@ -198,10 +198,10 @@ function render(){
  }
 }
 const pl=document.getElementById('players');
-[2,3,4].forEach(n=>{const b=document.createElement('button');b.textContent=n+' players';b.onclick=()=>{N=n;sync()};pl.appendChild(b)});
+[1,2,3,4].forEach(n=>{const b=document.createElement('button');b.textContent=n===1?'Solo':n+' players';b.onclick=()=>{N=n;sync()};pl.appendChild(b)});
 const tg=document.getElementById('toggles');const bossBtn=document.createElement('button');bossBtn.textContent='Boss bar';bossBtn.onclick=()=>{BOSS=!BOSS;sync()};tg.appendChild(bossBtn);
 const chatBtn=document.createElement('button');chatBtn.textContent='Chat window (PC)';chatBtn.onclick=()=>{CHAT=!CHAT;sync()};tg.appendChild(chatBtn);
-function sync(){[...pl.children].forEach((b,i)=>b.classList.toggle('on',i+2===N));bossBtn.classList.toggle('on',BOSS);chatBtn.classList.toggle('on',CHAT);render()}
+function sync(){[...pl.children].forEach((b,i)=>b.classList.toggle('on',i+1===N));bossBtn.classList.toggle('on',BOSS);chatBtn.classList.toggle('on',CHAT);render()}
 window.addEventListener('resize',render);document.fonts.ready.then(sync);sync();
 </script>
 </body>
