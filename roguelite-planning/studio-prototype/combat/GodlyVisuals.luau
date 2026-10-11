@@ -11,6 +11,7 @@
 -- Sandboxed like the combat client that requires it: no sounds here (RogueliteSounds plays them).
 local RunService=game:GetService('RunService')
 local Players=game:GetService('Players')
+local Debris=game:GetService('Debris')
 local Motion=require(script.Parent:WaitForChild('WeaponMotion'))
 local K=require(script.Parent:WaitForChild('VfxKit'))
 local V={}
@@ -53,13 +54,14 @@ local function emitter(parent,o)
  e.Enabled=o.enabled==true;e.Parent=parent
  return e
 end
--- One-shot burst at a point; the holder cleans itself up.
+-- One-shot burst at a point; the holder cleans itself up. Its cleanup is registered before the
+-- emitter is built, so a bad option can't strand the holder (2026-10-10).
 local function burst(folder,position,o,count)
  local holder=K.part(folder,'GodlyBurst',Vector3.one*.05,K.White,1)
+ K.animate((o.life1 or o.life or .6)+.15,function() end,function() holder:Destroy() end,'godlyBurst',60)
  holder.CFrame=CFrame.lookAt(position,position+(o.facing or Vector3.yAxis))
  local e=emitter(holder,o);e.EmissionDirection=Enum.NormalId.Front
  e:Emit(count or 10)
- K.animate((o.life1 or o.life or .6)+.15,function() end,function() holder:Destroy() end,'godlyBurst',60)
  return e
 end
 local function ground(position)
@@ -275,10 +277,14 @@ function V.mount(combat,folder,lookup,options)
  end
  local function rise(key,position,big,life)
   if not K.near(position,160) then return end
+  -- A repeated key would orphan the old wraith's model (nothing could reach it again).
+  local old=wraiths[key];if old then wraiths[key]=nil;old.model:Destroy() end
   local w=buildWraith(big)
   w.key=key;w.big=big;w.born=os.clock();w.position=position+Vector3.yAxis*1.5;w.velocity=Vector3.zero;w.yaw=math.random()*6.28
   w.ends=w.born+(life or 6)+.5
   w.model.Parent=folder;wraiths[key]=w
+  -- Backstop if the step loop ever stops: fades end at w.ends + .35 s, this is well after.
+  Debris:AddItem(w.model,w.ends-w.born+5)
   local floor=Vector3.new(position.X,ground(position)+.1,position.Z)
   -- Erupts from the corpse: soul smoke, a skull spray, a red ring and a flash.
   burst(folder,floor+Vector3.yAxis*.6,{texture=TEX.Smoke,flipbook=true,color=rgb(150,10,36),color2=rgb(20,0,6),size=seq(0,1.5,1,4.5),alpha=seq(0,.2,1,1),life=.7,life1=1,speed=2,speed1=5,spread=60,light=.4,influence=.4},8)
@@ -291,13 +297,15 @@ function V.mount(combat,folder,lookup,options)
   wraiths[key]=nil
   if w.smoke then w.smoke.Enabled=false end;if w.embers then w.embers.Enabled=false end
   local start=w.model:GetPivot()
-  if K.near(start.Position,160) then
-   burst(folder,start.Position,{texture=TEX.Smoke,flipbook=true,color=rgb(110,6,26),color2=rgb(14,0,4),size=seq(0,1.2,1,3.4),alpha=seq(0,.3,1,1),life=.6,speed=1.5,spread=180,light=.3,influence=.5},6)
-  end
+  -- The fade is registered before the smoke burst: the wraith is already out of `wraiths`, so
+  -- this is the only thing left that can remove its model (2026-10-10).
   K.animate(.35,function(t)
    for _,e in w.parts do e.part.Transparency=e.base+(1-e.base)*t end
    w.model:PivotTo(start*CFrame.new(0,t*1.2,0))
   end,function() w.model:Destroy() end,'wraithFade',24)
+  if K.near(start.Position,160) then
+   burst(folder,start.Position,{texture=TEX.Smoke,flipbook=true,color=rgb(110,6,26),color2=rgb(14,0,4),size=seq(0,1.2,1,3.4),alpha=seq(0,.3,1,1),life=.6,speed=1.5,spread=180,light=.3,influence=.5},6)
+  end
  end
  local function claw(key,npc)
   local w=wraiths[key];if not w then return end
@@ -587,14 +595,20 @@ function V.mount(combat,folder,lookup,options)
     K.animate(.16,function(t) ring.Size=Vector3.new(.08,.4+t*2.2,.4+t*2.2);ring.CFrame=CFrame.lookAt(muzzle,muzzle+look)*CFrame.Angles(0,math.pi/2,0);ring.Transparency=.1+.9*t end,function() ring:Destroy() end,'rayRing',24)
     K.flash(folder,muzzle,green,9,4,.15)
    end
+   -- A second `first` for a live id replaces its bolt: drop the old parts, or they'd be orphaned.
+   if b then b.core:Destroy();b.shell:Destroy() end
    local core=K.part(folder,'RayBolt',Vector3.new(.22,.22,1.3),hot,0,Enum.Material.Neon)
    local shell=K.part(folder,'RayBoltShell',Vector3.new(.5,.5,1.6),green,.45,Enum.Material.Neon)
+   -- Backstop if stepBolts ever stops (it drops a bolt 2 s after its last segment; BulletFlights
+   -- forgets a bullet after 10 s).
+   Debris:AddItem(core,14);Debris:AddItem(shell,14)
    K.trail(core,.45,.16,hot,green,.05,true)
    local light=Instance.new('PointLight');light.Color=green;light.Range=7;light.Brightness=3;light.Shadows=false;light.Parent=core
    -- Muzzle glow follows the weapon, but the bolt stays on the server's firing line.
    core.CFrame=CFrame.new(origin);shell.CFrame=core.CFrame
    b={core=core,shell=shell,from=origin,to=finish,t0=os.clock(),speed=math.max(20,projectileSpeed or 150)}
-   if projectileId then bolts[projectileId]=b end
+   -- Without an id the bolt is still tracked (keyed by itself), so stepBolts retires it.
+   bolts[projectileId or b]=b
   else
    b.from=b.core.Position;b.to=finish;b.t0=os.clock()
   end

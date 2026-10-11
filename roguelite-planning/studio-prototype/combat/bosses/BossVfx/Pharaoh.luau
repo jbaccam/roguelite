@@ -44,7 +44,7 @@ local function charge(ctx)
   local e=1-(1-math.clamp((age-begin)/.6,0,1))^2 -- the orb grows over 0.6 s from chargeStart
   if g then local s=.5+2.9*e+math.sin(age*32)*.14*e;g.Size=UDim2.fromScale(s,s) end
   light.Range=4+10*e;light.Brightness=.3+2.4*e;C.setGlow(eyes,Color3.fromRGB(225,255,255),e)
- end,function() C.setGlow(eyes,nil,0);core:Destroy();C.retire({spin},.9) end)
+ end,function() core:Destroy();C.retire({spin},.9);C.setGlow(eyes,nil,0) end) -- own parts first (2026-10-10)
 end
 local function boltImpact(ctx)
  local at,def=ctx.attack,ctx.def;local o=ctx.points(def.point,at.impact);if not C.near(o) then return end

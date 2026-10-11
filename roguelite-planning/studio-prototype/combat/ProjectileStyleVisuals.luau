@@ -4,6 +4,7 @@
 -- as one travelling head with its own trail. The server path, hits and damage
 -- are unchanged.
 local RunService=game:GetService('RunService')
+local Debris=game:GetService('Debris')
 local K=require(script.Parent:WaitForChild('VfxKit'))
 local V={}
 local ARCANE={core=Color3.fromRGB(226,246,255),glow=Color3.fromRGB(96,168,255),halo=Color3.fromRGB(150,112,246)}
@@ -188,7 +189,12 @@ function V.mount(folder,lookup)
  end
  local function finish(key,point,contact)
   local s=shots[key];if not s then return end
-  if s.style.impact and contact and s.near then s.style.impact(folder,point,s) end
+  -- Protected: an impact that threw used to skip the release below, leaving the head on screen
+  -- (and the step loop failing on it each frame until the 8 s cap) (2026-10-10).
+  if s.style.impact and contact and s.near then
+   local ok,err=pcall(s.style.impact,folder,point,s)
+   if not ok then warn('ProjectileStyleVisuals impact failed: '..tostring(err)) end
+  end
   if s.style.retract then
    -- Reel the disc back to its loop before restoring the resting yo-yo.
    s.retracting=os.clock();s.retractFrom=s.head or point
@@ -215,6 +221,7 @@ function V.mount(folder,lookup)
    local near=K.near(origin,160)
    local model,parts=nil,{}
    if near then model,parts=style.build(folder,v) end
+   if model then Debris:AddItem(model,12) end -- backstop if the step loop ever stops (it releases by 8 s)
    local launchPoint=origin
    if v and style.muzzle then launchPoint=style.muzzle(v) end
    s={id=id,style=style,model=model,parts=parts,visual=v,born=os.clock(),head=origin,

@@ -125,5 +125,26 @@ return function(newKit)
 		check(fresh.z1 == 1 and fresh.z2 == nil, "The fourth evicts only the oldest")
 		run(env, 2)
 	end
+
+	-- 7. The cleanup order modules follow (2026-10-10, check_vfx_cleanup_order.py): own parts are
+	-- destroyed first, then follow-ups start. A follow-up that throws after starting another effect
+	-- leaves nothing behind: the parts are gone, the started follow-up still retires once, and the
+	-- scheduler keeps running later effects.
+	do
+		local K, env = newKit()
+		local calls, done = tracker()
+		local parts = { alive = 3 }
+		K.animate(0.1, function() end, function()
+			parts.alive = 0 -- own parts first
+			K.animate(0.1, function() end, done("landing"), "landing", 4)
+			error("follow-up failed")
+		end, "slash", 4)
+		K.animate(0.5, function() end, done("later"), "swing", 8)
+		run(env, 1)
+		check(parts.alive == 0, "Own parts are destroyed even though the follow-up threw")
+		check(calls.landing == 1, "The follow-up started before the throw still retires once")
+		check(calls.later == 1, "Later effects still retire")
+		check(#env.warnings == 1 and not env.connected(), "One warning, and the scheduler stops when idle")
+	end
 	return { checks = checks }
 end

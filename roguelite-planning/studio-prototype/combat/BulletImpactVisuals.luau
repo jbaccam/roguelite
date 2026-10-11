@@ -1,5 +1,6 @@
 -- Only rows 2 and 4 of the supplied atlas; coordinates use its 1254px source.
 local RunService=game:GetService('RunService')
+local Debris=game:GetService('Debris')
 local V={}
 local atlas='rbxassetid://131707953627421'
 local rows={
@@ -34,6 +35,7 @@ function V.mount(visuals)
   anchor.Anchored=true;anchor.Transparency=1;anchor.CanCollide=false;anchor.CanTouch=false;anchor.CanQuery=false;anchor.CastShadow=false
   anchor.Position=position+(normal or Vector3.zero)*.07
   anchor:SetAttribute('AtlasRow',row);anchor:SetAttribute('Variant',variant);anchor.Parent=visuals
+  Debris:AddItem(anchor,2) -- backstop if the render loop ever stops (sprites live < 0.25 s)
   local gui=Instance.new('BillboardGui');gui.Name='ImpactSprite';gui.Adornee=anchor;gui.AlwaysOnTop=false;gui.LightInfluence=0;gui.MaxDistance=150;gui.Parent=anchor
   local picture=Instance.new('ImageLabel');picture.BackgroundTransparency=1;picture.Size=UDim2.fromScale(1,1);picture.ScaleType=Enum.ScaleType.Fit
   picture.Image=atlas;picture.Rotation=rng:NextNumber(-25,25)

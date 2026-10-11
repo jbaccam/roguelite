@@ -1,4 +1,5 @@
 local RunService=game:GetService('RunService')
+local Debris=game:GetService('Debris')
 local Tags=game:GetService('CollectionService')
 local C=game.ReplicatedStorage.RogueliteCombat
 local Roll=require(C.RolledShirtVisual)
@@ -49,6 +50,7 @@ function V.mount(folder)
   if not r then
    local count=0;for _ in flights do count+=1 end;if count>=24 then return end
    r={model=template:Clone(),born=now};r.model:SetAttribute('ProjectileId',key);r.model:SetAttribute('LaunchOrigin',origin);r.model.Parent=folder;flights[key]=r
+   Debris:AddItem(r.model,15) -- backstop if the render loop ever stops (BulletFlights ends a bullet by 10 s)
   end
   r.terminal=terminal;r.origin=origin;r.finish=finish;r.direction=(finish-origin).Unit;r.updated=now
   r.duration=math.clamp((finish-origin).Magnitude/(speed or 65),1/240,.1)

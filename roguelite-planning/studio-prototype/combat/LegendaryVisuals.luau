@@ -58,13 +58,14 @@ local function emitter(parent,o)
  e.Enabled=o.enabled==true;e.Parent=parent
  return e
 end
--- One-shot particle burst at a point; its holder cleans itself up.
+-- One-shot particle burst at a point; its holder cleans itself up. Its cleanup is registered
+-- before the emitter is built, so a bad option can't strand the holder (2026-10-10).
 local function burst(folder,position,o,count)
  local holder=K.part(folder,'LegendaryBurst',Vector3.one*.05,K.White,1)
+ K.animate((o.life1 or o.life or .6)+.15,function() end,function() holder:Destroy() end,'legendBurst',64)
  holder.CFrame=CFrame.lookAt(position,position+(o.facing or Vector3.yAxis))
  local e=emitter(holder,o);e.EmissionDirection=Enum.NormalId.Front
  e:Emit(count or 10)
- K.animate((o.life1 or o.life or .6)+.15,function() end,function() holder:Destroy() end,'legendBurst',64)
 end
 local function groundY(position)
  local exclude={}
@@ -321,9 +322,6 @@ function V.mount(combat,folder,lookup,options)
   local floor=groundY(start)
   local y=math.max(floor+.6,math.min(start.Y,floor+1.4))
   local scar=K.part(folder,'SlashScar',Vector3.new(beam and .28 or .18,.04,.1),beam and GOLD or HOT,1,Enum.Material.Neon)
-  K.flash(folder,start,beam and GOLD or HOT,beam and 13 or 8,beam and 3.2 or 2,.25)
-  burst(folder,start,{texture=TEX.Slash,color=K.White,color2=glowColor,size=seq(0,radius*.9,.4,radius*1.5,1,radius*1.7),alpha=seq(0,0,.6,.3,1,1),
-   life=.14,speed=0,spread=0,light=1,spin=0,facing=Vector3.yAxis:Cross(direction).Unit},1)
   local seen,limit={},{n=10}
   local from=Vector3.new(start.X,y,start.Z)
   local last=from
@@ -347,14 +345,19 @@ function V.mount(combat,folder,lookup,options)
     last=position
    end
   end,function()
+   -- Own parts first: a follow-up that throws must not strand the crescent (2026-10-10).
+   for _,s in list do s.glow:Destroy();s.body:Destroy();s.rim:Destroy() end
+   carrier:Destroy();scar:Destroy()
    local endAt=from+direction*reach
    if K.near(endAt,150) then
     K.shards(folder,endAt,glowColor,5,9,.32,.13)
     burst(folder,endAt,{texture=TEX.Star,color=K.White,color2=glowColor,size=seq(0,.6,1,0),alpha=seq(0,0,1,1),life=.28,speed=4,speed1=8,spread=180,light=1},7)
    end
-   for _,s in list do s.glow:Destroy();s.body:Destroy();s.rim:Destroy() end
-   carrier:Destroy();scar:Destroy()
   end,'legendSlash',10)
+  -- Launch flash and cut, started once the crescent's own cleanup is registered.
+  K.flash(folder,start,beam and GOLD or HOT,beam and 13 or 8,beam and 3.2 or 2,.25)
+  burst(folder,start,{texture=TEX.Slash,color=K.White,color2=glowColor,size=seq(0,radius*.9,.4,radius*1.5,1,radius*1.7),alpha=seq(0,0,.6,.3,1,1),
+   life=.14,speed=0,spread=0,light=1,spin=0,facing=Vector3.yAxis:Cross(direction).Unit},1)
  end
 
  -- Rolling Slice (Pizza Cutter, 2026-10-09) -------------------------------------------------------
@@ -385,10 +388,6 @@ function V.mount(combat,folder,lookup,options)
   local sparks=emitter(contact,{name='RollSparks',texture=TEX.Star,color=K.White,color2=TOMATO,size=seq(0,.28,1,0),alpha=seq(0,0,.7,.3,1,1),
    life=.2,life1=.35,speed=2,speed1=6,spread=40,rate=40,direction=Enum.NormalId.Back,light=1,enabled=true})
   local from=Vector3.new(start.X,floor0,start.Z)
-  K.flash(folder,from+Vector3.yAxis*radius,STEEL,8,2,.25)
-  burst(folder,from+Vector3.yAxis*radius,{texture=TEX.Slash,color=K.White,color2=TOMATO,size=seq(0,radius*1.2,.4,radius*1.9,1,radius*2.1),alpha=seq(0,0,.6,.3,1,1),
-   life=.14,speed=0,spread=0,light=1,spin=0,facing=Vector3.yAxis:Cross(direction).Unit},1)
-  dust(from+Vector3.yAxis*.3,1.1,2)
   local seen,limit={},{n=10}
   local last=from
   local hold=.3 -- the slice line lingers after the wheel is gone
@@ -435,17 +434,23 @@ function V.mount(combat,folder,lookup,options)
     last=ground
    end
   end,function()
+   -- Own parts first, then the landing follow-ups (2026-10-10).
+   disc:Destroy();hub:Destroy();contact:Destroy();core:Destroy();glow:Destroy()
+   for _,s in spokes do s:Destroy() end
+   for _,s in dashes do s:Destroy() end
+   for _,arc in arcs do for _,s in arc do s:Destroy() end end
    local endAt=Vector3.new(start.X,floor1,start.Z)+direction*reach
    if K.near(endAt,150) then
     K.shards(folder,endAt+Vector3.yAxis*.4,STEEL,5,9,.32,.13)
     burst(folder,endAt+Vector3.yAxis*radius,{texture=TEX.Star,color=K.White,color2=TOMATO,size=seq(0,.6,1,0),alpha=seq(0,0,1,1),life=.28,speed=4,speed1=8,spread=180,light=1},7)
     dust(endAt+Vector3.yAxis*.3,1,2)
    end
-   disc:Destroy();hub:Destroy();contact:Destroy();core:Destroy();glow:Destroy()
-   for _,s in spokes do s:Destroy() end
-   for _,s in dashes do s:Destroy() end
-   for _,arc in arcs do for _,s in arc do s:Destroy() end end
   end,'legendRoll',8)
+  -- Launch flash, cut and dust, started once the wheel's own cleanup is registered.
+  K.flash(folder,from+Vector3.yAxis*radius,STEEL,8,2,.25)
+  burst(folder,from+Vector3.yAxis*radius,{texture=TEX.Slash,color=K.White,color2=TOMATO,size=seq(0,radius*1.2,.4,radius*1.9,1,radius*2.1),alpha=seq(0,0,.6,.3,1,1),
+   life=.14,speed=0,spread=0,light=1,spin=0,facing=Vector3.yAxis:Cross(direction).Unit},1)
+  dust(from+Vector3.yAxis*.3,1.1,2)
  end
 
  -- Royal Flush (Deck of Cards) --------------------------------------------------------------------
@@ -508,10 +513,10 @@ function V.mount(combat,folder,lookup,options)
     c.card.CFrame=cf;c.edge.CFrame=cf*CFrame.new(0,-.03,0)
    end,function()
     local endAt=c.card.Position
+    c.card:Destroy();c.edge:Destroy() -- own parts before the follow-up burst (2026-10-10)
     if K.near(endAt,150) then
      burst(folder,endAt,{texture=TEX.Star,color=HOT,color2=GOLD,size=seq(0,.6,1,0),alpha=seq(0,0,1,1),life=.35,speed=3,speed1=7,spread=180,light=1},9)
     end
-    c.card:Destroy();c.edge:Destroy()
    end,'legendCard',12)
   end
  end
@@ -556,13 +561,14 @@ function V.mount(combat,folder,lookup,options)
  end
  local function split(ownerId,start,splitAt,t0,splitTime,minis,radius,spread)
   if not K.near(splitAt,180) then return end
-  local carrier=rocketBody(1)
   local look=(splitAt-start).Magnitude>.01 and (splitAt-start).Unit or -Vector3.zAxis
   local side=Vector3.yAxis:Cross(look);side=side.Magnitude>.01 and side.Unit or Vector3.xAxis
   local carryTime=math.max(.05,splitTime-t0)
   local lastPuff=0
-  -- The carrier flies to the split point, wobbling as it charges up.
+  -- The carrier flies to the split point, wobbling as it charges up. Built just before its
+  -- K.animate, so nothing between can strand it (2026-10-10).
   local now0=workspace:GetServerTimeNow()
+  local carrier=rocketBody(1)
   K.animate(math.max(.05,splitTime-now0),function(_,age)
    local f=math.clamp((workspace:GetServerTimeNow()-t0)/carryTime,0,1)
    local position=start:Lerp(splitAt,f)+side*math.sin(age*40)*.06*f
@@ -579,11 +585,11 @@ function V.mount(combat,folder,lookup,options)
    for i=1,3 do K.cloud(folder,splitAt+side*(i-2)*.6,rgb(230,224,216),.8,.6,Vector3.yAxis*.8,.35) end
    for i,m in minis do
     local arrive,at,npc=m[1],m[2],m[3] -- the enemy last: it may not exist on this client
-    local r=rocketBody(.55)
     local offset=side*spread*.18*(i-(#minis+1)/2)+Vector3.yAxis*(2.2+math.random())
     local control=splitAt+look*3+offset
     local lastP=splitAt;local lastSmoke=0
     local flight=math.max(.05,arrive-splitTime)
+    local r=rocketBody(.55) -- built just before its K.animate (2026-10-10)
     K.animate(math.max(.05,arrive-workspace:GetServerTimeNow()),function(_,age)
      local f=math.clamp((workspace:GetServerTimeNow()-splitTime)/flight,0,1)
      local root=npcRoot(npc);local goal=root and root.Position or at
@@ -695,13 +701,13 @@ function V.mount(combat,folder,lookup,options)
      f:draw(from,ground+Vector3.new(rng:NextNumber()-.5,0,rng:NextNumber()-.5)*radius*1.4,.9,rng)
     end
    end
-   draw()
    local redraws=0
    K.animate(.42,function(t)
     if t>.18*(redraws+1) and redraws<2 then redraws+=1;draw() end
     local a=smooth((t-.35)/.65)
     main:fade(a);for _,f in forks do f:fade(math.min(1,a+.2)) end
    end,function() main:destroy();for _,f in forks do f:destroy() end end,'legendBolt',6)
+   draw() -- after its cleanup is registered, so a bad draw can't strand bolt segments (2026-10-10)
    K.flash(folder,ground+Vector3.yAxis*6,BOLT,radius*3.5,9,.45)
    K.pop(folder,ground+Vector3.yAxis*.4,rgb(196,230,255),.6,radius*.9,.25,.2)
    groundRing(Vector3.new(ground.X,y+.08,ground.Z),SKY,.6,radius*1.1,.4,.05)

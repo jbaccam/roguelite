@@ -36,6 +36,7 @@ function V.mount(combat, visuals, options)
 	smokeFolder.Parent = visuals
 	local puffs = {}
 	local spacing, lifetime, maxPuffs = 0.75, 1.15, 144
+	local MaxFlight = 30 -- seconds; no rocket flies this long
 	local rocketLength = template:GetAttribute("Length")
 	-- Different silhouettes: tall billow, wide bank, diagonal plume, rounded
 	-- cluster, trailing beads, and a small split cloud. Each smoothly contracts.
@@ -60,6 +61,8 @@ function V.mount(combat, visuals, options)
 		model.Name = "SmokeCloud"
 		model:SetAttribute("BornAt", born)
 		model.Parent = smokeFolder
+		-- Backstop if step ever stops; step removes it after `lifetime`.
+		Debris:AddItem(model, lifetime + 3)
 		local width = 0.83 + (seed % 3) * 0.025
 		local variant = seed % #shapes + 1
 		model:SetAttribute("Variant", variant)
@@ -109,10 +112,14 @@ function V.mount(combat, visuals, options)
 			r.nextSmoke = r.length
 		elseif action == "Launch" then
 			Explosion.warm()
+			-- A repeated id would orphan the earlier rocket's model.
+			remove(id)
 			local model = template:Clone()
 			model.Name = "FlyingRPG_" .. id
 			model:ScaleTo(template:GetScale() * (projectileScale or 1))
 			model.Parent = visuals
+			-- Backstop if step ever stops (step drops a rocket past its range or after MaxFlight).
+			Debris:AddItem(model, MaxFlight + 5)
 			local speed = velocity.Magnitude
 			local age = math.max(0, workspace:GetServerTimeNow() - started)
 			local r = {
@@ -145,7 +152,9 @@ function V.mount(combat, visuals, options)
 		for id, r in active do
 			local age = math.max(0, now - r.started)
 			local distance = age * r.velocity.Magnitude
-			if distance > r.range + 10 then
+			-- MaxFlight: a zero or tiny velocity never reaches the range, and a lost Impact/Remove
+			-- would otherwise leave the rocket hanging for the rest of the run (2026-10-10).
+			if distance > r.range + 10 or age > MaxFlight then
 				remove(id)
 			else
 				local traveled = math.min(distance, r.range)

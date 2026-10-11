@@ -1,5 +1,6 @@
 local RunService=game:GetService('RunService')
 local Players=game:GetService('Players')
+local Debris=game:GetService('Debris')
 local Motion=require(script.Parent.ArcMotion)
 local Pandora=require(script.Parent.PandoraVisuals)
 local K=require(script.Parent.VfxKit)
@@ -28,6 +29,7 @@ function A.mount(combat,folder,lookup)
   end
   if action~='Launch' then return end
   if a[2]~=Players.LocalPlayer.UserId and not K.near(a[5],150) then return end
+  if active[id] then remove(id) end -- a repeated id would orphan the earlier card's model
   active[id]={weapon=a[1],owner=a[2],slot=a[3],index=a[4],origin=a[5],finish=a[6],started=a[7],duration=a[8],side=a[9],height=a[10],target=a[11],bend=a[12]}
  end)
  RunService.RenderStepped:Connect(function()
@@ -63,6 +65,7 @@ function A.mount(combat,folder,lookup)
      if card then K.trail(card,.22,.14,K.White,K.White,.55) end
     end
     r.model.Parent=folder
+    Debris:AddItem(r.model,30) -- backstop if this loop ever stops (it removes a card 1 s after landing)
     rendered+=1
    end
    local t=math.clamp((now-r.started)/r.duration,0,1)

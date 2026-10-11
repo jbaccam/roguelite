@@ -1,6 +1,7 @@
 -- Supplied transparent artwork, cropped at display time; no image pixels edited.
 -- Roblox serves these uploaded 1254px atlases at 1024px texture resolution.
 local RunService=game:GetService('RunService')
+local Debris=game:GetService('Debris')
 local V={}
 local smallAtlas='rbxassetid://99550847281506'
 local largeAtlas='rbxassetid://120401440349556'
@@ -13,6 +14,7 @@ function V.mount(visuals)
   anchor.Size=Vector3.one*.05;anchor.Transparency=1;anchor.Anchored=true
   anchor.CanCollide=false;anchor.CanTouch=false;anchor.CanQuery=false;anchor.CastShadow=false
   anchor.Position=position;anchor.Parent=visuals
+  Debris:AddItem(anchor,delay+duration+2) -- backstop if the render loop ever stops
   local gui=Instance.new('BillboardGui');gui.Name='ExplosionSprite';gui.Adornee=anchor
   gui.AlwaysOnTop=false;gui.LightInfluence=0;gui.MaxDistance=150;gui.Size=UDim2.fromOffset(1,1);gui.Parent=anchor
   local picture=Instance.new('ImageLabel');picture.BackgroundTransparency=1;picture.Size=UDim2.fromScale(1,1)

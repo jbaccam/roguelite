@@ -3,6 +3,7 @@
 local Run = game:GetService("RunService")
 local Assets = game:GetService("AssetService")
 local Http = game:GetService("HttpService")
+local Debris = game:GetService("Debris")
 local M = {}
 local data, records, templates = nil, {}, {}
 local keepAlive = {}
@@ -162,6 +163,10 @@ function M.mount(visuals, options)
 		folder.Name = "CartoonRocket3D_Burst"
 		folder.Parent = visuals
 		local entry = { folder = folder, began = os.clock(), origin = CFrame.new(origin), scale = scale, objects = {} }
+		-- Tracked before its parts are cloned, so a failed clone can't strand the folder; Debris is
+		-- the backstop if the render loop ever stops (it ends a burst after 75 frames, ~1.2 s).
+		table.insert(active, entry)
+		Debris:AddItem(folder, 5)
 		for _, r in records do
 			local t = templates[r.template]
 			local part = t.part:Clone()
@@ -171,7 +176,6 @@ function M.mount(visuals, options)
 			part.Parent = folder
 			table.insert(entry.objects, { record = r, part = part, size = t.size })
 		end
-		table.insert(active, entry)
 	end
 	local connection
 	connection = Run.RenderStepped:Connect(function()
