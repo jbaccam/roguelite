@@ -102,6 +102,14 @@ function Service.frozen(player)
  local held=combat:GetAttribute('RunPaused')==true or (combat:GetAttribute('CinematicUntil') or 0)>workspace:GetServerTimeNow()
  return held and player:GetAttribute('LobbyPreviewActive')~=true
 end
+-- Boss arrival i-frames (CharacterStats.BossArrival): BossService.spawn and MapBossService.spawn (wave
+-- bosses, round 10 leaders and extra Wardens, admin bosses) call this once the boss is placed, after
+-- any entrance set CinematicUntil. contact blocks every hit to every player until BossGraceUntil
+-- (server time, on RogueliteCombat, so a player revived inside the window is covered too).
+function Service.bossArrived()
+ if not Stats.bossGraceUntil then return end -- an older CharacterStats in this place
+ combat:SetAttribute('BossGraceUntil',Stats.bossGraceUntil(workspace:GetServerTimeNow(),combat:GetAttribute('CinematicUntil'),combat:GetAttribute('BossGraceUntil')))
+end
 -- The air bonus is the player's own client's to apply (RogueliteCombat.client), from the GroundSpeed
 -- and AirSpeed set here: the server hears about a jump ~0.2 s late and its WalkSpeed change takes as
 -- long to get back, so when it switched the speed itself the bonus missed most of a 0.7 s jump.
@@ -266,6 +274,9 @@ function Service.contact(player,amount,roll,attacker)
  -- that window misses, so dashing through a swing or a crowd is safe.
  local dashAt=player:GetAttribute('DashAt')
  if type(dashAt)=='number' and Stats.Dash and workspace:GetServerTimeNow()-dashAt<(Stats.Dash.IFrames or 0) then return 0 end
+ -- Boss arrival i-frames (Service.bossArrived): 1.5 s after a boss comes in, or after its entrance.
+ local graceUntil=combat:GetAttribute('BossGraceUntil')
+ if type(graceUntil)=='number' and workspace:GetServerTimeNow()<graceUntil then return 0 end
  -- A pet shell shield (Turtle) blocks the next hit first, then pops.
  if Service.hasPetShield(player) then
   s.petShield=0;s.petShieldUntil=0;player:SetAttribute('PetShieldUntil',nil)

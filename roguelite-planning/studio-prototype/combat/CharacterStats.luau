@@ -16,6 +16,18 @@ S.Movement={Gravity=150,JumpHeight=9.5,AirSpeedMultiplier=1.45}
 -- long after the server approves the dash (DashAt). 0.35 s covers the 0.3 s burst plus the request's
 -- trip to the server; one dash every 3 s makes that about 12% of the time at most.
 S.Dash={Peak=280,Ease=3,Seconds=.3,Cooldown=3,Distance=28,Allowance=30,IFrames=.35}
+-- Boss arrival i-frames (friends' play-test, 2026-10-10: "Invincibility frames for a second or two
+-- after a boss spawns would be nice; Mason got frame-oned a couple times"): no player in the run takes
+-- damage from any source until IFrames s after a boss comes in (CharacterService.bossArrived, called
+-- by every boss spawn). An entrance holds everyone (CinematicUntil) and lets the boss and every mob go
+-- in the same frame, so the window counts from the end of that hold. Example: the Hammer Brute's 5.45 s
+-- sky drop starts at 100 s: no damage until 106.95 s. An admin boss with no entrance at 100 s: 101.5 s.
+-- A second boss in the window only ever extends it.
+S.BossArrival={IFrames=1.5}
+function S.bossGraceUntil(now,cinematicUntil,current)
+ local from=math.max(now,tonumber(cinematicUntil) or 0)
+ return math.max(tonumber(current) or 0,from+S.BossArrival.IFrames)
+end
 -- Dash is a class ability, never granted by selecting/equipping a melee weapon.
 -- Brawler is the current melee-focused class; mixed/ranged classes do not gain it.
 function S.dashes(class) return class=='Brawler' end
@@ -36,7 +48,7 @@ stat('LifeStealCap','Life steal cap',10,0,50,2,' HP/s','Recovery','Maximum life-
 stat('Recovery','Recovery',0,-80,200,10,'%','Recovery','Multiplies regeneration, life steal and health-pickup healing.')
 stat('MoveSpeed','Movement speed',24,6,40,2,' studs/s','Utility','Actual Humanoid WalkSpeed.')
 stat('PickupRadius','Pickup radius',8,1,50,2,' studs','Utility','Distance at which crystals start pulling toward you. Collect them for shards and run XP.')
-stat('Luck','Luck',0,0,100,10,'','Utility','Improves higher-tier shop odds within rarity caps, and health-drop chance. Does not weight weapons.')
+stat('Luck','Luck',0,0,100,10,'','Utility','Better tier odds for shop offers and level-up cards (Tier II-IV chances up to x2 at 100), rarer shop weapons, more heart drops.')
 stat('MeleeDamage','Melee damage',0,-80,300,10,'%','Offense','Bonus to close-range attacks.')
 stat('RangedDamage','Ranged damage',0,-80,300,10,'%','Offense','Bonus to projectile attacks, including thrown weapons.')
 stat('ElementalDamage','Elemental damage',0,-80,300,10,'%','Offense','Bonus to Elemental-tagged hits and status damage.')

@@ -289,5 +289,40 @@ return function(R)
 		end
 	end
 	check(not any, "Everyone down: no hold is possible (the last stand and paid revive are unchanged)")
+
+	-- The revive shove (shovePlan / shoveEase), with MonetizationConfig's 14 / 13 / 4.
+	if R.shovePlan then
+		local function near(a, b)
+			return math.abs(a - b) < 1e-6
+		end
+		local spot = Vector3.new(100, 3, -40)
+		local mobs = {
+			{ name = "close", position = spot + Vector3.new(2, 0, 0) },
+			{ name = "mid", position = spot + Vector3.new(0, -2, 10) }, -- lower ground: flat distance counts
+			{ name = "edge", position = spot + Vector3.new(-13.5, 0, 0) },
+			{ name = "far", position = spot + Vector3.new(15, 0, 0) },
+			{ name = "onTop1", position = spot },
+			{ name = "onTop2", position = spot + Vector3.new(0, 1, 0) },
+		}
+		local plans = R.shovePlan(spot, mobs, 14, 13, 4)
+		local by = {}
+		for _, plan in plans do
+			by[plan.mob.name] = plan
+		end
+		check(#plans == 5 and by.far == nil, "Only enemies within 14 studs (flat) are shoved")
+		check(near(by.close.distance, 11) and near(by.close.direction.X, 1), "2 studs off: shoved 11 straight out, to 13")
+		check(near(by.mid.distance, 4) and near(by.mid.direction.Z, 1) and near(by.mid.direction.Y, 0), "10 off: the 4-stud minimum, flat, to 14")
+		check(near(by.edge.distance, 4) and near(by.edge.direction.X, -1), "13.5 off: still the minimum, away from the spot")
+		for _, plan in plans do
+			local d = plan.direction
+			local landed = Vector3.new(plan.mob.position.X - spot.X, 0, plan.mob.position.Z - spot.Z) + d * plan.distance
+			check(near(d.Magnitude, 1) and d.Y == 0, plan.mob.name .. ": a flat unit direction")
+			check(landed.Magnitude >= 13 - 1e-6 and landed.Magnitude <= 18, plan.mob.name .. ": lands 13-18 studs from the spot")
+		end
+		check(near(by.onTop1.distance, 13) and by.onTop1.direction:Dot(by.onTop2.direction) < 0.99, "A pile on the spot fans out, not all one way")
+		check(#R.shovePlan(spot, {}, 14, 13, 4) == 0, "Nobody near: no shove")
+		check(R.shoveEase(0) == 0 and R.shoveEase(1) == 1 and R.shoveEase(2) == 1 and R.shoveEase(-1) == 0, "The shove starts at 0 and ends at its full distance")
+		check(R.shoveEase(1 / 3) > 0.7 and R.shoveEase(0.5) > R.shoveEase(1 / 3), "Most of the shove lands at once (an ease-out), and it only moves outward")
+	end
 	return checks
 end

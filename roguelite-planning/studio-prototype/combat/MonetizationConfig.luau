@@ -87,8 +87,15 @@ function M.reviveKey(n) return 'Revive'..math.clamp(math.floor(tonumber(n) or 1)
 function M.isRevive(key) local p=type(key)=='string' and M.Products[key];return p and p.revive~=nil or false end
 M.ReviveHealth=.5
 M.ReviveInvulnerableSeconds=3
-M.RevivePushRadius=22
-M.RevivePushDistance=14
+-- The revive shove (RogueliteMeta's rise, TeammateRevive.shovePlan; dev 2026-10-10: "a knockback on
+-- mobs, not an explosion ... to move the mobs out of the way after a resurrection"): every regular
+-- enemy within Radius of the spot slides straight out over Seconds (an ease-out, no damage) to at
+-- least Distance studs away, and always at least Min. Bosses and round 10 objectives stay put.
+-- Example: a zombie 2 studs off ends 13 out (11 studs); one 10 off ends 14 out; one 15 off isn't moved.
+M.RevivePushRadius=14
+M.RevivePushDistance=13
+M.RevivePushMin=4
+M.RevivePushSeconds=.25
 
 -- Daily deals: 5 slots, new every UTC day. Slot 1 is always free.
 M.DailyDealSlots=5

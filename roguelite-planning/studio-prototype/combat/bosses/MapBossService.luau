@@ -706,6 +706,9 @@ function M.spawn(id,cf,practice,opts)
  end)
  h.Died:Connect(function() Death.finish(npc) end)
  Tags:AddTag(npc,'RogueliteZombie');Tags:AddTag(npc,'MapBoss')
+ -- Boss arrival i-frames for the whole run (CharacterStats.BossArrival), after any entrance above
+ -- (a round 10 leader's eventIntro ends with the event's cinematic).
+ if Characters.bossArrived then pcall(Characters.bossArrived) end
  return npc
 end
 local lastPracticeRequest=-math.huge

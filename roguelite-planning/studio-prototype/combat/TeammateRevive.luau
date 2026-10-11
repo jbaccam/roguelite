@@ -160,4 +160,25 @@ function R.new(opts)
  end
  return o
 end
+
+-- The revive shove (any rise: paid, teammate, Phoenix, wave's end; RogueliteMeta's rise drives it,
+-- numbers in MonetizationConfig.RevivePush*). Plain values, so TeammateReviveTests checks it: `mobs` is
+-- a list of tables with a `position`; each one within `radius` of `at` (flat) gets {mob, direction
+-- (flat unit, straight away from the spot), distance} that leaves it at least `clear` out and moves it
+-- at least `min`. Example (14, 13, 4): 2 studs off moves 11 to 13; 10 off moves 4 to 14; 15 off stays.
+-- A pile right on the spot fans out around it (golden-angle turns by list order), never all one way.
+function R.shovePlan(at,mobs,radius,clear,min)
+ local plans={}
+ for i,mob in mobs do
+  local offset=Vector3.new(mob.position.X-at.X,0,mob.position.Z-at.Z);local d=offset.Magnitude
+  if d<radius then
+   local direction=d>.1 and offset/d or Vector3.new(math.cos(i*2.39996),0,math.sin(i*2.39996))
+   table.insert(plans,{mob=mob,direction=direction,distance=math.max(min,clear-d)})
+  end
+ end
+ return plans
+end
+-- How much of a shove is done at u (0..1 of its time): an ease-out cubic, so it reads as a knock,
+-- not a slide. Example: 0.25 s, 11 studs: 7.7 studs in the first 0.08 s, the last 0.4 in the final 0.08.
+function R.shoveEase(u) u=math.clamp(u,0,1);return 1-(1-u)^3 end
 return R

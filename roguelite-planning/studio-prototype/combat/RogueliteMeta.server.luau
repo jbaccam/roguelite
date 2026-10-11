@@ -366,6 +366,46 @@ local respawn=SSS:WaitForChild('AvatarNormalizer'):WaitForChild('RespawnPlayer')
 -- No limit per run; each revive costs more (Config.reviveKey).
 local rising={}
 local function canRevive(p) return down[p]~=nil and not rising[p] and not p:GetAttribute('RunReturning') end
+-- The revive shove (TeammateRevive.shovePlan, MonetizationConfig.RevivePush*): regular enemies near the
+-- spot slide straight out over RevivePushSeconds, no damage. It was a 14-stud teleport of everything
+-- within 22, bosses and round 10 tombs included (dev 2026-10-10: "a knockback on mobs, not an
+-- explosion"). Each Heartbeat adds that frame's share to where the body is now, so the chase's steering
+-- (Humanoid:Move) and crowd separation keep running underneath. Weapon knockback (CombatEffectsService:
+-- an impulse of at most 40 studs/s) moves a walking mob only a couple of studs, too little to clear a
+-- spot. Bosses (they never trip or take shoves), anchored bodies (a boss mid-attack, tombs, coffins),
+-- event objectives, event-driven rushers and lobby dummies stay put. A wall stops a shove at the wall.
+local function shoveAway(at)
+ if not TeammateRevive.shovePlan then return end -- an older TeammateRevive in this place
+ local mobs={}
+ for _,npc in Tags:GetTagged('RogueliteZombie') do
+  local root=npc:IsA('Model') and npc.PrimaryPart
+  local h=root and npc:FindFirstChildOfClass('Humanoid')
+  if h and h.Health>0 and not root.Anchored and npc:IsDescendantOf(workspace) and not npc:GetAttribute('IsBoss') and not npc:GetAttribute('EventObjective')
+   and not npc:GetAttribute('EventControlled') and not npc:GetAttribute('LobbyDummy') then
+   table.insert(mobs,{npc=npc,root=root,position=root.Position})
+  end
+ end
+ local plans=TeammateRevive.shovePlan(at,mobs,Config.RevivePushRadius,Config.RevivePushDistance,Config.RevivePushMin or 4)
+ if #plans==0 then return end
+ local ignore={};for _,q in Players:GetPlayers() do if q.Character then table.insert(ignore,q.Character) end end
+ local enemies=workspace:FindFirstChild('RogueliteEnemies');if enemies then table.insert(ignore,enemies) end
+ local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances=ignore;params.RespectCanCollide=true
+ for _,plan in plans do
+  local body=math.max(1,plan.mob.root.Size.X*.5)
+  local wall=workspace:Raycast(plan.mob.position,plan.direction*(plan.distance+body),params)
+  if wall then plan.distance=math.max(0,(wall.Position-plan.mob.position).Magnitude-body) end
+  plan.done=0
+ end
+ local seconds=Config.RevivePushSeconds or .25;local started=os.clock();local connection
+ connection=RunService.Heartbeat:Connect(function()
+  local u=math.min(1,(os.clock()-started)/seconds);local share=TeammateRevive.shoveEase(u)
+  for _,plan in plans do
+   local npc=plan.mob.npc;local step=plan.distance*share-plan.done
+   if step>0 and npc.Parent and not plan.mob.root.Anchored then plan.done+=step;npc:PivotTo(npc:GetPivot()+plan.direction*step) end
+  end
+  if u>=1 then connection:Disconnect() end
+ end)
+end
 -- Respawn at `at` with `health` (fraction of max), a short shield and nearby zombies pushed back.
 -- beforePush(root) runs once the body is placed (the Phoenix blast), before the push.
 rise=function(p,at,health,beforePush)
@@ -397,16 +437,8 @@ rise=function(p,at,health,beforePush)
   local shield=Instance.new('ForceField');shield.Name='ReviveShield';shield.Parent=character
   task.delay(Config.ReviveInvulnerableSeconds,function() if shield.Parent then shield:Destroy() end end)
   if beforePush then beforePush(root) end
-  for _,npc in Tags:GetTagged('RogueliteZombie') do
-   local part=npc:IsA('Model') and npc.PrimaryPart
-   if part and npc:IsDescendantOf(workspace) and not npc:GetAttribute('LobbyDummy') then
-    local offset=part.Position-at;offset=Vector3.new(offset.X,0,offset.Z)
-    if offset.Magnitude<Config.RevivePushRadius then
-     local dir=offset.Magnitude>.1 and offset.Unit or Vector3.new(1,0,0)
-     npc:PivotTo(npc:GetPivot()+dir*Config.RevivePushDistance)
-    end
-   end
-  end
+  -- Never fails the rise: the body is already up, so a shove error only warns.
+  local shoved,why=pcall(shoveAway,at);if not shoved then warn('Revive shove failed: '..tostring(why)) end
   clearDown(p);p:SetAttribute('HoldRespawn',false);succeeded=true
   local state=Shop.states[p]
   if state then state.ready=false;state.revision+=1;Shop.prepareUpgrades(p);Shop.publish(p,'Back on your feet · choose upgrades and shop') end

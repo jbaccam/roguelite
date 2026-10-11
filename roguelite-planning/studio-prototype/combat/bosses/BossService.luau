@@ -265,6 +265,8 @@ function B.spawn(cf,practice)
  end)
  h.Died:Connect(function() Death.finish(npc) end)
  Tags:AddTag(npc,'RogueliteZombie');Tags:AddTag(npc,'HammerBoss')
+ -- Boss arrival i-frames for the whole run (CharacterStats.BossArrival), after the entrance above.
+ if Characters.bossArrived then pcall(Characters.bossArrived) end
  return npc
 end
 local function damage(npc,s,time)
