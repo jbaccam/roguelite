@@ -420,6 +420,42 @@ local function bodyFloor(cf)
  for _,o in {{-3.8,-3},{3.8,-3},{-3.8,3},{3.8,3}} do local p=ground((cf*CFrame.new(o[1],0,o[2])).Position);if p then y=math.min(y,p.Y) end end
  return math.max(y,cf.Y-BODY_SINK)-.05
 end
+-- 2026-10-10 user: "you can stand on top of the coffins ... mobs can't hit you up there". Each tomb
+-- gets an invisible pillar over the stone's footprint, NO_CLIMB_HEIGHT studs up from its base, in
+-- the place's player-only group (ArenaHeightBarrier, the arenas' PlayerHeightBarrier ceiling: players
+-- collide with it; the ground, mobs and the Warden never do). Players bump into the coffin where they
+-- did and can't land on it or in its cavity; the Warden's Emerge and the skeletons' exits are
+-- unchanged (they never touch the group). Unqueryable: shots, hits, the camera and ground checks
+-- pass through. Example: the 8.3 x 6.6 stone gets an 8.3 x 40 x 6.6 pillar, gone when the tomb falls.
+local NO_CLIMB_GROUP,NO_CLIMB_HEIGHT='ArenaHeightBarrier',40
+local function playerOnlyGroup()
+ local Physics=game:GetService('PhysicsService')
+ if not Physics:IsCollisionGroupRegistered(NO_CLIMB_GROUP) then
+  -- A place without the barrier's group: make it (players only). Never fall back to Default, which
+  -- would fill tomb A's cavity for the Warden too.
+  local ok=pcall(function()
+   Physics:RegisterCollisionGroup(NO_CLIMB_GROUP)
+   for _,g in {'Default','RogueliteZombies',NO_CLIMB_GROUP} do if Physics:IsCollisionGroupRegistered(g) then Physics:CollisionGroupSetCollidable(NO_CLIMB_GROUP,g,false) end end
+  end)
+  if not ok then return nil end
+ end
+ return NO_CLIMB_GROUP
+end
+local function noClimb(E,model,cf)
+ local body=model:FindFirstChild('Sarcophagus_Body',true);local group=playerOnlyGroup()
+ if not body or not group or not E.anchor then return nil end
+ local folder=E.anchor:FindFirstChild('NoClimb')
+ if not folder then folder=Instance.new('Folder');folder.Name='NoClimb';folder.Parent=E.anchor end
+ -- The body's box in the tomb's (yaw-only) frame: its footprint, base at cf.
+ local rel=cf:ToObjectSpace(body.CFrame);local s=body.Size
+ local hx=math.abs(rel.RightVector.X)*s.X/2+math.abs(rel.UpVector.X)*s.Y/2+math.abs(rel.LookVector.X)*s.Z/2
+ local hz=math.abs(rel.RightVector.Z)*s.X/2+math.abs(rel.UpVector.Z)*s.Y/2+math.abs(rel.LookVector.Z)*s.Z/2
+ local p=Instance.new('Part');p.Name='NoClimb_'..model.Name
+ p.Size=Vector3.new(hx*2,NO_CLIMB_HEIGHT,hz*2);p.CFrame=cf*CFrame.new(rel.X,NO_CLIMB_HEIGHT/2,rel.Z)
+ p.Anchored=true;p.CanCollide=true;p.CanQuery=false;p.CanTouch=false;p.CastShadow=false;p.Transparency=1
+ p.CollisionGroup=group;p.Parent=folder
+ return p
+end
 local function buildTomb(E,index,cf,health)
  local props=ServerStorage:FindFirstChild('Round10Props');local source=props and props:FindFirstChild('Sarcophagus')
  if not source then return nil end
@@ -468,7 +504,7 @@ local function buildTomb(E,index,cf,health)
  Tags:AddTag(model,'RogueliteZombie');Tags:AddTag(model,'Round10Tomb')
  -- MobCollision puts tagged bodies in the walk-through group; a coffin stays solid stone.
  task.defer(function() for _,p in model:GetDescendants() do if p:IsA('BasePart') and p.CanCollide then p.CollisionGroup='Default' end end end)
- return model
+ return model,noClimb(E,model,cf)
 end
 local function breakTomb(E,t,position,cf)
  local props=ServerStorage:FindFirstChild('Round10Props');local kit=props and props:FindFirstChild('SarcophagusBroken')
@@ -536,9 +572,9 @@ EVENTS.TombOpens={
    if spot then
     table.insert(placed,spot)
     local cf=CFrame.lookAt(spot,Vector3.new(center.X,spot.Y,center.Z))
-    local model=buildTomb(E,i,cf,math.ceil(spec.health*hpScale))
+    local model,pillar=buildTomb(E,i,cf,math.ceil(spec.health*hpScale))
     if model then
-     local T={model=model,letter=LETTERS[i],alive=true,cf=cf,exit=cf*CFrame.new(0,0,-4.2),index=i,nextPulse=0,bursts=0}
+     local T={model=model,letter=LETTERS[i],alive=true,cf=cf,exit=cf*CFrame.new(0,0,-4.2),index=i,nextPulse=0,bursts=0,noClimb=pillar}
      table.insert(E.tombs,T)
      local v=Instance.new('ObjectValue');v.Name='Tomb'..LETTERS[i];v.Value=model;v.Parent=E.anchor
      local h=model:FindFirstChildOfClass('Humanoid')
@@ -549,6 +585,7 @@ EVENTS.TombOpens={
      T.down=function()
       if E.gen~=generation or not T.alive then return end
       T.alive=false;if model.Parent then model:SetAttribute('BurstAt',nil) end;breakTomb(E,now(),cf.Position,cf);status(E)
+      if T.noClimb then T.noClimb:Destroy();T.noClimb=nil end -- the ruins don't collide: nothing left to climb
      end
      h.Died:Connect(T.down)
      h.HealthChanged:Connect(function(hp) if E.gen==generation then E.statusDirty=true;if hp<=0 then T.down() end end end)
