@@ -666,7 +666,9 @@ function M.spawn(id,cf,practice,opts)
  -- The tutorial's boss (TutorialDirector sets TutorialBossHealth): that fixed health, no scaling,
  -- and the def.tutorial variant (s.tutorial: its order, no enrage or follow-ups).
  local fixed=not practice and combat:GetAttribute('TutorialBossHealth');local tutorial=type(fixed)=='number'
- h.MaxHealth=tutorial and fixed or math.ceil(def.health*hpScale);h.Health=h.MaxHealth;h.WalkSpeed=def.chaseSpeed
+ -- Walk speed x the difficulty's pace.chase (MapBossDefs, 2026-10-10: Hammer 24 -> 19.7 on Normal).
+ local chase=(Defs.pace and Defs.pace(id,difficulty) or {}).chase or 1
+ h.MaxHealth=tutorial and fixed or math.ceil(def.health*hpScale);h.Health=h.MaxHealth;h.WalkSpeed=def.chaseSpeed*chase
  npc:SetAttribute('BossDamageScale',damageScale)
  npc:SetAttribute('BossSpawnedAt',workspace:GetServerTimeNow())
  npc:SetAttribute('IsBoss',true);npc:SetAttribute('IsMapBoss',true);npc:SetAttribute('MapBossId',id);npc:SetAttribute('BossName',def.name);npc:SetAttribute('ZombieType',id)
@@ -989,7 +991,7 @@ end
 -- Never for the tutorial boss whose def says so (X.allows).
 local function checkEnrage(npc,s,h)
  if s.enraged or not X.allows(s,'enrage') or h.Health>h.MaxHealth*Defs.ENRAGE_AT then return end
- s.enraged=true;local speed=s.def.chaseSpeed+(s.def.enrage and s.def.enrage.chase or 0)
+ s.enraged=true;local speed=(s.def.chaseSpeed+(s.def.enrage and s.def.enrage.chase or 0))*(s.pace and s.pace.chase or 1)
  h.WalkSpeed=speed;npc:SetAttribute('BaseMoveSpeed',speed);npc:SetAttribute('BossEnraged',workspace:GetServerTimeNow())
 end
 function M.step(npc,s,now)

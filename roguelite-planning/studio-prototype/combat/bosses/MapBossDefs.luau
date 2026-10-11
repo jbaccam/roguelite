@@ -110,9 +110,12 @@ D.Hammer.toolBlend={tool='Hammer',hands={'RightHand','LeftHand'}}
 -- Nightmare keeps the old pace. A def without `pace` (every other boss) waits plain cooldown x enrage.
 -- Example, Normal: Swing .8 -> 1.6 s (1 s standing), SwingSpin 1 x 2 x 1.15 = 2.3 s, SpinSlam 2.53 s;
 -- enraged Swing .96 -> 1.2 (min), SwingSpin 1.38. Hard: Swing 1.12, SwingSpin 1.54. Nightmare: .8 / 1.
+-- chase (2026-10-10, user: "the hammer boss is just a little too fast on normal mode"): his walk speed
+-- x this. His 24 (26 enraged) matched a player's base 24, so on Normal nobody could outwalk him; now
+-- Normal 19.7 (21.3 enraged), Hard 22.1 (23.9), Nightmare unchanged. The Charge's lane is unchanged.
 D.Hammer.pace={
- Normal={cooldown=2,combo=1.15,min=1.2,breather=1},
- Hard={cooldown=1.4,combo=1.1,min=.7,breather=.45},
+ Normal={cooldown=2,combo=1.15,min=1.2,breather=1,chase=.82},
+ Hard={cooldown=1.4,combo=1.1,min=.7,breather=.45,chase=.92},
  Nightmare={cooldown=1,combo=1,min=0,breather=0},
 }
 -- The pace row for boss `id` on `difficulty` (a RunSetupRules id), nil when it has none.
