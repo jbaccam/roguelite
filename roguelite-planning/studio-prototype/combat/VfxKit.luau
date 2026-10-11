@@ -10,20 +10,43 @@ K.Dust=Color3.fromRGB(214,202,184)
 local effects={}
 local counts={}
 local connection
+-- Hard ceiling on any effect's life, whatever duration a caller passes (nil/NaN/huge included).
+K.MaxLifetime=30
+-- The only way an effect leaves: once, with its cleanup protected so an error cannot skip it.
+-- The list entry is dropped later by step's compaction, never by index mid-loop.
+-- (2026-10-10 wave-50 report: an update that spawned a child effect could evict an older one,
+-- shifting the list; step then table.remove'd the wrong index, and that effect's parts, e.g. a
+-- swing crescent, stayed frozen on screen for the rest of the game.)
+local function retire(e)
+ if e.dead then return end
+ e.dead=true
+ if e.category then counts[e.category]-=1 end
+ if e.cleanup then
+  local ok,err=pcall(e.cleanup)
+  if not ok then warn('VfxKit cleanup failed: '..tostring(err)) end
+ end
+end
 local function step()
  local now=os.clock()
- for i=#effects,1,-1 do
+ -- Effects added during this pass (by updates or cleanups) start next frame; nothing is removed
+ -- until the pass ends, so indices 1..n stay stable however callbacks nest.
+ local n=#effects
+ for i=1,n do
   local e=effects[i]
-  local t=(now-e.born)/e.duration
-  local ok,done=pcall(e.update,math.min(t,1),now-e.born)
-  if not ok then warn('VfxKit effect failed: '..tostring(done)) end
-  if not ok or done or t>=1 then
-   table.remove(effects,i)
-   if e.category then counts[e.category]-=1 end
-   if e.cleanup then e.cleanup() end
+  if not e.dead then
+   local t=(now-e.born)/e.duration
+   local ok,done=pcall(e.update,math.min(t,1),now-e.born)
+   if not ok then warn('VfxKit effect failed: '..tostring(done)) end
+   if not ok or done or t>=1 then retire(e) end
   end
  end
- if #effects==0 and connection then connection:Disconnect();connection=nil end
+ local kept=0
+ for i=1,#effects do
+  local e=effects[i]
+  if not e.dead then kept+=1;effects[kept]=e end
+ end
+ for i=#effects,kept+1,-1 do effects[i]=nil end
+ if kept==0 and connection then connection:Disconnect();connection=nil end
 end
 -- Runs update(t,age) every frame until t reaches 1 or update returns true.
 -- Categories are budgeted; the oldest effect in a full category is retired.
@@ -33,12 +56,12 @@ function K.animate(duration,update,cleanup,category,budget)
  if category then
   counts[category]=(counts[category] or 0)+1
   if budget and counts[category]>budget then
-   for i,e in effects do if e.category==category then
-    table.remove(effects,i);counts[category]-=1;if e.cleanup then e.cleanup() end;break
-   end end
+   for _,e in effects do if e.category==category and not e.dead then retire(e);break end end
   end
  end
- table.insert(effects,{born=os.clock(),duration=math.max(duration,1e-3),update=update,cleanup=cleanup,category=category})
+ duration=tonumber(duration) or 0
+ if duration~=duration then duration=0 end
+ table.insert(effects,{born=os.clock(),duration=math.clamp(duration,1e-3,K.MaxLifetime),update=update,cleanup=cleanup,category=category})
 end
 function K.near(position,distance)
  local camera=workspace.CurrentCamera
