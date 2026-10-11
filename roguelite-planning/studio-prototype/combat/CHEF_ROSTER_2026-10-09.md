@@ -41,5 +41,24 @@ Design: [plans/2026-10-09-chef-roster-weapon-types-design.md](../../plans/2026-1
 
 - Rename product 3716086758 on the Creator Dashboard to "Chef Class" with `ui/assets/store-products/29-ClassThrower.png`.
 - 6-gun Gunner is +10% single-target vs before (kept: the old free pierce is gone).
-- There is no pizza-slice icon yet; the Chef ability row uses the Pizza Cutter icon.
+- There is no pizza-slice icon yet; the Chef ability row uses the Chef class icon (Frying Pan) since Oct 10 (it was the Pizza Cutter's, which made the drops look like a Cutter perk).
+- Mage has no Epic weapon (Common Staff and Crystal Ball, Rare Pandora and Medusa, Legendary Mjolnir). That was already true; with Excalibur gone Mage also has only one Legendary and 5 weapons. The planned spellbook is the natural Epic (or a second Legendary).
 - Weapon names for the three new items are working names from the level-up art.
+
+## October 10: pizza for every Chef weapon, Excalibur to Brawler
+
+User: "The chef pizza roller drops pizza slices, but I need to make it universal for all his weapons" and "I should make a spellbook for the mage and move Excalibur to others."
+
+**Pizza drops are a Chef class ability.** The code already rolled for every Chef weapon; the class screen's PIZZA DROPS row showed the Pizza Cutter icon, which read as a Cutter perk. Now:
+
+- `ChefPizza.isChefWeapon` decides by the weapon's class tag only (`d.class`, the `WeaponCatalog.inClass` rule). The hard-coded id fallback list is gone, so a weapon moved into or out of Chef moves its drops with it.
+- Numbers, the same for all six (Pan, Spatula, Steak, Egg, Molotov, Pizza Cutter): 8% per kill (about 1 in 12), at least 1.5 s apart per Chef, at most 4 slices per Chef on the ground, 12 s lifetime (blinks the last 3 s), heals the grabber 10% of max HP x Recovery (Chef's +25% makes 150 max HP heal 18.75). The Cutter never had its own rate, so there is no per-weapon bonus. No strength buff (the friend's "strengthens you" idea is not built).
+- A non-Chef with a Chef weapon (bought in the shop) gets no drops, the same rule as specialty. Godlies, turrets and bloater kills never drop.
+- Server side, unchanged: `ChefPizzaService` decides on enemy death from `LastDamageUserId` / `LastWeaponId`; `HeartDropService` runs the pickup with the distance check. Same pizza-slice model for every weapon.
+- Class screen: the row reads "8% chance (about 1 in 12) on a kill with any Chef weapon; heals 10% of max health" with the Frying Pan (Chef class) icon.
+
+**Excalibur (32) moved Mage -> Brawler.** It is a melee sword swing (type Blade); Brawler is the melee class with the Katana and Kusarigama and +20% melee, and Excalibur was a Brawler weapon before Oct 9. Types (Blade, Elemental), elemental flag, Legendary beam and numbers are unchanged. Brawler 7 weapons (like Juggler; the starter grid already sizes for 7 + the Godly slot), Mage 5. Owned copies, tiers and saves are untouched; a saved Mage + Excalibur starter resets to the Magic Staff on load (existing `ProfileService` rule), and Brawlers who own it can now start with it. Godly slot and shop pools are not class based, so they are unchanged.
+
+Ran (Luau CLI only, no Studio, no Play): ChefPizzaTests 1644 (was 1527; adds every catalog weapon by class tag), roster runner (WeaponClassTag 644, WeaponType 1315, RunSetupValidation 32, Showcase 1182, GearPower 265, NormalBalance 955, RosterBalance 338; Mage roster row now 5 weapons, new printed "Brawler + Excalibur" row 0.941 / 0.936), shop runner 571 + 33 + 34 in a scratch copy with other sessions' uncommitted EconomyConfig / LevelUpCatalog / ShopPreferenceTests / CharacterStats edits set back to HEAD (the live tree fails "shop wave 20, no Luck tier 3" from those edits, not this change). Rojo build OK. Updated but not run (need Studio): RunSetupLayoutTests (pizza line text + icon), CharacterStatsTests (Brawler 7, Mage 5).
+
+Studio: not synced. Files to push: WeaponCatalog, ChefPizza, RunSetupUI (+ the test modules).

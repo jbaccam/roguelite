@@ -203,13 +203,17 @@ end
 -- takes its slot; Kusarigama moves to Brawler. d.class is the one class; d.home stays d.class for
 -- older code ('Godly' for a Godly) and d.classes is {d.class} ({} for a Godly).
 -- Example: Frying Pan d.class = 'Chef'.
+-- 2026-10-10 (user: "move Excalibur to others"): Excalibur '32' moves Mage -> Brawler. It is a melee
+-- sword swing (Blade), and Brawler is the sword-and-melee class (Katana, Kusarigama, +20% melee);
+-- it was a Brawler weapon before 2026-10-09 too. Its Elemental type and flag stay (its beam and its
+-- damage scaling do not change). Brawler now has 7 like Juggler; Mage 5 (a spellbook is planned).
 C.StarterClass={
- Brawler={'02','03','04','06','19','20'},
+ Brawler={'02','03','04','06','19','20','32'},
  Gunner={'00','07','08','09','10','11'},
  Chef={'01','05','14','15','16','42'},
  Juggler={'12','13','17','18','21','22','23'},
  Handyman={'24','25','26','27','28','29'},
- Mage={'30','31','32','33','34','35'},
+ Mage={'30','31','33','34','35'},
 }
 C.ClassOf={};for class,ids in C.StarterClass do for _,id in ids do C.ClassOf[id]=class end end
 -- Elemental / Utility flags, authored (2026-10-09). They were worked out from Mage / Handyman

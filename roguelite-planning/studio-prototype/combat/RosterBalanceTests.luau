@@ -122,7 +122,10 @@ return function(Weapons,Stats)
   {'Chef roster','Chef',{'01','05','14','15','16','42'},false},
   {'Juggler roster','Juggler',{'12','13','17','18','21','22'},true},
   {'Handyman roster','Handyman',{'24','25','26','27','28','29'},true},
-  {'Mage roster','Mage',{'30','31','32','33','34','35'},true},
+  -- 2026-10-10: Excalibur '32' moved Mage -> Brawler. Mage has 5 weapons (all 5); Brawler 7 (its
+  -- first 6 above, and a swap-in-Excalibur build below, printed).
+  {'Mage roster','Mage',{'30','31','33','34','35'},true},
+  {'Brawler + Excalibur','Brawler',{'02','03','04','06','19','32'},false},
   {'4 guns','Gunner',{'00','07','09','10'},false},
   {'6 Katanas','Brawler',{'03','03','03','03','03','03'},false},
   {'6 Staffs','Mage',{'30','30','30','30','30','30'},false},

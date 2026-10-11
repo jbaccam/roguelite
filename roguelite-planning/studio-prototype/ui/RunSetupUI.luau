@@ -52,7 +52,7 @@ local function pizza()
  local ok,P=pcall(require,m);return ok and type(P)=='table' and P or nil
 end
 -- The class ability row: {icon=, title=, text=, dash=bool} or nil (no ability). Chef: pizza drops,
--- e.g. '8% chance (about 1 in 12) on a kill with a Chef weapon; heals 10% of max health'.
+-- e.g. '8% chance (about 1 in 12) on a kill with any Chef weapon; heals 10% of max health'.
 -- Brawler: dash (CharacterStats.dashes). Handyman: the free Nail Turret.
 function M.ability(class)
  if Stats.dashes(class) then
@@ -62,10 +62,11 @@ function M.ability(class)
  if class=='Chef' or (P and P.CLASS==class) then
   local text='Kills with Chef weapons sometimes drop a pizza slice that heals whoever grabs it.'
   if P and type(P.CHANCE)=='number' and P.CHANCE>0 and type(P.HEAL_FRACTION)=='number' then
-   text=string.format('%s%% chance (about 1 in %d) on a kill with a Chef weapon; heals %s%% of max health',num(P.CHANCE*100),math.floor(1/P.CHANCE+1e-6),num(P.HEAL_FRACTION*100))
+   text=string.format('%s%% chance (about 1 in %d) on a kill with any Chef weapon; heals %s%% of max health',num(P.CHANCE*100),math.floor(1/P.CHANCE+1e-6),num(P.HEAL_FRACTION*100))
   end
-  -- No pizza slice icon yet: the Pizza Cutter's render stands in.
-  return {icon=WeaponIcons['42'],title='PIZZA DROPS',text=text}
+  -- No pizza slice icon yet: Chef's class icon (the Frying Pan, like the dash and turret rows) stands
+  -- in. It was the Pizza Cutter's, which read as a Cutter-only drop (2026-10-10: every Chef weapon).
+  return {icon=WeaponIcons[Rules.Signature[class]],title='PIZZA DROPS',text=text}
  end
  if class=='Handyman' then
   return {icon=WeaponIcons[Rules.Signature[class]],title='NAIL TURRET',text='Starts every run with a free Nail Turret that spawns close to you.'}

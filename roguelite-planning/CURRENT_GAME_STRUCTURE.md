@@ -93,12 +93,12 @@ New accounts own **Brawler, Gunner, and Mage**. **Thrower, Juggler, and Handyman
 
 | Class | Play style | Signature starter | Other home weapons | Also in this class (2026-10-04) |
 | --- | --- | --- | --- | --- |
-| **Brawler** | Hand-to-hand: close-range arcs, heavy hits, durability | **Baseball Bat** (since 2026-10-10) | Boxing Gloves, Nunchucks, Kusarigama, Cinder Block, Katana | (one starter class per weapon since 2026-10-09; see the Chef roster record) |
+| **Brawler** | Hand-to-hand: close-range arcs, heavy hits, durability | **Baseball Bat** (since 2026-10-10) | Boxing Gloves, Nunchucks, Kusarigama, Cinder Block, Katana, Excalibur (from Mage, 2026-10-10) | (one starter class per weapon since 2026-10-09; see the Chef roster record) |
 | **Gunner** | Fast projectiles, magazines, piercing and spread | **Glock** | Draco, Fart Gun, Shotgun, T-Shirt Cannon, Rocket Launcher | Nail Gun |
 | **Thrower** | Returning projectiles, volleys, area denial | **Boomerang** | Kunais, Molotovs, Eggs, Steak, Deck of Cards | Kusarigama, T-Shirt Cannon, Rubber Duck, Bowling Ball, Mjolnir |
 | **Juggler** | Tricks and toys: rebounds, spins, repeated contact and knockback | **Rubber Duck** | Spatula, Yo-Yo, Bowling Pins, Kusarigama, Bowling Ball | Boomerang, Eggs, Deck of Cards, Boxing Gloves |
 | **Handyman** | Construction tools, deployables, lanes and utility. Builds a nail turret it upgrades in the shop (2026-10-03; [HANDYMAN_TURRET.md](studio-prototype/combat/HANDYMAN_TURRET.md), off until its templates are installed) | **Nail Gun** | Wrecking Ball, Shovel, Paint Roller, Vacuum Cleaner, Power Washer | Spatula, Rocket Launcher, Cinder Block |
-| **Mage** | Elemental zones, chain effects, mythic late unlocks | **Magic Staff** | Mjolnir, Excalibur, Pandora's Box, Medusa's Head, Crystal Ball | Fart Gun, Molotovs |
+| **Mage** | Elemental zones, chain effects, mythic late unlocks | **Magic Staff** | Mjolnir, Pandora's Box, Medusa's Head, Crystal Ball (Excalibur moved to Brawler 2026-10-10; a spellbook is planned) | Fart Gun, Molotovs |
 
 Weapon classes were regrouped on 2026-10-03 so each class reads as one idea: Boxing Gloves and Cinder Block moved to Brawler, Spatula and Kusarigama to Juggler (equal-rarity swaps, so every class still has 2 Common, 2 Rare, 1 Epic, 1 Legendary). Juggler's starter became the Rubber Duck; saves that own Juggler are given it on load.
 

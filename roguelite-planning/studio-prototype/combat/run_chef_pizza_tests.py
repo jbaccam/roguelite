@@ -35,10 +35,12 @@ if stats is not None and weapons is not None:
 if stats is None:
     print("CharacterStats anchors moved: Recovery checked with CharacterService.heal's formula")
     source += "local Stats=nil\n"
+    # The catalog alone still drives the per-weapon class-tag checks.
+    source += weapons if weapons is not None else "local Weapons=nil\n"
 else:
     source += stats
 source += module("Tests", "ChefPizzaTests.luau")
-source += "print('ChefPizzaTests: '..Tests(Pizza,Stats)..' checks passed'..(Stats and ' (real Stats.mult)' or ''))\n"
+source += "print('ChefPizzaTests: '..Tests(Pizza,Stats,Weapons)..' checks passed'..(Stats and ' (real Stats.mult)' or '')..(Weapons and ', real WeaponCatalog' or ''))\n"
 with tempfile.TemporaryDirectory(prefix="roguelite-chef-pizza-") as temporary:
     path = pathlib.Path(temporary) / "tests.luau"
     path.write_text(source, encoding="utf-8")

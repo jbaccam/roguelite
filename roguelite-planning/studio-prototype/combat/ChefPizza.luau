@@ -1,4 +1,10 @@
 -- Chef pizza drops (plans/2026-10-09-chef-roster-weapon-types-design.md, "Chef"): the pure rules.
+-- A Chef CLASS ability, not a Pizza Cutter one (2026-10-10, user: "make it universal for all his
+-- weapons"): a Chef's kill with ANY weapon whose starter class is Chef (WeaponCatalog d.class, today
+-- Frying Pan, Spatula, Molotov, Egg, Steak and Pizza Cutter) has the same 8% chance; no weapon has
+-- its own rate. It follows the class tag, so moving a weapon into or out of Chef moves its drops too.
+-- A non-Chef holding a Chef weapon gets none, the same as specialty (+10% only for your class's
+-- weapons). Example: a Chef's Egg kill rolls 8%; a Brawler's Frying Pan kill rolls nothing.
 -- A Chef's kill with a Chef weapon has an 8% chance to drop a pizza slice where the enemy died. Any
 -- living player in the run who reaches it heals 10% of their own max HP, times their Recovery (the
 -- heart pickups' healing path, CharacterService.heal). Example: max HP 150 -> 15 HP before Recovery;
@@ -21,17 +27,15 @@ local P={
  -- Presentation (ChefPizzaVisuals). The template is scaled to WIDTH studs across, tilted TILT
  -- degrees so its toppings read from the game camera, and bobs BOB studs while it spins.
  WIDTH=2.4,TILT=30,BOB=.22,BOB_SPEED=2.7,SPIN_SPEED=1.8,
- -- Chef weapons for a WeaponCatalog that has no d.class yet: Frying Pan, Spatula, Molotov, Egg,
- -- Steak and Pizza Cutter. Once entries carry d.class, that decides instead.
- WEAPON_IDS={['01']=true,['05']=true,['14']=true,['15']=true,['16']=true,['42']=true},
 }
 
--- Whether the weapon that landed the kill is a Chef weapon. weapon = WeaponCatalog.ById[id] (nil for
--- 'Turret', 'Bloater' and other non-weapon kill credit). Godlies belong to no class.
+-- Whether the weapon that landed the kill is a Chef weapon: its class tag, the WeaponCatalog.inClass
+-- rule (d.class, or d.home for a bare table). weapon = WeaponCatalog.ById[id] (nil for 'Turret',
+-- 'Bloater' and other non-weapon kill credit). Godlies belong to no class. id is unused (kept for
+-- callers); the 2026-10-09 fallback id list went once every catalog entry carried d.class.
 function P.isChefWeapon(weapon,id)
  if type(weapon)~='table' or weapon.godly then return false end
- if type(weapon.class)=='string' then return weapon.class==P.CLASS end
- return P.WEAPON_IDS[id]==true
+ return (weapon.class or weapon.home)==P.CLASS
 end
 
 -- One kill. o = {class, weapon, weaponId, now, lastDrop (this Chef's last drop time or nil), rng

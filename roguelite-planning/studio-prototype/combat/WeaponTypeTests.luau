@@ -21,7 +21,9 @@ return function(Weapons,Stats,Rules)
   end
  end
  for _,class in Stats.ClassOrder do
-  check((perClass[class] or 0)>=6,class..' has 6+ weapons')
+  -- Mage is 5 since Excalibur moved to Brawler (2026-10-10) until its planned spellbook lands.
+  local least=class=='Mage' and 5 or 6
+  check((perClass[class] or 0)>=least,class..' has '..least..'+ weapons')
   local sig=Weapons.ById[Stats.Signature[class]]
   check(sig and sig.class==class and sig.rarity=='Common','signature is a Common '..class..' weapon')
   check(Stats.Classes[class].build[1]==Stats.Signature[class],'build opens with the signature '..class)

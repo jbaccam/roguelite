@@ -19,12 +19,14 @@ October 9, 2026. Implements [ROSTER_WEAPONS_CLASSES_MASTER_GUIDE.md](../ROSTER_W
 
 | Class | Weapons (id) | Default starter |
 |---|---|---|
-| Brawler | Nunchucks 02, Katana 03, Kusarigama 04, Baseball Bat 06, Boxing Gloves 19, Cinder Block 20 | Baseball Bat 06 (was Frying Pan; Boxing Gloves for one day) |
+| Brawler | Nunchucks 02, Katana 03, Kusarigama 04, Baseball Bat 06, Boxing Gloves 19, Cinder Block 20, Excalibur 32 (Oct 10) | Baseball Bat 06 (was Frying Pan; Boxing Gloves for one day) |
 | Gunner | Glock 00, Draco 07, Fart Gun 08, Shotgun 09, T-Shirt Cannon 10, Rocket Launcher 11 | Glock 00 |
 | Chef | Frying Pan 01, Spatula 05, Steak 16, Egg 15, Molotov 14, Pizza Cutter 42 | Frying Pan 01 |
 | Juggler | Boomerang 12, Kunai 13, Rubber Duck 17, Deck of Cards 18, Yo-Yo 21, Bowling Ball 22, Bowling Pin 23 | Rubber Duck 17 |
 | Handyman | Nail Gun 24, Wrecking Ball 25, Shovel 26, Paint Roller 27, Vacuum 28, Power Washer 29 | Nail Gun 24 |
-| Mage | Magic Staff 30, Mjolnir 31, Excalibur 32, Pandora's Box 33, Medusa's Head 34, Crystal Ball 35 | Magic Staff 30 |
+| Mage | Magic Staff 30, Mjolnir 31, Pandora's Box 33, Medusa's Head 34, Crystal Ball 35 (Excalibur 32 moved to Brawler Oct 10) | Magic Staff 30 |
+
+Oct 10 change (user: "I should make a spellbook for the mage and move Excalibur to others"): Excalibur is a melee sword swing (type Blade), so it joins Brawler, the melee class that already holds the Katana and Kusarigama and gets +20% melee. It was a Brawler weapon before Oct 9 as well. Its types (Blade, Elemental), elemental flag, Legendary beam and numbers do not change. Brawler now has 7 weapons like Juggler (two Legendaries: Katana, Excalibur). Mage has 5 and no Epic until the spellbook. Example (Tier I, one copy, no items, base crit): Excalibur's raw 23.1 DPS becomes about 31.3 for a Brawler (x1.2 melee x1.1 specialty) and 26.7 for a Mage (x0.9 melee x1.25 elemental, no specialty; it was 29.4 with specialty).
 
 Class order everywhere (menus, Armory groups, arrows): Brawler, Gunner, Chef, Juggler, Handyman, Mage. Chef takes Thrower's slot.
 
@@ -122,6 +124,7 @@ The drawback never weakens Chef's own weapons, which follows the rule the other 
 Ability, pizza drops:
 
 - When a Chef player kills an enemy with a Chef weapon, there is an 8% chance a pizza slice drops where the enemy died.
+- Oct 10: this is a class ability for every Chef weapon (Pan, Spatula, Steak, Egg, Molotov, Pizza Cutter), decided by the weapon's class tag. All six use the same 8%; the Pizza Cutter never had its own rate. A non-Chef carrying a Chef weapon gets no drops, the same as specialty.
 - Any living player in the run who touches it heals 10% of their max HP. The server checks the distance and that the slice is still there; the client only shows it.
 - A slice lasts 12 s and blinks for its last 3 s. At most 4 slices per Chef can be on the ground; the oldest goes when a fifth drops. At least 1.5 s between drops per Chef, so fast weapons don't flood the map.
 - Slices bob and spin on the client. Flat ground ring decal, no 3D effect meshes.

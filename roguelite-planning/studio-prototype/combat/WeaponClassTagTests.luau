@@ -2,12 +2,12 @@
 -- one starter class per ordinary weapon, Godlies classless. No instances or rewards.
 return function(Weapons)
  local expected={
-  Brawler={'02','03','04','06','19','20'},
+  Brawler={'02','03','04','06','19','20','32'}, -- Excalibur '32' moved from Mage on 2026-10-10
   Gunner={'00','07','08','09','10','11'},
   Chef={'01','05','14','15','16','42'},
   Juggler={'12','13','17','18','21','22','23'},
   Handyman={'24','25','26','27','28','29'},
-  Mage={'30','31','32','33','34','35'},
+  Mage={'30','31','33','34','35'},
  }
  local classOf={};for class,ids in expected do for _,id in ids do classOf[id]=class end end
  local classes={'Brawler','Gunner','Chef','Juggler','Handyman','Mage'}
@@ -31,5 +31,16 @@ return function(Weapons)
  end
  check(#Weapons.List==43,'audit covers all 43 weapons')
  check(Weapons.ById['42'].name=='Pizza Cutter' and not Weapons.ById['42'].godly,'Pizza Cutter is id 42 and not Godly')
+ -- Excalibur (2026-10-10): a Brawler sword now; it keeps its Blade + Elemental types, its elemental
+ -- flag (damage scaling unchanged) and its Legendary beam.
+ local ex=Weapons.ById['32']
+ check(ex.name=='Excalibur' and ex.class=='Brawler' and not Weapons.inClass(ex,'Mage'),'Excalibur is a Brawler weapon, not Mage')
+ check(table.concat(ex.types,',')=='Blade,Elemental' and ex.elemental==true and ex.kind=='Melee' and ex.rarity=='Legendary','Excalibur keeps types, elemental flag, melee and Legendary')
+ -- Every class keeps at least five weapons and a Common starter.
+ for _,class in classes do
+  local n,common=0,false
+  for _,w in Weapons.List do if Weapons.inClass(w,class) then n+=1;common=common or w.rarity=='Common' end end
+  check(n>=5 and common,'class '..class..' has at least 5 weapons and a Common one')
+ end
  return {passed=true,checks=checks}
 end

@@ -249,14 +249,16 @@ local ok,err=xpcall(function()
   assert(ui.PickGodly('37')==false,'nothing to pick');pk.Close()
   table.insert(results,'picker none owned')
  end
- -- Chef's pizza line reads ChefPizza's numbers: '8% chance (about 1 in 12) on a kill with a Chef
+ -- Chef's pizza line reads ChefPizza's numbers: '8% chance (about 1 in 12) on a kill with any Chef
  -- weapon; heals 10% of max health'.
  if RunSetup.Pizza then
   local P=RunSetup.Pizza
   local function num(x) return (string.format('%.1f',x):gsub('%.0$','')) end
-  local want=string.format('%s%% chance (about 1 in %d) on a kill with a Chef weapon; heals %s%% of max health',num(P.CHANCE*100),math.floor(1/P.CHANCE+1e-6),num(P.HEAL_FRACTION*100))
+  local want=string.format('%s%% chance (about 1 in %d) on a kill with any Chef weapon; heals %s%% of max health',num(P.CHANCE*100),math.floor(1/P.CHANCE+1e-6),num(P.HEAL_FRACTION*100))
   assert(RunSetup.ability('Chef').text==want,'pizza line uses ChefPizza numbers: '..RunSetup.ability('Chef').text)
  end
+ -- The pizza row shows Chef's class icon, not the Pizza Cutter's (drops are every Chef weapon's).
+ assert(RunSetup.ability('Chef').icon==req(RS:WaitForChild('WeaponInventoryUI')).Icons[Rules.Signature.Chef],'pizza row uses the Chef class icon')
  -- The explanation follows the gameplay eligibility helper for every class/weapon combination.
  for _,class in Stats.ClassOrder do
   for _,weapon in Weapons.List do

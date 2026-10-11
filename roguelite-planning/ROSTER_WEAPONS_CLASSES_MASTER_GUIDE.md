@@ -60,6 +60,8 @@ These are **direct class assignments**, not weapon-set tags and not restrictions
 | Handyman | **Nail Gun, Wrecking Ball, Shovel, Paint Roller, Vacuum Cleaner, Power Washer** | 6 | Tools, utility, turrets |
 | Mage | **Magic Staff, Mjolnir, Excalibur, Pandora's Box, Medusa's Head, Crystal Ball** | 6 | Magic and elemental effects |
 
+**Update, October 10:** Excalibur moved from Mage to **Brawler** (Brawler 7, Mage 5 until the planned spellbook). Pizza drops are a Chef class ability for every Chef weapon, not a Pizza Cutter one. See the Oct 10 section of [CHEF_ROSTER_2026-10-09.md](studio-prototype/combat/CHEF_ROSTER_2026-10-09.md).
+
 Total: **37 ordinary weapons after Pizza Cutter**, versus 36 now. With the existing six Godlies, the complete catalog would contain **43 weapons**. Juggler having seven does not require inventing extra weapons for every other class.
 
 Chef has **four melee weapons** (Pan, Spatula, Steak, proposed Cutter) and **two ranged/throwing weapons** (Egg, Molotov). Molotov is the least direct culinary fit; retain that as an explicit design question rather than claiming every assignment is settled.

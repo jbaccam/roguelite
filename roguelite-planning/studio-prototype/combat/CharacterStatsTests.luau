@@ -21,7 +21,8 @@ local force=player.Character:FindFirstChildOfClass('ForceField');if force then f
 -- Weapons per class (2026-10-09: one starter class per weapon, Chef replaces Thrower): 37 weapons.
 local counts={}
 for _,w in C.List do for _,c in w.classes do counts[c]=(counts[c] or 0)+1 end end
-local WANT={Brawler=6,Gunner=6,Chef=6,Juggler=7,Handyman=6,Mage=6}
+-- 2026-10-10: Excalibur moved Mage -> Brawler (Brawler 7, Mage 5).
+local WANT={Brawler=7,Gunner=6,Chef=6,Juggler=7,Handyman=6,Mage=5}
 for _,class in S.ClassOrder do
  check(counts[class]==WANT[class],'weapons in '..class..': '..tostring(counts[class]))
  -- 2026-10-03 class rework: the starter is one of the class's own weapons, the class panels have

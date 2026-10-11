@@ -2,9 +2,10 @@
 -- 1.5 s spacing, the cap of 4 with the oldest removed, lifetime and blink timing, heal = 10% x
 -- Recovery, and the server pickup check (distance, gone, expired, dead). Pure: plain tables and
 -- numbers. Run `python roguelite-planning/studio-prototype/combat/run_chef_pizza_tests.py
--- build/luau-validation/luau.exe`, or in Studio Edit: `ChefPizzaTests(ChefPizza, CharacterStats)`.
--- Returns the number of checks. Stats is optional; given, Recovery uses its mult (CharacterService.heal).
-return function(P,Stats)
+-- build/luau-validation/luau.exe`, or in Studio Edit: `ChefPizzaTests(ChefPizza, CharacterStats,
+-- WeaponCatalog)`. Returns the number of checks. Stats is optional; given, Recovery uses its mult
+-- (CharacterService.heal). Weapons is optional; given, every catalog weapon is checked by class tag.
+return function(P,Stats,Weapons)
 	local checks = 0
 	local function check(condition, message)
 		assert(condition, message)
@@ -71,18 +72,48 @@ return function(P,Stats)
 	ok, why = P.decide({ class = nil, weapon = pan, weaponId = "01", now = 1, rng = nobody })
 	check(ok == false and why == "class" and nobody.calls == 0, "A kill with no class should never drop pizza")
 
-	-- Chef weapons only. With d.class: only class 'Chef'. Without it (older catalog): the six ids.
+	-- Chef weapons only, by class tag (d.class, or d.home for a bare table), never by id.
 	check(P.isChefWeapon(pan, "01"), "Frying Pan with class Chef is a Chef weapon")
 	check(not P.isChefWeapon(glock, "00"), "Glock is not a Chef weapon")
-	check(not P.isChefWeapon({ class = "Brawler" }, "01"), "d.class decides over the fallback id list")
+	check(not P.isChefWeapon({ class = "Brawler" }, "01"), "The class tag decides, not the id")
+	check(P.isChefWeapon({ class = "Chef" }, "99"), "Any weapon tagged Chef counts, whatever its id")
+	check(P.isChefWeapon({ home = "Chef" }, "05") and not P.isChefWeapon({ home = "Thrower" }, "05"), "A bare {home=} table counts its home")
+	check(P.WEAPON_IDS == nil, "No hard-coded Chef weapon id list")
 	check(not P.isChefWeapon({ class = "Chef", godly = true }, "36"), "Godlies are never Chef weapons")
 	check(not P.isChefWeapon(nil, "01"), "A kill with no catalog weapon is not a Chef weapon")
 	check(not P.isChefWeapon(nil, "Turret") and not P.isChefWeapon(nil, "Bloater"), "Turret and Bloater credit are not Chef weapons")
-	for _, id in { "01", "05", "14", "15", "16", "42" } do
-		check(P.isChefWeapon({ home = "Thrower" }, id), "Fallback: " .. id .. " is a Chef weapon")
-	end
-	for _, id in { "00", "02", "03", "12", "13", "17", "24", "30" } do
-		check(not P.isChefWeapon({ home = "Brawler" }, id), "Fallback: " .. id .. " is not a Chef weapon")
+
+	-- Every Chef weapon in the real catalog (2026-10-10: a class ability, not the Pizza Cutter's).
+	-- A Chef's kill with each one drops at the same 8%; a non-Chef holding it gets nothing (like
+	-- specialty); a Chef's kill with any other weapon (other classes, Godlies) gets nothing.
+	if Weapons then
+		local chefIds, rolls = {}, {}
+		for _, w in Weapons.List do
+			local tagged = Weapons.inClass(w, "Chef")
+			check(P.isChefWeapon(w, w.id) == tagged, "Chef weapon follows the class tag: " .. w.name)
+			if tagged then
+				table.insert(chefIds, w.id)
+				check(kill({ weapon = w, rng = fixed(.0799) }) == true, "A Chef's " .. w.name .. " kill drops under 8%")
+				ok, why = kill({ weapon = w, rng = fixed(.08) })
+				check(ok == false and why == "chance", w.name .. " has no higher rate than 8%")
+				local seededRate = 0
+				local g = seeded(7)
+				for _ = 1, 5000 do if kill({ weapon = w, rng = g }) then seededRate += 1 end end
+				table.insert(rolls, seededRate)
+				for _, class in { "Brawler", "Gunner", "Juggler", "Handyman", "Mage" } do
+					local r = fixed(0)
+					ok, why = kill({ class = class, weapon = w, rng = r })
+					check(ok == false and why == "class" and r.calls == 0, class .. " holding " .. w.name .. " drops nothing")
+				end
+			else
+				local r = fixed(0)
+				ok, why = kill({ weapon = w, rng = r })
+				check(ok == false and why == "weapon" and r.calls == 0, "A Chef's " .. w.name .. " kill drops nothing")
+			end
+		end
+		table.sort(chefIds)
+		check(table.concat(chefIds, ",") == "01,05,14,15,16,42", "Chef weapons: Pan, Spatula, Molotov, Egg, Steak, Pizza Cutter; got " .. table.concat(chefIds, ","))
+		for i = 2, #rolls do check(rolls[i] == rolls[1], "Every Chef weapon drops at the same rate (same seed, same drops)") end
 	end
 	local rng = fixed(0)
 	ok, why = kill({ weapon = glock, rng = rng })
