@@ -68,9 +68,9 @@ function M.ability(class)
    -- stack (up to 5, 10 s)'. Older rules without it keep the heal-only line.
    if type(P.buffText)=='function' then text..=' and gives '..(P.BUFF_NAME or 'Full Belly')..': '..P.buffText() end
   end
-  -- No pizza slice icon yet: Chef's class icon (the Frying Pan, like the dash and turret rows) stands
-  -- in. It was the Pizza Cutter's, which read as a Cutter-only drop (2026-10-10: every Chef weapon).
-  return {icon=WeaponIcons[Rules.Signature[class]],title='PIZZA DROPS',text=text}
+  -- The pizza slice icon (ChefPizza.ICON, user-supplied 2026-10-10); Chef's class icon if an older
+  -- ChefPizza has none. Not the Pizza Cutter's, which read as a Cutter-only drop.
+  return {icon=P and P.ICON or WeaponIcons[Rules.Signature[class]],title='PIZZA DROPS',text=text}
  end
  if class=='Handyman' then
   return {icon=WeaponIcons[Rules.Signature[class]],title='NAIL TURRET',text='Starts every run with a free Nail Turret that spawns close to you.'}

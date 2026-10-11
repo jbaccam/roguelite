@@ -58,24 +58,16 @@ function UI.mount(playerGui)
  local pending=panel(health,'PendingLevels',0,198,240,34,'button');pending.Visible=false
  local pendingText=label(pending,'Text','',0,0,0,0,17,C.white);pendingText.Size=UDim2.fromScale(1,1)
  -- Full Belly chip (Chef pizza stacks, ChefPizza): beside the level-up pill, inside the health
- -- block, so it scales with it and the kill board under the block never moves. Chef class icon (no
- -- pizza slice icon yet), the stack count and a bar draining over the 10 s.
+ -- block, so it scales with it and the kill board under the block never moves. The pizza slice icon
+ -- (ChefPizza.ICON, user-supplied 2026-10-10), the stack count and a bar draining over the 10 s.
  local buffChip=panel(health,'PizzaBuff',248,198,136,34,'inset');buffChip.Visible=false
- local buffIcon=icon(buffChip,'Icon',5,3,28,'')
+ local buffIcon=icon(buffChip,'Icon',5,3,28,'rbxassetid://136189700331591') -- ChefPizza.ICON
  local buffStacks=label(buffChip,'Stacks','',38,1,48,24,20,C.lime);buffStacks.TextXAlignment=Enum.TextXAlignment.Left
  local buffTime=label(buffChip,'Time','',86,1,42,24,15,C.cream);buffTime.TextXAlignment=Enum.TextXAlignment.Right
  local buffTrack=make('Frame',buffChip,{Name='Track',Position=UDim2.fromOffset(38,25),Size=UDim2.fromOffset(90,5),BackgroundColor3=C.track,BorderSizePixel=0})
  make('UICorner',buffTrack,{CornerRadius=UDim.new(1,0)})
  local buffFill=make('Frame',buffTrack,{Name='Fill',Size=UDim2.fromScale(1,1),BackgroundColor3=C.lime,BorderSizePixel=0})
  make('UICorner',buffFill,{CornerRadius=UDim.new(1,0)})
- task.spawn(function()
-  local combat=RS:WaitForChild('RogueliteCombat')
-  local ok,image=pcall(function()
-   local Stats=require(combat:WaitForChild('CharacterStats'))
-   return require(RS:WaitForChild('WeaponInventoryUI')).Icons[Stats.Signature.Chef]
-  end)
-  if ok and type(image)=='string' then buffIcon.Image=image end
- end)
  -- Shards and bag split the bar width evenly (same left/right edges as the bars above).
  local half=(384-8)/2
  local shardRow=panel(health,'Shards',0,158,half,34,'inset')

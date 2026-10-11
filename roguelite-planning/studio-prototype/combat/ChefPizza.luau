@@ -22,6 +22,7 @@
 -- ReplicatedStorage.RogueliteCombat (HeartDropService's side is sandboxed).
 local P={
  CLASS='Chef',
+ ICON='rbxassetid://136189700331591', -- pizza slice icon (ui/assets/pizza-slice.png, user art 2026-10-10)
  CHANCE=.15, -- per eligible kill
  SPACING=1, -- seconds between one Chef's drops
  MAX_PER_CHEF=4, -- slices one Chef can have on the ground
