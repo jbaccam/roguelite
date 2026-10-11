@@ -1011,7 +1011,9 @@ function Stage:zone(at, kind)
 	table.insert(self.zoneKeys, key)
 	local life = kind == "Fire" and 4 or 5
 	local base = Vector3.new(at.X, ORIGIN.Y + (kind == "Fire" and 0.15 or 2), at.Z)
-	self.specialFX.handle("Zone", key, kind, base, kind == "Fire" and 4.5 or 5.5, life)
+	-- Same sizes as the server (SpecialMotion.zoneRadii): the Molotov fire starts at 7.2 and burns down to 3.6.
+	local r0, r1 = Special.zoneRadii(kind, 1)
+	self.specialFX.handle("Zone", key, kind, base, r0, life, r1, nil, Special.zoneHold(kind, life))
 	for j = 1, math.floor(life / 0.4) do
 		self:later(j * 0.4, function()
 			if table.find(self.zoneKeys, key) then

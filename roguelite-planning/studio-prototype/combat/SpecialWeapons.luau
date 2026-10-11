@@ -62,14 +62,20 @@ function S.new(combat,damage,rayParams)
   local own={};local total=0
   for key,z in zones do total+=1;if z.d.owner==d.owner and z.d.id==d.id then table.insert(own,key) end end
   table.sort(own)
-  if #own>=3 then local key=own[1];zones[key]=nil;event:FireAllClients('ZoneEnd',key) end
+  -- Fire 4 / Poison 3 per player and weapon id (SpecialMotion.Fire.cap); the oldest goes first.
+  local tuning=kind=='Fire' and Motion.Fire or Motion.Poison
+  while #own>=tuning.cap do local key=table.remove(own,1);zones[key]=nil;event:FireAllClients('ZoneEnd',key) end
   if total>=64 then return end
   local ground=workspace:Raycast(position+Vector3.yAxis*3,-Vector3.yAxis*30,rayParams(d.character,true))
   if ground then position=ground.Position+Vector3.yAxis*(kind=='Fire' and .15 or 2) end
-  local radius=math.clamp((kind=='Fire' and 4.5 or 5.5)*Stats.mult(d.stats.AreaSize),2,12)
-  local duration=math.clamp((kind=='Fire' and 4 or 5)*Stats.mult(d.stats.Duration),2,12)
-  local key=nextId();zones[key]={d=d,position=position,radius=radius,ends=workspace:GetServerTimeNow()+duration,nextTick=0,kind=kind}
-  event:FireAllClients('Zone',key,kind,position,radius,duration)
+  -- Fire starts big and burns down (SpecialMotion.zoneRadius); poison stays one size.
+  local r0,r1=Motion.zoneRadii(kind,Stats.mult(d.stats.AreaSize))
+  local duration=math.clamp(tuning.duration*Stats.mult(d.stats.Duration),2,12)
+  local hold=Motion.zoneHold(kind,duration)
+  local now=workspace:GetServerTimeNow()
+  local key=nextId();zones[key]={d=d,position=position,radius=r0,r0=r0,r1=r1,hold=hold,born=now,duration=duration,ends=now+duration,nextTick=0,ticks=0,kind=kind,tuning=tuning}
+  -- r0 stays the 4th value, so older listeners (the Armory showcase) still get the start size.
+  event:FireAllClients('Zone',key,kind,position,r0,duration,r1,now,hold)
  end
  local function endFlight(r)
   if r.ended then return end
@@ -167,14 +173,19 @@ function S.new(combat,damage,rayParams)
   for key,z in zones do
    if now>=z.ends or not valid(z.d) then zones[key]=nil;event:FireAllClients('ZoneEnd',key)
    elseif now>=z.nextTick then
-    z.nextTick=now+.4
+    z.nextTick=now+z.tuning.tick
+    -- The radius right now: a fire burns down from r0 to r1 (SpecialMotion.zoneRadius).
+    z.radius=Motion.zoneRadius(z.r0,z.r1,now-z.born,z.duration,z.hold)
+    -- The first tick is the ignition (Fire: 100% across the full start radius) and shows as a hit.
+    local ignition=z.ticks==0;z.ticks+=1
+    local factor=ignition and z.tuning.ignite or z.tuning.factor
     local wall=rayParams(z.d.character,true)
     for _,npc in Tags:GetTagged('RogueliteZombie') do
      local root=npc:FindFirstChild('HumanoidRootPart');local h=npc:FindFirstChildOfClass('Humanoid')
      if h and h.Health>0 and root and allowed(npc,z.d) and (root.Position-z.position).Magnitude<=z.radius and not workspace:Raycast(z.position+Vector3.yAxis*.3,root.Position-z.position-Vector3.yAxis*.3,wall) then
       -- Secondary ticks cannot proc crit, chains, knockback or status stacks. A damage-over-time
       -- tick (last true): clients show its number without a splat or flash.
-      damage(npc,z.d.damage*.4,z.d,true,true)
+      damage(npc,z.d.damage*factor,z.d,true,not (ignition and z.kind=='Fire'))
      end
     end
    end

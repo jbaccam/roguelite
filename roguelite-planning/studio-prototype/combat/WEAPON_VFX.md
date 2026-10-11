@@ -105,3 +105,41 @@ User: Legendary extra moves only at Tier IV; "make the vfx sick af and use blend
 **Rules kept:** every move hit is a secondary hit (no crits, chains, knockback or other specials), so a move can never start another move. Movers stop at walls. At most 48 slashes/cards in flight and 256 scheduled hits per server; effects are skipped beyond 170 studs from the camera, and the camera kick is only for the player who made the move (off with the Screen shake setting). Effects use existing textures only (Slash, Star, Glow, Lightning, Ring, Scorch, Cracks, Dust).
 
 **Tests:** `LegendaryMovesTests` (pure helpers and the catalog: exactly the 7 Legendaries, moves only at Tier IV, the user's counts) PASS, 99 checks, Edit-mode harness, 2026-10-02. Not run yet: any Studio Play test of the moves or their visuals.
+
+## Effects that stayed on screen: cleanup hardening, October 10, 2026
+
+Play-testers saw some weapon effects stay for the whole run after about wave 40. Commit e595ffb fixed the shared `VfxKit` scheduler (each effect retires once, cleanups are pcalled, 30 s cap). This pass fixes the effect modules around it. Nothing looks different.
+
+**Rule 1: destroy your own parts first, then start follow-ups.** A cleanup that started a landing burst and then destroyed its parts lost those parts if the burst threw (the pcall stops the rest of the cleanup). Reordered: Legendary Katana/Excalibur slash, Pizza Cutter roll, Royal Flush cards, Pharaoh charge. `check_vfx_cleanup_order.py` checks every `K.animate`/`C.follow` cleanup for this (it flags exactly those four on the old code).
+
+**Rule 2: register the cleanup before anything that can throw.** Legendary/Godly bursts register before building the emitter; the Legendary split rockets are built right before their `K.animate`; Mjolnir's bolt draws after its cleanup is registered; a Reaper wraith's fade registers before its smoke burst; a rocket explosion is tracked before its parts are cloned.
+
+**Rule 3: no orphans.** A repeated id used to replace an entry and leave the old model with nothing pointing at it: wraiths (by key), Ray Gun bolts (a second `first`, or no projectile id at all), rockets and arc cards (by id) now remove the old one first.
+
+**Rule 4: loops that own parts can't fail forever.** `SpecialWeaponVisuals.endFlight` ran the landing impact before removing the flight; an impact that threw left the thrown model up and failed again every frame, which also stopped the zones and puffs after it in the same loop. It now removes the flight, then runs the impact. Projectile-style impacts (Staff, Crystal Ball, Medusa) are pcalled before the head is released. Rockets also end after 30 s of flight (a zero speed never reached its range).
+
+**Backstops:** transient parts outside VfxKit get a `Debris:AddItem` well past their normal end, so they go even if their render loop stops: thrown flights 12 s (normal end by 9 s), poison puffs, rocket models 35 s and smoke 4 s, rocket bursts 5 s (normal 1.2 s), bullet and old-explosion sprites 2 to 3 s, projectile-style heads 12 s (normal 8 s), arc cards 30 s, shirt shots 15 s, wraiths life + 5 s, Ray Gun bolts 14 s. Example: a Bowling Ball flight launched at 0 s is ended by its loop at 9 s; if that loop had stopped, Debris removes it at 12 s.
+
+**Not touched:** the Molotov/fire-zone code (another pass is reworking it). Known gap there: a `Zone` model is parented before it is registered in `zones`, and zones have no Debris backstop.
+
+**Tests:** `run_vfxkit_tests.py` 90 checks PASS (new case 7: a follow-up that throws after the cleanup destroyed its parts leaves nothing behind); `check_vfx_cleanup_order.py` 22 files, 95 effect calls, 0 problems; every touched file compiles with luau-compile. No Studio Play test was run for this pass.
+
+## Molotov fire, October 10, 2026
+
+Play-test: the Molotov's fire "looks weird" (seven neon balls flattened to discs, each with a Roblox `Fire` instance: realistic smoke-fire, not our style) and its zone was too small. Design sheet first (Claude Design, one pass): https://claude.ai/artifact/NBgiUUT7Ee3gDMfwWhMEA8 (top-down and 3/4 views, the burn-down as four frames, colours, budget). Gameplay numbers: [WEAPON_BALANCE.md](WEAPON_BALANCE.md#molotov-fire-rework-2026-10-10).
+
+**What you see** (`ThrownVisuals.fireZone`, called by `SpecialWeaponVisuals` on the `Zone` packet; flat and painted, no meshes):
+
+| Layer | Built from | Behaviour |
+|---|---|---|
+| Scorch | `ScorchMark` decal (uploaded, BossVfxAssets) | 2.5x the start radius, fades in over 0.15 s, out over the last 0.6 s |
+| Fire pool | new painted `MolotovFirePool.png` decal (rim red, orange, yellow, pale core, flame-lick edge) | sized to the server's radius every frame (`SpecialMotion.zoneRadius`), so the red rim is the hit edge; until the PNG is uploaded, three flat Neon discs in the same bands |
+| Flame tongues | `Flame_Flipbook4x4` (uploaded), one emitter, `FacingCameraWorldUp` billboards | spawned on the rim and inside: 2.6 x r + 0.12 x r² a second x ClientQuality effects (about 16 alive at the start on Full, 11 Balanced, 6 Low/Lean); 2.2 studs tall at 7.2, 1.8 at 3.6 |
+| Embers | `Ember` sprite (uploaded), one emitter | 4 a second x quality |
+| Landing | `VfxKit.ring` (amber dashed rim, 0.35 -> 1x the start radius in 0.38 s), a burst of tongues, plus the existing glass shards, pop and flash | only when the camera is within 160 studs |
+
+Colours are the flame flipbook's own bands, measured from its pixels: #D33A22, #F7801F, #FFC93F, #FFE8A0; LightInfluence 0 on the particles so the sky fill doesn't shift them. The fire is a budgeted VfxKit effect (category `fireZone`, 24 x quality), stops spawning past 160 studs, and is 3-5 parts + 2 emitters each (max 4 per player). The fire's model is registered in `zones` and given a Debris backstop (life + 5 s) before it is built, and the build is pcalled (closes the gap noted in the cleanup pass above). Poison clouds are unchanged.
+
+Texture source: `roguelite-planning/weapon-models/assets/14-molotovs/vfx/paint_molotov_vfx.py` (numpy, seeded) writes `textures/MolotovFirePool.png` (512², coloured RGBA). Not uploaded yet.
+
+Not tested: anything in Studio or Play (look in daylight, particle sizes on the real camera, mobile frame time, the sound mix).

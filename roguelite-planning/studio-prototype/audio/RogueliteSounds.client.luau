@@ -307,6 +307,16 @@ combat:WaitForChild('GodlyFX').OnClientEvent:Connect(function(kind,...)
  end
 end)
 
+-- Molotov fire (SpecialWeapons 'Zone', 2026-10-10 rework): the bottle's glassy clink and a soft
+-- low whoomp as the pool goes up. The same kit, pitched; poison clouds stay silent.
+task.spawn(function()
+ combat:WaitForChild('SpecialFX').OnClientEvent:Connect(function(action,_,kind,position)
+  if action~='Zone' or kind~='Fire' or typeof(position)~='Vector3' then return end
+  play('hit_punch','impact',.2,1.9,position,.08)
+  play('shot_rocket','impact',.28,.6,position,.06)
+ end)
+end)
+
 -- Legendary Tier IV moves (LegendaryMoves -> LegendaryFX): the same kit, pitched. Spawned so a
 -- place without LegendaryFX yet never holds up the sounds below.
 task.spawn(function()

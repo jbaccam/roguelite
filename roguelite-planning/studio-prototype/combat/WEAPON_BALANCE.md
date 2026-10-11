@@ -192,3 +192,42 @@ Tier I numbers before character bonuses. The cooldown includes rarity power. DPS
 - Ice Cube now slows the same way (35% for 2 s, bosses half) on 15% of hits from any weapon (`SlowStrength` 10 on top of the base 25%; [SHOP_GAMEPLAY_READINESS.md](SHOP_GAMEPLAY_READINESS.md)).
 
 Tests: `WeaponBalanceTests` (every weapon's range and rate against its old numbers, the Glock and Pan examples, Medusa's slow and card text; the Tier IV check scales the five buffed melee weapons' old Tier IV by their damage change), `MeleeSweepTests` (jump allowance), `WeaponFollowTests` (ring), `WeaponBehaviorTests` (chain pull-in). Not yet run in Studio.
+
+## Molotov fire rework (2026-10-10)
+
+Play-test: "Molotovs are kinda shit. Increase radius and maybe change the actual fire, it looks weird. An initial bigger AoE that gets smaller could be good." Damage, cooldown, tiers and rarity are unchanged (`WeaponCatalog` untouched: 3 / 5 / 7 / 10 every 1.727 s x 1 / .9 / .8 / .7). Only the fire it leaves changed (`SpecialMotion.Fire`, read by `SpecialWeapons` for the ticks and `ThrownVisuals.fireZone` for the look):
+
+| | Before | Now |
+|---|---|---|
+| Radius | 4.5 flat (x Area Size, 2-12) | starts 7.2 (1.6x the old base), holds 0.4 s, eases (smoothstep) to 3.6 (0.8x) at 4 s; at most 16 |
+| Life | 4 s x Duration | same |
+| Tick | 40% of a hit every 0.4 s | 45% every 0.4 s, at the radius of that moment |
+| First tick | 40% | 100% (the ignition), across the full 7.2 studs, shown as a hit |
+| Fires at once | 3 per player per weapon id | 4 (Tier IV throws every 1.21 s, so 3.3 fires were alive and the cap cut one) |
+| Direct hit, burn | 1x hit, 100% burn 6/s for 3 s | same |
+
+Why these numbers: 7.2 matches the Pandora blast (7) and beats the Rocket's 6 for the moment it lands, so the splash reads as an explosive. 3.6 at the end keeps ground x time at x1.62 (412 vs 254 stud²·s per throw), not x2.6 for a 7.2 fire held 4 s. The average radius over the life is 5.4, about a Fart Gun cloud (5.5). Poison clouds (Fart Gun) are unchanged: 5.5 flat, 40%, cap 3.
+
+Per tier, one copy, no stats. Crossing = an enemy walking through the middle at 12 studs/s as the fire lands. Crowd = damage x area per second (sum over ticks of hit x π r², per throw, / cooldown; the cap applied), the number that compares lingering fire with one-off blasts on a steady swarm.
+
+| Tier | Damage · cooldown | Per enemy in the fire, DPS | Crossing damage | Crowd, before -> now |
+|---|---|---|---|---|
+| I | 3 · 1.73 s | 3.0 -> 3.4 (+3 ignition) | 2.4 -> 5.7 | 442 -> 1,010 (x2.3) |
+| II | 5 · 1.55 s | 5.0 -> 5.6 (+5) | 4.0 -> 9.5 | 819 -> 1,870 (x2.3) |
+| III | 7 · 1.38 s | 7.0 -> 7.9 (+7) | 5.6 -> 13.3 | 1,289 -> 2,946 (x2.3) |
+| IV | 10 · 1.21 s | 10.0 -> 11.3 (+10) | 8.0 -> 19.0 | 1,909 -> 4,809 (x2.5) |
+
+Against the other AoE weapons on the same measure (Rocket: 6-stud blast with its 65% edge falloff, average and centre):
+
+| Tier | Molotov now | Fart Gun (Common, poison) | Rocket Launcher (Legendary) avg / centre | Pandora's Box (Rare, 7-stud blast) |
+|---|---|---|---|---|
+| I | 1,010 | 1,186 | 911 / 1,608 | 1,796 |
+| II | 1,870 | 1,779 | 1,412 / 2,493 | 2,762 |
+| III | 2,946 | 2,372 | 2,219 / 3,915 | 4,403 |
+| IV | 4,809 | 3,262 | 3,564 / 6,289 | 7,005 |
+
+Reading it: the Molotov was the worst area weapon in the game (40% of a Common Fart Gun at Tier I). Now it is level with the Fart Gun at Tier I and passes it from Tier II (its x1.5 tier steps), sits between the Rocket's average and centre hits, and stays under Pandora's Box at every tier (`FireZoneTests` checks this). Single target barely moves: the aimed enemy takes the hit, the 6/s burn and the fire, about 10.7 -> 12.8 DPS at Tier I if it stands in the fire (direct 1.7 + burn 6 + ticks 3.4 + ignition 1.7), still under the Chef melee (Pan 17.1, Spatula 16.4, Steak 19.8). It is the Chef's crowd weapon, not a duelist.
+
+Worked example: a zombie standing 6 studs from where the bottle lands. Before, the 4.5-stud fire never reached it. Now it takes the 3-damage ignition and burns until about 1.8 s, when the fire has shrunk past it (4 more ticks at 1.35 = 5.4, 8.4 in all at Tier I).
+
+Server rules kept: the server owns every tick and the radius (`SpecialWeapons`, `Motion.zoneRadius` at tick time), ticks are secondary (no crit, chains, knockback or status procs), walls block, 64 zones per server. Tests: `run_fire_zone_tests.py` (FireZoneTests, 453 checks: radii, hold, curve, monotonic, Area Size scaling, tick schedule, the x1.62 cover, the 6-stud example and the per-tier Pandora ceiling).

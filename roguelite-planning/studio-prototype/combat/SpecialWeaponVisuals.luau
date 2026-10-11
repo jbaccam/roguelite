@@ -24,6 +24,7 @@ function V.mount(combat,folder,lookup,options)
    local flame=Instance.new('Fire');flame.Size=1.2;flame.Heat=1;flame.Color=Color3.fromRGB(255,170,45);flame.SecondaryColor=Color3.fromRGB(225,67,15);flame.Parent=p
   end
   table.insert(puffs,{part=p,born=os.clock(),duration=duration,size=size,position=position,velocity=velocity or Vector3.yAxis*.5,green=green})
+  Debris:AddItem(p,duration+3) -- backstop if step ever stops
  end
  local function release(r)
   if r.visual and r.visual.flying then r.visual.flying[r.reserve]=math.max(0,(r.visual.flying[r.reserve] or 1)-1) end
@@ -31,9 +32,12 @@ function V.mount(combat,folder,lookup,options)
  end
  local function endFlight(key)
   local r=flights[key];if not r then return end
-  -- Returning weapons land back in their slot; everything else gets a small impact.
-  if r.model and not r.returning then Thrown.impact(folder,r.id,r.model:GetPivot().Position) end
+  -- Returning weapons land back in their slot; everything else gets a small impact. The flight
+  -- is removed before the impact runs: an impact that threw used to leave the flown model and its
+  -- entry behind, and step retried (and failed) every frame for the rest of the run (2026-10-10).
+  local at=r.model and not r.returning and r.model:GetPivot().Position
   release(r);flights[key]=nil
+  if at then Thrown.impact(folder,r.id,at) end
  end
  local function endZone(key) local z=zones[key];if z then z.model:Destroy();zones[key]=nil end end
  local function onFx(action,key,...)
@@ -50,6 +54,19 @@ function V.mount(combat,folder,lookup,options)
    local model=Instance.new('Model');model.Name=a[1]..'Zone';model.Parent=folder
    local green=a[1]=='Poison';local radius=a[3]
    local z={model=model,position=a[2],radius=radius,ends=workspace:GetServerTimeNow()+a[4],green=green,parts={}}
+   -- Molotov fire (2026-10-10): a painted pool and flipbook flame tongues that burn down with the
+   -- server's radius (a[5] end radius, a[6] server start time, a[7] hold; SpecialMotion.zoneRadius).
+   -- Missing extras (an older caller) fall back to SpecialMotion's own fire shape.
+   if not green then
+    local r1=a[5] or radius/Motion.Fire.start*Motion.Fire.finish
+    local born=a[6] or workspace:GetServerTimeNow()
+    z.ends=born+a[4]
+    -- Registered (and backstopped) before building, so a build that throws still ends at ZoneEnd.
+    zones[key]=z;Debris:AddItem(model,math.max(0,z.ends-workspace:GetServerTimeNow())+5)
+    local ok,err=pcall(Thrown.fireZone,model,a[2],radius,r1,a[4],born,a[7] or Motion.zoneHold('Fire',a[4]))
+    if not ok then warn('fire zone failed: '..tostring(err)) end
+    return
+   end
    for i=1,7 do
     local angle=i*2.39996;local distance=i==1 and 0 or radius*.5
     local size=green and radius*1.15 or radius*.55
@@ -123,6 +140,8 @@ function V.mount(combat,folder,lookup,options)
     end
     for _,p in r.model:GetDescendants() do if p:IsA('BasePart') then p.Anchored=true;p.CanCollide=false;p.CanTouch=false;p.CanQuery=false;p.LocalTransparencyModifier=0 end end
     r.model.Parent=folder
+    -- Backstop if this step loop ever stops: endFlight runs by 9 s after launch.
+    Debris:AddItem(r.model,12)
     local visual=lookup(r.owner,r.slot)
     if visual and visual.id==r.id then
      local source=visual.reserves and visual.reserves[r.reserve] or visual.model
