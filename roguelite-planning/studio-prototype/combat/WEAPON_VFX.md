@@ -143,3 +143,24 @@ Colours are the flame flipbook's own bands, measured from its pixels: #D33A22, #
 Texture source: `roguelite-planning/weapon-models/assets/14-molotovs/vfx/paint_molotov_vfx.py` (numpy, seeded) writes `textures/MolotovFirePool.png` (512², coloured RGBA). Not uploaded yet.
 
 Not tested: anything in Studio or Play (look in daylight, particle sizes on the real camera, mobile frame time, the sound mix).
+
+### Follow-up: soft, grounded fire (same day)
+
+Play-test of the version above (synced at 33124c1): "fire effects are hella 2D, especially on the floor, and clips hella". The screenshot showed the pool as a hard-edged opaque cutout lying flat on uneven grass (terrain and grass poking through it, reading as a sticker), and the flame tongues as flat cards (`FacingCameraWorldUp`) slicing into the ground from the 3/4 camera.
+
+Rebuilt `ThrownVisuals.fireZone` (server, radius curve and counts unchanged). Nothing in it is a flat shape of its own any more. Every sprite sits on its own ground raycast (players, enemies and effect folders excluded):
+
+| Layer | Now |
+|---|---|
+| Pool | **Dropped.** `MolotovFirePool.png` (rbxassetid://121830714730465) is no longer drawn; its id stays in `FireTextures` for reference |
+| Heat glow | Soft additive glow sprites (GodlySoftGlow, tinted orange to red, LightEmission 1) lying flat on ground hits (`VelocityPerpendicular`), 0.7-1 s each, re-spawned inside the current radius at (2 + 0.8 r) a second x quality, about 0.55 transparent at their brightest. The glow flickers and shrinks with the fire, and a bump under one blob only dims a soft edge |
+| Scorch | 7 small ScorchMark decals (1.05-1.3 x start radius) instead of one 2.5x plate, each on its own ground hit and tilted to its normal, 45% transparent at most |
+| Flames | Same flipbook and the same counts by quality, now `FacingCamera`, so a tongue never shows an edge. Each is lifted so its painted base sits 0.15 stud above its own ground hit, with ZOffset 1.2 toward the camera so slopes and grass can't slice it. Size varies ±18% per tongue, the squash wobbles as it burns, and a glow blob under the base softens where it meets the ground |
+| Height | Embers rise 3-5 studs (6 a second x quality), plus a little grey smoke (SmokePuff flipbook, 1.6 a second x quality) starting 2-3 studs up |
+| Light | One warm PointLight per fire (brightness about 1.1 with a flicker, range 1.8 r + 2, shrinking with the fire). At most 3 fires are lit at once and none on Low/Lean (ClientQuality `lights` 0) |
+
+The landing ring sits 0.2 stud up (was 0.08) and is drawn after the fire's cleanup is registered. Cost per fire: 8 parts (7 scorch + 1 anchor) and 4 emitters, plus about 40 short raycasts a second at Full on the camera's side only. Still a VfxKit `fireZone` effect (budget 24 x quality), skipped past 160 studs.
+
+**Look at in Play:** (1) on bumpy grass and a slope, no flat edge or sticker shape should show and no tongue should be cut by the ground; (2) the glow reads as heat, not paint (if it is too faint or too strong, `glow.Transparency` 0.55 is the lever); (3) the tongues' bases from the normal 3/4 camera and from straight above; (4) the shrink is still easy to read from the ring of tongues; (5) with 4 fires down, the light count and frame time on Balanced and Low.
+
+**Tests:** `run_fire_zone_tests.py` 453 PASS, `run_vfxkit_tests.py` 91 PASS, `check_vfx_cleanup_order.py` 22 files / 99 calls / 0 problems, luau-compile OK. Not run in Studio or Play.

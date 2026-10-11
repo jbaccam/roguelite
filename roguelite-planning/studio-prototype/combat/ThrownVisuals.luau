@@ -4,13 +4,12 @@ local K=require(script.Parent:WaitForChild('VfxKit'))
 local Q=require(script.Parent:WaitForChild('ClientQuality'))
 local Motion=require(script.Parent:WaitForChild('SpecialMotion'))
 local T={}
--- Molotov fire textures. Flame, Scorch and Ember are the boss kit's painted sprites, already uploaded
--- (BossVfxAssets; LegendaryVisuals uses them too). Pool: weapon-models/assets/14-molotovs/vfx/
--- textures/MolotovFirePool.png; nil until it is uploaded, and the pool is drawn as flat discs meanwhile.
-T.FireTextures={Flame='rbxassetid://132081298787809',Scorch='rbxassetid://92423458342016',Ember='rbxassetid://116159534169534',Pool='rbxassetid://121830714730465'} -- Pool: MolotovFirePool.png, uploaded 2026-10-10
--- The flame flipbook's bands, measured from its pixels: rim red, orange, yellow (design sheet:
--- https://claude.ai/artifact/NBgiUUT7Ee3gDMfwWhMEA8).
-local POOL_BANDS={{Color3.fromRGB(211,58,34),1,.32},{Color3.fromRGB(247,128,31),.78,.28},{Color3.fromRGB(255,201,63),.52,.22}}
+-- Molotov fire textures, all already uploaded: Flame, Scorch, Ember and Smoke are the boss kit's painted
+-- sprites (BossVfxAssets; LegendaryVisuals uses them too), Glow is GodlySoftGlow (white on clear,
+-- tinted). Pool (MolotovFirePool.png, uploaded 2026-10-10) is no longer drawn: the opaque pool read
+-- as a sticker on uneven ground (play-test, 2026-10-10); kept for reference only.
+T.FireTextures={Flame='rbxassetid://132081298787809',Scorch='rbxassetid://92423458342016',Ember='rbxassetid://116159534169534',
+ Smoke='rbxassetid://133683398795549',Glow='rbxassetid://119796255132573',Pool='rbxassetid://121830714730465'}
 local YOLK=Color3.fromRGB(255,196,64)
 local SHELL=Color3.fromRGB(250,244,230)
 local GLASS=Color3.fromRGB(176,226,206)
@@ -84,103 +83,157 @@ function T.impact(folder,id,position)
   K.shards(folder,position,K.White,3,6,.16,.1,nil,.5)
  end
 end
--- Molotov fire pool (2026-10-10 rework; SpecialWeaponVisuals 'Zone'). Flat and painted, never a Fire
--- instance or a shaded mesh: a scorch decal at the start size, the painted pool sized to the
--- server's radius every frame (SpecialMotion.zoneRadius, the same curve the damage ticks use), and
--- flipbook flame tongues spawned on its rim and inside, upright billboards, plus a few embers.
--- One emitter of each moves its attachment and Emits, so a fire is 3-5 parts and 2 emitters.
--- Flames per second follow the rim length x ClientQuality effects: about 16 alive at the start on
--- Full, 11 on Balanced, 6 on Low/Lean (phones). Nothing spawns past 160 studs from the camera.
+-- Molotov fire (2026-10-10 rework; SpecialWeaponVisuals 'Zone'). Play-test of the first version: "fire
+-- effects are hella 2D, especially on the floor, and clips hella" (an opaque pool decal lying on
+-- uneven grass like a sticker, upright flame cards slicing into the ground). Now it has no flat
+-- shape of its own; every piece is a soft sprite placed on its own ground raycast:
+--   scorch: 7 small ScorchMark decals, each on its own ground hit and tilted to it, so terrain
+--     bumps can't cut one big plate; faint (they are a burn mark, not the fire)
+--   heat glow: soft additive glow sprites lying flat (VelocityPerpendicular) on ground hits inside
+--     the current radius, short-lived and re-spawned, so the glow flickers and shrinks with the fire
+--   flames: the flame flipbook as camera-facing particles (never show an edge), each lifted so its
+--     painted base sits just above its ground hit, ZOffset toward the camera so a slope or grass
+--     can't slice it, random size and squash per tongue, a glow blob under the base hides its edge
+--   height: embers that rise 3-5 studs, heat sparks, and a little grey smoke above
+--   light: one warm PointLight per fire, low and shrinking with it, at most 3 fires lit at once
+--     (none on Low/Lean, ClientQuality lights)
+-- Everything scales with the server's radius every frame (SpecialMotion.zoneRadius, the same curve
+-- the damage ticks use) and ClientQuality effects: about 16 tongues alive at the start on Full, 11
+-- on Balanced, 6 on Low/Lean (phones). Nothing spawns past 160 studs from the camera.
 -- On landing: a flat amber-rimmed ring whooshes out to the start radius and the flames burst up.
 -- model: the zone's Model (SpecialWeaponVisuals destroys it at ZoneEnd); position: server centre,
 -- 0.15 above the ground; born: server time it started.
+local fireLights=0
+local FIRE_LIGHT=Color3.fromRGB(255,146,58)
+local GLOW={Color3.fromRGB(255,170,64),Color3.fromRGB(226,78,20)}
+local SMOKE=Color3.fromRGB(92,84,80)
+local function seq(...) local k={};local a={...};for i=1,#a,3 do k[#k+1]=NumberSequenceKeypoint.new(a[i],a[i+1],a[i+2] or 0) end;return NumberSequence.new(k) end
 function T.fireZone(model,position,r0,r1,duration,born,hold)
  local tex=T.FireTextures
  local groundY=position.Y-.15
- local spin=CFrame.Angles(0,math.random()*math.pi*2,0)
- local function flat(y) return CFrame.new(position.X,groundY+y,position.Z)*spin end
- -- 1. Scorch under it all, at the start size; it stays until the fire is out.
- local scorch=K.part(model,'FireScorch',Vector3.new(r0*2.5,.05,r0*2.5),K.White,1)
- scorch.CFrame=flat(.03)
- local scorchDecal=Instance.new('Decal');scorchDecal.Face=Enum.NormalId.Top;scorchDecal.Texture=tex.Scorch;scorchDecal.Transparency=1;scorchDecal.Parent=scorch
- -- 2. The pool: the painted decal, or flat discs in the flipbook's bands until it is uploaded.
- local pool,poolDecal,discs
- if tex.Pool then
-  pool=K.part(model,'FirePool',Vector3.new(1,.05,1),K.White,1)
-  poolDecal=Instance.new('Decal');poolDecal.Face=Enum.NormalId.Top;poolDecal.Texture=tex.Pool;poolDecal.Transparency=1;poolDecal.Parent=pool
- else
-  discs={}
-  for i,b in POOL_BANDS do
-   discs[i]={part=K.part(model,'FirePoolDisc',Vector3.new(.04,1,1),b[1],1,Enum.Material.Neon,Enum.PartType.Cylinder),scale=b[2],alpha=b[3],lift=.08+i*.012}
-  end
+ -- Ground probe: players, enemies and effect folders are not ground.
+ local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.IgnoreWater=true
+ local exclude={model.Parent or model}
+ for _,p in game:GetService('Players'):GetPlayers() do if p.Character then exclude[#exclude+1]=p.Character end end
+ local enemies=workspace:FindFirstChild('RogueliteEnemies');if enemies then exclude[#exclude+1]=enemies end
+ params.FilterDescendantsInstances=exclude
+ -- Ground point and normal under (x, z); falls back to the landing height on a miss.
+ local function ground(x,z)
+  local hit=workspace:Raycast(Vector3.new(x,groundY+4,z),-Vector3.yAxis*9,params)
+  if hit then return hit.Position,hit.Normal end
+  return Vector3.new(x,groundY,z),Vector3.yAxis
  end
- -- 3 and 4. Flame tongues and embers.
+ local function around(r,inner)
+  local angle=math.random()*math.pi*2
+  local distance=inner and r*.75*math.sqrt(math.random()) or r*(.8+math.random()*.17)
+  return position.X+math.cos(angle)*distance,position.Z+math.sin(angle)*distance
+ end
+ -- 1. Scorch: small decals, each on its own ground hit and tilted to it.
+ local scorches={}
+ for i=1,7 do
+  local angle=i*2.39996;local distance=i==1 and 0 or r0*.55
+  local at,normal=ground(position.X+math.cos(angle)*distance,position.Z+math.sin(angle)*distance)
+  local right=normal:Cross(Vector3.new(math.cos(angle*3),0,math.sin(angle*3)));if right.Magnitude<.05 then right=Vector3.xAxis end
+  local size=r0*(i==1 and 1.3 or 1.05)
+  local plate=K.part(model,'FireScorch',Vector3.new(size,.04,size),K.White,1)
+  plate.CFrame=CFrame.fromMatrix(at+normal*.06,right.Unit,normal)
+  local d=Instance.new('Decal');d.Face=Enum.NormalId.Top;d.Texture=tex.Scorch;d.Transparency=1;d.Parent=plate
+  scorches[i]=d
+ end
+ -- 2-4. One spawn point, several emitters; each Emit moves the attachment to a ground hit first.
  local anchor=K.part(model,'FireAnchor',Vector3.one*.1,K.White,1);anchor.CFrame=CFrame.new(position)
  local at=Instance.new('Attachment');at.Name='FireSpawn';at.Parent=anchor
- local flames=Instance.new('ParticleEmitter');flames.Name='MolotovFlames';flames.Texture=tex.Flame
+ local function emitter(name,texture)
+  local e=Instance.new('ParticleEmitter');e.Name=name;e.Texture=texture;e.Rate=0;e.Enabled=false
+  e.EmissionDirection=Enum.NormalId.Top;e.LightInfluence=0;e.Parent=at
+  return e
+ end
+ local flames=emitter('MolotovFlames',tex.Flame)
  flames.FlipbookLayout=Enum.ParticleFlipbookLayout.Grid4x4;flames.FlipbookMode=Enum.ParticleFlipbookMode.OneShot
- flames.Orientation=Enum.ParticleOrientation.FacingCameraWorldUp
- flames.Lifetime=NumberRange.new(.5,.7);flames.Speed=NumberRange.new(.3,.9);flames.SpreadAngle=Vector2.new(10,10)
- flames.EmissionDirection=Enum.NormalId.Top;flames.Acceleration=Vector3.new(0,1.5,0)
- flames.Rotation=NumberRange.new(-6,6);flames.RotSpeed=NumberRange.new(0,0)
- flames.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.05),NumberSequenceKeypoint.new(.8,.1),NumberSequenceKeypoint.new(1,.5)})
- -- LightInfluence 0: the blue sky fill would turn the orange mustard (game lighting shifts colours).
- flames.LightEmission=.25;flames.LightInfluence=0;flames.ZOffset=.3;flames.Rate=0;flames.Enabled=false;flames.Parent=at
- local embers=Instance.new('ParticleEmitter');embers.Name='MolotovEmbers';embers.Texture=tex.Ember
- embers.Size=NumberSequence.new(.3,0);embers.Lifetime=NumberRange.new(.8,1.2);embers.Speed=NumberRange.new(2,4)
- embers.SpreadAngle=Vector2.new(20,20);embers.EmissionDirection=Enum.NormalId.Top;embers.Acceleration=Vector3.new(0,1,0);embers.Drag=.6
- embers.LightEmission=1;embers.LightInfluence=0;embers.Rate=0;embers.Enabled=false;embers.Parent=at
+ flames.Orientation=Enum.ParticleOrientation.FacingCamera
+ flames.Lifetime=NumberRange.new(.45,.75);flames.Speed=NumberRange.new(.4,1.1);flames.SpreadAngle=Vector2.new(8,8)
+ flames.Acceleration=Vector3.new(0,2,0);flames.Rotation=NumberRange.new(-8,8);flames.RotSpeed=NumberRange.new(-10,10)
+ -- Flicker: each tongue squashes a little differently as it burns (envelopes randomise per particle).
+ flames.Squash=seq(0,0,0, .5,.12,.1, 1,-.08,0)
+ flames.Transparency=seq(0,.15,0, .2,0,0, .8,.08,0, 1,.6,0)
+ -- Pushed toward the camera so a slope, a bump or grass never slices a tongue.
+ flames.LightEmission=.3;flames.ZOffset=1.2
+ local glow=emitter('MolotovGlow',tex.Glow)
+ glow.Orientation=Enum.ParticleOrientation.VelocityPerpendicular -- lies flat on the ground
+ glow.Speed=NumberRange.new(.01);glow.SpreadAngle=Vector2.zero;glow.Lifetime=NumberRange.new(.7,1)
+ glow.Color=ColorSequence.new(GLOW[1],GLOW[2]);glow.LightEmission=1;glow.ZOffset=.5
+ glow.Transparency=seq(0,1,0, .25,.55,.1, .7,.65,.1, 1,1,0);glow.Rotation=NumberRange.new(0,360)
+ local embers=emitter('MolotovEmbers',tex.Ember)
+ embers.Size=seq(0,.32,.08, 1,0,0);embers.Lifetime=NumberRange.new(1,1.6);embers.Speed=NumberRange.new(2.5,4.5)
+ embers.SpreadAngle=Vector2.new(18,18);embers.Acceleration=Vector3.new(0,.8,0);embers.Drag=.5;embers.LightEmission=1;embers.ZOffset=.8
+ local smoke=emitter('MolotovSmoke',tex.Smoke)
+ smoke.FlipbookLayout=Enum.ParticleFlipbookLayout.Grid4x4;smoke.FlipbookMode=Enum.ParticleFlipbookMode.OneShot
+ smoke.Color=ColorSequence.new(SMOKE);smoke.LightInfluence=.6;smoke.LightEmission=0
+ smoke.Lifetime=NumberRange.new(1.2,1.6);smoke.Speed=NumberRange.new(2,3);smoke.SpreadAngle=Vector2.new(12,12)
+ smoke.Acceleration=Vector3.new(0,.5,0);smoke.Drag=.4;smoke.Rotation=NumberRange.new(0,360);smoke.RotSpeed=NumberRange.new(-20,20)
+ smoke.Transparency=seq(0,1,0, .25,.62,0, 1,1,0)
  local function tongueSize(r) return math.clamp(1.4+.11*r,1.6,2.6) end -- studs: 2.2 at 7.2, 1.8 at 3.6
- local function emitFlames(r,count,inner)
+ -- A tongue: the flipbook's flame fills the lower part of each frame (bottom ~0.4 of its size below
+ -- the centre), so lift it that much plus a little; a glow blob sits under its base.
+ local function emitFlame(r,inner)
   local s=tongueSize(r)
-  flames.Size=NumberSequence.new(s*.8,s)
-  for _=1,count do
-   local angle=math.random()*math.pi*2
-   local distance=inner and r*.7*math.sqrt(math.random()) or r*(.8+math.random()*.17)
-   -- The flipbook's flame sits in the lower part of each frame: lift so its base is on the ground.
-   at.WorldPosition=Vector3.new(position.X+math.cos(angle)*distance,groundY+s*.3,position.Z+math.sin(angle)*distance)
-   flames:Emit(1)
-  end
+  flames.Size=seq(0,s*.8,s*.18, 1,s,s*.18)
+  local x,z=around(r,inner);local g=ground(x,z)
+  at.WorldPosition=g+Vector3.yAxis*(s*.42+.15);flames:Emit(1)
  end
- -- Landing: the ignition ring out to the full start radius and a burst of tongues (when on screen).
+ local function emitGlow(r,x,z)
+  local g=ground(x,z);local s=math.clamp(r*.9,2.2,6)
+  glow.Size=seq(0,s*.8,s*.15, 1,s,s*.15)
+  at.WorldPosition=g+Vector3.yAxis*.12;glow:Emit(1)
+ end
+ -- 5. The warm light (Balanced and up; at most 3 fires lit at once).
+ local light
+ if Q.get().lights>0 and fireLights<3 then
+  fireLights+=1
+  light=Instance.new('PointLight');light.Color=FIRE_LIGHT;light.Shadows=false;light.Brightness=0;light.Range=r0*1.8;light.Parent=anchor
+  anchor.CFrame=CFrame.new(position+Vector3.yAxis*1.5)
+ end
  local near=K.near(position,160)
- if near and workspace:GetServerTimeNow()-born<.3 then
-  K.ring(model,CFrame.new(position.X,groundY+.08,position.Z),{radius0=r0*.35,radius1=r0,width=.8,color=FLAME[1],rim=K.Amber,bodyAlpha=.5,duration=.38,segments=20})
-  emitFlames(r0,math.max(2,math.floor(10*Q.get().effects)),true)
- end
- local spawnFlames,spawnEmbers,lastAge,checkNear=0,0,0,os.clock()+.5
+ local spawnFlames,spawnGlow,spawnEmbers,spawnSmoke,lastAge,checkNear=0,0,0,0,0,os.clock()+.5
  K.animate(math.max(.1,born+duration-workspace:GetServerTimeNow())+.05,function(_,age)
   if not model.Parent then return true end
   local now=workspace:GetServerTimeNow()
   local life=now-born
   local r=Motion.zoneRadius(r0,r1,life,duration,hold)
-  -- Fade in over 0.15 s, out over the last 0.6 s (tongues stop then and finish their flipbook).
+  -- Fade in over 0.15 s, out over the last 0.6 s (sprites stop spawning then and finish their life).
   local hidden=math.max(1-math.clamp(life/.15,0,1),math.clamp(1-(born+duration-now)/.6,0,1))
-  scorchDecal.Transparency=.15+.85*hidden
-  if pool then
-   local d=r*2*1.08 -- the painted rim's tongues reach past the hit edge a little, its valleys inside
-   pool.Size=Vector3.new(d,.05,d);pool.CFrame=flat(.06);poolDecal.Transparency=.05+.95*hidden
-  else
-   for _,disc in discs do
-    local d=r*2*disc.scale
-    disc.part.Size=Vector3.new(.04,d,d);disc.part.CFrame=flat(disc.lift)*CFrame.Angles(0,0,math.pi/2)
-    disc.part.Transparency=disc.alpha+(1-disc.alpha)*hidden
-   end
+  for _,d in scorches do d.Transparency=.45+.55*hidden end
+  if light then
+   light.Range=r*1.8+2;light.Brightness=(1-hidden)*(1.1+.25*math.sin(now*17)*math.sin(now*7.3))
   end
   local dt=math.clamp(age-lastAge,0,.1);lastAge=age
   if os.clock()>=checkNear then near=K.near(position,160);checkNear=os.clock()+.5 end
   if near and now<born+duration-.6 then
    local q=Q.get().effects
    local rim,inner=2.6*r,.12*r*r -- per second: 18.7 + 6.2 at 7.2 studs, 9.4 + 1.6 at 3.6
-   spawnFlames+=(rim+inner)*q*dt;spawnEmbers+=4*q*dt
-   while spawnFlames>=1 do spawnFlames-=1;emitFlames(r,1,math.random()>=rim/(rim+inner)) end
+   spawnFlames+=(rim+inner)*q*dt;spawnGlow+=(2+.8*r)*q*dt;spawnEmbers+=6*q*dt;spawnSmoke+=1.6*q*dt
+   while spawnFlames>=1 do spawnFlames-=1;emitFlame(r,math.random()>=rim/(rim+inner)) end
+   while spawnGlow>=1 do spawnGlow-=1;local x,z=around(r,true);emitGlow(r,x,z) end
    while spawnEmbers>=1 do
-    spawnEmbers-=1
-    local angle=math.random()*math.pi*2;local distance=r*.8*math.sqrt(math.random())
-    at.WorldPosition=Vector3.new(position.X+math.cos(angle)*distance,groundY+.6,position.Z+math.sin(angle)*distance)
-    embers:Emit(1)
+    spawnEmbers-=1;local x,z=around(r,true)
+    at.WorldPosition=ground(x,z)+Vector3.yAxis*.8;embers:Emit(1)
+   end
+   while spawnSmoke>=1 do
+    spawnSmoke-=1;local x,z=around(r*.6,true)
+    local s=math.clamp(r*.5,1.6,3.2);smoke.Size=seq(0,s*.6,0, 1,s*1.4,0)
+    at.WorldPosition=ground(x,z)+Vector3.yAxis*(2.2+math.random());smoke:Emit(1)
    end
   end
- end,function() model:Destroy() end,'fireZone',24)
+ end,function()
+  if light then fireLights=math.max(0,fireLights-1);light=nil end
+  model:Destroy()
+ end,'fireZone',24)
+ -- Landing (after the cleanup is registered, so a throw here strands nothing): the ignition ring
+ -- out to the full start radius and a burst of tongues (when on screen).
+ if near and workspace:GetServerTimeNow()-born<.3 then
+  K.ring(model,CFrame.new(position.X,groundY+.2,position.Z),{radius0=r0*.35,radius1=r0,width=.8,color=FLAME[1],rim=K.Amber,bodyAlpha=.5,duration=.38,segments=20})
+  for _=1,math.max(2,math.floor(10*Q.get().effects)) do emitFlame(r0,true) end
+  for _=1,math.max(2,math.floor(5*Q.get().effects)) do local x,z=around(r0,true);emitGlow(r0,x,z) end
+ end
 end
 return T
