@@ -55,3 +55,25 @@ What the revived player gets is unchanged: 50% health, a 3 s shield and the revi
 **Ring on screen:** the spot publishes `Progress`, `ProgressAt` and `ProgressRate` (and `Revivers`) only when the speed changes, so every screen draws the same ring smoothly. The prompt's own `HoldDuration` is 60 s, so no client ends a hold early; the server finishes the revive. Each guarded reviver shows a lime ForceField bubble (client-only, cannot be hit or raycast).
 
 **Verification:** `python run_survival_tests.py <luau.exe>` ran BossArrivalTests (12) and TeammateReviveTests (79, rewritten for the ring: speeds, helpers, drain, reach, guard on and off, pause, the revive shove). `run_enemy_shot_tests.py` still passes (6,351). Boss shots (MapBossService) and hazards aren't stopped by the bubble; they get the 40% damage. No Studio sync or Play test was run for this change.
+
+### Second pass (2026-10-10, "a lil too op")
+
+After a play-test the first pass was toned down. The table above shows the first pass; these are the live numbers now:
+
+| | Before | First pass | Now |
+|---|---|---|---|
+| Time, one reviver | 5 s | 2.5 s | 3.5 s |
+| More revivers | not faster | +50% each | +25% each: 2 → 2.8 s, 3 → 2.33 s |
+| Reach (prompt / server) | 10 / 14 | 16 / 20 | 12 / 16 |
+| Ring drain when nobody holds | instant reset | full to empty in 5 s | full to empty in 3 s |
+| Reviver damage | 100% | 40% | 60% (40% less), shots included |
+| Regular enemies' shots | hit | stopped at the bubble | hit, at 60% (`TeammateRevive.BLOCK_SHOTS` / `EnemyAttacks` `BLOCK_REVIVE_SHOTS` = false) |
+
+The guard rules are the same: on only while the server counts the hold. The bubble still shows, and now means 40% less damage.
+
+**Example, same fight** (3 Bow Skeletons, one reviver, 15.6 per arrow before scaling, one arrow per skeleton every 2.65 s):
+- Originally: 5 s, about 5.7 arrows, about 88 damage.
+- First pass: 2.5 s, 0 damage (every arrow stopped).
+- Now: 3.5 s, about 4 arrows × 15.6 × 0.6, about 37 damage.
+
+Verification: `python run_survival_tests.py <luau.exe>`: BossArrivalTests 12 and TeammateReviveTests 81 checks passed, with every scenario retimed to these numbers. No Studio sync or Play test by this agent.

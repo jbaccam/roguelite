@@ -27,19 +27,22 @@ local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')
 local Tags=game:GetService('CollectionService')
 local R={}
-R.HOLD_SECONDS=2.5 -- one reviver, from an empty ring (was 5)
--- Each extra teammate holding the same ring adds this much speed. Example: 2 holding x1.5 (1.67 s),
--- 3 holding x2 (1.25 s).
-R.HELPER_BONUS=.5
+-- 2026-10-10 second pass (user: "reviving seems just a lil too op now"): between the old and the first
+-- pass: 3.5 s, +25% per helper, 12 + 4 = 16 studs, 3 s drain, 40% less damage, no shot block.
+R.HOLD_SECONDS=3.5 -- one reviver, from an empty ring (was 5, then 2.5)
+-- Each extra teammate holding the same ring adds this much speed. Example: 2 holding x1.25 (2.8 s),
+-- 3 holding x1.5 (2.33 s).
+R.HELPER_BONUS=.25
 -- Nobody holding: the ring drains from full to empty in this long (was: empty at once on a let-go).
-R.DECAY_SECONDS=5
-R.RANGE=16 -- the prompt's MaxActivationDistance, in studs (was 10), so you can revive from outside a crowd
+R.DECAY_SECONDS=3
+R.RANGE=12 -- the prompt's MaxActivationDistance, in studs (was 10, then 16)
 -- The server allows a little more reach than the prompt: positions replicate a moment late, so a
--- teammate at the prompt's edge keeps the hold. 16 + 4 = 20 studs from the prompt.
+-- teammate at the prompt's edge keeps the hold. 12 + 4 = 16 studs from the prompt.
 R.SLACK=4
 -- Share of damage a reviver takes while their hold counts (CharacterService.contact reads the player's
--- ReviveGuard attribute): 60% less. Regular enemies' shots that reach them are stopped (EnemyAttacks).
-R.GUARD=.4
+-- ReviveGuard attribute): 40% less, shots included (the first pass's shot block is off: R.BLOCK_SHOTS).
+R.GUARD=.6
+R.BLOCK_SHOTS=false -- EnemyAttacks: stop regular enemies' shots at a reviver's bubble
 R.PROMPT_HOLD=60 -- the prompt's HoldDuration: longer than any revive; the server ends the hold
 R.STEP=.1 -- seconds between checks (10 a second)
 R.FOLDER='RogueliteReviveSpots' -- in Workspace; TeammateReviveVisuals draws each spot in it

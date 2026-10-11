@@ -5,7 +5,8 @@
 -- revivers and drains slowly when nobody holds), so every screen shows the same progress, the downed
 -- player's death screen included. The prompt shows only to living run members who aren't down: never
 -- to the downed player, people outside the run, or anyone while the run is paused. Each reviver whose
--- hold counts (ReviveGuard) wears a lime bubble: they take 40% damage and enemy shots stop at it.
+-- hold counts (ReviveGuard) wears a lime bubble: they take 40% less damage, shots included (shots
+-- pass through it since the second pass, TeammateRevive.BLOCK_SHOTS).
 -- Presentation only: the server times each hold itself, guards the revivers and decides the revive.
 -- Unsandboxed LocalScript in StarterPlayerScripts, like PetVisuals.
 local Players=game:GetService('Players')
@@ -20,7 +21,7 @@ local combat=RS:WaitForChild('RogueliteCombat')
 local player=Players.LocalPlayer
 local gui=player:WaitForChild('PlayerGui')
 local FOLDER='RogueliteReviveSpots'
-local SEGMENTS=32 -- ring pieces lighting up one by one: 32 in 2.5 s is one every 0.08 s
+local SEGMENTS=32 -- ring pieces lighting up one by one: 32 in 3.5 s is one every 0.11 s
 local SLICE=Rect.new(48,48,208,208) -- UITheme's nine-slice centre
 local views={} -- spot model -> {ring,stroke,segments,plus,tag,down,prompt,shown,pressing,progress,reviver}
 local bubbles={} -- guarded reviver (Player) -> their bubble Part (local to this screen)
@@ -165,7 +166,7 @@ RunService.RenderStepped:Connect(function()
   local t=v.tag
   t.gui.Enabled=member or mine
   if t.scale.Scale~=s then t.scale.Scale=s;t.gui.Size=UDim2.fromOffset(260*s,130*s) end
-  -- More than one holding: "BEN +1 ARE REVIVING" (the ring fills x1.5 with two, x2 with three).
+  -- More than one holding: "BEN +1 ARE REVIVING" (the ring fills x1.25 with two, x1.5 with three).
   local who=string.upper(spot:GetAttribute('ReviverName') or 'A teammate')..(revivers>1 and ' +'..(revivers-1)..' ARE' or ' IS')
   t.status.Text=not held and 'DOWN' or v.reviver==player.UserId and (revivers>1 and 'REVIVING x'..revivers or 'REVIVING') or mine and who..' REVIVING YOU' or who..' REVIVING'
   t.status.TextColor3=held and C.lime or C.negative

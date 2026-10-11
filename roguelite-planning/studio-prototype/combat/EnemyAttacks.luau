@@ -1,6 +1,8 @@
 -- Server-owned regular enemy attacks. No client-supplied hit/target claims.
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+-- TeammateRevive.BLOCK_SHOTS mirror (not required here): enemy shots stop at a reviver's bubble.
+local BLOCK_REVIVE_SHOTS = false
 local combat = game.ReplicatedStorage:WaitForChild("RogueliteCombat")
 local Catalog = require(combat:WaitForChild("EnemyCatalog"))
 local Motion = require(combat:WaitForChild("EnemyMotion"))
@@ -385,8 +387,10 @@ RunService.Heartbeat:Connect(function(dt)
 				end
 			end
 			if closest then
-				-- Reviving a teammate (ReviveGuard, TeammateRevive): the shot stops at their bubble, no damage.
-				if closest:GetAttribute("ReviveGuard") == nil then
+				-- Reviving a teammate (ReviveGuard, TeammateRevive): the shot stopped at their bubble, no damage.
+				-- Off since the 2026-10-10 second pass ("a lil too op"): a reviver takes shots at 60% instead
+				-- (CharacterService.contact). BLOCK_REVIVE_SHOTS=true brings the block back.
+				if closest:GetAttribute("ReviveGuard") == nil or not BLOCK_REVIVE_SHOTS then
 					damage(p.source, closest, p.damage)
 				end
 				stop = true

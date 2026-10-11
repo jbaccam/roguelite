@@ -14,10 +14,10 @@ return function(R)
 	local H, REACH = R.HOLD_SECONDS, R.RANGE + R.SLACK
 
 	-- The 2026-10-10 numbers (play-test: "it takes too long and it's too easy to die when you're doing it").
-	check(H == 2.5 and R.RANGE == 16 and REACH == 20, "2.5 s alone (was 5), 16-stud prompt (was 10), 20 studs on the server")
-	check(near(R.rate(1), 0.4) and near(1 / R.rate(2), 5 / 3) and near(1 / R.rate(3), 1.25), "1 reviver 2.5 s, 2 revivers 1.67 s, 3 revivers 1.25 s")
-	check(near(R.rate(0), -0.2), "Nobody holding: drains 20% a second (full to empty in 5 s)")
-	check(R.GUARD == 0.4, "A reviver takes 40% damage (60% less)")
+	check(H == 3.5 and R.RANGE == 12 and REACH == 16, "3.5 s alone (was 5, then 2.5), 12-stud prompt, 16 studs on the server")
+	check(near(1 / R.rate(1), 3.5) and near(1 / R.rate(2), 2.8) and near(1 / R.rate(3), 3.5 / 1.5), "1 reviver 3.5 s, 2 revivers 2.8 s, 3 revivers 2.33 s")
+	check(near(R.rate(0), -1 / 3), "Nobody holding: drains a third a second (full to empty in 3 s)")
+	check(R.GUARD == 0.6 and R.BLOCK_SHOTS == false, "A reviver takes 60% damage (40% less), shots included")
 	check(R.PROMPT_HOLD > 2 * H, "The prompt's own hold never ends before the server's revive")
 
 	-- A fresh world: ana, ben, cal and dan in the run, all alive at the origin, nobody down.
@@ -102,20 +102,20 @@ return function(R)
 		return (w.svc.progress(p, t))
 	end
 
-	-- One reviver: 2.5 s, once; the spot goes first.
+	-- One reviver: 3.5 s, once; the spot goes first.
 	local w = world()
 	w.fall(w.ana)
 	check(w.svc.holdBegan(w.ana, w.ben) == true, "A living teammate in reach can start a hold")
-	w.at(2.4)
-	check(#w.revived == 0 and near(ring(w, w.ana), 0.96), "2.4 s: 96%, not yet")
+	w.at(3.4)
+	check(#w.revived == 0 and near(ring(w, w.ana), 3.4 / 3.5), "3.4 s: 97%, not yet")
 	local s = w.svc.spots[w.ana]
-	check(s.shownReviver == w.ben and near(s.shownRate, 0.4) and s.shownCount == 1, "The spot shows who holds and how fast it fills")
+	check(s.shownReviver == w.ben and near(s.shownRate, 1 / 3.5) and s.shownCount == 1, "The spot shows who holds and how fast it fills")
 	check(w.guards[w.ben] == true, "Ben's hold counts: he is guarded")
-	w.at(2.5)
-	check(#w.revived == 1 and w.revived[1].p == w.ana and w.revived[1].q == w.ben, "2.5 s revives Ana, credited to Ben (was 5 s)")
+	w.at(3.5)
+	check(#w.revived == 1 and w.revived[1].p == w.ana and w.revived[1].q == w.ben, "3.5 s revives Ana, credited to Ben (was 5 s)")
 	check(w.svc.spots[w.ana] == nil and s.gone, "The revived player's spot goes")
 	check(w.guards[w.ben] == nil, "The guard ends with the revive")
-	w.at(4)
+	w.at(5)
 	check(#w.revived == 1, "Never twice for one down")
 	check(w.svc.holdBegan(w.ana, w.ben) == false, "No spot left to hold")
 
@@ -123,52 +123,54 @@ return function(R)
 	w.fall(w.ana)
 	w.now = 10
 	w.svc.holdBegan(w.ana, w.cal)
-	w.at(12.5)
+	w.at(13.5)
 	check(#w.revived == 2 and w.revived[2].q == w.cal, "A second down is revived again, by Cal this time")
 
-	-- More revivers are faster: two x1.5, three x2.
+	-- More revivers are faster: two x1.25, three x1.5.
 	w = world()
 	w.fall(w.ana)
 	w.svc.holdBegan(w.ana, w.ben)
 	w.svc.holdBegan(w.ana, w.cal)
-	w.at(1.6)
-	check(#w.revived == 0, "Two holding: not done at 1.6 s")
-	w.at(1.7)
-	check(#w.revived == 1 and (w.revived[1].q == w.ben or w.revived[1].q == w.cal), "Two holding: up by 1.7 s (1.67 s), one revive")
+	w.at(2.7)
+	check(#w.revived == 0, "Two holding: not done at 2.7 s")
+	w.at(2.8)
+	check(#w.revived == 1 and (w.revived[1].q == w.ben or w.revived[1].q == w.cal), "Two holding: up at 2.8 s, one revive")
 	w = world()
 	w.fall(w.ana)
 	for _, q in { w.ben, w.cal, w.dan } do
 		w.svc.holdBegan(w.ana, q)
 	end
-	check(w.svc.spots[w.ana].shownCount == 3 and near(w.svc.spots[w.ana].shownRate, 0.8), "Three holding: x2")
-	w.at(1.2)
-	check(#w.revived == 0, "Three holding: not at 1.2 s")
-	w.at(1.3)
-	check(#w.revived == 1, "Three holding: up by 1.3 s (1.25 s), one revive")
+	check(w.svc.spots[w.ana].shownCount == 3 and near(w.svc.spots[w.ana].shownRate, 1.5 / 3.5), "Three holding: x1.5")
+	w.at(2.3)
+	check(#w.revived == 0, "Three holding: not at 2.3 s")
+	w.at(2.4)
+	check(#w.revived == 1, "Three holding: up by 2.4 s (2.33 s), one revive")
 	-- A helper joining part way: each stretch fills at its own speed.
 	w = world()
 	w.fall(w.ana)
 	w.svc.holdBegan(w.ana, w.ben)
-	w.at(1) -- 40%
+	w.at(1) -- 2/7
 	w.svc.holdBegan(w.ana, w.cal)
-	w.at(2)
-	check(#w.revived == 1 and near(w.revived[1].at, 2), "Ben 1 s alone (40%) + 1 s with Cal (60%): up at 2 s")
+	w.at(2.9)
+	check(#w.revived == 0, "With Cal from 1 s: not yet at 2.9 s")
+	w.at(3)
+	check(#w.revived == 1 and near(w.revived[1].at, 3), "Ben 1 s alone (2/7) + 2 s with Cal (5/7): up at 3 s")
 
 	-- Letting go drains slowly instead of resetting.
 	w = world()
 	w.fall(w.ana)
 	w.svc.holdBegan(w.ana, w.ben)
-	w.at(1.5) -- 60%
+	w.at(2.1) -- 60%
 	w.svc.holdEnded(w.ana, w.ben)
 	check(w.guards[w.ben] == nil, "Let go: the guard is off at once")
-	check(near(w.svc.spots[w.ana].shownRate, -0.2), "The ring shows it draining")
-	w.at(2.5)
-	check(near(ring(w, w.ana), 0.4) and #w.revived == 0, "1 s later: 40%, not 0")
+	check(near(w.svc.spots[w.ana].shownRate, -1 / 3), "The ring shows it draining")
+	w.at(3.1)
+	check(near(ring(w, w.ana), 0.6 - 1 / 3) and #w.revived == 0, "1 s later: 27%, not 0")
 	w.svc.holdBegan(w.ana, w.ben)
-	w.at(3.9)
-	check(#w.revived == 0, "The rest takes 1.5 s (60% at 0.4 a second)")
-	w.at(4)
-	check(#w.revived == 1 and near(w.revived[1].at, 4), "Up at 4.0 s (the old rule: 2.5 s after the new press)")
+	w.at(5.6)
+	check(#w.revived == 0, "The rest takes 2.57 s (73% at 2/7 a second)")
+	w.at(5.7)
+	check(#w.revived == 1 and near(w.revived[1].at, 5.7), "Up by 5.7 s (a reset would make it 6.6 s)")
 	w = world()
 	w.fall(w.ana)
 	w.svc.holdBegan(w.ana, w.ben)
@@ -182,23 +184,23 @@ return function(R)
 	w.fall(w.ana)
 	w.svc.holdBegan(w.ana, w.ben)
 	w.at(1)
-	check(w.svc.holdBegan(w.ana, w.ben) == true and near(ring(w, w.ana, 1), 0.4), "A second press neither restarts nor speeds the ring")
+	check(w.svc.holdBegan(w.ana, w.ben) == true and near(ring(w, w.ana, 1), 1 / 3.5), "A second press neither restarts nor speeds the ring")
 	local _, _, holders = w.svc.progress(w.ana, 1)
 	check(holders == 1, "One reviver pressing twice is still one reviver")
 
-	-- Reach (where their screen has them): 20 studs keeps a hold; walking out stops it.
+	-- Reach (where their screen has them): 16 studs keeps a hold; walking out stops it.
 	w = world()
 	w.fall(w.ana)
 	w.pos[w.ben] = Vector3.new(REACH + 1, 0, 0)
 	check(w.svc.holdBegan(w.ana, w.ben) == false, "Out of reach can't start a hold (an instant exploit press)")
 	check(w.guards[w.ben] == nil, "and isn't guarded: standing near a body protects nobody")
 	w.pos[w.ben] = Vector3.new(REACH - 0.5, 0, 0)
-	check(w.svc.holdBegan(w.ana, w.ben) == true, "19.5 studs away can (was 14)")
+	check(w.svc.holdBegan(w.ana, w.ben) == true, "15.5 studs away can (was 14, then 20)")
 	w.at(1)
 	w.pos[w.ben] = Vector3.new(REACH + 0.5, 0, 0)
 	w.at(1.1)
 	check(w.guards[w.ben] == nil and w.svc.spots[w.ana].holds[w.ben] == nil, "Walking out of reach drops the hold and the guard")
-	check(near(ring(w, w.ana, 1.1), 0.44), "The ring keeps what it had (the last 0.1 s counted)")
+	check(near(ring(w, w.ana, 1.1), 1.1 / 3.5), "The ring keeps what it had (the last 0.1 s counted)")
 	w.pos[w.ben] = Vector3.zero
 	w.at(3)
 	check(#w.revived == 0, "Coming back without pressing again doesn't resume")
@@ -209,7 +211,7 @@ return function(R)
 	w.svc.holdBegan(w.ana, w.ben)
 	w.at(1) -- Ben is hit here: alive, still holding
 	w.at(2)
-	check(near(ring(w, w.ana), 0.8) and w.guards[w.ben] == true, "Damage alone keeps the hold")
+	check(near(ring(w, w.ana), 2 / 3.5) and w.guards[w.ben] == true, "Damage alone keeps the hold")
 	w.alive[w.ben] = false
 	w.at(2.1)
 	check(w.svc.spots[w.ana].holds[w.ben] == nil and w.guards[w.ben] == nil, "The reviver dying drops the hold")
@@ -253,16 +255,17 @@ return function(R)
 	check(w.svc.holdBegan(w.ana, w.ben) == false, "No hold while frozen")
 	w.frozen = false
 	w.svc.holdBegan(w.ana, w.ben)
-	w.at(1)
+	w.at(2.1) -- 60%
 	w.frozen = true
-	w.at(1.1)
+	w.at(2.2)
 	check(w.svc.spots[w.ana].holds[w.ben] == nil and w.guards[w.ben] == nil, "A freeze drops the hold and the guard")
-	local frozenAt = ring(w, w.ana, 1.1)
+	local frozenAt = ring(w, w.ana, 2.2)
+	check(near(frozenAt, 0.6), "and keeps the ring's 60%")
 	w.at(20)
 	check(near(ring(w, w.ana, 20), frozenAt) and w.svc.spots[w.ana].shownRate == 0, "Frozen, the ring neither fills nor drains")
 	w.frozen = false
 	w.at(21)
-	check(#w.revived == 0 and near(ring(w, w.ana), frozenAt - 0.2), "After it, it drains until someone presses again")
+	check(#w.revived == 0 and near(ring(w, w.ana), frozenAt - 1 / 3), "After it, it drains until someone presses again")
 
 	-- The spot goes whenever the player stops being down some other way.
 	w = world()
@@ -287,7 +290,7 @@ return function(R)
 	w.now = 1
 	w.svc.clear(w.ben) -- Ben disconnects
 	local held, who = w.svc.progress(w.ana, 1)
-	check(who == w.cal and near(held, 0.2 + 0.3) and w.guards[w.ben] == nil, "A reviver leaving drops only their hold, at once")
+	check(who == w.cal and near(held, 0.5 / 3.5 + 0.5 * 1.25 / 3.5) and w.guards[w.ben] == nil, "A reviver leaving drops only their hold, at once")
 
 	-- A new down replaces the old spot, and the old prompt's events no longer count.
 	w = world()
