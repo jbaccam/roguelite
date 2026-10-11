@@ -17,7 +17,7 @@ local enabled = {}
 local function quality()
  local profile=Q.get()
  Lighting.GlobalShadows=authoredShadows and profile.shadows
- for v,on in enabled do v.Enabled=on and profile.shadows end
+ for v,on in enabled do v.Enabled=on and profile.post end
 end
 player:GetAttributeChangedSignal('LocalVisualQuality'):Connect(quality)
 local parked = Instance.new('Folder') -- Client-owned, never replicated or rendered.
