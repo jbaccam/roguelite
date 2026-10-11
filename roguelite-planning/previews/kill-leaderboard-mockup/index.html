@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kill Board Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Source+Sans+3:wght@700&display=swap" rel="stylesheet">
+<style>
+/* In-run kill board mockup (2026-10-10). Served by tools/dev_server.py from roguelite-planning/:
+   http://127.0.0.1:8934/previews/kill-leaderboard-mockup/index.html
+   The HUD rects and the board's placement use the same numbers as ui/KillBoard.luau (K.place) and
+   RogueliteUI layout(); nine-slice art is the real ui/assets files. */
+:root{--lime:#91ef14;--limeSoft:#d2ffa1;--limeDark:#3a700c;--white:#f8f9f5;--muted:#aeb7b9;--gold:#ffcb40;--cream:#eadda7;
+ --well:#22272b;--track:#161d20;--stroke:#080a0b;--red:#ef232f;--cyan:#64dcff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0e1214;color:var(--white);font-family:'Fredoka One',system-ui,sans-serif;padding:20px 16px 40px}
+h1{font-size:22px;color:var(--lime);margin-bottom:4px}
+p.note{font-family:'Source Sans 3',sans-serif;font-weight:700;color:var(--muted);font-size:14px;max-width:900px;line-height:1.35;margin-bottom:12px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 18px}
+.controls button{font-family:'Fredoka One';font-size:15px;color:var(--white);background:#2a3236;border:2px solid var(--stroke);border-radius:8px;padding:6px 12px;cursor:pointer}
+.controls button.on{background:var(--lime);color:#0a0e08}
+.screens{display:flex;flex-direction:column;gap:22px}
+.shot h2{font-size:16px;color:var(--cream);margin-bottom:6px}
+.shot .info{font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:13px;color:var(--muted);margin-top:6px}
+.fit{position:relative;overflow:hidden;border-radius:10px;border:2px solid #263034}
+.screen{position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;
+ background:radial-gradient(ellipse at 50% 55%,#6f9a48 0,#55803a 45%,#3c6129 100%)}
+.abs{position:absolute}
+.nine{position:absolute;border-style:solid;border-width:0;border-image-slice:48 fill;border-image-width:26.4px;border-image-repeat:stretch}
+.panel{border-image-source:url(../../studio-prototype/ui/assets/panel.png)}
+.inset{border-image-source:url(../../studio-prototype/ui/assets/inset.png)}
+.lbl{position:absolute;white-space:nowrap;overflow:hidden;display:flex;align-items:center;line-height:1;
+ text-shadow:1.6px 0 #000,-1.6px 0 #000,0 1.6px #000,0 -1.6px #000,1.1px 1.1px #000,-1.1px 1.1px #000,1.1px -1.1px #000,-1.1px -1.1px #000}
+.c{justify-content:center}.r{justify-content:flex-end}
+.mob{position:absolute;width:26px;height:26px;border-radius:50% 50% 40% 40%;background:#7a3b8f;border:3px solid #2a1430}
+.hero{position:absolute;width:30px;height:46px;border-radius:12px;background:#f2c48d;border:3px solid #3a2a1a}
+.zone{position:absolute;border:2px dashed rgba(255,255,255,.45);border-radius:50%;background:rgba(255,255,255,.08)}
+.bossbar .fill{position:absolute;background:linear-gradient(#ff6d67,#e31623 50%,#a5101b)}
+/* the board */
+.kb{position:absolute;transform-origin:0 0}
+.kb .row{position:absolute;left:8px;width:244px;height:30px;border-radius:6px;background:rgba(34,39,43,.9)}
+.kb .row.me{background:var(--limeDark);box-shadow:inset 0 0 0 2px var(--lime)}
+.kb .head{position:absolute;left:28px;top:3px;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#0a0e08}
+.outline{outline:2px solid #ff4fd8;outline-offset:1px}
+</style>
+</head>
+<body>
+<h1>Kill board: in-run, 2+ players</h1>
+<p class="note">Rank, headshot, display name and kills for everyone in the run; your row is lime. PC and tablets: the left edge, under the health and XP block. When the chat window (keyboard screens move it to the centre left in a run) is in the way, it drops under the chat, else to the bottom-left corner. Phones: their lower left is the thumbstick, so a compact board (no names) sits on the right under the weapon strip, left of PAUSE / SETTINGS and above DASH. Toasts and the round 10 panel keep the top centre. Hidden solo, in the lobby and on the results screen; on phones up to ~670 px wide it also hides while the boss bar or a round 10 panel leaves no room. Pink outline = the board's rect.</p>
+<div class="controls" id="players"></div>
+<div class="controls" id="toggles"></div>
+<div class="screens" id="screens"></div>
+<script>
+const W=260,PAD=8,HEAD=28,ROW=30,GAP=4;
+const heightOf=n=>PAD+HEAD+n*ROW+(n-1)*GAP+PAD;
+const overlaps=(a,b,g)=>Math.min(a[2],b[2])-Math.max(a[0],b[0])>-g&&Math.min(a[3],b[3])-Math.max(a[1],b[1])>-g;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+// RogueliteUI layout() for a w x h HUD frame (same model as KillBoardTests).
+function hudModel(w,h,touch,boss,chatOn,launchers=2){
+ let s=clamp(Math.min(w/1100,h/620),.55,1);s=Math.min(Math.max(s,.55),(w/2-24)/510.5);
+ const bs=Math.max(s*.9,Math.min(s,.55)),ms=clamp(s,.7,1.1);
+ const health=[12,12,12+382*s,12+234*s],timer=[w/2-112.5*s,14,w/2+112.5*s,14+112*s],build=[w-12-330*bs,12,w-12,12+210*bs];
+ const small=Math.min(w,h)<=500;
+ const jump=small?[w-95,h-90,w-25,h-20]:[w-170,h-210,w-50,h-90],stick=small?[0,h-150,170,h]:[0,h-260,260,h];
+ const zones=touch?[jump,stick]:[];
+ const clear=r=>r[3]<=h-8&&!zones.some(z=>overlaps(r,z,8));
+ const n=launchers;let top=Math.max(.52*h-150*ms,build[3]+10);
+ let menu=[w-10-76*ms,top,w-10,top+(80*n+6*(n-1))*ms];const vertical=clear(menu);
+ if(!vertical){top=build[3]+10;const width=58*n+44*(n-1);menu=[w-10-18*ms-width*ms,top,w-10,top+80*ms]}
+ const topSlot=()=>{const y=14+112*s+6;let half=Math.min(350*s,w/2-health[2]-10,build[0]-10-w/2);
+  if(!vertical&&menu[1]<y+96*s)half=Math.min(half,menu[0]-10-w/2);return [half,[w/2-half,y,w/2+half,y+96*s]]};
+ const bottomSlot=()=>{let half=Math.min(350*s,w/2-16);const y0=h-24-96*s,y1=h-24;
+  for(const z of zones)if(z[1]<y1&&z[3]>y0){if(z[0]+z[2]<w)half=Math.min(half,w/2-z[2]-10);else half=Math.min(half,z[0]-10-w/2)}
+  if(menu[3]>y0)half=Math.min(half,menu[0]-10-w/2);return [half,[w/2-half,y0,w/2+half,y1]]};
+ let first=topSlot(),second=bottomSlot();if(h>=500)[first,second]=[second,first];
+ const bossRect=((first[0]*2>=240||first[0]>=second[0])?first:second)[1];
+ // round 10 objective panel (with the boss toggle: the busy case), DASH, chat (keyboard, estimated size)
+ let ry=14+65*s+8+26*s;if(boss&&bossRect[1]<h/2&&bossRect[1]>=ry-4)ry=bossRect[3]+6;
+ const rs=Math.min(s,Math.max(240,w-2*(12+384*s)-20)/420),r10=[w/2-210*rs,ry,w/2+210*rs,ry+136*rs];
+ let dash;if(touch){const J=jump[2]-jump[0],size=clamp(J*.8,52,96),cx=jump[0]-10-size/2,cy=(jump[1]+jump[3])/2-J*.35;dash=[cx-size/2,cy-size/2,cx+size/2,cy+size/2]}
+ else{const ds=clamp(Math.min(w/1100,h/620),.7,1.1);dash=[w-16-76*ds,h-16-76*ds,w-16,h-16]}
+ const chat=chatOn&&!touch?[8,h/2-125,348,h/2+125]:null;
+ const blocks=[health,timer,build,menu,dash,...zones];if(boss)blocks.push(bossRect,r10);if(chat)blocks.push(chat);
+ return {s,bs,ms,vertical,health,timer,build,menu,jump,stick,zones,bossRect,r10,dash,chat,blocks};
+}
+// KillBoard.luau K.place: left edge first (under health, under chat, bottom-left), then the right side.
+const WC=128;const widthOf=c=>c?WC:W;
+function place(w,h,s,hud,n,compact){
+ const clear=r=>r[0]>=0&&r[1]>=0&&r[2]<=w&&r[3]<=h-8&&!hud.blocks.some(b=>overlaps(r,b,2));
+ const scales=[s];for(const k of [.85,.7])if(s*k>=.5)scales.push(s*k);
+ for(const sc of scales){const bw=widthOf(compact)*sc,bh=heightOf(n)*sc;
+  const lefts=[hud.health[3]+10];if(hud.chat)lefts.push(hud.chat[3]+10);lefts.push(h-12-bh);
+  for(const y0 of lefts)if(clear([12,y0,12+bw,y0+bh]))return {x:12,y:y0,sc,clear:true,side:'left'}}
+ for(const sc of scales){const bw=widthOf(compact)*sc,bh=heightOf(n)*sc;
+  const tops=[hud.build[3]+10];if(hud.menu)tops.push(hud.menu[3]+8);
+  for(const y0 of tops){let x1=w-12;
+   for(let i=0;i<8;i++){const r=[x1-bw,y0,x1,y0+bh];
+    if(r[3]>h-8||r[0]<w*.5+60*sc)break;
+    const hit=hud.blocks.find(b=>overlaps(r,b,2));if(!hit)return {x:r[0],y:r[1],sc,clear:true,side:'right'};x1=hit[0]-8}}}
+ return {x:12,y:0,sc:s,clear:false};
+}
+const PLAYERS=[{id:1,name:'xXSwarmSlayerXx',kills:214,col:'#e9a64b'},{id:2,name:'Jeremiah',kills:187,col:'#7fd0ff'},{id:3,name:'BaconHairBen',kills:187,col:'#f07aa0'},{id:4,name:'NoobMaster69',kills:96,col:'#b7e36b'}];
+const ME=2;
+function fmt(n){if(n>=1e6)return (Math.floor(n/1e5)/10+'M').replace('.0M','M');if(n>=1e4)return (Math.floor(n/100)/10+'K').replace('.0K','K');return n.toLocaleString('en-US')}
+function ranked(n){const list=PLAYERS.slice(0,n).map(p=>({...p}));
+ list.sort((a,b)=>b.kills-a.kills||a.name.localeCompare(b.name));list.forEach((e,i)=>e.rank=i>0&&list[i-1].kills===e.kills?list[i-1].rank:i+1);return list}
+const el=(parent,cls,style,html)=>{const d=document.createElement('div');if(cls)d.className=cls;Object.assign(d.style,style||{});if(html!=null)d.innerHTML=html;parent.appendChild(d);return d};
+const px=v=>v+'px';
+const rectStyle=r=>({left:px(r[0]),top:px(r[1]),width:px(r[2]-r[0]),height:px(r[3]-r[1])});
+const readable=(b,s)=>Math.max(b,Math.ceil(10/s));
+function drawBoard(scr,n,pos,compact){
+ const list=ranked(n),H=heightOf(n),BW=widthOf(compact),RW=BW-16;
+ const kb=el(scr,'kb',{left:px(pos.x),top:px(pos.y),width:px(BW),height:px(H),transform:`scale(${pos.sc})`});
+ el(kb,'nine panel',{left:0,top:0,width:px(BW),height:px(H)});
+ el(kb,'lbl',{left:px(PAD+6),top:px(PAD-1),width:px(BW-2*PAD-12),height:px(HEAD-2),fontSize:px(readable(18,pos.sc)),color:'var(--cream)'},'KILLS');
+ list.forEach((e,i)=>{const me=e.id===ME;
+  const row=el(kb,'row'+(me?' me':''),{top:px(PAD+HEAD+i*(ROW+GAP)),width:px(RW)});
+  el(row,'lbl c',{left:'2px',top:0,width:'22px',height:px(ROW),fontSize:px(readable(17,pos.sc)),color:e.rank===1?'var(--gold)':'var(--muted)'},e.rank);
+  el(row,'head',{background:e.col},e.name[0].toUpperCase());
+  if(!compact)el(row,'lbl',{left:'58px',top:0,width:px(RW-58-56),height:px(ROW),fontSize:px(readable(17,pos.sc)),color:me?'var(--limeSoft)':'var(--white)',textOverflow:'ellipsis',display:'block',lineHeight:px(ROW)},e.name);
+  el(row,'lbl r',{left:px(RW-54),top:0,width:'50px',height:px(ROW),fontSize:px(readable(19,pos.sc)),color:me?'var(--lime)':'var(--white)'},fmt(e.kills));
+ });
+ const out=el(scr,'abs outline',{left:px(pos.x),top:px(pos.y),width:px(BW*pos.sc),height:px(H*pos.sc),pointerEvents:'none'});
+ return list;
+}
+function drawHud(scr,w,h,m,touch,boss){
+ const s=m.s;
+ // health block (simplified: heart, bar, xp, shards)
+ const hb=el(scr,'abs',{left:'12px',top:'12px',width:'382px',height:'234px',transform:`scale(${s})`,transformOrigin:'0 0'});
+ el(hb,'nine inset',{left:'25px',top:'8px',width:'355px',height:'56px'});
+ el(hb,'abs',{left:'54px',top:'20px',width:'307px',height:'30px',background:'linear-gradient(#ff6d67,#e31623 50%,#a5101b)'});
+ el(hb,'abs',{left:0,top:0,width:'75px',height:'75px',background:'url(../../studio-prototype/ui/assets/heart.png) center/contain no-repeat'});
+ el(hb,'lbl c',{left:'75px',top:'10px',width:'265px',height:'48px',fontSize:'29px'},'186 / 240');
+ el(hb,'nine inset',{left:'0',top:'84px',width:'384px',height:'60px'});
+ el(hb,'abs',{left:'48px',top:'100px',width:'200px',height:'28px',background:'linear-gradient(#b8ff5a,#5aa816)'});
+ el(hb,'lbl',{left:'60px',top:'100px',width:'220px',height:'28px',fontSize:'18px'},'14 / 40 XP');
+ el(hb,'lbl r',{left:'280px',top:'100px',width:'76px',height:'28px',fontSize:'16px'},'LV. 6');
+ const half=(384-8)/2;
+ el(hb,'nine inset',{left:'0',top:'158px',width:px(half),height:'34px'});el(hb,'lbl',{left:'44px',top:'160px',width:'100px',height:'30px',fontSize:'20px',color:'var(--cyan)'},'128');
+ el(hb,'nine inset',{left:px(half+8),top:'158px',width:px(half),height:'34px'});el(hb,'lbl',{left:px(half+52),top:'160px',width:'100px',height:'30px',fontSize:'20px',color:'var(--muted)'},'40');
+ // timer
+ const tm=el(scr,'abs',{left:px(w/2-112.5*s),top:'14px',width:'225px',height:'112px',transform:`scale(${s})`,transformOrigin:'0 0'});
+ el(tm,'nine panel',{left:0,top:0,width:'225px',height:'65px'});
+ for(const x of [-14,195])el(tm,'abs',{left:px(x),top:'10px',width:'44px',height:'44px',background:'url(../../studio-prototype/ui/assets/stone.png) center/contain no-repeat'});
+ el(tm,'lbl c',{left:'25px',top:'3px',width:'175px',height:'42px',fontSize:'35px'},'00:27');
+ el(tm,'nine panel',{left:'43px',top:'51px',width:'139px',height:'31px'});el(tm,'lbl c',{left:'51px',top:'53px',width:'123px',height:'26px',fontSize:'17px'},'WAVE 7 / 20');
+ // build strip
+ const bd=el(scr,'abs',{left:px(m.build[0]),top:'12px',width:'330px',height:'150px',transform:`scale(${m.bs})`,transformOrigin:'0 0'});
+ el(bd,'nine panel',{left:0,top:0,width:'330px',height:'78px'});
+ for(let i=0;i<6;i++)el(bd,'nine inset',{left:px(11+i*52),top:'14px',width:'50px',height:'50px',opacity:i<4?1:.5});
+ for(let i=0;i<5;i++)el(bd,'nine inset',{left:px(330-46*(i+1)),top:'88px',width:'42px',height:'42px'});
+ el(scr,'abs',Object.assign(rectStyle(m.build),{border:'1px dashed rgba(255,255,255,.25)',pointerEvents:'none'}));
+ // launchers
+ const n=2;const ms=m.ms;
+ ['pause','settings'].forEach((ic,i)=>{let x,y;
+  if(m.vertical){x=m.menu[0]+(76*ms-58*ms)/2;y=m.menu[1]+i*86*ms}else{x=m.menu[0]+9*ms+i*(58+44)*ms;y=m.menu[1]}
+  const b=el(scr,'abs',{left:px(x),top:px(y),width:'58px',height:'80px',transform:`scale(${ms})`,transformOrigin:'0 0'});
+  el(b,'abs',{left:0,top:0,width:'58px',height:'58px',background:`url(../../studio-prototype/ui/assets/hud/${ic}.png) center/contain no-repeat`});
+  el(b,'lbl c',{left:'-20px',top:'48px',width:'98px',height:'30px',fontSize:'17px'},ic.toUpperCase());
+ });
+ if(boss){const r=m.bossRect;const bb=el(scr,'abs bossbar',rectStyle(r));
+  el(bb,'nine inset',{left:0,top:px(30*s),width:'100%',height:px(62*s)});
+  el(bb,'fill',{left:px(32*s),top:px(46*s),width:`calc(70% - ${32*s}px)`,height:px(30*s)});
+  el(bb,'nine panel',{left:'50%',top:0,width:px(260*s),height:px(40*s),transform:'translateX(-50%)'});
+  el(bb,'lbl c',{left:0,top:0,width:'100%',height:px(40*s),fontSize:px(22*s)},'HAMMER BRUTE');}
+ if(touch){for(const z of [m.jump,m.stick])el(scr,'zone',rectStyle(z))}
+ {const d=el(scr,'nine',Object.assign(rectStyle(m.dash),{borderImageSource:'url(../../studio-prototype/ui/assets/button.png)',borderImageWidth:px(24*(m.dash[2]-m.dash[0])/76)}));
+  el(d,'lbl c',{left:0,bottom:px(4),width:'100%',height:'40%',fontSize:px(18*(m.dash[2]-m.dash[0])/76)},'DASH')}
+ if(m.chat){const c=el(scr,'abs',Object.assign(rectStyle(m.chat),{background:'rgba(10,14,16,.35)',border:'1px dashed rgba(255,255,255,.35)',borderRadius:'6px'}));
+  el(c,'lbl',{left:'10px',top:'8px',width:'320px',height:'18px',fontSize:'15px',color:'var(--muted)'},'chat window (size estimated)');
+  ['BaconHairBen: left side!','xXSwarmSlayerXx: gg','Jeremiah: boss next wave'].forEach((t,i)=>el(c,'lbl',{left:'10px',top:px(150+i*26),width:'320px',height:'22px',fontSize:'17px'},t))}
+ if(boss){const r=m.r10;const p=el(scr,'nine panel',rectStyle(r));el(p,'lbl c',{left:0,top:'6%',width:'100%',height:'30%',fontSize:px(26*(r[2]-r[0])/420),color:'var(--gold)'},'TOMB RAID');
+  el(p,'lbl c',{left:0,top:'38%',width:'100%',height:'22%',fontSize:px(18*(r[2]-r[0])/420)},'DESTROY THE TOMBS')}
+}
+const SIZES=[
+ {name:'Desktop 1920 x 1080 (HUD 1920 x 1022)',w:1920,h:1022,touch:false,show:760},
+ {name:'Laptop 1366 x 768 (HUD 1366 x 710)',w:1366,h:710,touch:false,show:680},
+ {name:'Phone 844 x 390 (HUD 750 x 311, touch)',w:750,h:311,touch:true,show:900},
+ {name:'Small phone 667 x 375 (HUD 667 x 311, touch)',w:667,h:311,touch:true,show:800},
+ {name:'Tablet 1024 x 768 (HUD 1024 x 712, touch)',w:1024,h:712,touch:true,show:640},
+];
+let N=4,BOSS=false,CHAT=true;
+function render(){
+ const root=document.getElementById('screens');root.innerHTML='';
+ for(const sz of SIZES){
+  const shot=el(root,'shot');el(shot,null,null,'<h2>'+sz.name+'</h2>');
+  const avail=Math.min(sz.show,document.body.clientWidth-32),k=avail/sz.w;
+  const fit=el(shot,'fit',{width:px(sz.w*k),height:px(sz.h*k)});
+  const scr=el(fit,'screen',{width:px(sz.w),height:px(sz.h),transform:`scale(${k})`});
+  el(scr,'hero',{left:px(sz.w/2-15),top:px(sz.h/2-23)});
+  for(let i=0;i<14;i++){const a=i*2.4,r=110+((i*37)%5)*28;el(scr,'mob',{left:px(sz.w/2+Math.cos(a)*r*(sz.w/1200)),top:px(sz.h/2+Math.sin(a)*r*(sz.h/900))})}
+  const m=hudModel(sz.w,sz.h,sz.touch,BOSS,CHAT);const compact=Math.min(sz.w,sz.h)<=500;
+  drawHud(scr,sz.w,sz.h,m,sz.touch,BOSS);
+  const pos=place(sz.w,sz.h,m.s,m,N,compact);
+  if(pos.clear)drawBoard(scr,N,pos,compact);
+  const BW=widthOf(compact);const r=pos.clear?`${pos.side} side${compact?', compact':''} · board x ${pos.x.toFixed(0)}..${(pos.x+BW*pos.sc).toFixed(0)}, y ${pos.y.toFixed(1)}..${(pos.y+heightOf(N)*pos.sc).toFixed(1)}, scale ${pos.sc.toFixed(2)} (${(BW*pos.sc).toFixed(0)} x ${(heightOf(N)*pos.sc).toFixed(0)} px)`:'board hidden: no clear spot while the boss bar is up';
+  el(shot,'info',null,`HUD scale ${m.s.toFixed(2)} · menu ${m.vertical?'column':'row'} · ${r}`);
+ }
+}
+const pl=document.getElementById('players');
+[2,3,4].forEach(n=>{const b=document.createElement('button');b.textContent=n+' players';b.onclick=()=>{N=n;sync()};pl.appendChild(b)});
+const tg=document.getElementById('toggles');const bossBtn=document.createElement('button');bossBtn.textContent='Boss bar';bossBtn.onclick=()=>{BOSS=!BOSS;sync()};tg.appendChild(bossBtn);
+const chatBtn=document.createElement('button');chatBtn.textContent='Chat window (PC)';chatBtn.onclick=()=>{CHAT=!CHAT;sync()};tg.appendChild(chatBtn);
+function sync(){[...pl.children].forEach((b,i)=>b.classList.toggle('on',i+2===N));bossBtn.classList.toggle('on',BOSS);chatBtn.classList.toggle('on',CHAT);render()}
+window.addEventListener('resize',render);document.fonts.ready.then(sync);sync();
+</script>
+</body>
+</html>

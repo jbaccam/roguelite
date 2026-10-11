@@ -487,6 +487,9 @@
       },
       "WeaponJournalPresentation": {
         "$path": "../ui/WeaponJournalPresentation.luau"
+      },
+      "KillBoard": {
+        "$path": "../ui/KillBoard.luau"
       }
     },
     "ReplicatedFirst": {
@@ -757,6 +760,9 @@
         },
         "EnemyHealthBars": {
           "$path": "events/EnemyHealthBars.client.luau"
+        },
+        "KillBoard": {
+          "$path": "../ui/KillBoard.client.luau"
         }
       },
       "StarterCharacterScripts": {
