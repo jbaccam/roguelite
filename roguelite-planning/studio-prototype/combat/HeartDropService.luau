@@ -38,7 +38,8 @@ function H.chance(luck)
  if type(test)=='number' then return math.clamp(test,0,1) end
  return math.clamp(H.BASE_CHANCE+math.max(0,tonumber(luck) or 0)*H.LUCK_CHANCE,0,H.MAX_CHANCE)
 end
--- variant (optional): {kind, owner, lifetime, heal=function(humanoid) base HP, allow=function(d,now,distance,radius) bool}.
+-- variant (optional): {kind, owner, lifetime, heal=function(humanoid) base HP, allow=function(d,now,distance,radius) bool,
+-- arrive=function(player) after the heal (Chef pizza's Full Belly stack)}.
 function H.spawnAt(position,variant)
  if not inCombat() then return nil end
  if not variant then local hearts=0;for _,d in H.drops do if not d.kind then hearts+=1 end end;if hearts>=H.MAX_ACTIVE then return nil end end
@@ -59,7 +60,7 @@ function H.spawnAt(position,variant)
  model:SetAttribute('ExpiresAt',born+lifetime)
  model.Parent=folder
  local d={model=model,origin=at,position=at,born=born,lifetime=lifetime}
- if variant then d.kind=variant.kind;d.owner=variant.owner;d.heal=variant.heal;d.allow=variant.allow end
+ if variant then d.kind=variant.kind;d.owner=variant.owner;d.heal=variant.heal;d.allow=variant.allow;d.arrive=variant.arrive end
  table.insert(H.drops,d);return d
 end
 function H.removeDrop(d) local i=table.find(H.drops,d);if i then remove(i) end end
@@ -102,6 +103,7 @@ function H.step(now)
     local _,h=living(d.target);local before=h.Health
     characters.heal(d.target,d.heal and d.heal(h) or H.HEAL) -- Recovery applies inside heal
     d.model:SetAttribute('Healed',h.Health-before)
+    if d.arrive then local ok,err=pcall(d.arrive,d.target);if not ok then warn('HeartDropService: pickup hook failed:',err) end end
     remove(i)
    end
   else

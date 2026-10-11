@@ -72,3 +72,36 @@ User (play-test): "Molotovs are kinda shit. Increase radius and maybe change the
 - **Look** (design sheet: https://claude.ai/artifact/NBgiUUT7Ee3gDMfwWhMEA8): no more Roblox `Fire` instances on neon balls. A scorch decal, a painted fire-pool decal that shrinks with the server radius, upright flipbook flame tongues on its rim and inside, embers, and on landing an amber-rimmed ring out to 7.2 plus the existing glass shards. A glassy clink and a low whoomp play when it lands (`RogueliteSounds`, the existing kit pitched). Details: [WEAPON_VFX.md](WEAPON_VFX.md#molotov-fire-october-10-2026).
 - **Ran:** `run_fire_zone_tests.py` (FireZoneTests 453 checks, new), roster runner, ChefPizzaTests 1644, `run_vfxkit_tests.py` 90, shop runner (ShopPreference 5979, Duck 33, Washer 34), `check_vfx_cleanup_order.py` 0 problems, luau-compile on every touched file, Rojo build OK. No Studio run and no Play test: the fire's look and feel are untested in game.
 - **Studio:** not synced. Scripts to push: `SpecialMotion`, `SpecialWeapons`, `SpecialWeaponVisuals`, `ThrownVisuals` (RogueliteCombat), `WeaponShowcaseStage` (UI), `RogueliteSounds` (StarterPlayerScripts). Asset to upload: `weapon-models/assets/14-molotovs/vfx/textures/MolotovFirePool.png`, then put its id in `ThrownVisuals.FireTextures.Pool` (until then the pool is three flat discs in the same colours).
+
+## October 10: Full Belly (pizza buff)
+
+User: "Other classes are able to use their abilities like dash more than a Chef sees pizzas, and he should get a little buff across his stats when he picks it up, not just a heal. Like a temp buff that stacks to a certain amount." (This builds the friend's "strengthens you" idea that the section above says was not built.)
+
+**Rules** (numbers in `ChefPizza`, pure functions `buffStacks`, `stacksAfterPickup`, `buffLeft`, `buffBonus`, `buffText`):
+
+- A slice still heals 10% of max HP x Recovery, and now also gives whoever eats it (the Chef or a teammate, like the heal) one **Full Belly** stack.
+- Each stack: **+4% Damage, +4% Attack speed, +3% Movement speed.** Damage and Attack speed get +4 points (the same flat terms items use); speed gets 3% of the player's own speed (24 -> 24.72 per stack for a Chef).
+- **Up to 5 stacks** (+20% damage, +20% attack speed, +15% speed: x1.2 damage and x1.2 attack rate, about +44% DPS at full).
+- **10 s, refreshed for every stack by each slice. When the 10 s run out, all stacks go at once.** One clear rule: keep eating or lose it all. Example: slices at 0, 6 and 12 s give 1, 2, 3 stacks until 22 s; a slice at 23 s starts again at 1.
+- The stacks also end when the run leaves Combat (wave end, run end), when the player dies and when they leave. A paused run holds the timer (the end time moves later by the pause, like the hearts).
+- Handyman teammates get half the Damage points (his "Damage gains halved" applies to every flat Damage gain).
+
+**Server** (`ChefPizzaService`): `HeartDropService` calls the slice's new `arrive` hook after the heal; the service keeps `{stacks, untilTime}` per player, sets Player attributes `PizzaStacks` and `PizzaBuffUntil` (server time, HUD only) and calls the new `CharacterService.setPizzaBuff(player, flat, percent)`, which `refresh` adds to the flat and percent terms, so weapons (their cache follows `s.stats`), WalkSpeed, the stat screens and the shop all see it. A pickup at 5 stacks only moves the timer (no refresh). A 10-per-second Heartbeat ends expired, dead or out-of-Combat buffs. No remote, nothing from the client. An older `ChefPizza` or `CharacterService` in the place means slices only heal.
+
+**HUD** (`RogueliteUI`): a small inset chip inside the health block, beside the LEVEL UP pill (248..384 x 198..232 in health-block units). Chef class icon (the Frying Pan; there is still no pizza slice icon), the count `×3`, seconds left and a bar draining over the 10 s (gold under 3 s). It scales with the health block on every screen, and because it is inside the block the kill board under the block does not move. Frozen while the run is paused. Hidden at 0 stacks.
+
+**Class screen** (`RunSetupUI` ability row, also the Armory class details): "15% chance (about 1 in 6) on a kill with any Chef weapon; heals 10% of max health and gives Full Belly: +4% damage and attack speed, +3% speed per stack (up to 5, 10 s)". `RunSetupLayoutTests` expects the same text.
+
+**Uptime** (simulated: kills spread at random, the current 15% chance and 1 s spacing, the Chef eats every slice about 0.6 s after it drops):
+
+| Kills a second | A slice every | Buff up | Average stacks | At 5 stacks |
+| --- | --- | --- | --- | --- |
+| 0.5 (early waves) | 14.3 s | 53% | 1.0 (+4% damage and attack speed) | 3% |
+| 1 | 7.7 s | 78% | 2.3 (+9%) | 23% |
+| 2 (late waves) | 4.3 s | 95% | 4.1 (+17%) | 72% |
+
+For comparison the Brawler's dash is ready every 3 s. At 2 kills a second the Chef gets a slice about as often (every 4.3 s) and holds about 4 stacks almost all the time, so the buff is a real late-wave bonus. At 0.5 kills a second the gaps (14 s on average) are longer than the 10 s timer half the time, so he mostly sits at 0 or 1 stack: small. That is fine for easy early waves, but if early pizza should matter more, raise `BUFF_SECONDS` to 15 (0.5 kills/s: 67% up, 1.7 stacks; 2 kills/s: 99% up, 4.8 stacks). If late waves turn out too strong, drop the per-stack numbers to +3 / +3 / +2 rather than the cap. Teammates who grab his slices take stacks from him; that is intended (the heal works the same way).
+
+**Ran** (Luau CLI only, no Studio, no Play): ChefPizzaTests 1686 (was 1644; adds Full Belly cap, refresh, expiry, bad input, HUD bar share, stat terms and the real `CharacterStats.resolve` at 5 stacks), KillBoardTests 2529, shop runner (ShopPreference 5979, Duck 33, Washer 34), roster runner (WeaponClassTag 644, WeaponType 1315, RunSetupValidation 32, Showcase 1182, GearPower 265, RosterBalance 338; it prints two Gunner 6-gun TARGET MISS lines that come from other sessions' uncommitted balance edits, not this change), luau-compile on every touched file, Rojo build OK. Updated but not run (need Studio): RunSetupLayoutTests (pizza line).
+
+**Studio:** not synced. Scripts to push: `ChefPizza` (RogueliteCombat, also carries the uncommitted 15% / 1 s change), `ChefPizzaTests`, `ChefPizzaService`, `HeartDropService` and `CharacterService` (ServerScriptService, all sandboxed; no new requires), `RogueliteUI`, `RunSetupUI`, `RunSetupLayoutTests` (ReplicatedStorage). Push `CharacterService` with or before `ChefPizzaService` (without `setPizzaBuff` the service skips the buff and slices only heal). Play-test: as Chef with `TestPizzaChance=1`, eat slices and watch the chip count up to ×5, the bar drain, all stacks drop 10 s after the last slice, the Stat_Damage / Stat_AttackSpeed / Stat_MoveSpeed attributes rise by 4 / 4 / 3% per stack, and pause hold the timer.

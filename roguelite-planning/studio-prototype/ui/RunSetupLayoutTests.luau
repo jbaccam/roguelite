@@ -249,12 +249,14 @@ local ok,err=xpcall(function()
   assert(ui.PickGodly('37')==false,'nothing to pick');pk.Close()
   table.insert(results,'picker none owned')
  end
- -- Chef's pizza line reads ChefPizza's numbers: '8% chance (about 1 in 12) on a kill with any Chef
+ -- Chef's pizza line reads ChefPizza's numbers: '15% chance (about 1 in 6) on a kill with any Chef
  -- weapon; heals 10% of max health'.
  if RunSetup.Pizza then
   local P=RunSetup.Pizza
   local function num(x) return (string.format('%.1f',x):gsub('%.0$','')) end
   local want=string.format('%s%% chance (about 1 in %d) on a kill with any Chef weapon; heals %s%% of max health',num(P.CHANCE*100),math.floor(1/P.CHANCE+1e-6),num(P.HEAL_FRACTION*100))
+  -- Full Belly (2026-10-10): '... and gives Full Belly: +4% damage and attack speed, +3% speed per stack (up to 5, 10 s)'.
+  if type(P.buffText)=='function' then want..=' and gives '..(P.BUFF_NAME or 'Full Belly')..': '..P.buffText() end
   assert(RunSetup.ability('Chef').text==want,'pizza line uses ChefPizza numbers: '..RunSetup.ability('Chef').text)
  end
  -- The pizza row shows Chef's class icon, not the Pizza Cutter's (drops are every Chef weapon's).

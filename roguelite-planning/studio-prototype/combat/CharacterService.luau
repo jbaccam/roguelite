@@ -151,6 +151,9 @@ function Service.refresh(player)
  for id,v in skills do flat[id]=(flat[id] or 0)+v end
  for id,v in armor do flat[id]=(flat[id] or 0)+v end
  for id,v in pet do flat[id]=(flat[id] or 0)+v end
+ -- Chef pizza's Full Belly while it lasts (ChefPizzaService via setPizzaBuff): points on Damage and
+ -- Attack speed here, a percent of Movement speed below.
+ for id,v in s.pizzaFlat or {} do flat[id]=(flat[id] or 0)+v end
  -- Gear power (GEAR_POWER.md) from the starter's owned tier, worn armor and the pet: the GearPower
  -- stat, its damage share in CombatEffectsService.hit and its health share as a max-health percent,
  -- so it multiplies every other health bonus. An admin override of GearPower counts too.
@@ -158,6 +161,7 @@ function Service.refresh(player)
  flat.GearPower=Stats.gearPower(function(name) return player:GetAttribute(name) end,type(weapon)=='string' and weapon or Stats.Signature[s.class] or Stats.Signature.Brawler)
  local power=s.overrides.GearPower or flat.GearPower
  local percent=table.clone(s.itemPercent or {})
+ for id,v in s.pizzaPercent or {} do percent[id]=(percent[id] or 0)+v end
  percent.MaxHP=(percent.MaxHP or 0)+(Stats.powerHealth(power)-1)*100
  s.stats=Stats.resolve(s.class,s.typeCounts,s.overrides,flat,percent)
  s.folder:SetAttribute('Class',s.class)
@@ -229,6 +233,12 @@ end
 function Service.setPetTemp(player,bonus)
  local s=Service.states[player];if not s then return end
  s.petTemp=bonus;Service.refresh(player)
+end
+-- Chef pizza's Full Belly (ChefPizzaService owns the stacks and timer): flat and percent stat terms
+-- from ChefPizza.buffBonus, e.g. {Damage=12,AttackSpeed=12}, {MoveSpeed=9}; nil, nil clears it.
+function Service.setPizzaBuff(player,flat,percent)
+ local s=Service.states[player];if not s then return end
+ s.pizzaFlat=flat;s.pizzaPercent=percent;Service.refresh(player)
 end
 function Service.givePetShield(player,duration)
  local s=Service.states[player];local h=humanoid(player)

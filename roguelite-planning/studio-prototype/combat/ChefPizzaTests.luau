@@ -1,6 +1,7 @@
 -- ChefPizza rule checks: chance gating with a seeded generator, Chef class only, Chef weapons only,
--- 1.5 s spacing, the cap of 4 with the oldest removed, lifetime and blink timing, heal = 10% x
--- Recovery, and the server pickup check (distance, gone, expired, dead). Pure: plain tables and
+-- 1 s spacing, the cap of 4 with the oldest removed, lifetime and blink timing, heal = 10% x
+-- Recovery, the server pickup check (distance, gone, expired, dead) and Full Belly stacks (cap 5,
+-- 10 s refreshed by each slice, all lost together, stat terms). Pure: plain tables and
 -- numbers. Run `python roguelite-planning/studio-prototype/combat/run_chef_pizza_tests.py
 -- build/luau-validation/luau.exe`, or in Studio Edit: `ChefPizzaTests(ChefPizza, CharacterStats,
 -- WeaponCatalog)`. Returns the number of checks. Stats is optional; given, Recovery uses its mult
@@ -42,10 +43,10 @@ return function(P,Stats,Weapons)
 	end
 
 	-- Constants match the design.
-	check(P.CHANCE == .08 and P.SPACING == 1.5 and P.MAX_PER_CHEF == 4, "Chance, spacing or cap differs from the design")
+	check(P.CHANCE == .15 and P.SPACING == 1 and P.MAX_PER_CHEF == 4, "Chance, spacing or cap differs from the design")
 	check(P.LIFETIME == 12 and P.BLINK == 3 and P.HEAL_FRACTION == .1, "Lifetime, blink or heal differs from the design")
 
-	-- Chance gating: about 8% over many eligible kills with a seeded generator, and the same seed
+	-- Chance gating: about 15% over many eligible kills with a seeded generator, and the same seed
 	-- gives the same drops.
 	local function rate(seed, n)
 		local rng, hits = seeded(seed), 0
@@ -54,11 +55,11 @@ return function(P,Stats,Weapons)
 	end
 	local r1, calls = rate(42, 20000)
 	check(calls == 20000, "Every eligible kill should spend exactly one roll")
-	check(r1 > .07 and r1 < .09, ("Drop rate %.4f is not about 8%%"):format(r1))
+	check(r1 > .14 and r1 < .16, ("Drop rate %.4f is not about 15%%"):format(r1))
 	check(rate(42, 500) == rate(42, 500), "The same seed should give the same drops")
-	check(kill({ rng = fixed(.0799) }) == true, "A roll just under 8% should drop")
-	local ok, why = kill({ rng = fixed(.08) })
-	check(ok == false and why == "chance", "A roll of exactly 8% should not drop")
+	check(kill({ rng = fixed(.1499) }) == true, "A roll just under 15% should drop")
+	local ok, why = kill({ rng = fixed(.15) })
+	check(ok == false and why == "chance", "A roll of exactly 15% should not drop")
 	check(kill({ rng = fixed(.5), chance = 1 }) == true, "TestPizzaChance 1 should always drop")
 	check(kill({ rng = fixed(0), chance = 0 }) == false, "TestPizzaChance 0 should never drop")
 
@@ -84,7 +85,7 @@ return function(P,Stats,Weapons)
 	check(not P.isChefWeapon(nil, "Turret") and not P.isChefWeapon(nil, "Bloater"), "Turret and Bloater credit are not Chef weapons")
 
 	-- Every Chef weapon in the real catalog (2026-10-10: a class ability, not the Pizza Cutter's).
-	-- A Chef's kill with each one drops at the same 8%; a non-Chef holding it gets nothing (like
+	-- A Chef's kill with each one drops at the same 15%; a non-Chef holding it gets nothing (like
 	-- specialty); a Chef's kill with any other weapon (other classes, Godlies) gets nothing.
 	if Weapons then
 		local chefIds, rolls = {}, {}
@@ -93,9 +94,9 @@ return function(P,Stats,Weapons)
 			check(P.isChefWeapon(w, w.id) == tagged, "Chef weapon follows the class tag: " .. w.name)
 			if tagged then
 				table.insert(chefIds, w.id)
-				check(kill({ weapon = w, rng = fixed(.0799) }) == true, "A Chef's " .. w.name .. " kill drops under 8%")
-				ok, why = kill({ weapon = w, rng = fixed(.08) })
-				check(ok == false and why == "chance", w.name .. " has no higher rate than 8%")
+				check(kill({ weapon = w, rng = fixed(.1499) }) == true, "A Chef's " .. w.name .. " kill drops under 15%")
+				ok, why = kill({ weapon = w, rng = fixed(.15) })
+				check(ok == false and why == "chance", w.name .. " has no higher rate than 15%")
 				local seededRate = 0
 				local g = seeded(7)
 				for _ = 1, 5000 do if kill({ weapon = w, rng = g }) then seededRate += 1 end end
@@ -121,22 +122,22 @@ return function(P,Stats,Weapons)
 	ok, why = kill({ weapon = false, weaponId = "Turret", rng = fixed(0) })
 	check(ok == false and why == "weapon", "A Chef's turret kill should never drop pizza")
 
-	-- Spacing: at least 1.5 s between one Chef's drops; a spaced-out kill spends no roll.
+	-- Spacing: at least 1 s between one Chef's drops; a spaced-out kill spends no roll.
 	rng = fixed(0)
 	ok, why = kill({ now = 100.9, lastDrop = 100, rng = rng })
 	check(ok == false and why == "spacing" and rng.calls == 0, "A drop 0.9 s after the last should be blocked")
-	ok, why = kill({ now = 101.49, lastDrop = 100, rng = fixed(0) })
-	check(ok == false and why == "spacing", "A drop 1.49 s after the last should be blocked")
-	check(kill({ now = 101.5, lastDrop = 100, rng = fixed(0) }) == true, "A drop 1.5 s after the last should be allowed")
+	ok, why = kill({ now = 100.99, lastDrop = 100, rng = fixed(0) })
+	check(ok == false and why == "spacing", "A drop 0.99 s after the last should be blocked")
+	check(kill({ now = 101, lastDrop = 100, rng = fixed(0) }) == true, "A drop 1 s after the last should be allowed")
 	check(kill({ now = 100, lastDrop = nil, rng = fixed(0) }) == true, "A Chef's first drop has no spacing")
-	-- A burst of guaranteed rolls 0.1 s apart for 6 s drops on 0, 1.5, 3, 4.5 (and 6 itself): never closer.
+	-- A burst of guaranteed rolls 0.1 s apart for 6 s drops on 0, 1, 2 ... 6: never closer.
 	local last, drops = nil, {}
 	for i = 0, 60 do
 		local now = i / 10
 		if kill({ now = now, lastDrop = last, rng = fixed(0) }) then last = now; table.insert(drops, now) end
 	end
-	check(#drops == 5, ("Expected 5 drops in 6 s of instant kills, got %d"):format(#drops))
-	for i = 2, #drops do check(drops[i] - drops[i - 1] >= P.SPACING - 1e-9, "Drops closer than 1.5 s") end
+	check(#drops == 7, ("Expected 7 drops in 6 s of instant kills, got %d"):format(#drops))
+	for i = 2, #drops do check(drops[i] - drops[i - 1] >= P.SPACING - 1e-9, "Drops closer than 1 s") end
 
 	-- Cap 4 per Chef: a 5th removes his oldest, never a slice already flying to someone.
 	local function slices(...)
@@ -248,6 +249,62 @@ return function(P,Stats,Weapons)
 	local _, a0 = P.pose(5, 6)
 	local _, a1 = P.pose(5, 7)
 	check(near(a1 - a0, P.SPIN_SPEED), "Spin should turn SPIN_SPEED radians a second")
+
+	-- Full Belly: one stack per slice eaten, up to 5; every pickup restarts the 10 s timer for all
+	-- stacks; when it runs out they all go at once.
+	check(P.BUFF_STACKS == 5 and P.BUFF_SECONDS == 10, "Full Belly cap or duration differs from the design")
+	check(P.BUFF_PER_STACK.Damage == 4 and P.BUFF_PER_STACK.AttackSpeed == 4 and P.BUFF_SPEED_PER_STACK == 3, "Full Belly per-stack numbers differ from the design")
+	local stacks, untilTime = P.stacksAfterPickup(100, nil, nil)
+	check(stacks == 1 and untilTime == 110, "The first slice gives 1 stack until 10 s later")
+	check(P.buffStacks(105, stacks, untilTime) == 1 and P.buffStacks(109.99, stacks, untilTime) == 1, "The stack lasts 10 s")
+	check(P.buffStacks(110, stacks, untilTime) == 0 and P.buffStacks(200, stacks, untilTime) == 0, "At 10 s the stack is gone")
+	-- Stacking and the cap: slices every 2 s climb 1, 2, 3, 4, 5, then stay at 5.
+	stacks, untilTime = nil, nil
+	for i = 1, 8 do
+		stacks, untilTime = P.stacksAfterPickup(100 + 2 * i, stacks, untilTime)
+		check(stacks == math.min(i, 5), ("Slice %d should leave %d stacks, got %d"):format(i, math.min(i, 5), stacks))
+		check(untilTime == 110 + 2 * i, "Every slice restarts the timer")
+	end
+	check(P.buffStacks(125.9, stacks, untilTime) == 5, "All 5 stacks live until 10 s after the last slice")
+	check(P.buffStacks(126, stacks, untilTime) == 0, "All 5 stacks go together when the timer runs out")
+	-- Refresh keeps every stack: 3 stacks with 1 s left, another slice -> 4 stacks, a full 10 s.
+	stacks, untilTime = P.stacksAfterPickup(49, 3, 50)
+	check(stacks == 4 and untilTime == 59, "A slice before expiry adds a stack and refreshes all of them")
+	-- After expiry the count starts again at 1, never at the old count + 1.
+	stacks, untilTime = P.stacksAfterPickup(50, 3, 50)
+	check(stacks == 1 and untilTime == 60, "A slice after expiry starts again at 1 stack")
+	stacks = P.stacksAfterPickup(51, 5, 60)
+	check(stacks == 5, "The cap holds at 5")
+	check(P.buffStacks(1, 99, 2) == 5 and P.buffStacks(1, -3, 2) == 0 and P.buffStacks(1, 2.7, 2) == 2, "Live stacks stay whole and within 0-5")
+	check(P.buffStacks(1, "3", 2) == 0 and P.buffStacks(nil, 3, 2) == 0 and P.buffStacks(0 / 0, 3, 2) == 0, "Bad input means no stacks")
+	-- Time left for the HUD bar.
+	local left, share = P.buffLeft(104, 110)
+	check(near(left, 6) and near(share, .6), "6 s of 10 left is a 60% bar")
+	left, share = P.buffLeft(111, 110)
+	check(left == 0 and share == 0, "An expired buff has an empty bar")
+	left, share = P.buffLeft(90, 110)
+	check(left == 10 and share == 1, "The bar never shows more than 10 s")
+	check(select(1, P.buffLeft(nil, 110)) == 0, "No time, no bar")
+	-- Stat terms: points on Damage and Attack speed, a percent of Movement speed.
+	check(P.buffBonus(0) == nil and P.buffBonus(nil) == nil and P.buffBonus(-1) == nil, "No stacks, no bonus")
+	local flat, percent = P.buffBonus(3)
+	check(flat.Damage == 12 and flat.AttackSpeed == 12 and percent.MoveSpeed == 9, "3 stacks: +12% damage, +12% attack speed, +9% speed")
+	flat, percent = P.buffBonus(9)
+	check(flat.Damage == 20 and flat.AttackSpeed == 20 and percent.MoveSpeed == 15, "The bonus never passes 5 stacks")
+	check(P.buffText() == "+4% damage and attack speed, +3% speed per stack (up to 5, 10 s)", "Ability text: " .. P.buffText())
+	-- Through the real stat resolver (CharacterService.refresh adds flat and percent the same way).
+	if Stats and Stats.resolve and Stats.Classes and Stats.Classes.Chef then
+		flat, percent = P.buffBonus(5)
+		local plain = Stats.resolve("Chef", nil, {}, {}, {})
+		local fed = Stats.resolve("Chef", nil, {}, flat, percent)
+		check(near(fed.Damage - plain.Damage, 20) and near(fed.AttackSpeed - plain.AttackSpeed, 20), "5 stacks: +20 Damage and +20 Attack speed on a Chef")
+		check(near(fed.MoveSpeed, plain.MoveSpeed * 1.15), ("5 stacks: speed x1.15 (%.2f -> %.2f)"):format(plain.MoveSpeed, fed.MoveSpeed))
+		check(fed.MaxHP == plain.MaxHP and fed.Recovery == plain.Recovery, "Full Belly touches nothing else")
+		if Stats.mult then
+			-- Example: a weapon's damage x1.2 and its attacks 1.2x as fast at 5 stacks (about +44% DPS).
+			check(near(Stats.mult(fed.Damage) / Stats.mult(plain.Damage), 1.2), "5 stacks: x1.2 damage on a Chef")
+		end
+	end
 
 	return checks
 end

@@ -57,6 +57,25 @@ function UI.mount(playerGui)
  -- Banked level-ups resolve between waves; this pill only counts them.
  local pending=panel(health,'PendingLevels',0,198,240,34,'button');pending.Visible=false
  local pendingText=label(pending,'Text','',0,0,0,0,17,C.white);pendingText.Size=UDim2.fromScale(1,1)
+ -- Full Belly chip (Chef pizza stacks, ChefPizza): beside the level-up pill, inside the health
+ -- block, so it scales with it and the kill board under the block never moves. Chef class icon (no
+ -- pizza slice icon yet), the stack count and a bar draining over the 10 s.
+ local buffChip=panel(health,'PizzaBuff',248,198,136,34,'inset');buffChip.Visible=false
+ local buffIcon=icon(buffChip,'Icon',5,3,28,'')
+ local buffStacks=label(buffChip,'Stacks','',38,1,48,24,20,C.lime);buffStacks.TextXAlignment=Enum.TextXAlignment.Left
+ local buffTime=label(buffChip,'Time','',86,1,42,24,15,C.cream);buffTime.TextXAlignment=Enum.TextXAlignment.Right
+ local buffTrack=make('Frame',buffChip,{Name='Track',Position=UDim2.fromOffset(38,25),Size=UDim2.fromOffset(90,5),BackgroundColor3=C.track,BorderSizePixel=0})
+ make('UICorner',buffTrack,{CornerRadius=UDim.new(1,0)})
+ local buffFill=make('Frame',buffTrack,{Name='Fill',Size=UDim2.fromScale(1,1),BackgroundColor3=C.lime,BorderSizePixel=0})
+ make('UICorner',buffFill,{CornerRadius=UDim.new(1,0)})
+ task.spawn(function()
+  local combat=RS:WaitForChild('RogueliteCombat')
+  local ok,image=pcall(function()
+   local Stats=require(combat:WaitForChild('CharacterStats'))
+   return require(RS:WaitForChild('WeaponInventoryUI')).Icons[Stats.Signature.Chef]
+  end)
+  if ok and type(image)=='string' then buffIcon.Image=image end
+ end)
  -- Shards and bag split the bar width evenly (same left/right edges as the bars above).
  local half=(384-8)/2
  local shardRow=panel(health,'Shards',0,158,half,34,'inset')
@@ -143,6 +162,34 @@ function UI.mount(playerGui)
   pendingText.Text=count==1 and 'LEVEL UP READY' or ('LEVEL UP  ×'..count)
   gui:SetAttribute('DisplayedPendingLevels',count)
  end
+ -- stacks: live Full Belly stacks (0 hides the chip); left: seconds left; share: 0..1 of the timer.
+ function controller:SetPizzaBuff(stacks,left,share)
+  stacks=math.max(0,math.floor(tonumber(stacks) or 0))
+  buffChip.Visible=stacks>0
+  gui:SetAttribute('DisplayedPizzaStacks',stacks)
+  if stacks<=0 then return end
+  buffStacks.Text='×'..stacks
+  buffTime.Text=math.ceil(left or 0)..'s'
+  buffFill.Size=UDim2.fromScale(math.clamp(share or 0,0,1),1)
+  buffFill.BackgroundColor3=(left or 0)<3 and C.gold or C.lime
+ end
+ -- Server-set PizzaStacks and PizzaBuffUntil (ChefPizzaService), 10 times a second. Frozen while the
+ -- run is paused: the server moves PizzaBuffUntil later by the pause when it resumes.
+ task.spawn(function()
+  local combat=RS:WaitForChild('RogueliteCombat')
+  local m=combat:WaitForChild('ChefPizza',60)
+  local ok,P=pcall(require,m)
+  if not ok or type(P)~='table' or type(P.buffStacks)~='function' then return end -- older rules: no buff
+  while gui.Parent do
+   if combat:GetAttribute('RunPaused')~=true then
+    local now=workspace:GetServerTimeNow()
+    local untilTime=player:GetAttribute('PizzaBuffUntil')
+    local left,share=P.buffLeft(now,untilTime)
+    controller:SetPizzaBuff(P.buffStacks(now,player:GetAttribute('PizzaStacks'),untilTime),left,share)
+   end
+   task.wait(.1)
+  end
+ end)
  local bossTween,bossTrailTween;local lastBossHealth,lastBossMax,lastBossId
  -- Where the boss bar rests and where it slides in from; layout() picks bottom centre or, on
  -- phones, under the timer (clear of the thumbstick and jump button).
@@ -435,7 +482,7 @@ function UI.mount(playerGui)
   buildS=math.max(scale*.9,math.min(scale,.55))
   local ms=math.clamp(scale,.7,1.1) -- launchers stay at least 40 px to tap
   healthScale.Scale=scale;timerScale.Scale=scale;buildScale.Scale=buildS;menuScale.Scale=ms;bossScale.Scale=scale
-  for _,l in {{low,16},{levelText,16},{xpText,18},{phaseText,17},{testText,15},{pendingText,17}} do l[1].TextSize=readableSize(l[2],scale) end
+  for _,l in {{low,16},{levelText,16},{xpText,18},{phaseText,17},{testText,15},{pendingText,17},{buffStacks,20},{buffTime,15}} do l[1].TextSize=readableSize(l[2],scale) end
   health.Position=UDim2.fromOffset(12,12)
   timer.Position=UDim2.new(0.5,0,0,14)
   build.AnchorPoint=Vector2.new(1,0);build.Position=UDim2.new(1,-12,0,12)
