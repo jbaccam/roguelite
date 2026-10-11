@@ -93,6 +93,31 @@ end
 -- element (2026-10-10 hit colours): 'Burn' or 'Poison' for a status tick, 'Lightning' for a chain
 -- or Mjolnir strike; a direct hit that lands a slow is 'Frost'. It, whether the crit roll landed and
 -- whether a Handyman turret (d.structure) dealt it go to clients for the number (ShotBatch.style).
+-- A weapon's own hit rolls burn, poison and slow, and counts toward its lightning chain. Practice
+-- targets run these too (2026-10-10: the lobby dummies never showed an elemental hit colour), so a
+-- burn ticks and a chain jumps on them; their ticks and chains are practice hits (no rewards).
+local function procs(npc,d,s,share,position,slowProc)
+ local elemental=Stats.mult(s.Damage)*Stats.mult(s.ElementalDamage)
+ if math.random()<share*math.max(s.BurnChance,d.burn or 0)/100 then status(npc,d,'Burn',3*Stats.mult(s.Duration),6*elemental*Stats.mult(s.BurnDamage),true) end
+ if math.random()<share*math.max(s.PoisonChance,d.poison or 0)/100 then status(npc,d,'Poison',4*Stats.mult(s.Duration),3*elemental*Stats.mult(s.PoisonDamage),false) end
+ -- A weapon's native slow (WeaponCatalog.SlowById, Medusa 35% for 2 s) or the player's stats, whichever is bigger.
+ if slowProc then status(npc,d,'Slow',math.max(s.SlowDuration,d.slowFor or 0)*Stats.mult(s.Duration),math.min(70,math.max(s.SlowStrength,d.slowStrength or 0)),false) end
+ local state=Characters.states[d.owner]
+ if state then
+  -- A stream tick counts as its share of a hit: with ChainEvery 5, about every 13 ticks at .375.
+  local before=state.hits;state.hits+=share
+  -- CharacterStats.chainTargets: a lightning weapon adds 1 to the player's Lightning targets (the
+  -- Battery Pack fix, 2026-10-09: it took the bigger of the two before).
+  local count=Stats.chainTargets(s,d)
+  if count>0 and math.floor(state.hits/s.ChainEvery)>math.floor(before/s.ChainEvery) then
+   for i,target in near(position,12*Stats.mult(s.AreaSize),{[npc]=true},d.character) do
+    if i>count then break end
+    bolts:push(d.owner,position,target.HumanoidRootPart.Position,'Lightning',d.id)
+    E.hit(target,d.damage*.4*Stats.mult(s.ChainDamage),d,true,nil,nil,'Lightning')
+   end
+  end
+ end
+end
 function E.hit(npc,amount,d,secondary,dot,stream,element)
  local own=not secondary or type(stream)=='number' -- the weapon's own hit: crits and procs
  local share=type(stream)=='number' and math.clamp(stream,0,1) or 1
@@ -129,8 +154,11 @@ function E.hit(npc,amount,d,secondary,dot,stream,element)
    npc:SetAttribute('PracticeDamage',(npc:GetAttribute('PracticeDamage') or 0)+actual)
    npc:SetAttribute('LastWeaponId',d.id)
   end
+  local slowProc=own and math.random()<share*math.max(s.SlowChance,d.slow or 0)/100
+  if slowProc and not element then element='Frost' end
   hits:push(d.owner,position,actual,npc,false,secondary==true,dot==true,d.id,crit,element,d.structure==true)
-  return actual -- no death, rewards, lifesteal farming or damage to the tester
+  if own then procs(npc,d,s,share,position,slowProc) end
+  return actual -- no death, rewards, lifesteal farming, knockback or damage to the tester
  end
  -- Kill credit, read when the enemy dies (quests count Utility kills; leaderboard, shard and
  -- heart owners). Written before the damage, as before, but only when it changes: one player's
@@ -183,26 +211,7 @@ function E.hit(npc,amount,d,secondary,dot,stream,element)
   local pr=d.character:FindFirstChild('HumanoidRootPart');local delta=pr and Vector3.new(position.X-pr.Position.X,0,position.Z-pr.Position.Z)
   if delta and delta.Magnitude>.01 then r:ApplyImpulse(delta.Unit*knockback*r.AssemblyMass*(npc:GetAttribute('IsBoss') and .25 or 1));E.knockedAt[npc]=os.clock() end
  end
- local elemental=Stats.mult(s.Damage)*Stats.mult(s.ElementalDamage)
- if math.random()<share*math.max(s.BurnChance,d.burn or 0)/100 then status(npc,d,'Burn',3*Stats.mult(s.Duration),6*elemental*Stats.mult(s.BurnDamage),true) end
- if math.random()<share*math.max(s.PoisonChance,d.poison or 0)/100 then status(npc,d,'Poison',4*Stats.mult(s.Duration),3*elemental*Stats.mult(s.PoisonDamage),false) end
- -- A weapon's native slow (WeaponCatalog.SlowById, Medusa 35% for 2 s) or the player's stats, whichever is bigger.
- if slowProc then status(npc,d,'Slow',math.max(s.SlowDuration,d.slowFor or 0)*Stats.mult(s.Duration),math.min(70,math.max(s.SlowStrength,d.slowStrength or 0)),false) end
- local state=Characters.states[d.owner]
- if state then
-  -- A stream tick counts as its share of a hit: with ChainEvery 5, about every 13 ticks at .375.
-  local before=state.hits;state.hits+=share
-  -- CharacterStats.chainTargets: a lightning weapon adds 1 to the player's Lightning targets (the
-  -- Battery Pack fix, 2026-10-09: it took the bigger of the two before).
-  local count=Stats.chainTargets(s,d)
-  if count>0 and math.floor(state.hits/s.ChainEvery)>math.floor(before/s.ChainEvery) then
-   for i,target in near(position,12*Stats.mult(s.AreaSize),{[npc]=true},d.character) do
-    if i>count then break end
-    bolts:push(d.owner,position,target.HumanoidRootPart.Position,'Lightning',d.id)
-    E.hit(target,d.damage*.4*Stats.mult(s.ChainDamage),d,true,nil,nil,'Lightning')
-   end
-  end
- end
+ procs(npc,d,s,share,position,slowProc)
  return actual
 end
 -- Armor perks hit through the same path as weapons, with a weapon-like source whose id is 'Armor'
