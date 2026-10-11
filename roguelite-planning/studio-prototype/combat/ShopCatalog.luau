@@ -109,8 +109,9 @@ if turretOk and type(Turret)=='table' and Turret.Items then
   item(it.id,it.name,it.tier,it.price,Turret.Icons[it.tier],{},Turret.describe(it.tier),Turret.MAX_OWNED,'Turret')
   C.ById[it.id].turret=it.tier;C.ById[it.id].structure=true
  end
- -- Scrap Magnet: the Fridge Magnet's art. Toolbelt: the Utility Power level-up art (LevelUpCatalog.IconIds).
- item(Turret.SCRAP_MAGNET,'Scrap Magnet',2,40,'rbxassetid://79860440384816',{},'Each '..Turret.SCRAP_EVERY..' crystals you pick up in a wave builds a temporary Nail Turret near you, up to '..Turret.SCRAP_PER_COPY..' a wave per copy. They go when the wave ends.')
+ -- Scrap Magnet: its own red horseshoe (ui/assets/shop/magnet.png; it shared the Fridge Magnet's blue
+ -- tile until 2026-10-10). Toolbelt: the Utility Power level-up art (LevelUpCatalog.IconIds).
+ item(Turret.SCRAP_MAGNET,'Scrap Magnet',2,40,'rbxassetid://119978395020560',{},'Each '..Turret.SCRAP_EVERY..' crystals you pick up in a wave builds a temporary Nail Turret near you, up to '..Turret.SCRAP_PER_COPY..' a wave per copy. They go when the wave ends.')
  -- Toolbelt is the Utility family item (2026-10-09, items audit 6.2): +10 Utility Power (was 6), base
  -- 16 (was 18), offered only to a build carrying a utility weapon or owning a turret item (C.usable).
  item(Turret.TOOLBELT,'Toolbelt',1,16,'rbxassetid://133538769433103',{UtilityPower=10},'Utility weapons and turrets deal 10% more damage (+10% Utility Power).')

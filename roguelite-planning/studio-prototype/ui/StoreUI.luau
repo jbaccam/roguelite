@@ -308,7 +308,7 @@ function S.open(screen,ctx,focus)
   tiles(face,{{'emerald','+25%','Emerald'},{Chests.ById[Money.VIPDailyChest].icon,'Daily','Legendary'},{'chest','Open ×10','Epic'},{'profile','VIP Tag','Rare'}},24,138,84,10)
   priceButton(face,'Buy',24,vh-84,HW-48,62,'VIP',profile.vip,true)
   FX.shine(face)
-  face=half('QuickOpen',HW+18,y,vh,'wood','QUICK OPEN','Open 10 chests in one click.','chest')
+  face=half('QuickOpen',HW+18,y,vh,'wood','QUICK OPEN','Open 10 chests or eggs in one click.','chest')
   tiles(face,{{'chest','×10','Common'}},24,138,84,10)
   priceButton(face,'Buy',24,vh-84,HW-48,62,'QuickOpen',profile.quickOpen,false)
   y+=vh+48

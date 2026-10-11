@@ -103,6 +103,8 @@ function U.new(player,opts)
 
  local function owned() return player:GetAttribute('ProfileEggs') or 0 end
  local function gems() return player:GetAttribute('ProfileGems') or 0 end
+ -- ×3 / ×10 needs the Quick Open pass (VIP includes it), like chests; the server refuses more too.
+ local function quick() return player:GetAttribute('ProfileQuickOpen')==true or player:GetAttribute('ProfileVIP')==true end
  local function toast(text,ok) T.toast(screen,text,ok and C.lime or C.negative) end
 
  -- The pedestal's aura runs from the start; the merchant animates via EggStage.
@@ -222,7 +224,12 @@ function U.new(player,opts)
   local bw,bh,gap=L.bw,92,16
   actions=T.frame(canvas,'Actions',L.ax,L.ay,L.aw,124)
   local x0=(L.aw-(bw*2+170+gap*2))/2
+  -- One at a time without Quick Open (VIP includes it), like the chest screen.
+  local multi=quick()
+  if not multi then amount=1 end
   local price=Eggs.price(amount)
+  local short=price-gems()
+  -- Charcoal (not lime) when you can't afford it; still tappable so the merchant says why.
   local buy=T.button(actions,'Buy','',x0,0,bw,bh,function()
    if busy then return end
    busy=true
@@ -235,11 +242,10 @@ function U.new(player,opts)
    elseif tostring(r.message):find('emerald') then Merchant.Say(Merchant.pick('broke'),2.4) end
    toast(r.message or '',r.ok)
    drawBrowse()
-  end)
+  end,short>0)
   buy.Caption.Visible=false
-  local bl=centred(T.label(buy,'Label','BUY ×'..amount,0,8,bw,34,28,C.ink));bl.TextStrokeTransparency=1
+  local bl=centred(T.label(buy,'Label','BUY ×'..amount,0,8,bw,34,28,short>0 and C.muted or C.ink));bl.TextStrokeTransparency=1
   local c=costRow(buy,fmt(price),'emerald',30,WHITE);c.Position=UDim2.new(.5,0,0,64)
-  local short=price-gems()
   if short>0 then centred(T.text(actions,'Need','Need '..fmt(short)..' more',x0,bh+6,bw,26,22,C.negative)) end
   local n2=math.min(amount,n)
   local hatch=T.button(actions,'Hatch',n>0 and ('HATCH ×'..n2) or 'HATCH',x0+bw+gap,0,bw,bh,function() self.Begin() end,n<=0)
@@ -247,11 +253,12 @@ function U.new(player,opts)
   if n<=0 then centred(T.text(actions,'NoneOwned','Buy one first',x0+bw+gap,bh+6,bw,26,22,C.muted)) end
   if n>0 then StoreFX.pulse(hatch,.04) end
   local amt=T.button(actions,'Amount','×'..amount,x0+2*(bw+gap),0,170,bh,function()
+   if not quick() then combat:WaitForChild('PurchaseRequest'):FireServer('QuickOpen');return end
    local i=table.find(Eggs.Amounts,amount) or 1
    amount=Eggs.Amounts[i%#Eggs.Amounts+1];FX.play(FX.Sounds.Chime,.15,1.6);drawBrowse()
   end,true)
   corners(amt,T.Tier[2]);amt.Caption.TextSize=42;amt.Caption.TextColor3=Color3.fromRGB(150,215,255)
-  centred(T.text(actions,'AmountHelp','amount',x0+2*(bw+gap),bh+6,170,26,20,C.muted))
+  centred(T.text(actions,'AmountHelp',multi and 'amount' or 'Quick Open: ×10',x0+2*(bw+gap),bh+6,170,26,20,multi and C.muted or C.limeSoft))
   hatch.SelectionOrder=n>0 and 1 or 2;buy.SelectionOrder=n>0 and 2 or 1;amt.SelectionOrder=3
  end
 
@@ -354,6 +361,7 @@ function U.new(player,opts)
  function self.Begin(n)
   if mode~='browse' and mode~='results' or busy then return end
   local want=Eggs.validAmount(n) and n or amount
+  if not quick() then want=1 end
   n=math.min(want,owned())
   if n<=0 then return end
   busy=true
@@ -543,7 +551,7 @@ function U.new(player,opts)
   T.hideTouchControls('EggScreen',true)
   if opts.onVisible then opts.onVisible(false) end
   table.insert(conns,player.AttributeChanged:Connect(function(name)
-   if (name=='ProfileGems' or name=='ProfileEggs' or name=='ProfilePets' or name=='ProfileLoaded') and mode=='browse' then
+   if (name=='ProfileGems' or name=='ProfileEggs' or name=='ProfilePets' or name=='ProfileLoaded' or name=='ProfileQuickOpen' or name=='ProfileVIP') and mode=='browse' then
     if not pendingBrowse then pendingBrowse=true;task.defer(function() pendingBrowse=false;drawBrowse() end) end
     if gemValue and gemValue.Parent then gemValue.Text=fmt(gems()) end
    end

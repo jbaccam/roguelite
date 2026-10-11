@@ -494,6 +494,9 @@ function P.openEgg(player,count)
  local d=P.profiles[player]
  if not d then return false,'Profile still loading' end
  if not Eggs.validAmount(count) then return false,'Invalid amount' end
+ -- Hatching ×3 or ×10 at once is the Quick Open pass (VIP includes it), like openChest; without
+ -- it every egg hatches one at a time (it used to be free for eggs, 2026-10-10 play-test).
+ if count>1 and not (d.quickOpen or d.vip) then return false,'Get Quick Open to hatch '..count..' at once' end
  local n=math.min(count,d.eggs or 0)
  if n<=0 then return false,'No '..Eggs.Name..' to hatch' end
  d.eggs-=n

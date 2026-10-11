@@ -112,7 +112,7 @@ A Gunner with 2 Nail Turrets and no Utility Power gets 10 DPS.
 **Selling:** items can't be sold in this game (only weapons recycle), so turret items can't either.
 
 **Support items:**
-- **Scrap Magnet** (tier II, 40, the Fridge Magnet's art):
+- **Scrap Magnet** (tier II, 40, its own red horseshoe icon `rbxassetid://119978395020560`, `ui/assets/shop/magnet.png`; it shared the Fridge Magnet's blue tile until 2026-10-10):
   - Each 40 crystals you pick up in a wave builds a temporary Nail Turret near you, up to 3 a wave per copy.
   - It counts crystals before the crystal bag's bonus.
   - Temporary turrets last until the wave ends, don't count toward your 10, and do count toward the server's 30.

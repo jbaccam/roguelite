@@ -73,6 +73,11 @@ return function(E, P, Profiles)
 		check(not ok, "buy with a string amount rejected")
 		ok, msg = Profiles.buyEgg(fake, 10, false)
 		check(not ok and msg:find("more emeralds"), "buy ×10 with 1000 emeralds rejected: " .. tostring(msg))
+		-- Only 1, 3 and 10 are sold: huge, negative and NaN counts spend nothing.
+		for _, n in { 1e9, -3, 0 / 0, math.huge, 2.5 } do
+			ok, msg = Profiles.buyEgg(fake, n, false)
+			check(not ok and msg == "Invalid amount", "buy " .. tostring(n) .. " rejected: " .. tostring(msg))
+		end
 		check(d.emeralds == 1000 and d.eggs == 0, "a rejected buy spends nothing")
 		ok = Profiles.buyEgg(fake, 3, false)
 		check(ok and d.emeralds == 250 and d.eggs == 3, "buy ×3 costs 750 and adds 3 eggs")
@@ -81,12 +86,33 @@ return function(E, P, Profiles)
 		d.bought = 200
 		ok, msg = Profiles.buyEgg(fake, 1, true)
 		check(not ok and msg:find("region"), "restricted buy with Robux emeralds rejected: " .. tostring(msg))
+		check(d.emeralds == 250 and d.eggs == 3, "a rejected restricted buy spends nothing")
 		d.bought = 0
+		ok = Profiles.buyEgg(fake, 1, false)
+		check(ok and d.emeralds == 0 and d.eggs == 4, "buy ×1 costs 250")
+		ok, msg = Profiles.buyEgg(fake, 1, false)
+		check(not ok and d.emeralds == 0 and d.eggs == 4, "buy with 0 emeralds rejected: " .. tostring(msg))
+		-- ×10 with exactly 2500: charged once for all ten, nothing left over.
+		d.emeralds = 2500
+		ok = Profiles.buyEgg(fake, 10, false)
+		check(ok and d.emeralds == 0 and d.eggs == 14, "buy ×10 costs 2500 and adds 10 eggs")
 		ok, msg = Profiles.openEgg(fake, 2)
 		check(not ok and msg == "Invalid amount", "hatch ×2 rejected")
+		-- Hatching several at once is the Quick Open pass (VIP includes it), like chests.
+		for _, n in { 3, 10 } do
+			ok, msg = Profiles.openEgg(fake, n)
+			check(not ok and msg:find("Quick Open") and d.eggs == 14, "hatch ×" .. n .. " without Quick Open rejected: " .. tostring(msg))
+		end
+		ok = Profiles.openEgg(fake, 1)
+		check(ok and d.eggs == 13, "hatch ×1 works without Quick Open")
+		d.quickOpen = true
+		ok = Profiles.openEgg(fake, 10)
+		check(ok and d.eggs == 3, "hatch ×10 with Quick Open hatches 10")
+		d.quickOpen = false
+		d.vip = true
 		local results
 		ok, msg, results = Profiles.openEgg(fake, 10)
-		check(ok and d.eggs == 0, "hatch ×10 hatches the 3 owned: " .. tostring(msg))
+		check(ok and d.eggs == 0, "hatch ×10 with VIP hatches the 3 owned: " .. tostring(msg))
 		local pets = 0
 		for i, r in results do
 			pets += r.count
@@ -101,7 +127,7 @@ return function(E, P, Profiles)
 		for _, rec in d.pets do
 			owned += 1 + rec.have
 		end
-		check(owned == 3, "the profile holds the 3 copies")
+		check(owned == 14, "the profile holds all 14 copies, got " .. owned)
 		ok, msg = Profiles.openEgg(fake, 1)
 		check(not ok and msg:find("No "), "hatch with no eggs rejected")
 		Profiles.publish = publish

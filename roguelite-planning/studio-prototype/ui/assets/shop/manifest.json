@@ -271,5 +271,13 @@
     "origin": "Built-in image generation; user references; see GENERATED_PROMPTS.md",
     "downloadCopy": "C:\\Users\\Jeremiah\\Downloads\\shop images\\Bone Crown.png",
     "assetId": "rbxassetid://121286333601812"
+  },
+  {
+    "itemId": "scrap_magnet",
+    "originalFile": "C:\\Users\\Jeremiah\\AppData\\Local\\Temp\\claude\\C--Users-Jeremiah-Documents-ChatGPT-Roblox\\ac7f3b94-2419-4605-b649-b30a382466b1\\images\\2.webp",
+    "file": "magnet.png",
+    "sha256": "61ad55addd91bdff86d13340798430c7b5e47d06a2127d89b814ad40311c70cb",
+    "origin": "Red horseshoe magnet, the user's pick for Scrap Magnet (2026-10-10); the Fridge Magnet keeps the blue sun tile (magnet-fridge.png)",
+    "assetId": "rbxassetid://119978395020560"
   }
 ]
