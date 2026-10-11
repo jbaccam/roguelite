@@ -78,3 +78,25 @@ Tests: `python roguelite-planning/studio-prototype/combat/run_hit_feedback_tests
 **Revision, same day (user: "gold on crits and peach on fire is kinda odd"; ice, poison and turret kept).** The table above is the current look: crits went from gold to hot red with a white outline, fire from peach on orange to a real orange on an ember outline, lightning from violet to an electric cyan outline. A crit is close in hue to damage taken (235,72,72), but damage taken shows only over your own character, with a `-`, a bigger size and a dark red outline, so they don't meet.
 
 **Impact streaks take the colour too.** `MobImpactVisuals` tints the white streak atlas (`ImageColor3`, no new art) with `HitFeedbackVisuals.sparkColor`: the element's hue wins (fire 255,140,40, frost 120,200,255, poison 120,220,70, lightning 255,245,140), else turret steel, else crit red; a plain hit stays white. Burn and poison ticks, which drew no streaks before, now draw a small 3-ray puff in their colour (still throttled to one impact per enemy per 0.07 s). Example: a Medusa hit shows a blue-outlined number and pale blue shards; a crit with a plain Katana shows a red `42!` with red shards. Tests: HitFeedbackTests 369 checks (sparkColor order and every element), CombatWireTests 2449.
+
+**Elemental weapons show only their colour (same day; user: a Molotov's hit "shouldn't show the original one still").** Before this, a Molotov bottle hit or a fire-zone tick came with no element, so it showed a cream number, white streaks and a white flash next to the orange burn ticks. Now:
+
+- **Weapon theme.** Each weapon's element comes from its catalog data (`HitFeedbackVisuals.themeOf` on `WeaponCatalog.List`, no hand-typed ids). A hit the server sent with no element uses its weapon's theme for the number, the streaks and the flash. A hit with a server element uses that one (a lightning chain off a Molotov hit is still lightning). Crits keep the red fill with the element's outline. Plain weapons don't change: cream number, white streaks, white flash.
+
+| Weapon (id) | Catalog data | Theme |
+|---|---|---|
+| Molotov (14) | `burn` 100 | Burn (orange) |
+| Fart Gun (08) | `poison` 100 | Poison (green) |
+| Medusa's Head (34) | `slow` (SlowById 35%) | Frost (blue) |
+| Paint Roller (27) | `slow` (SlowById 30%) | Frost (blue) |
+| Mjolnir (31) | `lightning` | Lightning (yellow on cyan) |
+| Crystal Ball (35) | `lightning` | Lightning (yellow on cyan) |
+| every other weapon | none | plain |
+
+- **Server elements on elemental damage.** The Molotov fire zone's ignition splash and its ticks now send `Burn`, and the Fart Gun cloud's ticks send `Poison` (`SpecialWeapons` zone ticks). The Storm Bow's storm arrows send `Lightning` (`GodlyWeapons`; they are drawn as lightning arrows), and they still crit and proc like before. Mjolnir's Tier IV strike and lightning chains already sent `Lightning`, and burn/poison status ticks already sent their element. Crit rolls are unchanged.
+- **Coloured hit flash.** The enemy's flash Highlight (`api.flash`) is the hit's streak colour moved 35% toward white (`V.flashColor`, `V.FlashSoften` = 0.35), so it still reads as a flash. Fire 255,140,40 flashes 255,180,115. Crit-only hits flash a soft red and turret hits a soft steel. Plain hits stay pure white. All colours are built once, and each flash sets `FillColor`, so a pooled Highlight never keeps the last hit's colour.
+- Example: a Molotov bottle hit for 12 now shows an orange `12` on an ember outline, orange streaks and an orange flash. The fire under the enemy then ticks orange numbers with small orange puffs (zone ticks used to show only a cream number).
+
+Still white: the kill burst (`ZombiePopped` → `MobImpactVisuals.death`). It is a death effect, not a hit, and the remote doesn't say which weapon made the kill. Frost's number fill (228,246,255) is a very pale ice colour on a blue outline. It was kept as already approved. The Molotov's glass shards (`ThrownVisuals.impact`, 176,226,206) are pale mint glass, not white, and that file belongs to the Molotov visuals rework.
+
+Tests: HitFeedbackTests 524 checks: flash colours, `themeOf` / `themes` / `hitElement`, and the catalog check that every themed weapon's number, outline, streaks and flash are never white while every plain weapon stays cream and white. The runner now inlines `WeaponCatalog` too. CombatWireTests 2449, FireZoneTests 453 and the shop runner (ShopPreferenceTests 5979, Duck 33, Washer 34) also passed. No Studio sync and no Play test were run for this change.

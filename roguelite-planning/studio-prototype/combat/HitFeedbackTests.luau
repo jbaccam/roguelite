@@ -1,7 +1,8 @@
 -- Pure checks for HitFeedbackVisuals' pool rules (launch audit F2). Studio Edit, no Play: load its
 -- source with loadstring and pass the module in (V.pick and V.pickFlash touch no Instances).
 -- B (optional): ShotBatch, for the crit/element style's trip over the wire (run_hit_feedback_tests.py).
-return function(V,B)
+-- C (optional): WeaponCatalog, for the weapon themes (every elemental weapon shows only its colour).
+return function(V,B,C)
  local checks=0;local function check(ok,message) checks+=1;assert(ok,message) end
  local pick,pickFlash=V.pick,V.pickFlash
  -- Numbers: new ones until the cap, then free ones first.
@@ -94,6 +95,54 @@ return function(V,B)
   c4,e4,t4=B.unstyle(15*16);check(c4==false and e4==nil and t4==false,'the unused code reads as plain')
   for name in V.Colors do check(table.find(B.Elements,name),'every coloured element can be sent: '..name) end
   for _,name in B.Elements do check(V.Colors[name],'every sent element has a colour: '..name) end
+ end
+ -- Hit flash colour (2026-10-10, user: a Molotov "shouldn't show the original one still"): white
+ -- only for a plain hit; otherwise sparkColor's hue lifted V.FlashSoften toward white.
+ local function white(c) return c.R==1 and c.G==1 and c.B==1 end
+ local function near(a,b) return math.abs(a.R-b.R)<1e-6 and math.abs(a.G-b.G)<1e-6 and math.abs(a.B-b.B)<1e-6 end
+ local function softened(c) local k=V.FlashSoften;return {R=c.R+(1-c.R)*k,G=c.G+(1-c.G)*k,B=c.B+(1-c.B)*k} end
+ check(white(V.flashColor(false,nil,false)),'a plain hit flashes pure white')
+ check(V.FlashSoften>0 and V.FlashSoften<.6,'the flash keeps most of the hit colour')
+ for _,name in {'Burn','Frost','Poison','Lightning'} do
+  local f=V.flashColor(false,name,false)
+  check(not white(f) and near(f,softened(V.Sparks[name])),name..' flashes its streak colour, softened')
+  check(V.flashColor(true,name,false)==f and V.flashColor(false,name,true)==f,name..' flash wins over crit and turret')
+ end
+ check(near(V.flashColor(true,nil,false),softened(V.CritColor)) and near(V.flashColor(false,nil,true),softened(V.TurretColor)),'crit flashes red, turret steel')
+ check(white(V.flashColor(false,'Ice',false)),'an unknown element flashes white')
+ check(V.flashColor(false,'Burn')==V.flashColor(false,'Burn'),'flash colours are shared, not built per hit')
+ -- Weapon themes: a catalog weapon's native burn, poison, slow or lightning is its theme.
+ check(V.themeOf({burn=100,poison=0,slow=0})=='Burn' and V.themeOf({burn=0,poison=100,slow=0})=='Poison','burn and poison weapons are themed')
+ check(V.themeOf({burn=0,poison=0,slow=100})=='Frost' and V.themeOf({burn=0,poison=0,slow=0,lightning=true})=='Lightning','slow and lightning weapons are themed')
+ check(V.themeOf({burn=0,poison=0,slow=0,lightning=false})==nil and V.themeOf(nil)==nil,'a plain weapon has no theme')
+ local themes={['14']='Burn'}
+ check(V.hitElement(nil,'14',themes)=='Burn','a Molotov hit with no element shows Burn')
+ check(V.hitElement('Lightning','14',themes)=='Lightning','the server element wins over the theme')
+ check(V.hitElement(nil,'03',themes)==nil and V.hitElement(nil,nil,themes)==nil and V.hitElement(nil,'14',nil)==nil,'unthemed, missing ids and no table stay plain')
+ if C then
+  local t=V.themes(C.List)
+  check(t['14']=='Burn' and t['08']=='Poison' and t['34']=='Frost' and t['31']=='Lightning' and t['35']=='Lightning','Molotov fire, Fart Gun poison, Medusa frost, Mjolnir and Crystal Ball lightning')
+  local themed,plain=0,0
+  for _,w in C.List do
+   local native=(w.burn or 0)>0 or (w.poison or 0)>0 or (w.slow or 0)>0 or w.lightning==true
+   check((t[w.id]~=nil)==native,'theme follows the catalog data: '..w.id)
+   if t[w.id] then
+    themed+=1
+    check(V.Colors[t[w.id]]~=nil and (not B or table.find(B.Elements,t[w.id])),'theme is a sendable, coloured element: '..w.id)
+    -- No white anywhere on a themed weapon's hit: number fill/outline, streaks and flash.
+    for _,crit in {false,true} do
+     local e=V.hitElement(nil,w.id,t);local s=V.style(crit,e,false)
+     check(s and s.outline==V.Colors[e] and not white(s.outline),w.name..': element outline, never white (crit '..tostring(crit)..')')
+     check(not white(s.color),w.name..': coloured number fill')
+     local spark=V.sparkColor(crit,e,false);check(spark==V.Sparks[e] and not white(spark),w.name..': streaks take the theme')
+     check(not white(V.flashColor(crit,e,false)),w.name..': flash takes the theme')
+    end
+   else
+    plain+=1
+    check(V.style(false,V.hitElement(nil,w.id,t),false)==nil and white(V.flashColor(false,V.hitElement(nil,w.id,t),false)),w.name..': a plain hit stays cream and white')
+   end
+  end
+  check(themed>=6 and plain>themed,'a few weapons are themed, most are plain')
  end
  -- Flashes: an enemy already flashing restarts its own; free before new; new under the cap; else oldest.
  local a,b,c={},{},{}

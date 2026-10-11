@@ -302,17 +302,22 @@ local function damageNumber(position,damage,color,name,mine,crit,element,turret)
  hitFeedback.number(position,damage,color,taken,mine,crit,element,turret)
 end
 -- mine: your own hit (teammates' numbers give way first). dot: a burn, poison or zone tick, which
--- shows its number and white flash without an extra splat. crit, element, turret: the server's
+-- shows its number and flash without an extra splat (a coloured tick gets a small puff). crit, element, turret: the server's
 -- roll and source, for the number's colour (HitFeedbackVisuals.style).
+-- A weapon's theme element (HitStyle.themeOf, from the catalog's burn/poison/slow/lightning): a hit
+-- the server sent with no element shows its weapon's, so a Molotov never shows a cream number,
+-- white streaks or a white flash (2026-10-10).
+local hitThemes=HitStyle.themes(Catalog.List)
 local function onHit(position,damage,npc,impactPosition,lethal,secondary,weaponId,mine,dot,crit,element,turret)
  if typeof(position)~='Vector3' or type(damage)~='number' then return end
+ element=HitStyle.hitElement(element,weaponId,hitThemes)
  -- The impact streaks take the hit's colour (HitStyle.sparkColor). A burn/poison tick, which had
  -- no streaks, now shows a small 3-ray puff in its element's colour.
  local tint=HitStyle.sparkColor(crit,element,turret)
  if not lethal and (not dot or tint) then mobImpact.hit(impactPosition or position-Vector3.yAxis*2,npc,secondary or dot,tint) end
  godlyFX.hit(npc,lethal,secondary,weaponId,impactPosition or position)
  damageNumber(position,damage,Color3.fromRGB(255,246,218),'DamageNumber',mine,crit,element,turret)
- if npc and npc.Parent then hitFeedback.flash(npc) end
+ if npc and npc.Parent then hitFeedback.flash(npc,HitStyle.flashColor(crit,element,turret)) end
 end
 -- Kills, one at a time and reliable (CombatEffectsService); they carry their owner, dot flag and
 -- crit/element/turret style (ShotBatch.style).

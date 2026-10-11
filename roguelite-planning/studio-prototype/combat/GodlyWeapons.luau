@@ -167,7 +167,9 @@ function G.new(damage,canTarget)
   for i,npc in list do
    local _,r=alive(npc);roots[i]=r and r.Position or mainRoot.Position
    local at=now+rise+.16+(i-1)*.035
-   later(at,function() if alive(npc) and ownerAlive(d) then damage(npc,d.damage,d) end end)
+   -- Lightning arrows (GodlyVisuals' storm burst): their hits show lightning's colour (2026-10-10).
+   -- Still the bow's own hit: it crits and procs as before.
+   later(at,function() if alive(npc) and ownerAlive(d) then damage(npc,d.damage,d,nil,nil,nil,'Lightning') end end)
   end
   send(origin,d.owner,'Rain',d.owner.UserId,d.slotIndex,origin,split,roots,list,now,rise)
  end

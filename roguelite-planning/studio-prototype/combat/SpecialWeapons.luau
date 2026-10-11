@@ -185,7 +185,9 @@ function S.new(combat,damage,rayParams)
      if h and h.Health>0 and root and allowed(npc,z.d) and (root.Position-z.position).Magnitude<=z.radius and not workspace:Raycast(z.position+Vector3.yAxis*.3,root.Position-z.position-Vector3.yAxis*.3,wall) then
       -- Secondary ticks cannot proc crit, chains, knockback or status stacks. A damage-over-time
       -- tick (last true): clients show its number without a splat or flash.
-      damage(npc,z.d.damage*factor,z.d,true,not (ignition and z.kind=='Fire'))
+      -- Element (2026-10-10 hit colours): a fire zone's ignition splash and ticks are 'Burn', a
+      -- poison cloud's 'Poison', so they show only that colour (no cream number or white streaks).
+      damage(npc,z.d.damage*factor,z.d,true,not (ignition and z.kind=='Fire'),nil,z.kind=='Fire' and 'Burn' or 'Poison')
      end
     end
    end

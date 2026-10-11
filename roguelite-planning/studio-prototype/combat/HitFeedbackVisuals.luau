@@ -48,6 +48,38 @@ function V.sparkColor(crit,element,turret)
 end
 V.TurretColor=Color3.fromRGB(176,190,204);V.TurretScale=.85
 V.OutlineThickness=2
+-- 2026-10-10 (user: a Molotov's hit "shouldn't show the original one still ... have them all only
+-- show their corresponding effect colour"). Three pieces so an elemental weapon never shows white:
+--  * The hit flash (api.flash) takes sparkColor's hue lifted V.FlashSoften toward white, so the
+--    enemy still reads as flashing: fire 255,140,40 flashes 255,180,115. A plain hit stays pure
+--    white. Built once, no Color3 per hit.
+--  * A weapon's theme (V.themeOf), from WeaponCatalog's native procs: burn -> 'Burn' (Molotov),
+--    poison -> 'Poison' (Fart Gun), slow -> 'Frost' (Medusa's Head, Paint Roller), lightning ->
+--    'Lightning' (Mjolnir, Crystal Ball); nil for the rest.
+--  * V.hitElement: the server's element wins (a chain off a Molotov is still lightning); a hit
+--    with none from a themed weapon shows its theme, so the Molotov's bottle hit is an orange
+--    number with orange streaks and an orange flash, like its fire.
+V.FlashWhite=Color3.new(1,1,1);V.FlashSoften=.35
+local function soften(c) local k=V.FlashSoften;return Color3.new(c.R+(1-c.R)*k,c.G+(1-c.G)*k,c.B+(1-c.B)*k) end
+V.FlashTints={};for name,c in V.Sparks do V.FlashTints[name]=soften(c) end
+V.FlashCrit=soften(V.CritColor);V.FlashTurret=soften(V.TurretColor)
+function V.flashColor(crit,element,turret)
+ return V.FlashTints[element] or (turret and V.FlashTurret) or (crit and V.FlashCrit) or V.FlashWhite
+end
+function V.themeOf(w)
+ if type(w)~='table' then return nil end
+ return (w.burn or 0)>0 and 'Burn' or (w.poison or 0)>0 and 'Poison' or (w.slow or 0)>0 and 'Frost' or w.lightning and 'Lightning' or nil
+end
+-- weapon id -> theme for every catalog weapon that has one (WeaponCatalog.List).
+function V.themes(list)
+ local t={}
+ for _,w in list or {} do if type(w)=='table' and type(w.id)=='string' then t[w.id]=V.themeOf(w) end end
+ return t
+end
+function V.hitElement(element,weaponId,themes)
+ if element then return element end
+ return themes and weaponId~=nil and themes[weaponId] or nil
+end
 -- One frozen style per kind ('Crit', 'Burn', 'CritBurn', 'TurretPoison', ...), built once: no
 -- per-hit tables. stroke: the text stroke's transparency (1 where the element outline replaces it).
 V.Styles={}
@@ -153,13 +185,16 @@ function V.mount(visuals)
   e.text.TextTransparency=0;e.text.TextStrokeTransparency=e.stroke;if e.outline then e.outline.Transparency=0 end
   e.scale.Scale=.65*e.big;e.attachment.Position=e.start;e.gui.Enabled=true
  end
- function api.flash(npc)
+ -- color: V.flashColor for the hit (nil: white). Each flash sets it, so a pooled one never keeps
+ -- the last hit's colour.
+ function api.flash(npc,color)
   if not npc or not npc.Parent then return end
   local f=V.pickFlash(flashes,V.Flashes,npc)
   if f=='new' then
    local h=Instance.new('Highlight');h.Name='WeaponHitFlash';h.FillColor=Color3.new(1,1,1);h.OutlineTransparency=1;h.DepthMode=Enum.HighlightDepthMode.Occluded;h.Enabled=false;h.Parent=visuals
    f={highlight=h};table.insert(flashes,f)
   end
+  f.highlight.FillColor=color or V.FlashWhite
   f.npc=npc;f.born=os.clock();f.highlight.Adornee=npc;f.highlight.FillTransparency=0;f.highlight.Enabled=true
  end
  local function stepNumbers(pool,now)
@@ -195,7 +230,7 @@ function V.mount(visuals)
  -- patch (a pale Neon disc and six frost spikes, turning slowly); a frost ring bursts out when the
  -- slow lands. Only the nearest within 150 studs are drawn: V.FrostTints Highlights (flashes keep
  -- their separate bounded pool) and V.FrostPatches patches. A white hit flash takes over the
- -- tint for its 0.18 s. Example: a Medusa hit on a zombie walking 12 studs/s shows ice for the
+ -- tint for its 0.18 s (white, or the hit's colour: V.flashColor). Example: a Medusa hit on a zombie walking 12 studs/s shows ice for the
  -- 2 s it crawls at 7.8.
  local Tags=game:GetService('CollectionService')
  local K=require(game:GetService('ReplicatedStorage'):WaitForChild('RogueliteCombat'):WaitForChild('VfxKit'))

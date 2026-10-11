@@ -3,8 +3,8 @@
 Usage (from the repo root):
   python roguelite-planning/studio-prototype/combat/run_hit_feedback_tests.py build/luau-validation/luau.exe
 
-Inlines the real HitFeedbackVisuals and ShotBatch, then runs HitFeedbackTests (pool, merge and
-crit/element colour rules, plus ShotBatch.style's round trip) and CombatWireTests (Shot rows, hit
+Inlines the real HitFeedbackVisuals, ShotBatch and WeaponCatalog, then runs HitFeedbackTests (pool,
+merge and crit/element colour rules, flash colours, weapon themes, plus ShotBatch.style's round trip) and CombatWireTests (Shot rows, hit
 batches with their crit/element bits, packed attacks). Only engine types are stubbed: Color3,
 Enum, a small Vector3 / yaw-only CFrame, Random, typeof, game and workspace. HitFeedbackVisuals'
 V.mount, which builds Instances, is never called.
@@ -71,12 +71,13 @@ source = STUBS + "local MODULES={}\n"
 for name, filename in [
     ("HitFeedbackVisuals", "HitFeedbackVisuals.luau"),
     ("ShotBatch", "ShotBatch.luau"),
+    ("WeaponCatalog", "WeaponCatalog.luau"),
     ("HitFeedbackTests", "HitFeedbackTests.luau"),
     ("CombatWireTests", "CombatWireTests.luau"),
 ]:
     source += module(name, filename)
 source += """local M=MODULES
-print('HitFeedbackTests: '..M.HitFeedbackTests(M.HitFeedbackVisuals,M.ShotBatch).checks..' checks passed')
+print('HitFeedbackTests: '..M.HitFeedbackTests(M.HitFeedbackVisuals,M.ShotBatch,M.WeaponCatalog).checks..' checks passed')
 local wire=M.CombatWireTests(M.ShotBatch)
 print('CombatWireTests: '..wire.checks..' checks passed ('..wire.notes.hitMessages..' hit messages, worst budget '..wire.notes.worstHitBudget..' bytes)')
 """
