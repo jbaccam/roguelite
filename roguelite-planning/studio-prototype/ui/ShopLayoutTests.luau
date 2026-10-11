@@ -30,6 +30,9 @@ local ok,err=xpcall(function()
    if left:FindFirstChild('RobuxReroll') then assert(disjoint(bag,left.RobuxReroll),'bag overlaps Robux reroll') end
    local note=left:FindFirstChild('BagNote')
    assert(note,'bag caption missing')
+   -- 2026-10-10: the caption sits right beside the bag, centred on it.
+   assert(note.AbsolutePosition.X>=right(bag)-1 and note.AbsolutePosition.X<=right(bag)+12,'bag caption not beside the bag')
+   assert(math.abs((note.AbsolutePosition.Y+note.AbsoluteSize.Y/2)-(bag.AbsolutePosition.Y+bag.AbsoluteSize.Y/2))<2,'bag caption not centred on the bag')
    if left:FindFirstChild('RerollOdds') then assert(disjoint(note,left.RerollOdds),'bag caption overlaps odds') end
    for i=1,4 do local card=left:FindFirstChild('Offer'..i);if card then assert(disjoint(note,card),'bag caption overlaps offer') end end
   end

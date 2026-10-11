@@ -680,34 +680,48 @@ function M.new(player,h,refresh)
   end
   -- Crystals, and right beside them the crystal bag (Brotato's material bag, user 2026-10-03): what
   -- was left on the ground when the last wave ended. Shown only while it holds some (an empty bag
-  -- hides), with one plain caption line. Example: '439 [crystal]  30 [bag]'. Between the title and
-  -- the reroll buttons; each amount sized by price()'s own fit rule, so both always fit.
+  -- hides), with a plain caption beside it. Example: '439 [crystal]  30 [bag]'. Between the title and
+  -- the reroll buttons (or its own row, below); each amount sized by price()'s own fit rule.
   local bag=data.baggedShards or 0
   local bx0=leftW*(narrow and .65 or .40)
   local function shardsBox(name,x,width,value,size,color,icon)
    local f=Instance.new('Frame');f.Name=name;f.BackgroundTransparency=1;f.Position=UDim2.fromOffset(x,0);f.Size=UDim2.fromOffset(width,46);f.Parent=left
    price(f,value,'',size,color,icon);return f
   end
-  local bagRow=0 -- extra layout px a caption row adds above the cards
-  if bag<=0 then shardsBox('Shards',bx0,leftW*(narrow and .35 or .14),data.shards,narrow and 23 or 32,white)
-  else
-   local bx1=narrow and leftW or math.max(bx0+leftW*.14,leftW-rerollW-(paid and robuxW+8 or 0)-8)
+  local bagRow=0 -- extra layout px the bag row adds above the cards
+  -- The caption sits right beside the bag, centred on it (play-test 2026-10-10: under the title, far
+  -- left, it didn't read as the bag's). Wide screens with room keep the bag after the crystals in
+  -- the header, the caption in the gap before the reroll buttons (two lines at most; 1920x1080 has
+  -- about 290 px). Elsewhere the bag moves to its own row above the cards with the caption beside
+  -- it: '[bag] 30  Missed crystals. ...' (1440x900 and smaller, phones).
+  local caption="Missed crystals. Your next pickups pay double until it's empty."
+  local fs=math.max(16,minText)
+  local inline=false
+  if bag>0 and not narrow then
+   local bx1=math.max(bx0+leftW*.14,leftW-rerollW-(paid and robuxW+8 or 0)-8)
    local a,b=#tostring(data.shards)*.65+1.2,#tostring(bag)*.65+1.2
-   local ss=math.max(12,math.min(narrow and 23 or 32,math.floor((bx1-bx0-44)/(a+b))))
+   local ss=math.max(12,math.min(32,math.floor((bx1-bx0-44)/(a+b))))
    local sw,bw=20+ss*a,20+ss*b
-   local x0=narrow and bx0+math.max(0,(bx1-bx0-sw-bw-4)/2) or bx0
-   shardsBox('Shards',x0,sw,data.shards,ss,white)
-   shardsBox('Bag',x0+sw+4,bw,bag,ss,cream,T.Asset.shardBag)
-   -- The caption: under the title when one line fits there (wide), else its own row above the cards.
-   local caption="Missed crystals. Your next pickups pay double until it's empty."
-   local cw=narrow and leftW or (paid and leftW-math.min(leftW*.6,560)-12 or leftW)
-   local fs=math.max(14,minText)
-   local chH=math.ceil(TS:GetTextSize(caption,fs,T.Body,Vector2.new(math.max(40,cw-6),1000)).Y)+4
-   if not narrow and chH<=26 then text(left,'BagNote',caption,0,48,cw,26,fs,cream)
-   else
-    if not narrow then cw=leftW;chH=math.ceil(TS:GetTextSize(caption,fs,T.Body,Vector2.new(cw-6,1000)).Y)+4 end
-    text(left,'BagNote',caption,0,(narrow and 78+rerollH or math.max(76,rerollH+30))+oddsExtra,cw,chH,fs,cream)
-    bagRow=chH+6
+   local cx=bx0+sw+4+bw+2;local cw=bx1-cx
+   if cw>=160 and TS:GetTextSize(caption,fs,T.Body,Vector2.new(cw-6,1000)).Y+4<=46 then
+    inline=true
+    shardsBox('Shards',bx0,sw,data.shards,ss,white)
+    shardsBox('Bag',bx0+sw+4,bw,bag,ss,cream,T.Asset.shardBag)
+    text(left,'BagNote',caption,cx,0,cw,46,fs,cream)
+   end
+  end
+  if not inline then
+   shardsBox('Shards',bx0,leftW*(narrow and .35 or .14),data.shards,narrow and 23 or 32,white)
+   if bag>0 then
+    -- price()'s fit rule sizes the box, so the amount keeps its size; the caption starts at its edge.
+    local bs=narrow and 22 or 26
+    local bw=20+bs*(#tostring(bag)*.65+1.2);local cw=leftW-bw-4
+    local rh=math.max(bs+12,math.ceil(TS:GetTextSize(caption,fs,T.Body,Vector2.new(cw-6,1000)).Y)+4)
+    local y=(narrow and 78+rerollH or math.max(76,rerollH+30))+oddsExtra
+    local f=Instance.new('Frame');f.Name='Bag';f.BackgroundTransparency=1;f.Position=UDim2.fromOffset(0,y);f.Size=UDim2.fromOffset(bw,rh);f.Parent=left
+    price(f,bag,'',bs,cream,T.Asset.shardBag)
+    text(left,'BagNote',caption,bw+4,y,cw,rh,fs,cream)
+    bagRow=rh+6
    end
   end
   -- Phones (tap>0) keep four columns only when each card is still 240 wide; else two rows of two.
