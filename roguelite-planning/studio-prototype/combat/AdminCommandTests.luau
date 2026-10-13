@@ -52,14 +52,15 @@ return function(C, Weapons, Items, Stats)
 	parsed("/god bob off", { name = "god", player = "bob", on = false })
 	parsed("/god on", { name = "god", player = "me", on = true })
 	parsed("/pause", { name = "pause" })
-	parsed("/pause off", { name = "pause", on = false })
+	parsed("/resume", { name = "resume" })
+	parsed("/wave 15", { name = "wave", wave = 15 })
 	parsed("/admin", { name = "admin" })
-	for _, bad in { "/tempgive", "/tempgive bob", "/tempgive bob katana 7", "/tempgive bob katana 0", "/tempgive bob katana 2 5", "/give bob katana 5", "/armor bob", "/armor bob iron 5", "/pause now", "/god a b c", "/kick bob", "", "/give bob" } do
+	for _, bad in { "/pause off", "/resume now", "/wave", "/wave 0", "/wave 21", "/wave ten", "/wave 1 2", "/tempgive", "/tempgive bob", "/tempgive bob katana 7", "/tempgive bob katana 0", "/tempgive bob katana 2 5", "/give bob katana 5", "/armor bob", "/armor bob iron 5", "/pause now", "/god a b c", "/kick bob", "", "/give bob" } do
 		check(C.parse(bad) == nil, bad .. " is refused")
 	end
 	check(C.parse(string.rep("a", C.MAX_TEXT + 1)) == nil, "Long text refused")
 	check(C.parse(42) == nil, "Not text refused")
-	check(#C.Names == 6 and table.find(C.Names, "tempgive") ~= nil and table.find(C.Names, "armor") ~= nil and table.find(C.Names, "pause") ~= nil, "Six commands")
+	check(#C.Names == 8 and table.find(C.Names, "armor") ~= nil and table.find(C.Names, "resume") ~= nil and table.find(C.Names, "wave") ~= nil, "Eight commands")
 
 	-- The catalog and item search, with the real weapons and shop items.
 	local armor = { Slots = { "Helmet", "Chest", "Legs", "Boots" }, Sets = { { id = "Iron", name = "Iron" }, { id = "DragonScale", name = "Dragon Scale" } }, Icons = {} }
@@ -103,6 +104,43 @@ return function(C, Weapons, Items, Stats)
 	found("dragon scale", "armor", "s:DragonScale")
 	found("dragon", "armor", "s:DragonScale")
 	check(C.find(entries, "katana", "armor") == nil, "/armor takes sets only")
+	-- Tokens (2026-10-13): one word each, and each finds its own entry exactly.
+	for _, e in entries do
+		check(not string.find(e.token, "%s") and e.token ~= "", e.key .. " has a one-word token")
+		local mode = e.set and "armor" or e.temp and "temp" or "perm"
+		local got = C.find(entries, e.token, mode, e.tier)
+		check(got == e, string.format("token %q finds %s (got %s)", e.token, e.key, got and got.key or "nothing"))
+	end
+	check(C.find(entries, "dragonscale", "armor").key == "s:DragonScale", "dragonscale, no space")
+
+	-- Tab completion.
+	local ctx = { entries = entries, players = { { name = "Bob", display = "Bobby" }, { name = "Bonnie", display = "Bonnie" } } }
+	local function tokens(text)
+		local out = {}
+		for i, o in C.suggest(text, ctx).options do
+			out[i] = o.token
+		end
+		return out
+	end
+	local cmds = tokens("/")
+	check(#cmds == #C.Names and cmds[1] == "/tempgive", "'/' lists every command")
+	check(table.concat(tokens("/ar"), ",") == "/armor", "'/ar' -> /armor")
+	local who = tokens("/armor ")
+	check(who[1] == "me" and who[2] == "all" and who[3] == "others" and who[4] == "Bob" and who[5] == "Bonnie", "Players next")
+	check(table.concat(tokens("/armor bo"), ",") == "Bob,Bonnie", "'bo' -> Bob, Bonnie")
+	local sets = tokens("/armor all ")
+	check(sets[1] == "off" and table.find(sets, "dragonscale") and table.find(sets, "iron") and #sets == 3, "Sets (and off) after the player")
+	check(table.concat(tokens("/armor all dr"), ",") == "dragonscale", "'dr' -> dragonscale")
+	local s = C.suggest("/armor all dr", ctx)
+	check(s.before == "/armor all " and s.partial == "dr", "Completion replaces only the last word")
+	check(table.find(tokens("/tempgive "), "me") ~= nil, "tempgive: players")
+	check(table.find(tokens("/tempgive me fry"), "fryingpan") ~= nil, "tempgive: items by token")
+	check(table.find(tokens("/tempgive me "), "dragonscale") == nil and table.find(tokens("/tempgive me x"), "fox") == nil, "players, not items, in the player spot")
+	check(#tokens("/tempgive me katana ") == C.SLOTS and #tokens("/tempgive me katana 2 ") == 4, "Slots, then tiers")
+	check(#tokens("/give me katana ") == 4 and #tokens("/armor me iron ") == 4, "Tiers for give and armor")
+	check(#tokens("/pause ") == 0 and #tokens("/resume ") == 0 and #tokens("/admin ") == 0 and #tokens("/nope ") == 0, "Nothing after pause, resume, admin or an unknown command")
+	check(#tokens("/wave ") == C.MAX_WAVE and table.concat(tokens("/wave 1"), ",") == "1,10,11,12,13,14,15,16,17,18,19", "Wave numbers")
+	check(table.find(tokens("/give "), "Bob") ~= nil and table.find(tokens("/give me pro"), "proteinshake") == nil, "give: saved items only")
 	check(C.find(entries, "protein", "perm") == nil, "Run items can't be saved")
 	check(C.find(entries, "fox", "temp") == nil, "Pets aren't run items")
 	check(C.find(entries, "zzzz", "temp") == nil, "Nothing found")

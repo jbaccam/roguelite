@@ -92,12 +92,19 @@ These are typed in the Roblox chat. They exist only on a developer's own client,
 | Command | What it does |
 |---|---|
 | `/tempgive <player> <item> [slot] [tier]` | This run only (2026-10-13: by slot, not copies). A weapon goes in weapon slot 1-6, replacing what is there. With no slot it goes in the next free one. Tier I by default. Example: `/tempgive bob katana 2 3` puts a Tier III Katana in Bob's slot 2. Run items and turrets have no slot, so each command adds one copy, and a lone number is the tier. For turrets the tier picks which one: `/tempgive me turret 4` gives a Gatling Rig. |
-| `/armor <player> <set> [tier]` or `/armor <player> off` | This run only: the player wears the whole set, with its visuals, set bonus and gear power. Their saved armor is never changed. The run armor comes off when they return to the lobby, when a new run starts, or with `off`. With no tier, each piece uses the tier they own (Tier I if they don't own it). Example: `/armor all dragon scale 4`. |
+| `/armor <player> <set> [tier]` or `/armor <player> off` | This run only: the player wears the whole set, with its visuals, set bonus and gear power. Their saved armor is never changed. The run armor comes off when they return to the lobby, when a new run starts, or with `off`. With no tier, each piece uses the tier they own (Tier I if they don't own it). Example: `/armor all dragonscale 4`. |
 | `/give <player> <item> [tier]` | Saved for good. Example: `/give all iron set`, or `/give bob katana 4` for a Tier IV Katana. |
 | `/god [player] [on\|off]` | Toggles when on/off is left out. |
-| `/pause [on\|off]` | Pauses the wave clock and spawns (Pause) and freezes every enemy (Freeze), together. Leave on/off out to toggle. |
+| `/pause` | Holds the wave clock and spawns, and freezes every enemy (Pause and Freeze together). |
+| `/resume` | Lets them all go again. |
+| `/wave <1-20>` | Starts that wave now. If you were paused, it stays paused, so you can set everyone up first: `/pause`, `/wave 15`, set up, then `/resume`. |
 | `/admin` | Shows this list. |
 
+- **Command bar and Tab (2026-10-13):** press `;` to open the admin command bar at the bottom of the screen, with `/` already typed. A list above it shows what fits the word you are typing: commands, then players, then items or sets, then slots and tiers.
+  - **Tab** puts the next option in and **Shift+Tab** the previous one. Example: `/armor all ` then Tab gives `off`, Tab again gives `iron`, and so on through the sets.
+  - **Enter** runs the command. On a phone, tap a row instead.
+  - The Give tab's command box completes the same way. Roblox doesn't let games read its own chat box, so typing in chat can't Tab-complete.
+  - Every option is one word (`dragonscale`, `fryingpan`, `ironhelmet`), so commands never need spaces.
 - `<player>` can be `me`, `all`, `others`, or a name or display name. The start of a name is enough when only one player fits.
 - `<item>` can be any name, with or without spaces. A whole word wins: `pan` means the Frying Pan, not Pandora's Box.
 - The module is `AdminCommands`, checked offline by `run_admin_command_tests.py`.

@@ -292,7 +292,16 @@ end
 function actions.Command(p,text)
  local cmd,why=Commands.parse(text);if not cmd then return false,why end
  if cmd.name=='admin' then return true,Commands.HELP end
- if cmd.name=='pause' then return actions.PauseAll(p,cmd.on) end
+ if cmd.name=='pause' then return actions.PauseAll(p,true) end
+ if cmd.name=='resume' then return actions.PauseAll(p,false) end
+ -- /wave n: that wave starts now. Paused before (/pause): paused again at once, so the new wave's
+ -- clock and spawns wait for /resume while everyone sets up.
+ if cmd.name=='wave' then
+  local was=RS:WaitForChild('RogueliteRunState'):GetAttribute('AdminPaused')==true or combat:GetAttribute('AdminFreeze')==true
+  local ok,message=actions.JumpWave(p,cmd.wave)
+  if ok and was then actions.PauseAll(p,true);message=message..' · still paused (/resume)' end
+  return ok,message
+ end
  local targets,whyNot=Commands.players(cmd.player,playerList(),p.UserId)
  if not targets then return false,whyNot end
  if #targets==0 then return false,'Nobody else is here' end

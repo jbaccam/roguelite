@@ -1,6 +1,6 @@
 -- ADMIN panel launcher (ADMIN_PANEL.md). Developers only: adds the ADMIN button to the arena HUD's
 -- launcher column and the lobby HUD's right-side buttons, binds P, and closes on Escape / gamepad B.
--- Developers also get the admin chat commands (below).
+-- Developers also get the admin chat commands (below) and the ';' command bar with Tab completion.
 -- Showing it is cosmetic: AdminService checks the developer on every request.
 local Players=game:GetService('Players')
 local RS=game:GetService('ReplicatedStorage')
@@ -33,8 +33,11 @@ Input.InputBegan:Connect(function(input,processed)
   if not Input:GetFocusedTextBox() and os.clock()-released>.1 then panel.Close() end
   return
  end
+ if processed or Input:GetFocusedTextBox() then return end
+ -- ';' opens the admin command bar (2026-10-13): Tab-completes players, items, sets, slots and tiers.
+ if input.KeyCode==Enum.KeyCode.Semicolon then panel.OpenBar();return end
  -- F2 (P was it until plan L made P the pause key for everyone).
- if processed or Input:GetFocusedTextBox() or input.KeyCode~=Enum.KeyCode.F2 then return end
+ if input.KeyCode~=Enum.KeyCode.F2 then return end
  panel.Toggle()
 end)
 -- Chat commands (2026-10-12, AdminCommands: /tempgive, /give, /god, /pause, /admin). Made here, on

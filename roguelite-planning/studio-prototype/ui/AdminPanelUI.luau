@@ -6,6 +6,7 @@
 -- tabs that show run state redraw only when that state changes. Give is built once per open window.
 local RS=game:GetService('ReplicatedStorage')
 local Players=game:GetService('Players')
+local Input=game:GetService('UserInputService')
 local RunService=game:GetService('RunService')
 local T=require(RS:WaitForChild('UITheme'))
 local combat=RS:WaitForChild('RogueliteCombat')
@@ -249,6 +250,81 @@ function M.new(player)
    Pets=require(combat:WaitForChild('PetConfig')),Classes=Stats.ClassOrder,Signature=Stats.Signature,WeaponIcons=Inventory.Icons})
   return catalog
  end
+ -- Tab completion for a command box (2026-10-13, user: "if i tab on /armor all _ it will type
+ -- dragon and if i tab again it will cycle thru the sets"). A list above the box shows what fits
+ -- the word being typed (AdminCommands.suggest); Tab puts the next one in, Shift+Tab the one
+ -- before, and tapping a row puts it in with a space (phones). Typing anything starts over.
+ local MAX_ROWS=8
+ local function esc(text) return (string.gsub(string.gsub(string.gsub(tostring(text),'&','&amp;'),'<','&lt;'),'>','&gt;')) end
+ local function completionContext()
+  local list={};for _,q in Players:GetPlayers() do table.insert(list,{name=q.Name,display=q.DisplayName}) end
+  return {entries=catalogEntries(),players=list}
+ end
+ local function completer(box)
+  local frame=T.make('Frame',box.Parent,{Name=box.Name..'Suggestions',AnchorPoint=Vector2.new(0,1),Position=UDim2.new(box.Position.X.Scale,box.Position.X.Offset-6,box.Position.Y.Scale,box.Position.Y.Offset-10),Size=UDim2.new(box.Size.X.Scale,box.Size.X.Offset+12,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundColor3=C.track,BorderSizePixel=0,Visible=false,ZIndex=40})
+  T.make('UICorner',frame,{CornerRadius=UDim.new(0,8)})
+  T.make('UIStroke',frame,{Color=C.lime,Thickness=1,Transparency=.4})
+  T.make('UIListLayout',frame,{SortOrder=Enum.SortOrder.LayoutOrder,Padding=UDim.new(0,2)})
+  T.make('UIPadding',frame,{PaddingTop=UDim.new(0,6),PaddingBottom=UDim.new(0,6),PaddingLeft=UDim.new(0,8),PaddingRight=UDim.new(0,8)})
+  local rows={}
+  for i=1,MAX_ROWS do
+   rows[i]=T.make('TextButton',frame,{Name='Row'..i,LayoutOrder=i,AutoButtonColor=false,BackgroundColor3=C.limeDark,BackgroundTransparency=1,Size=UDim2.new(1,0,0,24),Font=T.Body,TextSize=16,RichText=true,TextColor3=C.white,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,Text='',ZIndex=41})
+   T.make('UICorner',rows[i],{CornerRadius=UDim.new(0,4)})
+  end
+  local hint=T.make('TextLabel',frame,{Name='Hint',LayoutOrder=100,BackgroundTransparency=1,Size=UDim2.new(1,0,0,18),Font=T.Body,TextSize=13,TextColor3=C.dim,TextXAlignment=Enum.TextXAlignment.Left,Text='',ZIndex=41})
+  local state={options={},before='',first=1,index=nil,applying=false}
+  local function show()
+   local options=state.options
+   frame.Visible=box:IsFocused() and #options>0
+   local k=state.index
+   if k then if k<state.first then state.first=k elseif k>=state.first+MAX_ROWS then state.first=k-MAX_ROWS+1 end end
+   for i,row in rows do
+    local n=state.first+i-1;local o=options[n]
+    row.Visible=o~=nil
+    if o then
+     row.Text='<font color="#91EF14">'..esc(o.token)..'</font>   <font color="#AEB7B9">'..esc(o.label)..'</font>'
+     row.BackgroundTransparency=n==k and .15 or 1
+    end
+   end
+   hint.Text=(#options>MAX_ROWS and (#options..' options · ') or '')..'Tab: next · Shift+Tab: back · Enter: run'
+  end
+  local function refresh()
+   local found=Commands.suggest(box.Text,completionContext())
+   state.options=found.options;state.before=found.before;state.index=nil;state.first=1
+   show()
+  end
+  local function apply(n,space)
+   local o=state.options[n];if not o then return end
+   state.index=n;state.applying=true
+   box.Text=state.before..o.token..(space and ' ' or '')
+   box.CursorPosition=#box.Text+1
+   state.applying=false
+   if space then refresh() else show() end
+  end
+  for i,row in rows do
+   row.Activated:Connect(function()
+    apply(state.first+i-1,true)
+    box:CaptureFocus();task.defer(function() box.CursorPosition=#box.Text+1 end)
+   end)
+  end
+  box:GetPropertyChangedSignal('Text'):Connect(function()
+   if state.applying then return end
+   -- A Tab may land in the box as a character: take it out; the Tab handler completes.
+   if string.find(box.Text,'\t',1,true) then state.applying=true;box.Text=string.gsub(box.Text,'\t','');state.applying=false;return end
+   refresh()
+  end)
+  box.Focused:Connect(refresh)
+  -- Lost focus: hide, unless a row tap takes it straight back.
+  box.FocusLost:Connect(function() task.delay(.2,function() if not box:IsFocused() then frame.Visible=false end end) end)
+  local conn=Input.InputBegan:Connect(function(input)
+   if input.KeyCode~=Enum.KeyCode.Tab or not box:IsFocused() or #state.options==0 then return end
+   local back=Input:IsKeyDown(Enum.KeyCode.LeftShift) or Input:IsKeyDown(Enum.KeyCode.RightShift)
+   local n=#state.options
+   local k=state.index and ((state.index-1+(back and -1 or 1))%n+1) or (back and n or 1)
+   task.defer(apply,k,false) -- after a Tab character, if one landed
+  end)
+  box.Destroying:Connect(function() conn:Disconnect() end)
+ end
  local KINDS={'All','Weapon','Item','Turret','Armor','Pet','Class'}
  local KIND_LABEL={All='All',Weapon='Weapons',Item='Items',Turret='Turrets',Armor='Armor',Pet='Pets',Class='Classes'}
  self.give={mode='temp',kind='All',slot=0,tier=1,search='',target=nil}
@@ -347,8 +423,9 @@ function M.new(player)
   filter()
   -- Row 4: a chat command, typed here (phones have no slash commands at hand).
   T.panel(v,'CommandWell',0,GIVE_H-40,CW-128,40,'inset')
-  local box=T.make('TextBox',v,{Name='CommandBox',Position=UDim2.fromOffset(6,GIVE_H-35),Size=UDim2.fromOffset(CW-140,30),ZIndex=2,BackgroundColor3=INPUT,BorderSizePixel=0,TextColor3=C.white,Font=T.Font,TextSize=16,Text='',PlaceholderText='/tempgive bob katana 2 3 · /armor all iron · /give me iron set · /god all · /pause',PlaceholderColor3=C.dim,ClearTextOnFocus=false,TextXAlignment=Enum.TextXAlignment.Left})
+  local box=T.make('TextBox',v,{Name='CommandBox',Position=UDim2.fromOffset(6,GIVE_H-35),Size=UDim2.fromOffset(CW-140,30),ZIndex=2,BackgroundColor3=INPUT,BorderSizePixel=0,TextColor3=C.white,Font=T.Font,TextSize=16,Text='',PlaceholderText='/tempgive bob katana 2 3 · /armor all iron · /wave 10 · /pause · /resume',PlaceholderColor3=C.dim,ClearTextOnFocus=false,TextXAlignment=Enum.TextXAlignment.Left})
   T.make('UICorner',box,{CornerRadius=UDim.new(0,6)})
+  completer(box)
   local function run() local text=box.Text;if text~='' and self.Command(text) then box.Text='' end end
   box.FocusLost:Connect(function(enter) if enter then run() end end)
   T.button(v,'RunCommand','Run',CW-120,GIVE_H-40,120,40,run).Caption.TextSize=18
@@ -391,6 +468,31 @@ function M.new(player)
    if giveView then giveView:Destroy();giveView=nil end
   end)
   screen:SetAttribute('Open',true);draw()
+ end
+ -- The command bar (2026-10-13): ';' opens it at the bottom of the screen with '/' typed, Tab
+ -- completes (completer), Enter runs the command and closes it, Esc or clicking away closes it.
+ -- Games can't read Roblox's own chat box, so this is where the completion lives.
+ local bar,barBox
+ function self.OpenBar()
+  if not bar then
+   bar=T.make('Frame',screen,{Name='CommandBar',AnchorPoint=Vector2.new(.5,1),Position=UDim2.new(.5,0,1,-96),Size=UDim2.new(1,-24,0,52),BackgroundTransparency=1,ZIndex=35})
+   T.make('UISizeConstraint',bar,{MaxSize=Vector2.new(760,52)})
+   local well=T.panel(bar,'Well',0,0,0,0,'inset');well.Size=UDim2.fromScale(1,1);well.ZIndex=35
+   barBox=T.make('TextBox',bar,{Name='CommandBox',Position=UDim2.fromOffset(8,8),Size=UDim2.new(1,-16,1,-16),ZIndex=36,BackgroundColor3=INPUT,BorderSizePixel=0,TextColor3=C.white,Font=T.Font,TextSize=20,Text='',PlaceholderText='/armor all dragonscale 4',PlaceholderColor3=C.dim,ClearTextOnFocus=false,TextXAlignment=Enum.TextXAlignment.Left})
+   T.make('UICorner',barBox,{CornerRadius=UDim.new(0,6)})
+   completer(barBox)
+   barBox.FocusLost:Connect(function(enter)
+    if enter then
+     local text=barBox.Text;bar.Visible=false
+     if text~='' and text~='/' then self.Command(text) end
+    else task.delay(.2,function() if not barBox:IsFocused() then bar.Visible=false end end) end
+   end)
+  end
+  bar.Visible=true
+  task.defer(function()
+   barBox:CaptureFocus()
+   task.defer(function() barBox.Text='/';barBox.CursorPosition=2 end) -- after the ';' key's own character
+  end)
  end
  function self.Close() if win then win.Close() end end
  function self.Toggle() if win then self.Close() else self.Open() end end
