@@ -321,6 +321,21 @@ local ok,err=xpcall(function()
   check(request('Reroll'),'capped roll')
   for _,x in s.offers do check(not Catalog.ById[x.id].turret,'no turret offers at 10: '..x.id) end
  end
+ -- Combining (2026-10-12): 2 of a tier -> 1 of the next, only on CombineItem, free, shop phase only.
+ -- 9 Nail + 1 Quad here: the Nail can combine (even at 10 turrets), the lone Quad can't.
+ shards=s.shards
+ local combineSnap=game:GetService('HttpService'):JSONDecode(cs.folder:GetAttribute('ShopSnapshot'))
+ check(combineSnap.combinable and combineSnap.combinable.turret_nail=='turret_twin' and combineSnap.combinable.turret_quad==nil,'snapshot marks Nail combinable, not a lone Quad')
+ check(Turret.count(s.items,'turret_nail')==9,'9 Nail: nothing combined by itself')
+ check(request('CombineItem','turret_nail'),'combine 2 Nail at 10 turrets')
+ check(Turret.count(s.items,'turret_nail')==7 and Turret.count(s.items,'turret_twin')==1 and Turret.owned(s.items)==9,'9 Nail -> 7 Nail + 1 Twin, 10 turrets -> 9')
+ near(s.shards,shards,'combining is free');check(s.message=='2 Nail Turrets → Twin Nailer','says what it made: '..s.message)
+ check(not request('CombineItem','turret_quad'),'a lone Quad cannot combine')
+ check(not request('CombineItem','turret_gatling'),'no Gatling Rig owned')
+ for _,bad in {'protein',5,{},string.rep('a',100)} do check(not request('CombineItem',bad),'invalid combine id') end
+ check(not request('CombineItem','turret_nail',nil,s.revision-1),'stale revision refused')
+ Shop.phase='Combat';check(not request('CombineItem','turret_nail'),'no combining mid-wave');Shop.phase='Shop'
+ check(Turret.count(s.items,'turret_nail')==7 and Turret.count(s.items,'turret_twin')==1,'refusals changed nothing')
  -- UPGRADE TURRET is gone: an old client's request does nothing and says nothing.
  local rev=s.revision;local message=s.message
  check(not request('UpgradeTurret',1),'UpgradeTurret refused')

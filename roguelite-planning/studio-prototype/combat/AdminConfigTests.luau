@@ -62,22 +62,30 @@ return function(Admin, Enemies, Items)
 	-- Every action name, in sorted order.
 	-- 2026-10-03: the tutorial and turret actions were missing here (15 listed, 19 real); EndlessBoss makes 20.
 	-- 2026-10-04: GiftTest (Simulate gift to me) makes 21.
+	-- 2026-10-12: the list was missing the three Round 10 actions; Command, Give, PauseAll and TempGive make 29.
 	local expectedActions = {
 		"ClearMobs",
+		"Command",
 		"Difficulty",
 		"EndWave",
 		"EndlessBoss",
 		"Freeze",
 		"GiftTest",
+		"Give",
 		"GiveItem",
 		"God",
 		"JumpWave",
 		"KeepAlive",
 		"Level",
 		"Pause",
+		"PauseAll",
+		"Round10Clear",
+		"Round10Skip",
+		"Round10Start",
 		"Sandbox",
 		"Shards",
 		"Spawn",
+		"TempGive",
 		"Travel",
 		"Turret",
 		"TutorialEnd",
@@ -86,7 +94,7 @@ return function(Admin, Enemies, Items)
 		"Waves",
 		"Weapons",
 	}
-	check(#Admin.Actions == 22, "22 admin actions, found " .. #Admin.Actions)
+	check(#Admin.Actions == 29, "29 admin actions, found " .. #Admin.Actions)
 	check(
 		table.concat(Admin.Actions, ",") == table.concat(expectedActions, ","),
 		"action names: " .. table.concat(Admin.Actions, ",")
@@ -142,10 +150,33 @@ return function(Admin, Enemies, Items)
 		{ "Turret", "Give", 1 },
 		{ "Turret", "Give", 4 },
 		{ "Turret", "Clear" },
+		-- Commands and the Give tab (2026-10-12).
+		{ "God" },
+		{ "TempGive", "w:04", 1, 1 },
+		{ "TempGive", "w:04", 10, 4 },
+		{ "TempGive", "i:" .. anItem, 3, 1 },
+		{ "TempGive", "i:turret_gatling", 2, 1 },
+		{ "Give", "w:04" },
+		{ "Give", "w:04", 4 },
+		{ "Give", "a:Iron.Helmet" },
+		{ "Give", "s:Iron", 2 },
+		{ "Give", "p:Fox" },
+		{ "Give", "c:Chef" },
+		{ "PauseAll" },
+		{ "PauseAll", true },
+		{ "PauseAll", false },
+		{ "Command", "/god" },
+		{ "Command", string.rep("a", 200) },
 	}
 	for _, call in valid do
-		check(Admin.check(call[1], call[2], call[3]), "should pass: " .. show(call))
+		check(Admin.check(call[1], call[2], call[3], call[4]), "should pass: " .. show(call))
 	end
+	-- Targets: a UserId, only on actions that act on a player.
+	check(Admin.check("God", true, nil, nil, 12345), "God for another player")
+	check(Admin.check("TempGive", "w:04", 2, 3, 12345), "TempGive for another player")
+	check(not Admin.check("Pause", true, nil, nil, 12345), "Pause takes no target")
+	check(not Admin.check("God", true, nil, nil, "Bob"), "Targets are UserIds, not names")
+	check(not Admin.check("God", true, nil, nil, 0) and not Admin.check("God", true, nil, nil, 1.5), "Bad UserIds")
 	local invalid = {
 		{ "Difficulty", "Easy" },
 		{ "Difficulty", "hard" },
@@ -238,9 +269,30 @@ return function(Admin, Enemies, Items)
 		{ "Turret", "Tier", 2 },
 		{ "Turret", "Break" },
 		{ "Turret", "Clear", 1 },
+		-- Commands and the Give tab: a third argument only for TempGive.
+		{ "Turret", "Give", 1, 1 },
+		{ "God", true, nil, 1 },
+		{ "TempGive", "w:04", 1 },
+		{ "TempGive", "w:04", 0, 1 },
+		{ "TempGive", "w:04", 11, 1 },
+		{ "TempGive", "w:04", 1, 5 },
+		{ "TempGive", "w:nope", 1, 1 },
+		{ "TempGive", "i:weapon_01_1", 1, 1 },
+		{ "TempGive", "a:Iron.Helmet", 1, 1 },
+		{ "TempGive", "04", 1, 1 },
+		{ "Give", "w:04", 5 },
+		{ "Give", "x:04" },
+		{ "Give", "w:" },
+		{ "Give", "w:04;drop" },
+		{ "Give", 4 },
+		{ "PauseAll", 1 },
+		{ "Command" },
+		{ "Command", "" },
+		{ "Command", string.rep("a", 201) },
+		{ "Command", {} },
 	}
 	for _, call in invalid do
-		check(not Admin.check(call[1], call[2], call[3]), "should fail: " .. show(call))
+		check(not Admin.check(call[1], call[2], call[3], call[4]), "should fail: " .. show(call))
 	end
 	return { passed = checks }
 end

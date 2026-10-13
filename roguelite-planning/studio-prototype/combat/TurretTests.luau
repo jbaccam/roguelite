@@ -10,8 +10,10 @@
 -- Pierce, extra nails and procs kept), the ring placement maths (bands, 5-stud spacing, the
 -- fallback), the 10 / 30 caps, Scrap Magnet counting, the Handyman as Engineer (x1.25 Utility
 -- Power gains, x0.5 Damage gains, 20% off structure items, the 4-8 ring, shop weighting), the shop
--- entries (ShopCatalog, optional), targeting through TargetGrid and following the owner (2026-10-10:
--- left behind past range, 2 moving at once, 1.5 s cooldown, spots led along his run). Returns the
+-- entries (ShopCatalog, optional), targeting through TargetGrid and following the owner (2026-10-10,
+-- leash 2026-10-12: left behind past 40 studs, 70 while shooting, 2 moving at once, 3 s cooldown,
+-- spots led along his run) and manual
+-- combining in the shop (2026-10-12: 2 of a tier -> 1 of the next, row and copy caps). Returns the
 -- number of checks. Outside Studio: python run_turret_tests.py <luau.exe>.
 return function(H, G, Weapons, Stats, E, Catalog)
 	local checks = 0
@@ -274,6 +276,75 @@ return function(H, G, Weapons, Stats, E, Catalog)
 	check(string.find(H.describe(2), "6 damage every 0.72 s within 25 studs, through 1 enemy.", 1, true) ~= nil, "Twin card: " .. H.describe(2))
 	check(string.find(H.describe(4), "3 nails of 3.7 damage every 0.56 s within 25 studs, through 2 enemies.", 1, true) ~= nil, "Gatling card: " .. H.describe(4))
 
+	-- Combining (2026-10-12): 2 of a tier -> 1 of the next, only when asked (ShopAction CombineItem).
+	local cap = E.ITEM_CAPACITY
+	local function capOf(id)
+		return Catalog and Catalog.ById[id] and Catalog.ById[id].cap or H.MAX_OWNED
+	end
+	check(H.COMBINE == 2 and H.Next.turret_nail == "turret_twin" and H.Next.turret_twin == "turret_quad" and H.Next.turret_quad == "turret_gatling", "Each tier combines into the next")
+	check(H.Next.turret_gatling == nil, "Nothing past the Gatling Rig")
+	local function list(rows)
+		local out = {}
+		for _, r in rows do
+			table.insert(out, { id = r[1], count = r[2] })
+		end
+		return out
+	end
+	-- The worked example: 3 Nail + 0 Twin -> 1 Nail + 1 Twin, turrets 3 -> 2.
+	local inv = list({ { "protein", 2 }, { "turret_nail", 3 } })
+	check(H.canCombine(inv, "turret_nail", cap, capOf), "3 Nail can combine")
+	check(H.combine(inv, "turret_nail") == "turret_twin", "Combine returns the next id")
+	check(H.count(inv, "turret_nail") == 1 and H.count(inv, "turret_twin") == 1 and H.owned(inv) == 2 and #inv == 3, "3 Nail -> 1 Nail + 1 Twin, turrets 3 -> 2")
+	check(H.count(inv, "protein") == 2, "Other items untouched")
+	local ok, why = H.canCombine(inv, "turret_nail", cap, capOf)
+	check(not ok and why == "Need 2 to combine", "1 copy can't combine: " .. tostring(why))
+	-- Exactly 2: the source row goes, the next row grows.
+	inv = list({ { "turret_twin", 2 }, { "turret_quad", 1 } })
+	H.combine(inv, "turret_twin")
+	check(#inv == 1 and inv[1].id == "turret_quad" and inv[1].count == 2, "2 Twin + 1 Quad -> 2 Quad, the Twin row removed")
+	H.combine(inv, "turret_quad")
+	check(#inv == 1 and inv[1].id == "turret_gatling" and inv[1].count == 1, "2 Quad -> 1 Gatling Rig")
+	inv = list({ { "turret_gatling", 3 } })
+	ok, why = H.canCombine(inv, "turret_gatling", cap, capOf)
+	check(not ok and why == "Maximum tier", "The Gatling Rig can't combine")
+	ok, why = H.canCombine(list({ { "protein", 3 } }), "protein", cap, capOf)
+	check(not ok and why == "Only turrets combine", "Non-turret items never combine")
+	check(not H.canCombine({}, "turret_nail", cap, capOf), "Nothing owned, nothing to combine")
+	-- Row capacity: a full inventory can still combine when the source row empties into the space,
+	-- or the next tier already has a row; not when it would need a 17th row.
+	local full = {}
+	for i = 1, cap - 1 do
+		table.insert(full, { id = "filler" .. i, count = 1 })
+	end
+	table.insert(full, { id = "turret_nail", count = 3 })
+	ok, why = H.canCombine(full, "turret_nail", cap, capOf)
+	check(#full == cap and not ok and why == "Item inventory full", "Full rows, 3 Nail and no Twin row: refused")
+	full[#full].count = 2
+	check(H.canCombine(full, "turret_nail", cap, capOf), "Full rows, exactly 2 Nail: the Nail row becomes the Twin row")
+	H.combine(full, "turret_nail")
+	check(#full == cap and H.count(full, "turret_twin") == 1, "Still 16 rows")
+	full[#full] = { id = "turret_twin", count = 1 }
+	table.insert(full, 1, { id = "turret_nail", count = 3 })
+	table.remove(full, 2)
+	check(#full == cap and H.canCombine(full, "turret_nail", cap, capOf), "Full rows with a Twin row already: fine")
+	-- The next tier's copy cap.
+	ok, why = H.canCombine(list({ { "turret_nail", 2 }, { "turret_twin", capOf("turret_twin") } }), "turret_nail", cap, capOf)
+	check(not ok and why == "Next tier is at its copy limit", "Next tier at its cap: refused")
+	-- Combining never raises the turret count, so 10 turrets can still combine.
+	inv = list({ { "turret_nail", 10 } })
+	check(H.canCombine(inv, "turret_nail", cap, capOf), "10 Nail (the cap) can combine")
+	for _ = 1, 5 do
+		H.combine(inv, "turret_nail")
+	end
+	check(H.count(inv, "turret_nail") == 0 and H.count(inv, "turret_twin") == 5 and #inv == 1, "10 Nail -> 5 Twin")
+	-- The UI's marks: only what can combine now, mapped to the next id.
+	local marks = H.combinable(list({ { "turret_nail", 3 }, { "turret_twin", 1 }, { "turret_gatling", 2 }, { "protein", 4 } }), cap, capOf)
+	check(marks.turret_nail == "turret_twin" and marks.turret_twin == nil and marks.turret_gatling == nil and marks.protein == nil, "combinable marks only Nail")
+	check(next(H.combinable({}, cap, capOf)) == nil and next(H.combinable(nil, cap, capOf)) == nil, "Empty: no marks")
+	-- No automatic combining: owning many copies changes nothing by itself.
+	inv = list({ { "turret_nail", 4 } })
+	check(#H.tiers(inv) == 4 and H.tiers(inv)[1] == 1, "4 Nail stay 4 Nail turrets until combined")
+
 	-- The shop entries (ShopCatalog), when given.
 	if Catalog then
 		for i, row in items do
@@ -317,9 +388,11 @@ return function(H, G, Weapons, Stats, E, Catalog)
 	check(pick({ enemyAt(5, "dummy", { dummy = true }), enemyAt(12, "zombie") }, range) == "zombie", "Lobby dummies are never targets")
 	check(pick({ enemyAt(27, "x") }, H.weapon(1, loaded).range) == nil, "Attack range doesn't stretch it")
 
-	-- Follow (2026-10-10): left behind past range, at most 2 moving, 1.5 s between moves, spots ahead.
+	-- Follow (2026-10-10, leash 2026-10-12): left behind past 40 studs (70 while shooting), at most 2
+	-- moving, 3 s between moves, spots ahead.
 	check(H.PACK_TIME == 0.35 and H.BUILD_TIME == 0.5 and near(H.PACK_TIME + H.BUILD_TIME, 0.85), "Offline 0.35 + 0.5 = 0.85 s a move")
-	check(H.FOLLOW_AT_ONCE == 2 and H.FOLLOW_COOLDOWN == 1.5, "2 at once, 1.5 s apart")
+	check(H.FOLLOW_AT_ONCE == 2 and H.FOLLOW_COOLDOWN == 3, "2 at once, 3 s apart")
+	check(H.FOLLOW_RANGE == 40 and H.FOLLOW_FAR == 70 and H.FOLLOW_BUSY == 2, "Leash 40, 70 while busy for 2 s")
 	local owner = Vector3.new(0, 3, 0)
 	local function turretAt(x, z, extra)
 		local t = { position = Vector3.new(x, 0, z) }
@@ -329,13 +402,18 @@ return function(H, G, Weapons, Stats, E, Catalog)
 		return t
 	end
 	local followRange = H.weapon(1, loaded).range
-	check(near(followRange, 25), "Follow uses the turret's real range (25, Attack range doesn't stretch it)")
-	check(#H.leftBehind({ turretAt(25, 0) }, owner, 10, followRange) == 0, "Exactly 25 studs: still in range")
-	check(#H.leftBehind({ turretAt(25.1, 0) }, owner, 10, followRange) == 1, "25.1 studs: left behind")
-	check(#H.leftBehind({ turretAt(0, 20, { position = Vector3.new(0, 40, 20) }) }, owner, 10, followRange) == 0, "Height doesn't count, only ground distance")
-	check(#H.leftBehind({ turretAt(30, 0, { range = 40 }) }, owner, 10, followRange) == 0, "A turret's own range wins")
-	check(#H.leftBehind({ turretAt(30, 0) }, owner, 10) == 1, "Default range is RANGE")
-	local five = { turretAt(30, 0), turretAt(-40, 0), turretAt(0, 35), turretAt(0, -27), turretAt(4, 4) }
+	check(near(followRange, 25), "A turret's range is 25 (Attack range doesn't stretch it)")
+	check(#H.leftBehind({ turretAt(30, 0) }, owner, 10, followRange) == 0, "30 studs (past its range): stays")
+	check(#H.leftBehind({ turretAt(40, 0) }, owner, 10, followRange) == 0, "Exactly 40 studs: stays")
+	check(#H.leftBehind({ turretAt(40.1, 0) }, owner, 10, followRange) == 1, "40.1 studs: left behind")
+	check(#H.leftBehind({ turretAt(0, 35, { position = Vector3.new(0, 60, 35) }) }, owner, 10, followRange) == 0, "Height doesn't count, only ground distance")
+	check(#H.leftBehind({ turretAt(50, 0, { range = 60 }) }, owner, 10, followRange) == 0, "A longer own range wins")
+	check(#H.leftBehind({ turretAt(45, 0) }, owner, 10) == 1, "Default leash is FOLLOW_RANGE")
+	-- Training mobs: a turret with a target in the last 2 s stays until 70 studs.
+	check(#H.leftBehind({ turretAt(60, 0, { seenTarget = 9 }) }, owner, 10, followRange) == 0, "Shooting 1 s ago, 60 studs: stays")
+	check(#H.leftBehind({ turretAt(70.1, 0, { seenTarget = 9 }) }, owner, 10, followRange) == 1, "Shooting, 70.1 studs: follows")
+	check(#H.leftBehind({ turretAt(45, 0, { seenTarget = 8 }) }, owner, 10, followRange) == 1, "Idle 2 s, 45 studs: follows")
+	local five = { turretAt(45, 0), turretAt(-60, 0), turretAt(0, 55), turretAt(0, -42), turretAt(4, 4) }
 	local go = H.leftBehind(five, owner, 10, followRange)
 	check(#go == 2 and go[1] == five[2] and go[2] == five[3], "5 left behind: the 2 farthest move")
 	five[2].packAt = 10
@@ -346,10 +424,10 @@ return function(H, G, Weapons, Stats, E, Catalog)
 	check(H.moving(five[3], 10.9) and not H.moving(five[3], 11), "Rising until readyAt")
 	five[2].packAt, five[3].readyAt = nil, nil
 	five[2].movedAt, five[3].movedAt = 10, 10
-	go = H.leftBehind(five, owner, 11.4, followRange)
+	go = H.leftBehind(five, owner, 12.9, followRange)
 	check(#go == 2 and go[1] == five[1] and go[2] == five[4], "Just moved: skipped until the cooldown ends")
-	go = H.leftBehind(five, owner, 11.5, followRange)
-	check(#go == 2 and go[1] == five[2] and go[2] == five[3], "1.5 s after landing: may move again")
+	go = H.leftBehind(five, owner, 13, followRange)
+	check(#go == 2 and go[1] == five[2] and go[2] == five[3], "3 s after landing: may move again")
 	check(#H.leftBehind({}, owner, 0, followRange) == 0 and #H.leftBehind({ turretAt(4, 4) }, owner, 0, followRange) == 0, "Nothing to move")
 	-- Spots lead toward his move direction: the first is straight ahead on the band's outer edge.
 	for _, band in { H.Engineer.ring, H.RING } do

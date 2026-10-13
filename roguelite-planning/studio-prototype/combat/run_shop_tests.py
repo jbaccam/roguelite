@@ -4,7 +4,7 @@ Usage (from the repo root):
   python roguelite-planning/studio-prototype/combat/run_shop_tests.py build/luau-validation/luau.exe
 
 Inlines the real catalogs (WeaponCatalog, SpecialMotion, CharacterStats, EconomyConfig,
-HandymanTurret, ShopCatalog, LevelUpCatalog) and UtilityWeapons' pure Area Size rule, then runs
+HandymanTurret, ShopCatalog, LevelUpCatalog, RunXP since 2026-10-12) and UtilityWeapons' pure Area Size rule, then runs
 ShopPreferenceTests, ShopBanishTests (2026-10-10), DuckBurstTests.area and WasherBurstTests.area. Only Roblox module wiring is
 replaced: `require(script.Parent.X)` and `require(game.ReplicatedStorage.RogueliteCombat.X)` read
 the module loaded above, WeaponMotion is an empty table (CharacterStats only requires it) and
@@ -38,6 +38,7 @@ for name, filename in [
     ("HandymanTurret", "HandymanTurret.luau"),
     ("ShopCatalog", "ShopCatalog.luau"),
     ("LevelUpCatalog", "LevelUpCatalog.luau"),
+    ("RunXP", "RunXP.luau"),
     ("UtilityWeapons", "UtilityWeapons.luau"),
     ("ShopPreferenceTests", "ShopPreferenceTests.luau"),
     ("ShopBanishTests", "ShopBanishTests.luau"),
@@ -46,7 +47,7 @@ for name, filename in [
 ]:
     source += module(name, filename)
 source += """local M=MODULES
-print('ShopPreferenceTests: '..M.ShopPreferenceTests(M.WeaponCatalog,M.CharacterStats,M.EconomyConfig,M.ShopCatalog,M.LevelUpCatalog)..' checks passed')
+print('ShopPreferenceTests: '..M.ShopPreferenceTests(M.WeaponCatalog,M.CharacterStats,M.EconomyConfig,M.ShopCatalog,M.LevelUpCatalog,M.RunXP)..' checks passed')
 print('ShopBanishTests: '..M.ShopBanishTests(M.ShopCatalog)..' checks passed')
 print('DuckBurstTests.area: '..M.DuckBurstTests.area(M.UtilityWeapons)..' checks passed')
 print('WasherBurstTests.area: '..M.WasherBurstTests.area(M.UtilityWeapons)..' checks passed')

@@ -337,6 +337,32 @@ function P.addCopies(d,id,count)
  return {id=id,new=new,tier=rec.tier,have=rec.have,emeralds=emeralds,overflow=emeralds>0}
 end
 function P.addDrop(d,id) return P.addCopies(d,id,1) end
+-- /give and the admin Give tab's Permanent mode (2026-10-12, user: "perma give / unlock" so friends
+-- get trailer loadouts): a weapon (WeaponCatalog id, godlies too), an armor piece ('Iron.Helmet') or
+-- a pet. Not owned: unlocked at `tier` (Tier I when nil). Owned: raised to `tier`, or with no tier
+-- one more copy toward its upgrade bar. Saves at once. Studio keeps it in memory only (useStore);
+-- on a live server it is the player's real save, so AdminService allows it to developers only.
+-- Example: Katana not owned, tier 3 -> Katana Tier III; owned at Tier II, no tier -> +1 copy.
+function P.adminGive(player,id,tier)
+ local d=P.profiles[player];if not d or not P.loaded[player] then return false,'Profile still loading' end
+ local armor=Chests.isArmor(id) and Armor.valid(id);local pet=Pets.valid(id);local weapon=Weapons.ById[id]~=nil
+ if not (armor or pet or weapon) then return false,'Unknown item' end
+ local book=armor and d.armor or pet and d.pets or d.weapons
+ local rec=book[id];local text
+ if not rec then book[id]={tier=tier or 1,have=0};text='unlocked at Tier '..(tier or 1)
+ elseif tier then rec.tier=math.max(rec.tier,tier);text='now Tier '..rec.tier
+ else P.addCopies(d,id,1);text='+1 copy (Tier '..rec.tier..')' end
+ P.publish(player);task.spawn(P.save,player)
+ return true,text
+end
+-- /give of a class (2026-10-12): unlocks it and its starting weapon, like a bought class.
+function P.adminClass(player,class)
+ local d=P.profiles[player];if not d or not P.loaded[player] then return false,'Profile still loading' end
+ if not SIGNATURE[class] then return false,'Unknown class' end
+ if d.classes[class] then return true,'already unlocked' end
+ P.grant(player,{class=class});task.spawn(P.save,player)
+ return true,'unlocked'
+end
 
 -- Wear the owned piece of `setId` in `slot`, or take it off (setId nil). slot 'All' does every
 -- slot: all owned pieces of the set, or takes everything off.

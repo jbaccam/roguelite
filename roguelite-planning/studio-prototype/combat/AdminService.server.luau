@@ -3,10 +3,15 @@
 -- limit, AdminConfig.check on every argument, then the shared-run gate (blocked below). Every
 -- valid, unblocked request marks the run as a test run (no rewards), even one the owning
 -- service then refuses; the owning service does the work.
--- Until plan C's solo test matches, a live server is Combined: one run shared by everyone. So on
--- a live server the panel only works while no other player (non-developer) is in the server,
--- and a developer leaving hands the shared run back (unpaused, unfrozen, normal waves).
--- A non-developer joining a live server mid-test ends the developer's test with a new, rewarding run.
+-- Until plan C's solo test matches, a live server is Combined: one run shared by everyone. Since
+-- 2026-10-12 (user: "these commands are what i need to use in arenas so i can give my friends
+-- loadouts, pause the game ... prep making my trailer") the panel and the chat commands work with
+-- other players in the server: the first request marks the shared run a test run, so nobody in it
+-- earns run rewards. A developer leaving hands the shared run back (unpaused, unfrozen, normal
+-- waves). Someone joining a test run while no developer is in the server gets a new, rewarding run.
+-- Targets (2026-10-12): AdminConfig.Targeted actions act on the request's target (a UserId in the
+-- server; nil = the developer). Chat commands (AdminCommands) arrive as one Command request with the
+-- typed text, parsed and checked here again.
 -- Unsandboxed Script: it uses sandboxed modules (AdminConfig, MapConfig, ServerRole, ShopService)
 -- and the spawner's ServerStorage.AdminSpawn bindable (RogueliteZombieChase, unsandboxed).
 local Players=game:GetService('Players')
@@ -19,6 +24,13 @@ local Admin=require(combat:WaitForChild('AdminConfig'))
 local Maps=require(combat:WaitForChild('MapConfig'))
 local Role=require(SSS:WaitForChild('ServerRole'))
 local Shop=require(SSS:WaitForChild('ShopService'))
+local Commands=require(combat:WaitForChild('AdminCommands'))
+-- Permanent gives (Give, /give) need the save; looked up when used so the panel loads without it.
+local function profiles()
+ local m=SSS:FindFirstChild('ProfileService')
+ local ok,P=pcall(function() return m and require(m) end)
+ return ok and P or nil
+end
 local remote=combat:FindFirstChild('AdminAction') or Instance.new('RemoteFunction')
 remote.Name='AdminAction';remote.Parent=combat
 local NO_ARENA='No arena on this server'
@@ -181,7 +193,11 @@ function actions.Pause(p,on)
  return true,on and 'Paused' or 'Resumed'
 end
 -- Player.
-function actions.God(p,on) p:SetAttribute('AdminGod',on or nil);return true,on and 'God mode on' or 'God mode off' end
+-- on nil toggles (/god).
+function actions.God(p,on)
+ if on==nil then on=p:GetAttribute('AdminGod')~=true end
+ p:SetAttribute('AdminGod',on or nil);return true,on and 'God mode on' or 'God mode off'
+end
 -- Weapons on/off: the old K test key.
 function actions.Weapons(p,on)
  local states=combat:FindFirstChild('PlayerStates');local state=states and states:FindFirstChild(tostring(p.UserId))
@@ -197,6 +213,96 @@ function actions.Turret(p,mode,n)
  local handler=Shop.turretAdmin
  if type(handler)~='function' then return false,'Turrets are not running (HandymanTurretService)' end
  return handler(p,mode,n)
+end
+-- The Give tab's catalog (AdminCommands.entries) from the same modules the client uses.
+local catalog
+local function entries()
+ if catalog then return catalog end
+ local Stats=require(combat:WaitForChild('CharacterStats'))
+ local okInv,Inventory=pcall(function() return require(RS:WaitForChild('WeaponInventoryUI',5)) end)
+ catalog=Commands.entries({Weapons=require(combat:WaitForChild('WeaponCatalog')),Items=require(combat:WaitForChild('ShopCatalog')),
+  Armor=require(combat:WaitForChild('ArmorCatalog')),Pets=require(combat:WaitForChild('PetConfig')),
+  Classes=Stats.ClassOrder,Signature=Stats.Signature,WeaponIcons=okInv and type(Inventory)=='table' and Inventory.Icons or {}})
+ return catalog
+end
+local function entryByKey(key) for _,e in entries() do if e.key==key then return e end end end
+-- TempGive (/tempgive, the Give tab): this run only. A weapon fills `copies` free slots at `tier`
+-- (ShopService.adminWeapon); an item or turret is `copies` more copies (ShopService.adminItem, so its
+-- copy cap, the 16 item rows and the 10 turrets hold). Example: Protein Shake x7 -> 5 added (cap).
+function actions.TempGive(p,key,copies,tier)
+ local e=entryByKey(key);if not e or not e.temp then return false,'Not a run item' end
+ if not Shop.states[p] then return false,p.Name..' has no run yet' end
+ if e.kind=='Weapon' then
+  local ok,text=Shop.adminWeapon(p,e.id,tier,copies)
+  return ok,p.Name..': '..tostring(text)
+ end
+ local added,why=0,nil
+ for _=1,copies do
+  local ok,text=Shop.adminItem(p,e.id)
+  if not ok then why=text;break end
+  added+=1
+ end
+ if added==0 then return false,p.Name..': '..tostring(why) end
+ return true,p.Name..': '..e.name..' x'..added..(why and ' ('..why..')' or '')
+end
+-- Give (/give, the Give tab's Saved mode): for good, through ProfileService. Weapons, armor pieces
+-- and pets unlock at `tier` (or gain a copy when owned and no tier is given), a set gives all four
+-- pieces, a class unlocks with its weapon. Studio's profiles are in memory; a live server writes
+-- the real save, which is what the user asked for (friends' trailer loadouts).
+function actions.Give(p,key,tier)
+ local e=entryByKey(key);if not e or not e.perm then return false,'Not a saved item' end
+ local P=profiles();if not P then return false,'ProfileService is not running' end
+ local ok,text
+ if e.kind=='Class' then ok,text=P.adminClass(p,e.id)
+ elseif e.set then
+  local Armor=require(combat:WaitForChild('ArmorCatalog'))
+  for _,slot in Armor.Slots do ok,text=P.adminGive(p,Armor.pieceId(e.id,slot),tier);if not ok then break end end
+ else ok,text=P.adminGive(p,e.id,tier) end
+ return ok==true,p.Name..': '..e.name..' '..tostring(text)
+end
+-- PauseAll (/pause, 2026-10-12): the wave clock and spawns (Pause) and every enemy (Freeze) together.
+-- nil toggles: paused when either is on. Between waves only the freeze applies.
+function actions.PauseAll(p,on)
+ local sp=spawner()
+ if on==nil then on=not (RS:WaitForChild('RogueliteRunState'):GetAttribute('AdminPaused')==true or combat:GetAttribute('AdminFreeze')==true) end
+ if on then
+  local paused=Shop.adminPause(true)
+  if sp then sp:Invoke('Freeze',true) end
+  return true,paused and 'Wave paused · enemies frozen' or 'Enemies frozen (no wave clock to pause)'
+ end
+ Shop.adminPause(false)
+ if sp then sp:Invoke('Freeze',false) end
+ return true,'Resumed'
+end
+-- Chat commands (AdminCommands). The text is parsed again here; each part goes through the same
+-- rules (AdminConfig.check) and handlers as a panel request. Several players: one line each.
+local function playerList()
+ local list={};for _,q in Players:GetPlayers() do table.insert(list,{name=q.Name,display=q.DisplayName,userId=q.UserId,player=q}) end
+ return list
+end
+function actions.Command(p,text)
+ local cmd,why=Commands.parse(text);if not cmd then return false,why end
+ if cmd.name=='admin' then return true,Commands.HELP end
+ if cmd.name=='pause' then return actions.PauseAll(p,cmd.on) end
+ local targets,whyNot=Commands.players(cmd.player,playerList(),p.UserId)
+ if not targets then return false,whyNot end
+ if #targets==0 then return false,'Nobody else is here' end
+ local action,a,b,c
+ if cmd.name=='god' then action,a='God',cmd.on
+ else
+  local mode=cmd.name=='tempgive' and 'temp' or 'perm'
+  local e,missing=Commands.find(entries(),cmd.item,mode,cmd.tier);if not e then return false,missing end
+  if mode=='temp' then action,a,b,c='TempGive',e.key,cmd.copies,cmd.tier else action,a,b='Give',e.key,cmd.tier end
+ end
+ if not Admin.check(action,a,b,c) then return false,'Invalid request' end
+ local lines,any={},false
+ for _,t in targets do
+  local ran,ok,message=pcall(actions[action],t.player,a,b,c)
+  if not ran then warn('AdminService command:',action,ok);ok,message=false,'Server error' end
+  any=any or ok==true
+  table.insert(lines,(action=='God' and (t.player.Name..': ') or '')..tostring(message))
+ end
+ return any,table.concat(lines,' · ')
 end
 -- Tutorial (plans/2026-10-03-tutorial-design.md): TutorialDirector's ServerStorage.TutorialControl
 -- does the work. Start: the run from the top. Lobby: the reward now, then the lobby steps. End:
@@ -219,12 +325,6 @@ for _,name in Admin.Actions do assert(actions[name],'AdminService has no handler
 
 -- The shared-run gate, checked before anything is marked. A reason string blocks the request.
 local function blocked(p,action)
- -- A live server's run is shared (Combined until plan C): never test on other players' run.
- if not RunService:IsStudio() then
-  for _,q in Players:GetPlayers() do
-   if q~=p and not Admin.isAdmin(q) then return "Other players are in this server. Use the panel when you're alone (solo test matches come with plan C)." end
-  end
- end
  -- Travel can't do anything outside Studio's combined server, so it must not mark the run either.
  if action=='Travel' and not (RunService:IsStudio() and Role.get()=='Combined') then return 'Needs lobby/match teleports (plan C)' end
  -- The tutorial buttons too: Studio profiles live in memory, so its reward can be paid again there.
@@ -235,15 +335,18 @@ local function blocked(p,action)
 end
 
 local last={}
-remote.OnServerInvoke=function(p,action,a,b)
+remote.OnServerInvoke=function(p,action,a,b,c,target)
  if not Admin.isAdmin(p) then return nil end -- non-developers get no reply
  if os.clock()-(last[p] or -math.huge)<.15 then return {ok=false,message='Slow down'} end
  last[p]=os.clock()
- if not Admin.check(action,a,b) then return {ok=false,message='Invalid request'} end
+ if not Admin.check(action,a,b,c,target) then return {ok=false,message='Invalid request'} end
  local why=blocked(p,action);if why then return {ok=false,message=why} end
+ -- Targeted actions: the named player, who must be in this server.
+ local who=p
+ if target~=nil then who=Players:GetPlayerByUserId(target);if not who then return {ok=false,message='That player left'} end end
  -- Mark first: an action that does part of its work and then errors must still void rewards.
  Admin.markTestRun()
- local ran,ok,message=pcall(actions[action],p,a,b)
+ local ran,ok,message=pcall(actions[action],who,a,b,c)
  if not ran then warn('AdminService:',action,ok);return {ok=false,message='Server error'} end
  return {ok=ok==true,message=message or ''}
 end
@@ -270,11 +373,13 @@ Players.PlayerRemoving:Connect(function(p)
   end
  end
 end)
--- A non-developer joining a live server where a developer has been testing gets a real,
--- rewarding run: the gate kept everyone else out, so this only ends the developer's own test.
+-- A non-developer joining a live server where a developer has been testing, with no developer
+-- left in it, gets a real, rewarding run. While a developer is here (a trailer session with
+-- friends, 2026-10-12) the test run carries on: a friend rejoining must not wipe the setup.
 local run=RS:WaitForChild('RogueliteRunState')
 local function joined(p)
  if RunService:IsStudio() or Admin.isAdmin(p) then return end
+ for _,q in Players:GetPlayers() do if Admin.isAdmin(q) then return end end
  if Admin.isTestRun(run) or run:GetAttribute('AdminPaused') or combat:GetAttribute('AdminFreeze') or Shop.phase=='Practice' then
   handBack('player joined',Shop.resetRun)
  end

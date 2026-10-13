@@ -839,7 +839,7 @@ SellValue = max(1, floor(FinalPrice(weapon at its tier, current wave, this playe
 WEAPON_SELL_REFUND = 0.25   (2026-10-03: was 50% of what was paid, so free starters sold for 0)
 ```
 
-Wave 1 rerolls cost 2, 4, 6, 8 shards; wave 8 costs 8, 10, 12, 14. RerollCount resets to zero upon entering the next wave's shop. A base-price-20 offer costs 22, 32, 48 and 88 at waves 1, 5, 10 and 20 with no modifier. Discounts apply immediately to unlocked offers; locked prices remain fixed. Shop price increases are red, discounts green, and unchanged values neutral. No harvesting or reroll-discount stat is fabricated.
+Wave 1 rerolls cost 2, 4, 6, 8 shards; wave 8 costs 8, 10, 12, 14. RerollCount resets to zero upon entering the next wave's shop. A base-price-20 offer costs 22, 32, 48 and 88 at waves 1, 5, 10 and 20 with no modifier. Discounts apply immediately to unlocked offers; locked prices remain fixed. Shop price increases are red, discounts green, and unchanged values neutral. No harvesting or reroll-discount stat is fabricated. XP Gain (2026-10-12) is not harvesting: it adds run XP per crystal (+15%: 20 crystals = 23 XP) and never shards.
 
 Each catalog entry has an individual BasePrice. Common items begin around 8–25; weapon price bands are 12–25, 30–55, 60–95, and 110–160 for Common/Uncommon/Rare/Legendary. Items have individually tuned prices and fixed tiers. Prototype weapon tiers multiply damage by 1, 1.20, 1.45, and 1.75, without scaling the imported model. These are temporary shop tiers, not persistent weapon levels; mechanical combination/evolution upgrades remain future work.
 

@@ -1,7 +1,11 @@
--- ADMIN panel window (ADMIN_PANEL.md): one green-theme window with Travel, Mobs, Waves and Player
--- tabs. Presentation and requests only: AdminService checks the developer and every argument.
+-- ADMIN panel window (ADMIN_PANEL.md): one green-theme window with Travel, Mobs, Waves, Player and
+-- Give tabs. Presentation and requests only: AdminService checks the developer and every argument.
 -- The Player tab reuses the old STATS (CharacterStatsUI) and GEAR (WeaponInventoryUI) views.
+-- Lag (2026-10-12, user: "make admin panel less laggy and more usable like minecraft creative"): a
+-- request no longer rebuilds the whole tab. Buttons repaint from the attributes they show, and the
+-- tabs that show run state redraw only when that state changes. Give is built once per open window.
 local RS=game:GetService('ReplicatedStorage')
+local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')
 local T=require(RS:WaitForChild('UITheme'))
 local combat=RS:WaitForChild('RogueliteCombat')
@@ -12,11 +16,14 @@ local Items=require(combat:WaitForChild('ShopCatalog'))
 local Economy=require(combat:WaitForChild('EconomyConfig')) -- Set-box limits, same as AdminConfig
 local XP=require(combat:WaitForChild('RunXP'))
 local Rules=require(RS:WaitForChild('RunSetupRules')) -- map display names
+local Commands=require(combat:WaitForChild('AdminCommands')) -- the Give tab's catalog and the command box
+local Inventory=require(RS:WaitForChild('WeaponInventoryUI')) -- weapon icons (Inventory.Icons)
 local C=T.Color
 local M={}
 local W,H=920,600 -- window content size; the Body inside is (W-36) x (H-58)
 local CW=W-60 -- canvas width inside the scroll frame; 850+ puts the stat cards in two columns
-local TABS={'Travel','Mobs','Waves','Player'}
+local TABS={'Travel','Mobs','Waves','Player','Give'}
+local GIVE_H=H-58-56 -- the Give tab fills the content area; its grid scrolls inside it
 local function left(l) l.TextXAlignment=Enum.TextXAlignment.Left;return l end
 function M.new(player)
  local remote=combat:WaitForChild('AdminAction')
@@ -29,14 +36,21 @@ function M.new(player)
  local win,list,draw
  local statsView=require(RS:WaitForChild('CharacterStatsUI')).new(player,helpers)
  local inventory=require(RS:WaitForChild('WeaponInventoryUI')).new(player,helpers,function() if win and self.tab=='Player' then task.defer(draw) end end)
- -- One request: the server's reply shows as a toast, then the tab redraws with the new state.
- local function send(action,a,b)
-  local ok,res=pcall(remote.InvokeServer,remote,action,a,b)
+ -- One request: the server's reply shows as a toast. No redraw (2026-10-12): what a request changes
+ -- comes back as attributes, which the buttons and tabs already follow. target: a UserId for
+ -- AdminConfig.Targeted actions (nil = you).
+ local function send(action,a,b,c,target)
+  local ok,res=pcall(remote.InvokeServer,remote,action,a,b,c,target)
   local good=ok and type(res)=='table' and res.ok==true
   local message=ok and type(res)=='table' and res.message or 'No reply from the server'
   if message~='' then T.toast(screen,message,good and C.lime or C.negative) end
-  if win then task.defer(draw) end
-  return good
+  return good,message
+ end
+ -- A chat command's text (AdminCommands), from the chat or the Give tab's command box.
+ function self.Command(text)
+  if type(text)~='string' or text=='' then return false,'' end
+  if string.sub(text,1,1)~='/' then text='/'..text end
+  return send('Command',text)
  end
  local function button(parent,name,text,x,y,w,callback,primary)
   local b=T.button(parent,name,text,x,y,w,40,callback,not primary);b.Caption.TextSize=17;return b
@@ -201,14 +215,8 @@ function M.new(player)
   live(level,own,'RunLevel',function(v) return 'Level · '..tostring(v or 1) end)
   button(c,'LevelUp','+1',230,140,110,function() send('Level','Add',1) end)
   numberBox(c,'LevelSet',function() return own:GetAttribute('RunLevel') or 1 end,350,140,120,function(v) send('Level','Set',math.clamp(math.floor(v),1,XP.MAX_LEVEL)) end,'Set level',own,'RunLevel')
-  note(c,'SetHint','Type a number and press Enter to set it.',188)
-  heading(c,'ItemsTitle','Give item',220)
-  local items={};for _,e in Items.List do if e.kind~='Weapon' then table.insert(items,e) end end
-  local cols=4;local cw=(CW-(cols-1)*8)/cols
-  for i,e in items do
-   button(c,'Item_'..e.id,e.name,((i-1)%cols)*(cw+8),256+math.floor((i-1)/cols)*48,cw,function() send('GiveItem',e.id) end).Caption.TextSize=15
-  end
-  local y=256+math.ceil(#items/cols)*48+16
+  note(c,'SetHint','Type a number and press Enter to set it. Items, weapons, armor and pets for anyone: the Give tab.',188)
+  local y=228
   -- Turrets (HANDYMAN_TURRET.md, turret items 2026-10-04): AdminService action Turret.
   heading(c,'TurretTitle','Turrets',y);y+=36
   local names={'Give Nail','Give Twin','Give Quad','Give Gatling'}
@@ -226,10 +234,132 @@ function M.new(player)
   h=inventory:render(gear,CW);gear.Size=UDim2.fromOffset(CW,h)
   return y+h+16
  end
+ -- Give (2026-10-12, user: "give players items ... like minecraft creative panel"): every weapon,
+ -- run item, turret, armor piece and set, pet and class in one grid, built once per open window and
+ -- only filtered after (This run / Saved, kind, search), so a click never rebuilds anything. A tile
+ -- gives itself to the picked player (Me, anyone here, or All): This run = TempGive with the copies
+ -- and tier, Saved = Give at the tier (+1 = one more copy of something owned). The command box runs
+ -- the chat commands, for phones. Example: Saved, Tier IV, Katana -> that player's Katana Tier IV.
+ local catalog,giveView
+ local function catalogEntries()
+  if catalog then return catalog end
+  local Stats=require(combat:WaitForChild('CharacterStats'))
+  catalog=Commands.entries({Weapons=require(combat:WaitForChild('WeaponCatalog')),Items=Items,Armor=require(combat:WaitForChild('ArmorCatalog')),
+   Pets=require(combat:WaitForChild('PetConfig')),Classes=Stats.ClassOrder,Signature=Stats.Signature,WeaponIcons=Inventory.Icons})
+  return catalog
+ end
+ local KINDS={'All','Weapon','Item','Turret','Armor','Pet','Class'}
+ local KIND_LABEL={All='All',Weapon='Weapons',Item='Items',Turret='Turrets',Armor='Armor',Pet='Pets',Class='Classes'}
+ self.give={mode='temp',kind='All',copies=1,tier=1,search='',target=nil}
+ local function buildGive()
+  local g=self.give
+  local v=T.frame(nil,'GiveView',0,0,CW,GIVE_H)
+  -- Chips: one row of small buttons; the picked one is lime. They repaint, never rebuild.
+  local function chips(name,x,y,w,list,get,set)
+   local bs={}
+   local function paint() for i,o in list do T.setPrimary(bs[i],get()==o.value);if o.enabled then bs[i].Interactable=o.enabled() end end end
+   for i,o in list do
+    bs[i]=T.button(v,name..i,o.label,x+(i-1)*(w+6),y,w,36,function() set(o.value);paint() end,true);bs[i].Caption.TextSize=15
+   end
+   paint();return paint
+  end
+  -- Row 1: who gets it. Rebuilt when players join or leave (a few buttons).
+  left(T.label(v,'ToLabel','Give to',0,0,90,36,18))
+  local who=T.frame(v,'Targets',96,0,CW-96,36)
+  local function targets()
+   for _,child in who:GetChildren() do child:Destroy() end
+   local list={{id=nil,name='Me'}}
+   for _,q in Players:GetPlayers() do if q~=player then table.insert(list,{id=q.UserId,name=q.DisplayName}) end end
+   if #list>1 then table.insert(list,{id=0,name='All'}) end
+   local still=false;for _,t in list do if t.id==g.target then still=true end end
+   if not still then g.target=nil end
+   local bw=math.min(150,(CW-96-6*(#list-1))/#list)
+   for i,t in list do
+    local b=T.button(who,'Target'..i,t.name,(i-1)*(bw+6),0,bw,36,function() g.target=t.id;targets() end,g.target~=t.id);b.Caption.TextSize=15
+   end
+  end
+  targets()
+  local joins={Players.PlayerAdded:Connect(targets),Players.PlayerRemoving:Connect(function() task.defer(targets) end)}
+  v.Destroying:Connect(function() for _,conn in joins do conn:Disconnect() end end)
+  -- Row 2: This run / Saved, copies (This run only) and tier (+1: Saved only, one more copy).
+  local paintCopies,paintTier,filter
+  chips('Mode',0,44,108,{{label='This run',value='temp'},{label='Saved',value='perm'}},function() return g.mode end,function(m)
+   g.mode=m;if m=='temp' and g.tier==0 then g.tier=1 end
+   paintCopies();paintTier();filter()
+  end)
+  left(T.label(v,'CopiesLabel','Copies',236,44,66,36,16))
+  local copyList={};for _,n in {1,2,3,5,10} do table.insert(copyList,{label=tostring(n),value=n,enabled=function() return g.mode=='temp' end}) end
+  paintCopies=chips('Copies',306,44,42,copyList,function() return g.copies end,function(n) g.copies=n end)
+  left(T.label(v,'TierLabel','Tier',576,44,36,36,16))
+  local tierList={{label='+1',value=0,enabled=function() return g.mode=='perm' end}}
+  for t=1,4 do table.insert(tierList,{label=T.Roman[t],value=t}) end
+  paintTier=chips('Tier',612,44,42,tierList,function() return g.tier end,function(t) g.tier=t end)
+  -- Row 3: search and kind.
+  T.panel(v,'SearchWell',0,88,300,36,'inset')
+  local search=T.make('TextBox',v,{Name='Search',Position=UDim2.fromOffset(6,92),Size=UDim2.fromOffset(288,28),ZIndex=2,BackgroundColor3=INPUT,BorderSizePixel=0,TextColor3=C.white,Font=T.Font,TextSize=17,Text='',PlaceholderText='Search',PlaceholderColor3=C.dim,ClearTextOnFocus=false,TextXAlignment=Enum.TextXAlignment.Left})
+  T.make('UICorner',search,{CornerRadius=UDim.new(0,6)})
+  local kindList={};for _,k in KINDS do table.insert(kindList,{label=KIND_LABEL[k],value=k}) end
+  chips('Kind',308,88,(CW-308-6*(#KINDS-1))/#KINDS,kindList,function() return g.kind end,function(k) g.kind=k;filter() end)
+  -- The grid.
+  local gridH=GIVE_H-134-48
+  local grid=T.make('ScrollingFrame',v,{Name='Grid',Position=UDim2.fromOffset(0,134),Size=UDim2.fromOffset(CW,gridH),BackgroundTransparency=1,BorderSizePixel=0,CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollBarThickness=6,ScrollBarImageColor3=C.lime,ScrollingDirection=Enum.ScrollingDirection.Y,VerticalScrollBarInset=Enum.ScrollBarInset.ScrollBar})
+  T.make('UIGridLayout',grid,{CellSize=UDim2.fromOffset(98,96),CellPadding=UDim2.fromOffset(6,6),SortOrder=Enum.SortOrder.LayoutOrder})
+  local busy=false
+  local function give(e)
+   if busy then return end
+   busy=true
+   local ids={g.target}
+   if g.target==0 then ids={};for _,q in Players:GetPlayers() do table.insert(ids,q.UserId) end end
+   for i,id in ids do
+    if i>1 then task.wait(.2) end -- AdminService's rate limit
+    if id==player.UserId then id=nil end
+    if g.mode=='temp' then send('TempGive',e.key,g.copies,math.max(1,g.tier),nil,id)
+    else send('Give',e.key,g.tier>0 and g.tier or nil,nil,id) end
+   end
+   busy=false
+  end
+  local tiles={}
+  for i,e in catalogEntries() do
+   local tile=T.make('TextButton',grid,{Name='Tile_'..e.key,Text='',AutoButtonColor=false,BackgroundColor3=C.well,BorderSizePixel=0,LayoutOrder=i})
+   T.make('UICorner',tile,{CornerRadius=UDim.new(0,8)})
+   T.make('UIStroke',tile,{Color=e.godly and C.red or e.kind=='Turret' and T.Tier[e.tier or 1] or C.track,Thickness=2,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+   if e.icon and e.icon~='' then T.make('ImageLabel',tile,{Name='Icon',BackgroundTransparency=1,Position=UDim2.fromOffset(21,4),Size=UDim2.fromOffset(56,56),Image=e.icon,ScaleType=Enum.ScaleType.Fit}) end
+   local name=T.make('TextLabel',tile,{Name='Name',BackgroundTransparency=1,Position=UDim2.fromOffset(4,e.icon and 60 or 6),Size=UDim2.fromOffset(90,e.icon and 32 or 84),Text=e.name,TextColor3=C.white,Font=T.Body,TextScaled=true,TextWrapped=true,TextStrokeTransparency=.6})
+   T.make('UITextSizeConstraint',name,{MaxTextSize=14,MinTextSize=8})
+   tile.MouseEnter:Connect(function() tile.BackgroundColor3=C.well:Lerp(C.lime,.25) end)
+   tile.MouseLeave:Connect(function() tile.BackgroundColor3=C.well end)
+   tile.Activated:Connect(function() give(e) end)
+   tiles[i]={tile=tile,e=e}
+  end
+  filter=function()
+   local q=Commands.norm(g.search)
+   for _,t in tiles do
+    local e=t.e
+    t.tile.Visible=(g.mode=='temp' and e.temp or g.mode=='perm' and e.perm) and (g.kind=='All' or e.kind==g.kind) and (q=='' or string.find(e.norm,q,1,true)~=nil)
+   end
+   grid.CanvasPosition=Vector2.zero
+  end
+  search:GetPropertyChangedSignal('Text'):Connect(function() g.search=search.Text;filter() end)
+  filter()
+  -- Row 4: a chat command, typed here (phones have no slash commands at hand).
+  T.panel(v,'CommandWell',0,GIVE_H-40,CW-128,40,'inset')
+  local box=T.make('TextBox',v,{Name='CommandBox',Position=UDim2.fromOffset(6,GIVE_H-35),Size=UDim2.fromOffset(CW-140,30),ZIndex=2,BackgroundColor3=INPUT,BorderSizePixel=0,TextColor3=C.white,Font=T.Font,TextSize=16,Text='',PlaceholderText='/tempgive bob katana 2 3 · /give me iron set · /god all · /pause',PlaceholderColor3=C.dim,ClearTextOnFocus=false,TextXAlignment=Enum.TextXAlignment.Left})
+  T.make('UICorner',box,{CornerRadius=UDim.new(0,6)})
+  local function run() local text=box.Text;if text~='' and self.Command(text) then box.Text='' end end
+  box.FocusLost:Connect(function(enter) if enter then run() end end)
+  T.button(v,'RunCommand','Run',CW-120,GIVE_H-40,120,40,run).Caption.TextSize=18
+  return v
+ end
+ function tabs.Give(c)
+  giveView=giveView or buildGive()
+  giveView.Parent=c
+  return GIVE_H
+ end
  draw=function()
   if not win then return end
   local keep=list and list.Parent and list.CanvasPosition
   statsView.refreshers={} -- the old stat widgets stop updating; the Player tab adds its own again
+  if giveView then giveView.Parent=nil end -- kept for the next visit to Give, never rebuilt
   for _,child in win.Body:GetChildren() do child:Destroy() end
   T.tabs(win.Body,0,0,W-36,46,TABS,self.tab,function(id) self.tab=id;list=nil;draw() end)
   list=T.scroll(win.Body,'Content',0,56,W-36,H-58-56)
@@ -252,7 +382,10 @@ function M.new(player)
  end
  function self.Open()
   if win then return end
-  win=T.window(screen,'AdminWindow','Admin',W,H,function() win=nil;list=nil;statsView.refreshers={};screen:SetAttribute('Open',false) end)
+  win=T.window(screen,'AdminWindow','Admin',W,H,function()
+   win=nil;list=nil;statsView.refreshers={};screen:SetAttribute('Open',false)
+   if giveView then giveView:Destroy();giveView=nil end
+  end)
   screen:SetAttribute('Open',true);draw()
  end
  function self.Close() if win then win.Close() end end
@@ -260,7 +393,7 @@ function M.new(player)
  function self.Show(tab) if tab and tabs[tab] then self.tab=tab end;if win then list=nil;draw() else self.Open() end end
  -- Redraw live state (phase, wave, pause, freeze, map, area) while open. The Player tab redraws
  -- only after its own requests: rebuilding the stat editor on every shard pickup would fight typing.
- local function changed() if win and self.tab~='Player' then draw() end end
+ local function changed() if win and self.tab~='Player' and self.tab~='Give' then draw() end end
  for _,a in {'Phase','Wave','AdminPaused','EventId','EventPhase'} do run:GetAttributeChangedSignal(a):Connect(changed) end
  for _,a in {'AdminFreeze','TestZombieCountOverride','RunMap','RunDifficulty'} do combat:GetAttributeChangedSignal(a):Connect(changed) end
  player:GetAttributeChangedSignal('StudioArea'):Connect(changed)

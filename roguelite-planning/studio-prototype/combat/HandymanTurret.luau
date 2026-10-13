@@ -60,6 +60,45 @@ function H.tiers(items)
 end
 -- Whether the shop may offer `entry` to a player owning `owned` turrets: no turret item at 10.
 function H.offerable(entry,owned) return not (type(entry)=='table' and entry.turret) or (owned or 0)<H.MAX_OWNED end
+-- Combining (2026-10-12, user: "allowing for turret combining to keep upscaling turrets as the run
+-- goes on ... it shouldnt automatically combine and it should be clear that the user can combine
+-- them"). Only in the shop, only when the player presses Combine (ShopAction 'CombineItem'): COMBINE
+-- copies of one turret item become 1 of the next tier. It never adds a turret, so the 10 cap never
+-- blocks it. Example: 3 Nail + 0 Twin -> 1 Nail + 1 Twin (turrets 3 -> 2); 2 Quad -> 1 Gatling Rig.
+H.Next={turret_nail='turret_twin',turret_twin='turret_quad',turret_quad='turret_gatling'}
+H.COMBINE=2
+-- Whether `id` can combine now. capacity: item rows allowed (EconomyConfig.ITEM_CAPACITY); capOf(id):
+-- that item's copy cap (ShopCatalog entry.cap). Returns ok, reason. A new row is needed only when the
+-- next tier has none and the source keeps copies. Example: 16 rows, 3 Nail, no Twin -> 'Item
+-- inventory full'; 2 Nail, no Twin -> fine (the Nail row becomes the space).
+function H.canCombine(items,id,capacity,capOf)
+ local nxt=H.Next[id]
+ if not H.ItemTier[id] then return false,'Only turrets combine' end
+ if not nxt then return false,'Maximum tier' end
+ local have=H.count(items,id)
+ if have<H.COMBINE then return false,'Need '..H.COMBINE..' to combine' end
+ local cap=capOf and capOf(nxt) or H.MAX_OWNED
+ if H.count(items,nxt)>=cap then return false,'Next tier is at its copy limit' end
+ local hasNext=false;for _,it in items do if it.id==nxt then hasNext=true end end
+ if not hasNext and have>H.COMBINE and #items>=(capacity or math.huge) then return false,'Item inventory full' end
+ return true,nil
+end
+-- Do it (check canCombine first): COMBINE fewer `id` (its row goes at 0), one more of the next tier.
+-- Returns the next id.
+function H.combine(items,id)
+ local nxt=H.Next[id]
+ for i,it in items do if it.id==id then it.count-=H.COMBINE;if it.count<=0 then table.remove(items,i) end;break end end
+ for _,it in items do if it.id==nxt then it.count+=1;return nxt end end
+ table.insert(items,{id=nxt,count=1})
+ return nxt
+end
+-- The turret items that can combine now, each to its next id: the UI's COMBINE marks and buttons.
+-- Example: {3 Nail, 1 Twin} -> {turret_nail='turret_twin'}.
+function H.combinable(items,capacity,capOf)
+ local out={}
+ for _,it in items or {} do if H.canCombine(items,it.id,capacity,capOf) then out[it.id]=H.Next[it.id] end end
+ return out
+end
 
 -- Numbers (Brotato's structure rule, 2026-10-04) -------------------------------------------------
 -- Damage = base x (1 + Utility Power). Damage, Ranged damage, Attack speed, Cooldown reduction, Crit
@@ -196,16 +235,30 @@ end
 -- waves nothing moves. Example: he runs 24 studs/s; a turret 25+ studs behind packs, lands about
 -- 8 + 6 = 14 studs ahead of where the server sees him and is offline 0.35 + 0.5 = 0.85 s; with 5
 -- turrets at most 2 are offline, so at least 3 fire while he runs, all 5 when he stands.
+-- Leash (2026-10-12, user: "the distance currently is a little short and if I train mobs they
+-- constantly spawn in and out and never attack"): a turret follows only once he is FOLLOW_RANGE
+-- studs away (its own range if longer), and one that had a target in the last FOLLOW_BUSY s stays
+-- until FOLLOW_FAR. Each waits FOLLOW_COOLDOWN after landing. Example: he kites a train in a 30-stud
+-- circle around his turrets: they stay put and shoot the train; he runs 45 studs off with nothing
+-- near them: they follow; 45 studs off while they are still shooting: they keep shooting until 70.
 H.PACK_TIME=.35;H.BUILD_TIME=.5
-H.FOLLOW_AT_ONCE=2;H.FOLLOW_COOLDOWN=1.5
+H.FOLLOW_AT_ONCE=2;H.FOLLOW_COOLDOWN=3
+H.FOLLOW_RANGE=40;H.FOLLOW_FAR=70;H.FOLLOW_BUSY=2
 -- The ring centre leads him by FOLLOW_LEAD seconds of his speed, at most FOLLOW_LEAD_MAX studs (the
 -- server sees players ~0.2 s late). Example: 24 studs/s -> 6 studs ahead; standing -> 0.
 H.FOLLOW_LEAD=.25;H.FOLLOW_LEAD_MAX=6
--- t: {position, packAt (packing since), readyAt (rising until), movedAt (landed at)}.
+-- t: {position, packAt (packing since), readyAt (rising until), movedAt (landed at), seenTarget
+-- (last had a target at)}.
 function H.moving(t,now) return t.packAt~=nil or (t.readyAt~=nil and now<t.readyAt) end
--- The turrets that should start packing now, farthest first: past their range (t.range, else
--- `range`, else RANGE) from owner on the ground, not moving, off cooldown, and only as many as
--- leave FOLLOW_AT_ONCE moving. Example: 5 turrets 30 studs behind, none moving -> the 2 farthest.
+-- How far he may get before t follows: FOLLOW_RANGE (or its range, t.range else `range`, if
+-- longer); FOLLOW_FAR while it is busy shooting.
+function H.leash(t,now,range)
+ if t.seenTarget and now-t.seenTarget<H.FOLLOW_BUSY then return H.FOLLOW_FAR end
+ return math.max(H.FOLLOW_RANGE,t.range or range or H.RANGE)
+end
+-- The turrets that should start packing now, farthest first: past their leash (H.leash) from owner
+-- on the ground, not moving, off cooldown, and only as many as leave FOLLOW_AT_ONCE moving.
+-- Example: 5 idle turrets 45 studs behind, none moving -> the 2 farthest.
 function H.leftBehind(list,owner,now,range)
  local busy=0
  for _,t in list do if H.moving(t,now) then busy+=1 end end
@@ -216,7 +269,7 @@ function H.leftBehind(list,owner,now,range)
   if not H.moving(t,now) and (t.movedAt==nil or now-t.movedAt>=H.FOLLOW_COOLDOWN-1e-9) then
    local dx,dz=t.position.X-owner.X,t.position.Z-owner.Z
    local d=math.sqrt(dx*dx+dz*dz)
-   if d>(t.range or range or H.RANGE) then table.insert(far,{t=t,d=d,i=#far}) end
+   if d>H.leash(t,now,range) then table.insert(far,{t=t,d=d,i=#far}) end
   end
  end
  table.sort(far,function(a,b) if a.d~=b.d then return a.d>b.d end;return a.i<b.i end)

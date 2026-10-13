@@ -32,10 +32,11 @@ M.Groups={
  {'OFFENSE',{'Damage','AttackSpeed','CritChance','CritDamage','MeleeDamage','RangedDamage'}},
  {'DEFENSE',{'MaxHP','Armor','Dodge','ContactReduction','FirstHitBlock'}},
  {'RECOVERY',{'Regeneration','LifeSteal'}},
- {'UTILITY',{'MoveSpeed','PickupRadius','Luck'}},
+ {'UTILITY',{'MoveSpeed','PickupRadius','Luck','XPGain'}},
 }
--- Shown only when you have some (Iron and Spartan 4-piece, a few items), 2026-10-10.
-M.OnlyWhenSet={ContactReduction=true,FirstHitBlock=true}
+-- Shown only when you have some (Iron and Spartan 4-piece, a few items), 2026-10-10. XP Gain
+-- (2026-10-12) too: only XP cards and XP items give it.
+M.OnlyWhenSet={ContactReduction=true,FirstHitBlock=true,XPGain=true}
 local SIDE_W,MID_W=520,400 -- design widths of the side panels and the button column
 local function center(l) l.TextXAlignment=Enum.TextXAlignment.Center;return l end
 local function left(l) l.TextXAlignment=Enum.TextXAlignment.Left;return l end

@@ -17,6 +17,7 @@ local PLAYER = {
 	MoveSpeed = true,
 	PickupRadius = true,
 	Luck = true,
+	XPGain = true,
 	FirstHitBlock = true,
 	ContactReduction = true,
 	ShopDiscount = true,

@@ -8,6 +8,7 @@ local RunService=game:GetService('RunService')
 local combat=RS:WaitForChild('RogueliteCombat')
 local Enemies=require(combat:WaitForChild('EnemyCatalog'))
 local Items=require(combat:WaitForChild('ShopCatalog'))
+local Weapons=require(combat:WaitForChild('WeaponCatalog'))
 local Maps=require(combat:WaitForChild('MapConfig'))
 local E=require(combat:WaitForChild('EconomyConfig'))
 local XP=require(combat:WaitForChild('RunXP'))
@@ -64,7 +65,8 @@ local rules={
  EndlessBoss=none, -- a random Endless boss now (in a wave) or with the next wave (in the shop)
  Round10Start=none,Round10Skip=none,Round10Clear=none, -- round 10 events (Round10Service): wave 10 now, skip its intro, clear it
  JumpWave=function(a,b) return int(a,1,20) and b==nil end,
- God=flag,Weapons=flag,
+ -- God: true / false, or nil to toggle (/god, 2026-10-12).
+ God=function(a,b) return (a==nil or type(a)=='boolean') and b==nil end,Weapons=flag,
  TutorialStart=none,TutorialLobby=none,TutorialEnd=none, -- Studio's combined server only (AdminService)
  GiftTest=none, -- Studio only: a fake Starter Pack gift through the real inbox delivery (2026-10-04)
  GiveItem=function(a,b) local e=type(a)=='string' and Items.ById[a];return e and e.kind~='Weapon' and b==nil end,
@@ -73,11 +75,30 @@ local rules={
  -- Turrets (HANDYMAN_TURRET.md, turret items 2026-10-04): Give 1-4 (one Nail Turret / Twin Nailer /
  -- Quad Nailer / Gatling Rig item) or Clear.
  Turret=function(a,b) return (a=='Give' and int(b,1,4)) or (a=='Clear' and b==nil) end,
+ -- Admin commands and the Give tab (AdminCommands, 2026-10-12). TempGive: a Give-tab key ('w:<weapon
+ -- id>' or 'i:<item id>'), copies 1-10 and tier 1-4, for this run. Give: any Give-tab key (AdminService
+ -- checks the armor, pet or class exists) and an optional tier, saved for good. PauseAll: the wave
+ -- clock, spawns and every enemy; nil toggles. Command: one chat command's text, parsed by the server.
+ TempGive=function(a,b,c)
+  if type(a)~='string' or not int(b,1,10) or not int(c,1,4) then return false end
+  local w=string.match(a,'^w:(.+)$');if w then return Weapons.ById[w]~=nil end
+  local i=string.match(a,'^i:(.+)$');local e=i and Items.ById[i]
+  return e~=nil and e.kind~='Weapon'
+ end,
+ Give=function(a,b) return type(a)=='string' and #a<=60 and string.match(a,'^[wapsc]:[%w_%.]+$')~=nil and (b==nil or int(b,1,4)) end,
+ PauseAll=function(a,b) return (a==nil or type(a)=='boolean') and b==nil end,
+ Command=function(a,b) return type(a)=='string' and #a>0 and #a<=200 and b==nil end,
 }
+-- Actions with a third argument; every other action must leave it nil.
+local THREE={TempGive=true}
+-- Actions that act on a player: the request's target (a UserId; nil = the developer) picks who.
+A.Targeted=table.freeze({God=true,Weapons=true,GiveItem=true,Shards=true,Level=true,Turret=true,TempGive=true,Give=true})
 A.Actions={};for name in rules do table.insert(A.Actions,name) end;table.sort(A.Actions)
--- true only for a known action with valid arguments.
-function A.check(action,a,b)
+-- true only for a known action with valid arguments. target: nil, or a UserId for a Targeted action.
+function A.check(action,a,b,c,target)
  local rule=type(action)=='string' and rules[action] or nil
- return rule~=nil and rule(a,b)==true
+ if rule==nil or (c~=nil and not THREE[action]) then return false end
+ if target~=nil and not (A.Targeted[action] and int(target,1,2^53)) then return false end
+ return rule(a,b,c)==true
 end
 return A

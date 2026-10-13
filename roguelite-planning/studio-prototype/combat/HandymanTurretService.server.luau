@@ -9,8 +9,9 @@
 -- (HandymanTurret.ring / spot); the ground and sight rays run only then. Turrets added mid-wave
 -- (admin Give, Scrap Magnet's temporary ones) go to free spots on the ring around the player then.
 -- Temporary ones go when the wave ends. Follow (2026-10-10): mid-wave, a turret whose owner is
--- past its range packs up (PackAt, no fire, PACK_TIME) and rises again (BuiltAt, no fire,
--- BUILD_TIME) at a free spot ahead of him, 2 of a player's moving at once, 1.5 s apart
+-- 40+ studs off (70 while it is shooting; HandymanTurret.leash) packs up (PackAt, no fire, PACK_TIME)
+-- and rises again (BuiltAt, no fire, BUILD_TIME) at a free spot ahead of him, 2 of a player's moving
+-- at once, 3 s apart
 -- (HandymanTurret.leftBehind / followRing); between waves nothing moves. Turrets can't be destroyed and
 -- block nothing (user, 2026-10-04: "let's not let mobs destroy the turrets"): mobs ignore them.
 -- Server authority: who has turrets, where they stand, what they shoot and when are decided here.
@@ -392,7 +393,7 @@ local function fire(t,d,e,point,character)
  return interval
 end
 -- Follow, once a tick in a wave (not paused): track his flat run, stand finished packs, and pack
--- the ones left behind past their range (HandymanTurret.leftBehind: 2 moving at once, 1.5 s apart).
+-- the ones left behind past their leash (HandymanTurret.leftBehind: 2 moving at once, 3 s apart).
 local function follow(p,root,list,cs,character,clock)
  local m=motion[p];local at=root.Position
  if m and clock-m.clock<.5 and clock>m.clock then

@@ -108,6 +108,12 @@ item('soup','Chicken Soup',2,34,'rbxassetid://134653604976810',{MaxHP=6,Recovery
 item('skates','Roller Skates',2,38,'rbxassetid://84335919314680',{Dodge=3},'You move 10% faster, and 3% of enemy hits miss you.',5,'Item',{MoveSpeed=10})
 item('detector','Metal Detector',2,36,'rbxassetid://135461885570276',{Luck=8},'+8 luck, and you grab crystals from 20% farther away.',5,'Item',{PickupRadius=20})
 item('gummies','Vitamin Gummies',3,66,'rbxassetid://96244325205305',{Regeneration=2,MaxHP=10},'Heal 2 HP every second, and +10 max health.')
+-- XP items (2026-10-12, user: "implement the xp level up and xp items"): the XPGain stat, so more run
+-- XP per crystal (RunXP.gain); shards stay the same. Example: Flashcards + Trophy = +30%, so 20
+-- crystals give 26 XP. Icons: placeholder (the XP quest icon) until the user's icons are uploaded.
+item('flashcards','Homework Flashcards',1,18,'rbxassetid://101475186887359',{XPGain=10},'You earn 10% more run XP from crystals.')
+item('trophy','Participation Trophy',2,36,'rbxassetid://101475186887359',{XPGain=20},'You earn 20% more run XP from crystals.')
+item('goldstars','Gold Star Stickers',3,60,'rbxassetid://101475186887359',{XPGain=35,Damage=-5},'You earn 35% more run XP from crystals, but all your weapons deal 5% less damage.')
 -- Turret items (2026-10-04, Brotato's structures; HANDYMAN_TURRET.md): every copy owned is one more
 -- turret, placed near you at each wave start, at most 10 (cap). Any class can buy them. structure:
 -- the Handyman (Engineer) gets 20% off them (ShopService). Since 2026-10-09 they are preferred by
@@ -140,6 +146,7 @@ local itemTags={
  -- is general damage), so melee preference goes to Knee of Justice.
  knee={'Melee','Damage'},fingercannon={'Ranged','Projectile'},pocketweather={'Elemental','Burn','Poison'},toolbelt={'Utility','Structure'},
  wiper={'Melee'}, -- 2026-10-10: melee builds prefer it, as Gun and Thrown builds prefer Two Straws
+ flashcards={'Economy'},trophy={'Economy'},goldstars={'Economy'}, -- 2026-10-12 XP items: no build prefers them
 }
 for _,entry in C.List do
  if entry.kind~='Weapon' then entry.tags=itemTags[entry.id] or (entry.structure and {'Structure'}) or {} end

@@ -140,6 +140,7 @@ function S.publish(p,message)
  s.slotRows=slotRows(p) or s.slotRows -- every slot change publishes, so this copy stays current
  local data={pendingLevels=s.pendingLevels,upgradeOffers=s.upgradeOffers,upgradeToken=s.upgradeToken,upgradeRerolls=s.upgradeRerolls,upgradeRerollPrice=E.reroll(S.wave,s.upgradeRerolls),freeRerolls=s.freeRerolls,freeUpgradeRerolls=s.freeUpgradeRerolls,baggedShards=s.baggedShards,level=s.level,shards=s.shards,wave=S.wave,phase=S.phase,rerolls=s.rerolls,rerollPrice=E.reroll(S.wave,s.rerolls),offers=s.offers,items=s.items,weapons=owned(p),ready=s.ready,revision=s.revision,message=message or s.message or '',modifier=E.modifier(Characters.states[p].stats),debug=RunService:IsStudio() and E.DEBUG_CURRENCY_ENABLED}
  data.upgrades=s.upgradeBonuses -- plan L: the pause screen's level-up picks (id -> picks)
+ data.combinable=Turret and Turret.combinable(s.items,E.ITEM_CAPACITY,function(id) return Catalog.ById[id] and Catalog.ById[id].cap end) or {} -- turret ids that can combine now -> next id (2026-10-12)
  s.message=data.message;S.publishProgress(p)
  slots(p):SetAttribute('ShopSnapshot',Http:JSONEncode(data))
 end
@@ -297,7 +298,7 @@ local function freeTurret(p,fresh)
 end
 local function newState(p)
  -- A tutorial run starts with no crystals (S.tutorial.startShards).
- local s={shards=S.tutorial and S.tutorial.startShards or E.STARTING_SHARDS,level=1,xp=0,pendingLevels=0,upgradeOffers={},upgradeBonuses={},banished={},shopBanned={},baggedShards=0,upgradeRerolls=0,upgradeToken=token(),rerolls=0,offers={},items={},ready=false,revision=1,lastRequest=-1e6,freeRerolls=0,freeUpgradeRerolls=0}
+ local s={shards=S.tutorial and S.tutorial.startShards or E.STARTING_SHARDS,level=1,xp=0,xpCarry=0,pendingLevels=0,upgradeOffers={},upgradeBonuses={},banished={},shopBanned={},baggedShards=0,upgradeRerolls=0,upgradeToken=token(),rerolls=0,offers={},items={},ready=false,revision=1,lastRequest=-1e6,freeRerolls=0,freeUpgradeRerolls=0}
  S.states[p]=s
  freeTurret(p,true)
  for i=1,6 do local f=slots(p)['Slot'..i];f:SetAttribute('Tier',1);f:SetAttribute('FinalPurchasePrice',0);f:SetAttribute('BasePrice',0);f:SetAttribute('WavePurchased',0);f:SetAttribute('CopyId',token()) end
@@ -678,6 +679,31 @@ function S.adminItem(p,id)
  s.revision+=1;S.bonuses(p);S.publish(p,entry.name..' added')
  return true,entry.name..' added'
 end
+-- /tempgive and the admin Give tab (2026-10-12): `copies` copies of WeaponCatalog weapon `id` at
+-- `tier`, each into the next free slot, free and with no refund (like a bought weapon at price 0).
+-- Godly weapons too (trailer loadouts). Stops when the six slots are full. Example: 3 Katanas at
+-- Tier III with slots 1-4 filled -> 2 placed, 'Katana III x2 (slots full)'.
+function S.adminWeapon(p,id,tier,copies)
+ local s=S.states[p];local cs=Characters.states[p];local w=Weapons.ById[id]
+ if not s or not cs or not w then return false,'Unknown weapon' end
+ if not combat.WeaponTemplates:FindFirstChild(id) then return false,'Weapon asset unavailable' end
+ tier=math.clamp(math.floor(tier or 1),1,4);copies=math.clamp(math.floor(copies or 1),1,6)
+ local placed=0
+ for i=1,6 do
+  if placed>=copies then break end
+  local f=slots(p)['Slot'..i]
+  if f:GetAttribute('WeaponId')=='' then
+   f:SetAttribute('RunDamage',0);f:SetAttribute('RunKills',0);f:SetAttribute('BasePrice',0);f:SetAttribute('FinalPurchasePrice',0);f:SetAttribute('PurchasePrice',0)
+   f:SetAttribute('Tier',tier);f:SetAttribute('WavePurchased',S.wave);f:SetAttribute('CopyId',token());f:SetAttribute('WeaponId',id)
+   placed+=1
+  end
+ end
+ if placed==0 then return false,'Six weapons equipped: no free slot' end
+ local count=0;for i=1,6 do if slots(p)['Slot'..i]:GetAttribute('WeaponId')~='' then count+=1 end end;slots(p):SetAttribute('EquippedCount',count)
+ local text=w.name..' '..({'I','II','III','IV'})[tier]..(placed>1 and ' x'..placed or '')..(placed<copies and ' (slots full)' or '')
+ s.ready=false;s.revision+=1;S.bonuses(p);reprice(p);S.publish(p,text);S.publishReady()
+ return true,text
+end
 function S.request(p,action,revision,arg,extra)
  local s=S.states[p];local cs=Characters.states[p]
  if not s or not cs or not living(p) or type(action)~='string' then return false end
@@ -779,6 +805,19 @@ function S.request(p,action,revision,arg,extra)
    s.shards-=price;s.rerolls+=1;how,cost='Shards',price
   end
   rerollOffers(p);fire('onReroll',p,'Shop',how,cost)
+ elseif action=='CombineItem' then
+  -- Turret combining (2026-10-12, HANDYMAN_TURRET.md "Combining"): arg is a turret item id. 2 of a
+  -- tier become 1 of the next, free, only when the player presses Combine (nothing combines by
+  -- itself). Example: 3 Nail Turrets -> 1 Nail Turret + 1 Twin Nailer (turrets 3 -> 2).
+  if type(arg)~='string' or #arg>40 or not Turret or not Turret.ItemTier[arg] then return fail('Only turrets combine') end
+  local ok,why=Turret.canCombine(s.items,arg,E.ITEM_CAPACITY,function(id) return Catalog.ById[id] and Catalog.ById[id].cap end)
+  if not ok then return fail(why) end
+  local nxt=Turret.combine(s.items,arg);S.bonuses(p)
+  -- Its own publish so the snapshot says what happened (the shared one below says nothing); the
+  -- rest matches the shared ending.
+  s.ready=false;s.revision+=1;reprice(p)
+  S.publish(p,Turret.COMBINE..' '..Catalog.ById[arg].name..'s → '..Catalog.ById[nxt].name);S.publishReady()
+  return true
  elseif action=='Combine' then
   if not E.integer(arg,1,6) then return fail('Invalid weapon slot') end
   local f=slots(p)['Slot'..arg];local id=f:GetAttribute('WeaponId');local tier=f:GetAttribute('Tier') or 1
@@ -825,7 +864,11 @@ function S.creditShards(p,amount,pickedUp)
   s.baggedShards-=bonus
   local total=amount+bonus
   s.shards=math.min(E.MAX_SHARDS,s.shards+total)
-  local level,xp,gained=XP.add(s.level,s.xp,math.min(1000000,total*XP.XP_PER_SHARD))
+  -- XP Gain (2026-10-12): XP only, never shards; the fraction waits in s.xpCarry for the next
+  -- pickup. Example: +15% XP Gain, 20 crystals = 20 shards and 23 XP.
+  local cs=Characters.states[p];local whole,carry=XP.gain(total,cs and cs.stats and cs.stats.XPGain or 0,s.xpCarry)
+  s.xpCarry=carry
+  local level,xp,gained=XP.add(s.level,s.xp,math.min(1000000,whole))
   s.level=level;s.xp=xp;s.pendingLevels+=gained
   fire('onShards',p,total,amount)
   if gained>0 then fire('onLevelUp',p,gained) end

@@ -81,7 +81,7 @@ local function shard(parent,x,y,size)
  return T.icon(parent,'ShardIcon',x,y,size,'shard')
 end
 local primary={}
-for _,id in {'MaxHP','Damage','MeleeDamage','RangedDamage','ElementalDamage','UtilityPower','AttackSpeed','CritChance','CritDamage','Armor','Dodge','Regeneration','LifeSteal','Recovery','MoveSpeed','AttackRange','Luck','PickupRadius','ShopDiscount','ShopPricePercent','ExplosionDamage','ContactReduction','LifeStealCap'} do primary[id]=true end
+for _,id in {'MaxHP','Damage','MeleeDamage','RangedDamage','ElementalDamage','UtilityPower','AttackSpeed','CritChance','CritDamage','Armor','Dodge','Regeneration','LifeSteal','Recovery','MoveSpeed','AttackRange','Luck','PickupRadius','XPGain','ShopDiscount','ShopPricePercent','ExplosionDamage','ContactReduction','LifeStealCap'} do primary[id]=true end
 local function thumbnail(parent,template,x,y,w,h)
  require(RS.WeaponInventoryUI).preview(parent,template,x,y,w,h)
 end
@@ -889,7 +889,15 @@ function M.new(player,h,refresh)
    local f=Instance.new('Frame');f.Name=name;f.BackgroundTransparency=1;f.Position=UDim2.fromOffset(x,y);f.Size=UDim2.fromOffset(width,inventoryH);f.Parent=left;return f
   end
   local items=inventoryRegion('Items',0,top,itemW)
-  heading(items,'Title','Items',0,0,itemW,32,28)
+  -- Turret combining (2026-10-12, user: "it shouldnt automatically combine and it should be clear
+  -- that the user can combine them"). data.combinable (ShopService, HandymanTurret.combinable): the
+  -- turret ids that can combine now -> the next id. Each gets a lime up-arrow badge on its tile, a
+  -- hint sits beside the Items title, and its popup has Combine. Example: 3 Nail Turrets -> the
+  -- Nail tile shows the arrow; Combine 2 -> Twin Nailer leaves 1 Nail + 1 Twin.
+  local combinable=type(data.combinable)=='table' and data.combinable or {}
+  local anyCombine=next(combinable)~=nil
+  heading(items,'Title','Items',0,0,anyCombine and 88 or itemW,32,28)
+  if anyCombine then text(items,'CombineHint','Lime arrow: tap to combine 2 into the next tier',96,0,itemW-96,32,15,green) end
   local itemCols=math.max(1,math.min(8,math.floor((itemW+8)/(th(52)+8))));local cell=math.min(th(64),(itemW-(itemCols-1)*8)/itemCols)
   local anchor
   for i,it in data.items do
@@ -898,6 +906,20 @@ function M.new(player,h,refresh)
    T.setTier(b,entry.tier)
    art(b,entry,4,4,cell-8,cell-8)
    if it.count>1 then local cs=tap>0 and 16 or 14;local count=text(b,'Count','×'..it.count,cell-cs-15,cell-cs-7,cs+12,cs+4,cs);count.TextXAlignment=Enum.TextXAlignment.Right end
+   -- Turret tiles: a small tier badge top-left (I-IV, like weapon slots), and the combine arrow
+   -- top-right. Cells are at least 52 px: badge 3..29 (III), arrow 31..49, count from 31 down.
+   if entry.turret then local tb=T.tierBadge(b,entry.turret,3,3);tb.Size=UDim2.fromOffset(8+#T.Roman[entry.turret]*6,16) end
+   if combinable[it.id] then
+    local s=math.clamp(math.floor(cell*.36),18,26)
+    local mark=T.make('Frame',b,{Name='CombineBadge',AnchorPoint=Vector2.new(1,0),Position=UDim2.fromOffset(cell-3,3),Size=UDim2.fromOffset(s,s),BackgroundColor3=T.Color.lime,BorderSizePixel=0,ZIndex=4})
+    T.make('UICorner',mark,{CornerRadius=UDim.new(1,0)})
+    T.make('UIStroke',mark,{Color=T.Color.ink,Thickness=2})
+    -- An up arrow in ink: a stem and two strokes leaning in (T.check's way of drawing marks).
+    for _,a in {{.5,.6,.17,.46,0},{.385,.4,.17,.38,45},{.615,.4,.17,.38,-45}} do
+     local line=T.make('Frame',mark,{Name='Arrow',AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(a[1],a[2]),Size=UDim2.fromScale(a[3],a[4]),Rotation=a[5],BackgroundColor3=T.Color.ink,BorderSizePixel=0,ZIndex=5})
+     T.make('UICorner',line,{CornerRadius=UDim.new(1,0)})
+    end
+   end
    if self.selected and self.selected.kind=='Item' and self.selected.id==it.id then anchor=Vector2.new(x,top+y) end
   end
   local itemBottom=math.max(inventoryH,40+math.ceil(#data.items/itemCols)*(cell+8))
@@ -1035,10 +1057,23 @@ function M.new(player,h,refresh)
      if works then text(detail,'WorksWith',works,16,y+4,dw-32,40,15,wc);y+=46 end
      y+=14
     end
-    local below=base and 2*(b1+7)+b2+12 or b2+12+16 -- the buttons under the content
+    -- Turret items (2026-10-12) get one Combine button over Cancel, where a weapon's Recycle sits.
+    local turret=entry and entry.turret
+    local below=base and 2*(b1+7)+b2+12 or b2+12+16+(turret and b1+7 or 0) -- the buttons under the content
     local dh=math.max(392+(base and 2*(b1-34) or 0)+(b2-32),y+below+(base and 0 or 40));local visibleH=math.min(dh,ht-16)
     local cancelY=dh-12-b2;local sellY=cancelY-7-b1;local combineY=sellY-7-b1
-    if not base then text(detail,'Description',entry.description,16,y,dw-32,math.max(40,cancelY-16-y),15) end
+    if not base then text(detail,'Description',entry.description,16,y,dw-32,math.max(40,(turret and sellY or cancelY)-16-y),15) end
+    if turret then
+     -- Lime when it can combine now (ShopService's data.combinable); greyed with the reason otherwise.
+     -- Example: 3 Nail Turrets -> "Combine 2 → Twin Nailer"; 1 -> "Need 2 to combine".
+     local nextEntry=combinable[entry.id] and Catalog.ById[combinable[entry.id]]
+     local have=0;for _,it in data.items do if it.id==entry.id then have=it.count end end
+     local caption=nextEntry and 'Combine 2 → '..nextEntry.name or turret>=4 and 'Maximum tier' or have<2 and 'Need 2 to combine' or 'No room: item inventory full'
+     local combine=btn(detail,'Combine',caption,14,sellY,dw-28,b1,function()
+      T.sound('ui_upgrade');self.combining={t=os.clock(),revision=(self:snapshot() or data).revision};self:send('CombineItem',entry.id);self.selected=nil
+     end,nextEntry==nil)
+     combine.Interactable=data.phase=='Shop' and nextEntry~=nil;combine.Caption.TextColor3=combine.Interactable and white or Color3.fromRGB(135,146,150)
+    end
     if base then
      local combine=btn(detail,'Combine',copy.tier==4 and 'Maximum tier' or copy.canCombine and 'Combine → '..E.TIER_NAMES[copy.tier+1] or 'Need matching weapon + tier',14,combineY,dw-28,b1,function() T.sound('ui_upgrade');self:send('Combine',sel.slot,sel.copy);self.selected=nil end,true)
      combine.Interactable=data.phase=='Shop' and copy.canCombine==true;combine.Caption.TextColor3=combine.Interactable and white or Color3.fromRGB(135,146,150)
@@ -1072,6 +1107,12 @@ function M.new(player,h,refresh)
    self.banishing=nil
    local screen=screenGui();if screen then T.toast(screen,data.message,T.Color.lime) end
   elseif sent and os.clock()-sent.t>5 then self.banishing=nil end
+  -- A turret combine's result, "2 Nail Turrets → Twin Nailer", the same way (2026-10-12).
+  local combined=self.combining
+  if combined and (data.revision or 0)>combined.revision and type(data.message)=='string' and data.message:find(' → ',1,true) then
+   self.combining=nil
+   local screen=screenGui();if screen then T.toast(screen,data.message,T.Color.lime) end
+  elseif combined and os.clock()-combined.t>5 then self.combining=nil end
   -- A controller in banish mode starts on the first offer's BANISH (after the HUD's own selection
   -- restore, which is deferred).
   if banishing then task.delay(.05,function() pcall(function()

@@ -35,7 +35,7 @@ It works in Studio and in the published game, but only for listed developer acco
 - **What it replaces:** the old **STATS** and **GEAR** launchers and footer tabs in the arena HUD, and their I/P keys, are removed. Their contents move into the panel.
 - **Style:** the panel uses the existing green nine-slice UI theme (`UITheme`): one window, four tabs, and a close button.
 
-## The four tabs
+## The tabs
 
 ### Travel
 - **Buttons:** **Lobby** and one per playable map (`MapConfig.Maps`: Pine Valley, Beach Cove, and future maps automatically).
@@ -67,6 +67,45 @@ It works in Studio and in the published game, but only for listed developer acco
 - **Give weapon:** any weapon and tier into the next free slot (today's GEAR inventory), plus **Give item**: any shop item.
 - **Shards:** +100 / +1000 / set. **Level:** +1 / set.
 - **Emeralds:** +100 / +1000 / set, to the saved profile. That's in-memory in Studio, and on a live server it's a real change to the developer's own account.
+
+### Give (2026-10-12)
+The user asked for this to set up trailer arenas with friends: "give my friends loadouts, pause the game". It works like Minecraft's creative inventory.
+- **What's in it:** one grid of everything that can be given: every weapon (godlies included), run item, turret, armor piece and full set, pet and class. It is built once per opened window, and after that only filtered, so clicks never rebuild it.
+- **Give to:** **Me**, any player in the server, or **All**.
+- **This run** gives a run-only copy (`TempGive`):
+  - A weapon fills that many free slots at the picked tier.
+  - Items and turrets stack, up to their copy cap.
+  - Choose **Copies** 1/2/3/5/10 and **Tier** I-IV.
+- **Saved** gives it for good (`Give`, `ProfileService.adminGive` / `adminClass`):
+  - A weapon, armor piece or pet you don't own unlocks at the picked tier.
+  - **+1** adds one more copy to something you already own.
+  - A set gives all four pieces. A class unlocks along with its starting weapon.
+  - Studio profiles live in memory. On a live server this writes the player's real save.
+- **Search box and kind filter:** All, Weapons, Items, Turrets, Armor, Pets, Classes.
+- **Command box:** runs the chat commands below. It is there for phones.
+- **Player tab change:** its old "Give item" grid moved here.
+
+### Chat commands (2026-10-12)
+These are typed in the Roblox chat. They exist only on a developer's own client, so nobody else sees them in autocomplete. `AdminService` parses the text again and checks it with the same rules as the panel. The reply comes back as a toast and as a chat line only the developer sees.
+
+| Command | What it does |
+|---|---|
+| `/tempgive <player> <item> [copies] [tier]` | This run only. Defaults: 1 copy, Tier I. Example: `/tempgive bob katana 2 3` gives 2 Katanas at Tier III. For a turret, the tier picks which one: `/tempgive me turret 2 4` gives 2 Gatling Rigs. |
+| `/give <player> <item> [tier]` | Saved for good. Example: `/give all iron set`, or `/give bob katana 4` for a Tier IV Katana. |
+| `/god [player] [on\|off]` | Toggles when on/off is left out. |
+| `/pause [on\|off]` | Pauses the wave clock and spawns (Pause) and freezes every enemy (Freeze), together. Leave on/off out to toggle. |
+| `/admin` | Shows this list. |
+
+- `<player>` can be `me`, `all`, `others`, or a name or display name. The start of a name is enough when only one player fits.
+- `<item>` can be any name, with or without spaces. A whole word wins: `pan` means the Frying Pan, not Pandora's Box.
+- The module is `AdminCommands`, checked offline by `run_admin_command_tests.py`.
+
+### Using it with other players (2026-10-12)
+The panel and the commands work while friends are in the server. The old rule allowed it only when you were alone.
+- The first admin request still makes the shared run a **test run**, so nobody in it earns run rewards.
+- A friend joining or rejoining while a developer is in the server keeps the test run, so your setup survives.
+- Only when no developer is left does a joiner get a fresh, rewarding run.
+- **Lag fix:** admin requests no longer rebuild the open tab. Buttons repaint from the attributes they show.
 
 ## Test runs (no rewards)
 

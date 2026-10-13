@@ -24,6 +24,20 @@ local ok,err=xpcall(function()
   assert(right(stats)<=right(content)+1,'stats exceeds content')
   assert(bottom(stats)<layout.StartWave.AbsolutePosition.Y,'stats/start gutter')
   assert(disjoint(left.Items,left.Weapons),'items/weapons overlap')
+  -- 2026-10-12 turret combining (own 2+ of a turret to see it): the hint beside the Items title, and
+  -- on each turret tile the tier badge, the lime arrow and the count stay apart and inside the tile.
+  local hint=left.Items:FindFirstChild('CombineHint')
+  if hint then assert(disjoint(hint,left.Items.Title),'combine hint over the Items title');assert(right(hint)<=right(left.Items)+1,'combine hint past the items edge') end
+  for _,tile in left.Items:GetChildren() do
+   if tile.Name:match('^ItemSlot') then
+    local marks={}
+    for _,name in {'TierBadge','CombineBadge','Count'} do local m=tile:FindFirstChild(name);if m then table.insert(marks,m) end end
+    for i,a in marks do
+     assert(a.AbsolutePosition.X>=tile.AbsolutePosition.X-1 and right(a)<=right(tile)+1 and a.AbsolutePosition.Y>=tile.AbsolutePosition.Y-1 and bottom(a)<=bottom(tile)+1,a.Name..' outside its item tile at '..tostring(size))
+     for j=i+1,#marks do assert(disjoint(a,marks[j]),a.Name..' overlaps '..marks[j].Name..' at '..tostring(size)) end
+    end
+   end
+  end
   assert(disjoint(left.Reroll,left.Shards) and disjoint(left.Shards,left.ShopTitle),'header overlaps')
   -- 2026-10-10 Shop Banish: BANISH (CANCEL in banish mode) beside the R$ reroll, or on its own row
   -- under the rerolls when the header is too narrow; never over another header piece or an offer.
@@ -91,6 +105,13 @@ local ok,err=xpcall(function()
    end
    assert(body.Combine.AbsolutePosition.Y>=bottom(body.SpecBar),'detail buttons over the specialty bar')
    assert(layout:FindFirstChild('DetailsBacking'),'detail popup has a solid backing')
+  end
+  -- An open turret item detail (select a turret item before running): Combine between the
+  -- description and Cancel (2026-10-12).
+  if details and not details.Body:FindFirstChild('SpecBar') and details.Body:FindFirstChild('Combine') then
+   local body=details.Body
+   assert(body.Combine.AbsolutePosition.Y>=bottom(body.Description),'item Combine over the description')
+   assert(bottom(body.Combine)<=body.Cancel.AbsolutePosition.Y,'item Combine over Cancel')
   end
   for _,label in layout:GetDescendants() do
    -- The specialty bar says which rule applies: your class's weapon, your class's drawback, or none.

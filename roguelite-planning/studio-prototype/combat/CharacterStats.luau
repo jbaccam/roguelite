@@ -49,6 +49,10 @@ stat('Recovery','Recovery',0,-80,200,10,'%','Recovery','Multiplies regeneration,
 stat('MoveSpeed','Movement speed',24,6,40,2,' studs/s','Utility','Actual Humanoid WalkSpeed.')
 stat('PickupRadius','Pickup radius',8,1,50,2,' studs','Utility','Distance at which crystals start pulling toward you. Collect them for shards and run XP.')
 stat('Luck','Luck',0,0,100,10,'','Utility','Better tier odds for shop offers and level-up cards (Tier II-IV chances up to x2 at 100), rarer shop weapons, more heart drops.')
+-- XP Gain (2026-10-12, user: "a lvl up option for increase xp yield during the run is somewhat
+-- standard"): run XP per crystal x (1 + XPGain/100), fractions kept (RunXP.gain). Shards don't change.
+-- Example: +15%: 1 crystal = 1.15 XP; 20 crystals = 23 XP.
+stat('XPGain','XP gain',0,-50,200,5,'%','Economy','More run XP from every crystal you pick up.')
 stat('MeleeDamage','Melee damage',0,-80,300,10,'%','Offense','Bonus to close-range attacks.')
 stat('RangedDamage','Ranged damage',0,-80,300,10,'%','Offense','Bonus to projectile attacks, including thrown weapons.')
 stat('ElementalDamage','Elemental damage',0,-80,300,10,'%','Offense','Bonus to Elemental-tagged hits and status damage.')

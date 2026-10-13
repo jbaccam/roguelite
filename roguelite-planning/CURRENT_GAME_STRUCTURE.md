@@ -66,6 +66,7 @@ The player selects:
 - The avatar moves freely in an open arena while up to six equipped weapons attack automatically.
 - Every mob death drops a crystal worth shards and run XP, in one of four player ownership colors. See [Crystal shard currency](SHARD_CURRENCY.md).
 - Waves last 40 s (2026-10-03; were 30). The HUD shows the goal: WAVE 7 / 20, then ENDLESS 21. Wave size grows with the wave and with the number of players up, and enemies come in swarms from one side. See [Crystal shard currency](SHARD_CURRENCY.md).
+- The XP Gain stat (2026-10-12) adds run XP per crystal, never shards. Example: +15%, 20 crystals = 23 XP. It comes from a level-up card and three shop items (Flashcards, Participation Trophy, Gold Star Stickers).
 - Level-ups are banked during combat and never interrupt it.
 - At the end of each wave, crystals still on the ground go into the crystal bag at full value (Brotato's rule, 2026-10-03). Next wave each pickup pays double out of the bag. Example: bag 30, a 5-crystal pickup pays 10, bag 25. Only the tutorial pulls every crystal in.
 - Banked level-ups resolve as four stat cards; paid/token rerolls clearly confirm consumption before submission.
@@ -97,7 +98,7 @@ New accounts own **Brawler, Gunner, and Mage**. **Thrower, Juggler, and Handyman
 | **Gunner** | Fast projectiles, magazines, piercing and spread | **Glock** | Draco, Fart Gun, Shotgun, T-Shirt Cannon, Rocket Launcher | Nail Gun |
 | **Thrower** | Returning projectiles, volleys, area denial | **Boomerang** | Kunais, Molotovs, Eggs, Steak, Deck of Cards | Kusarigama, T-Shirt Cannon, Rubber Duck, Bowling Ball, Mjolnir |
 | **Juggler** | Tricks and toys: rebounds, spins, repeated contact and knockback | **Rubber Duck** | Spatula, Yo-Yo, Bowling Pins, Kusarigama, Bowling Ball | Boomerang, Eggs, Deck of Cards, Boxing Gloves |
-| **Handyman** | Construction tools, deployables, lanes and utility. Builds a nail turret it upgrades in the shop (2026-10-03; [HANDYMAN_TURRET.md](studio-prototype/combat/HANDYMAN_TURRET.md), off until its templates are installed) | **Nail Gun** | Wrecking Ball, Shovel, Paint Roller, Vacuum Cleaner, Power Washer | Spatula, Rocket Launcher, Cinder Block |
+| **Handyman** | Construction tools, deployables, lanes and utility. Brotato's Engineer: starts with a Nail Turret item; turrets are shop items any class can buy (up to 10), placed around you each wave, and 2 of a tier combine into the next with the item's Combine button (2026-10-12; [HANDYMAN_TURRET.md](studio-prototype/combat/HANDYMAN_TURRET.md)) | **Nail Gun** | Wrecking Ball, Shovel, Paint Roller, Vacuum Cleaner, Power Washer | Spatula, Rocket Launcher, Cinder Block |
 | **Mage** | Elemental zones, chain effects, mythic late unlocks | **Magic Staff** | Mjolnir, Pandora's Box, Medusa's Head, Crystal Ball (Excalibur moved to Brawler 2026-10-10; a spellbook is planned) | Fart Gun, Molotovs |
 
 Weapon classes were regrouped on 2026-10-03 so each class reads as one idea: Boxing Gloves and Cinder Block moved to Brawler, Spatula and Kusarigama to Juggler (equal-rarity swaps, so every class still has 2 Common, 2 Rare, 1 Epic, 1 Legendary). Juggler's starter became the Rubber Duck; saves that own Juggler are given it on load.
@@ -125,6 +126,7 @@ Equipped weapons stay visible as floating 3D models around the avatar. The avata
 
 - Up to **six** equipped weapons.
 - Two copies of the same weapon and tier combine into the next tier, up to **Tier IV**.
+- Turret items combine too (2026-10-12): 2 of a tier become 1 of the next, Nail -> Twin -> Quad -> Gatling Rig, only when you press Combine on the item.
 - Every tier changes behavior, silhouette, projectile pattern or utility, not only damage.
 
 The Glock is the approved model for upgrade quality:
@@ -147,7 +149,7 @@ Full rules, chest types, key values and pacing targets: [PROGRESSION_AND_SESSION
 
 ## 6. Between-wave shop
 
-Four offers each intermission. Buy, reroll, lock, recycle, and automatic legal combining. All prices use crystal shards, which are temporary run money and never Robux or saved currency.
+Four offers each intermission. Buy, reroll, lock, recycle and combine. Combining is manual: the Combine button on a weapon or a turret item. The only automatic merge is buying a weapon when all 6 slots are full and one of them matches it (same weapon and tier). All prices use crystal shards, which are temporary run money and never Robux or saved currency.
 
 The **current implemented rules** are in [Shop gameplay readiness](studio-prototype/combat/SHOP_GAMEPLAY_READINESS.md):
 
@@ -167,7 +169,7 @@ A **passive** is a temporary shop item that modifies the run without using a wea
 
 The working roster is [PASSIVE_ITEM_MASTER_LIST.md](PASSIVE_ITEM_MASTER_LIST.md): **37 passives**. The run shop's catalog (`ShopCatalog`) has 44 items since 2026-10-03; the seven new player-buff items and their numbers are in [Shop gameplay readiness](studio-prototype/combat/SHOP_GAMEPLAY_READINESS.md). About 20 are proposed as available from the start. The rest unlock through achievements. Some passives appear on the avatar as hats, glasses or backpacks.
 
-Level-up stat choices are free and happen between waves as four cards. They are separate from shop items.
+Level-up stat choices are free and happen between waves as four cards. They are separate from shop items. XP Gain (2026-10-12) is one of them (+8 / 12 / 18 / 25% run XP per crystal), and three shop items give it too.
 
 ## 8. Maps, mobs and bosses
 

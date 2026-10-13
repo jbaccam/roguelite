@@ -68,10 +68,12 @@ The user asked: "There should be disassemble and reassemble animations for turre
 **Status:** built in the repo only. Pure rules tested outside Studio (`run_turret_tests.py`). Not synced to Studio, no Play test.
 
 **Rules** (server, `HandymanTurretService`; numbers in `HandymanTurret`):
-- **Left behind:** mid-wave, a turret whose owner is farther than its range (25 studs, measured flat) packs up. Range is the turret's real range from `HandymanTurret.weapon`; Attack range doesn't stretch it.
+- **Left behind:** mid-wave, a turret whose owner is farther than its leash (measured flat) packs up. Range is the turret's real range from `HandymanTurret.weapon`; Attack range doesn't stretch it.
+  - **Leash (2026-10-12,** user: "the distance currently is a little short and if I train mobs they constantly spawn in and out and never attack"**):** 40 studs (`FOLLOW_RANGE`, or the turret's range if longer), and 70 (`FOLLOW_FAR`) while it had a target in the last 2 s (`FOLLOW_BUSY`). Before this it was the 25-stud range. `HandymanTurret.leash`.
+  - Example: you kite a train in a 30-stud circle around your turrets: they stay and shoot. You run 45 studs off with nothing near them: they follow. 45 studs off while they are still shooting: they stay until you are 70 off.
 - **Pack:** 0.35 s (`PACK_TIME`), no fire. Then it **rebuilds**: 0.5 s (`BUILD_TIME`), no fire. Each move is 0.85 s offline.
 - **Where it lands:** a free spot on the band's outer edge (8 studs for a Handyman, 14 for others), 5+ studs from the turrets standing. The ring is centred on you, led along your run by 0.25 s of your speed (at most 6 studs), and the spot nearest your heading is tried first. Standing still, it uses your facing. Same ground and sight checks as every placement. With no ground found it stands back up where it was.
-- **Limits:** at most 2 of a player's turrets moving (packing or rebuilding) at once (`FOLLOW_AT_ONCE`), the farthest first. Each waits 1.5 s after it lands before it can move again (`FOLLOW_COOLDOWN`). Scrap Magnet's temporary turrets follow the same rule.
+- **Limits:** at most 2 of a player's turrets moving (packing or rebuilding) at once (`FOLLOW_AT_ONCE`), the farthest first. Each waits 3 s after it lands before it can move again (`FOLLOW_COOLDOWN`; 1.5 s until 2026-10-12). Scrap Magnet's temporary turrets follow the same rule.
 - **Not moving:** between waves, while the run is paused, and before the wave's placement. A turret caught packing when the wave ends stands up near you. The 30-turret server cap, the 10-per-player cap and the 500-stud re-place are unchanged.
 - It keeps its Folder and Index, so clients re-pose the same turret.
 
@@ -146,6 +148,22 @@ A Gunner with 2 Nail Turrets and no Utility Power gets 10 DPS.
 **Shop weighting**, like Handyman weapons: a Handyman, or anyone carrying a Handyman-class weapon, gets 15% of item offers from the structure items (the four turrets, Scrap Magnet, Toolbelt), plus the early-wave class bonus. Example: 30% on wave 1.
 
 **Selling:** items can't be sold in this game (only weapons recycle), so turret items can't either.
+
+**Combining (2026-10-12).** The user asked: "allowing for turret combining to keep upscaling turrets as the run goes on ... maybe just in the items. but it shouldnt automatically combine and it should be clear that the user can combine them."
+- **Rule:** 2 copies of a turret item become 1 copy of the next tier: Nail -> Twin -> Quad -> Gatling Rig. Free. The Gatling Rig is the top.
+  - Example: 3 Nail Turrets and no Twin become 1 Nail + 1 Twin Nailer. Turrets go 3 -> 2, so DPS goes 15.0 -> 13.3 before Utility Power, and you get a turret slot back for the next buy.
+  - Combining never adds a turret, so the 10-turret cap never blocks it: 10 Nail can combine down to 5 Twin.
+- **Only when you press Combine,** in the between-waves shop. Nothing combines by itself, not on buy and not at 10.
+- **How you see it:**
+  - Each turret tile in Items shows its tier (I-IV) top-left.
+  - A tile that can combine now gets a lime up-arrow badge top-right, and "Lime arrow: tap to combine 2 into the next tier" shows beside the Items title.
+  - Tap the tile: its popup has **Combine 2 → Twin Nailer** (lime). When it can't, the button is grey and says why: "Need 2 to combine", "Maximum tier" or "No room: item inventory full".
+  - After a combine a toast says what happened, e.g. "2 Nail Turrets → Twin Nailer".
+- **Limits** (`HandymanTurret.canCombine`): 2+ copies, a next tier, the next tier under its copy cap (10), and an item row for it. A new row is needed only when the next tier has none and the source keeps copies: with all 16 rows full, 3 Nail and no Twin can't combine, 2 Nail can (the Nail row turns into the Twin row).
+- **Server:** ShopAction `CombineItem` (arg: the item id), shop phase and the current revision only. The snapshot's `combinable` (turret id -> next id, from `HandymanTurret.combinable`) drives the badges and the button, so the client never decides the rule. HandymanTurretService needs no change: it reads the tiers at each wave start.
+- **Not done:** the free Nail Turret still follows the class in wave 1's shop; combining it and then changing class keeps the result (the shop only takes a Nail back if one is left). Only the sandbox changes class there.
+- **Files:** `HandymanTurret` (`Next`, `COMBINE`, `canCombine`, `combine`, `combinable`), `ShopService` (`CombineItem`, snapshot `combinable`), `ShopUI` (tile badges, hint, popup button, toast), `TurretTests`, `ShopTests` (the `CombineItem` path, Studio Play), `ShopLayoutTests` (badges and the popup button stay apart).
+- **Status:** repo only. `run_turret_tests.py` passes outside Studio. The `ShopTests` and `ShopLayoutTests` additions need Studio Play and have not run. Not synced to Studio, not play-tested. Sync `HandymanTurret` first, then `ShopService` and `ShopUI` together.
 
 **Support items:**
 - **Scrap Magnet** (tier II, 40, its own red horseshoe icon `rbxassetid://119978395020560`, `ui/assets/shop/magnet.png`; it shared the Fridge Magnet's blue tile until 2026-10-10):

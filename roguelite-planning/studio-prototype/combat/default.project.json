@@ -311,6 +311,9 @@
         "AdminConfig": {
           "$path": "AdminConfig.luau"
         },
+        "AdminCommands": {
+          "$path": "AdminCommands.luau"
+        },
         "TutorialConfig": {
           "$path": "TutorialConfig.luau"
         },

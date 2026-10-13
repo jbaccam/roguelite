@@ -20,6 +20,8 @@ add('UtilityPower','Utility Power','cross','Strengthens construction and utility
 add('MoveSpeed','Movement Speed','wing','Increases how fast you move.',{.5,1,1.5,2})
 add('PickupRadius','Pickup Radius','spark','Pulls crystals in from farther away.',{1,1.5,2,3})
 add('Luck','Luck','spark','Improves shop rarity and health-drop chance.',{3,5,7,10})
+-- XP Gain (2026-10-12): Tier I +8% means 25 crystals give 27 XP.
+add('XPGain','XP Gain','spark','Earn more run XP from every crystal.',{8,12,18,25})
 add('AttackRange','Attack Range','arrows','Increases targeting reach and attack travel distance.',{5,8,12,18})
 function C.pool(stats,banished,excluded)
  local pool={}
@@ -62,6 +64,8 @@ C.IconIds={
  ElementalDamage='rbxassetid://104925573900277', UtilityPower='rbxassetid://133538769433103',
  MoveSpeed='rbxassetid://117216104224040', PickupRadius='rbxassetid://133081616364253',
  Luck='rbxassetid://136231704380505', AttackRange='rbxassetid://72729393219444',
+ -- Placeholder: the XP quest icon (QuestConfig) until the user's generated XP Gain icon is uploaded.
+ XPGain='rbxassetid://101475186887359',
 }
 function C.icon(id)
  local asset=script:GetAttribute('Icon_'..id)

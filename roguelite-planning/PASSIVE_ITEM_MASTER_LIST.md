@@ -18,6 +18,7 @@ The user approved the simpler direction and requested a few spooky/science addit
 - Projectile count, bounce, pierce, attack range, area radius and status modifiers apply only to compatible attacks; tooltips must identify affected equipped weapons. No free projectile from a melee swipe, and no bounce recursion or unlimited repeated targets.
 - Status amplifiers do not grant the status themselves. Final status proc rates, tick values, stacking and boss slow rules still require specification. The Recovery versus separate regeneration/life-steal stat decision remains open.
 - No new Accuracy, enemy-attention, Curse or Harvesting systems are implied by these items.
+- XP Gain (2026-10-12, user: a run XP boost "is somewhat standard"): one stat, `XPGain`, more run XP per crystal and never more shards. Shop items: Homework Flashcards (Tier I, base 18, +10%), Participation Trophy (Tier II, base 36, +20%), Gold Star Stickers (Tier III, base 60, +35% and -5% damage). Example: Flashcards + Trophy = +30%, so 20 crystals give 26 XP. There is also an XP Gain level-up card.
 
 ## Straight bonuses — 15
 

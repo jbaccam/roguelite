@@ -9,7 +9,8 @@
 -- which builds are offered what (ShopCatalog.usable), the preference pools and their weights by
 -- copies, the tier-or-lower rule, and that Thrower and the class lists are gone. Not ShopService's
 -- dice (Play only; ShopTests rolls the real shop). Returns the number of checks.
-return function(Weapons,Stats,E,Catalog,Upgrades)
+-- XP (optional, 2026-10-12): RunXP, for RunXP.gain's checks; Studio callers that pass five skip them.
+return function(Weapons,Stats,E,Catalog,Upgrades,XP)
  local checks=0
  local function check(ok,msg) checks+=1;assert(ok,msg) end
  local function near(a,b,msg) check(math.abs(a-b)<1e-6,msg..': '..tostring(a)..' / '..tostring(b)) end
@@ -286,6 +287,41 @@ return function(Weapons,Stats,E,Catalog,Upgrades)
    check(math.abs(shop[i]-E.tierOdds(n,luck)[i])<.001,'shop draws match the note: wave '..n..' Luck '..luck..' tier '..i)
    check(math.abs(card[i]-Upgrades.tierOdds(n,luck)[i])<.001,'level-up draws match the note: level '..n..' Luck '..luck..' tier '..i)
   end
+ end
+
+ -- XP Gain (2026-10-12): the stat, its level-up card, the three XP items and RunXP.gain's carry.
+ local xs=Stats.ById.XPGain
+ check(xs and xs.base==0 and xs.min==-50 and xs.max==200 and xs.step==5 and xs.unit=='%' and xs.group=='Economy','XPGain stat: 0%, -50..200, step 5')
+ check(Stats.resolve('Brawler',0).XPGain==0 and Stats.resolve('Brawler',0,nil,{XPGain=30}).XPGain==30,'XPGain resolves: 0 base, +30 from bonuses')
+ check(Stats.resolve('Brawler',0,nil,{XPGain=500}).XPGain==200 and Stats.valid('XPGain',15) and not Stats.valid('XPGain',250),'XPGain clamps at 200')
+ local xc=Upgrades.ById.XPGain
+ check(xc and xc.name=='XP Gain' and xc.values[1]==8 and xc.values[2]==12 and xc.values[3]==18 and xc.values[4]==25,'XP Gain card: 8 / 12 / 18 / 25')
+ check(Upgrades.icon~=nil and Upgrades.IconIds.XPGain=='rbxassetid://101475186887359','XP Gain card: placeholder XP icon')
+ check(#Upgrades.pool(with({XPGain=200}))==#Upgrades.pool(neutral)-1,'a capped XP Gain is not offered')
+ for _,row in {{'flashcards','Homework Flashcards',1,18,10},{'trophy','Participation Trophy',2,36,20},{'goldstars','Gold Star Stickers',3,60,35}} do
+  local e=item(row[1])
+  check(e.name==row[2] and e.kind=='Item' and e.tier==row[3] and e.basePrice==row[4] and e.modifiers.XPGain==row[5],row[1]..': Tier '..row[3]..', base '..row[4]..', +'..row[5]..'% XP')
+  check(e.tags[1]=='Economy' and Catalog.weaponStats(e)==nil and usable(row[1],{'00'}) and usable(row[1],{'03'}),row[1]..': general Economy item, every build')
+  local band=E.TIER_PRICE_BANDS[row[3]];check(row[4]>=band[1] and row[4]<=band[2],row[1]..': inside the Tier '..row[3]..' price band')
+ end
+ check(item('goldstars').modifiers.Damage==-5,'Gold Star Stickers: -5% damage')
+ check(item('flashcards').description=='You earn 10% more run XP from crystals.' and item('goldstars').description=='You earn 35% more run XP from crystals, but all your weapons deal 5% less damage.','XP item texts')
+ if XP then
+  local function gain(t,pct,carry) local w,c=XP.gain(t,pct,carry);return w,c end
+  local w,c=gain(1,0,0);check(w==1 and c==0,'no bonus: 1 crystal = 1 XP')
+  w,c=gain(20,15,0);check(w==23 and c<1e-6,'+15%: 20 crystals = 23 XP')
+  w,c=gain(1,15,0);check(w==1 and math.abs(c-.15)<1e-6,'+15%: 1 crystal = 1 XP, 0.15 carried')
+  local total,carry=0,0
+  for _=1,7 do local n;n,carry=gain(1,15,carry);total+=n end
+  check(total==8 and math.abs(carry-.05)<1e-6,'+15%: 7 single crystals = 8 XP, 0.05 carried')
+  total,carry=0,0
+  for _=1,100 do local n;n,carry=gain(1,8,carry);total+=n end
+  check(total==108,'+8%: 100 single crystals = 108 XP (nothing lost to rounding)')
+  w,c=gain(10,-50,0);check(w==5 and c<1e-6,'-50%: 10 crystals = 5 XP')
+  w,c=gain(10,999,0);check(w==30,'XPGain clamps at 200%: 10 crystals = 30 XP')
+  w,c=gain(.5,15,.3);check(w==0 and math.abs(c-.3)<1e-6,'bad amount: nothing, carry kept')
+  w,c=gain(3,0,nil);check(w==3 and c==0,'no carry yet')
+  local l,x,n=XP.add(1,0,gain(20,0,0));check(l==2 and x==0 and n==1,'20 crystals level up at 0%')
  end
  return checks
 end
