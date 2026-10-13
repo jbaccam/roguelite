@@ -73,9 +73,10 @@ The user asked for this to set up trailer arenas with friends: "give my friends 
 - **What's in it:** one grid of everything that can be given: every weapon (godlies included), run item, turret, armor piece and full set, pet and class. It is built once per opened window, and after that only filtered, so clicks never rebuild it.
 - **Give to:** **Me**, any player in the server, or **All**.
 - **This run** gives a run-only copy (`TempGive`):
-  - A weapon fills that many free slots at the picked tier.
-  - Items and turrets stack, up to their copy cap.
-  - Choose **Copies** 1/2/3/5/10 and **Tier** I-IV.
+  - A weapon goes in the picked weapon **Slot** 1-6, replacing what is there. **Next** (the default) uses the next free slot. Since 2026-10-13 this replaces the old Copies choice.
+  - Items and turrets add one copy per click, up to their copy cap.
+  - An armor **set** tile wears that set for this run (`Armor`, the same as `/armor`).
+  - Choose the **Tier** I-IV.
 - **Saved** gives it for good (`Give`, `ProfileService.adminGive` / `adminClass`):
   - A weapon, armor piece or pet you don't own unlocks at the picked tier.
   - **+1** adds one more copy to something you already own.
@@ -90,7 +91,8 @@ These are typed in the Roblox chat. They exist only on a developer's own client,
 
 | Command | What it does |
 |---|---|
-| `/tempgive <player> <item> [copies] [tier]` | This run only. Defaults: 1 copy, Tier I. Example: `/tempgive bob katana 2 3` gives 2 Katanas at Tier III. For a turret, the tier picks which one: `/tempgive me turret 2 4` gives 2 Gatling Rigs. |
+| `/tempgive <player> <item> [slot] [tier]` | This run only (2026-10-13: by slot, not copies). A weapon goes in weapon slot 1-6, replacing what is there. With no slot it goes in the next free one. Tier I by default. Example: `/tempgive bob katana 2 3` puts a Tier III Katana in Bob's slot 2. Run items and turrets have no slot, so each command adds one copy, and a lone number is the tier. For turrets the tier picks which one: `/tempgive me turret 4` gives a Gatling Rig. |
+| `/armor <player> <set> [tier]` or `/armor <player> off` | This run only: the player wears the whole set, with its visuals, set bonus and gear power. Their saved armor is never changed. The run armor comes off when they return to the lobby, when a new run starts, or with `off`. With no tier, each piece uses the tier they own (Tier I if they don't own it). Example: `/armor all dragon scale 4`. |
 | `/give <player> <item> [tier]` | Saved for good. Example: `/give all iron set`, or `/give bob katana 4` for a Tier IV Katana. |
 | `/god [player] [on\|off]` | Toggles when on/off is left out. |
 | `/pause [on\|off]` | Pauses the wave clock and spawns (Pause) and freezes every enemy (Freeze), together. Leave on/off out to toggle. |

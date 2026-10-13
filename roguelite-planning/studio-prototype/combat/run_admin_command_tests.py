@@ -42,7 +42,7 @@ source += module("Catalog", "ShopCatalog.luau", [
 ])
 source += module("Commands", "AdminCommands.luau")
 source += module("Tests", "AdminCommandTests.luau")
-source += "print('AdminCommandTests: '..Tests(Commands,Weapons,Catalog)..' checks passed')\n"
+source += "print('AdminCommandTests: '..Tests(Commands,Weapons,Catalog,Stats)..' checks passed')\n"
 with tempfile.TemporaryDirectory(prefix="roguelite-admin-") as temporary:
     path = pathlib.Path(temporary) / "tests.luau"
     path.write_text(source, encoding="utf-8")

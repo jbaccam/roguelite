@@ -63,7 +63,9 @@ return function(Admin, Enemies, Items)
 	-- 2026-10-03: the tutorial and turret actions were missing here (15 listed, 19 real); EndlessBoss makes 20.
 	-- 2026-10-04: GiftTest (Simulate gift to me) makes 21.
 	-- 2026-10-12: the list was missing the three Round 10 actions; Command, Give, PauseAll and TempGive make 29.
+	-- 2026-10-13: Armor (/armor) makes 30.
 	local expectedActions = {
+		"Armor",
 		"ClearMobs",
 		"Command",
 		"Difficulty",
@@ -94,7 +96,7 @@ return function(Admin, Enemies, Items)
 		"Waves",
 		"Weapons",
 	}
-	check(#Admin.Actions == 29, "29 admin actions, found " .. #Admin.Actions)
+	check(#Admin.Actions == 30, "30 admin actions, found " .. #Admin.Actions)
 	check(
 		table.concat(Admin.Actions, ",") == table.concat(expectedActions, ","),
 		"action names: " .. table.concat(Admin.Actions, ",")
@@ -152,8 +154,9 @@ return function(Admin, Enemies, Items)
 		{ "Turret", "Clear" },
 		-- Commands and the Give tab (2026-10-12).
 		{ "God" },
+		{ "TempGive", "w:04", 0, 1 },
 		{ "TempGive", "w:04", 1, 1 },
-		{ "TempGive", "w:04", 10, 4 },
+		{ "TempGive", "w:04", 6, 4 },
 		{ "TempGive", "i:" .. anItem, 3, 1 },
 		{ "TempGive", "i:turret_gatling", 2, 1 },
 		{ "Give", "w:04" },
@@ -165,6 +168,9 @@ return function(Admin, Enemies, Items)
 		{ "PauseAll" },
 		{ "PauseAll", true },
 		{ "PauseAll", false },
+		{ "Armor", "Iron" },
+		{ "Armor", "DragonScale", 4 },
+		{ "Armor", "" },
 		{ "Command", "/god" },
 		{ "Command", string.rep("a", 200) },
 	}
@@ -273,8 +279,8 @@ return function(Admin, Enemies, Items)
 		{ "Turret", "Give", 1, 1 },
 		{ "God", true, nil, 1 },
 		{ "TempGive", "w:04", 1 },
-		{ "TempGive", "w:04", 0, 1 },
-		{ "TempGive", "w:04", 11, 1 },
+		{ "TempGive", "w:04", -1, 1 },
+		{ "TempGive", "w:04", 7, 1 },
 		{ "TempGive", "w:04", 1, 5 },
 		{ "TempGive", "w:nope", 1, 1 },
 		{ "TempGive", "i:weapon_01_1", 1, 1 },
@@ -286,6 +292,10 @@ return function(Admin, Enemies, Items)
 		{ "Give", "w:04;drop" },
 		{ "Give", 4 },
 		{ "PauseAll", 1 },
+		{ "Armor", "Iron", 5 },
+		{ "Armor", "Iron.Helmet" },
+		{ "Armor", 1 },
+		{ "Armor" },
 		{ "Command" },
 		{ "Command", "" },
 		{ "Command", string.rep("a", 201) },

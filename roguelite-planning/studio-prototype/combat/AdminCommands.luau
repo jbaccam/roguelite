@@ -5,19 +5,27 @@
 -- so nothing the client sends is trusted. AdminCommandTests checks it offline.
 -- Studio: ReplicatedStorage.RogueliteCombat.AdminCommands, Sandboxed = true with CharacterStats'
 -- Capabilities (it requires nothing, so any caller may require it).
---   /tempgive <player> <item> [copies] [tier]  this run only: weapons fill free slots, items and
---                                              turrets stack. Default 1 copy, Tier I.
---   /give <player> <item> [tier]               saved for good: weapon, armor piece or set, pet, class
---   /god [player] [on|off]                     toggles when on/off is left out
---   /pause [on|off]                            the wave clock, spawns and every enemy
---   /admin                                     this list
+--   /tempgive <player> <item> [slot] [tier]  this run only. A weapon goes in weapon slot 1-6 (replacing
+--                                            what is there), or the next free slot when no slot is
+--                                            given. Default Tier I. Run items and turrets have no
+--                                            slot: one more copy, and a lone number is the tier
+--                                            (for turrets, which turret).
+--   /give <player> <item> [tier]             saved for good: weapon, armor piece or set, pet, class
+--   /armor <player> <set> [tier] | off       this run only: wears the whole set (visuals, set bonus,
+--                                            gear power); their saved armor is untouched and comes
+--                                            back in the lobby. Tier left out: the tiers they own.
+--   /god [player] [on|off]                   toggles when on/off is left out
+--   /pause [on|off]                          the wave clock, spawns and every enemy
+--   /admin                                   this list
 -- <player>: me, all, others, or a name or display name (the start is enough when only one fits).
 -- <item>: a name, any words of it run together or spaced ("frying pan", "fryingpan", "pan").
--- Example: "/tempgive bob katana 2 3" -> 2 Katanas at Tier III in Bob's free weapon slots.
+-- Example (2026-10-13, user: "not based off copies ... based off of inventory slot"): "/tempgive bob
+-- katana 2 3" -> a Tier III Katana in Bob's weapon slot 2; "/tempgive bob katana" -> Tier I in his
+-- next free slot; "/tempgive me turret 4" -> a Gatling Rig; "/armor bob dragon scale 4".
 local C={}
-C.Names={'tempgive','give','god','pause','admin'}
-C.HELP='/tempgive <player> <item> [copies] [tier] · /give <player> <item> [tier] · /god [player] [on|off] · /pause [on|off]. Player: me, all, others or a name.'
-C.MAX_COPIES=10
+C.Names={'tempgive','give','armor','god','pause','admin'}
+C.HELP='/tempgive <player> <item> [slot] [tier] · /give <player> <item> [tier] · /armor <player> <set> [tier] (or off) · /god [player] [on|off] · /pause [on|off]. Player: me, all, others or a name.'
+C.SLOTS=6
 C.MAX_TEXT=200
 -- 'Frying Pan!' -> 'fryingpan'.
 function C.norm(s) return (string.gsub(string.lower(tostring(s or '')),'[^%w]','')) end
@@ -32,7 +40,7 @@ local function tierWord(s)
 end
 local SWITCH={on=true,off=false,['true']=true,['false']=false}
 
--- text -> {name, player, item, copies, tier, on} or nil, reason. Checks the shape only; AdminService
+-- text -> {name, player, item, slot, tier, on, off} or nil, reason. Checks the shape only; AdminService
 -- finds the player and the item. Example: '/give me katana 4' -> {name='give', player='me',
 -- item='katana', tier=4}.
 function C.parse(text)
@@ -55,11 +63,14 @@ function C.parse(text)
   cmd.player=args[1] or 'me'
   return cmd
  end
- -- tempgive / give: <player> <item words...> then trailing numbers.
- if #args<2 then return nil,name=='tempgive' and 'Usage: /tempgive <player> <item> [copies] [tier]' or 'Usage: /give <player> <item> [tier]' end
+ -- tempgive / give / armor: <player> <item words...> then trailing numbers.
+ local usage={tempgive='Usage: /tempgive <player> <item> [slot] [tier]',give='Usage: /give <player> <item> [tier]',armor='Usage: /armor <player> <set> [tier] (or off)'}
+ if #args<2 then return nil,usage[name] end
  cmd.player=table.remove(args,1)
+ if name=='armor' and #args==1 and string.lower(args[1])=='off' then cmd.off=true;return cmd end
  if name=='tempgive' then
-  -- Up to two trailing numbers: copies then tier. A tier word ('t3', 'iii') may end it instead.
+  -- Up to two trailing numbers: slot then tier. A tier word ('t3', 'iii') may end it instead.
+  -- AdminService reads a lone number as the tier for run items and turrets (they have no slot).
   local n=#args
   if n>=2 and tierWord(args[n]) then cmd.tier=tierWord(args[n]);table.remove(args);n-=1 end
   if n>=2 and tonumber(args[n]) then
@@ -67,10 +78,9 @@ function C.parse(text)
     cmd.tier=whole(args[n],1,4);if not cmd.tier then return nil,'Tier must be 1-4' end
     table.remove(args);n-=1
    end
-   cmd.copies=whole(args[n],1,C.MAX_COPIES);if not cmd.copies then return nil,'Copies must be 1-'..C.MAX_COPIES end
+   cmd.slot=whole(args[n],1,C.SLOTS);if not cmd.slot then return nil,'Slot must be 1-'..C.SLOTS end
    table.remove(args)
   end
-  cmd.copies=cmd.copies or 1;cmd.tier=cmd.tier or 1
  else
   local n=#args
   if n>=2 and (tonumber(args[n]) or tierWord(args[n])) then
@@ -119,7 +129,8 @@ end
 -- Frying Pan (a whole word), not Pandora's Box; 'iron' -> Iron Set.
 function C.find(entries,query,mode,tier)
  local q=C.norm(query);if q=='' then return nil,'Name an item' end
- local function allowed(e) return (mode=='temp' and e.temp) or (mode=='perm' and e.perm) or (mode==nil) end
+ -- mode 'armor': whole sets only (/armor).
+ local function allowed(e) return (mode=='temp' and e.temp) or (mode=='perm' and e.perm) or (mode=='armor' and e.set) or (mode==nil) end
  local exact,word,starts,contains={},{},{},{}
  local function hasWord(e) for w in string.gmatch(string.lower(e.name),"[%w']+") do if C.norm(w)==q then return true end end;return false end
  for _,e in entries do
@@ -146,7 +157,7 @@ function C.find(entries,query,mode,tier)
    return nil,'Did you mean: '..table.concat(names,', ')..(#list>5 and ', ...' or '')
   end
  end
- return nil,'No '..(mode=='perm' and 'saved ' or mode=='temp' and 'run ' or '')..'item called "'..query..'"'
+ return nil,'No '..(mode=='perm' and 'saved item' or mode=='temp' and 'run item' or mode=='armor' and 'armor set' or 'item')..' called "'..query..'"'
 end
 -- The players `query` names. list: {name, display, userId, player}. me / all / others, else a
 -- name or display name: exact first, then the only one starting with it. Example: 'bo' with Bob and

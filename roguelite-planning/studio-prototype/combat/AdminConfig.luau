@@ -76,23 +76,25 @@ local rules={
  -- Quad Nailer / Gatling Rig item) or Clear.
  Turret=function(a,b) return (a=='Give' and int(b,1,4)) or (a=='Clear' and b==nil) end,
  -- Admin commands and the Give tab (AdminCommands, 2026-10-12). TempGive: a Give-tab key ('w:<weapon
- -- id>' or 'i:<item id>'), copies 1-10 and tier 1-4, for this run. Give: any Give-tab key (AdminService
+ -- id>' or 'i:<item id>'), weapon slot 0-6 (0 = the next free one; since 2026-10-13, was copies) and
+ -- tier 1-4, for this run. Armor: a set id ('' = off) and an optional tier, for this run. Give: any Give-tab key (AdminService
  -- checks the armor, pet or class exists) and an optional tier, saved for good. PauseAll: the wave
  -- clock, spawns and every enemy; nil toggles. Command: one chat command's text, parsed by the server.
  TempGive=function(a,b,c)
-  if type(a)~='string' or not int(b,1,10) or not int(c,1,4) then return false end
+  if type(a)~='string' or not int(b,0,6) or not int(c,1,4) then return false end
   local w=string.match(a,'^w:(.+)$');if w then return Weapons.ById[w]~=nil end
   local i=string.match(a,'^i:(.+)$');local e=i and Items.ById[i]
   return e~=nil and e.kind~='Weapon'
  end,
  Give=function(a,b) return type(a)=='string' and #a<=60 and string.match(a,'^[wapsc]:[%w_%.]+$')~=nil and (b==nil or int(b,1,4)) end,
  PauseAll=function(a,b) return (a==nil or type(a)=='boolean') and b==nil end,
+ Armor=function(a,b) return type(a)=='string' and #a<=40 and string.match(a,'^%w*$')~=nil and (b==nil or int(b,1,4)) end,
  Command=function(a,b) return type(a)=='string' and #a>0 and #a<=200 and b==nil end,
 }
 -- Actions with a third argument; every other action must leave it nil.
 local THREE={TempGive=true}
 -- Actions that act on a player: the request's target (a UserId; nil = the developer) picks who.
-A.Targeted=table.freeze({God=true,Weapons=true,GiveItem=true,Shards=true,Level=true,Turret=true,TempGive=true,Give=true})
+A.Targeted=table.freeze({God=true,Weapons=true,GiveItem=true,Shards=true,Level=true,Turret=true,TempGive=true,Give=true,Armor=true})
 A.Actions={};for name in rules do table.insert(A.Actions,name) end;table.sort(A.Actions)
 -- true only for a known action with valid arguments. target: nil, or a UserId for a Targeted action.
 function A.check(action,a,b,c,target)

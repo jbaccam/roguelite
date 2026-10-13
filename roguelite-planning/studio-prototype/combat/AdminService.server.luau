@@ -226,24 +226,33 @@ local function entries()
  return catalog
 end
 local function entryByKey(key) for _,e in entries() do if e.key==key then return e end end end
--- TempGive (/tempgive, the Give tab): this run only. A weapon fills `copies` free slots at `tier`
--- (ShopService.adminWeapon); an item or turret is `copies` more copies (ShopService.adminItem, so its
--- copy cap, the 16 item rows and the 10 turrets hold). Example: Protein Shake x7 -> 5 added (cap).
-function actions.TempGive(p,key,copies,tier)
+-- TempGive (/tempgive, the Give tab): this run only. A weapon goes in weapon slot `slot` (1-6,
+-- replacing what is there) or the next free one (slot 0) at `tier` (ShopService.adminWeapon, since
+-- 2026-10-13; was copies). A run item or turret is one more copy (ShopService.adminItem, so its copy
+-- cap, the 16 item rows and the 10 turrets hold).
+function actions.TempGive(p,key,slot,tier)
  local e=entryByKey(key);if not e or not e.temp then return false,'Not a run item' end
  if not Shop.states[p] then return false,p.Name..' has no run yet' end
  if e.kind=='Weapon' then
-  local ok,text=Shop.adminWeapon(p,e.id,tier,copies)
+  local ok,text=Shop.adminWeapon(p,e.id,tier,slot)
   return ok,p.Name..': '..tostring(text)
  end
- local added,why=0,nil
- for _=1,copies do
-  local ok,text=Shop.adminItem(p,e.id)
-  if not ok then why=text;break end
-  added+=1
- end
- if added==0 then return false,p.Name..': '..tostring(why) end
- return true,p.Name..': '..e.name..' x'..added..(why and ' ('..why..')' or '')
+ local ok,text=Shop.adminItem(p,e.id)
+ return ok,p.Name..': '..tostring(text)
+end
+-- Armor (/armor, 2026-10-13, user: "sets the users armor set for that round ... make sure we dont
+-- wipe their existing gear. it should all be reverted when they go back to the lobby"): the player
+-- attribute RunArmor = 'Set' or 'Set:tier' (CharacterStats.runArmor). ArmorService dresses them in
+-- the whole set and CharacterService gives its set bonus and gear power; their saved armor is never
+-- written. '' takes it off now; leaving the run (the lobby) or a new run clears it too (below, and
+-- CharacterService.clearAdmin). Example: Armor('DragonScale', 4) -> Dragon Scale Tier IV this run.
+function actions.Armor(p,set,tier)
+ if set=='' then p:SetAttribute('RunArmor',nil);return true,p.Name..': run armor off (saved armor back)' end
+ local Armor=require(combat:WaitForChild('ArmorCatalog'))
+ local d=Armor.ById[set];if not d then return false,'Unknown armor set' end
+ if not Shop.members[p] then return false,p.Name..' is not in the run' end
+ p:SetAttribute('RunArmor',set..(tier and ':'..tier or ''))
+ return true,p.Name..': '..d.name..' set'..(tier and ' Tier '..tier or '')..' for this run'
 end
 -- Give (/give, the Give tab's Saved mode): for good, through ProfileService. Weapons, armor pieces
 -- and pets unlock at `tier` (or gain a copy when owned and no tier is given), a set gives all four
@@ -289,10 +298,26 @@ function actions.Command(p,text)
  if #targets==0 then return false,'Nobody else is here' end
  local action,a,b,c
  if cmd.name=='god' then action,a='God',cmd.on
+ elseif cmd.name=='armor' then
+  if cmd.off then action,a='Armor',''
+  else
+   local e,missing=Commands.find(entries(),cmd.item,'armor');if not e then return false,missing end
+   action,a,b='Armor',e.id,cmd.tier
+  end
+ elseif cmd.name=='tempgive' then
+  -- Weapons: [slot] [tier]. Run items and turrets have no slot, so a lone number is the tier
+  -- ("/tempgive me turret 4" -> a Gatling Rig).
+  local e,missing=Commands.find(entries(),cmd.item,'temp',cmd.tier);if not e then return false,missing end
+  if e.kind=='Weapon' then action,a,b,c='TempGive',e.key,cmd.slot or 0,cmd.tier or 1
+  else
+   local tier=cmd.tier or cmd.slot
+   if tier and tier>4 then return false,'Tier must be 1-4' end
+   if tier and e.kind=='Turret' then e=Commands.find(entries(),cmd.item,'temp',tier) or e end
+   action,a,b,c='TempGive',e.key,0,tier or 1
+  end
  else
-  local mode=cmd.name=='tempgive' and 'temp' or 'perm'
-  local e,missing=Commands.find(entries(),cmd.item,mode,cmd.tier);if not e then return false,missing end
-  if mode=='temp' then action,a,b,c='TempGive',e.key,cmd.copies,cmd.tier else action,a,b='Give',e.key,cmd.tier end
+  local e,missing=Commands.find(entries(),cmd.item,'perm',cmd.tier);if not e then return false,missing end
+  action,a,b='Give',e.key,cmd.tier
  end
  if not Admin.check(action,a,b,c) then return false,'Invalid request' end
  local lines,any={},false
@@ -377,6 +402,13 @@ end)
 -- left in it, gets a real, rewarding run. While a developer is here (a trailer session with
 -- friends, 2026-10-12) the test run carries on: a friend rejoining must not wipe the setup.
 local run=RS:WaitForChild('RogueliteRunState')
+-- Run armor (/armor) goes when its player leaves the run: back in the lobby, or out of the server.
+local function watchRunArmor(p)
+ p:GetAttributeChangedSignal('RunMember'):Connect(function() if p:GetAttribute('RunMember')~=true then p:SetAttribute('RunArmor',nil) end end)
+ p:GetAttributeChangedSignal('LobbyPreviewActive'):Connect(function() if p:GetAttribute('LobbyPreviewActive')==true then p:SetAttribute('RunArmor',nil) end end)
+end
+Players.PlayerAdded:Connect(watchRunArmor)
+for _,p in Players:GetPlayers() do watchRunArmor(p) end
 local function joined(p)
  if RunService:IsStudio() or Admin.isAdmin(p) then return end
  for _,q in Players:GetPlayers() do if Admin.isAdmin(q) then return end end

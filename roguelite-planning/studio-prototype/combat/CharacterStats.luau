@@ -465,8 +465,9 @@ end
 -- Only owned things count: the starter's owned tier (1 if unknown), owned worn pieces, the pet.
 function S.gearPower(get,weapon)
  local power=S.ownedTier(get('ProfileWeapons'),weapon) or 1
- local tiers=S.parseArmorTiers(get('ProfileArmor') or '')
- for slot,setId in S.parseWearing(get('ProfileWearing')) do power+=tiers[setId..'.'..slot] or 0 end
+ local wearing,armor=S.wornArmor(get) -- run armor (/armor) counts while it is on
+ local tiers=S.parseArmorTiers(armor or '')
+ for slot,setId in S.parseWearing(wearing) do power+=tiers[setId..'.'..slot] or 0 end
  local pet=get('ProfilePet')
  if type(pet)=='string' and pet~='' then power+=S.ownedTier(get('ProfilePets'),pet) or 0 end
  return power
@@ -507,6 +508,30 @@ end
 -- 'DragonScale.Helmet:2:0' (piece:tier:copies) -> {['DragonScale.Helmet']=2} (ProfileArmor)
 function S.parseArmorTiers(text)
  local t={};for id,tier in string.gmatch(type(text)=='string' and text or '','([^,:]+):(%d+):%d+') do t[id]=math.clamp(tonumber(tier) or 1,1,4) end;return t
+end
+-- Run armor (/armor, 2026-10-13, user: "sets the users armor set for that round ... dont wipe their
+-- existing gear ... reverted when they go back to the lobby"). AdminService sets the player
+-- attribute RunArmor = 'Set' or 'Set:tier' for one run and clears it in the lobby or a new run; the
+-- saved ProfileWearing / ProfileArmor never change. runArmor turns it into those two strings: all
+-- four pieces of the set, at `tier`, else the tier they own each piece at, else Tier I. Example:
+-- 'Iron:3' -> 'Helmet:Iron,Chest:Iron,Legs:Iron,Boots:Iron', 'Iron.Helmet:3:0,...'; nil when unset.
+function S.runArmor(value,owned)
+ local set,tier=string.match(type(value)=='string' and value or '','^(%w+):?([1-4]?)$')
+ if not set or not S.ArmorSets[set] then return nil end
+ tier=tonumber(tier)
+ local have=S.parseArmorTiers(owned or '')
+ local w,t={},{}
+ for _,slot in S.ArmorSlots do
+  table.insert(w,slot..':'..set);table.insert(t,set..'.'..slot..':'..(tier or have[set..'.'..slot] or 1)..':0')
+ end
+ return table.concat(w,','),table.concat(t,',')
+end
+-- What a player wears now (get = player:GetAttribute): RunArmor when set, else the saved armor.
+-- Returns the wearing and tier strings that armorBonus and gear power read.
+function S.wornArmor(get)
+ local w,t=S.runArmor(get('RunArmor'),get('ProfileArmor'))
+ if w then return w,t end
+ return get('ProfileWearing'),get('ProfileArmor')
 end
 -- wearing: {slot=setId} or the ProfileWearing string. tiers: {pieceId=tier} or the ProfileArmor
 -- string; when given, a worn piece must be in it (owned) to count; nil means every piece is tier I.

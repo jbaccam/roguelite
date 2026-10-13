@@ -679,28 +679,28 @@ function S.adminItem(p,id)
  s.revision+=1;S.bonuses(p);S.publish(p,entry.name..' added')
  return true,entry.name..' added'
 end
--- /tempgive and the admin Give tab (2026-10-12): `copies` copies of WeaponCatalog weapon `id` at
--- `tier`, each into the next free slot, free and with no refund (like a bought weapon at price 0).
--- Godly weapons too (trailer loadouts). Stops when the six slots are full. Example: 3 Katanas at
--- Tier III with slots 1-4 filled -> 2 placed, 'Katana III x2 (slots full)'.
-function S.adminWeapon(p,id,tier,copies)
+-- /tempgive and the admin Give tab (2026-10-13, user: "not based off copies ... based off of inventory
+-- slot ... if i dont specify inventory slot just take the next one"): WeaponCatalog weapon `id` at
+-- `tier` into weapon slot `slot` (1-6), replacing what is there, or the next free slot when `slot`
+-- is nil or 0. Free, with no refund (like a bought weapon at price 0); godly weapons too (trailer
+-- loadouts). Only this run's slots change: the saved loadout is untouched. Example: Katana, tier 3,
+-- slot 2 with a Glock there -> slot 2 is a Tier III Katana; no slot and slots 1-3 full -> slot 4.
+function S.adminWeapon(p,id,tier,slot)
  local s=S.states[p];local cs=Characters.states[p];local w=Weapons.ById[id]
  if not s or not cs or not w then return false,'Unknown weapon' end
  if not combat.WeaponTemplates:FindFirstChild(id) then return false,'Weapon asset unavailable' end
- tier=math.clamp(math.floor(tier or 1),1,4);copies=math.clamp(math.floor(copies or 1),1,6)
- local placed=0
- for i=1,6 do
-  if placed>=copies then break end
-  local f=slots(p)['Slot'..i]
-  if f:GetAttribute('WeaponId')=='' then
-   f:SetAttribute('RunDamage',0);f:SetAttribute('RunKills',0);f:SetAttribute('BasePrice',0);f:SetAttribute('FinalPurchasePrice',0);f:SetAttribute('PurchasePrice',0)
-   f:SetAttribute('Tier',tier);f:SetAttribute('WavePurchased',S.wave);f:SetAttribute('CopyId',token());f:SetAttribute('WeaponId',id)
-   placed+=1
-  end
+ tier=math.clamp(math.floor(tier or 1),1,4);slot=math.clamp(math.floor(slot or 0),0,6)
+ if slot==0 then
+  for i=1,6 do if slots(p)['Slot'..i]:GetAttribute('WeaponId')=='' then slot=i;break end end
+  if slot==0 then return false,'All 6 weapon slots are full: name a slot to replace (1-6)' end
  end
- if placed==0 then return false,'Six weapons equipped: no free slot' end
+ local f=slots(p)['Slot'..slot];local was=f:GetAttribute('WeaponId')
+ Effects.flushWeaponStats()
+ f:SetAttribute('RunDamage',0);f:SetAttribute('RunKills',0);f:SetAttribute('BasePrice',0);f:SetAttribute('FinalPurchasePrice',0);f:SetAttribute('PurchasePrice',0)
+ f:SetAttribute('Tier',tier);f:SetAttribute('WavePurchased',S.wave);f:SetAttribute('CopyId',token());f:SetAttribute('WeaponId',id)
  local count=0;for i=1,6 do if slots(p)['Slot'..i]:GetAttribute('WeaponId')~='' then count+=1 end end;slots(p):SetAttribute('EquippedCount',count)
- local text=w.name..' '..({'I','II','III','IV'})[tier]..(placed>1 and ' x'..placed or '')..(placed<copies and ' (slots full)' or '')
+ local old=was~='' and Weapons.ById[was]
+ local text=w.name..' '..({'I','II','III','IV'})[tier]..' in slot '..slot..(old and old.id~=id and ' (was '..old.name..')' or '')
  s.ready=false;s.revision+=1;S.bonuses(p);reprice(p);S.publish(p,text);S.publishReady()
  return true,text
 end

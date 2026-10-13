@@ -5,6 +5,8 @@
 -- (the CFrame from body part to mesh, set by the kit's Studio installer). A worn helmet hides
 -- what its set's `helmet` mode says (ArmorCatalog): hood = hats and hair, full = those and the
 -- face. Phoenix's flames and lights ride along as Attachments inside its meshes.
+-- Run armor (/armor, 2026-10-13): while the server-set RunArmor ('Set' or 'Set:tier') names a set,
+-- the character wears all four of its pieces instead; clearing it puts the saved armor back.
 -- Cosmetic only. Unsandboxed (reads the unsandboxed ArmorCatalog).
 local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
@@ -12,9 +14,22 @@ local Catalog = require(RS:WaitForChild("RogueliteCombat"):WaitForChild("ArmorCa
 
 local HIDE = { [Enum.AccessoryType.Hat] = true, [Enum.AccessoryType.Hair] = true }
 
+-- The wearing string in effect: the run armor's four pieces, else ProfileWearing.
+local function wearing(player)
+	local run = string.match(player:GetAttribute("RunArmor") or "", "^(%w+)")
+	if run and Catalog.ById[run] then
+		local out = {}
+		for _, slot in Catalog.Slots do
+			table.insert(out, slot .. ":" .. run)
+		end
+		return table.concat(out, ",")
+	end
+	return player:GetAttribute("ProfileWearing") or ""
+end
+
 local function worn(player)
 	local out = {}
-	for slot, setId in string.gmatch(player:GetAttribute("ProfileWearing") or "", "([^,:]+):([^,:]+)") do
+	for slot, setId in string.gmatch(wearing(player), "([^,:]+):([^,:]+)") do
 		if Catalog.isSlot(slot) and Catalog.ById[setId] then
 			out[slot] = setId
 		end
@@ -98,8 +113,8 @@ local function dress(player, character)
 	end
 	folder.Parent = character
 	setHidden(character, w.Helmet and Catalog.ById[w.Helmet].helmet or nil)
-	-- The Armory copies the character once this matches ProfileWearing.
-	character:SetAttribute("ArmorWorn", player:GetAttribute("ProfileWearing") or "")
+	-- The Armory copies the character once this matches ProfileWearing (run armor is gone in the lobby).
+	character:SetAttribute("ArmorWorn", wearing(player))
 end
 
 local function added(player)
@@ -118,11 +133,13 @@ local function added(player)
 			end
 		end)
 	end)
-	player:GetAttributeChangedSignal("ProfileWearing"):Connect(function()
-		if player.Character then
-			dress(player, player.Character)
-		end
-	end)
+	for _, attribute in { "ProfileWearing", "RunArmor" } do
+		player:GetAttributeChangedSignal(attribute):Connect(function()
+			if player.Character then
+				dress(player, player.Character)
+			end
+		end)
+	end
 	if player.Character then
 		task.spawn(dress, player, player.Character)
 	end

@@ -134,8 +134,10 @@ function Service.refresh(player)
  local flat=s.itemBonuses
  local skills=Skills.bonuses(Skills.parse(player:GetAttribute('ProfileSkills')))
  -- Armor set bonuses (lobby and runs) from the server-set ProfileWearing/ProfileArmor, the same
- -- way. Perks are kept on the state: DodgeCrit, RageAttackSpeed, FireThorns, PhoenixBlast.
- local armor,perks=Stats.armorBonus(player:GetAttribute('ProfileWearing'),player:GetAttribute('ProfileArmor') or '')
+ -- way, or from RunArmor while /armor is on (Stats.wornArmor, 2026-10-13). Perks are kept on the
+ -- state: DodgeCrit, RageAttackSpeed, FireThorns, PhoenixBlast.
+ local wornSets,wornTiers=Stats.wornArmor(function(name) return player:GetAttribute(name) end)
+ local armor,perks=Stats.armorBonus(wornSets,wornTiers or '')
  s.perks=perks
  -- Viking 4-piece: extra attack speed only while below half health (the HealthChanged hook in
  -- spawned refreshes when health crosses the line).
@@ -203,6 +205,7 @@ function Service.attach(player,folder)
  player:GetAttributeChangedSignal('ProfileSkills'):Connect(function() Service.refresh(player) end)
  player:GetAttributeChangedSignal('ProfileWearing'):Connect(function() Service.refresh(player) end)
  player:GetAttributeChangedSignal('ProfileArmor'):Connect(function() Service.refresh(player) end)
+ player:GetAttributeChangedSignal('RunArmor'):Connect(function() Service.refresh(player) end)
  player:GetAttributeChangedSignal('ProfilePet'):Connect(function() Service.refresh(player) end)
  player:GetAttributeChangedSignal('ProfilePets'):Connect(function() Service.refresh(player) end)
  -- Gear power follows the starter and its owned tier.
@@ -216,14 +219,14 @@ function Service.setClass(player,class)
  if not s or type(class)~='string' or not Stats.Classes[class] or s.class==class then return end
  s.class=class;Service.refresh(player)
 end
--- A new run starts clean (ShopService.resetRun): admin stat edits, class picks, god mode and the
--- Weapons off toggle never carry into a run that pays rewards. Normal play has nothing to clear.
+-- A new run starts clean (ShopService.resetRun): admin stat edits, class picks, god mode, run armor
+-- (/armor) and the Weapons off toggle never carry into a run that pays rewards. Normal play has nothing to clear.
 -- The caller refreshes.
 function Service.clearAdmin(player)
  local s=Service.states[player];if not s then return end
  s.overrides={}
  local picked=player:GetAttribute('RunClass');s.class=Stats.Classes[picked] and picked or 'Brawler'
- player:SetAttribute('AdminGod',nil)
+ player:SetAttribute('AdminGod',nil);player:SetAttribute('RunArmor',nil) -- /armor is for one run
  s.folder:SetAttribute('WeaponEnabled',true)
 end
 -- Pet hooks (PetService). setPetTemp: a short flat bonus like {MoveSpeed=6}, nil clears it.

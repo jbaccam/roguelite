@@ -237,8 +237,9 @@ function M.new(player)
  -- Give (2026-10-12, user: "give players items ... like minecraft creative panel"): every weapon,
  -- run item, turret, armor piece and set, pet and class in one grid, built once per open window and
  -- only filtered after (This run / Saved, kind, search), so a click never rebuilds anything. A tile
- -- gives itself to the picked player (Me, anyone here, or All): This run = TempGive with the copies
- -- and tier, Saved = Give at the tier (+1 = one more copy of something owned). The command box runs
+ -- gives itself to the picked player (Me, anyone here, or All): This run = TempGive into the picked
+ -- weapon slot (Next = the next free one; 2026-10-13, was copies) at the tier, or for an armor set
+ -- the run armor (Armor: worn this run only); Saved = Give at the tier (+1 = one more copy). The command box runs
  -- the chat commands, for phones. Example: Saved, Tier IV, Katana -> that player's Katana Tier IV.
  local catalog,giveView
  local function catalogEntries()
@@ -250,7 +251,7 @@ function M.new(player)
  end
  local KINDS={'All','Weapon','Item','Turret','Armor','Pet','Class'}
  local KIND_LABEL={All='All',Weapon='Weapons',Item='Items',Turret='Turrets',Armor='Armor',Pet='Pets',Class='Classes'}
- self.give={mode='temp',kind='All',copies=1,tier=1,search='',target=nil}
+ self.give={mode='temp',kind='All',slot=0,tier=1,search='',target=nil}
  local function buildGive()
   local g=self.give
   local v=T.frame(nil,'GiveView',0,0,CW,GIVE_H)
@@ -281,15 +282,17 @@ function M.new(player)
   targets()
   local joins={Players.PlayerAdded:Connect(targets),Players.PlayerRemoving:Connect(function() task.defer(targets) end)}
   v.Destroying:Connect(function() for _,conn in joins do conn:Disconnect() end end)
-  -- Row 2: This run / Saved, copies (This run only) and tier (+1: Saved only, one more copy).
+  -- Row 2: This run / Saved, weapon slot (This run only; Next = the next free one) and tier (+1:
+  -- Saved only, one more copy).
   local paintCopies,paintTier,filter
   chips('Mode',0,44,108,{{label='This run',value='temp'},{label='Saved',value='perm'}},function() return g.mode end,function(m)
    g.mode=m;if m=='temp' and g.tier==0 then g.tier=1 end
    paintCopies();paintTier();filter()
   end)
-  left(T.label(v,'CopiesLabel','Copies',236,44,66,36,16))
-  local copyList={};for _,n in {1,2,3,5,10} do table.insert(copyList,{label=tostring(n),value=n,enabled=function() return g.mode=='temp' end}) end
-  paintCopies=chips('Copies',306,44,42,copyList,function() return g.copies end,function(n) g.copies=n end)
+  left(T.label(v,'SlotLabel','Slot',236,44,40,36,16))
+  local slotList={{label='Next',value=0,enabled=function() return g.mode=='temp' end}}
+  for n=1,6 do table.insert(slotList,{label=tostring(n),value=n,enabled=function() return g.mode=='temp' end}) end
+  paintCopies=chips('Slot',278,44,34,slotList,function() return g.slot end,function(n) g.slot=n end)
   left(T.label(v,'TierLabel','Tier',576,44,36,36,16))
   local tierList={{label='+1',value=0,enabled=function() return g.mode=='perm' end}}
   for t=1,4 do table.insert(tierList,{label=T.Roman[t],value=t}) end
@@ -313,7 +316,8 @@ function M.new(player)
    for i,id in ids do
     if i>1 then task.wait(.2) end -- AdminService's rate limit
     if id==player.UserId then id=nil end
-    if g.mode=='temp' then send('TempGive',e.key,g.copies,math.max(1,g.tier),nil,id)
+    if g.mode=='temp' and e.set then send('Armor',e.id,math.max(1,g.tier),nil,id)
+    elseif g.mode=='temp' then send('TempGive',e.key,e.kind=='Weapon' and g.slot or 0,math.max(1,g.tier),id)
     else send('Give',e.key,g.tier>0 and g.tier or nil,nil,id) end
    end
    busy=false
@@ -335,7 +339,7 @@ function M.new(player)
    local q=Commands.norm(g.search)
    for _,t in tiles do
     local e=t.e
-    t.tile.Visible=(g.mode=='temp' and e.temp or g.mode=='perm' and e.perm) and (g.kind=='All' or e.kind==g.kind) and (q=='' or string.find(e.norm,q,1,true)~=nil)
+    t.tile.Visible=(g.mode=='temp' and (e.temp or e.set) or g.mode=='perm' and e.perm) and (g.kind=='All' or e.kind==g.kind) and (q=='' or string.find(e.norm,q,1,true)~=nil)
    end
    grid.CanvasPosition=Vector2.zero
   end
@@ -343,7 +347,7 @@ function M.new(player)
   filter()
   -- Row 4: a chat command, typed here (phones have no slash commands at hand).
   T.panel(v,'CommandWell',0,GIVE_H-40,CW-128,40,'inset')
-  local box=T.make('TextBox',v,{Name='CommandBox',Position=UDim2.fromOffset(6,GIVE_H-35),Size=UDim2.fromOffset(CW-140,30),ZIndex=2,BackgroundColor3=INPUT,BorderSizePixel=0,TextColor3=C.white,Font=T.Font,TextSize=16,Text='',PlaceholderText='/tempgive bob katana 2 3 · /give me iron set · /god all · /pause',PlaceholderColor3=C.dim,ClearTextOnFocus=false,TextXAlignment=Enum.TextXAlignment.Left})
+  local box=T.make('TextBox',v,{Name='CommandBox',Position=UDim2.fromOffset(6,GIVE_H-35),Size=UDim2.fromOffset(CW-140,30),ZIndex=2,BackgroundColor3=INPUT,BorderSizePixel=0,TextColor3=C.white,Font=T.Font,TextSize=16,Text='',PlaceholderText='/tempgive bob katana 2 3 · /armor all iron · /give me iron set · /god all · /pause',PlaceholderColor3=C.dim,ClearTextOnFocus=false,TextXAlignment=Enum.TextXAlignment.Left})
   T.make('UICorner',box,{CornerRadius=UDim.new(0,6)})
   local function run() local text=box.Text;if text~='' and self.Command(text) then box.Text='' end end
   box.FocusLost:Connect(function(enter) if enter then run() end end)

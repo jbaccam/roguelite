@@ -5,7 +5,9 @@
 -- Covers parsing (defaults, trailing copies and tier, tier words, refusals), the Give catalog (one
 -- key per entry, every kind), the item search (whole words before prefixes, turrets by tier, run vs
 -- saved items) and the player search. Returns the number of checks.
-return function(C, Weapons, Items)
+-- Stats (optional, 2026-10-13): CharacterStats, for run armor (/armor): RunArmor wins over the saved
+-- armor and never touches it.
+return function(C, Weapons, Items, Stats)
 	local checks = 0
 	local function check(ok, message)
 		checks += 1
@@ -30,13 +32,18 @@ return function(C, Weapons, Items)
 		check(same(cmd, want), text .. " -> the right fields")
 	end
 	-- Parsing.
-	parsed("/tempgive bob katana", { name = "tempgive", player = "bob", item = "katana", copies = 1, tier = 1 })
-	parsed("/tempgive bob katana 3", { name = "tempgive", player = "bob", item = "katana", copies = 3, tier = 1 })
-	parsed("/tempgive bob katana 2 4", { name = "tempgive", player = "bob", item = "katana", copies = 2, tier = 4 })
-	parsed("/tempgive all frying pan 2 3", { name = "tempgive", player = "all", item = "frying pan", copies = 2, tier = 3 })
-	parsed("/tempgive me ray gun iii", { name = "tempgive", player = "me", item = "ray gun", copies = 1, tier = 3 })
-	parsed("/tempgive me nail turret 2 t2", { name = "tempgive", player = "me", item = "nail turret", copies = 2, tier = 2 })
-	parsed("/TEMPGIVE Bob Katana", { name = "tempgive", player = "Bob", item = "Katana", copies = 1, tier = 1 })
+	-- 2026-10-13: slot, not copies. No slot: the next free one (AdminService); no tier: Tier I.
+	parsed("/tempgive bob katana", { name = "tempgive", player = "bob", item = "katana" })
+	parsed("/tempgive bob katana 3", { name = "tempgive", player = "bob", item = "katana", slot = 3 })
+	parsed("/tempgive bob katana 2 4", { name = "tempgive", player = "bob", item = "katana", slot = 2, tier = 4 })
+	parsed("/tempgive all frying pan 6 3", { name = "tempgive", player = "all", item = "frying pan", slot = 6, tier = 3 })
+	parsed("/tempgive me ray gun iii", { name = "tempgive", player = "me", item = "ray gun", tier = 3 })
+	parsed("/tempgive me ray gun 5 t2", { name = "tempgive", player = "me", item = "ray gun", slot = 5, tier = 2 })
+	parsed("/tempgive me turret 4", { name = "tempgive", player = "me", item = "turret", slot = 4 })
+	parsed("/TEMPGIVE Bob Katana", { name = "tempgive", player = "Bob", item = "Katana" })
+	parsed("/armor bob dragon scale", { name = "armor", player = "bob", item = "dragon scale" })
+	parsed("/armor bob iron 4", { name = "armor", player = "bob", item = "iron", tier = 4 })
+	parsed("/armor all off", { name = "armor", player = "all", off = true })
 	parsed("/give bob katana", { name = "give", player = "bob", item = "katana" })
 	parsed("/give bob katana 4", { name = "give", player = "bob", item = "katana", tier = 4 })
 	parsed("/give others iron set", { name = "give", player = "others", item = "iron set" })
@@ -47,12 +54,12 @@ return function(C, Weapons, Items)
 	parsed("/pause", { name = "pause" })
 	parsed("/pause off", { name = "pause", on = false })
 	parsed("/admin", { name = "admin" })
-	for _, bad in { "/tempgive", "/tempgive bob", "/tempgive bob katana 11", "/tempgive bob katana 2 5", "/give bob katana 5", "/pause now", "/god a b c", "/kick bob", "", "/give bob" } do
+	for _, bad in { "/tempgive", "/tempgive bob", "/tempgive bob katana 7", "/tempgive bob katana 0", "/tempgive bob katana 2 5", "/give bob katana 5", "/armor bob", "/armor bob iron 5", "/pause now", "/god a b c", "/kick bob", "", "/give bob" } do
 		check(C.parse(bad) == nil, bad .. " is refused")
 	end
 	check(C.parse(string.rep("a", C.MAX_TEXT + 1)) == nil, "Long text refused")
 	check(C.parse(42) == nil, "Not text refused")
-	check(#C.Names == 5 and table.find(C.Names, "tempgive") ~= nil and table.find(C.Names, "pause") ~= nil, "Five commands")
+	check(#C.Names == 6 and table.find(C.Names, "tempgive") ~= nil and table.find(C.Names, "armor") ~= nil and table.find(C.Names, "pause") ~= nil, "Six commands")
 
 	-- The catalog and item search, with the real weapons and shop items.
 	local armor = { Slots = { "Helmet", "Chest", "Legs", "Boots" }, Sets = { { id = "Iron", name = "Iron" }, { id = "DragonScale", name = "Dragon Scale" } }, Icons = {} }
@@ -92,6 +99,10 @@ return function(C, Weapons, Items)
 	found("iron helmet", "perm", "a:Iron.Helmet")
 	found("fox", "perm", "p:Fox")
 	found("chef", "perm", "c:Chef")
+	found("iron", "armor", "s:Iron")
+	found("dragon scale", "armor", "s:DragonScale")
+	found("dragon", "armor", "s:DragonScale")
+	check(C.find(entries, "katana", "armor") == nil, "/armor takes sets only")
 	check(C.find(entries, "protein", "perm") == nil, "Run items can't be saved")
 	check(C.find(entries, "fox", "temp") == nil, "Pets aren't run items")
 	check(C.find(entries, "zzzz", "temp") == nil, "Nothing found")
@@ -115,5 +126,27 @@ return function(C, Weapons, Items)
 	check(names(C.players("egga", list, 1)) == "EggaRowls", "Display name")
 	check(C.players("bo", list, 1) == nil, "Two fit: refused")
 	check(C.players("zed", list, 1) == nil, "Nobody")
+	-- Run armor (/armor): CharacterStats.runArmor / wornArmor / gearPower.
+	if Stats then
+		local function get(attrs)
+			return function(name)
+				return attrs[name]
+			end
+		end
+		local saved = { ProfileWearing = "Helmet:Iron", ProfileArmor = "Iron.Helmet:2:0,DragonScale.Chest:3:0", ProfileWeapons = "01:1:0" }
+		local w, tiers = Stats.wornArmor(get(saved))
+		check(w == "Helmet:Iron" and tiers == saved.ProfileArmor, "No run armor: the saved armor")
+		local run = table.clone(saved)
+		run.RunArmor = "DragonScale"
+		w, tiers = Stats.wornArmor(get(run))
+		check(w == "Helmet:DragonScale,Chest:DragonScale,Legs:DragonScale,Boots:DragonScale", "Run armor: all four pieces")
+		check(Stats.parseArmorTiers(tiers)["DragonScale.Chest"] == 3 and Stats.parseArmorTiers(tiers)["DragonScale.Helmet"] == 1, "No tier: owned tiers, else I")
+		run.RunArmor = "DragonScale:4"
+		w, tiers = Stats.wornArmor(get(run))
+		check(Stats.parseArmorTiers(tiers)["DragonScale.Helmet"] == 4, "A tier sets all four")
+		check(Stats.gearPower(get(run), "01") == 1 + 16 and Stats.gearPower(get(saved), "01") == 1 + 2, "Gear power follows the run armor, then the saved armor again")
+		check(run.ProfileWearing == "Helmet:Iron" and run.ProfileArmor == saved.ProfileArmor, "Saved armor untouched")
+		check(Stats.runArmor("Nope") == nil and Stats.runArmor("Iron:5") == nil and Stats.runArmor(nil) == nil, "Bad run armor is ignored")
+	end
 	return checks
 end
