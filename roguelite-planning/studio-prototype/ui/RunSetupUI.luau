@@ -248,7 +248,7 @@ function M.new(player,opts)
  end
  local function cycle(d)
   sel.map=((sel.map-1+d)%#Rules.Maps)+1
-  if not Rules.difficultyUnlocked(profile.wins,sel.map,sel.difficulty) then sel.difficulty='Normal' end
+  if not Rules.difficultyUnlocked((profile.unlockWins or profile.wins),sel.map,sel.difficulty) then sel.difficulty='Normal' end
   draw()
  end
  -- Starter choice: tiles and the Godly picker both set it here; the server checks it again
@@ -314,8 +314,8 @@ function M.new(player,opts)
 
  -- Step 1: map -------------------------------------------------------------------------
  local function drawMap()
-  local i=sel.map;local m=Rules.Maps[i];local mapOpen=Rules.mapUnlocked(profile.wins,i)
-  local diff=sel.difficulty;local tier=Rules.difficulty(diff);local unlocked=Rules.difficultyUnlocked(profile.wins,i,diff)
+  local i=sel.map;local m=Rules.Maps[i];local mapOpen=Rules.mapUnlocked((profile.unlockWins or profile.wins),i)
+  local diff=sel.difficulty;local tier=Rules.difficulty(diff);local unlocked=Rules.difficultyUnlocked((profile.unlockWins or profile.wins),i,diff)
   local key=Rules.runKey(m.id,diff)
   -- Compact (phones): smaller headline and tighter rows; the arrows sit below the top bar.
   local cp=G.compact;local hx=G.corner;local hw=CW-2*hx -- top rows clear of the top-bar corners
@@ -369,7 +369,7 @@ function M.new(player,opts)
   -- the caption moved left of it (NIGHTMARE is nearly as wide as the button).
   local DWB,DBH,DGAP=200,56,16;local dx=(CW-(3*DWB+2*DGAP))/2
   for k,d in Rules.Difficulties do
-   local open=Rules.difficultyUnlocked(profile.wins,i,d.id)
+   local open=Rules.difficultyUnlocked((profile.unlockWins or profile.wins),i,d.id)
    local b=T.button(canvas,'Diff_'..d.id,string.upper(d.id),dx+(k-1)*(DWB+DGAP),cp and 244 or 378,DWB,DBH,function() sel.difficulty=d.id;draw() end,d.id~=diff or not mapOpen)
    b.Caption.TextSize=cp and 22 or 24
    if d.id~=diff or not mapOpen then b.Caption.TextColor3=not open and C.dim or d.id=='Hard' and C.gold or d.id=='Nightmare' and C.negative or C.lime end
@@ -715,9 +715,9 @@ function M.new(player,opts)
   if mode=='Member' and player:GetAttribute('LobbyLockedIn')==true then
    sel.class=player:GetAttribute('RunClass') or sel.class;sel.weapon=player:GetAttribute('RunWeapon') or sel.weapon
   end
-  if not Rules.mapUnlocked(profile.wins,sel.map) then sel.map=1 end
+  if not Rules.mapUnlocked((profile.unlockWins or profile.wins),sel.map) then sel.map=1 end
   sel.difficulty=sel.difficulty or 'Normal'
-  if not Rules.difficultyUnlocked(profile.wins,sel.map,sel.difficulty) then sel.difficulty='Normal' end
+  if not Rules.difficultyUnlocked((profile.unlockWins or profile.wins),sel.map,sel.difficulty) then sel.difficulty='Normal' end
   if not profile.classes[sel.class] then sel.class='Brawler' end
   local wasOpen=screen.Enabled
   self.mode=mode;self.step=(mode=='Member' or mode=='Loadout') and 'Class' or 'Map'

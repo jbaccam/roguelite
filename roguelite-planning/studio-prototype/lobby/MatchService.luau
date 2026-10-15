@@ -285,6 +285,9 @@ function M.start()
   firstArrival=firstArrival or os.clock()
   if offered[p.UserId] then clearRejoin(p.UserId) end -- back in: the way back isn't needed now
   local applied,why=applyLoadout(p,want)
+  -- Map pass (RunSetupRules.allWins): everyone in a match that lists a developer.
+  local Admin=require(combat:WaitForChild('AdminConfig'))
+  for id in entry.members do if Admin.isAdminId(tonumber(id)) then p:SetAttribute('MapPass',true);break end end
   if applied then applied,why=Rules.validMap(p,entry.map,entry.difficulty) end
   if not applied then
    log({p},'sent back',why)

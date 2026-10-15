@@ -66,6 +66,7 @@ function L.profile(player)
  p.freeChestDay=player:GetAttribute('ProfileFreeChestDay') or 0 -- = MonetizationConfig.day(): today's free Wooden Chest is claimed
  p.best=csvMap(player:GetAttribute('ProfileBestWaves'))
  p.wins=csvSet(player:GetAttribute('ProfileMapWins'))
+ p.unlockWins=Rules.unlockWins(player,p.wins) -- MapPass (admin squads): every map open; p.wins stays the real wins
  p.pity=csvMap(player:GetAttribute('ProfilePity'));p.picks=csvMap(player:GetAttribute('ProfilePicks'))
  p.chests=csvMap(player:GetAttribute('ProfileChests'))
  p.starter=player:GetAttribute('ProfileStarterPack')==true;p.vip=player:GetAttribute('ProfileVIP')==true
@@ -84,7 +85,7 @@ end
 -- Rarer weapons need fewer copies (ChestConfig.UpgradeByRarity); records carry their weapon id.
 L.UpgradeCost=Chests.UpgradeCost
 function L.need(rec) return rec and rec.tier<4 and (rec.id and Chests.upgradeCost(rec.id,rec.tier) or L.UpgradeCost[rec.tier]) or nil end
-function L.mapUnlocked(p,index) return Rules.mapUnlocked(p.wins,index) end
+function L.mapUnlocked(p,index) return Rules.mapUnlocked(p.unlockWins or p.wins,index) end
 local function homeWeapons(class) return Rules.classWeapons(class) end -- every weapon listing the class (2026-10-04)
 local function passives() local out={};for _,e in ShopCatalog.List do if not e.weaponId then table.insert(out,e) end end;return out end
 local function fmt(n) n=tonumber(n) or 0;if n>=1e6 then return string.format('%.1fM',n/1e6) elseif n>=1e4 then return string.format('%.1fK',n/1e3) end;return tostring(n) end
@@ -755,7 +756,7 @@ function L.mount(player)
    if win and self.redraw then self.redraw() end
   end)
  end
- for _,attr in {'ProfileLoaded','ProfileGems','ProfileGemsEarned','ProfileClasses','ProfileWeapons','ProfilePity','ProfilePicks','ProfileChests','ProfileStarterPack','ProfileVIP','ProfileBundles','PaidRandomRestricted','ProfileSkills','ProfileQuests'} do player:GetAttributeChangedSignal(attr):Connect(profileChanged) end
+ for _,attr in {'ProfileLoaded','ProfileGems','ProfileGemsEarned','ProfileClasses','ProfileWeapons','ProfilePity','ProfilePicks','ProfileChests','ProfileStarterPack','ProfileVIP','ProfileBundles','PaidRandomRestricted','ProfileSkills','ProfileQuests','MapPass'} do player:GetAttributeChangedSignal(attr):Connect(profileChanged) end -- MapPass: admin squads see every map open
  -- Gifts (2026-10-04): gift={to=name} on the buyer's "Gift sent to Ana!" (a toast: nothing arrived
  -- for them); gift={from=name, pick, emeralds} on one arriving, which plays the reveal with GIFT FROM
  -- <name> (just the emeralds when it was paid as emeralds). Arriving gifts wait for the lobby HUD and

@@ -105,12 +105,21 @@ local function csvSet(text) local out={};for v in string.gmatch(text or '','[^,]
 -- Classes, owned weapons and map wins. Before a profile loads, a fresh account's defaults.
 function R.progress(player)
  local connected=player:GetAttribute('ProfileLoaded')==true
- local p={classes=connected and csvSet(player:GetAttribute('ProfileClasses')) or {Brawler=true,Gunner=true,Mage=true},weapons={},wins=csvSet(player:GetAttribute('ProfileMapWins'))}
+ local p={classes=connected and csvSet(player:GetAttribute('ProfileClasses')) or {Brawler=true,Gunner=true,Mage=true},weapons={},wins=R.unlockWins(player,csvSet(player:GetAttribute('ProfileMapWins')))}
  if connected then
   for id in string.gmatch(player:GetAttribute('ProfileWeapons') or '','([^,:]+):%d+:%d+') do p.weapons[id]=true end
  else for class in p.classes do p.weapons[R.Signature[class]]=true end end
  return p
 end
+-- Map pass (2026-10-14, user: "i need to be able to go into other maps as an admin that i dont have
+-- unlocked with my squad"): the server sets the player attribute MapPass on a developer, on anyone
+-- in a developer's party or on a developer's portal pad (RogueliteLobbyPreview), and on everyone in
+-- a match that lists a developer (MatchService). With it every map and difficulty counts as won for
+-- unlocking (R.allWins); their real wins (ProfileMapWins) don't change.
+function R.allWins()
+ local t={};for _,m in R.Maps do for _,d in R.Difficulties do t[R.runKey(m.id,d.id)]=true end end;return t
+end
+function R.unlockWins(player,wins) return player:GetAttribute('MapPass')==true and R.allWins() or wins end
 function R.mapUnlocked(wins,index) return index==1 or wins[R.runKey(R.Maps[index-1].id,'Hard')]==true end
 -- Normal follows the map; Hard needs a Normal win on that map; Nightmare needs a Hard win.
 function R.difficultyUnlocked(wins,index,diff)

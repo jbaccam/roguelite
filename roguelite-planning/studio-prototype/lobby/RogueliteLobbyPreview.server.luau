@@ -25,6 +25,25 @@ local CAPACITY=4
 local state=State.new(4,CAPACITY)
 local Party=require(script:WaitForChild('PartyState'))
 local parties=Party.new(CAPACITY)
+-- Map pass (RunSetupRules.allWins, 2026-10-14): a developer, their party and anyone on their portal
+-- pad may pick and launch any map and difficulty. Kept current twice a second.
+local Admin=require(RS:WaitForChild('RogueliteCombat'):WaitForChild('AdminConfig'))
+local function mapPass(p)
+ if Admin.isAdmin(p) then return true end
+ for _,id in parties:members(p.UserId) do if Admin.isAdminId(id) then return true end end
+ local index=state and state.membership[p.UserId]
+ if index then for _,id in state.queues[index].members do if Admin.isAdminId(id) then return true end end end
+ return false
+end
+task.spawn(function()
+ while true do
+  for _,p in Players:GetPlayers() do
+   local pass=mapPass(p) or nil
+   if p:GetAttribute('MapPass')~=pass then p:SetAttribute('MapPass',pass) end
+  end
+  task.wait(.5)
+ end
+end)
 local last,stepOff={},{}
 local travelling={}
 -- Lobby servers spawn players here; the combined Studio preview places them by script instead.
