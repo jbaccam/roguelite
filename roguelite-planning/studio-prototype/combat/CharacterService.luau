@@ -219,14 +219,15 @@ function Service.setClass(player,class)
  if not s or type(class)~='string' or not Stats.Classes[class] or s.class==class then return end
  s.class=class;Service.refresh(player)
 end
--- A new run starts clean (ShopService.resetRun): admin stat edits, class picks, god mode, run armor
--- (/armor) and the Weapons off toggle never carry into a run that pays rewards. Normal play has nothing to clear.
+-- A new run starts clean (ShopService.resetRun): admin stat edits, class picks, god mode, ghost
+-- (/ghost), run armor (/armor) and the Weapons off toggle never carry into a run that pays rewards. Normal play has nothing to clear.
 -- The caller refreshes.
 function Service.clearAdmin(player)
  local s=Service.states[player];if not s then return end
  s.overrides={}
  local picked=player:GetAttribute('RunClass');s.class=Stats.Classes[picked] and picked or 'Brawler'
  player:SetAttribute('AdminGod',nil);player:SetAttribute('RunArmor',nil) -- /armor is for one run
+ player:SetAttribute('AdminGhost',nil) -- /ghost: AdminService shows them again
  s.folder:SetAttribute('WeaponEnabled',true)
 end
 -- Pet hooks (PetService). setPetTemp: a short flat bonus like {MoveSpeed=6}, nil clears it.
@@ -282,7 +283,7 @@ function Service.contact(player,amount,roll,attacker)
  -- Admin god mode (AdminGod, set only by AdminService) and the between-wave shop: no damage from
  -- any source. Every player damage path (contact, enemy melee and projectiles, zombie slams, the
  -- boss) comes through here.
- if not s or not h or h.Health<=0 or player.Character:FindFirstChildOfClass('ForceField') or player:GetAttribute('AdminGod')==true or Service.inShop(player) or Service.frozen(player) then return 0 end
+ if not s or not h or h.Health<=0 or player.Character:FindFirstChildOfClass('ForceField') or player:GetAttribute('AdminGod')==true or player:GetAttribute('AdminGhost')==true or Service.inShop(player) or Service.frozen(player) then return 0 end
  -- Dash i-frames (CharacterStats.Dash.IFrames, 0.35 s from the server's DashAt stamp): every hit in
  -- that window misses, so dashing through a swing or a crowd is safe.
  local dashAt=player:GetAttribute('DashAt')

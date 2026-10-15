@@ -198,6 +198,18 @@ function actions.God(p,on)
  if on==nil then on=p:GetAttribute('AdminGod')~=true end
  p:SetAttribute('AdminGod',on or nil);return true,on and 'God mode on' or 'God mode off'
 end
+-- Ghost (/ghost, 2026-10-14, user: "when i go to shift p my character is still in there how can i
+-- make him invis or despawn so mobs dont chase him"): AdminGhost makes them invisible (ghostLook,
+-- below), no enemy or boss targets them (RogueliteZombieChase, BossService, MapBossService,
+-- Round10Service), nothing hits them (EnemyAttacks, CharacterService.contact) and their weapons
+-- are off. on nil toggles. Off, or a new run (CharacterService.clearAdmin), puts it all back.
+function actions.Ghost(p,on)
+ if on==nil then on=p:GetAttribute('AdminGhost')~=true end
+ p:SetAttribute('AdminGhost',on or nil)
+ local states=combat:FindFirstChild('PlayerStates');local state=states and states:FindFirstChild(tostring(p.UserId))
+ if state then state:SetAttribute('WeaponEnabled',not on) end
+ return true,on and 'Ghost on: invisible, enemies ignore you' or 'Ghost off'
+end
 -- Weapons on/off: the old K test key.
 function actions.Weapons(p,on)
  local states=combat:FindFirstChild('PlayerStates');local state=states and states:FindFirstChild(tostring(p.UserId))
@@ -307,6 +319,7 @@ function actions.Command(p,text)
  if #targets==0 then return false,'Nobody else is here' end
  local action,a,b,c
  if cmd.name=='god' then action,a='God',cmd.on
+ elseif cmd.name=='ghost' then action,a='Ghost',cmd.on
  elseif cmd.name=='armor' then
   if cmd.off then action,a='Armor',''
   else
@@ -334,7 +347,7 @@ function actions.Command(p,text)
   local ran,ok,message=pcall(actions[action],t.player,a,b,c)
   if not ran then warn('AdminService command:',action,ok);ok,message=false,'Server error' end
   any=any or ok==true
-  table.insert(lines,(action=='God' and (t.player.Name..': ') or '')..tostring(message))
+  table.insert(lines,((action=='God' or action=='Ghost') and (t.player.Name..': ') or '')..tostring(message))
  end
  return any,table.concat(lines,' · ')
 end
@@ -411,6 +424,34 @@ end)
 -- left in it, gets a real, rewarding run. While a developer is here (a trailer session with
 -- friends, 2026-10-12) the test run carries on: a friend rejoining must not wipe the setup.
 local run=RS:WaitForChild('RogueliteRunState')
+-- A ghost's look: every part and decal of the character invisible (the old values kept in a
+-- GhostBase attribute and put back after), the name hidden, and anything added while a ghost
+-- (armor re-dress, accessories) hidden too.
+local ghostAdds={}
+local function ghostPart(d,on)
+ if not (d:IsA('BasePart') or d:IsA('Decal')) then return end
+ local base=d:GetAttribute('GhostBase')
+ if on then
+  if base==nil then d:SetAttribute('GhostBase',d.Transparency) end
+  d.Transparency=1
+ elseif base~=nil then d.Transparency=base;d:SetAttribute('GhostBase',nil) end
+end
+local function ghostLook(p)
+ local c=p.Character;if not c then return end
+ local on=p:GetAttribute('AdminGhost')==true
+ for _,d in c:GetDescendants() do ghostPart(d,on) end
+ local h=c:FindFirstChildOfClass('Humanoid')
+ if h then h.DisplayDistanceType=on and Enum.HumanoidDisplayDistanceType.None or Enum.HumanoidDisplayDistanceType.Viewer end
+ if ghostAdds[p] then ghostAdds[p]:Disconnect();ghostAdds[p]=nil end
+ if on then ghostAdds[p]=c.DescendantAdded:Connect(function(d) task.defer(ghostPart,d,true) end) end
+end
+local function watchGhost(p)
+ p:GetAttributeChangedSignal('AdminGhost'):Connect(function() ghostLook(p) end)
+ p.CharacterAdded:Connect(function() task.defer(ghostLook,p) end)
+end
+Players.PlayerAdded:Connect(watchGhost)
+for _,p in Players:GetPlayers() do watchGhost(p) end
+Players.PlayerRemoving:Connect(function(p) if ghostAdds[p] then ghostAdds[p]:Disconnect();ghostAdds[p]=nil end end)
 -- Run armor (/armor) goes when its player leaves the run: back in the lobby, or out of the server.
 local function watchRunArmor(p)
  p:GetAttributeChangedSignal('RunMember'):Connect(function() if p:GetAttribute('RunMember')~=true then p:SetAttribute('RunArmor',nil) end end)

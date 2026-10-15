@@ -170,7 +170,8 @@ local function shared()
         local character = player.Character
         local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
         local targetHumanoid = character and character:FindFirstChildOfClass("Humanoid")
-        if targetRoot and targetHumanoid then
+        -- An admin ghost (/ghost, AdminService) is never a target.
+        if targetRoot and targetHumanoid and player:GetAttribute('AdminGhost') ~= true then
             table.insert(targets, {root = targetRoot, humanoid = targetHumanoid, userId = player.UserId})
         end
     end
@@ -287,17 +288,21 @@ local function arena()
     if typeof(center) ~= 'Vector3' then center = m.Position end
     return center, m:GetAttribute('SpawnAreaRadius') or 60
 end
+-- Admin ghosts (/ghost) count only when nobody else is up, so waves still spawn while the
+-- developer films alone; otherwise enemies spawn and face around the other players.
 local function livingRoots()
-    local roots = {}
+    local roots, ghosts = {}, {}
     local run = combat.Parent:FindFirstChild('RogueliteRunState')
     local practice = not run or run:GetAttribute('Phase')=='Practice'
     for _, player in Players:GetPlayers() do
         local character = player.Character
         local root = character and character:FindFirstChild("HumanoidRootPart")
         local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-        if Timeline.participating(player:GetAttribute('RunMember'),player:GetAttribute('RunDown'),player:GetAttribute('RunReturning'),humanoid and humanoid.Health,root~=nil,practice) then table.insert(roots,root) end
+        if Timeline.participating(player:GetAttribute('RunMember'),player:GetAttribute('RunDown'),player:GetAttribute('RunReturning'),humanoid and humanoid.Health,root~=nil,practice) then
+            table.insert(player:GetAttribute('AdminGhost') == true and ghosts or roots, root)
+        end
     end
-    return roots
+    return #roots > 0 and roots or ghosts
 end
 local function flatDistance(a, b) return Vector2.new(a.X - b.X, a.Z - b.Z).Magnitude end
 local function clearOfPlayers(point, minimum, roots)

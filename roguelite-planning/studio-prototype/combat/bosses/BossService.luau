@@ -199,7 +199,7 @@ local function stepCharge(npc,s,now,root)
   s.attack=nil;npc:SetAttribute('Attacking',false)
   local target,dist=nil,Motion.reach('Slam')+3
   for _,p in Players:GetPlayers() do
-   local pr=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
+   local pr=p:GetAttribute('AdminGhost')~=true and p.Character and p.Character:FindFirstChild('HumanoidRootPart') -- never an admin ghost
    if pr then local d=(pr.Position-root.Position).Magnitude;if d<dist then target,dist=pr,d end end
   end
   -- A missed run already paid its warning and brake. Slamming empty ground forced another
@@ -329,7 +329,7 @@ function B.step(npc,s,now)
  local target,dist=nil,math.huge
  for _,p in Players:GetPlayers() do
   local ch=p.Character;local ph=ch and ch:FindFirstChildOfClass('Humanoid');local pr=ch and ch:FindFirstChild('HumanoidRootPart')
-  if ph and ph.Health>0 and pr then local d=(pr.Position-root.Position).Magnitude;if d<dist then target,dist=pr,d end end
+  if ph and ph.Health>0 and pr and p:GetAttribute('AdminGhost')~=true then local d=(pr.Position-root.Position).Magnitude;if d<dist then target,dist=pr,d end end
  end
  if target then
   -- Out of reach and kiting: run them down (Motion.Charge), on its own cooldown.

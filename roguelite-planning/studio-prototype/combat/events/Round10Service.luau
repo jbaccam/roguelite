@@ -48,7 +48,7 @@ local function members()
  local list={}
  for _,p in Players:GetPlayers() do
   local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid');local r=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
-  if p:GetAttribute('RunMember') and not p:GetAttribute('RunDown') and h and h.Health>0 and r then table.insert(list,{player=p,root=r}) end
+  if p:GetAttribute('RunMember') and not p:GetAttribute('RunDown') and not p:GetAttribute('AdminGhost') and h and h.Health>0 and r then table.insert(list,{player=p,root=r}) end
  end
  return list
 end

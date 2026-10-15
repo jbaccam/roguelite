@@ -67,6 +67,7 @@ local rules={
  JumpWave=function(a,b) return int(a,1,20) and b==nil end,
  -- God: true / false, or nil to toggle (/god, 2026-10-12).
  God=function(a,b) return (a==nil or type(a)=='boolean') and b==nil end,Weapons=flag,
+ Ghost=function(a,b) return (a==nil or type(a)=='boolean') and b==nil end, -- /ghost: nil toggles
  TutorialStart=none,TutorialLobby=none,TutorialEnd=none, -- Studio's combined server only (AdminService)
  GiftTest=none, -- Studio only: a fake Starter Pack gift through the real inbox delivery (2026-10-04)
  GiveItem=function(a,b) local e=type(a)=='string' and Items.ById[a];return e and e.kind~='Weapon' and b==nil end,
@@ -94,7 +95,7 @@ local rules={
 -- Actions with a third argument; every other action must leave it nil.
 local THREE={TempGive=true}
 -- Actions that act on a player: the request's target (a UserId; nil = the developer) picks who.
-A.Targeted=table.freeze({God=true,Weapons=true,GiveItem=true,Shards=true,Level=true,Turret=true,TempGive=true,Give=true,Armor=true})
+A.Targeted=table.freeze({God=true,Weapons=true,GiveItem=true,Shards=true,Level=true,Turret=true,TempGive=true,Give=true,Armor=true,Ghost=true})
 A.Actions={};for name in rules do table.insert(A.Actions,name) end;table.sort(A.Actions)
 -- true only for a known action with valid arguments. target: nil, or a UserId for a Targeted action.
 function A.check(action,a,b,c,target)

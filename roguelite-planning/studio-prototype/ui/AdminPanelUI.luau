@@ -207,6 +207,7 @@ function M.new(player)
   end
   toggle('God','God',0,'God mode: ',player,'AdminGod',function() return player:GetAttribute('AdminGod')==true end)
   toggle('WeaponsToggle','Weapons',270,'Weapons: ',own,'WeaponEnabled',function() return own:GetAttribute('WeaponEnabled')~=false end)
+  toggle('Ghost','Ghost',540,'Ghost: ',player,'AdminGhost',function() return player:GetAttribute('AdminGhost')==true end) -- /ghost
   local shards=left(T.label(c,'ShardsLabel','',0,90,220,40,20))
   live(shards,own,'Shards',function(v) return 'Shards · '..tostring(v or 0) end)
   button(c,'Shards100','+100',230,90,110,function() send('Shards','Add',100) end)

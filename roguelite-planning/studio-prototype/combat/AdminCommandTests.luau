@@ -51,16 +51,18 @@ return function(C, Weapons, Items, Stats)
 	parsed("/god bob", { name = "god", player = "bob" })
 	parsed("/god bob off", { name = "god", player = "bob", on = false })
 	parsed("/god on", { name = "god", player = "me", on = true })
+	parsed("/ghost", { name = "ghost", player = "me" })
+	parsed("/ghost bob off", { name = "ghost", player = "bob", on = false })
 	parsed("/pause", { name = "pause" })
 	parsed("/resume", { name = "resume" })
 	parsed("/wave 15", { name = "wave", wave = 15 })
 	parsed("/admin", { name = "admin" })
-	for _, bad in { "/pause off", "/resume now", "/wave", "/wave 0", "/wave 21", "/wave ten", "/wave 1 2", "/tempgive", "/tempgive bob", "/tempgive bob katana 7", "/tempgive bob katana 0", "/tempgive bob katana 2 5", "/give bob katana 5", "/armor bob", "/armor bob iron 5", "/pause now", "/god a b c", "/kick bob", "", "/give bob" } do
+	for _, bad in { "/ghost a b c", "/pause off", "/resume now", "/wave", "/wave 0", "/wave 21", "/wave ten", "/wave 1 2", "/tempgive", "/tempgive bob", "/tempgive bob katana 7", "/tempgive bob katana 0", "/tempgive bob katana 2 5", "/give bob katana 5", "/armor bob", "/armor bob iron 5", "/pause now", "/god a b c", "/kick bob", "", "/give bob" } do
 		check(C.parse(bad) == nil, bad .. " is refused")
 	end
 	check(C.parse(string.rep("a", C.MAX_TEXT + 1)) == nil, "Long text refused")
 	check(C.parse(42) == nil, "Not text refused")
-	check(#C.Names == 8 and table.find(C.Names, "armor") ~= nil and table.find(C.Names, "resume") ~= nil and table.find(C.Names, "wave") ~= nil, "Eight commands")
+	check(#C.Names == 9 and table.find(C.Names, "ghost") ~= nil and table.find(C.Names, "resume") ~= nil and table.find(C.Names, "wave") ~= nil, "Nine commands")
 
 	-- The catalog and item search, with the real weapons and shop items.
 	local armor = { Slots = { "Helmet", "Chest", "Legs", "Boots" }, Sets = { { id = "Iron", name = "Iron" }, { id = "DragonScale", name = "Dragon Scale" } }, Icons = {} }

@@ -95,6 +95,7 @@ These are typed in the Roblox chat. They exist only on a developer's own client,
 | `/armor <player> <set> [tier]` or `/armor <player> off` | This run only: the player wears the whole set, with its visuals, set bonus and gear power. Their saved armor is never changed. The run armor comes off when they return to the lobby, when a new run starts, or with `off`. With no tier, each piece uses the tier they own (Tier I if they don't own it). Example: `/armor all dragonscale 4`. |
 | `/give <player> <item> [tier]` | Saved for good. Example: `/give all iron set`, or `/give bob katana 4` for a Tier IV Katana. |
 | `/god [player] [on\|off]` | Toggles when on/off is left out. |
+| `/ghost [player] [on\|off]` | For filming with Freecam (Shift+P). The player turns invisible and no mob, boss or round 10 event targets them. Swings and shots pass through them, and their weapons are off. Mobs spawn around the other players, or around the ghost if nobody else is up. Leave on/off out to toggle. A new run turns it off. There is also a Ghost toggle on the Player tab. |
 | `/pause` | Holds the wave clock and spawns, and freezes every enemy (Pause and Freeze together). |
 | `/resume` | Lets them all go again. |
 | `/wave <1-20>` | Starts that wave now. If you were paused, it stays paused, so you can set everyone up first: `/pause`, `/wave 15`, set up, then `/resume`. |

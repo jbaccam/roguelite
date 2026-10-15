@@ -521,7 +521,7 @@ local function living()
  local list={}
  for _,p in Players:GetPlayers() do
   local ch=p.Character;local pr=ch and ch:FindFirstChild('HumanoidRootPart');local ph=ch and ch:FindFirstChildOfClass('Humanoid')
-  if pr and ph and ph.Health>0 and Characters.states[p] then table.insert(list,{player=p,root=pr,at=Characters.seen(p,pr)}) end
+  if pr and ph and ph.Health>0 and Characters.states[p] and p:GetAttribute('AdminGhost')~=true then table.insert(list,{player=p,root=pr,at=Characters.seen(p,pr)}) end -- never an admin ghost
  end
  return list
 end

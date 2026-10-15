@@ -76,7 +76,8 @@ local function validPlayer(player)
 	local char = player.Character
 	local root = char and char:FindFirstChild("HumanoidRootPart")
 	local h = char and char:FindFirstChildOfClass("Humanoid")
-	return Characters.states[player] and root and h and h.Health > 0, root
+	-- An admin ghost (/ghost) is never hit: swings and shots pass through.
+	return Characters.states[player] and root and h and h.Health > 0 and player:GetAttribute("AdminGhost") ~= true, root
 end
 -- Attacks don't root an enemy: it keeps walking (the chase loop steers) and keeps turning toward
 -- its target at this rate, so a swing lands where the enemy is at impact instead of where the

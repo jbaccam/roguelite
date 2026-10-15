@@ -63,7 +63,7 @@ return function(Admin, Enemies, Items)
 	-- 2026-10-03: the tutorial and turret actions were missing here (15 listed, 19 real); EndlessBoss makes 20.
 	-- 2026-10-04: GiftTest (Simulate gift to me) makes 21.
 	-- 2026-10-12: the list was missing the three Round 10 actions; Command, Give, PauseAll and TempGive make 29.
-	-- 2026-10-13: Armor (/armor) makes 30.
+	-- 2026-10-13: Armor (/armor) makes 30; Ghost (/ghost) 31.
 	local expectedActions = {
 		"Armor",
 		"ClearMobs",
@@ -73,6 +73,7 @@ return function(Admin, Enemies, Items)
 		"EndlessBoss",
 		"Freeze",
 		"GiftTest",
+		"Ghost",
 		"Give",
 		"GiveItem",
 		"God",
@@ -96,7 +97,7 @@ return function(Admin, Enemies, Items)
 		"Waves",
 		"Weapons",
 	}
-	check(#Admin.Actions == 30, "30 admin actions, found " .. #Admin.Actions)
+	check(#Admin.Actions == 31, "31 admin actions, found " .. #Admin.Actions)
 	check(
 		table.concat(Admin.Actions, ",") == table.concat(expectedActions, ","),
 		"action names: " .. table.concat(Admin.Actions, ",")
@@ -168,6 +169,8 @@ return function(Admin, Enemies, Items)
 		{ "PauseAll" },
 		{ "PauseAll", true },
 		{ "PauseAll", false },
+		{ "Ghost" },
+		{ "Ghost", true },
 		{ "Armor", "Iron" },
 		{ "Armor", "DragonScale", 4 },
 		{ "Armor", "" },
@@ -292,6 +295,7 @@ return function(Admin, Enemies, Items)
 		{ "Give", "w:04;drop" },
 		{ "Give", 4 },
 		{ "PauseAll", 1 },
+		{ "Ghost", 1 },
 		{ "Armor", "Iron", 5 },
 		{ "Armor", "Iron.Helmet" },
 		{ "Armor", 1 },

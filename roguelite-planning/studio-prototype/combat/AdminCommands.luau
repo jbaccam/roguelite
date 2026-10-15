@@ -15,6 +15,8 @@
 --                                            gear power); their saved armor is untouched and comes
 --                                            back in the lobby. Tier left out: the tiers they own.
 --   /god [player] [on|off]                   toggles when on/off is left out
+--   /ghost [player] [on|off]                 invisible, ignored by every enemy, never hit, weapons
+--                                            off (filming with Freecam); toggles like /god
 --   /pause                                   holds the wave clock and spawns and freezes every enemy
 --   /resume                                  lets them all go again
 --   /wave <1-20>                             starts that wave now; paused stays paused
@@ -32,14 +34,14 @@
 local C={}
 -- /pause, /resume and /wave (2026-10-13, user: "pause and set up everyone and then resume and then a
 -- /wave number that changes the wave to that").
-C.Names={'tempgive','give','armor','god','pause','resume','wave','admin'}
+C.Names={'tempgive','give','armor','god','ghost','pause','resume','wave','admin'}
 C.MAX_WAVE=20
-C.HELP='/tempgive <player> <item> [slot] [tier] · /give <player> <item> [tier] · /armor <player> <set> [tier] (or off) · /god [player] [on|off] · /pause · /resume · /wave <1-20>. Player: me, all, others or a name.'
+C.HELP='/tempgive <player> <item> [slot] [tier] · /give <player> <item> [tier] · /armor <player> <set> [tier] (or off) · /god [player] [on|off] · /ghost [player] [on|off] · /pause · /resume · /wave <1-20>. Player: me, all, others or a name.'
 C.SLOTS=6
 C.MAX_TEXT=200
 -- One line per command for the suggestion list.
 C.Usage={tempgive='<player> <item> [slot] [tier] · this run',give='<player> <item> [tier] · saved',armor='<player> <set> [tier] | off · this run',
- god='[player] [on|off]',pause='hold the clock, spawns and enemies',resume='let them go again',wave='<1-20> · start that wave now',admin='list the commands'}
+ god='[player] [on|off]',ghost='[player] [on|off] · invisible, ignored by enemies',pause='hold the clock, spawns and enemies',resume='let them go again',wave='<1-20> · start that wave now',admin='list the commands'}
 -- 'Frying Pan!' -> 'fryingpan'.
 function C.norm(s) return (string.gsub(string.lower(tostring(s or '')),'[^%w]','')) end
 local function words(text) local out={};for w in string.gmatch(text,'%S+') do table.insert(out,w) end;return out end
@@ -73,10 +75,10 @@ function C.parse(text)
   if not cmd.wave then return nil,'Usage: /wave <1-'..C.MAX_WAVE..'>' end
   return cmd
  end
- if name=='god' then
+ if name=='god' or name=='ghost' then
   local last=args[#args] and SWITCH[string.lower(args[#args])]
   if last~=nil then cmd.on=last;table.remove(args) end
-  if #args>1 then return nil,'Usage: /god [player] [on|off]' end
+  if #args>1 then return nil,'Usage: /'..name..' [player] [on|off]' end
   cmd.player=args[1] or 'me'
   return cmd
  end
@@ -209,7 +211,7 @@ function C.suggest(text,ctx)
  elseif not table.find(C.Names,cmd) then
  elseif cmd=='pause' or cmd=='resume' then
  elseif cmd=='wave' then if index==2 then for n=1,C.MAX_WAVE do add(tostring(n),'wave '..n) end end
- elseif cmd=='god' then if index==2 then players();switch() elseif index==3 then switch() end
+ elseif cmd=='god' or cmd=='ghost' then if index==2 then players();switch() elseif index==3 then switch() end
  elseif cmd~='admin' then
   if index==2 then players()
   elseif index==3 then
