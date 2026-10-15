@@ -60,6 +60,10 @@ V.OutlineThickness=2
 --    with none from a themed weapon shows its theme, so the Molotov's bottle hit is an orange
 --    number with orange streaks and an orange flash, like its fire.
 V.FlashWhite=Color3.new(1,1,1);V.FlashSoften=.35
+-- Bosses don't flash when hit (2026-10-14, user: "remove the flashing the bosses getting hit for
+-- now"). Their damage numbers still show; set true to bring the flash back.
+V.BossFlash=false
+function V.flashes(npc) return V.BossFlash or not (npc:GetAttribute('IsBoss') or npc:GetAttribute('IsHammerBoss')) end
 local function soften(c) local k=V.FlashSoften;return Color3.new(c.R+(1-c.R)*k,c.G+(1-c.G)*k,c.B+(1-c.B)*k) end
 V.FlashTints={};for name,c in V.Sparks do V.FlashTints[name]=soften(c) end
 V.FlashCrit=soften(V.CritColor);V.FlashTurret=soften(V.TurretColor)
@@ -188,7 +192,7 @@ function V.mount(visuals)
  -- color: V.flashColor for the hit (nil: white). Each flash sets it, so a pooled one never keeps
  -- the last hit's colour.
  function api.flash(npc,color)
-  if not npc or not npc.Parent then return end
+  if not npc or not npc.Parent or not V.flashes(npc) then return end
   local f=V.pickFlash(flashes,V.Flashes,npc)
   if f=='new' then
    local h=Instance.new('Highlight');h.Name='WeaponHitFlash';h.FillColor=Color3.new(1,1,1);h.OutlineTransparency=1;h.DepthMode=Enum.HighlightDepthMode.Occluded;h.Enabled=false;h.Parent=visuals
