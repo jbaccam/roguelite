@@ -81,11 +81,14 @@ return function(source,modules)
  local OLD_WEAPONS=old().weapons
  -- Migrates a copy, checks nothing owned was lost and that a second run changes nothing.
  local function migrate(save,name)
-  local after=P.migrate(copy(save))
+  local after=P.migrate(copy(save));local paid=0
   for id,rec in save.weapons or {} do
-   local r=after.weapons[id];check(r~=nil and r.tier==rec.tier and r.have==rec.have,name..': keeps weapon '..id..' with its tier and copies')
+   local r=after.weapons[id]
+   -- A Godly below Tier IV goes to Tier IV, its saved copies paid as emeralds (2026-10-16).
+   if W.isGodly(id) and rec.tier<4 then paid+=rec.have*modules.ChestConfig.overflow(id);check(r~=nil and r.tier==4 and r.have==0,name..': Godly '..id..' goes to Tier IV')
+   else check(r~=nil and r.tier==rec.tier and r.have==rec.have,name..': keeps weapon '..id..' with its tier and copies') end
   end
-  check(after.emeralds==(save.emeralds or 0),name..': emeralds untouched')
+  check(after.emeralds==(save.emeralds or 0)+paid,name..': emeralds untouched (but Godly copies paid)')
   check(same(P.migrate(copy(after)),after),name..': running it twice = once')
   check(after.classes.Thrower==nil,name..': no Thrower class left')
   return after
@@ -137,6 +140,12 @@ return function(source,modules)
  check(set(d.classes)=='Brawler,Gunner,Mage','Brawler + Pan: no class added')
  d=migrate(old({weapons=with(OLD_WEAPONS,{['36']={tier=1,have=0}}),loadout={class='Brawler',weapon='36'}}),'Brawler + Godly')
  check(d.loadout.weapon=='36','Brawler + an owned Godly stays')
+ -- 2026-10-16: every Godly is Tier IV; copies saved toward the next tier pay the Godly overflow.
+ check(same(d.weapons['36'],{tier=4,have=0}),'an owned Tier I Godly becomes Tier IV')
+ local before=migrate(old(),'no Godly').emeralds
+ d=migrate(old({weapons=with(OLD_WEAPONS,{['38']={tier=2,have=2}})}),'Godly copies')
+ check(same(d.weapons['38'],{tier=4,have=0}) and d.emeralds==before+2*modules.ChestConfig.overflow('38'),'Tier II Storm Bow with 2 copies: Tier IV, copies paid as emeralds')
+ check(same(migrate(copy(d),'Godly twice').weapons['38'],{tier=4,have=0}),'Godly fix-up twice = once')
  d=migrate(old({loadout={class='Brawler',weapon='36'}}),'Brawler + unowned Godly')
  check(d.loadout.weapon=='06','Brawler + a Godly not owned goes to the Bat')
  d=migrate(old({weapons=with(OLD_WEAPONS,{['03']={tier=4,have=0}}),loadout={class='Brawler',weapon='03'}}),'Brawler + Katana')
@@ -196,6 +205,7 @@ return function(source,modules)
  P.addCopies(P.profiles[ana],'19',1);check(P.setLoadout(ana,'Brawler','19') and P.profiles[ana].loadout.weapon=='19','Brawler + owned Boxing Gloves can be picked')
  ok,why=P.setLoadout(ana,'Thrower','01');check(not ok and why=='Class locked','the Thrower class is gone')
  P.addCopies(P.profiles[ana],'36',1);check(P.setLoadout(ana,'Mage','36'),'an owned Godly fits any class')
+ check(P.profiles[ana].weapons['36'].tier==4,'a newly unlocked Godly starts at Tier IV')
  ok,why=P.buyClass(ana,'Thrower',400);check(not ok and why=='Unknown class','Thrower cannot be bought with emeralds')
 
  -- 9. Load paths. Studio: always the in-memory fresh profile, migrated, never a DataStore.

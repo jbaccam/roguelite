@@ -56,6 +56,9 @@ local SIGNATURE={Brawler='06',Gunner='00',Chef='01',Juggler='17',Handyman='24',M
 -- Classes that were renamed: an old save, receipt or grant naming the left one means the right one.
 -- Thrower became Chef 1:1 (2026-10-09, plans/2026-10-09-chef-roster-weapon-types-design.md).
 local RENAMED={Thrower='Chef'}
+-- Godly weapons are always Tier IV (2026-10-16, user: "make all god weapons tier 4 so you dont even have
+-- to upgrade them"): unlocked at IV, and every extra copy pays the Godly overflow (200 emeralds).
+local GODLY_TIER=4
 local MAX_RECEIPTS=200
 
 local function fresh()
@@ -196,6 +199,13 @@ function P.migrate(data)
  -- Chef's the Frying Pan; on 2026-10-10 Brawler's became the Baseball Bat, so Brawler owners get the
  -- Bat. Nothing owned is ever taken away: no weapon, copy or tier.
  for class in data.classes do local id=SIGNATURE[class];if id and not data.weapons[id] then data.weapons[id]={tier=1,have=0} end end
+ -- Godlies owned below Tier IV go to Tier IV once (GODLY_TIER); copies saved toward the next tier
+ -- pay out like overflow copies. Example: Storm Bow Tier I with 2 copies -> Tier IV, +400 emeralds.
+ for id,rec in data.weapons do
+  if Weapons.isGodly(id) and type(rec)=='table' and (tonumber(rec.tier) or 1)<GODLY_TIER then
+   data.emeralds+=math.max(0,math.floor(tonumber(rec.have) or 0))*Chests.overflow(id);rec.tier=GODLY_TIER;rec.have=0
+  end
+ end
  data.journal=Journal.clean(data.journal)
  return data
 end
@@ -325,12 +335,12 @@ function P.grant(player,g)
 end
 
 -- Copies of one item (a weapon, an armor piece like 'Iron.Helmet', or a pet like 'Fox'): the first copy unlocks it
--- at Tier I; the rest fill the upgrade bar; past Tier IV each copy turns into (earned) emeralds
--- by rarity.
+-- at Tier I (a Godly at Tier IV, see GODLY_TIER); the rest fill the upgrade bar; past Tier IV each copy turns
+-- into (earned) emeralds by rarity.
 function P.addCopies(d,id,count)
  local book=Chests.isArmor(id) and d.armor or Pets.valid(id) and d.pets or d.weapons
  local rec=book[id];local new=false
- if not rec then rec={tier=1,have=0};book[id]=rec;new=true;count-=1 end
+ if not rec then rec={tier=book==d.weapons and Weapons.isGodly(id) and GODLY_TIER or 1,have=0};book[id]=rec;new=true;count-=1 end
  local emeralds=0
  if rec.tier>=4 then emeralds=count*Chests.overflow(id);d.emeralds+=emeralds
  else rec.have+=count end
@@ -349,6 +359,7 @@ function P.adminGive(player,id,tier)
  if not (armor or pet or weapon) then return false,'Unknown item' end
  local book=armor and d.armor or pet and d.pets or d.weapons
  local rec=book[id];local text
+ if weapon and Weapons.isGodly(id) then tier=GODLY_TIER end -- a Godly is always Tier IV
  if not rec then book[id]={tier=tier or 1,have=0};text='unlocked at Tier '..(tier or 1)
  elseif tier then rec.tier=math.max(rec.tier,tier);text='now Tier '..rec.tier
  else P.addCopies(d,id,1);text='+1 copy (Tier '..rec.tier..')' end

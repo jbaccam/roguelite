@@ -1,7 +1,9 @@
 local E={
  WEAPON_SELL_REFUND=.25, REROLL_BASE_WAVE=.75, REROLL_STEP_WAVE=.40,
  FLAT_WAVE_PRICE=1, INFLATION_RATE=.10, GLOBAL_SHOP_PRICE_MODIFIER=1,
- STARTING_SHARDS=60, MAX_SHARDS=1000000, DEBUG_CURRENCY_ENABLED=true,
+ -- Starting crystals: 30 (60 until 2026-10-16, user: "you start off with a little too many crystals
+ -- like for round 1"). Wave 1 Tier I items cost about 14-28, so 30 plus wave 1's pickups buys 2-3.
+ STARTING_SHARDS=30, MAX_SHARDS=1000000, DEBUG_CURRENCY_ENABLED=true,
  OFFER_COUNT=4, ITEM_CAPACITY=16, MAX_ITEM_COPIES=5,
  -- Shop timer: the next wave starts when every living player presses GO, or after this long.
  SHOP_SECONDS=120,
