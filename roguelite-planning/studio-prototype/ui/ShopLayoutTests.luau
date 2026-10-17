@@ -3,6 +3,9 @@
 -- TypeStep_ / TypeLine_) and the stat lines; the stats column has SETS (pinned or a Sets tab).
 -- 2026-10-10: BANISH in the header (run it once normally and once in banish mode; it isn't shown
 -- where PaidRandomRestricted is set or in the tutorial).
+-- 2026-10-16 phones / tablets (ShopUI `compact`): the offers sit in one sideways-scrolling row
+-- (ShopMain.Offers, cards and Lock<n> inside it, Buy and Lock side by side at each card's foot),
+-- Items and Weapons are one sideways row each, and short (phone) views need no vertical scroll.
 local gui=game.Players.LocalPlayer.PlayerGui.RogueliteHUD
 local Weapons=require(game.ReplicatedStorage.RogueliteCombat.WeaponCatalog)
 local Stats=require(game.ReplicatedStorage.RogueliteCombat.CharacterStats)
@@ -27,7 +30,9 @@ local ok,err=xpcall(function()
   -- 2026-10-12 turret combining (own 2+ of a turret to see it): the hint beside the Items title, and
   -- on each turret tile the tier badge, the lime arrow and the count stay apart and inside the tile.
   local hint=left.Items:FindFirstChild('CombineHint')
-  if hint then assert(disjoint(hint,left.Items.Title),'combine hint over the Items title');assert(right(hint)<=right(left.Items)+1,'combine hint past the items edge') end
+  if hint then assert(disjoint(hint,left.Items.Title),'combine hint over the Items title') end
+  -- Compact rows scroll sideways: their hint may sit past the row's right edge (scrolled away).
+  if hint and not left.Items:IsA('ScrollingFrame') then assert(right(hint)<=right(left.Items)+1,'combine hint past the items edge') end
   for _,tile in left.Items:GetChildren() do
    if tile.Name:match('^ItemSlot') then
     local marks={}
@@ -46,7 +51,7 @@ local ok,err=xpcall(function()
    for _,name in {'ShopTitle','Shards','Reroll','RobuxReroll','RerollOdds','BanishHint','Bag','BagNote'} do
     local other=left:FindFirstChild(name);if other then assert(disjoint(banish,other),'BANISH overlaps '..name..' at '..tostring(size)) end
    end
-   for i=1,4 do local card=left:FindFirstChild('Offer'..i);if card then assert(disjoint(banish,card),'BANISH overlaps an offer') end end
+   for i=1,4 do local card=left:FindFirstChild('Offer'..i,true);if card then assert(disjoint(banish,card),'BANISH overlaps an offer') end end
    assert(right(banish)<=right(left)+1,'BANISH past the shop edge')
   end
   if left:FindFirstChild('RobuxReroll') then assert(disjoint(left.RobuxReroll,left.Reroll),'R$ reroll overlaps REROLL') end
@@ -61,14 +66,45 @@ local ok,err=xpcall(function()
    assert(note.AbsolutePosition.X>=right(bag)-1 and note.AbsolutePosition.X<=right(bag)+12,'bag caption not beside the bag')
    assert(math.abs((note.AbsolutePosition.Y+note.AbsoluteSize.Y/2)-(bag.AbsolutePosition.Y+bag.AbsoluteSize.Y/2))<2,'bag caption not centred on the bag')
    if left:FindFirstChild('RerollOdds') then assert(disjoint(note,left.RerollOdds),'bag caption overlaps odds') end
-   for i=1,4 do local card=left:FindFirstChild('Offer'..i);if card then assert(disjoint(note,card),'bag caption overlaps offer') end end
+   for i=1,4 do local card=left:FindFirstChild('Offer'..i,true);if card then assert(disjoint(note,card),'bag caption overlaps offer') end end
   end
   for _,v in left.Weapons:GetChildren() do
    if v:IsA('ImageButton') then assert(v:FindFirstChild('WeaponIcon') or v:FindFirstChild('WeaponPreview'),'empty weapon box') end
   end
+  local strip=left:FindFirstChild('Offers')
+  if strip then
+   -- One row: every card at the same height inside the sideways strip, 2 px in from its canvas
+   -- edges, the strip inside ShopMain; the strip only scrolls sideways.
+   assert(strip:IsA('ScrollingFrame') and strip.ScrollingDirection==Enum.ScrollingDirection.X,'offer row does not scroll sideways at '..tostring(size))
+   assert(strip.AbsolutePosition.X>=left.AbsolutePosition.X and right(strip)<=right(left)+1,'offer row outside the shop at '..tostring(size))
+   local y0
+   for _,card in strip:GetChildren() do
+    if card.Name:match('^Offer%d$') then
+     y0=y0 or card.AbsolutePosition.Y
+     assert(math.abs(card.AbsolutePosition.Y-y0)<1,'offers not in one row at '..tostring(size))
+     assert(card.Position.X.Offset>=2 and card.Position.X.Offset+card.Size.X.Offset<=strip.CanvasSize.X.Offset-2+1,'card outside the row canvas at '..tostring(size))
+     local bar=strip.ScrollBarThickness*strip.AbsoluteSize.Y/strip.Size.Y.Offset -- the bar's screen px
+     assert(bottom(card)<=bottom(strip)-bar+1,'card under the row scroll bar at '..tostring(size))
+    end
+   end
+   for _,name in {'Items','Weapons'} do local r=left[name];assert(r:IsA('ScrollingFrame') and r.ScrollingDirection==Enum.ScrollingDirection.X,name..' row does not scroll sideways') end
+   -- Short (phone) views: the whole shop fits, or scrolls at most 24 px (2026-10-16, user: "way too
+   -- much scrolling"; 812x375 with two-type weapons and a crystal bag scrolls about 22).
+   if size.Y<450 then assert(left.AbsoluteCanvasSize.Y<=left.AbsoluteWindowSize.Y+24,string.format('phone shop scrolls %d px at %s',left.AbsoluteCanvasSize.Y-left.AbsoluteWindowSize.Y,tostring(size))) end
+  end
   for i=1,4 do
-   local card=left:FindFirstChild('Offer'..i)
-   if card then
+   local card=left:FindFirstChild('Offer'..i,true)
+   local lock=left:FindFirstChild('Lock'..i,true)
+   if card and strip then
+    -- Compact: Lock beside Buy at the card's foot, both clear of its 12 layout px border ring.
+    local ring=12*layout.UIScale.Scale-1
+    assert(disjoint(card.Buy,lock) and math.abs(lock.AbsolutePosition.Y-card.Buy.AbsolutePosition.Y)<1,'lock not beside Buy at '..tostring(size))
+    assert(right(lock)<=right(card)-ring and bottom(lock)<=bottom(card)-ring and bottom(card.Buy)<=bottom(card)-ring,'lock or Buy on the card border at '..tostring(size))
+    for _,c in card:GetChildren() do if (c:IsA('TextLabel') and c.Text~='') or c.Name=='SpecBar' or c.Name:match('^TypeChip_') then assert(disjoint(c,lock),'lock over '..c.Name..' at '..tostring(size)) end end
+    local tier=card:GetAttribute('Tier') or 1
+    assert(card.Image~='' and ((tier>1)==(card:FindFirstChild('RarityCorners')~=nil)),'rarity frame mismatch')
+    assert(disjoint(card,left.Items) and disjoint(card,left.Weapons),'offer/inventory overlap')
+   elseif card then
     assert(card.AbsolutePosition.X-2>=left.AbsolutePosition.X,'left border clipped')
     assert(right(card)+2<=right(left),'right border clipped')
     -- Green theme: tier II+ cards carry recoloured RarityCorners (T.setTier); common keeps the lime panel.
@@ -76,8 +112,10 @@ local ok,err=xpcall(function()
     assert(card.Image~='' and ((tier>1)==(card:FindFirstChild('RarityCorners')~=nil)),'rarity frame mismatch')
     assert(disjoint(card,left.Items) and disjoint(card,left.Weapons),'offer/inventory overlap')
     assert(bottom(card.Buy)<=bottom(card)-8,'price overlaps card border')
-    assert(disjoint(card,left['Lock'..i]),'lock overlaps card border')
-    for j=i+1,4 do local other=left:FindFirstChild('Offer'..j);if other then assert(disjoint(card,other),'offer overlap') end end
+    assert(disjoint(card,lock),'lock overlaps card border')
+   end
+   if card then
+    for j=i+1,4 do local other=left:FindFirstChild('Offer'..j,true);if other then assert(disjoint(card,other),'offer overlap') end end
     -- Weapon cards: the specialty bar, type rows, stat lines and traits never overlap each other or
     -- Buy. Item cards: the "Works with" line clear of the description and Buy.
     if card:FindFirstChild('SpecBar') then
@@ -89,7 +127,8 @@ local ok,err=xpcall(function()
       for j=i+1,#pieces do local b=pieces[j];if not (a.Name:match('^TypeChip_') and b.Name:match('^TypeChip_')) then assert(disjoint(a,b),'weapon card pieces overlap: '..a.Name..' / '..b.Name) end end
      end
      local w=Weapons.ById[card.SpecBar:GetAttribute('WeaponId')]
-     for _,t in w.types do assert(card:FindFirstChild('TypeChip_'..t) and card:FindFirstChild('TypeLine_'..t),'type row for '..t..' on '..w.name) end
+     -- Compact cards have one chip per type ('GUN 1→2'); the bonus words are on the Sets tab.
+     for _,t in w.types do assert(card:FindFirstChild('TypeChip_'..t) and (strip or card:FindFirstChild('TypeLine_'..t)),'type row for '..t..' on '..w.name) end
     end
     if card:FindFirstChild('WorksWith') then assert(disjoint(card.WorksWith,card.Description) and disjoint(card.WorksWith,card.Buy),'works-with overlap') end
    end
