@@ -39,6 +39,16 @@ local ok,err=xpcall(function()
   check(layout.StartWave.Caption.Text:find('UNREADY',1,true)~=nil,'ready button cannot unready')
   host:Destroy()
  end
+ -- 2026-10-16: a popup left open when the shop ends is closed when the next shop opens.
+ shop.selected={kind='Weapon',slot=1,copy='preview-a'}
+ local host=T.frame(gui,'ShopFixture',0,0,1600,850)
+ shop:render(host,1600,850,false);task.wait()
+ check(host.ShopLayout:FindFirstChild('Details')~=nil,'weapon details did not open')
+ host:Destroy();fixture.wave=3
+ host=T.frame(gui,'ShopFixture',0,0,1600,850)
+ shop:render(host,1600,850,false);task.wait()
+ check(shop.selected==nil and host.ShopLayout:FindFirstChild('Details')==nil,'details from the last shop reopened')
+ host:Destroy();fixture.wave=2
  -- The tracker collapses on completion, preserves a way to claim, and reopens for fresh quests.
  local tracker=Quests.tracker(gui,0,0,{config=config,open=function() end,claim=function() end})
  local daily={}

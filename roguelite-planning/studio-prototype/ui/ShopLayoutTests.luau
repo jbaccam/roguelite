@@ -129,11 +129,35 @@ local ok,err=xpcall(function()
    end
    if label:IsA('TextLabel') and label.Text~='' then assert(label.TextFits,'text overflow '..label:GetFullName()..' at '..tostring(size)) end
   end
-  -- SETS: pinned rows (desktop) or the Sets tab's rows sit inside the stats column, clear of the tabs.
-  for _,r in stats:GetDescendants() do
-   if r.Name:match('^Set_') and r:IsA('Frame') then
-    assert(r:FindFirstAncestor('SetRows')~=nil or (r.AbsolutePosition.Y>=stats.AbsolutePosition.Y and bottom(r)<=bottom(stats)+1),'set row inside the stats column')
-    local tab=stats:FindFirstChild('PrimaryTab');if tab and not r:FindFirstAncestor('SetRows') then assert(disjoint(r,tab),'set row over the tabs') end
+  -- SETS: pinned rows (desktop, in the Sets list) or the Sets tab's rows (SetRows) sit inside the
+  -- stats column, clear of the tabs. 2026-10-16: the lists themselves are clear of the tabs and the
+  -- title; rows never overlap each other; each row's lines sit inside it with 4 px to spare.
+  local tab=stats:FindFirstChild('PrimaryTab')
+  for _,name in {'Sets','SetRows'} do
+   local list=stats:FindFirstChild(name)
+   if list then
+    assert(list.AbsolutePosition.Y>=stats.AbsolutePosition.Y and bottom(list)<=bottom(stats)+1,name..' outside the stats column at '..tostring(size))
+    if tab and name=='Sets' then assert(disjoint(list,tab),'set list over the tabs at '..tostring(size)) end
+    if stats:FindFirstChild('SetsNote') then assert(disjoint(list,stats.SetsNote) and disjoint(stats.SetsTitle,stats.SetsNote),'set title / hint overlap') end
+    local rows={}
+    for _,r in list:GetChildren() do if r.Name:match('^Set_') and r:IsA('Frame') then table.insert(rows,r) end end
+    for i,r in rows do
+     for j=i+1,#rows do assert(disjoint(r,rows[j]),'set rows overlap: '..r.Name..' / '..rows[j].Name..' at '..tostring(size)) end
+     for _,c in r:GetChildren() do
+      if c:IsA('TextLabel') then assert(c.AbsolutePosition.Y>=r.AbsolutePosition.Y and bottom(c)<=bottom(r)-4 and right(c)<=right(r)-4,c.Name..' touches the edge of '..r.Name..' at '..tostring(size)) end
+     end
+    end
+   end
+  end
+  -- Owned tiles (2026-10-16): the icon centred in its tile with even gaps, clear of the frame.
+  for _,region in {left.Items,left.Weapons} do
+   for _,tile in region:GetChildren() do
+    local icon=tile:IsA('ImageButton') and (tile:FindFirstChild('Icon') or tile:FindFirstChild('WeaponIcon') or tile:FindFirstChild('WeaponPreview'))
+    if icon then
+     local l,t=icon.AbsolutePosition.X-tile.AbsolutePosition.X,icon.AbsolutePosition.Y-tile.AbsolutePosition.Y
+     local r,b=right(tile)-right(icon),bottom(tile)-bottom(icon)
+     assert(math.abs(l-r)<1.5 and math.abs(t-b)<1.5 and math.min(l,t)>=tile.AbsoluteSize.X*.12,'icon not centred in '..tile.Name..' at '..tostring(size))
+    end
    end
   end
   -- Phone-height views (the HUD root of a 844x390 iPhone is 750x311): every button is a 40 px tap.

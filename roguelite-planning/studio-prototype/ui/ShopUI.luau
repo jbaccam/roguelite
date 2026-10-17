@@ -354,11 +354,23 @@ function M.new(player,h,refresh)
   local asset=entry.weaponId and WeaponIcons[entry.weaponId] or T.Asset[entry.icon] or entry.icon
   buyFX(screen,b,find,asset,tiers[entry.tier] or white,math.clamp(2+entry.tier,3,5))
  end
+ -- Each shop opens clean (user, 2026-10-16: "next time the shop opens the item is already clicked
+ -- on"): the open item / weapon popup, banish mode and the scroll belong to one shop, and go when
+ -- the phase leaves Shop or the wave changes (GO, the timer, auto-ready). render() checks too: the
+ -- HUD draws the new shop before the deferred listener below runs. The first look keeps them.
+ local shopKey
+ local function newShop(data)
+  if not data then return end
+  local key=data.phase=='Shop' and data.wave or false
+  if shopKey==nil then shopKey=key;return end
+  if key==shopKey then return end
+  shopKey=key;self.selected=nil;self.banishMode=false;self.ShopScroll=nil;self.InventoryScroll=nil
+ end
  local refreshQueued=false
  local function queueRefresh()
   if refreshQueued then return end
   refreshQueued=true
-  task.defer(function() refreshQueued=false;refresh() end)
+  task.defer(function() refreshQueued=false;newShop(self:snapshot());refresh() end)
  end
  state:GetAttributeChangedSignal('ShopSnapshot'):Connect(queueRefresh)
  local readyState=RS:FindFirstChild('RogueliteRunState')
@@ -572,6 +584,7 @@ function M.new(player,h,refresh)
  end
  function self:render(parent,width,height,inventoryOnly)
   local data=self:snapshot();if not data then text(parent,'Loading','Loading shop…',0,0,width,40,20);return end
+  newShop(data)
   local L=M.getLayout()
   local scale=math.min(1,(width-12)/480)
   local occupied=0;for _,v in data.weapons do if v.id~='' then occupied+=1 end end
@@ -609,40 +622,67 @@ function M.new(player,h,refresh)
   local statTitle=heading(stats,'Title','Stats',12,10,side-24,34,28);statTitle.TextXAlignment=Enum.TextXAlignment.Center
   local tabH=th(32)
   -- SETS (2026-10-09): each equipped weapon type with its copies, current bonus and next step, most
-  -- copies first. Pinned above the stats when it takes at most half the column (desktop); else a
-  -- third tab, Sets, with one line per type (phones).
+  -- copies first. Desktop pins them above the stats; phones get a third tab, Sets.
+  -- SET BONUSES (2026-10-16, user: "equipped copies" wasn't clear; rows overlapped each other and the
+  -- tabs, and their last line clipped on the row edge): a plain title and hint, then one row per type
+  -- as tall as its wrapped lines (measured like readableHeight), 8 px under the last line. Pinned,
+  -- they take at most half the column and scroll past that. Example, 310 wide: BLADE 2 is 34 + 20 +
+  -- 18 + 8 = 80 px, so three types take 46 + 248.
   local lines=Stats.typeLines(equippedIds(data))
   table.sort(lines,function(a,b) if a.count~=b.count then return a.count>b.count end return table.find(Weapons.Types,a.type)<table.find(Weapons.Types,b.type) end)
-  local setsH=30+#lines*64+4
-  local pinned=#lines>0 and tap==0 and setsH<=(statsH-52)*.5
-  local function setRows(parent,y,w,compact)
-   local y0=y
+  local bonusSize,nextSize,tabSize=math.max(14,minText),math.max(13,minText),math.max(13,minText)
+  local function lineH(s,size,w) return readableHeight(s,size,w)-6 end
+  -- The row's words: now (the bonus you have, or 'No bonus yet') and, full rows only, the next step.
+  -- Compact (the Sets tab) has one line: the bonus, or 'At 2: +4% dmg' when there is none yet.
+  local function setText(r,compact)
+   local on=r.count>=2;local step=r.next and M.setShort(r.type,r.next)
+   if compact then return on and M.setShort(r.type,r.count) or step and ('At '..r.next..': '..step) or '' end
+   return on and M.setShort(r.type,r.count) or 'No bonus yet',step and ((on and 'Next at ' or 'At ')..r.next..': '..step) or 'Full set'
+  end
+  local function setRowH(r,w,compact)
+   local now,nxt=setText(r,compact)
+   if compact then return 32+lineH(now,tabSize,w-20)+8 end
+   return 34+lineH(now,bonusSize,w-56)+lineH(nxt,nextSize,w-56)+8
+  end
+  local function rowsHeight(w,compact) local h=0;for _,r in lines do h+=setRowH(r,w,compact)+4 end;return math.max(0,h-4) end
+  -- Rows from y=2, x=2 (their 2 px outlines stay inside a clipping list); returns the canvas height.
+  local function setRows(parent,w,compact)
+   local y=2;w-=4
    for _,r in lines do
-    local rh=compact and 78 or 64;local on=r.count>=2
-    local f=Instance.new('Frame');f.Name='Set_'..r.type;f.Position=UDim2.fromOffset(0,y);f.Size=UDim2.fromOffset(w,rh-4);f.BorderSizePixel=0
+    local rh=setRowH(r,w,compact);local on=r.count>=2;local now,nxt=setText(r,compact)
+    local f=Instance.new('Frame');f.Name='Set_'..r.type;f.Position=UDim2.fromOffset(2,y);f.Size=UDim2.fromOffset(w,rh);f.BorderSizePixel=0
     f.BackgroundColor3=on and Color3.fromRGB(26,32,36) or Color3.fromRGB(21,25,28);f.Parent=parent
     T.make('UICorner',f,{CornerRadius=UDim.new(0,8)});T.make('UIStroke',f,{Color=Color3.fromRGB(8,10,11),Thickness=2})
     f:SetAttribute('Count',r.count)
-    local is=compact and 24 or 34;local nx=compact and 36 or 48
-    T.icon(f,'Icon',6,compact and 4 or 6,is,WeaponIcons[TYPE_ICON[r.type]])
-    heading(f,'Type',string.upper(r.type),nx,compact and 2 or 4,w-nx-50,24,compact and 16 or 18,on and white or T.Color.muted)
-    local c=heading(f,'Count',tostring(r.count),w-46,2,38,28,compact and 20 or 24,on and green or T.Color.muted);c.TextXAlignment=Enum.TextXAlignment.Right
-    local now=on and M.setShort(r.type,r.count) or (compact and ('1 more: '..M.setShort(r.type,2)) or 'No bonus yet. Sets start at 2.')
-    text(f,'Bonus',now,compact and 8 or nx,compact and 25 or 29,w-(compact and 16 or nx+8),compact and 48 or 17,compact and math.max(13,minText) or 14,on and green or cream)
-    if not compact and r.next then
-     text(f,'Next',(on and 'Next at ' or 'At ')..r.next..': '..M.setShort(r.type,r.next),nx,45,w-nx-8,15,13,T.Color.muted)
-    elseif not compact then text(f,'Next','Full set',nx,45,w-nx-8,15,13,T.Color.gold) end
-    y+=rh
+    local is=compact and 24 or 30;local nx=compact and 40 or 46
+    T.icon(f,'Icon',8,compact and 6 or 8,is,WeaponIcons[TYPE_ICON[r.type]])
+    heading(f,'Type',string.upper(r.type),nx,compact and 4 or 7,w-nx-52,24,compact and 16 or 18,on and white or T.Color.muted)
+    local c=heading(f,'Count',tostring(r.count),w-48,compact and 2 or 5,40,28,compact and 20 or 24,on and green or T.Color.muted);c.TextXAlignment=Enum.TextXAlignment.Right
+    if compact then
+     local l=text(f,'Bonus',now,10,32,w-20,lineH(now,tabSize,w-20),tabSize,on and green or cream);l.TextYAlignment=Enum.TextYAlignment.Top
+    else
+     local bh=lineH(now,bonusSize,w-56)
+     local l=text(f,'Bonus',now,nx,34,w-nx-10,bh,bonusSize,on and green or cream);l.TextYAlignment=Enum.TextYAlignment.Top
+     local n=text(f,'Next',nxt,nx,34+bh,w-nx-10,lineH(nxt,nextSize,w-56),nextSize,r.next and T.Color.muted or T.Color.gold);n.TextYAlignment=Enum.TextYAlignment.Top
+    end
+    y+=rh+4
    end
-   return y-y0
+   return y-4+2
   end
   local tabsY=52
+  local cap=math.floor((statsH-52)*.5)
+  local pinned=#lines>0 and tap==0 and 46+setRowH(lines[1],side-24,false)+4<=cap
   if pinned then
-   heading(stats,'SetsTitle','SETS',12,tabsY,60,26,18,green)
-   text(stats,'SetsNote','equipped copies',72,tabsY+5,side-84,18,13,T.Color.muted)
-   local box=T.frame(stats,'Sets',9,tabsY+30,side-18,#lines*64)
-   setRows(box,0,side-18,false)
-   tabsY+=setsH
+   heading(stats,'SetsTitle','SET BONUSES',14,tabsY,side-28,24,18,green)
+   text(stats,'SetsNote','2+ weapons of one type give a bonus',14,tabsY+24,side-28,18,13,T.Color.muted)
+   local listW=side-24;local rowsH=rowsHeight(listW-4,false)+4
+   local scrolls=46+rowsH>cap
+   if scrolls then listW-=6;rowsH=rowsHeight(listW-4,false)+4 end
+   local boxH=math.min(rowsH,cap-46)
+   local box=Instance.new('ScrollingFrame');box.Name='Sets';box.Position=UDim2.fromOffset(12,tabsY+46);box.Size=UDim2.fromOffset(side-24,boxH);box.CanvasSize=UDim2.fromOffset(0,rowsH)
+   box.BackgroundTransparency=1;box.BorderSizePixel=0;box.ScrollBarThickness=scrolls and 3 or 0;box.ScrollBarImageColor3=green;box.VerticalScrollBarInset=Enum.ScrollBarInset.None;box.Parent=stats
+   setRows(box,listW,false)
+   tabsY+=46+boxH+8
   end
   local tabList=(pinned or #lines==0) and {'Primary','Secondary'} or {'Primary','Secondary','Sets'}
   local showSets=self.statTab=='Sets' and #tabList==3 -- kept when a resize pins the sets again
@@ -655,9 +695,9 @@ function M.new(player,h,refresh)
   end
   local definitions={};if not showSets then for _,d in Stats.List do if (primary[d.id]==true)~=secondary then table.insert(definitions,d) end end end
   if showSets then
-   local list=Instance.new('ScrollingFrame');list.Name='SetRows';list.Position=UDim2.fromOffset(9,tabsY+tabH+6);list.Size=UDim2.fromOffset(side-18,math.max(0,statsH-(tabsY+tabH+6)-8))
+   local list=Instance.new('ScrollingFrame');list.Name='SetRows';list.Position=UDim2.fromOffset(12,tabsY+tabH+6);list.Size=UDim2.fromOffset(side-24,math.max(0,statsH-(tabsY+tabH+6)-12))
    list.BackgroundTransparency=1;list.BorderSizePixel=0;list.ScrollBarThickness=3;list.ScrollBarImageColor3=green;list.VerticalScrollBarInset=Enum.ScrollBarInset.None;list.Parent=stats
-   list.CanvasSize=UDim2.fromOffset(0,setRows(list,0,side-24,true))
+   list.CanvasSize=UDim2.fromOffset(0,setRows(list,side-30,true))
   end
   -- Rows fill the space between the tabs and the pager (never past the panel); each row at least
   -- 18 layout px and 13 px on screen.
@@ -669,15 +709,16 @@ function M.new(player,h,refresh)
   if available<rowMin then perPage=math.max(1,#definitions);paged=false end -- too short for any row
   local pages=math.max(1,math.ceil(#definitions/perPage));local page=math.clamp(self.statPage or 1,1,pages)
   local shown=available<rowMin and 0 or math.min(perPage,#definitions-(page-1)*perPage);local rowH=shown>0 and available/shown or 0
-  local scroll=Instance.new('Frame');scroll.Name='StatRows';scroll.Position=UDim2.fromOffset(9,rowsTop);scroll.Size=UDim2.fromOffset(side-18,math.max(0,available));scroll.BackgroundTransparency=1;scroll.ClipsDescendants=true;scroll.Parent=stats
+  -- 12 px in, so names and values clear the panel's 12 px border by 4 and 8 (2026-10-16).
+  local scroll=Instance.new('Frame');scroll.Name='StatRows';scroll.Position=UDim2.fromOffset(12,rowsTop);scroll.Size=UDim2.fromOffset(side-24,math.max(0,available));scroll.BackgroundTransparency=1;scroll.ClipsDescendants=true;scroll.Parent=stats
   local values=Stats.read(state)
   for i=1,shown do
    local d=definitions[(page-1)*perPage+i]
    local row=Instance.new('Frame');row.Name=d.id;row.Size=UDim2.new(1,-4,0,rowH-1);row.Position=UDim2.fromOffset(0,(i-1)*rowH);row.BorderSizePixel=0;row.BackgroundColor3=Color3.fromRGB(18,22,23);row.BackgroundTransparency=1;row.Parent=scroll
    local font=side<180 and 10 or math.clamp(rowH*.86,11,19)
-   text(row,'Name',Stats.statLabel(d,values[d.id]),4,0,side*.58-9,rowH-1,font) -- 'Armor · you take 35% less damage' (2026-10-10)
+   text(row,'Name',Stats.statLabel(d,values[d.id]),4,0,side*.58-12,rowH-1,font) -- 'Armor · you take 35% less damage' (2026-10-10)
    local value=d.id=='ShopPricePercent' and string.format('×%.2f',data.modifier) or Stats.format(d,values[d.id])
-   local v=text(row,'Value',value,side*.58-5,0,side*.42-23,rowH-1,font,M.statColor(d.id,d.id=='ShopPricePercent' and (data.modifier-1)*100 or values[d.id],d.base));v.TextXAlignment=Enum.TextXAlignment.Right
+   local v=text(row,'Value',value,side*.58-8,0,side*.42-24,rowH-1,font,M.statColor(d.id,d.id=='ShopPricePercent' and (data.modifier-1)*100 or values[d.id],d.base));v.TextXAlignment=Enum.TextXAlignment.Right
   end
   if paged then
    local py=statsH-8-pagerH
@@ -831,9 +872,9 @@ function M.new(player,h,refresh)
   for _,offer in data.offers do
    local entry=Catalog.ById[offer.id];local base=entry and entry.weaponId and Weapons.ById[entry.weaponId]
    if base then
-    attackH=math.max(attackH,readableHeight(M.attackLine(base),ts,cardW-98,38)-8)
-    typesH=math.max(typesH,typeRowsHeight(base,cardW-28,now,true))
-    traitsH=math.max(traitsH,readableHeight(traitLine(base,entry.tier,after(base)),16,cardW-28,22))
+    attackH=math.max(attackH,readableHeight(M.attackLine(base),ts,cardW-104,38)-8)
+    typesH=math.max(typesH,typeRowsHeight(base,cardW-36,now,true))
+    traitsH=math.max(traitsH,readableHeight(traitLine(base,entry.tier,after(base)),16,cardW-36,22))
    end
   end
   local specY=44+attackH+4;local typesY=specY+26+8;local statsY=typesY+typesH+2
@@ -844,22 +885,22 @@ function M.new(player,h,refresh)
     if not o.sold then
      local card=surface(left,'Offer'..i,x,y,cardW,cardH,entry.tier)
      local well=surface(card,'IconWell',12,12,64,64,nil,'inset')
-     art(well,entry,4,4,56,56)
-     heading(card,'Name',entry.name..(entry.weaponId and entry.tier>1 and (' '..({'I','II','III','IV'})[entry.tier]) or ''),86,12,cardW-98,entry.weaponId and 30 or 43,22,tiers[entry.tier])
-     if not entry.weaponId then text(card,'Kind',entry.kind..(#entry.tags>0 and ' · '..entry.tags[1] or ''),86,56,cardW-98,26,17,cream) end
+     art(well,entry,7,7,50,50) -- clear of the well's 8 px rim
+     heading(card,'Name',entry.name..(entry.weaponId and entry.tier>1 and (' '..({'I','II','III','IV'})[entry.tier]) or ''),86,12,cardW-104,entry.weaponId and 30 or 43,22,tiers[entry.tier])
+     if not entry.weaponId then text(card,'Kind',entry.kind..(#entry.tags>0 and ' · '..entry.tags[1] or ''),86,56,cardW-104,26,17,cream) end
      if entry.weaponId then
       local base=Weapons.ById[entry.weaponId]
-      local al=text(card,'Attack',M.attackLine(base),86,44,cardW-98,attackH,ts,cream);al.TextYAlignment=Enum.TextYAlignment.Top
-      specBar(card,base,14,specY,cardW-28,26)
-      typeRows(card,base,14,typesY,cardW-28,now,true)
-      local used=weaponStats(card,base,entry.tier,14,statsY,cardW-28,after(base))
-      text(card,'Traits',traitLine(base,entry.tier,after(base)),14,statsY+used+4,cardW-28,traitsH,16,tiers[entry.tier])
+      local al=text(card,'Attack',M.attackLine(base),86,44,cardW-104,attackH,ts,cream);al.TextYAlignment=Enum.TextYAlignment.Top
+      specBar(card,base,18,specY,cardW-36,26)
+      typeRows(card,base,18,typesY,cardW-36,now,true)
+      local used=weaponStats(card,base,entry.tier,18,statsY,cardW-36,after(base))
+      text(card,'Traits',traitLine(base,entry.tier,after(base)),18,statsY+used+4,cardW-36,traitsH,16,tiers[entry.tier])
      else
-      local used=effects(card,entry,14,98,cardW-28)
+      local used=effects(card,entry,18,98,cardW-36)
       -- Which of your weapons it works with, for items only some weapons use (worksLine).
       local works,wc=worksLine(entry,data)
-      if works then text(card,'WorksWith',works,14,102+used,cardW-28,40,17,wc);used+=44 end
-      text(card,'Description',entry.description,14,110+used,cardW-28,math.max(40,cardH-185-used-(buyH-43)),18)
+      if works then text(card,'WorksWith',works,18,102+used,cardW-36,40,17,wc);used+=44 end
+      text(card,'Description',entry.description,18,110+used,cardW-36,math.max(40,cardH-185-used-(buyH-43)),18)
      end
      local bw=math.min(136,cardW-32)
      local buy=btn(card,'Buy','', (cardW-bw)/2,cardH-16-buyH,bw,buyH,function() T.sound('ui_purchase');remember(card,well,i,o,data);self:send('Buy',i,o.token) end)
@@ -880,6 +921,18 @@ function M.new(player,h,refresh)
     end
    end
    top+=math.ceil(4/cols)*(cardH+lockH+24)
+  end
+  -- Owned tiles (2026-10-16, user: icons didn't fit their boxes): a thinner frame (8 px, not the
+  -- button's 11), each icon centred in it with an even gap (Fit keeps its shape: 64 px -> 46 px icon,
+  -- 9 px each side), and the count on a dark pill 5 px in from the corner, off the frame's edge.
+  local function slotFrame(b) b.SliceScale=.36 end
+  local function slotPad(size) return math.max(8,math.floor(size*.15)) end
+  local function countPill(b,s,size,cs)
+   local pw=math.ceil(TS:GetTextSize(s,cs,T.Body,Vector2.new(200,50)).X)+10;local ph=cs+4
+   local c=text(b,'Count',s,size-5-pw,size-5-ph,pw,ph,cs);c.TextXAlignment=Enum.TextXAlignment.Center;c.ZIndex=4
+   c.BackgroundColor3=Color3.fromRGB(8,10,11);c.BackgroundTransparency=.3
+   T.make('UICorner',c,{CornerRadius=UDim.new(0,6)})
+   return c
   end
   local split=leftW>=660
   local weaponW=split and math.min(300,leftW*.32) or leftW
@@ -903,15 +956,15 @@ function M.new(player,h,refresh)
   for i,it in data.items do
    local entry=Catalog.ById[it.id];local x=((i-1)%itemCols)*(cell+8);local y=40+math.floor((i-1)/itemCols)*(cell+8)
    local b=btn(items,'ItemSlot'..i,'',x,y,cell,cell,function() self.selected={kind='Item',id=it.id};refresh() end,true)
-   T.setTier(b,entry.tier)
-   art(b,entry,4,4,cell-8,cell-8)
-   if it.count>1 then local cs=tap>0 and 16 or 14;local count=text(b,'Count','×'..it.count,cell-cs-15,cell-cs-7,cs+12,cs+4,cs);count.TextXAlignment=Enum.TextXAlignment.Right end
+   slotFrame(b);T.setTier(b,entry.tier)
+   local pad=slotPad(cell);art(b,entry,pad,pad,cell-2*pad,cell-2*pad)
+   if it.count>1 then countPill(b,'×'..it.count,cell,tap>0 and 16 or 14) end
    -- Turret tiles: a small tier badge top-left (I-IV, like weapon slots), and the combine arrow
-   -- top-right. Cells are at least 52 px: badge 3..29 (III), arrow 31..49, count from 31 down.
-   if entry.turret then local tb=T.tierBadge(b,entry.turret,3,3);tb.Size=UDim2.fromOffset(8+#T.Roman[entry.turret]*6,16) end
+   -- top-right, 4 px in. Cells are at least 52 px: badge 4..30 (III), arrow 31..48, count from 29 down.
+   if entry.turret then local tb=T.tierBadge(b,entry.turret,4,4);tb.Size=UDim2.fromOffset(8+#T.Roman[entry.turret]*6,16) end
    if combinable[it.id] then
-    local s=math.clamp(math.floor(cell*.36),18,26)
-    local mark=T.make('Frame',b,{Name='CombineBadge',AnchorPoint=Vector2.new(1,0),Position=UDim2.fromOffset(cell-3,3),Size=UDim2.fromOffset(s,s),BackgroundColor3=T.Color.lime,BorderSizePixel=0,ZIndex=4})
+    local s=math.clamp(math.floor(cell*.34),16,24)
+    local mark=T.make('Frame',b,{Name='CombineBadge',AnchorPoint=Vector2.new(1,0),Position=UDim2.fromOffset(cell-4,4),Size=UDim2.fromOffset(s,s),BackgroundColor3=T.Color.lime,BorderSizePixel=0,ZIndex=4})
     T.make('UICorner',mark,{CornerRadius=UDim.new(1,0)})
     T.make('UIStroke',mark,{Color=T.Color.ink,Thickness=2})
     -- An up arrow in ink: a stem and two strokes leaning in (T.check's way of drawing marks).
@@ -934,9 +987,9 @@ function M.new(player,h,refresh)
    if base then
     local x=(shown%3)*(slotSize+8);local y=40+math.floor(shown/3)*(slotSize+8);shown+=1
     local b=btn(owned,'WeaponSlot'..i,'',x,y,slotSize,slotSize,function() self.selected={kind='Weapon',slot=i,copy=copy.copy};refresh() end,true)
-    T.setTier(b,copy.tier)
-    thumbnail(b,combat.WeaponTemplates:FindFirstChild(copy.id),7,7,slotSize-14,slotSize-14)
-    T.tierBadge(b,copy.tier,slotSize-3,slotSize-3,Vector2.new(1,1))
+    slotFrame(b);T.setTier(b,copy.tier)
+    local pad=slotPad(slotSize);thumbnail(b,combat.WeaponTemplates:FindFirstChild(copy.id),pad,pad,slotSize-2*pad,slotSize-2*pad)
+    T.tierBadge(b,copy.tier,slotSize-5,slotSize-5,Vector2.new(1,1))
     if self.selected and self.selected.kind=='Weapon' and self.selected.copy==copy.copy then anchor=Vector2.new(wx+x,top+y) end
    end
   end
@@ -1022,6 +1075,19 @@ function M.new(player,h,refresh)
    if (base and copy.copy==sel.copy) or entry then
     local dim=Instance.new('TextButton');dim.Name='FocusBackdrop';dim.Text='';dim.AutoButtonColor=false;dim.BackgroundColor3=Color3.new(0,0,0);dim.BackgroundTransparency=.28;dim.BorderSizePixel=0;dim.Size=UDim2.fromScale(1,1);dim.ZIndex=10;dim.Parent=root
     dim.Activated:Connect(function() self.selected=nil;refresh() end)
+    -- The dim reaches the screen edges (2026-10-16, user: a grey frame showed round the screen with
+    -- a popup open). This layout sits in the HUD's scroller, which clips it, so the dim above only
+    -- covered the shop and the margins and bands around it stayed the lighter backdrop. A second
+    -- shade on the scroller's parent (the full-screen Menus backdrop), just under the scroller,
+    -- darkens those too; it goes with this layout.
+    local clip;local up=parent
+    while up and not up:IsA('LayerCollector') do if up:IsA('ScrollingFrame') then clip=up end;up=up.Parent end
+    if clip and clip.Parent and clip.Parent:IsA('GuiObject') then
+     local edge=Instance.new('TextButton');edge.Name='FocusEdge';edge.Text='';edge.AutoButtonColor=false;edge.Selectable=false;edge.BackgroundColor3=Color3.new(0,0,0);edge.BackgroundTransparency=dim.BackgroundTransparency;edge.BorderSizePixel=0
+     edge.Size=UDim2.fromScale(1,1);edge.ZIndex=math.max(0,clip.ZIndex-1);edge.Parent=clip.Parent
+     edge.Activated:Connect(function() self.selected=nil;refresh() end)
+     root.Destroying:Connect(function() edge:Destroy() end)
+    end
     -- Combine/Sell (34) and Cancel (32) grow to touch size on phones; the panel grows with them.
     local b1,b2=th(34),th(32)
     local dw=math.min(324,w-20);local tier=copy and copy.tier or entry.tier
@@ -1032,9 +1098,9 @@ function M.new(player,h,refresh)
     local outer=surface(root,'Details',0,0,dw,100,tier);outer.ZIndex=12;outer.Active=true
     local detail=Instance.new('ScrollingFrame');detail.Name='Body';detail.BackgroundTransparency=1;detail.BorderSizePixel=0;detail.Size=UDim2.fromScale(1,1);detail.ScrollBarThickness=3;detail.Parent=outer
     local well=surface(detail,'IconWell',14,14,72,72,nil,'inset')
-    if base then thumbnail(well,combat.WeaponTemplates:FindFirstChild(copy.id),4,4,64,64) else art(well,entry,4,4,64,64) end
-    heading(detail,'Title',(base or entry).name,98,14,dw-112,44,23,tiers[tier])
-    text(detail,'Tier',E.TIER_NAMES[tier],98,60,dw-112,24,tap>0 and 16 or 14)
+    if base then thumbnail(well,combat.WeaponTemplates:FindFirstChild(copy.id),8,8,56,56) else art(well,entry,8,8,56,56) end
+    heading(detail,'Title',(base or entry).name,98,14,dw-116,44,23,tiers[tier])
+    text(detail,'Tier',E.TIER_NAMES[tier],98,60,dw-116,24,tap>0 and 16 or 14)
     -- The content stacks top-down and the buttons go under it, so stat lines, traits and the class
     -- row never overlap, whatever a weapon shows (2026-10-03: Range was hidden behind the class row).
     -- Example, Tier II Magic Staff: 4 stat lines end at 200, the class row sits at 208-232, the
@@ -1042,19 +1108,19 @@ function M.new(player,h,refresh)
     local y=104
     if base then
      local sets=Stats.typeCounts(equippedIds(data))
-     y+=weaponStats(detail,base,copy.tier,16,y,dw-32,sets)
+     y+=weaponStats(detail,base,copy.tier,18,y,dw-36,sets)
      local traits=traitLine(base,copy.tier,sets)
-     if traits~='' then local th=readableHeight(traits,15,dw-32,22);text(detail,'Traits',traits,16,y+2,dw-32,th,15,tiers[tier]);y+=th+4 end
+     if traits~='' then local th=readableHeight(traits,15,dw-36,22);text(detail,'Traits',traits,18,y+2,dw-36,th,15,tiers[tier]);y+=th+4 end
      y+=8
      -- Specialty bar and this weapon's sets now (2026-10-09; they replaced the class row).
-     specBar(detail,base,16,y,dw-32,26);y+=34
-     y+=typeRows(detail,base,16,y,dw-32,sets,false)+6
+     specBar(detail,base,18,y,dw-36,26);y+=34
+     y+=typeRows(detail,base,18,y,dw-36,sets,false)+6
      local damage=math.max(0,math.floor(tonumber(copy.damage) or 0));local kills=math.max(0,math.floor(tonumber(copy.kills) or 0))
-     text(detail,'RunPerformance',string.format('THIS RUN · %s damage · %s kills',damage,kills),16,y,dw-32,26,16,cream);y+=32
+     text(detail,'RunPerformance',string.format('THIS RUN · %s damage · %s kills',damage,kills),18,y,dw-36,26,16,cream);y+=32
     else
-     y+=effects(detail,entry,16,y,dw-32,true)
+     y+=effects(detail,entry,18,y,dw-36,true)
      local works,wc=worksLine(entry,data)
-     if works then text(detail,'WorksWith',works,16,y+4,dw-32,40,15,wc);y+=46 end
+     if works then text(detail,'WorksWith',works,18,y+4,dw-36,40,15,wc);y+=46 end
      y+=14
     end
     -- Turret items (2026-10-12) get one Combine button over Cancel, where a weapon's Recycle sits.
@@ -1062,7 +1128,7 @@ function M.new(player,h,refresh)
     local below=base and 2*(b1+7)+b2+12 or b2+12+16+(turret and b1+7 or 0) -- the buttons under the content
     local dh=math.max(392+(base and 2*(b1-34) or 0)+(b2-32),y+below+(base and 0 or 40));local visibleH=math.min(dh,ht-16)
     local cancelY=dh-12-b2;local sellY=cancelY-7-b1;local combineY=sellY-7-b1
-    if not base then text(detail,'Description',entry.description,16,y,dw-32,math.max(40,(turret and sellY or cancelY)-16-y),15) end
+    if not base then text(detail,'Description',entry.description,18,y,dw-36,math.max(40,(turret and sellY or cancelY)-16-y),15) end
     if turret then
      -- Lime when it can combine now (ShopService's data.combinable); greyed with the reason otherwise.
      -- Example: 3 Nail Turrets -> "Combine 2 → Twin Nailer"; 1 -> "Need 2 to combine".
