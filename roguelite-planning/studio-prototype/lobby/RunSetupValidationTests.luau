@@ -43,6 +43,11 @@ function T.run(R)
  check(#starters==2 and starters[1].id=='01' and starters[2].id=='36','Chef starters: owned Chef weapons, then owned Godlies')
  local brawler=R.starters('Brawler',R.progress(fresh).weapons)
  check(#brawler==1 and brawler[1].id=='06','Fresh Brawler starts with only the Bat')
+ -- A saved Juggler + Kunai comes back after a match as itself (2026-10-16): the lobby falls back to the
+ -- signature Bat only when the pick really fails validLoadout, like Brawler + Kunai (Juggler's).
+ local juggler=player('',true,'Brawler,Gunner,Juggler,Mage','06:1:0,00:1:0,13:1:0,17:1:0,30:1:0')
+ check(R.validLoadout(juggler,'Juggler','13'),'Juggler + owned Kunai is restored as is')
+ check(not R.validLoadout(juggler,'Brawler','13') and R.validLoadout(juggler,'Brawler',R.Signature.Brawler),'Brawler + Kunai is refused, so only that falls back to the Bat')
  check(R.ClassUnlock.Chef=='Reach wave 10 on Pine Valley' and R.ClassUnlock.Thrower==nil,'Chef takes the Thrower unlock quest')
  return {passed=checks,failed=0}
 end

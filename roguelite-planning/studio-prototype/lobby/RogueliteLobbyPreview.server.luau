@@ -18,6 +18,7 @@ local root=workspace:WaitForChild('RogueliteLobby')
 local State=require(script:WaitForChild('QueueState'))
 local Rules=require(RS:WaitForChild('RunSetupRules'))
 local combat=RS:WaitForChild('RogueliteCombat')
+local Weapons=require(combat:WaitForChild('WeaponCatalog'))
 local Shop=require(SSS:WaitForChild('ShopService'))
 local Match=require(SSS:WaitForChild('MatchService'))
 local Profiles=require(SSS:WaitForChild('ProfileService')) -- MatchService loads it already
@@ -165,6 +166,14 @@ local function publish()
    pad.shown=shown;pad.count.Text=n..'/'..cap;pad.status.Text=text;pad.map.Text=mapText
    paint(pad,n>0 and ACTIVE or IDLE)
   end
+ end
+ -- Pick deadlines for the ready panel (QueueState:deadline, 2026-10-16): QueueDeadline is the server
+ -- time they come off the pad, QueueDeadlineKind 'Map' (host, press START), 'Host' (waiting for the
+ -- host's map) or 'Class' (ready up). Example: Ben unready 12 s after the map -> 'Class', 18 s left.
+ for _,p in Players:GetPlayers() do
+  local at,kind=state:deadline(p.UserId)
+  if p:GetAttribute('QueueDeadline')~=at then p:SetAttribute('QueueDeadline',at) end
+  if p:GetAttribute('QueueDeadlineKind')~=kind then p:SetAttribute('QueueDeadlineKind',kind) end
  end
 end
 
@@ -344,18 +353,21 @@ local function besidePad(pad,char)
  spot=Vector3.new(spot.X,(hit and hit.Position.Y or pad.center.Y)+3.5,spot.Z)
  return CFrame.lookAt(spot,spot+toward)
 end
+-- Off pad `index` at once, after QueueState already removed them (LEAVE or a pick deadline).
+-- LobbyQueue is cleared first, so the client stops holding them in the ring; stepOff still keeps
+-- them from re-joining until they walk back on.
+local function putOff(player,index)
+ stepOff[player]=index;setQueue(player);publish()
+ local pad=pads[index];local char,hrp=alive(player)
+ if pad and hrp then char:PivotTo(besidePad(pad,char)) end
+end
 leaveRemote.OnServerEvent:Connect(function(player)
  if os.clock()-(last[player] or -math.huge)<.4 then return end
  last[player]=os.clock()
  local index=state.membership[player.UserId]
  -- LEAVE puts them off the pad at once (user, 2026-10-03: "when you click leave when your in
- -- queue it should force you off the pad"). LobbyQueue is cleared first, so the client stops
- -- holding them in the ring; stepOff still keeps them from re-joining until they walk back on.
- if state:leave(player.UserId,now()) then
-  stepOff[player]=index;setQueue(player);publish()
-  local pad=pads[index];local char,hrp=alive(player)
-  if pad and hrp then char:PivotTo(besidePad(pad,char)) end
- end
+ -- queue it should force you off the pad").
+ if state:leave(player.UserId,now()) then putOff(player,index) end
 end)
 -- A class and starter that passed Rules.validLoadout: this server's run uses them, and the profile
 -- keeps them for the next lobby (ProfileService.setLoadout).
@@ -524,18 +536,39 @@ end
 -- Back in a lobby (after a run, a rejoin or on a new server): the class and starter they last
 -- picked (ProfileService.loadout), not Brawler and the Frying Pan (user, 2026-10-03: "it keeps
 -- resetting me back to brawler and the pan"). Checked like a launch: a starter that moved class
--- falls back to that class's own. A pick made here before the save loaded wins.
+-- falls back to that class's own, and says so (never silently). A pick made here before the save
+-- loaded wins.
 local function restoreLoadout(player)
  local started=os.clock()
  while player.Parent==Players and player:GetAttribute('ProfileLoaded')~=true and os.clock()-started<90 do task.wait(.25) end
  if player.Parent~=Players or player:GetAttribute('RunClass')~=nil then return end
  local class,weapon=Profiles.loadout(player)
  if not class then return end
+ local saved=weapon
  if not Rules.validLoadout(player,class,weapon) and Rules.validLoadout(player,class,Rules.Signature[class]) then weapon=Rules.Signature[class] end
  if not Rules.validLoadout(player,class,weapon) then return end
  player:SetAttribute('RunClass',class);player:SetAttribute('RunWeapon',weapon)
  -- The lobby screens (LobbyUI, ArmoryUI, RunSetupUI) show the pick from these.
  player:SetAttribute('LoadoutClass',class);player:SetAttribute('LoadoutWeapon',weapon)
+ if weapon~=saved then
+  -- Only when the saved starter is really gone or no longer this class's (validLoadout): keep the
+  -- save in step and tell them. Example: "Kunai can't start a Brawler run: Baseball Bat equipped".
+  Profiles.setLoadout(player,class,weapon)
+  local old,new=Weapons.ById[saved],Weapons.ById[weapon]
+  setupRemote:FireClient(player,'Result',false,("%s can't start a %s run: %s equipped"):format(old and old.name or 'Your saved starter',class,new and new.name or weapon))
+ end
+ -- The ring's starter (PlayerStates Slot1) was made when they joined, before the save loaded, as
+ -- the Baseball Bat (no RunClass yet), and ShopService.setStarter only swaps it while they stand in
+ -- the lobby (LobbyPreviewActive). After a teleport the save often loads before the character is
+ -- in, so RunWeapon above was right but the ring kept the Bat (user, 2026-10-16: "ill have like
+ -- kunais equiped and after i load back into the lobby from a match i might have like the bat
+ -- equipped"). Once they are in the lobby, put the current starter on the ring if it isn't there.
+ started=os.clock()
+ while player.Parent==Players and player:GetAttribute('LobbyPreviewActive')~=true and os.clock()-started<60 do task.wait(.25) end
+ local states=combat:FindFirstChild('PlayerStates');local folder=states and states:FindFirstChild(tostring(player.UserId))
+ local slot=folder and folder:FindFirstChild('Slot1');local id=player:GetAttribute('RunWeapon')
+ local templates=combat:FindFirstChild('WeaponTemplates')
+ if player:GetAttribute('LobbyPreviewActive')==true and slot and type(id)=='string' and slot:GetAttribute('WeaponId')~=id and templates and templates:FindFirstChild(id) then Shop.setStarter(player,id) end
 end
 -- Back from LEAVE WITH PARTY (2026-10-03): the match server sends the party home in one teleport
 -- with {leader, ids} in its teleport data (MatchService.toLobby), and the party is put back together
@@ -584,6 +617,7 @@ Players.PlayerRemoving:Connect(function(p)
  parties:remove(p.UserId);lastParty[p]=nil;publishParties()
 end)
 
+local REMOVED={Map='Removed from the queue: no map picked in time',Host="Removed from the queue: the host didn't pick a map in time",Class='Removed from the queue: no class picked in time'}
 local elapsed=0
 RunService.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<.1 then return end;elapsed=0
@@ -615,14 +649,24 @@ RunService.Heartbeat:Connect(function(dt)
   end
  end
  if parties:expire(now()) then publishParties() end
- -- A host who never presses START frees the pad for someone else.
- for _,id in state:stale(now()) do
-  local p=Players:GetPlayerByUserId(id)
-  local index=state.membership[id]
-  if state:leave(id,now()) and p then
-   stepOff[p]=index;setQueue(p)
-   setupRemote:FireClient(p,'Result',false,'Pad released. Step off and back on to host again.')
+ -- Pick deadlines (QueueState.MAP_LIMIT / READY_LIMIT, 2026-10-16): whoever holds a pad up comes
+ -- off it like LEAVE and is told why; ready players stay and count down without them. Someone
+ -- removed for no class also leaves the party still on that pad, or its launch would refuse to go
+ -- without them forever (launch checks the whole party). Example: Ana and Ben ready, Cal AFK on the
+ -- class screen -> at 0:30 Cal is beside the pad, out of the party, and Ana and Ben count down.
+ for _,r in state:expire(now()) do
+  local p=Players:GetPlayerByUserId(r.id)
+  local text=REMOVED[r.reason]
+  if r.reason=='Class' then
+   for _,id in parties:members(r.id) do
+    if id~=r.id and state.membership[id]==r.index then
+     parties:leave(r.id);publishParties();text='Removed from the queue and your party: no class picked in time'
+     for _,other in parties:members(id) do local o=Players:GetPlayerByUserId(other);if o then partyRemote:FireClient(o,'Result',false,nameOf(r.id)..' left the party: no class picked in time') end end
+     break
+    end
+   end
   end
+  if p then putOff(p,r.index);setupRemote:FireClient(p,'Result',false,text) end
  end
  for _,index in state:due(now()) do task.spawn(launch,index) end
  publish()

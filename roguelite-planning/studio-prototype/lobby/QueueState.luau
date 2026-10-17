@@ -6,15 +6,21 @@ local QueueState={}
 QueueState.__index=QueueState
 QueueState.COUNTDOWN=10 -- seconds after the host presses START
 QueueState.FULL_COUNTDOWN=3 -- a full pad (or a solo run) launches sooner
-QueueState.CHOOSING_LIMIT=60 -- a host who never presses START gives the pad up
--- Readiness is explicit: an unready member holds the pad indefinitely. A timeout must never
--- launch someone who is still picking a class or has not agreed to this map and difficulty.
+-- Pick deadlines (user, 2026-10-16: a party "can sit there forever if the host doesnt pick the map
+-- or someone doesnt select their class ... it takes up queue spots for other players"). A timeout
+-- never launches anyone: it removes whoever is holding the pad (QueueState:expire), and ready
+-- players stay. Example: Ana takes portal 1 at 0:00 and hasn't pressed START by 0:30 -> Ana, Ben
+-- and Cal all come off it. Ana starts at 0:10 -> Ben readies by 0:40 and stays; Cal, still
+-- picking at 0:40, comes off and Ana and Ben count down without him.
+QueueState.MAP_LIMIT=30 -- the host presses START (map, difficulty, class) within this of taking the pad
+QueueState.READY_LIMIT=30 -- everyone else readies within this of the map, of joining after it, or of unreadying
 -- solo = a Private pad (user, 2026-10-03: "what if were in a group with 2 people that wanted it to
 -- be private"): only the ids in q.allow (the host's party, the host included) may join, and it holds
 -- that many. Without allow it is the old solo pad: the host alone. Example: Ana and Ben in a party,
 -- Ana starts Private -> Ben may join (2 of 2, the short countdown), Cal stepping on is refused.
--- picked: ids that locked in a class on this pad (START, LOCK IN); joined: when each got on.
-local function reset(q) q.members={};q.locked=false;q.launchAt=nil;q.host=nil;q.phase='Idle';q.since=nil;q.solo=false;q.map=nil;q.difficulty=nil;q.allow=nil;q.allowCount=nil;q.picked={};q.joined={};q.startedAt=nil;q.readyAt=nil;q.fullAt=nil end
+-- picked: ids that locked in a class on this pad (START, LOCK IN); joined: when each got on;
+-- waitFrom: when each unready member's READY_LIMIT clock started (the map, their join, or UNREADY).
+local function reset(q) q.members={};q.locked=false;q.launchAt=nil;q.host=nil;q.phase='Idle';q.since=nil;q.solo=false;q.map=nil;q.difficulty=nil;q.allow=nil;q.allowCount=nil;q.picked={};q.joined={};q.waitFrom={};q.startedAt=nil;q.readyAt=nil;q.fullAt=nil end
 function QueueState.new(count,capacity)
  local self=setmetatable({queues={},membership={},capacity=capacity},QueueState)
  for i=1,count do self.queues[i]={};reset(self.queues[i]) end
@@ -40,7 +46,7 @@ function QueueState:leave(id,now)
  local q=self.queues[index]
  if q.locked then return false end
  for i,v in q.members do if v==id then table.remove(q.members,i);break end end
- self.membership[id]=nil;q.picked[id]=nil;q.joined[id]=nil
+ self.membership[id]=nil;q.picked[id]=nil;q.joined[id]=nil;q.waitFrom[id]=nil
  if #q.members==0 then reset(q)
  else
   if q.host==id then q.host=q.members[1];if q.phase=='Choosing' then q.since=now end end
@@ -52,7 +58,7 @@ function QueueState:join(id,index,now)
  local q=self.queues[index]
  if not q or q.locked or self.membership[id] or #q.members>=self:capacityOf(q) then return false end
  if q.solo and not (q.allow and q.allow[id]) then return false end -- a Private pad: its party only
- table.insert(q.members,id);self.membership[id]=index;q.joined[id]=now
+ table.insert(q.members,id);self.membership[id]=index;q.joined[id]=now;q.waitFrom[id]=now
  if #q.members==1 then q.host=id;q.phase='Choosing';q.since=now end
  retime(self,q,now)
  return true
@@ -68,13 +74,15 @@ end
 function QueueState:unready(id,now)
  local index=self.membership[id];local q=index and self.queues[index]
  if not q or q.locked then return false end
+ -- Withdrawing consent starts a fresh READY_LIMIT; changing an unready pick does not extend it.
+ if q.picked[id] then q.waitFrom[id]=now end
  q.picked[id]=nil;retime(self,q,now)
  return true
 end
 -- A final server validation failed: keep the group together and require fresh confirmation.
 function QueueState:cancelLaunch(index,now)
  local q=self.queues[index];if not q then return end
- q.locked=false;q.picked={};retime(self,q,now)
+ q.locked=false;q.picked={};for _,m in q.members do q.waitFrom[m]=now end;retime(self,q,now)
 end
 -- How many on pad `index` haven't locked in a class yet.
 function QueueState:picking(index)
@@ -109,13 +117,41 @@ function QueueState:start(id,index,now,map,solo,difficulty,allow)
  -- START includes the host's class confirmation. Earlier picks cannot consent to a map that
  -- had not been selected yet; all other members must confirm after the map is published.
  q.startedAt=now;q.picked={[id]=true};q.readyAt=nil;q.fullAt=nil
+ for _,m in q.members do q.waitFrom[m]=now end -- everyone's class clock starts with the map
  retime(self,q,now)
  return true
 end
--- Hosts who have been choosing longer than the limit; the caller removes them.
-function QueueState:stale(now)
+-- When id must have done their part on their pad, and what it is: 'Map' (the host, before START),
+-- 'Host' (waiting for that host; the whole pad empties then) or 'Class' (unready after the map).
+-- nil when they are ready, not queued or already leaving. Example: Ben joins at 0:05, Ana starts at
+-- 0:12 -> Ben: 0:42, 'Class'.
+function QueueState:deadline(id)
+ local index=self.membership[id];local q=index and self.queues[index]
+ if not q or q.locked then return nil end
+ if q.phase=='Choosing' then return q.since and q.since+QueueState.MAP_LIMIT,q.host==id and 'Map' or 'Host' end
+ if q.phase=='Counting' and not q.picked[id] then return (q.waitFrom[id] or q.startedAt or 0)+QueueState.READY_LIMIT,'Class' end
+ return nil
+end
+-- Removes everyone past their deadline (QueueState:deadline) and returns {id=,index=,reason=} for
+-- each, so the caller can put them off the pad and say why. reason 'Map': the host never pressed
+-- START; 'Host': on that host's pad (all of it empties); 'Class': never readied. Ready players stay
+-- and their countdown restarts without the removed ones.
+function QueueState:expire(now)
  local out={}
- for _,q in self.queues do if q.phase=='Choosing' and q.since and now-q.since>QueueState.CHOOSING_LIMIT then table.insert(out,q.host) end end
+ for index,q in self.queues do
+  if q.locked or #q.members==0 then continue end
+  if q.phase=='Choosing' then
+   if q.since and now>=q.since+QueueState.MAP_LIMIT then
+    local host=q.host
+    for _,id in table.clone(q.members) do table.insert(out,{id=id,index=index,reason=id==host and 'Map' or 'Host'});self:leave(id,now) end
+   end
+  elseif q.phase=='Counting' then
+   for _,id in table.clone(q.members) do
+    local at=self:deadline(id)
+    if at and now>=at then table.insert(out,{id=id,index=index,reason='Class'});self:leave(id,now) end
+   end
+  end
+ end
  return out
 end
 -- Locks and returns the indices of queues whose countdown finished. Members stay listed

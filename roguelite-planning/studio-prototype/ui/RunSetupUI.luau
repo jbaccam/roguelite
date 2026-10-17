@@ -246,6 +246,15 @@ function M.new(player,opts)
   local q=player:GetAttribute('LobbyQueue');local portals=workspace.RogueliteLobby:FindFirstChild('Portals')
   return q and portals and portals:FindFirstChild('Portal'..q)
  end
+ -- This player's pick deadline on their pad (the server's QueueDeadline, 2026-10-16), worded by
+ -- kind ('Map', 'Host', 'Class'); '' when they have none. Example: {Class='PICK YOUR CLASS'} ->
+ -- 'PICK YOUR CLASS 0:12'. At 0:00 the server takes them off the pad.
+ local function deadlineText(words)
+  local at,kind=player:GetAttribute('QueueDeadline'),player:GetAttribute('QueueDeadlineKind')
+  if type(at)~='number' or not words[kind] then return '' end
+  local left=math.max(0,math.ceil(at-workspace:GetServerTimeNow()))
+  return ('%s %d:%02d'):format(words[kind],left//60,left%60)
+ end
  local function cycle(d)
   sel.map=((sel.map-1+d)%#Rules.Maps)+1
   if not Rules.difficultyUnlocked((profile.unlockWins or profile.wins),sel.map,sel.difficulty) then sel.difficulty='Normal' end
@@ -319,7 +328,14 @@ function M.new(player,opts)
   local key=Rules.runKey(m.id,diff)
   -- Compact (phones): smaller headline and tighter rows; the arrows sit below the top bar.
   local cp=G.compact;local hx=G.corner;local hw=CW-2*hx -- top rows clear of the top-bar corners
-  T.label(canvas,'Step','CHOOSE A MAP',hx,cp and 4 or 30,hw,cp and 26 or 30,22,C.muted)
+  local step=T.label(canvas,'Step','CHOOSE A MAP',hx,cp and 4 or 30,hw,cp and 26 or 30,22,C.muted)
+  -- A host on a pad has MAP_LIMIT to press START (QueueState): "CHOOSE A MAP  ·  0:18". The loop
+  -- ends with the redraw or close that removes the label.
+  if self.mode=='Host' then
+   task.spawn(function()
+    while step.Parent do local t=deadlineText({Map=''});step.Text='CHOOSE A MAP'..(t~='' and '  ·  '..t:sub(2) or '');task.wait(.25) end
+   end)
+  end
   for k=1,#Rules.Maps do
    local on=k==i
    local d=T.make('Frame',canvas,{Name='Dot'..k,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(CW/2+(k-3)*28,cp and 44 or 76),Size=UDim2.fromOffset(on and 16 or 10,on and 16 or 10),BackgroundColor3=on and C.lime or C.dim,BorderSizePixel=0})
@@ -422,14 +438,18 @@ function M.new(player,opts)
    local chip=T.label(canvas,'MapChip',string.upper(mapText),hx,cp and 40 or 64,hw,cp and 24 or 26,cp and 18 or 19,C.cream)
    -- A member on a pad already counting down (pulled along by their party, 2026-10-03) sees the
    -- time left, so they know to LOCK IN. The loop ends with the redraw or close that removes the chip.
-   if mode=='Member' then
+   -- Pick deadlines (2026-10-16) follow: "PINE VALLEY  ·  READY 1 / 2  ·  PICK YOUR CLASS 0:12";
+   -- the host before START: "PINE VALLEY  ·  READY UP 0:18".
+   if mode=='Member' or mode=='Host' then
     local base=chip.Text
     task.spawn(function()
      while chip.Parent do
       local portal=myPortal();local at=portal and portal:GetAttribute('LaunchAt')
       local picking=portal and portal:GetAttribute('Picking') or 0
       local count=portal and portal:GetAttribute('QueueCount') or 0
-      chip.Text=type(at)=='number' and base..'  ·  STARTING IN '..math.max(0,math.ceil(at-workspace:GetServerTimeNow())) or base..(portal and portal:GetAttribute('MapId') and ('  ·  READY %d / %d'):format(count-picking,count) or '')
+      local text=mode=='Host' and base or type(at)=='number' and base..'  ·  STARTING IN '..math.max(0,math.ceil(at-workspace:GetServerTimeNow())) or base..(portal and portal:GetAttribute('MapId') and ('  ·  READY %d / %d'):format(count-picking,count) or '')
+      local due=deadlineText({Map='READY UP',Host='HOST PICKS A MAP',Class='PICK YOUR CLASS'})
+      chip.Text=text..(due~='' and '  ·  '..due or '')
       task.wait(.25)
      end
     end)
@@ -758,6 +778,21 @@ function M.new(player,opts)
   end
  end)
  player:GetAttributeChangedSignal('LobbyLockedIn'):Connect(function() if self.mode=='Member' then self.Refresh() end end)
+ -- The saved class and starter arrive (RogueliteLobbyPreview restoreLoadout) up to a moment after
+ -- ProfileLoaded, and LobbyUI moves the shared selection to them. Redraw, or this screen keeps the
+ -- Brawler + Baseball Bat it drew while loading and READY UP sends (and saves) that instead
+ -- (2026-10-16: kunais before a match, the bat after it). Deferred: class and weapon arrive together.
+ local loadoutQueued=false
+ for _,name in {'LoadoutClass','LoadoutWeapon'} do
+  player:GetAttributeChangedSignal(name):Connect(function()
+   if loadoutQueued then return end
+   loadoutQueued=true
+   task.defer(function()
+    loadoutQueued=false
+    if screen.Enabled and self.step=='Class' and not (self.mode=='Member' and player:GetAttribute('LobbyLockedIn')==true) then self.Refresh() end
+   end)
+  end)
+ end
  Input.InputBegan:Connect(function(input,processed)
   if not screen.Enabled or Input:GetFocusedTextBox() or GuiService.MenuIsOpen then return end
   local key=input.KeyCode
