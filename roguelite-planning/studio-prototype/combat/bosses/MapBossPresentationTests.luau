@@ -342,6 +342,16 @@ check('tool blend: a hand or tool the chain lacks is skipped; only the Hammer ha
  for _,id in OLD do if Defs.get(id).toolBlend~=nil then return false end end
  return off(one.T,two.T)<1e-6 and none==same and lone.T==lerped(A,B,.4).T and defs.tool=='Hammer' and #defs.hands==2
 end)
+-- Walking attacks (2026-10-16, MapBossDefs move / lunge): hips and legs walk, the upper body attacks.
+check('walking attacks: at weight 1 the hips and legs take the Walk pose and the arms, torso and staff keep the attack; weight 0 is the attack; the weight eases over 0.15 s',function()
+ local attack={Root=CFrame.new(0,-1,0),LowerTorso=CFrame.new(0,0,1),LeftUpperLeg=CFrame.new(1,0,0),RightFoot=CFrame.new(2,0,0),Kilt_L=CFrame.new(3,0,0),UpperTorso=CFrame.new(0,5,0),RightHand=CFrame.new(0,6,0),Staff=CFrame.new(0,7,0)}
+ local walk={Root=CFrame.new(),LowerTorso=CFrame.new(),LeftUpperLeg=CFrame.new(),RightFoot=CFrame.new(),Kilt_L=CFrame.new(),UpperTorso=CFrame.new(),RightHand=CFrame.new(),Staff=CFrame.new()}
+ local one=P.layerLegs(table.clone(attack),walk,1);local none=P.layerLegs(table.clone(attack),walk,0)
+ local legs=true;for _,n in {'Root','LowerTorso','LeftUpperLeg','RightFoot','Kilt_L'} do if one[n].Position.Magnitude>1e-6 then legs=false end end
+ local upper=one.UpperTorso==attack.UpperTorso and one.RightHand==attack.RightHand and one.Staff==attack.Staff
+ local w=P.legWeight(0,10,.075);local back=P.legWeight(1,0,.075)
+ return legs and upper and none.LeftUpperLeg==attack.LeftUpperLeg and math.abs(w-.5)<1e-9 and math.abs(back-.5)<1e-9 and P.legWeight(.9,10,.1)==1
+end)
 local passed=0;for _,line in r do if line:sub(1,4)=='PASS' then passed+=1 end end
 table.insert(r,('%d PASS, %d FAIL'):format(passed,#r-passed))
 return table.concat(r,'\n')

@@ -500,6 +500,95 @@ function X.stepRing(A,age,t0,people,strike)
   if not A.hits[e.player] and Shapes.ringHit(ring,e.at,t0-impact,age-impact) and strike(e,ring.center+Vector3.yAxis*2) then A.hits[e.player]=true end
  end
 end
+-- Pursuit (2026-10-16, the Pharaoh and the Frost Cyclops; MapBossDefs move / lunge / face).
+-- Walking attacks (def.move {lock, resume}): he walks after his target from the commit until `lock` s
+-- before impact (nil lock: planted from the commit), stands planted for the hit, and walks again
+-- from `resume` s after it (nil: planted to the end). Example, CursedBolts (impact 0.83, lock .3,
+-- resume .15): 'walk' to 0.53 s, 'plant' to 0.98 s, then 'walk' to the clip's end (1.7 s).
+function X.moveMode(def,at,age)
+ local m=def.move;if not m or def.shape=='lane' then return 'plant' end
+ if m.lock and age<at.impact-m.lock then return 'walk' end
+ if m.resume and age>=at.impact+m.resume then return 'walk' end
+ return 'plant'
+end
+-- The chase's hold-off with slack: he stops at `stop` and sets off again only past stop + HOLD_SLACK,
+-- so a player hovering at the line doesn't flick him between walk and stand every frame (stop 11:
+-- stops at 11, walks again past 13).
+X.HOLD_SLACK=2
+function X.holds(holding,reach,stop) return reach<=stop+(holding and X.HOLD_SLACK or 0) end
+-- Going round solid round 10 props (2026-10-16, the Tomb Opens in multiplayer: an extra Warden
+-- spawned in front of tomb B walked straight back into it after the player hitting it from behind,
+-- and stood pressed into the stone facing away from everyone; the chase is a plain MoveTo).
+-- list: {center, radius} flat circles (a tomb's footprint plus the boss's half width). Returns a
+-- waypoint beside the first one his straight path to `goal` crosses (on the side the path already
+-- leans to), a step round it when he is already inside one and heading in, or nil: walk straight.
+-- Example: a tomb 10 ahead (radius 7.7), the player 10 behind it: walk to 9.2 beside its centre first.
+function X.detour(pos,goal,list)
+ local d=flat(goal-pos);local len=d.Magnitude;if len<.1 then return nil end
+ local dir=d/len;local best,bestT
+ for _,o in list do
+  local rel=flat(o.center-pos);local t=rel:Dot(dir)
+  if rel.Magnitude<o.radius then
+   if t>0 then
+    local out=rel.Magnitude>.1 and -rel.Unit or Vector3.new(-dir.Z,0,dir.X)
+    local tan=Vector3.yAxis:Cross(out);if tan:Dot(d)<0 then tan=-tan end
+    return pos+(tan+out*.5).Unit*6
+   end
+  elseif t>0 and t<len and (rel-dir*t).Magnitude<o.radius and (not bestT or t<bestT) then best,bestT=o,t end
+ end
+ if not best then return nil end
+ local rel=flat(best.center-pos);local side=rel-dir*rel:Dot(dir)
+ local perp=side.Magnitude>.05 and -side.Unit or Vector3.new(-dir.Z,0,dir.X)
+ local w=flat(best.center)+perp*(best.radius+1.5)
+ return Vector3.new(w.X,pos.Y,w.Z)
+end
+-- True when the flat segment a -> b passes through an obstacle's stone (o.frame, its yaw-only pivot;
+-- o.box {cx, cz, hx, hz}: the stone's footprint in that frame) grown by `margin`. A slab test, so a
+-- player beside the stone is never "behind" it. Example: a 8.3 x 6.6 stone, a player 4 behind it, he
+-- 6 in front: crossed; the player 6 to its side: not.
+function X.crosses(a,b,o,margin)
+ local box=o.box;if not box then return false end
+ local pa,pb=o.frame:PointToObjectSpace(a),o.frame:PointToObjectSpace(b);local t0,t1=0,1
+ for _,ax in {{pa.X,pb.X,box[1],box[3]},{pa.Z,pb.Z,box[2],box[4]}} do
+  local p0,d,lo,hi=ax[1],ax[2]-ax[1],ax[3]-ax[4]-margin,ax[3]+ax[4]+margin
+  if math.abs(d)<1e-9 then if p0<lo or p0>hi then return false end
+  else
+   local u,v=(lo-p0)/d,(hi-p0)/d;if u>v then u,v=v,u end
+   t0,t1=math.max(t0,u),math.min(t1,v);if t0>t1 then return false end
+  end
+ end
+ return true
+end
+-- A slam's lunge (def.lunge studs, frame f facing the target at `goal`): far enough that his impact
+-- point (def.point at impact, `ahead` studs in front of him) lands on the target, at most def.lunge.
+-- Example, GroundSlam (club 11.6 ahead, lunge 8): target 28 away -> 8; 16 away -> 4.4; 11 -> 0.
+function X.lungeLength(def,at,f,goal)
+ local look=flat(f.cf.LookVector).Unit
+ local ahead=math.max(0,flat(X.point(f,at,def.point,at.impact)-f.cf.Position):Dot(look))
+ return math.clamp(flat(goal-f.cf.Position).Magnitude-ahead,0,def.lunge or 0)
+end
+-- The anchored root during a lunge: from A.from to A.cf (where the hit frame is), eased in and out,
+-- arriving A.lungeT s in (0.15 s before impact). Without a lunge, A.cf.
+function X.lungeAt(A,age)
+ if not A.from then return A.cf end
+ local k=math.clamp(age/math.max(A.lungeT or 0,1e-3),0,1);k=k*k*(3-2*k)
+ return A.from:Lerp(A.cf,k)
+end
+-- A walking attack's shapes moved to frame f (he walks until the plant): the volley re-aimed from where
+-- the crook is now at `goal`, a circle or a wave (with its committed fan, A.fan) rebuilt. Targets
+-- (the tombs) sit under the players, not at him: nothing to move. True when the data changed.
+function X.refit(A,f,goal,mouthAimed)
+ local def,at=A.def,A.at
+ if def.shape=='projectiles' then
+  local rate=A.data.rate;A.data=X.volley(def,at,f,goal or f.cf.Position+f.cf.LookVector*12,mouthAimed,A.rage);A.data.rate=rate;return true
+ elseif def.shape=='circle' then A.data.shape=Shapes.encode(X.circle(def,at,f));return true
+ elseif def.shape=='wave' then
+  A.lines={};A.data.lines={}
+  for _,deg in A.fan or {0} do local line=X.wave(def,at,f,math.rad(deg));table.insert(A.lines,line);table.insert(A.data.lines,Shapes.encode(line)) end
+  A.line=A.lines[math.ceil(#A.lines/2)];A.data.shape=Shapes.encode(A.line);return true
+ end
+ return false
+end
 
 -- Edit-mode test requires stop here: the services and the Heartbeat load on a running server only.
 if not (Run:IsServer() and Run:IsRunning()) then return M end
@@ -538,8 +627,54 @@ local function segmentDistance(a,b,p) local ab=b-a;local t=math.clamp((p-a):Dot(
 -- Holding still for an attack, the intro or the roar (commit), and back to the chase (release).
 -- The server keeps network ownership of the boss either way: a released root left to the nearest
 -- client would let it push him around.
-local function commit(npc,h,root) npc:SetAttribute('Attacking',true);h:Move(Vector3.zero);h:MoveTo(root.Position);h.AutoRotate=false;root.Anchored=true end
+-- walking (def.move, X.moveMode 'walk' at the commit): he keeps walking into the attack, nothing
+-- anchored or stopped, so his speed carries straight through (anchoring zeroes it).
+local function commit(npc,h,root,walking) npc:SetAttribute('Attacking',true);if walking then return end;h:Move(Vector3.zero);h:MoveTo(root.Position);h.AutoRotate=false;root.Anchored=true end
 local function release(npc,h,root) npc:SetAttribute('Attacking',false);root.Anchored=false;root:SetNetworkOwner(nil);h.AutoRotate=true end
+-- def.face (rad/s, 2026-10-16): standing still he turns toward `goal` through an AlignOrientation on
+-- the root (a CFrame write would stop the Humanoid), AutoRotate off meanwhile; nil hands the facing
+-- back to AutoRotate. Made on first use. Bosses without def.face are untouched.
+local function face(s,h,root,goal)
+ local rate=s.def.face;if not rate then return end
+ local al=s.align
+ if not goal then if al and al.Enabled then al.Enabled=false;h.AutoRotate=true end;return end
+ if not al or not al.Parent then
+  local att=Instance.new('Attachment');att.Name='BossFaceAttachment';att.Parent=root
+  al=Instance.new('AlignOrientation');al.Name='BossFace';al.Mode=Enum.OrientationAlignmentMode.OneAttachment;al.Attachment0=att
+  al.RigidityEnabled=false;al.MaxTorque=math.huge;al.Responsiveness=30;al.MaxAngularVelocity=rate;al.Enabled=false;al.Parent=root;s.align=al
+ end
+ local d=flat(goal-root.Position);if d.Magnitude<.5 then return end
+ al.CFrame=CFrame.lookAt(Vector3.zero,d.Unit);h.AutoRotate=false;al.Enabled=true
+end
+-- Solid round 10 props in his way (X.detour): standing tombs (Round10Service, tag Round10Tomb), each
+-- its stone's footprint circle plus half his root's width and a stud.
+local function obstacles(root)
+ local list
+ for _,m in Tags:GetTagged('Round10Tomb') do
+  local body=m.Parent and m:FindFirstChild('Sarcophagus_Body',true)
+  if body then
+   -- The stone's footprint in the tomb's yaw-only pivot (as Round10Service noClimb measures it).
+   local pivot=m:GetPivot();local rel=pivot:ToObjectSpace(body.CFrame);local z=body.Size
+   local hx=math.abs(rel.RightVector.X)*z.X/2+math.abs(rel.UpVector.X)*z.Y/2+math.abs(rel.LookVector.X)*z.Z/2
+   local hz=math.abs(rel.RightVector.Z)*z.X/2+math.abs(rel.UpVector.Z)*z.Y/2+math.abs(rel.LookVector.Z)*z.Z/2
+   list=list or {}
+   table.insert(list,{center=body.Position,radius=math.sqrt(hx^2+hz^2)+math.max(root.Size.X,root.Size.Z)/2+1,frame=pivot,box={rel.X,rel.Z,hx,hz}})
+  end
+ end
+ return list or NONE
+end
+-- The chase toward target (reach: flat studs to it): walk (round a tomb in the way, X.detour), or
+-- hold at s.stop with X.HOLD_SLACK (X.holds) and turn to face it (def.face).
+local function chase(s,h,root,target,reach)
+ s.holding=X.holds(s.holding,reach,s.stop)
+ if s.holding then h:Move(Vector3.zero);h:MoveTo(root.Position);face(s,h,root,target.Position)
+ else face(s,h,root,nil);h:MoveTo(X.detour(root.Position,target.Position,obstacles(root)) or target.Position) end
+end
+local function nearest(people,from)
+ local target,dist=nil,math.huge
+ for _,e in people do local d=(e.root.Position-from).Magnitude;if d<dist then target,dist=e.root,d end end
+ return target
+end
 function M.start(npc,kind,target,force)
  local s=M.states[npc];local def=s and s.def.attacks[kind];local h=npc:FindFirstChildOfClass('Humanoid');local root=npc.PrimaryPart
  if not def or s.attack or not h or h.Health<=0 or not root or not X.window(def,s.T) then return false end
@@ -549,6 +684,9 @@ function M.start(npc,kind,target,force)
  local goal=target and target.Parent and target.Position or root.Position+root.CFrame.LookVector*12
  local delta=goal-root.Position;local params=exclusions(npc)
  if not force and (not target or math.abs(delta.Y)>10 or workspace:Raycast(root.Position,delta,params)) then return false end
+ -- The sight ray skips RogueliteEnemies, so a standing tomb never blocked it: a Warden turned his back
+ -- to the arena and slammed into the stone at a player behind it (2026-10-16). He goes round first.
+ if not force then for _,o in obstacles(root) do if X.crosses(root.Position,goal,o,.3) then return false end end end
  local laneDir
  if def.shape=='lane' then
   -- The crab's lane is the side the target is on once it stands side-on to it, so it runs through
@@ -556,12 +694,35 @@ function M.start(npc,kind,target,force)
   -- model's forward. A forward runner (the Hammer) runs straight at them. Either way the root
   -- faces along the lane (X.laneDir).
   laneDir=X.laneDir(def,root.Position,goal,root.CFrame.LookVector);root.CFrame=CFrame.lookAt(root.Position,root.Position+laneDir)
- elseif flat(delta).Magnitude>.1 then root.CFrame=CFrame.lookAt(root.Position,root.Position+flat(delta)) end
+ end
+ -- A walking attack (def.move, 2026-10-16) that starts on the move: his root is never turned here
+ -- (a CFrame write stops a walking Humanoid); the shapes start in a frame facing the target and
+ -- follow him from the next step (stepAttack, X.refit) until the plant.
+ local walking=X.moveMode(def,X.window(def,s.T),0)=='walk'
+ if not laneDir and not walking and flat(delta).Magnitude>.1 then root.CFrame=CFrame.lookAt(root.Position,root.Position+flat(delta)) end
  local ground=workspace:Raycast(root.Position+Vector3.yAxis*8,-Vector3.yAxis*(s.T.rootHeight+30),params)
  if not ground then return false end
- local now=workspace:GetServerTimeNow();local cf=root.CFrame;local f=X.frame(cf,s.T,ground.Position.Y)
- local A={kind=kind,def=def,start=now,cf=cf,ground=f.groundY,frame=f,hits={},ticks={},sampled=0,data={}}
+ local now=workspace:GetServerTimeNow();local cf=root.CFrame
+ if walking and flat(delta).Magnitude>.1 then cf=CFrame.lookAt(root.Position,root.Position+flat(delta)) end
+ local f=X.frame(cf,s.T,ground.Position.Y)
+ -- def.lunge (a slam, 2026-10-16): the hit frame is where his committed step ends (X.lungeLength),
+ -- short of a wall ahead and only onto floor within 4 studs of this one; every shape and warning is
+ -- built there from now, and the anchored root slides there by 0.15 s before impact (X.lungeAt).
+ local from,lungeT
+ if def.lunge and not laneDir then
+  local at0=X.window(def,s.T);local len=X.lungeLength(def,at0,f,goal)
+  local look=flat(cf.LookVector).Unit;local pad=s.T.footprintRadius or 4
+  local wall=len>.5 and workspace:Raycast(cf.Position,look*(len+pad),params);if wall then len=math.max(0,wall.Distance-pad) end
+  local to=cf.Position+look*len
+  local floor=len>.5 and workspace:Raycast(to+Vector3.yAxis*8,-Vector3.yAxis*(s.T.rootHeight+30),params)
+  if floor and math.abs(floor.Position.Y-f.groundY)<=4 then
+   from,lungeT=cf,math.max(.1,at0.impact-.15)
+   cf=cf.Rotation+Vector3.new(to.X,floor.Position.Y+(cf.Y-f.groundY),to.Z);f=X.frame(cf,s.T,floor.Position.Y)
+  end
+ end
+ local A={kind=kind,def=def,start=now,cf=cf,ground=f.groundY,frame=f,hits={},ticks={},sampled=0,data={},from=from,lungeT=lungeT,planted=not walking or nil,chase=target}
  local rage=s.enraged and s.def.enrage or {}
+ A.rage=rage -- the committed enrage extras (X.refit re-aims the volley with them)
  -- The wave fan this attack commits with (enraged: rage.fan): its aim turns (X.reshape) keep it, so an
  -- enrage mid-attack never adds lines the clients weren't warned about.
  A.fan=rage.fan
@@ -594,6 +755,9 @@ function M.start(npc,kind,target,force)
   A.lines={};A.data.lines={}
   for _,deg in rage.fan or {0} do local line=X.wave(def,at,f,math.rad(deg));table.insert(A.lines,line);table.insert(A.data.lines,Shapes.encode(line)) end
   A.line=A.lines[math.ceil(#A.lines/2)];A.data.shape=Shapes.encode(A.line)
+  -- A walking wave (def.move, the Stomp 2026-10-16): its front runs on its own clock (s.waves, below),
+  -- so the attack ends at the clip's recovery, not once the front is out (Stomp 2.02 s, was 2.31).
+  if def.move then A.detached=true;A.duration=at.recoveryEnd or at.duration end
  elseif def.shape=='breath' then A.data.shape=Shapes.encode(X.cone(def,at,f,at.impact))
  elseif def.shape=='sweep' then A.arc=X.sweepArc(def,at,f);A.data.shape=Shapes.encode(A.arc)
  elseif def.shape=='projectiles' then A.data=X.volley(def,at,f,goal,MOUTH_AIMED[kind],rage) end
@@ -608,6 +772,7 @@ function M.start(npc,kind,target,force)
  -- Detached waves (a wave phase, a finish wave) go on their own clock now: stepWaves runs them every
  -- Heartbeat, through and after this attack.
  for _,list in {A.phases or NONE,A.finishes or NONE} do for _,P in list do if P.detached then table.insert(s.waves,{P=P,start=now}) end end end
+ if A.detached then table.insert(s.waves,{P=A,start=now}) end
  npc:SetAttribute('BossAttack',kind);npc:SetAttribute('BossStart',now);npc:SetAttribute('BossFrame',cf);npc:SetAttribute('BossGroundY',f.groundY);npc:SetAttribute('BossDuration',A.duration)
  -- A charge's length (X.isCharge) changes as he runs. Client contract: re-time the end clip from
  -- BossChargeLength, falling back to data.length. It is set before BossSerial, so no client reads
@@ -616,7 +781,7 @@ function M.start(npc,kind,target,force)
  -- A homing run's heading (stepAttack): none until it turns, never the last charge's.
  if A.pos then npc:SetAttribute('BossChargeHead',nil);npc:SetAttribute('BossChargeHeadAt',nil) end
  A.serial=(npc:GetAttribute('BossSerial') or 0)+1
- publish(npc,A);npc:SetAttribute('BossSerial',A.serial);commit(npc,h,root)
+ publish(npc,A);npc:SetAttribute('BossSerial',A.serial);commit(npc,h,root,walking)
  return true
 end
 function M.spawn(id,cf,practice,opts)
@@ -846,6 +1011,36 @@ local function startRoar(npc,s,now,h,root,params)
  publish(npc,A);npc:SetAttribute('BossSerial',A.serial);commit(npc,h,root)
  return true
 end
+-- Walking attacks (def.move, X.moveMode, 2026-10-16). His frame for the shapes where he stands now (on
+-- the floor under him), republished: the data when X.refit moved it, BossFrame and BossGroundY.
+local function refit(npc,s,A,root,params,people)
+ local target=A.chase and A.chase.Parent and A.chase or nearest(people,root.Position)
+ local ground=workspace:Raycast(root.Position+Vector3.yAxis*8,-Vector3.yAxis*(s.T.rootHeight+30),params)
+ A.cf=root.CFrame;A.frame=X.frame(A.cf,s.T,ground and ground.Position.Y);A.ground=A.frame.groundY
+ if X.refit(A,A.frame,target and target.Position,MOUTH_AIMED[A.kind]) then publish(npc,A) end
+ npc:SetAttribute('BossFrame',A.cf);npc:SetAttribute('BossGroundY',A.ground)
+end
+-- A 'walk' step: unanchored, chasing his target like between attacks (or holding and turning to it at
+-- his stop line). Before the plant the shapes follow him every REFIT s (the volley re-aims), so his
+-- warning stays on him: 0.15 s at 22 studs/s is 3.3 studs a step.
+local REFIT=.15
+local function walkStep(npc,s,A,h,root,params,people,age)
+ if root.Anchored then root.Anchored=false;root:SetNetworkOwner(nil);h.AutoRotate=true end
+ local target=A.chase and A.chase.Parent and A.chase or nearest(people,root.Position)
+ if target then chase(s,h,root,target,flat(target.Position-root.Position).Magnitude) else face(s,h,root,nil);h:Move(Vector3.zero) end
+ if not A.planted and age-(A.refitAt or 0)>=REFIT then A.refitAt=age;refit(npc,s,A,root,params,people) end
+end
+-- The plant (X.moveMode 'plant' after walking): stop, anchor, square up to the target, and fix the
+-- shapes there: the frame the hit uses, sent `lock` s before impact so every warning holds still.
+local function plant(npc,s,A,h,root,params,people)
+ face(s,h,root,nil);h:Move(Vector3.zero);h:MoveTo(root.Position);h.AutoRotate=false;root.Anchored=true
+ if A.planted then return end
+ A.planted=true
+ local target=A.chase and A.chase.Parent and A.chase or nearest(people,root.Position)
+ local d=target and flat(target.Position-root.Position)
+ if d and d.Magnitude>.1 then root.CFrame=CFrame.lookAt(root.Position,root.Position+d) end
+ refit(npc,s,A,root,params,people)
+end
 local function stepAttack(npc,s,now,h,root,params,people)
  local A=s.attack;local age=now-A.start;local t0=A.sampled
  if A.roar then
@@ -944,13 +1139,18 @@ local function stepAttack(npc,s,now,h,root,params,people)
     A.sentLength=A.length;npc:SetAttribute('BossChargeLength',A.length);publish(npc,A);npc:SetAttribute('BossDuration',A.duration)
    end
   end
- else root.CFrame=A.cf end
+ elseif X.moveMode(def,at,age)=='walk' then walkStep(npc,s,A,h,root,params,people,age)
+ else
+  -- Planted: a walking attack plants first (plant); a lunge slides the anchored root to the hit frame.
+  if not root.Anchored then plant(npc,s,A,h,root,params,people);f=A.frame end
+  root.CFrame=X.lungeAt(A,age)
+ end
  -- Circle, wave, breath and sweep hits (X.stepHits): the attack itself, or each combo phase with
  -- its own hit memory. A circle that fired brings its follow-up (none in the tutorial).
  -- A detached wave phase runs in stepWaves instead.
  if A.phases then
   for _,P in A.phases do if not P.detached then stepUnit(npc,s,A,P,f,age,t0,now,root,params,people) end end
- else stepUnit(npc,s,A,A,f,age,t0,now,root,params,people) end
+ elseif not A.detached then stepUnit(npc,s,A,A,f,age,t0,now,root,params,people) end -- a detached wave: stepWaves
  -- A lane's finish slam, on the end clip's clock (it starts where the run ends, F.start). Each part has
  -- its own hit memory; a finish wave runs in stepWaves.
  for _,F in A.finishes or NONE do
@@ -997,20 +1197,20 @@ end
 function M.step(npc,s,now)
  if not npc.Parent then M.states[npc]=nil;return end
  local h=npc:FindFirstChildOfClass('Humanoid');local root=npc.PrimaryPart
- if not h or not root or h.Health<=0 then s.attack=nil;s.shots=nil;table.clear(s.follows);table.clear(s.waves);return end
+ if not h or not root or h.Health<=0 then s.attack=nil;s.shots=nil;table.clear(s.follows);table.clear(s.waves);if s.align then s.align.Enabled=false end;return end
  -- The sky-drop entrance (def.intro, M.spawn): stand still until it's over, then fight.
  if s.intro then
   if now<s.intro then h:Move(Vector3.zero);return end
   s.intro=nil;npc:SetAttribute('BossStart',nil);release(npc,h,root)
  end
  if combat:GetAttribute('ZombiesEnabled')~=true then
-  s.attack=nil;s.shots=nil;table.clear(s.follows);table.clear(s.waves);npc:SetAttribute('BossStart',nil);release(npc,h,root);h:Move(Vector3.zero);return
+  s.attack=nil;s.shots=nil;table.clear(s.follows);table.clear(s.waves);npc:SetAttribute('BossStart',nil);release(npc,h,root);face(s,h,root,nil);h:Move(Vector3.zero);return
  end
  -- Pause (plan L): a paused run cancels the attack under way, its shots and follow-ups, and
  -- holds still. Attacks start fresh (with their wind-up) once the run unfreezes.
  if combat:GetAttribute('RunPaused')==true then
   if s.attack then s.attack=nil;npc:SetAttribute('BossStart',nil);release(npc,h,root) end
-  s.shots=nil;table.clear(s.follows);table.clear(s.waves);h:Move(Vector3.zero);h:MoveTo(root.Position);return
+  s.shots=nil;table.clear(s.follows);table.clear(s.waves);face(s,h,root,nil);h:Move(Vector3.zero);h:MoveTo(root.Position);return
  end
  checkEnrage(npc,s,h)
  local params,people=exclusions(npc),living()
@@ -1020,14 +1220,14 @@ function M.step(npc,s,now)
  if s.attack then stepAttack(npc,s,now,h,root,params,people);return end
  if npc:GetAttribute('BossManual') and Run:IsStudio() then h:Move(Vector3.zero);return end
  -- Admin Freeze: no moving and no new attacks; an attack already under way finishes above.
- if combat:GetAttribute('AdminFreeze')==true then h:Move(Vector3.zero);h:MoveTo(root.Position);return end
+ if combat:GetAttribute('AdminFreeze')==true then face(s,h,root,nil);h:Move(Vector3.zero);h:MoveTo(root.Position);return end
  -- Enraged: the roar first, once (an attack under way finished above); without its clip, never.
  if X.roarDue(s) then if startRoar(npc,s,now,h,root,params) then return end;s.roared=true end
  -- The breather after an attack (Defs.recovery, 2026-10-10): he stands in his Idle, no chase, no wind-up.
  if s.rest and now<s.rest then h:Move(Vector3.zero);h:MoveTo(root.Position);return end
  local target,dist=nil,math.huge
  for _,e in people do local d=(e.root.Position-root.Position).Magnitude;if d<dist then target,dist=e.root,d end end
- if not target then h:Move(Vector3.zero);return end
+ if not target then face(s,h,root,nil);h:Move(Vector3.zero);return end
  local reach=flat(target.Position-root.Position).Magnitude
  if now>=s.next then
   -- Walk the order (the tutorial's or enraged one, X.orderFor) from the last attack: the first one
@@ -1035,7 +1235,8 @@ function M.step(npc,s,now)
   local index=X.walk(s,X.orderFor(s),reach,now,function(kind) return M.start(npc,kind,target) end)
   if index then s.index=index;return end
  end
- if reach>s.stop then h:MoveTo(target.Position) else h:Move(Vector3.zero);h:MoveTo(root.Position) end
+ -- Walk, or hold at the stop line (with slack, X.holds) and turn to face them (def.face): chase.
+ chase(s,h,root,target,reach)
 end
 -- Tests only: start `kind` now at the nearest player (or straight ahead), ignoring range and cooldown.
 function M._force(npc,kind)

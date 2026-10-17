@@ -498,6 +498,69 @@ if Defs then
   for _,a in def.attacks do if a.phases or a.finish or a.contact or a.lockout or a.facing or a.height or a.aim or a.home then plain=false end end
  end
  add(plain,'the four bosses use none of the Hammer fields (phases, finish, contact, lockout, facing, height, aim, home, sky-drop intro, roar, tutorial, enrage.order)')
+ -- Pursuit (2026-10-16, user: the Pharaoh and the cyclops "kinda just stand there"): walking attacks
+ -- (move), slam lunges, a held stop line with slack, and shorter waits. Real defs and timing.
+ check('pursuit 2026-10-16: Pharaoh and Frost Cyclops chase at 22 (24 enraged), hold at 11 / 12.2 (was 20 / 18), cooldowns about halved',function()
+  local Ph,Fc=Defs.get('Pharaoh'),Defs.get('FrostCyclops');local a,b=Ph.attacks,Fc.attacks
+  local fcStop=math.min(8*Fc.scale,Defs.timing('FrostCyclops').footprintRadius)+3
+  return Ph.chaseSpeed==22 and Fc.chaseSpeed==22 and Ph.enrage.chase==2 and Fc.enrage.chase==2 and Ph.stop==11 and Fc.stop==nil and math.abs(fcStop-12.16)<.05
+   and a.CursedBolts.cooldown==.5 and a.TombEruption.cooldown==.7 and b.GroundSlam.cooldown==.6 and b.Stomp.cooldown==.8 and Ph.face~=nil and Fc.face~=nil
+ end)
+ check('pursuit: CursedBolts walks to impact - .3, plants for the release, walks from impact + .15; GroundSlam (no lock) plants from the commit, walks from impact + .5; a lane never walks',function()
+  local PT,FT=Defs.timing('Pharaoh'),Defs.timing('FrostCyclops');local bolts,slam=Defs.get('Pharaoh').attacks.CursedBolts,Defs.get('FrostCyclops').attacks.GroundSlam
+  local bt,st=X.window(bolts,PT),X.window(slam,FT);local m=X.moveMode
+  return math.abs(bt.impact-.8334)<1e-3 and m(bolts,bt,0)=='walk' and m(bolts,bt,bt.impact-.31)=='walk' and m(bolts,bt,bt.impact-.29)=='plant' and m(bolts,bt,bt.impact+.14)=='plant'
+   and m(bolts,bt,bt.impact+.16)=='walk' and m(slam,st,0)=='plant' and m(slam,st,st.impact+.49)=='plant' and m(slam,st,st.impact+.51)=='walk'
+   and m({shape='lane',move={lock=.3}},bt,0)=='plant' and m({shape='circle'},bt,0)=='plant'
+ end)
+ check('pursuit fairness: every walking attack plants at least 0.25 s before its hit, and only the bolts and tombs walk in the wind-up (the slams lunge, warned from the commit)',function()
+  for _,id in {'Pharaoh','FrostCyclops'} do for kind,a in Defs.get(id).attacks do
+   if a.move and a.move.lock and (a.move.lock<.25 or a.lunge or not (a.shape=='projectiles' or a.shape=='targets')) then error(kind) end
+   if not (a.move or a.lunge) then error(kind..' stands') end
+  end end
+  return true
+ end)
+ -- The Tomb Opens, multiplayer (2026-10-16): Wardens go round a standing tomb to a player behind it
+ -- and never strike through its stone.
+ check('tombs: a Warden 10 in front of a tomb walks round it (9.2 beside its centre) to a player behind it; straight on to one in front or off to the side; pressed against it, he steps round',function()
+  local tomb={center=Vector3.new(0,0,0),radius=7.7}
+  local w=X.detour(Vector3.new(0,3,-10),Vector3.new(0,3,10),{tomb})
+  local inside=X.detour(Vector3.new(.5,3,-5),Vector3.new(0,3,10),{tomb})
+  return w~=nil and math.abs(S.flat(w).Magnitude-9.2)<1e-6 and math.abs(w.Z)<1e-6 and w.Y==3
+   and X.detour(Vector3.new(0,3,-10),Vector3.new(0,3,-30),{tomb})==nil and X.detour(Vector3.new(0,3,-10),Vector3.new(20,3,-10),{tomb})==nil
+   and inside~=nil and (S.flat(inside).Magnitude>5) and X.detour(Vector3.new(0,3,-5),Vector3.new(0,3,-20),{tomb})==nil
+ end)
+ check('tombs: no strike through the stone (8.3 x 6.6, slab test): a player 4 behind it from 6 in front is crossed; one beside it, or in front, is not; a turned tomb turns its box',function()
+  local o={frame=CFrame.new(0,4,0),box={0,0,4.15,3.3}};local turned={frame=CFrame.Angles(0,math.pi/2,0)+Vector3.new(0,4,0),box={0,0,4.15,3.3}}
+  return X.crosses(Vector3.new(0,3,-9.3),Vector3.new(0,3,7.3),o,.3) and not X.crosses(Vector3.new(0,3,-9.3),Vector3.new(6,3,-9.3),o,.3)
+   and not X.crosses(Vector3.new(-6,3,-5),Vector3.new(6,3,-5),o,.3) and not X.crosses(Vector3.new(0,3,-9.3),Vector3.new(0,3,-20),o,.3)
+   and X.crosses(Vector3.new(-6,3,-3.8),Vector3.new(6,3,-3.8),turned,.3) and not X.crosses(Vector3.new(-6,3,-3.8),Vector3.new(6,3,-3.8),o,.3)
+ end)
+ check('stop line slack: holds at 11, walks again only past 13 (X.HOLD_SLACK 2)',function()
+  return X.holds(nil,11,11) and not X.holds(nil,11.5,11) and X.holds(true,12.9,11) and not X.holds(true,13.1,11)
+ end)
+ check('GroundSlam lunge: 8 from 28 studs (the club lands 8.4 from the player, inside the 15 circle), 16 - the club reach from 16, none from 11; the root eases from start to the hit frame',function()
+  local FT=Defs.timing('FrostCyclops');local slam=Defs.get('FrostCyclops').attacks.GroundSlam;local at=X.window(slam,FT)
+  local cf0=CFrame.lookAt(Vector3.new(0,FT.rootHeight,0),Vector3.new(0,FT.rootHeight,-1));local f=X.frame(cf0,FT,0)
+  local ahead=-X.localPoint(at,slam.point,at.impact).Z
+  local function len(d) return X.lungeLength(slam,at,f,Vector3.new(0,3,-d)) end
+  local endCf=cf0+Vector3.new(0,0,-len(28));local club=X.circle(slam,at,X.frame(endCf,FT,0)).center
+  local A={from=cf0,cf=endCf,lungeT=at.impact-.15};local mid=X.lungeAt(A,A.lungeT/2)
+  return math.abs(ahead-11.6)<.6 and len(28)==8 and math.abs(len(16)-(16-ahead))<1e-6 and len(11)==0 and slam.range[2]==28
+   and (S.flat(club)-Vector3.new(0,0,-28)).Magnitude<=slam.radius and (mid.Position-Vector3.new(0,FT.rootHeight,-4)).Magnitude<1e-6
+   and X.lungeAt(A,A.lungeT).Position==endCf.Position and X.lungeAt({cf=cf0},.2)==cf0
+ end)
+ check('walking bolts re-fit: 10 studs on, the volley starts 10 studs on and re-aims at the target; a circle moves with him; tombs (targets) keep nothing on him',function()
+  local PT=Defs.timing('Pharaoh');local bolts=Defs.get('Pharaoh').attacks.CursedBolts;local at=X.window(bolts,PT)
+  local cf1=CFrame.lookAt(Vector3.new(0,PT.rootHeight,0),Vector3.new(0,PT.rootHeight,-1));local cf2=cf1+Vector3.new(0,0,-10)
+  local goal=Vector3.new(6,3,-60);local A={def=bolts,at=at,data={rate=1.25}};A.data=X.volley(bolts,at,X.frame(cf1,PT,0),goal,false);A.data.rate=1.25
+  local o1=Vector3.new(table.unpack(A.data.origin));local ok=X.refit(A,X.frame(cf2,PT,0),goal,false);local o2=Vector3.new(table.unpack(A.data.origin))
+  local mid=A.data.yaws[math.ceil(#A.data.yaws/2)];local aim=S.flat(goal-o2).Unit
+  local C={def={shape='circle',point='StompImpact',radius=5},at=T.attacks.Stomp,data={}};X.refit(C,X.frame(cf2,T,0),nil)
+  return ok and A.data.rate==1.25 and ((o2-o1)-Vector3.new(0,0,-10)).Magnitude<1e-6 and #A.data.yaws==bolts.count
+   and math.abs(S.yaw(Vector3.new(0,0,-1),aim)-mid)<1e-6 and type(C.data.shape)=='table' and math.abs(C.data.shape.center[3]-(-14))<1e-6
+   and X.refit({def={shape='targets'},at=at,data={}},X.frame(cf2,PT,0),goal)==false
+ end)
  -- The Hammer's chained moves (2026-10-04): Spin two sweeps, SwingSpin a swing and two spins, SpinSlam two
  -- spins and a slam; the Charge homes and ends in the Slam's clip and circle; every hit aims; no roar.
  local H=Defs.get('Hammer');local a=H and H.attacks

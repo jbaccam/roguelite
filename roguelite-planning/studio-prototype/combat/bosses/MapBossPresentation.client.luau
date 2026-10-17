@@ -279,6 +279,22 @@ function P.toolChain(npc,spec,ratio)
  add(named[spec.tool]);for _,h in spec.hands do add(named[h]) end
  return chain
 end
+-- Walking attacks (2026-10-16, MapBossDefs move / lunge: the Pharaoh casts and the Frost Cyclops steps
+-- into his slams on the move). While the body moves mid-attack, the hips and legs take the Walk clip's
+-- pose and everything from UpperTorso up keeps the attack's: weight 0 is the attack alone, 1 its
+-- upper body on walking legs. Blended per joint into `poses` (in place).
+function P.lowerBody(name)
+ return name=='Root' or name=='HumanoidRootPart' or name=='LowerTorso' or name:find('Leg')~=nil or name:find('Foot')~=nil or name:find('Toes')~=nil
+  or name:find('Kilt')~=nil or name:find('Apron')~=nil or name:find('Loincloth')~=nil
+end
+function P.layerLegs(poses,walk,weight)
+ if weight<=0 then return poses end
+ for name,pose in walk do if P.lowerBody(name) then poses[name]=(poses[name] or pose):Lerp(pose,math.min(1,weight)) end end
+ return poses
+end
+-- The legs' weight eased toward 1 while he moves faster than 2 studs/s and back to 0 when he stops,
+-- over 0.15 s, so the plant settles into the attack's stance instead of snapping to it.
+function P.legWeight(weight,speed,dt) local goal=speed>2 and 1 or 0;local step=dt/.15;return weight<goal and math.min(goal,weight+step) or math.max(goal,weight-step) end
 if not Run:IsRunning() then return P end -- Edit (the tests): helpers only
 
 local EnemyMotion=require(combat:WaitForChild('EnemyMotion'))
@@ -906,6 +922,10 @@ local function frame(npc,state,now,dt)
   local raw=npc:GetAttribute('MapBossAttackData');if raw~=ctx.raw then ctx.raw=raw;ctx.data=decode(raw) end
   -- The breath turns during its active window (MapBossService tracking); follow the new frame.
   local cf=npc:GetAttribute('BossFrame');if typeof(cf)=='CFrame' and cf~=ctx.cf then ctx.cf=cf;ctx.ground=cf*CFrame.new(0,-T.rootHeight,0) end
+  -- A walking or lunging attack (def.move / def.lunge): its effects ride the body as it moves (the
+  -- server's BossFrame comes a few times a second while he walks, and is the lunge's end at once).
+  -- Warnings are the data's world shapes, so they never move with this.
+  if (ctx.def.move or ctx.def.lunge) and not ctx.pseudo and ctx.serial==serial then ctx.cf=root.CFrame;ctx.ground=root.CFrame*CFrame.new(0,-T.rootHeight,0) end
   -- The charge's run, latched end and duration on this frame's clock (age; nil without BossStart).
   if ctx.charge then chargeStep(npc,ctx,ctx.serial==serial and age or nil) end
  end
@@ -932,6 +952,13 @@ local function frame(npc,state,now,dt)
   end
  end
  local poses=EnemyMotion.sample(motion,clip,time)
+ -- Walking attacks (P.layerLegs): the legs walk by ground distance like the Walk clip below.
+ local walker=attacking and not death and (ctx.def.move or ctx.def.lunge)
+ state.legWeight=walker and P.legWeight(state.legWeight or 0,distance/math.max(dt,1e-3),dt) or 0
+ if state.legWeight>0 then
+  state.phase+=math.min(distance/(T.strideLength or 4)*clipDuration(motion,'Walk'),dt*MAX_GAIT_RATE)
+  P.layerLegs(poses,EnemyMotion.sample(motion,'Walk',state.phase%clipDuration(motion,'Walk')),state.legWeight)
+ end
  if state.lastClip~=clip and state.lastPose and clip~='Death' then state.blendFrom=state.lastPose;state.blendStart=now end
  if state.blendFrom then
   local weight=math.clamp((now-state.blendStart)/((clip=='Walk' or clip=='Idle') and .16 or .12),0,1)

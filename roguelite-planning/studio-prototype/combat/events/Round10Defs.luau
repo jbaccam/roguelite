@@ -66,7 +66,16 @@ D.Events={
  VolcanicCrater={
   id='Eruption',title='ERUPTION',objective='SURVIVE',kind='survive',duration=60,intro=4.0,
   needs={props={'VolcanicVent'}},
-  spawn={interval={3.2,2.4},perPlayer=4,base=3,cap={30,12},fodder={'lava-slime','lava-slime','fire-goblin','lava-slime','ember-spider'}},
+  -- 2026-10-16 user: "the spawn rate on the volcanic crater for round 10 is ass why are there not even
+  -- really mobs". It was the thinnest event: 7 a pulse every 3.2 -> 2.4 s (2.2-2.9 a second, under a
+  -- normal wave 10's 3 a second and Pine Valley's 3.3-4.5), cap 30, 3 in 5 of them 13-speed slimes
+  -- spawned 30-46 studs out (3 s to reach anyone, so a kiting player never met most), and the vents
+  -- took 35% of a mob's health a tick (dead in 3 ticks, inside one eruption). Now 11 a pulse every
+  -- 2.4 -> 1.5 s (4.6 -> 7.3 a second solo), cap 46 (+14 a player; 4 players 88), spawned 24-38 out
+  -- (band), slimes 4 in 12 with spiders and goblins 3 each, a shaman and an ogre; vents take 12%
+  -- (enemyShare below: a full eruption 48%, still worth luring them through twice).
+  spawn={interval={2.4,1.5},perPlayer=6,base=5,cap={46,14},band={24,38},
+   fodder={'lava-slime','ember-spider','fire-goblin','lava-slime','ember-spider','fire-goblin','lava-slime','ash-shaman','ember-spider','lava-slime','fire-goblin','obsidian-ogre'}},
   -- Vents in groups that take turns: charge (warn s), erupt (damage ticks), cool. 2026-10-10 user:
   -- remove the big CHARGING / ERUPTING / COOLING tags (the vent's glow, light and ground ring say it
   -- now), "spread out more and larger aoe", and "they should change locations ... or just have more".
@@ -77,7 +86,7 @@ D.Events={
   -- minGap from other vents, clear from players.
   vents={count=8,rings={.3,.62},radius={18,44},groups=4,warn=1.5,erupt=1.8,cool=.9,gap=1.9,blast=12,tick=.5,
    splash={count=3,radius=6,distance={13,19}},relocate={every=2,warn=1.6,minGap=22,clear=8},
-   playerDamage=12,enemyShare=.35},
+   playerDamage=12,enemyShare=.12}, -- enemyShare .35 -> .12 (2026-10-16, see spawn above)
  },
 }
 -- Event music (Round10Events.client), played through the RogueliteMusic group (the Settings music
@@ -105,7 +114,7 @@ function D.interval(spawn,k) k=math.clamp(k or 0,0,1);return spawn.interval[1]+(
 -- Living event adds the director keeps at most, for `players` up (1-4): cap[1] solo plus cap[2] a
 -- player. Example, Pine Valley with 3 players: 34 + 2 x 14 = 62 (under WaveTimeline.MaxAlive 100).
 function D.cap(spawn,players) return math.min(90,spawn.cap[1]+spawn.cap[2]*math.max(0,(players or 1)-1)) end
--- How many arrive in one pulse: base + perPlayer x players.
+-- How many arrive in one pulse: base + perPlayer x players. Example, Volcanic Crater solo: 5 + 6 = 11.
 function D.pulseSize(spawn,players) return spawn.base+spawn.perPlayer*math.max(1,players or 1) end
 -- Tomb event (2026-10-10). Wardens for `players` up: 1 solo, 2 for 2-3, 3 for 4.
 function D.wardens(tombs,players) local w=tombs.wardens or {1};return w[math.clamp(math.floor(players or 1),1,#w)] end

@@ -152,23 +152,44 @@ D.KingCrab={anim='king-crab',name='Giant King Crab',health=21000,scale=1.4,chase
   BubbleBarrage={clip='BubbleBarrage',rate=1.2,range={10,72},cooldown=1.1,damage=10,shape='projectiles',point='BubbleOrigin',count=13,spread=math.rad(52),speed=30,radius=2,life=2.6,perPlayer=2},
  },order={'ClawCrush','BubbleBarrage','SidewaysRush','ClawCrush','SidewaysRush','BubbleBarrage'}}
 -- The Pharaoh's staff crook releases the bolts ~10 studs ahead and 14 up, so they pass over anyone
--- within ~13 studs (MapBossServiceTests 4). He holds off at 20 (stop), bolts start at 15, and a
--- player who closes in gets the tombs instead. The bolts fly 48 x 2.5 = 120 studs.
-D.Pharaoh={anim='pharaoh',name='The Pharaoh',health=24000,scale=1.4,chaseSpeed=20,glowColor=Color3.fromRGB(120,235,255),stop=20,
- enrage={cooldown=.6,chase=3,extra=2,follow=2},
+-- within ~13 studs (MapBossServiceTests 4). Bolts start at 15, and a player who closes in gets the
+-- tombs instead. The bolts fly 48 x 2.5 = 120 studs.
+-- Pursuit (user, 2026-10-16: "the pharaoh and the cyclops should ... chase players more they kinda
+-- just stand there ... maybe even attacking while moving"). Why they stood: stop 20 / 18 held them
+-- still whenever a player was that close (a melee player always is), every attack froze them
+-- anchored for its whole clip (Bolts 1.7 s, Tombs 1.92, Slam 1.92, Stomp 2.31) and the cooldowns
+-- after (0.9-1.4 s) were spent standing at the stop line. Now (MapBossService move / lunge / face):
+--   chaseSpeed 20 / 21 -> 22, enrage +3 -> +2 (24: a player's base, still outwalkable with any speed);
+--   stop 20 / 18 -> 11 / the default (12.2): they walk right up to melee players;
+--   move {lock, resume}: he keeps walking after his target through the attack, planting only from
+--     `lock` s before impact to `resume` s after it. Bolts: walks 0.53 s of the wind-up (the volley
+--     re-aims as he goes, then locks 0.3 s before release), planted 0.45 s, walks the last 0.72 s.
+--     Tombs: walks 0.41 s, plants for the staff strike (0.65 s), walks while the tombs erupt;
+--   lunge (studs): a slam's committed step at its target during the wind-up. Its warning is placed
+--     where the step ends, from the commit, and never moves. GroundSlam: up to 8 (range 22 -> 28: from
+--     28 he steps 8 and the club lands 8.4 from the player, inside the 15 circle), Stomp up to 6;
+--     both walk again 0.5 / 0.35 s after impact (the Stomp's wave runs on by itself);
+--   face (rad/s): standing at his stop line he turns to his target (AlignOrientation), never his back;
+--   cooldowns about halved: Bolts .9 -> .5, Tombs 1.4 -> .7, Slam 1 -> .6, Stomp 1.3 -> .8.
+-- Example, a melee Brawler on him: was Tombs 1.92 s planted + 1.4 s standing = 3.3 s idle a cast; now
+-- 0.65 s planted of a 2.6 s cycle, the rest chasing her (or turning to her at 11 studs).
+D.Pharaoh={anim='pharaoh',name='The Pharaoh',health=24000,scale=1.4,chaseSpeed=22,glowColor=Color3.fromRGB(120,235,255),stop=11,face=math.rad(240),
+ enrage={cooldown=.6,chase=2,extra=2,follow=2},
  attacks={
-  CursedBolts={clip='CursedBolts',rate=1.25,range={15,100},cooldown=.9,damage=22,shape='projectiles',point='BoltOrigin',count=5,spread=math.rad(34),speed=48,radius=1.6,life=2.5,perPlayer=1},
-  TombEruption={clip='TombEruption',rate=1.2,range={0,100},cooldown=1.4,damage=30,shape='targets',radius=5.5,maxTargets=5,lead=.25,eruptDelay=.7,extra=1},
+  CursedBolts={clip='CursedBolts',rate=1.25,range={15,100},cooldown=.5,damage=22,shape='projectiles',point='BoltOrigin',count=5,spread=math.rad(34),speed=48,radius=1.6,life=2.5,perPlayer=1,
+   move={lock=.3,resume=.15}},
+  TombEruption={clip='TombEruption',rate=1.2,range={0,100},cooldown=.7,damage=30,shape='targets',radius=5.5,maxTargets=5,lead=.25,eruptDelay=.7,extra=1,
+   move={lock=.25,resume=.4}},
  },order={'CursedBolts','TombEruption','CursedBolts','CursedBolts','TombEruption'}}
--- The cyclops holds off at 18 studs (stop) and uses Stomp's wave from range. Ground Slam's club
--- lands ~11.6 studs ahead, so radius 15 reaches ~27 studs; rate 1 keeps its warning at
--- radius/22 + .25 s (0.93 s of the 0.96 s wind-up).
-D.FrostCyclops={anim='frost-cyclops',name='Frost Cyclops',health=27000,scale=1.4,chaseSpeed=21,glowColor=nil,stop=18,
- enrage={cooldown=.6,chase=3,follow=2,fan={-28,0,28}},
+-- The cyclops uses Stomp's wave from range. Ground Slam's club lands ~11.6 studs ahead, so radius 15
+-- reaches ~27 studs; rate 1 keeps its warning at radius/22 + .25 s (0.93 s of the 0.96 s wind-up).
+-- Pursuit 2026-10-16: see the Pharaoh above (no stop: the default 12.2).
+D.FrostCyclops={anim='frost-cyclops',name='Frost Cyclops',health=27000,scale=1.4,chaseSpeed=22,glowColor=nil,face=math.rad(240),
+ enrage={cooldown=.6,chase=2,follow=2,fan={-28,0,28}},
  attacks={
-  GroundSlam={clip='GroundSlam',rate=1,range={0,22},cooldown=1,damage=32,shape='circle',point='ClubImpact',radius=15,knockdown=.7,
+  GroundSlam={clip='GroundSlam',rate=1,range={0,28},cooldown=.6,damage=32,shape='circle',point='ClubImpact',radius=15,knockdown=.7,lunge=8,move={resume=.5},
    follow={radius=6,delay=.85,maxTargets=4,range=48,damage=22}},
-  Stomp={clip='Stomp',rate=1.3,range={10,75},cooldown=1.3,damage=30,shape='wave',point='StompImpact',length=78,width=7,travel=80},
+  Stomp={clip='Stomp',rate=1.3,range={10,75},cooldown=.8,damage=30,shape='wave',point='StompImpact',length=78,width=7,travel=80,lunge=6,move={resume=.35}},
  },order={'GroundSlam','Stomp','GroundSlam','Stomp','Stomp'}}
 D.Dragon={anim='dragon',name='Inferno Dragon',health=31500,scale=1.25,chaseSpeed=22,glowColor=Color3.fromRGB(255,150,40),
  enrage={cooldown=.6,chase=3,follow=2,track=1.6},

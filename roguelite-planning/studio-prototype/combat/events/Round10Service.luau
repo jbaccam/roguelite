@@ -135,9 +135,18 @@ local function point(request)
 end
 -- A group of `count` ids around one approach point: the point (Round10Spawn Point near a living
 -- member, `band` studs out), then the others on open floor around it.
+-- No open floor in the band (lava, a crater rim, a player against the arena edge) never drops the
+-- pulse (2026-10-16): it tries a wider band round the same member, then anywhere in the arena away
+-- from the players; only then is the pulse lost (warned once an event, E.misses counts them).
 local function group(E,ids,count,band,anchorRoot,telegraph,attrs)
  local anchor=anchorRoot and anchorRoot.Position or nil
- local base=point({anchor=anchor,band=band or {30,46},minimum=22});if not base then return 0 end
+ band=band or {30,46}
+ local base=point({anchor=anchor,band=band,minimum=22}) or point({anchor=anchor,band={22,math.max(60,band[2]+14)},minimum=20}) or point({minimum=20})
+ if not base then
+  E.misses=(E.misses or 0)+1
+  if E.misses==1 then warn('Round10Service: '..E.def.id..' found no open floor for a pulse of '..count..' (arena floor blocked?)') end
+  return 0
+ end
  local spawned=0
  for i=1,count do
   local a=i*2.39996;local r=i==1 and 0 or 2.5+math.sqrt(i)*1.6
@@ -158,7 +167,7 @@ local function pulse(E,t,spec,list,extra)
  local count=math.min(Defs.pulseSize(spec,n)+(extra or 0),room)
  if count<=0 then return false end
  E.turn=(E.turn or 0)%n+1
- group(E,spec.fodder,count,{30,46},list[E.turn].root,1)
+ group(E,spec.fodder,count,spec.band or {30,46},list[E.turn].root,1) -- spec.band: Volcanic Crater's 24-38 (2026-10-16)
  return true
 end
 
@@ -520,18 +529,29 @@ end
 -- They count for the clear and the HUD like the first. BossPractice: the extra Wardens pay no boss
 -- crystal shower or "defeat a boss" quest credit (ZombieDeath skips their death listeners), so a
 -- party's wave 10 pays exactly what one Warden did.
-local function wardenSpot(E,T)
+-- 2026-10-16 (multiplayer: an extra Warden "clipped into the tomb, facing the wrong way"): the spot
+-- was right, 6.1 in front of the cavity, but MapBossService chased the nearest player in a straight
+-- line, and that is often the one hitting this very tomb from its side or back, so he walked back into
+-- the stone and stood pressed against it with his back to the arena. The chase now goes round
+-- standing tombs (MapBossService X.detour). Here: the spot also steps 5 studs to the side when a player
+-- stands on it (list: members), and is picked once, so the sand burst and the Warden match.
+local function wardenSpot(E,T,list)
  local BossDefs=module(combat,'MapBossDefs');local d=BossDefs and BossDefs.get(E.def.leader)
- local out=T.cf*CFrame.new(0,0,-(((d and d.emergeOut) or 3.5)+1.2))
- return ground(out.Position) or out.Position
+ local reach=((d and d.emergeOut) or 3.5)+1.2
+ for _,side in {0,5,-5} do
+  local out=T.cf*CFrame.new(side,0,-reach);local clear=true
+  for _,e in list or {} do if flat(e.root.Position-out.Position).Magnitude<4 then clear=false;break end end
+  if clear or side==-5 then return ground(out.Position) or out.Position end
+ end
 end
-local function extraWarden(E,T,health)
+local function extraWarden(E,T,health,floor)
  local MB=module(script.Parent,'MapBossService');local BossDefs=module(combat,'MapBossDefs')
  local timing=BossDefs and BossDefs.timing(E.def.leader)
  if not MB or not BossDefs then return nil end
- local floor=wardenSpot(E,T)
+ floor=floor or wardenSpot(E,T)
  local y=floor.Y+((timing and timing.rootHeight) or 3)+.1
- local face=flat(E.center-floor).Magnitude>1 and Vector3.new(E.center.X,y,E.center.Z) or Vector3.new(floor.X,y,floor.Z)+T.cf.LookVector
+ -- Facing out of the tomb's open face (T.cf looks at the arena centre), whoever is nearest.
+ local face=Vector3.new(floor.X,y,floor.Z)+flat(T.cf.LookVector).Unit
  local ok,npc=pcall(MB.spawn,E.def.leader,CFrame.lookAt(Vector3.new(floor.X,y,floor.Z),face),false,nil)
  if not ok or not npc then warn('Round10Service: extra Warden failed to spawn: '..tostring(npc));return nil end
  npc:SetAttribute('BossPractice',true);npc:SetAttribute('EventLeader',true);npc:SetAttribute('EventGen',E.gen);npc:SetAttribute('FromTomb',T.letter)
@@ -620,13 +640,14 @@ EVENTS.TombOpens={
    E.wardensCalled=true
    for i=2,E.wardenCount do
     local T=E.tombs[i]
-    fx:FireAllClients('TombWardenBurst',wardenSpot(E,T),T.cf.LookVector)
+    local spot=wardenSpot(E,T,list)
+    fx:FireAllClients('TombWardenBurst',spot,T.cf.LookVector)
     task.delay(.45,function()
      -- The pending slot is released whatever happens, so a failed or cancelled arrival can't
      -- hold the clear (wardensAlive counts pending Wardens).
      E.wardensPending=math.max(0,(E.wardensPending or 1)-1)
      if E.gen~=generation or E.phase~='Active' then return end
-     local ok,npc=pcall(extraWarden,E,T,E.wardenHealth or 6000)
+     local ok,npc=pcall(extraWarden,E,T,E.wardenHealth or 6000,spot)
      if not ok then warn('Round10Service: extra Warden failed: '..tostring(npc));npc=nil end
      if npc then
       table.insert(E.wardens,npc)
