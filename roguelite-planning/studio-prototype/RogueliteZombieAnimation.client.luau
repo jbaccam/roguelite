@@ -74,7 +74,9 @@ local function track(npc)
  if tracked[npc] or npc:GetAttribute('IsBoss') or npc:GetAttribute('IsHammerBoss') then return end
  local config=Catalog.fromModel(npc);if not config then return end
  local seed=((npc:GetAttribute('SpawnIndex') or 1)*2.3999632297)%(2*math.pi)
- tracked[npc]={joints=Motion.bind(npc),phase=seed,idleOffset=seed,stride=0,reach=0,moveClock=0,poses={},spare={},config=config,bindingsDirty=false,feetRetry=0,connections={},feet=config.legacy and NativeFeet.bind(npc,config.legacy)}
+ -- Zombie feet bind on the first pose (feetRetry 0), inside its pcall: a bind error here used to
+ -- leave the enemy untracked, sliding in its rest pose for its whole life.
+ tracked[npc]={joints=Motion.bind(npc),phase=seed,idleOffset=seed,stride=0,reach=0,moveClock=0,poses={},spare={},config=config,bindingsDirty=false,feetRetry=0,connections={},feet=nil}
  -- Per-enemy pose buffers, refilled every frame instead of allocating new tables (see the frame).
  tracked[npc].buffers={idle={},move={},mix={},attack={},scaled={},display={}}
  local state=tracked[npc]
@@ -140,31 +142,27 @@ local function poseEnemy(npc,state,now,dt,camera,interval)
  -- from the stale one (stride, arm reach, mode blend); idle and attack poses follow the clock.
  local step,resume=state.wait,state.culled;state.wait=0;state.culled=false
  if state.bindingsDirty then
+  -- Cleared first: a bind that throws waits for the once-a-second retry (the frame's pcall), not every frame.
+  state.bindingsDirty=false;state.feetRetry=now+1
   state.joints=Motion.bind(npc)
   state.feet=config.legacy and NativeFeet.bind(npc,config.legacy)
   state.legs=bindLegs(npc,state)
-  state.bindingsDirty=false;state.feetRetry=now+1
  elseif config.legacy and not state.feet and now>=state.feetRetry then
   -- A rig that can't bind yet retries on its next structural change, else once a second.
   state.feet=NativeFeet.bind(npc,config.legacy);state.feetRetry=now+1
  end
  local displacement=state.lastPosition and position-state.lastPosition or Vector3.zero;state.lastPosition=position
- local distance=Vector2.new(displacement.X,displacement.Z).Magnitude
- -- Teleports and long hitches reset the estimator instead of spinning a gait.
- if step<=0 or dt>.25 or distance>math.max(4,config.speed*step*3) then distance=0 end
- local speed=distance/math.max(step,1/240)
+ -- NativeFeet.gait (tested offline): teleports and long hitches reset the estimator instead of
+ -- spinning a gait. On the ground: the Humanoid says so, or the body isn't rising or falling (under
+ -- 8 studs/s, a 25-degree slope at full speed; a hop starts at 50). FloorMaterial here is the
+ -- server's copy, and an Air left over from a spawn drop, a stall hop or a knockback kept a mob
+ -- sliding along in a still pose ("they move like their images sliding around in photoshop", 2026-10-03).
+ -- Enemies attack on the move (EnemyAttacks), so the legs keep walking through a swing.
+ local distance,speed,walking=NativeFeet.gait(displacement.X,displacement.Y,displacement.Z,step,dt,config.speed,h.FloorMaterial==Enum.Material.Air)
  local blend=resume and 1 or 1-math.exp(-math.min(step,.1)*12)
  local attackStart=npc:GetAttribute(config.legacy=='Mutant' and 'SlamStart' or 'EnemyAttackStart')
- local age=attackStart and now-attackStart
+ local age=type(attackStart)=='number' and now-attackStart or nil
  local attacking=age~=nil and age>=0 and age<=config.attackRecovery
- -- On the ground: the Humanoid says so, or the body isn't rising or falling (under 8 studs/s, a
- -- 25-degree slope at full speed; a hop starts at 50). FloorMaterial here is the server's copy, and
- -- an Air left over from a spawn drop, a stall hop or a knockback kept a mob sliding along in a
- -- still pose ("they move like their images sliding around in photoshop", 2026-10-03).
- local rising=step>0 and math.abs(displacement.Y)/step or 0
- local grounded=h.FloorMaterial~=Enum.Material.Air or rising<8
- -- Enemies attack on the move (EnemyAttacks), so the legs keep walking through a swing.
- local walking=grounded and speed>.2
  state.stride+=((walking and 1 or 0)-state.stride)*blend
  local target;local buffers=state.buffers
  if config.legacy then
@@ -181,12 +179,14 @@ local function poseEnemy(npc,state,now,dt,camera,interval)
    if not data and not pending and not state.warned then warn('Missing enemy clips: '..config.id);state.warned=true end
    if state.data then
     state.moveClock=state.idleOffset/(2*math.pi)*state.data.clips.Move.duration
-    state.legs=bindLegs(npc,state)
     -- Leg bones on every rig: Thigh/Shin/Foot, Upper/LowerLeg, crab and spider LegNUpper/Lower.
+    -- Listed before the IK legs bind: a bind that threw here used to leave this nil, and every
+    -- later attack frame failed on it (the mob froze mid-stride through each swing).
     state.legBones={}
     for bone in state.data.bones do
      if bone:find('Leg') or bone:find('Thigh') or bone:find('Shin') or bone:find('Foot') then table.insert(state.legBones,bone) end
     end
+    state.legs=bindLegs(npc,state)
    end
   end
   if not state.data then return end
@@ -259,6 +259,9 @@ RunService.PreSimulation:Connect(function(dt)
  for npc,state in tracked do
   local ok,err=pcall(poseEnemy,npc,state,now,dt,camera,interval)
   if not ok then
+   -- Rebind it at most once a second (stale joints after streaming or a part swap), so a failing
+   -- mob recovers instead of sliding along unposed until it dies.
+   if now>=(state.failRetry or 0) then state.failRetry=now+1;state.bindingsDirty=true;state.radius=nil end
    local id=state.config and state.config.id or npc.Name
    if not failedTypes[id] then failedTypes[id]=true;warn('Enemy pose failed ('..tostring(id)..'): '..tostring(err)) end
   end

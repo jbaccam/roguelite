@@ -33,7 +33,12 @@ function F.bind(npc, kind)
 		local hip = npc:FindFirstChild(side .. "Hip", true)
 		local knee = npc:FindFirstChild(side .. "Knee", true)
 		local ankle = npc:FindFirstChild(side .. "Ankle", true)
-		if not hip or not knee or not ankle then
+		-- A foot that hasn't streamed in (or a same-named non-joint) can't bind yet: nil, so the
+		-- caller retries, instead of an error on ankle.Part1.Size.
+		if
+			not (hip and hip:IsA("Motor6D") and knee and knee:IsA("Motor6D") and ankle and ankle:IsA("Motor6D"))
+			or not ankle.Part1
+		then
 			return nil
 		end
 		local u = hip.C1:Inverse() * knee.C0
@@ -87,6 +92,24 @@ function F.footPath(u, stance, reach, length)
 		forward = start * (1 - 2 * smooth)
 	end
 	return forward, math.sin(t * math.pi) ^ 2 * length * 0.22, false
+end
+-- Whether an enemy walked since its last pose, in plain numbers (offline tests). dx/dy/dz: its
+-- root's travel over step seconds; dt: this frame; speed: its catalog speed; floorAir: the
+-- Humanoid's FloorMaterial reads Air. Returns the flat distance (0 for a teleport or a long hitch:
+-- over 3x the catalog speed and at least 4 studs, or a frame over 0.25 s), the measured speed, and
+-- walking. Grounded when the Humanoid says so or the body isn't rising or falling (under 8
+-- studs/s): a server-owned mob's FloorMaterial can stay Air on the client after a stall hop, a
+-- spawn drop or a knockback, and that alone kept mobs sliding in a still pose (2026-10-03).
+-- Example: 0.27 studs flat in 1/60 s with FloorMaterial stuck at Air is 16 studs/s, walking.
+function F.gait(dx, dy, dz, step, dt, speed, floorAir)
+	local distance = math.sqrt(dx * dx + dz * dz)
+	if step <= 0 or dt > 0.25 or distance > math.max(4, (speed or 0) * step * 3) then
+		distance = 0
+	end
+	local measured = distance / math.max(step, 1 / 240)
+	local rising = step > 0 and math.abs(dy) / step or 0
+	local grounded = not floorAir or rising < 8
+	return distance, measured, grounded and measured > 0.2
 end
 function F.apply(state, poses, phase, stride, attacking)
 	if not state then
