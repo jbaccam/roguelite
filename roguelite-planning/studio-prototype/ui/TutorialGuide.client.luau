@@ -14,7 +14,6 @@ local RS=game:GetService('ReplicatedStorage')
 local RunService=game:GetService('RunService')
 local Http=game:GetService('HttpService')
 local Tags=game:GetService('CollectionService')
-local GuiService=game:GetService('GuiService')
 local player=Players.LocalPlayer
 local combat=RS:WaitForChild('RogueliteCombat')
 local Config=require(combat:WaitForChild('TutorialConfig'))
@@ -127,7 +126,21 @@ end
 -- The bosses: the old Hammer (tag HammerBoss) and map bosses, the rebuilt Hammer Brute included
 -- (MapBoss). Kept up to date by the tag signals below, not looked up every frame.
 local bossList={}
-local function fightContext() return {edges=true,avoid=bossList} end
+-- What a step explains, for the box to keep clear far above other UI (ctx.keep; 2026-10-16: on a
+-- phone no spot is clear, and the box sat on the health bar in fights and on an offer or GO in the
+-- shop). The run: the HUD's health block and the boss bar.
+local function keepOf(list) local k={};for _,v in list do if v then table.insert(k,v) end end;return k end
+local function fightContext()
+ local g=screen('RogueliteHUD');local hud=g and g:FindFirstChild('HUD',true)
+ return {edges=true,avoid=bossList,keep=keepOf({hud and hud:FindFirstChild('Health'),hud and hud:FindFirstChild('BossHealth')})}
+end
+-- A card screen: its offers (Offer1..4) and its GO.
+local function offersKeep(root)
+ local k={};if not root then return k end
+ for i=1,4 do local c=find(root,'Offer'..i);if c then table.insert(k,c) end end
+ local go=find(root,'StartWave',true);if go then table.insert(k,go) end
+ return k
+end
 -- The boss's first two attacks after his entrance: "Red circle = move!"
 local function watchBoss(npc)
  npc:GetAttributeChangedSignal('BossSerial'):Connect(function()
@@ -186,8 +199,8 @@ local function runStep()
  local pending=st and st:GetAttribute('PendingLevelUps') or 0
  if pending>0 then
   -- By the count, not the wave: with worth-1 crystals each shop has one card (2026-10-03).
-  local card=find(screen('LevelUpOffers'),'Offer1')
-  return {line=pending>=2 and 'LevelUp2' or 'LevelUp',target=card and find(card,'Choose',true)}
+  local cards=screen('LevelUpOffers');local card=find(cards,'Offer1')
+  return {line=pending>=2 and 'LevelUp2' or 'LevelUp',target=card and find(card,'Choose',true),ctx={keep=offersKeep(cards)}}
  end
  local shop
  for _,g in pg:GetChildren() do if g:IsA('ScreenGui') and g.Enabled then shop=find(g,'ShopLayout');if shop then break end end end
@@ -196,16 +209,17 @@ local function runStep()
   -- The arrow suggests the guided offer (the Glock) while it can be bought; any buy counts.
   -- After one, GO; nothing bought and the Glock gone or too dear, buy-then-GO.
   local snap=snapshot();local list=snap and snap.offers or {}
-  for _,o in list do if o.sold then return {line='ShopGo',target=shop and find(shop,'StartWave',true)} end end
+  local keep={keep=offersKeep(shop)}
+  for _,o in list do if o.sold then return {line='ShopGo',target=shop and find(shop,'StartWave',true),ctx=keep} end end
   for i,o in list do
    if o.id==offers[1] and (snap.shards or 0)>=(o.price or math.huge) then
     local card=shop and find(shop,'Offer'..i)
-    return {line='Shop',target=card and find(card,'Buy',true)}
+    return {line='Shop',target=card and find(card,'Buy',true),ctx=keep}
    end
   end
-  return {line='Shop2',target=shop and find(shop,'StartWave',true)}
+  return {line='Shop2',target=shop and find(shop,'StartWave',true),ctx=keep}
  end
- return {line='Shop2',target=shop and find(shop,'StartWave',true)}
+ return {line='Shop2',target=shop and find(shop,'StartWave',true),ctx={keep=offersKeep(shop)}}
 end
 
 -- The lobby part -------------------------------------------------------------------------------
@@ -238,8 +252,9 @@ local function chestContext(chests)
  local row=find(chests,'Row_'..Config.SeedChest)
  local prefer
  if row then
-  local right=row.AbsolutePosition.X+row.AbsoluteSize.X+(GuiService:GetGuiInset()).X+16
-  local full=pg:FindFirstChild('TutorialGuide') and pg.TutorialGuide.AbsoluteSize or workspace.CurrentCamera.ViewportSize
+  -- In the guide's own pixels (2026-10-16: was + GetGuiInset().X, off by a phone's notch).
+  local g=ui();local right=g.toLocal(row.AbsolutePosition).X+row.AbsoluteSize.X+16
+  local full=g.size()
   prefer={right,0,full.X,full.Y}
  end
  return {avoid=avoid,prefer=prefer}

@@ -2,7 +2,9 @@
 -- roguelite-planning/previews/tutorial-guide/guide.html): the guide's portrait (Eggbert, the egg
 -- merchant) and text box wherever they cover no UI, and ONE arrow that glides between targets.
 -- Presentation only: TutorialGuide.client decides what is said and pointed at.
---   G.new(player, assets, name) -> guide   (name: his name tag)
+--   G.new(player, assets, name, opts) -> guide   (name: his name tag; opts only for Edit previews:
+--                             opts.parent = a Frame standing in for the screen, opts.layers = what
+--                             holds the screens to keep clear, opts.insets = {left, top, right, bottom})
 --   guide.say(text, button)   types the line in (button: {label=, onClick=} or nil); same text = no-op
 --   guide.hide()              tucks the box away (the arrow too)
 --   guide.point(obj)          the arrow glides to a GuiObject (any ScreenGui), or to a Model/BasePart
@@ -10,16 +12,21 @@
 --                             nil fades it out where it is
 --   guide.context(ctx)        where the box may go: ctx.avoid = world Models/BaseParts it must not
 --                             cover (the player's own character always counts), ctx.prefer = a
---                             screen rect {x0,y0,x1,y1} to try first, ctx.edges = corners and sides
---                             only (the run: never over the fight)
---   guide.Screen, guide.destroy()
+--                             rect {x0,y0,x1,y1} in the guide's pixels (guide.toLocal) to try first,
+--                             ctx.edges = corners and sides only (the run: never over the fight),
+--                             ctx.keep = GuiObjects the step explains, kept clear far above other UI
+--   guide.toLocal(absolutePosition), guide.size(), guide.Screen, guide.destroy()
 -- The arrow is one image: a new target starts a 0.55 s eased curve (a quadratic Bezier bulging to
 -- the side) while it turns to its new direction; at rest it keeps following the target (layouts
 -- move) and bobs along its pointing line. Below the target pointing up, unless the target sits in
--- the bottom part of the screen (then above, pointing down), so it never covers a card's text.
+-- the bottom part of the screen or there's no room under it (then above, pointing down), so it
+-- never covers a card's text.
+-- The placement maths is pure (G.placeArrow, G.scrollInto, G.spots, G.placeBox, G.fitText) and
+-- tested offline: ui/TutorialGuideTests.luau via ui/run_tutorial_guide_tests.py.
 local GuiService=game:GetService('GuiService')
 local RunService=game:GetService('RunService')
 local TweenService=game:GetService('TweenService')
+local TextService=game:GetService('TextService')
 local RS=game:GetService('ReplicatedStorage')
 local T=require(RS:WaitForChild('UITheme'))
 local C=T.Color
@@ -28,31 +35,209 @@ G.ARROW=112 -- arrow size at scale 1 (design px)
 G.TIP=6/256 -- the tip's height in arrow.png (ui/assets/tutorial/make_arrow.py)
 G.GLIDE=.55
 G.TAG_H=32
--- Two shapes at scale 1, each {size, portrait, box, text, tag, buttons} as {x, y, w, h} inside it:
--- wide (portrait beside a long box, like the reference) and compact (portrait over a short box),
--- for gaps the wide one doesn't fit, like between the chest screen's menu and its chests.
+G.REVEAL=.6 -- seconds a new target's scrolling lists are scrolled to show it
+G.KEEP=25 -- the weight of UI a step explains (ctx.keep: the shop's offers and GO), per px² covered
+-- Four shapes at scale 1, each {size, portrait, box, text, tag, buttons} as {x, y, w, h} inside it:
+-- wide (portrait beside a long box, like the reference), compact (portrait over a short box), for
+-- gaps the wide one doesn't fit, like between the chest screen's menu and its chests, and for short
+-- phone screens (2026-10-16) strip (a smaller portrait beside the same box, 180 tall instead of
+-- 300) and column (compact at 340 wide: the phone shop's stats column is all the room it leaves).
+-- Example: an 844x390 phone draws at .42, so wide is 361x126 px there (a third of the height),
+-- strip 319x76 and column 143x155, which fits the 667x375 shop's 145 px stats column.
 G.Shapes={
  wide={size=Vector2.new(860,300),portrait={0,0,300,300},box={150,120,710,150},text={140,14,530,122,36},
   textWithButton={140,14,330,122,36},tag={290,88},buttons={660,226,190,58},fade=1},
  compact={size=Vector2.new(480,340),portrait={0,0,200,200},box={0,170,480,170},text={24,14,432,142,32},
   textWithButton={24,10,432,90,30},tag={186,130},buttons={270,278,190,52},fade=.35},
+ strip={size=Vector2.new(760,180),portrait={0,0,180,180},box={110,30,650,150},text={90,12,540,126,34},
+  textWithButton={90,12,340,126,32},tag={170,0},buttons={550,104,190,58},fade=1},
+ column={size=Vector2.new(340,370),portrait={0,0,200,200},box={0,170,340,200},text={20,14,300,172,30},
+  textWithButton={20,10,300,120,28},tag={186,138},buttons={140,302,190,58},fade=.35},
 }
+G.TRIES={'wide','compact','strip','column'} -- the order shapes are tried in (the one it has goes first)
 local CPS=46 -- typed characters per second
 
 local function ease(t) return t<.5 and 4*t*t*t or 1-(-2*t+2)^3/2 end
--- Screen pixels from AbsolutePosition: every GuiObject's AbsolutePosition is measured from under
--- Roblox's top bar, whatever its ScreenGui's insets (a full-screen layer's own top-left reads
--- (0, -58)). Adding the top bar's inset gives the real screen spot for any layer. Until
--- 2026-10-03 full-screen layers got no inset added, and arrows on the level-up cards, chest
--- screen and results sat 58 px too high (into a button, or short of it).
-local function inset() return (GuiService:GetGuiInset()) end
 
-function G.new(player,assets,name)
+-- Pure placement maths ---------------------------------------------------------------------------
+-- Every rect is {pos, size} (Vector2s) in the guide's own pixels: the guide's root covers the whole
+-- screen (ScreenInsets None) and its top-left is (0, 0). A GuiObject's spot there is its
+-- AbsolutePosition minus the root's (G.toLocal). Phones (2026-10-16, user: "the egg bert texts and
+-- arrows are not accurate positioning for mobile screens"): until then it was AbsolutePosition +
+-- GetGuiInset(). AbsolutePosition is measured from the CoreUISafeInsets corner, which on a phone is
+-- under the top bar AND in from a notch; GetGuiInset is only the top bar's inset, so it put arrows
+-- and the box's obstacles off by whatever else the device reserves. The difference of two
+-- AbsolutePositions is exact on every device, top-bar size and safe area. Example: a full-screen
+-- root reads (0, -58) on a PC and a button at screen (100, 158) reads (100, 100): local (100, 158).
+function G.toLocal(abs,origin) return abs-origin end
+-- The part of rect (p, s) inside clip ({pos, size}, nil = no clip), or nil when none of it is.
+function G.clip(p,s,clip)
+ if not clip then return p,s end
+ local x0,y0=math.max(p.X,clip[1].X),math.max(p.Y,clip[1].Y)
+ local x1,y1=math.min(p.X+s.X,clip[1].X+clip[2].X),math.min(p.Y+s.Y,clip[1].Y+clip[2].Y)
+ if x1-x0<=0 or y1-y0<=0 then return nil end
+ return Vector2.new(x0,y0),Vector2.new(x1-x0,y1-y0)
+end
+function G.overlap(ap,as,bp,bs)
+ local w=math.min(ap.X+as.X,bp.X+bs.X)-math.max(ap.X,bp.X)
+ local h=math.min(ap.Y+as.Y,bp.Y+bs.Y)-math.max(ap.Y,bp.Y)
+ return w>0 and h>0 and w*h or 0
+end
+-- The arrow's tip and turn (0 = pointing up from under the target, 180 = down from over it) for a
+-- target's shown rect (p, s) on a screen `full` big, arrow `size` long, `gap` off the target. Under
+-- it when the target's middle is in the top 62% and the arrow fits under it; over it otherwise,
+-- unless only under fits; with room for neither (a short phone) the side with more room. The tip
+-- stays on the target but keeps 30% of the arrow's width from the screen's sides. Example: on a
+-- 667x375 phone a 40 px GO button at y 300..340 gets the arrow over it, tip at y 300-gap.
+function G.placeArrow(p,s,full,size,gap)
+ local below,above=full.Y-(p.Y+s.Y+gap),p.Y-gap
+ local under
+ if p.Y+s.Y/2<full.Y*.62 then under=below>=size or (above<size and below>=above)
+ else under=above<size and (below>=size or below>above) end
+ local edge=size*.3
+ local cx=math.clamp(p.X+s.X/2,math.max(p.X,edge),math.max(math.max(p.X,edge),math.min(p.X+s.X,full.X-edge)))
+ if under then return Vector2.new(cx,p.Y+s.Y+gap),0 end
+ return Vector2.new(cx,p.Y-gap),180
+end
+-- Where to scroll a ScrollingFrame so a target inside it shows, or nil when it already does. Target
+-- (p, s) and window (wp, ws) in screen px, canvas = its CanvasPosition, k = screen px per canvas px
+-- (the UIScales above it), max = the largest CanvasPosition, axes = its ScrollingDirection's name
+-- ('X', 'Y' or 'XY'). A target smaller than the window is centred in it, a bigger one lines up
+-- with its start. Example (2026-10-16, the phone shop's one-row offers): a 480 px row at .6 scale
+-- with card 4 at x 600..780 scrolls by (690-240)/.6 = 750 canvas px.
+function G.scrollInto(p,s,wp,ws,canvas,k,max,axes)
+ local out={X=canvas.X,Y=canvas.Y};local moved=false
+ for _,a in {'X','Y'} do
+  if string.find(axes,a,1,true) then
+   local t0,t1,w0,w1=p[a],p[a]+s[a],wp[a],wp[a]+ws[a]
+   if t0<w0-1 or t1>w1+1 then
+    local shift=s[a]<=ws[a] and (t0+t1)/2-(w0+w1)/2 or t0-w0
+    local v=math.clamp(canvas[a]+shift/k,0,math.max(0,max[a]))
+    if math.abs(v-canvas[a])>.5 then out[a]=v;moved=true end
+   end
+  end
+ end
+ return moved and Vector2.new(out.X,out.Y) or nil
+end
+-- The guide's drawn parts at a spot: the portrait, the text box and the name tag.
+function G.parts(pos,s,shape,tagW)
+ local d=G.Shapes[shape];local q,b,g=d.portrait,d.box,d.tag
+ return {{pos+Vector2.new(q[1],q[2])*s,Vector2.new(q[3],q[4])*s},{pos+Vector2.new(b[1],b[2])*s,Vector2.new(b[3],b[4])*s},{pos+Vector2.new(g[1],g[2])*s,Vector2.new(tagW,G.TAG_H)*s}}
+end
+-- Spots for the guide at scale s in a shape (top-left corners), in the order they're tried, inside
+-- `safe` ({x0, y0, x1, y1}: the screen less the top bar and a phone's notch and home bar).
+function G.spots(full,safe,s,shape,prefer,edges)
+ local size=G.Shapes[shape].size*s
+ local m=18*s;local w,h=size.X,size.Y
+ -- Under the top bar: 56 px more at scale 1 on PCs (as before 2026-10-16); just the margin on
+ -- short screens, where that is a seventh of the height.
+ local x0,y0=safe.x0+m,safe.y0+(full.Y<600 and m or 56*s)
+ local x1,y1=math.max(x0,safe.x1-m-w),math.max(y0,safe.y1-m-h)
+ local midX,midY=math.clamp((safe.x0+safe.x1-w)/2,x0,x1),math.clamp((safe.y0+safe.y1-h)/2,y0,y1)
+ local list={}
+ local r=prefer
+ if r then
+  -- Inside the preferred area: next to its left side first, then outwards from its middle.
+  local px0,py0=math.max(x0,r[1]),math.max(y0,r[2]);local px1,py1=math.min(x1,r[3]-w),math.min(y1,r[4]-h)
+  if px1>=px0 and py1>=py0 then
+   local mid=(py0+py1)/2;local cells={}
+   for i=0,5 do for j=0,5 do table.insert(cells,Vector2.new(px0+(px1-px0)*i/5,py0+(py1-py0)*j/5)) end end
+   table.sort(cells,function(a,b) if a.X~=b.X then return a.X<b.X end;return math.abs(a.Y-mid)<math.abs(b.Y-mid) end)
+   table.move(cells,1,#cells,1,list)
+  end
+ end
+ for _,v in {Vector2.new(x0,y1),Vector2.new(x0,y0),Vector2.new(x1,y1),Vector2.new(x1,y0),Vector2.new(x0,midY),Vector2.new(x1,midY),Vector2.new(midX,y1),Vector2.new(midX,y0)} do table.insert(list,v) end
+ if not edges then
+  local grid,centre={},Vector2.new(safe.x0+safe.x1-w,safe.y0+safe.y1-h)/2 -- a centred guide's corner
+  for i=0,9 do for j=0,6 do table.insert(grid,Vector2.new(x0+(x1-x0)*i/9,y0+(y1-y0)*j/6)) end end
+  table.sort(grid,function(a,b) return (a-centre).Magnitude>(b-centre).Magnitude end)
+  table.move(grid,1,#grid,#list+1,list)
+ end
+ return list
+end
+-- Less than 3% of the guide's area isn't worth a move (a counter's digits growing under it).
+function G.slack(shape,s,tagW)
+ local a=0;for _,part in G.parts(Vector2.zero,s,shape,tagW) do a+=part[2].X*part[2].Y end
+ return a*.03
+end
+-- Where the box goes. a = {full, safe, s, shapes (in the order tried), list (UI rects {pos, size,
+-- weight}), hard (rects it must not cover), prefer, edges, tagW, here = {pos, shape} where it sits
+-- now (nil: anywhere)}. Overlap in px², times each rect's weight (a button weighs more than a label),
+-- the hard ones far above anything else and leaving the safe area worse still. The first spot that
+-- covers nothing wins, else the one that covers least; where it is stays unless a spot is clearly
+-- better. Returns pos, shape, score (0 = covers nothing).
+function G.placeBox(a)
+ local full,sa,s,list,hard=a.full,a.safe,a.s,a.list or {},a.hard or {}
+ local best,bestShape,bestScore
+ -- A spot that can't beat the best stops early.
+ local function try(pos,shape)
+  local score=0
+  for _,part in G.parts(pos,s,shape,a.tagW) do
+   local p,z=part[1],part[2]
+   if p.X<sa.x0-.5 or p.Y<sa.y0-.5 or p.X+z.X>sa.x1+.5 or p.Y+z.Y>sa.y1+.5 then score+=1e7 end
+   for _,h in hard do local o_=G.overlap(p,z,h[1],h[2]);if o_>0 then score+=1e6+o_*50 end end
+   for _,o_ in list do
+    score+=G.overlap(p,z,o_[1],o_[2])*(o_[3] or 1)
+    if bestScore and score>=bestScore then return score end
+   end
+  end
+  if not bestScore or score<bestScore then best,bestShape,bestScore=pos,shape,score end
+  return score
+ end
+ local here=a.here and try(a.here.pos,a.here.shape) or nil
+ if here~=0 then
+  for _,shape in a.shapes do
+   for _,pos in G.spots(full,sa,s,shape,a.prefer,a.edges) do if try(pos,shape)==0 then break end end
+   if bestScore==0 then break end
+  end
+ end
+ if here and here-bestScore<G.slack(a.here.shape,s,a.tagW) then return a.here.pos,a.here.shape,here end
+ return best,bestShape,bestScore
+end
+-- The biggest text size from `size` down to 60% (at least 9) whose wrapped lines fit a w x h rect,
+-- 4 px clear of each side; measure(line, size, width) -> Vector2 (TextService:GetTextSize).
+-- 2026-10-16: the line was TextScaled under the guide's UIScale, so how big it came out depended on
+-- the device (UITextSizeConstraint caps screen px, not design px); now it's a fixed design size
+-- that the UIScale shrinks evenly with the box.
+function G.fitText(measure,line,w,h,size)
+ local low=math.min(size,math.max(9,math.floor(size*.6)))
+ for z=size,low,-1 do local b=measure(line,z,w-8);if b.Y<=h-4 and b.X<=w-8 then return z end end
+ return low
+end
+
+function G.new(player,assets,name,opts)
+ opts=opts or {}
  local o={}
- local screen=T.make('ScreenGui',player:WaitForChild('PlayerGui'),{Name='TutorialGuide',ResetOnSpawn=false,DisplayOrder=95,
-  ScreenInsets=Enum.ScreenInsets.None,ZIndexBehavior=Enum.ZIndexBehavior.Sibling})
+ local screen
+ if opts.parent then
+  -- Edit previews: a Frame standing in for the screen, with no top bar or notch of its own.
+  screen=T.make('Frame',opts.parent,{Name='TutorialGuide',BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=50})
+ else
+  screen=T.make('ScreenGui',player:WaitForChild('PlayerGui'),{Name='TutorialGuide',ResetOnSpawn=false,DisplayOrder=95,
+   ScreenInsets=Enum.ScreenInsets.None,ZIndexBehavior=Enum.ZIndexBehavior.Sibling})
+ end
  o.Screen=screen
  local root=T.frame(screen,'Root',0,0,0,0);root.Size=UDim2.fromScale(1,1)
+ local function origin() return root.AbsolutePosition end
+ function o.toLocal(abs) return G.toLocal(abs,origin()) end
+ function o.size() return root.AbsoluteSize end
+ -- The screen less the top bar, a phone's notch and its home bar, in the guide's pixels. Example:
+ -- an iPhone 14 in landscape keeps the box 47 px in from the notch side (the root's ClipToDeviceSafeArea
+ -- would otherwise cut the portrait off there).
+ local function safe()
+  local full=root.AbsoluteSize
+  local i=opts.insets
+  if i then return {x0=i[1],y0=i[2],x1=full.X-i[3],y1=full.Y-i[4]} end
+  local ok,r=pcall(function()
+   local f=GuiService:GetInsetArea(Enum.ScreenInsets.None)
+   local d=GuiService:GetInsetArea(Enum.ScreenInsets.DeviceSafeInsets)
+   local c=GuiService:GetInsetArea(Enum.ScreenInsets.CoreUISafeInsets)
+   if f.Width<=0 or d.Width<=0 or c.Width<=0 then return nil end
+   return {x0=d.Min.X-f.Min.X,y0=math.max(d.Min.Y,c.Min.Y)-f.Min.Y,x1=d.Max.X-f.Min.X,y1=d.Max.Y-f.Min.Y}
+  end)
+  if ok and r then return r end
+  return {x0=0,y0=math.max(0,-origin().Y),x1=full.X,y1=full.Y} -- the root's own top-left reads (0, -top bar)
+ end
  local scale=1
  -- The guide: portrait over the left end of a dark box that fades out to the right.
  local guide=T.make('CanvasGroup',root,{Name='Guide',BackgroundTransparency=1,Size=UDim2.fromOffset(860,300),GroupTransparency=1})
@@ -60,19 +245,20 @@ function G.new(player,assets,name)
  local box=T.make('Frame',guide,{Name='Box',BackgroundColor3=Color3.fromRGB(8,12,10),BackgroundTransparency=.08,BorderSizePixel=0})
  local boxFade=T.make('UIGradient',box,{})
  T.make('Frame',box,{Name='Edge',Size=UDim2.new(0,6,1,0),BackgroundColor3=C.lime,BorderSizePixel=0})
- local text=T.label(box,'Line','',0,0,10,10,36);text.TextXAlignment=Enum.TextXAlignment.Left
+ local text=T.label(box,'Line','',0,0,10,10,36);text.TextXAlignment=Enum.TextXAlignment.Left;text.TextScaled=false
+ local function measure(line,z,w) return TextService:GetTextSize(line,z,T.Font,Vector2.new(w,1e4)) end
  local label=string.upper(name or 'Egg Merchant')
- local tagW=math.clamp(#label*14+28,90,260) -- about 14 px a capital at size 20, plus padding
+ local tagW=math.clamp(math.ceil(measure(label,20,1000).X)+28,90,260)
  local tag=T.make('Frame',guide,{Name='NameTag',Size=UDim2.fromOffset(tagW,G.TAG_H),BackgroundColor3=C.lime,BorderSizePixel=0})
  T.make('UICorner',tag,{CornerRadius=UDim.new(0,4)})
- local tagText=T.label(tag,'Text',label,8,2,tagW-16,28,20,C.ink);tagText.TextStrokeTransparency=1
+ local tagText=T.label(tag,'Text',label,8,2,tagW-16,28,20,C.ink);tagText.TextStrokeTransparency=1;tagText.TextScaled=false
  local portrait=T.make('ImageLabel',guide,{Name='Portrait',BackgroundTransparency=1,Image=assets.portrait or '',ScaleType=Enum.ScaleType.Fit})
  local buttonHolder=T.frame(guide,'Buttons',0,0,190,58)
  local shapeName,hasButton
  local function setRect(obj,r) obj.Position=UDim2.fromOffset(r[1],r[2]);if r[3] then obj.Size=UDim2.fromOffset(r[3],r[4]) end end
  local function setText()
   local r=G.Shapes[shapeName][hasButton and 'textWithButton' or 'text']
-  setRect(text,r);text.TextSize=r[5];text.TextWrapped=true
+  setRect(text,r);text.TextWrapped=true;text.TextSize=G.fitText(measure,text.Text,r[3],r[4],r[5])
  end
  local function applyShape(name_)
   if name_==shapeName then return end
@@ -88,7 +274,7 @@ function G.new(player,assets,name)
  local arrow=T.make('ImageLabel',root,{Name='Arrow',BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Size=UDim2.fromOffset(G.ARROW,G.ARROW),
   Image=assets.arrow or '',ImageTransparency=1,ZIndex=5})
 
- -- Where the guide sits: spot = {pos (top-left, screen px), s (its scale), shape}; placement moves it.
+ -- Where the guide sits: spot = {pos (top-left, guide px), s (its scale), shape}; placement moves it.
  local spot={pos=Vector2.zero,s=1,shape='wide'}
  local placed=false -- false: pick a spot afresh (new screen size or a new kind of screen)
  -- One size per screen: the guide is always drawn at `scale` (user, 2026-10-03: it shrank on small
@@ -96,7 +282,8 @@ function G.new(player,assets,name)
  local function layout()
   local v=root.AbsoluteSize;if v.X<=0 then return end
   local s=math.clamp(math.min(v.X/1700,v.Y/950),.42,1.25)
-  if s~=scale then scale=s;placed=false end
+  if s~=scale then scale=s end
+  placed=false -- a new size (or a phone turning over) can move the notch too
   arrow.Size=UDim2.fromOffset(G.ARROW*scale,G.ARROW*scale)
  end
  root:GetPropertyChangedSignal('AbsoluteSize'):Connect(layout);layout()
@@ -110,13 +297,34 @@ function G.new(player,assets,name)
   TweenService:Create(guideScale,info,{Scale=s}):Play()
  end
 
- -- The arrow tip's spot for a target and its rotation (0 = pointing up, 180 = down), in this
- -- screen's pixels, and the target's own rect; nil when the target isn't on screen.
+ -- A shown GuiObject's rect in the guide's pixels, and the part of it that shows (nil when none
+ -- does): inside the screen and every scrolling list or clipping frame it sits in.
+ local function shownRect(obj)
+  local layer=obj:FindFirstAncestorWhichIsA('LayerCollector')
+  if not layer or (layer:IsA('ScreenGui') and not layer.Enabled) then return nil end
+  local p=obj
+  while p and p~=layer do if p:IsA('GuiObject') and not p.Visible then return nil end;p=p.Parent end
+  local size=obj.AbsoluteSize;if size.X<2 or size.Y<2 then return nil end
+  local o0=origin()
+  local at=obj.AbsolutePosition-o0
+  local vp,vs=G.clip(at,size,{Vector2.zero,root.AbsoluteSize})
+  local up=obj.Parent
+  while vp and up and up~=layer do
+   if up:IsA('GuiObject') and (up.ClipsDescendants or up:IsA('ScrollingFrame')) then vp,vs=G.clip(vp,vs,{up.AbsolutePosition-o0,up.AbsoluteSize}) end
+   up=up.Parent
+  end
+  return at,size,vp,vs
+ end
+ -- The arrow tip's spot for a target and its rotation (0 = pointing up, 180 = down), in the guide's
+ -- pixels, and the target's own rect; nil when the target isn't on screen. A target in a scrolling
+ -- list or clipping frame counts only where it shows (2026-10-16: the phone shop's offer row
+ -- scrolls sideways); the arrow points at the part that shows, and at nothing when none does.
  local function aim(obj)
   if typeof(obj)~='Instance' or not obj.Parent then return nil end
   local full=root.AbsoluteSize;local gap=6*scale
   if obj:IsA('Model') or obj:IsA('BasePart') then
-   -- A world thing (a crystal on the ground): pointed at from above.
+   -- A world thing (a crystal on the ground): pointed at from above. Viewport points are the
+   -- full-screen root's own pixels.
    local pos=obj:IsA('Model') and obj:GetPivot().Position or obj.Position
    local v=workspace.CurrentCamera:WorldToViewportPoint(pos)
    if v.Z<=0 or v.X<0 or v.Y<0 or v.X>full.X or v.Y>full.Y then return nil end
@@ -124,18 +332,37 @@ function G.new(player,assets,name)
    return Vector2.new(v.X,at.Y-gap),180,at,size
   end
   if not obj:IsA('GuiObject') then return nil end
-  local layer=obj:FindFirstAncestorWhichIsA('LayerCollector')
-  if not layer or (layer:IsA('ScreenGui') and not layer.Enabled) then return nil end
-  local p=obj
-  while p and p~=layer do if p:IsA('GuiObject') and not p.Visible then return nil end;p=p.Parent end
-  local size=obj.AbsoluteSize;if size.X<2 or size.Y<2 then return nil end
-  local at=obj.AbsolutePosition+inset()
-  local cx,cy=at.X+size.X/2,at.Y+size.Y/2
-  if cy<full.Y*.62 then return Vector2.new(cx,at.Y+size.Y+gap),0,at,size end
-  return Vector2.new(cx,at.Y-gap),180,at,size
+  local at,size,vp,vs=shownRect(obj)
+  if not vp or vs.X<math.min(size.X,12) or vs.Y<math.min(size.Y,12) then return nil end
+  local tip,rot=G.placeArrow(vp,vs,full,G.ARROW*scale,gap)
+  return tip,rot,at,size
+ end
+ -- Screen px per px of what's inside g: every UIScale on it and above it, its ScreenGui's included.
+ local function scaleOf(g)
+  local k=1
+  while g do
+   local u=g:FindFirstChildWhichIsA('UIScale');if u then k*=u.Scale end
+   if g:IsA('LayerCollector') then break end
+   g=g.Parent
+  end
+  return math.max(k,.01)
+ end
+ -- Scrolls each list the target sits in (innermost first) so the target shows: the phone shop's
+ -- sideways offer row and its scrolling column, the Armory's lists.
+ local function reveal(obj)
+  if typeof(obj)~='Instance' or not obj.Parent or not obj:IsA('GuiObject') then return end
+  local o0=origin();local up=obj.Parent
+  while up and not up:IsA('LayerCollector') do
+   if up:IsA('ScrollingFrame') and up.ScrollingEnabled then
+    local k=scaleOf(up);local win=up.AbsoluteWindowSize
+    local to=G.scrollInto(obj.AbsolutePosition-o0,obj.AbsoluteSize,up.AbsolutePosition-o0,win,up.CanvasPosition,k,(up.AbsoluteCanvasSize-win)/k,up.ScrollingDirection.Name)
+    if to then up.CanvasPosition=to end
+   end
+   up=up.Parent
+  end
  end
  -- The arrow (drawn in the Arrow section below); A.target is what it points at.
- local A={x=0,y=0,rot=180,shown=false,target=nil,from=nil,ctrl=nil,t0=0,rot0=180,rot1=180}
+ local A={x=0,y=0,rot=180,shown=false,target=nil,from=nil,ctrl=nil,t0=0,rot0=180,rot1=180,revealUntil=0}
 
  -- Placement: the box never covers the game's UI, the arrow's target, the player's character or
  -- what the step says to keep clear (the user, 2026-10-03), and it STAYS STILL (the user, the same
@@ -144,16 +371,18 @@ function G.new(player,assets,name)
  -- changing as the boss, crystals and the player moved, so it jumped from corner to corner.
  -- Now it picks a spot only when it appears, when the screen size or the kind of screen (ctx)
  -- changes, and when UI or an on-screen target comes under it; then it moves only to a clearly
- -- better spot. Things moving in the world (the boss, crystals, the player) are kept clear when a
- -- spot is picked but never move it, and it is always the screen's own size.
+ -- better spot, keeping its shape when that shape has a clear spot (2026-10-16). Things moving in
+ -- the world (the boss, crystals, the player) are kept clear when a spot is picked but never move
+ -- it, and it is always the screen's own size, inside the safe area.
  -- Obstacles: every visible button, panel, picture and text on screen (not backdrops over 60% of
- -- it; a piece inside the obstacle it belongs to counts once, as that obstacle), and a phone's
- -- whole thumbstick area (the stick shows wherever the thumb lands). Hard ones: the target and
+ -- it; a piece inside the obstacle it belongs to counts once, as that obstacle, except a button,
+ -- which adds weight to its card), and a phone's whole thumbstick area (the stick shows wherever the
+ -- thumb lands). Buttons weigh 3, a button on a card 2 more (2026-10-16: on a phone shop where no
+ -- spot is clear it covered an offer's BUY or GO rather than a stat line). Hard ones: the target and
  -- the world things in ctx.avoid plus the character, drawn as their screen rects, padded. Spots,
- -- in this order, the wide shape first and then the compact one: inside ctx.prefer (next to the
+ -- in this order, its own shape first, then wide, compact, strip and column: inside ctx.prefer (next to the
  -- chest menu), the corners and the middle of each side, then (unless ctx.edges, the run) a grid,
- -- farthest from the screen's centre first. The first spot that covers nothing wins; if none
- -- does, the one that covers least.
+ -- farthest from the screen's centre first.
  local SKIP={TutorialGuide=true,BossIntro=true}
  local ctx={}
  local function solid(c)
@@ -162,14 +391,6 @@ function G.new(player,assets,name)
   end
   if (c:IsA('ImageLabel') or c:IsA('ImageButton')) and c.Image~='' and c.ImageTransparency<.9 then return true end
   return c.BackgroundTransparency<.9 and not c:IsA('CanvasGroup')
- end
- -- The part of rect (p, s) inside clip (nil = no clip), or nil when none of it is.
- local function clipped(p,s,clip)
-  if not clip then return p,s end
-  local x0,y0=math.max(p.X,clip[1].X),math.max(p.Y,clip[1].Y)
-  local x1,y1=math.min(p.X+s.X,clip[1].X+clip[2].X),math.min(p.Y+s.Y,clip[1].Y+clip[2].Y)
-  if x1-x0<=0 or y1-y0<=0 then return nil end
-  return Vector2.new(x0,y0),Vector2.new(x1-x0,y1-y0)
  end
  local function inside(p,s,o_)
   return o_~=nil and p.X>=o_[1].X-1 and p.Y>=o_[1].Y-1 and p.X+s.X<=o_[1].X+o_[2].X+1 and p.Y+s.Y<=o_[1].Y+o_[2].Y+1
@@ -183,26 +404,36 @@ function G.new(player,assets,name)
    for _,c in obj:GetChildren() do
     if c:IsA('GuiObject') then
      if c.Visible then
-      local p,size=clipped(c.AbsolutePosition+off,c.AbsoluteSize,clip)
+      local p,size=G.clip(c.AbsolutePosition+off,c.AbsoluteSize,clip)
       local mine=owner
       if c.Name=='DynamicThumbstickFrame' then
        -- A phone's thumbstick: the whole area counts all the time, so a thumb press never moves it.
        if p then table.insert(list,{p,size}) end
-      elseif p and size.X>4 and size.Y>4 and size.X*size.Y<maxArea and solid(c) and not inside(p,size,owner) then
-       mine={p,size};table.insert(list,mine)
+      elseif p and size.X>4 and size.Y>4 and size.X*size.Y<maxArea and solid(c) then
+       if not inside(p,size,owner) then mine={p,size,c:IsA('GuiButton') and 3 or 1};table.insert(list,mine)
+       elseif c:IsA('GuiButton') then table.insert(list,{p,size,2}) end
       end
       if c.Name~='DynamicThumbstickFrame' and (p or not clip) then
        local inner=clip
-       if c.ClipsDescendants then inner={c.AbsolutePosition+off,c.AbsoluteSize};if clip then local q,z=clipped(inner[1],inner[2],clip);inner=q and {q,z} or nil end end
-       if inner or not c.ClipsDescendants then walk(c,off,inner,mine) end
+       if c.ClipsDescendants or c:IsA('ScrollingFrame') then
+        inner={c.AbsolutePosition+off,c.AbsoluteSize}
+        if clip then local q,z=G.clip(inner[1],inner[2],clip);inner=q and {q,z} or nil end
+       end
+       if inner or not (c.ClipsDescendants or c:IsA('ScrollingFrame')) then walk(c,off,inner,mine) end
       end
      end
     elseif c:IsA('Folder') then walk(c,off,clip,owner) end
    end
   end
-  local off=inset()
-  for _,g in player.PlayerGui:GetChildren() do
-   if g:IsA('ScreenGui') and g.Enabled and not SKIP[g.Name] then walk(g,off,nil,nil) end
+  local off=-origin()
+  for _,g in (opts.layers or player.PlayerGui):GetChildren() do
+   if g~=screen and not SKIP[g.Name] and (g:IsA('ScreenGui') and g.Enabled or g:IsA('GuiObject') and g.Visible) then walk(g,off,nil,nil) end
+  end
+  -- What the step explains (ctx.keep), where it shows: far worse to cover than other UI.
+  for _,k in ctx.keep or {} do
+   if typeof(k)=='Instance' and k.Parent and k:IsA('GuiObject') then
+    local _,_,vp,vs=shownRect(k);if vp then table.insert(list,{vp,vs,G.KEEP}) end
+   end
   end
   return list
  end
@@ -223,45 +454,6 @@ function G.new(player,assets,name)
   local pad=math.max(x1-x0,y1-y0)/3
   return {Vector2.new(x0-pad,y0-pad),Vector2.new(x1-x0+pad*2,y1-y0+pad*2)}
  end
- local function overlap(ap,as,bp,bs)
-  local w=math.min(ap.X+as.X,bp.X+bs.X)-math.max(ap.X,bp.X)
-  local h=math.min(ap.Y+as.Y,bp.Y+bs.Y)-math.max(ap.Y,bp.Y)
-  return w>0 and h>0 and w*h or 0
- end
- -- The guide's drawn parts at a spot: the portrait, the text box and the name tag.
- local function parts(pos,s,shape)
-  local d=G.Shapes[shape];local q,b,g=d.portrait,d.box,d.tag
-  return {{pos+Vector2.new(q[1],q[2])*s,Vector2.new(q[3],q[4])*s},{pos+Vector2.new(b[1],b[2])*s,Vector2.new(b[3],b[4])*s},{pos+Vector2.new(g[1],g[2])*s,Vector2.new(tagW,G.TAG_H)*s}}
- end
- -- Spots for the guide at scale s in a shape (top-left corners), in the order they're tried.
- local function spots(full,top,s,shape)
-  local size=G.Shapes[shape].size*s
-  local m=18*s;local w,h=size.X,size.Y
-  local x0,y0=m,top+56*s
-  local x1,y1=math.max(x0,full.X-m-w),math.max(y0,full.Y-m-h)
-  local midX,midY=math.clamp((full.X-w)/2,x0,x1),math.clamp((full.Y-h)/2,y0,y1)
-  local list={}
-  local r=ctx.prefer
-  if r then
-   -- Inside the preferred area: next to its left side first, then outwards from its middle.
-   local px0,py0=math.max(x0,r[1]),math.max(y0,r[2]);local px1,py1=math.min(x1,r[3]-w),math.min(y1,r[4]-h)
-   if px1>=px0 and py1>=py0 then
-    local mid=(py0+py1)/2;local cells={}
-    for i=0,5 do for j=0,5 do table.insert(cells,Vector2.new(px0+(px1-px0)*i/5,py0+(py1-py0)*j/5)) end end
-    table.sort(cells,function(a,b) if a.X~=b.X then return a.X<b.X end;return math.abs(a.Y-mid)<math.abs(b.Y-mid) end)
-    table.move(cells,1,#cells,1,list)
-   end
-  end
-  for _,v in {Vector2.new(x0,y1),Vector2.new(x0,y0),Vector2.new(x1,y1),Vector2.new(x1,y0),Vector2.new(x0,midY),Vector2.new(x1,midY),Vector2.new(midX,y1),Vector2.new(midX,y0)} do table.insert(list,v) end
-  if not ctx.edges then
-   local grid,centre={},Vector2.new(full.X-w,full.Y-h)/2 -- a centred guide's corner
-   for i=0,9 do for j=0,6 do table.insert(grid,Vector2.new(x0+(x1-x0)*i/9,y0+(y1-y0)*j/6)) end end
-   table.sort(grid,function(a,b) return (a-centre).Magnitude>(b-centre).Magnitude end)
-   table.move(grid,1,#grid,#list+1,list)
-  end
-  return list
- end
- local TRIES={'wide','compact'} -- both at the screen's own size
  local checkAt=0 -- next look for UI or a target that came under it
  local uiAt=0 -- the UI and target under it when it last placed itself
  -- A different kind of screen (edges only, or another preferred area) looks for a spot at once.
@@ -286,16 +478,11 @@ function G.new(player,assets,name)
  local function uiCover(pos,shape,list,target)
   local r,gui=targetArea(target)
   local score=0
-  for _,part in parts(pos,scale,shape) do
-   if r and gui then score+=overlap(part[1],part[2],r[1],r[2])*50 end
-   for _,o_ in list do score+=overlap(part[1],part[2],o_[1],o_[2]) end
+  for _,part in G.parts(pos,scale,shape,tagW) do
+   if r and gui then score+=G.overlap(part[1],part[2],r[1],r[2])*50 end
+   for _,o_ in list do score+=G.overlap(part[1],part[2],o_[1],o_[2])*(o_[3] or 1) end
   end
   return score
- end
- -- Less than 3% of the guide's area isn't worth a move (a counter's digits growing under it).
- local function slack(shape)
-  local a=0;for _,part in parts(Vector2.zero,scale,shape) do a+=part[2].X*part[2].Y end
-  return a*.03
  end
  local function place(instant,list)
   local full=root.AbsoluteSize;if full.X<=0 then return end
@@ -303,34 +490,13 @@ function G.new(player,assets,name)
   local hard={}
   local r=targetArea(A.target)
   if r then table.insert(hard,r) end
-  local things=table.clone(ctx.avoid or {});if player.Character then table.insert(things,player.Character) end
+  local things=table.clone(ctx.avoid or {});if player and player.Character then table.insert(things,player.Character) end
   for _,thing in things do local w=worldRect(thing);if w then table.insert(hard,w) end end
-  local top=inset().Y
-  local best,bestShape,bestScore
-  -- Overlap in px²; the hard ones far above anything else. A spot that can't beat the best stops early.
-  local function try(pos,shape)
-   local score=0
-   for _,part in parts(pos,scale,shape) do
-    local p,z=part[1],part[2]
-    if p.X<0 or p.Y<0 or p.X+z.X>full.X or p.Y+z.Y>full.Y then score+=1e7 end
-    for _,h in hard do local o_=overlap(p,z,h[1],h[2]);if o_>0 then score+=1e6+o_*50 end end
-    for _,o_ in list do
-     score+=overlap(p,z,o_[1],o_[2])
-     if bestScore and score>=bestScore then return score end
-    end
-   end
-   if not bestScore or score<bestScore then best,bestShape,bestScore=pos,shape,score end
-   return score
-  end
-  -- Where it is goes first (same kind of screen and size): it stays unless a spot is clearly better.
-  local here=placed and math.abs(spot.s-scale)<.001 and try(spot.pos,spot.shape) or nil
-  if here~=0 then
-   for _,shape in TRIES do
-    for _,pos in spots(full,top,scale,shape) do if try(pos,shape)==0 then break end end
-    if bestScore==0 then break end
-   end
-  end
-  if here and here-bestScore<slack(spot.shape) then best,bestShape=spot.pos,spot.shape end
+  -- Where it is goes first (same kind of screen and size), and then its shape is tried first; a
+  -- new screen starts from wide again.
+  local here=placed and math.abs(spot.s-scale)<.001 and {pos=spot.pos,shape=spot.shape} or nil
+  local shapes=here and {spot.shape} or {};for _,s in G.TRIES do if not table.find(shapes,s) then table.insert(shapes,s) end end
+  local best,bestShape=G.placeBox({full=full,safe=safe(),s=scale,shapes=shapes,list=list,hard=hard,prefer=ctx.prefer,edges=ctx.edges,tagW=tagW,here=here})
   placed=true
   if best and ((best-spot.pos).Magnitude>2 or math.abs(scale-spot.s)>.001 or bestShape~=spot.shape) then moveGuide(best,scale,bestShape,instant) end
   uiAt=uiCover(spot.pos,spot.shape,list,A.target)
@@ -348,10 +514,10 @@ function G.new(player,assets,name)
   current=line
   buttonHolder:ClearAllChildren()
   if button then
-   local b=T.button(buttonHolder,'Action',button.label,0,0,190,58,button.onClick,button.neutral);b.Caption.TextSize=24
+   local b=T.button(buttonHolder,'Action',button.label,0,0,190,58,button.onClick,button.neutral);b.Caption.TextScaled=false;b.Caption.TextSize=24
   end
-  hasButton=button~=nil;setText() -- room for the button
   text.Text=line or '';text.MaxVisibleGraphemes=0
+  hasButton=button~=nil;setText() -- room for the button, and a size that fits this line
   typed+=1;local mine=typed
   task.spawn(function()
    local n=utf8.len(text.Text) or #text.Text;local t0=os.clock()
@@ -395,9 +561,11 @@ function G.new(player,assets,name)
  function o.point(obj)
   if obj==A.target then return end
   A.target=obj;checkAt=0 -- a new target: move off it at once if the box is on it
+  A.revealUntil=os.clock()+G.REVEAL;reveal(obj)
   local tip,rot=aim(obj)
   if tip then glide(tip,rot) end -- otherwise frame() picks it up once it shows, or fades the arrow
  end
+ local function slackOf() return G.slack(spot.shape,scale,tagW) end
  local function frame()
   -- The box: a fresh spot when it has none for this screen; otherwise, twice a second, a look for
   -- UI or an on-screen target that came under it since (the boss bar sliding in, a panel opening).
@@ -406,10 +574,13 @@ function G.new(player,assets,name)
    elseif os.clock()>=checkAt then
     checkAt=os.clock()+.5
     local list=obstacles()
-    if uiCover(spot.pos,spot.shape,list,A.target)>uiAt+slack(spot.shape) then place(false,list) end
+    if uiCover(spot.pos,spot.shape,list,A.target)>uiAt+slackOf() then place(false,list) end
    end
   end
   if not A.shown and not A.target then return end
+  -- A new target's lists keep scrolling to it for a moment (a list that lays itself out late, two
+  -- nested lists), then the player's own scrolling wins.
+  if A.target and os.clock()<A.revealUntil then reveal(A.target) end
   local tip,rot=aim(A.target)
   if not tip then
    -- The target is gone (a screen rebuilt its buttons, or there's nothing to point at): hold
