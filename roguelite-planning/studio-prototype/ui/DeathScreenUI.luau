@@ -50,7 +50,7 @@ function M.mount(player)
  -- Near the top, clear of the splash and the spectate bar; phones draw it smaller (.56 at 390 tall).
  local reviving=T.panel(root,'Reviving',0,0,560,96,'panel');reviving.AnchorPoint=Vector2.new(.5,0);reviving.Position=UDim2.new(.5,0,0,60);reviving.Visible=false
  local revivingScale=T.make('UIScale',reviving,{Scale=1})
- local revivingText=T.label(reviving,'Text','',20,8,520,40,30,C.lime)
+ local revivingText=T.label(reviving,'Text','',24,13,512,38,30,C.lime) -- off the top ring (2026-10-16)
  local revivingFill=T.bar(reviving,'Progress',40,58,480,18,C.lime)
  local spots -- Workspace.RogueliteReviveSpots, once it exists
  local function revivingTick()
@@ -189,7 +189,7 @@ function M.mount(player)
   -- Centre near 52% of the height, but always 8 px inside the safe area.
   local cy=math.clamp(v.Y*.52,8+H*s/2,math.max(8+H*s/2,v.Y-8-H*s/2))
   local title=T.panel(summary,'Title',(W-620)/2,0,620,62,'panel');T.caps(title,46)
-  countdown=T.label(title,'Text','DOWN  ·  '..string.upper(info.map or 'Pine Valley')..'  ·  WAVE '..(info.wave or 1),0,0,620,62,26)
+  countdown=T.label(title,'Text','DOWN  ·  '..string.upper(info.map or 'Pine Valley')..'  ·  WAVE '..(info.wave or 1),40,8,540,46,26) -- clear of the caps and rings
   local by=H-6-bh -- buttons; their notes sit just above, the body ends above the notes
   local BH=by-28-76
   local body=T.panel(summary,'Body',0,76,W,BH,'panel')
@@ -233,8 +233,8 @@ function M.mount(player)
    local entry=Catalog.ById[it.id]
    if entry then
     local cell=T.panel(grid,'Item'..i,((i-1)%cols)*80,math.floor((i-1)/cols)*80,72,72,'inset');T.setTier(cell,entry.tier)
-    T.icon(cell,'Icon',10,8,52,T.Asset[entry.icon] or entry.icon)
-    if it.count>1 then local n=T.label(cell,'Count','×'..it.count,0,44,66,24,20);n.TextXAlignment=Enum.TextXAlignment.Right end
+    T.icon(cell,'Icon',10,10,52,T.Asset[entry.icon] or entry.icon)
+    if it.count>1 then T.countTag(cell,'×'..it.count,18) end -- off the inset's border (2026-10-16)
    end
   end
   grid.CanvasSize=UDim2.fromOffset(0,math.ceil(#items/cols)*80)

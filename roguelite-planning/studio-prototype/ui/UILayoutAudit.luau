@@ -8,6 +8,8 @@
 -- overlap (M.overlaps), pieces off the screen, text drawn smaller than MIN_TEXT px and buttons
 -- smaller than MIN_TAP px on phones. The root's size is restored afterwards.
 -- Example: require(game.ReplicatedStorage.UILayoutAudit).sweep(game.Players.LocalPlayer.PlayerGui.Armory.Root)
+-- M.edges(root) (also in sweep, 2026-10-16): text whose line box reaches into its nine-slice
+-- panel's border ring, e.g. a title flush with a panel's top edge.
 local M={}
 M.Devices={
  {'1920x1080',1920,1080},{'1366x768',1366,768},{'1280x720',1280,720},{'1536x864',1536,864},
@@ -68,6 +70,37 @@ function M.run(root,tolerance)
     if lx<cx0-tolerance or rx>cx1+tolerance or (vertical and (ly<cy0-tolerance or by>cy1+tolerance)) then
      table.insert(problems,'outside '..c.Name..': '..n..' "'..t.ContentText:sub(1,40)..'"')
     end
+   end
+  end
+ end
+ return problems
+end
+
+-- Text too close to its nine-slice panel's edge (2026-10-16: "KILLS" and "READY: EggaRowls" sat on
+-- borders). The panel / inset / button art's border ring is 21 of its 48 slice px (11.5 px at
+-- SliceScale .55, times any UIScale); slices shrink on boxes smaller than two corners. Flags text
+-- whose line box (TextBounds, a little taller than the glyphs) comes within M.EDGE px of the ring.
+-- A button's own Caption is skipped (T.button centres it on the face).
+M.EDGE=0
+local function uiScale(g)
+ local s=1;local o=g
+ while o and o:IsA('GuiObject') do local u=o:FindFirstChildOfClass('UIScale');if u then s*=u.Scale end;o=o.Parent end
+ return s
+end
+function M.edges(root)
+ local problems={}
+ for _,t in root:GetDescendants() do
+  if (t:IsA('TextLabel') or t:IsA('TextButton')) and t.Text~='' and t.TextTransparency<1 and visible(t) and t.AbsoluteSize.X>0 and not ignored(t)
+   and not (t.Name=='Caption' and t.Parent:IsA('GuiButton')) then
+   local c=container(t)
+   if c and (c:IsA('ImageLabel') or c:IsA('ImageButton')) and c.ScaleType==Enum.ScaleType.Slice then
+    local cx0,cy0,cx1,cy1=box(c)
+    local corner=c.SliceCenter.Min.X*c.SliceScale*uiScale(c)
+    local k=math.min(1,(cx1-cx0)/(2*corner),(cy1-cy0)/(2*corner))
+    local ring=corner*k*21/48+M.EDGE
+    local lx,ly,rx,by=textRect(t)
+    local gap=math.min(lx-cx0,ly-cy0,cx1-rx,cy1-by)-ring
+    if gap<0 then table.insert(problems,string.format('edge (%.0f px into %s ring): %s "%s"',-gap,c.Name,name(t),t.ContentText:sub(1,30))) end
    end
   end
  end
@@ -151,6 +184,7 @@ function M.sweep(root,groupsRoot,devices)
   for _,p in M.run(root) do table.insert(list,p) end
   for _,p in M.overlaps(g) do table.insert(list,p) end
   for _,p in M.bounds(root,d[4]) do table.insert(list,p) end
+  for _,p in M.edges(root) do table.insert(list,p) end
   out[d[1]]=list
   print(string.format('[UILayoutAudit] %s: %d problem(s)',d[1],#list))
   for i,p in list do if i<=12 then print('   '..p) end end

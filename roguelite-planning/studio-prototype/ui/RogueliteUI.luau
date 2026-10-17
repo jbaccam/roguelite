@@ -31,15 +31,29 @@ function UI.mount(playerGui)
  local healthScale=make("UIScale",health,{Scale=1})
  panel(health,"HealthFrame",25,8,355,56,"inset")
  -- Red health fill over an orange damage trail in a dark track. The boss bar uses the same one.
+ -- Clean ends (2026-10-16: "weird lines on the end that look blunt"): track, trail and fill share one
+ -- rounded shape, the shine is a gradient band instead of a square-ended 2 px strip, the trail hides
+ -- at rest (its edge peeked past the fill's end as an orange line), and the player's track stops 24 px
+ -- before the inset's right edge, clear of its angled corners (was 19: the square end sat on them).
  local function healthTrack(parent,position,size)
   local t=make("Frame",parent,{Name="Track",Position=position,Size=size,BackgroundColor3=Color3.fromRGB(34,39,43),BorderSizePixel=0,ClipsDescendants=true})
-  local damage=make("Frame",t,{Name="DamageTrail",Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.fromRGB(248,172,104),BorderSizePixel=0})
+  make("UICorner",t,{CornerRadius=UDim.new(0,6)})
+  local damage=make("Frame",t,{Name="DamageTrail",Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.fromRGB(248,172,104),BorderSizePixel=0,Visible=false})
+  make("UICorner",damage,{CornerRadius=UDim.new(0,6)})
   local f=make("Frame",t,{Name="Fill",Size=UDim2.fromScale(1,1),BackgroundColor3=C.red,BorderSizePixel=0})
-  make("UIGradient",f,{Rotation=90,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,109,103)),ColorSequenceKeypoint.new(0.18,Color3.fromRGB(255,45,54)),ColorSequenceKeypoint.new(0.52,Color3.fromRGB(227,22,35)),ColorSequenceKeypoint.new(1,Color3.fromRGB(165,16,27))})})
-  make("Frame",f,{Name="Shine",Position=UDim2.fromOffset(0,2),Size=UDim2.new(1,0,0,2),BackgroundColor3=Color3.fromRGB(255,152,144),BackgroundTransparency=0.4,BorderSizePixel=0})
+  make("UICorner",f,{CornerRadius=UDim.new(0,6)})
+  make("UIGradient",f,{Rotation=90,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,109,103)),ColorSequenceKeypoint.new(0.06,Color3.fromRGB(255,140,133)),ColorSequenceKeypoint.new(0.13,Color3.fromRGB(255,96,96)),ColorSequenceKeypoint.new(0.22,Color3.fromRGB(255,45,54)),ColorSequenceKeypoint.new(0.52,Color3.fromRGB(227,22,35)),ColorSequenceKeypoint.new(1,Color3.fromRGB(165,16,27))})})
   return t,f,damage
  end
- local _,fill,trail=healthTrack(health,UDim2.fromOffset(54,20),UDim2.fromOffset(307,30))
+ -- Drain the trail to `ratio`; it shows only while it is longer than the fill.
+ local function trailTo(damage,ratio,info)
+  damage.Visible=true
+  local tween=TweenService:Create(damage,info,{Size=UDim2.fromScale(ratio,1)})
+  tween.Completed:Connect(function(state) if state==Enum.PlaybackState.Completed then damage.Visible=false end end)
+  tween:Play()
+  return tween
+ end
+ local _,fill,trail=healthTrack(health,UDim2.fromOffset(54,20),UDim2.fromOffset(302,30))
  icon(health,"Heart",0,0,75,"heart")
  local hp=label(health,"HealthText","— / —",75,10,265,48,29)
  local low=label(health,"Warning","LOW HEALTH",92,63,250,22,16,C.red);low.Visible=false
@@ -52,7 +66,9 @@ function UI.mount(playerGui)
  make('ImageLabel',xpClip,{Name='FacetedFill',BackgroundTransparency=1,Size=UDim2.fromOffset(316,29),Image=A.xp,ImageRectOffset=Vector2.new(190,148),ImageRectSize=Vector2.new(240,59)})
  make('ImageLabel',xpBar,{Name='Potion',BackgroundTransparency=1,Size=UDim2.fromOffset(60,76),Image=A.xp,ImageRectOffset=Vector2.new(35,75),ImageRectSize=Vector2.new(150,190),ZIndex=3})
  local xpText=label(xpBar,'XPText','0 / 20 XP',65,27,218,29,18);xpText.ZIndex=4
- local levelText=label(xpBar,'Level','LV. 1',286,27,76,29,16);levelText.ZIndex=4
+ -- LV plate: the channel between the divider (284) and the frame's inner end (~365); the text is
+ -- centred in it with 6 px each side and 3 px top and bottom (2026-10-16, was flush at 286..362).
+ local levelText=label(xpBar,'Level','LV. 1',290,30,70,23,16);levelText.ZIndex=4;levelText.TextWrapped=false
  make('Frame',xpBar,{Name='Divider',Position=UDim2.fromOffset(284,31),Size=UDim2.fromOffset(1,21),BackgroundColor3=C.muted,BackgroundTransparency=.6,BorderSizePixel=0,ZIndex=4})
  -- Banked level-ups resolve between waves; this pill only counts them.
  local pending=panel(health,'PendingLevels',0,198,240,34,'button');pending.Visible=false
@@ -100,7 +116,7 @@ function UI.mount(playerGui)
  timer.AnchorPoint=Vector2.new(0.5,0);timer.Position=UDim2.new(0.5,0,0,14)
  local timerScale=make("UIScale",timer,{Scale=1})
  icon(timer,"LeftStone",-14,10,44,"stone");icon(timer,"RightStone",195,10,44,"stone")
- local timeText=label(timer,"Time","--:--",25,3,175,42,35)
+ local timeText=label(timer,"Time","--:--",25,8,175,38,35) -- 8 px down: the digits sat on the top ring (2026-10-16)
  local phase=panel(timer,"Phase",43,51,139,31)
  local phaseText=label(phase,"Label","PRACTICE",8,2,123,26,17)
  -- TEST RUN tag under the phase pill: the admin panel was used, so this run pays no rewards.
@@ -114,7 +130,7 @@ function UI.mount(playerGui)
  for i=1,6 do
   -- Square slots; tier II-IV tint the frame and every filled slot gets a tier badge.
   local cell=panel(weaponPanel,'Slot'..i,11+(i-1)*52,14,50,54,'inset');cell.Size=UDim2.fromOffset(50,50)
-  local art=make('ImageLabel',cell,{Name='Icon',BackgroundTransparency=1,Position=UDim2.fromOffset(6,6),Size=UDim2.fromOffset(38,38),ScaleType=Enum.ScaleType.Fit,Image=''})
+  local art=make('ImageLabel',cell,{Name='Icon',BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(36,36),ScaleType=Enum.ScaleType.Fit,Image=''}) -- centred, 7 px all round
   slotCells[i]={cell=cell,art=art}
  end
  local itemStrip=frame(build,'Items',0,88,330,62)
@@ -203,13 +219,13 @@ function UI.mount(playerGui)
    local name=string.upper(tostring(npc:GetAttribute('BossName') or 'Hammer Brute'))
    bossName.Text=name
    bossPlate.Size=UDim2.fromOffset(TextService:GetTextSize(name,22,T.Font,Vector2.new(1000,100)).X+64,40)
-   bossFill.Size=UDim2.fromScale(ratio,1);bossTrail.Size=bossFill.Size
+   bossFill.Size=UDim2.fromScale(ratio,1);bossTrail.Size=bossFill.Size;bossTrail.Visible=false
    bossBar.Position=bossFrom;bossBar.Visible=true
    TweenService:Create(bossBar,TweenInfo.new(.4,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Position=bossAt}):Play()
   else
    -- Same feel as the player's bar: the fill snaps down, the orange trail drains after it.
    bossTween=TweenService:Create(bossFill,TweenInfo.new(.16,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.fromScale(ratio,1)});bossTween:Play()
-   bossTrailTween=TweenService:Create(bossTrail,TweenInfo.new(decreasing and .55 or .16,Enum.EasingStyle.Quad,Enum.EasingDirection.Out,0,false,decreasing and .12 or 0),{Size=UDim2.fromScale(ratio,1)});bossTrailTween:Play()
+   bossTrailTween=trailTo(bossTrail,ratio,TweenInfo.new(decreasing and .55 or .16,Enum.EasingStyle.Quad,Enum.EasingDirection.Out,0,false,decreasing and .12 or 0))
   end
  end
  local xpTween;local lastXP,lastLevel,lastRequired
@@ -238,10 +254,10 @@ function UI.mount(playerGui)
   gui:SetAttribute("DisplayedHealth",value);gui:SetAttribute("DisplayedMaxHealth",maximum);gui:SetAttribute("HealthRatio",ratio)
   if fillTween then fillTween:Cancel() end
   if trailTween then trailTween:Cancel() end
-  if immediate then fill.Size=UDim2.fromScale(ratio,1);trail.Size=fill.Size
+  if immediate then fill.Size=UDim2.fromScale(ratio,1);trail.Size=fill.Size;trail.Visible=false
   else
    fillTween=TweenService:Create(fill,TweenInfo.new(0.16,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.fromScale(ratio,1)});fillTween:Play()
-   trailTween=TweenService:Create(trail,TweenInfo.new(decreasing and 0.55 or 0.16,Enum.EasingStyle.Quad,Enum.EasingDirection.Out,0,false,decreasing and 0.12 or 0),{Size=UDim2.fromScale(ratio,1)});trailTween:Play()
+   trailTween=trailTo(trail,ratio,TweenInfo.new(decreasing and 0.55 or 0.16,Enum.EasingStyle.Quad,Enum.EasingDirection.Out,0,false,decreasing and 0.12 or 0))
   end
  end
  function controller:SetTimer(seconds,wave,phaseName,label)
@@ -353,12 +369,15 @@ function UI.mount(playerGui)
   for i=1,shown do
    local it,entry=list[i].it,list[i].entry
    local cell=panel(itemStrip,'Item'..i,0,0,38,38,'inset');cell.LayoutOrder=i;T.setTier(cell,entry.tier)
-   icon(cell,'Icon',4,4,30,A[entry.icon] or entry.icon)
-   if it.count>1 then local n=label(cell,'Count','×'..it.count,0,38-math.max(18,countSize+3),36,math.max(18,countSize+3),countSize);n.TextXAlignment=Enum.TextXAlignment.Right end
+   -- Centred with 5 px all round, inside the inset's ~8 px ring at this size (2026-10-16: icons sat
+   -- off-centre on the border). Fit keeps non-square art's aspect.
+   local art=icon(cell,'Icon',0,0,28,A[entry.icon] or entry.icon);art.AnchorPoint=Vector2.new(.5,.5);art.Position=UDim2.fromScale(.5,.5)
+   -- The stack count on a dark corner tag (T.countTag), off the inset's border lines.
+   if it.count>1 then T.countTag(cell,'×'..it.count,countSize) end
   end
   if #list>shown then
    local more=panel(itemStrip,'More',0,0,38,38,'inset');more.LayoutOrder=MAX_ITEM_CELLS
-   label(more,'Count','+'..(#list-shown),2,2,34,34,readableSize(18,buildS))
+   label(more,'Count','+'..(#list-shown),6,6,26,26,readableSize(18,buildS)) -- inside the ring (2026-10-16)
   end
  end
  -- Attack clocks, aim and motion attributes change continuously; only identity

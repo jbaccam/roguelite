@@ -52,7 +52,7 @@ return function(K)
  end
  check(K.signature(K.rank({{userId=1,name='A',kills=1}},1))~=K.signature(K.rank({{userId=1,name='A',kills=2}},1)),'a kill changes the signature')
  check(K.signature(K.rank({{userId=1,name='A',kills=1}},1))==K.signature(K.rank({{userId=1,name='A',kills=1}},1)),'same board, same signature')
- near(K.height(1),74,'1 row (solo): 74 design px');near(K.height(2),108,'2 rows: 108 design px');near(K.height(4),176,'4 rows: 176 design px')
+ near(K.height(1),82,'1 row (solo): 82 design px');near(K.height(2),116,'2 rows: 116 design px');near(K.height(4),184,'4 rows: 184 design px')
 
  -- Placement against the HUD, RogueliteUI layout() for a w x h HUD frame (CoreUISafeInsets), plus
  -- the DASH button (RogueliteCombat.client layout) and, on keyboard screens, the chat window that
@@ -115,9 +115,9 @@ return function(K)
  local b,sc=placeOn(1920,1022,false,4)
  near(b[1],12,'1080p desktop: left edge');near(b[2],256,'1080p desktop: under the health block');near(sc,1,'desktop scale 1')
  b=placeOn(1920,1022,false,1,false,true)
- near(b[1],12,'1080p solo, chat: left');near(b[2],256,'solo: under the health block');near(b[4],256+74,'solo: one row tall')
+ near(b[1],12,'1080p solo, chat: left');near(b[2],256,'solo: under the health block');near(b[4],256+82,'solo: one row tall')
  b,sc=placeOn(750,311,true,1)
- near(b[2],137.5,'750x311 phone solo: under the weapon strip');near(b[4]-b[2],74*sc,'phone solo: one row')
+ near(b[2],137.5,'750x311 phone solo: under the weapon strip');near(b[4]-b[2],82*sc,'phone solo: one row')
  b=placeOn(1920,1022,false,2,false,true)
  near(b[1],12,'1080p, 2 players, chat: left');near(b[2],256,'2 players fit between the health block and the chat')
  b=placeOn(1920,1022,false,4,false,true)

@@ -137,8 +137,8 @@ function L.mount(player)
  local head=T.make('ImageLabel',ring,{Name='Headshot',BackgroundTransparency=1,Position=UDim2.fromOffset(3,3),Size=UDim2.fromOffset(48,48),Image=''})
  T.make('UICorner',head,{CornerRadius=UDim.new(0,8)})
  T.headshot(head,player.UserId)
- local nameLabel=T.label(chip,'Name',player.DisplayName,72,8,168,30,20);nameLabel.TextXAlignment=Enum.TextXAlignment.Left;nameLabel.TextTruncate=Enum.TextTruncate.AtEnd;nameLabel.TextWrapped=false
- local chipSub=T.text(chip,'Sub','',72,38,168,22,15,C.muted)
+ local nameLabel=T.label(chip,'Name',player.DisplayName,72,11,166,28,20);nameLabel.TextXAlignment=Enum.TextXAlignment.Left;nameLabel.TextTruncate=Enum.TextTruncate.AtEnd;nameLabel.TextWrapped=false
+ local chipSub=T.text(chip,'Sub','',72,39,166,20,15,C.muted) -- name/sub keep off the chip's rings (2026-10-16)
  local party=T.button(left,'PartyButton','',258,0,70,70,function() open('Party') end,true);party.Caption.Visible=false
  T.icon(party,'Icon',9,9,52,'party')
  local plus=T.label(party,'Plus','+',44,38,26,26,24,C.lime)
@@ -157,7 +157,7 @@ function L.mount(player)
  end
  -- Emeralds are the only currency: earned in runs and bought with Robux.
  local gemsValue=currency('Gems','emerald',82,C.emerald)
- local gt=T.label(left.Gems,'Tag','EMERALDS',110,10,100,28,14,C.muted);gt.TextXAlignment=Enum.TextXAlignment.Right
+ local gt=T.label(left.Gems,'Tag','EMERALDS',100,10,100,28,14,C.muted);gt.TextXAlignment=Enum.TextXAlignment.Right
  -- Quest tracker (QuestsUI.tracker, plan K): today's quests, the streak and OPEN QUESTS. A finished
  -- quest claims right on it; anywhere else on the tracker opens the Quests window.
  local tracker=QuestsUI.tracker(left,0,140,{config=QuestConfig,open=function() open('Quests','Daily') end,
@@ -223,12 +223,13 @@ function L.mount(player)
  -- Sign over each dummy saying it's a target and how to stop attacking it.
  local function addHint(dummy)
   if dummyHints[dummy] then return end
-  local bb=T.make('BillboardGui',player:WaitForChild('PlayerGui'),{Name='DummyHint_'..dummy.Name,Size=UDim2.fromOffset(270,92),
+  local bb=T.make('BillboardGui',player:WaitForChild('PlayerGui'),{Name='DummyHint_'..dummy.Name,Size=UDim2.fromOffset(270,98),
    MaxDistance=60,LightInfluence=0,ResetOnSpawn=false,Enabled=screen.Enabled})
-  local panel=T.panel(bb,'Panel',0,0,270,92,'panel')
-  T.label(panel,'Title','PRACTICE DUMMY',10,6,250,28,21,C.lime)
-  local status=T.text(panel,'Status','',14,36,242,22,16);status.TextXAlignment=Enum.TextXAlignment.Center
-  local how=T.text(panel,'How','',14,60,242,22,16,C.muted);how.TextXAlignment=Enum.TextXAlignment.Center
+  local panel=T.panel(bb,'Panel',0,0,270,98,'panel')
+  -- 16 px inside the ring on every side (2026-10-16: the title sat on the top border).
+  T.label(panel,'Title','PRACTICE DUMMY',16,14,238,26,21,C.lime)
+  local status=T.text(panel,'Status','',16,42,238,20,16);status.TextXAlignment=Enum.TextXAlignment.Center
+  local how=T.text(panel,'How','',16,64,238,20,16,C.muted);how.TextXAlignment=Enum.TextXAlignment.Center
   dummyHints[dummy]={Gui=bb,Status=status,How=how}
   -- Streaming: the dummy's parts arrive (and can leave) with distance, so follow its root.
   local function adorn()
@@ -263,13 +264,18 @@ function L.mount(player)
  bottom.Size=UDim2.fromOffset(x-34,150)
  if bottomButtons.Play.Caption then bottomButtons.Play.Caption.TextSize=30;bottomButtons.Play.Caption.TextColor3=C.lime end
  -- Top centre: portal queue status / guidance.
- local banner=T.panel(hud,'QueueBanner',0,0,420,74,'panel');banner.AnchorPoint=Vector2.new(.5,0);banner.Position=UDim2.new(.5,0,0,12);banner.Visible=false
+ -- Padded (2026-10-16: "READY: EggaRowls" sat on the bottom-left border, the title on the top one):
+ -- text starts 36 px in (the stone caps reach 26) and keeps 16 px off the top and bottom rings.
+ -- Queued: 440x120, the text block (x 36..296) centred on the LEAVE / READY column (y 16..102).
+ -- Guiding: 340x80. placeBannerText() sets the block for the shown roster rows.
+ local BANNER_TOP,BANNER_BAND=16,86
+ local banner=T.panel(hud,'QueueBanner',0,0,440,80,'panel');banner.AnchorPoint=Vector2.new(.5,0);banner.Position=UDim2.new(.5,0,0,12);banner.Visible=false
  local bannerScale=T.make('UIScale',banner,{Scale=1})
  T.caps(banner,44)
- local bannerTitle=T.label(banner,'Title','',30,6,260,34,24);bannerTitle.TextXAlignment=Enum.TextXAlignment.Left
- local bannerSub=T.text(banner,'Sub','',30,40,260,22,15,C.muted)
- local leave=T.button(banner,'Leave','LEAVE',300,14,96,46,function() local r=workspace:FindFirstChild('RogueliteLobby') and workspace.RogueliteLobby:FindFirstChild('LeaveQueue');if r then r:FireServer() end end,true)
- local queueReady=T.button(banner,'Ready','READY UP',300,72,96,36,function()
+ local bannerTitle=T.label(banner,'Title','',36,BANNER_TOP,260,30,24);bannerTitle.TextXAlignment=Enum.TextXAlignment.Left
+ local bannerSub=T.text(banner,'Sub','',36,BANNER_TOP+32,260,18,15,C.muted)
+ local leave=T.button(banner,'Leave','LEAVE',308,16,96,42,function() local r=workspace:FindFirstChild('RogueliteLobby') and workspace.RogueliteLobby:FindFirstChild('LeaveQueue');if r then r:FireServer() end end,true)
+ local queueReady=T.button(banner,'Ready','READY UP',308,64,96,38,function()
   local lobby=workspace:FindFirstChild('RogueliteLobby');local remote=lobby and lobby:FindFirstChild('RunSetup')
   if player:GetAttribute('LobbyLockedIn')==true then if remote then remote:FireServer('Unready') end
   else open('Play') end
@@ -277,8 +283,15 @@ function L.mount(player)
  queueReady.Caption.TextSize=14
  local queueRoster={}
  for i=1,4 do
-  local label=T.text(banner,'Member'..i,'',18+((i-1)%2)*140,64+math.floor((i-1)/2)*22,136,20,13,C.muted)
+  local label=T.text(banner,'Member'..i,'',36+((i-1)%2)*134,0,126,17,13,C.muted)
   label.TextWrapped=false;label.TextTruncate=Enum.TextTruncate.AtEnd;queueRoster[i]=label
+ end
+ -- Title 30 + sub 18 + 18 per roster row, centred in the button band when queued. Example: 1 member
+ -- -> title y 25, sub 57, row 75..92; 3-4 members -> 16 / 48 / 66 and 84..101.
+ local function placeBannerText(rows,queued)
+  local top=queued and BANNER_TOP+math.floor((BANNER_BAND-(50+rows*18))/2) or BANNER_TOP
+  bannerTitle.Position=UDim2.fromOffset(36,top);bannerSub.Position=UDim2.fromOffset(36,top+32)
+  for i,label in queueRoster do label.Position=UDim2.fromOffset(36+((i-1)%2)*134,top+50+math.floor((i-1)/2)*18) end
  end
  leave.Caption.TextSize=18;leave.Caption.TextColor3=C.negative
 
@@ -351,8 +364,9 @@ function L.mount(player)
   banner.Visible=q~=nil or self.guiding==true
   leave.Visible=q~=nil
   queueReady.Visible=q~=nil
-  banner.Size=UDim2.fromOffset(q and 420 or 330,q and 116 or 74)
+  banner.Size=UDim2.fromOffset(q and 440 or 340,q and 120 or 80)
   for _,label in queueRoster do label.Visible=false end
+  placeBannerText(0,q~=nil)
   -- Says what happens next in big text (2026-10-03: "its not really clear whats happening"):
   -- STARTING IN 8 (lime) once the host pressed START, ENTERING PORTAL... at launch, otherwise who
   -- is picking the map. Example: "STARTING IN 8" / "Pine Valley  ·  2 / 4 players  ·  Gunner".
@@ -372,8 +386,13 @@ function L.mount(player)
     label.Visible=true;label.Text=(isReady and 'READY: ' or 'PICK: ')..(member and member.DisplayName or id)
     label.TextColor3=isReady and C.lime or C.gold
    end
+   placeBannerText(math.ceil(math.min(position,#queueRoster)/2),true)
    queueReady.Caption.Text=player:GetAttribute('LobbyLockedIn')==true and 'UNREADY' or 'READY UP'
    queueReady.Interactable=phase~='Launching'
+   -- Pick deadline (server QueueDeadline, 2026-10-16): at 0:00 the server takes them off the pad.
+   -- Example: "Pick your class: 0:12 · READY UP".
+   local dueAt=player:GetAttribute('QueueDeadline');local left=type(dueAt)=='number' and math.max(0,math.ceil(dueAt-workspace:GetServerTimeNow()))
+   local due=left and ('%d:%02d'):format(left//60,left%60) or ''
    if phase=='Launching' then
     bannerTitle.Text='ENTERING PORTAL...';bannerTitle.TextColor3=C.lime
     bannerSub.Text=(mapName or '')..'  ·  '..players
@@ -389,10 +408,10 @@ function L.mount(player)
    elseif phase=='Counting' then
     local picking=portal and portal:GetAttribute('Picking') or count
     bannerTitle.Text=('READY %d / %d'):format(count-picking,count)
-    bannerSub.Text=player:GetAttribute('LobbyLockedIn')==true and 'Starts automatically when everyone is ready' or 'Confirm class and starter · READY UP'
+    bannerSub.Text=player:GetAttribute('LobbyLockedIn')==true and 'Starts automatically when everyone is ready' or (due~='' and 'Pick your class: '..due..' · READY UP' or 'Confirm class and starter · READY UP')
    else
     bannerTitle.Text='PORTAL '..q..'  ·  '..count..' / '..cap
-    bannerSub.Text=portal and portal:GetAttribute('HostId')==player.UserId and 'Pick a map and loadout, then READY UP' or 'Waiting for the host to pick a map'
+    bannerSub.Text=portal and portal:GetAttribute('HostId')==player.UserId and (due~='' and 'Pick a map: '..due..', then READY UP' or 'Pick a map and loadout, then READY UP') or (due~='' and 'Host picks a map: '..due or 'Waiting for the host to pick a map')
    end
   else
    bannerTitle.Text='FIND A PORTAL';bannerSub.Text='Follow the green beam to a queue pad'

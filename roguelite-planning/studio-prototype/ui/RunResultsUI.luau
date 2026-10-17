@@ -123,8 +123,8 @@ function M.mount(player)
    local entry=Catalog.ById[it.id]
    if entry then
     local c=T.panel(items,'Item'..i,((i-1)%cols)*(icell+8),math.floor((i-1)/cols)*(icell+8),icell,icell,'inset');T.setTier(c,entry.tier)
-    T.icon(c,'Icon',icell*.14,icell*.12,icell*.72,T.Asset[entry.icon] or entry.icon)
-    if (it.count or 1)>1 then local n=T.label(c,'Count','×'..it.count,0,icell-26,icell-6,24,18);n.TextXAlignment=Enum.TextXAlignment.Right end
+    T.icon(c,'Icon',icell*.14,icell*.14,icell*.72,T.Asset[entry.icon] or entry.icon)
+    if (it.count or 1)>1 then T.countTag(c,'×'..it.count,16) end -- off the inset's border (2026-10-16)
    end
   end
   items.CanvasSize=UDim2.fromOffset(0,math.ceil(#list/cols)*(icell+8))

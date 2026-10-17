@@ -154,6 +154,18 @@ function T.tierBadge(parent,tier,x,y,anchor)
  local l=T.label(b,'Tier',T.Roman[tier],0,0,0,0,15);l.Size=UDim2.fromScale(1,1);l.ZIndex=5;l.TextStrokeTransparency=.3
  return b
 end
+-- Stack count ("×2") on a small dark tag over a slot's bottom-right corner, the same spot and look
+-- as the tier badge, so the number never sits on the slot's nine-slice border (2026-10-16). Example:
+-- T.countTag(cell,'×2',13) -> a 23x16 tag; the label inside is named Count.
+function T.countTag(parent,text,size)
+ size=size or 15
+ local w=math.ceil(game:GetService('TextService'):GetTextSize(text,size,T.Font,Vector2.new(400,100)).X)+8
+ local tag=make('Frame',parent,{Name='CountTag',AnchorPoint=Vector2.new(1,1),Position=UDim2.fromScale(1,1),Size=UDim2.fromOffset(w,size+3),BackgroundColor3=T.Color.ink,BorderSizePixel=0,ZIndex=4})
+ make('UICorner',tag,{CornerRadius=UDim.new(0,4)})
+ make('UIStroke',tag,{Color=Color3.fromRGB(8,10,11),Thickness=1.5})
+ local l=T.label(tag,'Count',text,0,0,0,0,size);l.Size=UDim2.fromScale(1,1);l.ZIndex=5;l.TextWrapped=false
+ return tag
+end
 -- Upgrade progress: "have / need" printed inside a lime bar. need=nil means max tier.
 function T.upgradeBar(parent,name,x,y,w,h,have,need)
  local fill,track=T.bar(parent,name,x,y,w,h,need and have>=need and T.Color.gold or T.Color.lime)

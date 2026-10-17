@@ -22,8 +22,11 @@
 --   previews/kill-leaderboard-mockup/index.html.
 -- Pure functions first (KillBoardTests runs them with luau.exe); mount() is the Roblox part.
 local K={}
--- Design pixels at HUD scale 1.
-K.W=260;K.PAD=8;K.HEAD=28;K.ROW=30;K.GAP=4;K.MAX=4
+-- Design pixels at HUD scale 1. PAD 14 keeps the title and rows inside the panel's nine-slice ring
+-- (~12 px at SliceScale .55) with a few px to spare (2026-10-16: "KILLS" touched the top/left border;
+-- was PAD 8, HEAD 28). Solo 82 tall, 2 rows 116, 4 rows 184. Rows and title sit INSET (18) from the
+-- sides, clear of the lime corner accents.
+K.W=260;K.PAD=14;K.INSET=18;K.HEAD=24;K.ROW=30;K.GAP=4;K.MAX=4
 function K.height(n) n=math.max(1,n);return K.PAD+K.HEAD+n*K.ROW+(n-1)*K.GAP+K.PAD end
 
 -- entries: {userId, name, kills}. Returns copies sorted by kills (then name, then id), each with
@@ -81,7 +84,7 @@ K.overlaps=overlaps
 -- definitely be on the left"). hud: health, build (down to the three item rows it reserves), menu
 -- and chat (optional) and blocks: every rect it must not touch (health, timer, build strip, menu,
 -- boss bar, round 10 panel, chat window, DASH button, touch thumbstick and jump button).
--- compact (small screens): no names, 128 wide. Tries the first spot clear of every block, each
+-- compact (small screens): no names, 132 wide (136 would hide it on a 667x311 phone in a boss fight). Tries the first spot clear of every block, each
 -- side at the HUD scale, then .85 and .7 of it (never below .5), the left side first:
 --   1. left edge, under the health block (desktops, tablets);
 --   2. left edge, under the chat window (keyboard screens put it centre left in a run);
@@ -91,11 +94,11 @@ K.overlaps=overlaps
 --      their left side below the health block is the thumbstick.
 -- Returns x0, y0, scale, clear (false: nowhere clear, e.g. a 667 px phone while the boss bar sits
 -- bottom centre; the board hides).
--- Examples: 1920 x 1022 desktop -> x 12..272 under the health block (solo y 256..330, 2 players
--- y 256..364) or under
--- the chat window when the health spot would touch it; 750 x 311 phone, compact at .55 -> x 537..607,
--- y 137.5..197 (2 players), left of PAUSE/SETTINGS and above DASH.
-K.WC=128
+-- Examples: 1920 x 1022 desktop -> x 12..272 under the health block (solo y 256..338, 2 players
+-- y 256..372) or under
+-- the chat window when the health spot would touch it; 750 x 311 phone, compact at .55 -> x 535..607,
+-- y 137.5..201.3 (2 players), left of PAUSE/SETTINGS and above DASH.
+K.WC=132
 function K.width(compact) return compact and K.WC or K.W end
 function K.place(w,h,s,hud,n,compact)
  local function clear(r)
@@ -149,32 +152,35 @@ function K.mount(player)
   local root=T.make('Frame',hud,{Name='KillBoard',BackgroundTransparency=1,BorderSizePixel=0,Active=false,Visible=false,Size=UDim2.fromOffset(K.W,K.height(2))})
   local scale=T.make('UIScale',root,{Scale=1})
   local plate=T.panel(root,'Plate',0,0,0,0,'panel');plate.Size=UDim2.fromScale(1,1)
-  local title=T.label(root,'Title','KILLS',K.PAD+6,K.PAD-1,K.W-2*K.PAD-12,K.HEAD-2,18,C.cream);title.TextXAlignment=Enum.TextXAlignment.Left
-  local rw=K.W-2*K.PAD
+  local title=T.label(root,'Title','KILLS',K.INSET+4,K.PAD,K.W-2*K.INSET-8,K.HEAD,18,C.cream);title.TextXAlignment=Enum.TextXAlignment.Left
+  local rw=K.W-2*K.INSET
   local rows={}
   for i=1,K.MAX do
-   local row=T.make('Frame',root,{Name='Row'..i,Position=UDim2.fromOffset(K.PAD,K.PAD+K.HEAD+(i-1)*(K.ROW+K.GAP)),Size=UDim2.fromOffset(rw,K.ROW),BackgroundColor3=C.well,BackgroundTransparency=.1,BorderSizePixel=0,Visible=false})
+   local row=T.make('Frame',root,{Name='Row'..i,Position=UDim2.fromOffset(K.INSET,K.PAD+K.HEAD+(i-1)*(K.ROW+K.GAP)),Size=UDim2.fromOffset(rw,K.ROW),BackgroundColor3=C.well,BackgroundTransparency=.1,BorderSizePixel=0,Visible=false})
    T.make('UICorner',row,{CornerRadius=UDim.new(0,6)})
    local stroke=T.make('UIStroke',row,{Color=C.lime,Thickness=2,Enabled=false})
-   local rank=T.label(row,'Rank','',2,0,22,K.ROW,17,C.muted)
-   local head=T.make('ImageLabel',row,{Name='Headshot',BackgroundColor3=C.track,BorderSizePixel=0,Position=UDim2.fromOffset(28,3),Size=UDim2.fromOffset(24,24),Image=''})
+   -- Inside a row: 4 px before the rank, 8 px after the kills, so nothing sits on the row's edge.
+   local rank=T.label(row,'Rank','',4,0,22,K.ROW,17,C.muted)
+   local head=T.make('ImageLabel',row,{Name='Headshot',BackgroundColor3=C.track,BorderSizePixel=0,Position=UDim2.fromOffset(30,3),Size=UDim2.fromOffset(24,24),Image=''})
    T.make('UICorner',head,{CornerRadius=UDim.new(1,0)})
-   local name=T.make('TextLabel',row,{Name='PlayerName',BackgroundTransparency=1,Position=UDim2.fromOffset(58,0),Size=UDim2.fromOffset(rw-58-56,K.ROW),Text='',Font=T.Font,TextSize=17,
+   local name=T.make('TextLabel',row,{Name='PlayerName',BackgroundTransparency=1,Position=UDim2.fromOffset(60,0),Size=UDim2.fromOffset(rw-60-58,K.ROW),Text='',Font=T.Font,TextSize=17,
     TextColor3=C.white,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,TextWrapped=false,TextStrokeColor3=Color3.new(0,0,0),TextStrokeTransparency=.12})
-   local kills=T.label(row,'Kills','',rw-54,0,50,K.ROW,19,C.white);kills.TextXAlignment=Enum.TextXAlignment.Right
+   local kills=T.label(row,'Kills','',rw-58,0,50,K.ROW,19,C.white);kills.TextXAlignment=Enum.TextXAlignment.Right
    rows[i]={row=row,stroke=stroke,rank=rank,head=head,name=name,kills=kills}
   end
   return {root=root,scale=scale,title=title,rows=rows,count=2}
  end
- -- Compact (small screens): 128 wide, no names; rank, headshot, kills.
+ -- Compact (small screens): 132 wide, no names; rank, headshot, kills (right of the headshot, 6 px
+ -- before the row's end; long counts shrink rather than run under the headshot).
  local function setCompact(compact)
   view.compact=compact
-  local width=K.width(compact);local rw=width-2*K.PAD
+  local width=K.width(compact);local rw=width-2*K.INSET
   view.root.Size=UDim2.fromOffset(width,K.height(view.count))
-  view.title.Size=UDim2.fromOffset(width-2*K.PAD-12,K.HEAD-2)
+  view.title.Size=UDim2.fromOffset(width-2*K.INSET-8,K.HEAD)
   for _,r in view.rows do
    r.row.Size=UDim2.fromOffset(rw,K.ROW);r.name.Visible=not compact
-   r.name.Size=UDim2.fromOffset(rw-58-56,K.ROW);r.kills.Position=UDim2.fromOffset(rw-54,0)
+   r.name.Size=UDim2.fromOffset(rw-60-58,K.ROW)
+   r.kills.Position=UDim2.fromOffset(compact and 58 or rw-58,0);r.kills.Size=UDim2.fromOffset(compact and rw-64 or 50,K.ROW)
   end
  end
  local function render(list)
