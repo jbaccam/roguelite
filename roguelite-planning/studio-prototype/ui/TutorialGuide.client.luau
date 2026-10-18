@@ -209,7 +209,6 @@ local function runStep()
  for _,g in pg:GetChildren() do if g:IsA('ScreenGui') and g.Enabled then shop=find(g,'ShopLayout');if shop then shopGui=g;break end end end
  local snap=snapshot();local list=snap and snap.offers or {};local weapons=snap and snap.weapons or {}
  local keep={keep=offersKeep(shop)}
- local function slotOf(id) for _,w in weapons do if w.id==id then return find(shopGui,'WeaponSlot'..w.slot) end end;return nil end
  -- Combining (2026-10-18, user: players didn't know they could combine weapons). Any shop with two
  -- of one weapon at one tier (ShopService owned(): canCombine): the arrow points at one of them,
  -- then at the popup's Combine. Example: shop 1's second Baseball Bat -> tap a Bat -> Combine ->
@@ -243,7 +242,8 @@ local function runStep()
   -- line for TYPES_SECONDS). After a buy, GO; nothing bought and the offer gone or too dear, buy-then-GO.
   local classOffer='weapon_'..Config.ClassWeapon..'_1'
   for _,o in list do if o.sold and o.id==classOffer then typesAt=typesAt or os.clock() end end
-  if typesAt and os.clock()-typesAt<Config.TYPES_SECONDS then return {line='Types',target=slotOf(Config.ClassWeapon),ctx=combineKeep} end
+  -- No arrow (2026-10-18, user: the arrow stayed on the Gloves and they couldn't tell what it meant).
+  if typesAt and os.clock()-typesAt<Config.TYPES_SECONDS then return {line='Types',ctx=combineKeep} end
   for _,o in list do if o.sold then return {line='ShopGo',target=shop and find(shop,'StartWave',true),ctx=keep} end end
   for i,o in list do
    if o.id==offers[1] and (snap.shards or 0)>=(o.price or math.huge) then
