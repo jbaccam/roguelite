@@ -3,16 +3,18 @@ return function(T,Catalog,Maps)
  local function check(ok,label) checks+=1;assert(ok,label) end
  local function simulate(wave,players,boss,step)
   local s=T.new(wave);local total,pulses=0,0
-  for _=1,math.floor(40/step) do local e=T.step(s,step,false,boss,players);if e then total+=#e.roles;pulses+=1 end end
+  -- An ordinary wave runs T.Duration (30 s since 2026-10-18, was 40); a boss wave has no clock, so
+  -- its budgets are counted over the same forty seconds as before.
+  for _=1,math.floor((boss and 40 or T.Duration)/step) do local e=T.step(s,step,false,boss,players);if e then total+=#e.roles;pulses+=1 end end
   return total,pulses
  end
- for _,case in {{1,42},{5,72},{10,120},{20,180},{25,180}} do
+ for _,case in {{1,30},{5,54},{10,96},{20,144},{25,144}} do
   for _,dt in {.05,.025} do local total=simulate(case[1],1,false,dt);check(total==case[2],'authored total '..case[1]..' dt '..dt..': '..total) end
  end
  check(simulate(20,1,true,.05)==84,'boss wave has eighty-four scheduled adds over forty seconds')
- check(simulate(1,4,false,.05)==168,'four players receive exactly four solo arrival budgets')
+ check(simulate(1,4,false,.05)==120,'four players receive exactly four solo arrival budgets')
  for players=1,4 do
-  check(simulate(20,players,false,.025)==180*players,'linear ordinary arrival budget '..players)
+  check(simulate(20,players,false,.025)==144*players,'linear ordinary arrival budget '..players)
   check(simulate(20,players,true,.025)==84*players,'linear boss arrival budget '..players)
   check(math.abs(T.dispatchInterval(players)*players-.25)<1e-9,'linear dispatch throughput '..players)
   check(math.abs(T.groupInterval(.65,players)*players-.65)<1e-9,'linear boss group throughput '..players)

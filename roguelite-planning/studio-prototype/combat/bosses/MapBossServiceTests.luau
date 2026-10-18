@@ -623,6 +623,11 @@ if Defs then
   end
   return true
  end)
+ check('Hammer tracking 2026-10-18: his hits and Charge follow the player only on Nightmare (pace track=false on Normal and Hard)',function()
+  if not X.tracks then return false end
+  local function s(diff) return {pace=Defs.pace('Hammer',diff)} end
+  return not X.tracks(s('Normal')) and not X.tracks(s('Hard')) and X.tracks(s('Nightmare')) and X.tracks({pace=nil}) and X.tracks({pace=Defs.pace('KingCrab','Normal')})
+ end)
  check('admin spawn 2026-10-10: a practice boss is on Normal unless the panel picked the run\'s difficulty; wave and tutorial bosses keep the run\'s',function()
   local d=Defs.spawnDifficulty
   return d(true,'Hard',nil)=='Normal' and d(true,nil,nil)=='Normal' and d(true,'Nightmare','Hard')=='Normal' and d(true,'Hard','Hard')=='Hard'

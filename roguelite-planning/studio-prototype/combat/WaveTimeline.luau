@@ -1,8 +1,8 @@
--- Server-owned authored arrivals, pure clock/composition/cap policy. Counts are our 40s-wave
+-- Server-owned authored arrivals, pure clock/composition/cap policy. Counts are our 30s-wave (40s until 2026-10-18)
 -- adaptation, not copied Brotato data. Deaths never advance this clock or request an arrival.
 -- Boss adds average two arrivals/second, below late ordinary waves (4.5/s).
 -- The existing boss population cap still leaves melee access when clearing falls behind.
-local T={Duration=40,MaxAlive=100,BossInterval=3,BossAmount=6}
+local T={Duration=30,MaxAlive=100,BossInterval=3,BossAmount=6}
 -- {seconds between arrivals, solo group size, fast every N, heavy every N (0 disables)}
 T.Profiles={
  {6,6,0,0},{6,7,5,0},{6,8,4,0},{5,8,4,0},{5,9,4,0},

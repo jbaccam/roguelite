@@ -28,7 +28,15 @@ T.Waves={
  {count=10,roster='regular-zombie'}, -- plus the boss
 }
 -- Forced shop offers: [shop wave][slot] = ShopCatalog id. The shop after wave 1 is wave 2's.
-T.Offers={[2]={[1]='weapon_00_1'}} -- slot 1: the Glock, Tier I
+-- 2026-10-18 (user: "add combining weapons and tiers to the tutorial, players have reported not
+-- knowing they could combine weapons ... briefly describe classes and attributes / stat boosts for
+-- using the right weapons"): shop 1 sells a second Baseball Bat, Tier I (was the Glock), so the
+-- player combines the pair into Tier II; shop 2 sells Boxing Gloves, Tier I: a Brawler weapon (+10%
+-- class specialty) and Blunt like the Bat, so the pair turns on the Blunt set bonus.
+T.Offers={[2]={[1]='weapon_06_1'},[3]={[1]='weapon_19_1'}}
+T.CombineWeapon='06';T.ClassWeapon='19';T.WeaponType='Blunt'
+-- How long the Tier II line stays after the combine, and the Blunt set line after the Gloves.
+T.TIERS_SECONDS=6;T.TYPES_SECONDS=7
 -- Paid once, when the boss wave is cleared.
 T.Reward={chests={Silver=3},emeralds=100}
 -- The first Silver Chest opened after the reward is these copies instead of a roll: two Baseball
@@ -61,6 +69,11 @@ T.Lines={
  LevelUp="You leveled up! Pick any upgrade.",
  Shop="After every wave you can shop. Crystals pay for it. Buy anything you like!",
  ShopGo="Nice! Press GO when you're ready.",
+ Combine="Two of the same weapon and tier combine! Tap one, then press Combine.",
+ CombineTap="Press Combine to merge them into Tier II.",
+ Tiers="Tier II! Higher tiers hit harder. Two Tier IIs combine into Tier III.",
+ Class="You're a Brawler. Brawler weapons, like these Gloves, deal 10% more damage.",
+ Types="Bat and Gloves are both Blunt. 2 or more of one type give a set bonus!",
  Survive="Survive wave 3 and beat the boss!",
  LevelUp2="Two level-ups! Pick your upgrades.",
  Shop2="Your turn. Buy what you like, then press GO.",
@@ -83,11 +96,13 @@ T.Asset={portrait='rbxassetid://108357696326171',arrow='rbxassetid://74984560082
 
 -- The tutorial's economy, walked the way the run pays it (ShopService): each kill's crystal is
 -- shards and XP, and a clear pays EconomyConfig's wave reward for the wave that comes next.
--- glockBase/itemBase: ShopCatalog base prices of the Glock (Tier I) and a Protein Shake.
--- Returns what the player has at each shop. Example (2026-10-03 numbers): 24 kills + 15 for the
--- clear = 39 shards at shop 1, level 2 (1 card, at the 20th kill); after the Glock (24) 15 are
--- left, too few for a Protein Shake (18); 30 more kills + 18 = 63 at shop 2, level 3 (1 card).
-function T.economy(E,XP,glockBase,itemBase)
+-- weaponBase/itemBase: ShopCatalog base prices of shop 1's guided weapon (the Baseball Bat, Tier I)
+-- and a Protein Shake; gloveBase: shop 2's Boxing Gloves, Tier I.
+-- Returns what the player has at each shop. Example (2026-10-18 numbers): 24 kills + 15 for the
+-- clear = 39 shards at shop 1, level 2 (1 card, at the 20th kill); after the Bat (28) 11 are left,
+-- too few for a Protein Shake (18); 30 more kills + 18 = 59 at shop 2, level 3 (1 card), enough for
+-- the Gloves (34).
+function T.economy(E,XP,weaponBase,itemBase,gloveBase)
  local shards,level,xp=T.START_SHARDS,1,0
  local function kills(n)
   local amount=n*E.KILL_SHARDS;shards+=amount
@@ -96,10 +111,10 @@ function T.economy(E,XP,glockBase,itemBase)
  end
  local function clear(nextWave) shards+=E.WAVE_REWARD_BASE+(nextWave-1)*E.WAVE_REWARD_SCALE end
  local cards1=kills(T.Waves[1].count);clear(2)
- local shop1={shards=shards,level=level,cards=cards1,glock=E.price(glockBase,2,1),item=E.price(itemBase,2,1)}
- shards-=shop1.glock
+ local shop1={shards=shards,level=level,cards=cards1,weapon=E.price(weaponBase,2,1),item=E.price(itemBase,2,1)}
+ shards-=shop1.weapon
  if shards>=shop1.item then shards-=shop1.item;shop1.boughtItem=true end
  local cards2=kills(T.Waves[2].count);clear(3)
- return shop1,{shards=shards,level=level,cards=cards2}
+ return shop1,{shards=shards,level=level,cards=cards2,gloves=gloveBase and E.price(gloveBase,3,1) or nil}
 end
 return T

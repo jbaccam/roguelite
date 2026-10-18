@@ -102,6 +102,9 @@ end
 local seenRunAt=nil
 local redUntil,redShown=0,0
 local runId -- RogueliteRunState.RunId these belong to
+-- Combining and classes (2026-10-18): the pair last pointed at ({id, tier}), when its combine was
+-- seen and the slot it landed in, and when the guided Gloves were bought.
+local pairSeen,tiersAt,tiersSlot,typesAt
 -- Crystals (user, 2026-10-03: the tutorial never talked about collecting them). Wave 1: once one
 -- is on the ground the arrow points at it ("walk over them"); after the first pickup it points at
 -- the crystal counter for a few seconds ("XP and money").
@@ -166,7 +169,7 @@ local function runStep()
  if combat:GetAttribute('TutorialRun')~=true or not player:GetAttribute('RunMember') then return nil end
  local run=RS:FindFirstChild('RogueliteRunState');if not run then return nil end
  -- A new run (the admin panel's Start tutorial again): its lines start over.
- if run:GetAttribute('RunId')~=runId then runId=run:GetAttribute('RunId');seenRunAt=nil;crystal=nil;pickedAt=nil;redShown=0;redUntil=0 end
+ if run:GetAttribute('RunId')~=runId then runId=run:GetAttribute('RunId');seenRunAt=nil;crystal=nil;pickedAt=nil;redShown=0;redUntil=0;pairSeen=nil;tiersAt=nil;tiersSlot=nil;typesAt=nil end
  -- The loading screen still covers the arena: the welcome waits for it (it used to type out and
  -- time out underneath, 2026-10-03).
  if pg:FindFirstChild('LoadingScreen') then return {hide=true} end
@@ -202,24 +205,46 @@ local function runStep()
   local cards=screen('LevelUpOffers');local card=find(cards,'Offer1')
   return {line=pending>=2 and 'LevelUp2' or 'LevelUp',target=card and find(card,'Choose',true),ctx={keep=offersKeep(cards)}}
  end
- local shop
- for _,g in pg:GetChildren() do if g:IsA('ScreenGui') and g.Enabled then shop=find(g,'ShopLayout');if shop then break end end end
+ local shopGui,shop
+ for _,g in pg:GetChildren() do if g:IsA('ScreenGui') and g.Enabled then shop=find(g,'ShopLayout');if shop then shopGui=g;break end end end
+ local snap=snapshot();local list=snap and snap.offers or {};local weapons=snap and snap.weapons or {}
+ local keep={keep=offersKeep(shop)}
+ local function slotOf(id) for _,w in weapons do if w.id==id then return find(shopGui,'WeaponSlot'..w.slot) end end;return nil end
+ -- Combining (2026-10-18, user: players didn't know they could combine weapons). Any shop with two
+ -- of one weapon at one tier (ShopService owned(): canCombine): the arrow points at one of them,
+ -- then at the popup's Combine. Example: shop 1's second Baseball Bat -> tap a Bat -> Combine ->
+ -- one Tier II Bat, and the Tier II line stays TIERS_SECONDS. Selling one instead skips that line.
+ local pair
+ for _,w in weapons do if w.canCombine then pair=w;break end end
+ if pair then
+  pairSeen={id=pair.id,tier=pair.tier}
+  local press=find(shopGui,'Combine',true)
+  if press then return {line='CombineTap',target=press,ctx=keep} end
+  return {line='Combine',target=find(shopGui,'WeaponSlot'..pair.slot,true),ctx=keep}
+ end
+ if pairSeen and not tiersAt then
+  for _,w in weapons do if w.id==pairSeen.id and w.tier>pairSeen.tier then tiersAt=os.clock();tiersSlot=w.slot end end
+  if not tiersAt then pairSeen=nil end
+ end
+ if tiersAt and os.clock()-tiersAt<Config.TIERS_SECONDS then return {line='Tiers',target=find(shopGui,'WeaponSlot'..(tiersSlot or 0)),ctx=keep} end
  local offers=Config.Offers[wave]
  if offers then
-  -- The arrow suggests the guided offer (the Glock) while it can be bought; any buy counts.
-  -- After one, GO; nothing bought and the Glock gone or too dear, buy-then-GO.
-  local snap=snapshot();local list=snap and snap.offers or {}
-  local keep={keep=offersKeep(shop)}
+  -- The arrow suggests the guided offer while it can be bought; any buy counts. Shop 1's is the
+  -- second Bat ('Shop'), shop 2's the Brawler's Boxing Gloves ('Class'; once bought, the Blunt set
+  -- line for TYPES_SECONDS). After a buy, GO; nothing bought and the offer gone or too dear, buy-then-GO.
+  local classOffer='weapon_'..Config.ClassWeapon..'_1'
+  for _,o in list do if o.sold and o.id==classOffer then typesAt=typesAt or os.clock() end end
+  if typesAt and os.clock()-typesAt<Config.TYPES_SECONDS then return {line='Types',target=slotOf(Config.ClassWeapon),ctx=keep} end
   for _,o in list do if o.sold then return {line='ShopGo',target=shop and find(shop,'StartWave',true),ctx=keep} end end
   for i,o in list do
    if o.id==offers[1] and (snap.shards or 0)>=(o.price or math.huge) then
     local card=shop and find(shop,'Offer'..i)
-    return {line='Shop',target=card and find(card,'Buy',true),ctx=keep}
+    return {line=o.id==classOffer and 'Class' or 'Shop',target=card and find(card,'Buy',true),ctx=keep}
    end
   end
   return {line='Shop2',target=shop and find(shop,'StartWave',true),ctx=keep}
  end
- return {line='Shop2',target=shop and find(shop,'StartWave',true),ctx={keep=offersKeep(shop)}}
+ return {line='Shop2',target=shop and find(shop,'StartWave',true),ctx=keep}
 end
 
 -- The lobby part -------------------------------------------------------------------------------

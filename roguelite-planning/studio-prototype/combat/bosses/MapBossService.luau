@@ -482,6 +482,9 @@ end
 -- The tutorial boss (TutorialBossHealth) teaches the moves, it doesn't punish: def.tutorial.enrage
 -- and .follow set to false turn those off. True when `key` stays on for this boss.
 function X.allows(s,key) return not (s.tutorial and s.def.tutorial and s.def.tutorial[key]==false) end
+-- Mid-attack tracking (def.aim, def.home) stays on unless the difficulty's pace row says track=false
+-- (MapBossDefs D.Hammer.pace: off on Normal and Hard, 2026-10-18).
+function X.tracks(s) return not (s.pace and s.pace.track==false) end
 -- The enrage roar (def.roar): once, after enraging, and only between attacks: one under way
 -- finishes first.
 function X.roarDue(s) return s.enraged==true and not s.roared and not s.attack and s.def.roar~=nil end
@@ -739,7 +742,7 @@ function M.start(npc,kind,target,force)
   -- clip's phase (X.laneTiming, X.finishUnits).
   if def.finish then X.finishUnits(A) end
   -- def.home (the Hammer): a homing run. The body and its heading live in A.pos / A.dir (stepAttack).
-  if def.home and def.facing=='forward' then A.pos,A.sentDir,A.homeTarget=cf.Position,A.dir,target end
+  if def.home and def.facing=='forward' then A.pos,A.sentDir,A.homeTarget=cf.Position,A.dir,X.tracks(s) and target or nil end
   A.data={dir={A.dir.X,A.dir.Z}};X.laneTiming(s.T,A);X.publishParts(A)
  else A.at=X.window(def,s.T);A.duration=X.duration(def,A.at) end
  local at=A.at
@@ -766,7 +769,7 @@ function M.start(npc,kind,target,force)
  -- def.aim (the boss def's, or the attack's own): the frame turns toward the target until each hit's
  -- lock (stepAttack). data.yaw is the frame's heading the shapes were built in: clients turn them by
  -- the BossFrame they get.
- local aim=(def.phases or def.shape=='circle' or def.shape=='sweep' or def.shape=='wave') and (def.aim or s.def.aim) or nil
+ local aim=(def.phases or def.shape=='circle' or def.shape=='sweep' or def.shape=='wave') and X.tracks(s) and (def.aim or s.def.aim) or nil
  if aim then A.aim,A.aimTarget,A.sentYaw=aim,target,Shapes.yawOf(cf);A.data.yaw=A.sentYaw end
  s.attack=A;s.lastStart[kind]=now -- def.lockout (X.lockedOut)
  -- Detached waves (a wave phase, a finish wave) go on their own clock now: stepWaves runs them every

@@ -113,9 +113,14 @@ D.Hammer.toolBlend={tool='Hammer',hands={'RightHand','LeftHand'}}
 -- chase (2026-10-10, user: "the hammer boss is just a little too fast on normal mode"): his walk speed
 -- x this. His 24 (26 enraged) matched a player's base 24, so on Normal nobody could outwalk him; now
 -- Normal 19.7 (21.3 enraged), Hard 22.1 (23.9), Nightmare unchanged. The Charge's lane is unchanged.
+-- track (2026-10-18, user: "dont make the hammer brute attacks follow the player on regular and [hard],
+-- only on nightmare, theyre impossible for newb and mobile players to dodge cause hes constantly
+-- tracking you"): false turns off def.aim (a hit's frame turning toward its target in the wind-up) and
+-- the Charge's def.home. He still faces his target when an attack starts, then the swing, slam, wave
+-- and charge go where he was facing. Example: walk sideways out of a Swing's wind-up and it misses.
 D.Hammer.pace={
- Normal={cooldown=2,combo=1.15,min=1.2,breather=1,chase=.82},
- Hard={cooldown=1.4,combo=1.1,min=.7,breather=.45,chase=.92},
+ Normal={cooldown=2,combo=1.15,min=1.2,breather=1,chase=.82,track=false},
+ Hard={cooldown=1.4,combo=1.1,min=.7,breather=.45,chase=.92,track=false},
  Nightmare={cooldown=1,combo=1,min=0,breather=0},
 }
 -- The pace row for boss `id` on `difficulty` (a RunSetupRules id), nil when it has none.

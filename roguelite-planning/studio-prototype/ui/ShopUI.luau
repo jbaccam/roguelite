@@ -1190,6 +1190,23 @@ function M.new(player,h,refresh)
   local combinable=type(data.combinable)=='table' and data.combinable or {}
   local anyCombine=next(combinable)~=nil
   local count=0;for _,copy in data.weapons do if copy.id~='' then count+=1 end end
+  -- Weapons get the same arrow (2026-10-18, user: "players have reported not knowing they could
+  -- combine weapons"): a weapon with a matching copy at its tier (ShopService canCombine). The hint
+  -- shows when anything can combine. Example: two Tier I Bats -> both tiles show the arrow.
+  local weaponCombine=false;for _,copy in data.weapons do if copy.canCombine then weaponCombine=true end end
+  anyCombine=anyCombine or weaponCombine
+  -- The lime up-arrow badge, top-right of a tile `cell` wide.
+  local function combineBadge(b,cell)
+   local s=math.clamp(math.floor(cell*.34),16,24)
+   local mark=T.make('Frame',b,{Name='CombineBadge',AnchorPoint=Vector2.new(1,0),Position=UDim2.fromOffset(cell-4,4),Size=UDim2.fromOffset(s,s),BackgroundColor3=T.Color.lime,BorderSizePixel=0,ZIndex=4})
+   T.make('UICorner',mark,{CornerRadius=UDim.new(1,0)})
+   T.make('UIStroke',mark,{Color=T.Color.ink,Thickness=2})
+   -- An up arrow in ink: a stem and two strokes leaning in (T.check's way of drawing marks).
+   for _,a in {{.5,.6,.17,.46,0},{.385,.4,.17,.38,45},{.615,.4,.17,.38,-45}} do
+    local line=T.make('Frame',mark,{Name='Arrow',AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(a[1],a[2]),Size=UDim2.fromScale(a[3],a[4]),Rotation=a[5],BackgroundColor3=T.Color.ink,BorderSizePixel=0,ZIndex=5})
+    T.make('UICorner',line,{CornerRadius=UDim.new(1,0)})
+   end
+  end
   -- Compact: Items and Weapons are one sideways row each, the title first and then the tiles (the
   -- combine hint after the last one). Side by side, Weapons as wide as its tiles (at least 42% while
   -- Items needs the room); stacked when the shop is under 560 wide. Example, 844x390: one 43 px row.
@@ -1237,17 +1254,7 @@ function M.new(player,h,refresh)
    -- Turret tiles: a small tier badge top-left (I-IV, like weapon slots), and the combine arrow
    -- top-right, 4 px in. Cells are at least 52 px: badge 4..30 (III), arrow 31..48, count from 29 down.
    if entry.turret then local tb=T.tierBadge(b,entry.turret,4,4);tb.Size=UDim2.fromOffset(8+#T.Roman[entry.turret]*6,16) end
-   if combinable[it.id] then
-    local s=math.clamp(math.floor(cell*.34),16,24)
-    local mark=T.make('Frame',b,{Name='CombineBadge',AnchorPoint=Vector2.new(1,0),Position=UDim2.fromOffset(cell-4,4),Size=UDim2.fromOffset(s,s),BackgroundColor3=T.Color.lime,BorderSizePixel=0,ZIndex=4})
-    T.make('UICorner',mark,{CornerRadius=UDim.new(1,0)})
-    T.make('UIStroke',mark,{Color=T.Color.ink,Thickness=2})
-    -- An up arrow in ink: a stem and two strokes leaning in (T.check's way of drawing marks).
-    for _,a in {{.5,.6,.17,.46,0},{.385,.4,.17,.38,45},{.615,.4,.17,.38,-45}} do
-     local line=T.make('Frame',mark,{Name='Arrow',AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(a[1],a[2]),Size=UDim2.fromScale(a[3],a[4]),Rotation=a[5],BackgroundColor3=T.Color.ink,BorderSizePixel=0,ZIndex=5})
-     T.make('UICorner',line,{CornerRadius=UDim.new(1,0)})
-    end
-   end
+   if combinable[it.id] then combineBadge(b,cell) end
    -- The popup anchors where the tile shows: a scrolled compact row moves it left.
    if self.selected and self.selected.kind=='Item' and self.selected.id==it.id then anchor=Vector2.new(x-(compact and self.ItemsScroll or 0),top+y) end
   end
@@ -1270,6 +1277,7 @@ function M.new(player,h,refresh)
     slotFrame(b);T.setTier(b,copy.tier)
     local pad=slotPad(slotSize);thumbnail(b,combat.WeaponTemplates:FindFirstChild(copy.id),pad,pad,slotSize-2*pad,slotSize-2*pad)
     T.tierBadge(b,copy.tier,slotSize-5,slotSize-5,Vector2.new(1,1))
+    if copy.canCombine then combineBadge(b,slotSize) end
     if self.selected and self.selected.kind=='Weapon' and self.selected.copy==copy.copy then anchor=Vector2.new(wx+x-(compact and self.WeaponsScroll or 0),top+y) end
    end
   end

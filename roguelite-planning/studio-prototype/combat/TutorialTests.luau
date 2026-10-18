@@ -1,26 +1,37 @@
 -- Pure checks for TutorialConfig and the shared-crystal split (EconomyConfig.shareIndex). Run in
 -- Studio Edit on fresh repo copies (plans/2026-10-03-tutorial-build-steps.md "Running Luau checks"):
--- `TutorialTests(TutorialConfig, EconomyConfig, RunXP, glockBase, itemBase, WeaponCatalog)` returns the
--- number of checks. WeaponCatalog is optional: with it, the tutorial pair is checked against the roster.
-return function(T,E,XP,glockBase,itemBase,Weapons)
+-- `TutorialTests(TutorialConfig, EconomyConfig, RunXP, batBase, itemBase, WeaponCatalog, glovesBase)`
+-- returns the number of checks. WeaponCatalog is optional: with it, the tutorial pair is checked
+-- against the roster. batBase / glovesBase: ShopCatalog base prices of weapon_06_1 / weapon_19_1.
+return function(T,E,XP,batBase,itemBase,Weapons,glovesBase)
  local checks=0
  local function check(condition,message) assert(condition,message);checks+=1 end
- glockBase=glockBase or 19;itemBase=itemBase or 14
+ batBase=batBase or 22;itemBase=itemBase or 14;glovesBase=glovesBase or 24
 
  -- The economy (crystals worth 1, like normal runs): one level-up card after wave 1, earned late
- -- in it, and enough crystals for the guided Glock; one more card after wave 2.
- local shop1,shop2=T.economy(E,XP,glockBase,itemBase)
+ -- in it, and enough crystals for the guided second Bat; one more card after wave 2, and enough
+ -- for the guided Gloves.
+ local shop1,shop2=T.economy(E,XP,batBase,itemBase,glovesBase)
  check(shop1.cards==1 and shop1.level==2,'wave 1 gives exactly one level-up (level 2), got '..shop1.cards)
  check(math.ceil(XP.required(1)/E.KILL_SHARDS)>=T.Waves[1].count*.75,'the first level-up comes late in wave 1, not in its first kills')
- check(shop1.shards>=shop1.glock,('shop 1 affords the Glock: %d shards, Glock %d'):format(shop1.shards,shop1.glock))
- check(shop1.shards-shop1.glock<shop1.glock,'shop 1 is not rich enough for two Glocks')
+ check(shop1.shards>=shop1.weapon,('shop 1 affords the second Bat: %d shards, Bat %d'):format(shop1.shards,shop1.weapon))
+ check(shop1.shards-shop1.weapon<shop1.weapon,'shop 1 is not rich enough for two Bats')
  check(shop2.cards==1 and shop2.level==3,'wave 2 gives one level-up (level 3), got '..shop2.cards..' / level '..shop2.level)
- check(shop2.shards>=50 and shop2.shards<=75,'shop 2 has about 63 shards, got '..shop2.shards)
+ check(shop2.shards>=50 and shop2.shards<=75,'shop 2 has about 59 shards, got '..shop2.shards)
+ check(shop2.shards>=shop2.gloves,('shop 2 affords the Gloves: %d shards, Gloves %d'):format(shop2.shards,shop2.gloves))
 
  -- Waves: three, the boss on the last, every count positive.
  check(#T.Waves==T.BOSS_WAVE,'the boss wave is the last tutorial wave')
  for i,w in T.Waves do check(type(w.count)=='number' and w.count>0,'wave '..i..' has enemies') end
- check(T.Offers[2] and T.Offers[2][1]=='weapon_00_1','the shop after wave 1 offers the Glock in slot 1')
+ -- Combining and classes (2026-10-18): shop 1 sells a copy of the tutorial weapon at the Tier it
+ -- starts at, so the pair combines; shop 2 sells another weapon of the class and of the same type.
+ check(T.Offers[2] and T.Offers[2][1]=='weapon_'..T.Weapon..'_1' and T.CombineWeapon==T.Weapon,'the shop after wave 1 offers a second Baseball Bat, Tier I, in slot 1')
+ check(T.Offers[3] and T.Offers[3][1]=='weapon_'..T.ClassWeapon..'_1','the shop after wave 2 offers the Boxing Gloves, Tier I, in slot 1')
+ if Weapons then
+  local g=Weapons.ById[T.ClassWeapon]
+  check(g~=nil and not g.godly and Weapons.inClass(g,T.Class),'the Gloves are a '..T.Class..' weapon (class specialty)')
+  check(table.find(Weapons.typesOf(T.Weapon),T.WeaponType)~=nil and table.find(Weapons.typesOf(T.ClassWeapon),T.WeaponType)~=nil,'Bat and Gloves share the '..T.WeaponType..' type')
+ end
 
  -- Shared crystals: round-robin, so 50 across 3 players is 17 / 17 / 16 and one player gets all 50.
  local function split(total,count)
@@ -57,7 +68,7 @@ return function(T,E,XP,glockBase,itemBase,Weapons)
  check(T.SeedCopies[T.SeedArmor]==1 and T.SeedArmor==T.SeedArmorSet..'.'..T.SeedArmorSlot,'the seeded armor piece id matches its set and slot')
 
  -- Every line the guide can show exists.
- for _,id in {'Welcome','Bat','Crystals','CrystalsUse','LevelUp','Shop','ShopGo','Survive','LevelUp2','Shop2','Boss','RedCircle','Loot','Chests','ChestOpen','ChestTap','ChestMore','Armory','Upgrade','Equip','Equipped','Offer','Play'} do
+ for _,id in {'Welcome','Bat','Crystals','CrystalsUse','LevelUp','Shop','ShopGo','Combine','CombineTap','Tiers','Class','Types','Survive','LevelUp2','Shop2','Boss','RedCircle','Loot','Chests','ChestOpen','ChestTap','ChestMore','Armory','Upgrade','Equip','Equipped','Offer','Play'} do
   check(type(T.Lines[id])=='string' and #T.Lines[id]>0,'line '..id)
  end
  check(type(T.GuideName)=='string' and #T.GuideName>0 and #T.GuideName<=14,'the guide has a short name for his tag')
