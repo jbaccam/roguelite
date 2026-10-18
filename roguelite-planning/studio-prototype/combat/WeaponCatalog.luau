@@ -22,7 +22,7 @@ local profiles={
  {16,1.22,14}, -- Kusarigama: keep reach; reduce its crowd DPS ~11%
  {9,.55,7.5}, -- Spatula
  {20,1.25,9.5}, -- Bat
- {3,.19,33}, -- Draco
+ {3,.20,33}, -- Draco (.19 until 2026-10-18; see TierGrowthById)
  {4,.9,22}, -- Fart Gun (poison)
  {3,1.25,19,nil,nil,'pellets'}, -- Shotgun
  {18,1.55,31,nil,nil,'pierce'}, -- T-shirt
@@ -51,7 +51,8 @@ local profiles={
  {25,2.25,39}, -- Pandora
  {5,1.2,30,nil,nil,'shots'}, -- Medusa (slow: C.SlowById)
  {13,1.19,37,nil,nil,'bounce'}, -- Crystal (lightning)
- -- Godly (plans/2026-10-01-G): ~24 single-target DPS at Tier I (power 160); specials add crowd power.
+ -- Godly (plans/2026-10-01-G): ~24 single-target DPS authored at Tier I, x1.45 rarity power since
+ -- 2026-10-18 (C.RarityPower); specials add crowd power.
  {30,1.25,12}, -- Reaper's Scythe: 360 reap, raises wraiths
  {34,1.5,10.5}, -- Poseidon's Trident: stab, or throw + tidal wave
  {14,1.2,39}, -- Storm Bow: per storm arrow, 5 split arrows
@@ -84,8 +85,15 @@ for _,r in C.Rarities do for _,id in C.RarityLists[r] do C.RarityOf[id]=r end en
 -- second x1.05 Rare, x1.1 Epic, x1.2 Legendary, built into each weapon's own base numbers so the Armory
 -- and shop show it. Damage rounds down to a whole number and the cooldown shortens by what rounding
 -- took, so damage per second is exactly x power. Godly numbers are authored at their power (160).
--- Example: Katana 18 dmg every .95 s becomes 21 dmg every .924 s (x1.2 per second).
-C.RarityPower={Common=1,Rare=1.05,Epic=1.1,Legendary=1.2,Godly=1}
+-- Example: Katana 18 dmg every .95 s becomes 23 dmg every .92 s (x1.32 per second).
+-- 2026-10-18 (user: "all legendary weapons need buffed ... if you end up having a tier 4 draco and a
+-- tier 4 ray gun, the draco will end up out performing the ray gun ... the god tier weapons should be
+-- the best weapons, but not game breaking"): Legendary 1.2 -> 1.32 (+10%), Godly 1 -> 1.45. Tier IV
+-- single-target DPS with the wielder's class (Gunner for ranged Godlies, Brawler for melee): Ray Gun
+-- 126 -> ~180 vs Draco ~109; Vampire Blade 116 -> ~168 vs Excalibur 173 -> ~190 counting every
+-- beam slash at full value, so a Godly is the best weapon once its special (splash, wraiths, heals,
+-- chains) counts, without doubling anything.
+C.RarityPower={Common=1,Rare=1.05,Epic=1.1,Legendary=1.32,Godly=1.45}
 -- Tiers (§6, Brotato style; user 2026-10-02): each tier x1.4 damage and cooldown x{1,.9,.8,.7}, so
 -- an upgrade hits harder AND faster. Six weapons step differently to keep Tier IV within 10% of its
 -- old damage per second: Shotgun, Boomerang, Deck of Cards and Nail Gun also gain pellets, bounces,
@@ -94,7 +102,10 @@ C.RarityPower={Common=1,Rare=1.05,Epic=1.1,Legendary=1.2,Godly=1}
 C.TierGrowth=1.4;C.TierCooldown={1,.9,.8,.7}
 -- Draco's upgraded bullets need to cross late-fodder hit breakpoints, including off-class use.
 -- Keep Tier I, cadence, range and projectile count: damage now 3 / 5 / 7 / 11 (was 3 / 4 / 6 / 8).
-C.TierGrowthById={['01']=1.45,['07']=1.55,['09']=1.25,['12']=1.35,['14']=1.5,['18']=1.3,['24']=1.35}
+-- 2026-10-18 (user: "weaken the draco a little bit, its rate of fire combined with its damage is a
+-- little too strong"): growth 1.55 -> 1.5 (3 / 5 / 7 / 10) and cooldown .19 -> .20. Tier IV single
+-- target as a Gunner: 126 -> 109 DPS (-14%); Tier I-III -5%. Wave 20 breakpoints stay (WeaponBalanceTests).
+C.TierGrowthById={['01']=1.45,['07']=1.5,['09']=1.25,['12']=1.35,['14']=1.5,['18']=1.3,['24']=1.35}
 -- Godly specials, per tier where a list (index = tier). Read by GodlyWeapons (server) and
 -- GodlyVisuals (client). Every special is capped and never triggers another special.
 C.Godly={

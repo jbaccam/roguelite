@@ -51,13 +51,14 @@ local ok,err=xpcall(function()
  -- Draco late-fodder correction: actual reported loadout was Brawler (no Gunner affinity),
  -- Damage32, RangedDamage-15, GP1, with six Tier IV Dracos and +1 projectile. 2026-10-09: no class fit
  -- any more, so off-class it is 11 x 1.32 x .85 = 12.342 (was x.85 more, 10.4907); same breakpoints.
+ -- 2026-10-18: Tier IV 10 (growth 1.5) -> 10 x 1.32 x .85 = 11.22, cooldown .19 x .7 = .133 (.20 rounds to .19 after rarity power); same breakpoints.
  local dracoStats=Stats.resolve('Brawler',0,{Damage=32,RangedDamage=-15,GearPower=1,ProjectileCount=1,AttackSpeed=0})
  local draco=Stats.weapon(Weapons.ById['07'],dracoStats,'Brawler',4)
- check(math.abs(draco.damage-12.342)<.0001,'Draco reported off-class damage')
+ check(math.abs(draco.damage-11.22)<.0001,'Draco reported off-class damage')
  check(math.ceil(Types.scaled('Regular',20).health/draco.damage)==4,'Draco wave20 regular four-hit breakpoint')
  check(math.ceil(Types.scaled('Baby',20).health/draco.damage)==2,'Draco wave20 baby two-hit breakpoint')
  check(draco.nativePierce==0 and draco.nativeBounce==0 and draco.projectileCount==1,'Draco improves damage without adding projectile work or ricochet')
- check(math.abs(draco.cooldown-.1267)<.0001 and Weapons.ById['07'].damage==3,'Draco original cadence and Tier I unchanged')
+ check(math.abs(draco.cooldown-.133)<.0001 and Weapons.ById['07'].damage==3,'Draco cadence (.20 since 2026-10-18), Tier I damage unchanged')
  for _,wave in {1,5,10,20} do
   check(Types.scaled('Regular',wave).health==3+2*(wave-1),'regular wave HP')
   check(Types.scaled('Baby',wave).health==1+1*(wave-1),'baby wave HP')
@@ -91,14 +92,14 @@ local ok,err=xpcall(function()
    local pass=MELEE_PASS[w.id]
    local old=OLD_T4[w.id]*(pass and pass[2]/pass[1] or 1)/(w.authoredCooldown*.84)
    if w.id=='07' then
-    check(w.tierDamage[4]==11 and math.abs(w.cooldown-.181)<.0001,'Draco explicit late-fodder tuning supersedes old DPS cap')
+    check(w.tierDamage[4]==10 and math.abs(w.cooldown-.19)<.0001,'Draco explicit late-fodder tuning supersedes old DPS cap')
    else
     check(math.abs(new/old-1)<=.10,string.format('tier IV within 10%% %s %.1f vs %.1f',w.id,new,old))
    end
   end
  end
  check(counts.Common==12 and counts.Rare==12 and counts.Epic==5 and counts.Legendary==8 and counts.Godly==6,'rarity pools 12/12/5/8/6 (Pizza Cutter is Legendary)')
- check(Weapons.ById['03'].damage==21 and math.abs(Weapons.ById['03'].cooldown-.924)<.001,'katana example 21 / .924')
+ check(Weapons.ById['03'].damage==23 and math.abs(Weapons.ById['03'].cooldown-.92)<.001,'katana example 23 / .92 (Legendary x1.32 since 2026-10-18)')
  check(Weapons.ById['00'].tierDamage[2]==17 and Weapons.ById['00'].tierDamage[4]==33,'glock example 12/17/24/33')
  -- Melee vs ranged pass (2026-10-03): ranged ~22% shorter and ~12% slower, melee ~20% longer.
  for _,w in Weapons.List do
@@ -116,6 +117,7 @@ local ok,err=xpcall(function()
   else
    check(reach>=.74 and reach<=.8+1e-9,string.format('ranged range -20-26%% %s %.2f',w.id,reach))
    if w.godly or w.id=='34' then check(math.abs(rate-1)<1e-9,'cadence kept '..w.id)
+   elseif w.id=='07' then check(rate>1.15 and rate<1.2,string.format('Draco slowed again 2026-10-18 (.19 -> .20): %.3f',rate))
    else check(rate>=1.05 and rate<=1.15,string.format('ranged rate -5-13%% %s %.3f',w.id,rate)) end
   end
  end
@@ -170,7 +172,7 @@ local ok,err=xpcall(function()
  -- than Katana and faster hits; its Tier IV move is data until LegendaryMoves runs the Rolling Slice.
  local function dps(id,tier) local d=Stats.weapon(Weapons.ById[id],neutral,nil,tier);return d.damage/d.cooldown end
  local pc,katana,steak=Weapons.ById['42'],Weapons.ById['03'],Weapons.ById['16']
- check(pc.kind=='Melee' and pc.rarity=='Legendary' and pc.class=='Chef' and pc.damage==15 and math.abs(pc.cooldown-.673)<.001,'Pizza Cutter 15 / .673 (13 / .70 authored)')
+ check(pc.kind=='Melee' and pc.rarity=='Legendary' and pc.class=='Chef' and pc.damage==17 and math.abs(pc.cooldown-.693)<.001,'Pizza Cutter 17 / .693 (13 / .70 authored, Legendary x1.32 since 2026-10-18)')
  for tier=1,4 do
   check(math.abs(dps('42',tier)/dps('03',tier)-1)<=.10,string.format('Pizza Cutter T%d DPS within 10%% of Katana (%.1f vs %.1f)',tier,dps('42',tier),dps('03',tier)))
   check(dps('42',tier)>dps('16',tier),'Pizza Cutter above Steak (Rare) at T'..tier)
