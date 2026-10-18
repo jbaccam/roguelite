@@ -68,7 +68,7 @@ return function(T,E,XP,batBase,itemBase,Weapons,glovesBase)
  check(T.SeedCopies[T.SeedArmor]==1 and T.SeedArmor==T.SeedArmorSet..'.'..T.SeedArmorSlot,'the seeded armor piece id matches its set and slot')
 
  -- Every line the guide can show exists.
- for _,id in {'Welcome','Bat','Crystals','CrystalsUse','LevelUp','Shop','ShopGo','Combine','CombineTap','Tiers','Class','Types','Survive','LevelUp2','Shop2','Boss','RedCircle','Loot','Chests','ChestOpen','ChestTap','ChestMore','Armory','Upgrade','Equip','Equipped','Offer','Play'} do
+ for _,id in {'Welcome','Bat','Crystals','CrystalsUse','LevelUp','Shop','ShopGo','Combine','CombineTap','Tiers','TiersKeep','Class','Types','Survive','LevelUp2','Shop2','Boss','RedCircle','Loot','Chests','ChestOpen','ChestTap','ChestMore','Armory','Upgrade','Equip','Equipped','Offer','Play'} do
   check(type(T.Lines[id])=='string' and #T.Lines[id]>0,'line '..id)
  end
  check(type(T.GuideName)=='string' and #T.GuideName>0 and #T.GuideName<=14,'the guide has a short name for his tag')

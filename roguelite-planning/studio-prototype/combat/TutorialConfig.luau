@@ -35,8 +35,10 @@ T.Waves={
 -- class specialty) and Blunt like the Bat, so the pair turns on the Blunt set bonus.
 T.Offers={[2]={[1]='weapon_06_1'},[3]={[1]='weapon_19_1'}}
 T.CombineWeapon='06';T.ClassWeapon='19';T.WeaponType='Blunt'
--- How long the Tier II line stays after the combine, and the Blunt set line after the Gloves.
-T.TIERS_SECONDS=6;T.TYPES_SECONDS=7
+-- How long the Tier II line stays after the combine, then the keep-lower-tiers line, and the Blunt
+-- set line after the Gloves. No arrow on any of them (2026-10-18, user: the arrow stayed on the
+-- combined Bat, which read as "tap it again").
+T.TIERS_SECONDS=5;T.KEEP_SECONDS=6;T.TYPES_SECONDS=7
 -- Paid once, when the boss wave is cleared.
 T.Reward={chests={Silver=3},emeralds=100}
 -- The first Silver Chest opened after the reward is these copies instead of a roll: two Baseball
@@ -73,6 +75,8 @@ T.Lines={
  Combine="Two matching weapons combine! Tap one, then Combine.",
  CombineTap="Press Combine to make it the next tier.",
  Tiers="Tier II! Higher tiers hit harder. Two Tier IIs make Tier III.",
+ -- 2026-10-18, user: "sometimes it may be better to keep multiple lower tiers".
+ TiersKeep="Sometimes two lower-tier weapons beat one higher one. Your call!",
  Class="You're a Brawler: Brawler weapons like these Gloves deal +10% damage.",
  Types="Bat and Gloves are both Blunt. 2+ of one type give a set bonus!",
  Survive="Survive wave 3 and beat the boss!",

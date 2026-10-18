@@ -104,7 +104,7 @@ local redUntil,redShown=0,0
 local runId -- RogueliteRunState.RunId these belong to
 -- Combining and classes (2026-10-18): the pair last pointed at ({id, tier}), when its combine was
 -- seen and the slot it landed in, and when the guided Gloves were bought.
-local pairSeen,tiersAt,tiersSlot,typesAt
+local pairSeen,tiersAt,typesAt
 -- Crystals (user, 2026-10-03: the tutorial never talked about collecting them). Wave 1: once one
 -- is on the ground the arrow points at it ("walk over them"); after the first pickup it points at
 -- the crystal counter for a few seconds ("XP and money").
@@ -169,7 +169,7 @@ local function runStep()
  if combat:GetAttribute('TutorialRun')~=true or not player:GetAttribute('RunMember') then return nil end
  local run=RS:FindFirstChild('RogueliteRunState');if not run then return nil end
  -- A new run (the admin panel's Start tutorial again): its lines start over.
- if run:GetAttribute('RunId')~=runId then runId=run:GetAttribute('RunId');seenRunAt=nil;crystal=nil;pickedAt=nil;redShown=0;redUntil=0;pairSeen=nil;tiersAt=nil;tiersSlot=nil;typesAt=nil end
+ if run:GetAttribute('RunId')~=runId then runId=run:GetAttribute('RunId');seenRunAt=nil;crystal=nil;pickedAt=nil;redShown=0;redUntil=0;pairSeen=nil;tiersAt=nil;typesAt=nil end
  -- The loading screen still covers the arena: the welcome waits for it (it used to type out and
  -- time out underneath, 2026-10-03).
  if pg:FindFirstChild('LoadingScreen') then return {hide=true} end
@@ -213,7 +213,8 @@ local function runStep()
  -- Combining (2026-10-18, user: players didn't know they could combine weapons). Any shop with two
  -- of one weapon at one tier (ShopService owned(): canCombine): the arrow points at one of them,
  -- then at the popup's Combine. Example: shop 1's second Baseball Bat -> tap a Bat -> Combine ->
- -- one Tier II Bat, and the Tier II line stays TIERS_SECONDS. Selling one instead skips that line.
+ -- one Tier II Bat, then the Tier II line (TIERS_SECONDS) and the keep-lower-tiers line (KEEP_SECONDS),
+-- with no arrow: pointing at the new Bat read as "tap it again". Selling one instead skips both.
  local pair
  for _,w in weapons do if w.canCombine then pair=w;break end end
  -- Phones (2026-10-18, user: "make sure the tutorial for combining tiers is optimizing for mobile"):
@@ -227,10 +228,14 @@ local function runStep()
   return {line='Combine',target=find(shopGui,'WeaponSlot'..pair.slot,true),ctx=combineKeep}
  end
  if pairSeen and not tiersAt then
-  for _,w in weapons do if w.id==pairSeen.id and w.tier>pairSeen.tier then tiersAt=os.clock();tiersSlot=w.slot end end
+  for _,w in weapons do if w.id==pairSeen.id and w.tier>pairSeen.tier then tiersAt=os.clock() end end
   if not tiersAt then pairSeen=nil end
  end
- if tiersAt and os.clock()-tiersAt<Config.TIERS_SECONDS then return {line='Tiers',target=find(shopGui,'WeaponSlot'..(tiersSlot or 0)),ctx=combineKeep} end
+ if tiersAt then
+  local age=os.clock()-tiersAt
+  if age<Config.TIERS_SECONDS then return {line='Tiers',ctx=combineKeep} end
+  if age<Config.TIERS_SECONDS+Config.KEEP_SECONDS then return {line='TiersKeep',ctx=combineKeep} end
+ end
  local offers=Config.Offers[wave]
  if offers then
   -- The arrow suggests the guided offer while it can be bought; any buy counts. Shop 1's is the
