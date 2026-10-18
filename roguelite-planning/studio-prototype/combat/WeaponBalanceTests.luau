@@ -165,7 +165,7 @@ local ok,err=xpcall(function()
  end
  check(Weapons.ById['05'].utility and Weapons.ById['11'].utility and Weapons.ById['20'].utility,'Spatula, Rocket Launcher and Cinder Block keep Utility Power')
  check(Weapons.classNames(Weapons.ById['13'])=='Juggler' and Weapons.classNames(Weapons.ById['36'])=='','class names')
- check(string.find(Weapons.describe(Weapons.ById['12']),'Juggler starter weapon. Thrown, Trick.',1,true)==1,'card text: starter class and types')
+ check(Weapons.describe(Weapons.ById['12'])=='Thrown, and bounces from enemy to enemy. Juggler starter weapon.','card text: what it does, then the starter class')
  -- Pizza Cutter (2026-10-09): Legendary melee about Katana's and Steak's damage per second, shorter reach
  -- than Katana and faster hits; its Tier IV move is data until LegendaryMoves runs the Rolling Slice.
  local function dps(id,tier) local d=Stats.weapon(Weapons.ById[id],neutral,nil,tier);return d.damage/d.cooldown end

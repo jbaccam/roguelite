@@ -69,9 +69,16 @@ return function(Weapons,Stats,Rules)
   check(w.utility==(U[w.id]==true),'utility flag '..w.id)
  end
 
- -- Card text: starter class and types; the Duck and Washer don't claim bounce / pierce.
- check(Weapons.describe(Weapons.ById['01'])=='Chef starter weapon. Blunt, Culinary.','Pan card text')
- check(Weapons.describe(pc)=='Chef starter weapon. Blade, Culinary.','Pizza Cutter card text')
+ -- Card text (2026-10-18): what it does, then its class, no types sentence; the Duck and Washer
+ -- don't claim bounce / pierce.
+ check(Weapons.describe(Weapons.ById['01'])==Weapons.Blurbs['01']..' Chef starter weapon.','Pan card text')
+ check(Weapons.describe(pc)==Weapons.Blurbs['42']..' Chef starter weapon.','Pizza Cutter card text')
+ for _,w in Weapons.List do
+  local text=Weapons.describe(w)
+  if not w.godly then check(Weapons.Blurbs[w.id]~=nil,'weapon '..w.id..' has a blurb') end
+  local types=Weapons.typesOf(w.id)
+  check(#types==0 or not string.find(text,table.concat(types,', ')..'.',1,true),w.id..' card text has no types sentence: '..text)
+ end
  local duck,washer=Weapons.describe(Weapons.ById['17']),Weapons.describe(Weapons.ById['29'])
  check(not duck:find('Bounces',1,true) and not washer:find('pierce',1,true),'Duck / Washer stop claiming bounce / pierce')
  check(string.find(Weapons.describe(Weapons.ById['36']),'Any class can start a run with it.',1,true)==1,'Godly card text')

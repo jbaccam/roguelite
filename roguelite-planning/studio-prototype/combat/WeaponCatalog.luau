@@ -249,18 +249,69 @@ function C.classNames(w,sep)
  if type(w)~='table' or w.godly then return '' end
  return w.class or w.home or ''
 end
--- 'Chef starter weapon. Blade, Culinary.' then its traits.
-function C.describe(w)
- local types=#(w.types or {})>0 and table.concat(w.types,', ')..'.' or nil
- if w.godly then return 'Any class can start a run with it.'..(types and ' '..types or '') end
- local out={C.classNames(w)..' starter weapon.'}
- if types then table.insert(out,types) end
+-- What each weapon does, one line (2026-10-18, user: the generated "Juggler starter weapon. Trick.
+-- Bounces between enemies." read as fragments; the type word as its own sentence meant nothing, and
+-- the TYPES chips under it already show the types). Burn, poison, bounce, pierce and blasts are in
+-- the line; a slow's numbers are added by describe (slowText).
+C.Blurbs={
+ ['00']='Quick, accurate shots at the nearest enemy. Simple and reliable.',
+ ['01']='A heavy bonk up close. Somebody\'s dinner just got ruined.',
+ ['02']='Fast whirling hits up close. Looks cool, mostly is.',
+ ['03']='Quick, clean slashes up close.',
+ ['04']='A blade on a chain that whips out to hit enemies further away.',
+ ['05']='Very fast slaps up close. Flip them like pancakes.',
+ ['06']='Solid swings up close. Batter up.',
+ ['07']='Rapid-fire bullets that shred anything in front of you.',
+ ['08']='Shoots clouds of stink that poison enemies. Nobody wants to stand near you.',
+ ['09']='Blasts a spread of pellets. Best up close.',
+ ['10']='Launches shirts that fly through every enemy in a line. Free merch!',
+ ['11']='Fires rockets that explode and hit everything around the target.',
+ ['12']='Thrown, and bounces from enemy to enemy.',
+ ['13']='Thrown knives that pierce through enemies in a line.',
+ ['14']='Shatters into flames that set enemies on fire.',
+ ['15']='Lobbed eggs that splat on enemies. Not free-range.',
+ ['16']='A slab of meat swung like a club. Tenderizes enemies.',
+ ['17']='Squirts short bursts that hit everything in a cone in front of you.',
+ ['18']='Throws a fan of three cards at once.',
+ ['19']='Lightning-fast punches up close.',
+ ['20']='Slow, heavy smashes up close. It\'s a brick. It hurts.',
+ ['21']='Snaps out and bounces between enemies.',
+ ['22']='Rolls through every enemy in its path.',
+ ['23']='Thrown end over end to bonk enemies at range.',
+ ['24']='Fires nails that pierce through enemies.',
+ ['25']='Swings a huge ball that smashes enemies up close.',
+ ['26']='Wide digging swings up close.',
+ ['27']='Rolls over enemies and leaves them slowed.',
+ ['28']='Sucks enemies in and holds them in place while you beat on them.',
+ ['29']='A steady stream that hits everything in its path.',
+ ['30']='Fires magic bolts at the nearest enemy.',
+ ['31']='A thrown hammer whose lightning chains to nearby enemies.',
+ ['32']='A legendary sword with wide golden slashes up close.',
+ ['33']='Unleashes magic blasts that explode on enemies.',
+ ['34']='Fires bursts of shots that slow what they hit.',
+ ['35']='A magic orb that bounces between enemies, with lightning chaining off each hit.',
+ ['42']='Fast rolling slices up close. Extra cheese.',
+}
+-- A weapon's line: its Blurbs entry, else built from its traits (a weapon added without one).
+function C.blurb(w)
+ if type(w)~='table' then return '' end
+ if C.Blurbs[w.id] then return C.Blurbs[w.id] end
+ local out={}
  if TRAITS[w.trait] then table.insert(out,TRAITS[w.trait]) end
  if w.burn>0 then table.insert(out,'Sets enemies on fire.') end
  if w.poison>0 then table.insert(out,'Poisons what it hits.') end
- if w.slow>0 then table.insert(out,C.slowText(w)) end
  if w.lightning then table.insert(out,'Lightning chains to nearby enemies.') end
  if w.blastRadius then table.insert(out,'Explodes on impact.') end
+ return table.concat(out,' ')
+end
+-- Card text: what it does, its slow's numbers, then its class. Example (Boomerang): 'Thrown, and
+-- bounces from enemy to enemy. Juggler starter weapon.'
+function C.describe(w)
+ if w.godly then return 'Any class can start a run with it.' end
+ local out={}
+ local line=C.blurb(w);if line~='' then table.insert(out,line) end
+ if w.slow>0 then table.insert(out,C.slowText(w)) end
+ table.insert(out,C.classNames(w)..' starter weapon.')
  return table.concat(out,' ')
 end
 for i,name in names do

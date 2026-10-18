@@ -48,14 +48,6 @@ local AVATAR_HALF = 210
 local TOP_H = 150 -- the name and emerald pill at the top centre
 local BOTTOM_H = 86 + 18 -- CLOSE / BACK
 
-local TRAITS = {
-	pellets = "Fires a spread of pellets.",
-	pierce = "Shots pierce through enemies.",
-	bounce = "Bounces between enemies.",
-	cards = "Throws a three-card volley.",
-	shots = "Fires a burst of shots.",
-}
-
 -- Player attributes this screen shows: the LobbyUI.profile fields it reads (connected, gems,
 -- classes, weapons, armor, wearing, pets, pet) and the loadout preference. ProfileService.publish
 -- sets about 24 attributes in a row; the others (ProfileDaily, ProfileBestWaves...) change nothing here.
@@ -199,25 +191,15 @@ local function describe(w)
 		return (GODLY_TEXT[w.id] or "") .. " One Godly per run; it's never sold in the run shop."
 	end
 	-- The starter class, types and attack have their own rows now (2026-10-09); this is what it does.
+	-- The one-line blurb (WeaponCatalog.blurb, 2026-10-18) replaces the trait fragments.
 	local out = {}
-	if TRAITS[w.trait] then
-		table.insert(out, TRAITS[w.trait])
-	end
-	if w.burn > 0 then
-		table.insert(out, "Sets enemies on fire.")
-	end
-	if w.poison > 0 then
-		table.insert(out, "Poisons what it hits.")
+	local line = Weapons.blurb and Weapons.blurb(w) or ""
+	if line ~= "" then
+		table.insert(out, line)
 	end
 	if w.slow > 0 then
 		-- With its numbers (WeaponCatalog.slowText, 2026-10-03): "Slows enemies 35% for 2 s."
 		table.insert(out, Weapons.slowText and Weapons.slowText(w) or "Slows enemies down.")
-	end
-	if w.lightning then
-		table.insert(out, "Lightning chains to nearby enemies.")
-	end
-	if w.blastRadius then
-		table.insert(out, "Explodes on impact.")
 	end
 	local move = Weapons.legendaryText and Weapons.legendaryText(w.id)
 	if move then

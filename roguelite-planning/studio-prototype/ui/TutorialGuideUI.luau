@@ -248,10 +248,12 @@ function G.new(player,assets,name,opts)
  local text=T.label(box,'Line','',0,0,10,10,36);text.TextXAlignment=Enum.TextXAlignment.Left;text.TextScaled=false
  local function measure(line,z,w) return TextService:GetTextSize(line,z,T.Font,Vector2.new(w,1e4)) end
  local label=string.upper(name or 'Egg Merchant')
- local tagW=math.clamp(math.ceil(measure(label,20,1000).X)+28,90,260)
+ -- 15% spare and no wrapping (2026-10-18: on a phone's small scale the exact fit wrapped and
+ -- the tag read EGGBE).
+ local tagW=math.clamp(math.ceil(measure(label,20,1000).X*1.15)+28,90,260)
  local tag=T.make('Frame',guide,{Name='NameTag',Size=UDim2.fromOffset(tagW,G.TAG_H),BackgroundColor3=C.lime,BorderSizePixel=0})
  T.make('UICorner',tag,{CornerRadius=UDim.new(0,4)})
- local tagText=T.label(tag,'Text',label,8,2,tagW-16,28,20,C.ink);tagText.TextStrokeTransparency=1;tagText.TextScaled=false
+ local tagText=T.label(tag,'Text',label,8,2,tagW-16,28,20,C.ink);tagText.TextStrokeTransparency=1;tagText.TextScaled=false;tagText.TextWrapped=false
  local portrait=T.make('ImageLabel',guide,{Name='Portrait',BackgroundTransparency=1,Image=assets.portrait or '',ScaleType=Enum.ScaleType.Fit})
  local buttonHolder=T.frame(guide,'Buttons',0,0,190,58)
  local shapeName,hasButton
