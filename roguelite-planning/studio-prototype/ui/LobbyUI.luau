@@ -713,23 +713,32 @@ function L.mount(player)
   return jump.AbsolutePosition.X-hud.AbsolutePosition.X,jump.AbsolutePosition.Y-hud.AbsolutePosition.Y
  end
  local function between(v,lo,hi) return lo<=hi and math.clamp(v,lo,hi) or (lo+hi)/2 end
+ -- Margins (2026-10-18, user: "on mobile why is there huge gaps on the gui ... they should be closer
+ -- to the edges of the screen so the player can see better"). The safe-area inset already keeps the
+ -- notch clear, so phones add only a few px of their own: left 6/6 (was 14/10), right 4 (12), bottom
+ -- 4 (8), 6 between right buttons (10), and the right column starts at the top instead of sitting
+ -- mid-screen. Example, 844x390: STORE moves from y 112 to y 6 and 8 px nearer the edge.
  local function layout()
   local v=hud.AbsoluteSize;if v.X<=0 then return end
-  local s=math.clamp(math.min(v.X/1280,v.Y/760),Input.TouchEnabled and .75 or .55,1.1)*T.setting('HudScale')
+  local touch=Input.TouchEnabled
+  local mx,my,mr,mb=touch and 6 or 14,touch and 6 or 10,touch and 4 or 12,touch and 4 or 8
+  rightList.Padding=UDim.new(0,touch and 6 or 10)
+  left.Position=UDim2.fromOffset(mx,my);bottom.Position=UDim2.new(.5,0,1,-mb)
+  local s=math.clamp(math.min(v.X/1280,v.Y/760),touch and .75 or .55,1.1)*T.setting('HudScale')
   leftScale.Scale=s;bottomScale.Scale=s
   goals.Visible=v.Y>=520
-  local leftRight,leftBottom=14+(goals.Visible and QuestsUI.TRACKER_W or 328)*s,10+(goals.Visible and 140+QuestsUI.TRACKER_H or 118)*s
-  local barLeft,barTop=v.X/2-bottom.Size.X.Offset*s/2,v.Y-8-150*s
+  local leftRight,leftBottom=mx+(goals.Visible and QuestsUI.TRACKER_W or 328)*s,my+(goals.Visible and 140+QuestsUI.TRACKER_H or 118)*s
+  local barLeft,barTop=v.X/2-bottom.Size.X.Offset*s/2,v.Y-mb-150*s
   -- Right column: its buttons' natural height, one column if it fits, else two.
   local items={}
   for _,c in right:GetChildren() do if c:IsA('GuiObject') and c.Visible then table.insert(items,c) end end
   table.sort(items,function(a,b) return a.LayoutOrder<b.LayoutOrder end)
   local pad=rightList.Padding.Offset
   local function height(from,to) local h=-pad;for i=from,to do h+=items[i].Size.Y.Offset+pad end;return math.max(h,0) end
-  local top,floor=8,v.Y-8
+  local top,floor=touch and 6 or 8,v.Y-mb
   local jx,jy=jumpButton()
   if jx and jx>v.X-240 then floor=math.min(floor,jy-8) end
-  if barLeft+bottom.Size.X.Offset*s>v.X-12-(96*2+pad)*s then floor=math.min(floor,barTop-8) end
+  if barLeft+bottom.Size.X.Offset*s>v.X-mr-(96*2+pad)*s then floor=math.min(floor,barTop-8) end
   local avail=math.max(floor-top,120)
   local cols,colH=1,height(1,#items)
   local rs=math.min(s,avail/math.max(colH,1))
@@ -746,9 +755,9 @@ function L.mount(player)
   -- (the next button needs 70+ px, so the slack never pulls an extra one into column one).
   right.Size=UDim2.fromOffset(cols*96+(cols-1)*pad,colH+16)
   rightScale.Scale=rs
-  right.Position=UDim2.new(1,-12,0,between(v.Y*.45,top+colH*rs/2,floor-colH*rs/2))
+  right.Position=UDim2.new(1,-mr,0,between(touch and 0 or v.Y*.45,top+colH*rs/2,floor-colH*rs/2))
   -- Queue banner: top centre between the profile chip and the right column, else under the chip.
-  local rightLeft=v.X-12-right.Size.X.Offset*rs
+  local rightLeft=v.X-mr-right.Size.X.Offset*rs
   local bw=banner.Size.X.Offset
   local bs=math.min(s,2*(math.min(v.X/2-leftRight,rightLeft-v.X/2)-12)/bw)
   local by=12

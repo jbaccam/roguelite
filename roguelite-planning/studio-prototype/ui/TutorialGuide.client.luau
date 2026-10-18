@@ -216,17 +216,21 @@ local function runStep()
  -- one Tier II Bat, and the Tier II line stays TIERS_SECONDS. Selling one instead skips that line.
  local pair
  for _,w in weapons do if w.canCombine then pair=w;break end end
+ -- Phones (2026-10-18, user: "make sure the tutorial for combining tiers is optimizing for mobile"):
+ -- the box also keeps clear of the Weapons row and the weapon popup, which fill most of a phone's
+ -- shop, and the arrow's tile is scrolled into view by the guide (TutorialGuideUI).
+ local combineKeep={keep=keepOf({find(shop,'Weapons'),find(shopGui,'Details'),shop and find(shop,'StartWave',true)})}
  if pair then
   pairSeen={id=pair.id,tier=pair.tier}
   local press=find(shopGui,'Combine',true)
-  if press then return {line='CombineTap',target=press,ctx=keep} end
-  return {line='Combine',target=find(shopGui,'WeaponSlot'..pair.slot,true),ctx=keep}
+  if press then return {line='CombineTap',target=press,ctx=combineKeep} end
+  return {line='Combine',target=find(shopGui,'WeaponSlot'..pair.slot,true),ctx=combineKeep}
  end
  if pairSeen and not tiersAt then
   for _,w in weapons do if w.id==pairSeen.id and w.tier>pairSeen.tier then tiersAt=os.clock();tiersSlot=w.slot end end
   if not tiersAt then pairSeen=nil end
  end
- if tiersAt and os.clock()-tiersAt<Config.TIERS_SECONDS then return {line='Tiers',target=find(shopGui,'WeaponSlot'..(tiersSlot or 0)),ctx=keep} end
+ if tiersAt and os.clock()-tiersAt<Config.TIERS_SECONDS then return {line='Tiers',target=find(shopGui,'WeaponSlot'..(tiersSlot or 0)),ctx=combineKeep} end
  local offers=Config.Offers[wave]
  if offers then
   -- The arrow suggests the guided offer while it can be bought; any buy counts. Shop 1's is the
@@ -234,7 +238,7 @@ local function runStep()
   -- line for TYPES_SECONDS). After a buy, GO; nothing bought and the offer gone or too dear, buy-then-GO.
   local classOffer='weapon_'..Config.ClassWeapon..'_1'
   for _,o in list do if o.sold and o.id==classOffer then typesAt=typesAt or os.clock() end end
-  if typesAt and os.clock()-typesAt<Config.TYPES_SECONDS then return {line='Types',target=slotOf(Config.ClassWeapon),ctx=keep} end
+  if typesAt and os.clock()-typesAt<Config.TYPES_SECONDS then return {line='Types',target=slotOf(Config.ClassWeapon),ctx=combineKeep} end
   for _,o in list do if o.sold then return {line='ShopGo',target=shop and find(shop,'StartWave',true),ctx=keep} end end
   for i,o in list do
    if o.id==offers[1] and (snap.shards or 0)>=(o.price or math.huge) then
