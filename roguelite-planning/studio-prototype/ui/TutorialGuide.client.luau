@@ -135,7 +135,9 @@ local bossList={}
 local function keepOf(list) local k={};for _,v in list do if v then table.insert(k,v) end end;return k end
 local function fightContext()
  local g=screen('RogueliteHUD');local hud=g and g:FindFirstChild('HUD',true)
- return {edges=true,avoid=bossList,keep=keepOf({hud and hud:FindFirstChild('Health'),hud and hud:FindFirstChild('BossHealth')})}
+ -- 2026-10-18: the timer and the weapon strip too (the box sat on the timer's WAVE badge on a phone).
+ local function shown(name) local o=hud and hud:FindFirstChild(name);return o and o.Visible and o or nil end
+ return {edges=true,avoid=bossList,keep=keepOf({shown('Health'),shown('BossHealth'),shown('Timer'),shown('Build')})}
 end
 -- A card screen: its offers (Offer1..4) and its GO.
 local function offersKeep(root)

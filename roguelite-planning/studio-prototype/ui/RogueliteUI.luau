@@ -202,6 +202,12 @@ function UI.mount(playerGui)
  -- Where the boss bar rests and where it slides in from; layout() picks bottom centre or, on
  -- phones, under the timer (clear of the thumbstick and jump button).
  local bossAt,bossFrom=UDim2.new(.5,0,1,-24),UDim2.new(.5,0,1,116)
+ -- Phones (2026-10-18, user: "holy fucking screen clutter why is the health bar right in the middle
+ -- of the screen on mobile"): the boss bar takes the timer's place at the top instead of hanging
+ -- under it over the player, and the timer hides while it shows (a boss wave's timer only says BOSS).
+ local bossOnTop=false
+ local function syncTimer() timer.Visible=not (bossOnTop and bossBar.Visible) end
+ bossBar:GetPropertyChangedSignal('Visible'):Connect(syncTimer)
  function controller:SetBossHealth(npc,value,maximum)
   local visible=npc~=nil and type(value)=='number' and type(maximum)=='number' and maximum>0 and value>0
   if not visible then bossBar.Visible=false;lastBossId=nil;gui:SetAttribute('BossHealthRatio',nil);gui:SetAttribute('DisplayedBossHealth',nil);return end
@@ -525,11 +531,11 @@ function UI.mount(playerGui)
    menu.Size=UDim2.fromOffset(width,80);menu.Position=UDim2.new(1,-10-9*ms,0,top)
    menuRect={w-10-18*ms-width*ms,top,w-10,top+80*ms}
   end
-  -- Boss bar (700x96 at the HUD scale). Short screens (phones): under the timer, between the
-  -- health block and the build strip. Taller screens: bottom centre, narrowed to clear the touch
+  -- Boss bar (700x96 at the HUD scale). Short screens (phones): at the top in the timer's place
+  -- (hidden while the bar shows, see bossOnTop), between the health block and the build strip. Taller screens: bottom centre, narrowed to clear the touch
   -- controls and the menu. When the preferred spot is under 240 px wide, the wider of the two.
   local function topSlot()
-   local y=14+112*scale+6
+   local y=10
    local half=math.min(350*scale,w/2-healthRight-10,buildLeft-10-w/2)
    if not vertical and menuRect[2]<y+96*scale then half=math.min(half,menuRect[1]-10-w/2) end
    return {half,UDim2.new(.5,0,0,y),Vector2.new(.5,0),UDim2.new(.5,0,0,y-140)}
@@ -551,6 +557,7 @@ function UI.mount(playerGui)
   bossBar.Size=UDim2.fromOffset(math.max(100,pick[1]*2/scale),BOSS_H)
   bossBar.AnchorPoint=pick[3];bossAt,bossFrom=pick[2],pick[4]
   bossBar.Position=bossAt
+  bossOnTop=pick==first and h<500 or pick==second and h>=500;syncTimer()
   header.Size=UDim2.fromOffset(math.min(500,w-28),46)
   note.TextSize=12
   title.TextSize=26
