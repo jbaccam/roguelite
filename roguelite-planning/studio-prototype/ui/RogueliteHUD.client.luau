@@ -200,6 +200,19 @@ task.spawn(function()
  end
  for _,a in {'EndlessBossWave','EndlessBossName','Phase','Wave'} do state:GetAttributeChangedSignal(a):Connect(check) end
  check()
+ -- Endless events (2026-10-18): the map's round 10 event booked for a wave (EndlessEventWave /
+ -- EndlessEventName). Wave 26's shop -> "An EVENT is coming next wave: CRAB RAVE"; its own title card
+ -- plays when it starts.
+ local function checkEvent()
+  local wave,eventWave,name,phase=state:GetAttribute('Wave'),state:GetAttribute('EndlessEventWave'),state:GetAttribute('EndlessEventName'),state:GetAttribute('Phase')
+  if type(eventWave)~='number' or eventWave~=wave or type(name)~='string' or phase~='Shop' then return end
+  local key=tostring(state:GetAttribute('RunId'))..'/event/'..eventWave
+  if shown[key] then return end
+  shown[key]=true
+  T.toast(view.Gui,'An EVENT is coming next wave: '..name,T.Color.gold)
+ end
+ for _,a in {'EndlessEventWave','EndlessEventName','Phase','Wave'} do state:GetAttributeChangedSignal(a):Connect(checkEvent) end
+ checkEvent()
 end)
 -- Frame rate for play-test analytics (RunAnalytics FrameRate / FrameDips): while this player is in a
 -- run and a wave is on, count rendered frames; when the wave ends, send the average FPS, how many

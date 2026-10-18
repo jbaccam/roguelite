@@ -161,6 +161,10 @@ S.Endless = {
 	bossHealth = 0.15,
 	bossDamage = 0.04,
 	bossSlots = 10,
+	-- Events (2026-10-18): see S.endlessEventDue.
+	eventChance = 0.25,
+	eventGap = 3,
+	eventHealth = 2,
 }
 -- The multipliers for `wave` (all 1 / 0 up to FROM).
 function S.endless(wave)
@@ -208,7 +212,7 @@ end
 -- A run's Endless boss history: the last boss wave (wave 20's map boss to begin with) and the last
 -- bossRecent bosses, newest last.
 function S.endlessState(mapBoss)
-	return { last = S.Endless.FROM, recent = if mapBoss then { mapBoss } else {} }
+	return { last = S.Endless.FROM, recent = if mapBoss then { mapBoss } else {}, lastEvent = nil }
 end
 -- Does `wave` bring a boss? rng (a per-run Random) is drawn only when the rules leave it open.
 function S.endlessBossDue(state, wave, rng)
@@ -217,8 +221,8 @@ function S.endlessBossDue(state, wave, rng)
 		return false
 	end
 	local since = wave - state.last
-	if since <= 1 then
-		return false -- never two boss waves in a row
+	if since <= 1 or (state.lastEvent and wave - state.lastEvent <= 1) then
+		return false -- never two boss waves in a row, nor a boss right after an event wave
 	elseif since > E.bossDrought then
 		return true -- the last bossDrought waves had none
 	end
@@ -244,6 +248,35 @@ function S.endlessBossRecord(state, wave, id)
 	while #state.recent > S.Endless.bossRecent do
 		table.remove(state.recent, 1)
 	end
+end
+-- Endless events (2026-10-18, user: "in endless mode yk how theres chances of bosses spawning can you
+-- make sure events still happen to like rave dj? make sure they correspond with the map"). A wave
+-- with no boss may bring back the map's own round 10 event (Round10Defs: Pine Valley's Pop Goes the
+-- Zombie, Beach Cove's Crab Rave, Desert Basin's The Tomb Opens, Frozen Pass's Blood Moon Hunt,
+-- Volcanic Crater's Eruption): eventChance (25%), never right after a boss or event wave, and at
+-- least eventGap (3) waves after the last event. Its leader, Wardens and tombs get health x
+-- eventHealth (2: a wave-10 leader is about a third of a map boss) x the wave's bossHealth, and its
+-- hits x bossDamage; its arrivals scale with the wave like any mob.
+-- Example: a boss on 24 -> no event on 25; an event on 26 -> none again before 30, and no boss on 27.
+-- Call it after endlessBossDue said no (a booked boss wave never also gets an event).
+function S.endlessEventDue(state, wave, rng)
+	local E = S.Endless
+	if wave <= E.FROM or wave - state.last <= 1 then
+		return false
+	end
+	if state.lastEvent and wave - state.lastEvent <= E.eventGap then
+		return false
+	end
+	return rng:NextNumber() < E.eventChance
+end
+function S.endlessEventRecord(state, wave)
+	state.lastEvent = wave
+end
+-- The event's health and damage multipliers at `wave` (RogueliteZombieChase passes them to
+-- Round10Service.start). Example: wave 30 -> health 2 x 2.5 = 5, damage 1.4.
+function S.endlessEventScale(wave)
+	local scale = S.endless(math.max(wave, S.Endless.FROM + 1))
+	return { health = S.Endless.eventHealth * scale.bossHealth, damage = scale.bossDamage }
 end
 
 -- Drops finished records (record.done), keeping the order of the rest.

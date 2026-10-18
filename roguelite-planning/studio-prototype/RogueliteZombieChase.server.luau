@@ -1040,7 +1040,7 @@ end)
 -- it lands with the Hammer's 18,000 x 1.9 = 34,200 HP, not the Dragon's own number.
 local Maps = require(combat:WaitForChild('MapConfig'))
 local HAMMER_HEALTH = 18000 -- BossService HEALTH: RunSetupRules bossBase is relative to it
-local endless = {state = nil, rng = nil, decided = nil, pending = nil}
+local endless = {state = nil, rng = nil, decided = nil, pending = nil, event = nil}
 local function runState() return game:GetService('ReplicatedStorage'):FindFirstChild('RogueliteRunState') end
 local function bossDefs()
     local module = combat:FindFirstChild('MapBossDefs')
@@ -1086,6 +1086,37 @@ end
 local function endlessClear(run)
     endless.pending = nil
     run:SetAttribute('EndlessBossWave', nil); run:SetAttribute('EndlessBossId', nil); run:SetAttribute('EndlessBossName', nil)
+end
+-- Endless events (Population.endlessEventDue, 2026-10-18): the map's own round 10 event on a
+-- non-boss wave. RogueliteRunState EndlessEventWave / EndlessEventName tell the HUD from the shop
+-- before it; the event starts once that wave's combat begins (after any cinematic or pause).
+local function round10Service()
+    local module = script.Parent:FindFirstChild('Round10Service')
+    local ok, service = pcall(function() return module and require(module) end)
+    return ok and service or nil
+end
+-- The run map's event title when this place can run it (Round10Service.ready), else nil.
+local function endlessEventTitle()
+    local R10, defsModule = round10Service(), combat:FindFirstChild('Round10Defs')
+    local map = combat:GetAttribute('RunMap')
+    if not (R10 and R10.ready and defsModule) or not R10.ready(map) then return nil end
+    local def = require(defsModule).forMap(map)
+    return def and def.title or nil
+end
+local function endlessEventClear(run)
+    endless.event = nil
+    run:SetAttribute('EndlessEventWave', nil); run:SetAttribute('EndlessEventName', nil)
+end
+local function endlessEventStart(ev)
+    local run = runState()
+    while true do
+        if endless.event ~= ev or not run or run:GetAttribute('Wave') ~= ev.wave or run:GetAttribute('Phase') ~= 'Combat' or combat:GetAttribute('ZombiesEnabled') ~= true then return end
+        if not adminPaused() and run:GetAttribute('Paused') ~= true and (combat:GetAttribute('CinematicUntil') or 0) <= workspace:GetServerTimeNow() then break end
+        task.wait(0.5)
+    end
+    local R10 = round10Service()
+    local ok, started = pcall(function() return R10 and R10.start(combat:GetAttribute('RunMap'), ev.wave, Population.endlessEventScale(ev.wave)) end)
+    if not ok then warn('Endless event failed to start: ' .. tostring(started)) end
 end
 -- Book `id` for `wave` (the HUD shows it from now); it lands `delay` s into that wave.
 local function endlessQueue(run, wave, id, delay)
@@ -1182,6 +1213,7 @@ local function endlessCheck()
     local wave, phase = run:GetAttribute('Wave'), run:GetAttribute('Phase')
     if type(wave) ~= 'number' then return end
     if endless.pending and endless.pending.wave ~= wave then endlessClear(run) end
+    if endless.event and endless.event.wave ~= wave then endlessEventClear(run) end
     if wave <= Population.Endless.FROM or combat:GetAttribute('TutorialRun') == true then
         endless.state, endless.decided = nil, nil -- the history starts over at wave 21
     elseif phase == 'Shop' and (endless.decided or 0) < wave then
@@ -1195,7 +1227,18 @@ local function endlessCheck()
             local id = ok and Population.endlessBossPick(list, endless.state.recent, endless.rng)
             if id then endlessQueue(run, wave, id, Population.Endless.bossDelay) end -- none in the place: no boss
         end
+        -- No boss booked for this wave: maybe the map's event (a place that can't run it: none).
+        if not (endless.pending and endless.pending.wave == wave) and Population.endlessEventDue and Population.endlessEventDue(endless.state, wave, endless.rng) then
+            local okTitle, title = pcall(endlessEventTitle)
+            if okTitle and title then
+                endless.event = {wave = wave}
+                Population.endlessEventRecord(endless.state, wave)
+                run:SetAttribute('EndlessEventName', title); run:SetAttribute('EndlessEventWave', wave)
+            end
+        end
     end
+    local ev = endless.event
+    if ev and ev.wave == wave and phase == 'Combat' and not ev.started then ev.started = true; task.spawn(endlessEventStart, ev) end
     local p = endless.pending
     if p and p.wave == wave then
         if phase == 'Combat' and not p.armed then p.armed = true; task.delay(p.delay, endlessArrive, p)

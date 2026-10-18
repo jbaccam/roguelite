@@ -186,6 +186,9 @@ local function spawnLeader(E,cf,land)
  local music=E.def.music and Defs.Music and Defs.Music[E.def.music]
  if music and music.bpm then npc:SetAttribute('BeatAnchor',E.introStart+music.accentAtIntro);npc:SetAttribute('BeatPeriod',60/music.bpm) end
  local h=npc:FindFirstChildOfClass('Humanoid')
+ -- Endless (S.start opts, 2026-10-18): the leader grows like an Endless boss (health and hits).
+ if h and (E.hpMult or 1)~=1 then h.MaxHealth=math.ceil(h.MaxHealth*E.hpMult);h.Health=h.MaxHealth;npc:SetAttribute('BossHitStart',nil) end
+ if (E.dmgMult or 1)~=1 then npc:SetAttribute('BossDamageScale',(npc:GetAttribute('BossDamageScale') or 1)*E.dmgMult) end
  if h then h.Died:Connect(function() if E.gen==generation then E.leaderAlive=false;status(E) end end) end
  npc.Destroying:Connect(function() if E.gen==generation then E.leaderAlive=false end end)
  -- Event moves at each attack's impact (MapBossService X hook): the DJ's Beat Command, the howl.
@@ -570,7 +573,7 @@ EVENTS.TombOpens={
   local arenaR=E.arenaRadius or 60
   local radius=math.min(math.clamp(arenaR*spec.ring,spec.ringClamp[1],spec.ringClamp[2]),arenaR-9)
   local hpScale,damageScale=Rules.bossScale(combat:GetAttribute('RunDifficulty'),math.max(1,#list),combat:GetAttribute('RunMap'))
-  E.tombs={};E.damageScale=damageScale
+  E.tombs={};E.damageScale=damageScale*(E.dmgMult or 1)
   local placed={}
   -- Three spots spread round the arena centre, the first on the far side from the players. Each spot
   -- also wants open floor behind the coffin and where its lid falls; a crowded arena relaxes minGap.
@@ -592,7 +595,7 @@ EVENTS.TombOpens={
    if spot then
     table.insert(placed,spot)
     local cf=CFrame.lookAt(spot,Vector3.new(center.X,spot.Y,center.Z))
-    local model,pillar=buildTomb(E,i,cf,math.ceil(spec.health*hpScale))
+    local model,pillar=buildTomb(E,i,cf,math.ceil(spec.health*hpScale*(E.hpMult or 1)))
     if model then
      local T={model=model,letter=LETTERS[i],alive=true,cf=cf,exit=cf*CFrame.new(0,0,-4.2),index=i,nextPulse=0,bursts=0,noClimb=pillar}
      table.insert(E.tombs,T)
@@ -959,7 +962,9 @@ function S.abort(reason)
  if reason then print('Round10Service: '..E.def.id..' ended: '..reason) end
 end
 -- Start the map's event for wave `wave` (BossEncounter). True when it started; false keeps the midboss.
-function S.start(map,wave)
+-- opts (Endless, RogueliteZombieChase 2026-10-18): {health=, damage=} multipliers for the leader,
+-- the Wardens and the tombs, and every event hazard's hit. Arrivals already scale with the wave.
+function S.start(map,wave,opts)
  if current then S.abort('replaced') end
  local ok,why=S.ready(map);if not ok then warn('Round10Service: '..tostring(map)..' event not ready, midboss instead: '..tostring(why));return false end
  local def=Defs.forMap(map);local run=runState();if not run then return false end
@@ -969,8 +974,9 @@ function S.start(map,wave)
  local t=now()
  local E={def=def,map=map,wave=wave,gen=generation,phase='Intro',introStart=t,introUntil=t+def.intro,adds={},pending=0,serial=0,nextPulse=math.huge,center=center,arenaRadius=radius}
  E.onLeader=EVENTS[def.id] and EVENTS[def.id].leader
+ E.hpMult=type(opts)=='table' and tonumber(opts.health) or 1;E.dmgMult=type(opts)=='table' and tonumber(opts.damage) or 1
  local _,damageScale=Rules.bossScale(combat:GetAttribute('RunDifficulty'),math.max(1,#list),combat:GetAttribute('RunMap'))
- E.damageScale=damageScale
+ E.damageScale=damageScale*E.dmgMult
  current=E
  combat:SetAttribute('EventSpawnHold',true)
  combat:SetAttribute('CinematicUntil',E.introUntil)

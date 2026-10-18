@@ -260,6 +260,39 @@ return function(S)
 	for _ = 1, 20 do
 		check(S.endlessBossPick(all, {}, a1) == S.endlessBossPick(all, {}, a2), "the same seed picks the same bosses")
 	end
+	-- Endless events (2026-10-18): the map's round 10 event on a wave with no boss, 25%, never next to
+	-- a boss or event wave, at least 3 waves after the last event.
+	local ev = S.endlessState("KingCrab")
+	local yes, no = { NextNumber = function() return 0.24 end }, { NextNumber = function() return 0.25 end }
+	check(not S.endlessEventDue(ev, 20, noDraw) and not S.endlessEventDue(ev, 21, noDraw), "no event at 20 or 21 (right after wave 20's boss)")
+	check(S.endlessEventDue(ev, 22, yes) and not S.endlessEventDue(ev, 22, no), "wave 22: a 25% roll")
+	S.endlessEventRecord(ev, 22)
+	check(not S.endlessBossDue(ev, 23, noDraw), "no boss right after an event wave")
+	for w = 23, 25 do
+		check(not S.endlessEventDue(ev, w, noDraw), "no event within 3 waves of the last: " .. w)
+	end
+	check(S.endlessEventDue(ev, 26, yes), "an event may come again at 26")
+	S.endlessBossRecord(ev, 26, "Pharaoh")
+	check(not S.endlessEventDue(ev, 27, noDraw), "no event right after a boss wave")
+	local sc = S.endlessEventScale(30)
+	check(math.abs(sc.health - 5) < 1e-9 and math.abs(sc.damage - 1.4) < 1e-9, "wave 30 event: health x5, damage x1.4")
+	local rng4, sim2, prevSpecial, events = Random.new(3), S.endlessState(nil), 20, 0
+	for w = 21, 20020 do
+		local special = false
+		if S.endlessBossDue(sim2, w, rng4) then
+			S.endlessBossRecord(sim2, w, "X")
+			special = true
+		elseif S.endlessEventDue(sim2, w, rng4) then
+			S.endlessEventRecord(sim2, w)
+			special, events = true, events + 1
+		end
+		if special then
+			check(w - prevSpecial >= 2, "two special waves in a row at " .. w)
+			prevSpecial = w
+		end
+	end
+	check(events > 0, "events happen in a long Endless run")
+	result.endlessEventsPer10Waves = events / 2000
 
 	result.passed = true
 	result.checks = checks
