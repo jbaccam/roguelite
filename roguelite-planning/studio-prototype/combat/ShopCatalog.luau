@@ -74,7 +74,7 @@ item('straws','Two Straws',3,90,'rbxassetid://103855013199609',{ProjectileCount=
 -- on very fast weapons where a second would push back a full swing (CharacterStats.extraSwingTimes). Offered
 -- only to a build carrying a melee weapon (C.usable). Placeholder icon: the Attack Speed level-up
 -- art (LevelUpCatalog.IconIds.AttackSpeed) until it has its own.
-item('wiper','Windshield Wiper',3,80,'rbxassetid://118215254503921',{ExtraSwings=1},'Your melee weapons swing again after every swing, back the other way, for 60% damage. 2 copies: 2 extra swings (1 on very fast weapons).',2)
+item('wiper','Windshield Wiper',3,80,'rbxassetid://80763181419401',{ExtraSwings=1},'Your melee weapons swing again after every swing, back the other way, for 60% damage. 2 copies: 2 extra swings (1 on very fast weapons).',2)
 item('bouncy','Bouncy Ball',3,80,'rbxassetid://72472678515992',{Bounce=1},'Throws, cards, yo-yos and magic bolts bounce to 1 more enemy (60-65% damage). Not guns, melee, explosives, fire or gas throws, bowling balls or sprays.',1)
 item('pencil','Sharp Pencil',2,42,'rbxassetid://108647088361466',{Pierce=1},'Bullets, throws, cards and magic bolts go through 1 more enemy (70% damage). Not melee, explosives, gas clouds, bowling balls or sprays.',1)
 item('antlers','Tinfoil Antlers',3,68,'rbxassetid://90516946916091',{ChainBonus=1},'Your lightning chains jump to 1 more enemy. Needs lightning: a lightning weapon, Battery Pack or Mage.',2)
@@ -111,9 +111,9 @@ item('gummies','Vitamin Gummies',3,66,'rbxassetid://96244325205305',{Regeneratio
 -- XP items (2026-10-12, user: "implement the xp level up and xp items"): the XPGain stat, so more run
 -- XP per crystal (RunXP.gain); shards stay the same. Example: Flashcards + Trophy = +30%, so 20
 -- crystals give 26 XP. Icons: placeholder (the XP quest icon) until the user's icons are uploaded.
-item('flashcards','Homework Flashcards',1,18,'rbxassetid://101475186887359',{XPGain=10},'You earn 10% more run XP from crystals.')
-item('trophy','Participation Trophy',2,36,'rbxassetid://101475186887359',{XPGain=20},'You earn 20% more run XP from crystals.')
-item('goldstars','Gold Star Stickers',3,60,'rbxassetid://101475186887359',{XPGain=35,Damage=-5},'You earn 35% more run XP from crystals, but all your weapons deal 5% less damage.')
+item('flashcards','Homework Flashcards',1,18,'rbxassetid://130875737372724',{XPGain=10},'You earn 10% more run XP from crystals.')
+item('trophy','Participation Trophy',2,36,'rbxassetid://74329552618729',{XPGain=20},'You earn 20% more run XP from crystals.')
+item('goldstars','Gold Star Stickers',3,60,'rbxassetid://130823017125279',{XPGain=35,Damage=-5},'You earn 35% more run XP from crystals, but all your weapons deal 5% less damage.')
 -- Turret items (2026-10-04, Brotato's structures; HANDYMAN_TURRET.md): every copy owned is one more
 -- turret, placed near you at each wave start, at most 10 (cap). Any class can buy them. structure:
 -- the Handyman (Engineer) gets 20% off them (ShopService). Since 2026-10-09 they are preferred by

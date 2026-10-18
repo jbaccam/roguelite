@@ -65,7 +65,7 @@ C.IconIds={
  MoveSpeed='rbxassetid://117216104224040', PickupRadius='rbxassetid://133081616364253',
  Luck='rbxassetid://136231704380505', AttackRange='rbxassetid://72729393219444',
  -- Placeholder: the XP quest icon (QuestConfig) until the user's generated XP Gain icon is uploaded.
- XPGain='rbxassetid://101475186887359',
+ XPGain='rbxassetid://101655037996344', -- the XP arrow (2026-10-18, was the shared XP placeholder)
 }
 function C.icon(id)
  local asset=script:GetAttribute('Icon_'..id)

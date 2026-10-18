@@ -296,7 +296,7 @@ return function(Weapons,Stats,E,Catalog,Upgrades,XP)
  check(Stats.resolve('Brawler',0,nil,{XPGain=500}).XPGain==200 and Stats.valid('XPGain',15) and not Stats.valid('XPGain',250),'XPGain clamps at 200')
  local xc=Upgrades.ById.XPGain
  check(xc and xc.name=='XP Gain' and xc.values[1]==8 and xc.values[2]==12 and xc.values[3]==18 and xc.values[4]==25,'XP Gain card: 8 / 12 / 18 / 25')
- check(Upgrades.icon~=nil and Upgrades.IconIds.XPGain=='rbxassetid://101475186887359','XP Gain card: placeholder XP icon')
+ check(Upgrades.icon~=nil and Upgrades.IconIds.XPGain=='rbxassetid://101655037996344','XP Gain card: the XP arrow icon')
  check(#Upgrades.pool(with({XPGain=200}))==#Upgrades.pool(neutral)-1,'a capped XP Gain is not offered')
  for _,row in {{'flashcards','Homework Flashcards',1,18,10},{'trophy','Participation Trophy',2,36,20},{'goldstars','Gold Star Stickers',3,60,35}} do
   local e=item(row[1])
