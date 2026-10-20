@@ -43,7 +43,7 @@ function M.mount(player)
   again.Interactable=ready and reviewed
   if back then back.Interactable=ready and reviewed end
   again.Caption.Text=waiting and 'CANCEL' or not ready and 'SAVING REWARDS...' or not reviewed and 'YOUR REWARDS' or 'PLAY AGAIN'
-  if rewardCaption then rewardCaption.Text=status=='Saved' and 'SAVED TO YOUR ACCOUNT' or status=='Studio' and 'STUDIO ONLY · NOT SAVED' or status=='NoRewards' and 'TEST RUN · NO REWARDS' or status=='Retrying' and 'SAVE RETRYING...' or 'SAVING TO YOUR ACCOUNT...' end
+  if rewardCaption then rewardCaption.Text=status=='Saved' and 'SAVED TO YOUR ACCOUNT' or status=='Studio' and 'STUDIO ONLY · NOT SAVED' or status=='NoRewards' and (combat:GetAttribute('AdminHideTestTag')==true and '' or 'TEST RUN · NO REWARDS') or status=='Retrying' and 'SAVE RETRYING...' or 'SAVING TO YOUR ACCOUNT...' end
   if note and waiting then note.Text=waiting;note.TextColor3=C.lime elseif note then note.TextColor3=C.muted end
  end
  player:GetAttributeChangedSignal('PlayAgainStatus'):Connect(paintAgain)

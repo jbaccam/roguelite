@@ -5,7 +5,7 @@ Usage (from the repo root):
 
 Inlines the real catalogs (WeaponCatalog, SpecialMotion, CharacterStats, EconomyConfig,
 HandymanTurret, ShopCatalog, LevelUpCatalog, RunXP since 2026-10-12) and UtilityWeapons' pure Area Size rule, then runs
-ShopPreferenceTests, ShopBanishTests (2026-10-10), DuckBurstTests.area and WasherBurstTests.area. Only Roblox module wiring is
+ShopPreferenceTests, ShopBanishTests (2026-10-10), ShopAdminTests (2026-10-20), DuckBurstTests.area and WasherBurstTests.area. Only Roblox module wiring is
 replaced: `require(script.Parent.X)` and `require(game.ReplicatedStorage.RogueliteCombat.X)` read
 the module loaded above, WeaponMotion is an empty table (CharacterStats only requires it) and
 `game` is a stub (UtilityWeapons' W.new, which needs services, is never called).
@@ -42,6 +42,7 @@ for name, filename in [
     ("UtilityWeapons", "UtilityWeapons.luau"),
     ("ShopPreferenceTests", "ShopPreferenceTests.luau"),
     ("ShopBanishTests", "ShopBanishTests.luau"),
+    ("ShopAdminTests", "ShopAdminTests.luau"),
     ("DuckBurstTests", "DuckBurstTests.luau"),
     ("WasherBurstTests", "WasherBurstTests.luau"),
 ]:
@@ -49,6 +50,7 @@ for name, filename in [
 source += """local M=MODULES
 print('ShopPreferenceTests: '..M.ShopPreferenceTests(M.WeaponCatalog,M.CharacterStats,M.EconomyConfig,M.ShopCatalog,M.LevelUpCatalog,M.RunXP)..' checks passed')
 print('ShopBanishTests: '..M.ShopBanishTests(M.ShopCatalog)..' checks passed')
+print('ShopAdminTests: '..M.ShopAdminTests(M.ShopCatalog,M.WeaponCatalog)..' checks passed')
 print('DuckBurstTests.area: '..M.DuckBurstTests.area(M.UtilityWeapons)..' checks passed')
 print('WasherBurstTests.area: '..M.WasherBurstTests.area(M.UtilityWeapons)..' checks passed')
 """

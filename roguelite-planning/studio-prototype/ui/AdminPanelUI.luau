@@ -1,5 +1,5 @@
--- ADMIN panel window (ADMIN_PANEL.md): one green-theme window with Travel, Mobs, Waves, Player and
--- Give tabs. Presentation and requests only: AdminService checks the developer and every argument.
+-- ADMIN panel window (ADMIN_PANEL.md): one green-theme window with Travel, Mobs, Waves, Player, Give
+-- and Shop tabs. Presentation and requests only: AdminService checks the developer and every argument.
 -- The Player tab reuses the old STATS (CharacterStatsUI) and GEAR (WeaponInventoryUI) views.
 -- Lag (2026-10-12, user: "make admin panel less laggy and more usable like minecraft creative"): a
 -- request no longer rebuilds the whole tab. Buttons repaint from the attributes they show, and the
@@ -23,7 +23,7 @@ local C=T.Color
 local M={}
 local W,H=920,600 -- window content size; the Body inside is (W-36) x (H-58)
 local CW=W-60 -- canvas width inside the scroll frame; 850+ puts the stat cards in two columns
-local TABS={'Travel','Mobs','Waves','Player','Give'}
+local TABS={'Travel','Mobs','Waves','Player','Give','Shop'}
 local GIVE_H=H-58-56 -- the Give tab fills the content area; its grid scrolls inside it
 local function left(l) l.TextXAlignment=Enum.TextXAlignment.Left;return l end
 function M.new(player)
@@ -155,6 +155,9 @@ function M.new(player)
   heading(c,'ModeTitle','Mode',0)
   button(c,'Sandbox','Sandbox (no waves)',0,36,280,function() send('Sandbox') end,sandbox)
   button(c,'Waves','Waves',290,36,200,function() send('Waves') end,not sandbox)
+  -- TEST RUN tag (2026-10-20): hidden for filming; the run still pays nothing (AdminService HideTestTag).
+  local hidden=combat:GetAttribute('AdminHideTestTag')==true
+  button(c,'HideTestTag',hidden and 'TEST RUN tag: hidden' or 'TEST RUN tag: shown',540,36,CW-540,function() send('HideTestTag',not hidden) end,hidden)
   note(c,'ModeNote',sandbox and 'Sandbox: no wave timer and no shop. Enemies only come from Mobs.' or ('Wave '..tostring(run:GetAttribute('Wave'))..' · '..(fighting and 'fighting' or 'shop')),84)
   heading(c,'JumpTitle','Jump to wave (1-20)',120)
   numberBox(c,'JumpWave',function() return self.jump end,0,156,90,function(v) self.jump=math.clamp(math.floor(v),1,20) end,'1-20')
@@ -335,7 +338,7 @@ function M.new(player)
   -- Chips: one row of small buttons; the picked one is lime. They repaint, never rebuild.
   local function chips(name,x,y,w,list,get,set)
    local bs={}
-   local function paint() for i,o in list do T.setPrimary(bs[i],get()==o.value);if o.enabled then bs[i].Interactable=o.enabled() end end end
+   local function paint() for i,o in list do T.setPrimary(bs[i],get()==o.value);if o.enabled then bs[i].Interactable=o.enabled() end;if o.text then bs[i].Caption.Text=o.text() end end end
    for i,o in list do
     bs[i]=T.button(v,name..i,o.label,x+(i-1)*(w+6),y,w,36,function() set(o.value);paint() end,true);bs[i].Caption.TextSize=15
    end
@@ -359,16 +362,22 @@ function M.new(player)
   targets()
   local joins={Players.PlayerAdded:Connect(targets),Players.PlayerRemoving:Connect(function() task.defer(targets) end)}
   v.Destroying:Connect(function() for _,conn in joins do conn:Disconnect() end end)
-  -- Row 2: This run / Saved, weapon slot (This run only; Next = the next free one) and tier (+1:
-  -- Saved only, one more copy).
-  local paintCopies,paintTier,filter
-  chips('Mode',0,44,108,{{label='This run',value='temp'},{label='Saved',value='perm'}},function() return g.mode end,function(m)
-   g.mode=m;if m=='temp' and g.tier==0 then g.tier=1 end
+  -- Row 2: This run / Saved / Shop, weapon slot (This run only; Next = the next free one) and tier
+  -- (+1: Saved only, one more copy). Shop (2026-10-20): the tile is queued into the picked player's
+  -- shop at the tier, on the picked roll: Next = the next time their offers roll (the shop opening
+  -- or a reroll), 2nd = the roll after that. Example: Shop, Next, III, Fart Gun, then 2nd, IV, Fart
+  -- Gun -> a Tier III Fart Gun in the next shop and a Tier IV one after its first reroll.
+  local paintCopies,paintTier,filter,slotLabel
+  local ORDINAL={'1st','2nd','3rd','4th','5th','6th','7th'}
+  chips('Mode',0,44,72,{{label='This run',value='temp'},{label='Saved',value='perm'},{label='Shop',value='shop'}},function() return g.mode end,function(m)
+   g.mode=m;if m~='perm' and g.tier==0 then g.tier=1 end
+   slotLabel.Text=m=='shop' and 'Roll' or 'Slot'
    paintCopies();paintTier();filter()
   end)
-  left(T.label(v,'SlotLabel','Slot',236,44,40,36,16))
-  local slotList={{label='Next',value=0,enabled=function() return g.mode=='temp' end}}
-  for n=1,6 do table.insert(slotList,{label=tostring(n),value=n,enabled=function() return g.mode=='temp' end}) end
+  slotLabel=left(T.label(v,'SlotLabel',g.mode=='shop' and 'Roll' or 'Slot',236,44,40,36,16))
+  local function slotText(n) return function() return n==0 and 'Next' or g.mode=='shop' and ORDINAL[n+1] or tostring(n) end end
+  local slotList={{label='Next',value=0,enabled=function() return g.mode~='perm' end,text=slotText(0)}}
+  for n=1,6 do table.insert(slotList,{label=tostring(n),value=n,enabled=function() return g.mode~='perm' end,text=slotText(n)}) end
   paintCopies=chips('Slot',278,44,34,slotList,function() return g.slot end,function(n) g.slot=n end)
   left(T.label(v,'TierLabel','Tier',576,44,36,36,16))
   local tierList={{label='+1',value=0,enabled=function() return g.mode=='perm' end}}
@@ -393,7 +402,8 @@ function M.new(player)
    for i,id in ids do
     if i>1 then task.wait(.2) end -- AdminService's rate limit
     if id==player.UserId then id=nil end
-    if g.mode=='temp' and e.set then send('Armor',e.id,math.max(1,g.tier),nil,id)
+    if g.mode=='shop' then send('ShopQueue',e.key,math.max(1,g.tier),g.slot+1,id)
+    elseif g.mode=='temp' and e.set then send('Armor',e.id,math.max(1,g.tier),nil,id)
     elseif g.mode=='temp' then send('TempGive',e.key,e.kind=='Weapon' and g.slot or 0,math.max(1,g.tier),id)
     else send('Give',e.key,g.tier>0 and g.tier or nil,nil,id) end
    end
@@ -416,7 +426,7 @@ function M.new(player)
    local q=Commands.norm(g.search)
    for _,t in tiles do
     local e=t.e
-    t.tile.Visible=(g.mode=='temp' and (e.temp or e.set) or g.mode=='perm' and e.perm) and (g.kind=='All' or e.kind==g.kind) and (q=='' or string.find(e.norm,q,1,true)~=nil)
+    t.tile.Visible=(g.mode=='temp' and (e.temp or e.set) or g.mode=='perm' and e.perm or g.mode=='shop' and e.temp and not e.godly) and (g.kind=='All' or e.kind==g.kind) and (q=='' or string.find(e.norm,q,1,true)~=nil)
    end
    grid.CanvasPosition=Vector2.zero
   end
@@ -436,6 +446,72 @@ function M.new(player)
   giveView=giveView or buildGive()
   giveView.Parent=c
   return GIVE_H
+ end
+ -- Shop (2026-10-20, user: "change the % chance some things spawn in the shop for content purposes"):
+ -- what is queued for your shop (queue items from the Give tab's Shop mode), and the odds every
+ -- player's shop rolls with until set back (ShopService adminOdds). Example: tiers 0 / 0 / 50 / 50 ->
+ -- every offer is Tier III or IV; Boost Fart Gun 30 -> about 3 in 10 offers are Fart Guns.
+ self.odds={50,30,15,5};self.weaponPct=35;self.boostPct=25
+ local function decode(text) local ok,v=pcall(function() return game:GetService('HttpService'):JSONDecode(text) end);return ok and v or nil end
+ function tabs.Shop(c)
+  local names={};for _,e in catalogEntries() do names[e.key]=e.name end
+  heading(c,'QueueTitle','Queued for your shop',0)
+  local queue=left(T.text(c,'QueueText','',0,32,CW,44,16,C.white));queue.TextWrapped=true
+  live(queue,player,'AdminShopQueue',function(v)
+   local steps=type(v)=='string' and decode(v) or nil
+   if not steps or #steps==0 then return 'Nothing queued. Give tab, Shop mode: pick the roll (Next = the next shop or reroll) and the tier, then tap an item.' end
+   local parts={}
+   for i,step in steps do table.insert(parts,(i==1 and 'Next' or ('Roll '..i))..': '..(#step>0 and table.concat(step,', ') or 'normal')) end
+   return table.concat(parts,' · ')
+  end)
+  button(c,'QueueClear','Clear queue',0,80,200,function() send('ShopQueueClear') end)
+  button(c,'QueueGive','Queue items (Give tab)',210,80,280,function() self.give.mode='shop';giveView=giveView and giveView:Destroy() or nil;self.tab='Give';list=nil;draw() end,true)
+  local now=type(combat:GetAttribute('AdminShopOdds'))=='string' and decode(combat:GetAttribute('AdminShopOdds')) or {}
+  local y=140
+  heading(c,'OddsTitle','Odds (every player\'s shop)',y);y+=32
+  note(c,'OddsNote','Until you set them back. A run they change pays no rewards, like any admin use.',y);y+=34
+  left(T.label(c,'TierLabel','Tiers %',0,y,90,40,18))
+  local roman={'I','II','III','IV'}
+  for t=1,4 do
+   local x=90+(t-1)*100
+   left(T.label(c,'TierName'..t,roman[t],x,y,30,40,16))
+   numberBox(c,'Tier'..t,function() return self.odds[t] end,x+30,y,64,function(v) self.odds[t]=math.clamp(math.floor(v),0,100) end,'%')
+  end
+  button(c,'TiersApply','Set',500,y,110,function() send('ShopOdds','Tiers',table.concat(self.odds,',')) end,true)
+  button(c,'TiersNormal','Normal',620,y,120,function() send('ShopOdds','Tiers') end,now.tiers==nil)
+  y+=46
+  note(c,'TiersNow',now.tiers and ('Now: I '..now.tiers[1]..'% · II '..now.tiers[2]..'% · III '..now.tiers[3]..'% · IV '..now.tiers[4]..'%') or 'Now: normal (by wave and Luck)',y,now.tiers and C.lime or C.muted);y+=34
+  left(T.label(c,'WeaponLabel','Weapons %',0,y,120,40,18))
+  numberBox(c,'WeaponPct',function() return self.weaponPct end,120,y,80,function(v) self.weaponPct=math.clamp(math.floor(v),0,100) end,'%')
+  button(c,'WeaponApply','Set',210,y,110,function() send('ShopOdds','Weapon',self.weaponPct) end,true)
+  button(c,'WeaponNormal','Normal',330,y,120,function() send('ShopOdds','Weapon') end,now.weapon==nil)
+  T.text(c,'WeaponNow',now.weapon and ('Now: '..now.weapon..'% of offers are weapons, the rest items') or 'Now: normal (by wave and slot)',462,y+9,CW-462,22,15,now.weapon and C.lime or C.muted)
+  y+=56
+  heading(c,'BoostTitle','Boost one thing',y);y+=32
+  note(c,'BoostNote','Each offer is this first, by its own chance (a weapon at the tier the offer rolled). 0 or its x button takes it off.',y);y+=30
+  T.panel(c,'BoostWell',0,y,300,40,'inset')
+  local name=T.make('TextBox',c,{Name='BoostName',Position=UDim2.fromOffset(6,y+5),Size=UDim2.fromOffset(288,30),ZIndex=2,BackgroundColor3=INPUT,BorderSizePixel=0,TextColor3=C.white,Font=T.Font,TextSize=17,Text=self.boostName or '',PlaceholderText='fart gun, knee of justice...',PlaceholderColor3=C.dim,ClearTextOnFocus=false,TextXAlignment=Enum.TextXAlignment.Left})
+  T.make('UICorner',name,{CornerRadius=UDim.new(0,6)})
+  name:GetPropertyChangedSignal('Text'):Connect(function() self.boostName=name.Text end)
+  numberBox(c,'BoostPct',function() return self.boostPct end,310,y,80,function(v) self.boostPct=math.clamp(math.floor(v),0,100) end,'%')
+  button(c,'BoostAdd','Boost',400,y,140,function()
+   local e,why=Commands.find(catalogEntries(),name.Text,'temp')
+   if e and e.godly then e,why=nil,'Godly weapons are never sold in the shop' end
+   if not e then T.toast(screen,why or 'Name an item',C.negative);return end
+   send('ShopBoost',e.key,self.boostPct)
+  end,true)
+  y+=52
+  local bx=0
+  for _,b in now.boosts or {} do
+   local text=(names[b.key] or b.key)..' '..b.pct..'%  x'
+   local w=math.min(CW,40+#text*9)
+   if bx+w>CW then bx=0;y+=46 end
+   button(c,'Boost_'..b.key,text,bx,y,w,function() send('ShopBoost',b.key,0) end,true).Caption.TextSize=15
+   bx+=w+8
+  end
+  if #(now.boosts or {})>0 then y+=52 end
+  button(c,'OddsOff','All odds back to normal',0,y,300,function() send('ShopOdds','Off') end)
+  return y+60
  end
  draw=function()
   if not win then return end
@@ -502,7 +578,7 @@ function M.new(player)
  -- only after its own requests: rebuilding the stat editor on every shard pickup would fight typing.
  local function changed() if win and self.tab~='Player' and self.tab~='Give' then draw() end end
  for _,a in {'Phase','Wave','AdminPaused','EventId','EventPhase'} do run:GetAttributeChangedSignal(a):Connect(changed) end
- for _,a in {'AdminFreeze','TestZombieCountOverride','RunMap','RunDifficulty'} do combat:GetAttributeChangedSignal(a):Connect(changed) end
+ for _,a in {'AdminFreeze','TestZombieCountOverride','RunMap','RunDifficulty','AdminShopOdds','AdminHideTestTag'} do combat:GetAttributeChangedSignal(a):Connect(changed) end
  player:GetAttributeChangedSignal('StudioArea'):Connect(changed)
  combat:GetAttributeChangedSignal('TutorialRun'):Connect(changed)
  player:GetAttributeChangedSignal('ProfileTutorial'):Connect(changed)

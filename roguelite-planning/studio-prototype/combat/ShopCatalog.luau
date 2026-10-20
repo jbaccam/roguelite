@@ -316,4 +316,38 @@ function C.offerPool(list,tier,wantWeapon,candidate,owned,excluded,banned)
  end
  return pool
 end
+-- Admin shop controls (2026-10-20, user: "change the % chance some things spawn in the shop for
+-- content purposes ... make 1 fart gun tier 3 appear in the next shop, so the other items are still
+-- random"). Pure; ShopService keeps the settings and does the rolling.
+-- The tier one offer rolls from admin odds {I,II,III,IV} in percent (any total above 0); n is one
+-- draw in [0,1). nil when every tier is 0. Example: {0,0,50,50}, n = 0.7 -> Tier IV.
+function C.drawTier(odds,n)
+ local total=0;for t=1,4 do total+=math.max(0,odds[t] or 0) end
+ if total<=0 then return nil end
+ local x,last=n*total,1
+ for t=1,4 do local w=math.max(0,odds[t] or 0);if w>0 then last=t;if x<w then return t end;x-=w end end
+ return last
+end
+-- The shop entry a Give-tab key names: 'w:<weapon id>' at `tier` (1-4), 'i:<item id>' as it is
+-- (an item has one tier). nil for Godly weapons (never sold in runs) and unknown keys. Example:
+-- ('w:09', 3) -> weapon_09_3, a Tier III Fart Gun.
+function C.entryForKey(key,tier)
+ if type(key)~='string' then return nil end
+ local w=string.match(key,'^w:(.+)$')
+ if w then return C.ById['weapon_'..w..'_'..math.clamp(math.floor(tonumber(tier) or 1),1,4)] end
+ local i=string.match(key,'^i:(.+)$');local e=i and C.ById[i]
+ return e and e.kind~='Weapon' and e or nil
+end
+-- Queued offers into the slots a roll just refilled, each in a random one of them (draw() in
+-- [0,1)), so they don't always land first. step: entry ids; free: the refilled slot numbers.
+-- Returns slot -> entry id; extras beyond the free slots are dropped. Example: step {a}, free
+-- {2,3,4}, draw .5 -> {[3]=a}.
+function C.placeQueued(step,free,draw)
+ local open=table.clone(free);local out={}
+ for _,id in step do
+  if #open==0 then break end
+  out[table.remove(open,math.clamp(math.floor(draw()*#open)+1,1,#open))]=id
+ end
+ return out
+end
 return C

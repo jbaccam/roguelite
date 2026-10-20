@@ -60,6 +60,7 @@ It works in Studio and in the published game, but only for listed developer acco
   - **Jump to wave N** (1–20): starts wave N now.
   - **End this wave:** goes to the shop phase as if the timer ran out.
   - **Pause / Resume:** freezes the wave timer and enemy spawning.
+- **TEST RUN tag: shown / hidden (2026-10-20):** hides the HUD's TEST RUN tag and the results screen's "TEST RUN · NO REWARDS" line for filming. Looks only: the run still pays nothing, and the switch itself doesn't mark a run. A developer leaving shows it again.
 
 ### Player
 - **Class** and **stat edits:** today's STATS panel content, unchanged.
@@ -82,9 +83,24 @@ The user asked for this to set up trailer arenas with friends: "give my friends 
   - **+1** adds one more copy to something you already own.
   - A set gives all four pieces. A class unlocks along with its starting weapon.
   - Studio profiles live in memory. On a live server this writes the player's real save.
+- **Shop (2026-10-20)** queues the tile into the picked player's shop (`ShopQueue`). The user asked for it for content: "make 1 fart gun tier 3 appear in the next shop, so the other items are still random".
+  - **Roll** picks when it shows. **Next** is the next time their offers roll: the shop opening, a reroll, or the refill after buying everything. **2nd** is the roll after that, and so on up to 7th.
+  - **Tier** picks the weapon tier. Items have one tier, so it doesn't change them.
+  - Each queued offer takes a random slot among the ones that roll. The other slots roll as normal, and locked offers stay where they are.
+  - Example: Next + III + Fart Gun, then 2nd + IV + Fart Gun. The next shop shows a Tier III Fart Gun, and its first reroll a Tier IV one.
+  - Godly weapons aren't shown in this mode: the run shop never sells them.
 - **Search box and kind filter:** All, Weapons, Items, Turrets, Armor, Pets, Classes.
 - **Command box:** runs the chat commands below. It is there for phones.
 - **Player tab change:** its old "Give item" grid moved here.
+
+### Shop (2026-10-20)
+- **Queued for your shop:** what the Give tab's Shop mode has queued for you, roll by roll, with **Clear queue**.
+- **Odds**, for every player's shop until set back (`ShopOdds`, `ShopBoost`; `ShopService.adminOdds`):
+  - **Tiers %:** I / II / III / IV in place of the normal wave and Luck odds. Example: 0 / 0 / 50 / 50 makes every offer Tier III or IV. The shop's REROLL odds note shows them.
+  - **Weapons %:** the share of offers that are weapons; the rest are items.
+  - **Boost one thing:** type a weapon or item and a percent. Each offer is that thing first, by that chance (a weapon at the tier the offer rolled). Boosted items skip the "works with your build" check, but keep their copy cap. Tap a boost's x to take it off.
+  - **All odds back to normal** clears tiers, weapons and boosts. A developer leaving the server clears them and every queue.
+- A shop roll these change marks the run a test run, the same as any admin request, even when they were set before the run started.
 
 ### Chat commands (2026-10-12)
 These are typed in the Roblox chat. They exist only on a developer's own client, so nobody else sees them in autocomplete. `AdminService` parses the text again and checks it with the same rules as the panel. The reply comes back as a toast and as a chat line only the developer sees.

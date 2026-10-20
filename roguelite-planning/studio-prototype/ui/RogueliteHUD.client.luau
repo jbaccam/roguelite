@@ -142,7 +142,8 @@ RunService.Heartbeat:Connect(function(dt)
  if type(eventLabel)=='string' and phase=='Combat' then bossLabel=eventLabel end
  view:SetTimer(not practice and remaining or nil,not practice and validWave and math.floor(wave) or nil,phase,practice and "SANDBOX" or bossLabel)
  -- A run where the admin panel was used pays no rewards (ADMIN_PANEL.md).
- view:SetTestRun(state~=nil and state:GetAttribute("AdminTestRun")==true)
+ -- AdminHideTestTag (admin Waves tab, 2026-10-20): hidden for filming; the run still pays nothing.
+ view:SetTestRun(state~=nil and state:GetAttribute("AdminTestRun")==true and not (combatFolder and combatFolder:GetAttribute("AdminHideTestTag")==true))
  if activeHumanoid then view:SetStats(activeHumanoid.MaxHealth,activeHumanoid.WalkSpeed) end
  local combat=ReplicatedStorage:FindFirstChild('RogueliteCombat')
  local states=combat and combat:FindFirstChild('PlayerStates')

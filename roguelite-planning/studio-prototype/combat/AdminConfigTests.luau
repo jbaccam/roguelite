@@ -64,6 +64,7 @@ return function(Admin, Enemies, Items)
 	-- 2026-10-04: GiftTest (Simulate gift to me) makes 21.
 	-- 2026-10-12: the list was missing the three Round 10 actions; Command, Give, PauseAll and TempGive make 29.
 	-- 2026-10-13: Armor (/armor) makes 30; Ghost (/ghost) 31.
+	-- 2026-10-20: HideTestTag, ShopBoost, ShopOdds, ShopQueue and ShopQueueClear make 36.
 	local expectedActions = {
 		"Armor",
 		"ClearMobs",
@@ -77,6 +78,7 @@ return function(Admin, Enemies, Items)
 		"Give",
 		"GiveItem",
 		"God",
+		"HideTestTag",
 		"JumpWave",
 		"KeepAlive",
 		"Level",
@@ -87,6 +89,10 @@ return function(Admin, Enemies, Items)
 		"Round10Start",
 		"Sandbox",
 		"Shards",
+		"ShopBoost",
+		"ShopOdds",
+		"ShopQueue",
+		"ShopQueueClear",
 		"Spawn",
 		"TempGive",
 		"Travel",
@@ -97,7 +103,7 @@ return function(Admin, Enemies, Items)
 		"Waves",
 		"Weapons",
 	}
-	check(#Admin.Actions == 31, "31 admin actions, found " .. #Admin.Actions)
+	check(#Admin.Actions == 36, "36 admin actions, found " .. #Admin.Actions)
 	check(
 		table.concat(Admin.Actions, ",") == table.concat(expectedActions, ","),
 		"action names: " .. table.concat(Admin.Actions, ",")

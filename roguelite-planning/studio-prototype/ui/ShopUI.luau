@@ -730,7 +730,7 @@ function M.new(player,h,refresh)
   -- The compact header: 'Shop (Wave 6)' and the crystals, the odds line under them (10 px), the
   -- buttons on the right at full height. One row: 844x390's is the buttons' 40 px.
   function K.cButtons() return math.ceil(K.px(K.hR(100))),math.ceil(K.px(K.hR(62))) end
-  function K.oddsText(label) return M.oddsLine(label,E.tierOdds(data.wave,Stats.read(state).Luck)) end
+  function K.oddsText(label) return M.oddsLine(label,data.tierOdds or E.tierOdds(data.wave,Stats.read(state).Luck)) end -- tierOdds: admin odds (ShopService)
   function K.oddsHeightFor(label,nw,size,s,old)
    return math.max(old,math.ceil(TS:GetTextSize(K.oddsText(label):gsub('<[^>]->',''),size,T.Body,Vector2.new(math.max(20,(nw-8)*math.min(1,s)*.9),1000)).Y/math.min(1,s))+6)
   end

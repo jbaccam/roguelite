@@ -91,11 +91,41 @@ local rules={
  PauseAll=function(a,b) return (a==nil or type(a)=='boolean') and b==nil end,
  Armor=function(a,b) return type(a)=='string' and #a<=40 and string.match(a,'^%w*$')~=nil and (b==nil or int(b,1,4)) end,
  Command=function(a,b) return type(a)=='string' and #a>0 and #a<=200 and b==nil end,
+ -- Shop controls (2026-10-20, ShopService adminOdds / adminQueues). ShopQueue: a Give-tab key ('w:<weapon
+ -- id>' or 'i:<item id>'), tier 1-4 and which shop roll (1 = the next one, up to 7) for the target's
+ -- shop. ShopOdds: 'Tiers' with 'I,II,III,IV' percents (nil = normal), 'Weapon' with a percent (nil =
+ -- normal), or 'Off'. ShopBoost: a key and the percent each offer is that thing (0 removes it).
+ ShopQueue=function(a,b,c)
+  if type(a)~='string' or not int(b,1,4) or not int(c,1,7) then return false end
+  local w=string.match(a,'^w:(.+)$');if w then local d=Weapons.ById[w];return d~=nil and not d.godly end
+  local i=string.match(a,'^i:(.+)$');local e=i and Items.ById[i]
+  return e~=nil and e.kind~='Weapon'
+ end,
+ ShopQueueClear=none,
+ ShopOdds=function(a,b)
+  if a=='Off' then return b==nil end
+  if a=='Weapon' then return b==nil or int(b,0,100) end
+  if a~='Tiers' then return false end
+  if b==nil then return true end
+  if type(b)~='string' or #b>20 then return false end
+  local n,total=0,0
+  for v in string.gmatch(b,'[^,]+') do local x=tonumber(v);if not int(x,0,100) then return false end;n+=1;total+=x end
+  return n==4 and total>0
+ end,
+ ShopBoost=function(a,b)
+  if type(a)~='string' or not int(b,0,100) then return false end
+  local w=string.match(a,'^w:(.+)$');if w then local d=Weapons.ById[w];return d~=nil and not d.godly end
+  local i=string.match(a,'^i:(.+)$');local e=i and Items.ById[i]
+  return e~=nil and e.kind~='Weapon'
+ end,
+ -- The HUD's TEST RUN tag and the results screen's TEST RUN line, hidden for filming (2026-10-20).
+ -- Looks only: the run still pays nothing.
+ HideTestTag=flag,
 }
 -- Actions with a third argument; every other action must leave it nil.
-local THREE={TempGive=true}
+local THREE={TempGive=true,ShopQueue=true}
 -- Actions that act on a player: the request's target (a UserId; nil = the developer) picks who.
-A.Targeted=table.freeze({God=true,Weapons=true,GiveItem=true,Shards=true,Level=true,Turret=true,TempGive=true,Give=true,Armor=true,Ghost=true})
+A.Targeted=table.freeze({God=true,Weapons=true,GiveItem=true,Shards=true,Level=true,Turret=true,TempGive=true,Give=true,Armor=true,Ghost=true,ShopQueue=true,ShopQueueClear=true})
 A.Actions={};for name in rules do table.insert(A.Actions,name) end;table.sort(A.Actions)
 -- true only for a known action with valid arguments. target: nil, or a UserId for a Targeted action.
 function A.check(action,a,b,c,target)

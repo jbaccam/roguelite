@@ -139,6 +139,8 @@ function S.publish(p,message)
  local s=S.states[p];if not s or not Characters.states[p] then return end
  s.slotRows=slotRows(p) or s.slotRows -- every slot change publishes, so this copy stays current
  local data={pendingLevels=s.pendingLevels,upgradeOffers=s.upgradeOffers,upgradeToken=s.upgradeToken,upgradeRerolls=s.upgradeRerolls,upgradeRerollPrice=E.reroll(S.wave,s.upgradeRerolls),freeRerolls=s.freeRerolls,freeUpgradeRerolls=s.freeUpgradeRerolls,baggedShards=s.baggedShards,level=s.level,shards=s.shards,wave=S.wave,phase=S.phase,rerolls=s.rerolls,rerollPrice=E.reroll(S.wave,s.rerolls),offers=s.offers,items=s.items,weapons=owned(p),ready=s.ready,revision=s.revision,message=message or s.message or '',modifier=E.modifier(Characters.states[p].stats),debug=RunService:IsStudio() and E.DEBUG_CURRENCY_ENABLED}
+ -- Admin tier odds (adminOdds): the REROLL odds note shows what the shop now rolls.
+ if S.adminOdds.tiers then local t,o=0,{};for i=1,4 do t+=S.adminOdds.tiers[i] end;for i=1,4 do o[i]=t>0 and S.adminOdds.tiers[i]/t or 0 end;data.tierOdds=o end
  data.upgrades=s.upgradeBonuses -- plan L: the pause screen's level-up picks (id -> picks)
  data.combinable=Turret and Turret.combinable(s.items,E.ITEM_CAPACITY,function(id) return Catalog.ById[id] and Catalog.ById[id].cap end) or {} -- turret ids that can combine now -> next id (2026-10-12)
  s.message=data.message;S.publishProgress(p)
@@ -209,6 +211,39 @@ S.offerableWeapons=offerable -- ShopTests
 -- Frying Pan + Boomerang build is never offered Two Straws; buying a Glock makes it possible again.
 local function usable(entry,carried,stats,turrets) return Catalog.usable(entry,carried,stats,turrets) end
 S.usableItem=usable -- ShopTests
+-- Admin shop controls (2026-10-20, user: "change the % chance some things spawn in the shop for
+-- content purposes ... make 1 fart gun tier 3 appear in the next shop, so the other items are still
+-- random ... make 1 fart gun tier 4 appear in the next shop after that so i can reroll and see
+-- another fart gun"). AdminService sets them (actions ShopOdds, ShopBoost, ShopQueue).
+-- adminOdds, for every player's shop until turned off: tiers = {I,II,III,IV} percent in place of
+-- E.rollTier; weapon = percent of offers that are weapons in place of E.weaponSlot; boosts = Give-tab
+-- key -> percent each offer is that thing first (a weapon at the rolled tier).
+-- adminQueues: UserId -> shop rolls, each a list of entry ids. Roll 1 is the next time their offers
+-- roll (the shop opening, a reroll or a sold-out refill), roll 2 the one after. Each queued offer
+-- takes a random refilled slot; the rest roll as normal. Example: Fart Gun III on roll 1 and Fart
+-- Gun IV on roll 2 -> the next shop shows a Tier III Fart Gun, and its first reroll a Tier IV one.
+-- Any roll they change marks the run a test run (no rewards), as an admin request does.
+S.adminOdds={boosts={},boostList={}}
+S.adminQueues={}
+local function adminMark() run:SetAttribute('AdminTestRun',true) end
+local function publishOdds()
+ local o=S.adminOdds;local boosts={}
+ for key,pct in o.boosts do table.insert(boosts,{key=key,pct=pct}) end
+ table.sort(boosts,function(a,b) return a.key<b.key end)
+ o.boostList=boosts
+ local on=o.tiers~=nil or o.weapon~=nil or #boosts>0
+ combat:SetAttribute('AdminShopOdds',on and Http:JSONEncode({tiers=o.tiers,weapon=o.weapon,boosts=boosts}) or nil)
+end
+local function offerName(e) return e.name..(e.kind=='Weapon' and ' '..E.TIER_NAMES[e.tier] or '') end
+local function publishQueue(p)
+ local q=S.adminQueues[p.UserId];local steps={}
+ for i,step in q or {} do
+  local names={}
+  for _,id in step do local e=Catalog.ById[id];table.insert(names,e and offerName(e) or id) end
+  steps[i]=names
+ end
+ p:SetAttribute('AdminShopQueue',q and #q>0 and Http:JSONEncode(steps) or nil)
+end
 local function roll(p,slot,excluded)
  local s=S.states[p];local cs=Characters.states[p]
  -- The tutorial's guided offer (S.tutorial.offers), tagged forced=<wave>. Once this wave's is
@@ -222,8 +257,11 @@ local function roll(p,slot,excluded)
   excluded[forcedEntry.id]=true
   return {id=forcedEntry.id,token=token(),price=offerPrice(p,forcedEntry),locked=false,sold=false,forced=S.wave}
  end
- local wantWeapon=E.weaponSlot(S.wave,slot,rng)
- local tier=E.rollTier(S.wave,cs.stats.Luck,rng)
+ local odds=S.adminOdds
+ local wantWeapon
+ if odds.weapon then wantWeapon=rng:NextNumber()<odds.weapon/100;adminMark() else wantWeapon=E.weaponSlot(S.wave,slot,rng) end
+ local tier=odds.tiers and Catalog.drawTier(odds.tiers,rng:NextNumber())
+ if tier then adminMark() else tier=E.rollTier(S.wave,cs.stats.Luck,rng) end
  local owned=offerable(p)
  local carried={};for i=1,6 do local id=slots(p)['Slot'..i]:GetAttribute('WeaponId');if id and id~='' then table.insert(carried,id) end end
  -- Turret items stop at 10 owned (HandymanTurret.offerable, 2026-10-04).
@@ -240,6 +278,19 @@ local function roll(p,slot,excluded)
  -- The rolled tier (else the next lower one that has any) of the wanted kind, then items, then any
  -- owned weapon of any tier, then any weapon rather than a dead offer (ShopCatalog.offerPool, pure
  -- and tested; it leaves banished entries out of every step).
+ -- Admin boosts first: each its own chance, a weapon at the rolled tier. Only its copy cap, what is
+ -- on show and Banish hold (a content setup may want an item the build can't use).
+ for _,b in odds.boostList do
+  if rng:NextNumber()<b.pct/100 then
+   local e=Catalog.entryForKey(b.key,tier)
+   local count=0
+   if e and e.kind~='Weapon' then for _,it in s.items do if it.id==e.id then count=it.count end end end
+   if e and not excluded[e.id] and not Catalog.isBanned(s.shopBanned,e) and (e.kind=='Weapon' or count<e.cap) then
+    excluded[e.id]=true;adminMark()
+    return {id=e.id,token=token(),price=offerPrice(p,e),locked=false,sold=false}
+   end
+  end
+ end
  local pool=Catalog.offerPool(Catalog.List,tier,wantWeapon,candidate,owned,excluded,s.shopBanned)
  -- Item preference (2026-10-09, ShopCatalog.preferredItems): 15% of item rolls pick among the items
  -- that suit the equipped copies (attack family and weapon types; turret items owned count like a
@@ -255,6 +306,18 @@ local function roll(p,slot,excluded)
  entry=entry or choose(pool,p,wantWeapon and #pool>0 and pool[1].kind=='Weapon',carried)
  excluded[entry.id]=true
  return {id=entry.id,token=token(),price=offerPrice(p,entry),locked=false,sold=false}
+end
+-- The player's next queued shop roll (adminQueues) into the slots just refilled.
+local function applyQueue(p,refilled)
+ local q=S.adminQueues[p.UserId];local s=S.states[p]
+ if not q or #q==0 or not s or #refilled==0 then return end
+ local step=table.remove(q,1)
+ if #q==0 then S.adminQueues[p.UserId]=nil end
+ for slot,id in Catalog.placeQueued(step,refilled,function() return rng:NextNumber() end) do
+  local e=Catalog.ById[id]
+  if e then s.offers[slot]={id=id,token=token(),price=offerPrice(p,e),locked=false,sold=false};adminMark() end
+ end
+ publishQueue(p)
 end
 function S.bonuses(p)
  local s=S.states[p];local cs=Characters.states[p];if not s or not cs then return end
@@ -458,9 +521,10 @@ function S.banishOffer(p,index,tok)
  return true
 end
 local function rerollOffers(p)
- local s=S.states[p];local excluded={}
+ local s=S.states[p];local excluded,refilled={},{}
  for _,o in s.offers do excluded[o.id]=true end
- for i,o in s.offers do if not o.locked or o.sold then s.offers[i]=roll(p,i,excluded) end end
+ for i,o in s.offers do if not o.locked or o.sold then s.offers[i]=roll(p,i,excluded);table.insert(refilled,i) end end
+ applyQueue(p,refilled)
 end
 local function rerollUpgrades(p)
  local s=S.states[p];local cs=Characters.states[p]
@@ -590,9 +654,10 @@ function S.finishWave()
  for p,s in S.states do
   if living(p) then s.shards=math.min(E.MAX_SHARDS,s.shards+E.WAVE_REWARD_BASE+(S.wave-1)*E.WAVE_REWARD_SCALE) end
   s.rerolls=0;s.ready=false;s.revision+=1
-  local excluded={}
+  local excluded,refilled={},{}
   for _,o in s.offers do excluded[o.id]=true end
-  for i,o in s.offers do if not o.locked or o.sold then s.offers[i]=roll(p,i,excluded) end end
+  for i,o in s.offers do if not o.locked or o.sold then s.offers[i]=roll(p,i,excluded);table.insert(refilled,i) end end
+  applyQueue(p,refilled)
   S.prepareUpgrades(p)
   S.publish(p,'Next shop · reroll cost reset')
  end
@@ -704,6 +769,34 @@ function S.adminWeapon(p,id,tier,slot)
  s.ready=false;s.revision+=1;S.bonuses(p);reprice(p);S.publish(p,text);S.publishReady()
  return true,text
 end
+-- Admin shop controls (adminOdds / adminQueues above). Example: adminQueue(p,'w:09',3,1) -> a Tier
+-- III Fart Gun in the next roll of p's shop.
+function S.adminQueue(p,key,tier,step)
+ local e=Catalog.entryForKey(key,tier)
+ if not e then return false,'Not sold in the shop (Godly weapons never are)' end
+ local q=S.adminQueues[p.UserId] or {}
+ for i=#q+1,step do q[i]={} end
+ if #q[step]>=E.OFFER_COUNT then return false,'That roll already has '..E.OFFER_COUNT..' offers' end
+ table.insert(q[step],e.id);S.adminQueues[p.UserId]=q;publishQueue(p)
+ local which=step==1 and 'the next shop roll' or ('shop roll '..step)
+ return true,offerName(e)..' queued for '..which..' (a shop opening or a reroll)'
+end
+function S.adminQueueClear(p) S.adminQueues[p.UserId]=nil;publishQueue(p);return true,'Shop queue cleared' end
+-- mode 'Tiers' (value {I,II,III,IV} percent, nil = normal), 'Weapon' (percent, nil = normal) or
+-- 'Off' (everything back to normal, boosts too).
+function S.adminSetOdds(mode,value)
+ local o=S.adminOdds
+ if mode=='Tiers' then o.tiers=value elseif mode=='Weapon' then o.weapon=value else o.tiers=nil;o.weapon=nil;table.clear(o.boosts) end
+ publishOdds();for p in S.states do S.publish(p) end
+ return true
+end
+function S.adminBoost(key,pct) S.adminOdds.boosts[key]=pct>0 and pct or nil;publishOdds();return true end
+-- Everything above back to normal (a developer leaving hands the run back, AdminService).
+function S.adminShopReset()
+ S.adminSetOdds('Off')
+ for p in S.states do if S.adminQueues[p.UserId] then S.adminQueues[p.UserId]=nil;publishQueue(p) end end
+ table.clear(S.adminQueues)
+end
 function S.request(p,action,revision,arg,extra)
  local s=S.states[p];local cs=Characters.states[p]
  if not s or not cs or not living(p) or type(action)~='string' then return false end
@@ -792,7 +885,9 @@ function S.request(p,action,revision,arg,extra)
    if soldOut then
     local excluded={}
     for _,offerNow in s.offers do excluded[offerNow.id]=true end
-    for i=1,E.OFFER_COUNT do s.offers[i]=roll(p,i,excluded) end
+    local refilled={}
+    for i=1,E.OFFER_COUNT do s.offers[i]=roll(p,i,excluded);refilled[i]=i end
+    applyQueue(p,refilled)
    end
   end
  elseif action=='Reroll' then

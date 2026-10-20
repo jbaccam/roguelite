@@ -281,6 +281,28 @@ function actions.Give(p,key,tier)
  else ok,text=P.adminGive(p,e.id,tier) end
  return ok==true,p.Name..': '..e.name..' '..tostring(text)
 end
+-- Shop controls (2026-10-20, user: "change the % chance some things spawn in the shop for content
+-- purposes ... make 1 fart gun tier 3 appear in the next shop"): ShopService adminOdds (everyone's
+-- shop) and adminQueues (the target's next shop rolls). Example: ShopQueue('w:09',3,1) then
+-- ShopQueue('w:09',4,2) -> the next shop has a Tier III Fart Gun and its first reroll a Tier IV one.
+function actions.ShopQueue(p,key,tier,step) local ok,text=Shop.adminQueue(p,key,tier,step);return ok,p.Name..': '..tostring(text) end
+function actions.ShopQueueClear(p) local ok,text=Shop.adminQueueClear(p);return ok,p.Name..': '..text end
+function actions.ShopOdds(p,mode,value)
+ if mode=='Off' then Shop.adminSetOdds('Off');return true,'Shop odds back to normal' end
+ if mode=='Weapon' then Shop.adminSetOdds('Weapon',value);return true,value and ('Shop offers: '..value..'% weapons') or 'Weapon chance back to normal' end
+ if value==nil then Shop.adminSetOdds('Tiers',nil);return true,'Tier odds back to normal' end
+ local odds={};for v in string.gmatch(value,'[^,]+') do table.insert(odds,tonumber(v)) end
+ Shop.adminSetOdds('Tiers',odds)
+ return true,'Shop tiers: I '..odds[1]..'% · II '..odds[2]..'% · III '..odds[3]..'% · IV '..odds[4]..'%'
+end
+function actions.ShopBoost(p,key,pct)
+ Shop.adminBoost(key,pct)
+ local e=entryByKey(key);local name=e and e.name or key
+ return true,pct>0 and (name..': '..pct..'% of shop offers') or (name..' boost off')
+end
+-- HideTestTag (2026-10-20, user: "turn off test wave when i use admin commands"): for filming. The
+-- run still pays nothing; only the tag and the results line hide (RogueliteHUD, RunResultsUI).
+function actions.HideTestTag(p,on) combat:SetAttribute('AdminHideTestTag',on or nil);return true,on and 'TEST RUN tag hidden (still no rewards)' or 'TEST RUN tag shown' end
 -- PauseAll (/pause, 2026-10-12): the wave clock and spawns (Pause) and every enemy (Freeze) together.
 -- nil toggles: paused when either is on. Between waves only the freeze applies.
 function actions.PauseAll(p,on)
@@ -392,7 +414,7 @@ remote.OnServerInvoke=function(p,action,a,b,c,target)
  local who=p
  if target~=nil then who=Players:GetPlayerByUserId(target);if not who then return {ok=false,message='That player left'} end end
  -- Mark first: an action that does part of its work and then errors must still void rewards.
- Admin.markTestRun()
+ if action~='HideTestTag' then Admin.markTestRun() end -- the tag switch is looks only
  local ran,ok,message=pcall(actions[action],who,a,b,c)
  if not ran then warn('AdminService:',action,ok);return {ok=false,message='Server error'} end
  return {ok=ok==true,message=message or ''}
@@ -404,6 +426,7 @@ local function handBack(why,after)
   Shop.adminPause(false) -- false when it wasn't paused; nothing to do then
   local sp=spawner()
   if sp then sp:Invoke('Freeze',false);keepAlive(0,'') end -- no spawner: neither can be on
+  Shop.adminShopReset();combat:SetAttribute('AdminHideTestTag',nil)
   after()
  end)
  if not ok then warn('AdminService: hand back ('..why..') failed:',err) end
