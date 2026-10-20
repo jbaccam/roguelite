@@ -4,9 +4,11 @@
 -- The existing boss population cap still leaves melee access when clearing falls behind.
 local T={Duration=30,MaxAlive=100,BossInterval=3,BossAmount=6}
 -- {seconds between arrivals, solo group size, fast every N, heavy every N (0 disables)}
+-- 2026-10-20 (user: early waves had dead time between groups): waves 1-7 now every 4 s, not 5-6 s.
+-- Example, wave 1 solo: 8 groups of 6 = 48 zombies in 30 s (was 5 groups = 30).
 T.Profiles={
- {6,6,0,0},{6,7,5,0},{6,8,4,0},{5,8,4,0},{5,9,4,0},
- {5,10,4,0},{5,11,4,0},{4,11,4,12},{4,12,4,12},{4,12,4,12},
+ {4,6,0,0},{4,7,5,0},{4,8,4,0},{4,9,4,0},{4,9,4,0},
+ {4,10,4,0},{4,10,4,0},{4,11,4,12},{4,12,4,12},{4,12,4,12},
  {4,13,4,11},{4,13,4,10},{4,14,4,10},{4,14,4,9},{4,15,4,9},
  {4,15,4,9},{4,16,4,8},{4,16,4,8},{4,17,4,8},{4,18,4,8},
 }

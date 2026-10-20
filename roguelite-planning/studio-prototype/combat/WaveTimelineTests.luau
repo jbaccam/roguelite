@@ -8,11 +8,11 @@ return function(T,Catalog,Maps)
   for _=1,math.floor((boss and 40 or T.Duration)/step) do local e=T.step(s,step,false,boss,players);if e then total+=#e.roles;pulses+=1 end end
   return total,pulses
  end
- for _,case in {{1,30},{5,54},{10,96},{20,144},{25,144}} do
+ for _,case in {{1,48},{5,72},{10,96},{20,144},{25,144}} do
   for _,dt in {.05,.025} do local total=simulate(case[1],1,false,dt);check(total==case[2],'authored total '..case[1]..' dt '..dt..': '..total) end
  end
  check(simulate(20,1,true,.05)==84,'boss wave has eighty-four scheduled adds over forty seconds')
- check(simulate(1,4,false,.05)==120,'four players receive exactly four solo arrival budgets')
+ check(simulate(1,4,false,.05)==192,'four players receive exactly four solo arrival budgets')
  for players=1,4 do
   check(simulate(20,players,false,.025)==144*players,'linear ordinary arrival budget '..players)
   check(simulate(20,players,true,.025)==84*players,'linear boss arrival budget '..players)
